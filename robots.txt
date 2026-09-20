@@ -1,0 +1,8 @@
+# SokoHai — robots.txt (SEO / Google)
+# Badilisha <DOMAIN> kuwa domain yako halisi ya production (mfano: sokohai.co.tz)
+User-agent: *
+Allow: /
+
+# Sitemap inatolewa na Cloud Function "sitemapXml".
+# Ona docs/SEO-PRODUCT-LINKS.md kwa maelekezo kamili.
+Sitemap: https://<DOMAIN>/sitemap.xml

@@ -1,0 +1,1273 @@
+/* ==== css/15-chat-comments.css ====
+   SOKOHAI — Commerce Chat & Comments (Phase 2–4)
+   Mtindo MPYA pekee (hauongezi juu ya mtindo wa zamani).
+   Rangi za chapa: soft blue #00509d, green #16a34a, gold #d97706,
+   background nyepesi, mobile-first. */
+
+/* ---------- Vichwa vya ujumbe (bubbles) ---------- */
+/* [CHAT FIX 2026-09] Mpangilio wa pande: ujumbe wa mwenyewe upande wa KULIA,
+   wa mwenzake upande wa KUSHOTO — kila mmoja anajitenga kwa rangi yake. */
+.ch-msg {
+    position: relative;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+}
+.ch-msg[data-mine="0"] { align-items: flex-start; }
+.ch-msg[data-mine="1"] { align-items: flex-end; }
+.ch-msg .chat-bubble { max-width: 78%; overflow-wrap: anywhere; word-break: break-word; }
+.ch-msg[data-mine="0"] .chat-bubble {
+    background: #ffffff;
+    color: #111b21;
+    border: 1px solid #e2e8f0;
+    border-radius: 2px 12px 12px 12px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.08);
+}
+.ch-msg[data-mine="1"] .chat-bubble {
+    background: #d3f4d1; /* kijani cha SokoHai — mwenyewe anajitenga na mwenzake */
+    color: #0b3d1f;
+    border: 1px solid #b8e6b5;
+    border-radius: 12px 2px 12px 12px;
+}
+.ch-sender {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    color: #0369a1;
+    margin-bottom: 3px;
+}
+
+.ch-meta { display: flex; align-items: center; gap: 6px; margin: 2px 0 2px 0; font-size: 10px; color: #8a99a8; }
+.ch-msg[data-mine="1"] .ch-meta { justify-content: flex-end; }
+.ch-tick { color: #34b7f1; font-weight: 800; letter-spacing: -1px; }
+
+.ch-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 0 8px 0; opacity: .85; }
+.ch-msg[data-mine="1"] .ch-actions { justify-content: flex-end; }
+.ch-actions button {
+    border: none; background: transparent; color: #64748b; font-size: 10.5px;
+    font-weight: 700; cursor: pointer; padding: 3px 7px; border-radius: 99px;
+    background: #eef2f6;
+}
+.ch-actions button:hover { background: #dbe6f0; color: #03509d; }
+
+.ch-quote {
+    border-left: 3px solid #34b7f1; background: rgba(52,183,241,.12);
+    padding: 4px 8px; border-radius: 6px; font-size: 11px; color: #475569; margin-bottom: 4px;
+}
+
+/* ---------- Kadi za kushiriki (product/order/delivery) ---------- */
+.ch-card {
+    display: flex; gap: 10px; align-items: center; background: #ffffff;
+    border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px; margin-top: 6px;
+    cursor: pointer; min-width: 220px; box-shadow: 0 1px 4px rgba(15,23,42,.06);
+}
+.ch-card img { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
+.ch-card-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ch-card-title { font-size: 12.5px; font-weight: 800; color: #0f172a; }
+.ch-card-price { font-size: 12px; font-weight: 800; color: #b45309; }
+.ch-card-sub { font-size: 10.5px; color: #475569; }
+.ch-card-link { font-size: 10.5px; color: #03509d; font-weight: 800; }
+.ch-card-order { border-left: 4px solid #03509d; }
+.ch-card-delivery { border-left: 4px solid #16a34a; }
+/* [COMMERCE 2026-09] Kadi ya oda: hali ya malipo (inasubiri / imelindwa escrow). */
+.ch-card-ico {
+    width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    background: #f1f5f9;
+}
+.ch-card-order--paid { border-left-color: #18A982; background: #f3fbf8; }
+.ch-card-order--paid .ch-card-ico { background: #dff3ec; }
+.ch-card-price--ok { color: #0E7A63; }
+.ch-order-badge {
+    display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
+    margin-top: 3px; padding: 2px 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 800; line-height: 1.6;
+}
+.ch-order-badge--wait { background: #fef3c7; color: #92400e; }
+.ch-order-badge--ok { background: #dff3ec; color: #0E7A63; }
+
+/* ---------- Context bar (quick actions juu ya composer) ---------- */
+#chatContextBar { background: #ffffff; border-top: 1px solid #e2e8f0; }
+/* [CHAT SPACE FIX 2026-09] Mstari MMOJA unaoteleza — usile nafasi ya ujumbe. */
+.ch-ctxbar { display: flex; flex-wrap: nowrap; gap: 6px; padding: 6px 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.ch-ctxbtn {
+    border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a;
+    font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 99px; cursor: pointer;
+    white-space: nowrap; flex: 0 0 auto;
+}
+.ch-ctxbtn:hover { background: #e0f2fe; border-color: #7dd3fc; }
+
+/* ---------- Chip ya kujibu ---------- */
+#chatReplyChip { background: #ffffff; border-top: 1px solid #e2e8f0; }
+.ch-replychip {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 11.5px;
+    color: #475569; background: #f1f5f9;
+}
+.ch-replychip button { border: none; background: #e2e8f0; color: #475569; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; }
+
+/* ---------- Inbox (tabs + list) ---------- */
+.ch-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 4px 8px; border-bottom: 1px solid #eef2f6; }
+.ch-tab {
+    flex: 0 0 auto; padding: 7px 13px; border-radius: 99px; border: 1px solid #e2e8f0;
+    background: #f8fafc; color: #475569; font-size: 11.5px; font-weight: 800; cursor: pointer;
+}
+.ch-tab.active { background: #03509d; border-color: #03509d; color: #fff; }
+.ch-inbox-list { padding: 8px 2px; }
+.ch-contact {
+    display: flex; gap: 10px; align-items: center; padding: 11px 8px; border-radius: 14px;
+    cursor: pointer; border-bottom: 1px solid #f1f5f9;
+}
+.ch-contact:hover { background: #f8fafc; }
+/* [PIN 2026-09] Mazungumzo yaliyopiniwa — yanaangaziwa na kuonekana juu. */
+.ch-contact.ch-pinned { background: #fefce8; border-left: 4px solid #d97706; }
+.ch-pin-badge { font-size: 10px; color: #b45309; font-weight: 800; }
+.ch-pin-btn {
+    border: none; background: transparent; cursor: pointer; font-size: 15px;
+    padding: 4px 6px; border-radius: 50%; color: #94a3b8; flex-shrink: 0; line-height: 1;
+}
+.ch-pin-btn:hover { background: #fef3c7; color: #b45309; }
+.ch-pin-btn.on { color: #b45309; }
+.ch-cc-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ch-cc-name { font-size: 13.5px; font-weight: 800; color: #0f172a; overflow-wrap: anywhere; }
+.ch-verified { color: #16a34a; font-weight: 900; }
+.ch-cc-msg { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-cc-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.ch-chip { font-size: 9.5px; background: #eef2f6; color: #475569; padding: 2px 7px; border-radius: 99px; font-weight: 700; }
+.ch-cc-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.ch-cc-time { font-size: 10px; color: #94a3b8; }
+.ch-unread { background: #16a34a; color: #fff; font-size: 10px; font-weight: 800; border-radius: 99px; padding: 2px 8px; }
+
+/* ---------- Commerce quick actions (PHASE 5) ---------- */
+#chatCommerceBar { background: #ffffff; border-top: 1px solid #e2e8f0; }
+/* [CHAT SPACE FIX 2026-09] Mstari MMOJA unaoteleza — usifiche eneo la mazungumzo. */
+.ch-commercebar { display: flex; flex-wrap: nowrap; gap: 6px; padding: 6px 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.ch-commercebar .ch-ctxbtn:first-child { background: #03509d; border-color: #03509d; color: #fff; }
+
+/* ---------- Ofa (price negotiation, PHASE 6) ---------- */
+.ch-offer-msg {
+    background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px;
+    padding: 10px 12px; min-width: 220px; max-width: 320px; margin-top: 2px;
+}
+.ch-offer-msg-top { font-size: 12px; color: #92400e; margin-bottom: 4px; }
+.ch-offer-msg-row { font-size: 12px; color: #78350f; }
+.ch-offer-was { color: #a16207; font-size: 11px; }
+.ch-offer-msg-status { display: inline-block; margin-top: 6px; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 99px; }
+.ch-offer-msg-status.pending { background: #fef3c7; color: #92400e; }
+.ch-offer-msg-status.accepted { background: #ecfdf5; color: #047857; }
+.ch-offer-msg-status.rejected { background: #fff1f2; color: #be123c; }
+.ch-offer-msg-status.countered { background: #e0f2fe; color: #0369a1; }
+.ch-offer-msg-status.expired { background: #f1f5f9; color: #64748b; }
+.ch-offer-msg-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ch-offer-msg-actions button {
+    border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-size: 11px;
+    font-weight: 800; padding: 6px 10px; border-radius: 99px; cursor: pointer;
+}
+.ch-offer-msg-actions button:hover { background: #e0f2fe; border-color: #7dd3fc; }
+
+/* ---------- Ofa modal (PHASE 6) ---------- */
+.ch-offer-shell {
+    position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.ch-offer-card {
+    width: 100%; max-width: 380px; background: #ffffff; border-radius: 18px;
+    overflow: hidden; box-shadow: 0 24px 72px rgba(15,23,42,.4);
+}
+.ch-offer-head {
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(135deg,#001122,#00509d); color: #fff; padding: 12px 16px;
+}
+.ch-offer-head b { font-size: 14px; }
+.ch-offer-x { border: none; background: transparent; color: #fff; font-size: 16px; cursor: pointer; }
+.ch-offer-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 7px; }
+.ch-offer-prod { font-size: 12.5px; font-weight: 800; color: #0f172a; }
+.ch-offer-body label { font-size: 11px; font-weight: 700; color: #475569; margin-top: 3px; }
+.ch-offer-body input {
+    border: 1px solid #cbd5e1; border-radius: 10px; padding: 9px 11px; font-size: 13.5px; width: 100%;
+    box-sizing: border-box;
+}
+.ch-offer-actions { display: flex; gap: 8px; margin-top: 6px; }
+.ch-offer-btn { flex: 1; border: none; border-radius: 10px; padding: 10px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+.ch-offer-btn.primary { background: #03509d; color: #fff; }
+.ch-offer-btn.light { background: #eef2f6; color: #0f172a; border: 1px solid #dbe3ee; }
+.ch-offer-note { font-size: 10.5px; color: #64748b; margin-top: 4px; }
+
+/* ---------- Public Comments (PHASE 7) ---------- */
+.skh-comments { margin-top: 6px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+.skh-cm-headbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; }
+.skh-cm-headbar h5 { margin: 0; font-size: 13px; color: var(--primary-dark, #0f172a); text-transform: uppercase; }
+.skh-cm-sort { display: flex; gap: 4px; flex-wrap: wrap; }
+.skh-cm-sort button {
+    border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; font-size: 10.5px;
+    font-weight: 800; padding: 4px 9px; border-radius: 99px; cursor: pointer;
+}
+.skh-cm-sort button.active { background: #03509d; color: #fff; border-color: #03509d; }
+.skh-cm-list { max-height: 260px; overflow-y: auto; padding-right: 4px; }
+.skh-cm-item { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 9px 10px; margin-bottom: 8px; }
+.skh-cm-item.reply { margin-left: 22px; background: #ffffff; }
+.skh-cm-head { display: flex; gap: 8px; align-items: center; }
+.skh-cm-who { flex: 1; min-width: 0; }
+.skh-cm-who b { font-size: 12.5px; color: #0f172a; display: block; }
+.skh-cm-badge { display: inline-block; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 99px; margin-right: 4px; vertical-align: middle; }
+.skh-cm-badge.seller { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.skh-cm-badge.ver { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.skh-cm-badge.vp { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.skh-cm-replyto { display: block; font-size: 10.5px; color: #0369a1; }
+.skh-cm-time { font-size: 9.5px; color: #94a3b8; }
+.skh-cm-text { display: block; font-size: 12.5px; color: #334155; line-height: 1.45; margin: 6px 0 4px; white-space: pre-wrap; }
+.skh-cm-media { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0; }
+.skh-cm-media img { width: 74px; height: 74px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; }
+.skh-cm-prodcard { display: flex; gap: 8px; align-items: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px; margin-top: 5px; cursor: pointer; }
+.skh-cm-prodcard img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #f1f5f9; }
+.skh-cm-prodcard b { font-size: 11.5px; color: #0f172a; display: block; }
+.skh-cm-prodcard span { font-size: 10.5px; color: #b45309; font-weight: 800; }
+.skh-cm-prodcard em { font-size: 10px; color: #03509d; font-style: normal; font-weight: 800; }
+.skh-cm-actions { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+.skh-cm-actions button {
+    border: none; background: transparent; color: #64748b; font-size: 10.5px;
+    font-weight: 700; cursor: pointer; padding: 3px 8px; border-radius: 99px; background: #eef2f6;
+}
+.skh-cm-actions button.on { background: #dbeafe; color: #1d4ed8; }
+.skh-cm-more { border: none; background: #eef2f6; color: #475569; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 99px; cursor: pointer; margin: 2px 0 8px; }
+.skh-cm-empty { font-size: 12px; color: #94a3b8; text-align: center; margin: 16px 0; }
+.skh-cm-composer { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px; margin-top: 8px; }
+.skh-cm-replying { font-size: 11px; color: #0369a1; background: #f0f9ff; border-radius: 8px; padding: 5px 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+.skh-cm-replying button { border: none; background: #e0f2fe; color: #0369a1; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; }
+.skh-cm-composer input { flex: 1; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 11px; font-size: 13px; outline: none; min-width: 0; }
+.skh-cm-composer button { border: none; background: #03509d; color: #fff; border-radius: 10px; padding: 10px 14px; font-weight: 800; font-size: 12.5px; cursor: pointer; }
+
+/* [GESTURE REPLY 2026-09] Fomu ndogo ya kujibu (chini ya swali). */
+.skh-cm-replyform {
+    display: flex; gap: 6px; align-items: center; margin: 6px 0 4px 12px;
+    background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 7px;
+}
+.skh-cm-replyform input {
+    flex: 1; min-width: 0; border: 1px solid #cbd5e1; border-radius: 99px;
+    padding: 9px 12px; font-size: 12.5px; outline: none;
+}
+.skh-cm-replyform button {
+    border: none; background: #03509d; color: #fff; border-radius: 99px;
+    padding: 9px 13px; font-weight: 800; font-size: 12px; cursor: pointer; flex-shrink: 0;
+}
+.skh-cm-replyform .skh-cm-cancel { background: #e2e8f0; color: #475569; padding: 9px 11px; }
+.skh-cm-tools { display: flex; gap: 10px; align-items: center; margin-top: 7px; flex-wrap: wrap; }
+.skh-cm-attach { font-size: 11px; color: #475569; font-weight: 700; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+.skh-cm-hint { font-size: 10px; color: #94a3b8; }
+
+/* ============================================================
+   [CHAT UI v1.0 2026-09] Ukurasa KAMILI kila wakati (mobile + desktop).
+   Mobile: chat inachukua kioo NZIMA. Desktop (>=900px): two-pane
+   (orodha kushoto #chatSidePane + mazungumzo kulia) — spec §12.
+   ============================================================ */
+#chatModal { padding: 0; }
+.chat-card {
+    width: 100%; max-width: 100%;
+    height: 100dvh; max-height: 100dvh;
+    border-radius: 0;
+}
+#chatBackBtn { display: inline-flex; align-items: center; justify-content: center; }
+#chatSidePane { display: none; }
+
+/* ---------- Hint: telezesha ujumbe kujibu (gesture) ---------- */
+.ch-swipe-hint {
+    text-align: center; font-size: 10px; color: #94a3b8; margin-bottom: 8px;
+    background: #fff; padding: 5px 12px; border-radius: 99px; align-self: center;
+    box-shadow: 0 1px 1px rgba(0,0,0,.06);
+}
+.ch-msg.ch-swipe-flash .chat-bubble { outline: 2px solid #0369a1; outline-offset: 2px; }
+
+/* ---------- Hali ya block (badala ya composer) ---------- */
+.ch-blocked-state {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 22px 16px; background: #ffffff; border-top: 1px solid #e2e8f0;
+}
+.ch-blocked-ico { font-size: 30px; }
+.ch-blocked-state b { font-size: 13.5px; color: #0f172a; }
+.ch-blocked-state span { font-size: 12px; color: #64748b; text-align: center; }
+.ch-unblock-btn {
+    margin-top: 6px; border: 1px solid #b91c1c; background: #ffffff; color: #b91c1c;
+    font-weight: 800; font-size: 12px; padding: 8px 16px; border-radius: 99px; cursor: pointer;
+}
+.ch-unblock-btn:hover { background: #fee2e2; }
+.ch-unblock-btn.small { margin-top: 0; padding: 6px 12px; font-size: 11px; }
+.ch-blocked-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 10px 6px; border-bottom: 1px solid #f1f5f9;
+}
+
+/* ---------- Side pane + empty state ---------- */
+.ch-side-head { padding: 12px 14px 6px; font-size: 13px; font-weight: 900; color: #0f172a; }
+.ch-side-list { padding: 4px 6px 12px; }
+.ch-contact.active { background: #e0f2fe; }
+.ch-inbox-empty { text-align: center; padding: 32px 16px; color: #64748b; }
+.ch-inbox-empty-ico { font-size: 40px; }
+.ch-inbox-empty b { display: block; font-size: 14px; color: #0f172a; margin: 8px 0 4px; }
+.ch-inbox-empty span { font-size: 12px; }
+
+/* ---------- Desktop (>=900px): two-pane (orodha kushoto + mazungumzo kulia) ---------- */
+@media (min-width: 900px) {
+    .chat-card { width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; }
+    .chat-two-pane #chatSidePane {
+        display: flex; width: 340px; min-width: 340px; background: #fbfdff;
+        border-right: 1px solid #e5e7eb; flex-direction: column; overflow: hidden;
+    }
+    .chat-two-pane #chatBackBtn { display: none; }
+}
+
+/* ============================================================
+   [NEGO ENGINE 2026-09] Commerce Context Anchor + injini ya majadiliano.
+   Anchor ni sehemu MOJA inayoonyesha hali ya biashara + vitendo halali.
+   ============================================================ */
+#chatCommerceAnchor { flex-shrink: 0; border-top: 1px solid #d1d7db; background: #ffffff; }
+.ch-anchor { padding: 8px 12px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+.ch-anchor-head { font-size: 12.5px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ch-anchor-prod { font-weight: 700; color: #475569; }
+.ch-anchor-terms { font-size: 12px; color: #334155; margin-top: 3px; }
+.ch-anchor-order { font-size: 11.5px; color: #065f46; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 4px 8px; margin-top: 5px; display: inline-block; }
+.ch-anchor-adj { font-size: 11px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 4px 8px; margin-top: 4px; }
+
+.ch-nego-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ch-nego-btn {
+    border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a;
+    font-size: 12px; font-weight: 800; padding: 7px 12px; border-radius: 99px; cursor: pointer;
+}
+.ch-nego-btn:hover { background: #e0f2fe; border-color: #7dd3fc; }
+.ch-nego-btn.primary { background: #03509d; border-color: #03509d; color: #ffffff; }
+.ch-nego-btn.primary:hover { background: #023f7c; }
+
+.ch-nego-event { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 8px 10px; max-width: 88%; }
+.ch-nego-event-top { font-size: 12px; color: #9a3412; font-weight: 800; }
+.ch-nego-event-row { font-size: 11.5px; color: #475569; margin-top: 2px; }
+
+.ch-nego-hist { margin-top: 6px; font-size: 11px; color: #64748b; }
+.ch-nego-hist summary { cursor: pointer; font-weight: 800; color: #0369a1; }
+.ch-nego-hist-line { padding: 2px 0; border-bottom: 1px dashed #e2e8f0; }
+
+#chatNegoHint { flex-shrink: 0; background: #eff6ff; border-top: 1px solid #bfdbfe; padding: 6px 10px; }
+.ch-nego-hint { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ch-nego-hint span { font-size: 11.5px; color: #1d4ed8; font-weight: 800; }
+.ch-nego-hint button {
+    border: 1px solid #bfdbfe; background: #ffffff; color: #1d4ed8;
+    font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 99px; cursor: pointer;
+}
+.ch-nego-hint button:hover { background: #dbeafe; }
+.ch-nego-hint button.x { border: none; background: transparent; color: #64748b; padding: 4px 8px; }
+
+/* ---------- Anchor tulivu (spec §27–28) ---------- */
+.ch-anchor { padding: 7px 12px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; }
+.ch-anchor-links { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.ch-anchor-links .ch-nego-btn { padding: 5px 10px; font-size: 11.5px; }
+
+/* Kadi ya negotiation NDANI ya mtiririko wa chat (spec §35) */
+.ch-nego-event { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 9px 10px; max-width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.ch-nego-event .ch-nego-actions { margin-top: 8px; }
+.ch-nego-event .ch-nego-actions .ch-nego-btn { padding: 7px 12px; font-size: 12.5px; }
+.ch-nego-event .ch-nego-hist { margin-top: 8px; }
+/* Bango la zamu linalojua UPANDE (spec §7): "Jibu lako" vs "Inasubiri" */
+.ch-nego-turnbanner {
+    margin-top: 6px; padding: 5px 10px; border-radius: 99px;
+    font-size: 11.5px; font-weight: 800; display: inline-block;
+    background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+}
+.ch-nego-event .ch-nego-event-row b { color: #0f172a; }
+.ch-nego-event .ch-nego-pending {
+    margin-top: 4px; padding: 5px 9px; border-radius: 8px;
+    background: #ecfeff; border: 1px dashed #67e8f9; color: #155e75;
+    font-size: 12px;
+}
+
+/* ---------- Delivery pipeline tracker (spec §37) ---------- */
+.ch-nego-track { position: relative; margin-top: 8px; padding: 4px 2px; }
+.ch-track-line { position: absolute; top: 7px; left: 8%; right: 8%; height: 2px; background: #e2e8f0; border-radius: 2px; z-index: 0; }
+.ch-track-step { position: relative; z-index: 1; display: inline-flex; flex-direction: column; align-items: center; width: 20%; }
+.ch-track-dot { width: 14px; height: 14px; border-radius: 50%; background: #e2e8f0; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
+.ch-track-dot.on { background: #059669; box-shadow: 0 0 0 1px #059669; }
+.ch-track-lbl { font-size: 9.5px; color: #64748b; margin-top: 3px; text-align: center; white-space: nowrap; }
+.ch-track-step .on + .ch-track-lbl { color: #065f46; font-weight: 800; }
+
+/* ---------- Ujumbe wa MFUMO (ofa/oda/delivery) — TUKIO katikati ---------- */
+/* [DELIVERY/INTERNAL FIX 2026-09] Tukio la mfumo halichukui umbo la bubble ya
+   mtu (me/them), halina jina la mtumaji wala tick — linaonekana katikati. */
+.ch-msg-system {
+    align-items: center !important;
+    margin: 8px 0;
+}
+.ch-system-body {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+.ch-system-body .ch-nego-event,
+.ch-system-body .ch-card {
+    max-width: 100%;
+    width: 100%;
+}
+.ch-system-meta {
+    justify-content: center !important;
+}
+
+/* ============================================================
+   [CHAT UI v1.0 2026-09] Inbox ya ukurasa KAMILI (main chat screen).
+   Search + chips + orodha RICHI (avatar, alama ya kuthibitishwa, aina ya
+   akaunti, muhtasari, muda, unread, online, mute, kiashiria cha biashara).
+   ============================================================ */
+#chatListModal { padding: 0; }
+.ch-inbox-shell {
+    width: 100%; height: 100dvh; max-height: 100dvh;
+    background: linear-gradient(180deg, #F6F9FC 0%, #ffffff 100%);
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.ch-inbox-head {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 12px 14px calc(12px + env(safe-area-inset-top, 0px));
+    background: linear-gradient(135deg, #0B4F7A, #1268A8); color: #ffffff;
+    box-shadow: 0 2px 12px rgba(11,79,122,.28);
+}
+.ch-inbox-brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.ch-inbox-logo {
+    width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0;
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+    display: flex; align-items: center; justify-content: center; color: #ffffff;
+}
+.ch-inbox-title { display: flex; flex-direction: column; min-width: 0; }
+.ch-inbox-title b { font-size: 19px; letter-spacing: 3px; line-height: 1.1; }
+.ch-inbox-title small { font-size: 11px; color: #d3e7f7; font-weight: 600; }
+.ch-inbox-head-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.ch-inbox-iconbtn {
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.28);
+    background: rgba(255,255,255,.14); color: #ffffff; font-size: 17px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+}
+.ch-inbox-iconbtn:hover { background: rgba(255,255,255,.26); }
+
+.ch-inbox-search {
+    flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+    margin: 12px 14px 4px; padding: 10px 14px;
+    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 99px;
+    box-shadow: 0 1px 4px rgba(15,23,42,.06);
+}
+.ch-inbox-search-ico { font-size: 15px; opacity: .7; }
+#inboxSearchInput {
+    flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+    font-size: 14px; color: #173B56; font-family: inherit; caret-color: #1268A8;
+}
+#inboxSearchInput::placeholder { color: #94a3b8; }
+.ch-inbox-clear {
+    border: none; background: #e2e8f0; color: #475569; width: 22px; height: 22px;
+    border-radius: 50%; cursor: pointer; font-size: 11px; align-items: center;
+    justify-content: center; flex-shrink: 0; line-height: 1;
+}
+
+/* Chips za vichujio — zinateleza kwa mlalo (compact). */
+.ch-inbox-chips {
+    flex-shrink: 0; display: flex; gap: 6px; overflow-x: auto;
+    padding: 8px 14px 6px; scrollbar-width: none;
+}
+.ch-inbox-chips::-webkit-scrollbar { display: none; }
+.ch-inbox-chips .ch-tab {
+    flex: 0 0 auto; padding: 7px 14px; border-radius: 99px; border: 1px solid #d7e3ee;
+    background: #ffffff; color: #33506b; font-size: 12px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15,23,42,.05);
+}
+.ch-inbox-chips .ch-tab.active {
+    background: linear-gradient(135deg, #2B82BD, #1268A8); border-color: #1268A8; color: #fff;
+}
+
+.ch-inbox-scroll { flex: 1; overflow-y: auto; padding: 6px 10px 24px; -webkit-overflow-scrolling: touch; }
+
+/* Sehemu PINNED / RECENT */
+.ch-inbox-sec {
+    font-size: 10.5px; font-weight: 900; letter-spacing: 1.4px; text-transform: uppercase;
+    color: #1268A8; padding: 12px 8px 6px;
+}
+
+/* Mstari wa mazungumzo (RICHI lakini compact). */
+.ch-contact {
+    display: flex; gap: 10px; align-items: center; padding: 10px 8px; border-radius: 14px;
+    cursor: pointer; border-bottom: 1px solid #eef2f6; background: transparent;
+}
+.ch-contact:hover { background: #ffffff; box-shadow: 0 1px 6px rgba(15,23,42,.06); }
+.ch-contact.active { background: #e9f3fb; }
+.ch-contact.ch-pinned { background: #fefce8; border-left: 3px solid #d4af37; }
+.ch-cc-avatar { position: relative; flex-shrink: 0; }
+.ch-cc-avatar .ch-dot {
+    position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px;
+    border-radius: 50%; background: #18A982; border: 2px solid #ffffff;
+}
+.ch-cc-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ch-cc-name { font-size: 14px; font-weight: 800; color: #0f172a; overflow-wrap: anywhere; }
+.ch-verified { color: #18A982; font-weight: 900; margin-left: 2px; }
+.ch-cc-msg {
+    font-size: 12.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ch-cc-msg.commerce { color: #1268A8; font-weight: 700; }
+.ch-cc-meta { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.ch-acct-badge {
+    font-size: 9.5px; background: #eef6fb; color: #1268A8; padding: 2px 8px; border-radius: 99px;
+    font-weight: 800;
+}
+.ch-cc-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.ch-cc-time { font-size: 10px; color: #94a3b8; }
+.ch-unread {
+    background: #18A982; color: #fff; font-size: 10px; font-weight: 800; border-radius: 99px;
+    padding: 2px 8px; min-width: 18px; text-align: center;
+}
+/* Mkazo wa unread: uzani + upau + asili (si rangi pekee — spec §7). */
+.ch-contact.ch-unread-row { background: #ffffff; }
+.ch-contact.ch-unread-row .ch-cc-name { font-weight: 900; color: #0B4F7A; }
+.ch-contact.ch-unread-row .ch-cc-msg { color: #173B56; font-weight: 700; }
+
+/* ---------- Hali TUPU ya brand (spec §8–§9) ---------- */
+.ch-inbox-onboard {
+    position: relative; min-height: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; padding: 32px 20px; box-sizing: border-box;
+    background: linear-gradient(150deg, #F6F9FC 0%, #e8f1f9 55%, #dcECF5 100%);
+}
+.ch-ob-blob {
+    position: absolute; border-radius: 50%; filter: blur(2px); opacity: .55;
+}
+.ch-ob-blob.b1 { width: 260px; height: 260px; top: -80px; right: -60px; background: radial-gradient(circle at 30% 30%, #2B82BD, #1268A8); }
+.ch-ob-blob.b2 { width: 200px; height: 200px; bottom: -70px; left: -50px; background: radial-gradient(circle at 40% 40%, #18A982, #0f8f6d); }
+.ch-ob-blob.b3 { width: 120px; height: 120px; bottom: 26%; right: 14%; background: radial-gradient(circle at 50% 50%, #d4af37, rgba(212,175,55,.0)); opacity: .3; }
+.ch-ob-card {
+    position: relative; z-index: 2; text-align: center; max-width: 380px;
+    background: rgba(255,255,255,.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.9); border-radius: 26px; padding: 34px 26px 30px;
+    box-shadow: 0 24px 60px rgba(11,79,122,.16);
+}
+.ch-ob-mark { margin-bottom: 16px; display: flex; justify-content: center; }
+.ch-ob-card h2 { margin: 0 0 8px; font-size: 21px; color: #0B4F7A; font-weight: 900; }
+.ch-ob-card p { margin: 0 0 22px; font-size: 13.5px; color: #33506b; line-height: 1.6; }
+.ch-ob-cta {
+    border: none; cursor: pointer; color: #fff; font-size: 14px; font-weight: 800;
+    padding: 13px 26px; border-radius: 99px;
+    background: linear-gradient(135deg, #18A982, #1268A8);
+    box-shadow: 0 8px 20px rgba(18,104,168,.35);
+}
+.ch-ob-cta:hover { filter: brightness(1.06); }
+
+/* ---------- Hali ya utafutaji bila matokeo (spec §10) ---------- */
+.ch-inbox-search-empty { text-align: center; padding: 40px 20px; color: #64748b; }
+.ch-se-ico {
+    width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%;
+    background: #eef6fb; border: 1px solid #d7e3ee; display: flex; align-items: center;
+    justify-content: center; font-size: 26px;
+}
+.ch-inbox-search-empty b { display: block; font-size: 15px; color: #173B56; margin-bottom: 4px; }
+.ch-inbox-search-empty span { font-size: 12.5px; }
+
+/* ---------- Waliozuiwa (blocked) ---------- */
+.ch-blocked-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 14px; background: #fef2f2; border-top: 1px solid #fecaca;
+    border-bottom: 1px solid #fecaca; font-size: 12px; font-weight: 800; color: #b91c1c;
+}
+.ch-blocked-head button { border: none; background: transparent; color: #b91c1c; font-size: 15px; cursor: pointer; }
+.ch-blocked-list { padding: 6px 10px; max-height: 260px; overflow-y: auto; }
+
+/* ---------- Side pane ya desktop (two-pane) ---------- */
+.ch-side-head {
+    padding: 14px 16px 8px; font-size: 15px; font-weight: 900; color: #0B4F7A;
+    letter-spacing: .5px;
+}
+.ch-side-search {
+    display: flex; align-items: center; gap: 8px; margin: 4px 12px 8px;
+    padding: 8px 12px; background: #f1f6fb; border: 1px solid #e2e8f0; border-radius: 99px;
+}
+.ch-side-search span { font-size: 13px; opacity: .7; }
+.ch-side-search input { flex: 1; border: none; outline: none; background: transparent; font-size: 13px; color: #173B56; }
+.ch-inbox-chips.side { padding: 0 12px 6px; }
+.ch-inbox-chips.side .ch-tab { padding: 6px 11px; font-size: 11px; }
+.ch-side-list { flex: 1; overflow-y: auto; padding: 4px 6px 12px; }
+
+/* ---------- Hali ya uteuzi (desktop two-pane, hakuna uteuzi) ---------- */
+.ch-select-empty {
+    height: 100%; min-height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px; text-align: center;
+    color: #64748b; padding: 24px;
+}
+.ch-select-ico {
+    width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, #2B82BD, #1268A8);
+    color: #fff; display: flex; align-items: center; justify-content: center; font-size: 34px;
+    margin-bottom: 8px; box-shadow: 0 12px 28px rgba(18,104,168,.3);
+}
+.ch-select-empty b { font-size: 16px; color: #173B56; }
+.ch-select-empty span { font-size: 12.5px; max-width: 300px; line-height: 1.5; }
+
+/* ---------- Menyu ya + (composer) ---------- */
+.ch-plus-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    background: transparent; border: none; cursor: pointer; font-size: 13.5px; font-weight: 700;
+    color: #173B56; padding: 9px 12px; border-radius: 10px; font-family: inherit;
+}
+.ch-plus-item span { font-size: 17px; }
+.ch-plus-item:hover { background: #eef6fb; color: #0B4F7A; }
+
+/* ---------- Menyu ya ujumbe (long-press / right-click / ⋯) ---------- */
+#chMsgMenu button {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    background: transparent; border: none; cursor: pointer; font-size: 13px; font-weight: 700;
+    color: #173B56; padding: 9px 12px; border-radius: 10px; font-family: inherit;
+}
+#chMsgMenu button:hover { background: #eef6fb; color: #0B4F7A; }
+
+/* ---------- Mistari ya kuchagua (forward / product / order) ---------- */
+.ch-attach-row {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    background: #ffffff; border: 1px solid #eef2f6; border-radius: 12px; cursor: pointer;
+    padding: 9px 10px; margin-bottom: 6px; font-family: inherit;
+}
+.ch-attach-row:hover { background: #f6fafd; border-color: #d7e3ee; }
+.ch-attach-row img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
+.ch-attach-ph {
+    width: 44px; height: 44px; border-radius: 10px; background: #eef6fb; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.ch-attach-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ch-attach-t b { font-size: 13px; color: #173B56; }
+.ch-attach-t span { font-size: 11.5px; color: #64748b; }
+.ch-attach-t b b, .ch-attach-t span b { color: #b45309; }
+.ch-attach-send { color: #1268A8; font-weight: 900; flex-shrink: 0; }
+
+/* ---------- Kadi ya mahali (location) ---------- */
+.ch-loc-card {
+    display: flex; align-items: center; gap: 10px; background: #ffffff;
+    border: 1px solid #e2e8f0; border-radius: 12px; padding: 9px 10px; min-width: 200px;
+}
+.ch-loc-pin { font-size: 22px; }
+.ch-loc-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.ch-loc-info b { font-size: 12.5px; color: #0f172a; }
+.ch-loc-info span { font-size: 10.5px; color: #64748b; }
+.ch-loc-open { color: #1268A8; font-weight: 900; text-decoration: none; font-size: 16px; }
+
+/* ============================================================
+   [DRAFT/ARCHIVE/MUTE/REACTIONS 2026-09] spec §4, §12, §13, §28
+   ============================================================ */
+/* Rasimu + kimya kwenye orodha */
+.ch-mute-ico { font-size: 11px; margin-left: 2px; }
+.ch-draft-badge {
+    font-size: 9.5px; background: #fff7ed; color: #b45309; padding: 2px 8px;
+    border-radius: 99px; font-weight: 800; border: 1px solid #fde68a;
+}
+
+/* Reactions kwenye bubble */
+.ch-reactions { display: flex; gap: 4px; flex-wrap: wrap; margin: 3px 0 2px; }
+.ch-msg[data-mine="1"] .ch-reactions { justify-content: flex-end; }
+.ch-react-chip {
+    border: 1px solid #d7e3ee; background: #ffffff; color: #33506b;
+    font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.ch-react-chip span { font-size: 10.5px; color: #1268A8; }
+.ch-react-chip.on { background: #e9f3fb; border-color: #1268A8; }
+
+/* Picker ya emoji */
+.ch-emoji-btn {
+    width: 40px; height: 40px; font-size: 22px; border: none; background: transparent;
+    cursor: pointer; border-radius: 10px; line-height: 1;
+}
+.ch-emoji-btn:hover { background: #eef6fb; }
+
+/* ============================================================
+   [COMMENTS POLISH 2026-09] Sehemu ya "Maswali & Majibu" ndani
+   ya kadi ya bidhaa — mpangilio safi, kadi za maoni, mtunzi
+   aliye wazi, beji za uaminifu (alinunua/imethibitishwa/muuzaji).
+   ============================================================ */
+.comments-section.pm-sec .skh-comments {
+    margin-top: 10px;
+    border-top: none;
+    padding-top: 0;
+    font-size: 13px;
+}
+/* Kichwa cha skh-comments hakirudiwi — section tayari ina kichwa chake */
+.comments-section.pm-sec .skh-cm-headbar {
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+.comments-section.pm-sec .skh-cm-headbar h5 { display: none; }
+.comments-section.pm-sec .skh-cm-sort button {
+    padding: 5px 12px; font-size: 11px; border-radius: 99px;
+}
+/* Orodha ya maoni isikate ndani ya kadi — scroll ya modal yatosha */
+.comments-section.pm-sec .skh-cm-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+}
+.comments-section.pm-sec .skh-cm-item {
+    background: #f8fafc;
+    border: 1px solid #edf1f6;
+    border-radius: 14px;
+    padding: 11px 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
+}
+.comments-section.pm-sec .skh-cm-item.reply {
+    margin-left: 26px;
+    background: #fff;
+    border: 1px solid #eef2f7;
+}
+.skh-cm-thread {
+    margin-left: 26px;
+    padding-left: 12px;
+    border-left: 2px solid #e2e8f0;
+}
+.comments-section.pm-sec .skh-cm-who b { font-size: 13px; }
+.comments-section.pm-sec .skh-cm-text { font-size: 13px; line-height: 1.5; color: #1f2a37; }
+.comments-section.pm-sec .skh-cm-badge { font-size: 9px; padding: 2px 7px; }
+.comments-section.pm-sec .skh-cm-actions button {
+    background: #eef2f6;
+    padding: 5px 11px;
+    font-size: 11px;
+}
+.comments-section.pm-sec .skh-cm-actions button:hover { background: #e2e8f0; }
+.comments-section.pm-sec .skh-cm-actions button.on { background: #dbeafe; color: #1d4ed8; }
+
+/* Mtunzi (composer) — kadi ya wazi kabisa chini ya maoni */
+.comments-section.pm-sec .skh-cm-composer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border: 1px solid #dbe3ee;
+    border-radius: 14px;
+    padding: 10px;
+    margin-top: 10px;
+    box-shadow: 0 -6px 16px rgba(246, 249, 252, .9), 0 2px 10px rgba(15, 23, 42, .06);
+}
+.comments-section.pm-sec .skh-cm-composer input {
+    border: 1px solid #cbd5e1;
+    border-radius: 99px;
+    padding: 11px 14px;
+    font-size: 13px;
+    background: #f8fafc;
+}
+.comments-section.pm-sec .skh-cm-composer input:focus {
+    background: #fff;
+    border-color: var(--primary-blue, #1268A8);
+    outline: none;
+}
+.comments-section.pm-sec .skh-cm-composer > div[style*="display:flex"] button,
+.comments-section.pm-sec .skh-cm-composer button {
+    border-radius: 99px;
+    padding: 11px 18px;
+    background: var(--primary-blue, #1268A8);
+    flex-shrink: 0;
+}
+.comments-section.pm-sec .skh-cm-empty {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 22px 14px;
+    font-size: 12.5px;
+}
+.comments-section.pm-sec .skh-cm-more {
+    padding: 7px 14px;
+    font-size: 11.5px;
+    margin: 4px auto 10px;
+    display: block;
+}
+
+/* Paneli ya maoni hufungwa kwa makusudi (icon ya 💬 au kubofya kichwa). */
+.skh-comments--closed { display: none !important; }
+.skh-cm-panel-title {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    width: 100%;
+}
+.skh-cm-panel-title:hover { color: var(--primary-blue, #1268A8); }
+.skh-cm-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    margin-left: auto;
+    border-radius: 50%;
+    background: #e0f0fa;
+    color: #1268A8;
+    font-size: 11px;
+    font-weight: 900;
+    transition: transform .18s ease, background .18s ease;
+}
+.skh-cm-panel-title:hover .skh-cm-chevron { background: #cfe6f8; }
+
+/* ============================================================
+   [CHAT POLISH 2026-09] Mawingu ya ujumbe (pande zote) + kadi
+   za orodha ya inbox — muonekano safi, vipimo vya chapa.
+   ============================================================ */
+.ch-msg { margin-bottom: 9px; }
+.ch-msg .chat-bubble {
+    max-width: 80%;
+    padding: 9px 13px;
+    font-size: 14px;
+    line-height: 1.46;
+    border-radius: 16px;
+    margin-bottom: 2px;
+    position: relative;
+}
+.ch-msg[data-mine="0"] .chat-bubble {
+    background: #ffffff;
+    color: #173B56;
+    border: 1px solid #e6edf5;
+    border-top-left-radius: 5px;
+    box-shadow: 0 1.5px 3px rgba(15, 23, 42, .07);
+}
+.ch-msg[data-mine="1"] .chat-bubble {
+    background: linear-gradient(180deg, #dff7dc 0%, #d2f1cf 100%);
+    color: #10381f;
+    border: 1px solid #b9e6b6;
+    border-top-right-radius: 5px;
+    box-shadow: 0 1.5px 3px rgba(16, 90, 50, .10);
+}
+.ch-msg[data-mine="1"] .chat-bubble.me { background: linear-gradient(180deg, #dff7dc 0%, #d2f1cf 100%); }
+.ch-meta { margin-top: 1px; }
+/* Kadi za biashara ndani ya wingu — zipumue na zisipite upana. */
+.chat-bubble .ch-card,
+.ch-system-body .ch-card { max-width: 100%; }
+.chat-bubble .ch-nego-event,
+.chat-bubble .ch-offer-msg { max-width: 100%; }
+
+/* ---------- Kadi za orodha ya mazungumzo (inbox) ---------- */
+.ch-contact {
+    margin: 5px 8px;
+    padding: 11px 12px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+    transition: transform .12s ease, box-shadow .15s ease, background .15s ease;
+}
+.ch-contact:hover {
+    background: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .09);
+    z-index: 1;
+}
+.ch-contact.active {
+    background: linear-gradient(180deg, #eaf4fc 0%, #e1effa 100%);
+    border-color: #c5dff3;
+    box-shadow: inset 3px 0 0 #1268A8, 0 2px 8px rgba(18, 104, 168, .12);
+}
+.ch-contact.ch-pinned {
+    background: #fefce8;
+    border-color: #fde68a;
+    box-shadow: inset 3px 0 0 #d97706;
+}
+.ch-contact.ch-unread-row {
+    background: #f4f9fe;
+    border-color: #ddebf7;
+}
+.ch-contact.ch-unread-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 4px; border-radius: 4px;
+    background: #1268A8;
+}
+.ch-contact { position: relative; }
+.ch-cc-avatar .ch-user-avatar,
+.ch-cc-avatar span,
+.ch-cc-avatar img {
+    width: 48px !important; height: 48px !important;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(15,23,42,.12);
+}
+.ch-cc-name { font-size: 14.5px; letter-spacing: -.01em; }
+.ch-cc-msg { margin-top: 1px; font-size: 12.5px; line-height: 1.4; }
+.ch-unread {
+    background: #1268A8;
+    box-shadow: 0 2px 6px rgba(18,104,168,.35);
+}
+.ch-pin-btn {
+    width: 30px; height: 30px;
+    border: none; border-radius: 50%;
+    background: transparent;
+    cursor: pointer; opacity: .55;
+    font-size: 13px;
+    transition: opacity .15s ease, background .15s ease;
+}
+.ch-pin-btn:hover { opacity: 1; background: #eef4fa; }
+.ch-pin-btn.on { opacity: 1; }
+@media (max-width: 380px) {
+    .ch-contact { margin: 4px 6px; padding: 9px 10px; border-radius: 14px; }
+    .ch-cc-avatar .ch-user-avatar,
+    .ch-cc-avatar span,
+    .ch-cc-avatar img { width: 42px !important; height: 42px !important; }
+    .ch-cc-name { font-size: 13.5px; }
+}
+
+/* [ICON POLICY 2026-09] Maoni: icons za SVG badala ya emoji */
+.skh-cm-actions button .skh-cm-like-ic { display: inline-flex; vertical-align: -2px; }
+.skh-cm-actions button .skh-cm-like-ic svg { width: 13px; height: 13px; display: block; }
+.skh-cm-actions button.on .skh-cm-like-ic svg { fill: currentColor; stroke: currentColor; }
+.skh-cm-deleted { display: inline-flex; align-items: center; gap: 5px; font-style: italic; opacity: .65; }
+.skh-cm-deleted svg { stroke: #94a3b8; }
+
+/* ============================================================
+   [NEGO POLISH 2026-09] Kadi za majibizano — mwonekano mpya:
+   kichwa chenye ikoni, beji ya hali, gridi ya masharti,
+   jumla kuu, bango la zamu lenye rangi, vitufe vya maana.
+   (Mwisho wa faili kimakusudi — rules hizi zinashinda zamani.)
+   ============================================================ */
+.ch-nego-event {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #f59e0b;
+    border-radius: 16px;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, .08);
+}
+.ch-nego-event .ch-nego-head {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 11px 12px 9px;
+    background: linear-gradient(135deg, #fffaf2 0%, #ffffff 70%);
+    border-bottom: 1px solid #f1f5f9;
+}
+.ch-nego-event .ch-nego-ico {
+    flex: 0 0 auto;
+    width: 34px; height: 34px; border-radius: 11px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #2B82BD, #0B4F7A);
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(11, 79, 122, .28);
+}
+.ch-nego-event .ch-nego-ico svg { width: 18px; height: 18px; display: block; }
+.ch-nego-event .ch-nego-head-t { min-width: 0; flex: 1 1 auto; }
+.ch-nego-event .ch-nego-state {
+    display: inline-block;
+    font-size: 9.5px; font-weight: 900; letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #b45309; background: #fef3c7; border: 1px solid #fde68a;
+    padding: 2px 8px; border-radius: 99px; margin-bottom: 4px;
+}
+.ch-nego-event .ch-nego-title {
+    display: block; font-size: 13.5px; font-weight: 900; color: #0f172a;
+    line-height: 1.25; word-break: break-word;
+}
+/* Rangi ya msisitizo wa hali — ukingo wa kushoto + beji */
+.ch-nego-event.st-counter-offer { border-left-color: #0ea5e9; }
+.ch-nego-event.st-counter-offer .ch-nego-state { color: #0369a1; background: #e0f2fe; border-color: #bae6fd; }
+.ch-nego-event.st-offer-sent { border-left-color: #f59e0b; }
+.ch-nego-event.st-agreement,
+.ch-nego-event.st-final-agreement { border-left-color: #10b981; }
+.ch-nego-event.st-agreement .ch-nego-state,
+.ch-nego-event.st-final-agreement .ch-nego-state { color: #047857; background: #d1fae5; border-color: #a7f3d0; }
+.ch-nego-event.st-order-created { border-left-color: #2B82BD; }
+.ch-nego-event.st-order-created .ch-nego-state { color: #075985; background: #e0f2fe; border-color: #bae6fd; }
+.ch-nego-event.st-change-requested,
+.ch-nego-event.st-scope-change-requested,
+.ch-nego-event.st-route-change-requested { border-left-color: #f97316; }
+.ch-nego-event.st-change-requested .ch-nego-state,
+.ch-nego-event.st-scope-change-requested .ch-nego-state,
+.ch-nego-event.st-route-change-requested .ch-nego-state { color: #c2410c; background: #ffedd5; border-color: #fed7aa; }
+.ch-nego-event.st-rejected,
+.ch-nego-event.st-cancelled { border-left-color: #f43f5e; }
+.ch-nego-event.st-rejected .ch-nego-state,
+.ch-nego-event.st-cancelled .ch-nego-state { color: #be123c; background: #ffe4e6; border-color: #fecdd3; }
+.ch-nego-event.st-expired { border-left-color: #94a3b8; }
+.ch-nego-event.st-expired .ch-nego-state { color: #475569; background: #f1f5f9; border-color: #e2e8f0; }
+.ch-nego-event.st-completed { border-left-color: #10b981; }
+.ch-nego-event.st-completed .ch-nego-state { color: #047857; background: #d1fae5; border-color: #a7f3d0; }
+
+/* Bango la zamu — flex, ikoni, rangi kulingana na maana */
+.ch-nego-event .ch-nego-turnbanner {
+    display: flex; align-items: center; gap: 7px;
+    margin: 9px 12px 0; padding: 7px 11px;
+    border-radius: 10px; font-size: 11.5px; font-weight: 800;
+    border: 1px solid transparent;
+}
+.ch-nego-event .ch-nb-ico { display: inline-flex; flex: 0 0 auto; }
+.ch-nego-event .ch-nb-ico svg { width: 14px; height: 14px; display: block; }
+.ch-nego-event .ch-nego-turnbanner.you {
+    background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;
+    box-shadow: 0 0 0 1px rgba(59,130,246,.08);
+}
+.ch-nego-event .ch-nego-turnbanner.wait { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.ch-nego-event .ch-nego-turnbanner.ok { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.ch-nego-event .ch-nego-turnbanner.paid { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+.ch-nego-event .ch-nego-turnbanner.pay-wait { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
+
+/* Gridi ya masharti (idadi kwanza, bei/jumla baadaye) */
+.ch-nego-event .ch-nego-terms {
+    margin: 9px 12px 2px; padding: 4px 0;
+    display: flex; flex-direction: column; gap: 2px;
+}
+.ch-nego-event .ch-nego-term {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    font-size: 12px; color: #475569; padding: 4px 0;
+    border-bottom: 1px dashed #eef2f7;
+}
+.ch-nego-event .ch-nego-term:last-child { border-bottom: none; }
+.ch-nego-event .ch-nego-term-l {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-weight: 700; color: #64748b; min-width: 0;
+}
+.ch-nego-event .ch-nego-term-l svg { width: 13px; height: 13px; opacity: .8; flex: 0 0 auto; }
+.ch-nego-event .ch-nego-term b { font-weight: 900; color: #0f172a; text-align: right; white-space: nowrap; }
+.ch-nego-event .ch-nego-term.is-total {
+    margin-top: 4px; padding: 8px 11px;
+    background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+    border: 1px solid #bfdbfe; border-radius: 10px;
+    border-bottom: 1px solid #bfdbfe;
+}
+.ch-nego-event .ch-nego-term.is-total .ch-nego-term-l { color: #1d4ed8; font-weight: 900; }
+.ch-nego-event .ch-nego-term.is-total b { color: #0b4f7a; font-size: 14px; }
+
+/* Mstari wa ombi dogo (pending change) */
+.ch-nego-event .ch-nego-pending {
+    margin: 7px 12px 0; padding: 7px 10px; border-radius: 10px;
+    background: #ecfeff; border: 1px dashed #22d3ee; color: #155e75;
+    font-size: 11.5px;
+}
+
+/* Kifungo cha oda */
+.ch-nego-event .ch-nego-order {
+    display: flex; align-items: center; gap: 9px;
+    margin: 10px 12px 2px; padding: 8px 11px;
+    background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+}
+.ch-nego-event .ch-nego-order.is-paid { background: #ecfdf5; border-color: #a7f3d0; }
+.ch-nego-event .ch-nego-order-ico {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #f59e0b; color: #fff;
+}
+.ch-nego-event .ch-nego-order.is-paid .ch-nego-order-ico { background: #10b981; }
+.ch-nego-event .ch-nego-order-ico svg { width: 16px; height: 16px; }
+.ch-nego-event .ch-nego-order-t { display: flex; flex-direction: column; min-width: 0; }
+.ch-nego-event .ch-nego-order-t b { font-size: 12.5px; color: #0f172a; }
+.ch-nego-event .ch-nego-order-t span { font-size: 11px; font-weight: 700; color: #92400e; }
+.ch-nego-event .ch-nego-order.is-paid .ch-nego-order-t span { color: #047857; }
+.ch-nego-event .ch-nego-event-row b { color: #0f172a; }
+.ch-nego-event .ch-nego-event-row { padding: 0 12px; margin-top: 6px; font-size: 12px; }
+
+/* Tracker iwe na nafasi nzuri ndani ya kadi */
+.ch-nego-event .ch-nego-track { margin: 10px 12px 4px; }
+
+/* Vitufe — misingi mipya + vya maana */
+.ch-nego-event .ch-nego-actions,
+.ch-nego-event .ch-nego-actions { padding: 0 12px 11px; margin-top: 10px; gap: 7px; }
+.ch-nego-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a;
+    font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 99px;
+    cursor: pointer; transition: transform .06s ease, box-shadow .15s ease, background .15s ease;
+}
+.ch-nego-btn svg { width: 14px; height: 14px; display: block; }
+.ch-nego-btn:active { transform: scale(.97); }
+.ch-nego-btn:hover { box-shadow: 0 3px 10px rgba(15,23,42,.10); }
+.ch-nego-btn.primary { background: #03509d; border-color: #03509d; color: #fff; }
+.ch-nego-btn.accept {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #059669; color: #fff;
+    box-shadow: 0 3px 10px rgba(16,185,129,.28);
+}
+.ch-nego-btn.accept:hover { background: linear-gradient(135deg, #059669, #047857); }
+.ch-nego-btn.reject {
+    background: #ffffff; border-color: #fecdd3; color: #be123c;
+}
+.ch-nego-btn.reject:hover { background: #fff1f2; border-color: #fda4af; }
+.ch-nego-btn.outline {
+    background: #f0f9ff; border-color: #7dd3fc; color: #0369a1;
+}
+.ch-nego-btn.outline:hover { background: #e0f2fe; }
+
+/* Historia ndogo ya majadiliano */
+.ch-nego-event .ch-nego-hist { padding: 0 12px 10px; margin-top: 8px; font-size: 11px; color: #64748b; }
+.ch-nego-event .ch-nego-hist summary { cursor: pointer; font-weight: 800; color: #0369a1; }
+.ch-nego-event .ch-nego-hist-line { padding: 3px 0; border-bottom: 1px dashed #e2e8f0; }
+
+/* ============================================================
+   [NEGO COUNTER MODAL 2026-09] Fomu ya Counter — idadi KWANZA,
+   kisha bei, jumla ya moja kwa moja (badala ya prompt mbili).
+   ============================================================ */
+.skh-cn-card { max-width: 400px; }
+.skh-cn-head b { display: inline-flex; align-items: center; gap: 8px; }
+.skh-cn-head svg { display: inline-block; vertical-align: -2px; }
+.skh-cn-body { gap: 10px; }
+.skh-cn-field { display: flex; flex-direction: column; gap: 5px; }
+.skh-cn-field label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 800; color: #334155; margin-top: 2px;
+}
+.skh-cn-field label svg { width: 14px; height: 14px; color: #0b4f7a; }
+.skh-cn-req { color: #e11d48; font-weight: 900; }
+.skh-cn-field input,
+.skh-cn-money input {
+    border: 1.5px solid #cbd5e1; border-radius: 11px; padding: 10px 12px;
+    font-size: 14px; font-weight: 800; width: 100%; box-sizing: border-box;
+    background: #fff; color: #0f172a;
+}
+.skh-cn-field input:focus,
+.skh-cn-money input:focus { outline: none; border-color: #2B82BD; box-shadow: 0 0 0 3px rgba(43,130,189,.14); }
+.skh-cn-money { position: relative; display: flex; align-items: center; }
+.skh-cn-money span {
+    position: absolute; left: 12px; font-size: 11px; font-weight: 900;
+    color: #64748b; pointer-events: none; letter-spacing: .02em;
+}
+.skh-cn-money input { padding-left: 42px; }
+.skh-cn-err { color: #e11d48; font-size: 10.5px; font-weight: 700; min-height: 12px; }
+.skh-cn-total {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 2px; padding: 10px 13px; border-radius: 12px;
+    background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+    border: 1px solid #bfdbfe;
+    font-size: 12.5px; font-weight: 800; color: #1d4ed8;
+}
+.skh-cn-total span { display: inline-flex; align-items: center; gap: 6px; }
+.skh-cn-total b { color: #0b4f7a; font-size: 15px; font-weight: 900; }
+.skh-cn-total svg { width: 15px; height: 15px; }
+.ch-offer-btn svg { width: 15px; height: 15px; vertical-align: -2px; }
+
+/* [NEGO POLISH 2026-09] Mpangilio wa ikoni za SVG ndani ya anchor/historia/vitufe vya ofa */
+.ch-nego-hist-line svg { width: 12px; height: 12px; vertical-align: -1px; margin-right: 4px; }
+.ch-offer-msg-actions button { display: inline-flex; align-items: center; gap: 5px; }
+.ch-offer-msg-actions button svg { width: 13px; height: 13px; }
+.ch-offer-msg-actions button.is-accept { color: #047857; border-color: #a7f3d0; }
+.ch-offer-msg-actions button.is-reject { color: #be123c; border-color: #fecdd3; }
+.ch-anchor-order svg, .ch-anchor-adj svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 3px; }
+.ch-anchor-links .ch-nego-btn svg { width: 14px; height: 14px; }
+.ch-nego-actions .ch-nego-btn svg { width: 14px; height: 14px; flex: 0 0 auto; }
+.skh-cn-body .ch-offer-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* ============================================================
+   [CHAT HEADER v2 2026-09] Top bar NYEMBAMBA: jina tu (+ "anaandika"
+   kwa maandishi madogo), kitufe KIMOJA cha kurudi, na menyu ya
+   nukta tatu (Nyamazisha/Hifadhi/Zuia/Ripoti).
+   ============================================================ */
+.chat-head-bar {
+    background: linear-gradient(135deg, #0B4F7A, #1268A8);
+    padding: 5px 8px 5px 6px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 12;
+    flex-shrink: 0;
+    box-shadow: 0 1px 6px rgba(11, 79, 122, .25);
+}
+.chat-head-bar .chat-head-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+}
+.chat-head-bar .chat-head-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ch-head-id { min-width: 0; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.ch-head-id b {
+    font-size: 14px; line-height: 1.2; font-weight: 800; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+}
+.ch-head-sub {
+    display: block; min-height: 0; height: 13px;
+    font-size: 10.5px; line-height: 13px; font-weight: 800;
+    color: #a7f3d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ch-hbtn {
+    background: transparent; border: none; color: #fff;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; padding: 0;
+    transition: background .15s ease;
+}
+.ch-hbtn:hover, .ch-hbtn:active { background: rgba(255,255,255,.16); }
+.ch-head-right { position: relative; flex-shrink: 0; display: flex; align-items: center; }
+.ch-head-menu {
+    position: absolute; top: 40px; right: 4px; z-index: 40;
+    min-width: 210px; background: #fff; color: #0f172a;
+    border: 1px solid #e2e8f0; border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .22);
+    padding: 6px; display: flex; flex-direction: column; gap: 2px;
+    animation: chMenuPop .16s ease;
+}
+.ch-head-menu[hidden] { display: none; }
+@keyframes chMenuPop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.ch-head-menu button {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    border: none; background: transparent; text-align: left;
+    padding: 9px 11px; border-radius: 9px; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: #173B56;
+}
+.ch-head-menu button:hover { background: #eef6fb; }
+.ch-head-menu button.is-danger { color: #b91c1c; }
+.ch-head-menu button.is-danger:hover { background: #fef2f2; }
+.ch-head-menu .ch-hm-ic {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    background: #eaf3fa; color: #1268A8;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.ch-head-menu button.is-danger .ch-hm-ic { background: #fee2e2; color: #b91c1c; }
+.ch-head-menu .ch-hm-ic svg { width: 15px; height: 15px; }
+.ch-head-menu button.is-on { color: #92400e; }
+.ch-head-menu button.is-on .ch-hm-ic { background: #fef3c7; color: #b45309; }
+
+/* ============================================================
+   [CHAT SPACE v2 2026-09] Uwanja MPANA wa majadiliano — mawingu
+   na kadi za biashara zipumue, hasa kwenye skuti ndefu.
+   ============================================================ */
+#chatMessages { padding: 12px 8px !important; }
+.ch-msg .chat-bubble { max-width: 88%; }
+.ch-system-body { width: 100%; }
+.ch-system-body .ch-nego-event,
+.ch-system-body .ch-card { max-width: 100%; }
+
+/* ============================================================
+   [COMMERCE SIDES v2 2026-09] Kadi za biashara/majadiliano
+   zinatofuata UPANDE wa aliyetenda (mnunuzi kulia/kijani,
+   muuzaji kushoto/buluu) kama mawingu ya kawaida. Matukio
+   yasiyo na mtendaji husalia katikati.
+   ============================================================ */
+.ch-msg.ch-msg-event { align-items: flex-start; }
+.ch-msg.ch-msg-event[data-mine="1"] { align-items: flex-end; }
+.ch-event-wrap { width: 100%; max-width: 92%; display: flex; flex-direction: column; }
+.ch-msg.ch-msg-event[data-mine="1"] .ch-event-wrap { align-items: flex-end; }
+.ch-event-cap {
+    font-size: 10px; font-weight: 800; letter-spacing: .2px;
+    color: #64748b; margin: 0 6px 3px;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.ch-msg.ch-msg-event[data-mine="1"] .ch-event-cap { color: #047857; }
+.ch-msg.ch-msg-event[data-mine="0"] .ch-event-cap { color: #1d4ed8; }
+.ch-event-card { width: 100%; }
+
+/* Kadi ya majadiliano kwa upande — rangi + bando la upande */
+.ch-msg.ch-msg-event[data-mine="1"] .ch-event-card .ch-nego-event {
+    background: linear-gradient(180deg, #effdf3 0%, #e4f8e9 100%);
+    border: 1px solid #b7e6c4;
+    border-right: 4px solid #16a34a;
+    border-radius: 12px 4px 12px 12px;
+}
+.ch-msg.ch-msg-event[data-mine="0"] .ch-event-card .ch-nego-event {
+    background: linear-gradient(180deg, #f5f9ff 0%, #ecf3fc 100%);
+    border: 1px solid #c7ddf5;
+    border-left: 4px solid #1268A8;
+    border-radius: 4px 12px 12px 12px;
+}
+.ch-msg.ch-msg-event .ch-event-card .ch-card {
+    border-radius: 12px; box-shadow: 0 1px 3px rgba(15,23,42,.08);
+}
+.ch-msg.ch-msg-event[data-mine="1"] .ch-event-card .ch-card { border-right: 3px solid #16a34a; }
+.ch-msg.ch-msg-event[data-mine="0"] .ch-event-card .ch-card { border-left: 3px solid #1268A8; }
+.ch-msg-event .ch-meta { padding: 0 6px; }
+
+/* [CHAT HEADER v2] Viashiria vya "anaandika…" (madoa matatu yanayopepesa) */
+.ch-typing-dots { display: inline-flex; gap: 2px; vertical-align: -1px; }
+.ch-typing-dots i {
+    width: 4px; height: 4px; border-radius: 50%; background: #a7f3d0;
+    display: inline-block; animation: chTyping 1.1s infinite ease-in-out;
+}
+.ch-typing-dots i:nth-child(2) { animation-delay: .15s; }
+.ch-typing-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes chTyping { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }

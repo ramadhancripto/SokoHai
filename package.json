@@ -1,0 +1,27 @@
+{
+  "name": "sokohai-static",
+  "private": true,
+  "description": "SokoHai static frontend (ES modules). Root package.json enables Node ESM tooling/tests; backend lives in functions/.",
+  "type": "module",
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  },
+  "scripts": {
+    "test:nego": "node tools/test_nego_form.mjs",
+    "test:nego-engine": "node tools/test_negotiation_engine.mjs",
+    "test:nego-dom": "node tools/test_negotiation_dom.mjs",
+    "test:chat-ui": "node tools/test_chat_header_sides.mjs",
+    "test:logistics-market": "node tools/test_logistics_market.mjs",
+    "test:cards": "node tools/test_commerce_cards.mjs",
+    "test:flow": "node tools/test_commerce_flow.mjs",
+    "test:matcher": "node tools/test_route_matcher.mjs",
+    "test:delivery-flow": "node tools/test_delivery_nego_flow.mjs",
+    "test:routing": "node tools/test_routing.mjs",
+    "test:tokenbox": "node tools/test_token_inbox.mjs",
+    "test:showcase": "node tools/test_showcase.mjs",
+    "test": "node tools/test_nego_form.mjs && node tools/test_negotiation_engine.mjs && node tools/test_showcase.mjs && node tools/test_negotiation_dom.mjs && node tools/test_chat_header_sides.mjs && node tools/test_commerce_flow.mjs && node tools/test_delivery_nego_flow.mjs && node tools/test_route_matcher.mjs && node tools/test_routing.mjs && node tools/test_token_inbox.mjs && node tools/test_logistics_market.mjs && node tools/test_card_discovery.mjs && node tools/test_delivery_choice.mjs && node tools/test_commerce_cards.mjs && node tools/test_functions_resilience.mjs",
+    "build:html": "python3 tools/build_html.py build",
+    "check:html": "python3 tools/build_html.py check",
+    "test:functions": "node tools/test_functions_resilience.mjs"
+  }
+}

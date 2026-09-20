@@ -1,0 +1,554 @@
+/* ============================================================
+   SOKOHAI — DISCOVERY CARD + MAONI SHEET (css/21, 2026-09)
+   ------------------------------------------------------------
+   Nyongeza YA UPANDE juu ya 18-product-showcase.css:
+   1) Urambazaji wa wima kati ya matangazo (discovery feed).
+   2) Utambulisho wa muuzaji/mtoa huduma/usafiri kando ya media.
+   3) Mstari wa idadi pekee, kisha mstari wa Chat/Kikapu/Lipa.
+   4) Paneli ya MAONI ya chini/upande inayofunguka juu ya
+      ukurasa wa bidhaa (bili kuhama ukurasa).
+   Rangi za brand: blue #1268A8, green #18A982, gold #D4AF37.
+   ============================================================ */
+
+/* ---------- 1) DISCOVERY NAV (juu katikati ya hero) ---------- */
+.df-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(15, 23, 42, .55);
+    backdrop-filter: blur(6px);
+    border-radius: 999px;
+    padding: 2px;
+    margin: 0 auto;
+    pointer-events: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .22);
+}
+.df-nav-btn {
+    width: 32px; height: 32px;
+    border: none; border-radius: 50%;
+    background: transparent;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease;
+    padding: 0;
+}
+.df-nav-btn:hover { background: rgba(255, 255, 255, .18); }
+.df-nav-btn:active { transform: scale(.9); }
+.df-nav-btn:disabled { opacity: .35; cursor: default; }
+.df-nav-count {
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    min-width: 30px;
+    text-align: center;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Muelekeo wa kuteleza kati ya tangazo moja na jingine */
+@keyframes dfSlideNext { 0% { transform: translateY(26px); opacity: .25; } 100% { transform: none; opacity: 1; } }
+@keyframes dfSlidePrev { 0% { transform: translateY(-26px); opacity: .25; } 100% { transform: none; opacity: 1; } }
+#productModal > .pm-sheet.df-go-next { animation: dfSlideNext .26s ease-out; }
+#productModal > .pm-sheet.df-go-prev { animation: dfSlidePrev .26s ease-out; }
+
+/* Hamisha counter/dots juu kidogo (chini kushoto sasa kuna muuzaji) */
+.pm-hero-bottom {
+    top: 58px;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    justify-content: center;
+    pointer-events: none;
+}
+.pm-dots { top: 92px; bottom: auto; }
+.pm-views-pill, .pm-counter { background: rgba(15, 23, 42, .5); }
+
+/* ---------- 2) UTAMBULISHO WA MUUZAJI KANDO YA MEDIA ---------- */
+.pm-hero-seller {
+    position: absolute;
+    left: 10px; right: 70px; bottom: 10px;
+    z-index: 5;
+}
+.pm-hero-seller .pm-seller {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: rgba(255, 255, 255, .95);
+    backdrop-filter: blur(6px);
+    border-radius: 16px;
+    padding: 7px 9px;
+    box-shadow: 0 4px 16px rgba(2, 18, 38, .28);
+    cursor: pointer;
+}
+.pm-hero-seller .pm-seller-avatar,
+.pm-hero-seller #pmSellerAvatar { flex: 0 0 auto; }
+.pm-hero-seller .pm-seller-avatar img,
+.pm-hero-seller .pm-seller-avatar span {
+    width: 38px !important; height: 38px !important; border-radius: 50%; object-fit: cover; display: block;
+}
+.pm-hero-seller .pm-seller-info { flex: 1 1 auto; min-width: 0; }
+.pm-seller-role {
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #1268A8;
+    line-height: 1.2;
+}
+.pm-hero-seller .pm-seller-name-row { gap: 5px; align-items: center; }
+.pm-hero-seller .pm-seller-name-row b {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
+}
+.pm-hero-seller .pm-seller-meta {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; color: #64748b; margin-top: 1px;
+    white-space: nowrap; overflow: hidden;
+}
+.pm-hero-seller .pm-seller-meta svg { width: 11px; height: 11px; flex: 0 0 auto; }
+.pm-hero-seller .pm-seller-loc {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Fuata — karibu kabisa na jina */
+.pm-hero-seller .pm-follow {
+    flex: 0 0 auto;
+    height: 34px;
+    padding: 0 13px;
+    border-radius: 999px;
+    border: 1.5px solid #1268A8;
+    background: #1268A8;
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: background .15s ease, color .15s ease, transform .12s ease;
+}
+.pm-hero-seller .pm-follow:active { transform: scale(.96); }
+.pm-hero-seller .pm-follow .eng-ico svg { width: 14px; height: 14px; }
+.pm-hero-seller .pm-follow .eng-lbl { font-size: 11.5px; font-weight: 800; }
+.pm-hero-seller .pm-follow.btn-is-following,
+.pm-hero-seller .pm-follow.skh-eng-active {
+    background: #fff;
+    color: #0B4F7A;
+    border-color: #bcd4e8;
+}
+.pm-hero-seller .pm-seller-name-row .skh-verified,
+.pm-hero-seller .pm-seller-name-row svg { flex: 0 0 auto; }
+
+/* ---------- 3) MIFIMBO: IDADI kisha VITENDO ---------- */
+.pm-bar { flex-direction: column; gap: 8px; align-items: stretch; }
+.pm-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+}
+.pm-qty-row[style*="none"],
+.pm-qty-row[hidden] { display: none !important; }
+.pm-qty-lbl {
+    font-size: 12px;
+    font-weight: 800;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.pm-qty-row .pm-qty {
+    align-self: auto;
+    height: 42px;
+    flex: 0 0 auto;
+}
+.pm-qty-row .pm-qty-btn { width: 36px; }
+.pm-stock {
+    flex: 1 1 auto;
+    text-align: right;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pm-stock.pm-stock--low { color: #b45309; }
+.pm-stock.pm-stock--out { color: #b91c1c; }
+
+/* Mstari wa vitundo wa upana kamili */
+.pm-bar .pm-bar-actions { width: 100%; flex: 1 1 auto; }
+.pm-bar-btn { flex: 1 1 0; }
+/* Chat iwe na maandishi (si ikoni pekee) kwenye mstari huu */
+.pm-bar-chat {
+    flex: 0.9 1 0 !important;
+    width: auto;
+    padding: 0 12px;
+    font-size: 12.5px;
+    font-weight: 800;
+    gap: 6px;
+}
+.pm-bar-chat .pm-bar-lbl { display: inline; }
+.pm-bar-cart { flex: 1.15 1 0; }
+.pm-bar-buy { flex: 1.35 1 0; flex-direction: row; gap: 6px; background: linear-gradient(135deg, #e0bb43, #d4af37); }
+.pm-bar-buy .pm-bar-total { font-size: 10.5px; font-weight: 800; opacity: .92; }
+.pm-bar-buy .pm-bar-ic { display: inline-flex; align-items: center; }
+@media (max-width: 380px) {
+    .pm-bar-chat { flex-basis: auto; width: auto; padding: 0 10px; }
+    .pm-bar-btn { font-size: 11.5px; }
+    .pm-bar-buy { flex-direction: row; }
+}
+
+/* ---------- 4) MAONI SHEET ---------- */
+.maoni-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: none;
+}
+.maoni-layer.is-open { display: block; }
+.maoni-layer[hidden] { display: none !important; }
+.maoni-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 20, 33, .45);
+    animation: maoniFade .2s ease-out;
+}
+@keyframes maoniFade { from { opacity: 0; } to { opacity: 1; } }
+.maoni-sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 82%;
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -16px 50px rgba(2, 18, 38, .4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: maoniUp .28s cubic-bezier(.2, .8, .25, 1);
+}
+@keyframes maoniUp { from { transform: translateY(100%); } to { transform: none; } }
+.maoni-head {
+    flex: 0 0 auto;
+    border-bottom: 1px solid #eef2f7;
+    background: #fff;
+    padding-top: 8px;
+}
+.maoni-grip {
+    display: block;
+    width: 42px; height: 4px;
+    border-radius: 99px;
+    background: #cbd5e1;
+    margin: 0 auto 8px;
+}
+.maoni-head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px 10px;
+}
+.maoni-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.maoni-count {
+    background: #eaf2f9;
+    color: #0B4F7A;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 99px;
+    padding: 2px 9px;
+}
+.maoni-x {
+    width: 34px; height: 34px;
+    border: none; border-radius: 50%;
+    background: #f1f5f9; color: #475569;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+.maoni-x:hover { background: #e2e8f0; }
+.maoni-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+}
+.maoni-body #skhCommentsRoot {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    margin: 0;
+    border: none;
+    background: #f8fafc;
+}
+
+/* Orodha ya maoni yasukumike; composer abaki chini */
+.maoni-body .skh-cm-headbar {
+    flex: 0 0 auto;
+    background: #fff;
+    border: 1px solid #e6edf3;
+    border-radius: 12px;
+    padding: 7px 9px;
+    margin-bottom: 8px;
+}
+.maoni-body .skh-cm-headbar h5 { display: none; }
+.maoni-body .skh-cm-sort { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+.maoni-body .skh-cm-sort button {
+    border: 1px solid #dbe3ee;
+    background: #fff;
+    color: #64748b;
+    font-size: 10.5px;
+    font-weight: 800;
+    border-radius: 99px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.maoni-body .skh-cm-sort button.active { background: #1268A8; border-color: #1268A8; color: #fff; }
+.maoni-body .skh-cm-list {
+    flex: 1 1 auto;
+    max-height: none !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 2px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.maoni-body .skh-cm-item {
+    background: #fff;
+    border: 1px solid #e6edf3;
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+.maoni-body .skh-cm-composer {
+    flex: 0 0 auto;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 9px;
+    margin-top: 8px;
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, .06);
+}
+
+/* Beji za uthibitisho wa kweli (server pekee) */
+.skh-cm-badge.vp { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.skh-cm-badge.vd {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin: 3px 4px 0 0;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+.skh-cm-evidence {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 7px;
+}
+.skh-cm-evidence img, .skh-cm-evidence video {
+    width: 78px; height: 78px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+}
+.skh-cm-evidence video { width: 130px; }
+
+/* Kifungio cha kuambatisha ushahidi */
+.skh-cm-attach-btn {
+    width: 40px; height: 40px;
+    flex: 0 0 auto;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    border-radius: 11px;
+    color: #475569;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+.skh-cm-attach-btn:hover { background: #f8fafc; }
+.skh-cm-attach-btn svg { width: 17px; height: 17px; }
+.skh-cm-attach-btn.is-eligible { color: #0E7A5F; border-color: #9ad9c9; background: #f0faf7; }
+.skh-cm-pending {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: #64748b;
+    margin-top: 6px; flex-wrap: wrap;
+}
+.skh-cm-pending img, .skh-cm-pending video {
+    width: 44px; height: 44px; object-fit: cover; border-radius: 9px; border: 1px solid #cbd5e1;
+}
+.skh-cm-pending button {
+    border: none; background: #fee2e2; color: #b91c1c;
+    width: 20px; height: 20px; border-radius: 50%;
+    font-size: 11px; font-weight: 900; cursor: pointer; line-height: 1;
+}
+.skh-cm-elig-note {
+    font-size: 10.5px; line-height: 1.45;
+    color: #0E7A5F; margin: 6px 1px 0;
+    display: flex; gap: 5px; align-items: flex-start;
+}
+.skh-cm-elig-note svg { width: 13px; height: 13px; flex: 0 0 auto; margin-top: 1px; }
+
+/* Skrini kubwa: paneli ya upande wa kulia (bado ndani ya sheet ya bidhaa) */
+@media (min-width: 641px) {
+    .maoni-sheet {
+        left: auto;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        height: auto;
+        width: 420px;
+        border-radius: 22px 0 0 22px;
+        animation: maoniInRight .28s cubic-bezier(.2, .8, .25, 1);
+    }
+    @keyframes maoniInRight { from { transform: translateX(100%); } to { transform: none; } }
+}
+
+/* Ufikivu: punguza miondoko isiyo ya lazima */
+@media (prefers-reduced-motion: reduce) {
+    .maoni-sheet, .maoni-scrim, #productModal > .pm-sheet.df-go-next,
+    #productModal > .pm-sheet.df-go-prev { animation: none; }
+}
+
+/* ============================================================
+   5) UPATANISHI WA MAONI SHEET (classes za 35-comments.js)
+   ============================================================ */
+.pm-stock.is-low { color: #b45309; }
+.pm-stock.is-out { color: #b91c1c; font-weight: 900; }
+
+/* Tathmini zilizohamishwa ndani ya sheet */
+.maoni-body .maoni-reviews {
+    flex: 0 0 auto;
+    background: #fff;
+    border: 1px solid #e6edf3;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+.maoni-body .maoni-reviews .pm-sec-title,
+.maoni-body .maoni-reviews > h2 { display: none; }
+.maoni-body .maoni-reviews .pm-rev-head { margin-bottom: 6px; }
+.maoni-body .maoni-reviews .pm-rev-item {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 7px 0;
+}
+.maoni-body .maoni-reviews .pm-rev-item:last-child { border-bottom: none; }
+.maoni-body .maoni-reviews .pm-rev-badge.vd {
+    background: #e0f2fe; color: #0369a1; border-color: #bae6fd;
+}
+
+/* Beji chini ya maandishi ya maoni */
+.skh-cm-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+
+/* Kosa la upakuaji */
+.skh-cm-err { color: #b91c1c; }
+.skh-cm-err .skh-cm-more { margin-left: 8px; }
+
+/* Mstari wa input na kiambatisho */
+.maoni-body .skh-cm-inputrow {
+    display: flex; align-items: center; gap: 7px;
+}
+.maoni-body .skh-cm-inputrow input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 40px;
+    border: 1px solid #cbd5e1;
+    border-radius: 11px;
+    padding: 0 12px;
+    font-size: 13px;
+    background: #fff;
+}
+.maoni-body .skh-cm-inputrow input[type="text"]:focus {
+    outline: none; border-color: #1268A8;
+    box-shadow: 0 0 0 3px rgba(18, 104, 168, .12);
+}
+.maoni-body .skh-cm-send {
+    flex: 0 0 auto;
+    height: 40px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 11px;
+    background: #1268A8;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.maoni-body .skh-cm-send:disabled { opacity: .6; cursor: default; }
+.maoni-body .skh-cm-inputrow .skh-cm-attach-btn {
+    width: 40px; height: 40px;
+    flex: 0 0 auto;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    border-radius: 11px;
+    color: #475569;
+    padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+.maoni-body .skh-cm-inputrow .skh-cm-attach-btn.disabled {
+    opacity: .45; cursor: not-allowed;
+    color: #94a3b8; background: #f8fafc;
+}
+.maoni-body .skh-cm-inputrow .skh-cm-attach-btn:not(.disabled) {
+    color: #0E7A5F; border-color: #9ad9c9; background: #f0faf7;
+}
+
+/* Midia inayosubiri kutumwa */
+.maoni-body .skh-cm-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin: 2px 0 7px;
+}
+.maoni-body .skh-cm-chip {
+    position: relative;
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    overflow: hidden;
+    background: #f1f5f9;
+    display: flex; align-items: center; justify-content: center;
+    color: #475569;
+}
+.maoni-body .skh-cm-chip.vid { width: auto; padding: 0 8px; gap: 4px; }
+.maoni-body .skh-cm-chip img { width: 100%; height: 100%; object-fit: cover; }
+.maoni-body .skh-cm-chip small { font-size: 9.5px; font-weight: 800; }
+.maoni-body .skh-cm-chip svg { width: 18px; height: 18px; }
+.maoni-body .skh-cm-chip button {
+    position: absolute; top: -6px; right: -6px;
+    border: none; background: #b91c1c; color: #fff;
+    width: 18px; height: 18px; min-width: 0; border-radius: 50%;
+    font-size: 11px; font-weight: 900; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    padding: 0 !important; margin: 0;
+}
+
+/* Taarifa ya uhalali wa kushuhudia */
+.maoni-body .skh-cm-tools {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    margin-top: 6px;
+}
+.maoni-body .skh-cm-elig {
+    font-size: 10.5px; line-height: 1.4;
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-weight: 700;
+}
+.maoni-body .skh-cm-elig.order { background: #ecfdf5; color: #047857; }
+.maoni-body .skh-cm-elig.delivery { background: #e0f2fe; color: #0369a1; }
+.maoni-body .skh-cm-elig.none { background: #f1f5f9; color: #64748b; }
+.maoni-body .skh-cm-elig.checking { background: #fffbeb; color: #92400e; }
+

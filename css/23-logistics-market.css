@@ -1,0 +1,380 @@
+/* ==== css/23-logistics-market.css ====
+   [LOGISTICS MARKETPLACE 2026-09] Muonekano mpya wa Soko la Maombi ya
+   Usafirishaji (dashi ya dereva/chombo). Hutenganisha wazi:
+     MAOMBI yaliyo wazi  ·  Yaliyotumwa kwako  ·  Yanaendelea  ·  Kumbukumbu.
+   Kadi za maombi zina njia, mzigo, tarehe, nauli na kitufe kimoja wazi. */
+
+/* ---------- Bango la kichwa ---------- */
+.lm-hero {
+    position: relative;
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    color: #fff;
+    overflow: hidden;
+    background: linear-gradient(135deg, #03509d 0%, #0E7A5F 100%);
+    box-shadow: 0 12px 28px rgba(3, 80, 157, .25);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+}
+.lm-hero::after {
+    content: "";
+    position: absolute;
+    right: -30px; top: -30px;
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .08);
+}
+.lm-hero-ico {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .16);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.lm-hero-ico svg { width: 25px; height: 25px; color: #fff; }
+.lm-hero-txt { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.lm-hero-txt h3 {
+    margin: 0 0 3px;
+    font-size: 15px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .3px; line-height: 1.25;
+}
+.lm-hero-txt p { margin: 0; font-size: 11px; line-height: 1.45; color: rgba(255,255,255,.88); }
+.lm-hero-count {
+    position: relative; z-index: 1;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 12px;
+    padding: 6px 10px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.lm-hero-count b { display: block; font-size: 20px; line-height: 1; color: #FFD700; }
+.lm-hero-count small { font-size: 8.5px; text-transform: uppercase; font-weight: 800; opacity: .9; }
+
+/* ---------- Kanda ya kutenganisha dhana (maombi / kwako / yanaendelea / kumbukumbu) ---------- */
+.lm-quicknav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.lm-qn {
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    border-radius: 14px;
+    padding: 11px 8px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    font-family: inherit;
+}
+.lm-qn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15,23,42,.08); border-color: #bfdbfe; }
+.lm-qn-ico {
+    width: 34px; height: 34px; margin: 0 auto 6px;
+    border-radius: 11px;
+    background: #eef6fb; color: #03509d;
+    display: flex; align-items: center; justify-content: center;
+}
+.lm-qn-ico svg { width: 18px; height: 18px; }
+.lm-qn b { display: block; font-size: 11px; font-weight: 800; color: #0f172a; line-height: 1.25; }
+.lm-qn small { display: block; font-size: 9px; color: #64748b; margin-top: 2px; line-height: 1.3; }
+.lm-qn.is-primary { border-color: #0E7A5F; background: #f0fdf4; }
+.lm-qn.is-primary .lm-qn-ico { background: #0E7A5F; color: #fff; }
+.lm-qn.is-primary b { color: #064e3b; }
+.lm-qn.is-active { border-color: #03509d; box-shadow: 0 0 0 2px rgba(3,80,157,.12); }
+
+.lm-sep-note {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: #f8fafc; border: 1px dashed #cbd5e1;
+    border-radius: 12px; padding: 9px 12px;
+    font-size: 10.5px; color: #475569; line-height: 1.5;
+    margin-bottom: 12px; text-align: left;
+}
+.lm-sep-note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: #03509d; }
+
+/* ---------- Vichupo vya aina ya kazi ---------- */
+.lm-tabs {
+    display: flex; gap: 4px;
+    background: #eef2f6;
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.lm-tabs::-webkit-scrollbar { display: none; }
+.lm-tab {
+    flex: 1 0 auto;
+    border: none; background: transparent;
+    border-radius: 9px;
+    padding: 9px 10px;
+    font-size: 11px; font-weight: 800;
+    color: #64748b;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.lm-tab svg { width: 14px; height: 14px; }
+.lm-tab .lm-tab-n {
+    background: #dbe3ec; color: #475569;
+    font-size: 9.5px; font-weight: 900;
+    border-radius: 999px; padding: 1px 7px; min-width: 18px;
+}
+.lm-tab.active {
+    background: #fff;
+    color: #03509d;
+    box-shadow: 0 2px 8px rgba(15,23,42,.12);
+}
+.lm-tab.active .lm-tab-n { background: #03509d; color: #fff; }
+
+/* ---------- Orodha + mifupa ya upakiaji ---------- */
+.lm-list { display: flex; flex-direction: column; gap: 12px; }
+.lm-skel {
+    background: #fff;
+    border: 1px solid #e8edf2;
+    border-radius: 16px;
+    padding: 14px;
+    overflow: hidden;
+}
+.lm-skel-row { display: flex; gap: 12px; align-items: center; }
+.lm-skel-ico { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; }
+.lm-skel-bar { height: 11px; border-radius: 6px; margin-bottom: 8px; }
+.lm-skel-bar.w70 { width: 70%; } .lm-skel-bar.w90 { width: 90%; } .lm-skel-bar.w40 { width: 40%; }
+.lm-skel-ico, .lm-skel-bar {
+    background: linear-gradient(90deg, #eef2f6 25%, #f7fafc 37%, #eef2f6 63%);
+    background-size: 400% 100%;
+    animation: lmShimmer 1.3s ease infinite;
+}
+@keyframes lmShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+/* ---------- Kadi ya ombi ---------- */
+.lm-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e4eaf1;
+    border-radius: 16px;
+    padding: 13px 14px 14px;
+    text-align: left;
+    box-shadow: 0 2px 8px rgba(15,23,42,.05);
+    animation: lmCardIn .25s ease-out;
+}
+@keyframes lmCardIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.lm-card-top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 10px;
+}
+.lm-cat {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 9.5px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .3px;
+    padding: 3px 9px; border-radius: 999px;
+}
+.lm-cat svg { width: 12px; height: 12px; }
+.lm-cat-cargo { background: #e0f2fe; color: #03509d; }
+.lm-cat-passengers { background: #ede9fe; color: #6d28d9; }
+.lm-cat-livestock { background: #fef3c7; color: #92400e; }
+.lm-cat-other { background: #f1f5f9; color: #475569; }
+.lm-new {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 9px; font-weight: 900; color: #b45309;
+    text-transform: uppercase;
+}
+.lm-new i {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #f59e0b;
+    box-shadow: 0 0 0 0 rgba(245,158,11,.55);
+    animation: lmLivePulse 1.6s infinite;
+}
+@keyframes lmLivePulse {
+    0% { box-shadow: 0 0 0 0 rgba(245,158,11,.55); }
+    70% { box-shadow: 0 0 0 7px rgba(245,158,11,0); }
+    100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+}
+.lm-time { font-size: 9.5px; color: #94a3b8; font-weight: 700; white-space: nowrap; }
+
+.lm-card-main { display: flex; gap: 11px; align-items: center; margin-bottom: 10px; }
+.lm-cargo-ico {
+    width: 48px; height: 48px;
+    border-radius: 13px;
+    overflow: hidden; flex-shrink: 0;
+    background: #eef6fb;
+    display: flex; align-items: center; justify-content: center;
+    color: #03509d;
+    border: 1px solid #e2e8f0;
+}
+.lm-cargo-ico img { width: 100%; height: 100%; object-fit: cover; }
+.lm-cargo-ico svg { width: 24px; height: 24px; }
+.lm-cargo-txt { flex: 1; min-width: 0; }
+.lm-cargo-txt b {
+    display: block; font-size: 13.5px; font-weight: 800; color: #0f172a;
+    line-height: 1.3; overflow: hidden; text-overflow: ellipsis;
+}
+.lm-cargo-txt small { display: block; font-size: 10.5px; color: #64748b; margin-top: 2px; }
+.lm-cargo-txt small svg { width: 11px; height: 11px; vertical-align: -1px; margin-right: 3px; }
+
+.lm-route {
+    display: flex; align-items: stretch; gap: 9px;
+    background: #f8fafc;
+    border: 1px solid #edf1f5;
+    border-radius: 12px;
+    padding: 9px 11px;
+    margin-bottom: 9px;
+}
+.lm-route-line { position: relative; width: 16px; flex-shrink: 0; }
+.lm-route-line::before {
+    content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px;
+    border-left: 2px dashed #94a3b8;
+}
+.lm-route-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    position: relative; z-index: 1; margin: 2px auto;
+    border: 3px solid #f8fafc;
+}
+.lm-route-dot.from { background: #16a34a; margin-top: 0; }
+.lm-route-dot.to { background: #dc2626; margin-top: 14px; }
+.lm-route-places { flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.35; }
+.lm-route-places b { color: #0f172a; font-weight: 800; }
+.lm-route-places .lm-r-sub { color: #64748b; font-size: 9.5px; display: block; }
+.lm-route-places .lm-r-to { margin-top: 5px; }
+
+.lm-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.lm-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #f1f5f9; color: #334155;
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 9.5px; font-weight: 700;
+}
+.lm-chip svg { width: 11px; height: 11px; color: #64748b; }
+.lm-chip.is-warn { background: #fef3c7; color: #92400e; }
+.lm-chip.is-warn svg { color: #b45309; }
+.lm-chip.is-date { background: #e0f2fe; color: #03509d; }
+.lm-chip.is-date svg { color: #03509d; }
+
+.lm-foot { display: flex; align-items: center; gap: 10px; }
+.lm-fare {
+    flex-shrink: 0;
+    text-align: right;
+}
+.lm-fare small { display: block; font-size: 8.5px; text-transform: uppercase; color: #94a3b8; font-weight: 800; letter-spacing: .3px; }
+.lm-fare b { display: block; font-size: 14px; font-weight: 900; color: #0E7A5F; white-space: nowrap; }
+.lm-fare b.is-negotiable { color: #b45309; font-size: 11.5px; }
+.lm-accept {
+    flex: 1;
+    border: none;
+    border-radius: 11px;
+    padding: 11px 14px;
+    background: linear-gradient(135deg, #10b981, #0E7A5F);
+    color: #fff;
+    font-weight: 900; font-size: 12.5px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    font-family: inherit;
+    box-shadow: 0 4px 12px rgba(14,122,95,.3);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.lm-accept:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(14,122,95,.4); }
+.lm-accept:active { transform: translateY(0); }
+.lm-accept svg { width: 16px; height: 16px; }
+
+/* ---------- Hali tupu ---------- */
+.lm-empty {
+    text-align: center;
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 16px;
+    padding: 34px 20px;
+}
+.lm-empty-ico {
+    width: 60px; height: 60px; margin: 0 auto 12px;
+    border-radius: 50%;
+    background: #e2e8f0; color: #64748b;
+    display: flex; align-items: center; justify-content: center;
+}
+.lm-empty-ico svg { width: 28px; height: 28px; }
+.lm-empty b { display: block; font-size: 13px; color: #334155; margin-bottom: 5px; }
+.lm-empty p { margin: 0 0 14px; font-size: 11px; color: #64748b; line-height: 1.55; }
+.lm-empty-btn {
+    border: none; border-radius: 10px;
+    background: #0E7A5F; color: #fff;
+    padding: 10px 16px; font-weight: 800; font-size: 11.5px;
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 7px;
+}
+.lm-empty-btn svg { width: 14px; height: 14px; }
+
+@media (max-width: 480px) {
+    .lm-hero { padding: 13px 14px; gap: 11px; border-radius: 15px; }
+    .lm-hero-ico { width: 40px; height: 40px; border-radius: 12px; }
+    .lm-hero-txt h3 { font-size: 13px; }
+    .lm-hero-txt p { font-size: 10px; }
+    .lm-hero-count { padding: 5px 8px; }
+    .lm-hero-count b { font-size: 17px; }
+    .lm-quicknav { grid-template-columns: repeat(2, 1fr); }
+    .lm-tab { padding: 8px 9px; font-size: 10px; }
+}
+
+/* ---------- Kumbukumbu ya usafirishaji (rekodi rasmi) ---------- */
+.lm-hist-sep {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .4px; color: #0E7A5F;
+    margin: 14px 2px 8px;
+}
+.lm-hist-sep.is-problem { color: #b91c1c; margin-top: 4px; }
+.lm-hist {
+    display: flex; align-items: center; gap: 11px;
+    background: #fff;
+    border: 1px solid #e4eaf1;
+    border-left: 4px solid #16a34a;
+    border-radius: 13px;
+    padding: 11px 13px;
+    margin-bottom: 8px;
+}
+.lm-hist.is-problem { border-left-color: #dc2626; background: #fffdfd; }
+.lm-hist-ico {
+    width: 38px; height: 38px; border-radius: 11px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.lm-hist-ico.is-done { background: #dcfce7; color: #15803d; }
+.lm-hist-ico.is-problem { background: #fee2e2; color: #b91c1c; }
+.lm-hist-body { flex: 1; min-width: 0; text-align: left; }
+.lm-hist-body b {
+    display: block; font-size: 12.5px; color: #0f172a;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lm-hist-body b small { color: #94a3b8; font-weight: 700; font-size: 9.5px; margin-left: 6px; }
+.lm-hist-route, .lm-hist-meta {
+    display: block; font-size: 10.5px; color: #64748b; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lm-hist-route svg, .lm-hist-meta svg { width: 11px; height: 11px; vertical-align: -1px; }
+.lm-hist-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.lm-hist-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 9px; font-weight: 900; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px;
+    white-space: nowrap;
+}
+.lm-hist-badge svg { width: 10px; height: 10px; }
+.lm-hist-badge.is-done { background: #dcfce7; color: #15803d; }
+.lm-hist-badge.is-problem { background: #fee2e2; color: #b91c1c; }
+.lm-hist-track {
+    border: 1px solid #cbd5e1; background: #f8fafc;
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 10px; font-weight: 800; color: #334155;
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.lm-hist-track:hover { background: #eef6fb; border-color: #93c5fd; }
+@media (max-width: 480px) {
+    .lm-hist { padding: 10px; gap: 9px; }
+    .lm-hist-ico { width: 34px; height: 34px; }
+}

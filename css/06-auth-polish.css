@@ -1,0 +1,147 @@
+/* ==== css/06-auth-polish.css ==== */
+/* ============================================================
+   SOKOHAI AUTH POLISH (Phase 3.3) — Login & Signup
+   ⚠️ SCOPED: selectors zote zinaanza #authModal — hakuna modal
+   nyingine inayoathirika.
+   ⚠️ !IMPORTANT hapa inatumika KUBEAT inline styles zilizopo
+   kwenye HTML (padding/border/background) — njia pekee ya
+   kubadilisha bila kugusa HTML/auth logic. (Phase 4 itasafisha
+   inline styles zote.)
+   ============================================================ */
+
+/* ---------- Backdrop: brand gradient + blur ---------- */
+#authModal {
+    background: radial-gradient(1200px 600px at 20% -10%, rgba(3, 80, 157, 0.35), transparent 60%),
+                radial-gradient(900px 500px at 110% 110%, rgba(212, 175, 55, 0.18), transparent 55%),
+                rgba(2, 13, 28, 0.62) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* ---------- Card ya Auth ---------- */
+#authModal > div {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(2, 13, 28, 0.45) !important;
+    animation: skhAuthPop 0.34s var(--skh-ease, cubic-bezier(.22, 1, .36, 1));
+}
+/* Strip ya brand juu ya card */
+#authModal > div::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--skh-primary, #03509d) 0%, #0a7ace 55%, var(--skh-gold, #d4af37) 100%);
+}
+@keyframes skhAuthPop {
+    from { opacity: 0; transform: scale(.94) translateY(14px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ---------- Duara la logo ---------- */
+#authModal > div > div:first-of-type {
+    background: linear-gradient(145deg, #e8f1fb, #cfe4f8) !important;
+    box-shadow: 0 0 0 6px rgba(3, 80, 157, 0.06), var(--skh-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+}
+
+/* ---------- Inputs ---------- */
+#authModal input[type="email"],
+#authModal input[type="password"],
+#authModal input[type="tel"],
+#authModal input[type="text"] {
+    border: 1.5px solid #d7e0ea !important;
+    background: #f8fafc !important;
+    font-size: 16px !important; /* inazuia iOS auto-zoom */
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+#authModal input[type="email"]:hover,
+#authModal input[type="password"]:hover,
+#authModal input[type="tel"]:hover,
+#authModal input[type="text"]:hover {
+    border-color: #b3c3d4 !important;
+}
+#authModal input[type="email"]:focus,
+#authModal input[type="password"]:focus,
+#authModal input[type="tel"]:focus,
+#authModal input[type="text"]:focus {
+    border-color: var(--skh-primary, #03509d) !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(3, 80, 157, 0.13) !important;
+}
+/* Placeholder laini */
+#authModal input::placeholder { color: #94a3b8; }
+
+/* ---------- Vitufe vya Submit ---------- */
+#authModal button[type="submit"] {
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+    letter-spacing: 0.6px;
+}
+#authModal button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 8px 22px rgba(0, 80, 157, 0.35) !important;
+}
+#authModal button[type="submit"]:active:not(:disabled) {
+    transform: translateY(0) scale(.985);
+}
+#authModal button[type="submit"]:disabled {
+    opacity: .75;
+    cursor: progress;
+}
+
+/* ---------- Google button ---------- */
+#authModal .google-btn {
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+#authModal .google-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.12);
+}
+#authModal .google-btn:active { transform: scale(.985); }
+
+/* ---------- Links ndogo ---------- */
+#authModal .link-btn { transition: color .15s ease, opacity .15s ease; }
+#authModal .link-btn:hover { color: var(--skh-primary, #03509d); }
+#authModal b[onclick] { transition: color .15s ease; }
+#authModal b[onclick]:hover { color: var(--skh-gold, #b8912a) !important; }
+
+/* ---------- Eye toggle ya nenosiri (js/08) ---------- */
+.skh-pass-wrap { position: relative; display: block; }
+.skh-pass-wrap input { padding-right: 48px !important; }
+.skh-eye {
+    position: absolute;
+    right: 6px; top: 50%;
+    transform: translateY(-50%);
+    width: 38px; height: 38px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 17px;
+    color: #64748b;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s ease, color .15s ease;
+}
+.skh-eye:hover { background: #eef2f7; color: var(--skh-primary, #03509d); }
+
+/* ---------- Strength meter ya signup (js/08) ---------- */
+.skh-strength { display: flex; align-items: center; gap: 8px; margin-top: -4px; }
+.skh-strength-bars { display: flex; gap: 4px; flex: 1; }
+.skh-strength-bars i {
+    height: 4px; flex: 1;
+    border-radius: 99px;
+    background: #e2e8f0;
+    transition: background .25s ease;
+}
+.skh-strength-label { font-size: 10.5px; font-weight: 800; color: #94a3b8; min-width: 64px; text-align: right; }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 420px) {
+    #authModal > div { padding: 24px 18px 18px !important; }
+}
+
+/* ---------- Upunguzaji wa motion (accessibility) ---------- */
+@media (prefers-reduced-motion: reduce) {
+    #authModal > div { animation: none; }
+    #authModal button, #authModal input { transition: none !important; }
+}

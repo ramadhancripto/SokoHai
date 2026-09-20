@@ -1,0 +1,792 @@
+/* ============================================================
+   SOKOHAI — PRODUCT SHOWCASE (Module 02 · css/18)
+   ------------------------------------------------------------
+   Modali ya bidhaa: hero media, icon actions, hierarchy safi,
+   kifimbo cha kununua chini (sticky), rails za related.
+   Mobile-first; rangi kutoka design tokens zilizopo.
+   ============================================================ */
+
+/* ---------- SHEET (bottom-sheet) ---------- */
+#productModal.pm-overlay {
+    justify-content: flex-end !important;
+    align-items: flex-end !important;
+    padding: 0 !important;
+}
+#productModal > .pm-sheet {
+    width: 100% !important;
+    max-width: 600px !important;
+    height: 94vh;
+    max-height: 94vh !important;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+    box-shadow: 0 -12px 44px rgba(2, 18, 38, .35);
+    animation: pmUp .28s ease-out;
+}
+@keyframes pmUp {
+    from { transform: translateY(40px); opacity: .5; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+.pm-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    background: #fff;
+}
+.pm-sec {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.pm-sec[hidden] { display: none; }
+
+.pm-sec-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--primary-dark, #022b52);
+    margin: 0 0 10px;
+    font-weight: 800;
+}
+.pm-sec-sub {
+    text-transform: none;
+    font-weight: 600;
+    color: #94a3b8;
+    font-size: 11px;
+}
+/* Kaunta ya maoni katika kichwa cha sehemu */
+.pm-title-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    padding: 1px 8px;
+    margin-left: 4px;
+    border-radius: 99px;
+    background: #e0f0fa;
+    color: var(--primary-blue, #1268A8);
+    font-size: 11px;
+    font-weight: 800;
+    vertical-align: middle;
+}
+.pm-muted { color: #94a3b8; }
+
+/* ---------- HERO MEDIA ---------- */
+.pm-hero {
+    position: relative;
+    height: clamp(300px, 42vh, 380px);
+    background: #0f172a;
+    flex: 0 0 auto;
+    overflow: hidden;
+}
+.pm-image-slider {
+    display: flex;
+    height: 100%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+.pm-image-slider::-webkit-scrollbar { display: none; }
+.pm-image-slider > div { scroll-snap-align: center; }
+
+.pm-hero-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px;
+    z-index: 6;
+    pointer-events: none;
+}
+.pm-hero-top > * { pointer-events: auto; }
+.pm-circle {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .94);
+    color: #0f172a;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .22);
+    padding: 0;
+}
+.pm-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, .85);
+    color: #0f172a;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+.pm-arrow--l { left: 8px; }
+.pm-arrow--r { right: 8px; }
+
+/* Rundo la icon actions (upande wa kulia) — duara + idadi + jina dogo,
+   mtindo unaosomeka (kama reels): kila kitendo kina jina chini yake. */
+.pm-hero-stack {
+    position: absolute;
+    right: 10px;
+    bottom: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    z-index: 6;
+}
+.pm-act {
+    position: relative;
+    width: 50px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    color: #475569;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px;
+    cursor: pointer;
+}
+.pm-act-ico {
+    position: relative;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .95);
+    display: flex; align-items: center; justify-content: center;
+    color: #475569;
+    box-shadow: 0 2px 9px rgba(0, 0, 0, .22);
+    flex: 0 0 auto;
+}
+.pm-act:active .pm-act-ico { transform: scale(.92); }
+.pm-act svg,
+.pm-act .eng-ico,
+.pm-act .eng-ico svg { width: 20px; height: 20px; display: block; }
+.pm-act-lbl {
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .85), 0 0 6px rgba(0, 0, 0, .55);
+    white-space: nowrap;
+    pointer-events: none;
+}
+/* Hali amilifu (alipenda/amehifadhi) — duara la icon nalo hubadilika */
+.pm-act.skh-eng-active .pm-act-ico { color: inherit; }
+.pm-act-n {
+    position: absolute;
+    top: -5px; right: -5px;
+    background: #ef4444; color: #fff;
+    border: 1.5px solid #fff;
+    font-size: 9px; font-weight: 800;
+    min-width: 17px; height: 17px;
+    border-radius: 99px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+
+.pm-hero-bottom {
+    position: absolute;
+    left: 12px; right: 64px; bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    z-index: 4;
+    pointer-events: none;
+}
+.pm-views-pill, .pm-counter {
+    background: rgba(15, 23, 42, .62);
+    color: #fff;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    backdrop-filter: blur(4px);
+}
+.pm-dots {
+    position: absolute;
+    bottom: 14px; left: 0; right: 0;
+    display: flex; gap: 5px;
+    justify-content: center;
+    z-index: 3;
+    pointer-events: none;
+}
+
+/* ---------- 2.1 UTAMBULISHO ---------- */
+.pm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+.pm-chips .skh-loc {
+    background: #f1f5f9;
+    color: #475569;
+}
+.pm-avail {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 99px;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+.pm-avail--in      { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; }
+.pm-avail--low     { color: #b45309; background: #fffbeb; border: 1px solid #fde68a; }
+.pm-avail--out     { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+.pm-avail--auction { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+.pm-avail--service { color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; }
+.pm-avail--offline { color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; }
+
+.pm-title {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--primary-dark, #022b52);
+    margin: 2px 0 6px;
+    line-height: 1.3;
+}
+.pm-rating-link {
+    background: none; border: none; padding: 0;
+    display: inline-flex; align-items: center; gap: 6px;
+    cursor: pointer;
+    color: #b45309;
+    font-size: 13px;
+}
+.pm-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+.pm-price {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--terracotta, #c2410c);
+    letter-spacing: -.01em;
+}
+.pm-watch {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #475569;
+    border-radius: 99px;
+    padding: 7px 13px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.pm-watch .eng-ico svg { width: 14px; height: 14px; display: block; }
+.pm-wholesale-note {
+    font-size: 12px;
+    color: #047857;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+/* ---------- VARIANTS ---------- */
+.pm-var-group { margin-bottom: 10px; }
+.pm-var-group:last-child { margin-bottom: 0; }
+.pm-var-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--primary-dark, #022b52);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+.pm-var-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pm-chip {
+    padding: 8px 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+    cursor: pointer;
+    line-height: 1.2;
+}
+.pm-chip--on {
+    border-color: var(--primary-blue, #03509d);
+    background: #e0f2fe;
+    color: #03509d;
+}
+.pm-chip-delta { color: #b45309; font-weight: 800; }
+.pm-var-delta { font-size: 12px; color: #b45309; font-weight: 700; margin-top: 8px; }
+
+/* ---------- MAELEZO / SIFA ---------- */
+.pm-desc {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #334155;
+    margin: 0 0 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.pm-spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.pm-spec {
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.pm-spec-lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+.pm-spec-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    word-break: break-word;
+}
+
+/* ---------- USAMBAZAJI / ULINZI ---------- */
+.pm-trust-list { display: flex; flex-direction: column; gap: 9px; }
+.pm-trust-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.5;
+}
+.pm-trust-ic { flex: 0 0 auto; font-size: 15px; line-height: 1.4; }
+
+/* ---------- TATHMINI ---------- */
+.pm-rev-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.pm-rev-score { display: flex; gap: 12px; align-items: center; }
+.pm-rev-avg { font-size: 32px; font-weight: 900; color: #0f172a; line-height: 1; }
+.pm-stars { white-space: nowrap; letter-spacing: 1px; }
+.pm-star { color: #cbd5e1; font-size: 14px; }
+.pm-star--on { color: #f59e0b; }
+.pm-btn-outline {
+    border: 1.5px solid var(--primary-blue, #1268A8);
+    color: #1268A8;
+    background: #fff;
+    border-radius: 99px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.pm-rev-empty { font-size: 12.5px; line-height: 1.55; margin: 0; }
+.pm-rev-item { padding: 10px 0; border-top: 1px solid #f1f5f9; }
+.pm-rev-top {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #0f172a;
+}
+.pm-rev-date { color: #94a3b8; font-size: 11px; margin-left: auto; }
+.pm-rev-badge {
+    display: inline-block;
+    margin: 4px 0 0;
+    font-size: 10px;
+    font-weight: 800;
+    color: #047857;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 99px;
+    padding: 2px 8px;
+}
+.pm-rev-text { font-size: 13px; color: #334155; line-height: 1.55; margin: 6px 0 0; white-space: pre-wrap; word-break: break-word; }
+.pm-rev-media { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.pm-rev-thumb {
+    border: none; padding: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 84px; height: 84px;
+    cursor: pointer;
+    background: #f1f5f9;
+}
+.pm-rev-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pm-rev-video { width: 190px; max-width: 100%; border-radius: 10px; border: 1px solid #eee; background: #000; }
+.pm-rev-more {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px dashed #cbd5e1;
+    background: #f8fafc;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: #334155;
+    cursor: pointer;
+}
+
+/* ---------- MASWALI ---------- */
+.comments-section.pm-sec .skh-comments { font-size: 13px; }
+
+/* ---------- MUUZAJI ---------- */
+.pm-seller {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 2px 0;
+    cursor: pointer;
+}
+.pm-seller-avatar {
+    flex: 0 0 auto;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.pm-seller-avatar img,
+.pm-seller-avatar span { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; display: block; }
+.pm-seller-info { flex: 1; min-width: 0; }
+.pm-seller-name-row { display: flex; align-items: center; gap: 6px; }
+.pm-seller-name-row b {
+    font-size: 14px;
+    color: var(--primary-dark, #022b52);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pm-seller-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+    color: #64748b;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+.pm-seller-loc { white-space: nowrap; }
+.pm-follow {
+    flex: 0 0 auto;
+    margin-left: 10px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    border: 1.5px solid transparent;
+    gap: 5px;
+}
+.pm-follow[style*="none"] { display: none !important; }
+.follow-btn .eng-ico svg { width: 14px; height: 14px; display: block; }
+
+/* ---------- RELATED RAILS ---------- */
+.pm-related-sec { padding-bottom: 22px; }
+.pm-related-title { margin-bottom: 12px; }
+.pm-rel-loading { font-size: 13px; color: #64748b; padding: 6px 0 12px; }
+.pm-rail { margin-bottom: 16px; }
+.pm-rail:last-child { margin-bottom: 0; }
+.pm-rail-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 10px;
+}
+.pm-rail-head h3 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--primary-dark, #022b52);
+    margin: 0;
+}
+.pm-rail-head h3 small { color: #94a3b8; font-weight: 700; }
+.pm-rail-grid-btn {
+    border: none;
+    background: #eff6ff;
+    color: #1268A8;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 99px;
+    padding: 5px 11px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.pm-rail-track {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+}
+.pm-rel-card {
+    flex: 0 0 140px;
+    scroll-snap-align: start;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, .05);
+}
+.pm-rel-img {
+    display: block;
+    position: relative;
+    height: 96px;
+    background: #f1f5f9;
+    overflow: hidden;
+}
+.pm-rel-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pm-rel-img--ph img { display: none; }
+.pm-rel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px 10px;
+}
+.pm-rel-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 32px;
+}
+.pm-rel-price { font-size: 13px; font-weight: 900; color: #c2410c; }
+.pm-rel-loc {
+    font-size: 10px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pm-rail--grid .pm-rail-track { flex-wrap: wrap; overflow: visible; }
+.pm-rail--grid .pm-rel-card { flex: 0 0 calc(50% - 5px); }
+.pm-rail--grid .pm-rel-img { height: 130px; }
+
+/* ---------- KIFIMBO CHA KUNUNUA (sticky bar) ----------
+   Mpangilio: [Idadi] [Chat icon] [Kikapu] [Nunua Sasa+bei].
+   Vipimo vya flex huzuia vitufe kubanana au kata kaandishi. */
+.pm-bar {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    box-shadow: 0 -4px 18px rgba(15, 23, 42, .07);
+}
+.pm-qty {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 0 0 auto;
+    align-self: center;
+    height: 48px;
+}
+.pm-qty[style*="none"] { display: none !important; }
+.pm-qty-btn {
+    width: 32px; height: 100%;
+    border: none;
+    background: #f8fafc;
+    font-size: 20px;
+    font-weight: 800;
+    color: #334155;
+    cursor: pointer;
+}
+.pm-qty-btn:active { background: #e2e8f0; }
+#pmQty {
+    width: 38px; height: 100%;
+    border: none;
+    text-align: center;
+    font-weight: 800;
+    font-size: 14px;
+    background: #fff;
+    -moz-appearance: textfield;
+    appearance: textfield;
+    padding: 0;
+    min-width: 0;
+}
+#pmQty::-webkit-outer-spin-button,
+#pmQty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.pm-bar-actions { flex: 1 1 auto; display: flex; gap: 8px; min-width: 0; }
+.pm-bar-btn {
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 10px;
+    min-height: 48px;
+    height: 48px;
+    font-size: 13px;
+    min-width: 0;
+    white-space: nowrap;
+    line-height: 1.15;
+}
+.pm-bar-btn .pm-bar-lbl { white-space: nowrap; }
+.pm-bar-btn:disabled { cursor: not-allowed; }
+.pm-bar-chat { flex: 0 0 48px; width: 48px; padding: 0; background: #25D366; color: #fff; font-size: 19px; }
+.pm-bar-cart { flex: 1 1 0; min-width: 84px; background: var(--primary-dark, #022b52); color: #fff; }
+.pm-bar-buy {
+    flex: 1.5 1 0;
+    min-width: 132px;
+    background: var(--gold, #d4af37);
+    color: var(--primary-dark, #022b52);
+    flex-direction: column;
+    gap: 1px;
+}
+.pm-bar-primary { flex: 1 1 0; min-width: 120px; background: var(--primary-blue, #1268A8); color: #fff; }
+.pm-bar-bid { flex: 1 1 0; min-width: 120px; background: #ef4444; color: #fff; }
+.pm-bar-btn-dis { flex: 1 1 0; min-width: 100px; background: #e2e8f0; color: #64748b; }
+.pm-bar-total { font-size: 11.5px; font-weight: 900; opacity: .9; }
+/* Simu ndogo: punguza kwa upole, USIFICHE maandishi ya kitendo */
+@media (max-width: 380px) {
+    .pm-bar { gap: 6px; padding-left: 9px; padding-right: 9px; }
+    .pm-bar-actions { gap: 6px; }
+    .pm-bar-btn { font-size: 12px; padding: 0 8px; gap: 4px; }
+    .pm-bar-chat { flex-basis: 44px; width: 44px; }
+    .pm-qty-btn { width: 28px; }
+    #pmQty { width: 34px; }
+    .pm-bar-cart { min-width: 72px; }
+    .pm-bar-buy { min-width: 116px; }
+}
+@media (max-width: 340px) {
+    /* Ikari sana (320px): chat ikoni tu, qty fupi, vitufe vya maandishi
+       hubaki na maneno lakini vinafupishwa zaidi — havibaniwi wala kukatika. */
+    .pm-bar { gap: 5px; padding-left: 8px; padding-right: 8px; }
+    .pm-bar-actions { gap: 5px; }
+    .pm-bar-chat .pm-bar-lbl { display: none; }
+    .pm-bar-chat { flex-basis: 42px; width: 42px; font-size: 18px; }
+    .pm-qty-btn { width: 26px; }
+    #pmQty { width: 30px; }
+    .pm-bar-cart, .pm-bar-buy { font-size: 11.5px; min-width: 0; padding: 0 7px; }
+    .pm-bar-btn { height: 46px; min-height: 46px; }
+}
+
+/* ---------- UFIKAJI (a11y) ---------- */
+.pm-sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.pm-act:focus-visible,
+.pm-circle:focus-visible,
+.pm-arrow:focus-visible,
+.pm-chip:focus-visible,
+.pm-bar-btn:focus-visible,
+.pm-btn-outline:focus-visible,
+.pm-rel-card:focus-visible {
+    outline: 2px solid var(--primary-blue, #1268A8);
+    outline-offset: 2px;
+}
+
+/* ---------- SIMU NDOGO ---------- */
+/* Sheria ya jumla (12-mobile-responsive) huweka min-height:42 kwa kila
+   button ya modali; ishara duara/chips vidogo visipanuke kiurahisi. */
+@media (max-width: 480px) {
+    #productModal .pm-act,
+    #productModal .pm-circle,
+    #productModal .pm-arrow,
+    #productModal .pm-zoom-in,
+    #productModal .pm-qty-btn,
+    #productModal .pm-chip,
+    #productModal .pm-rail-grid-btn,
+    #productModal .pm-btn-outline { min-height: 0; }
+}
+@media (max-width: 360px) {
+    /* Maneno ya vifungo hubaki yakionekana (usiwafiche); punguza tu ukubwa */
+    .pm-title { font-size: 17px; }
+    .pm-price { font-size: 21px; }
+    .pm-rel-card { flex-basis: 128px; }
+}
+
+/* ---------- DESKTOP (pana zaidi ya 600) ---------- */
+@media (min-width: 601px) {
+    #productModal.pm-overlay { padding-bottom: 2vh !important; }
+    #productModal > .pm-sheet {
+        border-radius: 20px;
+        height: 92vh;
+        max-height: 860px !important;
+    }
+}
+
+/* ============================================================
+   [POLICY 2026-09] Vitendo vya ENGAGEMENT ni ICONS tu (bila
+   maandishi) — Like/Save/Maoni/Gawa/Fuatilia/Fuata. Maandishi
+   yanabaki kwa vitufe vya commerce (Chat, Lipa, Kikapu).
+   ============================================================ */
+.pm-act-lbl { display: none; }
+.pm-act { width: 40px; gap: 0; }
+.pm-hero-stack { gap: 8px; }
+#btnWatch .eng-lbl,
+#btnFollow .eng-lbl { display: none; }
+.pm-watch { padding: 8px 10px; }
+.pm-follow {
+    width: 38px; height: 38px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.follow-btn .eng-ico svg,
+.pm-follow .eng-ico svg { width: 16px; height: 16px; display: block; margin: 0; }
+
+/* Icons za vitufe vya chini (badala ya emoji) */
+.pm-bar-btn .pm-bar-ic { display: inline-flex; align-items: center; }
+.pm-bar-btn .pm-bar-ic svg { width: 16px; height: 16px; display: block; }
+
+/* Icons za mistari ya uaminifu/maelezo (SVG, rangi ya brand) */
+.pm-trust-ic svg { stroke: #1268A8; }
+.pm-inline-arrow { display: inline-flex; vertical-align: middle; color: #94A3B8; }
+.pm-inline-arrow svg { stroke: #94A3B8; }
+.pm-seller-loc svg, .pm-rel-loc svg { stroke: #64748B; vertical-align: -2px; }
+.pm-rev-badge svg { stroke: #18A982; vertical-align: -2px; }
+
+/* Nyota za tathmini (SVG badala ya glyph) */
+.pm-star { display: inline-flex; align-items: center; }
+.pm-star svg { width: 13px; height: 13px; fill: currentColor; stroke: currentColor; }

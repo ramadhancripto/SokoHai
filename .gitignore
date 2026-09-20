@@ -1,0 +1,16 @@
+node_modules/
+functions/node_modules/
+.env
+functions/.env
+*.log
+uploads/
+.firebase/
+dist/
+.env.*
+!.env.example
+functions/.env.*
+functions/.env
+*.pem
+*.key
+service-account*.json
+firebase-adminsdk*.json
