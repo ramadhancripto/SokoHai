@@ -58,7 +58,7 @@
     z-index: 2147483200;
     padding: 7px 14px;
     border-radius: 999px;
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: .3px;
     box-shadow: 0 8px 24px rgba(2, 13, 28, .25);
@@ -97,7 +97,7 @@
 #skhInstallBanner .skh-inst-ico { font-size: 26px; }
 #skhInstallBanner .skh-inst-txt { flex: 1; min-width: 0; }
 #skhInstallBanner .skh-inst-txt b { display: block; font-size: 13.5px; }
-#skhInstallBanner .skh-inst-txt small { color: #cbd5e1; font-size: 11px; }
+#skhInstallBanner .skh-inst-txt small { color: #cbd5e1; font-size: 13px; }
 #skhInstallBanner button {
     border: none; cursor: pointer;
     padding: 10px 14px; border-radius: 10px;

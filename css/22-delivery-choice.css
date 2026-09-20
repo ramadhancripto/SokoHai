@@ -24,7 +24,7 @@
 }
 .skh-dchoice-head b { color: #0f172a; font-size: 13px; }
 .skh-dchoice-tag {
-    font-size: 9px; font-weight: 900; text-transform: uppercase;
+    font-size: 12px; font-weight: 900; text-transform: uppercase;
     letter-spacing: .03em; color: #0B4F7A;
     background: #eaf2f9; border-radius: 999px; padding: 3px 9px;
     white-space: nowrap;
@@ -59,12 +59,12 @@
 .skh-dchoice-radio.is-on.green .skh-dot { border-color: #0E7A5F; }
 .skh-dchoice-radio.is-on.green .skh-dot::after { background: #0E7A5F; }
 .skh-dchoice-radio b { display: block; font-size: 12px; color: #0f172a; line-height: 1.3; }
-.skh-dchoice-radio small { display: block; font-size: 10px; color: #64748b; line-height: 1.35; margin-top: 2px; }
+.skh-dchoice-radio small { display: block; font-size: 12.5px; color: #64748b; line-height: 1.35; margin-top: 2px; }
 
 .skh-dchoice-body { margin-top: 11px; }
 .skh-dchoice-field { margin-bottom: 9px; }
 .skh-dchoice-field label {
-    display: block; font-size: 9.5px; font-weight: 900; color: #64748b;
+    display: block; font-size: 12px; font-weight: 900; color: #64748b;
     text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px;
 }
 .skh-dchoice-field input,
@@ -91,23 +91,23 @@
 .skh-dpick-selected .skh-dpick-sel-info { flex: 1 1 auto; min-width: 0; }
 .skh-dpick-selected b { font-size: 12.5px; color: #0f172a; display: block;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.skh-dpick-selected small { display: block; color: #0E7A5F; font-size: 10.5px; font-weight: 700; margin-top: 2px;
+.skh-dpick-selected small { display: block; color: #0E7A5F; font-size: 12.5px; font-weight: 700; margin-top: 2px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .skh-dpick-sel-actions { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
 .skh-dpick-mini {
     border: 1px solid #9ad9c9; background: #fff; color: #0E7A5F;
-    border-radius: 10px; padding: 7px 11px; font-size: 11px; font-weight: 900;
+    border-radius: 10px; padding: 7px 11px; font-size: 13px; font-weight: 900;
     cursor: pointer; white-space: nowrap;
 }
 .skh-dpick-mini.alt { border-color: #cbd5e1; color: #64748b; }
 .skh-dpick-note {
     background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
-    border-radius: 12px; padding: 9px 11px; font-size: 11px; line-height: 1.5;
+    border-radius: 12px; padding: 9px 11px; font-size: 13px; line-height: 1.5;
     margin-top: 9px;
 }
 .skh-dpick-fareline {
     display: flex; justify-content: space-between; gap: 8px;
-    font-size: 11px; color: #475569; margin-top: 8px;
+    font-size: 13px; color: #475569; margin-top: 8px;
     border-top: 1px dashed #e2e8f0; padding-top: 8px;
 }
 .skh-dpick-fareline b { color: #0f172a; }
@@ -126,7 +126,7 @@
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .skh-dpick-head h2 { margin: 0; font-size: 16px; }
-.skh-dpick-head small { color: #ccfbf1; font-size: 10.5px; display: block; margin-top: 2px; }
+.skh-dpick-head small { color: #ccfbf1; font-size: 12.5px; display: block; margin-top: 2px; }
 .skh-dpick-x {
     width: 36px; height: 36px; border-radius: 50%; border: none;
     background: rgba(255,255,255,.14); color: #fff;
@@ -140,7 +140,7 @@
     display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;
 }
 .skh-dpick-route label {
-    display: block; font-size: 9.5px; font-weight: 900; color: #64748b;
+    display: block; font-size: 12px; font-weight: 900; color: #64748b;
     text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px;
 }
 .skh-dpick-route input, .skh-dpick-route select {
@@ -213,7 +213,7 @@
 }
 .skh-dpost-head { background: linear-gradient(135deg,#0f172a,#1268A8); color:#fff; padding:16px; }
 .skh-dpost-head h2 { margin:0; font-size:16px; }
-.skh-dpost-head small { color:#cbd5e1; font-size:11px; display:block; margin-top:3px; }
+.skh-dpost-head small { color:#cbd5e1; font-size: 13px; display:block; margin-top:3px; }
 .skh-dpost-body { padding: 15px; overflow-y: auto; background: #f8fafc; }
 .skh-dpost-order {
     background:#fff; border:1px solid #e2e8f0; border-radius:14px;
@@ -227,7 +227,7 @@
 }
 .skh-dpost-actions .green { background:#0E7A5F; color:#fff; }
 .skh-dpost-actions .light { background:#eef2f7; color:#0f172a; }
-.skh-dpost-note { font-size:11px; color:#64748b; line-height:1.55; margin-top:10px; text-align:center; }
+.skh-dpost-note { font-size: 13px; color:#64748b; line-height:1.55; margin-top:10px; text-align:center; }
 
 @media (max-width: 640px) {
     .skh-dchoice-radios { grid-template-columns: 1fr; }

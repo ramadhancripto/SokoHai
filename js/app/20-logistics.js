@@ -31,7 +31,7 @@ window.boardPassengerByOtp = async function() {
                 if (typeof window.skhCustodyPassengerBoard !== 'function') break;
                 const res = await window.skhCustodyPassengerBoard(d.id, otp);
                 if (res.ok) { boarded = true; break; }
-                // bad_otp/forbidden kwa safari moja → endelea kujaribu safari nyingine.
+                // bad_otp/forbidden kwa safari moja -> endelea kujaribu safari nyingine.
             }
         }
         if (!boarded) {
@@ -48,7 +48,7 @@ window.boardPassengerByOtp = async function() {
 };
 
 window.triggerVehicleBreakdown = async function(rideId, cargoName) {
-    if(!confirm(` EMERGENCY BREAKDOWN RECOVERY ENGINE:\n\nJe, chombo chako kimepata hitilafu au dharura njiani?\n\nMfumo utahifadhi mkataba na Escrow yote, lakini utarudisha safari ya "${cargoName}" sokoni ili dereva wa karibu aje kuendeleza safari ya mzigo salama.`)) return;
+    if(!await skhConfirm(` EMERGENCY BREAKDOWN RECOVERY ENGINE:\n\nJe, chombo chako kimepata hitilafu au dharura njiani?\n\nMfumo utahifadhi mkataba na Escrow yote, lakini utarudisha safari ya "${cargoName}" sokoni ili dereva wa karibu aje kuendeleza safari ya mzigo salama.`)) return;
 
     try {
         const rideRef = skh.doc(skh.db, "ride_requests", rideId);
@@ -74,6 +74,9 @@ window.triggerVehicleBreakdown = async function(rideId, cargoName) {
             // 1. Mtumie Mnunuzi arifa ya dharura
             await skh.addDoc(skh.collection(skh.db, "notifications"), {
                 userId: rd.customerId,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'logistics.recoveryStarted',
+                params: { cargo: String(cargoName || '') },
                 title: " Uokoaji wa Safari Umeanzishwa (Recovery Active)",
                 body: `Chombo cha dereva kimepata hitilafu njiani. Safari ya "${cargoName}" imerudishwa sokoni automatically ili dereva wa karibu aje kuendeleza safari salama bila kuvunja Escrow.`,
                 createdAt: new Date().toISOString(),
@@ -87,6 +90,9 @@ window.triggerVehicleBreakdown = async function(rideId, cargoName) {
                 if (!orderSnap.empty) {
                     await skh.addDoc(skh.collection(skh.db, "notifications"), {
                         userId: orderSnap.docs[0].data().sellerId,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'logistics.transportFault',
+                params: { cargo: '' },
                         title: " Ujumbe: Hitilafu ya Usafiri!",
                         body: `Mzigo wa mteja wako uliopo njiani umepata hitilafu ya chombo. Usijali, mfumo unatafuta gari lingine mtaani sasa hivi.`,
                         createdAt: new Date().toISOString(),
@@ -108,40 +114,7 @@ window.renderSellerLogisticsTab = async function() {
     if(!ws || !skh.currentUser) return;
 
     ws.innerHTML = `
-        <div style="text-align:left; animation: fadeIn 0.3s ease;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> MIZIGO, DISPATCH & VERIFY PICKUP</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Hapa ndipo unapomthibitisha dereva anapokuja kuchukua mzigo dukani kwako kwa kutumia Token A (PK) [1].</p>
-
-            <!-- INPUT YA KULIPIA/KUHAKIKI TOKEN A (SELLER DISPATCH CONTROLS) -->
-            <div style="background:#fffbeb; border:1.5px dashed var(--gold); padding:20px; border-radius:16px; margin-bottom:25px;">
-                <b style="color:var(--primary-dark); font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> HAKIKI TOKENS ZA MAREJESHO / DISPATCH</b>
-                <p style="font-size:11px; color:#475569; margin-bottom:15px;">Weka Token A (Pickup Token - PK-XXXX) uliyopewa na dereva kuthibitisha kuwa chombo chake kinalingana na oda:</p>
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <input type="text" id="sellerDispatchTokenInp" placeholder="${T('lg_token_a_ph', 'Enter Token A (e.g. PK-XXXX)...')}" style="flex:2; padding:15px; border-radius:12px; border:1px solid #cbd5e1; outline:none; text-align:center; font-weight:900; font-size:18px; text-transform:uppercase;">
-                    <button onclick="window.verifySellerDispatchToken()" id="btnVerifySellerDispatch" style="flex:1; padding:15px; background:var(--primary-blue); color:white; border:none; border-radius:12px; font-weight:900; cursor:pointer;">${T('lg_verify', 'VERIFY')} </button>
-                </div>
-                <div id="sellerDispatchResult" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:14px; margin-bottom:15px; text-align:left;"></div>
-                <div id="sellerParcelConditionBox" style="display:none; margin-bottom:15px; text-align:left;">
-                    <label style="font-size:11px; color:#475569; display:block; margin-bottom:6px;">Hali ya mzigo unapoukabidhi (Parcel Condition):</label>
-                    <select id="sellerParcelCondition" style="width:100%; padding:12px; border-radius:12px; border:1px solid #cbd5e1; font-weight:600; outline:none;">
-                        <option value="good"> Vizuri (Good)</option>
-                        <option value="packaging_damaged">Kifungashio kimeharibika (Packaging damaged)</option>
-                        <option value="parcel_damaged">Mzigo umeharibika (Parcel damaged)</option>
-                        <option value="seal_broken">Muhuri umevunjika (Seal broken)</option>
-                        <option value="other">Nyingine (Other)</option>
-                    </select>
-                    <label style="font-size:11px; color:#475569; display:block; margin:10px 0 6px;">Maelezo ya hali ya mzigo (kama kuna tatizo):</label>
-                    <textarea id="sellerParcelNote" rows="2" placeholder="Mfano: sanduku limechubuka pembeni..." style="width:100%; padding:10px; border-radius:12px; border:1px solid #cbd5e1; outline:none; font-size:12px;"></textarea>
-                </div>
-                <button onclick="window.confirmSellerDispatch()" id="btnConfirmSellerDispatch" style="display:none; width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI KWA TOKEN (OPTION A)</button>
-                <button onclick="window.confirmSellerDispatchDirect()" id="btnConfirmSellerDispatchDirect" style="display:none; width:100%; padding:14px; margin-top:8px; background:#0f172a; color:white; border:none; border-radius:14px; font-weight:900; font-size:13px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI MOJA KWA MOJA (OPTION B — BILA TOKEN)</button>
-            </div>
-
-            <!-- LIST YA ODA ZINAZOSUBIRI KUCHUKULIWA -->
-            <b style="font-size:13px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;"> ODA ZINAZOSUBIRI KUCHUKULIWA (PENDING DISPATCH)</b>
-            <div id="sellerPendingDispatchList">Inapakia mizigo...</div>
-        </div>
-    `;
+        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> MIZIGO, DISPATCH & VERIFY PICKUP</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Hapa ndipo unapomthibitisha dereva anapokuja kuchukua mzigo dukani kwako kwa kutumia Token A (PK) [1].</p> <!-- INPUT YA KULIPIA/KUHAKIKI TOKEN A (SELLER DISPATCH CONTROLS) --> <div style="background:#fffbeb; border:1.5px dashed var(--gold); padding:20px; border-radius:16px; margin-bottom:25px;"> <b style="color:var(--primary-dark); font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> HAKIKI TOKENS ZA MAREJESHO / DISPATCH</b> <p style="font-size:13px; color:#475569; margin-bottom:15px;">Weka Token A (Pickup Token - PK-XXXX) uliyopewa na dereva kuthibitisha kuwa chombo chake kinalingana na oda:</p> <div style="display:flex; gap:10px; margin-bottom:15px;"> <input type="text" id="sellerDispatchTokenInp" placeholder="${T('lg_token_a_ph', 'Enter Token A (e.g. PK-XXXX)...')}" style="flex:2; padding:15px; border-radius:12px; border:1px solid #cbd5e1; outline:none; text-align:center; font-weight:900; font-size:18px; text-transform:uppercase;"> <button onclick="window.verifySellerDispatchToken()" id="btnVerifySellerDispatch" style="flex:1; padding:15px; background:var(--primary-blue); color:white; border:none; border-radius:12px; font-weight:900; cursor:pointer;">${T('lg_verify', 'VERIFY')} </button> </div> <div id="sellerDispatchResult" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:14px; margin-bottom:15px; text-align:left;"></div> <div id="sellerParcelConditionBox" style="display:none; margin-bottom:15px; text-align:left;"> <label style="font-size:13px; color:#475569; display:block; margin-bottom:6px;">Hali ya mzigo unapoukabidhi (Parcel Condition):</label> <select id="sellerParcelCondition" style="width:100%; padding:12px; border-radius:12px; border:1px solid #cbd5e1; font-weight:600; outline:none;"> <option value="good"> Vizuri (Good)</option> <option value="packaging_damaged">Kifungashio kimeharibika (Packaging damaged)</option> <option value="parcel_damaged">Mzigo umeharibika (Parcel damaged)</option> <option value="seal_broken">Muhuri umevunjika (Seal broken)</option> <option value="other">Nyingine (Other)</option> </select> <label style="font-size:13px; color:#475569; display:block; margin:10px 0 6px;">Maelezo ya hali ya mzigo (kama kuna tatizo):</label> <textarea id="sellerParcelNote" rows="2" placeholder="Mfano: sanduku limechubuka pembeni..." style="width:100%; padding:10px; border-radius:12px; border:1px solid #cbd5e1; outline:none; font-size:12px;"></textarea> </div> <button onclick="window.confirmSellerDispatch()" id="btnConfirmSellerDispatch" style="display:none; width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI KWA TOKEN (OPTION A)</button> <button onclick="window.confirmSellerDispatchDirect()" id="btnConfirmSellerDispatchDirect" style="display:none; width:100%; padding:14px; margin-top:8px; background:#0f172a; color:white; border:none; border-radius:14px; font-weight:900; font-size:13px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI MOJA KWA MOJA (OPTION B — BILA TOKEN)</button> </div> <!-- LIST YA ODA ZINAZOSUBIRI KUCHUKULIWA --> <b style="font-size:13px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;"> ODA ZINAZOSUBIRI KUCHUKULIWA (PENDING DISPATCH)</b> <div id="sellerPendingDispatchList">Inapakia mizigo...</div> </div> `;
 
     // Load pending dispatch items from Firestore
     const shopOwnerId = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
@@ -164,21 +137,7 @@ window.renderSellerLogisticsTab = async function() {
             count++;
             const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
             html += `
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;">
-                        <div>
-                            <b style="font-size:14px; color:#0f172a; display:block;"> ${rd.cargoName}</b>
-                            <span style="font-size:11px; color:gray; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} | Njia: ${rd.fromLocation} ➔ ${rd.toLocation}</span>
-                            <span style="font-size:11px; color:orange; font-weight:bold; display:block; margin-top:2px;">Dereva: ${skh.skhEscape(rd.driverName || 'N/A')} (Chombo: ${rd.vehicleType})</span>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <span style="font-size:10px; background:#fffbeb; color:#d97706; padding:4px 8px; border-radius:8px; font-weight:bold; display:block; margin-bottom:5px;">${rd.status.toUpperCase()}</span>
-                        <b style="font-size:12px; color:var(--primary-blue);">Token A: ${rd.pickupTokenRef || rd.pickupToken || 'Itaundwa baada ya dereva kukubali'}</b>
-                    </div>
-                </div>
-            `;
+                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;"> ${rd.cargoName}</b> <span style="font-size:13px; color:gray; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} | Njia: ${rd.fromLocation} -> ${rd.toLocation}</span> <span style="font-size:13px; color:orange; font-weight:bold; display:block; margin-top:2px;">Dereva: ${skh.skhEscape(rd.driverName || 'N/A')} (Chombo: ${rd.vehicleType})</span> </div> </div> <div style="text-align:right;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:4px 8px; border-radius:8px; font-weight:bold; display:block; margin-bottom:5px;">${rd.status.toUpperCase()}</span> <b style="font-size:12px; color:var(--primary-blue);">Token A: ${rd.pickupTokenRef || rd.pickupToken || 'Itaundwa baada ya dereva kukubali'}</b> </div> </div> `;
         });
 
         listDiv.innerHTML = count === 0 
@@ -209,7 +168,7 @@ window.verifySellerDispatchToken = async function() {
             try {
                 const v = await window.skhCustodyServerTokenVerify({ token: token, kind: 'pickup' });
                 if (v && v.data && v.data.ok) { rd = v.data; foundId = v.data.rideId; }
-            } catch (e) { /* server haijibu → fallback ya demo hapa chini */ }
+            } catch (e) { /* server haijibu -> fallback ya demo hapa chini */ }
         }
         if (!foundId && (typeof window.skhCustodyFallbackAllowed !== 'function' || !window.skhCustodyFallbackAllowed())) {
             alert(T('lg_token_wrong', "This token is wrong or the cargo has already been released!"));
@@ -240,13 +199,7 @@ window.verifySellerDispatchToken = async function() {
         sessionStorage.setItem('active_seller_verified_ride_id', foundId);
 
         resultBox.innerHTML = `
-            <div style="font-size:13px; color:#1e293b; line-height:1.5; text-align:left;">
-                <b style="color:var(--green); display:block; margin-bottom:8px; font-size:14px; text-transform:uppercase;"> Token A Imethibitishwa!</b>
-                <span>Mzigo: <b>${skh.skhEscape(rd.cargoName || '')}</b></span><br>
-                <span>Mteja: <b>${skh.skhEscape(rd.customerName || '')}</b></span><br>
-                <span>Dereva: <b style="color:var(--primary-blue);">${skh.skhEscape(rd.driverName || '')}</b> (Chombo: ${skh.skhEscape(rd.vehicleType || '')})</span>
-            </div>
-        `;
+            <div style="font-size:13px; color:#1e293b; line-height:1.5; text-align:left;"> <b style="color:var(--green); display:block; margin-bottom:8px; font-size:14px; text-transform:uppercase;"> Token A Imethibitishwa!</b> <span>Mzigo: <b>${skh.skhEscape(rd.cargoName || '')}</b></span><br> <span>Mteja: <b>${skh.skhEscape(rd.customerName || '')}</b></span><br> <span>Dereva: <b style="color:var(--primary-blue);">${skh.skhEscape(rd.driverName || '')}</b> (Chombo: ${skh.skhEscape(rd.vehicleType || '')})</span> </div> `;
         resultBox.style.display = 'block';
         btnVerify.style.display = 'none';
         btnConfirm.style.display = 'block';
@@ -271,7 +224,7 @@ window.confirmSellerDispatch = async function() {
     try {
         // [CUSTODY 2026-09] Muuzaji anathibitisha MAKABIDHIANO (pande la kwanza)
         // tu — HAIWEKI mzigo "in_transit". Dereva ndiye atakayethibitisha upokeaji
-        // kwa token yake → PICKED_UP → ndipo custody inapohamia kwake.
+        // kwa token yake -> PICKED_UP -> ndipo custody inapohamia kwake.
         // OPTION A: kwa token.
         const token = document.getElementById('sellerDispatchTokenInp').value.trim().toUpperCase();
         const condition = (document.getElementById('sellerParcelCondition') || {}).value || 'good';
@@ -459,41 +412,19 @@ window.setupDriverActiveJobsQuery = function() {
                 const cPhone = rd.customerPhone || "Haikujazwa";
 
                 html += `
-                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:18px; padding:15px; margin-bottom:12px; border-left:6px solid var(--primary-blue); text-align:left;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="font-size:10px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span>
-                            <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small>
-                        </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;">
-                            <div>
-                                <b style="font-size:14px; color:#0f172a; display:block;">${rd.cargoName}</b>
-                                <small style="color:gray;">Mteja: ${skh.skhEscape(rd.customerName)} | Simu: ${cPhone}</small>
-                            </div>
-                        </div>
-                        <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
-                             Kutoka: <b>${rd.fromLocation}</b> ➔ Kwenda: <b>${rd.toLocation}</b>
-                        </div>
-                        <div style="background:#fffbeb; padding:10px; border-radius:10px; margin-top:10px; border:1.5px dashed #d97706; font-size:12px;">
-                            <b style="color:#d97706; display:block; margin-bottom:4px;"> Token A (Pickup Verification): <span id="pktok_${rid}">${pToken === 'Bado' ? 'Itaundwa baada ya kukubali' : pToken}</span></b>
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:18px; padding:15px; margin-bottom:12px; border-left:6px solid var(--primary-blue); text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center;"> <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;">${rd.cargoName}</b> <small style="color:gray;">Mteja: ${skh.skhEscape(rd.customerName)} | Simu: ${cPhone}</small> </div> </div> <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
+                             Kutoka: <b>${rd.fromLocation}</b> -> Kwenda: <b>${rd.toLocation}</b> </div> <div style="background:#fffbeb; padding:10px; border-radius:10px; margin-top:10px; border:1.5px dashed #d97706; font-size:12px;"> <b style="color:#d97706; display:block; margin-bottom:4px;"> Token A (Pickup Verification): <span id="pktok_${rid}">${pToken === 'Bado' ? 'Itaundwa baada ya kukubali' : pToken}</span></b>
                             ${rd.status === 'in_transit' ? T('lg_in_transit', 'Cargo is on the way! Ask the customer for Token C when you hand it over.') : ''}
                             ${rd.status === 'seller_confirmed_handover'
-                                ? `<p style="margin:8px 0; color:#92400e;">Muuzaji amethibitisha makabidhiano. Ingiza Token A kuthibitisha upokeaji:</p>
-                                   <div style="display:flex; gap:8px;">
-                                     <input type="text" id="pickupTokenInp_${rid}" placeholder="Token A (PK-XXXXXXXX)" style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1; text-transform:uppercase; font-weight:bold; text-align:center;">
-                                     <button onclick="window.verifyHandoverToken('${rid}', 'pickup')" style="padding:10px 14px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; font-size:11px; cursor:pointer;">THIBITISHA UPOKEAJI</button>
-                                   </div>`
+                                ? `<p style="margin:8px 0; color:#92400e;">Muuzaji amethibitisha makabidhiano. Ingiza Token A kuthibitisha upokeaji:</p> <div style="display:flex; gap:8px;"> <input type="text" id="pickupTokenInp_${rid}" placeholder="Token A (PK-XXXXXXXX)" style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1; text-transform:uppercase; font-weight:bold; text-align:center;"> <button onclick="window.verifyHandoverToken('${rid}', 'pickup')" style="padding:10px 14px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; font-size:13px; cursor:pointer;">THIBITISHA UPOKEAJI</button> </div>`
                                 : ''}
                             ${rd.status === 'picked_up'
-                                ? `<p style="margin:8px 0; color:#065f46;">Mzigo uko chini ya ulinzi wako. Bonyeza "Anza Safari" ukiwa tayari.</p>
-                                   <button onclick="window.skhCustodyDriverStartQuick('${rid}')" style="width:100%; padding:10px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;"> ANZA SAFARI</button>`
+                                ? `<p style="margin:8px 0; color:#065f46;">Mzigo uko chini ya ulinzi wako. Bonyeza "Anza Safari" ukiwa tayari.</p> <button onclick="window.skhCustodyDriverStartQuick('${rid}')" style="width:100%; padding:10px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;"> ANZA SAFARI</button>`
                                 : ''}
                             ${(rd.status === 'accepted' || rd.status === 'awaiting_pickup' || rd.status === 'pickup_pending')
                                 ? `<p style="margin:8px 0 0 0; color:#92400e;">Subiri muuzaji athibitishe makabidhiano kwenye Jopo la Mizigo & Dispatch.</p>`
                                 : ''}
-                        </div>
-                        <button onclick="window.triggerVehicleBreakdown('${rid}', '${rd.cargoName.replace(/'/g, "\\'")}')" style="width:100%; padding:10px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px; margin-top:10px;"> CHOMBO KIMEHARIBIKA (BREAKDOWN)</button>
-                    </div>`;
+                        </div> <button onclick="window.triggerVehicleBreakdown('${rid}', '${rd.cargoName.replace(/'/g, "\\'")}')" style="width:100%; padding:10px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px; margin-top:10px;"> CHOMBO KIMEHARIBIKA (BREAKDOWN)</button> </div>`;
             }
         });
 
@@ -523,8 +454,7 @@ window.setupDriverActiveJobsQuery = function() {
 // Msikilizaji mmoja hukaa hai; vichupo huchuja upande wa mteja
 // (papoo hapo, bila kusubiri mtandao) kwa kasi ya milliseconds.
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var market = { rows: [], filter: 'all_types', started: false };
     var lmIco = function (n, s) { return (window.skhNavIcon ? window.skhNavIcon(n, s || 14) : ''); };
@@ -586,34 +516,45 @@ window.setupDriverActiveJobsQuery = function() {
 
         return ''
             + '<article class="lm-card" data-rid="' + esc(rid) + '">'
-            +   '<div class="lm-card-top">'
-            +     '<span class="lm-cat ' + meta.cls + '">' + lmIco(meta.ico, 12) + ' ' + meta.label + '</span>'
-            +     '<span style="display:inline-flex;align-items:center;gap:8px;">'
-            +       '<span class="lm-time">' + esc(ago(rd.createdAt)) + '</span>'
-            +       '<span class="lm-new"><i></i>Mpya</span>'
-            +     '</span>'
-            +   '</div>'
-            +   '<div class="lm-card-main">'
-            +     '<div class="lm-cargo-ico">' + img + '</div>'
-            +     '<div class="lm-cargo-txt">'
-            +       '<b>' + esc(rd.cargoName || 'Mzigo') + '</b>'
-            +       '<small>' + lmIco('users', 11) + ' ' + esc(rd.customerName || 'Mteja') + '</small>'
-            +     '</div>'
-            +   '</div>'
-            +   '<div class="lm-route">'
-            +     '<div class="lm-route-line"><span class="lm-route-dot from"></span><span class="lm-route-dot to"></span></div>'
-            +     '<div class="lm-route-places">'
-            +       '<div><b>' + esc(rd.fromLocation || 'Sehemu ya kuchukua haijatajwa') + '</b><span class="lm-r-sub">Mahali pa KUCHUKUA</span></div>'
-            +       '<div class="lm-r-to"><b>' + esc(rd.toLocation || 'Sehemu ya kupeleka haijatajwa') + '</b><span class="lm-r-sub">MAHALI PA KUPELEKA</span></div>'
-            +     '</div>'
-            +   '</div>'
+            + '<div class="lm-card-top">'
+            + '<span class="lm-cat ' + meta.cls + '">' + lmIco(meta.ico, 12) + ' ' + meta.label + '</span>'
+            + '<span style="display:inline-flex;align-items:center;gap:8px;">'
+            + '<span class="lm-time">' + esc(ago(rd.createdAt)) + '</span>'
+            + '<span class="lm-new"><i></i>Mpya</span>'
+            + '</span>'
+            + '</div>'
+            + '<div class="lm-card-main">'
+            + '<div class="lm-cargo-ico">' + img + '</div>'
+            + '<div class="lm-cargo-txt">'
+            + '<b>' + esc(rd.cargoName || 'Mzigo') + '</b>'
+            + '<small>' + lmIco('users', 11) + ' ' + esc(rd.customerName || 'Mteja') + '</small>'
+            + '</div>'
+            + '</div>'
+            + '<div class="lm-route">'
+            + '<div class="lm-route-line"><span class="lm-route-dot from"></span><span class="lm-route-dot to"></span></div>'
+            + '<div class="lm-route-places">'
+            + '<div><b>' + esc(rd.fromLocation || 'Sehemu ya kuchukua haijatajwa') + '</b><span class="lm-r-sub">Mahali pa KUCHUKUA</span></div>'
+            + '<div class="lm-r-to"><b>' + esc(rd.toLocation || 'Sehemu ya kupeleka haijatajwa') + '</b><span class="lm-r-sub">MAHALI PA KUPELEKA</span></div>'
+            + '</div>'
+            + '</div>'
             +   (chips.length ? '<div class="lm-chips">' + chips.join('') + '</div>' : '')
-            +   '<div class="lm-foot">'
-            +     '<div class="lm-fare"><small>Nauli' + (goodsValue ? ' · mzigo ' + goodsValue : '') + '</small>' + fareHtml + '</div>'
-            +     '<button type="button" class="lm-accept" onclick="window.acceptTransportMission(\'' + esc(rid) + '\')">'
+            + '<div class="lm-foot">'
+            + '<div class="lm-fare"><small>Nauli' + (goodsValue ? ' · mzigo ' + goodsValue : '') + '</small>' + fareHtml + '</div>'
+            /* [FIX NEGOTIATION 2026-09-15] Hapo awali kulikuwa na "Kubali Kazi Hii"
+               PEKEE. Nauli ikiwa "Maelewano", msafirishaji hakuwa na njia yoyote
+               ya kupendekeza bei — alilazimika kukubali au kuachana nayo.
+               Sasa: "Toa Ofa" inafungua injini ya majadiliano ILIYOPO
+               (skhNegoFormOpen -> 37-negotiation.js), ambayo ina
+               Offer -> Counter -> Accept/Reject -> Agreement. */
+            + '<div class="lm-acts">'
+            + '<button type="button" class="lm-offer" onclick="window.skhTransportOffer(\'' + esc(rid) + '\')">'
+            +       lmIco('tag', 15) + ' Toa Ofa'
+            + '</button>'
+            + '<button type="button" class="lm-accept" onclick="window.acceptTransportMission(\'' + esc(rid) + '\')">'
             +       lmIco('check', 16) + ' Kubali Kazi Hii'
-            +     '</button>'
-            +   '</div>'
+            + '</button>'
+            + '</div>'
+            + '</div>'
             + '</article>';
     }
 
@@ -628,9 +569,9 @@ window.setupDriverActiveJobsQuery = function() {
             : 'Maombi mapya yanaendelea kuingia sokoni. Angalia pia maombi yaliyotumwa KWAKO binafsi kupitia routing.';
         return ''
             + '<div class="lm-empty">'
-            +   '<div class="lm-empty-ico">' + lmIco('truck', 28) + '</div>'
-            +   '<b>' + title + '</b>'
-            +   '<p>' + sub + '</p>'
+            + '<div class="lm-empty-ico">' + lmIco('truck', 28) + '</div>'
+            + '<b>' + title + '</b>'
+            + '<p>' + sub + '</p>'
             +   (window.skhOpenRequestInbox
                     ? '<button type="button" class="lm-empty-btn" onclick="window.skhOpenRequestInbox()">' + lmIco('target', 14) + ' Angalia Yaliyotumwa Kwako</button>'
                     : '')
@@ -643,15 +584,15 @@ window.setupDriverActiveJobsQuery = function() {
         for (var i = 0; i < (n || 3); i++) {
             out += ''
                 + '<div class="lm-skel">'
-                +   '<div class="lm-skel-row">'
-                +     '<div class="lm-skel-ico"></div>'
-                +     '<div style="flex:1;">'
-                +       '<div class="lm-skel-bar w70"></div>'
-                +       '<div class="lm-skel-bar w40"></div>'
-                +     '</div>'
-                +   '</div>'
-                +   '<div class="lm-skel-bar w90" style="margin-top:12px;"></div>'
-                +   '<div class="lm-skel-bar w90" style="margin-top:8px;"></div>'
+                + '<div class="lm-skel-row">'
+                + '<div class="lm-skel-ico"></div>'
+                + '<div style="flex:1;">'
+                + '<div class="lm-skel-bar w70"></div>'
+                + '<div class="lm-skel-bar w40"></div>'
+                + '</div>'
+                + '</div>'
+                + '<div class="lm-skel-bar w90" style="margin-top:12px;"></div>'
+                + '<div class="lm-skel-bar w90" style="margin-top:8px;"></div>'
                 + '</div>';
         }
         return out;
@@ -738,9 +679,9 @@ window.setupDriverActiveJobsQuery = function() {
             if (!market.rows.length && listDiv) {
                 listDiv.innerHTML = ''
                     + '<div class="lm-empty">'
-                    +   '<div class="lm-empty-ico">' + lmIco('alert', 28) + '</div>'
-                    +   '<b>Imeshindikana kupakua maombi</b>'
-                    +   '<p>Angalia muunganisho wako wa intaneti kisha fungua tena sehemu hii.</p>'
+                    + '<div class="lm-empty-ico">' + lmIco('alert', 28) + '</div>'
+                    + '<b>Imeshindikana kupakua maombi</b>'
+                    + '<p>Angalia muunganisho wako wa intaneti kisha fungua tena sehemu hii.</p>'
                     + '</div>';
             }
         });
@@ -786,7 +727,7 @@ window.verifyTokenCenterDL = async function() {
                 if (typeof window.skhCustodyCompleteDelivery !== 'function') break;
                 const res = await window.skhCustodyCompleteDelivery(d.id, code, undefined);
                 if (res.ok) { completed = true; break; }
-                // bad_token kwa safari moja → endelea kujaribu safari nyingine.
+                // bad_token kwa safari moja -> endelea kujaribu safari nyingine.
             }
         }
         if (!completed) {
@@ -892,6 +833,8 @@ window.skhDriverTripStats = async function () {
     return stats;
 };
 
+// [GLOSS EXT 2026-09] Expose badge helper (kama wengine wa logistics) — wiring ya i18n inathibitishwa.
+window.skhDriverStatusBadge = skhDriverStatusBadge;
 function skhDriverStatusBadge(status) {
     var map = {
         completed: ['#dcfce7', '#16a34a', 'Imekamilika'],
@@ -907,7 +850,10 @@ function skhDriverStatusBadge(status) {
         disputed: ['#fee2e2', '#b91c1c', 'Mgogoro']
     };
     var m = map[status] || ['#f1f5f9', '#475569', status || '—'];
-    return '<span style="background:' + m[0] + ';color:' + m[1] + ';font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;text-transform:uppercase;">' + skh.skhEscape(m[2]) + '</span>';
+    // [GLOSS EXT 2026-09] Label itokane glossary ya i18n (delivery family); map ya zamani ni fallback.
+    var lbl = m[2];
+    try { if (window.skhGloss) lbl = window.skhGloss(status, 'delivery', m[2]); } catch (eG) {}
+    return '<span style="background:' + m[0] + ';color:' + m[1] + ';font-size:12.5px;font-weight:800;padding:2px 8px;border-radius:99px;text-transform:uppercase;">' + skh.skhEscape(lbl) + '</span>';
 }
 
 window.skhDriverOverviewStats = async function () {
@@ -917,7 +863,7 @@ window.skhDriverOverviewStats = async function () {
     if (!stats) { area.innerHTML = '<p style="text-align:center;color:#64748b;padding:20px;font-size:12px;">' + T('dt_no_stats', 'Imeshindwa kupakia takwimu.') + '</p>'; return; }
     if (!stats.total) {
         area.innerHTML = '<div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:26px;text-align:center;">'
-            + '<div style="font-size:34px;">🚚</div>'
+            + '<div style="font-size:34px;"></div>'
             + '<b style="display:block;margin-top:8px;color:#0f172a;">' + T('dt_no_trips', 'Huna safari bado.') + '</b>'
             + '<p style="color:#64748b;font-size:12px;margin:6px 0 14px;">' + T('dt_no_trips_hint', 'Nenda kwenye Requests Marketplace ukubali kazi ya kwanza.') + '</p>'
             + '<button onclick="window.switchDashTab(\'bookings\')" style="background:#03509d;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">' + T('dt_view_requests', 'ONA MAOMBI MAPYA') + '</button></div>';
@@ -925,7 +871,7 @@ window.skhDriverOverviewStats = async function () {
     }
     function kpi(label, value, color) {
         return '<div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;">'
-            + '<small style="color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;display:block;">' + label + '</small>'
+            + '<small style="color:#64748b;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;display:block;">' + label + '</small>'
             + '<b style="font-size:20px;color:' + color + ';display:block;margin-top:4px;">' + value + '</b></div>';
     }
     var money = 'TSh ' + Math.round(stats.earningsToday).toLocaleString();
@@ -942,7 +888,7 @@ window.skhDriverOverviewStats = async function () {
     var denom = Math.max(1, stats.total);
     function bar(label, count, color) {
         var pct = Math.round((count / denom) * 100);
-        return '<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;font-size:11px;color:#475569;margin-bottom:3px;"><span>' + label + '</span><b>' + count + ' (' + pct + '%)</b></div>'
+        return '<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;font-size:13px;color:#475569;margin-bottom:3px;"><span>' + label + '</span><b>' + count + ' (' + pct + '%)</b></div>'
             + '<div style="height:7px;background:#eef2f6;border-radius:99px;"><div style="width:' + pct + '%;height:7px;background:' + color + ';border-radius:99px;"></div></div></div>';
     }
     var breakdown = '<div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-top:16px;">'
@@ -960,9 +906,9 @@ window.skhDriverOverviewStats = async function () {
         try { var dd = new Date(r.createdAt); if (!isNaN(dd.getTime())) when = dd.toLocaleDateString() + ' ' + dd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) {}
         return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;">'
             + '<div style="flex:1;min-width:0;"><b style="font-size:12px;color:#0f172a;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + skh.skhEscape(r.cargoName || 'Mzigo') + '</b>'
-            + '<small style="color:#64748b;font-size:11px;">' + skh.skhEscape(String(r.fromLocation || '') + ' ➔ ' + String(r.toLocation || '')) + '</small></div>'
+            + '<small style="color:#64748b;font-size:13px;">' + skh.skhEscape(String(r.fromLocation || '') + ' -> ' + String(r.toLocation || '')) + '</small></div>'
             + skhDriverStatusBadge(r.status)
-            + '<small style="color:#94a3b8;font-size:10px;white-space:nowrap;">' + skh.skhEscape(when) + '</small></div>';
+            + '<small style="color:#94a3b8;font-size:12.5px;white-space:nowrap;">' + skh.skhEscape(when) + '</small></div>';
     }).join('');
     var recentHtml = recent
         ? '<div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;margin-top:16px;"><b style="font-size:12px;color:#0f172a;text-transform:uppercase;display:block;margin-bottom:4px;">' + T('dt_recent_trips', 'Safari za Hivi Karibuni') + '</b>' + recent + '</div>'
@@ -988,7 +934,7 @@ window.skhDriverAnalytics = async function () {
     var avgEarn = total > 0 ? Math.round(stats.earningsToday / Math.max(1, stats.deliveredToday)) : 0;
     function card(label, value, color) {
         return '<div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:18px;text-align:center;">'
-            + '<b style="font-size:11px;color:#64748b;text-transform:uppercase;display:block;">' + label + '</b>'
+            + '<b style="font-size:13px;color:#64748b;text-transform:uppercase;display:block;">' + label + '</b>'
             + '<b style="font-size:22px;color:' + color + ';display:block;margin-top:6px;">' + value + '</b></div>';
     }
     area.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;">'
@@ -1057,18 +1003,18 @@ window.skhRenderTripHistory = async function () {
             : ('<span class="lm-hist-badge is-done">' + lmic('check', 11) + ' Imekamilika</span>');
         return ''
             + '<div class="lm-hist' + (problem ? ' is-problem' : '') + '">'
-            +   '<span class="lm-hist-ico ' + (problem ? 'is-problem' : 'is-done') + '">' + lmic(problem ? 'alert' : 'shield-check', 17) + '</span>'
-            +   '<div class="lm-hist-body">'
-            +     '<b>' + esc(r.cargoName || 'Mzigo') + ' <small>' + esc(ref(r)) + '</small></b>'
-            +     '<span class="lm-hist-route">' + lmic('map', 11) + ' ' + esc(r.fromLocation || '…') + ' → ' + esc(r.toLocation || '…') + '</span>'
-            +     '<span class="lm-hist-meta">' + lmic('calendar', 11) + ' ' + esc(fmt(r.completedAt || r.createdAt))
-            +       ' · <b style="color:#0E7A5F;">' + payout(r) + '</b>'
+            + '<span class="lm-hist-ico ' + (problem ? 'is-problem' : 'is-done') + '">' + lmic(problem ? 'alert' : 'shield-check', 17) + '</span>'
+            + '<div class="lm-hist-body">'
+            + '<b>' + esc(r.cargoName || 'Mzigo') + ' <small>' + esc(ref(r)) + '</small></b>'
+            + '<span class="lm-hist-route">' + lmic('map', 11) + ' ' + esc(r.fromLocation || '…') + ' -> ' + esc(r.toLocation || '…') + '</span>'
+            + '<span class="lm-hist-meta">' + lmic('calendar', 11) + ' ' + esc(fmt(r.completedAt || r.createdAt))
+            + ' · <b style="color:#0E7A5F;">' + payout(r) + '</b>'
             +       (r.driverName ? ' · ' + esc(r.driverName) : '') + '</span>'
-            +   '</div>'
-            +   '<div class="lm-hist-side">'
+            + '</div>'
+            + '<div class="lm-hist-side">'
             +     statusBadgeHtml
-            +     '<button type="button" class="lm-hist-track" onclick="window.openLiveMap(\'' + esc(r.id) + '\')">' + lmic('map', 12) + ' Tazama</button>'
-            +   '</div>'
+            + '<button type="button" class="lm-hist-track" onclick="window.openLiveMap(\'' + esc(r.id) + '\')">' + lmic('map', 12) + ' Tazama</button>'
+            + '</div>'
             + '</div>';
     }
     var done = stats.rides.filter(function (r) { return r.status === 'completed'; }).slice(0, 15);

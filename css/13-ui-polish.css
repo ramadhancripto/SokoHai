@@ -62,8 +62,11 @@ button {
 }
 /* Vitufe vya chips/tabs: vibaki kwenye mstari mmoja (usibanwe wima) */
 .mode-tab-btn, .subcat-chip, .filter-chip, .pos-quick-btn,
-.ct-pos-btn, .p-sub-tab, .time-tab {
-    white-space: nowrap;
+.ct-pos-btn, .p-sub-tab, .time-tab, .ch-tab, .dc88-tab, .skh-de-feed-tab,
+.skh-de-chip, .skh-k-chip, .ch-head-menu button, .nav-tab span, #gsgTabs button {
+    white-space: nowrap !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
     flex-shrink: 0;
     max-width: 100%;
 }
@@ -108,7 +111,7 @@ button {
     margin-bottom: 6px;
 }
 .feed-info-box .price { font-size: 16px; font-weight: 900; }
-.feed-info-box .stats-row { font-size: 11px; color: #64748b; margin-top: 6px; }
+.feed-info-box .stats-row { font-size: 13px; color: #64748b; margin-top: 6px; }
 
 /* 3b. Sanduku za kategoria (modal ya kategoria) */
 .cat-box {
@@ -125,7 +128,7 @@ button {
     border-color: #bfdbfe;
 }
 .cat-box .cat-name {
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 900;
     line-height: 1.25;
     max-width: 100%;
@@ -197,7 +200,7 @@ button {
 @media (max-width: 480px) {
     .feed-info-box b { font-size: 13px; }
     .feed-info-box .price { font-size: 15px; }
-    .cat-box .cat-name { font-size: 11px; }
+    .cat-box .cat-name { font-size: 13px; }
     .menu-item b { font-size: 14px; }
 }
 

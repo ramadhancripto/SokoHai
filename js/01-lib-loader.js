@@ -2,17 +2,16 @@
  * [PERF 2026-09] Maktaba za nje NZITO (Leaflet ~150KB, Chart.js ~200KB)
  * hazipakwi tena kwenye upakiaji wa mwanzo (zilikuwa render-blocking <head>).
  * Zinaingizwa kwa uvivu PALE TU zinapohitajika (ramani au grafu za
- * dashibodi) → ukurasa wa nyumbani/chat/fungua haraka kwa milliseconds.
+ * dashibodi) -> ukurasa wa nyumbani/chat/fungua haraka kwa milliseconds.
  *
  * Matumizi:
  *   window.skhWithLeaflet(function (L) { L.map('x') ... });
  *   window.skhLoadChart().then(function () { new Chart(...) });
  */
-(function () {
-    'use strict';
-    var LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    var LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    var CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+(function () { 'use strict';
+    var LEAFLET_JS = 'vendor/leaflet/leaflet.js';
+    var LEAFLET_CSS = 'vendor/leaflet/leaflet.css';
+    var CHART_JS = 'vendor/chart.umd.min.js';
 
     function loadCss(href) {
         return new Promise(function (resolve, reject) {
@@ -57,7 +56,7 @@
                 .then(function () { return loadScript(LEAFLET_JS); })
                 .then(function () {
                     // Ficha default-attribute ya Leaflet isiharibu mpangilio.
-                    try { if (window.L && window.L.Icon && window.L.Icon.Default) window.L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/'; } catch (e) {}
+                    try { if (window.L && window.L.Icon && window.L.Icon.Default) window.L.Icon.Default.imagePath = 'vendor/leaflet/images/'; } catch (e) {}
                     return window.L;
                 });
         }

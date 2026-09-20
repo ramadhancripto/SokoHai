@@ -35,20 +35,44 @@ window.skhEnsureBackButton = function(){
     return null;
 };
 
+/* [AUDIT-FIX 2026-09-16 P1 §nav-kupotea] ROOT CAUSE ya "bottom nav zinapotea
+   ukigusa search bar / filter ya mikoa":
+   Awali class 'skh-keyboard-open' iliwekwa FOCUS yoyote ya input/select —
+   hata pasipo keyboard ya kweli (select ya region, desktop clicks) — kisha
+   23-smart-cart.js ilikuwa inaficha .bottom-area-wrapper. Blur restore ilikuwa
+   timeout ya 180ms ikatoharibika mara kwa mara.
+   SULUHISHO: ficha nav TU wakati keyboard ya SIMU ipo wazi kweli —
+   (text input imefokusi) NA (visualViewport imepungua zaidi ya 25%). */
+window.skhKeyboardStateSync = function(){
+    let textFocused = false, inOverlay = false;
+    try {
+        const t = document.activeElement;
+        textFocused = !!(t && /INPUT|TEXTAREA/.test(t.tagName)
+            && ['checkbox','radio','date','button','submit','file','range'].indexOf(t.type) < 0);
+        inOverlay = !!(t && t.closest('.overlay-menu,.modal,[class*=Modal],[class*=modal],[id*=Modal],[id*=modal]'));
+    } catch(e) {}
+    let keyboardLikely = false;
+    if (window.visualViewport) {
+        keyboardLikely = window.visualViewport.height < window.innerHeight * 0.75;
+    }
+    /* Ficha bottom nav TU wakati keyboard halisi ipo wazi na input
+       iliyofokusi inaonekana IKINDE kwenye overlay/modal (chat, fomu).
+       Search bar ya feed na filter za mikoa HAZINGERING'AKIWE nav — hiyo
+       ilikuwa root cause ya "nav zinapotea, mpaka utouch sehemu yeyote". */
+    document.body.classList.toggle('skh-keyboard-open', !!(textFocused && inOverlay && keyboardLikely));
+};
+
 window.skhInputFocusHandler = function(e){
     const t = e.target;
     if(!t || !/INPUT|TEXTAREA|SELECT/.test(t.tagName)) return;
-    document.body.classList.add('skh-keyboard-open');
+    window.skhKeyboardStateSync();
     setTimeout(() => {
         try { t.scrollIntoView({ block:'center', inline:'nearest', behavior:'smooth' }); } catch(err) {}
     }, 250);
 };
 
 window.skhInputBlurHandler = function(){
-    setTimeout(() => {
-        const active = document.activeElement;
-        if(!active || !/INPUT|TEXTAREA|SELECT/.test(active.tagName)) document.body.classList.remove('skh-keyboard-open');
-    }, 180);
+    setTimeout(window.skhKeyboardStateSync, 180);
 };
 
 document.addEventListener('focusin', window.skhInputFocusHandler, true);
@@ -56,10 +80,7 @@ document.addEventListener('focusin', window.skhInputFocusHandler, true);
 document.addEventListener('focusout', window.skhInputBlurHandler, true);
 
 if(window.visualViewport){
-    window.visualViewport.addEventListener('resize', () => {
-        const keyboardLikely = window.visualViewport.height < window.innerHeight * 0.78;
-        document.body.classList.toggle('skh-keyboard-open', keyboardLikely);
-    });
+    window.visualViewport.addEventListener('resize', window.skhKeyboardStateSync);
 }
 
 if(typeof window.updateApp === 'function' && !window.__skhUpdateAppWrapped){
@@ -320,7 +341,7 @@ document.addEventListener('keydown', e => {
   window.openTrackingTokenLookup = function(){
     let m=document.getElementById('trackingTokenLookupModal');
     if(!m){ m=document.createElement('div'); m.id='trackingTokenLookupModal'; m.className='overlay-menu'; m.style.cssText='z-index:100012;display:none;background:rgba(15,23,42,.55);'; document.body.appendChild(m); }
-    m.innerHTML=`<div class="spbuyer-modal-card"><div class="spbuyer-head"><div><h2> Track Shipment</h2><small>Enter Tracking Token or open your SokoPay orders</small></div><button class="spbuyer-btn light" onclick="document.getElementById('trackingTokenLookupModal').style.display='none'">✕</button></div><div class="spbuyer-body"><div class="spbuyer-card"><input id="trackingTokenInput" placeholder="TRK-7F9D-KQ82-2026" style="width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:12px;font-weight:900;text-transform:uppercase;"><button class="spbuyer-btn primary" style="width:100%;margin-top:10px;" onclick="window.trackShipmentByTrackingToken()">Track Shipment</button><button class="spbuyer-btn light" style="width:100%;margin-top:8px;" onclick="window.openSokoPayBuyerOrders&&window.openSokoPayBuyerOrders()">My Orders</button></div><div id="trackingLookupResult"></div></div></div>`;
+    m.innerHTML=`<div class="spbuyer-modal-card"><div class="spbuyer-head"><div><h2> Track Shipment</h2><small>Enter Tracking Token or open your SokoPay orders</small></div><button class="spbuyer-btn light" onclick="document.getElementById('trackingTokenLookupModal').style.display='none'" aria-label="Funga">${window.skhNavIcon ? window.skhNavIcon('x',16) : ''}</button></div><div class="spbuyer-body"><div class="spbuyer-card"><input id="trackingTokenInput" placeholder="TRK-7F9D-KQ82-2026" style="width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:12px;font-weight:900;text-transform:uppercase;"><button class="spbuyer-btn primary" style="width:100%;margin-top:10px;" onclick="window.trackShipmentByTrackingToken()">Track Shipment</button><button class="spbuyer-btn light" style="width:100%;margin-top:8px;" onclick="window.openSokoPayBuyerOrders&&window.openSokoPayBuyerOrders()">My Orders</button></div><div id="trackingLookupResult"></div></div></div>`;
     m.style.display='flex';
   };
   window.trackShipmentByTrackingToken = async function(token){
@@ -340,7 +361,7 @@ document.addEventListener('keydown', e => {
   window.openSokoPayUnifiedTokenCenter = function(){
     let m=document.getElementById('unifiedTokenCenterModal');
     if(!m){ m=document.createElement('div'); m.id='unifiedTokenCenterModal'; m.className='overlay-menu'; m.style.cssText='z-index:100013;display:none;background:rgba(15,23,42,.55);'; document.body.appendChild(m); }
-    m.innerHTML=`<div class="spbuyer-modal-card"><div class="spbuyer-head"><div><h2> SokoPay Token Center</h2><small>Tracking tokens for buyer/seller. Delivery Permission tokens for assigned couriers only.</small></div><button class="spbuyer-btn light" onclick="document.getElementById('unifiedTokenCenterModal').style.display='none'">✕</button></div><div class="spbuyer-body"><div class="spbuyer-tabs"><button class="spbuyer-tab active" onclick="window.loadMyBuyerTokens()">My Tokens</button><button class="spbuyer-tab" onclick="window.openTrackingTokenLookup()">Track Shipment</button><button class="spbuyer-tab" onclick="window.openLogisticsTokenModal()">Courier Permission</button></div><div id="myBuyerTokensList"><p style="color:#64748b;text-align:center;">Inapakia tokens...</p></div></div></div>`;
+    m.innerHTML=`<div class="spbuyer-modal-card"><div class="spbuyer-head"><div><h2> SokoPay Token Center</h2><small>Tracking tokens for buyer/seller. Delivery Permission tokens for assigned couriers only.</small></div><button class="spbuyer-btn light" onclick="document.getElementById('unifiedTokenCenterModal').style.display='none'" aria-label="Funga">${window.skhNavIcon ? window.skhNavIcon('x',16) : ''}</button></div><div class="spbuyer-body"><div class="spbuyer-tabs"><button class="spbuyer-tab active" onclick="window.loadMyBuyerTokens()">My Tokens</button><button class="spbuyer-tab" onclick="window.openTrackingTokenLookup()">Track Shipment</button><button class="spbuyer-tab" onclick="window.openLogisticsTokenModal()">Courier Permission</button></div><div id="myBuyerTokensList"><p style="color:#64748b;text-align:center;">Inapakia tokens...</p></div></div></div>`;
     m.style.display='flex';
     window.loadMyBuyerTokens();
   };
@@ -379,7 +400,7 @@ document.addEventListener('keydown', e => {
     body.skh-overlay-active #skhGlobalBackBtn.skh-allowed { display:inline-flex !important; }
 
     /* Inline back buttons inside modals should be compact, not duplicated everywhere */
-    .skh-inline-back-btn { min-height:36px !important; padding:8px 10px !important; margin:0 0 8px !important; font-size:11px !important; background:#eef2f7 !important; color:#0f172a !important; border:1px solid #dbe3ee !important; }
+    .skh-inline-back-btn { min-height:36px !important; padding:8px 10px !important; margin:0 0 8px !important; font-size:13px !important; background:#eef2f7 !important; color:#0f172a !important; border:1px solid #dbe3ee !important; }
     .overlay-menu .skh-inline-back-btn ~ .skh-inline-back-btn { display:none !important; }
 
     /* Any modal must fit small smartphones */
@@ -414,18 +435,19 @@ document.addEventListener('keydown', e => {
         .search-wrap input { height:38px !important; font-size:12px !important; }
         .user-dp { width:34px !important; height:34px !important; }
         .big-announcement { margin:7px 10px !important; padding:8px !important; border-radius:10px !important; }
-        .marquee-text { font-size:11px !important; white-space:normal !important; animation:none !important; }
+        .marquee-text { font-size:13px !important; white-space:normal !important; animation:none !important; }
         .cat-trigger-btn { margin:8px 10px 0 !important; padding:10px 12px !important; font-size:12px !important; }
         .market-modes-nav { padding:8px 10px !important; top:54px !important; }
-        .mode-tab-btn { font-size:10px !important; padding:8px 11px !important; min-height:34px !important; }
+        .mode-tab-btn { font-size:12.5px !important; padding:8px 11px !important; min-height:34px !important; }
 
         /* Product/service/job/transport grids */
         .main-feed { padding:0 10px !important; }
         .feed-grid { grid-template-columns:repeat(2, minmax(0, 1fr)) !important; gap:10px !important; }
         .feed-card-box { border-radius:14px !important; }
         .feed-info-box { padding:9px 8px !important; }
-        .feed-info-box b { font-size:11.5px !important; }
-        .feed-info-box .price { font-size:13px !important; }
+        .feed-info-box b { font-size:13px !important; }
+        /* [R8 MOBILE CARDS] Bei 16px — ilitajaluka SPEC (readable price kwenye 360/390/412). old: 13px. */
+        .feed-info-box .price { font-size:16px !important; }
         .strategy-row { margin-right:10px !important; margin-bottom:14px !important; padding:12px 10px 12px 12px !important; }
         .large-card { min-width:132px !important; height:172px !important; }
         .card-img { height:86px !important; }
@@ -434,9 +456,15 @@ document.addEventListener('keydown', e => {
            (chat 7800+, cart 7600+, overlay-menu 100000) so the "+" button never
            covers the chat writing area or any open dialog */
         .bottom-area-wrapper { z-index:6900 !important; }
-        .main-nav-icons { height:52px !important; padding:3px 5px 7px !important; }
-        .nav-tab svg { width:16px !important; height:16px !important; margin-bottom:2px !important; }
-        .nav-tab span { font-size:7px !important; letter-spacing:0.1px !important; }
+        /* [FIX NAV 2026-09-14] CSS hii huingizwa na JS, hivyo ilikuwa
+           inashinda stylesheets zote (ikiwemo design system). Ilikuwa
+           inabana nav hadi 52px na kulazimisha 12px kwa labels — ndiyo
+           sababu "Nyumbani"/"Chat Naye" zilikatika kwenye 320-360px.
+           Sasa inafuata design tokens na inashuka kwa skrini finyu. */
+        .main-nav-icons { min-height:58px; padding:4px 4px 8px !important; }
+        .nav-tab svg { width:19px !important; height:19px !important; margin-bottom:3px !important; }
+        .nav-tab span { font-size:clamp(10px, 2.9vw, 12px) !important; letter-spacing:-0.01em !important;
+                        text-transform:none !important; font-weight:600 !important; }
         .sell-circle-glow { width:46px !important; height:46px !important; }
 
         /* Complex cart/logistics/sokopay layouts collapse to one column */
@@ -456,12 +484,11 @@ document.addEventListener('keydown', e => {
 
     @media(max-width:380px){
         .feed-grid { grid-template-columns:1fr 1fr !important; gap:8px !important; }
-        .feed-info-box b { font-size:11px !important; }
+        .feed-info-box b { font-size:13px !important; }
         .top-nav-icons span { font-size:14px !important; }
         .brand-text { font-size:12px !important; }
-        .fcart-btn, .scart-btn, .lgx-btn, .spbuyer-btn, .ops-btn { font-size:9px !important; padding:7px 8px !important; min-height:34px !important; }
-    }
-    `;
+        .fcart-btn, .scart-btn, .lgx-btn, .spbuyer-btn, .ops-btn { font-size:12px !important; padding:7px 8px !important; min-height:34px !important; }
+    } `;
     const st=document.createElement('style'); st.id='sokohaiDeconflictMobileCSS'; st.textContent=css; document.head.appendChild(st);
 })();
 
@@ -478,14 +505,10 @@ window.skhFriendlyModuleHeader = function(){ const el=document.getElementById('s
 
 setInterval(()=>{ document.getElementById('skhFriendlySectionCard')?.remove(); }, 1000);
 
-document.addEventListener('focusin', e=>{
-    if(e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){
-        document.body.classList.add('skh-keyboard-open');
-        setTimeout(()=>{ try{ e.target.scrollIntoView({block:'center',behavior:'smooth'}); }catch(_){} },180);
-    }
-}, true);
-
-document.addEventListener('focusout', ()=> setTimeout(()=>document.body.classList.remove('skh-keyboard-open'),250), true);
+/* [AUDIT-FIX §nav] DUPLICATE handlers zimeondolewa — zilikuwa zikarudisha
+   kuruka 'skh-keyboard-open' kwa kila input focus bila ukaguzi. Handlers
+   za msingi (skhInputFocusHandler/skhInputBlurHandler + skhKeyboardStateSync)
+   juu hapo hapa kwenye faili hili hushughulikia hilo sasa. */
 
 window.scanAndFixSokoHaiUI = function(){
     document.getElementById('skhFriendlySectionCard')?.remove();
@@ -513,8 +536,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     }
   };
 
-  const phraseKey = {
-    'My Cart':'my_cart','Kikapu Chako':'my_cart','Kikapu Changu':'my_cart','Cart':'cart','Kikapu':'cart','Checkout':'checkout','Endelea Kulipa':'checkout','Proceed to Checkout':'proceed_checkout','Clear Cart':'clear_cart','Futa Kikapu':'clear_cart','Continue Shopping':'continue_shopping','Endelea Kununua':'continue_shopping','Save for Later':'save_for_later','Hifadhi Baadaye':'save_for_later','Products':'products','Bidhaa':'products','Product Information':'product_information','Taarifa za Bidhaa':'product_information','Delivery Selection':'delivery_selection','Uchaguzi wa Uwasilishaji':'delivery_selection','Chagua Uwasilishaji':'select_delivery','Select Delivery':'select_delivery','SokoHai Logistics Marketplace':'logistics_marketplace','Selected Logistics':'selected_logistics','Vehicle':'vehicle','Gari':'vehicle','Shipping Cost':'shipping_cost','Gharama ya Usafirishaji':'shipping_cost','Escrow Protection':'escrow_protection','Ulinzi wa Malipo wa SokoPay':'escrow_protection','Order Summary':'order_summary','Muhtasari wa Oda':'order_summary','Payment Method':'payment_method','Njia ya Malipo':'payment_method','Seller Communication':'seller_communication','Mawasiliano na Muuzaji':'seller_communication','Send Message':'send_message','Tuma Ujumbe':'send_message','Open Chat':'open_chat','Fungua Chat':'open_chat','Track Shipment':'track_shipment','Fuatilia Mzigo':'track_shipment','View Details':'view_details','Ona Maelezo':'view_details','Select':'select','Chagua':'select','Token Center':'token_center','Kituo cha Token':'token_center','Tracking Token':'tracking_token','Token ya Ufuatiliaji':'tracking_token','Delivery Permission Token':'delivery_permission_token','Token ya Ruhusa ya Uwasilishaji':'delivery_permission_token','Language & Region':'language_region','Lugha na Eneo':'language_region','Security':'security','Usalama':'security','Privacy':'privacy','Faragha':'privacy','Notifications':'notifications','Taarifa':'notifications','Messages':'messages','Ujumbe':'messages','Help Center':'help_center','Kituo cha Msaada':'help_center','Logout':'logout','Toka':'logout','Search':'search','Tafuta':'search','Filter':'filter','Chuja':'filter','Sort':'sort','Panga':'sort','Nearby':'nearby','Karibu':'nearby','Verified':'verified','Imethibitishwa':'verified','Premium':'premium','Standard':'standard','Economy':'economy','Nafuu':'economy','Route':'route','Njia':'route','Location':'location','Eneo':'location','Exact Location':'exact_location','Eneo Sahihi':'exact_location','Accuracy':'accuracy','Usahihi':'accuracy','Distance':'distance','Umbali':'distance','Media':'media','Audio':'audio','Sauti':'audio','Video':'video','Photos':'photos','Picha':'photos','Chat':'chat','Close':'close','Funga':'close','Back':'back','Rudi':'back','Go Back':'back_full','Rudi Nyuma':'back_full','Cancel':'cancel','Ghairi':'cancel','Save':'save','Hifadhi':'save'
+  const phraseKey = { 'My Cart':'my_cart','Kikapu Chako':'my_cart','Kikapu Changu':'my_cart','Cart':'cart','Kikapu':'cart','Checkout':'checkout','Endelea Kulipa':'checkout','Proceed to Checkout':'proceed_checkout','Clear Cart':'clear_cart','Futa Kikapu':'clear_cart','Continue Shopping':'continue_shopping','Endelea Kununua':'continue_shopping','Save for Later':'save_for_later','Hifadhi Baadaye':'save_for_later','Products':'products','Bidhaa':'products','Product Information':'product_information','Taarifa za Bidhaa':'product_information','Delivery Selection':'delivery_selection','Uchaguzi wa Uwasilishaji':'delivery_selection','Chagua Uwasilishaji':'select_delivery','Select Delivery':'select_delivery','SokoHai Logistics Marketplace':'logistics_marketplace','Selected Logistics':'selected_logistics','Vehicle':'vehicle','Gari':'vehicle','Shipping Cost':'shipping_cost','Gharama ya Usafirishaji':'shipping_cost','Escrow Protection':'escrow_protection','Ulinzi wa Malipo wa SokoPay':'escrow_protection','Order Summary':'order_summary','Muhtasari wa Oda':'order_summary','Payment Method':'payment_method','Njia ya Malipo':'payment_method','Seller Communication':'seller_communication','Mawasiliano na Muuzaji':'seller_communication','Send Message':'send_message','Tuma Ujumbe':'send_message','Open Chat':'open_chat','Fungua Chat':'open_chat','Track Shipment':'track_shipment','Fuatilia Mzigo':'track_shipment','View Details':'view_details','Ona Maelezo':'view_details','Select':'select','Chagua':'select','Token Center':'token_center','Kituo cha Token':'token_center','Tracking Token':'tracking_token','Token ya Ufuatiliaji':'tracking_token','Delivery Permission Token':'delivery_permission_token','Token ya Ruhusa ya Uwasilishaji':'delivery_permission_token','Language & Region':'language_region','Lugha na Eneo':'language_region','Security':'security','Usalama':'security','Privacy':'privacy','Faragha':'privacy','Notifications':'notifications','Taarifa':'notifications','Messages':'messages','Ujumbe':'messages','Help Center':'help_center','Kituo cha Msaada':'help_center','Logout':'logout','Toka':'logout','Search':'search','Tafuta':'search','Filter':'filter','Chuja':'filter','Sort':'sort','Panga':'sort','Nearby':'nearby','Karibu':'nearby','Verified':'verified','Imethibitishwa':'verified','Premium':'premium','Standard':'standard','Economy':'economy','Nafuu':'economy','Route':'route','Njia':'route','Location':'location','Eneo':'location','Exact Location':'exact_location','Eneo Sahihi':'exact_location','Accuracy':'accuracy','Usahihi':'accuracy','Distance':'distance','Umbali':'distance','Media':'media','Audio':'audio','Sauti':'audio','Video':'video','Photos':'photos','Picha':'photos','Chat':'chat','Close':'close','Funga':'close','Back':'back','Rudi':'back','Go Back':'back_full','Rudi Nyuma':'back_full','Cancel':'cancel','Ghairi':'cancel','Save':'save','Hifadhi':'save'
   };
 
   const LMS = {
@@ -554,7 +576,21 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     },
     apply(root=document.body){
       if(!root) return;
-      root.querySelectorAll('[data-i18n]').forEach(el => { const key=el.getAttribute('data-i18n'); if(key) el.textContent=this.t(key); });
+      root.querySelectorAll('[data-i18n]').forEach(el => {
+        const key=el.getAttribute('data-i18n'); if(!key) return;
+        const txt=this.t(key);
+        // [FIX 2026-09-14] `textContent=` ilifuta SVG ya icon iliyokuwa ndani
+        // (vipengele vyenye data-skh-icon), hivyo menyu zilibaki bila icons.
+        // Sasa tunabadilisha MAANDISHI pekee na kuacha icon mahali pake.
+        const ico = el.querySelector('svg, img, .skh-ico');
+        if(ico){
+          let hit=false;
+          el.childNodes.forEach(n=>{ if(n.nodeType===3 && n.nodeValue.trim()){ n.nodeValue=' '+txt; hit=true; } });
+          if(!hit) el.appendChild(document.createTextNode(' '+txt));
+        } else {
+          el.textContent = txt;
+        }
+      });
       root.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key=el.getAttribute('data-i18n-placeholder'); if(key) el.setAttribute('placeholder', this.t(key)); });
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
         acceptNode(node){
@@ -562,6 +598,11 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
           if(!p) return NodeFilter.FILTER_REJECT;
           const tag=p.tagName;
           if(['SCRIPT','STYLE','TEXTAREA','INPUT','SELECT','OPTION','CODE','PRE'].includes(tag)) return NodeFilter.FILTER_REJECT;
+          // [FIX 2026-09-14] Kipengele chenye `data-i18n` tayari kinatafsiriwa
+          // na applyLanguage(). Sweep ya phrase ilikuwa inaandika juu yake na
+          // kubadilisha maandishi sahihi kuwa mengine (mf. nav "Chat" ikawa
+          // "Chat Naye", ikakatika kwenye simu ndogo). Iachwe.
+          if(p.hasAttribute('data-i18n') || p.closest('[data-i18n],[data-no-i18n],.nav-tab')) return NodeFilter.FILTER_REJECT;
           const txt=node.nodeValue.replace(/\s+/g,' ').trim();
           if(!txt || txt.length>60) return NodeFilter.FILTER_REJECT;
           if(!LMS.keyFromPhrase(LMS.splitIcon(txt).core) && !LMS.keyFromPhrase(txt)) return NodeFilter.FILTER_REJECT;
@@ -573,6 +614,8 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => { const tr=this.translatePhrase(el.getAttribute('placeholder')); if(tr!==el.getAttribute('placeholder')) el.setAttribute('placeholder', tr); });
       root.querySelectorAll('button, a, span, b, small, label, option, h1, h2, h3, h4').forEach(el => {
         if(el.children.length) return;
+        // [FIX 2026-09-14] Usiguse vilivyo na data-i18n wala labels za nav.
+        if(el.hasAttribute('data-i18n') || el.closest('[data-i18n],[data-no-i18n],.nav-tab')) return;
         const txt=el.textContent?.trim();
         if(!txt || txt.length>70) return;
         const tr=this.translatePhrase(txt);
@@ -615,7 +658,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     let m=document.getElementById('sokohaiLanguageCenterModal');
     if(!m){ m=document.createElement('div'); m.id='sokohaiLanguageCenterModal'; m.className='overlay-menu'; m.style.cssText='z-index:100020;display:none;background:rgba(15,23,42,.55);'; document.body.appendChild(m); }
     const audit=LMS.audit(document.body);
-    m.innerHTML=`<div class="skh-settings-modal-card"><div class="skh-settings-head"><div><b> ${LMS.t('language_center')}</b><br><small>${LMS.t('no_mixed_language')}</small></div><button class="skh-menu-close" onclick="document.getElementById('sokohaiLanguageCenterModal').style.display='none'">✕</button></div><div class="skh-settings-body"><div class="skh-setting-card"><b>${LMS.t('switch_language')}</b><p>${LMS.lang==='sw'?'Mfumo wote utumie lugha moja kwa wakati mmoja.':'The whole system uses one language at a time.'}</p><div style="display:flex;gap:8px;margin-top:10px;"><button class="skh-action-btn" style="flex:1;${LMS.lang==='sw'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('sw'); window.openSokoHaiLanguageCenter();">Kiswahili</button><button class="skh-action-btn" style="flex:1;${LMS.lang==='en'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('en'); window.openSokoHaiLanguageCenter();">English</button></div></div><div class="skh-setting-card"><b>${LMS.t('language_audit')}</b><p>${LMS.t('missing_translation')}: ${audit.missing.length}<br>${LMS.t('duplicate_translation')}: ${audit.duplicates.length}<br>${LMS.t('hardcoded_text')}: ${audit.hardcoded.length}</p><button class="skh-action-btn" onclick="window.runSokoHaiLanguageAudit()">${LMS.t('audit_now')}</button></div><div class="skh-setting-card"><b>Add Translation Key</b><div class="skh-setting-row"><span>Key</span><input id="lmsKey" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>English</span><input id="lmsEn" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>Kiswahili</span><input id="lmsSw" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><button class="skh-action-btn" onclick="window.addSokoHaiTranslationKey()">${LMS.t('save')}</button></div><div class="skh-setting-card"><b>Hardcoded Text Sample</b><p style="max-height:130px;overflow:auto;font-size:11px;">${audit.hardcoded.slice(0,30).map(x=>'- '+x).join('<br>') || 'None'}</p></div></div></div>`;
+    m.innerHTML=`<div class="skh-settings-modal-card"><div class="skh-settings-head"><div><b> ${LMS.t('language_center')}</b><br><small>${LMS.t('no_mixed_language')}</small></div><button class="skh-menu-close" onclick="document.getElementById('sokohaiLanguageCenterModal').style.display='none'" aria-label="Funga">${window.skhNavIcon ? window.skhNavIcon('x',16) : ''}</button></div><div class="skh-settings-body"><div class="skh-setting-card"><b>${LMS.t('switch_language')}</b><p>${LMS.lang==='sw'?'Mfumo wote utumie lugha moja kwa wakati mmoja.':'The whole system uses one language at a time.'}</p><div style="display:flex;gap:8px;margin-top:10px;"><button class="skh-action-btn" style="flex:1;${LMS.lang==='sw'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('sw'); window.openSokoHaiLanguageCenter();">Kiswahili</button><button class="skh-action-btn" style="flex:1;${LMS.lang==='en'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('en'); window.openSokoHaiLanguageCenter();">English</button></div></div><div class="skh-setting-card"><b>${LMS.t('language_audit')}</b><p>${LMS.t('missing_translation')}: ${audit.missing.length}<br>${LMS.t('duplicate_translation')}: ${audit.duplicates.length}<br>${LMS.t('hardcoded_text')}: ${audit.hardcoded.length}</p><button class="skh-action-btn" onclick="window.runSokoHaiLanguageAudit()">${LMS.t('audit_now')}</button></div><div class="skh-setting-card"><b>Add Translation Key</b><div class="skh-setting-row"><span>Key</span><input id="lmsKey" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>English</span><input id="lmsEn" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>Kiswahili</span><input id="lmsSw" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><button class="skh-action-btn" onclick="window.addSokoHaiTranslationKey()">${LMS.t('save')}</button></div><div class="skh-setting-card"><b>Hardcoded Text Sample</b><p style="max-height:130px;overflow:auto;font-size:13px;">${audit.hardcoded.slice(0,30).map(x=>'- '+x).join('<br>') || 'None'}</p></div></div></div>`;
     m.style.display='flex';
   };
   window.addSokoHaiTranslationKey = function(){ const k=document.getElementById('lmsKey')?.value?.trim(); const en=document.getElementById('lmsEn')?.value?.trim(); const sw=document.getElementById('lmsSw')?.value?.trim(); if(!k||!en||!sw) return alert('Required field'); LMS.register(k,en,sw,'draft'); LMS.apply(document.body); alert('Success'); window.openSokoHaiLanguageCenter(); };
@@ -660,10 +703,9 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     if(document.getElementById('tokenCenterPolishCSS')) return;
     const css = `
     .tok-shell{width:96%;max-width:880px;max-height:92vh;background:#fff;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 72px rgba(15,23,42,.45)}
-    .tok-head{background:linear-gradient(135deg,#0f172a,#00509d);color:#fff;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}.tok-head h2{margin:0;font-size:18px}.tok-head small{color:#cbd5e1;font-size:11px}.tok-body{background:#f8fafc;padding:14px;overflow-y:auto}.tok-tabs{display:flex;gap:7px;overflow-x:auto;margin-bottom:12px}.tok-tab{border:1px solid #dbe3ee;background:#fff;color:#334155;border-radius:999px;padding:9px 13px;font-size:11px;font-weight:950;white-space:nowrap;cursor:pointer}.tok-tab.active{background:#00509d;color:#fff;border-color:#00509d}.tok-card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
-    .tok-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.tok-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px}.tok-box small{display:block;color:#64748b;font-size:9px;font-weight:950;text-transform:uppercase}.tok-box b{display:block;color:#0f172a;font-size:12px;margin-top:4px;word-break:break-word}.tok-pill{display:inline-flex;padding:3px 8px;border-radius:999px;background:#eef2f7;color:#334155;border:1px solid #dbe3ee;font-size:9px;font-weight:950}.tok-pill.green{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.tok-pill.amber{background:#fffbeb;color:#b45309;border-color:#fde68a}.tok-pill.red{background:#fff5f5;color:#991b1b;border-color:#fecaca}.tok-btn{border:none;border-radius:12px;min-height:40px;padding:9px 12px;font-size:11px;font-weight:950;cursor:pointer}.tok-btn.primary{background:#00509d;color:#fff}.tok-btn.dark{background:#0f172a;color:#fff}.tok-btn.green{background:#10b981;color:#fff}.tok-btn.red{background:#e11d48;color:#fff}.tok-btn.light{background:#eef2f7;color:#0f172a;border:1px solid #dbe3ee}.tok-input{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:13px;font-size:14px;font-weight:900;text-transform:uppercase;outline:none;box-sizing:border-box;background:#fff}.tok-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tok-row .tok-btn{flex:1 1 140px}
-    @media(max-width:560px){.tok-shell{width:98%;max-height:94vh;border-radius:18px}.tok-head{flex-direction:column;align-items:flex-start}.tok-tabs{padding-bottom:3px}.tok-tab{font-size:10px;padding:8px 11px}.tok-row .tok-btn{flex:1 1 100%}}
-    `;
+    .tok-head{background:linear-gradient(135deg,#0f172a,#00509d);color:#fff;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}.tok-head h2{margin:0;font-size:18px}.tok-head small{color:#cbd5e1;font-size:13px}.tok-body{background:#f8fafc;padding:14px;overflow-y:auto}.tok-tabs{display:flex;gap:7px;overflow-x:auto;margin-bottom:12px}.tok-tab{border:1px solid #dbe3ee;background:#fff;color:#334155;border-radius:999px;padding:9px 13px;font-size:13px;font-weight:950;white-space:nowrap;cursor:pointer}.tok-tab.active{background:#00509d;color:#fff;border-color:#00509d}.tok-card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+    .tok-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.tok-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px}.tok-box small{display:block;color:#64748b;font-size:12px;font-weight:950;text-transform:uppercase}.tok-box b{display:block;color:#0f172a;font-size:12px;margin-top:4px;word-break:break-word}.tok-pill{display:inline-flex;padding:3px 8px;border-radius:999px;background:#eef2f7;color:#334155;border:1px solid #dbe3ee;font-size:12px;font-weight:950}.tok-pill.green{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.tok-pill.amber{background:#fffbeb;color:#b45309;border-color:#fde68a}.tok-pill.red{background:#fff5f5;color:#991b1b;border-color:#fecaca}.tok-btn{border:none;border-radius:12px;min-height:40px;padding:9px 12px;font-size:13px;font-weight:950;cursor:pointer}.tok-btn.primary{background:#00509d;color:#fff}.tok-btn.dark{background:#0f172a;color:#fff}.tok-btn.green{background:#10b981;color:#fff}.tok-btn.red{background:#e11d48;color:#fff}.tok-btn.light{background:#eef2f7;color:#0f172a;border:1px solid #dbe3ee}.tok-input{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:13px;font-size:14px;font-weight:900;text-transform:uppercase;outline:none;box-sizing:border-box;background:#fff}.tok-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tok-row .tok-btn{flex:1 1 140px}
+    @media(max-width:560px){.tok-shell{width:98%;max-height:94vh;border-radius:18px}.tok-head{flex-direction:column;align-items:flex-start}.tok-tabs{padding-bottom:3px}.tok-tab{font-size:12.5px;padding:8px 11px}.tok-row .tok-btn{flex:1 1 100%}} `;
     const st=document.createElement('style'); st.id='tokenCenterPolishCSS'; st.textContent=css; document.head.appendChild(st);
   }
 
@@ -671,7 +713,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     ensureCSS();
     let m=document.getElementById('unifiedTokenCenterModal');
     if(!m){ m=document.createElement('div'); m.id='unifiedTokenCenterModal'; m.className='overlay-menu'; m.style.cssText='z-index:100013;display:none;background:rgba(15,23,42,.55);'; document.body.appendChild(m); }
-    m.innerHTML = `<div class="tok-shell"><div class="tok-head"><div><h2> SokoPay Token Center</h2><small>Tracking Token ≠ Delivery Permission Token. Kila token ina kazi yake.</small></div><button class="tok-btn light" onclick="document.getElementById('unifiedTokenCenterModal').style.display='none'">✕ Funga</button></div><div class="tok-body"><div class="tok-tabs"><button id="tokTab_my" class="tok-tab" onclick="window.renderTokenCenterTab('my')">My Tokens</button><button id="tokTab_track" class="tok-tab" onclick="window.renderTokenCenterTab('track')">Track Shipment</button><button id="tokTab_courier" class="tok-tab" onclick="window.renderTokenCenterTab('courier')">Courier Permission</button><button id="tokTab_info" class="tok-tab" onclick="window.renderTokenCenterTab('info')">Token Types</button></div><div id="tokenCenterContent"></div></div></div>`;
+    m.innerHTML = `<div class="tok-shell"><div class="tok-head"><div><h2> SokoPay Token Center</h2><small>Tracking Token ≠ Delivery Permission Token. Kila token ina kazi yake.</small></div><button class="tok-btn light" onclick="document.getElementById('unifiedTokenCenterModal').style.display='none'"> Funga</button></div><div class="tok-body"><div class="tok-tabs"><button id="tokTab_my" class="tok-tab" onclick="window.renderTokenCenterTab('my')">My Tokens</button><button id="tokTab_track" class="tok-tab" onclick="window.renderTokenCenterTab('track')">Track Shipment</button><button id="tokTab_courier" class="tok-tab" onclick="window.renderTokenCenterTab('courier')">Courier Permission</button><button id="tokTab_info" class="tok-tab" onclick="window.renderTokenCenterTab('info')">Token Types</button></div><div id="tokenCenterContent"></div></div></div>`;
     m.style.display='flex';
     window.renderTokenCenterTab(tab);
   };
@@ -725,7 +767,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       const d=snap.docs[0]; const t=d.data();
       const expired=t.expiryAt && new Date(t.expiryAt).getTime()<Date.now();
       const denied=expired||t.used;
-      result.innerHTML = `<div class="tok-card"><b style="color:${denied?'#e11d48':'#10b981'};">${denied?'ACCESS DENIED':' PERMISSION VALID'}</b><div class="tok-grid" style="margin-top:10px;"><div class="tok-box"><small>Master</small><b>${esc(t.masterTransactionId||t.masterShipmentToken||'—')}</b></div><div class="tok-box"><small>Stage</small><b>${esc(t.stageNumber||'—')}</b></div><div class="tok-box"><small>Route</small><b>${esc(t.pickupHub||'—')} → ${esc(t.destinationHub||'—')}</b></div><div class="tok-box"><small>Courier</small><b>${esc(t.courierName||t.courierId||'—')}</b></div></div><p style="font-size:12px;color:#64748b;line-height:1.5;">Delivery Permission Token ni authorization tu. Identity verification inatoka kwenye SokoHai Verification Engine iliyopo.</p>${!denied?`<button class="tok-btn green" style="width:100%;" onclick="window.useInlineCourierPermissionToken('${d.id}','${esc(token)}')">Confirm Pickup / Handover</button>`:''}</div>`;
+      result.innerHTML = `<div class="tok-card"><b style="color:${denied?'#e11d48':'#10b981'};">${denied?'ACCESS DENIED':' PERMISSION VALID'}</b><div class="tok-grid" style="margin-top:10px;"><div class="tok-box"><small>Master</small><b>${esc(t.masterTransactionId||t.masterShipmentToken||'—')}</b></div><div class="tok-box"><small>Stage</small><b>${esc(t.stageNumber||'—')}</b></div><div class="tok-box"><small>Route</small><b>${esc(t.pickupHub||'—')} -> ${esc(t.destinationHub||'—')}</b></div><div class="tok-box"><small>Courier</small><b>${esc(t.courierName||t.courierId||'—')}</b></div></div><p style="font-size:12px;color:#64748b;line-height:1.5;">Delivery Permission Token ni authorization tu. Identity verification inatoka kwenye SokoHai Verification Engine iliyopo.</p>${!denied?`<button class="tok-btn green" style="width:100%;" onclick="window.useInlineCourierPermissionToken('${d.id}','${esc(token)}')">Confirm Pickup / Handover</button>`:''}</div>`;
     }catch(e){ result.innerHTML='<div class="tok-card" style="color:#e11d48;">Verification failed: '+esc(e.message)+'</div>'; }
   };
   window.useInlineCourierPermissionToken = async function(docId, token){
@@ -745,10 +787,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     function topAndScroll() { showTop(); try { window.scrollTo(0, 0); } catch (e) {} }
 
     var PAGE = ['showForm', 'loadMainFeed', 'switchMode', 'updateApp'];
-    var VIEW = ['openProduct', 'closeModals', 'openBuyerOrdersModal', 'openMyDeliveries',
-                'openMyTrips', 'openCart', 'openNotifications', 'openChatList',
-                'openSavedItems', 'openProfile', 'openUserPaymentModal',
-                'openLogisticsTokenModal', 'openSokoPay'];
+    var VIEW = ['openProduct', 'closeModals', 'openBuyerOrdersModal', 'openMyDeliveries', 'openMyTrips', 'openCart', 'openNotifications', 'openChatList', 'openSavedItems', 'openProfile', 'openUserPaymentModal', 'openLogisticsTokenModal', 'openSokoPay'];
 
     PAGE.forEach(function (name) {
         var orig = window[name];

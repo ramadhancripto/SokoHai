@@ -1,6 +1,6 @@
 /* ==== js/12-payments.js ==== */
 // ============================================================
-// SOKOHAI PAYMENTS — PESAPAL (Phase: AzamPay → PesaPal)
+// SOKOHAI PAYMENTS — PESAPAL (Phase: AzamPay -> PesaPal)
 // PesaPal ni hosted checkout: kila malipo (MNO/bank/kadi) hutumia
 // redirect ya PesaPal. Siri (consumer key/secret) ziko Cloud Function
 // 'pesapalCheckout' PEKEE — browser haioni kabisa.
@@ -14,18 +14,17 @@
 //
 //   skhPesaPalPendingWrite / Read / Clear — rekodi ya nia (localStorage)
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var PENDING_KEY = 'sokohai_pending_payment';
 
-    // Kuchuja ujumbe wa kosa la Firebase callable → ujumbe muhimu kwa mtumiaji.
+    // Kuchuja ujumbe wa kosa la Firebase callable -> ujumbe muhimu kwa mtumiaji.
     // Firebase huficha makosa ya server kama "INTERNAL"; `.details` ndilo
     // lenye ujumbe HALISI kutoka kwenye Cloud Function.
     window.skhPesaPalErrMsg = function (e) {
         if (!e) return 'haijulikani';
         if (typeof e === 'string') return e;
-        // [FUNCTIONS RESILIENCE] endpoint haijapelekwa/haipatikani → usimwonyeshe
+        // [FUNCTIONS RESILIENCE] endpoint haijapelekwa/haipatikani -> usimwonyeshe
         // mtumiaji "INTERNAL"; mpe ujumbe wa maana (pesa haijatoka).
         if (e.fnDown) return e.friendlyMessage || 'Huduma ya malipo (SokoPay) haipatikani kwa sasa. Malipo hayajakamilika — jaribu tena baadaye.';
         var m = '';
@@ -38,9 +37,9 @@
             // Tofautisha: function haipo (deploy) vs tatizo la siri za PesaPal.
             var code = String(e.code || (e.errorInfo && e.errorInfo.code) || '').toLowerCase();
             if (/not-found|unavailable|deadline/.test(code)) {
-                return 'Huduma ya malipo (SokoPay) haijawashwa/haipatikani kwa sasa. Malipo hayajakamilika — tafadhali jaribu tena baadaye au wasiliana na msaada.';
+                return 'Huduma ya malipo (SokoPay) haijawashwa/haipatikani kwa sasa. Malipo hayajakamilika — jaribu tena baadaye au wasiliana na msaada.';
             }
-            m = 'hitilafu ya ndani ya server ya malipo. Tafadhali jaribu tena; ikiendelea, wasiliana na msaada (angalia Cloud Functions logs na PESAPAL_CONSUMER_KEY / PESAPAL_CONSUMER_SECRET kwenye functions/.env).';
+            m = 'hitilafu ya ndani ya server ya malipo. jaribu tena; ikiendelea, wasiliana na msaada (angalia Cloud Functions logs na PESAPAL_CONSUMER_KEY / PESAPAL_CONSUMER_SECRET kwenye functions/.env).';
         }
         return m;
     };

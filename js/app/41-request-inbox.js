@@ -4,8 +4,8 @@
 // yanayopelekwa na Routing Engine kwa wakala/dereva
 // (hayajifichi ndani ya order/soko la jumla).
 //
-//   Request → Routing → Eligible Agents → Offer → Agent
-//   Acceptance → Confirmation → Pickup Token (Token Box)
+//   Request -> Routing -> Eligible Agents -> Offer -> Agent
+//   Acceptance -> Confirmation -> Pickup Token (Token Box)
 //
 // Kadi ya "NEW REQUEST": mzigo, Pickup, Destination, tarehe ya
 // pickup, fee, View Request, Accept, Decline. Akikataa/akichelewa
@@ -15,8 +15,7 @@
 // ============================================================ */
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var state = { tab: 'new', offers: [], loaded: false, unsub: null, timer: null };
 
@@ -91,11 +90,22 @@ import { skh } from './00-bootstrap.js';
             state.offers = all;
             state.loaded = true;
             render();
-        }, function () {
+        }, function (err) {
+            /* [FIX §24 2026-09-15] Hapo awali kosa lilionekana kama "hakuna
+               maombi" — mtumiaji aliamini hana maombi kumbe query imeshindwa.
+               Sasa: ERROR na EMPTY zinatofautishwa, na kuna kitufe cha Retry. */
+            var x = window.skhErr ? window.skhErr(err, { fn: 'requestInbox', operation: 'listen' })
+                                  : { userMessage: 'Imeshindikana kupakia maombi.' };
             if (listEl && !state.offers.length) {
-                listEl.innerHTML = emptyHtml('Imeshindikana kupakua maombi. Angalia muunganisho na ufungue tena.');
+                listEl.innerHTML = (typeof window.skhStateHtml === 'function')
+                    ? window.skhStateHtml('error', {
+                        message: x.userMessage + ' Maombi yako hayajapotea.',
+                        onRetry: 'window.skhRequestInboxRetry && window.skhRequestInboxRetry()'
+                      })
+                    : emptyHtml('Imeshindikana kupakua maombi. Jaribu tena.');
             }
         });
+        window.skhRequestInboxRetry = function () { try { listen(); } catch (e) {} };
 
         // Burudisha "dakika zilizosalia" kila baada ya 30s.
         state.timer = setInterval(function () {
@@ -158,6 +168,13 @@ import { skh } from './00-bootstrap.js';
             actions = '<div class="ri-actions">'
                 + '<button type="button" class="ri-btn ri-btn-light" onclick="window.skhRequestInboxToggle(\'' + esc(o.id) + '\')">'
                 + ico('search', 14) + ' Angalia Ombi</button>'
+                /* [FIX NEGOTIATION 2026-09-15] Hapo awali kulikuwa na
+                   "Kubali / Kataa" PEKEE. Nauli ikiwa "Maelewano",
+                   msafirishaji hakuwa na njia yoyote ya kupendekeza bei —
+                   alilazimika kukubali au kuachana nayo (§8, §9, §11).
+                   Sasa "Toa Ofa" inafungua injini ya majadiliano ILIYOPO. */
+                + '<button type="button" class="ri-btn ri-btn-offer" onclick="window.skhRequestInboxOffer(\'' + esc(o.rideId || o.id) + '\')">'
+                + ico('tag', 14) + ' Toa Ofa</button>'
                 + '<button type="button" class="ri-btn ri-btn-danger-light" onclick="window.skhRequestInboxDecline(\'' + esc(o.id) + '\')">'
                 + ico('x', 14) + ' Kataa</button>'
                 + '<button type="button" class="ri-btn ri-btn-primary" onclick="window.skhRequestInboxAccept(\'' + esc(o.id) + '\')">'
@@ -272,7 +289,7 @@ import { skh } from './00-bootstrap.js';
     };
 
     window.skhRequestInboxDecline = async function (offerId) {
-        if (!confirm('Kataa ombi hili? Mfumo utalihamisha kwa wakala mwingine aliyestahili.')) return;
+        if (!await skhConfirm('Kataa ombi hili? Mfumo utalihamisha kwa wakala mwingine aliyestahili.')) return;
         var card = document.querySelector('[data-ri-id="' + (window.CSS && CSS.escape ? CSS.escape(offerId) : offerId) + '"]');
         var btn = card ? card.querySelector('.ri-btn-danger-light') : null;
         setBusy(btn, true);
@@ -316,3 +333,18 @@ import { skh } from './00-bootstrap.js';
         if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) window.skhCloseRequestInbox(); });
     });
 })();
+
+/* [NEGOTIATION 2026-09-15] Msafirishaji anatoa ofa kwenye ombi.
+   Inatumia skhTransportOffer (52-transport-inbox.js) -> skhNegoFormOpen
+   -> 37-negotiation.js. Hakuna negotiation system mpya. */
+window.skhRequestInboxOffer = function (rideId) {
+    if (!rideId) return;
+    if (typeof window.skhTransportOffer === 'function') {
+        window.skhTransportOffer(rideId);
+    } else if (typeof window.skhNegoFormOpen === 'function') {
+        window.skhNegoFormOpen({ type: 'transport',
+            entity: { id: rideId, collection: 'ride_requests' } });
+    } else {
+        skhToast('Fomu ya majadiliano haipatikani kwa sasa.', 'error');
+    }
+};

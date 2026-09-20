@@ -4,54 +4,123 @@ import { skh } from './00-bootstrap.js';
 // [FIX 2026-09] `deliveryTaxonomy` ilikuwa ikitumika bila kufafanuliwa (ReferenceError)
 // -> ilivunja modal ya kategoria za Usafirishaji kabisa. Sasa imefafanuliwa hapa,
 // ikiendana na maadili ya `supportedServices` yanayohifadhiwa na madereva.
-skh.deliveryTaxonomy = {
-    "Passenger": { label: "Abiria (Watu)", items: ["Boda", "Bajaji", "Daladala", "Gari"], vehicles: ["Boda", "Bajaji", "Daladala", "Gari"] },
-    "Product":   { label: "Mizigo (Bidhaa)", items: ["Boda", "Bajaji", "Pickup", "Gari"], vehicles: ["Boda", "Bajaji", "Pickup", "Gari"] },
-    "Cargo":     { label: "Mizigo Mikubwa", items: ["Lori", "Pickup", "Fuso", "Trailer"], vehicles: ["Lori", "Pickup", "Fuso", "Trailer"] },
-    "Emergency": { label: "Dharura / Express", items: ["Boda", "Gari", "Ambulance"], vehicles: ["Boda", "Gari", "Ambulance"] }
+skh.deliveryTaxonomy = { "Passenger": { label: "Abiria (Watu)", items: ["Boda", "Bajaji", "Daladala", "Gari"], vehicles: ["Boda", "Bajaji", "Daladala", "Gari"] }, "Product":   { label: "Mizigo (Bidhaa)", items: ["Boda", "Bajaji", "Pickup", "Gari"], vehicles: ["Boda", "Bajaji", "Pickup", "Gari"] }, "Cargo":     { label: "Mizigo Mikubwa", items: ["Lori", "Pickup", "Fuso", "Trailer"], vehicles: ["Lori", "Pickup", "Fuso", "Trailer"] }, "Emergency": { label: "Dharura / Express", items: ["Boda", "Gari", "Ambulance"], vehicles: ["Boda", "Gari", "Ambulance"] }
 };
 
-window.requestUserLocation = function() {
+// [LOCATION LIFECYCLE 2026-09] Kanuni (kutoka kwa mtumiaji):
+//   UNKNOWN → REQUESTING → AVAILABLE → STALE (ikizidi muda wake)
+//   DENIED/ERROR → tofauti na "hakuna bidhaa za karibu"
+//   - Eneo halisi LINAHIFADHIWA (localStorage) na kutumika mara moja — GPS
+//     haitafutwi upya kila wakati app inapofunguka.
+//   - Hakuna loop: kupa ombi moja kwa wakati; fetch ina TIMEOUT.
+//   - Marketplace haizuwi hata GPS ikifeli kabisa.
+const SKH_LOC_TTL = 24 * 60 * 60 * 1000; // eneo lithibetwe lazima kwa siku mmoja
+function skhLocGetSaved() {
+    try {
+        const raw = skh.localStorage.getItem('skh_last_loc');
+        if (!raw) return null;
+        const d = JSON.parse(raw);
+        if (typeof d === 'object' && d && typeof d.lat === 'number' && typeof d.lon === 'number') return d;
+    } catch (e) {}
+    return null;
+}
+function skhLocSave(lat, lon, name, source) {
+    try {
+        skh.localStorage.setItem('skh_last_loc', JSON.stringify({
+            lat, lon, name: name || '', ts: Date.now(), source: source || 'gps'
+        }));
+    } catch (e) {}
+}
+function skhLocSetStatus(txt) {
     const statusEl = document.getElementById('userLocationStatus');
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            skh.userLat = position.coords.latitude;
-            skh.userLon = position.coords.longitude;
-            
-            if (statusEl) statusEl.innerText = " Inatafsiri jina la mtaa...";
-            
-            try {
-                // Tunatumia OpenStreetMap reverse geocoding kujua jina la mtaa bure kabisa
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${skh.userLat}&lon=${skh.userLon}&addressdetails=1`);
-                const data = await res.json();
-                const addr = data.address;
-                
-                const neighborhood = addr.suburb || addr.neighbourhood || addr.quarter || addr.city_district || "";
-                const city = addr.city || addr.town || addr.village || addr.region || "";
-                
-                skh.userRegionName = neighborhood ? `${neighborhood}, ${city}` : city;
-                if (!skh.userRegionName) skh.userRegionName = "Tanzania";
+    if (statusEl) statusEl.innerText = txt;
+}
 
-                if (statusEl) statusEl.innerText = ` Eneo: ${skh.userRegionName}`;
-            } catch (err) {
-                skh.userRegionName = "Tanzania";
-                if (statusEl) statusEl.innerText = " Eneo: Imeshindwa kusoma jina";
-            }
-            
-            // Kama tayari toggle ya "Karibu Nawe" imewashwa, refresh feed
-            if (skh.filterNearMe) {
-                skh.loadMainFeed(skh.currentFeedCollection);
-            }
-        }, (err) => {
-            if (statusEl) statusEl.innerText = " GPS Imezimwa (Gusa kuwasha)";
-        }, { enableHighAccuracy: true });
-    } else {
-        if (statusEl) statusEl.innerText = " Browser haisupport GPS";
+window.requestUserLocation = function(force) {
+    const statusEl = document.getElementById('userLocationStatus');
+
+    // 1) TUMIA ILIYOHIFADHIWA mara moja (hii ndiyo sababu ya kufuta loop):
+    //    kama location haijazidi muda wake, GPS hataisidiuliwa tena.
+    //    `force = true` atakapogusa muonekano (au kubadilisha mkoa au karibu-nawe).
+    const saved = skhLocGetSaved();
+    if (!force && saved && (Date.now() - saved.ts) < SKH_LOC_TTL) {
+        skh.userLat = saved.lat;
+        skh.userLon = saved.lon;
+        skh.userRegionName = saved.name || skh.userRegionName || '';
+        if (skh.userRegionName) skhLocSetStatus(' Eneo: ' + skh.userRegionName);
+        return;
     }
+
+    // 2) Ombi moja kwa wakati — zizie request nyingi zinazosababisha "loop".
+    if (skh._locInFlight) return;
+    skh._locInFlight = true;
+
+    const finish = function () { skh._locInFlight = false; };
+    const fallbackText = function () {
+        // ERROR ≠ flatten: Duka la SokoHai likuendelea kufanya kazi ziu.
+        const st = skhLocGetSaved();
+        if (st && st.name) {
+            skh.userLat = st.lat; skh.userLon = st.lon; skh.userRegionName = st.name;
+            skhLocSetStatus(' Eneo: ' + st.name + ' (imehifadhiwa)');
+        } else {
+            skhLocSetStatus(' Eneo halijapatikana — gusa kujaribu tena');
+        }
+    };
+
+    if (!navigator.geolocation) {
+        fallbackText();
+        finish();
+        return;
+    }
+
+    // TIMEOUT+CACHE ya browser: isibaki animation kuwasha "getCurrentPosition".
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        skh.userLat = position.coords.latitude;
+        skh.userLon = position.coords.longitude;
+
+        skhLocSetStatus(' Inatafsiri jina la mtaa...');
+
+        try {
+            // reverse geocoding yenye TIMEOUT: fetch isinpinge milele (kichupi
+            // cha "Inatafuta eneo..." isiyotamatika).
+            const ctrl = new AbortController();
+            const to = setTimeout(() => ctrl.abort(), 8000);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${skh.userLat}&lon=${skh.userLon}&addressdetails=1`, { signal: ctrl.signal });
+            clearTimeout(to);
+            const data = await res.json();
+            const addr = data.address || {};
+
+            const neighborhood = addr.suburb || addr.neighbourhood || addr.quarter || addr.city_district || "";
+            const city = addr.city || addr.town || addr.village || addr.region || "";
+
+            skh.userRegionName = neighborhood ? `${neighborhood}, ${city}` : city;
+            if (!skh.userRegionName) skh.userRegionName = "Tanzania";
+
+            // HIFADHI: eneo hili itatumika tena bila kuuliza GPS.
+            skhLocSave(skh.userLat, skh.userLon, skh.userRegionName, 'gps');
+            skhLocSetStatus(` Eneo: ${skh.userRegionName}`);
+        } catch (err) {
+            // GPS imerudi lakini geocoding imefeli — save coordinates tuwa tu.
+            skh.userRegionName = skh.userRegionName || "Tanzania";
+            skhLocSave(skh.userLat, skh.userLon, skh.userRegionName, 'gps-noname');
+            skhLocSetStatus(" Eneo halisoma jina — gusa kujaribu tena");
+        }
+
+        // Kama tayari toggle ya "Karibu Nawe" imewashwa, refresh feed
+        if (skh.filterNearMe) {
+            skh.loadMainFeed(skh.currentFeedCollection);
+        }
+        finish();
+    }, (err) => {
+        // DENIED/ERROR — sio "sio karibu"; Duka likuendelea kufanya kazi.
+        fallbackText();
+        finish();
+    }, { enableHighAccuracy: false, timeout: 12000, maximumAge: SKH_LOC_TTL });
 };
 
+// Boot: omba mara moja (isiyo-'force'). Kama cache ipo haitasusu GPS.
 setTimeout(() => {
-    window.requestUserLocation();
+    window.requestUserLocation(false);
 }, 1500);
 
 window.toggleNearMeFilter = function() {
@@ -95,7 +164,7 @@ skh.modeEnabled = function(mode) {
 
 window.skhApplyModeSwitches = function() {
     try {
-        // 1) Tab za mode kwenye feed (data-skh-mode) — zimezimwa → zimezimwa (greyed, no click)
+        // 1) Tab za mode kwenye feed (data-skh-mode) — zimezimwa -> zimezimwa (greyed, no click)
         document.querySelectorAll('[data-skh-mode]').forEach(function (el) {
             var mode = el.getAttribute('data-skh-mode');
             var on = skh.modeEnabled(mode);
@@ -141,33 +210,28 @@ window.setMarketMode = function(mode, btnElement) {
 
     // 1. Kagua kama Admin amezima hii Mode
     if(skh.sysConfig.modes && skh.sysConfig.modes[mode] === false) {
-        alert(" Samahani, mfumo huu umezimwa kwa muda na Admin.");
+        alert(" mfumo huu umezimwa kwa muda na Admin.");
         return;
     }
 
     // 2. Maelezo mafupi ya kila mode (lugha moja kwa wakati — kupitia t()).
-    const rules = {
-        'free_market': {
+    const rules = { 'free_market': {
             icon: "",
             title: window.t('mode_free_market_title'),
             desc: window.t('mode_free_market_desc')
-        },
-        'auction': {
+        }, 'auction': {
             icon: "",
             title: window.t('mode_auction_title'),
             desc: window.t('mode_auction_desc')
-        },
-        'price_drop': {
+        }, 'price_drop': {
             icon: "",
             title: window.t('mode_price_drop_title'),
             desc: window.t('mode_price_drop_desc')
-        },
-        'wholesale': {
+        }, 'wholesale': {
             icon: "",
             title: window.t('mode_wholesale_title'),
             desc: window.t('mode_wholesale_desc')
-        },
-        'group_buy': {
+        }, 'group_buy': {
             icon: "",
             title: window.t('mode_group_buy_title'),
             desc: window.t('mode_group_buy_desc')
@@ -233,10 +297,7 @@ window.openCategoryModal = function() {
         html += `<div style="grid-column: span 3; color: var(--terracotta); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">CHAGUA HUDUMA YA USAFIRI</div>`; // [PHASE 5.9] emoji imetolewa
         for (const catName in skh.deliveryTaxonomy) {
             html += `
-                <div class="cat-box" onclick="selectAdvancedCategory('${catName}')">
-                    <div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div>
-                    <div class="cat-name">${catName.toUpperCase()}</div>
-                </div>`;
+                <div class="cat-box" onclick="selectAdvancedCategory('${catName}')"> <div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div> <div class="cat-name">${catName.toUpperCase()}</div> </div>`;
         }
         container.innerHTML = html;
         document.getElementById('categoryModal').style.display = 'flex';
@@ -363,15 +424,14 @@ window.selectAdvancedCategory = function(catName, sectionName = null) {
         
         if(subRow && subcatNames.length > 0) {
             subcatNames.unshift('Zote'); 
-            subRow.innerHTML = subcatNames.map(sub => 
-                `<div class="subcat-chip ${sub === 'Zote' ? 'active' : ''}" onclick="selectSubCategory('${sub}', this, '${sectionName}')">${sub}</div>`
+            subRow.innerHTML = subcatNames.map(sub => `<div class="subcat-chip ${sub === 'Zote' ? 'active' : ''}" onclick="selectSubCategory('${sub}', this, '${sectionName}')">${sub}</div>`
             ).join('');
         } else if (subRow) {
             subRow.innerHTML = '';
         }
         
         if(filterRow) {
-            filterRow.innerHTML = '<span style="font-size:11px; color:#94a3b8; padding:5px;">Chagua aina hapo juu kuona vichujio (Filters)</span>';
+            filterRow.innerHTML = '<span style="font-size:13px; color:#94a3b8; padding:5px;">Chagua aina hapo juu kuona vichujio (Filters)</span>';
         }
         
         if(subRow) { subRow.style.animation = 'none'; setTimeout(() => subRow.style.animation = 'slideInFromRight 0.4s ease forwards', 10); }
@@ -393,7 +453,7 @@ window.selectSubCategory = function(subName, element, sectionName = 'null') {
     const filterRow = document.getElementById('filterRow');
     if(filterRow) {
         if(subName === 'Zote') {
-            filterRow.innerHTML = '<span style="font-size:11px; color:#94a3b8; padding:5px;">Chagua aina kuona vichujio (Filters)</span>';
+            filterRow.innerHTML = '<span style="font-size:13px; color:#94a3b8; padding:5px;">Chagua aina kuona vichujio (Filters)</span>';
         } else {
             let filters = [];
 
@@ -424,14 +484,13 @@ window.selectSubCategory = function(subName, element, sectionName = 'null') {
             }
 
             if(filters.length > 0) {
-                filterRow.innerHTML = filters.map(filter => 
-                    `<div class="filter-chip" onclick="handleFilterClick('${filter}', this)">${filter}</div>`
+                filterRow.innerHTML = filters.map(filter => `<div class="filter-chip" onclick="handleFilterClick('${filter}', this)">${filter}</div>`
                 ).join('');
                 
                 filterRow.style.animation = 'none'; 
                 setTimeout(() => filterRow.style.animation = 'slideInFromRight 0.5s ease forwards', 10);
             } else {
-                filterRow.innerHTML = '<span style="font-size:11px; color:#94a3b8; padding:5px;">Hakuna vichujio maalum (Filters)</span>';
+                filterRow.innerHTML = '<span style="font-size:13px; color:#94a3b8; padding:5px;">Hakuna vichujio maalum (Filters)</span>';
             }
         }
     }
@@ -503,7 +562,7 @@ window.handleFilterClick = function(filterName, element) {
 
     // Weka kisanduku cha mteja kuandika mwenyewe (kama anataka kutafuta kisicho kwenye orodha ya haraka)
     const textLabel = document.createElement("label");
-    textLabel.style.cssText = "font-size:11px; font-weight:bold; color:gray; display:block; text-align:left; margin-bottom:4px;";
+    textLabel.style.cssText = "font-size:13px; font-weight:bold; color:gray; display:block; text-align:left; margin-bottom:4px;";
     textLabel.innerText = "Au andika mwenyewe hapa:";
 
     const manualInput = document.createElement("input");
@@ -520,7 +579,7 @@ window.handleFilterClick = function(filterName, element) {
             applyFilterValue(typedVal);
             overlay.remove();
         } else {
-            alert(" Tafadhali chagua kigezo kilichopo au andika mwenyewe!");
+            alert(" chagua kigezo kilichopo au andika mwenyewe!");
         }
     };
 
@@ -695,11 +754,11 @@ window.payForBoost = async function() {
     // PAID MODE — namba ya kulipia inahitajika.
     let phone = (skh.currentUserData && (skh.currentUserData.paymentAccount || skh.currentUserData.phone)) || '';
     if(!phone) {
-        alert(" Tafadhali sajili Namba yako ya Malipo kwenye menyu kwanza.");
+        alert(" sajili Namba yako ya Malipo kwenye menyu kwanza.");
         openUserPaymentModal();
         return;
     }
-    if(!confirm(`Lipa TSh ${amount.toLocaleString()} kwa kutumia namba yako: ${phone}?`)) return;
+    if(!await skhConfirm(`Lipa TSh ${amount.toLocaleString()} kwa kutumia namba yako: ${phone}?`)) return;
     if (phone.startsWith('0')) phone = '255' + phone.substring(1);
 
     btn.innerHTML = " INAKATA PESA...";

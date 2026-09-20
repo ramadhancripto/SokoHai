@@ -44,7 +44,7 @@
 .tb-head-ic svg { stroke: #fff; width: 21px; height: 21px; }
 .tb-head-txt { flex: 1; min-width: 0; }
 .tb-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #173B56; }
-.tb-sub { display: block; font-size: 11.5px; color: #64748B; line-height: 1.4; margin-top: 1px; }
+.tb-sub { display: block; font-size: 13px; color: #64748B; line-height: 1.4; margin-top: 1px; }
 .tb-close {
     margin-left: auto; flex: 0 0 auto;
     width: 36px; height: 36px; border-radius: 50%;
@@ -109,7 +109,7 @@
 .tb-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .tb-kind {
     display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 800; letter-spacing: .02em;
+    font-size: 13px; font-weight: 800; letter-spacing: .02em;
     padding: 5px 11px; border-radius: 99px;
     text-transform: uppercase;
 }
@@ -125,7 +125,7 @@
 
 .tb-badge {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 10.5px; font-weight: 800;
+    font-size: 12.5px; font-weight: 800;
     padding: 4px 10px; border-radius: 99px;
 }
 .tb-badge svg { width: 11px; height: 11px; }
@@ -173,7 +173,7 @@
 
 .tb-meta {
     display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px;
-    font-size: 11px; color: #64748B; font-weight: 600;
+    font-size: 13px; color: #64748B; font-weight: 600;
 }
 .tb-meta span { display: inline-flex; align-items: center; gap: 4px; }
 .tb-meta svg { width: 12px; height: 12px; stroke: #94A3B8; }
@@ -181,7 +181,7 @@
 
 .tb-hint, .tb-mint-hint {
     display: flex; align-items: flex-start; gap: 7px;
-    margin: 0; font-size: 11.5px; line-height: 1.5; color: #64748B;
+    margin: 0; font-size: 13px; line-height: 1.5; color: #64748B;
 }
 .tb-hint svg, .tb-mint-hint svg { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 1px; stroke: #94A3B8; }
 .tb-mint-hint svg { stroke: #0E7A5F; }
@@ -215,7 +215,7 @@
 }
 .tb-qr[hidden] { display: none; }
 .tb-qr img { width: 168px; height: 168px; border-radius: 10px; background: #fff; }
-.tb-qr small { font-size: 10.5px; color: #B45309; text-align: center; line-height: 1.4; font-weight: 600; }
+.tb-qr small { font-size: 12.5px; color: #B45309; text-align: center; line-height: 1.4; font-weight: 600; }
 
 /* Hali tupu / upakiaji */
 .tb-loading {

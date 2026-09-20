@@ -90,36 +90,7 @@ if (!skh.currentUser) {
         if (agentSnap.empty) {
             // Kama sio wakala au hajalipia, onyesha form ya kujiunga
             container.innerHTML = `
-                <div style="max-width: 450px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; border: 1.5px solid #cbd5e1; text-align: center;">
-                    <div style="font-size: 50px;"></div>
-                    <h3 style="color:var(--primary-dark); margin-top:10px;">${T('ag_agreement', 'SokoHai Agency Agreement')}</h3>
-                    <p style="font-size:13px; color:#64748b; margin-bottom:20px; line-height:1.5;">${T('ag_join_pitch', 'Join as an agent, register offline members and earn 60% of each fee.')}</p>
-                    
-                    <div style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:12px; margin-bottom:20px; text-align:left; font-size:12px;">
-                        <b style="color:var(--primary-dark); display:block; margin-bottom:5px;">${T('ag_fee_label', 'Agency Registration Fee: TSh 3,100')}</b>
-                        <span>${T('ag_fee_note', 'A one-time fee to create your Agent Code.')}</span>
-                    </div>
-
-                    <div style="text-align:left;">
-                        <label style="font-size:11px; font-weight:bold; color:gray;">${T('ag_full_name', 'FULL NAME *')}</label>
-                        <input type="text" id="dashAgentName" value="${skh.skhEscape(skh.currentUser.displayName || '')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
-                        
-                        <label style="font-size:11px; font-weight:bold; color:gray;">${T('ag_pay_phone', 'PAYMENT PHONE NUMBER (MPESA) *')}</label>
-                        <input type="tel" id="dashAgentPhone" value="${skh.currentUserData?.phone || ''}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
-
-                        <label style="font-size:11px; font-weight:bold; color:gray;">${T('ag_region', 'REGION *')}</label>
-                        <select id="dashAgentRegion" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:20px;">
-                            <option value="Dar es Salaam">Dar es Salaam</option>
-                            <option value="Arusha">Arusha</option>
-                            <option value="Mwanza">Mwanza</option>
-                            <option value="Mbeya">Mbeya</option>
-                            <option value="Dodoma">Dodoma</option>
-                        </select>
-                    </div>
-
-                    <button id="btnDashAgent" onclick="window.submitAgentFromDash()" style="width:100%; padding:16px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer;">${T('ag_pay_submit', 'PAY AND SUBMIT')}</button>
-                </div>
-            `;
+                <div style="max-width: 450px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; border: 1.5px solid #cbd5e1; text-align: center;"> <div style="font-size: 50px;"></div> <h3 style="color:var(--primary-dark); margin-top:10px;">${T('ag_agreement', 'SokoHai Agency Agreement')}</h3> <p style="font-size:13px; color:#64748b; margin-bottom:20px; line-height:1.5;">${T('ag_join_pitch', 'Join as an agent, register offline members and earn 60% of each fee.')}</p> <div style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:12px; margin-bottom:20px; text-align:left; font-size:12px;"> <b style="color:var(--primary-dark); display:block; margin-bottom:5px;">${T('ag_fee_label', 'Agency Registration Fee: TSh 3,100')}</b> <span>${T('ag_fee_note', 'A one-time fee to create your Agent Code.')}</span> </div> <div style="text-align:left;"> <label style="font-size:13px; font-weight:bold; color:gray;">${T('ag_full_name', 'FULL NAME *')}</label> <input type="text" id="dashAgentName" value="${skh.skhEscape(skh.currentUser.displayName || '')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;"> <label style="font-size:13px; font-weight:bold; color:gray;">${T('ag_pay_phone', 'PAYMENT PHONE NUMBER (MPESA) *')}</label> <input type="tel" id="dashAgentPhone" value="${skh.currentUserData?.phone || ''}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;"> <label style="font-size:13px; font-weight:bold; color:gray;">${T('ag_region', 'REGION *')}</label> <select id="dashAgentRegion" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:20px;"> <option value="Dar es Salaam">Dar es Salaam</option> <option value="Arusha">Arusha</option> <option value="Mwanza">Mwanza</option> <option value="Mbeya">Mbeya</option> <option value="Dodoma">Dodoma</option> </select> </div> <button id="btnDashAgent" onclick="window.submitAgentFromDash()" style="width:100%; padding:16px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer;">${T('ag_pay_submit', 'PAY AND SUBMIT')}</button> </div> `;
             return;
         }
 
@@ -140,16 +111,11 @@ if (!skh.currentUser) {
             const payNowBtn = paidNow ? '' : `
                 <button onclick="window.skhAgentPayPendingFee('${agentDocId}')" style="width:100%; padding:14px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer; margin-top:14px;">${T('ag_pay_now', 'PAY FEE NOW (TSh 3,100)')}</button>`;
             container.innerHTML = `
-                <div style="max-width: 400px; margin: 50px auto; text-align:center; padding:30px; background:white; border-radius:20px; border:1px solid #cbd5e1;">
-                    <div style="font-size: 50px; animation: pulse 1.5s infinite;"></div>
-                    <h3 style="color:orange; margin-top:15px;">${T('ag_under_review', 'Application Under Review')}</h3>
-                    <p style="font-size:13px; color:#64748b; line-height:1.5;">${paidNow
+                <div style="max-width: 400px; margin: 50px auto; text-align:center; padding:30px; background:white; border-radius:20px; border:1px solid #cbd5e1;"> <div style="font-size: 50px; animation: pulse 1.5s infinite;"></div> <h3 style="color:orange; margin-top:15px;">${T('ag_under_review', 'Application Under Review')}</h3> <p style="font-size:13px; color:#64748b; line-height:1.5;">${paidNow
                         ? T('ag_paid_waiting', 'You have paid TSh 3,100. Your agency file is now being reviewed by the admin.')
-                        : T('ag_not_paid', 'Your application reached the admin. The fee (TSh 3,100) is not paid yet — pay so the admin can approve you.')}</p>
-                    <b style="font-size:12px; color:gray; display:block; margin-top:10px;">${T('ag_reference', 'Reference')}: ${skh.skhEscape(agentData.paymentRef || 'N/A')}</b>
+                        : T('ag_not_paid', 'Your application reached the admin. The fee (TSh 3,100) is not paid yet — pay so the admin can approve you.')}</p> <b style="font-size:12px; color:gray; display:block; margin-top:10px;">${T('ag_reference', 'Reference')}: ${skh.skhEscape(agentData.paymentRef || 'N/A')}</b>
                     ${payNowBtn}
-                </div>
-            `;
+                </div> `;
             return;
         }
 
@@ -168,21 +134,7 @@ if (!skh.currentUser) {
                 const hasBusiness = u.businessId ? true : false;
                 
                 let clientCard = `
-                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; text-align:left;">
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <img src="${skh.skhEscape(u.photoURL)}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);">
-                            <div>
-                                <b style="font-size:14px; color:#0f172a;">${skh.skhEscape(u.fullName)}</b>
-                                <span style="display:block; font-size:11px; color:gray;">${T('ag_phone', 'Phone')}: ${skh.skhEscape(u.phone)} |  ${skh.skhEscape(u.region)}</span>
-                                <span style="display:block; font-size:10px; font-weight:bold; color:var(--primary-blue);">ID: ${skh.skhEscape(u.offlineAccountId || u.businessId)}</span>
-                            </div>
-                        </div>
-                        <div style="display:flex; flex-direction:column; gap:6px; text-align:right;">
-                            <b style="color:green; font-size:13px;">TSh ${(u.walletBalance || 0).toLocaleString()}</b>
-                            <button onclick="window.enableOfflineManagement('${u.uid}', '${skh.skhJsEsc(u.fullName)}', '${skh.skhJsEsc(u.shopName || u.fullName)}')" style="padding:6px 12px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:8px; font-weight:900; font-size:11px; cursor:pointer;">${T('ag_manage', 'MANAGE')}</button>
-                        </div>
-                    </div>
-                `;
+                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; text-align:left;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${skh.skhEscape(u.photoURL)}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);"> <div> <b style="font-size:14px; color:#0f172a;">${skh.skhEscape(u.fullName)}</b> <span style="display:block; font-size:13px; color:gray;">${T('ag_phone', 'Phone')}: ${skh.skhEscape(u.phone)} |  ${skh.skhEscape(u.region)}</span> <span style="display:block; font-size:12.5px; font-weight:bold; color:var(--primary-blue);">ID: ${skh.skhEscape(u.offlineAccountId || u.businessId)}</span> </div> </div> <div style="display:flex; flex-direction:column; gap:6px; text-align:right;"> <b style="color:green; font-size:13px;">TSh ${(u.walletBalance || 0).toLocaleString()}</b> <button onclick="window.enableOfflineManagement('${u.uid}', '${skh.skhJsEsc(u.fullName)}', '${skh.skhJsEsc(u.shopName || u.fullName)}')" style="padding:6px 12px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:8px; font-weight:900; font-size:13px; cursor:pointer;">${T('ag_manage', 'MANAGE')}</button> </div> </div> `;
 
                 if (hasBusiness) {
                     businessClientsHtml += clientCard;
@@ -195,88 +147,24 @@ if (!skh.currentUser) {
 
             // Muonekano thabiti wa Dashboard
             container.innerHTML = `
-                <div style="text-align: left;">
-                    <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <h2 style="margin:0; color: white; font-weight:900;">${T('ag_dashboard', 'SOKOHAI AGENT DASHBOARD')}</h2>
-                            <p style="margin:5px 0 0; opacity:0.9; font-size:13px;">${T('ag_bridge', 'Manage your members in the street and online.')}</p>
-                        </div>
-                        <div style="text-align:right;">
-                            <small style="display:block; opacity:0.8; font-size:9px; font-weight:bold; letter-spacing:1px;">${T('ag_agent_code', 'AGENT CODE')}</small>
-                            <b style="font-size:24px; color:var(--gold); font-weight:900;">${agentData.agentCode}</b>
-                        </div>
-                    </div>
-
-                    <!-- [AGENT ASSISTED ACCESS] Kitendo kikuu cha Wakala: Msaada wa Mwanachama -->
-                    <div style="background: linear-gradient(135deg, #1268A8, #0f172a); color: white; padding: 22px; border-radius: 18px; margin-bottom: 25px; display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center;">
-                        <div style="min-width:200px;">
-                            <h3 style="margin:0; font-weight:900; font-size:16px;">${T('ag_assist_title', 'HELP A SOKOHAI MEMBER')}</h3>
-                            <p style="margin:4px 0 0; opacity:0.85; font-size:12px; line-height:1.5;">${T('ag_assist_sub', 'Register a member without a phone or help them sign in.')}</p>
-                        </div>
-                        <button onclick="window.skhAssistHome()" style="padding:15px 22px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer;">${T('ag_open_assist', 'OPEN ASSISTED ACCESS')}</button>
-                    </div>
-
-                    <!-- METRICS KUU ZA WAKALA -->
-                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:25px;">
-                        <div style="background:#f0fdf4; border: 1px solid #bbf7d0; padding:18px; border-radius:15px; text-align:center;">
-                            <small style="color:gray; font-weight:bold;">${T('ag_wallet_comm', 'WALLET COMMISSION (INCOME)')}</small>
-                            <h3 style="margin:5px 0 0; color:green; font-size:20px; font-weight:900;">TSh ${(skh.currentUserData?.walletBalance || 0).toLocaleString()}</h3>
-                            <button onclick="window.requestWithdrawal()" style="margin-top:10px; padding:6px 12px; background:green; color:white; border:none; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">${T('ag_withdraw', 'WITHDRAW NOW')}</button>
-                        </div>
-                        <div style="background:#eff6ff; border: 1px solid #bfdbfe; padding:18px; border-radius:15px; text-align:center;">
-                            <small style="color:gray; font-weight:bold;">${T('ag_member_stats', 'MEMBER STATS')}</small>
-                            <h3 style="margin:5px 0 0; color:var(--primary-blue); font-size:20px; font-weight:900;">${T('ag_members_biz', '{m} Members | {b} Businesses', { m: watejaCount, b: biasharaCount })}</h3>
-                            <button onclick="window.showForm('offlineMemberForm')" style="margin-top:10px; padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-size:11px; font-weight:900; cursor:pointer;">${T('ag_register_off', 'REGISTER OFFLINE')}</button>
-                        </div>
-                        <div style="background:#fffbeb; border: 1px solid #fde68a; padding:18px; border-radius:15px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                            <small style="color:gray; font-weight:bold; font-size:11px;">${T('ag_review_tokens', 'Review your customers shipment tokens safely')}</small>
-                            <button onclick="window.openLogisticsTokenModal()" style="margin-top:10px; width:100%; padding:8px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">${T('ag_logistics', 'LOGISTICS TOKENS')}</button>
-                        </div>
-                    </div>
-
-                    <!-- SEHEMU YA ORODHA YA WATEJA (MEMBERS LIST) -->
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                        <div style="background: #f8fafc; padding:20px; border-radius:18px; border:1px solid #cbd5e1;">
-                            <b style="font-size:14px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:5px;">${T('ag_members_list', 'OFFLINE MEMBERS REGISTERED ({n})', { n: watejaCount })}</b>
-                            <div style="max-height: 350px; overflow-y:auto;">
-                                ${normalClientsHtml || '<p style="text-align:center; color:gray; font-size:11px; padding:20px;">' + T('ag_no_members', 'No offline members yet.') + '</p>'}
-                            </div>
-                        </div>
-
-                        <div style="background: #f8fafc; padding:20px; border-radius:18px; border:1px solid #cbd5e1;">
-                            <b style="font-size:14px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:5px;">${T('ag_biz_list', 'OFFLINE BUSINESSES REGISTERED ({n})', { n: biasharaCount })}</b>
-                            <div style="max-height: 350px; overflow-y:auto;">
-                                ${businessClientsHtml || '<p style="text-align:center; color:gray; font-size:11px; padding:20px;">' + T('ag_no_biz', 'No offline businesses yet.') + '</p>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                <div style="text-align: left;"> <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; display:flex; justify-content:space-between; align-items:center;"> <div> <h2 style="margin:0; color: white; font-weight:900;">${T('ag_dashboard', 'SOKOHAI AGENT DASHBOARD')}</h2> <p style="margin:5px 0 0; opacity:0.9; font-size:13px;">${T('ag_bridge', 'Manage your members in the street and online.')}</p> </div> <div style="text-align:right;"> <small style="display:block; opacity:0.8; font-size:12px; font-weight:bold; letter-spacing:1px;">${T('ag_agent_code', 'AGENT CODE')}</small> <b style="font-size:24px; color:var(--gold); font-weight:900;">${agentData.agentCode}</b> </div> </div> <!-- [AGENT ASSISTED ACCESS] Kitendo kikuu cha Wakala: Msaada wa Mwanachama --> <div style="background: linear-gradient(135deg, #1268A8, #0f172a); color: white; padding: 22px; border-radius: 18px; margin-bottom: 25px; display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center;"> <div style="min-width:200px;"> <h3 style="margin:0; font-weight:900; font-size:16px;">${T('ag_assist_title', 'HELP A SOKOHAI MEMBER')}</h3> <p style="margin:4px 0 0; opacity:0.85; font-size:12px; line-height:1.5;">${T('ag_assist_sub', 'Register a member without a phone or help them sign in.')}</p> </div> <button onclick="window.skhAssistHome()" style="padding:15px 22px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer;">${T('ag_open_assist', 'OPEN ASSISTED ACCESS')}</button> </div> <!-- METRICS KUU ZA WAKALA --> <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:25px;"> <div style="background:#f0fdf4; border: 1px solid #bbf7d0; padding:18px; border-radius:15px; text-align:center;"> <small style="color:gray; font-weight:bold;">${T('ag_wallet_comm', 'WALLET COMMISSION (INCOME)')}</small> <h3 style="margin:5px 0 0; color:green; font-size:20px; font-weight:900;">TSh ${(skh.currentUserData?.walletBalance || 0).toLocaleString()}</h3> <button onclick="window.requestWithdrawal()" style="margin-top:10px; padding:6px 12px; background:green; color:white; border:none; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">${T('ag_withdraw', 'WITHDRAW NOW')}</button> </div> <div style="background:#eff6ff; border: 1px solid #bfdbfe; padding:18px; border-radius:15px; text-align:center;"> <small style="color:gray; font-weight:bold;">${T('ag_member_stats', 'MEMBER STATS')}</small> <h3 style="margin:5px 0 0; color:var(--primary-blue); font-size:20px; font-weight:900;">${T('ag_members_biz', '{m} Members | {b} Businesses', { m: watejaCount, b: biasharaCount })}</h3> <button onclick="window.skhAssistRegisterView()" style="margin-top:10px; padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer;">${T('ag_register_off', 'REGISTER OFFLINE')}</button> </div> <div style="background:#fffbeb; border: 1px solid #fde68a; padding:18px; border-radius:15px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;"> <small style="color:gray; font-weight:bold; font-size:13px;">${T('ag_review_tokens', 'Review your customers shipment tokens safely')}</small> <button onclick="window.openLogisticsTokenModal()" style="margin-top:10px; width:100%; padding:8px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">${T('ag_logistics', 'LOGISTICS TOKENS')}</button> </div> </div> <!-- SEHEMU YA ORODHA YA WATEJA (MEMBERS LIST) --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;"> <div style="background: #f8fafc; padding:20px; border-radius:18px; border:1px solid #cbd5e1;"> <b style="font-size:14px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:5px;">${T('ag_members_list', 'OFFLINE MEMBERS REGISTERED ({n})', { n: watejaCount })}</b> <div style="max-height: 350px; overflow-y:auto;">
+                                ${normalClientsHtml || '<p style="text-align:center; color:gray; font-size:13px; padding:20px;">' + T('ag_no_members', 'No offline members yet.') + '</p>'}
+                            </div> </div> <div style="background: #f8fafc; padding:20px; border-radius:18px; border:1px solid #cbd5e1;"> <b style="font-size:14px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:5px;">${T('ag_biz_list', 'OFFLINE BUSINESSES REGISTERED ({n})', { n: biasharaCount })}</b> <div style="max-height: 350px; overflow-y:auto;">
+                                ${businessClientsHtml || '<p style="text-align:center; color:gray; font-size:13px; padding:20px;">' + T('ag_no_biz', 'No offline businesses yet.') + '</p>'}
+                            </div> </div> </div> </div> `;
             return;
         }
 
         // [FIX 2026-09] Ombi lililokataliwa — onyesha sababu badala ya kukwama kwenye "Inapakia..."
         if (status === 'rejected') {
             container.innerHTML = `
-                <div style="max-width: 400px; margin: 50px auto; text-align:center; padding:30px; background:white; border-radius:20px; border:1px solid #fecaca;">
-                    <div style="font-size: 44px; color:#ef4444;">!</div>
-                    <h3 style="color:#b91c1c; margin-top:10px;">${T('ag_rejected', 'Your Agency Application Was Rejected')}</h3>
-                    <p style="font-size:13px; color:#64748b; line-height:1.5;">${T('ag_reason', 'Reason')}: ${skh.skhEscape(agentData.rejectReason || agentData.reason || T('ag_not_stated', 'Not stated'))}</p>
-                    <p style="font-size:12px; color:#64748b;">${T('ag_resubmit_hint', 'You can submit a new application through the join form.')}</p>
-                    <button onclick="window.showForm('agentForm')" style="width:100%; padding:14px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer; margin-top:14px;">${T('ag_resubmit', 'SUBMIT NEW APPLICATION')}</button>
-                </div>
-            `;
+                <div style="max-width: 400px; margin: 50px auto; text-align:center; padding:30px; background:white; border-radius:20px; border:1px solid #fecaca;"> <div style="font-size: 44px; color:#ef4444;">!</div> <h3 style="color:#b91c1c; margin-top:10px;">${T('ag_rejected', 'Your Agency Application Was Rejected')}</h3> <p style="font-size:13px; color:#64748b; line-height:1.5;">${T('ag_reason', 'Reason')}: ${skh.skhEscape(agentData.rejectReason || agentData.reason || T('ag_not_stated', 'Not stated'))}</p> <p style="font-size:12px; color:#64748b;">${T('ag_resubmit_hint', 'You can submit a new application through the join form.')}</p> <button onclick="window.showForm('agentForm')" style="width:100%; padding:14px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer; margin-top:14px;">${T('ag_resubmit', 'SUBMIT NEW APPLICATION')}</button> </div> `;
             return;
         }
 
         // [FIX 2026-09] Hali isiyojulikana — usikwame kwenye spinner.
         container.innerHTML = `
-            <div style="max-width: 400px; margin: 50px auto; text-align:center; padding:30px; background:white; border-radius:20px; border:1px solid #cbd5e1;">
-                <h3 style="color:var(--primary-dark); margin-top:10px;">${T('ag_unknown', 'Unknown Agency Status')}</h3>
-                <p style="font-size:13px; color:#64748b; line-height:1.5;">${T('ag_unknown_hint', 'Your application status ({s}) is not recognized. Contact the admin for help.', { s: skh.skhEscape(status || 'N/A') })}</p>
-                <button onclick="window.showForm('agentForm')" style="width:100%; padding:14px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer; margin-top:14px;">${T('ag_resubmit', 'SUBMIT NEW APPLICATION')}</button>
-            </div>
-        `;
+            <div style="max-width: 400px; margin: 50px auto; text-align:center; padding:30px; background:white; border-radius:20px; border:1px solid #cbd5e1;"> <h3 style="color:var(--primary-dark); margin-top:10px;">${T('ag_unknown', 'Unknown Agency Status')}</h3> <p style="font-size:13px; color:#64748b; line-height:1.5;">${T('ag_unknown_hint', 'Your application status ({s}) is not recognized. Contact the admin for help.', { s: skh.skhEscape(status || 'N/A') })}</p> <button onclick="window.showForm('agentForm')" style="width:100%; padding:14px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer; margin-top:14px;">${T('ag_resubmit', 'SUBMIT NEW APPLICATION')}</button> </div> `;
     } catch (e) {
         console.error("Agent Dashboard Error:", e);
         container.innerHTML = `<p style="color:red; text-align:center; padding:30px;">${T('ag_net_error', 'Network error while loading the Dashboard.')} <button onclick="window.loadAgentDashboard()" style="padding:10px 15px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">${T('ag_retry', 'TRY AGAIN')}</button></p>`;

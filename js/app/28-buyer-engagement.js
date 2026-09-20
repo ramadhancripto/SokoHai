@@ -18,8 +18,7 @@
 // ============================================================
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var state = { liked: {}, saved: {}, watched: {}, following: {} };
     var prefsCache = null;
@@ -37,12 +36,12 @@ import { skh } from './00-bootstrap.js';
 
     // ---------- ICONS (SVG inline, HAKUNA emoji) ----------
     window.SKH_ICONS = {
-        like:   '<svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px;display:block;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
-        save:   '<svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px;display:block;"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>',
+        like: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px;display:block;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
+        save: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:17px;height:17px;display:block;"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>',
         follow: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;display:block;"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
-        watch:  '<svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;display:block;"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-5v-1l-1-1v-5a6 6 0 0 0-4.5-5.8V3.5a1.5 1.5 0 0 0-3 0v.7A6 6 0 0 0 6 10v5l-1 1v1h14z"/></svg>',
-        store:  '<svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;display:block;"><path d="M21 9V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v1H2v2c0 1.1.9 2 2 2h1v7h14v-7h1c1.1 0 2-.9 2-2V9h-1zm-4 8h-6v-4h6v4z"/></svg>',
-        gear:   '<svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;display:block;"><path d="M19.14 12.94a7 7 0 0 0 .05-.94 7 7 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.2 7.2 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.65 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7 7 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.32.61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54a7.2 7.2 0 0 0 1.62-.94l2.39.96c.21.1.48 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>'
+        watch: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;display:block;"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-5v-1l-1-1v-5a6 6 0 0 0-4.5-5.8V3.5a1.5 1.5 0 0 0-3 0v.7A6 6 0 0 0 6 10v5l-1 1v1h14z"/></svg>',
+        store: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;display:block;"><path d="M21 9V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v1H2v2c0 1.1.9 2 2 2h1v7h14v-7h1c1.1 0 2-.9 2-2V9h-1zm-4 8h-6v-4h6v4z"/></svg>',
+        gear: '<svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;display:block;"><path d="M19.14 12.94a7 7 0 0 0 .05-.94 7 7 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.2 7.2 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.65 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7 7 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.32.61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54a7.2 7.2 0 0 0 1.62-.94l2.39.96c.21.1.48 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>'
     };
 
     // Jaza icons za SVG kwenye modali + My SokoHai tabs
@@ -58,11 +57,7 @@ import { skh } from './00-bootstrap.js';
             if (el) el.innerHTML = map[id];
         });
         // Weka lebo za lugha sahihi kabla ya modali kufunguliwa
-        var lbl = {
-            'btnFollow .eng-lbl': engT('eng_follow', 'Follow'),
-            'btnLike .eng-lbl': engT('eng_like', 'Like'),
-            'btnSave .eng-lbl': engT('eng_save', 'Save'),
-            'btnWatch .eng-lbl': engT('eng_watch', 'Watch Price')
+        var lbl = { 'btnFollow .eng-lbl': engT('eng_follow', 'Follow'), 'btnLike .eng-lbl': engT('eng_like', 'Like'), 'btnSave .eng-lbl': engT('eng_save', 'Save'), 'btnWatch .eng-lbl': engT('eng_watch', 'Watch Price')
         };
         Object.keys(lbl).forEach(function (sel) {
             var el = document.querySelector('#' + sel);
@@ -78,14 +73,69 @@ import { skh } from './00-bootstrap.js';
     function snapExists(s) { try { return !!(s && (typeof s.exists === 'function' ? s.exists() : s.exists)); } catch (e) { return false; } }
     function ownerNameOf(p) { return (p && (p.ownerName || p.driverName || p.sellerName || p.fullName || p.storeName)) || engT('eng_seller', 'Seller'); }
     function btnLabel(btn, txt) { if (!btn) return; var lbl = btn.querySelector('.eng-lbl'); if (lbl) lbl.textContent = txt; else btn.textContent = txt; }
-    function paintFollowBtn(btn, following) {
+    /* [FOLLOW UX 2026-09-14] Hapo awali kitufe kilibadilisha RANGI pekee —
+       mtumiaji hakujua kama amefuata au la, wala hakuona idadi ya wafuasi.
+       Sasa: neno linabadilika (Fuata -> Unafuata), rangi inabadilika,
+       tiki inaonekana, na idadi ya wafuasi inaonyeshwa kando yake. */
+    function fmtCount(n) {
+        n = Number(n) || 0;
+        if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
+        if (n >= 1000)    return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K';
+        return String(n);
+    }
+
+    function paintFollowBtn(btn, following, count) {
         if (!btn) return;
+        btn.classList.toggle('is-following', !!following);
+        btn.classList.toggle('btn-following', !!following);
+        btn.classList.toggle('btn-not-following', !following);
+        btn.setAttribute('aria-pressed', following ? 'true' : 'false');
+        btn.setAttribute('title', following ? 'Unamfuata — bonyeza kuacha' : 'Mfuate muuzaji huyu');
+
+        // Neno linalobadilika (ndilo linaloeleweka zaidi kuliko rangi pekee)
+        var lbl = btn.querySelector('.eng-lbl');
+        if (lbl) lbl.textContent = following ? 'Unafuata' : 'Fuata';
+
+        // Ikoni: tiki ikiwa anafuata, plus ikiwa hafuati
+        var ico = btn.querySelector('.eng-ico');
+        if (ico && window.skhNavIcon) {
+            ico.innerHTML = window.skhNavIcon(following ? 'check' : 'plus', 14);
+        }
+
+        // Idadi ya wafuasi
+        if (count !== undefined && count !== null) {
+            var n = btn.querySelector('.eng-count');
+            if (!n) {
+                n = document.createElement('span');
+                n.className = 'eng-count';
+                btn.appendChild(n);
+            }
+            var c = Number(count) || 0;
+            n.textContent = c > 0 ? fmtCount(c) : '';
+            n.style.display = c > 0 ? '' : 'none';
+        }
+
+        // Rangi (inabaki kama nyongeza, si ishara pekee)
         if (following) {
-            btn.style.background = '#dcfce7'; btn.style.color = '#16a34a'; btn.style.borderColor = '#bbf7d0';
+            btn.style.background = '#E7F7F2'; btn.style.color = '#0F7A5E'; btn.style.borderColor = '#BFE8DA';
         } else {
-            btn.style.background = 'white'; btn.style.color = 'var(--primary-dark)'; btn.style.borderColor = '#cbd5e1';
+            btn.style.background = '#fff'; btn.style.color = 'var(--sh-blue, #1268A8)'; btn.style.borderColor = '#D4E0EC';
         }
     }
+    window.skhPaintFollow = paintFollowBtn;
+
+    /* Soma idadi halisi ya wafuasi wa muuzaji (users/{uid}.followers) */
+    window.skhFollowerCount = async function (sellerId) {
+        if (!sellerId || !skh.db) return null;
+        try {
+            var snap = await skh.getDoc(skh.doc(skh.db, 'users', sellerId));
+            if (!snap || !snap.exists || !snap.exists()) return null;
+            var d = snap.data() || {};
+            if (Array.isArray(d.followers)) return d.followers.length;
+            if (typeof d.followerCount === 'number') return d.followerCount;
+            return null;
+        } catch (e) { return null; }
+    };
 
     function logEvent(type, data) {
         try {
@@ -222,10 +272,18 @@ import { skh } from './00-bootstrap.js';
         const wasFollowing = !!state.following[key];
         state.following[key] = !wasFollowing;
         if (btnEl) {
-            btnEl.classList.toggle('btn-following', state.following[key]);
-            btnEl.classList.toggle('btn-not-following', !state.following[key]);
-            paintFollowBtn(btnEl, state.following[key]);
-            btnLabel(btnEl, state.following[key] ? engT('eng_following', 'Following') : engT('eng_follow', 'Follow'));
+            // Idadi ibadilike PAPO HAPO (+1 / -1) ili mtumiaji aone athari mara moja
+            var cur = Number(btnEl.dataset.count);
+            if (!isFinite(cur)) cur = 0;
+            cur = Math.max(0, cur + (state.following[key] ? 1 : -1));
+            btnEl.dataset.count = cur;
+            paintFollowBtn(btnEl, state.following[key], cur);
+            if (typeof skhToast === 'function') {
+                skhToast(state.following[key]
+                    ? 'Unamfuata ' + (sellerName || 'muuzaji') + ' sasa.'
+                    : 'Umeacha kumfuata ' + (sellerName || 'muuzaji') + '.',
+                    state.following[key] ? 'success' : 'info', 2000);
+            }
         }
         try {
             const relRef = skh.doc(skh.db, "sellerFollowers", relId(skh.currentUser.uid, sellerId));
@@ -339,9 +397,17 @@ import { skh } from './00-bootstrap.js';
             bFollow.classList.toggle('btn-following', f);
             bFollow.classList.toggle('btn-not-following', !f);
             paintFollowBtn(bFollow, f);
-            btnLabel(bFollow, f ? engT('eng_following', 'Following') : engT('eng_follow', 'Follow'));
             if (skh.currentUser && p.userId === skh.currentUser.uid) bFollow.style.display = 'none';
             else bFollow.style.display = 'flex';
+            // Idadi halisi ya wafuasi (haizuii UI — inaingia ikishafika)
+            if (p.userId) {
+                window.skhFollowerCount(p.userId).then(function (c) {
+                    if (c !== null && document.getElementById('btnFollow') === bFollow) {
+                        bFollow.dataset.count = c;
+                        paintFollowBtn(bFollow, !!state.following[p.userId], c);
+                    }
+                });
+            }
         }
     };
 
@@ -440,7 +506,7 @@ import { skh } from './00-bootstrap.js';
         return hit;
     }
 
-    // NEW_PRODUCT_PUBLISHED → arifu followers wenye interest husika
+    // NEW_PRODUCT_PUBLISHED -> arifu followers wenye interest husika
     window.skhNotifyNewProduct = async function (product, sellerId) {
         if (!sellerId) return { notified: 0 };
         try {
@@ -458,8 +524,7 @@ import { skh } from './00-bootstrap.js';
                 if (!relevantTo(product, interests) && !prefs.seller.allUpdates) continue;
                 await sendNotif(uid,
                     engT('notif_new_product', 'New Product') + ': ' + (product.title || engT('products', 'Products')),
-                    engT('notif_new_product_body', 'New product from a seller you follow: {title} — TSh {price}.', { title: product.title || '', price: Number(product.price || 0).toLocaleString() }),
-                    'engagement', { productId: product.id, sellerId: sellerId });
+                    engT('notif_new_product_body', 'New product from a seller you follow: {title} — TSh {price}.', { title: product.title || '', price: Number(product.price || 0).toLocaleString() }), 'engagement', { productId: product.id, sellerId: sellerId });
                 sent++;
             }
             return { notified: sent };
@@ -469,7 +534,7 @@ import { skh } from './00-bootstrap.js';
         }
     };
 
-    // PRICE_DROPPED → arifu watchers + savers
+    // PRICE_DROPPED -> arifu watchers + savers
     window.skhNotifyPriceDrop = async function (product, oldPrice, newPrice) {
         if (!product || !product.id) return;
         try {
@@ -487,14 +552,13 @@ import { skh } from './00-bootstrap.js';
                 if (!prefs.product.priceDrop) continue;
                 sendNotif(uid,
                     engT('notif_price_drop', 'Price Dropped'),
-                    engT('notif_price_drop_body', '{title} you saved/watched dropped from TSh {old} to TSh {new}.', { title: product.title || engT('products', 'Products'), old: Number(oldPrice || 0).toLocaleString(), new: Number(newPrice || 0).toLocaleString() }),
-                    'engagement', { productId: product.id });
+                    engT('notif_price_drop_body', '{title} you saved/watched dropped from TSh {old} to TSh {new}.', { title: product.title || engT('products', 'Products'), old: Number(oldPrice || 0).toLocaleString(), new: Number(newPrice || 0).toLocaleString() }), 'engagement', { productId: product.id });
             }
             logEvent('PRODUCT_PRICE_DROPPED', { productId: product.id, oldPrice: oldPrice, newPrice: newPrice });
         } catch (e) { console.warn('[engage:price-drop]', e && e.message); }
     };
 
-    // RESTOCKED → arifu watchers + savers
+    // RESTOCKED -> arifu watchers + savers
     window.skhNotifyRestock = async function (product) {
         if (!product || !product.id) return;
         try {
@@ -512,8 +576,7 @@ import { skh } from './00-bootstrap.js';
                 if (!prefs.product.restock) continue;
                 sendNotif(uid,
                     engT('notif_restock', 'Back in Stock'),
-                    engT('notif_restock_body', '{title} you saved/watched is available again.', { title: product.title || engT('products', 'Products') }),
-                    'engagement', { productId: product.id });
+                    engT('notif_restock_body', '{title} you saved/watched is available again.', { title: product.title || engT('products', 'Products') }), 'engagement', { productId: product.id });
             }
             logEvent('PRODUCT_RESTOCKED', { productId: product.id });
         } catch (e) { console.warn('[engage:restock]', e && e.message); }
@@ -583,14 +646,9 @@ import { skh } from './00-bootstrap.js';
             if (it.savedAt) meta.push(engT('eng_saved_on', 'Saved on') + ' ' + new Date(it.savedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ'));
         }
         return `
-        <div class="list-item" style="cursor:pointer;" onclick="openProduct('${skh.skhJsEsc(it.productId || '')}', '${skh.skhJsEsc(it.collectionName || 'products')}')">
-            <img src="${skh.skhEscape(it.image || 'https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b')}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;background:#f1f5f9;" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'">
-            <div class="list-info">
-                <b>${skh.skhEscape(it.title || engT('products', 'Products'))}</b>
-                <span style="color:var(--terracotta);font-weight:900;">TSh ${Number(it.price || 0).toLocaleString()}</span>
+        <div class="list-item" style="cursor:pointer;" onclick="openProduct('${skh.skhJsEsc(it.productId || '')}', '${skh.skhJsEsc(it.collectionName || 'products')}')"> <img src="${skh.skhEscape(it.image || 'https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b')}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;background:#f1f5f9;" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'"> <div class="list-info"> <b>${skh.skhEscape(it.title || engT('products', 'Products'))}</b> <span style="color:var(--terracotta);font-weight:900;">TSh ${Number(it.price || 0).toLocaleString()}</span>
                 ${meta.length ? '<small style="color:#64748b;">' + meta.join(' · ') + '</small>' : ''}
-            </div>
-        </div>`;
+            </div> </div>`;
     }
 
     window.skhRenderEngagementTab = async function (tab) {
@@ -614,13 +672,7 @@ import { skh } from './00-bootstrap.js';
                 snap.forEach(function (d) {
                     var f = d.data();
                     rows += `
-                    <div class="list-item" style="justify-content:space-between;">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:45px;height:45px;background:#16a34a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;">${window.SKH_ICONS ? window.SKH_ICONS.store : ''}</div>
-                            <div><b>${skh.skhEscape(f.sellerName || engT('eng_seller', 'Seller'))}</b><small style="display:block;color:#64748b;">${engT('eng_follow_since', 'Following since')} ${new Date(f.followedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ')}</small></div>
-                        </div>
-                        <button onclick="window.skhToggleFollowSeller('${skh.skhJsEsc(f.sellerId)}','${skh.skhJsEsc(f.sellerName || '')}',this)" style="padding:8px 12px;background:#fee2e2;color:#ef4444;border:none;border-radius:8px;font-weight:800;cursor:pointer;">${engT('eng_unfollow', 'Unfollow')}</button>
-                    </div>`;
+                    <div class="list-item" style="justify-content:space-between;"> <div style="display:flex;align-items:center;gap:12px;"> <div style="width:45px;height:45px;background:#16a34a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;">${window.SKH_ICONS ? window.SKH_ICONS.store : ''}</div> <div><b>${skh.skhEscape(f.sellerName || engT('eng_seller', 'Seller'))}</b><small style="display:block;color:#64748b;">${engT('eng_follow_since', 'Following since')} ${new Date(f.followedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ')}</small></div> </div> <button onclick="window.skhToggleFollowSeller('${skh.skhJsEsc(f.sellerId)}','${skh.skhJsEsc(f.sellerName || '')}',this)" style="padding:8px 12px;background:#fee2e2;color:#ef4444;border:none;border-radius:8px;font-weight:800;cursor:pointer;">${engT('eng_unfollow', 'Unfollow')}</button> </div>`;
                 });
                 box.innerHTML = rows || '<p style="text-align:center;color:#64748b;">' + engT('my_no_following', 'You are not following any seller yet.') + '</p>';
                 return;
@@ -652,13 +704,7 @@ import { skh } from './00-bootstrap.js';
         function row(group, key, label) {
             var on = p[group][key];
             return `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
-                <b style="font-size:13px;color:#0f172a;">${label}</b>
-                <label style="position:relative;display:inline-block;width:42px;height:24px;">
-                    <input type="checkbox" ${on ? 'checked' : ''} onchange="window.skhSetNotifPref('${group}','${key}',this.checked); this.checked ? this.parentElement.style.background='' : null;" style="opacity:0;width:0;height:0;">
-                    <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:${on ? '#16a34a' : '#cbd5e1'};border-radius:24px;transition:.3s;"></span>
-                </label>
-            </div>`;
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;"> <b style="font-size:13px;color:#0f172a;">${label}</b> <label style="position:relative;display:inline-block;width:42px;height:24px;"> <input type="checkbox" ${on ? 'checked' : ''} onchange="window.skhSetNotifPref('${group}','${key}',this.checked); this.checked ? this.parentElement.style.background='' : null;" style="opacity:0;width:0;height:0;"> <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:${on ? '#16a34a' : '#cbd5e1'};border-radius:24px;transition:.3s;"></span> </label> </div>`;
         }
         box.innerHTML = `
             <b style="font-size:12px;color:#0f172a;display:block;margin:10px 0 8px;">${engT('my_seller_updates', 'Seller Updates')}</b>
@@ -670,8 +716,7 @@ import { skh } from './00-bootstrap.js';
             <b style="font-size:12px;color:#0f172a;display:block;margin:16px 0 8px;">${engT('my_product_updates', 'Product Updates (watched)')}</b>
             ${row('product','priceDrop', engT('my_price_drop', 'Price drop'))}
             ${row('product','restock', engT('my_restock', 'Restock'))}
-            ${row('product','majorDeal', engT('my_major_deal', 'Major deal'))}
-        `;
+            ${row('product','majorDeal', engT('my_major_deal', 'Major deal'))} `;
     };
 
     // ---------- PERSONALIZED HOME FEED ----------
@@ -715,14 +760,7 @@ import { skh } from './00-bootstrap.js';
             try { if (window.sessionStorage.getItem('skh_recommended_hidden') === '1') { host.style.display = 'none'; return; } } catch (e) {}
             host.style.display = 'block';
             host.innerHTML = `
-                <div class="strategy-header" style="gap:8px; margin-bottom:10px;">
-                    <div style="min-width:0;">
-                        <b>${engT('eng_rec_title', 'Recommended for You')}</b>
-                        <small style="color:#94a3b8;font-size:10px; display:block; letter-spacing:0; text-transform:none;">${engT('eng_rec_sub', 'Based on your likes, saves and follows')}</small>
-                    </div>
-                    <button onclick="window.skhHideRecommended()" title="${engT('eng_hide', 'Hide')}" aria-label="${engT('eng_hide', 'Hide')}" style="background:#eef2f6; color:#475569; border:none; width:26px; height:26px; border-radius:50%; font-weight:900; font-size:13px; cursor:pointer; flex-shrink:0; line-height:1;">✕</button>
-                </div>
-                <div class="item-slider">${docs.map(function (d) {
+                <div class="strategy-header" style="gap:8px; margin-bottom:10px;"> <div style="min-width:0;"> <b>${engT('eng_rec_title', 'Recommended for You')}</b> <small style="color:#94a3b8;font-size:12.5px; display:block; letter-spacing:0; text-transform:none;">${engT('eng_rec_sub', 'Based on your likes, saves and follows')}</small> </div> <button onclick="window.skhHideRecommended()" title="${engT('eng_hide', 'Hide')}" aria-label="${engT('eng_hide', 'Hide')}" style="background:#eef2f6; color:#475569; border:none; width:26px; height:26px; border-radius:50%; font-weight:900; font-size:13px; cursor:pointer; flex-shrink:0; line-height:1;">${window.skhNavIcon ? window.skhNavIcon('x',16) : ''}</button> </div> <div class="item-slider">${docs.map(function (d) {
                     var img = skh.skhEscape(d.image || 'https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b');
                     return `<div class="large-card" onclick="openProduct('${skh.skhJsEsc(d.id)}', '${skh.skhJsEsc(d.collectionName || 'products')}')"><div class="card-img" style="position:relative;overflow:hidden;"><img src="${img}" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'"></div><b style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:8px;">${skh.skhEscape(d.title || 'Bidhaa')}</b><span style="color:var(--green);font-size:13px;font-weight:900;">TSh ${Number(d.price || 0).toLocaleString()}</span></div>`;
                 }).join('')}</div>`;

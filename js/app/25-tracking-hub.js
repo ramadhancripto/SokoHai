@@ -2,8 +2,8 @@
    KAZI YA FILE HII: UFUATILIAJI WA MZIGO (Tracking Hub).
    - Line track + Live track (ramani) ya mzigo wa mnunuzi.
    - Picha ya mzigo + details zote (muuzaji, dereva, njia, kiasi, token).
-   - Location: dereva akiruhusu GPS → mnunuzi anaona LIVE; vinginevyo
-     tunaonyesha njia (from → to) na mahali pa mwisho palipojulikana.
+   - Location: dereva akiruhusu GPS -> mnunuzi anaona LIVE; vinginevyo
+     tunaonyesha njia (from -> to) na mahali pa mwisho palipojulikana.
    - Dereva anaweza kushirikisha location yake live (share/stop).
 */
 import { skh } from './00-bootstrap.js';
@@ -12,7 +12,7 @@ const TRACK_GEO_CACHE = {};
 let liveWatchId = null;   // watch id ya GPS ya dereva (share location)
 let trackUnsub = null;    // onSnapshot ya ufuatiliaji live
 
-// Forward geocode ya jina la mahali → [lat, lon] (cache ndani ya kumbukumbu)
+// Forward geocode ya jina la mahali -> [lat, lon] (cache ndani ya kumbukumbu)
 window.skhGeocodePlace = async function(name) {
     if (!name) return null;
     const key = String(name).trim().toLowerCase();
@@ -39,19 +39,7 @@ window.ensureTrackDetailModal = function() {
     m.className = 'overlay-menu';
     m.style.cssText = 'z-index: 9600; padding: 0;';
     m.innerHTML = `
-        <div style="background:#ffffff; width:100%; max-width:520px; height:100vh; height:100dvh; max-height:100vh; max-height:100dvh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.45);">
-            <div style="background:var(--primary-dark, #052e4f); padding:14px 16px; color:white; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="font-size:22px;">&#128666;</div>
-                    <div>
-                        <b id="trackTitle" style="font-size:15px; display:block;">Ufuatiliaji wa Mzigo</b>
-                        <small id="trackSub" style="color:#a5c8e8; font-size:11px; font-weight:bold;">Line Track + Live Track</small>
-                    </div>
-                </div>
-                <button onclick="window.closeModals()" style="background:transparent; border:none; color:white; width:34px; height:34px; border-radius:50%; font-size:18px; cursor:pointer;">&#10005;</button>
-            </div>
-            <div id="trackBody" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#f4f6f8; padding:14px;"></div>
-        </div>`;
+        <div style="background:#ffffff; width:100%; max-width:520px; height:100vh; height:100dvh; max-height:100vh; max-height:100dvh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.45);"> <div style="background:var(--primary-dark, #052e4f); padding:14px 16px; color:white; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"> <div style="display:flex; align-items:center; gap:10px;"> <div style="font-size:22px;"></div> <div> <b id="trackTitle" style="font-size:15px; display:block;">Ufuatiliaji wa Mzigo</b> <small id="trackSub" style="color:#a5c8e8; font-size:13px; font-weight:bold;">Line Track + Live Track</small> </div> </div> <button onclick="window.closeModals()" style="background:transparent; border:none; color:white; width:34px; height:34px; border-radius:50%; font-size:18px; cursor:pointer;">&#10005;</button> </div> <div id="trackBody" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:#f4f6f8; padding:14px;"></div> </div>`;
     document.body.appendChild(m);
     return m;
 };
@@ -140,16 +128,7 @@ window.skhTrackSteps = function(status) {
 window.skhTrackLineHTML = function(status) {
     const t = window.skhTrackSteps(status);
     return `
-        <div class="tracker-wrap" style="margin:14px 0;">
-            <div class="tracker-line"></div>
-            <div class="tracker-fill" style="width: ${t.width};"></div>
-            <div class="tracker-steps">
-                <div class="t-step ${t.s1}"><div class="t-dot"></div><span class="t-label">Muuzaji</span></div>
-                <div class="t-step ${t.s2}"><div class="t-dot"></div><span class="t-label">Safarini</span></div>
-                <div class="t-step ${t.s3}"><div class="t-dot"></div><span class="t-label">Kituoni</span></div>
-                <div class="t-step ${t.s4}"><div class="t-dot"></div><span class="t-label">Mteja</span></div>
-            </div>
-        </div>`;
+        <div class="tracker-wrap" style="margin:14px 0;"> <div class="tracker-line"></div> <div class="tracker-fill" style="width: ${t.width};"></div> <div class="tracker-steps"> <div class="t-step ${t.s1}"><div class="t-dot"></div><span class="t-label">Muuzaji</span></div> <div class="t-step ${t.s2}"><div class="t-dot"></div><span class="t-label">Safarini</span></div> <div class="t-step ${t.s3}"><div class="t-dot"></div><span class="t-label">Kituoni</span></div> <div class="t-step ${t.s4}"><div class="t-dot"></div><span class="t-label">Mteja</span></div> </div> </div>`;
 };
 
 // PATA (Fuatilia) oda ya bidhaa — photo + details + line track + ramani/last location
@@ -176,40 +155,15 @@ window.openOrderTracking = async function(orderId) {
         const st = String(od.status || 'held').toLowerCase();
 
         body.innerHTML = `
-            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
-                <div style="display:flex; gap:12px; align-items:center;">
-                    <img src="${img || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:84px; height:84px; border-radius:14px; object-fit:cover; border:1px solid #e2e8f0; background:#f1f5f9; flex-shrink:0;">
-                    <div style="flex:1; min-width:0;">
-                        <b style="font-size:14px; color:#0f172a; display:block; margin-bottom:4px;">${skh.skhEscape(od.itemTitle || 'Bidhaa')}</b>
-                        <span style="font-size:13px; font-weight:900; color:#065f46; display:block;">TSh ${Number(od.amount || 0).toLocaleString()}</span>
-                        <span style="font-size:11px; color:#64748b; display:block; margin-top:2px;">Muuzaji: ${skh.skhEscape(od.sellerName || 'Muuzaji')}</span>
-                    </div>
-                </div>
-            </div>
+            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${img || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:84px; height:84px; border-radius:14px; object-fit:cover; border:1px solid #e2e8f0; background:#f1f5f9; flex-shrink:0;"> <div style="flex:1; min-width:0;"> <b style="font-size:14px; color:#0f172a; display:block; margin-bottom:4px;">${skh.skhEscape(od.itemTitle || 'Bidhaa')}</b> <span style="font-size:13px; font-weight:900; color:#065f46; display:block;">TSh ${Number(od.amount || 0).toLocaleString()}</span> <span style="font-size:13px; color:#64748b; display:block; margin-top:2px;">Muuzaji: ${skh.skhEscape(od.sellerName || 'Muuzaji')}</span> </div> </div> </div>
 
             ${window.skhTrackLineHTML(od.status)}
 
-            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
-                <b style="font-size:12px; color:#0f172a; display:block; margin-bottom:8px;">DETAILS ZA MZIGO</b>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
-                    <div><small style="color:#94a3b8;">Hali</small><br><b>${String(od.status || 'held').toUpperCase()}</b></div>
-                    <div><small style="color:#94a3b8;">Tarehe</small><br><b>${od.date ? new Date(od.date).toLocaleDateString('sw-TZ', {day:'numeric', month:'short', year:'numeric'}) : '—'}</b></div>
-                    <div><small style="color:#94a3b8;">Malipo</small><br><b>${skh.skhEscape(od.paymentType || '—')}</b></div>
-                    <div><small style="color:#94a3b8;">Ref</small><br><b style="font-family:monospace;">${skh.skhEscape(od.paymentRef || '—')}</b></div>
-                </div>
-                ${od.lastLocation ? `<div style="margin-top:8px; background:#fef3c7; border-radius:8px; padding:8px; font-size:11px; color:#92400e;"><b>Mahali pa mwisho:</b> ${skh.skhEscape(od.lastLocation)}</div>` : ''}
-            </div>
+            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;"> <b style="font-size:12px; color:#0f172a; display:block; margin-bottom:8px;">DETAILS ZA MZIGO</b> <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;"> <div><small style="color:#94a3b8;">Hali</small><br><b>${String(od.status || 'held').toUpperCase()}</b></div> <div><small style="color:#94a3b8;">Tarehe</small><br><b>${od.date ? new Date(od.date).toLocaleDateString('sw-TZ', {day:'numeric', month:'short', year:'numeric'}) : '—'}</b></div> <div><small style="color:#94a3b8;">Malipo</small><br><b>${skh.skhEscape(od.paymentType || '—')}</b></div> <div><small style="color:#94a3b8;">Ref</small><br><b style="font-family:monospace;">${skh.skhEscape(od.paymentRef || '—')}</b></div> </div>
+                ${od.lastLocation ? `<div style="margin-top:8px; background:#fef3c7; border-radius:8px; padding:8px; font-size:13px; color:#92400e;"><b>Mahali pa mwisho:</b> ${skh.skhEscape(od.lastLocation)}</div>` : ''}
+            </div> <div id="orderTrackMap" style="height:240px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:8px;"></div> <p id="orderTrackGps" style="font-size:13px; color:#475569; text-align:center; margin:4px 0 12px;">Inachunguza GPS ya mzigo...</p> <div style="display:flex; gap:8px;"> <button onclick="window.openChatWithUser('${skh.skhJsEsc(od.sellerId || '')}', '${skh.skhJsEsc(od.sellerName || 'Muuzaji')}')" style="flex:1; padding:13px; background:#25D366; color:white; border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer;">CHAT NA MUUZAJI</button> </div> <button onclick="window.closeModals()" style="margin-top:8px; width:100%; padding:13px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">FUNGA</button> `;
 
-            <div id="orderTrackMap" style="height:240px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:8px;"></div>
-            <p id="orderTrackGps" style="font-size:11px; color:#475569; text-align:center; margin:4px 0 12px;">Inachunguza GPS ya mzigo...</p>
-
-            <div style="display:flex; gap:8px;">
-                <button onclick="window.openChatWithUser('${skh.skhJsEsc(od.sellerId || '')}', '${skh.skhJsEsc(od.sellerName || 'Muuzaji')}')" style="flex:1; padding:13px; background:#25D366; color:white; border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer;">&#128172; CHAT NA MUUZAJI</button>
-            </div>
-            <button onclick="window.closeModals()" style="margin-top:8px; width:100%; padding:13px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">FUNGA</button>
-        `;
-
-        // Ramani ya oda: live GPS (kutoka kwa dereva aliyeunganishwa) → vinginevyo njia + last known
+        // Ramani ya oda: live GPS (kutoka kwa dereva aliyeunganishwa) -> vinginevyo njia + last known
         const gps = document.getElementById('orderTrackGps');
         const q = skh.query(skh.collection(skh.db, "ride_requests"),
             skh.where("customerId", "==", skh.currentUser.uid),
@@ -262,49 +216,17 @@ window.openRideTrackingInto = async function(mapId, gpsId, rideId, rd, bodyEl) {
     if (bodyEl) {
         const img = rd.cargoImage || '';
         bodyEl.innerHTML = `
-            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
-                <div style="display:flex; gap:12px; align-items:center;">
-                    <img src="${img || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:84px; height:84px; border-radius:14px; object-fit:cover; border:1px solid #e2e8f0; background:#f1f5f9; flex-shrink:0;">
-                    <div style="flex:1; min-width:0;">
-                        <b style="font-size:14px; color:#0f172a; display:block; margin-bottom:4px;">${skh.skhEscape(rd.cargoName || 'Mzigo')}</b>
-                        <span style="font-size:11px; color:#475569; display:block;">${skh.skhEscape(rd.fromLocation || '—')} &#10142; ${skh.skhEscape(rd.toLocation || '—')}</span>
+            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${img || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:84px; height:84px; border-radius:14px; object-fit:cover; border:1px solid #e2e8f0; background:#f1f5f9; flex-shrink:0;"> <div style="flex:1; min-width:0;"> <b style="font-size:14px; color:#0f172a; display:block; margin-bottom:4px;">${skh.skhEscape(rd.cargoName || 'Mzigo')}</b> <span style="font-size:13px; color:#475569; display:block;">${skh.skhEscape(rd.fromLocation || '—')} &#10142; ${skh.skhEscape(rd.toLocation || '—')}</span>
                         ${rd.cargoPrice ? `<span style="font-size:13px; font-weight:900; color:#065f46; display:block; margin-top:2px;">TSh ${Number(rd.cargoPrice).toLocaleString()}</span>` : ''}
-                    </div>
-                </div>
-            </div>
+                    </div> </div> </div>
 
             ${window.skhTrackLineHTML(rd.status)}
 
-            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
-                <b style="font-size:12px; color:#0f172a; display:block; margin-bottom:8px;">DETAILS ZA SAFARI</b>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
-                    <div><small style="color:#94a3b8;">Hali</small><br><b>${String(rd.status || 'searching').toUpperCase()}</b></div>
-                    <div><small style="color:#94a3b8;">Dereva</small><br><b>${skh.skhEscape(rd.driverName || 'Hajapewa bado')}</b></div>
-                    <div><small style="color:#94a3b8;">Simu ya Dereva</small><br><b>${skh.skhEscape(rd.driverPhone || '—')}</b></div>
-                    <div><small style="color:#94a3b8;">Chombo</small><br><b>${skh.skhEscape(rd.vehicleType || rd.vehicle || '—')}</b></div>
-                </div>
-                <div style="margin-top:8px; background:#fff7ed; border:1px dashed #f97316; border-radius:8px; padding:8px; text-align:center;"><small style="font-size:9px; color:#9a3412; display:block;">CODE YA UTHIBITISHO</small><b data-custody-token-ride="${rideId}" data-custody-token-kind="transfer" style="font-size:16px; color:#ea580c; letter-spacing:2px;">• • •</b></div>
-                ${rd.driverLocName ? `<div style="margin-top:8px; background:#fef3c7; border-radius:8px; padding:8px; font-size:11px; color:#92400e;"><b>Mahali pa mwisho:</b> ${skh.skhEscape(rd.driverLocName)}</div>` : ''}
-            </div>
-
-            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
-                <b style="font-size:12px; color:#0f172a; display:block; margin-bottom:8px;"> MLINZI WA MZIGO (CHAIN OF CUSTODY)</b>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
-                    <div><small style="color:#94a3b8;">Hali ya Makabidhiano</small><br><b>${window.skhCustodyStatusLabel ? window.skhCustodyStatusLabel(rd.status) : String(rd.status || '—').toUpperCase()}</b></div>
-                    <div><small style="color:#94a3b8;">Mshika Mzigo Sasa</small><br><b>${skh.skhEscape(rd.currentCustodianName || rd.driverName || '—')}</b></div>
-                </div>
-                <div id="custodyTimeline_${mapId}" style="margin-top:10px;"></div>
-            </div>
-
-            <div id="${mapId}" style="height:240px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:8px;"></div>
-            <p id="${gpsId}" style="font-size:11px; color:#475569; text-align:center; margin:4px 0 12px;">Inachunguza GPS ya dereva...</p>
-
-            <div style="display:flex; gap:8px;">
-                <button onclick="window.openChatWithUser('${skh.skhJsEsc(rd.driverId || '')}', '${skh.skhJsEsc(rd.driverName || 'Dereva')}')" style="flex:1; padding:13px; background:#25D366; color:white; border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer;">&#128172; CHAT NA MSAFIRISHAJI</button>
+            <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;"> <b style="font-size:12px; color:#0f172a; display:block; margin-bottom:8px;">DETAILS ZA SAFARI</b> <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;"> <div><small style="color:#94a3b8;">Hali</small><br><b>${String(rd.status || 'searching').toUpperCase()}</b></div> <div><small style="color:#94a3b8;">Dereva</small><br><b>${skh.skhEscape(rd.driverName || 'Hajapewa bado')}</b></div> <div><small style="color:#94a3b8;">Simu ya Dereva</small><br><b>${skh.skhEscape(rd.driverPhone || '—')}</b></div> <div><small style="color:#94a3b8;">Chombo</small><br><b>${skh.skhEscape(rd.vehicleType || rd.vehicle || '—')}</b></div> </div> <div style="margin-top:8px; background:#fff7ed; border:1px dashed #f97316; border-radius:8px; padding:8px; text-align:center;"><small style="font-size:12px; color:#9a3412; display:block;">CODE YA UTHIBITISHO</small><b data-custody-token-ride="${rideId}" data-custody-token-kind="transfer" style="font-size:16px; color:#ea580c; letter-spacing:2px;">• • •</b></div>
+                ${rd.driverLocName ? `<div style="margin-top:8px; background:#fef3c7; border-radius:8px; padding:8px; font-size:13px; color:#92400e;"><b>Mahali pa mwisho:</b> ${skh.skhEscape(rd.driverLocName)}</div>` : ''}
+            </div> <div style="background:#fff; border-radius:16px; padding:14px; border:1px solid #e2e8f0; margin-bottom:12px;"> <b style="font-size:12px; color:#0f172a; display:block; margin-bottom:8px;"> MLINZI WA MZIGO (CHAIN OF CUSTODY)</b> <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;"> <div><small style="color:#94a3b8;">Hali ya Makabidhiano</small><br><b>${window.skhCustodyStatusLabel ? window.skhCustodyStatusLabel(rd.status) : String(rd.status || '—').toUpperCase()}</b></div> <div><small style="color:#94a3b8;">Mshika Mzigo Sasa</small><br><b>${skh.skhEscape(rd.currentCustodianName || rd.driverName || '—')}</b></div> </div> <div id="custodyTimeline_${mapId}" style="margin-top:10px;"></div> </div> <div id="${mapId}" style="height:240px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:8px;"></div> <p id="${gpsId}" style="font-size:13px; color:#475569; text-align:center; margin:4px 0 12px;">Inachunguza GPS ya dereva...</p> <div style="display:flex; gap:8px;"> <button onclick="window.openChatWithUser('${skh.skhJsEsc(rd.driverId || '')}', '${skh.skhJsEsc(rd.driverName || 'Dereva')}')" style="flex:1; padding:13px; background:#25D366; color:white; border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer;">CHAT NA MSAFIRISHAJI</button>
                 ${rd.driverPhone ? `<button onclick="window.location.href='tel:${skh.skhJsEsc(rd.driverPhone)}'" style="flex:1; padding:13px; background:#0f172a; color:white; border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer;">&#128222; PIGA SIMU</button>` : ''}
-            </div>
-            <button onclick="window.closeModals()" style="margin-top:8px; width:100%; padding:13px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">FUNGA</button>
-        `;
+            </div> <button onclick="window.closeModals()" style="margin-top:8px; width:100%; padding:13px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">FUNGA</button> `;
         // [CUSTODY 2026-09] Mlolongo wa makabidhiano kutoka kwenye matukio halisi (delivery_events).
         if (typeof window.skhCustodyRenderTimeline === 'function') {
             window.skhCustodyRenderTimeline(rideId, 'custodyTimeline_' + mapId);
@@ -335,7 +257,7 @@ window.openRideTrackingInto = async function(mapId, gpsId, rideId, rd, bodyEl) {
         }, () => {});
         trackUnsub = unsub;
     } else {
-        // Hakuna live GPS — chora njia (from → to) + last known kama ipo
+        // Hakuna live GPS — chora njia (from -> to) + last known kama ipo
         if (typeof rd.lastLat === 'number' && typeof rd.lastLon === 'number') {
             mapOpts.lastLat = rd.lastLat; mapOpts.lastLon = rd.lastLon; mapOpts.lastLabel = rd.driverLocName || rd.lastLocation || '';
         }

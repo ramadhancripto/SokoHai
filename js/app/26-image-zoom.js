@@ -1,14 +1,13 @@
 /* ==== js/app/26-image-zoom.js ==== */
 // ============================================================
 // IMAGE ZOOM (Touch-friendly) — kama simu smart:
-//   - Pinch (vidole viwili) → kuza / kupunguza
-//   - Drag (kidole kimoja, picha ikiwa imekuzwa) → kusogeza upande wowote
-//   - Swipe kushoto/kulia (picha ikiwa kawaida) → picha inayofuata/iliyotangulia
-//   - Double-tap → kuza haraka / rudisha kawaida
+//   - Pinch (vidole viwili) -> kuza / kupunguza
+//   - Drag (kidole kimoja, picha ikiwa imekuzwa) -> kusogeza upande wowote
+//   - Swipe kushoto/kulia (picha ikiwa kawaida) -> picha inayofuata/iliyotangulia
+//   - Double-tap -> kuza haraka / rudisha kawaida
 //   - Vitufe + / − na wheel (desktop)
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var images = [];
     var index = 0;

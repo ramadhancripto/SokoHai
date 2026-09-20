@@ -2,15 +2,12 @@
 import { skh } from './00-bootstrap.js';
 
 window.deleteAd = async function(id, collectionName, title) {
-    if(confirm(` Una uhakika unataka KUFUTA tangazo hili ("${title}")?\n\nKitendo hiki hakirudishiki nyuma!`)) {
-        try {
-            await skh.deleteDoc(skh.doc(skh.db, collectionName, id));
-            alert(" Tangazo limefutwa kikamilifu.");
-            loadAndRenderDashboard(); // Refresh Dashbodi baada ya kufuta
-        } catch(e) {
-            alert(" Imeshindwa kufuta: " + e.message);
-        }
-    }
+    // [LIFECYCLE] Tangazo linaweza kuwa na orders/reviews/analytics
+    // zinazoli-reference. Likiwa "safi" linafutwa; vinginevyo Archive.
+    await window.skhRequestDelete(collectionName, id, {
+        title: title,
+        onDone: function () { loadAndRenderDashboard(); }
+    });
 };
 
 window.handleImageSearch = async function(e) {
@@ -56,7 +53,7 @@ window.toggleSys = async function(category, feature) {
 
         const cat = skh.sysConfig[category];
 
-        // [MIGRATION] fees.enabled ya zamani (global) → per-feature.
+        // [MIGRATION] fees.enabled ya zamani (global) -> per-feature.
         if (category === 'fees' && typeof cat.enabled === 'boolean') {
             const legacy = cat.enabled === true;
             ['deposit','subscription','boost','commission','offline_registration','agent_registration'].forEach(k => { cat[k] = legacy; });
@@ -70,7 +67,27 @@ window.toggleSys = async function(category, feature) {
         // ikiwa `system/config` HAIPO bado (toggle ya KWANZA), itaundwa badala
         // ya kutupa "not-found" na kufanya kitufe kirudi kwenye OFF. Uga moja
         // tu (dot-path) ndio unaandikwa — haiwezi kugusa ada nyingine.
-        await skh.setDoc(configRef, { [category + '.' + feature]: newVal }, { merge: true });
+        // [FIX TOGGLE 2026-09-14] setDoc({merge}) haitafsiri dot-notation —
+        // ilikuwa inaunda field bapa "fees.boost" badala ya fees.boost nested,
+        // hivyo switch ilionekana OFF daima. updateDoc inaelewa dot-paths.
+        // [FLIP-FLOP FIX 2026-09-17] Tafuta-Kanda: futa legacy field
+        // `{category}.enabled` kutoka Firestore — ingesimama huko milele na
+        // kushinda yoyote jipya la per-feature (switch ilikuwa "ikarudi OFF").
+        try {
+            var payload = {};
+            payload[category + '.' + feature] = newVal;
+            try {
+                if (category === 'fees' && skh.sysConfig[category] && !('enabled' in skh.sysConfig[category]) ) {
+                    // imefutwa memory — futa na backend (kama ipo)
+                    payload[category + '.enabled'] = skh.deleteField();
+                }
+            } catch (eDel0) {}
+            await skh.updateDoc(configRef, payload);
+        } catch (errUpd) {
+            var nested2 = {}; nested2[category] = {};
+            nested2[category][feature] = newVal;
+            await skh.setDoc(configRef, nested2, { merge: true });
+        }
 
         console.log(`Mabadiliko: ${category} ${feature} sasa ni ${newVal}`);
 
@@ -158,7 +175,7 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
 };
 
 window.sokohaiDeleteAnnouncement = async function(id){
-    if(!confirm("Una uhakika unataka kufuta tangazo hili kabisa?")) return;
+    if(!await skhConfirm("Una uhakika unataka kufuta tangazo hili kabisa?")) return;
     try {
         await skh.deleteDoc(skh.doc(skh.db, "announcements", id));
     } catch(e) {
@@ -221,7 +238,12 @@ setInterval(() => {
         }
     }, 2000);
 
-window.registerOfflineMember = async function() {
+// [IDENTITY-FIX BUG-05 2026-09-16] NJIA MOJA YA USAJILI — awali kulikuwa na
+// flow MBILI za kusajili mwanachama: #offlineMemberForm (index.html, isiyo na
+// confirm-PIN, isiyo na member card) na skhAssistRegisterView (31, flow kamili
+// ya hatua 2: taarifa → mwanachama aandika PIN yeye mwenyewe → kadi ya
+// Member ID). Sasa menyu hufungua flow YENYEWE iliyoko agent dashboard pekee.
+window.skhOpenMemberRegistration = async function() {
     if (!skh.requireAuth()) return;
 
     // [FIX 2026-09] Kagua uwanja wa wakala LIVE (agents collection) — sio
@@ -233,48 +255,15 @@ window.registerOfflineMember = async function() {
         return;
     }
 
-    const name = document.getElementById('offName').value.trim();
-    const region = document.getElementById('offRegion').value.trim();
-    const district = document.getElementById('offDistrict').value.trim();
-    const bType = document.getElementById('offBusinessType').value;
-    const pin = (document.getElementById('offPin') ? document.getElementById('offPin').value : '').trim();
+    try { closeModals(); } catch (e) {}
+    if (typeof window.loadAgentDashboard === 'function') await window.loadAgentDashboard();
+    if (typeof window.skhAssistHome === 'function') window.skhAssistHome();
+    if (typeof window.skhAssistRegisterView === 'function') window.skhAssistRegisterView();
+};
 
-    if (!name || !region || !district) {
-        alert(" Tafadhali jaza sehemu zote zenye alama ya nyota (*)."); 
-        return;
-    }
-    if (!/^\d{4,6}$/.test(pin)) {
-        alert(" PIN: tarakimu 4 hadi 6.");
-        return;
-    }
-
-    const btn = document.getElementById('btnOffline');
-    const origText = btn ? btn.innerHTML : '';
-    if (btn) { btn.innerHTML = " INASAJILI (NJIA YA WAKALA)..."; btn.disabled = true; }
-
-    try {
-        // [FIX 2026-09] NJIA YA WAKALA (server memberRegister) — hakuna
-        // identitytoolkit wala PesaPal hapa. Server ndiyo mamlaka: huunda
-        // akaunti, Member ID, PIN hash, na uhusiano wa agentMembers.
-        if (typeof window.skhAssistRegisterMember !== 'function') {
-            throw new Error("Backend ya Msaada wa Mwanachama haipatikani. Pakia Cloud Functions (memberRegister).");
-        }
-        const r = await window.skhAssistRegisterMember({
-            fullName: name,
-            region: region,
-            district: district,
-            businessType: bType,
-            pin: pin
-        });
-        if (!r || !r.ok) throw new Error((r && r.error) || 'Usajili umeshindikana.');
-        alert(" Mwanachama Amesajiliwa!\n\nMEMBER ID: " + r.memberId);
-        closeModals();
-        if (typeof window.loadAgentDashboard === 'function') window.loadAgentDashboard();
-    } catch (error) {
-        alert(" Kosa wakati wa usajili: " + (error && error.message ? error.message : error));
-    } finally {
-        if (btn) { btn.innerHTML = origText; btn.disabled = false; }
-    }
+// Proxy ya zamani — inaelekeza kwa flow moja (hakuna form iliyobaki).
+window.registerOfflineMember = async function() {
+    return window.skhOpenMemberRegistration();
 };
 
 window.submitAgentFromDash = async function() {
@@ -285,7 +274,7 @@ window.submitAgentFromDash = async function() {
     const region = document.getElementById('dashAgentRegion').value;
     
     if(!name || !phone || !region) {
-        alert(" Tafadhali jaza Jina, Simu, na Mkoa kabla ya kuendelea."); 
+        alert(" jaza Jina, Simu, na Mkoa kabla ya kuendelea."); 
         return;
     }
 
@@ -360,7 +349,7 @@ window.skhAgentPayPendingFee = async function(agentDocId) {
     let phone = (skh.currentUserData && skh.currentUserData.phone) || '';
     const txRef = "AGT_" + Date.now();
 
-    // [ADMIN PAYMENTS SWITCH] Ada ya wakala imezimwa → hakuna ada; weka alama ya FREE.
+    // [ADMIN PAYMENTS SWITCH] Ada ya wakala imezimwa -> hakuna ada; weka alama ya FREE.
     if (!skh.paymentGate('agent_registration')) {
         try {
             await skh.updateDoc(skh.doc(skh.db, "agents", agentDocId), { paymentStatus: 'free', feeWaived: true });
@@ -414,48 +403,16 @@ window.openSubscriptionModal = function() {
 // WEKA HII CHINI YAKE:
 
 let businessTools = `
-    <div style="background:white; padding:15px; border-radius:15px; margin-bottom:20px; border:1px solid #e2e8f0;">
-        <b style="font-size:12px; color:var(--business-purple); display:block; margin-bottom:10px;"> MFUMO WA HASIBU (POS & ACCOUNTANT)</b>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <button onclick="showForm('businessOSForm')" style="padding:12px; background:var(--business-purple); color:white; border:none; border-radius:10px; font-size:11px; font-weight:bold;"> REKODI MAUZO</button>
-            <button onclick="alert('Ripoti ya Leo: \nMauzo: 150,000 \nMatumizi: 20,000 \nFaida: 130,000')" style="padding:12px; background:#0f172a; color:white; border:none; border-radius:10px; font-size:11px; font-weight:bold;"> RIPOTI YA FAIDA</button>
-        </div>
-    </div>
+    <div style="background:white; padding:15px; border-radius:15px; margin-bottom:20px; border:1px solid #e2e8f0;"> <b style="font-size:12px; color:var(--business-purple); display:block; margin-bottom:10px;"> MFUMO WA HASIBU (POS & ACCOUNTANT)</b> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"> <button onclick="showForm('businessOSForm')" style="padding:12px; background:var(--business-purple); color:white; border:none; border-radius:10px; font-size:13px; font-weight:bold;"> REKODI MAUZO</button> <button onclick="window.skhShowTodayProfitReport()" style="padding:12px; background:#0f172a; color:white; border:none; border-radius:10px; font-size:13px; font-weight:bold;"> RIPOTI YA FAIDA</button> </div> </div>
 `;
 // Kisha hakikisha variable hii 'businessTools' inaongezwa kwenye container.innerHTML ya seller.
         // Vifurushi vya Wauzaji Bidhaa
         html = `
-            <div class="sub-card-pro" onclick="paySubscription(10000, 'BASIC SELLER')">
-                <div class="sub-icon"></div>
-                <div class="sub-info">
-                    <b>BASIC (Bidhaa 6-99)</b>
-                    <span>TSh 10,000 / Mwezi</span>
-                </div>
-            </div>
-            <div class="sub-card-pro gold" onclick="paySubscription(35000, 'UNLIMITED PRO')">
-                <div class="sub-icon"></div>
-                <div class="sub-info">
-                    <b>PRO (Bidhaa 1000+)</b>
-                    <span>TSh 35,000 / Mwezi</span>
-                </div>
-            </div>`;
+            <div class="sub-card-pro" onclick="paySubscription(10000, 'BASIC SELLER')"> <div class="sub-icon"></div> <div class="sub-info"> <b>BASIC (Bidhaa 6-99)</b> <span>TSh 10,000 / Mwezi</span> </div> </div> <div class="sub-card-pro gold" onclick="paySubscription(35000, 'UNLIMITED PRO')"> <div class="sub-icon"></div> <div class="sub-info"> <b>PRO (Bidhaa 1000+)</b> <span>TSh 35,000 / Mwezi</span> </div> </div>`;
     } else {
         // Vifurushi vya Mafundi (Providers) na Waajiri (Employers)
         html = `
-            <div class="sub-card-pro" onclick="paySubscription(4000, 'MONTHLY PACKAGE')">
-                <div class="sub-icon"></div>
-                <div class="sub-info">
-                    <b>Kifurushi cha Mwezi</b>
-                    <span>TSh 4,000 / Mwezi</span>
-                </div>
-            </div>
-            <div class="sub-card-pro gold" onclick="paySubscription(43000, 'YEARLY SAVER')">
-                <div class="sub-icon"></div>
-                <div class="sub-info">
-                    <b>Kifurushi cha Mwaka (Okoa)</b>
-                    <span>TSh 43,000 / Mwaka</span>
-                </div>
-            </div>`;
+            <div class="sub-card-pro" onclick="paySubscription(4000, 'MONTHLY PACKAGE')"> <div class="sub-icon"></div> <div class="sub-info"> <b>Kifurushi cha Mwezi</b> <span>TSh 4,000 / Mwezi</span> </div> </div> <div class="sub-card-pro gold" onclick="paySubscription(43000, 'YEARLY SAVER')"> <div class="sub-icon"></div> <div class="sub-info"> <b>Kifurushi cha Mwaka (Okoa)</b> <span>TSh 43,000 / Mwaka</span> </div> </div>`;
     }
 
     // [ADMIN PAYMENTS SWITCH] Onyesha bendera ya FREE MODE juu ya vifurushi.
@@ -510,14 +467,14 @@ window.paySubscription = async function(amount, title) {
         // C. NJIA YA MALIPO (PAID MODE) — namba ya kulipia inahitajika
         let payPhone = (skh.currentUserData && (skh.currentUserData.paymentAccount || skh.currentUserData.phone)) || '';
         if(!payPhone) {
-            alert(" Tafadhali sajili Namba yako ya Malipo kwenye Akaunti kwanza.");
+            alert(" sajili Namba yako ya Malipo kwenye Akaunti kwanza.");
             openUserPaymentModal();
             return;
         }
-        if(!confirm(`Je, unathibitisha kulipia Kifurushi cha ${title} (TSh ${amount.toLocaleString()}) kupitia namba yako: ${payPhone}?`)) return;
+        if(!await skhConfirm(`Je, unathibitisha kulipia Kifurushi cha ${title} (TSh ${amount.toLocaleString()}) kupitia namba yako: ${payPhone}?`)) return;
         if(payPhone.startsWith('0')) payPhone = '255' + payPhone.substring(1);
         closeModals();
-        alert(` Ombi la malipo limetumwa kwenye namba ${payPhone}. Tafadhali weka PIN kukamilisha.`);
+        alert(` Ombi la malipo limetumwa kwenye namba ${payPhone}. weka PIN kukamilisha.`);
 
         // D. LIPA KWA PESAPAL — usajili utakamilika baada ya kurudi (17-pesapal-return)
         const pay = await window.skhPesaPalPay({
@@ -552,11 +509,38 @@ if (!document.getElementById('sub-pro-styles')) {
         .sub-card-pro.gold { border-color: var(--gold); background: #fffbeb; }
         .sub-icon { font-size: 26px; }
         .sub-info b { display: block; color: var(--primary-dark); font-size: 14px; margin-bottom: 2px; }
-        .sub-info span { color: var(--terracotta); font-weight: 900; font-size: 13px; }
-    `;
+        .sub-info span { color: var(--terracotta); font-weight: 900; font-size: 13px; } `;
     document.head.appendChild(subCSS);
 }
 
 window.activeDashboardTab = 'overview';
 
 window.activeChartTimeframe = 'month';
+
+// [REAL DATA 2026-09] Ripoti ya Faida ya LEO — hesabu halisi kutoka ledger ya duka.
+// (Ilipokwisha kwama kwa namba za kubuni 150,000/20,000/130,000 — uongo tumekataza kabisa.)
+window.skhShowTodayProfitReport = async function () {
+    if (!skh.currentUser) return alert('Ingia kwanza akaunti yako.');
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    try {
+        const ownerUid = (skh.currentUserData && skh.currentUserData.shopOwnerUid) || skh.currentUser.uid;
+        const q = skh.query(skh.collection(skh.db, 'shop_ledger'), skh.where('shopOwnerId', '==', ownerUid));
+        const snap = await skh.getDocs(q);
+        let salesToday = 0, expenseToday = 0, profitToday = 0, found = false;
+        snap.forEach(function (docSnap) {
+            const l = docSnap.data();
+            const when = l.date ? new Date(l.date) : null;
+            if (!when || isNaN(when.getTime()) || when < today) return;
+            const amt = parseFloat(l.amount) || 0;
+            if (l.type === 'income_offline' || l.type === 'income_online') { salesToday += amt; profitToday += (parseFloat(l.profit) || 0); found = true; }
+            else if (l.type === 'expense') { expenseToday += amt; found = true; }
+        });
+        if (!found) return alert('Ripoti ya Leo:\n\nBado hakuna miamala yoyote iliyorekodiwa leo. Rekodi mauzo au matumizi kupitia POS ili kupata ripoti halisi.');
+        alert('Ripoti ya Leo:\n\nMauzo: TZS ' + salesToday.toLocaleString() +
+            '\nMatumizi: TZS ' + expenseToday.toLocaleString() +
+            '\nFaida: TZS ' + profitToday.toLocaleString() +
+            '\n\n(Hesabu hizi ni halisi kutoka ledger ya duka lako.)');
+    } catch (e) {
+        alert('Hitilafu ya kusoma ledger: ' + e.message);
+    }
+};

@@ -114,12 +114,11 @@ window.searchExistingStockForUpdate = async function() {
         const d = docSnap.data();
         if (d.title.toLowerCase().includes(queryStr)) {
             html += `
-                <div onclick="window.selectStockForUpdate('${docSnap.id}', '${d.title}', ${d.stock || 0})" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white;">
-                    <b> ${d.title}</b> (Stock ya sasa: ${d.stock || 0} Pcs)
+                <div onclick="window.selectStockForUpdate('${docSnap.id}', '${d.title}', ${d.stock || 0})" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white;"> <b> ${d.title}</b> (Stock ya sasa: ${d.stock || 0} Pcs)
                 </div>`;
         }
     });
-    resultsDiv.innerHTML = html || '<p style="padding:10px; font-size:11px; color:gray;">Haikupatikana...</p>';
+    resultsDiv.innerHTML = html || '<p style="padding:10px; font-size:13px; color:gray;">Haikupatikana...</p>';
 };
 
 window.selectStockForUpdate = function(id, name, currentQty) {
@@ -221,51 +220,7 @@ window.openOfflineSaleForm = function(itemId, name, unit, pcsPerUnit, sellPrice)
     div.className = 'overlay-menu';
     div.style.cssText = 'z-index: 1000002; display:flex;';
     div.innerHTML = `
-        <div style="background:white; padding:25px; border-radius:24px; width:90%; max-width:390px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); text-align:center;">
-            <h3 style="margin-top:0; color:var(--primary-dark); font-size:18px;"> ${T('pos_quick_sale', 'POS: QUICK SALE')}</h3>
-            <b style="font-size:15px; color:#1e293b; display:block; margin-bottom:12px;">${name}</b>
-            
-            <div style="display:flex; gap:10px; margin-bottom:12px;">
-                <div style="flex:1;">
-                    <label style="font-size:10px; font-weight:bold; display:block; text-align:left;">${T('pos_measure', 'MEASURE')}</label>
-                    <select id="saleMethod" onchange="calculatePosTotal(${sellPrice}, ${pcsPerUnit})" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white;">
-                        <option value="pc">Piece (Kipande) @ TSh ${sellPrice.toLocaleString()}</option>
-                        <option value="unit">${unit} @ TSh ${(sellPrice * pcsPerUnit).toLocaleString()}</option>
-                    </select>
-                </div>
-                <div style="flex:1;">
-                    <label style="font-size:10px; font-weight:bold; display:block; text-align:left;">${T('pos_qty', 'QUANTITY (QTY)')}</label>
-                    <input type="number" id="saleQty" value="1" oninput="calculatePosTotal(${sellPrice}, ${pcsPerUnit})" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; text-align:center; font-weight:bold;">
-                </div>
-            </div>
-
-            <div style="background:#fffbeb; padding:10px; border-radius:10px; margin-bottom:12px; border:1px solid var(--gold);">
-                <span style="font-size:11px; color:#64748b;">${T('pos_total_due', 'Total to Pay:')}</span><br>
-                <b id="posTotalDisplay" style="font-size:18px; color:var(--terracotta);">TSh ${sellPrice.toLocaleString()}</b>
-            </div>
-
-            <label style="font-size:11px; font-weight:bold; display:block; text-align:left; margin-bottom:4px;">${T('pos_payment_method', 'PAYMENT METHOD')}</label>
-            <select id="posPaymentMethod" onchange="togglePosDebtFields()" style="width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid #cbd5e1; background:white;">
-                <option value="Cash"> ${T('pos_cash', 'Cash')}</option>
-                <option value="Mpesa"> ${T('pos_mobile', 'Mobile (Mpesa/Tigo/Airtel)')}</option>
-                <option value="Deni"> ${T('pos_credit', 'Credit (pay later)')}</option>
-            </select>
-
-            <div id="posDebtFields" style="display:none; background:#fef2f2; padding:12px; border-radius:12px; border:1.5px dashed #ef4444; margin-bottom:12px; text-align:left;">
-                <label style="font-size:11px; font-weight:bold; color:#ef4444;">${T('pos_debt_customer_name_label', 'Customer Name (Credit) *')}</label>
-                <input type="text" id="posDebtClientName" placeholder="${T('pos_debt_customer_ph', 'e.g. Mama Asha')}" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:8px;">
-                
-                <label style="font-size:11px; font-weight:bold; color:#ef4444;">${T('pos_customer_phone', 'Customer Phone Number')}</label>
-                <input type="tel" id="posDebtClientPhone" placeholder="07XXXXXXXX" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:8px;">
-                
-                <label style="font-size:11px; font-weight:bold; color:#ef4444;">${T('pos_deposit_paid', 'Amount Paid Upfront (TSh)')}</label>
-                <input type="number" id="posDebtDepositPaid" value="0" placeholder="0" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
-            </div>
-
-            <button onclick="processSmartOfflineSale('${itemId}', ${pcsPerUnit}, ${sellPrice}, '${name}', '${unit}')" style="width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer;">${T('pos_record_sale', 'RECORD SALE NOW')} </button>
-            <button onclick="document.getElementById('quickOfflineSaleModal').remove()" style="width:100%; margin-top:8px; padding:10px; background:#e2e8f0; color:#475569; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">${T('pos_close', 'X Close')}</button>
-        </div>
-    `;
+        <div style="background:white; padding:25px; border-radius:24px; width:90%; max-width:390px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); text-align:center;"> <h3 style="margin-top:0; color:var(--primary-dark); font-size:18px;"> ${T('pos_quick_sale', 'POS: QUICK SALE')}</h3> <b style="font-size:15px; color:#1e293b; display:block; margin-bottom:12px;">${name}</b> <div style="display:flex; gap:10px; margin-bottom:12px;"> <div style="flex:1;"> <label style="font-size:12.5px; font-weight:bold; display:block; text-align:left;">${T('pos_measure', 'MEASURE')}</label> <select id="saleMethod" onchange="calculatePosTotal(${sellPrice}, ${pcsPerUnit})" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white;"> <option value="pc">Piece (Kipande) @ TSh ${sellPrice.toLocaleString()}</option> <option value="unit">${unit} @ TSh ${(sellPrice * pcsPerUnit).toLocaleString()}</option> </select> </div> <div style="flex:1;"> <label style="font-size:12.5px; font-weight:bold; display:block; text-align:left;">${T('pos_qty', 'QUANTITY (QTY)')}</label> <input type="number" id="saleQty" value="1" oninput="calculatePosTotal(${sellPrice}, ${pcsPerUnit})" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; text-align:center; font-weight:bold;"> </div> </div> <div style="background:#fffbeb; padding:10px; border-radius:10px; margin-bottom:12px; border:1px solid var(--gold);"> <span style="font-size:13px; color:#64748b;">${T('pos_total_due', 'Total to Pay:')}</span><br> <b id="posTotalDisplay" style="font-size:18px; color:var(--terracotta);">TSh ${sellPrice.toLocaleString()}</b> </div> <label style="font-size:13px; font-weight:bold; display:block; text-align:left; margin-bottom:4px;">${T('pos_payment_method', 'PAYMENT METHOD')}</label> <select id="posPaymentMethod" onchange="togglePosDebtFields()" style="width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid #cbd5e1; background:white;"> <option value="Cash"> ${T('pos_cash', 'Cash')}</option> <option value="Mpesa"> ${T('pos_mobile', 'Mobile (Mpesa/Tigo/Airtel)')}</option> <option value="Deni"> ${T('pos_credit', 'Credit (pay later)')}</option> </select> <div id="posDebtFields" style="display:none; background:#fef2f2; padding:12px; border-radius:12px; border:1.5px dashed #ef4444; margin-bottom:12px; text-align:left;"> <label style="font-size:13px; font-weight:bold; color:#ef4444;">${T('pos_debt_customer_name_label', 'Customer Name (Credit) *')}</label> <input type="text" id="posDebtClientName" placeholder="${T('pos_debt_customer_ph', 'e.g. Mama Asha')}" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:8px;"> <label style="font-size:13px; font-weight:bold; color:#ef4444;">${T('pos_customer_phone', 'Customer Phone Number')}</label> <input type="tel" id="posDebtClientPhone" placeholder="07XXXXXXXX" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:8px;"> <label style="font-size:13px; font-weight:bold; color:#ef4444;">${T('pos_deposit_paid', 'Amount Paid Upfront (TSh)')}</label> <input type="number" id="posDebtDepositPaid" value="0" placeholder="0" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1;"> </div> <button onclick="processSmartOfflineSale('${itemId}', ${pcsPerUnit}, ${sellPrice}, '${name}', '${unit}')" style="width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer;">${T('pos_record_sale', 'RECORD SALE NOW')} </button> <button onclick="document.getElementById('quickOfflineSaleModal').remove()" style="width:100%; margin-top:8px; padding:10px; background:#e2e8f0; color:#475569; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">${T('pos_close', 'X Close')}</button> </div> `;
     document.body.appendChild(div);
 };
 
@@ -331,6 +286,8 @@ window.processSmartOfflineSale = async function(itemId, pcsPerUnit, sellPrice, n
                 title: `Deni: ${skh.skhEscape(clientName)} - Mauzo ya ${name}`,
                 amount: remainingDebt,
                 notes: `Simu: ${clientPhone} | Jumla Mauzo: TSh ${totalAmount.toLocaleString()} | Alilipa: TSh ${deposit.toLocaleString()}`,
+                /* [AUDIT-FIX §42] fields za muundo kwa ajili ya analytics halisi */
+                productId: itemId, productName: name, qty: qty, unitPrice: pricePerItem, payMethod: payMethod,
                 status: "pending",
                 recordedBy: skh.currentUser.displayName || "POS",
                 date: new Date().toISOString()
@@ -343,6 +300,8 @@ window.processSmartOfflineSale = async function(itemId, pcsPerUnit, sellPrice, n
                     title: `Deposit: ${skh.skhEscape(clientName)} - Mauzo ya ${name}`,
                     amount: deposit,
                     profit: profit * (deposit / totalAmount),
+                    /* [AUDIT-FIX §42] fields za muundo kwa ajili ya analytics halisi */
+                    productId: itemId, productName: name, qty: qty, unitPrice: pricePerItem, payMethod: payMethod,
                     date: new Date().toISOString()
                 });
             }
@@ -355,6 +314,9 @@ window.processSmartOfflineSale = async function(itemId, pcsPerUnit, sellPrice, n
                 title: `Uzo POS: ${qty} Pcs - ${name} (${payMethod})`,
                 amount: totalAmount,
                 profit: profit,
+                /* [AUDIT-FIX §42] fields za muundo kwa ajili ya analytics halisi
+                   (kabla entries za zamani zilitegemea title tu — parser inazisoma pia) */
+                productId: itemId, productName: name, qty: qty, unitPrice: pricePerItem, payMethod: payMethod,
                 date: new Date().toISOString()
             });
             alert(T('pos_sale_done', 'You sold TSh {t} via {m}!', { t: totalAmount.toLocaleString(), m: payMethod }));
@@ -428,7 +390,7 @@ window.toggleLedgerInputs = function() {
 };
 
 window.markDebtPaid = async function(id, amount) {
-    if(confirm("Je, unathibitisha kuwa mteja huyu ameshalipa deni hili la " + amount.toLocaleString() + "?")) {
+    if(await skhConfirm("Je, unathibitisha kuwa mteja huyu ameshalipa deni hili la " + amount.toLocaleString() + "?")) {
         try {
             await skh.updateDoc(skh.doc(skh.db, "shop_ledger", id), { status: "completed" });
             const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
@@ -447,7 +409,7 @@ window.markDebtPaid = async function(id, amount) {
 };
 
 window.markLoanPaid = async function(id) {
-    if(confirm("Je, unathibitisha kuwa umelipa mkopo huu?")) {
+    if(await skhConfirm("Je, unathibitisha kuwa umelipa mkopo huu?")) {
         try {
             await skh.updateDoc(skh.doc(skh.db, "shop_ledger", id), { status: "completed" });
             alert(T('pos_loan_paid', "Loan marked as PAID."));
@@ -588,10 +550,7 @@ window.calculatePosChange = function() {
     if (totalDisplay) {
         if (discountAmount > 0) {
             totalDisplay.innerHTML = `
-                <span style="text-decoration: line-through; color:gray; font-size:14px;">TSh ${baseTotal.toLocaleString()}</span><br>
-                <b style="color:var(--terracotta); font-size:22px;">TSh ${finalTotal.toLocaleString()}</b><br>
-                <small style="color:var(--green); font-weight:bold; font-size:11px;">Punguzo (Discount): - TSh ${discountAmount.toLocaleString()}</small>
-            `;
+                <span style="text-decoration: line-through; color:gray; font-size:14px;">TSh ${baseTotal.toLocaleString()}</span><br> <b style="color:var(--terracotta); font-size:22px;">TSh ${finalTotal.toLocaleString()}</b><br> <small style="color:var(--green); font-weight:bold; font-size:13px;">Punguzo (Discount): - TSh ${discountAmount.toLocaleString()}</small> `;
         } else {
             totalDisplay.innerText = `TSh ${finalTotal.toLocaleString()}`;
         }
@@ -610,7 +569,7 @@ window.calculatePosChange = function() {
         changeDisplay.innerHTML = `<span style="color:#10b981;">TSh ${change.toLocaleString()}</span>`;
     }
 
-    // Hifadhi data hizi kwa ajili ya kusafirisha kwenye Ledger (submitPosSale)
+    // Hifadhi data hizi kwa kusafirisha kwenye Ledger (submitPosSale)
     window.activePosFinalTotal = finalTotal;
     window.activePosDiscountApplied = discountAmount;
 };
@@ -681,7 +640,7 @@ window.submitAddNewStaff = async function() {
 };
 
 window.payStaffSalary = async function(staffDocId, fullSalary) {
-    let payAmountPrompt = prompt(` INALIPA KWA SOKOPAY:\nMshahara Kamili: TSh ${fullSalary.toLocaleString()}\n\nIngiza kiasi unachotaka kumlipa (Unaweza kumlipa nusu au wote):`, fullSalary);
+    let payAmountPrompt = await skhPrompt(` INALIPA KWA SOKOPAY:\nMshahara Kamili: TSh ${fullSalary.toLocaleString()}\n\nIngiza kiasi unachotaka kumlipa (Unaweza kumlipa nusu au wote):`, fullSalary);
     if (!payAmountPrompt) return;
 
     const amountToPay = parseFloat(payAmountPrompt);
@@ -720,7 +679,7 @@ window.payStaffSalary = async function(staffDocId, fullSalary) {
 };
 
 window.assignStaffTaskPrompt = async function(staffDocId) {
-    const taskName = prompt("Andika kazi unayotaka kumpa leo (Mfano: Restock Rice, Safisha Kaunta):");
+    const taskName = await skhPrompt("Andika kazi unayotaka kumpa leo (Mfano: Restock Rice, Safisha Kaunta):");
     if (!taskName) return;
 
     try {

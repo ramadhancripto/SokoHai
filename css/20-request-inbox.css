@@ -41,7 +41,7 @@
 .ri-head-ic svg { stroke: #fff; width: 21px; height: 21px; }
 .ri-head-txt { flex: 1; min-width: 0; }
 .ri-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #173B56; }
-.ri-sub { display: block; font-size: 11.5px; color: #64748B; line-height: 1.4; margin-top: 1px; }
+.ri-sub { display: block; font-size: 13px; color: #64748B; line-height: 1.4; margin-top: 1px; }
 .ri-close {
     margin-left: auto; flex: 0 0 auto;
     width: 36px; height: 36px; border-radius: 50%;
@@ -101,7 +101,7 @@
 
 .ri-badge {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 10.5px; font-weight: 800;
+    font-size: 12.5px; font-weight: 800;
     padding: 4px 10px; border-radius: 99px;
     letter-spacing: .02em;
 }
@@ -122,7 +122,7 @@
 
 .ri-fit {
     display: inline-flex; align-items: center; gap: 4px;
-    font-size: 10px; font-weight: 800; color: #0E7A5F;
+    font-size: 12.5px; font-weight: 800; color: #0E7A5F;
     background: #E7F7F1; padding: 3px 9px; border-radius: 99px;
 }
 .ri-fit svg { width: 11px; height: 11px; stroke: #18A982; }
@@ -139,7 +139,7 @@
 
 .ri-meta {
     display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px;
-    font-size: 11px; color: #64748B; font-weight: 600;
+    font-size: 13px; color: #64748B; font-weight: 600;
 }
 .ri-meta span { display: inline-flex; align-items: center; gap: 4px; }
 .ri-meta svg { width: 12px; height: 12px; stroke: #94A3B8; }
@@ -157,12 +157,12 @@
 .ri-detail[hidden] { display: none; }
 .ri-detail p { margin: 0; line-height: 1.5; }
 .ri-detail b { color: #173B56; }
-.ri-ref { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 10.5px; color: #94A3B8; }
+.ri-ref { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; color: #94A3B8; }
 .ri-ref svg { stroke: #94A3B8; }
 
 .ri-hint {
     display: flex; align-items: flex-start; gap: 7px;
-    margin: 0; font-size: 11.5px; line-height: 1.5; color: #64748B;
+    margin: 0; font-size: 13px; line-height: 1.5; color: #64748B;
 }
 .ri-hint svg { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 1px; stroke: #94A3B8; }
 .ri-hint-live { color: #0E7A5F; }

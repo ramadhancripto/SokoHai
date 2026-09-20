@@ -15,8 +15,7 @@
    ya dirisha kufunguka. (Toleo rahisi la fallback limebaki chini
    kwa usalama wa ziada iwapo core haijasajiliwa.)
    ============================================================ */
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     // Hifadhi utekelezaji kamili uliofanya kazi (unaofahamu SokoPay Core)
     var coreOpenCart  = window.openCart;

@@ -44,8 +44,13 @@ if(skh.dpu) {
                 if(data.secure_url) {
                     const optImg = skh.getOptimizedImageUrl(data.secure_url);
                     await skh.updateProfile(skh.currentUser, { photoURL: optImg });
-                    if(skh.currentUserData && skh.currentUserData.docId) { 
-                        await skh.updateDoc(skh.doc(skh.db, "users", skh.currentUserData.docId), { photoURL: optImg }); 
+                    // [MEDIA PERSIST §10–§12] DP lazima iandikwe kwenye doc la
+                    // Firestore — si Auth profile pekee. Nala kwa sepuleni, users
+                    // docId ni uid (doSignup); fallback hiyo ni muhimu kwa watumiaji
+                    // ambao currentUserData.docId haipo kwa sababu yoyote.
+                    const _userDocId = (skh.currentUserData && skh.currentUserData.docId) || (skh.currentUser && skh.currentUser.uid);
+                    if(_userDocId) { 
+                        await skh.updateDoc(skh.doc(skh.db, "users", _userDocId), { photoURL: optImg }); 
                     }
                     if(pic) pic.src = optImg; 
                     alert(T('pf_pic_updated', 'Your profile picture has been updated!'));
@@ -116,14 +121,7 @@ window.loadUserSokoPayLinks = async function() {
             count++;
             const statusText = d.status === 'pending' ? T('pf_pending', 'Pending') : (d.status === 'held' ? T('pf_held', 'Held') : T('pf_completed', 'Completed'));
             walletListHtml += `
-                <div style="background:white; border:1px solid #e2e8f0; padding:10px; border-radius:10px;">
-                    <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                        <span>${T('pf_code', 'Code')}: ${d.code}</span>
-                        <span style="color:red;">TSh ${d.price.toLocaleString()}</span>
-                    </div>
-                    <span style="display:block; margin-top:3px; color:gray;">${T('pf_product', 'Product')}: ${d.title}</span>
-                    <span style="display:block; font-size:10px; color:#03509d; font-weight:bold;">${T('pf_status', 'Status')}: ${statusText}</span>
-                </div>`;
+                <div style="background:white; border:1px solid #e2e8f0; padding:10px; border-radius:10px;"> <div style="display:flex; justify-content:space-between; font-weight:bold;"> <span>${T('pf_code', 'Code')}: ${d.code}</span> <span style="color:red;">TSh ${d.price.toLocaleString()}</span> </div> <span style="display:block; margin-top:3px; color:gray;">${T('pf_product', 'Product')}: ${d.title}</span> <span style="display:block; font-size:12.5px; color:#03509d; font-weight:bold;">${T('pf_status', 'Status')}: ${statusText}</span> </div>`;
         });
 
         snapPaid.forEach(docSnap => {
@@ -131,14 +129,7 @@ window.loadUserSokoPayLinks = async function() {
             count++;
             const statusText = d.status === 'held' ? T('pf_held', 'Held') : T('pf_completed', 'Completed');
             walletListHtml += `
-                <div style="background:#fffbeb; border:1px solid var(--gold); padding:10px; border-radius:10px;">
-                    <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                        <span>${T('pf_paid_code', 'Code I paid for')}: ${d.code}</span>
-                        <span style="color:red;">TSh ${d.price.toLocaleString()}</span>
-                    </div>
-                    <span style="display:block; margin-top:3px; color:gray;">${T('eng_seller', 'Seller')}: ${skh.skhEscape(d.ownerName)}</span>
-                    <span style="display:block; font-size:10px; color:green; font-weight:bold;">${T('pf_status', 'Status')}: ${statusText}</span>
-                </div>`;
+                <div style="background:#fffbeb; border:1px solid var(--gold); padding:10px; border-radius:10px;"> <div style="display:flex; justify-content:space-between; font-weight:bold;"> <span>${T('pf_paid_code', 'Code I paid for')}: ${d.code}</span> <span style="color:red;">TSh ${d.price.toLocaleString()}</span> </div> <span style="display:block; margin-top:3px; color:gray;">${T('eng_seller', 'Seller')}: ${skh.skhEscape(d.ownerName)}</span> <span style="display:block; font-size:12.5px; color:green; font-weight:bold;">${T('pf_status', 'Status')}: ${statusText}</span> </div>`;
         });
 
         if(listDiv) {
@@ -148,58 +139,7 @@ window.loadUserSokoPayLinks = async function() {
         // 2. Chora Active Overview (Kama ilivyopo kwenye picha ya muundo)
         if(overviewDiv) {
             overviewDiv.innerHTML = `
-                <!-- 1. PRODUCT ORDER (BIDHAA) -->
-                <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <div style="width:45px; height:45px; background:#eff6ff; color:#3b82f6; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;"></div>
-                        <div>
-                            <span style="font-size:9px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${T('pf_product_order', 'PRODUCT ORDER')}</span>
-                            <b style="font-size:14px; color:#0F172A; display:block; margin-top:3px;">Samsung 55" Smart TV</b>
-                            <small style="color:gray; font-size:10px; display:block;">${T('pf_order_id', 'Order ID')}: ORD-7X92KQ | ${T('pf_status', 'Status')}: <span style="color:#03509d; font-weight:bold;">${T('pf_in_transit', 'In Transit')}</span></small>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">TZS 890,000</b>
-                        <button type="button" onclick="alert('${T('pf_open_map', 'Opening Live tracking map...')}')" style="padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer;">${T('pf_track_order', 'Track Order')}</button>
-                    </div>
-                </div>
-
-                <!-- 2. SERVICE ORDER (HUDUMA) -->
-                <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="display:flex; gap:12px; align-items:center; flex:1;">
-                        <div style="width:45px; height:45px; background:#f0fdf4; color:#22c55e; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;"></div>
-                        <div style="flex:1;">
-                            <span style="font-size:9px; background:#dcfce7; color:#16a34a; padding:2px 8px; border-radius:10px; font-weight:900; text-transform:uppercase;">${T('pf_service_order', 'SERVICE ORDER')}</span>
-                            <b style="font-size:14px; color:#0F172A; display:block; margin-top:3px;">Website Development</b>
-                            <small style="color:gray; font-size:10px; display:block;">${T('pf_service_id', 'Service ID')}: SRV-82KX91 | ${T('pf_status', 'Status')}: <span style="color:#16a34a; font-weight:bold;">${T('pf_in_progress', 'In Progress')}</span></small>
-                            <!-- Progress Bar -->
-                            <div style="width:80%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-top:6px;">
-                                <div style="width:65%; height:100%; background:#10b981;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:10px;">TZS 450,000</b>
-                        <button type="button" onclick="alert('${T('pf_open_contracts', 'Opening job details and contracts...')}')" style="padding:6px 12px; background:#e2e8f0; color:#475569; border:none; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer;">${T('view_details', 'View Details')}</button>
-                    </div>
-                </div>
-
-                <!-- 4. TRANSPORT BOOKING (USAFIRI) -->
-                <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <div style="width:45px; height:45px; background:#fffbeb; color:#d97706; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;"></div>
-                        <div>
-                            <span style="font-size:9px; background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${T('pf_transport_booking', 'TRANSPORT BOOKING')}</span>
-                            <b style="font-size:14px; color:#0F172A; display:block; margin-top:3px;">Dar es Salaam ➔ Dodoma</b>
-                            <small style="color:gray; font-size:10px; display:block;">${T('pf_trip_id', 'Trip ID')}: TRP-73A91 | ${T('pf_status', 'Status')}: <span style="color:#d97706; font-weight:bold;">${T('pf_confirmed', 'Confirmed')}</span></small>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">TZS 40,000</b>
-                        <button type="button" onclick="alert('${T('pf_open_ticket', 'Opening your trip ticket...')}')" style="padding:6px 12px; background:#e2e8f0; color:#475569; border:none; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer;">${T('pf_view_ticket', 'View Ticket')}</button>
-                    </div>
-                </div>
-            `;
+                <!-- 1. PRODUCT ORDER (BIDHAA) --> <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"> <div style="display:flex; gap:12px; align-items:center;"> <div style="width:45px; height:45px; background:#eff6ff; color:#3b82f6; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;"></div> <div> <span style="font-size:12px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${T('pf_product_order', 'PRODUCT ORDER')}</span> <b style="font-size:14px; color:#0F172A; display:block; margin-top:3px;">Samsung 55" Smart TV</b> <small style="color:gray; font-size:12.5px; display:block;">${T('pf_order_id', 'Order ID')}: ORD-7X92KQ | ${T('pf_status', 'Status')}: <span style="color:#03509d; font-weight:bold;">${T('pf_in_transit', 'In Transit')}</span></small> </div> </div> <div style="text-align:right;"> <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">TZS 890,000</b> <button type="button" onclick="alert('${T('pf_open_map', 'Opening Live tracking map...')}')" style="padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; font-size:12.5px; cursor:pointer;">${T('pf_track_order', 'Track Order')}</button> </div> </div> <!-- 2. SERVICE ORDER (HUDUMA) --> <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"> <div style="display:flex; gap:12px; align-items:center; flex:1;"> <div style="width:45px; height:45px; background:#f0fdf4; color:#22c55e; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;"></div> <div style="flex:1;"> <span style="font-size:12px; background:#dcfce7; color:#16a34a; padding:2px 8px; border-radius:10px; font-weight:900; text-transform:uppercase;">${T('pf_service_order', 'SERVICE ORDER')}</span> <b style="font-size:14px; color:#0F172A; display:block; margin-top:3px;">Website Development</b> <small style="color:gray; font-size:12.5px; display:block;">${T('pf_service_id', 'Service ID')}: SRV-82KX91 | ${T('pf_status', 'Status')}: <span style="color:#16a34a; font-weight:bold;">${T('pf_in_progress', 'In Progress')}</span></small> <!-- Progress Bar --> <div style="width:80%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-top:6px;"> <div style="width:65%; height:100%; background:#10b981;"></div> </div> </div> </div> <div style="text-align:right;"> <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:10px;">TZS 450,000</b> <button type="button" onclick="alert('${T('pf_open_contracts', 'Opening job details and contracts...')}')" style="padding:6px 12px; background:#e2e8f0; color:#475569; border:none; border-radius:8px; font-weight:bold; font-size:12.5px; cursor:pointer;">${T('view_details', 'View Details')}</button> </div> </div> <!-- 4. TRANSPORT BOOKING (USAFIRI) --> <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"> <div style="display:flex; gap:12px; align-items:center;"> <div style="width:45px; height:45px; background:#fffbeb; color:#d97706; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;"></div> <div> <span style="font-size:12px; background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${T('pf_transport_booking', 'TRANSPORT BOOKING')}</span> <b style="font-size:14px; color:#0F172A; display:block; margin-top:3px;">Dar es Salaam -> Dodoma</b> <small style="color:gray; font-size:12.5px; display:block;">${T('pf_trip_id', 'Trip ID')}: TRP-73A91 | ${T('pf_status', 'Status')}: <span style="color:#d97706; font-weight:bold;">${T('pf_confirmed', 'Confirmed')}</span></small> </div> </div> <div style="text-align:right;"> <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">TZS 40,000</b> <button type="button" onclick="alert('${T('pf_open_ticket', 'Opening your trip ticket...')}')" style="padding:6px 12px; background:#e2e8f0; color:#475569; border:none; border-radius:8px; font-weight:bold; font-size:12.5px; cursor:pointer;">${T('pf_view_ticket', 'View Ticket')}</button> </div> </div> `;
         }
 
     } catch (e) {
@@ -215,17 +155,7 @@ window.populateFormCategories = function() {
     const primaryProfile = skh.currentUserData?.primaryProfile || 'General Store';
     
     // Ramani inayounganisha Wasifu wa Duka na Kategoria za Bidhaa zenye uhusiano
-    const profileMap = {
-        'Pharmacy': ["Afya (Health)", "Urembo (Beauty)"],
-        'Hardware Store': ["Ujenzi (Construction)", "Mabati na Vyuma (Industrial)", "Zana za Viwandani (Hardware)", "Spea (Spare Parts)"],
-        'Grocery Store': ["Vyakula na Vinywaji (Food)", "Vyombo vya Plastiki (Retail)", "Jumla (Wholesale Goods)"],
-        'Supermarket': ["Vyakula na Vinywaji (Food)", "Vyombo vya Plastiki (Retail)", "Urembo (Beauty)", "Mavazi (Fashion)"],
-        'Mini Market': ["Vyakula na Vinywaji (Food)", "Vyombo vya Plastiki (Retail)"],
-        'Agrovet': ["Kilimo (Agriculture)", "Ufugaji (Livestock)", "Uvuvi (Fisheries)"],
-        'Phone Shop': ["Simu (Phones)", "Kompyuta (Computers)", "Mifumo (Digital Products)"],
-        'Computer Store': ["Kompyuta (Computers)", "Simu (Phones)", "Mifumo (Digital Products)"],
-        'Boutique': ["Mavazi (Fashion)", "Urembo (Beauty)"],
-        'Shoe Store': ["Mavazi (Fashion)", "Mitumba (Second Hand)"]
+    const profileMap = { 'Pharmacy': ["Afya (Health)", "Urembo (Beauty)"], 'Hardware Store': ["Ujenzi (Construction)", "Mabati na Vyuma (Industrial)", "Zana za Viwandani (Hardware)", "Spea (Spare Parts)"], 'Grocery Store': ["Vyakula na Vinywaji (Food)", "Vyombo vya Plastiki (Retail)", "Jumla (Wholesale Goods)"], 'Supermarket': ["Vyakula na Vinywaji (Food)", "Vyombo vya Plastiki (Retail)", "Urembo (Beauty)", "Mavazi (Fashion)"], 'Mini Market': ["Vyakula na Vinywaji (Food)", "Vyombo vya Plastiki (Retail)"], 'Agrovet': ["Kilimo (Agriculture)", "Ufugaji (Livestock)", "Uvuvi (Fisheries)"], 'Phone Shop': ["Simu (Phones)", "Kompyuta (Computers)", "Mifumo (Digital Products)"], 'Computer Store': ["Kompyuta (Computers)", "Simu (Phones)", "Mifumo (Digital Products)"], 'Boutique': ["Mavazi (Fashion)", "Urembo (Beauty)"], 'Shoe Store': ["Mavazi (Fashion)", "Mitumba (Second Hand)"]
     };
 
     const recommendedCats = profileMap[primaryProfile] || [];
@@ -244,8 +174,7 @@ window.populateFormCategories = function() {
     catSelect.innerHTML = `
         <option value="">${T('pf_choose_category', '-- Choose Category --')}</option>
         ${recommendedHtml ? `<optgroup label="${T('pf_recommended_for', 'Recommended for')} ${primaryProfile}">${recommendedHtml}</optgroup>` : ''}
-        <optgroup label="${T('pf_other_categories', 'Other SokoHai Categories')}">${otherHtml}</optgroup>
-    `;
+        <optgroup label="${T('pf_other_categories', 'Other SokoHai Categories')}">${otherHtml}</optgroup> `;
 };
 
 window.generateSellerFilters = function() {
@@ -264,10 +193,7 @@ window.generateSellerFilters = function() {
         let inputsHtml = '';
         filters.forEach(f => {
             inputsHtml += `
-            <div style="margin-bottom:12px;">
-                <label style="font-size:11px; font-weight:bold; color:#64748b;">${f} *</label>
-                <input type="text" class="universal-filter-input" data-filter="${f}" placeholder="${T('pf_enter', 'Enter')} ${f}..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;">
-            </div>`;
+            <div style="margin-bottom:12px;"> <label style="font-size:13px; font-weight:bold; color:#64748b;">${f} *</label> <input type="text" class="universal-filter-input" data-filter="${f}" placeholder="${T('pf_enter', 'Enter')} ${f}..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;"> </div>`;
         });
         filtersArea.innerHTML = inputsHtml;
         filterContainer.style.display = 'block';

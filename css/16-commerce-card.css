@@ -62,7 +62,7 @@
     gap: 3px;
     background: rgba(11, 27, 43, .62);
     color: #ffffff;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 700;
     padding: 3px 8px;
     border-radius: 999px;
@@ -106,7 +106,7 @@
     right: auto;
     background: linear-gradient(45deg, #FFD700, #FDB931);
     color: #5b4300;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 900;
     letter-spacing: .3px;
     padding: 3px 8px;
@@ -141,7 +141,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 9.5px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: .2px;
     padding: 3px 8px;
@@ -158,6 +158,7 @@
 .skh-badge--auction   { background: #fdecec; color: #c2410c; }
 .skh-badge--drop      { background: #f3e8ff; color: #7c3aed; }
 .skh-badge--group     { background: #e7f7f1; color: #0e7a5f; }
+.skh-badge--wholesale{ background: #dbeafe; color: #0B4F7A; }
 
 /* Kichwa (max mistari 2) */
 .skh-title {
@@ -216,13 +217,20 @@
     background: #e2e8f0;
 }
 .skh-seller-name {
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--skh-primary, #1268A8);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
+}
+/* [AUDIT 2026-09-16] Wafuasi karibu na jina la muuzaji (kwenye kadi) */
+.skh-followers {
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 /* Tiki ya uthibitisho */
@@ -245,13 +253,13 @@
     align-items: center;
     gap: 3px;
     color: #d97706;
-    font-size: 11px;
+    font-size: 13px;
     white-space: nowrap;
     flex-shrink: 0;
 }
 .skh-rating svg { width: 11px; height: 11px; fill: none; }
 .skh-rating b { font-weight: 800; color: #92400e; }
-.skh-rating small { color: #94a3b8; font-size: 10px; font-weight: 600; }
+.skh-rating small { color: #94a3b8; font-size: 12.5px; font-weight: 600; }
 
 /* Safu ya meta (eneo / views / aina) */
 .skh-meta-row {
@@ -266,7 +274,7 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    font-size: 10.5px;
+    font-size: 12.5px;
     color: #718096;
     white-space: nowrap;
     overflow: hidden;
@@ -308,7 +316,7 @@
 }
 .skh-route .skh-route-arrow svg { width: 13px; height: 13px; }
 .skh-route-sub {
-    font-size: 11px;
+    font-size: 13px;
     color: #718096;
     white-space: nowrap;
     overflow: hidden;
@@ -330,14 +338,14 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #0e7a5f;
     white-space: nowrap;
 }
 .skh-protect svg { width: 11px; height: 11px; }
 .skh-cta {
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 800;
     color: var(--skh-primary, #1268A8);
     white-space: nowrap;
@@ -452,18 +460,20 @@
     letter-spacing: 0;
     line-height: 1.3;
     white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: normal;
+    writing-mode: horizontal-tb !important;
 }
 .skh-section-text small {
-    font-size: 11px;
+    font-size: 13px;
     color: #8aa0b5;
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
     white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: normal;
+    writing-mode: horizontal-tb !important;
     line-height: 1.35;
 }
 .skh-seeall {
@@ -475,7 +485,7 @@
     border: none;
     border-radius: 999px;
     padding: 8px 13px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     cursor: pointer;
     white-space: nowrap;
@@ -580,7 +590,7 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, .95);
     color: var(--skh-green-dark, #0E7A63);
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 800;
     letter-spacing: .1px;
     box-shadow: 0 2px 8px rgba(15, 23, 42, .16);
@@ -602,7 +612,7 @@
     border-radius: 999px;
     background: rgba(11, 31, 48, .66);
     color: #fff;
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 700;
     line-height: 1;
     box-shadow: 0 2px 8px rgba(11, 31, 48, .28);
@@ -615,7 +625,7 @@
     text-overflow: ellipsis;
     max-width: 64px;
 }
-.skh-route-overlay .skh-ro-arrow { color: #cfe7fb; font-size: 11px; flex-shrink: 0; }
+.skh-route-overlay .skh-ro-arrow { color: #cfe7fb; font-size: 13px; flex-shrink: 0; }
 
 /* Zimeisha: donge la kati + picha ya kijivu */
 .skh-out-pill {
@@ -628,7 +638,7 @@
     border-radius: 8px;
     background: rgba(15, 23, 42, .72);
     color: #fff;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 900;
     letter-spacing: 1.2px;
     text-transform: uppercase;
@@ -674,7 +684,7 @@
     font-weight: 800;
 }
 .skh-price-prefix {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #7b94a8;
     letter-spacing: 0;
@@ -708,7 +718,7 @@
 }
 .skh-seller-ic svg { width: 10px; height: 10px; }
 .skh-seller-mini .skh-seller-name {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #3d5468;
 }
@@ -728,7 +738,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 600;
     color: #8395a7;
     max-width: 100%;
@@ -744,7 +754,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 700;
     color: var(--skh-deep, #0B4F7A);
     background: #eef5fb;
@@ -762,7 +772,7 @@
     border: 1px solid #fbe7c3;
     border-radius: 999px;
     padding: 1px 7px;
-    font-size: 10.5px;
+    font-size: 12.5px;
 }
 
 /* Footer ya zamani (Imelindwa/CTA) haitumiki tena kwenye teaser —
@@ -847,7 +857,7 @@
     display:flex;align-items:center;justify-content:center;
 }
 .rm-head h3{margin:0;font-size:16px;font-weight:800;color:#173B56;}
-.rm-sub{font-size:11.5px;color:#64748B;line-height:1.4;}
+.rm-sub{font-size: 13px;color:#64748B;line-height:1.4;}
 .rm-close{
     margin-left:auto;flex:0 0 auto;width:36px;height:36px;border-radius:50%;
     border:none;background:#F1F5F9;color:#475569;font-size:20px;line-height:1;
@@ -888,7 +898,7 @@
 .rm-name{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .rm-name b{font-size:14px;font-weight:800;color:#173B56;}
 .rm-verified{color:#18A982;display:inline-flex;}
-.rm-online{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#18A982;}
+.rm-online{display:inline-flex;align-items:center;gap:5px;font-size: 12.5px;font-weight:700;color:#18A982;}
 .rm-online i{width:7px;height:7px;border-radius:50%;background:#18A982;display:inline-block;box-shadow:0 0 0 3px rgba(24,169,130,.15);}
 .rm-route{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#334155;flex-wrap:wrap;}
 .rm-route svg{stroke:#2B82BD;flex:0 0 auto;}
@@ -900,10 +910,10 @@
 .rm-chips{display:flex;gap:6px;flex-wrap:wrap;}
 .rm-chip{
     display:inline-flex;align-items:center;gap:4px;background:#F1F5F9;
-    border-radius:8px;padding:3px 8px;font-size:11px;color:#475569;font-weight:600;
+    border-radius:8px;padding:3px 8px;font-size: 13px;color:#475569;font-weight:600;
 }
 .rm-chip svg{stroke:#64748B;}
-.rm-warn{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#B45309;font-weight:600;}
+.rm-warn{display:inline-flex;align-items:center;gap:5px;font-size: 13px;color:#B45309;font-weight:600;}
 .rm-warn svg{stroke:#D97706;}
 .rm-actions{flex:0 0 100%;display:flex;gap:8px;padding-left:90px;}
 .rm-btn{
@@ -950,4 +960,93 @@
     .rm-card{gap:5px 10px;padding:10px;}
     .rm-img{flex-basis:64px;width:64px;height:64px;}
     .rm-actions{padding-left:0;}
+}
+
+/* [§6/§8/§13/§17/§21] Mode signal line — namba halisi chini ya bei ya kadi */
+.skh-mode-line {
+    display: flex; align-items: center; gap: 5px;
+    margin: 2px 0 0 0; padding: 2px 0 0 0;
+    font-size: 11px; line-height: 1.35; font-weight: 700;
+    color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.skh-mode-line--auction   { color: #c2410c; }
+.skh-mode-line--drop      { color: #7c3aed; }
+.skh-mode-line--group     { color: #0e7a5f; }
+.skh-mode-line--wholesale { color: #0B4F7A; }
+
+/* ============================================================
+   [§6-§11 R8 MOBILE 360–412px] Kadi = quick discovery, muundo tayari.
+   Mmadili gidilgies 412 — hakunakuliyni tiny text wala image distortion.
+   ============================================================ */
+@media (max-width: 420px) {
+    /* Kadi iza kwa row 2 safa-umlke hakukuliny ladbanit */
+    .feed-card-box.skh-card .skh-title {
+        font-size: 13px;
+        line-height: 1.35;
+        /* Ruhexa 2 mistari (imeandikwa kupindana pekee): */
+        -webkit-line-clamp: 2;
+        min-height: calc(1.35em * 2);
+    }
+    .feed-card-box.skh-card .skh-price { font-size: 16px; }
+    .feed-card-box.skh-card .skh-price-prefix { font-size: 11px; }
+
+    /* Mode signal line — iigandze inapofungipwa bindis, si kikatazisid */
+    .feed-card-box.skh-card .skh-mode-line {
+        white-space: normal;           /* 2 - wildings kunaonekn sanity 360px */
+        font-size: 11px;
+        line-height: 1.4;
+        display: block;                /* kuzuwa rip-width gumeia */
+        text-overflow: clip;
+        overflow: visible;
+    }
+
+    /* Seller-mini row: muuzaji + wafuasi hakuliny tiny — wanawezagen */
+    .feed-card-box.skh-card .skh-seller-row {
+        flex-wrap: wrap;
+        gap: 4px 6px;
+    }
+    .feed-card-box.skh-card .skh-seller-mini { max-width: 100%; }
+    .feed-card-box.skh-card .skh-followers { white-space: nowrap; }
+
+    /* Badges: mpya ndezya — lady size inaonvel balbally */
+    .skh-badge { font-size: 10.5px; padding: 3px 7px; }
+
+    /* Image isiqri'nit ki kerir — lazima aspect kulaqdis */
+    .feed-card-box.skh-card .skh-img img { object-fit: cover; }
+}
+
+/* 360px — ukungui wa kypeu: gfururi mbili zilizobaraku */
+@media (max-width: 360px) {
+    .feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+
+/* ═══ [§6-§11 R8 MOBILE CARDS] 420px & 360px: title 2-line clamp,
+ * mode-line haitozidi kuwa kiwalifuwi, seller-row inaugauge line. */
+@media (max-width: 420px) {
+    .feed-card-box.skh-card .skh-title,
+    .feed-card-box .skh-card-title { 
+        font-size: 13px !important;
+        line-height: 1.35 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        min-height: calc(1.35em * 2);
+    }
+    .feed-card-box.skh-card .skh-mode-line,
+    .feed-card-box .skh-mode-line {
+        white-space: normal !important;
+        font-size: 10.5px !important;
+        line-height: 1.5 !important;
+        display: block !important;
+        overflow: visible !important;
+    }
+    .feed-card-box.skh-card .skh-seller-row,
+    .feed-card-box .skh-seller-row { flex-wrap: wrap !important; gap: 4px 6px !important; }
+}
+
+@media (max-width: 360px) {
+    .feed-card-box.skh-card .skh-title,
+    .feed-card-box .skh-card-title { font-size: 13px !important; }
+    .feed-card-box.skh-card .skh-mode-line { font-size: 10px !important; }
 }

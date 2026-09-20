@@ -9,8 +9,7 @@
 // ============================================================
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var SOLD_STATUSES = ['completed', 'delivered', 'paid', 'delivered_confirmed', 'shipped'];
     var META = null; // { products:[], ordersAgg:{}, byProduct:{} }
@@ -79,7 +78,8 @@ import { skh } from './00-bootstrap.js';
                 views: views, likes: likes, saves: saves,
                 orders: b.orders, units: units, revenue: b.revenue,
                 conversion: conv, createdAt: p.createdAt, updatedAt: p.updatedAt || p.createdAt,
-                saleMode: p.saleMode
+                saleMode: p.saleMode,
+                modeData: p.modeData || null   // [§34] muuzaji aone metrics za modes
             };
         });
         META = { rows: rows, byProduct: byProduct };
@@ -106,10 +106,56 @@ import { skh } from './00-bootstrap.js';
     }
 
     function statPill(label, value, color) {
-        return '<div style="text-align:center;"><small style="display:block;font-size:9px;color:#64748b;text-transform:uppercase;">' + label + '</small><b style="font-size:14px;color:' + (color || '#0f172a') + ';">' + value + '</b></div>';
+        return '<div style="text-align:center;"><small style="display:block;font-size:12px;color:#64748b;text-transform:uppercase;">' + label + '</small><b style="font-size:14px;color:' + (color || '#0f172a') + ';">' + value + '</b></div>';
     }
 
     function empty(msg) { return '<p style="text-align:center;color:#64748b;padding:30px;">' + (msg || T('smp_no_data', 'Not enough data yet.')) + '</p>'; }
+
+    /* [§34 MODE METRICS] Muuzaji aone hali halisi ya commerce modes zake —
+     * kutoka modeData ya Firestore (si placeholder). free_market haitaonyesha
+     * chochote kilicho tofauti (Sokohuru = kawaida, SOKO HURU). */
+    function modeMetricsLine(r) {
+        if (!r || !r.saleMode || r.saleMode === 'free_market') return '';
+        var md = r.modeData || {};
+        var chip = function (txt, bg, fg) {
+            return '<span style="background:' + bg + ';color:' + fg + ';border-radius:8px;padding:3px 8px;font-size:11px;font-weight:900;">' + esc(txt) + '</span>';
+        };
+        var endTxt = md.endTime ? new Date(Number(md.endTime)).toLocaleDateString('sw-TZ') + ' · ' + new Date(Number(md.endTime)).toLocaleTimeString('sw-TZ', { hour: '2-digit', minute: '2-digit' }) : '';
+        if (r.saleMode === 'auction') {
+            var st = md.ended ? 'Umefungwa' : 'Live';
+            return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'
+                + chip(' Mnada: ' + st, '#fdecec', '#c2410c')
+                + chip('Dau: TSh ' + Number(md.currentBid || 0).toLocaleString(), '#fff7ed', '#c2410c')
+                + chip('Zabuni: ' + (md.totalBids || 0), '#f0f9ff', '#0369a1')
+                + (endTxt ? chip('Kuisha: ' + endTxt, '#f1f5f9', '#334155') : '')
+                + '</div>';
+        }
+        if (r.saleMode === 'group_buy') {
+            var joined = parseInt(md.joinedUsers) || 1, target = parseInt(md.targetPeople) || 10;
+            var status = (joined >= target) ? 'Limekamilika' : (md.endTime && Date.now() >= Number(md.endTime) ? 'Imekwisha' : 'Inavyuma');
+            return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'
+                + chip('Group Buy: ' + status, '#dcfce7', '#166534')
+                + chip(joined + '/' + target + ' wamejiunga', '#f0fdf4', '#166534')
+                + (endTxt ? chip('Kuisha: ' + endTxt, '#f1f5f9', '#334155') : '')
+                + '</div>';
+        }
+        if (r.saleMode === 'price_drop') {
+            return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'
+                + chip(' Bei Kushuka: live', '#f3e8ff', '#7c3aed')
+                + chip('Min: TSh ' + Number(md.minPrice || 0).toLocaleString(), '#faf5ff', '#7c3aed')
+                + (endTxt ? chip('Kuisha: ' + endTxt, '#f1f5f9', '#334155') : '')
+                + '</div>';
+        }
+        if (r.saleMode === 'wholesale') {
+            var minQ = parseInt(md.minQty) || 0;
+            var tiersN = Array.isArray(md.tiers) ? md.tiers.length : 0;
+            return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'
+                + chip(' Jumla: minQty ' + minQ, '#dbeafe', '#0B4F7A')
+                + (tiersN ? chip('Tiers: ' + tiersN, '#eff6ff', '#0B4F7A') : chip('Punguzo: ' + (md.discountValue || 0) + (md.discountType === 'percent' ? '%' : ' TSh'), '#eff6ff', '#0B4F7A'))
+                + '</div>';
+        }
+        return '';
+    }
 
     // ---------- 1. MY PRODUCTS ----------
     window.skhRenderMyProducts = async function () {
@@ -124,41 +170,9 @@ import { skh } from './00-bootstrap.js';
         var catKeys = Object.keys(cats);
 
         ws.innerHTML = `
-        <div style="text-align:left; animation: fadeIn 0.3s ease;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-                <div>
-                    <h2 style="margin:0;font-size:19px;color:#0f172a;font-weight:800;">${T('smp_my_products', 'My Products')}</h2>
-                    <p style="margin:3px 0 0;color:#64748b;font-size:12px;">${T('smp_products_sub', 'All products you listed on SokoHai — total: {n}', { n: rows.length })}</p>
-                </div>
-            </div>
-
-            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:14px;">
-                <input id="mpSearch" oninput="window.skhMPFilter('q', this.value)" placeholder="${T('smp_search_ph', 'Search products (name or category)...')}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:13px;margin-bottom:8px;outline:none;">
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <select onchange="window.skhMPFilter('cat', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;">
-                        <option value="">${T('smp_all_categories', 'All categories')}</option>
+        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;"> <div> <h2 style="margin:0;font-size:19px;color:#0f172a;font-weight:800;">${T('smp_my_products', 'My Products')}</h2> <p style="margin:3px 0 0;color:#64748b;font-size:12px;">${T('smp_products_sub', 'All products you listed on SokoHai — total: {n}', { n: rows.length })}</p> </div> </div> <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:14px;"> <input id="mpSearch" oninput="window.skhMPFilter('q', this.value)" placeholder="${T('smp_search_ph', 'Search products (name or category)...')}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:13px;margin-bottom:8px;outline:none;"> <div style="display:flex;gap:6px;flex-wrap:wrap;"> <select onchange="window.skhMPFilter('cat', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_categories', 'All categories')}</option>
                         ${catKeys.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('')}
-                    </select>
-                    <select onchange="window.skhMPFilter('stock', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;">
-                        <option value="">${T('smp_all_stock', 'All stock')}</option>
-                        <option value="in">${T('eng_in_stock', 'In stock')}</option>
-                        <option value="out">${T('eng_out_stock', 'Out of stock')}</option>
-                    </select>
-                    <select onchange="window.skhMPFilter('status', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;">
-                        <option value="">${T('smp_all_status', 'All statuses')}</option>
-                        <option value="active">${T('smp_active', 'Active')}</option>
-                        <option value="inactive">${T('smp_inactive', 'Inactive')}</option>
-                    </select>
-                    <select onchange="window.skhMPFilter('sort', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;">
-                        <option value="newest">${T('smp_newest', 'Newest')}</option>
-                        <option value="best">${T('smp_best', 'Best selling')}</option>
-                        <option value="lowest">${T('smp_lowest', 'Slow selling')}</option>
-                        <option value="highest">${T('smp_highest', 'Highest revenue')}</option>
-                    </select>
-                </div>
-            </div>
-            <div id="mpTableWrap"></div>
-        </div>`;
+                    </select> <select onchange="window.skhMPFilter('stock', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_stock', 'All stock')}</option> <option value="in">${T('eng_in_stock', 'In stock')}</option> <option value="out">${T('eng_out_stock', 'Out of stock')}</option> </select> <select onchange="window.skhMPFilter('status', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_status', 'All statuses')}</option> <option value="active">${T('smp_active', 'Active')}</option> <option value="inactive">${T('smp_inactive', 'Inactive')}</option> </select> <select onchange="window.skhMPFilter('sort', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="newest">${T('smp_newest', 'Newest')}</option> <option value="best">${T('smp_best', 'Best selling')}</option> <option value="lowest">${T('smp_lowest', 'Slow selling')}</option> <option value="highest">${T('smp_highest', 'Highest revenue')}</option> </select> </div> </div> <div id="mpTableWrap"></div> </div>`;
         window.skhMPRenderTable();
     };
 
@@ -181,20 +195,10 @@ import { skh } from './00-bootstrap.js';
             var stColor = r.status === 'active' ? '#16a34a' : '#94a3b8';
             var stockColor = r.stockStatus === 'in_stock' ? '#16a34a' : '#ef4444';
             return `
-            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;">
-                <div style="display:flex;gap:10px;align-items:flex-start;">
-                    <img src="${img}" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'" style="width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f1f5f9;">
-                    <div style="flex:1;min-width:0;">
-                        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
-                            <b style="font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</b>
-                            <span style="font-size:13px;font-weight:900;color:var(--terracotta);white-space:nowrap;">${tzs(r.price)}</span>
-                        </div>
-                        <div style="font-size:11px;color:#64748b;margin:3px 0;">
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;"> <div style="display:flex;gap:10px;align-items:flex-start;"> <img src="${img}" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'" style="width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f1f5f9;"> <div style="flex:1;min-width:0;"> <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"> <b style="font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</b> <span style="font-size:13px;font-weight:900;color:var(--terracotta);white-space:nowrap;">${tzs(r.price)}</span> </div> <div style="font-size:13px;color:#64748b;margin:3px 0;">
                             ${esc(r.category)} ·
                             <span style="color:${stockColor};font-weight:800;">${r.stockStatus === 'in_stock' ? T('eng_in_stock', 'In stock') + ' (' + r.stock + ')' : T('eng_out_stock', 'Out of stock')}</span> ·
-                            <span style="color:${stColor};font-weight:800;">${r.status === 'active' ? T('smp_active', 'Active') : T('smp_inactive', 'Inactive')}</span>
-                        </div>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+                            <span style="color:${stColor};font-weight:800;">${r.status === 'active' ? T('smp_active', 'Active') : T('smp_inactive', 'Inactive')}</span> </div> <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
                             ${statPill(T('pm_views', 'Views'), r.views.toLocaleString())}
                             ${statPill(T('smp_likes', 'Likes'), r.likes.toLocaleString())}
                             ${statPill(T('smp_saves', 'Saves'), r.saves.toLocaleString())}
@@ -202,23 +206,15 @@ import { skh } from './00-bootstrap.js';
                             ${statPill(T('smp_sold', 'Sold'), r.units.toLocaleString())}
                             ${statPill(T('smp_revenue', 'Revenue'), tzs(r.revenue), '#16a34a')}
                         </div>
-                        <div style="font-size:10px;color:#94a3b8;margin-top:5px;">
+                        ${modeMetricsLine(r)}
+                        <div style="font-size:12.5px;color:#94a3b8;margin-top:5px;">
                             ${T('smp_added_on', 'Added on')} ${esc(new Date(r.createdAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ'))}${r.updatedAt && r.updatedAt !== r.createdAt ? ' · ' + T('smp_updated_on', 'Updated on') + ' ' + esc(new Date(r.updatedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ')) : ''}
-                        </div>
-                        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                            <button onclick="openProduct('${js(r.id)}','products')" style="padding:8px 12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">${T('smp_view_btn', 'View')}</button>
-                            <button onclick="window.openEditModal('${js(r.id)}','products')" style="padding:8px 12px;background:#e0f2fe;color:#03509d;border:none;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">${T('smp_edit_btn', 'Edit')}</button>
-                            <button onclick="window.skhMPStock('${js(r.id)}', ${r.stock})" style="padding:8px 12px;background:#fef3c7;color:#92400e;border:none;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">${T('smp_stock_btn', 'Stock')}</button>
-                            <button onclick="window.skhRenderProductPerformance('${js(r.id)}')" style="padding:8px 12px;background:#f3e8ff;color:#6b21a8;border:none;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">${T('smp_perf_btn', 'Performance')}</button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+                        </div> <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"> <button onclick="openProduct('${js(r.id)}','products')" style="padding:8px 12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_view_btn', 'View')}</button> <button onclick="window.openEditModal('${js(r.id)}','products')" style="padding:8px 12px;background:#e0f2fe;color:#03509d;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_edit_btn', 'Edit')}</button> <button onclick="window.skhMPStock('${js(r.id)}', ${r.stock})" style="padding:8px 12px;background:#fef3c7;color:#92400e;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_stock_btn', 'Stock')}</button> <button onclick="window.skhRenderProductPerformance('${js(r.id)}')" style="padding:8px 12px;background:#f3e8ff;color:#6b21a8;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_perf_btn', 'Performance')}</button> </div> </div> </div> </div>`;
         }).join('');
     };
 
     window.skhMPStock = async function (id, current) {
-        var v = prompt(T('smp_stock_prompt', 'Enter new stock amount (current: {n}):', { n: current }), String(current || 0));
+        var v = await skhPrompt(T('smp_stock_prompt', 'Enter new stock amount (current: {n}):', { n: current }), String(current || 0));
         if (v === null) return;
         var n = Number(v);
         if (isNaN(n) || n < 0) { alert(T('smp_stock_invalid', 'Please enter a valid number (0 or more).')); return; }
@@ -240,12 +236,7 @@ import { skh } from './00-bootstrap.js';
         var convTxt = r.conversion.toFixed(2) + '%';
         var likeToSale = r.likes > 0 && r.units > 0 ? (r.units / r.likes * 100).toFixed(1) + '%' : (r.units > 0 ? '—' : '0%');
         ws.innerHTML = `
-        <div style="text-align:left; animation: fadeIn 0.3s ease;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <button onclick="window.skhRenderMyProducts()" style="background:#e2e8f0;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;">&larr; ${T('smp_my_products', 'My Products')}</button>
-                <h2 style="margin:0;font-size:18px;color:#0f172a;">${T('smp_perf_btn', 'Performance')}: ${esc(r.title)}</h2>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;">
+        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;"> <button onclick="window.skhRenderMyProducts()" style="background:#e2e8f0;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;">← ${T('smp_my_products', 'My Products')}</button> <h2 style="margin:0;font-size:18px;color:#0f172a;">${T('smp_perf_btn', 'Performance')}: ${esc(r.title)}</h2> </div> <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;">
                 ${statPill(T('pm_views', 'Views'), r.views.toLocaleString())}
                 ${statPill(T('smp_likes', 'Likes'), r.likes.toLocaleString())}
                 ${statPill(T('smp_saves', 'Saves'), r.saves.toLocaleString())}
@@ -253,16 +244,7 @@ import { skh } from './00-bootstrap.js';
                 ${statPill(T('smp_units_sold', 'Units sold'), r.units.toLocaleString())}
                 ${statPill(T('smp_revenue', 'Revenue'), tzs(r.revenue), '#16a34a')}
                 ${statPill(T('smp_conversion', 'Conversion'), convTxt, '#7c3aed')}
-            </div>
-            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;">
-                <b style="font-size:12px;color:#0f172a;display:block;margin-bottom:8px;">${T('smp_explanation', 'Explanation')}</b>
-                <div style="font-size:12px;color:#334155;line-height:1.8;">
-                    <div>${T('smp_conv_line', 'Conversion (views → purchases):')} <b>${convTxt}</b></div>
-                    <div>${T('smp_like_sale_line', 'Likes to sales rate (likes → sold):')} <b>${likeToSale}</b></div>
-                    <div style="margin-top:6px;color:#64748b;">${T('smp_interest_note', 'Interest (likes/saves) and purchases (orders/sold) are different — many likes do not mean more sales.')}</div>
-                </div>
-            </div>
-        </div>`;
+            </div> <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;"> <b style="font-size:12px;color:#0f172a;display:block;margin-bottom:8px;">${T('smp_explanation', 'Explanation')}</b> <div style="font-size:12px;color:#334155;line-height:1.8;"> <div>${T('smp_conv_line', 'Conversion (views -> purchases):')} <b>${convTxt}</b></div> <div>${T('smp_like_sale_line', 'Likes to sales rate (likes -> sold):')} <b>${likeToSale}</b></div> <div style="margin-top:6px;color:#64748b;">${T('smp_interest_note', 'Interest (likes/saves) and purchases (orders/sold) are different — many likes do not mean more sales.')}</div> </div> </div> </div>`;
     };
 
     // ---------- 3. SALES INSIGHTS ----------
@@ -288,9 +270,7 @@ import { skh } from './00-bootstrap.js';
         }
 
         ws.innerHTML = `
-        <div style="text-align:left; animation: fadeIn 0.3s ease;">
-            <h2 style="margin:0 0 4px;font-size:19px;color:#0f172a;">${T('smp_sales_perf', 'Sales Performance')}</h2>
-            <p style="margin:0 0 14px;color:#64748b;font-size:12px;">${T('smp_sales_sub', 'Based on your real order and product data.')}</p>
+        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h2 style="margin:0 0 4px;font-size:19px;color:#0f172a;">${T('smp_sales_perf', 'Sales Performance')}</h2> <p style="margin:0 0 14px;color:#64748b;font-size:12px;">${T('smp_sales_sub', 'Based on your real order and product data.')}</p>
             ${listBlock(T('smp_best_selling', 'Best Selling Products'), '#16a34a', best, 'units', T('smp_suffix_sold', ' sold'))}
             ${listBlock(T('smp_slow_moving', 'Slow Moving Products'), '#ef4444', slow, 'units', T('smp_suffix_sold', ' sold'))}
             ${listBlock(T('smp_most_viewed', 'Most Viewed'), '#0369a1', mostViewed, 'views', T('smp_suffix_views', ' views'))}
@@ -332,16 +312,14 @@ import { skh } from './00-bootstrap.js';
         insights.sort(function (a, b) { return orderMap[a.level] - orderMap[b.level]; });
 
         ws.innerHTML = `
-        <div style="text-align:left; animation: fadeIn 0.3s ease;">
-            <h2 style="margin:0 0 4px;font-size:19px;color:#0f172a;">${T('smp_prod_insights', 'Product Insights')}</h2>
-            <p style="margin:0 0 14px;color:#64748b;font-size:12px;">${T('smp_insights_sub', 'Classification is based on real data — views, sales, saves, listing age and stock.')}</p>
+        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h2 style="margin:0 0 4px;font-size:19px;color:#0f172a;">${T('smp_prod_insights', 'Product Insights')}</h2> <p style="margin:0 0 14px;color:#64748b;font-size:12px;">${T('smp_insights_sub', 'Classification is based on real data — views, sales, saves, listing age and stock.')}</p>
             ${insights.length ? insights.map(function (r) {
                 var L = levels[r.level];
                 return '<div style="' + L[2] + 'border-radius:12px;padding:12px;margin-bottom:10px;">'
                     + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">'
                     + '<b style="font-size:13px;color:#0f172a;">' + esc(r.title) + '</b>'
-                    + '<span style="font-size:10px;font-weight:900;color:' + L[1] + ';text-transform:uppercase;">' + L[0] + '</span></div>'
-                    + '<div style="font-size:11px;color:#64748b;margin:4px 0;">' + esc(r.reason) + '</div>'
+                    + '<span style="font-size:12.5px;font-weight:900;color:' + L[1] + ';text-transform:uppercase;">' + L[0] + '</span></div>'
+                    + '<div style="font-size:13px;color:#64748b;margin:4px 0;">' + esc(r.reason) + '</div>'
                     + '<div style="font-size:12px;color:#0f172a;background:rgba(255,255,255,0.7);border-radius:8px;padding:8px;">' + T('smp_suggestion', 'Suggestion') + ': ' + esc(r.reco) + '</div>'
                     + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">'
                     + statPill(T('pm_views', 'Views'), r.views.toLocaleString())
@@ -373,27 +351,22 @@ import { skh } from './00-bootstrap.js';
         function table(pickedRows) {
             if (pickedRows.length < 2) return empty(T('smp_compare_pick', 'Select at least 2 products by ticking them.'));
             var cols = ['views', 'likes', 'saves', 'orders', 'sold'];
-            var head = '<tr style="text-align:left;"><th style="padding:8px;font-size:11px;color:#64748b;">' + T('smp_product_col', 'Product') + '</th>'
+            var head = '<tr style="text-align:left;"><th style="padding:8px;font-size:13px;color:#64748b;">' + T('smp_product_col', 'Product') + '</th>'
                 + pickedRows.map(function (r) { return '<th style="padding:8px;font-size:12px;color:#0f172a;text-align:center;">' + esc(r.title) + '</th>'; }).join('') + '</tr>';
             var body = cols.map(function (c) {
-                return '<tr><td style="padding:8px;font-size:11px;color:#64748b;font-weight:700;">' + colLabel(c) + '</td>'
+                return '<tr><td style="padding:8px;font-size:13px;color:#64748b;font-weight:700;">' + colLabel(c) + '</td>'
                     + pickedRows.map(function (r) { return '<td style="padding:8px;font-size:13px;font-weight:900;text-align:center;">' + r[c].toLocaleString() + '</td>'; }).join('') + '</tr>';
             }).join('');
             return '<table style="width:100%;border-collapse:collapse;background:white;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
         }
 
         ws.innerHTML = `
-        <div style="text-align:left; animation: fadeIn 0.3s ease;">
-            <h2 style="margin:0 0 4px;font-size:19px;color:#0f172a;">${T('smp_compare', 'Compare Products')}</h2>
-            <p style="margin:0 0 8px;color:#64748b;font-size:12px;">${T('smp_compare_sub', 'Compare attention (views/likes/saves) with conversion (orders/sold).')}</p>
-            <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:8px;margin-bottom:12px;max-height:220px;overflow-y:auto;">
+        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h2 style="margin:0 0 4px;font-size:19px;color:#0f172a;">${T('smp_compare', 'Compare Products')}</h2> <p style="margin:0 0 8px;color:#64748b;font-size:12px;">${T('smp_compare_sub', 'Compare attention (views/likes/saves) with conversion (orders/sold).')}</p> <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:8px;margin-bottom:12px;max-height:220px;overflow-y:auto;">
                 ${rows.map(function (r) {
                     return '<label style="display:flex;align-items:center;gap:8px;padding:7px 6px;font-size:12px;color:#0f172a;border-bottom:1px solid #f1f5f9;cursor:pointer;">'
                         + '<input type="checkbox" onchange="window.skhToggleCompare(\'' + js(r.id) + '\', this); window.skhCompareRefresh();"> ' + esc(r.title) + '</label>';
                 }).join('')}
-            </div>
-            <div id="cmpTable">${table(picked)}</div>
-        </div>`;
+            </div> <div id="cmpTable">${table(picked)}</div> </div>`;
     };
     window.skhCompareRefresh = function () {
         var wrap = document.getElementById('cmpTable');
@@ -402,10 +375,10 @@ import { skh } from './00-bootstrap.js';
         if (picked.length < 2) { wrap.innerHTML = empty(T('smp_compare_pick', 'Select at least 2 products by ticking them.')); return; }
         var cols = ['views', 'likes', 'saves', 'orders', 'sold'];
         var colLabel = function (key) { return { views: T('pm_views', 'Views'), likes: T('smp_likes', 'Likes'), saves: T('smp_saves', 'Saves'), orders: T('smp_orders', 'Orders'), sold: T('smp_sold', 'Sold') }[key] || key; };
-        var head = '<tr style="text-align:left;"><th style="padding:8px;font-size:11px;color:#64748b;">' + T('smp_product_col', 'Product') + '</th>'
+        var head = '<tr style="text-align:left;"><th style="padding:8px;font-size:13px;color:#64748b;">' + T('smp_product_col', 'Product') + '</th>'
             + picked.map(function (r) { return '<th style="padding:8px;font-size:12px;color:#0f172a;text-align:center;">' + esc(r.title) + '</th>'; }).join('') + '</tr>';
         var body = cols.map(function (c) {
-            return '<tr><td style="padding:8px;font-size:11px;color:#64748b;font-weight:700;">' + colLabel(c) + '</td>'
+            return '<tr><td style="padding:8px;font-size:13px;color:#64748b;font-weight:700;">' + colLabel(c) + '</td>'
                 + picked.map(function (r) { return '<td style="padding:8px;font-size:13px;font-weight:900;text-align:center;">' + r[c].toLocaleString() + '</td>'; }).join('') + '</tr>';
         }).join('');
         wrap.innerHTML = '<table style="width:100%;border-collapse:collapse;background:white;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';

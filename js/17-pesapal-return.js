@@ -10,8 +10,7 @@
 //   - 'sokohai_pending_checkout' : oda ya mnunuzi (cart/bidhaa)
 //   - 'sokohai_pending_payment'  : deposit / ada / boost / payroll / usajili
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var CHECKOUT_KEY = 'sokohai_pending_checkout';
     var PAYMENT_KEY = 'sokohai_pending_payment';
@@ -23,6 +22,28 @@
     // [COMMERCE 2026-09] Malipo ya oda ya MAJADILIANO (DEMO/direct) — huweka
     // oda iliyokuwepo kwenye 'held' (escrow), haiunda oda mpya ya kikapu.
     window.skhPesaPalFinishNegotiationOrder = markNegoOrderPaid;
+
+    // [AUDIT-FIX 2026-09-16 P0 §23/§42] Thibitisha malipo kwa SERVER
+    // (callable 'pesapalTransactionStatus') KABLA ya kuandika 'paid'/'held'.
+    // Awali faili hii iliandika mafanikio ya malipo ikitegemea tu URL ya kurudi —
+    // browser ingeweza kufake mafanikio (user akighairi malipo PesaPal lakini
+    // kurudi kwa link yenye OrderTrackingId, oda iliandikwa 'paid').
+    // @returns 'verified' | 'rejected' | 'unknown' | 'unavailable'
+    async function verifyPaymentWithServer(orderTrackingId) {
+        try {
+            if (!orderTrackingId || typeof window.skhServerPaymentsStatus !== 'function') return 'unavailable';
+            var res = await window.skhServerPaymentsStatus({ orderTrackingId: orderTrackingId });
+            var d = (res && typeof res === 'object' && 'data' in res) ? res.data : res;
+            if (d && (d.verified === true || d.paid === true)) return 'verified';
+            var s = String((d && (d.status || d.payment_status_description || d.paymentStatus)) || '').toLowerCase();
+            if (s.indexOf('completed') !== -1 || s.indexOf('paid') !== -1 || s.indexOf('confirmed') !== -1) return 'verified';
+            if (s.indexOf('fail') !== -1 || s.indexOf('invalid') !== -1 || s.indexOf('cancel') !== -1 || s.indexOf('reversed') !== -1) return 'rejected';
+            return 'unknown';
+        } catch (e) {
+            console.warn('[payments] pesapalTransactionStatus imekataliwa:', e && e.message);
+            return 'unavailable';
+        }
+    }
 
     // [COMMERCE 2026-09] Oda ya majadiliano ikishalipwa: funga bei iliyogandishwa
     // kwenye escrow ('held'). HAIUNDI oda mpya — inathibitisha oda ya makubaliano.
@@ -48,6 +69,25 @@
             return { ok: true, already: true };
         }
 
+        /* [AUDIT-FIX 2026-09-16 P0 §42] HAKUNA kuandika 'paid'/'held' bila
+           uthibitisho wa server kwa workflow ZA KWELI (za DEMO huruhusiwa wazi). */
+        if (!pending.demo) {
+            var verifyOn = !window.SOKOHAI_CONFIG || window.SOKOHAI_CONFIG.PAYMENT_VERIFY_ON_RETURN !== false;
+            if (verifyOn) {
+                var vres = await verifyPaymentWithServer(tid);
+                if (vres === 'rejected') {
+                    try { await fb.updateDoc(fb.doc(fb.db, 'orders', String(orderId)), { paymentStatus: 'rejected', paymentVerified: false, paymentRejectedAt: now, updatedAt: now }); } catch (e) {}
+                    return { ok: false, error: 'Malipo yamekataliwa na PesaPal' };
+                }
+                if (vres !== 'verified') {
+                    /* Server haikupatikana au hali haijulikani: andika UKWELI
+                       (inasubiri uthibitisho) — SI 'paid'. UI/audits zione hali halisi. */
+                    try { await fb.updateDoc(fb.doc(fb.db, 'orders', String(orderId)), { paymentStatus: vres === 'unknown' ? 'verification_pending' : 'verification_unavailable', paymentVerified: false, updatedAt: now }); } catch (e) {}
+                    return { ok: false, pendingVerification: true, error: 'Malipo hayajathibitishwa bado — yanathaminiwa na server' };
+                }
+            }
+        }
+
         var patch = {
             status: 'held',
             paymentStatus: 'paid',
@@ -64,14 +104,15 @@
         if (existing.commerceType === 'service') patch.serviceStatus = 'held';
         else if (existing.commerceType === 'transport') patch.transportStatus = 'held';
         else patch.deliveryStatus = 'held';
+        if (!pending.demo) patch.verifiedByServer = true; // [AUDIT-FIX §42] thibitisho la server
         await fb.updateDoc(fb.doc(fb.db, 'orders', String(orderId)), patch);
 
         try {
             if (existing.sellerId) {
-                // Kitambulisho thabiti → arifa isirudiwe (DEMO ikibofya mara mbili).
+                // Kitambulisho thabiti -> arifa isirudiwe (DEMO ikibofya mara mbili).
                 await fb.setDoc(fb.doc(fb.db, 'notifications', 'payprot_' + String(orderId)), {
                     userId: existing.sellerId,
-                    title: '🛡 SokoPay: Malipo Yamelindwa',
+                    title: ' SokoPay: Malipo Yamelindwa',
                     body: 'Oda #' + orderId + ' imelipwa na fedha zimehifadhiwa Escrow. Tayarisha/endelea na oda sasa.',
                     createdAt: now, read: false, type: 'order',
                     orderId: String(orderId), negotiationId: existing.negotiationId || ctx.negotiationId || null
@@ -86,7 +127,7 @@
     // [ADMIN PAYMENTS SWITCH] Kutengeneza mwanachama wa OFFLINE (shared):
     //   - Inaitwa na case 'offline_registration' (baada ya malipo ya PesaPal)
     //   - Inaitwa na registerOfflineMember (FREE MODE) — bila kamisheni
-    // opts.skipCommission = true → FREE (hakuna wallet commission wala adminRevenue)
+    // opts.skipCommission = true -> FREE (hakuna wallet commission wala adminRevenue)
     // ============================================================
     window.skhCreateOfflineMember = async function (ctx, opts) {
         opts = opts || {};
@@ -95,13 +136,17 @@
         var businessId = null;
         var businessSetupComplete = false;
         if (ctx.bType && ctx.bType !== 'Sio Biashara') { businessId = 'BUS-' + randomDigits; businessSetupComplete = true; }
-        var offEmail = 'offline_' + randomDigits + '@sokohai.com';
+        /* [FIX 2026-09-15 §5] Hii ni IDENTIFIER YA NDANI ya Firebase Auth pekee
+           (Auth inahitaji email/password). HAIWASILISHWI kwa mtumiaji kama
+           email yake, wala haihifadhiwi kwenye `email` ya profile.
+           Utambulisho wa mwanachama ni NAMBA YA SIMU (§5, §6). */
+        var authIdentifier = 'offline_' + randomDigits + '@sokohai.internal';
         var defaultPassword = 'sokohai' + randomDigits;
         var apiKey = (fb && fb.apiKey) || '';
         var newUid = null;
         if (apiKey) {
             var signUpUrl = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + encodeURIComponent(apiKey);
-            var regRes = await fetch(signUpUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: offEmail, password: defaultPassword, returnSecureToken: false }) });
+            var regRes = await fetch(signUpUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: authIdentifier, password: defaultPassword, returnSecureToken: false }) });
             var regData = await regRes.json();
             if (regData.error) throw new Error(regData.error.message);
             newUid = regData.localId;
@@ -109,11 +154,25 @@
             newUid = 'offline_' + Date.now() + '_' + randomDigits;
         }
         await fb.setDoc(fb.doc(fb.db, 'users', newUid), {
-            uid: newUid, fullName: ctx.name, phone: ctx.phone, email: offEmail,
+            /* [FIX §2,§3,§4,§5,§13,§22] Umiliki ni wa MWANACHAMA:
+                 • `email: null` — hakuna email ya uongo; simu ndiyo utambulisho
+                 • `accountType: 'offline_member'` — mtumiaji kamili, si sub-account
+                 • wakala ni `registeredThroughAgentId` (metadata), SI mmiliki   */
+            uid: newUid, fullName: ctx.name, phone: ctx.phone,
+            phoneNumber: ctx.phone,
+            email: null,
+            authIdentifier: authIdentifier,
+            accountType: 'offline_member',
+            ownerId: newUid,
+            notificationChannel: 'sms',
             photoURL: ctx.photoUrl || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(ctx.name || 'x') + '&background=f1f5f9&color=64748b'),
             region: ctx.region, district: ctx.district, businessType: ctx.bType,
             isOfflineUser: true, offlineAccountId: offlineAccountId, businessId: businessId, businessSetupComplete: businessSetupComplete,
             shopName: (ctx.bType && ctx.bType !== 'Sio Biashara') ? ('Duka la ' + ctx.name) : null,
+            /* Uhusiano wa wakala = metadata ya onboarding TU (§13).
+               `managedBy*` zimehifadhiwa kwa utangamano wa nyuma, lakini
+               `registeredThrough*` ndiyo maana sahihi. */
+            registeredThroughAgentId: ctx.agentUid, registeredThroughAgentName: ctx.agentName,
             managedByAgentUid: ctx.agentUid, managedByAgentName: ctx.agentName, agentCode: ctx.agentCode,
             walletBalance: 0, createdAt: new Date().toISOString()
         });
@@ -278,6 +337,11 @@
                 hostedCheckout: true,
                 delivery: delivery,
                 deliveryRequired: !!delivery.required,
+                // [§31 ORDER RECORD] Ikiwa oda ilitoka commerce mode (auction/
+                // price_drop/group_buy/wholesale), hifadhi context — kanya buhali za
+                // "frasa trade" baadaye (receipts/disputes/life-cycle audit).
+                commerceMode: it.commerceMode || (pending.commerceContext && (pending.commerceContext.commerceMode || pending.commerceContext.mode || pending.commerceContext.type)) || null,
+                commerceModeSnapshot: it.commerceModeSnapshot || null,
                 isOfflineUser: meta.isOffline, managedByAgentUid: meta.agentUid, agentCode: meta.agentCode
             });
             created++;
@@ -380,7 +444,7 @@
                 if (negoRes && negoRes.already) {
                     summary = 'Malipo ya oda hii yalishathibitishwa — Escrow imeshafungwa.';
                 } else if (negoRes && negoRes.ok) {
-                    summary = '🛡 Oda #' + esc(negoRes.orderId) + ' imelipwa na <b>fedha zimehifadhiwa kwenye SokoPay Escrow</b>. Muuzaji amearifiwa atayarishe oda.';
+                    summary = ' Oda #' + esc(negoRes.orderId) + ' imelipwa na <b>fedha zimehifadhiwa kwenye SokoPay Escrow</b>. Muuzaji amearifiwa atayarishe oda.';
                 } else {
                     summary = 'Malipo yamethibitishwa lakini kufunga oda kumeshindikana — wasiliana na usaidizi.';
                 }
@@ -432,7 +496,7 @@
                         await fb.updateDoc(fb.doc(fb.db, 'agents', ctx.agentDocId), { paymentStatus: 'paid', isPaid: true, paymentRef: ctx.txRef || tid, paidAt: now });
                     } catch (e) { /* document inaweza kukosekana kwenye legacy flow */ }
                 } else {
-                    // Legacy fallback: hakuna draft → andika sasa.
+                    // Legacy fallback: hakuna draft -> andika sasa.
                     await fb.addDoc(fb.collection(fb.db, 'agents'), { userId: ctx.uid, userEmail: ctx.email, fullName: ctx.name, contact: ctx.phone, email: ctx.agentEmail || '', location: ctx.region, bio: ctx.bio || '', status: 'pending', paymentStatus: 'paid', isPaid: true, paymentRef: ctx.txRef || tid, createdAt: now });
                 }
                 if (ctx.recordRevenue !== false) {

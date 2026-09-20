@@ -8,8 +8,7 @@
    ============================================================ */
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     function T(key, en) {
         var s = null;
@@ -94,7 +93,7 @@ import { skh } from './00-bootstrap.js';
         m.innerHTML = '<div style="background:#fff;border-radius:18px;width:96%;max-width:640px;max-height:90vh;overflow:auto;box-shadow:0 24px 72px rgba(15,23,42,.4);">'
             + '<div style="background:linear-gradient(135deg,#001122,#00509d);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;">'
             + '<b>' + T('sc_title', 'Tathmini & Maswali (Halisi)') + '</b>'
-            + '<button type="button" onclick="document.getElementById(\'skhSellerCommentsModal\').style.display=\'none\'" style="border:none;background:transparent;color:#fff;font-size:20px;cursor:pointer;">✕</button></div>'
+            + '<button type="button" onclick="document.getElementById(\'skhSellerCommentsModal\').style.display=\'none\'" style="border:none;background:transparent;color:#fff;font-size:20px;cursor:pointer;" aria-label="Funga">' + (window.skhNavIcon ? window.skhNavIcon('x',16) : '') + '</button></div>'
             + '<div id="skhSellerCommentsBody" style="padding:14px;font-size:12px;color:#475569;">' + T('sc_loading', 'Inapakia...') + '</div></div>';
         m.style.display = 'flex';
         await renderSellerPanel();
@@ -105,20 +104,20 @@ import { skh } from './00-bootstrap.js';
         if (!body) return;
         var me = myUid();
         var s = await window.skhSellerStatsReal();
-        var star = function (n) { var g = ''; for (var i = 0; i < n; i++) g += '★'; return '<span style="color:#f59e0b;">' + g + '</span>'; };
+        var star = function (n) { var g = ''; for (var i = 0; i < n; i++) g += ''; return '<span style="color:#f59e0b;">' + g + '</span>'; };
         var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">'
             + '<div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;text-align:center;">'
             + '<div style="font-size:28px;font-weight:900;color:#0f172a;">' + (s.avg ? s.avg.toFixed(1) : '—') + '</div>'
-            + '<div style="font-size:11px;color:#64748b;">' + T('sc_avg_rating', 'Wastani wa Nyota') + ' (' + s.count + ')</div></div>'
+            + '<div style="font-size:13px;color:#64748b;">' + T('sc_avg_rating', 'Wastani wa Nyota') + ' (' + s.count + ')</div></div>'
             + '<div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;text-align:center;">'
             + '<div style="font-size:28px;font-weight:900;color:#16a34a;">' + (s.responseRate == null ? '—' : s.responseRate + '%') + '</div>'
-            + '<div style="font-size:11px;color:#64748b;">' + T('sc_response_rate', 'Kiwango cha Kujibu') + '</div></div>'
+            + '<div style="font-size:13px;color:#64748b;">' + T('sc_response_rate', 'Kiwango cha Kujibu') + '</div></div>'
             + '<div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;text-align:center;">'
             + '<div style="font-size:28px;font-weight:900;color:#d97706;">' + s.questions + '</div>'
-            + '<div style="font-size:11px;color:#64748b;">' + T('sc_questions', 'Maswali ya Wateja') + '</div></div></div>';
+            + '<div style="font-size:13px;color:#64748b;">' + T('sc_questions', 'Maswali ya Wateja') + '</div></div></div>';
 
         html += '<b style="display:block;margin-bottom:6px;">' + T('sc_breakdown', 'Mgawanyo wa Nyota') + '</b>'
-            + '<div style="font-size:11px;color:#64748b;margin-bottom:12px;">'
+            + '<div style="font-size:13px;color:#64748b;margin-bottom:12px;">'
             + [5, 4, 3, 2, 1].map(function (n) {
                 var pct = s.count ? Math.round((s.breakdown[n] || 0) / s.count * 100) : 0;
                 return '<div style="display:flex;align-items:center;gap:8px;margin:2px 0;">' + n + ' ' + star(1)
@@ -159,10 +158,10 @@ import { skh } from './00-bootstrap.js';
             var rs = (replies[t.id] || []);
             var answered = rs.some(function (r) { return r.authorId === me; });
             return '<div style="border:1px solid #e2e8f0;border-radius:12px;padding:9px;margin-bottom:8px;background:#f8fafc;">'
-                + '<b style="font-size:12px;color:#0f172a;">' + esc(t.authorName || 'Mteja') + '</b> <span style="color:#94a3b8;font-size:10px;">' + fmtDate(t.createdAt) + '</span>'
+                + '<b style="font-size:12px;color:#0f172a;">' + esc(t.authorName || 'Mteja') + '</b> <span style="color:#94a3b8;font-size:12.5px;">' + fmtDate(t.createdAt) + '</span>'
                 + '<div style="font-size:12px;margin:3px 0;">' + esc(t.text || '') + '</div>'
-                + (rs.length ? rs.map(function (r) { return '<div style="margin-left:14px;font-size:11px;color:#0369a1;">↳ ' + esc(r.authorName || '') + ': ' + esc(r.text || '') + '</div>'; }).join('') : '')
-                + '<div style="margin-top:6px;"><button type="button" style="border:none;background:#03509d;color:#fff;border-radius:99px;padding:5px 12px;font-size:11px;font-weight:800;cursor:pointer;" onclick="window.skhSellerReplyToQuestion(\'' + jsEsc(t.id) + '\')">'
+                + (rs.length ? rs.map(function (r) { return '<div style="margin-left:14px;font-size:13px;color:#0369a1;">↳ ' + esc(r.authorName || '') + ': ' + esc(r.text || '') + '</div>'; }).join('') : '')
+                + '<div style="margin-top:6px;"><button type="button" style="border:none;background:#03509d;color:#fff;border-radius:99px;padding:5px 12px;font-size:13px;font-weight:800;cursor:pointer;" onclick="window.skhSellerReplyToQuestion(\'' + jsEsc(t.id) + '\')">'
                 + (answered ? T('sc_reply_again', 'Jibu Tena') : T('sc_reply', 'Jibu')) + '</button></div></div>';
         }).join('');
     }
@@ -218,10 +217,10 @@ import { skh } from './00-bootstrap.js';
                         alert(T('sc_fail', 'Imeshindwa.') + ' ' + (e && e.message ? e.message : ''));
                         return;
                     }
-                    // server haipatikani → endelea na fallback.
+                    // server haipatikani -> endelea na fallback.
                 }
             }
-            // 2) Fallback: server haipatikani → andika moja kwa moja (rules za author).
+            // 2) Fallback: server haipatikani -> andika moja kwa moja (rules za author).
             if (!published && targetId) {
                 try {
                     await skh.addDoc(skh.collection(skh.db, 'comments'), {
@@ -248,7 +247,7 @@ import { skh } from './00-bootstrap.js';
             await renderQaList();
         };
         if (typeof window.customPrompt === 'function') window.customPrompt(T('sc_reply_ph', 'Andika jibu lako...'), '', doSend);
-        else { var v = prompt(T('sc_reply_ph', 'Andika jibu lako...'), ''); if (v != null) doSend(v); }
+        else { var v = await skhPrompt(T('sc_reply_ph', 'Andika jibu lako...'), ''); if (v != null) doSend(v); }
     };
 
     /* ---------- Admin: usimamizi wa maoni + ripoti ---------- */
@@ -266,7 +265,7 @@ import { skh } from './00-bootstrap.js';
         m.innerHTML = '<div style="background:#fff;border-radius:18px;width:96%;max-width:680px;max-height:90vh;overflow:auto;box-shadow:0 24px 72px rgba(15,23,42,.4);">'
             + '<div style="background:linear-gradient(135deg,#0b1120,#1e293b);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;">'
             + '<b>' + T('md_title', 'Usimamizi wa Maoni & Ripoti') + '</b>'
-            + '<button type="button" onclick="document.getElementById(\'skhAdminModerationModal\').style.display=\'none\'" style="border:none;background:transparent;color:#fff;font-size:20px;cursor:pointer;">✕</button></div>'
+            + '<button type="button" onclick="document.getElementById(\'skhAdminModerationModal\').style.display=\'none\'" style="border:none;background:transparent;color:#fff;font-size:20px;cursor:pointer;" aria-label="Funga">' + (window.skhNavIcon ? window.skhNavIcon('x',16) : '') + '</button></div>'
             + '<div id="skhAdminModerationBody" style="padding:14px;font-size:12px;color:#475569;">' + T('sc_loading', 'Inapakia...') + '</div></div>';
         m.style.display = 'flex';
         await renderAdminModeration();
@@ -302,12 +301,12 @@ import { skh } from './00-bootstrap.js';
             var chtml = items.map(function (c) {
                 var st = c.moderationStatus || 'visible';
                 return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:8px;margin-bottom:6px;background:#f8fafc;">'
-                    + '<div style="font-size:11px;color:#64748b;">' + esc(c.authorName || '') + ' · ' + fmtDate(c.createdAt) + ' · <b>' + esc(st) + '</b>' + (c.verifiedPurchase ? ' · ✓ Umenunua' : '') + '</div>'
+                    + '<div style="font-size:13px;color:#64748b;">' + esc(c.authorName || '') + ' · ' + fmtDate(c.createdAt) + ' · <b>' + esc(st) + '</b>' + (c.verifiedPurchase ? ' ·  Umenunua' : '') + '</div>'
                     + '<div style="font-size:12px;margin:3px 0;">' + esc(truncate(c.text || '', 160)) + '</div>'
                     + '<div style="display:flex;gap:6px;">'
-                    + (st === 'visible' ? '<button type="button" style="border:1px solid #cbd5e1;background:#fff;border-radius:99px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="window.skhAdminModerateComment(\'' + jsEsc(c.id) + '\',\'hide\')">' + T('md_hide', 'Ficha') + '</button>' : '')
-                    + (st === 'hidden' ? '<button type="button" style="border:1px solid #cbd5e1;background:#fff;border-radius:99px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="window.skhAdminModerateComment(\'' + jsEsc(c.id) + '\',\'unhide\')">' + T('md_unhide', 'Onyesha') + '</button>' : '')
-                    + '<button type="button" style="border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:99px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="window.skhAdminModerateComment(\'' + jsEsc(c.id) + '\',\'delete\')">' + T('md_delete', 'Futa') + '</button>'
+                    + (st === 'visible' ? '<button type="button" style="border:1px solid #cbd5e1;background:#fff;border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer;" onclick="window.skhAdminModerateComment(\'' + jsEsc(c.id) + '\',\'hide\')">' + T('md_hide', 'Ficha') + '</button>' : '')
+                    + (st === 'hidden' ? '<button type="button" style="border:1px solid #cbd5e1;background:#fff;border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer;" onclick="window.skhAdminModerateComment(\'' + jsEsc(c.id) + '\',\'unhide\')">' + T('md_unhide', 'Onyesha') + '</button>' : '')
+                    + '<button type="button" style="border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer;" onclick="window.skhAdminModerateComment(\'' + jsEsc(c.id) + '\',\'delete\')">' + T('md_delete', 'Futa') + '</button>'
                     + '</div></div>';
             }).join('');
             document.getElementById('skhAdminComments').innerHTML = chtml || '<span style="color:#94a3b8;">' + T('md_none', 'Hakuna maoni.') + '</span>';
@@ -323,7 +322,7 @@ import { skh } from './00-bootstrap.js';
         } catch (e) { alert(T('md_fail', 'Imeshindwa.') + ' ' + (e && e.message)); }
     };
 
-    /* ---------- Hook: provider dashboard (reviews tab → halisi) ---------- */
+    /* ---------- Hook: provider dashboard (reviews tab -> halisi) ---------- */
     const _oldSwitchProvider = window.switchProviderDashTab;
     window.switchProviderDashTab = function (tab) {
         if (tab === 'reviews' && typeof window.loadHubDetailedReviews === 'function') {
@@ -335,7 +334,7 @@ import { skh } from './00-bootstrap.js';
                 if (btn) return;
                 var host = document.createElement('div');
                 host.style.cssText = 'margin-top:14px;';
-                host.innerHTML = '<button type="button" id="skhSellerRealBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#001122,#00509d);color:#fff;border:none;border-radius:14px;font-weight:900;font-size:13px;cursor:pointer;" onclick="window.skhSellerCommentsPanel()">📊 ' + T('sc_open_real', 'Tazama Tathmini & Maswali Halisi') + '</button>';
+                host.innerHTML = '<button type="button" id="skhSellerRealBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#001122,#00509d);color:#fff;border:none;border-radius:14px;font-weight:900;font-size:13px;cursor:pointer;" onclick="window.skhSellerCommentsPanel()"> ' + T('sc_open_real', 'Tazama Tathmini & Maswali Halisi') + '</button>';
                 ws.appendChild(host);
             }, 150);
             return;
@@ -352,7 +351,7 @@ import { skh } from './00-bootstrap.js';
             if (!ws || document.getElementById('skhAdminModBtn')) return;
             var host = document.createElement('div');
             host.style.cssText = 'margin-top:14px;';
-            host.innerHTML = '<button type="button" id="skhAdminModBtn" style="padding:12px 16px;background:#0f172a;color:#fff;border:none;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;" onclick="window.skhAdminModerationOpen()">🛡️ ' + T('md_open', 'Usimamizi wa Maoni & Ripoti') + '</button>';
+            host.innerHTML = '<button type="button" id="skhAdminModBtn" style="padding:12px 16px;background:#0f172a;color:#fff;border:none;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;" onclick="window.skhAdminModerationOpen()"> ' + T('md_open', 'Usimamizi wa Maoni & Ripoti') + '</button>';
             ws.appendChild(host);
         }, 200);
     };

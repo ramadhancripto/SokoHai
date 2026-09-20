@@ -6,8 +6,7 @@
 // Haionyeshi kama app imeshasakwa (standalone) au user
 // amekataa awali (localStorage).
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
     var KEY = 'sokohai_install_dismissed';
     var deferred = null;
 
@@ -36,7 +35,7 @@
 
         var ico = document.createElement('span');
         ico.className = 'skh-inst-ico';
-        ico.textContent = '📲';
+        ico.textContent = '';
 
         var txt = document.createElement('div');
         txt.className = 'skh-inst-txt';
@@ -80,6 +79,6 @@
     window.addEventListener('appinstalled', function () {
         var b = document.getElementById('skhInstallBanner');
         if (b) b.remove();
-        if (window.sokohaiToast) window.sokohaiToast('🎉 SOKOHAI imesakwa kwenye simu yako!', 'success', 4000);
+        if (window.sokohaiToast) window.sokohaiToast(' SOKOHAI imesakwa kwenye simu yako!', 'success', 4000);
     });
 })();

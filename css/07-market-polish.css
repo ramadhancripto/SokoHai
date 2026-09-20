@@ -184,7 +184,7 @@
     left: 8px;
     background: rgba(15, 23, 42, .72);
     color: #fff;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 900;
     padding: 3px 8px;
     border-radius: 999px;
@@ -315,7 +315,7 @@
     border: 1.5px solid #cbd5e1;
     color: #0f172a;
     font-weight: 900;
-    font-size: 11px;
+    font-size: 13px;
     padding: 7px 12px;
     border-radius: 999px;
     cursor: pointer;
@@ -343,7 +343,8 @@
     border-radius: 14px;
     box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22);
     padding: 6px;
-    z-index: 99999;
+    z-index: 45000;
+    position: absolute;
     animation: langPop .16s ease;
 }
 @keyframes langPop {
@@ -394,7 +395,7 @@
 }
 .menu-item span {
     color: #64748b;
-    font-size: 11px;
+    font-size: 13px;
 }
 
 /* ---------- Vichwa vya sehemu (sliders) ---------- */

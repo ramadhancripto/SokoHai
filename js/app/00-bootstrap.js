@@ -6,7 +6,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, setDoc, deleteDoc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 
 const skh = {};
@@ -43,6 +43,7 @@ skh.setDoc = setDoc;
 skh.deleteDoc = deleteDoc;
 skh.runTransaction = runTransaction;
 skh.serverTimestamp = serverTimestamp;
+skh.deleteField = deleteField;  // [FIX TOGGLE 2026-09-14] kusafisha fields bapa
 skh.getFunctions = getFunctions;
 skh.httpsCallable = httpsCallable;
 
@@ -91,12 +92,12 @@ skh.isFunctionsDownError = function (e) {
 window.skhFnDownMessage = function (feature) {
     var f = String(feature || '').toLowerCase();
     if (/pesapal|pesa|pay|malipo|wallet|escrow|sokopay|haipay/.test(f)) {
-        return 'Huduma ya malipo (SokoPay) haipatikani kwa sasa. Malipo hayajakamilika — tafadhali jaribu tena baadaye au wasiliana na msaada. Pesa yoyote haijatolewa.';
+        return 'Huduma ya malipo (SokoPay) haipatikani kwa sasa. Malipo hayajakamilika — jaribu tena baadaye au wasiliana na msaada. Pesa yoyote haijatolewa.';
     }
     if (/deliver|custody|token|rout|booking|safari|usafir|offer|negotiation/.test(f)) {
         return 'Huduma ya server ya hatua hii haipatikani kwa sasa. Jaribu tena baadaye; endapo itaendelea, wasiliana na msaada.';
     }
-    return 'Huduma ya server haipatikani kwa sasa. Tafadhali jaribu tena baadaye.';
+    return 'Huduma ya server haipatikani kwa sasa. jaribu tena baadaye.';
 };
 
 function markFunctionsDown(name, e) {
@@ -139,13 +140,25 @@ skh.wrapCallable = function (name) {
     // kwa sekunde 30; wito hurudisha kosa la 'haipatikani' mara moja
     // (fallback za kawaida hufanya kazi). Mwito wowote ukifanikiwa,
     // kizingiti hufunguliwa tena papo hapo.
+    /* [FIX 2026-09-15] Cooldown ilikuwa sekunde 30 — fupi mno kwa function
+       ambayo HAIPO kabisa (404). Kila sekunde 30 kila mwito ulijaribu tena,
+       ukijaza console kwa CORS/ERR_FAILED (mf. deliveryRouteSweep ikirudia).
+       Sasa: 30s kwa hitilafu ya muda, LAKINI dakika 10 kwa function
+       iliyothibitika kuwa haipo (404/not-found). */
     var FN_COOLDOWN_MS = 30000;
+    var FN_MISSING_COOLDOWN_MS = 10 * 60 * 1000;
+    skh._fnMissing = skh._fnMissing || {};
     function syntheticDown() {
         var e = new Error('Cloud Functions hazipatikani kwa muda huu (server haijatumwa au mtandao umekatika).');
         e.code = 'functions/unavailable';
         return normalizeFnCallError(name, e);
     }
     function wrapped(data, opts) {
+        // Function hii imeshathibitika HAIPO -> usiijaribu tena kwa dakika 10.
+        var missAt = skh._fnMissing[name];
+        if (missAt && (Date.now() - missAt) < FN_MISSING_COOLDOWN_MS) {
+            return Promise.reject(syntheticDown());
+        }
         if (skh.functionsDown && skh.functionsDownSince
             && (Date.now() - skh.functionsDownSince) < FN_COOLDOWN_MS) {
             return Promise.reject(syntheticDown());
@@ -153,7 +166,7 @@ skh.wrapCallable = function (name) {
         return Promise.resolve()
             .then(function () { return raw(data, opts); })
             .then(function (res) {
-                // Mwito umefanikiwa → server imerudi; fungua kizingiti.
+                // Mwito umefanikiwa -> server imerudi; fungua kizingiti.
                 if (skh.functionsDown) {
                     skh.functionsDown = false;
                     skh.functionsDownSince = 0;
@@ -162,7 +175,19 @@ skh.wrapCallable = function (name) {
             })
             .catch(function (e) {
                 var normalized = normalizeFnCallError(name, e);
-                if (normalized.fnDown) skh.functionsDownSince = Date.now(); // anzisha upya dirisha la sekunde 30
+                if (normalized.fnDown) {
+                    skh.functionsDownSince = Date.now();
+                    // 404/not-found = haipo kabisa -> weka alama ya muda mrefu
+                    var c = String((e && e.code) || '').toLowerCase();
+                    var t = String((e && e.message) || '').toLowerCase();
+                    if (/not-?found|404|cors|failed to fetch|err_failed/.test(c + ' ' + t)) {
+                        if (!skh._fnMissing[name]) {
+                            console.warn('[Cloud Functions] "' + name + '" haipo (haijadeploy). ' +
+                                         'Sitaijaribu tena kwa dakika 10. Endesha skhDiagnose() kwa maelezo.');
+                        }
+                        skh._fnMissing[name] = Date.now();
+                    }
+                }
                 throw normalized;
             });
     }
@@ -192,7 +217,7 @@ window.skhFnErrText = function (e, feature) {
     var d = e.details;
     var real = (d && (typeof d === 'string' ? d : d.message)) || e.message || '';
     real = String(real).replace(/^Error:\s*/, '').replace(/^\[.*?\]\s*/, '');
-    if (/^\s*internal\s*$/i.test(real)) return (feature ? window.skhFnDownMessage(feature) : 'Hitilafu ya ndani ya server. Tafadhali jaribu tena.');
+    if (/^\s*internal\s*$/i.test(real)) return (feature ? window.skhFnDownMessage(feature) : 'Hitilafu ya ndani ya server. jaribu tena.');
     return real || (feature ? window.skhFnDownMessage(feature) : 'Hitilafu. Jaribu tena.');
 };
 
@@ -412,21 +437,29 @@ window.safeCreateChart = function(canvasId, config) {
     return new Chart(ctx, config);
 };
 
-window.closeModals = function() {
-        document.querySelectorAll('.overlay-menu').forEach(ov => ov.style.display = 'none');
-        const fomuZote = [
-    'sellerForm','serviceForm','deliveryForm','sokopayForm',
-    'offlineMemberForm','editModal','businessOSForm','rideRequestModal',
-    'userPaymentModal','buyerOrdersModal',
-    'authModal', 'productModal', 'cartModal', 'chatModal', 'chatListModal', 
-    'notifModal', 'directHireModal', 'deliveryChoiceModal',
-    'actionRequestModal', 'logisticsTokenModal', 'deliveriesModal', 'tripsModal', 'savedItemsModal'
-];
+window.closeModals = function(forceAll) {
+        // [FIX 2026-09-19] Inbox double-hop + dashboard scroll lock regression
+        // - Always hide ALL overlay-menus including sidebarMenuModal (z100005) which is > chatListModal (z7750)
+        // - Explicit list includes sidebarMenuModal, plusMenu, sokohaiAccountSettingModal, mySokoHaiModal etc.
+        // - Reset body overflow to auto (openProduct sets hidden)
+        try {
+            document.querySelectorAll('.overlay-menu').forEach(ov => {
+                try { ov.style.display = 'none'; } catch(e) {}
+                try { ov.classList.remove('open'); } catch(e) {}
+            });
+        } catch(e) {}
+        const fomuZote = [ 'sellerForm','serviceForm','deliveryForm','sokopayForm', 'offlineMemberForm','editModal','businessOSForm','rideRequestModal', 'userPaymentModal','buyerOrdersModal', 'authModal', 'productModal', 'cartModal', 'chatModal', 'chatListModal', 'notifModal', 'directHireModal', 'deliveryChoiceModal', 'actionRequestModal', 'logisticsTokenModal', 'deliveriesModal', 'tripsModal', 'savedItemsModal',
+            'sidebarMenuModal','plusMenu','mainMenu','sokohaiAccountSettingModal','mySokoHaiModal','sellerProfileModal','tokenBoxModal','requestInboxModal','routeMatchModal','skhDiscoverOverlay','skhDiscoverEngine'
+        ];
         fomuZote.forEach(id => {
             const el = document.getElementById(id);
-            if(el) el.style.display = 'none';
+            if(el) {
+                try { el.style.display = 'none'; } catch(e) {}
+                try { el.classList.remove('open'); } catch(e) {}
+            }
         });
-        document.body.style.overflow = 'auto';
+        try { document.body.style.overflow = 'auto'; } catch(e) {}
+        try { document.documentElement.style.overflow = 'auto'; } catch(e) {}
 
         // [FIX: bottom nav kupotea] Baada ya kufunga modal yoyote (mf. chujio/kategoria),
         // hakikisha bottom nav na top nav vinarudi ikiwa tupo kwenye soko (buyer mode).
@@ -497,6 +530,15 @@ try { window.skhRoutingServerOfferAccept = skh.wrapCallable("deliveryOfferAccept
 try { window.skhRoutingServerOfferDecline = skh.wrapCallable("deliveryOfferDecline"); } catch (e) { console.warn("[Routing] offerDecline callable haikusajiliwa:", e && e.message); }
 try { window.skhRoutingServerSweep = skh.wrapCallable("deliveryRouteSweep"); } catch (e) { console.warn("[Routing] sweep callable haikusajiliwa:", e && e.message); }
 try { window.skhRoutingServerRetry = skh.wrapCallable("deliveryRouteRetry"); } catch (e) { console.warn("[Routing] retry callable haikusajiliwa:", e && e.message); }
+
+// [DEEP L10N 2026-09] Card labels kupitia engine ya lugha; fallback za zamani hazivunjwi.
+function skhTF(key, fb) {
+    try { if (window.t) { var s = window.t(key); if (s && s !== key) return s; } } catch (eT) {}
+    return fb;
+}
+skh.skhTF = skhTF;
+// Two-arg form: skhTF(key, fallback) — tumikiwa katika blocks ya classic scripts.
+window.skhTF = window.skhTF || skhTF;
 
 skh.skhJsEsc = function skhJsEsc(s) { // [PHASE 4.5b] escaper ya onclick="fn('...')" (JS-string-safe)
     var BS = String.fromCharCode(92); // backslash
@@ -598,7 +640,7 @@ skh.filterNearMe = false;
 skh.filterRegion = ""; // [MIKOA] Mkoa uliochaguliwa kwenye chujio la location ("") = Tanzania Nzima
 
 // [MIKOA] Orodha kamili ya mikoa ya Tanzania (+visiwa) pamoja na majina mbadala
-// kwa ajili ya kufananisha na maandishi ya 'location' ya bidhaa.
+// kwa kufananisha na maandishi ya 'location' ya bidhaa.
 skh.TZ_REGIONS = [
     { name: "Arusha", aliases: ["arusha"] },
     { name: "Dar es Salaam", aliases: ["dar es salaam", "dar-es-salaam", "dar", "dsm", "ilala", "kinondoni", "temeke", "ubungo", "kigamboni", "kariakoo"] },
@@ -662,123 +704,28 @@ skh.userUnsubscribe = null;
 
 skh.notifUnsubscribe = null;
 
-skh.serviceDataMap = {
-    "physical": {
-        "Home & Personal": {
-            "Cleaning Services": { filters: ["Type of cleaning", "House size (rooms)", "Frequency (daily/weekly)"] },
-            "Beauty & Grooming": { filters: ["Service type", "Gender", "Location (home/salon)"] },
-            "Laundry Services": { filters: ["Weight (kg)", "Type of clothes", "Pickup & delivery"] },
-            "Home Cooking": { filters: ["Number of people", "Menu type", "Cooking location"] },
-            "Home Maintenance": { filters: ["Problem type", "Urgency level", "Tools required"] },
-            "Personal Care": { filters: ["Age group", "Duration", "Special needs"] }
-        },
-        "Construction & Handyman": {
-            "Building Construction": { filters: ["Project type", "Size of building", "Materials included"] },
-            "Electrical Installation": { filters: ["Type of electrical work", "House size", "Safety inspection needed"] },
-            "Plumbing Services": { filters: ["Problem type", "Water system type", "Materials included"] },
-            "Carpentry & Furniture": { filters: ["Custom design", "Material type", "Size"] },
-            "Painting & Finishing": { filters: ["Area size (m²)", "Paint type", "Interior/exterior"] },
-            "General Repairs": { filters: ["Type of repair", "Urgency level", "Parts required"] },
-            "Welding & Metal Works": { filters: ["Material type", "Design complexity", "Installation needed"] }
-        },
-        "Cleaning & Maintenance": {
-            "House Cleaning": { filters: ["Number of rooms", "Frequency", "Deep cleaning", "Materials provided"] },
-            "Office Cleaning": { filters: ["Office size", "Number of rooms", "Working hours"] },
-            "Vehicle Cleaning": { filters: ["Vehicle type", "Wash type", "Location"] },
-            "Deep Cleaning": { filters: ["Area size", "Dirt level", "Chemicals required"] },
-            "Pest Control": { filters: ["Type of pest", "Area size", "Frequency", "Safety precautions"] },
-            "Outdoor Maintenance": { filters: ["Area size", "Frequency", "Tools provided", "Waste disposal"] }
-        },
-        "Event & Entertainment": {
-            "Event Planning": { filters: ["Event type", "Guest count", "Location", "Budget range"] },
-            "DJ & Music": { filters: ["Event type", "Duration (hours)", "Music genre", "Equipment provided"] },
-            "Sound Systems": { filters: ["Event size", "Indoor/outdoor", "Technician needed"] },
-            "Decoration Services": { filters: ["Theme type", "Venue size", "Color scheme"] },
-            "Photography & Video": { filters: ["Event duration", "Number of photographers", "Editing required"] },
-            "MC / Host Services": { filters: ["Event type", "Language preference", "Duration"] },
-            "Entertainment Performers": { filters: ["Performance type", "Duration", "Audience size"] }
-        },
-        "Tech & Repair": {
-            "Phone Repair": { filters: ["Phone brand/model", "Problem type", "Spare parts needed"] },
-            "Computer Repair": { filters: ["Device type", "Problem category", "Onsite/offsite"] },
-            "Network Setup": { filters: ["Location size", "Number of devices", "Speed requirements"] },
-            "Electronics Repair": { filters: ["Device type", "Fault description", "Warranty needed"] },
-            "Printer Services": { filters: ["Machine type", "Error type", "Replacement parts needed"] },
-            "CCTV Systems": { filters: ["Number of cameras", "Indoor/outdoor", "Remote access needed"] }
-        },
-        "Industrial Support": {
-            "Machine Maintenance": { filters: ["Machine type", "Industry type", "Downtime urgency"] },
-            "Industrial Installation": { filters: ["Plant size", "Machine complexity", "Installation timeline"] },
-            "Warehouse Support": { filters: ["Warehouse size", "Type of goods", "Staff required"] },
-            "Logistics Handling": { filters: ["Load weight", "Transport type", "Distance"] },
-            "Quality Control": { filters: ["Product type", "Inspection depth", "Certification needed"] },
-            "Heavy Equipment": { filters: ["Equipment type", "Job size", "Operator required"] }
-        },
-        "Agriculture Support": {
-            "Farm Preparation": { filters: ["Farm size", "Type of land", "Equipment needed"] },
-            "Crop Production": { filters: ["Crop type", "Growth stage", "Pest type"] },
-            "Irrigation Systems": { filters: ["Farm size", "Water source", "System type"] },
-            "Livestock Services": { filters: ["Animal type", "Herd size", "Disease issue"] },
-            "Agricultural Advisory": { filters: ["Farm goal", "Crop type", "Soil condition"] },
-            "Post-Harvest Services": { filters: ["Crop type", "Quantity", "Storage duration"] }
+skh.serviceDataMap = { "physical": { "Home & Personal": { "Cleaning Services": { filters: ["Type of cleaning", "House size (rooms)", "Frequency (daily/weekly)"] }, "Beauty & Grooming": { filters: ["Service type", "Gender", "Location (home/salon)"] }, "Laundry Services": { filters: ["Weight (kg)", "Type of clothes", "Pickup & delivery"] }, "Home Cooking": { filters: ["Number of people", "Menu type", "Cooking location"] }, "Home Maintenance": { filters: ["Problem type", "Urgency level", "Tools required"] }, "Personal Care": { filters: ["Age group", "Duration", "Special needs"] }
+        }, "Construction & Handyman": { "Building Construction": { filters: ["Project type", "Size of building", "Materials included"] }, "Electrical Installation": { filters: ["Type of electrical work", "House size", "Safety inspection needed"] }, "Plumbing Services": { filters: ["Problem type", "Water system type", "Materials included"] }, "Carpentry & Furniture": { filters: ["Custom design", "Material type", "Size"] }, "Painting & Finishing": { filters: ["Area size (m²)", "Paint type", "Interior/exterior"] }, "General Repairs": { filters: ["Type of repair", "Urgency level", "Parts required"] }, "Welding & Metal Works": { filters: ["Material type", "Design complexity", "Installation needed"] }
+        }, "Cleaning & Maintenance": { "House Cleaning": { filters: ["Number of rooms", "Frequency", "Deep cleaning", "Materials provided"] }, "Office Cleaning": { filters: ["Office size", "Number of rooms", "Working hours"] }, "Vehicle Cleaning": { filters: ["Vehicle type", "Wash type", "Location"] }, "Deep Cleaning": { filters: ["Area size", "Dirt level", "Chemicals required"] }, "Pest Control": { filters: ["Type of pest", "Area size", "Frequency", "Safety precautions"] }, "Outdoor Maintenance": { filters: ["Area size", "Frequency", "Tools provided", "Waste disposal"] }
+        }, "Event & Entertainment": { "Event Planning": { filters: ["Event type", "Guest count", "Location", "Budget range"] }, "DJ & Music": { filters: ["Event type", "Duration (hours)", "Music genre", "Equipment provided"] }, "Sound Systems": { filters: ["Event size", "Indoor/outdoor", "Technician needed"] }, "Decoration Services": { filters: ["Theme type", "Venue size", "Color scheme"] }, "Photography & Video": { filters: ["Event duration", "Number of photographers", "Editing required"] }, "MC / Host Services": { filters: ["Event type", "Language preference", "Duration"] }, "Entertainment Performers": { filters: ["Performance type", "Duration", "Audience size"] }
+        }, "Tech & Repair": { "Phone Repair": { filters: ["Phone brand/model", "Problem type", "Spare parts needed"] }, "Computer Repair": { filters: ["Device type", "Problem category", "Onsite/offsite"] }, "Network Setup": { filters: ["Location size", "Number of devices", "Speed requirements"] }, "Electronics Repair": { filters: ["Device type", "Fault description", "Warranty needed"] }, "Printer Services": { filters: ["Machine type", "Error type", "Replacement parts needed"] }, "CCTV Systems": { filters: ["Number of cameras", "Indoor/outdoor", "Remote access needed"] }
+        }, "Industrial Support": { "Machine Maintenance": { filters: ["Machine type", "Industry type", "Downtime urgency"] }, "Industrial Installation": { filters: ["Plant size", "Machine complexity", "Installation timeline"] }, "Warehouse Support": { filters: ["Warehouse size", "Type of goods", "Staff required"] }, "Logistics Handling": { filters: ["Load weight", "Transport type", "Distance"] }, "Quality Control": { filters: ["Product type", "Inspection depth", "Certification needed"] }, "Heavy Equipment": { filters: ["Equipment type", "Job size", "Operator required"] }
+        }, "Agriculture Support": { "Farm Preparation": { filters: ["Farm size", "Type of land", "Equipment needed"] }, "Crop Production": { filters: ["Crop type", "Growth stage", "Pest type"] }, "Irrigation Systems": { filters: ["Farm size", "Water source", "System type"] }, "Livestock Services": { filters: ["Animal type", "Herd size", "Disease issue"] }, "Agricultural Advisory": { filters: ["Farm goal", "Crop type", "Soil condition"] }, "Post-Harvest Services": { filters: ["Crop type", "Quantity", "Storage duration"] }
         }
-    },
-    "online": {
-        "Creative Freelancing": {
-            "Graphic Design": { filters: ["Design type", "Purpose", "File format"] },
-            "Video Production": { filters: ["Video length", "Platform", "Style"] },
-            "Photography": { filters: ["Event type", "Number of photos", "Editing level"] },
-            "Content Writing": { filters: ["Topic", "Word count", "Tone"] },
-            "Web & App Design": { filters: ["Project type", "Number of pages", "Features required"] },
-            "Social Media Management": { filters: ["Platform", "Posting frequency", "Ad budget"] },
-            "Digital AI Services": { filters: ["Use case", "Platform integration", "Complexity level"] }
-        },
-        "Software & IT": {
-            "Web & App Dev": { filters: ["Project type", "Programming language", "Required skills"] }
-        },
-        "Digital Marketing": {
-            "Campaigns": { filters: ["Platform", "Campaign duration", "Target audience"] }
-        },
-        "Writing & Translation": {
-            "Languages": { filters: ["Topic", "Word count", "Languages"] }
-        },
-        "Media Production": {
-            "Editing": { filters: ["Video length", "Platform", "Style"] }
-        },
-        "AI Services": {
-            "Prompt Engineering": { filters: ["Use case", "Platform integration", "Complexity level"] }
-        },
-        "Virtual Business": {
-            "Office Support": { filters: ["Task type", "Work hours", "Remote/onsite"] }
-        },
-        "Online Coaching": {
-            "Coaching & Lessons": { filters: ["Session Type", "Subject", "Duration"] }
-        },
-        "Website Services": {
-            "Site Setup": { filters: ["Project type", "Number of pages", "Features required"] }
-        },
-        "Remote Support": {
-            "Tech Help": { filters: ["Technical Support", "Software Troubleshooting", "Device Configuration"] }
+    }, "online": { "Creative Freelancing": { "Graphic Design": { filters: ["Design type", "Purpose", "File format"] }, "Video Production": { filters: ["Video length", "Platform", "Style"] }, "Photography": { filters: ["Event type", "Number of photos", "Editing level"] }, "Content Writing": { filters: ["Topic", "Word count", "Tone"] }, "Web & App Design": { filters: ["Project type", "Number of pages", "Features required"] }, "Social Media Management": { filters: ["Platform", "Posting frequency", "Ad budget"] }, "Digital AI Services": { filters: ["Use case", "Platform integration", "Complexity level"] }
+        }, "Software & IT": { "Web & App Dev": { filters: ["Project type", "Programming language", "Required skills"] }
+        }, "Digital Marketing": { "Campaigns": { filters: ["Platform", "Campaign duration", "Target audience"] }
+        }, "Writing & Translation": { "Languages": { filters: ["Topic", "Word count", "Languages"] }
+        }, "Media Production": { "Editing": { filters: ["Video length", "Platform", "Style"] }
+        }, "AI Services": { "Prompt Engineering": { filters: ["Use case", "Platform integration", "Complexity level"] }
+        }, "Virtual Business": { "Office Support": { filters: ["Task type", "Work hours", "Remote/onsite"] }
+        }, "Online Coaching": { "Coaching & Lessons": { filters: ["Session Type", "Subject", "Duration"] }
+        }, "Website Services": { "Site Setup": { filters: ["Project type", "Number of pages", "Features required"] }
+        }, "Remote Support": { "Tech Help": { filters: ["Technical Support", "Software Troubleshooting", "Device Configuration"] }
         }
-    },
-    "food": {
-        "Food Services": {
-            "Restaurants Food": { filters: ["Restaurant type", "Menu items", "Serving size"] },
-            "Catering Services": { filters: ["Event type", "Number of guests", "Menu selection"] },
-            "Street Food": { filters: ["Food type", "Portion size", "Location"] },
-            "Personal Chef": { filters: ["Service duration", "Meal plan type", "Number of people"] },
-            "Food Delivery": { filters: ["Pickup location", "Delivery location", "Urgency"] },
-            "Meal Prep Plans": { filters: ["Goal", "Calories target", "Duration plan"] }
+    }, "food": { "Food Services": { "Restaurants Food": { filters: ["Restaurant type", "Menu items", "Serving size"] }, "Catering Services": { filters: ["Event type", "Number of guests", "Menu selection"] }, "Street Food": { filters: ["Food type", "Portion size", "Location"] }, "Personal Chef": { filters: ["Service duration", "Meal plan type", "Number of people"] }, "Food Delivery": { filters: ["Pickup location", "Delivery location", "Urgency"] }, "Meal Prep Plans": { filters: ["Goal", "Calories target", "Duration plan"] }
         }
-    },
-    "rental": {
-        "Rental Services": {
-            "Property Rentals": { filters: ["Property type", "Location", "Size", "Duration"] },
-            "Vehicle Rentals": { filters: ["Vehicle type", "Fuel policy", "Driver included"] },
-            "Equipment Rentals": { filters: ["Equipment type", "Power capacity", "Duration"] },
-            "Event Rentals": { filters: ["Event type", "Guest size", "Setup needed"] },
-            "Agricultural Rentals": { filters: ["Farm size", "Crop type", "Duration"] },
-            "Furniture Rentals": { filters: ["Item type", "Condition", "Duration"] }
+    }, "rental": { "Rental Services": { "Property Rentals": { filters: ["Property type", "Location", "Size", "Duration"] }, "Vehicle Rentals": { filters: ["Vehicle type", "Fuel policy", "Driver included"] }, "Equipment Rentals": { filters: ["Equipment type", "Power capacity", "Duration"] }, "Event Rentals": { filters: ["Event type", "Guest size", "Setup needed"] }, "Agricultural Rentals": { filters: ["Farm size", "Crop type", "Duration"] }, "Furniture Rentals": { filters: ["Item type", "Condition", "Duration"] }
         }
     }
 };
@@ -813,16 +760,23 @@ skh.sysConfig = {
 // [FIX 2026-09] MALIPO KIMOJA-KIMOJA (PER-FEATURE) — hakuna switch ya jumla tena.
 // Kila ada ina kitufe chake kwenye admin dashboard (deposit, subscription, boost,
 // commission, offline_registration, agent_registration).
-//   - paymentGate(feature)  → je, ada HUSIKA imewashwa?
-//   - paymentsEnabled()     → (compat) true ikiwa ANGALAU ada moja imewashwa.
+//   - paymentGate(feature)  -> je, ada HUSIKA imewashwa?
+//   - paymentsEnabled()     -> (compat) true ikiwa ANGALAU ada moja imewashwa.
 // [MIGRATION] fees.enabled ya zamani (global) bado inaheshimiwa mpaka admin abonyeze
 // toggle mpya yoyote — toggleSys('fees', ...) inaibadilisha kuwa per-feature.
 skh.paymentsEnabled = function paymentsEnabled() {
     try {
         const cfg = (window.sysConfig && window.sysConfig.fees) || (skh.sysConfig && skh.sysConfig.fees);
         if (!cfg) return false;
+        // [FLIP-FLOP FIX 2026-09-17] Per-feature field IPO = ndiyo authoritative.
+        // Legacy `enabled` ni fallback TU kama hakuna per-feature kamwe — vinginevyo
+        // legacy `fees.enabled=false` ingeraidi haijauza chuma b(lipa sys toggle).
+        const keys = ['deposit','subscription','boost','commission','offline_registration','agent_registration'];
+        if (keys.some(function (k) { return k in cfg; })) {
+            return keys.some(function (k) { return cfg[k] === true; });
+        }
         if (typeof cfg.enabled === 'boolean') return cfg.enabled === true; // global ya zamani
-        return !!(cfg.deposit || cfg.subscription || cfg.boost || cfg.commission || cfg.offline_registration || cfg.agent_registration);
+        return false;
     } catch (e) { /* default: free */ }
     return false;
 };
@@ -832,258 +786,116 @@ skh.paymentGate = function paymentGate(feature) {
     try {
         const cfg = (window.sysConfig && window.sysConfig.fees) || (skh.sysConfig && skh.sysConfig.fees);
         if (!cfg) return false;
-        if (typeof cfg.enabled === 'boolean') return cfg.enabled === true; // global ya zamani
+        // [FLIP-FLOP FIX 2026-09-17] Angalia per-feature KWANZA; legacy `enabled`
+        // inaweza kushika ON/OFF kinyume na badiliko jipya admin alibofanya —
+        // hili ndiyo lilikuwa chanzo cha switch "ikarudi OFF baada ya ON".
         if (feature in cfg) return cfg[feature] === true;
+        if (typeof cfg.enabled === 'boolean') return cfg.enabled === true; // legacy fallback
         return false; // default: FREE
     } catch (e) { /* default: free */ }
     return false;
 };
 window.skhPaymentGate = skh.paymentGate; // ipatikane kwenye UI ya admin
 
-skh.advancedCategories = {
-    "Vyakula na Vinywaji (Food)": {
+skh.advancedCategories = { "Vyakula na Vinywaji (Food)": {
         icon: "",
-        subcategories: {
-            "Grains & Cereals": { filters: ["Brand", "Origin", "Grade", "Moisture", "Others"], stockTypes: ["Kg", "Bag", "Sack", "Ton"] },
-            "Cooking Oils": { filters: ["Brand", "Volume", "Type", "Origin", "Others"], stockTypes: ["Bottle", "Tin", "Drum", "Litre"] },
-            "Dairy Products": { filters: ["Brand", "Volume", "Fat Content", "Expiry", "Others"], stockTypes: ["Packet", "Bottle", "Box"] },
-            "Snacks & Confectionery": { filters: ["Brand", "Flavor", "Weight", "Expiry", "Others"], stockTypes: ["Piece", "Pack", "Box"] },
-            "Sugar & Sweeteners": { filters: ["Brand", "Weight", "Purity", "Others"], stockTypes: ["Kg", "Bag", "Sack"] },
-            "Salt Products": { filters: ["Brand", "Weight", "Type", "Others"], stockTypes: ["Piece", "Pack", "Bag"] },
-            "Spices & Seasonings": { filters: ["Brand", "Weight", "Origin", "Others"], stockTypes: ["Pack", "Kg", "Box"] },
-            "Bakery Products": { filters: ["Brand", "Weight", "Freshness", "Others"], stockTypes: ["Piece", "Pack"] },
-            "Beverages": { filters: ["Brand", "Volume", "Flavor", "Others"], stockTypes: ["Bottle", "Can", "Crate"] },
-            "Meat Products": { filters: ["Type", "Weight", "Freshness", "Source", "Others"], stockTypes: ["Kg", "Tray"] },
-            "Fish & Seafood": { filters: ["Type", "Weight", "Freshness", "Source", "Others"], stockTypes: ["Kg", "Crate", "Piece"] }
+        subcategories: { "Grains & Cereals": { filters: ["Brand", "Origin", "Grade", "Moisture", "Others"], stockTypes: ["Kg", "Bag", "Sack", "Ton"] }, "Cooking Oils": { filters: ["Brand", "Volume", "Type", "Origin", "Others"], stockTypes: ["Bottle", "Tin", "Drum", "Litre"] }, "Dairy Products": { filters: ["Brand", "Volume", "Fat Content", "Expiry", "Others"], stockTypes: ["Packet", "Bottle", "Box"] }, "Snacks & Confectionery": { filters: ["Brand", "Flavor", "Weight", "Expiry", "Others"], stockTypes: ["Piece", "Pack", "Box"] }, "Sugar & Sweeteners": { filters: ["Brand", "Weight", "Purity", "Others"], stockTypes: ["Kg", "Bag", "Sack"] }, "Salt Products": { filters: ["Brand", "Weight", "Type", "Others"], stockTypes: ["Piece", "Pack", "Bag"] }, "Spices & Seasonings": { filters: ["Brand", "Weight", "Origin", "Others"], stockTypes: ["Pack", "Kg", "Box"] }, "Bakery Products": { filters: ["Brand", "Weight", "Freshness", "Others"], stockTypes: ["Piece", "Pack"] }, "Beverages": { filters: ["Brand", "Volume", "Flavor", "Others"], stockTypes: ["Bottle", "Can", "Crate"] }, "Meat Products": { filters: ["Type", "Weight", "Freshness", "Source", "Others"], stockTypes: ["Kg", "Tray"] }, "Fish & Seafood": { filters: ["Type", "Weight", "Freshness", "Source", "Others"], stockTypes: ["Kg", "Crate", "Piece"] }
         }
-    },
-    "Kilimo (Agriculture)": {
+    }, "Kilimo (Agriculture)": {
         icon: "",
-        subcategories: {
-            "Crop Production": { filters: ["Variety", "Season", "Moisture", "Grade", "Others"], stockTypes: ["Kg", "Bag", "Sack", "Ton"] },
-            "Seeds & Planting": { filters: ["Variety", "Germination Rate", "Treatment", "Others"], stockTypes: ["Packet", "Kg", "Bag"] },
-            "Fertilizers": { filters: ["Brand", "NPK Ratio", "Weight", "Form", "Others"], stockTypes: ["Bag", "Kg", "Ton"] },
-            "Pesticides & Herbicides": { filters: ["Brand", "Active Ingredient", "Volume", "Others"], stockTypes: ["Bottle", "Can", "Pack"] },
-            "Farm Tools": { filters: ["Brand", "Material", "Size", "Power Type", "Others"], stockTypes: ["Piece", "Set"] },
-            "Irrigation Supplies": { filters: ["Brand", "Size", "Material", "Capacity", "Others"], stockTypes: ["Piece", "Roll", "Set"] }
+        subcategories: { "Crop Production": { filters: ["Variety", "Season", "Moisture", "Grade", "Others"], stockTypes: ["Kg", "Bag", "Sack", "Ton"] }, "Seeds & Planting": { filters: ["Variety", "Germination Rate", "Treatment", "Others"], stockTypes: ["Packet", "Kg", "Bag"] }, "Fertilizers": { filters: ["Brand", "NPK Ratio", "Weight", "Form", "Others"], stockTypes: ["Bag", "Kg", "Ton"] }, "Pesticides & Herbicides": { filters: ["Brand", "Active Ingredient", "Volume", "Others"], stockTypes: ["Bottle", "Can", "Pack"] }, "Farm Tools": { filters: ["Brand", "Material", "Size", "Power Type", "Others"], stockTypes: ["Piece", "Set"] }, "Irrigation Supplies": { filters: ["Brand", "Size", "Material", "Capacity", "Others"], stockTypes: ["Piece", "Roll", "Set"] }
         }
-    },
-    "Ufugaji (Livestock)": {
+    }, "Ufugaji (Livestock)": {
         icon: "",
-        subcategories: {
-            "Live Animals": { filters: ["Breed", "Age", "Weight", "Gender", "Health", "Others"], stockTypes: ["Head", "Piece"] },
-            "Meat & Protein": { filters: ["Cut Type", "Fresh/Frozen", "Weight", "Others"], stockTypes: ["Kg", "Tray"] },
-            "Dairy & Animal Products": { filters: ["Volume", "Fat Content", "Brand", "Expiry", "Others"], stockTypes: ["Bottle", "Packet", "Tray"] },
-            "Animal Feed & Nutrition": { filters: ["Brand", "Animal Type", "Form", "Weight", "Others"], stockTypes: ["Bag", "Kg", "Sack"] },
-            "Poultry Products": { filters: ["Type", "Breed", "Age", "Health", "Others"], stockTypes: ["Bird", "Tray", "Box"] },
-            "Fish & Aquaculture": { filters: ["Type", "Weight", "Source", "Freshness", "Others"], stockTypes: ["Kg", "Fingerling", "Crate"] }
+        subcategories: { "Live Animals": { filters: ["Breed", "Age", "Weight", "Gender", "Health", "Others"], stockTypes: ["Head", "Piece"] }, "Meat & Protein": { filters: ["Cut Type", "Fresh/Frozen", "Weight", "Others"], stockTypes: ["Kg", "Tray"] }, "Dairy & Animal Products": { filters: ["Volume", "Fat Content", "Brand", "Expiry", "Others"], stockTypes: ["Bottle", "Packet", "Tray"] }, "Animal Feed & Nutrition": { filters: ["Brand", "Animal Type", "Form", "Weight", "Others"], stockTypes: ["Bag", "Kg", "Sack"] }, "Poultry Products": { filters: ["Type", "Breed", "Age", "Health", "Others"], stockTypes: ["Bird", "Tray", "Box"] }, "Fish & Aquaculture": { filters: ["Type", "Weight", "Source", "Freshness", "Others"], stockTypes: ["Kg", "Fingerling", "Crate"] }
         }
-    },
-    "Afya na Pharmacy (Health)": {
+    }, "Afya na Pharmacy (Health)": {
         icon: "",
-        subcategories: {
-            "Medicines": { filters: ["Generic Name", "Brand", "Dosage", "Form", "Prescription", "Others"], stockTypes: ["Tablet", "Bottle", "Box"] },
-            "Medical Supplies": { filters: ["Brand", "Size", "Sterility", "Disposable", "Others"], stockTypes: ["Piece", "Box", "Pack"] },
-            "OTC Products": { filters: ["Brand", "Usage", "Form", "Age Group", "Others"], stockTypes: ["Piece", "Bottle", "Box"] },
-            "Veterinary Medicines": { filters: ["Brand", "Animal Type", "Dosage", "Form", "Others"], stockTypes: ["Tablet", "Bottle", "Pack"] },
-            "Health Supplements": { filters: ["Brand", "Ingredient", "Form", "Target Group", "Others"], stockTypes: ["Bottle", "Box", "Pack"] },
-            "Personal Health Care": { filters: ["Brand", "Purpose", "Skin Type", "Others"], stockTypes: ["Piece", "Bottle", "Pack"] }
+        subcategories: { "Medicines": { filters: ["Generic Name", "Brand", "Dosage", "Form", "Prescription", "Others"], stockTypes: ["Tablet", "Bottle", "Box"] }, "Medical Supplies": { filters: ["Brand", "Size", "Sterility", "Disposable", "Others"], stockTypes: ["Piece", "Box", "Pack"] }, "OTC Products": { filters: ["Brand", "Usage", "Form", "Age Group", "Others"], stockTypes: ["Piece", "Bottle", "Box"] }, "Veterinary Medicines": { filters: ["Brand", "Animal Type", "Dosage", "Form", "Others"], stockTypes: ["Tablet", "Bottle", "Pack"] }, "Health Supplements": { filters: ["Brand", "Ingredient", "Form", "Target Group", "Others"], stockTypes: ["Bottle", "Box", "Pack"] }, "Personal Health Care": { filters: ["Brand", "Purpose", "Skin Type", "Others"], stockTypes: ["Piece", "Bottle", "Pack"] }
         }
-    },
-    "Mavazi na Fashoni (Fashion)": {
+    }, "Mavazi na Fashoni (Fashion)": {
         icon: "",
-        subcategories: {
-            "Men's Wear": { filters: ["Brand", "Size", "Color", "Material", "Fit Type", "Others"], stockTypes: ["Piece", "Pack", "Bale"] },
-            "Women's Wear": { filters: ["Brand", "Size", "Color", "Material", "Style", "Others"], stockTypes: ["Piece", "Pack", "Bale"] },
-            "Footwear": { filters: ["Brand", "Shoe Size", "Color", "Material", "Others"], stockTypes: ["Pair", "Box"] },
-            "Kids & Baby Wear": { filters: ["Age Group", "Size", "Color", "Material", "Gender", "Others"], stockTypes: ["Piece", "Set", "Pack"] }
+        subcategories: { "Men's Wear": { filters: ["Brand", "Size", "Color", "Material", "Fit Type", "Others"], stockTypes: ["Piece", "Pack", "Bale"] }, "Women's Wear": { filters: ["Brand", "Size", "Color", "Material", "Style", "Others"], stockTypes: ["Piece", "Pack", "Bale"] }, "Footwear": { filters: ["Brand", "Shoe Size", "Color", "Material", "Others"], stockTypes: ["Pair", "Box"] }, "Kids & Baby Wear": { filters: ["Age Group", "Size", "Color", "Material", "Gender", "Others"], stockTypes: ["Piece", "Set", "Pack"] }
         }
-    },
-    "Vito na Saa (Luxury)": {
+    }, "Vito na Saa (Luxury)": {
         icon: "",
-        subcategories: {
-            "Jewelry": { filters: ["Material", "Purity", "Weight", "Gemstone", "Others"], stockTypes: ["Piece", "Gram", "Set"] },
-            "Watches": { filters: ["Brand", "Movement", "Water Resistance", "Material", "Others"], stockTypes: ["Piece", "Box"] },
-            "Luxury Accessories": { filters: ["Brand", "Material", "Gender", "Authenticity", "Others"], stockTypes: ["Piece", "Box"] },
-            "Precious Materials & Gems": { filters: ["Type", "Carat", "Clarity", "Certification", "Others"], stockTypes: ["Gram", "Piece"] }
+        subcategories: { "Jewelry": { filters: ["Material", "Purity", "Weight", "Gemstone", "Others"], stockTypes: ["Piece", "Gram", "Set"] }, "Watches": { filters: ["Brand", "Movement", "Water Resistance", "Material", "Others"], stockTypes: ["Piece", "Box"] }, "Luxury Accessories": { filters: ["Brand", "Material", "Gender", "Authenticity", "Others"], stockTypes: ["Piece", "Box"] }, "Precious Materials & Gems": { filters: ["Type", "Carat", "Clarity", "Certification", "Others"], stockTypes: ["Gram", "Piece"] }
         }
-    },
-    "Electronics & Teknoloji (Tech)": {
+    }, "Electronics & Teknoloji (Tech)": {
         icon: "",
-        subcategories: {
-            "Mobile Phones": { filters: ["Brand", "Model", "RAM", "Storage", "Battery", "Others"], stockTypes: ["Piece", "Box"] },
-            "Computers & Laptops": { filters: ["Brand", "Processor", "RAM", "Storage", "Graphics", "Others"], stockTypes: ["Piece", "Box"] },
-            "TVs & Displays": { filters: ["Brand", "Size", "Resolution", "Smart Features", "Others"], stockTypes: ["Piece", "Box"] },
-            "Audio Devices": { filters: ["Brand", "Type", "Connectivity", "Battery", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Gaming Devices": { filters: ["Brand", "Console Type", "Storage", "Condition", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Office Technology": { filters: ["Brand", "Type", "Connectivity", "Color Support", "Others"], stockTypes: ["Piece", "Box"] }
+        subcategories: { "Mobile Phones": { filters: ["Brand", "Model", "RAM", "Storage", "Battery", "Others"], stockTypes: ["Piece", "Box"] }, "Computers & Laptops": { filters: ["Brand", "Processor", "RAM", "Storage", "Graphics", "Others"], stockTypes: ["Piece", "Box"] }, "TVs & Displays": { filters: ["Brand", "Size", "Resolution", "Smart Features", "Others"], stockTypes: ["Piece", "Box"] }, "Audio Devices": { filters: ["Brand", "Type", "Connectivity", "Battery", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Gaming Devices": { filters: ["Brand", "Console Type", "Storage", "Condition", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Office Technology": { filters: ["Brand", "Type", "Connectivity", "Color Support", "Others"], stockTypes: ["Piece", "Box"] }
         }
-    },
-    "Samani na Nyumbani (Home)": {
+    }, "Samani na Nyumbani (Home)": {
         icon: "",
-        subcategories: {
-            "Furniture": { filters: ["Material", "Size", "Color", "Assembly Type", "Others"], stockTypes: ["Piece", "Set"] },
-            "Bedroom Essentials": { filters: ["Size", "Material", "Thickness", "Color", "Others"], stockTypes: ["Piece", "Set", "Pack"] },
-            "Kitchen & Dining": { filters: ["Material", "Capacity", "Set Type", "Brand", "Others"], stockTypes: ["Piece", "Set", "Pack"] },
-            "Home Appliances": { filters: ["Brand", "Power", "Capacity", "Warranty", "Others"], stockTypes: ["Piece", "Box"] },
-            "Home Decor": { filters: ["Style", "Color", "Material", "Size", "Others"], stockTypes: ["Piece", "Set"] },
-            "Storage & Organization": { filters: ["Material", "Size", "Capacity", "Others"], stockTypes: ["Piece", "Pack"] }
+        subcategories: { "Furniture": { filters: ["Material", "Size", "Color", "Assembly Type", "Others"], stockTypes: ["Piece", "Set"] }, "Bedroom Essentials": { filters: ["Size", "Material", "Thickness", "Color", "Others"], stockTypes: ["Piece", "Set", "Pack"] }, "Kitchen & Dining": { filters: ["Material", "Capacity", "Set Type", "Brand", "Others"], stockTypes: ["Piece", "Set", "Pack"] }, "Home Appliances": { filters: ["Brand", "Power", "Capacity", "Warranty", "Others"], stockTypes: ["Piece", "Box"] }, "Home Decor": { filters: ["Style", "Color", "Material", "Size", "Others"], stockTypes: ["Piece", "Set"] }, "Storage & Organization": { filters: ["Material", "Size", "Capacity", "Others"], stockTypes: ["Piece", "Pack"] }
         }
-    },
-    "Ujenzi na Hardware (Hardware)": {
+    }, "Ujenzi na Hardware (Hardware)": {
         icon: "",
-        subcategories: {
-            "Building Materials": { filters: ["Type", "Grade", "Dimensions", "Others"], stockTypes: ["Piece", "Ton", "Truck Load", "Bag", "Cubic Meter"] },
-            "Cement & Concrete": { filters: ["Brand", "Weight", "Strength Grade", "Others"], stockTypes: ["Bag", "Ton"] },
-            "Tools & Equipment": { filters: ["Brand", "Power Type", "Size", "Warranty", "Others"], stockTypes: ["Piece", "Set", "Box"] },
-            "Electrical Supplies": { filters: ["Brand", "Voltage", "Type", "Amperage", "Others"], stockTypes: ["Piece", "Roll", "Box"] },
-            "Plumbing Supplies": { filters: ["Brand", "Material", "Size", "Pressure", "Others"], stockTypes: ["Piece", "Roll"] },
-            "Paints & Chemicals": { filters: ["Brand", "Color", "Volume", "Finish", "Others"], stockTypes: ["Can", "Bucket", "Litre"] }
+        subcategories: { "Building Materials": { filters: ["Type", "Grade", "Dimensions", "Others"], stockTypes: ["Piece", "Ton", "Truck Load", "Bag", "Cubic Meter"] }, "Cement & Concrete": { filters: ["Brand", "Weight", "Strength Grade", "Others"], stockTypes: ["Bag", "Ton"] }, "Tools & Equipment": { filters: ["Brand", "Power Type", "Size", "Warranty", "Others"], stockTypes: ["Piece", "Set", "Box"] }, "Electrical Supplies": { filters: ["Brand", "Voltage", "Type", "Amperage", "Others"], stockTypes: ["Piece", "Roll", "Box"] }, "Plumbing Supplies": { filters: ["Brand", "Material", "Size", "Pressure", "Others"], stockTypes: ["Piece", "Roll"] }, "Paints & Chemicals": { filters: ["Brand", "Color", "Volume", "Finish", "Others"], stockTypes: ["Can", "Bucket", "Litre"] }
         }
-    },
-    "Magari na Vyombo (Automotive)": {
+    }, "Magari na Vyombo (Automotive)": {
         icon: "",
-        subcategories: {
-            "Vehicles": { filters: ["Brand", "Model", "Year", "Fuel Type", "Transmission", "Others"], stockTypes: ["Unit"] },
-            "Spare Parts": { filters: ["Car Model", "Part Name", "Part Number", "OEM/Aftermarket", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Tyres & Wheels": { filters: ["Size", "Width", "Brand", "Vehicle Type", "Others"], stockTypes: ["Piece", "Pair", "Set"] },
-            "Batteries & Electrical": { filters: ["Brand", "Voltage", "Capacity", "Warranty", "Others"], stockTypes: ["Piece", "Box"] },
-            "Lubricants & Fluids": { filters: ["Brand", "Viscosity", "Volume", "Engine Type", "Others"], stockTypes: ["Bottle", "Litre", "Can"] }
+        subcategories: { "Vehicles": { filters: ["Brand", "Model", "Year", "Fuel Type", "Transmission", "Others"], stockTypes: ["Unit"] }, "Spare Parts": { filters: ["Car Model", "Part Name", "Part Number", "OEM/Aftermarket", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Tyres & Wheels": { filters: ["Size", "Width", "Brand", "Vehicle Type", "Others"], stockTypes: ["Piece", "Pair", "Set"] }, "Batteries & Electrical": { filters: ["Brand", "Voltage", "Capacity", "Warranty", "Others"], stockTypes: ["Piece", "Box"] }, "Lubricants & Fluids": { filters: ["Brand", "Viscosity", "Volume", "Engine Type", "Others"], stockTypes: ["Bottle", "Litre", "Can"] }
         }
-    },
-    "Vitabu na Elimu (Education)": {
+    }, "Vitabu na Elimu (Education)": {
         icon: "",
-        subcategories: {
-            "Books & Publications": { filters: ["Author", "Publisher", "Edition", "Language", "Subject", "Others"], stockTypes: ["Piece", "Box"] },
-            "School Supplies": { filters: ["Age Group", "Size", "Color", "Material", "Others"], stockTypes: ["Piece", "Set", "Pack"] },
-            "Office Stationery": { filters: ["Brand", "Type", "Color", "Others"], stockTypes: ["Piece", "Pack", "Box"] },
-            "Printing & Paper Products": { filters: ["Brand", "Size", "GSM", "Quantity", "Others"], stockTypes: ["Pack", "Box", "Ream"] },
-            "Educational Tools": { filters: ["Subject", "Material", "Age Group", "Others"], stockTypes: ["Piece", "Set"] }
+        subcategories: { "Books & Publications": { filters: ["Author", "Publisher", "Edition", "Language", "Subject", "Others"], stockTypes: ["Piece", "Box"] }, "School Supplies": { filters: ["Age Group", "Size", "Color", "Material", "Others"], stockTypes: ["Piece", "Set", "Pack"] }, "Office Stationery": { filters: ["Brand", "Type", "Color", "Others"], stockTypes: ["Piece", "Pack", "Box"] }, "Printing & Paper Products": { filters: ["Brand", "Size", "GSM", "Quantity", "Others"], stockTypes: ["Pack", "Box", "Ream"] }, "Educational Tools": { filters: ["Subject", "Material", "Age Group", "Others"], stockTypes: ["Piece", "Set"] }
         }
-    },
-    "Michezo na Mazoezi (Sports)": {
+    }, "Michezo na Mazoezi (Sports)": {
         icon: "",
-        subcategories: {
-            "Sports Equipment": { filters: ["Sport Type", "Size", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set"] },
-            "Fitness & Gym": { filters: ["Weight", "Resistance", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set", "Pair"] },
-            "Outdoor & Camping": { filters: ["Capacity", "Waterproof", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set"] },
-            "Sportswear": { filters: ["Size", "Gender", "Material", "Brand", "Sport Type", "Others"], stockTypes: ["Piece", "Set", "Pair"] },
-            "Accessories": { filters: ["Brand", "Type", "Material", "Others"], stockTypes: ["Piece", "Pack"] }
+        subcategories: { "Sports Equipment": { filters: ["Sport Type", "Size", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set"] }, "Fitness & Gym": { filters: ["Weight", "Resistance", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set", "Pair"] }, "Outdoor & Camping": { filters: ["Capacity", "Waterproof", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set"] }, "Sportswear": { filters: ["Size", "Gender", "Material", "Brand", "Sport Type", "Others"], stockTypes: ["Piece", "Set", "Pair"] }, "Accessories": { filters: ["Brand", "Type", "Material", "Others"], stockTypes: ["Piece", "Pack"] }
         }
-    },
-    "Vichezeo na Michezo (Toys)": {
+    }, "Vichezeo na Michezo (Toys)": {
         icon: "",
-        subcategories: {
-            "Toys": { filters: ["Age Group", "Material", "Battery Operated", "Brand", "Others"], stockTypes: ["Piece", "Box"] },
-            "Games": { filters: ["Players Count", "Age Group", "Game Type", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Puzzles & Brain Games": { filters: ["Piece Count", "Difficulty", "Age Group", "Material", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Collectibles & Models": { filters: ["Scale Size", "Material", "Brand", "Condition", "Others"], stockTypes: ["Piece", "Box"] },
-            "Creative Kits": { filters: ["Skill Level", "Material", "Age Group", "Others"], stockTypes: ["Piece", "Set"] }
+        subcategories: { "Toys": { filters: ["Age Group", "Material", "Battery Operated", "Brand", "Others"], stockTypes: ["Piece", "Box"] }, "Games": { filters: ["Players Count", "Age Group", "Game Type", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Puzzles & Brain Games": { filters: ["Piece Count", "Difficulty", "Age Group", "Material", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Collectibles & Models": { filters: ["Scale Size", "Material", "Brand", "Condition", "Others"], stockTypes: ["Piece", "Box"] }, "Creative Kits": { filters: ["Skill Level", "Material", "Age Group", "Others"], stockTypes: ["Piece", "Set"] }
         }
-    },
-    "Sauti na Muziki (Music)": {
+    }, "Sauti na Muziki (Music)": {
         icon: "",
-        subcategories: {
-            "Musical Instruments": { filters: ["Type", "Size", "Material", "Brand", "Skill Level", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Audio Systems": { filters: ["Power Output", "Connectivity", "Channel Type", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Studio & Recording": { filters: ["Type", "Frequency", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "DJ Equipment": { filters: ["Channels", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] }
+        subcategories: { "Musical Instruments": { filters: ["Type", "Size", "Material", "Brand", "Skill Level", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Audio Systems": { filters: ["Power Output", "Connectivity", "Channel Type", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Studio & Recording": { filters: ["Type", "Frequency", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "DJ Equipment": { filters: ["Channels", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] }
         }
-    },
-    "Sanaa na Ubunifu (Arts)": {
+    }, "Sanaa na Ubunifu (Arts)": {
         icon: "",
-        subcategories: {
-            "Drawing & Painting": { filters: ["Medium", "Brand", "Size", "Quality", "Others"], stockTypes: ["Piece", "Set", "Pack"] },
-            "Craft Materials": { filters: ["Material", "Color", "Size", "Brand", "Others"], stockTypes: ["Piece", "Pack", "Roll"] },
-            "Art Tools": { filters: ["Tool Type", "Material", "Size", "Brand", "Others"], stockTypes: ["Piece", "Set"] },
-            "DIY Kits": { filters: ["Skill Level", "Age Group", "Brand", "Others"], stockTypes: ["Piece", "Set"] },
-            "Decorative": { filters: ["Material", "Size", "Theme", "Handmade", "Others"], stockTypes: ["Piece", "Set"] }
+        subcategories: { "Drawing & Painting": { filters: ["Medium", "Brand", "Size", "Quality", "Others"], stockTypes: ["Piece", "Set", "Pack"] }, "Craft Materials": { filters: ["Material", "Color", "Size", "Brand", "Others"], stockTypes: ["Piece", "Pack", "Roll"] }, "Art Tools": { filters: ["Tool Type", "Material", "Size", "Brand", "Others"], stockTypes: ["Piece", "Set"] }, "DIY Kits": { filters: ["Skill Level", "Age Group", "Brand", "Others"], stockTypes: ["Piece", "Set"] }, "Decorative": { filters: ["Material", "Size", "Theme", "Handmade", "Others"], stockTypes: ["Piece", "Set"] }
         }
-    },
-    "Dini na Utamaduni (Religion)": {
+    }, "Dini na Utamaduni (Religion)": {
         icon: "",
-        subcategories: {
-            "Religious Books": { filters: ["Religion", "Language", "Publisher", "Others"], stockTypes: ["Piece", "Box"] },
-            "Worship Items": { filters: ["Religion", "Material", "Size", "Handmade", "Others"], stockTypes: ["Piece", "Set"] },
-            "Clothing & Accessories": { filters: ["Religion", "Gender", "Size", "Material", "Others"], stockTypes: ["Piece", "Set", "Pair"] },
-            "Ritual & Ceremonial": { filters: ["Culture", "Material", "Usage", "Handmade", "Others"], stockTypes: ["Piece", "Set"] },
-            "Cultural Artifacts": { filters: ["Culture", "Material", "Age", "Handmade", "Others"], stockTypes: ["Piece", "Set"] }
+        subcategories: { "Religious Books": { filters: ["Religion", "Language", "Publisher", "Others"], stockTypes: ["Piece", "Box"] }, "Worship Items": { filters: ["Religion", "Material", "Size", "Handmade", "Others"], stockTypes: ["Piece", "Set"] }, "Clothing & Accessories": { filters: ["Religion", "Gender", "Size", "Material", "Others"], stockTypes: ["Piece", "Set", "Pair"] }, "Ritual & Ceremonial": { filters: ["Culture", "Material", "Usage", "Handmade", "Others"], stockTypes: ["Piece", "Set"] }, "Cultural Artifacts": { filters: ["Culture", "Material", "Age", "Handmade", "Others"], stockTypes: ["Piece", "Set"] }
         }
-    },
-    "Zawadi na Sherehe (Gifts)": {
+    }, "Zawadi na Sherehe (Gifts)": {
         icon: "",
-        subcategories: {
-            "Gifts": { filters: ["Occasion", "Gender", "Age Group", "Personalization", "Others"], stockTypes: ["Piece", "Set", "Box"] },
-            "Flowers": { filters: ["Flower Type", "Color", "Size", "Others"], stockTypes: ["Piece", "Bouquet", "Set"] },
-            "Party Supplies": { filters: ["Occasion", "Color", "Material", "Quantity", "Others"], stockTypes: ["Piece", "Pack", "Set"] },
-            "Celebration Decorations": { filters: ["Event Type", "Material", "Size", "Others"], stockTypes: ["Piece", "Set"] },
-            "Greeting Cards": { filters: ["Occasion", "Language", "Customizable", "Others"], stockTypes: ["Piece", "Pack"] }
+        subcategories: { "Gifts": { filters: ["Occasion", "Gender", "Age Group", "Personalization", "Others"], stockTypes: ["Piece", "Set", "Box"] }, "Flowers": { filters: ["Flower Type", "Color", "Size", "Others"], stockTypes: ["Piece", "Bouquet", "Set"] }, "Party Supplies": { filters: ["Occasion", "Color", "Material", "Quantity", "Others"], stockTypes: ["Piece", "Pack", "Set"] }, "Celebration Decorations": { filters: ["Event Type", "Material", "Size", "Others"], stockTypes: ["Piece", "Set"] }, "Greeting Cards": { filters: ["Occasion", "Language", "Customizable", "Others"], stockTypes: ["Piece", "Pack"] }
         }
-    },
-    "Pet Products (Pet)": {
+    }, "Pet Products (Pet)": {
         icon: "",
-        subcategories: {
-            "Pet Food": { filters: ["Animal Type", "Age Stage", "Brand", "Weight", "Others"], stockTypes: ["Kg", "Packet", "Box"] },
-            "Pet Health": { filters: ["Animal Type", "Usage", "Prescription", "Brand", "Others"], stockTypes: ["Piece", "Bottle", "Pack"] },
-            "Pet Accessories": { filters: ["Animal Type", "Size", "Material", "Brand", "Others"], stockTypes: ["Piece", "Pack"] },
-            "Pet Housing": { filters: ["Animal Type", "Size", "Material", "Others"], stockTypes: ["Piece", "Set"] },
-            "Live Pets": { filters: ["Animal Type", "Breed", "Age", "Gender", "Health", "Others"], stockTypes: ["Piece"] }
+        subcategories: { "Pet Food": { filters: ["Animal Type", "Age Stage", "Brand", "Weight", "Others"], stockTypes: ["Kg", "Packet", "Box"] }, "Pet Health": { filters: ["Animal Type", "Usage", "Prescription", "Brand", "Others"], stockTypes: ["Piece", "Bottle", "Pack"] }, "Pet Accessories": { filters: ["Animal Type", "Size", "Material", "Brand", "Others"], stockTypes: ["Piece", "Pack"] }, "Pet Housing": { filters: ["Animal Type", "Size", "Material", "Others"], stockTypes: ["Piece", "Set"] }, "Live Pets": { filters: ["Animal Type", "Breed", "Age", "Gender", "Health", "Others"], stockTypes: ["Piece"] }
         }
-    },
-    "Vifungashio na Printi (Packaging)": {
+    }, "Vifungashio na Printi (Packaging)": {
         icon: "",
-        subcategories: {
-            "Packaging Materials": { filters: ["Material", "Size", "Thickness", "Recyclable", "Others"], stockTypes: ["Piece", "Pack", "Box", "Roll"] },
-            "Printing Materials": { filters: ["Printing Type", "Size", "Brand", "Others"], stockTypes: ["Pack", "Box", "Roll"] },
-            "Labelling & Branding": { filters: ["Label Type", "Adhesive", "Waterproof", "Customizable", "Others"], stockTypes: ["Piece", "Pack", "Roll"] },
-            "Packaging Machines": { filters: ["Power Type", "Capacity", "Speed", "Brand", "Others"], stockTypes: ["Piece", "Box"] },
-            "Industrial Wrapping": { filters: ["Material", "Thickness", "Size", "Others"], stockTypes: ["Piece", "Roll"] }
+        subcategories: { "Packaging Materials": { filters: ["Material", "Size", "Thickness", "Recyclable", "Others"], stockTypes: ["Piece", "Pack", "Box", "Roll"] }, "Printing Materials": { filters: ["Printing Type", "Size", "Brand", "Others"], stockTypes: ["Pack", "Box", "Roll"] }, "Labelling & Branding": { filters: ["Label Type", "Adhesive", "Waterproof", "Customizable", "Others"], stockTypes: ["Piece", "Pack", "Roll"] }, "Packaging Machines": { filters: ["Power Type", "Capacity", "Speed", "Brand", "Others"], stockTypes: ["Piece", "Box"] }, "Industrial Wrapping": { filters: ["Material", "Thickness", "Size", "Others"], stockTypes: ["Piece", "Roll"] }
         }
-    },
-    "Ulinzi na Usalama (Safety)": {
+    }, "Ulinzi na Usalama (Safety)": {
         icon: "",
-        subcategories: {
-            "Personal Safety": { filters: ["Protection Level", "Material", "Size", "Certification", "Others"], stockTypes: ["Piece", "Pair", "Pack"] },
-            "Home Security": { filters: ["System Type", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Surveillance": { filters: ["Resolution", "Night Vision", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] },
-            "Fire Safety": { filters: ["Fire Class", "Capacity", "Brand", "Others"], stockTypes: ["Piece", "Box"] },
-            "Security Tools": { filters: ["Lock Type", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set"] }
+        subcategories: { "Personal Safety": { filters: ["Protection Level", "Material", "Size", "Certification", "Others"], stockTypes: ["Piece", "Pair", "Pack"] }, "Home Security": { filters: ["System Type", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Surveillance": { filters: ["Resolution", "Night Vision", "Connectivity", "Brand", "Others"], stockTypes: ["Piece", "Box", "Set"] }, "Fire Safety": { filters: ["Fire Class", "Capacity", "Brand", "Others"], stockTypes: ["Piece", "Box"] }, "Security Tools": { filters: ["Lock Type", "Material", "Brand", "Others"], stockTypes: ["Piece", "Set"] }
         }
-    },
-    "Biashara ya Jumla (Wholesale)": {
+    }, "Biashara ya Jumla (Wholesale)": {
         icon: "",
-        subcategories: {
-            "Bulk Food": { filters: ["Unit Type", "Weight", "Grade", "Origin", "Others"], stockTypes: ["Sack", "Bag", "Ton"] },
-            "Industrial Bulk": { filters: ["Measurement", "Weight", "Grade", "Industry", "Others"], stockTypes: ["Ton", "Bag", "Truck Load"] }
+        subcategories: { "Bulk Food": { filters: ["Unit Type", "Weight", "Grade", "Origin", "Others"], stockTypes: ["Sack", "Bag", "Ton"] }, "Industrial Bulk": { filters: ["Measurement", "Weight", "Grade", "Industry", "Others"], stockTypes: ["Ton", "Bag", "Truck Load"] }
         }
-    },
-    "Maagizo ya Nje (Import/Export)": {
+    }, "Maagizo ya Nje (Import/Export)": {
         icon: "",
-        subcategories: {
-            "Container Goods": { filters: ["Country", "Container Type", "Duty Status", "Others"], stockTypes: ["Container", "Pallet", "Crate"] }
+        subcategories: { "Container Goods": { filters: ["Country", "Container Type", "Duty Status", "Others"], stockTypes: ["Container", "Pallet", "Crate"] }
         }
-    },
-    "Vitu vya Kale na Thamani (Antiques)": {
+    }, "Vitu vya Kale na Thamani (Antiques)": {
         icon: "",
-        subcategories: {
-            "Antiques": { filters: ["Age", "Rarity", "Origin", "Condition", "Others"], stockTypes: ["Piece", "Set"] }
+        subcategories: { "Antiques": { filters: ["Age", "Rarity", "Origin", "Condition", "Others"], stockTypes: ["Piece", "Set"] }
         }
-    },
-    "Mchanganyiko (General Merchandise)": {
+    }, "Mchanganyiko (General Merchandise)": {
         icon: "",
-        subcategories: {
-            "Mixed Retail": { filters: ["Category", "Brand", "Usage", "Others"], stockTypes: ["Piece", "Box", "Pack"] }
+        subcategories: { "Mixed Retail": { filters: ["Category", "Brand", "Usage", "Others"], stockTypes: ["Piece", "Box", "Pack"] }
         }
-    },
-    "Asili na Utamaduni (Traditional)": {
+    }, "Asili na Utamaduni (Traditional)": {
         icon: "",
-        subcategories: {
-            "Traditional Furniture": { filters: ["Aina ya Mbao", "Size", "Handmade", "Others"], stockTypes: ["Piece", "Set"] },
-            "Honey & Bee Products": { filters: ["Aina ya Asali", "Origin", "Weight", "Organic", "Others"], stockTypes: ["Bottle", "Kg", "Tin"] },
-            "Traditional Farm": { filters: ["Origin", "Msimu", "Organic", "Weight", "Others"], stockTypes: ["Kg", "Bag", "Sack"] },
-            "Handicrafts": { filters: ["Material", "Origin", "Handmade", "Size", "Others"], stockTypes: ["Piece", "Set"] },
-            "Building Materials": { filters: ["Length", "Weight", "Origin", "Material", "Others"], stockTypes: ["Piece", "Roll", "Truck Load"] },
-            "Cultural Wear": { filters: ["Type", "Gender", "Material", "Others"], stockTypes: ["Piece", "Pair", "Set"] }
+        subcategories: { "Traditional Furniture": { filters: ["Aina ya Mbao", "Size", "Handmade", "Others"], stockTypes: ["Piece", "Set"] }, "Honey & Bee Products": { filters: ["Aina ya Asali", "Origin", "Weight", "Organic", "Others"], stockTypes: ["Bottle", "Kg", "Tin"] }, "Traditional Farm": { filters: ["Origin", "Msimu", "Organic", "Weight", "Others"], stockTypes: ["Kg", "Bag", "Sack"] }, "Handicrafts": { filters: ["Material", "Origin", "Handmade", "Size", "Others"], stockTypes: ["Piece", "Set"] }, "Building Materials": { filters: ["Length", "Weight", "Origin", "Material", "Others"], stockTypes: ["Piece", "Roll", "Truck Load"] }, "Cultural Wear": { filters: ["Type", "Gender", "Material", "Others"], stockTypes: ["Piece", "Pair", "Set"] }
         }
     }
 };
@@ -1146,11 +958,7 @@ skh.appStartTime = Date.now();
 
 skh.dpu = document.getElementById('dpUploadInput');
 
-skh.navMap = {
-        'home': { dbCollection: 'all', title: ' Uwanja wa Mchanganyiko' },
-        'bidhaa': { dbCollection: 'products', title: ' Bidhaa Zote Sokoni' },
-        'services': { dbCollection: 'services', title: ' Wataalamu na Huduma' },
-        'delivery': { dbCollection: 'drivers', title: ' Vyombo vya Usafiri na Mizigo' }
+skh.navMap = { 'home': { dbCollection: 'all', title: ' Uwanja wa Mchanganyiko' }, 'bidhaa': { dbCollection: 'products', title: ' Bidhaa Zote Sokoni' }, 'services': { dbCollection: 'services', title: ' Wataalamu na Huduma' }, 'delivery': { dbCollection: 'drivers', title: ' Vyombo vya Usafiri na Mizigo' }
     };
 
 skh.mm = document.getElementById('mainMenu');
@@ -1231,7 +1039,7 @@ skh.loadRelatedProducts = async function loadRelatedProducts(category, excludeId
         }
         if(!relContainer) return;
 
-        relContainer.innerHTML = `<h4 style="margin:20px 0 10px; color:var(--primary-dark); font-size:14px; text-transform:uppercase; display:flex; align-items:center; gap:6px;"> Wauzaji Wengine <span style="font-size:10px; color:#64748b; font-weight:600; text-transform:none;">(zinaweza kukufaa)</span></h4><div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;" id="pmRelatedScroll"> Inatafuta...</div>`;
+        relContainer.innerHTML = `<h4 style="margin:20px 0 10px; color:var(--primary-dark); font-size:14px; text-transform:uppercase; display:flex; align-items:center; gap:6px;"> Wauzaji Wengine <span style="font-size:12.5px; color:#64748b; font-weight:600; text-transform:none;">(zinaweza kukufaa)</span></h4><div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;" id="pmRelatedScroll"> Inatafuta...</div>`;
 
         // [WAUZAJI] 1. Tumia cache iliyopo (haraka & bila mtandao) kwanza
         let related = [];
@@ -1251,14 +1059,7 @@ skh.loadRelatedProducts = async function loadRelatedProducts(category, excludeId
                 const img = skh.getOptimizedImageUrl(d.image || d.photo || 'https://via.placeholder.com/150');
                 const title = d.title || d.driverName || d.company || 'Tangazo';
                 html += `
-                    <div onclick="openProduct('${skh.skhEscape(d.id)}', '${skh.skhEscape(d.collectionName || colToUse || 'products')}')" style="min-width:130px; max-width:150px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; overflow:hidden; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
-                        <img src="${skh.skhEscape(img)}" style="width:100%; height:90px; object-fit:cover; background:#f1f5f9;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b'">
-                        <div style="padding:8px;">
-                            <b style="font-size:11px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${skh.skhEscape(title)}</b>
-                            <span style="color:var(--terracotta); font-size:12px; font-weight:900;">TSh ${(d.price||0).toLocaleString()}</span>
-                        </div>
-                    </div>
-                `;
+                    <div onclick="openProduct('${skh.skhEscape(d.id)}', '${skh.skhEscape(d.collectionName || colToUse || 'products')}')" style="min-width:130px; max-width:150px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; overflow:hidden; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.04);"> <img src="${skh.skhEscape(img)}" style="width:100%; height:90px; object-fit:cover; background:#f1f5f9;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b'"> <div style="padding:8px;"> <b style="font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${skh.skhEscape(title)}</b> <span style="color:var(--terracotta); font-size:12px; font-weight:900;">TSh ${(d.price||0).toLocaleString()}</span> </div> </div> `;
             });
             return html || '<p style="font-size:12px; color:#64748b;">Hakuna matangazo mengine bado.</p>';
         };
@@ -1337,11 +1138,11 @@ if(btnLike && !window.skhEngagementState) {
                     const timeStr = new Date(c.timestamp).toLocaleDateString();
                     
                     // Tengeneza nyota kulingana na namba (1-5)
-                    const stars = '<span style="color:#f59e0b;letter-spacing:1px;">' + '★'.repeat(Number(c.rating || 0) || 5) + '</span>';
+                    const stars = '<span style="color:#f59e0b;letter-spacing:1px;">' + ''.repeat(Number(c.rating || 0) || 5) + '</span>';
 
                     // [REVIEWS 2026-09] Badge ya "Umenunua" ni ya server pekee.
                     const badgeHtml = c.verifiedPurchase
-                        ? '<span style="display:inline-block;margin:4px 0 2px;font-size:10px;font-weight:800;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:99px;padding:2px 8px;">✓ Umenunua (Verified Purchase)</span>'
+                        ? '<span style="display:inline-block;margin:4px 0 2px;font-size:12.5px;font-weight:800;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:99px;padding:2px 8px;"> Umenunua (Verified Purchase)</span>'
                         : '';
 
                     // Picha na/au video (media array mpya, fallback kwa photo ya zamani)
@@ -1355,17 +1156,11 @@ if(btnLike && !window.skhEngagementState) {
                     }).join('');
                     
                     return `
-                        <div class="comment-box" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid #f1f5f9;">
-                            <div class="comment-head">
+                        <div class="comment-box" style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid #f1f5f9;"> <div class="comment-head">
                                 ${window.skhUserAvatar ? window.skhUserAvatar(c.authorPhoto, c.authorName || 'Mteja', 34) : ''}
-                                <div style="flex:1; min-width:0;">
-                                    <b style="font-size:13px; color:var(--primary-dark); display:block;">${skh.skhEscape(c.authorName || 'Mteja')}</b>
-                                    <span style="font-size:10px; color:#94a3b8;">${timeStr}</span>
+                                <div style="flex:1; min-width:0;"> <b style="font-size:13px; color:var(--primary-dark); display:block;">${skh.skhEscape(c.authorName || 'Mteja')}</b> <span style="font-size:12.5px; color:#94a3b8;">${timeStr}</span>
                                     ${badgeHtml}
-                                </div>
-                            </div>
-                            <div style="font-size:10px; margin:6px 0 5px;">${stars}</div>
-                            <p style="margin:0; font-size:13px; color:#475569; line-height:1.4;">${skh.skhEscape(c.text || c.comment || '')}</p>
+                                </div> </div> <div style="font-size:12.5px; margin:6px 0 5px;">${stars}</div> <p style="margin:0; font-size:13px; color:#475569; line-height:1.4;">${skh.skhEscape(c.text || c.comment || '')}</p>
                             ${mediaHtml}
                         </div>`;
                 }).join('');
@@ -1415,7 +1210,7 @@ skh.listenToChats = function listenToChats(receiverEmail, receiverUid) {
     
     // [FIX] Usalama: mtu akiwa hajaingia, onyesha ujumbe mzuri badala ya error
     if(!skh.currentUser || !skh.currentUser.uid) {
-        chatDiv.innerHTML = '<p style="text-align:center; color:#64748b; padding:30px 10px; font-size:13px;">Tafadhali ingia kwenye akaunti yako kwanza ili kuona meseji.</p>';
+        chatDiv.innerHTML = '<p style="text-align:center; color:#64748b; padding:30px 10px; font-size:13px;">ingia kwenye akaunti yako kwanza ili kuona meseji.</p>';
         return;
     }
     // [NEGO DIALOGUE FIX 2026-09] Injini mpya ya chat (34-chat-core, mkusanyiko
@@ -1433,7 +1228,7 @@ skh.listenToChats = function listenToChats(receiverEmail, receiverUid) {
     chatDiv.innerHTML = '<p style="text-align:center; color:#667781; padding:30px 10px; font-size:13px;">Inapakia meseji...</p>';
     
     skh.chatUnsubscribe = skh.onSnapshot(q, (snapshot) => {
-        let html = '<div style="text-align:center; font-size:11px; color:#64748b; margin-bottom:20px; background:white; padding:5px 15px; border-radius:20px; align-self:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);"> Mawasiliano yako yanalindwa na Sokohai E2E.</div>';
+        let html = '<div style="text-align:center; font-size:13px; color:#64748b; margin-bottom:20px; background:white; padding:5px 15px; border-radius:20px; align-self:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);"> Mawasiliano yako yanalindwa na Sokohai E2E.</div>';
         let msgCount = 0;
         
         snapshot.forEach((doc) => {
@@ -1461,13 +1256,7 @@ skh.listenToChats = function listenToChats(receiverEmail, receiverUid) {
                     const pCollJs = skh.skhJsEsc(msg.productCollection || '');
                     const pSellerJs = skh.skhJsEsc(msg.sellerUid || msg.ownerUid || '');
                     productCardHTML = `
-                    <div class="chat-product-card" onclick="window.skhOpenChatProduct('${pIdJs}', '${pCollJs}', '${pSellerJs}')">
-                        <img src="${pImg}" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||'';">
-                        <div class="cpc-info">
-                            <span class="cpc-title">${pTitle}</span>
-                            <span class="cpc-link">&#128279; Nenda kwenye bidhaa &rarr;</span>
-                        </div>
-                    </div>`;
+                    <div class="chat-product-card" onclick="window.skhOpenChatProduct('${pIdJs}', '${pCollJs}', '${pSellerJs}')"> <img src="${pImg}" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||'';"> <div class="cpc-info"> <span class="cpc-title">${pTitle}</span> <span class="cpc-link"> Nenda kwenye bidhaa →</span> </div> </div>`;
                 }
 
                 if(rawText.startsWith(" Attachment:")) {
@@ -1495,7 +1284,7 @@ skh.listenToChats = function listenToChats(receiverEmail, receiverUid) {
     }, (err) => {
         // [FIX] Error wakati wa kupakia ujumbe — onyesha ujumbe mzuri, usifanye ukurasa ukwame
         console.error('Chat load error:', err && err.message ? err.message : err);
-        chatDiv.innerHTML = '<p style="text-align:center; color:#b91c1c; padding:30px 10px; font-size:13px;">&#9888; Imeshindwa kupakia meseji. Tafadhali jaribu tena au angalia muunganisho wako.</p>';
+        chatDiv.innerHTML = '<p style="text-align:center; color:#b91c1c; padding:30px 10px; font-size:13px;">Imeshindwa kupakia meseji. jaribu tena au angalia muunganisho wako.</p>';
     });
 }
 
@@ -1520,10 +1309,34 @@ skh.setLoading = function setLoading(btnId, isLoading, defaultText) {
         }
     }
 
+// [AUTO-LOGIN §15–§17 — ROOT CAUSE] Firebase Auth ina default persistence
+// (local) — session hupatikana baada ya refresh/browser-restart. Tatizo liko
+// hapa: requireAuth() inaitwa na maelfanya UX (modal action, click) na inaweza
+// kufungua login modal Kabla ya onAuthStateChanged ya kwanza kumaliza
+// kuponya session — mtumiaji aliyeingia anaambiwa "Ingia" bure. Bendera hii
+// inakuwa TRUE tu baada ya callback ya kwanza (user au null, zote ni halali).
+skh.__authResolved = false;
+try {
+    if (skh.onAuthStateChanged && skh.auth) {
+        skh.onAuthStateChanged(skh.auth, function () { skh.__authResolved = true; });
+    } else {
+        skh.__authResolved = true; // hakuna auth (mf. failed init) — usizuie UI
+    }
+} catch (e) { skh.__authResolved = true; }
+
 skh.requireAuth = function requireAuth() { 
         if(!skh.currentUser) { 
+            // [AUTO-LOGIN §16] Usizindue login modal bila mpango kabla Firebase
+            // haijamaliza kuponya session iliyohifadhiwa. Subiri resolution;
+            // baada yake kumpata null, wito unaofuata utafungua modal.
+            if (skh.__authResolved === false) {
+                if (typeof window.skhToast === 'function') {
+                    window.skhToast('Inathibitisha akaunti yako… jaribu tena baada ya sekunde chache.', 'info', 2600);
+                }
+                return false; 
+            }
             openAuthModal(); 
-            alert(" Tafadhali Ingia (Login) au Jisajili kwanza!"); 
+            alert(" Ingia (Login) au Jisajili kwanza!"); 
             return false; 
         } 
         return true; 
@@ -1588,17 +1401,53 @@ skh.uploadMultipleImages = async function uploadMultipleImages(inputId) {
 
 skh.saveData = async function saveData(col, data) { 
     if(!skh.requireAuth()) return null; 
+    /* [FIX 2026-09-15] Kinga ya jumla: Firestore hukataa `undefined`.
+       Ondoa funguo zenye undefined kabla ya kuandika — hii inazuia
+       "Unsupported field value" kwenye KILA fomu ya kupakia. */
+    function stripUndefined(obj) {
+        if (!obj || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(stripUndefined);
+        var out = {};
+        Object.keys(obj).forEach(function (k) {
+            var v = obj[k];
+            if (v === undefined) return;                 // ruka
+            out[k] = (v && typeof v === 'object' && !(v instanceof Date)) ? stripUndefined(v) : v;
+        });
+        return out;
+    }
+
     try { 
         // Angalia kama kuna usimamizi wa offline user ulio hai
         const managedUid = sessionStorage.getItem('currently_managed_offline_uid');
         const managedName = sessionStorage.getItem('currently_managed_offline_name');
         const managedShop = sessionStorage.getItem('currently_managed_offline_shop');
 
+        /* [FIX OWNERSHIP 2026-09-15]
+           Mabug mawili yaliyokuwepo hapa:
+           1) `userEmail: offline_xxx@sokohai.com` — EMAIL YA UONGO. Spec §5
+              inakataza waziwazi. Offline member anaweza kukosa email;
+              utambulisho wake wa msingi ni NAMBA YA SIMU.
+           2) `ownerName: managedShop || currentUser.displayName` — ikiwa jina
+              la duka halijawekwa, jina la WAKALA lilikuwa linakuwa mmiliki.
+              Spec §3/§9/§22: mmiliki ni MWANACHAMA, wakala ni facilitator.
+
+           Sasa: mmiliki ni mwanachama daima; wakala ni metadata pekee. */
+        const ownerIsManaged = !!managedUid;
         const docData = { 
             ...data, 
             userId: managedUid || skh.currentUser.uid, 
-            userEmail: managedUid ? `offline_${managedUid}@sokohai.com` : skh.currentUser.email, 
-            ownerName: managedShop || skh.currentUser.displayName || skh.currentUser.email.split('@')[0], 
+            userEmail: ownerIsManaged ? null : skh.currentUser.email, 
+            ownerPhone: ownerIsManaged ? (sessionStorage.getItem('currently_managed_offline_phone') || null) : null,
+            ownerName: ownerIsManaged
+                ? (managedName || managedShop || 'Mwanachama')
+                : (managedShop || skh.currentUser.displayName || (skh.currentUser.email || '').split('@')[0]),
+            // Uhusiano wa wakala — SI umiliki (§13)
+            registeredThroughAgentId: ownerIsManaged ? (skh.currentUser.uid || null) : null,
+            /* [FIX 2026-09-15] `undefined` HAIKUBALIKI na Firestore —
+               ilikuwa inatupa "Unsupported field value: undefined" na
+               kuzuia KUPAKIA huduma/usafiri/bidhaa kabisa.
+               Tumia `null` (inakubalika) badala yake. */
+            accountType: ownerIsManaged ? 'offline_member' : null,
             createdAt: new Date().toISOString(), 
             status: "active",
             itemCollection: col,
@@ -1611,11 +1460,11 @@ skh.saveData = async function saveData(col, data) {
             docData.managedByAgentUid = skh.currentUser.uid;
         }
 
-        const docRef = await skh.addDoc(skh.collection(skh.db, col), docData);
-        // [PERF 2026-09] Kitu kipya kimehifadhiwa → futa cache ya feed ili
+        const docRef = await skh.addDoc(skh.collection(skh.db, col), stripUndefined(docData));
+        // [PERF 2026-09] Kitu kipya kimehifadhiwa -> futa cache ya feed ili
         // tangazo jipya lionekane mara moja (badala ya kusubiri TTL).
         if (skh._feedCache) skh._feedCache.clear();
-        // [BUYER ENGAGEMENT] Bidhaa mpya → price history + arifu followers (fire-and-forget)
+        // [BUYER ENGAGEMENT] Bidhaa mpya -> price history + arifu followers (fire-and-forget)
         if (col === 'products' && typeof window.skhOnProductPublished === 'function') {
             window.skhOnProductPublished(Object.assign({}, docData, { id: docRef.id }), 'products', docRef.id).catch(() => {});
         }
@@ -1720,7 +1569,7 @@ skh.listenToUnreadNotifications = function listenToUnreadNotifications() {
 }
 
 // [PERF 2026-09] Cache fupi (LRU) ya mlisho wa soko. Inazuia kupakua tena
-// kila kitu kila wakati mtumiaji anabadili tab (Home→Bidhaa→Home), kuchuja, au
+// kila kitu kila wakati mtumiaji anabadili tab (Home->Bidhaa->Home), kuchuja, au
 // kila auth-state inapobadilika. Inaisha baada ya dakika 2 na inabebwa kwenye
 // kumbukumbu pekee (si disk) — data iko upya kwa kutembelea tena.
 skh._feedCache = new Map();       // key -> { data, expiresAt }
@@ -1775,15 +1624,7 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
 
     // [COMMERCE CARDS 2026-09] Skeleton inayolingana na muundo wa kadi (si spinner tu)
     feedGrid.innerHTML = Array.from({ length: 6 }, () => `
-        <div class="feed-card-box skh-card skh-skeleton-card" aria-hidden="true">
-            <div class="feed-img-box skh-img skeleton"></div>
-            <div class="feed-info-box skh-body">
-                <div class="skh-sk skh-sk--chip"></div>
-                <div class="skh-sk skh-sk--line" style="width:88%"></div>
-                <div class="skh-sk skh-sk--line" style="width:58%"></div>
-                <div class="skh-sk skh-sk--line" style="width:68%"></div>
-            </div>
-        </div>`).join('');
+        <div class="feed-card-box skh-card skh-skeleton-card" aria-hidden="true"> <div class="feed-img-box skh-img skeleton"></div> <div class="feed-info-box skh-body"> <div class="skh-sk skh-sk--chip"></div> <div class="skh-sk skh-sk--line" style="width:88%"></div> <div class="skh-sk skh-sk--line" style="width:58%"></div> <div class="skh-sk skh-sk--line" style="width:68%"></div> </div> </div>`).join('');
     
     if(window.unsubscribeFeed) window.unsubscribeFeed();
 
@@ -1801,12 +1642,7 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
         // [COMMERCE CARDS 2026-09] Usionyeshe hitilafu mbichi ya Firebase/API kwa
         // mtumiaji — iwe kwenye console tu; UI inaonyesha ujumbe mzuri na "Jaribu Tena".
         console.warn('[loadMainFeed] hitilafu ya kupakia soko:', msg);
-        feedGrid.innerHTML = `<div class="skh-empty skh-empty--error" style="grid-column:1/-1;">
-            <span class="skh-empty-icon">${window.skhNavIcon ? window.skhNavIcon('refresh', 26) : ''}</span>
-            <b>Imeshindikana kupakia soko</b>
-            <p>Angalia muunganisho wako wa mtandao kisha ujaribu tena.</p>
-            <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Jaribu Tena</button>
-        </div>`;
+        feedGrid.innerHTML = `<div class="skh-empty skh-empty--error" style="grid-column:1/-1;"> <span class="skh-empty-icon">${window.skhNavIcon ? window.skhNavIcon('refresh', 26) : ''}</span> <b>Imeshindikana kupakia soko</b> <p>Angalia muunganisho wako wa mtandao kisha ujaribu tena.</p> <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Jaribu Tena</button> </div>`;
     };
 
     // Kama ni "ALL" (HOME PAGE)
@@ -1867,7 +1703,7 @@ let qNormal;
     // 2) Hakuna orderBy wala limit kwenye matawi yenye `where` — tunachukua matokeo
     //    yote ya kichujio na kupanga kwenye browser. Hii inaepuka hitaji la composite
     //    indexes (ambazo hazipo kwenye services/drivers) NA inaondoa tatizo la
-    //    "limit(20) bila mpangilio" lililokuwa linapoteza bidhaa mpya zilizopakiwa.
+    // "limit(20) bila mpangilio" lililokuwa linapoteza bidhaa mpya zilizopakiwa.
     const isModeFilter = (currentActiveMode && currentActiveMode !== "all_modes" && collectionToFetch === 'products');
     const isCategoryFilter = (!isModeFilter && skh.activeCategory && skh.activeCategory !== "Zote" && skh.activeCategory !== "");
 
@@ -1955,10 +1791,7 @@ skh.cardEngage = function cardEngage(data, colName) {
     const _saved = !!((_eng.saved || {})[_ekey]);
     const _icLike = (window.SKH_ICONS && window.SKH_ICONS.like) ? window.SKH_ICONS.like : '';
     const _icSave = (window.SKH_ICONS && window.SKH_ICONS.save) ? window.SKH_ICONS.save : '';
-    return `<div class="skh-actions">
-        <span id="cardLike_${data.id}" onclick="event.stopPropagation(); window.skhCardToggle('like','${skh.skhJsEsc(data.id)}')" title="Like" aria-label="Like" role="button" tabindex="0" class="skh-eng-btn card-eng-like ${_liked ? 'skh-eng-on' : ''}">${_icLike}</span>
-        <span id="cardSave_${data.id}" onclick="event.stopPropagation(); window.skhCardToggle('save','${skh.skhJsEsc(data.id)}')" title="Save" aria-label="Save" role="button" tabindex="0" class="skh-eng-btn card-eng-save ${_saved ? 'skh-eng-on' : ''}">${_icSave}</span>
-    </div>`;
+    return `<div class="skh-actions"> <span id="cardLike_${data.id}" onclick="event.stopPropagation(); window.skhCardToggle('like','${skh.skhJsEsc(data.id)}')" title="Like" aria-label="Like" role="button" tabindex="0" class="skh-eng-btn card-eng-like ${_liked ? 'skh-eng-on' : ''}">${_icLike}</span> <span id="cardSave_${data.id}" onclick="event.stopPropagation(); window.skhCardToggle('save','${skh.skhJsEsc(data.id)}')" title="Save" aria-label="Save" role="button" tabindex="0" class="skh-eng-btn card-eng-save ${_saved ? 'skh-eng-on' : ''}">${_icSave}</span> </div>`;
 };
 
 // [PostImage] Picha thabiti (cover) + placeholder + idadi ya picha
@@ -1969,8 +1802,7 @@ skh.cardImage = function cardImage(data, overlayHTML, extraClass) {
     const optImg = skh.getOptimizedImageUrl(rawImg || window.SKH_PLACEHOLDER_IMG || '');
     const photoCount = (data.imagesArray && data.imagesArray.length > 1)
         ? `<span class="skh-photo-count">${skh.cardIcon('image', 11)} ${data.imagesArray.length}</span>` : '';
-    return `<div class="feed-img-box skh-img${extraClass || ''}">
-        <img src="${skh.skhEscape(optImg)}" loading="lazy" alt="${skh.skhEscape(data.title || '')}" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||'';">
+    return `<div class="feed-img-box skh-img${extraClass || ''}"> <img src="${skh.skhEscape(optImg)}" loading="lazy" alt="${skh.skhEscape(data.title || '')}" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||'';">
         ${photoCount}
         ${overlayHTML || ''}
     </div>`;
@@ -1983,19 +1815,29 @@ skh.cardVerified = function cardVerified(data) {
     return '<span class="skh-verified" title="Imethibitishwa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>';
 };
 
-// [RatingDisplay] Nyota + wastani — ikiwa ipo tu (hatubandiki)
+// [RatingDisplay] Nyota + wastani (+ idadi ya mapokezi) + mauzo — ikiwa ipo tu
+// (hatubandiki). [AUDIT 2026-09-16] Muonekano mmoja kwa BIDHAA/HUDUMA/USAFIRI:
+// spec: ⭐rating (+ idadi ya comment) · Imeuzwa X. Taarifa zote ni za DB tu.
 skh.cardRating = function cardRating(data) {
+    const bits = [];
     const r = parseFloat(data.rating);
-    if (!Number.isFinite(r) || r <= 0) return '';
-    const count = data.reviewCount || data.totalReviews || data.ratingCount || 0;
-    return `<span class="skh-rating">${skh.cardIcon('star', 11)}<b>${r.toFixed(1)}</b>${count ? '<small>(' + Number(count).toLocaleString() + ')</small>' : ''}</span>`;
+    if (Number.isFinite(r) && r > 0) {
+        const count = data.reviewCount || data.totalReviews || data.ratingCount || 0;
+        bits.push(`${skh.cardIcon('star', 11)}<b>${r.toFixed(1)}</b>${count ? '<small>(' + Number(count).toLocaleString() + ')</small>' : ''}`);
+    }
+    const sold = Number(data.soldCount || data.sold || data.salesCount || 0);
+    if (Number.isFinite(sold) && sold > 0) {
+        bits.push('<small class="skh-sold">Imeuzwa ' + sold.toLocaleString() + '</small>');
+    }
+    if (!bits.length) return '';
+    return `<span class="skh-rating">${bits.join('')}</span>`;
 };
 
 // [LocationDisplay] Eneo — bidhaa/huduma: location; usafiri: njia
 skh.cardLocation = function cardLocation(data, colName) {
     let loc = data.location || data.region || '';
     if (!loc && colName === 'drivers') {
-        loc = ((data.pickupRegion || '') + (data.destinationRegion ? '  ' + data.destinationRegion : '')).trim();
+        loc = ((data.pickupRegion || '') + (data.destinationRegion ? ' ' + data.destinationRegion : '')).trim();
         return `<span class="skh-loc">${skh.cardIcon('map', 11)} ${skh.skhEscape(data.pickupRegion || '')}${data.destinationRegion ? '<span class="skh-title-arrow">' + skh.cardIcon('arrow-right', 11) + '</span>' + skh.skhEscape(data.destinationRegion) : ''}</span>`;
     }
     if (!loc) loc = 'Tanzania';
@@ -2056,16 +1898,48 @@ skh.cardAvail = function cardAvail(data, colName) {
 
 // [Mode badge] Mnada / Bei inashuka / Group Buy — za pekee pekee
 skh.cardModeBadge = function cardModeBadge(data) {
-    if (data.saleMode === 'auction') return `<span class="skh-badge skh-badge--auction">${skh.cardIcon('trophy', 10)} Live Mnada</span>`;
-    if (data.saleMode === 'price_drop') return `<span class="skh-badge skh-badge--drop">${skh.cardIcon('refresh', 10)} Bei Inashuka</span>`;
+    if (data.saleMode === 'auction') return `<span class="skh-badge skh-badge--auction">${skh.cardIcon('trophy', 10)} ${skhTF('card_badge_auction', 'Live Mnada')}</span>`;
+    if (data.saleMode === 'price_drop') return `<span class="skh-badge skh-badge--drop">${skh.cardIcon('refresh', 10)} ${skhTF('card_badge_drop', 'Bei Inashuka')}</span>`;
     if (data.saleMode === 'group_buy') return `<span class="skh-badge skh-badge--group">${skh.cardIcon('users', 10)} Group Buy</span>`;
+    // [§21] Wholesale ina badge yake yenyewe — inawezekana kupatikana
+    // kutoka modeData.minQty/tiers (halisi, si placeholder).
+    if (data.saleMode === 'wholesale') return `<span class="skh-badge skh-badge--wholesale">${skh.cardIcon('package', 10)} ${skhTF('card_badge_wholesale', 'Jumla')}</span>`;
+    return '';
+};
+
+/* [§6/§8/§13/§17/§21 CARD SIGNAL LINE] Mstari mmoja chini ya bei —
+ * namba HALISI toka modeData (zabuni/wamejiunga/bei hai/halalizima),
+ * si maelezo ya staili. Habaed, kwa teaser (§44 — uongoza kwa undani
+ * utakao kusoma Product Details). */
+skh.cardModeSignalLine = function cardModeSignalLine(data) {
+    try {
+        if (typeof window.skhModesCompute !== 'function') return '';
+        const c = window.skhModesCompute(data);
+        if (c.mode === 'auction') {
+            const t = c.auction.ended ? skhTF('card_auction_ended', 'Mnada umefungwa') : skhTF('card_auction_live', 'Mnada live');
+            return `<div class="skh-mode-line skh-mode-line--auction">${skh.cardIcon('trophy', 10)} ${skhTF('card_bid', 'Dau')}: TSh ${Number(c.auction.currentBid).toLocaleString()} · ${c.auction.totalBids.toLocaleString()} ${skhTF('card_bids', 'zabuni')} · ${t}</div>`;
+        }
+        if (c.mode === 'group_buy') {
+            const s = (c.group.status === 'successful' ? '🎉 ' + skhTF('card_group_success', 'kundi limekamilika') : (c.group.status === 'failed' ? skhTF('card_group_failed', 'deal imekwisha') : skhTF('card_group_active', 'inavyuma')));
+            return `<div class="skh-mode-line skh-mode-line--group">${skh.cardIcon('users', 10)} ${c.group.joined}/${c.group.target} ${skhTF('card_joined', 'wamejiunga')} · TSh ${c.group.price.toLocaleString()} · ${s}</div>`;
+        }
+        if (c.mode === 'price_drop') {
+            const baseN = Number(data.price) || 0;
+            const curN = c.drop.currentPrice;
+            const pct = baseN > 0 ? Math.max(0, Math.round((1 - curN / baseN) * 100)) : 0;
+            return `<div class="skh-mode-line skh-mode-line--drop">${skh.cardIcon('refresh', 10)} TSh ${baseN.toLocaleString()} → <b>TSh ${curN.toLocaleString()}</b>${pct > 0 ? ' · −' + pct + '%' : ''}</div>`;
+        }
+        if (c.mode === 'wholesale') {
+            return `<div class="skh-mode-line skh-mode-line--wholesale">${skh.cardIcon('package', 10)} ${skhTF('card_wholesale_from', 'Jumla kuanzia')} TSh ${Number(c.wholesale.lowest).toLocaleString()}</div>`;
+        }
+    } catch (e) { /* kadi ibaki teaser — line ikipuuzwa kadi haipaswi kuvunja */ }
     return '';
 };
 
 // [Type badge] Huduma / Usafiri (bidhaa hazihitaji)
 skh.cardTypeBadge = function cardTypeBadge(colName) {
-    if (colName === 'services') return `<span class="skh-badge skh-badge--service">${skh.cardIcon('wrench', 10)} Huduma</span>`;
-    if (colName === 'drivers') return `<span class="skh-badge skh-badge--transport">${skh.cardIcon('truck', 10)} Usafiri</span>`;
+    if (colName === 'services') return `<span class="skh-badge skh-badge--service">${skh.cardIcon('wrench', 10)} ${skhTF('nav_services', 'Huduma')}</span>`;
+    if (colName === 'drivers') return `<span class="skh-badge skh-badge--transport">${skh.cardIcon('truck', 10)} ${skhTF('nav_transport', 'Usafiri')}</span>`;
     return '';
 };
 
@@ -2073,7 +1947,7 @@ skh.cardTypeBadge = function cardTypeBadge(colName) {
 // [CARD TEASER 2026-09] Kadi ya discovery ni TEASER safi (tazama
 // reference): picha ndiyo shujaa, taarifa chache muhimu tu.
 // Verifi/mode/njia/zimeisha huwekwa kama OVERLAY juu ya picha;
-// mwili wa kadi unabaki: jina → bei → muuzaji ✓ → eneo.
+// mwili wa kadi unabaki: jina -> bei -> muuzaji  -> eneo.
 // ============================================================
 
 // [VerifiedPill] Kibandiko cha kijani chini-kushoto mwa picha
@@ -2087,7 +1961,7 @@ skh.cardVerifiedPill = function cardVerifiedPill(data) {
 skh.cardOutPill = function cardOutPill(data, colName) {
     if (colName !== 'products') return '';
     const stock = Number(data.stock);
-    if (Number.isFinite(stock) && stock <= 0) return '<span class="skh-out-pill">Zimeisha</span>';
+    if (Number.isFinite(stock) && stock <= 0) return '<span class="skh-out-pill">' + skhTF('card_out', 'Zimeisha') + '</span>';
     return '';
 };
 
@@ -2105,10 +1979,10 @@ skh.cardRouteOverlay = function cardRouteOverlay(data) {
 // [PriceHtml] Bei ya kijani, hierarchy ya wazi; "Kuanzia" kwa huduma/usafiri
 skh.cardPriceHtml = function cardPriceHtml(data, colName) {
     const hasPrice = Number(data.price) > 0;
-    if (!hasPrice) return '<span class="price skh-price skh-price--muted">Maelewano</span>';
+    if (!hasPrice) return '<span class="price skh-price skh-price--muted">' + skhTF('card_negotiable', 'Maelewano') + '</span>';
     const amount = 'TSh ' + Number(data.price).toLocaleString();
     if (colName === 'services' || colName === 'drivers') {
-        return '<span class="price skh-price"><span class="skh-price-prefix">Kuanzia </span>' + amount + '</span>';
+        return '<span class="price skh-price"><span class="skh-price-prefix">' + skhTF('card_from', 'Kuanzia') + ' </span>' + amount + '</span>';
     }
     return '<span class="price skh-price">' + amount + '</span>';
 };
@@ -2150,11 +2024,54 @@ skh.cardSellerMini = function cardSellerMini(data, iconName) {
     if (!name) return '';
     const uid = data.userId || data.sellerId || '';
     const onClick = uid ? `onclick="event.stopPropagation(); if(window.openSellerProfile){window.openSellerProfile('${skh.skhJsEsc(uid)}','${skh.skhJsEsc(name)}');}"` : '';
-    const a11y = uid ? 'role="link" tabindex="0" title="Tazama duka"' : '';
-    return `<div class="skh-seller-mini" ${onClick} ${a11y}>
-        <span class="skh-seller-ic">${skh.cardIcon(iconName || 'shop', 11)}</span>
-        <span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data)}
+    const a11y = uid ? 'role="link" tabindex="0" title="' + skhTF('tt_view_shop', 'Tazama duka') + '"' : '';
+    // [AUDIT 2026-09-16] Wafuasi wa muuzaji (data halisi ya DB tu — hatubandiki;
+    // ikiwa muuzaji anao wafuasi, hesabu inasafirishwa kwenye doc ya bidhaa/
+    // huduma/chombo (ownerFollowers) na itaonekana hapa moja kwa moja).
+    // [§12-§13 R8 FOLLOWERS: NO FAKE NUMBERS] Product/docs hazina count iliyo-
+    // hifadhiwa; hesabu inaHYDRATE KWENDA live (skhHydrateFollowerCounts).
+    // Font hii ni slot tu — data halisi itapopatikana itaingia hapa.
+    const fAttr = uid ? ` data-fowner="${skh.skhJsEsc(uid)}"` : '';
+    const followersHtml = uid
+        ? ` <small class="skh-followers" data-fowner-count="${skh.skhJsEsc(uid)}" title="${skhTF('tt_followers', 'Wafuasi wa muuzaji')}" style="opacity:0;"></small>` : '';
+    return `<div class="skh-seller-mini"${fAttr} ${onClick} ${a11y}> <span class="skh-seller-ic">${skh.cardIcon(iconName || 'shop', 11)}</span> <span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data)}${followersHtml}
     </div>`;
+};
+
+/* [§12-§13 R8 HYDRATE FOLLOWERS] Baada ya feed/card kuonekana, vuta LIVE
+ * hesabu za wafuasi kwa wamiliki wote wa kadi zinazoonekana (batch live).
+ * Chanzo = users[].followers array (yenyewee inatumika kwenye follow followe
+ * (28-buyer-engagement + openProduct follow-btn)), errors zikosekerewa (zero). */
+skh.hydrateFollowerCounts = async function hydrateFollowerCounts(rootEl) {
+    try {
+        const root = rootEl || document.getElementById('mainFeed');
+        if (!root || !skh.db) return;
+        const slots = Array.from(root.querySelectorAll('[data-fowner-count]'));
+        if (!slots.length) return;
+        const uids = Array.from(new Set(slots.map(s => s.getAttribute('data-fowner-count')).filter(Boolean)));
+        if (!uids.length) return;
+        const counts = {};
+        // Firestore 'in' query — aisha ya 10 - fallback ya kukijaduzima.
+        const batches = [];
+        for (let i = 0; i < uids.length; i += 10) batches.push(uids.slice(i, i + 10));
+        await Promise.all(batches.map(async (batch) => {
+            try {
+                const q = skh.query(skh.collection(skh.db, 'users'), skh.where('uid', 'in', batch));
+                const snap = await skh.getDocs(q);
+                snap.forEach(function (d) {
+                    const x = d.data() || {};
+                    counts[x.uid] = Array.isArray(x.followers) ? x.followers.length : 0;
+                });
+            } catch (e) { /* batch flieptask — mashushe haitakuza */ }
+        }));
+        slots.forEach(function (s) {
+            const uid = s.getAttribute('data-fowner-count');
+            const c = counts[uid];
+            if (typeof c !== 'number') return;   // haijapatikana — acha opacity:0
+            if (c > 0) { s.textContent = '· ' + c.toLocaleString() + ' ' + skhTF('card_followers', 'wafuasi'); s.style.opacity = '1'; }
+            else { s.textContent = '· 0 ' + skhTF('card_followers', 'wafuasi'); s.style.opacity = '0.55'; } // hakuna wafuasi: HASHA visible-lakini haughti — zero ni namba halisi
+        });
+    } catch (e) { /* kadi ionekane bila count — hassu */ }
 };
 
 // [PinLocation] Mstari wa eneo mwembamba (pini + jina)
@@ -2165,7 +2082,7 @@ skh.cardPinLocation = function cardPinLocation(data, colName) {
     return `<span class="skh-pinloc">${skh.cardIcon('map', 11)}<span>${skh.skhEscape(loc)}</span></span>`;
 };
 
-// [ProductPostCard] TEASER: picha → jina → bei → duka ✓ → eneo.
+// [ProductPostCard] TEASER: picha -> jina -> bei -> duka  -> eneo.
 // Taarifa kamili (stock, ulinzi, maoni) zipo kwenye ukurasa wa bidhaa.
 skh.ProductPostCard = function ProductPostCard(data, colName) {
     // [CARD POLICY 2026-09] Kadi ni TEASER: Like/Save havionekani mbele —
@@ -2178,16 +2095,13 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
     ].join('');
     return `<div class="feed-card-box skh-card skh-card--product" ${skh.cardOpenAttrs(data.id, 'products', data.title)}>
         ${skh.cardImage(data, overlays, skh.cardImageClass(data, 'products'))}
-        <div class="feed-info-box skh-body">
-            <h3 class="skh-title">${skh.skhEscape(data.title || 'Bidhaa')}</h3>
+        <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_product_def', 'Bidhaa'))}</h3>
             ${skh.cardPriceHtml(data, 'products')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'shop')}</div>
-            <div class="skh-meta-row">${skh.cardPinLocation(data, 'products')}</div>
-        </div>
-    </div>`;
+            ${skh.cardModeSignalLine(data)}
+            <div class="skh-seller-row">${skh.cardSellerMini(data, 'shop')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'products')}</div> </div> </div>`;
 };
 
-// [ServicePostCard] TEASER: picha → jina → bei (Kuanzia) → mtoa ✓ ⭐ → eneo.
+// [ServicePostCard] TEASER: picha -> jina -> bei (Kuanzia) -> mtoa   -> eneo.
 skh.ServicePostCard = function ServicePostCard(data, colName) {
     const overlays = [
         skh.cardTypeBadge('services') ? '<div class="skh-overlay-chip skh-overlay-chip--service">' + skh.cardTypeBadge('services') + '</div>' : '',
@@ -2196,17 +2110,13 @@ skh.ServicePostCard = function ServicePostCard(data, colName) {
     ].join('');
     return `<div class="feed-card-box skh-card skh-card--service" ${skh.cardOpenAttrs(data.id, 'services', data.title)}>
         ${skh.cardImage(data, overlays)}
-        <div class="feed-info-box skh-body">
-            <h3 class="skh-title">${skh.skhEscape(data.title || 'Huduma')}</h3>
+        <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_service_def', 'Huduma'))}</h3>
             ${skh.cardPriceHtml(data, 'services')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'wrench')}${skh.cardRating(data)}</div>
-            <div class="skh-meta-row">${skh.cardPinLocation(data, 'services')}</div>
-        </div>
-    </div>`;
+            <div class="skh-seller-row">${skh.cardSellerMini(data, 'wrench')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'services')}</div> </div> </div>`;
 };
 
-// [TransportPostCard] TEASER: picha (njia juu yake) → jina/aina → bei
-// (Kuanzia) → msafirishaji ✓ ⭐ → eneo la mwanzo.
+// [TransportPostCard] TEASER: picha (njia juu yake) -> jina/aina -> bei
+// (Kuanzia) -> msafirishaji   -> eneo la mwanzo.
 skh.TransportPostCard = function TransportPostCard(data, colName) {
     const hasRoute = !!(data.pickupRegion || data.destinationRegion);
     const overlays = [
@@ -2214,18 +2124,15 @@ skh.TransportPostCard = function TransportPostCard(data, colName) {
         skh.cardOutPill(data, colName)
     ].join('');
     const arrowIco = skh.cardIcon('arrow-right', 12);
-    const title = skh.skhEscape(data.title || (hasRoute ? ((data.pickupRegion || '') + '  ' + (data.destinationRegion || '')) : 'Usafiri'));
+    const _locTitle = (window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title;
+    const title = skh.skhEscape(_locTitle || (hasRoute ? ((data.pickupRegion || '') + ' ' + (data.destinationRegion || '')) : skhTF('card_transport_def', 'Usafiri')));
     const vehicle = data.vehicleType ? `<div class="skh-card-sub">${skh.cardIcon('truck', 11)} ${skh.skhEscape(data.vehicleType)}</div>` : '';
-    return `<div class="feed-card-box skh-card skh-card--transport" ${skh.cardOpenAttrs(data.id, 'drivers', data.title || 'Usafiri')}>
+    return `<div class="feed-card-box skh-card skh-card--transport" ${skh.cardOpenAttrs(data.id, 'drivers', _locTitle || skhTF('card_transport_def', 'Usafiri'))}>
         ${skh.cardImage(data, overlays)}
-        <div class="feed-info-box skh-body">
-            <h3 class="skh-title">${hasRoute && !data.title ? skh.skhEscape(data.pickupRegion || '') + '<span class="skh-title-arrow" aria-label="hadi">' + arrowIco + '</span>' + skh.skhEscape(data.destinationRegion || '') : title}</h3>
+        <div class="feed-info-box skh-body"> <h3 class="skh-title">${hasRoute && !data.title ? skh.skhEscape(data.pickupRegion || '') + '<span class="skh-title-arrow" aria-label="hadi">' + arrowIco + '</span>' + skh.skhEscape(data.destinationRegion || '') : title}</h3>
             ${vehicle}
             ${skh.cardPriceHtml(data, 'drivers')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'truck')}${skh.cardRating(data)}</div>
-            <div class="skh-meta-row">${skh.cardPinLocation(data, 'drivers')}</div>
-        </div>
-    </div>`;
+            <div class="skh-seller-row">${skh.cardSellerMini(data, 'truck')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'drivers')}</div> </div> </div>`;
 };
 
 // [CommercePostCard] Kichaguzi cha aina ya kadi
@@ -2303,8 +2210,26 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
 
     // 5. Chujio la Search Query
     if (skh.searchQuery && skh.searchQuery.trim() !== "") {
-        const query = skh.searchQuery.toLowerCase();
+        let query = skh.searchQuery.toLowerCase().replace(/\s+/g, ' ').trim();
+        // [§26 MODE-AWARE SEARCH] "simu mnada" / "bei jumla" / "group buy kundi"
+        // / "bei kushuka" — neno la mode linatolewa nje ya swali na kuwa filter.
+        let forcedMode = null;
+        const MODE_WORDS = [
+            { mode: 'auction',    re: /\b(mnada|auction|zabuni|bid)\b/g },
+            { mode: 'group_buy',  re: /\b(group buy|groupbuy|group_buy|kundi|kubatizana)\b/g },
+            { mode: 'price_drop', re: /\b(bei kushuka|price drop|price_drop|kushuka)\b/g },
+            { mode: 'wholesale',  re: /\b(jumla|wholesale|bei ya jumla|bei jumla)\b/g }
+        ];
+        MODE_WORDS.forEach(function (mw) {
+            if (mw.re.test(query)) { forcedMode = mw.mode; query = query.replace(mw.re, ' ').replace(/\s+/g, ' ').trim(); }
+        });
+        if (forcedMode) {
+            filteredData = filteredData.filter(function (d) { return d.saleMode === forcedMode; });
+            // Ikiwa swali lilibaki tupu baada ya mode-word, onyesha zote za mode
+            // (si "hakuna matokeo") — mfano: user aandika tu "mnada".
+        }
         filteredData = filteredData.filter(data => {
+            if (!query) return true; // msingi baada ya mode-only search
             const title = (data.title || data.driverName || data.company || '').toLowerCase();
             const desc = (data.description || '').toLowerCase();
             const cat = (data.category || '').toLowerCase();
@@ -2338,28 +2263,20 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
     }
 
     skh.cachedItems = filteredData; 
+    // [§1-§5 R8 FILTERS] HIFADHI YA SOURCE: cachedItems ni state ya SOURCE
+    // toka Firestore. Kuhandika hafuta filtra-emtsc (filtered) basi ya
+    // algorithm nyingine (mfadhiri omega kupotea feed baada ya search).
+    skh._visibleFeedItems = filteredData;
 
     // [ROUTE MATCHER 2026-09] Kwenye ukurasa wa USAFIRI mteja aanze kwa
     // kuweka njia/vigezo — SokoHai humwonesha magari yanayopitia route yake
     // (kisha majadiliano), badala ya kutangaza ombi kwa upofu.
     const matcherBanner = (skh.currentFeedCollection === 'drivers')
-        ? `<div class="skh-route-cta" style="grid-column: 1/-1;">
-            <span class="skh-route-cta-ic">${skh.cardIcon('filter', 22)}</span>
-            <div class="skh-route-cta-txt">
-                <b>Unatafuta chombo cha kusafirisha?</b>
-                <span>Weka njia yako (kutoka → kwenda) na vigezo vya mzigo/abiria — utaona magari yanayopitia route hiyo.</span>
-            </div>
-            <button type="button" class="skh-route-cta-btn" onclick="if(window.openRideRequestModal){window.openRideRequestModal();}">${skh.cardIcon('search', 15)} <span>Tafuta gari kwa njia</span></button>
-        </div>` : '';
+        ? `<div class="skh-route-cta" style="grid-column: 1/-1;"> <span class="skh-route-cta-ic">${skh.cardIcon('filter', 22)}</span> <div class="skh-route-cta-txt"> <b>Unatafuta chombo cha kusafirisha?</b> <span>Weka njia yako (kutoka -> kwenda) na vigezo vya mzigo/abiria — utaona magari yanayopitia route hiyo.</span> </div> <button type="button" class="skh-route-cta-btn" onclick="if(window.openRideRequestModal){window.openRideRequestModal();}">${skh.cardIcon('search', 15)} <span>Tafuta gari kwa njia</span></button> </div>` : '';
 
     if (filteredData.length === 0) {
         feedGrid.innerHTML = matcherBanner + `
-            <div class="skh-empty" style="grid-column: 1/-1;">
-                <span class="skh-empty-icon">${skh.cardIcon('search', 30)}</span>
-                <b>Hatujapata matokeo</b>
-                <p>Jaribu kutafuta kwa neno lingine au badilisha kategoria — au tafuta gari kwa njia yako.</p>
-                <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Onyesha Vyote</button>
-            </div>`;
+            <div class="skh-empty" style="grid-column: 1/-1;"> <span class="skh-empty-icon">${skh.cardIcon('search', 30)}</span> <b>Hatujapata matokeo</b> <p>Jaribu kutafuta kwa neno lingine au badilisha kategoria — au tafuta gari kwa njia yako.</p> <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Onyesha Vyote</button> </div>`;
         return;
     }
 
@@ -2374,6 +2291,10 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
         }
     });
     feedGrid.innerHTML = html;
+
+    // [§12-§13 R8] HYDRATE hesabu HALISI za wafuasi (fire-and-forget —
+    // haitazuia render: kadi zinaonekana mara moja, counts zinaingia baadaye).
+    try { skh.hydrateFollowerCounts(feedGrid).catch(function () {}); } catch (e) {}
 }
 
 skh.calculateDistance = function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -2838,7 +2759,7 @@ skh.lgxDestination = function lgxDestination(){ return window.smartCartState?.ad
 
 skh.lgxPickup = function lgxPickup(){ const items=skh.smartCartItems(); return items[0]?.sellerLocation || items[0]?.location || items[0]?.cartMeta?.pickupAddress || 'Seller pickup location'; }
 
-skh.lgxRouteText = function lgxRouteText(){ return `${skh.lgxPickup()} → ${skh.lgxDestination() || 'Delivery address pending'}`; }
+skh.lgxRouteText = function lgxRouteText(){ return `${skh.lgxPickup()} -> ${skh.lgxDestination() || 'Delivery address pending'}`; }
 
 skh.lgxVehicleOptions = function lgxVehicleOptions(company, pkg){
     const all = [
@@ -2872,7 +2793,7 @@ skh.lgxLoadCompanies = async function lgxLoadCompanies(){
     const pkg=skh.lgxPackage();
     let carriers = typeof window.loadSokoHaiCarriers==='function' ? await window.loadSokoHaiCarriers() : (window.sokohaiCarrierFallbacks||[]);
     // Add sponsored/premium examples without replacing existing.
-    carriers = carriers.map((c,i)=>({ ...c, sponsored: c.sponsored ?? (i===1), premium: c.premium ?? (c.verified && (parseFloat(c.rating)||0)>=4.5), coverageArea:c.coverageArea||'Local/Regional routes', completedDeliveries:c.completedDeliveries||Math.floor(80+Math.random()*900), activeVehicles:c.activeVehicles||Math.floor(2+Math.random()*40), branches:c.branches||'Main branch', warehouses:c.warehouses||'Available on request', operatingHours:c.operatingHours||'08:00 - 20:00', coldChain: /refrigerated|cold/i.test(c.vehicleType||''), heavyCargo:(c.capacityKg||0)>2000, fragileCargo:!!c.insurance, expressDelivery:/moto|express|fast/i.test(c.name+' '+c.eta) }));
+    carriers = carriers.map((c,i)=>({ ...c, sponsored: c.sponsored ?? (i===1), premium: c.premium ?? (c.verified && (parseFloat(c.rating)||0)>=4.5), coverageArea:c.coverageArea||'Local/Regional routes', completedDeliveries:(c.completedDeliveries != null ? c.completedDeliveries : '—') /* [AUDIT-FIX §42] ilikuwa Math.random(80..980) */, activeVehicles:(c.activeVehicles != null ? c.activeVehicles : '—') /* [AUDIT-FIX §42] ilikuwa Math.random(2..42) */, branches:c.branches||'Main branch', warehouses:c.warehouses||'Available on request', operatingHours:c.operatingHours||'08:00 - 20:00', coldChain: /refrigerated|cold/i.test(c.vehicleType||''), heavyCargo:(c.capacityKg||0)>2000, fragileCargo:!!c.insurance, expressDelivery:/moto|express|fast/i.test(c.name+' '+c.eta) }));
     carriers = carriers.filter(c => (c.capacityKg||0)>=pkg.weightKg || c.service==='customer_pickup');
     carriers.forEach(c=>c.matchScore=skh.lgxScoreCarrier(c,pkg,window.logisticsMarketplaceState));
     window.logisticsMarketplaceState.carriers=carriers;
@@ -2896,4 +2817,59 @@ skh.lgxApplyFilters = function lgxApplyFilters(list){
     return out;
 }
 
+// [FIX 6] `skh` ipatikane kwa scripts za kawaida (si module tu).
+try { window.skh = skh; } catch (e) {}
+
 export { skh };
+
+// [§19 GENERIC-ALERT FIX 2026-09] Ripoti kamili ya kiufundi kwa console
+// (function, collection, docId, requestId, timestamp) bila kumfanyia
+// mtumiaji "raw Firebase error". Hutumika na vitendo vya majadiliano/SokoPay.
+window.skhReportError = function skhReportError(scope, err, ctx) {
+    try {
+        var rec = {
+            scope: scope || 'unknown',
+            message: (err && err.message) || String(err || ''),
+            code: (err && err.code) || null,
+            stackFirst: (err && err.stack ? String(err.stack).split('\n').slice(0, 4).join(' | ') : null),
+            ctx: ctx || {},
+            ts: new Date().toISOString()
+        };
+        console.error('[skh:err]', rec);
+        return rec;
+    } catch (e) { return null; }
+};
+
+/* ================= [R24] GLOBAL TOAST (window.showToast) =================
+ * Chat groups/discover zilitumia window.showToast kwa arifa fupi (success/info)
+ * lakini hakukuwa na implimentesheni — guarded calls zote zilikuwa no-op.
+ * Hii ni toast ndogo isiyozuia UI: fixed-bottom, auto-dismiss, ARIA-live.
+ * Si modal; si fake state; halina effect yoyote kwenye store/screens. */
+(function () {
+    if (window.showToast) return;      // usibadilshwe iwapo tayari ipo (tests hu-spy)
+    var host = null;
+    function ensureHost() {
+        if (host && document.body.contains(host)) return host;
+        host = document.createElement('div');
+        host.id = 'skhToastHost';
+        host.setAttribute('aria-live', 'polite');
+        host.style.cssText = 'position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:110000;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;max-width:92vw;';
+        document.body.appendChild(host);
+        return host;
+    }
+    window.showToast = function (msg, kind) {
+        try {
+            var h = ensureHost();
+            var t = document.createElement('div');
+            var bg = kind === 'success' ? '#18A982' : kind === 'error' ? '#dc2626' : '#0f172a';
+            t.style.cssText = 'background:' + bg + ';color:#fff;font-size:13px;font-weight:700;padding:10px 16px;border-radius:99px;box-shadow:0 8px 24px rgba(15,23,42,.28);opacity:0;transform:translateY(8px);transition:opacity .18s ease,transform .18s ease;max-width:100%;text-align:center;';
+            t.textContent = String(msg || '');
+            h.appendChild(t);
+            requestAnimationFrame(function () { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
+            setTimeout(function () {
+                t.style.opacity = '0'; t.style.transform = 'translateY(8px)';
+                setTimeout(function () { try { t.remove(); } catch (e) {} }, 240);
+            }, 2800);
+        } catch (e) {}
+    };
+})();

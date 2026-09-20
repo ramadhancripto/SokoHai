@@ -7,16 +7,16 @@
    - Mzigo unakuwa chini ya ulinzi wa dereva (picked_up) baada ya
      uthibitisho WA PANDEMBILI: muuzaji anathibitisha makabidhiano
      (seller_confirmed_handover) NA dereva anathibitisha upokeaji kwa
-     token salama (transporter_confirmed_receipt → picked_up).
+     token salama (transporter_confirmed_receipt -> picked_up).
 
    Mpangilio wa statusi:
-     accepted → pickup_pending → seller_confirmed_handover
-        → transporter_confirmed_receipt → picked_up → in_transit
-        → (handover) awaiting_handover → in_transit → ... → delivered
+     accepted -> pickup_pending -> seller_confirmed_handover
+        -> transporter_confirmed_receipt -> picked_up -> in_transit
+        -> (handover) awaiting_handover -> in_transit -> ... -> delivered
 
    Tokens ni SALAMA (crypto-random, single-use, na muda wa kuisha):
-     - PK-XXXXXXXX  (pickup, muuzaji ↔ dereva wa kwanza)
-     - TR-XXXXXXXX  (handover, dereva A ↔ dereva B)
+     - PK-XXXXXXXX  (pickup, muuzaji <-> dereva wa kwanza)
+     - TR-XXXXXXXX  (handover, dereva A <-> dereva B)
 
    Server (functions/index.js) ndiyo mamlaka: deliveryGenerateToken +
    deliveryConfirmCustody (role: seller | handover_from | transporter).
@@ -87,11 +87,13 @@ function tokenExpired(rd) {
     try { return Date.parse(exp) < Date.now(); } catch (e) { return false; }
 }
 
-function notify(userId, title, body, type) {
+function notify(userId, title, body, type, eventId, params) {
     if (!userId) return Promise.resolve(null);
     try {
+        // [SYSTEM EVENTS 2026-09] ikiwa eventId ipo, render hutafsiri kwa lugha ya msomaji.
         return skh.addDoc(skh.collection(skh.db, 'notifications'), {
             userId: userId, title: title, body: body,
+            event: eventId || null, params: params || null,
             createdAt: nowIso(), read: false, type: type || 'delivery'
         });
     } catch (e) { return Promise.resolve(null); }
@@ -144,7 +146,7 @@ async function callServer(name, payload) {
 
 // [CUSTODY/FIX 2026-09] Fail-secure: demo fallback (uandishi wa client moja
 // kwa moja kwenye ride_requests) unaruhusiwa PEKEE kwa opt-in ya demo/offline.
-// Production default = false → server haipatikani = KOSA (hakuna uandishi wa
+// Production default = false -> server haipatikani = KOSA (hakuna uandishi wa
 // client-authoritative). Hii inazuia "kitufe cha frontend" kubadilisha custody.
 function custodyFallbackAllowed() {
     try {
@@ -269,7 +271,7 @@ window.skhCustodyGenerateToken = async function(rideId, kind, opts) {
         await appendEvent(rideId, 'HANDOVER_TOKEN_GENERATED', {});
         await appendEvent(rideId, 'HANDOVER_INITIATED', { legId: 'leg_' + legNumber, handoverId: hoId, location: opts.location || '' });
         await notify(nextId, T('cust_notif_int_pickup', 'Intermediate Pickup Required'),
-            T('cust_notif_int_pickup_body', 'Umepewa mkono wa usafirishaji. Thibitisha upokeaji kwa token ya TR.'), 'delivery');
+            T('cust_notif_int_pickup_body', 'Umepewa mkono wa usafirishaji. Thibitisha upokeaji kwa token ya TR.'), 'delivery', 'custody.intPickupRequired');
         return { ok: true, token: tr, server: false, handoverId: hoId };
     }
 
@@ -343,12 +345,12 @@ window._skhCustodySellerConfirm = async function(rideId, token, parcelCondition,
         location: location || '', verificationMethod: direct ? 'direct' : 'token'
     });
     await notify(d.driverId, T('cust_notif_pickup_req', 'Pickup Confirmation Required'),
-        T('cust_notif_pickup_req_body', 'Muuzaji amethibitisha makabidhiano. Thibitisha upokeaji wa mzigo kwa token yako.'), 'delivery');
+        T('cust_notif_pickup_req_body', 'Muuzaji amethibitisha makabidhiano. Thibitisha upokeaji wa mzigo kwa token yako.'), 'delivery', 'custody.pickupConfirmRequired');
     return { ok: true, status: CUST_STATUS.SELLER_CONFIRMED, server: false };
 };
 
 /* ============================================================
-   3) DEREVA ATHIBITISHE UPOKEAJI (pande la pili) → PICKED_UP
+   3) DEREVA ATHIBITISHE UPOKEAJI (pande la pili) -> PICKED_UP
    ============================================================ */
 window.skhCustodyConfirmTransporterPickup = async function(rideId, token, parcelCondition, note, location, pickupCount) {
     if (!rideId || !token) return { ok: false, error: 'token_required' };
@@ -404,12 +406,12 @@ window.skhCustodyConfirmTransporterPickup = async function(rideId, token, parcel
     });
     await appendEvent(rideId, 'TRANSPORTER_PICKUP_CONFIRMED', { parcelCondition: parcelCondition || 'good', parcelConditionNote: note || '', location: location || '' });
     await notify(d.customerId, T('cust_notif_picked', 'Mzigo Umechukuliwa (Picked Up)'),
-        T('cust_notif_picked_body', 'Dereva amethibitisha kupokea mzigo. Mzigo sasa uko chini ya ulinzi wake.'), 'delivery');
+        T('cust_notif_picked_body', 'Dereva amethibitisha kupokea mzigo. Mzigo sasa uko chini ya ulinzi wake.'), 'delivery', 'custody.pickedUp');
     return { ok: true, status: CUST_STATUS.PICKED_UP, server: false };
 };
 
 /* ============================================================
-   4) ANZA SAFARI (dereva) — picked_up → in_transit
+   4) ANZA SAFARI (dereva) — picked_up -> in_transit
    ============================================================ */
 window.skhCustodyStartTransit = async function(rideId, opts) {
     opts = opts || {};
@@ -432,7 +434,7 @@ window.skhCustodyStartTransit = async function(rideId, opts) {
     await skh.updateDoc(skh.doc(skh.db, 'ride_requests', rideId), patch);
     await appendEvent(rideId, 'DELIVERY_STARTED', {});
     await notify(d.customerId, T('cust_notif_transit', 'Safari Imeanza'),
-        T('cust_notif_transit_body', 'Dereva ameanza safari. Mzigo uko njiani.'), 'delivery');
+        T('cust_notif_transit_body', 'Dereva ameanza safari. Mzigo uko njiani.'), 'delivery', 'custody.transitStarted');
     return { ok: true, status: CUST_STATUS.IN_TRANSIT, server: false };
 };
 
@@ -541,7 +543,7 @@ window.skhCustodyHydrateTokenCodes = async function(root) {
 };
 
 /* ============================================================
-   5) HANDOVER YA KATI (dereva A → dereva B) — multi-hop
+   5) HANDOVER YA KATI (dereva A -> dereva B) — multi-hop
    ============================================================ */
 window.skhCustodyInitiateHandover = async function(rideId, nextTransporterId, nextTransporterName, location) {
     if (!rideId || !nextTransporterId) return { ok: false, error: 'next_transporter_required' };
@@ -553,7 +555,7 @@ window.skhCustodyInitiateHandover = async function(rideId, nextTransporterId, ne
     if (d.currentCustodian && d.currentCustodian !== me) return { ok: false, error: 'not_custodian' };
     if (d.status !== CUST_STATUS.IN_TRANSIT && d.status !== CUST_STATUS.PICKED_UP) return { ok: false, error: 'bad_stage' };
 
-    // Token ya handover (TR) + rekodi ya handover + leg → server (au fallback).
+    // Token ya handover (TR) + rekodi ya handover + leg -> server (au fallback).
     var gen = await window.skhCustodyGenerateToken(rideId, 'handover', {
         nextTransporterId: nextTransporterId,
         nextTransporterName: nextTransporterName,
@@ -580,11 +582,11 @@ window.skhCustodyConfirmHandoverFrom = async function(rideId) {
     await updateHandoverRecord(d.activeHandoverId, { fromPartyConfirmed: true, fromConfirmedAt: nowIso() });
     await appendEvent(rideId, 'HANDOVER_CONFIRMED', { handoverId: d.activeHandoverId || null });
     await notify(d.nextTransporterId, T('cust_notif_handover_ready', 'Handover Imethibitishwa'),
-        T('cust_notif_handover_ready_body', 'Dereva wa awali amethibitisha makabidhiano. Thibitisha upokeaji kwa token ya TR.'), 'delivery');
+        T('cust_notif_handover_ready_body', 'Dereva wa awali amethibitisha makabidhiano. Thibitisha upokeaji kwa token ya TR.'), 'delivery', 'custody.handoverReady');
     return { ok: true, status: CUST_STATUS.AWAITING_HANDOVER, server: false };
 };
 
-// Dereva B anathibitisha upokeaji (pande la pili) → custody inahamia kwake.
+// Dereva B anathibitisha upokeaji (pande la pili) -> custody inahamia kwake.
 window.skhCustodyConfirmIntermediatePickup = async function(rideId, token, parcelCondition, note, location) {
     if (!rideId || !token) return { ok: false, error: 'token_required' };
     if (badAttempts(rateLimitKey(rideId, 'intermediate')) >= 6) return { ok: false, error: 'rate_limited' };
@@ -635,12 +637,12 @@ window.skhCustodyConfirmIntermediatePickup = async function(rideId, token, parce
         parcelConditionNote: note || '', location: location || ''
     });
     await notify(d.currentCustodian, T('cust_notif_handover_done', 'Handover Imekamilika'),
-        T('cust_notif_handover_done_body', 'Transporter mpya amepokea mzigo. Custody imehamia kwake.'), 'delivery');
+        T('cust_notif_handover_done_body', 'Transporter mpya amepokea mzigo. Custody imehamia kwake.'), 'delivery', 'custody.handoverDone');
     return { ok: true, status: CUST_STATUS.IN_TRANSIT, server: false };
 };
 
 /* ============================================================
-   5b) KUFUTA/BATILISHA TOKEN (cancelled → revoked)
+   5b) KUFUTA/BATILISHA TOKEN (cancelled -> revoked)
    ============================================================ */
 window.skhCustodyRevokeTokens = async function(rideId) {
     // Server kwanza (mamlaka); fallback ya demo ikiwa haipatikani.
@@ -666,7 +668,7 @@ window.skhCustodyRevokeTokens = async function(rideId) {
 window.skhCustodyRenderTimeline = async function(rideId, containerId) {
     var el = document.getElementById(containerId);
     if (!el) return;
-    el.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:11px; padding:12px;">Inapakia mlolongo wa makabidhiano...</p>';
+    el.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:13px; padding:12px;">Inapakia mlolongo wa makabidhiano...</p>';
     try {
         // Kumbuka: hatutumii orderBy hapa — inahitaji composite index kwenye
         // deliveryId + timestamp. Tunapanga kwenye browser (safe bila index).
@@ -678,7 +680,7 @@ window.skhCustodyRenderTimeline = async function(rideId, containerId) {
         items.sort(function (a, b) { return String(a.timestamp || '').localeCompare(String(b.timestamp || '')); });
 
         if (!items.length) {
-            el.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:11px; padding:12px;">Hakuna matukio ya makabidhiano bado.</p>';
+            el.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:13px; padding:12px;">Hakuna matukio ya makabidhiano bado.</p>';
             return;
         }
         var labels = {
@@ -703,14 +705,14 @@ window.skhCustodyRenderTimeline = async function(rideId, containerId) {
             html += '<div style="position:relative; padding:0 0 14px 0;">'
                 + '<span style="position:absolute; left:-21px; top:1px; width:12px; height:12px; border-radius:50%; background:' + (i === items.length - 1 ? '#10b981' : '#00509d') + '; border:2px solid #fff; box-shadow:0 0 0 2px #e2e8f0;"></span>'
                 + '<b style="font-size:12px; color:#0f172a; display:block;">' + skh.skhEscape(labels[e.event] || e.event) + '</b>'
-                + '<small style="color:#94a3b8; font-size:10px;">' + t + (e.location ? ' · ' + skh.skhEscape(e.location) : '') + '</small>'
+                + '<small style="color:#94a3b8; font-size:12.5px;">' + t + (e.location ? ' · ' + skh.skhEscape(e.location) : '') + '</small>'
                 + cond
                 + '</div>';
         });
         html += '</div>';
         el.innerHTML = html;
     } catch (e) {
-        el.innerHTML = '<p style="text-align:center; color:#b91c1c; font-size:11px; padding:12px;">Hitilafu kupakia mlolongo wa makabidhiano.</p>';
+        el.innerHTML = '<p style="text-align:center; color:#b91c1c; font-size:13px; padding:12px;">Hitilafu kupakia mlolongo wa makabidhiano.</p>';
     }
 };
 
@@ -739,7 +741,7 @@ window.skhCustodyDriverPickupQuick = async function(rideId) {
             return; // customPrompt inashughulikia mwendelezo
         }
     } catch (e) {}
-    tok = prompt("Ingiza Token A (PK) ili kuthibitisha upokeaji wa mzigo:") || '';
+    tok = await skhPrompt("Ingiza Token A (PK) ili kuthibitisha upokeaji wa mzigo:") || '';
     if (!tok) return;
     var res = await window.skhCustodyConfirmTransporterPickup(rideId, tok, 'good');
     if (!res.ok) {

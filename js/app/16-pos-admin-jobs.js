@@ -121,7 +121,7 @@ window.skhSysToggle = function(e, el) {
             el.setAttribute('data-on', wasOn ? '1' : '0');
             if (st) { st.textContent = wasOn ? 'ON' : 'OFF'; st.className = 'sys-state ' + (wasOn ? 'on' : 'off'); }
         } else if (typeof window.sokohaiToast === 'function') {
-            window.sokohaiToast(nowOn === '1' ? 'Imewashwa ✓' : 'Imezimwa', nowOn === '1' ? 'success' : 'info');
+            window.sokohaiToast(nowOn === '1' ? 'Imewashwa ' : 'Imezimwa', nowOn === '1' ? 'success' : 'info');
         }
     };
 
@@ -198,133 +198,52 @@ window.loadAdminDashboard = async function() {
         }
 
         container.innerHTML = `
-            <div style="text-align: left; font-family: inherit;">
-                <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 25px; border-radius: 20px; margin-bottom: 25px;">
-                    <h2 style="margin: 0; color: var(--gold);"> PLATFORM CONTROL PANEL</h2>
-                    <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 13px;">Usimamizi mkuu wa Sokohai, miamala, na ulinzi wa jamii.</p>
-                </div>
-
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-                    <div style="background:#f0fdf4; border: 1px solid #bbf7d0; padding:15px; border-radius:14px;">
-                        <small style="color: gray;">PLATFORM REVENUE (MAPATO YA MFUMO)</small>
-                        <h3 style="margin:5px 0 0; color:green; font-size: 18px; font-weight:900;">TSh ${totalPlatformRevenue.toLocaleString()}</h3>
-                        ${statsMeta ? `<small style="color:#16a34a;">✓ Aggregates (${statsMeta.eventCount} matukio)${statsMeta.generatedAt ? " · " + new Date(statsMeta.generatedAt).toLocaleString() : ""} <span style="color:#2563eb; text-decoration:underline; cursor:pointer;" onclick="window.skhRefreshStats()">↻ Sasisha</span></small>` : ""}
-                    </div>
-                    <div style="background:#fffbeb; border: 1px solid #fde68a; padding:15px; border-radius:14px;">
-                        <small style="color: gray;">MIGOGORO INAYOSUBIRI (PENDING DISPUTES)</small>
-                        <h3 style="margin:5px 0 0; color:orange; font-size: 18px; font-weight:900;">${disputesSnap.size} Disputes</h3>
-                    </div>
-                    <div style="background:#eff6ff; border: 1px solid #bfdbfe; padding:15px; border-radius:14px;">
-                        <small style="color: gray;">MAOMBI YA WAWAKALA (PENDING AGENTS)</small>
-                        <h3 style="margin:5px 0 0; color:var(--primary-blue); font-size: 18px; font-weight:900;">${agentsSnap.size} Agents</h3>
-                    </div>
-                </div>
-
-                <!-- [ADMIN FIX] VIDHIBITI VYA MFUMO — KIBAO KIMOJA (hakuna switches rudufu) -->
-                <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 25px;">
-                    <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
-                        <div style="min-width:0; flex:1;">
-                            <h4 style="margin:0; color: var(--primary-dark); font-weight:900;"> VIDHIBITI VYA MFUMO &mdash; WASHA / ZIMA</h4>
-                            <p style="margin:6px 0 0; font-size:12px; color:#64748b; line-height:1.5;">Kila kibadilishaji kinadhibiti setting MOJA pekee. Hakuna kubadilisha kingine kwa bahati mbaya.</p>
-                        </div>
-                        <div style="text-align:right;">
-                            <b style="display:block; font-size:18px; color:#0f172a; font-weight:900;">${(() => {
+            <div style="text-align: left; font-family: inherit;"> <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 25px; border-radius: 20px; margin-bottom: 25px;"> <h2 style="margin: 0; color: var(--gold);"> PLATFORM CONTROL PANEL</h2> <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 13px;">Usimamizi mkuu wa Sokohai, miamala, na ulinzi wa jamii.</p> </div> <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;"> <div style="background:#f0fdf4; border: 1px solid #bbf7d0; padding:15px; border-radius:14px;"> <small style="color: gray;">PLATFORM REVENUE (MAPATO YA MFUMO)</small> <h3 style="margin:5px 0 0; color:green; font-size: 18px; font-weight:900;">TSh ${totalPlatformRevenue.toLocaleString()}</h3>
+                        ${statsMeta ? `<small style="color:#16a34a;"> Aggregates (${statsMeta.eventCount} matukio)${statsMeta.generatedAt ? " · " + new Date(statsMeta.generatedAt).toLocaleString() : ""} <span style="color:#2563eb; text-decoration:underline; cursor:pointer;" onclick="window.skhRefreshStats()">↻ Sasisha</span></small>` : ""}
+                    </div> <div style="background:#fffbeb; border: 1px solid #fde68a; padding:15px; border-radius:14px;"> <small style="color: gray;">MIGOGORO INAYOSUBIRI (PENDING DISPUTES)</small> <h3 style="margin:5px 0 0; color:orange; font-size: 18px; font-weight:900;">${disputesSnap.size} Disputes</h3> </div> <div style="background:#eff6ff; border: 1px solid #bfdbfe; padding:15px; border-radius:14px;"> <small style="color: gray;">MAOMBI YA WAWAKALA (PENDING AGENTS)</small> <h3 style="margin:5px 0 0; color:var(--primary-blue); font-size: 18px; font-weight:900;">${agentsSnap.size} Agents</h3> </div> </div> <!-- [ADMIN FIX] VIDHIBITI VYA MFUMO — KIBAO KIMOJA (hakuna switches rudufu) --> <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 25px;"> <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;"> <div style="min-width:0; flex:1;"> <h4 style="margin:0; color: var(--primary-dark); font-weight:900;"> VIDHIBITI VYA MFUMO &mdash; WASHA / ZIMA</h4> <p style="margin:6px 0 0; font-size:12px; color:#64748b; line-height:1.5;">Kila kibadilishaji kinadhibiti setting MOJA pekee. Hakuna kubadilisha kingine kwa bahati mbaya.</p> </div> <div style="text-align:right;"> <b style="display:block; font-size:18px; color:#0f172a; font-weight:900;">${(() => {
                                 const _m = ['bidhaa','huduma','usafiri','alerts'].filter(k => skh.sysConfig && skh.sysConfig[k] && skh.sysConfig[k].active !== false).length;
                                 const _md = ['free_market','auction','price_drop','group_buy'].filter(k => skh.sysConfig && skh.sysConfig.modes && skh.sysConfig.modes[k] !== false).length;
                                 const _f = ['deposit','subscription','boost','commission','offline_registration','agent_registration'].filter(k => skh.paymentGate(k)).length;
                                 return (_m + _md + _f) + '/14 ZIMEWASHWA';
-                            })()}</b>
-                            <small style="color:#64748b; font-size:11px;">Moduli &middot; Hali za Uuzaji &middot; Ada</small>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-top:16px;">
-                        <div class="sys-group">
-                            <div class="sys-group-title"> Moduli (Modules)</div>
+                            })()}</b> <small style="color:#64748b; font-size:13px;">Moduli &middot; Hali za Uuzaji &middot; Ada</small> </div> </div> <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-top:16px;"> <div class="sys-group"> <div class="sys-group-title"> Moduli (Modules)</div>
                             ${skhSysRow('module', 'bidhaa', 'Bidhaa na Soko', 'Onesha / ficha moduli ya bidhaa kwenye soko.')}
                             ${skhSysRow('module', 'huduma', 'Huduma na Mafundi', 'Onesha / ficha moduli ya huduma na mafundi.')}
                             ${skhSysRow('module', 'usafiri', 'Usafirishaji na Dereva', 'Onesha / ficha moduli ya usafirishaji.')}
                             ${skhSysRow('module', 'alerts', 'Alert System (Biashara Live)', 'Ukizima, Announcement Bar itarudi kwenye matangazo ya kawaida pekee.')}
-                        </div>
-                        <div class="sys-group">
-                            <div class="sys-group-title"> Hali za Uuzaji (Modes)</div>
+                        </div> <div class="sys-group"> <div class="sys-group-title"> Hali za Uuzaji (Modes)</div>
                             ${skhSysRow('mode', 'free_market', 'Soko Huru', 'Mauzo ya kawaida bila mnada.')}
                             ${skhSysRow('mode', 'auction', 'Mnada Live', 'Uwezo wa mnada wa moja kwa moja.')}
                             ${skhSysRow('mode', 'price_drop', 'Price Drop Mode', 'Bei inashuka kwa wingi (flash).')}
                             ${skhSysRow('mode', 'group_buy', 'Group Buy Mode', 'Manunuzi ya pamoja (group buying).')}
-                        </div>
-                        <div class="sys-group">
-                            <div class="sys-group-title"> Ada (Fees)</div>
+                        </div> <div class="sys-group"> <div class="sys-group-title"> Ada (Fees)</div>
                             ${skhSysRow('fee', 'commission', 'Kamisheni ya Mfumo (5%)', 'Inakatwa kwenye escrow / SokoPay payout ya muuzaji.')}
                             ${skhSysRow('fee', 'subscription', 'Ada ya Subscription', 'Usajili wa duka &mdash; lazima ulipe.')}
                             ${skhSysRow('fee', 'boost', 'Ada ya Boost', 'Kukuza matangazo ya bidhaa/huduma/usafiri.')}
                             ${skhSysRow('fee', 'deposit', 'Deposit ya Mnada/Group Buy', 'TSh 1,300 kwa serious actions (bid/join/lock).')}
                             ${skhSysRow('fee', 'offline_registration', 'Mwanachama Offline (TSh 2,100)', 'Usajili wa mwanachama asiye na simu (wakala).')}
                             ${skhSysRow('fee', 'agent_registration', 'Wakala (TSh 3,100)', 'Usajili wa wakala mpya wa SokoHai.')}
-                        </div>
-                    </div>
-                </div>
-
-                <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 25px;">
-                    <h4 style="margin:0 0 15px 0; color: var(--primary-dark); font-weight:900;"> MAOMBI YA WAWAKALA (AGENT APPROVALS)</h4>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        </div> </div> </div> <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 25px;"> <h4 style="margin:0 0 15px 0; color: var(--primary-dark); font-weight:900;"> MAOMBI YA WAWAKALA (AGENT APPROVALS)</h4> <div style="display:flex; flex-direction:column; gap:10px;">
                         ${agentsSnap.empty ? '<p style="color:gray; font-size:12px; text-align:center; padding:10px;">Hakuna maombi mapya kwa sasa.</p>' : ''}
                         ${agentsSnap.docs.map(doc => {
                             const ag = doc.data();
                             const paid = ag.paymentStatus === 'paid' || ag.isPaid === true;
                             const freeWaived = ag.paymentStatus === 'free' || ag.feeWaived === true;
                             const payBadge = paid
-                                ? '<small style="color:green; font-weight:bold;">✓ ADA IMELIPWA</small>'
-                                : (freeWaived ? '<small style="color:#2563eb; font-weight:bold;">FREE MODE — HAKUNA ADA</small>' : '<small style="color:#b45309; font-weight:bold;">⚠ ADA HAIJALIPWA — pending</small>');
+                                ? '<small style="color:green; font-weight:bold;"> ADA IMELIPWA</small>'
+                                : (freeWaived ? '<small style="color:#2563eb; font-weight:bold;">FREE MODE — HAKUNA ADA</small>' : '<small style="color:#b45309; font-weight:bold;"> ADA HAIJALIPWA — pending</small>');
                             return `
-                                <div style="padding:15px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-                                    <div style="min-width: 200px;">
-                                        <b> Jina: ${skh.skhEscape(ag.fullName)}</b><br>
-                                        <small style="color:gray;">Mkoa: ${skh.skhEscape(ag.location)} | Simu: ${skh.skhEscape(ag.contact)}</small><br>
+                                <div style="padding:15px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;"> <div style="min-width: 200px;"> <b> Jina: ${skh.skhEscape(ag.fullName)}</b><br> <small style="color:gray;">Mkoa: ${skh.skhEscape(ag.location)} | Simu: ${skh.skhEscape(ag.contact)}</small><br>
                                         ${payBadge}
-                                    </div>
-                                    <div style="display:flex; gap:8px;">
-                                        <button onclick="window.approveAgent('${doc.id}', '${ag.userId}')" style="padding:8px 15px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_approve', 'APPROVE')} </button>
-                                        <button onclick="window.rejectAgent('${doc.id}')" style="padding:8px 15px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_reject', 'REJECT')} </button>
-                                    </div>
-                                </div>`;
+                                    </div> <div style="display:flex; gap:8px;"> <button onclick="window.approveAgent('${doc.id}', '${ag.userId}')" style="padding:8px 15px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_approve', 'APPROVE')} </button> <button onclick="window.rejectAgent('${doc.id}')" style="padding:8px 15px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_reject', 'REJECT')} </button> </div> </div>`;
                         }).join('')}
-                    </div>
-                </div>
-
-                <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 25px;">
-                    <h4 style="margin:0 0 15px 0; color: var(--primary-dark); font-weight:900;"> MIGOGORO YA ESCROW (ORDER DISPUTES)</h4>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
+                    </div> </div> <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 25px;"> <h4 style="margin:0 0 15px 0; color: var(--primary-dark); font-weight:900;"> MIGOGORO YA ESCROW (ORDER DISPUTES)</h4> <div style="display:flex; flex-direction:column; gap:10px;">
                         ${disputesSnap.empty ? '<p style="color:gray; font-size:12px; text-align:center; padding:10px;">Hakuna migogoro inayoungojea utatuzi.</p>' : ''}
                         ${disputesSnap.docs.map(doc => {
                             const od = doc.data();
                             return `
-                                <div style="padding:15px; background:#fbf2f2; border-left:5px solid red; border-radius:12px; text-align:left;">
-                                    <b> Oda: ${skh.skhEscape(od.itemTitle || 'Bidhaa')}</b> (TSh ${(od.amount != null ? Number(od.amount) : 0).toLocaleString()})<br>
-                                    <span>Mnunuzi: ${skh.skhEscape(od.buyerName)} | Muuzaji: ${skh.skhEscape(od.sellerName)}</span><br>
-                                    <p style="margin:5px 0; font-size:12px; background:white; padding:8px; border-radius:6px;">Sababu ya Mgogoro: <b>${od.disputeReason || 'N/A'}</b></p>
-                                    <div style="display:flex; gap:8px; margin-top:10px;">
-                                        <button onclick="window.resolvePlatformDispute('${doc.id}', 'buyer')" style="padding:8px 15px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_refund_buyer', 'REFUND BUYER')}</button>
-                                        <button onclick="window.resolvePlatformDispute('${doc.id}', 'seller')" style="padding:8px 15px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_pay_seller', 'PAY SELLER')}</button>
-                                    </div>
-                                </div>`;
+                                <div style="padding:15px; background:#fbf2f2; border-left:5px solid red; border-radius:12px; text-align:left;"> <b> Oda: ${skh.skhEscape(od.itemTitle || 'Bidhaa')}</b> (TSh ${(od.amount != null ? Number(od.amount) : 0).toLocaleString()})<br> <span>Mnunuzi: ${skh.skhEscape(od.buyerName)} | Muuzaji: ${skh.skhEscape(od.sellerName)}</span><br> <p style="margin:5px 0; font-size:12px; background:white; padding:8px; border-radius:6px;">Sababu ya Mgogoro: <b>${od.disputeReason || 'N/A'}</b></p> <div style="display:flex; gap:8px; margin-top:10px;"> <button onclick="window.resolvePlatformDispute('${doc.id}', 'buyer')" style="padding:8px 15px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_refund_buyer', 'REFUND BUYER')}</button> <button onclick="window.resolvePlatformDispute('${doc.id}', 'seller')" style="padding:8px 15px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">${T('pa_pay_seller', 'PAY SELLER')}</button> </div> </div>`;
                         }).join('')}
-                    </div>
-                </div>
-
-                <!--  ANNOUNCEMENT BAR MANAGER (Marquee/Ticker) -->
-                <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                        <h4 style="margin:0; color: var(--primary-dark); font-weight:900;"> USIMAMIZI WA ANNOUNCEMENT BAR (TICKER)</h4>
-                        <button onclick="window.openAnnouncementFormModal()" style="padding:10px 18px; background:var(--primary-dark); color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> TANGAZO JIPYA</button>
-                    </div>
-                    <p style="font-size:11px; color:gray; margin:0 0 15px;">Weka matangazo yanayopita juu ya website (kama Amazon/Temu). Yanabadilika kiotomatiki, yanaonekana kwa watumiaji WOTE papo hapo, bila kubadili code.</p>
-                    <div id="adminAnnouncementListBox" style="display:flex; flex-direction:column; gap:10px;">
-                        <p style="color:gray; font-size:12px; text-align:center; padding:10px;">Inapakia matangazo...</p>
-                    </div>
-                </div>
-            </div>
-        `;
+                    </div> </div> <!--  ANNOUNCEMENT BAR MANAGER (Marquee/Ticker) --> <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;"> <h4 style="margin:0; color: var(--primary-dark); font-weight:900;"> USIMAMIZI WA ANNOUNCEMENT BAR (TICKER)</h4> <button onclick="window.openAnnouncementFormModal()" style="padding:10px 18px; background:var(--primary-dark); color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> TANGAZO JIPYA</button> </div> <p style="font-size:13px; color:gray; margin:0 0 15px;">Weka matangazo yanayopita juu ya website (kama Amazon/Temu). Yanabadilika kiotomatiki, yanaonekana kwa watumiaji WOTE papo hapo, bila kubadili code.</p> <div id="adminAnnouncementListBox" style="display:flex; flex-direction:column; gap:10px;"> <p style="color:gray; font-size:12px; text-align:center; padding:10px;">Inapakia matangazo...</p> </div> </div> </div> `;
 
         window.renderAnnouncementManagerList();
     } catch (e) {
@@ -349,7 +268,7 @@ window.renderAnnouncementManagerList = function(){
     const typeLabels = {
         normal:' Welcome', breaking:' Breaking News', feature:' New Feature',
         promotion:' Promotion', maintenance:' Maintenance', 'security-notice':' Security Notice',
-        tender:'⚫ Government Tender', event:' Event', security:' Escrow', launch:' Launch',
+        tender:' Government Tender', event:' Event', security:' Escrow', launch:' Launch',
         company:' Companies', service:' Services', payment:' Payments', update:' Update'
     };
 
@@ -358,32 +277,20 @@ window.renderAnnouncementManagerList = function(){
         const endsOk = !a.endAt || new Date(a.endAt).getTime() >= now;
         const isLive = a.active !== false && startsOk && endsOk;
         const statusBadge = isLive
-            ? `<span style="background:#dcfce7; color:#16a34a; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:900;"> LIVE</span>`
+            ? `<span style="background:#dcfce7; color:#16a34a; padding:3px 10px; border-radius:20px; font-size:12.5px; font-weight:900;"> LIVE</span>`
             : (a.active === false
-                ? `<span style="background:#fee2e2; color:#ef4444; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:900;"> IMEZIMWA</span>`
-                : `<span style="background:#fef9c3; color:#a16207; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:900;"> NJE YA MUDA</span>`);
+                ? `<span style="background:#fee2e2; color:#ef4444; padding:3px 10px; border-radius:20px; font-size:12.5px; font-weight:900;"> IMEZIMWA</span>`
+                : `<span style="background:#fef9c3; color:#a16207; padding:3px 10px; border-radius:20px; font-size:12.5px; font-weight:900;"> NJE YA MUDA</span>`);
         const dateInfo = (a.startAt || a.endAt)
-            ? `<small style="color:#94a3b8; display:block; margin-top:4px;"> ${a.startAt ? new Date(a.startAt).toLocaleString() : 'Sasa'} ➔ ${a.endAt ? new Date(a.endAt).toLocaleString() : 'Bila mwisho'}</small>`
+            ? `<small style="color:#94a3b8; display:block; margin-top:4px;"> ${a.startAt ? new Date(a.startAt).toLocaleString() : 'Sasa'} -> ${a.endAt ? new Date(a.endAt).toLocaleString() : 'Bila mwisho'}</small>`
             : '';
         return `
-            <div style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:200px;">
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <b style="font-size:11px; background:#e2e8f0; padding:3px 10px; border-radius:20px;">${typeLabels[a.type] || a.type || 'Notice'}</b>
+            <div style="padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;"> <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;"> <div style="flex:1; min-width:200px;"> <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"> <b style="font-size:13px; background:#e2e8f0; padding:3px 10px; border-radius:20px;">${typeLabels[a.type] || a.type || 'Notice'}</b>
                             ${statusBadge}
-                        </div>
-                        <p style="margin:8px 0 0; font-size:13px; font-weight:700; color:#0f172a;">${(a.icon || '')} ${a.text}</p>
+                        </div> <p style="margin:8px 0 0; font-size:13px; font-weight:700; color:#0f172a;">${(a.icon || '')} ${a.text}</p>
                         ${a.link ? `<small style="color:var(--primary-blue); display:block; margin-top:4px;"> ${a.link}</small>` : ''}
                         ${dateInfo}
-                    </div>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button onclick="window.openAnnouncementFormModal('${a.id}')" style="padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px;">HARIRI ✏</button>
-                        <button onclick="window.sokohaiToggleAnnouncementActive('${a.id}', ${a.active !== false})" style="padding:6px 12px; background:${a.active !== false ? '#fef9c3' : '#dcfce7'}; color:${a.active !== false ? '#a16207' : '#16a34a'}; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px;">${a.active !== false ? 'ZIMA ' : 'WASHA ▶'}</button>
-                        <button onclick="window.sokohaiDeleteAnnouncement('${a.id}')" style="padding:6px 12px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px;">${T('pa_delete', 'DELETE')} </button>
-                    </div>
-                </div>
-            </div>`;
+                    </div> <div style="display:flex; gap:6px; flex-wrap:wrap;"> <button onclick="window.openAnnouncementFormModal('${a.id}')" style="padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">HARIRI </button> <button onclick="window.sokohaiToggleAnnouncementActive('${a.id}', ${a.active !== false})" style="padding:6px 12px; background:${a.active !== false ? '#fef9c3' : '#dcfce7'}; color:${a.active !== false ? '#a16207' : '#16a34a'}; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">${a.active !== false ? 'ZIMA ' : 'WASHA '}</button> <button onclick="window.sokohaiDeleteAnnouncement('${a.id}')" style="padding:6px 12px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">${T('pa_delete', 'DELETE')} </button> </div> </div> </div>`;
     }).join('');
 };
 
@@ -398,54 +305,8 @@ window.openAnnouncementFormModal = function(editId){
         modal.className = 'overlay-menu';
         modal.style.cssText = 'z-index:9999; display:none; align-items:center; justify-content:center;';
         modal.innerHTML = `
-            <div style="background:white; border-radius:24px; padding:28px; width:95%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 40px rgba(0,0,0,0.5);">
-                <h3 id="annFormTitle" style="margin-top:0; color:var(--primary-dark); font-weight:900;"> Tangazo Jipya</h3>
-
-                <label style="font-size:11px; font-weight:900; color:gray; display:block; margin-bottom:4px;">AINA YA TANGAZO *</label>
-                <select id="annType" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px; font-weight:bold; background:white;">
-                    <option value="normal"> Welcome / General</option>
-                    <option value="breaking"> Breaking News</option>
-                    <option value="feature"> New Feature</option>
-                    <option value="promotion"> Promotion</option>
-                    <option value="maintenance"> Maintenance</option>
-                    <option value="security-notice"> Security Notice</option>
-                    <option value="tender">⚫ Government Tender</option>
-                    <option value="event"> Event</option>
-                    <option value="security"> Escrow</option>
-                    <option value="launch"> Launch</option>
-                    <option value="company"> Companies</option>
-                    <option value="service"> Services</option>
-                    <option value="payment"> Payments</option>
-                    <option value="update"> Update</option>
-                </select>
-
-                <label style="font-size:11px; font-weight:900; color:gray; display:block; margin-bottom:4px;">ICON (HIARI, MF: )</label>
-                <input type="text" id="annIcon" placeholder="${T('pa_icon_ph', 'e.g. icon')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px;">
-
-                <label style="font-size:11px; font-weight:900; color:gray; display:block; margin-bottom:4px;">UJUMBE WA TANGAZO *</label>
-                <textarea id="annText" rows="3" placeholder="${T('pa_ann_ph', 'Write the announcement message here...')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px; resize:vertical; font-family:inherit;"></textarea>
-
-                <label style="font-size:11px; font-weight:900; color:gray; display:block; margin-bottom:4px;">KIUNGO CHA "READ MORE" (HIARI)</label>
-                <input type="text" id="annLink" placeholder="${T('pa_link_ph', 'e.g. https://sokohai.com/promo')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px;">
-
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-                    <div>
-                        <label style="font-size:11px; font-weight:900; color:gray; display:block; margin-bottom:4px;">${T('pa_start_date', 'START DATE')}</label>
-                        <input type="datetime-local" id="annStartAt" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1;">
-                    </div>
-                    <div>
-                        <label style="font-size:11px; font-weight:900; color:gray; display:block; margin-bottom:4px;">${T('pa_end_date', 'END DATE')}</label>
-                        <input type="datetime-local" id="annEndAt" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1;">
-                    </div>
-                </div>
-
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:bold; margin-bottom:20px;">
-                    <input type="checkbox" id="annActive" checked style="width:18px; height:18px;"> Tangazo Liwe LIVE Sasa
-                </label>
-
-                <button onclick="window.submitAnnouncementForm()" id="btnSubmitAnnouncement" style="width:100%; padding:15px; background:var(--primary-dark); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer;">${T('pa_save_ann', 'SAVE ANNOUNCEMENT')} </button>
-                <button onclick="document.getElementById('announcementFormModal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; background:#e2e8f0; color:#475569; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">${T('pa_cancel', 'Cancel')}</button>
-            </div>`;
+            <div style="background:white; border-radius:24px; padding:28px; width:95%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 40px rgba(0,0,0,0.5);"> <h3 id="annFormTitle" style="margin-top:0; color:var(--primary-dark); font-weight:900;"> Tangazo Jipya</h3> <label style="font-size:13px; font-weight:900; color:gray; display:block; margin-bottom:4px;">AINA YA TANGAZO *</label> <select id="annType" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px; font-weight:bold; background:white;"> <option value="normal"> Welcome / General</option> <option value="breaking"> Breaking News</option> <option value="feature"> New Feature</option> <option value="promotion"> Promotion</option> <option value="maintenance"> Maintenance</option> <option value="security-notice"> Security Notice</option> <option value="tender"> Government Tender</option> <option value="event"> Event</option> <option value="security"> Escrow</option> <option value="launch"> Launch</option> <option value="company"> Companies</option> <option value="service"> Services</option> <option value="payment"> Payments</option> <option value="update"> Update</option> </select> <label style="font-size:13px; font-weight:900; color:gray; display:block; margin-bottom:4px;">ICON (HIARI, MF: )</label> <input type="text" id="annIcon" placeholder="${T('pa_icon_ph', 'e.g. icon')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px;"> <label style="font-size:13px; font-weight:900; color:gray; display:block; margin-bottom:4px;">UJUMBE WA TANGAZO *</label> <textarea id="annText" rows="3" placeholder="${T('pa_ann_ph', 'Write the announcement message here...')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px; resize:vertical; font-family:inherit;"></textarea> <label style="font-size:13px; font-weight:900; color:gray; display:block; margin-bottom:4px;">KIUNGO CHA "READ MORE" (HIARI)</label> <input type="text" id="annLink" placeholder="${T('pa_link_ph', 'e.g. https://sokohai.com/promo')}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:14px;"> <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;"> <div> <label style="font-size:13px; font-weight:900; color:gray; display:block; margin-bottom:4px;">${T('pa_start_date', 'START DATE')}</label> <input type="datetime-local" id="annStartAt" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1;"> </div> <div> <label style="font-size:13px; font-weight:900; color:gray; display:block; margin-bottom:4px;">${T('pa_end_date', 'END DATE')}</label> <input type="datetime-local" id="annEndAt" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1;"> </div> </div> <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:bold; margin-bottom:20px;"> <input type="checkbox" id="annActive" checked style="width:18px; height:18px;"> Tangazo Liwe LIVE Sasa
+                </label> <button onclick="window.submitAnnouncementForm()" id="btnSubmitAnnouncement" style="width:100%; padding:15px; background:var(--primary-dark); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer;">${T('pa_save_ann', 'SAVE ANNOUNCEMENT')} </button> <button onclick="document.getElementById('announcementFormModal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; background:#e2e8f0; color:#475569; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">${T('pa_cancel', 'Cancel')}</button> </div>`;
         document.body.appendChild(modal);
     }
 
@@ -521,20 +382,16 @@ window.disableOfflineManagement = function() {
 };
 
 window.deleteRideOrder = async function(rideId) {
-    if(!confirm(" Je, una uhakika unataka kufuta kabisa historia ya safari hii kwenye kumbukumbu zako?")) return;
+    if(!await skhConfirm(" Una uhakika unataka kufuta kabisa historia ya safari hii kwenye kumbukumbu zako?")) return;
 
-    try {
-        await skh.deleteDoc(skh.doc(skh.db, "ride_requests", rideId));
-        alert(T('pa_trip_deleted', "Trip record deleted successfully."));
-        
-        if(skh.currentMode === 'buyer') {
-            window.loadBuyerOrdersWithTracking();
-        } else {
-            window.loadAndRenderDashboard();
+    // [LIFECYCLE] Safari ni rekodi ya biashara (token, makabidhiano, escrow).
+    // Haifutwi ikishaanza — huwekwa kwenye Historia.
+    await window.skhRequestDelete('ride_requests', rideId, {
+        onDone: function () {
+            if (skh.currentMode === 'buyer') window.loadBuyerOrdersWithTracking();
+            else window.loadAndRenderDashboard();
         }
-    } catch(e) {
-        alert(T('pa_delete_error', "Could not delete: ") + e.message);
-    }
+    });
 };
 
 window.chainNextLeg = function(oldRideId, lastStop, cargoName) {
@@ -712,13 +569,10 @@ window.handleAuctionBid = function() {
 
     window.verifyAndProceedSeriousAction("Auction", "auction", skh.currentOpenProduct.id, async () => {
         try {
-            const prodRef = skh.doc(skh.db, 'products', skh.currentOpenProduct.id);
-            await skh.updateDoc(prodRef, {
-                "modeData.currentBid": bidValue,
-                "modeData.maxBidder": skh.currentUser.uid,
-                "modeData.maxBidderName": skh.currentUser.displayName || "Mwanachama",
-                "modeData.totalBids": skh.increment(1)
-            });
+            // [§8 ONE CORE] Pitia validator moja (07 skhAuctionPlaceBid): re-read
+            // + transaction + outbid/seller notify + bids-history.
+            const r = await window.skhAuctionPlaceBid(skh.currentOpenProduct.id, bidValue);
+            if (!r.ok) { alert("Kosa: " + r.error); if (bidInput) bidInput.value = ""; return; }
 
             alert(T('pa_bid_lead', "Congratulations! You are now leading the auction."));
             bidInput.value = "";
@@ -743,13 +597,9 @@ window.placeLiveBid = async function() {
 
     window.verifyAndProceedSeriousAction("Auction", "auction", skh.currentOpenProduct.id, async () => {
         try {
-            const prodRef = skh.doc(skh.db, 'products', skh.currentOpenProduct.id);
-            await skh.updateDoc(prodRef, {
-                "modeData.currentBid": bidValue,
-                "modeData.maxBidder": skh.currentUser.uid,
-                "modeData.maxBidderName": skh.currentUser.displayName || "Mwanachama",
-                "modeData.totalBids": skh.increment(1)
-            });
+            // [§8 ONE CORE] Na hapa: pitia validator moja (07).
+            const r = await window.skhAuctionPlaceBid(skh.currentOpenProduct.id, bidValue);
+            if (!r.ok) { alert(T('pa_bid_error', "Auction error: ") + r.error); if (bidInput) bidInput.value = ""; return; }
 
             alert(T('pa_bid_placed', "Congratulations! Your bid has been placed. Everyone's screen now shows your name!"));
             bidInput.value = ""; 
@@ -845,19 +695,17 @@ window.confirmDeliveryWithToken = async function(rideId, correctToken, driverId,
 };
 
 window.deleteOrderLog = async function(orderId) {
-    if (!confirm(" Je, una uhakika unataka kufuta kabisa rekodi hii ya mauzo kwenye historia yako? Kitendo hiki hakirudishiki nyuma!")) return;
-    try {
-        await skh.deleteDoc(skh.doc(skh.db, "orders", orderId));
-        alert(T('pa_order_deleted', "Order record deleted and archived successfully."));
-        window.loadBuyerOrdersWithTracking(); 
-    } catch(e) {
-        alert(" Imeshindwa kufuta rekodi: " + e.message);
-    }
+    if (!await skhConfirm(" Una uhakika unataka kufuta kabisa rekodi hii ya mauzo kwenye historia yako? Hakuna kurudi nyuma.")) return;
+    // [LIFECYCLE] Oda: isiyolipiwa inafutika; iliyolipiwa/iliyokamilika
+    // huwekwa Kumbukumbu ili historia ya malipo/escrow isipotee.
+    await window.skhRequestDelete('orders', orderId, {
+        onDone: function () { window.loadBuyerOrdersWithTracking(); }
+    });
 };
 
 window.directRequestTransporter = async function(rideId) {
     if(!skh.requireAuth()) return;
-    if(!confirm("Je, unathibitisha kukubali usafiri huu na unataka kuanza sasa?")) return;
+    if(!await skhConfirm("Je, unathibitisha kukubali usafiri huu na unataka kuanza sasa?")) return;
 
     try {
         const rideRef = skh.doc(skh.db, "ride_requests", rideId);
@@ -880,10 +728,73 @@ window.directRequestTransporter = async function(rideId) {
         }
 
         if (!serverDone) {
-            // Fail-secure: bila opt-in ya demo, usiandike custody kwenye browser.
+            /* [FIX 2026-09-15] Uchunguzi ulionyesha `deliveryAccept` inarudisha 404
+               kwenye REGION ZOTE — haijadeploy. Hapo awali hii ilikuwa inasimama
+               kabisa, hivyo dereva hakuweza KAMWE kukubali kazi.
+
+               Tofautisho muhimu (§2 — hakuna fake success):
+                 • KUKUBALI KAZI ni AHADI. Ni mabadiliko ya hali yanayolindwa na
+                   Security Rules (dereva mwenyewe, ombi liwe bado 'searching').
+                   Hii inaweza kuandikwa na client kwa usalama.
+                 • TOKEN YA KUCHUKUA (PK), escrow na kamisheni ni MAMLAKA YA
+                   SERVER. Hizi HAZIANDIKWI na browser — tunamwambia mtumiaji
+                   ukweli badala ya kudanganya.                                */
             if (!demoOk) {
-                alert(" Imeshindwa kuunganisha na server ili kuthibitisha kukubali safari. Jaribu tena.");
-                return;
+                var st = (typeof window.skhErr === 'function')
+                    ? null : null;
+                // Andika hali ya 'accepted' pekee — Rules ndizo mlinzi.
+                try {
+                    var snapPre = await skh.getDoc(rideRef);
+                    if (!snapPre || !snapPre.exists || !snapPre.exists()) {
+                        skhToast('Ombi hili halipatikani tena — huenda limeondolewa.', 'error', 4000);
+                        return;
+                    }
+                    var cur = snapPre.data() || {};
+                    // Usiruhusu kukubali ombi ambalo tayari lina dereva (§15 stale state)
+                    if (cur.driverId && cur.driverId !== skh.currentUser.uid) {
+                        skhToast('Samahani, kazi hii tayari imechukuliwa na dereva mwingine.', 'info', 4000);
+                        if (typeof window.loadAvailableJobs === 'function') window.loadAvailableJobs();
+                        return;
+                    }
+                    if (['completed','cancelled','delivered'].indexOf(String(cur.status||'').toLowerCase()) !== -1) {
+                        skhToast('Kazi hii imeshafungwa.', 'info', 3500);
+                        return;
+                    }
+                    await skh.updateDoc(rideRef, {
+                        status: 'accepted',
+                        driverId: skh.currentUser.uid,
+                        driverName: skh.currentUser.displayName || 'Dereva Sokohai',
+                        driverPhone: (skh.currentUserData && skh.currentUserData.phone) || 'N/A',
+                        driverVehicleReg: (skh.currentUserData && skh.currentUserData.vehicleReg) || 'N/A',
+                        acceptedAt: new Date().toISOString(),
+                        tokenPending: true   // token itatolewa na server ikiwashwa
+                    });
+                    try {
+                        var sn2 = await skh.getDoc(rideRef);
+                        var d2 = (sn2 && sn2.data && sn2.data()) || {};
+                        if (d2.customerId) {
+                            await skh.addDoc(skh.collection(skh.db, 'notifications'), {
+                                userId: d2.customerId,
+                                title: 'Dereva amekubali kazi yako',
+                                body: 'Dereva amekubali kusafirisha mzigo wako. Fungua mazungumzo kuendelea.',
+                                createdAt: new Date().toISOString(), read: false, type: 'delivery'
+                            });
+                        }
+                    } catch (eN) { /* arifa si kikwazo */ }
+
+                    skhToast('Umekubali kazi hii. Namba ya kuchukua itatolewa server ikiwashwa.', 'success', 5000);
+                    if (typeof window.loadAvailableJobs === 'function') window.loadAvailableJobs();
+                    if (typeof window.loadAndRenderDashboard === 'function') window.loadAndRenderDashboard();
+                    return;
+                } catch (eAcc) {
+                    if (typeof window.skhShowErr === 'function') {
+                        window.skhShowErr(eAcc, { fn: 'acceptTransport', entityId: rideId,
+                                                  collection: 'ride_requests', operation: 'update' });
+                    } else {
+                        skhToast('Imeshindikana kukubali ombi kwa sasa. Jaribu tena.', 'error', 4000);
+                    }
+                    return;
+                }
             }
 
             // Demo/offline fallback (legacy) — kama ilivyokuwa awali.
@@ -910,6 +821,9 @@ window.directRequestTransporter = async function(rideId) {
                         if (snap && snap.exists && snap.exists()) {
                             await skh.addDoc(skh.collection(skh.db, "notifications"), {
                                 userId: snap.data().customerId,
+                                // [SYSTEM EVENTS 2026-09] structured event — render hutafsiri kwa lugha ya msomaji.
+                                event: 'delivery.transporterAccepted',
+                                params: {},
                                 title: "Transporter Amekubali — Pickup Inasubiri",
                                 body: "Dereva amekubali kazi. Thibitisha makabidhiano ya mzigo kwenye Jopo la Mizigo & Dispatch.",
                                 createdAt: new Date().toISOString(),
@@ -946,13 +860,13 @@ window.verifyHandoverToken = async function(rideId, stage) {
         if(!inputPK) return alert("Ingiza Token A (PK) kwanza!");
 
         // [CUSTODY 2026-09] Uthibitisho wa PANDEMBILI: muuzaji amethibitisha
-        // makabidhiano (seller_confirmed_handover) → sasa dereva anathibitisha
+        // makabidhiano (seller_confirmed_handover) -> sasa dereva anathibitisha
         // upokeaji kwa token salama. Hii ndiyo inayobadilisha custody kuwa PICKED_UP.
         if (typeof window.skhCustodyConfirmTransporterPickup === 'function') {
             // Uhakiki wa Mifugo ikiwa amebeba wanyama (kabla ya kuthibitisha).
             let startCount = rd.animalCount || 0;
             if(rd.reqCategory === 'Livestock') {
-                const verifiedCount = prompt(` LIVE COUNT VERIFICATION:\nIdadi iliyotajwa kwenye oda: ${startCount} Heads.\n\nThibitisha idadi halisi unayopakia hivi sasa kwenye gari:`, startCount);
+                const verifiedCount = await skhPrompt(` LIVE COUNT VERIFICATION:\nIdadi iliyotajwa kwenye oda: ${startCount} Heads.\n\nThibitisha idadi halisi unayopakia hivi sasa kwenye gari:`, startCount);
                 if(verifiedCount === null) return;
                 startCount = parseInt(verifiedCount) || startCount;
             }
@@ -984,7 +898,7 @@ window.verifyHandoverToken = async function(rideId, stage) {
         // Uhakiki wa Mifugo ikiwa amebeba wanyama
         let startCount = rd.animalCount || 0;
         if(rd.reqCategory === 'Livestock') {
-            const verifiedCount = prompt(` LIVE COUNT VERIFICATION:\nIdadi iliyotajwa kwenye oda: ${startCount} Heads.\n\nThibitisha idadi halisi unayopakia hivi sasa kwenye gari:`, startCount);
+            const verifiedCount = await skhPrompt(` LIVE COUNT VERIFICATION:\nIdadi iliyotajwa kwenye oda: ${startCount} Heads.\n\nThibitisha idadi halisi unayopakia hivi sasa kwenye gari:`, startCount);
             if(verifiedCount === null) return;
             startCount = parseInt(verifiedCount) || startCount;
             await skh.updateDoc(rideRef, { verifiedPickupCount: startCount });
@@ -1009,7 +923,7 @@ window.verifyHandoverToken = async function(rideId, stage) {
         let arrivalCount;
         if(rd.reqCategory === 'Livestock') {
             const pickupCount = rd.verifiedPickupCount || rd.animalCount || 0;
-            const arrivalCountPrompt = prompt(` ARRIVAL COUNT CHECK:\nIdadi iliyopakiwa mwanzo: ${pickupCount} Heads.\n\nIngiza idadi halisi ya mifugo iliyofika salama:`, pickupCount);
+            const arrivalCountPrompt = await skhPrompt(` ARRIVAL COUNT CHECK:\nIdadi iliyopakiwa mwanzo: ${pickupCount} Heads.\n\nIngiza idadi halisi ya mifugo iliyofika salama:`, pickupCount);
             if(arrivalCountPrompt === null) return;
             arrivalCount = parseInt(arrivalCountPrompt) || 0;
 
@@ -1017,8 +931,8 @@ window.verifyHandoverToken = async function(rideId, stage) {
                 const lostCount = pickupCount - arrivalCount;
                 const penalty = (finalPrice * 0.15) * lostCount;
                 const adjustedPayout = Math.max(0, finalPrice - penalty);
-                if(!confirm(` MKATABA WA DHARURA: Mifugo ${lostCount} imepotea njiani!\n\nKiasi cha kulipwa kitapunguzwa kwa faini hadi TSh ${adjustedPayout.toLocaleString()}.\n\nJe, unakubali kupokea na kukamilisha safari?`)) {
-                    // Mgogoro wa mifugo → server (deliveryDispute).
+                if(!await skhConfirm(` MKATABA WA DHARURA: Mifugo ${lostCount} imepotea njiani!\n\nKiasi cha kulipwa kitapunguzwa kwa faini hadi TSh ${adjustedPayout.toLocaleString()}.\n\nJe, unakubali kupokea na kukamilisha safari?`)) {
+                    // Mgogoro wa mifugo -> server (deliveryDispute).
                     if (typeof window.skhCustodyRaiseDispute === 'function') {
                         await window.skhCustodyRaiseDispute(rideId, `Mifugo ${lostCount} imepotea safarini. Dereva amekataa kukatwa faini ya upotevu.`);
                     }
@@ -1061,7 +975,7 @@ window.simulateSellerHandover = async function(rideId) {
     const tokenPlain = (typeof window.skhCustodyReadToken === 'function')
         ? (await window.skhCustodyReadToken(rideId, 'pickup')) : rd.pickupToken;
     
-    window.customPrompt(` SELLER HANDOVER VERIFICATION\nDereva amefika! Mmiliki wa mzigo (Seller), tafadhali ingiza Token PK (${tokenPlain || 'PK-XXXXXXXX'}) aliyokupa Dereva ili kumthibitisha kabla ya kukabidhi mzigo:`, "PK-XXXXXXXX", async (inputToken) => {
+    window.customPrompt(` SELLER HANDOVER VERIFICATION\nDereva amefika! Mmiliki wa mzigo (Seller), ingiza Token PK (${tokenPlain || 'PK-XXXXXXXX'}) aliyokupa Dereva ili kumthibitisha kabla ya kukabidhi mzigo:`, "PK-XXXXXXXX", async (inputToken) => {
         if (!inputToken) return;
 
         // [CUSTODY 2026-09] Muuzaji anathibitisha MAKABIDHIANO (pande la kwanza) tu.
@@ -1078,7 +992,7 @@ window.simulateSellerHandover = async function(rideId) {
                 alert(msgs[res.error] || (" Makabidhiano hayajathibitishwa: " + res.error));
                 return;
             }
-            alert(` Makabidhiano yamethibitishwa!\n\nDereva sasa atathibitisha upokeaji kwa token yake → mzigo utakuwa chini ya ulinzi wake (Picked Up).`);
+            alert(` Makabidhiano yamethibitishwa!\n\nDereva sasa atathibitisha upokeaji kwa token yake -> mzigo utakuwa chini ya ulinzi wake (Picked Up).`);
             return;
         }
 
@@ -1088,7 +1002,7 @@ window.simulateSellerHandover = async function(rideId) {
             return;
         }
         await skh.updateDoc(rideRef, { status: "in_transit" });
-        alert(`✓ Driver Verified!\n\nMzigo umekabidhiwa salama kwa Dereva. Status imebadilika kuwa: SAFARINI (In Transit) `);
+        alert(` Driver Verified!\n\nMzigo umekabidhiwa salama kwa Dereva. Status imebadilika kuwa: SAFARINI (In Transit) `);
     });
 };
 
@@ -1111,39 +1025,11 @@ window.loadHubDetailedRequests = async function() {
             snap.forEach(docSnap => {
                 const r = docSnap.data();
                 html += `
-                    <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align:left;">
-                        <div>
-                            <b style="font-size:15px; color:#0f172a; display:block; margin-bottom:4px;"> Mteja: ${r.senderName}</b>
-                            <small style="color:gray; display:block; margin-bottom:5px;">Aina ya Kazi: ${skh.skhEscape(r.itemTitle)}</small>
-                            <span style="font-size:12px; display:block; color:#475569; background:#f1f5f9; padding:8px; border-radius:8px;">Maelezo: ${r.detail1}</span>
-                            <b style="display:block; color:var(--terracotta); font-size:14px; margin-top:8px;">Malipo yaliyotengwa: TZS ${parseFloat(r.detail2 || 0).toLocaleString()}</b>
-                        </div>
-                        <div style="display:flex; flex-direction:column; gap:8px;">
-                            <button onclick="window.acceptHubServiceRequest('${docSnap.id}', '${r.senderName.replace(/'/g, "\\'")}', '${r.itemTitle.replace(/'/g, "\\'")}', ${parseFloat(r.detail2 || 0)}, '${r.senderId}')" style="padding:10px 20px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">Kubali Kazi</button>
-                            <button onclick="window.rejectHubServiceRequest('${docSnap.id}')" style="padding:10px 20px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">Kataa</button>
-                        </div>
-                    </div>`;
+                    <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align:left;"> <div> <b style="font-size:15px; color:#0f172a; display:block; margin-bottom:4px;"> Mteja: ${r.senderName}</b> <small style="color:gray; display:block; margin-bottom:5px;">Aina ya Kazi: ${skh.skhEscape(r.itemTitle)}</small> <span style="font-size:12px; display:block; color:#475569; background:#f1f5f9; padding:8px; border-radius:8px;">Maelezo: ${r.detail1}</span> <b style="display:block; color:var(--terracotta); font-size:14px; margin-top:8px;">Malipo yaliyotengwa: TZS ${parseFloat(r.detail2 || 0).toLocaleString()}</b> </div> <div style="display:flex; flex-direction:column; gap:8px;"> <button onclick="window.skhServiceOffer('${docSnap.id}', '${r.senderId}', '${skh.skhEscape(r.itemTitle)}')" style="padding:10px 20px; background:#fff; color:#1268A8; border:1px solid #1268A8; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">Toa Ofa</button> <button onclick="window.acceptHubServiceRequest('${docSnap.id}', '${r.senderName.replace(/'/g, "\\'")}', '${r.itemTitle.replace(/'/g, "\\'")}', ${parseFloat(r.detail2 || 0)}, '${r.senderId}')" style="padding:10px 20px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">Kubali Kazi</button> <button onclick="window.rejectHubServiceRequest('${docSnap.id}')" style="padding:10px 20px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">Kataa</button> </div> </div>`;
             });
         } else {
-            // MOCKUP FALLBACK (Kama duka bado jipya na halina oda bado ili lisionekane tupu kulingana na picha ya muundo)
-            const mockRequests = [
-                { id: "mock_req_1", senderName: "John Mwangwa", itemTitle: "House Wiring", detail1: "Kufanya wiring mpya ya vyumba 4 vya luku na kuweka taa za bodi.", detail2: "150000", senderId: "mock_user_1" },
-                { id: "mock_req_2", senderName: "Asha Salim", itemTitle: "Repair Switch", detail1: "Kukagua na kurekebisha swichi ya jikoni inayopiga shoti mara kwa mara.", detail2: "80000", senderId: "mock_user_2" },
-                { id: "mock_req_3", senderName: "Peter K.", itemTitle: "Install Lights", detail1: "Kufunga taa za kisasa za pembezoni mwa ukuta wa nje ya uzio (Masaki).", detail2: "120000", senderId: "mock_user_3" }
-            ];
-            html = mockRequests.map(r => `
-                <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); text-align:left; margin-bottom:10px;">
-                    <div>
-                        <b style="font-size:15px; color:#0f172a; display:block; margin-bottom:4px;"> Mteja: ${r.senderName}</b>
-                        <small style="color:gray; display:block; margin-bottom:5px;">Aina ya Kazi: ${skh.skhEscape(r.itemTitle)}</small>
-                        <span style="font-size:12px; display:block; color:#475569; background:#f1f5f9; padding:8px; border-radius:8px; margin-bottom:8px;">Maelezo: ${r.detail1}</span>
-                        <b style="display:block; color:var(--terracotta); font-size:14px;">Gharama: TZS ${(parseFloat(r.detail2) || 0).toLocaleString()}</b>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <button onclick="window.acceptHubServiceRequest('${r.id}', '${r.senderName.replace(/'/g, "\\'")}', '${r.itemTitle.replace(/'/g, "\\'")}', ${r.detail2}, '${r.senderId}')" style="padding:10px 20px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">Kubali Kazi</button>
-                        <button onclick="window.rejectHubServiceRequest('${r.id}')" style="padding:10px 20px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">Kataa</button>
-                    </div>
-                </div>`).join('');
+            // [REAL DATA 2026-09] MOCKS zimeondolewa kabisa — onyesha ukweli:
+            html = `<div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:16px; padding:30px; text-align:center; color:#64748b;"> <p style="margin:0; font-size:14px;"> Bado hakuna ombi jipya la kazi lililotumwa kwako kwa sasa.</p> <small style="color:#94a3b8;">Mteja atakapotuma ombi la huduma kwako, litaonekana hapa sasa hivi.</small> </div>`;
         }
         area.innerHTML = html;
     } catch(e) {
@@ -1152,7 +1038,7 @@ window.loadHubDetailedRequests = async function() {
 };
 
 window.acceptHubServiceRequest = async function(reqId, senderName, title, price, senderId) {
-    if(!confirm(`Je, unathibitisha kukubali mkataba wa ufundi wa "${title}" kutoka kwa ${senderName} kwa TSh ${price.toLocaleString()}?`)) return;
+    if(!await skhConfirm(`Je, unathibitisha kukubali mkataba wa ufundi wa "${title}" kutoka kwa ${senderName} kwa TSh ${price.toLocaleString()}?`)) return;
 
     try {
         // Badilisha status ya request kwanza
@@ -1183,7 +1069,7 @@ window.acceptHubServiceRequest = async function(reqId, senderName, title, price,
 };
 
 window.rejectHubServiceRequest = async function(reqId) {
-    if(!confirm("Je, una uhakika unataka kukataa ombi hili la huduma?")) return;
+    if(!await skhConfirm("Una uhakika unataka kukataa ombi hili la huduma?")) return;
     try {
         if (!reqId.startsWith('mock_')) {
             await skh.updateDoc(skh.doc(skh.db, "requests", reqId), { status: "rejected" });
@@ -1208,41 +1094,11 @@ window.loadHubDetailedActiveTasks = async function() {
             snap.forEach(docSnap => {
                 const od = docSnap.data();
                 html += `
-                    <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; text-align:left;">
-                        <div style="flex:1;">
-                            <span style="font-size:10px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold;">Safarini / In Progress</span>
-                            <b style="font-size:15px; color:#0f172a; display:block; margin-top:8px;"> Kazi: ${skh.skhEscape(od.itemTitle)}</b>
-                            <span style="font-size:12px; display:block; color:gray; margin-top:3px;">Mteja: ${skh.skhEscape(od.buyerName || '')} | Thamani: TZS ${(od.amount != null ? Number(od.amount) : 0).toLocaleString()}</span>
-                            <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:8px;">
-                                <div style="width:60%; height:100%; background:var(--primary-blue);"></div>
-                            </div>
-                        </div>
-                        <div style="margin-left:20px; text-align:right;">
-                            <button onclick="window.completeServiceTaskPro('${docSnap.id}', '${od.buyerId}', '${od.itemTitle.replace(/'/g, "\\'")}')" style="padding:10px 18px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px;">Kamilisha Kazi</button>
-                        </div>
-                    </div>`;
+                    <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; text-align:left;"> <div style="flex:1;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold;">Safarini / In Progress</span> <b style="font-size:15px; color:#0f172a; display:block; margin-top:8px;"> Kazi: ${skh.skhEscape(od.itemTitle)}</b> <span style="font-size:12px; display:block; color:gray; margin-top:3px;">Mteja: ${skh.skhEscape(od.buyerName || '')} | Thamani: TZS ${(od.amount != null ? Number(od.amount) : 0).toLocaleString()}</span> <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:8px;"> <div style="width:60%; height:100%; background:var(--primary-blue);"></div> </div> </div> <div style="margin-left:20px; text-align:right;"> <button onclick="window.completeServiceTaskPro('${docSnap.id}', '${od.buyerId}', '${od.itemTitle.replace(/'/g, "\\'")}')" style="padding:10px 18px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">Kamilisha Kazi</button> </div> </div>`;
             });
         } else {
-            // MOCKUP FALLBACK (Matching Image)
-            const mockTasks = [
-                { id: "mock_t_1", itemTitle: "House Wiring", buyerName: "John Mwangwa", amount: 150000, progress: 60, color: "#1d4ed8", status: "In Progress" },
-                { id: "mock_t_2", itemTitle: "Repair Switch", buyerName: "Asha Salim", amount: 80000, progress: 75, color: "#f59e0b", status: "On Site" },
-                { id: "mock_t_3", itemTitle: "Fix Power Issue", buyerName: "Peter K.", amount: 120000, progress: 30, color: "#6366f1", status: "On Route" }
-            ];
-            html = mockTasks.map(t => `
-                <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; text-align:left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                    <div style="flex:1;">
-                        <span style="font-size:9px; background:#f1f5f9; color:#475569; padding:2px 8px; border-radius:10px; font-weight:bold;">${t.status}</span>
-                        <b style="font-size:15px; color:#0f172a; display:block; margin-top:6px;"> Kazi: ${skh.skhEscape(t.itemTitle)}</b>
-                        <span style="font-size:12px; display:block; color:gray; margin-top:3px;">Mteja: ${skh.skhEscape(t.buyerName || '')} | Thamani: TZS ${(t.amount != null ? Number(t.amount) : 0).toLocaleString()}</span>
-                        <div style="width:100%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-top:8px;">
-                            <div style="width:${t.progress}%; height:100%; background:${t.color};"></div>
-                        </div>
-                    </div>
-                    <div style="margin-left:20px;">
-                        <button onclick="window.completeServiceTaskPro('${t.id}', 'mock_user', '${t.itemTitle.replace(/'/g, "\\'")}')" style="padding:10px 18px; background:var(--green); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px;">Kamilisha Kazi</button>
-                    </div>
-                </div>`).join('');
+            // [REAL DATA 2026-09] Mock tasks zimeondolewa — hali ya kweli.
+            html = `<div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:16px; padding:30px; text-align:center; color:#64748b;"> <p style="margin:0; font-size:14px;">${T('hub_tasks_empty', 'Hakuna kazi inayoendelea kwa sasa.')}</p> </div>`;
         }
         area.innerHTML = html;
     } catch(e) {
@@ -1251,7 +1107,7 @@ window.loadHubDetailedActiveTasks = async function() {
 };
 
 window.completeServiceTaskPro = async function(orderId, buyerId, title) {
-    if(!confirm(`Je, unathibitisha kuwa umekamilisha kazi ya "${title}" na mteja ameridhika?`)) return;
+    if(!await skhConfirm(`Je, unathibitisha kuwa umekamilisha kazi ya "${title}" na mteja ameridhika?`)) return;
 
     try {
         if (!orderId.startsWith('mock_')) {
@@ -1261,8 +1117,11 @@ window.completeServiceTaskPro = async function(orderId, buyerId, title) {
             // Tuma notification kwa mteja kuthibitisha kupokea ukarabati
             await skh.addDoc(skh.collection(skh.db, "notifications"), {
                 userId: buyerId,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha haitegemei mwandishi.
+                event: 'tasks.completed',
+                params: { title: String(title || '') },
                 title: " Kazi Imekamilika!",
-                body: `Mtaalamu ameweka alama kuwa amemaliza kazi ya "${title}". Tafadhali kagua na uthibitishe ili kuachia Escrow.`,
+                body: `Mtaalamu ameweka alama kuwa amemaliza kazi ya "${title}". kagua na uthibitishe ili kuachia Escrow.`,
                 createdAt: new Date().toISOString(),
                 read: false,
                 type: 'order'
@@ -1278,11 +1137,7 @@ window.loadHubDetailedCompletedTasks = async function() {
     if(!area) return;
 
     area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Kazi Zilizokamilika (History)</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Orodha ya kazi zote ulizozifanya na kuzikamilisha salama mtaani kwako [1].</p>
-            <div style="display:flex; flex-direction:column; gap:10px;" id="hubHistoryArea">Inapakia...</div>
-        </div>`;
+        <div style="text-align:left; animation:fadeIn 0.2s ease-out;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Kazi Zilizokamilika (History)</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Orodha ya kazi zote ulizozifanya na kuzikamilisha salama mtaani kwako [1].</p> <div style="display:flex; flex-direction:column; gap:10px;" id="hubHistoryArea">Inapakia...</div> </div>`;
 
     const listDiv = document.getElementById('hubHistoryArea');
     try {
@@ -1294,74 +1149,79 @@ window.loadHubDetailedCompletedTasks = async function() {
             snap.forEach(docSnap => {
                 const od = docSnap.data();
                 html += `
-                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <b> ${skh.skhEscape(od.itemTitle)}</b>
-                            <span style="display:block; font-size:11px; color:gray; margin-top:2px;">Mteja: ${skh.skhEscape(od.buyerName || '')} | Thamani: TZS ${(od.amount != null ? Number(od.amount) : 0).toLocaleString()}</span>
-                        </div>
-                        <span style="font-size:11px; background:#dcfce7; color:#16a34a; padding:4px 10px; border-radius:8px; font-weight:bold;">COMPLETED</span>
-                    </div>`;
+                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;"> <div> <b> ${skh.skhEscape(od.itemTitle)}</b> <span style="display:block; font-size:13px; color:gray; margin-top:2px;">Mteja: ${skh.skhEscape(od.buyerName || '')} | Thamani: TZS ${(od.amount != null ? Number(od.amount) : 0).toLocaleString()}</span> </div> <span style="font-size:13px; background:#dcfce7; color:#16a34a; padding:4px 10px; border-radius:8px; font-weight:bold;">COMPLETED</span> </div>`;
             });
         } else {
-            // MOCKUP HISTORIA (Kama duka jipya)
-            html = `
-                <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; text-align:left; margin-bottom:10px;">
-                    <div>
-                        <b> House Wiring (Vyumba 4)</b>
-                        <span style="display:block; font-size:11px; color:gray; margin-top:2px;">Mteja: John Mwangwa | Thamani: TZS 150,000</span>
-                    </div>
-                    <span style="font-size:11px; background:#dcfce7; color:#16a34a; padding:4px 10px; border-radius:8px; font-weight:bold;">COMPLETED</span>
-                </div>`;
+            // [REAL DATA 2026-09] Mock historia imeondolewa — hali ya kweli ya ukurasa mtupu.
+            html = `<div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:16px; padding:30px; text-align:center; color:#64748b;"> <p style="margin:0; font-size:14px;">${T('hub_history_empty', 'Hakuna kazi zilizokamilika bado — historia itajazwa hapa.')}</p> </div>`;
         }
         listDiv.innerHTML = html;
     } catch(e) { listDiv.innerHTML = `<p style="color:red;">Kosa la mtandao.</p>`; }
 };
 
-window.loadHubDetailedCalendar = function() {
-    const area = document.getElementById('providerWorkspace');
-    if(!area) return;
+/* ================================================================
+   [REAL DATA 2026-09] Paneli za Provider Hub: mockups zimeondolewa.
+   Kila view inasoma data HALISI kutoka Firestore (sellerId/provider
+   = mtumiaji aliyeingia). Statuses zinapitia glossary (skhGloss),
+   fedha/tarehe zinapitia skhFmt. Routes + majina ya functions yamebaki.
+   ================================================================ */
 
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out; display:flex; flex-direction:column; gap:20px;">
-            <div>
-                <h3 style="color:var(--primary-dark); margin:0; text-transform:uppercase;"> Booking Calendar & Schedules</h3>
-                <p style="color:gray; font-size:12px;">Kagua na dhibiti ratiba zako zote za leo na siku zijazo.</p>
-            </div>
-            <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px;">
-                <b style="color:var(--primary-dark); display:block; margin-bottom:15px;">Juni 2025 (Booking Calendar List)</b>
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="border-left:4px solid #10b981; padding:10px; background:#f0fdf4; border-radius:0 8px 8px 0;">
-                        <b>09:00 AM - House Wiring</b><br>
-                        <span style="color:gray; font-size:11px;">Mteja: John Mwangwa | Kimara, DSM • TZS 120,000</span>
-                    </div>
-                    <div style="border-left:4px solid #3b82f6; padding:10px; background:#eff6ff; border-radius:0 8px 8px 0;">
-                        <b>11:00 AM - Repair Switch</b><br>
-                        <span style="color:gray; font-size:11px;">Mteja: Asha Salim | Msasani, DSM • TZS 80,000</span>
-                    </div>
-                    <div style="border-left:4px solid #8b5cf6; padding:10px; background:#f5f3ff; border-radius:0 8px 8px 0;">
-                        <b>02:00 PM - Install Lights</b><br>
-                        <span style="color:gray; font-size:11px;">Mteja: Peter K. | Masaki, DSM • TZS 150,000</span>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+// Helper: oda zangu kama muuzaji/mtoa huduma (bila index maalum).
+async function skhHubMyOrders() {
+    try {
+        var uid = skh.currentUser && skh.currentUser.uid;
+        if (!uid) return [];
+        var qy = skh.query(skh.collection(skh.db, "orders"), skh.where("sellerId", "==", uid), skh.limit(300));
+        var snap = await skh.getDocs(qy);
+        var list = [];
+        snap.forEach(function (d) { list.push(Object.assign({ id: d.id }, d.data())); });
+        return list;
+    } catch (e) { console.warn('[hub-orders]', e && e.message); return []; }
+}
+function skhHubAmt(o) { return Number(o.amount != null ? o.amount : (o.total != null ? o.total : 0)) || 0; }
+function skhHubMoney(n) { try { if (window.skhFmt) return window.skhFmt.money(n, 'TZS'); } catch (e) {} return 'TZS ' + Number(n || 0).toLocaleString(); }
+function skhHubSt(o) {
+    var st = String(o.deliveryStatus || o.status || 'payment_pending');
+    try { if (window.skhGloss) return window.skhGloss(st, 'delivery', st); } catch (e) {}
+    return st;
+}
+var SKH_HELD = ['payment_pending', 'held', 'prepared', 'shipped', 'in_transit', 'paid', 'processing', 'accepted'];
+var SKH_DONE = ['completed', 'confirmed', 'delivered_confirmed'];
+
+window.loadHubDetailedCalendar = async function () {
+    const area = document.getElementById('providerWorkspace');
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var rows = (await skhHubMyOrders())
+        .filter(function (o) { return SKH_HELD.indexOf(String(o.status || '')) !== -1; })
+        .sort(function (a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); })
+        .slice(0, 8);
+    var list = rows.length ? rows.map(function (o, i) {
+        var col = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'][i % 4];
+        var bg = ['#f0fdf4', '#eff6ff', '#f5f3ff', '#fffbeb'][i % 4];
+        var d = ''; try { if (window.skhFmt) d = window.skhFmt.date(o.createdAt); } catch (e) {}
+        return '<div style="border-left:4px solid ' + col + '; padding:10px; background:' + bg + '; border-radius:0 8px 8px 0; text-align:left;">'
+            + '<b>' + skh.skhEscape(o.itemTitle || o.title || ('Oda #' + String(o.orderId || o.id).slice(0, 10))) + '</b><br>'
+            + '<span style="color:gray; font-size:13px;">' + skh.skhEscape(o.buyerName || o.customerName || T('cust_customer', 'Mteja'))
+            + ' • ' + skhHubMoney(skhHubAmt(o)) + ' • <b>' + skh.skhEscape(skhHubSt(o)) + '</b>'
+            + (d ? ' • ' + d : '') + '</span></div>';
+    }).join('') : '<p style="color:#64748b; font-size:13px;">' + T('hub_cal_empty', 'Hakuna oda au booking inayoendelea kwa sasa.') + '</p>';
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out; display:flex; flex-direction:column; gap:20px;">'
+        + '<div><h3 style="color:var(--primary-dark); margin:0; text-transform:uppercase;"> ' + T('hub_cal_title', 'Booking Calendar & Schedules') + '</h3>'
+        + '<p style="color:gray; font-size:12px;">' + T('hub_cal_sub', 'Kagua na dhibiti ratiba zako zote za leo na siku zijazo.') + '</p></div>'
+        + '<div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; display:flex; flex-direction:column; gap:10px;">' + list + '</div></div>';
 };
 
-window.loadHubDetailedMyServices = async function() {
+window.loadHubDetailedMyServices = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
+    if (!area) return;
 
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <div>
-                    <h3 style="color:var(--primary-dark); margin:0; text-transform:uppercase;"> Huduma Zangu (My Services List)</h3>
-                    <p style="color:gray; font-size:12px;">Maelezo ya ujuzi na matoleo yote uliyosajili sokoni hivi sasa.</p>
-                </div>
-                <button onclick="showForm('serviceForm')" style="padding:10px 18px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;"> Ongeza Huduma</button>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:12px;" id="hubServicesListArea">Inapakia...</div>
-        </div>`;
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;">'
+        + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">'
+        + '<div><h3 style="color:var(--primary-dark); margin:0; text-transform:uppercase;"> ' + T('hub_services_title', 'Huduma Zangu (My Services List)') + '</h3>'
+        + '<p style="color:gray; font-size:12px;">' + T('hub_services_sub', 'Maelezo ya ujuzi na matoleo yote uliyosajili sokoni hivi sasa.') + '</p></div>'
+        + '<button onclick="showForm(\'serviceForm\')" style="padding:10px 18px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;"> ' + T('hub_services_add', 'Ongeza Huduma') + '</button></div>'
+        + '<div style="display:flex; flex-direction:column; gap:12px;" id="hubServicesListArea">' + T('common_loading', 'Inapakia...') + '</div></div>';
 
     const listDiv = document.getElementById('hubServicesListArea');
     try {
@@ -1369,188 +1229,227 @@ window.loadHubDetailedMyServices = async function() {
         const snap = await skh.getDocs(q);
         let html = '';
 
-        if(!snap.empty) {
+        if (!snap.empty) {
             snap.forEach(docSnap => {
                 const s = docSnap.data();
+                var priceHtml = (s.price != null && window.skhFmt) ? window.skhFmt.money(s.price) : 'TZS ' + (s.price != null ? Number(s.price) : 0).toLocaleString();
                 html += `
-                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <img src="${s.image}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;">
-                            <div>
-                                <b style="font-size:14px; color:#0f172a; display:block;"> ${s.title}</b>
-                                <span style="font-size:11px; color:gray; display:block;">Kundi: ${s.groupType || s.category} |  ${s.location}</span>
-                            </div>
-                        </div>
-                        <div style="text-align:right;">
-                            <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">TZS ${(s.price != null ? Number(s.price) : 0).toLocaleString()}</b>
-                            <button onclick="window.deleteAd('${docSnap.id}', 'services', '${s.title.replace(/'/g, "\\'")}')" style="padding:4px 10px; background:#fee2e2; color:#ef4444; border:none; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer;">Futa</button>
-                        </div>
-                    </div>`;
+                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${s.image}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;"> ${s.title}</b> <span style="font-size:13px; color:gray; display:block;">Kundi: ${s.groupType || s.category} |  ${s.location}</span> </div> </div> <div style="text-align:right;"> <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">${priceHtml}</b> <button onclick="window.deleteAd('${docSnap.id}', 'services', '${s.title.replace(/'/g, "\\'")}')" style="padding:4px 10px; background:#fee2e2; color:#ef4444; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">Futa</button> </div> </div>`;
             });
         } else {
-            // MOCKUP FALLBACK (Matching Image)
-            html = `
-                <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; text-align:left;">
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <div style="width:45px; height:45px; background:var(--primary-blue); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px;"></div>
-                        <div>
-                            <b style="font-size:14px; color:#0f172a; display:block;"> Ufundi wa Umeme (General Electrician)</b>
-                            <span style="font-size:11px; color:gray; display:block;">Kundi: Construction & Handyman |  Mikocheni, DSM</span>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <b style="display:block; color:var(--terracotta); font-size:14px;">TSh 80,000</b>
-                    </div>
-                </div>`;
+            // [REAL DATA 2026-09] Mockup imeondolewa — hali ya kweli ya ukurasa mtupu.
+            html = '<p style="color:#64748b; font-size:13px; text-align:left;">' + T('empty_services', 'Hakuna huduma')
+                + ' — ' + T('hub_services_empty_hint', 'Bonyeza "Ongeza Huduma" kusajili huduma yako ya kwanza.') + '</p>';
         }
         listDiv.innerHTML = html;
-    } catch(e) { listDiv.innerHTML = `<p style="color:red;">Kosa la mtandao wakati wa kupakia.</p>`; }
+    } catch (e) { listDiv.innerHTML = '<p style="color:red;">' + T('err_network', 'Kosa la mtandao wakati wa kupakia.') + '</p>'; }
 };
 
-window.loadHubDetailedClients = function() {
+window.loadHubDetailedClients = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
-
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Wateja Wako wa Kawaida</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Orodha ya wateja waliowahi kufanya kazi nawe na kutoa tathmini ya juu [1].</p>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:14px; display:flex; gap:12px; align-items:center;">
-                    <div style="width:45px; height:45px; background:var(--primary-blue); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;">JM</div>
-                    <div>
-                        <b style="font-size:14px; display:block;">John Mwangwa</b>
-                        <span style="font-size:11px; color:gray; display:block;"> Simu: 0712345678 | Kazi: House Wiring</span>
-                    </div>
-                </div>
-                <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:14px; display:flex; gap:12px; align-items:center;">
-                    <div style="width:45px; height:45px; background:var(--primary-blue); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;">AS</div>
-                    <div>
-                        <b style="font-size:14px; display:block;">Asha Salim</b>
-                        <span style="font-size:11px; color:gray; display:block;"> Simu: 0612345678 | Kazi: Repair Switch</span>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var byBuyer = {};
+    (await skhHubMyOrders()).forEach(function (o) {
+        var k = o.buyerId || o.buyerName || '';
+        if (!k) return;
+        if (!byBuyer[k]) byBuyer[k] = { name: o.buyerName || T('cust_customer', 'Mteja'), n: 0 };
+        byBuyer[k].n++;
+    });
+    var entries = Object.keys(byBuyer).map(function (k) { return byBuyer[k]; })
+        .sort(function (a, b) { return b.n - a.n; }).slice(0, 20);
+    var cards = entries.length ? entries.map(function (c) {
+        var initials = String(c.name || 'M').trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0] || ''; }).join('').toUpperCase() || 'M';
+        return '<div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:14px; display:flex; gap:12px; align-items:center;">'
+            + '<div style="width:45px; height:45px; background:var(--primary-blue); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:18px;">' + skh.skhEscape(initials) + '</div>'
+            + '<div><b style="font-size:14px; display:block;">' + skh.skhEscape(c.name) + '</b>'
+            + '<span style="font-size:13px; color:gray; display:block;">' + (window.tn ? tn('hub_client_orders', c.n) : ('Oda: ' + c.n)) + '</span></div></div>';
+    }).join('') : '<p style="color:#64748b; font-size:13px;">' + T('hub_clients_empty', 'Bado huna wateja — wataonekana hapa baada ya oda ya kwanza.') + '</p>';
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;"><h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> ' + T('hub_clients_title', 'Wateja Wako') + '</h3>'
+        + '<p style="color:gray; font-size:12px; margin-bottom:20px;">' + T('hub_clients_sub', 'Orodha ya wateja waliofanya kazi nawe.') + '</p>'
+        + '<div style="display:flex; flex-direction:column; gap:10px;">' + cards + '</div></div>';
 };
 
-window.loadHubDetailedContracts = function() {
+window.loadHubDetailedContracts = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
-
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Mikataba na Makubaliano</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Orodha ya mikataba inayohusisha ufundi na uwasilishaji wa vifaa vya kiufundi.</p>
-            <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px;">
-                <div style="border-left:4px solid var(--green); padding-left:12px; margin-bottom:15px;">
-                    <b style="color:var(--primary-dark);">Mkataba wa House Wiring (Ghorofa la Kimara)</b>
-                    <p style="font-size:12px; color:gray; margin:4px 0;">Mteja: John Mwangwa | Thamani: TZS 150,000 | Status: <b style="color:green;">Held in Escrow</b></p>
-                </div>
-            </div>
-        </div>`;
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var rows = (await skhHubMyOrders()).filter(function (o) { return SKH_HELD.indexOf(String(o.status || '')) !== -1; });
+    var list = rows.length ? rows.map(function (o) {
+        return '<div style="border-left:4px solid var(--green); padding-left:12px; margin-bottom:15px; text-align:left;">'
+            + '<b style="color:var(--primary-dark);">' + skh.skhEscape(o.itemTitle || ('Oda #' + String(o.orderId || o.id).slice(0, 10))) + '</b>'
+            + '<p style="font-size:12px; color:gray; margin:4px 0;">' + skh.skhEscape(o.buyerName || T('cust_customer', 'Mteja'))
+            + ' | ' + skhHubMoney(skhHubAmt(o)) + ' | ' + T('hub_status', 'Hali') + ': <b style="color:green;">' + skh.skhEscape(skhHubSt(o)) + '</b></p></div>';
+    }).join('') : '<p style="color:#64748b; font-size:13px;">' + T('hub_contracts_empty', 'Hakuna mkataba unaoendelea kwa sasa.') + '</p>';
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;"><h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> ' + T('hub_contracts_title', 'Mikataba na Makubaliano') + '</h3>'
+        + '<p style="color:gray; font-size:12px; margin-bottom:20px;">' + T('hub_contracts_sub', 'Orodha ya mikataba inayohusisha kazi zako za sasa.') + '</p>'
+        + '<div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px;">' + list + '</div></div>';
 };
 
-window.loadHubDetailedEscrow = function() {
+window.loadHubDetailedEscrow = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
-
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Escrow Summary Ledger</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Ulinzi wa malipo: Hali ya fedha iliyoshikiliwa au iliyoachiwa mwezi huu.</p>
-            <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:8px;">
-                    <span>Held (Kwenye ulinzi sasa):</span><b style="color:orange;">TZS 800,000</b>
-                </div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:8px;">
-                    <span>Released (Zilizolipwa kwako):</span><b style="color:green;">TZS 4,200,000</b>
-                </div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:8px;">
-                    <span>Pending Confirmation (Inasubiri):</span><b style="color:var(--primary-blue);">TZS 600,000</b>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span>Refund Requested (Mteja kadai kurudishiwa):</span><b style="color:red;">TZS 150,000</b>
-                </div>
-            </div>
-        </div>`;
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var agg = { held: 0, released: 0, pending: 0, refund: 0 };
+    (await skhHubMyOrders()).forEach(function (o) {
+        var st = String(o.status || '');
+        var amt = skhHubAmt(o);
+        if (SKH_HELD.indexOf(st) !== -1) agg.held += amt;
+        else if (SKH_DONE.indexOf(st) !== -1) agg.released += amt;
+        else if (st === 'delivered') agg.pending += amt;
+        else if (st === 'disputed') agg.refund += amt;
+    });
+    function row(lbl, val, color) {
+        return '<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:8px; text-align:left;"><span>' + lbl + '</span><b style="color:' + color + ';">' + skhHubMoney(val) + '</b></div>';
+    }
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;"><h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> ' + T('hub_escrow_title', 'Escrow Summary Ledger') + '</h3>'
+        + '<p style="color:gray; font-size:12px; margin-bottom:20px;">' + T('hub_escrow_sub', 'Ulinzi wa malipo: hali halisi ya fedha kwenye oda zako.') + '</p>'
+        + '<div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; display:flex; flex-direction:column; gap:10px;">'
+        + row(T('sp_escrow', 'Held (kwenye ulinzi)') , agg.held, 'orange')
+        + row(T('sp_release', 'Released (zilizolipwa)'), agg.released, 'green')
+        + row(T('st_pay_pending', 'Pending (inasubiri uthibitisho)'), agg.pending, 'var(--primary-blue)')
+        + row(T('status_disputed', 'Refunded/Disputed'), agg.refund, 'red')
+        + '</div></div>';
 };
 
-window.loadHubDetailedEarnings = function() {
+window.loadHubDetailedEarnings = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
-
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Ripoti ya Mapato (Earnings Hub)</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Kagua mapato yako yote mwezi hadi mwezi tangu uanze Sokohai Pro.</p>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-                <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:15px;">
-                    <small style="color:gray; font-weight:bold; text-transform:uppercase;">MAPATO YA LEO</small>
-                    <h3 style="margin:5px 0 0; color:green;">TZS 150,000</h3>
-                </div>
-                <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:15px;">
-                    <small style="color:gray; font-weight:bold; text-transform:uppercase;">MAPATO YA WIKI HII</small>
-                    <h3 style="margin:5px 0 0; color:green;">TZS 750,000</h3>
-                </div>
-                <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:15px;">
-                    <small style="color:gray; font-weight:bold; text-transform:uppercase;">MAPATO YA MWEZI HUU</small>
-                    <h3 style="margin:5px 0 0; color:var(--primary-blue);">TZS 2,500,000</h3>
-                </div>
-                <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:15px;">
-                    <small style="color:gray; font-weight:bold; text-transform:uppercase;">MAPATO YA MWAKA HUU</small>
-                    <h3 style="margin:5px 0 0; color:var(--primary-blue);">TZS 18,600,000</h3>
-                </div>
-            </div>
-        </div>`;
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var now = new Date();
+    var d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var w0 = d0 - 6 * 864e5;
+    var m0 = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    var y0 = new Date(now.getFullYear(), 0, 1).getTime();
+    var agg = { day: 0, week: 0, month: 0, year: 0 };
+    (await skhHubMyOrders()).forEach(function (o) {
+        if (SKH_DONE.indexOf(String(o.status || '')) === -1) return;
+        var ts = Date.parse(o.createdAt || o.completedAt || '') || 0;
+        var amt = skhHubAmt(o);
+        if (!ts) return;
+        if (ts >= d0) agg.day += amt;
+        if (ts >= w0) agg.week += amt;
+        if (ts >= m0) agg.month += amt;
+        if (ts >= y0) agg.year += amt;
+    });
+    function card(lbl, val, color) {
+        return '<div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:15px; text-align:left;"><small style="color:gray; font-weight:bold; text-transform:uppercase;">' + lbl + '</small><h3 style="margin:5px 0 0; color:' + color + ';">' + skhHubMoney(val) + '</h3></div>';
+    }
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;"><h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> ' + T('hub_earn_title', 'Ripoti ya Mapato (Earnings Hub)') + '</h3>'
+        + '<p style="color:gray; font-size:12px; margin-bottom:20px;">' + T('hub_earn_sub', 'Mapato halisi kutoka kwenye oda zilizokamilika.') + '</p>'
+        + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">'
+        + card(T('hub_earn_day', 'MAPATO YA LEO'), agg.day, 'green')
+        + card(T('hub_earn_week', 'MAPATO YA WIKI'), agg.week, 'green')
+        + card(T('hub_earn_month', 'MAPATO YA MWEZI'), agg.month, 'var(--primary-blue)')
+        + card(T('hub_earn_year', 'MAPATO YA MWAKA'), agg.year, 'var(--primary-blue)')
+        + '</div></div>';
 };
 
-window.loadHubDetailedReviews = function() {
+window.loadHubDetailedReviews = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
-
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Reviews & Client Feedbacks</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Soma maoni ya wateja waliokukagua baada ya kukamilisha kazi zao.</p>
-            <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; margin-bottom:15px;">
-                <b style="color:#0f172a; display:block; margin-bottom:10px;">★ Neema Juma (★★★★★)</b>
-                <p style="color:#475569; font-size:13px; line-height:1.4; margin:0;">"Kazi imefanyika vizuri sana, fundi alifika kwa wakati na tatizo la switch lilipatiwa ufumbuzi kabisa. Asante sana!"</p>
-                <small style="color:gray; display:block; margin-top:6px;">Tarehe: 20 Mei, 2025</small>
-            </div>
-        </div>`;
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var reviews = [];
+    try {
+        var uid = skh.currentUser && skh.currentUser.uid;
+        if (uid) {
+            var snap = await skh.getDocs(skh.query(skh.collection(skh.db, "services"), skh.where("userId", "==", uid), skh.limit(100)));
+            snap.forEach(function (d) {
+                var sv = d.data();
+                (sv.comments || []).forEach(function (c) {
+                    if (Number(c.rating || 0) > 0 || c.text) {
+                        reviews.push({ name: c.authorName || c.userName || T('cust_customer', 'Mteja'), text: c.text || '', rating: Number(c.rating || 0), at: c.createdAt || '' });
+                    }
+                });
+            });
+        }
+    } catch (e) { console.warn('[hub-reviews]', e && e.message); }
+    reviews.sort(function (a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
+    var cards = reviews.length ? reviews.slice(0, 10).map(function (r) {
+        var stars = r.rating ? ' ' + '★'.repeat(Math.min(5, r.rating)) : '';
+        var d = ''; try { if (window.skhFmt && r.at) d = window.skhFmt.date(r.at); } catch (e) {}
+        return '<div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px; margin-bottom:15px; text-align:left;">'
+            + '<b style="color:#0f172a; display:block; margin-bottom:10px;">' + skh.skhEscape(r.name) + ' <span style="color:#f59e0b;">' + stars + '</span></b>'
+            + (r.text ? '<p style="color:#475569; font-size:13px; line-height:1.4; margin:0;">"' + skh.skhEscape(r.text) + '"</p>' : '')
+            + (d ? '<small style="color:gray; display:block; margin-top:6px;">' + d + '</small>' : '') + '</div>';
+    }).join('') : '<p style="color:#64748b; font-size:13px;">' + T('hub_reviews_empty', 'Bado huna tathmini — zitaonekana hapa baada ya wateja kukadiria huduma zako.') + '</p>';
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;"><h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> ' + T('hub_reviews_title', 'Reviews & Client Feedbacks') + '</h3>'
+        + '<p style="color:gray; font-size:12px; margin-bottom:20px;">' + T('hub_reviews_sub', 'Maoni halisi ya wateja waliokula huduma zako.') + '</p>' + cards + '</div>';
 };
 
-window.loadHubDetailedDisputes = function() {
+window.loadHubDetailedDisputes = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
-
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Migogoro Inayokusubiri (Disputes)</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Dhibiti au tatua migogoro ili kuachia fedha zako kwenye Escrow [1].</p>
-            <div style="background:#fff5f5; border-left:4px solid red; padding:15px; border-radius:0 12px 12px 0;">
-                <b style="color:red; display:block; margin-bottom:5px;">Deni / Mkataba: Kazi ya Wiring</b>
-                <span style="font-size:12px; color:#475569;">Mteja Peter K. ameweka dai la kutokuridhika na ubora wa taa zilizofungwa uzioni.</span>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button onclick="alert('Ujumbe umetumwa kwa mteja kutatua.')" style="padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:6px; font-size:11px; cursor:pointer;">Wasiliana na Mteja</button>
-                    <button onclick="alert('Mgogoro umerushwa kwa Admin kwa uhakiki.')" style="padding:6px 12px; background:red; color:white; border:none; border-radius:6px; font-size:11px; cursor:pointer;">Omba Msaada wa Admin</button>
-                </div>
-            </div>
-        </div>`;
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var rows = (await skhHubMyOrders()).filter(function (o) { return String(o.status || '') === 'disputed'; });
+    var cards = rows.length ? rows.map(function (o) {
+        var buyer = o.buyerName || T('cust_customer', 'Mteja');
+        var chatBtn = (o.buyerId && typeof window.openChatWithUser === 'function')
+            ? '<button onclick="window.openChatWithUser(\'' + skh.skhJsEsc(String(o.buyerId)) + '\',\'' + skh.skhJsEsc(String(buyer)) + '\')" style="padding:6px 12px; background:var(--primary-blue); color:white; border:none; border-radius:6px; font-size:13px; cursor:pointer;">' + T('hub_dispute_chat', 'Wasiliana na Mteja') + '</button>' : '';
+        return '<div style="background:#fff5f5; border-left:4px solid red; padding:15px; border-radius:0 12px 12px 0; text-align:left;">'
+            + '<b style="color:red; display:block; margin-bottom:5px;">' + skh.skhEscape(o.itemTitle || ('Oda #' + String(o.orderId || o.id).slice(0, 10))) + '</b>'
+            + '<span style="font-size:12px; color:#475569;">' + T('hub_dispute_desc', 'Mgogoro wazi')
+            + ' • ' + skh.skhEscape(buyer) + ' • ' + skhHubMoney(skhHubAmt(o)) + '</span>'
+            + '<div style="display:flex; gap:10px; margin-top:10px; align-items:center;">' + chatBtn
+            + '<small style="color:#64748b;">' + T('hub_dispute_admin_note', 'Oda zenye mgogoro zinaonekana kwa Admin moja kwa moja kwa uhakiki.') + '</small></div></div>';
+    }).join('') : '<p style="color:#64748b; font-size:13px;">' + T('hub_disputes_empty', 'Hakuna mgogoro wazi kwa sasa.') + '</p>';
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;"><h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> ' + T('hub_disputes_title', 'Migogoro Inayokusubiri (Disputes)') + '</h3>'
+        + '<p style="color:gray; font-size:12px; margin-bottom:20px;">' + T('hub_disputes_sub', 'Oda zilizo kwenye mgogoro — wasiliana moja kwa moja kutatua.') + '</p>' + cards + '</div>';
 };
 
-window.loadHubDetailedAnalytics = function() {
+window.loadHubDetailedAnalytics = async function () {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
+    if (!area) return;
+    area.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px;">' + T('common_loading', 'Inapakia...') + '</div>';
+    var now = new Date();
+    var m0 = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    var pm0 = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    var thisM = 0, lastM = 0, buyers = {}, mRev = 0;
+    (await skhHubMyOrders()).forEach(function (o) {
+        var ts = Date.parse(o.createdAt || '') || 0;
+        if (o.buyerId) buyers[o.buyerId] = true;
+        if (ts >= m0) { thisM++; if (SKH_DONE.indexOf(String(o.status || '')) !== -1) mRev += skhHubAmt(o); }
+        else if (ts >= pm0 && ts < m0) lastM++;
+    });
+    var growth = lastM > 0 ? Math.round(((thisM - lastM) / lastM) * 100) : (thisM > 0 ? 100 : 0);
+    var body = (thisM || lastM || Object.keys(buyers).length)
+        ? '<span>' + T('hub_an_orders', 'Oda mwezi huu') + ': <b>' + thisM + '</b> · '
+        + T('hub_an_last', 'Mwezi uliopita') + ': <b>' + lastM + '</b> · '
+        + T('hub_an_trend', 'Mabadiliko') + ': <b style="color:' + (growth >= 0 ? 'green' : 'red') + ';">' + (growth >= 0 ? '+' : '') + growth + '%</b><br><br>'
+        + T('hub_an_clients', 'Wateja wa kipekee') + ': <b>' + Object.keys(buyers).length + '</b> · '
+        + T('hub_an_rev', 'Mapato ya mwezi huu (zilizokamilika)') + ': <b>' + skhHubMoney(mRev) + '</b></span>'
+        : '<span style="color:#64748b;">' + T('hub_an_empty', 'Hakuna data ya kutosha bado — itajazwa kadiri oda zinavyokua.') + '</span>';
+    area.innerHTML = '<div style="text-align:left; animation:fadeIn 0.2s ease-out;"><h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> ' + T('hub_an_title', 'Performance Analytics') + '</h3>'
+        + '<p style="color:gray; font-size:12px; margin-bottom:20px;">' + T('hub_an_sub', 'Takwimu halisi za biashara yako kutoka kwenye oda.') + '</p>'
+        + '<div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px;">' + body + '</div></div>';
+};
 
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-            <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Performance Analytics</h3>
-            <p style="color:gray; font-size:12px; margin-bottom:20px;">Utabiri na uchambuzi kamili wa kukuaji wa biashara yako ya ufundi mtaani.</p>
-            <div style="background:white; border:1px solid #cbd5e1; padding:20px; border-radius:16px;">
-                <b style="color:var(--primary-dark); display:block; margin-bottom:10px;">Kukuaji wa Wateja (Client Growth Index)</b>
-                <span>Duka lako limekuwa kwa asilimia <b>18%</b> zaidi mwezi huu ukilinganisha na mwezi uliopita!</span>
-            </div>
-        </div>`;
+/* [NEGOTIATION 2026-09-15] Mtoa huduma anatoa ofa kwenye ombi (§17, §18).
+   Hapo awali kulikuwa na "Kubali Kazi / Kataa" pekee — hakuna njia ya
+   kujadili bei. Inatumia injini ILIYOPO (skhNegoFormOpen -> 37-negotiation). */
+window.skhServiceOffer = async function (requestId, customerId, title) {
+    if (!requestId) return;
+    if (skh.requireAuth && !skh.requireAuth()) return;
+    var me = (window.skhOwnerId ? window.skhOwnerId() : null)
+             || (skh.currentUser && skh.currentUser.uid);
+    if (customerId && customerId === me) {
+        skhToast('Huwezi kujitolea ofa kwenye ombi lako mwenyewe.', 'info', 3000);
+        return;
+    }
+    if (typeof window.skhNegoFormOpen !== 'function') {
+        skhToast('Fomu ya majadiliano haipatikani kwa sasa.', 'error');
+        return;
+    }
+    window.skhNegoFormOpen({
+        type: 'service',
+        entity: {
+            id: requestId,
+            collection: 'requests',
+            collectionName: 'requests',
+            title: title || 'Huduma',
+            sellerId: me,              // mtoa huduma ndiye anayetoa ofa
+            buyerId: customerId || null,
+            customerId: customerId || null
+        }
+    });
 };

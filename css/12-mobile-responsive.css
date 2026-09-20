@@ -36,13 +36,13 @@ body {
     .usimamizi-btn {
         padding: 6px 9px !important;
         gap: 4px !important;
-        font-size: 8.5px !important;
+        font-size: 12px !important;
         white-space: nowrap !important;
         letter-spacing: 0 !important;
     }
     .usimamizi-btn b {
         display: inline !important;
-        font-size: 8.5px !important;
+        font-size: 12px !important;
         line-height: 1 !important;
     }
     .usimamizi-btn svg { width: 12px !important; height: 12px !important; flex-shrink: 0; }
@@ -55,8 +55,8 @@ body {
 @media (max-width: 360px) {
     .brand-text { font-size: 13px !important; }
     .top-nav-icons { gap: 6px !important; }
-    .usimamizi-btn { padding: 5px 8px !important; font-size: 8px !important; gap: 3px !important; }
-    .usimamizi-btn b { font-size: 8px !important; }
+    .usimamizi-btn { padding: 5px 8px !important; font-size: 12px !important; gap: 3px !important; }
+    .usimamizi-btn b { font-size: 12px !important; }
     .usimamizi-btn svg { width: 11px !important; height: 11px !important; }
     /* Kifungo cha lugha kibane ili neno "Usimamizi" lipate nafasi */
     .lang-toggle { padding: 5px 7px !important; }
@@ -78,12 +78,20 @@ body {
         height: 16px !important;
         margin-bottom: 3px !important;
     }
+    /* [FIX NAV 2026-09-14] Labels zilikuwa zinakatika ("NYUMBANI" -> "NYUMBAN")
+       kwenye simu za 320-360px. Chanzo: UPPERCASE + weight 900 + letter-spacing
+       huongeza upana ~35%. Suluhisho: herufi za kawaida (si CAPS), uzito mdogo
+       na ukubwa unaobadilika kulingana na upana halisi wa skrini. */
     .nav-tab span {
-        font-size: 7.5px !important;
-        letter-spacing: 0.1px;
-        white-space: nowrap !important; /* Labels zibaki mlalo (moja kwa mstari) */
+        font-size: clamp(10px, 2.9vw, 12px) !important;
+        font-weight: 700 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
         overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: clip;
+        max-width: 100%;
     }
     /* Kitufe cha "+" kisifunike kwa vidole */
     .sell-circle-glow {
@@ -154,7 +162,7 @@ body {
     }
     .mode-tab-btn {
         padding: 8px 10px !important;
-        font-size: 10.5px !important;
+        font-size: 12.5px !important;
         white-space: nowrap;
         flex-shrink: 0;
     }
@@ -215,7 +223,8 @@ body {
         padding: 0 10px;
     }
     .feed-info-box b { font-size: 12px !important; }
-    .feed-info-box .price { font-size: 13px !important; }
+    /* [R8 MOBILE CARDS] Bei 16px (readable na kasi): kwaraza ya kujíficha; spec ya kadi inahtaji bei kuonekana */
+    .feed-info-box .price { font-size: 16px !important; }
 }
 @media (max-width: 360px) {
     .feed-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)) !important; }
@@ -227,7 +236,7 @@ body {
     /* Vitufe vya dashboard visibanwe */
     .ct-header-actions { flex-wrap: wrap; gap: 8px !important; }
     .ct-header-actions button {
-        font-size: 11px !important;
+        font-size: 13px !important;
         padding: 9px 14px !important;
     }
 }
@@ -240,10 +249,27 @@ body {
     }
 }
 
-/* ---------- 13) Epuka overflow ya maandishi kwenye vitufe ---------- */
+/* ---------- 13) Epuka maandishi kusimama wima kwenye vitufe na chips ---------- */
 @media (max-width: 480px) {
     button, a, .menu-item b, .menu-item-new span {
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
+        word-break: normal;
+        writing-mode: horizontal-tb !important;
+        text-orientation: mixed !important;
+    }
+    .ch-head-menu button,
+    .mode-tab-btn,
+    .ch-tab,
+    .dc88-tab,
+    .skh-de-feed-tab,
+    .skh-de-chip,
+    .skh-k-chip,
+    .usimamizi-btn,
+    .nav-tab span {
+        white-space: nowrap !important;
+        writing-mode: horizontal-tb !important;
+        text-orientation: mixed !important;
+        flex-shrink: 0;
     }
 }
 
@@ -255,14 +281,14 @@ body {
         flex-wrap: wrap;
     }
     #locationFilterBar #userLocationStatus {
-        font-size: 10px !important;
+        font-size: 12.5px !important;
         max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     #regionFilterSelect {
         max-width: 140px !important;
-        font-size: 10.5px !important;
+        font-size: 12.5px !important;
         padding: 6px 8px !important;
     }
 }
@@ -330,7 +356,7 @@ body {
         align-items: center;
     }
     .ct-sidebar-group-title {
-        font-size: 10.5px !important;
+        font-size: 12.5px !important;
         letter-spacing: 1px !important;
         margin-top: 18px !important;
         margin-bottom: 6px !important;
@@ -472,7 +498,7 @@ body {
     justify-content: space-between;
     padding: 9px 12px;
     margin-top: 8px;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 950;
     color: #64748b;
     text-transform: uppercase;

@@ -1,12 +1,12 @@
 /* ==== js/app/37-negotiation.js ====
    SOKOHAI — GLOBAL NEGOTIATION & COMMERCE CHAT AUTOMATION ENGINE (2026-09)
    -------------------------------------------------------------------------
-   INJINI MOJA YA UJUMBA ya majadiliano ya biashara (offer → counter →
-   agreement → quantity change → re-negotiation → order → SokoPay → delivery).
+   INJINI MOJA YA UJUMBA ya majadiliano ya biashara (offer -> counter ->
+   agreement -> quantity change -> re-negotiation -> order -> SokoPay -> delivery).
 
    Kanuni kuu (spec §1, §46):
-     STATE → valid actions → BUTTON → command → backend validation →
-     state transition → event → UI update.
+     STATE -> valid actions -> BUTTON -> command -> backend validation ->
+     state transition -> event -> UI update.
 
    Faili hii ina LOGIC TUPU (state machine + resolver + lugha ya icons +
    kutambua nia kwa lugha asilia) — HAKUNA uandikaji wa Firestore wala
@@ -19,8 +19,7 @@
    ============================================================ */
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     /* ============================================================
      * 1) DOMAIN MODEL (spec §3)
@@ -259,7 +258,7 @@ import { skh } from './00-bootstrap.js';
     const LABELS = {
         SEND_OFFER: 'Tuma Ofa',
         ACCEPT_OFFER: 'Kubali',
-        COUNTER_OFFER: 'Counter',
+        COUNTER_OFFER: 'Toa Ofa Mpya',
         REJECT_OFFER: 'Kataa',
         REQUEST_QUANTITY_CHANGE: 'Ongeza Kiasi',
         ACCEPT_QUANTITY_CHANGE: 'Kubali',
@@ -299,7 +298,7 @@ import { skh } from './00-bootstrap.js';
     const STATE_LABELS = {
         DRAFT: 'Draft',
         OFFER_SENT: 'Ofa Imetumwa',
-        COUNTER_OFFER: 'Counter Ofa',
+        COUNTER_OFFER: 'Toa Ofa Mpya',
         AGREEMENT: 'Makubaliano',
         CHANGE_REQUESTED: 'Ombi la Mabadiliko',
         SCOPE_CHANGE_REQUESTED: 'Ombi la Kubadilisha Scope',
@@ -638,7 +637,7 @@ import { skh } from './00-bootstrap.js';
             const v = terms[f.k];
             if (v == null || v === '' || (f.money && !(Number(v) > 0))) return;
             let s;
-            if (f.k === 'route' && v && (v.from || v.to)) s = (v.from || '?') + ' → ' + (v.to || '?');
+            if (f.k === 'route' && v && (v.from || v.to)) s = (v.from || '?') + ' -> ' + (v.to || '?');
             else if (f.money) s = 'TSh ' + Number(v).toLocaleString();
             else s = String(v);
             if (s) parts.push({ label: f.label, value: s, suffix: f.suffix || '' });
@@ -668,7 +667,7 @@ import { skh } from './00-bootstrap.js';
     }
 
     /* [DIALOGUE §17] Mabadiliko YANAYOOMBWA (bado hayajakubaliwa) — huonyeshwa
-     * kando ya terms za sasa: kiasi cha sasa → kilichoombwa, scope/njia mpya.
+     * kando ya terms za sasa: kiasi cha sasa -> kilichoombwa, scope/njia mpya.
      * Haya ni MAOMBI yanayosubiri jibu la upande mwingine (CHANGE_REQUESTED /
      * SCOPE_CHANGE_REQUESTED / ROUTE_CHANGE_REQUESTED). */
     function pendingChangeHtml(nego) {
@@ -678,7 +677,7 @@ import { skh } from './00-bootstrap.js';
             const cur = nego.quantity || 1;
             const pq = Number(nego.pendingQuantity);
             if (pq !== Number(cur)) {
-                lines.push('Ombi la kiasi: <b>' + escHtml(String(cur)) + ' → ' + escHtml(String(pq)) + '</b> pc');
+                lines.push('Ombi la kiasi: <b>' + escHtml(String(cur)) + ' -> ' + escHtml(String(pq)) + '</b> pc');
             }
         }
         if (nego.pendingScope != null && nego.pendingScope !== '') {
@@ -690,7 +689,7 @@ import { skh } from './00-bootstrap.js';
         }
         if (nego.pendingRoute && (nego.pendingRoute.from || nego.pendingRoute.to)) {
             const r = nego.pendingRoute;
-            lines.push('Njia mpya iliyoombwa: <b>' + escHtml(r.from || '?') + ' → ' + escHtml(r.to || '?') + '</b>');
+            lines.push('Njia mpya iliyoombwa: <b>' + escHtml(r.from || '?') + ' -> ' + escHtml(r.to || '?') + '</b>');
         }
         return lines;
     }
@@ -717,7 +716,7 @@ import { skh } from './00-bootstrap.js';
             const attr = String(fn).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
             const label = escHtml(a.label);
             // [REMBA 2026-09] Madarasa yenye maana + ikoni za SVG (hakuna emoji).
-            // window.skhNavIcon haipo katika majaribio ya Node → ikoni huachwa.
+            // window.skhNavIcon haipo katika majaribio ya Node -> ikoni huachwa.
             var cls = 'ch-nego-btn' + (a.primary ? ' primary' : '');
             var icName = '';
             if (/^ACCEPT/.test(a.command)) { cls += ' accept'; icName = 'check'; }
@@ -739,20 +738,20 @@ import { skh } from './00-bootstrap.js';
         if (!h.length) return '';
         const items = h.slice(-6).map(function (e) {
             const t = {
-                offer_sent: '' + (e.price || 0).toLocaleString() + ' — ' + (e.actorRole === 'buyer' ? 'Mnunuzi' : 'Muuzaji'),
+                offer_sent: '' + (e.price || 0).toLocaleString() + ' — ' + (e.actorRole === 'buyer' ? tloc('role_buyer', 'Mnunuzi') : tloc('role_seller', 'Muuzaji')),
                 // [REMBA] ikoni ya SVG (Node tests hazina window.skhNavIcon).
                 counter: (typeof window !== 'undefined' && window.skhNavIcon ? window.skhNavIcon('refresh', 12) + ' ' : '') + (e.price || 0).toLocaleString() + ' — counter',
-                accepted: '' + (e.price || 0).toLocaleString() + ' — Imekubaliwa',
-                rejected: 'Imekataliwa',
-                quantity_change: 'Kiasi: ' + (e.previousQuantity || 0) + ' → ' + (e.newQuantity || 0),
-                agreement: 'Makubaliano v' + (e.agreementVersion || 1),
-                order_created: 'Oda #' + (e.orderId || ''),
-                cancelled: 'Imefutwa',
-                expired: 'Imeisha muda'
+                accepted: '' + (e.price || 0).toLocaleString() + ' — ' + tloc('st_off_accepted', 'Imekubaliwa'),
+                rejected: tloc('st_off_rejected', 'Imekataliwa'),
+                quantity_change: tloc('hist_qty', 'Kiasi') + ': ' + (e.previousQuantity || 0) + ' -> ' + (e.newQuantity || 0),
+                agreement: tloc('hist_agreement', 'Makubaliano') + ' v' + (e.agreementVersion || 1),
+                order_created: tloc('hist_order', 'Oda #') + (e.orderId || ''),
+                cancelled: tloc('hist_cancelled', 'Imefutwa'),
+                expired: tloc('hist_expired', 'Imeisha muda')
             };
             return '<div class="ch-nego-hist-line">' + (t[e.kind] || e.kind || '—') + '</div>';
         });
-        return '<details class="ch-nego-hist"><summary>Historia ya Majadiliano</summary>' + items.join('') + '</details>';
+        return '<details class="ch-nego-hist"><summary>' + tloc('hist_title', 'Historia ya Majadiliano') + '</summary>' + items.join('') + '</details>';
     }
 
     /* ============================================================
@@ -819,7 +818,7 @@ import { skh } from './00-bootstrap.js';
 
     function detectProductIntent(text, ctx) {
         if (!text) return null;
-        // [NEGO 2026-09] Ondoa separators za maelfu ("65,000" → "65000") KABLA
+        // [NEGO 2026-09] Ondoa separators za maelfu ("65,000" -> "65000") KABLA
         // ya kuondoa alama, vinginevyo namba hugawanyika ("65 000") na bei hupotea.
         let s = String(text).toLowerCase();
         s = s.replace(/(\d)[,.](?=\d{3}\b)/g, '$1');
@@ -916,19 +915,27 @@ import { skh } from './00-bootstrap.js';
         return productTrackerHtml(order);
     }
 
+
+    // [DEEP L10N 2026-09] — Node tests hazina window.t; tumia helper salama.
+    function tloc(key, fallback) {
+        try { if (typeof window !== 'undefined' && typeof window.t === 'function') {
+            var v = window.t(key); if (v && v !== key) return v;
+        } } catch (eT) {}
+        return fallback;
+    }
     function productTrackerHtml(order) {
         const stage = orderStage(order);
         if (stage === 'payment_pending') {
-            return '<div class="ch-nego-track"><b>Inasubiri Malipo</b> — mnunuzi alipe kupitia SokoPay.</div>';
+            return '<div class="ch-nego-track"><b>' + tloc('st_del_PAYMENT_PENDING', 'Inasubiri Malipo') + '</b> — ' + tloc('trk_payer_buyer', 'mnunuzi alipe kupitia SokoPay.') + '</div>';
         }
         const idx = ORDER_PIPELINE.indexOf(stage);
         const done = idx < 0 ? ORDER_PIPELINE.length : idx + 1;
         const steps = [
-            ['Lipia', 'held'],
-            ['Andaa', 'prepared'],
-            ['Safirisha', 'in_transit'],
-            ['Fikisha', 'delivered'],
-            ['Thibitisha', 'confirmed']
+            [tloc('trk_pay', 'Lipia'), 'held'],
+            [tloc('trk_prepare', 'Andaa'), 'prepared'],
+            [tloc('trk_ship', 'Safirisha'), 'in_transit'],
+            [tloc('trk_deliver', 'Fikisha'), 'delivered'],
+            [tloc('trk_confirm', 'Thibitisha'), 'confirmed']
         ];
         const dots = steps.map(function (st, i) {
             const on = i < done;
@@ -941,15 +948,15 @@ import { skh } from './00-bootstrap.js';
     function serviceTrackerHtml(order) {
         const stage = commerceOrderStage(order);
         if (stage === 'payment_pending') {
-            return '<div class="ch-nego-track"><b>Inasubiri Malipo</b> — mteja alipe kupitia SokoPay.</div>';
+            return '<div class="ch-nego-track"><b>' + tloc('st_del_PAYMENT_PENDING', 'Inasubiri Malipo') + '</b> — ' + tloc('trk_payer_client', 'mteja alipe kupitia SokoPay.') + '</div>';
         }
         const idx = SERVICE_PIPELINE.indexOf(stage);
         const done = idx < 0 ? SERVICE_PIPELINE.length : idx + 1;
         const steps = [
-            ['Lipia', 'held'],
-            ['Kazi', 'service_in_progress'],
-            ['Wasilisha', 'service_submitted'],
-            ['Kamilisha', 'completed']
+            [tloc('trk_pay', 'Lipia'), 'held'],
+            [tloc('trk_work', 'Kazi'), 'service_in_progress'],
+            [tloc('trk_submit', 'Wasilisha'), 'service_submitted'],
+            [tloc('trk_complete', 'Kamilisha'), 'completed']
         ];
         const dots = steps.map(function (st, i) {
             const on = i < done;
@@ -962,16 +969,16 @@ import { skh } from './00-bootstrap.js';
     function transportTrackerHtml(order) {
         const stage = commerceOrderStage(order);
         if (stage === 'payment_pending') {
-            return '<div class="ch-nego-track"><b>Inasubiri Malipo</b> — mteja alipe kupitia SokoPay.</div>';
+            return '<div class="ch-nego-track"><b>' + tloc('st_del_PAYMENT_PENDING', 'Inasubiri Malipo') + '</b> — ' + tloc('trk_payer_client', 'mteja alipe kupitia SokoPay.') + '</div>';
         }
         const idx = TRANSPORT_PIPELINE.indexOf(stage);
         const done = idx < 0 ? TRANSPORT_PIPELINE.length : idx + 1;
         const steps = [
-            ['Booking', 'booking_confirmed'],
-            ['Pickup', 'pickup'],
-            ['Safari', 'in_transit'],
-            ['Handover', 'handover'],
-            ['Thibitisha', 'confirmed']
+            [tloc('trk_booking', 'Booking'), 'booking_confirmed'],
+            [tloc('trk_pickup', 'Pickup'), 'pickup'],
+            [tloc('trk_trip', 'Safari'), 'in_transit'],
+            [tloc('trk_handover', 'Handover'), 'handover'],
+            [tloc('trk_confirm', 'Thibitisha'), 'confirmed']
         ];
         const dots = steps.map(function (st, i) {
             const on = i < done;
@@ -1089,25 +1096,25 @@ import { skh } from './00-bootstrap.js';
 
     // product: deliveryStatus/status (msamiati wa `orders` uliyopo).
     const PRODUCT_ORDER_DEFS = {
-        PREPARE_ORDER:    { from: ['held', 'shipped', 'prepared'], actor: 'seller', stage: 'prepared', status: 'shipped', at: 'preparedAt', notif: { title: 'Oda Imetayarishwa', body: 'Muuzaji ameandaa bidhaa yako na iko tayari kusafirishwa.' } },
-        START_TRANSIT:    { from: ['prepared', 'shipped'], actor: 'seller', stage: 'in_transit', status: 'in_transit', at: 'inTransitAt', notif: { title: 'Bidhaa Yako Iko Njia', body: 'Oda yako imesafirishwa na iko njiani kwako.' } },
-        MARK_DELIVERED:   { from: ['in_transit'], actor: 'seller', stage: 'delivered', status: 'delivered', at: 'deliveredAt', notif: { title: 'Mzigo Umewasilishwa', body: 'Mzigo wako umewasilishwa. Thibitisha kupokea.' } },
-        CONFIRM_RECEIPT:  { from: ['delivered'], actor: 'buyer', stage: 'confirmed', status: 'completed', at: 'completedAt', notif: { title: 'Mnunuzi Amethibitisha Kupokea', body: 'Mnunuzi amethibitisha kupokea mzigo. Asante!' } }
+        PREPARE_ORDER:    { from: ['held', 'shipped', 'prepared'], actor: 'seller', stage: 'prepared', status: 'shipped', at: 'preparedAt', notif: { event: 'nego.orderPrepared', title: 'Oda Imetayarishwa', body: 'Muuzaji ameandaa bidhaa yako na iko tayari kusafirishwa.' } },
+        START_TRANSIT:    { from: ['prepared', 'shipped'], actor: 'seller', stage: 'in_transit', status: 'in_transit', at: 'inTransitAt', notif: { event: 'nego.inTransit', title: 'Bidhaa Yako Iko Njia', body: 'Oda yako imesafirishwa na iko njiani kwako.' } },
+        MARK_DELIVERED:   { from: ['in_transit'], actor: 'seller', stage: 'delivered', status: 'delivered', at: 'deliveredAt', notif: { event: 'nego.delivered', title: 'Mzigo Umewasilishwa', body: 'Mzigo wako umewasilishwa. Thibitisha kupokea.' } },
+        CONFIRM_RECEIPT:  { from: ['delivered'], actor: 'buyer', stage: 'confirmed', status: 'completed', at: 'completedAt', notif: { event: 'nego.receiptConfirmed', title: 'Mnunuzi Amethibitisha Kupokea', body: 'Mnunuzi amethibitisha kupokea mzigo. Asante!' } }
     };
     // service: serviceStatus (status hubaki 'held' hadi kukamilika).
     const SERVICE_ORDER_DEFS = {
-        START_SERVICE:        { from: ['held'], actor: 'seller', stage: 'service_in_progress', status: 'held', at: 'serviceStartedAt', notif: { title: 'Kazi Imeanza', body: 'Mtoa huduma ameanza kazi yako.' } },
-        SUBMIT_WORK:          { from: ['service_in_progress', 'revision_requested'], actor: 'seller', stage: 'service_submitted', status: 'held', at: 'serviceSubmittedAt', notif: { title: 'Kazi Imewasilishwa', body: 'Kazi yako imewasilishwa. Tafadhali kagua na uthibitishe.' } },
-        REQUEST_REVISION:     { from: ['service_submitted'], actor: 'buyer', stage: 'revision_requested', status: 'held', at: 'revisionRequestedAt', notif: { title: 'Marekebisho Yameombwa', body: 'Mteja ameomba marekebisho ya kazi.' } },
-        CONFIRM_COMPLETION:   { from: ['service_submitted'], actor: 'buyer', stage: 'completed', status: 'completed', at: 'completedAt', notif: { title: 'Kazi Imethibitishwa', body: 'Mteja amethibitisha kukamilika kwa kazi. Asante!' } }
+        START_SERVICE:        { from: ['held'], actor: 'seller', stage: 'service_in_progress', status: 'held', at: 'serviceStartedAt', notif: { event: 'nego.serviceStarted', title: 'Kazi Imeanza', body: 'Mtoa huduma ameanza kazi yako.' } },
+        SUBMIT_WORK:          { from: ['service_in_progress', 'revision_requested'], actor: 'seller', stage: 'service_submitted', status: 'held', at: 'serviceSubmittedAt', notif: { event: 'nego.workSubmitted', title: 'Kazi Imewasilishwa', body: 'Kazi yako imewasilishwa. kagua na uthibitishe.' } },
+        REQUEST_REVISION:     { from: ['service_submitted'], actor: 'buyer', stage: 'revision_requested', status: 'held', at: 'revisionRequestedAt', notif: { event: 'nego.revisionRequested', title: 'Marekebisho Yameombwa', body: 'Mteja ameomba marekebisho ya kazi.' } },
+        CONFIRM_COMPLETION:   { from: ['service_submitted'], actor: 'buyer', stage: 'completed', status: 'completed', at: 'completedAt', notif: { event: 'nego.completionConfirmed', title: 'Kazi Imethibitishwa', body: 'Mteja amethibitisha kukamilika kwa kazi. Asante!' } }
     };
-    // transport: transportStatus (booking → pickup → safari → handover).
+    // transport: transportStatus (booking -> pickup -> safari -> handover).
     const TRANSPORT_ORDER_DEFS = {
-        CONFIRM_BOOKING:   { from: ['held'], actor: 'seller', stage: 'booking_confirmed', status: 'held', at: 'bookingConfirmedAt', notif: { title: 'Booking Imethibitishwa', body: 'Booking yako imethibitishwa na mtoa usafiri.' } },
-        START_PICKUP:      { from: ['booking_confirmed'], actor: 'seller', stage: 'pickup', status: 'held', at: 'pickupStartedAt', notif: { title: 'Pickup Imeanza', body: 'Dereva ameelekea kuchukua mzigo.' } },
-        START_TRANSIT:     { from: ['pickup'], actor: 'seller', stage: 'in_transit', status: 'held', at: 'inTransitAt', notif: { title: 'Safari Imeanza', body: 'Mzigo wako uko njiani.' } },
-        CONFIRM_HANDOVER:  { from: ['in_transit'], actor: 'seller', stage: 'handover', status: 'delivered', at: 'handoverAt', notif: { title: 'Mzigo Umekabidhiwa', body: 'Mzigo umekabidhiwa. Thibitisha kupokea.' } },
-        CONFIRM_RECEIPT:   { from: ['handover'], actor: 'buyer', stage: 'confirmed', status: 'completed', at: 'completedAt', notif: { title: 'Umethibitisha Kupokea', body: 'Umethibitisha kupokea mzigo. Asante!' } }
+        CONFIRM_BOOKING:   { from: ['held'], actor: 'seller', stage: 'booking_confirmed', status: 'held', at: 'bookingConfirmedAt', notif: { event: 'nego.bookingConfirmed', title: 'Booking Imethibitishwa', body: 'Booking yako imethibitishwa na mtoa usafiri.' } },
+        START_PICKUP:      { from: ['booking_confirmed'], actor: 'seller', stage: 'pickup', status: 'held', at: 'pickupStartedAt', notif: { event: 'nego.pickupStarted', title: 'Pickup Imeanza', body: 'Dereva ameelekea kuchukua mzigo.' } },
+        START_TRANSIT:     { from: ['pickup'], actor: 'seller', stage: 'in_transit', status: 'held', at: 'inTransitAt', notif: { event: 'nego.transitStarted', title: 'Safari Imeanza', body: 'Mzigo wako uko njiani.' } },
+        CONFIRM_HANDOVER:  { from: ['in_transit'], actor: 'seller', stage: 'handover', status: 'delivered', at: 'handoverAt', notif: { event: 'nego.handoverDone', title: 'Mzigo Umekabidhiwa', body: 'Mzigo umekabidhiwa. Thibitisha kupokea.' } },
+        CONFIRM_RECEIPT:   { from: ['handover'], actor: 'buyer', stage: 'confirmed', status: 'completed', at: 'completedAt', notif: { event: 'nego.receiptConfirmedByYou', title: 'Umethibitisha Kupokea', body: 'Umethibitisha kupokea mzigo. Asante!' } }
     };
     function orderDefsFor(order) {
         const t = (order && order.commerceType) || 'product';
@@ -1162,6 +1169,9 @@ import { skh } from './00-bootstrap.js';
         };
         const notification = def.notif ? {
             to: def.actor === 'buyer' ? order.sellerId : order.buyerId,
+            // [SYSTEM EVENTS 2026-09] event + params — render hutafsiri kwa lugha ya msomaji
+            event: def.notif.event || null,
+            params: { title: String(order.itemTitle || order.productTitle || 'Bidhaa'), detail: String(def.notif.body || '') },
             title: def.notif.title,
             body: (order.itemTitle || order.productTitle || 'Bidhaa') + ' — ' + def.notif.body
         } : null;
@@ -1417,8 +1427,8 @@ import { skh } from './00-bootstrap.js';
         return patch;
     }
 
-    // Mioo ya applyCommand ya server (spec §30–§35): membership → role/turn →
-    // transition → price/quantity/agreements/history → event + notification.
+    // Mioo ya applyCommand ya server (spec §30–§35): membership -> role/turn ->
+    // transition -> price/quantity/agreements/history -> event + notification.
     // `params.orderPaid` / `params.newOrderId` huletwa na caller (34-chat-core).
     function applyCommandLocally(nego, command, params, actorUid, nowIsoStr) {
         nego = nego || {};
@@ -1473,7 +1483,7 @@ import { skh } from './00-bootstrap.js';
             if (params.packageQuantity != null) patch.packageQuantity = String(params.packageQuantity);
             if (params.specialRequirements != null) patch.specialRequirements = String(params.specialRequirements);
             history.push({ kind: 'offer_sent', actorId: uid, actorRole: 'buyer', price: price, quantity: qty, at: nowIsoStr });
-            notification = { to: nego.sellerId, title: 'Ofa Mpya', body: (nego.serviceTitle || nego.transportTitle || nego.productTitle || 'Bidhaa') + ' · TSh ' + price.toLocaleString() };
+            notification = { to: nego.sellerId, event: 'nego.offerReceived', params: { title: (nego.serviceTitle || nego.transportTitle || nego.productTitle || 'Bidhaa'), price: price.toLocaleString() }, title: 'Ofa Mpya', body: (nego.serviceTitle || nego.transportTitle || nego.productTitle || 'Bidhaa') + ' · TSh ' + price.toLocaleString() };
         } else if (command === 'COUNTER_OFFER' || command === 'COUNTER_QUANTITY_CHANGE') {
             const price = Number(params.price);
             const qty = command === 'COUNTER_QUANTITY_CHANGE'
@@ -1496,7 +1506,7 @@ import { skh } from './00-bootstrap.js';
             if (params.packageQuantity != null) patch.packageQuantity = String(params.packageQuantity);
             if (params.specialRequirements != null) patch.specialRequirements = String(params.specialRequirements);
             history.push({ kind: 'counter', actorId: uid, actorRole: myRole, price: price, quantity: qty, at: nowIsoStr });
-            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), title: 'Counter Ofa', body: (nego.serviceTitle || nego.transportTitle || nego.productTitle || 'Bidhaa') + ' · TSh ' + price.toLocaleString() };
+            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), event: 'nego.countered', params: { title: (nego.serviceTitle || nego.transportTitle || nego.productTitle || 'Bidhaa'), price: price.toLocaleString() }, title: 'Counter Ofa', body: (nego.serviceTitle || nego.transportTitle || nego.productTitle || 'Bidhaa') + ' · TSh ' + price.toLocaleString() };
         } else if (command === 'REQUEST_QUANTITY_CHANGE' || command === 'REQUEST_ADDITIONAL_ITEMS') {
             const qty = Math.max(1, parseInt(params.quantity, 10) || 0);
             if (!(qty > 0)) return fail('Kiasi sahihi kinahitajika.', 'invalid-argument');
@@ -1506,11 +1516,11 @@ import { skh } from './00-bootstrap.js';
             }
             patch.pendingQuantity = qty; patch.pendingUnitPrice = nego.currentUnitPrice || 0;
             history.push({ kind: 'quantity_change', actorId: uid, actorRole: 'buyer', previousQuantity: prevQty, newQuantity: qty, at: nowIsoStr });
-            notification = { to: nego.sellerId, title: 'Ombi la Kubadilisha Kiasi', body: (nego.productTitle || 'Bidhaa') + ': ' + prevQty + ' → ' + qty };
+            notification = { to: nego.sellerId, event: 'nego.qtyChangeRequested', params: { title: (nego.productTitle || 'Bidhaa'), from: String(prevQty), to: String(qty) }, title: 'Ombi la Kubadilisha Kiasi', body: (nego.productTitle || 'Bidhaa') + ': ' + prevQty + ' -> ' + qty };
         } else if (command === 'ACCEPT_QUANTITY_CHANGE') {
             const qty = Math.max(1, parseInt(nego.pendingQuantity, 10) || prevQty);
             if (nego.orderId && params.orderPaid) {
-                // [spec §24–§25] Oda ILIYOLIPWA → ADJUSTMENT, rekodi ya awali haibadiliki.
+                // [spec §24–§25] Oda ILIYOLIPWA -> ADJUSTMENT, rekodi ya awali haibadiliki.
                 const additionalQty = Math.max(1, qty - prevQty);
                 const unit = nego.currentUnitPrice || 0;
                 const amount = additionalQty * unit;
@@ -1530,7 +1540,7 @@ import { skh } from './00-bootstrap.js';
                 patch.turn = 'buyer';
                 patch.pendingQuantity = null;
                 history.push({ kind: 'adjustment', actorId: uid, actorRole: 'seller', adjustmentId: adjId, quantity: additionalQty, amount: amount, at: nowIsoStr });
-                notification = { to: nego.buyerId, title: 'Nyongeza Imeidhinishwa', body: (nego.productTitle || 'Bidhaa') + ' +' + additionalQty + ' · TSh ' + amount.toLocaleString() };
+                notification = { to: nego.buyerId, event: 'nego.additionalApproved', params: { title: (nego.productTitle || 'Bidhaa'), qty: String(additionalQty), amount: amount.toLocaleString() }, title: 'Nyongeza Imeidhinishwa', body: (nego.productTitle || 'Bidhaa') + ' +' + additionalQty + ' · TSh ' + amount.toLocaleString() };
             } else {
                 patch.quantity = qty;
                 patch.currentTotal = qty * (nego.currentUnitPrice || 0);
@@ -1539,12 +1549,12 @@ import { skh } from './00-bootstrap.js';
                 agreements = agreements.concat([buildAgreementLocal(Object.assign({}, nego, { quantity: qty }), agreements.length + 1, nowIsoStr)]);
                 patch.agreements = agreements;
                 history.push({ kind: 'agreement', actorId: uid, actorRole: 'seller', agreementVersion: agreements.length, quantity: qty, at: nowIsoStr });
-                notification = { to: nego.buyerId, title: 'Makubaliano ya Mwisho', body: (nego.productTitle || 'Bidhaa') + ' × ' + qty + ' · TSh ' + (qty * (nego.currentUnitPrice || 0)).toLocaleString() };
+                notification = { to: nego.buyerId, event: 'nego.finalAgreement', params: { title: (nego.productTitle || 'Bidhaa'), qty: String(qty), amount: (qty * (nego.currentUnitPrice || 0)).toLocaleString() }, title: 'Makubaliano ya Mwisho', body: (nego.productTitle || 'Bidhaa') + ' × ' + qty + ' · TSh ' + (qty * (nego.currentUnitPrice || 0)).toLocaleString() };
             }
         } else if (command === 'REJECT_QUANTITY_CHANGE') {
             patch.pendingQuantity = null;
             history.push({ kind: 'quantity_rejected', actorId: uid, actorRole: 'seller', at: nowIsoStr });
-            notification = { to: nego.buyerId, title: 'Ombi Limekataliwa', body: 'Muuzaji amekataa mabadiliko ya kiasi.' };
+            notification = { to: nego.buyerId, event: 'nego.qtyRejected', params: {}, title: 'Ombi Limekataliwa', body: 'Muuzaji amekataa mabadiliko ya kiasi.' };
         } else if (command === 'ACCEPT_OFFER') {
             const qty = nego.pendingQuantity ? Math.max(1, parseInt(nego.pendingQuantity, 10) || nego.quantity || 1) : (nego.quantity || 1);
             patch.quantity = qty;
@@ -1555,23 +1565,23 @@ import { skh } from './00-bootstrap.js';
             patch.agreements = agreements;
             const isFinal = def.to === STATES.FINAL_AGREEMENT;
             history.push({ kind: 'accepted', actorId: uid, actorRole: myRole, price: nego.currentUnitPrice, quantity: qty, agreementVersion: agreements.length, at: nowIsoStr });
-            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), title: 'Ofa Imekubaliwa', body: (nego.productTitle || 'Bidhaa') + ' · TSh ' + Number(nego.currentUnitPrice || 0).toLocaleString() + (isFinal ? ' (Makubaliano ya Mwisho)' : '') };
+            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), event: 'nego.offerAccepted', params: { title: (nego.productTitle || 'Bidhaa'), price: Number(nego.currentUnitPrice || 0).toLocaleString(), final: isFinal ? '1' : '0' }, title: 'Ofa Imekubaliwa', body: (nego.productTitle || 'Bidhaa') + ' · TSh ' + Number(nego.currentUnitPrice || 0).toLocaleString() + (isFinal ? ' (Makubaliano ya Mwisho)' : '') };
         } else if (command === 'REJECT_OFFER') {
             if (from === STATES.RE_NEGOTIATION) { patch.currentState = STATES.AGREEMENT; patch.turn = 'buyer'; patch.pendingQuantity = null; }
             history.push({ kind: 'rejected', actorId: uid, actorRole: myRole, at: nowIsoStr });
-            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), title: 'Ofa Imekataliwa', body: 'Ofa imekataliwa.' };
+            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), event: 'nego.offerRejected', params: {}, title: 'Ofa Imekataliwa', body: 'Ofa imekataliwa.' };
         } else if (command === 'REQUEST_PRICE_CHANGE') {
             history.push({ kind: 'price_change_request', actorId: uid, actorRole: 'buyer', at: nowIsoStr });
-            notification = { to: nego.sellerId, title: 'Ombi la Kubadilisha Bei', body: (nego.productTitle || 'Bidhaa') + ' — mnunuzi anataka bei nyingine.' };
+            notification = { to: nego.sellerId, event: 'nego.priceChangeRequested', params: { title: (nego.productTitle || 'Bidhaa') }, title: 'Ombi la Kubadilisha Bei', body: (nego.productTitle || 'Bidhaa') + ' — mnunuzi anataka bei nyingine.' };
         } else if (command === 'CREATE_ORDER' || command === 'CREATE_BOOKING') {
             const orderId = params.newOrderId || ('ord_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8));
             order = { id: orderId, doc: buildOrderDocLocal(nego, orderId, nowIsoStr) };
             patch.orderId = orderId;
             history.push({ kind: 'order_created', actorId: uid, actorRole: 'buyer', orderId: orderId, at: nowIsoStr });
             if (command === 'CREATE_BOOKING') {
-                notification = { to: nego.sellerId, title: 'Booking Imefungwa', body: 'Booking #' + orderId + ' · ' + (nego.transportTitle || 'Usafiri') };
+                notification = { to: nego.sellerId, event: 'nego.bookingCreated', params: { orderId: String(orderId), title: (nego.transportTitle || 'Usafiri') }, title: 'Booking Imefungwa', body: 'Booking #' + orderId + ' · ' + (nego.transportTitle || 'Usafiri') };
             } else {
-                notification = { to: nego.sellerId, title: 'Oda Imefungwa', body: 'Oda #' + orderId + ' · ' + (nego.serviceTitle || nego.productTitle || 'Bidhaa') + ' · TSh ' + ((nego.quantity || 1) * (nego.currentUnitPrice || 0)).toLocaleString() };
+                notification = { to: nego.sellerId, event: 'nego.orderCreatedEv', params: { orderId: String(orderId), title: (nego.serviceTitle || nego.productTitle || 'Bidhaa'), amount: ((nego.quantity || 1) * (nego.currentUnitPrice || 0)).toLocaleString() }, title: 'Oda Imefungwa', body: 'Oda #' + orderId + ' · ' + (nego.serviceTitle || nego.productTitle || 'Bidhaa') + ' · TSh ' + ((nego.quantity || 1) * (nego.currentUnitPrice || 0)).toLocaleString() };
             }
         } else if (command === 'CHANGE_SCOPE') {
             // Mtoa huduma (au mteja) anapendekeza scope/deadline tofauti (spec §8).
@@ -1583,13 +1593,13 @@ import { skh } from './00-bootstrap.js';
             if (params.requirements != null) patch.pendingRequirements = String(params.requirements);
             if (params.price > 0) patch.pendingUnitPrice = Number(params.price);
             history.push({ kind: 'scope_change', actorId: uid, actorRole: myRole, scope: params.scope, deadline: params.deadline, price: params.price, at: nowIsoStr });
-            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), title: 'Ombi la Kubadilisha Scope', body: (nego.serviceTitle || 'Huduma') + (params.scope ? ' · ' + params.scope : '') };
+            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), event: 'nego.scopeChangeRequested', params: { title: (nego.serviceTitle || 'Huduma'), scope: (params.scope || '') }, title: 'Ombi la Kubadilisha Scope', body: (nego.serviceTitle || 'Huduma') + (params.scope ? ' · ' + params.scope : '') };
         } else if (command === 'REQUEST_SCOPE_CHANGE') {
             if (params.scope == null && params.deadline == null) return fail('Scope au deadline inahitajika.', 'invalid-argument');
             if (params.scope != null) patch.pendingScope = String(params.scope);
             if (params.deadline != null) patch.pendingDeadline = String(params.deadline);
             history.push({ kind: 'scope_change', actorId: uid, actorRole: 'buyer', scope: params.scope, deadline: params.deadline, at: nowIsoStr });
-            notification = { to: nego.sellerId, title: 'Ombi la Kubadilisha Scope', body: (nego.serviceTitle || 'Huduma') + (params.scope ? ' · ' + params.scope : '') };
+            notification = { to: nego.sellerId, event: 'nego.scopeChangeRequested', params: { title: (nego.serviceTitle || 'Huduma'), scope: (params.scope || '') }, title: 'Ombi la Kubadilisha Scope', body: (nego.serviceTitle || 'Huduma') + (params.scope ? ' · ' + params.scope : '') };
         } else if (command === 'ACCEPT_SCOPE_CHANGE') {
             if (nego.pendingScope != null) patch.scope = nego.pendingScope;
             if (nego.pendingScopeUnit != null) patch.scopeUnit = nego.pendingScopeUnit;
@@ -1606,11 +1616,11 @@ import { skh } from './00-bootstrap.js';
             }), agreements.length + 1, nowIsoStr)]);
             patch.agreements = agreements;
             history.push({ kind: 'agreement', actorId: uid, actorRole: 'seller', agreementVersion: agreements.length, scope: patch.scope, at: nowIsoStr });
-            notification = { to: nego.buyerId, title: 'Scope Imekubaliwa', body: (nego.serviceTitle || 'Huduma') + ' · Makubaliano ya mwisho' };
+            notification = { to: nego.buyerId, event: 'nego.scopeAccepted', params: { title: (nego.serviceTitle || 'Huduma') }, title: 'Scope Imekubaliwa', body: (nego.serviceTitle || 'Huduma') + ' · Makubaliano ya mwisho' };
         } else if (command === 'REJECT_SCOPE_CHANGE') {
             patch.pendingScope = null; patch.pendingScopeUnit = null; patch.pendingDeadline = null; patch.pendingLocation = null; patch.pendingRequirements = null; patch.pendingUnitPrice = null;
             history.push({ kind: 'scope_rejected', actorId: uid, actorRole: 'seller', at: nowIsoStr });
-            notification = { to: nego.buyerId, title: 'Scope Imekataliwa', body: 'Mtoa huduma amekataa mabadiliko ya scope.' };
+            notification = { to: nego.buyerId, event: 'nego.scopeRejected', params: {}, title: 'Scope Imekataliwa', body: 'Mtoa huduma amekataa mabadiliko ya scope.' };
         } else if (command === 'COUNTER_SCOPE_CHANGE') {
             const price = Number(params.price);
             if (!(price > 0)) return fail('Bei ya counter inahitajika.', 'invalid-argument');
@@ -1621,7 +1631,7 @@ import { skh } from './00-bootstrap.js';
             patch.currentProposedBy = myRole;
             patch.pendingScope = null; patch.pendingScopeUnit = null; patch.pendingDeadline = null; patch.pendingLocation = null; patch.pendingRequirements = null; patch.pendingUnitPrice = null;
             history.push({ kind: 'counter', actorId: uid, actorRole: myRole, price: price, scope: patch.scope, at: nowIsoStr });
-            notification = { to: nego.buyerId, title: 'Counter Scope', body: (nego.serviceTitle || 'Huduma') + ' · TSh ' + price.toLocaleString() };
+            notification = { to: nego.buyerId, event: 'nego.scopeCountered', params: { title: (nego.serviceTitle || 'Huduma'), price: price.toLocaleString() }, title: 'Counter Scope', body: (nego.serviceTitle || 'Huduma') + ' · TSh ' + price.toLocaleString() };
         } else if (command === 'CHANGE_ROUTE' || command === 'REQUEST_ROUTE_CHANGE') {
             // Mtoa usafiri (au mteja) anapendekeza njia/details tofauti (spec §12).
             const route = params.route || {};
@@ -1638,7 +1648,7 @@ import { skh } from './00-bootstrap.js';
             if (params.packageDescription != null) patch.pendingPackageDescription = String(params.packageDescription);
             if (params.price > 0) patch.pendingUnitPrice = Number(params.price);
             history.push({ kind: 'route_change', actorId: uid, actorRole: myRole, route: route, at: nowIsoStr });
-            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), title: 'Ombi la Kubadilisha Njia', body: (nego.transportTitle || 'Usafiri') + (route.from && route.to ? ' · ' + route.from + ' → ' + route.to : '') };
+            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), event: 'nego.routeChangeRequested', params: { title: (nego.transportTitle || 'Usafiri'), route: ((route.from && route.to) ? (route.from + ' -> ' + route.to) : '') }, title: 'Ombi la Kubadilisha Njia', body: (nego.transportTitle || 'Usafiri') + (route.from && route.to ? ' · ' + route.from + ' -> ' + route.to : '') };
         } else if (command === 'ACCEPT_ROUTE_CHANGE') {
             if (nego.pendingRoute) patch.route = nego.pendingRoute;
             if (nego.pendingPickupDate != null) patch.pickupDate = nego.pendingPickupDate;
@@ -1654,11 +1664,11 @@ import { skh } from './00-bootstrap.js';
             }), agreements.length + 1, nowIsoStr)]);
             patch.agreements = agreements;
             history.push({ kind: 'agreement', actorId: uid, actorRole: 'seller', agreementVersion: agreements.length, route: patch.route, at: nowIsoStr });
-            notification = { to: nego.buyerId, title: 'Njia Imekubaliwa', body: (nego.transportTitle || 'Usafiri') + ' · Makubaliano ya mwisho' };
+            notification = { to: nego.buyerId, event: 'nego.routeAccepted', params: { title: (nego.transportTitle || 'Usafiri') }, title: 'Njia Imekubaliwa', body: (nego.transportTitle || 'Usafiri') + ' · Makubaliano ya mwisho' };
         } else if (command === 'REJECT_ROUTE_CHANGE') {
             patch.pendingRoute = null; patch.pendingPickupDate = null; patch.pendingPickupTime = null; patch.pendingVehicleType = null; patch.pendingPackageDescription = null; patch.pendingUnitPrice = null;
             history.push({ kind: 'route_rejected', actorId: uid, actorRole: 'seller', at: nowIsoStr });
-            notification = { to: nego.buyerId, title: 'Njia Imekataliwa', body: 'Mtoa usafiri amekataa mabadiliko ya njia.' };
+            notification = { to: nego.buyerId, event: 'nego.routeRejected', params: {}, title: 'Njia Imekataliwa', body: 'Mtoa usafiri amekataa mabadiliko ya njia.' };
         } else if (command === 'COUNTER_ROUTE_CHANGE') {
             const price = Number(params.price);
             if (!(price > 0)) return fail('Nauli ya counter inahitajika.', 'invalid-argument');
@@ -1671,10 +1681,10 @@ import { skh } from './00-bootstrap.js';
             patch.currentProposedBy = myRole;
             patch.pendingRoute = null; patch.pendingPickupDate = null; patch.pendingPickupTime = null; patch.pendingVehicleType = null; patch.pendingPackageDescription = null; patch.pendingUnitPrice = null;
             history.push({ kind: 'counter', actorId: uid, actorRole: myRole, price: price, route: patch.route, at: nowIsoStr });
-            notification = { to: nego.buyerId, title: 'Counter Njia', body: (nego.transportTitle || 'Usafiri') + ' · TSh ' + price.toLocaleString() };
+            notification = { to: nego.buyerId, event: 'nego.routeCountered', params: { title: (nego.transportTitle || 'Usafiri'), price: price.toLocaleString() }, title: 'Counter Njia', body: (nego.transportTitle || 'Usafiri') + ' · TSh ' + price.toLocaleString() };
         } else if (command === 'CANCEL_NEGOTIATION') {
             history.push({ kind: 'cancelled', actorId: uid, actorRole: myRole, at: nowIsoStr });
-            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), title: 'Majadiliano Yamefutwa', body: 'Majadiliano yamefutwa na ' + myRole + '.' };
+            notification = { to: (myRole === 'seller' ? nego.buyerId : nego.sellerId), event: 'nego.cancelled', params: { role: myRole }, title: 'Majadiliano Yamefutwa', body: 'Majadiliano yamefutwa na ' + myRole + '.' };
         } else if (command === 'EXPIRE_NEGOTIATION') {
             history.push({ kind: 'expired', actorId: 'system', actorRole: 'system', at: nowIsoStr });
         }

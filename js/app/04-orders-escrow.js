@@ -34,37 +34,12 @@ const qRides = skh.query(
                 const canArchive = (status === 'completed' || status === 'refunded_by_admin');
                 const odImg = od.itemImg || '';
                 html += `
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:16px; margin-bottom:15px;">
-                        <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
-                            <img src="${odImg || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:52px; height:52px; border-radius:12px; object-fit:cover; border:1px solid #e2e8f0; background:#f1f5f9; flex-shrink:0;">
-                            <div style="flex:1; min-width:0;">
-                                <b style="color:var(--primary-dark); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"> Bidhaa: ${skh.skhEscape(od.itemTitle)}</b>
-                                <span style="font-size:11px; font-weight:bold; color:var(--terracotta);">TSh ${Number(od.amount || 0).toLocaleString()}</span>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:16px; margin-bottom:15px;"> <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;"> <img src="${odImg || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:52px; height:52px; border-radius:12px; object-fit:cover; border:1px solid #e2e8f0; background:#f1f5f9; flex-shrink:0;"> <div style="flex:1; min-width:0;"> <b style="color:var(--primary-dark); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"> Bidhaa: ${skh.skhEscape(od.itemTitle)}</b> <span style="font-size:13px; font-weight:bold; color:var(--terracotta);">TSh ${Number(od.amount || 0).toLocaleString()}</span>
                                 ${canArchive ? `<button onclick="window.deleteOrderLog('${docSnap.id}')" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;" title="Futa Rekodi"></button>` : ''}
-                            </div>
-                        </div>
-                        <div class="tracker-wrap">
-                            <div class="tracker-line"></div>
-                            <div class="tracker-fill" style="width: ${progressWidth};"></div>
-                            <div class="tracker-steps">
-                                <div class="t-step ${step1Class}"><div class="t-dot"></div><span class="t-label">Seller</span></div>
-                                <div class="t-step ${step2Class}"><div class="t-dot"></div><span class="t-label">Safarini</span></div>
-                                <div class="t-step"><div class="t-dot"></div><span class="t-label">Kituoni</span></div>
-                                <div class="t-step ${step4Class}"><div class="t-dot"></div><span class="t-label">Mteja</span></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-                            <button onclick="window.openOrderTracking('${docSnap.id}')" style="flex:1; min-width:130px; padding:12px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128506; FUATILIA MZIGO</button>
-                            <button onclick="window.openChatWithUser('${skh.skhJsEsc(od.sellerId || '')}', '${skh.skhJsEsc(od.sellerName || 'Muuzaji')}')" style="flex:1; min-width:130px; padding:12px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128172; CHAT NA MUUZAJI</button>
-                        </div>
-                        <div style="margin-top:10px;">
-                            ${status === 'shipped' ? 
-                                `<button onclick="openEscrowModal('${docSnap.id}', '${od.sellerId}', ${od.amount})" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;"> NIMEPOKEA MZIGO</button>` : 
-                                `<p style="font-size:12px; color:#64748b; text-align:center; background:#eee; padding:5px; border-radius:5px;">Hali: <b>${status.toUpperCase()}</b></p>`
+                            </div> </div> <div class="tracker-wrap"> <div class="tracker-line"></div> <div class="tracker-fill" style="width: ${progressWidth};"></div> <div class="tracker-steps"> <div class="t-step ${step1Class}"><div class="t-dot"></div><span class="t-label">Seller</span></div> <div class="t-step ${step2Class}"><div class="t-dot"></div><span class="t-label">Safarini</span></div> <div class="t-step"><div class="t-dot"></div><span class="t-label">Kituoni</span></div> <div class="t-step ${step4Class}"><div class="t-dot"></div><span class="t-label">Mteja</span></div> </div> </div> <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"> <button onclick="window.skhViewOrderProduct('${skh.skhJsEsc(String(od.itemId || ''))}')" style="flex:1; min-width:110px; padding:12px; background:#e0f2fe; color:#03509d; border:none; border-radius:10px; font-weight:bold; cursor:pointer;"> TAZAMA BIDHAA</button> <button onclick="window.openOrderTracking('${docSnap.id}')" style="flex:1; min-width:130px; padding:12px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128506; FUATILIA MZIGO</button> <button onclick="window.openChatWithUser('${skh.skhJsEsc(od.sellerId || '')}', '${skh.skhJsEsc(od.sellerName || 'Muuzaji')}')" style="flex:1; min-width:130px; padding:12px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">CHAT NA MUUZAJI</button> </div> <div style="margin-top:10px;">
+                            ${status === 'shipped' ? `<button onclick="openEscrowModal('${docSnap.id}', '${od.sellerId}', ${od.amount})" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;"> NIMEPOKEA MZIGO</button>` : `<p style="font-size:12px; color:#64748b; text-align:center; background:#eee; padding:5px; border-radius:5px;">Hali: <b>${status.toUpperCase()}</b></p>`
                             }
-                        </div>
-                    </div>
-                `;
+                        </div> </div> `;
             });
         }
 
@@ -86,26 +61,9 @@ const qRides = skh.query(
                 const rideImg = rd.cargoImage || '';
 
     html += `
-                    <div style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:16px; margin-bottom:15px;">
-                        <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
-                            <img src="${rideImg || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:52px; height:52px; border-radius:12px; object-fit:cover; border:1px solid #fcd34d; background:#fff; flex-shrink:0;">
-                            <div style="flex:1; min-width:0;">
-                                <b style="color:var(--primary-dark); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"> Safari: ${skh.skhEscape(rd.cargoName || 'Mzigo')}</b>
-                                <p style="font-size:12px; color:#475569; margin:2px 0;"> ${skh.skhEscape(rd.fromLocation)} ➡ ${skh.skhEscape(rd.toLocation)}</p>
-                                ${isFinished ? `<button onclick="deleteRideOrder('${rDoc.id}')" style="color:red; background:none; border:none; float:right; font-size:11px;"> Futa Kumbukumbu</button>` : ''}
-                            </div>
-                        </div>
-
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <button onclick="window.openRideTracking('${rDoc.id}')" style="flex:1; min-width:130px; padding:12px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128506; FUATILIA LIVE</button>
-                            <button onclick="window.openChatWithUser('${skh.skhJsEsc(rd.driverId || '')}', '${skh.skhJsEsc(rd.driverName || 'Msafirishaji')}')" style="flex:1; min-width:130px; padding:12px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128172; CHAT NA MSAFIRISHAJI</button>
-                        </div>
-
-                        <div style="background:white; padding:12px; border-radius:12px; margin-top:10px; border: 1px dashed #f97316;">
-                            <p style="font-size:11px; color:#9a3412; margin:0;"><b> CODE YAKO YA UTHIBITISHO:</b></p>
-                            <h1 data-custody-token-ride="${rDoc.id}" data-custody-token-kind="transfer" style="text-align:center; color:orange; margin:5px 0;">• • •</h1>
-                            <small style="font-size:9px; display:block; text-align:center;">Mpe namba hii mtu anayepaswa kupokea mzigo huu (Dereva au Mteja wa mwisho).</small>
-                        </div>
+                    <div style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:16px; margin-bottom:15px;"> <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;"> <img src="${rideImg || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:52px; height:52px; border-radius:12px; object-fit:cover; border:1px solid #fcd34d; background:#fff; flex-shrink:0;"> <div style="flex:1; min-width:0;"> <b style="color:var(--primary-dark); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"> Safari: ${skh.skhEscape(rd.cargoName || 'Mzigo')}</b> <p style="font-size:12px; color:#475569; margin:2px 0;"> ${skh.skhEscape(rd.fromLocation)}  ${skh.skhEscape(rd.toLocation)}</p>
+                                ${isFinished ? `<button onclick="deleteRideOrder('${rDoc.id}')" style="color:red; background:none; border:none; float:right; font-size:13px;"> Futa Kumbukumbu</button>` : ''}
+                            </div> </div> <div style="display:flex; gap:8px; flex-wrap:wrap;"> <button onclick="window.openRideTracking('${rDoc.id}')" style="flex:1; min-width:130px; padding:12px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128506; FUATILIA LIVE</button> <button onclick="window.openChatWithUser('${skh.skhJsEsc(rd.driverId || '')}', '${skh.skhJsEsc(rd.driverName || 'Msafirishaji')}')" style="flex:1; min-width:130px; padding:12px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">CHAT NA MSAFIRISHAJI</button> </div> <div style="background:white; padding:12px; border-radius:12px; margin-top:10px; border: 1px dashed #f97316;"> <p style="font-size:13px; color:#9a3412; margin:0;"><b> CODE YAKO YA UTHIBITISHO:</b></p> <h1 data-custody-token-ride="${rDoc.id}" data-custody-token-kind="transfer" style="text-align:center; color:orange; margin:5px 0;">• • •</h1> <small style="font-size:12px; display:block; text-align:center;">Mpe namba hii mtu anayepaswa kupokea mzigo huu (Dereva au Mteja wa mwisho).</small> </div>
                         ${actionArea}
                     </div>`;
             });
@@ -126,26 +84,23 @@ const qRides = skh.query(
     }
 };
 
+// [IDENTITY-FIX BUG-05] #offlineMemberForm imehamishwa — flow ya usajili ni MOJA
+// (skhAssistRegisterView kwenye agent dashboard). Proxy hii inabaki ili kiungo
+// chochote cha zamani kisianguke kimya kimya.
 window.openOfflineRegister = function() {
     closeModals(); // Funga kila kitu kwanza
-    const pm = document.getElementById('plusMenu');
-    const mm = document.getElementById('mainMenu');
-    const fm = document.getElementById('offlineMemberForm');
-    
-    if(pm && fm) {
-        pm.style.display = 'flex'; // Onyesha kioo cheusi cha nyuma
-        if(mm) mm.style.display = 'none'; // Ficha menu ya kuchagua bidhaa
-        fm.style.display = 'block'; // Onyesha fomu yenyewe ya mwanachama
+    if (typeof window.skhOpenMemberRegistration === 'function') {
+        window.skhOpenMemberRegistration();
     }
 };
 
-window.requestWithdrawal = function() {
+window.requestWithdrawal = async function() {
     const kiasi = skh.currentUserData.walletBalance || 0;
     if(kiasi < 5000) {
         alert(" Huwezi kutoa chini ya TSh 5,000. Wallet yako ina TSh " + kiasi.toLocaleString());
         return;
     }
-    const namba = prompt("Andika namba ya simu au namba ya benki ya kupokelea pesa:");
+    const namba = await skhPrompt("Andika namba ya simu au namba ya benki ya kupokelea pesa:");
     if(namba) {
         alert(" Ombi lako la kutoa TSh " + kiasi.toLocaleString() + " limepokelewa. Admin atakutumia muamala kwenye namba " + namba);
         // Hapa unaweza kuongeza kodi ya kutuma notification kwa Admin Firebase
@@ -170,7 +125,7 @@ window.confirmEscrowOrder = async function() {
     if(!aoi) return;
     const oid = aoi.value;
     
-    if(confirm("Je, unathibitisha kukamilisha oda hii? SokoPay itagawanya malipo kwa Muuzaji na Msafirishaji (Smart Split) sasa hivi.")) {
+    if(await skhConfirm("Je, unathibitisha kukamilisha oda hii? SokoPay itagawanya malipo kwa Muuzaji na Msafirishaji (Smart Split) sasa hivi.")) {
         const btn = event.target || document.querySelector('#escrowModal button');
         const originalText = btn ? btn.innerHTML : "Thibitisha";
         if(btn) {
@@ -189,7 +144,7 @@ window.confirmEscrowOrder = async function() {
             // [PHASE 5.2a] NJIA YA SERVER (WALLET_VIA_SERVER=true): escrow release
             // NZIMA inafanyika Cloud Function 'escrowRelease' — smart-split atomic,
             // wallet_ledger (idempotent), adminRevenue, na uhamisho wa hali zote.
-            // Geti likiwa false / server ikikosekana → njia ya client (hapa chini)
+            // Geti likiwa false / server ikikosekana -> njia ya client (hapa chini)
             // inabaki KAMA ILIVYO (tabia ya sasa).
             if (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.WALLET_VIA_SERVER && typeof window.skhEscrowRelease === 'function') {
                 const srv = await window.skhEscrowRelease(oid);
@@ -224,7 +179,7 @@ window.confirmEscrowOrder = async function() {
             }
 
             // 3. PIGA HESABU YA KAMISHENI YA SOKOHAI (5% Platform Fee)
-            // [ADMIN PAYMENTS SWITCH] Ada ya kamisheni imezimwa = FREE → kamisheni 0.
+            // [ADMIN PAYMENTS SWITCH] Ada ya kamisheni imezimwa = FREE -> kamisheni 0.
             const platformFee = skh.paymentGate('commission') ? (totalAmount * 0.05) : 0;
             const sellerEarned = totalAmount - (platformFee + carrierShare);
 
@@ -276,6 +231,9 @@ window.confirmEscrowOrder = async function() {
                 
                 await skh.addDoc(skh.collection(skh.db, "notifications"), {
                     userId: sellerId,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'wallet.saleCompleted',
+                params: { amount: sellerEarned.toLocaleString() },
                     title: " SokoPay: Mauzo Yamekamilika!",
                     body: `Mnunuzi amethibitisha mapokezi. TSh ${sellerEarned.toLocaleString()} imeingizwa kwenye wallet yako salama.`,
                     createdAt: new Date().toISOString(),
@@ -294,6 +252,9 @@ window.confirmEscrowOrder = async function() {
 
                     await skh.addDoc(skh.collection(skh.db, "notifications"), {
                         userId: driverId,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'wallet.transportPaid',
+                params: { amount: carrierShare.toLocaleString() },
                         title: " SokoPay: Malipo ya Usafiri Yamepokelewa!",
                         body: `Mteja amethibitisha kupokea mzigo. TSh ${carrierShare.toLocaleString()} imeingizwa kwenye wallet yako kama nauli.`,
                         createdAt: new Date().toISOString(),
@@ -317,6 +278,9 @@ window.confirmEscrowOrder = async function() {
                     
                     await skh.addDoc(skh.collection(skh.db, "notifications"), {
                         userId: agentQ.docs[0].data().uid,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'wallet.commissionEarned',
+                params: { amount: agentShare.toLocaleString() },
                         title: " SokoPay: Kamisheni Mpya ya Uwakala!",
                         body: `Mteja wako amefanya mauzo. Umepata kiasi cha TSh ${agentShare.toLocaleString()} kwenye wallet yako.`,
                         createdAt: new Date().toISOString(),
@@ -337,7 +301,7 @@ window.confirmEscrowOrder = async function() {
             window.closeModals(); 
             if(window.loadBuyerOrdersWithTracking) window.loadBuyerOrdersWithTracking();
         } catch(e) {
-            // [FUNCTIONS RESILIENCE] escrowRelease haijapelekwa/haipatikani →
+            // [FUNCTIONS RESILIENCE] escrowRelease haijapelekwa/haipatikani ->
             // usionyeshe "INTERNAL"; hakuna pesa iliyotoka.
             var emsg = (window.skhFnErrText && window.skhFnErrText(e, 'escrow')) || (e && e.message) || 'Imeshindwa.';
             alert(" Hitilafu ya kukamilisha: " + emsg);
@@ -355,7 +319,7 @@ window.disputeEscrowOrder = async function() {
         if(!aoi) return;
         const oid = aoi.value;
         
-        const sababu = prompt("Eleza tatizo la mzigo huu kwa ufupi:");
+        const sababu = await skhPrompt("Eleza tatizo la mzigo huu kwa ufupi:");
         if(sababu) {
             await skh.updateDoc(skh.doc(skh.db, "orders", oid), { status: "disputed", disputeReason: sababu });
             alert(" Tumepokea malalamiko yako. Pesa itaendelea kushikiliwa mpaka tatizo litatuliwe na Admin.");
@@ -430,7 +394,7 @@ skh.onAuthStateChanged(skh.auth, async (user) => {
     }
 
     // [ODA RELATIONAL 2026-09] Mnunuzi akiingia, anzisha mlisho wa ofa zake
-    // zilizokubaliwa → bei iliyokubaliwa iingie kwenye Smart Cart moja kwa moja.
+    // zilizokubaliwa -> bei iliyokubaliwa iingie kwenye Smart Cart moja kwa moja.
     if (user && typeof window.skhOfferCartSync === 'function') {
         try { window.skhOfferCartSync(user.uid); } catch (e) { /* ignore */ }
     }
@@ -449,3 +413,42 @@ skh.onAuthStateChanged(skh.auth, async (user) => {
         if (nb) nb.style.display = 'none';
     }
 });
+
+/* [§19-§20 R8 VIEW PRODUCT] "Tazama Bidhaa" ya oda — RESOLVES correctly
+ * (productId → Product Details), eller FAIL-GRACEFULLY when item imesitishwa
+ * / archived — NO broken route au silent-do-nothing. */
+window.skhViewOrderProduct = async function (itemId) {
+    if (!itemId) {
+        if (typeof skhToast === 'function') skhToast('Oda hii haina rejea ya bidhaa (rekodi ya zamani).', 'warning');
+        return;
+    }
+    try {
+        const cols = ['products', 'services', 'drivers'];
+        let archivedFound = false;
+        for (let i = 0; i < cols.length; i++) {
+            try {
+                const snap = await skh.getDoc(skh.doc(skh.db, cols[i], itemId));
+                if (snap && snap.exists && snap.exists()) {
+                    const d = snap.data() || {};
+                    const st = String(d.status || '').toLowerCase();
+                    // [R8 §20 GRACEFUL ARCHIVED 2026-09] Bidhaa/venini imeasisha au
+                    // imefutwa — SI broken-route! Show graceful unavailable state,
+                    // na hakika hakuna kufungua zililaoma zilizo-uzile kutoka matumizi.
+                    if (st === 'archived' || st === 'deleted' || st === 'removed') { archivedFound = true; continue; }
+                    if (typeof window.openProduct === 'function') {
+                        window.openProduct(itemId, cols[i]);
+                        return;
+                    }
+                }
+            } catch (e) { /* kifaa-haossi endelea */ }
+        }
+        if (archivedFound && typeof skhToast === 'function') {
+            skhToast('Bidhaa hii imepunguzwa/live haipo tena sokoni kwa sasa.', 'warning');
+            return;
+        }
+        if (typeof skhToast === 'function') skhToast('Bidhaa hii haipatikani tena — inaweza kuwa imeachisha (au imefutwa na muuzaji wake).', 'warning');
+        else alert('Bidhaa hii haipatikani tena.');
+    } catch (e) {
+        if (typeof skhToast === 'function') skhToast('Imeshindikana kufungua bidhaa: ' + (e && e.message), 'error');
+    }
+};

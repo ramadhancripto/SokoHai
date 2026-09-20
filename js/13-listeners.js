@@ -8,8 +8,7 @@
 //   - skhCancelAllListeners() inafunga zote (logout/mode-switch)
 // Classic script — inapakia KABLA ya app.module.js (module).
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
     var registry = {};   // tag -> unsubscribe fn
     window.SOKOHAI_LISTENERS = registry;
 

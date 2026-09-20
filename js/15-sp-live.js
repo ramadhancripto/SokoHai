@@ -11,8 +11,7 @@
 // Ukaguzi: hakuna mabadiliko ya module — Firestore inasajiliwa na
 // app.module.js kupitia skhSpLiveRegisterFirestore (mfumo wa 14-sync).
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var fb = null; // {db, collection, query, where, orderBy, limit, getDocs}
     window.skhSpLiveRegisterFirestore = function (fns) { fb = fns; };
@@ -36,31 +35,19 @@
     function emptyState(box, icon, title, sub, ctaLabel, ctaFn) {
         var el = document.getElementById(box);
         if (!el) return;
-        el.innerHTML =
-            '<div style="text-align:center;padding:28px 10px;color:#64748b;">' +
-            '<div style="font-size:34px;">' + icon + '</div>' +
-            '<b style="display:block;margin-top:8px;color:#0f172a;">' + esc(title) + '</b>' +
-            '<small style="display:block;margin-top:4px;">' + esc(sub) + '</small>' +
-            (ctaLabel ? '<button onclick="' + ctaFn + '" style="margin-top:14px;padding:11px 18px;background:#00509d;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">' + esc(ctaLabel) + '</button>' : '') +
-            '</div>';
+        el.innerHTML = '<div style="text-align:center;padding:28px 10px;color:#64748b;">' + '<div style="font-size:34px;">' + icon + '</div>' + '<b style="display:block;margin-top:8px;color:#0f172a;">' + esc(title) + '</b>' + '<small style="display:block;margin-top:4px;">' + esc(sub) + '</small>' +
+            (ctaLabel ? '<button onclick="' + ctaFn + '" style="margin-top:14px;padding:11px 18px;background:#00509d;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">' + esc(ctaLabel) + '</button>' : '') + '</div>';
     }
 
     function rowCard(icon, title, sub, amount, status, extra) {
-        return '<div style="background:#f8fafc;border:1px solid #e2e8f0;padding:13px 15px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;">' +
-            '<div style="min-width:0;">' +
-            '<b style="font-size:13px;color:#0f172a;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + icon + ' ' + esc(title) + '</b>' +
-            '<small style="color:#64748b;display:block;margin-top:2px;">' + sub + '</small>' +
-            (extra || '') +
-            '</div>' +
-            '<div style="text-align:right;flex-shrink:0;">' +
+        return '<div style="background:#f8fafc;border:1px solid #e2e8f0;padding:13px 15px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;">' + '<div style="min-width:0;">' + '<b style="font-size:13px;color:#0f172a;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + icon + ' ' + esc(title) + '</b>' + '<small style="color:#64748b;display:block;margin-top:2px;">' + sub + '</small>' +
+            (extra || '') + '</div>' + '<div style="text-align:right;flex-shrink:0;">' +
             (amount != null ? '<b style="font-size:13px;color:#00509d;display:block;">' + money(amount) + '</b>' : '') +
-            (status ? '<span class="spbuyer-pill ' + pill(status) + '" style="font-size:9px;">' + esc(String(status).toUpperCase()) + '</span>' : '') +
-            '</div></div>';
+            (status ? '<span class="spbuyer-pill ' + pill(status) + '" style="font-size:12px;">' + esc(String(status).toUpperCase()) + '</span>' : '') + '</div></div>';
     }
 
     function listWrap(header, rows, note) {
-        return '<b style="font-size:13px;color:#0f172a;text-transform:uppercase;margin-bottom:12px;display:block;text-align:left;">' + header + '</b>' +
-            '<div style="display:flex;flex-direction:column;gap:10px;">' + rows.join('') + '</div>' +
+        return '<b style="font-size:13px;color:#0f172a;text-transform:uppercase;margin-bottom:12px;display:block;text-align:left;">' + header + '</b>' + '<div style="display:flex;flex-direction:column;gap:10px;">' + rows.join('') + '</div>' +
             (note ? '<small style="display:block;margin-top:12px;color:#94a3b8;text-align:left;">' + note + '</small>' : '');
     }
 
@@ -185,7 +172,7 @@
             }
             var rows = list.slice(0, 20).map(function (r) {
                 var code = r.transferCode ? '<small style="display:block;margin-top:4px;color:#9a3412;"> Code: <b>' + esc(r.transferCode) + '</b></small>' : '';
-                return rowCard('', 'Safari: ' + (r.cargoName || 'Mzigo'), esc(r.fromLocation || '?') + ' ➡ ' + esc(r.toLocation || '?') + ' • ' + when(r.createdAt), parseFloat(r.price) || null, r.status, code);
+                return rowCard('', 'Safari: ' + (r.cargoName || 'Mzigo'), esc(r.fromLocation || '?') + ' ' + esc(r.toLocation || '?') + ' • ' + when(r.createdAt), parseFloat(r.price) || null, r.status, code);
             });
             var html = listWrap(' Safari Zangu (' + list.length + ')', rows);
             html += '<div style="height:10px;"></div><button onclick="window.openBuyerOrdersModal && window.openBuyerOrdersModal()" style="width:100%;padding:12px;background:#001122;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer;"> Fungua Ufuatiliaji Kamili (Tracker)</button>';

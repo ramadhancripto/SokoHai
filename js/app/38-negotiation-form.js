@@ -2,12 +2,12 @@
    SOKOHAI — DYNAMIC NEGOTIATION FORM (Module 01 · UI)
    ----------------------------------------------------------------
    FOMU MOJA inayojua muktadha wa biashara (PRODUCT | SERVICE |
-   TRANSPORT) na kuandaa PROPOSAL iliyopangiliwa kwa ajili ya Ofa
+   TRANSPORT) na kuandaa PROPOSAL iliyopangiliwa kwa Ofa
    ya kwanza (OFFER_SENT). Haiundi oda/malipo/usafirishaji.
 
    Inatumia:
-   - 38-nego-form-logic.js  → config/validation/totals/proposal (logic tupu)
-   - 34-chat-core.js        → window.skhChatSubmitNegotiationProposal()
+   - 38-nego-form-logic.js  -> config/validation/totals/proposal (logic tupu)
+   - 34-chat-core.js        -> window.skhChatSubmitNegotiationProposal()
                               (ndiyo njia ILIYOPO ya kutuma ofa)
    - design tokens za SokoHai (css/17-negotiation-form.css)
    ================================================================ */
@@ -17,8 +17,7 @@ import {
     buildProposal, summaryLines, computeTotals, nfFmtMoney, nfTodayISO
 } from './38-nego-form-logic.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     function esc(s) { return skh.skhEscape(s == null ? '' : String(s)); }
     function myUid() { return (skh.currentUser && skh.currentUser.uid) || null; }
@@ -233,7 +232,10 @@ import {
                     sellerId: d.userId || d.providerId || entity.sellerId,
                     sellerName: d.ownerName || entity.sellerName || '',
                     description: d.description || '', location: d.location || '',
-                    category: d.category || '', scope: entity.scope || d.description || ''
+                    category: d.category || '', scope: entity.scope || d.description || '',
+                    // [NEGO LOCK §21/§22] Provider Settings: mtoa huduma anaweza kuzima
+                    // negotiation kwa huduma maalum. Default ON kwa matangazo ya zamani.
+                    negotiationAllowed: d.negotiationAllowed === false ? false : true
                 };
             }
             if (coll === 'drivers') {
@@ -255,7 +257,9 @@ import {
                     weight: d.maxWeight != null ? Number(d.maxWeight) : (entity.weight != null ? entity.weight : null),
                     image: d.image || entity.image || '',
                     sellerId: d.userId || d.sellerId || entity.sellerId || entity.userId || null,
-                    sellerName: d.driverName || d.ownerName || d.company || entity.sellerName || entity.ownerName || ''
+                    sellerName: d.driverName || d.ownerName || d.company || entity.sellerName || entity.ownerName || '',
+                    // [NEGO LOCK §21/§22] Transporter Settings.
+                    negotiationAllowed: d.negotiationAllowed === false ? false : true
                 });
             }
             // ride_requests (ombi la usafiri/mzigo)
@@ -295,8 +299,8 @@ import {
         return '<div class="nf-shell" id="nfShell" role="dialog" aria-modal="true" aria-labelledby="nfTitle">'
             + '<div class="nf-sheet">'
             + '<div class="nf-head">'
-            +   '<div class="nf-head-t"><span class="nf-head-ico">' + nfIco(meta.icon, 20) + '</span><div><h2 id="nfTitle">' + esc(meta.title) + '</h2><span class="nf-head-sub">SokoHai · Majadiliano salama</span></div></div>'
-            +   '<button type="button" class="nf-x" id="nfCloseBtn" aria-label="Funga">' + nfIco('x', 18) + '</button>'
+            + '<div class="nf-head-t"><span class="nf-head-ico">' + nfIco(meta.icon, 20) + '</span><div><h2 id="nfTitle">' + esc(meta.title) + '</h2><span class="nf-head-sub">SokoHai · Majadiliano salama</span></div></div>'
+            + '<button type="button" class="nf-x" id="nfCloseBtn" aria-label="Funga">' + nfIco('x', 18) + '</button>'
             + '</div>'
             + '<div class="nf-body" id="nfBody"></div>'
             + '<div class="nf-foot" id="nfFoot" style="display:none;"></div>'
@@ -306,7 +310,7 @@ import {
     function loadingHtml(meta) {
         return '<div class="nf-state"><div class="nf-spinner" aria-hidden="true"></div>'
             + '<b>' + nfIco(meta.icon, 16) + ' ' + esc(meta.label) + ' inapakiwa…</b>'
-            + '<span>Tafadhali subiri kidogo.</span></div>';
+            + '<span>subiri kidogo.</span></div>';
     }
 
     function unavailableHtml(meta, reason) {
@@ -348,8 +352,8 @@ import {
         return '<div class="nf-ctx">'
             + '<div class="nf-ctx-img">' + imgHtml + '</div>'
             + '<div class="nf-ctx-info">'
-            +   '<span class="nf-badge">' + nfIco(meta.icon, 13) + ' ' + esc(meta.label) + '</span>'
-            +   '<b class="nf-ctx-title">' + esc(entity.title || meta.label) + '</b>'
+            + '<span class="nf-badge">' + nfIco(meta.icon, 13) + ' ' + esc(meta.label) + '</span>'
+            + '<b class="nf-ctx-title">' + esc(entity.title || meta.label) + '</b>'
             +   extra + sellerLine + priceLine
             + '</div></div>';
     }
@@ -672,7 +676,7 @@ import {
     }
 
     /* ============================================================
-     * 8) KUTUMA — hakiki → hesabu → proposal → njia ILIYOPO ya chat
+     * 8) KUTUMA — hakiki -> hesabu -> proposal -> njia ILIYOPO ya chat
      * ============================================================ */
     async function onSubmit() {
         if (!state || state.sending) return;
@@ -684,12 +688,12 @@ import {
             var firstKey = Object.keys(state.errors)[0];
             var firstEl = document.getElementById(fid(firstKey)) || document.querySelector('.nf-field.has-error input,.nf-field.has-error textarea,.nf-field.has-error select');
             if (firstEl) { try { firstEl.focus(); } catch (e) {} }
-            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Tafadhali kamilisha sehemu zilizoonyeshwa.', 'error', 3200);
+            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Jaza sehemu zilizokosekana.', 'error', 3200);
             return;
         }
 
         var c = core();
-        if (!c.convId || !c.partnerUid) { showBanner('Fungua mazungumzo na muuzaji kwanza, kisha rudi kwenye ofa.'); return; }
+        if (!c.convId || !c.partnerUid) { showBanner('Anza mazungumzo kwanza.'); return; }
 
         var proposal = currentProposal();
         if (!proposal.sellerId) proposal.sellerId = c.partnerUid;
@@ -717,7 +721,7 @@ import {
         }
         if (btn) btn.disabled = false;
         if (label) label.innerHTML = nfIco('send', 14) + ' ' + esc(NF_META[state.type].cta);
-        showBanner((res && res.error) ? res.error : 'Imeshindwa kutuma ofa. Angalia mtandao kisha jaribu tena.');
+        showBanner((res && res.error) ? res.error : 'Imeshindikana. Angalia mtandao.');
     }
 
     /* ============================================================
@@ -750,6 +754,19 @@ import {
 
         body.innerHTML = loadingHtml(NF_META[type]);
         var entity = await enrichEntity(type, baseEntity);
+
+        // [NEGO LOCK §21/§22 — FRONT GATE] Mmiliki wa tangazo (provider/transporter)
+        // kama amezima negotiation → fomu haifungulwi kamwe. KM bado inafanya kazi
+        // (spec §23: chatting ≠ negotiation). Backend gate iko kwenye
+        // skhNegoNativeCreate (34-chat-core) — hii ni UX ya haraka tu, si gate pekee.
+        if ((type === NF_TYPES.SERVICE || type === NF_TYPES.TRANSPORT) && entity.negotiationAllowed === false) {
+            body.innerHTML = unavailableHtml(NF_META[type],
+                'Negotiation haijaruhusiwa na mmiliki wa tangazo hili. Bei iliyotangazwa ndiyo sahihi — unaweza kuzungumza nae bado kupitia chat hii.');
+            var b0 = document.getElementById('nfUnavailClose');
+            if (b0) b0.addEventListener('click', close);
+            document.getElementById('nfCloseBtn').addEventListener('click', close);
+            return;
+        }
 
         // Thibitisha upande wa pili (usiruhusu kujitolea ofa mwenyewe).
         var c = core();

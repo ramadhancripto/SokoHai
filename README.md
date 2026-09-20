@@ -1,267 +1,225 @@
-# SOKOHAI — Ultimate Pro Edition (Escrow & Admin)
+# SOKOHAI - Ultimate Pro Edition (Escrow & Admin)
 
-Muundo wa project baada ya refactor ya **Phase 1 + Phase 2**:
-monolith ya awali (`sokohai-hai.html`, ~33,400 lines) sasa ni project halisi
-yenye `css/`, `js/`, `js/app/` na `index.html` — **kila faili ina kazi yake.**
-
-> ⚠️ **Hakuna kitu kilichobadilishwa kwenye utendaji (behaviour).**
-> Code zote zimehamishwa kwa utaratibu (AST + scope analysis) — zimepangwa upya tu.
-> Imehakikishwa kuwa: syntax yote inapita, marejeo yote yanasuluhika, na **mlolongo
-> wa `window.*` assignments wa wakati wa load unalingana 100%** na build ya awali.
+Mfumo mzima wa **SOKOHAI** (`sokohaicom.netlify.app`) uliopakuliwa kikamilifu bila kukosa faili hata moja wala mstari wowote wa msimbo (code).
 
 ---
 
-## 1. Muundo wa Project
+## 📁 Muundo wa Faili za Mfumo (Project Structure)
 
-```
-sokohai/
-├── index.html                    # HTML pekee (4,539 lines — ilikuwa 33,395)
-├── README.md                     # Faili hili
-├── sokohai-manifest.json         # PWA manifest (jina, theme, icons)
-├── sokohai-sw.js                 # Service Worker (network-first)
-├── icon-192.png / icon-512.png   # Icon za PWA (brand ya SOKOHAI)
-├── _originals/                   # Nakala ya asili (kumbukumbu tu — haijapakiwa)
-│   └── app.module.js             # (21,549 lines — kilichokuwa engine moja)
-├── css/                          # Staili (10 faili)
-│   ├── 00-tokens.css             #   Design tokens (rangi, nafasi, radius, motion)
-│   ├── 01-core.css               #   CSS kuu ya mfumo mzima
-│   ├── 02-menu.css / 02b-…       #   Staili za menu (sidebar)
-│   └── 05…10-*-polish.css        #   Polishes za matangazo, auth, soko, POS, SokoPay, admin
-└── js/
-    ├── 00-pwa.js                 # Manifest + Service Worker (PWA)
-    ├── 00-config.js              # MIPANGILIO YA MFUMO (ona §5 Usalama!)
-    ├── 06…19-*.js                # Plugins huru (toasts, uploads, payments, wallet…)
-    └── app/                      # ★ ENGINE YA APP (ilikuwa app.module.js moja)
-        ├── 00-bootstrap.js       #   Firebase imports + config + auth/db + bridges + shared state `skh`
-        ├── 01-market.js          #   Soko: kategoria, market modes, boost/kukuza bidhaa
-        ├── 02-checkout.js        #   Checkout na malipo (AzamPay)
-        ├── 03-dashboard.js       #   Dashboard renderer (moyo wa app)
-        ├── 04-orders-escrow.js   #   Oda za mnunuzi, escrow, wallet, migogoro
-        ├── 05-forms.js           #   Fomu za muuzaji + upload ya picha ya profile
-        ├── 06-navigation.js      #   Sidebar, tabu, logout, zoom ya picha
-        ├── 07-product.js         #   Bidhaa: maelezo, dau (bids), chat, kikapu
-        ├── 08-app-state.js       #   Auth, submit bidhaa/huduma/usafirishaji, topbar
-        ├── 09-feed-announcements.js # Matangazo, wanachama, wakala, usajili
-        ├── 10-dashboard-tabs.js  #   Maudhui ya tabu za dashboard
-        ├── 11-analytics.js       #   Product analytics + grafu
-        ├── 12-sys-modes.js       #   Sys modes, notifications, main feed
-        ├── 13-community.js       #   Community guard, ticker, agent dashboard
-        ├── 14-map-onboarding.js  #   Ramani + onboarding ya duka
-        ├── 15-pos-sales.js       #   POS: mauzo, stock, madeni, mishahara
-        ├── 16-pos-admin-jobs.js  #   POS admin, kazi (jobs), admin dashboard
-        ├── 17-hub.js             #   Hub ya huduma (service hub)
-        ├── 18-cockpit.js         #   Cockpit charts + manunuzi (procurement)
-        ├── 19-roles.js           #   Dashboards za roles (driver, provider…)
-        ├── 20-logistics.js       #   Logistics & dispatch
-        ├── 21-sokopay.js         #   SokoPay links, migogoro, deposits
-        ├── 22-printing.js        #   Huduma za uchapishaji
-        ├── 23-smart-cart.js      #   Smart Cart + logistics + final cart (canonical)
-        └── 24-ui-final.js        #   UI polish, tokens, language center
-```
+Jumla ya faili: **151+ files**
+
+### 1. Ukurasa Mkuu (Core HTML)
+- `index.html` - Ukurasa kamili wa mfumo (341 KB), unaojumuisha muundo wote wa DOM, templates, modals, navigation, na bootstrapping.
+
+### 2. Mtindo na Muonekano (CSS - `css/`, jumla ya faili 30)
+- `css/00-tokens.css` - Design tokens, rangi, vipimo na vigezo vya CSS.
+- `css/01-core.css` - Mpangilio mkuu wa mfumo (Core layout & animations).
+- `css/02-menu.css` - Mtindo wa menyu na drop-downs.
+- `css/02b-menu-extra.css` - Marekebisho ya ziada ya menyu.
+- `css/05-announcement.css` - Tangazo la juu (Marquee & announcement banner).
+- `css/06-auth-polish.css` - Muonekano wa dirisha la Kuingia / Kujisajili (Auth polish).
+- `css/07-market-polish.css` - Soko la bidhaa na gridi ya bidhaa.
+- `css/08-dashboard-pos-polish.css` - Dashibodi ya mfanyabiashara na mashine ya POS.
+- `css/09-sokopay-polish.css` - Muonekano wa pochi ya SokoPay.
+- `css/10-admin-dash-polish.css` - Dashibodi ya msimamizi mkuu (Admin dashboard).
+- `css/11-haipay-mobile.css` - Muonekano wa simu kwa malipo ya HaiPay.
+- `css/12-mobile-responsive.css` - Usanidi wa simu za mkononi (Mobile responsiveness).
+- `css/13-ui-polish.css` - Maboresho ya viwango vya interface (UI polish).
+- `css/14-chat-admin-polish.css` - Dirisha la gumzo na dhibiti za admin.
+- `css/15-chat-comments.css` - Maoni na ujumbe wa bidhaa.
+- `css/16-commerce-card.css` - Kadi za biashara (Bidhaa, huduma, usafiri).
+- `css/17-negotiation-form.css` - Fomu ya kufanya mapatano ya bei (Negotiation).
+- `css/18-product-showcase.css` - Muonekano wa undani wa bidhaa (Product showcase).
+- `css/19-token-box.css` - Sanduku la msimbo wa uthibitisho (Token box ya makabidhiano).
+- `css/20-request-inbox.css` - Kikasha cha maombi ya wateja (Request inbox).
+- `css/21-discovery-maoni.css` - Sehemu ya kugundua na maoni (Discovery & feedback).
+- `css/22-delivery-choice.css` - Dirisha la uchaguzi wa usafirishaji (Delivery modal).
+- `css/23-logistics-market.css` - Soko la usafirishaji kwa madereva na watoa huduma.
+- `css/24-chat-ui-v2.css` - Toleo jipya la gumzo la kisasa (Chat UI v2).
+- `css/25-typography.css` - Mipangilio ya fonti na maandishi (Typography).
+- `css/26-design-system.css` - Mfumo thabiti wa usanifu wa kielektroniki (Design system).
+- `css/27-visual-audit-fixes.css` - Marekebisho ya visual audit na touch targets.
+- `css/28-my-profile.css` - Ukurasa wa wasifu binafsi (Profile, DP & Cover).
+- `css/29-nav-dict.css` - Menyu ya juu + kamusi ya picha (Visual Dictionary).
+- `css/30-discover-engine.css` - Injini ya uvumbuzi (Discover feed & cards).
+
+### 3. Mantiki ya Mfumo (JavaScript - `js/` & `js/app/`, jumla ya faili 101)
+#### Faili za Msingi (`js/`):
+- `js/00-config.js` - Mipangilio ya mfumo (Demo mode, Escrow, PesaPal, Firebase Cloud Functions).
+- `js/00-pwa.js` - Usajili wa Progressive Web App na Service Worker.
+- `js/01-lib-loader.js` - Kipakiaji cha maktaba za Leaflet na Chart.js kwa uvivu (Lazy-loader).
+- `js/05-dialogs.js` - Madirisha ya uthibitisho na ujumbe (Modals & dialogs).
+- `js/06-announcement.js` - Marquee na matangazo yanayotembea.
+- `js/07-toasts.js` - Toasts za taarifa za haraka (Success/error toasts).
+- `js/08-auth-polish.js` - Utatuzi na uthibitishaji wa akaunti.
+- `js/09-states.js` - Usimamizi wa hali za mfumo.
+- `js/10-pwa-install.js` - Kitufe cha kusakinisha PWA kwenye simu/kivinjari.
+- `js/11-uploads.js` - Upakiaji wa picha kupitia Cloudinary.
+- `js/12-payments.js` - Mantiki ya kuchakata malipo.
+- `js/13-listeners.js` - Event listeners za mfumo mzima.
+- `js/14-sync.js` - Usawazishaji wa data nje ya mtandao na mtandaoni.
+- `js/15-sp-live.js` - Salio la moja kwa moja la SokoPay (Live wallet polling).
+- `js/16-wallet.js` - Vitendo vya pochi (Deposit, withdraw, transfer).
+- `js/17-pesapal-return.js` - Mapokezi na uthibitishaji wa matokeo ya PesaPal.
+- `js/18-icons.js` - Maktaba ya ikoni zote za SVG (SVG Icon library).
+- `js/19-cart-checkout-canonical.js` - Usimamizi mkuu wa kikapu na malipo.
+- `js/20-search-chat.js` - Utafutaji wa gumzo na mawasiliano.
+- `js/21-home-filters.js` - Vichujio vya bidhaa kwenye ukurasa mkuu.
+- `js/22-humanize.js` - Ugeuzaji wa tarehe na nambari kuwa lugha nyepesi.
+- `js/23-smart-search.js` - Injini ya utafutaji werevu wa bidhaa na huduma.
+
+#### Moduli Kuu za Programu (`js/app/`):
+- `js/app/00-bootstrap.js` - Uunganishaji wa Firebase SDK (Auth, Firestore, Functions, Cloud Storage) na uanzishaji.
+- `js/app/01-market.js` - Usimamizi wa soko, kuorodhesha bidhaa na kategoria.
+- `js/app/02-checkout.js` - Njia ya ukamilishaji wa oda.
+- `js/app/03-dashboard.js` - Dashibodi kuu ya mtumiaji.
+- `js/app/04-orders-escrow.js` - Usimamizi wa oda na fedha zilizoshikiliwa (Escrow protection).
+- `js/app/05-forms.js` - Udhibiti wa fomu zote za mfumo.
+- `js/app/06-navigation.js` - Njia za kufungua kurasa na vichupo (Tab switching).
+- `js/app/07-product.js` - Kuongeza, kuhariri na kuonyesha bidhaa.
+- `js/app/08-app-state.js` - Hali ya jumla ya programu na utunzaji wa mtumiaji wa sasa.
+- `js/app/09-feed-announcements.js` - Milisho ya habari na matangazo.
+- `js/app/10-dashboard-tabs.js` - Vichupo vya dashibodi ya biashara.
+- `js/app/11-analytics.js` - Takwimu za mauzo, chati na ripoti.
+- `js/app/12-sys-modes.js` - Njia za mfumo (Demo vs Real, Sandbox).
+- `js/app/13-community.js` - Jumuia ya watumiaji na machapisho.
+- `js/app/14-map-onboarding.js` - Ramani ya maeneo, usajili na GPS geocoding.
+- `js/app/15-pos-sales.js` - Mashine ya mauzo ya duka (Point of Sale).
+- `js/app/16-pos-admin-jobs.js` - Usimamizi wa stoo, matawi na mhamisho wa hisa (Stock transfers).
+- `js/app/17-hub.js` - Kituo cha shughuli zote za biashara.
+- `js/app/18-cockpit.js` - Cockpit ya dereva na msafirishaji.
+- `js/app/19-roles.js` - Majukumu ya watumiaji (Mnunuzi, Muuzaji, Dereva, Wakala, Admin).
+- `js/app/20-logistics.js` - Mfumo kamili wa usafirishaji na ufuatiliaji wa mzigo.
+- `js/app/21-sokopay.js` - Mfumo mkuu wa kifedha wa SokoPay Wallet.
+- `js/app/22-printing.js` - Uchapishaji wa risiti za POS na ankara (Receipt printing).
+- `js/app/23-smart-cart.js` - Kikapu werevu chenye mahesabu ya usafiri na punguzo.
+- `js/app/24-ui-final.js` - Marekebisho ya mwisho ya kiolesura.
+- `js/app/25-tracking-hub.js` - Kituo cha kufuatilia mwenendo wa oda.
+- `js/app/26-image-zoom.js` - Ukuzaji wa picha za bidhaa (Image gallery lightbox).
+- `js/app/27-route-dispatch.js` - Upangaji wa njia za wasafirishaji.
+- `js/app/28-buyer-engagement.js` - Mwingiliano wa wanunuzi na wauzaji.
+- `js/app/29-seller-store.js` - Duka la mtandaoni la muuzaji binafsi.
+- `js/app/30-seller-products.js` - Usimamizi wa bidhaa za muuzaji.
+- `js/app/31-agent-assist.js` - Mfumo wa mawakala kusaidia wateja.
+- `js/app/32-i18n.js` - Lugha za mfumo (Kiswahili & Kiingereza).
+- `js/app/33-custody.js` - Usimamizi wa ulinzi wa bidhaa na makabidhiano.
+- `js/app/34-chat-core.js` - Injini kuu ya gumzo la papo hapo (Real-time chat).
+- `js/app/35-comments.js` - Mfumo wa maoni na mrejesho wa bidhaa.
+- `js/app/36-seller-chat-comments.js` - Mazungumzo ya moja kwa moja baina ya muuzaji na mteja.
+- `js/app/37-negotiation.js` - Injini ya mapatano ya bei (Bargaining engine).
+- `js/app/38-negotiation-form.js` & `38-nego-form-logic.js` - Fomu na mantiki ya mapatano.
+- `js/app/39-product-showcase.js` & `39-showcase-logic.js` - Onyesho la bidhaa.
+- `js/app/40-token-box.js` - Uzalishaji na uhakiki wa tokeni za OTP za makabidhiano.
+- `js/app/41-request-inbox.js` - Kikasha cha maombi ya huduma na bidhaa.
+- `js/app/42-discovery-feed.js` - Mlisho wa ugunduzi wa bidhaa mpya.
+- `js/app/43-delivery-choice.js` - Uchaguzi wa aina ya usafirishaji (Pikipiki, gari, n.k.).
+- `js/app/50-lifecycle-core.js` - Mzunguko wa uhai wa oda (Pending -> Paid -> Dispatched -> Completed).
+- `js/app/51-lifecycle-ui.js` - Muonekano wa hatua za oda.
+- `js/app/52-transport-inbox.js` - Kikasha cha maombi ya usafiri kwa madereva.
+- `js/app/53-test-sandbox.js` - Hali ya majaribio (Testing sandbox).
+- `js/app/54-error-core.js` - Udhibiti na ufuatiliaji wa makosa (Error handling).
+- `js/app/55-escrow-guard.js` - Mlinzi wa fedha za Escrow.
+- `js/app/56-nav-back.js` - Udhibiti wa kitufe cha kurudi nyuma kwenye simu/browser.
+- `js/app/57-checkout-bridge.js` - Daraja la kuunganisha kikapu na malipo.
+- `js/app/58-request-visibility.js` - Udhibiti wa kuonekana kwa maombi.
+- `js/app/59-agent-monitor.js` - Dashibodi ya ufuatiliaji wa mawakala.
+- `js/app/60-identity-layer.js` - Utambulisho wa mtumiaji na sifa zake.
+- `js/app/61-full-system-repair.js` - Marekebisho ya utangamano wa mifumo.
+- `js/app/62-missing-features.js` - Utatuzi wa vipengele vya ziada.
+- `js/app/63-audit-fixes.js` - Marekebisho ya usalama na viwango vya mfumo.
+- `js/app/64-i18n-core.js` - Injini ya tafsiri ya haraka.
+- `js/app/64-my-profile.js` - Wasifu wa mtumiaji, picha ya jalada na DP.
+- `js/app/65-content-l10n.js` - Ujanibishaji wa maudhui ya kienyeji.
+- `js/app/66-wordmark.js` - Uundaji wa nembo ya SokoHai SVG.
+- `js/app/67-payment-accounts.js` - Akaunti za malipo (M-Pesa, Tigo, Airtel, Benki).
+- `js/app/68-chat-discover.js` - Uvumbuzi wa gumzo na biashara mpya.
+- `js/app/69-chat-groups.js` - Vikundi vya mazungumzo (Community & buyer groups).
+- `js/app/70-role-identity.js` - Beji na viwango vya mtumiaji.
+- `js/app/71-visual-dictionary.js` - Kamusi ya picha ya vitu na huduma.
+- `js/app/73-group-soga.js` - Gumzo la kijamii la vikundi (Soga).
+- `js/app/74-group-order-system.js` - Mfumo wa oda za pamoja kwa punguzo (Group orders).
+- `js/app/75-discover-engine.js` - Injini kuu ya uvumbuzi wa bidhaa na wauzaji.
+- `js/app/76-group-order-production-enhancement.js` - Maboresho ya mfumo wa oda za pamoja.
+- `js/app/78-chat-fix-blink.js` - Utatuzi wa flicker kwenye ujumbe wa gumzo.
+- `js/app/79-one-ui-at-a-time.js` - Udhibiti wa dirisha moja pekee kuwa wazi kwa wakati mmoja.
+- `js/app/81-absolute-one-ui-live.js` - Utekelezaji thabiti wa One-UI.
+- `js/app/88-discover-complete.js` - Moduli kamilifu ya Discover.
+- `js/app/90-chat-fixes.js` - Marekebisho ya historia na spidi ya gumzo.
+- `js/app/91-discover-fixes.js` - Marekebisho ya Discover kwenye vifaa vya simu.
+- `js/app/92-chat-auth-fix.js` - Utatuzi wa mbio za uthibitisho wa akaunti (Auth race condition).
+- `js/app/93-chat-inbox-repair.js` - Marekebisho ya kikasha cha ujumbe.
+
+### 4. Fonti (Typography - `fonts/`)
+- `fonts/inter.css` - Mipangilio ya fonti ya kisasa ya 'Inter'.
+- 6 faili kamili za TTF (Uzito 400, 500, 600, 700, 800, 900) zilizopakuliwa ndani ya mfumo (Hakuna utegemezi wa Google Fonts kutoka nje).
+
+### 5. Picha na Nembo (`img/` na `assets/`)
+- `assets/sokohai-s-mark.png` - Nembo rasmi ya SokoHai (High-res mark).
+- `img/avatar-sokohai.png` - Picha ya wasifu ya roboti/mfumo wa SokoHai.
+- `img/avatar-user.png` - Picha chaguomsingi ya mtumiaji.
+- `img/avatar-gray.png` - Picha chaguomsingi ya kivuli.
+- `img/hero-product.jpg` - Picha ya mfano ya bidhaa.
+
+### 6. Maktaba za Nje Zilizopakuliwa Ndani (`vendor/`)
+- `vendor/leaflet/leaflet.js` - Maktaba ya ramani ya Leaflet (v1.9.4).
+- `vendor/leaflet/leaflet.css` - Mtindo wa ramani ya Leaflet.
+- `vendor/leaflet/images/` - Picha za ramani (alama na vivuli vya pini za ramani).
+- `vendor/chart.umd.min.js` - Maktaba ya grafu na chati za takwimu (Chart.js).
+
+### 7. PWA & Offline Support
+- `sokohai-manifest.json` - Web App Manifest ya usakinishaji kwenye simu.
+- `sokohai-sw.js` - Service Worker ya kuwezesha tovuti kufanya kazi nje ya mtandao.
 
 ---
 
-## 2. Muundo wa Kiteknolojia (Phase 2)
+## 🚀 Jinsi ya Kuendesha Mfumo (How to Run)
 
-`js/app/` inafanya kazi hivi:
+Unaweza kuendesha mfumo huu mara moja kwa kutumia seva yoyote ya mitaa (local HTTP server):
 
-- **`00-bootstrap.js`** ina imports za Firebase, `auth`/`db`, bridges za plugins,
-  na **shared state yote** kwenye object moja `skh` (imetangazwa kama `const skh = {}`
-  na **`export { skh }`**).
-- **Imports za Firebase zinaakisiwa (mirrored)** kwenye `skh`:
-  `skh.initializeApp = initializeApp; skh.collection = collection; …` —
-  ndiyo maana faili za feature zinaweza kuita `skh.db`, `skh.collection(...)`,
-  `skh.onAuthStateChanged(...)` n.k.
-- Kila faili ya feature (`01…24`) ni ES module inayoanza na
-  `import { skh } from './00-bootstrap.js';` — kisha ina **`window.X = …`** zake tu.
-- State na helpers za pamoja zinatumika kama `skh.myCart`, `skh.db`, `skh.requireAuth()`…
-- **Mpangilio wa kupakia NI MUHIMU** (unaonekana mwishoni mwa `index.html`):
-  bootstrap kwanza, kisha `01…24` kwa mpangilio — ni mpangilio ule ule wa code ya awali,
-  kwa hiyo "last definition wins" inabaki sahihi.
-
-### Kwa nini `skh.*`?
-Code ya awali ilikuwa module moja — state (`myCart`, `currentUser`…) na helpers
-zilishirikishwa moja kwa moja. Baada ya kugawa katika modules tofauti, bindings za
-`let` haziwezi kuagizwa (imports ni read-only). Hivyo state yote ikawekwa kwenye
-object moja `skh` (mutable) — suluhisho lile lile wakubwa wa JavaScript hutumia.
-
-### "Capture" consts (kwa nini zipo mahali pake)
-Const kama `const _oldAddToCartSmart = window.addToCart;` zinahifadhi **thamani ya
-wakati huo** kabla ya kufafanua upya. Zimebaki **mahali pake** (hazijasogezwa kwenye
-bootstrap) ili capture iwe sahihi.
-
----
-
-## 3. Jinsi ya Kuendesha (Run)
-
-App inahitaji **mtandao** (Firebase CDN + Firestore, Leaflet, Chart.js).
-Usifungue kwa `file://` moja kwa moja (service worker + modules hushindwa).
-Tumia server ndogo:
-
+### Kwa Python:
 ```bash
-cd sokohai
 python3 -m http.server 8080
-# kisha fungua: http://localhost:8080
+```
+Kisha fungua kivinjari chako kwenye: `http://localhost:8080`
+
+### Kwa Node.js (npx serve):
+```bash
+npx serve -l 8080 .
 ```
 
-Au deploy folda nzima kwenye hosting yoyote (Firebase Hosting, Netlify, Vercel…).
+---
+
+## 🔒 Usalama na Backend (Firebase & PesaPal)
+- **Firebase Project ID**: `sokonet-3b847`
+- Mfumo huu unatumia Firebase Firestore na Authentication kuunganisha data moja kwa moja.
+- Siri zote za malipo (PesaPal Consumer Secret) ziko salama ndani ya Firebase Cloud Functions (`functions/.env`) kulingana na usanifu wa Phase 2.
 
 ---
 
-## 4. Jinsi ya Kurekebisha (Marekebisho kwa kina)
+## 🛠️ Marekebisho ya Masuala Yaliyotatuliwa (Critical Fixes & Optimization)
 
-Sasa unaweza kufungua **faili MOJA yenye kazi MOJA** badala ya kusearch kwenye
-21,000+ lines. Mfano:
+1. **Kufungua Vikundi Mara Moja (Group Soga Immediate Fast Opening):**
+   - **Chanzo:** Hitilafu ya `ReferenceError: snap is not defined` iliyotokea ndani ya `skhOpenGroupSoga` (`js/app/73-group-soga.js:472-487`) pamoja na vizuizi vya `canOpen` na `atomicShowGroupModal` vilivyokuwa vikifunika dirisha kwa skeleton spinner "Inafungua..." na kusababisha `skhChatOpenGroupRow` na `skhOpenGroupSoga` kukwama bila kikomo. Pia `mergePairConversations` ilikuwa ikiharibu vitambulisho vya vikundi kwa kuweka `mergedInto`.
+   - **Suluhisho:**
+     - Tumeondoa kizuizi cha skeleton ya kusubiri; sasa dirisha la kikundi (`#skhGroupSogaModal`) linafunguka mara moja synchronously kwa mwonekano kamili (`display: flex`).
+     - Kusoma meseji na subscriptions za moja kwa moja (`onSnapshot`) zinaanza papo hapo; taarifa za uanachama na metadata zinapakiwa background bila kuzuia interface ya mtumiaji.
+     - Vitambulisho vyote vya vikundi vimesanifiwa kuondoa kiambishi `conv_group_`.
+     - Data za mazungumzo ya kikundi zilizokuwa na `mergedInto` batili kwenye Firestore zimerekebishwa.
 
-- Tatizo la malipo? → `js/app/02-checkout.js`
-- Tatizo la escrow/wallet? → `js/app/04-orders-escrow.js` + `js/app/21-sokopay.js`
-- Tatizo la POS? → `js/app/15-pos-sales.js` + `js/app/16-pos-admin-jobs.js`
-- Tatizo la kikapu (cart)? → `js/app/23-smart-cart.js` + `js/19-cart-checkout-canonical.js`
-- Mpangilio wa mfumo (rangi, modes, usalama)? → `js/00-config.js` + `css/00-tokens.css`
+2. **Menyu ya Nukta Tatu kwenye Gumzo (Chat 3-Dots Menu & Actions):**
+   - **Chanzo:** Kitufe `#chatMenuBtn` kilikosa handler ya kuaminika ya kufungua/kufunga `#chatHeadMenu` na kilikosa kitendo cha "Tazama Wasifu / Duka" cha moja kwa moja.
+   - **Suluhisho:** Tumeongeza kazi thabiti ya `window.skhChatToggleHeadMenu(event)` iliyofungwa kwenye kitufe, tukarekebisha click-outside listener, na tukaongeza machaguo yote yakiwemo kutazama duka/wasifu, kunyamazisha, kuhifadhi, kufuta na kuzuia.
 
-**KUMBUKA:** baadhi ya kazi zinafafanuliwa mara kadhaa (`window.openCart`,
-`window.confirmSmartCartOrder`, `window.addToCart`…). **Toleo la mwisho linashinda.**
-Hilo ni muundo wa awali (patches) — `js/app/23-smart-cart.js` na
-`js/19-cart-checkout-canonical.js` ndizo "canonical".
+3. **Mfumo wa Mapatano ya Bei (Negotiation / Offer System):**
+   - **Chanzo:** Wakati Firebase Cloud Functions zikirejesha 404/NOT_FOUND, regex `/not-found/i` ilishindwa kugundua `code: "NOT_FOUND"`, na hivyo kuzuia mfumo kugeukia Firestore fallback. Pia msikilizaji wa ofa alikosa kuunganisha data pale ambapo `conversationId` haikulingana au index ilikosekana.
+   - **Suluhisho:**
+     - Regex ya `isFunctionsDown` imeboreshwa ili kutambua `NOT_FOUND`, `UNAVAILABLE`, `DEADLINE_EXCEEDED`, n.k.
+     - Fallback queries za `negotiations` sasa zinasikiliza moja kwa moja `buyerId == me && sellerId == partner` bila kuhitaji composite index, na ofa mpya huingia papo hapo pande zote mbili.
 
----
+4. **Mpangilio wa Maandishi Mlalo kwenye Simu (Horizontal Text on Mobile Portrait):**
+   - **Chanzo:** Kwenye `css/12-mobile-responsive.css` kulikuwa na sheria ya `@media (max-width: 480px)` iliyoweka `overflow-wrap: anywhere;` kwa vitufe (`button, a`). Katika CSS, `overflow-wrap: anywhere` inaruhusu upana wa min-content kuwa wa herufi moja tu, hivyo vitufe ndani ya vyombo vya flex vilikandamizwa na kusababisha maneno kusimama wima herufi moja baada ya nyingine.
+   - **Suluhisho:**
+     - Tumeondoa `overflow-wrap: anywhere` na kuweka `overflow-wrap: break-word` na `word-break: normal`.
+     - Tumeongeza sheria madhubuti ya `writing-mode: horizontal-tb !important; text-orientation: mixed !important;` kwenye vipengele vyote.
+     - Vitufe, lebo, vichwa vya habari na tabs za kategoria, discover na menyu zimewekwa `white-space: nowrap !important;` na `flex-shrink: 0;` ili maandishi yasivunjike wala kusimama wima.
 
-## 5. Usalama & Mambo ya Kufanyia Kazi (TODO)
-
-1. **`AZAMPAY_CLIENT_ID` bado iko kwenye browser** (`js/00-config.js`).
-   Client Secret imeondolewa tayari (server pekee), lakini Client ID bado inaonekana.
-   Hatua sahihi: ihamishe kwenye backend (Cloud Function) — ona comments za code (Phase 5).
-
-2. **`js/17-azampay-return.js`** inatumia `window.AZAMPAY_*` (fallback tu — inafanya kazi
-   **tu** ikiwa `PAYMENTS_VIA_SERVER=false`, na sasa ni `true`, hivyo haina athari).
-   Inafaa kurekebishwa kuwa `window.SOKOHAI_CONFIG`/server callable.
-
-3. **Bridges za plugins:** bootstrap inaita `window.skhRegisterFirestore(...)` n.k. —
-   plugins hizo (`js/13…17`) ni plain scripts zinazotekelezwa kabla ya modules,
-   hivyo usajili unafanya kazi. Usibadilishe mpangilio huu.
-
-4. **Kujaribu baada ya marekebisho:** baada ya kuhariri faili yoyote, onyesha kwenye
-   browser console — makosa yoyote ya "Uncaught" yanaonyesha faili na mstari husika.
-
----
-
-## 6. Historia (Changelog)
-
-- **Phase 1:** monolith → `css/` + `js/` + `index.html` (style/script ziligawanywa).
-- **Phase 2 (hii):** `js/app.module.js` (21,549 lines) → `js/app/` (bootstrap + 24 feature files),
-  kwa kutumia AST + scope analysis (espree + eslint-scope). Behaviour haijaguswa:
-  - 496 majina ya `window.*` yamehifadhiwa (counts sawa),
-  - mlolongo wa load-time wa 473 top-level assignments unalingana 100%,
-  - hakuna marejeo yaliyoachwa bila kusuluhika.
-- **Phase 2.1 (bugfix):** imports za Firebase zinaakisiwa kwenye `skh` (la sivyo
-  `skh.initializeApp`/`skh.collection` n.k. zilikuwa undefined) + faili za PWA
-  (`sokohai-manifest.json`, `sokohai-sw.js`, icons) zimeongezwa.
-- **Phase 2.3 (HaiPay MVP — mwanzo):**
-  - **SokoPay → HaiPay** (jina la kuonekana). Code identifiers hazijaguswa.
-  - **Payroll & Jobs module imeondolewa** kwenye HaiPay (sidebar tab + tab area + demo rows +
-    chujio + option ya payroll).
-  - **Design spec ya MVP** imeandikwa: `docs/HAIPAY-MVP-DESIGN.md` (architecture,
-    state machine, Firestore data model, frontend structure, server functions,
-    integration points, implementation order).
-- **Phase 2.4 (HaiPay MVP — frontend kupunguzwa):**
-  - **Sidebar imebadilishwa** kuwa sehemu za MVP: Home, Pay, Create Link, Track,
-    Transactions, Help + (Trust & Security: Disputes, Settings, Direct Pay).
-  - **Maeneo yaliyoondolewa** (dead tabs): Products, Services, Logistics, Companies,
-    Governance, Events — HTML imepungua kutoka ~394K hadi ~298K chars.
-  - **Home (spOverviewArea)** imefanywa upya kwa mobile-first: KPI 4 (Available,
-    Escrow Locked, Pending, Completed) + vitendo 3 vya msingi (PAY, CREATE LINK, TRACK)
-    + Active Escrow + Recent Activity + trust note.
-  - **Create Link (spCreateArea)** imerahisishwa: maelezo + kiasi + maelezo ya ziada
-    + simu/email ya mnunuzi (hiari) + picha (hiari). Sehemu za contract nyingi
-    (product/service/job/logistics/passenger, split engine, image-proof lazima)
-    zimeondolewa/kuwa hidden.
-  - **`generateSokoPayCode`** imerekebishwa: partner/picha ni vya hiari, ujumbe
-    unatumia "token (SP-XXXXXX)" badala ya "mkataba".
-  - **Tab mpya: Transactions** (`spTransactionsArea` + `renderSokoPayTransactions`)
-    na **Help** (`spHelpArea`) — zenye maelezo ya mtiririko PAY → SECURE → TRACK →
-    CONFIRM → RELEASE/DISPUTE na token si pesa.
-  - `toggleSokoPayTab` imerekebishwa kwa orodha ya maeneo ya MVP.
-- **Phase 2.5 (HaiPay LIVE — Firebase backend):**
-  - **Uchunguzi ulithibitisha**: project `sokonet-3b847` iko LIVE na ina data
-    halisi (users, sokopay_links). Lakini **Firestore rules zilikuwa WAZI**
-    (mtu yeyote anaweza kuandika/kufuta) na Cloud Functions hazijawahi kuwepo.
-  - **Cloud Functions zimeundwa** (`functions/index.js`, region `europe-west1`):
-    `walletAdjust` (atomic + idempotent + wallet_ledger), `escrowRelease`
-    (smart-split server), `haipayReleaseLink` (HaiPay escrow), `azampayCheckout`,
-    `azampayTransactionStatus`, `azampayWebhook`, `platformStatsRefresh`,
-    `platformStatsHourly`.
-  - **`firestore.rules`** zimeandikwa: login required kwa kuandika; `walletBalance`
-    ni server-only (browser haiwezi kuandika salio); `wallet_ledger`/`platform_stats`
-    ni server-only; products/services/announcements zinabaki public kusoma.
-  - **`firestore.indexes.json`** (code+status, customerId+status, n.k.),
-    **`firebase.json`**, **`.firebaserc`** zimeongezwa.
-  - **`confirmSokoPayLinkDirect`** sasa inapita Cloud Function `haipayReleaseLink`
-    (server-authoritative release ya HaiPay).
-  - **Runbook**: `docs/HAIPAY-DEPLOY.md` — hatua za `firebase deploy` (rules →
-    functions → hosting), AzamPay secret kwenye `functions/.env`, na Blaze plan.
-- **Phase 2.6 (bugfix — HaiPay haikufunguka kwenye browser):**
-  - **Sababu:** `skh.masterCommands` (registry ya functions 160+) hujengwa kwenye
-    `00-bootstrap.js` (module ya kwanza), wakati `window.*` functions bado
-    hazijafafanuliwa — hivyo values zote ni `undefined`. Kisha `17-hub.js`
-    kilizire-register kwenye `window`, na **kufuta functions halisi** (mf.
-    `updateApp`, `openSokoPay`) na `undefined`. Hili lilitokea tu baada ya
-    kugawanya monolith (awali registry ilijengwa BAADA ya definitions).
-  - **Rekebisho:** `17-hub.js` sasa hure-register tu functions zilizopo
-    (`typeof cmd === 'function'`); bootloader inaitwa kwa ulinzi
-    (`typeof updateApp === 'function'`); no-op `window.renderPosCart = renderPosCart`
-    imefungwa kwa `typeof`.
-  - Imethibitishwa: `node --check` zote OK, `verify_split` ALL CHECKS PASSED,
-    hakuna top-level crash nyingine (scan ya modules zote 00–24).
-- **Phase 2.7 (HTML body imegawanywa — njia ya build):**
-  - `index.html` (298 KB, mistari 3566) imegawanywa kuwa **vipande 22 huru** kwenye
-    `html/` — kila kimoja kina kazi yake (`14-haipay.html` = HaiPay modal nzima,
-    `16-topnav.html`, `19-bottomnav.html`, `03-modals-core.html`, n.k.).
-  - Zana: `tools/build_html.py` — `split` (gawanya), `build` (kusanya vipande →
-    `index.html`), `check` (thibitisha mkutano ni byte-exact).
-  - **Hakuna mabadiliko ya runtime** — mkutano umethibitishwa 100% sawa na
-    faili ya asili (`cmp` → identical; tag balance 651/651, 168/168, 194/194).
-  - Maelezo kamili ya kila kipande: `html/README.md`.
-- **Phase 2.8 (bugfix — top nav ilikuwa 'inapotea'):**
-  - **Sababu 1:** `applyModeUI()` inaficha top nav/bottom nav/environment (display:none)
-    unapoingia Usimamizi/dashboard, lakini `updateApp()` (tabs za chini Home/Bidhaa/...) 
-    haikuzirudisha → top nav ilibaki fiche milele baada ya kurudi sokoni.
-  - **Sababu 2:** scroll-handler ilificha `.top-nav-row` (scroll-hidden) unaposcroll chini.
-  - **Rekebisho:** (a) `updateApp()` sasa inarudisha `.sticky-top-section`,
-    `.bottom-area-wrapper` na `#locationFilterBar`; (b) scroll-handler haifichi top nav
-    tena — **announcement ndiyo pekee inayojificha** unaposcroll chini.
-  - Uthibitisho: `node --check` zote OK, `verify_split` ALL CHECKS PASSED,
-    HTML build byte-exact, duplicate IDs zimekaguliwa (pre-existing tu).
-- **Phase 2.9 (HaiPay mobile-first + button polish):**
-  - **Tatizo:** kwenye kioo wima (portrait), HaiPay ilikuwa inaonyesha sidebar tu;
-    workspace ilionekana baada ya kusroll chini kabisa (layout haikuwa mobile-friendly).
-  - **Rekebisho (`css/11-haipay-mobile.css`):** kwenye `≤1024px` HaiPay inakuwa
-    **screen nzima** (`100dvh`); sidebar inakuwa **upau wa juu** (horizontal pills
-    za Home/Pay/Create Link/Track/Transactions/Help/Disputes/Settings/Direct Pay);
-    workspace inajaza kioo na **kuscroll peke yake**; paneli ya kulia (demo)
-    inafichwa; header imefanywa compact (search/QR/fullscreen zimefichwa).
-  - **Button mpya ya "Rudi Soko"** (`sp-back-btn`) imeongezwa kwenye brand row —
-    inafanya kazi desktop na mobile; wallet chip (`spSidebarBalanceTop`) imeongezwa
-    kwenye top bar ya mobile.
-  - **Buttons zote za HaiPay** zimepigwa msasa: hover lift, active press, focus ring,
-    pills za sidebar zenye gradient na shadow, transitions laini.
-  - `updateSokoPayUIBalances` sasa inasasisha pia wallet chip ya mobile.
-  - Uthibitisho: `node --check` OK, `verify_split` ALL CHECKS PASSED, HTML tag
-    balance (651/651, 169/169, 196/196), CSS braces balanced.
-- **Phase 2.10 (button ya "Rudi Soko" imeboreshwa):**
-  - Button ya "Rudi Soko" imehamishwa kutoka brand row ya sidebar → **header ya
-    workspace (kushoto)**, kama button nzuri ya kisasa (white card, icon ya mshale,
-    border laini, hover lift + shadow).
-  - Brand row sasa ni safi: logo + jina + wallet chip pekee.
-  - Style mpya ya `.sp-back-btn` (light theme) kwenye `css/11-haipay-mobile.css`.
-  - Uthibitisho: HTML tag balance 652/652, 169/169, 196/196; CSS braces 47/47.
-- **Phase 2.11 (usafishaji wa CSS — makosa ya syntax VS Code):**
-  - `css/01-core.css` ilikuwa na **mabaki 4 ya `@keyframes`** (mistari ya `50%/70%/100%`
-    bila kifuniko cha `@keyframes`) — mabaki ya zamani kutoka monolith asili.
-    Browser ilivivumilia kimya lakini VS Code ilionyesha makosa ya
-    `at-rule or selector expected` / `{ expected`.
-  - **Rekebisho:** mabaki 12 ya mistari yameondolewa kwa usahihi (bila kugusa
-    keyframes 17 halali — dash, pulse, fadeIn, alert-flash, kutingishika, n.k.).
-  - Uthibitisho: braces za CSS zote 646/646 (01-core) + faili zote 11 za CSS
-    ziko safi (hakuna orphans), `verify_split` ALL CHECKS PASSED, HTML build
-    byte-exact.
-- Build ya awali imehifadhiwa kwenye `_originals/` na `uploads/`.

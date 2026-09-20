@@ -8,8 +8,7 @@
 //    kitu kinachovunjika; kama script hii isipatikane, app
 //    inafanya kazi kama kabla yake)
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     // ---------- 1) EYE TOGGLE ----------
     function addEyeToggle(input) {
@@ -23,12 +22,20 @@
         eye.type = 'button';
         eye.className = 'skh-eye';
         eye.setAttribute('aria-label', 'Onyesha / ficha nenosiri');
-        eye.textContent = '👁';
+        // [FIX 2026-09-14] Kitufe kilibaki tupu baada ya kuondoa emoji.
+        // Sasa kinatumia SVG za maktaba (eye / eye-off).
+        function paintEye(shown) {
+            eye.innerHTML = (window.skhNavIcon
+                ? window.skhNavIcon(shown ? 'eye-off' : 'eye', 18)
+                : (shown ? '-' : '+'));
+            eye.setAttribute('title', shown ? 'Ficha nenosiri' : 'Onyesha nenosiri');
+        }
+        paintEye(false);
 
         eye.addEventListener('click', function () {
             var show = input.type === 'password';
             input.type = show ? 'text' : 'password';
-            eye.textContent = show ? '🙈' : '👁';
+            paintEye(show);
             input.focus({ preventScroll: true });
         });
         wrap.appendChild(eye);
@@ -49,7 +56,7 @@
         { label: 'DHAIFU', color: '#ef4444' },
         { label: 'WASTANI', color: '#f59e0b' },
         { label: 'NZURI', color: '#0ea5e9' },
-        { label: 'NGUVU 💪', color: '#10b981' }
+        { label: 'NGUVU ', color: '#10b981' }
     ];
 
     function addStrengthMeter(input) {
@@ -125,13 +132,13 @@
 
     withLoading('doLogin', function () {
         return document.querySelector('#loginForm button[type="submit"]');
-    }, '⏳ INAKUINGIZA...');
+    }, ' INAKUINGIZA...');
 
     withLoading('doSignup', function () {
         return document.querySelector('#signupForm button[type="submit"]');
-    }, '⏳ INATENGENEZA AKAUNTI...');
+    }, ' INATENGENEZA AKAUNTI...');
 
     withLoading('doGoogleLogin', function () {
         return document.querySelector('#authModal .google-btn');
-    }, '⏳ INAFUNGUA GOOGLE...');
+    }, ' INAFUNGUA GOOGLE...');
 })();

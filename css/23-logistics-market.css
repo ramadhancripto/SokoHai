@@ -41,7 +41,7 @@
     font-size: 15px; font-weight: 900; text-transform: uppercase;
     letter-spacing: .3px; line-height: 1.25;
 }
-.lm-hero-txt p { margin: 0; font-size: 11px; line-height: 1.45; color: rgba(255,255,255,.88); }
+.lm-hero-txt p { margin: 0; font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.88); }
 .lm-hero-count {
     position: relative; z-index: 1;
     background: rgba(255,255,255,.15);
@@ -52,7 +52,7 @@
     flex-shrink: 0;
 }
 .lm-hero-count b { display: block; font-size: 20px; line-height: 1; color: #FFD700; }
-.lm-hero-count small { font-size: 8.5px; text-transform: uppercase; font-weight: 800; opacity: .9; }
+.lm-hero-count small { font-size: 12px; text-transform: uppercase; font-weight: 800; opacity: .9; }
 
 /* ---------- Kanda ya kutenganisha dhana (maombi / kwako / yanaendelea / kumbukumbu) ---------- */
 .lm-quicknav {
@@ -79,8 +79,8 @@
     display: flex; align-items: center; justify-content: center;
 }
 .lm-qn-ico svg { width: 18px; height: 18px; }
-.lm-qn b { display: block; font-size: 11px; font-weight: 800; color: #0f172a; line-height: 1.25; }
-.lm-qn small { display: block; font-size: 9px; color: #64748b; margin-top: 2px; line-height: 1.3; }
+.lm-qn b { display: block; font-size: 13px; font-weight: 800; color: #0f172a; line-height: 1.25; }
+.lm-qn small { display: block; font-size: 12px; color: #64748b; margin-top: 2px; line-height: 1.3; }
 .lm-qn.is-primary { border-color: #0E7A5F; background: #f0fdf4; }
 .lm-qn.is-primary .lm-qn-ico { background: #0E7A5F; color: #fff; }
 .lm-qn.is-primary b { color: #064e3b; }
@@ -90,7 +90,7 @@
     display: flex; align-items: flex-start; gap: 8px;
     background: #f8fafc; border: 1px dashed #cbd5e1;
     border-radius: 12px; padding: 9px 12px;
-    font-size: 10.5px; color: #475569; line-height: 1.5;
+    font-size: 12.5px; color: #475569; line-height: 1.5;
     margin-bottom: 12px; text-align: left;
 }
 .lm-sep-note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: #03509d; }
@@ -112,7 +112,7 @@
     border: none; background: transparent;
     border-radius: 9px;
     padding: 9px 10px;
-    font-size: 11px; font-weight: 800;
+    font-size: 13px; font-weight: 800;
     color: #64748b;
     cursor: pointer;
     white-space: nowrap;
@@ -123,7 +123,7 @@
 .lm-tab svg { width: 14px; height: 14px; }
 .lm-tab .lm-tab-n {
     background: #dbe3ec; color: #475569;
-    font-size: 9.5px; font-weight: 900;
+    font-size: 12px; font-weight: 900;
     border-radius: 999px; padding: 1px 7px; min-width: 18px;
 }
 .lm-tab.active {
@@ -171,7 +171,7 @@
 }
 .lm-cat {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 9.5px; font-weight: 900; text-transform: uppercase;
+    font-size: 12px; font-weight: 900; text-transform: uppercase;
     letter-spacing: .3px;
     padding: 3px 9px; border-radius: 999px;
 }
@@ -182,7 +182,7 @@
 .lm-cat-other { background: #f1f5f9; color: #475569; }
 .lm-new {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 9px; font-weight: 900; color: #b45309;
+    font-size: 12px; font-weight: 900; color: #b45309;
     text-transform: uppercase;
 }
 .lm-new i {
@@ -196,7 +196,7 @@
     70% { box-shadow: 0 0 0 7px rgba(245,158,11,0); }
     100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
 }
-.lm-time { font-size: 9.5px; color: #94a3b8; font-weight: 700; white-space: nowrap; }
+.lm-time { font-size: 12px; color: #94a3b8; font-weight: 700; white-space: nowrap; }
 
 .lm-card-main { display: flex; gap: 11px; align-items: center; margin-bottom: 10px; }
 .lm-cargo-ico {
@@ -215,7 +215,7 @@
     display: block; font-size: 13.5px; font-weight: 800; color: #0f172a;
     line-height: 1.3; overflow: hidden; text-overflow: ellipsis;
 }
-.lm-cargo-txt small { display: block; font-size: 10.5px; color: #64748b; margin-top: 2px; }
+.lm-cargo-txt small { display: block; font-size: 12.5px; color: #64748b; margin-top: 2px; }
 .lm-cargo-txt small svg { width: 11px; height: 11px; vertical-align: -1px; margin-right: 3px; }
 
 .lm-route {
@@ -238,9 +238,9 @@
 }
 .lm-route-dot.from { background: #16a34a; margin-top: 0; }
 .lm-route-dot.to { background: #dc2626; margin-top: 14px; }
-.lm-route-places { flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.35; }
+.lm-route-places { flex: 1; min-width: 0; font-size: 13px; line-height: 1.35; }
 .lm-route-places b { color: #0f172a; font-weight: 800; }
-.lm-route-places .lm-r-sub { color: #64748b; font-size: 9.5px; display: block; }
+.lm-route-places .lm-r-sub { color: #64748b; font-size: 12px; display: block; }
 .lm-route-places .lm-r-to { margin-top: 5px; }
 
 .lm-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
@@ -249,7 +249,7 @@
     background: #f1f5f9; color: #334155;
     border-radius: 8px;
     padding: 3px 8px;
-    font-size: 9.5px; font-weight: 700;
+    font-size: 12px; font-weight: 700;
 }
 .lm-chip svg { width: 11px; height: 11px; color: #64748b; }
 .lm-chip.is-warn { background: #fef3c7; color: #92400e; }
@@ -262,9 +262,9 @@
     flex-shrink: 0;
     text-align: right;
 }
-.lm-fare small { display: block; font-size: 8.5px; text-transform: uppercase; color: #94a3b8; font-weight: 800; letter-spacing: .3px; }
+.lm-fare small { display: block; font-size: 12px; text-transform: uppercase; color: #94a3b8; font-weight: 800; letter-spacing: .3px; }
 .lm-fare b { display: block; font-size: 14px; font-weight: 900; color: #0E7A5F; white-space: nowrap; }
-.lm-fare b.is-negotiable { color: #b45309; font-size: 11.5px; }
+.lm-fare b.is-negotiable { color: #b45309; font-size: 13px; }
 .lm-accept {
     flex: 1;
     border: none;
@@ -299,11 +299,11 @@
 }
 .lm-empty-ico svg { width: 28px; height: 28px; }
 .lm-empty b { display: block; font-size: 13px; color: #334155; margin-bottom: 5px; }
-.lm-empty p { margin: 0 0 14px; font-size: 11px; color: #64748b; line-height: 1.55; }
+.lm-empty p { margin: 0 0 14px; font-size: 13px; color: #64748b; line-height: 1.55; }
 .lm-empty-btn {
     border: none; border-radius: 10px;
     background: #0E7A5F; color: #fff;
-    padding: 10px 16px; font-weight: 800; font-size: 11.5px;
+    padding: 10px 16px; font-weight: 800; font-size: 13px;
     cursor: pointer; font-family: inherit;
     display: inline-flex; align-items: center; gap: 7px;
 }
@@ -313,17 +313,17 @@
     .lm-hero { padding: 13px 14px; gap: 11px; border-radius: 15px; }
     .lm-hero-ico { width: 40px; height: 40px; border-radius: 12px; }
     .lm-hero-txt h3 { font-size: 13px; }
-    .lm-hero-txt p { font-size: 10px; }
+    .lm-hero-txt p { font-size: 12.5px; }
     .lm-hero-count { padding: 5px 8px; }
     .lm-hero-count b { font-size: 17px; }
     .lm-quicknav { grid-template-columns: repeat(2, 1fr); }
-    .lm-tab { padding: 8px 9px; font-size: 10px; }
+    .lm-tab { padding: 8px 9px; font-size: 12.5px; }
 }
 
 /* ---------- Kumbukumbu ya usafirishaji (rekodi rasmi) ---------- */
 .lm-hist-sep {
     display: flex; align-items: center; gap: 6px;
-    font-size: 10.5px; font-weight: 900; text-transform: uppercase;
+    font-size: 12.5px; font-weight: 900; text-transform: uppercase;
     letter-spacing: .4px; color: #0E7A5F;
     margin: 14px 2px 8px;
 }
@@ -350,16 +350,16 @@
     display: block; font-size: 12.5px; color: #0f172a;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lm-hist-body b small { color: #94a3b8; font-weight: 700; font-size: 9.5px; margin-left: 6px; }
+.lm-hist-body b small { color: #94a3b8; font-weight: 700; font-size: 12px; margin-left: 6px; }
 .lm-hist-route, .lm-hist-meta {
-    display: block; font-size: 10.5px; color: #64748b; margin-top: 2px;
+    display: block; font-size: 12.5px; color: #64748b; margin-top: 2px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .lm-hist-route svg, .lm-hist-meta svg { width: 11px; height: 11px; vertical-align: -1px; }
 .lm-hist-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
 .lm-hist-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    font-size: 9px; font-weight: 900; text-transform: uppercase;
+    font-size: 12px; font-weight: 900; text-transform: uppercase;
     padding: 3px 8px; border-radius: 999px;
     white-space: nowrap;
 }
@@ -369,7 +369,7 @@
 .lm-hist-track {
     border: 1px solid #cbd5e1; background: #f8fafc;
     border-radius: 8px; padding: 4px 10px;
-    font-size: 10px; font-weight: 800; color: #334155;
+    font-size: 12.5px; font-weight: 800; color: #334155;
     cursor: pointer; font-family: inherit;
     display: inline-flex; align-items: center; gap: 4px;
 }

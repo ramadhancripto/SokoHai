@@ -18,13 +18,57 @@ window.initControlTowerCharts = function(data) {
         if (window.skhLoadChart) window.skhLoadChart().then(function () { window.initControlTowerCharts(data); }).catch(function () {});
         return;
     }
-    // 1. Sparklines za KPI Cards za Juu
+    // [REAL DATA 2026-09] Hesabu za kweli kutoka ledger — sifuri ikiwa hakuna rekodi.
+    var __dayKey = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    var __days = [];
+    for (var i = 6; i >= 0; i--) {
+        var dd = new Date(); dd.setHours(0, 0, 0, 0); dd.setDate(dd.getDate() - i);
+        __days.push(dd);
+    }
+    var __sales = [0,0,0,0,0,0,0], __profit = [0,0,0,0,0,0,0], __orders = [0,0,0,0,0,0,0],
+        __debtEntries = [], __custPerDay = [{map:{}},{map:{}},{map:{}},{map:{}},{map:{}},{map:{}},{map:{}}];
+    if (data && data.ledgerSnap && !data.ledgerSnap.empty) {
+        data.ledgerSnap.forEach(function (docSnap) {
+            var l = docSnap.data();
+            var when = l.date ? new Date(l.date) : null;
+            if (!when || isNaN(when.getTime())) return;
+            var key = __dayKey(when);
+            var idx = -1;
+            for (var k = 0; k < 7; k++) { if (__dayKey(__days[k]) === key) { idx = k; break; } }
+            var amt = parseFloat(l.amount) || 0;
+            if (l.type === 'income_offline' || l.type === 'income_online') {
+                if (idx >= 0) { __sales[idx] += amt; __profit[idx] += (parseFloat(l.profit) || 0); __orders[idx] += 1;
+                    var cn = String(l.customerName || l.title || '').toLowerCase().trim();
+                    if (cn) __custPerDay[idx].map[cn] = true;
+                }
+            } else if (l.type === 'debt' && l.status === 'pending') {
+                __debtEntries.push({ when: when, amt: amt });
+                var cn2 = String(l.customerName || l.title || '').toLowerCase().trim();
+                if (idx >= 0 && cn2) __custPerDay[idx].map[cn2] = true;
+            }
+        });
+    }
+    // Madeni yaliyosalia kwa siku (kubuni balance inayopungua kwa siku — sum ya madeni yaliyobaki hadi siku hiyo)
+    var __debtsByDay = __days.map(function (d) {
+        var total = 0;
+        __debtEntries.forEach(function (e) { if (e.when <= new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59)) total += e.amt; });
+        return total;
+    });
+    // Wateja wapya kwa siku (wale walioonekana kwa mara ya kwanza siku hiyo)
+    var __seenCust = {}, __newCustByDay = [0,0,0,0,0,0,0];
+    for (var i2 = 0; i2 < 7; i2++) {
+        var cMap = __custPerDay[i2].map, cnt = 0;
+        for (var nm in cMap) { if (!__seenCust[nm]) { __seenCust[nm] = true; cnt++; } }
+        __newCustByDay[i2] = cnt;
+    }
+
+    // 1. Sparklines za KPI Cards za Juu (REAL kutoka ledger)
     const sparklineConfigs = {
-        sparklineSales: { data: [10, 15, 8, 25, 18, 30, 22], color: '#10b981' },
-        sparklineProfit: { data: [5, 12, 10, 20, 15, 25, 24], color: '#3b82f6' },
-        sparklineOrders: { data: [8, 14, 12, 22, 19, 28, 26], color: '#8b5cf6' },
-        sparklineDebts: { data: [30, 25, 28, 18, 15, 10, 5], color: '#ef4444' },
-        sparklineCustomers: { data: [5, 10, 12, 18, 22, 30, 32], color: '#06b6d4' }
+        sparklineSales: { data: __sales, color: '#10b981' },
+        sparklineProfit: { data: __profit, color: '#3b82f6' },
+        sparklineOrders: { data: __orders, color: '#8b5cf6' },
+        sparklineDebts: { data: __debtsByDay, color: '#ef4444' },
+        sparklineCustomers: { data: __newCustByDay, color: '#06b6d4' }
     };
 
     Object.keys(sparklineConfigs).forEach(id => {
@@ -50,14 +94,15 @@ window.initControlTowerCharts = function(data) {
         });
     });
 
-    // 2. Chati Kuu ya Mwenendo wa Mauzo (Sales Line Chart)
+    // 2. Chati Kuu ya Mwenendo wa Mauzo (REAL — siku 7 zilizopita)
+    var __dayLabels = __days.map(function (d) { return d.toLocaleDateString('sw-TZ', { day: '2-digit', month: 'short' }); });
     window.safeCreateChart('adaptiveShopChart', {
         type: 'line',
         data: {
-            labels: ['01 Jun', '05 Jun', '09 Jun', '13 Jun', '17 Jun', '19 Jun'],
+            labels: __dayLabels,
             datasets: [{
                 label: 'Sales (TZS)',
-                data: [1500000, 2400000, 1900000, 3100000, 4800000, data.totalSales || 12845300],
+                data: __sales,
                 borderColor: '#6366f1',
                 borderWidth: 3,
                 tension: 0.35,
@@ -76,14 +121,26 @@ window.initControlTowerCharts = function(data) {
         }
     });
 
-    // 3. Sales by Category (Donut Chart)
+    // 3. Sales by Category (Donut Chart — REAL kutoka bidhaa zako halisi)
+    var __catCount = {}, __catLabels = [], __catData = [];
+    if (data && data.prodSnap && !data.prodSnap.empty) {
+        data.prodSnap.forEach(function (docSnap) {
+            var p = docSnap.data();
+            var cat = String(p.category || p.cat || 'Nyingine').trim() || 'Nyingine';
+            __catCount[cat] = (__catCount[cat] || 0) + 1;
+        });
+    }
+    var __catEntries = Object.keys(__catCount).map(function (k) { return [k, __catCount[k]]; })
+        .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 5);
+    if (__catEntries.length === 0) { __catLabels = ['Hakuna bidhaa bado']; __catData = [1]; }
+    else { __catLabels = __catEntries.map(function (e) { return e[0]; }); __catData = __catEntries.map(function (e) { return e[1]; }); }
     window.safeCreateChart('salesCategoryChart', {
         type: 'doughnut',
         data: {
-            labels: ['Electronics', 'Groceries', 'Fashion', 'Others'],
+            labels: __catLabels,
             datasets: [{
-                data: [35, 25, 20, 20],
-                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'],
+                data: __catData,
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#64748b'],
                 borderWidth: 0
             }]
         },
@@ -147,15 +204,9 @@ window.runBusinessAlertsEngine = function(data) {
         const iconColor = al.type === 'danger' ? '#ef4444' : (al.type === 'warning' ? '#b45309' : '#16a34a');
         const iconSymbol = al.type === 'danger' ? '' : (al.type === 'warning' ? '' : '');
         return `
-            <div class="ct-alert-item" style="display: flex; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; align-items: center;">
-                <div class="ct-alert-icon" style="font-size: 14px; background: ${iconBg}; color: ${iconColor}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <div class="ct-alert-item" style="display: flex; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; align-items: center;"> <div class="ct-alert-icon" style="font-size: 14px; background: ${iconBg}; color: ${iconColor}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     ${iconSymbol}
-                </div>
-                <div class="ct-alert-content">
-                    <b style="display: block; font-size: 11px; color: #0f172a; margin: 0;">${al.title}</b>
-                    <span style="font-size: 10px; color: #64748b;">${al.desc}</span>
-                </div>
-            </div>`;
+                </div> <div class="ct-alert-content"> <b style="display: block; font-size:13px; color: #0f172a; margin: 0;">${al.title}</b> <span style="font-size:12.5px; color: #64748b;">${al.desc}</span> </div> </div>`;
     }).join('');
 };
 
@@ -286,12 +337,10 @@ window.searchProductForPO = async function() {
         const d = docSnap.data();
         if (d.title.toLowerCase().includes(queryStr)) {
             html += `
-                <div onclick="window.selectProductForPO('${docSnap.id}', '${d.title.replace(/'/g, "\\'")}')" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white; font-size:12px;">
-                    <b> ${d.title}</b>
-                </div>`;
+                <div onclick="window.selectProductForPO('${docSnap.id}', '${d.title.replace(/'/g, "\\'")}')" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white; font-size:12px;"> <b> ${d.title}</b> </div>`;
         }
     });
-    resultsDiv.innerHTML = html || '<p style="padding:10px; font-size:11px; color:gray; text-align:center;">Haikupatikana...</p>';
+    resultsDiv.innerHTML = html || '<p style="padding:10px; font-size:13px; color:gray; text-align:center;">Haikupatikana...</p>';
 };
 
 window.selectProductForPO = function(id, name) {
@@ -348,7 +397,7 @@ window.createPurchaseOrder = async function() {
 };
 
 window.receivePurchaseOrder = async function(poId, productId, quantity, totalCost, productName) {
-    if (!confirm(`Je, unathibitisha kuwa mzigo wa "${productName}" (Pcs ${quantity}) umefika salama na unataka kuupokea stoo?`)) return;
+    if (!await skhConfirm(`Je, unathibitisha kuwa mzigo wa "${productName}" (Pcs ${quantity}) umefika salama na unataka kuupokea stoo?`)) return;
 
     try {
         const prodRef = skh.doc(skh.db, "products", productId);
@@ -379,7 +428,7 @@ window.receivePurchaseOrder = async function(poId, productId, quantity, totalCos
 };
 
 window.markLoanPaidPro = async function(id, amount, title) {
-    if(!confirm(`Je, unathibitisha kuwa umelipa Mkopo/Deni hili la TSh ${amount.toLocaleString()} kwa supplier/mteja?`)) return;
+    if(!await skhConfirm(`Je, unathibitisha kuwa umelipa Mkopo/Deni hili la TSh ${amount.toLocaleString()} kwa supplier/mteja?`)) return;
 
     try {
         const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
@@ -437,7 +486,7 @@ window.closeCashierShiftPrompt = function() {
         const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
 
         try {
-            // Hifadhi historia ya shift Firebase kwa ajili ya ukaguzi wa bosi
+            // Hifadhi historia ya shift Firebase kwa ukaguzi wa bosi
             await skh.addDoc(skh.collection(skh.db, "shift_logs"), {
                 shopOwnerId: ownerUid,
                 cashierName: shiftData.cashierName,
@@ -762,7 +811,7 @@ window.calculateScrapCost = function() {
     const totalCost = weight * pricePerKg;
     document.getElementById('scpTotalCostDisplay').innerText = `TSh ${totalCost.toLocaleString()}`;
     
-    // Hifadhi thamani kwa ajili ya kulipa/kurekodi
+    // Hifadhi thamani kwa kulipa/kurekodi
     window.activeScrapTotalCost = totalCost;
 };
 
@@ -812,157 +861,11 @@ window.saveScrapTransaction = async function() {
     }
 };
 
+// [DEDUP 2026-09] Function hii (legacy "initializeControlTowerCharts") ilikuwa nakala
+// iliyofarijiwa ya chati za uongo ambazo hazikutumwa tena. Sasa inatumia
+// implementasio moja halisi ya data (initControlTowerCharts) — hakuna fake data.
 window.initializeControlTowerCharts = function(data) {
-    // 1. Sparklines za kadi zote tano za juu (Sasa zinafanya kazi)
-    const sparklines = {
-        sparklineSales: { data: [10, 15, 8, 25, 18, 30, 22], color: '#10b981' },
-        sparklineProfit: { data: [5, 12, 10, 20, 15, 25, 24], color: '#3b82f6' },
-        sparklineOrders: { data: [8, 14, 12, 22, 19, 28, 26], color: '#8b5cf6' },
-        sparklineDebts: { data: [30, 25, 28, 18, 15, 10, 5], color: '#ef4444' },
-        sparklineCustomers: { data: [5, 10, 12, 18, 22, 30, 32], color: '#06b6d4' }
-    };
-
-    Object.keys(sparklines).forEach(id => {
-        const ctx = document.getElementById(id);
-        if (ctx) {
-            const old = Chart.getChart(id);
-            if (old) old.destroy();
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['', '', '', '', '', '', ''],
-                    datasets: [{
-                        data: sparklines[id].data,
-                        borderColor: sparklines[id].color,
-                        borderWidth: 1.5,
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false }, y: { display: false } }
-                }
-            });
-        }
-    });
-
-    // 2. Chati Kuu ya Mwenendo wa Mauzo
-    const ctxMain = document.getElementById('adaptiveShopChart');
-    if (ctxMain) {
-        const oldMain = Chart.getChart('adaptiveShopChart');
-        if (oldMain) oldMain.destroy();
-
-        new Chart(ctxMain, {
-            type: 'line',
-            data: {
-                labels: ['01 Jun', '05 Jun', '09 Jun', '13 Jun', '17 Jun', '19 Jun'],
-                datasets: [{
-                    label: 'Sales TZS',
-                    data: [1500000, 2400000, 1900000, 3100000, 4800000, data.totalSales || 12845300],
-                    borderColor: '#6366f1',
-                    borderWidth: 3,
-                    tension: 0.35,
-                    fill: true,
-                    backgroundColor: 'rgba(99, 102, 241, 0.05)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] } } }
-            }
-        });
-    }
-
-    // 3. Sales by Category (Donut Chart)
-    const ctxCat = document.getElementById('salesCategoryChart');
-    if (ctxCat) {
-        const oldCat = Chart.getChart('salesCategoryChart');
-        if (oldCat) oldCat.destroy();
-
-        new Chart(ctxCat, {
-            type: 'doughnut',
-            data: {
-                labels: ['Electronics', 'Groceries', 'Fashion', 'Others'],
-                datasets: [{
-                    data: [35, 25, 20, 20],
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#64748b'],
-                    borderWidth: 0
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
-        });
-    }
-
-    // 4. Stock Overview (Donut Chart)
-    const ctxStock = document.getElementById('stockOverviewChart');
-    if (ctxStock) {
-        const oldStock = Chart.getChart('stockOverviewChart');
-        if (oldStock) oldStock.destroy();
-
-        new Chart(ctxStock, {
-            type: 'doughnut',
-            data: {
-                labels: ['In Stock', 'Low Stock', 'Out of Stock'],
-                datasets: [{
-                    data: [75, 15, 10],
-                    backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
-                    borderWidth: 0
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
-        });
-    }
-
-    // 5. Cash Flow Overview (Double Bar Chart)
-    const ctxCash = document.getElementById('cashFlowChart');
-    if (ctxCash) {
-        const oldCash = Chart.getChart('cashFlowChart');
-        if (oldCash) oldCash.destroy();
-
-        new Chart(ctxCash, {
-            type: 'bar',
-            data: {
-                labels: ['01 Jun', '05 Jun', '09 Jun', '13 Jun', '17 Jun', '19 Jun'],
-                datasets: [
-                    { label: 'Inflow', data: [1500000, 2400000, 1900000, 3100000, 4800000, data.totalSales], backgroundColor: '#10b981', borderRadius: 4 },
-                    { label: 'Outflow', data: [800000, 1200000, 950000, 1500000, 2100000, data.totalExpenses], backgroundColor: '#ef4444', borderRadius: 4 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] } } }
-            }
-        });
-    }
-
-    // 6. Sales Channels (Donut Chart)
-    const ctxChan = document.getElementById('salesChannelsChart');
-    if (ctxChan) {
-        const oldChan = Chart.getChart('salesChannelsChart');
-        if (oldChan) oldChan.destroy();
-
-        new Chart(ctxChan, {
-            type: 'doughnut',
-            data: {
-                labels: ['In-Store', 'Online', 'Others'],
-                datasets: [{
-                    data: [65, 25, 10],
-                    backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981'],
-                    borderWidth: 0
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
-        });
-    }
+    if (typeof window.initControlTowerCharts === 'function') window.initControlTowerCharts(data);
 };
 
 window.populateControlTowerTables = function(prodSnap, ledgerSnap) {
@@ -976,34 +879,37 @@ window.populateControlTowerTables = function(prodSnap, ledgerSnap) {
                 const p = docSnap.data();
                 if (count < 5) {
                     phtml += `
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 0; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 8px;">
-                            <img src="${skh.skhEscape(window.getOptimizedImageUrl(p.image || window.SKH_PLACEHOLDER_IMG))}" style="width: 25px; height: 25px; border-radius: 6px; object-fit: cover;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Stoo&background=cbd5e1&color=0f172a'">
-                            <span>${skh.skhEscape(p.title)}</span>
-                        </td>
-                        <td style="text-align: center; color: #334155;">${Math.floor(40 + Math.random() * 90)}</td>
-                        <td style="font-weight: bold; color: #4f46e5; text-align: right;">TZS ${(p.price || 0).toLocaleString()}</td>
-                    </tr>`;
+                    <tr style="border-bottom: 1px solid #f1f5f9;"> <td style="padding: 10px 0; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 8px;"> <img src="${skh.skhEscape(window.getOptimizedImageUrl(p.image || window.SKH_PLACEHOLDER_IMG))}" style="width: 25px; height: 25px; border-radius: 6px; object-fit: cover;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Stoo&background=cbd5e1&color=0f172a'"> <span>${skh.skhEscape(p.title)}</span> </td> <td style="text-align: center; color: #334155;">${(p.views != null ? p.views : (p.stats && p.stats.views != null ? p.stats.views : '—')) /* [AUDIT-FIX §42] ilikuwa Math.random(40..130) — views za uongo */}</td> <td style="font-weight: bold; color: #4f46e5; text-align: right;">TZS ${(p.price || 0).toLocaleString()}</td> </tr>`;
                     count++;
                 }
             });
         }
-        // Kama duka bado halina bidhaa, weka bidhaa hizi za mfano (Fallbacks) ili lisibaki wazi:
+        // [REAL DATA 2026-09] Fallback ya uongo (iPhone/Samsung/HP) imeondolewa —
+        // honeyesha hali ya kweli ya uchozi: "hakuna bidhaa bado".
         topProdBody.innerHTML = phtml || `
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 8px;"><span style="font-size:16px;"></span> iPhone 14 Pro</td><td style="text-align: center;">128</td><td style="font-weight: bold; color: #4f46e5; text-align: right;">TZS 4,480,000</td></tr>
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 8px;"><span style="font-size:16px;"></span> Samsung Galaxy A54</td><td style="text-align: center;">96</td><td style="font-weight: bold; color: #4f46e5; text-align: right;">TZS 2,880,000</td></tr>
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 8px;"><span style="font-size:16px;"></span> HP Laptop 15</td><td style="text-align: center;">78</td><td style="font-weight: bold; color: #4f46e5; text-align: right;">TZS 2,340,000</td></tr>
-        `;
+            <tr><td colspan="3" style="padding: 18px 0; text-align: center; color: #94a3b8; font-size: 12.5px;">Hakuna bidhaa bado — ongeza bidhaa duka kwako kuanza kuona takwimu halisi hapa.</td></tr>`;
     }
 
-    // 2. Table 2: Top Customers (By Sales)
+    // 2. Table 2: Top Customers (By Sales) — REAL kutoka ledger yako
     const topCustBody = document.getElementById('topCustomersTableBody');
     if (topCustBody) {
-        topCustBody.innerHTML = `
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> John Doe</td><td style="text-align: center;">12</td><td style="font-weight: bold; color: #10b981; text-align: right;">TZS 2,450,000</td></tr>
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> Mary Joseph</td><td style="text-align: center;">9</td><td style="font-weight: bold; color: #10b981; text-align: right;">TZS 1,890,000</td></tr>
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> Peter Mwangi</td><td style="text-align: center;">7</td><td style="font-weight: bold; color: #10b981; text-align: right;">TZS 1,450,000</td></tr>
-        `;
+        const custMap = {}; // name -> {orders, spent}
+        if (ledgerSnap && !ledgerSnap.empty) {
+            ledgerSnap.forEach(docSnap => {
+                const l = docSnap.data();
+                if (l.type !== 'income_offline' && l.type !== 'income_online') return;
+                const name = String(l.customerName || l.title || 'Mteja').replace(/^Sale:\s*/i, '').trim() || 'Mteja';
+                if (!custMap[name]) custMap[name] = { orders: 0, spent: 0 };
+                custMap[name].orders += 1;
+                custMap[name].spent += parseFloat(l.amount) || 0;
+            });
+        }
+        const topCust = Object.keys(custMap).map(n => [n, custMap[n]])
+            .sort((a, b) => b[1].spent - a[1].spent).slice(0, 5);
+        topCustBody.innerHTML = topCust.length
+            ? topCust.map(([n, v]) => `
+                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> ${n}</td><td style="text-align: center;">${v.orders}</td><td style="font-weight: bold; color: #10b981; text-align: right;">TZS ${v.spent.toLocaleString()}</td></tr>`).join('')
+            : `<tr><td colspan="3" style="padding: 18px 0; text-align: center; color: #94a3b8; font-size: 12.5px;">Bado hakuna mauzo yaliyorekodiwa kwa mteja yeyote.</td></tr>`;
     }
 
     // 3. Table 3: Outstanding Debts
@@ -1015,18 +921,12 @@ window.populateControlTowerTables = function(prodSnap, ledgerSnap) {
                 const l = docSnap.data();
                 if (l.type === 'debt' && l.status === 'pending') {
                     dhtml += `
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 0; font-weight: bold; text-align: left;"> ${l.title.replace("Deni: ", "")}</td>
-                        <td style="font-weight: bold; color: #ef4444; text-align: right;">TZS ${l.amount.toLocaleString()}</td>
-                        <td style="text-align: center;"><button onclick="window.markDebtPaid('${docSnap.id}', ${l.amount})" style="padding: 4px 8px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">LIPWA ✓</button></td>
-                    </tr>`;
+                    <tr style="border-bottom: 1px solid #f1f5f9;"> <td style="padding: 10px 0; font-weight: bold; text-align: left;"> ${l.title.replace("Deni: ", "")}</td> <td style="font-weight: bold; color: #ef4444; text-align: right;">TZS ${l.amount.toLocaleString()}</td> <td style="text-align: center;"><button onclick="window.markDebtPaid('${docSnap.id}', ${l.amount})" style="padding: 4px 8px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: bold; font-size:12.5px; cursor: pointer;">LIPWA </button></td> </tr>`;
                 }
             });
         }
         debtsBody.innerHTML = dhtml || `
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> Aisha Salim</td><td style="font-weight: bold; color: #ef4444; text-align: right;">TZS 1,200,000</td><td style="text-align: center;"><button class="ct-pos-btn" style="padding: 4px 8px; font-size: 10px; background: #ef4444;">${T('ck_paid', 'PAID')}</button></td></tr>
-            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> David Kamau</td><td style="font-weight: bold; color: #ef4444; text-align: right;">TZS 980,000</td><td style="text-align: center;"><button class="ct-pos-btn" style="padding: 4px 8px; font-size: 10px; background: #ef4444;">LIPWA</button></td></tr>
-        `;
+            <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> Aisha Salim</td><td style="font-weight: bold; color: #ef4444; text-align: right;">TZS 1,200,000</td><td style="text-align: center;"><button class="ct-pos-btn" style="padding: 4px 8px; font-size:12.5px; background: #ef4444;">${T('ck_paid', 'PAID')}</button></td></tr> <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; font-weight: bold; text-align: left;"> David Kamau</td><td style="font-weight: bold; color: #ef4444; text-align: right;">TZS 980,000</td><td style="text-align: center;"><button class="ct-pos-btn" style="padding: 4px 8px; font-size:12.5px; background: #ef4444;">LIPWA</button></td></tr> `;
     }
 };
 

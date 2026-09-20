@@ -15,7 +15,7 @@
 }
 .ch-msg[data-mine="0"] { align-items: flex-start; }
 .ch-msg[data-mine="1"] { align-items: flex-end; }
-.ch-msg .chat-bubble { max-width: 78%; overflow-wrap: anywhere; word-break: break-word; }
+.ch-msg .chat-bubble { max-width: 88%; overflow-wrap: break-word; word-break: normal; writing-mode: horizontal-tb !important; text-orientation: mixed !important; }
 .ch-msg[data-mine="0"] .chat-bubble {
     background: #ffffff;
     color: #111b21;
@@ -31,20 +31,20 @@
 }
 .ch-sender {
     display: block;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #0369a1;
     margin-bottom: 3px;
 }
 
-.ch-meta { display: flex; align-items: center; gap: 6px; margin: 2px 0 2px 0; font-size: 10px; color: #8a99a8; }
+.ch-meta { display: flex; align-items: center; gap: 6px; margin: 2px 0 2px 0; font-size: 12.5px; color: #8a99a8; }
 .ch-msg[data-mine="1"] .ch-meta { justify-content: flex-end; }
 .ch-tick { color: #34b7f1; font-weight: 800; letter-spacing: -1px; }
 
 .ch-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 0 8px 0; opacity: .85; }
 .ch-msg[data-mine="1"] .ch-actions { justify-content: flex-end; }
 .ch-actions button {
-    border: none; background: transparent; color: #64748b; font-size: 10.5px;
+    border: none; background: transparent; color: #64748b; font-size: 12.5px;
     font-weight: 700; cursor: pointer; padding: 3px 7px; border-radius: 99px;
     background: #eef2f6;
 }
@@ -52,7 +52,7 @@
 
 .ch-quote {
     border-left: 3px solid #34b7f1; background: rgba(52,183,241,.12);
-    padding: 4px 8px; border-radius: 6px; font-size: 11px; color: #475569; margin-bottom: 4px;
+    padding: 4px 8px; border-radius: 6px; font-size: 13px; color: #475569; margin-bottom: 4px;
 }
 
 /* ---------- Kadi za kushiriki (product/order/delivery) ---------- */
@@ -65,8 +65,8 @@
 .ch-card-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ch-card-title { font-size: 12.5px; font-weight: 800; color: #0f172a; }
 .ch-card-price { font-size: 12px; font-weight: 800; color: #b45309; }
-.ch-card-sub { font-size: 10.5px; color: #475569; }
-.ch-card-link { font-size: 10.5px; color: #03509d; font-weight: 800; }
+.ch-card-sub { font-size: 12.5px; color: #475569; }
+.ch-card-link { font-size: 12.5px; color: #03509d; font-weight: 800; }
 .ch-card-order { border-left: 4px solid #03509d; }
 .ch-card-delivery { border-left: 4px solid #16a34a; }
 /* [COMMERCE 2026-09] Kadi ya oda: hali ya malipo (inasubiri / imelindwa escrow). */
@@ -81,7 +81,7 @@
 .ch-order-badge {
     display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
     margin-top: 3px; padding: 2px 8px; border-radius: 999px;
-    font-size: 10px; font-weight: 800; line-height: 1.6;
+    font-size: 12.5px; font-weight: 800; line-height: 1.6;
 }
 .ch-order-badge--wait { background: #fef3c7; color: #92400e; }
 .ch-order-badge--ok { background: #dff3ec; color: #0E7A63; }
@@ -92,7 +92,7 @@
 .ch-ctxbar { display: flex; flex-wrap: nowrap; gap: 6px; padding: 6px 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .ch-ctxbtn {
     border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a;
-    font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 99px; cursor: pointer;
+    font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 99px; cursor: pointer;
     white-space: nowrap; flex: 0 0 auto;
 }
 .ch-ctxbtn:hover { background: #e0f2fe; border-color: #7dd3fc; }
@@ -100,7 +100,7 @@
 /* ---------- Chip ya kujibu ---------- */
 #chatReplyChip { background: #ffffff; border-top: 1px solid #e2e8f0; }
 .ch-replychip {
-    display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 11.5px;
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 13px;
     color: #475569; background: #f1f5f9;
 }
 .ch-replychip button { border: none; background: #e2e8f0; color: #475569; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; }
@@ -109,7 +109,7 @@
 .ch-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 10px 4px 8px; border-bottom: 1px solid #eef2f6; }
 .ch-tab {
     flex: 0 0 auto; padding: 7px 13px; border-radius: 99px; border: 1px solid #e2e8f0;
-    background: #f8fafc; color: #475569; font-size: 11.5px; font-weight: 800; cursor: pointer;
+    background: #f8fafc; color: #475569; font-size: 13px; font-weight: 800; cursor: pointer;
 }
 .ch-tab.active { background: #03509d; border-color: #03509d; color: #fff; }
 .ch-inbox-list { padding: 8px 2px; }
@@ -120,7 +120,7 @@
 .ch-contact:hover { background: #f8fafc; }
 /* [PIN 2026-09] Mazungumzo yaliyopiniwa — yanaangaziwa na kuonekana juu. */
 .ch-contact.ch-pinned { background: #fefce8; border-left: 4px solid #d97706; }
-.ch-pin-badge { font-size: 10px; color: #b45309; font-weight: 800; }
+.ch-pin-badge { font-size: 12.5px; color: #b45309; font-weight: 800; }
 .ch-pin-btn {
     border: none; background: transparent; cursor: pointer; font-size: 15px;
     padding: 4px 6px; border-radius: 50%; color: #94a3b8; flex-shrink: 0; line-height: 1;
@@ -128,14 +128,18 @@
 .ch-pin-btn:hover { background: #fef3c7; color: #b45309; }
 .ch-pin-btn.on { color: #b45309; }
 .ch-cc-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.ch-cc-name { font-size: 13.5px; font-weight: 800; color: #0f172a; overflow-wrap: anywhere; }
+.ch-cc-name {
+    font-size: 13.5px; font-weight: 800; color: #0f172a;
+    white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
+    writing-mode: horizontal-tb !important;
+}
 .ch-verified { color: #16a34a; font-weight: 900; }
 .ch-cc-msg { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-cc-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
-.ch-chip { font-size: 9.5px; background: #eef2f6; color: #475569; padding: 2px 7px; border-radius: 99px; font-weight: 700; }
+.ch-chip { font-size: 12px; background: #eef2f6; color: #475569; padding: 2px 7px; border-radius: 99px; font-weight: 700; }
 .ch-cc-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.ch-cc-time { font-size: 10px; color: #94a3b8; }
-.ch-unread { background: #16a34a; color: #fff; font-size: 10px; font-weight: 800; border-radius: 99px; padding: 2px 8px; }
+.ch-cc-time { font-size: 12.5px; color: #94a3b8; }
+.ch-unread { background: #16a34a; color: #fff; font-size: 12.5px; font-weight: 800; border-radius: 99px; padding: 2px 8px; }
 
 /* ---------- Commerce quick actions (PHASE 5) ---------- */
 #chatCommerceBar { background: #ffffff; border-top: 1px solid #e2e8f0; }
@@ -150,8 +154,8 @@
 }
 .ch-offer-msg-top { font-size: 12px; color: #92400e; margin-bottom: 4px; }
 .ch-offer-msg-row { font-size: 12px; color: #78350f; }
-.ch-offer-was { color: #a16207; font-size: 11px; }
-.ch-offer-msg-status { display: inline-block; margin-top: 6px; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 99px; }
+.ch-offer-was { color: #a16207; font-size: 13px; }
+.ch-offer-msg-status { display: inline-block; margin-top: 6px; font-size: 12.5px; font-weight: 800; padding: 3px 9px; border-radius: 99px; }
 .ch-offer-msg-status.pending { background: #fef3c7; color: #92400e; }
 .ch-offer-msg-status.accepted { background: #ecfdf5; color: #047857; }
 .ch-offer-msg-status.rejected { background: #fff1f2; color: #be123c; }
@@ -159,7 +163,7 @@
 .ch-offer-msg-status.expired { background: #f1f5f9; color: #64748b; }
 .ch-offer-msg-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .ch-offer-msg-actions button {
-    border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-size: 11px;
+    border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-size: 13px;
     font-weight: 800; padding: 6px 10px; border-radius: 99px; cursor: pointer;
 }
 .ch-offer-msg-actions button:hover { background: #e0f2fe; border-color: #7dd3fc; }
@@ -181,7 +185,7 @@
 .ch-offer-x { border: none; background: transparent; color: #fff; font-size: 16px; cursor: pointer; }
 .ch-offer-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 7px; }
 .ch-offer-prod { font-size: 12.5px; font-weight: 800; color: #0f172a; }
-.ch-offer-body label { font-size: 11px; font-weight: 700; color: #475569; margin-top: 3px; }
+.ch-offer-body label { font-size: 13px; font-weight: 700; color: #475569; margin-top: 3px; }
 .ch-offer-body input {
     border: 1px solid #cbd5e1; border-radius: 10px; padding: 9px 11px; font-size: 13.5px; width: 100%;
     box-sizing: border-box;
@@ -190,7 +194,7 @@
 .ch-offer-btn { flex: 1; border: none; border-radius: 10px; padding: 10px; font-size: 12.5px; font-weight: 800; cursor: pointer; }
 .ch-offer-btn.primary { background: #03509d; color: #fff; }
 .ch-offer-btn.light { background: #eef2f6; color: #0f172a; border: 1px solid #dbe3ee; }
-.ch-offer-note { font-size: 10.5px; color: #64748b; margin-top: 4px; }
+.ch-offer-note { font-size: 12.5px; color: #64748b; margin-top: 4px; }
 
 /* ---------- Public Comments (PHASE 7) ---------- */
 .skh-comments { margin-top: 6px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
@@ -198,7 +202,7 @@
 .skh-cm-headbar h5 { margin: 0; font-size: 13px; color: var(--primary-dark, #0f172a); text-transform: uppercase; }
 .skh-cm-sort { display: flex; gap: 4px; flex-wrap: wrap; }
 .skh-cm-sort button {
-    border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; font-size: 10.5px;
+    border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; font-size: 12.5px;
     font-weight: 800; padding: 4px 9px; border-radius: 99px; cursor: pointer;
 }
 .skh-cm-sort button.active { background: #03509d; color: #fff; border-color: #03509d; }
@@ -208,30 +212,30 @@
 .skh-cm-head { display: flex; gap: 8px; align-items: center; }
 .skh-cm-who { flex: 1; min-width: 0; }
 .skh-cm-who b { font-size: 12.5px; color: #0f172a; display: block; }
-.skh-cm-badge { display: inline-block; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 99px; margin-right: 4px; vertical-align: middle; }
+.skh-cm-badge { display: inline-block; font-size: 12px; font-weight: 900; padding: 1px 6px; border-radius: 99px; margin-right: 4px; vertical-align: middle; }
 .skh-cm-badge.seller { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 .skh-cm-badge.ver { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 .skh-cm-badge.vp { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-.skh-cm-replyto { display: block; font-size: 10.5px; color: #0369a1; }
-.skh-cm-time { font-size: 9.5px; color: #94a3b8; }
+.skh-cm-replyto { display: block; font-size: 12.5px; color: #0369a1; }
+.skh-cm-time { font-size: 12px; color: #94a3b8; }
 .skh-cm-text { display: block; font-size: 12.5px; color: #334155; line-height: 1.45; margin: 6px 0 4px; white-space: pre-wrap; }
 .skh-cm-media { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0; }
 .skh-cm-media img { width: 74px; height: 74px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; }
 .skh-cm-prodcard { display: flex; gap: 8px; align-items: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px; margin-top: 5px; cursor: pointer; }
 .skh-cm-prodcard img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #f1f5f9; }
-.skh-cm-prodcard b { font-size: 11.5px; color: #0f172a; display: block; }
-.skh-cm-prodcard span { font-size: 10.5px; color: #b45309; font-weight: 800; }
-.skh-cm-prodcard em { font-size: 10px; color: #03509d; font-style: normal; font-weight: 800; }
+.skh-cm-prodcard b { font-size: 13px; color: #0f172a; display: block; }
+.skh-cm-prodcard span { font-size: 12.5px; color: #b45309; font-weight: 800; }
+.skh-cm-prodcard em { font-size: 12.5px; color: #03509d; font-style: normal; font-weight: 800; }
 .skh-cm-actions { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
 .skh-cm-actions button {
-    border: none; background: transparent; color: #64748b; font-size: 10.5px;
+    border: none; background: transparent; color: #64748b; font-size: 12.5px;
     font-weight: 700; cursor: pointer; padding: 3px 8px; border-radius: 99px; background: #eef2f6;
 }
 .skh-cm-actions button.on { background: #dbeafe; color: #1d4ed8; }
-.skh-cm-more { border: none; background: #eef2f6; color: #475569; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 99px; cursor: pointer; margin: 2px 0 8px; }
+.skh-cm-more { border: none; background: #eef2f6; color: #475569; font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 99px; cursor: pointer; margin: 2px 0 8px; }
 .skh-cm-empty { font-size: 12px; color: #94a3b8; text-align: center; margin: 16px 0; }
 .skh-cm-composer { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px; margin-top: 8px; }
-.skh-cm-replying { font-size: 11px; color: #0369a1; background: #f0f9ff; border-radius: 8px; padding: 5px 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+.skh-cm-replying { font-size: 13px; color: #0369a1; background: #f0f9ff; border-radius: 8px; padding: 5px 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
 .skh-cm-replying button { border: none; background: #e0f2fe; color: #0369a1; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; }
 .skh-cm-composer input { flex: 1; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 11px; font-size: 13px; outline: none; min-width: 0; }
 .skh-cm-composer button { border: none; background: #03509d; color: #fff; border-radius: 10px; padding: 10px 14px; font-weight: 800; font-size: 12.5px; cursor: pointer; }
@@ -251,8 +255,8 @@
 }
 .skh-cm-replyform .skh-cm-cancel { background: #e2e8f0; color: #475569; padding: 9px 11px; }
 .skh-cm-tools { display: flex; gap: 10px; align-items: center; margin-top: 7px; flex-wrap: wrap; }
-.skh-cm-attach { font-size: 11px; color: #475569; font-weight: 700; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
-.skh-cm-hint { font-size: 10px; color: #94a3b8; }
+.skh-cm-attach { font-size: 13px; color: #475569; font-weight: 700; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+.skh-cm-hint { font-size: 12.5px; color: #94a3b8; }
 
 /* ============================================================
    [CHAT UI v1.0 2026-09] Ukurasa KAMILI kila wakati (mobile + desktop).
@@ -270,7 +274,7 @@
 
 /* ---------- Hint: telezesha ujumbe kujibu (gesture) ---------- */
 .ch-swipe-hint {
-    text-align: center; font-size: 10px; color: #94a3b8; margin-bottom: 8px;
+    text-align: center; font-size: 12.5px; color: #94a3b8; margin-bottom: 8px;
     background: #fff; padding: 5px 12px; border-radius: 99px; align-self: center;
     box-shadow: 0 1px 1px rgba(0,0,0,.06);
 }
@@ -289,7 +293,7 @@
     font-weight: 800; font-size: 12px; padding: 8px 16px; border-radius: 99px; cursor: pointer;
 }
 .ch-unblock-btn:hover { background: #fee2e2; }
-.ch-unblock-btn.small { margin-top: 0; padding: 6px 12px; font-size: 11px; }
+.ch-unblock-btn.small { margin-top: 0; padding: 6px 12px; font-size: 13px; }
 .ch-blocked-row {
     display: flex; gap: 10px; align-items: center;
     padding: 10px 6px; border-bottom: 1px solid #f1f5f9;
@@ -323,8 +327,8 @@
 .ch-anchor-head { font-size: 12.5px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ch-anchor-prod { font-weight: 700; color: #475569; }
 .ch-anchor-terms { font-size: 12px; color: #334155; margin-top: 3px; }
-.ch-anchor-order { font-size: 11.5px; color: #065f46; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 4px 8px; margin-top: 5px; display: inline-block; }
-.ch-anchor-adj { font-size: 11px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 4px 8px; margin-top: 4px; }
+.ch-anchor-order { font-size: 13px; color: #065f46; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 4px 8px; margin-top: 5px; display: inline-block; }
+.ch-anchor-adj { font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 4px 8px; margin-top: 4px; }
 
 .ch-nego-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .ch-nego-btn {
@@ -334,21 +338,31 @@
 .ch-nego-btn:hover { background: #e0f2fe; border-color: #7dd3fc; }
 .ch-nego-btn.primary { background: #03509d; border-color: #03509d; color: #ffffff; }
 .ch-nego-btn.primary:hover { background: #023f7c; }
+/* [NEGO CLICK FIX 2026-09-17] busy state: amri ikiprocess vitufe hu-
+   jificha kidogo + spinner — mtumiaji anajua click imepokelewa. */
+.ch-nego-btn:disabled, .ch-nego-btn.skh-nego-busy { opacity: .5; cursor: wait; }
+.ch-nego-btn.skh-nego-busy { position: relative; }
+.ch-nego-btn.skh-nego-busy::after {
+    content: ""; display: inline-block; width: 10px; height: 10px; margin-left: 6px;
+    border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%;
+    vertical-align: -1px; animation: skhNegoSpin .7s linear infinite;
+}
+@keyframes skhNegoSpin { to { transform: rotate(360deg); } }
 
 .ch-nego-event { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 8px 10px; max-width: 88%; }
 .ch-nego-event-top { font-size: 12px; color: #9a3412; font-weight: 800; }
-.ch-nego-event-row { font-size: 11.5px; color: #475569; margin-top: 2px; }
+.ch-nego-event-row { font-size: 13px; color: #475569; margin-top: 2px; }
 
-.ch-nego-hist { margin-top: 6px; font-size: 11px; color: #64748b; }
+.ch-nego-hist { margin-top: 6px; font-size: 13px; color: #64748b; }
 .ch-nego-hist summary { cursor: pointer; font-weight: 800; color: #0369a1; }
 .ch-nego-hist-line { padding: 2px 0; border-bottom: 1px dashed #e2e8f0; }
 
 #chatNegoHint { flex-shrink: 0; background: #eff6ff; border-top: 1px solid #bfdbfe; padding: 6px 10px; }
 .ch-nego-hint { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ch-nego-hint span { font-size: 11.5px; color: #1d4ed8; font-weight: 800; }
+.ch-nego-hint span { font-size: 13px; color: #1d4ed8; font-weight: 800; }
 .ch-nego-hint button {
     border: 1px solid #bfdbfe; background: #ffffff; color: #1d4ed8;
-    font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 99px; cursor: pointer;
+    font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 99px; cursor: pointer;
 }
 .ch-nego-hint button:hover { background: #dbeafe; }
 .ch-nego-hint button.x { border: none; background: transparent; color: #64748b; padding: 4px 8px; }
@@ -356,7 +370,7 @@
 /* ---------- Anchor tulivu (spec §27–28) ---------- */
 .ch-anchor { padding: 7px 12px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; }
 .ch-anchor-links { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-.ch-anchor-links .ch-nego-btn { padding: 5px 10px; font-size: 11.5px; }
+.ch-anchor-links .ch-nego-btn { padding: 5px 10px; font-size: 13px; }
 
 /* Kadi ya negotiation NDANI ya mtiririko wa chat (spec §35) */
 .ch-nego-event { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 9px 10px; max-width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
@@ -366,7 +380,7 @@
 /* Bango la zamu linalojua UPANDE (spec §7): "Jibu lako" vs "Inasubiri" */
 .ch-nego-turnbanner {
     margin-top: 6px; padding: 5px 10px; border-radius: 99px;
-    font-size: 11.5px; font-weight: 800; display: inline-block;
+    font-size: 13px; font-weight: 800; display: inline-block;
     background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
 }
 .ch-nego-event .ch-nego-event-row b { color: #0f172a; }
@@ -382,7 +396,7 @@
 .ch-track-step { position: relative; z-index: 1; display: inline-flex; flex-direction: column; align-items: center; width: 20%; }
 .ch-track-dot { width: 14px; height: 14px; border-radius: 50%; background: #e2e8f0; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
 .ch-track-dot.on { background: #059669; box-shadow: 0 0 0 1px #059669; }
-.ch-track-lbl { font-size: 9.5px; color: #64748b; margin-top: 3px; text-align: center; white-space: nowrap; }
+.ch-track-lbl { font-size: 12px; color: #64748b; margin-top: 3px; text-align: center; white-space: nowrap; }
 .ch-track-step .on + .ch-track-lbl { color: #065f46; font-weight: 800; }
 
 /* ---------- Ujumbe wa MFUMO (ofa/oda/delivery) — TUKIO katikati ---------- */
@@ -431,7 +445,7 @@
 }
 .ch-inbox-title { display: flex; flex-direction: column; min-width: 0; }
 .ch-inbox-title b { font-size: 19px; letter-spacing: 3px; line-height: 1.1; }
-.ch-inbox-title small { font-size: 11px; color: #d3e7f7; font-weight: 600; }
+.ch-inbox-title small { font-size: 13px; color: #d3e7f7; font-weight: 600; }
 .ch-inbox-head-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 .ch-inbox-iconbtn {
     width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.28);
@@ -454,7 +468,7 @@
 #inboxSearchInput::placeholder { color: #94a3b8; }
 .ch-inbox-clear {
     border: none; background: #e2e8f0; color: #475569; width: 22px; height: 22px;
-    border-radius: 50%; cursor: pointer; font-size: 11px; align-items: center;
+    border-radius: 50%; cursor: pointer; font-size: 13px; align-items: center;
     justify-content: center; flex-shrink: 0; line-height: 1;
 }
 
@@ -477,7 +491,7 @@
 
 /* Sehemu PINNED / RECENT */
 .ch-inbox-sec {
-    font-size: 10.5px; font-weight: 900; letter-spacing: 1.4px; text-transform: uppercase;
+    font-size: 12.5px; font-weight: 900; letter-spacing: 1.4px; text-transform: uppercase;
     color: #1268A8; padding: 12px 8px 6px;
 }
 
@@ -495,7 +509,11 @@
     border-radius: 50%; background: #18A982; border: 2px solid #ffffff;
 }
 .ch-cc-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.ch-cc-name { font-size: 14px; font-weight: 800; color: #0f172a; overflow-wrap: anywhere; }
+.ch-cc-name {
+    font-size: 14px; font-weight: 800; color: #0f172a;
+    white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
+    writing-mode: horizontal-tb !important;
+}
 .ch-verified { color: #18A982; font-weight: 900; margin-left: 2px; }
 .ch-cc-msg {
     font-size: 12.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -503,13 +521,13 @@
 .ch-cc-msg.commerce { color: #1268A8; font-weight: 700; }
 .ch-cc-meta { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
 .ch-acct-badge {
-    font-size: 9.5px; background: #eef6fb; color: #1268A8; padding: 2px 8px; border-radius: 99px;
+    font-size: 12px; background: #eef6fb; color: #1268A8; padding: 2px 8px; border-radius: 99px;
     font-weight: 800;
 }
 .ch-cc-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.ch-cc-time { font-size: 10px; color: #94a3b8; }
+.ch-cc-time { font-size: 12.5px; color: #94a3b8; }
 .ch-unread {
-    background: #18A982; color: #fff; font-size: 10px; font-weight: 800; border-radius: 99px;
+    background: #18A982; color: #fff; font-size: 12.5px; font-weight: 800; border-radius: 99px;
     padding: 2px 8px; min-width: 18px; text-align: center;
 }
 /* Mkazo wa unread: uzani + upau + asili (si rangi pekee — spec §7). */
@@ -578,7 +596,7 @@
 .ch-side-search span { font-size: 13px; opacity: .7; }
 .ch-side-search input { flex: 1; border: none; outline: none; background: transparent; font-size: 13px; color: #173B56; }
 .ch-inbox-chips.side { padding: 0 12px 6px; }
-.ch-inbox-chips.side .ch-tab { padding: 6px 11px; font-size: 11px; }
+.ch-inbox-chips.side .ch-tab { padding: 6px 11px; font-size: 13px; }
 .ch-side-list { flex: 1; overflow-y: auto; padding: 4px 6px 12px; }
 
 /* ---------- Hali ya uteuzi (desktop two-pane, hakuna uteuzi) ---------- */
@@ -626,7 +644,7 @@
 }
 .ch-attach-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .ch-attach-t b { font-size: 13px; color: #173B56; }
-.ch-attach-t span { font-size: 11.5px; color: #64748b; }
+.ch-attach-t span { font-size: 13px; color: #64748b; }
 .ch-attach-t b b, .ch-attach-t span b { color: #b45309; }
 .ch-attach-send { color: #1268A8; font-weight: 900; flex-shrink: 0; }
 
@@ -638,16 +656,16 @@
 .ch-loc-pin { font-size: 22px; }
 .ch-loc-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
 .ch-loc-info b { font-size: 12.5px; color: #0f172a; }
-.ch-loc-info span { font-size: 10.5px; color: #64748b; }
+.ch-loc-info span { font-size: 12.5px; color: #64748b; }
 .ch-loc-open { color: #1268A8; font-weight: 900; text-decoration: none; font-size: 16px; }
 
 /* ============================================================
    [DRAFT/ARCHIVE/MUTE/REACTIONS 2026-09] spec §4, §12, §13, §28
    ============================================================ */
 /* Rasimu + kimya kwenye orodha */
-.ch-mute-ico { font-size: 11px; margin-left: 2px; }
+.ch-mute-ico { font-size: 13px; margin-left: 2px; }
 .ch-draft-badge {
-    font-size: 9.5px; background: #fff7ed; color: #b45309; padding: 2px 8px;
+    font-size: 12px; background: #fff7ed; color: #b45309; padding: 2px 8px;
     border-radius: 99px; font-weight: 800; border: 1px solid #fde68a;
 }
 
@@ -659,7 +677,7 @@
     font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 99px; cursor: pointer;
     display: inline-flex; align-items: center; gap: 4px;
 }
-.ch-react-chip span { font-size: 10.5px; color: #1268A8; }
+.ch-react-chip span { font-size: 12.5px; color: #1268A8; }
 .ch-react-chip.on { background: #e9f3fb; border-color: #1268A8; }
 
 /* Picker ya emoji */
@@ -687,7 +705,7 @@
 }
 .comments-section.pm-sec .skh-cm-headbar h5 { display: none; }
 .comments-section.pm-sec .skh-cm-sort button {
-    padding: 5px 12px; font-size: 11px; border-radius: 99px;
+    padding: 5px 12px; font-size: 13px; border-radius: 99px;
 }
 /* Orodha ya maoni isikate ndani ya kadi — scroll ya modal yatosha */
 .comments-section.pm-sec .skh-cm-list {
@@ -715,11 +733,11 @@
 }
 .comments-section.pm-sec .skh-cm-who b { font-size: 13px; }
 .comments-section.pm-sec .skh-cm-text { font-size: 13px; line-height: 1.5; color: #1f2a37; }
-.comments-section.pm-sec .skh-cm-badge { font-size: 9px; padding: 2px 7px; }
+.comments-section.pm-sec .skh-cm-badge { font-size: 12px; padding: 2px 7px; }
 .comments-section.pm-sec .skh-cm-actions button {
     background: #eef2f6;
     padding: 5px 11px;
-    font-size: 11px;
+    font-size: 13px;
 }
 .comments-section.pm-sec .skh-cm-actions button:hover { background: #e2e8f0; }
 .comments-section.pm-sec .skh-cm-actions button.on { background: #dbeafe; color: #1d4ed8; }
@@ -763,7 +781,7 @@
 }
 .comments-section.pm-sec .skh-cm-more {
     padding: 7px 14px;
-    font-size: 11.5px;
+    font-size: 13px;
     margin: 4px auto 10px;
     display: block;
 }
@@ -789,7 +807,7 @@
     border-radius: 50%;
     background: #e0f0fa;
     color: #1268A8;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 900;
     transition: transform .18s ease, background .18s ease;
 }
@@ -944,7 +962,7 @@
 .ch-nego-event .ch-nego-head-t { min-width: 0; flex: 1 1 auto; }
 .ch-nego-event .ch-nego-state {
     display: inline-block;
-    font-size: 9.5px; font-weight: 900; letter-spacing: .06em;
+    font-size: 12px; font-weight: 900; letter-spacing: .06em;
     text-transform: uppercase;
     color: #b45309; background: #fef3c7; border: 1px solid #fde68a;
     padding: 2px 8px; border-radius: 99px; margin-bottom: 4px;
@@ -982,7 +1000,7 @@
 .ch-nego-event .ch-nego-turnbanner {
     display: flex; align-items: center; gap: 7px;
     margin: 9px 12px 0; padding: 7px 11px;
-    border-radius: 10px; font-size: 11.5px; font-weight: 800;
+    border-radius: 10px; font-size: 13px; font-weight: 800;
     border: 1px solid transparent;
 }
 .ch-nego-event .ch-nb-ico { display: inline-flex; flex: 0 0 auto; }
@@ -1026,7 +1044,7 @@
 .ch-nego-event .ch-nego-pending {
     margin: 7px 12px 0; padding: 7px 10px; border-radius: 10px;
     background: #ecfeff; border: 1px dashed #22d3ee; color: #155e75;
-    font-size: 11.5px;
+    font-size: 13px;
 }
 
 /* Kifungo cha oda */
@@ -1045,7 +1063,7 @@
 .ch-nego-event .ch-nego-order-ico svg { width: 16px; height: 16px; }
 .ch-nego-event .ch-nego-order-t { display: flex; flex-direction: column; min-width: 0; }
 .ch-nego-event .ch-nego-order-t b { font-size: 12.5px; color: #0f172a; }
-.ch-nego-event .ch-nego-order-t span { font-size: 11px; font-weight: 700; color: #92400e; }
+.ch-nego-event .ch-nego-order-t span { font-size: 13px; font-weight: 700; color: #92400e; }
 .ch-nego-event .ch-nego-order.is-paid .ch-nego-order-t span { color: #047857; }
 .ch-nego-event .ch-nego-event-row b { color: #0f172a; }
 .ch-nego-event .ch-nego-event-row { padding: 0 12px; margin-top: 6px; font-size: 12px; }
@@ -1082,7 +1100,7 @@
 .ch-nego-btn.outline:hover { background: #e0f2fe; }
 
 /* Historia ndogo ya majadiliano */
-.ch-nego-event .ch-nego-hist { padding: 0 12px 10px; margin-top: 8px; font-size: 11px; color: #64748b; }
+.ch-nego-event .ch-nego-hist { padding: 0 12px 10px; margin-top: 8px; font-size: 13px; color: #64748b; }
 .ch-nego-event .ch-nego-hist summary { cursor: pointer; font-weight: 800; color: #0369a1; }
 .ch-nego-event .ch-nego-hist-line { padding: 3px 0; border-bottom: 1px dashed #e2e8f0; }
 
@@ -1097,7 +1115,7 @@
 .skh-cn-field { display: flex; flex-direction: column; gap: 5px; }
 .skh-cn-field label {
     display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11.5px; font-weight: 800; color: #334155; margin-top: 2px;
+    font-size: 13px; font-weight: 800; color: #334155; margin-top: 2px;
 }
 .skh-cn-field label svg { width: 14px; height: 14px; color: #0b4f7a; }
 .skh-cn-req { color: #e11d48; font-weight: 900; }
@@ -1111,11 +1129,11 @@
 .skh-cn-money input:focus { outline: none; border-color: #2B82BD; box-shadow: 0 0 0 3px rgba(43,130,189,.14); }
 .skh-cn-money { position: relative; display: flex; align-items: center; }
 .skh-cn-money span {
-    position: absolute; left: 12px; font-size: 11px; font-weight: 900;
+    position: absolute; left: 12px; font-size: 13px; font-weight: 900;
     color: #64748b; pointer-events: none; letter-spacing: .02em;
 }
 .skh-cn-money input { padding-left: 42px; }
-.skh-cn-err { color: #e11d48; font-size: 10.5px; font-weight: 700; min-height: 12px; }
+.skh-cn-err { color: #e11d48; font-size: 12.5px; font-weight: 700; min-height: 12px; }
 .skh-cn-total {
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 2px; padding: 10px 13px; border-radius: 12px;
@@ -1172,12 +1190,13 @@
 }
 .ch-head-sub {
     display: block; min-height: 0; height: 13px;
-    font-size: 10.5px; line-height: 13px; font-weight: 800;
+    font-size: 12.5px; line-height: 13px; font-weight: 800;
     color: #a7f3d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .ch-hbtn {
     background: transparent; border: none; color: #fff;
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 34px; height: 34px; min-width: 34px; min-height: 34px; max-width: 34px; max-height: 34px;
+    border-radius: 50% !important;
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0; padding: 0;
     transition: background .15s ease;
@@ -1186,7 +1205,7 @@
 .ch-head-right { position: relative; flex-shrink: 0; display: flex; align-items: center; }
 .ch-head-menu {
     position: absolute; top: 40px; right: 4px; z-index: 40;
-    min-width: 210px; background: #fff; color: #0f172a;
+    min-width: 220px; width: max-content; max-width: 90vw; background: #fff; color: #0f172a;
     border: 1px solid #e2e8f0; border-radius: 14px;
     box-shadow: 0 14px 34px rgba(15, 23, 42, .22);
     padding: 6px; display: flex; flex-direction: column; gap: 2px;
@@ -1195,10 +1214,16 @@
 .ch-head-menu[hidden] { display: none; }
 @keyframes chMenuPop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 .ch-head-menu button {
-    display: flex; align-items: center; gap: 10px; width: 100%;
+    display: flex !important; flex-direction: row !important; align-items: center !important;
+    gap: 10px; width: 100%; white-space: nowrap !important;
+    writing-mode: horizontal-tb !important; text-orientation: mixed !important;
     border: none; background: transparent; text-align: left;
     padding: 9px 11px; border-radius: 9px; cursor: pointer;
     font-size: 13px; font-weight: 700; color: #173B56;
+}
+.ch-head-menu button span:last-child {
+    white-space: nowrap !important;
+    writing-mode: horizontal-tb !important;
 }
 .ch-head-menu button:hover { background: #eef6fb; }
 .ch-head-menu button.is-danger { color: #b91c1c; }
@@ -1234,7 +1259,7 @@
 .ch-event-wrap { width: 100%; max-width: 92%; display: flex; flex-direction: column; }
 .ch-msg.ch-msg-event[data-mine="1"] .ch-event-wrap { align-items: flex-end; }
 .ch-event-cap {
-    font-size: 10px; font-weight: 800; letter-spacing: .2px;
+    font-size: 12.5px; font-weight: 800; letter-spacing: .2px;
     color: #64748b; margin: 0 6px 3px;
     display: inline-flex; align-items: center; gap: 4px;
 }
@@ -1271,3 +1296,22 @@
 .ch-typing-dots i:nth-child(2) { animation-delay: .15s; }
 .ch-typing-dots i:nth-child(3) { animation-delay: .3s; }
 @keyframes chTyping { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+
+/* [TICKS UX 2026-09-17 v2] Mpangilio uliothibitishwa na mtumiaji:
+ *   ✓  SENT     = tick 1 kijivu kavu (#a8b4c4) — ujumbe umetoka simu yako
+ *   ✓✓ DELIVERED = tick 2 za KIJIVU (#64748b) — imefikia tu (HAIJASOMWA)
+ *   ✓✓ READ     = tick 2 za BULUU KAMILI (#1e90ff) — IMESOMWA KWELI
+ * Kanuni kama ya WhatsApp: kijivu = haijasomwa; buluu = imesomwa. */
+.ch-tick { display: inline-flex; align-items: center; vertical-align: middle; }
+.ch-tick svg { display: block; }
+.ch-tick--sent { color: #a8b4c4 !important; }
+.ch-tick--read { color: #1e90ff !important; }
+#chatMessages .ch-tick--read { color: #1e90ff !important; }
+#chatMessages .ch-tick--sent { color: #a8b4c4 !important; }
+/* Specificity war: 24-chat-ui-v2 `#chatMessages .ch-meta span{!important}` (1,1,1)
+ * inalz juju kwa `.ch-tick--*` (1,1,0). Bongea `.ch-meta` ndani: (1,2,0) → wins. */
+#chatMessages .ch-meta .ch-tick--read { color: #1e90ff !important; }
+#chatMessages .ch-meta .ch-tick--sent { color: #a8b4c4 !important; }
+
+/* DELIVERED = tick 2 za KIJIVU (imefikia tu); baada ya kusomwa inageuka BULUU. */
+#chatMessages .ch-meta .ch-tick--delivered { color: #64748b !important; }

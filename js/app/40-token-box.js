@@ -4,12 +4,12 @@
 // linalojitegemea (halijifichi ndani ya oda/safari).
 //
 // Tokeni za chain-of-custody (zilizopo — 33-custody.js + server):
-//   PK-XXXXXXXX  Pickup    (mzigo muuzaji/chanzo → mshikaji wa kwanza)
-//   TR-XXXXXXXX  Handover  (mshikaji A → mshikaji B / wakala wa kati)
+//   PK-XXXXXXXX  Pickup    (mzigo muuzaji/chanzo -> mshikaji wa kwanza)
+//   TR-XXXXXXXX  Handover  (mshikaji A -> mshikaji B / wakala wa kati)
 //   DL-XXXXXXXX  Delivery  (mpokeaji wa mwisho, uthibitisho wa uwasilishaji)
 //
-// Kila tokeni inahusishwa na safari/mzigo (Order → Transport →
-// Parcel → Mshika → Tukio la makabidhiano), ina hali
+// Kila tokeni inahusishwa na safari/mzigo (Order -> Transport ->
+// Parcel -> Mshika -> Tukio la makabidhiano), ina hali
 // (hai/imetumika/imeisha), tarehe ya kuisha na QR, na inasomwa
 // na MHUSIKA tu (delivery_tokens za faragha, rules za Firestore).
 //
@@ -19,8 +19,7 @@
 // ============================================================ */
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var state = { tab: 'active', items: [], bookings: [], routing: [], loaded: false };
 
@@ -251,7 +250,7 @@ import { skh } from './00-bootstrap.js';
             + '<div class="tb-code-row"><span class="tb-code" id="tbCode_' + esc(it.rideId) + '_' + esc(it.kind) + '">' + esc(it.code) + '</span>'
             + '<button type="button" class="tb-icon-btn" title="Nakili" aria-label="Nakili kodi" onclick="window.skhTokenBoxCopy(\'' + esc(it.rideId) + '\',\'' + esc(it.kind) + '\')">' + ico('edit', 14) + '</button></div>'
             + '<div class="tb-meta">'
-            +   '<span>' + ico('user', 12) + ' ' + esc(it.role) + '</span>'
+            + '<span>' + ico('user', 12) + ' ' + esc(it.role) + '</span>'
             +   (exp ? '<span>' + ico('calendar', 12) + ' ' + esc(exp) + '</span>' : '')
             +   rideStatusLine(it)
             + '</div>'

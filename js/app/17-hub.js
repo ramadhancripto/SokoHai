@@ -146,7 +146,7 @@ window.renderPosCart = function() {
     if (!container) return;
 
     if (window.posCart.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:gray; font-size:11px; margin:15px 0;">Kikapu kiko wazi. Tafuta bidhaa juu kuingiza.</p>`;
+        container.innerHTML = `<p style="text-align:center; color:gray; font-size:13px; margin:15px 0;">Kikapu kiko wazi. Tafuta bidhaa juu kuingiza.</p>`;
         if(totalEl) totalEl.textContent = "TSh 0";
         return;
     }
@@ -162,24 +162,12 @@ window.renderPosCart = function() {
         const showWholesaleToggle = item.wholesalePrice > 0 && item.wholesalePrice < item.retailPrice;
 
         html += `
-            <div class="pos-cart-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:13px;">
-                <div>
-                    <b> ${item.name}</b><br>
-                    <small style="color:gray;">TSh ${currentActivePrice.toLocaleString()} x ${item.qty}</small>
+            <div class="pos-cart-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:13px;"> <div> <b> ${item.name}</b><br> <small style="color:gray;">TSh ${currentActivePrice.toLocaleString()} x ${item.qty}</small>
                     ${showWholesaleToggle ? `
-                        <label style="display:flex; align-items:center; gap:4px; font-size:10px; color:var(--primary-blue); font-weight:bold; margin-top:4px; cursor:pointer;">
-                            <input type="checkbox" ${item.isWholesale ? 'checked':''} onchange="window.toggleCartItemPriceMode(${index}, this.checked)" style="width:14px; height:14px;">
+                        <label style="display:flex; align-items:center; gap:4px; font-size:12.5px; color:var(--primary-blue); font-weight:bold; margin-top:4px; cursor:pointer;"> <input type="checkbox" ${item.isWholesale ? 'checked':''} onchange="window.toggleCartItemPriceMode(${index}, this.checked)" style="width:14px; height:14px;">
                             Uza kwa bei ya Jumla (TSh ${item.wholesalePrice.toLocaleString()})
-                        </label>
-                    ` : ''}
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <button type="button" onclick="window.updatePosCartQty(${index}, -1)" style="width:28px; height:28px; border-radius:5px; border:1px solid #cbd5e1; background:white; font-weight:bold; cursor:pointer;">-</button>
-                    <b>${item.qty}</b>
-                    <button type="button" onclick="window.updatePosCartQty(${index}, 1)" style="width:28px; height:28px; border-radius:5px; border:none; background:var(--primary-blue); color:white; font-weight:bold; cursor:pointer;">+</button>
-                    <button type="button" onclick="window.removePosCartItem(${index})" style="padding:6px 10px; border:none; background:#fee2e2; color:#ef4444; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px;"></button>
-                </div>
-            </div>`;
+                        </label> ` : ''}
+                </div> <div style="display:flex; align-items:center; gap:8px;"> <button type="button" onclick="window.updatePosCartQty(${index}, -1)" style="width:28px; height:28px; border-radius:5px; border:1px solid #cbd5e1; background:white; font-weight:bold; cursor:pointer;">-</button> <b>${item.qty}</b> <button type="button" onclick="window.updatePosCartQty(${index}, 1)" style="width:28px; height:28px; border-radius:5px; border:none; background:var(--primary-blue); color:white; font-weight:bold; cursor:pointer;">+</button> <button type="button" onclick="window.removePosCartItem(${index})" style="padding:6px 10px; border:none; background:#fee2e2; color:#ef4444; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px;"></button> </div> </div>`;
     });
 
     container.innerHTML = html;
@@ -240,7 +228,7 @@ const queueOfflinePosSale = function(payMethod, ownerUid) {
 
 window.submitPosSale = async function() {
     if (posCart.length === 0) { 
-        alert(" Kikapu cha mauzo kipo wazi! Tafadhali tafuta na uongeze bidhaa."); 
+        alert(" Kikapu cha mauzo kipo wazi! tafuta na uongeze bidhaa."); 
         return; 
     }
     
@@ -296,7 +284,7 @@ window.submitPosSale = async function() {
                 await skh.updateDoc(prodRef, { stock: newStock });
 
                 if (newStock <= lowAlert) {
-                    alert(` RESTOCK WARNING:\nBidhaa ya "${item.name}" imebakiwa na idadi ndogo stoo (${newStock} Pcs!). Tafadhali jaza stoo hivi karibuni.`);
+                    alert(` RESTOCK WARNING:\nBidhaa ya "${item.name}" imebakiwa na idadi ndogo stoo (${newStock} Pcs!). jaza stoo hivi karibuni.`);
                 }
             }
 
@@ -314,7 +302,7 @@ window.submitPosSale = async function() {
             const remainingDebt = (finalSalesAmount > 0 ? finalSalesAmount : totalCartAmount) - deposit;
 
             if(!customerName || !customerPhone) {
-                alert(" Tafadhali jaza Jina na Namba ya Simu ya mteja kwanza!");
+                alert(" jaza Jina na Namba ya Simu ya mteja kwanza!");
                 return;
             }
 
@@ -459,7 +447,7 @@ window.searchPosProductsLive = function() {
 
     const shopOwnerId = skh.currentUserData?.shopOwnerUid || (skh.currentUser ? skh.currentUser.uid : null);
     if (!shopOwnerId) {
-        resultsDiv.innerHTML = '<p style="padding:15px; font-size:11px; text-align:center; color:gray;">Tafadhali ingia kwenye duka lako kwanza...</p>';
+        resultsDiv.innerHTML = '<p style="padding:15px; font-size:13px; text-align:center; color:gray;">ingia kwenye duka lako kwanza...</p>';
         resultsDiv.style.display = 'block';
         return;
     }
@@ -483,7 +471,7 @@ window.searchPosProductsLive = function() {
 
     const draw = () => {
         if (items.length === 0) {
-            resultsDiv.innerHTML = '<p style="padding:15px; font-size:11px; text-align:center; color:gray;">Hakuna bidhaa inayofanana na ulichoandika. Jaribu neno fupi au jina la bidhaa.</p>';
+            resultsDiv.innerHTML = '<p style="padding:15px; font-size:13px; text-align:center; color:gray;">Hakuna bidhaa inayofanana na ulichoandika. Jaribu neno fupi au jina la bidhaa.</p>';
             resultsDiv.style.display = 'block';
             return;
         }
@@ -494,10 +482,7 @@ window.searchPosProductsLive = function() {
             const stock = Number(d.stock || 0);
             __posResultsCache[d.id] = { id: d.id, title: d.title || 'Bidhaa', price: price, stock: stock, wholesalePrice: Number(d.wholesalePrice || 0) };
             html += `
-                <div onclick="window.addPosCartItemById('${d.id}')" style="padding:12px; border-bottom:1px solid #f1f5f9; cursor:pointer; background:white; font-size:13px; display:flex; justify-content:space-between; align-items:center; transition: 0.2s;">
-                    <span><b> ${safeTitle}</b> (Stock: ${stock} Pcs)</span>
-                    <b style="color:var(--green);">TSh ${price.toLocaleString()}</b>
-                </div>`;
+                <div onclick="window.addPosCartItemById('${d.id}')" style="padding:12px; border-bottom:1px solid #f1f5f9; cursor:pointer; background:white; font-size:13px; display:flex; justify-content:space-between; align-items:center; transition: 0.2s;"> <span><b> ${safeTitle}</b> (Stock: ${stock} Pcs)</span> <b style="color:var(--green);">TSh ${price.toLocaleString()}</b> </div>`;
         });
         resultsDiv.innerHTML = html;
         resultsDiv.style.display = 'block';
@@ -575,7 +560,7 @@ window.loadDebtsListInLedger = async function() {
     const container = document.getElementById('osDebtsListContainer');
     if (!container) return;
 
-    container.innerHTML = '<p style="text-align:center; color:gray; font-size:11px; padding:15px;"> Inapakia madeni...</p>';
+    container.innerHTML = '<p style="text-align:center; color:gray; font-size:13px; padding:15px;"> Inapakia madeni...</p>';
     const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
 
     try {
@@ -583,7 +568,7 @@ window.loadDebtsListInLedger = async function() {
         const snap = await skh.getDocs(q);
 
         if (snap.empty) {
-            container.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:11px; padding:15px;">Duka halidai mtu yeyote kwa sasa! Safe </p>';
+            container.innerHTML = '<p style="text-align:center; color:#94a3b8; font-size:13px; padding:15px;">Duka halidai mtu yeyote kwa sasa! Safe </p>';
             return;
         }
 
@@ -593,22 +578,12 @@ window.loadDebtsListInLedger = async function() {
             const dateStr = new Date(l.date).toLocaleDateString();
             
             html += `
-                <div style="padding:12px; border:1px solid #fecaca; display:flex; justify-content:space-between; align-items:center; font-size:12px; text-align:left; background:#fff5f5; border-radius:10px; margin-bottom:5px;">
-                    <div>
-                        <b> ${l.title}</b><br>
-                        <small style="color:#ef4444; font-weight:bold;">${skh.skhEscape(l.notes || '')}</small><br>
-                        <small style="color:gray;">Tarehe: ${dateStr} | Mrekodi: ${l.recordedBy}</small>
-                    </div>
-                    <div style="text-align:right;">
-                        <b style="color:red; display:block; margin-bottom:5px;">TSh ${l.amount.toLocaleString()}</b>
-                        <button type="button" onclick="window.markDebtPaid('${docSnap.id}', ${l.amount})" style="padding:6px 12px; background:var(--green); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:10px;">LIPWA ✓</button>
-                    </div>
-                </div>`;
+                <div style="padding:12px; border:1px solid #fecaca; display:flex; justify-content:space-between; align-items:center; font-size:12px; text-align:left; background:#fff5f5; border-radius:10px; margin-bottom:5px;"> <div> <b> ${l.title}</b><br> <small style="color:#ef4444; font-weight:bold;">${skh.skhEscape(l.notes || '')}</small><br> <small style="color:gray;">Tarehe: ${dateStr} | Mrekodi: ${l.recordedBy}</small> </div> <div style="text-align:right;"> <b style="color:red; display:block; margin-bottom:5px;">TSh ${l.amount.toLocaleString()}</b> <button type="button" onclick="window.markDebtPaid('${docSnap.id}', ${l.amount})" style="padding:6px 12px; background:var(--green); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12.5px;">LIPWA </button> </div> </div>`;
         });
         container.innerHTML = html;
 
     } catch (e) {
-        container.innerHTML = '<p style="color:red; text-align:center; font-size:11px;">Maboresho ya mtandao yamekwama.</p>';
+        container.innerHTML = '<p style="color:red; text-align:center; font-size:13px;">Maboresho ya mtandao yamekwama.</p>';
     }
 };
 
@@ -653,7 +628,9 @@ window.openSokoPay = function() {
     // Jaza Jina la Mtumiaji kwenye ujumbe wa Karibu
     const welcomeEl = document.getElementById('spWelcomeMsg');
     if (welcomeEl && skh.currentUser) {
-        const nameToDisplay = skh.currentUser.displayName || (skh.currentUser.email ? skh.currentUser.email.split('@')[0] : "John Mwangi");
+        // [REAL DATA 2026-09] Fallback ya bandia "John Mwangi" imeondolewa —
+        // tumia jina halisi la akaunti; kama halijawekwa, tumia 'Mgeni'.
+        const nameToDisplay = (skh.currentUserData && (skh.currentUserData.fullName || skh.currentUserData.displayName || skh.currentUserData.name)) || skh.currentUser.displayName || (skh.currentUser.email ? skh.currentUser.email.split('@')[0] : 'Mgeni');
         welcomeEl.innerText = `Welcome back, ${nameToDisplay}! `;
     }
 
@@ -867,10 +844,7 @@ window.renderSokoPayActiveOverview = function(contractsArray) {
 
     if (contractsArray.length === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 25px; color: gray;">
-                <span style="font-size: 30px;"></span>
-                <p style="font-size: 11px; margin-top: 5px;">Huna mkataba wowote unaoendelea (Active) kwa sasa.</p>
-            </div>`;
+            <div style="text-align: center; padding: 25px; color: gray;"> <span style="font-size: 30px;"></span> <p style="font-size:13px; margin-top: 5px;">Huna mkataba wowote unaoendelea (Active) kwa sasa.</p> </div>`;
         return;
     }
 
@@ -894,20 +868,7 @@ window.renderSokoPayActiveOverview = function(contractsArray) {
         }
 
         html += `
-            <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <div style="width: 42px; height: 42px; background: #F8FAFC; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">${icon}</div>
-                    <div>
-                        <span style="font-size: 8px; background: #F1F5F9; color: ${statusColor}; padding: 2px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase;">${typeLabel}</span>
-                        <b style="font-size: 13px; color: #0F172A; display: block; margin-top: 3px;">${skh.skhEscape(c.title || c.itemTitle)}</b>
-                        <small style="color: gray; font-size: 10px; display: block;">Status: <b style="color: ${statusColor};">${c.status.toUpperCase()}</b></small>
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <b style="display: block; color: var(--terracotta); font-size: 13px; margin-bottom: 5px;">TZS ${amt.toLocaleString()}</b>
-                    <button type="button" onclick="${btnClick}" style="padding: 6px 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; font-weight: bold; font-size: 10px; cursor: pointer;">${btnText}</button>
-                </div>
-            </div>`;
+            <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"> <div style="display: flex; gap: 12px; align-items: center;"> <div style="width: 42px; height: 42px; background: #F8FAFC; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">${icon}</div> <div> <span style="font-size:12px; background: #F1F5F9; color: ${statusColor}; padding: 2px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase;">${typeLabel}</span> <b style="font-size: 13px; color: #0F172A; display: block; margin-top: 3px;">${skh.skhEscape(c.title || c.itemTitle)}</b> <small style="color: gray; font-size:12.5px; display: block;">Status: <b style="color: ${statusColor};">${c.status.toUpperCase()}</b></small> </div> </div> <div style="text-align: right;"> <b style="display: block; color: var(--terracotta); font-size: 13px; margin-bottom: 5px;">TZS ${amt.toLocaleString()}</b> <button type="button" onclick="${btnClick}" style="padding: 6px 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; font-weight: bold; font-size:12.5px; cursor: pointer;">${btnText}</button> </div> </div>`;
     });
 
     container.innerHTML = html;
@@ -917,7 +878,7 @@ window.renderSokoPayRecentTransactions = async function() {
     const container = document.getElementById('spRecentTransactionsList');
     if (!container || !skh.currentUser) return;
 
-    container.innerHTML = '<p style="text-align: center; color: gray; font-size: 10px;"> Inasoma miamala yako yote ya kifedha...</p>';
+    container.innerHTML = '<p style="text-align: center; color: gray; font-size:12.5px;"> Inasoma miamala yako yote ya kifedha...</p>';
 
     try {
         const uid = skh.currentUser.uid;
@@ -1008,10 +969,7 @@ window.renderSokoPayRecentTransactions = async function() {
 
         if (displayList.length === 0) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 20px; color: gray;">
-                    <span style="font-size: 24px;"></span>
-                    <p style="font-size: 10px; margin-top: 5px;">Hujafanya muamala wowote wa kifedha bado.</p>
-                </div>`;
+                <div style="text-align: center; padding: 20px; color: gray;"> <span style="font-size: 24px;"></span> <p style="font-size:12.5px; margin-top: 5px;">Hujafanya muamala wowote wa kifedha bado.</p> </div>`;
             return;
         }
 
@@ -1026,25 +984,13 @@ window.renderSokoPayRecentTransactions = async function() {
             const timeStr = tx.date ? new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Sasa";
 
             html += `
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left; transition: 0.2s;">
-                    <div style="display: flex; gap: 10px; align-items: center; min-width: 0;">
-                        <span style="font-size: 16px; flex-shrink: 0;">${tx.icon}</span>
-                        <div style="min-width: 0;">
-                            <b style="font-size: 11px; color: #0F172A; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.title}</b>
-                            <span style="font-size: 9px; color: gray; display: block;">Today, ${timeStr}</span>
-                        </div>
-                    </div>
-                    <div style="text-align: right; flex-shrink: 0; margin-left: 10px;">
-                        <b style="font-size: 11px; color: ${amtColor}; display: block;">${amtSign} TZS ${displayAmt.toLocaleString()}</b>
-                        <small style="font-size: 8px; background: white; border: 1px solid #E2E8F0; color: #475569; padding: 1px 4px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 2px;">${tx.status}</small>
-                    </div>
-                </div>`;
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left; transition: 0.2s;"> <div style="display: flex; gap: 10px; align-items: center; min-width: 0;"> <span style="font-size: 16px; flex-shrink: 0;">${tx.icon}</span> <div style="min-width: 0;"> <b style="font-size:13px; color: #0F172A; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.title}</b> <span style="font-size:12px; color: gray; display: block;">Today, ${timeStr}</span> </div> </div> <div style="text-align: right; flex-shrink: 0; margin-left: 10px;"> <b style="font-size:13px; color: ${amtColor}; display: block;">${amtSign} TZS ${displayAmt.toLocaleString()}</b> <small style="font-size:12px; background: white; border: 1px solid #E2E8F0; color: #475569; padding: 1px 4px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 2px;">${tx.status}</small> </div> </div>`;
         });
 
         container.innerHTML = html;
 
     } catch (err) {
-        container.innerHTML = `<p style="color:red; text-align:center; font-size:10px; padding:10px;">Hitilafu: ${skh.skhEscape(err.message)}</p>`;
+        container.innerHTML = `<p style="color:red; text-align:center; font-size:12.5px; padding:10px;">Hitilafu: ${skh.skhEscape(err.message)}</p>`;
     }
 };
 
@@ -1053,7 +999,7 @@ window.renderSokoPayTransactions = async function() {
     const container = document.getElementById('spTransactionsList');
     if (!container || !skh.currentUser) return;
 
-    container.innerHTML = '<p style="text-align: center; color: gray; font-size: 11px;"> Inapakia miamala yako...</p>';
+    container.innerHTML = '<p style="text-align: center; color: gray; font-size:13px;"> Inapakia miamala yako...</p>';
 
     try {
         const uid = skh.currentUser.uid;
@@ -1085,10 +1031,7 @@ window.renderSokoPayTransactions = async function() {
         rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
         if (rows.length === 0) {
-            container.innerHTML = `<div style="text-align: center; padding: 25px; color: gray;">
-                <span style="font-size: 26px; display: block; margin-bottom: 6px;"></span>
-                <p style="font-size: 11px; margin: 0;">Hujafanya muamala wowote bado.</p>
-            </div>`;
+            container.innerHTML = `<div style="text-align: center; padding: 25px; color: gray;"> <span style="font-size: 26px; display: block; margin-bottom: 6px;"></span> <p style="font-size:13px; margin: 0;">Hujafanya muamala wowote bado.</p> </div>`;
             return;
         }
 
@@ -1108,22 +1051,13 @@ window.renderSokoPayTransactions = async function() {
             const timeStr = tx.date ? new Date(tx.date).toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Sasa';
 
             html += `
-                <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; text-align: left; margin-bottom: 10px;">
-                    <div style="min-width: 0;">
-                        <b style="font-size: 12px; color: #0F172A; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${skh.skhEscape(tx.title)}</b>
-                        <span style="font-size: 9px; color: gray; display: block; margin-top: 2px;">${timeStr}${tx.role ? ' • ' + tx.role : ''}${tx.code ? ' • <b style="color:#00509d;">' + skh.skhEscape(tx.code) + '</b>' : ''}</span>
-                    </div>
-                    <div style="text-align: right; flex-shrink: 0; margin-left: 10px;">
-                        <b style="font-size: 12px; color: ${color}; display: block;">${sign} TZS ${Math.abs(tx.amount).toLocaleString()}</b>
-                        <small style="font-size: 8px; background: ${badge}; color: white; padding: 2px 7px; border-radius: 8px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 3px;">${skh.skhEscape(st)}</small>
-                    </div>
-                </div>`;
+                <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; text-align: left; margin-bottom: 10px;"> <div style="min-width: 0;"> <b style="font-size: 12px; color: #0F172A; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${skh.skhEscape(tx.title)}</b> <span style="font-size:12px; color: gray; display: block; margin-top: 2px;">${timeStr}${tx.role ? ' • ' + tx.role : ''}${tx.code ? ' • <b style="color:#00509d;">' + skh.skhEscape(tx.code) + '</b>' : ''}</span> </div> <div style="text-align: right; flex-shrink: 0; margin-left: 10px;"> <b style="font-size: 12px; color: ${color}; display: block;">${sign} TZS ${Math.abs(tx.amount).toLocaleString()}</b> <small style="font-size:12px; background: ${badge}; color: white; padding: 2px 7px; border-radius: 8px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 3px;">${skh.skhEscape(st)}</small> </div> </div>`;
         });
 
         container.innerHTML = html;
 
     } catch (err) {
-        container.innerHTML = `<p style="color:red; text-align:center; font-size:10px; padding:10px;">Hitilafu: ${skh.skhEscape(err.message)}</p>`;
+        container.innerHTML = `<p style="color:red; text-align:center; font-size:12.5px; padding:10px;">Hitilafu: ${skh.skhEscape(err.message)}</p>`;
     }
 };
 
@@ -1135,7 +1069,7 @@ window.updateSokoPayFormFields = function() {
     const jobSection = document.getElementById('spJobFieldsSection');
     const passSection = document.getElementById('spPassengerFieldsSection');
 
-    // Onyesha sehemu za mhamisho wa fedha (Split) kwa ajili ya bidhaa na logistics tu
+    // Onyesha sehemu za mhamisho wa fedha (Split) kwa bidhaa na logistics tu
     if (splitSection) splitSection.style.display = (type === 'product' || type === 'logistics') ? 'block' : 'none';
     
     // Onyesha na kuficha fomu maalum za kila aina ya mkataba
@@ -1204,7 +1138,7 @@ window.generateSokoPayCode = async function() {
 
     // [SOKOPAY MVP] Partner contact na picha ni vya hiari
     if (!name || amount <= 0) {
-        alert(" Tafadhali jaza maelezo ya bidhaa/huduma na kiasi cha Escrow!");
+        alert(" jaza maelezo ya bidhaa/huduma na kiasi cha Escrow!");
         return;
     }
 
@@ -1279,6 +1213,9 @@ window.generateSokoPayCode = async function() {
         if (partner) {
             await skh.addDoc(skh.collection(skh.db, "notifications"), {
                 userId: partner, // Kama ameandika uid ya partner
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'wallet.paymentLink',
+                params: { title: String(name || ''), amount: amount.toLocaleString(), code: String(spCode || '') },
                 title: " SokoPay: Payment Link Mpya Inakusubiri!",
                 body: `Umetengenezewa payment link ya "${name}" (TSh ${amount.toLocaleString()}). Tumia Token ${spCode} au linki ${sokopayLink} kuukagua na kuulipia.`,
                 createdAt: new Date().toISOString(),
@@ -1601,7 +1538,7 @@ window.spSyncSavedFromCloud = async function() {
 // Chora orodha ya vitu vilivyohifadhiwa
 window.renderSavedItemsList = function(el, items) {
     if (!items.length) {
-        el.innerHTML = '<p style="font-size:11px; color:#94a3b8; text-align:center; padding:8px;">Hakuna token/linki iliyohifadhiwa bado.</p>';
+        el.innerHTML = '<p style="font-size:13px; color:#94a3b8; text-align:center; padding:8px;">Hakuna token/linki iliyohifadhiwa bado.</p>';
         return;
     }
     let html = '';
@@ -1611,18 +1548,9 @@ window.renderSavedItemsList = function(el, items) {
         html += `
         <div style="background:#fff; border:1px solid #E2E8F0; border-radius:12px; padding:10px 12px; margin-bottom:8px; display:flex; gap:10px; align-items:center; text-align:left;">
             ${it.qr ? `<img src="${it.qr}" alt="" style="width:52px; height:52px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; flex-shrink:0;">` : ''}
-            <div style="flex:1; min-width:0;">
-                <b style="font-size:11px; color:#0F172A; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${skh.skhEscape(it.title || 'SokoPay Link')} ${it.docId ? '<span style="font-size:8px; color:#0ea5e9; font-weight:900;">&#9733; CLOUD</span>' : ''}</b>
-                <span style="font-family:monospace; font-size:11px; font-weight:800; color:#00509d;">${skh.skhEscape(it.code)}</span>
-                ${it.amount ? `<span style="font-size:10px; color:#065f46; font-weight:700;"> &bull; TZS ${Number(it.amount).toLocaleString()}</span>` : ''}
-                <span style="font-size:9px; color:#94a3b8; display:block;">${dStr}</span>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0;">
-                <button type="button" data-copy="${skh.skhEscape(it.code)}" onclick="window.spCopyHaiPay(this.dataset.copy, this)" style="padding:6px 10px; background:#e0f2fe; color:#00509d; border:none; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">Nakili Token</button>
-                <button type="button" data-copy="${skh.skhEscape(it.link)}" onclick="window.spCopyHaiPay(this.dataset.copy, this)" style="padding:6px 10px; background:#f0f9ff; color:#0369a1; border:none; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">Nakili Linki</button>
-                <button type="button" onclick="window.spDeleteSavedItem('${skh.skhJsEsc(it.id)}')" style="padding:6px 10px; background:#fee2e2; color:#b91c1c; border:none; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">Futa</button>
-            </div>
-        </div>`;
+            <div style="flex:1; min-width:0;"> <b style="font-size:13px; color:#0F172A; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${skh.skhEscape(it.title || 'SokoPay Link')} ${it.docId ? '<span style="font-size:12px; color:#0ea5e9; font-weight:900;"> CLOUD</span>' : ''}</b> <span style="font-family:monospace; font-size:13px; font-weight:800; color:#00509d;">${skh.skhEscape(it.code)}</span>
+                ${it.amount ? `<span style="font-size:12.5px; color:#065f46; font-weight:700;">· TZS ${Number(it.amount).toLocaleString()}</span>` : ''}
+                <span style="font-size:12px; color:#94a3b8; display:block;">${dStr}</span> </div> <div style="display:flex; flex-direction:column; gap:5px; flex-shrink:0;"> <button type="button" data-copy="${skh.skhEscape(it.code)}" onclick="window.spCopyHaiPay(this.dataset.copy, this)" style="padding:6px 10px; background:#e0f2fe; color:#00509d; border:none; border-radius:8px; font-weight:800; font-size:12.5px; cursor:pointer;">Nakili Token</button> <button type="button" data-copy="${skh.skhEscape(it.link)}" onclick="window.spCopyHaiPay(this.dataset.copy, this)" style="padding:6px 10px; background:#f0f9ff; color:#0369a1; border:none; border-radius:8px; font-weight:800; font-size:12.5px; cursor:pointer;">Nakili Linki</button> <button type="button" onclick="window.spDeleteSavedItem('${skh.skhJsEsc(it.id)}')" style="padding:6px 10px; background:#fee2e2; color:#b91c1c; border:none; border-radius:8px; font-weight:800; font-size:12.5px; cursor:pointer;">Futa</button> </div> </div>`;
     });
     el.innerHTML = html;
 };
@@ -1693,40 +1621,14 @@ window.spRenderGenResult = function(item) {
     el.style.display = 'block';
     const fmtAmt = (item.amount || 0).toLocaleString();
     el.innerHTML = `
-        <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:14px; padding:16px; margin-bottom:4px;">
-            <b style="font-size:13px; color:#0369a1; display:flex; align-items:center; gap:6px;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:14px; padding:16px; margin-bottom:4px;"> <b style="font-size:13px; color:#0369a1; display:flex; align-items:center; gap:6px;"> <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 LINKI IMEZALISHWA (Token + Linki + QR)
-            </b>
-            <p style="font-size:11px; color:#334155; margin:6px 0 10px; line-height:1.5;">"${skh.skhEscape(item.title || '')}" &mdash; TZS ${fmtAmt}. Mpe mnunuzi token, linki au QR code; ataingia 'Pay' na kulipia kwa Escrow.</p>
-
-            <label style="font-size:10px; font-weight:800; color:#0f172a; display:block; margin-bottom:3px;">TOKEN (nakili)</label>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input id="spGenToken" readonly value="${skh.skhEscape(item.code)}" onclick="this.select()" style="flex:1; min-width:0; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font-family:monospace; font-weight:800; font-size:14px; color:#0f172a; background:#fff; outline:none;">
-                <button type="button" id="spCopyTokenBtn" onclick="window.spCopyHaiPay(document.getElementById('spGenToken').value, 'spCopyTokenBtn')" style="padding:10px 14px; background:#00509d; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap;">Nakili</button>
-            </div>
-
-            <label style="font-size:10px; font-weight:800; color:#0f172a; display:block; margin-bottom:3px;">LINKI (nakili & tuma kwa WhatsApp/SMS)</label>
-            <div style="display:flex; gap:8px; margin-bottom:12px;">
-                <input id="spGenLink" readonly value="${skh.skhEscape(item.link)}" onclick="this.select()" style="flex:1; min-width:0; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font-size:12px; color:#0f172a; background:#fff; outline:none;">
-                <button type="button" id="spCopyLinkBtn" onclick="window.spCopyHaiPay(document.getElementById('spGenLink').value, 'spCopyLinkBtn')" style="padding:10px 14px; background:#00509d; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap;">Nakili</button>
-            </div>
-
-            <label style="font-size:10px; font-weight:800; color:#0f172a; display:block; margin-bottom:3px;">QR CODE (skanisha au pakua)</label>
-            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-                ${item.qr ? `<img src="${item.qr}" alt="QR ${skh.skhEscape(item.code)}" style="width:150px; height:150px; background:#fff; border:1px solid #e2e8f0; border-radius:10px;">` : '<span style="font-size:11px;color:#b45309;">QR haikuweza kutengenezwa.</span>'}
-                ${item.qr ? `<div style="display:flex; flex-direction:column; gap:8px;">
-                    <a href="${item.qr}" download="sokopay-${skh.skhEscape(item.code)}.png" style="text-align:center; padding:9px 14px; background:#001122; color:#fff; border-radius:10px; font-weight:800; font-size:12px; text-decoration:none;">&#11015; Pakua PNG</a>
-                    <button type="button" id="spCopyQrBtn" onclick="window.spCopyHaiPay(document.querySelector('#spGenResult img').src, 'spCopyQrBtn')" style="padding:9px 14px; background:#e2e8f0; color:#0f172a; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Nakili QR</button>
-                </div>` : ''}
-            </div>
-
-            <button type="button" onclick="window.spShareWhatsApp('${skh.skhJsEsc(item.link)}','${skh.skhJsEsc(item.code)}','${skh.skhJsEsc(item.title || '')}',${Number(item.amount || 0)})" style="margin-top:12px; width:100%; padding:11px 14px; background:#25D366; color:#fff; border:none; border-radius:10px; font-weight:900; font-size:12.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </b> <p style="font-size:13px; color:#334155; margin:6px 0 10px; line-height:1.5;">"${skh.skhEscape(item.title || '')}" &mdash; TZS ${fmtAmt}. Mpe mnunuzi token, linki au QR code; ataingia 'Pay' na kulipia kwa Escrow.</p> <label style="font-size:12.5px; font-weight:800; color:#0f172a; display:block; margin-bottom:3px;">TOKEN (nakili)</label> <div style="display:flex; gap:8px; margin-bottom:10px;"> <input id="spGenToken" readonly value="${skh.skhEscape(item.code)}" onclick="this.select()" style="flex:1; min-width:0; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font-family:monospace; font-weight:800; font-size:14px; color:#0f172a; background:#fff; outline:none;"> <button type="button" id="spCopyTokenBtn" onclick="window.spCopyHaiPay(document.getElementById('spGenToken').value, 'spCopyTokenBtn')" style="padding:10px 14px; background:#00509d; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap;">Nakili</button> </div> <label style="font-size:12.5px; font-weight:800; color:#0f172a; display:block; margin-bottom:3px;">LINKI (nakili & tuma kwa WhatsApp/SMS)</label> <div style="display:flex; gap:8px; margin-bottom:12px;"> <input id="spGenLink" readonly value="${skh.skhEscape(item.link)}" onclick="this.select()" style="flex:1; min-width:0; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; font-size:12px; color:#0f172a; background:#fff; outline:none;"> <button type="button" id="spCopyLinkBtn" onclick="window.spCopyHaiPay(document.getElementById('spGenLink').value, 'spCopyLinkBtn')" style="padding:10px 14px; background:#00509d; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap;">Nakili</button> </div> <label style="font-size:12.5px; font-weight:800; color:#0f172a; display:block; margin-bottom:3px;">QR CODE (skanisha au pakua)</label> <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                ${item.qr ? `<img src="${item.qr}" alt="QR ${skh.skhEscape(item.code)}" style="width:150px; height:150px; background:#fff; border:1px solid #e2e8f0; border-radius:10px;">` : '<span style="font-size:13px;color:#b45309;">QR haikuweza kutengenezwa.</span>'}
+                ${item.qr ? `<div style="display:flex; flex-direction:column; gap:8px;"> <a href="${item.qr}" download="sokopay-${skh.skhEscape(item.code)}.png" style="text-align:center; padding:9px 14px; background:#001122; color:#fff; border-radius:10px; font-weight:800; font-size:12px; text-decoration:none;">&#11015; Pakua PNG</a> <button type="button" id="spCopyQrBtn" onclick="window.spCopyHaiPay(document.querySelector('#spGenResult img').src, 'spCopyQrBtn')" style="padding:9px 14px; background:#e2e8f0; color:#0f172a; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Nakili QR</button> </div>` : ''}
+            </div> <button type="button" onclick="window.spShareWhatsApp('${skh.skhJsEsc(item.link)}','${skh.skhJsEsc(item.code)}','${skh.skhJsEsc(item.title || '')}',${Number(item.amount || 0)})" style="margin-top:12px; width:100%; padding:11px 14px; background:#25D366; color:#fff; border:none; border-radius:10px; font-weight:900; font-size:12.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;"> <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 Shiriki kwa WhatsApp
-            </button>
-            <p style="font-size:10px; color:#64748b; margin:10px 0 0;">Token, linki na QR vimehifadhiwa kiotomatiki kwenye cloud na kwenye orodha ya "Hifadhi / Ingiza" hapa chini.</p>
-        </div>`;
+            </button> <p style="font-size:12.5px; color:#64748b; margin:10px 0 0;">Token, linki na QR vimehifadhiwa kiotomatiki kwenye cloud na kwenye orodha ya "Hifadhi / Ingiza" hapa chini.</p> </div>`;
 };
 
 // Orodhesha vitu vilivyohifadhiwa (ndani mara moja, kisha cloud inaunganishwa)
@@ -1880,7 +1782,7 @@ window.spApplyScannedValue = function(raw) {
 window.verifyAndPreviewSokoPay = async function() {
     const code = document.getElementById('spCodeInputPay').value.trim().toUpperCase();
     if (!code) {
-        alert(" Tafadhali ingiza msimbo wa SokoPay (SP-XXXXXX) kwanza!");
+        alert(" ingiza msimbo wa SokoPay (SP-XXXXXX) kwanza!");
         return;
     }
 
@@ -1889,7 +1791,7 @@ window.verifyAndPreviewSokoPay = async function() {
     const btnProceed = document.getElementById('btnProceedPaySp');
 
     if (preview) {
-        preview.innerHTML = '<p style="text-align:center; color:gray; font-size:11px; padding:10px;"> Inahakiki msimbo kutoka kwenye daftari la mkataba...</p>';
+        preview.innerHTML = '<p style="text-align:center; color:gray; font-size:13px; padding:10px;"> Inahakiki msimbo kutoka kwenye daftari la mkataba...</p>';
         preview.style.display = 'block';
     }
 
@@ -1920,16 +1822,7 @@ window.verifyAndPreviewSokoPay = async function() {
         // Chora muonekano wa preview maridadi ya mkataba
         if (preview) {
             preview.innerHTML = `
-                <div style="display:flex; gap:12px; align-items:center; text-align:left;">
-                    <img src="${skh.skhEscape(skh.getOptimizedImageUrl(d.image))}" style="width:60px; height:65px; border-radius:12px; object-fit:cover; border:1px solid #E2E8F0;" onerror="this.src='https://ui-avatars.com/api/?name=SokoPay&background=cbd5e1&color=0f172a'">
-                    <div>
-                        <span style="font-size: 8px; background: #FFFBEB; color: #B45309; padding: 2px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase;">Mkataba wa ${skh.skhEscape(d.contractType.toUpperCase())}</span>
-                        <b style="font-size:13px; display:block; color:#0F172A; margin-top:4px;">${skh.skhEscape(d.title)}</b>
-                        <span style="display:block; color:var(--terracotta); font-weight:900; margin-top:2px;">TSh ${d.price.toLocaleString()}</span>
-                        <small style="color:gray; font-size:10px; display:block; margin-top:2px;">Umetengenezwa na: <b>${skh.skhEscape(d.ownerName)}</b></small>
-                    </div>
-                </div>
-            `;
+                <div style="display:flex; gap:12px; align-items:center; text-align:left;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(d.image))}" style="width:60px; height:65px; border-radius:12px; object-fit:cover; border:1px solid #E2E8F0;" onerror="this.src='https://ui-avatars.com/api/?name=SokoPay&background=cbd5e1&color=0f172a'"> <div> <span style="font-size:12px; background: #FFFBEB; color: #B45309; padding: 2px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase;">Mkataba wa ${skh.skhEscape(d.contractType.toUpperCase())}</span> <b style="font-size:13px; display:block; color:#0F172A; margin-top:4px;">${skh.skhEscape(d.title)}</b> <span style="display:block; color:var(--terracotta); font-weight:900; margin-top:2px;">TSh ${d.price.toLocaleString()}</span> <small style="color:gray; font-size:12.5px; display:block; margin-top:2px;">Umetengenezwa na: <b>${skh.skhEscape(d.ownerName)}</b></small> </div> </div> `;
         }
 
         // Badilisha vitufe vya muamala
@@ -1950,7 +1843,7 @@ window.proceedToPaySokoPay = async function() {
 
     // Kagua kama Salio la Wallet linatosha kufanya malipo ya papo hapo (Instant Escrow)
     if (walletBalance >= price) {
-        if (confirm(` SALIO LA WALLET LINATOSHA!\n\nJe, unathibitisha kufanya malipo ya papo hapo ya TSh ${price.toLocaleString()} kutoka kwenye salio lako la Wallet (TSh ${walletBalance.toLocaleString()}) ili kufunga fedha kwenye Escrow?`)) {
+        if (await skhConfirm(` SALIO LA WALLET LINATOSHA!\n\nJe, unathibitisha kufanya malipo ya papo hapo ya TSh ${price.toLocaleString()} kutoka kwenye salio lako la Wallet (TSh ${walletBalance.toLocaleString()}) ili kufunga fedha kwenye Escrow?`)) {
             await window.executeSokoPayWalletPayment(skh.currentOpenProduct.id, price);
         }
     } else {
@@ -1989,7 +1882,7 @@ window.executeSokoPayWalletPayment = async function(linkDocId, price) {
             paymentType: "Wallet Payout"
         });
 
-        // C. Sajili muamala kwenye orders collection kwa ajili ya mnyororo mkuu wa kufuatilia (Tracking)
+        // C. Sajili muamala kwenye orders collection kwa mnyororo mkuu wa kufuatilia (Tracking)
         await skh.addDoc(skh.collection(skh.db, "orders"), {
             buyerId: skh.currentUser.uid,
             buyerName: skh.currentUser.displayName || "Mwanachama",
@@ -2008,6 +1901,9 @@ window.executeSokoPayWalletPayment = async function(linkDocId, price) {
         // D. Mtumie muuzaji/mtoa huduma taarifa (Notification) kwamba mkataba umefungwa na pesa ipo salama
         await skh.addDoc(skh.collection(skh.db, "notifications"), {
             userId: skh.currentOpenProduct.userId,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'wallet.escrowFunded',
+                params: { title: String(skh.currentOpenProduct.title || ''), amount: price.toLocaleString() },
             title: " SokoPay: Malipo ya Escrow Yamefungwa!",
             body: `Mteja ameshalipia mkataba wa "${skh.currentOpenProduct.title}" (TSh ${price.toLocaleString()}) kwa kutumia Wallet. Pesa ipo locked kwenye Escrow ya SokoPay, unaweza kuanza kazi/kusafirisha sasa.`,
             createdAt: new Date().toISOString(),
@@ -2041,11 +1937,11 @@ window.trackSokoPayTransaction = async function() {
     const actionsArea = document.getElementById('spTrackActions');
     
     if (!code || !resultBox) {
-        alert(" Tafadhali ingiza msimbo wa mkataba!");
+        alert(" ingiza msimbo wa mkataba!");
         return;
     }
 
-    resultBox.innerHTML = '<p style="text-align:center; color:gray; font-size:11px; padding:10px;"> Inatafuta mkataba kwenye daftari la miamala...</p>';
+    resultBox.innerHTML = '<p style="text-align:center; color:gray; font-size:13px; padding:10px;"> Inatafuta mkataba kwenye daftari la miamala...</p>';
     resultBox.style.display = 'block';
     if (actionsArea) actionsArea.style.display = 'none';
 
@@ -2055,7 +1951,7 @@ window.trackSokoPayTransaction = async function() {
         const snap = await skh.getDocs(q);
 
         if (snap.empty) {
-            resultBox.innerHTML = '<p style="text-align:center; color:#EF4444; font-size:11px; padding:10px; font-weight:bold;"> Msimbo huu haupatikani kwenye mfumo wetu!</p>';
+            resultBox.innerHTML = '<p style="text-align:center; color:#EF4444; font-size:13px; padding:10px; font-weight:bold;"> Msimbo huu haupatikani kwenye mfumo wetu!</p>';
             return;
         }
 
@@ -2092,13 +1988,8 @@ window.trackSokoPayTransaction = async function() {
         }
 
         resultBox.innerHTML = `
-            <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; font-size:12px; text-align:left;">
-                <b style="font-size:14px; display:block; color:var(--primary-dark); margin-bottom:8px;">Mkataba: ${d.title}</b>
-                <span style="display:block; margin-bottom:4px;">Aina ya Mkataba: <b>${d.contractType.toUpperCase()}</b></span>
-                <span style="display:block; margin-bottom:4px;">Kiasi cha Escrow: <b style="color:var(--terracotta);">TSh ${d.price.toLocaleString()}</b></span>
-                <span style="display:block; margin-bottom:4px;">Hali ya Muamala: <b style="color:${statusColor};">${statusText}</b></span>
-                <span style="display:block; margin-bottom:4px;">Mmiliki wa Mkataba: <b>${skh.skhEscape(d.ownerName)}</b></span>
-                ${d.disputeReason ? `<p style="font-size:11px; background:#fff5f5; color:red; padding:8px; border-radius:8px; margin-top:10px; border:1px solid #fecaca;"><b>Sababu ya Mgogoro:</b> ${d.disputeReason}</p>` : ''}
+            <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; font-size:12px; text-align:left;"> <b style="font-size:14px; display:block; color:var(--primary-dark); margin-bottom:8px;">Mkataba: ${d.title}</b> <span style="display:block; margin-bottom:4px;">Aina ya Mkataba: <b>${d.contractType.toUpperCase()}</b></span> <span style="display:block; margin-bottom:4px;">Kiasi cha Escrow: <b style="color:var(--terracotta);">TSh ${d.price.toLocaleString()}</b></span> <span style="display:block; margin-bottom:4px;">Hali ya Muamala: <b style="color:${statusColor};">${statusText}</b></span> <span style="display:block; margin-bottom:4px;">Mmiliki wa Mkataba: <b>${skh.skhEscape(d.ownerName)}</b></span>
+                ${d.disputeReason ? `<p style="font-size:13px; background:#fff5f5; color:red; padding:8px; border-radius:8px; margin-top:10px; border:1px solid #fecaca;"><b>Sababu ya Mgogoro:</b> ${d.disputeReason}</p>` : ''}
             </div>`;
 
     } catch (err) {
@@ -2164,13 +2055,12 @@ window.searchProductForTransfer = async function() {
         const d = docSnap.data();
         if (d.title.toLowerCase().includes(queryStr)) {
             html += `
-                <div onclick="window.selectProductForTransfer('${docSnap.id}', '${d.title}', ${d.stock || 0})" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white; font-size:12px;">
-                    <b> ${d.title}</b> (Stock: ${d.stock || 0} Pcs)
+                <div onclick="window.selectProductForTransfer('${docSnap.id}', '${d.title}', ${d.stock || 0})" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white; font-size:12px;"> <b> ${d.title}</b> (Stock: ${d.stock || 0} Pcs)
                 </div>`;
         }
     });
 
-    resultsDiv.innerHTML = html || '<p style="padding:10px; font-size:11px; color:gray; text-align:center;">Haikupatikana...</p>';
+    resultsDiv.innerHTML = html || '<p style="padding:10px; font-size:13px; color:gray; text-align:center;">Haikupatikana...</p>';
 };
 
 window.selectProductForTransfer = function(id, name, stock) {
@@ -2188,7 +2078,7 @@ window.submitStockTransfer = async function() {
     const qty = parseInt(document.getElementById('transferQty').value) || 0;
 
     if (!productId || qty <= 0) {
-        alert(" Tafadhali chagua bidhaa na uandike idadi sahihi ya kuhamisha!");
+        alert(" chagua bidhaa na uandike idadi sahihi ya kuhamisha!");
         return;
     }
 
@@ -2324,7 +2214,7 @@ window.searchDebtorsLive = function() {
 
     const draw = (items) => {
         if (!items || items.length === 0) {
-            results.innerHTML = '<p style="padding:10px; font-size:11px; color:gray;">Mteja hajapatikana...</p>';
+            results.innerHTML = '<p style="padding:10px; font-size:13px; color:gray;">Mteja hajapatikana...</p>';
             results.style.display = 'block';
             return;
         }
@@ -2333,8 +2223,7 @@ window.searchDebtorsLive = function() {
             const safeTitle = skh.skhEscape(d.title || 'Mteja');
             __posDebtorCache[d.id] = { id: d.id, title: d.title || 'Mteja', amount: Number(d.amount || 0) };
             html += `
-                <div onclick="window.selectDebtorForPaymentById('${d.id}')" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white;">
-                    <b> ${safeTitle}</b> (Inayodaiwa: TSh ${Number(d.amount || 0).toLocaleString()})
+                <div onclick="window.selectDebtorForPaymentById('${d.id}')" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white;"> <b> ${safeTitle}</b> (Inayodaiwa: TSh ${Number(d.amount || 0).toLocaleString()})
                 </div>`;
         });
         results.innerHTML = html;
@@ -2351,7 +2240,7 @@ window.searchDebtorsLive = function() {
             draw(items);
         })
         .catch(err => {
-            results.innerHTML = '<p style="padding:10px; font-size:11px; color:#b91c1c; text-align:center;">Imeshindwa kutafuta madeni. Angalia muunganisho.</p>';
+            results.innerHTML = '<p style="padding:10px; font-size:13px; color:#b91c1c; text-align:center;">Imeshindwa kutafuta madeni. Angalia muunganisho.</p>';
             results.style.display = 'block';
         });
 };
@@ -2375,7 +2264,7 @@ window.submitCollectDebtPayment = async function() {
     const amount = parseFloat(document.getElementById('debtCollectAmount').value) || 0;
     const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
 
-    if(!id || amount <= 0) return alert(" Tafadhali chagua mteja na uweke kiasi sahihi cha malipo.");
+    if(!id || amount <= 0) return alert(" chagua mteja na uweke kiasi sahihi cha malipo.");
 
     try {
         const debtRef = skh.doc(skh.db, "shop_ledger", id);
@@ -2444,7 +2333,7 @@ window.searchProductsForReturnLive = function() {
 
     const draw = () => {
         if (items.length === 0) {
-            results.innerHTML = '<p style="padding:10px; font-size:11px; color:gray;">Bidhaa haikupatikana...</p>';
+            results.innerHTML = '<p style="padding:10px; font-size:13px; color:gray;">Bidhaa haikupatikana...</p>';
             results.style.display = 'block';
             return;
         }
@@ -2453,8 +2342,7 @@ window.searchProductsForReturnLive = function() {
             const safeTitle = skh.skhEscape(d.title || 'Bidhaa');
             __posReturnCache[d.id] = { id: d.id, title: d.title || 'Bidhaa', price: Number(d.price || 0) };
             html += `
-                <div onclick="window.selectProductForReturnById('${d.id}')" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white;">
-                    <b> ${safeTitle}</b> (Bei: TSh ${Number(d.price || 0).toLocaleString()})
+                <div onclick="window.selectProductForReturnById('${d.id}')" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:white;"> <b> ${safeTitle}</b> (Bei: TSh ${Number(d.price || 0).toLocaleString()})
                 </div>`;
         });
         results.innerHTML = html;

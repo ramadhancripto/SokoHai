@@ -65,7 +65,7 @@ window.processPayment = async function() {
     }
 
     if (!provider || !accountNumber) {
-        alert(" Tafadhali jaza taarifa zako za malipo (Namba ya simu, akaunti, au kadi ya benki)!");
+        alert(" jaza taarifa zako za malipo (Namba ya simu, akaunti, au kadi ya benki)!");
         return;
     }
 
@@ -117,10 +117,21 @@ window.processPayment = async function() {
         } catch (e) {}
 
         // 1) Hifadhi muktadha wa oda KABLA ya kwenda PesaPal (17-pesapal-return.js inamalizia)
+        // [§31] Muktadha wa commerce mode zaidi — kama checkout ilitoka
+        // auction/price_drop/group_buy/wholesale, hifadhi ili order ya 17
+        // ipeleke commerceMode + modeData snapshot (kuthibitisha baadaye).
+        let commerceContext = null;
+        try {
+            const cc = sessionStorage.getItem('skh_checkout_commerce_context');
+            if (cc) commerceContext = JSON.parse(cc);
+            sessionStorage.removeItem('skh_checkout_commerce_context');
+        } catch (e) { commerceContext = null; }
+
         const pendingCheckout = {
             txRef: txRef,
             amount: skh.activeCheckoutAmount,
             provider: provider,
+            commerceContext: commerceContext,   // [§31]
             buyerUid: skh.currentUser ? skh.currentUser.uid : null,
             savedAt: new Date().toISOString(),
             product: (skh.currentOpenProduct && (!skh.myCart || skh.myCart.length === 0)) ? {
@@ -131,7 +142,10 @@ window.processPayment = async function() {
                 price: parseFloat(skh.currentOpenProduct.price) || skh.activeCheckoutAmount,
                 image: skh.currentOpenProduct.image || '',
                 location: skh.currentOpenProduct.location || skh.currentOpenProduct.sellerLocation || '',
-                isSokoPay: !!skh.currentOpenProduct.isSokoPay
+                isSokoPay: !!skh.currentOpenProduct.isSokoPay,
+                // [§31] ndani ya every order — mode context
+                commerceMode: skh.currentOpenProduct.commerceMode || (commerceContext && commerceContext && (commerceContext.commerceMode || commerceContext.mode || commerceContext.type)) || null,
+                commerceModeSnapshot: skh.currentOpenProduct.commerceModeSnapshot || null
             } : null,
             cart: (skh.myCart && skh.myCart.length) ? skh.myCart.map(function (x) {
                 return Object.assign({}, x, { location: x.location || x.sellerLocation || (x.cartMeta && x.cartMeta.pickupAddress) || '' });
@@ -196,15 +210,15 @@ window.processPayment = async function() {
 window.saveAdminSettings = function() {
         const inp = document.getElementById('adminAccountInput');
         if(inp && inp.value.trim() !== '') {
-            alert(" Akaunti " + inp.value + " imehifadhiwa kikamilifu kwa ajili ya kupokelea mapato ya mfumo.");
+            alert(" Akaunti " + inp.value + " imehifadhiwa kikamilifu kwa kupokelea mapato ya mfumo.");
             closeModals();
         } else {
-            alert("Tafadhali ingiza namba ya akaunti.");
+            alert("ingiza namba ya akaunti.");
         }
     };
 
 window.approveAgent = async function(agentDocId, userUid) {
-        if(!confirm("Una uhakika unataka kumpitisha mtumiaji huyu kuwa Wakala Rasmi?")) return;
+        if(!await skhConfirm("Una uhakika unataka kumpitisha mtumiaji huyu kuwa Wakala Rasmi?")) return;
         
         try {
             // 1. Tengeneza Namba ya Wakala
@@ -227,6 +241,9 @@ window.approveAgent = async function(agentDocId, userUid) {
                 // 4. Mtumie Notification Mtumiaji
                 await skh.addDoc(skh.collection(skh.db, "notifications"), {
                     userId: userUid,
+                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
+                event: 'agent.activated',
+                params: { code: generatedCode },
                     title: " Hongera! Umeingia Kazini",
                     body: `Sasa wewe ni Wakala Rasmi. Namba yako ni ${generatedCode}. Unaweza kusajili watu na kuanza kupiga hela!`,
                     createdAt: new Date().toISOString(),
@@ -242,7 +259,7 @@ window.approveAgent = async function(agentDocId, userUid) {
     };
 
 window.rejectAgent = async function(agentDocId) {
-        const sababu = prompt("Andika sababu ya kumkataa (k.m. Picha haionekani vizuri):");
+        const sababu = await skhPrompt("Andika sababu ya kumkataa (k.m. Picha haionekani vizuri):");
         if(sababu === null) return; // Kama admin amecancel
         
         try {

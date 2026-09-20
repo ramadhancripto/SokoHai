@@ -9,8 +9,7 @@
 //   skhCatIcon('Kilimo (Agriculture)') -> tile kwa jina lolote la kategoria
 // Inajizunga na <style> yake — CSS za nje hazikuguswa.
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     // ---------- ikoni (path za stroke, viewBox 24) ----------
     var P = {
@@ -59,8 +58,14 @@
         plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
         // [COMMERCE 2026-09] ikoni za ziada za commerce/transport (badala ya emoji)
         'arrow-right': '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
-        shield: '<path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/>',
+        'arrow-left': '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+        // [LIFECYCLE 2026-09-14] icons za mfumo wa Kumbukumbu/Historia
         'shield-check': '<path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+        archive: '<rect x="2" y="4" width="20" height="5" rx="1"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><line x1="10" y1="13" x2="14" y2="13"/>',
+        trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+        eye: '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>',
+        'eye-off': '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',
+        shield: '<path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/>', 'shield-check': '<path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
         clipboard: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><polyline points="9 14 11 16 15 12"/>',
         bolt: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
         filter: '<polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/>',
@@ -77,7 +82,15 @@
         scales: '<path d="M12 3v18"/><path d="M5 21h14"/><path d="M5 7l-3 8h6z"/><path d="M19 7l-3 8h6z"/><path d="M5 7h14"/><path d="M12 3 8 7"/><path d="M12 3l4 4"/>',
         alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
         lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
-        handshake: '<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88A3 3 0 0 0 13.5 9H12L7 12"/><path d="m3 12 3-3 4 2"/><path d="M21 12l-3-3"/><path d="M3 21h18"/>'
+        handshake: '<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88A3 3 0 0 0 13.5 9H12L7 12"/><path d="m3 12 3-3 4 2"/><path d="M21 12l-3-3"/><path d="M3 21h18"/>',
+        /* [AUDIT-FIX 2026-09-16 P3 §24] Zilitumika sana (38/55/56 n.k.) lakini
+           hazikuwepo kwenye map — zilikuwa zikionyeshwa kama 'package' vibaya */
+        'arrow-left': '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
+        'arrow-right': '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+        // [FILE TYPES 2026-09-17] download icon kwa kadi za faili (zip/pdf/...)
+        download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+        back: '<path d="m15 18-6-6 6-6"/>',
+        'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>'
     };
 
     function svg(name, size, extra) {
@@ -162,6 +175,28 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hydrate);
     else hydrate();
     window.skhIconsHydrate = hydrate;
+
+    // [FIX 2026-09-14] Hydrate ilikimbia MARA MOJA tu. Vipengele
+    // vinavyoongezwa baadaye na JS (modals, dashboards, sidebars)
+    // vilibaki TUPU — mtumiaji akakosa icons za kunavigate.
+    // Sasa tunafuatilia DOM na kujaza kila kinachoongezwa.
+    try {
+        var q = null;
+        var mo = new MutationObserver(function (muts) {
+            for (var i = 0; i < muts.length; i++) {
+                if (muts[i].addedNodes && muts[i].addedNodes.length) {
+                    if (q) return;
+                    q = setTimeout(function () { q = null; hydrate(); }, 120);
+                    return;
+                }
+            }
+        });
+        function watch() {
+            if (document.body) mo.observe(document.body, { childList: true, subtree: true });
+        }
+        if (document.body) watch();
+        else document.addEventListener('DOMContentLoaded', watch);
+    } catch (e) { /* defensive */ }
 
     // ---------- CSS ya tiles kwenye cat-grid ----------
     try {

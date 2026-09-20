@@ -13,8 +13,7 @@
 //       caller anaendelea na njia yake ya legacy.
 // Firestore/callables zinasajiliwa na app.module.js (mfumo wa 14-sync).
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var legacy = null;          // {doc, updateDoc, increment}
     var callAdjust = null;      // callable 'walletAdjust'
@@ -58,7 +57,7 @@
         try {
             res = await callRelease({ orderId: orderId });
         } catch (e) {
-            // [FUNCTIONS RESILIENCE] server haijapelekwa/haipatikani → ujumbe wa
+            // [FUNCTIONS RESILIENCE] server haijapelekwa/haipatikani -> ujumbe wa
             // maana (SokoPay halitoi pesa), si "internal" mbichi.
             if (e && e.fnDown) {
                 return { ok: false, fnDown: true, message: e.friendlyMessage

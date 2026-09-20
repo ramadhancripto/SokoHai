@@ -6,53 +6,7 @@ window.loadDriverDashboard = function() {
     if(!container) return;
 
     container.innerHTML = `
-    <div class="control-tower-wrapper">
-        <!-- 1. SOKOHAI COCKPIT LOGISTICS SIDEBAR -->
-        <div class="ct-sidebar" style="background: #0f172a; min-height: 100vh;">
-            <div class="ct-sidebar-brand">
-                <span style="font-size: 28px;"></span>
-                <div class="ct-sidebar-brand-text">
-                    <h3>SOKOHAI</h3>
-                    <span>Logistics Hub</span>
-                </div>
-            </div>
-            
-            <span class="ct-sidebar-group-title">Logistics Menu</span>
-            <button id="btnTab_overview" class="ct-sidebar-menu-btn side-menu-link active" onclick="window.switchDashTab('overview')"> Dashboard / Cockpit</button>
-            <button id="btnTab_bookings" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('bookings')"> Requests Marketplace</button>
-            <button id="btnTab_inbox" class="ct-sidebar-menu-btn" onclick="if(window.skhOpenRequestInbox) window.skhOpenRequestInbox()"> Request Inbox (NEW)</button>
-            <button id="btnTab_trips" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('trips')"> Active Shipments</button>
-            <button id="btnTab_cargo" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('cargo')"> Token Center</button>
-            <button id="btnTab_tokenbox" class="ct-sidebar-menu-btn" onclick="if(window.skhOpenTokenBox) window.skhOpenTokenBox()"> My Token Box (PK · TR · DL)</button>
-            <button id="btnTab_fleet" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('fleet')"> Fleet Status</button>
-            <button id="btnTab_drivers" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('drivers')">✈ Drivers Directory</button>
-            <button id="btnTab_tracking" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('tracking')"> Live Tracking</button>
-            <button id="btnTab_finance" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('finance')"> Revenue & Costs</button>
-            <button id="btnTab_analytics" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('analytics')"> Performance Analytics</button>
-            
-            <button class="ct-sidebar-menu-btn" onclick="window.openModeMenu()" style="background:#ef4444; color:white; font-weight:900; margin-top:20px; text-align:center;"> Badili Dashboard / Rudi</button>
-        </div>
-
-        <!-- 2. MAIN FRAME -->
-        <div class="ct-main-content">
-            <!-- HEADER BAR -->
-            <div class="ct-header-bar" style="background: white; border-bottom: 1px solid #cbd5e1; padding: 15px 25px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="ct-menu-toggle-btn" onclick="window.toggleDashboardSidebar()" style="font-size: 24px; cursor: pointer; display: none; color: #0f172a;">☰</span>
-                    <b style="font-size: 16px; color: #0f172a;">LOGISTICS HUB CONTROL BRIDGE</b>
-                </div>
-                <div class="ct-header-actions">
-                    <button onclick="window.switchMode('buyer')" style="background:#ef4444; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:900; font-size:12px; cursor:pointer;"> FUNGA / SOKO KUU</button>
-                </div>
-            </div>
-
-            <!-- WORKSPACE -->
-            <div class="ct-workspace" id="dashWorkspace" style="padding: 25px;">
-                <!-- Tab contents render here -->
-            </div>
-        </div>
-    </div>
-    `;
+    <div class="control-tower-wrapper"> <!-- 1. SOKOHAI COCKPIT LOGISTICS SIDEBAR --> <div class="ct-sidebar" style="background: #0f172a; min-height: 100vh;"> <div class="ct-sidebar-brand"> <span style="font-size: 28px;"></span> <div class="ct-sidebar-brand-text"> <h3>SOKOHAI</h3> <span>Logistics Hub</span> </div> </div> <span class="ct-sidebar-group-title">Logistics Menu</span> <button id="btnTab_overview" class="ct-sidebar-menu-btn side-menu-link active" onclick="window.switchDashTab('overview')"> Dashboard / Cockpit</button> <button id="btnTab_bookings" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('bookings')"> Requests Marketplace</button> <button id="btnTab_inbox" class="ct-sidebar-menu-btn" onclick="if(window.skhOpenRequestInbox) window.skhOpenRequestInbox()"> Request Inbox (NEW)</button> <button id="btnTab_trips" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('trips')"> Active Shipments</button> <button id="btnTab_cargo" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('cargo')"> Token Center</button> <button id="btnTab_tokenbox" class="ct-sidebar-menu-btn" onclick="if(window.skhOpenTokenBox) window.skhOpenTokenBox()"> My Token Box (PK · TR · DL)</button> <button id="btnTab_fleet" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('fleet')"> Fleet Status</button> <button id="btnTab_drivers" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('drivers')">✈ Drivers Directory</button> <button id="btnTab_tracking" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('tracking')"> Live Tracking</button> <button id="btnTab_finance" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('finance')"> Revenue & Costs</button> <button id="btnTab_analytics" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchDashTab('analytics')"> Performance Analytics</button> <button class="ct-sidebar-menu-btn" onclick="window.openModeMenu()" style="background:#ef4444; color:white; font-weight:900; margin-top:20px; text-align:center;"> Badili Dashboard / Rudi</button> </div> <!-- 2. MAIN FRAME --> <div class="ct-main-content"> <!-- HEADER BAR --> <div class="ct-header-bar" style="background: white; border-bottom: 1px solid #cbd5e1; padding: 15px 25px;"> <div style="display: flex; align-items: center; gap: 12px;"> <span class="ct-menu-toggle-btn" onclick="window.toggleDashboardSidebar()" style="font-size:0; line-height:0; cursor: pointer; display: none; color: #0f172a;">${window.skhNavIcon ? window.skhNavIcon('menu', 24) : ''}</span> <b style="font-size: 16px; color: #0f172a;">LOGISTICS HUB CONTROL BRIDGE</b> </div> <div class="ct-header-actions"> <button onclick="window.switchMode('buyer')" style="background:#ef4444; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:900; font-size:12px; cursor:pointer;"> FUNGA / SOKO KUU</button> </div> </div> <!-- WORKSPACE --> <div class="ct-workspace" id="dashWorkspace" style="padding: 25px;"> <!-- Tab contents render here --> </div> </div> </div> `;
 
     // Active tab selection
     window.switchDashTab('overview');
@@ -65,74 +19,9 @@ window.loadProviderDashboard = function() {
     if(!container) return;
 
     container.innerHTML = `
-    <div class="control-tower-wrapper" style="display:flex; min-height:100vh; background:#F1F5F9; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-        
-        <!-- 1. LEFT SIDEBAR (Dark Custom Theme #071625) -->
-        <div class="ct-sidebar" style="width:260px; background:#071625; color:#f8fafc; padding:20px; display:flex; flex-direction:column; gap:12px; flex-shrink:0;">
-            <div class="ct-sidebar-brand" style="border-bottom:1px solid #1e293b; padding-bottom:15px; margin-bottom:10px;">
-                <span style="font-size:24px;"></span>
-                <div class="ct-sidebar-brand-text">
-                    <h3 style="color:white; margin:0; font-size:15px; font-weight:900; letter-spacing:0.5px;">SOKOHAI</h3>
-                    <span style="font-size:10px; color:#94a3b8; display:block; font-weight:bold;">Huduma Hub</span>
-                </div>
-            </div>
-
-            <!-- Profile Card (DATA HALISI pekee — hakuna tiki/idadi za kubuni) -->
-            <div style="background:#0f2135; padding:15px; border-radius:16px; text-align:center; border:1px solid #1e293b; margin-bottom:10px;">
-                <img src="${skh.skhEscape(skh.currentUser?.photoURL || 'https://ui-avatars.com/api/?name=User')}" style="width:55px; height:55px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);">
-                <b style="display:block; color:white; font-size:13px; margin-top:8px;">${skh.skhEscape(skh.currentUser?.displayName || (skh.currentUser?.email ? skh.currentUser.email.split('@')[0] : 'Fundi'))}</b>
-                <small style="color:#94a3b8; font-size:9px; display:block; margin-top:3px; word-break:break-all;">${skh.skhEscape(skh.currentUser?.email || '')}</small>
-            </div>
-            
-            <div style="flex-grow:1; display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-right:5px;">
-                <span class="ct-sidebar-group-title" style="font-size:9px; color:#475569;">HUB MANAGEMENT</span>
-                <button id="pTab_dashboard" class="ct-sidebar-menu-btn side-menu-link active" onclick="window.switchProviderDashTab('dashboard')"> Dashboard</button>
-                <button id="pTab_requests" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('requests')">Maombi Mapya</button>
-                <button id="pTab_active_tasks" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('active_tasks')">Kazi Zinazoendelea</button>
-                <button id="pTab_completed" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('completed')">Kazi Zilizokamilika</button>
-                <button id="pTab_calendar" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('calendar')">Booking Calendar</button>
-                <button id="pTab_my_services" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('my_services')">Huduma Zangu</button>
-                <button id="pTab_clients" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('clients')">Wateja</button>
-                <button id="pTab_contracts" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('contracts')">Mikataba</button>
-                <button id="pTab_escrow" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('escrow')">Escrow Summary</button>
-                <button id="pTab_earnings" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('earnings')">Mapato</button>
-                <button id="pTab_reviews" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('reviews')">Reviews</button>
-                <button id="pTab_disputes" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('disputes')">Migogoro</button>
-                <button id="pTab_analytics" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('analytics')">Analytics</button>
-            </div>
-
-            <!-- SOKOPAY WIDGET -->
-            <div style="background:#0f2135; border:1px solid var(--primary-blue); border-radius:14px; padding:12px; font-size:10px; margin-top:10px;">
-                <b style="color:var(--primary-blue); display:block; margin-bottom:4px;"> SOKOPAY INSTANT</b>
-                <span style="color:#94a3b8; display:block; margin-bottom:8px;">Pokea malipo kwa haraka na usalama.</span>
-                <button onclick="window.openUserPaymentModal()" style="width:100%; padding:6px; background:var(--primary-blue); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Jifunze Zaidi</button>
-            </div>
-
-            <button class="ct-sidebar-menu-btn" onclick="window.switchMode('buyer')" style="background:#ef4444; color:white; font-weight:900; margin-top:15px; text-align:center;"> Rudi Soko Kuu</button>
-        </div>
-
-        <!-- 2. MAIN COCKPIT BRIDGE -->
-        <div class="ct-main-content" style="flex-grow:1; display:flex; flex-direction:column; min-width:0; background:#f8fafc;">
-            <!-- HEADER BAR -->
-            <div class="ct-header-bar" style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:12px 25px; border-bottom:1px solid #E2E8F0; height:60px;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <span class="ct-menu-toggle-btn" onclick="window.toggleDashboardSidebar()" style="font-size: 24px; cursor: pointer; display: none; color: #0f172a;">☰</span>
-                    <div>
-                        <h2 style="margin:0; font-size:16px; color:#0f172a; font-weight:900; text-transform:uppercase;">Huduma Dashboard</h2>
-                        <small style="color:#64748b; font-size:11px;">Karibu, ${skh.skhEscape(skh.currentUser?.displayName || 'Fundi Umeme')}! Hapa ni muhtasari wa huduma zako.</small>
-                    </div>
-                </div>
-                <div style="background:white; padding:8px 15px; border-radius:10px; border:1px solid #e2e8f0; font-size:11px; font-weight:800; color:#475569;">
+    <div class="control-tower-wrapper" style="display:flex; min-height:100vh; background:#F1F5F9; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"> <!-- 1. LEFT SIDEBAR (Dark Custom Theme #071625) --> <div class="ct-sidebar" style="width:260px; background:#071625; color:#f8fafc; padding:20px; display:flex; flex-direction:column; gap:12px; flex-shrink:0;"> <div class="ct-sidebar-brand" style="border-bottom:1px solid #1e293b; padding-bottom:15px; margin-bottom:10px;"> <span style="font-size:24px;"></span> <div class="ct-sidebar-brand-text"> <h3 style="color:white; margin:0; font-size:15px; font-weight:900; letter-spacing:0.5px;">SOKOHAI</h3> <span style="font-size:12.5px; color:#94a3b8; display:block; font-weight:bold;">Huduma Hub</span> </div> </div> <!-- Profile Card (DATA HALISI pekee — hakuna tiki/idadi za kubuni) --> <div style="background:#0f2135; padding:15px; border-radius:16px; text-align:center; border:1px solid #1e293b; margin-bottom:10px;"> <img src="${skh.skhEscape(skh.currentUser?.photoURL || 'https://ui-avatars.com/api/?name=User')}" style="width:55px; height:55px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);"> <b style="display:block; color:white; font-size:13px; margin-top:8px;">${skh.skhEscape(skh.currentUser?.displayName || (skh.currentUser?.email ? skh.currentUser.email.split('@')[0] : 'Fundi'))}</b> <small style="color:#94a3b8; font-size:12px; display:block; margin-top:3px; word-break:break-all;">${skh.skhEscape(skh.currentUser?.email || '')}</small> </div> <div style="flex-grow:1; display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-right:5px;"> <span class="ct-sidebar-group-title" style="font-size:12px; color:#475569;">HUB MANAGEMENT</span> <button id="pTab_dashboard" class="ct-sidebar-menu-btn side-menu-link active" onclick="window.switchProviderDashTab('dashboard')"> Dashboard</button> <button id="pTab_requests" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('requests')">Maombi Mapya</button> <button id="pTab_active_tasks" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('active_tasks')">Kazi Zinazoendelea</button> <button id="pTab_completed" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('completed')">Kazi Zilizokamilika</button> <button id="pTab_calendar" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('calendar')">Booking Calendar</button> <button id="pTab_my_services" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('my_services')">Huduma Zangu</button> <button id="pTab_clients" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('clients')">Wateja</button> <button id="pTab_contracts" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('contracts')">Mikataba</button> <button id="pTab_escrow" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('escrow')">Escrow Summary</button> <button id="pTab_earnings" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('earnings')">Mapato</button> <button id="pTab_reviews" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('reviews')">Reviews</button> <button id="pTab_disputes" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('disputes')">Migogoro</button> <button id="pTab_analytics" class="ct-sidebar-menu-btn side-menu-link" onclick="window.switchProviderDashTab('analytics')">Analytics</button> </div> <!-- SOKOPAY WIDGET --> <div style="background:#0f2135; border:1px solid var(--primary-blue); border-radius:14px; padding:12px; font-size:12.5px; margin-top:10px;"> <b style="color:var(--primary-blue); display:block; margin-bottom:4px;"> SOKOPAY INSTANT</b> <span style="color:#94a3b8; display:block; margin-bottom:8px;">Pokea malipo kwa haraka na usalama.</span> <button onclick="window.openUserPaymentModal()" style="width:100%; padding:6px; background:var(--primary-blue); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Jifunze Zaidi</button> </div> <button class="ct-sidebar-menu-btn" onclick="window.switchMode('buyer')" style="background:#ef4444; color:white; font-weight:900; margin-top:15px; text-align:center;"> Rudi Soko Kuu</button> </div> <!-- 2. MAIN COCKPIT BRIDGE --> <div class="ct-main-content" style="flex-grow:1; display:flex; flex-direction:column; min-width:0; background:#f8fafc;"> <!-- HEADER BAR --> <div class="ct-header-bar" style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:12px 25px; border-bottom:1px solid #E2E8F0; height:60px;"> <div style="display:flex; align-items:center; gap:12px;"> <span class="ct-menu-toggle-btn" onclick="window.toggleDashboardSidebar()" style="font-size:0; line-height:0; cursor: pointer; display: none; color: #0f172a;">${window.skhNavIcon ? window.skhNavIcon('menu', 24) : ''}</span> <div> <h2 style="margin:0; font-size:16px; color:#0f172a; font-weight:900; text-transform:uppercase;">Huduma Dashboard</h2> <small style="color:#64748b; font-size:13px;">Karibu, ${skh.skhEscape(skh.currentUser?.displayName || 'Fundi Umeme')}! Hapa ni muhtasari wa huduma zako.</small> </div> </div> <div style="background:white; padding:8px 15px; border-radius:10px; border:1px solid #e2e8f0; font-size:13px; font-weight:800; color:#475569;">
                      25 Mei, 2025 - 24 Jun, 2025
-                </div>
-            </div>
-
-            <!-- DYNAMIC WORKSPACE -->
-            <div class="ct-workspace" id="providerWorkspace" style="padding:20px; display:flex; flex-direction:column; gap:20px; overflow-y:auto; box-sizing:border-box;">
-                <!-- Tab views rendering dynamically -->
-            </div>
-        </div>
-    </div>`;
+                </div> </div> <!-- DYNAMIC WORKSPACE --> <div class="ct-workspace" id="providerWorkspace" style="padding:20px; display:flex; flex-direction:column; gap:20px; overflow-y:auto; box-sizing:border-box;"> <!-- Tab views rendering dynamically --> </div> </div> </div>`;
 
     window.switchProviderDashTab('dashboard');
 };
@@ -153,167 +42,7 @@ window.switchProviderDashTab = function(tabName) {
     // A.  OVERVIEW TOWER (Exact Match to Your Hub Image)
     if (tabName === 'dashboard') {
         workspace.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:20px; animation:fadeIn 0.2s ease-out;">
-            
-            <!-- ROW 1: 4 FIRST KPI CARDS -->
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;">
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Maombi Mapya</small>
-                    <b style="font-size:22px; color:#0f172a; display:block; margin:4px 0;">15</b>
-                    <span style="color:green; font-size:10px; font-weight:bold;">▲ 20% kutoka wiki iliyopita</span>
-                </div>
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Yanayoendelea</small>
-                    <b style="font-size:22px; color:#10b981; display:block; margin:4px 0;">8</b>
-                    <span style="color:green; font-size:10px; font-weight:bold;">▲ 12% kutoka wiki iliyopita</span>
-                </div>
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Yaliyokamilika</small>
-                    <b style="font-size:22px; color:#1d4ed8; display:block; margin:4px 0;">120</b>
-                    <span style="color:green; font-size:10px; font-weight:bold;">▲ 18% kutoka wiki iliyopita</span>
-                </div>
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Rating</small>
-                    <b style="font-size:22px; color:#ea580c; display:block; margin:4px 0;">4.8</b>
-                    <span style="color:var(--gold); font-size:11px;">★★★★★ (128)</span>
-                </div>
-            </div>
-
-            <!-- ROW 2: 4 FINANCIAL KPI CARDS -->
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;">
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Mapato Mwezi Huu</small>
-                    <b style="font-size:20px; color:#10b981; display:block; margin:4px 0;">TZS 2,500,000</b>
-                    <span style="color:green; font-size:10px; font-weight:bold;">▲ 22% kutoka mwezi jana</span>
-                </div>
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Escrow Pending</small>
-                    <b style="font-size:20px; color:#e11d48; display:block; margin:4px 0;">TZS 800,000</b>
-                    <span style="color:gray; font-size:10px; font-weight:bold;">3 mikataba inasubiri</span>
-                </div>
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Migogoro</small>
-                    <b style="font-size:20px; color:#d97706; display:block; margin:4px 0;">2</b>
-                    <span style="color:red; font-size:10px; font-weight:bold;">Inahitaji hatua yako</span>
-                </div>
-                <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;">
-                    <small style="color:gray; font-size:9px; font-weight:900; text-transform:uppercase;">Growth</small>
-                    <b style="font-size:20px; color:#06b6d4; display:block; margin:4px 0;">+18%</b>
-                    <span style="color:green; font-size:10px; font-weight:bold;">Kukuaji kwa wateja</span>
-                </div>
-            </div>
-
-            <!-- ROW 3: CHARTS AND ACTIVE LISTS -->
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <!-- Chart 1: Maombi ya Huduma (Line) -->
-                <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px; text-align:left;">
-                    <b style="font-size:12px; text-transform:uppercase;"> Maombi ya Huduma (Wiki Hii)</b>
-                    <div style="height:180px; position:relative; margin-top:15px;"><canvas id="hubRequestLineChart"></canvas></div>
-                </div>
-                <!-- Chart 2: Mapato (Bar) -->
-                <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px; text-align:left;">
-                    <b style="font-size:12px; text-transform:uppercase;"> Mapato (TZS)</b>
-                    <div style="height:180px; position:relative; margin-top:15px;"><canvas id="hubEarningsBarChart"></canvas></div>
-                </div>
-            </div>
-
-            <!-- ROW 4: DATA LISTS GRID -->
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <!-- New Requests list -->
-                <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:20px; text-align:left;">
-                    <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;"> Maombi Mapya</b>
-                    <div style="display:flex; flex-direction:column; gap:12px;" id="hubNewRequestsArea">
-                        <!-- Loaded dynamically -->
-                    </div>
-                </div>
-                <!-- Active Tasks list -->
-                <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:20px; text-align:left;">
-                    <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">⚙ Kazi Zinazoendelea</b>
-                    <div style="display:flex; flex-direction:column; gap:12px;" id="hubActiveTasksArea">
-                        <!-- Loaded dynamically -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- ROW 5: BOTTOM INFO BLOCKS -->
-            <div style="display:grid; grid-template-columns: 1.2fr 1.5fr 1fr; gap:15px; text-align:left;">
-                <!-- Escrow summary -->
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;">
-                    <b style="font-size:11px; display:block; margin-bottom:10px;"> Escrow Summary</b>
-                    <div style="font-size:11px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="display:flex; justify-content:space-between;"><span>Held:</span><b>TZS 800,000</b></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Released:</span><b>TZS 4,200,000</b></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Pending:</span><b>TZS 600,000</b></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Refunded:</span><b>TZS 150,000</b></div>
-                    </div>
-                </div>
-                <!-- Map View -->
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; display:flex; flex-direction:column;">
-                    <b style="font-size:11px; display:block; margin-bottom:8px;"> Map View (Dar es Salaam)</b>
-                    
-                </div>
-                <!-- Mapato Quick Table -->
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;">
-                    <b style="font-size:11px; display:block; margin-bottom:10px;"> Mapato Summary</b>
-                    <div style="font-size:11px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="display:flex; justify-content:space-between;"><span>Leo:</span><b>TZS 150,000</b></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Wiki Hii:</span><b>TZS 750,000</b></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Mwezi Huu:</span><b>TZS 2,500,000</b></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Mwaka Huu:</span><b>TZS 18,600,000</b></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ROW 6: REVIEWS, CALENDAR & RECOMMENDATIONS -->
-            <div style="display:grid; grid-template-columns: 1.2fr 1.5fr 1fr; gap:15px; text-align:left;">
-                <!-- Reviews -->
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;">
-                    <b style="font-size:11px; display:block; margin-bottom:8px; color:var(--gold);"> Reviews & Rating breakdown</b>
-                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-                        <h1 style="margin:0; font-size:32px;">4.8</h1>
-                        <span style="font-size:11px; color:gray;">(128 Reviews)</span>
-                    </div>
-                    <div style="font-size:10px; display:flex; flex-direction:column; gap:2px; color:gray;">
-                        <div>5 Star: <b>85%</b></div>
-                        <div>4 Star: <b>10%</b></div>
-                        <div>3 Star: <b>3%</b></div>
-                        <div>2 Star: <b>1%</b></div>
-                        <div>1 Star: <b>1%</b></div>
-                    </div>
-                </div>
-                <!-- Booking Calendar -->
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;">
-                    <b style="font-size:11px; display:block; margin-bottom:8px;"> Kalendar ya Bookings (Juni 2025)</b>
-                    <div style="font-size:11px; display:flex; flex-direction:column; gap:8px;">
-                        <div style="border-left:3px solid #10b981; padding-left:8px; margin-bottom:4px;">
-                            <b>09:00 AM - House Wiring</b><br>
-                            <span style="color:gray;">Mikocheni, DSM • TZS 120,000</span>
-                        </div>
-                        <div style="border-left:3px solid #3b82f6; padding-left:8px;">
-                            <b>11:00 AM - Repair Switch</b><br>
-                            <span style="color:gray;">Msasani, DSM • TZS 80,000</span>
-                        </div>
-                    </div>
-                </div>
-                <!-- Smart Recommendations -->
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; font-size:11px;">
-                    <b style="font-size:11px; display:block; margin-bottom:8px; color:var(--primary-blue);"> Smart Recommendations</b>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <span> Maombi Karibu Yako: 5 ndani ya 5km.</span>
-                        <span> Wateja wa Kawaida: Wasiliana na wateja 10 waliofanya kazi nawe.</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BOTTOM QUICK ACTIONS ROW -->
-            <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:15px; display:flex; justify-content:space-around; align-items:center; gap:10px;">
-                <button onclick="showForm('serviceForm')" style="padding:10px 18px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;"> Ongeza Huduma</button>
-                <button onclick="window.openUserPaymentModal()" style="padding:10px 18px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;"> Pokea Malipo</button>
-                <button onclick="showForm('serviceForm')" style="padding:10px 18px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;"> Tangaza Huduma</button>
-                <button onclick="alert('Usimamizi wa Migogoro: Huna migogoro hai inayohitaji hatua yako hivi sasa.')" style="padding:10px 18px; background:#fef2f2; color:#ef4444; border:1px solid #fee2e2; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;"> Dai la Migogoro</button>
-            </div>
-
-        </div>`;
+        <div style="display:flex; flex-direction:column; gap:20px; animation:fadeIn 0.2s ease-out;"> <!-- ROW 1: 4 FIRST KPI CARDS --> <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;"> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Maombi Mapya</small> <b style="font-size:22px; color:#0f172a; display:block; margin:4px 0;">15</b> <span style="color:green; font-size:12.5px; font-weight:bold;"> 20% kutoka wiki iliyopita</span> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Yanayoendelea</small> <b style="font-size:22px; color:#10b981; display:block; margin:4px 0;">8</b> <span style="color:green; font-size:12.5px; font-weight:bold;"> 12% kutoka wiki iliyopita</span> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Yaliyokamilika</small> <b style="font-size:22px; color:#1d4ed8; display:block; margin:4px 0;">120</b> <span style="color:green; font-size:12.5px; font-weight:bold;"> 18% kutoka wiki iliyopita</span> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Rating</small> <b style="font-size:22px; color:#ea580c; display:block; margin:4px 0;">4.8</b> <span style="color:var(--gold); font-size:13px;"> (128)</span> </div> </div> <!-- ROW 2: 4 FINANCIAL KPI CARDS --> <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;"> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Mapato Mwezi Huu</small> <b style="font-size:20px; color:#10b981; display:block; margin:4px 0;">TZS 2,500,000</b> <span style="color:green; font-size:12.5px; font-weight:bold;"> 22% kutoka mwezi jana</span> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Escrow Pending</small> <b style="font-size:20px; color:#e11d48; display:block; margin:4px 0;">TZS 800,000</b> <span style="color:gray; font-size:12.5px; font-weight:bold;">3 mikataba inasubiri</span> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Migogoro</small> <b style="font-size:20px; color:#d97706; display:block; margin:4px 0;">2</b> <span style="color:red; font-size:12.5px; font-weight:bold;">Inahitaji hatua yako</span> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:16px; text-align:left;"> <small style="color:gray; font-size:12px; font-weight:900; text-transform:uppercase;">Growth</small> <b style="font-size:20px; color:#06b6d4; display:block; margin:4px 0;">+18%</b> <span style="color:green; font-size:12.5px; font-weight:bold;">Kukuaji kwa wateja</span> </div> </div> <!-- ROW 3: CHARTS AND ACTIVE LISTS --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;"> <!-- Chart 1: Maombi ya Huduma (Line) --> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px; text-align:left;"> <b style="font-size:12px; text-transform:uppercase;"> Maombi ya Huduma (Wiki Hii)</b> <div style="height:180px; position:relative; margin-top:15px;"><canvas id="hubRequestLineChart"></canvas></div> </div> <!-- Chart 2: Mapato (Bar) --> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px; text-align:left;"> <b style="font-size:12px; text-transform:uppercase;"> Mapato (TZS)</b> <div style="height:180px; position:relative; margin-top:15px;"><canvas id="hubEarningsBarChart"></canvas></div> </div> </div> <!-- ROW 4: DATA LISTS GRID --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;"> <!-- New Requests list --> <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:20px; text-align:left;"> <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;"> Maombi Mapya</b> <div style="display:flex; flex-direction:column; gap:12px;" id="hubNewRequestsArea"> <!-- Loaded dynamically --> </div> </div> <!-- Active Tasks list --> <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:20px; text-align:left;"> <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;"> Kazi Zinazoendelea</b> <div style="display:flex; flex-direction:column; gap:12px;" id="hubActiveTasksArea"> <!-- Loaded dynamically --> </div> </div> </div> <!-- ROW 5: BOTTOM INFO BLOCKS --> <div style="display:grid; grid-template-columns: 1.2fr 1.5fr 1fr; gap:15px; text-align:left;"> <!-- Escrow summary --> <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;"> <b style="font-size:13px; display:block; margin-bottom:10px;"> Escrow Summary</b> <div style="font-size:13px; display:flex; flex-direction:column; gap:8px;"> <div style="display:flex; justify-content:space-between;"><span>Held:</span><b>TZS 800,000</b></div> <div style="display:flex; justify-content:space-between;"><span>Released:</span><b>TZS 4,200,000</b></div> <div style="display:flex; justify-content:space-between;"><span>Pending:</span><b>TZS 600,000</b></div> <div style="display:flex; justify-content:space-between;"><span>Refunded:</span><b>TZS 150,000</b></div> </div> </div> <!-- Map View --> <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; display:flex; flex-direction:column;"> <b style="font-size:13px; display:block; margin-bottom:8px;"> Map View (Dar es Salaam)</b> </div> <!-- Mapato Quick Table --> <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;"> <b style="font-size:13px; display:block; margin-bottom:10px;"> Mapato Summary</b> <div style="font-size:13px; display:flex; flex-direction:column; gap:8px;"> <div style="display:flex; justify-content:space-between;"><span>Leo:</span><b>TZS 150,000</b></div> <div style="display:flex; justify-content:space-between;"><span>Wiki Hii:</span><b>TZS 750,000</b></div> <div style="display:flex; justify-content:space-between;"><span>Mwezi Huu:</span><b>TZS 2,500,000</b></div> <div style="display:flex; justify-content:space-between;"><span>Mwaka Huu:</span><b>TZS 18,600,000</b></div> </div> </div> </div> <!-- ROW 6: REVIEWS, CALENDAR & RECOMMENDATIONS --> <div style="display:grid; grid-template-columns: 1.2fr 1.5fr 1fr; gap:15px; text-align:left;"> <!-- Reviews --> <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;"> <b style="font-size:13px; display:block; margin-bottom:8px; color:var(--gold);"> Reviews & Rating breakdown</b> <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;"> <h1 style="margin:0; font-size:32px;">4.8</h1> <span style="font-size:13px; color:gray;">(128 Reviews)</span> </div> <div style="font-size:12.5px; display:flex; flex-direction:column; gap:2px; color:gray;"> <div>5 Star: <b>85%</b></div> <div>4 Star: <b>10%</b></div> <div>3 Star: <b>3%</b></div> <div>2 Star: <b>1%</b></div> <div>1 Star: <b>1%</b></div> </div> </div> <!-- Booking Calendar --> <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px;"> <b style="font-size:13px; display:block; margin-bottom:8px;"> Kalendar ya Bookings (Juni 2025)</b> <div style="font-size:13px; display:flex; flex-direction:column; gap:8px;"> <div style="border-left:3px solid #10b981; padding-left:8px; margin-bottom:4px;"> <b>09:00 AM - House Wiring</b><br> <span style="color:gray;">Mikocheni, DSM • TZS 120,000</span> </div> <div style="border-left:3px solid #3b82f6; padding-left:8px;"> <b>11:00 AM - Repair Switch</b><br> <span style="color:gray;">Msasani, DSM • TZS 80,000</span> </div> </div> </div> <!-- Smart Recommendations --> <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; font-size:13px;"> <b style="font-size:13px; display:block; margin-bottom:8px; color:var(--primary-blue);"> Smart Recommendations</b> <div style="display:flex; flex-direction:column; gap:6px;"> <span> Maombi Karibu Yako: 5 ndani ya 5km.</span> <span> Wateja wa Kawaida: Wasiliana na wateja 10 waliofanya kazi nawe.</span> </div> </div> </div> <!-- BOTTOM QUICK ACTIONS ROW --> <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:15px; display:flex; justify-content:space-around; align-items:center; gap:10px;"> <button onclick="showForm('serviceForm')" style="padding:10px 18px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;"> Ongeza Huduma</button> <button onclick="window.openUserPaymentModal()" style="padding:10px 18px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;"> Pokea Malipo</button> <button onclick="showForm('serviceForm')" style="padding:10px 18px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;"> Tangaza Huduma</button> <button onclick="alert('Usimamizi wa Migogoro: Huna migogoro hai inayohitaji hatua yako hivi sasa.')" style="padding:10px 18px; background:#fef2f2; color:#ef4444; border:1px solid #fee2e2; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;"> Dai la Migogoro</button> </div> </div>`;
 
         setTimeout(() => {
             window.initHubOverviewCharts();
@@ -326,38 +55,30 @@ window.switchProviderDashTab = function(tabName) {
     // B. OTHER TABS (Maombi Mapya n.k.)
     if (tabName === 'requests') {
         workspace.innerHTML = `
-            <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-                <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Maombi Mapya ya Huduma</h3>
-                <p style="color:gray; font-size:12px; margin-bottom:20px;">Kagua maombi yote yaliyotumwa na wateja wa karibu kwako sasa hivi [1].</p>
-                <div style="display:flex; flex-direction:column; gap:12px;" id="hubDetailedNewReqArea">Inapakia maombi...</div>
-            </div>`;
+            <div style="text-align:left; animation:fadeIn 0.2s ease-out;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Maombi Mapya ya Huduma</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Kagua maombi yote yaliyotumwa na wateja wa karibu kwako sasa hivi [1].</p> <div style="display:flex; flex-direction:column; gap:12px;" id="hubDetailedNewReqArea">Inapakia maombi...</div> </div>`;
         setTimeout(() => window.loadHubDetailedRequests(), 100);
         return;
     }
 
     if (tabName === 'active_tasks') {
         workspace.innerHTML = `
-            <div style="text-align:left; animation:fadeIn 0.2s ease-out;">
-                <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;">⚙ Kazi Zinazoendelea (Active Tasks)</h3>
-                <p style="color:gray; font-size:12px; margin-bottom:20px;">Fuatilia maendeleo, fanya mawasiliano na thibitisha kumalizika kwa mikataba.</p>
-                <div style="display:flex; flex-direction:column; gap:12px;" id="hubDetailedActiveArea">Inapakia kazi...</div>
-            </div>`;
+            <div style="text-align:left; animation:fadeIn 0.2s ease-out;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Kazi Zinazoendelea (Active Tasks)</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Fuatilia maendeleo, fanya mawasiliano na thibitisha kumalizika kwa mikataba.</p> <div style="display:flex; flex-direction:column; gap:12px;" id="hubDetailedActiveArea">Inapakia kazi...</div> </div>`;
         setTimeout(() => window.loadHubDetailedActiveTasks(), 100);
         return;
     }
 
     // C. SECONDARY TABS — kila kitufe kinaelekeza kwenye view yake HALISI (sio kurudia ile ile)
     const secondaryTargets = {
-        completed:      'loadHubDetailedCompletedTasks',
-        calendar:       'loadHubDetailedCalendar',
-        my_services:    'loadHubDetailedMyServices',
-        clients:        'loadHubDetailedClients',
-        contracts:      'loadHubDetailedContracts',
-        escrow:         'loadHubDetailedEscrow',
-        earnings:       'loadHubDetailedEarnings',
-        reviews:        'loadHubDetailedReviews',
-        disputes:       'loadHubDetailedDisputes',
-        analytics:      'loadHubDetailedAnalytics'
+        completed: 'loadHubDetailedCompletedTasks',
+        calendar: 'loadHubDetailedCalendar',
+        my_services: 'loadHubDetailedMyServices',
+        clients: 'loadHubDetailedClients',
+        contracts: 'loadHubDetailedContracts',
+        escrow: 'loadHubDetailedEscrow',
+        earnings: 'loadHubDetailedEarnings',
+        reviews: 'loadHubDetailedReviews',
+        disputes: 'loadHubDetailedDisputes',
+        analytics: 'loadHubDetailedAnalytics'
     };
     if (secondaryTargets[tabName] && typeof window[secondaryTargets[tabName]] === 'function') {
         window[secondaryTargets[tabName]]();
@@ -410,56 +131,61 @@ window.initHubOverviewCharts = function() {
     });
 };
 
-window.loadHubNewRequests = function() {
+// [REAL DATA 2026-09] Maombi halisi yanayungoja — mock names zimeondolewa kabisa.
+window.loadHubNewRequests = async function () {
     const area = document.getElementById('hubNewRequestsArea');
-    if(!area) return;
-
-    // Data za mfano (Mock data zinazofanana na picha kwa 100%)
-    const requests = [
-        { name: "John Mwangwa", task: "Fundi Umeme", location: "Kimara, DSM", price: 50000, distance: "4km" },
-        { name: "Asha Salim", task: "Kukagua Tatizo la Umeme", location: "Mbezi Beach", price: 80000, distance: "6km" },
-        { name: "Peter K.", task: "Wiring Mpya", location: "Mikocheni, DSM", price: 120000, distance: "8km" }
-    ];
-
-    area.innerHTML = requests.map(r => `
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <b style="font-size:13px; color:#0f172a; display:block;"> ${r.name}</b>
-                <small style="color:gray;">Kazi: ${r.task} |  ${r.location} (${r.distance})</small>
-                <b style="display:block; color:var(--terracotta); font-size:11px; margin-top:2px;">TZS ${r.price.toLocaleString()}</b>
-            </div>
-            <div style="display:flex; gap:6px;">
-                <button onclick="alert('Kazi Imekubaliwa! Umesajiliwa kwenye kazi ya ${r.name}')" style="padding:6px 12px; background:var(--green); color:white; border:none; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer;">Kubali</button>
-                <button onclick="alert('Ombi Limeghairiwa')" style="padding:6px 12px; background:#fee2e2; color:#ef4444; border:none; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer;">Kataa</button>
-            </div>
-        </div>
-    `).join('');
+    if (!area || !skh.currentUser) return;
+    try {
+        const q = skh.query(skh.collection(skh.db, "requests"),
+            skh.where("receiverId", "==", skh.currentUser.uid),
+            skh.where("status", "==", "pending"));
+        const snap = await skh.getDocs(q);
+        if (snap.empty) {
+            area.innerHTML = `<div style="background:#f8fafc; border:1px dashed #e2e8f0; padding:16px; border-radius:12px; text-align:center; color:#94a3b8; font-size:12.5px;">Bado hakuna ombi jipya. Ombi la mteja litapofika litaonekana hapa.</div>`;
+            return;
+        }
+        let html = '';
+        snap.forEach(docSnap => {
+            const r = docSnap.data();
+            const price = parseFloat(r.detail2 || r.price || 0);
+            const task = String(r.itemTitle || r.detail1 || 'Huduma').slice(0, 60);
+            const name = String(r.senderName || 'Mteja');
+            const sName = name.replace(/'/g, "\\'"), sTask = task.replace(/'/g, "\\'");
+            html += `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;"> <div> <b style="font-size:13px; color:#0f172a; display:block;"> ${skh.skhEscape(name)}</b> <small style="color:gray;">${skh.skhEscape(task)}</small> <b style="display:block; color:var(--terracotta); font-size:13px; margin-top:2px;">TZS ${price.toLocaleString()}</b> </div> <div style="display:flex; gap:6px;"> <button onclick="window.acceptHubServiceRequest('${docSnap.id}', '${sName}', '${sTask}', ${price}, '${r.senderId || ''}')" style="padding:6px 12px; background:var(--green); color:white; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">Kubali</button> <button onclick="window.rejectHubServiceRequest('${docSnap.id}')" style="padding:6px 12px; background:#fee2e2; color:#ef4444; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">Kataa</button> </div> </div>`;
+        });
+        area.innerHTML = html;
+    } catch (e) {
+        area.innerHTML = `<div style="color:#b45309; font-size:12.5px; padding:12px; text-align:center;">Imeshindwa kupakia maombi: ${skh.skhEscape(e.message || '')}</div>`;
+    }
 };
 
-window.loadHubActiveTasks = function() {
+// [REAL DATA 2026-09] Kazi halisi zilizokubaliwa (escrow orders za huduma)
+window.loadHubActiveTasks = async function () {
     const area = document.getElementById('hubActiveTasksArea');
-    if(!area) return;
-
-    const tasks = [
-        { title: "House Wiring", location: "Mikocheni, DSM", progress: 60, status: "In Progress", color: "#3b82f6" },
-        { title: "Repair Switch", location: "Msasani, DSM", progress: 75, status: "On Site", color: "#f59e0b" },
-        { title: "Fix Power Issue", location: "Sinza, DSM", progress: 30, status: "On Route", color: "#6366f1" },
-        { title: "Install Lights", location: "Masaki, DSM", progress: 10, status: "Accepted", color: "#10b981" }
-    ];
-
-    area.innerHTML = tasks.map(t => `
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:12px; display:flex; flex-direction:column; gap:5px;">
-            <div style="display:flex; justify-content:space-between;">
-                <b> ${skh.skhEscape(t.title||'')}</b>
-                <span style="font-size:9px; background:#eef2f6; color:#475569; padding:2px 8px; border-radius:8px; font-weight:bold;">${t.status}</span>
-            </div>
-            <small style="color:gray;">Location: ${t.location}</small>
-            <div style="width:100%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-top:4px;">
-                <div style="width:${t.progress}%; height:100%; background:${t.color};"></div>
-            </div>
-            <small style="font-size:9px; text-align:right; color:gray;">Kazi imefanyika: ${t.progress}%</small>
-        </div>
-    `).join('');
+    if (!area || !skh.currentUser) return;
+    try {
+        const q = skh.query(skh.collection(skh.db, "orders"), skh.where("sellerId", "==", skh.currentUser.uid));
+        const snap = await skh.getDocs(q);
+        const active = [];
+        snap.forEach(docSnap => {
+            const o = docSnap.data();
+            if (o.collectionName === 'services' && /held|accepted|in_progress|in progress|on route|on site/i.test(String(o.status || ''))) {
+                active.push({ id: docSnap.id, ...o });
+            }
+        });
+        if (active.length === 0) {
+            area.innerHTML = `<div style="background:#f8fafc; border:1px dashed #e2e8f0; padding:16px; border-radius:12px; text-align:center; color:#94a3b8; font-size:12.5px;">Bado huna kazi inayoendelea iliyokubaliwa.</div>`;
+            return;
+        }
+        area.innerHTML = active.slice(0, 6).map(t => {
+            const progress = 0;
+            return `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:12px; display:flex; flex-direction:column; gap:5px;"> <div style="display:flex; justify-content:space-between;"> <b> ${skh.skhEscape((t.itemTitle || 'Huduma') + '')}</b> <span style="font-size:12px; background:#eef2f6; color:#475569; padding:2px 8px; border-radius:8px; font-weight:bold;">${t.status || 'Accepted'}</span> </div> <small style="color:gray;">Mteja: ${skh.skhEscape(String(t.buyerName || '—'))} | TZS ${Number(t.amount || 0).toLocaleString()}</small> <div style="width:100%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-top:4px;"> <div style="width:${progress}%; height:100%; background:#3b82f6;"></div> </div> </div>`;
+        }).join('');
+    } catch (e) {
+        area.innerHTML = `<div style="color:#b45309; font-size:12.5px; padding:12px; text-align:center;">Imeshindwa kupakia kazi: ${skh.skhEscape(e.message || '')}</div>`;
+    }
 };
 
 window.updateHubCategories = function() {
@@ -516,10 +242,7 @@ window.generateHubServiceFilters = function() {
         let inputsHtml = '';
         data.filters.forEach(f => {
             inputsHtml += `
-            <div style="margin-top:10px;">
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:3px;">${f} *</label>
-                <input type="text" class="hub-service-filter-input" data-filter="${f}" placeholder="Jaza ${f}..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; outline:none; background:white;" required>
-            </div>`;
+            <div style="margin-top:10px;"> <label style="font-size:13px; font-weight:bold; color:gray; display:block; margin-bottom:3px;">${f} *</label> <input type="text" class="hub-service-filter-input" data-filter="${f}" placeholder="Jaza ${f}..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; outline:none; background:white;" required> </div>`;
         });
         filtersArea.innerHTML = inputsHtml;
         filterContainer.style.display = 'block';
@@ -542,7 +265,7 @@ window.submitSokohaiService = async function(event) {
     const loc = document.getElementById('servHubLocation').value.trim();
 
     if (!title || !grp || !cat || !sub || !desc || !loc || price <= 0) {
-        alert(" Tafadhali jaza sehemu zote zenye alama ya nyota (*).");
+        alert(" jaza sehemu zote zenye alama ya nyota (*).");
         return;
     }
 
@@ -571,6 +294,8 @@ window.submitSokohaiService = async function(event) {
             description: desc,
             location: loc,
             image: imageUrl || "https://ui-avatars.com/api/?name=Huduma&background=1d4ed8&color=fff",
+            // [NEGO LOCK §21/§22] Provider Settings — kweli iliyo kwenye doc la huduma.
+            negotiationAllowed: (function(){ var el = document.getElementById('servNegoAllowed'); return el ? !!el.checked : true; })(),
             createdAt: new Date().toISOString()
         });
 

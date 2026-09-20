@@ -2,9 +2,9 @@
    SOKOHAI — PRODUCT SHOWCASE UI (Module 02 · UI)
    ----------------------------------------------------------------
    Modali ya bidhaa inayomfanya BIDHAA kuwa shujaa:
-   hero media → utambulisho/bei/upatikanaji → variants → maelezo →
-   usambazaji → tathmini → maswali → muuzaji (fupi) → bidhaa
-   zinazohusiana (maduka mbalimbali) → kifimbo cha kununua chini.
+   hero media -> utambulisho/bei/upatikanaji -> variants -> maelezo ->
+   usambazaji -> tathmini -> maswali -> muuzaji (fupi) -> bidhaa
+   zinazohusiana (maduka mbalimbali) -> kifimbo cha kununua chini.
 
    Kanuni za utekelezaji:
    - Haiundi mifumo mipya ya bidhaa/duka/cart/chat/order — inatumia
@@ -21,8 +21,7 @@ import {
     psIsVideo, PS_PRODUCT, PS_SERVICE, PS_DRIVER, PS_FETCH_CAP, PS_LOW_STOCK
 } from './39-showcase-logic.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     function T(key, en, vars) {
         var s = null;
@@ -42,9 +41,9 @@ import {
     function starsHtml(r) {
         r = Math.round(Number(r) || 0);
         var full = '';
-        var starSvg = (window.skhNavIcon ? window.skhNavIcon('star', 13) : '★');
+        var starSvg = (window.skhNavIcon ? window.skhNavIcon('star', 13) : '');
         for (var i = 0; i < 5; i++) full += '<span class="pm-star' + (i < r ? ' pm-star--on' : '') + '">' + starSvg + '</span>';
-        return '<span class="pm-stars" aria-label="Nyota ' + r + ' kati ya 5">' + full + '</span>';
+        return '<span class="pm-stars" aria-label="' + T('pm_stars', 'Nyota') + ' ' + r + ' ' + T('pm_stars_of', 'kati ya') + ' 5">' + full + '</span>';
     }
 
     /* ================================================================
@@ -65,7 +64,7 @@ import {
         }
         $('pmChips').innerHTML = chips;
 
-        $('pmTitle').textContent = psTitle(p, col);
+        $('pmTitle').textContent = ((window.skhLocField ? window.skhLocField(p, 'title') : null) || p.title) || psTitle(p, col);
 
         // Mstari wa tathmini (hufungua sehemu ya reviews)
         var rl = $('pmRatingLine');
@@ -84,12 +83,12 @@ import {
         var price = psNum(p.price);
         var priceText = psMoney(p.price);
         if (col === PS_SERVICE) {
-            priceText = price !== null && price > 0 ? 'Kuanzia ' + priceText : T('ps_price_negotiable', 'Maelewano');
+            priceText = price !== null && price > 0 ? T('card_from', 'Kuanzia') + ' ' + priceText : T('ps_price_negotiable', 'Maelewano');
         } else if (col === PS_DRIVER) {
-            priceText = price !== null && price > 0 ? 'Kuanzia ' + priceText : T('ps_price_negotiable', 'Maelewano');
+            priceText = price !== null && price > 0 ? T('card_from', 'Kuanzia') + ' ' + priceText : T('ps_price_negotiable', 'Maelewano');
         } else if (p.saleMode === 'auction') {
             var bid = (p.modeData && psNum(p.modeData.currentBid)) || price || 0;
-            priceText = 'Dau la sasa: ' + psMoney(bid);
+            priceText = T('pm_current_bid', 'Dau la sasa') + ': ' + psMoney(bid);
         } else if (priceText === 'Maelewano') {
             priceText = T('ps_price_negotiable', 'Maelewano');
         } else if (p.baseUnit) {
@@ -108,7 +107,7 @@ import {
         var wp = psNum(p.wholesalePrice);
         if (col === PS_PRODUCT && p.hasBulkPackaging && wp !== null && wp > 0) {
             wn.hidden = false;
-            wn.textContent = 'Jumla: ' + psMoney(wp) + (p.bulkUnit ? ' / ' + p.bulkUnit : '');
+            wn.textContent = T('pm_wholesale_price', 'Jumla') + ': ' + psMoney(wp) + (p.bulkUnit ? ' / ' + p.bulkUnit : '');
         } else if (wn) {
             wn.hidden = true;
             wn.textContent = '';
@@ -157,13 +156,48 @@ import {
         var totalEl = $('pmTotalPriceCalc');
         if (!totalEl) return; // mnada/huduma hazina jumla ya kununua
         if (p.saleMode === 'auction') return;
+        var qty = parseInt(($('pmQty') || {}).value) || 1;
+        // [§20 WHOLESALE] Bei ya tier husika kwa qty — inaonyeshwa kwenye
+        // jumla na panel-hint. Hesabu hutoka skhModesCompute (backend doc).
+        if (p.saleMode === 'wholesale' && typeof window.skhModesCompute === 'function') {
+            var w = window.skhModesCompute(p).wholesale;
+            var unitP = w.applicable(qty);
+            totalEl.textContent = psMoney(unitP * qty);
+            var hint = document.getElementById('wsApplyHint');
+            if (hint) {
+                var baseP = psNum(p.price) || 0;
+                hint.textContent = qty >= (w.minQty > 0 ? w.minQty : 0) && unitP < baseP
+                    ? 'Umepata bei ya jumla: TSh ' + unitP.toLocaleString() + '/kipande (umepata TSh ' + ((baseP - unitP) * qty).toLocaleString() + ' zaidi)'
+                    : 'Chagua angalau ' + (w.tiers.length ? w.tiers[0].minQty : w.minQty) + ' vipande ili kupata bei ya jumla';
+            }
+            return;
+        }
         if (typeof skh.calculateDynamicPrice === 'function') {
             try { skh.calculateDynamicPrice(); return; } catch (e) {}
         }
-        var qty = parseInt(($('pmQty') || {}).value) || 1;
         var base = psNum(p.tempVariantPrice) !== null ? psNum(p.tempVariantPrice) : (psNum(p.price) || 0);
         totalEl.textContent = psMoney(base * qty);
     }
+    window.skhPsRefreshTotal = refreshTotals; // [§20] qty-change engines wanaweza kusitisha hapa (07 changeQty).
+
+    /* [§20 WHOLESALE CHECKOUT] Bei ya kipande = tier ya qty — total computed
+     * kutoka modeData ya Firestore (hakuna kuchukua amount inayotumwa na
+     * frontend blindly; qty inasemekana, tiers hutoka seller config). */
+    window.skhWholesaleCheckout = async function () {
+        if (!skh.requireAuth() || !skh.currentOpenProduct) return { ok: false, error: 'login' };
+        var p = skh.currentOpenProduct;
+        if (p.saleMode !== 'wholesale' || typeof window.skhModesCompute !== 'function') {
+            try { window.addToCart && window.addToCart(true); } catch (e) {}
+            return { ok: true, fallback: true };
+        }
+        var qty = parseInt((document.getElementById('pmQty') || {}).value) || 1;
+        var w = window.skhModesCompute(p).wholesale;
+        var unit = w.applicable(qty);
+        if (!isFinite(unit) || unit <= 0) { alert('Bei haijapatikana kwa kiasi hiki.'); return { ok: false, error: 'bei_haitapatikana' }; }
+        // Malipo: bawana kiasi cha halisi (unit * qty) — sera iliyopo ya escrow.
+        window.checkoutSeriousMode(Math.round(unit * qty));
+        return { ok: true, amount: Math.round(unit * qty), unit: unit, qty: qty };
+    };
 
     window.skhSelectVariant = function (groupKey, value, el) {
         var p = skh.currentOpenProduct;
@@ -209,21 +243,54 @@ import {
      * ================================================================ */
     function renderSpecial(p, col) {
         var area = $('pmSpecialModeArea');
+        // [MODES R1 §40] Panel maalum inatolewa kwa AINA ZOTE za modes (si
+        // auction tu) — modeData ni ya Firestore, hivyo panels hii ni ya kweli.
         if (col === PS_PRODUCT && p.saleMode === 'auction' && typeof window.renderSpecialModesUI === 'function') {
             area.hidden = false;
             area.innerHTML = '';
             window.renderSpecialModesUI('auction', area);
+        } else if (col === PS_PRODUCT && (p.saleMode === 'group_buy' || p.saleMode === 'price_drop')
+                   && typeof window.renderSpecialModesUI === 'function') {
+            area.hidden = false;
+            area.innerHTML = '';
+            window.renderSpecialModesUI(p.saleMode, area);
+        } else if (col === PS_PRODUCT && p.saleMode === 'wholesale'
+                   && typeof window.skhModesCompute === 'function') {
+            area.hidden = false;
+            window.skhWholesalePanel(area, p);
         } else {
             area.hidden = true;
             area.innerHTML = '';
         }
     }
 
+    /* [§19–§21 WHOLESALE PANEL] Tiers kutoka `modeData.tiers`/+legacy discount
+     * rule — hii ndiyo details inayoonyesha jedwali kamili la jumla. */
+    window.skhWholesalePanel = function (area, p) {
+        var c = window.skhModesCompute(p);
+        var w = c.wholesale;
+        if (!w) { area.innerHTML = ''; area.hidden = true; return; }
+        var rows = w.rows.map(function (r) {
+            return '<tr><td style="padding:7px 10px; border-top:1px solid #e2e8f0; font-weight:700;">' + skh.skhEscape(r.range) + '</td>'
+                + '<td style="padding:7px 10px; border-top:1px solid #e2e8f0; font-weight:900; color:#0B4F7A; text-align:right;">TSh ' + Number(r.price).toLocaleString() + '</td></tr>';
+        }).join('');
+        area.innerHTML = '<div style="background:#eff6ff; padding:15px; border-radius:18px; border:2px dashed #0B4F7A;" data-mode-panel="wholesale" data-lowest-ws="' + w.lowest + '">'
+            + '<div style="text-align:center; margin-bottom:10px;"><b style="color:#0B4F7A;"> BEI YA JUMLA (WHOLESALE)</b></div>'
+            + '<table style="width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; font-size:14px;">'
+            + '<thead><tr style="background:#0B4F7A; color:white;"><th style="padding:8px 10px; text-align:left; font-size:12px;">Idadi</th><th style="padding:8px 10px; text-align:right; font-size:12px;">Bei / Kipande</th></tr></thead>'
+            + '<tbody>' + rows + '</tbody></table>'
+            + '<div id="wsApplyHint" style="margin-top:10px; text-align:center; font-size:12.5px; color:#0B4F7A;"></div>'
+            + '<small style="display:block; margin-top:8px; text-align:center; color:#64748b;">Chagua idadi hapo juu (Qty) — bei yakie inotingenea automatically kwa tiers hizi (halisi kutoka seller settings).</small></div>';
+    };
+
     window.skhPsScrollToBid = function () {
         var el = $('pmSpecialModeArea');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         var inp = $('userBidInput');
-        if (inp) setTimeout(function () { try { inp.focus(); } catch (e) {} }, 400);
+        if (inp) { setTimeout(function () { try { inp.focus(); } catch (e) {} }, 400); return; }
+        // Mode-bar (group/wholesale): angalia kitufe cha kwanza cha panel badala
+        var firstBtn = el ? el.querySelector('button') : null;
+        if (firstBtn) setTimeout(function () { try { firstBtn.focus(); } catch (e) {} }, 400);
     };
 
     /* ================================================================
@@ -233,10 +300,11 @@ import {
         var sec = $('pmDetailsSec');
         if (!psHasDetails(p, col)) { sec.hidden = true; return; }
         sec.hidden = false;
-        var desc = (p.description || '').trim();
+        var descRaw = (window.skhLocField ? window.skhLocField(p, 'description') : null);
+        var desc = ((descRaw || p.description || '')).trim();
         var descEl = $('pmDesc');
         if (desc && desc.toLowerCase() !== 'in-store product') descEl.textContent = desc;
-        else descEl.textContent = T('ps_no_desc', 'Muuzaji hajaweka maelezo ya kina.');
+        else descEl.textContent = T('ps_no_desc', 'Hakuna maelezo ya ziada.');
         descEl.classList.toggle('pm-muted', !(desc && desc.toLowerCase() !== 'in-store product'));
 
         var rows = psSpecRows(p, col);
@@ -261,7 +329,7 @@ import {
     function renderDelivery(p, col) {
         var list = $('pmDeliveryList');
         var rows = [];
-        rows.push(trustRow('shield-check', T('ps_escrow', 'Malipo yanalindwa na Escrow — huachiwa muuzaji hadi upokee.')));
+        rows.push(trustRow('shield-check', T('ps_escrow', 'Pesa yako inalindwa hadi upokee bidhaa.')));
 
         var loc = p.location || p.region || '';
         var distance = '';
@@ -273,21 +341,21 @@ import {
         } catch (e) {}
 
         if (col === PS_PRODUCT) {
-            if (p.isOnline !== false) rows.push(trustRow('wallet', T('ps_pay_online', 'Unaweza kulipa mtandaoni kwa Escrow na uchukue au usafirishwe.')));
+            if (p.isOnline !== false) rows.push(trustRow('wallet', T('ps_pay_online', 'Lipa mtandaoni, kisha chukua au usafirishwe.')));
             if (p.isOffline === true && loc) rows.push(trustRow('shop', 'Ununuzi wa dukani: ' + esc(loc) + esc(distance)));
             else if (loc) rows.push(trustRow('map', 'Kuchukua mwenyewe: ' + esc(loc) + esc(distance)));
-            rows.push(trustRow('truck', T('ps_transport', 'Usafirishaji hupangwa kupitia madereva wa SokoHai wakati wa kulipa; nauli ni ya msafirishaji.')));
+            rows.push(trustRow('truck', T('ps_transport', 'Utachagua dereva wakati wa kulipa.')));
         } else if (col === PS_SERVICE) {
             if (p.section === 'online' || p.online === true) rows.push(trustRow('globe', 'Huduma ya mtandaoni.'));
             else if (loc) rows.push(trustRow('map', 'Eneo: ' + esc(loc) + esc(distance)));
-            rows.push(trustRow('clipboard', T('ps_service_order', 'Eleza mahitaji kwa kitufe cha Agiza Huduma au mwasiliane kwa Chat.')));
+            rows.push(trustRow('clipboard', T('ps_service_order', 'Bonyeza "Agiza Huduma" au anza mazungumzo.')));
         } else if (col === PS_DRIVER) {
             if (p.pickupRegion || p.destinationRegion) {
                 rows.push('<div class="pm-trust-item"><span class="pm-trust-ic" aria-hidden="true">' + pico('map', 16) + '</span><span>'
                     + esc(p.pickupRegion || '…') + ' <span class="pm-inline-arrow">' + pico('arrow-right', 13) + '</span> ' + esc(p.destinationRegion || '…') + '</span></div>');
             }
             if (p.vehicleType) rows.push(trustRow('truck', 'Chombo: ' + esc(p.vehicleType)));
-            rows.push(trustRow('handshake', T('ps_driver_pay', 'Kubaliananeni nauli na dereva; malipo ya Escrow baada ya kupokezana mzigo.')));
+            rows.push(trustRow('handshake', T('ps_driver_pay', 'Kubaliana nauli na dereva. Pesa inalindwa hadi mzigo ufike.')));
         }
         list.innerHTML = rows.join('');
     }
@@ -335,12 +403,12 @@ import {
             + '<div class="pm-rev-avg">' + (s.count ? s.avg.toFixed(1) : '–') + '</div>'
             + '<div>' + starsHtml(s.avg) + '<div class="pm-muted">' + (s.count ? s.count + ' tathmini' : 'Bado hakuna tathmini') + '</div></div>'
             + '</div>'
-            + '<button type="button" class="pm-btn-outline" onclick="window.openRatingModal(\'' + jsEsc(p.id) + '\',\'' + type + '\',\'' + jsEsc(psTitle(p, col)) + '\')">' + pico('star', 14) + ' Toa Tathmini</button>'
+            + '<button type="button" class="pm-btn-outline" onclick="window.openRatingModal(\'' + jsEsc(p.id) + '\',\'' + type + '\',\'' + jsEsc(psTitle(p, col)) + '\')">' + pico('star', 14) + ' ' + T('rate_it', 'Toa Tathmini') + '</button>'
             + '</div>';
 
         if (!s.count) {
             sec.innerHTML = head + '<p class="pm-muted pm-rev-empty">'
-                + T('ps_no_reviews', 'Hujaona tathmini bado. Ukinunua kupitia Escrow, tathmini yako inaweza kuthibitishwa.') + '</p>';
+                + T('ps_no_reviews', 'Bado hakuna tathmini.') + '</p>';
             return;
         }
         reviewMediaRegistry = {};
@@ -449,7 +517,7 @@ import {
                 if (n !== null) return n;
             }
         }
-        return null; // haijulikani → usizuie oda
+        return null; // haijulikani -> usizuie oda
     }
 
     // Andaa mstari wa qty: min/max (stock), kaunta na taarifa ya stock.
@@ -513,22 +581,70 @@ import {
             return;
         }
 
+        // [§27 MODES ACTION BAR] Kila mode ina action yake mahususi:
+        // group → Jiunge na Group; price_drop → Nunua kwa sasa; wholesale →
+        // Nunua kwa Jumla (qty inaishi — tiers huwa kulingana na qty hiyo).
+        if (col === PS_PRODUCT && p.saleMode === 'group_buy') {
+            qtyArea.style.display = 'none';
+            var gbStatus = (typeof window.skhModesCompute === 'function')
+                ? window.skhModesCompute(p).group.status : 'active';
+            if (gbStatus === 'active') {
+                actionArea.innerHTML = chatBtn
+                    + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhPsScrollToBid()"><span class="pm-bar-ic">' + pico('users', 16) + '</span><span class="pm-bar-lbl">Jiunge na Kundi</span></button>';
+            } else {
+                actionArea.innerHTML = chatBtn
+                    + '<button type="button" class="pm-bar-btn pm-bar-btn-dis" disabled aria-disabled="true">' + (gbStatus === 'successful' ? 'Kundi Limekamilika' : 'Deal Imekwisha') + '</button>';
+            }
+            return;
+        }
+
+        if (col === PS_PRODUCT && p.saleMode === 'price_drop') {
+            qtyArea.style.display = 'none';
+            var pdEnded = (typeof window.skhModesCompute === 'function')
+                ? window.skhModesCompute(p).drop.ended : false;
+            if (!pdEnded) {
+                actionArea.innerHTML = chatBtn
+                    + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhPsScrollToBid()"><span class="pm-bar-ic">' + pico('tag', 16) + '</span><span class="pm-bar-lbl">Nunua kwa Bei ya Sasa</span></button>';
+            } else {
+                actionArea.innerHTML = chatBtn
+                    + '<button type="button" class="pm-bar-btn pm-bar-btn-dis" disabled aria-disabled="true">Deal Imekwisha</button>';
+            }
+            return;
+        }
+
+        if (col === PS_PRODUCT && p.saleMode === 'wholesale') {
+            // qty inaishi: bei mpya hukokokwa kwa tiers kwa kila qty change
+            qtyArea.style.display = 'flex';
+            setupQty(p);
+            actionArea.innerHTML = chatBtn
+                + '<button type="button" class="pm-bar-btn pm-bar-nego" onclick="window.skhPsNegotiate(\'product\')" aria-label="Pendekeza Bei" title="Pendekeza Bei kwa jumla"><span class="pm-bar-ic">' + pico('tag', 16) + '</span><span class="pm-bar-lbl">Pendekeza Bei</span></button>'
+                + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhWholesaleCheckout()"><span class="pm-bar-ic">' + pico('package', 16) + '</span><span class="pm-bar-lbl">Nunua kwa Jumla</span>'
+                + '<span class="pm-bar-total" id="pmTotalPriceCalc">' + psMoney(psNum(p.price) || 0) + '</span></button>';
+            refreshTotals(p);
+            return;
+        }
+
         if (col === PS_SERVICE) {
             qtyArea.style.display = 'none';
             // [COMMERCE CORE 2026-09] Huduma hupitia INJINI YA MAJADILIANO
-            // (scope/deadline/bei → makubaliano → service order → SokoPay),
+            // (scope/deadline/bei -> makubaliano -> service order -> SokoPay),
             // si mfumo wa zamani wa 'requests' (openActionModal).
             actionArea.innerHTML = chatBtn
-                + '<button type="button" class="pm-bar-btn pm-bar-primary" onclick="window.skhPsOfferService()"><span class="pm-bar-ic">' + pico('wrench', 16) + '</span><span class="pm-bar-lbl">Kadirio / Agiza Huduma</span></button>';
+                + '<button type="button" class="pm-bar-btn pm-bar-primary" onclick="window.skhPsNegotiate(\'service\')"><span class="pm-bar-ic">' + pico('wrench', 16) + '</span><span class="pm-bar-lbl">Kadirio / Agiza Huduma</span></button>';
             return;
         }
 
         if (col === PS_DRIVER) {
             qtyArea.style.display = 'none';
-            // [COMMERCE CORE 2026-09] Usafiri hupitia majadiliano ya nauli/njia
-            // (of a→counter→makubaliano→booking→SokoPay), si direct-hire wa zamani.
+            // [R8 TRANSPORT §31-§35 2026-09] KANUNI YA BIASHARA:
+            //   "Panga/Omba Usafiri" = DIRECT BOOKING (ride request → payment)
+            //   — haitategemei negotiation (injini tofauti). Hata transporter
+            //   akiwa amefunga negotiation (negotiationAllowed=false), mteja
+            //   ANABAKIA na njia ya booking/payment. Licha madgo (38 ille-gating),
+            //   negotiation inabaki kama ONYO la kupendekeza nauli kupita CHAT.
             actionArea.innerHTML = chatBtn
-                + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhPsOfferTransport()"><span class="pm-bar-ic">' + pico('truck', 16) + '</span><span class="pm-bar-lbl">Panga Usafiri</span></button>';
+                + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhPsBookTransport()"><span class="pm-bar-ic">' + pico('truck', 16) + '</span><span class="pm-bar-lbl">Omba Usafiri</span></button>'
+                + '<button type="button" class="pm-bar-btn pm-bar-nego" onclick="window.skhPsNegotiate(\'transport\')" aria-label="Jadili Nauli (optional)" title="Jadili Nauli (optional — kupitia Chat)"><span class="pm-bar-ic">' + pico('tag', 16) + '</span><span class="pm-bar-lbl">Jadili Nauli</span></button>';
             return;
         }
 
@@ -544,11 +660,79 @@ import {
         qtyArea.style.display = 'flex';
         setupQty(p);
         actionArea.innerHTML = chatBtn
+            + '<button type="button" class="pm-bar-btn pm-bar-nego" onclick="window.skhPsNegotiate(\'product\')" aria-label="Pendekeza Bei" title="Pendekeza Bei (Jadili)"><span class="pm-bar-ic">' + pico('tag', 16) + '</span><span class="pm-bar-lbl">Pendekeza Bei</span></button>'
             + '<button type="button" class="pm-bar-btn pm-bar-cart" onclick="addToCart(false)" aria-label="Weka Kikapuni" title="Weka Kikapuni"><span class="pm-bar-ic">' + pico('cart', 16) + '</span><span class="pm-bar-lbl">Weka Kikapuni</span></button>'
             + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="addToCart(true)"><span class="pm-bar-ic">' + pico('bolt', 16) + '</span><span class="pm-bar-lbl">Lipa Sasa</span>'
             + '<span class="pm-bar-total" id="pmTotalPriceCalc">' + psMoney(psNum(p.price) || 0) + '</span></button>';
         refreshTotals(p);
     }
+
+    /* ================================================================
+     * NEGOTIATE ENTRY (spec §6, §9) — Product Details NI LAZIMA iwe na
+     * kitufe cha "Pendekeza Bei/Jadili" kwa aina ZOTE (product/service/
+     * transport). Flow kamili:
+     *   Product Details → startChat (conversation na mmiliki) → nego form.
+     * Hatuwezi kuruka hatua: 38 (skhNegoFormOpen) inahitaji conversation
+     * hai (c.convId + partnerUid), hivyo tunazifungua kwanza kupitia
+     * startChat iliyopo — haijiandiki upya.
+     * ================================================================ */
+    window.skhPsNegotiate = async function (kind) {
+        if (typeof kind !== 'string') kind = 'product';
+        // kind pekee → muktadha wa Product Details iliyofunguliwa sasa
+        // (entity override hutumika na Route-Matcher n.k. — tazama chini).
+        return window.skhChatNegotiate(kind, null);
+    };
+
+    /* [§2/§24 SEQUENCE FIX — SHARED CHAT-FIRST NEGOTIATION ENTRY]
+       Njia MOJA rasmi ya kuanza negotiation: Details → Chat → Negotiation.
+       Kipengele chochote (bidhaa, huduma, safari ya usafiri) kinachotaka
+       kuanza negotiation hupita hapa:
+
+         (1) Weka currentOpenProduct — startChat() isomayo inategemea hili.
+         (2) startChat() → conversation hutengezwa/kufunguliwa kwanza.
+         (3) Subiri attachConversation kumalize (convId + partnerUid).
+         (4) Fungua fomu ya negotiation NDANI ya chat (si ndani ya booking).
+
+       Hii ndiyo inayotumika na Product Details (skhPsNegotiate) na
+       Route-Matcher (27-route-dispatch → skhChatNegotiate) — engine moja. */
+    window.skhChatNegotiate = async function (kind, entityOverride) {
+        if (!skh.requireAuth()) return;
+        if (typeof kind !== 'string') kind = 'product';
+        var p = entityOverride && entityOverride.id ? entityOverride : skh.currentOpenProduct;
+        if (!p || !p.id) { alert(T('ch_no_product', 'Hakuna kipengele kilichofunguliwa.')); return; }
+        var sellerId = p.userId || p.providerId || p.driverId || p.sellerId || null;
+        if (!sellerId) { alert(T('pr_no_email', 'Mmiliki huyu bado hana taarifa za mawasiliano.')); return; }
+        if (skh.currentUser && sellerId === skh.currentUser.uid) { alert(T('pr_chat_self', 'Huwezi kujadili tangazo lako mwenyewe.')); return; }
+        // (1) Hakikisha startChat() inaona kipengele hiki (startChat inasoma
+        //     skh.currentOpenProduct) — kamilisha muonekano wake.
+        skh.currentOpenProduct = Object.assign({}, p, {
+            userId: sellerId,
+            ownerName: p.ownerName || p.sellerName || p.providerName || p.driverName || '',
+            collectionName: p.collectionName || p.collection ||
+                (kind === 'service' ? 'services' : (kind === 'transport' ? 'ride_requests' : 'products'))
+        });
+        // (2–3) Fungua conversation kwanza; subiri attachConversation.
+        if (typeof window.startChat === 'function') window.startChat();
+        for (var i = 0; i < 24; i++) {
+            var c = skh.chatCore || {};
+            if (c.convId && c.partnerUid === sellerId) break;
+            await new Promise(function (r) { setTimeout(r, 250); });
+        }
+        var cc = skh.chatCore || {};
+        if (!cc.convId || cc.partnerUid !== sellerId) {
+            alert('Mazungumzo hayajafunguka bado — jaribu tena baada ya sekunde chache.');
+            return;
+        }
+        // (4) Fomu ya negotiation ndani ya chat-ika hiyo.
+        if (typeof window.skhNegoFormOpen === 'function') {
+            window.skhNegoFormOpen({ type: kind, entity: Object.assign({}, p, {
+                sellerId: sellerId,
+                sellerName: p.ownerName || p.sellerName || '',
+                collection: p.collectionName || p.collection ||
+                    (kind === 'service' ? 'services' : (kind === 'transport' ? 'ride_requests' : 'products'))
+            }) });
+        }
+    };
 
     /* ================================================================
      * HUDUMA / USAFIRI — fungua fomu ya MAJADILIANO (injini moja ya nego)
@@ -566,6 +750,40 @@ import {
             openActionModal('service'); // fallback la zamani kama nego haijapakiwa
         }
     };
+    /* ================================================================
+     * [R8 TRANSPORT §31–§35 DIRECT BOOKING 2026-09]
+     * "Omba Usafiri" = booking/payment ya Moja-kwa-Moja (SI negotiation):
+     *   Details → booking/request (route match / ride-request) → payment.
+     * Njia hii haijavunjwa na negotiationAllowed=false (gating ya 38
+     * inagusa tu fomu ya negotiation, si booking).
+     * Badili driver context ka sessionStorage ili 08-app-state (broadcast
+     * ride request) ambaye ita-'preferential' kwa mfafard scelta transporter.
+     * ================================================================ */
+    window.skhPsBookTransport = function () {
+        if (!skh.requireAuth()) return;
+        var p = skh.currentOpenProduct;
+        if (!p || !p.id) { alert(T('ch_no_transport', 'Hakuna safari/usafiri imefunguliwa.')); return; }
+        var driverUid = p.userId || p.driverId || p.providerId || null;
+        var driverName = p.ownerName || p.driverName || p.providerName || '';
+        // [§31 DIRECT BOOKING] custom context wakurring openRideRequestModal
+        // — njia ya biashara iliyo halisi (pf55 pick-nicoth tusigo side-line).
+        try {
+            sessionStorage.setItem('ride_pref_driver', JSON.stringify({
+                uid: driverUid || null, name: driverName || '', listingId: p.id,
+                listingCol: p.collectionName || 'drivers'
+            }));
+        } catch (e) {}
+        if (typeof window.openRideRequestModal === 'function') {
+            window.openRideRequestModal();
+        } else if (typeof window.skhPsNegotiate === 'function') {
+            // Fallback: kama modal haipo, tumia negotiation (njia ya mwisho,
+            // inasakuza gate ya negotiationAllowed kwa usalama wa booking).
+            window.skhPsNegotiate('transport');
+        } else {
+            alert('Sahau oni request form haijapakiwa — jaribu tena.');
+        }
+    };
+
     window.skhPsOfferTransport = function () {
         if (!skh.requireAuth()) return;
         var p = skh.currentOpenProduct;
@@ -598,7 +816,7 @@ import {
         var img = skh.getOptimizedImageUrl ? skh.getOptimizedImageUrl(raw) : raw;
         var title = psTitle(d, col);
         var price = col === PS_PRODUCT ? psMoney(d.price) : (psNum(d.price) ? 'Kuanzia ' + psMoney(d.price) : 'Maelewano');
-        var loc = d.location || d.region || (col === PS_DRIVER ? ((d.pickupRegion || '') + (d.destinationRegion ? ' → ' + d.destinationRegion : '')) : '');
+        var loc = d.location || d.region || (col === PS_DRIVER ? ((d.pickupRegion || '') + (d.destinationRegion ? ' -> ' + d.destinationRegion : '')) : '');
         var id = jsEsc(d.id), cc = jsEsc(d.collectionName || col);
         return '<button type="button" class="pm-rel-card" onclick="openProduct(\'' + id + '\',\'' + cc + '\')" aria-label="' + esc(title) + '">'
             + '<span class="pm-rel-img"><img src="' + esc(img) + '" loading="lazy" alt="" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';this.parentNode.classList.add(\'pm-rel-img--ph\')"></span>'
@@ -701,7 +919,7 @@ import {
      * ================================================================ */
     var lastShowcaseKey = null;
 
-    // [FIX] Icons za engagement (♡/🔖/🔔/＋) zilikuwa hazijawahi kujazwa
+    // [FIX] Icons za engagement (♡///＋) zilikuwa hazijawahi kujazwa
     // (skhInitEngagementIcons haikuitwa popote). Jaza sasa na kila render.
     function ensureEngagementIcons() {
         if (typeof window.skhInitEngagementIcons === 'function') {

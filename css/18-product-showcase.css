@@ -55,7 +55,7 @@
     text-transform: none;
     font-weight: 600;
     color: #94a3b8;
-    font-size: 11px;
+    font-size: 13px;
 }
 /* Kaunta ya maoni katika kichwa cha sehemu */
 .pm-title-count {
@@ -68,7 +68,7 @@
     border-radius: 99px;
     background: #e0f0fa;
     color: var(--primary-blue, #1268A8);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     vertical-align: middle;
 }
@@ -171,7 +171,7 @@
 .pm-act .eng-ico,
 .pm-act .eng-ico svg { width: 20px; height: 20px; display: block; }
 .pm-act-lbl {
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 800;
     line-height: 1;
     color: #fff;
@@ -186,7 +186,7 @@
     top: -5px; right: -5px;
     background: #ef4444; color: #fff;
     border: 1.5px solid #fff;
-    font-size: 9px; font-weight: 800;
+    font-size: 12px; font-weight: 800;
     min-width: 17px; height: 17px;
     border-radius: 99px;
     display: flex; align-items: center; justify-content: center;
@@ -208,7 +208,7 @@
     background: rgba(15, 23, 42, .62);
     color: #fff;
     border-radius: 99px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     padding: 4px 10px;
     display: inline-flex;
@@ -238,7 +238,7 @@
     color: #475569;
 }
 .pm-avail {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     padding: 3px 10px;
     border-radius: 99px;
@@ -290,7 +290,7 @@
     color: #475569;
     border-radius: 99px;
     padding: 7px 13px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     cursor: pointer;
 }
@@ -357,7 +357,7 @@
     min-width: 0;
 }
 .pm-spec-lbl {
-    font-size: 10px;
+    font-size: 12.5px;
     text-transform: uppercase;
     color: #94a3b8;
     font-weight: 700;
@@ -416,11 +416,11 @@
     font-size: 13px;
     color: #0f172a;
 }
-.pm-rev-date { color: #94a3b8; font-size: 11px; margin-left: auto; }
+.pm-rev-date { color: #94a3b8; font-size: 13px; margin-left: auto; }
 .pm-rev-badge {
     display: inline-block;
     margin: 4px 0 0;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #047857;
     background: #ecfdf5;
@@ -536,7 +536,7 @@
     border: none;
     background: #eff6ff;
     color: #1268A8;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     border-radius: 99px;
     padding: 5px 11px;
@@ -590,7 +590,7 @@
 }
 .pm-rel-price { font-size: 13px; font-weight: 900; color: #c2410c; }
 .pm-rel-loc {
-    font-size: 10px;
+    font-size: 12.5px;
     color: #64748b;
     white-space: nowrap;
     overflow: hidden;
@@ -681,8 +681,10 @@
 }
 .pm-bar-primary { flex: 1 1 0; min-width: 120px; background: var(--primary-blue, #1268A8); color: #fff; }
 .pm-bar-bid { flex: 1 1 0; min-width: 120px; background: #ef4444; color: #fff; }
+/* [NEGO ENTRY §6] Kitufe cha Pendekeza Bei — kati ya primary na cart */
+.pm-bar-nego { flex: 1 1 0; min-width: 96px; background: var(--primary-blue, #1268A8); color: #fff; }
 .pm-bar-btn-dis { flex: 1 1 0; min-width: 100px; background: #e2e8f0; color: #64748b; }
-.pm-bar-total { font-size: 11.5px; font-weight: 900; opacity: .9; }
+.pm-bar-total { font-size: 13px; font-weight: 900; opacity: .9; }
 /* Simu ndogo: punguza kwa upole, USIFICHE maandishi ya kitendo */
 @media (max-width: 380px) {
     .pm-bar { gap: 6px; padding-left: 9px; padding-right: 9px; }
@@ -703,7 +705,7 @@
     .pm-bar-chat { flex-basis: 42px; width: 42px; font-size: 18px; }
     .pm-qty-btn { width: 26px; }
     #pmQty { width: 30px; }
-    .pm-bar-cart, .pm-bar-buy { font-size: 11.5px; min-width: 0; padding: 0 7px; }
+    .pm-bar-cart, .pm-bar-buy { font-size: 13px; min-width: 0; padding: 0 7px; }
     .pm-bar-btn { height: 46px; min-height: 46px; }
 }
 
@@ -749,7 +751,9 @@
 }
 
 /* ---------- DESKTOP (pana zaidi ya 600) ---------- */
-@media (min-width: 601px) {
+/* [R16 2026-09-17] Legacy tablet range tu (601–900px) — desktop (≥901px)
+   huchukuliwa na FULL-PAGE block hapo chini (height/max-height vimeachwa huru). */
+@media (min-width: 601px) and (max-width: 900px) {
     #productModal.pm-overlay { padding-bottom: 2vh !important; }
     #productModal > .pm-sheet {
         border-radius: 20px;
@@ -790,3 +794,80 @@
 /* Nyota za tathmini (SVG badala ya glyph) */
 .pm-star { display: inline-flex; align-items: center; }
 .pm-star svg { width: 13px; height: 13px; fill: currentColor; stroke: currentColor; }
+
+/* ==========================================================================
+   [FLOW 2026-09] ACTION BAR INAENDANA NA Mtiririko — HAIKUBANDIZI (sticky)
+   Mpangilio mpya: DETAILS → ACTION AREA → RECOMMENDED, yote ndani ya
+   .pm-scroll moja. Hakuna kifuniko kizwelewedho juu ya recommendations.
+   ========================================================================== */
+.pm-scroll > .pm-bar {
+    box-shadow: none;                 /* hakuna kivuli kinachodokeza ku-float */
+    border-top: none;
+    border-bottom: 1px solid #f1f5f9; /* mgawanyo wa sehemu kama sehemu nyingine */
+    background: #fff;
+}
+/* Nafasi ya chini ya mwisho ili recommendations zisimitwe mwishoni */
+.pm-scroll { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+
+/* ==========================================================================
+   [R15 OPENED-CARD LAYOUT 2026-09-17] DESKTOP — kadi iliyofunguliwa
+   isibaki "kipimo cha kadi ndogo" ndani ya feed: hukua kuwa "details view"
+   kamili inayotumia eneo kuu la content. SABABU (audit): .pm-sheet
+   max-width:600px !important + margin auto + height 92vh → nafasi tupu
+   pande zote mbili kwenye skrini pana.
+
+   MAREKEBISHO (muundo, si patch):
+   - Desktop (≥901px): sheet huwa pana (1120/1240), imekatizwa katikati,
+     rounded pande zote, flex-direction: ROW — hero kushoto (46%), content
+     .pm-scroll kulia (54%). Hakuna sticky; action bar iko ndani ya flow
+     (tayari, [FLOW 2026-09]); recommendations zinafuata details kwenye
+     .pm-scroll moja — mpangilio haujavunjwa.
+   - Mobile (≤900px): haiguswi — bottom-sheet full-width kama kawaida.
+   ========================================================================== */
+@media (min-width: 901px) {
+    #productModal.pm-overlay {
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 16px !important;
+    }
+    /* [R16 FULL-PAGE 2026-09-17] Kadi iliyofunguliwa = UKURASA MZIMA wa app
+       (sio "kipande kilichochorwa") — inajieneza hadi ukingoni mwa viewport,
+       ikiachwa presha ya 16px tu kwa backdrop click. Two-col inawekwa. */
+    #productModal > .pm-sheet {
+        width: calc(100vw - 32px) !important;
+        max-width: none !important;
+        height: calc(100vh - 32px) !important;
+        height: calc(100dvh - 32px) !important;
+        max-height: none !important;
+        border-radius: 18px !important;
+        flex-direction: row;
+        animation: pmPop .24s ease-out;
+    }
+    #productModal .pm-hero {
+        flex: 1 1 44%;
+        height: auto !important;
+        min-height: 480px;
+        max-width: 620px;
+    }
+    #productModal .pm-scroll {
+        flex: 1 1 56%;
+        min-width: 0;
+    }
+}
+@keyframes pmPop {
+    from { transform: scale(.97) translateY(8px); opacity: .4; }
+    to   { transform: none; opacity: 1; }
+}
+/* [R16 FULL-PAGE 2026-09-17] MOBILE: sheet ni skrini nzima — hakuna mipaka
+   (radius 0, urefu 100dvh). Navigation ya app hubaki nyuma ya overlay. */
+@media (max-width: 900px) {
+    #productModal.pm-overlay { padding: 0 !important; }
+    #productModal > .pm-sheet {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+    }
+}

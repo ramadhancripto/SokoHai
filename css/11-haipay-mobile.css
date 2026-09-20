@@ -75,7 +75,7 @@
     border: 1px solid rgba(16, 185, 129, 0.35);
     padding: 5px 11px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     white-space: nowrap;
 }
@@ -193,7 +193,7 @@
         padding-bottom: 10px !important;
     }
     .sp-header-title { font-size: 17px !important; }
-    .sp-header-subtitle { font-size: 11px !important; }
+    .sp-header-subtitle { font-size: 13px !important; }
     .sp-header-controls { gap: 6px !important; }
     .sp-header-controls .sp-search-box { display: none !important; }
     .sp-header-btn.sp-hide-mobile { display: none !important; }
@@ -207,6 +207,6 @@
 @media (max-width: 480px) {
     #sokopayWorkspace { padding: 12px !important; }
     .sp-kpi-grid-premium { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
-    .sp-back-btn { height: 32px !important; padding: 0 12px !important; font-size: 11.5px !important; }
-    .sp-back-label { font-size: 11.5px !important; }
+    .sp-back-btn { height: 32px !important; padding: 0 12px !important; font-size: 13px !important; }
+    .sp-back-label { font-size: 13px !important; }
 }

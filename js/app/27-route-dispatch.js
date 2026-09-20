@@ -9,9 +9,9 @@
 //      eneo la kutoka / kufika (pickupRegion, destinationRegion,
 //      fullRoute) — "around the area".
 //   2) Tumia kila dereva anayelingana taarifa (notification).
-//   3) Kama HAKUNA dereva anayelingana → arifu Mawakala wa
+//   3) Kama HAKUNA dereva anayelingana -> arifu Mawakala wa
 //      SokoHai (agents) wa mkoa/eneo husika.
-//   4) Kama hakuna hata wakala → arifu mteja tu.
+//   4) Kama hakuna hata wakala -> arifu mteja tu.
 // ============================================================
 import { skh } from './00-bootstrap.js';
 
@@ -26,10 +26,10 @@ function contains(a, b) {
     return a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
 }
 
-// Kata route kamili ("Dar ➔ Moro ➔ Dom ➔ Mwanza") kuwa vituo
+// Kata route kamili ("Dar -> Moro -> Dom -> Mwanza") kuwa vituo
 function splitStops(route) {
     return String(route || '')
-        .split(/[➔→>—-]|,|\/|\|/)
+        .split(/[->->>—-]|,|\/|\|/)
         .map(norm)
         .filter(Boolean);
 }
@@ -61,7 +61,7 @@ window.skhRouteMatchesDriver = function (driver, fromLoc, toLoc) {
     const t = norm(toLoc);
     if (!f && !t) return false;
     const m = window.skhRouteMatchEnds(driver, fromLoc, toLoc);
-    // Dereva anapita eneo la kutoka AU la kufika → yuko "around the area"
+    // Dereva anapita eneo la kutoka AU la kufika -> yuko "around the area"
     return m.origin || m.dest;
 };
 
@@ -88,7 +88,7 @@ window.skhDispatchRideToCarriers = async function (ride, rideId) {
         const cargo = String(ride.cargoName || (ride.reqCategory === 'Passengers' ? 'Abiria' : 'Mzigo'));
         const isLeg = !!(ride.parentRideId || ride.isIntermediateLeg);
         const legLabel = isLeg ? ' (Legi ya Kati / Intermediate)' : '';
-        const routeText = fromLoc + ' → ' + toLoc;
+        const routeText = fromLoc + ' -> ' + toLoc;
 
         // 1) Madereva wa chombo hicho
         const q = skh.query(
@@ -108,29 +108,24 @@ window.skhDispatchRideToCarriers = async function (ride, rideId) {
             }
         });
 
-        // 2) Madereva wamepatikana → wape taarifa
+        // 2) Madereva wamepatikana -> wape taarifa
         if (matched.length) {
             const tops = matched.slice(0, 12);
             await Promise.all(tops.map(dr =>
                 pushNotif(
-                    dr.userId,
-                    ' Ombi Jipya la Usafiri' + legLabel + ' — Route Yako',
-                    cargo + ' | ' + routeText + '. Fungua "Requests Marketplace" kukubali kazi.',
-                    'ride_request',
+                    dr.userId, ' Ombi Jipya la Usafiri' + legLabel + ' — Route Yako',
+                    cargo + ' | ' + routeText + '. Fungua "Requests Marketplace" kukubali kazi.', 'ride_request',
                     rideId
                 )
             ));
             await pushNotif(
-                ride.customerId,
-                ' Madereva Wamearifiwa',
-                'Ombi lako (' + cargo + ') limetumwa kwa madereva ' + matched.length + ' wanaotumia route hiyo.',
-                'delivery',
+                ride.customerId, ' Madereva Wamearifiwa', 'Ombi lako (' + cargo + ') limetumwa kwa madereva ' + matched.length + ' wanaotumia route hiyo.', 'delivery',
                 rideId
             );
             return { ok: true, drivers: matched.length, agents: 0 };
         }
 
-        // 3) Hakuna dereva → tumia Mawakala wa SokoHai wa eneo husika
+        // 3) Hakuna dereva -> tumia Mawakala wa SokoHai wa eneo husika
         const aq = skh.query(
             skh.collection(skh.db, "agents"),
             skh.where("status", "==", "approved"),
@@ -151,29 +146,21 @@ window.skhDispatchRideToCarriers = async function (ride, rideId) {
             const tops = agents.slice(0, 10);
             await Promise.all(tops.map(ag =>
                 pushNotif(
-                    ag.userId,
-                    ' Ombi la Usafiri Halina Dereva (Eneo Lako)',
-                    cargo + ' | ' + routeText + '. Tafuta msafirishaji wa eneo lako au wasiliana na mteja.',
-                    'ride_request',
+                    ag.userId, ' Ombi la Usafiri Halina Dereva (Eneo Lako)',
+                    cargo + ' | ' + routeText + '. Tafuta msafirishaji wa eneo lako au wasiliana na mteja.', 'ride_request',
                     rideId
                 )
             ));
             await pushNotif(
-                ride.customerId,
-                ' Wawakala Wamearifiwa',
-                'Hakuna dereva wa moja kwa moja kwenye route hiyo bado. Wawakala wa SokoHai wa eneo lako wamearifiwa kukusaidia kupata msafirishaji.',
-                'delivery',
+                ride.customerId, ' Wawakala Wamearifiwa', 'Hakuna dereva wa moja kwa moja kwenye route hiyo bado. Wawakala wa SokoHai wa eneo lako wamearifiwa kukusaidia kupata msafirishaji.', 'delivery',
                 rideId
             );
             return { ok: true, drivers: 0, agents: agents.length };
         }
 
-        // 4) Hakuna dereva wala wakala → arifu mteja tu
+        // 4) Hakuna dereva wala wakala -> arifu mteja tu
         await pushNotif(
-            ride.customerId,
-            ' Ombi Limewekwa Sokoni',
-            'Ombi lako linaonekana kwenye soko la usafiri. Madereva watakubali mara tu wanapokuwa online.',
-            'delivery',
+            ride.customerId, ' Ombi Limewekwa Sokoni', 'Ombi lako linaonekana kwenye soko la usafiri. Madereva watakubali mara tu wanapokuwa online.', 'delivery',
             rideId
         );
         return { ok: true, drivers: 0, agents: 0 };
@@ -192,7 +179,7 @@ window.skhDispatchRideToCarriers = async function (ride, rideId) {
    Mfumo wa zamani wa broadcast unabaki kama njia ya pili tu.
    ============================================================ */
 
-// Ramani ya kundi la ombi → huduma anazotakiwa chombo kubeba
+// Ramani ya kundi la ombi -> huduma anazotakiwa chombo kubeba
 function skhRmServiceWanted(category) {
     switch (String(category || '').toLowerCase()) {
         case 'passengers': return ['passenger'];
@@ -209,7 +196,7 @@ function skhRmCapacityKg(dr) {
     if (!m) return null;
     let n = parseFloat(m[1].replace(/,/g, '.'));
     if (!isFinite(n)) return null;
-    if (/ton|tani|tonne|\bt\b/i.test(raw) && n < 200) n *= 1000; // tani → kg
+    if (/ton|tani|tonne|\bt\b/i.test(raw) && n < 200) n *= 1000; // tani -> kg
     return n;
 }
 
@@ -325,19 +312,19 @@ window.skhRouteMatcherCard = function (dr, crit) {
 
     return '<div class="rm-card">'
         + '<button type="button" class="rm-img" onclick="openProduct(\'' + skh.skhJsEsc(dr.id) + '\',\'drivers\')" aria-label="Fungua wasifu wa chombo">'
-        +   '<img src="' + rmEsc(skh.getOptimizedImageUrl ? skh.getOptimizedImageUrl(img) : img) + '" loading="lazy" alt="" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">'
+        + '<img src="' + rmEsc(skh.getOptimizedImageUrl ? skh.getOptimizedImageUrl(img) : img) + '" loading="lazy" alt="" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">'
         + '</button>'
         + '<div class="rm-body">'
-        +   '<div class="rm-name"><b>' + name + '</b>' + verified + online + '</div>'
-        +   '<div class="rm-route">' + rmIco('map', 13) + '<span>' + rmEsc(from) + '</span>'
-        +     '<span class="rm-arrow">' + rmIco('arrow-right', 13) + '</span><span>' + rmEsc(to) + '</span></div>'
-        +   '<div class="rm-meta"><span class="rm-price">' + rmMoney(dr.price) + '</span>' + rating + '</div>'
-        +   '<div class="rm-chips">' + chips.join('') + '</div>'
+        + '<div class="rm-name"><b>' + name + '</b>' + verified + online + '</div>'
+        + '<div class="rm-route">' + rmIco('map', 13) + '<span>' + rmEsc(from) + '</span>'
+        + '<span class="rm-arrow">' + rmIco('arrow-right', 13) + '</span><span>' + rmEsc(to) + '</span></div>'
+        + '<div class="rm-meta"><span class="rm-price">' + rmMoney(dr.price) + '</span>' + rating + '</div>'
+        + '<div class="rm-chips">' + chips.join('') + '</div>'
         +   warn
         + '</div>'
         + '<div class="rm-actions">'
-        +   '<button type="button" class="rm-btn rm-btn-light" onclick="openProduct(\'' + skh.skhJsEsc(dr.id) + '\',\'drivers\')">' + rmIco('search', 14) + ' Tazama</button>'
-        +   '<button type="button" class="rm-btn rm-btn-primary" onclick="window.skhRouteMatcherChoose(\'' + skh.skhJsEsc(dr.id) + '\')">' + rmIco('chat', 14) + ' Jadili nafasi na bei</button>'
+        + '<button type="button" class="rm-btn rm-btn-light" onclick="openProduct(\'' + skh.skhJsEsc(dr.id) + '\',\'drivers\')">' + rmIco('search', 14) + ' Tazama</button>'
+        + '<button type="button" class="rm-btn rm-btn-primary" onclick="window.skhRouteMatcherChoose(\'' + skh.skhJsEsc(dr.id) + '\')">' + rmIco('chat', 14) + ' Jadili nafasi na bei</button>'
         + '</div></div>';
 };
 
@@ -360,7 +347,7 @@ window.skhRouteMatcherInit = function () {
 window.skhRouteMatcherSearch = async function () {
     if (!skh.requireAuth || !skh.requireAuth()) return;
     const crit = window.skhRouteMatcherReadForm();
-    if (!crit.from || !crit.to) { alert('Tafadhali jaza sehemu ya KUTOKEA na ya KWENDA.'); return; }
+    if (!crit.from || !crit.to) { alert('jaza sehemu ya KUTOKEA na ya KWENDA.'); return; }
 
     window.skhRouteMatcherInit();
     const modal = document.getElementById('routeMatchModal');
@@ -405,21 +392,30 @@ window.skhRouteMatcherSearch = async function () {
     }
 };
 
-// ---------- Chagua gari → fungua MAJADILIANO (injini ya nego) ----------
+// ---------- Chagua gari -> CHAT KWANZA, kisha MAJADILIANO (injini moja ya nego) ----------
+// [§2/§24 SEQUENCE FIX 2026-09-16] Kabla: iliitwa skhNegoFormOpen moja kwa moja
+// bila kufungua conversation — negotiation ikaonekana "kutoka mahali" na
+// conversationId ilikuwa null (oferta haikuunganishwa na mazungumzo). Sasa
+// tunapitia skhChatNegotiate (39-product-showcase): Details → Chat → Negotiation.
 window.skhRouteMatcherChoose = function (driverId) {
     const mem = window.__skhRouteMatcher || {};
     const dr = (mem.drivers || {})[driverId];
     const crit = mem.crit || window.skhRouteMatcherReadForm();
     if (!dr) return;
-
+    // [NEGO LOCK §21/§22 — FRONT GATE] Kadi ya route-matcher inaonyesha kiingilizi
+    // cha 'Jadili nafasi na bei' kwa matangazo YOTE; ikiwa msafiri amezima
+    // negotiation, hifadhi cha cache baada ya kusoma doc halisi (fail-open humu:
+    // fomu+backend-gate ndizo kinga halisi kama cache haipo).
     const entity = {
         id: dr.id,
         collectionName: 'drivers',
         title: dr.title || dr.driverName || 'Usafiri',
         image: dr.image || '',
         price: dr.price || 0,
+        userId: dr.userId || dr.sellerId || '',
         sellerId: dr.userId || dr.sellerId || '',
         sellerName: dr.driverName || dr.ownerName || '',
+        ownerName: dr.driverName || dr.ownerName || '',
         vehicleType: crit.vehicleType || dr.vehicleType || '',
         route: { from: crit.from || dr.pickupRegion || '', to: crit.to || dr.destinationRegion || '' },
         fromLocation: crit.from || dr.pickupRegion || '',
@@ -430,8 +426,8 @@ window.skhRouteMatcherChoose = function (driverId) {
     const modal = document.getElementById('routeMatchModal');
     if (modal) modal.style.display = 'none';
     if (typeof window.closeModals === 'function') window.closeModals();
-    if (typeof window.skhNegoFormOpen === 'function') {
-        window.skhNegoFormOpen({ type: 'transport', entity: entity });
+    if (typeof window.skhChatNegotiate === 'function') {
+        window.skhChatNegotiate('transport', entity);
     } else if (typeof window.openDirectHire === 'function') {
         window.openDirectHire(entity.sellerId, entity.sellerName, entity.vehicleType);
     }

@@ -11,8 +11,7 @@
 //     localStorage kama kawaida
 // Firestore inasajiliwa na app.module.js (skhSyncRegisterFirestore).
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var KEYS = ['sokohai_cart', 'sokohai_offline_sales', 'sokohai_saved_cart', 'sokohai_saved_later', 'sokohai_wishlist'];
     var META = 'sokohai_sync_meta';
@@ -86,7 +85,7 @@
                 var localT = m[k] || 0;
                 var remoteT = r.t || 0;
                 if (remoteT > localT) {
-                    // Remote mpya zaidi → ikubali
+                    // Remote mpya zaidi -> ikubali
                     silentSet(k, r.v);
                     localChanged = true;
                     try {

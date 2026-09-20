@@ -12,7 +12,7 @@ function T(key, en, vars) {
     return s;
 }
 
-// [ZOOM] Kugusa picha au kubofya +/- → viewer kamili ya kukuza/kupunguza
+// [ZOOM] Kugusa picha au kubofya +/- -> viewer kamili ya kukuza/kupunguza
 // inayoweza kusogeza picha upande wowote (pinch + drag) — 26-image-zoom.js
 window.zoomProductImage = function(delta) {
     const pics = window.skhZoomImages || [];
@@ -55,6 +55,12 @@ window.changeQty = function(amount) {
     if (minus) minus.disabled = currentQty <= minQty;
     if (plus) plus.disabled = (maxQty !== null && currentQty >= maxQty);
 
+    // [§20 WHOLESALE] Bidhaa za jumla — tiers za SELLER-DEFINED ndizo zenye
+    // kula mamlaka (siyo calculateDynamicPrice ya bulk packaging).
+    if (skh.currentOpenProduct && skh.currentOpenProduct.saleMode === 'wholesale' && typeof window.skhPsRefreshTotal === 'function') {
+        try { window.skhPsRefreshTotal(skh.currentOpenProduct); } catch (e) {}
+        return;
+    }
     if (typeof skh.calculateDynamicPrice === 'function') {
         skh.calculateDynamicPrice();
     } else {
@@ -82,19 +88,47 @@ window.openProduct = async function(id, manualCollection = null) {
         colToUse = (skh.currentFeedCollection && skh.currentFeedCollection !== 'all') ? skh.currentFeedCollection : 'products';
     }
     
-    // 2. Funga listener ya zamani kama ipo ili zisijirudie
-    if(window.activeProductUnsubscribe) window.activeProductUnsubscribe();
-
     // 3. ANZA LIVE LISTENER (Hapa ndipo mawasiliano yanatokea)
-    const docRef = skh.doc(skh.db, colToUse, id);
-    window.activeProductUnsubscribe = skh.onSnapshot(docRef, (snapshot) => {
-        if(!snapshot.exists()) {
-            alert(T('pm_deleted', 'Product no longer available!'));
-            closeModals();
-            return;
-        }
+    // [AUDIT-FIX 2026-09-16 :: alert ya uongo "Bidhaa haipo" baada ya login]
+    // KISABABISHI: bidhaa iliyoko collection isiyo 'products' (mf. services/drivers)
+    // ilipofunguliwa MAPYAAAAAAAAAAAAAA/mapema baada ya login, cache haikuwa tayari —
+    // colToUse ilikuwa 'products' kimakosa -> snapshot.exists() = false -> alert.
+    // Sasa: listener inafuatilia doc; kama haipo, inaangalia makundi MENGINE kabla
+    // ya kutangaza "haipo". Alert inatokea TU baada ya makundi yote kudhibitisha miss.
+    const SKH_OPEN_COLS = ['products','services','drivers'];
+    let skhOpenMissChecked = false;
 
-        const found = { id: snapshot.id, collectionName: colToUse, ...snapshot.data() };
+    const skhAttachProductListener = (colName) => {
+        if(window.activeProductUnsubscribe) window.activeProductUnsubscribe();
+        const docRef = skh.doc(skh.db, colName, id);
+        window.activeProductUnsubscribe = skh.onSnapshot(docRef, async (snapshot) => {
+            if(!snapshot.exists()) {
+                if (skhOpenMissChecked) {
+                    alert(T('pm_deleted', 'Product no longer available!'));
+                    closeModals();
+                    return;
+                }
+                skhOpenMissChecked = true;
+                // [AUDIT-FIX] Sura ya makundi mengine kabla ya alert (bila kuficha:
+                // kama kweli bidhaa imefutwa, alerti itafika hapa baada ya ukaguzi wote).
+                try {
+                    const others = SKH_OPEN_COLS.filter(c => c !== colName);
+                    for (const oc of others) {
+                        const alt = await skh.getDoc(skh.doc(skh.db, oc, id));
+                        if (alt && typeof alt.exists === 'function' && alt.exists()) {
+                            colToUse = oc;
+                            skhOpenMissChecked = false; // [AUDIT-FIX] mpya: ruhusu miss moja kwa collection iliyosahihishwa
+                            skhAttachProductListener(oc);
+                            return;
+                        }
+                    }
+                } catch (e) {}
+                alert(T('pm_deleted', 'Product no longer available!'));
+                closeModals();
+                return;
+            }
+
+        const found = { id: snapshot.id, collectionName: colName, ...snapshot.data() };
         skh.currentOpenProduct = found;
 
         // [PUBLIC LINKS] Weka URL ya bidhaa kwenye address bar (bila ku-reload)
@@ -121,15 +155,11 @@ window.openProduct = async function(id, manualCollection = null) {
         window.skhZoomImages = _zoomImgs.length ? _zoomImgs : pics;
         slider.innerHTML = pics.map((pic) => {
             if (_isVid(pic)) {
-                return `<div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; background:#0f172a;">
-                    <video src="${skh.skhEscape(pic)}" controls muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:contain;"></video>
-                </div>`;
+                return `<div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; background:#0f172a;"> <video src="${skh.skhEscape(pic)}" controls muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:contain;"></video> </div>`;
             }
             const zIdx = window.skhZoomImages.indexOf(pic);
             return `
-            <div onclick="window.openImageZoom(window.skhZoomImages, ${zIdx >= 0 ? zIdx : 0})" style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; cursor:zoom-in;">
-                <img src="${skh.skhEscape(skh.getOptimizedImageUrl(pic))}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b'">
-            </div>`;
+            <div onclick="window.openImageZoom(window.skhZoomImages, ${zIdx >= 0 ? zIdx : 0})" style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; cursor:zoom-in;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(pic))}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b'"> </div>`;
         }).join('');
 
         // [ZOOM] Index ya sasa kwa viewer ya kugusa (26-image-zoom.js)
@@ -148,8 +178,7 @@ window.openProduct = async function(id, manualCollection = null) {
         const dotsContainer = document.getElementById('pmImageDots');
         if (dotsContainer) {
             dotsContainer.innerHTML = pics.map((_, idx) => `
-                <span class="pm-dot ${idx === 0 ? 'active' : ''}" style="width:8px; height:8px; border-radius:50%; background:#cbd5e1; display:inline-block; transition: 0.3s;"></span>
-            `).join('');
+                <span class="pm-dot ${idx === 0 ? 'active' : ''}" style="width:8px; height:8px; border-radius:50%; background:#cbd5e1; display:inline-block; transition: 0.3s;"></span> `).join('');
         }
 
         // 2. Sikiliza kusogea (scroll) kwa picha ili kuwasha doti inayohusika
@@ -194,6 +223,17 @@ window.openProduct = async function(id, manualCollection = null) {
             // [MIKOA/WAUZAJI] Chora "Wauzaji Wengine" chini ya maelezo
             skh.loadRelatedProducts(found.category || found.subCategory || '', id, colToUse);
         });
+    };
+
+    // [AUDIT-FIX 2026-09-16] Anza na collection iliyotajwa; kama haipo,
+    // listener (hapo juu) itafungua makundi mengine kabla ya alert.
+    skhAttachProductListener(colToUse);
+
+        // [FLOW 2026-09] Details inapofunguka: FUNSA scroll ya background —
+        // ndiyo sababu mtumiaji aliona "card ikiwa sticky juu ya recommendations
+        // zinazosogea nyuma yake". Sheet inafunika viewport, bg inabaki kimya
+        // hadi ikifungwa (closeModals tayari hurudisha overflow='auto').
+        try { document.body.style.overflow = 'hidden'; } catch (e) {}
 
         document.getElementById('productModal').style.display = 'flex';
     };
@@ -203,120 +243,421 @@ window.renderSpecialModesUI = function(mode, actionArea) {
     const nowMs = Date.now();
     let basePrice = parseFloat(skh.currentOpenProduct.price) || 0;
 
+    // [MODES CORE §37] Msavindane ubora: malipo yanaanza na HESABU HALISI za
+    // doc (skhModesCompute) — si placeholders. Lifecycle lazima igongwe mbele
+    // ya render (ikiwezekana inaandika status/gamata mara moja hiya ya Firestore).
+    try { window.skhModesLifecycle(skh.currentOpenProduct); } catch (e) {}
+    const C = window.skhModesCompute(skh.currentOpenProduct);
+
     if (mode === 'auction') {
-        const currentBid = mData.currentBid || skh.currentOpenProduct.price;
-        const totalBids = mData.totalBids || 0;
-        const winner = mData.maxBidderName || "Bado hakuna";
-        const isExpired = Date.now() >= (mData.endTime || 0);
+        const currentBid = C.auction.currentBid;
+        const totalBids = C.auction.totalBids;
+        const winner = C.auction.winnerName || "Bado hakuna";
+        const isExpired = C.auction.ended;
+        const meUid = skh.currentUser && skh.currentUser.uid;
+        const iAmWinner = !!(meUid && C.auction.winnerId && meUid === C.auction.winnerId);
 
         if (isExpired) {
+            // [§11 AUCTION END] Winner anaweza kulipia — ukweli kutoka Firestore.
+            const winnerAction = iAmWinner
+                ? `<button onclick="window.skhAuctionWinnerCheckout()" style="width:100%; padding:16px; background:var(--green,#18A982); color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer; margin-top:12px;"> LIPILIA ZABUNI YANGU (TSh ${currentBid.toLocaleString()})</button>`
+                : (C.auction.winnerId ? '' : `<p style="opacity:0.85;">Hakuna dau lililowekwa kabla ya muda kufika.</p>`);
             actionArea.innerHTML = `
-                <div style="background:#0f172a; color:white; padding:20px; text-align:center; border-radius:18px;">
-                    <h3 style="color:var(--gold); margin:0;"> MNADA UMEFUNGWA</h3>
-                    <p>Mshindi: <b>${winner.toUpperCase()}</b></p>
-                    <h2 style="color:var(--gold);">TZS ${currentBid.toLocaleString()}</h2>
-                </div>`;
+                <div style="background:#0f172a; color:white; padding:20px; text-align:center; border-radius:18px;"> <h3 style="color:var(--gold); margin:0;"> MNADA UMEFUNGWA</h3> <p>Mshindi: <b>${winner.toUpperCase()}</b></p> <h2 style="color:var(--gold);">TZS ${currentBid.toLocaleString()}</h2> ${winnerAction} </div>`;
         } else {
             actionArea.innerHTML = `
-                <div style="background:#fef2f2; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #ef4444;">
-                    <b style="color:#ef4444;"> MNADA LIVE</b><br>
-                    <span class="live-timer" data-endtime="${mData.endTime}" style="color:#ef4444; font-weight:900; font-size:20px;"> ...</span>
-                    
-                    <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; display:flex; justify-content:space-around;">
-                        <div><small>Dau la Juu</small><br><b>${currentBid.toLocaleString()}</b></div>
-                        <div><small>Bids</small><br><b>${totalBids}</b></div>
-                    </div>
-
-                    <div style="background:white; padding:10px; border-radius:12px; margin-bottom:12px; border:1px solid #ddd;">
-                         <input type="number" id="userBidInput" placeholder="${T('pr_bid_ph', 'Place a bid above')} ${(currentBid + 500).toLocaleString()}" style="width:100%; border:none; outline:none; text-align:center; font-weight:900; font-size:18px;">
-                    </div>
-                    
-                    <button onclick="window.placeBid()" style="width:100%; padding:16px; background:#ef4444; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;">WEKA DAU LAKO </button>
-                </div>`;
+                <div style="background:#fef2f2; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #ef4444;"> <b style="color:#ef4444;"> MNADA LIVE</b><br> <span class="live-timer" data-endtime="${mData.endTime}" style="color:#ef4444; font-weight:900; font-size:20px;"> ...</span> <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; display:flex; justify-content:space-around;"> <div><small>Dau la Juu</small><br><b>${currentBid.toLocaleString()}</b></div> <div><small>Bids</small><br><b>${totalBids}</b></div> </div> <div style="background:white; padding:10px; border-radius:12px; margin-bottom:12px; border:1px solid #ddd;"> <input type="number" id="userBidInput" placeholder="Angalau TSh ${C.auction.minNextBid.toLocaleString()}" style="width:100%; border:none; outline:none; text-align:center; font-weight:900; font-size:18px;"> <small style="color:#64748b;">Dau lako lazima liwe angalau <b>TSh ${C.auction.minNextBid.toLocaleString()}</b> (dau la juu + 5%)</small> </div> <button onclick="window.placeBid()" style="width:100%; padding:16px; background:#ef4444; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;">WEKA DAU LAKO </button> </div>`;
         }
-    } 
+    }
     else if (mode === 'price_drop') {
-        const start = mData.startTime || nowMs;
-        const end = mData.endTime || nowMs;
-        const min = mData.minPrice || 0;
-        const interval = mData.intervalMs || 60000;
-        const dropAmt = mData.dropAmount || 0;
-
-        const dropsOccurred = Math.floor((nowMs - start) / interval);
-        let currentP = basePrice - (dropsOccurred * dropAmt);
-        if (currentP < min) currentP = min;
-
-        const isExpired = nowMs >= end;
+        // [§16-§18 PRICE DROP] Hesabu ya bei ya sasa kutoka modeData halisi
+        // (startTime/intervalMs/dropAmount/minPrice) — si frontend cache.
+        const end = C.drop.endsAt;
+        const min = C.drop.minPrice;
+        const currentP = C.drop.currentPrice;
+        const isExpired = C.drop.ended;
 
         if (isExpired) {
             actionArea.innerHTML = `
-                <div style="background:#0f172a; color:white; padding:20px; text-align:center; border-radius:18px;">
-                    <h3 style="color:#ef4444; margin:0;"> PRICE DROP DEAL IMEKWISHA</h3>
-                    <h2 style="color:var(--gold);">TZS ${min.toLocaleString()}</h2>
-                </div>`;
+                <div style="background:#0f172a; color:white; padding:20px; text-align:center; border-radius:18px;"> <h3 style="color:#ef4444; margin:0;"> PRICE DROP DEAL IMEKWISHA</h3> <h2 style="color:var(--gold);">TZS ${min.toLocaleString()}</h2> <p style="opacity:0.85; font-size:12px;">Bei ya mwisho ilikuwa TSh ${min.toLocaleString()}</p></div>`;
         } else {
             actionArea.innerHTML = `
-                <div style="background:#f3e8ff; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #9333ea;">
-                    <b style="color:#9333ea;"> PRICE DROP DEAL IS LIVE</b><br>
-                    <span class="live-timer" data-endtime="${end}" style="color:#9333ea; font-weight:900; font-size:20px;"> ...</span>
-                    
-                    <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; text-align:center;">
-                        <span style="font-size:12px; color:gray;">Bei ya Sasa Hivi:</span>
-                        <h2 style="color:#9333ea; margin:5px 0;">TZS ${Math.round(currentP).toLocaleString()}</h2>
-                    </div>
-
-                    <button onclick="window.checkoutSeriousMode(${currentP})" style="width:100%; padding:16px; background:#9333ea; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;"> FUNGIA BEI HII & LIPYA (ESCROW)</button>
-                </div>`;
+                <div style="background:#f3e8ff; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #9333ea;" data-mode-panel="price_drop" data-live-price="${currentP}" data-live-ends="${end}"> <b style="color:#9333ea;"> PRICE DROP DEAL IS LIVE</b><br> <span class="live-timer" data-endtime="${end}" style="color:#9333ea; font-weight:900; font-size:20px;"> ...</span> <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; text-align:center;"> <span style="font-size:12px; color:gray;">Bei ya Sasa Hivi:</span> <h2 style="color:#9333ea; margin:5px 0;">TZS ${Math.round(currentP).toLocaleString()}</h2> <small style="color:#94a3b8;">Ilizaliwa TSh ${basePrice.toLocaleString()} · inapungua hadi TSh ${min.toLocaleString()}</small></div> <button onclick="window.skhPriceDropCheckout()" style="width:100%; padding:16px; background:#9333ea; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;"> NUNUA KWA BEI HALISI YA SASA & LIPYA (ESCROW)</button> </div>`;
         }
-    } 
+    }
     else if (mode === 'group_buy') {
-        const joined = mData.joinedUsers || 1;
-        const target = mData.targetPeople || 10;
-        const discVal = parseFloat(mData.discountValue) || 0;
-        const discType = mData.discountType || 'amount';
-        const end = mData.endTime || nowMs;
-
-        let currentPrice = basePrice;
-        const extraPeople = joined - 1;
-
-        if (extraPeople > 0) {
-            if (discType === 'percent') {
-                let totalDiscPercent = Math.min(90, discVal * extraPeople);
-                currentPrice = basePrice - (basePrice * (totalDiscPercent / 100));
-            } else {
-                currentPrice = Math.max(basePrice * 0.1, basePrice - (discVal * extraPeople));
-            }
-        }
-
-        const isExpired = nowMs >= end;
+        const joined = C.group.joined;
+        const target = C.group.target;
+        const end = C.group.endsAt;
+        const currentPrice = C.group.price;
+        const status = C.group.status; // active | successful | failed
+        const meUid = skh.currentUser && skh.currentUser.uid;
+        const alreadyIn = (C.group.participants || []).indexOf(meUid) !== -1;
+        const isExpired = status !== 'active';
+        const expiredTitle = status === 'successful'
+            ? ' GROUP BUY IMEFANIKIWA (' + joined + '/' + target + ')'
+            : ' GROUP BUY IMEKUTA MUDA (' + joined + '/' + target + ' wamejiunga)';
 
         if (isExpired) {
             actionArea.innerHTML = `
-                <div style="background:#0f172a; color:white; padding:20px; text-align:center; border-radius:18px;">
-                    <h3 style="color:#10b981; margin:0;"> GROUP BUY DEAL IMEFUNGWA</h3>
-                    <p>Watu waliojiunga: <b>${joined}/${target}</b></p>
-                    <h2 style="color:var(--gold);">TZS ${Math.round(currentPrice).toLocaleString()}</h2>
-                </div>`;
+                <div style="background:#0f172a; color:white; padding:20px; text-align:center; border-radius:18px;" data-mode-panel="group_buy"> <h3 style="color:${status === 'successful' ? '#10b981' : '#f59e0b'}; margin:0;">${expiredTitle}</h3> ${status === 'failed' ? '<p style="opacity:0.85; font-size:12px;">Lengo halikufikiwa — hakuna oda inayotoezna kutoka deal hii.</p>' : '<p>Bei ya kundi ni TSh ' + Math.round(currentPrice).toLocaleString() + '</p>'} </div>`;
         } else {
             let progressPercent = Math.min(100, (joined / target) * 100);
+            const joinLabel = alreadyIn ? 'UMEJIUNGA — KAMILISHA MALIPO (ESCROW)' : 'JIUNGE NA KUNDI & HIFADHI NAFSI (ESCROW)';
             actionArea.innerHTML = `
-                <div style="background:#dcfce7; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #10b981;">
-                    <b style="color:#10b981;"> GROUP BUY INAVUMA</b><br>
-                    <span class="live-timer" data-endtime="${end}" style="color:#10b981; font-weight:900; font-size:20px;"> ...</span>
-                    
-                    <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; text-align:center;">
-                        <span style="font-size:12px; color:gray;">Bei ya Kundi Sasa:</span>
-                        <h2 style="color:#10b981; margin:5px 0;">TZS ${Math.round(currentPrice).toLocaleString()}</h2>
-                        
-                        <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;">
-                            <div style="width:${progressPercent}%; height:100%; background:#10b981;"></div>
-                        </div>
-                        <small style="font-size:10px; color:gray; display:block; margin-top:5px;">Watu waliojiunga: <b>${joined}/${target}</b></small>
-                    </div>
-
-                    <button onclick="window.checkoutSeriousMode(${currentPrice})" style="width:100%; padding:16px; background:#10b981; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;"> JIUNGE & LIPIA KWA ESCROW</button>
-                </div>`;
+                <div style="background:#dcfce7; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #10b981;" data-mode-panel="group_buy" data-live-price="${currentPrice}" data-live-joined="${joined}" data-live-target="${target}"> <b style="color:#10b981;"> GROUP BUY INAVUMA</b><br> <span class="live-timer" data-endtime="${end}" style="color:#10b981; font-weight:900; font-size:20px;"> ...</span> <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; text-align:center;"> <span style="font-size:12px; color:gray;">Bei ya Kundi Sasa:</span> <h2 style="color:#10b981; margin:5px 0;">TZS ${Math.round(currentPrice).toLocaleString()}</h2> <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;"> <div style="width:${progressPercent}%; height:100%; background:#10b981;"></div> </div> <small style="font-size:12.5px; color:gray; display:block; margin-top:5px;">Watu waliojiunga: <b>${joined}/${target}</b></small> </div> <button onclick="window.skhGroupBuyJoinAndCheckout()" style="width:100%; padding:16px; background:#10b981; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;"> ${joinLabel}</button> <small style="display:block; margin-top:8px; color:#64748b;">Umejiunga unarekodiwa kwenye Firestore — oda na usafirishaji hutathminiwa kulingana na deal. </small></div>`;
         }
+    }
+};
+
+/* [§14 R4 GROUP BUY CORE] Join = Firestore update (unique-joiner guard).
+ * Tel. flow: RE-READ → guard → update → lifecycle (SUCCESSFUL/Debugging) →
+ * kisha malipo (escrow) kulingana na sera ya sasa (checkoutSeriousMode). */
+window.skhGroupBuyJoin = async function (productId) {
+    if (!skh.requireAuth()) return { ok: false, error: 'login' };
+    const col = (skh.currentOpenProduct && skh.currentOpenProduct.collectionName) || 'products';
+    const prodRef = skh.doc(skh.db, col, productId);
+    const meUid = skh.currentUser && skh.currentUser.uid;
+
+    try {
+        const snap = await skh.getDoc(prodRef);
+        if (!snap || !snap.exists || !snap.exists()) return { ok: false, error: 'bidhaa_haipo' };
+        const p = Object.assign({ id: productId, collectionName: col }, snap.data());
+        const c = window.skhModesCompute(p);
+        if (c.mode !== 'group_buy') return { ok: false, error: 'si_group' };
+        if (c.group.status !== 'active') return { ok: false, error: 'group_' + c.group.status };
+        if ((c.group.participants || []).indexOf(meUid) !== -1) return { ok: true, already: true, joined: c.group.joined };
+
+        await skh.updateDoc(prodRef, {
+            'modeData.joinedUsers': skh.increment(1),
+            'modeData.participants': skh.arrayUnion(meUid)
+        });
+
+        // [§37 LIFECYCLE] Mtalengo gusa → successful + arifa (guarded mara moja)
+        const newP = Object.assign({}, p, { modeData: Object.assign({}, p.modeData, {
+            joinedUsers: c.group.joined + 1, participants: (c.group.participants || []).concat([meUid])
+        }) });
+        try { await window.skhModesLifecycle(newP); } catch (e) {}
+        return { ok: true, joined: c.group.joined + 1 };
+    } catch (e) {
+        return { ok: false, error: (e && e.message) || 'error' };
+    }
+};
+
+/* Join + malipo (serious-action deposit gate inatumika ikiwa iko ON) — KADADAGA
+ * inacooka "Lipa" bila ku-rekodi group membership kwanza. Hii ndiyo full §14. */
+window.skhGroupBuyJoinAndCheckout = async function () {
+    if (!skh.currentOpenProduct) return;
+    const id = skh.currentOpenProduct.id, mode = skh.currentOpenProduct.saleMode || 'group_buy';
+    if (typeof window.verifyAndProceedSeriousAction === 'function') {
+        await window.verifyAndProceedSeriousAction("Action", mode, id, async () => {
+            const r = await window.skhGroupBuyJoin(id);
+            if (!r.ok) { alert('Imeshindikana kujiunga: ' + r.error); return; }
+            // Bei halisi kutoka panel (inarender kutoka compute ya backend doc)
+            const panel = document.querySelector('#pmSpecialModeArea [data-live-price]');
+            const livePrice = panel ? parseFloat(panel.getAttribute('data-live-price')) : null;
+            const p = window.skhModesCompute(skh.currentOpenProduct).group.price;
+            window.checkoutSeriousMode(isFinite(livePrice) ? livePrice : p);
+        });
+    } else {
+        const r = await window.skhGroupBuyJoin(id);
+        if (!r.ok) { alert('Imeshindikana kujiunga: ' + r.error); return; }
+        try { window.checkoutSeriousMode(window.skhModesCompute(skh.currentOpenProduct).group.price); } catch (e) {}
+    }
+};
+
+/* [§18 PRICE DROP CORE] Malipo kwa bei halisi ya SASA. Bei inasomwa kutoka
+ * panel iliyorender (#pmSpecialModeArea [data-live-price], uppendekeo: ina-
+ * anISHIA ya compute ya modeData ya Firestore), AU compute moja kwa moja.
+ * Inakubali productId (kutoka action-bar) AU currentOpenProduct; inarudisha
+ * {ok, error} — imara kwa probes na tidy UX. */
+window.skhPriceDropCheckout = async function (productId) {
+    if (!skh.requireAuth()) return { ok: false, error: 'login' };
+    let p = skh.currentOpenProduct;
+    if (productId && (!p || p.id !== productId)) {
+        try { const snap = await skh.getDoc(skh.doc(skh.db, 'products', productId)); p = snap && snap.exists() ? Object.assign({ id: snap.id, collectionName: 'products' }, snap.data()) : null; } catch (e) { p = null; }
+    }
+    if (!p) return { ok: false, error: 'bidhaa_haipo' };
+    const c = window.skhModesCompute(p);
+    if (c.mode !== 'price_drop') return { ok: false, error: 'si_price_drop' };
+    if (c.drop.ended) { alert(' Deal imekwisha: bei haiyakati tena.'); return { ok: false, error: 'deal_imekwisha' }; }
+    const panel = document.querySelector('#pmSpecialModeArea [data-live-price], #specialModePanel[data-live-price]');
+    const livePrice = panel ? parseFloat(panel.getAttribute('data-live-price')) : null;
+    const price = isFinite(livePrice) ? livePrice : c.drop.currentPrice;
+    skh.currentOpenProduct = p;
+    window.checkoutSeriousMode(price);
+    return { ok: true, amount: price };
+};
+
+/* [§11 AUCTION WINNER] Wuhi: winner pekee aedae kulipia bidhaa. */
+/* [§17 B WINNER PAY] Mshindi wa mnada pekee ndiye anaye-tajirisha oda.
+ * Inachukua productId (kutoka action-bar/render) AU currentOpenProduct.
+ * Guard: mnada umefungwa + uid === modeData.winnerId (dawa ya "kufinya
+ * kufungua oda ya mwingine"). */
+window.skhAuctionWinnerCheckout = async function (productId) {
+    if (!skh.requireAuth()) return { ok: false, error: 'login_required' };
+    let p = skh.currentOpenProduct;
+    if (productId && (!p || p.id !== productId)) {
+        try { const snap = await skh.getDoc(skh.doc(skh.db, 'products', productId)); p = snap.exists() ? Object.assign({ id: snap.id }, snap.data()) : null; } catch (e) { p = null; }
+    }
+    if (!p) return { ok: false, error: 'bidhaa_haipo' };
+    const c = window.skhModesCompute(p);
+    if (c.mode !== 'auction') return { ok: false, error: 'si_mnada' };
+    if (!c.auction.ended) return { ok: false, error: 'mnada_bado_live' };
+    const meUid = skh.currentUser && skh.currentUser.uid;
+    if (!meUid || c.auction.winnerId !== meUid) {
+        alert(' Mnada una kikwaya: oda haiundwi — malipo ni kwa mshindi (winner) tu.');
+        return { ok: false, error: 'si_mshindi' };
+    }
+    skh.currentOpenProduct = p;
+    window.checkoutSeriousMode(c.auction.currentBid);
+    return { ok: true, amount: c.auction.currentBid };
+};
+
+/* ================================================================
+ * [MODES CORE 2026-09] Chanzo kimoja cha HESABU + LIFECYCLE ya
+ * commerce modes (auction / group_buy / price_drop / wholesale).
+ * Sera: doc ya `products` + modeData ndiyo chanzo chetu; client hufanya
+ * RE-READ kabla ya kukubali writable actions (Firestore-native
+ * "server-authoritative" kwa app hii), hakuna fake state kwenye UI.
+ * ================================================================ */
+window.skhModesCompute = function (p) {
+    // Hesabu za KUSOMA pekee kutoka data halisi ya doc — zirejeshwe kwa UI zote.
+    const md = (p && p.modeData) || {};
+    const base = parseFloat(p && p.price) || 0;
+    const now = Date.now();
+    const out = { mode: (p && p.saleMode) || 'free_market', base: base, modeData: md, now: now };
+    if (out.mode === 'auction') {
+        const currentBid = parseFloat(md.currentBid) || base;
+        const totalBids = parseInt(md.totalBids) || 0;
+        const endsAt = Number(md.endTime) || 0;
+        const ended = !!md.ended || (endsAt > 0 && now >= endsAt);
+        out.auction = {
+            currentBid: currentBid, totalBids: totalBids, endsAt: endsAt,
+            endsIn: Math.max(0, endsAt - now), ended: ended,
+            minNextBid: Math.round(currentBid * 1.05),
+            winnerId: md.maxBidder || null, winnerName: md.maxBidderName || 'Bado hakuna',
+            notified: !!md.endNotified
+        };
+    } else if (out.mode === 'group_buy') {
+        const joined = parseInt(md.joinedUsers) || 1;
+        const target = parseInt(md.targetPeople) || 10;
+        const discVal = parseFloat(md.discountValue) || 0;
+        const discType = md.discountType || 'amount';
+        let price = base;
+        const extra = Math.max(0, joined - 1);
+        if (discType === 'percent') price = base - (base * Math.min(90, discVal * extra) / 100);
+        else price = Math.max(base * 0.1, base - (discVal * extra));
+        const endsAt = Number(md.endTime) || 0;
+        const timedOut = endsAt > 0 && now >= endsAt;
+        // [GROUP LIFECYCLE] hali halisi: successful (target imefikiwa) |
+        // failed (muda umekwisha bila target) | active (inaendelea).
+        const status = (joined >= target) ? 'successful' : (timedOut ? 'failed' : 'active');
+        out.group = {
+            joined: joined, target: target, price: Math.max(0, Math.round(price)),
+            endsAt: endsAt, endsIn: Math.max(0, endsAt - now),
+            status: status, participants: md.participants || [],
+            notified: !!md.successNotified
+        };
+    } else if (out.mode === 'price_drop') {
+        const start = Number(md.startTime) || now;
+        const endsAt = Number(md.endTime) || now;
+        const min = parseFloat(md.minPrice) || 0;
+        const interval = Number(md.intervalMs) || 60000;
+        const drop = parseFloat(md.dropAmount) || 0;
+        const steps = Math.max(0, Math.floor((now - start) / interval));
+        let cur = base - (steps * drop);
+        if (cur < min) cur = min;
+        out.drop = {
+            currentPrice: Math.max(min, Math.round(cur)), minPrice: min,
+            endsAt: endsAt, endsIn: Math.max(0, endsAt - now),
+            ended: now >= endsAt, stepsDone: steps,
+            lockedBy: md.lockedBy || null
+        };
+    } else if (out.mode === 'wholesale') {
+        const discVal = parseFloat(md.discountValue) || 0;
+        const discType = md.discountType || 'amount';
+        const minQty = parseInt(md.minQty) || 1;
+        // Tiers (modeData.tiers = [{minQty, price}] — price = bei ya KIPANDE)
+        let tiers = Array.isArray(md.tiers) ? md.tiers.slice() : [];
+        tiers = tiers
+            .map(function (t) { return { minQty: parseInt(t.minQty) || 0, price: parseFloat(t.price) || 0 }; })
+            .filter(function (t) { return t.minQty > 0 && t.price > 0; })
+            .sort(function (a, b) { return a.minQty - b.minQty; });
+        // Legacy single-rule (discount {percent|amount}) hutengenezwa kuwa tier ya minQty.
+        if (!tiers.length && minQty > 0 && discVal > 0) {
+            let tprice = base;
+            if (discType === 'percent') tprice = base - (base * discVal / 100);
+            else tprice = Math.max(0, base - discVal);
+            tiers = [ { minQty: minQty, price: Math.round(tprice) } ];
+        }
+        // Tier ya msingi (qty 1..minQty-1) bei kamili — muonekano wa jedwali lazima
+        // uonyeshe safu zote ili buyer ajue bei anayolipia kwa kila kiwango.
+        let rows = [ { range: '1' + (tiers.length && tiers[0].minQty > 1 ? '–' + (tiers[0].minQty - 1) : ''), qty: 1, price: base } ];
+        tiers.forEach(function (t, i) {
+            const hi = (i + 1 < tiers.length) ? (tiers[i + 1].minQty - 1) : null;
+            rows.push({ range: hi ? (t.minQty + '–' + hi) : (t.minQty + '+'), qty: t.minQty, price: t.price });
+        });
+        const lowest = tiers.length ? tiers[tiers.length - 1].price : base;
+        out.wholesale = {
+            rows: rows, tiers: tiers, minQty: minQty,
+            lowest: lowest,
+            applicable: function (qty) {
+                const q = parseInt(qty) || 1;
+                let pr = base;
+                tiers.forEach(function (t) { if (q >= t.minQty) pr = t.price; });
+                return pr;
+            }
+        };
+        out.wholesale.applicableSrc = 'backend-tiers';
+    }
+    return out;
+};
+
+/* Arifa halisi za modes — chimbua kupitia injini iliyopo (28-buyer-engagement)
+ * au addDoc ya moja kwa moja kwenye `notifications`. */
+window.skhModesNotify = function (userId, title, body, type, meta) {
+    if (!userId) return Promise.resolve();
+    if (typeof window.skhEngageSendNotif === 'function') {
+        return Promise.resolve(window.skhEngageSendNotif(userId, title, body, type, meta));
+    }
+    return skh.addDoc(skh.collection(skh.db, 'notifications'), Object.assign({
+        userId: userId, title: title, body: body, createdAt: new Date().toISOString(), read: false, type: type || 'engagement'
+    }, meta || {})).catch(function () {});
+};
+
+/* [§37 LIFECYCLE] Mabadiliko ya mipaka ya muda, IDEMPOTENT: inaandika status
+ * + arifa MARA MOJA (flag `_ended` / `successNotified`). Huchomozwa wakati
+ * wa kufungua ukurasa wa bidhaa (listener iko tayari) na baada ya actions. */
+window.skhModesLifecycle = async function (p) {
+    if (!p || !p.id || !p.collectionName) return;
+    const c = window.skhModesCompute(p);
+    const prodRef = skh.doc(skh.db, p.collectionName, p.id);
+    try {
+        if (c.mode === 'auction' && c.auction.ended) {
+            // [IDEMPOTENCY GAP] Snapshot p inaweza kuwa stale (tab mbili zikifunga
+            // lifecycle mpapayo) → flags zingiandikwa mara mbili na ARIFA
+            // zikirudia. RE-READ halisi kabla ya kuamua kama taarifa zimishapeleke.
+            const p2snap = await skh.getDoc(prodRef);
+            const p2md = (p2snap && p2snap.exists() && p2snap.data() && p2snap.data().modeData) || {};
+            const alreadyEnded = !!p2md.ended;
+            const alreadyNotified = !!p2md.endNotified;
+            if (alreadyEnded && alreadyNotified) return;   // kila kitu kimemalizika
+            c.modeData = p2md;   // tumia up-to-date state kwa hatua zifuatazo
+        }
+        if (c.mode === 'auction' && c.auction.ended && !c.modeData.ended) {
+            // Auction imekwisha → watu wa mwisho (winner) + arifa.
+            const patch = {
+                'modeData.ended': true,
+                'modeData.endedAt': new Date().toISOString()
+            };
+            if (c.auction.winnerId) patch['modeData.winnerId'] = c.auction.winnerId;
+            await skh.updateDoc(prodRef, patch);
+            if (!c.modeData.endNotified && c.auction.winnerId) {
+                await skh.updateDoc(prodRef, { 'modeData.endNotified': true });
+                const t = p.title || 'bidhaa';
+                window.skhModesNotify(c.auction.winnerId, ' Umeshinda Mnada!',
+                    'Umeshinda mnada wa ' + t + ' kwa TSh ' + Number(c.auction.currentBid).toLocaleString() + '. Lipia sasa ili kumaliza oda yako.', 'auction_won',
+                    { productId: p.id, commerceMode: 'AUCTION' });
+                if (p.userId && p.userId !== c.auction.winnerId) {
+                    window.skhModesNotify(p.userId, 'Mnada wako umekamilika',
+                        'Mnada wa ' + t + ' umefungwa. Mshindi ni ' + c.auction.winnerName + ' kwa TSh ' + Number(c.auction.currentBid).toLocaleString() + '.', 'auction_ended',
+                        { productId: p.id, commerceMode: 'AUCTION' });
+                }
+            }
+        } else if (c.mode === 'group_buy' && c.group.status === 'successful' && !c.modeData.successNotified) {
+            await skh.updateDoc(prodRef, { 'modeData.successNotified': true, 'modeData.status': 'successful' });
+            const t = p.title || 'bidhaa';
+            const msg = 'Group Buy ya ' + t + ' imefikia lengo (' + c.group.joined + '/' + c.group.target + '). Bei ya makubaliano ni TSh ' + Number(c.group.price).toLocaleString() + ' huenda ikafanyizika — lipia oda yako sasa.';
+            (c.group.participants || []).forEach(function (uid) {
+                window.skhModesNotify(uid, ' Group Buy imefanikiwa!', msg, 'group_success', { productId: p.id, commerceMode: 'GROUP_BUY' });
+            });
+            if (p.userId) {
+                window.skhModesNotify(p.userId, 'Group Buy imefiki lengo', 'Kundi la ' + t + ' limefika ' + c.group.joined + '/' + c.group.target + '.', 'group_success', { productId: p.id, commerceMode: 'GROUP_BUY' });
+            }
+        }
+    } catch (e) { console.warn('[MODES] lifecycle: ' + (e && e.message)); }
+};
+
+/* [§10 R2+AUCTION CORE] Weka zabuni — RE-READ kabla ya kukubali.
+ * Hakuna blind overwrite: ikiwa mtaji mwingine amekwisha weka dau kubwa kati
+ * ya kusoma+kuiandika, dau la chini haliikubaliwi (analytics kwa hisani ya
+ * Firestore SDK; atomic hike iko kwenye increment ya totalBids + bid docs
+ * zinavyoandikwa kama makazi asilia — hakuna kipi cha speculative copy). */
+window.skhAuctionPlaceBid = async function (productId, bidValue) {
+    if (!skh.requireAuth()) return { ok: false, error: 'login' };
+    const bid = parseFloat(bidValue);
+    if (!isFinite(bid) || bid <= 0) return { ok: false, error: 'ingiza_kiasi' };
+
+    const col = (skh.currentOpenProduct && skh.currentOpenProduct.collectionName) || 'products';
+    const prodRef = skh.doc(skh.db, col, productId);
+
+    // RE-READ: daima ona hali halisi ya Firestore kabla ya kukubali.
+    const snap = await skh.getDoc(prodRef);
+    if (!snap || !snap.exists || !snap.exists()) return { ok: false, error: 'bidhaa_haipo' };
+    const p = Object.assign({ id: productId, collectionName: col }, snap.data());
+    const c = window.skhModesCompute(p);
+    if (c.mode !== 'auction') return { ok: false, error: 'si_mnada' };
+    if (c.auction.ended) return { ok: false, error: 'mnada_umefungwa' };
+    if (skh.currentUser && p.userId === skh.currentUser.uid) return { ok: false, error: 'tangazo_lako' };
+    if (skh.sysConfig && skh.sysConfig.modes && skh.sysConfig.modes.auction === false) {
+        return { ok: false, error: 'imezimwa_admin' };
+    }
+
+    const minRequired = c.auction.minNextBid; // =1.05 × dau la juu (policy iliyopo)
+    if (bid < minRequired) return { ok: false, error: 'chini_ya_' + minRequired, minRequired: minRequired };
+
+    const prevLeader = c.auction.winnerId;
+    const prevBid = c.auction.currentBid;
+    const myName = (skh.currentUser && skh.currentUser.displayName)
+        || (skh.currentUser && skh.currentUser.email ? skh.currentUser.email.split('@')[0] : 'Mteja');
+
+    try {
+        if (typeof skh.runTransaction === 'function') {
+            await skh.runTransaction(skh.db, async function (tx) {
+                const fresh = await tx.get(prodRef);
+                if (!fresh.exists()) throw new Error('bidhaa_haipo');
+                const fp = fresh.data() || {};
+                const fmd = fp.modeData || {};
+                const fBid = parseFloat(fmd.currentBid) || (parseFloat(fp.price) || 0);
+                if (Number(fmd.endTime) > 0 && Date.now() >= Number(fmd.endTime)) throw new Error('mnada_umefungwa');
+                if (fmd.ended) throw new Error('mnada_umefungwa');
+                if (bid < Math.round(fBid * 1.05)) throw new Error('waliokuzidi');
+                tx.set(prodRef, { modeData: Object.assign({}, fmd, {
+                    currentBid: bid, maxBidder: skh.currentUser.uid, maxBidderName: myName,
+                    totalBids: (parseInt(fmd.totalBids) || 0) + 1
+                }) }, { merge: true });
+            });
+        } else {
+            await skh.updateDoc(prodRef, {
+                'modeData.currentBid': bid, 'modeData.maxBidder': skh.currentUser.uid,
+                'modeData.maxBidderName': myName, 'modeData.totalBids': skh.increment(1)
+            });
+        }
+
+        // [§33] ARIFA HALISI: outbid + seller alert (wote — kama != mimi)
+        const t = p.title || 'bidhaa';
+        if (prevLeader && prevLeader !== skh.currentUser.uid) {
+            window.skhModesNotify(prevLeader, ' Umezidiwa Dau',
+                'Mteja mwingine ameweka TSh ' + Number(bid).toLocaleString() + ' kwenye mnada wa ' + t + ' (dau lako lilikuwa TSh ' + Number(prevBid).toLocaleString() + ').', 'auction_outbid',
+                { productId: productId, commerceMode: 'AUCTION' });
+        }
+        if (p.userId && p.userId !== skh.currentUser.uid) {
+            window.skhModesNotify(p.userId, 'Dau jipya kwenye mnada wako',
+                myName + ' ameweka TSh ' + Number(bid).toLocaleString() + ' (zabuni: ' + (c.auction.totalBids + 1) + ').', 'auction_bid',
+                { productId: productId, commerceMode: 'AUCTION' });
+        }
+        // Reje[§8] Hesabu halisi za historia — andika na bid doc (Firestore).
+        try {
+            await skh.addDoc(skh.collection(skh.db, col, productId, 'bids'), {
+                uid: skh.currentUser.uid, name: myName, amount: bid,
+                prevBid: prevBid || null, createdAt: new Date().toISOString()
+            });
+        } catch (e2) { /* historia ya ziada — bid kuu imeshahifadhiwa */ }
+        return { ok: true, bid: bid, totalBids: c.auction.totalBids + 1 };
+    } catch (e) {
+        var code = (e && e.message) || 'error';
+        return { ok: false, error: code };
     }
 };
 
@@ -331,20 +672,38 @@ window.placeBid = async function() {
         return;
     }
 
-    if(confirm(T('pr_bid_confirm', 'Confirm placing a bid of TSh {n}? If you win, you will have to pay.', { n: bidValue.toLocaleString() }))) {
+    if(await skhConfirm(T('pr_bid_confirm', 'Confirm placing a bid of TSh {n}? If you win, you will have to pay.', { n: bidValue.toLocaleString() }))) {
         try {
-            const prodRef = skh.doc(skh.db, skh.currentOpenProduct.itemCollection || 'products', skh.currentOpenProduct.id);
-            
-            // Hifadhi dau jipya kwenye Firebase
-            await skh.updateDoc(prodRef, {
-                "modeData.currentBid": bidValue,
-                "modeData.maxBidder": skh.currentUser.uid,
-                "modeData.maxBidderName": skh.currentUser.displayName || T('pr_customer', 'Customer'),
-                "modeData.totalBids": skh.increment(1)
-            });
-
+            // [DEPOSIT GATE] Sera iliyopo: dau la serious actions (mnada/group/
+            // price_drop) linahitaji deposit ya TSh 1,300 kama Admin ameyawasha
+            // malipo — iwe imelipiwa mwanzoni, ikwarenjee mojamoja kama kawaida.
+            if (typeof window.verifyAndProceedSeriousAction === 'function') {
+                let proceedCore = false, errored = null, doneRes = null;
+                await window.verifyAndProceedSeriousAction("Auction", "auction", skh.currentOpenProduct.id, async () => {
+                    doneRes = await window.skhAuctionPlaceBid(skh.currentOpenProduct.id, bidValue);
+                    proceedCore = true;
+                });
+                if (!proceedCore) return; // deposit ilianzishwa/imekataliwa — rudi baadaye
+                var r = doneRes;
+            } else {
+                var r = await window.skhAuctionPlaceBid(skh.currentOpenProduct.id, bidValue);
+            }
+            if (!r.ok) {
+                if (/^waliokuzidi/.test(r.error)) alert('Mteja mwingine amekuzidi — onyesha dau kubwa zaidi (rejareja ukurasa kwanza).');
+                else if (/^mnada_umefungwa/.test(r.error)) alert(' Mnada huu umefungwa tayari. Haunaweza kuweka dau tena.');
+                else if (/^bidhaa_haipo/.test(r.error)) alert('Bidhaa haipo tena.');
+                else if (/^imezimwa_admin/.test(r.error)) alert('Mnada umezimwa kwa muda na Admin.');
+                else alert(T('pr_error', 'Error') + ': ' + r.error);
+                if (bidInput) bidInput.value = '';
+                return;
+            }
             alert(T('pr_bid_placed', 'Congratulations! Your bid is placed. You are now leading the auction!'));
-            bidInput.value = "";
+            bidInput.value = '';
+            // Refresh ya panel pia (listener inachoma pia, lakini haraka).
+            try {
+                const area = (typeof $ === 'function' ? $('pmSpecialModeArea') : document.getElementById('pmSpecialModeArea'));
+                if (area) window.renderSpecialModesUI('auction', area);
+            } catch (e2) {}
         } catch(e) {
             alert(T('pr_error', 'Error') + ": " + e.message);
         }
@@ -393,7 +752,7 @@ window.submitComment = async function() {
                 if (res && res.data && res.data.ok) published = true;
             } catch (e) {
                 const code = String((e && e.code) || '');
-                // Server haipatikani (haijatumwa) → fallback ya client (bila badge).
+                // Server haipatikani (haijatumwa) -> fallback ya client (bila badge).
                 if (code && code !== 'functions/not-found' && code !== 'unavailable' && code !== 'internal' && !/not-found/.test(code)) throw e;
             }
             // Fallback: andika moja kwa moja (rules zinaruhusu maoni ya mwandishi).
@@ -574,15 +933,7 @@ window.openCart = function() {
             skh.myCart.forEach((item, index) => {
                 total += parseFloat(item.price || 0);
                 html += `
-                    <div class="list-item">
-                        <img src="${skh.getOptimizedImageUrl(item.image || 'https://via.placeholder.com/150')}" alt="item">
-                        <div class="list-info">
-                            <b>${item.title}</b>
-                            <span>TSh ${(item.price || 0).toLocaleString()}</span>
-                        </div>
-                        <button onclick="removeFromCart(${index})" style="background:#fee2e2; color:#ef4444; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; cursor:pointer;">X</button>
-                    </div>
-                `;
+                    <div class="list-item"> <img src="${skh.getOptimizedImageUrl(item.image || 'https://via.placeholder.com/150')}" alt="item"> <div class="list-info"> <b>${item.title}</b> <span>TSh ${(item.price || 0).toLocaleString()}</span> </div> <button onclick="removeFromCart(${index})" style="background:#fee2e2; color:#ef4444; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; cursor:pointer;">X</button> </div> `;
             });
         }
         
@@ -633,10 +984,11 @@ window.skhProductPublicUrl = function(id) {
 // [SEO] Sasisha <title> + meta tags za bidhaa kwa Google na viungo vya umma.
 window.skhUpdateSeoMeta = function(p) {
     try {
-        const t = p ? ((p.title || p.itemTitle || 'Bidhaa') + ' — SokoHai') : 'SokoHai — Soko la Mtandaoni la Tanzania';
+        const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def','Bidhaa') : 'Bidhaa');
+        const t = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', 'SokoHai — Soko la Mtandaoni la Tanzania') : 'SokoHai — Soko la Mtandaoni la Tanzania');
         document.title = t;
         const desc = p
-            ? ((p.title || p.itemTitle || 'Bidhaa') + (p.price ? ' kwa TSh ' + Number(p.price).toLocaleString() : '') + ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.')
+            ? (_pT + (p.price ? (window.skhTF?window.skhTF('meta_for_tsh',' kwa TSh '):' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF?window.skhTF('meta_on_skh',' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'):' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'))
             : 'Nunua na uuze bidhaa, huduma na usafiri kwa usalama kupitia SokoHai.';
         const set = function(id, attr, val) { const el = document.getElementById(id); if (el) el.setAttribute(attr, val || ''); };
         set('skhMetaDescription', 'content', desc);
@@ -704,15 +1056,22 @@ window.skhRenderAttachedProduct = function() {
     const wrap = document.getElementById('chatAttachedProduct');
     if (!wrap) return;
     const p = skh.activeChatProduct;
-    if (!p || !p.id) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+    // [CTX-LEAK FIX 2026-09-16] "Bidhaa imeambatishwa" ionekane TU ikiwa
+    // partner wa chat hii ndiye mmiliki wa bidhaa — kamwe si tangazo la
+    // ukurasa uliotembelewa mwishoni.
+    var partner = (skh.chatCore && skh.chatCore.partnerUid) || skh.currentChatUid || null;
+    var owner = p ? (p.userId || p.providerId || p.driverId || p.sellerId || null) : null;
+    if (!p || !p.id || (partner && owner && owner !== partner)) {
+        wrap.style.display = 'none'; wrap.innerHTML = ''; return;
+    }
     const img = p.image || (p.images && p.images[0]) || p.photo || (window.SKH_PLACEHOLDER_IMG || '');
-    const title = p.title || p.itemTitle || 'Bidhaa';
+    const title = (window.skhLocField ? window.skhLocField(p, 'title') : null) || p.title || p.itemTitle || (window.skhTF?window.skhTF('card_product_def','Bidhaa'):'Bidhaa');
     wrap.style.display = 'block';
     wrap.innerHTML = '<div class="chat-attached">'
         + (img ? '<img src="' + skh.skhEscape(skh.getOptimizedImageUrl(img)) + '" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">' : '')
         + '<div style="min-width:0;flex:1;"><b style="font-size:12px;color:#0f172a;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + skh.skhEscape(title) + '</b>'
-        + '<small style="font-size:10.5px;color:#b45309;font-weight:700;">Bidhaa imeambatishwa</small></div>'
-        + '<button class="ca-remove" onclick="window.skhClearAttachedProduct()" title="Ondoa bidhaa">&times;</button>'
+        + '<small style="font-size:12.5px;color:#b45309;font-weight:700;">' + (window.skhTF?window.skhTF('attach_product','Bidhaa imeambatishwa'):'Bidhaa imeambatishwa') + '</small></div>'
+        + '<button class="ca-remove" onclick="window.skhClearAttachedProduct()" title="' + (window.skhTF?window.skhTF('attach_remove','Ondoa bidhaa'):'Ondoa bidhaa') + '">&times;</button>'
         + '</div>';
 };
 
@@ -787,7 +1146,31 @@ window.startChat = function() {
     skh.chatPartner = skh.currentOpenProduct.ownerName || (skh.currentOpenProduct.userEmail ? skh.currentOpenProduct.userEmail.split('@')[0] : T('eng_seller', 'Seller'));
     skh.currentChatEmail = skh.currentOpenProduct.userEmail || ''; // SHIKILIA EMAIL
     skh.currentChatUid = skh.currentOpenProduct.userId || '';       // SHIKILIA UID (ya kuaminika)
-    skh.activeChatProduct = skh.currentOpenProduct; // SHIKILIA BIDHAA
+    /* [FIX 2026-09-15] Hapo awali KILA tangazo lilihifadhiwa kama
+       `activeChatProduct` — hata huduma na usafiri. Kwa hiyo `serviceCtx()`
+       na `transportCtx()` hazikuwahi kupata muktadha, na kadi ya majadiliano
+       haikuonekana kwa huduma/usafiri (ndiyo uliyokuwa ukiona: ujumbe wa
+       kawaida tu, bila kadi ya negotiation).
+
+       Sasa tunahifadhi kwenye SEHEMU SAHIHI kulingana na aina. */
+    (function () {
+        var p = skh.currentOpenProduct || {};
+        var col = String(p.collectionName || p.itemCollection || 'products');
+        skh.activeChatProduct = null;
+        skh.activeChatService = null;
+        skh.activeChatTransport = null;
+        if (col === 'services') {
+            skh.activeChatService = Object.assign({}, p, { collectionName: 'services' });
+        } else if (col === 'drivers' || col === 'ride_requests') {
+            skh.activeChatTransport = Object.assign({}, p, { collectionName: col });
+        } else {
+            skh.activeChatProduct = p;
+        }
+        // Onyesha kadi ya majadiliano kwa muktadha huu
+        setTimeout(function () {
+            if (typeof window.skhChatRefreshNegoCard === 'function') window.skhChatRefreshNegoCard();
+        }, 700);
+    })();
 
     const cw = document.getElementById('chatWith');
     if(cw) cw.innerText = skh.chatPartner;
@@ -972,13 +1355,9 @@ window.openChatList = async function() {
             html += `
                 <div class="chat-contact" onclick="resumeChat('${escUid}', '${escEmail}', '${escLabel}')">
                     ${dp}
-                    <div class="cc-info">
-                        <span class="cc-name">${skh.skhEscape(label)}</span>
-                        <span class="cc-msg">${escMsg}</span>
-                    </div>
+                    <div class="cc-info"> <span class="cc-name">${skh.skhEscape(label)}</span> <span class="cc-msg">${escMsg}</span> </div>
                     ${escTime ? `<span class="cc-time">${escTime}</span>` : ''}
-                </div>
-            `;
+                </div> `;
         });
         inboxList.innerHTML = html;
     } catch (e) {
@@ -1142,27 +1521,64 @@ window.handleChatFileUpload = async function(e) {
 // ============================================================
 window.skhNotifLabel = function(type) {
     const labels = {
-        order: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Nenda kwenye Oda Zako</span>',
-        wallet: '<span style="display:inline-block; margin-top:6px; background:#16a34a; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua SokoPay Wallet</span>',
-        agent: '<span style="display:inline-block; margin-top:6px; background:#f97316; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Dashbodi ya Wakala</span>',
-        delivery: '<span style="display:inline-block; margin-top:6px; background:#6366f1; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Mizigo Yangu</span>',
-        ride_request: '<span style="display:inline-block; margin-top:6px; background:#d97706; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Requests Marketplace</span>',
-        chat: '<span style="display:inline-block; margin-top:6px; background:#25D366; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Inbox</span>',
-        new_comment: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Maswali</span>',
-        comment_reply: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Maswali</span>',
-        comment_mention: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:10px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Maswali</span>'
+        order: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Nenda kwenye Oda Zako</span>',
+        wallet: '<span style="display:inline-block; margin-top:6px; background:#16a34a; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua SokoPay Wallet</span>',
+        agent: '<span style="display:inline-block; margin-top:6px; background:#f97316; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Dashbodi ya Wakala</span>',
+        delivery: '<span style="display:inline-block; margin-top:6px; background:#6366f1; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Mizigo Yangu</span>',
+        ride_request: '<span style="display:inline-block; margin-top:6px; background:#d97706; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Requests Marketplace</span>',
+        chat: '<span style="display:inline-block; margin-top:6px; background:#25D366; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Chat</span>',
+        negotiation: '<span style="display:inline-block; margin-top:6px; background:#03509d; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Majadiliano</span>',
+        booking: '<span style="display:inline-block; margin-top:6px; background:#d97706; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Requests Marketplace</span>',
+        payment: '<span style="display:inline-block; margin-top:6px; background:#16a34a; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua SokoPay Wallet</span>',
+        new_comment: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Maswali</span>',
+        comment_reply: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Maswali</span>',
+        comment_mention: '<span style="display:inline-block; margin-top:6px; background:#0ea5e9; color:#fff; font-size:12.5px; font-weight:900; padding:4px 10px; border-radius:99px;">&#8594; Fungua Maswali</span>'
     };
     return labels[type] || '';
 };
 
-window.skhNotifGo = function(type, targetId) {
+// Helper: fungua conversation HALISI kwa ID yake — hutumika na arifa za
+// negotiation/chat (ukigusa arifa inakwenda MOJA KWA MOJA kwenye mazungumzo,
+// si kwenye list tena). Hakuna fake: hupata participants kutoka doc halisi.
+window.skhOpenConvById = async function(convId) {
+    if (!convId || !skh.db) return false;
+    try {
+        var s = await skh.getDoc(skh.doc(skh.db, 'conversations', convId));
+        if (!s || !s.exists || !s.exists()) return false;
+        var c = s.data() || {};
+        var me = (skh.currentUser && skh.currentUser.uid) || '';
+        var other = (c.participants || []).filter(function (u) { return u && u !== me; })[0];
+        var nm = '';
+        try {
+            var metas = c.participantMeta || c.meta || {};
+            var om = metas[other] || {};
+            nm = om.name || om.displayName || '';
+        } catch (e) {}
+        if (other && typeof window.skhChatOpen === 'function') {
+            await window.skhChatOpen(other, nm, {});
+            return true;
+        }
+    } catch (e) { /* anguka chini: chat list */ }
+    return false;
+};
+
+window.skhNotifGo = async function(type, targetId, conversationId) {
     try { closeModals(); } catch(e) {}
     try {
+        // [NOTIF GO 2026-09-17] KILA gusa linapeleka mahali — hakuna "imeisha hivyo".
+        // 1) Njia ya KUZUNGUMZA inapojulikana (negotiation/chat reminders):
+        //    fungua conversation yenyewe moja kwa moja.
+        var convId = conversationId
+            || (targetId && /^(conv_|conv:)/.test(String(targetId)) ? targetId : null);
+        if ((type === 'negotiation' || type === 'chat') && convId) {
+            try { if (await window.skhOpenConvById(convId)) return; } catch (e2) {}
+            if (typeof window.openChatList === 'function') { window.openChatList(); return; }
+        }
         if (type === 'order') { if (typeof window.openBuyerOrdersModal === 'function') { window.openBuyerOrdersModal(); return; } }
-        if (type === 'wallet') { if (typeof window.openUserPaymentModal === 'function') { window.openUserPaymentModal(); return; } }
+        if (type === 'wallet' || type === 'payment') { if (typeof window.openUserPaymentModal === 'function') { window.openUserPaymentModal(); return; } }
         if (type === 'agent') { if (typeof window.switchMode === 'function') { window.switchMode('agent'); return; } }
         if (type === 'delivery') { if (typeof window.openMyDeliveries === 'function') { window.openMyDeliveries(); return; } }
-        if (type === 'ride_request') {
+        if (type === 'ride_request' || type === 'booking') {
             // Msafirishaji: fungua dashboard yake kwenye Requests Marketplace
             if (typeof window.switchMode === 'function') window.switchMode('driver');
             setTimeout(function() {
@@ -1172,13 +1588,20 @@ window.skhNotifGo = function(type, targetId) {
         }
         if (type === 'chat') { if (typeof window.openChatList === 'function') { window.openChatList(); return; } }
         if (type === 'new_comment' || type === 'comment_reply' || type === 'comment_mention') {
-            // [COMMENT FIX 2026-09] Taarifa ya maoni → fungua bidhaa (na Maswali & Majibu).
+            // [COMMENT FIX 2026-09] Taarifa ya maoni -> fungua bidhaa (na Maswali & Majibu).
             if (targetId && typeof window.openProduct === 'function') { window.openProduct(targetId); return; }
             if (typeof window.updateApp === 'function') { window.updateApp('market'); return; }
+        }
+        // [DEEP-LINK 2026-09] Bidhaa mpya / price drop / engagement — Fungua
+        // bidhaa yenyewe (hii ilikuwa ikifungiwa na kurudishwa sokoni bure).
+        if (type === 'engagement' || type === 'product' || type === 'new_product' || type === 'price_drop' || type === 'saved' || type === 'watch') {
+            if (targetId && typeof window.openProduct === 'function') { window.openProduct(targetId); return; }
         }
     } catch(e) {
         console.error('NotifGo error:', e);
     }
+    // FALLBACK: aina mpya/isiyotambulika → peleka kwenye soko kuu (si chochole).
+    try { if (typeof window.updateApp === 'function') window.updateApp('market'); } catch (e) {}
 };
 
 // Tambua aina ya notification kutoka kwenye maneno (kwa taarifa za zamani zisizo na `type`)
@@ -1186,6 +1609,7 @@ window.skhInferNotifType = function(title, body) {
     const t = ((title || '') + ' ' + (body || '')).toLowerCase();
     if (t.includes('wallet') || t.includes('sokopay') || t.includes('kamisheni') || t.includes('imeingizwa') || t.includes('imepokelewa') || t.includes('malipo')) return 'wallet';
     if (t.includes('wakala') || t.includes('uwakala') || t.includes('umeingia kazini')) return 'agent';
+    if (t.includes('majadiliano') || t.includes('ofa mpya') || t.includes('kumbusho la') || t.includes('bei unayopendekeza')) return 'negotiation';
     if (t.includes('oda') || t.includes('mzigo') || t.includes('escrow') || t.includes('uthibitishe') || t.includes('kazi imekamilika')) return 'order';
     if (t.includes('usafiri') || t.includes('safari') || t.includes('dereva') || t.includes('mizigo')) return 'delivery';
     if (t.includes('ujumbe') || t.includes('meseji') || t.includes('chat') || t.includes('mawasiliano')) return 'chat';
@@ -1254,14 +1678,15 @@ window.openNotifications = async function() {
                     try { date = new Date(data.createdAt).toLocaleString(); } catch (e) { date = ''; }
                     const ntype = data.type || window.skhInferNotifType(data.title, data.body);
                     const actionLabel = window.skhNotifLabel(ntype);
-                    const targetId = data.targetId ? skh.skhJsEsc(String(data.targetId)) : (data.negotiationId ? skh.skhJsEsc(String(data.negotiationId)) : (data.conversationId ? skh.skhJsEsc(String(data.conversationId)) : ''));
+                    // [SYSTEM EVENTS 2026-09] Arifa zenye `event`+`params` hutafsiriwa
+                    // kwa lugha ya MSOMAJI; za zamani (title/body tu) haziguswi.
+                    const ntxt = window.skhNotifText ? window.skhNotifText(data) : { title: data.title || '', body: data.body || '' };
+                    // [NOTIF GO 2026-09-17] kwa-arifa za kuzungumza, conversationId
+                    // ndiyo kiinua cha deep-link; ziada (productId, rideId) hubaki.
+                    const convPrm = data.conversationId ? skh.skhJsEsc(String(data.conversationId)) : '';
+                    const targetId = data.targetId ? skh.skhJsEsc(String(data.targetId)) : (data.productId ? skh.skhJsEsc(String(data.productId)) : (convPrm ? convPrm : (data.negotiationId ? skh.skhJsEsc(String(data.negotiationId)) : (data.orderId ? skh.skhJsEsc(String(data.orderId)) : (data.rideId ? skh.skhJsEsc(String(data.rideId)) : '')))));
                     html += `
-                    <div class="list-item skh-notif-item" onclick="window.skhNotifGo('${skh.skhJsEsc(ntype || '')}', '${targetId}')" style="cursor:pointer; ${data.read ? 'opacity:0.7;' : 'background:#f0f9ff;'}">
-                        <div class="skh-notif-ico">${notifIco(ntype)}</div>
-                        <div class="list-info">
-                            <b>${skh.skhEscape(data.title || '')}</b>
-                            <span style="color:#64748b; font-weight:normal; display:block; font-size:12px;">${skh.skhEscape(data.body || '')}</span>
-                            <small style="font-size:10px; color:#94a3b8;">${skh.skhEscape(date)}</small>
+                    <div class="list-item skh-notif-item" onclick="window.skhNotifGo('${skh.skhJsEsc(ntype || '')}', '${targetId}', '${convPrm}')" style="cursor:pointer; ${data.read ? 'opacity:0.7;' : 'background:#f0f9ff;'}"> <div class="skh-notif-ico">${notifIco(ntype)}</div> <div class="list-info"> <b>${skh.skhEscape(ntxt.title)}</b> <span style="color:#64748b; font-weight:normal; display:block; font-size:12px;">${skh.skhEscape(ntxt.body)}</span> <small style="font-size:12.5px; color:#94a3b8;">${skh.skhEscape(date)}</small>
                             ${actionLabel}
                         </div>
                         ${data.read ? '' : '<span class="skh-notif-dot" aria-label="Hijasomwa"></span>'}

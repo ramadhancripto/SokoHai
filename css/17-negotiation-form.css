@@ -51,7 +51,7 @@
     font-size: 19px; flex-shrink: 0;
 }
 .nf-head h2 { margin: 0; font-size: 15.5px; font-weight: 800; line-height: 1.25; }
-.nf-head-sub { display: block; font-size: 10.5px; font-weight: 600; color: #cfe3f5; margin-top: 1px; }
+.nf-head-sub { display: block; font-size: 12.5px; font-weight: 600; color: #cfe3f5; margin-top: 1px; }
 .nf-x {
     border: none; background: rgba(255,255,255,.14); color: #fff;
     width: 34px; height: 34px; border-radius: 50%; font-size: 15px;
@@ -91,7 +91,7 @@
 .nf-ctx-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .nf-badge {
     align-self: flex-start;
-    font-size: 10px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase;
+    font-size: 12.5px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase;
     color: var(--skh-deep, #0B4F7A);
     background: var(--skh-primary-light, #e8f1fb);
     padding: 3px 9px; border-radius: var(--skh-radius-pill, 999px);
@@ -101,13 +101,13 @@
     line-height: 1.3;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.nf-ctx-sub { font-size: 11.5px; color: var(--skh-muted, #64748b); }
-.nf-ctx-seller { font-size: 11.5px; color: var(--skh-ink-soft, #475569); font-weight: 600; }
+.nf-ctx-sub { font-size: 13px; color: var(--skh-muted, #64748b); }
+.nf-ctx-seller { font-size: 13px; color: var(--skh-ink-soft, #475569); font-weight: 600; }
 .nf-ctx-price {
     display: flex; align-items: baseline; justify-content: space-between;
     margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--skh-line, #e2e8f0);
 }
-.nf-ctx-price span { font-size: 10.5px; font-weight: 700; color: var(--skh-muted, #64748b); text-transform: uppercase; letter-spacing: .3px; }
+.nf-ctx-price span { font-size: 12.5px; font-weight: 700; color: var(--skh-muted, #64748b); text-transform: uppercase; letter-spacing: .3px; }
 .nf-ctx-price b { font-size: 15px; color: var(--skh-deep, #0B4F7A); font-weight: 800; }
 
 /* ---------- Sheria / hint ---------- */
@@ -116,7 +116,7 @@
     background: var(--skh-info-bg, #eff6ff);
     border: 1px solid #cfe3f8;
     color: #1e5a86;
-    font-size: 11.5px; line-height: 1.45;
+    font-size: 13px; line-height: 1.45;
     padding: 9px 12px; border-radius: var(--skh-radius, 12px);
 }
 .nf-rule-hint b { color: var(--skh-deep, #0B4F7A); }
@@ -146,7 +146,7 @@
     display: flex; align-items: center; gap: 6px;
 }
 .nf-opt-tag {
-    font-size: 9.5px; font-weight: 700; text-transform: none; letter-spacing: 0;
+    font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: 0;
     color: var(--skh-muted, #64748b); background: var(--skh-bg, #F6F9FC);
     border: 1px solid var(--skh-line, #e2e8f0);
     padding: 2px 8px; border-radius: var(--skh-radius-pill, 999px);
@@ -155,7 +155,7 @@
 .nf-field { margin-bottom: 11px; }
 .nf-field:last-child { margin-bottom: 0; }
 .nf-field label, .nf-label {
-    display: block; font-size: 11.5px; font-weight: 700;
+    display: block; font-size: 13px; font-weight: 700;
     color: var(--skh-ink-soft, #475569); margin-bottom: 5px;
 }
 .nf-req { color: var(--skh-red, #ef4444); }
@@ -223,7 +223,7 @@
 
 /* Tofauti ya bei (sheria: sokoni vs pendekezo) */
 .nf-price-cmp {
-    margin-top: 7px; font-size: 11px; font-weight: 600;
+    margin-top: 7px; font-size: 13px; font-weight: 600;
     padding: 7px 10px; border-radius: 10px;
 }
 .nf-price-cmp.down { background: var(--skh-success-bg, #ecfdf5); color: var(--skh-green-dark, #0E7A63); border: 1px solid #a7e8d4; }
@@ -253,7 +253,7 @@
 /* Makosa */
 .nf-field-error {
     min-height: 0;
-    font-size: 11.5px; font-weight: 600;
+    font-size: 13px; font-weight: 600;
     color: var(--skh-red-dark, #b91c1c);
     margin-top: 4px; display: none;
 }
@@ -264,7 +264,7 @@
     border-color: var(--skh-red, #ef4444);
     box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
 }
-.nf-hint { font-size: 11px; color: var(--skh-muted, #64748b); margin-top: 4px; }
+.nf-hint { font-size: 13px; color: var(--skh-muted, #64748b); margin-top: 4px; }
 
 /* ---------- Live summary ---------- */
 .nf-summary-sec { background: linear-gradient(180deg, #fff, #f7fbff); border-color: #cfe3f8; }

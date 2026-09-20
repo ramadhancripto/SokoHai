@@ -3,11 +3,11 @@
 // DELIVERY OPTION (2026-09) — usafirishaji ni HIARI na uko PEKE
 // ya malipo:
 //
-//   Bidhaa → Cart/Checkout → SokoPay → CHAGUO LA USAFIRISHAJI
-//                                            ├─ Nahitaji  → matangazo HALISI ya drivers
-//                                            │             → ride_request → delivery_offers
-//                                            │             → Request Inbox ya mtoa usafiri
-//                                            └─ Sitahitaji → kujichukulia/self collection
+//   Bidhaa -> Cart/Checkout -> SokoPay -> CHAGUO LA USAFIRISHAJI
+//                                            ├─ Nahitaji  -> matangazo HALISI ya drivers
+//                                            │             -> ride_request -> delivery_offers
+//                                            │             -> Request Inbox ya mtoa usafiri
+//                                            └─ Sitahitaji -> kujichukulia/self collection
 //
 // Kanuni:
 //  - HAKUNA carrier wa kuigwa: sokohaiCarrierFallbacks/lgx vehicle
@@ -23,8 +23,7 @@
 // ============================================================ */
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var LS_KEY = 'sokohai_delivery_choice';
     var SESSION_PAYLOAD = 'sokohai_delivery_session';
@@ -121,7 +120,7 @@ import { skh } from './00-bootstrap.js';
             }
             return routeOk;
         });
-        // Panga: njia kamili → bei → rating.
+        // Panga: njia kamili -> bei -> rating.
         out.sort(function (a, b) {
             var ra = window.skhRouteMatchEnds ? window.skhRouteMatchEnds(a, pickup, dest) : { origin: 0, dest: 0 };
             var rb = window.skhRouteMatchEnds ? window.skhRouteMatchEnds(b, pickup, dest) : { origin: 0, dest: 0 };
@@ -148,7 +147,7 @@ import { skh } from './00-bootstrap.js';
             var q1 = skh.query(skh.collection(skh.db, 'drivers'),
                 skh.where('supportedServices', 'array-contains', 'Cargo'), skh.limit(150));
             push(await skh.getDocs(q1));
-        } catch (e) { /* index kukosa → chukua zote */ }
+        } catch (e) { /* index kukosa -> chukua zote */ }
         if (!all.length) {
             try {
                 var q2 = skh.query(skh.collection(skh.db, 'drivers'), skh.limit(200));
@@ -349,7 +348,7 @@ import { skh } from './00-bootstrap.js';
                 + (post.image ? '<img src="' + esc(post.image) + '" alt="">' : '<span class="skh-dpick-empty-ic" style="width:54px;height:54px;border-radius:11px;background:#e2e8f0;display:inline-flex;align-items:center;justify-content:center">' + ico('truck', 22) + '</span>')
                 + '<div class="skh-dpick-sel-info"><b>' + esc(post.driverName + (post.company && post.company !== post.driverName ? ' — ' + post.company : '')) + '</b>'
                 + '<small>' + ico('truck', 11) + ' ' + esc(post.vehicleType || 'Chombo') + ' &nbsp;'
-                + ico('map', 11) + ' ' + esc(post.pickupRegion || pickup) + (post.destinationRegion ? ' → ' + esc(post.destinationRegion) : '') + '</small>'
+                + ico('map', 11) + ' ' + esc(post.pickupRegion || pickup) + (post.destinationRegion ? ' -> ' + esc(post.destinationRegion) : '') + '</small>'
                 + '<small>' + ico('star', 11) + ' ' + esc(post.rating || '—') + ' &nbsp;·&nbsp; ' + T('dp_fare_hint', 'Nauli huamuliwa na mtoa usafiri') + ': <b>' + money(post.price) + '</b></small></div>'
                 + '<div class="skh-dpick-sel-actions"><button type="button" class="skh-dpick-mini" onclick="window.skhDeliveryOpenPicker()">Badili</button>'
                 + '<button type="button" class="skh-dpick-mini alt" onclick="window.skhDeliveryClearPost()">Ondoa</button></div></div>' : '';
@@ -471,11 +470,11 @@ import { skh } from './00-bootstrap.js';
     window.openLogisticsMarketplaceFromCart = function () { window.skhDeliveryOpenPicker(); };
 
     // Checkout haifungiwi tena na carrier; ila chaguo la delivery lazima lifanywe.
-    window.finalProceedCheckout = function () {
+    window.finalProceedCheckout = async function () {
         var items = cartItems();
         if (!items.length) return alert('Cart iko wazi.');
         if (!DC.chosen) return alert('Chagua: unahitaji usafirishaji au la (Usafirishaji / Delivery).');
-        if (DC.required && !DC.post && !confirm('Umeomba SokoHai ikutafutie mtoa usafiri (bila tangazo maalum). Endelea?')) return;
+        if (DC.required && !DC.post && !await skhConfirm('Umeomba SokoHai ikutafutie mtoa usafiri (bila tangazo maalum). Endelea?')) return;
         if (DC.required && DC.post && !DC.destination) {
             // destination inashauriwa lakini haikatalishi (anaweza kukubali baadae).
         }
@@ -483,7 +482,7 @@ import { skh } from './00-bootstrap.js';
     };
 
     // Pitia ukaguzi wa zamani wa native-confirm na uende kwenye uumbaji safi.
-    window.openSmartOrderReview = function () {
+    window.openSmartOrderReview = async function () {
         var items = cartItems();
         if (!items.length) return alert('Cart iko wazi.');
         var t = totalsFor(items);
@@ -494,7 +493,7 @@ import { skh } from './00-bootstrap.js';
                 ? (DC.post ? 'Tangazo: ' + DC.post.driverName + ' (nauli huamuliwa na mtoa usafiri)' : 'Ombi la soko (SokoHai itatafuta)')
                 : 'Sitahitaji (self collection)')
             + '\n\nThibitisha kuendelea na malipo?';
-        if (confirm(msg)) window.confirmSmartCartOrder();
+        if (await skhConfirm(msg)) window.confirmSmartCartOrder();
     };
 
     // Uumbaji wa oda/SokoPay core: REUSE buildSokoPayCoreTx iliyopo, ONDOA
@@ -563,6 +562,18 @@ import { skh } from './00-bootstrap.js';
                 });
                 var orderRef = await skh.addDoc(skh.collection(skh.db, 'orders'), orderDoc);
                 postPay.push({ orderDocId: orderRef.id, coreId: coreRef.id, delivery: delivery });
+
+                // [IDENTITY WIRING 2026-09-16] AGENT MONITORING (§7/§15): wakala
+                // wa buyer/seller apate tukio la ORDER_CREATED. memberSilent=true
+                // — taarifa za wateja wenyewe zinatumwa na flows zilizopo hapa
+                // chini (seller_order_inbox + notifications), tusizirudie.
+                try {
+                    if (typeof window.skhEmitEvent === 'function') {
+                        var _amt = Number(core.amount || (core.totals && core.totals.grandTotal) || 0) || null;
+                        if (core.buyerId) window.skhEmitEvent({ type: 'ORDER_CREATED', memberId: core.buyerId, memberSilent: true, orderId: orderId, amount: _amt, memberName: core.buyerName || '' });
+                        if (sid && sid !== core.buyerId) window.skhEmitEvent({ type: 'ORDER_CREATED', memberId: sid, memberSilent: true, orderId: orderId, amount: _amt });
+                    }
+                } catch (eMon) { /* monitoring si kikwazo cha biashara */ }
 
                 // Sanduku la muuzaji (bila carrier bandia).
                 try {
@@ -678,8 +689,7 @@ import { skh } from './00-bootstrap.js';
         if (!orderId || !delivery) return { routed: false };
         if (!delivery.required) {
             try {
-                await skh.updateDoc(skh.doc(skh.db, 'orders', orderId), {
-                    'delivery.status': 'not_required', deliveryRequired: false
+                await skh.updateDoc(skh.doc(skh.db, 'orders', orderId), { 'delivery.status': 'not_required', deliveryRequired: false
                 });
             } catch (e) {}
             return { routed: false, selfCollection: true };
@@ -693,7 +703,7 @@ import { skh } from './00-bootstrap.js';
         } catch (e) {}
 
         // 1) SERVER (ya kuaminika): deliveryRouteBooking hutengeneza
-        //    ride + delivery_offers → Request Inbox ya mtoa usafiri.
+        //    ride + delivery_offers -> Request Inbox ya mtoa usafiri.
         if (window.skhRoutingServerRouteBooking) {
             try {
                 var res = await window.skhRoutingServerRouteBooking({
@@ -714,7 +724,7 @@ import { skh } from './00-bootstrap.js';
                     // Tatizo halisi la data — liripoti, usijifanye.
                     return { routed: false, error: msg || code };
                 }
-                // Server haipatikani → endelea na fallback salama.
+                // Server haipatikani -> endelea na fallback salama.
             }
         }
 
@@ -723,9 +733,7 @@ import { skh } from './00-bootstrap.js';
             var ride = window.skhDeliveryBuildRide(orderId, orderData || {}, delivery);
             var rideRef = await skh.addDoc(skh.collection(skh.db, 'ride_requests'), ride);
             await skh.updateDoc(skh.doc(skh.db, 'orders', orderId), {
-                rideRequestId: rideRef.id, deliveryId: rideRef.id,
-                'delivery.deliveryRequestId': rideRef.id,
-                'delivery.status': 'searching',
+                rideRequestId: rideRef.id, deliveryId: rideRef.id, 'delivery.deliveryRequestId': rideRef.id, 'delivery.status': 'searching',
                 deliveryRequired: true
             });
             // Taarifa kwa madereva wanaolingana (kazi ya 27).
@@ -738,7 +746,7 @@ import { skh } from './00-bootstrap.js';
                     await skh.addDoc(skh.collection(skh.db, 'notifications'), {
                         userId: delivery.logisticProviderId,
                         title: 'Ombi Jipya la Usafiri — Oda #' + orderId,
-                        body: (delivery.packageDescription || 'Mzigo') + ' · ' + (delivery.pickupLocation || '') + ' → ' + (delivery.destination || '')
+                        body: (delivery.packageDescription || 'Mzigo') + ' · ' + (delivery.pickupLocation || '') + ' -> ' + (delivery.destination || '')
                             + (delivery.fare ? ' · Nauli ya marejeo: ' + money(delivery.fare) : '') + '. Fungua Requests Marketplace/Request Inbox.',
                         type: 'ride_request', rideId: rideRef.id, orderId: String(orderId),
                         createdAt: nowIso(), read: false

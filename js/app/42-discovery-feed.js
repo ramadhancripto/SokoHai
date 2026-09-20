@@ -13,7 +13,7 @@
 //    renderFeedUI) + vichujio VILE VILE vya soko (collection,
 //    activeCategory, activeServiceSection, activeDeliverySection).
 //  - Haichanganyi aina ovyo: ukifungua bidhaa, watembea bidhaa;
-//    huduma → huduma; usafiri → usafiri.
+//    huduma -> huduma; usafiri -> usafiri.
 //  - Nafasi ya kusogeza ya kila tangazo inakumbukwa; picha ya
 //    tangalo linalofuata inapakiwa kabla (preload); karibu na
 //    mwisho wa foleni, soko la msingi linaombwa vipya zaidi
@@ -21,8 +21,7 @@
 // ============================================================ */
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var D = {
         col: null,        // collection ya foleni ya sasa
@@ -144,7 +143,7 @@ import { skh } from './00-bootstrap.js';
         return ids;
     }
 
-    // Panga foleni kwa ajili ya tangazo lililofunguliwa.
+    // Panga foleni kwa tangazo lililofunguliwa.
     async function syncTo(id, col) {
         if (!id) return;
         col = col || (function () {
@@ -236,7 +235,11 @@ import { skh } from './00-bootstrap.js';
             D.moreRequested = true;
             try {
                 skh.currentLimit = (skh.currentLimit || 100) + 30;
-                if (typeof skh.loadMainFeed === 'function') skh.loadMainFeed(D.col);
+                // [§1-§5 R8 FILTERS] Discovery TRAIL IMESAKAA kutoku feed-card:
+                // Ikiwa user nunaonekana kwa kuponjwa ya Home (all), loadMainFeed
+                // BILA kukarabati would bed ya picha (mfadhiri omega kupotea feed).
+                const curCol = skh.currentFeedCollection || 'all';
+                if (D.col === curCol) skh.loadMainFeed(D.col);
             } catch (e) {}
             // Jengishe upya foleni baada ya muda wa kupakua.
             setTimeout(function () {
@@ -291,7 +294,7 @@ import { skh } from './00-bootstrap.js';
             window.skhDiscoveryMove(dy < 0 ? 1 : -1);
         }, { passive: true });
 
-        // Wheel juu ya HERO (bado haina scroll yake) → discovery moja kwa moja.
+        // Wheel juu ya HERO (bado haina scroll yake) -> discovery moja kwa moja.
         hero.addEventListener('wheel', function (e) {
             if (Math.abs(e.deltaY) < 24) return;
             if (D.wheelLock) { e.preventDefault(); return; }

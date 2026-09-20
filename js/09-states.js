@@ -6,8 +6,7 @@
 // 2) Helper za baadaye: empty-state component (haitoi kosa
 //    kwa sasa; inatumika na code mpya tu)
 // ============================================================
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     var pill = null;
     var hideTimer = null;
@@ -29,8 +28,8 @@
         var dot = document.createElement('span'); dot.className = 'skh-dot';
         var txt = document.createElement('span');
         txt.textContent = state === 'online'
-            ? '✅ Intaneti imerudi — unaunganishwa'
-            : '📶 HAKUNA INTANETI — vitu vingi vitaendelea, mengine vinakisubiri';
+            ? ' Intaneti imerudi — unaunganishwa'
+            : ' HAKUNA INTANETI — vitu vingi vitaendelea, mengine vinakisubiri';
         p.appendChild(dot); p.appendChild(txt);
         p.style.display = 'flex';
         if (state === 'online') {
@@ -53,7 +52,7 @@
         wrap.style.cssText = 'text-align:center;padding:44px 18px;color:#64748b;';
         var ic = document.createElement('div');
         ic.style.cssText = 'font-size:46px;margin-bottom:12px;opacity:.9;';
-        ic.textContent = icon || '📭';
+        ic.textContent = icon || '';
         var t = document.createElement('b');
         t.style.cssText = 'display:block;font-size:15px;color:#0f172a;margin-bottom:6px;';
         t.textContent = title || 'Hakuna kitu bado';

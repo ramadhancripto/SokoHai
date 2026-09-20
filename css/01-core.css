@@ -26,7 +26,7 @@
     border: 1px solid #cbd5e1;
     padding: 6px 12px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     color: #1e293b;
     cursor: pointer;
@@ -89,7 +89,7 @@
     right: 15px;
     background: #00509d;
     color: #ffffff;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 900;
     padding: 3px 10px;
     border-radius: 20px;
@@ -360,7 +360,7 @@
 }
 
 .nav-tab span {
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;
     white-space: nowrap;      /* Neno lisivunjike wima/kwa herufi */
@@ -408,7 +408,7 @@
 .t-step.done .t-dot { background: var(--green); border-color: var(--green); }
 .t-step.active .t-dot { background: white; border-color: var(--primary-blue); box-shadow: 0 0 12px rgba(0, 80, 157, 0.4); animation: pulse 1.5s infinite; }
 .t-step.error .t-dot { border-color: #ef4444; background: #fee2e2; }
-.t-label { font-size: 11px; font-weight: 800; color: #0f172a; text-align: center; text-transform: uppercase; line-height: 1.1; margin-top: 4px; }
+.t-label { font-size: 13px; font-weight: 800; color: #0f172a; text-align: center; text-transform: uppercase; line-height: 1.1; margin-top: 4px; }
 .t-step.done .t-label { color: var(--green); font-weight: 900; }
 .t-step.active .t-label { color: var(--primary-blue); font-weight: 900; }
 .t-step.error .t-label { color: #ef4444; font-weight: 900; }
@@ -598,52 +598,103 @@
         border-bottom: 1px solid #f0f0f0; 
     }
     
-    .top-nav-left { 
-        display: flex; 
-        align-items: center; 
-        gap: 12px; 
+    .top-nav-left {
+        display: flex;
+        align-items: center;
+        gap: 9px; /* [NAV BALANCE 2026-09-17] distance sawa, si ya kubantia */
     }
-    
-    .menu-btn { 
-        font-size: 24px; 
-        color: var(--primary-dark); 
-        font-weight: 900; 
-        cursor: pointer; 
-        transition: 0.2s; 
+
+    /* [NAV BALANCE 2026-09-17] Hamburger imefupishwa — ikoni ndogo, hit-area
+       compact, rasimu isilete mwanya mkubwa kufikia logo */
+    .menu-btn {
+        font-size: 20px;
+        color: var(--primary-dark);
+        font-weight: 900;
+        cursor: pointer;
+        transition: 0.2s;
+        line-height: 0;
+        padding: 3px;
     }
-    
-    .menu-btn:hover { 
-        color: var(--gold); 
+
+    .menu-btn:hover {
+        color: var(--gold);
     }
-    
-    .brand-text { 
-        font-size: 16px; 
-        font-weight: 900; 
-        color: var(--primary-dark); 
-        letter-spacing: 0.5px; 
+
+    /* [BRAND TEXT 2026-09-17] Wordmark TEXT kubwa inayoumbwa kimfumo
+       (kama Amazon/noon) — haibiliki faili la logo, haifinywi. */
+    .skh-brand-wordmark {
+        font-size: 28px;
+        font-weight: 800;
+        font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif; /* rounded kama logo ya asili */
+        letter-spacing: -0.2px; /* herufi karibu kama logo */
+        line-height: 1;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: baseline;
+        background: linear-gradient(100deg, #1f6faf 0%, #23917b 55%, #79bc41 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
     }
-    
-    .top-nav-icons { 
-        display: flex; 
-        gap: 12px; 
-        font-size: 19px; 
-        color: var(--primary-dark); 
-        align-items: center; 
-        cursor: pointer; 
+    /* 'a' ya logo = gari (cart icon) isimame kama herufi 'a'
+       (class pekee — itumike pia kwenye splash .skh-bs-word & zote) */
+    .skh-cart-a {
+        display: inline-block;
+        width: 0.82em;
+        height: 0.82em;
+        margin: 0 0.01em;
+        vertical-align: -0.13em; /* magurudumu yakae kwenye baseline kama 'a' */
+        flex: 0 0 auto;
+        font-size: inherit;
+    }
+    .skh-cart-a svg { width: 100%; height: 100%; display: block; }
+    .skh-brand-wordmark .skh-brand-i { font: inherit; letter-spacing: inherit; }
+    /* fallback: browsers zisizoualia gradient-text zione rangi ya brand */
+    @supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+        .skh-brand-wordmark { color: #03509d; -webkit-text-fill-color: currentColor; }
+    }
+    /* Specificity: brand-text(16px) inavaliwa UPYA kwa wordmark (23px) — hii
+       lazima halali hata kwa .modal h2 (25-typography!) ili zipote SHIDA. */
+    .brand-text.skh-brand-wordmark { font-size: 28px !important; font-weight: 800; }
+    /* [BRAND TEXT] simu ndogo: kubwa zaidi hata mbele — ushidi wa nafasi */
+    @media (max-width: 380px) {
+        .brand-text.skh-brand-wordmark { font-size: 23px !important; }
+    }
+    #welcomeModal h2.skh-brand-wordmark { font-size: 34px !important; font-weight: 800 !important; }
+
+    .brand-text {
+        font-size: 16px;
+        font-weight: 900;
+        color: var(--primary-dark);
+        letter-spacing: 0.5px;
+    }
+
+    .top-nav-icons {
+        display: flex;
+        gap: 10px; /* [NAV BALANCE] distance moja kwa kila item */
+        font-size: 19px;
+        color: var(--primary-dark);
+        align-items: center;
+        cursor: pointer;
         flex-shrink: 0; /* Inazuia icons zisibanwe */
     }
-    
-    .top-nav-icons span { 
-        transition: transform 0.2s, color 0.2s; 
-        position: relative; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
+
+    /* [NAV BALANCE] Kila ikoni iwe na kitengo CHA KUSAWA — hitbox ya 24px,
+       kila rangi iwe ya kati ili hit-box spacing ziwakawwe sawasawa */
+    .top-nav-icons span {
+        transition: transform 0.2s, color 0.2s;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        min-height: 24px;
     }
-    
-    .top-nav-icons span:hover { 
-        color: var(--gold); 
-        transform: scale(1.1); 
+
+    .top-nav-icons span:hover {
+        color: var(--gold);
+        transform: scale(1.1);
     }
     
     .badge { 
@@ -652,7 +703,7 @@
         right: -8px; 
         background: var(--terracotta); 
         color: white; 
-        font-size: 9px; 
+        font-size: 12px; 
         font-weight: bold; 
         border-radius: 50%; 
         padding: 2px 6px; 
@@ -857,7 +908,7 @@ mask-composite: exclude;
     background: white;
     color: #475569;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
     white-space: nowrap;
     cursor: pointer;
@@ -894,7 +945,7 @@ mask-composite: exclude;
 }
 .cat-box:active { transform: scale(0.95); background: #e0f2fe; border-color: var(--primary-blue); }
 .cat-box .cat-icon { font-size: 32px; margin-bottom: 8px; }
-.cat-box .cat-name { font-size: 11px; font-weight: 900; color: var(--primary-dark); line-height: 1.2; }
+.cat-box .cat-name { font-size: 13px; font-weight: 900; color: var(--primary-dark); line-height: 1.2; }
 
 
     /* =========================================
@@ -1036,7 +1087,7 @@ mask-composite: exclude;
         right: 8px; 
         background: linear-gradient(45deg, #FFD700, #FDB931); 
         color: #000; 
-        font-size: 9px; 
+        font-size: 12px; 
         font-weight: 900; 
         padding: 3px 8px; 
         border-radius: 12px; 
@@ -1088,7 +1139,7 @@ mask-composite: exclude;
         justify-content: space-between; 
         align-items: center; 
         margin-top: 6px; 
-        font-size: 10px; 
+        font-size: 12.5px; 
         color: var(--text-muted); 
     }
     
@@ -1096,7 +1147,7 @@ mask-composite: exclude;
         color: var(--primary-blue); 
         font-weight: 800; 
         margin-top: 8px; 
-        font-size: 11px; 
+        font-size: 13px; 
     }
 
     /* =========================================
@@ -1155,7 +1206,7 @@ mask-composite: exclude;
     }
     
     .timeline-time { 
-        font-size: 11px; 
+        font-size: 13px; 
         color: #94a3b8; 
         margin-bottom: 4px; 
         display: block; 
@@ -1218,7 +1269,7 @@ mask-composite: exclude;
     
     
     .metric { 
-        font-size: 11px; 
+        font-size: 13px; 
         color: #64748b; 
         background: #f8fafc; 
         padding: 4px 8px; 
@@ -1565,7 +1616,7 @@ mask-composite: exclude;
     }
     
     .comment-box span { 
-        font-size: 10px; 
+        font-size: 12.5px; 
         color: #94a3b8; 
         float: right; 
     }
@@ -1671,7 +1722,7 @@ mask-composite: exclude;
 
 
 .nav-tab svg { width: 19px; height: 19px; margin-bottom: 4px; }
-.nav-tab span { font-size: 8px; font-weight: 900; text-transform: uppercase; }
+.nav-tab span { font-size: 12px; font-weight: 900; text-transform: uppercase; }
 
 
 /* HUU MCHEZO WA KUTIKISIKA KIDOGO UKIGUSA */
@@ -1796,12 +1847,12 @@ mask-composite: exclude;
 }
 
 .ct-sidebar-brand-text span {
-    font-size: 11px;
+    font-size: 13px;
     color: #94a3b8;
 }
 
 .ct-sidebar-group-title {
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #64748b;
     text-transform: uppercase;
@@ -1983,7 +2034,7 @@ mask-composite: exclude;
 }
 
 .ct-alert-content span {
-    font-size: 11px;
+    font-size: 13px;
     color: #64748b;
 }
 
@@ -2214,7 +2265,7 @@ html, body {
 }
 
 .sp-menu-heading {
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
     color: rgba(255, 255, 255, 0.35);
     text-transform: uppercase;
@@ -2310,7 +2361,7 @@ html, body {
 }
 
 .sp-profile-verified {
-    font-size: 9px;
+    font-size: 12px;
     color: #10b981;
     display: flex;
     align-items: center;
@@ -2386,7 +2437,7 @@ html, body {
 }
 
 .sp-search-shortcut {
-    font-size: 9px;
+    font-size: 12px;
     font-weight: bold;
     color: #64748B;
     background: #E2E8F0;
@@ -2478,7 +2529,7 @@ html, body {
 }
 
 .sp-section-action-link {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
     color: #00509d;
     text-decoration: none;
@@ -2517,7 +2568,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
+    font-size: 12px;
     z-index: 2;
 }
 
@@ -2533,25 +2584,25 @@ html, body {
 }
 
 .sp-tracking-code {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
     color: #0F172A;
 }
 
 .sp-tracking-status {
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: bold;
     text-transform: capitalize;
 }
 
 .sp-tracking-desc {
-    font-size: 11px;
+    font-size: 13px;
     color: #64748B;
     margin-top: 2px;
 }
 
 .sp-tracking-time-offset {
-    font-size: 10px;
+    font-size: 12.5px;
     color: #94A3B8;
     margin-top: 4px;
     display: block;
@@ -2571,7 +2622,7 @@ html, body {
     gap: 6px;
     padding: 10px;
     border-radius: 10px;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 800;
     cursor: pointer;
     transition: 0.2s;
@@ -2596,7 +2647,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
     color: #475569;
 }
@@ -2657,7 +2708,7 @@ html, body {
     border-bottom: 1.5px solid #E2E8F0;
     font-weight: 800;
     text-transform: uppercase;
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 0.5px;
 }
 
@@ -2788,7 +2839,7 @@ html, body {
 }
 
 .sp-kpi-title {
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #64748b;
     text-transform: uppercase;
@@ -2805,7 +2856,7 @@ html, body {
 }
 
 .sp-kpi-sub {
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: 700;
     margin-top: 5px;
     display: block;
@@ -2861,13 +2912,13 @@ html, body {
 }
 
 .sp-overview-box b {
-    font-size: 11px;
+    font-size: 13px;
     display: block;
     margin-top: 4px;
 }
 
 .sp-overview-box small {
-    font-size: 9px;
+    font-size: 12px;
     color: #64748b;
     display: block;
 }
@@ -2915,7 +2966,7 @@ html, body {
     background: transparent;
     color: #475569;
     font-weight: bold;
-    font-size: 11px;
+    font-size: 13px;
     border-radius: 8px;
     cursor: pointer;
     transition: 0.2s;
@@ -2972,7 +3023,7 @@ html, body {
 }
 
 .sp-timeline-desc {
-    font-size: 10px;
+    font-size: 12.5px;
     color: #64748b;
 }
 

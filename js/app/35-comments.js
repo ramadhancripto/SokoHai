@@ -14,8 +14,7 @@
    ============================================================ */
 import { skh } from './00-bootstrap.js';
 
-(function () {
-    'use strict';
+(function () { 'use strict';
 
     function T(key, en, vars) {
         var s = null;
@@ -219,7 +218,7 @@ import { skh } from './00-bootstrap.js';
         setTimeout(function () { layer.hidden = true; }, 220);
     };
 
-    // Wajibu wa zamani (39-skHHeroComments na sehemu nyingine) → elekeza sheet.
+    // Wajibu wa zamani (39-skHHeroComments na sehemu nyingine) -> elekeza sheet.
     window.skhCommentsToggle = function (forceOpen) {
         if (forceOpen === false) window.skhCloseMaoni();
         else window.skhOpenMaoni();
@@ -310,13 +309,13 @@ import { skh } from './00-bootstrap.js';
     // ---------- Uchoraji ----------
     // Beji hizi hubandikwa na SERVER tu (commentsPublish) kamwe na browser.
     function badgeVerifiedPurchase() {
-        return '<span class="skh-cm-badge vp" title="' + T('cm_verified_order', 'Ana oda halisi iliyokamilika ya tangazo hili') + '">✓ ' + T('cm_verified_order_lbl', 'Oda Imethibitishwa') + '</span>';
+        return '<span class="skh-cm-badge vp" title="' + T('cm_verified_order', 'Ana oda halisi iliyokamilika ya tangazo hili') + '"> ' + T('cm_verified_order_lbl', 'Oda Imethibitishwa') + '</span>';
     }
     function badgeVerifiedDelivery() {
-        return '<span class="skh-cm-badge vd" title="' + T('cm_verified_delivery', 'Usafirishaji/uwasilishaji umethibitishwa kwenye mifumo ya SokoHai') + '">✓ ' + T('cm_verified_delivery_lbl', 'Delivery Imethibitishwa') + '</span>';
+        return '<span class="skh-cm-badge vd" title="' + T('cm_verified_delivery', 'Usafirishaji/uwasilishaji umethibitishwa kwenye mifumo ya SokoHai') + '"> ' + T('cm_verified_delivery_lbl', 'Delivery Imethibitishwa') + '</span>';
     }
     function badgeVerifiedAuthor() {
-        return '<span class="skh-cm-badge ver" title="' + T('cm_verified', 'Akaunti imethibitishwa') + '">✓ ' + T('cm_verified', 'Imethibitishwa') + '</span>';
+        return '<span class="skh-cm-badge ver" title="' + T('cm_verified', 'Akaunti imethibitishwa') + '"> ' + T('cm_verified', 'Imethibitishwa') + '</span>';
     }
     function badgeSeller() {
         return '<span class="skh-cm-badge seller">' + T('cm_seller', 'MUUZAJI') + '</span>';
@@ -327,7 +326,7 @@ import { skh } from './00-bootstrap.js';
         var price = (pr.price != null) ? 'TSh ' + Number(pr.price).toLocaleString() : '';
         return '<div class="skh-cm-prodcard" onclick="if(window.openProduct)window.openProduct(\'' + jsEsc(pr.id) + '\', \'' + jsEsc(pr.collection || 'products') + '\')">'
             + (pr.image ? '<img src="' + esc(pr.image) + '" onerror="this.style.display=\'none\'">' : '')
-            + '<div><b>' + esc(pr.title || 'Bidhaa') + '</b>' + (price ? '<span>' + esc(price) + '</span>' : '') + '<em>' + T('cm_view_product', 'Tazama →') + '</em></div></div>';
+            + '<div><b>' + esc(pr.title || 'Bidhaa') + '</b>' + (price ? '<span>' + esc(price) + '</span>' : '') + '<em>' + T('cm_view_product', 'Tazama ->') + '</em></div></div>';
     }
 
     function commentHtml(c, isReply) {
@@ -367,8 +366,7 @@ import { skh } from './00-bootstrap.js';
                 + (badges ? '<div class="skh-cm-badges">' + badges + '</div>' : '')
                 + evidenceMediaHtml(c.media) + productCardHtml(c.productRef));
         var liked = !!C.liked[c.id];
-        var actions = deleted ? '' :
-            '<div class="skh-cm-actions">'
+        var actions = deleted ? '' : '<div class="skh-cm-actions">'
             + '<button type="button" class="' + (liked ? 'on' : '') + '" onclick="window.skhCommentsLike(\'' + jsEsc(c.id) + '\')"><span class="skh-cm-like-ic">' + (window.skhNavIcon ? window.skhNavIcon('heart', 13) : '') + '</span> ' + (c.likeCount || 0) + '</button>'
             + '<button type="button" onclick="window.skhCommentsReply(\'' + jsEsc(c.id) + '\')">' + T('cm_reply', 'Jibu') + '</button>'
             + (own ? '<button type="button" onclick="window.skhCommentsEdit(\'' + jsEsc(c.id) + '\')">' + T('cm_edit', 'Hariri') + '</button>' : '')
@@ -466,7 +464,7 @@ import { skh } from './00-bootstrap.js';
         return '<div class="skh-cm-replyform" id="skhCmReplyForm">'
             + '<input type="text" id="skhCmReplyInput" maxlength="2000" placeholder="' + T('cm_reply_ph', 'Andika jibu lako...') + '">'
             + '<button type="button" onclick="window.skhCommentsSubmit()">' + T('cm_send', 'Tuma') + '</button>'
-            + '<button type="button" class="skh-cm-cancel" onclick="window.skhCommentsCancelReply()">✕</button>'
+            + '<button type="button" class="skh-cm-cancel" onclick="window.skhCommentsCancelReply()"></button>'
             + '</div>';
     }
 
@@ -566,7 +564,7 @@ import { skh } from './00-bootstrap.js';
     function callableUnavailable(e) {
         if (!e) return true;
         var c = String((e && e.code) || '');
-        if (!c) return true; // hitilafu bila code (network) → tuna fallback
+        if (!c) return true; // hitilafu bila code (network) -> tuna fallback
         return c === 'functions/not-found' || c === 'unavailable' || c === 'internal' || /not-found/.test(c);
     }
     function findCommentById(id) {
@@ -613,7 +611,7 @@ import { skh } from './00-bootstrap.js';
             }
             if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = T('cm_send', 'Tuma'); }
             if (!mediaUrls.length && !text) {
-                alert(T('cm_media_fail', 'Picha/video haikupatikana. Tafadhali andika maoni au jaribu tena.'));
+                alert(T('cm_media_fail', 'Picha/video haikupatikana. andika maoni au jaribu tena.'));
                 return;
             }
         }
@@ -646,10 +644,10 @@ import { skh } from './00-bootstrap.js';
                     if (inp) { inp.disabled = false; inp.focus(); }
                     return;
                 }
-                // server haipatikani → endelea na fallback ya client.
+                // server haipatikani -> endelea na fallback ya client.
             }
         }
-        // 2) Fallback: server haijatumwa/haipatikani → andika moja kwa moja
+        // 2) Fallback: server haijatumwa/haipatikani -> andika moja kwa moja
         //    (rules zinaruhusu maoni ya mwandishi; bila badge za server).
         if (!published) {
             try {
@@ -743,7 +741,7 @@ import { skh } from './00-bootstrap.js';
                 else { await window.skhCommentsLikeNative(id); C.loaded = false; await window.skhCommentsOpen(C.product); return; }
             }
         }
-        // Hakuna callable → Firestore-native moja kwa moja.
+        // Hakuna callable -> Firestore-native moja kwa moja.
         await window.skhCommentsLikeNative(id);
         C.loaded = false;
         await window.skhCommentsOpen(C.product);
@@ -762,11 +760,11 @@ import { skh } from './00-bootstrap.js';
             }).catch(function (e) { alert(T('cm_fail', 'Imeshindwa.') + ' ' + e.message); });
         };
         if (typeof window.customPrompt === 'function') window.customPrompt(T('cm_edit_prompt', 'Hariri maoni'), c.text || '', doEdit);
-        else { var v = prompt(T('cm_edit_prompt', 'Hariri maoni'), c.text || ''); if (v != null) doEdit(v); }
+        else { var v = await skhPrompt(T('cm_edit_prompt', 'Hariri maoni'), c.text || ''); if (v != null) doEdit(v); }
     };
 
     window.skhCommentsDelete = async function (id) {
-        if (!confirm(T('cm_delete_confirm', 'Futa maoni haya?'))) return;
+        if (!await skhConfirm(T('cm_delete_confirm', 'Futa maoni haya?'))) return;
         await skh.updateDoc(skh.doc(skh.db, 'comments', id), { deletedAt: nowIso(), text: '' });
         C.loaded = false; await window.skhCommentsOpen(C.product);
     };
@@ -781,7 +779,7 @@ import { skh } from './00-bootstrap.js';
             }).then(function () { alert(T('cm_reported_ok', 'Ripoti imepokelewa.')); }).catch(function () {});
         };
         if (typeof window.customPrompt === 'function') window.customPrompt(T('cm_report_prompt', 'Sababu ya ripoti (spam, udhalilishaji, udanganyifu, n.k.):'), T('cm_report_ph', 'Mfano: spam'), doReport);
-        else { var v = prompt(T('cm_report_prompt', 'Sababu ya ripoti:'), 'spam'); doReport(v); }
+        else { var v = await skhPrompt(T('cm_report_prompt', 'Sababu ya ripoti:'), 'spam'); doReport(v); }
     };
 
     // ---------- Auto-hook: product modal ----------

@@ -106,7 +106,7 @@ window.setDeliverySection = function(section, btnElement) {
 
     // 2. Weka kigezo cha kuchuja (section itakuwa: 'Passenger', 'Product', 'Cargo', au 'Emergency').
     //    [FIX] Zamani iliweka `activeSubCategory = section` na renderFeedUI ilichuja
-    //    `data.subCategory` — sehemu ambayo madereva HAWANA — hivyo orodha ilifutwa kabisa.
+    // `data.subCategory` — sehemu ambayo madereva HAWANA — hivyo orodha ilifutwa kabisa.
     //    Sasa tunatumia kigezo chake maalum: `activeDeliverySection`.
     skh.activeDeliverySection = section;
 
@@ -186,6 +186,22 @@ window.doSignup = async function(event) {
         // [OFFLINE 2026-09] Kumbuka email ya usajili kwa kuingia baadaye.
         try { skh.localStorage.setItem('sokohai_last_email', e); } catch (e2) {}
         closeModals(); 
+        // [ONBOARDING §11] Baada ya signup, mwalike mtumiaji kukamilisha wasifu
+        // wake (DP = picha yake binafsi, Cover = picha ya biashara) — HIARI,
+        // akipiga Funga ('X') au acha, hakikulazimishwi kamwe. Non-blocking:
+        // hakuna redirect/hakuna modal zinazofunguka kiotomatiki; ni kirai-dokezo
+        // tu linalofungua Profile (Edit) modal, ambayo tayari ina vitufe vya
+        // kupandisha DP + Cover (64-my-profile.js — muundo unaoheshimiwa).
+        setTimeout(function () {
+            try {
+                if (typeof window.openProfile === 'function') {
+                    window.openProfile();
+                    if (typeof window.skhToast === 'function') {
+                        window.skhToast('Karibu ' + n + '! Unaweza kuweka DP na Cover yako hapa sasa hivi (hiari).', 'info', 5200);
+                    }
+                }
+            } catch (e3) { /* onboarding haizuii signup successful */ }
+        }, 700);
     } catch(err) { 
         alert(" Kosa: " + err.message); 
     } 
@@ -221,7 +237,7 @@ window.doGoogleLogin = async function() {
 window.doResetPassword = async function() {
     const email = document.getElementById('loginEmail').value.trim();
     if(!email) {
-        alert(" Tafadhali andika email yako kwanza kwenye kisanduku cha 'Barua Pepe' kisha ubofye tena hapa.");
+        alert(" andika email yako kwanza kwenye kisanduku cha 'Barua Pepe' kisha ubofye tena hapa.");
         return;
     }
     
@@ -236,7 +252,7 @@ window.doResetPassword = async function() {
     } catch (error) {
         // Badilisha ujumbe wa Kiingereza kuwa Kiswahili kwa makosa yanayojulikana
         if (error.code === 'auth/user-not-found') {
-            alert(" Akaunti yenye email hii haipo. Tafadhali jisajili.");
+            alert(" Akaunti yenye email hii haipo. jisajili.");
         } else {
             alert(" Kosa: " + error.message);
         }
@@ -300,7 +316,7 @@ window.updateFormSubcats = function() {
         if(expiryFields) expiryFields.style.display = 'block';
         if(expInput) expInput.setAttribute('required', 'true');
         if(batchInput) batchInput.setAttribute('required', 'true');
-        console.log(" BOT SUGGESTION: Expiry na Batch numbers zimewashwa kwa ajili ya afya!");
+        console.log(" BOT SUGGESTION: Expiry na Batch numbers zimewashwa kwa afya!");
     } 
     // BOT INTEL 2: Phones / Computers (IMEI / Serial tracking required)
     else if (catVal.includes("Simu") || catVal.includes("Kompyuta")) {
@@ -344,7 +360,7 @@ if (visibility === 'offline_only') {
     const barcode = document.getElementById('prodBarcode').value.trim();
     const loc = document.getElementById('prodLocation').value.trim();
 if(!title || !price || !loc || !buyPrice || (visibility !== 'offline_only' && !category)) {
-    alert(" Tafadhali jaza sehemu zote zenye alama ya nyota (*).");
+    alert(" jaza sehemu zote zenye alama ya nyota (*).");
     return;
 }
     // --- QUANTITY & UNIT CONVERSION CALCULATION ---
@@ -379,7 +395,7 @@ if(!title || !price || !loc || !buyPrice || (visibility !== 'offline_only' && !c
     if (visibility !== 'offline_only') {
         saleMode = document.getElementById('prodSaleMode').value;
         const desc = document.getElementById('prodDesc').value.trim();
-        if(!desc) { alert("Weka maelezo ya kina (Description) kwa ajili ya soko la mtandaoni!"); return; }
+        if(!desc) { alert("Weka maelezo ya kina (Description) kwa soko la mtandaoni!"); return; }
 
         document.querySelectorAll('.universal-filter-input').forEach(inp => {
             if(inp.value.trim() !== '') {
@@ -410,8 +426,27 @@ if(!title || !price || !loc || !buyPrice || (visibility !== 'offline_only' && !c
             const discVal = parseFloat(document.getElementById('wsDiscount').value);
             const discType = document.getElementById('wsDiscountType').value;
             if(!discVal) { alert("Weka kiasi cha punguzo kwa Wholesale."); return; }
-            modeData = { discountValue: discVal, discountType: discType }; 
-        } 
+            const minQtyEl = document.getElementById('wsMinQty');
+            const minQty = minQtyEl ? (parseInt(minQtyEl.value) || 0) : 0;
+            if(!minQty || minQty <= 0) { alert("Weka IDADI YA CHINI ya jumla (minQty) — mfano: 10."); return; }
+            // [§19] Tiers text: "minQty:bei; minQty:bei" → modeData.tiers[].
+            // Frontend isivunje: ukifanya uchakataji vibaya, tutaonyesha kwa
+            // muuzaji (si kuandika mbaya backend).
+            const tiersEl = document.getElementById('wsTiersText');
+            let tiers = [];
+            if (tiersEl && tiersEl.value.trim()) {
+                try {
+                    tiers = tiersEl.value.split(';').map(function (pair) {
+                        var kv = pair.split(':');
+                        return { minQty: parseInt(kv[0], 10), price: parseFloat(kv[1]) };
+                    }).filter(function (t) {
+                        return Number.isFinite(t.minQty) && t.minQty > 0 && Number.isFinite(t.price) && t.price > 0;
+                    });
+                    tiers.sort(function (a, b) { return a.minQty - b.minQty; });
+                } catch (e) { tiers = []; }
+            }
+            modeData = { discountValue: discVal, discountType: discType, minQty: minQty, tiers: tiers }; 
+        }
         else if (saleMode === 'group_buy') {
             const discVal = parseFloat(document.getElementById('gbDiscount').value);
             const discType = document.getElementById('gbDiscountType').value;
@@ -511,7 +546,7 @@ window.submitRating = async function() {
     const photoFile = document.getElementById('ratingPhoto').files[0];
 
     if(!rating) { 
-        alert(" Tafadhali chagua idadi ya nyota (stars) kwanza!"); 
+        alert(" chagua idadi ya nyota (stars) kwanza!"); 
         return; 
     }
 
@@ -560,7 +595,7 @@ window.submitRating = async function() {
             await skh.updateDoc(productRef, { comments: skh.arrayUnion(reviewObj) });
         }
 
-        alert(verified ? " Asante kwa tathmini yako! (✓ Umenunua — imethibitishwa)" : " Asante kwa tathmini yako! Picha yako itaonekana kwa wateja wengine.");
+        alert(verified ? " Asante kwa tathmini yako! ( Umenunua — imethibitishwa)" : " Asante kwa tathmini yako! Picha yako itaonekana kwa wateja wengine.");
         document.getElementById('ratingModal').style.display = 'none';
         
     } catch(e) {
@@ -632,10 +667,7 @@ window.generateServiceFilters = function() {
         let inputsHtml = '';
         data.filters.forEach(f => {
             inputsHtml += `
-            <div style="margin-top:10px;">
-                <label style="font-size:12px; font-weight:bold; display:block; color:var(--primary-dark);">${f}</label>
-                <input type="text" class="service-filter-input" data-filter="${f}" placeholder="Jaza hapa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:white;">
-            </div>`;
+            <div style="margin-top:10px;"> <label style="font-size:12px; font-weight:bold; display:block; color:var(--primary-dark);">${f}</label> <input type="text" class="service-filter-input" data-filter="${f}" placeholder="Jaza hapa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:white;"> </div>`;
         });
         filtersArea.innerHTML = inputsHtml;
         filterContainer.style.display = 'block';
@@ -661,7 +693,7 @@ window.submitService = async function(event) {
     const isSubCategoryVisible = document.getElementById('servSubCategoryContainer').style.display !== 'none';
 
     if(!title || !section || (isCategoryVisible && !category) || (isSubCategoryVisible && !subCategory) || !desc || !loc) {
-        alert(" Tafadhali jaza sehemu zote zenye alama ya nyota (*)."); 
+        alert(" jaza sehemu zote zenye alama ya nyota (*)."); 
         return;
     }
 
@@ -746,7 +778,7 @@ window.submitDelivery = async function(event) {
     const selectedServices = Array.from(document.querySelectorAll('.del-supported-service:checked')).map(cb => cb.value);
 
     if (selectedServices.length === 0) {
-        alert(" Tafadhali chagua angalau aina moja ya huduma unayoweza kubeba!");
+        alert(" chagua angalau aina moja ya huduma unayoweza kubeba!");
         return;
     }
 
@@ -756,7 +788,7 @@ window.submitDelivery = async function(event) {
         // 2. Pandisha picha ya chombo
         const imageUrl = await skh.uploadImage('delImage');
 
-        // 3. Jenga data kamili kwa ajili ya database ya Sokohai
+        // 3. Jenga data kamili kwa database ya Sokohai
         const deliveryData = {
             title: document.getElementById('delTitle').value.trim(),
             accountType: document.getElementById('delAccountType').value,
@@ -775,6 +807,9 @@ window.submitDelivery = async function(event) {
             image: imageUrl || "https://ui-avatars.com/api/?name=Usafiri&background=03509d&color=fff",
             online: true, // Anaonekana live kuanzia sasa
             status: "available",
+            // [NEGO LOCK §21/§22] Transporter Settings — msafiri anajiamulia.
+            // Field hii ndiyo kweli ambayo Backend Gate inaitafuta (34-chat-core).
+            negotiationAllowed: (function(){ var el = document.getElementById('delNegoAllowed'); return el ? !!el.checked : true; })(),
             createdAt: new Date().toISOString()
         };
 
@@ -818,7 +853,7 @@ window.broadcastRideRequest = async function() {
     const oldRideId = sessionStorage.getItem('chain_old_ride_id') || null;
 
     if (!category || !vType || !fromLoc || !toLoc || !recPhone) {
-        alert(" Tafadhali jaza sehemu zote zenye alama ya nyota (*).");
+        alert(" jaza sehemu zote zenye alama ya nyota (*).");
         return;
     }
 
@@ -850,7 +885,7 @@ window.broadcastRideRequest = async function() {
         isLiquid = document.getElementById('isLiquid').checked;
 
         if(!finalCargoName) {
-            alert(" Tafadhali andika jina la mzigo unaotaka kuusafirisha!");
+            alert(" andika jina la mzigo unaotaka kuusafirisha!");
             return;
         }
     }
@@ -888,6 +923,19 @@ window.broadcastRideRequest = async function() {
         } catch(e) { console.log(e); }
     }
 
+    // [R8 TRANSPORT §31-§35 DIRECT BOOKING 2026-09] Mteja alianzia kotlinx na
+    // DETAIL ya transporter (chaguo lake: ‘Omba Usafiri’) — hakuna negotiation.
+    // Ambatsha preferredDriverId+notification (il ilk Request Inbox ya TRANSPORTER).
+    let preferredDriverId = null, preferredDriverName = '';
+    try {
+        const pd = JSON.parse(sessionStorage.getItem('ride_pref_driver') || 'null');
+        if (pd && (pd.uid || pd.name)) {
+            preferredDriverId = pd.uid || null;
+            preferredDriverName = pd.name || '';
+        }
+        sessionStorage.removeItem('ride_pref_driver'); // tumia-mara-moja (hakuna state inayobaa blindi)
+    } catch(e) {}
+
     try {
         const rideDocRef = await skh.addDoc(skh.collection(skh.db, "ride_requests"), {
             customerId: skh.currentUser.uid,
@@ -914,10 +962,17 @@ window.broadcastRideRequest = async function() {
             isLiquid,
 
             status: "searching", // Dereva anatafutwa
-            
-            // --- Hifadhi Tokens kwenye Firestore kwa ajili ya Chain of Custody ---
+
+            // [R8 §31 DIRECT BOOKING] transporter allychaguliwa na mteja
+            // (DETAILS-'Omba Usafiri') — anaiona kwenye Request Inbox yake
+            // (27-route-dispatch inayo 'bila target' kwa madereva WAORORIJWA
+            // wakiwa wamefuliza, na kwa wedge wengine kwa soko la kazi).
+            preferredDriverId: preferredDriverId,
+            preferredDriverName: preferredDriverName,
+
+            // --- Hifadhi Tokens kwenye Firestore kwa Chain of Custody ---
             // [CUSTODY 2026-09] PK (pickup) na TR (handover) zinaundwa na SERVER
-            // kwenye hatua sahihi (ACCEPT → PK; handover → TR). DL (delivery) ni ya
+            // kwenye hatua sahihi (ACCEPT -> PK; handover -> TR). DL (delivery) ni ya
             // mpokeaji wa mwisho. Tokeni zote ni SALAMA (crypto-random), si 4-digit.
             pickupToken: null,             // Token A — itaundwa baada ya ACCEPT (server)
             pickupTokenStatus: 'unissued',
@@ -952,6 +1007,22 @@ window.broadcastRideRequest = async function() {
         sessionStorage.removeItem('chain_from');
         sessionStorage.removeItem('chain_cargo_name');
         sessionStorage.removeItem('chain_old_ride_id');
+
+        // [R8 §31 DIRECT BOOKING] Notification kwa TRANSPORTER aliyechaguliwa
+        // na mteja (Direct booking kwa Details-'Omba Usafiri'). HUO ni booking
+        // request ya knotazi, haitegemei majadiliano. Backend-helpers za zamani
+        // (preferredDriverId kwenye rideRequest) zimbo.
+        if (typeof preferredDriverId !== 'undefined' && preferredDriverId) {
+            try {
+                await skh.addDoc(skh.collection(skh.db, 'notifications'), {
+                    userId: preferredDriverId,
+                    title: 'Ombi jipya la usafirishaji',
+                    body: (skh.currentUser.displayName || 'Mteja') + ' · ' + (fromLoc || '') + ' → ' + (toLoc || ''),
+                    type: 'delivery', rideId: rideDocRef.id,
+                    createdAt: new Date().toISOString(), read: false
+                });
+            } catch (e) { /* si kikwazo cha ombi */ }
+        }
 
         // [CUSTODY PHASE B 2026-09] Token C inatolewa na SERVER (salama).
         let tokenC = null;

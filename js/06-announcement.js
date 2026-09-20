@@ -4,32 +4,31 @@
     window.__SOKOHAI_JS_MARQUEE_GUARANTEED_FINAL__ = true;
 
     const normalItems = [
-        {badge:'🚀 Welcome', text:'Welcome to SokoHai – Tanzania’s Smart Marketplace for Products, Services, Projects & Secure Escrow Payments.'},
-        {badge:'🔒 Escrow', text:'All transactions are protected by Secure Escrow for safer buying and selling.'},
-        {badge:'🎉 Beta Live', text:'SokoHai Beta is now live! Register today and experience secure digital commerce.'},
-        {badge:'🎁 Promotion', text:'New sellers can register FREE for a limited time. Start selling today on SokoHai!'},
-        {badge:'🏢 Companies', text:'Businesses, NGOs and Government Institutions can create verified accounts and manage projects securely.'},
-        {badge:'👨‍💼 Services', text:'Find trusted professionals, skilled workers, and service providers across Tanzania.'},
-        {badge:'💳 Payments', text:'Secure payment options are being expanded. More payment methods are coming soon.'},
-        {badge:'🛒 Marketplace', text:'Buy Products • Sell Products • Hire Professionals • Manage Projects — all inside SokoHai.'}
+        {badge:' Welcome', text:'Welcome to SokoHai – Tanzania’s Smart Marketplace for Products, Services, Projects & Secure Escrow Payments.'},
+        {badge:' Escrow', text:'All transactions are protected by Secure Escrow for safer buying and selling.'},
+        {badge:' Beta Live', text:'SokoHai Beta is now live! Register today and experience secure digital commerce.'},
+        {badge:' Promotion', text:'New sellers can register FREE for a limited time. Start selling today on SokoHai!'},
+        {badge:' Companies', text:'Businesses, NGOs and Government Institutions can create verified accounts and manage projects securely.'},
+        {badge:'‍ Services', text:'Find trusted professionals, skilled workers, and service providers across Tanzania.'},
+        {badge:' Payments', text:'Secure payment options are being expanded. More payment methods are coming soon.'},
+        {badge:' Marketplace', text:'Buy Products • Sell Products • Hire Professionals • Manage Projects — all inside SokoHai.'}
     ];
 
     // Aina za matangazo na icon/jina lake la default (Admin Panel Announcement Types)
     const TYPE_META = {
-        normal:          { icon:'🚀', label:'Welcome' },
-        breaking:        { icon:'🔴', label:'Breaking News' },
-        feature:         { icon:'🟢', label:'New Feature' },
-        promotion:       { icon:'🔵', label:'Promotion' },
-        maintenance:     { icon:'🟡', label:'Maintenance' },
-        'security-notice':{ icon:'🟣', label:'Security Notice' },
-        tender:          { icon:'⚫', label:'Government Tender' },
-        event:           { icon:'🟠', label:'Event' },
-        security:        { icon:'🔒', label:'Escrow' },
-        launch:          { icon:'🎉', label:'Launch' },
-        company:         { icon:'🏢', label:'Companies' },
-        service:         { icon:'👨‍💼', label:'Services' },
-        payment:         { icon:'💳', label:'Payments' },
-        update:          { icon:'⭐', label:'Update' }
+        normal:          { icon:'', label:'Welcome' },
+        breaking:        { icon:'', label:'Breaking News' },
+        feature:         { icon:'', label:'New Feature' },
+        promotion:       { icon:'', label:'Promotion' },
+        maintenance:     { icon:'', label:'Maintenance' }, 'security-notice':{ icon:'', label:'Security Notice' },
+        tender:          { icon:'', label:'Government Tender' },
+        event:           { icon:'', label:'Event' },
+        security:        { icon:'', label:'Escrow' },
+        launch:          { icon:'', label:'Launch' },
+        company:         { icon:'', label:'Companies' },
+        service:         { icon:'‍', label:'Services' },
+        payment:         { icon:'', label:'Payments' },
+        update:          { icon:'', label:'Update' }
     };
     // Ipatikane globally ili Admin Panel itumie orodha hii hii ya aina za matangazo
     window.SOKOHAI_ANNOUNCEMENT_TYPE_META = TYPE_META;
@@ -56,7 +55,7 @@
                 const endsOk = !a.endAt || new Date(a.endAt).getTime() >= now;
                 return startsOk && endsOk;
             }).map(a => {
-                const meta = TYPE_META[a.type] || { icon:'📢', label:'Notice' };
+                const meta = TYPE_META[a.type] || { icon:'', label:'Notice' };
                 const badge = ((a.icon || meta.icon) + ' ' + meta.label).trim();
                 return { badge, text: a.text, link: a.link || '', type: a.type || 'normal' };
             });
@@ -68,13 +67,12 @@
                 const startsOk = !a.startAt || new Date(a.startAt).getTime() <= now;
                 const endsOk = !a.endAt || new Date(a.endAt).getTime() >= now;
                 return a && (a.text || a.message) && startsOk && endsOk;
-            }).map(a => ({ badge: ((a.icon || '📢') + ' ' + (a.label || a.type || 'Notice')).trim(), text: a.text || a.message, link: a.link || '' }));
+            }).map(a => ({ badge: ((a.icon || '') + ' ' + (a.label || a.type || 'Notice')).trim(), text: a.text || a.message, link: a.link || '' }));
             return activeLocal.length ? activeLocal : normalItems;
         }catch(e){ return normalItems; }
     }
     function itemHtml(items){
-        return '<div class="skh-js-marquee-set">' + items.map(it =>
-            `<span class="skh-js-marquee-item"><span class="skh-js-marquee-badge">${esc(it.badge)}</span><span>${esc(it.text)}</span>${it.link ? `<a href="${esc(it.link)}" class="skh-js-readmore" onclick="event.stopPropagation();">Read More ➔</a>` : ''}<span class="skh-js-sep">•</span></span>`
+        return '<div class="skh-js-marquee-set">' + items.map(it => `<span class="skh-js-marquee-item"><span class="skh-js-marquee-badge">${esc(it.badge)}</span><span>${esc(it.text)}</span>${it.link ? `<a href="${esc(it.link)}" class="skh-js-readmore" onclick="event.stopPropagation();">Read More -></a>` : ''}<span class="skh-js-sep">•</span></span>`
         ).join('') + '</div>';
     }
     function stopLoop(){
@@ -169,19 +167,19 @@
         }
   
         if(t === 'auction'){
-            render([{badge:'🔥 Auction', text:`MNADA LIVE: ${String(mhusika || '').toUpperCase()} - dau linaendelea sasa.`}], false, 'auction:' + String(mhusika||''));
+            render([{badge:' Auction', text:`MNADA LIVE: ${String(mhusika || '').toUpperCase()} - dau linaendelea sasa.`}], false, 'auction:' + String(mhusika||''));
             clearTimeout(window.__sokohaiPromoMarqueeTimer);
             window.__sokohaiPromoMarqueeTimer = setTimeout(function(){ lastRenderKey=''; window.startSokoHaiSmoothMarquee(); }, 16000);
             return;
         }
         if(t === 'price_drop'){
-            render([{badge:'📉 Price Drop', text:`BEI INASHUKA: ${String(mhusika || '').toUpperCase()} - wahi kabla haijaisha.`}], false, 'price:' + String(mhusika||''));
+            render([{badge:' Price Drop', text:`BEI INASHUKA: ${String(mhusika || '').toUpperCase()} - wahi kabla haijaisha.`}], false, 'price:' + String(mhusika||''));
             clearTimeout(window.__sokohaiPromoMarqueeTimer);
             window.__sokohaiPromoMarqueeTimer = setTimeout(function(){ lastRenderKey=''; window.startSokoHaiSmoothMarquee(); }, 16000);
             return;
         }
         if(t === 'group_buy'){
-            render([{badge:'👥 Group Buy', text:`GROUP BUY: jiunge na ${String(mhusika || '').toUpperCase()} uokoe pesa.`}], false, 'group:' + String(mhusika||''));
+            render([{badge:' Group Buy', text:`GROUP BUY: jiunge na ${String(mhusika || '').toUpperCase()} uokoe pesa.`}], false, 'group:' + String(mhusika||''));
             clearTimeout(window.__sokohaiPromoMarqueeTimer);
             window.__sokohaiPromoMarqueeTimer = setTimeout(function(){ lastRenderKey=''; window.startSokoHaiSmoothMarquee(); }, 16000);
             return;

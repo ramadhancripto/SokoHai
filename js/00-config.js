@@ -1,7 +1,7 @@
 /* ==== js/00-config.js ==== */
 // ============================================================
 // SOKOHAI CONFIG  (Phase 2)
-// ⚠️ USALAMA: PesaPal consumerSecret HAIPASWI kuishi kwenye browser.
+//  USALAMA: PesaPal consumerSecret HAIPASWI kuishi kwenye browser.
 // Siri zote za malipo zinaishi Firebase Cloud Functions (functions/.env)
 // pekee. Browser inaweka tu URL ya malipo na URL ya kurudi (return).
 // Hizi constants za awali za AzamPay zimeondolewa kabisa.
@@ -13,13 +13,19 @@
 // ============================================================
 window.SOKOHAI_CONFIG = {
 
-    // ✅ AWAMU 1 (USALAMA WA PESA): DEMO_MODE = false → MODE YA PESA HALISI.
+    //  AWAMU 1 (USALAMA WA PESA): DEMO_MODE = false -> MODE YA PESA HALISI.
     // Hakuna kujidanganya: malipo yakishindikana, muamala unasimama —
-    // oda haiumbwi. ⚠️ Hii inafanya kazi vizuri BAADA ya kupakia
+    // oda haiumbwi.  Hii inafanya kazi vizuri BAADA ya kupakia
     // Firebase Cloud Functions (ona folda ya functions/ + README-DEPLOY.md).
     // Ikiwa bado hujapakia functions na unahitaji majaribio, rudisha
     // DEMO_MODE: true hadi deploy ikamilike.
     DEMO_MODE: false,
+
+    // [SANDBOX 2026-09-14] Test/Sandbox mode (§1, §9).
+    // false = HAIWEZEKANI kuwasha kwenye host hii (production).
+    // Sandbox pia hujiwasha yenyewe kwenye localhost/staging.
+    // Hata ikiwa true, bado inahitaji: admin + flag ya mkono.
+    ALLOW_SANDBOX: false,
 
     // Admin: email fallback (ya sasa) + custom claims (njia sahihi, Phase 2.4).
     // Usibadilishe isipokuwa umeshahamisha admin kwenda custom claims.
@@ -33,7 +39,7 @@ window.SOKOHAI_CONFIG = {
 
     // [AWAMU 1] WALLET NA ESCROW KUPITIA SERVER (Cloud Functions):
     //   true (sasa) = escrow release NZIMA inafanyika Cloud Function
-    //                  'escrowRelease' (smart-split atomic + idempotent);
+    // 'escrowRelease' (smart-split atomic + idempotent);
     //                  skhWalletAdjust inapita 'walletAdjust'. Firestore
     //                  rules zinazuia walletBalance kuandikwa na kivinjari.
     //   false        = kurudisha njia ya zamani ya client (SI salama — usifanye).
@@ -61,5 +67,13 @@ window.SOKOHAI_CONFIG = {
     // ALERTS ZA KISANI (Phase 3.2): alert() za kivinjari zimebadilishwa
     // dialogs/toasts nzuri (js/07-toasts.js). Weka false kurudisha alert
     // za asali za kivinjari.
-    NICE_ALERTS: true
+    NICE_ALERTS: true,
+
+    // [AUDIT-FIX 2026-09-16 P0 §42] UTHIBITISHAJI WA MALIPO KWA SERVER BAADA YA KURUDI PESAPAL:
+    //   true (sasa)  = js/17-pesapal-return.js HAIANDIKI 'paid'/'held' kwenye oda
+    //                  kabla callable 'pesapalTransactionStatus' kuthibitisha malipo.
+    //                  (Awali browser iliandika mafanikio ya malipo bila uthibitisho —
+    //                  mtumiaji angeweza kufake malipo kwa link ya kurudi.)
+    //   false        = kurudisha tabia ya zamani (SIYO salama — achiwa kwa dharura tu).
+    PAYMENT_VERIFY_ON_RETURN: true
 };
