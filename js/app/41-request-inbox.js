@@ -20,6 +20,11 @@ import { skh } from './00-bootstrap.js';
     var state = { tab: 'new', offers: [], loaded: false, unsub: null, timer: null };
 
     function esc(s) { return (skh.skhEscape ? skh.skhEscape(s) : String(s == null ? '' : s)); }
+    var skhConfirm = function (msg, opts) {
+        if (typeof window !== 'undefined' && typeof window.skhConfirm === 'function') return window.skhConfirm(msg, opts);
+        if (typeof globalThis !== 'undefined' && typeof globalThis.skhConfirm === 'function') return globalThis.skhConfirm(msg, opts);
+        return Promise.resolve(typeof confirm === 'function' ? confirm(msg) : true);
+    };
     function ico(name, size) { return (window.skhNavIcon ? window.skhNavIcon(name, size || 14) : ''); }
     function uid() { return (skh.currentUser && skh.currentUser.uid) || null; }
 

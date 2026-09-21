@@ -1102,32 +1102,34 @@ window.skhSetChatHeaderAvatar = function(uid, photo, name) {
     }
 };
 
-// Strip ya bidhaa iliyoambatishwa kwenye chat (juu ya composer).
+// Strip ya bidhaa / huduma / usafiri iliyoambatishwa kwenye chat (juu ya composer).
 window.skhRenderAttachedProduct = function() {
     const wrap = document.getElementById('chatAttachedProduct');
     if (!wrap) return;
-    const p = skh.activeChatProduct;
-    // [CTX-LEAK FIX 2026-09-16] "Bidhaa imeambatishwa" ionekane TU ikiwa
-    // partner wa chat hii ndiye mmiliki wa bidhaa — kamwe si tangazo la
-    // ukurasa uliotembelewa mwishoni.
+    const p = skh.activeChatProduct || skh.activeChatService || skh.activeChatTransport;
     var partner = (skh.chatCore && skh.chatCore.partnerUid) || skh.currentChatUid || null;
+    var myId = (skh.currentUser && skh.currentUser.uid) || null;
     var owner = p ? (p.userId || p.providerId || p.driverId || p.sellerId || null) : null;
-    if (!p || !p.id || (partner && owner && owner !== partner)) {
+    if (!p || !p.id || (partner && owner && owner !== partner && owner !== myId)) {
         wrap.style.display = 'none'; wrap.innerHTML = ''; return;
     }
     const img = p.image || (p.images && p.images[0]) || p.photo || (window.SKH_PLACEHOLDER_IMG || '');
-    const title = (window.skhLocField ? window.skhLocField(p, 'title') : null) || p.title || p.itemTitle || (window.skhTF?window.skhTF('card_product_def','Bidhaa'):'Bidhaa');
+    var defTitle = skh.activeChatService ? 'Huduma' : (skh.activeChatTransport ? 'Usafiri' : (window.skhTF?window.skhTF('card_product_def','Bidhaa'):'Bidhaa'));
+    var attachLabel = skh.activeChatService ? 'Huduma imeambatishwa' : (skh.activeChatTransport ? 'Usafiri umeambatishwa' : (window.skhTF?window.skhTF('attach_product','Bidhaa imeambatishwa'):'Bidhaa imeambatishwa'));
+    const title = (window.skhLocField ? window.skhLocField(p, 'title') : null) || p.title || p.itemTitle || p.cargoName || defTitle;
     wrap.style.display = 'block';
     wrap.innerHTML = '<div class="chat-attached">'
         + (img ? '<img src="' + skh.skhEscape(skh.getOptimizedImageUrl(img)) + '" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">' : '')
         + '<div style="min-width:0;flex:1;"><b style="font-size:12px;color:#0f172a;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + skh.skhEscape(title) + '</b>'
-        + '<small style="font-size:12.5px;color:#b45309;font-weight:700;">' + (window.skhTF?window.skhTF('attach_product','Bidhaa imeambatishwa'):'Bidhaa imeambatishwa') + '</small></div>'
-        + '<button class="ca-remove" onclick="window.skhClearAttachedProduct()" title="' + (window.skhTF?window.skhTF('attach_remove','Ondoa bidhaa'):'Ondoa bidhaa') + '">&times;</button>'
+        + '<small style="font-size:12.5px;color:#b45309;font-weight:700;">' + attachLabel + '</small></div>'
+        + '<button class="ca-remove" onclick="window.skhClearAttachedProduct()" title="' + (window.skhTF?window.skhTF('attach_remove','Ondoa'):'Ondoa') + '">&times;</button>'
         + '</div>';
 };
 
 window.skhClearAttachedProduct = function() {
     skh.activeChatProduct = null;
+    skh.activeChatService = null;
+    skh.activeChatTransport = null;
     window.skhRenderAttachedProduct();
 };
 

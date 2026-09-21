@@ -71,6 +71,7 @@
             yes.focus();
         });
     };
+    if (typeof globalThis !== 'undefined') globalThis.skhConfirm = window.skhConfirm;
 
     window.skhPrompt = function (msg, def, opts) {
         opts = opts || {};

@@ -532,13 +532,17 @@ try { window.skhRoutingServerSweep = skh.wrapCallable("deliveryRouteSweep"); } c
 try { window.skhRoutingServerRetry = skh.wrapCallable("deliveryRouteRetry"); } catch (e) { console.warn("[Routing] retry callable haikusajiliwa:", e && e.message); }
 
 // [DEEP L10N 2026-09] Card labels kupitia engine ya lugha; fallback za zamani hazivunjwi.
-function skhTF(key, fb) {
+var skhTF = function skhTF(key, fb) {
     try { if (window.t) { var s = window.t(key); if (s && s !== key) return s; } } catch (eT) {}
     return fb;
-}
+};
 skh.skhTF = skhTF;
 // Two-arg form: skhTF(key, fallback) — tumikiwa katika blocks ya classic scripts.
 window.skhTF = window.skhTF || skhTF;
+if (typeof globalThis !== 'undefined') globalThis.skhTF = globalThis.skhTF || skhTF;
+
+window.skhConfirm = window.skhConfirm || function (msg) { return Promise.resolve(typeof window.confirm === 'function' ? window.confirm(msg) : true); };
+if (typeof globalThis !== 'undefined') globalThis.skhConfirm = globalThis.skhConfirm || window.skhConfirm;
 
 skh.skhJsEsc = function skhJsEsc(s) { // [PHASE 4.5b] escaper ya onclick="fn('...')" (JS-string-safe)
     var BS = String.fromCharCode(92); // backslash
@@ -1772,6 +1776,7 @@ let qNormal;
 // ============================================================
 
 // Ikoni ndogo ya SVG (stroke) — maktaba iliyopo ya 18-icons.js
+var skhTF = (typeof window !== 'undefined' && window.skhTF) || (typeof skhTF !== 'undefined' ? skhTF : function (k, fb) { return fb; });
 skh.cardIcon = function cardIcon(name, size) {
     return (window.skhNavIcon ? window.skhNavIcon(name, size) : '');
 };

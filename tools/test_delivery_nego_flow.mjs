@@ -118,8 +118,10 @@ console.log('\n[1] Tangazo la DEREVA → fomu ya usafiri + kutuma (functions fnD
 
     $('#nf_packageDescription').value = 'Mfuko wa mahindi 2';
     $('#nf_packageCount').value = '1';
-    $('#nf_pickupDate').value = '2026-09-20';
-    $('#nf_deliveryDeadline').value = '2026-09-21';
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const tomorrowStr = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    $('#nf_pickupDate').value = todayStr;
+    $('#nf_deliveryDeadline').value = tomorrowStr;
     $('#nf_fee').value = '23000';
     $('#nfSendBtn').click();
     await new Promise(r => setTimeout(r, 200));

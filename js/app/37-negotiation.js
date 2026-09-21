@@ -258,7 +258,7 @@ import { skh } from './00-bootstrap.js';
     const LABELS = {
         SEND_OFFER: 'Tuma Ofa',
         ACCEPT_OFFER: 'Kubali',
-        COUNTER_OFFER: 'Toa Ofa Mpya',
+        COUNTER_OFFER: 'Counter',
         REJECT_OFFER: 'Kataa',
         REQUEST_QUANTITY_CHANGE: 'Ongeza Kiasi',
         ACCEPT_QUANTITY_CHANGE: 'Kubali',
@@ -637,7 +637,7 @@ import { skh } from './00-bootstrap.js';
             const v = terms[f.k];
             if (v == null || v === '' || (f.money && !(Number(v) > 0))) return;
             let s;
-            if (f.k === 'route' && v && (v.from || v.to)) s = (v.from || '?') + ' -> ' + (v.to || '?');
+            if (f.k === 'route' && v && (v.from || v.to)) s = (v.from || '?') + ' → ' + (v.to || '?');
             else if (f.money) s = 'TSh ' + Number(v).toLocaleString();
             else s = String(v);
             if (s) parts.push({ label: f.label, value: s, suffix: f.suffix || '' });
@@ -677,7 +677,7 @@ import { skh } from './00-bootstrap.js';
             const cur = nego.quantity || 1;
             const pq = Number(nego.pendingQuantity);
             if (pq !== Number(cur)) {
-                lines.push('Ombi la kiasi: <b>' + escHtml(String(cur)) + ' -> ' + escHtml(String(pq)) + '</b> pc');
+                lines.push('Ombi la kiasi: <b>' + escHtml(String(cur)) + ' → ' + escHtml(String(pq)) + '</b> pc');
             }
         }
         if (nego.pendingScope != null && nego.pendingScope !== '') {
@@ -689,7 +689,7 @@ import { skh } from './00-bootstrap.js';
         }
         if (nego.pendingRoute && (nego.pendingRoute.from || nego.pendingRoute.to)) {
             const r = nego.pendingRoute;
-            lines.push('Njia mpya iliyoombwa: <b>' + escHtml(r.from || '?') + ' -> ' + escHtml(r.to || '?') + '</b>');
+            lines.push('Njia mpya iliyoombwa: <b>' + escHtml(r.from || '?') + ' → ' + escHtml(r.to || '?') + '</b>');
         }
         return lines;
     }

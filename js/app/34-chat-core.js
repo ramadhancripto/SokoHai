@@ -33,6 +33,11 @@ import { skh } from './00-bootstrap.js';
     }
 
     function nowIso() { return new Date().toISOString(); }
+    var skhConfirm = function (msg, opts) {
+        if (typeof window !== 'undefined' && typeof window.skhConfirm === 'function') return window.skhConfirm(msg, opts);
+        if (typeof globalThis !== 'undefined' && typeof globalThis.skhConfirm === 'function') return globalThis.skhConfirm(msg, opts);
+        return Promise.resolve(typeof confirm === 'function' ? confirm(msg) : true);
+    };
     function esc(s) { return skh.skhEscape(s == null ? '' : String(s)); }
     function jsEsc(s) { return skh.skhJsEsc(s == null ? '' : String(s)); }
     function myUid() { return (skh.currentUser && skh.currentUser.uid) || null; }
@@ -135,6 +140,11 @@ import { skh } from './00-bootstrap.js';
         var myEmail = (skh.currentUser && skh.currentUser.email || '').toLowerCase();
         var theirEmail = (skh.currentChatEmail || '').toLowerCase();
         try {
+            var refId = (msg.productRef && msg.productRef.id) || (msg.serviceRef && msg.serviceRef.id) || (msg.transportRef && msg.transportRef.id) || msg.productId || msg.serviceId || msg.transportId || null;
+            var snapTitle = (msg.productSnapshot && msg.productSnapshot.title) || (msg.serviceSnapshot && msg.serviceSnapshot.title) || (msg.transportSnapshot && msg.transportSnapshot.title) || msg.productTitle || msg.serviceTitle || msg.transportTitle || null;
+            var snapImg = (msg.productSnapshot && msg.productSnapshot.image) || (msg.serviceSnapshot && msg.serviceSnapshot.image) || msg.productImg || null;
+            var refCol = (msg.productRef && msg.productRef.collection) || (msg.serviceRef && msg.serviceRef.collection) || (msg.transportRef && msg.transportRef.collection) || msg.productCollection || null;
+            var snapSeller = (msg.productSnapshot && msg.productSnapshot.sellerId) || (msg.serviceSnapshot && msg.serviceSnapshot.sellerId) || (msg.transportSnapshot && msg.transportSnapshot.sellerId) || msg.sellerUid || null;
             return skh.addDoc(skh.collection(skh.db, 'chats'), {
                 text: msg.mediaReference ? (' Attachment: ' + msg.mediaReference) : preview,
                 sender: myEmail,
@@ -144,11 +154,11 @@ import { skh } from './00-bootstrap.js';
                 senderName: msg.senderName || myName(),
                 receiverName: partnerName || 'Mawasiliano',
                 createdAt: msg.createdAt || nowIso(),
-                productId: msg.productRef ? msg.productRef.id : null,
-                productTitle: msg.productSnapshot ? msg.productSnapshot.title : null,
-                productImg: msg.productSnapshot ? msg.productSnapshot.image : null,
-                productCollection: msg.productRef ? msg.productRef.collection : null,
-                sellerUid: msg.productSnapshot ? msg.productSnapshot.sellerId : null,
+                productId: refId,
+                productTitle: snapTitle,
+                productImg: snapImg,
+                productCollection: refCol,
+                sellerUid: snapSeller,
                 conversationId: (skh.chatCore && skh.chatCore.convId) || null
             });
         } catch (e) { return Promise.resolve(); }
@@ -208,23 +218,95 @@ import { skh } from './00-bootstrap.js';
         var msg = { senderId: me, type: type, createdAt: nowIso(), readBy: [me], replyToId: opts.replyToId || null, system: !!opts.system };
         var previewText = text;
 
-        // Bidhaa iliyoambatishwa (product chat) inakuwa ujumbe wa aina 'product'.
-        // [CTX-LEAK FIX] Ambatisha TU ikiwa partner ndiye mmiliki wa bidhaa —
-        // hakuna tena "mapicha ya bidhaa ng'eni kwenye DM ya mtu mwingine".
+        // Bidhaa / Huduma / Usafiri iliyoambatishwa (product/service/transport chat) inakuwa ujumbe wa aina husika.
+        // [CTX-LEAK FIX] Ambatisha TU ikiwa partner au mimi ndiye mmiliki wa kipengele —
+        // pande zote (mnunuzi na muuzaji) zinaona na kutuma kadi sahihi.
+        var pOwner = (skh.activeChatProduct && ctxOwnerOf(skh.activeChatProduct)) || null;
+        var sOwner = (skh.activeChatService && ctxOwnerOf(skh.activeChatService)) || null;
+        var tOwner = (skh.activeChatTransport && ctxOwnerOf(skh.activeChatTransport)) || null;
+
+        var commercePatch = null;
+
         if (skh.activeChatProduct && skh.activeChatProduct.id && !opts.type
-            && ctxOwnerOf(skh.activeChatProduct) === partnerUid) {
+            && (pOwner === partnerUid || pOwner === me || !pOwner)) {
             type = 'product';
             msg.type = type;
-            msg.productRef = { id: skh.activeChatProduct.id, collection: skh.activeChatProduct.collectionName || skh.currentFeedCollection || 'products' };
+            var prodCol = skh.activeChatProduct.collectionName || skh.currentFeedCollection || 'products';
+            msg.productRef = { id: skh.activeChatProduct.id, collection: prodCol };
             msg.productSnapshot = {
                 title: skh.activeChatProduct.title || skh.activeChatProduct.itemTitle || 'Bidhaa',
                 price: skh.activeChatProduct.price != null ? skh.activeChatProduct.price : null,
                 image: skh.activeChatProduct.image || (skh.activeChatProduct.images && skh.activeChatProduct.images[0]) || skh.activeChatProduct.photo || '',
-                sellerId: skh.activeChatProduct.userId || null,
+                sellerId: skh.activeChatProduct.userId || pOwner || null,
                 sellerName: skh.activeChatProduct.ownerName || ''
             };
             msg.text = text || '';
             previewText = 'Bidhaa: ' + (msg.productSnapshot.title || 'Bidhaa');
+            commercePatch = {
+                productId: skh.activeChatProduct.id,
+                productCollection: prodCol,
+                productTitle: msg.productSnapshot.title,
+                productPrice: msg.productSnapshot.price,
+                productImage: msg.productSnapshot.image,
+                sellerId: msg.productSnapshot.sellerId,
+                buyerId: (msg.productSnapshot.sellerId === me ? partnerUid : me)
+            };
+        } else if (skh.activeChatService && skh.activeChatService.id && !opts.type
+            && (sOwner === partnerUid || sOwner === me || !sOwner)) {
+            type = 'service';
+            msg.type = type;
+            var servCol = skh.activeChatService.collectionName || 'services';
+            msg.serviceRef = { id: skh.activeChatService.id, collection: servCol };
+            msg.serviceSnapshot = {
+                title: skh.activeChatService.title || skh.activeChatService.itemTitle || skh.activeChatService.serviceName || 'Huduma',
+                price: skh.activeChatService.price != null ? skh.activeChatService.price : null,
+                image: skh.activeChatService.image || (skh.activeChatService.images && skh.activeChatService.images[0]) || skh.activeChatService.photo || '',
+                scope: skh.activeChatService.scope || skh.activeChatService.description || '',
+                sellerId: skh.activeChatService.userId || skh.activeChatService.providerId || sOwner || null,
+                sellerName: skh.activeChatService.ownerName || ''
+            };
+            msg.text = text || '';
+            previewText = 'Huduma: ' + (msg.serviceSnapshot.title || 'Huduma');
+            commercePatch = {
+                serviceId: skh.activeChatService.id,
+                serviceCollection: servCol,
+                serviceTitle: msg.serviceSnapshot.title,
+                servicePrice: msg.serviceSnapshot.price,
+                serviceImage: msg.serviceSnapshot.image,
+                serviceScope: msg.serviceSnapshot.scope,
+                sellerId: msg.serviceSnapshot.sellerId,
+                buyerId: (msg.serviceSnapshot.sellerId === me ? partnerUid : me)
+            };
+        } else if (skh.activeChatTransport && skh.activeChatTransport.id && !opts.type
+            && (tOwner === partnerUid || tOwner === me || !tOwner)) {
+            type = 'transport';
+            msg.type = type;
+            var tCol = skh.activeChatTransport.collectionName || skh.activeChatTransport.collection || 'ride_requests';
+            msg.transportRef = { id: skh.activeChatTransport.id, collection: tCol };
+            msg.transportSnapshot = {
+                title: skh.activeChatTransport.title || skh.activeChatTransport.cargoName || 'Usafiri',
+                price: skh.activeChatTransport.price != null ? skh.activeChatTransport.price : (skh.activeChatTransport.fare != null ? skh.activeChatTransport.fare : null),
+                fare: skh.activeChatTransport.fare != null ? skh.activeChatTransport.fare : (skh.activeChatTransport.price != null ? skh.activeChatTransport.price : null),
+                route: skh.activeChatTransport.route || { from: skh.activeChatTransport.fromLocation || skh.activeChatTransport.pickupRegion || '', to: skh.activeChatTransport.toLocation || skh.activeChatTransport.destinationRegion || '' },
+                fromLocation: skh.activeChatTransport.fromLocation || skh.activeChatTransport.pickupRegion || '',
+                toLocation: skh.activeChatTransport.toLocation || skh.activeChatTransport.destinationRegion || '',
+                packageDescription: skh.activeChatTransport.packageDescription || '',
+                vehicleType: skh.activeChatTransport.vehicleType || '',
+                sellerId: skh.activeChatTransport.userId || skh.activeChatTransport.providerId || skh.activeChatTransport.driverId || tOwner || null,
+                sellerName: skh.activeChatTransport.driverName || skh.activeChatTransport.ownerName || ''
+            };
+            msg.text = text || '';
+            previewText = 'Usafiri: ' + (msg.transportSnapshot.title || 'Usafiri');
+            commercePatch = {
+                transportId: skh.activeChatTransport.id,
+                transportCollection: tCol,
+                transportTitle: msg.transportSnapshot.title,
+                transportFare: msg.transportSnapshot.fare,
+                transportFrom: msg.transportSnapshot.fromLocation,
+                transportTo: msg.transportSnapshot.toLocation,
+                sellerId: msg.transportSnapshot.sellerId,
+                buyerId: (msg.transportSnapshot.sellerId === me ? partnerUid : me)
+            };
         } else if (type === 'text') {
             msg.text = text;
         } else {
@@ -283,6 +365,9 @@ import { skh } from './00-bootstrap.js';
                 updatedAt: nowIso(),
                 unread: unread
             };
+            if (commercePatch) {
+                convPatch.related = Object.assign({}, cd.related || {}, commercePatch);
+            }
             if (hiddenDirty) convPatch.deletedForUser = hidden;
             await skh.updateDoc(convRef, convPatch);
             // [DRAFT 2026-09] Futa rasimu yangu baada ya kutuma (spec §12).
@@ -305,9 +390,17 @@ import { skh } from './00-bootstrap.js';
                 previewText, 'chat', { conversationId: convId });
         }
 
-        // Futa bidhaa iliyoambatishwa baada ya ujumbe wa kwanza (kama legacy).
+        // Futa muktadha ulioambatishwa baada ya ujumbe wa kwanza kutumwa.
         if (skh.activeChatProduct) {
             skh.activeChatProduct = null;
+            if (typeof window.skhRenderAttachedProduct === 'function') window.skhRenderAttachedProduct();
+        }
+        if (skh.activeChatService) {
+            skh.activeChatService = null;
+            if (typeof window.skhRenderAttachedProduct === 'function') window.skhRenderAttachedProduct();
+        }
+        if (skh.activeChatTransport) {
+            skh.activeChatTransport = null;
             if (typeof window.skhRenderAttachedProduct === 'function') window.skhRenderAttachedProduct();
         }
         return { ok: true, id: added && added.id, conversationId: convId };
@@ -397,23 +490,30 @@ import { skh } from './00-bootstrap.js';
     }
 
     function renderProductCard(msg) {
-        var ref = msg.productRef; var s = msg.productSnapshot || {};
-        if (!ref || !ref.id) return '';
-        var pid = jsEsc(ref.id), coll = jsEsc(ref.collection || 'products'), seller = jsEsc(s.sellerId || '');
-        var img = s.image || (window.SKH_PLACEHOLDER_IMG || '');
-        var price = (s.price != null) ? ('TSh ' + Number(s.price).toLocaleString()) : '';
-        // [NEGO ENGINE 2026-09] Vitendo vya mnunuzi (spec §10) vinaishi KWENYE
-        // kadi ya bidhaa NDANI ya chat — si vitufe vilivyokwama kwenye composer.
-        var isBuyer = !s.sellerId || s.sellerId !== myUid();
+        var ref = msg.productRef || (msg.productId ? { id: msg.productId, collection: msg.productCollection || 'products' } : null);
+        var s = msg.productSnapshot || {};
+        if (!ref && !msg.productId && !s.title && !msg.productTitle) return '';
+        var pid = jsEsc((ref && ref.id) || msg.productId || '');
+        var coll = jsEsc((ref && ref.collection) || msg.productCollection || 'products');
+        var seller = jsEsc(s.sellerId || msg.sellerUid || '');
+        var img = s.image || msg.productImg || (window.SKH_PLACEHOLDER_IMG || '');
+        var title = s.title || msg.productTitle || 'Bidhaa';
+        var priceVal = s.price != null ? s.price : msg.productPrice;
+        var price = (priceVal != null && priceVal !== '') ? ('TSh ' + Number(priceVal).toLocaleString()) : '';
+        // [NEGO ENGINE 2026-09] Vitendo vya mnunuzi na muuzaji ndani ya kadi ya chat
+        var isBuyer = !seller || seller !== myUid();
         var actions = isBuyer
             ? '<div class="ch-nego-actions" style="margin-top:6px;">'
                 + '<button type="button" class="ch-nego-btn accept" onclick="event.stopPropagation();window.skhChatBuy()">' + (window.skhNavIcon ? window.skhNavIcon('cart', 14) : '') + '<span>' + T('ch_buy', 'Oda') + '</span></button>'
                 + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatMakeOffer()">' + (window.skhNavIcon ? window.skhNavIcon('tag', 14) : '') + '<span>' + T('ch_make_offer', 'Pendekeza Bei') + '</span></button>'
+                + '<button type="button" class="ch-nego-btn" onclick="event.stopPropagation();window.skhChatAddToCart(\'' + pid + '\')">' + (window.skhNavIcon ? window.skhNavIcon('cart', 14) : '') + '<span>' + T('ch_add_cart', 'Weka Kikapu') + '</span></button>'
                 + '</div>'
-            : '';
+            : '<div class="ch-nego-actions" style="margin-top:6px;">'
+                + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatMakeOffer()">' + (window.skhNavIcon ? window.skhNavIcon('tag', 14) : '') + '<span>' + T('ch_send_offer', 'Tuma Ofa') + '</span></button>'
+                + '</div>';
         return '<div class="ch-card" onclick="window.openProduct(\'' + pid + '\', \'' + coll + '\')">'
             + (img ? '<img src="' + esc(img) + '" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">' : '')
-            + '<div class="ch-card-info"><span class="ch-card-title">' + esc(s.title || 'Bidhaa') + '</span>'
+            + '<div class="ch-card-info"><span class="ch-card-title">' + esc(title) + '</span>'
             + (price ? '<span class="ch-card-price">' + esc(price) + '</span>' : '')
             + '<span class="ch-card-link">' + (window.skhNavIcon ? window.skhNavIcon('search', 13) : '') + ' ' + T('ch_view_product', 'Tazama Bidhaa') + ' →</span>'
             + actions + '</div></div>';
@@ -421,22 +521,29 @@ import { skh } from './00-bootstrap.js';
 
     // [COMMERCE 2026-09] Kadi ya HUDUMA (spec §6) — reference, si backend mpya.
     function renderServiceCard(msg) {
-        var ref = msg.serviceRef; var s = msg.serviceSnapshot || {};
-        if (!ref || !ref.id) return '';
-        var sid = jsEsc(ref.id), coll = jsEsc(ref.collection || 'services');
-        var img = s.image || '';
-        var price = (s.price != null) ? ('TSh ' + Number(s.price).toLocaleString()) : '';
-        var isBuyer = !s.sellerId || s.sellerId !== myUid();
+        var ref = msg.serviceRef || (msg.serviceId ? { id: msg.serviceId, collection: msg.serviceCollection || 'services' } : null);
+        var s = msg.serviceSnapshot || {};
+        if (!ref && !msg.serviceId && !s.title && !msg.serviceTitle) return '';
+        var sid = jsEsc((ref && ref.id) || msg.serviceId || '');
+        var coll = jsEsc((ref && ref.collection) || msg.serviceCollection || 'services');
+        var img = s.image || msg.serviceImage || '';
+        var title = s.title || msg.serviceTitle || 'Huduma';
+        var priceVal = s.price != null ? s.price : msg.servicePrice;
+        var price = (priceVal != null && priceVal !== '') ? ('TSh ' + Number(priceVal).toLocaleString()) : '';
+        var sOwner = s.sellerId || s.providerId || msg.sellerId || msg.providerId || '';
+        var isBuyer = !sOwner || sOwner !== myUid();
         var actions = isBuyer
             ? '<div class="ch-nego-actions" style="margin-top:6px;">'
                 + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatOpenServiceOffer()">' + (window.skhNavIcon ? window.skhNavIcon('wrench', 14) : '') + '<span>' + T('ch_make_offer', 'Pendekeza Ofa') + '</span></button>'
                 + '</div>'
-            : '';
-        var scope = s.scope || '';
+            : '<div class="ch-nego-actions" style="margin-top:6px;">'
+                + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatOpenServiceOffer()">' + (window.skhNavIcon ? window.skhNavIcon('wrench', 14) : '') + '<span>' + T('ch_send_offer', 'Tuma Ofa') + '</span></button>'
+                + '</div>';
+        var scope = s.scope || msg.serviceScope || '';
         var sHeadIcon = window.skhNavIcon ? window.skhNavIcon('wrench', 14) : '';
         return '<div class="ch-card" onclick="window.openProduct(\'' + sid + '\', \'' + coll + '\')">'
             + (img ? '<img src="' + esc(img) + '" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">' : '')
-            + '<div class="ch-card-info"><span class="ch-card-title">' + sHeadIcon + ' ' + esc(s.title || 'Huduma') + '</span>'
+            + '<div class="ch-card-info"><span class="ch-card-title">' + sHeadIcon + ' ' + esc(title) + '</span>'
             + (scope ? '<span class="ch-card-sub">' + esc(scope) + '</span>' : '')
             + (price ? '<span class="ch-card-price">' + esc(price) + '</span>' : '')
             + '<span class="ch-card-link">' + (window.skhNavIcon ? window.skhNavIcon('search', 13) : '') + ' ' + T('ch_view_service', 'Tazama Huduma') + ' →</span>'
@@ -445,23 +552,28 @@ import { skh } from './00-bootstrap.js';
 
     // [COMMERCE 2026-09] Kadi ya USAFIRI (spec §10) — reference kwenye ride_requests.
     function renderTransportCard(msg) {
-        var ref = msg.transportRef; var s = msg.transportSnapshot || {};
-        if (!ref || !ref.id) return '';
-        var tid = jsEsc(ref.id);
-        var from = s.fromLocation || (s.route && s.route.from) || '';
-        var to = s.toLocation || (s.route && s.route.to) || '';
-        var price = (s.price != null || s.fare != null) ? ('TSh ' + Number(s.price != null ? s.price : s.fare).toLocaleString()) : '';
-        var tOwner = s.providerId || s.sellerId || s.userId || '';
+        var ref = msg.transportRef || (msg.transportId ? { id: msg.transportId, collection: msg.transportCollection || 'ride_requests' } : null);
+        var s = msg.transportSnapshot || {};
+        if (!ref && !msg.transportId && !s.title && !msg.transportTitle) return '';
+        var tid = jsEsc((ref && ref.id) || msg.transportId || '');
+        var title = s.title || msg.transportTitle || 'Usafiri';
+        var from = s.fromLocation || (s.route && s.route.from) || msg.transportFrom || '';
+        var to = s.toLocation || (s.route && s.route.to) || msg.transportTo || '';
+        var priceVal = s.price != null ? s.price : (s.fare != null ? s.fare : (msg.transportFare != null ? msg.transportFare : msg.transportPrice));
+        var price = (priceVal != null && priceVal !== '') ? ('TSh ' + Number(priceVal).toLocaleString()) : '';
+        var tOwner = s.providerId || s.sellerId || s.userId || msg.sellerId || msg.driverId || '';
         var isBuyer = !tOwner || tOwner !== myUid();
         var actions = isBuyer
             ? '<div class="ch-nego-actions" style="margin-top:6px;">'
                 + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatOpenTransportOffer()">' + (window.skhNavIcon ? window.skhNavIcon('truck', 14) : '') + '<span>' + T('ch_make_offer', 'Pendekeza Ofa') + '</span></button>'
                 + '</div>'
-            : '';
+            : '<div class="ch-nego-actions" style="margin-top:6px;">'
+                + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatOpenTransportOffer()">' + (window.skhNavIcon ? window.skhNavIcon('truck', 14) : '') + '<span>' + T('ch_send_offer', 'Tuma Ofa') + '</span></button>'
+                + '</div>';
         var route = (from || to) ? (from || '?') + ' → ' + (to || '?') : '';
         var tHeadIcon = window.skhNavIcon ? window.skhNavIcon('truck', 14) : '';
-        return '<div class="ch-card ch-card-delivery" onclick="if(window.openRideTracking)window.openRideTracking(\'' + tid + '\')">'
-            + '<div class="ch-card-info"><span class="ch-card-title">' + tHeadIcon + ' ' + esc(s.title || 'Usafiri') + '</span>'
+        return '<div class="ch-card ch-card-delivery" onclick="if(window.openRideTracking)window.openRideTracking(\'' + tid + '\');else if(window.openProduct)window.openProduct(\'' + tid + '\',\'drivers\');">'
+            + '<div class="ch-card-info"><span class="ch-card-title">' + tHeadIcon + ' ' + esc(title) + '</span>'
             + (route ? '<span class="ch-card-sub">' + esc(route) + '</span>' : '')
             + (s.packageDescription ? '<span class="ch-card-sub">' + esc(s.packageDescription) + '</span>' : '')
             + (price ? '<span class="ch-card-price">' + esc(price) + '</span>' : '')
@@ -609,17 +721,29 @@ import { skh } from './00-bootstrap.js';
     }
 
     function renderMessageBody(msg, isMe) {
-        if (msg.type === 'product') return renderProductCard(msg) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
-        if (msg.type === 'service') return renderServiceCard(msg) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
-        if (msg.type === 'transport') return renderTransportCard(msg) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
-        if (msg.type === 'order') return renderOrderCard(msg) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
-        if (msg.type === 'delivery') return renderDeliveryCard(msg) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
-        if (msg.type === 'negotiation') return renderNegotiationEvent(msg) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
-        if (msg.type === 'offer') return renderOfferCard(msg) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
-        if (msg.type === 'image' || msg.type === 'video' || msg.type === 'audio' || msg.type === 'file') {
+        var card = '';
+        if (msg.type === 'product' || msg.productRef || msg.productId) {
+            card = renderProductCard(msg);
+        } else if (msg.type === 'service' || msg.serviceRef || msg.serviceId) {
+            card = renderServiceCard(msg);
+        } else if (msg.type === 'transport' || msg.transportRef || msg.transportId) {
+            card = renderTransportCard(msg);
+        } else if (msg.type === 'order') {
+            card = renderOrderCard(msg);
+        } else if (msg.type === 'delivery') {
+            card = renderDeliveryCard(msg);
+        } else if (msg.type === 'negotiation') {
+            card = renderNegotiationEvent(msg);
+        } else if (msg.type === 'offer') {
+            card = renderOfferCard(msg);
+        } else if (msg.type === 'image' || msg.type === 'video' || msg.type === 'audio' || msg.type === 'file') {
             return renderMedia(msg.type, msg.mediaReference, msg.mediaMeta || {}) + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
+        } else if (msg.type === 'location') {
+            return renderLocationCard(msg);
         }
-        if (msg.type === 'location') return renderLocationCard(msg);
+        if (card) {
+            return card + (msg.text ? '<div style="margin-top:6px;white-space:pre-wrap;">' + esc(msg.text) + '</div>' : '');
+        }
         return '<span style="white-space:pre-wrap;">' + esc(msg.text || '') + '</span>';
     }
 
@@ -3239,7 +3363,8 @@ import { skh } from './00-bootstrap.js';
                 var lockId = negotiation.commerceType === 'service' ? negotiation.serviceId : negotiation.transportId;
                 if (lockId) {
                     var lockSnap = await skh.getDoc(skh.doc(skh.db, lockColl, lockId));
-                    if (lockSnap && lockSnap.exists && lockSnap.exists()) {
+                    var lockExists = lockSnap && (typeof lockSnap.exists === 'function' ? lockSnap.exists() : !!lockSnap.exists);
+                    if (lockExists) {
                         var lockData = lockSnap.data() || {};
                         if (lockData.negotiationAllowed === false) {
                             return { ok: false, error: 'Negotiation haijaruhusiwa na mmiliki wa tangazo hili. Bei iliyotangazwa ndiyo sahihi — unaweza kuzungumza nae bado.' };
@@ -3367,31 +3492,31 @@ import { skh } from './00-bootstrap.js';
         if (owner && owner !== partnerUid && other !== partnerUid) return null;
         return rel;
     }
-    /** related MBORA kutoka globals za activeChat* — ikiwa TU partner ndiye mmiliki. */
+    /** related MBORA kutoka globals za activeChat* — ikiwa partner au mimi ndiye mmiliki. */
     function scopedRelatedForPartner(uid) {
         if (!uid) return null;
         var me = myUid();
         var p = skh.activeChatProduct;
-        if (p && p.id && ctxOwnerOf(p) === uid) {
-            return { productId: p.id, sellerId: ctxOwnerOf(p), buyerId: me,
+        if (p && p.id && (ctxOwnerOf(p) === uid || ctxOwnerOf(p) === me || !ctxOwnerOf(p))) {
+            var pOwner = ctxOwnerOf(p) || uid;
+            return { productId: p.id, sellerId: pOwner, buyerId: (pOwner === me ? uid : me),
                      productTitle: p.title || p.itemTitle || null, productPrice: p.price != null ? p.price : null,
                      productImage: p.image || (p.images && p.images[0]) || p.photo || null,
                      productCollection: p.collectionName || 'products',
-                     // [§28 MODE CTX] Chat ijue mbichi kama hii ni bidhaa ya
-                     // mnada/group/price_drop/wholesale (si 'KAWAIDA'). Related
-                     // compact — data zaidi hupatikana kwa re-read ivyoionavyo.
                      productSaleMode: p.saleMode || 'free_market' };
         }
         var s = skh.activeChatService;
-        if (s && s.id && ctxOwnerOf(s) === uid) {
-            return { serviceId: s.id, sellerId: ctxOwnerOf(s), buyerId: me,
-                     serviceTitle: s.title || s.itemTitle || null, servicePrice: s.price != null ? s.price : null,
+        if (s && s.id && (ctxOwnerOf(s) === uid || ctxOwnerOf(s) === me || !ctxOwnerOf(s))) {
+            var sOwner = ctxOwnerOf(s) || uid;
+            return { serviceId: s.id, sellerId: sOwner, buyerId: (sOwner === me ? uid : me),
+                     serviceTitle: s.title || s.itemTitle || s.serviceName || null, servicePrice: s.price != null ? s.price : null,
                      serviceImage: s.image || (s.images && s.images[0]) || s.photo || null,
                      serviceScope: s.scope || s.description || null };
         }
         var t = skh.activeChatTransport;
-        if (t && t.id && ctxOwnerOf(t) === uid) {
-            return { transportId: t.id, sellerId: ctxOwnerOf(t), buyerId: me,
+        if (t && t.id && (ctxOwnerOf(t) === uid || ctxOwnerOf(t) === me || !ctxOwnerOf(t))) {
+            var tOwner = ctxOwnerOf(t) || uid;
+            return { transportId: t.id, sellerId: tOwner, buyerId: (tOwner === me ? uid : me),
                      transportTitle: t.title || t.cargoName || null, transportFare: t.price != null ? t.price : (t.fare != null ? t.fare : null),
                      transportFrom: t.fromLocation || t.pickupRegion || null, transportTo: t.toLocation || t.destinationRegion || null,
                      transportCollection: t.collectionName || t.collection || (t.rideRequest ? 'ride_requests' : (t.pickupRegion || t.destinationRegion ? 'drivers' : 'ride_requests')) };
@@ -3408,15 +3533,16 @@ import { skh } from './00-bootstrap.js';
     // Bidhaa bora inayojulikana: activeChatProduct > conversation.related > ujumbe wa bidhaa wa mwisho.
     function productCtx() {
         var core = skh.chatCore || {};
-        // [CTX-LEAK FIX] global ya activeChatProduct inaitumia TU partner mmiliki.
-        if (skh.activeChatProduct && skh.activeChatProduct.id && ctxOwnerOf(skh.activeChatProduct) === ctxPartner()) {
+        var me = myUid();
+        // Global ya activeChatProduct inatumiwa na partner au mimi mmiliki
+        if (skh.activeChatProduct && skh.activeChatProduct.id && (ctxOwnerOf(skh.activeChatProduct) === ctxPartner() || ctxOwnerOf(skh.activeChatProduct) === me || !ctxOwnerOf(skh.activeChatProduct))) {
             var p = skh.activeChatProduct;
             return {
                 id: p.id, collection: p.collectionName || skh.currentFeedCollection || 'products',
                 title: p.title || p.itemTitle || 'Bidhaa',
                 price: p.price != null ? p.price : null,
                 image: p.image || (p.images && p.images[0]) || p.photo || '',
-                sellerId: p.userId || null, sellerName: p.ownerName || ''
+                sellerId: p.userId || p.sellerId || null, sellerName: p.ownerName || p.sellerName || ''
             };
         }
         var rel = relatedCtx();
@@ -3431,9 +3557,17 @@ import { skh } from './00-bootstrap.js';
         var msgs = core.msgs || [];
         for (var i = msgs.length - 1; i >= 0; i--) {
             var m = msgs[i];
-            if (m.productRef && m.productRef.id) {
+            if ((m.productRef && m.productRef.id) || m.productId) {
                 var s = m.productSnapshot || {};
-                return { id: m.productRef.id, collection: m.productRef.collection || 'products', title: s.title || 'Bidhaa', price: s.price != null ? s.price : null, image: s.image || '', sellerId: s.sellerId || null, sellerName: s.sellerName || '' };
+                return {
+                    id: (m.productRef && m.productRef.id) || m.productId,
+                    collection: (m.productRef && m.productRef.collection) || m.productCollection || 'products',
+                    title: s.title || m.productTitle || 'Bidhaa',
+                    price: s.price != null ? s.price : m.productPrice,
+                    image: s.image || m.productImg || '',
+                    sellerId: s.sellerId || m.sellerUid || null,
+                    sellerName: s.sellerName || ''
+                };
             }
         }
         return null;
@@ -3442,8 +3576,8 @@ import { skh } from './00-bootstrap.js';
     // [COMMERCE 2026-09] Huduma bora inayojulikana kwenye chat (kama productCtx).
     function serviceCtx() {
         var core = skh.chatCore || {};
-        // [CTX-LEAK FIX] global ya activeChatService inaitumia TU partner mmiliki.
-        if (skh.activeChatService && skh.activeChatService.id && ctxOwnerOf(skh.activeChatService) === ctxPartner()) {
+        var me = myUid();
+        if (skh.activeChatService && skh.activeChatService.id && (ctxOwnerOf(skh.activeChatService) === ctxPartner() || ctxOwnerOf(skh.activeChatService) === me || !ctxOwnerOf(skh.activeChatService))) {
             var s = skh.activeChatService;
             return {
                 id: s.id, collection: s.collectionName || 'services',
@@ -3451,7 +3585,7 @@ import { skh } from './00-bootstrap.js';
                 price: s.price != null ? s.price : null,
                 image: s.image || (s.images && s.images[0]) || s.photo || '',
                 scope: s.scope || s.description || '',
-                sellerId: s.userId || s.providerId || null, sellerName: s.ownerName || ''
+                sellerId: s.userId || s.providerId || s.sellerId || null, sellerName: s.ownerName || s.sellerName || ''
             };
         }
         var rel = relatedCtx();
@@ -3465,9 +3599,18 @@ import { skh } from './00-bootstrap.js';
         var msgs = core.msgs || [];
         for (var i = msgs.length - 1; i >= 0; i--) {
             var m = msgs[i];
-            if (m.serviceRef && m.serviceRef.id) {
+            if ((m.serviceRef && m.serviceRef.id) || m.serviceId) {
                 var sn = m.serviceSnapshot || {};
-                return { id: m.serviceRef.id, collection: m.serviceRef.collection || 'services', title: sn.title || 'Huduma', price: sn.price != null ? sn.price : null, image: sn.image || '', scope: sn.scope || '', sellerId: sn.sellerId || null, sellerName: sn.sellerName || '' };
+                return {
+                    id: (m.serviceRef && m.serviceRef.id) || m.serviceId,
+                    collection: (m.serviceRef && m.serviceRef.collection) || m.serviceCollection || 'services',
+                    title: sn.title || m.serviceTitle || 'Huduma',
+                    price: sn.price != null ? sn.price : m.servicePrice,
+                    image: sn.image || m.serviceImage || '',
+                    scope: sn.scope || m.serviceScope || '',
+                    sellerId: sn.sellerId || m.sellerId || null,
+                    sellerName: sn.sellerName || ''
+                };
             }
         }
         return null;
@@ -3476,8 +3619,8 @@ import { skh } from './00-bootstrap.js';
     // [COMMERCE 2026-09] Usafiri bora unaojulikana kwenye chat (spec §10).
     function transportCtx() {
         var core = skh.chatCore || {};
-        // [CTX-LEAK FIX] global ya activeChatTransport inaitumia TU partner mmiliki.
-        if (skh.activeChatTransport && skh.activeChatTransport.id && ctxOwnerOf(skh.activeChatTransport) === ctxPartner()) {
+        var me = myUid();
+        if (skh.activeChatTransport && skh.activeChatTransport.id && (ctxOwnerOf(skh.activeChatTransport) === ctxPartner() || ctxOwnerOf(skh.activeChatTransport) === me || !ctxOwnerOf(skh.activeChatTransport))) {
             var t = skh.activeChatTransport;
             var tCol = t.collectionName || t.collection || 'ride_requests';
             return {
@@ -3497,17 +3640,30 @@ import { skh } from './00-bootstrap.js';
             return {
                 id: rel.transportId, collection: relCol, collectionName: relCol, title: rel.transportTitle || 'Usafiri',
                 fare: rel.transportFare != null ? rel.transportFare : null,
-                route: rel.transportRoute || {}, fromLocation: rel.transportFrom || '', toLocation: rel.transportTo || '',
-                packageDescription: rel.transportPackage || '', providerId: rel.sellerId || null, providerName: rel.sellerName || ''
+                route: rel.transportRoute || { from: rel.transportFrom || '', to: rel.transportTo || '' },
+                fromLocation: rel.transportFrom || '', toLocation: rel.transportTo || '',
+                packageDescription: rel.transportPackage || '',
+                providerId: rel.sellerId || null, providerName: rel.sellerName || ''
             };
         }
         var msgs = core.msgs || [];
         for (var i = msgs.length - 1; i >= 0; i--) {
             var m = msgs[i];
-            if (m.transportRef && m.transportRef.id) {
+            if ((m.transportRef && m.transportRef.id) || m.transportId) {
                 var sn2 = m.transportSnapshot || {};
-                var tCol2 = m.transportRef.collection || sn2.collection || 'ride_requests';
-                return { id: m.transportRef.id, collection: tCol2, collectionName: tCol2, title: sn2.title || 'Usafiri', fare: sn2.price != null ? sn2.price : (sn2.fare != null ? sn2.fare : null), route: sn2.route || {}, fromLocation: sn2.fromLocation || (sn2.route && sn2.route.from) || sn2.pickupRegion || '', toLocation: sn2.toLocation || (sn2.route && sn2.route.to) || sn2.destinationRegion || '', packageDescription: sn2.packageDescription || '', vehicleType: sn2.vehicleType || '', providerId: sn2.providerId || sn2.sellerId || sn2.userId || null, providerName: sn2.providerName || sn2.sellerName || sn2.driverName || '' };
+                var tCol2 = (m.transportRef && m.transportRef.collection) || sn2.collection || 'ride_requests';
+                return {
+                    id: (m.transportRef && m.transportRef.id) || m.transportId,
+                    collection: tCol2, collectionName: tCol2,
+                    title: sn2.title || m.transportTitle || 'Usafiri',
+                    fare: sn2.price != null ? sn2.price : (sn2.fare != null ? sn2.fare : (m.transportFare != null ? m.transportFare : m.transportPrice)),
+                    route: sn2.route || { from: sn2.fromLocation || (sn2.route && sn2.route.from) || m.transportFrom || '', to: sn2.toLocation || (sn2.route && sn2.route.to) || m.transportTo || '' },
+                    fromLocation: sn2.fromLocation || (sn2.route && sn2.route.from) || m.transportFrom || '',
+                    toLocation: sn2.toLocation || (sn2.route && sn2.route.to) || m.transportTo || '',
+                    packageDescription: sn2.packageDescription || '', vehicleType: sn2.vehicleType || '',
+                    providerId: sn2.providerId || sn2.sellerId || sn2.userId || null,
+                    providerName: sn2.providerName || sn2.sellerName || sn2.driverName || ''
+                };
             }
         }
         return null;
@@ -3537,6 +3693,14 @@ import { skh } from './00-bootstrap.js';
         var p = productCtx();
         if (!p) { alert(T('ch_no_product', 'Hakuna bidhaa kwenye chat hii.')); return; }
         window.skhChatOpenOffer(p);
+    };
+
+    window.skhChatAddToCart = async function (overridePid) {
+        if (!skh.requireAuth()) return;
+        var p = productCtx();
+        if (!p) { alert(T('ch_no_product', 'Hakuna bidhaa kwenye chat hii.')); return; }
+        setCurrentOpenProduct(p);
+        if (typeof window.addToCart === 'function') await window.addToCart(false);
     };
 
     window.skhChatAskDelivery = function () {
@@ -4123,6 +4287,8 @@ import { skh } from './00-bootstrap.js';
         }
         return host;
     }
+    window.skhEnsureCommerceAnchor = ensureCommerceAnchor;
+    window.skhIngestLatestNegoFromMsgs = ingestLatestNegoFromMsgs;
 
     function updateConvCommerce(convId, patch) {
         if (!convId) return;
@@ -4483,15 +4649,38 @@ import { skh } from './00-bootstrap.js';
         if (negoOrderUnsub) { try { negoOrderUnsub(); } catch (e) {} negoOrderUnsub = null; }
         negoFallbackStop();
         negoOrderUnsubFor = null;
-
-        // Vuta na kusikiliza muda halisi kwa conversationId + washiriki (buyer/seller)
-        negoFallbackSubscribe(convId);
-        negoFallbackFetch(convId).then(function (n) {
-            if (n) {
-                var cur = skh.negoCurrent;
-                if (!cur || cur.negotiationId !== n.negotiationId || negoNewer(n, cur)) adoptNego(n, convId);
-            }
-        }).catch(function () {});
+        var triedFallback = false;
+        var startFallback = function () {
+            if (triedFallback) return;
+            triedFallback = true;
+            // Muda halisi (single-field index) — majibu ya muuzaji/mnunuzi
+            // yataendelea kuonekana hata composite index isipokuwepo live.
+            negoFallbackSubscribe(convId);
+            // Vuta mara moja pia (kwa haraka) endapo mazingira hayana onSnapshot
+            // ya kuaminika kwa query hii.
+            negoFallbackFetch(convId).then(function (n) {
+                if (n) {
+                    var cur = skh.negoCurrent;
+                    if (!cur || cur.negotiationId !== n.negotiationId || negoNewer(n, cur)) adoptNego(n, convId);
+                }
+            }).catch(function () {});
+        };
+        try {
+            var q = skh.query(skh.collection(skh.db, 'negotiations'), skh.where('conversationId', '==', convId), skh.orderBy('updatedAt', 'desc'), skh.limit(1));
+            negoUnsub = skh.onSnapshot(q, function (snap) {
+                var nego = null;
+                if (snap && snap.forEach) snap.forEach(function (d) { nego = Object.assign({}, d.data(), { id: d.id }); });
+                if (nego) {
+                    negoFallbackStop();
+                    adoptNego(nego, convId);
+                } else if (!triedFallback) {
+                    adoptNego(null, convId);
+                    startFallback();
+                } else {
+                    adoptNego(null, convId);
+                }
+            }, function () { renderCommerceAnchor(); renderChatStream(); startFallback(); });
+        } catch (e) { startFallback(); }
     };
 
     // [REMINDER §35] Kumbusha mhusika anayesubiriwa (spec §35) — Firestore-native

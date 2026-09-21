@@ -338,13 +338,14 @@
             return;
         }
         var uid = key;
-        var row = items93.filter(function (x) { return x.otherUid === uid; })[0] || {};
+        var row = items93.filter(function (x) { return x.otherUid === uid || x.convId === uid; })[0] || {};
+        var actualUid = row.otherUid || uid;
         var name = row.name || '';
-        if (typeof window.openChatWithUser === 'function') {
-            try { window.openChatWithUser(uid, name); return; } catch (e) { console.warn('[INBOX93] openChatWithUser failed', e); }
-        }
         if (typeof window.skhChatOpen === 'function') {
-            try { window.skhChatOpen(uid, name); return; } catch (e) { console.warn('[INBOX93] skhChatOpen failed', e); }
+            try { window.skhChatOpen(actualUid, name, { convId: row.convId, related: row.related, ctx: row.ctx || '' }); return; } catch (e) { console.warn('[INBOX93] skhChatOpen failed', e); }
+        }
+        if (typeof window.openChatWithUser === 'function') {
+            try { window.openChatWithUser(actualUid, name); return; } catch (e) { console.warn('[INBOX93] openChatWithUser failed', e); }
         }
         console.error('[INBOX93] hakuna njia ya kufungua chat na', uid);
     };
@@ -400,15 +401,22 @@
      * typing/draft, nego listeners. RENDERER ni wa app yenyewe
      * (window.skhChatRenderStream) — bubbles/reply zinaonekana kama kawaida.
      * ---------------------------------------------------------------- */
-    function ensureConv93(partnerUid, ctx) {
+    function ensureConv93(partnerUid, ctx, related, convIdOverride) {
         var s = S();
         var me = myUid();
-        var id = window.skhChatConvId
+        var id = convIdOverride || (window.skhChatConvId
             ? window.skhChatConvId(partnerUid, ctx)
-            : 'conv_' + [me, partnerUid].sort().join('_') + (ctx ? '_' + String(ctx).replace(/[^A-Za-z0-9_-]/g, '') : '');
+            : 'conv_' + [me, partnerUid].sort().join('_') + (ctx ? '_' + String(ctx).replace(/[^A-Za-z0-9_-]/g, '') : ''));
         var ref = s.doc(s.db, 'conversations', id);
         return s.getDoc(ref).then(function (snap) {
-            if (snap && snap.exists && snap.exists()) return { id: id, data: snap.data(), created: false };
+            if (snap && snap.exists && snap.exists()) {
+                var cData = snap.data() || {};
+                if (related && (!cData.related || Object.keys(cData.related).length === 0)) {
+                    s.updateDoc(ref, { related: related }).catch(function () {});
+                    cData.related = related;
+                }
+                return { id: id, data: cData, created: false };
+            }
             function metaOf(uid) {
                 return s.getDoc(s.doc(s.db, 'users', uid)).then(function (u0) {
                     if (u0 && u0.exists && u0.exists()) {
@@ -432,7 +440,7 @@
                     type: 'direct',
                     participants: [me, partnerUid].sort(),
                     participantMeta: meta,
-                    related: null,
+                    related: related || null,
                     lastMessage: null,
                     lastMessageAt: null,
                     unread: unread,
@@ -460,14 +468,25 @@
                     var c = d.data() || {};
                     var other = c.senderUid === me ? c.receiverUid : c.senderUid;
                     if (other !== partnerUid) return;
-                    out.push({
+                    var itm = {
                         id: 'lg_' + d.id,
                         senderId: c.senderUid,
                         text: c.text || '',
                         type: 'text',
                         createdAt: c.createdAt,
                         _legacy: true
-                    });
+                    };
+                    if (c.productId) {
+                        itm.type = 'product';
+                        itm.productRef = { id: c.productId, collection: c.productCollection || 'products' };
+                        itm.productSnapshot = {
+                            title: c.productTitle || '',
+                            image: c.productImg || '',
+                            price: c.productPrice != null ? c.productPrice : null,
+                            sellerId: c.sellerUid || null
+                        };
+                    }
+                    out.push(itm);
                 });
             });
             return out;
@@ -521,8 +540,28 @@
             skh.chatPartner = name || skh.chatPartner || 'Mawasiliano';
             if (cw) cw.textContent = skh.chatPartner;
 
-            var conv = await ensureConv93(uid, opts.ctx || '');
+            // Related context resolution: opts.related > scopedRelatedForPartner > globals
+            var scopedRel = opts.related || (typeof scopedRelatedForPartner === 'function' ? scopedRelatedForPartner(uid) : null);
+            if (!scopedRel && skh.activeChatProduct) {
+                var p = skh.activeChatProduct;
+                var pOwner = (typeof ctxOwnerOf === 'function' && ctxOwnerOf(p)) || p.userId || uid;
+                scopedRel = { productId: p.id, sellerId: pOwner, buyerId: (pOwner === myUid() ? uid : myUid()), productTitle: p.title || p.itemTitle || null, productPrice: p.price != null ? p.price : null, productImage: p.image || (p.images && p.images[0]) || p.photo || null, productCollection: p.collectionName || 'products' };
+            } else if (!scopedRel && skh.activeChatService) {
+                var sItem = skh.activeChatService;
+                var sOwner = (typeof ctxOwnerOf === 'function' && ctxOwnerOf(sItem)) || sItem.userId || uid;
+                scopedRel = { serviceId: sItem.id, sellerId: sOwner, buyerId: (sOwner === myUid() ? uid : myUid()), serviceTitle: sItem.title || sItem.itemTitle || sItem.serviceName || null, servicePrice: sItem.price != null ? sItem.price : null, serviceImage: sItem.image || (sItem.images && sItem.images[0]) || sItem.photo || null, serviceScope: sItem.scope || sItem.description || null };
+            } else if (!scopedRel && skh.activeChatTransport) {
+                var tItem = skh.activeChatTransport;
+                var tOwner = (typeof ctxOwnerOf === 'function' && ctxOwnerOf(tItem)) || tItem.userId || uid;
+                scopedRel = { transportId: tItem.id, sellerId: tOwner, buyerId: (tOwner === myUid() ? uid : myUid()), transportTitle: tItem.title || tItem.cargoName || null, transportFare: tItem.price != null ? tItem.price : (tItem.fare != null ? tItem.fare : null), transportFrom: tItem.fromLocation || tItem.pickupRegion || null, transportTo: tItem.toLocation || tItem.destinationRegion || null, transportCollection: tItem.collectionName || tItem.collection || 'ride_requests' };
+            }
+
+            var conv = await ensureConv93(uid, opts.ctx || '', scopedRel, opts.convId || null);
             var legacy = await fetchLegacy93(uid);
+
+            if (conv.data && conv.data.related) {
+                skh.chatRelated = conv.data.related;
+            }
 
             skh.chatCore = {
                 convId: conv.id,
@@ -546,7 +585,11 @@
                     if (snap && snap.forEach) snap.forEach(function (d) { live.push(Object.assign({ id: d.id }, d.data())); });
                     var core = skh.chatCore; if (!core || core.convId !== conv.id) return;
                     core.msgs = mergeMsgs93(core._legacyMsgs || [], live);
+                    if (typeof window.skhIngestLatestNegoFromMsgs === 'function') {
+                        try { window.skhIngestLatestNegoFromMsgs(live); } catch (eN) {}
+                    }
                     if (typeof window.skhChatRenderStream === 'function') { try { window.skhChatRenderStream(); } catch (e2) {} }
+                    if (typeof window.skhChatRefreshNegoCard === 'function') { try { window.skhChatRefreshNegoCard(); } catch (eC) {} }
                 }, function (err) {
                     console.error('[CHAT93] messages stream failed:', err && err.message);
                     var cd = document.getElementById('chatMessages');
@@ -578,10 +621,11 @@
             // UX extras zote za app (kwa try/catch — si za lazima)
             try { window.skhSetChatHeaderAvatar && window.skhSetChatHeaderAvatar(uid, null, skh.chatPartner); } catch (e1) {}
             try { window.skhRenderAttachedProduct && window.skhRenderAttachedProduct(); } catch (e2) {}
+            try { window.skhEnsureCommerceAnchor && window.skhEnsureCommerceAnchor(); } catch (eA0) {}
+            try { window.skhChatRefreshNegoCard && window.skhChatRefreshNegoCard(); } catch (eA1) {}
             try { window.skhNegoListen && window.skhNegoListen(conv.id); } catch (e3) {}
             try { window.skhChatRenderBlockedState && window.skhChatRenderBlockedState(); } catch (e4) {}
             try { window.skhChatRenderSidePane && window.skhChatRenderSidePane(); } catch (e5) {}
-            try { window.skhChatWipeState && skh.negoCurrent !== undefined && (skh.negoCurrent = null, skh.negoOrder = null); } catch (e6) {}
 
             console.log('[CHAT93] opened conv', conv.id, 'legacy msgs:', legacy.length, (conv.created ? '(new)' : '(existing)'));
             return conv;

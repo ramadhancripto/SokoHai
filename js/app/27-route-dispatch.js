@@ -428,6 +428,8 @@ window.skhRouteMatcherChoose = function (driverId) {
     if (typeof window.closeModals === 'function') window.closeModals();
     if (typeof window.skhChatNegotiate === 'function') {
         window.skhChatNegotiate('transport', entity);
+    } else if (typeof window.skhNegoFormOpen === 'function') {
+        window.skhNegoFormOpen({ type: 'transport', entity: entity });
     } else if (typeof window.openDirectHire === 'function') {
         window.openDirectHire(entity.sellerId, entity.sellerName, entity.vehicleType);
     }
