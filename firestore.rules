@@ -96,7 +96,17 @@ service cloud.firestore {
     }
     match /orders/{id}            { allow read, write: if signedIn(); allow delete: if false; }
     match /notifications/{id}     { allow read, write: if signedIn(); }
-    match /chats/{id}             { allow read, write: if signedIn(); }
+    // Legacy compatibility only. Canonical chat ni conversations/messages.
+    // Legacy doc haisomeki na mtumiaji mwingine aliye-login bila kuwa mhusika.
+    match /chats/{id} {
+      allow read: if signedIn()
+        && (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.receiverUid is string
+        && request.resource.data.receiverUid.size() > 0;
+      allow update, delete: if false;
+    }
 
     // ============================================================
     // COMMERCE CHAT (2026-09) — mazungumzo yenye mfano wa conversation.
@@ -107,8 +117,12 @@ service cloud.firestore {
       allow read: if signedIn()
         && resource.data.participants.hasAny([request.auth.uid]);
       allow create: if signedIn()
+        && request.resource.data.participants is list
         && request.resource.data.participants.hasAll([request.auth.uid])
-        && request.resource.data.participants.size() == 2;
+        && request.resource.data.participants.size() == 2
+        && request.resource.data.participants[0] is string
+        && request.resource.data.participants[1] is string
+        && request.resource.data.participants[0] != request.resource.data.participants[1];
       allow update: if signedIn()
         && resource.data.participants.hasAny([request.auth.uid])
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participants']);
@@ -119,6 +133,9 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]);
       allow create: if signedIn()
         && request.resource.data.senderId == request.auth.uid
+        // Mwandishi lazima awe mshiriki wa parent conversation; kujua convId
+        // pekee hakumpi mtu ruhusa ya kuingiza ujumbe.
+        && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
         // [CHAT BLOCK 2026-09] Backend inakataa ujumbe ikiwa kuna block.
         && !isBlockedPair(
              get(/databases/$(database)/documents/conversations/$(convId)).data.participants[0],

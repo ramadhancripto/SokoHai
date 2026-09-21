@@ -318,8 +318,8 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   assert.equal(writtenDoc.type, 'service', 'Message type must be service');
   assert.equal(writtenDoc.serviceRef.id, 'srv_1', 'Service ref ID must match');
   assert.equal(writtenDoc.serviceSnapshot.title, 'Kupaka Rangi', 'Service title must match');
-  assert(updatedConv && updatedConv.related, 'Conversation related must be persisted');
-  assert.equal(updatedConv.related.serviceId, 'srv_1', 'Conversation related serviceId must match');
+  assert(updatedConv && updatedConv['related.serviceId'], 'Conversation related must be persisted atomically');
+  assert.equal(updatedConv['related.serviceId'], 'srv_1', 'Conversation related serviceId must match');
   console.log('✅ 7a. Buyer sending service message attaches serviceRef, snapshot, and persists conversation related');
 
   // B: Transporter (Seller/Owner) sends transport context
@@ -344,8 +344,8 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   assert.equal(writtenDoc.type, 'transport', 'Message type must be transport');
   assert.equal(writtenDoc.transportRef.id, 'tr_1', 'Transport ref ID must match');
   assert.equal(writtenDoc.transportSnapshot.fare, 25000, 'Transport fare must match');
-  assert(updatedConv && updatedConv.related, 'Conversation related must be persisted for transport');
-  assert.equal(updatedConv.related.transportId, 'tr_1', 'Conversation related transportId must match');
+  assert(updatedConv && updatedConv['related.transportId'], 'Conversation related must be persisted for transport');
+  assert.equal(updatedConv['related.transportId'], 'tr_1', 'Conversation related transportId must match');
   console.log('✅ 7b. Driver sending transport message attaches transportRef, snapshot, and persists conversation related');
 }
 

@@ -114,31 +114,11 @@ import { skh } from './00-bootstrap.js';
   var origAttach = null;
 
   function hookDirect(){
+    /* [AUTHORITY 2026-09-22] Direct chat haifunikwi tena hapa. 34-chat-core
+       yenyewe inaonyesha modal/skeleton kabla ya I/O na inamiliki lifecycle.
+       Faili 78 inabaki kwa group/no-blink compatibility pekee. */
     if(typeof window.skhChatOpen !== 'function') return false;
-    if(window.skhChatOpen.__blinkPatched) return true;
-    origChatOpen = window.skhChatOpen;
-    window.skhChatOpen = async function(uid2,name2,opts2){
-      try{
-        if(opts2 && opts2.__fromClick && opts2.__ev){ try{ opts2.__ev.stopPropagation(); }catch(e){} }
-      }catch(e){}
-      if(!uid2) return null;
-      if(!canOpen(uid2,'')) return null;
-      // INSTANT UI — no await
-      try{
-        atomicShowChatModal();
-        ensureChatSkeleton(name2||opts2&&opts2.name||'');
-      }catch(e){}
-      // proceed with original async work
-      try{
-        var res = await origChatOpen.call(this, uid2, name2, opts2);
-        return res;
-      }catch(err){
-        console.error('[blinkFix direct]',err);
-        try{ window.showToast && window.showToast('Imeshindikana kufungua chat','error'); }catch(e){}
-        return null;
-      }
-    };
-    window.skhChatOpen.__blinkPatched=true;
+    window.skhChatOpen.__blinkPatched = true; // compatibility marker only
     return true;
   }
 

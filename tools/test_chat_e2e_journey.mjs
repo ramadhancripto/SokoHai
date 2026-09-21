@@ -365,5 +365,34 @@ console.log('\n[J8] 39: skhChatNegotiate — await open halisi + fomu ndani ya c
   ok('double-call hairudii fomu', $$('#nfShell').length === shells);
 }
 
+console.log('\n[J9] Conversation create failure — fail-closed, si listener/send bandia');
+{
+  const realTx = skh.runTransaction;
+  const beforeListeners = listeners.length;
+  skh.runTransaction = async () => { throw Object.assign(new Error('Missing or insufficient permissions'), { code: 'permission-denied' }); };
+  const out = await window.skhChatOpen('seller_denied', 'Denied Seller', {});
+  await tick(5);
+  ok('open inarudisha null permission ikikataa create', out === null);
+  ok('state ni ERROR, si CONNECTING milele', skh.chatCore && skh.chatCore.state === 'ERROR');
+  ok('parent conversation bandia haikuundwa', !store.has('conversations/conv_buyer_1_seller_denied'));
+  ok('message listener mpya haikuunganishwa', listeners.length <= beforeListeners && !listeners.some((L) => String(L.path || '').includes('seller_denied')));
+  skh.runTransaction = realTx;
+}
+
+console.log('\n[J10] Switch partner — old realtime callback haiwezi kuvuja');
+{
+  await window.skhChatOpen('seller_3', 'Seller Three', {});
+  await tick(8);
+  const newConv = skh.chatCore && skh.chatCore.convId;
+  ok('partner mpya ana canonical conversation yake', newConv === 'conv_buyer_1_seller_3');
+  const oldPath = `conversations/${convId}/messages/late_old`;
+  store.set(oldPath, { senderId: 'seller_2', type: 'text', text: 'OLD CONVERSATION LEAK', createdAt: new Date().toISOString() });
+  fireListeners(oldPath);
+  await tick(5);
+  const activeTexts = (skh.chatCore.msgs || []).map((m) => m.text || '');
+  ok('ujumbe wa conversation ya zamani haujaingia partner mpya', !activeTexts.includes('OLD CONVERSATION LEAK'));
+  ok('listener hai imefungwa kwa conversation mpya', skh.chatCore.convId === newConv && skh.chatCore.partnerUid === 'seller_3');
+}
+
 console.log(`\nMATOKEO E2E: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

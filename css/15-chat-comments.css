@@ -1324,3 +1324,85 @@
 .ch-msg--failed .chat-bubble { border: 1.5px solid #fca5a5 !important; background: #fef2f2 !important; cursor: pointer; }
 .ch-retry { border: none; background: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 99px; cursor: pointer; margin-left: 6px; }
 .ch-retry:active { transform: scale(.96); }
+
+/* ============================================================
+   [CHAT MOBILE AUTHORITY 2026-09-22]
+   Page-level overflow is prevented at the source. Intentional horizontal
+   strips (.ch-ctxbar/.ch-commercebar/.ch-inbox-chips) may scroll internally.
+   ============================================================ */
+#chatModal, #chatListModal, .chat-card, .ch-inbox-shell,
+#chatMessages, #chatComposer, #chatCommerceAnchor, #chatContextBar {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+#chatMessages { overflow-x: hidden !important; }
+#chatMessages .ch-msg,
+#chatMessages .chat-bubble,
+#chatMessages .ch-card,
+#chatMessages .ch-offer-msg,
+#chatMessages .ch-nego-event,
+#chatMessages .ch-loc-card,
+#chatMessages .ch-card-info,
+#chatMessages .ch-nego-head-t,
+#chatMessages .ch-nego-order-t {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+#chatMessages .chat-bubble {
+    overflow-wrap: anywhere !important;
+    word-break: break-word;
+}
+#chatMessages .ch-card-title,
+#chatMessages .ch-card-sub,
+#chatMessages .ch-card-link,
+#chatMessages .ch-quote,
+#chatMessages .ch-nego-event,
+#chatMessages .ch-nego-event *,
+#chatMessages a {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+#chatMessages .ch-nego-event .ch-nego-term {
+    min-width: 0;
+    flex-wrap: wrap;
+}
+#chatMessages .ch-nego-event .ch-nego-term b {
+    white-space: normal;
+    max-width: 100%;
+    text-align: end;
+}
+#chatMessages .ch-offer-msg-actions,
+#chatMessages .ch-nego-actions {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+#chatMessages .ch-offer-msg-actions button,
+#chatMessages .ch-nego-actions button {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.ch-inbox-head, .ch-contact, .ch-cc-info, .ch-cc-side,
+.chat-head-bar, .ch-head-id, #chatComposer > * { min-width: 0; }
+.ch-inbox-title b, .ch-inbox-title small, .ch-cc-name, .ch-cc-msg,
+.chat-head-bar #chatWith { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 420px) {
+    #chatMessages .chat-bubble { max-width: 92% !important; }
+    #chatMessages .ch-card { gap: 8px; padding: 8px; }
+    #chatMessages .ch-card img, #chatMessages .ch-card-ico {
+        width: 44px; height: 44px;
+    }
+    .ch-inbox-head { gap: 7px; padding-inline: 10px; }
+    .ch-inbox-title b { font-size: 17px; letter-spacing: 2px; }
+}
+@media (max-width: 340px) {
+    #chatMessages { padding-inline: 6px !important; }
+    #chatMessages .chat-bubble { max-width: 94% !important; padding-inline: 8px !important; }
+    #chatMessages .ch-card { align-items: flex-start; }
+    .ch-inbox-head-actions { gap: 2px; }
+}

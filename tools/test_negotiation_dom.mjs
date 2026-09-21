@@ -372,8 +372,8 @@ console.log('\n[14] REGRESSION — counter ya muuzaji ISIKWAME kwa mnunuzi (live
     const sLabels = $$('.ch-nego-actions .ch-nego-btn').map(b => b.textContent.trim());
     ok('muuzaji hana Kabali/Counter/Kataa', !sLabels.some(l => /kubali|counter|kataa|badili/i.test(l)));
 
-    // Fallback ya msikilizaji: primary akirudi TUPU (composite index haipo),
-    // fallback ya muda halisi inaanza BILA orderBy (single-field index pekee).
+    // Authority moja: primary akirudi TUPU haianzishi pair-wide listener
+    // ambayo ingeweza kuleta negotiation ya bidhaa nyingine ya watu hawa.
     let orderByCount = 0;
     let registrations = [];
     // [13] ilibandika stub juu ya window.skhNegoListen — rudisha halisi.
@@ -386,8 +386,8 @@ console.log('\n[14] REGRESSION — counter ya muuzaji ISIKWAME kwa mnunuzi (live
         return () => {};
     };
     window.skhNegoListen('conv1');
-    ok('fallback listener wa muda halisi umeanza', registrations.length >= 2);
-    ok('fallback haitumii orderBy (haihitaji composite index)', orderByCount === 1);
+    ok('listener moja authoritative tu imesajiliwa', registrations.length === 1);
+    ok('query ya negotiation haitumii orderBy/composite index', orderByCount === 0);
     skh.onSnapshot = realOnSnapshot; skh.orderBy = realOrderBy;
 }
 

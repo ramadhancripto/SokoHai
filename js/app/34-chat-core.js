@@ -41,6 +41,80 @@ import { skh } from './00-bootstrap.js';
     function esc(s) { return skh.skhEscape(s == null ? '' : String(s)); }
     function jsEsc(s) { return skh.skhJsEsc(s == null ? '' : String(s)); }
     function myUid() { return (skh.currentUser && skh.currentUser.uid) || null; }
+
+    /* [CHAT AUTHORITY 2026-09-22]
+       Lifecycle moja ya direct chat. Repair layers hazipaswi tena kubadilisha
+       loader/composer kwa timers zao. State hii ndiyo source of truth ya UI. */
+    var CHAT_STATES = { IDLE: 'IDLE', CONNECTING: 'CONNECTING', READY: 'READY', EMPTY: 'EMPTY', ERROR: 'ERROR', RETRYING: 'RETRYING' };
+    var chatOpenSeq = 0;
+    function chatErrorCode(err, area) {
+        var raw = String((err && (err.code || err.message)) || '').toLowerCase();
+        if (raw.indexOf('permission-denied') !== -1 || raw.indexOf('insufficient permission') !== -1) return 'PERMISSION_DENIED';
+        if (raw.indexOf('unauth') !== -1) return 'AUTH_FAILURE';
+        if (raw.indexOf('unavailable') !== -1 || raw.indexOf('network') !== -1 || raw.indexOf('offline') !== -1) return 'FIREBASE_UNAVAILABLE';
+        if (raw.indexOf('partner') !== -1) return 'PARTNER_MISSING';
+        if (raw.indexOf('conversation') !== -1) return 'CONVERSATION_MISSING';
+        return area || 'CHAT_UNKNOWN';
+    }
+    function chatLog(area, err, meta) {
+        try { console.error('[SOKOHAI][' + area + ']', { code: chatErrorCode(err, area), error: err, meta: meta || null }); } catch (e) {}
+    }
+    function setChatState(state, detail) {
+        var core = skh.chatCore || (skh.chatCore = {});
+        core.state = state;
+        core.error = detail || null;
+        var modal = document.getElementById('chatModal');
+        var host = document.getElementById('chatMessages');
+        var composer = document.getElementById('chatComposer');
+        if (modal) modal.setAttribute('data-state', String(state || '').toLowerCase());
+        if (composer) {
+            var enabled = state === CHAT_STATES.READY || state === CHAT_STATES.EMPTY;
+            composer.style.opacity = enabled ? '1' : '.72';
+            composer.style.pointerEvents = enabled ? 'auto' : 'none';
+            var input = document.getElementById('chatInput');
+            if (input) input.disabled = !enabled;
+        }
+        if (!host) return;
+        host.classList.remove('ch-loading', 'ch-empty', 'ch-error');
+        if (state === CHAT_STATES.CONNECTING || state === CHAT_STATES.RETRYING) host.classList.add('ch-loading');
+        else if (state === CHAT_STATES.EMPTY) host.classList.add('ch-empty');
+        else if (state === CHAT_STATES.ERROR) host.classList.add('ch-error');
+    }
+    window.skhChatState = CHAT_STATES;
+    window.skhChatGetState = function () { return (skh.chatCore && skh.chatCore.state) || CHAT_STATES.IDLE; };
+
+    function waitForChatAuth() {
+        if (skh.currentUser && skh.currentUser.uid) return Promise.resolve(skh.currentUser);
+        try {
+            if (skh.auth && skh.auth.currentUser) {
+                skh.currentUser = skh.auth.currentUser;
+                return Promise.resolve(skh.currentUser);
+            }
+        } catch (e) {}
+        if (skh.__authResolved === true) return Promise.resolve(null);
+        return new Promise(function (resolve) {
+            var done = false;
+            var timer = null;
+            function finish(user) {
+                if (done) return;
+                done = true;
+                if (timer) clearTimeout(timer);
+                document.removeEventListener('skh:auth-ready', onReady);
+                resolve(user || skh.currentUser || (skh.auth && skh.auth.currentUser) || null);
+            }
+            function onReady(ev) { finish(ev && ev.detail && ev.detail.user); }
+            document.addEventListener('skh:auth-ready', onReady);
+            timer = setTimeout(function () { finish(null); }, 10000);
+        });
+    }
+
+    function stopDirectChatListeners() {
+        if (skh.chatCoreUnsub) { try { skh.chatCoreUnsub(); } catch (e) {} skh.chatCoreUnsub = null; }
+        if (skh.chatCoreConvUnsub) { try { skh.chatCoreConvUnsub(); } catch (e) {} skh.chatCoreConvUnsub = null; }
+        if (listenWatch) { try { clearTimeout(listenWatch); } catch (e) {} listenWatch = null; }
+        try { if (typeof window.skhNegoUnsubscribeAll === 'function') window.skhNegoUnsubscribeAll(); } catch (e) {}
+    }
+
     function myName() {
         if (skh.currentUser && skh.currentUser.displayName) return skh.currentUser.displayName;
         if (skh.currentUser && skh.currentUser.email) return skh.currentUser.email.split('@')[0];
@@ -69,7 +143,9 @@ import { skh } from './00-bootstrap.js';
     function sanitizeCtx(c) { return String(c || '').replace(/[^A-Za-z0-9_-]/g, ''); }
     function convIdFor(partnerUid, ctx) {
         var me = myUid();
-        var sorted = [me, partnerUid].sort().join('_');
+        partnerUid = partnerUid == null ? '' : String(partnerUid).trim();
+        if (!me || !partnerUid || partnerUid === 'undefined' || partnerUid === 'null' || partnerUid === me) return null;
+        var sorted = [String(me), partnerUid].sort().join('_');
         return 'conv_' + sorted;
     }
     window.skhChatConvId = convIdFor;
@@ -96,41 +172,53 @@ import { skh } from './00-bootstrap.js';
     async function ensureConversation(partnerUid, opts) {
         opts = opts || {};
         var me = myUid();
-        var ctx = opts.ctx || '';
-        var id = convIdFor(partnerUid, ctx);
+        var id = convIdFor(partnerUid, opts.ctx || '');
+        if (!me) throw Object.assign(new Error('CHAT_AUTH: current user UID missing'), { code: 'chat/auth-missing' });
+        if (!partnerUid || !id) throw Object.assign(new Error('CHAT_PARTNER: partner UID invalid'), { code: 'chat/partner-missing' });
         var ref = skh.doc(skh.db, 'conversations', id);
         try {
             var snap = await skh.getDoc(ref);
             if (snap && snap.exists && snap.exists()) {
-                return { id: id, ref: ref, data: snap.data(), created: false };
+                var existing = snap.data() || {};
+                if (!Array.isArray(existing.participants) || existing.participants.indexOf(me) === -1 || existing.participants.indexOf(partnerUid) === -1) {
+                    throw Object.assign(new Error('CHAT_CONVERSATION: participant contract mismatch'), { code: 'chat/conversation-participants' });
+                }
+                return { id: id, ref: ref, data: existing, created: false };
             }
-            var a = await participantMeta(me);
-            var b = await participantMeta(partnerUid);
-            var meta = {}; meta[a.uid] = a; meta[b.uid] = b;
-            // [CTX-LEAK FIX] related kutoka globals KAMA TU partner ndiye
-            // mmiliki wa kipengele — kamwe tusandike related ya tangazo la mtu
-            // mwingine kwenye conversation hii (hili ndilo lililotengeneza
-            // "product cards kila inbox hata sio muuzaji husika").
-            var related = opts.related || scopedRelatedForPartner(partnerUid);
+            var metas = await Promise.all([participantMeta(me), participantMeta(partnerUid)]);
+            var meta = {}; meta[metas[0].uid] = metas[0]; meta[metas[1].uid] = metas[1];
+            var related = opts.related || scopedRelatedForPartner(partnerUid) || null;
             var unread = {}; unread[me] = 0; unread[partnerUid] = 0;
-            var doc = {
-                type: opts.type || 'direct',
-                participants: [me, partnerUid].sort(),
-                participantMeta: meta,
-                related: related,
-                lastMessage: null,
-                lastMessageAt: null,
-                unread: unread,
-                lastReadAt: {},
-                typing: null,
-                createdAt: nowIso(),
-                updatedAt: nowIso(),
-                status: 'active'
+            var createdDoc = {
+                type: opts.type || 'direct', participants: [me, partnerUid].sort(), participantMeta: meta,
+                related: related, lastMessage: null, lastMessageAt: null, unread: unread,
+                lastReadAt: {}, typing: null, createdAt: nowIso(), updatedAt: nowIso(), status: 'active'
             };
-            await skh.setDoc(ref, doc);
-            return { id: id, ref: ref, data: doc, created: true };
+            var finalData = createdDoc;
+            var created = true;
+            if (typeof skh.runTransaction === 'function') {
+                await skh.runTransaction(skh.db, async function (tx) {
+                    var current = await tx.get(ref);
+                    if (current && current.exists && current.exists()) {
+                        finalData = current.data() || {};
+                        created = false;
+                    } else {
+                        tx.set(ref, createdDoc);
+                    }
+                });
+            } else {
+                // Compatibility environments bila transaction: setDoc promise
+                // yenyewe ndiyo confirmation; failure hairuhusiwi kumezwa.
+                await skh.setDoc(ref, createdDoc);
+                finalData = createdDoc;
+            }
+            if (!Array.isArray(finalData.participants) || finalData.participants.indexOf(me) === -1 || finalData.participants.indexOf(partnerUid) === -1) {
+                throw Object.assign(new Error('CHAT_CONVERSATION: participant contract mismatch'), { code: 'chat/conversation-participants' });
+            }
+            return { id: id, ref: ref, data: finalData, created: created };
         } catch (e) {
-            return { id: id, ref: ref, data: null, created: false };
+            chatLog('CHAT_CONVERSATION', e, { conversationId: id, partnerUid: partnerUid });
+            throw e;
         }
     }
 
@@ -201,11 +289,17 @@ import { skh } from './00-bootstrap.js';
             skh.chatCore = Object.assign(core, { partnerUid: partnerUid, convId: convId });
         }
 
-        if (!me) return { ok: false, error: 'not_authenticated' };
+        if (!me) { chatLog('CHAT_AUTH', new Error('Current user missing')); return { ok: false, error: 'not_authenticated', code: 'AUTH_FAILURE' }; }
         if (!partnerUid || !convId) {
-            console.error('[sendInternal error] Mpokeaji hajatambulika:', { me: me, partnerUid: partnerUid, convId: convId });
-            return { ok: false, error: 'no_partner' };
+            chatLog('CHAT_PARTNER', new Error('Partner or conversation missing'), { partnerUid: partnerUid, conversationId: convId });
+            return { ok: false, error: 'no_partner', code: !partnerUid ? 'PARTNER_MISSING' : 'CONVERSATION_MISSING' };
         }
+        if (core.state === CHAT_STATES.CONNECTING || core.state === CHAT_STATES.RETRYING || core.state === CHAT_STATES.ERROR) {
+            return { ok: false, error: 'not_ready', code: 'CONVERSATION_NOT_READY' };
+        }
+        text = text == null ? '' : String(text);
+        if (!opts.system && !opts.type && !text.trim()) return { ok: false, error: 'invalid_payload', code: 'INVALID_PAYLOAD' };
+        if (text.length > 10000) return { ok: false, error: 'invalid_payload', code: 'INVALID_PAYLOAD' };
 
         /* [SEND-FIX 2026-09-21] Block-check (getDocs 2x) IMEHAMISHWA chini:
            kwanza onyesha ujumbe (optimistic), kisha thibitisha block kwa
@@ -385,11 +479,12 @@ import { skh } from './00-bootstrap.js';
                 ? await skh.setDoc(skh.doc(skh.db, 'conversations/' + convId + '/messages', opts.docId), msg)
                 : await skh.addDoc(msgCol, msg);
         } catch (eWrite) {
-            /* [SEND-FIX 2026-09-21] Kuandika kumeshindwa (offline/rules):
-               weka alama NYEKUNDU + kitufe cha kujaribu tena — si kimya. */
+            /* [SEND-FIX 2026-09-22] Hifadhi sababu ya ndani; UI inabaki rafiki. */
             if (tempId) { markPendingFailed(core, tempId); try { renderChatStream(); } catch (eRF) {} }
+            var writeCode = chatErrorCode(eWrite, 'WRITE_FAILED');
+            chatLog('CHAT_WRITE', eWrite, { code: writeCode, conversationId: convId, partnerUid: partnerUid });
             try { skhToast(T('ch_send_fail', 'Imeshindwa kutuma. Angalia mtandao kisha gusa "Jaribu tena".'), 'error', 4200); } catch (eT) {}
-            return { ok: false, error: 'write_failed' };
+            return { ok: false, error: 'write_failed', code: writeCode };
         }
         /* [SEND-FIX 2026-09-21] Reconcile: ondoa bubble ya muda, weka umbo
            la ujumbe halisi (id ya server) ili UI isiblink — listener
@@ -406,36 +501,23 @@ import { skh } from './00-bootstrap.js';
         }
 
         // [MUTE 2026-09] Kama mwenzake ameweka conversation KIMYA, usimtumie arifa.
-        var partnerMuted = false;
-        // Sasisha conversation (lastMessage + unread kwa mwenzako) — read-modify-write.
+        var partnerMuted = !!(core.conv && core.conv.muted && core.conv.muted[partnerUid]);
+        // Metadata ni field-level atomic update: increment haiwezi kupotea wakati
+        // sends mbili zinafanyika pamoja, na hakuna read-modify-write round trip.
         try {
-            var cs = await skh.getDoc(convRef);
-            var cd = (cs && cs.exists && cs.exists()) ? cs.data() : {};
-            partnerMuted = !!(cd.muted && cd.muted[partnerUid]);
-            var unread = Object.assign({}, cd.unread || {});
-            unread[partnerUid] = (unread[partnerUid] || 0) + 1;
-            // [§15-§16 R8 CHAT DELETE] Ujumbe mpya luỵungezi uifunguliwe tena —
-            // kumbukumbu ya `deletedForUser` inafutwa kwa MWENZAKE (na hata mimi,
-            // kwa sababu mazungumzo yameendelea). Kuachiana-kunde hails hupotelea.
-            var hidden = Object.assign({}, cd.deletedForUser || {});
-            var hiddenDirty = false;
-            if (hidden[partnerUid]) { hidden[partnerUid] = false; hiddenDirty = true; }
-            if (hidden[me]) { hidden[me] = false; hiddenDirty = true; }
-            var convPatch = {
+            var metaPatch = {
                 lastMessage: { text: truncate(previewText, 120), senderId: me, at: nowIso(), type: type },
-                lastMessageAt: nowIso(),
-                updatedAt: nowIso(),
-                unread: unread
+                lastMessageAt: nowIso(), updatedAt: nowIso()
             };
-            if (commercePatch) {
-                convPatch.related = Object.assign({}, cd.related || {}, commercePatch);
-            }
-            if (hiddenDirty) convPatch.deletedForUser = hidden;
-            await skh.updateDoc(convRef, convPatch);
-            // [DRAFT 2026-09] Futa rasimu yangu baada ya kutuma (spec §12).
-            var drafts = Object.assign({}, cd.drafts || {});
-            if (drafts[me]) { delete drafts[me]; skh.updateDoc(convRef, { drafts: drafts }).catch(function () {}); }
-        } catch (e) { /* si kikwazo */ }
+            metaPatch['unread.' + partnerUid] = typeof skh.increment === 'function' ? skh.increment(1) : Number((((core.conv || {}).unread || {})[partnerUid]) || 0) + 1;
+            metaPatch['deletedForUser.' + partnerUid] = false;
+            metaPatch['deletedForUser.' + me] = false;
+            if (typeof skh.deleteField === 'function') metaPatch['drafts.' + me] = skh.deleteField();
+            if (commercePatch) Object.keys(commercePatch).forEach(function (k) { metaPatch['related.' + k] = commercePatch[k]; });
+            await skh.updateDoc(convRef, metaPatch);
+        } catch (eMeta) {
+            chatLog('CHAT_CONVERSATION', eMeta, { conversationId: convId, phase: 'message_metadata' });
+        }
 
         // Dual-write kwa legacy `chats` (backward compatible).
         // [DELIVERY/INTERNAL FIX 2026-09] Ujumbe wa MFUMO (ofa/oda/delivery)
@@ -1319,13 +1401,14 @@ import { skh } from './00-bootstrap.js';
             if (c.convId) listen(c.convId);
         } catch (e) {}
     };
-    function listen(convId) {
+    function listen(convId, openToken) {
         var chatDiv = document.getElementById('chatMessages');
         if (!chatDiv) return;
-        if (skh.chatCoreUnsub) { try { skh.chatCoreUnsub(); } catch (e) {} }
-        if (skh.chatCoreConvUnsub) { try { skh.chatCoreConvUnsub(); } catch (e) {} }
+        if (skh.chatCoreUnsub) { try { skh.chatCoreUnsub(); } catch (e) {} skh.chatCoreUnsub = null; }
+        if (skh.chatCoreConvUnsub) { try { skh.chatCoreConvUnsub(); } catch (e) {} skh.chatCoreConvUnsub = null; }
         if (listenWatch) { try { clearTimeout(listenWatch); } catch (e) {} listenWatch = null; }
-
+        openToken = openToken || ((skh.chatCore || {}).openToken);
+        setChatState(CHAT_STATES.CONNECTING);
         chatDiv.innerHTML = '<p style="text-align:center;color:#667781;padding:30px 10px;font-size:13px;">' + T('ch_loading', 'Inapakia meseji...') + '</p>';
 
         /* [HISTORY-WATCHDOG 2026-09-21] "Inapakia..." milele hairuhusiwi:
@@ -1335,23 +1418,26 @@ import { skh } from './00-bootstrap.js';
         listenWatch = setTimeout(function () {
             listenWatch = null;
             if (firstSnapDone) return;
+            var active = skh.chatCore || {};
+            if (active.convId !== convId || active.openToken !== openToken) return;
+            setChatState(CHAT_STATES.ERROR, { code: 'LISTENER_TIMEOUT' });
             try {
-                var stillLoading = chatDiv && /Inapakia/.test(chatDiv.innerHTML || '');
-                if (!stillLoading) return;
-                chatDiv.innerHTML = '<div style="text-align:center;padding:30px 16px;">'
-                    + '<p style="color:#64748b;font-size:13px;">' + T('ch_history_slow', 'Ujumbe wa zamani unachukua muda kupakia.') + '</p>'
-                    + '<button type="button" onclick="window.skhChatRetryHistory()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
-                    + '</div>';
+                chatDiv.innerHTML = '<div class="skh-chat-state"><b>' + T('ch_connect_fail', 'Chat haikuweza kuunganishwa.') + '</b>'
+                    + '<span>' + T('ch_history_slow', 'Ujumbe wa zamani unachukua muda kupakia.') + '</span>'
+                    + '<button type="button" class="skh-chat-btn" onclick="window.skhChatRetryHistory()">' + T('ch_retry', 'Jaribu Tena') + '</button></div>';
             } catch (e) {}
-        }, 12000);
+        }, 10000);
 
         var q = skh.query(skh.collection(skh.db, 'conversations/' + convId + '/messages'), skh.orderBy('createdAt', 'asc'), skh.limit(msgLimit));
         skh.chatCoreUnsub = skh.onSnapshot(q, function (snap) {
+            var activeCore = skh.chatCore || {};
+            if (activeCore.convId !== convId || activeCore.openToken !== openToken) return;
             firstSnapDone = true;
             if (listenWatch) { try { clearTimeout(listenWatch); } catch (e) {} listenWatch = null; }
             var msgs = [];
             if (snap && snap.forEach) snap.forEach(function (d) { msgs.push(Object.assign({ id: d.id }, d.data())); });
-            (skh.chatCore || {}).msgs = msgs;
+            activeCore.msgs = msgs;
+            setChatState(msgs.length ? CHAT_STATES.READY : CHAT_STATES.EMPTY);
             /* [HISTORY-WATCHDOG 2026-09-21] Render isiangushe kimya — data
                ya zamani isiyotarajiwa ikivunja render, onyesha retry. */
             var html = '';
@@ -1390,16 +1476,24 @@ import { skh } from './00-bootstrap.js';
                     skh.updateDoc(skh.doc(skh.db, 'conversations', convId), { deliveredAt: nextDlv }).catch(function () { skh._lastDelivAck = null; });
                 }
             } catch (e) {}
-        }, function () {
-            chatDiv.innerHTML = '<p style="text-align:center;color:#b91c1c;padding:30px 10px;font-size:13px;">' + (window.skhNavIcon?window.skhNavIcon('alert',14):'') + '' + T('ch_load_fail', 'Imeshindwa kupakia meseji. Jaribu tena.') + '</p>';
+        }, function (err) {
+            var activeCore = skh.chatCore || {};
+            if (activeCore.convId !== convId || activeCore.openToken !== openToken) return;
+            if (listenWatch) { try { clearTimeout(listenWatch); } catch (e) {} listenWatch = null; }
+            chatLog('CHAT_LISTENER', err, { conversationId: convId });
+            setChatState(CHAT_STATES.ERROR, { code: chatErrorCode(err, 'CHAT_LISTENER') });
+            chatDiv.innerHTML = '<div class="skh-chat-state"><b>' + T('ch_load_fail', 'Imeshindwa kupakia meseji.') + '</b>'
+                + '<span>' + T('ch_retry_sub', 'Angalia mtandao kisha jaribu tena.') + '</span>'
+                + '<button type="button" class="skh-chat-btn" onclick="window.skhChatRetryHistory()">' + T('ch_retry', 'Jaribu Tena') + '</button></div>';
         });
 
         // Msimamizi wa conversation (typing + read receipts + unread).
         var convRef = skh.doc(skh.db, 'conversations', convId);
         skh.chatCoreConvUnsub = skh.onSnapshot(convRef, function (snap) {
+            var core = skh.chatCore || {};
+            if (core.convId !== convId || core.openToken !== openToken) return;
             if (!snap || !snap.exists || !snap.exists()) return;
             var conv = snap.data();
-            var core = skh.chatCore || {};
             var oldConv = core.conv || {};
             core.conv = conv;
             updateHeaderSub(conv);
@@ -1631,14 +1725,20 @@ import { skh } from './00-bootstrap.js';
 
     function attachConversation(conv, partnerUid, partnerName, opts) {
         opts = opts || {};
+        if (!conv || !conv.id || !conv.data) throw Object.assign(new Error('CHAT_CONVERSATION: conversation was not confirmed'), { code: 'chat/conversation-missing' });
+        var previousCore = skh.chatCore || {};
         var core = skh.chatCore = {
             convId: conv.id,
             partnerUid: partnerUid,
             partnerName: partnerName,
             replyTo: null,
             msgs: [],
-            conv: conv.data || {},
-            subEl: null
+            conv: conv.data,
+            subEl: null,
+            openToken: opts.openToken || chatOpenSeq,
+            state: CHAT_STATES.CONNECTING,
+            error: null,
+            openRequest: previousCore.openRequest || { uid: partnerUid, name: partnerName, opts: {} }
         };
         var cw = document.getElementById('chatWith');
         if (cw) cw.textContent = partnerName;
@@ -1773,7 +1873,7 @@ import { skh } from './00-bootstrap.js';
             };
             setTimeout(function () { try { inp.focus(); } catch (e) {} }, 250);
         }
-        listen(conv.id);
+        listen(conv.id, core.openToken);
         bindSwipeReply();
         bindMessageMenu();
         // [BLOCK FIX 2026-09] Onyesha hali ya block na usajili msikilizaji wa
@@ -1942,15 +2042,24 @@ import { skh } from './00-bootstrap.js';
     // papo hapo na loading indicator, kisha queries za background zinafanyika
     // baadaye. Zamani ilikuwa inasubiri queries 10-20 SEQUENTIALLY (5-15s).
     window.skhChatOpen = async function (uid, name, opts) {
-        if (!skh.requireAuth()) return null;
-        // [ULINZI WA UID] Usiruhusu kamwe UID ya undefined au tupu
-        if (!uid || uid === 'undefined' || uid === 'null' || uid === '') {
-            console.error('[skhChatOpen] Aborted due to invalid UID:', uid);
+        opts = opts || {};
+        var openToken = ++chatOpenSeq;
+        uid = uid == null ? '' : String(uid).trim();
+        var user = await waitForChatAuth();
+        if (openToken !== chatOpenSeq) return null;
+        if (!user || !user.uid) {
+            chatLog('CHAT_AUTH', new Error('Authentication was not resolved'));
+            try { if (typeof window.openAuthModal === 'function') window.openAuthModal(); } catch (e) {}
+            return null;
+        }
+        skh.currentUser = user;
+        if (!uid || uid === 'undefined' || uid === 'null') {
+            chatLog('CHAT_PARTNER', new Error('Partner UID missing'), { uid: uid });
             alert('Hitilafu: Mpokeaji hajatambulika kwenye tangazo hili.');
             return null;
         }
         if (uid === myUid()) { alert(T('ch_self', 'Huwezi kujitumia ujumbe mwenyewe.')); return null; }
-        opts = opts || {};
+        stopDirectChatListeners();
         var email = opts.email || skh.currentChatEmail || '';
         var partnerName = name || opts.name || '';
         var me = myUid();
@@ -1970,10 +2079,16 @@ import { skh } from './00-bootstrap.js';
             replyTo: null,
             msgs: [],
             conv: {},
-            subEl: null
+            subEl: null,
+            openToken: openToken,
+            state: CHAT_STATES.CONNECTING,
+            error: null,
+            openRequest: { uid: uid, name: name || '', opts: Object.assign({}, opts) }
         };
+        setChatState(opts.retry ? CHAT_STATES.RETRYING : CHAT_STATES.CONNECTING);
 
-        // 2. FUNGUA UI MARA MOJA NA WEKA SPINNER
+        // 2. FUNGUA UI MARA MOJA NA WEKA SPINNER (mamlaka ya core; hakuna wrapper)
+        try { if (typeof window.skhAbsoluteShowOnly === 'function') window.skhAbsoluteShowOnly('chatModal', 'flex', true); } catch (eShow) {}
         var cmEarly = document.getElementById('chatModal');
         if (cmEarly) {
             cmEarly.style.display = 'flex';
@@ -2006,19 +2121,8 @@ import { skh } from './00-bootstrap.js';
             }
         } catch(e){}
 
-        // 3. HARD TIMEOUT WATCHDOG (Sekunde 8) KUZUIA "Inaunganisha..." MILELE
-        var connectionTimedOut = false;
-        var connectionTimer = setTimeout(function () {
-            connectionTimedOut = true;
-            var cDiv = document.getElementById('chatMessages');
-            if (cDiv && /Inaunganisha/.test(cDiv.innerHTML || '')) {
-                cDiv.innerHTML = '<div style="text-align:center;padding:34px 16px;">'
-                    + '<p style="color:#64748b;font-size:13px;">Mazungumzo yanachukua muda kuunganishwa.</p>'
-                    + '<button type="button" onclick="window.skhChatOpen(\'' + jsEsc(uid) + '\',\'' + jsEsc(name || '') + '\')" style="margin-top:10px;padding:9px 18px;background:#0B4F7A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
-                    + '</div>';
-            }
-        }, 8000);
-
+        // Timeout moja authoritative inaanza ndani ya listen() baada ya parent
+        // conversation kuthibitishwa; hatutafsiri profile/create latency kuwa EMPTY.
         try {
             // Background resolution ya User profile
             if (!email || !partnerName) {
@@ -2031,6 +2135,7 @@ import { skh } from './00-bootstrap.js';
                     }
                 } catch (e) { /* ignore */ }
             }
+            if (openToken !== chatOpenSeq) return null;
             partnerName = partnerName || (email ? email.split('@')[0] : 'Mawasiliano');
             skh.currentChatEmail = email || '';
             skh.chatPartner = partnerName;
@@ -2044,10 +2149,10 @@ import { skh } from './00-bootstrap.js';
 
             // Unda au thibitisha conversation
             var conv = await ensureConversation(uid, { ctx: '', related: related, type: type });
-            clearTimeout(connectionTimer);
+            if (openToken !== chatOpenSeq) return null;
 
             // Unganisha conversation kikamilifu
-            attachConversation(conv, uid, partnerName, { ctx: ctx, related: related });
+            attachConversation(conv, uid, partnerName, { ctx: ctx, related: related, openToken: openToken });
 
             // Run merge na legacy bila kuzuia mtumiaji kuanza kuandika
             Promise.allSettled([
@@ -2061,19 +2166,26 @@ import { skh } from './00-bootstrap.js';
 
             return conv;
         } catch(e) {
-            clearTimeout(connectionTimer);
-            console.error('[chat open error]', e);
+            if (openToken !== chatOpenSeq) return null;
+            chatLog('CHAT_OPEN', e, { partnerUid: uid, conversationId: deterministicConvId });
+            setChatState(CHAT_STATES.ERROR, { code: chatErrorCode(e, 'CHAT_OPEN') });
             var chatDiv = document.getElementById('chatMessages');
             if (chatDiv) {
                 chatDiv.innerHTML = '<div style="text-align:center;padding:30px 16px;">'
                     + '<p style="color:#b91c1c;font-size:13px;">' + T('ch_open_fail', 'Imeshindwa kufungua mazungumzo.') + '</p>'
-                    + '<button type="button" onclick="window.skhChatOpen(\'' + jsEsc(uid) + '\',\'' + jsEsc(name || '') + '\')" style="margin-top:10px;padding:9px 18px;background:#0B4F7A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
+                    + '<button type="button" onclick="window.skhChatRetryOpen()" style="margin-top:10px;padding:9px 18px;background:#0B4F7A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
                     + '</div>';
             }
             return null;
         }
     };
 
+    window.skhChatRetryOpen = function () {
+        var req = (skh.chatCore && skh.chatCore.openRequest) || null;
+        if (!req || !req.uid) return;
+        var nextOpts = Object.assign({}, req.opts || {}, { retry: true });
+        return window.skhChatOpen(req.uid, req.name || '', nextOpts);
+    };
 
     /* ---------- ACTIONS ZA UJUMBE ---------- */
     async function getMsg(msgId) {
@@ -4704,25 +4816,9 @@ import { skh } from './00-bootstrap.js';
             if (snap && snap.forEach) snap.forEach(addDoc);
         } catch (e) {}
 
-        if (me && partner) {
-            try {
-                var q1 = skh.query(skh.collection(skh.db, 'negotiations'),
-                    skh.where('buyerId', '==', me),
-                    skh.where('sellerId', '==', partner),
-                    skh.limit(10));
-                var snap1 = await skh.getDocs(q1);
-                if (snap1 && snap1.forEach) snap1.forEach(addDoc);
-            } catch (e1) {}
-
-            try {
-                var q2 = skh.query(skh.collection(skh.db, 'negotiations'),
-                    skh.where('sellerId', '==', me),
-                    skh.where('buyerId', '==', partner),
-                    skh.limit(10));
-                var snap2 = await skh.getDocs(q2);
-                if (snap2 && snap2.forEach) snap2.forEach(addDoc);
-            } catch (e2) {}
-        }
+        /* Pair-wide fallback imeondolewa: ilikuwa inaweza kuleta negotiation ya
+           bidhaa/huduma nyingine ya watu hawa hawa. Legacy recovery inatumia
+           conversation IDs zilizothibitishwa pekee. */
         return docs;
     }
 
@@ -4738,6 +4834,7 @@ import { skh } from './00-bootstrap.js';
             var ids = [convId].concat(extras.filter(function (x) { return x && x !== convId; }));
 
             var handleSnap = function (snap) {
+                if ((skh.chatCore || {}).convId !== convId) return;
                 var docs = [];
                 if (snap && snap.forEach) snap.forEach(function (d) { docs.push(Object.assign({}, d.data(), { id: d.id })); });
                 if (!docs.length) return;
@@ -4750,29 +4847,11 @@ import { skh } from './00-bootstrap.js';
             };
 
             var q = skh.query(skh.collection(skh.db, 'negotiations'), skh.where('conversationId', 'in', ids), skh.limit(30));
-            var unsub = skh.onSnapshot(q, handleSnap, function () {});
+            var unsub = skh.onSnapshot(q, handleSnap, function (err) { chatLog('CHAT_NEGOTIATION', err, { conversationId: convId, phase: 'fallback_listener' }); });
             negoFallbackUnsubs.push(unsub);
 
-            if (me && partner) {
-                try {
-                    var q1 = skh.query(skh.collection(skh.db, 'negotiations'),
-                        skh.where('buyerId', '==', me),
-                        skh.where('sellerId', '==', partner),
-                        skh.limit(10));
-                    var u1 = skh.onSnapshot(q1, handleSnap, function () {});
-                    negoFallbackUnsubs.push(u1);
-                } catch (e1) {}
-
-                try {
-                    var q2 = skh.query(skh.collection(skh.db, 'negotiations'),
-                        skh.where('sellerId', '==', me),
-                        skh.where('buyerId', '==', partner),
-                        skh.limit(10));
-                    var u2 = skh.onSnapshot(q2, handleSnap, function () {});
-                    negoFallbackUnsubs.push(u2);
-                } catch (e2) {}
-            }
-        } catch (e) {}
+            // Hakuna listeners za pair-wide; query hii moja ndiyo legacy authority.
+        } catch (e) { chatLog('CHAT_NEGOTIATION', e, { conversationId: convId, phase: 'fallback_subscribe' }); }
     }
     function negoFallbackStop() {
         if (negoFallbackUnsubs && negoFallbackUnsubs.length) {
@@ -4891,6 +4970,7 @@ import { skh } from './00-bootstrap.js';
         var startFallback = function () {
             if (triedFallback) return;
             triedFallback = true;
+            if (negoUnsub) { try { negoUnsub(); } catch (e) {} negoUnsub = null; }
             negoFallbackSubscribe(convId);
             negoFallbackFetch(convId).then(function (n) {
                 if (n) {
@@ -4904,6 +4984,7 @@ import { skh } from './00-bootstrap.js';
             // Kupanga (sort) kunafanyika client-side kupitia negoDocsCmp ili kuzuia Firestore error ya missing index.
             var q = skh.query(skh.collection(skh.db, 'negotiations'), skh.where('conversationId', '==', convId), skh.limit(10));
             negoUnsub = skh.onSnapshot(q, function (snap) {
+                if ((skh.chatCore || {}).convId !== convId) return;
                 var docs = [];
                 if (snap && snap.forEach) snap.forEach(function (d) { docs.push(Object.assign({}, d.data(), { id: d.id })); });
                 if (docs.length > 0) {
@@ -4916,7 +4997,8 @@ import { skh } from './00-bootstrap.js';
                     adoptNego(null, convId);
                 }
             }, function (err) {
-                console.warn('[nego listen error]', err);
+                if ((skh.chatCore || {}).convId !== convId) return;
+                chatLog('CHAT_NEGOTIATION', err, { conversationId: convId, phase: 'primary_listener' });
                 renderCommerceAnchor();
                 renderChatStream();
                 startFallback();

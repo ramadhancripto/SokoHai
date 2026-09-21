@@ -357,36 +357,11 @@ import { skh } from './00-bootstrap.js';
   }
 
   function patchDirectChat(){
-    if(!window.skhChatOpen || window.skhChatOpen.__abs81_final) return;
-    var orig = window.skhChatOpen.__blinkPatched ? window.skhChatOpen : window.skhChatOpen;
-    // get the most original
-    var base = orig.__orig || orig;
-    // If already patched by 78/79, get base
-    if(window.skhChatOpen.__orig) base = window.skhChatOpen.__orig;
-    // Actually we want to wrap the current (which already has blink fix)
-    var current = window.skhChatOpen;
-    window.skhChatOpen = async function(uid2,name2,opts2){
-      try{
-        if(!uid2) return null;
-        // Block double click same uid <600ms
-        if(!canOpen('chat_'+uid2)){
-          var cmExist = byId('chatModal');
-          if(cmExist && cmExist.style.display!=='none') return;
-        }
-        // ABSOLUTE show only chatModal SYNC — no home flash
-        window.skhAbsoluteShowOnly('chatModal','flex',true);
-        // instant skeleton
-        var host = byId('chatMessages');
-        if(host && !host.innerHTML.includes('Inafungua')){
-          host.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8;"><div style="display:inline-block;width:28px;height:28px;border:3px solid #e2e8f0;border-top-color:#1268A8;border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="margin-top:10px;font-size:13px;">Inafungua chat na '+esc(name2||'')+'</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>';
-        }
-      }catch(e){}
-      try{
-        return await current.apply(this, arguments);
-      }catch(e){ console.error('[81 direct]',e); try{ if(window.showToast) window.showToast('Chat error: '+(e.message||''),'error'); }catch(e2){} return null; }
-    };
-    __skhCopyChainFlags(current, window.skhChatOpen);
-    window.skhChatOpen.__abs81_final=true;
+    /* [AUTHORITY 2026-09-22] 34-chat-core ndiyo public direct-chat entry.
+       skhAbsoluteShowOnly bado ni UI primitive inayotumiwa NA core, lakini 81
+       haifunikwi tena juu ya skhChatOpen. */
+    if(!window.skhChatOpen) return;
+    window.skhChatOpen.__abs81_final = true; // compatibility marker only
   }
 
   function patchGroupRow(){

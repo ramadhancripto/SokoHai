@@ -386,3 +386,34 @@
 .nf-x { font-size: 0; }
 .nf-x svg { stroke: #64748B; }
 .nf-x:hover svg { stroke: #0F172A; }
+
+/* [NEGO MOBILE AUTHORITY 2026-09-22] 320–412px: long commerce text and
+   actions wrap inside the sheet; no fixed button width may widen viewport. */
+.nf-sheet, .nf-sheet form, .nf-body, .nf-foot, .nf-context,
+.nf-row, .nf-pair-row, .nf-sum-row, .nf-actions {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.nf-head-t, .nf-ctx-info, .nf-ctx-info *, .nf-sum-row *, .nf-state * {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.nf-foot, .nf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.nf-foot .nf-btn, .nf-actions .nf-btn, .nf-state .nf-btn {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 380px) {
+    .nf-head { padding: 12px 10px; }
+    .nf-body { padding-inline: 10px; }
+    .nf-foot { padding: 10px; }
+    .nf-pair-row { flex-wrap: wrap; }
+    .nf-pair-row > * { flex: 1 1 130px; }
+    .nf-foot .nf-btn, .nf-actions .nf-btn { flex: 1 1 calc(50% - 8px); }
+}
+@media (max-width: 330px) {
+    .nf-foot .nf-btn, .nf-actions .nf-btn { flex-basis: 100%; width: 100%; }
+}

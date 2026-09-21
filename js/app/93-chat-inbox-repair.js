@@ -53,6 +53,7 @@
     var tab93 = 'all';
     var query93 = '';
     var loading93 = false;
+    var loadSeq93 = 0;
 
     /* ---------------- LOAD (schema ya 34-chat-core) ---------------- */
     async function loadInbox93() {
@@ -138,15 +139,16 @@
             if (curC && !itC) return;
             if (String(it.lastMessageAt || '') > String(cur.lastMessageAt || '')) best[k] = it;
         });
-        items93 = Object.keys(best).map(function (k) { return best[k]; });
-        items93.sort(function (a, b) {
+        var loadedItems = Object.keys(best).map(function (k) { return best[k]; });
+        loadedItems.sort(function (a, b) {
             if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
             return String(b.lastMessageAt || '').localeCompare(String(a.lastMessageAt || ''));
         });
-        console.log('[INBOX93] loaded:', items93.length, 'items');
-        if (convErr && legacyErr && items93.length === 0) {
+        console.log('[INBOX93] loaded:', loadedItems.length, 'items');
+        if (convErr && legacyErr && loadedItems.length === 0) {
             throw new Error('Imeshindwa kusoma mazungumzo (' + String(convErr.message || convErr).slice(0, 80) + ')');
         }
+        return loadedItems;
     }
 
     /* ---------------- RENDER (classes .ch-* za CSS ileile) ---------------- */
@@ -285,6 +287,7 @@
         if (!list) { console.error('[INBOX93] #inboxList haipo kwenye DOM'); return; }
         if (loading93) return;
         loading93 = true;
+        var myLoadSeq = ++loadSeq93;
         list.innerHTML = '<div style="text-align:center;padding:30px 16px;">'
             + '<div style="display:inline-block;width:28px;height:28px;border:3px solid #e2e8f0;border-top-color:#0B4F7A;border-radius:50%;animation:skhSpin 0.8s linear infinite;"></div>'
             + '<p style="color:#64748b;font-size:13px;margin-top:10px;">Inapakia mazungumzo...</p>'
@@ -297,21 +300,26 @@
         }
         var timedOut = false;
         var to = setTimeout(function () {
-            if (!timedOut && loading93) {
+            if (!timedOut && loading93 && myLoadSeq === loadSeq93) {
                 timedOut = true;
+                loading93 = false; // Retry lazima iweze kuanza; invalidate response ya zamani.
+                loadSeq93++;
                 list.innerHTML = '<div style="text-align:center;padding:24px 16px;">'
                     + '<p style="color:#64748b;font-size:13px;">Mazungumzo yanachukua muda kupakia.</p>'
                     + '<button type="button" onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
                     + '</div>';
             }
-        }, 15000);
+        }, 10000);
         try {
-            await loadInbox93();
+            var loaded = await loadInbox93();
             clearTimeout(to);
+            if (myLoadSeq !== loadSeq93) return;
+            items93 = loaded || [];
             loading93 = false;
             renderInbox93();
         } catch (e) {
             clearTimeout(to);
+            if (myLoadSeq !== loadSeq93) return;
             loading93 = false;
             console.error('[INBOX93] load failed:', e);
             list.innerHTML = '<div style="text-align:center;padding:26px 16px;color:#b91c1c;">'
