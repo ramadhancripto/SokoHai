@@ -1,0 +1,125 @@
+/* ==== css/09-sokopay-polish.css ==== */
+/* ============================================================
+   SOKOHAI SOKOPAY POLISH (Phase 3.6) — Escrow screens
+   A) Checkout modal (#checkoutModal)
+   B) Escrow confirm/dispute modal (#escrowModal)
+   C) Wallet deposit modal (#sokopayDepositModal)
+   D) SokoPay portal KPI cards (.sp-kpi-card-premium)
+   ⚠️ Visual tu — hakuna logic ya malipo inayoguswa.
+   ============================================================ */
+
+/* ---------- Backdrop ya pamoja (3 modals za malipo) ---------- */
+#checkoutModal,
+#escrowModal,
+#sokopayDepositModal {
+    background: radial-gradient(1000px 500px at 15% -10%, rgba(16, 185, 129, 0.16), transparent 60%),
+                radial-gradient(900px 500px at 110% 110%, rgba(3, 80, 157, 0.28), transparent 55%),
+                rgba(2, 13, 28, 0.62) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* ---------- Card ya pamoja ---------- */
+#checkoutModal > div,
+#escrowModal > div,
+#sokopayDepositModal > div {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(2, 13, 28, 0.45) !important;
+    animation: skhPayPop 0.32s var(--skh-ease, cubic-bezier(.22, 1, .36, 1));
+}
+/* Strip ya "trusted" — kijani (escrow) kwa juu ya card */
+#checkoutModal > div::before,
+#escrowModal > div::before,
+#sokopayDepositModal > div::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--skh-green, #10b981) 0%, #0ea371 45%, var(--skh-primary, #03509d) 100%);
+    z-index: 1;
+}
+@keyframes skhPayPop {
+    from { opacity: 0; transform: scale(.94) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ---------- A) CHECKOUT ---------- */
+#checkoutProvider, #checkoutPhone, #checkoutBankAccount {
+    font-size: 16px !important; /* iOS zoom-fix */
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+#checkoutProvider:focus, #checkoutPhone:focus, #checkoutBankAccount:focus {
+    border-color: var(--skh-primary, #03509d) !important;
+    box-shadow: 0 0 0 4px rgba(3, 80, 157, .12) !important;
+    outline: none;
+}
+
+/* ---------- B) ESCROW (confirm / dispute) ---------- */
+#escrowModal button {
+    transition: transform .15s ease, filter .15s ease, box-shadow .15s ease, background .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+    #escrowModal button[onclick="confirmEscrowOrder()"]:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+        box-shadow: 0 8px 22px rgba(16, 185, 129, 0.4) !important;
+    }
+    #escrowModal button[onclick="disputeEscrowOrder()"]:hover {
+        background: #fecaca !important;
+        transform: translateY(-2px);
+    }
+}
+#escrowModal button:active { transform: scale(.98); }
+#escrowModal button:disabled { opacity: .7; cursor: progress; }
+
+/* ---------- C) DEPOSIT ---------- */
+#spDepositAmount, #spDepositProvider, #spDepositPhone {
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+#spDepositPhone { font-size: 16px !important; } /* iOS zoom-fix */
+#spDepositAmount:focus, #spDepositProvider:focus, #spDepositPhone:focus {
+    border-color: var(--skh-green, #10b981) !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, .12) !important;
+    outline: none;
+}
+#btnSubmitSpDeposit {
+    transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+}
+@media (hover: hover) {
+    #btnSubmitSpDeposit:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+        box-shadow: 0 8px 22px rgba(16, 185, 129, 0.35);
+    }
+}
+#btnSubmitSpDeposit:active { transform: scale(.98); }
+#btnSubmitSpDeposit:disabled { opacity: .7; cursor: progress; }
+@media (hover: hover) {
+    
+}
+@media (hover: hover) {
+    
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 420px) {
+    #checkoutModal > div, #escrowModal > div, #sokopayDepositModal > div { padding: 24px 18px 18px !important; }
+}
+
+/* ---------- Upunguzaji wa motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    #checkoutModal > div, #escrowModal > div, #sokopayDepositModal > div,
+    #escrowModal button, #btnSubmitSpDeposit, .sp-kpi-card-premium { animation: none !important; transition: none !important; }
+}
+
+/* [SOKOHAI] Input ya njia ya malipo (Smart Cart) — ilikuwa 'sos-input' ya zamani */
+#checkoutModal .scart-input, .scart-input {
+    width: 100%; box-sizing: border-box;
+    padding: 12px; border-radius: 10px;
+    border: 1.5px solid #d7e0ea; background: #fff;
+    font-weight: 700; font-size: 16px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.scart-input:focus { border-color: var(--skh-primary, #03509d) !important; box-shadow: 0 0 0 4px rgba(3,80,157,.12); outline: none; }

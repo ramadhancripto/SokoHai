@@ -1,0 +1,128 @@
+/* ==== css/28-my-profile.css ====
+   SOKOHAI — MY PROFILE (professional identity + business cover)
+   Externalized (hakuna inline styles) — tokens za vifurushi, Inter, responsive.
+   ============================================================================ */
+
+#myProfileModal { padding: 14px; box-sizing: border-box; }
+
+.mp-shell {
+    width: 100%;
+    max-width: 520px;
+    max-height: 92vh;
+    background: #f4f7fa;
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 18px 50px rgba(2, 16, 38, .38);
+    position: relative;
+}
+.mp-body { flex: 1; overflow-y: auto; scroll-behavior: smooth; position: relative; }
+
+.mp-topbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; justify-content: flex-end;
+    padding: 10px 12px;
+    pointer-events: none;
+}
+.mp-topbar > * { pointer-events: auto; }
+.mp-x {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(2, 22, 46, .55); color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; backdrop-filter: blur(4px);
+}
+.mp-loading { text-align: center; color: #64748b; padding: 60px 16px 70px; }
+
+/* ---- COVER ---- */
+.mp-cover {
+    position: relative; height: 150px; flex-shrink: 0;
+    background: linear-gradient(135deg, #0B4F7A, #1268A8 60%, #2B82BD);
+    overflow: hidden;
+}
+.mp-cover-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mp-cover-ph {
+    width: 100%; height: 100%; display: flex; flex-direction: column; gap: 6px;
+    align-items: center; justify-content: center;
+    color: rgba(255,255,255,.85); font-size: 12.5px; font-weight: 700;
+    padding-top: 46px; /* acha nafasi ya DP inayopanda juu — text isiingie chini ya DP */
+    box-sizing: border-box; text-align: center;
+}
+
+/* ---- HEADER CARD (DP overlap, centered) ---- */
+.mp-head-card {
+    background: #fff;
+    margin: -46px 12px 10px;
+    border-radius: 18px;
+    padding: 0 16px 14px;
+    text-align: center;
+    position: relative; z-index: 5;
+    box-shadow: 0 8px 22px rgba(12, 42, 77, .10);
+}
+.mp-dp {
+    width: 84px; height: 84px; border-radius: 50%;
+    border: 4px solid #fff; background: #eef4fb;
+    object-fit: cover;
+    margin-top: -42px;
+    box-shadow: 0 6px 14px rgba(12, 42, 77, .18);
+    display: inline-block;
+}
+.mp-name { margin: 8px 0 2px !important; font-size: 19px !important; font-weight: 800; color: #0f172a !important; }
+.mp-subs { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: #64748b; }
+.mp-verified {
+    display: inline-flex; gap: 5px; align-items: center;
+    background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 999px; font-weight: 800; font-size: 12px;
+}
+.mp-unverified { background: #f1f5f9; color: #64748b; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: 12px; }
+.mp-role { color: #1268A8; font-weight: 800; }
+.mp-stats { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 10px; font-size: 13px; color: #334155; }
+.mp-stat { display: inline-flex; gap: 5px; align-items: center; }
+.mp-stat b { color: #0f172a; }
+.mp-stat-gold, .mp-stat-gold b { color: #b45309; }
+
+.mp-actions { display: flex; gap: 8px; margin-top: 13px; flex-wrap: wrap; justify-content: center; }
+.mp-btn {
+    display: inline-flex; gap: 6px; align-items: center; justify-content: center;
+    padding: 10px 13px; border-radius: 12px; border: none; cursor: pointer;
+    font-weight: 800; font-size: 13px; line-height: 1.2;
+}
+.mp-btn-light { background: #eef4fb; color: #0B4F7A; border: 1.5px solid #d5e4f4; }
+.mp-btn-brand { background: #1268A8; color: #fff; }
+.mp-btn:active { transform: scale(.98); }
+
+/* ---- SECTIONS ---- */
+.mp-sec { background: #fff; margin: 10px 12px; border-radius: 16px; padding: 13px 15px; box-shadow: 0 4px 14px rgba(12, 42, 77, .06); }
+.mp-sec-t { margin: 0 0 9px !important; font-size: 15px !important; font-weight: 800; color: #0f172a !important; text-transform: none; }
+.mp-sec-t small { color: #94a3b8; font-weight: 700; }
+.mp-about { margin: 0; font-size: 14px; color: #475569; line-height: 1.6; }
+.mp-empty { margin: 0; font-size: 13px; color: #94a3b8; text-align: center; padding: 8px 4px; }
+
+.mp-kv { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13.5px; }
+.mp-kv:last-child { border-bottom: none; }
+.mp-kv span { color: #64748b; flex-shrink: 0; }
+.mp-kv-v { color: #0f172a; text-align: right; font-weight: 700; word-break: break-word; }
+
+/* ---- GRID za matangazo ---- */
+.mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 9px; }
+.mp-item {
+    border: 1px solid #e2e8f0; border-radius: 13px; background: #fff;
+    overflow: hidden; text-align: left; cursor: pointer; padding: 0;
+    display: flex; flex-direction: column;
+}
+.mp-item img { width: 100%; height: 76px; object-fit: cover; display: block; background: #eef2f7; }
+.mp-item-ph { width: 100%; height: 76px; display: block; background: linear-gradient(135deg, #e2e8f0, #cbd5e1); }
+.mp-item-t { font-size: 12px; color: #0f172a; font-weight: 700; padding: 7px 8px 0; line-height: 1.35; min-height: 34px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.mp-item-p { font-size: 12.5px; color: #c2410c; font-weight: 900; padding: 3px 8px 9px; }
+
+/* ---- Desktop / tablet ---- */
+@media (min-width: 768px) {
+    .mp-shell { max-width: 620px; }
+    .mp-cover { height: 180px; }
+    .mp-dp { width: 96px; height: 96px; margin-top: -48px; }
+    .mp-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
+@media (max-width: 360px) {
+    .mp-actions .mp-btn { flex: 1 1 auto; }
+}
+
+#dmp-body .mp-sustained { display: none; }

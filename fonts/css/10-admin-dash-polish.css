@@ -1,0 +1,111 @@
+/* ==== css/10-admin-dash-polish.css ==== */
+/* ============================================================
+   SOKOHAI ADMIN/DASHBOARD POLISH (Phase 3.8) — additive
+   Inagusa dashboards zote (Admin/Agent/Seller/Driver) kupitia
+   ct-* (Control Tower) na widgets za pamoja.
+   ============================================================ */
+
+/* ---------- Sidebar ya Control Tower ---------- */
+.ct-sidebar-menu-btn {
+    transition: background .15s ease, transform .15s ease, border-color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+    .ct-sidebar-menu-btn:hover {
+        background: #eef4fb;
+        transform: translateX(2px);
+    }
+}
+.ct-sidebar-menu-btn:active { transform: scale(.98); }
+.ct-sidebar-menu-btn:focus-visible {
+    outline: 2px solid var(--skh-primary, #03509d);
+    outline-offset: 2px;
+}
+.ct-sidebar-group-title { letter-spacing: .8px; }
+
+/* ---------- Header bar ya dashboard ---------- */
+.ct-header-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.ct-header-bar .ct-header-search input { font-size: 16px; } /* iOS zoom-fix */
+
+/* ---------- Scrollbar nzuri kwenye dashboard nzima ---------- */
+#dashboardViews ::-webkit-scrollbar { width: 8px; height: 8px; }
+#dashboardViews ::-webkit-scrollbar-track { background: transparent; }
+#dashboardViews ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+#dashboardViews ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ---------- Mode menu (chaguo la Admin/Agent/Muuzaja n.k.) ---------- */
+.menu-item {
+    transition: background .15s ease, transform .15s ease, border-left-color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+    .menu-item:hover { background: #e8eff8; transform: translateX(2px); }
+}
+.menu-item:active { transform: scale(.985); }
+
+/* ---------- Online/Offline pill (js/09) ---------- */
+#skhNetPill {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2147483200;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    box-shadow: 0 8px 24px rgba(2, 13, 28, .25);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    animation: skhNetIn .25s var(--skh-ease, ease-out);
+    font-family: var(--skh-font, 'Segoe UI', system-ui, sans-serif);
+}
+@keyframes skhNetIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+#skhNetPill.skh-offline { background: #0f172a; color: #fca5a5; border: 1px solid #7f1d1d; }
+#skhNetPill.skh-online { background: #062e22; color: #6ee7b7; border: 1px solid #065f46; }
+#skhNetPill .skh-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: skhNetBlink 1.2s infinite; }
+@keyframes skhNetBlink { 50% { opacity: .35; } }
+
+/* ---------- PWA install banner (js/10) ---------- */
+#skhInstallBanner {
+    position: fixed;
+    left: 12px; right: 12px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+    z-index: 2147483300;
+    max-width: 420px;
+    margin: 0 auto;
+    background: linear-gradient(140deg, #0f172a 0%, #03509d 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 14px 14px 12px;
+    box-shadow: 0 16px 40px rgba(2, 13, 28, .4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: skhInstIn .3s var(--skh-ease, ease-out);
+    font-family: var(--skh-font, 'Segoe UI', system-ui, sans-serif);
+}
+@keyframes skhInstIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+#skhInstallBanner .skh-inst-ico { font-size: 26px; }
+#skhInstallBanner .skh-inst-txt { flex: 1; min-width: 0; }
+#skhInstallBanner .skh-inst-txt b { display: block; font-size: 13.5px; }
+#skhInstallBanner .skh-inst-txt small { color: #cbd5e1; font-size: 13px; }
+#skhInstallBanner button {
+    border: none; cursor: pointer;
+    padding: 10px 14px; border-radius: 10px;
+    font-weight: 800; font-size: 12px;
+}
+#skhInstallBanner .skh-inst-go { background: var(--skh-gold, #d4af37); color: #0f172a; }
+#skhInstallBanner .skh-inst-no { background: rgba(255,255,255,.14); color: #e2e8f0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .ct-sidebar-menu-btn, .menu-item, #skhNetPill, #skhInstallBanner { transition: none !important; animation: none !important; }
+}
