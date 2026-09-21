@@ -373,26 +373,19 @@
             });
         }
     }
-    setInterval(wireSearch, 1500);
-    setTimeout(wireSearch, 800);
+    setTimeout(wireSearch, 400);
+    window.addEventListener('load', wireSearch, { once: true });
 
-    /* ---------------- RE-ASSERT GUARD ----------------
-     * Modules (34/79/81) zinaweza kupakia baadaye na ku-overwrite.
-     * Guard hii inahakikisha 93 ndiyo inashinda kwenye window. */
+    /* ---------------- RE-ASSERT GUARD (PHASE 1 CLEAN) ---------------- */
     function ensureOurs93() {
         try {
             if (typeof window.skhChatOpenInbox !== 'function' || window.skhChatOpenInbox.__skh93 !== true) {
                 window.skhChatOpenInbox = window.__skhInboxActive93;
             }
-        } catch (e) { console.error('[INBOX93] ensureOurs93:', e && e.message); }
+        } catch (e) {}
     }
-    var assertCount = 0;
-    var assertIv = setInterval(function () {
-        ensureOurs93();
-        assertCount++;
-        if (assertCount > 120) clearInterval(assertIv);
-    }, 1000);
-    setInterval(ensureOurs93, 5000);
+    ensureOurs93();
+    window.addEventListener('load', ensureOurs93, { once: true });
 
     /* ---------------- SKHCHATOPEN SAFI (badala ya chain tata) ----------------
      * Ina-replicate mtiririko wa 34-chat-core kwa idhai za umma:
@@ -651,21 +644,16 @@
     window.__skhChatActive93 = skhChatOpen93;
     window.skhChatOpen = skhChatOpen93;
 
-    /* Re-assert: modules hazirudishe chain tata tena */
+    /* Re-assert: Hakikisha 93 ndiyo inabaki kwenye window (PHASE 1 CLEAN) */
     function ensureChatOurs93() {
         try {
             if (typeof window.skhChatOpen !== 'function' || window.skhChatOpen.__skh93 !== true) {
                 window.skhChatOpen = window.__skhChatActive93;
             }
-        } catch (e) { console.error('[CHAT93] ensureChatOurs93:', e && e.message); }
+        } catch (e) {}
     }
-    var chatAssertCount = 0;
-    var chatAssertIv = setInterval(function () {
-        ensureChatOurs93();
-        chatAssertCount++;
-        if (chatAssertCount > 120) clearInterval(chatAssertIv);
-    }, 1000);
-    setInterval(ensureChatOurs93, 5000);
+    ensureChatOurs93();
+    window.addEventListener('load', ensureChatOurs93, { once: true });
 
     console.log('[SOKOHAI 93] chat inbox repair loaded ✓ — clean inbox + re-assert guard + watchdog');
     window.__skhInboxRepairBooted = true;

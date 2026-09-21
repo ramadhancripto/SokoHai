@@ -555,22 +555,11 @@ import { skh } from './00-bootstrap.js';
     console.log('[81-absolute-one-ui-live] FINAL PATCHED — absolute one UI, no home flash, discover second click fixed, live safe');
   }
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-  setTimeout(init, 300);
-  setTimeout(init, 1000);
-  setTimeout(init, 2500);
-
-  // FAB retry
-  var fabRetry = setInterval(function(){
-    var fab = byId('skhDiscFab');
-    if(fab && !fab.__abs81){
-      patchFab();
-    }
-    if(fab && fab.__abs81){
-      clearInterval(fabRetry);
-    }
-  }, 500);
-  setTimeout(function(){ clearInterval(fabRetry); }, 12000);
+  // Phase 1 Clean Init: Fanya mara moja tu, hakuna timers za kurudia
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 
 })();

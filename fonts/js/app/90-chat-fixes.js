@@ -230,19 +230,21 @@
         }
         installMsgObserver();
 
-        // ---------- COMPOSER VISIBILITY GUARD ----------
-        setInterval(function () {
+        // ---------- COMPOSER VISIBILITY GUARD (EVENT-BASED) ----------
+        function ensureComposerVisible() {
             var cm = document.getElementById('chatModal');
             if (!cm) return;
-            var vis = (cm.style.display === 'flex' || cm.style.display === 'block' || getComputedStyle(cm).display !== 'none');
             var comp = document.getElementById('chatComposer');
             if (!comp) return;
-            if (vis && comp.style.display === 'none') {
-                var blocked = document.getElementById('chatBlockedState');
-                if (blocked && getComputedStyle(blocked).display !== 'none') return;
-                comp.style.display = 'flex';
+            var blocked = document.getElementById('chatBlockedState');
+            if (blocked && blocked.style.display !== 'none') return;
+            comp.style.display = 'flex';
+        }
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.closest && (e.target.closest('#chatModal') || e.target.closest('.ch-contact'))) {
+                setTimeout(ensureComposerVisible, 250);
             }
-        }, 800);
+        });
 
         // ---------- GROUP CHAT FIX ----------
         var _origGroupOpen = window.skhOpenGroupSoga;

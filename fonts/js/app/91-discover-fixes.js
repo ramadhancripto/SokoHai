@@ -324,7 +324,7 @@
         }
     }
     window.addEventListener('resize', fixModalSizing);
-    setInterval(fixModalSizing, 1500);
+    fixModalSizing();
 
     // ------------- 6. WIRE seller-name click kwenye product cards za Discover
     // Mtu akibofya jina la muuzaji ndani ya product card, afungue profile
@@ -349,7 +349,12 @@
             });
         });
     }
-    setInterval(wireSellerNameClicks, 1000);
+    // Inaitwa tu wakati Discover inapofunguliwa badala ya kupima kila sekunde
+    document.addEventListener('click', function (e) {
+        if (e.target && (e.target.closest('#skhDiscFab') || e.target.closest('.dc88-search-wrap') || e.target.closest('.skh-de-search'))) {
+            setTimeout(wireSellerNameClicks, 350);
+        }
+    });
 
     // ------------- 7. OPEN PROFILE KUTOKA PRODUCT DETAIL -------------
     // Ukiwa kwenye product detail na ubofye jina la muuzaji, fungua profile
@@ -473,7 +478,6 @@
             }
         }
     }
-    setInterval(sanitizeDiscoverTexts, 1200);
     setTimeout(sanitizeDiscoverTexts, 600);
 
     window.__skhDiscFixesBooted = true;
