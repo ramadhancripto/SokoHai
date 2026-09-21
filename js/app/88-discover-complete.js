@@ -324,23 +324,54 @@ import { skh } from './00-bootstrap.js';
     for(var sec in S.applied){
       var vals=S.applied[sec];
       if(!vals||!vals.length) continue;
+
+      // 1. Umbali (Mahali) — Hesabu sahihi ya mita na kilomita
       if(sec==='Mahali'){
-        var dv=vals.filter(function(v){return v.match(/km|m/);});
-        if(dv.length&&l.distance!=null){
-          var mx=Math.max.apply(null,dv.map(function(v){
-            if(v==='Karibu nami')return 1;
-            var n=parseFloat(v); return isNaN(n)?99999:n;
+        if(l.distance!=null){
+          var mx = Math.max.apply(null, vals.map(function(v){
+            if(v==='Karibu nami') return 2;
+            if(v.endsWith('m') && !v.endsWith('km')) {
+              var mVal = parseFloat(v);
+              return isNaN(mVal) ? 99999 : (mVal / 1000); // 100m -> 0.1km, 500m -> 0.5km
+            }
+            var kmVal = parseFloat(v);
+            return isNaN(kmVal) ? 99999 : kmVal;
           }));
-          if(l.distance>mx) return false;
+          if(l.distance > mx) return false;
         }
       }
+
+      // 2. Bei (Price Range)
+      if(sec==='Bei' && l.price != null){
+        var p = Number(l.price);
+        var matchPrice = vals.some(function(v){
+          if(v==='Chini ya 10k') return p < 10000;
+          if(v==='10k-50k') return p >= 10000 && p <= 50000;
+          if(v==='50k-100k') return p > 50000 && p <= 100000;
+          if(v==='100k-500k') return p > 100000 && p <= 500000;
+          if(v==='500k+') return p > 500000;
+          if(v==='Chini ya 5k') return p < 5000;
+          if(v==='5k-20k') return p >= 5000 && p <= 20000;
+          if(v==='20k+') return p > 20000;
+          if(v==='Chini ya 20k') return p < 20000;
+          if(v==='20k-100k') return p >= 20000 && p <= 100000;
+          return true;
+        });
+        if(!matchPrice) return false;
+      }
+
+      // 3. Upatikanaji (Stock / Delivery / Online Ordering)
       if(sec==='Upatikanaji'){
-        if(vals.indexOf('In Stock')>=0&&l.stock===false) return false;
-        if(vals.indexOf('Available Now')>=0&&l.available===false) return false;
+        if(vals.indexOf('In Stock')>=0 && (l.availabilityStatus==='OUT_OF_STOCK' || l.stock===0)) return false;
+        if(vals.indexOf('Online Ordering')>=0 && l.onlineOrderingEnabled===false) return false;
       }
+
+      // 4. Uthibitisho (Verified)
       if(sec==='Uthibitisho'){
-        if(vals.indexOf('Verified')>=0&&!l.verified&&!(l.raw&&l.raw.verified)) return false;
+        if(vals.indexOf('Verified')>=0 && !l.verified && !(l.raw&&l.raw.verified)) return false;
       }
+
+      // 5. Kategoria
       if(sec==='Kategoria'){
         var cat=String(l.categoryName||l.category||'').toLowerCase();
         var m=vals.some(function(v){return cat.indexOf(v.toLowerCase())>=0;});
@@ -358,7 +389,21 @@ import { skh } from './00-bootstrap.js';
   }
   function filterItems(items){
     if(!items||!items.length) return[];
-    return items.filter(function(i){return matchSearch(i)&&matchFilters(i);});
+    var res = items.filter(function(i){return matchSearch(i)&&matchFilters(i);});
+
+    // [PHASE 6 FIX] Utekelezaji wa kichujio cha 'Panga' (Sort)
+    var sortVal = S.applied['Panga'] && S.applied['Panga'][0];
+    if(sortVal){
+      res.sort(function(a, b){
+        var la = a.listing || a;
+        var lb = b.listing || b;
+        if(sortVal==='Bei ↓') return (Number(lb.price)||0) - (Number(la.price)||0);
+        if(sortVal==='Bei ↑') return (Number(la.price)||0) - (Number(lb.price)||0);
+        if(sortVal==='Karibu' || sortVal==='Karibu zaidi') return (la.distance||9999) - (lb.distance||9999);
+        return 0;
+      });
+    }
+    return res;
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -383,15 +428,14 @@ import { skh } from './00-bootstrap.js';
       S.sections=sections;
       window.__deLastSections=sections;
       
-      // Check if we got any data
+      // [PHASE 6 FIX] Usirudie search mara 3 mtumiaji anapotafuta kitu kisichokuwepo (huua quota ya Firestore).
+      // Jaribu tena mara MOJA tu iwapo ni ukurasa wa kwanza mtupu (bila query) na cache bado haijapakiwa.
       var totalCount = (sections.products||[]).length + (sections.services||[]).length + 
                        (sections.businesses||[]).length + (sections.transporters||[]).length + 
                        (sections.people||[]).length + (sections.groups||[]).length;
       
-      if (totalCount === 0 && retryCount < 3) {
-        // No data found — retry after delay (Firestore might still be loading)
-        console.log('[88] No data found, retry ' + (retryCount+1) + '/3...');
-        setTimeout(function(){ doSearch(query, retryCount + 1); }, 1000 * (retryCount + 1));
+      if (!query && totalCount === 0 && retryCount < 1) {
+        setTimeout(function(){ doSearch('', retryCount + 1); }, 1200);
         return;
       }
       
@@ -595,6 +639,10 @@ import { skh } from './00-bootstrap.js';
 
     var items=sec[key]||[];
     if(S.entity==='Biashara'&&sec.nearbyBusinesses) items=items.concat(sec.nearbyBusinesses);
+    // [PHASE 6 FIX] Wauzaji wajumuishe pia offline/online product sellers, si maduka makubwa pekee
+    if(S.entity==='Wauzaji'){
+      items = items.concat(sec.offlineSellers||[], sec.onlineSellers||[]);
+    }
 
     var filtered=filterItems(items);
     if(!filtered.length) return renderEmpty();
@@ -1315,8 +1363,9 @@ import { skh } from './00-bootstrap.js';
       var val=ev.target.value;
       clearTimeout(S.timer);
       if(!val){
-        S.query='';S.sections=null;
-        refresh();
+        S.query='';
+        // [PHASE 6 FIX] Badala ya kuacha skrini tupu, rudisha feed ya ugunduzi ya kawaida
+        doSearch('');
         return;
       }
       S.timer=setTimeout(function(){

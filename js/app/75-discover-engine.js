@@ -778,23 +778,25 @@ import { skh } from './00-bootstrap.js';
       } catch (e) {}
     }
 
-    // Businesses (from users with businessName)
+    // [PHASE 6 OPTIMIZATION] Vuta 'users' mara MOJA pekee kwa ajili ya Biashara na Watu wote
+    var needUsers = (entityTypes.indexOf(ENTITY_TYPE.BUSINESS) !== -1) || (entityTypes.indexOf(ENTITY_TYPE.PERSON) !== -1);
+    var sharedUsers = [];
+    if (needUsers) {
+      try {
+        var uSnap = await skh.getDocs(skh.query(skh.collection(skh.db, 'users'), skh.limit(50)));
+        uSnap.forEach(function (d) {
+          var u = d.data() || {}; u.uid = u.uid || d.id;
+          if (u.discoverable !== false) sharedUsers.push(u);
+        });
+      } catch (eUsers) {
+        console.warn('[discover] users fetch error', eUsers);
+      }
+    }
+
+    // Businesses (from users with businessName/shopName)
     if (entityTypes.indexOf(ENTITY_TYPE.BUSINESS) !== -1) {
       try {
-        var bizUsers = [];
-        try {
-          // Tafuta watu wote wenye businessName/shopName/isSeller (bila discoverable filter)
-          var uSnap = await skh.getDocs(skh.query(skh.collection(skh.db, 'users'), skh.limit(50)));
-          uSnap.forEach(function (d) {
-            var u = d.data() || {}; u.uid = u.uid || d.id;
-            // Chuja: onyesha tu kama discoverable !== false (opt-out model)
-            if (u.discoverable === false) return;
-            if (u.businessName || u.shopName || u.isSeller) bizUsers.push(u);
-          });
-        } catch (e) {
-          // Fallback from cached?
-          bizUsers = [];
-        }
+        var bizUsers = sharedUsers.filter(function (u) { return u.businessName || u.shopName || u.isSeller; });
         bizUsers.forEach(function (u) {
           var listing = buildDiscoverListing({ id: u.uid, businessName: u.businessName || u.shopName, title: u.businessName || u.shopName, ownerName: u.fullName, category: u.category, location: u.location || u.region, coords: u.coords || null, rating: u.rating }, ENTITY_TYPE.BUSINESS);
           if (listing.distance != null && listing.distance > distanceFilter) return;
@@ -810,18 +812,8 @@ import { skh } from './00-bootstrap.js';
     // People (discoverable)
     if (entityTypes.indexOf(ENTITY_TYPE.PERSON) !== -1) {
       try {
-        var people = [];
-        try {
-          // Tafuta watu wote (bila discoverable filter) — chuja client-side
-          var pSnap = await skh.getDocs(skh.query(skh.collection(skh.db, 'users'), skh.limit(50)));
-          pSnap.forEach(function (d) {
-            var u = d.data() || {}; u.uid = u.uid || d.id;
-            if (u.uid === uid()) return; // Usionyeshe current user
-            // Chuja: onyesha tu kama discoverable !== false (opt-out model)
-            if (u.discoverable === false) return;
-            people.push(u);
-          });
-        } catch (e) {}
+        var myId = uid();
+        var people = sharedUsers.filter(function (u) { return u.uid !== myId; });
         people.forEach(function (u) {
           var listing = buildDiscoverListing({ id: u.uid, uid: u.uid, fullName: u.fullName, displayName: u.displayName, businessName: u.businessName, category: u.category, interests: u.interests, location: u.location, region: u.region, photoURL: u.photoURL, verified: u.verified }, ENTITY_TYPE.PERSON);
           if (q) {
@@ -831,7 +823,6 @@ import { skh } from './00-bootstrap.js';
               if (!toks.some(function (t) { return hay.includes(t); })) return;
             }
           }
-          // Privacy: only show if discoverable and showInterests opt-in for interests
           listing.raw = u;
           allListings.push(listing);
         });
@@ -872,6 +863,7 @@ import { skh } from './00-bootstrap.js';
       businesses: [],
       people: [],
       groups: [],
+      interests: [], // <-- [PHASE 6 FIX]
       opportunities: [],
       related: []
     };
@@ -895,6 +887,14 @@ import { skh } from './00-bootstrap.js';
         sections.groups.push(r);
       }
     });
+
+    // [PHASE 6 FIX] Jaza sections.interests ili Tab ya 'Interests' isikae tupu
+    try {
+      var pSec = getPersonalizedSections();
+      if (pSec && pSec.basedOnInterests && pSec.basedOnInterests.length) {
+        sections.interests = pSec.basedOnInterests.map(function (item) { return { listing: item, score: 10 }; });
+      }
+    } catch (eInt) {}
 
     // Related categories
     try {
