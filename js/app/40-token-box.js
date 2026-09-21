@@ -68,6 +68,7 @@ import { skh } from './00-bootstrap.js';
 
     function roleOfMine(rd, me) {
         if (rd.customerId === me) return 'Mteja / Mmiliki wa mzigo';
+        if (rd.sellerId === me) return 'Muuzaji / Chanzo cha mzigo'; // <-- [PHASE 8 FIX]
         if (rd.driverId === me) return 'Msafirishaji mkuu';
         if (rd.currentCustodian === me) return 'Mshikaji wa sasa';
         if (rd.nextTransporterId === me) return 'Msafirishaji wa mkono unaofuata';
@@ -87,10 +88,12 @@ import { skh } from './00-bootstrap.js';
     async function fetchMyRides() {
         var me = uid();
         if (!me || !skh.db) return [];
+        // [PHASE 8 FIX] Ongeza q4 ili muuzaji (sellerId) naye aone Tokeni za Pickup dukani kwake
         var q1 = skh.query(skh.collection(skh.db, 'ride_requests'), skh.where('customerId', '==', me), skh.limit(100));
         var q2 = skh.query(skh.collection(skh.db, 'ride_requests'), skh.where('driverId', '==', me), skh.limit(100));
         var q3 = skh.query(skh.collection(skh.db, 'ride_requests'), skh.where('nextTransporterId', '==', me), skh.limit(100));
-        var results = await Promise.allSettled([skh.getDocs(q1), skh.getDocs(q2), skh.getDocs(q3)]);
+        var q4 = skh.query(skh.collection(skh.db, 'ride_requests'), skh.where('sellerId', '==', me), skh.limit(100));
+        var results = await Promise.allSettled([skh.getDocs(q1), skh.getDocs(q2), skh.getDocs(q3), skh.getDocs(q4)]);
         var map = new Map();
         results.forEach(function (r) {
             if (r.status !== 'fulfilled' || !r.value) return;
@@ -98,7 +101,7 @@ import { skh } from './00-bootstrap.js';
                 r.value.forEach(function (d) {
                     if (!map.has(d.id)) map.set(d.id, Object.assign({ id: d.id }, d.data()));
                 });
-            } catch (e) { /* query ya nextTransporter inaweza kukosa index */ }
+            } catch (e) { /* index kukosa */ }
         });
         return Array.from(map.values());
     }

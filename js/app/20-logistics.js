@@ -134,6 +134,8 @@ window.renderSellerLogisticsTab = async function() {
 
         snap.forEach(docSnap => {
             const rd = docSnap.data();
+            // [PHASE 8 FIX] Chuja ili muuzaji aone mizigo ya duka lake pekee, si ya maduka mengine
+            if (rd.sellerId && rd.sellerId !== shopOwnerId && rd.customerId !== shopOwnerId) return;
             count++;
             const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
             html += `
@@ -246,14 +248,15 @@ window.confirmSellerDispatch = async function() {
             }
             alert(T('lg_handover', "MAKABIDHIANO YAMETHIBITISHWA!\n\nDereva sasa atathibitisha upokeaji kwa token yake. Mzigo utakuwa chini ya ulinzi wake (Picked Up) baada ya uthibitisho wa pandembili."));
         } else {
-            // Legacy fallback
+            // [PHASE 8 FIX] Muuzaji anathibitisha makabidhiano tu (seller_confirmed_handover); dereva ndiye anayeanza safari
             const rideRef = skh.doc(skh.db, "ride_requests", rideId);
             await skh.updateDoc(rideRef, {
-                status: "in_transit",
-                pickupToken: "USED",
-                dispatchedAt: new Date().toISOString()
+                status: "seller_confirmed_handover",
+                sellerConfirmedAt: new Date().toISOString(),
+                parcelCondition: condition,
+                parcelNote: note
             });
-            alert(T('lg_handover', "CARGO HANDED OVER TO THE DRIVER SAFELY!\n\nThe driver is now cleared to start the trip (Status: In Transit)."));
+            alert("MAKABIDHIANO YAMETHIBITISHWA!\n\nDereva sasa atathibitisha upokeaji kwa Token A ili kuanza safari.");
         }
         
         window.skhResetSellerDispatchForm();
@@ -1029,4 +1032,99 @@ window.skhRenderTripHistory = async function () {
         ? done.map(function (r) { return row(r, 'done'); }).join('')
         : '<div class="lm-empty" style="padding:22px 16px;"><div class="lm-empty-ico">' + lmic('clipboard', 26) + '</div><b>Bado hamna safari iliyokamilika</b><p>Safari itakapothibitishwa kupokelewa na mpokeaji, itaonekana hapa.</p></div>';
     area.innerHTML = html;
+};
+
+// ============================================================
+// [PHASE 8 FIX] UTEKELEZAJI WA KUKABILI KAZI NA KUTOA OFA YA USAFIRI
+// ============================================================
+window.acceptTransportMission = async function(rideId) {
+    if (!skh.requireAuth()) return;
+    if (typeof window.skhCustodyAcceptRide === 'function') {
+        return window.skhCustodyAcceptRide(rideId);
+    }
+    try {
+        const me = skh.currentUser.uid;
+        const myName = (skh.currentUserData && skh.currentUserData.fullName) || skh.currentUser.displayName || 'Dereva';
+        const myPhone = (skh.currentUserData && skh.currentUserData.phone) || '';
+        const myVehicle = (skh.currentUserData && skh.currentUserData.vehicleType) || 'Usafiri';
+        const rideRef = skh.doc(skh.db, 'ride_requests', rideId);
+        const snap = await skh.getDoc(rideRef);
+        if (!snap || !snap.exists || !snap.exists()) return alert('Safari hii haipatikani tena.');
+        const rd = snap.data();
+        if (rd.status !== 'searching' && rd.status !== 'pending_acceptance') {
+            return alert('Safari hii imeshachukuliwa au kufungwa.');
+        }
+
+        const pkToken = 'PK-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+        await skh.updateDoc(rideRef, {
+            driverId: me,
+            driverName: myName,
+            driverPhone: myPhone,
+            vehicleType: myVehicle,
+            status: 'accepted',
+            acceptedAt: new Date().toISOString(),
+            pickupToken: pkToken,
+            pickupTokenStatus: 'pending'
+        });
+
+        // Tuma arifa kwa mteja
+        if (rd.customerId) {
+            await skh.addDoc(skh.collection(skh.db, 'notifications'), {
+                userId: rd.customerId,
+                title: 'Dereva Amekubali Safari!',
+                body: myName + ' amekubali kusafirisha ' + (rd.cargoName || 'mzigo wako') + '. Token A ya kuchukulia: ' + pkToken,
+                type: 'delivery',
+                rideId: rideId,
+                createdAt: new Date().toISOString(),
+                read: false
+            });
+        }
+        // Tuma arifa kwa muuzaji
+        if (rd.sellerId && rd.sellerId !== rd.customerId) {
+            await skh.addDoc(skh.collection(skh.db, 'notifications'), {
+                userId: rd.sellerId,
+                title: 'Dereva Ameelekea Kuchukua Mzigo',
+                body: myName + ' anakuja kuchukua mzigo #' + (rd.cargoName || '') + '. Hakiki Token A (' + pkToken + ') atakapofika.',
+                type: 'delivery',
+                rideId: rideId,
+                createdAt: new Date().toISOString(),
+                read: false
+            });
+        }
+
+        alert('Umefanikiwa kukubali safari hii! Unaweza kuiona kwenye tab ya "Safari Zangu".');
+        if (typeof window.switchDashTab === 'function') window.switchDashTab('active');
+        if (typeof window.renderDriverActiveTabContent === 'function') window.renderDriverActiveTabContent();
+    } catch(e) {
+        alert('Hitilafu ya kukubali safari: ' + e.message);
+    }
+};
+
+window.skhTransportOffer = async function(rideId) {
+    if (!skh.requireAuth()) return;
+    try {
+        const snap = await skh.getDoc(skh.doc(skh.db, 'ride_requests', rideId));
+        if (!snap || !snap.exists || !snap.exists()) return alert('Ombi hili halipatikani tena.');
+        const rd = Object.assign({ id: rideId, collectionName: 'ride_requests' }, snap.data());
+        if (!rd.customerId) return alert('Mteja wa ombi hili hajapatikana.');
+        if (rd.customerId === skh.currentUser.uid) return alert('Huwezi kujitolea ofa kwenye safari yako mwenyewe.');
+
+        // Unganisha muktadha na ufungue Chat + Negotiation Form
+        skh.activeChatTransport = rd;
+        if (typeof window.skhChatOpen === 'function') {
+            await window.skhChatOpen(rd.customerId, rd.customerName || 'Mteja', {
+                type: 'transport',
+                related: { transportId: rideId, transportTitle: rd.cargoName || 'Usafiri', transportFare: rd.fare || null }
+            });
+            setTimeout(function() {
+                if (typeof window.skhNegoFormOpen === 'function') {
+                    window.skhNegoFormOpen({ type: 'transport', entity: rd });
+                }
+            }, 600);
+        } else if (typeof window.openChatWithUser === 'function') {
+            window.openChatWithUser(rd.customerId, rd.customerName || 'Mteja');
+        }
+    } catch(e) {
+        alert('Hitilafu: ' + e.message);
+    }
 };

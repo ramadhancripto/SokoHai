@@ -73,17 +73,17 @@
                 + '</button>';
         }).join('');
     };
-
-    window.skhSetHomeFilter = function (key) {
+window.skhSetHomeFilter = function (key) {
         window.skhHomeFilter = key || 'all';
         window.skhRenderHomeFilters();
         var skh = window.skh;
         var grid = document.getElementById('mainFeed');
+        // [PHASE 7 FIX] Ilikuwa === 'function' kimakosa; inapaswa kuwa !== 'function' ili iruhusu renderFeedUI kufanya kazi
         if (!skh || !grid || typeof skh.renderFeedUI !== 'function') return;
         skh.renderFeedUI(skh.cachedItems || [], grid);
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
     };
-
+    
     // ---- Unganisha na renderFeedUI: chuja Home kwa kitufe kilichochaguliwa ----
     var hooked = false, tries = 0;
     var iv = setInterval(function () {

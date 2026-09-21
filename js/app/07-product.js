@@ -945,11 +945,22 @@ window.addToCart = async function(isBuyNow = false) {
         if (typeof window.openCart === 'function') { window.openCart(); return; }
     } else {
         // Kuweka kwenye Cart — kwanza hakikisha myCart imesomwa upya (si stale)
-        skh.smartCartItems();
-        let cartItem = {...skh.currentOpenProduct, chosenColor, chosenSize, qty};
+        if (typeof skh.smartCartItems === 'function') skh.smartCartItems();
+
+        // [PHASE 7 FIX] Kama ni wholesale mode, pata bei ya tier inayolingana na idadi
+        let effectivePrice = parseFloat(skh.currentOpenProduct.price) || 0;
+        if (skh.currentOpenProduct.saleMode === 'wholesale' && window.skhModesCompute) {
+            const C = window.skhModesCompute(skh.currentOpenProduct);
+            if (C && C.wholesale && typeof C.wholesale.applicable === 'function') {
+                effectivePrice = C.wholesale.applicable(qty);
+            }
+        }
+
+        let cartItem = {...skh.currentOpenProduct, price: effectivePrice, chosenColor, chosenSize, qty};
+        if (!Array.isArray(skh.myCart)) skh.myCart = [];
         skh.myCart.push(cartItem);
-        skh.smartCartSave(); // Hifadhi local + cloud (users/{id}.cart) mara moja
-        skh.updateCartUI();
+        if (typeof skh.smartCartSave === 'function') skh.smartCartSave(); // Hifadhi local + cloud mara moja
+        if (typeof skh.updateCartUI === 'function') skh.updateCartUI();
         alert(T('pr_added_cart', 'Product added to cart (qty: {qty})!', { qty: qty }));
     }
 };
@@ -978,13 +989,31 @@ window.openCart = function() {
         let html = '';
         let total = 0;
         
-        if(skh.myCart.length === 0) {
-            html = '<p style="text-align:center; color:#64748b; margin-top:20px;">Kikapu chako kipo wazi. </p>';
+        if(!skh.myCart || skh.myCart.length === 0) {
+            html = '<p style="text-align:center; color:#64748b; margin-top:20px;">Kikapu chako kipo wazi.</p>';
         } else {
             skh.myCart.forEach((item, index) => {
-                total += parseFloat(item.price || 0);
+                // [PHASE 7 FIX] Hesabu ya jumla lazima izidishe idadi (qty)
+                const qty = Math.max(1, parseInt(item.qty, 10) || 1);
+                const itemPrice = parseFloat(item.price || 0);
+                const subtotal = itemPrice * qty;
+                total += subtotal;
+
+                // Beji ya ofa iliyojadiliwa
+                const negoBadge = item.fromOffer ? '<span style="background:#e0f2fe;color:#0369a1;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;margin-left:6px;">Makubaliano</span>' : '';
+                const variantInfo = (item.chosenColor && item.chosenColor !== 'N/A' || item.chosenSize && item.chosenSize !== 'N/A')
+                    ? `<span style="font-size:11px;color:#64748b;display:block;">${item.chosenColor !== 'N/A' ? item.chosenColor : ''} ${item.chosenSize !== 'N/A' ? item.chosenSize : ''}</span>` : '';
+
                 html += `
-                    <div class="list-item"> <img src="${skh.getOptimizedImageUrl(item.image || 'https://via.placeholder.com/150')}" alt="item"> <div class="list-info"> <b>${item.title}</b> <span>TSh ${(item.price || 0).toLocaleString()}</span> </div> <button onclick="removeFromCart(${index})" style="background:#fee2e2; color:#ef4444; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; cursor:pointer;">X</button> </div> `;
+                    <div class="list-item" style="display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid #f1f5f9;">
+                        <img src="${skh.getOptimizedImageUrl(item.image || 'https://via.placeholder.com/150')}" alt="item" style="width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f8fafc;">
+                        <div class="list-info" style="flex:1;min-width:0;">
+                            <b style="font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${skh.skhEscape(item.title || 'Bidhaa')}</b>
+                            ${variantInfo}
+                            <span style="font-size:12px;color:#18A982;font-weight:700;">TSh ${itemPrice.toLocaleString()} × ${qty} = TSh ${subtotal.toLocaleString()}</span>${negoBadge}
+                        </div>
+                        <button onclick="removeFromCart(${index})" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 10px; border-radius:8px; font-weight:bold; cursor:pointer;" aria-label="Ondoa">✕</button>
+                    </div>`;
             });
         }
         
