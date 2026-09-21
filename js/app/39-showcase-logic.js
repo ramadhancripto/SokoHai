@@ -14,7 +14,8 @@ export const PS_LOW_STOCK = 5;
 // Money formatting
 export function psNum(v) {
     if (v == null || v === '') return null;
-    var n = Number(v);
+    // [AUDIT-FIX] bei iliyohifadhiwa kama "120,000" / "120 000" ilionekana kama TSh 0 (Number("120,000") = NaN)
+    var n = (typeof v === 'string') ? Number(v.replace(/[,\s]/g, '')) : Number(v);
     return isNaN(n) ? null : n;
 }
 

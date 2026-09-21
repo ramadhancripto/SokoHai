@@ -73,7 +73,35 @@ window.changeQty = function(amount) {
     }
 };
 
+// [AUDIT-FIX] Picha zinaweza kuhifadhiwa kama array, string (moja au zenye koma), au object {0:url,...}.
+// Awali `imagesArray.filter` ilitupa TypeError kwa string/object -> kadi nzima haikuchorwa (modal tupu
+// au ikiwa na maudhui/vitufe vya bidhaa iliyopita) bila ujumbe wowote.
+window.skhNormalizeImages = function (p) {
+    var out = [];
+    function add(v) {
+        if (v == null) return;
+        if (Array.isArray(v)) { v.forEach(add); return; }
+        if (typeof v === 'object') {
+            if (typeof v.url === 'string' || typeof v.secure_url === 'string') { add(v.url || v.secure_url); return; }
+            Object.keys(v).forEach(function (k) { add(v[k]); }); return;
+        }
+        var s = String(v).trim();
+        if (!s) return;
+        if (s.indexOf(',') !== -1 && !/^data:/i.test(s) && /,\s*https?:\/\//i.test(s)) { s.split(/,\s*(?=https?:\/\/)/i).forEach(add); return; }
+        out.push(s);
+    }
+    if (p) { add(p.imagesArray); if (!out.length) add(p.images); if (!out.length) add(p.image); if (!out.length) add(p.photo); if (!out.length) add(p.imageUrl); }
+    return out;
+};
+
 window.openProduct = async function(id, manualCollection = null) {
+    // [FIX 2026-09-20] id tupu (mf. kipengee cha Saved kisicho na productId) ilifanya skh.doc(...)
+    // itupe hitilafu isiyoonekana — kadi haikufunguka na hakukuwa na ujumbe.
+    if (!id || typeof id !== 'string') {
+        try { console.warn('[openProduct] id haipo:', id); } catch (e) {}
+        try { (window.skhToast || window.alert)(T('pm_open_noid', 'Kadi hii haiwezi kufunguka (kiungo kimekosa taarifa).'), 'error'); } catch (e) {}
+        return;
+    }
     // 1. Tambua collection (Bidhaa, Huduma, nk)
     // 1. Tafuta kundi sahihi la bidhaa (Collection) kwenye kumbukumbu ya haraka (Cache)
     let colToUse = manualCollection;
@@ -138,12 +166,10 @@ window.openProduct = async function(id, manualCollection = null) {
 
         // --- CHORA UI (Renders everything inside the modal) ---
         
+        try {
         // A. Jaza Picha (Ulinzi uliodhibitiwa dhidi ya picha tupu)
         const slider = document.getElementById('pmImageSlider');
-        let pics = found.imagesArray || [];
-        if (pics.length === 0 && (found.image || found.photo)) {
-            pics = [found.image || found.photo];
-        }
+        let pics = window.skhNormalizeImages(found);
         pics = pics.filter(p => p && !/ui-avatars\.com/.test(String(p))); // [PHASE 5.7] chuja na avatar za zamani za DB
         if (pics.length === 0) {
             pics = [window.SKH_PLACEHOLDER_IMG || "https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b"]; // [PHASE 5.7] tile ya SOKOHAI
@@ -199,6 +225,10 @@ window.openProduct = async function(id, manualCollection = null) {
                 });
             };
         }
+        } catch (eMedia) {
+            // [AUDIT-FIX] hitilafu ya picha isizuie maelezo na vitufe vya kununua kuchorwa
+            try { console.warn('[openProduct] media render error:', eMedia && (eMedia.stack || eMedia.message)); } catch (e) {}
+        }
         // B. [SHOWCASE MODULE 39] Panga muonekano mzima wa bidhaa:
         //    identity/bei/upatikanaji, variants za data, panel ya mnada,
         //    maelezo/sifa, usambazaji/ulinzi, tathmini, muuzaji (fupi),
@@ -222,11 +252,28 @@ window.openProduct = async function(id, manualCollection = null) {
 
             // [MIKOA/WAUZAJI] Chora "Wauzaji Wengine" chini ya maelezo
             skh.loadRelatedProducts(found.category || found.subCategory || '', id, colToUse);
+        }, function (listenErr) {
+            // [FIX 2026-09-20] Awali hakukuwa na error callback: Firestore ikikataa (rules/mtandao)
+            // kadi ilibaki na "Bidhaa / TSh 0" bila vitufe na bila maelezo. Sasa mtumiaji anaona
+            // sababu na anaweza kujaribu tena.
+            try { console.warn('[openProduct] listener error:', listenErr && (listenErr.code || listenErr.message)); } catch (e) {}
+            try {
+                window.__skhRetryOpenProduct = function () { window.openProduct(id, colToUse); };
+                const aa = document.getElementById('pmActionArea');
+                if (aa) aa.innerHTML = '<div class="pm-bar-loading"><span>' + skh.skhEscape(T('pm_load_fail', 'Imeshindikana kupakia kadi hii.')) + '</span>'
+                    + '<button type="button" class="pm-bar-btn pm-bar-primary" onclick="window.__skhRetryOpenProduct()">' + skh.skhEscape(T('pm_retry', 'Jaribu tena')) + '</button></div>';
+            } catch (e) {}
         });
     };
 
     // [AUDIT-FIX 2026-09-16] Anza na collection iliyotajwa; kama haipo,
     // listener (hapo juu) itafungua makundi mengine kabla ya alert.
+    // [FIX 2026-09-20] Onyesha hali ya kupakia kwenye eneo la vitufe mara moja (badala ya
+    // kuacha tupu hadi data ifike) — renderBar() inaandika juu yake data ikifika.
+    try {
+        const _aa0 = document.getElementById('pmActionArea');
+        if (_aa0) _aa0.innerHTML = '<div class="pm-bar-loading"><span>' + skh.skhEscape(T('pm_loading', 'Inapakia…')) + '</span></div>';
+    } catch (e) {}
     skhAttachProductListener(colToUse);
 
         // [FLOW 2026-09] Details inapofunguka: FUNSA scroll ya background —
@@ -236,6 +283,10 @@ window.openProduct = async function(id, manualCollection = null) {
         try { document.body.style.overflow = 'hidden'; } catch (e) {}
 
         document.getElementById('productModal').style.display = 'flex';
+        // [AUDIT-FIX] Kadi ifunguke JUU ya modal ilipofunguliwa (duka, saved, chat, oda...) — awali
+        // productModal (z-index 7500) ilifunguka NYUMA ya sellerProfileModal (7900) n.k. na ilionekana
+        // kama "kadi haifunguki".
+        try { if (typeof window.skhBringToFront === 'function') window.skhBringToFront('productModal'); } catch (e) {}
     };
 
 window.renderSpecialModesUI = function(mode, actionArea) {
@@ -1126,6 +1177,13 @@ window.skhResolveProductDeepLink = function() {
             if (pm) pid = pm[1];
         }
         if (!pid) return;
+        // [FIX 2026-09-20] Timer ya 1400ms (chini) iliona URL /p/{id} iliyowekwa na kadi ambayo mtumiaji
+        // ALIKWISHA kuifungua na kuifungua TENA — kadi ilirudi kwenye "Inapakia" na vitufe vilipotea kwa
+        // muda. Usifungue kadi ile ile ambayo tayari iko wazi.
+        try {
+            const _pm = document.getElementById('productModal');
+            if (_pm && _pm.style.display === 'flex' && skh.currentOpenProduct && String(skh.currentOpenProduct.id) === String(pid)) return;
+        } catch (e) { /* endelea na ufunguzi wa kawaida */ }
         if (typeof window.openProduct === 'function') window.openProduct(pid);
     } catch (e) { /* si kiungo cha bidhaa */ }
 };

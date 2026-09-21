@@ -16,7 +16,7 @@
 <meta name="hosting-provider" content="Netlify">
 <meta name="netlify-deploy" content="https://netlify.new/?utm_campaign=ai-legible&amp;utm_source=meta&amp;utm_medium=referral&amp;utm_id=7e5de4c3-e06f-4212-ac59-ecaa90b5f5d3">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>SOKOHAI- Ultimate Pro Edition (Escrow & Admin)</title>
+    <title>SokoHai — Soko la Mtandaoni la Tanzania</title>
     <!-- [SEO / PUBLIC LINKS] Meta za Google + viungo vya umma vya bidhaa.
          IDs hizi zinasasishwa na JS (window.skhUpdateSeoMeta) kila bidhaa ikifunguliwa. -->
     <meta name="description" content="SokoHai — soko la mtandaoni la Tanzania. Nunua na uuze bidhaa, huduma na usafiri kwa usalama (escrow)." id="skhMetaDescription">
@@ -25,8 +25,8 @@
     <meta property="og:title" content="SokoHai — Soko la Mtandaoni la Tanzania" id="skhOgTitle">
     <meta property="og:description" content="Nunua na uuze bidhaa, huduma na usafiri kwa usalama kupitia SokoHai." id="skhOgDescription">
     <meta property="og:type" content="website">
-    <meta property="og:url" id="skhOgUrl" content="">
-    <meta property="og:image" id="skhOgImage" content="">
+    <meta property="og:url" id="skhOgUrl" content="https://sokohaicom.netlify.app/">
+    <meta property="og:image" id="skhOgImage" content="https://sokohaicom.netlify.app/assets/sokohai-s-mark.png">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" id="skhCanonical" href="index.html">
 <link rel="icon" href="data:,">
@@ -67,6 +67,7 @@
 <link rel="stylesheet" href="css/23-logistics-market.css">
 <link rel="stylesheet" href="css/24-chat-ui-v2.css">
 <link rel="stylesheet" href="css/30-discover-engine.css">
+<link rel="stylesheet" href="css/31-product-actions.css"><!-- [FIX 2026-09-20] vitufe vya kadi sticky -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
 <link rel="stylesheet" href="css/25-typography.css">
@@ -1901,7 +1902,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <!-- HEADER BAR OF SOKOPAY -->
             <div class="sp-header-bar">
                 <div class="sp-header-left">
-                    <h2 class="sp-header-title" id="spWelcomeMsg">Welcome back, John! </h2>
+                    <h2 class="sp-header-title" id="spWelcomeMsg">Welcome back! </h2>
                     <p class="sp-header-subtitle">Here's what's happening with your account today.</p>
                 </div>
                 
@@ -2032,11 +2033,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <div class="sp-kpi-grid-premium">
                     <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 14px;">
                         <small style="color: gray; font-size: 12px; font-weight: bold; text-transform: uppercase;">Instant Transfers</small>
-                        <b style="font-size: 16px; color: #00509d; display: block; margin-top: 4px;">15 Today</b>
+                        <b style="font-size: 16px; color: #00509d; display: block; margin-top: 4px;">—</b>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 14px;">
                         <small style="color: gray; font-size: 12px; font-weight: bold; text-transform: uppercase;">Total Received</small>
-                        <b style="font-size: 16px; color: #10b981; display: block; margin-top: 4px;">TZS 1,850,000</b>
+                        <b style="font-size: 16px; color: #10b981; display: block; margin-top: 4px;">—</b>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 14px;">
                         <small style="color: gray; font-size: 12px; font-weight: bold; text-transform: uppercase;">SokoPay Security</small>
@@ -2105,9 +2106,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                         <div style="background: white; border: 1px solid #cbd5e1; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: left;">
                             <span class="sp-widget-title" style="font-size: 12px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid #8b5cf6; padding-left: 10px; margin-bottom: 15px; display: block;"> Recent Lipa Feeds</span>
                             <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
-                                <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;"><div><b>Supermarket Pay</b><br><small style="color:gray;">SP-8829</small></div><b style="color:#ef4444;">- TZS 120,000</b></div>
-                                <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;"><div><b>Ufundi Simu</b><br><small style="color:gray;">0712345678</small></div><b style="color:#ef4444;">- TZS 45,000</b></div>
-                                <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;"><div><b>Payment Request</b><br><small style="color:gray;">Kutoka: James</small></div><b style="color:#10b981;">+ TZS 80,000</b></div>
+                                <div style="background:#f8fafc; padding:14px; border-radius:10px; border:1px dashed #cbd5e1; color:#64748b; text-align:center; font-size:12.5px;">Hakuna miamala ya hivi karibuni bado.</div>
                             </div>
                         </div>
                     </div>
@@ -2342,19 +2341,19 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
                     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:16px;">
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#ef4444; font-size:22px; font-weight:900; display:block; line-height:1.1;">12,340</span>
+                            <span style="color:#ef4444; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
                             <small style="color:#64748b; font-weight:700;">Active Disputes</small>
                         </div>
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#f59e0b; font-size:22px; font-weight:900; display:block; line-height:1.1;">3,120</span>
+                            <span style="color:#f59e0b; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
                             <small style="color:#64748b; font-weight:700;">Pending Review</small>
                         </div>
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#10b981; font-size:22px; font-weight:900; display:block; line-height:1.1;">890,120</span>
+                            <span style="color:#10b981; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
                             <small style="color:#64748b; font-weight:700;"><span class="skh-ico" data-ico="check"></span> Resolved</small>
                         </div>
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#f43f5e; font-size:22px; font-weight:900; display:block; line-height:1.1;">45,210</span>
+                            <span style="color:#f43f5e; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
                             <small style="color:#64748b; font-weight:700;">Rejected Claims</small>
                         </div>
                     </div>
@@ -2460,70 +2459,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 </div>
                 
                 <div class="sp-tracking-timeline">
-                    <!-- Item 1 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #3b82f6;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">LOG-78391</span>
-                                <span class="sp-tracking-status transit">In Transit</span>
-                            </div>
-                            <p class="sp-tracking-desc">Electronics Items to Dodoma Hub</p>
-                            <span class="sp-tracking-time-offset">2 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #8b5cf6;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">JOB-55421</span>
-                                <span class="sp-tracking-status wip">Work in Progress</span>
-                            </div>
-                            <p class="sp-tracking-desc">Website Development (Task 3 of 5)</p>
-                            <span class="sp-tracking-time-offset">5 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 3 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #0f172a;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">CON-33112</span>
-                                <span class="sp-tracking-status">Foundation Work</span>
-                            </div>
-                            <p class="sp-tracking-desc">Building Construction (65% Complete)</p>
-                            <span class="sp-tracking-time-offset">8 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 4 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #f59e0b;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">LOG-78392</span>
-                                <span class="sp-tracking-status pending">At Hub</span>
-                            </div>
-                            <p class="sp-tracking-desc">Furniture Delivery at Morogoro Hub</p>
-                            <span class="sp-tracking-time-offset">12 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 5 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #10b981;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">SER-44123</span>
-                                <span class="sp-tracking-status" style="color: #10b981;">Completed</span>
-                            </div>
-                            <p class="sp-tracking-desc">Cleaning Service Done</p>
-                            <span class="sp-tracking-time-offset">15 min ago</span>
-                        </div>
-                    </div>
+                    <div style="padding:16px; text-align:center; color:#64748b; font-size:12.5px; border:1px dashed #cbd5e1; border-radius:12px;">Hakuna mizigo au kazi zinazofuatiliwa kwa sasa.</div>
                 </div>
             </div>
 
@@ -2562,7 +2498,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                         <canvas id="spDashboardWalletChart"></canvas>
                         <div style="position: absolute; text-align: center; pointer-events: none;">
                             <small style="color: #64748B; font-size: 12.5px; font-weight: bold; text-transform: uppercase; display:block;">Total Assets</small>
-                            <b style="font-size: 16px; color: #0F172A;" id="lblSpTotalAssetsVal">TZS 4,090,000</b>
+                            <b style="font-size: 16px; color: #0F172A;" id="lblSpTotalAssetsVal">TZS 0</b>
                         </div>
                     </div>
                 </div>
@@ -2573,21 +2509,21 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                             <span class="sp-legend-indicator-dot" style="background:#10b981;"></span>
                             <span>Available</span>
                         </div>
-                        <span class="sp-legend-amount-bold">TZS 2,450,000</span>
+                        <span class="sp-legend-amount-bold" id="spLegendAvailable">TZS 0</span>
                     </div>
                     <div class="sp-legend-row">
                         <div class="sp-legend-tag">
                             <span class="sp-legend-indicator-dot" style="background:#00509d;"></span>
                             <span>Escrow / Locked</span>
                         </div>
-                        <span class="sp-legend-amount-bold">TZS 1,320,000</span>
+                        <span class="sp-legend-amount-bold" id="spLegendEscrow">TZS 0</span>
                     </div>
                     <div class="sp-legend-row">
                         <div class="sp-legend-tag">
                             <span class="sp-legend-indicator-dot" style="background:#3b82f6;"></span>
                             <span>Pending</span>
                         </div>
-                        <span class="sp-legend-amount-bold">TZS 320,000</span>
+                        <span class="sp-legend-amount-bold" id="spLegendPending">TZS 0</span>
                     </div>
                 </div>
                 <!-- Wallet CTA Button -->
@@ -2889,28 +2825,28 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div class="sp-kpi-grid">
         <div class="sp-kpi-card" style="border-left: 4px solid #10b981;">
             <span class="sp-kpi-title">Wallet Balance</span>
-            <span class="sp-kpi-value" id="lblWalletBalanceVal">TZS 2,450,000</span>
+            <span class="sp-kpi-value" id="lblWalletBalanceVal">TZS 0</span>
             <span class="sp-kpi-sub" style="color: #10b981;">Available Balance</span>
         </div>
         <div class="sp-kpi-card" style="border-left: 4px solid #eab308;">
             <span class="sp-kpi-title">Escrow / Locked</span>
-            <span class="sp-kpi-value" id="lblEscrowBalanceVal">TZS 1,320,000</span>
+            <span class="sp-kpi-value" id="lblEscrowBalanceVal">TZS 0</span>
             <span class="sp-kpi-sub" style="color: #eab308;">Locked in Contracts</span>
         </div>
         <div class="sp-kpi-card" style="border-left: 4px solid #00509d;">
             <span class="sp-kpi-title">Active Contracts</span>
-            <span class="sp-kpi-value" id="lblActiveContractsVal">18</span>
+            <span class="sp-kpi-value" id="lblActiveContractsVal">0</span>
             <span class="sp-kpi-sub" style="color: #00509d;">Running Contracts</span>
         </div>
         <div class="sp-kpi-card" style="border-left: 4px solid #ef4444;">
             <span class="sp-kpi-title">Pending Confirmations</span>
-            <span class="sp-kpi-value" id="lblPendingConfirmationsVal">7</span>
+            <span class="sp-kpi-value" id="lblPendingConfirmationsVal">0</span>
             <span class="sp-kpi-sub" style="color: #ef4444;">Awaiting Action</span>
         </div>
         <div class="sp-kpi-card" style="border-left: 4px solid #8b5cf6;">
             <span class="sp-kpi-title">Total Earnings (This Month)</span>
-            <span class="sp-kpi-value" id="lblTotalEarningsVal">TZS 8,760,000</span>
-            <span class="sp-kpi-sub" style="color: #8b5cf6;">&#9650; +12.5% from last month</span>
+            <span class="sp-kpi-value" id="lblTotalEarningsVal">TZS 0</span>
+            <span class="sp-kpi-sub" style="color: #8b5cf6;">&nbsp;</span>
         </div>
     </div>
 
@@ -2991,7 +2927,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <canvas id="spDashboardWalletChart"></canvas>
                     <div style="position: absolute; text-align: center; pointer-events: none;">
                         <small style="color: gray; font-size: 12.5px; font-weight: bold; text-transform: uppercase; display:block;">Total Assets</small>
-                        <b style="font-size: 16px; color: #00509d;" id="lblSpTotalAssetsVal">TZS 4,090,000</b>
+                        <b style="font-size: 16px; color: #00509d;" id="lblSpTotalAssetsVal">TZS 0</b>
                     </div>
                 </div>
             </div>
@@ -4011,6 +3947,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <!-- [CHAT AUTH RACE FIX 2026-09-20] Tatizo kubwa la chat kushindwa kufungua: race kati ya Firebase auth na currentUser -->
 <script src="js/app/92-chat-auth-fix.js" defer></script>
 <script src="js/app/93-chat-inbox-repair.js" defer></script>
+<script src="js/94-modal-stack.js" defer></script><!-- [FIX 2026-09-20] tabaka za modals: kadi kufunguka juu -->
 </body>
 </html>
 <!-- [AUDIT 2026-09-16] HUD inajitokeza 3X — nakala mbili za ZIADA zimeondolewa -->

@@ -973,19 +973,43 @@ import {
             if (wrap) { delete wrap.dataset.key; wrap.dataset.loaded = ''; wrap.hidden = true; wrap.innerHTML = ''; }
             lastShowcaseKey = key;
         }
+        // [AUDIT-FIX] Awali sehemu zote zilikuwa kwenye try MOJA na renderBar ndiyo ya MWISHO:
+        // sehemu yoyote iliyotangulia ikitupa hitilafu (data isiyo ya kawaida), vitufe (Chat / Weka
+        // Kikapuni / Lipa Sasa / Agiza / Omba Usafiri) havikuchorwa kabisa. Sasa kila sehemu ina
+        // ulinzi wake, na vitufe vina fallback ya uhakika.
+        [['identity', renderIdentity], ['variants', renderVariants], ['special', renderSpecial],
+         ['details', renderDetails], ['delivery', renderDelivery], ['reviews', renderReviews],
+         ['seller', renderSeller]].forEach(function (s) {
+            try { s[1](found, col); }
+            catch (e) { console.warn('[showcase] ' + s[0] + ' error:', e && (e.stack || e.message)); }
+        });
         try {
-            renderIdentity(found, col);
-            renderVariants(found, col);
-            renderSpecial(found, col);
-            renderDetails(found, col);
-            renderDelivery(found, col);
-            renderReviews(found, col);
-            renderSeller(found, col);
             renderBar(found, col);
         } catch (e) {
-            console.warn('[showcase] render error:', e && e.message);
+            console.warn('[showcase] bar error:', e && (e.stack || e.message));
+            try { renderBarFallback(found, col); } catch (e2) { console.warn('[showcase] bar fallback error:', e2 && e2.message); }
         }
     };
+
+    // Vitufe vya msingi kabisa (hutumika renderBar ikishindwa) — vinatumia handlers zilezile.
+    function renderBarFallback(p, col) {
+        var area = $('pmActionArea'); if (!area) return;
+        var qty = $('pmQtyArea');
+        var chat = '<button type="button" class="pm-bar-btn pm-bar-chat" onclick="startChat()">' + '<span class="pm-bar-lbl">Chat</span></button>';
+        if (col === PS_SERVICE) {
+            if (qty) qty.style.display = 'none';
+            area.innerHTML = chat + '<button type="button" class="pm-bar-btn pm-bar-primary" onclick="window.skhPsNegotiate(\'service\')"><span class="pm-bar-lbl">Kadirio / Agiza Huduma</span></button>';
+        } else if (col === PS_DRIVER) {
+            if (qty) qty.style.display = 'none';
+            area.innerHTML = chat + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhPsBookTransport()"><span class="pm-bar-lbl">Omba Usafiri</span></button>'
+                + '<button type="button" class="pm-bar-btn pm-bar-nego" onclick="window.skhPsNegotiate(\'transport\')"><span class="pm-bar-lbl">Jadili Nauli</span></button>';
+        } else {
+            if (qty) qty.style.display = 'flex';
+            area.innerHTML = chat + '<button type="button" class="pm-bar-btn pm-bar-nego" onclick="window.skhPsNegotiate(\'product\')"><span class="pm-bar-lbl">Pendekeza Bei</span></button>'
+                + '<button type="button" class="pm-bar-btn pm-bar-cart" onclick="addToCart(false)"><span class="pm-bar-lbl">Weka Kikapuni</span></button>'
+                + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="addToCart(true)"><span class="pm-bar-lbl">Lipa Sasa</span></button>';
+        }
+    }
 
     // Jaza icons mara moja wakati wa kupakia (modali na My SokoHai tabs)
     ensureEngagementIcons();

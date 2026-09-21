@@ -217,7 +217,8 @@ const originalOpenProduct = window.openProduct;
 
 window.openProduct = async function(id, manualCollection = null) {
     // Kagua kwanza kama ID hii ipo kwenye orodha ya SokoPay links
-    const foundSokoPay = window.sokopayActiveContractsCache.find(c => c.id === id);
+    // [AUDIT-FIX] cache ikiwa si array (au haijawekwa) `.find` ilitupa TypeError na KADI ZOTE zilishindwa kufunguka
+    const foundSokoPay = (Array.isArray(window.sokopayActiveContractsCache) ? window.sokopayActiveContractsCache : []).find(c => c && c.id === id);
 
     if (foundSokoPay && foundSokoPay.isSokoPay) {
         // Ikiwa ni mkataba wa SokoPay, uonyeshe kwenye tracking tab moja kwa moja kwa urahisi
@@ -235,7 +236,7 @@ window.openProduct = async function(id, manualCollection = null) {
 
     // Kama sio SokoPay link ya direct, tumia mfumo wa kawaida wa bidhaa za soko
     if (typeof originalOpenProduct === 'function') {
-        originalOpenProduct(id, manualCollection);
+        return originalOpenProduct(id, manualCollection);
     }
 };
 

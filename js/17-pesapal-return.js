@@ -141,7 +141,15 @@
            email yake, wala haihifadhiwi kwenye `email` ya profile.
            Utambulisho wa mwanachama ni NAMBA YA SIMU (§5, §6). */
         var authIdentifier = 'offline_' + randomDigits + '@sokohai.internal';
-        var defaultPassword = 'sokohai' + randomDigits;
+        // [SECURITY-FIX] Nywila ilikuwa 'sokohai'+tarakimu 6 zilezile zilizo kwenye email ya akaunti
+        // (mtu yeyote angeweza kuingia kwenye akaunti yoyote ya mwanachama). Sasa ni nasibu salama;
+        // hakuna sehemu ya mfumo inayoitegemea (kuingia ni kwa PIN kupitia wakala).
+        var defaultPassword = (function () {
+            var c = window.crypto || window.msCrypto;
+            if (!c || !c.getRandomValues) throw new Error('Kivinjari hakina crypto salama — usajili umesimamishwa.');
+            var a = new Uint8Array(24); c.getRandomValues(a);
+            return Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('') + 'Aa1!';
+        })();
         var apiKey = (fb && fb.apiKey) || '';
         var newUid = null;
         if (apiKey) {
@@ -210,6 +218,11 @@
         if (m) { try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; } }
         return '';
     }
+
+    // [AUDIT-FIX] helpers hizi zilitumika (skhPesaPalReturnRun) lakini hazikuwepo -> ReferenceError,
+    // malipo ya PesaPal hayakuthibitishwa na oda haikuundwa baada ya kurudi.
+    function getOrderTrackingId() { return param('OrderTrackingId'); }
+    function getMerchantReference() { return param('OrderMerchantReference'); }
 
     function isReturnVisit() {
         var s = (window.location.search || '').toLowerCase();
@@ -577,6 +590,13 @@
             }
             setModal(mi('clock'), 'Malipo Yanasubiri Uthibitisho', 'PesaPal bado haijathibitisha muamala huu (mara nyingine inachukua dakika chache).<br><small style="color:#94a3b8;">Ref: ' + esc(orderTrackingId) + '</small>',
                 btn(' Angalia Tena', 'window.skhPesaPalReturnRun()') +
+                btn('Funga', 'window.skhPesaPalReturnClose()', '#e2e8f0', '#334155'));
+        } catch (runErr) {
+            // [AUDIT-FIX] hapo awali hitilafu yoyote ilimezwa kimya (try/finally bila catch)
+            try { console.error('[PesaPal return]', runErr); } catch (e) { /* defensive */ }
+            setModal(mi('warn'), 'Hitilafu Wakati wa Uthibitisho',
+                'Imeshindikana kuthibitisha malipo kwa sasa. <b>Malipo yako hayajapotea</b> — jaribu tena, au wasiliana na usaidizi.<br><small style="color:#94a3b8;">' + esc((runErr && runErr.message) || '') + '</small>',
+                btn('Jaribu Tena', 'window.skhPesaPalReturnRun()') +
                 btn('Funga', 'window.skhPesaPalReturnClose()', '#e2e8f0', '#334155'));
         } finally {
             running = false;

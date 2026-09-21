@@ -1276,7 +1276,7 @@ import { skh } from './00-bootstrap.js';
                 if (mIc) mIc.innerHTML = hIco(muted ? 'bell' : 'bell', 15);
                 if (mBtn) mBtn.classList.toggle('is-on', muted);
                 if (aLbl) aLbl.textContent = archived ? 'Toa kwenye kumbukumbu' : 'Hifadhi (Archive)';
-                if (aIc) aIc.innerHTML = hIc('folder', 15);
+                if (aIc) aIc.innerHTML = hIco('folder', 15);
                 if (aBtn) aBtn.classList.toggle('is-on', archived);
             }).catch(function () {});
         } catch (e) { /* ignore */ }

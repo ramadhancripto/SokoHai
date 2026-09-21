@@ -807,32 +807,33 @@ window.renderSokoPayPieChart = function(prod, serv, trans) {
 };
 
 window.renderSokoPayWalletSummaryChart = function(wallet, escrow, pending) {
+    wallet = Number(wallet) || 0; escrow = Number(escrow) || 0; pending = Number(pending) || 0;
     const total = wallet + escrow + pending;
-    
-    // Ikiwa salio lote ni zero (mteja mpya), mfumo unaonyesha muundo thabiti wa picha yetu kama fallback
-    const values = total > 0 ? [wallet, escrow, pending] : [2450000, 1320000, 320000];
-    
-    // Sasisha kiasi cha mali zote (Total Assets) katikati ya chati ya duara
-    const totalAssetsEl = document.getElementById('lblSpTotalAssetsVal');
-    if (totalAssetsEl) {
-        const displayTotal = total > 0 ? total : 4090000;
-        totalAssetsEl.innerText = `TZS ${displayTotal.toLocaleString()}`;
-    }
+    const fmt = function (n) { return 'TZS ' + Number(n || 0).toLocaleString(); };
 
+    // [AUDIT-FIX] Awali, salio 0 lilionyesha namba za KUBUNI (TZS 4,090,000 / 2,450,000 / ...).
+    // Sasa tunaonyesha namba halisi, na chati ya kijivu tupu kama hakuna data.
+    const totalAssetsEl = document.getElementById('lblSpTotalAssetsVal');
+    if (totalAssetsEl) totalAssetsEl.innerText = fmt(total);
+    const lgA = document.getElementById('spLegendAvailable'); if (lgA) lgA.innerText = fmt(wallet);
+    const lgE = document.getElementById('spLegendEscrow');    if (lgE) lgE.innerText = fmt(escrow);
+    const lgP = document.getElementById('spLegendPending');   if (lgP) lgP.innerText = fmt(pending);
+
+    const empty = total <= 0;
     window.safeCreateChart('spDashboardWalletChart', {
         type: 'doughnut',
         data: {
-            labels: ['Available', 'Escrow / Locked', 'Pending'],
+            labels: empty ? ['Hakuna data'] : ['Available', 'Escrow / Locked', 'Pending'],
             datasets: [{
-                data: values,
-                backgroundColor: ['#10b981', '#00509d', '#3b82f6'],
+                data: empty ? [1] : [wallet, escrow, pending],
+                backgroundColor: empty ? ['#e2e8f0'] : ['#10b981', '#00509d', '#3b82f6'],
                 borderWidth: 0
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: { legend: { display: false }, tooltip: { enabled: !empty } },
             cutout: '70%'
         }
     });
@@ -1915,7 +1916,7 @@ window.executeSokoPayWalletPayment = async function(linkDocId, price) {
         // Weka upya muonekano
         document.getElementById('spCodeInputPay').value = '';
         document.getElementById('spItemPreview').style.display = 'none';
-        if (btnProceedPaySp) btnProceedPaySp.style.display = 'none';
+        if (btnProceed) btnProceed.style.display = 'none';
         document.getElementById('btnVerifySp').style.display = 'block';
 
         window.toggleSokoPayTab('track');

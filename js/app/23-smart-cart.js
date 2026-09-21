@@ -1,6 +1,13 @@
 /* ==== js/app/23-smart-cart.js ==== */
 import { skh } from './00-bootstrap.js';
 
+// [AUDIT-FIX] lgxEscape ilitumika mara nyingi (soko la logistics) lakini haikufafanuliwa -> ReferenceError.
+function lgxEscape(s) {
+    s = (s === null || s === undefined) ? '' : String(s);
+    if (typeof skh.skhEscape === 'function') return skh.skhEscape(s);
+    return s.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+}
+
 window.openPrintingModal = function(){ window.closeModals(); const modal=document.getElementById('printingServiceModal'); if(modal){ modal.style.display='flex'; window.renderPrintingModalPro(); } };
 
 (function injectSmartCartCSS(){

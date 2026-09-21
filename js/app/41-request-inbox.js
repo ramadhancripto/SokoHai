@@ -105,7 +105,7 @@ import { skh } from './00-bootstrap.js';
                     : emptyHtml('Imeshindikana kupakua maombi. Jaribu tena.');
             }
         });
-        window.skhRequestInboxRetry = function () { try { listen(); } catch (e) {} };
+        window.skhRequestInboxRetry = function () { try { load(); } catch (e) {} };
 
         // Burudisha "dakika zilizosalia" kila baada ya 30s.
         state.timer = setInterval(function () {

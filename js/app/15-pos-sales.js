@@ -435,9 +435,9 @@ window.switchOsTab = function(tab) {
         }
     });
 
-    if (tab === 'pos') renderRecentProducts();
+    if (tab === 'pos' && typeof window.renderRecentProducts === 'function') window.renderRecentProducts();
     if (tab === 'expenses') window.loadDebtsListInLedger(); // Badiliko: Inaita madeni live!
-    if (tab === 'staff') renderStaffList();
+    if (tab === 'staff' && typeof window.renderStaffList === 'function') window.renderStaffList();
 };
 
 window.openOfflineStockModal = function() {

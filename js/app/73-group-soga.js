@@ -518,10 +518,6 @@ import { skh } from './00-bootstrap.js';
                 } catch (eT2) {}
             });
         }
-                var patch = {}; patch['typingMap.' + uid()] = { uid: uid(), name: myName(), at: nowIso() };
-                skh.updateDoc(cRef(gid), patch).catch(function () {});
-            } catch (eT2) {}
-        });
     };
 
     window.skhCloseGroupSoga = function () {

@@ -123,7 +123,13 @@ import { skh } from './00-bootstrap.js';
            MutationObserver hupiga mara kadhaa kwa mabadiliko yale yale.
            Sasa: kila kipengele kinakuwa kwenye rundo MARA MOJA tu. */
         for (var i = 0; i < stack.length; i++) {
-            if (stack[i].type === entry.type && stack[i].id === entry.id) return;
+            if (stack[i].type === entry.type && stack[i].id === entry.id) {
+                // [FIX 2026-09-20] Modal iliyofunguliwa TENA juu ya nyingine (mf. kadi ndani ya duka
+                // iliyokuwa tayari kwenye rundo) lazima ihamie JUU ya rundo — vinginevyo X/Back
+                // inafunga duka badala ya kadi. Hali ya kawaida (bila raise) haibadiliki.
+                if (entry.raise && i !== stack.length - 1) stack.push(stack.splice(i, 1)[0]);
+                return;
+            }
         }
         stack.push(entry);
         if (stack.length > MAX) stack.shift();

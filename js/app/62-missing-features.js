@@ -244,7 +244,7 @@
       if (nego.status !== 'agreed') throw new Error('Negotiation not agreed yet');
       // Build service order
       const orderId = `SVC-${Date.now()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
-      const activeUid = (window.skhGetEffectiveUid && skhGetEffectiveUid()) || (window.currentUser && currentUser.uid) || null;
+      const activeUid = ((window.skh && window.skh.currentUser && window.skh.currentUser.uid) || null);
       const order = {
         orderId,
         negotiationId,
@@ -340,7 +340,7 @@
   const origVoid = window.skhPOS.voidTransaction;
   window.skhPOS.voidTransaction = async function(txId, reason){
     try{
-      const entry = { txId, reason: reason||'No reason', at: new Date().toISOString(), by: (window.skhGetEffectiveUid && skhGetEffectiveUid()) || (window.currentUser&&currentUser.uid) || 'unknown' };
+      const entry = { txId, reason: reason||'No reason', at: new Date().toISOString(), by: (((window.skh && window.skh.currentUser && window.skh.currentUser.uid) || null) || 'unknown') };
       window.skhPOS.voidHistory.unshift(entry);
       localStorage.setItem('skh_pos_void_history', JSON.stringify(window.skhPOS.voidHistory.slice(0,100)));
       // Also write to Firestore for audit
@@ -391,7 +391,7 @@
       console.log('[identity] Signed in as offline member', memberUid);
       if (window.skhToast) skhToast(`Umeingia kama ${memberUid}`, 'success');
       // Save audit
-      localStorage.setItem('skh_last_offline_signin', JSON.stringify({ memberUid, at: new Date().toISOString(), agentId: (window.currentUser&&currentUser.uid)||null }));
+      localStorage.setItem('skh_last_offline_signin', JSON.stringify({ memberUid, at: new Date().toISOString(), agentId: ((window.skh && window.skh.currentUser && window.skh.currentUser.uid) || null) }));
       return customToken;
     }catch(e){
       console.error('[customToken] signInAsOfflineMember fail', e);

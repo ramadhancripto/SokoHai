@@ -324,7 +324,7 @@ window.disputeEscrowOrder = async function() {
             await skh.updateDoc(skh.doc(skh.db, "orders", oid), { status: "disputed", disputeReason: sababu });
             alert(" Tumepokea malalamiko yako. Pesa itaendelea kushikiliwa mpaka tatizo litatuliwe na Admin.");
             closeModals(); 
-            loadBuyerOrders();
+            if (typeof window.loadBuyerOrdersWithTracking === 'function') window.loadBuyerOrdersWithTracking();
         }
     };
 
