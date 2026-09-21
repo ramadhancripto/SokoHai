@@ -1285,20 +1285,58 @@ import { skh } from './00-bootstrap.js';
         el.textContent = '';
     }
 
+    var listenWatch = null;
+    window.skhChatRetryHistory = function () {
+        try {
+            var c = skh.chatCore || {};
+            if (c.convId) listen(c.convId);
+        } catch (e) {}
+    };
     function listen(convId) {
         var chatDiv = document.getElementById('chatMessages');
         if (!chatDiv) return;
         if (skh.chatCoreUnsub) { try { skh.chatCoreUnsub(); } catch (e) {} }
         if (skh.chatCoreConvUnsub) { try { skh.chatCoreConvUnsub(); } catch (e) {} }
+        if (listenWatch) { try { clearTimeout(listenWatch); } catch (e) {} listenWatch = null; }
 
         chatDiv.innerHTML = '<p style="text-align:center;color:#667781;padding:30px 10px;font-size:13px;">' + T('ch_loading', 'Inapakia meseji...') + '</p>';
 
+        /* [HISTORY-WATCHDOG 2026-09-21] "Inapakia..." milele hairuhusiwi:
+           snapshot ya kwanza isipofika ndani ya 12s (mtandao/listener
+           issue), onyesha retry badala ya spinner ya milele. */
+        var firstSnapDone = false;
+        listenWatch = setTimeout(function () {
+            listenWatch = null;
+            if (firstSnapDone) return;
+            try {
+                var stillLoading = chatDiv && /Inapakia/.test(chatDiv.innerHTML || '');
+                if (!stillLoading) return;
+                chatDiv.innerHTML = '<div style="text-align:center;padding:30px 16px;">'
+                    + '<p style="color:#64748b;font-size:13px;">' + T('ch_history_slow', 'Ujumbe wa zamani unachukua muda kupakia.') + '</p>'
+                    + '<button type="button" onclick="window.skhChatRetryHistory()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
+                    + '</div>';
+            } catch (e) {}
+        }, 12000);
+
         var q = skh.query(skh.collection(skh.db, 'conversations/' + convId + '/messages'), skh.orderBy('createdAt', 'asc'), skh.limit(msgLimit));
         skh.chatCoreUnsub = skh.onSnapshot(q, function (snap) {
+            firstSnapDone = true;
+            if (listenWatch) { try { clearTimeout(listenWatch); } catch (e) {} listenWatch = null; }
             var msgs = [];
             if (snap && snap.forEach) snap.forEach(function (d) { msgs.push(Object.assign({ id: d.id }, d.data())); });
             (skh.chatCore || {}).msgs = msgs;
-            var html = renderMessageList(filteredMsgs(msgs), (skh.chatCore || {}).conv || {});
+            /* [HISTORY-WATCHDOG 2026-09-21] Render isiangushe kimya — data
+               ya zamani isiyotarajiwa ikivunja render, onyesha retry. */
+            var html = '';
+            try {
+                html = renderMessageList(filteredMsgs(msgs), (skh.chatCore || {}).conv || {});
+            } catch (eRender) {
+                try { console.error('[chat render]', eRender); } catch (e2) {}
+                html = '<div style="text-align:center;padding:30px 16px;">'
+                    + '<p style="color:#b91c1c;font-size:13px;">' + T('ch_render_fail', 'Imeshindwa kuonyesha ujumbe.') + '</p>'
+                    + '<button type="button" onclick="window.skhChatRetryHistory()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
+                    + '</div>';
+            }
             if (msgs.length >= msgLimit) html += '<div style="text-align:center;margin-top:8px;"><button type="button" class="ch-ctxbtn" onclick="window.skhChatLoadOlder()">' + T('ch_load_older', 'Pakia ujumbe wa zamani') + '</button></div>';
             // [AUDIT anti-flicker] subiri: scroll chini TU user karibu-chini (au load ya kwanza & msgs chache)
             var atBottomL = (chatDiv.scrollHeight - chatDiv.scrollTop - chatDiv.clientHeight) < 90;
