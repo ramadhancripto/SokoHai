@@ -1943,7 +1943,12 @@ import { skh } from './00-bootstrap.js';
     // baadaye. Zamani ilikuwa inasubiri queries 10-20 SEQUENTIALLY (5-15s).
     window.skhChatOpen = async function (uid, name, opts) {
         if (!skh.requireAuth()) return null;
-        if (!uid) { alert(T('ch_unknown_person', 'Hatujui mtu huyu bado.')); return null; }
+        // [ULINZI WA UID] Usiruhusu kamwe UID ya undefined au tupu
+        if (!uid || uid === 'undefined' || uid === 'null' || uid === '') {
+            console.error('[skhChatOpen] Aborted due to invalid UID:', uid);
+            alert('Hitilafu: Mpokeaji hajatambulika kwenye tangazo hili.');
+            return null;
+        }
         if (uid === myUid()) { alert(T('ch_self', 'Huwezi kujitumia ujumbe mwenyewe.')); return null; }
         opts = opts || {};
         var email = opts.email || skh.currentChatEmail || '';
@@ -3063,34 +3068,47 @@ import { skh } from './00-bootstrap.js';
 
     window.startChat = function () {
         if (!skh.requireAuth() || !skh.currentOpenProduct) return;
-        var p = skh.currentOpenProduct;
-        if (!p.userId) { alert(T('pr_no_email', 'Muuzaji huyu bado hana taarifa za mawasiliano.')); return; }
-        if (p.userId === myUid()) { alert(T('pr_chat_self', 'Huwezi kujitumia meseji kwenye tangazo lako mwenyewe.')); return; }
-        skh.currentChatUid = p.userId;
-        skh.currentChatEmail = p.userEmail || '';
-        skh.chatPartner = p.ownerName || (p.userEmail ? p.userEmail.split('@')[0] : 'Muuzaji');
-        // [COMMERCE 2026-09] Weka muktadha UNAOFUATA aina ya tangazo —
-        // tangazo la dereva si bidhaa, nalo huduma si bidhaa.
+        var p = skh.currentOpenProduct || {};
+        var myId = myUid();
+        
+        // [PHASE 5 FIX] Pata sellerUid kutoka kwenye fields zote
+        var sellerUid = p.sellerId || p.userId || p.sellerUid || p.ownerUid || p.ownerId || p.providerId || p.driverId || null;
+        
+        if (!sellerUid || sellerUid === 'undefined' || sellerUid === 'null') {
+            alert('Muuzaji huyu bado hana taarifa za mawasiliano kwenye tangazo hili.');
+            return;
+        }
+        if (sellerUid === myId) {
+            alert(T('pr_chat_self', 'Huwezi kujitumia meseji kwenye tangazo lako mwenyewe.'));
+            return;
+        }
+
+        var sellerName = p.sellerName || p.ownerName || p.storeName || p.shopName || p.businessName || p.fullName || p.displayName || p.company || 'Mawasiliano';
+        var sellerEmail = p.sellerEmail || p.userEmail || p.email || '';
+
+        skh.currentChatUid = sellerUid;
+        skh.currentChatEmail = sellerEmail;
+        skh.chatPartner = sellerName;
+
         var pCol = p.collectionName || p.itemCollection || skh.currentFeedCollection || 'products';
         skh.activeChatProduct = null;
         skh.activeChatService = null;
         skh.activeChatTransport = null;
         var greetRef = 'tangazo hili';
         if (pCol === 'drivers') {
-            skh.activeChatTransport = Object.assign({}, p, { collectionName: 'drivers' });
+            skh.activeChatTransport = Object.assign({}, p, { collectionName: 'drivers', sellerId: sellerUid, sellerName: sellerName });
             greetRef = 'tangazo lenu la usafiri';
         } else if (pCol === 'services') {
-            skh.activeChatService = Object.assign({}, p, { collectionName: 'services' });
+            skh.activeChatService = Object.assign({}, p, { collectionName: 'services', sellerId: sellerUid, sellerName: sellerName });
             greetRef = 'huduma yenu';
         } else {
-            skh.activeChatProduct = p;
+            skh.activeChatProduct = Object.assign({}, p, { collectionName: 'products', sellerId: sellerUid, sellerName: sellerName });
             greetRef = 'bidhaa hii';
         }
         var input = document.getElementById('chatInput');
         if (input) input.value = 'Habari, nimevutiwa na ' + greetRef + ': ' + (p.title || '');
-        /* [NEGO-FIX 2026-09-21] Rudisha promise ya chat-open ili witoaji
-           (skhChatNegotiate) wa-await badala ya polling vipofu ya 6s. */
-        return window.skhChatOpen(p.userId, skh.chatPartner, { ctx: 'p_' + p.id, type: 'direct', email: p.userEmail || '' });
+        
+        return window.skhChatOpen(sellerUid, sellerName, { ctx: 'p_' + p.id, type: 'direct', email: sellerEmail });
     };
 
     /* ---------- Kadi za kushiriki (share) — Phase 4 ---------- */

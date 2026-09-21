@@ -1224,11 +1224,11 @@ window.startChat = function() {
     const p = skh.currentOpenProduct || {};
     const myId = (skh.currentUser && skh.currentUser.uid) || null;
 
-    // [SAHIHISHO LA UID] Tafuta UID ya muuzaji kwa majina yote yanayowezekana
+    // [REKEBISHO KUU] Pata UID ya muuzaji kutoka field yoyote iliyotumika kwenye tangazo
     const sellerUid = p.sellerId || p.userId || p.sellerUid || p.ownerUid || p.ownerId || p.providerId || p.driverId || null;
 
-    if(!sellerUid) {
-        alert("Hitilafu: Muuzaji huyu hana taarifa za mawasiliano kwenye tangazo hili.");
+    if(!sellerUid || sellerUid === 'undefined' || sellerUid === 'null') {
+        alert("Hitilafu: Taarifa za mawasiliano ya muuzaji hazijapatikana kwenye tangazo hili.");
         return;
     }
 
@@ -1237,7 +1237,7 @@ window.startChat = function() {
         return;
     }
 
-    // [SAHIHISHO LA JINA] Tafuta jina halisi la muuzaji au duka badala ya kubaki neno "Muuzaji"
+    // Pata jina halisi la muuzaji au duka badala ya kubaki neno "Muuzaji"
     const sellerName = p.sellerName || p.ownerName || p.storeName || p.shopName || p.businessName || p.fullName || p.displayName || p.company || 'Mawasiliano';
     const sellerEmail = p.sellerEmail || p.userEmail || p.email || '';
 
@@ -1245,7 +1245,7 @@ window.startChat = function() {
     skh.currentChatEmail = sellerEmail;
     skh.chatPartner = sellerName;
 
-    // Weka muktadha wa aina ya tangazo
+    // Weka muktadha wa aina ya bidhaa/huduma
     var col = String(p.collectionName || p.itemCollection || 'products');
     skh.activeChatProduct = null;
     skh.activeChatService = null;
@@ -1266,17 +1266,40 @@ window.startChat = function() {
     var input = document.getElementById('chatInput');
     if(input) input.value = "Habari, nimevutiwa na " + greetRef + ": " + (p.title || '');
 
-    // Tumia moja kwa moja mfumo rasmi wa skhChatOpen badala ya listenToChats ya zamani
+    // Fungua moja kwa moja kupitia mfumo mpya wa skhChatOpen
     if (typeof window.skhChatOpen === 'function') {
         return window.skhChatOpen(sellerUid, sellerName, {
             ctx: 'p_' + p.id,
             type: 'direct',
             email: sellerEmail
         });
-    } else if (typeof window.openChatWithUser === 'function') {
-        return window.openChatWithUser(sellerUid, sellerName);
     }
 };
+
+window.openChatWithUser = function(uid, displayName) {
+    if(!skh.requireAuth()) return;
+    if(!uid || uid === 'undefined' || uid === 'null') {
+        alert("Hitilafu: Mpokeaji hajatambulika.");
+        return;
+    }
+    skh.currentChatUid = uid;
+    skh.chatPartner = displayName || 'Mawasiliano';
+    skh.activeChatProduct = null;
+    skh.activeChatService = null;
+    skh.activeChatTransport = null;
+
+    if (typeof window.skhChatOpen === 'function') {
+        return window.skhChatOpen(uid, displayName || 'Mawasiliano', {});
+    }
+};
+
+window.resumeChat = function(uid, email, name) {
+    if (!uid || uid === 'undefined' || uid === 'null') return;
+    if (typeof window.skhChatOpen === 'function') {
+        return window.skhChatOpen(uid, name || 'Mawasiliano', { email: email || '' });
+    }
+};
+
 
 window.resumeChat = function(uid, email, name) {
     skh.currentChatUid = uid || '';
