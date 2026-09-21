@@ -1221,83 +1221,61 @@ window.skhResolveProductDeepLink = function() {
 
 window.startChat = function() {
     if(!skh.requireAuth() || !skh.currentOpenProduct) return;
+    const p = skh.currentOpenProduct || {};
+    const myId = (skh.currentUser && skh.currentUser.uid) || null;
 
-    if(skh.currentOpenProduct.userId === skh.currentUser.uid) {
-        alert(T('pr_chat_self', 'You cannot chat with yourself on your own listing.'));
+    // [SAHIHISHO LA UID] Tafuta UID ya muuzaji kwa majina yote yanayowezekana
+    const sellerUid = p.sellerId || p.userId || p.sellerUid || p.ownerUid || p.ownerId || p.providerId || p.driverId || null;
+
+    if(!sellerUid) {
+        alert("Hitilafu: Muuzaji huyu hana taarifa za mawasiliano kwenye tangazo hili.");
         return;
     }
 
-    if(!skh.currentOpenProduct.userEmail) {
-        alert(T('pr_no_email', 'This seller has no registered email yet. You cannot start a chat.'));
+    if(sellerUid === myId) {
+        alert(T('pr_chat_self', 'Huwezi kujitumia meseji kwenye tangazo lako mwenyewe.'));
         return;
     }
 
-    skh.chatPartner = skh.currentOpenProduct.ownerName || (skh.currentOpenProduct.userEmail ? skh.currentOpenProduct.userEmail.split('@')[0] : T('eng_seller', 'Seller'));
-    skh.currentChatEmail = skh.currentOpenProduct.userEmail || ''; // SHIKILIA EMAIL
-    skh.currentChatUid = skh.currentOpenProduct.userId || '';       // SHIKILIA UID (ya kuaminika)
-    /* [FIX 2026-09-15] Hapo awali KILA tangazo lilihifadhiwa kama
-       `activeChatProduct` — hata huduma na usafiri. Kwa hiyo `serviceCtx()`
-       na `transportCtx()` hazikuwahi kupata muktadha, na kadi ya majadiliano
-       haikuonekana kwa huduma/usafiri (ndiyo uliyokuwa ukiona: ujumbe wa
-       kawaida tu, bila kadi ya negotiation).
+    // [SAHIHISHO LA JINA] Tafuta jina halisi la muuzaji au duka badala ya kubaki neno "Muuzaji"
+    const sellerName = p.sellerName || p.ownerName || p.storeName || p.shopName || p.businessName || p.fullName || p.displayName || p.company || 'Mawasiliano';
+    const sellerEmail = p.sellerEmail || p.userEmail || p.email || '';
 
-       Sasa tunahifadhi kwenye SEHEMU SAHIHI kulingana na aina. */
-    (function () {
-        var p = skh.currentOpenProduct || {};
-        var col = String(p.collectionName || p.itemCollection || 'products');
-        skh.activeChatProduct = null;
-        skh.activeChatService = null;
-        skh.activeChatTransport = null;
-        if (col === 'services') {
-            skh.activeChatService = Object.assign({}, p, { collectionName: 'services' });
-        } else if (col === 'drivers' || col === 'ride_requests') {
-            skh.activeChatTransport = Object.assign({}, p, { collectionName: col });
-        } else {
-            skh.activeChatProduct = p;
-        }
-        // Onyesha kadi ya majadiliano kwa muktadha huu
-        setTimeout(function () {
-            if (typeof window.skhChatRefreshNegoCard === 'function') window.skhChatRefreshNegoCard();
-        }, 700);
-    })();
+    skh.currentChatUid = sellerUid;
+    skh.currentChatEmail = sellerEmail;
+    skh.chatPartner = sellerName;
 
-    const cw = document.getElementById('chatWith');
-    if(cw) cw.innerText = skh.chatPartner;
+    // Weka muktadha wa aina ya tangazo
+    var col = String(p.collectionName || p.itemCollection || 'products');
+    skh.activeChatProduct = null;
+    skh.activeChatService = null;
+    skh.activeChatTransport = null;
+    var greetRef = 'tangazo hili';
 
-    // [DP-EVERYWHERE] DP ya muuzaji kwenye kichwa cha chat
-    window.skhSetChatHeaderAvatar(skh.currentOpenProduct.userId, skh.currentOpenProduct.ownerPhoto || null, skh.chatPartner);
+    if (col === 'services') {
+        skh.activeChatService = Object.assign({}, p, { collectionName: 'services', sellerId: sellerUid, sellerName: sellerName });
+        greetRef = 'huduma yenu';
+    } else if (col === 'drivers' || col === 'ride_requests') {
+        skh.activeChatTransport = Object.assign({}, p, { collectionName: col, sellerId: sellerUid, sellerName: sellerName });
+        greetRef = 'tangazo lenu la usafiri';
+    } else {
+        skh.activeChatProduct = Object.assign({}, p, { collectionName: 'products', sellerId: sellerUid, sellerName: sellerName });
+        greetRef = 'bidhaa hii';
+    }
 
-    // [ATTACH] Onyesha strip ya bidhaa iliyoambatishwa (juu ya composer)
-    window.skhRenderAttachedProduct();
+    var input = document.getElementById('chatInput');
+    if(input) input.value = "Habari, nimevutiwa na " + greetRef + ": " + (p.title || '');
 
-    // [SHOWCASE 39] Bebesha muktadha kamili (pamoja na variant iliyochaguliwa)
-    var _vlabel = '';
-    try {
-        if (skh.currentOpenProduct.psVariants) {
-            var _parts = [];
-            Object.keys(skh.currentOpenProduct.psVariants).forEach(function (k) {
-                var v = skh.currentOpenProduct.psVariants[k];
-                if (v && String(v).toUpperCase() !== 'N/A') _parts.push(v);
-            });
-            if (_parts.length) _vlabel = ' (' + _parts.join(' / ') + ')';
-        }
-    } catch (e) {}
-    skh.activeChatProductContext = {
-        productId: skh.currentOpenProduct.id,
-        sellerId: skh.currentOpenProduct.userId || null,
-        collection: skh.currentOpenProduct.collectionName || 'products',
-        variant: _vlabel ? _vlabel.slice(2, -1) : null
-    };
-
-    // Andaa ujumbe kwenye Input box wa kuvutia mteja
-    const input = document.getElementById('chatInput');
-    if(input) input.value = "Habari, nimevutiwa na bidhaa hii: " + skh.currentOpenProduct.title + _vlabel;
-
-    closeModals();
-    const cm = document.getElementById('chatModal');
-    if(cm) cm.style.display = 'flex';
-
-    skh.listenToChats(skh.currentChatEmail, skh.currentChatUid);
+    // Tumia moja kwa moja mfumo rasmi wa skhChatOpen badala ya listenToChats ya zamani
+    if (typeof window.skhChatOpen === 'function') {
+        return window.skhChatOpen(sellerUid, sellerName, {
+            ctx: 'p_' + p.id,
+            type: 'direct',
+            email: sellerEmail
+        });
+    } else if (typeof window.openChatWithUser === 'function') {
+        return window.openChatWithUser(sellerUid, sellerName);
+    }
 };
 
 window.resumeChat = function(uid, email, name) {
@@ -1321,39 +1299,21 @@ window.resumeChat = function(uid, email, name) {
 };
 
 // [CHAT] Fungua chat na mtu yeyote kwa uid (muuzaji/dereva/mteja) — kwa kuangalia email yake
-window.openChatWithUser = async function(uid, displayName) {
+window.openChatWithUser = function(uid, displayName) {
     if(!skh.requireAuth()) return;
-    if(!uid) { alert(T('pr_unknown_person', 'We do not know this person yet (no info).')); return; }
-    let email = null;
-    try {
-        const snap = await skh.getDoc(skh.doc(skh.db, "users", uid));
-        if (snap && snap.exists()) {
-            const ud = snap.data();
-            email = ud.email || ud.userEmail || null;
-            if (!displayName) displayName = ud.fullName || ud.displayName || email;
-        }
-    } catch (e) { email = null; }
-
-    skh.chatPartner = displayName || (email ? email.split('@')[0] : 'Mawasiliano');
-    skh.currentChatEmail = email || '';
+    if(!uid || uid === 'undefined' || uid === 'null') {
+        alert("Hitilafu: Taarifa za mpokeaji hazijapatikana.");
+        return;
+    }
     skh.currentChatUid = uid;
+    skh.chatPartner = displayName || 'Mawasiliano';
     skh.activeChatProduct = null;
+    skh.activeChatService = null;
+    skh.activeChatTransport = null;
 
-    const cw = document.getElementById('chatWith');
-    if(cw) cw.innerText = skh.chatPartner;
-
-    // [DP-EVERYWHERE] DP ya mwenzako kwenye kichwa cha chat
-    window.skhSetChatHeaderAvatar(uid, null, skh.chatPartner);
-    window.skhRenderAttachedProduct();
-
-    closeModals();
-    const cm = document.getElementById('chatModal');
-    if(cm) cm.style.display = 'flex';
-    // Focus kwenye sanduku la kuandika ili mtumiaji aanze kuandika mara moja
-    const inp = document.getElementById('chatInput');
-    if (inp) setTimeout(() => { try { inp.focus(); } catch(e){} }, 250);
-
-    skh.listenToChats(email || '', uid);
+    if (typeof window.skhChatOpen === 'function') {
+        return window.skhChatOpen(uid, displayName || '', {});
+    }
 };
 
 window.openChatList = async function() { 
