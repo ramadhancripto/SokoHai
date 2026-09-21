@@ -341,7 +341,11 @@ import { skh } from './00-bootstrap.js';
             try { sessionStorage.removeItem('skh_assist_session'); } catch (e) {}
             if (typeof window.skhIdentityRestore === 'function') window.skhIdentityRestore();
             if (typeof window.skhAssistLogout === 'function') { try { window.skhAssistLogout(); } catch (e) {} }
-            skhToast('Umerudi kwenye akaunti ya wakala.', 'info', 2600);
+            if (typeof window.showToast === 'function') {
+                window.showToast('Umerudi kwenye akaunti ya wakala.', 'info');
+            } else if (typeof window.sokohaiToast === 'function') {
+                window.sokohaiToast('Umerudi kwenye akaunti ya wakala.', 'info', 2600);
+            }
         });
     }
 

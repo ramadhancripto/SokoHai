@@ -748,14 +748,20 @@ import {
                 var cm = document.getElementById('chatModal');
                 if (!cm || cm.style.display === 'none') return;
             } catch (eNav) {}
-            // (4) Fomu ya negotiation ndani ya chat-ika hiyo.
+            // (4) Fomu ya negotiation ndani ya chat husika (Universal Bridge)
+            var negoEntity = Object.assign({}, p, {
+                sellerId: sellerId,
+                sellerName: p.ownerName || p.sellerName || '',
+                collection: p.collectionName || p.collection ||
+                    (kind === 'service' ? 'services' : (kind === 'transport' ? 'ride_requests' : 'products'))
+            });
+
             if (typeof window.skhNegoFormOpen === 'function') {
-                window.skhNegoFormOpen({ type: kind, entity: Object.assign({}, p, {
-                    sellerId: sellerId,
-                    sellerName: p.ownerName || p.sellerName || '',
-                    collection: p.collectionName || p.collection ||
-                        (kind === 'service' ? 'services' : (kind === 'transport' ? 'ride_requests' : 'products'))
-                }) });
+                window.skhNegoFormOpen({ type: kind, entity: negoEntity });
+            } else if (typeof window.skhOpenNegoForm === 'function') {
+                window.skhOpenNegoForm(negoEntity, { chatId: cc.convId, sellerId: sellerId });
+            } else if (typeof window.openNegotiationForm === 'function') {
+                window.openNegotiationForm(negoEntity, { chatId: cc.convId, sellerId: sellerId });
             }
         } finally {
             if (__skhNegoInFlight && __skhNegoInFlight.key === flightKey) __skhNegoInFlight = null;

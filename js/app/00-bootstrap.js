@@ -692,8 +692,21 @@ skh.chatPartner = "";
 skh.currentChatEmail = "";
 
 skh.activeChatProduct = null;
+skh.activeChatService = null;
+skh.activeChatTransport = null;
+
+// Helper ya kusafisha muktadha wa chat ili biashara moja isichafue nyingine
+skh.resetChatContext = function resetChatContext() {
+    skh.activeChatProduct = null;
+    skh.activeChatService = null;
+    skh.activeChatTransport = null;
+    skh.currentChatUid = null;
+    skh.currentChatEmail = "";
+    skh.chatPartner = "";
+};
 
 skh.currentFeedCollection = "products";
+
 
 skh.activeCheckoutAmount = 0;
 
@@ -1313,20 +1326,23 @@ skh.setLoading = function setLoading(btnId, isLoading, defaultText) {
         }
     }
 
-// [AUTO-LOGIN §15–§17 — ROOT CAUSE] Firebase Auth ina default persistence
-// (local) — session hupatikana baada ya refresh/browser-restart. Tatizo liko
-// hapa: requireAuth() inaitwa na maelfanya UX (modal action, click) na inaweza
-// kufungua login modal Kabla ya onAuthStateChanged ya kwanza kumaliza
-// kuponya session — mtumiaji aliyeingia anaambiwa "Ingia" bure. Bendera hii
-// inakuwa TRUE tu baada ya callback ya kwanza (user au null, zote ni halali).
+// [AUTO-LOGIN FIX 2026-09] Weka mtumiaji (currentUser) mara moja punde Firebase inapotambua session
 skh.__authResolved = false;
 try {
     if (skh.onAuthStateChanged && skh.auth) {
-        skh.onAuthStateChanged(skh.auth, function () { skh.__authResolved = true; });
+        skh.onAuthStateChanged(skh.auth, function (user) { 
+            skh.currentUser = user;
+            skh.__authResolved = true; 
+            try {
+                document.dispatchEvent(new CustomEvent('skh:auth-ready', { detail: { user: user } }));
+            } catch (e) {}
+        });
     } else {
-        skh.__authResolved = true; // hakuna auth (mf. failed init) — usizuie UI
+        skh.__authResolved = true;
     }
-} catch (e) { skh.__authResolved = true; }
+} catch (e) { 
+    skh.__authResolved = true; 
+}
 
 skh.requireAuth = function requireAuth() { 
         if(!skh.currentUser) { 

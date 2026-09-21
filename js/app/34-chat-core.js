@@ -1263,12 +1263,27 @@ import { skh } from './00-bootstrap.js';
 
     function markRead(convId, conv) {
         var me = myUid();
-        var unread = Object.assign({}, conv.unread || {});
-        var lastReadAt = Object.assign({}, conv.lastReadAt || {});
-        if ((unread[me] || 0) === 0 && lastReadAt[me]) return; // hakuna kipya
+        if (!convId || !me) return;
+        var unread = Object.assign({}, (conv && conv.unread) || {});
+        var lastReadAt = Object.assign({}, (conv && conv.lastReadAt) || {});
+        
+        // Ikiwa tayari ni 0, hakuna haja ya kuandika tena Firestore
+        if ((unread[me] || 0) === 0 && lastReadAt[me]) return;
+        
         unread[me] = 0;
         lastReadAt[me] = nowIso();
         skh.updateDoc(skh.doc(skh.db, 'conversations', convId), { unread: unread, lastReadAt: lastReadAt }).catch(function () {});
+
+        // Sasisha mara moja beji ya chini au ya juu ya chat
+        var badge = document.getElementById('chatBadge');
+        if (badge) {
+            var cur = parseInt(badge.textContent || '0', 10);
+            if (cur > 0) {
+                cur = Math.max(0, cur - 1);
+                badge.textContent = cur > 0 ? String(cur) : '';
+                badge.style.display = cur > 0 ? 'flex' : 'none';
+            }
+        }
     }
 
     function updateHeaderSub(conv) {
@@ -2374,6 +2389,7 @@ import { skh } from './00-bootstrap.js';
             skh.activeChatTransport = null;
             skh.chatRelated = null;
             window.skhChatInboxCache = null;
+            if (typeof skhNegoUnsubscribeAll === 'function') skhNegoUnsubscribeAll(); // [PHASE 5 FIX]
             // Funga listeners za mtumiaji wa awali
             if (typeof unsubMsgs === 'function') { try { unsubMsgs(); } catch (e) {} }
             var list = document.getElementById('inboxList');
@@ -2664,11 +2680,15 @@ import { skh } from './00-bootstrap.js';
             + '</div>';
     };
 
-    // Rudi kwenye orodha ya mazungumzo (mobile back button).
+    // Rudi kwenye orodha ya mazungumzo (mobile back button - LEAK FREE)
     window.skhChatBackToList = function () {
+        // Zima listeners za mazungumzo ya sasa ili kuzuia data kuvutwa chinichini bila sababu
+        if (skh.chatCoreUnsub) { try { skh.chatCoreUnsub(); } catch (e) {} skh.chatCoreUnsub = null; }
+        if (skh.chatCoreConvUnsub) { try { skh.chatCoreConvUnsub(); } catch (e) {} skh.chatCoreConvUnsub = null; }
+        if (typeof skhNegoUnsubscribeAll === 'function') skhNegoUnsubscribeAll(); // [PHASE 5 FIX]
+        
         var cm = document.getElementById('chatModal');
         if (isDesktopChat()) {
-            // Desktop: acha kadi ya mazungumzo, onyesha tu hali ya uteuzi.
             skh.chatCore = null;
             skh.currentChatUid = null;
             window.skhChatShowSelectPlaceholder();
@@ -2676,9 +2696,10 @@ import { skh } from './00-bootstrap.js';
             return;
         }
         if (cm) cm.style.display = 'none';
-        // [NAV §23] Mtumiaji amerudi orodhani kwa makusudi — restore ya
-        // modal ya mmelezi isipepeke baadaye (flag isafishwe sasa).
         try { if (skh.chatCore) skh.chatCore.reopenOnCloseId = null; } catch (eRC) {}
+        skh.chatCore = null;
+        skh.currentChatUid = null;
+        
         window.skhChatOpenInbox();
     };
 
@@ -3626,12 +3647,21 @@ import { skh } from './00-bootstrap.js';
     function ctxOwnerOf(x) {
         return x ? (x.userId || x.providerId || x.driverId || x.sellerId || null) : null;
     }
-    /** related ya doc ya mazungumzo: kataza ikitaja mtu asiye partner. */
+    /** [PHASE 5 FIX] related ya doc ya mazungumzo: kataza TU ikitaja mtu asiyehusika na pande zote mbili. */
     function pairRelatedOrNull(rel, partnerUid) {
         if (!rel || !partnerUid) return rel || null;
+        var me = myUid();
         var owner = rel.sellerId || rel.providerId || rel.driverId || null;
         var other = rel.buyerId || null;
-        if (owner && owner !== partnerUid && other !== partnerUid) return null;
+        
+        // Ikiwa mmiliki ni mimi (muuzaji) AU ni mwenzangu (mnunuzi), muktadha ni halali kabisa!
+        if (owner && (owner === partnerUid || owner === me)) return rel;
+        if (other && (other === partnerUid || other === me)) return rel;
+        
+        // Ikiwa haihusiani na yeyote kati yetu wawili, ndipo inapokataliwa kama leak
+        if (owner && owner !== partnerUid && owner !== me && other && other !== partnerUid && other !== me) {
+            return null;
+        }
         return rel;
     }
     /** related MBORA kutoka globals za activeChat* — ikiwa partner au mimi ndiye mmiliki. */
@@ -4272,6 +4302,15 @@ import { skh } from './00-bootstrap.js';
     skh.negoOrder = null;     // oda ya negotiation (authoritative state)
     var negoUnsub = null, negoOrderUnsub = null, negoOrderUnsubFor = null;
 
+    // [PHASE 5 FIX] Usafishaji wa listeners zote za negotiation na order kuzuia memory leaks
+    function skhNegoUnsubscribeAll() {
+        if (negoUnsub) { try { negoUnsub(); } catch (e) {} negoUnsub = null; }
+        if (negoOrderUnsub) { try { negoOrderUnsub(); } catch (e) {} negoOrderUnsub = null; }
+        if (typeof negoFallbackStop === 'function') negoFallbackStop();
+        negoOrderUnsubFor = null;
+    }
+    window.skhNegoUnsubscribeAll = skhNegoUnsubscribeAll;
+
     /* [NEGO START CARD 2026-09-15]
        Kadi inayoonekana kabla ya majadiliano kuanza. Inatumia muktadha
        ULIOPO (productCtx/serviceCtx/transportCtx) na kufungua fomu
@@ -4366,10 +4405,9 @@ import { skh } from './00-bootstrap.js';
                  +  'Negotiation haijaruhusiwa na mmiliki wa tangazo hili. '
                  +  'Bei iliyotangazwa ndiyo sahihi. Chat inafanya kazi bado.</div>';
         } else if (iAmOwner) {
-            html += '<div class="ch-sn-note">' + ico('alert', 12)
-                 +  ' Hili ni tangazo lako. Subiri mteja atoe ofa, au tuma ofa yako.</div>'
-                 +  '<button type="button" class="ch-sn-btn" onclick="window.skhChatStartNego(\'' + kind + '\')">'
-                 +  ico('tag', 14) + ' Tuma Ofa kwa Mteja</button>';
+            // [PHASE 5 FIX] Muuzaji hapaswi kujinadi mwenyewe; anasubiri ofa ya mteja au anamwandikia ujumbe kawaida
+            html += '<div class="ch-sn-note">' + ico('shop', 13)
+                 +  ' Hili ni tangazo lako. Mteja akituma ofa ya bei, utaiona hapa ikiwa na vitufe vya Kubali, Kataa au Counter.</div>';
         } else {
             html += '<div class="ch-sn-note">' + ico('shield-check', 12)
                  +  ' Bei ikikubaliwa hapa, inagandishwa na kulindwa na SokoPay.</div>'
@@ -4787,19 +4825,12 @@ import { skh } from './00-bootstrap.js';
 
     window.skhNegoListen = function (convId) {
         if (!convId || !skh.db) return;
-        if (negoUnsub) { try { negoUnsub(); } catch (e) {} negoUnsub = null; }
-        if (negoOrderUnsub) { try { negoOrderUnsub(); } catch (e) {} negoOrderUnsub = null; }
-        negoFallbackStop();
-        negoOrderUnsubFor = null;
+        if (typeof skhNegoUnsubscribeAll === 'function') skhNegoUnsubscribeAll();
         var triedFallback = false;
         var startFallback = function () {
             if (triedFallback) return;
             triedFallback = true;
-            // Muda halisi (single-field index) — majibu ya muuzaji/mnunuzi
-            // yataendelea kuonekana hata composite index isipokuwepo live.
             negoFallbackSubscribe(convId);
-            // Vuta mara moja pia (kwa haraka) endapo mazingira hayana onSnapshot
-            // ya kuaminika kwa query hii.
             negoFallbackFetch(convId).then(function (n) {
                 if (n) {
                     var cur = skh.negoCurrent;
@@ -4808,20 +4839,27 @@ import { skh } from './00-bootstrap.js';
             }).catch(function () {});
         };
         try {
-            var q = skh.query(skh.collection(skh.db, 'negotiations'), skh.where('conversationId', '==', convId), skh.orderBy('updatedAt', 'desc'), skh.limit(1));
+            // [PHASE 5 FIX] Query ya single-field index kwenye conversationId haihitaji composite index!
+            // Kupanga (sort) kunafanyika client-side kupitia negoDocsCmp ili kuzuia Firestore error ya missing index.
+            var q = skh.query(skh.collection(skh.db, 'negotiations'), skh.where('conversationId', '==', convId), skh.limit(10));
             negoUnsub = skh.onSnapshot(q, function (snap) {
-                var nego = null;
-                if (snap && snap.forEach) snap.forEach(function (d) { nego = Object.assign({}, d.data(), { id: d.id }); });
-                if (nego) {
-                    negoFallbackStop();
-                    adoptNego(nego, convId);
-                } else if (!triedFallback) {
+                var docs = [];
+                if (snap && snap.forEach) snap.forEach(function (d) { docs.push(Object.assign({}, d.data(), { id: d.id })); });
+                if (docs.length > 0) {
+                    docs.sort(negoDocsCmp);
+                    adoptNego(docs[0], convId);
+                } else if (!triedFallback && (skh.chatCore || {}).extraConvIds && (skh.chatCore.extraConvIds || []).length) {
                     adoptNego(null, convId);
                     startFallback();
                 } else {
                     adoptNego(null, convId);
                 }
-            }, function () { renderCommerceAnchor(); renderChatStream(); startFallback(); });
+            }, function (err) {
+                console.warn('[nego listen error]', err);
+                renderCommerceAnchor();
+                renderChatStream();
+                startFallback();
+            });
         } catch (e) { startFallback(); }
     };
 

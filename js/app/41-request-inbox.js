@@ -349,7 +349,11 @@ window.skhRequestInboxOffer = function (rideId) {
     } else if (typeof window.skhNegoFormOpen === 'function') {
         window.skhNegoFormOpen({ type: 'transport',
             entity: { id: rideId, collection: 'ride_requests' } });
+    } else if (typeof window.openNegotiationForm === 'function') {
+        window.openNegotiationForm({ id: rideId, collection: 'ride_requests', commerceType: 'transport' });
     } else {
-        skhToast('Fomu ya majadiliano haipatikani kwa sasa.', 'error');
+        if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Fomu ya majadiliano haipatikani kwa sasa.', 'error');
+        else if (typeof window.showToast === 'function') window.showToast('Fomu ya majadiliano haipatikani kwa sasa.', 'error');
+        else alert('Fomu ya majadiliano haipatikani kwa sasa.');
     }
 };

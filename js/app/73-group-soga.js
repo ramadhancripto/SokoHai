@@ -534,8 +534,12 @@ import { skh } from './00-bootstrap.js';
         unsubscribeMsgs();
         // [R24] typing yangu ifutwe nikifunga soga (best effort)
         if (gid0) { try { var tp = {}; tp['typingMap.' + uid()] = null; skh.updateDoc(cRef(gid0), tp).catch(function () {}); } catch (eT4) {} }
-        var m = document.getElementById('skhGroupSogaModal');
-        if (m) m.classList.remove('open');
+       var m = document.getElementById('skhGroupSogaModal');
+        if (m) {
+            m.classList.remove('open');
+            m.style.display = 'none';
+        }
+        document.body.style.overflow = 'auto';
     };
 
     /* ================= [R23 B9] GROUP-INFO / MANAGE DRAWER =================
@@ -1511,13 +1515,25 @@ import { skh } from './00-bootstrap.js';
     async function renderMsgs(gid) {
         var host = document.getElementById('gsgMsgs');
         if (!host) return;
+
+        // Ulinzi: Usikae kwenye "Inapakia meseji..." milele
+        var loadTimer = setTimeout(function () {
+            if (host && host.innerHTML.includes('Inapakia meseji')) {
+                host.innerHTML = '<div style="text-align:center;padding:26px 16px;color:#64748b;">'
+                    + '<p style="font-size:13px;margin:0 0 10px;">Mazungumzo yanachukua muda kupakia.</p>'
+                    + '<button type="button" onclick="window.skhOpenGroupSoga(\'' + esc(gid) + '\')" style="padding:8px 16px;background:#1268A8;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;">Jaribu Tena</button>'
+                    + '</div>';
+            }
+        }, 8000);
+
         try {
             var snap = await skh.getDocs(msgsCol(gid));
+            clearTimeout(loadTimer);
             var rows = [];
-            snap.forEach(function (d) { var dd = d.data() || {}; dd.__id = d.id; rows.push(dd); });  // [R26: reactions need msg id]
-            rows.sort(function (a, b) { return String(a.at || '').localeCompare(String(b.at || '')); });
+            snap.forEach(function (d) { var dd = d.data() || {}; dd.__id = d.id; rows.push(dd); });
+            rows.sort(function (a, b) { return String(a.at || '').localeCompare(String(a.at || '')); });
             rows = rows.slice(-60);
-            // [R25 read receipts] conv.lastReadAt + active members (majina → CUR.__names)
+            
             var convD = {}, othersActive = [];
             try {
                 var cs = await skh.getDoc(cRef(gid));
@@ -1529,13 +1545,13 @@ import { skh } from './00-bootstrap.js';
             } catch (eM) {}
             if (!CUR.__names) { try { CUR.__names = await fetchNames(othersActive.concat([uid()])); } catch (eN) { CUR.__names = {}; } }
             var lra = convD.lastReadAt || {};
-            // [P3 §12] thread counts + cache kwa thread view
+            
             var tc = {};
             rows.forEach(function (r) { if (r.threadRootId) tc[r.threadRootId] = (tc[r.threadRootId] || 0) + 1; });
             CUR.__lastRows = rows;
             var __prevBottom = host ? (host.scrollHeight - host.scrollTop - host.clientHeight) : 0;
-            var needBottom = __prevBottom < 120;                    // karibu-chini ⇒ enda chini
-            if (!host || host.childElementCount < 2) needBottom = true;   // first paint ⇒ chini
+            var needBottom = __prevBottom < 120;
+            if (!host || host.childElementCount < 2) needBottom = true;
             host.innerHTML = rows.length
                 ? rows.map(function (r) {
                     var ri = null;
@@ -1547,17 +1563,20 @@ import { skh } from './00-bootstrap.js';
                     return msgRow(r, r.senderUid === uid(), ri, tc);
                 }).join('')
                 : '<div style="text-align:center;padding:30px;color:#94a3b8;"><b>' + tk('gsg_empty', 'Bado hakuna ujumbe') + '</b><br><small>' + tk('gsg_empty_sub', 'Anza mazungumzo — context ya kikundi iko juu.') + '</small></div>';
-            // [R25] live mark-read: soga ikiwa wazi, ujumbe mpya unasomwa mara moja —
-            // ✓✓ ya WENGINE inageuka kwa mtumaji ALSO without refresh (conv listener si loop: ina-renderTypingLine pekee)
+            
             var maxAt = rows.length ? String(rows[rows.length - 1].at || '') : '';
             try { hydrateGOCards(gid); } catch (eHR) {}
             if (maxAt && CUR.gid === gid && maxAt > String(lra[uid()] || '')) {
                 try { var lr = {}; lr['lastReadAt.' + uid()] = maxAt; await skh.updateDoc(cRef(gid), lr); } catch (eLR) {}
             }
-            // [AUDIT anti-flicker] scroll chini TU ni user karibu nayo (kwale), AU
-            // hii ni load ya kwanza — isije ikuruka chini akiwa anasoma msg za juu.
             if (needBottom) host.scrollTop = host.scrollHeight;
-        } catch (e) { host.innerHTML = '<small style="color:#94a3b8;">' + tk('gsg_err', 'Imeshindikana kupakia') + '</small>'; }
+        } catch (e) { 
+            clearTimeout(loadTimer);
+            host.innerHTML = '<div style="text-align:center;padding:20px;color:#b91c1c;">'
+                + '<p style="font-size:12.5px;margin:0 0 8px;">Imeshindikana kupakia meseji.</p>'
+                + '<button type="button" onclick="window.skhOpenGroupSoga(\'' + esc(gid) + '\')" style="padding:6px 14px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:11.5px;cursor:pointer;">Jaribu Tena</button>'
+                + '</div>';
+        }
     }
 
     async function sendText() {

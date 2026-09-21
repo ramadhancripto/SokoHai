@@ -162,6 +162,15 @@ import {
 
     function detectTypeAndEntity(opts) {
         if (opts && opts.type) return { type: opts.type, entity: opts.entity || null };
+        
+        // Ikiwa ametuma entity moja kwa moja (bila kuifunga ndani ya { type, entity })
+        if (opts && (opts.id || opts.productId || opts.serviceId || opts.transportId)) {
+            var rawCol = (opts.collectionName || opts.collection || '').toLowerCase();
+            var guessType = (rawCol === 'services' || opts.serviceId) ? NF_TYPES.SERVICE
+                : ((rawCol === 'drivers' || rawCol === 'ride_requests' || opts.transportId) ? NF_TYPES.TRANSPORT : NF_TYPES.PRODUCT);
+            return { type: guessType, entity: opts };
+        }
+
         // 1) Majadiliano yaliyopo (Counter) — aina hufuata snapshot halisi.
         var negoSnap = lastNegotiationCard();
         if (negoSnap) {
@@ -797,10 +806,13 @@ import {
             if (first) { try { first.focus(); } catch (e) {} }
         }, 120);
     };
-
-    function fIdSafe(type) {
+function fIdSafe(type) {
         if (type === NF_TYPES.TRANSPORT) return fid('packageDescription');
         if (type === NF_TYPES.SERVICE) return fid('scope');
         return fid('quantity');
     }
+
+    // Aliases za kimataifa ili sehemu yoyote iweze kufungua fomu bila kukwama
+    window.openNegotiationForm = window.skhNegoFormOpen;
+    window.skhOpenNegoForm = window.skhNegoFormOpen;
 })();
