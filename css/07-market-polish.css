@@ -188,6 +188,7 @@
     font-weight: 900;
     padding: 3px 8px;
     border-radius: 999px;
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     z-index: 3;
     letter-spacing: .3px;

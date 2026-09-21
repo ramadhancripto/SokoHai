@@ -16,6 +16,7 @@
     align-items: center;
     gap: 2px;
     background: rgba(15, 23, 42, .55);
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     border-radius: 999px;
     padding: 2px;
@@ -76,6 +77,7 @@
     align-items: center;
     gap: 9px;
     background: rgba(255, 255, 255, .95);
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     border-radius: 16px;
     padding: 7px 9px;

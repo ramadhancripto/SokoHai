@@ -214,6 +214,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 }
 .pm-dots {

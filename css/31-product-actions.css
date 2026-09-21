@@ -1,23 +1,21 @@
 /* ==========================================================================
-   31-product-actions.css — [FIX 2026-09-20 VITUFE VYA KADI HAVIONEKANI]
-   TATIZO: kifimbo cha vitendo (Chat / Weka Kikapuni / Lipa Sasa / Pendekeza Bei /
-   Omba Usafiri / Agiza Huduma / Weka Dau) kiliwekwa "in-flow" MWISHONI mwa
-   .pm-scroll — baada ya maelezo, usambazaji na tathmini zote. Kwenye kadi yenye
-   maudhui marefu mtumiaji hafiki kukiona, akadhani vitufe havipo.
-
-   SULUHISHO: kifimbo kinakuwa sticky chini ya karatasi ya kadi — kinaonekana
-   MUDA WOTE kadi inapofunguka. Mpangilio unabaki: DETAILS → ACTION → RECOMMENDED.
-   (sticky bottom: kinapofikia nafasi yake ya asili, kinatulia hapo — hakifuniki
-   recommendations zinazofuata chini yake.)
+   31-product-actions.css — [FIX 2026-09 SCROLLING PRODUCT ACTIONS & RECOMMENDATIONS]
+   MABADILIKO: Kifimbo cha vitendo kiliwekwa "sticky bottom: 0" ambacho kilikuwa
+   kinaganda chini na kufunika sehemu ya bidhaa zinazopendekezwa (recommendations).
+   SULUHISHO: Kifimbo kinarudishwa kuwa aina ya kusogea (scrolling type / in-flow),
+   ili kikae kiasili kati ya maelezo ya bidhaa na sehemu ya mapendekezo, bila
+   kuganda wala kufunika bidhaa zinazopendekezwa.
    ========================================================================== */
 #productModal .pm-scroll > .pm-bar {
-    position: sticky;
-    bottom: 0;
-    z-index: 30;
+    position: relative;
+    bottom: auto;
+    z-index: 5;
     background: #fff;
     border-top: 1px solid #e2e8f0;
-    border-bottom: none;
-    box-shadow: 0 -6px 18px rgba(15, 23, 42, .10);
+    border-bottom: 1px solid #f1f5f9;
+    box-shadow: none;
+    margin-top: 10px;
+    margin-bottom: 16px;
 }
 
 /* Hali ya kupakia / hitilafu kabla vitufe havijaja */

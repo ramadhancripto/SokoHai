@@ -111,6 +111,7 @@
     justify-content: center; /* Inasogeza kadi katikati ya kioo vizuri */
     align-items: center;
     padding: 20px 0;
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     box-sizing: border-box;
     overflow-y: auto; /* 🟢 MPYA: Inaruhusu kuteleza juu na chini kwenye simu */
@@ -241,6 +242,7 @@
     display: none; /* Inajificha mpaka iitwe */
     align-items: center;
     justify-content: center;
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 }
 

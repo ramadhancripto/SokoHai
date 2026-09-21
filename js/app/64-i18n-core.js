@@ -217,14 +217,18 @@ import { skh } from './00-bootstrap.js';
 
     /* t(key, vars) — re-wired: dotted aliases + missing-key logging */
     var baseT = window.t || LMS() && LMS().t.bind(LMS());
+    var __warnedMissingKeys = new Set();
     window.t = function (key, vars) {
         var L = LMS();
         if (!L && baseT) return baseT(key, vars);
         var k = resolveKey(key);
-        var s = L.t(k, vars || {});
+        var s = L ? L.t(k, vars || {}) : (baseT ? baseT(k, vars) : k);
         if (s === k && k === key) {
-            // missing key — chazia console (dev) na tumia fallback ya key
-            try { console.warn('[i18n:miss]', key, 'lang=' + L.lang); } catch (e) {}
+            // missing key — chazia console mara moja tu kwa kila key (dev) kuzuia console flood / lag
+            if (!__warnedMissingKeys.has(key)) {
+                __warnedMissingKeys.add(key);
+                try { console.warn('[i18n:miss]', key, 'lang=' + (L ? L.lang : 'unknown')); } catch (e) {}
+            }
         }
         return s;
     };

@@ -1173,6 +1173,7 @@ button.is-loading { opacity: .75; cursor: progress; }
     padding: var(--sh-2) var(--sh-3);
     background: var(--sh-surface);
     border-bottom: 1px solid var(--sh-border);
+    -webkit-backdrop-filter: saturate(180%) blur(6px);
     backdrop-filter: saturate(180%) blur(6px);
 }
 .skh-backbar--inline { position: relative; border-radius: var(--sh-r-md); margin-bottom: var(--sh-3); }

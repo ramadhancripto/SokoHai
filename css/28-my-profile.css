@@ -30,7 +30,7 @@
     width: 36px; height: 36px; border-radius: 50%;
     background: rgba(2, 22, 46, .55); color: #fff; border: none;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; backdrop-filter: blur(4px);
+    cursor: pointer; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
 }
 .mp-loading { text-align: center; color: #64748b; padding: 60px 16px 70px; }
 
