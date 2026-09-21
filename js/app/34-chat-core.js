@@ -191,9 +191,21 @@ import { skh } from './00-bootstrap.js';
         opts = opts || {};
         var me = myUid();
         var core = skh.chatCore || {};
-        var partnerUid = opts.partnerUid || core.partnerUid;
-        var convId = opts.conversationId || core.convId;
-        if (!me || !partnerUid || !convId) return { ok: false, error: 'no_partner' };
+        
+        // [PHASE 5 EMERGENCY REPAIR] Fallback recovery ya partnerUid na convId
+        var partnerUid = opts.partnerUid || core.partnerUid || skh.currentChatUid;
+        var convId = opts.conversationId || core.convId || (partnerUid ? convIdFor(partnerUid, '') : null);
+
+        // Hakikisha core inarekebishwa ikiwa ilikosa fields
+        if (partnerUid && (!core.partnerUid || !core.convId)) {
+            skh.chatCore = Object.assign(core, { partnerUid: partnerUid, convId: convId });
+        }
+
+        if (!me) return { ok: false, error: 'not_authenticated' };
+        if (!partnerUid || !convId) {
+            console.error('[sendInternal error] Mpokeaji hajatambulika:', { me: me, partnerUid: partnerUid, convId: convId });
+            return { ok: false, error: 'no_partner' };
+        }
 
         /* [SEND-FIX 2026-09-21] Block-check (getDocs 2x) IMEHAMISHWA chini:
            kwanza onyesha ujumbe (optimistic), kisha thibitisha block kwa
@@ -1936,13 +1948,27 @@ import { skh } from './00-bootstrap.js';
         opts = opts || {};
         var email = opts.email || skh.currentChatEmail || '';
         var partnerName = name || opts.name || '';
+        var me = myUid();
 
-        // [INSTANT UI] Weka chat state na ufungue modal MARA MOJA
+        // 1. [AUTHORITATIVE STATE INITIALIZATION - MAPEMA SANA]
+        // Weka skh.currentChatUid na skh.chatCore PAPO HAPO ili sendInternal isipate 'no_partner' kamwe
+        var deterministicConvId = convIdFor(uid, '');
         skh.currentChatUid = uid;
         skh.currentChatEmail = email || '';
         skh.chatPartner = partnerName || (email ? email.split('@')[0] : 'Mawasiliano');
 
-        // Fungua chatModal papo hapo na loading indicator
+        // Hakikisha skh.chatCore inaundwa na partnerUid na convId mara moja!
+        skh.chatCore = {
+            convId: deterministicConvId,
+            partnerUid: uid,
+            partnerName: skh.chatPartner,
+            replyTo: null,
+            msgs: [],
+            conv: {},
+            subEl: null
+        };
+
+        // 2. FUNGUA UI MARA MOJA NA WEKA SPINNER
         var cmEarly = document.getElementById('chatModal');
         if (cmEarly) {
             cmEarly.style.display = 'flex';
@@ -1950,15 +1976,15 @@ import { skh } from './00-bootstrap.js';
             cmEarly.style.transform = 'none';
         }
         var cwEarly = document.getElementById('chatWith');
-        if (cwEarly) cwEarly.textContent = partnerName || '...';
+        if (cwEarly) cwEarly.textContent = skh.chatPartner || '...';
         var chatDivEarly = document.getElementById('chatMessages');
         if (chatDivEarly) {
             chatDivEarly.innerHTML = '<div style="text-align:center;padding:40px 16px;">'
                 + '<div style="display:inline-block;width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#0B4F7A;border-radius:50%;animation:skhSpin 0.8s linear infinite;"></div>'
                 + '<p style="color:#64748b;font-size:13px;margin-top:12px;">' + T('ch_connecting', 'Inaunganisha mazungumzo...') + '</p>'
                 + '</div>';
+            chatDivEarly.__skhHasRows = false;
         }
-        // Inject spinner animation kama haipo
         if (!document.getElementById('skhSpinStyle')) {
             var spinStyle = document.createElement('style');
             spinStyle.id = 'skhSpinStyle';
@@ -1966,7 +1992,7 @@ import { skh } from './00-bootstrap.js';
             document.head.appendChild(spinStyle);
         }
 
-        // Fichua inbox (kama ilikuwa wazi)
+        // Funga inbox mara moja
         try {
             var inboxEl = document.getElementById('chatListModal');
             if (inboxEl && inboxEl.style.display !== 'none') {
@@ -1975,8 +2001,21 @@ import { skh } from './00-bootstrap.js';
             }
         } catch(e){}
 
-        // Sasa fanya queries za background
+        // 3. HARD TIMEOUT WATCHDOG (Sekunde 8) KUZUIA "Inaunganisha..." MILELE
+        var connectionTimedOut = false;
+        var connectionTimer = setTimeout(function () {
+            connectionTimedOut = true;
+            var cDiv = document.getElementById('chatMessages');
+            if (cDiv && /Inaunganisha/.test(cDiv.innerHTML || '')) {
+                cDiv.innerHTML = '<div style="text-align:center;padding:34px 16px;">'
+                    + '<p style="color:#64748b;font-size:13px;">Mazungumzo yanachukua muda kuunganishwa.</p>'
+                    + '<button type="button" onclick="window.skhChatOpen(\'' + jsEsc(uid) + '\',\'' + jsEsc(name || '') + '\')" style="margin-top:10px;padding:9px 18px;background:#0B4F7A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
+                    + '</div>';
+            }
+        }, 8000);
+
         try {
+            // Background resolution ya User profile
             if (!email || !partnerName) {
                 try {
                     var s = await skh.getDoc(skh.doc(skh.db, 'users', uid));
@@ -1990,37 +2029,41 @@ import { skh } from './00-bootstrap.js';
             partnerName = partnerName || (email ? email.split('@')[0] : 'Mawasiliano');
             skh.currentChatEmail = email || '';
             skh.chatPartner = partnerName;
+            if (skh.chatCore) { skh.chatCore.partnerName = partnerName; }
+            if (cwEarly) cwEarly.textContent = partnerName;
 
-            var me = myUid();
             var scopedRel = opts.related || scopedRelatedForPartner(uid);
             var ctx = opts.ctx || (scopedRel && scopedRel.productId ? 'p_' + scopedRel.productId : '');
             var related = scopedRel;
             var type = opts.type || ((ctx && ctx.indexOf('o_') === 0) ? 'order' : ((ctx && ctx.indexOf('d_') === 0) ? 'delivery' : 'direct'));
 
-            // [PARALLEL FIX] Fanya ensureConversation kwanza (inategemewa na zingine)
+            // Unda au thibitisha conversation
             var conv = await ensureConversation(uid, { ctx: '', related: related, type: type });
+            clearTimeout(connectionTimer);
 
-            // [PARALLEL FIX] merge + migrate + related update kwa PARALLEL (si sequential)
-            var mergedIds = [];
-            try {
-                var results = await Promise.allSettled([
-                    mergePairConversations(conv.id, uid),
-                    migrateLegacyChats(conv.id, uid),
-                    related ? skh.updateDoc(skh.doc(skh.db, 'conversations', conv.id), { related: related }) : Promise.resolve()
-                ]);
-                mergedIds = (results[0] && results[0].status === 'fulfilled') ? results[0].value : [];
-            } catch(e) { /* best-effort */ }
-
-            // Sasa fungua chat kamili
+            // Unganisha conversation kikamilifu
             attachConversation(conv, uid, partnerName, { ctx: ctx, related: related });
-            skh.chatCore.extraConvIds = (mergedIds || lastMergedConvIds || []).slice();
+
+            // Run merge na legacy bila kuzuia mtumiaji kuanza kuandika
+            Promise.allSettled([
+                mergePairConversations(conv.id, uid),
+                migrateLegacyChats(conv.id, uid),
+                related ? skh.updateDoc(skh.doc(skh.db, 'conversations', conv.id), { related: related }) : Promise.resolve()
+            ]).then(function(results) {
+                var mergedIds = (results[0] && results[0].status === 'fulfilled') ? results[0].value : [];
+                if (skh.chatCore) skh.chatCore.extraConvIds = (mergedIds || lastMergedConvIds || []).slice();
+            }).catch(function(){});
+
             return conv;
         } catch(e) {
-            console.warn('[chat open error]', e);
+            clearTimeout(connectionTimer);
+            console.error('[chat open error]', e);
             var chatDiv = document.getElementById('chatMessages');
             if (chatDiv) {
-                chatDiv.innerHTML = '<p style="text-align:center;color:#b91c1c;padding:30px 10px;font-size:13px;">'
-                    + T('ch_open_fail', 'Imeshindwa kufungua mazungumzo. Jaribu tena.') + '</p>';
+                chatDiv.innerHTML = '<div style="text-align:center;padding:30px 16px;">'
+                    + '<p style="color:#b91c1c;font-size:13px;">' + T('ch_open_fail', 'Imeshindwa kufungua mazungumzo.') + '</p>'
+                    + '<button type="button" onclick="window.skhChatOpen(\'' + jsEsc(uid) + '\',\'' + jsEsc(name || '') + '\')" style="margin-top:10px;padding:9px 18px;background:#0B4F7A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
+                    + '</div>';
             }
             return null;
         }

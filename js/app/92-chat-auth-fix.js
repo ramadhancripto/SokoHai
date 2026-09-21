@@ -216,13 +216,9 @@
                         try { if (typeof openAuthModal === 'function') openAuthModal(); } catch (e) {}
                         return;
                     }
-                    if (skh.chatCoreUnsub) { try { skh.chatCoreUnsub(); } catch (e) {} }
-                    if (skh.chatCoreConvUnsub) { try { skh.chatCoreConvUnsub(); } catch (e) {} }
+                    // Weka UID mara moja kabla ya wito wowote
                     skh.currentChatUid = uid;
-                    skh.chatPartner = displayName || '';
-                    skh.activeChatProduct = null;
-                    skh.activeChatService = null;
-                    skh.activeChatTransport = null;
+                    skh.chatPartner = displayName || 'Mawasiliano';
                     try {
                         window.skhChatOpen(uid, displayName || '', {});
                     } catch (e) {
