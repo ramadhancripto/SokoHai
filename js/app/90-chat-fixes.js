@@ -16,6 +16,18 @@
 
     function skh() { return window.skh || {}; }
 
+    /* [STABILIZE 2026-09-21] Urithi chain flags kutoka base — vinginevyo
+       retry za 79/81/91 hu-wrap tena juu yetu (tabaka mara 2-3). */
+    var __SKH_CHAIN_FLAGS = ['__blinkPatched','__blinkWrap','__oneUI','__oneUIAtomic','__abs81','__abs81_final','__skh90','__skhAuthPatched','__skhErrPatched','__skh93','__skhBack','__raw','__orig'];
+    function __skhCopyChainFlags(from, to) {
+        if (!from || !to) return to;
+        for (var i = 0; i < __SKH_CHAIN_FLAGS.length; i++) {
+            var k = __SKH_CHAIN_FLAGS[i];
+            try { if (from[k] !== undefined && to[k] === undefined) to[k] = from[k]; } catch (e) {}
+        }
+        return to;
+    }
+
     function boot() {
         if (window.__skhChatFixesBooted) return;
         // Subiri window.skh ipatikane (bootstrap inaiweka baada ya modules)
@@ -194,9 +206,22 @@
                 return null;
             }
         };
+        __skhCopyChainFlags(_origChatOpen, window.skhChatOpen);
+        window.skhChatOpen.__skh90 = true;
 
         // ---------- MUTATION OBSERVER: badilisha loader-text na state nzuri ----------
+        /* [PERF 2026-09-21] Batch: typing + mutations za fremu moja
+           huendesha tick MOJA (badala ya ~5-10 full scans kwa kila herufi). */
+        var __msgObsQueued = false;
         var msgObs = new MutationObserver(function () {
+            if (__msgObsQueued) return;
+            __msgObsQueued = true;
+            Promise.resolve().then(function () {
+                __msgObsQueued = false;
+                try { msgObsTick(); } catch (e) {}
+            });
+        });
+        function msgObsTick() {
             var chatDiv = document.getElementById('chatMessages');
             if (!chatDiv) return;
             var html = chatDiv.innerHTML;
@@ -222,7 +247,7 @@
             } else if (html.indexOf('Hamna meseji') !== -1) {
                 setChatState('empty');
             }
-        });
+        }
         function installMsgObserver() {
             var chatDiv = document.getElementById('chatMessages');
             if (!chatDiv) return setTimeout(installMsgObserver, 500);
@@ -234,6 +259,9 @@
         setInterval(function () {
             var cm = document.getElementById('chatModal');
             if (!cm) return;
+            /* [PERF 2026-09-21] Ruka HARAKA chat ikiwa imefungwa — bila
+               getComputedStyle (iliyokuwa ikilazimisha style recalc kila 800ms). */
+            if (!cm.classList.contains('open') && cm.style.display !== 'flex' && cm.style.display !== 'block') return;
             var vis = (cm.style.display === 'flex' || cm.style.display === 'block' || getComputedStyle(cm).display !== 'none');
             var comp = document.getElementById('chatComposer');
             if (!comp) return;
@@ -252,6 +280,8 @@
                 var cleanGid = String(gid).trim().replace(/^conv_group_/, '');
                 return _origGroupOpen.call(this, cleanGid);
             };
+            __skhCopyChainFlags(_origGroupOpen, window.skhOpenGroupSoga);
+            window.skhOpenGroupSoga.__skh90 = true;
         }
 
         // ---------- INBOX TIMEOUT ----------
@@ -280,6 +310,8 @@
                 }, 12000);
                 return _promise;
             };
+            __skhCopyChainFlags(_origOpenInbox, window.skhChatOpenInbox);
+            window.skhChatOpenInbox.__skh90 = true;
         }
 
         // ---------- MESSAGE CACHE (localStorage fallback for history) ----------
@@ -316,6 +348,8 @@
                 } catch (e) {}
                 return _origRenderStream.apply(this, arguments);
             };
+            __skhCopyChainFlags(_origRenderStream, window.skhChatRenderStream);
+            window.skhChatRenderStream.__skh90 = true;
         }
 
         console.log('[SOKOHAI CHAT FIXES] v1 loaded ✓ — background, infinite-loader, group-open, inbox-timeout, msg-cache');

@@ -23,6 +23,18 @@
     if (window.__skhChatAuthFixed) return;
     window.__skhChatAuthFixed = true;
 
+    /* [STABILIZE 2026-09-21] Urithi chain flags kutoka base — vinginevyo
+       retry za 79/81/91 hu-wrap tena juu yetu (tabaka mara 2-3). */
+    var __SKH_CHAIN_FLAGS = ['__blinkPatched','__blinkWrap','__oneUI','__oneUIAtomic','__abs81','__abs81_final','__skh90','__skhAuthPatched','__skhErrPatched','__skh93','__skhBack','__raw','__orig'];
+    function __skhCopyChainFlags(from, to) {
+        if (!from || !to) return to;
+        for (var i = 0; i < __SKH_CHAIN_FLAGS.length; i++) {
+            var k = __SKH_CHAIN_FLAGS[i];
+            try { if (from[k] !== undefined && to[k] === undefined) to[k] = from[k]; } catch (e) {}
+        }
+        return to;
+    }
+
     function showErr(title, err) {
         var msg = (err && err.message) ? String(err.message) : (typeof err === 'string' ? err : '');
         console.error('[SOKOHAI CHAT FIX] ' + title, err);
@@ -188,6 +200,7 @@
                     return null;
                 }
             };
+            __skhCopyChainFlags(_orig, window.skhChatOpen);
             window.skhChatOpen.__skhAuthPatched = true;
             info('skhChatOpen wrapped');
         }
@@ -217,6 +230,7 @@
                     }
                 });
             };
+            __skhCopyChainFlags(_origOC, window.openChatWithUser);
             window.openChatWithUser.__skhAuthPatched = true;
             info('openChatWithUser wrapped');
         }
@@ -241,6 +255,7 @@
                     showErr('Imeshindwa kufungua kikundi', e);
                 }
             };
+            __skhCopyChainFlags(_origG, window.skhOpenGroupSoga);
             window.skhOpenGroupSoga.__skhAuthPatched = true;
             info('skhOpenGroupSoga wrapped');
         }
@@ -259,6 +274,7 @@
                     showErr('Imeshindwa kufungua profile', e);
                 }
             };
+            __skhCopyChainFlags(_origS, window.openSellerProfile);
             window.openSellerProfile.__skhAuthPatched = true;
             info('openSellerProfile wrapped');
         }
@@ -281,6 +297,7 @@
                     showErr('Imeshindwa kupakia inbox', e);
                 }
             };
+            __skhCopyChainFlags(_origI, window.skhChatOpenInbox);
             window.skhChatOpenInbox.__skhAuthPatched = true;
             info('skhChatOpenInbox wrapped');
         }

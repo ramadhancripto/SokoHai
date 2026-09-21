@@ -334,6 +334,16 @@ import { skh } from './00-bootstrap.js';
     // Pakia hali ya likes/saves/watches za mtumiaji (kwa kadi za feed) — mara moja
     window.skhLoadMyEngagementMap = async function () {
         if (!skh.currentUser) return;
+        /* [PERF 2026-09-21] Cache 5min kwa user: awali kila loadMainFeed
+           (kila tab switch!) ilisoma hadi docs 900 (3x300) upya — bila sababu,
+           kwa sababu toggles tayari husasisha `state` moja kwa moja. */
+        try {
+            var __uid = skh.currentUser.uid;
+            var __now = Date.now();
+            if (state._engMapUid === __uid && __now - (state._engMapAt || 0) < 5 * 60 * 1000) return;
+            state._engMapUid = __uid;
+            state._engMapAt = __now;
+        } catch (eC) {}
         try {
             var uid = skh.currentUser.uid;
             var q1 = skh.query(skh.collection(skh.db, "productLikes"), skh.where("userId", "==", uid), skh.limit(300));
@@ -724,6 +734,13 @@ import { skh } from './00-bootstrap.js';
         if (!skh.currentUser) return;
         var host = document.getElementById('recommendedFeed');
         if (!host) return;
+        /* [PERF 2026-09-21] Cache 5min: recommendations hazibadiliki kila tab. */
+        try {
+            var __pu = skh.currentUser.uid;
+            if (state._persUid === __pu && Date.now() - (state._persAt || 0) < 5 * 60 * 1000) return;
+            state._persUid = __pu;
+            state._persAt = Date.now();
+        } catch (ePC) {}
         try {
             var uid = skh.currentUser.uid;
             var q1 = skh.query(skh.collection(skh.db, "savedProducts"), skh.where("userId", "==", uid), skh.limit(4));

@@ -1,6 +1,6 @@
 <!-- FOMU YA KUHARIRI TANGAZO (EDIT MODAL) -->
     <form id="editModal" class="form-box" onsubmit="submitEditForm(event)">
-        <h3>✏ Hariri Tangazo Lako</h3>
+        <h3><span class="skh-ico" data-ico="edit"></span> Hariri Tangazo Lako</h3>
         <input type="hidden" id="editId">
         <input type="hidden" id="editCollection">
         
@@ -33,6 +33,11 @@
             <div id="edit_mode_wholesale" style="display:none;">
                 <input type="number" class="mode-input" id="editWsDiscount" placeholder="Punguzo Kila Pc 1 Inapoongezeka">
                 <select class="mode-input" id="editWsDiscountType"><option value="amount">TSh</option><option value="percent">%</option></select>
+                <!-- [§23-§24M] Wahariyeri wa minQty/tiers zatendrana na creation form -->
+                <label style="font-size:12px; color:#0B4F7A;">IDADI YA CHINI YA JUMLA (minQty):</label>
+                <input type="number" class="mode-input" id="editWsMinQty" placeholder="Mfano: 10">
+                <label style="font-size:12px; color:#0B4F7A;">TIERS ZA JUMLA ("minQty:bei" kwa ";"):</label>
+                <input type="text" class="mode-input" id="editWsTiersText" placeholder="Mfano: 10:9000; 50:8000; 100:7000">
             </div>
             <div id="edit_mode_group_buy" style="display:none;">
                 <input type="number" class="mode-input" id="editGbDiscount" placeholder="Punguzo Kila Mtu Akiongezeka">
@@ -59,7 +64,7 @@
         <textarea id="editDesc" required></textarea>
         
         <button type="submit" id="btnSubmitEdit" style="background:var(--primary-blue);"> HIFADHI MABADILIKO</button>
-<button type="button" class="btn-close" onclick="goBackToMenu()">❮ Rudi Nyuma</button>
+<button type="button" class="btn-close" onclick="goBackToMenu()">&lsaquo; Rudi Nyuma</button>
     </form>
 
 <!--  SOKOPAY TRUST & ESCROW CENTRAL PORTAL (REFINED CORE ENGINE) -->

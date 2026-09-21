@@ -195,7 +195,9 @@ import { skh } from './00-bootstrap.js';
         var convId = opts.conversationId || core.convId;
         if (!me || !partnerUid || !convId) return { ok: false, error: 'no_partner' };
 
-        if (await isBlockedEither(partnerUid)) return { ok: false, error: 'blocked' };
+        /* [SEND-FIX 2026-09-21] Block-check (getDocs 2x) IMEHAMISHWA chini:
+           kwanza onyesha ujumbe (optimistic), kisha thibitisha block kwa
+           cache ya 60s — mtumaji asingoje mtandao kuona alichotuma. */
 
         // [ANTI-SPAM 2026-09] Rate limit (1 ujumbe / sekunde) + duplicate (3s).
         // [COMMERCE] Matukio ya MFUMO (ofa/oda/malipo) hayapitiwi kizingiti —
@@ -334,14 +336,62 @@ import { skh } from './00-bootstrap.js';
         msg.senderName = myName();
         msg.senderPhoto = (skh.currentUserData && skh.currentUserData.photoURL) || (skh.currentUser && skh.currentUser.photoURL) || null;
 
+        /* [SEND-FIX 2026-09-21] OPTIMISTIC UI: mtumaji anaona ujumbe wake
+           PAPO (bila kusubiri mtandao). System events hazipati bubble ya
+           muda — zina-render zikifika tu (kuepuka status events mbili). */
+        var tempId = null;
+        var wantOptimistic = !opts.system && core.convId === convId && Array.isArray(core.msgs);
+        if (wantOptimistic) {
+            tempId = 'tmp_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 1e6).toString(36);
+            msg.clientTempId = tempId;
+            core._pendingSends = core._pendingSends || {};
+            core._pendingSends[tempId] = { text: text, opts: Object.assign({}, opts, { conversationId: convId, partnerUid: partnerUid }) };
+            core.msgs.push(Object.assign({ id: tempId, _pending: true }, msg));
+            try { renderChatStream(); } catch (eOpt) {}
+        }
+
+        /* [SEND-FIX 2026-09-21] Block-check yenye cache (60s kwa conversation).
+           Ikigoma: ondoa bubble ya muda, onyesha ujumbe wa kawaida. */
+        try {
+            if (!core._blockCache || core._blockCache.uid !== partnerUid || (Date.now() - (core._blockCache.at || 0)) > 60000) {
+                core._blockCache = { uid: partnerUid, blocked: !!(await isBlockedEither(partnerUid)), at: Date.now() };
+            }
+        } catch (eBlk) { core._blockCache = { uid: partnerUid, blocked: false, at: Date.now() }; }
+        if (core._blockCache.blocked) {
+            if (tempId) { dropPendingSend(core, tempId); try { renderChatStream(); } catch (eRB) {} }
+            return { ok: false, error: 'blocked' };
+        }
+
         var convRef = skh.doc(skh.db, 'conversations', convId);
         // [COMMERCE 2026-09] opts.docId → kitambulisho THABITI cha ujumbe
         // (idempotent): tukio la 'payment_protected' liandikwe mara moja tu
         // hata kama mteja na server (IPN) wote wakijaribu kulituma.
         var msgCol = skh.collection(skh.db, 'conversations/' + convId + '/messages');
-        var added = opts.docId
-            ? await skh.setDoc(skh.doc(skh.db, 'conversations/' + convId + '/messages', opts.docId), msg)
-            : await skh.addDoc(msgCol, msg);
+        var added = null;
+        try {
+            added = opts.docId
+                ? await skh.setDoc(skh.doc(skh.db, 'conversations/' + convId + '/messages', opts.docId), msg)
+                : await skh.addDoc(msgCol, msg);
+        } catch (eWrite) {
+            /* [SEND-FIX 2026-09-21] Kuandika kumeshindwa (offline/rules):
+               weka alama NYEKUNDU + kitufe cha kujaribu tena — si kimya. */
+            if (tempId) { markPendingFailed(core, tempId); try { renderChatStream(); } catch (eRF) {} }
+            try { skhToast(T('ch_send_fail', 'Imeshindwa kutuma. Angalia mtandao kisha gusa "Jaribu tena".'), 'error', 4200); } catch (eT) {}
+            return { ok: false, error: 'write_failed' };
+        }
+        /* [SEND-FIX 2026-09-21] Reconcile: ondoa bubble ya muda, weka umbo
+           la ujumbe halisi (id ya server) ili UI isiblink — listener
+           itakapoleta echo, id ni ileile (hakuna duplicate). */
+        if (tempId) {
+            var realId = (added && added.id) || opts.docId || null;
+            dropPendingSend(core, tempId);
+            if (realId && !core.msgs.some(function (m) { return m && m.id === realId; })) {
+                var confirmed = Object.assign({}, msg, { id: realId });
+                delete confirmed._pending;
+                core.msgs.push(confirmed);
+            }
+            try { renderChatStream(); } catch (eRC) {}
+        }
 
         // [MUTE 2026-09] Kama mwenzake ameweka conversation KIMYA, usimtumie arifa.
         var partnerMuted = false;
@@ -379,7 +429,9 @@ import { skh } from './00-bootstrap.js';
         // [DELIVERY/INTERNAL FIX 2026-09] Ujumbe wa MFUMO (ofa/oda/delivery)
         // hauandikwi kwenye legacy `chats` — server ndiye chanzo cha kweli,
         // na migrateLegacyChats ingeurudisha kama ujumbe wa pili (duplicate).
-        if (!opts.system) await writeLegacy(msg, previewText, partnerUid, core.partnerName);
+        /* [SEND-FIX 2026-09-21] Legacy dual-write isiharibu send iliyofanikiwa:
+           ujumbe mkuu tayari umeandikwa — kushindwa huku ni best-effort. */
+        if (!opts.system) { try { await writeLegacy(msg, previewText, partnerUid, core.partnerName); } catch (eWL) {} }
 
         // Arifa kupitia mfumo uliopo.
         // [DELIVERY/INTERNAL FIX 2026-09] Ujumbe wa MFUMO hauarifu tena kupitia
@@ -416,8 +468,35 @@ import { skh } from './00-bootstrap.js';
         return '' + (window.skhNavIcon?window.skhNavIcon('tag',14):'') + '' + T('ch_file', 'Faili') + (nm ? ': ' + nm : '');
     }
 
+    /* [SEND-FIX 2026-09-21] Helpers za optimistic sends (pending/failed/retry). */
+    function dropPendingSend(core, tempId) {
+        if (!core || !tempId) return;
+        try {
+            core.msgs = (core.msgs || []).filter(function (m) { return !m || m.id !== tempId; });
+            if (core._pendingSends) delete core._pendingSends[tempId];
+        } catch (e) {}
+    }
+    function markPendingFailed(core, tempId) {
+        if (!core || !tempId) return;
+        try {
+            (core.msgs || []).forEach(function (m) {
+                if (m && m.id === tempId) { m._pending = false; m._failed = true; }
+            });
+        } catch (e) {}
+    }
+
     // API ya moja kwa moja ya kutuma (pia inatumika kwenye share cards + tests).
     window.skhChatSendMessage = function (text, opts) { return sendInternal(text, opts || {}); };
+
+    /* [SEND-FIX 2026-09-21] Jaribu tena ujumbe ulioshindwa (kutoka bubble nyekundu). */
+    window.skhChatRetrySend = async function (tempId) {
+        var core = skh.chatCore || {};
+        var saved = (core._pendingSends || {})[tempId];
+        if (!saved) return;
+        dropPendingSend(core, tempId);
+        try { renderChatStream(); } catch (e) {}
+        return sendInternal(saved.text, saved.opts || {});
+    };
 
     /* ---------- UCHORAJI (render) ---------- */
     // [FILE TYPES 2026-09-17] "zip file harafu hatofautish" — aina ya faili
@@ -972,6 +1051,9 @@ import { skh } from './00-bootstrap.js';
     function renderActions(msg, isMe) {
         var id = esc(msg.id);
         if (msg.deletedAt) return '';
+        /* [SEND-FIX 2026-09-21] Vitendo (reply/copy/menu) visitumike kwenye
+           bubble ambayo haijathibitishwa na server (temp id). */
+        if (msg._pending || msg._failed) return '';
         var a = '<div class="ch-actions">';
         a += '<button type="button" onclick="window.skhChatReply(\'' + id + '\')">↩ ' + T('ch_reply', 'Jibu') + '</button>';
         a += '<button type="button" onclick="window.skhChatCopy(\'' + id + '\')">⧉ ' + T('ch_copy', 'Nakili') + '</button>';
@@ -1137,14 +1219,22 @@ import { skh } from './00-bootstrap.js';
                 quote = '<div class="ch-quote">' + esc(truncate((p.senderName || '') + ': ' + (p.text || ''), 80)) + '</div>';
             }
             var readStat = '';
-            if (isMe && idx === lastMeIdx) {
+            /* [SEND-FIX 2026-09-21] Hali za optimistic: saa ya "inatuma" na
+               kitufe chekundu cha "jaribu tena" — badala ya kimya. */
+            if (msg._pending) {
+                readStat = '<span class="ch-tick ch-tick--pending" title="' + T('ch_sending', 'Inatuma...') + '">◷</span>';
+            } else if (msg._failed) {
+                readStat = '<button type="button" class="ch-retry" onclick="event.stopPropagation();window.skhChatRetrySend(\'' + esc(msg.id) + '\')">↻ ' + T('ch_retry', 'Jaribu Tena') + '</button>';
+            } else if (isMe && idx === lastMeIdx) {
                 // [DEDUP 2026-09] Builder moja __msgTick (mlipuko wa codebase):
                 // haijachezwa kwa nafasi zote — logic ya tick ni MOJA.
                 readStat = __msgTick(msg);
             }
             // [CHAT FIX 2026-09] Jina la mtumaji kwenye ujumbe wa MWENZAKE (si wangu).
             var senderLabel = (!isMe && partnerName) ? '<span class="ch-sender">' + esc(partnerName) + '</span>' : '';
-            html += '<div class="ch-msg" data-msgid="' + esc(msg.id) + '" data-mine="' + (isMe ? '1' : '0') + '">'
+            var __pendCls = msg._pending ? ' ch-msg--pending' : (msg._failed ? ' ch-msg--failed' : '');
+            html += '<div class="ch-msg' + __pendCls + '" data-msgid="' + esc(msg.id) + '" data-mine="' + (isMe ? '1' : '0') + '"'
+                + (msg._failed ? ' onclick="window.skhChatRetrySend(\'' + esc(msg.id) + '\')"' : '') + '>'
                 + '<div class="chat-bubble ' + (isMe ? 'me' : 'them') + '">' + senderLabel + quote + body + '</div>'
                 + renderReactions(msg, me)
                 + '<div class="ch-meta"><span>' + fmtTime(msg.createdAt) + (msg.editedAt ? ' · ' + T('ch_edited', 'imehaririwa') : '') + '</span>' + readStat + '</div>'
@@ -1336,6 +1426,9 @@ import { skh } from './00-bootstrap.js';
         setIc('chatMenuViewProfileIc', 'user');
         setIc('chatMenuMuteIc', 'bell');
         setIc('chatMenuArchiveIc', 'folder');
+        /* [FIX 2026-09-21] Kipengele "Futa kwangu" kilikosa icon (span
+           haina id, haikuhudhurishwa) — sasa trash kama vitendo vingine. */
+        setIc('chatMenuDeleteMeIc', 'trash');
         setIc('chatMenuBlockIc', 'x');
         setIc('chatMenuReportIc', 'alert');
         btn.onclick = function (e) {
@@ -2819,7 +2912,14 @@ import { skh } from './00-bootstrap.js';
             if (typeof window._skhLegacySendMessage === 'function') return window._skhLegacySendMessage();
             return;
         }
-        var res = await sendInternal(text, { conversationId: core.convId, partnerUid: core.partnerUid, replyToId: (core.replyTo && core.replyTo.id) || null });
+        /* [SEND-FIX 2026-09-21] Kutuma kusinyamaze kimya — kila kushindwa
+           kuna ujumbe kwa mtumiaji, na bubble nyekundu ya kujaribu tena. */
+        var res = null;
+        try {
+            res = await sendInternal(text, { conversationId: core.convId, partnerUid: core.partnerUid, replyToId: (core.replyTo && core.replyTo.id) || null });
+        } catch (eSend) {
+            res = { ok: false, error: 'exception' };
+        }
         if (res.ok) {
             input.value = '';
             core.replyTo = null;
@@ -2828,6 +2928,8 @@ import { skh } from './00-bootstrap.js';
             alert(T('ch_blocked', 'Huwezi kutumia ujumbe — umefungiwa au umemfunga mtu huyu.'));
         } else if (res.error === 'no_partner' && typeof window._skhLegacySendMessage === 'function') {
             window._skhLegacySendMessage();
+        } else if (res.error !== 'rate_limited' && res.error !== 'duplicate') {
+            try { skhToast(T('ch_send_fail', 'Imeshindwa kutuma. Angalia mtandao kisha jaribu tena.'), 'error', 3500); } catch (eT2) {}
         }
     };
 
@@ -2884,7 +2986,9 @@ import { skh } from './00-bootstrap.js';
         }
         var input = document.getElementById('chatInput');
         if (input) input.value = 'Habari, nimevutiwa na ' + greetRef + ': ' + (p.title || '');
-        window.skhChatOpen(p.userId, skh.chatPartner, { ctx: 'p_' + p.id, type: 'direct', email: p.userEmail || '' });
+        /* [NEGO-FIX 2026-09-21] Rudisha promise ya chat-open ili witoaji
+           (skhChatNegotiate) wa-await badala ya polling vipofu ya 6s. */
+        return window.skhChatOpen(p.userId, skh.chatPartner, { ctx: 'p_' + p.id, type: 'direct', email: p.userEmail || '' });
     };
 
     /* ---------- Kadi za kushiriki (share) — Phase 4 ---------- */

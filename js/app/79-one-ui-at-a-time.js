@@ -19,6 +19,20 @@ import { skh } from './00-bootstrap.js';
   if(window.__skhOneUI) return;
   window.__skhOneUI = true;
 
+  /* [STABILIZE 2026-09-21] Chain flags: kila wrapper lazima urithi alama za
+     base yake — vinginevyo retry za 79/81/91 hu-wrap tena na tena (ping-pong)
+     na kufanya kila open/close kufanya kazi mara 2-6. */
+  var __SKH_CHAIN_FLAGS = ['__blinkPatched','__blinkWrap','__oneUI','__oneUIAtomic','__abs81','__abs81_final','__skh90','__skhAuthPatched','__skhErrPatched','__skh93','__skhBack','__raw','__orig'];
+  function __skhCopyChainFlags(from, to){
+    if(!from || !to) return to;
+    for(var i=0;i<__SKH_CHAIN_FLAGS.length;i++){ var k=__SKH_CHAIN_FLAGS[i]; try{ if(from[k]!==undefined && to[k]===undefined) to[k]=from[k]; }catch(e){} }
+    return to;
+  }
+  /* [STABILIZE 2026-09-21] 81 ndiye single source of truth kwa atomic open
+     (precedent: discover patches tayari zilihamishiwa 81). 79 hubaki kama
+     fallback TU kama 81 haijapakia — vinginevyo tungepata hideAll mara 2+. */
+  function __skh81Live(){ return (typeof window.skhAbsoluteShowOnly === 'function'); }
+
   function byId(id){ return document.getElementById(id); }
   function esc(s){ return (window.skh && skh.skhEscape) ? skh.skhEscape(String(s||'')) : String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 
@@ -143,6 +157,7 @@ import { skh } from './00-bootstrap.js';
 
   // ---------- PATCH CHAT INBOX ----------
   function patchChatInbox(){
+    if(__skh81Live()) return; // [STABILIZE] 81 anashughulikia inbox (fallback pekee)
     var origInbox=window.skhChatOpenInbox;
     if(origInbox && !origInbox.__oneUI){
       window.skhChatOpenInbox = async function(){
@@ -167,12 +182,14 @@ import { skh } from './00-bootstrap.js';
           return;
         }catch(e){ console.error('[oneUI inbox]',e); }
       };
+      __skhCopyChainFlags(origInbox, window.skhChatOpenInbox);
       window.skhChatOpenInbox.__oneUI=true;
     }
   }
 
   // ---------- PATCH DIRECT CHAT (already patched in 78, but ensure one UI) ----------
   function patchDirect(){
+    if(__skh81Live()) return; // [STABILIZE] 81 anashughulikia direct chat (fallback pekee)
     // ensure skhChatOpen shows instantly and hides others
     if(window.skhChatOpen && window.skhChatOpen.__oneUIAtomic) return;
     // we already patched in 78, just ensure hideAll
@@ -188,14 +205,14 @@ import { skh } from './00-bootstrap.js';
         }catch(e){}
         return base.apply(this, arguments);
       };
+      __skhCopyChainFlags(base, window.skhChatOpen);
       window.skhChatOpen.__oneUIAtomic=true;
-      // preserve blink flag
-      if(base.__blinkPatched) window.skhChatOpen.__blinkPatched=true;
     }
   }
 
   // ---------- PATCH GROUP ROW ----------
   function patchGroupRow(){
+    if(__skh81Live()) return; // [STABILIZE] 81 anashughulikia group row (fallback pekee)
     if(window.skhChatOpenGroupRow && !window.skhChatOpenGroupRow.__oneUIAtomic){
       var base=window.skhChatOpenGroupRow;
       window.skhChatOpenGroupRow = function(gid, ev){
@@ -218,13 +235,14 @@ import { skh } from './00-bootstrap.js';
         }catch(e){}
         return base.apply(this, arguments);
       };
+      __skhCopyChainFlags(base, window.skhChatOpenGroupRow);
       window.skhChatOpenGroupRow.__oneUIAtomic=true;
-      if(base.__blinkPatched) window.skhChatOpenGroupRow.__blinkPatched=true;
     }
   }
 
   // ---------- PATCH GROUP SOGA ----------
   function patchSoga(){
+    if(__skh81Live()) return; // [STABILIZE] 81 anashughulikia group soga (fallback pekee)
     if(window.skhOpenGroupSoga && !window.skhOpenGroupSoga.__oneUIAtomic){
       var base=window.skhOpenGroupSoga;
       window.skhOpenGroupSoga = async function(gid){
@@ -245,8 +263,8 @@ import { skh } from './00-bootstrap.js';
         }catch(e){}
         return base.apply(this, arguments);
       };
+      __skhCopyChainFlags(base, window.skhOpenGroupSoga);
       window.skhOpenGroupSoga.__oneUIAtomic=true;
-      if(base.__blinkPatched) window.skhOpenGroupSoga.__blinkPatched=true;
     }
   }
 
@@ -308,6 +326,7 @@ import { skh } from './00-bootstrap.js';
           return raw.apply(this, arguments);
         }catch(e){ return raw.apply(this, arguments); }
       };
+      __skhCopyChainFlags(wrapped, newWrapped);
       newWrapped.__oneUI=true;
       newWrapped.__raw=raw;
       newWrapped.__skhBack=wrapped.__skhBack;

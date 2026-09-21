@@ -23,6 +23,16 @@ import { skh } from './00-bootstrap.js';
   if(window.__skhAbsoluteOneUI) return;
   window.__skhAbsoluteOneUI = true;
 
+  /* [STABILIZE 2026-09-21] Chain flags: urithi alama za base ili retry
+     zisipate ku-wrap tena (ping-pong 79<->81 ilifanya kila open kufanya
+     kazi mara nyingi). */
+  var __SKH_CHAIN_FLAGS = ['__blinkPatched','__blinkWrap','__oneUI','__oneUIAtomic','__abs81','__abs81_final','__skh90','__skhAuthPatched','__skhErrPatched','__skh93','__skhBack','__raw','__orig'];
+  function __skhCopyChainFlags(from, to){
+    if(!from || !to) return to;
+    for(var i=0;i<__SKH_CHAIN_FLAGS.length;i++){ var k=__SKH_CHAIN_FLAGS[i]; try{ if(from[k]!==undefined && to[k]===undefined) to[k]=from[k]; }catch(e){} }
+    return to;
+  }
+
   function byId(id){ return document.getElementById(id); }
   function esc(s){ return (window.skh && skh.skhEscape) ? skh.skhEscape(String(s==null?'':s)) : String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 
@@ -265,6 +275,7 @@ import { skh } from './00-bootstrap.js';
         }
       }catch(e){ console.error('[81 patchDiscoverEngine]',e); try{ return orig.apply(this, arguments); }catch(e2){} }
     };
+    __skhCopyChainFlags(orig, window.skhDiscoverEngineOpen);
     window.skhDiscoverEngineOpen.__abs81=true;
     window.skhDiscoverEngineOpen.__orig=orig;
 
@@ -279,6 +290,7 @@ import { skh } from './00-bootstrap.js';
           try{ return origClose.apply(this, arguments); }catch(e){}
         }catch(e){ try{ return origClose.apply(this, arguments); }catch(e2){} }
       };
+      __skhCopyChainFlags(origClose, window.skhDiscoverEngineClose);
       window.skhDiscoverEngineClose.__abs81=true;
     }
   }
@@ -307,6 +319,7 @@ import { skh } from './00-bootstrap.js';
           return orig.apply(this, arguments);
         }catch(e){ console.error('[81 discoverOpen]',e); return orig.apply(this, arguments); }
       };
+      __skhCopyChainFlags(orig, window.skhDiscoverOpen);
       window.skhDiscoverOpen.__abs81=true;
     }
   }
@@ -339,6 +352,7 @@ import { skh } from './00-bootstrap.js';
         console.warn('[abs81] chatInbox error:', e);
       }
     };
+    __skhCopyChainFlags(orig, window.skhChatOpenInbox);
     window.skhChatOpenInbox.__abs81=true;
   }
 
@@ -371,6 +385,7 @@ import { skh } from './00-bootstrap.js';
         return await current.apply(this, arguments);
       }catch(e){ console.error('[81 direct]',e); try{ if(window.showToast) window.showToast('Chat error: '+(e.message||''),'error'); }catch(e2){} return null; }
     };
+    __skhCopyChainFlags(current, window.skhChatOpen);
     window.skhChatOpen.__abs81_final=true;
   }
 
@@ -388,6 +403,7 @@ import { skh } from './00-bootstrap.js';
       }catch(e){}
       try{ return current.apply(this, arguments); }catch(e){ console.error('[81 groupRow]',e); }
     };
+    __skhCopyChainFlags(current, window.skhChatOpenGroupRow);
     window.skhChatOpenGroupRow.__abs81_final=true;
   }
 
@@ -403,6 +419,7 @@ import { skh } from './00-bootstrap.js';
       }catch(e){}
       try{ return await current.apply(this, arguments); }catch(e){ console.error('[81 soga]',e); throw e; }
     };
+    __skhCopyChainFlags(current, window.skhOpenGroupSoga);
     window.skhOpenGroupSoga.__abs81_final=true;
   }
 
@@ -438,6 +455,7 @@ import { skh } from './00-bootstrap.js';
         }catch(e){}
         try{ return await current.apply(this, arguments); }catch(e){ console.error('[81 go]',e); }
       };
+      __skhCopyChainFlags(current, window.skhGOWindowOpen);
       window.skhGOWindowOpen.__abs81_final=true;
     }
   }
@@ -501,6 +519,7 @@ import { skh } from './00-bootstrap.js';
         return raw.apply(this, arguments);
       }
     };
+    __skhCopyChainFlags(origCloseModals, wrapped);
     wrapped.__abs81=true;
     wrapped.__raw=raw;
     wrapped.__skhBack=origCloseModals.__skhBack;

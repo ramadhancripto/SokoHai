@@ -530,3 +530,25 @@ body {
     background: #e2e8f0;
     margin: 14px 4px;
 }
+
+/* ============================================================
+   [MOBILE 2026-09-21] Marekebisho ya simu ndogo
+   1) iOS Safari hu-AUTO-ZOOM ukurasa mzima input inapopata focus
+      ikiwa font-size < 16px — inavunja layout ya chat/forms.
+      Hii hulazimisha 16px kwenye sehemu zote za kuandika.
+   2) touch-action: manipulation huondoa kuchelewa kwa 300ms
+      (tap delay) na double-tap-zoom kwenye vitufe/viungo.
+   ============================================================ */
+input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"]),
+textarea,
+select {
+    font-size: 16px !important;
+}
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+    touch-action: manipulation;
+}

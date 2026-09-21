@@ -17,11 +17,11 @@
             <b style="font-size:12px; color:var(--primary-blue); text-transform:uppercase; display:block; margin-bottom:8px;"> Maelezo ya Safari (Abiria)</b>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div>
-                    <label style="font-size:11px; font-weight:bold;">IDADI YA ABIRIA *</label>
+                    <label style="font-size: 13px; font-weight:bold;">IDADI YA ABIRIA *</label>
                     <input type="number" id="ridePaxCount" value="1" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1;">
                 </div>
                 <div>
-                    <label style="font-size:11px; font-weight:bold;">NAFASI YA MZIGO *</label>
+                    <label style="font-size: 13px; font-weight:bold;">NAFASI YA MZIGO *</label>
                     <select id="ridePaxLuggage" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; background:white;">
                         <option value="No Luggage">Hana Mzigo kabisa</option>
                         <option value="Small Bag">Mkoba/Box Ndogo</option>
@@ -36,7 +36,7 @@
             <b style="font-size:12px; color:var(--green); text-transform:uppercase; display:block; margin-bottom:8px;"> Maelezo ya Mifugo (Livestock)</b>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div>
-                    <label style="font-size:11px; font-weight:bold;">AINA YA MIFUGO *</label>
+                    <label style="font-size: 13px; font-weight:bold;">AINA YA MIFUGO *</label>
                     <select id="rideAnimalType" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; background:white;">
                         <option value="Ng'ombe/Mbuzi">Ng'ombe / Mbuzi / Kondoo</option>
                         <option value="Kuku/Poultry">Kuku / Ndege</option>
@@ -44,7 +44,7 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-size:11px; font-weight:bold;">IDADI YA MIFUGO (HEADS) *</label>
+                    <label style="font-size: 13px; font-weight:bold;">IDADI YA MIFUGO (HEADS) *</label>
                     <input type="number" id="rideAnimalCount" value="1" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1;">
                 </div>
             </div>
@@ -53,21 +53,21 @@
         <!-- 4. SEHEMU YA CARGO & VIFURUSHI (Inatokea tu akichagua Cargo) -->
         <div id="cargoDetailsDiv" style="display:none; background:#fffbeb; padding:15px; border-radius:12px; border:1px solid #fde68a; margin-bottom:15px; text-align:left;">
             <b style="font-size:12px; color:#d97706; text-transform:uppercase; display:block; margin-bottom:8px;"> Maelezo ya Mzigo (Cargo/Parcels)</b>
-            <label style="font-size:11px; font-weight:bold;">JINA LA MZIGO / MAELEZO *</label>
+            <label style="font-size: 13px; font-weight:bold;">JINA LA MZIGO / MAELEZO *</label>
             <input type="text" id="cargoName" placeholder="Mfano: TV Inchi 55 na Sofa 1" style="margin-bottom:10px;">
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div>
-                    <label style="font-size:11px; font-weight:bold;">UZITO MAKADIRIO (KG) *</label>
+                    <label style="font-size: 13px; font-weight:bold;">UZITO MAKADIRIO (KG) *</label>
                     <input type="number" id="cargoWeight" placeholder="Uzito (kg)" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1;">
                 </div>
                 <div>
-                    <label style="font-size:11px; font-weight:bold;">IDADI YA CARGO *</label>
+                    <label style="font-size: 13px; font-weight:bold;">IDADI YA CARGO *</label>
                     <input type="text" id="cargoSize" placeholder="Mf: Box 3 / Mifuko 10" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1;">
                 </div>
             </div>
 
-            <div style="display:flex; gap:15px; margin-top:10px; font-size:11px; font-weight:bold;">
+            <div style="display:flex; gap:15px; margin-top:10px; font-size: 13px; font-weight:bold;">
                 <label style="display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="isFragile"> Inavunjika (Fragile)</label>
                 <label style="display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="isLiquid"> Ni Majimaji</label>
             </div>
@@ -75,7 +75,7 @@
 
         <!-- 5. CHOMBO KINACHOHITAJIKA -->
         <div style="text-align:left; margin-bottom:15px;">
-            <label style="font-size:11px; font-weight:bold; color:gray;">CHOMBO KINACHOHITAJIKA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">CHOMBO KINACHOHITAJIKA *</label>
             <select id="rideReqType" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                 <!-- Itajazwa na JS dynamically kulingana na safari -->
             </select>
@@ -83,13 +83,13 @@
 
         <!-- 6. RUTI NA WILAYA -->
         <div style="text-align:left; margin-bottom:15px;">
-            <label style="font-size:11px; font-weight:bold; color:gray;">KUTOKEA WAPI (PICKUP LOCATION) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">KUTOKEA WAPI (PICKUP LOCATION) *</label>
             <input type="text" id="rideReqFrom" placeholder="Mtaa, Mkoa unapotokea *" required style="margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">FINALI KWENDA WAPI (DESTINATION) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">FINALI KWENDA WAPI (DESTINATION) *</label>
             <input type="text" id="rideReqTo" placeholder="Mtaa, Mkoa unakopelekwa *" required style="margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">NAMBA YA SIMU YA MPOKEAJI MWISHO *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">NAMBA YA SIMU YA MPOKEAJI MWISHO *</label>
             <input type="tel" id="receiverPhone" placeholder="Simu ya mpokeaji (Receiver Phone) *" required style="margin-bottom:15px;">
             
             <!-- [ROUTE MATCHER 2026-09] Kipaumbele: chambua magari yanayopitia
@@ -108,18 +108,18 @@
     <div class="form-box" style="display:block; max-width:380px; text-align:center; border-top: 8px solid var(--gold); border-radius: 24px; padding: 30px;">
         <div style="font-size:40px; margin-bottom:10px;"></div>
         <h3 style="margin-top:0; color: var(--primary-dark);">Utapokeaje Mzigo?</h3>
-        <p style="font-size:13px; color:#64748b; margin-bottom:25px;">Tafadhali chagua njia moja ya kupokea bidhaa yako kabla ya kulipia.</p>
+        <p style="font-size:13px; color:#64748b; margin-bottom:25px;">chagua njia moja ya kupokea bidhaa yako kabla ya kulipia.</p>
         
         <!-- Button 1 -->
         <div onclick="proceedToDeliverySelection()" style="background:#fffbeb; border:2px solid var(--gold); padding:18px; border-radius:16px; cursor:pointer; margin-bottom:15px; text-align:left; display: block;">
             <b style="color:var(--primary-dark); font-size:15px; display: block;"> Tumia Usafiri wa Sokohai</b>
-            <p style="margin:5px 0 0; font-size:11px; color:#92400e;">Salama zaidi. Chagua gari/dereva sasa hivi alete mzigo wako.</p>
+            <p style="margin:5px 0 0; font-size: 13px; color:#92400e;">Salama zaidi. Chagua gari/dereva sasa hivi alete mzigo wako.</p>
         </div>
 
         <!-- Button 2 -->
         <div onclick="proceedToSelfPickup()" style="background:#f8fafc; border:1px solid #cbd5e1; padding:18px; border-radius:16px; cursor:pointer; text-align:left; display: block;">
-            <b style="color:#475569; font-size:15px; display: block;">♂ Nitachukua Mwenyewe</b>
-            <p style="margin:5px 0 0; font-size:11px; color:#64748b;">Mteja utawajibika kufuata mzigo wenyewe dukani kwa muuzaji.</p>
+            <b style="color:#475569; font-size:15px; display: block;">Nitachukua Mwenyewe</b>
+            <p style="margin:5px 0 0; font-size: 13px; color:#64748b;">Mteja utawajibika kufuata mzigo wenyewe dukani kwa muuzaji.</p>
         </div>
 
         <!-- Button 3: Ghairi -->

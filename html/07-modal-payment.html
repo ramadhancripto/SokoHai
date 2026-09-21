@@ -2,7 +2,7 @@
 <div id="userPaymentModal" class="overlay-menu" style="z-index: 8750;">
     <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:420px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out; max-height:90vh; overflow-y:auto;">
         <h3 style="color:var(--primary-dark); text-align:center; margin-top:0;"> Akaunti ya Malipo</h3>
-        <p style="font-size:12px; color:#64748b; text-align:center; margin-bottom:20px;">Weka taarifa sahihi za benki au simu kwa ajili ya kupokea pesa (Withdrawals) au kukatwa (Direct Auto-Pay).</p>
+        <p data-i18n="pay_hint" style="font-size:12px; color:#64748b; text-align:center; margin-bottom:20px;">Weka taarifa sahihi za benki au simu kwa kupokea pesa (Withdrawals) au kukatwa (Direct Auto-Pay).</p>
         
         <label style="font-size:12px; font-weight:bold; color:var(--primary-dark);">Aina ya Njia ya Malipo *</label>
         <select id="paySetupType" onchange="togglePaymentSetupFields()" style="width:100%; padding:14px; margin:5px 0 15px; border-radius:12px; border:1px solid #cbd5e1; outline:none; background:#f8fafc;">
@@ -63,23 +63,23 @@
             </div>
             <label style="font-size:12px; font-weight:bold;">Jina Lililopo Kwenye Kadi *</label>
             <input type="text" id="setupCardName" placeholder="JUMA ATHUMANI" style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1; text-transform:uppercase;">
-            <p style="font-size:10px; color:#ef4444; margin-top:5px; text-align:center;"> Taarifa za kadi zinalindwa na hazihifadhiwi waziwazi.</p>
+            <p style="font-size: 12.5px; color:#ef4444; margin-top:5px; text-align:center;"> Taarifa za kadi zinalindwa na hazihifadhiwi waziwazi.</p>
         </div>
 
 
 
 <!-- KITUFE CHA KU-UNLOCK FORM (EDIT) -->
-        <button id="btnEditPaymentAccount" type="button" onclick="enableEditPaymentInfo()" style="display:none; width:100%; padding:16px; background:#eab308; color:white; border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; transition: 0.3s; margin-bottom:10px;">✏ BADILI TAARIFA (EDIT)</button>
+        <button id="btnEditPaymentAccount" type="button" onclick="enableEditPaymentInfo()" style="display:none; width:100%; padding:16px; background:#eab308; color:white; border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; transition: 0.3s; margin-bottom:10px;"><span class="skh-ico" data-ico="edit"></span> BADILI TAARIFA (EDIT)</button>
         
         <!-- KITUFE CHA KUSAVE (Kitafichwa kama form ipo Locked) -->
     
 <!-- AKUNTI / MISTARI YA SOKOPAY YA USER -->
         <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:18px; margin-top:15px; margin-bottom:15px; text-align:left;">
             <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; border-bottom:1px solid #e2e8f0; padding-bottom:5px;"> SOKOPAY TRANSACTIONS (ESCROW)</b>
-            <div id="userSokoPayList" style="max-height:180px; overflow-y:auto; font-size:11px; display:flex; flex-direction:column; gap:8px;">
+            <div id="userSokoPayList" style="max-height:180px; overflow-y:auto; font-size: 13px; display:flex; flex-direction:column; gap:8px;">
                 <p style="color:gray; font-style:italic; text-align:center;">Inapakia miamala yako...</p>
             </div>
         </div>
-        <button onclick="goBackToSidebar()" style="width:100%; padding:12px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; transition: 0.3s;">❮ Rudi Kwenye Menu</button>
+        <button onclick="goBackToSidebar()" style="width:100%; padding:12px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; transition: 0.3s;">&lsaquo; Rudi Kwenye Menu</button>
     </div>
 </div>

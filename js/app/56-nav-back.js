@@ -356,10 +356,23 @@ import { skh } from './00-bootstrap.js';
         window.closeModals = wrapped;
     }
 
+    /* [PERF 2026-09-21] scan() hupitia overlays zote + getComputedStyle —
+       batch mutations za frame moja kuwa scan MOJA (badala ya kila mabadiliko). */
+    var __scanQueued = false;
+    function queueScan() {
+        if (__scanQueued) return;
+        __scanQueued = true;
+        try {
+            Promise.resolve().then(function () {
+                __scanQueued = false;
+                try { scan(); hookDash(); } catch (e) {}
+            });
+        } catch (e) { __scanQueued = false; try { scan(); hookDash(); } catch (e2) {} }
+    }
     function start() {
         scan(); hookDash(); hookCloseModals();
         try {
-            new MutationObserver(function () { scan(); hookDash(); })
+            new MutationObserver(queueScan)
                 .observe(document.body, { childList: true, subtree: true });
         } catch (e) {}
     }

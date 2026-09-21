@@ -695,6 +695,9 @@ import {
 
        Hii ndiyo inayotumika na Product Details (skhPsNegotiate) na
        Route-Matcher (27-route-dispatch → skhChatNegotiate) — engine moja. */
+    /* [NEGO-FIX 2026-09-21] Re-entrancy guard: double-tap ya "Toa Ofa"
+       isianzisha negotiation mbili (na listeners/reads mara mbili). */
+    var __skhNegoInFlight = null;
     window.skhChatNegotiate = async function (kind, entityOverride) {
         if (!skh.requireAuth()) return;
         if (typeof kind !== 'string') kind = 'product';
@@ -703,34 +706,59 @@ import {
         var sellerId = p.userId || p.providerId || p.driverId || p.sellerId || null;
         if (!sellerId) { alert(T('pr_no_email', 'Mmiliki huyu bado hana taarifa za mawasiliano.')); return; }
         if (skh.currentUser && sellerId === skh.currentUser.uid) { alert(T('pr_chat_self', 'Huwezi kujadili tangazo lako mwenyewe.')); return; }
-        // (1) Hakikisha startChat() inaona kipengele hiki (startChat inasoma
-        //     skh.currentOpenProduct) — kamilisha muonekano wake.
-        skh.currentOpenProduct = Object.assign({}, p, {
-            userId: sellerId,
-            ownerName: p.ownerName || p.sellerName || p.providerName || p.driverName || '',
-            collectionName: p.collectionName || p.collection ||
-                (kind === 'service' ? 'services' : (kind === 'transport' ? 'ride_requests' : 'products'))
-        });
-        // (2–3) Fungua conversation kwanza; subiri attachConversation.
-        if (typeof window.startChat === 'function') window.startChat();
-        for (var i = 0; i < 24; i++) {
-            var c = skh.chatCore || {};
-            if (c.convId && c.partnerUid === sellerId) break;
-            await new Promise(function (r) { setTimeout(r, 250); });
-        }
-        var cc = skh.chatCore || {};
-        if (!cc.convId || cc.partnerUid !== sellerId) {
-            alert('Mazungumzo hayajafunguka bado — jaribu tena baada ya sekunde chache.');
-            return;
-        }
-        // (4) Fomu ya negotiation ndani ya chat-ika hiyo.
-        if (typeof window.skhNegoFormOpen === 'function') {
-            window.skhNegoFormOpen({ type: kind, entity: Object.assign({}, p, {
-                sellerId: sellerId,
-                sellerName: p.ownerName || p.sellerName || '',
-                collection: p.collectionName || p.collection ||
+        var flightKey = kind + ':' + (p.id || '') + ':' + sellerId;
+        if (__skhNegoInFlight && __skhNegoInFlight.key === flightKey && (Date.now() - __skhNegoInFlight.at) < 12000) return;
+        __skhNegoInFlight = { key: flightKey, at: Date.now() };
+        try {
+            // (1) Hakikisha startChat() inaona kipengele hiki (startChat inasoma
+            //     skh.currentOpenProduct) — kamilisha muonekano wake.
+            skh.currentOpenProduct = Object.assign({}, p, {
+                userId: sellerId,
+                ownerName: p.ownerName || p.sellerName || p.providerName || p.driverName || '',
+                collectionName: p.collectionName || p.collection ||
                     (kind === 'service' ? 'services' : (kind === 'transport' ? 'ride_requests' : 'products'))
-            }) });
+            });
+            // (2–3) Fungua conversation kwanza; SUBIRI promise yenyewe (na
+            // timeout ya 10s) — si polling vipofu ya 6s kama awali.
+            var openPromise = (typeof window.startChat === 'function') ? window.startChat() : null;
+            if (openPromise && typeof openPromise.then === 'function') {
+                try {
+                    await Promise.race([
+                        openPromise,
+                        new Promise(function (_, rej) { setTimeout(function () { rej(new Error('chat_timeout')); }, 10000); })
+                    ]);
+                } catch (eOpen) { /* angalia hali halisi ya chatCore chini */ }
+            } else {
+                // Fallback: startChat isiyorudisha promise — subiri kidogo.
+                for (var i = 0; i < 16; i++) {
+                    var c0 = skh.chatCore || {};
+                    if (c0.convId && c0.partnerUid === sellerId) break;
+                    await new Promise(function (r) { setTimeout(r, 250); });
+                }
+            }
+            var cc = skh.chatCore || {};
+            if (!cc.convId || cc.partnerUid !== sellerId) {
+                alert('Mazungumzo hayajafunguka bado — jaribu tena baada ya sekunde chache.');
+                return;
+            }
+            /* [NEGO-FIX 2026-09-21] NAVIGATION GUARD: kama mtumiaji ameondoka
+               chat (kurudi Home n.k.) wakati tunasubiri — USIFUNGUE fomu hapa.
+               Hii ndiyo ilisababisha "fomu inatokea nikiwa Home". */
+            try {
+                var cm = document.getElementById('chatModal');
+                if (!cm || cm.style.display === 'none') return;
+            } catch (eNav) {}
+            // (4) Fomu ya negotiation ndani ya chat-ika hiyo.
+            if (typeof window.skhNegoFormOpen === 'function') {
+                window.skhNegoFormOpen({ type: kind, entity: Object.assign({}, p, {
+                    sellerId: sellerId,
+                    sellerName: p.ownerName || p.sellerName || '',
+                    collection: p.collectionName || p.collection ||
+                        (kind === 'service' ? 'services' : (kind === 'transport' ? 'ride_requests' : 'products'))
+                }) });
+            }
+        } finally {
+            if (__skhNegoInFlight && __skhNegoInFlight.key === flightKey) __skhNegoInFlight = null;
         }
     };
 

@@ -16,7 +16,7 @@
         <label>Picha Yako (Iwe Rasmi):</label>
         <input type="file" id="agentPhoto" accept="image/*" style="background:white;">
         <button type="submit" id="btnAgent" onclick="submitAgent()" style="background:var(--gold);color:var(--primary-dark);"> TUMA OMBI LAKO</button>
-        <button type="button" class="btn-close" onclick="goBackToMenu()">❮ Rudi Nyuma</button>
+        <button type="button" class="btn-close" onclick="goBackToMenu()">&lsaquo; Rudi Nyuma</button>
     </form>
 
 <!--  FOMU MPYA YA SOKOHAI HUDUMA HUB -->
@@ -42,11 +42,14 @@
     <option value="">-- Chagua Aina Ndogo --</option>
 </select>
 
-    <label style="font-size:12px; font-weight:bold;">Aina Ndogo ya Huduma (Subcategory) *</label>
-    <select id="servHubSubCategory" onchange="window.generateHubServiceFilters()" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:12px;"></select>
+    <!-- [AUDIT-FIX 2026-09-16 P1 §service-form]: NAKALA ya subcategory select
+         (same id="servHubSubCategory") IMEONDEOLEWA. Ilisababisha select ya
+         pili KUBAKIA tupu (<select></select>) na kadhalika gongo la
+         "Patupu / subcategory inalazimika" — huko updateHubSubcategories ina
+         jaza tu kipengele cha kwanza cha duplicate id. -->
 
     <div id="hubServiceFiltersBox" style="background:#f8fafc; padding:10px; border-radius:10px; margin-bottom:12px; display:none; border:1px solid #e2e8f0;">
-        <b style="font-size:11px; color:var(--primary-dark);">Jaza Vigezo vya Huduma</b>
+        <b style="font-size: 13px; color:var(--primary-dark);">Jaza Vigezo vya Huduma</b>
         <div id="hubServiceFiltersArea"></div>
     </div>
 
@@ -65,6 +68,15 @@
     <label style="font-size:12px; font-weight:bold;">Eneo unakopatikana / Kazi Inapofanyika *</label>
     <input type="text" id="servHubLocation" placeholder="Mfano: Kimara / Mikocheni, DSM" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px;">
 
+    <!-- [NEGO LOCK §21/§22] Provider Settings: mtoa huduma anachagua kama
+         mteja anaweza kupana bei (negotiation) ama hapana. Default ON. -->
+    <div style="background:#eff6ff; padding:12px; border-radius:10px; border:1px solid #bfdbfe; margin-bottom:15px; text-align:left;">
+        <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#1e3a5f; cursor:pointer;">
+            <input type="checkbox" id="servNegoAllowed" checked style="margin-top:2px; width:18px; height:18px; flex-shrink:0;">
+            <span><b>Ruhusu negotiation ya bei</b><br><small style="color:#475569;">Mteja anaweza kupendekeza bei tofauti. Ukizima, bei yako iliyotangazwa ndiyo sahihi (chat inabaki).</small></span>
+        </label>
+    </div>
+
     <button type="submit" id="btnSubmitHubService" style="background:var(--primary-blue); color:white; width:100%; padding:16px; border-radius:14px; font-weight:900; border:none; cursor:pointer; text-transform:uppercase;"> CHAPISHA HUDUMA</button>
-    <button type="button" class="btn-close" onclick="window.goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">❮ Rudi Nyuma</button>
+    <button type="button" class="btn-close" onclick="window.goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">&lsaquo; Rudi Nyuma</button>
 </form>

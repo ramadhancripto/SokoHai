@@ -1586,7 +1586,11 @@ skh._feedCacheKey = function _feedCacheKey(col) {
     const sub = (skh.activeSubCategory && skh.activeSubCategory !== 'Zote') ? skh.activeSubCategory : '';
     const sec = (c === 'services') ? (skh.activeServiceSection || 'all')
               : (c === 'drivers') ? (skh.activeDeliverySection || 'all') : 'all';
-    return c + '|' + mode + '|' + cat + '|' + sub + '|' + sec;
+    /* [PERF 2026-09-21] Weka limit kwenye key ya tabs (si 'all' ambayo huvuta
+       kiasi kimoja kila wakati): "Onyesha zaidi"/infinite-scroll lazima
+       ivute data MPYA badala ya kurudisha cache ya limit ya zamani. */
+    const lim = (c === 'all') ? '' : ('|lim' + (skh.currentLimit || 20));
+    return c + '|' + mode + '|' + cat + '|' + sub + '|' + sec + lim;
 };
 skh._feedCacheGet = function _feedCacheGet(key) {
     const e = skh._feedCache.get(key);
@@ -1625,6 +1629,19 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     // [BUYER ENGAGEMENT] Pakia hali ya likes/saves + sehemu ya "Recommended for You"
     if (typeof window.skhLoadMyEngagementMap === 'function') window.skhLoadMyEngagementMap();
     if (typeof window.skhRenderPersonalizedFeed === 'function') window.skhRenderPersonalizedFeed();
+
+    /* [PERF 2026-09-21] Cache KWANZA: tab-rudi / "Onyesha zaidi" isionyeshe
+       skeleton flash wala kusogeza scroll — chora data iliyopo papo hapo.
+       (currentFeedCollection tayari imewekwa na updateApp kabla ya hapa.) */
+    try {
+        var __earlyKey = skh._feedCacheKey(collectionToFetch);
+        var __early = skh._feedCacheGet(__earlyKey);
+        if (__early && __early.length) {
+            skh.cachedItems = __early;
+            skh.renderFeedUI(__early, feedGrid);
+            return;
+        }
+    } catch (eCache) {}
 
     // [COMMERCE CARDS 2026-09] Skeleton inayolingana na muundo wa kadi (si spinner tu)
     feedGrid.innerHTML = Array.from({ length: 6 }, () => `
@@ -2285,8 +2302,15 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
         return;
     }
 
+    /* [PERF 2026-09-21] Paginate render: awali kadi ZOTE (hadi 160 kwenye
+       Home) zilichorwa mara moja — DOM nzito + scroll ya kwanza polepole.
+       Sasa chora currentLimit (20) kwanza; zilizobaki kwa "Onyesha zaidi"
+       au infinite-scroll iliyopo (#bottomTrigger → currentLimit += 20). */
+    const __total = filteredData.length;
+    const __lim = Math.max(1, skh.currentLimit || 20);
+    const __visible = filteredData.slice(0, __lim);
     let html = matcherBanner;
-    filteredData.forEach(data => {
+    __visible.forEach(data => {
         try {
             const colName = data.collectionName || skh.currentFeedCollection;
             html += skh.CommercePostCard(data, colName);
@@ -2295,12 +2319,27 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             console.warn('[renderFeedUI] kadi imerukwa (data mbovu):', cardErr && cardErr.message);
         }
     });
+    if (__total > __visible.length) {
+        const __left = __total - __visible.length;
+        html += `<div style="grid-column:1/-1;text-align:center;padding:10px 0 18px;">`
+            + `<button type="button" class="skh-empty-btn" onclick="window.skhFeedShowMore()">Onyesha zaidi (${__left} zimebaki)</button></div>`;
+    }
     feedGrid.innerHTML = html;
 
     // [§12-§13 R8] HYDRATE hesabu HALISI za wafuasi (fire-and-forget —
     // haitazuia render: kadi zinaonekana mara moja, counts zinaingia baadaye).
     try { skh.hydrateFollowerCounts(feedGrid).catch(function () {}); } catch (e) {}
 }
+
+/* [PERF 2026-09-21] "Onyesha zaidi": ongeza kikomo kisha pakia — Home
+   huchora kutoka cache (bila network), tabs huvuta ukurasa mpana zaidi
+   (cache key inajumuisha limit). Scroll position inabaki. */
+window.skhFeedShowMore = function () {
+    try {
+        skh.currentLimit = (skh.currentLimit || 20) + 20;
+        skh.loadMainFeed(skh.currentFeedCollection || 'all');
+    } catch (e) {}
+};
 
 skh.calculateDistance = function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Radius ya dunia

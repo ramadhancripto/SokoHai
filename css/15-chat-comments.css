@@ -1315,3 +1315,12 @@
 
 /* DELIVERED = tick 2 za KIJIVU (imefikia tu); baada ya kusomwa inageuka BULUU. */
 #chatMessages .ch-meta .ch-tick--delivered { color: #64748b !important; }
+
+/* [SEND-FIX 2026-09-21] Optimistic states: bubble ya muda (pending) na
+   bubble nyekundu ya kushindwa (failed + retry). */
+.ch-msg--pending { opacity: .72; }
+.ch-msg--pending .chat-bubble { border-style: dashed; }
+#chatMessages .ch-meta .ch-tick--pending { color: #94a3b8 !important; font-size: 15px; }
+.ch-msg--failed .chat-bubble { border: 1.5px solid #fca5a5 !important; background: #fef2f2 !important; cursor: pointer; }
+.ch-retry { border: none; background: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 99px; cursor: pointer; margin-left: 6px; }
+.ch-retry:active { transform: scale(.96); }

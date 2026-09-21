@@ -280,6 +280,7 @@
         var s = S();
         if (!s.requireAuth || !s.requireAuth()) return;
         showModal93();
+        try { wireSearch(); } catch (eWS) { /* input inaweza kutengenezwa upya */ }
         var list = document.getElementById('inboxList');
         if (!list) { console.error('[INBOX93] #inboxList haipo kwenye DOM'); return; }
         if (loading93) return;
@@ -373,26 +374,19 @@
             });
         }
     }
-    setInterval(wireSearch, 1500);
+    /* [STABILIZE 2026-09-21] wireSearch sasa hu-itwa kila inbox inapofunguka
+       (skhInbox93) + mara moja baada ya load — timer ya 1.5s milele imeondolewa. */
     setTimeout(wireSearch, 800);
 
-    /* ---------------- RE-ASSERT GUARD ----------------
-     * Modules (34/79/81) zinaweza kupakia baadaye na ku-overwrite.
-     * Guard hii inahakikisha 93 ndiyo inashinda kwenye window. */
-    function ensureOurs93() {
-        try {
-            if (typeof window.skhChatOpenInbox !== 'function' || window.skhChatOpenInbox.__skh93 !== true) {
-                window.skhChatOpenInbox = window.__skhInboxActive93;
-            }
-        } catch (e) { console.error('[INBOX93] ensureOurs93:', e && e.message); }
-    }
-    var assertCount = 0;
-    var assertIv = setInterval(function () {
-        ensureOurs93();
-        assertCount++;
-        if (assertCount > 120) clearInterval(assertIv);
-    }, 1000);
-    setInterval(ensureOurs93, 5000);
+    /* [STABILIZE 2026-09-21] RE-ASSERT GUARD IMEONDOLEWA.
+     * Sababu: guard hii ilikuwa inachana (clobber) wrappers halali za
+     * 79/81/90/92/91 kila sekunde 1-5 — ndiyo chanzo cha tabia
+     * isiyotabirika (wakati mwingine chat inafunguka na loader, wakati
+     * mwingine bila; wakati mwingine na auth-wait, wakati mwingine bila).
+     * Wrappers zote sasa ni chain-preserving (zinarithi __skh93 n.k.)
+     * wala haziharibu msingi wa 93, kwa hivyo hakuna haja ya ku-reassert.
+     * Kama module nyingine ita-overwrite kwa bahati mbaya, 91 (error
+     * visibility) + console vitaonyesha — badala ya vita vya kimya. */
 
     /* ---------------- SKHCHATOPEN SAFI (badala ya chain tata) ----------------
      * Ina-replicate mtiririko wa 34-chat-core kwa idhai za umma:
@@ -651,21 +645,9 @@
     window.__skhChatActive93 = skhChatOpen93;
     window.skhChatOpen = skhChatOpen93;
 
-    /* Re-assert: modules hazirudishe chain tata tena */
-    function ensureChatOurs93() {
-        try {
-            if (typeof window.skhChatOpen !== 'function' || window.skhChatOpen.__skh93 !== true) {
-                window.skhChatOpen = window.__skhChatActive93;
-            }
-        } catch (e) { console.error('[CHAT93] ensureChatOurs93:', e && e.message); }
-    }
-    var chatAssertCount = 0;
-    var chatAssertIv = setInterval(function () {
-        ensureChatOurs93();
-        chatAssertCount++;
-        if (chatAssertCount > 120) clearInterval(chatAssertIv);
-    }, 1000);
-    setInterval(ensureChatOurs93, 5000);
+    /* [STABILIZE 2026-09-21] Re-assert ya skhChatOpen IMEONDOLEWA kwa sababu
+       ileile ya inbox hapo juu: wrappers (81/92/90/91) sasa ni
+       chain-preserving, na kuchana kwao ndiko kulikosababisha mvurugiko. */
 
     console.log('[SOKOHAI 93] chat inbox repair loaded ✓ — clean inbox + re-assert guard + watchdog');
     window.__skhInboxRepairBooted = true;

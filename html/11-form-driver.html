@@ -6,17 +6,17 @@
     <div style="text-align:center; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:12px;">
         <div style="font-size:40px;"></div>
         <h3 style="color:var(--primary-dark); margin:5px 0 0 0; text-transform:uppercase; font-weight:900;">Sajili Akaunti ya Usafiri</h3>
-        <p style="font-size:11px; color:#64748b; font-weight:bold;">Sokohai Unified Transporter & Fleet Registry</p>
+        <p style="font-size: 13px; color:#64748b; font-weight:bold;">Sokohai Unified Transporter & Fleet Registry</p>
     </div>
 
     <!-- PART 1: ACCOUNT TYPE & SERVICE SCOPE -->
     <div style="background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:15px; text-align:left;">
         <b style="font-size:12px; color:var(--primary-dark); text-transform:uppercase; display:block; margin-bottom:8px;">1. Aina ya Akaunti & Huduma</b>
         
-        <label style="font-size:11px; font-weight:bold; color:gray;">KICHWA CHA HUDUMA *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">KICHWA CHA HUDUMA *</label>
         <input type="text" id="delTitle" placeholder="Mfano: Mbeya Express Cargo / Dar-Dodoma Bus" required style="margin-bottom:12px;">
 
-        <label style="font-size:11px; font-weight:bold; color:gray;">AINA YA AKAUNTI (ACCOUNT TYPE) *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">AINA YA AKAUNTI (ACCOUNT TYPE) *</label>
         <select id="delAccountType" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold; margin-bottom:12px;">
             <option value="Individual Driver">Individual Driver (Dereva Binafsi)</option>
             <option value="Vehicle Owner">Vehicle Owner (Mmiliki pekee)</option>
@@ -26,8 +26,8 @@
             <option value="Fleet Company">Fleet Company (Mwenye Magari Mengi)</option>
         </select>
 
-        <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:6px;">HUDUMA UNAZOSHUGHULIKIA (TICK ZOTE UTANAZOPRENDA KUBEBA): *</label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px; background:white; padding:10px; border-radius:10px; border:1px solid #cbd5e1;">
+        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:6px;">HUDUMA UNAZOSHUGHULIKIA (TICK ZOTE UTANAZOPRENDA KUBEBA): *</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size: 13px; background:white; padding:10px; border-radius:10px; border:1px solid #cbd5e1;">
             <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" class="del-supported-service" value="Passenger" checked> Abiria (Passengers)</label>
             <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" class="del-supported-service" value="Parcel"> Vifurushi (Parcels)</label>
             <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" class="del-supported-service" value="Cargo"> Mizigo Mikubwa (Cargo)</label>
@@ -43,7 +43,7 @@
     <div style="background:#fffbeb; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #fde68a; text-align:left;">
         <b style="font-size:12px; color:var(--primary-dark); text-transform:uppercase; display:block; margin-bottom:8px;">2. Usajili wa Chombo (Vehicle)</b>
         
-        <label style="font-size:11px; font-weight:bold; color:gray;">AINA YA CHOMBO *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">AINA YA CHOMBO *</label>
         <select id="delVehicleType" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold; margin-bottom:12px;">
             <option value="Bodaboda">Bodaboda (Motorcycle)</option>
             <option value="Bajaji">Bajaji (Tricycle)</option>
@@ -56,16 +56,16 @@
             <option value="Trailer">Trailer (Mtego)</option>
         </select>
 
-        <label style="font-size:11px; font-weight:bold; color:gray;">NAMBA YA USAJILI (PLATE NUMBER) *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">NAMBA YA USAJILI (PLATE NUMBER) *</label>
         <input type="text" id="delVehicleReg" placeholder="Mfano: T 123 ABC" required style="margin-bottom:12px;">
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
             <div>
-                <label style="font-size:11px; font-weight:bold; color:gray;">UWEZO WA MWISHO (KG/TONS) *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray;">UWEZO WA MWISHO (KG/TONS) *</label>
                 <input type="text" id="delMaxWeight" placeholder="Mf: 5 Tons / 500Kg" required style="margin:0;">
             </div>
             <div>
-                <label style="font-size:11px; font-weight:bold; color:gray;">UTAMBULISHO WA RUSH (PRICING) *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray;">UTAMBULISHO WA RUSH (PRICING) *</label>
                 <select id="delPricingMethod" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                     <option value="Fixed">Fixed Price (Trip Moja)</option>
                     <option value="Per KM">Per KM (Kwa Umbali)</option>
@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <label style="font-size:11px; font-weight:bold; color:gray;">BEI YA KUANZIA (TSH) *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">BEI YA KUANZIA (TSH) *</label>
         <input type="number" id="delBasePrice" placeholder="Mfano: 45,000" required style="margin-bottom:12px;">
     </div>
 
@@ -85,36 +85,45 @@
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
             <div>
-                <label style="font-size:11px; font-weight:bold; color:gray;">MKOA WA KUTOKEA *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray;">MKOA WA KUTOKEA *</label>
                 <input type="text" id="delFromRegion" placeholder="Mf: Dar es Salaam" required style="margin:0;">
             </div>
             <div>
-                <label style="font-size:11px; font-weight:bold; color:gray;">MKOA WA MWISHO *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray;">MKOA WA MWISHO *</label>
                 <input type="text" id="delToRegion" placeholder="Mf: Mwanza" required style="margin:0;">
             </div>
         </div>
 
-        <label style="font-size:11px; font-weight:bold; color:gray;">RUTI KAMILI YENYE VITUO VYA NJIANI *</label>
-        <input type="text" id="delFullRoute" placeholder="Mf: Dar ➔ Moro ➔ Dom ➔ Singida ➔ Mwanza" required style="margin-bottom:12px;">
+        <label style="font-size: 13px; font-weight:bold; color:gray;">RUTI KAMILI YENYE VITUO VYA NJIANI *</label>
+        <input type="text" id="delFullRoute" placeholder="Mf: Dar &rarr; Moro &rarr; Dom &rarr; Singida &rarr; Mwanza" required style="margin-bottom:12px;">
     </div>
 
     <!-- PART 4: OPERATOR / DRIVER INFO -->
     <div style="background:#fff1f2; padding:15px; border-radius:12px; border:1px solid #fecaca; margin-bottom:20px; text-align:left;">
         <b style="font-size:12px; color:var(--terracotta); text-transform:uppercase; display:block; margin-bottom:8px;">4. Taarifa za Dereva & Picha</b>
         
-        <label style="font-size:11px; font-weight:bold; color:gray;">JINA LA DEREVA MKUU *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">JINA LA DEREVA MKUU *</label>
         <input type="text" id="delDriverName" placeholder="Mfano: Juma Athumani" required style="margin-bottom:12px;">
 
-        <label style="font-size:11px; font-weight:bold; color:gray;">NAMBA YA SIMU YA KAZINI *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">NAMBA YA SIMU YA KAZINI *</label>
         <input type="tel" id="delPhone" placeholder="Mfano: 07XXXXXXXX" required style="margin-bottom:12px;">
 
-        <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">MAELEZO YA ZIADA (HIARI)</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">MAELEZO YA ZIADA (HIARI)</label>
         <textarea id="delDesc" placeholder="Eleza huduma zako za usafirishaji, ratiba, au masharti maalum..." style="width:100%; height:60px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px; resize:none; outline:none;"></textarea>
 
-        <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">PANDISHA PICHA YA CHOMBO/VEHICLE *</label>
+        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">PANDISHA PICHA YA CHOMBO/VEHICLE *</label>
         <input type="file" id="delImage" accept="image/*" required style="background:white; padding:10px; width:100%;">
     </div>
 
+    <!-- [NEGO LOCK §21/§22] Transporter Settings: msafiri anachagua kama mteja
+         anaweza kupana bei na yeye (negotiation) ama hapana. Default ON. -->
+    <div style="background:#eff6ff; padding:12px 15px; border-radius:12px; margin-bottom:15px; border:1px solid #bfdbfe; text-align:left;">
+        <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#1e3a5f; cursor:pointer;">
+            <input type="checkbox" id="delNegoAllowed" checked style="margin-top:3px; width:18px; height:18px; flex-shrink:0;">
+            <span><b>Ruhusu negotiation ya nauli</b><br><small style="color:#475569;">Mteja akiwasiliana nawe anaweza kupendekeza bei tofauti. Ukizima, bei yako iliyotangazwa ndiyo sahihi (chat inabaki).</small></span>
+        </label>
+    </div>
+
     <button type="submit" id="btnDelivery" style="background:var(--primary-dark); color:white; width:100%; padding:18px; border-radius:14px; font-weight:900; font-size:15px; text-transform:uppercase;"> CHAPISHA SIFARA ZA USAFIRI</button>
-    <button type="button" class="btn-close" onclick="goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">❮ Rudi Kwenye Menu</button>
+    <button type="button" class="btn-close" onclick="goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">&lsaquo; Rudi Kwenye Menu</button>
 </form>

@@ -10,7 +10,7 @@
 
                                 <!-- Navigation List -->
                 <div class="sp-sidebar-menu" style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; overflow-y: auto; text-align: left; padding-right: 5px;">
-                    <span class="sp-menu-heading" style="font-size: 9px; font-weight: 800; color: rgba(255, 255, 255, 0.35); text-transform: uppercase; margin: 15px 0 5px 12px; letter-spacing: 0.8px; display: block;">SOKOPAY MVP</span>
+                    <span class="sp-menu-heading" style="font-size: 12px; font-weight: 800; color: rgba(255, 255, 255, 0.35); text-transform: uppercase; margin: 15px 0 5px 12px; letter-spacing: 0.8px; display: block;">SOKOPAY MVP</span>
 
                     <button class="sp-sidebar-link active" id="spBtn_overview" onclick="window.toggleSokoPayTab('overview')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #00509d; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
                         <span></span> Home
@@ -31,12 +31,12 @@
                         <span></span> Help
                     </button>
 
-                    <span class="sp-menu-heading" style="font-size: 9px; font-weight: 800; color: rgba(255, 255, 255, 0.35); text-transform: uppercase; margin: 15px 0 5px 12px; letter-spacing: 0.8px; display: block;">TRUST & SECURITY</span>
+                    <span class="sp-menu-heading" style="font-size: 12px; font-weight: 800; color: rgba(255, 255, 255, 0.35); text-transform: uppercase; margin: 15px 0 5px 12px; letter-spacing: 0.8px; display: block;">TRUST & SECURITY</span>
                     <button class="sp-sidebar-link" id="spBtn_disputes" onclick="window.toggleSokoPayTab('disputes')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: rgba(255, 255, 255, 0.65); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
-                        <span>⚖</span> Disputes
+                        <span><span class="skh-ico" data-ico="scales"></span></span> Disputes
                     </button>
                     <button class="sp-sidebar-link" id="spBtn_settings" onclick="window.toggleSokoPayTab('settings')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: rgba(255, 255, 255, 0.65); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
-                        <span>⚙</span> Settings
+                        <span><span class="skh-ico" data-ico="settings"></span></span> Settings
                     </button>
                     <button class="sp-sidebar-link" id="spBtn_lipa" onclick="window.toggleSokoPayTab('lipa')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: rgba(255, 255, 255, 0.65); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
                         <span></span> Direct Pay
@@ -49,19 +49,19 @@
                 <!-- User Profile Card -->
                 <div class="sp-profile-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px; margin-bottom: 12px; text-align: left;">
                     <div class="sp-profile-info" style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                        <img src="https://ui-avatars.com/api/?name=User&background=00509d&color=fff" class="sp-profile-img" id="spSidebarUserPic" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.2);" alt="User">
+                        <img src="img/avatar-user.png" class="sp-profile-img" id="spSidebarUserPic" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.2);" alt="User">
                         <div class="sp-profile-details" style="min-width: 0;">
                             <span class="sp-profile-name" id="spSidebarUserName" style="font-size: 12px; font-weight: 700; color: white; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mtumiaji</span>
-                            <span class="sp-profile-verified" style="font-size: 9px; color: #10b981; display: flex; align-items: center; gap: 3px; font-weight: bold;"> Verified Node</span>
+                            <span class="sp-profile-verified" style="font-size: 12px; color: #10b981; display: flex; align-items: center; gap: 3px; font-weight: bold;"> Verified Node</span>
                         </div>
                     </div>
-                    <div style="font-size: 11px; color: #10b981; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px; margin-top: 5px;">
+                    <div style="font-size: 13px; color: #10b981; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px; margin-top: 5px;">
                         Wallet: <span id="spSidebarBalance">TZS 0</span>
                     </div>
                 </div>
 
                 <!-- Help & Support Link -->
-                <a href="#" class="sp-support-link" onclick="window.toggleSokoPayTab('help')" style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.5); text-decoration: none; padding: 5px 10px; font-weight: 600; transition: 0.2s; cursor: pointer;">
+                <a class='sp-support-link' href='index.html#' onclick='window.toggleSokoPayTab(\'help\')' style='display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.5); text-decoration: none; padding: 5px 10px; font-weight: 600; transition: 0.2s; cursor: pointer;'>
                     <span></span> Help & Support
                 </a>
             </div>
@@ -73,7 +73,7 @@
             <!-- HEADER BAR OF SOKOPAY -->
             <div class="sp-header-bar">
                 <div class="sp-header-left">
-                    <h2 class="sp-header-title" id="spWelcomeMsg">Welcome back, John! </h2>
+                    <h2 class="sp-header-title" id="spWelcomeMsg">Welcome back! </h2>
                     <p class="sp-header-subtitle">Here's what's happening with your account today.</p>
                 </div>
                 
@@ -105,7 +105,7 @@
                     </button>
 
                     <!-- Profile Avatar / Exit Escrow Trigger -->
-                    <img id="spHeaderAvatar" src="https://ui-avatars.com/api/?name=SokoHai&background=00509d&color=fff" class="sp-header-avatar" onclick="window.closeModals()" title="Funga SokoPay">
+                    <img id="spHeaderAvatar" src="img/avatar-sokohai.png" class="sp-header-avatar" onclick="window.closeModals()" title="Funga SokoPay">
                 </div>
             </div>
 
@@ -115,24 +115,24 @@
                 <!-- KPI CARDS (mobile-first: 2x2) -->
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #10b981; border-radius: 14px; padding: 14px;">
-                        <span style="font-size: 9px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Available Balance</span>
+                        <span style="font-size: 12px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Available Balance</span>
                         <span id="spKpiWallet" style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 4px 0 2px; display: block;">TZS 0</span>
-                        <span style="font-size: 9px; font-weight: 700; color: #10b981; display: block;">Ready to use</span>
+                        <span style="font-size: 12px; font-weight: 700; color: #10b981; display: block;">Ready to use</span>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #00509d; border-radius: 14px; padding: 14px;">
-                        <span style="font-size: 9px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Escrow Locked</span>
+                        <span style="font-size: 12px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Escrow Locked</span>
                         <span id="spKpiEscrow" style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 4px 0 2px; display: block;">TZS 0</span>
-                        <span style="font-size: 9px; font-weight: 700; color: #00509d; display: block;">Protected</span>
+                        <span style="font-size: 12px; font-weight: 700; color: #00509d; display: block;">Protected</span>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #3b82f6; border-radius: 14px; padding: 14px;">
-                        <span style="font-size: 9px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Pending</span>
+                        <span style="font-size: 12px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Pending</span>
                         <span id="spKpiPending" style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 4px 0 2px; display: block;">TZS 0</span>
-                        <span style="font-size: 9px; font-weight: 700; color: #3b82f6; display: block;">Awaiting confirm</span>
+                        <span style="font-size: 12px; font-weight: 700; color: #3b82f6; display: block;">Awaiting confirm</span>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #8b5cf6; border-radius: 14px; padding: 14px;">
-                        <span style="font-size: 9px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Completed</span>
+                        <span style="font-size: 12px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Completed</span>
                         <span id="spKpiCompleted" style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 4px 0 2px; display: block;">0</span>
-                        <span style="font-size: 9px; font-weight: 700; color: #8b5cf6; display: block;">Transactions</span>
+                        <span style="font-size: 12px; font-weight: 700; color: #8b5cf6; display: block;">Transactions</span>
                     </div>
                 </div>
 
@@ -154,19 +154,19 @@
                         </button>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
-                        <button onclick="window.toggleSokoPayTab('lipa')" style="padding: 8px 12px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 11px; font-weight: 800; cursor: pointer;">Direct Pay</button>
-                        <button onclick="window.openSokoPayDeposit()" style="padding: 8px 12px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 11px; font-weight: 800; cursor: pointer;">Deposit</button>
-                        <button onclick="window.requestWithdrawal()" style="padding: 8px 12px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 11px; font-weight: 800; cursor: pointer;">Withdraw</button>
+                        <button onclick="window.toggleSokoPayTab('lipa')" style="padding: 8px 12px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 13px; font-weight: 800; cursor: pointer;">Direct Pay</button>
+                        <button onclick="window.openSokoPayDeposit()" style="padding: 8px 12px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 13px; font-weight: 800; cursor: pointer;">Deposit</button>
+                        <button onclick="window.requestWithdrawal()" style="padding: 8px 12px; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 13px; font-weight: 800; cursor: pointer;">Withdraw</button>
                     </div>
                 </div>
 
                 <!-- [SOKOPAY] KADI YA MPOKEAJI: aliyepokea token/linki/QR alipe hapa -->
                 <div style="background: #f0f9ff; border: 1.5px dashed #0284c7; border-radius: 18px; padding: 16px; margin-bottom: 20px;">
-                    <b style="font-size: 13px; color: #0369a1; display: block; margin-bottom: 4px;">&#128272; UMEPOKEA TOKEN / LINKI / QR CODE?</b>
-                    <p style="font-size: 11px; color: #334155; margin: 0 0 12px; line-height: 1.5;">Mtu amekutumia token (SP-XXXXXX), linki au QR code ya SokoPay? Bandika/scan hapa, ona mkataba (bidhaa + kiasi + muuzaji) kisha <b>lipa kwa Escrow</b> — pesa inakaa salama mpaka upokee mzigo.</p>
+                    <b style="font-size: 13px; color: #0369a1; display: block; margin-bottom: 4px;"><span class="skh-ico" data-ico="key"></span> UMEPOKEA TOKEN / LINKI / QR CODE?</b>
+                    <p style="font-size: 13px; color: #334155; margin: 0 0 12px; line-height: 1.5;">Mtu amekutumia token (SP-XXXXXX), linki au QR code ya SokoPay? Bandika/scan hapa, ona mkataba (bidhaa + kiasi + muuzaji) kisha <b>lipa kwa Escrow</b> — pesa inakaa salama mpaka upokee mzigo.</p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button onclick="window.toggleSokoPayTab('pay')" style="flex:1; min-width:150px; padding: 13px; background: #0284c7; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;">&#128179; LIPA KWA TOKEN / LINKI</button>
-                        <button onclick="window.spScanQr()" style="flex:1; min-width:150px; padding: 13px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;">&#128247; SKANISHA QR</button>
+                        <button onclick="window.toggleSokoPayTab('pay')" style="flex:1; min-width:150px; padding: 13px; background: #0284c7; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;"><span class="skh-ico" data-ico="wallet"></span> LIPA KWA TOKEN / LINKI</button>
+                        <button onclick="window.spScanQr()" style="flex:1; min-width:150px; padding: 13px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;"><span class="skh-ico" data-ico="camera"></span> SKANISHA QR</button>
                     </div>
                 </div>
 
@@ -188,7 +188,7 @@
 
                 <!-- TRUST NOTE -->
                 <div style="background: #ecfdf5; border: 1px solid #bbf7d0; border-radius: 14px; padding: 14px; font-size: 12px; color: #065f46; line-height: 1.6;">
-                    <b>🔒 SokoPay inalinda pesa yako.</b> Malipo yanashikiliwa kwenye Escrow hadi unapothibitisha kupokea bidhaa/huduma. Ukikumbana na tatizo, fungua <b>Dispute</b> — admin atakagua.
+                    <b><span class="skh-ico" data-ico="lock"></span> SokoPay inalinda pesa yako.</b> Malipo yanashikiliwa kwenye Escrow hadi unapothibitisha kupokea bidhaa/huduma. Ukikumbana na tatizo, fungua <b>Dispute</b> — admin atakagua.
                 </div>
             </div>
 
@@ -203,19 +203,19 @@
                 <!-- KPI Cards Row -->
                 <div class="sp-kpi-grid-premium">
                     <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 14px;">
-                        <small style="color: gray; font-size: 9px; font-weight: bold; text-transform: uppercase;">Instant Transfers</small>
-                        <b style="font-size: 16px; color: #00509d; display: block; margin-top: 4px;">15 Today</b>
+                        <small style="color: gray; font-size: 12px; font-weight: bold; text-transform: uppercase;">Instant Transfers</small>
+                        <b style="font-size: 16px; color: #00509d; display: block; margin-top: 4px;">—</b>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 14px;">
-                        <small style="color: gray; font-size: 9px; font-weight: bold; text-transform: uppercase;">Total Received</small>
-                        <b style="font-size: 16px; color: #10b981; display: block; margin-top: 4px;">TZS 1,850,000</b>
+                        <small style="color: gray; font-size: 12px; font-weight: bold; text-transform: uppercase;">Total Received</small>
+                        <b style="font-size: 16px; color: #10b981; display: block; margin-top: 4px;">—</b>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 14px;">
-                        <small style="color: gray; font-size: 9px; font-weight: bold; text-transform: uppercase;">SokoPay Security</small>
+                        <small style="color: gray; font-size: 12px; font-weight: bold; text-transform: uppercase;">SokoPay Security</small>
                         <b style="font-size: 16px; color: #8b5cf6; display: block; margin-top: 4px;">100% Active</b>
                     </div>
                     <div style="background: white; border: 1px solid #E2E8F0; padding: 15px; border-radius: 14px;">
-                        <small style="color: gray; font-size: 9px; font-weight: bold; text-transform: uppercase;">Average Payout Time</small>
+                        <small style="color: gray; font-size: 12px; font-weight: bold; text-transform: uppercase;">Average Payout Time</small>
                         <b style="font-size: 16px; color: #f59e0b; display: block; margin-top: 4px;">Instant (1s)</b>
                     </div>
                 </div>
@@ -227,7 +227,7 @@
                         <div style="background: white; border: 1px solid #cbd5e1; border-radius: 20px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);">
                             <span class="sp-widget-title" style="font-size: 13px; font-weight: 900; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid #00509d; padding-left: 10px; margin-bottom: 20px; display: block;"> FOMU YA KULIPA MOJA KWA MOJA (SEND DIRECT MONEY)</span>
                             
-                            <label style="font-size: 11px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">CHAGUA AINA YA MUAMALA *</label>
+                            <label style="font-size: 13px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">CHAGUA AINA YA MUAMALA *</label>
                             <select id="spLipaType" style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; background: white; font-weight: bold; margin-bottom: 15px; outline: none;">
                                 <option value="product" selected> Malipo ya Bidhaa Direct (Merchant Pay)</option>
                                 <option value="service"> Malipo ya Huduma Direct (Fundi / Professional)</option>
@@ -237,16 +237,16 @@
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                                 <div>
-                                    <label style="font-size: 11px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">SIMU / SOKOPAY CODE YA MPOKEAJI *</label>
+                                    <label style="font-size: 13px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">SIMU / SOKOPAY CODE YA MPOKEAJI *</label>
                                     <input type="text" id="spLipaAccount" placeholder="Mf: 07XXXXXXXX au SP-9921" style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; font-weight: bold; box-sizing: border-box;">
                                 </div>
                                 <div>
-                                    <label style="font-size: 11px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">KIASI CHA KUTUMA (TZS) *</label>
+                                    <label style="font-size: 13px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">KIASI CHA KUTUMA (TZS) *</label>
                                     <input type="number" id="spLipaAmount" placeholder="Kiasi (Mf: 50000)" style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; font-weight: bold; color: #10b981; font-size: 16px; box-sizing: border-box;">
                                 </div>
                             </div>
 
-                            <label style="font-size: 11px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">NJIA YA KULIPIA *</label>
+                            <label style="font-size: 13px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">NJIA YA KULIPIA *</label>
                             <select id="spLipaSource" style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; background: white; font-weight: bold; margin-bottom: 15px; outline: none;">
                                 <option value="wallet" selected> SokoPay Wallet Balance (Instant & Free)</option>
                                 <option value="mpesa"> Vodacom M-Pesa</option>
@@ -255,7 +255,7 @@
                                 <option value="halopesa"> Halopesa</option>
                             </select>
 
-                            <label style="font-size: 11px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">MAELEZO YA MUAMALA (NOTES) *</label>
+                            <label style="font-size: 13px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">MAELEZO YA MUAMALA (NOTES) *</label>
                             <input type="text" id="spLipaNotes" placeholder="Mf: Malipo ya fundi umeme au shehena ya mchele..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; margin-bottom: 20px; box-sizing: border-box;">
 
                             <button onclick="alert(' MALIPO YAMEFANIKIWA! Pesa imetumwa na settlement engine imesajili muamala.')" id="btnSubmitLipaDirect" style="width: 100%; padding: 18px; background: #00509d; color: white; border: none; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 80, 157, 0.25);"> TUMA / LIPA PESA SASA (INSTANT SETTLEMENT)</button>
@@ -276,10 +276,8 @@
                         <!-- Miamala ya Hivi Karibuni -->
                         <div style="background: white; border: 1px solid #cbd5e1; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: left;">
                             <span class="sp-widget-title" style="font-size: 12px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid #8b5cf6; padding-left: 10px; margin-bottom: 15px; display: block;"> Recent Lipa Feeds</span>
-                            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 11px;">
-                                <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;"><div><b>Supermarket Pay</b><br><small style="color:gray;">SP-8829</small></div><b style="color:#ef4444;">- TZS 120,000</b></div>
-                                <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;"><div><b>Ufundi Simu</b><br><small style="color:gray;">0712345678</small></div><b style="color:#ef4444;">- TZS 45,000</b></div>
-                                <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between;"><div><b>Payment Request</b><br><small style="color:gray;">Kutoka: James</small></div><b style="color:#10b981;">+ TZS 80,000</b></div>
+                            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                                <div style="background:#f8fafc; padding:14px; border-radius:10px; border:1px dashed #cbd5e1; color:#64748b; text-align:center; font-size:12.5px;">Hakuna miamala ya hivi karibuni bado.</div>
                             </div>
                         </div>
                     </div>
@@ -290,25 +288,25 @@
             <div id="spCreateArea" style="display: none; text-align: left;">
                 <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px; max-width: 480px;">
                     <b style="font-size: 14px; color: #0F172A; display: block; margin-bottom: 6px;">Unda Payment Link (Escrow)</b>
-                    <p style="font-size: 11px; color: #64748B; margin-top: 0; margin-bottom: 16px; line-height: 1.5;">Weka maelezo ya bidhaa/huduma na kiasi. Utapata namba ya <b>token (SP-XXXXXX)</b> ya kumshirikisha mnunuzi kupitia WhatsApp/SMS.</p>
+                    <p style="font-size: 13px; color: #64748B; margin-top: 0; margin-bottom: 16px; line-height: 1.5;">Weka maelezo ya bidhaa/huduma na kiasi. Utapata namba ya <b>token (SP-XXXXXX)</b> ya kumshirikisha mnunuzi kupitia WhatsApp/SMS.</p>
 
                     <input type="hidden" id="spContractType" value="service">
                     <input type="hidden" id="spSplitSeller">
                     <input type="hidden" id="spSplitCarrier" value="0">
 
-                    <label style="font-size: 11px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">MAELEZO YA BIDHAA / HUDUMA *</label>
+                    <label style="font-size: 13px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">MAELEZO YA BIDHAA / HUDUMA *</label>
                     <input type="text" id="spItemName" placeholder="Mf: iPhone 12 64GB nyeusi" style="width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; box-sizing: border-box;">
 
-                    <label style="font-size: 11px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">KIASI (TZS) *</label>
+                    <label style="font-size: 13px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">KIASI (TZS) *</label>
                     <input type="number" id="spAmount" placeholder="Mf: 850000" style="width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #065f46; outline: none; box-sizing: border-box;">
 
-                    <label style="font-size: 11px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">MAELEZO YA ZIADA</label>
+                    <label style="font-size: 13px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">MAELEZO YA ZIADA</label>
                     <textarea id="spDesc" placeholder="Maelezo mafupi ya makubaliano..." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 12px; height: 70px; resize: none; outline: none; box-sizing: border-box;"></textarea>
 
-                    <label style="font-size: 11px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">SIMU / EMAIL YA MNUNUZI (si lazima)</label>
+                    <label style="font-size: 13px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">SIMU / EMAIL YA MNUNUZI (si lazima)</label>
                     <input type="text" id="spPartnerContact" placeholder="07XXXXXXXX au email" style="width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; box-sizing: border-box;">
 
-                    <label style="font-size: 11px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">PICHA YA USHAHIDI (si lazima)</label>
+                    <label style="font-size: 13px; font-weight: bold; color: #0f172a; display: block; margin-bottom: 4px;">PICHA YA USHAHIDI (si lazima)</label>
                     <input type="file" id="spImageInput" accept="image/*" style="width: 100%; padding: 10px; background: #F8FAFC; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 16px; box-sizing: border-box;">
 
                     <button type="button" onclick="window.generateSokoPayCode()" id="btnGenerateSp" style="width: 100%; padding: 16px; background: #D4AF37; color: #0f172a; border: none; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase;"> TENGENEZA PAYMENT LINK</button>
@@ -320,7 +318,7 @@
                 <!-- [SOKOPAY] Sehemu ya Kuhifadhi / Kuingiza Token, Linki na QR -->
                 <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px; max-width: 480px; margin-top: 14px;">
                     <b style="font-size: 14px; color: #0F172A; display: block; margin-bottom: 6px;">Hifadhi / Ingiza Token &amp; Linki</b>
-                    <p style="font-size: 11px; color: #64748B; margin-top: 0; margin-bottom: 12px; line-height: 1.5;">Token, linki na QR zinazozalishwa hapo juu zimehifadhiwa kiotomatiki. Unaweza pia kubandika token au linki uliyopokea (kwa WhatsApp/SMS) ili kuirejesha na kuihifadhi hapa.</p>
+                    <p style="font-size: 13px; color: #64748B; margin-top: 0; margin-bottom: 12px; line-height: 1.5;">Token, linki na QR zinazozalishwa hapo juu zimehifadhiwa kiotomatiki. Unaweza pia kubandika token au linki uliyopokea (kwa WhatsApp/SMS) ili kuirejesha na kuihifadhi hapa.</p>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="spImportInput" placeholder="Bandika Token (SP-XXXXXX) au Linki hapa..." style="flex: 1; min-width: 0; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 12px; box-sizing: border-box;">
                         <button type="button" onclick="window.importHaiPayItem()" style="padding: 12px 16px; background: #00509d; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;">REJESHA / HIFADHI</button>
@@ -333,12 +331,12 @@
             <div id="spPayArea" style="display: none; text-align: center;">
                 <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px; max-width: 520px; margin: 0 auto;">
                     <b style="font-size: 14px; color: #0F172A; display: block; margin-bottom: 4px;">Lipa kwa Token, Linki au QR Code</b>
-                    <p style="font-size: 11px; color: #64748B; margin-top: 0; margin-bottom: 14px; line-height: 1.5;">Umepewa token (SP-XXXXXX), linki au QR code na mhusika? Weka hapa chini au bonyeza <b>Skanisha QR</b> — kisha utaona mkataba (bidhaa, kiasi, muuzaji) na kulipa kwa Escrow salama.</p>
+                    <p style="font-size: 13px; color: #64748B; margin-top: 0; margin-bottom: 14px; line-height: 1.5;">Umepewa token (SP-XXXXXX), linki au QR code na mhusika? Weka hapa chini au bonyeza <b>Skanisha QR</b> — kisha utaona mkataba (bidhaa, kiasi, muuzaji) na kulipa kwa Escrow salama.</p>
 
                     <input type="text" id="spCodeInputPay" placeholder="Bandika Token (SP-XXXXXX) au Linki hapa..." oninput="window.spCodeInputChanged(this.value)" style="width: 100%; padding: 16px; margin-bottom: 10px; border-radius: 12px; border: 2px dashed var(--primary-blue); text-align: center; font-size: 15px; font-weight: 800; text-transform: uppercase; outline: none; box-sizing: border-box;">
 
                     <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                        <button type="button" onclick="window.spScanQr()" id="btnScanQr" style="flex: 1; padding: 13px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;">&#128247; SKANISHA QR CODE</button>
+                        <button type="button" onclick="window.spScanQr()" id="btnScanQr" style="flex: 1; padding: 13px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;"><span class="skh-ico" data-ico="camera"></span> SKANISHA QR CODE</button>
                         <button type="button" onclick="window.verifyAndPreviewSokoPay()" id="btnVerifySp" style="flex: 1; padding: 13px; background: var(--primary-dark); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 13px; cursor: pointer;"> HAKIKI &amp; ONA MKATABA</button>
                     </div>
 
@@ -347,7 +345,7 @@
                     <div id="spItemPreview" style="display: none; text-align: left; background: #F8FAFC; padding: 12px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 15px;"></div>
 
                     <button type="button" onclick="window.proceedToPaySokoPay()" id="btnProceedPaySp" style="display: none; width: 100%; padding: 15px; background: var(--green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer;"> LIPIA KWA USALAMA (ESCROW)</button>
-                    <p style="font-size: 10px; color: #94a3b8; margin: 10px 0 0;">Pesa inakaa kwenye Escrow mpaka ukipokea mzigo/huduma kikamilifu.</p>
+                    <p style="font-size: 12.5px; color: #94a3b8; margin: 10px 0 0;">Pesa inakaa kwenye Escrow mpaka ukipokea mzigo/huduma kikamilifu.</p>
                 </div>
             </div>
 
@@ -355,7 +353,7 @@
             <div id="spTrackArea" style="display: none; text-align: left;">
                 <!-- Jopo la kutafuta mkataba kwa Code -->
                 <div style="background: #F8FAFC; padding: 15px; border-radius: 15px; border: 1px solid #cbd5e1; margin-bottom: 20px; text-align: center;">
-                    <p style="font-size: 11px; color: #475569; margin-top: 0; margin-bottom: 10px; font-weight: bold;"> Fuatilia Mkataba wa Nje (Code Search)</p>
+                    <p style="font-size: 13px; color: #475569; margin-top: 0; margin-bottom: 10px; font-weight: bold;"> Fuatilia Mkataba wa Nje (Code Search)</p>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="spCodeInputTrack" placeholder="Ingiza Code (Mfano: ORD-7X92KQ)" style="flex: 2; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: bold; text-transform: uppercase; outline: none; font-size: 13px; text-align: center; box-sizing: border-box;">
                         <button type="button" onclick="window.trackSokoPayTransaction()" id="btnTrackSp" style="flex: 1; padding: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px;">TAFUTA</button>
@@ -371,7 +369,7 @@
                 </div>
 
                 <div id="spTrackActions" style="display: none; margin-top: 15px; flex-direction: column; gap: 10px;">
-                    <button type="button" id="btnSpConfirmReceived" style="width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">✓ THIBITISHA MAPOKEZI / RELEASE FUNDS</button>
+                    <button type="button" id="btnSpConfirmReceived" style="width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;"><span class="skh-ico" data-ico="check"></span> THIBITISHA MAPOKEZI / RELEASE FUNDS</button>
                     <button type="button" id="btnSpRaiseDispute" style="width: 100%; padding: 14px; background: #fee2e2; color: #EF4444; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;"> LAINISHA MGOGORO (DISPUTE)</button>
                 </div>
             </div>
@@ -410,9 +408,9 @@
             <div id="spSettingsArea" style="display: none; text-align: left; animation: fadeIn 0.3s ease-out;">
                 <div style="background: white; border: 1px solid #E2E8F0; padding: 25px; border-radius: 18px;">
                     <b style="font-size: 13px; color: #0F172A; text-transform: uppercase; margin-bottom: 10px; display: block;"> Akaunti ya Kupokelea Fedha (Payout Account)</b>
-                    <p style="font-size: 11px; color: #64748B; margin-bottom: 15px; line-height: 1.4;">Weka taarifa sahihi za benki, kadi, au mitandao ya simu ili SokoPay iweze kukutumia malipo yako ya Escrow moja kwa moja ukikamilisha kazi.</p>
+                    <p data-i18n="pay_hint2" style="font-size: 13px; color: #64748B; margin-bottom: 15px; line-height: 1.4;">Weka taarifa sahihi za benki, kadi, au mitandao ya simu ili SokoPay iweze kukutumia malipo yako ya Escrow moja kwa moja ukikamilisha kazi.</p>
 
-                    <label style="font-size: 11px; font-weight: bold; color: gray;">Chagua Njia ya Malipo *</label>
+                    <label style="font-size: 13px; font-weight: bold; color: gray;">Chagua Njia ya Malipo *</label>
                     <select id="spSettingsPayType" onchange="window.toggleSokoPayInternalSetupFields()" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                         <option value="">-- Chagua Njia --</option>
                         <option value="Mobile"> Mtandao wa Simu (M-Pesa, Tigo-Pesa, n.k)</option>
@@ -422,61 +420,61 @@
 
                     <!-- SEHEMU YA MTANDAO WA SIMU -->
                     <div id="spSetMobileFields" style="display:none; background:#F0FDF4; padding:15px; border-radius:12px; border:1px solid #BBF7D0; margin-bottom:15px;">
-                        <label style="font-size:10px; font-weight:bold; color:gray;">MTANDAO WA SIMU *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">MTANDAO WA SIMU *</label>
                         <select id="spSetMobileProvider" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white; margin-bottom:10px;">
                             <option value="Mpesa">Vodacom M-Pesa</option>
                             <option value="Tigo">Tigo Pesa</option>
                             <option value="Airtel">Airtel Money</option>
                             <option value="Halopesa">Halopesa</option>
                         </select>
-                        <label style="font-size:10px; font-weight:bold; color:gray;">NAMBA YA SIMU *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">NAMBA YA SIMU *</label>
                         <input type="tel" id="spSetMobileNumber" placeholder="Mfano: 07XXXXXXXX" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:10px; box-sizing: border-box;">
-                        <label style="font-size:10px; font-weight:bold; color:gray;">JINA KAMILI LILILOSAJILIWA *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">JINA KAMILI LILILOSAJILIWA *</label>
                         <input type="text" id="spSetMobileName" placeholder="JINA LAKO KAMILI..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; text-transform:uppercase; box-sizing: border-box;">
                     </div>
 
                     <!-- SEHEMU YA BENKI -->
                     <div id="spSetBankFields" style="display:none; background:#EFF6FF; padding:15px; border-radius:12px; border:1px solid #BFDBFE; margin-bottom:15px;">
-                        <label style="font-size:10px; font-weight:bold; color:gray;">CHAGUA BENKI *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">CHAGUA BENKI *</label>
                         <select id="spSetBankProvider" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white; margin-bottom:10px;">
                             <option value="CRDB">CRDB Bank</option>
                             <option value="NMB">NMB Bank</option>
                             <option value="NBC">NBC Bank</option>
                             <option value="PBZ">PBZ Bank</option>
                         </select>
-                        <label style="font-size:10px; font-weight:bold; color:gray;">NAMBA YA AKAUNTI (ACCOUNT NUMBER) *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">NAMBA YA AKAUNTI (ACCOUNT NUMBER) *</label>
                         <input type="number" id="spSetBankNumber" placeholder="Namba ya akaunti..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:10px; box-sizing: border-box;">
-                        <label style="font-size:10px; font-weight:bold; color:gray;">JINA LA AKAUNTI (ACCOUNT NAME) *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">JINA LA AKAUNTI (ACCOUNT NAME) *</label>
                         <input type="text" id="spSetBankName" placeholder="JINA LA AKAUNTI..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; text-transform:uppercase; box-sizing: border-box;">
                     </div>
 
                     <!-- SEHEMU YA KADI -->
                     <div id="spSetCardFields" style="display:none; background:#FEF2F2; padding:15px; border-radius:12px; border:1px solid #FECACA; margin-bottom:15px;">
-                        <label style="font-size:10px; font-weight:bold; color:gray;">NAMBA YA KADI *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">NAMBA YA KADI *</label>
                         <input type="tel" id="spSetCardNumber" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:10px; box-sizing: border-box;">
                         <div style="display:flex; gap:10px; margin-bottom:10px;">
                             <div style="flex:1;">
-                                <label style="font-size:10px; font-weight:bold; color:gray;">EXPIRY (MM/YY) *</label>
+                                <label style="font-size: 12.5px; font-weight:bold; color:gray;">EXPIRY (MM/YY) *</label>
                                 <input type="text" id="spSetCardExpiry" placeholder="12/26" maxlength="5" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; box-sizing: border-box;">
                             </div>
                             <div style="flex:1;">
-                                <label style="font-size:10px; font-weight:bold; color:gray;">CVV *</label>
+                                <label style="font-size: 12.5px; font-weight:bold; color:gray;">CVV *</label>
                                 <input type="password" id="spSetCardCvv" placeholder="123" maxlength="3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; box-sizing: border-box;">
                             </div>
                         </div>
-                        <label style="font-size:10px; font-weight:bold; color:gray;">JINA LILILOPO KWENYE KADI *</label>
+                        <label style="font-size: 12.5px; font-weight:bold; color:gray;">JINA LILILOPO KWENYE KADI *</label>
                         <input type="text" id="spSetCardName" placeholder="JINA LAKO..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; text-transform:uppercase; box-sizing: border-box;">
                     </div>
 
                     <button type="button" id="btnSpSavePayment" onclick="window.saveSokoPayInternalPaymentInfo()" style="width: 100%; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase;"> HIFADHI AKAUNTI YA MALIPO</button>
-                    <button type="button" id="btnSpEditPayment" onclick="window.enableSokoPayInternalPaymentEdit()" style="display: none; width: 100%; padding: 15px; background: #eab308; color: white; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase;">✏ BADILI TAARIFA (EDIT)</button>
+                    <button type="button" id="btnSpEditPayment" onclick="window.enableSokoPayInternalPaymentEdit()" style="display: none; width: 100%; padding: 15px; background: #eab308; color: white; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase;"><span class="skh-ico" data-ico="edit"></span> BADILI TAARIFA (EDIT)</button>
                     
                     
 
                     <!--  SOKOPAY UNIFIED REGISTRATION & IDENTITY SYSTEM (URIS) & ROLE PROTECTION LAYER -->
                     <hr style="border:0; border-top:1px solid #cbd5e1; margin:25px 0;">
                     <b style="font-size: 14px; color: #00509d; display: block; margin-bottom: 12px; text-transform: uppercase;"> SokoPay Unified Registration & Identity System (URIS) & Role Protection Layer</b>
-                    <p style="font-size: 11px; color: #64748B; margin-bottom: 15px; line-height: 1.4;">Hakuna mtu anajisajili kama 'mtu binafsi tu'. Kila user anasajiliwa kama Node ndani ya hierarchy ya serikali, taasisi au kampuni (Parent Node ID mandatory).</p>
+                    <p style="font-size: 13px; color: #64748B; margin-bottom: 15px; line-height: 1.4;">Hakuna mtu anajisajili kama 'mtu binafsi tu'. Kila user anasajiliwa kama Node ndani ya hierarchy ya serikali, taasisi au kampuni (Parent Node ID mandatory).</p>
                     
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 12px; text-align: left; margin-bottom: 20px;">
                         <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:18px; border-radius:14px;">
@@ -506,27 +504,27 @@
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-left:6px solid #ef4444; border-radius:16px; padding:20px; margin-bottom:18px; box-shadow:0 4px 14px rgba(15,23,42,0.05);">
                     <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:flex-start;">
                         <div style="min-width:0; flex:1;">
-                            <h2 style="margin:0; font-size:18px; color:#0f172a; font-weight:900; line-height:1.3;">⚖ SokoPay Disputes Center</h2>
+                            <h2 style="margin:0; font-size:18px; color:#0f172a; font-weight:900; line-height:1.3;"><span class="skh-ico" data-ico="scales"></span> SokoPay Disputes Center</h2>
                             <p style="margin:6px 0 0; font-size:12px; color:#64748b; line-height:1.6;">Mahakama ya SokoPay — ushahidi unachambuliwa na mgogoro kusuluhishwa kabla pesa haijatolewa.</p>
                         </div>
-                        <span style="flex-shrink:0; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:6px 14px; border-radius:999px; font-size:11px; font-weight:900;">ESCROW: FROZEN</span>
+                        <span style="flex-shrink:0; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:6px 14px; border-radius:999px; font-size: 13px; font-weight:900;">ESCROW: FROZEN</span>
                     </div>
 
                     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:16px;">
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#ef4444; font-size:22px; font-weight:900; display:block; line-height:1.1;">12,340</span>
+                            <span style="color:#ef4444; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
                             <small style="color:#64748b; font-weight:700;">Active Disputes</small>
                         </div>
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#f59e0b; font-size:22px; font-weight:900; display:block; line-height:1.1;">3,120</span>
+                            <span style="color:#f59e0b; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
                             <small style="color:#64748b; font-weight:700;">Pending Review</small>
                         </div>
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#10b981; font-size:22px; font-weight:900; display:block; line-height:1.1;">890,120</span>
-                            <small style="color:#64748b; font-weight:700;">✔ Resolved</small>
+                            <span style="color:#10b981; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
+                            <small style="color:#64748b; font-weight:700;"><span class="skh-ico" data-ico="check"></span> Resolved</small>
                         </div>
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:left;">
-                            <span style="color:#f43f5e; font-size:22px; font-weight:900; display:block; line-height:1.1;">45,210</span>
+                            <span style="color:#f43f5e; font-size:22px; font-weight:900; display:block; line-height:1.1;">—</span>
                             <small style="color:#64748b; font-weight:700;">Rejected Claims</small>
                         </div>
                     </div>
@@ -547,10 +545,10 @@
                     <div class="sp-main-col">
                         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; box-shadow:0 4px 14px rgba(15,23,42,0.04);">
                             <b style="font-size:13px; color:#ef4444; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;"> SokoPay Dynamic Disputes List (Kesi Zako Halisi)</b>
-                            <p style="font-size:11px; color:#64748b; margin:0 0 14px; line-height:1.5;">Kagua, fuatilia na dhibiti migogoro yako yote ya mikataba iliyo hai. Ushahidi unaweza kuwasilishwa hapa.</p>
+                            <p style="font-size: 13px; color:#64748b; margin:0 0 14px; line-height:1.5;">Kagua, fuatilia na dhibiti migogoro yako yote ya mikataba iliyo hai. Ushahidi unaweza kuwasilishwa hapa.</p>
 
                             <div id="spDisputesList" style="display:flex; flex-direction:column; gap:12px; max-height:380px; overflow-y:auto;">
-                                <p style="text-align:center; color:#94a3b8; font-size:11px;">Inasoma migogoro yako yote ya mikataba...</p>
+                                <p style="text-align:center; color:#94a3b8; font-size: 13px;">Inasoma migogoro yako yote ya mikataba...</p>
                             </div>
                         </div>
 
@@ -608,11 +606,11 @@
 
                         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:18px; box-shadow:0 4px 14px rgba(15,23,42,0.04);">
                             <span style="font-size:12px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px; border-left:4px solid #8b5cf6; padding-left:10px; margin-bottom:14px; display:block;"> Dispute Intelligence Engine</span>
-                            <div style="display:flex; flex-direction:column; gap:12px; font-size:11px; color:#334155; line-height:1.5;">
-                                <div><b>⚙ Auto Analysis:</b> Check proof mismatch · Compare contract rules · Validate timestamps · Detect fraud patterns.</div>
-                                <div><b> Auto Classification:</b> Low risk ➔ auto resolve · Medium ➔ review · High ➔ escalate authority chain.</div>
+                            <div style="display:flex; flex-direction:column; gap:12px; font-size: 13px; color:#334155; line-height:1.5;">
+                                <div><b><span class="skh-ico" data-ico="settings"></span> Auto Analysis:</b> Check proof mismatch · Compare contract rules · Validate timestamps · Detect fraud patterns.</div>
+                                <div><b> Auto Classification:</b> Low risk &rarr; auto resolve · Medium &rarr; review · High &rarr; escalate authority chain.</div>
                                 <hr style="border:0; border-top:1px solid #e2e8f0; margin:2px 0;">
-                                <div><b> Escalation Chain:</b> Worker/Buyer ➔ Supervisor ➔ Engineer/Seller ➔ Company/Department ➔ Regional Authority ➔ Central System (SokoPay Rule Engine).</div>
+                                <div><b> Escalation Chain:</b> Worker/Buyer &rarr; Supervisor &rarr; Engineer/Seller &rarr; Company/Department &rarr; Regional Authority &rarr; Central System (SokoPay Rule Engine).</div>
                                 <hr style="border:0; border-top:1px solid #e2e8f0; margin:2px 0;">
                                 <div><b> Dispute Analytics:</b> Fraud detection rate · Common dispute causes · High-risk sellers · System leakage points.</div>
                             </div>
@@ -628,74 +626,11 @@
             <div>
                 <div class="sp-section-header">
                     <span class="sp-section-title-tag">Live Tracking Feed</span>
-                    <a href="#" class="sp-section-action-link" onclick="window.toggleSokoPayTab('track')">View all</a>
+                    <a class='sp-section-action-link' href='index.html#' onclick='window.toggleSokoPayTab(\'track\')'>View all</a>
                 </div>
                 
                 <div class="sp-tracking-timeline">
-                    <!-- Item 1 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #3b82f6;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">LOG-78391</span>
-                                <span class="sp-tracking-status transit">In Transit</span>
-                            </div>
-                            <p class="sp-tracking-desc">Electronics Items to Dodoma Hub</p>
-                            <span class="sp-tracking-time-offset">2 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #8b5cf6;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">JOB-55421</span>
-                                <span class="sp-tracking-status wip">Work in Progress</span>
-                            </div>
-                            <p class="sp-tracking-desc">Website Development (Task 3 of 5)</p>
-                            <span class="sp-tracking-time-offset">5 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 3 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #0f172a;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">CON-33112</span>
-                                <span class="sp-tracking-status">Foundation Work</span>
-                            </div>
-                            <p class="sp-tracking-desc">Building Construction (65% Complete)</p>
-                            <span class="sp-tracking-time-offset">8 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 4 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #f59e0b;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">LOG-78392</span>
-                                <span class="sp-tracking-status pending">At Hub</span>
-                            </div>
-                            <p class="sp-tracking-desc">Furniture Delivery at Morogoro Hub</p>
-                            <span class="sp-tracking-time-offset">12 min ago</span>
-                        </div>
-                    </div>
-
-                    <!-- Item 5 -->
-                    <div class="sp-tracking-card-item">
-                        <div class="sp-tracking-dot" style="color: #10b981;"></div>
-                        <div class="sp-tracking-info-box">
-                            <div class="sp-tracking-info-header">
-                                <span class="sp-tracking-code">SER-44123</span>
-                                <span class="sp-tracking-status" style="color: #10b981;">Completed</span>
-                            </div>
-                            <p class="sp-tracking-desc">Cleaning Service Done</p>
-                            <span class="sp-tracking-time-offset">15 min ago</span>
-                        </div>
-                    </div>
+                    <div style="padding:16px; text-align:center; color:#64748b; font-size:12.5px; border:1px dashed #cbd5e1; border-radius:12px;">Hakuna mizigo au kazi zinazofuatiliwa kwa sasa.</div>
                 </div>
             </div>
 
@@ -733,8 +668,8 @@
                     <div style="height: 155px; position: relative; display: flex; align-items: center; justify-content: center;">
                         <canvas id="spDashboardWalletChart"></canvas>
                         <div style="position: absolute; text-align: center; pointer-events: none;">
-                            <small style="color: #64748B; font-size: 10px; font-weight: bold; text-transform: uppercase; display:block;">Total Assets</small>
-                            <b style="font-size: 16px; color: #0F172A;" id="lblSpTotalAssetsVal">TZS 4,090,000</b>
+                            <small style="color: #64748B; font-size: 12.5px; font-weight: bold; text-transform: uppercase; display:block;">Total Assets</small>
+                            <b style="font-size: 16px; color: #0F172A;" id="lblSpTotalAssetsVal">TZS 0</b>
                         </div>
                     </div>
                 </div>
@@ -745,21 +680,21 @@
                             <span class="sp-legend-indicator-dot" style="background:#10b981;"></span>
                             <span>Available</span>
                         </div>
-                        <span class="sp-legend-amount-bold">TZS 2,450,000</span>
+                        <span class="sp-legend-amount-bold" id="spLegendAvailable">TZS 0</span>
                     </div>
                     <div class="sp-legend-row">
                         <div class="sp-legend-tag">
                             <span class="sp-legend-indicator-dot" style="background:#00509d;"></span>
                             <span>Escrow / Locked</span>
                         </div>
-                        <span class="sp-legend-amount-bold">TZS 1,320,000</span>
+                        <span class="sp-legend-amount-bold" id="spLegendEscrow">TZS 0</span>
                     </div>
                     <div class="sp-legend-row">
                         <div class="sp-legend-tag">
                             <span class="sp-legend-indicator-dot" style="background:#3b82f6;"></span>
                             <span>Pending</span>
                         </div>
-                        <span class="sp-legend-amount-bold">TZS 320,000</span>
+                        <span class="sp-legend-amount-bold" id="spLegendPending">TZS 0</span>
                     </div>
                 </div>
                 <!-- Wallet CTA Button -->

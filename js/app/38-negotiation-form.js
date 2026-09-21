@@ -290,7 +290,12 @@ import {
     function close() {
         var shell = document.getElementById('nfShell');
         if (shell) shell.remove();
-        document.body.style.overflow = '';
+        /* [NEGO-FIX 2026-09-21] Usirudishe scroll ya background kama chat
+           bado iko wazi chini ya fomu (fomu hufunguka NDANI ya chat). */
+        try {
+            var cm = document.getElementById('chatModal');
+            document.body.style.overflow = (cm && cm.style.display !== 'none') ? 'hidden' : '';
+        } catch (e) { document.body.style.overflow = ''; }
         state = null;
     }
     window.skhNegoFormClose = close;

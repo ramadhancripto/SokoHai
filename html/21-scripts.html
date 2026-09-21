@@ -50,6 +50,36 @@
 <!-- [DISCOVERY CARD 2026-09] Vertical discovery feed + Maoni sheet wiring -->
 <script type="module" src="js/app/42-discovery-feed.js"></script>
 <script type="module" src="js/app/43-delivery-choice.js"></script>
+<script type="module" src="js/app/54-error-core.js"></script>
+<script type="module" src="js/app/60-identity-layer.js"></script>
+<script type="module" src="js/app/61-full-system-repair.js"></script>
+    <script type="module" src="js/app/62-missing-features.js"></script>
+<script type="module" src="js/app/63-audit-fixes.js"></script>
+<script type="module" src="js/app/64-i18n-core.js"></script>
+<script type="module" src="js/app/65-content-l10n.js"></script>
+<script type="module" src="js/app/66-wordmark.js"></script>
+<script type="module" src="js/app/67-payment-accounts.js"></script>
+<script type="module" src="js/app/68-chat-discover.js"></script>
+<script type="module" src="js/app/69-chat-groups.js"></script>
+<script type="module" src="js/app/70-role-identity.js"></script>
+<script type="module" src="js/app/71-visual-dictionary.js"></script>
+<script type="module" src="js/app/73-group-soga.js"></script>
+<script type="module" src="js/app/74-group-order-system.js"></script>
+<script type="module" src="js/app/75-discover-engine.js"></script>
+<script type="module" src="js/app/76-group-order-production-enhancement.js"></script>
+<script type="module" src="js/app/64-my-profile.js"></script>
+<script type="module" src="js/app/50-lifecycle-core.js"></script>
+<script type="module" src="js/app/51-lifecycle-ui.js"></script>
+<script type="module" src="js/app/52-transport-inbox.js"></script>
+<script type="module" src="js/app/53-test-sandbox.js"></script>
+<script type="module" src="js/app/55-escrow-guard.js"></script>
+<script type="module" src="js/app/56-nav-back.js"></script>
+<script type="module" src="js/app/78-chat-fix-blink.js"></script>
+<script type="module" src="js/app/79-one-ui-at-a-time.js"></script>
+<script type="module" src="js/app/81-absolute-one-ui-live.js"></script>
+<script type="module" src="js/app/57-checkout-bridge.js"></script>
+<script type="module" src="js/app/58-request-visibility.js"></script>
+<script type="module" src="js/app/59-agent-monitor.js"></script>
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->
@@ -77,7 +107,7 @@
         <div style="text-align:center; margin-bottom:15px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
           <div style="font-size:40px; margin-bottom:5px;"></div>
             <h3 style="color:var(--primary-dark); margin:0;">Usimamizi wa Token za Mzigo</h3>
-            <p style="font-size:11px; color:#64748b; margin-top:4px;">Uhakiki wa kutoa, kupokea na kukabidhi mizigo kwa usalama</p>
+            <p style="font-size: 13px; color:#64748b; margin-top:4px;">Uhakiki wa kutoa, kupokea na kukabidhi mizigo kwa usalama</p>
         </div>
 
         <div style="display:flex; gap:5px; margin-bottom:15px;">
@@ -87,7 +117,7 @@
 
         <!-- TAB 1: UHAKIKI WA TOKEN -->
         <div id="tokenVerifyArea" style="flex:1; overflow-y:auto; display:block;">
-            <p style="font-size:12px; color:#475569; text-align:center; margin-bottom:12px;">Weka Token/Code ya tarakimu 4 uliyopewa na mteja au mfumo ili kuona details na kuhakiki makabidhiano.</p>
+            <p data-i18n="token_modal_hint" style="font-size:12px; color:#475569; text-align:center; margin-bottom:12px;">Weka Token/Code ya tarakimu 4 uliyopewa na mteja au mfumo ili kuona details na kuhakiki makabidhiano.</p>
             <input type="text" id="logisticsTokenInput" placeholder="Mfano: 4321" maxlength="6" style="width:100%; padding:15px; border-radius:12px; border:2px dashed var(--primary-blue); text-align:center; font-size:20px; font-weight:900; outline:none; background:#f8fafc; margin-bottom:15px;">
             
             <div id="logisticsTokenResult" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:14px; margin-bottom:15px; text-align:left;">
@@ -100,13 +130,13 @@
 
         <!-- TAB 2: MIZIGO NILIYOSHIKA (Pamoja na Sub-Tabs za Kuchuja) -->
         <div id="tokenHeldArea" style="flex:1; overflow-y:auto; display:none; text-align:left;">
-            <p style="font-size:11px; color:#64748b; margin-bottom:10px; text-align:center;">Chagua kikundi cha mizigo yako chini:</p>
+            <p style="font-size: 13px; color:#64748b; margin-bottom:10px; text-align:center;">Chagua kikundi cha mizigo yako chini:</p>
             
             <!-- Sub-Tabs za kuchuja -->
             <div style="display:flex; gap:3px; background:#f1f5f9; padding:3px; border-radius:8px; margin-bottom:12px;">
-                <button onclick="window.filterHeldCargo('transit', this)" class="time-tab active" style="flex:1; padding:6px; font-size:10px; border-radius:6px; font-weight:bold; cursor:pointer;"> Safarini</button>
-                <button onclick="window.filterHeldCargo('pending', this)" class="time-tab" style="flex:1; padding:6px; font-size:10px; border-radius:6px; font-weight:bold; cursor:pointer;"> Kupokea</button>
-                <button onclick="window.filterHeldCargo('completed', this)" class="time-tab" style="flex:1; padding:6px; font-size:10px; border-radius:6px; font-weight:bold; cursor:pointer;"> Tayari</button>
+                <button onclick="window.filterHeldCargo('transit', this)" class="time-tab active" style="flex:1; padding:6px; font-size: 12.5px; border-radius:6px; font-weight:bold; cursor:pointer;"> Safarini</button>
+                <button onclick="window.filterHeldCargo('pending', this)" class="time-tab" style="flex:1; padding:6px; font-size: 12.5px; border-radius:6px; font-weight:bold; cursor:pointer;"> Kupokea</button>
+                <button onclick="window.filterHeldCargo('completed', this)" class="time-tab" style="flex:1; padding:6px; font-size: 12.5px; border-radius:6px; font-weight:bold; cursor:pointer;"> Tayari</button>
             </div>
 
             <div id="heldCargoList" style="padding-right:5px; max-height:250px; overflow-y:auto;">
@@ -163,10 +193,10 @@
 
         <!-- 1. FOMU YA BIADHA MPYA -->
         <div id="formNewStockSection">
-            <label style="font-size:11px; font-weight:bold; color:gray;">JINA LA BIDHAA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">JINA LA BIDHAA *</label>
             <input type="text" id="offInvName" placeholder="Mf: Coca Cola 500ml" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px; border:1px solid #cbd5e1;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">KATEGORIA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">KATEGORIA *</label>
             <select id="offInvCategory" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px; border:1px solid #cbd5e1; background:white;">
                 <option value="Vinywaji">Vinywaji (Drinks)</option>
                 <option value="Chakula">Chakula (Food)</option>
@@ -176,30 +206,30 @@
 
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">PACKAGING *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">PACKAGING *</label>
                     <select id="offInvUnit" style="width:100%; padding:14px; border-radius:12px; border:1px solid #cbd5e1; background:white;">
                         <option value="Piece">Piece (Kipande)</option>
                         <option value="Box">Box (Katoni)</option>
                     </select>
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">PC NGAPI NDANI? *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">PC NGAPI NDANI? *</label>
                     <input type="number" id="offInvPcsPerUnit" value="1" style="width:100%; padding:14px; border-radius:12px; border:1px solid #cbd5e1;">
                 </div>
             </div>
 
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">BEI YA KUNUNUA *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">BEI YA KUNUNUA *</label>
                     <input type="number" id="offInvBuyPrice" placeholder="Mf: 1,500" style="width:100%; padding:14px; border-radius:12px; border:1px solid #cbd5e1;">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">BEI YA KUUZA *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">BEI YA KUUZA *</label>
                     <input type="number" id="offInvSellPrice" placeholder="Mf: 2,000" style="width:100%; padding:14px; border-radius:12px; border:1px solid #cbd5e1;">
                 </div>
             </div>
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">STOCK ILIYOPO SASA (QUANTITY) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">STOCK ILIYOPO SASA (QUANTITY) *</label>
             <input type="number" id="offInvQty" placeholder="Idadi ya mwanzo" style="width:100%; padding:14px; margin-bottom:15px; border-radius:12px; border:1px solid #cbd5e1;">
             
             <button onclick="saveOfflineInventoryItem()" style="width:100%; padding:16px; background:var(--primary-dark); color:white; border:none; border-radius:14px; font-weight:900;">HIFADHI BIDHAA MPYA </button>
@@ -207,7 +237,7 @@
 
         <!-- 2. FOMU YA KUONGEZA STOCK YA BIDHAA ILIYOPO -->
         <div id="formAddStockSection" style="display:none;">
-            <label style="font-size:11px; font-weight:bold; color:gray;">TAFUTA BIDHAA YA KUONGEZEA STOCK *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">TAFUTA BIDHAA YA KUONGEZEA STOCK *</label>
             <input type="text" id="searchStockToUpdate" oninput="searchExistingStockForUpdate()" placeholder="Andika herufi kuanza kutafuta..." style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:1px solid #cbd5e1;">
             <div id="stockSearchResults" style="max-height:150px; overflow-y:auto; background:#f8fafc; border-radius:10px; margin-bottom:12px;"></div>
 
@@ -217,10 +247,10 @@
                 <span>Stock ya Sasa: <b id="updateStockCurrentQty">10 Pcs</b></span>
             </div>
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">IDADI MPYA INAYOINGIA (PCS) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">IDADI MPYA INAYOINGIA (PCS) *</label>
             <input type="number" id="offInvQtyNew" placeholder="Idadi inayoongezeka" style="width:100%; padding:14px; margin-bottom:12px; border-radius:12px; border:1px solid #cbd5e1;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">BEI MPYA YA KUNUNUA (KAMA IMEBADILIKA)</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">BEI MPYA YA KUNUNUA (KAMA IMEBADILIKA)</label>
             <input type="number" id="offInvBuyPriceNew" placeholder="Bei mpya ya mzigo huu" style="width:100%; padding:14px; margin-bottom:15px; border-radius:12px; border:1px solid #cbd5e1;">
 
             <button onclick="updateExistingStockAmount()" style="width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900;">ONGEZA STOCK SASA </button>
@@ -270,7 +300,7 @@
         <div style="text-align:center; margin-bottom:15px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
             <div style="font-size:40px;"></div>
             <h3 style="color:var(--primary-dark); margin:0; font-weight:900;">Procurement & Supplier Engine</h3>
-            <p style="font-size:11px; color:#64748b; margin-top:4px;">Dhibiti wauzaji wa jumla na fanya maagizo ya mzigo (Purchase Orders)</p>
+            <p style="font-size: 13px; color:#64748b; margin-top:4px;">Dhibiti wauzaji wa jumla na fanya maagizo ya mzigo (Purchase Orders)</p>
         </div>
 
         <div style="display:flex; gap:5px; margin-bottom:15px;">
@@ -295,10 +325,10 @@
             <div id="procPoArea" style="display:none;">
                 <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;"> Agiza Bidhaa (Tengeneza PO)</b>
                 
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">CHAGUA SUPPLIER *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">CHAGUA SUPPLIER *</label>
                 <select id="poSupplierSelect" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:12px; font-weight:bold;"></select>
 
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">TAFUTA BIDHAA YA AGIZO *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">TAFUTA BIDHAA YA AGIZO *</label>
                 <input type="text" id="poProductSearch" oninput="window.searchProductForPO()" placeholder="Andika herufi kuanza kutafuta..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:8px; outline:none;">
                 <div id="poProductResults" style="max-height:100px; overflow-y:auto; background:#f8fafc; border-radius:10px; margin-bottom:10px;"></div>
 
@@ -310,23 +340,23 @@
 
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <div style="flex:1;">
-                        <label style="font-size:11px; font-weight:bold; color:gray;">IDADI (QTY) *</label>
+                        <label style="font-size: 13px; font-weight:bold; color:gray;">IDADI (QTY) *</label>
                         <input type="number" id="poQty" placeholder="Idadi" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1;">
                     </div>
                     <div style="flex:1;">
-                        <label style="font-size:11px; font-weight:bold; color:gray;">BEI YA UNUNUZI (TSH) *</label>
+                        <label style="font-size: 13px; font-weight:bold; color:gray;">BEI YA UNUNUZI (TSH) *</label>
                         <input type="number" id="poUnitCost" placeholder="Bei ya ununuzi" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1;">
                     </div>
                 </div>
 
                 <!--  MPYA: SOKOHAI LANDED COST CALCULATOR FOR IMPORTERS -->
                 <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:12px; margin-bottom:15px; text-align:left;">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:11px; color:var(--primary-blue);">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size: 13px; color:var(--primary-blue);">
                         <input type="checkbox" id="enableLandedCost" onchange="window.toggleLandedCostCalculator()" style="width:16px; height:16px;">
                         Washa Kikokotoo cha Ushuru na Usafiri (Landed Cost)
                     </label>
                     
-                    <div id="landedCostFields" style="display:none; margin-top:10px; font-size:11px;">
+                    <div id="landedCostFields" style="display:none; margin-top:10px; font-size: 13px;">
                         <label style="font-weight:bold; color:gray; display:block; margin-bottom:4px;">Ushuru wa Forodha / Customs Duty (TSh) *</label>
                         <input type="number" id="poCustomsDuty" value="0" oninput="window.calculateLandedCost()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:8px;">
                         
@@ -349,25 +379,25 @@
 <div id="repairModal" class="overlay-menu" style="z-index: 8795; display: none;">
     <div class="form-box" style="display:block; max-width:450px; border-top: 8px solid #8b5cf6; padding: 25px; border-radius: 24px; background: white;">
         <h3 style="margin-top:0; text-align:center; color:var(--primary-dark);"> After-Sales & Repair Tracker</h3>
-        <p style="font-size:11px; color:#64748b; margin-top:4px; text-align:center;">Sajili kifaa cha mteja kinachofanyiwa ukarabati kufuatilia mapato na stoo</p>
+        <p style="font-size: 13px; color:#64748b; margin-top:4px; text-align:center;">Sajili kifaa cha mteja kinachofanyiwa ukarabati kufuatilia mapato na stoo</p>
 
         <div style="text-align:left;">
-            <label style="font-size:11px; font-weight:bold; color:gray;">JINA LA MTEJA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">JINA LA MTEJA *</label>
             <input type="text" id="repCustName" placeholder="Mfano: John Doe" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">NAMBA YA SIMU *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">NAMBA YA SIMU *</label>
             <input type="tel" id="repCustPhone" placeholder="Mf: 07XXXXXXXX" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">KIFAA & MODEL *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">KIFAA & MODEL *</label>
             <input type="text" id="repDevice" placeholder="Mf: iPhone 13 Pro au HP Laptop" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">SERIAL / IMEI NUMBER (HIARI)</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">SERIAL / IMEI NUMBER (HIARI)</label>
             <input type="text" id="repSerial" placeholder="Mf: IMEI au Serial No" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">TATIZO LA KIFAA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">TATIZO LA KIFAA *</label>
             <textarea id="repIssue" placeholder="Eleza kwa ufupi tatizo (Mf: Kioo kimevunjika, duka haliwaki)..." required style="width:100%; height:60px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px; resize:none;"></textarea>
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">GHARAMA YA MATENGENEZO (TSH) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">GHARAMA YA MATENGENEZO (TSH) *</label>
             <input type="number" id="repCost" placeholder="Mfano: 50,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px;">
 
             <button onclick="window.saveRepairOrder()" style="width:100%; padding:15px; background:#8b5cf6; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;"> SAJILI KIFAA CHENYE MATENGENEZO</button>
@@ -380,7 +410,7 @@
 <div id="industrialProjectModal" class="overlay-menu" style="z-index: 8798; display: none;">
     <div class="form-box" style="display:block; max-width:450px; border-top: 8px solid var(--gold); padding: 25px; border-radius: 24px; background: white;">
         <h3 style="margin-top:0; text-align:center; color:var(--primary-dark);"> Projects & Garage Workshop</h3>
-        <p style="font-size:11px; color:#64748b; margin-top:4px; text-align:center;">Dhibiti bajeti za miradi ya ujenzi au andika mzunguko wa ukarabati wa gari garage</p>
+        <p style="font-size: 13px; color:#64748b; margin-top:4px; text-align:center;">Dhibiti bajeti za miradi ya ujenzi au andika mzunguko wa ukarabati wa gari garage</p>
 
         <div style="display:flex; gap:5px; margin-bottom:15px; border-bottom:1px solid #f1f5f9; padding-bottom:15px;">
             <button onclick="window.switchIndustrialTab('project')" id="tabProject" style="flex:1; padding:10px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; font-size:12px; cursor:pointer;"> Ujenzi / Mradi</button>
@@ -418,13 +448,13 @@
 <div id="printingServiceModal" class="overlay-menu" style="z-index: 8799; display: none;">
     <div class="form-box" style="display:block; max-width:450px; border-top: 8px solid var(--primary-dark); padding: 25px; border-radius: 24px; background: white;">
         <h3 style="margin-top:0; text-align:center; color:var(--primary-dark);"> Printing & Copy Services</h3>
-        <p style="font-size:11px; color:#64748b; margin-top:4px; text-align:center;">Sajili maagizo ya print, binding na photocopy, na upige hesabu ya kurasa automatically</p>
+        <p style="font-size: 13px; color:#64748b; margin-top:4px; text-align:center;">Sajili maagizo ya print, binding na photocopy, na upige hesabu ya kurasa automatically</p>
 
         <div style="text-align:left;">
-            <label style="font-size:11px; font-weight:bold; color:gray;">JINA LA MTEJA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">JINA LA MTEJA *</label>
             <input type="text" id="prCustName" placeholder="Mfano: Shule ya Sekondari Mbezi" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">AINA YA HUDUMA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">AINA YA HUDUMA *</label>
             <select id="prJobType" onchange="window.calculatePrintingCost()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:10px;">
                 <option value="photocopy"> Photocopy (TSh 100 / Page)</option>
                 <option value="printing"> Printing B/W (TSh 200 / Page)</option>
@@ -435,17 +465,17 @@
 
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">IDADI YA PAGES / PCS *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">IDADI YA PAGES / PCS *</label>
                     <input type="number" id="prPages" value="10" oninput="window.calculatePrintingCost()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; text-align:center; font-weight:bold;">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">IDADI YA COPY *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">IDADI YA COPY *</label>
                     <input type="number" id="prCopies" value="1" oninput="window.calculatePrintingCost()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; text-align:center; font-weight:bold;">
                 </div>
             </div>
 
             <div style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:15px; border:1px solid #e2e8f0; text-align:center;">
-                <span style="font-size:11px; color:#64748b;">Jumla ya Gharama ya Kazi:</span><br>
+                <span style="font-size: 13px; color:#64748b;">Jumla ya Gharama ya Kazi:</span><br>
                 <b id="prTotalCostDisplay" style="font-size:18px; color:var(--terracotta);">TSh 1,000</b>
             </div>
 
@@ -455,28 +485,28 @@
         <button type="button" class="btn-close" onclick="window.closeModals()" style="margin-top:15px; width:100%;">Funga</button>
     </div>
 </div>
-<!-- ♻ SOKOHAI RECYCLING & SCRAP YARD MODAL -->
+<!-- <span class="skh-ico" data-ico="refresh"></span> SOKOHAI RECYCLING & SCRAP YARD MODAL -->
 <div id="scrapYardModal" class="overlay-menu" style="z-index: 8802; display: none;">
     <div class="form-box" style="display:block; max-width:450px; border-top: 8px solid #3b82f6; padding: 25px; border-radius: 24px; background: white;">
-        <h3 style="margin-top:0; text-align:center; color:var(--primary-dark);">♻ Scrap Yard & Recycling Engine</h3>
-        <p style="font-size:11px; color:#64748b; margin-top:4px; text-align:center;">Dhibiti ununuzi na mauzo ya vyuma, plastiki au vifaa vilivyotumika kwa uzito na madaraja</p>
+        <h3 style="margin-top:0; text-align:center; color:var(--primary-dark);"><span class="skh-ico" data-ico="refresh"></span> Scrap Yard & Recycling Engine</h3>
+        <p style="font-size: 13px; color:#64748b; margin-top:4px; text-align:center;">Dhibiti ununuzi na mauzo ya vyuma, plastiki au vifaa vilivyotumika kwa uzito na madaraja</p>
 
         <div style="text-align:left;">
-            <label style="font-size:11px; font-weight:bold; color:gray;">JINA LA MTEJA / MKUSANYAJI *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">JINA LA MTEJA / MKUSANYAJI *</label>
             <input type="text" id="scpCustName" placeholder="Mfano: Juma Collector" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray;">AINA YA MALIGHAFI / CHAKAVU *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">AINA YA MALIGHAFI / CHAKAVU *</label>
             <select id="scpMaterial" onchange="window.calculateScrapCost()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:10px; font-weight:bold;">
                 <option value="shaba"> Shaba / Copper (TSh 12,000 / Kg)</option>
                 <option value="chuma"> Chuma / Iron (TSh 1,500 / Kg)</option>
                 <option value="aluminium"> Aluminium (TSh 4,500 / Kg)</option>
-                <option value="plastic">♻ Plastiki / PET (TSh 500 / Kg)</option>
+                <option value="plastic"><span class="skh-ico" data-ico="refresh"></span> Plastiki / PET (TSh 500 / Kg)</option>
                 <option value="used_item"> Vifaa vilivyotumika (Used / Resale)</option>
             </select>
 
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">DARAJA LA UBORA (GRADE) *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">DARAJA LA UBORA (GRADE) *</label>
                     <select id="scpGrade" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                         <option value="A" selected>Grade A (Good - Resale)</option>
                         <option value="B">Grade B (Repairable)</option>
@@ -484,18 +514,18 @@
                     </select>
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:11px; font-weight:bold; color:gray;">UZITO (WEIGHT IN KG) *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">UZITO (WEIGHT IN KG) *</label>
                     <input type="number" id="scpWeight" value="10" oninput="window.calculateScrapCost()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; text-align:center; font-weight:bold;">
                 </div>
             </div>
 
             <div style="background:#f8fafc; padding:12px; border-radius:12px; margin-bottom:15px; border:1px solid #e2e8f0; text-align:center;">
-                <span style="font-size:11px; color:#64748b;">Kikokotoo cha Thamani (Value Recovery):</span><br>
+                <span style="font-size: 13px; color:#64748b;">Kikokotoo cha Thamani (Value Recovery):</span><br>
                 <b id="scpTotalCostDisplay" style="font-size:18px; color:var(--terracotta);">TSh 120,000</b>
             </div>
 
             <!-- Njia ya Muamala: Yard inanunua au inauza? -->
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">AINA YA MUAMALA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">AINA YA MUAMALA *</label>
             <select id="scpTxType" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                 <option value="purchase"> NUNUA (Yard inalipa Mtaji kwa Collector)</option>
                 <option value="sale"> UZA (Yard inauza kwa Kiwanda/Mteja)</option>
@@ -515,7 +545,7 @@
         <!-- Header -->
         <div style="text-align:center; margin-bottom:15px; border-bottom:1px solid #f1f5f9; padding-bottom:10px; position:relative;">
             <h3 style="color:var(--primary-dark); margin:0; font-weight:900; text-transform:uppercase;"> Setup Biashara Yako</h3>
-            <span id="setupStepIndicator" style="font-size:10px; font-weight:900; background:#eef2f6; color:#475569; padding:4px 10px; border-radius:10px; display:inline-block; margin-top:5px;">HATUA 1/5</span>
+            <span id="setupStepIndicator" style="font-size: 12.5px; font-weight:900; background:#eef2f6; color:#475569; padding:4px 10px; border-radius:10px; display:inline-block; margin-top:5px;">HATUA 1/5</span>
         </div>
 
         <div style="max-height: 60vh; overflow-y: auto; padding-right: 5px; text-align: left;" id="setupStepsContainer">
@@ -527,13 +557,13 @@
                 <div class="setup-option-card selected" onclick="window.selectOnboardingOption('storeType', 'temporary', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Duka la Muda (Temporary Store)</b>
-                    <small style="color:#64748b; font-size:11px;">Mwisho bidhaa 9. Bure kabisa. Inafaa kwa wauzaji wa Eid, Christmas, graduates, au bidhaa za msimu.</small>
+                    <small style="color:#64748b; font-size: 13px;">Mwisho bidhaa 9. Bure kabisa. Inafaa kwa wauzaji wa Eid, Christmas, graduates, au bidhaa za msimu.</small>
                 </div>
 
                 <div class="setup-option-card" onclick="window.selectOnboardingOption('storeType', 'permanent', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Duka la Kudumu (Permanent Store)</b>
-                    <small style="color:#64748b; font-size:11px;">Mfumo mzima wa uendeshaji biashara (BOS) ukiwa na POS, Stoo, Hasibu, Madeni, na Wafanyakazi.</small>
+                    <small style="color:#64748b; font-size: 13px;">Mfumo mzima wa uendeshaji biashara (BOS) ukiwa na POS, Stoo, Hasibu, Madeni, na Wafanyakazi.</small>
                 </div>
             </div>
 
@@ -544,19 +574,19 @@
                 <div class="setup-option-card selected" id="modeCard_online" onclick="window.selectOnboardingOption('businessMode', 'online_only', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Online Only (Mtandaoni Tu)</b>
-                    <small style="color:#64748b; font-size:11px;">Mauzo yote yanafanyika mtandaoni kupitia soko kuu la Sokohai.</small>
+                    <small style="color:#64748b; font-size: 13px;">Mauzo yote yanafanyika mtandaoni kupitia soko kuu la Sokohai.</small>
                 </div>
 
                 <div class="setup-option-card" id="modeCard_offline" onclick="window.selectOnboardingOption('businessMode', 'offline_only', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Offline Only (Dukani Tu)</b>
-                    <small style="color:#64748b; font-size:11px;">POS, Stoo ya ndani, na mauzo ya dukani (Inafaa kama hutaki soko la mtandaoni).</small>
+                    <small style="color:#64748b; font-size: 13px;">POS, Stoo ya ndani, na mauzo ya dukani (Inafaa kama hutaki soko la mtandaoni).</small>
                 </div>
 
                 <div class="setup-option-card" id="modeCard_hybrid" onclick="window.selectOnboardingOption('businessMode', 'hybrid', this)">
-                    <div style="font-size:24px; margin-bottom:5px;">♾</div>
+                    <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Hybrid (Online + Offline)</b>
-                    <small style="color:#64748b; font-size:11px;">Unganisha mauzo ya POS dukani na duka la mtandaoni kote kwa pamoja.</small>
+                    <small style="color:#64748b; font-size: 13px;">Unganisha mauzo ya POS dukani na duka la mtandaoni kote kwa pamoja.</small>
                 </div>
             </div>
 
@@ -564,12 +594,12 @@
             <div class="setup-wizard-step" id="setupStep_3" style="display: none;">
                 <b style="font-size:13px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;">3. Jaza Taarifa za Duka *</b>
                 
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA DUKA *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA DUKA *</label>
                 <input type="text" id="regShopName" placeholder="Mfano: Ramadhan Fashion Sale" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; outline:none;">
 
                 <!-- Hizi zitaonekana TU kama akichagua TEMPORARY STORE -->
                 <div id="temporaryOnlyFields">
-                    <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">MUDA WA DUKA HILI *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">MUDA WA DUKA HILI *</label>
                     <select id="regStoreDuration" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                         <option value="7">Siku 7 (7 Days)</option>
                         <option value="14">Siku 14 (14 Days)</option>
@@ -578,7 +608,7 @@
                         <option value="90">Siku 90 (90 Days)</option>
                     </select>
 
-                    <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">UTAMBULISHO WA DUKA *</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">UTAMBULISHO WA DUKA *</label>
                     <select id="regStoreVisibility" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                         <option value="public" selected>Public (Kila mtu anaona)</option>
                         <option value="private">Private (Ulinzi wa ndani)</option>
@@ -588,7 +618,7 @@
 
                 <!-- Hizi zitaonekana TU kama akichagua PERMANENT STORE -->
                 <div id="permanentOnlyIdentityFields" style="display:none;">
-                    <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">MAELEZO YA DUKA (HIARI)</label>
+                    <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">MAELEZO YA DUKA (HIARI)</label>
                     <textarea id="regShopDesc" placeholder="Eleza kwa ufupi biashara yako..." style="width:100%; height:60px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; outline:none; resize:none;"></textarea>
                 </div>
             </div>
@@ -597,7 +627,7 @@
             <div class="setup-wizard-step" id="setupStep_4" style="display: none;">
                 <b style="font-size:13px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;">4. Wasifu wa Biashara na Wafanyakazi *</b>
                 
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">BIASHARA YAKO KUU (PRIMARY PROFILE) *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">BIASHARA YAKO KUU (PRIMARY PROFILE) *</label>
                 <select id="regPrimaryProfile" onchange="window.suggestOnboardingStructure()" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                     <option value="">-- Chagua Hapa --</option>
                     <optgroup label=" Food & Grocery">
@@ -628,15 +658,15 @@
                 </select>
 
                 <!-- Biashara za Ziada -->
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">BIASHARA ZA ZIADA (TICK ZOTE ZINAZOHUSIKA)</label>
-                <div style="background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">BIASHARA ZA ZIADA (TICK ZOTE ZINAZOHUSIKA)</label>
+                <div style="background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size: 13px;">
                     <label><input type="checkbox" class="reg-sec-profile" value="Cosmetics"> Cosmetics </label>
                     <label><input type="checkbox" class="reg-sec-profile" value="Stationery"> Stationery </label>
                     <label><input type="checkbox" class="reg-sec-profile" value="Mobile Money"> Wakala Simu </label>
                     <label><input type="checkbox" class="reg-sec-profile" value="Drinks"> Vinywaji </label>
                 </div>
 
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">WAFANYAKAZI WANGAPI WANAFANYA KAZI HAPA? *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">WAFANYAKAZI WANGAPI WANAFANYA KAZI HAPA? *</label>
                 <select id="regWorkforceSize" onchange="window.suggestOnboardingStructure()" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                     <option value="1">Mimi Peke Yangu tu (Solo - 1 Person)</option>
                     <option value="2-5">Watu 2 hadi 5 (Small - 2-5 Staff)</option>
@@ -653,19 +683,19 @@
                 <div class="setup-option-card selected" id="setupMode_auto" onclick="window.selectOnboardingOption('setupMode', 'auto', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Auto Smart Setup (Kiotomatiki)</b>
-                    <small style="color:#64748b; font-size:11px;">Mfumo utatengeneza kiotomatiki majukumu ya wafanyakazi, POS layout, na sheria za stoo kulingana na wasifu uliouchagua.</small>
+                    <small style="color:#64748b; font-size: 13px;">Mfumo utatengeneza kiotomatiki majukumu ya wafanyakazi, POS layout, na sheria za stoo kulingana na wasifu uliouchagua.</small>
                 </div>
 
                 <div class="setup-option-card" id="setupMode_custom" onclick="window.selectOnboardingOption('setupMode', 'custom', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Boss Control Mode (Custom - Kudhibiti)</b>
-                    <small style="color:#64748b; font-size:11px;">Sanidi na ujenge kila kitu mwenyewe (majukumu ya stoo, madeni, multi-pricing, barcode n.k.).</small>
+                    <small style="color:#64748b; font-size: 13px;">Sanidi na ujenge kila kitu mwenyewe (majukumu ya stoo, madeni, multi-pricing, barcode n.k.).</small>
                 </div>
 
                 <!-- SMART SUGGESTION BOX (Inatokea hapa dynamically kulingana na Profile) -->
                 <div id="onboardingSuggestedBox" style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:15px; display:block; margin-top:15px;">
                     <b style="color:#b45309; font-size:12px; display:block; margin-bottom:5px;"> MAPENDEKEZO MAALUM YA KISASA:</b>
-                    <p style="font-size:11px; color:#78350f; margin:0;" id="onboardingSuggestionText">Chagua wasifu wa duka katika hatua iliyopita ili kuona mapendekezo.</p>
+                    <p style="font-size: 13px; color:#78350f; margin:0;" id="onboardingSuggestionText">Chagua wasifu wa duka katika hatua iliyopita ili kuona mapendekezo.</p>
                 </div>
             </div>
 <!-- STEP 6: BRANCHES (MATAWI YA BIASHARA) -->
@@ -675,13 +705,13 @@
                 <div class="setup-option-card selected" onclick="window.selectOnboardingOption('branchMode', 'single', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Tawi Moja (Single Branch)</b>
-                    <small style="color:#64748b; font-size:11px;">Biashara inafanya kazi kwenye eneo moja tu kwa sasa.</small>
+                    <small style="color:#64748b; font-size: 13px;">Biashara inafanya kazi kwenye eneo moja tu kwa sasa.</small>
                 </div>
 
                 <div class="setup-option-card" onclick="window.selectOnboardingOption('branchMode', 'multiple', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Matawi Mengi (Multiple Branches)</b>
-                    <small style="color:#64748b; font-size:11px;">Unganisha na simamia Head Office pamoja na matawi mengine (Branch A, B, C).</small>
+                    <small style="color:#64748b; font-size: 13px;">Unganisha na simamia Head Office pamoja na matawi mengine (Branch A, B, C).</small>
                 </div>
             </div>
 
@@ -692,19 +722,19 @@
                 <div class="setup-option-card selected" onclick="window.selectOnboardingOption('approvalFlow', 'basic', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Hakuna Idhini (Basic - No Approval)</b>
-                    <small style="color:#64748b; font-size:11px;">Wafanyakazi wanaweza kuuza au kutoa stoo bila kuhitaji bosi kuidhinisha.</small>
+                    <small style="color:#64748b; font-size: 13px;">Wafanyakazi wanaweza kuuza au kutoa stoo bila kuhitaji bosi kuidhinisha.</small>
                 </div>
 
                 <div class="setup-option-card" onclick="window.selectOnboardingOption('approvalFlow', 'standard', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Standard Approval</b>
-                    <small style="color:#64748b; font-size:11px;">Miamala maalum (kama punguzo au hasara) inahitaji meneja kuidhinisha.</small>
+                    <small style="color:#64748b; font-size: 13px;">Miamala maalum (kama punguzo au hasara) inahitaji meneja kuidhinisha.</small>
                 </div>
 
                 <div class="setup-option-card" onclick="window.selectOnboardingOption('approvalFlow', 'advanced', this)">
                     <div style="font-size:24px; margin-bottom:5px;"></div>
-                    <b style="color:var(--primary-dark); display:block; font-size:14px;">Advanced Flow (Cashier ➔ Manager ➔ Owner)</b>
-                    <small style="color:#64748b; font-size:11px;">Usimamizi mkali wa mnyororo: lazima bosi athibitishe mwisho wa kila muamala.</small>
+                    <b style="color:var(--primary-dark); display:block; font-size:14px;">Advanced Flow (Cashier &rarr; Manager &rarr; Owner)</b>
+                    <small style="color:#64748b; font-size: 13px;">Usimamizi mkali wa mnyororo: lazima bosi athibitishe mwisho wa kila muamala.</small>
                 </div>
             </div>
 
@@ -712,18 +742,18 @@
             <div class="setup-wizard-step" id="setupStep_8" style="display: none;">
                 <b style="font-size:13px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;">8. Weka Malengo ya Kila Mwezi (Analytics Targets)</b>
                 
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">LENGO LA MAUZO KWA MWEZI (TSH) *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">LENGO LA MAUZO KWA MWEZI (TSH) *</label>
                 <input type="number" id="regSalesTarget" value="5000000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; outline:none; font-weight:bold;">
                 
-                <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">LENGO LA FAIDA KWA MWEZI (TSH) *</label>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">LENGO LA FAIDA KWA MWEZI (TSH) *</label>
                 <input type="number" id="regProfitTarget" value="1000000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; outline:none; font-weight:bold;">
             </div>
         </div>
 
         <!-- Navigation Buttons -->
         <div style="display:flex; justify-content:space-between; gap:10px; margin-top:20px; border-top:1px solid #f1f5f9; padding-top:15px;">
-            <button type="button" id="btnPrevSetup" onclick="window.prevSetupStep()" style="display:none; flex:1; padding:14px; background:#e2e8f0; color:#475569; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-size:12px;">❮ Rudi</button>
-            <button type="button" id="btnNextSetup" onclick="window.nextSetupStep()" style="flex:2; padding:14px; background:var(--primary-blue); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:900; text-transform:uppercase; font-size:12px; letter-spacing:0.5px;">Endelea ❯</button>
+            <button type="button" id="btnPrevSetup" onclick="window.prevSetupStep()" style="display:none; flex:1; padding:14px; background:#e2e8f0; color:#475569; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase; font-size:12px;">&lsaquo; Rudi</button>
+            <button type="button" id="btnNextSetup" onclick="window.nextSetupStep()" style="flex:2; padding:14px; background:var(--primary-blue); color:white; border:none; border-radius:12px; cursor:pointer; font-weight:900; text-transform:uppercase; font-size:12px; letter-spacing:0.5px;">Endelea &rsaquo;</button>
         </div>
     </div>
 </div>
@@ -740,17 +770,17 @@
         <div style="text-align:center; margin-bottom:15px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
             <div style="font-size:40px;"></div>
             <h3 style="color:var(--primary-dark); margin:0; font-weight:900;">Mhamisho wa Stock Baina ya Matawi</h3>
-            <p style="font-size:11px; color:#64748b; margin-top:4px;">Head Office ➔ Tawi A, B, C (Yenye Ulinzi wa Token za Usafiri)</p>
+            <p style="font-size: 13px; color:#64748b; margin-top:4px;">Head Office &rarr; Tawi A, B, C (Yenye Ulinzi wa Token za Usafiri)</p>
         </div>
 
         <div style="flex:1; overflow-y:auto; padding-right:5px; text-align:left;">
             <!-- Fomu ya Mhamisho -->
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KUTOKA TAWI (SOURCE BRANCH) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KUTOKA TAWI (SOURCE BRANCH) *</label>
             <select id="transferSourceBranch" style="width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                 <option value="Head Office" selected> Head Office (Tawi Kuu)</option>
             </select>
 
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KWENDA TAWI (DESTINATION BRANCH) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KWENDA TAWI (DESTINATION BRANCH) *</label>
             <select id="transferDestBranch" style="width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;">
                 <option value="Tawi A (Kariakoo)"> Tawi A (Kariakoo)</option>
                 <option value="Tawi B (Mbezi)"> Tawi B (Mbezi)</option>
@@ -759,7 +789,7 @@
 
             <hr style="border:0; border-top:1px solid #f1f5f9; margin:10px 0;">
 
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">CHAGUA BIDHAA YA KUHAMISHA *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">CHAGUA BIDHAA YA KUHAMISHA *</label>
             <input type="text" id="transferProductSearch" oninput="window.searchProductForTransfer()" placeholder="Andika jina la bidhaa hapa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:8px; outline:none;">
             <div id="transferSearchResults" style="max-height:120px; overflow-y:auto; background:#f8fafc; border-radius:10px; margin-bottom:10px;"></div>
 
@@ -770,7 +800,7 @@
                 <span>Stock iliyopo Head Office: <b id="transferProductCurrentQty">0 Pcs</b></span>
             </div>
 
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">IDADI YA KUHAMISHA (QUANTITY IN PCS) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">IDADI YA KUHAMISHA (QUANTITY IN PCS) *</label>
             <input type="number" id="transferQty" placeholder="Mfano: 20" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; outline:none; font-weight:bold;">
 
             <button onclick="window.submitStockTransfer()" id="btnSubmitTransfer" style="width:100%; padding:16px; background:var(--primary-blue); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;"> ANZA MHAMISHO (GENERATE TOKENS)</button>
@@ -791,10 +821,10 @@
         <p style="font-size:12px; color:#64748b; margin-bottom:20px; line-height: 1.4;">Weka kiasi unachotaka kuongeza kwenye salio lako la SokoPay Wallet.</p>
         
         <div style="text-align:left; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">KIASI CHA KUWEKA (TSH) *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">KIASI CHA KUWEKA (TSH) *</label>
             <input type="number" id="spDepositAmount" placeholder="Kiasi (Mfano: 10000)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold; font-size:16px; margin-bottom:15px; box-sizing: border-box;">
             
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">NJIA YA MALIPO *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">NJIA YA MALIPO *</label>
             <select id="spDepositProvider" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold; margin-bottom:15px;">
                 <option value="Mpesa">Vodacom M-Pesa</option>
                 <option value="Tigo">Tigo Pesa</option>
@@ -802,11 +832,11 @@
                 <option value="Halopesa">Halopesa</option>
             </select>
 
-            <label style="font-size:11px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">NAMBA YA SIMU YA MALIPO *</label>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:5px;">NAMBA YA SIMU YA MALIPO *</label>
             <input type="tel" id="spDepositPhone" placeholder="Mfano: 07XXXXXXXX" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-size:14px; box-sizing: border-box;">
         </div>
 
-        <button onclick="window.processSokoPayDeposit()" id="btnSubmitSpDeposit" style="width:100%; padding:15px; background:#10b981; color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;">WEKA PESA SASA ➔</button>
+        <button onclick="window.processSokoPayDeposit()" id="btnSubmitSpDeposit" style="width:100%; padding:15px; background:#10b981; color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;">WEKA PESA SASA &rarr;</button>
         <button onclick="document.getElementById('sokopayDepositModal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; background:#e2e8f0; color:#475569; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">Ghairi</button>
     </div>
 </div>
@@ -816,31 +846,12 @@
 
 
 
-<link rel="stylesheet" href="css/05-announcement.css">
-<link rel="stylesheet" href="css/06-auth-polish.css">
-<link rel="stylesheet" href="css/07-market-polish.css">
-<link rel="stylesheet" href="css/08-dashboard-pos-polish.css">
-<link rel="stylesheet" href="css/09-sokopay-polish.css">
-<link rel="stylesheet" href="css/10-admin-dash-polish.css">
-<link rel="stylesheet" href="css/11-haipay-mobile.css">
-<link rel="stylesheet" href="css/12-mobile-responsive.css">
-<link rel="stylesheet" href="css/13-ui-polish.css">
-<link rel="stylesheet" href="css/14-chat-admin-polish.css">
-<link rel="stylesheet" href="css/15-chat-comments.css">
-<link rel="stylesheet" href="css/16-commerce-card.css">
 <!-- [NEGO MODULE 01] Dynamic Negotiation Form (context-aware PRODUCT/SERVICE/TRANSPORT) -->
-<link rel="stylesheet" href="css/17-negotiation-form.css">
 <!-- [SHOWCASE MODULE 02] Product Detail & Discovery UI -->
-<link rel="stylesheet" href="css/18-product-showcase.css">
 <!-- [TOKEN BOX 2026-09] Sanduku la mikode ya makabidhiano -->
-<link rel="stylesheet" href="css/19-token-box.css">
 <!-- [REQUEST ROUTING 2026-09] Agent Request Inbox -->
-<link rel="stylesheet" href="css/20-request-inbox.css">
 <!-- [DISCOVERY CARD 2026-09] Vertical discovery + Maoni sheet -->
-<link rel="stylesheet" href="css/21-discovery-maoni.css">
-<link rel="stylesheet" href="css/22-delivery-choice.css">
 <!-- [LOGISTICS MARKETPLACE 2026-09] Soko la maombi ya usafirishaji (dashi dereva) -->
-<link rel="stylesheet" href="css/23-logistics-market.css">
 <!--  SOKOHAI JAVASCRIPT MARQUEE ENGINE - GUARANTEED MOVING FINAL FIX -->
 <script src="js/06-announcement.js"></script>
 <script src="js/07-toasts.js"></script>
@@ -858,5 +869,24 @@
 
 <script src="js/19-cart-checkout-canonical.js"></script>
 
+<script src="js/22-humanize.js"></script>
+<script src="js/23-smart-search.js"></script>
+<script src="js/20-search-chat.js"></script>
+<script src="js/21-home-filters.js"></script>
+<script type="module" src="js/app/88-discover-complete.js"></script>
+<!-- [CHAT FIXES 2026-09-20] Marekebisho ya chat system: background, loader isiyokwisha, group chat, inbox timeout, message-cache -->
+<script src="js/app/90-chat-fixes.js" defer></script>
+<!-- [DISCOVER FIXES 2026-09-20] Marekebisho ya Discover: mobile responsive, errors visible, full account profiles open -->
+<script src="js/app/91-discover-fixes.js" defer></script>
+<!-- [CHAT AUTH RACE FIX 2026-09-20] Tatizo kubwa la chat kushindwa kufungua: race kati ya Firebase auth na currentUser -->
+<script src="js/app/92-chat-auth-fix.js" defer></script>
+<script src="js/app/93-chat-inbox-repair.js" defer></script>
+<script src="js/94-modal-stack.js" defer></script><!-- [FIX 2026-09-20] tabaka za modals: kadi kufunguka juu -->
 </body>
 </html>
+<!-- [AUDIT 2026-09-16] HUD inajitokeza 3X — nakala mbili za ZIADA zimeondolewa -->
+
+
+
+
+

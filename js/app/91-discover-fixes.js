@@ -13,6 +13,19 @@
 
     function skh() { return window.skh || {}; }
 
+    /* [STABILIZE 2026-09-21] Urithi chain flags kutoka base — vinginevyo
+       guard za 93/79/81 huchukulia wrapper yetu kama "chain tata" na
+       kuichana (clobber) au ku-wrap tena. */
+    var __SKH_CHAIN_FLAGS = ['__blinkPatched','__blinkWrap','__oneUI','__oneUIAtomic','__abs81','__abs81_final','__skh90','__skhAuthPatched','__skhErrPatched','__skh93','__skhBack','__raw','__orig'];
+    function __skhCopyChainFlags(from, to) {
+        if (!from || !to) return to;
+        for (var i = 0; i < __SKH_CHAIN_FLAGS.length; i++) {
+            var k = __SKH_CHAIN_FLAGS[i];
+            try { if (from[k] !== undefined && to[k] === undefined) to[k] = from[k]; } catch (e) {}
+        }
+        return to;
+    }
+
     function boot() {
         if (window.__skhDiscFixesBooted) return;
         if (document.readyState === 'loading') {
@@ -76,6 +89,7 @@
                     throw e;
                 }
             };
+            __skhCopyChainFlags(fn, wrapped);
             wrapped.__skhErrPatched = true;
             window[name] = wrapped;
         });
@@ -391,6 +405,7 @@
                     throw e;
                 }
             };
+            __skhCopyChainFlags(orig, window.openSellerProfile);
             window.openSellerProfile.__skhErrPatched = true;
         }
     }, 1500);
