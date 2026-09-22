@@ -909,8 +909,11 @@ import { skh } from './00-bootstrap.js';
       }
     } catch (e) {}
 
-    // Save popular search
-    if (q) addPopularSearch(q);
+    // Save popular search + activity halisi ya ranking (dedupe iko service layer).
+    if (q) {
+      addPopularSearch(q);
+      if (typeof skh.recordMarketSearch === 'function') skh.recordMarketSearch(q, 'discover');
+    }
 
     // Save search event for personalization
     try {

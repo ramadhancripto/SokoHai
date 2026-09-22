@@ -94,8 +94,8 @@ console.log('\n[1] Muundo wa TOP BAR (header nyembamba)');
     // Hakuna kitufe cha pili cha kufunga (✕) ndani ya header.
     const closeBtns = $$('.chat-head-bar button').filter(b => /closeModals/.test(b.getAttribute('onclick') || ''));
     ok('hakuna kitufe cha pili cha ✕/closeModals', closeBtns.length === 0);
-    const directBtns = $$('.chat-head-bar > button').length + $$('.chat-head-bar .ch-head-right > button').length;
-    ok('jumla ya vitufe vikuu vya header ni viwili (rudi + menyu)', directBtns === 2);
+    const navBtns = [$('#chatBackBtn'), $('#chatSearchBtn'), $('#chatMenuBtn')].filter(Boolean);
+    ok('vitufe vya navigation ni vitatu (rudi + search + menyu)', navBtns.length === 3);
     ok('jina lipo (#chatWith)', !!$('#chatWith'));
     ok('sub ya kichwa imeanza tupu (jina tu)', ($('#chatSub') || {}).textContent === '');
     ok('kitufe cha menyu ya dots tatu kipo', !!$('#chatMenuBtn'));

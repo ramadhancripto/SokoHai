@@ -714,6 +714,9 @@ window.payForBoost = async function() {
     const bcd = document.getElementById('boostCostDisplay');
     const amount = parseFloat(bcd.getAttribute('data-val'));
     const targetViews = parseInt(document.getElementById('boostViews').value) || 1000;
+    const boostDays = Math.max(1, parseInt(document.getElementById('boostDays').value, 10) || (skh.activeBoostItem.collectionName === 'products' ? 3 : 7));
+    const boostStart = new Date();
+    const boostExpiresAt = new Date(boostStart.getTime() + boostDays * 86400000).toISOString();
     
     let catKey = 'bidhaa';
     if(skh.activeBoostItem.collectionName === 'services') catKey = 'huduma';
@@ -733,8 +736,10 @@ window.payForBoost = async function() {
             await skh.updateDoc(ref, { 
                 isBoosted: true, 
                 boostTargetViews: targetViews,
-                boostedViewsCount: 0, 
-                boostedAt: new Date().toISOString()
+                boostedViewsCount: 0,
+                boostDays: boostDays,
+                boostedAt: boostStart.toISOString(),
+                boostExpiresAt: boostExpiresAt
             });
             await skh.addDoc(skh.collection(skh.db, "adminRevenue"), { 
                 type: "boost", amount: 0, status: "success", waived: true, date: new Date().toISOString() 
@@ -772,7 +777,7 @@ window.payForBoost = async function() {
             phone: phone,
             provider: 'PesaPal',
             description: 'Boost ya tangazo la SokoHai',
-            context: { collectionName: skh.activeBoostItem.collectionName, itemId: skh.activeBoostItem.id, targetViews: targetViews }
+            context: { collectionName: skh.activeBoostItem.collectionName, itemId: skh.activeBoostItem.id, targetViews: targetViews, boostDays: boostDays, boostExpiresAt: boostExpiresAt }
         });
         if (!pay.ok) throw new Error(pay.error || 'Malipo ya boost yamefeli.');
         return; // Mtumiaji ameelekezwa PesaPal — boost itakamilika akirudi

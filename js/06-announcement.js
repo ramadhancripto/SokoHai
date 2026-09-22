@@ -1,205 +1,106 @@
-/* ==== js/06-announcement.js ==== */
-(function(){
-    if(window.__SOKOHAI_JS_MARQUEE_GUARANTEED_FINAL__) return;
-    window.__SOKOHAI_JS_MARQUEE_GUARANTEED_FINAL__ = true;
+/* SokoHai Announcement Story Card — real Firestore campaigns, no marquee. */
+(function () {
+  'use strict';
+  if (window.__SOKOHAI_ANNOUNCEMENT_STORY_V1__) return;
+  window.__SOKOHAI_ANNOUNCEMENT_STORY_V1__ = true;
 
-    const normalItems = [
-        {badge:' Welcome', text:'Welcome to SokoHai – Tanzania’s Smart Marketplace for Products, Services, Projects & Secure Escrow Payments.'},
-        {badge:' Escrow', text:'All transactions are protected by Secure Escrow for safer buying and selling.'},
-        {badge:' Beta Live', text:'SokoHai Beta is now live! Register today and experience secure digital commerce.'},
-        {badge:' Promotion', text:'New sellers can register FREE for a limited time. Start selling today on SokoHai!'},
-        {badge:' Companies', text:'Businesses, NGOs and Government Institutions can create verified accounts and manage projects securely.'},
-        {badge:'‍ Services', text:'Find trusted professionals, skilled workers, and service providers across Tanzania.'},
-        {badge:' Payments', text:'Secure payment options are being expanded. More payment methods are coming soon.'},
-        {badge:' Marketplace', text:'Buy Products • Sell Products • Hire Professionals • Manage Projects — all inside SokoHai.'}
-    ];
+  const TYPE_META = {
+    normal:{ label:'SokoHai' }, breaking:{ label:'Taarifa' }, feature:{ label:'Kipengele kipya' },
+    promotion:{ label:'Ofa' }, maintenance:{ label:'Matengenezo' }, 'security-notice':{ label:'Usalama' },
+    tender:{ label:'Zabuni' }, event:{ label:'Tukio' }, security:{ label:'SokoPay' }, launch:{ label:'Uzinduzi' },
+    company:{ label:'Biashara' }, service:{ label:'Huduma' }, payment:{ label:'Malipo' }, update:{ label:'Taarifa mpya' }
+  };
+  window.SOKOHAI_ANNOUNCEMENT_TYPE_META = TYPE_META;
 
-    // Aina za matangazo na icon/jina lake la default (Admin Panel Announcement Types)
-    const TYPE_META = {
-        normal:          { icon:'', label:'Welcome' },
-        breaking:        { icon:'', label:'Breaking News' },
-        feature:         { icon:'', label:'New Feature' },
-        promotion:       { icon:'', label:'Promotion' },
-        maintenance:     { icon:'', label:'Maintenance' }, 'security-notice':{ icon:'', label:'Security Notice' },
-        tender:          { icon:'', label:'Government Tender' },
-        event:           { icon:'', label:'Event' },
-        security:        { icon:'', label:'Escrow' },
-        launch:          { icon:'', label:'Launch' },
-        company:         { icon:'', label:'Companies' },
-        service:         { icon:'‍', label:'Services' },
-        payment:         { icon:'', label:'Payments' },
-        update:          { icon:'', label:'Update' }
-    };
-    // Ipatikane globally ili Admin Panel itumie orodha hii hii ya aina za matangazo
-    window.SOKOHAI_ANNOUNCEMENT_TYPE_META = TYPE_META;
+  let activeIndex = 0;
+  let rotationTimer = null;
+  let liveTimer = null;
+  let liveNotice = null;
 
-    let rafId = null;
-    let x = 0;
-    let oneSetWidth = 0;
-    let lastTime = 0;
-    let speed = 52; // px/sec. Higher = faster. Smooth because requestAnimationFrame controls it.
-    let lastRenderKey = '';
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+  function safeUrl(v) {
+    const s = String(v || '').trim();
+    return /^(https:\/\/|\/)/i.test(s) && !/["'<>\s]/.test(s) ? s : '';
+  }
+  function short(v, n) {
+    const s = String(v || '').replace(/\s+/g, ' ').trim();
+    return s.length > n ? s.slice(0, n - 1).trim() + '…' : s;
+  }
+  function activeAnnouncements() {
+    const now = Date.now();
+    const source = Array.isArray(window.__sokohaiAnnouncementsCache) ? window.__sokohaiAnnouncementsCache : [];
+    return source.filter(a => {
+      if (!a || !String(a.text || '').trim() || a.active === false) return false;
+      const start = a.startAt ? Date.parse(a.startAt) : 0;
+      const end = a.endAt ? Date.parse(a.endAt) : 0;
+      return (!start || start <= now) && (!end || end >= now);
+    }).sort((a, b) => String(b.createdAt || b.updatedAt || '').localeCompare(String(a.createdAt || a.updatedAt || '')));
+  }
+  function hide() {
+    const host = document.getElementById('topAnnouncement');
+    if (!host) return;
+    host.className = 'big-announcement skh-ann-story is-empty';
+    host.innerHTML = '';
+    host.hidden = true;
+  }
+  function openAction(url) {
+    if (!url) return;
+    if (url.charAt(0) === '#' || url.charAt(0) === '/') window.location.href = url;
+    else window.open(url, '_blank', 'noopener');
+  }
+  window.skhAnnouncementOpen = openAction;
 
-    function esc(s){
-        return String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function renderAnnouncement(a, live) {
+    const host = document.getElementById('topAnnouncement');
+    if (!host || !a) return;
+    const meta = TYPE_META[a.type] || TYPE_META.normal;
+    const image = safeUrl(a.image || a.imageUrl || a.mediaUrl || a.photo);
+    const link = safeUrl(a.link || a.actionUrl);
+    const title = short(a.title || meta.label || 'SokoHai', 72);
+    const message = short(a.text || a.message, 170);
+    const action = short(a.actionLabel || 'Angalia', 26);
+    host.hidden = false;
+    host.className = 'big-announcement skh-ann-story' + (image ? ' has-image' : ' no-image') + (live ? ' is-live' : '');
+    host.innerHTML = '<article class="skh-ann-card">'
+      + (image ? '<button type="button" class="skh-ann-media"' + (link ? ' onclick="window.skhAnnouncementOpen(\'' + esc(link) + '\')"' : '') + '><img src="' + esc(image) + '" alt="' + esc(title) + '" loading="lazy"></button>' : '')
+      + '<div class="skh-ann-copy"><div class="skh-ann-kicker"><span></span>' + esc(meta.label || 'SokoHai') + '</div>'
+      + '<b class="skh-ann-title">' + esc(title) + '</b><p>' + esc(message) + '</p>'
+      + (link ? '<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\'' + esc(link) + '\')">' + esc(action) + '</button>' : '')
+      + '</div></article>';
+  }
+
+  function renderCurrent() {
+    clearTimeout(rotationTimer);
+    if (liveNotice) { renderAnnouncement(liveNotice, true); return; }
+    const list = activeAnnouncements();
+    if (!list.length) { hide(); return; }
+    if (activeIndex >= list.length) activeIndex = 0;
+    renderAnnouncement(list[activeIndex], false);
+    if (list.length > 1) {
+      rotationTimer = setTimeout(function () { activeIndex = (activeIndex + 1) % list.length; renderCurrent(); }, 9000);
     }
-    function getItems(){
-        try{
-            // 1. Kipaumbele: Matangazo ya Admin kutoka Firestore (live-sync, kila mtumiaji anaona)
-            const fromFirestore = Array.isArray(window.__sokohaiAnnouncementsCache) ? window.__sokohaiAnnouncementsCache : [];
-            const now = Date.now();
-            const activeFromFirestore = fromFirestore.filter(a => {
-                if(!a || !a.text) return false;
-                if(a.active === false) return false;
-                const startsOk = !a.startAt || new Date(a.startAt).getTime() <= now;
-                const endsOk = !a.endAt || new Date(a.endAt).getTime() >= now;
-                return startsOk && endsOk;
-            }).map(a => {
-                const meta = TYPE_META[a.type] || { icon:'', label:'Notice' };
-                const badge = ((a.icon || meta.icon) + ' ' + meta.label).trim();
-                return { badge, text: a.text, link: a.link || '', type: a.type || 'normal' };
-            });
-            if(activeFromFirestore.length) return activeFromFirestore;
+  }
 
-            // 2. Legacy fallback: matangazo yaliyokuwa yamehifadhiwa localStorage (kabla ya Firestore sync)
-            const custom = JSON.parse(localStorage.getItem('sokohai_admin_announcements') || '[]');
-            const activeLocal = custom.filter(a => {
-                const startsOk = !a.startAt || new Date(a.startAt).getTime() <= now;
-                const endsOk = !a.endAt || new Date(a.endAt).getTime() >= now;
-                return a && (a.text || a.message) && startsOk && endsOk;
-            }).map(a => ({ badge: ((a.icon || '') + ' ' + (a.label || a.type || 'Notice')).trim(), text: a.text || a.message, link: a.link || '' }));
-            return activeLocal.length ? activeLocal : normalItems;
-        }catch(e){ return normalItems; }
-    }
-    function itemHtml(items){
-        return '<div class="skh-js-marquee-set">' + items.map(it => `<span class="skh-js-marquee-item"><span class="skh-js-marquee-badge">${esc(it.badge)}</span><span>${esc(it.text)}</span>${it.link ? `<a href="${esc(it.link)}" class="skh-js-readmore" onclick="event.stopPropagation();">Read More -></a>` : ''}<span class="skh-js-sep">•</span></span>`
-        ).join('') + '</div>';
-    }
-    function stopLoop(){
-        if(rafId) cancelAnimationFrame(rafId);
-        rafId = null;
-    }
-    function measureAndStart(){
-        const bar = document.getElementById('topAnnouncement');
-        const set = bar && bar.querySelector('.skh-js-marquee-set');
-        if(!bar || !set){ return; }
-        oneSetWidth = Math.ceil(set.getBoundingClientRect().width || set.scrollWidth || 0);
-        if(!oneSetWidth){
-            setTimeout(measureAndStart, 150);
-            return;
-        }
-        x = 0;
-        lastTime = performance.now();
-        stopLoop();
-        rafId = requestAnimationFrame(tick);
-    }
-    function tick(now){
-        const bar = document.getElementById('topAnnouncement');
-        const track = bar && bar.querySelector('.skh-js-marquee-track');
-        if(!bar || !track){ rafId = null; return; }
+  window.startSokoHaiSmoothMarquee = renderCurrent;
+  window.startSokoHaiAnnouncementRotator = renderCurrent;
+  window.startSokoHaiProAnnouncementBar = renderCurrent;
+  window.playNextSokoHaiProAnnouncement = function () { activeIndex += 1; renderCurrent(); };
+  window.rotateSokoHaiAnnouncement = window.playNextSokoHaiProAnnouncement;
+  window.__sokohaiOnAnnouncementsUpdate = function () { activeIndex = 0; renderCurrent(); };
 
-        const dt = Math.min(64, Math.max(0, now - lastTime));
-        lastTime = now;
-        x -= (speed * dt / 1000);
+  window.updateLiveTicker = function (type, message, subject, forceReset) {
+    clearTimeout(liveTimer);
+    const t = String(type || 'normal');
+    if (t === 'normal' || forceReset) { liveNotice = null; renderCurrent(); return; }
+    const labels = { auction:'Mnada unaendelea', price_drop:'Bei imeshuka', group_buy:'Group Buy', alert:'Taarifa muhimu' };
+    const generated = message || ((labels[t] || 'Taarifa') + (subject ? ': ' + subject : ''));
+    liveNotice = { type: t === 'price_drop' ? 'promotion' : 'update', title: labels[t] || 'SokoHai', text: generated, active: true };
+    renderCurrent();
+    liveTimer = setTimeout(function () { liveNotice = null; renderCurrent(); }, 16000);
+  };
 
-        if(oneSetWidth > 0 && x <= -oneSetWidth){
-            // seamless loop: keep the same visual position while recycling one full set
-            x += oneSetWidth;
-        }
-        track.style.transform = `translate3d(${x}px,0,0)`;
-        rafId = requestAnimationFrame(tick);
-    }
-    function render(items, highlight=false, key='normal'){
-        const bar = document.getElementById('topAnnouncement');
-        if(!bar) return;
-        // Avoid rerendering normal marquee repeatedly; rerender resets movement.
-        if(key === lastRenderKey && bar.classList.contains('skh-js-marquee') && rafId) return;
-        lastRenderKey = key;
-        const setHTML = itemHtml(items);
-        // Two identical sets create an endless loop. JS moves the track by exactly one set width.
-        bar.className = 'big-announcement skh-js-marquee' + (highlight ? ' skh-js-alert' : '');
-        bar.innerHTML = `<div class="skh-js-marquee-viewport"><div class="skh-js-marquee-track">${setHTML}${setHTML}</div></div>`;
-        setTimeout(measureAndStart, 60);
-    }
-
-    window.startSokoHaiSmoothMarquee = function(){
-        if(window.__sokohaiAnnouncementInterval) clearInterval(window.__sokohaiAnnouncementInterval);
-        if(window.__sokohaiProAnnouncementInterval) clearInterval(window.__sokohaiProAnnouncementInterval);
-        if(window.__sokohaiProAnnouncementTimeout) clearTimeout(window.__sokohaiProAnnouncementTimeout);
-        render(getItems(), false, 'normal');
-    };
-
-    // Firestore ikisasishwa (Admin akiongeza/kuhariri/kufuta tangazo), rudisha marquee mara moja
-    window.__sokohaiOnAnnouncementsUpdate = function(){
-        lastRenderKey = '';
-        window.startSokoHaiSmoothMarquee();
-    };
-    // Re-check kila dakika ili start/end date za matangazo zizingatiwe hata bila mabadiliko mengine
-    // (Haiguzi tangazo la dharura/mnada linaloendelea)
-    let __lastItemsSignature = '';
-    setInterval(function(){
-        if(String(lastRenderKey).indexOf('normal') !== 0) return; // usiguze tangazo maalum linaloendelea
-        const items = getItems();
-        const sig = JSON.stringify(items);
-        if(sig !== __lastItemsSignature){
-            __lastItemsSignature = sig;
-            lastRenderKey = '';
-            window.startSokoHaiSmoothMarquee();
-        }
-    }, 30000);
-
-    // Kill old engines that were causing freezing/jumping by resetting DOM or animation.
-    window.startSokoHaiAnnouncementRotator = window.startSokoHaiSmoothMarquee;
-    window.startSokoHaiProAnnouncementBar = window.startSokoHaiSmoothMarquee;
-    window.playNextSokoHaiProAnnouncement = function(){};
-    window.rotateSokoHaiAnnouncement = function(){};
-
-    window.updateLiveTicker = function(type, message, mhusika='', forceReset=false){
-        const t = String(type || 'normal');
-        if(t === 'normal' && forceReset){
-            // Inatumika Admin anapozima Alert System: lazimisha bar irudi kwenye
-            // matangazo ya kawaida MARA MOJA, hata kama mnada ulikuwa unaonekana.
-            clearTimeout(window.__sokohaiAlertMarqueeTimer);
-            clearTimeout(window.__sokohaiPromoMarqueeTimer);
-            lastRenderKey = '';
-            window.startSokoHaiSmoothMarquee();
-            return;
-        }
-  
-        if(t === 'auction'){
-            render([{badge:' Auction', text:`MNADA LIVE: ${String(mhusika || '').toUpperCase()} - dau linaendelea sasa.`}], false, 'auction:' + String(mhusika||''));
-            clearTimeout(window.__sokohaiPromoMarqueeTimer);
-            window.__sokohaiPromoMarqueeTimer = setTimeout(function(){ lastRenderKey=''; window.startSokoHaiSmoothMarquee(); }, 16000);
-            return;
-        }
-        if(t === 'price_drop'){
-            render([{badge:' Price Drop', text:`BEI INASHUKA: ${String(mhusika || '').toUpperCase()} - wahi kabla haijaisha.`}], false, 'price:' + String(mhusika||''));
-            clearTimeout(window.__sokohaiPromoMarqueeTimer);
-            window.__sokohaiPromoMarqueeTimer = setTimeout(function(){ lastRenderKey=''; window.startSokoHaiSmoothMarquee(); }, 16000);
-            return;
-        }
-        if(t === 'group_buy'){
-            render([{badge:' Group Buy', text:`GROUP BUY: jiunge na ${String(mhusika || '').toUpperCase()} uokoe pesa.`}], false, 'group:' + String(mhusika||''));
-            clearTimeout(window.__sokohaiPromoMarqueeTimer);
-            window.__sokohaiPromoMarqueeTimer = setTimeout(function(){ lastRenderKey=''; window.startSokoHaiSmoothMarquee(); }, 16000);
-            return;
-        }
-        // Normal monitoring calls should NEVER reset; just ensure loop exists.
-        const bar = document.getElementById('topAnnouncement');
-        if(!bar || !bar.classList.contains('skh-js-marquee') || !rafId) window.startSokoHaiSmoothMarquee();
-    };
-
-    window.addEventListener('resize', function(){
-        const bar = document.getElementById('topAnnouncement');
-        if(bar && bar.classList.contains('skh-js-marquee')) setTimeout(measureAndStart, 120);
-    });
-    document.addEventListener('visibilitychange', function(){
-        if(!document.hidden){ lastTime = performance.now(); if(!rafId) measureAndStart(); }
-    });
-
-    if(document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', window.startSokoHaiSmoothMarquee);
-    } else {
-        setTimeout(window.startSokoHaiSmoothMarquee, 250);
-    }
+  document.addEventListener('DOMContentLoaded', renderCurrent);
+  setTimeout(renderCurrent, 250);
 })();

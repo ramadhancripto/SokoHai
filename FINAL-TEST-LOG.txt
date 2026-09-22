@@ -1,7 +1,34 @@
 
 > test
-> node tools/test_nego_form.mjs && node tools/test_negotiation_engine.mjs && node tools/test_showcase.mjs && node tools/test_negotiation_dom.mjs && node tools/test_chat_header_sides.mjs && node tools/test_commerce_flow.mjs && node tools/test_delivery_nego_flow.mjs && node tools/test_route_matcher.mjs && node tools/test_routing.mjs && node tools/test_token_inbox.mjs && node tools/test_logistics_market.mjs && node tools/test_card_discovery.mjs && node tools/test_delivery_choice.mjs && node tools/test_commerce_cards.mjs && node tools/test_functions_resilience.mjs && node tools/test_chat_commerce_cards.mjs && node tools/test_chat_e2e_journey.mjs && node tools/test_chat_authority_contract.mjs && node tools/verify_nav_chain.mjs
+> node tools/test_market_ranking.mjs && node tools/test_market_visual_contract.mjs && node tools/test_nego_form.mjs && node tools/test_negotiation_engine.mjs && node tools/test_showcase.mjs && node tools/test_negotiation_dom.mjs && node tools/test_chat_header_sides.mjs && node tools/test_commerce_flow.mjs && node tools/test_delivery_nego_flow.mjs && node tools/test_route_matcher.mjs && node tools/test_routing.mjs && node tools/test_token_inbox.mjs && node tools/test_logistics_market.mjs && node tools/test_card_discovery.mjs && node tools/test_delivery_choice.mjs && node tools/test_commerce_cards.mjs && node tools/test_functions_resilience.mjs && node tools/test_chat_commerce_cards.mjs && node tools/test_chat_e2e_journey.mjs && node tools/test_chat_authority_contract.mjs && node tools/verify_nav_chain.mjs
 
+✅ listing halisi yenye id/title inastahili
+✅ deleted/suspended/draft hazistahili
+✅ boost lazima iwe active na haija-expire
+✅ boost iliyofikisha target haisongi boosted rank
+✅ legacy boost haidumu milele
+✅ haversine inatoa umbali halisi
+✅ nearby ina record yenye distance, si dummy
+✅ trending inatumia recent activity
+✅ most searched inahitaji search signal
+✅ boosted ina active boost tu
+✅ dedupe inapunguza kurudia sections mfululizo
+✅ search events halisi zinaweza kupanga most searched bila hardcode
+✅ boost isiyohusiana na query haishindi relevance
+MARKET RANKING: 13 passed, 0 failed
+✅ white-first stylesheet imeunganishwa
+✅ sections nne zina hosts tofauti
+✅ boosted disclosure ipo
+✅ ranking centralized inatumika na UI
+✅ search activity halisi inasomwa
+✅ future boosts zina expiry
+✅ announcement si marquee nzito
+✅ announcement hutumia records za Firestore cache
+✅ announcement image ni field halisi
+✅ white ni dominant kwenye marketplace surfaces
+✅ green primary na blue support zimetenganishwa
+✅ gold ni boost/premium accent
+MARKET VISUAL CONTRACT: 12 passed, 0 failed
 
 [1] CONFIG — fomu inajua aina za biashara
   ✅ product ina sections za bei/quantity + ujumbe
@@ -416,7 +443,7 @@ NEGO DIALOGUE DOM: 76 zimepita, 0 zimeshindwa
   ✅ kitufe cha kurudi (mshale) kipo
   ✅ kina SVG ya mshale
   ✅ hakuna kitufe cha pili cha ✕/closeModals
-  ✅ jumla ya vitufe vikuu vya header ni viwili (rudi + menyu)
+  ✅ vitufe vya navigation ni vitatu (rudi + search + menyu)
   ✅ jina lipo (#chatWith)
   ✅ sub ya kichwa imeanza tupu (jina tu)
   ✅ kitufe cha menyu ya dots tatu kipo
@@ -497,8 +524,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
   ✅ chombo cha tangazo kimechaguliwa (Daladala)
 [negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatikani kwa sasa.
     at file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:100:29
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:4350:29)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900762173990.19679575502302993:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900918650040.07396343132121319:4457:29)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900918650180.8053141459510056:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -535,8 +562,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'CHAT_CONVERSATION',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:2167:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900918650040.07396343132121319:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900918650040.07396343132121319:2170:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     conversationId: 'conv_buyer1_driverUid1',
@@ -546,8 +573,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_OPEN] {
   code: 'CHAT_OPEN',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:2167:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900918650040.07396343132121319:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900918650040.07396343132121319:2170:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     partnerUid: 'driverUid1',
@@ -1072,6 +1099,18 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ ujumbe mmoja tu umehifadhiwa (hakuna dup)
   ✅ hakuna bubble iliyokwama pending/failed
 
+[J3b] Hariri ujumbe ndani ya composer — message ileile, si duplicate
+  ✅ edit mode ina preview na composer
+  ✅ send imebadilika kuwa save
+  ✅ ujumbe uleule umehaririwa
+  ✅ edit haijatengeneza duplicate
+  ✅ edit mode imefungwa baada ya save
+
+[J3c] Search ya conversation — header control halisi
+  ✅ search bar imefunguka kutoka header
+  ✅ search inaonyesha ujumbe unaolingana
+  ✅ kufunga search kunarudisha stream kamili
+
 [J4] Toa Ofa kutoka chat — fomu inafunguka NDANI ya chat
   ✅ fomu (nfShell) imefunguka
   ✅ chatModal bado wazi (fomu ndani ya chat)
@@ -1079,8 +1118,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ product ina quantity na proposed price
   ✅ product HAINA schema ya service/transport/delivery
 [negotiationSendOffer] Falling back to Firestore-native: Error: NO_FUNCTIONS
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:4349:42)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900762324920.15564963660800069:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900918798860.28833263258909825:4456:42)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900918799010.7046693179590173:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -1088,7 +1127,7 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
     at fireAnEvent (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/helpers/events.js:18:36)
     at HTMLButtonElementImpl.click (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/nodes/HTMLElement-impl.js:85:5)
     at HTMLButtonElement.click (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/HTMLElement.js:111:34)
-    at file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:292:19 {
+    at file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:322:19 {
   code: 'unavailable'
 }
   ✅ negotiation imeundwa
@@ -1132,10 +1171,10 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
-      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:411:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:2167:24)
-      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:412:15 {
+      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900918798860.28833263258909825:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900918798860.28833263258909825:2170:24)
+      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },
   meta: {
@@ -1146,10 +1185,10 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
 [SOKOHAI][CHAT_OPEN] {
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
-      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:411:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:2167:24)
-      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:412:15 {
+      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900918798860.28833263258909825:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900918798860.28833263258909825:2170:24)
+      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },
   meta: {
@@ -1167,7 +1206,7 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ ujumbe wa conversation ya zamani haujaingia partner mpya
   ✅ listener hai imefungwa kwa conversation mpya
 
-MATOKEO E2E: 49 pass, 0 fail
+MATOKEO E2E: 57 pass, 0 fail
 --- CHAT AUTHORITY / MOBILE / SECURITY CONTRACT ---
 ✅ skhChatOpen implementation moja tu
 ✅ state machine ina IDLE/CONNECTING/READY/EMPTY/ERROR/RETRYING

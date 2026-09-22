@@ -153,6 +153,7 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
         const data = {
             text: String(payload.text || '').trim(),
             icon: String(payload.icon || '').trim(),
+            image: String(payload.image || '').trim(),
             type: payload.type || 'normal',
             link: String(payload.link || '').trim(),
             startAt: payload.startAt || '',

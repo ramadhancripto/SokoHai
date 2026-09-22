@@ -9,6 +9,7 @@ window.handleSearch = function() {
     clearTimeout(skh.searchTimeout);
     skh.searchTimeout = setTimeout(() => {
         skh.currentLimit = 20;
+        if (skh.searchQuery && typeof skh.recordMarketSearch === 'function') skh.recordMarketSearch(skh.searchQuery, 'home');
         skh.loadMainFeed(skh.currentFeedCollection);
     }, 600); 
 };

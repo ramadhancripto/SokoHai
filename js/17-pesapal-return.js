@@ -495,7 +495,9 @@
 
             case 'boost': // boost ya tangazo
                 if (ctx.collectionName && ctx.itemId) {
-                    await fb.updateDoc(fb.doc(fb.db, ctx.collectionName, ctx.itemId), { isBoosted: true, boostTargetViews: ctx.targetViews || 1000, boostedViewsCount: 0, boostedAt: now });
+                    var boostDays = Math.max(1, Number(ctx.boostDays) || (ctx.collectionName === 'products' ? 3 : 7));
+                    var boostExpiresAt = ctx.boostExpiresAt || new Date(Date.parse(now) + boostDays * 86400000).toISOString();
+                    await fb.updateDoc(fb.doc(fb.db, ctx.collectionName, ctx.itemId), { isBoosted: true, boostTargetViews: ctx.targetViews || 1000, boostedViewsCount: 0, boostDays: boostDays, boostedAt: now, boostExpiresAt: boostExpiresAt });
                 }
                 await fb.addDoc(fb.collection(fb.db, 'adminRevenue'), { type: 'boost', amount: pending.amount, status: 'success', date: now });
                 summary = 'Tangazo lako limekuwa Boosted!';

@@ -8,6 +8,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 
 const skh = {};
 
@@ -1626,9 +1627,47 @@ skh._feedCacheSet = function _feedCacheSet(key, data) {
     }
 };
 
+// Search activity ya kweli kwa "Zinazotafutwa Sana". Hifadhi event moja
+// iliyodebounceiwa; UI haitunzi counters za kubuni kwenye bidhaa.
+skh._marketSearchTerms = [];
+skh._lastMarketSearch = { q: '', at: 0 };
+skh.recordMarketSearch = function recordMarketSearch(queryText, source) {
+    const q = String(queryText || '').trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 100);
+    if (!skh.currentUser || q.length < 2) return;
+    const now = Date.now();
+    if (skh._lastMarketSearch.q === q && now - skh._lastMarketSearch.at < 30000) return;
+    skh._lastMarketSearch = { q: q, at: now };
+    skh.addDoc(skh.collection(skh.db, 'recommendationEvents'), {
+        userId: skh.currentUser.uid,
+        type: 'search', query: q, source: source || 'market', at: new Date(now).toISOString()
+    }).catch(function () {});
+};
+skh.loadMarketSearchSignals = function loadMarketSearchSignals() {
+    if (!skh.currentUser || skh._marketSearchLoading) return Promise.resolve(skh._marketSearchTerms);
+    if (skh._marketSearchLoadedAt && Date.now() - skh._marketSearchLoadedAt < 120000) return Promise.resolve(skh._marketSearchTerms);
+    skh._marketSearchLoading = true;
+    // Query moja yenye orderBy pekee huepuka composite index; chuja type/time client-side.
+    const q = skh.query(skh.collection(skh.db, 'recommendationEvents'), skh.orderBy('at', 'desc'), skh.limit(250));
+    return skh.getDocs(q).then(function (snap) {
+        const cutoff = Date.now() - 14 * 86400000;
+        const terms = [];
+        snap.forEach(function (d) {
+            const x = d.data() || {};
+            if (x.type !== 'search' || !x.query || Date.parse(x.at || 0) < cutoff) return;
+            terms.push({ query: String(x.query).slice(0, 100), at: x.at });
+        });
+        skh._marketSearchTerms = terms;
+        skh._marketSearchLoadedAt = Date.now();
+        return terms;
+    }).catch(function () { return skh._marketSearchTerms; }).finally(function () { skh._marketSearchLoading = false; });
+};
+
 skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     const feedGrid = document.getElementById('mainFeed'); 
     if(!feedGrid) return;
+    skh.loadMarketSearchSignals().then(function () {
+        if (skh._visibleFeedItems && skh._visibleFeedItems.length) skh.renderMarketplaceSections(skh._visibleFeedItems);
+    });
     
     // [FIX: bottom nav kupotea] Ukitazama soko (buyer mode), hakikisha upau wa juu,
     // upau wa chini (bottom nav) na upau wa eneo vinabaki vinaonekana — hata wakati
@@ -2120,13 +2159,20 @@ skh.cardPinLocation = function cardPinLocation(data, colName) {
     return `<span class="skh-pinloc">${skh.cardIcon('map', 11)}<span>${skh.skhEscape(loc)}</span></span>`;
 };
 
+skh.marketRankingVersion = (typeof MARKET_RANKING_VERSION !== 'undefined') ? MARKET_RANKING_VERSION : 'card-test';
+skh.boostEligibility = (typeof boostEligibility === 'function') ? boostEligibility : function (data) { return { eligible: !!(data && data._boostEligible) }; };
+skh.activeBoostBadge = function activeBoostBadge(data) {
+    const active = data && (data._boostEligible === true || skh.boostEligibility(data).eligible);
+    return active ? '<div class="boost-badge" aria-label="Tangazo lililoboostiwa">Boosted</div>' : '';
+};
+
 // [ProductPostCard] TEASER: picha -> jina -> bei -> duka  -> eneo.
 // Taarifa kamili (stock, ulinzi, maoni) zipo kwenye ukurasa wa bidhaa.
 skh.ProductPostCard = function ProductPostCard(data, colName) {
     // [CARD POLICY 2026-09] Kadi ni TEASER: Like/Save havionekani mbele —
     // vitendo vya engagement vipo ndani ya ukurasa wa maelezo (detail) tu.
     const overlays = [
-        data.isBoosted ? '<div class="boost-badge">BOOSTED</div>' : '',
+        skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
         skh.cardVerifiedPill(data),
         skh.cardOutPill(data, 'products')
@@ -2142,6 +2188,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
 // [ServicePostCard] TEASER: picha -> jina -> bei (Kuanzia) -> mtoa   -> eneo.
 skh.ServicePostCard = function ServicePostCard(data, colName) {
     const overlays = [
+        skh.activeBoostBadge(data),
         skh.cardTypeBadge('services') ? '<div class="skh-overlay-chip skh-overlay-chip--service">' + skh.cardTypeBadge('services') + '</div>' : '',
         skh.cardModeBadge(data),
         skh.cardVerifiedPill(data)
@@ -2158,6 +2205,7 @@ skh.ServicePostCard = function ServicePostCard(data, colName) {
 skh.TransportPostCard = function TransportPostCard(data, colName) {
     const hasRoute = !!(data.pickupRegion || data.destinationRegion);
     const overlays = [
+        skh.activeBoostBadge(data),
         hasRoute ? skh.cardRouteOverlay(data) : skh.cardVerifiedPill(data),
         skh.cardOutPill(data, colName)
     ].join('');
@@ -2178,6 +2226,40 @@ skh.CommercePostCard = function CommercePostCard(data, colName) {
     if (colName === 'services') return skh.ServicePostCard(data, colName);
     if (colName === 'drivers') return skh.TransportPostCard(data, colName);
     return skh.ProductPostCard(data, colName);
+};
+
+skh.renderMarketplaceSections = function renderMarketplaceSections(items) {
+    const context = {
+        userLat: skh.userLat,
+        userLon: skh.userLon,
+        region: skh.filterRegion || (skh.currentUserData && skh.currentUserData.region) || '',
+        query: skh.searchQuery || '',
+        category: skh.activeCategory || '',
+        searchTerms: skh._marketSearchTerms || [],
+        limit: 8
+    };
+    const sections = buildMarketplaceSections(items || [], context);
+    skh.marketplaceSections = sections;
+    const targets = [
+        ['slider1', sections.trending, 'Hakuna mwenendo halisi wa hivi karibuni bado.'],
+        ['slider2', sections.nearby, 'Ruhusu eneo au ongeza eneo kwenye matangazo ili kuona yaliyo karibu.'],
+        ['slider3', sections.searched, 'Hakuna takwimu za utafutaji za kipindi hiki bado.'],
+        ['slider4', sections.boosted, 'Hakuna tangazo lenye boost hai na linalostahili sasa.']
+    ];
+    const render = function (arr, empty) {
+        if (!arr || !arr.length) return '<div class="skh-market-empty"><span>' + skh.cardIcon('search', 18) + '</span><small>' + skh.skhEscape(empty) + '</small></div>';
+        return arr.map(function (data) {
+            const col = data.collectionName || 'products';
+            return '<div class="skh-market-slide-card">' + skh.CommercePostCard(data, col)
+                + (Number.isFinite(data.computedDistance) ? '<small class="skh-market-distance">' + skh.cardIcon('map', 11) + ' ' + data.computedDistance.toFixed(1) + ' km</small>' : '')
+                + '</div>';
+        }).join('');
+    };
+    targets.forEach(function (entry) {
+        const host = document.getElementById(entry[0]);
+        if (host) host.innerHTML = render(entry[1], entry[2]);
+    });
+    return sections;
 };
 
 skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
@@ -2299,6 +2381,10 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
         });
         filteredData.sort((a, b) => (a.computedDistance || 9999) - (b.computedDistance || 9999));
     }
+
+    // Centralized marketplace ranking: sliders zote hutumia records hizi hizi
+    // halisi baada ya filters, si arrays za mfano/hardcoded.
+    skh.renderMarketplaceSections(filteredData);
 
     skh.cachedItems = filteredData; 
     // [§1-§5 R8 FILTERS] HIFADHI YA SOURCE: cachedItems ni state ya SOURCE

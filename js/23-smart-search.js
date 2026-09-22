@@ -184,7 +184,10 @@
         // Ubora/umaarufu kama kivunja-sare
         score += Math.min(10, Number(it.views || 0) / 50);
         score += Math.min(8, Number(it.likeCount || 0));
-        if (it.isBoosted) score += 5;
+        // Boost huongeza nafasi ndani ya matokeo yanayohusiana TU ikiwa bado hai.
+        var boostOk = window.skh && typeof window.skh.boostEligibility === 'function'
+            ? window.skh.boostEligibility(it).eligible : false;
+        if (boostOk) score += 5;
         return score;
     }
 
