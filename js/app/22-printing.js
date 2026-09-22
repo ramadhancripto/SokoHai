@@ -25,6 +25,7 @@ window.renderSokoHaiAccountMenu = function(){
             ['mode_provider','','Mtoa Huduma / Fundi','Kazi, mikataba na mapato ya ufundi'],
             ['mode_driver','','Msafirishaji','Safari, mizigo, tokens na mapato'],
             ['mode_agent','','Wakala Sokohai','Sajili wanachama na maduka offline'],
+            ['mode_advertiser','','Advertiser','Campaign workspace ya kampuni'],
             ['mode_admin','','Admin (Msimamizi)','Dhibiti mfumo mzima na mapato']
         ]],
         ['SOKOPAY & FINANCE', false, [
@@ -86,6 +87,7 @@ window.skhSidebarGo = function(key) {
         mode_provider: function(){ modeGo('provider'); },
         mode_driver:   function(){ modeGo('driver'); },
         mode_agent:    function(){ modeGo('agent'); },
+        mode_advertiser:function(){ if (typeof window.skhOpenAdvertiserDashboard === 'function') window.skhOpenAdvertiserDashboard(); },
         mode_admin:    function(){ modeGo('admin'); },
         sokopay:        function(){ if (typeof window.openSokoPay === 'function') window.openSokoPay(); },
         wallet:        function(){ if (typeof window.openUserPaymentModal === 'function') window.openUserPaymentModal(); },

@@ -451,7 +451,7 @@ window.closeModals = function(forceAll) {
             });
         } catch(e) {}
         const fomuZote = [ 'sellerForm','serviceForm','deliveryForm','sokopayForm', 'offlineMemberForm','editModal','businessOSForm','rideRequestModal', 'userPaymentModal','buyerOrdersModal', 'authModal', 'productModal', 'cartModal', 'chatModal', 'chatListModal', 'notifModal', 'directHireModal', 'deliveryChoiceModal', 'actionRequestModal', 'logisticsTokenModal', 'deliveriesModal', 'tripsModal', 'savedItemsModal',
-            'sidebarMenuModal','plusMenu','mainMenu','sokohaiAccountSettingModal','mySokoHaiModal','sellerProfileModal','tokenBoxModal','requestInboxModal','routeMatchModal','skhDiscoverOverlay','skhDiscoverEngine'
+            'sidebarMenuModal','plusMenu','mainMenu','sokohaiAccountSettingModal','mySokoHaiModal','advertiserDashboardModal','advertiserBillingSoonModal','sellerProfileModal','tokenBoxModal','requestInboxModal','routeMatchModal','skhDiscoverOverlay','skhDiscoverEngine'
         ];
         fomuZote.forEach(id => {
             const el = document.getElementById(id);

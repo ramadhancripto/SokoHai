@@ -54,6 +54,10 @@
             <b> Wakala Sokohai</b>
             <span>Dashbodi ya miamala na kamisheni yako ya ukweli.</span>
         </div>
+        <div class="menu-item" onclick="window.skhOpenAdvertiserDashboard && window.skhOpenAdvertiserDashboard()" id="mode-advertiser" style="border-left-color:#4D91AA; background:#f8fafc;">
+            <b> Advertiser</b>
+            <span>Campaign workspace ya kampuni na matangazo.</span>
+        </div>
         <div class="menu-item" onclick="switchMode('admin')" id="mode-admin" style="border-left-color:#333; background:#f1f5f9;">
             <b> Admin (Msimamizi)</b>
             <span>Dashbodi ya Kufuatilia Mfumo mzima na Mapato.</span>
@@ -61,6 +65,47 @@
         
         <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:15px; background:#e2e8f0; color:#334155; border:none; border-radius:14px; cursor:pointer; font-weight:900; text-transform:uppercase;">Funga X</button>
     </div>
+</div>
+
+<!-- ADVERTISER DASHBOARD — Billing entry is intentionally locked/UI-only -->
+<div id="advertiserDashboardModal" class="overlay-menu" style="z-index:8550;">
+    <section class="adv-shell" role="dialog" aria-modal="true" aria-labelledby="advDashboardTitle">
+        <header class="adv-head">
+            <button type="button" class="adv-head-btn" onclick="window.skhAdvertiserBack()" aria-label="Rudi"><span class="skh-ico" data-ico="arrow-left"></span></button>
+            <div class="adv-head-copy"><b id="advDashboardTitle">Advertiser</b><small>Company advertising workspace</small></div>
+            <button type="button" class="adv-head-btn" onclick="window.skhCloseAdvertiserDashboard()" aria-label="Funga"><span class="skh-ico" data-ico="x"></span></button>
+        </header>
+        <div class="adv-layout">
+            <nav class="adv-nav" aria-label="Advertiser sections">
+                <button type="button" class="adv-nav-item active" aria-current="page">Overview</button>
+                <button type="button" class="adv-nav-item locked" aria-disabled="true" onclick="window.skhOpenAdvertiserBillingSoon()"><span>Billing &amp; Payments</span><span class="adv-lock">Coming Soon</span></button>
+            </nav>
+            <main class="adv-main">
+                <h1 class="adv-title">Advertiser Dashboard</h1>
+                <p class="adv-lead">Manage company advertising activity from one workspace. Existing advertising creation flows remain unchanged.</p>
+                <div class="adv-grid">
+                    <section class="adv-card"><h3>Advertising Workspace</h3><p>Campaign tools and advertiser activity will remain organized within this dashboard as capabilities are enabled.</p></section>
+                    <button type="button" class="adv-card adv-billing-card" aria-disabled="true" onclick="window.skhOpenAdvertiserBillingSoon()">
+                        <h3>Billing &amp; Payments</h3>
+                        <p>Manage advertising budget, payments and campaign spending.</p>
+                        <span class="adv-coming">Coming Soon</span>
+                    </button>
+                </div>
+                <div class="adv-note">Billing is not enabled. No payment, wallet, checkout, pricing or campaign-spend operation can start from this entry.</div>
+            </main>
+        </div>
+    </section>
+</div>
+
+<!-- Informational state only: no payment/billing operation -->
+<div id="advertiserBillingSoonModal" class="overlay-menu" style="z-index:8560;">
+    <section class="adv-soon-card" role="dialog" aria-modal="true" aria-labelledby="advBillingSoonTitle">
+        <div class="adv-soon-icon"><span class="skh-ico" data-ico="lock"></span></div>
+        <h2 id="advBillingSoonTitle">Billing &amp; Payments</h2>
+        <p>Mfumo wa malipo na usimamizi wa gharama za matangazo unakuja hivi karibuni.</p>
+        <span class="adv-coming">Coming Soon</span>
+        <button type="button" class="adv-ok" onclick="window.skhCloseAdvertiserBillingSoon()">Sawa</button>
+    </section>
 </div>
 
 <!-- SELLER TYPE SELECTION MODAL (MPYA) -->

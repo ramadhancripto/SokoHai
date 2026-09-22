@@ -632,3 +632,44 @@ window.initProductAnalyticsCharts = function(data) {
         options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
     });
 };
+
+// ---------------------------------------------------------------------------
+// Advertiser Billing & Payments — intentional UI-only Coming Soon state.
+// No collection, pricing calculation, wallet, checkout, or payment call exists here.
+// ---------------------------------------------------------------------------
+window.skhOpenAdvertiserDashboard = function () {
+    if (!skh.currentUser) {
+        if (typeof window.openAuthModal === 'function') window.openAuthModal();
+        return;
+    }
+    try { if (typeof window.closeModals === 'function') window.closeModals(); } catch (e) {}
+    var modal = document.getElementById('advertiserDashboardModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    try { if (typeof window.skhApplyIcons === 'function') window.skhApplyIcons(modal); } catch (e) {}
+};
+
+window.skhCloseAdvertiserDashboard = function () {
+    var modal = document.getElementById('advertiserDashboardModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.skhAdvertiserBack = function () {
+    if (typeof window.skhBack === 'function') {
+        window.skhBack();
+        return;
+    }
+    window.skhCloseAdvertiserDashboard();
+};
+
+window.skhOpenAdvertiserBillingSoon = function () {
+    var modal = document.getElementById('advertiserBillingSoonModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    try { if (typeof window.skhApplyIcons === 'function') window.skhApplyIcons(modal); } catch (e) {}
+};
+
+window.skhCloseAdvertiserBillingSoon = function () {
+    var modal = document.getElementById('advertiserBillingSoonModal');
+    if (modal) modal.style.display = 'none';
+};
