@@ -145,7 +145,7 @@ import { skh } from './00-bootstrap.js';
         // jina/verified centered, stats row, Follow + Chat. Preach ya brief §4.
         var coverHtml = P.cover
             ? '<div style="height:140px;background:url(' + esc(P.cover) + ') center/cover no-repeat;background-color:#e2e8f0;"></div>'
-            : '<div style="height:140px;background:linear-gradient(135deg,#0B4F7A,#1268A8 60%,#2B82BD);"></div>';
+            : '<div style="height:140px;background:#EAF8F2;"></div>';
         var since = P.memberSince ? '<span style="font-size:13px;color:#64748b;">' + T('sst_member_since', 'Member since') + ' ' + esc(new Date(P.memberSince).getFullYear()) + '</span>' : '';
         var trustRow = P.fulfillment != null
             ? '<span style="font-size:13px;color:#0f172a;">' + T('sst_completion_rate', 'Completion rate') + ': <b>' + P.fulfillment + '%</b></span>' : '';
@@ -181,7 +181,7 @@ import { skh } from './00-bootstrap.js';
         P_TAB = tab;
         var btns = document.querySelectorAll('#sellerProfileModal .skh-mytab');
         if (btns) btns.forEach(function (b) { b.style.background = '#e2e8f0'; b.style.color = '#334155'; });
-        if (el) { el.style.background = '#001122'; el.style.color = '#fff'; }
+        if (el) { el.style.background = '#EAF8F2'; el.style.color = '#17604E'; }
         window.skhRenderSellerProfile();
     };
 

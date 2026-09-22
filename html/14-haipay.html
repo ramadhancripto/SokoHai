@@ -1,9 +1,9 @@
 <!-- 1. LEFT SIDEBAR OF SOKOPAY (Re-engineered for Dynamic SokoPay Navigation) -->
-        <div class="sp-sidebar" id="sokopayLeftSidebar" style="width: 260px; background: #001122; color: #f8fafc; padding: 20px 15px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; box-sizing: border-box; border-right: 1px solid rgba(255, 255, 255, 0.08); height: 100%;">
+        <div class="sp-sidebar" id="sokopayLeftSidebar" style="width: 260px; background: #ffffff; color: #18352D; padding: 20px 15px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; box-sizing: border-box; border-right: 1px solid #E5ECEC; height: 100%;">
             <div>
                 <!-- Brand Logo & Name -->
                 <div class="sp-sidebar-brand" style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-left: 10px;">
-                    <div class="sp-brand-logo" style="width: 32px; height: 32px; background: #00509d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 18px;">S</div>
+                    <div class="sp-brand-logo" style="width: 32px; height: 32px; background: #18A982; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 18px;">S</div>
                     <span class="sp-brand-name" style="font-size: 18px; font-weight: 900; color: white; letter-spacing: 0.5px;">SokoPay</span>
                     <span class="sp-wallet-chip" id="spSidebarBalanceTop">TZS 0</span>
                 </div>
@@ -12,7 +12,7 @@
                 <div class="sp-sidebar-menu" style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; overflow-y: auto; text-align: left; padding-right: 5px;">
                     <span class="sp-menu-heading" style="font-size: 12px; font-weight: 800; color: rgba(255, 255, 255, 0.35); text-transform: uppercase; margin: 15px 0 5px 12px; letter-spacing: 0.8px; display: block;">SOKOPAY MVP</span>
 
-                    <button class="sp-sidebar-link active" id="spBtn_overview" onclick="window.toggleSokoPayTab('overview')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #00509d; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
+                    <button class="sp-sidebar-link active" id="spBtn_overview" onclick="window.toggleSokoPayTab('overview')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #18A982; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
                         <span></span> Home
                     </button>
                     <button class="sp-sidebar-link" id="spBtn_pay" onclick="window.toggleSokoPayTab('pay')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: rgba(255, 255, 255, 0.65); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
@@ -140,11 +140,11 @@
                 <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 18px; margin-bottom: 20px;">
                     <span style="font-size: 12px; font-weight: 900; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 14px; border-left: 4px solid #00509d; padding-left: 10px;">FANYA HARAKA</span>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px;">
-                        <button onclick="window.toggleSokoPayTab('pay')" style="padding: 20px 10px; background: #00509d; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
+                        <button onclick="window.toggleSokoPayTab('pay')" style="padding: 20px 10px; background: #18A982; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
                             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                             Pay
                         </button>
-                        <button onclick="window.toggleSokoPayTab('create')" style="padding: 20px 10px; background: #0f172a; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
+                        <button onclick="window.toggleSokoPayTab('create')" style="padding: 20px 10px; background: #18A982; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
                             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                             Create Link
                         </button>
@@ -258,7 +258,7 @@
                             <label style="font-size: 13px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">MAELEZO YA MUAMALA (NOTES) *</label>
                             <input type="text" id="spLipaNotes" placeholder="Mf: Malipo ya fundi umeme au shehena ya mchele..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; margin-bottom: 20px; box-sizing: border-box;">
 
-                            <button onclick="alert(' MALIPO YAMEFANIKIWA! Pesa imetumwa na settlement engine imesajili muamala.')" id="btnSubmitLipaDirect" style="width: 100%; padding: 18px; background: #00509d; color: white; border: none; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 80, 157, 0.25);"> TUMA / LIPA PESA SASA (INSTANT SETTLEMENT)</button>
+                            <button onclick="alert(' MALIPO YAMEFANIKIWA! Pesa imetumwa na settlement engine imesajili muamala.')" id="btnSubmitLipaDirect" style="width: 100%; padding: 18px; background: #18A982; color: white; border: none; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 80, 157, 0.25);"> TUMA / LIPA PESA SASA (INSTANT SETTLEMENT)</button>
                         </div>
                     </div>
 
@@ -269,7 +269,7 @@
                             <div style="display: flex; flex-direction: column; gap: 10px;">
                                 <button onclick="window.spScanQr()" style="padding: 14px; background: #10b981; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Scan QR Lipa Code</button>
                                 <button onclick="prompt('Andika SokoPay ID au namba ya unayemuomba pesa:','07XXXXXXXX')" style="padding: 14px; background: #f59e0b; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Request Money (Tuma Ombi)</button>
-                                <button onclick="window.openSokoPayDeposit()" style="padding: 14px; background: #0f172a; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Top Up Wallet</button>
+                                <button onclick="window.openSokoPayDeposit()" style="padding: 14px; background: #18A982; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Top Up Wallet</button>
                             </div>
                         </div>
 
@@ -321,7 +321,7 @@
                     <p style="font-size: 13px; color: #64748B; margin-top: 0; margin-bottom: 12px; line-height: 1.5;">Token, linki na QR zinazozalishwa hapo juu zimehifadhiwa kiotomatiki. Unaweza pia kubandika token au linki uliyopokea (kwa WhatsApp/SMS) ili kuirejesha na kuihifadhi hapa.</p>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="spImportInput" placeholder="Bandika Token (SP-XXXXXX) au Linki hapa..." style="flex: 1; min-width: 0; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 12px; box-sizing: border-box;">
-                        <button type="button" onclick="window.importHaiPayItem()" style="padding: 12px 16px; background: #00509d; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;">REJESHA / HIFADHI</button>
+                        <button type="button" onclick="window.importHaiPayItem()" style="padding: 12px 16px; background: #18A982; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;">REJESHA / HIFADHI</button>
                     </div>
                     <div id="spSavedItems" style="margin-top: 16px; text-align: left;"></div>
                 </div>
@@ -534,7 +534,7 @@
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; margin-bottom:18px;">
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <input type="text" placeholder=" Search Dispute ID / Token ID..." style="flex:1; min-width:200px; padding:13px 15px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-size:13px; font-weight:600; background:#f8fafc; box-sizing:border-box; color:#0f172a;">
-                        <button type="button" onclick="window.sokohaiToast && window.sokohaiToast('Utafutaji wa kesi unashughulikiwa...', 'info')" style="padding:13px 24px; background:#00509d; color:#ffffff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;"> SEARCH</button>
+                        <button type="button" onclick="window.sokohaiToast && window.sokohaiToast('Utafutaji wa kesi unashughulikiwa...', 'info')" style="padding:13px 24px; background:#18A982; color:#ffffff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;"> SEARCH</button>
                     </div>
                 </div>
 
@@ -684,7 +684,7 @@
                     </div>
                     <div class="sp-legend-row">
                         <div class="sp-legend-tag">
-                            <span class="sp-legend-indicator-dot" style="background:#00509d;"></span>
+                            <span class="sp-legend-indicator-dot" style="background:#18A982;"></span>
                             <span>Escrow / Locked</span>
                         </div>
                         <span class="sp-legend-amount-bold" id="spLegendEscrow">TZS 0</span>
@@ -698,7 +698,7 @@
                     </div>
                 </div>
                 <!-- Wallet CTA Button -->
-                <button onclick="window.openUserPaymentModal()" style="width:100%; margin-top:16px; padding:12px; background:#001122; color:white; border:none; border-radius:10px; font-size:12px; font-weight:900; text-transform:uppercase; cursor:pointer;">
+                <button onclick="window.openUserPaymentModal()" style="width:100%; margin-top:16px; padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-size:12px; font-weight:900; text-transform:uppercase; cursor:pointer;">
                     Go to Wallet
                 </button>
             </div>

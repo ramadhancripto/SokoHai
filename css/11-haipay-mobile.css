@@ -28,9 +28,9 @@
 
 /* ---------- 2) SIDEBAR LINKS (desktop polish) ---------- */
 .sp-sidebar-link { margin: 2px 0; position: relative; }
-.sp-sidebar-link:hover { background: rgba(255, 255, 255, 0.08) !important; color: #ffffff !important; }
+.sp-sidebar-link:hover { background: #F1F8F5 !important; color: #17604E !important; }
 .sp-sidebar-link.active {
-    box-shadow: 0 6px 16px rgba(0, 80, 157, 0.35);
+    box-shadow: inset 3px 0 0 #18A982;
 }
 
 /* Brand row iweze kujipanga vizuri hata desktop */
@@ -45,7 +45,7 @@
     height: 36px;
     padding: 0 14px;
     flex-shrink: 0;
-    background: #00509d;
+    background: #18A982;
     color: #ffffff;
     border: none;
     border-radius: 999px;
@@ -58,7 +58,7 @@
     transition: background .18s ease, transform .15s ease, box-shadow .18s ease;
 }
 .sp-back-btn:hover {
-    background: #003d77;
+    background: #17604E;
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(0, 80, 157, 0.34);
 }
@@ -108,8 +108,9 @@
         align-items: center;
         padding: 10px 12px !important;
         border-right: none !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+        background: #FFFFFF !important;
+        border-bottom: 1px solid #E5ECEC !important;
+        box-shadow: 0 6px 20px rgba(24, 53, 45, 0.08);
         z-index: 5;
         flex-shrink: 0;
     }
@@ -157,19 +158,19 @@
         white-space: nowrap;
         font-size: 12px !important;
         margin: 0 !important;
-        background: rgba(255, 255, 255, 0.07) !important;
-        color: rgba(255, 255, 255, 0.85) !important;
-        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        background: #FFFFFF !important;
+        color: #65757A !important;
+        border: 1px solid #E5ECEC !important;
     }
     #sokopayLeftSidebar .sp-sidebar-link.active {
-        background: linear-gradient(135deg, #00509d, #003d75) !important;
-        color: #ffffff !important;
-        border-color: transparent !important;
-        box-shadow: 0 6px 16px rgba(0, 80, 157, 0.45) !important;
+        background: #EAF8F2 !important;
+        color: #17604E !important;
+        border-color: #CCEBDD !important;
+        box-shadow: inset 0 -3px 0 #18A982 !important;
     }
     #sokopayLeftSidebar .sp-sidebar-link:hover {
-        background: rgba(255, 255, 255, 0.16) !important;
-        color: #ffffff !important;
+        background: #F1F8F5 !important;
+        color: #17604E !important;
     }
 
     /* Workspace inajaza sehemu iliyobaki na kuscroll peke yake */

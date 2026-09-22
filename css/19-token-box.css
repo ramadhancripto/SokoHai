@@ -11,7 +11,7 @@
     max-width: 560px;
     max-height: 92vh;
     margin: auto;
-    background: #F6F9FC;
+    background: #FFFFFF;
     border-radius: 24px;
     display: flex;
     flex-direction: column;
@@ -36,12 +36,13 @@
     flex: 0 0 auto;
     width: 42px; height: 42px;
     border-radius: 13px;
-    background: linear-gradient(135deg, #1268A8, #2B82BD);
-    color: #fff;
+    background: #EAF8F2;
+    color: #178864;
+    border: 1px solid #CCEBDD;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 6px 14px rgba(18, 104, 168, .28);
 }
-.tb-head-ic svg { stroke: #fff; width: 21px; height: 21px; }
+.tb-head-ic svg { stroke: #178864; width: 21px; height: 21px; }
 .tb-head-txt { flex: 1; min-width: 0; }
 .tb-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #173B56; }
 .tb-sub { display: block; font-size: 13px; color: #64748B; line-height: 1.4; margin-top: 1px; }
@@ -58,7 +59,7 @@
 .tb-tabs {
     display: flex; gap: 6px;
     padding: 12px 16px 0;
-    background: #F6F9FC;
+    background: #FFFFFF;
     flex: 0 0 auto;
 }
 .tb-tab {
@@ -70,8 +71,8 @@
 }
 .tb-tab:hover { border-color: #bcd4e8; color: #0B4F7A; }
 .tb-tab.is-active {
-    background: #1268A8; border-color: #1268A8; color: #fff;
-    box-shadow: 0 4px 10px rgba(18, 104, 168, .25);
+    background: #18A982; border-color: #18A982; color: #fff;
+    box-shadow: 0 4px 10px rgba(24, 169, 130, .20);
 }
 
 /* Orodha */
@@ -153,23 +154,24 @@
 /* Mstari wa code */
 .tb-code-row {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    background: #0B4F7A;
+    background: #EAF8F2;
+    border: 1px solid #CCEBDD;
     border-radius: 12px; padding: 10px 14px;
 }
 .tb-code {
     font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
     font-size: 20px; font-weight: 900; letter-spacing: 2.5px;
-    color: #fff;
+    color: #17604E;
 }
 .tb-icon-btn {
     flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px;
-    border: 1px solid rgba(255, 255, 255, .25);
-    background: rgba(255, 255, 255, .12); color: #fff;
+    border: 1px solid #B9DFCF;
+    background: #fff; color: #178864;
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer;
 }
-.tb-icon-btn:hover { background: rgba(255, 255, 255, .22); }
-.tb-icon-btn svg { stroke: #fff; width: 15px; height: 15px; }
+.tb-icon-btn:hover { background: #F1F8F5; }
+.tb-icon-btn svg { stroke: #178864; width: 15px; height: 15px; }
 
 .tb-meta {
     display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px;
@@ -198,10 +200,10 @@
 .tb-btn svg { width: 15px; height: 15px; }
 .tb-btn:active { transform: scale(.99); }
 .tb-btn-primary {
-    background: #1268A8; color: #fff;
-    box-shadow: 0 4px 12px rgba(18, 104, 168, .25);
+    background: #18A982; color: #fff;
+    box-shadow: 0 4px 12px rgba(24, 169, 130, .22);
 }
-.tb-btn-primary:hover { background: #0B4F7A; }
+.tb-btn-primary:hover { background: #17604E; }
 .tb-btn-primary svg { stroke: #fff; }
 .tb-btn-light { background: #fff; border-color: #CBD5E1; color: #334155; }
 .tb-btn-light:hover { background: #F8FAFC; }
@@ -224,7 +226,7 @@
 }
 .tb-spinner {
     width: 20px; height: 20px; border-radius: 50%;
-    border: 2.5px solid #CBD5E1; border-top-color: #1268A8;
+    border: 2.5px solid #CBD5E1; border-top-color: #18A982;
     animation: tbSpin .8s linear infinite;
 }
 .tb-spinner--btn { width: 15px; height: 15px; border-width: 2px; border-color: rgba(255,255,255,.4); border-top-color: #fff; }

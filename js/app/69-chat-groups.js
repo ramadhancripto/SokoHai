@@ -1666,7 +1666,7 @@ import { skh as _skh } from './00-bootstrap.js';
                 + '<small id="skhPkrCount" style="color:#64748b;"></small>'
                 + '<button type="button" id="skhPkrAll" style="border:1px solid #1268A8;color:#1268A8;background:#fff;font-weight:800;font-size:11.5px;padding:6px 11px;border-radius:99px;cursor:pointer;">' + tk('pkr_all', 'Chagua wote') + '</button></div>'
                 + '<div id="skhPkrList" style="max-height:46vh;overflow-y:auto;"></div>'
-                + '<button type="button" id="skhPkrDone" style="width:100%;margin-top:14px;padding:13px;background:#1268A8;color:#fff;border:none;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;"></button>'
+                + '<button type="button" id="skhPkrDone" style="width:100%;margin-top:14px;padding:13px;background:#18A982;color:#fff;border:none;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;"></button>'
                 + '</div>';
             document.body.appendChild(m);
             m.querySelector('#skhPkrQ').addEventListener('input', pickerRender);
@@ -1789,7 +1789,7 @@ import { skh as _skh } from './00-bootstrap.js';
             + sel('skhGrpJoin', tk('grp_join_policy', 'Nani anaweza kujiunga'), [['open', tk('grp_join_open', 'Wazi — kujiunga mara moja')], ['request', tk('grp_join_request', 'Omba — idhini ya admin')]], 'open')
             + sel('skhGrpCtxType', tk('grp_ctx', 'Context ya commerce (kwa soga ya pamoja)'), [['GENERAL', tk('grp_ctx_general', 'Ya kawaida (community)')], ['GROUP_BUY', 'Group Buy'], ['WHOLESALE', 'Wholesale / Group Order'], ['TRANSPORT', tk('grp_ctx_transport', 'Uratibu wa usafiri')], ['PRODUCT', tk('grp_ctx_product', 'Bidhaa maalum')], ['SERVICE', tk('grp_ctx_service', 'Huduma maalum')]], 'GENERAL')
             + '<input id="skhGrpCtxId" type="text" placeholder="' + tk('grp_ctx_id_ph', 'Context ID (si lazima) — mf: productId wa Group Buy') + '" style="width:100%;padding:12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:13.5px;margin-top:10px;">'
-            + '<button id="skhGrpDoCreate" type="button" style="width:100%;margin-top:16px;padding:14px;background:#1268A8;color:#fff;border:none;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;">' + tk('grp_create_now', 'UNDA KIKUNDI') + '</button>'
+            + '<button id="skhGrpDoCreate" type="button" style="width:100%;margin-top:16px;padding:14px;background:#18A982;color:#fff;border:none;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;">' + tk('grp_create_now', 'UNDA KIKUNDI') + '</button>'
             + '</div>';
         document.body.appendChild(m);
         m.querySelector('#skhGrpPickBtn').addEventListener('click', function () {

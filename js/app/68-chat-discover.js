@@ -130,7 +130,7 @@ import { skh } from './00-bootstrap.js';
     /* ---------- UI ---------- */
     function tabBtn(kind, label) {
         var on = LAST.kind === kind;
-        return '<button type="button" data-act="disc-tab" data-kind="' + kind + '" style="padding:6px 12px;border-radius:99px;border:1px solid #cbd5e1;background:' + (on ? '#1268A8;color:#fff' : '#fff') + ';font-size:12.5px;font-weight:700;cursor:pointer;">' + label + '</button>';
+        return '<button type="button" data-act="disc-tab" data-kind="' + kind + '" style="padding:6px 12px;border-radius:99px;border:1px solid #cbd5e1;background:' + (on ? '#18A982;color:#fff' : '#fff') + ';font-size:12.5px;font-weight:700;cursor:pointer;">' + label + '</button>';
     }
     function personCard(u) {
         var name = u.fullName || u.displayName || u.username || tk('disc_person', 'Mtu');
@@ -144,7 +144,7 @@ import { skh } from './00-bootstrap.js';
         var ints = d.showInterests !== false ? (u.interests && u.interests.slice ? u.interests.slice(0, 3).join(' · ') : (u.category || '')) : '';
         var initial = String(name).trim().charAt(0).toUpperCase() || '?';
         return '<div style="display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:8px;background:#fff;">'
-            + '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1268A8,#18A982);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;">' + esc(initial) + '</div>'
+            + '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#18A982,#18A982);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;">' + esc(initial) + '</div>'
             + '<div style="flex:1;min-width:0;">'
             + '<b style="display:block;font-size:14px;color:#0f172a;">' + esc(name) + ' ' + verifyBadge + (u.username ? ' <small style="color:#64748b;">@' + esc(u.username) + '</small>' : '') + '</b>'
             + (roleBadges ? roleBadges : '')
@@ -153,19 +153,19 @@ import { skh } from './00-bootstrap.js';
             + '</div>'
             + '<div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;">'
             + '<button type="button" data-act="disc-contact" data-uid="' + esc(u.uid) + '" data-name="' + esc(name) + '" style="border:none;background:#18A982;color:#fff;font-weight:800;font-size:12.5px;padding:8px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;">' + tk('disc_chatbtn', 'Wasiliana') + '</button>'
-            + '<button type="button" data-act="disc-view-person" data-uid="' + esc(u.uid) + '" style="border:1px solid #cbd5e1;background:#fff;color:#1268A8;font-weight:800;font-size:12px;padding:7px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;">' + tk('disc_view', 'Tazama Profaili') + '</button>'
+            + '<button type="button" data-act="disc-view-person" data-uid="' + esc(u.uid) + '" style="border:1px solid #cbd5e1;background:#fff;color:#18A982;font-weight:800;font-size:12px;padding:7px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;">' + tk('disc_view', 'Tazama Profaili') + '</button>'
             + '</div></div>';
     }
     function groupCard(g) {
         var name = g.name || g.title || tk('disc_group', 'Kikundi');
         var n = (g.memberCount != null ? g.memberCount : (Array.isArray(g.members) ? g.members.length : ''));
         return '<div style="display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:8px;background:#fff;">'
-            + '<div style="width:40px;height:40px;border-radius:12px;background:#e0f0fa;color:#1268A8;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
+            + '<div style="width:40px;height:40px;border-radius:12px;background:#e0f0fa;color:#18A982;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
             + '<div style="flex:1;min-width:0;"><b style="display:block;font-size:14px;color:#0f172a;">' + esc(name) + '</b>'
             + '<small style="color:#64748b;">' + esc(g.category || '') + (n !== '' ? ' · ' + n + ' ' + tk('disc_members', 'wanachama') : '') + '</small></div>'
             + (g.id ? '<div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;">'
-                + '<button type="button" data-act="disc-join" data-gid="' + esc(g.id) + '" style="border:none;background:#1268A8;color:#fff;font-weight:800;font-size:12.5px;padding:8px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;">' + tk('disc_join', 'Jiunge') + '</button>'
-                + '<button type="button" data-act="disc-view-group" data-gid="' + esc(g.id) + '" style="border:1px solid #cbd5e1;background:#fff;color:#1268A8;font-weight:800;font-size:12px;padding:7px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;">' + tk('disc_view_grp', 'Tazama') + '</button>'
+                + '<button type="button" data-act="disc-join" data-gid="' + esc(g.id) + '" style="border:none;background:#18A982;color:#fff;font-weight:800;font-size:12.5px;padding:8px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;">' + tk('disc_join', 'Jiunge') + '</button>'
+                + '<button type="button" data-act="disc-view-group" data-gid="' + esc(g.id) + '" style="border:1px solid #cbd5e1;background:#fff;color:#18A982;font-weight:800;font-size:12px;padding:7px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;">' + tk('disc_view_grp', 'Tazama') + '</button>'
                 + '</div>' : '')
             + '</div>';
     }
@@ -209,7 +209,7 @@ import { skh } from './00-bootstrap.js';
         var d = myDiscovery();
         var on = !!d[key];
         return '<label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px;cursor:pointer;">'
-            + '<input type="checkbox" data-toggle="' + key + '" ' + (on ? 'checked' : '') + ' style="margin-top:2px;width:17px;height:17px;accent-color:#1268A8;">'
+            + '<input type="checkbox" data-toggle="' + key + '" ' + (on ? 'checked' : '') + ' style="margin-top:2px;width:17px;height:17px;accent-color:#18A982;">'
             + '<span><b style="display:block;font-size:13.5px;color:#0f172a;">' + label + '</b><small style="color:#64748b;font-size:12px;">' + sub + '</small></span></label>';
     }
     function buildSettingsModal() {
@@ -235,7 +235,7 @@ import { skh } from './00-bootstrap.js';
                 + myRoles.map(function (r) {
                     var on = rv[r] !== false;
                     return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px;cursor:pointer;">'
-                        + '<input type="checkbox" data-role-toggle="' + r + '" ' + (on ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:#1268A8;">'
+                        + '<input type="checkbox" data-role-toggle="' + r + '" ' + (on ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:#18A982;">'
                         + (window.skhRoleBadge ? window.skhRoleBadge(r) : esc(r)) + '</label>';
                 }).join('');
         } catch (e) { return ''; }

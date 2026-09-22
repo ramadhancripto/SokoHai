@@ -277,7 +277,7 @@ import {
         area.innerHTML = '<div style="background:#eff6ff; padding:15px; border-radius:18px; border:2px dashed #0B4F7A;" data-mode-panel="wholesale" data-lowest-ws="' + w.lowest + '">'
             + '<div style="text-align:center; margin-bottom:10px;"><b style="color:#0B4F7A;"> BEI YA JUMLA (WHOLESALE)</b></div>'
             + '<table style="width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; font-size:14px;">'
-            + '<thead><tr style="background:#0B4F7A; color:white;"><th style="padding:8px 10px; text-align:left; font-size:12px;">Idadi</th><th style="padding:8px 10px; text-align:right; font-size:12px;">Bei / Kipande</th></tr></thead>'
+            + '<thead><tr style="background:#EAF8F2; color:#18352D;"><th style="padding:8px 10px; text-align:left; font-size:12px;">Idadi</th><th style="padding:8px 10px; text-align:right; font-size:12px;">Bei / Kipande</th></tr></thead>'
             + '<tbody>' + rows + '</tbody></table>'
             + '<div id="wsApplyHint" style="margin-top:10px; text-align:center; font-size:12.5px; color:#0B4F7A;"></div>'
             + '<small style="display:block; margin-top:8px; text-align:center; color:#64748b;">Chagua idadi hapo juu (Qty) — bei yakie inotingenea automatically kwa tiers hizi (halisi kutoka seller settings).</small></div>';

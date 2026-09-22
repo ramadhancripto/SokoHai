@@ -21,7 +21,7 @@
             '.skh-chat-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:32px 20px;min-height:220px;color:#667781;text-align:center;width:100%;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}',
             '.skh-chat-state b{color:#0f172a;font-size:15px}',
             '.skh-chat-state span{font-size:13px;color:#64748b;max-width:280px;line-height:1.5}',
-            '.skh-chat-state .skh-chat-btn{margin-top:8px;padding:9px 18px;background:#1268A8;color:#fff;border:0;border-radius:24px;font-weight:700;font-size:13px;cursor:pointer}',
+            '.skh-chat-state .skh-chat-btn{margin-top:8px;padding:9px 18px;background:#18A982;color:#fff;border:0;border-radius:24px;font-weight:700;font-size:13px;cursor:pointer}',
             '.skh-chat-state .skh-spin{width:34px;height:34px;border:3px solid #d3e6f5;border-top-color:#1268A8;border-radius:50%;animation:skhSpin .8s linear infinite}'
         ].join('\n');
         document.head.appendChild(s);

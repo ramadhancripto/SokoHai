@@ -162,7 +162,7 @@ window.sokohaiAccountSettingContent = function(key,title){
     const css = `
     #printingServiceModal { z-index:100004 !important; }
     .prt-pro-card { background:white; width:96%; max-width:760px; max-height:92vh; border-radius:24px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(15,23,42,.40); }
-    .prt-pro-head { background:linear-gradient(135deg,#0f172a,#00509d); color:white; padding:16px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .prt-pro-head { background:#EAF8F2; color:#18352D; padding:16px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
     .prt-pro-head b { font-size:17px; }
     .prt-pro-head small { color:#cbd5e1; font-size:13px; }
     .prt-pro-body { padding:14px; background:#f8fafc; overflow-y:auto; }
@@ -176,15 +176,15 @@ window.sokohaiAccountSettingContent = function(key,title){
     .prt-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .prt-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
     .prt-summary { background:linear-gradient(135deg,#fff,#eff6ff); border:1px solid #bfdbfe; border-radius:18px; padding:14px; position:sticky; top:0; }
-    .prt-total { text-align:center; padding:12px; background:#0f172a; color:white; border-radius:16px; margin-bottom:10px; }
+    .prt-total { text-align:center; padding:12px; background:#F8FBFA; color:#18352D; border:1px solid #E5ECEC; border-radius:16px; margin-bottom:10px; }
     .prt-total small { display:block; color:#cbd5e1; font-size:12.5px; font-weight:900; text-transform:uppercase; }
     .prt-total b { display:block; font-size:24px; margin-top:4px; }
     .prt-line { display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid #e2e8f0; padding:8px 0; font-size:12px; color:#334155; }
     .prt-line:last-child { border-bottom:none; }
     .prt-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
     .prt-btn { border:none; border-radius:12px; padding:12px; min-height:42px; font-size:12px; font-weight:950; cursor:pointer; }
-    .prt-btn-primary { background:#00509d; color:white; }
-    .prt-btn-dark { background:#0f172a; color:white; }
+    .prt-btn-primary { background:#18A982; color:white; }
+    .prt-btn-dark { background:#F8FBFA; color:#18352D; border:1px solid #E5ECEC; }
     .prt-btn-light { background:#e2e8f0; color:#334155; }
     .prt-btn-green { background:#10b981; color:white; }
     .prt-queue-item { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; margin-bottom:8px; font-size:12px; }

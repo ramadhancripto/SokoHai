@@ -327,8 +327,8 @@
 }
 .lang-toggle:hover,
 .lang-toggle.open {
-    background: #03509d;
-    border-color: #03509d;
+    background: #18A982;
+    border-color: #18A982;
     color: #ffffff;
 }
 .lang-toggle .lang-caret { color: currentColor; transition: transform .18s ease; }
@@ -371,7 +371,7 @@
 }
 .lang-dropdown-opt:hover { background: #eef4fb; }
 .lang-dropdown-opt.active {
-    background: #03509d;
+    background: #18A982;
     color: #ffffff;
 }
 .lang-dropdown-opt .lang-check {

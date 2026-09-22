@@ -404,7 +404,7 @@ window.openSubscriptionModal = function() {
 // WEKA HII CHINI YAKE:
 
 let businessTools = `
-    <div style="background:white; padding:15px; border-radius:15px; margin-bottom:20px; border:1px solid #e2e8f0;"> <b style="font-size:12px; color:var(--business-purple); display:block; margin-bottom:10px;"> MFUMO WA HASIBU (POS & ACCOUNTANT)</b> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"> <button onclick="showForm('businessOSForm')" style="padding:12px; background:var(--business-purple); color:white; border:none; border-radius:10px; font-size:13px; font-weight:bold;"> REKODI MAUZO</button> <button onclick="window.skhShowTodayProfitReport()" style="padding:12px; background:#0f172a; color:white; border:none; border-radius:10px; font-size:13px; font-weight:bold;"> RIPOTI YA FAIDA</button> </div> </div>
+    <div style="background:white; padding:15px; border-radius:15px; margin-bottom:20px; border:1px solid #e2e8f0;"> <b style="font-size:12px; color:#17604E; display:block; margin-bottom:10px;"> MFUMO WA HASIBU (POS & ACCOUNTANT)</b> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"> <button onclick="showForm('businessOSForm')" style="padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-size:13px; font-weight:bold;"> REKODI MAUZO</button> <button onclick="window.skhShowTodayProfitReport()" style="padding:12px; background:#526962; color:white; border:none; border-radius:10px; font-size:13px; font-weight:bold;"> RIPOTI YA FAIDA</button> </div> </div>
 `;
 // Kisha hakikisha variable hii 'businessTools' inaongezwa kwenye container.innerHTML ya seller.
         // Vifurushi vya Wauzaji Bidhaa

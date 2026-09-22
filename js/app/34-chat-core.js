@@ -1461,7 +1461,7 @@ import { skh } from './00-bootstrap.js';
                 try { console.error('[chat render]', eRender); } catch (e2) {}
                 html = '<div style="text-align:center;padding:30px 16px;">'
                     + '<p style="color:#b91c1c;font-size:13px;">' + T('ch_render_fail', 'Imeshindwa kuonyesha ujumbe.') + '</p>'
-                    + '<button type="button" onclick="window.skhChatRetryHistory()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
+                    + '<button type="button" onclick="window.skhChatRetryHistory()" style="margin-top:10px;padding:8px 16px;background:#17604E;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
                     + '</div>';
             }
             if (msgs.length >= msgLimit) html += '<div style="text-align:center;margin-top:8px;"><button type="button" class="ch-ctxbtn" onclick="window.skhChatLoadOlder()">' + T('ch_load_older', 'Pakia ujumbe wa zamani') + '</button></div>';
@@ -2195,7 +2195,7 @@ import { skh } from './00-bootstrap.js';
             if (chatDiv) {
                 chatDiv.innerHTML = '<div style="text-align:center;padding:30px 16px;">'
                     + '<p style="color:#b91c1c;font-size:13px;">' + T('ch_open_fail', 'Imeshindwa kufungua mazungumzo.') + '</p>'
-                    + '<button type="button" onclick="window.skhChatRetryOpen()" style="margin-top:10px;padding:9px 18px;background:#0B4F7A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
+                    + '<button type="button" onclick="window.skhChatRetryOpen()" style="margin-top:10px;padding:9px 18px;background:#17604E;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
                     + '</div>';
             }
             return null;
@@ -2587,7 +2587,7 @@ import { skh } from './00-bootstrap.js';
                     var listEl = document.getElementById('inboxList');
                     if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;">'
                         + '<p style="color:#64748b;font-size:13px;">' + T('ch_inbox_slow', 'Mazungumzo yanachukua muda kupakia.') + '</p>'
-                        + '<button onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
+                        + '<button onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#17604E;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
                         + '</div>';
                 }
             }
@@ -2607,7 +2607,7 @@ import { skh } from './00-bootstrap.js';
             var listEl = document.getElementById('inboxList');
             if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;">'
                 + '<p style="color:#b91c1c;font-size:13px;">' + T('ch_inbox_fail', 'Imeshindwa kupakia mazungumzo.') + '</p>'
-                + '<button onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
+                + '<button onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#17604E;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">' + T('ch_retry', 'Jaribu Tena') + '</button>'
                 + '</div>';
         });
     };

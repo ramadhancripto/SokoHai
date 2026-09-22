@@ -630,7 +630,7 @@ import { skh } from './00-bootstrap.js';
         activeTab = tab;
         var btns = document.querySelectorAll('#mySokoHaiModal .skh-mytab');
         if (btns) btns.forEach(function (b) { b.style.background = '#e2e8f0'; b.style.color = '#334155'; });
-        if (el) { el.style.background = '#001122'; el.style.color = '#fff'; }
+        if (el) { el.style.background = '#18A982'; el.style.color = '#fff'; }
         window.skhRenderEngagementTab(tab);
     };
 

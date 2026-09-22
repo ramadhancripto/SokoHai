@@ -42,7 +42,7 @@ import { skh } from './00-bootstrap.js';
 .skh-lc-tabs::-webkit-scrollbar{display:none}
 .skh-lc-tab{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
   border:1px solid #dbe5ef;background:#f8fafc;color:#334155;font-size:12.5px;font-weight:800;cursor:pointer}
-.skh-lc-tab.active{background:#1268A8;border-color:#1268A8;color:#fff;box-shadow:0 5px 14px rgba(18,104,168,.3)}
+.skh-lc-tab.active{background:#18A982;border-color:#18A982;color:#fff;box-shadow:0 5px 14px rgba(18,104,168,.3)}
 .skh-lc-tab .n{background:rgba(15,23,42,.08);border-radius:99px;padding:1px 7px;font-size:12.5px;font-weight:900}
 .skh-lc-tab.active .n{background:rgba(255,255,255,.22)}
 
@@ -54,11 +54,11 @@ import { skh } from './00-bootstrap.js';
 
 /* Bulk bar */
 .skh-lc-bulk{position:fixed;left:50%;transform:translateX(-50%);bottom:78px;z-index:2147482000;
-  background:#0f172a;color:#fff;border-radius:14px;padding:10px 12px;display:none;align-items:center;gap:10px;
+  background:#fff;color:#18352D;border:1px solid #E5ECEC;border-radius:14px;padding:10px 12px;display:none;align-items:center;gap:10px;
   box-shadow:0 18px 40px -10px rgba(0,0,0,.5);max-width:94vw}
 .skh-lc-bulk.show{display:flex}
 .skh-lc-bulk b{font-size:13px}
-.skh-lc-bulk button{background:#1e293b;color:#fff;border:none;border-radius:9px;padding:8px 11px;
+.skh-lc-bulk button{background:#526962;color:#fff;border:none;border-radius:9px;padding:8px 11px;
   font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .skh-lc-bulk button:hover{background:#334155}
 .skh-lc-bulk button.danger{background:#dc2626}

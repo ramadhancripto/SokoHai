@@ -270,7 +270,7 @@ import { skh } from './00-bootstrap.js';
           var eng = byId('skhDiscoverEngine');
           if(eng){
             var body = byId('skhDiscoverEngineBody');
-            if(body) body.innerHTML = '<div style="padding:20px;text-align:center;"><b style="color:#b91c1c;">Imeshindikana</b><br><small style="color:#64748b;">'+esc(e.message||'')+'</small><br><button onclick="window.skhDiscoverEngineClose()" style="margin-top:12px;padding:10px 18px;border:none;background:#1268A8;color:#fff;border-radius:10px;font-weight:800;">Funga</button></div>';
+            if(body) body.innerHTML = '<div style="padding:20px;text-align:center;"><b style="color:#b91c1c;">Imeshindikana</b><br><small style="color:#64748b;">'+esc(e.message||'')+'</small><br><button onclick="window.skhDiscoverEngineClose()" style="margin-top:12px;padding:10px 18px;border:none;background:#18A982;color:#fff;border-radius:10px;font-weight:800;">Funga</button></div>';
           }
         }
       }catch(e){ console.error('[81 patchDiscoverEngine]',e); try{ return orig.apply(this, arguments); }catch(e2){} }

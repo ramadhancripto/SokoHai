@@ -33,9 +33,9 @@
     transition: 0.2s ease-in-out;
 }
 .pos-quick-btn:hover {
-    background: #03509d;
+    background: #18A982;
     color: #ffffff;
-    border-color: #03509d;
+    border-color: #18A982;
 }
 
 /* === NYONGEZA YA MAPAMBO YA SETUP WIZARD === */
@@ -87,7 +87,7 @@
     position: absolute;
     top: 10px;
     right: 15px;
-    background: #00509d;
+    background: #18A982;
     color: #ffffff;
     font-size: 12.5px;
     font-weight: 900;
@@ -128,14 +128,14 @@
     transition: 0.2s;
 }
 .variant-chip.selected {
-    border-color: #03509d;
+    border-color: #18A982;
     background: #e0f2fe;
     color: #03509d;
     box-shadow: 0 0 0 3px rgba(3, 80, 157, 0.1);
 }
 
 .form-box {
-    display: none; 
+    display: none;
     z-index: 1000001 !important;
     background: white !important;
     position: fixed;
@@ -187,12 +187,12 @@
     cursor: pointer;
 }
         #categoryModal .overlay-menu { align-items: center; justify-content: center; }
-#categoryModal > div { 
-    max-height: 80vh; 
-    overflow-y: auto; 
-    border-radius: 25px; 
-    width: 95%; 
-    max-width: 450px; 
+#categoryModal > div {
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 25px;
+    width: 95%;
+    max-width: 450px;
 }
 
 
@@ -261,8 +261,8 @@
 
 /* 2. Style ya UZA (Dhahabu) - Ipo mda wote */
 .sell-circle-glow {
-    background: linear-gradient(145deg, #FFD700, #D4AF37) !important;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3) !important;
+    background: #18A982 !important;
+    box-shadow: 0 7px 18px rgba(24,169,130,.28) !important;
 }
 
 /* Big Announcement Bar inapokuwa dharura */
@@ -283,7 +283,7 @@
 /* 🌟 KITUFE CHA "UZA" - KIMEKAA JUU YA NAV BAR (KAMA TUFE) */
 .sell-action-fab {
     pointer-events: auto !important;
-    margin-bottom: -8px; 
+    margin-bottom: -8px;
     z-index: 6000 !important; /* CHINI ya modali zote (>=7600) — kisifunike chat, cart, maoni n.k. */
     display: flex;
     justify-content: center;
@@ -300,14 +300,14 @@
 .sell-circle-glow {
     width: 58px;
     height: 58px;
-    background: linear-gradient(145deg, #FFD700, #D4AF37); /* Gold Stylish */
+    background: #18A982; /* Primary SokoHai action */
     border-radius: 50%;
     border: 4px solid #ffffff; /* Border nyeupe inayoifanya ionekane imekaa juu */
     display: flex;
     align-items: center;
     justify-content: center;
     /* Kivuli kikubwa chini kuonyesha kimeinuka (Floating effect) */
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     cursor: pointer;
     transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -315,7 +315,7 @@
 .sell-text-btn {
     font-size: 30px; /* Alama ya + kubwa na wazi */
     font-weight: 900;
-    color: #002244; /* Navy Blue */
+    color: #ffffff;
     line-height: 1;
     text-align: center;
     display: block;
@@ -325,7 +325,7 @@
 .bottom-nav-main {
     pointer-events: auto;
     width: 100%;
-    background: var(--primary-dark); /* Rangi ya asili ya block */
+    background: #ffffff;
     padding-bottom: env(safe-area-inset-bottom);
     box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
     border-radius: 20px 20px 0 0; /* Pembe za juu tu zimeviringishwa */
@@ -397,7 +397,7 @@
 
 
 
-    
+
     /* =========================================
    LIVE TRACKING PROGRESS BAR (●----->---○)
    ========================================= */
@@ -439,7 +439,7 @@
     display: block !important;
     max-height: none !important;
     opacity: 1 !important;
-    background: linear-gradient(90deg, #002244, #00509d);
+    background: #FFFFFF;
 }
 
     /* CSS MPYA YA AUTH MODAL */
@@ -515,34 +515,34 @@
     /* =========================================
        1. GLOBAL VARIABLES & RESET
        ======================================== */
-    :root { 
-        --primary-dark: #03509d; 
-        --primary-blue: #00509d; 
-        --green: #10b981; 
-        --terracotta: #BC4A3C; 
+    :root {
+        --primary-dark: #17604E;
+        --primary-blue: #18A982;
+        --green: #18A982;
+        --terracotta: #BC4A3C;
       --danger-red: #ef4444; /* Kwa ajili ya Community Alert */
 --trust-green: #059669; /* Kwa ajili ya Trust Score */
 --business-purple: #8b5cf6; /* Kwa ajili ya Business OS */
-        --gold: #D4AF37; 
-        --white: #ffffff; 
-        --grey: #f1f5f9; 
+        --gold: #D4AF37;
+        --white: #ffffff;
+        --grey: #f1f5f9;
         --dark-bg: #0f172a;
         --card-bg: #ffffff;
         --text-muted: #64748b;
     }
-    
-    * { 
-        box-sizing: border-box; 
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        -webkit-tap-highlight-color: transparent; 
-        scroll-behavior: smooth; 
+
+    * {
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        scroll-behavior: smooth;
     }
-    
-    body { 
-        margin: 0; 
-        background: var(--grey); 
-        padding-bottom: 220px; 
-        overflow-x: hidden; 
+
+    body {
+        margin: 0;
+        background: var(--grey);
+        padding-bottom: 220px;
+        overflow-x: hidden;
     }
 /* =========================================
    MARKET MODES NAVIGATION & BADGES
@@ -591,15 +591,15 @@
     /* =========================================
        2. HEADER ROWS (TOP NAV & SEARCH NAV)
        ========================================= */
-    
-    .top-nav-row { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 12px 15px; 
-        border-bottom: 1px solid #f0f0f0; 
+
+    .top-nav-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
     }
-    
+
     .top-nav-left {
         display: flex;
         align-items: center;
@@ -698,117 +698,118 @@
         color: var(--gold);
         transform: scale(1.1);
     }
-    
-    .badge { 
-        position: absolute; 
-        top: -6px; 
-        right: -8px; 
-        background: var(--terracotta); 
-        color: white; 
-        font-size: 12px; 
-        font-weight: bold; 
-        border-radius: 50%; 
-        padding: 2px 6px; 
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
-    }
-    
-    
 
-    .search-nav-row { 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        gap: 15px; 
-        padding: 12px 15px 14px; 
-        background: var(--white); 
-        border-bottom: 2px solid var(--gold); 
-        transition: 0.3s; 
-        position: sticky; 
-    top: 0; 
+    .badge {
+        position: absolute;
+        top: -6px;
+        right: -8px;
+        background: var(--terracotta);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        border-radius: 50%;
+        padding: 2px 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+
+
+    .search-nav-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        padding: 12px 15px 14px;
+        background: var(--white);
+        border-bottom: 2px solid var(--gold);
+        transition: 0.3s;
+        position: sticky;
+    top: 0;
     z-index: 2050; /* Z-index kubwa kuliko bidhaa ili isifunikwe */
     box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Kivuli */
     }
-    
-.user-dp-wrapper { 
-        position: relative; 
-        cursor: pointer; 
-        transition: 0.2s; 
+
+.user-dp-wrapper {
+        position: relative;
+        cursor: pointer;
+        transition: 0.2s;
         flex-shrink: 0; /* Inazuia picha isikatwe */
     }
-    .user-dp-wrapper:active { 
-        transform: scale(0.95); 
+    .user-dp-wrapper:active {
+        transform: scale(0.95);
     }
-    
-    .user-dp { 
-        width: 40px; 
-        height: 40px; 
-        border-radius: 50%; 
-        object-fit: cover; 
-        border: 2px solid var(--primary-blue); 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+
+    .user-dp {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-blue);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    
-    .search-wrap { 
-        position: relative; 
-        width: 75%; 
-        max-width: 280px; 
+
+    .search-wrap {
+        position: relative;
+        width: 75%;
+        max-width: 280px;
     }
-    
-    .search-wrap input { 
-        width: 100%; 
-        height: 36px; 
-        border-radius: 18px; 
-        border: 1px solid #ccc; 
-        padding: 0 35px 0 15px; 
-        font-size: 13px; 
-        outline: none; 
-        background: #f8fafc; 
-        transition: all 0.3s ease; 
+
+    .search-wrap input {
+        width: 100%;
+        height: 36px;
+        border-radius: 18px;
+        border: 1px solid #ccc;
+        padding: 0 35px 0 15px;
+        font-size: 13px;
+        outline: none;
+        background: #f8fafc;
+        transition: all 0.3s ease;
     }
-    
-    .search-wrap input:focus { 
-        border-color: var(--primary-blue); 
-        background: #fff; 
-        box-shadow: 0 0 8px rgba(0,80,157,0.15); 
+
+    .search-wrap input:focus {
+        border-color: var(--primary-blue);
+        background: #fff;
+        box-shadow: 0 0 8px rgba(0,80,157,0.15);
     }
-    
-    .camera-icon { 
-        position: absolute; 
-        right: 12px; 
-        top: 50%; 
-        transform: translateY(-50%); 
-        font-size: 16px; 
-        color: #666; 
-        cursor: pointer; 
-        transition: 0.2s; 
+
+    .camera-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        color: #666;
+        cursor: pointer;
+        transition: 0.2s;
     }
-    
-    .camera-icon:hover { 
-        color: var(--primary-blue); 
+
+    .camera-icon:hover {
+        color: var(--primary-blue);
     }
 
     /* =========================================
        3. ANNOUNCEMENT MARQUEE
        ========================================= */
-    .big-announcement { 
-        background: linear-gradient(135deg, #003366, #00509d, #10b981); 
-        color: white; 
-        padding: 12px 10px; 
-        text-align: center; 
-        border-radius: 12px; 
-        margin: 10px 15px; 
-        overflow: hidden; 
-        position: relative; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+    .big-announcement {
+        background: #FFFFFF;
+        color: #18352D;
+        border: 1px solid #E5ECEC;
+        padding: 12px 10px;
+        text-align: center;
+        border-radius: 12px;
+        margin: 10px 15px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    
-    .big-announcement::before { 
-        content: ""; 
-        position: absolute; 
-        inset: 0; 
-        border-radius: 12px; 
-        padding: 2px; 
-        background: linear-gradient(90deg, #eeAF37, #10b981, #00509d, #D4AF37); 
+
+    .big-announcement::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        padding: 2px;
+        background: linear-gradient(90deg, #eeAF37, #10b981, #00509d, #D4AF37);
        -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -819,28 +820,28 @@ mask:
 
 -webkit-mask-composite: xor;
 mask-composite: exclude;
-        animation: borderGlow 4s linear infinite; 
+        animation: borderGlow 4s linear infinite;
     }
-    
-    @keyframes borderGlow { 
-        0% { filter: hue-rotate(0deg); } 
-        100% { filter: hue-rotate(360deg); } 
+
+    @keyframes borderGlow {
+        0% { filter: hue-rotate(0deg); }
+        100% { filter: hue-rotate(360deg); }
     }
-    
-    .marquee-text { 
-        display: inline-block; 
-        white-space: nowrap; 
-        font-size: 13px; 
-        font-weight: 900; 
-        color: #fff; 
-        letter-spacing: 1.5px; 
-        text-transform: uppercase; 
-        animation: scrollText 20s linear infinite; 
+
+    .marquee-text {
+        display: inline-block;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        animation: scrollText 20s linear infinite;
     }
-    
-    @keyframes scrollText { 
-        0% { transform: translateX(0%); } 
-        100% { transform: translateX(-50%); } 
+
+    @keyframes scrollText {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-50%); }
     }
 
 /* =========================================
@@ -953,66 +954,66 @@ mask-composite: exclude;
     /* =========================================
        5. BUYER FEED & SLIDERS
        ========================================= */
-    .scroll-content { 
-        padding-top: 15px; 
+    .scroll-content {
+        padding-top: 15px;
     }
-    
-    .strategy-row { 
-        margin-bottom: 25px; 
-        padding: 15px 15px 15px 20px; 
+
+    .strategy-row {
+        margin-bottom: 25px;
+        padding: 15px 15px 15px 20px;
         /* [DARK-BLUE FIX 2026-09] Msingi wa bluu nzito wa zamani umeondolewa —
            kadi nyepesi (.skh-section) ndiyo inayotumika sasa. */
-        background: transparent; 
-        border-left: 4px solid var(--skh-primary, #1268A8); 
-        margin-right: 15px; 
-        border-radius: 0 20px 20px 0; 
-        box-shadow: none; 
+        background: transparent;
+        border-left: 4px solid var(--skh-primary, #1268A8);
+        margin-right: 15px;
+        border-radius: 0 20px 20px 0;
+        box-shadow: none;
     }
-    
-    .strategy-header { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        margin-bottom: 15px; 
+
+    .strategy-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
     }
-    
-    .strategy-header b { 
-        font-size: 14px; 
-        color: var(--gold); 
-        text-transform: uppercase; 
-        letter-spacing: 1px; 
+
+    .strategy-header b {
+        font-size: 14px;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
-    
-    .item-slider { 
-        display: flex; 
-        gap: 12px; 
-        overflow-x: auto; 
-        scrollbar-width: none; 
-        padding-bottom: 10px; 
+
+    .item-slider {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-bottom: 10px;
         /* SCROLLING YA KITAALAMU */
-        scroll-snap-type: x mandatory; 
-        scroll-behavior: smooth; 
-        -webkit-overflow-scrolling: touch; 
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
     }
-    
-    .item-slider::-webkit-scrollbar { 
-        display: none; 
+
+    .item-slider::-webkit-scrollbar {
+        display: none;
     }
-    .large-card { 
-    min-width: 150px; 
+    .large-card {
+    min-width: 150px;
     flex-shrink: 0; /* Hii inazuia kadi kusinyaa upande wa pembeni */
-    height: 196px; 
-    background: white; 
-    border-radius: 14px; 
-    border: 1px solid #e6ecf2; 
-    display: flex; 
-    flex-direction: column; 
-    padding: 8px; 
-    box-shadow: 0 4px 12px rgba(0,34,68,0.08); 
-    cursor: pointer; 
-    transition: transform 0.2s, box-shadow 0.2s; 
-    position: relative; 
-    scroll-snap-align: start; 
+    height: 196px;
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #e6ecf2;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0,34,68,0.08);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    scroll-snap-align: start;
 }
 
 /* Mtindo wa picha ndani ya kadi za slides ili isivuruge vipimo */
@@ -1024,336 +1025,336 @@ mask-composite: exclude;
     background: #f4f7fa;
     flex-shrink: 0;
 }
-    
-    .large-card:active { 
-        transform: scale(0.96); 
+
+    .large-card:active {
+        transform: scale(0.96);
     }
 
-    .main-feed { 
-        padding: 0 15px; 
+    .main-feed {
+        padding: 0 15px;
     }
-    
-    .feed-grid { 
-        display: grid; 
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-        gap: 15px; 
+
+    .feed-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
     }
-    
-.feed-card-box { 
-    background: white; 
-    border-radius: 14px; 
-    overflow: hidden; 
-    border: 1px solid #e6ecf2; 
-    display: flex; 
-    flex-direction: column; 
+
+.feed-card-box {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e6ecf2;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 3px 8px rgba(0,34,68,0.05); /* Kivuli hafifu kinavutia zaidi */
-    cursor: pointer; 
-    transition: transform 0.2s, box-shadow 0.2s; 
-    position: relative; 
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
 }
-    .feed-card-box:hover { 
-        box-shadow: 0 10px 20px rgba(0,34,68,0.12); 
-        transform: translateY(-3px); 
+    .feed-card-box:hover {
+        box-shadow: 0 10px 20px rgba(0,34,68,0.12);
+        transform: translateY(-3px);
     }
-    
-    .feed-card-box:active { 
-        transform: scale(0.97); 
+
+    .feed-card-box:active {
+        transform: scale(0.97);
     }
-    
-    .feed-img-box { 
-        width: 100%; 
-        aspect-ratio: 1 /1 ; 
-        position: relative; 
-        background: #eef2f5; 
-        overflow: hidden; 
+
+    .feed-img-box {
+        width: 100%;
+        aspect-ratio: 1 /1 ;
+        position: relative;
+        background: #eef2f5;
+        overflow: hidden;
     }
-    
-    .feed-img-box img { 
-        width: 100%; 
-        height: 100%; 
+
+    .feed-img-box img {
+        width: 100%;
+        height: 100%;
         object-fit: cover; /* picha inajaa kadi vizuri bila mipaka nyeupe — inakaa kama soko la kisasa */
         object-position: center;
         background: #f4f7fa;
         display: block;
         box-sizing: border-box;
-        transition: opacity 0.3s, transform 0.35s ease; 
-    }
-    
-    .feed-img-box img:hover { 
-        transform: scale(1.05); 
-    }
-    
-    .boost-badge { 
-        position: absolute; 
-        top: 8px; 
-        right: 8px; 
-        background: linear-gradient(45deg, #FFD700, #FDB931); 
-        color: #000; 
-        font-size: 12px; 
-        font-weight: 900; 
-        padding: 3px 8px; 
-        border-radius: 12px; 
-        z-index: 10; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-        display: flex; 
-        align-items: center; 
-        gap: 3px; 
+        transition: opacity 0.3s, transform 0.35s ease;
     }
 
-    @keyframes shimmer { 
-        0% { background-position: -200px 0; } 
-        100% { background-position: calc(200px + 100%) 0; } 
-    }
-    
-    .skeleton { 
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); 
-        background-size: 200px 100%; 
-        animation: shimmer 1.5s infinite; 
-    }
-    
-    .skeleton img { 
-        opacity: 0; 
+    .feed-img-box img:hover {
+        transform: scale(1.05);
     }
 
-    .feed-info-box { 
-        padding: 12px 10px; 
-        display: flex; 
-        flex-direction: column; 
+    .boost-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(45deg, #FFD700, #FDB931);
+        color: #000;
+        font-size: 12px;
+        font-weight: 900;
+        padding: 3px 8px;
+        border-radius: 12px;
+        z-index: 10;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 3px;
     }
-    
-    .feed-info-box b { 
-        font-size: 13px; 
-        color: var(--primary-dark); 
-        margin-bottom: 6px; 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
+
+    @keyframes shimmer {
+        0% { background-position: -200px 0; }
+        100% { background-position: calc(200px + 100%) 0; }
     }
-    
-    .feed-info-box .price { 
-        color: var(--terracotta); 
-        font-weight: 900; 
-        font-size: 15px; 
+
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200px 100%;
+        animation: shimmer 1.5s infinite;
     }
-    
-    .feed-info-box .stats-row { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        margin-top: 6px; 
-        font-size: 12.5px; 
-        color: var(--text-muted); 
+
+    .skeleton img {
+        opacity: 0;
     }
-    
-    .feed-info-box small.owner { 
-        color: var(--primary-blue); 
-        font-weight: 800; 
-        margin-top: 8px; 
-        font-size: 13px; 
+
+    .feed-info-box {
+        padding: 12px 10px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .feed-info-box b {
+        font-size: 13px;
+        color: var(--primary-dark);
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .feed-info-box .price {
+        color: var(--terracotta);
+        font-weight: 900;
+        font-size: 15px;
+    }
+
+    .feed-info-box .stats-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        font-size: 12.5px;
+        color: var(--text-muted);
+    }
+
+    .feed-info-box small.owner {
+        color: var(--primary-blue);
+        font-weight: 800;
+        margin-top: 8px;
+        font-size: 13px;
     }
 
     /* =========================================
        6. COMPREHENSIVE DASHBOARD STYLES (REAL)
        ========================================= */
-    .dashboard-view { 
-        display: none; 
-        padding: 0 15px 30px; 
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    .stars { 
-        color: #f59e0b; 
-        font-size: 20px; 
-        letter-spacing: 3px; 
-    }
-    
-    .timeline { 
-        border-left: 2px solid #e2e8f0; 
-        margin-left: 10px; 
-        padding-left: 20px; 
-        position: relative; 
-    }
-    
-    .timeline-item { 
-        position: relative; 
-        margin-bottom: 20px; 
-    }
-    
-    .timeline-item:last-child { 
-        margin-bottom: 0; 
-    }
-    
-    .timeline-item::before { 
-        content: ''; 
-        position: absolute; 
-        left: -27px; 
-        top: 2px; 
-        width: 12px; 
-        height: 12px; 
-        border-radius: 50%; 
-        background: var(--primary-blue); 
-        border: 3px solid white; 
-        box-shadow: 0 0 0 1px var(--primary-blue); 
-    }
-    
-    .timeline-time { 
-        font-size: 13px; 
-        color: #94a3b8; 
-        margin-bottom: 4px; 
-        display: block; 
-        font-weight: bold; 
-    }
-    
-    .timeline-content { 
-        background: #f8fafc; 
-        padding: 12px; 
-        border-radius: 10px; 
-        border: 1px solid #e2e8f0; 
-        font-size: 13px; 
-        color: #334155; 
-        line-height: 1.5; 
-    }
-    
-    .timeline-content b { 
-        color: var(--primary-dark); 
+    .dashboard-view {
+        display: none;
+        padding: 0 15px 30px;
     }
 
-    .section-title { 
-        font-size: 15px; 
-        color: var(--primary-dark); 
-        text-transform: uppercase; 
-        margin-bottom: 18px; 
-        border-left: 5px solid var(--gold); 
-        padding-left: 12px; 
-        font-weight: 900; 
-        letter-spacing: 0.5px; 
+
+
+
+
+
+
+
+
+
+
+
+
+    .stars {
+        color: #f59e0b;
+        font-size: 20px;
+        letter-spacing: 3px;
     }
-    
-    .dash-item { 
-        display: flex; 
-        background: white; 
-        padding: 15px; 
-        border-radius: 14px; 
-        margin-bottom: 15px; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.04); 
-        align-items: center; 
-        border: 1px solid #f1f5f9; 
-        transition: 0.2s; 
+
+    .timeline {
+        border-left: 2px solid #e2e8f0;
+        margin-left: 10px;
+        padding-left: 20px;
+        position: relative;
     }
-    
-    .dash-item:hover { 
-        border-color: var(--gold); 
-        box-shadow: 0 6px 15px rgba(212, 175, 55, 0.15); 
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
     }
-    
-    .dash-item img { 
-        width: 65px; 
-        height: 65px; 
-        border-radius: 10px; 
-        object-fit: cover; 
-        margin-right: 15px; 
-        border: 1px solid #eee; 
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
     }
-    
-    
-    
-    
-    
-    .metric { 
-        font-size: 13px; 
-        color: #64748b; 
-        background: #f8fafc; 
-        padding: 4px 8px; 
-        border-radius: 6px; 
-        display: flex; 
-        align-items: center; 
-        gap: 4px; 
-        border: 1px solid #e2e8f0; 
-        font-weight: bold; 
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -27px;
+        top: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary-blue);
+        border: 3px solid white;
+        box-shadow: 0 0 0 1px var(--primary-blue);
     }
-    
-    
-    
-    
+
+    .timeline-time {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 4px;
+        display: block;
+        font-weight: bold;
+    }
+
+    .timeline-content {
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        font-size: 13px;
+        color: #334155;
+        line-height: 1.5;
+    }
+
+    .timeline-content b {
+        color: var(--primary-dark);
+    }
+
+    .section-title {
+        font-size: 15px;
+        color: var(--primary-dark);
+        text-transform: uppercase;
+        margin-bottom: 18px;
+        border-left: 5px solid var(--gold);
+        padding-left: 12px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
+
+    .dash-item {
+        display: flex;
+        background: white;
+        padding: 15px;
+        border-radius: 14px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        align-items: center;
+        border: 1px solid #f1f5f9;
+        transition: 0.2s;
+    }
+
+    .dash-item:hover {
+        border-color: var(--gold);
+        box-shadow: 0 6px 15px rgba(212, 175, 55, 0.15);
+    }
+
+    .dash-item img {
+        width: 65px;
+        height: 65px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-right: 15px;
+        border: 1px solid #eee;
+    }
+
+
+
+
+
+    .metric {
+        font-size: 13px;
+        color: #64748b;
+        background: #f8fafc;
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border: 1px solid #e2e8f0;
+        font-weight: bold;
+    }
+
+
+
+
 
     /* =========================================
        7. BOTTOM NAV & SUB NAV YA CHINI
        ========================================= */
-    .sub-slider-nav { 
-        pointer-events: auto; 
-        display: flex; 
-        width: 100%; 
-        gap: 16px; 
-        overflow-x: auto; 
-        padding: 10px 15px; 
-        scrollbar-width: none; 
-        margin-bottom: 5px; 
-        background: linear-gradient(to top, rgba(241,245,249,1), rgba(241,245,249,0)); 
+    .sub-slider-nav {
+        pointer-events: auto;
+        display: flex;
+        width: 100%;
+        gap: 16px;
+        overflow-x: auto;
+        padding: 10px 15px;
+        scrollbar-width: none;
+        margin-bottom: 5px;
+        background: linear-gradient(to top, rgba(241,245,249,1), rgba(241,245,249,0));
     }
-    
-    .sub-slider-nav::-webkit-scrollbar { 
-        display: none; 
+
+    .sub-slider-nav::-webkit-scrollbar {
+        display: none;
     }
-    
-    .sub-slider-nav::after { 
-        content: ''; 
-        padding-right: 15px; 
+
+    .sub-slider-nav::after {
+        content: '';
+        padding-right: 15px;
     }
 
 /* REKEBISHO LA PLUS MENU (Ili lianzie juu ya Nav) */
 #plusMenu {
     height: calc(100% - 62px) !important;
 }
-    
-    .main-nav-icons { 
-        display: flex; 
-        height: 70px; 
-        align-items: center; 
-        justify-content: space-around; 
-        padding: 5px 10px 10px; 
+
+    .main-nav-icons {
+        display: flex;
+        height: 70px;
+        align-items: center;
+        justify-content: space-around;
+        padding: 5px 10px 10px;
     }
-    
-    .nav-tab.active { 
-        color: var(--gold); 
-        transform: translateY(-3px); 
+
+    .nav-tab.active {
+        color: var(--gold);
+        transform: translateY(-3px);
     }
-    
-    
+
+
     /* =========================================
        8. MODALS & FORMS (OVERLAYS)
        ========================================= */
 
 
 /* BOX LA FOMU (FORM CARD) */
-.form-box { 
-    display: none; 
-    background: white; 
-    padding: 25px; 
-    border-radius: 24px; 
-    width: 100%; 
-    max-width: 480px; 
-    max-height: 90vh; 
-    overflow-y: auto; 
-    box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
-    animation: popIn 0.3s ease-out; 
+.form-box {
+    display: none;
+    background: white;
+    padding: 25px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    animation: popIn 0.3s ease-out;
 }
 
 
-#map { 
-    height: 500px; 
-    width: 100%; 
-    background: #e5e7eb; 
+#map {
+    height: 500px;
+    width: 100%;
+    background: #e5e7eb;
 }
 
 #mapModal > div {
@@ -1367,111 +1368,111 @@ mask-composite: exclude;
     height: 85vh !important;
     max-width: 600px !important;
 }
-    @keyframes popIn { 
-        0% { transform: scale(0.9); opacity: 0; } 
-        100% { transform: scale(1); opacity: 1; } 
+    @keyframes popIn {
+        0% { transform: scale(0.9); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
     }
-    
-    .menu-item { 
-        background: var(--white); 
-        width: 100%; 
-        max-width: 350px; 
-        padding: 20px; 
-        margin: 8px 0; 
-        border-radius: 16px; 
-        text-align: left; 
-        border-left: 8px solid var(--gold); 
-        cursor: pointer; 
-        transition: 0.2s; 
-        box-shadow: 0 6px 15px rgba(0,0,0,0.1); 
-        display: flex; 
-        flex-direction: column; 
+
+    .menu-item {
+        background: var(--white);
+        width: 100%;
+        max-width: 350px;
+        padding: 20px;
+        margin: 8px 0;
+        border-radius: 16px;
+        text-align: left;
+        border-left: 8px solid var(--gold);
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
     }
-    
-    .menu-item:active { 
-        transform: scale(0.96); 
+
+    .menu-item:active {
+        transform: scale(0.96);
     }
-    
-    .menu-item b { 
-        display: block; 
-        color: var(--primary-dark); 
-        font-size: 16px; 
-        margin-bottom: 6px; 
-        text-transform: uppercase; 
-        letter-spacing: 0.5px; 
+
+    .menu-item b {
+        display: block;
+        color: var(--primary-dark);
+        font-size: 16px;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    
-    .menu-item span { 
-        font-size: 12px; 
-        color: var(--text-muted); 
-        line-height: 1.4; 
+
+    .menu-item span {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.4;
     }
 
 
-    .form-box h3 { 
-        color: var(--primary-dark); 
-        text-align: center; 
-        margin-top: 0; 
-        margin-bottom: 25px; 
-        font-size: 22px; 
-        text-transform: uppercase; 
-        letter-spacing: 1px; 
-        border-bottom: 2px solid #f1f5f9; 
-        padding-bottom: 15px; 
+    .form-box h3 {
+        color: var(--primary-dark);
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 25px;
+        font-size: 22px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 15px;
     }
-    
-    .form-box input, 
-    .form-box select, 
-    .form-box textarea { 
-        width: 100%; 
-        padding: 15px; 
-        margin: 10px 0; 
-        border-radius: 12px; 
-        border: 1px solid #cbd5e1; 
-        font-size: 14px; 
-        outline: none; 
-        transition: 0.3s; 
-        background: #f8fafc; 
+
+    .form-box input,
+    .form-box select,
+    .form-box textarea {
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        font-size: 14px;
+        outline: none;
+        transition: 0.3s;
+        background: #f8fafc;
     }
-    
-    .form-box input:focus, 
-    .form-box select:focus, 
-    .form-box textarea:focus { 
-        border-color: var(--primary-blue); 
-        background: #fff; 
-        box-shadow: 0 0 0 3px rgba(0,80,157,0.1); 
+
+    .form-box input:focus,
+    .form-box select:focus,
+    .form-box textarea:focus {
+        border-color: var(--primary-blue);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(0,80,157,0.1);
     }
-    
-    .form-box textarea { 
-        resize: vertical; 
-        min-height: 100px; 
+
+    .form-box textarea {
+        resize: vertical;
+        min-height: 100px;
     }
-    
-    .form-box label { 
-        font-size: 13px; 
-        color: var(--primary-dark); 
-        display: block; 
-        margin: 15px 0 5px; 
-        font-weight: bold; 
+
+    .form-box label {
+        font-size: 13px;
+        color: var(--primary-dark);
+        display: block;
+        margin: 15px 0 5px;
+        font-weight: bold;
     }
-    
-    .form-box button[type="submit"] { 
-        width: 100%; 
-        padding: 16px; 
-        color: white; 
-        border: none; 
-        border-radius: 14px; 
-        font-weight: 900; 
-        font-size: 16px; 
-        margin-top: 20px; 
-        cursor: pointer; 
-        transition: 0.3s; 
-        text-transform: uppercase; 
-        letter-spacing: 1px; 
+
+    .form-box button[type="submit"] {
+        width: 100%;
+        padding: 16px;
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-weight: 900;
+        font-size: 16px;
+        margin-top: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
-    
-    .form-box button[type="submit"]:active { 
-        transform: scale(0.98); 
+
+    .form-box button[type="submit"]:active {
+        transform: scale(0.98);
     }
     /* Kuzuia Double Click na Kuonyesha Inapakia (Loading State) */
     button:disabled, .form-box button[type="submit"]:disabled {
@@ -1481,197 +1482,197 @@ mask-composite: exclude;
         background: #94a3b8 !important;
         box-shadow: none !important;
     }
-    
-    .form-box .btn-close { 
-        width: 100%; 
-        padding: 15px; 
-        background: #e2e8f0; 
-        color: #334155; 
-        border: none; 
-        border-radius: 14px; 
-        margin-top: 12px; 
-        cursor: pointer; 
-        font-weight: bold; 
-        transition: 0.2s; 
+
+    .form-box .btn-close {
+        width: 100%;
+        padding: 15px;
+        background: #e2e8f0;
+        color: #334155;
+        border: none;
+        border-radius: 14px;
+        margin-top: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
     }
-    
-    .form-box .btn-close:hover { 
-        background: #cbd5e1; 
+
+    .form-box .btn-close:hover {
+        background: #cbd5e1;
     }
 
     /* =========================================
        9. CUSTOM MODALS & INTERACTIONS UI
        ========================================= */
-    .list-item { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 15px 0; 
-        border-bottom: 1px solid #f1f5f9; 
+    .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
     }
-    
-    .list-item img { 
-        width: 55px; 
-        height: 55px; 
-        border-radius: 10px; 
-        object-fit: cover; 
-        margin-right: 15px; 
-        border: 1px solid #e2e8f0; 
+
+    .list-item img {
+        width: 55px;
+        height: 55px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-right: 15px;
+        border: 1px solid #e2e8f0;
     }
-    
-    .list-info { 
-        flex: 1; 
+
+    .list-info {
+        flex: 1;
     }
-    
-    .list-info b { 
-        display: block; 
-        font-size: 14px; 
-        color: var(--primary-dark); 
-        margin-bottom: 4px; 
+
+    .list-info b {
+        display: block;
+        font-size: 14px;
+        color: var(--primary-dark);
+        margin-bottom: 4px;
     }
-    
-    .list-info span { 
-        font-size: 13px; 
-        color: var(--terracotta); 
-        font-weight: 900; 
+
+    .list-info span {
+        font-size: 13px;
+        color: var(--terracotta);
+        font-weight: 900;
     }
-    
-    .chat-bubble { 
-        max-width: 78%; 
-        padding: 8px 12px; 
-        border-radius: 8px; 
-        margin-bottom: 8px; 
-        font-size: 14px; 
-        line-height: 1.4; 
-        word-wrap: break-word; 
+
+    .chat-bubble {
+        max-width: 78%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 14px;
+        line-height: 1.4;
+        word-wrap: break-word;
         position: relative;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
     }
-    
-    .chat-bubble.me { 
-        background: #DCF8C6; 
-        color: #111b21; 
-        align-self: flex-end; 
+
+    .chat-bubble.me {
+        background: #DCF8C6;
+        color: #111b21;
+        align-self: flex-end;
     }
-    
-    .chat-bubble.them { 
-        background: #ffffff; 
-        color: #111b21; 
-        align-self: flex-start; 
+
+    .chat-bubble.them {
+        background: #ffffff;
+        color: #111b21;
+        align-self: flex-start;
     }
-    
-    .action-btn { 
-        flex: 1; 
-        padding: 10px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        gap: 8px; 
-        background: #f8fafc; 
-        border: 1px solid #e2e8f0; 
-        border-radius: 12px; 
-        font-weight: bold; 
-        color: var(--primary-dark); 
-        font-size: 13px; 
-        cursor: pointer; 
-        transition: all 0.2s ease; 
+
+    .action-btn {
+        flex: 1;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-weight: bold;
+        color: var(--primary-dark);
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
-    
-    .action-btn:hover { 
-        background: #e2e8f0; 
-        transform: translateY(-2px); 
+
+    .action-btn:hover {
+        background: #e2e8f0;
+        transform: translateY(-2px);
     }
-    
-    .action-btn:active { 
-        transform: translateY(0); 
+
+    .action-btn:active {
+        transform: translateY(0);
     }
-    
-    .action-btn.liked { 
-        color: #ef4444; 
-        background: #fef2f2; 
-        border-color: #fecaca; 
+
+    .action-btn.liked {
+        color: #ef4444;
+        background: #fef2f2;
+        border-color: #fecaca;
     }
-    
-    .comments-section { 
-        background: #f8fafc; 
-        border-radius: 16px; 
-        padding: 15px; 
-        margin-bottom: 20px; 
-        border: 1px solid #e2e8f0; 
+
+    .comments-section {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
     }
-    
-    .comment-box { 
-        background: white; 
-        padding: 12px; 
-        border-radius: 10px; 
-        margin-bottom: 10px; 
-        font-size: 13px; 
-        border: 1px solid #e2e8f0; 
-        box-shadow: 0 1px 3px rgba(0,0,0,0.02); 
+
+    .comment-box {
+        background: white;
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    
-    .comment-box b { 
-        color: var(--primary-dark); 
-        display: block; 
-        margin-bottom: 4px; 
-        font-size: 12px; 
+
+    .comment-box b {
+        color: var(--primary-dark);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
     }
-    
-    .comment-box span { 
-        font-size: 12.5px; 
-        color: #94a3b8; 
-        float: right; 
+
+    .comment-box span {
+        font-size: 12.5px;
+        color: #94a3b8;
+        float: right;
     }
-    
-    .follow-btn { 
-        padding: 8px 18px; 
-        font-size: 12px; 
-        border-radius: 20px; 
-        font-weight: 900; 
-        cursor: pointer; 
-        border: none; 
-        transition: 0.3s; 
-        display: flex; 
-        align-items: center; 
-        gap: 5px; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+
+    .follow-btn {
+        padding: 8px 18px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: 900;
+        cursor: pointer;
+        border: none;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    
-    .btn-not-following { 
-        background: var(--primary-blue); 
-        color: white; 
+
+    .btn-not-following {
+        background: var(--primary-blue);
+        color: white;
     }
-    
-    .btn-not-following:hover { 
-        background: var(--primary-dark); 
+
+    .btn-not-following:hover {
+        background: var(--primary-dark);
     }
-    
-    .btn-following { 
-        background: #e2e8f0; 
-        color: #334155; 
+
+    .btn-following {
+        background: #e2e8f0;
+        color: #334155;
     }
-    
-    .btn-following:hover { 
-        background: #cbd5e1; 
-        color: #ef4444; 
+
+    .btn-following:hover {
+        background: #cbd5e1;
+        color: #ef4444;
     }
 
     /* Custom Scrollbar */
-    ::-webkit-scrollbar { 
-        width: 6px; 
+    ::-webkit-scrollbar {
+        width: 6px;
     }
-    ::-webkit-scrollbar-track { 
-        background: #f1f5f9; 
-        border-radius: 10px; 
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
     }
-    ::-webkit-scrollbar-thumb { 
-        background: #cbd5e1; 
-        border-radius: 10px; 
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
     }
-    ::-webkit-scrollbar-thumb:hover { 
-        background: #94a3b8; 
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
-   
+
    /* ====================================================
    FIX KWA AJILI YA FOMU NDEFU KUKATWA / KUFICHWA CHINI
    ==================================================== */
@@ -1681,7 +1682,7 @@ mask-composite: exclude;
 #productModal {
     justify-content: flex-end !important;
 }
-  
+
 /* Inahakikisha kioo cha bidhaa hakikatwi upande wa chini */
 #productModal > div {
     margin: 0 auto !important;
@@ -1694,30 +1695,30 @@ mask-composite: exclude;
 /* =========================================
    MFUMO WA KUTOA NYOTA (RATING STARS)
    ========================================= */
-.star-rating { 
-    display: flex; 
-    flex-direction: row-reverse; 
-    justify-content: center; 
-    gap: 8px; 
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    gap: 8px;
     margin: 15px 0;
 }
 .star-rating input { display: none; }
-.star-rating label { 
-    font-size: 45px; 
-    color: #cbd5e1; 
-    cursor: pointer; 
-    transition: 0.2s; 
+.star-rating label {
+    font-size: 45px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: 0.2s;
 }
 /* Hii inafanya nyota ziwake rangi ya dhahabu ukibofya */
 .star-rating input:checked ~ label { color: #f59e0b; }
-.star-rating label:hover, 
+.star-rating label:hover,
 .star-rating label:hover ~ label { color: #fbbf24; }
 
 
 
 
 
-   
+
    /* realistic map view */
 
 
@@ -1821,8 +1822,8 @@ mask-composite: exclude;
 /* Sidebar ya Kushoto ya Dashboard */
 .ct-sidebar {
     width: 260px;
-    background: #0f172a;
-    color: #f8fafc;
+    background: #ffffff;
+    color: #18352D;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -1836,7 +1837,7 @@ mask-composite: exclude;
     align-items: center;
     gap: 10px;
     margin-bottom: 20px;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid #E5ECEC;
     padding-bottom: 15px;
     text-align: left;
 }
@@ -1844,13 +1845,13 @@ mask-composite: exclude;
 .ct-sidebar-brand-text h3 {
     margin: 0;
     font-size: 18px;
-    color: #ffffff;
+    color: #17604E;
     font-weight: 900;
 }
 
 .ct-sidebar-brand-text span {
     font-size: 13px;
-    color: #94a3b8;
+    color: #65757A;
 }
 
 .ct-sidebar-group-title {
@@ -1866,8 +1867,8 @@ mask-composite: exclude;
 
 .ct-sidebar-menu-btn {
     background: transparent;
-    border: none;
-    color: #94a3b8;
+    border: 1px solid transparent;
+    color: #65757A;
     padding: 12px 15px;
     text-align: left;
     border-radius: 8px;
@@ -1878,12 +1879,13 @@ mask-composite: exclude;
 }
 
 .ct-sidebar-menu-btn:hover, .ct-sidebar-menu-btn.active {
-    background: #1e293b;
-    color: #ffffff;
+    background: #F1F8F5;
+    color: #17604E;
 }
 
 .ct-sidebar-menu-btn.active {
-    border-left: 4px solid var(--gold, #D4AF37);
+    border-color: #CCEBDD;
+    border-left: 4px solid #18A982;
 }
 
 /* Sehemu Kuu ya Maudhui (Cockpit Workspace) */
@@ -1891,7 +1893,7 @@ mask-composite: exclude;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
+    background: #ffffff;
     min-width: 0; /* Inazuia kufurika upande wa pembeni */
     box-sizing: border-box;
 }
@@ -2094,7 +2096,7 @@ mask-composite: exclude;
 
 /* Media Query kwa ajili ya Simu/Tablets - Sidebar slide-out drawer */
 @media (max-width: 900px) {
-  
+
     .ct-sidebar {
         position: fixed;
         top: 0;
@@ -2150,25 +2152,25 @@ html, body {
 
 @media (max-width: 768px) {
     /* KPI Cards za juu: Moja au Mbili kwa mstari kulingana na nafasi bila kubana maandishi */
-    
-    
+
+
     /* Chati na mpangilio wa dashibodi hushuka chini kuwa safu moja nyoofu */
     .ct-dashboard-layout, .ct-chart-row {
         grid-template-columns: 1fr !important;
         gap: 15px !important;
     }
-    
+
     .ct-workspace {
         padding: 12px !important;
         gap: 15px !important;
     }
-    
-    
-    
+
+
+
     .ct-header-bar {
         padding: 10px 12px !important;
     }
-    
+
     .ct-header-search {
         width: 100% !important;
         max-width: 160px !important;
@@ -2179,11 +2181,11 @@ html, body {
         align-items: flex-start !important;
         gap: 12px !important;
     }
-    
+
 }
 
 @media (max-width: 480px) {
-    
+
 }
 
 
@@ -2213,18 +2215,18 @@ html, body {
     box-shadow: none !important;
 }
 
-/* SokoPay Sidebar Left Style matching the premium image */
+/* SokoPay Sidebar — white-first shared payment navigation */
 .sp-sidebar {
     width: 260px;
-    background: #001122; /* Giza safi kama picha ya muundo */
-    color: #f8fafc;
+    background: #ffffff;
+    color: #18352D;
     padding: 20px 15px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     flex-shrink: 0;
     box-sizing: border-box;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid #E5ECEC;
     height: 100%;
 }
 
@@ -2239,7 +2241,7 @@ html, body {
 .sp-brand-logo {
     width: 32px;
     height: 32px;
-    background: #0284c7;
+    background: #18A982;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -2252,7 +2254,7 @@ html, body {
 .sp-brand-name {
     font-size: 18px;
     font-weight: 900;
-    color: white;
+    color: #17604E;
     letter-spacing: 0.5px;
 }
 
@@ -2269,7 +2271,7 @@ html, body {
 .sp-menu-heading {
     font-size: 12px;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.35);
+    color: #7B8D87;
     text-transform: uppercase;
     margin: 15px 0 5px 12px;
     letter-spacing: 0.8px;
@@ -2281,7 +2283,7 @@ html, body {
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    color: rgba(255, 255, 255, 0.65);
+    color: #65757A;
     text-decoration: none;
     border-radius: 8px;
     font-size: 13px;
@@ -2296,14 +2298,14 @@ html, body {
 }
 
 .sp-sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: #F1F8F5;
+    color: #17604E;
 }
 
 .sp-sidebar-link.active {
-    background: #00509d;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 80, 157, 0.25);
+    background: #EAF8F2;
+    color: #17604E;
+    box-shadow: inset 3px 0 0 #18A982;
 }
 
 .sp-sidebar-link svg {
@@ -2372,7 +2374,7 @@ html, body {
 }
 
 .sp-toggle-btn.active {
-    background: #00509d;
+    background: #18A982;
     color: white;
 }
 
@@ -2423,7 +2425,7 @@ html, body {
 }
 
 .sp-search-box:focus-within {
-    border-color: #00509d;
+    border-color: #18A982;
     background: white;
     box-shadow: 0 0 0 3px rgba(0, 80, 157, 0.08);
 }
@@ -2777,7 +2779,7 @@ html, body {
     .bottom-area-wrapper {
         display: flex !important; /* Bottom Nav inaonekana muda wote */
     }
-    
+
 }
 
 /* 📱 SIMU / TABLET (Skrini ndogo chini ya 1024px) */
@@ -2785,8 +2787,8 @@ html, body {
     .bottom-area-wrapper {
         display: flex !important;
     }
-    
-    
+
+
     /* SokoPay Main Layout Responsive Fixes */
     #sokopayMainLayout {
         flex-direction: column !important;
@@ -2956,7 +2958,7 @@ html, body {
         display: flex !important;
     }
     /* Hamburger menu ya juu inakuwa wazi */
-    
+
 }
 /* === SOKOPAY PRODUCTS LIFE-CYCLE STYLES === */
 

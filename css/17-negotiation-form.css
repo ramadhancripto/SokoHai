@@ -55,21 +55,24 @@
     justify-content: space-between;
     gap: 12px;
     padding: 14px 16px;
-    background: linear-gradient(135deg, var(--skh-deep, #0B4F7A), var(--skh-primary, #1268A8));
-    color: #fff;
+    background: #F1FBF7;
+    color: #18352D;
+    border-bottom: 1px solid #D9EEE5;
     flex-shrink: 0;
 }
 .nf-head-t { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .nf-head-ico {
     width: 38px; height: 38px; border-radius: 12px;
-    background: rgba(255,255,255,.16);
+    background: #EAF8F2;
+    border: 1px solid #CCEBDD;
+    color: #178864;
     display: flex; align-items: center; justify-content: center;
     font-size: 19px; flex-shrink: 0;
 }
 .nf-head h2 { margin: 0; font-size: 15.5px; font-weight: 800; line-height: 1.25; }
-.nf-head-sub { display: block; font-size: 12.5px; font-weight: 600; color: #cfe3f5; margin-top: 1px; }
+.nf-head-sub { display: block; font-size: 12.5px; font-weight: 600; color: #65757A; margin-top: 1px; }
 .nf-x {
-    border: none; background: rgba(255,255,255,.14); color: #fff;
+    border: 1px solid #CCEBDD; background: #fff; color: #17604E;
     width: 34px; height: 34px; border-radius: 50%; font-size: 15px;
     cursor: pointer; flex-shrink: 0; transition: background .2s;
 }

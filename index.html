@@ -177,8 +177,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <div id="buyerOrdersModalList" style="flex:1; overflow-y:auto; padding-right:5px; margin-bottom:15px;">
             <p style="text-align:center; color:#64748b;">Inapakia oda...</p>
         </div>
-<button onclick="document.getElementById('buyerOrdersModal').style.display='none'; if(window.openSokoPayBuyerOrders) window.openSokoPayBuyerOrders();" style="width:100%; margin-bottom:10px; padding:13px; background:#001122; color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase;">SokoPay Escrow (Mikataba Ya Malipo)</button>
-<button onclick="document.getElementById('buyerOrdersModal').style.display='none'; if(window.skhOpenTokenBox) window.skhOpenTokenBox();" style="width:100%; margin-bottom:10px; padding:13px; background:#1268A8; color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase;">Sanduku la Mikode — Pickup / Handover / Delivery</button>
+<button onclick="document.getElementById('buyerOrdersModal').style.display='none'; if(window.openSokoPayBuyerOrders) window.openSokoPayBuyerOrders();" style="width:100%; margin-bottom:10px; padding:13px; background:#18A982; color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase;">SokoPay Escrow (Mikataba Ya Malipo)</button>
+<button onclick="document.getElementById('buyerOrdersModal').style.display='none'; if(window.skhOpenTokenBox) window.skhOpenTokenBox();" style="width:100%; margin-bottom:10px; padding:13px; background:#18A982; color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase;">Sanduku la Mikode — Pickup / Handover / Delivery</button>
 <button onclick="document.getElementById('buyerOrdersModal').style.display='none'; openSidebarMenu();" style="width:100%; padding:15px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; text-transform:uppercase;">&lsaquo; Rudi Nyuma</button>
   </div>
 </div>
@@ -688,7 +688,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     </label>
     <p style="font-size: 12.5px; color:#64748b; margin:5px 0 0 30px;" data-i18n="checkout_delivery_note">Ukichagua hii, utachagua gari baada ya kulipia bidhaa.</p>
 </div>
-        <button onclick="processPayment()" id="btnPay" style="width:100%; padding:18px; background:linear-gradient(135deg, #00509d, #003366); color:white; border:none; border-radius:14px; font-weight:900; font-size:16px; cursor:pointer; text-transform:uppercase; box-shadow:0 4px 15px rgba(0,80,157,0.3); transition:0.3s;" data-i18n="checkout_pay_now">LIPA SASA</button>
+        <button onclick="processPayment()" id="btnPay" style="width:100%; padding:18px; background:#18A982; color:white; border:none; border-radius:14px; font-weight:900; font-size:16px; cursor:pointer; text-transform:uppercase; box-shadow:0 4px 15px rgba(0,80,157,0.3); transition:0.3s;" data-i18n="checkout_pay_now">LIPA SASA</button>
         <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:15px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; text-transform:uppercase;" data-i18n="checkout_cancel">Ghairi Malipo</button>
     </div>
 </div>
@@ -748,7 +748,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             </div>
             <input type="text" id="chatInput" placeholder="Andika ujumbe..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" style="flex:1; min-width:0; padding:11px 16px; border-radius:24px; border:1px solid #cbd5e1; outline:none; font-size:15px; background:#f8fafc; color:#173B56; caret-color:#1268A8;">
             <span title="Rekodi Sauti" aria-label="Rekodi Sauti" onclick="toggleVoiceRecord()" id="voiceBtn" style="cursor:pointer; color:#54656F; display:inline-flex; align-items:center;"><span class="skh-ico" data-ico="phone"></span></span>
-            <button id="chatSendBtn" type="button" onclick="sendMessage()" aria-label="Tuma ujumbe" style="background:linear-gradient(135deg,#18A982,#1268A8); color:white; border:none; border-radius:50%; width:46px; height:46px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 8px rgba(18,104,168,.35);">
+            <button id="chatSendBtn" type="button" onclick="sendMessage()" aria-label="Tuma ujumbe" style="background:#18A982; color:white; border:none; border-radius:50%; width:46px; height:46px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 8px rgba(18,104,168,.35);">
                 <svg class="ch-send-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 <svg class="ch-save-icon" hidden width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
@@ -865,12 +865,12 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <!-- MY SOKOHAI (Buyer Engagement Dashboard) -->
 <div id="mySokoHaiModal" class="overlay-menu" style="z-index: 7800;">
     <div style="background:white; border-radius:24px; padding:0; width:95%; max-width:460px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.25s ease-out;">
-        <div style="background:#001122; padding:16px 18px; color:white; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-            <b style="font-size:16px;"> My SokoHai</b>
-            <button onclick="document.getElementById('mySokoHaiModal').style.display='none'" style="background:transparent;border:none;color:white;font-size:18px;cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
+        <div style="background:#F1FBF7; padding:16px 18px; color:#18352D; border-bottom:1px solid #D9EEE5; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+            <b style="font-size:16px;color:#17604E;"> My SokoHai</b>
+            <button onclick="document.getElementById('mySokoHaiModal').style.display='none'" style="background:#fff;border:1px solid #CCEBDD;border-radius:10px;color:#17604E;font-size:18px;cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div style="display:flex; gap:6px; padding:10px; background:#f1f5f9; overflow-x:auto; flex-shrink:0;">
-            <button class="skh-mytab" onclick="window.skhMySokoHaiTab('liked', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#001122; color:#fff; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoLiked"></span><span>Likes</span></button>
+            <button class="skh-mytab" onclick="window.skhMySokoHaiTab('liked', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#18A982; color:#fff; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoLiked"></span><span>Likes</span></button>
             <button class="skh-mytab" onclick="window.skhMySokoHaiTab('saved', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoSaved"></span><span>Saved</span></button>
             <button class="skh-mytab" onclick="window.skhMySokoHaiTab('watched', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoWatched"></span><span>Watching</span></button>
             <button class="skh-mytab" onclick="window.skhMySokoHaiTab('following', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoFollowing"></span><span>Following</span></button>
@@ -1373,8 +1373,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <!-- [FIX 2026-09] PICHA HALISI: ANGALAU 3 (kamera/galari) + vihakiki (previews) -->
         <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px; margin-bottom:5px;"> PICHA ZA BIDHAA (ANGALAU 3) * <span id="prodImageCount" style="color:#16a34a;"></span></label>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <button type="button" onclick="document.getElementById('prodImageCam').click()" style="padding:12px; background:#0f172a; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> PIGA PICHA</button>
-            <button type="button" onclick="document.getElementById('prodImage').click()" style="padding:12px; background:#00509d; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> KUTOKA GALARI</button>
+            <button type="button" onclick="document.getElementById('prodImageCam').click()" style="padding:12px; background:#526962; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> PIGA PICHA</button>
+            <button type="button" onclick="document.getElementById('prodImage').click()" style="padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> KUTOKA GALARI</button>
         </div>
         <input type="file" id="prodImage" accept="image/*" multiple style="display:none;">
         <input type="file" id="prodImageCam" accept="image/*" capture="environment" style="display:none;">
@@ -1417,7 +1417,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div id="posSaleArea" style="display:block;">
         <div style="display:flex; gap:10px; margin-bottom:12px;">
             <input type="text" id="posSearchInput" oninput="window.searchPosProductsLive()" placeholder=" Tafuta Bidhaa au Scan Barcode hapa..." style="flex:1; padding:12px; border-radius:10px; border:1.5px solid #cbd5e1; outline:none; margin:0;">
-            <button type="button" onclick="window.simulateBarcodeScan()" style="padding:0 15px; background:#0f172a; color:white; border:none; border-radius:10px; font-weight:bold; font-size:12px; cursor:pointer;"> Scan</button>
+            <button type="button" onclick="window.simulateBarcodeScan()" style="padding:0 15px; background:#526962; color:white; border:none; border-radius:10px; font-weight:bold; font-size:12px; cursor:pointer;"> Scan</button>
         </div>
 
         <div id="posSearchResults" style="max-height:180px; overflow-y:auto; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; display:none; margin-bottom:12px; text-align: left;"></div>
@@ -1842,11 +1842,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <div id="sokopayForm" class="form-box" style="padding: 0; max-width: 1200px; width: 96%; height: 90vh; border-top: 8px solid var(--primary-blue); border-radius: 28px; overflow: hidden; display: none;">
     <div style="display: flex; height: 100%; width: 100%; background: #F8FAFC; flex-direction: row; text-align: left;" id="sokopayMainLayout">
 <!-- 1. LEFT SIDEBAR OF SOKOPAY (Re-engineered for Dynamic SokoPay Navigation) -->
-        <div class="sp-sidebar" id="sokopayLeftSidebar" style="width: 260px; background: #001122; color: #f8fafc; padding: 20px 15px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; box-sizing: border-box; border-right: 1px solid rgba(255, 255, 255, 0.08); height: 100%;">
+        <div class="sp-sidebar" id="sokopayLeftSidebar" style="width: 260px; background: #ffffff; color: #18352D; padding: 20px 15px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; box-sizing: border-box; border-right: 1px solid #E5ECEC; height: 100%;">
             <div>
                 <!-- Brand Logo & Name -->
                 <div class="sp-sidebar-brand" style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-left: 10px;">
-                    <div class="sp-brand-logo" style="width: 32px; height: 32px; background: #00509d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 18px;">S</div>
+                    <div class="sp-brand-logo" style="width: 32px; height: 32px; background: #18A982; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 18px;">S</div>
                     <span class="sp-brand-name" style="font-size: 18px; font-weight: 900; color: white; letter-spacing: 0.5px;">SokoPay</span>
                     <span class="sp-wallet-chip" id="spSidebarBalanceTop">TZS 0</span>
                 </div>
@@ -1855,7 +1855,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <div class="sp-sidebar-menu" style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; overflow-y: auto; text-align: left; padding-right: 5px;">
                     <span class="sp-menu-heading" style="font-size: 12px; font-weight: 800; color: rgba(255, 255, 255, 0.35); text-transform: uppercase; margin: 15px 0 5px 12px; letter-spacing: 0.8px; display: block;">SOKOPAY MVP</span>
 
-                    <button class="sp-sidebar-link active" id="spBtn_overview" onclick="window.toggleSokoPayTab('overview')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #00509d; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
+                    <button class="sp-sidebar-link active" id="spBtn_overview" onclick="window.toggleSokoPayTab('overview')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #18A982; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
                         <span></span> Home
                     </button>
                     <button class="sp-sidebar-link" id="spBtn_pay" onclick="window.toggleSokoPayTab('pay')" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: rgba(255, 255, 255, 0.65); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; border: none; width: 100%; text-align: left; box-sizing: border-box; transition: 0.2s;">
@@ -1983,11 +1983,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 18px; margin-bottom: 20px;">
                     <span style="font-size: 12px; font-weight: 900; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 14px; border-left: 4px solid #00509d; padding-left: 10px;">FANYA HARAKA</span>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px;">
-                        <button onclick="window.toggleSokoPayTab('pay')" style="padding: 20px 10px; background: #00509d; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
+                        <button onclick="window.toggleSokoPayTab('pay')" style="padding: 20px 10px; background: #18A982; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
                             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                             Pay
                         </button>
-                        <button onclick="window.toggleSokoPayTab('create')" style="padding: 20px 10px; background: #0f172a; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
+                        <button onclick="window.toggleSokoPayTab('create')" style="padding: 20px 10px; background: #18A982; color: white; border: none; border-radius: 14px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-transform: uppercase;">
                             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                             Create Link
                         </button>
@@ -2101,7 +2101,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                             <label style="font-size: 13px; font-weight: bold; color: gray; display: block; margin-bottom: 4px;">MAELEZO YA MUAMALA (NOTES) *</label>
                             <input type="text" id="spLipaNotes" placeholder="Mf: Malipo ya fundi umeme au shehena ya mchele..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; margin-bottom: 20px; box-sizing: border-box;">
 
-                            <button onclick="alert(' MALIPO YAMEFANIKIWA! Pesa imetumwa na settlement engine imesajili muamala.')" id="btnSubmitLipaDirect" style="width: 100%; padding: 18px; background: #00509d; color: white; border: none; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 80, 157, 0.25);"> TUMA / LIPA PESA SASA (INSTANT SETTLEMENT)</button>
+                            <button onclick="alert(' MALIPO YAMEFANIKIWA! Pesa imetumwa na settlement engine imesajili muamala.')" id="btnSubmitLipaDirect" style="width: 100%; padding: 18px; background: #18A982; color: white; border: none; border-radius: 14px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 80, 157, 0.25);"> TUMA / LIPA PESA SASA (INSTANT SETTLEMENT)</button>
                         </div>
                     </div>
 
@@ -2112,7 +2112,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                             <div style="display: flex; flex-direction: column; gap: 10px;">
                                 <button onclick="window.spScanQr()" style="padding: 14px; background: #10b981; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Scan QR Lipa Code</button>
                                 <button onclick="prompt('Andika SokoPay ID au namba ya unayemuomba pesa:','07XXXXXXXX')" style="padding: 14px; background: #f59e0b; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Request Money (Tuma Ombi)</button>
-                                <button onclick="window.openSokoPayDeposit()" style="padding: 14px; background: #0f172a; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Top Up Wallet</button>
+                                <button onclick="window.openSokoPayDeposit()" style="padding: 14px; background: #18A982; color: white; border: none; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; width: 100%;"> Top Up Wallet</button>
                             </div>
                         </div>
 
@@ -2164,7 +2164,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <p style="font-size: 13px; color: #64748B; margin-top: 0; margin-bottom: 12px; line-height: 1.5;">Token, linki na QR zinazozalishwa hapo juu zimehifadhiwa kiotomatiki. Unaweza pia kubandika token au linki uliyopokea (kwa WhatsApp/SMS) ili kuirejesha na kuihifadhi hapa.</p>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="spImportInput" placeholder="Bandika Token (SP-XXXXXX) au Linki hapa..." style="flex: 1; min-width: 0; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 12px; box-sizing: border-box;">
-                        <button type="button" onclick="window.importHaiPayItem()" style="padding: 12px 16px; background: #00509d; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;">REJESHA / HIFADHI</button>
+                        <button type="button" onclick="window.importHaiPayItem()" style="padding: 12px 16px; background: #18A982; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;">REJESHA / HIFADHI</button>
                     </div>
                     <div id="spSavedItems" style="margin-top: 16px; text-align: left;"></div>
                 </div>
@@ -2377,7 +2377,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; margin-bottom:18px;">
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <input type="text" placeholder=" Search Dispute ID / Token ID..." style="flex:1; min-width:200px; padding:13px 15px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-size:13px; font-weight:600; background:#f8fafc; box-sizing:border-box; color:#0f172a;">
-                        <button type="button" onclick="window.sokohaiToast && window.sokohaiToast('Utafutaji wa kesi unashughulikiwa...', 'info')" style="padding:13px 24px; background:#00509d; color:#ffffff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;"> SEARCH</button>
+                        <button type="button" onclick="window.sokohaiToast && window.sokohaiToast('Utafutaji wa kesi unashughulikiwa...', 'info')" style="padding:13px 24px; background:#18A982; color:#ffffff; border:none; border-radius:10px; font-weight:900; font-size:13px; cursor:pointer;"> SEARCH</button>
                     </div>
                 </div>
 
@@ -2527,7 +2527,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     </div>
                     <div class="sp-legend-row">
                         <div class="sp-legend-tag">
-                            <span class="sp-legend-indicator-dot" style="background:#00509d;"></span>
+                            <span class="sp-legend-indicator-dot" style="background:#18A982;"></span>
                             <span>Escrow / Locked</span>
                         </div>
                         <span class="sp-legend-amount-bold" id="spLegendEscrow">TZS 0</span>
@@ -2541,7 +2541,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     </div>
                 </div>
                 <!-- Wallet CTA Button -->
-                <button onclick="window.openUserPaymentModal()" style="width:100%; margin-top:16px; padding:12px; background:#001122; color:white; border:none; border-radius:10px; font-size:12px; font-weight:900; text-transform:uppercase; cursor:pointer;">
+                <button onclick="window.openUserPaymentModal()" style="width:100%; margin-top:16px; padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-size:12px; font-weight:900; text-transform:uppercase; cursor:pointer;">
                     Go to Wallet
                 </button>
             </div>
@@ -2608,7 +2608,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         
                 <div class="top-nav-icons">
             <!-- USIMAMIZI (badala ya "Badili Mode") -->
-            <span title="Usimamizi" onclick="openModeMenu()" class="usimamizi-btn" style="display:inline-flex; align-items:center; gap:3px; background:linear-gradient(135deg,#03509d,#022b52); color:#ffffff; padding:4px 7px; border-radius:999px; font-size: 10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.2px; cursor:pointer; box-shadow:0 2px 6px rgba(3,80,157,0.25);">
+            <span title="Usimamizi" onclick="openModeMenu()" class="usimamizi-btn" style="display:inline-flex; align-items:center; gap:3px; background:#EAF8F2; color:#17604E; border:1px solid #CCEBDD; padding:4px 7px; border-radius:999px; font-size: 10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.2px; cursor:pointer; box-shadow:0 2px 6px rgba(3,80,157,0.25);">
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
                 <!-- [NAV BALANCE 2026-09-17] "Kazi" badala ya "Usimamizi": fupi -->
                 <b>Kazi</b>
@@ -2850,30 +2850,30 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
        <div id="richDashboardContainer" style="width: 100%; min-height: 100vh; text-align: left;">
 <!-- 5 KPI CARDS ROW -->
     <div class="sp-kpi-grid">
-        <div class="sp-kpi-card" style="border-left: 4px solid #10b981;">
+        <div class="sp-kpi-card" style="border-left: 4px solid #18A982;">
             <span class="sp-kpi-title">Wallet Balance</span>
             <span class="sp-kpi-value" id="lblWalletBalanceVal">TZS 0</span>
-            <span class="sp-kpi-sub" style="color: #10b981;">Available Balance</span>
+            <span class="sp-kpi-sub" style="color: #18A982;">Available Balance</span>
         </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #eab308;">
+        <div class="sp-kpi-card" style="border-left: 4px solid #D8B83A;">
             <span class="sp-kpi-title">Escrow / Locked</span>
             <span class="sp-kpi-value" id="lblEscrowBalanceVal">TZS 0</span>
-            <span class="sp-kpi-sub" style="color: #eab308;">Locked in Contracts</span>
+            <span class="sp-kpi-sub" style="color: #D8B83A;">Locked in Contracts</span>
         </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #00509d;">
+        <div class="sp-kpi-card" style="border-left: 4px solid #4D91AA;">
             <span class="sp-kpi-title">Active Contracts</span>
             <span class="sp-kpi-value" id="lblActiveContractsVal">0</span>
-            <span class="sp-kpi-sub" style="color: #00509d;">Running Contracts</span>
+            <span class="sp-kpi-sub" style="color: #4D91AA;">Running Contracts</span>
         </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #ef4444;">
+        <div class="sp-kpi-card" style="border-left: 4px solid #B88916;">
             <span class="sp-kpi-title">Pending Confirmations</span>
             <span class="sp-kpi-value" id="lblPendingConfirmationsVal">0</span>
-            <span class="sp-kpi-sub" style="color: #ef4444;">Awaiting Action</span>
+            <span class="sp-kpi-sub" style="color: #B88916;">Awaiting Action</span>
         </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #8b5cf6;">
+        <div class="sp-kpi-card" style="border-left: 4px solid #18A982;">
             <span class="sp-kpi-title">Total Earnings (This Month)</span>
             <span class="sp-kpi-value" id="lblTotalEarningsVal">TZS 0</span>
-            <span class="sp-kpi-sub" style="color: #8b5cf6;">&nbsp;</span>
+            <span class="sp-kpi-sub" style="color: #18A982;">&nbsp;</span>
         </div>
     </div>
 
@@ -2920,7 +2920,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 
                 <div class="sp-widget-card" style="margin-bottom: 0;">
                     <span class="sp-widget-title">Live Tracking Overview</span>
-                    <small style="color: gray; display:block; margin-bottom: 8px;">Shipment: <b>Package #LOG-78391</b> (Electronics) - <b style="color: #10b981;">● Live</b></small>
+                    <small style="color: gray; display:block; margin-bottom: 8px;">Shipment: <b>Package #LOG-78391</b> (Electronics) - <b style="color: #18A982;">● Live</b></small>
                     <div id="liveTrackingMiniMap" style="height: 180px; background: #e5e7eb; border-radius: 12px; margin-bottom: 10px;"></div>
                 </div>
 
@@ -2954,7 +2954,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <canvas id="spDashboardWalletChart"></canvas>
                     <div style="position: absolute; text-align: center; pointer-events: none;">
                         <small style="color: gray; font-size: 12.5px; font-weight: bold; text-transform: uppercase; display:block;">Total Assets</small>
-                        <b style="font-size: 16px; color: #00509d;" id="lblSpTotalAssetsVal">TZS 0</b>
+                        <b style="font-size: 16px; color: #4D91AA;" id="lblSpTotalAssetsVal">TZS 0</b>
                     </div>
                 </div>
             </div>
@@ -3493,7 +3493,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <label style="font-size: 13px; font-weight:bold; color:gray;">GHARAMA YA MATENGENEZO (TSH) *</label>
             <input type="number" id="repCost" placeholder="Mfano: 50,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px;">
 
-            <button onclick="window.saveRepairOrder()" style="width:100%; padding:15px; background:#8b5cf6; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;"> SAJILI KIFAA CHENYE MATENGENEZO</button>
+            <button onclick="window.saveRepairOrder()" style="width:100%; padding:15px; background:#18A982; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;"> SAJILI KIFAA CHENYE MATENGENEZO</button>
         </div>
 
         <button type="button" class="btn-close" onclick="window.closeModals()" style="margin-top:15px; width:100%;">Funga</button>

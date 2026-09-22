@@ -93,7 +93,7 @@ window.openUserPaymentModal = function() {
             inp.style.opacity = '1';
         });
         if(btnEdit) { btnEdit.style.display = 'none'; }
-        if(btnSave) { btnSave.style.display = 'block'; btnSave.style.background = '#00509d'; }
+        if(btnSave) { btnSave.style.display = 'block'; btnSave.style.background = '#18A982'; }
     }
     // Inasoma na kupakia miamala ya SokoPay ya mtumiaji
     window.loadUserSokoPayLinks();

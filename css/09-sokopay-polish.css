@@ -36,7 +36,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 6px;
-    background: linear-gradient(90deg, var(--skh-green, #10b981) 0%, #0ea371 45%, var(--skh-primary, #03509d) 100%);
+    background: #18A982;
     z-index: 1;
 }
 @keyframes skhPayPop {
@@ -123,3 +123,55 @@
     transition: border-color .15s ease, box-shadow .15s ease;
 }
 .scart-input:focus { border-color: var(--skh-primary, #03509d) !important; box-shadow: 0 0 0 4px rgba(3,80,157,.12); outline: none; }
+
+/* ---------- GLOBAL WHITE-FIRST SOKOPAY SHELL (2026-09-22) ----------
+   Scoped here because the authoritative HaiPay fragment carries legacy inline colors. */
+#sokopayForm,
+#sokopayWorkspace { background: #fff !important; color: #18352D !important; }
+#sokopayLeftSidebar.sp-sidebar {
+    background: #fff !important;
+    color: #18352D !important;
+    border-right: 1px solid #E5ECEC !important;
+    box-shadow: 8px 0 24px -22px rgba(24,53,45,.35) !important;
+}
+#sokopayLeftSidebar .sp-brand-logo { background: #18A982 !important; color: #fff !important; }
+#sokopayLeftSidebar .sp-brand-name { color: #17604E !important; }
+#sokopayLeftSidebar .sp-menu-heading { color: #7B8D87 !important; }
+#sokopayLeftSidebar .sp-sidebar-link {
+    color: #65757A !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+}
+#sokopayLeftSidebar .sp-sidebar-link:hover {
+    color: #17604E !important;
+    background: #F1F8F5 !important;
+}
+#sokopayLeftSidebar .sp-sidebar-link.active {
+    color: #17604E !important;
+    background: #EAF8F2 !important;
+    border-color: #CCEBDD !important;
+    box-shadow: inset 3px 0 0 #18A982 !important;
+}
+#sokopayLeftSidebar .sp-bottom-section { border-top-color: #E5ECEC !important; }
+#sokopayLeftSidebar .sp-profile-card {
+    background: #F8FBFA !important;
+    border-color: #E5ECEC !important;
+}
+#sokopayLeftSidebar .sp-profile-name { color: #18352D !important; }
+#sokopayLeftSidebar .sp-profile-img { border-color: #CCEBDD !important; }
+#sokopayLeftSidebar .sp-profile-verified { color: #178864 !important; }
+#sokopayForm .sp-back-btn { background: #18A982 !important; color: #fff !important; }
+#sokopayForm .sp-wallet-chip {
+    background: #EAF8F2 !important;
+    color: #17604E !important;
+    border-color: #CCEBDD !important;
+}
+@media (max-width: 768px) {
+    #sokopayLeftSidebar.sp-sidebar {
+        border-right: 0 !important;
+        border-bottom: 1px solid #E5ECEC !important;
+        box-shadow: 0 8px 20px -20px rgba(24,53,45,.35) !important;
+    }
+    #sokopayLeftSidebar .sp-sidebar-link.active { box-shadow: inset 0 -3px 0 #18A982 !important; }
+}

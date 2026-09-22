@@ -86,7 +86,7 @@ import { skh } from './00-bootstrap.js';
     if(!m.classList.contains('open') || !m.innerHTML){
       m.innerHTML='<div class="skh-discover-sheet" style="max-height:92vh;display:flex;flex-direction:column;">'
         +'<div class="skh-discover-head" style="padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;">'
-        +'<div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#1268A8,#18A982);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
+        +'<div style="width:38px;height:38px;border-radius:11px;background:#EAF3FA;color:#39779B;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
         +'<div style="flex:1;"><b style="font-size:15px;color:#0f172a;">Inafungua...</b><br><small style="color:#64748b;">Tafadhali subiri</small></div></div>'
         +'<div style="flex:1;padding:20px;text-align:center;color:#94a3b8;"><div style="display:inline-block;width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#1268A8;border-radius:50%;animation:spin 0.8s linear infinite;"></div><br><br><small>Inapakia mazungumzo...</small></div></div>'
         +'<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';

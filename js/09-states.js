@@ -64,7 +64,7 @@
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = actionLabel;
-            btn.style.cssText = 'padding:11px 20px;background:var(--skh-primary,#03509d);color:#fff;border:none;border-radius:11px;font-weight:800;font-size:12.5px;cursor:pointer;';
+            btn.style.cssText = 'padding:11px 20px;background:#18A982;color:#fff;border:none;border-radius:11px;font-weight:800;font-size:12.5px;cursor:pointer;';
             btn.addEventListener('click', function () { if (actionFn) actionFn(); });
             wrap.appendChild(btn);
         }

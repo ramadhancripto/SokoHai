@@ -28,7 +28,7 @@
 .mp-topbar > * { pointer-events: auto; }
 .mp-x {
     width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(2, 22, 46, .55); color: #fff; border: none;
+    background: #FFFFFF; color: #17604E; border: 1px solid #CCEBDD;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
 }
@@ -37,14 +37,14 @@
 /* ---- COVER ---- */
 .mp-cover {
     position: relative; height: 150px; flex-shrink: 0;
-    background: linear-gradient(135deg, #0B4F7A, #1268A8 60%, #2B82BD);
+    background: linear-gradient(135deg, #EAF8F2, #F0F7FA);
     overflow: hidden;
 }
 .mp-cover-img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .mp-cover-ph {
     width: 100%; height: 100%; display: flex; flex-direction: column; gap: 6px;
     align-items: center; justify-content: center;
-    color: rgba(255,255,255,.85); font-size: 12.5px; font-weight: 700;
+    color: #526962; font-size: 12.5px; font-weight: 700;
     padding-top: 46px; /* acha nafasi ya DP inayopanda juu — text isiingie chini ya DP */
     box-sizing: border-box; text-align: center;
 }
@@ -86,8 +86,8 @@
     padding: 10px 13px; border-radius: 12px; border: none; cursor: pointer;
     font-weight: 800; font-size: 13px; line-height: 1.2;
 }
-.mp-btn-light { background: #eef4fb; color: #0B4F7A; border: 1.5px solid #d5e4f4; }
-.mp-btn-brand { background: #1268A8; color: #fff; }
+.mp-btn-light { background: #F8FBFA; color: #526962; border: 1.5px solid #D5E2DE; }
+.mp-btn-brand { background: #18A982; color: #fff; }
 .mp-btn:active { transform: scale(.98); }
 
 /* ---- SECTIONS ---- */

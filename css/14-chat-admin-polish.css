@@ -45,7 +45,7 @@
 }
 
 .sys-toggle:hover {
-    border-color: #00509d;
+    border-color: #18A982;
     box-shadow: 0 4px 14px rgba(0, 80, 157, 0.10);
 }
 
@@ -289,7 +289,7 @@
 }
 
 .sp-back-btn:hover {
-    background: #00509d;
+    background: #18A982;
     color: #ffffff;
     box-shadow: 0 6px 14px rgba(0, 80, 157, 0.24);
     transform: translateY(-1px);

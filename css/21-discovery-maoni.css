@@ -126,8 +126,8 @@
     height: 34px;
     padding: 0 13px;
     border-radius: 999px;
-    border: 1.5px solid #1268A8;
-    background: #1268A8;
+    border: 1.5px solid #18A982;
+    background: #18A982;
     color: #fff;
     font-size: 13px;
     font-weight: 800;
@@ -318,7 +318,7 @@
     padding: 5px 10px;
     cursor: pointer;
 }
-.maoni-body .skh-cm-sort button.active { background: #1268A8; border-color: #1268A8; color: #fff; }
+.maoni-body .skh-cm-sort button.active { background: #18A982; border-color: #18A982; color: #fff; }
 .maoni-body .skh-cm-list {
     flex: 1 1 auto;
     max-height: none !important;
@@ -475,8 +475,8 @@
     background: #fff;
 }
 .maoni-body .skh-cm-inputrow input[type="text"]:focus {
-    outline: none; border-color: #1268A8;
-    box-shadow: 0 0 0 3px rgba(18, 104, 168, .12);
+    outline: none; border-color: #18A982;
+    box-shadow: 0 0 0 3px rgba(24, 169, 130, .12);
 }
 .maoni-body .skh-cm-send {
     flex: 0 0 auto;
@@ -484,7 +484,7 @@
     padding: 0 16px;
     border: none;
     border-radius: 11px;
-    background: #1268A8;
+    background: #18A982;
     color: #fff;
     font-size: 12.5px;
     font-weight: 800;

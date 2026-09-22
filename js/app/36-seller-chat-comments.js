@@ -91,7 +91,7 @@ import { skh } from './00-bootstrap.js';
             document.body.appendChild(m);
         }
         m.innerHTML = '<div style="background:#fff;border-radius:18px;width:96%;max-width:640px;max-height:90vh;overflow:auto;box-shadow:0 24px 72px rgba(15,23,42,.4);">'
-            + '<div style="background:linear-gradient(135deg,#001122,#00509d);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;">'
+            + '<div style="background:linear-gradient(135deg,#EAF8F2,#F0F7FA);color:#18352D;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;">'
             + '<b>' + T('sc_title', 'Tathmini & Maswali (Halisi)') + '</b>'
             + '<button type="button" onclick="document.getElementById(\'skhSellerCommentsModal\').style.display=\'none\'" style="border:none;background:transparent;color:#fff;font-size:20px;cursor:pointer;" aria-label="Funga">' + (window.skhNavIcon ? window.skhNavIcon('x',16) : '') + '</button></div>'
             + '<div id="skhSellerCommentsBody" style="padding:14px;font-size:12px;color:#475569;">' + T('sc_loading', 'Inapakia...') + '</div></div>';
@@ -161,7 +161,7 @@ import { skh } from './00-bootstrap.js';
                 + '<b style="font-size:12px;color:#0f172a;">' + esc(t.authorName || 'Mteja') + '</b> <span style="color:#94a3b8;font-size:12.5px;">' + fmtDate(t.createdAt) + '</span>'
                 + '<div style="font-size:12px;margin:3px 0;">' + esc(t.text || '') + '</div>'
                 + (rs.length ? rs.map(function (r) { return '<div style="margin-left:14px;font-size:13px;color:#0369a1;">↳ ' + esc(r.authorName || '') + ': ' + esc(r.text || '') + '</div>'; }).join('') : '')
-                + '<div style="margin-top:6px;"><button type="button" style="border:none;background:#03509d;color:#fff;border-radius:99px;padding:5px 12px;font-size:13px;font-weight:800;cursor:pointer;" onclick="window.skhSellerReplyToQuestion(\'' + jsEsc(t.id) + '\')">'
+                + '<div style="margin-top:6px;"><button type="button" style="border:none;background:#18A982;color:#fff;border-radius:99px;padding:5px 12px;font-size:13px;font-weight:800;cursor:pointer;" onclick="window.skhSellerReplyToQuestion(\'' + jsEsc(t.id) + '\')">'
                 + (answered ? T('sc_reply_again', 'Jibu Tena') : T('sc_reply', 'Jibu')) + '</button></div></div>';
         }).join('');
     }
@@ -263,7 +263,7 @@ import { skh } from './00-bootstrap.js';
             document.body.appendChild(m);
         }
         m.innerHTML = '<div style="background:#fff;border-radius:18px;width:96%;max-width:680px;max-height:90vh;overflow:auto;box-shadow:0 24px 72px rgba(15,23,42,.4);">'
-            + '<div style="background:linear-gradient(135deg,#0b1120,#1e293b);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;">'
+            + '<div style="background:linear-gradient(135deg,#EAF8F2,#F8FBFA);color:#18352D;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1;">'
             + '<b>' + T('md_title', 'Usimamizi wa Maoni & Ripoti') + '</b>'
             + '<button type="button" onclick="document.getElementById(\'skhAdminModerationModal\').style.display=\'none\'" style="border:none;background:transparent;color:#fff;font-size:20px;cursor:pointer;" aria-label="Funga">' + (window.skhNavIcon ? window.skhNavIcon('x',16) : '') + '</button></div>'
             + '<div id="skhAdminModerationBody" style="padding:14px;font-size:12px;color:#475569;">' + T('sc_loading', 'Inapakia...') + '</div></div>';
@@ -334,7 +334,7 @@ import { skh } from './00-bootstrap.js';
                 if (btn) return;
                 var host = document.createElement('div');
                 host.style.cssText = 'margin-top:14px;';
-                host.innerHTML = '<button type="button" id="skhSellerRealBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#001122,#00509d);color:#fff;border:none;border-radius:14px;font-weight:900;font-size:13px;cursor:pointer;" onclick="window.skhSellerCommentsPanel()"> ' + T('sc_open_real', 'Tazama Tathmini & Maswali Halisi') + '</button>';
+                host.innerHTML = '<button type="button" id="skhSellerRealBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#EAF8F2,#F0F7FA);color:#fff;border:none;border-radius:14px;font-weight:900;font-size:13px;cursor:pointer;" onclick="window.skhSellerCommentsPanel()"> ' + T('sc_open_real', 'Tazama Tathmini & Maswali Halisi') + '</button>';
                 ws.appendChild(host);
             }, 150);
             return;
@@ -351,7 +351,7 @@ import { skh } from './00-bootstrap.js';
             if (!ws || document.getElementById('skhAdminModBtn')) return;
             var host = document.createElement('div');
             host.style.cssText = 'margin-top:14px;';
-            host.innerHTML = '<button type="button" id="skhAdminModBtn" style="padding:12px 16px;background:#0f172a;color:#fff;border:none;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;" onclick="window.skhAdminModerationOpen()"> ' + T('md_open', 'Usimamizi wa Maoni & Ripoti') + '</button>';
+            host.innerHTML = '<button type="button" id="skhAdminModBtn" style="padding:12px 16px;background:#526962;color:#fff;border:none;border-radius:12px;font-weight:800;font-size:12px;cursor:pointer;" onclick="window.skhAdminModerationOpen()"> ' + T('md_open', 'Usimamizi wa Maoni & Ripoti') + '</button>';
             ws.appendChild(host);
         }, 200);
     };

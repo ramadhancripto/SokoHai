@@ -12,7 +12,7 @@
 }
 @media (hover: hover) {
     .ct-sidebar-menu-btn:hover {
-        background: #eef4fb;
+        background: #F1F8F5;
         transform: translateX(2px);
     }
 }
@@ -69,8 +69,8 @@
     font-family: var(--skh-font, 'Segoe UI', system-ui, sans-serif);
 }
 @keyframes skhNetIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-#skhNetPill.skh-offline { background: #0f172a; color: #fca5a5; border: 1px solid #7f1d1d; }
-#skhNetPill.skh-online { background: #062e22; color: #6ee7b7; border: 1px solid #065f46; }
+#skhNetPill.skh-offline { background: #FEF2F2; color: #B63E3A; border: 1px solid #F2C9C7; }
+#skhNetPill.skh-online { background: #EAF8F2; color: #17604E; border: 1px solid #CCEBDD; }
 #skhNetPill .skh-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: skhNetBlink 1.2s infinite; }
 @keyframes skhNetBlink { 50% { opacity: .35; } }
 
@@ -82,11 +82,12 @@
     z-index: 2147483300;
     max-width: 420px;
     margin: 0 auto;
-    background: linear-gradient(140deg, #0f172a 0%, #03509d 100%);
-    color: #fff;
+    background: #FFFFFF;
+    color: #18352D;
+    border: 1px solid #D5E2DE;
     border-radius: 16px;
     padding: 14px 14px 12px;
-    box-shadow: 0 16px 40px rgba(2, 13, 28, .4);
+    box-shadow: 0 12px 32px rgba(24, 53, 45, .14);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -97,14 +98,14 @@
 #skhInstallBanner .skh-inst-ico { font-size: 26px; }
 #skhInstallBanner .skh-inst-txt { flex: 1; min-width: 0; }
 #skhInstallBanner .skh-inst-txt b { display: block; font-size: 13.5px; }
-#skhInstallBanner .skh-inst-txt small { color: #cbd5e1; font-size: 13px; }
+#skhInstallBanner .skh-inst-txt small { color: #65757A; font-size: 13px; }
 #skhInstallBanner button {
     border: none; cursor: pointer;
     padding: 10px 14px; border-radius: 10px;
     font-weight: 800; font-size: 12px;
 }
-#skhInstallBanner .skh-inst-go { background: var(--skh-gold, #d4af37); color: #0f172a; }
-#skhInstallBanner .skh-inst-no { background: rgba(255,255,255,.14); color: #e2e8f0; }
+#skhInstallBanner .skh-inst-go { background: #18A982; color: #fff; }
+#skhInstallBanner .skh-inst-no { background: #F1F5F3; color: #526962; }
 
 @media (prefers-reduced-motion: reduce) {
     .ct-sidebar-menu-btn, .menu-item, #skhNetPill, #skhInstallBanner { transition: none !important; animation: none !important; }

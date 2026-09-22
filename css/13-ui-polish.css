@@ -222,3 +222,13 @@ button {
     background: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.15);
 }
 .skh-notif-item .list-info b { font-size: 13px; line-height: 1.35; display: block; padding-right: 14px; }
+.skh-notif-item { background:#fff; border:1px solid #E5ECEC; box-shadow:0 2px 8px rgba(24,53,45,.05); }
+.skh-notif-ico.type-order,
+.skh-notif-ico.type-wallet { background:#EAF8F2; color:#178864; }
+.skh-notif-ico.type-delivery,
+.skh-notif-ico.type-ride_request { background:#F0F7FA; color:#39779B; }
+.skh-notif-ico.type-negotiation { background:#FBF7E7; color:#8B6A1D; }
+.skh-notif-ico.type-chat,
+.skh-notif-ico.type-new_comment,
+.skh-notif-ico.type-comment_reply,
+.skh-notif-ico.type-comment_mention { background:#F1F8F5; color:#17604E; }

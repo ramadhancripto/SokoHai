@@ -91,7 +91,7 @@ import { skh } from './00-bootstrap.js';
         var canView = !!((sc && sc.contextId) || (g && g.contextId));
         return '<div class="skh-gs-ctx" data-act="gsg-view-ctx" '
             + 'style="display:flex;align-items:center;gap:8px;margin:8px 12px 4px;padding:8px 12px;border-radius:12px;background:#eef6fc;border:1px solid #d3e6f5;cursor:' + (canView ? 'pointer' : 'default') + ';">'
-            + '<span style="width:26px;height:26px;border-radius:8px;background:#1268A8;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">⚑</span>'
+            + '<span style="width:26px;height:26px;border-radius:8px;background:#18A982;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">⚑</span>'
             + '<div style="flex:1;min-width:0;"><b style="display:block;font-size:11.5px;color:#0B4F7A;">' + esc(label) + (sc && sc.participants ? ' · ' + sc.participants.length : '') + '</b>'
             + '<small style="color:#5b7f9a;font-size:10.5px;">' + tk('gs_ctx_sub', 'Context ya soga — engine ya commerce ndiyo inamiliki hesabu') + '</small></div>'
             + (canView ? '<span style="color:#1268A8;font-weight:800;font-size:11.5px;white-space:nowrap;">' + tk('disc_opp_view', 'Tazama') + ' ›</span>' : '')
@@ -344,7 +344,7 @@ import { skh } from './00-bootstrap.js';
             m.innerHTML = '<div class="skh-discover-sheet" style="max-height:92vh;display:flex;flex-direction:column;">'
                 + '<div class="skh-discover-head">'
                 + '<button type="button" class="skh-discover-back" data-act="gsg-close" aria-label="' + tk('back', 'Rudi') + '">' + (window.skhNavIcon ? window.skhNavIcon('back', 18) : '‹') + '</button>'
-                + '<div id="gsgAvatarTile" style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#1268A8,#18A982);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
+                + '<div id="gsgAvatarTile" style="width:38px;height:38px;border-radius:11px;background:#EAF3FA;border:1px solid #CFDFEB;color:#39779B;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
                 + '<div style="flex:1;min-width:0;"><b id="gsgTitleEl" class="skh-discover-title" style="font-size:15px;">' + tk('group', 'Kikundi') + '</b><br>'
                 + '<small id="gsgSubEl" class="skh-discover-sub">' + tk('loading', 'Inapakia...') + '</small></div>'
                 + '<button type="button" class="skh-discover-back" data-act="gsg-info" title="' + tk('gsg_info', 'Taarifa za kikundi') + '" style="margin-left:6px;">' + (window.skhNavIcon ? window.skhNavIcon('menu', 18) : '☰') + '</button>'
@@ -355,17 +355,17 @@ import { skh } from './00-bootstrap.js';
                 + '<div id="gsgTabChat" style="flex:1;min-height:0;display:flex;flex-direction:column;">'
                 + '<div id="gsgAnnounce"></div>'
                 + '<div id="gsgTyping" style="padding:0 14px;font-size:11px;color:#64748b;min-height:2px;font-style:italic;"></div>'
-                + '<div id="gsgMsgs" style="flex:1;min-height:220px;overflow-y:auto;padding:12px;background:#f6f9fc;">'
+                + '<div id="gsgMsgs" style="flex:1;min-height:220px;overflow-y:auto;padding:12px;background:#efe7dd;">'
                 + '<small style="color:#64748b;display:block;text-align:center;padding:16px;">' + tk('loading', 'Inapakia meseji...') + '</small></div>'
                 + '<div id="gsgReplyBar" style="display:none;padding:7px 12px 0;"></div>'
                 + '<div id="gsgComposerRow" style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e2e8f0;align-items:stretch;">'
-                + '<button type="button" data-act="gsg-attach" title="' + tk('gsg_attach', 'Ambatisha') + '" aria-label="' + tk('gsg_attach', 'Ambatisha') + '" style="border:1.5px solid #cbd5e1;background:#fff;color:#1268A8;font-weight:900;font-size:17px;width:42px;border-radius:12px;cursor:pointer;line-height:1;">+</button>'
+                + '<button type="button" data-act="gsg-attach" title="' + tk('gsg_attach', 'Ambatisha') + '" aria-label="' + tk('gsg_attach', 'Ambatisha') + '" style="border:1.5px solid #CCEBDD;background:#fff;color:#178864;font-weight:900;font-size:17px;width:42px;border-radius:12px;cursor:pointer;line-height:1;">+</button>'
                 + '<input id="gsgInput" type="text" autocomplete="off" placeholder="' + tk('ch_msg_ph', 'Andika ujumbe...') + '" style="flex:1;padding:11px 13px;border:1.5px solid #cbd5e1;border-radius:12px;font-size:14px;">'
-                + '<button type="button" data-act="gsg-send" style="border:none;background:#1268A8;color:#fff;font-weight:800;font-size:13px;padding:0 18px;border-radius:12px;cursor:pointer;">' + tk('ch_send', 'Tuma') + '</button>'
+                + '<button type="button" data-act="gsg-send" style="border:none;background:#18A982;color:#fff;font-weight:800;font-size:13px;padding:0 18px;border-radius:12px;cursor:pointer;">' + tk('ch_send', 'Tuma') + '</button>'
                 + '</div></div>'
-                + '<div id="gsgTabOrders" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#f6f9fc;"></div>'
-                + '<div id="gsgTabMembers" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#f6f9fc;"></div>'
-                + '<div id="gsgTabMedia" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#f6f9fc;"></div>'
+                + '<div id="gsgTabOrders" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fff;"></div>'
+                + '<div id="gsgTabMembers" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fff;"></div>'
+                + '<div id="gsgTabMedia" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fff;"></div>'
                 + '</div>';
             m.classList.add('open');
             m.style.display = 'block';
@@ -440,7 +440,7 @@ import { skh } from './00-bootstrap.js';
                     if (annHost) {
                         annHost.innerHTML = '<div style="background:#fef3c7;border:1px solid #fde68a;padding:10px 14px;border-radius:12px;margin:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">'
                             + '<span style="font-size:12.5px;color:#92400e;font-weight:700;">Hujajiunga na kikundi hiki bado.</span>'
-                            + '<button type="button" onclick="if(window.skhGroupJoin){window.skhGroupJoin(\'' + esc(gid) + '\').then(function(){window.skhOpenGroupSoga(\'' + esc(gid) + '\');});}" style="border:none;background:#1268A8;color:#fff;padding:6px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;">Jiunge Sasa</button>'
+                            + '<button type="button" onclick="if(window.skhGroupJoin){window.skhGroupJoin(\'' + esc(gid) + '\').then(function(){window.skhOpenGroupSoga(\'' + esc(gid) + '\');});}" style="border:none;background:#18A982;color:#fff;padding:6px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;">Jiunge Sasa</button>'
                             + '</div>';
                     }
                 } else {
@@ -599,7 +599,7 @@ import { skh } from './00-bootstrap.js';
                 ? '<div style="padding:10px 14px;border-bottom:1px solid #eef2f7;display:flex;flex-direction:column;gap:7px;">'
                     + '<input id="gsgEditName" type="text" maxlength="48" value="' + esc(g.name || '') + '" placeholder="' + tk('grp_name_ph', 'Jina la kikundi') + '" style="padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:13px;">'
                     + '<textarea id="gsgEditDesc" rows="2" maxlength="300" placeholder="' + tk('grp_desc_ph', 'Maelezo (hiari)') + '" style="padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:12.5px;resize:none;">' + esc(g.description || '') + '</textarea>'
-                    + '<button type="button" data-act="gsg-save-info" style="align-self:flex-end;border:none;background:#1268A8;color:#fff;font-weight:800;font-size:11.5px;padding:8px 13px;border-radius:99px;cursor:pointer;">' + tk('gsg_save_info', 'Hifadhi taarifa') + '</button>'
+                    + '<button type="button" data-act="gsg-save-info" style="align-self:flex-end;border:none;background:#18A982;color:#fff;font-weight:800;font-size:11.5px;padding:8px 13px;border-radius:99px;cursor:pointer;">' + tk('gsg_save_info', 'Hifadhi taarifa') + '</button>'
                     + '</div>'
                 : '')
             // [SPEC P2 §9] PIN ANNOUNCEMENT (admins tu) — tangazo ni card maalum, si msg
@@ -607,7 +607,7 @@ import { skh } from './00-bootstrap.js';
                 ? '<div style="padding:10px 14px;border-bottom:1px solid #eef2f7;display:flex;flex-direction:column;gap:7px;">'
                     + '<small style="font-size:10.5px;color:#64748b;font-weight:700;">' + tk('gsg_ann_pin_l', 'Tangazo la kikundi (pinning):') + '</small>'
                     + '<textarea id="gsgAnnText" rows="2" maxlength="500" placeholder="' + tk('gsg_ann_ph', 'Andika tangazo (wazi neno tupu ku-unpin)') + '" style="padding:9px 11px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:12.5px;resize:none;">' + esc(g.announcement && g.announcement.text ? g.announcement.text : '') + '</textarea>'
-                    + '<button type="button" data-act="gsg-ann-save" style="align-self:flex-end;border:none;background:#1268A8;color:#fff;font-weight:800;font-size:11.5px;padding:8px 13px;border-radius:99px;cursor:pointer;">' + tk('gsg_ann_save', 'Hifadhi tangazo') + '</button>'
+                    + '<button type="button" data-act="gsg-ann-save" style="align-self:flex-end;border:none;background:#18A982;color:#fff;font-weight:800;font-size:11.5px;padding:8px 13px;border-radius:99px;cursor:pointer;">' + tk('gsg_ann_save', 'Hifadhi tangazo') + '</button>'
                     + '</div>'
                 : '')
             + '<div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center;">'
@@ -857,7 +857,7 @@ import { skh } from './00-bootstrap.js';
             + tk('gsg_sr_dl', 'Mwisho') + ': ' + esc(String(sn.deadline || '').slice(0, 10))
             + '</div>'
             + '<div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;">'
-            + '<button type="button" data-act="gsg-sr-offer" data-goid="' + esc(go) + '" style="flex:1;border:none;background:#1268A8;color:#fff;font-weight:800;font-size:11.5px;padding:9px;border-radius:10px;cursor:pointer;">' + tk('gsg_sr_poly', 'Toa ofa') + '</button>'
+            + '<button type="button" data-act="gsg-sr-offer" data-goid="' + esc(go) + '" style="flex:1;border:none;background:#18A982;color:#fff;font-weight:800;font-size:11.5px;padding:9px;border-radius:10px;cursor:pointer;">' + tk('gsg_sr_poly', 'Toa ofa') + '</button>'
             + '<span style="font-size:10px;font-weight:800;color:#1268A8;background:#fff;border:1px solid #cfe4f2;border-radius:6px;padding:6px 8px;align-self:center;" data-srcof="' + esc(go) + '">' + tk('gsg_sr_ofa', 'ofa') + ': ' + (+sn.offersCount || 0) + '</span>'
             + '</div></div>';
     }
@@ -1048,7 +1048,7 @@ import { skh } from './00-bootstrap.js';
                         + '<input id="tm_' + i + '_q" type="number" min="2" max="1000000" placeholder="' + tk('gsg_go_t_from', 'Kiasi ≥') + '" value="' + (r.minQty || '') + '" style="flex:1;padding:10px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:13px;">'
                         + '<input id="tm_' + i + '_p" type="number" min="1" max="1000000000" placeholder="TZS / ' + esc(d.unit || 'unit') + '" value="' + (r.price || '') + '" style="flex:1;padding:10px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:13px;"></div>';
                 }).join('')
-                + '<button type="button" data-act="gsg-tier-save" data-goid="' + esc(goid) + '" style="width:100%;margin-top:14px;border:none;background:#1268A8;color:#fff;font-weight:900;font-size:13.5px;padding:12px;border-radius:12px;cursor:pointer;">' + tk('save', 'Hifadhi') + '</button>'
+                + '<button type="button" data-act="gsg-tier-save" data-goid="' + esc(goid) + '" style="width:100%;margin-top:14px;border:none;background:#18A982;color:#fff;font-weight:900;font-size:13.5px;padding:12px;border-radius:12px;cursor:pointer;">' + tk('save', 'Hifadhi') + '</button>'
                 + '</div>';
             pop.addEventListener('click', function (ev) { if (ev.target === pop) closeP6(); });
             document.body.appendChild(pop);
@@ -1072,7 +1072,7 @@ import { skh } from './00-bootstrap.js';
                 + '<input id="ofQty" type="number" min="1" max="1000000" placeholder="' + tk('gsg_go_of_qty', 'Idadi unayoweza kutoa') + '" value="' + (mine ? mine.availableQty : '') + '" style="width:100%;margin-top:8px;padding:11px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:13px;">'
                 + '<input id="ofDays" type="number" min="0" max="90" placeholder="' + tk('gsg_go_of_days', 'Siku za kutoa usafihinati (0-90)') + '" value="' + (mine ? mine.deliveryDays : '') + '" style="width:100%;margin-top:8px;padding:11px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:13px;">'
                 + '<textarea id="ofNote" maxlength="200" placeholder="' + tk('gsg_go_of_note', 'Maelezo (mfano: grade, upatikanaji, njia)') + '" style="width:100%;margin-top:8px;padding:11px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:12.5px;min-height:64px;">' + (mine ? esc(mine.note || '') : '') + '</textarea>'
-                + '<button type="button" data-act="gsg-of-save" data-goid="' + esc(goid) + '" style="width:100%;margin-top:12px;border:none;background:#1268A8;color:#fff;font-weight:900;font-size:13.5px;padding:12px;border-radius:12px;cursor:pointer;">' + tk('gsg_sr_poly', 'Toa ofa') + '</button>'
+                + '<button type="button" data-act="gsg-of-save" data-goid="' + esc(goid) + '" style="width:100%;margin-top:12px;border:none;background:#18A982;color:#fff;font-weight:900;font-size:13.5px;padding:12px;border-radius:12px;cursor:pointer;">' + tk('gsg_sr_poly', 'Toa ofa') + '</button>'
                 + '</div>';
             pop.addEventListener('click', function (ev) { if (ev.target === pop) closeP6(); });
             document.body.appendChild(pop);
@@ -1417,7 +1417,7 @@ import { skh } from './00-bootstrap.js';
         pop.id = 'gsgAttachPop';
         pop.style.cssText = 'position:fixed;inset:0;z-index:100095;background:rgba(11,22,40,.35);display:flex;align-items:flex-end;';
         // [§13] commerce actions ZINATOFUATISHWA kikamilifu kutoka attachments (gold = commerce §39)
-        pop.innerHTML = '<div style="width:100%;background:#f6f9fc;border-radius:18px 18px 0 0;padding:16px 16px 22px;box-shadow:0 -8px 30px rgba(11,22,40,.18);">'
+        pop.innerHTML = '<div style="width:100%;background:#fff;border-radius:18px 18px 0 0;padding:16px 16px 22px;box-shadow:0 -8px 30px rgba(11,22,40,.18);">'
             + '<button type="button" data-act="gsg-attach-close" style="float:right;border:none;background:#e2e8f0;color:#334155;width:30px;height:30px;border-radius:99px;font-weight:900;cursor:pointer;">\u00d7</button>'
             + '<b style="display:block;font-size:13px;color:#0f172a;margin-bottom:10px;">' + tk('gsg_attach', 'Ambatisha') + '</b>'
             + '<small style="display:block;font-size:9.5px;font-weight:800;letter-spacing:.6px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">' + tk('gsg_at_files', 'Viambatisho') + '</small>'
@@ -1458,7 +1458,7 @@ import { skh } from './00-bootstrap.js';
             }).join('')
             + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">'
             + '<button type="button" data-act="gsg-form-cancel" style="border:1px solid #cbd5e1;background:#fff;color:#334155;font-weight:800;font-size:12px;padding:9px 14px;border-radius:10px;cursor:pointer;">' + tk('gsg_cancel', 'Ghairi') + '</button>'
-            + '<button type="button" data-act="gsg-form-save" style="border:none;background:#1268A8;color:#fff;font-weight:800;font-size:12px;padding:9px 16px;border-radius:10px;cursor:pointer;">' + tk('ch_send', 'Tuma') + '</button>'
+            + '<button type="button" data-act="gsg-form-save" style="border:none;background:#18A982;color:#fff;font-weight:800;font-size:12px;padding:9px 16px;border-radius:10px;cursor:pointer;">' + tk('ch_send', 'Tuma') + '</button>'
             + '</div></div>';
         pop.addEventListener('click', function (ev) { if (ev.target === pop) closeTypedForm(); });
         document.body.appendChild(pop);
@@ -1491,7 +1491,7 @@ import { skh } from './00-bootstrap.js';
                 + '<b style="flex:1;font-size:13px;color:#0f172a;">' + tk('gsg_thread', 'Mti wa majibu') + ' (' + replies.length + ')</b>'
                 + '<button type="button" data-act="gsg-thread-jump" data-mid="' + esc(rootId) + '" data-by="' + esc(root.senderName || '') + '" style="border:1px solid #1268A8;background:#fff;color:#1268A8;font-weight:800;font-size:10.5px;padding:6px 11px;border-radius:99px;cursor:pointer;">' + tk('gsg_thread_reply', 'Jibu ujumbe huu') + '</button>'
                 + '<button type="button" data-act="gsg-thread-close" aria-label="' + tk('gsg_cancel', 'Ghairi') + '" style="border:none;background:#eef2f7;color:#334155;width:29px;height:29px;border-radius:99px;font-weight:900;cursor:pointer;">\u00d7</button></div>'
-            + '<div style="flex:1;overflow-y:auto;padding:12px 14px;background:#f6f9fc;">'
+            + '<div style="flex:1;overflow-y:auto;padding:12px 14px;background:#fff;">'
             + '<div style="background:#fff;border:1px solid #d3e6f5;border-left:3px solid #1268A8;border-radius:12px;padding:9px 11px;">'
                 + '<small style="color:#64748b;font-weight:700;">' + esc(root.senderName || '') + '</small>'
                 + '<div style="font-size:13px;color:#0f172a;margin-top:2px;">' + renderMsgText(root.text || root.caption || root.question || '') + '</div></div>'
@@ -1521,7 +1521,7 @@ import { skh } from './00-bootstrap.js';
             if (host && host.innerHTML.includes('Inapakia meseji')) {
                 host.innerHTML = '<div style="text-align:center;padding:26px 16px;color:#64748b;">'
                     + '<p style="font-size:13px;margin:0 0 10px;">Mazungumzo yanachukua muda kupakia.</p>'
-                    + '<button type="button" onclick="window.skhOpenGroupSoga(\'' + esc(gid) + '\')" style="padding:8px 16px;background:#1268A8;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;">Jaribu Tena</button>'
+                    + '<button type="button" onclick="window.skhOpenGroupSoga(\'' + esc(gid) + '\')" style="padding:8px 16px;background:#18A982;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;">Jaribu Tena</button>'
                     + '</div>';
             }
         }, 8000);
@@ -1574,7 +1574,7 @@ import { skh } from './00-bootstrap.js';
             clearTimeout(loadTimer);
             host.innerHTML = '<div style="text-align:center;padding:20px;color:#b91c1c;">'
                 + '<p style="font-size:12.5px;margin:0 0 8px;">Imeshindikana kupakia meseji.</p>'
-                + '<button type="button" onclick="window.skhOpenGroupSoga(\'' + esc(gid) + '\')" style="padding:6px 14px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:11.5px;cursor:pointer;">Jaribu Tena</button>'
+                + '<button type="button" onclick="window.skhOpenGroupSoga(\'' + esc(gid) + '\')" style="padding:6px 14px;background:#17604E;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:11.5px;cursor:pointer;">Jaribu Tena</button>'
                 + '</div>';
         }
     }

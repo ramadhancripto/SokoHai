@@ -117,7 +117,7 @@
 .skh-discover-sheet {
     width: 100%; max-width: 720px;
     max-height: 92vh; height: 92vh;
-    background: #F6F9FC;
+    background: #FFFFFF;
     border-radius: 22px 22px 0 0;
     display: flex; flex-direction: column;
     overflow: hidden;
@@ -126,8 +126,9 @@
 .skh-discover-head {
     display: flex; align-items: center; gap: 10px;
     padding: 14px 14px 10px;
-    background: linear-gradient(135deg, #0B3A66, #1268A8);
-    color: #fff;
+    background: #F1FBF7;
+    color: #18352D;
+    border-bottom: 1px solid #D9EEE5;
     white-space: nowrap !important;
     writing-mode: horizontal-tb !important;
 }
@@ -143,13 +144,13 @@
 }
 .skh-discover-back {
     width: 34px; height: 34px; border-radius: 10px;
-    border: none; background: rgba(255,255,255,.16); color: #fff;
+    border: 1px solid #CCEBDD; background: #fff; color: #17604E;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .skh-discover-back svg { width: 17px; height: 17px; }
 .skh-discover-gear {
     width: 34px; height: 34px; border-radius: 10px; border: none;
-    background: rgba(255,255,255,.16); color: #fff; font-size: 16px; cursor: pointer;
+    background: #fff; color: #17604E; border-color: #CCEBDD; font-size: 16px; cursor: pointer;
 }
 .skh-discover-search {
     display: flex; align-items: center; gap: 9px;

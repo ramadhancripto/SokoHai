@@ -221,7 +221,7 @@ import { skh } from './00-bootstrap.js';
             b.id = 'btnSavePaymentAccount';
             b.type = 'button';
             b.addEventListener('click', function (ev) { ev.preventDefault(); window.skhSavePaymentAccount(); });
-            b.style.cssText = 'width:100%;padding:16px;background:#00509d;color:white;border:none;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;margin-bottom:10px;';
+            b.style.cssText = 'width:100%;padding:16px;background:#18A982;color:white;border:none;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;margin-bottom:10px;';
             b.textContent = tk('pay_save_btn', 'HIFADHI TAARIFA');
             btnEdit.parentNode.insertBefore(b, btnEdit);
         }

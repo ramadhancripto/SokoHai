@@ -31,7 +31,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 6px;
-    background: linear-gradient(90deg, var(--skh-primary, #03509d) 0%, #0a7ace 55%, var(--skh-gold, #d4af37) 100%);
+    background: linear-gradient(90deg, #18A982 0%, #35B892 100%);
 }
 @keyframes skhAuthPop {
     from { opacity: 0; transform: scale(.94) translateY(14px); }
@@ -40,8 +40,8 @@
 
 /* ---------- Duara la logo ---------- */
 #authModal > div > div:first-of-type {
-    background: linear-gradient(145deg, #e8f1fb, #cfe4f8) !important;
-    box-shadow: 0 0 0 6px rgba(3, 80, 157, 0.06), var(--skh-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+    background: #EAF8F2 !important;
+    box-shadow: 0 0 0 6px rgba(24, 169, 130, 0.08), var(--skh-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
 }
 
 /* ---------- Inputs ---------- */

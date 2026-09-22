@@ -609,7 +609,7 @@ window.customPrompt = function(message, placeholder, callback) {
 
     const btnOk = document.createElement("button");
     btnOk.innerText = "Sawa";
-    btnOk.style.cssText = "background:var(--primary-blue, #00509d); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:14px; cursor:pointer; flex:1;";
+    btnOk.style.cssText = "background:#18A982; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:14px; cursor:pointer; flex:1;";
     btnOk.onclick = () => {
         const val = input.value.trim();
         overlay.remove();

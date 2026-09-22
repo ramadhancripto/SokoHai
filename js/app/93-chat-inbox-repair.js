@@ -259,7 +259,7 @@
 
         if (!items93.length) {
             list.innerHTML = '<div style="text-align:center;padding:44px 20px;color:#64748b;">'
-                + '<div style="width:74px;height:74px;margin:0 auto 14px;border-radius:22px;background:linear-gradient(135deg,#1268A8,#18A982);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:34px;">S</div>'
+                + '<div style="width:74px;height:74px;margin:0 auto 14px;border-radius:22px;background:#EAF3FA;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:34px;">S</div>'
                 + '<b style="color:#0f172a;font-size:15px;display:block;">Hakuna mazungumzo bado</b>'
                 + '<span style="font-size:12.5px;display:block;margin-top:6px;">Ukibofya "Chat" kwenye bidhaa au mtumiaji, mazungumzo yataonekana hapa.</span>'
                 + '<button type="button" class="skh-chat-btn" style="margin-top:14px;" onclick="window.skhChatStartEmpty && window.skhChatStartEmpty()">Nenda Sokoni</button>'
@@ -342,7 +342,7 @@
                 loadSeq93++;
                 list.innerHTML = '<div style="text-align:center;padding:24px 16px;">'
                     + '<p style="color:#64748b;font-size:13px;">Mazungumzo yanachukua muda kupakia.</p>'
-                    + '<button type="button" onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
+                    + '<button type="button" onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#17604E;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
                     + '</div>';
             }
         }, 10000);
@@ -361,7 +361,7 @@
             list.innerHTML = '<div style="text-align:center;padding:26px 16px;color:#b91c1c;">'
                 + '<b style="font-size:13.5px;">Hitilafu kupakia mazungumzo</b>'
                 + '<p style="color:#64748b;font-size:12px;margin-top:6px;word-break:break-word;">' + esc((e && e.message) || String(e)) + '</p>'
-                + '<button type="button" onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#0B4F7A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
+                + '<button type="button" onclick="window.skhChatOpenInbox()" style="margin-top:10px;padding:8px 16px;background:#17604E;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Jaribu Tena</button>'
                 + '</div>';
         }
     }

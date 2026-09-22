@@ -869,7 +869,7 @@ window.skhDriverOverviewStats = async function () {
             + '<div style="font-size:34px;"></div>'
             + '<b style="display:block;margin-top:8px;color:#0f172a;">' + T('dt_no_trips', 'Huna safari bado.') + '</b>'
             + '<p style="color:#64748b;font-size:12px;margin:6px 0 14px;">' + T('dt_no_trips_hint', 'Nenda kwenye Requests Marketplace ukubali kazi ya kwanza.') + '</p>'
-            + '<button onclick="window.switchDashTab(\'bookings\')" style="background:#03509d;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">' + T('dt_view_requests', 'ONA MAOMBI MAPYA') + '</button></div>';
+            + '<button onclick="window.switchDashTab(\'bookings\')" style="background:#18A982;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">' + T('dt_view_requests', 'ONA MAOMBI MAPYA') + '</button></div>';
         return;
     }
     function kpi(label, value, color) {

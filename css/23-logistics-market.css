@@ -10,10 +10,11 @@
     border-radius: 18px;
     padding: 16px 18px;
     margin-bottom: 14px;
-    color: #fff;
+    color: #18352D;
     overflow: hidden;
-    background: linear-gradient(135deg, #03509d 0%, #0E7A5F 100%);
-    box-shadow: 0 12px 28px rgba(3, 80, 157, .25);
+    background: #F0F7FA;
+    border: 1px solid #D6E8EF;
+    box-shadow: 0 4px 16px rgba(57, 119, 155, .10);
     display: flex;
     align-items: center;
     gap: 14px;
@@ -30,28 +31,29 @@
 .lm-hero-ico {
     width: 46px; height: 46px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, .16);
+    background: #FFFFFF;
+    border: 1px solid #D6E8EF;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.lm-hero-ico svg { width: 25px; height: 25px; color: #fff; }
+.lm-hero-ico svg { width: 25px; height: 25px; color: #39779B; }
 .lm-hero-txt { flex: 1; min-width: 0; position: relative; z-index: 1; }
 .lm-hero-txt h3 {
     margin: 0 0 3px;
     font-size: 15px; font-weight: 900; text-transform: uppercase;
     letter-spacing: .3px; line-height: 1.25;
 }
-.lm-hero-txt p { margin: 0; font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.88); }
+.lm-hero-txt p { margin: 0; font-size: 13px; line-height: 1.45; color: #65757A; }
 .lm-hero-count {
     position: relative; z-index: 1;
-    background: rgba(255,255,255,.15);
-    border: 1px solid rgba(255,255,255,.25);
+    background: #FFFFFF;
+    border: 1px solid #D6E8EF;
     border-radius: 12px;
     padding: 6px 10px;
     text-align: center;
     flex-shrink: 0;
 }
-.lm-hero-count b { display: block; font-size: 20px; line-height: 1; color: #FFD700; }
+.lm-hero-count b { display: block; font-size: 20px; line-height: 1; color: #178864; }
 .lm-hero-count small { font-size: 12px; text-transform: uppercase; font-weight: 800; opacity: .9; }
 
 /* ---------- Kanda ya kutenganisha dhana (maombi / kwako / yanaendelea / kumbukumbu) ---------- */
@@ -84,7 +86,7 @@
 .lm-qn.is-primary { border-color: #0E7A5F; background: #f0fdf4; }
 .lm-qn.is-primary .lm-qn-ico { background: #0E7A5F; color: #fff; }
 .lm-qn.is-primary b { color: #064e3b; }
-.lm-qn.is-active { border-color: #03509d; box-shadow: 0 0 0 2px rgba(3,80,157,.12); }
+.lm-qn.is-active { border-color: #18A982; box-shadow: 0 0 0 2px rgba(3,80,157,.12); }
 
 .lm-sep-note {
     display: flex; align-items: flex-start; gap: 8px;
@@ -131,7 +133,7 @@
     color: #03509d;
     box-shadow: 0 2px 8px rgba(15,23,42,.12);
 }
-.lm-tab.active .lm-tab-n { background: #03509d; color: #fff; }
+.lm-tab.active .lm-tab-n { background: #18A982; color: #fff; }
 
 /* ---------- Orodha + mifupa ya upakiaji ---------- */
 .lm-list { display: flex; flex-direction: column; gap: 12px; }

@@ -117,7 +117,7 @@
    font 20px badala ya 15.5px — kichwa kinaonekana "kimechanganyika".
    Restore design intention ya 17-negotiation-form.css (.nf-head h2). */
 .nf-shell .nf-head h2 {
-    color: #fff;                          /* white juu ya gradient ya bluu */
+    color: #18352D;                      /* dark text on the light green header */
     font-size: 15.5px !important;         /* reclaim component sizing */
     font-weight: 800;
     line-height: 1.25;

@@ -1,7 +1,120 @@
 
 > test
-> node tools/test_market_ranking.mjs && node tools/test_market_visual_contract.mjs && node tools/test_chat_home_identity_contract.mjs && node tools/test_nego_form.mjs && node tools/test_negotiation_engine.mjs && node tools/test_showcase.mjs && node tools/test_negotiation_dom.mjs && node tools/test_chat_header_sides.mjs && node tools/test_commerce_flow.mjs && node tools/test_delivery_nego_flow.mjs && node tools/test_route_matcher.mjs && node tools/test_routing.mjs && node tools/test_token_inbox.mjs && node tools/test_logistics_market.mjs && node tools/test_card_discovery.mjs && node tools/test_delivery_choice.mjs && node tools/test_commerce_cards.mjs && node tools/test_functions_resilience.mjs && node tools/test_chat_commerce_cards.mjs && node tools/test_chat_e2e_journey.mjs && node tools/test_chat_authority_contract.mjs && node tools/verify_nav_chain.mjs
+> node tools/test_global_white_system_contract.mjs && node tools/test_white_system_modules_contract.mjs && node tools/test_white_system_checkpoint2_contract.mjs && node tools/test_white_system_forms_contract.mjs && node tools/test_white_system_final_contract.mjs && node tools/test_market_ranking.mjs && node tools/test_market_visual_contract.mjs && node tools/test_chat_home_identity_contract.mjs && node tools/test_nego_form.mjs && node tools/test_negotiation_engine.mjs && node tools/test_showcase.mjs && node tools/test_negotiation_dom.mjs && node tools/test_chat_header_sides.mjs && node tools/test_commerce_flow.mjs && node tools/test_delivery_nego_flow.mjs && node tools/test_route_matcher.mjs && node tools/test_routing.mjs && node tools/test_token_inbox.mjs && node tools/test_logistics_market.mjs && node tools/test_card_discovery.mjs && node tools/test_delivery_choice.mjs && node tools/test_commerce_cards.mjs && node tools/test_functions_resilience.mjs && node tools/test_chat_commerce_cards.mjs && node tools/test_chat_e2e_journey.mjs && node tools/test_chat_authority_contract.mjs && node tools/verify_nav_chain.mjs
 
+PASS canonical green token exists
+PASS canonical green dark token exists
+PASS canonical support blue token exists
+PASS canonical white background token exists
+PASS canonical cream gold token exists
+PASS compat primary points to green
+PASS design-system page background points to white
+PASS shared primary button is green
+PASS shared focus ring is green
+PASS bottom nav source is white
+PASS bottom nav final authority is white
+PASS bottom nav active state is green
+PASS bottom nav has small green active indicator
+PASS sell action source is green not premium gold
+PASS dashboard sidebar source is white
+PASS dashboard sidebar active state is green
+PASS dashboard workspace source is white
+PASS install banner no longer dark gradient
+PASS SokoPay sidebar final scoped surface is white
+PASS SokoPay active nav is soft green
+PASS SokoPay runtime tab colors match white design
+PASS account drawer header is light
+PASS account settings header is light
+PASS chat header is light green not dark gradient
+PASS chat keeps WhatsApp light message surface
+PASS chat dark OS theme no longer creates dark chat
+PASS danger remains semantic
+
+GLOBAL WHITE SYSTEM PHASE A: 27 passed, 0 failed
+PASS Discover and Group shared sheet header is light
+PASS shared sheet controls are white-green
+PASS group message area keeps WhatsApp light surface
+PASS group header avatar uses soft blue identity
+PASS group send actions are green
+PASS group creation actions are green
+PASS group order actions are green
+PASS negotiation header is light green
+PASS late negotiation heading color matches light header
+PASS profile fallback cover is light
+PASS profile primary action is green
+PASS Discover active controls are green
+PASS transport information hero is light blue
+PASS delivery chooser header is light
+PASS post-payment delivery header is light
+PASS driver live dashboard banner is white
+PASS admin control panel no longer uses dark block
+PASS My SokoHai static header is light
+PASS My SokoHai runtime selected tab is green
+
+WHITE SYSTEM MODULE CONTRACT: 19 passed, 0 failed
+PASS SokoPay inner primary actions are green
+PASS SokoPay governance map no longer uses black panel
+PASS SokoPay fragment has no dark action backgrounds
+PASS SokoPay mobile bar is white
+PASS SokoPay mobile active pill is soft green
+PASS Token Box sheet is white
+PASS Token Box active tab is green
+PASS Token code strip is soft green
+PASS Token primary action is green
+PASS Request Inbox sheet is white
+PASS Request Inbox header icon is soft blue
+PASS Request Inbox active tab is green
+PASS Cart header is light green
+PASS Cart total is soft green not dark
+PASS Buyer order header is light
+PASS Logistics cart headers are light blue
+PASS Smart cart injected CSS has no legacy dark header backgrounds
+PASS Logistics role sidebar is white
+PASS Service provider sidebar dark theme removed
+PASS Agent assist dark hero removed
+PASS Agent primary actions are green
+PASS Hub charts use green blue gold system palette
+PASS Unread notification uses light green row
+PASS Notification icons have semantic type classes
+PASS Notification semantic CSS includes green blue and gold
+PASS KPI palette has no purple identity
+PASS Pending KPI no longer uses danger red
+PASS Buyer order launch actions are green
+PASS Checkout payment action is green
+
+WHITE SYSTEM CHECKPOINT 2: 29 passed, 0 failed
+PASS auth accent strip is green only
+PASS auth logo surface is soft green
+PASS auth strip does not spend premium gold
+PASS market language selected state is green
+PASS seller follow action is green
+PASS comments send action is green
+PASS comments focus uses green ring
+PASS seller form gallery action is green
+PASS seller form utility camera action is neutral not black
+PASS form runtime save action is green
+
+WHITE SYSTEM FORMS: 10 passed, 0 failed
+PASS top navigation management identity is soft green
+PASS runtime toast is a white semantic surface
+PASS legacy chat inbox header is light
+PASS chat v2 active and unread states use green identity
+PASS commerce route panel uses supporting blue softly
+PASS commerce route action remains primary green
+PASS product mode summary cards no longer use dark full panels
+PASS seller fallback cover is soft green
+PASS seller comments header is a light surface
+PASS print workspace header is soft green
+PASS lifecycle active tab is primary green
+PASS state retry action is primary green
+PASS account save action is primary green
+PASS legacy announcement source no longer has dark navy strip
+PASS old core announcement source no longer has dark navy strip
+PASS dialogs do not use legacy blue primary background
+PASS discover engine does not use legacy blue CTA literal
+PASS discover completion does not use legacy blue CTA literal
+
+Final white-system contract: 18 passed, 0 failed
 ✅ listing halisi yenye id/title inastahili
 ✅ deleted/suspended/draft hazistahili
 ✅ boost lazima iwe active na haija-expire
@@ -556,8 +669,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
   ✅ chombo cha tangazo kimechaguliwa (Daladala)
 [negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatikani kwa sasa.
     at file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:100:29
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900943935640.6958580238415144:4457:29)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900943935770.10381548944906305:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900970398030.439854435566861:4457:29)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900970398160.598032854807192:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -594,8 +707,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'CHAT_CONVERSATION',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900943935640.6958580238415144:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900943935640.6958580238415144:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900970398030.439854435566861:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900970398030.439854435566861:2170:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     conversationId: 'conv_buyer1_driverUid1',
@@ -605,8 +718,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_OPEN] {
   code: 'CHAT_OPEN',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900943935640.6958580238415144:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900943935640.6958580238415144:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900970398030.439854435566861:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900970398030.439854435566861:2170:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     partnerUid: 'driverUid1',
@@ -1150,8 +1263,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ product ina quantity na proposed price
   ✅ product HAINA schema ya service/transport/delivery
 [negotiationSendOffer] Falling back to Firestore-native: Error: NO_FUNCTIONS
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900944089170.33700262008111115:4456:42)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900944089240.5959008787214499:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900970550080.7067154031767993:4456:42)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900970550230.5891439335311763:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -1204,8 +1317,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900944089170.33700262008111115:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900944089170.33700262008111115:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900970550080.7067154031767993:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900970550080.7067154031767993:2170:24)
       at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },
@@ -1218,8 +1331,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900944089170.33700262008111115:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900944089170.33700262008111115:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900970550080.7067154031767993:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900970550080.7067154031767993:2170:24)
       at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },
@@ -1294,5 +1407,4 @@ ALL 32 CHAT CONTRACT CHECKS PASSED
   ✅ 81: closeModals hurithi flags
 ==================================================
 CHAT/NAV AUTHORITY: 18 zimepita, 0 zimeshindwa
-
 NPM_TEST_EXIT=0

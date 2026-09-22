@@ -36,7 +36,7 @@
         var el = document.getElementById(box);
         if (!el) return;
         el.innerHTML = '<div style="text-align:center;padding:28px 10px;color:#64748b;">' + '<div style="font-size:34px;">' + icon + '</div>' + '<b style="display:block;margin-top:8px;color:#0f172a;">' + esc(title) + '</b>' + '<small style="display:block;margin-top:4px;">' + esc(sub) + '</small>' +
-            (ctaLabel ? '<button onclick="' + ctaFn + '" style="margin-top:14px;padding:11px 18px;background:#00509d;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">' + esc(ctaLabel) + '</button>' : '') + '</div>';
+            (ctaLabel ? '<button onclick="' + ctaFn + '" style="margin-top:14px;padding:11px 18px;background:#18A982;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">' + esc(ctaLabel) + '</button>' : '') + '</div>';
     }
 
     function rowCard(icon, title, sub, amount, status, extra) {

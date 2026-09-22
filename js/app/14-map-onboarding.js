@@ -5,13 +5,13 @@ window.handleSearch = function() {
     const input = document.getElementById('searchInput');
     if(!input) return;
     skh.searchQuery = input.value.trim().toLowerCase();
-    
+
     clearTimeout(skh.searchTimeout);
     skh.searchTimeout = setTimeout(() => {
         skh.currentLimit = 20;
         if (skh.searchQuery && typeof skh.recordMarketSearch === 'function') skh.recordMarketSearch(skh.searchQuery, 'home');
         skh.loadMainFeed(skh.currentFeedCollection);
-    }, 600); 
+    }, 600);
 };
 
 window.saveRealUserPaymentInfo = skh.saveRealUserPaymentInfo;
@@ -31,15 +31,15 @@ window.enableEditPaymentInfo = function() {
         // 2. Badilisha vitufe (Ficha Edit, Onyesha Save)
         const btnSave = document.getElementById('btnSavePaymentAccount');
         const btnEdit = document.getElementById('btnEditPaymentAccount');
-        
-        if(btnSave) { 
-            btnSave.style.display = 'block'; 
-            btnSave.style.background = '#00509d'; 
+
+        if(btnSave) {
+            btnSave.style.display = 'block';
+            btnSave.style.background = '#18A982';
         }
-        if(btnEdit) { 
-            btnEdit.style.display = 'none'; 
+        if(btnEdit) {
+            btnEdit.style.display = 'none';
         }
-        
+
         alert("Sasa unaweza kubadili taarifa zako za malipo. Ukimaliza bofya 'HIFADHI'.");
     };
 
@@ -90,7 +90,7 @@ window.toggleProductFormFields = function() {
     const onlineFields = document.getElementById('onlineSpecificFields');
     const descInput = document.getElementById('prodDesc');
     const imgInput = document.getElementById('prodImage');
-    
+
     const onlineCatSec = document.getElementById('onlineCategorySection');
     const offlineCatSec = document.getElementById('offlineCategorySection');
     const prodCatSelect = document.getElementById('prodCategory');
@@ -100,7 +100,7 @@ window.toggleProductFormFields = function() {
         if(descInput) descInput.removeAttribute('required');
         if(imgInput) imgInput.removeAttribute('required');
         if(prodCatSelect) prodCatSelect.removeAttribute('required');
-        
+
         if(onlineCatSec) onlineCatSec.style.display = 'none';
         if(offlineCatSec) offlineCatSec.style.display = 'block';
     } else {
@@ -108,7 +108,7 @@ window.toggleProductFormFields = function() {
         if(descInput) descInput.setAttribute('required', 'true');
         if(imgInput) imgInput.setAttribute('required', 'true');
         if(prodCatSelect) prodCatSelect.setAttribute('required', 'true');
-        
+
         if(onlineCatSec) onlineCatSec.style.display = 'block';
         if(offlineCatSec) offlineCatSec.style.display = 'none';
     }
@@ -133,11 +133,11 @@ window.runSokoPayTimeLockChronJob = async function() {
         snapOrders.forEach(async (docSnap) => {
             const od = docSnap.data();
             const shippedTime = od.shippedAt ? new Date(od.shippedAt).getTime() : 0;
-            
+
             // Ikiwa imepita saa 24 tangu msafirishaji aondoke na mzigo na hakuna mgogoro
             if (shippedTime > 0 && (nowMs - shippedTime) >= timeLimitMs) {
                 console.log(` SokoPay Auto-Release (Orders): Processing auto-release for order "${skh.skhEscape(od.itemTitle)}"...`);
-                
+
                 const orderRef = docSnap.ref;
                 const amount = parseFloat(od.amount || 0);
                 const sellerId = od.sellerId;
@@ -196,7 +196,7 @@ window.runSokoPayTimeLockChronJob = async function() {
             // Kwa mikataba ya direct, kama imepita saa 24 bila dispute, inakamilika kiotomatiki
             if (paidTime > 0 && (nowMs - paidTime) >= timeLimitMs) {
                 console.log(` SokoPay Auto-Release (Links): Processing auto-release for direct contract "${ld.title}"...`);
-                
+
                 const linkRef = docSnap.ref;
                 const amount = parseFloat(ld.price || 0);
                 const sellerId = ld.userId;
@@ -274,7 +274,7 @@ window.toggleLogisticsTokenTab = function(tab) {
         if (heldArea) heldArea.style.display = 'none';
         if (tabVerify) { tabVerify.style.background = 'var(--primary-blue)'; tabVerify.style.color = 'white'; }
         if (tabHeld) { tabHeld.style.background = '#f1f5f9'; tabHeld.style.color = '#475569'; }
-        
+
         document.getElementById('logisticsTokenInput').value = '';
         document.getElementById('logisticsTokenResult').style.display = 'none';
         document.getElementById('btnVerifyLogisticsToken').style.display = 'block';
@@ -285,7 +285,7 @@ window.toggleLogisticsTokenTab = function(tab) {
         if (heldArea) heldArea.style.display = 'block';
         if (tabVerify) { tabVerify.style.background = '#f1f5f9'; tabVerify.style.color = '#475569'; }
         if (tabHeld) { tabHeld.style.background = 'var(--primary-blue)'; tabHeld.style.color = 'white'; }
-        
+
         loadHeldCargoList();
     }
 };
@@ -310,7 +310,7 @@ window.verifyLogisticsToken = async function() {
         if (!snapBranch.empty) {
             const transDoc = snapBranch.docs[0];
             const td = transDoc.data();
-            
+
             sessionStorage.setItem('active_verified_ride_id', transDoc.id);
             sessionStorage.setItem('active_verified_token_type', 'branch_pickup');
 
@@ -329,7 +329,7 @@ window.verifyLogisticsToken = async function() {
         if (!snapBranchDelivery.empty) {
             const transDoc = snapBranchDelivery.docs[0];
             const td = transDoc.data();
-            
+
             sessionStorage.setItem('active_verified_ride_id', transDoc.id);
             sessionStorage.setItem('active_verified_token_type', 'branch_delivery');
 
@@ -484,24 +484,24 @@ window.releaseCargoWithToken = async function() {
         if (tokenType === 'branch_pickup') {
             // Badili mhamisho kuwa 'in_transit'
             const transRef = skh.doc(skh.db, "stock_transfers", rideId);
-            await skh.updateDoc(transRef, { 
+            await skh.updateDoc(transRef, {
                 status: "in_transit",
                 pickupToken: "USED"
             });
             alert(" mzigo umeruhusiwa kutoka Head Office! Sasa upo safarini kuelekea tawi la pili.");
-        } 
+        }
         else if (tokenType === 'branch_delivery') {
             // Badili mhamisho kuwa 'completed'
             const transRef = skh.doc(skh.db, "stock_transfers", rideId);
             const transSnap = await skh.getDoc(transRef);
             if (transSnap.exists()) {
                 const td = transSnap.data();
-                
+
                 // UKWELI WA DATA: Ongeza stock live kwenye bidhaa ya tawi la pili
                 const prodRef = skh.doc(skh.db, "products", td.productId);
                 await skh.updateDoc(prodRef, { stock: skh.increment(td.quantity) });
 
-                await skh.updateDoc(transRef, { 
+                await skh.updateDoc(transRef, {
                     status: "completed",
                     deliveryToken: "USED",
                     completedAt: new Date().toISOString()
@@ -510,7 +510,7 @@ window.releaseCargoWithToken = async function() {
                 await window.addActivityLog("STOCK_TRANSFER_COMPLETED", `Mhamisho umekamilika! Bidhaa ya "${td.productName}" (${td.quantity} Pcs) imepokelewa katika tawi la pili.`);
                 alert(` MZIGO UMEPOKELEWA TAWINI SALAMA!\n\nStock ya tawi la pili imeongezeka automatically kwa Pcs ${td.quantity}!`);
             }
-        } 
+        }
         else {
             // Mzigo wa mteja wa kawaida — mtiririko wa Chain of Custody.
             // [CUSTODY 2026-09] Hakuna tena token ya "TT-XXXX" ya kubahatisha.
@@ -606,7 +606,7 @@ window.loadHeldCargoList = async function() {
         snap.forEach(docSnap => {
             const rd = docSnap.data();
             const status = rd.status;
-            
+
             let belongsToTab = false;
             if (window.currentHeldCargoFilter === 'transit' && (status === 'in_transit' || status === 'awaiting_handover' || status === 'arrived_destination')) {
                 belongsToTab = true;
@@ -620,7 +620,7 @@ window.loadHeldCargoList = async function() {
                 count++;
                 const cargoImgUrl = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
                 const badgeColor = status === 'completed' ? 'green' : (status === 'in_transit' ? 'orange' : 'gray');
-                
+
                 html += `
                     <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:16px; margin-bottom:10px; font-size:12px; text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:6px; font-weight:bold;">${status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;"> <img src="${cargoImgUrl}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div style="flex:1; min-width:0;"> <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--primary-dark);">${rd.cargoName}</b> <small style="color:gray; font-size:12.5px; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} (Simu: ${rd.customerPhone})</small> </div> </div> <div style="background:white; padding:6px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px;"> <span> Njia: ${rd.fromLocation}  ${rd.toLocation}</span>
                             ${rd.transitToken && status === 'in_transit' ? `<span style="display:block; color:orange; font-weight:bold; margin-top:4px;"> Transit Token: ${rd.transitToken}</span>` : ''}
@@ -645,7 +645,7 @@ window.openMyDeliveries = async function() {
     try {
         const q = skh.query(skh.collection(skh.db, "orders"), skh.where("sellerId", "==", skh.currentUser.uid));
         const snap = await skh.getDocs(q);
-        
+
         if(snap.empty) {
             list.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">Huna mizigo inayokubiri kusafirishwa kwako kwa sasa.</p>';
             return;
@@ -673,7 +673,7 @@ window.openMyTrips = async function() {
     try {
         const q = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("driverId", "==", skh.currentUser.uid));
         const snap = await skh.getDocs(q);
-        
+
         if(snap.empty) {
             list.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">Huna ratiba za safari zilizosajiliwa kwako kwa sasa.</p>';
             return;
@@ -703,7 +703,7 @@ window.openSavedItems = async function() {
     try {
         const q = skh.query(skh.collection(skh.db, "products"), skh.where("likes", "array-contains", skh.currentUser.uid));
         const snap = await skh.getDocs(q);
-        
+
         if(snap.empty) {
             list.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">Hujachagua au kulike bidhaa yoyote kwa sasa. </p>';
             return;
@@ -731,13 +731,13 @@ window.onboardingData = {
 
 window.selectOnboardingOption = function(key, value, element) {
     window.onboardingData[key] = value;
-    
+
     // Ondoa alama ya 'selected' kwenye kadi zote za kundi hilo
     const parent = element.parentNode;
     parent.querySelectorAll('.setup-option-card').forEach(card => {
         card.classList.remove('selected');
     });
-    
+
     // Weka alama kwenye kadi iliyobonyezwa
     element.classList.add('selected');
 
@@ -745,7 +745,7 @@ window.selectOnboardingOption = function(key, value, element) {
     if (key === 'storeType') {
         const tempFields = document.getElementById('temporaryOnlyFields');
         const permFields = document.getElementById('permanentOnlyIdentityFields');
-        
+
         if (value === 'temporary') {
             if(tempFields) tempFields.style.display = 'block';
             if(permFields) permFields.style.display = 'none';
@@ -758,7 +758,7 @@ window.selectOnboardingOption = function(key, value, element) {
             window.selectOnboardingOption('businessMode', 'hybrid', document.getElementById('modeCard_hybrid'));
         }
     }
-    
+
     // Toa suggestions dynamically
     window.suggestOnboardingStructure();
 };
@@ -775,7 +775,7 @@ window.suggestOnboardingStructure = function() {
     }
 
     let suggestText = `Wasifu wa: <b>${profile}</b> | Wafanyakazi: <b>${size}</b><br><br>`;
-    
+
     if (profile === 'Pharmacy') {
         suggestText += ` <b>Marekebisho ya Kiotomatiki:</b><br>
         • Wafanyakazi: Tutapendekeza nafasi ya Pharmacist, Cashier na Storekeeper.<br>
@@ -799,7 +799,7 @@ window.suggestOnboardingStructure = function() {
 
 window.nextSetupStep = function() {
     const totalSteps = window.onboardingData.storeType === 'temporary' ? 3 : 8;
-    
+
     // Kabla ya kuvuka hatua ya 3, hakikisha duka lina Jina
     if (window.currentSetupStep === 3) {
         const name = document.getElementById('regShopName').value.trim();
@@ -856,7 +856,7 @@ window.prevSetupStep = function() {
 
 window.saveShopSetup = async function() {
     if(!skh.currentUser) return;
-    
+
     const name = document.getElementById('regShopName').value.trim();
     if (!name) {
         alert(" jaza Jina la Duka lako.");
@@ -878,13 +878,13 @@ window.saveShopSetup = async function() {
         shopOwnerUid: skh.currentUser.uid,
         myShopCode: businessId,
         businessSetupComplete: true,
-        
+
         //  MPYA: capturing branches, approval-flow and analytics targets
         branchMode: window.onboardingData.branchMode || 'single',
         approvalFlow: window.onboardingData.approvalFlow || 'basic',
         salesTarget: parseFloat(document.getElementById('regSalesTarget').value) || 5000000,
         profitTarget: parseFloat(document.getElementById('regProfitTarget').value) || 1000000,
-        
+
         createdAt: new Date().toISOString()
     };
 
@@ -901,14 +901,14 @@ window.saveShopSetup = async function() {
     } else {
         // Permanent Store
         const secProfiles = Array.from(document.querySelectorAll('.reg-sec-profile:checked')).map(cb => cb.value);
-        
+
         payload.primaryProfile = document.getElementById('regPrimaryProfile').value || "General Store";
         payload.secondaryProfiles = secProfiles;
         payload.workforceSize = document.getElementById('regWorkforceSize').value;
         payload.setupMode = window.onboardingData.setupMode;
         payload.sellerType = 'permanent';
         payload.productLimit = 9999; // Unlimited kwa permanent
-        
+
         // Auto-Generate staff structure if "auto" was selected
         if (window.onboardingData.setupMode === 'auto') {
             payload.autoStructureGenerated = true;
@@ -918,7 +918,7 @@ window.saveShopSetup = async function() {
     try {
         // Hifadhi kwenye profile ya User Firebase
         await skh.updateDoc(skh.doc(skh.db, "users", skh.currentUser.uid), payload);
-        
+
         // Pia kumuandalia database ya duka (Kama anatumia Auto smart setup)
         if (storeType === 'permanent' && window.onboardingData.setupMode === 'auto') {
             await window.autoGenerateStaffAndRules(payload.primaryProfile, payload.workforceSize);

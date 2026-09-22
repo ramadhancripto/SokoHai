@@ -811,21 +811,21 @@
 /* Bango juu ya ukurasa wa usafiri */
 .skh-route-cta{
     display:flex;align-items:center;gap:14px;
-    background:linear-gradient(135deg,#1268A8,#2B82BD);
-    color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:4px;
-    box-shadow:0 10px 24px rgba(18,104,168,.22);
+    background:#F0F7FA;
+    color:#18352D;border:1px solid #D6E8EF;border-radius:18px;padding:16px 18px;margin-bottom:4px;
+    box-shadow:0 4px 16px rgba(57,119,155,.10);
 }
 .skh-route-cta-ic{
     flex:0 0 auto;width:44px;height:44px;border-radius:13px;
-    background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;
+    background:#fff;border:1px solid #D6E8EF;display:flex;align-items:center;justify-content:center;
 }
-.skh-route-cta-ic svg{stroke:#fff;}
+.skh-route-cta-ic svg{stroke:#39779B;}
 .skh-route-cta-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
 .skh-route-cta-txt b{font-size:14px;font-weight:800;}
 .skh-route-cta-txt span{font-size:12px;line-height:1.45;opacity:.92;}
 .skh-route-cta-btn{
     flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;
-    background:#fff;color:#0B4F7A;border:none;border-radius:99px;
+    background:#18A982;color:#fff;border:none;border-radius:99px;
     padding:11px 17px;font-weight:800;font-size:13px;cursor:pointer;
     box-shadow:0 4px 12px rgba(11,79,122,.25);transition:transform .15s,box-shadow .15s;
 }
@@ -925,7 +925,7 @@
 .rm-btn:active{transform:scale(.98);}
 .rm-btn-light{background:#fff;border-color:#CBD5E1;color:#334155;}
 .rm-btn-light:hover{background:#F8FAFC;}
-.rm-btn-primary{background:#1268A8;color:#fff;flex:1;box-shadow:0 4px 12px rgba(18,104,168,.25);}
+.rm-btn-primary{background:#18A982;color:#fff;flex:1;box-shadow:0 4px 12px rgba(18,104,168,.25);}
 .rm-btn-primary:hover{background:#0B4F7A;}
 .rm-btn-primary svg{stroke:#fff;}
 .rm-btn-light svg{stroke:#475569;}

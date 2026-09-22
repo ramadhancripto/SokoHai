@@ -1499,7 +1499,7 @@ import { skh } from './00-bootstrap.js';
       } else if (isParticipant && myPart && myPart.payment && myPart.payment.status === PAYMENT_STATUS.UNPAID && [GO_STATUS.PAYMENT_COLLECTING, GO_STATUS.PAYMENT_OPEN, 'PROCESSING'].includes(String(goData.status))) {
         actionPanel = '<div style=\"background:#eef6fc;border:1.5px solid #1268A8;border-radius:12px;padding:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;\">'
           + '<div style=\"flex:1;\"><b style=\"display:block;font-size:13px;color:#0B4F7A;\">Lipa Sasa — SokoPay Escrow</b><small style=\"color:#475569;\">Kiasi: TZS ' + (myPart.total || myPart.payment.amountDue || 0) + ' · Bei kutoka agreement snapshot, si bei ya sasa</small></div>'
-          + '<button type=\"button\" data-act=\"go-pay-now\" data-gid=\"' + esc(gid) + '\" data-goid=\"' + esc(goid) + '\" style=\"border:none;background:#1268A8;color:#fff;font-weight:900;padding:10px 18px;border-radius:10px;cursor:pointer;\">PAY NOW</button>'
+          + '<button type=\"button\" data-act=\"go-pay-now\" data-gid=\"' + esc(gid) + '\" data-goid=\"' + esc(goid) + '\" style=\"border:none;background:#18A982;color:#fff;font-weight:900;padding:10px 18px;border-radius:10px;cursor:pointer;\">PAY NOW</button>'
           + '</div>';
       } else if (isParticipant && myPart) {
         var pkg = packages.find(function (p) { return p.participantId === uid(); });
@@ -1601,9 +1601,9 @@ import { skh } from './00-bootstrap.js';
           + '<div style=\"display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;\">'
           + '<span style=\"font-size:12px;font-weight:800;background:#fff;border:1px solid #d3e6f5;border-radius:8px;padding:6px 12px;\">Collected: TZS ' + paymentDash.collected + '</span>'
           + '<span style=\"font-size:12px;font-weight:800;background:#fff;border:1px solid #d3e6f5;border-radius:8px;padding:6px 12px;\">Expected: TZS ' + paymentDash.expected + '</span>'
-          + '<span style=\"font-size:12px;font-weight:800;background:#1268A8;color:#fff;border-radius:8px;padding:6px 12px;\">' + paymentDash.progress + '%</span>'
+          + '<span style=\"font-size:12px;font-weight:800;background:#18A982;color:#fff;border-radius:8px;padding:6px 12px;\">' + paymentDash.progress + '%</span>'
           + '</div>'
-          + '<div style=\"margin-top:8px;height:8px;border-radius:99px;background:#dbeafe;overflow:hidden;\"><div style=\"height:100%;width:' + paymentDash.progress + '%;background:#1268A8;\"></div></div>'
+          + '<div style=\"margin-top:8px;height:8px;border-radius:99px;background:#dbeafe;overflow:hidden;\"><div style=\"height:100%;width:' + paymentDash.progress + '%;background:#18A982;\"></div></div>'
           + '<small style=\"display:block;margin-top:6px;color:#64748b;\">Quantity target vs Payment target distinct · Privacy: ' + (paymentDash.isOrganizer ? 'Organizer sees all' : 'Participant sees only own') + '</small>'
           + '</div>'
           + '<div style=\"background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;\">'
@@ -1704,7 +1704,7 @@ import { skh } from './00-bootstrap.js';
       + '<div style=\"padding:12px 18px;border-top:1px solid #e2e8f0;display:flex;gap:8px;\">'
       + '<button type=\"button\" data-act=\"go-wiz-prev\" style=\"border:1.5px solid #cbd5e1;background:#fff;color:#334155;font-weight:800;padding:11px 18px;border-radius:12px;cursor:pointer;\">Back</button>'
       + '<span style=\"flex:1;\"></span>'
-      + '<button type=\"button\" data-act=\"go-wiz-next\" style=\"border:none;background:#1268A8;color:#fff;font-weight:900;padding:11px 22px;border-radius:12px;cursor:pointer;\">Next</button>'
+      + '<button type=\"button\" data-act=\"go-wiz-next\" style=\"border:none;background:#18A982;color:#fff;font-weight:900;padding:11px 22px;border-radius:12px;cursor:pointer;\">Next</button>'
       + '</div></div>';
     modal.addEventListener('click', function (e) { if (e.target === modal) closeWizardModal(); });
     document.body.appendChild(modal);
@@ -1741,7 +1741,7 @@ import { skh } from './00-bootstrap.js';
         + '<label style=\"font-size:12px;font-weight:700;color:#334155;\">Max Qty (juu) <input id=\"goWizMax\" type=\"number\" min=\"2\" value=\"' + d.maxQty + '\" style=\"width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-top:4px;\"></label>'
         + '<div style=\"background:#F6F9FC;border:1px solid #d3e6f5;border-radius:10px;padding:10px;\"><b style=\"font-size:11px;\">Location-based quantity (optional)</b><small style=\"display:block;color:#64748b;\">Mfano: Dar 50, Arusha 30 — progress 78/100 + participant count distinct</small>'
         + '<div id=\"goWizLocList\" style=\"margin-top:6px;\">' + Object.keys(d.locationQuantities).map(function (loc) { return '<div style=\"display:flex;gap:6px;margin-top:4px;\"><input value=\"' + esc(loc) + '\" disabled style=\"flex:1;padding:8px;border:1px solid #e2e8f0;border-radius:8px;\"><input value=\"' + d.locationQuantities[loc] + '\" disabled style=\"width:80px;padding:8px;border:1px solid #e2e8f0;border-radius:8px;\"><button type=\"button\" data-act=\"go-wiz-loc-del\" data-loc=\"' + esc(loc) + '\" style=\"border:none;background:#fef2f2;color:#b91c1c;padding:6px 10px;border-radius:8px;cursor:pointer;\">×</button></div>'; }).join('') + '</div>'
-        + '<div style=\"display:flex;gap:6px;margin-top:8px;\"><input id=\"goWizLocName\" type=\"text\" placeholder=\"Eneo\" style=\"flex:1;padding:8px;border:1.5px solid #cbd5e1;border-radius:8px;\"><input id=\"goWizLocQty\" type=\"number\" placeholder=\"Qty\" style=\"width:80px;padding:8px;border:1.5px solid #cbd5e1;border-radius:8px;\"><button type=\"button\" data-act=\"go-wiz-loc-add\" style=\"border:none;background:#1268A8;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;\">+</button></div></div>'
+        + '<div style=\"display:flex;gap:6px;margin-top:8px;\"><input id=\"goWizLocName\" type=\"text\" placeholder=\"Eneo\" style=\"flex:1;padding:8px;border:1.5px solid #cbd5e1;border-radius:8px;\"><input id=\"goWizLocQty\" type=\"number\" placeholder=\"Qty\" style=\"width:80px;padding:8px;border:1.5px solid #cbd5e1;border-radius:8px;\"><button type=\"button\" data-act=\"go-wiz-loc-add\" style=\"border:none;background:#18A982;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;\">+</button></div></div>'
         + '</div>';
       body.innerHTML = html;
     } else if (step === 3) {
@@ -1794,7 +1794,7 @@ import { skh } from './00-bootstrap.js';
       html = '<b style=\"font-size:14px;\">8. Publish — chapisha kwa kikundi</b><small style=\"display:block;color:#64748b;margin-top:4px;\">Publish to group — status DRAFT→OPEN, audit log, commerce indicator in chat list #FFF9E8 with left accent</small>'
         + '<div style=\"margin-top:16px;text-align:center;\"><div style=\"width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#D8B83A,#18A982);margin:0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;\">✓</div>'
         + '<b style=\"display:block;margin-top:12px;font-size:14px;\">Tayari Kuchapisha</b><small style=\"color:#64748b;\">Group Order itaonekana kwenye chat list kama #FFF9E8 na commerce badge 78/100 • Open</small></div>'
-        + '<button type=\"button\" data-act=\"go-wiz-publish\" style=\"width:100%;margin-top:18px;border:none;background:#1268A8;color:#fff;font-weight:900;padding:14px;border-radius:12px;cursor:pointer;\">PUBLISH GROUP ORDER</button>';
+        + '<button type=\"button\" data-act=\"go-wiz-publish\" style=\"width:100%;margin-top:18px;border:none;background:#18A982;color:#fff;font-weight:900;padding:14px;border-radius:12px;cursor:pointer;\">PUBLISH GROUP ORDER</button>';
       body.innerHTML = html;
     }
 

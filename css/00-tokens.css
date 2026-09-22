@@ -7,27 +7,43 @@
    Matumizi mapya: var(--skh-...)
    ============================================================ */
 :root {
-    /* --- Rangi za brand (zinazingatia 01-core) --- */
-    --skh-primary:        #1268A8;
-    --skh-soft:           #2B82BD;
-    --skh-deep:           #0B4F7A;
-    --skh-primary-dark:   #022b52;
-    --skh-primary-light:  #e8f1fb;
-    --skh-gold:           #d4af37;
-    --skh-green:          #18A982;
-    --skh-green-dark:     #0E7A63;
-    --skh-red:            #ef4444;
-    --skh-red-dark:       #b91c1c;
-    --skh-orange:         #f59e0b;
+    /* --- Canonical semantic palette: green identity, blue support --- */
+    --sokohai-green:       #18A982;
+    --sokohai-green-dark:  #17604E;
+    --sokohai-green-soft:  #EAF8F2;
+    --sokohai-blue:        #4D91AA;
+    --sokohai-blue-soft:   #F0F7FA;
+    --sokohai-gold:        #D8B83A;
+    --sokohai-gold-soft:   #FBF7E7;
+    --sokohai-background:  #FFFFFF;
+    --sokohai-surface:     #FFFFFF;
+    --sokohai-surface-soft:#F8FBFA;
+    --sokohai-text:        #18352D;
+    --sokohai-text-2:      #65757A;
+    --sokohai-border:      #E5ECEC;
+    --sokohai-danger:      #D9534F;
+
+    /* Compatibility aliases for existing components. */
+    --skh-primary:        var(--sokohai-green);
+    --skh-soft:           #35B892;
+    --skh-deep:           var(--sokohai-green-dark);
+    --skh-primary-dark:   var(--sokohai-text);
+    --skh-primary-light:  var(--sokohai-green-soft);
+    --skh-gold:           var(--sokohai-gold);
+    --skh-green:          var(--sokohai-green);
+    --skh-green-dark:     var(--sokohai-green-dark);
+    --skh-red:            var(--sokohai-danger);
+    --skh-red-dark:       #B63E3A;
+    --skh-orange:         #C88216;
 
     /* --- Neutrals --- */
-    --skh-ink:            #0f172a;
-    --skh-ink-soft:       #475569;
-    --skh-muted:          #64748b;
-    --skh-line:           #e2e8f0;
-    --skh-bg:             #F6F9FC;
-    --skh-text:           #173B56;
-    --skh-surface:        #ffffff;
+    --skh-ink:            var(--sokohai-text);
+    --skh-ink-soft:       #526962;
+    --skh-muted:          var(--sokohai-text-2);
+    --skh-line:           var(--sokohai-border);
+    --skh-bg:             var(--sokohai-background);
+    --skh-text:           var(--sokohai-text);
+    --skh-surface:        var(--sokohai-surface);
 
     /* --- Status --- */
     --skh-success-bg:     #ecfdf5;

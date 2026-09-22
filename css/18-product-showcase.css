@@ -671,7 +671,7 @@
 .pm-bar-btn .pm-bar-lbl { white-space: nowrap; }
 .pm-bar-btn:disabled { cursor: not-allowed; }
 .pm-bar-chat { flex: 0 0 48px; width: 48px; padding: 0; background: #25D366; color: #fff; font-size: 19px; }
-.pm-bar-cart { flex: 1 1 0; min-width: 84px; background: var(--primary-dark, #022b52); color: #fff; }
+.pm-bar-cart { flex: 1 1 0; min-width: 84px; background: #526962; color: #fff; }
 .pm-bar-buy {
     flex: 1.5 1 0;
     min-width: 132px;
@@ -680,10 +680,10 @@
     flex-direction: column;
     gap: 1px;
 }
-.pm-bar-primary { flex: 1 1 0; min-width: 120px; background: var(--primary-blue, #1268A8); color: #fff; }
+.pm-bar-primary { flex: 1 1 0; min-width: 120px; background: #18A982; color: #fff; }
 .pm-bar-bid { flex: 1 1 0; min-width: 120px; background: #ef4444; color: #fff; }
 /* [NEGO ENTRY §6] Kitufe cha Pendekeza Bei — kati ya primary na cart */
-.pm-bar-nego { flex: 1 1 0; min-width: 96px; background: var(--primary-blue, #1268A8); color: #fff; }
+.pm-bar-nego { flex: 1 1 0; min-width: 96px; background: #18A982; color: #fff; }
 .pm-bar-btn-dis { flex: 1 1 0; min-width: 100px; background: #e2e8f0; color: #64748b; }
 .pm-bar-total { font-size: 13px; font-weight: 900; opacity: .9; }
 /* Simu ndogo: punguza kwa upole, USIFICHE maandishi ya kitendo */

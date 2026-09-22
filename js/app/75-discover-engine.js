@@ -1052,7 +1052,7 @@ import { skh } from './00-bootstrap.js';
         imgUrl = imgUrl + '?alt=media&width=320';
       }
     }
-    var img = imgUrl ? '<img src="' + esc(imgUrl) + '" loading="lazy" decoding="async" width="320" height="240" style="width:100%;height:100%;object-fit:cover;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||\'\'">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1268A8,#2B82BD);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px;">' + esc((l.title||'P').charAt(0).toUpperCase()) + '</div>';
+    var img = imgUrl ? '<img src="' + esc(imgUrl) + '" loading="lazy" decoding="async" width="320" height="240" style="width:100%;height:100%;object-fit:cover;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||\'\'">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#18A982,#2B82BD);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px;">' + esc((l.title||'P').charAt(0).toUpperCase()) + '</div>';
     var price = l.price != null ? 'TSh ' + Number(l.price).toLocaleString() : T2('Bei ya Maelewano', 'Negotiable');
     var distance = l.distance != null ? '<span class="skh-de-card-distance">📍 ' + esc(formatDistance(l.distance)) + ' away</span>' : '';
     var avail = l.availabilityStatus ? renderAvailabilityBadge(l.availabilityStatus, l.freshness) : '';
@@ -1096,7 +1096,7 @@ import { skh } from './00-bootstrap.js';
     var initial = String(l.title||'S').charAt(0).toUpperCase();
     var distance = l.distance != null ? formatDistance(l.distance) + ' away' : '';
     return '<div class="skh-de-service-card" data-act="de-view" data-id="' + esc(l.entityId) + '" data-type="' + esc(l.entityType) + '">'
-      + '<div class="skh-de-biz-avatar" style="background:linear-gradient(135deg,#2B82BD,#0B4F7A);">' + esc(initial) + '</div>'
+      + '<div class="skh-de-biz-avatar" style="background:linear-gradient(135deg,#2B82BD,#17604E);">' + esc(initial) + '</div>'
       + '<div class="skh-de-biz-info"><b>' + esc(l.title) + '</b><small>🔧 ' + esc(l.categoryName||'Service') + (distance ? ' • 📍 ' + esc(distance) : '') + '</small><small style="color:#64748b;">' + esc((l.description||'').slice(0,80)) + '</small></div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;"><button class="skh-de-card-btn skh-de-card-btn--primary" data-act="de-view" data-id="' + esc(l.entityId) + '" data-type="' + esc(l.entityType) + '">View</button><button class="skh-de-card-btn" data-act="de-chat" data-id="' + esc(l.entityId) + '" data-type="' + esc(l.entityType) + '">Chat</button></div>'
       + '</div>';
@@ -1125,10 +1125,10 @@ import { skh } from './00-bootstrap.js';
     var verify = (u.verified || u.verifiedBusiness) ? '<span style="color:#18A982;font-weight:900;">✓</span>' : '';
     var interests = '';
     if (u.discovery && u.discovery.showInterests !== false && Array.isArray(u.interests)) {
-      interests = '<div style="margin-top:4px;">' + u.interests.slice(0,3).map(function (i) { return '<span style="display:inline-block;background:#eef6fc;color:#0B4F7A;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;margin:2px;">' + esc(i) + '</span>'; }).join('') + '</div>';
+      interests = '<div style="margin-top:4px;">' + u.interests.slice(0,3).map(function (i) { return '<span style="display:inline-block;background:#eef6fc;color:#17604E;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;margin:2px;">' + esc(i) + '</span>'; }).join('') + '</div>';
     }
     return '<div class="skh-de-person-card" data-act="de-view-person" data-id="' + esc(l.entityId) + '">'
-      + '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1268A8,#18A982);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">' + esc(initial) + '</div>'
+      + '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#18A982,#18A982);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">' + esc(initial) + '</div>'
       + '<div class="skh-de-biz-info"><b>' + esc(name) + ' ' + verify + '</b><small>' + esc(role) + (u.businessName ? ' • ' + esc(u.businessName) : '') + '</small>' + badges + interests + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;"><button class="skh-de-card-btn skh-de-card-btn--green" data-act="de-chat-person" data-id="' + esc(l.entityId) + '">Chat</button><button class="skh-de-card-btn" data-act="de-view-person" data-id="' + esc(l.entityId) + '">View</button></div>'
       + '</div>';
@@ -1139,7 +1139,7 @@ import { skh } from './00-bootstrap.js';
     var g = l.raw || {};
     var name = g.name || l.title || 'Group';
     return '<div class="skh-de-biz-card" data-act="de-view-group" data-id="' + esc(l.entityId) + '">'
-      + '<div class="skh-de-biz-avatar" style="background:#e0f0fa;color:#1268A8;">#</div>'
+      + '<div class="skh-de-biz-avatar" style="background:#e0f0fa;color:#18A982;">#</div>'
       + '<div class="skh-de-biz-info"><b>' + esc(name) + '</b><small>' + esc(g.category||'Group') + ' • ' + (g.memberCount||1) + ' members</small><small style="color:#64748b;">' + esc((g.description||'').slice(0,80)) + '</small></div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;"><button class="skh-de-card-btn skh-de-card-btn--primary" data-act="de-join-group" data-id="' + esc(l.entityId) + '">Join</button><button class="skh-de-card-btn" data-act="de-view-group" data-id="' + esc(l.entityId) + '">View</button></div>'
       + '</div>';
@@ -1205,7 +1205,7 @@ import { skh } from './00-bootstrap.js';
     var personalized = getPersonalizedSections();
     var html = '';
 
-    html += '<div style="margin-bottom:12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:13px;color:#0f172a;">📍 Discovery Location</b><button data-act="de-change-loc" style="border:1px solid #cbd5e1;background:#fff;color:#1268A8;font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Change</button></div><small style="color:#64748b;font-size:11.5px;display:block;margin-top:4px;">' + esc(userLoc.name||'') + ' • ' + esc(userLoc.source) + ' • ' + esc(userLoc.lat.toFixed(4) + ', ' + userLoc.lon.toFixed(4)) + '</small>' + renderDistanceFilters(DISTANCE_FILTER.ANY) + '</div>';
+    html += '<div style="margin-bottom:12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:13px;color:#0f172a;">📍 Discovery Location</b><button data-act="de-change-loc" style="border:1px solid #cbd5e1;background:#fff;color:#18A982;font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Change</button></div><small style="color:#64748b;font-size:11.5px;display:block;margin-top:4px;">' + esc(userLoc.name||'') + ' • ' + esc(userLoc.source) + ' • ' + esc(userLoc.lat.toFixed(4) + ', ' + userLoc.lon.toFixed(4)) + '</small>' + renderDistanceFilters(DISTANCE_FILTER.ANY) + '</div>';
 
     html += renderQuickCategories('all');
 
@@ -1264,7 +1264,7 @@ import { skh } from './00-bootstrap.js';
     var price = l.price != null ? 'TSh ' + Number(l.price).toLocaleString() : T2('Bei ya Maelewano', 'Negotiable');
     var distance = l.distance != null ? formatDistance(l.distance) + ' away' : '';
     var avail = l.availabilityStatus ? renderAvailabilityBadge(l.availabilityStatus, l.freshness) : '';
-    var img = l.image ? '<img src="' + esc(l.image) + '" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1268A8,#2B82BD);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:48px;">' + esc((l.title||'P').charAt(0)) + '</div>';
+    var img = l.image ? '<img src="' + esc(l.image) + '" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#18A982,#2B82BD);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:48px;">' + esc((l.title||'P').charAt(0)) + '</div>';
 
     var attributesHtml = '';
     if (l.attributes && Object.keys(l.attributes).length) {
@@ -1415,7 +1415,7 @@ import { skh } from './00-bootstrap.js';
   async function runDiscoverSearch(query, opts) {
     var body = document.getElementById('skhDiscoverEngineBody');
     if (!body) return;
-    body.innerHTML = '<div style="text-align:center;padding:30px;color:#64748b;"><small>Searching "' + esc(query) + '"...</small><div style="margin-top:12px;width:24px;height:24px;border:3px solid #e2e8f0;border-top-color:#1268A8;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>';
+    body.innerHTML = '<div style="text-align:center;padding:30px;color:#64748b;"><small>Searching "' + esc(query) + '"...</small><div style="margin-top:12px;width:24px;height:24px;border:3px solid #e2e8f0;border-top-color:#18A982;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>';
     try {
       var sections = await universalSearch(query, opts);
       body.innerHTML = renderSearchResults(sections);
@@ -1586,7 +1586,7 @@ import { skh } from './00-bootstrap.js';
       + '<label style="font-size:12px;font-weight:800;color:#334155;">Preferred Area</label><input id="deReqArea" type="text" value="' + esc(userLoc.name||'') + '" placeholder="e.g. Kariakoo, Dar" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;">'
       + '<label style="font-size:12px;font-weight:800;color:#334155;">Price Range (optional)</label><input id="deReqPrice" type="text" placeholder="e.g. 15000-20000" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;">'
       + '<small style="color:#64748b;font-size:11px;">Request expires in 48h. Relevant sellers who opted into opportunities will receive it.</small>'
-      + '<button data-act="de-submit-request" style="border:none;background:#1268A8;color:#fff;font-weight:800;font-size:13px;padding:12px;border-radius:12px;cursor:pointer;margin-top:8px;">Send Request to Nearby Sellers</button>'
+      + '<button data-act="de-submit-request" style="border:none;background:#18A982;color:#fff;font-weight:800;font-size:13px;padding:12px;border-radius:12px;cursor:pointer;margin-top:8px;">Send Request to Nearby Sellers</button>'
       + '</div></div>';
   }
 
