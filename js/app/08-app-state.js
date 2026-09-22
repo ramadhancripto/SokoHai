@@ -595,6 +595,17 @@ window.submitRating = async function() {
             await skh.updateDoc(productRef, { comments: skh.arrayUnion(reviewObj) });
         }
 
+        // Activity ya Buyer hutumia event stream iliyopo; si notification mpya.
+        try {
+            if (skh.currentUser) await skh.setDoc(skh.doc(skh.db, 'recommendationEvents', skh.currentUser.uid + '__review__' + targetId), {
+                userId: skh.currentUser.uid,
+                type: 'REVIEW_SUBMITTED',
+                entityId: targetId,
+                title: (skh.currentOpenProduct && skh.currentOpenProduct.title) || 'Review',
+                rating: parseInt(rating),
+                at: new Date().toISOString()
+            }, { merge: true });
+        } catch (eActivity) {}
         alert(verified ? " Asante kwa tathmini yako! ( Umenunua — imethibitishwa)" : " Asante kwa tathmini yako! Picha yako itaonekana kwa wateja wengine.");
         document.getElementById('ratingModal').style.display = 'none';
         

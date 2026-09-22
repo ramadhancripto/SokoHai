@@ -250,7 +250,7 @@ import { skh } from './00-bootstrap.js';
         try {
             const relRef = skh.doc(skh.db, "productWatches", relId(skh.currentUser.uid, id));
             if (!wasWatched) {
-                await skh.setDoc(relRef, { userId: skh.currentUser.uid, productId: id, collectionName: p.collectionName || 'products', priceAtWatch: p.price || 0, watchedAt: now() });
+                await skh.setDoc(relRef, { userId: skh.currentUser.uid, productId: id, collectionName: p.collectionName || 'products', sellerId: p.userId || '', priceAtWatch: p.price || 0, watchedAt: now() });
                 logEvent('PRODUCT_WATCHED', { productId: id, collectionName: p.collectionName });
             } else {
                 await skh.deleteDoc(relRef);
@@ -549,8 +549,8 @@ import { skh } from './00-bootstrap.js';
         if (!product || !product.id) return;
         try {
             var users = new Set();
-            var qW = skh.query(skh.collection(skh.db, "productWatches"), skh.where("productId", "==", product.id), skh.limit(100));
-            var qS = skh.query(skh.collection(skh.db, "savedProducts"), skh.where("productId", "==", product.id), skh.limit(100));
+            var qW = skh.query(skh.collection(skh.db, "productWatches"), skh.where("productId", "==", product.id), skh.where("sellerId", "==", product.userId || ""), skh.limit(100));
+            var qS = skh.query(skh.collection(skh.db, "savedProducts"), skh.where("productId", "==", product.id), skh.where("sellerId", "==", product.userId || ""), skh.limit(100));
             var [sw, ss] = await Promise.all([skh.getDocs(qW), skh.getDocs(qS)]);
             sw.forEach(function (d) { users.add(d.data().userId); });
             ss.forEach(function (d) { users.add(d.data().userId); });
@@ -573,8 +573,8 @@ import { skh } from './00-bootstrap.js';
         if (!product || !product.id) return;
         try {
             var users = new Set();
-            var qW = skh.query(skh.collection(skh.db, "productWatches"), skh.where("productId", "==", product.id), skh.limit(100));
-            var qS = skh.query(skh.collection(skh.db, "savedProducts"), skh.where("productId", "==", product.id), skh.limit(100));
+            var qW = skh.query(skh.collection(skh.db, "productWatches"), skh.where("productId", "==", product.id), skh.where("sellerId", "==", product.userId || ""), skh.limit(100));
+            var qS = skh.query(skh.collection(skh.db, "savedProducts"), skh.where("productId", "==", product.id), skh.where("sellerId", "==", product.userId || ""), skh.limit(100));
             var [sw, ss] = await Promise.all([skh.getDocs(qW), skh.getDocs(qS)]);
             sw.forEach(function (d) { users.add(d.data().userId); });
             ss.forEach(function (d) { users.add(d.data().userId); });
@@ -624,109 +624,252 @@ import { skh } from './00-bootstrap.js';
         } catch (e) { console.warn('[engage:on-product]', e && e.message); }
     };
 
-    // ---------- MY SOKOHAI (buyer dashboard) ----------
-    var activeTab = 'liked';
-    window.skhMySokoHaiTab = function (tab, el) {
-        activeTab = tab;
-        var btns = document.querySelectorAll('#mySokoHaiModal .skh-mytab');
-        if (btns) btns.forEach(function (b) { b.style.background = '#e2e8f0'; b.style.color = '#334155'; });
-        if (el) { el.style.background = '#18A982'; el.style.color = '#fff'; }
-        window.skhRenderEngagementTab(tab);
+    // ---------- BUYER DASHBOARD (personal aggregation; existing systems stay authoritative) ----------
+    var activeTab = 'overview';
+    var buyerCache = Object.create(null);
+    var buyerUnsubs = [];
+    var BUYER_ACTIVE = ['pending','processing','paid','confirmed','accepted','shipped','in_transit','pickup_pending','awaiting_handover','negotiating','waiting'];
+
+    function buyerUid() { return skh.currentUser && skh.currentUser.uid; }
+    function buyerEsc(v) { return skh.skhEscape(String(v == null ? '' : v)); }
+    function buyerTime(v) {
+        if (!v) return 0;
+        if (v && typeof v.toDate === 'function') return v.toDate().getTime();
+        if (v && typeof v.seconds === 'number') return v.seconds * 1000;
+        return Date.parse(v) || Number(v) || 0;
+    }
+    function buyerDate(v) {
+        var n = buyerTime(v); if (!n) return '—';
+        try { return new Date(n).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ'); } catch (e) { return '—'; }
+    }
+    function buyerRows(snap) {
+        var out = [];
+        if (snap && typeof snap.forEach === 'function') snap.forEach(function (d) { out.push(Object.assign({ id: d.id }, d.data() || {})); });
+        return out.sort(function (a,b) { return buyerTime(b.updatedAt || b.createdAt || b.at || b.savedAt || b.likedAt || b.followedAt) - buyerTime(a.updatedAt || a.createdAt || a.at || a.savedAt || a.likedAt || a.followedAt); });
+    }
+    function buyerQuery(col, field, limitN) {
+        var uid = buyerUid();
+        if (!uid) return Promise.resolve([]);
+        var q = skh.query(skh.collection(skh.db, col), skh.where(field, '==', uid), skh.limit(limitN || 60));
+        return skh.getDocs(q).then(buyerRows);
+    }
+    function buyerCount(col, field) {
+        var uid = buyerUid();
+        if (!uid || typeof skh.getCountFromServer !== 'function') return Promise.resolve(0);
+        var q = skh.query(skh.collection(skh.db, col), skh.where(field, '==', uid));
+        return skh.getCountFromServer(q).then(function (s) { return Number((s.data() || {}).count || 0); });
+    }
+    function buyerEmpty(title, text) {
+        return '<div class="byd-empty"><b>' + buyerEsc(title) + '</b><span>' + buyerEsc(text) + '</span><br><button class="byd-home-btn" onclick="window.skhBuyerGoHome()"><span class="skh-ico" data-ico="home"></span> Rudi Home</button></div>';
+    }
+    function buyerError(e) {
+        return '<div class="byd-error"><b>Imeshindwa kupakia</b><span>' + buyerEsc((e && e.message) || 'Jaribu tena.') + '</span><br><button class="byd-btn" style="margin-top:12px" onclick="window.skhRenderEngagementTab(\'' + activeTab + '\')">Jaribu tena</button></div>';
+    }
+    function buyerStatus(v) {
+        var s = String(v || 'pending').toLowerCase();
+        var cls = /complete|deliver|paid|accept|success/.test(s) ? 'green' : (/cancel|reject|fail|dispute/.test(s) ? 'red' : (/pending|wait|review/.test(s) ? 'gold' : ''));
+        return '<span class="byd-pill ' + cls + '">' + buyerEsc(s.replace(/_/g,' ')) + '</span>';
+    }
+    function buyerTitle(title, sub, action) {
+        return '<div class="byd-section-title"><div><h2>' + buyerEsc(title) + '</h2><p>' + buyerEsc(sub || '') + '</p></div>' + (action || '') + '</div>';
+    }
+    function buyerOpenTab(tab) {
+        var b = document.querySelector('#mySokoHaiModal [data-byd-tab="' + tab + '"]');
+        window.skhMySokoHaiTab(tab, b);
+    }
+    window.skhBuyerOpenTab = buyerOpenTab;
+
+    window.skhBuyerClose = function () {
+        buyerUnsubs.splice(0).forEach(function (u) { try { u(); } catch (e) {} });
+        var m = document.getElementById('mySokoHaiModal'); if (m) m.style.display = 'none';
+    };
+    window.skhBuyerBack = function () {
+        if (activeTab !== 'overview') { buyerOpenTab('overview'); return; }
+        if (typeof window.skhBack === 'function') { window.skhBack(); return; }
+        window.skhBuyerClose();
+    };
+    window.skhBuyerGoHome = function () {
+        window.skhBuyerClose();
+        var home = document.getElementById('navTabHome');
+        if (typeof window.updateApp === 'function') { window.updateApp('home', home); return; }
+        if (typeof window.switchMode === 'function') window.switchMode('buyer');
     };
 
     window.skhOpenMySokoHai = function (tab) {
-        if (!skh.requireAuth()) return;
-        closeModals();
+        if (!skh.currentUser) { if (typeof window.openAuthModal === 'function') window.openAuthModal(); return; }
+        try { if (typeof window.closeModals === 'function') window.closeModals(); } catch (e) {}
         var m = document.getElementById('mySokoHaiModal');
         if (!m) { alert(engT('my_mod_missing', 'My SokoHai module is missing.')); return; }
-        window.skhInitEngagementIcons();
         m.style.display = 'flex';
-        window.skhMySokoHaiTab(tab || 'liked');
+        buyerCache = Object.create(null);
+        buyerOpenTab(tab || 'overview');
+        try { if (window.skhApplyIcons) window.skhApplyIcons(m); } catch (e) {}
     };
 
-    function relCard(it, kind) {
-        var meta = [];
-        if (kind === 'saved') {
-            if (it.stockStatus === 'in_stock') meta.push(engT('eng_in_stock', 'In stock'));
-            else meta.push(engT('eng_out_stock', 'Out of stock'));
-            if (it.prevPrice && Number(it.prevPrice) > Number(it.price)) meta.push(engT('eng_was_price', 'Was TSh') + ' ' + Number(it.prevPrice).toLocaleString());
-            if (it.delivery) meta.push(engT('delivery', 'Delivery') + ': ' + skh.skhEscape(String(it.delivery)));
-            if (it.sellerName) meta.push(engT('eng_seller', 'Seller') + ': ' + skh.skhEscape(String(it.sellerName)));
-            if (state.liked[(it.collectionName || 'products') + '__' + it.productId]) meta.push(engT('eng_liked_badge', 'You liked this'));
-            if (it.savedAt) meta.push(engT('eng_saved_on', 'Saved on') + ' ' + new Date(it.savedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ'));
+    window.skhMySokoHaiTab = function (tab, el) {
+        activeTab = tab || 'overview';
+        buyerUnsubs.splice(0).forEach(function (u) { try { u(); } catch (e) {} });
+        document.querySelectorAll('#mySokoHaiModal .byd-tab').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-byd-tab') === activeTab);
+        });
+        if (el && el.scrollIntoView) { try { el.scrollIntoView({ block:'nearest', inline:'center' }); } catch (e) {} }
+        window.skhRenderEngagementTab(activeTab);
+    };
+
+    function orderOpen(o) {
+        if (o && o.id && typeof window.openOrderTracking === 'function') { window.openOrderTracking(o.id); return; }
+        if (typeof window.openBuyerOrdersModal === 'function') window.openBuyerOrdersModal();
+    }
+    window.skhBuyerOrderOpen = function (id) {
+        var list = buyerCache.orders || [], o = list.find(function (x) { return x.id === id; }); orderOpen(o || { id:id });
+    };
+    window.skhBuyerRequestOpen = function (id) {
+        var r = (buyerCache.requests || []).find(function (x) { return x.id === id; });
+        if (r && r.receiverId && typeof window.openChatWithUser === 'function') window.openChatWithUser(r.receiverId, r.receiverName || 'Mtoa huduma');
+        else if (typeof window.openNotifications === 'function') window.openNotifications();
+    };
+    window.skhBuyerNegotiationOpen = function (id) {
+        var n = (buyerCache.negotiations || []).find(function (x) { return x.id === id; });
+        if (n && n.sellerId && typeof window.openChatWithUser === 'function') window.openChatWithUser(n.sellerId, n.sellerName || 'Muuzaji');
+        else if (typeof window.openChatList === 'function') window.openChatList();
+    };
+    window.skhBuyerDeliveryOpen = function (id) { if (typeof window.openRideTracking === 'function') window.openRideTracking(id); else if (typeof window.openMyDeliveries === 'function') window.openMyDeliveries(); };
+    window.skhBuyerSellerOpen = function (uid, name) {
+        if (typeof window.openSellerProfile === 'function') window.openSellerProfile(uid, name || 'Muuzaji');
+        else if (typeof window.skhOpenSellerProfile === 'function') window.skhOpenSellerProfile(uid, name || 'Muuzaji');
+    };
+
+    function orderRow(o) {
+        var title = o.itemTitle || o.productTitle || o.serviceTitle || o.orderId || ('Order ' + o.id.slice(0,8));
+        var meta = (o.sellerName || o.providerName || 'SokoHai') + ' · ' + buyerDate(o.createdAt) + (o.amount != null ? ' · TSh ' + Number(o.amount || 0).toLocaleString() : '');
+        return '<article class="byd-row" onclick="window.skhBuyerOrderOpen(\'' + skh.skhJsEsc(o.id) + '\')"><img class="byd-thumb" src="' + buyerEsc(o.itemImg || o.productImage || '') + '" onerror="this.style.visibility=\'hidden\'"><div class="byd-row-main"><b>' + buyerEsc(title) + '</b><small>#' + buyerEsc(o.orderId || o.id.slice(0,10)) + ' · ' + buyerEsc(meta) + '</small></div>' + buyerStatus(o.status || o.orderStatus) + '</article>';
+    }
+    function requestRow(r) {
+        return '<article class="byd-row" onclick="window.skhBuyerRequestOpen(\'' + skh.skhJsEsc(r.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(r.itemTitle || r.cargoName || r.requestType || 'Request') + '</b><small>' + buyerEsc(r.detail1 || ((r.fromLocation || '') + ' → ' + (r.toLocation || ''))) + ' · ' + buyerDate(r.createdAt) + '</small></div>' + buyerStatus(r.status) + '</article>';
+    }
+    function negotiationRow(n) {
+        var title = n.productTitle || n.serviceTitle || n.transportTitle || n.title || 'Negotiation';
+        var price = n.currentUnitPrice || n.proposedPrice || n.currentPrice;
+        return '<article class="byd-row" onclick="window.skhBuyerNegotiationOpen(\'' + skh.skhJsEsc(n.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(title) + '</b><small>' + buyerEsc(n.sellerName || 'Muuzaji') + (price ? ' · TSh ' + Number(price).toLocaleString() : '') + ' · History ipo Chat</small></div>' + buyerStatus(n.currentState || n.status) + '</article>';
+    }
+    function deliveryRow(r) {
+        return '<article class="byd-row" onclick="window.skhBuyerDeliveryOpen(\'' + skh.skhJsEsc(r.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(r.cargoName || r.itemTitle || ('Delivery ' + r.id.slice(0,8))) + '</b><small>' + buyerEsc((r.fromLocation || 'Pickup') + ' → ' + (r.toLocation || 'Destination')) + ' · ' + buyerDate(r.createdAt) + '</small></div>' + buyerStatus(r.status) + '</article>';
+    }
+
+    function startBuyerLiveSummary() {
+        var uid = buyerUid(); if (!uid || typeof skh.onSnapshot !== 'function') return;
+        function listen(col, field, limitN, update) {
+            var q = skh.query(skh.collection(skh.db,col), skh.where(field,'==',uid), skh.limit(limitN));
+            try { buyerUnsubs.push(skh.onSnapshot(q, function (snap) { update(buyerRows(snap)); }, function () {})); } catch (e) {}
         }
-        return `
-        <div class="list-item" style="cursor:pointer;" onclick="openProduct('${skh.skhJsEsc(it.productId || '')}', '${skh.skhJsEsc(it.collectionName || 'products')}')"> <img src="${skh.skhEscape(it.image || 'https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b')}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;background:#f1f5f9;" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'"> <div class="list-info"> <b>${skh.skhEscape(it.title || engT('products', 'Products'))}</b> <span style="color:var(--terracotta);font-weight:900;">TSh ${Number(it.price || 0).toLocaleString()}</span>
-                ${meta.length ? '<small style="color:#64748b;">' + meta.join(' · ') + '</small>' : ''}
-            </div> </div>`;
+        listen('orders','buyerId',80,function(items){
+            buyerCache.orders=items; var n=items.filter(function(o){return BUYER_ACTIVE.indexOf(String(o.status||o.orderStatus||'').toLowerCase())!==-1;}).length;
+            var el=document.getElementById('bydKpiActive'); if(el)el.textContent=String(n);
+        });
+        listen('ride_requests','customerId',60,function(items){
+            buyerCache.deliveries=items; var n=items.filter(function(r){return BUYER_ACTIVE.indexOf(String(r.status||'').toLowerCase())!==-1;}).length;
+            var el=document.getElementById('bydCurrentDelivery'); if(el)el.textContent=String(n);
+        });
+        listen('negotiations','buyerId',60,function(items){
+            buyerCache.negotiations=items; var n=items.filter(function(x){return !/complete|cancel|reject|expired/.test(String(x.currentState||x.status||'').toLowerCase());}).length;
+            var el=document.getElementById('bydCurrentNeg'); if(el)el.textContent=String(n);
+        });
+    }
+
+    async function renderOverview(box) {
+        var uid = buyerUid();
+        var profile = skh.currentUserData || {}, user = skh.currentUser || {};
+        var name = profile.fullName || user.displayName || 'Buyer';
+        var photo = profile.photoURL || user.photoURL || '';
+        try {
+            var results = await Promise.all([
+                buyerQuery('orders','buyerId',80), buyerQuery('ride_requests','customerId',60),
+                buyerQuery('savedProducts','userId',120), buyerQuery('productLikes','userId',120),
+                buyerQuery('sellerFollowers','followerId',120), buyerQuery('requests','senderId',60),
+                buyerQuery('negotiations','buyerId',60), buyerQuery('recommendationEvents','userId',30),
+                buyerCount('orders','buyerId'), buyerCount('savedProducts','userId'), buyerCount('sellerFollowers','followerId')
+            ]);
+            var orders=results[0], rides=results[1], saved=results[2], liked=results[3], following=results[4], requests=results[5], negotiations=results[6], activity=results[7];
+            var ordersCount=results[8], savedCount=results[9], followingCount=results[10];
+            Object.assign(buyerCache,{orders:orders,deliveries:rides,saved:saved,liked:liked,following:following,requests:requests,negotiations:negotiations,activity:activity});
+            var activeOrders=orders.filter(function(o){return BUYER_ACTIVE.indexOf(String(o.status||o.orderStatus||'').toLowerCase())!==-1;});
+            var activeDeliveries=rides.filter(function(r){return BUYER_ACTIVE.indexOf(String(r.status||'').toLowerCase())!==-1;});
+            var activeNeg=negotiations.filter(function(n){return !/complete|cancel|reject|expired/.test(String(n.currentState||n.status||'').toLowerCase());});
+            var pendingReviews=orders.filter(function(o){return /complete|delivered/.test(String(o.status||o.orderStatus||'').toLowerCase()) && !o.reviewSubmitted && !o.reviewed;});
+            var important=[];
+            activeDeliveries.slice(0,2).forEach(function(r){important.push({text:(r.cargoName||'Delivery')+' iko '+String(r.status||'in progress').replace(/_/g,' '),tab:'deliveries'});});
+            activeNeg.slice(0,2).forEach(function(n){important.push({text:(n.productTitle||n.serviceTitle||'Negotiation')+' — '+String(n.currentState||n.status||'waiting').replace(/_/g,' '),tab:'negotiations'});});
+            pendingReviews.slice(0,2).forEach(function(o){important.push({text:(o.itemTitle||'Order')+' inasubiri review',tab:'reviews'});});
+            var recent = orders.slice(0,5);
+            box.innerHTML = '<div class="byd-wrap">' +
+                '<div class="byd-profile"><img class="byd-avatar" src="'+buyerEsc(photo)+'" onerror="this.style.visibility=\'hidden\'"><div><h2>Habari, '+buyerEsc(name)+' 👋</h2><p>Haya ndiyo yanayoendelea kwenye akaunti yako.</p></div></div>'+
+                '<div class="byd-kpis"><button class="byd-kpi" onclick="window.skhBuyerOpenTab(\'orders\')"><span>Orders</span><b>'+ordersCount+'</b></button><button class="byd-kpi" onclick="window.skhBuyerOpenTab(\'orders\')"><span>In Progress</span><b id="bydKpiActive">'+activeOrders.length+'</b></button><button class="byd-kpi" onclick="window.skhBuyerOpenTab(\'saved\')"><span>Saved</span><b>'+savedCount+'</b></button><button class="byd-kpi" onclick="window.skhBuyerOpenTab(\'following\')"><span>Following</span><b>'+followingCount+'</b></button></div>'+
+                '<div class="byd-grid"><div><section class="byd-card"><div class="byd-card-head"><h3>Recent Orders</h3><button class="byd-link" onclick="window.skhBuyerOpenTab(\'orders\')">View all</button></div>'+(recent.length?recent.map(orderRow).join(''):buyerEmpty('Bado huna oda','Oda utakazofanya SokoHai zitaonekana hapa.'))+'</section><section class="byd-card"><div class="byd-card-head"><h3>Recent Activity</h3><button class="byd-link" onclick="window.skhBuyerOpenTab(\'activity\')">View all</button></div>'+renderActivityRows(activity.slice(0,5),false)+'</section></div>'+
+                '<aside><section class="byd-card byd-important"><div class="byd-card-head"><h3>Important / Action required</h3></div>'+(important.length?important.map(function(a){return '<button class="byd-action" onclick="window.skhBuyerOpenTab(\''+a.tab+'\')"><i></i><span>'+buyerEsc(a.text)+'</span><strong>Fungua</strong></button>';}).join(''):'<div class="byd-empty" style="padding:20px"><b>Hakuna hatua inayosubiri</b><span>Uko sawa kwa sasa.</span></div>')+'</section>'+
+                '<section class="byd-card"><div class="byd-card-head"><h3>Current</h3></div><div class="byd-row"><div class="byd-row-main"><b>Active negotiations</b><small>Existing Chat / Negotiation</small></div><span class="byd-pill" id="bydCurrentNeg">'+activeNeg.length+'</span></div><div class="byd-row"><div class="byd-row-main"><b>Active deliveries</b><small>Existing tracking flow</small></div><span class="byd-pill" id="bydCurrentDelivery">'+activeDeliveries.length+'</span></div><div class="byd-row"><div class="byd-row-main"><b>Pending requests</b><small>Requests ulizoanzisha</small></div><span class="byd-pill">'+requests.filter(function(r){return /pending|waiting|responded|negotiating/.test(String(r.status||'pending'));}).length+'</span></div></section></aside></div></div>';
+            startBuyerLiveSummary();
+        } catch(e) { box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>'; }
+    }
+
+    function renderActivityRows(items, emptyHome) {
+        if (!items || !items.length) return buyerEmpty('Bado hakuna activity','Matendo yako muhimu yataonekana hapa.');
+        var labels={PRODUCT_LIKED:'Ulipenda bidhaa',PRODUCT_UNLIKED:'Uliondoa like',PRODUCT_SAVED:'Ulihifadhi bidhaa',PRODUCT_UNSAVED:'Uliondoa saved',PRODUCT_WATCHED:'Ulianza kufuatilia bidhaa',PRODUCT_UNWATCHED:'Uliacha kufuatilia bidhaa',SELLER_FOLLOWED:'Ulifuata account',SELLER_UNFOLLOWED:'Uliacha kufuata account',ENTITY_VIEWED:'Uliangalia item',REVIEW_SUBMITTED:'Uliandika review',search:'Ulitafuta sokoni'};
+        return items.map(function(x){var label=labels[x.type]||String(x.type||'Activity').replace(/_/g,' ').toLowerCase();return '<div class="byd-row"><div class="byd-row-main"><b>'+buyerEsc(label)+'</b><small>'+buyerEsc(x.title||x.query||x.productTitle||x.productId||x.entityId||'SokoHai')+' · '+buyerDate(x.at||x.createdAt)+'</small></div></div>';}).join('');
+    }
+
+    async function renderOrders(box) {
+        try { var items=buyerCache.orders||await buyerQuery('orders','buyerId',100); buyerCache.orders=items;
+            box.innerHTML='<div class="byd-wrap">'+buyerTitle('Orders','Historia halisi kutoka existing Orders system.','<button class="byd-btn secondary" onclick="window.openBuyerOrdersModal&&window.openBuyerOrdersModal()">Mfumo wa Oda</button>')+'<div class="byd-filter-row">'+['all','active','processing','delivery','completed','cancelled'].map(function(f){return '<button class="byd-filter '+(f==='all'?'active':'')+'" onclick="window.skhBuyerFilterOrders(\''+f+'\',this)">'+f+'</button>';}).join('')+'</div><section id="bydOrderList" class="byd-card" data-all="1">'+(items.length?items.map(orderRow).join(''):buyerEmpty('Bado huna oda','Oda utakazofanya SokoHai zitaonekana hapa.'))+'</section></div>';
+        } catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+    }
+    window.skhBuyerFilterOrders=function(filter,el){document.querySelectorAll('.byd-filter').forEach(function(b){b.classList.remove('active');});if(el)el.classList.add('active');var items=buyerCache.orders||[];var filtered=items.filter(function(o){var s=String(o.status||o.orderStatus||'').toLowerCase();if(filter==='all')return true;if(filter==='active')return BUYER_ACTIVE.indexOf(s)!==-1;if(filter==='processing')return /process|confirm|paid|pending/.test(s);if(filter==='delivery')return /ship|transit|delivery|pickup/.test(s);if(filter==='completed')return /complete|delivered/.test(s);return /cancel|refund|reject/.test(s);});var host=document.getElementById('bydOrderList');if(host)host.innerHTML=filtered.length?filtered.map(orderRow).join(''):buyerEmpty('Hakuna oda hapa','Hakuna rekodi inayolingana na hali hii.');};
+
+    async function renderSimpleOwned(box,tab) {
+        var cfg={requests:['requests','senderId','Requests','Maombi uliyoanzisha kwenye mifumo iliyopo.',requestRow],negotiations:['negotiations','buyerId','Negotiations','Summary tu; history na actions hubaki Chat.',negotiationRow],deliveries:['ride_requests','customerId','Deliveries','Safari na deliveries zako kutoka existing tracking.',deliveryRow]};
+        var c=cfg[tab]; try{var items=buyerCache[tab]||await buyerQuery(c[0],c[1],80);buyerCache[tab]=items;box.innerHTML='<div class="byd-wrap">'+buyerTitle(c[2],c[3])+'<section class="byd-card">'+(items.length?items.map(c[4]).join(''):buyerEmpty(tab==='requests'?'Bado huna request':tab==='negotiations'?'Bado huna negotiation':'Bado huna delivery','Shughuli zako zitaonekana hapa kutoka mfumo husika.'))+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+    }
+
+    async function renderEngagement(box,tab) {
+        var cfg=tab==='saved'?['savedProducts','savedAt','Saved','Vitu ulivyohifadhi kwa baadaye.']:['productLikes','likedAt','Liked','Vitu ulivyopenda; Like haijabadilishwa kuwa Save.'];
+        try{var items=buyerCache[tab]||await buyerQuery(cfg[0],'userId',80);buyerCache[tab]=items;box.innerHTML='<div class="byd-wrap">'+buyerTitle(cfg[2],cfg[3])+'<section class="byd-card">'+(items.length?items.map(function(it){return relCard(it,tab==='saved'?'saved':'liked');}).join(''):buyerEmpty('Hakuna '+cfg[2].toLowerCase()+' items','Vitu utakavyoweka hapa vitaonekana kutoka mfumo uliopo.'))+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+    }
+
+    async function renderFollowing(box) {
+        try{var items=buyerCache.following||await buyerQuery('sellerFollowers','followerId',80);buyerCache.following=items;box.innerHTML='<div class="byd-wrap">'+buyerTitle('Following','Accounts unazofollow kupitia existing profiles.')+'<section class="byd-card">'+(items.length?items.map(function(f){return '<article class="byd-row" onclick="window.skhBuyerSellerOpen(\''+skh.skhJsEsc(f.sellerId||'')+'\',\''+skh.skhJsEsc(f.sellerName||'')+'\')"><div class="byd-row-main"><b>'+buyerEsc(f.sellerName||'Seller')+'</b><small>Following since '+buyerDate(f.followedAt)+'</small></div><span class="byd-pill green">Profile</span></article>';}).join(''):buyerEmpty('Bado humfuati account','Accounts utakazofollow zitaonekana hapa.'))+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+    }
+
+    async function renderRecent(box) {
+        try{var events=await buyerQuery('recommendationEvents','userId',80);events=events.filter(function(x){return x.type==='ENTITY_VIEWED';});var seen={},items=events.filter(function(x){var k=(x.entityType||'product')+'__'+x.entityId;if(!x.entityId||seen[k])return false;seen[k]=1;return true;}).slice(0,30);box.innerHTML='<div class="byd-wrap">'+buyerTitle('Recently Viewed','Central recent-view history; newest unique items first.')+'<section class="byd-card">'+(items.length?items.map(function(x){return '<article class="byd-row" onclick="window.openProduct(\''+skh.skhJsEsc(x.entityId)+'\',\''+skh.skhJsEsc(x.collectionName||'products')+'\')"><img class="byd-thumb" src="'+buyerEsc(x.image||'')+'" onerror="this.style.visibility=\'hidden\'"><div class="byd-row-main"><b>'+buyerEsc(x.title||'Item')+'</b><small>'+buyerEsc(x.entityType||'product')+' · '+buyerDate(x.at)+'</small></div><span class="byd-pill">Open</span></article>';}).join(''):buyerEmpty('Bado hujaangalia item','Items utakazofungua Home zitaonekana hapa.'))+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+    }
+
+    async function renderReviews(box) {
+        try{var orders=buyerCache.orders||await buyerQuery('orders','buyerId',100);buyerCache.orders=orders;var pending=orders.filter(function(o){return /complete|delivered/.test(String(o.status||o.orderStatus||'').toLowerCase())&&!o.reviewSubmitted&&!o.reviewed;});var events=await buyerQuery('recommendationEvents','userId',100);var mine=events.filter(function(x){return x.type==='REVIEW_SUBMITTED';});box.innerHTML='<div class="byd-wrap">'+buyerTitle('Reviews','Existing review flow; dashboard only shows status and shortcuts.')+'<section class="byd-card"><div class="byd-card-head"><h3>Pending Reviews</h3><span class="byd-pill gold">'+pending.length+'</span></div>'+(pending.length?pending.map(function(o){return '<article class="byd-row"><div class="byd-row-main"><b>'+buyerEsc(o.itemTitle||o.productTitle||'Order')+'</b><small>Delivered · #'+buyerEsc(o.orderId||o.id.slice(0,8))+'</small></div><button class="byd-btn" onclick="window.skhCommentsOpen?window.skhCommentsOpen({id:\''+skh.skhJsEsc(o.itemId||o.productId||'')+'\',title:\''+skh.skhJsEsc(o.itemTitle||o.productTitle||'')+'\'}):window.skhBuyerOrderOpen(\''+skh.skhJsEsc(o.id)+'\')">Leave Review</button></article>';}).join(''):'<div class="byd-empty" style="padding:20px"><b>Hakuna review inayosubiri</b><span>Completed orders zinazohitaji review zitaonekana hapa.</span></div>')+'</section><section class="byd-card"><div class="byd-card-head"><h3>My Reviews</h3></div>'+(mine.length?renderActivityRows(mine,false):'<div class="byd-empty" style="padding:20px"><b>Bado hujaandika review</b><span>Reviews zako zitaonekana baada ya kutumia existing review flow.</span></div>')+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+    }
+
+    async function renderActivity(box) { try{var items=await buyerQuery('recommendationEvents','userId',100);buyerCache.activity=items;box.innerHTML='<div class="byd-wrap">'+buyerTitle('My Activity','History ya matendo yako; si General Notifications.')+'<section class="byd-card">'+renderActivityRows(items,true)+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';} }
+
+    async function renderSokoPay(box) {
+        try{var tx=await buyerQuery('sokopay_core_transactions','buyerId',60);var available=Number((skh.currentUserData||{}).walletBalance||0),pending=tx.filter(function(x){return /pending|held|escrow|locked/.test(String(x.escrowStatus||x.paymentStatus||'').toLowerCase());}).reduce(function(a,x){return a+Number(x.amount||(x.totals&&x.totals.grandTotal)||0);},0);box.innerHTML='<div class="byd-wrap">'+buyerTitle('SokoPay','Summary tu; wallet na escrow hubaki existing SokoPay.','<button class="byd-btn" onclick="window.openSokoPay&&window.openSokoPay()">Fungua SokoPay</button>')+'<div class="byd-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="byd-kpi"><span>Available</span><b style="font-size:20px">TSh '+available.toLocaleString()+'</b></div><div class="byd-kpi"><span>Pending Escrow</span><b style="font-size:20px">TSh '+pending.toLocaleString()+'</b></div></div><section class="byd-card">'+(tx.length?tx.slice(0,8).map(function(x){return '<article class="byd-row" onclick="window.openSokoPayOrderDetail&&window.openSokoPayOrderDetail(\''+skh.skhJsEsc(x.id)+'\')"><div class="byd-row-main"><b>'+buyerEsc(x.orderId||'SokoPay transaction')+'</b><small>TSh '+Number(x.amount||(x.totals&&x.totals.grandTotal)||0).toLocaleString()+' · '+buyerDate(x.createdAt)+'</small></div>'+buyerStatus(x.paymentStatus||x.escrowStatus)+'</article>';}).join(''):buyerEmpty('Hakuna SokoPay activity','Miamala yako halisi itaonekana hapa.'))+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+    }
+
+    function renderAccount(box) {
+        box.innerHTML='<div class="byd-wrap">'+buyerTitle('Account shortcuts','Hizi zinafungua global systems; hakuna Buyer Profile mpya.')+'<div class="byd-shortcuts"><button class="byd-shortcut" onclick="window.openProfile&&window.openProfile()">Profile<small>Existing global profile</small></button><button class="byd-shortcut" onclick="window.renderSokoHaiAccountMenu&&window.renderSokoHaiAccountMenu()">Settings<small>Existing global account menu</small></button><button class="byd-shortcut" onclick="window.openSokoHaiAccountSetting&&window.openSokoHaiAccountSetting(\'security\')">Security<small>Account security</small></button><button class="byd-shortcut" onclick="window.openSokoHaiAccountSetting&&window.openSokoHaiAccountSetting(\'privacy\')">Privacy<small>Privacy controls</small></button><button class="byd-shortcut" onclick="window.openNotifications&&window.openNotifications()">Notifications<small>Global notification center</small></button><button class="byd-shortcut" onclick="window.openChatList&&window.openChatList()">Chat<small>Global Chat and negotiations</small></button></div></div>';
     }
 
     window.skhRenderEngagementTab = async function (tab) {
-        var box = document.getElementById('mySokoHaiContent');
-        if (!box) return;
-        box.innerHTML = '<p style="text-align:center;color:#64748b;padding:30px;">' + engT('my_loading', 'Loading...') + '</p>';
-        var uid = skh.currentUser.uid;
-        var q, col, kind;
-        try {
-            if (tab === 'liked') { col = 'productLikes'; kind = 'liked'; }
-            else if (tab === 'saved') { col = 'savedProducts'; kind = 'saved'; }
-            else if (tab === 'watched') { col = 'productWatches'; kind = 'watched'; }
-            else if (tab === 'following') { col = 'sellerFollowers'; kind = 'following'; }
-            else if (tab === 'prefs') { window.skhRenderNotifPrefs(); return; }
-            else { box.innerHTML = ''; return; }
-
-            if (tab === 'following') {
-                q = skh.query(skh.collection(skh.db, col), skh.where("followerId", "==", uid), skh.limit(60));
-                var snap = await skh.getDocs(q);
-                var rows = '';
-                snap.forEach(function (d) {
-                    var f = d.data();
-                    rows += `
-                    <div class="list-item" style="justify-content:space-between;"> <div style="display:flex;align-items:center;gap:12px;"> <div style="width:45px;height:45px;background:#16a34a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;">${window.SKH_ICONS ? window.SKH_ICONS.store : ''}</div> <div><b>${skh.skhEscape(f.sellerName || engT('eng_seller', 'Seller'))}</b><small style="display:block;color:#64748b;">${engT('eng_follow_since', 'Following since')} ${new Date(f.followedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ')}</small></div> </div> <button onclick="window.skhToggleFollowSeller('${skh.skhJsEsc(f.sellerId)}','${skh.skhJsEsc(f.sellerName || '')}',this)" style="padding:8px 12px;background:#fee2e2;color:#ef4444;border:none;border-radius:8px;font-weight:800;cursor:pointer;">${engT('eng_unfollow', 'Unfollow')}</button> </div>`;
-                });
-                box.innerHTML = rows || '<p style="text-align:center;color:#64748b;">' + engT('my_no_following', 'You are not following any seller yet.') + '</p>';
-                return;
-            }
-
-            // [LIVE-FIX 2026-09] Docs za engagement hazina `createdAt` — zinaweka
-            // likedAt / watchedAt / savedAt. orderBy('createdAt') ilikuwa inarudisha
-            // TUPU kila wakati (Firestore huacha docs zisizo na uga wa orderBy).
-            q = skh.query(skh.collection(skh.db, col), skh.where("userId", "==", uid), skh.limit(60));
-            var snap2 = await skh.getDocs(q);
-            var items = [];
-            snap2.forEach(function (d) { items.push(d.data()); });
-            var tsField = col === 'productLikes' ? 'likedAt' : (col === 'productWatches' ? 'watchedAt' : 'savedAt');
-            items.sort(function (a, b) { var x = String(a[tsField] || ''), y = String(b[tsField] || ''); return x < y ? 1 : (x > y ? -1 : 0); });
-            if (!items.length) {
-                box.innerHTML = '<p style="text-align:center;color:#64748b;padding:30px;">' + engT('my_no_items', 'Nothing here yet.') + '</p>';
-                return;
-            }
-            box.innerHTML = items.map(function (it) { return relCard(it, kind); }).join('');
-        } catch (e) {
-            box.innerHTML = '<p style="color:red;text-align:center;">' + engT('my_error', 'Error') + ': ' + skh.skhEscape(e && e.message) + '</p>';
-        }
-    };
-
-    window.skhRenderNotifPrefs = function () {
-        var box = document.getElementById('mySokoHaiContent');
-        if (!box) return;
-        var p = window.skhGetNotifPrefs();
-        function row(group, key, label) {
-            var on = p[group][key];
-            return `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;"> <b style="font-size:13px;color:#0f172a;">${label}</b> <label style="position:relative;display:inline-block;width:42px;height:24px;"> <input type="checkbox" ${on ? 'checked' : ''} onchange="window.skhSetNotifPref('${group}','${key}',this.checked); this.checked ? this.parentElement.style.background='' : null;" style="opacity:0;width:0;height:0;"> <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:${on ? '#16a34a' : '#cbd5e1'};border-radius:24px;transition:.3s;"></span> </label> </div>`;
-        }
-        box.innerHTML = `
-            <b style="font-size:12px;color:#0f172a;display:block;margin:10px 0 8px;">${engT('my_seller_updates', 'Seller Updates')}</b>
-            ${row('seller','newProducts', engT('my_new_products', 'New products'))}
-            ${row('seller','priceDrops', engT('my_price_dropped', 'Price dropped'))}
-            ${row('seller','restock', engT('my_restock', 'Restock'))}
-            ${row('seller','deals', engT('my_special_deals', 'Special deals'))}
-            ${row('seller','allUpdates', engT('my_all_updates', 'All updates'))}
-            <b style="font-size:12px;color:#0f172a;display:block;margin:16px 0 8px;">${engT('my_product_updates', 'Product Updates (watched)')}</b>
-            ${row('product','priceDrop', engT('my_price_drop', 'Price drop'))}
-            ${row('product','restock', engT('my_restock', 'Restock'))}
-            ${row('product','majorDeal', engT('my_major_deal', 'Major deal'))} `;
+        var box=document.getElementById('mySokoHaiContent'); if(!box||!buyerUid())return;
+        box.innerHTML='<div class="byd-wrap"><div class="byd-loading">Inapakia data zako...</div></div>';
+        if(tab==='overview')return renderOverview(box);
+        if(tab==='orders')return renderOrders(box);
+        if(tab==='requests'||tab==='negotiations'||tab==='deliveries')return renderSimpleOwned(box,tab);
+        if(tab==='saved'||tab==='liked')return renderEngagement(box,tab);
+        if(tab==='following')return renderFollowing(box);
+        if(tab==='recent')return renderRecent(box);
+        if(tab==='reviews')return renderReviews(box);
+        if(tab==='activity')return renderActivity(box);
+        if(tab==='sokopay')return renderSokoPay(box);
+        if(tab==='account')return renderAccount(box);
+        return renderOverview(box);
     };
 
     // ---------- PERSONALIZED HOME FEED ----------

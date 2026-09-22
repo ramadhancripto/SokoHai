@@ -159,6 +159,24 @@ window.openProduct = async function(id, manualCollection = null) {
         const found = { id: snapshot.id, collectionName: colName, ...snapshot.data() };
         skh.currentOpenProduct = found;
 
+        // [BUYER DASHBOARD] Recent view moja kwa user+entity (bounded, central).
+        // Tunatumia recommendationEvents iliyopo; hakuna BuyerProductHistory mpya.
+        try {
+            if (skh.currentUser && (!found.userId || found.userId !== skh.currentUser.uid)) {
+                const recentId = skh.currentUser.uid + '__view__' + colName + '__' + found.id;
+                skh.setDoc(skh.doc(skh.db, 'recommendationEvents', recentId), {
+                    userId: skh.currentUser.uid,
+                    type: 'ENTITY_VIEWED',
+                    entityType: colName === 'services' ? 'service' : (colName === 'drivers' ? 'transport' : 'product'),
+                    entityId: found.id,
+                    collectionName: colName,
+                    title: found.title || found.name || '',
+                    image: found.image || found.photo || '',
+                    at: new Date().toISOString()
+                }, { merge: true }).catch(function () {});
+            }
+        } catch (e) {}
+
         // [PUBLIC LINKS] Weka URL ya bidhaa kwenye address bar (bila ku-reload)
         // — hii inafanya kiungo kiweze kushirikiwa na kuonekana na Google.
         window.skhSetProductUrl(found.id);

@@ -34,9 +34,9 @@
     <div style="width:100%; max-width:400px; display:flex; flex-direction:column; align-items:center; animation: popIn 0.3s ease-out; background: white; padding: 30px; border-radius: 24px; max-height: 90vh; overflow-y:auto;">
         <h2 style="color:var(--primary-dark); margin-top:0; margin-bottom:20px; text-align:center; text-transform:uppercase; font-size:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; width: 100%;"> Usimamizi</h2>
         
-        <div class="menu-item" onclick="switchMode('buyer')" id="mode-buyer" style="border-left-color:var(--green); background:#f8fafc;">
-            <b data-skh-icon="cart">Mnunuzi (Soko) & Oda Zangu</b>
-            <span>Tafuta, Nunua na fuatilia Oda Zako (Escrow).</span>
+        <div class="menu-item" onclick="window.skhOpenMySokoHai && window.skhOpenMySokoHai('overview')" id="mode-buyer" style="border-left-color:var(--green); background:#f8fafc;">
+            <b data-skh-icon="cart">Buyer Dashboard</b>
+            <span>Shughuli, oda, requests, negotiations na vitu vyako.</span>
         </div>
         <div class="menu-item" onclick="switchMode('seller')" id="mode-seller" style="border-left-color:var(--gold); background:#f8fafc;">
             <b data-skh-icon="shop">Muuzaji wa Bidhaa</b>

@@ -20,7 +20,7 @@ window.renderSokoHaiAccountMenu = function(){
             ['feed_drivers','','Usafirishaji','Boda, bajaji, gari na mizigo']
         ]],
         ['USIMAMIZI (DASHBOARDS)', false, [
-            ['mode_buyer','','Mnunuzi (Soko)','Tafuta, nunua na fuatilia oda zako'],
+            ['mode_buyer','','Buyer Dashboard','Shughuli, oda na biashara zako binafsi'],
             ['mode_seller','','Muuzaji wa Bidhaa','Duka, stoo, mauzo na madeni'],
             ['mode_provider','','Mtoa Huduma / Fundi','Kazi, mikataba na mapato ya ufundi'],
             ['mode_driver','','Msafirishaji','Safari, mizigo, tokens na mapato'],
@@ -81,7 +81,7 @@ window.skhSidebarGo = function(key) {
         feed_products: function(){ feedGo('products'); },
         feed_services: function(){ feedGo('services'); },
         feed_drivers:  function(){ feedGo('drivers'); },
-        mode_buyer:    function(){ modeGo('buyer'); },
+        mode_buyer:    function(){ if (typeof window.skhOpenMySokoHai === 'function') window.skhOpenMySokoHai('overview'); },
         mode_seller:   function(){ modeGo('seller'); },
         mode_provider: function(){ modeGo('provider'); },
         mode_driver:   function(){ modeGo('driver'); },

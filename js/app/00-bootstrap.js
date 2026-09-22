@@ -6,7 +6,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 
@@ -40,6 +40,7 @@ skh.arrayUnion = arrayUnion;
 skh.arrayRemove = arrayRemove;
 skh.getDocs = getDocs;
 skh.getDoc = getDoc;
+skh.getCountFromServer = getCountFromServer;
 skh.setDoc = setDoc;
 skh.deleteDoc = deleteDoc;
 skh.runTransaction = runTransaction;
@@ -1647,7 +1648,9 @@ skh.loadMarketSearchSignals = function loadMarketSearchSignals() {
     if (skh._marketSearchLoadedAt && Date.now() - skh._marketSearchLoadedAt < 120000) return Promise.resolve(skh._marketSearchTerms);
     skh._marketSearchLoading = true;
     // Query moja yenye orderBy pekee huepuka composite index; chuja type/time client-side.
-    const q = skh.query(skh.collection(skh.db, 'recommendationEvents'), skh.orderBy('at', 'desc'), skh.limit(250));
+    // Rules expose only non-private search signals across users; personal activity
+    // remains owner-only. The where clause lets Firestore prove that boundary.
+    const q = skh.query(skh.collection(skh.db, 'recommendationEvents'), skh.where('type', '==', 'search'), skh.limit(250));
     return skh.getDocs(q).then(function (snap) {
         const cutoff = Date.now() - 14 * 86400000;
         const terms = [];

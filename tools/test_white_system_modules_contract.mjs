@@ -21,6 +21,6 @@ c('delivery chooser header is light',delivery.includes('.skh-dpick-head {')&&del
 c('post-payment delivery header is light',delivery.includes('.skh-dpost-head { background:#F0F7FA'));
 c('driver live dashboard banner is white',dash.includes('id="driverLiveBanner" style="background:#fff'));
 c('admin control panel no longer uses dark block',admin.includes('PLATFORM CONTROL PANEL')&&!admin.includes('background: linear-gradient(135deg, #1e293b, #0f172a)'));
-c('My SokoHai static header is light',social.includes('background:#F1FBF7')&&social.includes('My SokoHai'));
-c('My SokoHai runtime selected tab is green',socialjs.includes("el.style.background = '#18A982'"));
+c('Buyer Dashboard static header is white-first',social.includes('class="byd-head"')&&social.includes('Buyer Dashboard'));
+c('Buyer Dashboard selected tab is green',socialjs.includes("b.classList.toggle('active'")&&fs.readFileSync('css/35-buyer-dashboard.css','utf8').includes('.byd-tab.active{background:#18A982'));
 console.log(`\nWHITE SYSTEM MODULE CONTRACT: ${p} passed, ${f} failed`); if(f)process.exit(1);

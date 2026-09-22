@@ -94,8 +94,28 @@ service cloud.firestore {
       allow update: if signedIn() && resource.data.userId == request.auth.uid;
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
-    match /orders/{id}            { allow read, write: if signedIn(); allow delete: if false; }
-    match /notifications/{id}     { allow read, write: if signedIn(); }
+    // Buyer isolation: order details are visible only to its buyer, seller/provider,
+    // assigned courier, or admin. Party identifiers cannot be swapped by an update.
+    match /orders/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.buyerId == request.auth.uid
+        || resource.data.sellerId == request.auth.uid
+        || resource.data.providerId == request.auth.uid
+        || resource.data.courierId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if signedIn()
+        && (isAdmin() || resource.data.buyerId == request.auth.uid
+            || resource.data.sellerId == request.auth.uid
+            || resource.data.providerId == request.auth.uid
+            || resource.data.courierId == request.auth.uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['buyerId','sellerId','providerId','courierId']);
+      allow delete: if false;
+    }
+    match /notifications/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.userId is string;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
     // Legacy compatibility only. Canonical chat ni conversations/messages.
     // Legacy doc haisomeki na mtumiaji mwingine aliye-login bila kuwa mhusika.
     match /chats/{id} {
@@ -410,7 +430,16 @@ service cloud.firestore {
     match /agents/{id}            { allow read, write: if signedIn(); }
     match /shop_staff/{id}        { allow read, write: if signedIn(); }
     match /stock_transfers/{id}   { allow read, write: if signedIn(); }
-    match /requests/{id}          { allow read, write: if signedIn(); }
+    match /requests/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.senderId == request.auth.uid
+        || resource.data.receiverId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if signedIn()
+        && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['senderId','receiverId']);
+      allow delete: if false;
+    }
     match /purchase_orders/{id}   { allow read, write: if signedIn(); }
     match /staff_attendance/{id}  { allow read, write: if signedIn(); }
     match /shipments/{id}         { allow read, write: if signedIn(); }
@@ -486,7 +515,7 @@ service cloud.firestore {
 
     // -- Ushiriki wa mnunuzi (relational: id = uid + '__' + entityId) --
     match /productLikes/{id} {
-      allow read: if true;
+      allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if signedIn()
         && id == request.resource.data.userId + '__' + request.resource.data.productId
         && request.resource.data.userId == request.auth.uid;
@@ -494,19 +523,25 @@ service cloud.firestore {
       allow update: if false;
     }
     match /productWatches/{id} {
-      allow read: if signedIn();
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.userId == request.auth.uid
+        || resource.data.sellerId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
       allow update: if false;
     }
     match /savedProducts/{id} {
-      allow read: if signedIn();
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.userId == request.auth.uid
+        || resource.data.sellerId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
       allow update: if false;
     }
     match /sellerFollowers/{id} {
-      allow read: if true;
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.followerId == request.auth.uid
+        || resource.data.sellerId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.followerId == request.auth.uid;
       allow delete: if signedIn() && resource.data.followerId == request.auth.uid;
       allow update: if false;
@@ -516,9 +551,16 @@ service cloud.firestore {
       allow write: if signedIn();
     }
     match /recommendationEvents/{id} {
-      allow read: if signedIn();
-      allow create: if signedIn();
-      allow update, delete: if false;
+      // Search signals are non-private ranking inputs; every other activity event
+      // is private to its owner. Deterministic recent-view/review docs may update.
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.userId == request.auth.uid
+        || resource.data.type == 'search');
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if false;
     }
     // Kusoma prefs za watumiaji WENGINE kunahitajika (arifa kwa wafuasi) —
     // kwa hiyo read ni signedIn; kuandika ni uga wa MTU MWENYEWE tu.

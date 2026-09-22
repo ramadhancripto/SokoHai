@@ -168,22 +168,32 @@
 </div>
 
 
-<!-- MY SOKOHAI (Buyer Engagement Dashboard) -->
-<div id="mySokoHaiModal" class="overlay-menu" style="z-index: 7800;">
-    <div style="background:white; border-radius:24px; padding:0; width:95%; max-width:460px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.25s ease-out;">
-        <div style="background:#F1FBF7; padding:16px 18px; color:#18352D; border-bottom:1px solid #D9EEE5; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-            <b style="font-size:16px;color:#17604E;"> My SokoHai</b>
-            <button onclick="document.getElementById('mySokoHaiModal').style.display='none'" style="background:#fff;border:1px solid #CCEBDD;border-radius:10px;color:#17604E;font-size:18px;cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
-        </div>
-        <div style="display:flex; gap:6px; padding:10px; background:#f1f5f9; overflow-x:auto; flex-shrink:0;">
-            <button class="skh-mytab" onclick="window.skhMySokoHaiTab('liked', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#18A982; color:#fff; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoLiked"></span><span>Likes</span></button>
-            <button class="skh-mytab" onclick="window.skhMySokoHaiTab('saved', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoSaved"></span><span>Saved</span></button>
-            <button class="skh-mytab" onclick="window.skhMySokoHaiTab('watched', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoWatched"></span><span>Watching</span></button>
-            <button class="skh-mytab" onclick="window.skhMySokoHaiTab('following', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoFollowing"></span><span>Following</span></button>
-            <button class="skh-mytab" onclick="window.skhMySokoHaiTab('prefs', this)" style="flex:1; min-width:88px; padding:9px 6px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:800; font-size: 13px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;"><span id="skhTabIcoPrefs"></span><span>Prefs</span></button>
-        </div>
-        <div id="mySokoHaiContent" style="flex:1; overflow-y:auto; padding:12px;"></div>
-    </div>
+<!-- BUYER DASHBOARD — personal activity & commerce center; existing systems remain authoritative -->
+<div id="mySokoHaiModal" class="overlay-menu" style="z-index:7800;">
+    <section class="byd-shell" role="dialog" aria-modal="true" aria-labelledby="buyerDashboardTitle">
+        <header class="byd-head">
+            <button type="button" class="byd-icon-btn" onclick="window.skhBuyerBack()" aria-label="Rudi hatua moja"><span class="skh-ico" data-ico="arrow-left"></span></button>
+            <div class="byd-head-id"><b id="buyerDashboardTitle">Buyer Dashboard</b><small>Shughuli na biashara zako</small></div>
+            <button type="button" class="byd-home-btn" onclick="window.skhBuyerGoHome()"><span class="skh-ico" data-ico="home"></span><span>Home</span></button>
+            <button type="button" class="byd-icon-btn" onclick="window.skhBuyerClose()" aria-label="Funga"><span class="skh-ico" data-ico="x"></span></button>
+        </header>
+        <nav class="byd-tabs" aria-label="Buyer Dashboard sections">
+            <button class="byd-tab active" data-byd-tab="overview" onclick="window.skhMySokoHaiTab('overview',this)">Overview</button>
+            <button class="byd-tab" data-byd-tab="orders" onclick="window.skhMySokoHaiTab('orders',this)">Orders</button>
+            <button class="byd-tab" data-byd-tab="requests" onclick="window.skhMySokoHaiTab('requests',this)">Requests</button>
+            <button class="byd-tab" data-byd-tab="negotiations" onclick="window.skhMySokoHaiTab('negotiations',this)">Negotiations</button>
+            <button class="byd-tab" data-byd-tab="deliveries" onclick="window.skhMySokoHaiTab('deliveries',this)">Deliveries</button>
+            <button class="byd-tab" data-byd-tab="saved" onclick="window.skhMySokoHaiTab('saved',this)">Saved</button>
+            <button class="byd-tab" data-byd-tab="liked" onclick="window.skhMySokoHaiTab('liked',this)">Liked</button>
+            <button class="byd-tab" data-byd-tab="following" onclick="window.skhMySokoHaiTab('following',this)">Following</button>
+            <button class="byd-tab" data-byd-tab="recent" onclick="window.skhMySokoHaiTab('recent',this)">Recently Viewed</button>
+            <button class="byd-tab" data-byd-tab="reviews" onclick="window.skhMySokoHaiTab('reviews',this)">Reviews</button>
+            <button class="byd-tab" data-byd-tab="activity" onclick="window.skhMySokoHaiTab('activity',this)">My Activity</button>
+            <button class="byd-tab" data-byd-tab="sokopay" onclick="window.skhMySokoHaiTab('sokopay',this)">SokoPay</button>
+            <button class="byd-tab" data-byd-tab="account" onclick="window.skhMySokoHaiTab('account',this)">Account</button>
+        </nav>
+        <main id="mySokoHaiContent" class="byd-content" aria-live="polite"></main>
+    </section>
 </div>
 
 <!-- PUBLIC SELLER PROFILE (duka la muuzaji) -->
