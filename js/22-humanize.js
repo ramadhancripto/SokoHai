@@ -62,7 +62,7 @@
         [/Nauli ya tangazo \*?\*?haibadilishwi\*?\*?\.\s*Unawasilisha nauli unayopendekeza\s*—\s*msafirishaji ndiye atakayejibu\.?/gi, 'Pendekeza nauli yako. Msafirishaji atajibu.'],
         [/Bei ya kawaida \*?\*?haibadilishwi\*?\*?\.\s*Unawasilisha bei unayopendekeza\s*—\s*mtoa huduma ndiye atakayejibu\.?/gi, 'Pendekeza bei yako. Mtoa huduma atajibu.'],
         [/Tafadhali kamilisha sehemu zilizoonyeshwa\.?/gi, 'Jaza sehemu zilizokosekana.'],
-        [/Fungua mazungumzo na muuzaji kwanza,\s*kisha rudi kwenye ofa\.?/gi, 'Anza mazungumzo kwanza.'],
+        [/Fungua mazungumzo na muuzaji kwanza,\s*kisha rudi kwenye ofa\.?/gi, 'Mazungumzo yanaandaliwa kiotomatiki. Jaribu tena.'],
         [/Kitendo hiki hakirudishiki nyuma!?/gi, 'Hakuna kurudi nyuma.'],
         [/\bJe,\s*una uhakika unataka\b/gi, 'Una uhakika unataka'],
         // [FIX] `\b` ni MUHIMU. Bila mpaka wa neno, "Tafadhali\s+" ilikata

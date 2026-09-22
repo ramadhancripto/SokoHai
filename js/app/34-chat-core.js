@@ -4293,7 +4293,7 @@ import { skh } from './00-bootstrap.js';
         var convId = p.conversationId || core.convId;
         var partnerUid = core.partnerUid || (p.sellerId || null);
         if (!myUid() || !partnerUid || !convId) {
-            return { ok: false, error: 'Fungua mazungumzo na muuzaji kwanza.' };
+            return { ok: false, error: 'Mazungumzo na mmiliki wa tangazo hayajaandaliwa. Jaribu tena.' };
         }
         var commandId = p.commandId || ('send_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8));
         var ctype = p.commerceType || 'product';

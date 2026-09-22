@@ -11,6 +11,8 @@ const negoForm = fs.readFileSync('js/app/38-negotiation-form.js', 'utf8');
 const negoLogic = fs.readFileSync('js/app/38-nego-form-logic.js', 'utf8');
 const negoEngine = fs.readFileSync('js/app/37-negotiation.js', 'utf8');
 const repair61 = fs.readFileSync('js/app/61-full-system-repair.js', 'utf8');
+const firebaseConfig = fs.readFileSync('firebase.json', 'utf8');
+const serviceWorker = fs.readFileSync('sokohai-sw.js', 'utf8');
 
 console.log('--- CHAT AUTHORITY / MOBILE / SECURITY CONTRACT ---');
 const checks = [];
@@ -39,6 +41,10 @@ ok('submit ina VALIDATING/PREPARING/SUBMITTING/SUCCESS/ERROR', ['VALIDATING','PR
 ok('Accept/Reject/Counter buttons zinapeleka clicked button kwa feedback', /skhNegoCommand\([\s\S]{0,180},this\)/.test(negoEngine));
 ok('command lifecycle ina loading/success/error UI', /actionState\('loading'/.test(core) && /actionState\('success'/.test(core) && /actionState\('error'/.test(core));
 ok('late repair layer haifungi tena skhNegoFormOpen', !/window\.skhNegoFormOpen\s*=\s*function/.test(repair61));
+ok('stale duplicate app haipo tena ndani ya fonts/', !fs.existsSync('fonts/js') && !fs.existsSync('fonts/css') && !fs.existsSync('fonts/html'));
+ok('legacy Product delivery labels hazipo kwenye deploy tree', !negoLogic.includes("id: 'productDelivery'") && !negoLogic.includes('Mahali pa kupeleka (hiari)'));
+ok('service worker inafuta cache za build ya zamani', serviceWorker.includes('sokohai-negotiation-host-v3-20260922') && /caches\.delete/.test(serviceWorker));
+ok('Firebase haitunzi HTML na app modules za zamani', firebaseConfig.includes('no-store, max-age=0') && firebaseConfig.includes('js/app/**'));
 
 ok('message create rule inahitaji sender awe participant', /allow create: if signedIn\(\)[\s\S]{0,700}participants\.hasAny\(\[request\.auth\.uid\]\)/.test(rules.slice(rules.indexOf('match /conversations/{convId}/messages'))));
 ok('legacy chats read imefungwa kwa sender/receiver', /match \/chats\/\{id\}[\s\S]{0,300}senderUid == request\.auth\.uid[\s\S]{0,120}receiverUid == request\.auth\.uid/.test(rules));
