@@ -59,6 +59,26 @@
     <label style="font-size:12px; font-weight:bold;">Gharama ya Huduma / Bajeti (TSh) *</label>
     <input type="number" id="servHubPrice" placeholder="Mfano: 80,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
 
+    <label style="font-size:12px; font-weight:bold;">Mfumo wa Bei</label>
+    <select id="servPricingModel" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:12px;">
+        <option value="fixed">Bei kamili (fixed)</option>
+        <option value="starting">Kuanzia</option>
+        <option value="hourly">Kwa saa</option>
+        <option value="per_job">Kwa kazi</option>
+        <option value="per_day">Kwa siku</option>
+        <option value="per_unit">Kwa kipimo</option>
+        <option value="negotiable">Inajadiliwa</option>
+        <option value="quotation_required">Kadirio linahitajika</option>
+    </select>
+
+    <label style="font-size:12px; font-weight:bold;">Upatikanaji (hiari)</label>
+    <select id="servAvailability" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:12px;">
+        <option value="">Haujaainishwa</option>
+        <option value="available">Inapatikana</option>
+        <option value="available_today">Inapatikana leo</option>
+        <option value="appointment_required">Miadi inahitajika</option>
+    </select>
+
     <label style="font-size:12px; font-weight:bold;">Maelezo ya Huduma yako *</label>
     <textarea id="servHubDesc" placeholder="Eleza kwa ufupi jinsi unavyotoa huduma hii kwa wateja..." required style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px; resize:none;"></textarea>
 
@@ -67,6 +87,13 @@
 
     <label style="font-size:12px; font-weight:bold;">Eneo unakopatikana / Kazi Inapofanyika *</label>
     <input type="text" id="servHubLocation" placeholder="Mfano: Kimara / Mikocheni, DSM" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px;">
+
+    <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px; text-align:left;">
+        <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#14532d; cursor:pointer;">
+            <input type="checkbox" id="servTravelAvailable" style="margin-top:2px; width:18px; height:18px;">
+            <span><b>Ninaweza kusafiri kwenda eneo la mteja</b><br><small>Chagua tu ikiwa uwezo huu ni wa kweli. Discover haitakadiria umbali au njia.</small></span>
+        </label>
+    </div>
 
     <!-- [NEGO LOCK §21/§22] Provider Settings: mtoa huduma anachagua kama
          mteja anaweza kupana bei (negotiation) ama hapana. Default ON. -->

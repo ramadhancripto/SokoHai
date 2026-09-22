@@ -147,11 +147,17 @@
     }
 
     function scoreItem(it, intent) {
+        var kind = it.collectionName || 'products';
+        if (kind === 'products' && window.skh && typeof window.skh.productEligible === 'function' && !window.skh.productEligible(it)) return 0;
+        // Product exact/name/brand/model/category/attribute weighting comes from
+        // the shared Product Foundation; service/transport retain existing logic.
+        var coreProductScore = kind === 'products' && window.skh && typeof window.skh.scoreProduct === 'function'
+            ? window.skh.scoreProduct(it, intent.clean) : 0;
         var hay = searchableText(it);
         var words = intent.clean.split(/\s+/).filter(function (w) { return w.length > 1; });
         if (!words.length) return 0;
 
-        var score = 0, matched = 0;
+        var score = coreProductScore, matched = 0;
         var title = String(it.title || it.name || '').toLowerCase();
         words.forEach(function (w) {
             if (hay.indexOf(w) === -1) return;
@@ -469,6 +475,7 @@
         var i = $('searchInput'); if (i && i.value.trim()) addRecent(i.value.trim());
         window.skhSearchClose();
         if (typeof window.handleSearch === 'function') window.handleSearch();
+        if (i && i.value.trim() && typeof window.skhDiscoverEngineOpen === 'function') window.skhDiscoverEngineOpen(i.value.trim(), { entityType:'products' });
     };
 
     /* ========================================================================
@@ -619,7 +626,8 @@
                 e.preventDefault();
                 var v = input.value.trim();
                 if (v) { addRecent(v); window.skhSearchClose();
-                         if (typeof window.handleSearch === 'function') window.handleSearch(); }
+                         if (typeof window.handleSearch === 'function') window.handleSearch();
+                         if (typeof window.skhDiscoverEngineOpen === 'function') window.skhDiscoverEngineOpen(v, { entityType:'products' }); }
             }
         });
 

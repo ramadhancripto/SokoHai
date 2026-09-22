@@ -316,9 +316,9 @@
 
         var items = [];
         if (pending.product && (!pending.cart || pending.cart.length === 0)) {
-            items.push({ id: pending.product.id, title: pending.product.title, userId: pending.product.userId, ownerName: pending.product.ownerName || 'Muuzaji', image: pending.product.image || '', price: pending.product.price, location: pending.product.location || '', isSokoPay: !!pending.product.isSokoPay });
+            items.push({ id: pending.product.id, title: pending.product.title, userId: pending.product.userId, ownerName: pending.product.ownerName || 'Muuzaji', image: pending.product.image || '', price: pending.product.price, quantity: pending.product.quantity || 1, selectedVariant: pending.product.selectedVariant || null, location: pending.product.location || '', isSokoPay: !!pending.product.isSokoPay });
         } else {
-            (pending.cart || []).forEach(function (it) { items.push({ id: it.id, title: it.title, userId: it.userId, ownerName: it.ownerName || 'Muuzaji', image: it.image || '', price: it.price, location: it.location || it.sellerLocation || (it.cartMeta && it.cartMeta.pickupAddress) || '', qty: it.qty || 1 }); });
+            (pending.cart || []).forEach(function (it) { items.push({ id: it.id, title: it.title, userId: it.userId || it.sellerId, ownerName: it.ownerName || it.sellerName || 'Muuzaji', image: it.image || '', price: it.price, location: it.location || it.sellerLocation || (it.cartMeta && it.cartMeta.pickupAddress) || '', quantity: it.qty || 1, selectedVariant: it.selectedVariant || it.selectedVariants || { color: it.chosenColor || null, size: it.chosenSize || null } }); });
         }
 
         // [DELIVERY OPTION] Usafirishaji ni hiari na unatekelezwa baada ya
@@ -339,9 +339,13 @@
             var orderRef = await fb.addDoc(fb.collection(fb.db, 'orders'), {
                 buyerId: buyerUid, buyerName: buyerName,
                 sellerId: it.userId, sellerName: it.ownerName,
-                itemId: it.id, itemTitle: it.title,
+                itemId: it.id, productId: it.id, itemTitle: it.title,
                 itemImg: it.image || '',
-                amount: items.length === 1 && pending.product ? (pending.amount || 0) : (parseFloat(it.price) || pending.amount || 0),
+                quantity: Math.max(1, parseInt(it.quantity || 1, 10) || 1),
+                unitPrice: parseFloat(it.price) || 0,
+                selectedVariant: it.selectedVariant || null,
+                productSnapshot: { productId: it.id, title: it.title, image: it.image || '', unitPrice: parseFloat(it.price) || 0, selectedVariant: it.selectedVariant || null },
+                amount: items.length === 1 && pending.product ? (pending.amount || 0) : ((parseFloat(it.price) || 0) * Math.max(1, parseInt(it.quantity || 1, 10) || 1) || pending.amount || 0),
                 status: 'held', date: now,
                 paymentRef: pending.txRef, transactionId: tid,
                 paymentType: pending.provider || 'PesaPal',

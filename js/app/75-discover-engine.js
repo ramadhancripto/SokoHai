@@ -27,6 +27,7 @@
  * SearchIntent: PRODUCT_SEARCH, SERVICE_SEARCH, BUSINESS_SEARCH, PERSON_SEARCH, LOCATION_SEARCH, TRANSPORT_SEARCH, CATEGORY_SEARCH, DISCOVERY_SEARCH
  * ================================================================ */
 import { skh } from './00-bootstrap.js';
+import { parseDiscoverQuery, validLocationContext, publicProfileProjection, catalogTokenMatch } from './76-discover-foundation.js';
 
 (function () {
   if (window.__skhDiscoverEngineBoot) return;
@@ -88,21 +89,21 @@ import { skh } from './00-bootstrap.js';
   function getUserDiscoveryLocation() {
     // Priority: skh.userLat/Lon (GPS) → saved localStorage → manual → Dar es Salaam fallback
     var lat = skh.userLat, lon = skh.userLon;
-    if (typeof lat === 'number' && typeof lon === 'number') return { lat, lon, source: 'gps', name: skh.userRegionName || '' };
+    if (typeof lat === 'number' && typeof lon === 'number') return validLocationContext({ lat, lon, source: 'gps', name: skh.userRegionName || '' });
     try {
       var raw = skh.localStorage && skh.localStorage.getItem('skh_last_loc');
       if (raw) {
         var d = JSON.parse(raw);
-        if (d && typeof d.lat === 'number' && typeof d.lon === 'number') return { lat: d.lat, lon: d.lon, source: d.source || 'saved', name: d.name || '' };
+        if (d && typeof d.lat === 'number' && typeof d.lon === 'number' && d.consent === true) return validLocationContext({ lat: d.lat, lon: d.lon, source: 'saved-consented', name: d.name || '' });
       }
       var manual = skh.localStorage && skh.localStorage.getItem('skh_discover_manual_loc');
       if (manual) {
         var m = JSON.parse(manual);
-        if (m && typeof m.lat === 'number' && typeof m.lon === 'number') return { lat: m.lat, lon: m.lon, source: 'manual', name: m.name || '' };
+        if (m && typeof m.lat === 'number' && typeof m.lon === 'number') return validLocationContext({ lat: m.lat, lon: m.lon, source: 'manual', name: m.name || '' });
       }
     } catch (e) {}
-    // Fallback Dar es Salaam
-    return { lat: -6.7924, lon: 39.2083, source: 'fallback', name: 'Dar es Salaam' };
+    // Hakuna ruhusa/manual context: usibuni eneo wala umbali.
+    return null;
   }
 
   function calcDistance(lat1, lon1, lat2, lon2) {
@@ -352,23 +353,37 @@ import { skh } from './00-bootstrap.js';
     var e = entity || {};
     var type = entityType || ENTITY_TYPE.PRODUCT;
     var businessLoc = buildBusinessLocation(e);
-    var struct = type === ENTITY_TYPE.PRODUCT ? parseProductStructure(e) : { attributes: {}, options: {}, variants: [], stock: null };
-    var sellerMode = type === ENTITY_TYPE.PRODUCT ? getSellerMode(e) : null;
-    var availability = type === ENTITY_TYPE.PRODUCT ? getAvailabilityStatus(e) : null;
-    var freshness = type === ENTITY_TYPE.PRODUCT ? getInventoryFreshness(e) : null;
+    var isProduct = type === ENTITY_TYPE.PRODUCT;
+    var isService = type === ENTITY_TYPE.SERVICE;
+    var struct = isProduct ? parseProductStructure(e) : { attributes: isService && e.filters && typeof e.filters === 'object' ? Object.assign({}, e.filters) : {}, options: {}, variants: [], stock: null };
+    var sellerMode = isProduct ? getSellerMode(e) : null;
+    var availability = isProduct ? getAvailabilityStatus(e) : (e.availabilityStatus || e.availability || (e.availableToday === true ? 'available_today' : null));
+    var freshness = isProduct ? getInventoryFreshness(e) : null;
 
     var listing = {
-      entityId: e.id || e.uid || genId('ENT'),
+      entityId: e.id || e.uid || null,
       entityType: type,
-      businessId: e.businessId || e.shopId || e.userId || null,
-      sellerId: e.userId || e.sellerId || e.ownerId || null,
+      businessId: e.businessId || e.shopId || (isProduct ? (e.userId || null) : null),
+      sellerId: e.userId || e.sellerId || e.ownerId || e.providerId || null,
+      providerId: isService ? (e.providerId || e.userId || e.ownerId || null) : null,
       title: e.title || e.name || e.driverName || e.company || e.fullName || e.displayName || e.businessName || 'Unknown',
       categoryId: e.categoryId || e.category || null,
       categoryName: e.category || e.categoryName || '',
       subCategory: e.subCategory || e.subCategoryName || '',
       searchableAttributes: {},
-      price: e.price != null ? parseFloat(e.price) : null,
+      price: e.price != null ? parseFloat(e.price) : (e.startingPrice != null ? parseFloat(e.startingPrice) : (e.minPrice != null ? parseFloat(e.minPrice) : null)),
+      minPrice: e.minPrice != null ? parseFloat(e.minPrice) : null,
+      maxPrice: e.maxPrice != null ? parseFloat(e.maxPrice) : null,
+      pricingModel: isService ? (e.pricingModel || e.priceType || (e.quoteRequired === true ? 'quotation_required' : '')) : '',
       currency: e.currency || 'TZS',
+      serviceType: isService ? (e.serviceType || e.subCategory || '') : '',
+      specialization: isService ? (e.specialization || e.speciality || e.skill || '') : '',
+      serviceAreas: isService ? (e.serviceAreas || e.coverageAreas || e.serviceArea || []) : [],
+      providerLocation: isService ? (e.providerLocation || e.businessLocation || '') : '',
+      travelAvailable: isService && (e.travelAvailable === true || e.homeVisit === true || e.onSite === true || e.onsite === true),
+      travelRadiusKm: isService && e.travelRadiusKm != null ? parseFloat(e.travelRadiusKm) : null,
+      bookingEnabled: isService && e.bookingEnabled === true,
+      negotiationAllowed: isService ? e.negotiationAllowed !== false : null,
       latitude: businessLoc.latitude,
       longitude: businessLoc.longitude,
       formattedAddress: businessLoc.formattedAddress,
@@ -402,7 +417,7 @@ import { skh } from './00-bootstrap.js';
       location: e.location || '',
       saleMode: e.saleMode || 'free_market',
       modeData: e.modeData || null,
-      isBoosted: !!e.isBoosted,
+      isBoosted: !!(e._boostEligible === true || (skh.boostEligibility && skh.boostEligibility(e).eligible)),
       distance: null,
       freshness: freshness,
       raw: e
@@ -436,46 +451,18 @@ import { skh } from './00-bootstrap.js';
 
   // --- Search Intent Detection ---
   function detectIntent(query) {
-    var q = String(query || '').toLowerCase().trim();
-    if (!q) return SEARCH_INTENT.DISCOVERY_SEARCH;
-
-    // Location intent
-    if (/\b(near me|nearby|karibu|karibu nami|around me|close to me|mikoa|jirani)\b/.test(q)) return SEARCH_INTENT.LOCATION_SEARCH;
-
-    // Transport intent
-    var transportKeywords = ['boda', 'bajaj', 'pickup', 'lori', 'truck', 'fuso', 'trailer', 'daladala', 'gari', 'taxi', 'ride', 'safari', 'usafiri', 'delivery', 'mizigo', 'abiria', 'transporter', 'dereva', 'driver'];
-    if (transportKeywords.some(function (k) { return q.includes(k); })) return SEARCH_INTENT.TRANSPORT_SEARCH;
-
-    // Service intent
-    var serviceKeywords = ['tailor', 'mshonaji', 'fundi', 'doctor', 'daktari', 'mechanic', 'electrician', 'plumber', 'cleaning', 'usafi', 'beauty', 'salon', 'kina mama', 'cooking', 'mpishi', 'lawyer', 'wakili', 'teacher', 'mwalimu', 'photographer', 'mpiga picha', 'dj', 'mc', 'decoration', 'event', 'sherehe'];
-    if (serviceKeywords.some(function (k) { return q.includes(k); })) return SEARCH_INTENT.SERVICE_SEARCH;
-
-    // Person intent
-    if (q.startsWith('@') || /\b(juma|asha|john|people|mtu|watu|account|profile)\b/.test(q)) return SEARCH_INTENT.PERSON_SEARCH;
-
-    // Business intent
-    var businessKeywords = ['hardware', 'duka', 'shop', 'store', 'biashara', 'business', 'supermarket', 'pharmacy', 'd pharmacy', 'restaurant', 'hotel', 'bar', 'salon', 'boutique', 'stationery', 'bookshop', 'agrovet'];
-    if (businessKeywords.some(function (k) { return q.includes(k); })) return SEARCH_INTENT.BUSINESS_SEARCH;
-
-    // Category intent
-    var categories = [];
-    try {
-      if (skh.advancedCategories) categories = categories.concat(Object.keys(skh.advancedCategories));
-      if (skh.serviceDataMap) {
-        Object.keys(skh.serviceDataMap).forEach(function (sec) { categories = categories.concat(Object.keys(skh.serviceDataMap[sec])); });
-      }
-    } catch (e) {}
-    var qCat = categories.some(function (cat) { return q.includes(String(cat).toLowerCase()); });
-    if (qCat) return SEARCH_INTENT.CATEGORY_SEARCH;
-
-    // Product intent (has attributes like color/size/brand/weight)
-    var productAttrKeywords = ['red', 'blue', 'black', 'white', 'green', 'yellow', 'size', '36', '37', '38', '39', '40', 'kg', '50kg', '25kg', 'brand', 'nike', 'samsung', 'iphone', 'cement', 'saruji', 'mchele', 'rice', 'shoes', 'viatu', 'phone', 'simu', 'laptop', 'tv'];
-    if (productAttrKeywords.some(function (k) { return q.includes(k); })) return SEARCH_INTENT.PRODUCT_SEARCH;
-
-    // Discovery intent (people who like, following, etc)
-    if (/\b(who like|who follow|people interested|watu wanaopenda|following|interests)\b/.test(q)) return SEARCH_INTENT.DISCOVERY_SEARCH;
-
-    return SEARCH_INTENT.PRODUCT_SEARCH;
+    var parsed = parseDiscoverQuery(query);
+    var map = {
+      products: SEARCH_INTENT.PRODUCT_SEARCH,
+      sellers: SEARCH_INTENT.BUSINESS_SEARCH,
+      services: SEARCH_INTENT.SERVICE_SEARCH,
+      transporters: SEARCH_INTENT.TRANSPORT_SEARCH,
+      groups: SEARCH_INTENT.DISCOVERY_SEARCH,
+      businesses: SEARCH_INTENT.BUSINESS_SEARCH,
+      people: SEARCH_INTENT.PERSON_SEARCH
+    };
+    if (parsed.constraints.location && parsed.normalized === parsed.constraints.location) return SEARCH_INTENT.LOCATION_SEARCH;
+    return map[parsed.primary] || SEARCH_INTENT.DISCOVERY_SEARCH;
   }
 
   // --- Ranking / Relevance ---
@@ -493,7 +480,7 @@ import { skh } from './00-bootstrap.js';
         else if (title.includes(q)) { score += 10; reasons.push('title contains'); }
         else {
           qTokens.forEach(function (tok) {
-            if (title.includes(tok)) { score += 3; reasons.push('token:' + tok); }
+            if (catalogTokenMatch(tok, title)) { score += title.includes(tok) ? 3 : 2; reasons.push((title.includes(tok) ? 'token:' : 'catalog variation:') + tok); }
           });
         }
         // Category match
@@ -672,14 +659,17 @@ import { skh } from './00-bootstrap.js';
   // --- Universal Search ---
   async function universalSearch(query, opts) {
     opts = opts || {};
-    var q = String(query || '').trim();
-    var intent = detectIntent(q);
+    var parsedIntent = parseDiscoverQuery(query);
+    var q = parsedIntent.searchText;
+    var intent = detectIntent(query);
     var userLoc = getUserDiscoveryLocation();
-    var distanceFilter = opts.distanceFilter != null ? opts.distanceFilter : DISTANCE_FILTER.ANY;
+    var state = opts.state || {};
+    var distanceFilter = userLoc && state.distanceKm != null ? Number(state.distanceKm) : (opts.distanceFilter != null ? opts.distanceFilter : DISTANCE_FILTER.ANY);
     var entityTypes = opts.entityTypes || [ENTITY_TYPE.PRODUCT, ENTITY_TYPE.SERVICE, ENTITY_TYPE.BUSINESS, ENTITY_TYPE.TRANSPORTER, ENTITY_TYPE.PERSON, ENTITY_TYPE.GROUP];
     var limit = opts.limit || 100;
 
     var allListings = [];
+    var sourceErrors = [];
 
     // Fetch from Firestore + cache
     // Products
@@ -693,15 +683,27 @@ import { skh } from './00-bootstrap.js';
         if (q || products.length < 20) {
           try {
             // [FIX §11/§53] Bounded to 30 results — was limit(100) which violates cost spec
-            var snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'products'), skh.orderBy('createdAt', 'desc'), skh.limit(30)));
+            var productQuery = state.category
+              ? skh.query(skh.collection(skh.db, 'products'), skh.where('category', '==', state.category), skh.orderBy('createdAt', 'desc'), skh.limit(30))
+              : skh.query(skh.collection(skh.db, 'products'), skh.orderBy('createdAt', 'desc'), skh.limit(30));
+            var snap = await skh.getDocs(productQuery);
             snap.forEach(function (d) {
               var data = Object.assign({ id: d.id, collectionName: 'products' }, d.data());
               if (!products.find(function (p) { return p.id === data.id; })) products.push(data);
             });
-          } catch (e) { console.warn('[discover] products fetch', e); }
+          } catch (e) { sourceErrors.push({source:'products',code:e&&e.code||'error'}); console.warn('[discover] products fetch', e); }
         }
         products.forEach(function (p) {
+          if (typeof skh.productEligible === 'function' && !skh.productEligible(p)) return;
           var listing = buildDiscoverListing(p, ENTITY_TYPE.PRODUCT);
+          if (!listing.entityId) return;
+          if (state.category && String(p.category || '').toLowerCase() !== String(state.category).toLowerCase()) return;
+          if (state.subcategory && String(p.subCategory || '').toLowerCase() !== String(state.subcategory).toLowerCase()) return;
+          if (state.brand && String(p.brand || (p.filters && p.filters.Brand) || '').toLowerCase() !== String(state.brand).toLowerCase()) return;
+          if (state.minPrice != null && Number(p.price) < Number(state.minPrice)) return;
+          if (state.maxPrice != null && Number(p.price) > Number(state.maxPrice)) return;
+          if (state.availability && String(listing.availabilityStatus || '').toLowerCase().indexOf(String(state.availability).toLowerCase()) === -1) return;
+          if (state.location && String([p.location,p.region,p.city,p.area].filter(Boolean).join(' ')).toLowerCase().indexOf(String(state.location).toLowerCase()) === -1) return;
           // Distance filter
           if (listing.distance != null && listing.distance > distanceFilter) return;
           // Query filter (if q, check searchable)
@@ -727,22 +729,24 @@ import { skh } from './00-bootstrap.js';
         var services = (skh.cachedItems || []).filter(function (it) { return (it.collectionName || '') === 'services'; });
         if (q || services.length < 10) {
           try {
-            var sSnap = await skh.getDocs(skh.query(skh.collection(skh.db, 'services'), skh.orderBy('createdAt', 'desc'), skh.limit(50)));
+            var serviceQuery = state.category
+              ? skh.query(skh.collection(skh.db, 'services'), skh.where('category', '==', state.category), skh.orderBy('createdAt', 'desc'), skh.limit(50))
+              : skh.query(skh.collection(skh.db, 'services'), skh.orderBy('createdAt', 'desc'), skh.limit(50));
+            var sSnap = await skh.getDocs(serviceQuery);
             sSnap.forEach(function (d) {
               var data = Object.assign({ id: d.id, collectionName: 'services' }, d.data());
               if (!services.find(function (s) { return s.id === data.id; })) services.push(data);
             });
-          } catch (e) {}
+          } catch (e) { sourceErrors.push({source:'services',code:e&&e.code||'error'}); }
         }
         services.forEach(function (s) {
           var listing = buildDiscoverListing(s, ENTITY_TYPE.SERVICE);
           if (listing.distance != null && listing.distance > distanceFilter) return;
           if (q) {
-            var hay = (listing.title + ' ' + listing.categoryName + ' ' + listing.businessName).toLowerCase();
+            var hay = (listing.title + ' ' + listing.categoryName + ' ' + listing.subCategory + ' ' + listing.serviceType + ' ' + listing.specialization + ' ' + listing.businessName + ' ' + listing.description + ' ' + JSON.stringify(listing.searchableAttributes || {}) + ' ' + JSON.stringify(listing.serviceAreas || [])).toLowerCase();
             if (!hay.includes(q.toLowerCase())) {
-              // Check tokens
-              var toks = q.toLowerCase().split(/\s+/);
-              if (!toks.some(function (t) { return hay.includes(t); })) return;
+              var toks = q.toLowerCase().split(/\s+/).filter(Boolean);
+              if (!toks.every(function (t) { return catalogTokenMatch(t, hay); })) return;
             }
           }
           allListings.push(listing);
@@ -761,7 +765,7 @@ import { skh } from './00-bootstrap.js';
               var data = Object.assign({ id: d.id, collectionName: 'drivers' }, d.data());
               if (!drivers.find(function (x) { return x.id === data.id; })) drivers.push(data);
             });
-          } catch (e) {}
+          } catch (e) { sourceErrors.push({source:'transport',code:e&&e.code||'error'}); }
         }
         drivers.forEach(function (d) {
           var listing = buildDiscoverListing(d, ENTITY_TYPE.TRANSPORTER);
@@ -783,25 +787,28 @@ import { skh } from './00-bootstrap.js';
     var sharedUsers = [];
     if (needUsers) {
       try {
-        var uSnap = await skh.getDocs(skh.query(skh.collection(skh.db, 'users'), skh.limit(50)));
+        var uSnap = await skh.getDocs(skh.query(skh.collection(skh.db, 'publicProfiles'), skh.where('discoverable', '==', true), skh.limit(50)));
         uSnap.forEach(function (d) {
-          var u = d.data() || {}; u.uid = u.uid || d.id;
-          if (u.discoverable !== false) sharedUsers.push(u);
+          var raw = d.data() || {}; raw.uid = raw.uid || d.id;
+          var u = publicProfileProjection(raw);
+          if (u) sharedUsers.push(u);
         });
       } catch (eUsers) {
-        console.warn('[discover] users fetch error', eUsers);
+        sourceErrors.push({source:'publicProfiles',code:eUsers&&eUsers.code||'error'});
+        console.warn('[discover] public profiles fetch error', eUsers);
       }
     }
 
     // Businesses (from users with businessName/shopName)
     if (entityTypes.indexOf(ENTITY_TYPE.BUSINESS) !== -1) {
       try {
-        var bizUsers = sharedUsers.filter(function (u) { return u.businessName || u.shopName || u.isSeller; });
+        var bizUsers = sharedUsers.filter(function (u) { return u.businessName || (u.discovery && (u.discovery.asSeller || u.discovery.asBusiness)); });
         bizUsers.forEach(function (u) {
-          var listing = buildDiscoverListing({ id: u.uid, businessName: u.businessName || u.shopName, title: u.businessName || u.shopName, ownerName: u.fullName, category: u.category, location: u.location || u.region, coords: u.coords || null, rating: u.rating }, ENTITY_TYPE.BUSINESS);
+          var publicName = u.businessName || u.displayName;
+          var listing = buildDiscoverListing({ id: u.uid, businessName: publicName, title: publicName, ownerName: u.displayName, category: u.category, location: u.region }, ENTITY_TYPE.BUSINESS);
           if (listing.distance != null && listing.distance > distanceFilter) return;
           if (q) {
-            var hay = (listing.title + ' ' + listing.categoryName + ' ' + (u.fullName || '')).toLowerCase();
+            var hay = (listing.title + ' ' + listing.categoryName + ' ' + (u.displayName || '')).toLowerCase();
             if (!hay.includes(q.toLowerCase())) return;
           }
           allListings.push(listing);
@@ -836,7 +843,7 @@ import { skh } from './00-bootstrap.js';
         try {
           var gSnap = await skh.getDocs(skh.query(skh.collection(skh.db, 'chatGroups'), skh.where('visibility', '==', 'public'), skh.limit(30)));
           gSnap.forEach(function (d) { var g = d.data() || {}; g.id = d.id; groups.push(g); });
-        } catch (e) {}
+        } catch (e) { sourceErrors.push({source:'groups',code:e&&e.code||'error'}); }
         groups.forEach(function (g) {
           var listing = buildDiscoverListing({ id: g.id, title: g.name || g.title, description: g.description, category: g.category, location: g.location }, ENTITY_TYPE.GROUP);
           if (q && !String(g.name || '').toLowerCase().includes(q.toLowerCase())) return;
@@ -865,7 +872,8 @@ import { skh } from './00-bootstrap.js';
       groups: [],
       interests: [], // <-- [PHASE 6 FIX]
       opportunities: [],
-      related: []
+      related: [],
+      errors: sourceErrors
     };
 
     ranked.forEach(function (r) {
@@ -2020,8 +2028,8 @@ import { skh } from './00-bootstrap.js';
       return {dNear, dFar};
     },
     caseL: function () { // User searches without location permission
-      var loc = getUserDiscoveryLocation(); // Should fallback to Dar
-      console.assert(loc.source==='fallback' || loc.lat!=null, 'CaseL fallback location');
+      var loc = getUserDiscoveryLocation();
+      console.assert(loc === null || (loc.source !== 'fallback' && loc.lat != null), 'CaseL no fabricated location');
       return loc;
     },
     caseM: function () { // Service search

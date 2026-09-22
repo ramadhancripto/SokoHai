@@ -74,8 +74,9 @@ test('dukani pekee (offline_only) hali tofauti', () => {
     assert.equal(a.kind, 'offline');
     assert.ok(!psCanBuy({ isOnline: false, isOffline: true }, PS_PRODUCT));
 });
-test('huduma: inapatikana kila mara', () => {
-    assert.equal(psAvailability({}, PS_SERVICE).kind, 'service');
+test('huduma: upatikanaji huonyeshwa kutoka data halisi tu', () => {
+    assert.equal(psAvailability({}, PS_SERVICE).kind, 'unknown');
+    assert.equal(psAvailability({ availableToday: true }, PS_SERVICE).label, 'Inapatikana leo');
     assert.equal(psAvailability({ section: 'online' }, PS_SERVICE).label, 'Inapatikana mtandaoni');
 });
 test('mnada: hai vs uliofungwa; CanBid', () => {

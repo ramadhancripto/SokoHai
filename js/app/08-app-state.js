@@ -359,8 +359,13 @@ if (visibility === 'offline_only') {
     const price = parseFloat(document.getElementById('prodPrice').value) || 0;
     const barcode = document.getElementById('prodBarcode').value.trim();
     const loc = document.getElementById('prodLocation').value.trim();
-if(!title || !price || !loc || !buyPrice || (visibility !== 'offline_only' && !category)) {
-    alert(" jaza sehemu zote zenye alama ya nyota (*).");
+    const productType = document.getElementById('prodProductType')?.value || 'physical';
+    const publicationStatus = document.getElementById('prodPublicationStatus')?.value || 'published';
+    const availabilityStatus = document.getElementById('prodAvailabilityStatus')?.value || 'available';
+    const condition = document.getElementById('prodCondition')?.value || (productType === 'digital' ? 'not_applicable' : 'new');
+    const variants = skh.normalizeProductVariants(document.getElementById('prodVariants')?.value || '');
+if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !== 'offline_only' && !category)) {
+    alert("Jaza jina, bei halali, kategoria, na eneo kwa bidhaa ya physical.");
     return;
 }
     // --- QUANTITY & UNIT CONVERSION CALCULATION ---
@@ -458,7 +463,7 @@ if(!title || !price || !loc || !buyPrice || (visibility !== 'offline_only' && !c
 
     }
 
-    // [FIX 2026-09] PICHA: LAZIMA angalau 3 kwa kila bidhaa (zaidi ya zamani).
+    // Product media: picha ya msingi ni lazima; nyingine ni hiari.
     skh.setLoading('btnSeller', true, ' INAPANDISHA PICHA...');
     try {
         imageUrls = await window.skhUploadPicked('prodImage', 6);
@@ -467,10 +472,10 @@ if(!title || !price || !loc || !buyPrice || (visibility !== 'offline_only' && !c
         imageUrls = [];
     }
 
-    if (!imageUrls || imageUrls.length < 3) {
+    if (!imageUrls || imageUrls.length < 1) {
         skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
         window.skhUpdateSellerSubmitLabel();
-        alert(" Weka angalau picha 3 za bidhaa.");
+        alert("Weka angalau picha 1 ya bidhaa.");
         return;
     }
 
@@ -496,7 +501,13 @@ if(!title || !price || !loc || !buyPrice || (visibility !== 'offline_only' && !c
         imagesArray: imageUrls,
         saleMode: saleMode,
         modeData: modeData,
-        stock: finalCalculatedStock, // Sasa inahifadhi jumla ya Vipande vidogo dynamically
+        productType: productType,
+        condition: condition,
+        publicationStatus: publicationStatus,
+        availabilityStatus: availabilityStatus,
+        variants: variants,
+        currency: 'TZS',
+        stock: finalCalculatedStock, // Existing canonical stock field
         barcode: barcode,
 
         // Baini na hifadhi alama (flags) kwa usahihi kulingana na aina 3 za visibility

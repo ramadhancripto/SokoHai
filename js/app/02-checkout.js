@@ -140,6 +140,8 @@ window.processPayment = async function() {
                 userId: skh.currentOpenProduct.userId,
                 ownerName: skh.currentOpenProduct.ownerName || 'Muuzaji',
                 price: parseFloat(skh.currentOpenProduct.price) || skh.activeCheckoutAmount,
+                quantity: Math.max(1, parseInt(document.getElementById('pmQty')?.value || '1', 10) || 1),
+                selectedVariant: Object.assign({}, skh.currentOpenProduct.selectedVariants || {}, { color: skh.currentOpenProduct.chosenColor || undefined, size: skh.currentOpenProduct.chosenSize || undefined }),
                 image: skh.currentOpenProduct.image || '',
                 location: skh.currentOpenProduct.location || skh.currentOpenProduct.sellerLocation || '',
                 isSokoPay: !!skh.currentOpenProduct.isSokoPay,

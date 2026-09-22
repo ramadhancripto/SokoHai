@@ -1233,7 +1233,16 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <!-- 1. TAARIFA ZA MSINGI (BASIC INFO) -->
     <div style="text-align: left;">
         <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA BIDHAA / SIFA *</label>
-        <input type="text" id="prodName" placeholder="Mfano: Viatu vya Ngozi / Panadol 500mg" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px; outline:none;">
+        <input type="text" id="prodName" placeholder="Mfano: Viatu vya Ngozi / Panadol 500mg" required maxlength="140" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px; outline:none;">
+        <!-- PRODUCT FOUNDATION: optional fields; no parallel product form/database. -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">AINA YA BIDHAA</label><select id="prodProductType" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="physical">Physical</option><option value="digital">Digital</option><option value="retail">Retail</option><option value="wholesale">Wholesale</option><option value="custom">Custom</option><option value="made_to_order">Made to order</option></select></div>
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">HALI</label><select id="prodCondition" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option><option value="not_applicable">Not applicable</option></select></div>
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">UCHAPISHAJI</label><select id="prodPublicationStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="published">Published</option><option value="draft">Draft</option></select></div>
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">UPATIKANAJI</label><select id="prodAvailabilityStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="available">Available</option><option value="pre_order">Pre-order</option><option value="made_to_order">Made to order</option><option value="out_of_stock">Out of stock</option><option value="hidden">Hidden</option></select></div>
+        </div>
+        <label style="font-size:12px;font-weight:800;color:#64748b;">VARIANTS (HIARI)</label>
+        <textarea id="prodVariants" placeholder="Mfano: Color: Black, White; Size: S, M, L" style="width:100%;height:55px;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:12px;"></textarea>
 <!-- Mfumo mgumu wa Dropdowns kwa kuuza ONLINE tu (Online & Hybrid) -->
 <div id="onlineCategorySection" style="display:block; margin-bottom:12px;">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -1440,8 +1449,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">MAELEZO YA BIDHAA (DESCRIPTION) *</label>
         <textarea id="prodDesc" placeholder="Eleza bidhaa yako kwa kina: faida zake, matumizi, ukubwa, rangi n.k..." style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; outline:none; resize:none;"></textarea>
         
-        <!-- [FIX 2026-09] PICHA HALISI: ANGALAU 3 (kamera/galari) + vihakiki (previews) -->
-        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px; margin-bottom:5px;"> PICHA ZA BIDHAA (ANGALAU 3) * <span id="prodImageCount" style="color:#16a34a;"></span></label>
+        <!-- PRODUCT FOUNDATION: primary + additional images kupitia uploader uliopo. -->
+        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px; margin-bottom:5px;"> PICHA ZA BIDHAA (ANGALAU 1) * <span id="prodImageCount" style="color:#16a34a;"></span></label>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
             <button type="button" onclick="document.getElementById('prodImageCam').click()" style="padding:12px; background:#526962; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> PIGA PICHA</button>
             <button type="button" onclick="document.getElementById('prodImage').click()" style="padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> KUTOKA GALARI</button>
@@ -1449,7 +1458,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <input type="file" id="prodImage" accept="image/*" multiple style="display:none;">
         <input type="file" id="prodImageCam" accept="image/*" capture="environment" style="display:none;">
         <div id="prodImagePreviews" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
-        <script>/* [FIX 2026-09] max 6, min 3 */ if (window.skhInitPhotoPicker) { try { window.skhProdPicker = window.skhInitPhotoPicker({ galleryInput: 'prodImage', cameraInput: 'prodImageCam', previewId: 'prodImagePreviews', max: 6, min: 3, hintId: 'prodImageCount' }); } catch (e) { console.warn('picker:', e && e.message); } }</script>
+        <script>/* Product media: primary + up to 5 additional images. */ if (window.skhInitPhotoPicker) { try { window.skhProdPicker = window.skhInitPhotoPicker({ galleryInput: 'prodImage', cameraInput: 'prodImageCam', previewId: 'prodImagePreviews', max: 6, min: 1, hintId: 'prodImageCount' }); } catch (e) { console.warn('picker:', e && e.message); } }</script>
     </div>
 
     <!--  MPYA: SOKOHAI WAREHOUSE ZONE & LOCATION ENGINE -->
@@ -1684,6 +1693,26 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <label style="font-size:12px; font-weight:bold;">Gharama ya Huduma / Bajeti (TSh) *</label>
     <input type="number" id="servHubPrice" placeholder="Mfano: 80,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
 
+    <label style="font-size:12px; font-weight:bold;">Mfumo wa Bei</label>
+    <select id="servPricingModel" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:12px;">
+        <option value="fixed">Bei kamili (fixed)</option>
+        <option value="starting">Kuanzia</option>
+        <option value="hourly">Kwa saa</option>
+        <option value="per_job">Kwa kazi</option>
+        <option value="per_day">Kwa siku</option>
+        <option value="per_unit">Kwa kipimo</option>
+        <option value="negotiable">Inajadiliwa</option>
+        <option value="quotation_required">Kadirio linahitajika</option>
+    </select>
+
+    <label style="font-size:12px; font-weight:bold;">Upatikanaji (hiari)</label>
+    <select id="servAvailability" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:12px;">
+        <option value="">Haujaainishwa</option>
+        <option value="available">Inapatikana</option>
+        <option value="available_today">Inapatikana leo</option>
+        <option value="appointment_required">Miadi inahitajika</option>
+    </select>
+
     <label style="font-size:12px; font-weight:bold;">Maelezo ya Huduma yako *</label>
     <textarea id="servHubDesc" placeholder="Eleza kwa ufupi jinsi unavyotoa huduma hii kwa wateja..." required style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px; resize:none;"></textarea>
 
@@ -1692,6 +1721,13 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
     <label style="font-size:12px; font-weight:bold;">Eneo unakopatikana / Kazi Inapofanyika *</label>
     <input type="text" id="servHubLocation" placeholder="Mfano: Kimara / Mikocheni, DSM" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px;">
+
+    <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px; text-align:left;">
+        <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#14532d; cursor:pointer;">
+            <input type="checkbox" id="servTravelAvailable" style="margin-top:2px; width:18px; height:18px;">
+            <span><b>Ninaweza kusafiri kwenda eneo la mteja</b><br><small>Chagua tu ikiwa uwezo huu ni wa kweli. Discover haitakadiria umbali au njia.</small></span>
+        </label>
+    </div>
 
     <!-- [NEGO LOCK §21/§22] Provider Settings: mtoa huduma anachagua kama
          mteja anaweza kupana bei (negotiation) ama hapana. Default ON. -->
@@ -1903,6 +1939,13 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         
         <label>Maelezo Mapya:</label>
         <textarea id="editDesc" required></textarea>
+        <div id="editProductFoundationFields" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;">
+            <div><label>Publication</label><select id="editPublicationStatus"><option value="published">Published</option><option value="draft">Draft</option><option value="archived">Archived</option></select></div>
+            <div><label>Availability</label><select id="editAvailabilityStatus"><option value="available">Available</option><option value="low_stock">Low stock</option><option value="out_of_stock">Out of stock</option><option value="pre_order">Pre-order</option><option value="made_to_order">Made to order</option><option value="hidden">Hidden</option></select></div>
+            <div><label>Product type</label><select id="editProductType"><option value="physical">Physical</option><option value="digital">Digital</option><option value="retail">Retail</option><option value="wholesale">Wholesale</option><option value="custom">Custom</option><option value="made_to_order">Made to order</option></select></div>
+            <div><label>Condition</label><select id="editCondition"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option><option value="not_applicable">Not applicable</option></select></div>
+            <div style="grid-column:1/-1"><label>Variants (hiari)</label><textarea id="editVariants" placeholder="Color: Black, White; Size: S, M, L"></textarea></div>
+        </div>
         
         <button type="submit" id="btnSubmitEdit" style="background:var(--primary-blue);"> HIFADHI MABADILIKO</button>
 <button type="button" class="btn-close" onclick="goBackToMenu()">&lsaquo; Rudi Nyuma</button>
@@ -4042,7 +4085,6 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <!-- [CHAT FIXES 2026-09-20] Marekebisho ya chat system: background, loader isiyokwisha, group chat, inbox timeout, message-cache -->
 <script src="js/app/90-chat-fixes.js" defer></script>
 <!-- [DISCOVER FIXES 2026-09-20] Marekebisho ya Discover: mobile responsive, errors visible, full account profiles open -->
-<script src="js/app/91-discover-fixes.js" defer></script>
 <!-- [CHAT AUTH RACE FIX 2026-09-20] Tatizo kubwa la chat kushindwa kufungua: race kati ya Firebase auth na currentUser -->
 <script src="js/app/92-chat-auth-fix.js" defer></script>
 <script src="js/app/93-chat-inbox-repair.js" defer></script>

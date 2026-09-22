@@ -9,8 +9,19 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWith
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
+import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
 
 const skh = {};
+// Canonical Product Foundation service; existing screens reuse this one interface.
+skh.buildProductWrite = buildProductWrite;
+skh.validateProduct = validateProduct;
+skh.filterProducts = filterProducts;
+skh.scoreProduct = scoreProduct;
+skh.productEligible = productEligible;
+skh.productPublicationStatus = publicationStatus;
+skh.productAvailabilityStatus = availabilityStatus;
+skh.normalizeProductVariants = normalizeVariants;
+skh.PRODUCT_SCHEMA_VERSION = PRODUCT_SCHEMA_VERSION;
 
 // Mirror ya Firebase imports -> skh (faili za feature zinazifikia kupitia skh)
 skh.initializeApp = initializeApp;
@@ -1455,8 +1466,15 @@ skh.saveData = async function saveData(col, data) {
 
            Sasa: mmiliki ni mwanachama daima; wakala ni metadata pekee. */
         const ownerIsManaged = !!managedUid;
+        // Products pass through one canonical compatibility layer. Other entities
+        // retain their existing schemas and flows.
+        const canonicalData = col === 'products' ? skh.buildProductWrite(data) : data;
+        if (col === 'products') {
+            const check = skh.validateProduct(canonicalData);
+            if (!check.ok) throw new Error(check.errors.join(' '));
+        }
         const docData = { 
-            ...data, 
+            ...canonicalData,
             userId: managedUid || skh.currentUser.uid, 
             userEmail: ownerIsManaged ? null : skh.currentUser.email, 
             ownerPhone: ownerIsManaged ? (sessionStorage.getItem('currently_managed_offline_phone') || null) : null,
@@ -1471,7 +1489,7 @@ skh.saveData = async function saveData(col, data) {
                Tumia `null` (inakubalika) badala yake. */
             accountType: ownerIsManaged ? 'offline_member' : null,
             createdAt: new Date().toISOString(), 
-            status: "active",
+            status: col === 'products' ? (canonicalData.status || 'active') : "active",
             itemCollection: col,
             ...(typeof window.skhAssistMeta === 'function' ? window.skhAssistMeta() : {})
         }; 
@@ -1833,6 +1851,7 @@ let qNormal;
         let normalData = snapshot.docs.map(doc => ({ id: doc.id, collectionName: collectionToFetch, ...doc.data() }));
         // Panga mpya kwanza, kisha kata kwa currentLimit (kwa matawi ya `where`
         // ambapo hatukupunguza idadi kwenye server).
+        if (collectionToFetch === 'products') normalData = normalData.filter(skh.productEligible);
         normalData = sortByCreated(normalData).slice(0, skh.currentLimit);
         skh._feedCacheSet(cacheKey, normalData);
         skh.renderFeedUI(normalData, feedGrid);
@@ -2059,11 +2078,16 @@ skh.cardRouteOverlay = function cardRouteOverlay(data) {
 // [PriceHtml] Bei ya kijani, hierarchy ya wazi; "Kuanzia" kwa huduma/usafiri
 skh.cardPriceHtml = function cardPriceHtml(data, colName) {
     const hasPrice = Number(data.price) > 0;
-    if (!hasPrice) return '<span class="price skh-price skh-price--muted">' + skhTF('card_negotiable', 'Maelewano') + '</span>';
+    const model = String(data.pricingModel || data.priceType || '').toLowerCase();
+    if (colName === 'services' && model === 'quotation_required') return '<span class="price skh-price skh-price--muted">Kadirio linahitajika</span>';
+    if (!hasPrice) return '<span class="price skh-price skh-price--muted">' + skhTF('card_negotiable', model === 'negotiable' ? 'Maelewano' : 'Bei haijaainishwa') + '</span>';
     const amount = 'TSh ' + Number(data.price).toLocaleString();
-    if (colName === 'services' || colName === 'drivers') {
-        return '<span class="price skh-price"><span class="skh-price-prefix">' + skhTF('card_from', 'Kuanzia') + ' </span>' + amount + '</span>';
+    if (colName === 'services') {
+        if (model === 'range' && Number(data.minPrice) > 0 && Number(data.maxPrice) >= Number(data.minPrice)) return '<span class="price skh-price">TSh ' + Number(data.minPrice).toLocaleString() + '–' + Number(data.maxPrice).toLocaleString() + '</span>';
+        const labels = { starting: skhTF('card_from', 'Kuanzia'), hourly: 'Kwa saa', per_job: 'Kwa kazi', per_day: 'Kwa siku', per_unit: 'Kwa kipimo', negotiable: 'Inajadiliwa' };
+        return '<span class="price skh-price">' + (labels[model] ? '<span class="skh-price-prefix">' + labels[model] + ' </span>' : '') + amount + '</span>';
     }
+    if (colName === 'drivers') return '<span class="price skh-price"><span class="skh-price-prefix">' + skhTF('card_from', 'Kuanzia') + ' </span>' + amount + '</span>';
     return '<span class="price skh-price">' + amount + '</span>';
 };
 

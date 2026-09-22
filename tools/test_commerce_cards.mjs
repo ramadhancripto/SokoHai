@@ -49,7 +49,7 @@ function render(html) { const d = document.createElement('div'); d.innerHTML = h
 
 const RICE = 'https://example.com/rice.jpg';
 const product = { id: 'p1', title: 'Mchele Mbeya 25kg', price: 75000, image: RICE, ownerName: 'Mlimani Rice Store', verified: true, location: 'Tabora', stock: 40, imagesArray: [RICE, RICE] };
-const service = { id: 's1', title: 'Ushonaji Suti', price: 100000, image: 'https://example.com/suit.jpg', ownerName: 'Asha Fashion', verified: true, location: 'Tabora', rating: 4.8, reviewCount: 34 };
+const service = { id: 's1', title: 'Ushonaji Suti', price: 100000, pricingModel: 'starting', image: 'https://example.com/suit.jpg', ownerName: 'Asha Fashion', verified: true, location: 'Tabora', rating: 4.8, reviewCount: 34 };
 const driver = { id: 'd1', title: 'Cargo Transport', price: 20000, image: 'https://example.com/truck.jpg', ownerName: 'Juma Transport', verified: true, pickupRegion: 'Tabora', destinationRegion: 'Pangale', vehicleType: 'Lori la Tani 10', rating: 4.7, reviewCount: 21 };
 
 console.log('\n[1] BIDHAA — muundo wa teaser');
@@ -112,7 +112,7 @@ console.log('\n[4] HALI MAALUMU');
     ok('zimeisha: pill + picha kijivu', !!oc.querySelector('.skh-out-pill') && !!oc.querySelector('.skh-img--out'));
     const auc = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p3', saleMode: 'auction', stock: undefined }), 'products'));
     ok('mnada: beji ya mnada juu ya picha', !!auc.querySelector('.skh-img .skh-badge--auction'));
-    const noPrice = render(skh.CommercePostCard(Object.assign({}, service, { id: 's2', price: 0 }), 'services'));
+    const noPrice = render(skh.CommercePostCard(Object.assign({}, service, { id: 's2', price: 0, pricingModel: 'negotiable' }), 'services'));
     ok('bila bei: "Maelewano"', noPrice.textContent.includes('Maelewano'));
     const unverified = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p4', verified: false }), 'products'));
     ok('bila uthibitisho: hakuna verified pill', !unverified.querySelector('.skh-verified-pill'));

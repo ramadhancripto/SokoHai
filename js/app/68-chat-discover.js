@@ -42,7 +42,23 @@ import { skh } from './00-bootstrap.js';
         };
         try {
             await skh.setDoc(skh.doc(skh.db, 'users', uid()), data, { merge: true });
-            skh.currentUserData = Object.assign({}, skh.currentUserData || {}, data);
+            var me = Object.assign({}, skh.currentUserData || {}, data);
+            if (data.discoverable) {
+                var roles = window.skhGetUserRoles ? window.skhGetUserRoles(me) : [];
+                await skh.setDoc(skh.doc(skh.db, 'publicProfiles', uid()), {
+                    uid: uid(), discoverable: true,
+                    displayName: me.displayName || me.fullName || me.username || '',
+                    username: me.username || '', photoURL: me.photoURL || '',
+                    businessName: data.discovery.asBusiness ? (me.businessName || me.shopName || '') : '',
+                    category: me.category || '', region: me.region || me.city || '',
+                    interests: data.discovery.showInterests && Array.isArray(me.interests) ? me.interests.slice(0, 12) : [],
+                    publicRoles: Array.isArray(roles) ? roles.slice(0, 8) : [],
+                    discovery: data.discovery, updatedAt: data.updatedAt
+                }, { merge: false });
+            } else {
+                try { await skh.deleteDoc(skh.doc(skh.db, 'publicProfiles', uid())); } catch (eDel) {}
+            }
+            skh.currentUserData = me;
             renderSettings();
             try { if (window.showToast) window.showToast(tk('disc_saved', 'Mipangilio ya ugunduzi imehifadhiwa'), 'success'); } catch (eT) {}
         } catch (e) { alert(tk('disc_err_save', 'Imeshindikana kuhifadhi. Jaribu tena.')); }
@@ -85,7 +101,7 @@ import { skh } from './00-bootstrap.js';
         var out = { people: [], groups: [] };
         if (kind === 'connections' || kind === 'opportunities') { LAST.people = []; LAST.groups = []; return out; } // 72 inachunguza hizi
         if (kind !== 'groups') try {
-            var snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'users'), skh.where('discoverable', '==', true), skh.limit(50)));
+            var snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'publicProfiles'), skh.where('discoverable', '==', true), skh.limit(50)));
             var blocked = blockedSet();
             snap.forEach(function (dc) {
                 var u = dc.data() || {};

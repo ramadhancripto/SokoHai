@@ -83,7 +83,12 @@ export function psAvailability(p, col) {
     if (!p) return { kind: 'unknown', label: '' };
     if (col === PS_SERVICE) {
         if (p.section === 'online' || p.online === true) return { kind: 'service', label: 'Inapatikana mtandaoni' };
-        return { kind: 'service', label: 'Inapatikana leo' };
+        var s = String(p.availabilityStatus || p.availability || '').toLowerCase();
+        if (p.availableToday === true || s === 'available_today' || s === 'today') return { kind: 'service', label: 'Inapatikana leo' };
+        if (s === 'available' || s === 'open') return { kind: 'service', label: 'Inapatikana' };
+        if (s === 'appointment_required' || s === 'appointment') return { kind: 'service', label: 'Miadi inahitajika' };
+        if (s === 'busy' || s === 'unavailable') return { kind: 'unknown', label: '' };
+        return { kind: 'unknown', label: '' };
     }
     if (col === PS_DRIVER) {
         if (p.online === true || p.status === 'available') return { kind: 'in', label: 'Dereva yupo tayari' };

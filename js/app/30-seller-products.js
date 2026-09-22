@@ -74,7 +74,7 @@ import { skh } from './00-bootstrap.js';
                 id: p.id, title: p.title || 'Bidhaa', image: p.image || p.imagesArray?.[0] || '',
                 category: p.category || 'N/A', price: num(p.price), stock: stock,
                 stockStatus: stock > 0 ? 'in_stock' : 'out_of_stock',
-                status: p.status || 'active',
+                status: skh.productPublicationStatus ? (skh.productPublicationStatus(p) === 'published' ? 'active' : skh.productPublicationStatus(p)) : (p.status || 'active'),
                 views: views, likes: likes, saves: saves,
                 orders: b.orders, units: units, revenue: b.revenue,
                 conversion: conv, createdAt: p.createdAt, updatedAt: p.updatedAt || p.createdAt,
@@ -172,7 +172,7 @@ import { skh } from './00-bootstrap.js';
         ws.innerHTML = `
         <div style="text-align:left; animation: fadeIn 0.3s ease;"> <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;"> <div> <h2 style="margin:0;font-size:19px;color:#0f172a;font-weight:800;">${T('smp_my_products', 'My Products')}</h2> <p style="margin:3px 0 0;color:#64748b;font-size:12px;">${T('smp_products_sub', 'All products you listed on SokoHai — total: {n}', { n: rows.length })}</p> </div> </div> <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:14px;"> <input id="mpSearch" oninput="window.skhMPFilter('q', this.value)" placeholder="${T('smp_search_ph', 'Search products (name or category)...')}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:13px;margin-bottom:8px;outline:none;"> <div style="display:flex;gap:6px;flex-wrap:wrap;"> <select onchange="window.skhMPFilter('cat', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_categories', 'All categories')}</option>
                         ${catKeys.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('')}
-                    </select> <select onchange="window.skhMPFilter('stock', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_stock', 'All stock')}</option> <option value="in">${T('eng_in_stock', 'In stock')}</option> <option value="out">${T('eng_out_stock', 'Out of stock')}</option> </select> <select onchange="window.skhMPFilter('status', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_status', 'All statuses')}</option> <option value="active">${T('smp_active', 'Active')}</option> <option value="inactive">${T('smp_inactive', 'Inactive')}</option> </select> <select onchange="window.skhMPFilter('sort', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="newest">${T('smp_newest', 'Newest')}</option> <option value="best">${T('smp_best', 'Best selling')}</option> <option value="lowest">${T('smp_lowest', 'Slow selling')}</option> <option value="highest">${T('smp_highest', 'Highest revenue')}</option> </select> </div> </div> <div id="mpTableWrap"></div> </div>`;
+                    </select> <select onchange="window.skhMPFilter('stock', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_stock', 'All stock')}</option> <option value="in">${T('eng_in_stock', 'In stock')}</option> <option value="out">${T('eng_out_stock', 'Out of stock')}</option> </select> <select onchange="window.skhMPFilter('status', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_status', 'All statuses')}</option> <option value="active">${T('smp_active', 'Published')}</option><option value="draft">Draft</option><option value="archived">Archived</option> </select> <select onchange="window.skhMPFilter('sort', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="newest">${T('smp_newest', 'Newest')}</option> <option value="best">${T('smp_best', 'Best selling')}</option> <option value="lowest">${T('smp_lowest', 'Slow selling')}</option> <option value="highest">${T('smp_highest', 'Highest revenue')}</option> </select> </div> </div> <div id="mpTableWrap"></div> </div>`;
         window.skhMPRenderTable();
     };
 
@@ -198,7 +198,7 @@ import { skh } from './00-bootstrap.js';
             <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;"> <div style="display:flex;gap:10px;align-items:flex-start;"> <img src="${img}" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'" style="width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f1f5f9;"> <div style="flex:1;min-width:0;"> <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"> <b style="font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</b> <span style="font-size:13px;font-weight:900;color:var(--terracotta);white-space:nowrap;">${tzs(r.price)}</span> </div> <div style="font-size:13px;color:#64748b;margin:3px 0;">
                             ${esc(r.category)} ·
                             <span style="color:${stockColor};font-weight:800;">${r.stockStatus === 'in_stock' ? T('eng_in_stock', 'In stock') + ' (' + r.stock + ')' : T('eng_out_stock', 'Out of stock')}</span> ·
-                            <span style="color:${stColor};font-weight:800;">${r.status === 'active' ? T('smp_active', 'Active') : T('smp_inactive', 'Inactive')}</span> </div> <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+                            <span style="color:${stColor};font-weight:800;">${r.status === 'active' ? T('smp_active', 'Published') : esc(r.status)}</span> </div> <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
                             ${statPill(T('pm_views', 'Views'), r.views.toLocaleString())}
                             ${statPill(T('smp_likes', 'Likes'), r.likes.toLocaleString())}
                             ${statPill(T('smp_saves', 'Saves'), r.saves.toLocaleString())}
@@ -209,8 +209,21 @@ import { skh } from './00-bootstrap.js';
                         ${modeMetricsLine(r)}
                         <div style="font-size:12.5px;color:#94a3b8;margin-top:5px;">
                             ${T('smp_added_on', 'Added on')} ${esc(new Date(r.createdAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ'))}${r.updatedAt && r.updatedAt !== r.createdAt ? ' · ' + T('smp_updated_on', 'Updated on') + ' ' + esc(new Date(r.updatedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ')) : ''}
-                        </div> <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"> <button onclick="openProduct('${js(r.id)}','products')" style="padding:8px 12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_view_btn', 'View')}</button> <button onclick="window.openEditModal('${js(r.id)}','products')" style="padding:8px 12px;background:#e0f2fe;color:#03509d;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_edit_btn', 'Edit')}</button> <button onclick="window.skhMPStock('${js(r.id)}', ${r.stock})" style="padding:8px 12px;background:#fef3c7;color:#92400e;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_stock_btn', 'Stock')}</button> <button onclick="window.skhRenderProductPerformance('${js(r.id)}')" style="padding:8px 12px;background:#f3e8ff;color:#6b21a8;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_perf_btn', 'Performance')}</button> </div> </div> </div> </div>`;
+                        </div> <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"> <button onclick="openProduct('${js(r.id)}','products')" style="padding:8px 12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_view_btn', 'View')}</button> <button onclick="window.openEditModal('${js(r.id)}','products')" style="padding:8px 12px;background:#e0f2fe;color:#03509d;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_edit_btn', 'Edit')}</button> <button onclick="window.skhMPStock('${js(r.id)}', ${r.stock})" style="padding:8px 12px;background:#fef3c7;color:#92400e;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_stock_btn', 'Stock')}</button> <button onclick="window.skhSetProductPublication('${js(r.id)}','${r.status === 'active' ? 'draft' : 'published'}')" style="padding:8px 12px;background:#ecfdf5;color:#047857;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${r.status === 'active' ? 'Unpublish' : 'Publish'}</button> <button onclick="window.skhSetProductPublication('${js(r.id)}','archived')" style="padding:8px 12px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">Archive</button> <button onclick="window.skhRenderProductPerformance('${js(r.id)}')" style="padding:8px 12px;background:#f3e8ff;color:#6b21a8;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_perf_btn', 'Performance')}</button> </div> </div> </div> </div>`;
         }).join('');
+    };
+
+    window.skhSetProductPublication = async function (id, state) {
+        if (!['draft','published','archived'].includes(state)) return;
+        var msg = state === 'archived' ? 'Archive bidhaa hii? Rekodi na historia zake hazitafutwa.' : (state === 'draft' ? 'Unpublish bidhaa hii?' : 'Publish bidhaa hii?');
+        if (!await skhConfirm(msg)) return;
+        try {
+            var patch = { publicationStatus: state, status: state === 'published' ? 'active' : state, updatedAt: new Date().toISOString() };
+            if (state === 'archived') patch.archivedAt = new Date().toISOString();
+            await skh.updateDoc(skh.doc(skh.db, 'products', id), patch);
+            if (skh._feedCache) skh._feedCache.clear();
+            await window.skhRenderMyProducts();
+        } catch (e) { alert('Imeshindwa kubadili hali: ' + (e && e.message)); }
     };
 
     window.skhMPStock = async function (id, current) {
@@ -219,7 +232,7 @@ import { skh } from './00-bootstrap.js';
         var n = Number(v);
         if (isNaN(n) || n < 0) { alert(T('smp_stock_invalid', 'Please enter a valid number (0 or more).')); return; }
         try {
-            await skh.updateDoc(skh.doc(skh.db, 'products', id), { stock: n, updatedAt: new Date().toISOString() });
+            await skh.updateDoc(skh.doc(skh.db, 'products', id), { stock: n, availabilityStatus: n <= 0 ? 'out_of_stock' : (n <= 3 ? 'low_stock' : 'available'), updatedAt: new Date().toISOString() });
             alert(T('smp_stock_updated', 'Stock updated to {n}.', { n: n }));
             window.skhRenderMyProducts();
         } catch (e) { alert(T('smp_stock_failed', 'Failed to update stock:') + ' ' + (e && e.message)); }

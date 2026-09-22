@@ -279,12 +279,27 @@ window.openEditModal = async function(id, collectionName) {
         } catch(e) { alert("Kosa: " + e.message); return; }
     }
 
+    if (collectionName === 'products') {
+        const isAdmin = !!(window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin);
+        const owns = itemToEdit.userId === skh.currentUser.uid || itemToEdit.managedByAgentUid === skh.currentUser.uid;
+        if (!owns && !isAdmin) { alert('Huna ruhusa ya kuhariri bidhaa hii.'); return; }
+    }
     document.getElementById('editId').value = itemToEdit.id;
     document.getElementById('editCollection').value = collectionName;
     document.getElementById('editTitle').value = itemToEdit.title || '';
     document.getElementById('editPrice').value = itemToEdit.price || '';
     document.getElementById('editLocation').value = itemToEdit.location || '';
     document.getElementById('editDesc').value = itemToEdit.description || '';
+    const foundationBox = document.getElementById('editProductFoundationFields');
+    if (foundationBox) foundationBox.style.display = collectionName === 'products' ? 'grid' : 'none';
+    if (collectionName === 'products') {
+        const setV = (id, value) => { const el=document.getElementById(id); if(el) el.value=value || ''; };
+        setV('editPublicationStatus', skh.productPublicationStatus(itemToEdit));
+        setV('editAvailabilityStatus', skh.productAvailabilityStatus(itemToEdit));
+        setV('editProductType', itemToEdit.productType || 'physical');
+        setV('editCondition', itemToEdit.condition || 'new');
+        setV('editVariants', (itemToEdit.variants || []).map(v => v.name + ': ' + (v.options || []).join(', ')).join('; '));
+    }
 
     const modeSelect = document.getElementById('editSaleMode');
     const warning = document.getElementById('editModeWarning');
@@ -397,7 +412,20 @@ window.submitEditForm = async function(event) {
             btn.innerHTML = originalText; btn.disabled = false; return;
         }
         // Protection B: bei (au bei ya kuanza-hiyo-hiyo) haiwezi kurekebishwa baada ya zabuni.
-        const updateMap = { title: title, price: price, location: location, description: desc, saleMode: saleMode };
+        const updateMap = { title: title, price: price, location: location, description: desc, saleMode: saleMode, updatedAt: new Date().toISOString() };
+        if (collectionName === 'products') {
+            const pub = document.getElementById('editPublicationStatus')?.value || skh.productPublicationStatus(fresh.data());
+            updateMap.publicationStatus = pub;
+            updateMap.status = pub === 'published' ? 'active' : pub;
+            updateMap.availabilityStatus = document.getElementById('editAvailabilityStatus')?.value || skh.productAvailabilityStatus(fresh.data());
+            updateMap.productType = document.getElementById('editProductType')?.value || 'physical';
+            updateMap.condition = document.getElementById('editCondition')?.value || 'new';
+            updateMap.variants = skh.normalizeProductVariants(document.getElementById('editVariants')?.value || '');
+            const merged = skh.buildProductWrite(Object.assign({}, fresh.data(), updateMap));
+            updateMap.searchMetadata = merged.searchMetadata;
+            updateMap.schemaVersion = skh.PRODUCT_SCHEMA_VERSION;
+            if (pub === 'archived') updateMap.archivedAt = new Date().toISOString();
+        }
         if (totalBids > 0 && curMode === 'auction') {
             const oldPrice = parseFloat(fresh.data().price) || 0;
             if (isFinite(price) && price !== oldPrice) {

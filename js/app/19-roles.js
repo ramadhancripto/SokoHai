@@ -293,6 +293,11 @@ window.submitSokohaiService = async function(event) {
             filters: filtersObj,
             description: desc,
             location: loc,
+            // Service discovery fields are factual choices from this form. Legacy
+            // documents remain valid and simply omit unsupported filters/labels.
+            pricingModel: (document.getElementById('servPricingModel') || {}).value || 'fixed',
+            availabilityStatus: (document.getElementById('servAvailability') || {}).value || '',
+            travelAvailable: !!((document.getElementById('servTravelAvailable') || {}).checked),
             image: imageUrl || "https://ui-avatars.com/api/?name=Huduma&background=1d4ed8&color=fff",
             // [NEGO LOCK §21/§22] Provider Settings — kweli iliyo kwenye doc la huduma.
             negotiationAllowed: (function(){ var el = document.getElementById('servNegoAllowed'); return el ? !!el.checked : true; })(),

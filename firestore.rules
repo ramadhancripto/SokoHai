@@ -39,14 +39,62 @@ service cloud.firestore {
     // ============================================================
     // [REVIEWS 2026-09] `comments` (tathmini) huandikwa na SERVER pekee
     // (reviewsPublish) — browser hairuhusiwi kuandika verifiedPurchase bandia.
-    match /products/{id} {
-      allow read: if true;
-      allow create: if signedIn();
-      allow update: if signedIn()
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments']);
-      allow delete: if signedIn();
+    function ownsProduct(data) {
+      return signedIn() && (
+        data.userId == request.auth.uid ||
+        data.managedByAgentUid == request.auth.uid ||
+        isAdmin()
+      );
     }
-    match /services/{id}              { allow read: if true; allow write: if signedIn(); }
+    function validProduct(data) {
+      return data.title is string && data.title.size() >= 2 && data.title.size() <= 140
+        && data.price is number && data.price > 0
+        && data.stock is number && data.stock >= 0
+        && data.userId is string && data.userId.size() > 0
+        && (!('publicationStatus' in data) || data.publicationStatus in ['draft','published','archived'])
+        && (!('availabilityStatus' in data) || data.availabilityStatus in ['available','low_stock','out_of_stock','pre_order','made_to_order','hidden'])
+        && (!('variants' in data) || data.variants is list)
+        && (!('imagesArray' in data) || data.imagesArray is list);
+    }
+    match /products/{id} {
+      // Legacy public marketplace compatibility. Sensitive seller/POS fields should
+      // be migrated to owner-only documents before public field-level separation.
+      allow read: if true;
+      allow create: if signedIn() && validProduct(request.resource.data)
+        && (request.resource.data.userId == request.auth.uid
+          || (request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
+          || isAdmin());
+      allow update: if ownsProduct(resource.data) && validProduct(request.resource.data)
+        && request.resource.data.userId == resource.data.userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments']);
+      // Product lifecycle is archive/unpublish. Physical deletion is server-only.
+      allow delete: if false;
+    }
+    function ownsService(data) {
+      return signedIn() && (
+        data.userId == request.auth.uid ||
+        data.managedByAgentUid == request.auth.uid ||
+        isAdmin()
+      );
+    }
+    function validService(data) {
+      return data.title is string && data.title.size() >= 2 && data.title.size() <= 140
+        && data.price is number && data.price > 0
+        && data.userId is string && data.userId.size() > 0
+        && (!('pricingModel' in data) || data.pricingModel in ['fixed','starting','range','hourly','per_job','per_day','per_unit','negotiable','quotation_required'])
+        && (!('availabilityStatus' in data) || data.availabilityStatus in ['','available','available_today','available_soon','appointment_required','busy','unavailable'])
+        && (!('travelAvailable' in data) || data.travelAvailable is bool);
+    }
+    match /services/{id} {
+      allow read: if true;
+      allow create: if signedIn() && validService(request.resource.data)
+        && (request.resource.data.userId == request.auth.uid
+          || (request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
+          || isAdmin());
+      allow update: if ownsService(resource.data) && validService(request.resource.data)
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if false;
+    }
     // Home Advertisement Showcase: public read, authorized Admin write only.
     match /announcements/{id} {
       allow read: if true;
@@ -66,15 +114,32 @@ service cloud.firestore {
     // ni Cloud Functions (Admin SDK) pekee. Hii inasimamisha
     // "kujilipia" / "kujiongezea salio" kutoka kwa kivinjari.
     // ============================================================
+    // Privacy-safe public projection consumed by Discover. It contains no phone,
+    // email, exact address, orders, chat data, wallet or private activity.
+    match /publicProfiles/{uid} {
+      allow read: if true;
+      allow create, update: if signedIn() && uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.discoverable == true
+        && request.resource.data.keys().hasOnly([
+          'uid','discoverable','displayName','username','photoURL','businessName',
+          'category','region','interests','publicRoles','discovery','updatedAt'
+        ]);
+      allow delete: if signedIn() && uid == request.auth.uid;
+    }
+
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if signedIn()
+        && (uid == request.auth.uid || request.resource.data.uid == request.auth.uid || isAdmin())
         && (!('walletBalance' in request.resource.data) || request.resource.data.walletBalance == 0)
         && (!('role' in request.resource.data) || request.resource.data.role != 'admin');
       // [CUSTODY/FIX 2026-09] role ni SERVER-ONLY: mtu asiweze kujipandisha
       // cheo kuwa admin (hii ilikuwa inawezesha privilege escalation popote
       // rules zinapotumia users.role == 'admin').
       allow update: if signedIn()
+        && (uid == request.auth.uid || resource.data.uid == request.auth.uid || isAdmin())
+        && (!('uid' in resource.data) || request.resource.data.uid == resource.data.uid)
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['walletBalance', 'role']);
       allow delete: if false;
     }
@@ -582,6 +647,16 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
       allow update: if false;
+    }
+
+    // Public/discoverable group headers only. Private group content/subcollections
+    // remain fail-closed unless their dedicated participant rules are added.
+    match /chatGroups/{id} {
+      allow read: if resource.data.visibility == 'public' && resource.data.discoverable != false;
+      allow create: if signedIn() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if signedIn() && (isAdmin() || resource.data.createdBy == request.auth.uid)
+        && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if false;
     }
 
     // -- Biashara / SokoPay / Smart Cart / Logistics / Uchapishaji --
