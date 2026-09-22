@@ -38,18 +38,34 @@
     return '<div class="skh-ann-media">'+visual+(audio?'<audio class="skh-ann-audio" controls preload="none" src="'+esc(audio)+'"></audio>':'')+'</div>';
   }
 
+  function countLabel(value, label) {
+    const n=Number(value)||0;
+    return n>0?'<span><b>'+n.toLocaleString()+'</b> '+esc(label)+'</span>':'';
+  }
+
+  function cardHtml(a, live) {
+    const type=mediaType(a), title=short(a.headline||a.title||a.text||'SokoHai',120), message=short(a.description||a.text||'',320);
+    const brand=short(a.brandName||a.brand||'SokoHai',48), logo=safeUrl(a.logoUrl), link=safeUrl(a.link||a.actionUrl), action=short(a.ctaLabel||a.actionLabel||'Tazama Zaidi',28);
+    const media=mediaHtml(a,title,type), withText=type.indexOf('text')!==-1||!!(a.headline||a.description||a.text);
+    const initial=esc((brand.charAt(0)||'S').toUpperCase());
+    const metrics=countLabel(a.likeCount||a.likesCount,'likes')+countLabel(a.viewCount||a.views,'views')+countLabel(a.clickCount||a.clicks,'clicks');
+    return '<article class="skh-ann-card">'
+      +'<header class="skh-ann-post-head">'+(logo?'<img class="skh-ann-brand-logo" src="'+esc(logo)+'" alt="'+esc(brand)+'">':'<span class="skh-ann-brand-fallback">'+initial+'</span>')
+      +'<div><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored · Advertisement')+'</small></div><span class="skh-ann-sponsored">Ad</span></header>'
+      +(withText?'<div class="skh-ann-copy"><strong class="skh-ann-title">'+esc(title)+'</strong>'+(message&&message!==title?'<p>'+esc(message)+'</p>':'')+'</div>':'')
+      +media
+      +(metrics?'<div class="skh-ann-metrics">'+metrics+'</div>':'')
+      +'<footer class="skh-ann-post-actions">'+(link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\')">'+esc(action)+'</button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>')+'</footer>'
+      +'</article>';
+  }
+  window.skhAdvertisementCardHtml=cardHtml;
+
   function renderAd(a, live) {
     const host=document.getElementById('topAnnouncement');if(!host||!a)return;
-    const type=mediaType(a), title=short(a.headline||a.title||a.text||'SokoHai',90), message=short(a.description||a.text||'',190);
-    const brand=short(a.brandName||a.brand||'SokoHai',48), logo=safeUrl(a.logoUrl), link=safeUrl(a.link||a.actionUrl), action=short(a.ctaLabel||a.actionLabel||'Tazama Zaidi',28);
-    const media=mediaHtml(a,title,type), withText=type.indexOf('text')!==-1||!!(a.headline||a.description||a.text), overlay=media&&withText;
+    const hasMedia=!!safeUrl(a.image||a.imageUrl||a.mediaUrl||a.photo||a.videoUrl);
     host.hidden=false;
-    host.className='big-announcement skh-ann-story skh-home-ad '+(media?'has-media':'no-media')+(overlay?' is-overlay':'')+(live?' is-live':'');
-    host.innerHTML='<article class="skh-ann-card">'+media+'<div class="skh-ann-copy">'
-      +'<div class="skh-ann-kicker"><span>Advertisement</span>'+(logo?'<img src="'+esc(logo)+'" alt="">':'')+'<b>'+esc(brand)+'</b></div>'
-      +(withText?'<strong class="skh-ann-title">'+esc(title)+'</strong>'+(message&&message!==title?'<p>'+esc(message)+'</p>':''):'')
-      +(link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\')">'+esc(action)+'</button>':'')
-      +'</div></article>';
+    host.className='big-announcement skh-ann-story skh-home-ad skh-ann-post '+(hasMedia?'has-media':'no-media')+(live?' is-live':'');
+    host.innerHTML=cardHtml(a,live);
     const video=host.querySelector('video');
     if(video && a.autoplay!==false){video.muted=true;const play=video.play();if(play&&play.catch)play.catch(function(){});}
   }

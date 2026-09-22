@@ -2,12 +2,17 @@
 import { skh } from './00-bootstrap.js';
 
 window.deleteAd = async function(id, collectionName, title) {
-    // [LIFECYCLE] Tangazo linaweza kuwa na orders/reviews/analytics
-    // zinazoli-reference. Likiwa "safi" linafutwa; vinginevyo Archive.
-    await window.skhRequestDelete(collectionName, id, {
-        title: title,
-        onDone: function () { loadAndRenderDashboard(); }
-    });
+    // Products are durable commerce entities: archive, never client-delete.
+    if (collectionName === 'products') {
+        if (!await skhConfirm('Archive "' + (title || 'bidhaa') + '"? Historia ya oda/review itabaki salama.')) return;
+        await skh.updateDoc(skh.doc(skh.db, 'products', id), {
+            publicationStatus: 'archived', status: 'archived', archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+        });
+        if (skh._feedCache) skh._feedCache.clear();
+        loadAndRenderDashboard();
+        return;
+    }
+    await window.skhRequestDelete(collectionName, id, { title: title, onDone: function () { loadAndRenderDashboard(); } });
 };
 
 window.handleImageSearch = async function(e) {
@@ -173,14 +178,28 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
             active: payload.status === 'published' && payload.archived !== true,
             updatedAt: new Date().toISOString()
         };
+        let savedId = editId || '';
         if(editId) {
             await skh.updateDoc(skh.doc(skh.db, "announcements", editId), data);
         } else {
             data.createdAt = new Date().toISOString();
-            await skh.addDoc(skh.collection(skh.db, "announcements"), data);
+            const created = await skh.addDoc(skh.collection(skh.db, "announcements"), data);
+            savedId = created.id;
         }
-        if(typeof window.skhToast === 'function') window.skhToast(editId ? 'Advertisement updated.' : 'Advertisement saved.', 'success');
-        return true;
+
+        // Render immediately after a confirmed Firestore write instead of waiting for
+        // listener latency. The snapshot remains authoritative and will reconcile it.
+        const cache = Array.isArray(window.__sokohaiAnnouncementsCache) ? window.__sokohaiAnnouncementsCache.slice() : [];
+        const at = cache.findIndex(function (a) { return a.id === savedId; });
+        const optimistic = Object.assign({}, at >= 0 ? cache[at] : {}, data, { id: savedId });
+        if (at >= 0) cache[at] = optimistic; else cache.unshift(optimistic);
+        window.__sokohaiAnnouncementsCache = cache;
+        if(typeof window.__sokohaiOnAnnouncementsUpdate === 'function') window.__sokohaiOnAnnouncementsUpdate(cache);
+        if(typeof window.renderAnnouncementManagerList === 'function') window.renderAnnouncementManagerList();
+
+        const state = typeof window.skhAdvertisementState === 'function' ? window.skhAdvertisementState(optimistic) : (data.status === 'published' ? 'active' : 'draft');
+        if(typeof window.skhToast === 'function') window.skhToast(state === 'active' ? 'Advertisement published and visible on Home.' : state === 'scheduled' ? 'Advertisement scheduled.' : 'Advertisement saved as draft.', 'success');
+        return { ok:true, id:savedId, state:state };
     } catch(e) {
         console.error("Kosa kuhifadhi tangazo:", e);
         alert(" Imeshindwa kuhifadhi tangazo: " + e.message);

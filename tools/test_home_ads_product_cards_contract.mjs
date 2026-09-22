@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const r=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
-const market=r('js/app/00-bootstrap.js'), cardCss=r('css/37-product-card-visual.css'), top=r('html/16-topnav.html'), ad=r('js/06-announcement.js'), admin=r('js/app/16-pos-admin-jobs.js'), engine=r('js/app/09-feed-announcements.js'), rules=r('firestore.rules'), upload=r('js/11-uploads.js'), adv=r('html/03-modals-core.html');
+const market=r('js/app/00-bootstrap.js'), cardCss=r('css/37-product-card-visual.css'), adCss=r('css/38-home-ad-manager.css'), top=r('html/16-topnav.html'), ad=r('js/06-announcement.js'), admin=r('js/app/16-pos-admin-jobs.js'), engine=r('js/app/09-feed-announcements.js'), rules=r('firestore.rules'), upload=r('js/11-uploads.js'), adv=r('html/03-modals-core.html');
 let pass=0,fail=0;function t(n,v){if(v){pass++;console.log('PASS '+n)}else{fail++;console.error('FAIL '+n)}}
 const product=market.slice(market.indexOf('skh.ProductPostCard'),market.indexOf('skh.ServicePostCard'));
 t('product front card keeps image/title/price/location',product.includes('skh.cardImage')&&product.includes('skh-title')&&product.includes("cardPriceHtml(data, 'products')")&&product.includes("cardPinLocation(data, 'products')"));
@@ -21,6 +21,12 @@ t('showcase supports video with safe controls',ad.includes('<video')&&ad.include
 t('showcase supports audio controls',ad.includes('<audio')&&ad.includes('preload="none"'));
 t('showcase supports poster image',ad.includes('poster='));
 t('showcase supports logo, brand, headline and CTA',ad.includes('logoUrl')&&ad.includes('brandName')&&ad.includes('headline')&&ad.includes('ctaLabel'));
+t('Home advertisement is rendered as a clear sponsored post',ad.includes('skh-ann-post-head')&&ad.includes('Sponsored · Advertisement')&&ad.includes('skh-ann-post-actions'));
+t('advertisement image preserves the whole creative',adCss.includes('aspect-ratio:16/9')&&adCss.includes('object-fit:contain!important'));
+t('preview and Home share the canonical advertisement card',ad.includes('window.skhAdvertisementCardHtml=cardHtml')&&admin.includes("typeof window.skhAdvertisementCardHtml==='function'"));
+t('engagement metrics display only when authentic count is positive',ad.includes("return n>0?")&&ad.includes('a.likeCount')&&ad.includes('a.viewCount'));
+t('published Firestore write updates Home immediately',engine.includes('window.__sokohaiAnnouncementsCache = cache')&&engine.includes('window.__sokohaiOnAnnouncementsUpdate(cache)'));
+t('new advertisement defaults to Publish with explicit button label',admin.includes("existing?(existing.status||((existing.active===false)?'draft':'published')):'published'")&&admin.includes("'Publish Advertisement':'Save Draft'"));
 t('Admin manager has required status filters',['active','scheduled','draft','expired','archived'].every(x=>admin.includes(x.charAt(0).toUpperCase()+x.slice(1))));
 t('Admin manager has Create Advertisement',admin.includes('+ Create Advertisement'));
 t('creative wizard supports all required types',['image','image_text','graphic','video','video_text','image_audio','video_audio'].every(x=>admin.includes('value="'+x+'"')));
