@@ -1,0 +1,253 @@
+<!-- CATEGORY MODAL (POP UP YA JUU KWA AJILI YA GRID) -->
+<div id="categoryModal" class="overlay-menu" style="z-index: 8550;">
+    <div style="background:white; border-radius:24px; padding:25px; width:95%; max-width:450px; max-height:85vh; display:flex; flex-direction:column; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">
+            <h3 style="color:var(--primary-dark); margin:0; font-size:18px; text-transform:uppercase;"><span id="skhCatModalHdr" data-skh-icon="folder" data-skh-size="18">Chagua Kategoria</span></h3>
+            <button onclick="closeModals()" style="background:none; border:none; font-size:22px; font-weight:bold; color:#ef4444; cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
+        </div>
+        <div class="cat-grid" id="catGridContainer" style="overflow-y:auto; flex:1;">
+            <!-- Grid itachorwa na Javascript hapa -->
+        </div>
+    </div>
+</div>
+     
+
+        <!-- BUYER ORDERS MODAL MPYA (Ikae peke yake Nje) -->
+<div id="buyerOrdersModal" class="overlay-menu" style="z-index: 8750;">
+    <div style="background:white; border-radius:24px; padding:25px; width:95%; max-width:450px; max-height:85vh; display:flex; flex-direction:column; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
+        <h3 style="color:var(--primary-dark); text-align:center; margin-top:0; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">Oda na Safari Zangu — Ufuatiliaji</h3>
+        <div id="buyerOrdersModalList" style="flex:1; overflow-y:auto; padding-right:5px; margin-bottom:15px;">
+            <p style="text-align:center; color:#64748b;">Inapakia oda...</p>
+        </div>
+<button onclick="document.getElementById('buyerOrdersModal').style.display='none'; if(window.openSokoPayBuyerOrders) window.openSokoPayBuyerOrders();" style="width:100%; margin-bottom:10px; padding:13px; background:#18A982; color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase;">SokoPay Escrow (Mikataba Ya Malipo)</button>
+<button onclick="document.getElementById('buyerOrdersModal').style.display='none'; if(window.skhOpenTokenBox) window.skhOpenTokenBox();" style="width:100%; margin-bottom:10px; padding:13px; background:#18A982; color:white; border:none; border-radius:12px; cursor:pointer; font-weight:bold; text-transform:uppercase;">Sanduku la Mikode — Pickup / Handover / Delivery</button>
+<button onclick="document.getElementById('buyerOrdersModal').style.display='none'; openSidebarMenu();" style="width:100%; padding:15px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; text-transform:uppercase;">&lsaquo; Rudi Nyuma</button>
+  </div>
+</div>
+
+
+<!-- SIDEBAR MENU (Unified) — maudhui yanachorwa na renderSokoHaiAccountMenu -->
+<div id="sidebarMenuModal" class="overlay-menu" style="z-index: 100005; justify-content: flex-start; align-items: stretch;"></div>
+
+<!-- MODE SWITCHER MODAL -->
+<div id="modeMenuModal" class="overlay-menu" style="z-index: 8500;" onclick="if(event.target===this){closeModals();}">
+    <div style="width:100%; max-width:400px; display:flex; flex-direction:column; align-items:center; animation: popIn 0.3s ease-out; background: white; padding: 30px; border-radius: 24px; max-height: 90vh; overflow-y:auto;">
+        <h2 style="color:var(--primary-dark); margin-top:0; margin-bottom:20px; text-align:center; text-transform:uppercase; font-size:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; width: 100%;"> Usimamizi</h2>
+        
+        <div class="menu-item" onclick="window.skhOpenMySokoHai && window.skhOpenMySokoHai('overview')" id="mode-buyer" style="border-left-color:var(--green); background:#f8fafc;">
+            <b data-skh-icon="cart">Buyer Dashboard</b>
+            <span>Shughuli, oda, requests, negotiations na vitu vyako.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('seller')" id="mode-seller" style="border-left-color:var(--gold); background:#f8fafc;">
+            <b data-skh-icon="shop">Muuzaji wa Bidhaa</b>
+            <span>Dashbodi ya kusimamia bidhaa, oda na mauzo.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('provider')" id="mode-provider" style="border-left-color:var(--primary-blue); background:#f8fafc;">
+            <b data-skh-icon="wrench">Mtoa Huduma / Fundi</b>
+            <span>Simamia matangazo yako ya ufundi na mapato.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('driver')" id="mode-driver" style="border-left-color:var(--terracotta); background:#f8fafc;">
+            <b data-skh-icon="truck">Msafirishaji</b>
+            <span>Dashbodi ya Boda, Bajaji, au Lori lako na safari.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('agent')" id="mode-agent" style="border-left-color:#f97316; background:#f8fafc;">
+            <b> Wakala Sokohai</b>
+            <span>Dashbodi ya miamala na kamisheni yako ya ukweli.</span>
+        </div>
+        <div class="menu-item" onclick="window.skhOpenAdvertiserDashboard && window.skhOpenAdvertiserDashboard()" id="mode-advertiser" style="border-left-color:#4D91AA; background:#f8fafc;">
+            <b> Advertiser</b>
+            <span>Campaign workspace ya kampuni na matangazo.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('admin')" id="mode-admin" style="border-left-color:#333; background:#f1f5f9;">
+            <b> Admin (Msimamizi)</b>
+            <span>Dashbodi ya Kufuatilia Mfumo mzima na Mapato.</span>
+        </div>
+        
+        <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:15px; background:#e2e8f0; color:#334155; border:none; border-radius:14px; cursor:pointer; font-weight:900; text-transform:uppercase;">Funga X</button>
+    </div>
+</div>
+
+<!-- ADVERTISER DASHBOARD — Billing entry is intentionally locked/UI-only -->
+<div id="advertiserDashboardModal" class="overlay-menu" style="z-index:8550;">
+    <section class="adv-shell" role="dialog" aria-modal="true" aria-labelledby="advDashboardTitle">
+        <header class="adv-head">
+            <button type="button" class="adv-head-btn" onclick="window.skhAdvertiserBack()" aria-label="Rudi"><span class="skh-ico" data-ico="arrow-left"></span></button>
+            <div class="adv-head-copy"><b id="advDashboardTitle">Advertiser</b><small>Company advertising workspace</small></div>
+            <button type="button" class="adv-head-btn" onclick="window.skhCloseAdvertiserDashboard()" aria-label="Funga"><span class="skh-ico" data-ico="x"></span></button>
+        </header>
+        <div class="adv-layout">
+            <nav class="adv-nav" aria-label="Advertiser sections">
+                <button type="button" class="adv-nav-item active" aria-current="page">Overview</button>
+                <button type="button" class="adv-nav-item locked" aria-disabled="true" onclick="window.skhOpenCompanyAdsSoon()"><span>Company Ads</span><span class="adv-lock">Coming Soon</span></button>
+                <button type="button" class="adv-nav-item locked" aria-disabled="true" onclick="window.skhOpenAdvertiserBillingSoon()"><span>Billing &amp; Payments</span><span class="adv-lock">Coming Soon</span></button>
+            </nav>
+            <main class="adv-main">
+                <h1 class="adv-title">Advertiser Dashboard</h1>
+                <p class="adv-lead">Manage company advertising activity from one workspace. Existing advertising creation flows remain unchanged.</p>
+                <div class="adv-grid">
+                    <button type="button" class="adv-card adv-billing-card" aria-disabled="true" onclick="window.skhOpenCompanyAdsSoon()"><h3>Company Ads</h3><p>Tangaza kampuni, brand, website, app, event au campaign yako kwa watumiaji wa SokoHai.</p><span class="adv-coming">Coming Soon</span></button>
+                    <button type="button" class="adv-card adv-billing-card" aria-disabled="true" onclick="window.skhOpenAdvertiserBillingSoon()">
+                        <h3>Billing &amp; Payments</h3>
+                        <p>Manage advertising budget, payments and campaign spending.</p>
+                        <span class="adv-coming">Coming Soon</span>
+                    </button>
+                </div>
+                <div class="adv-note">Billing is not enabled. No payment, wallet, checkout, pricing or campaign-spend operation can start from this entry.</div>
+            </main>
+        </div>
+    </section>
+</div>
+
+<!-- Informational state only: no payment/billing operation -->
+<div id="advertiserBillingSoonModal" class="overlay-menu" style="z-index:8560;">
+    <section class="adv-soon-card" role="dialog" aria-modal="true" aria-labelledby="advBillingSoonTitle">
+        <div class="adv-soon-icon"><span class="skh-ico" data-ico="lock"></span></div>
+        <h2 id="advBillingSoonTitle">Billing &amp; Payments</h2>
+        <p>Mfumo wa malipo na usimamizi wa gharama za matangazo unakuja hivi karibuni.</p>
+        <span class="adv-coming">Coming Soon</span>
+        <button type="button" class="adv-ok" onclick="window.skhCloseAdvertiserBillingSoon()">Sawa</button>
+    </section>
+</div>
+
+<div id="companyAdsSoonModal" class="overlay-menu" style="z-index:8560;">
+    <section class="adv-soon-card" role="dialog" aria-modal="true" aria-labelledby="companyAdsSoonTitle">
+        <div class="adv-soon-icon"><span class="skh-ico" data-ico="lock"></span></div>
+        <h2 id="companyAdsSoonTitle">Company Ads</h2>
+        <p>Tangaza kampuni, brand, website, app, event au campaign yako kwa watumiaji wa SokoHai.</p>
+        <span class="adv-coming">Coming Soon</span>
+        <button type="button" class="adv-ok" onclick="window.skhCloseCompanyAdsSoon()">Sawa</button>
+    </section>
+</div>
+
+<!-- SELLER TYPE SELECTION MODAL (MPYA) -->
+<div id="sellerTypeModal" class="overlay-menu" style="z-index: 9000;">
+    <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:400px; text-align:center; animation: popIn 0.3s ease-out;">
+        <div style="font-size:50px;"></div>
+        <h3 style="color:var(--primary-dark); margin-top:10px;">Anza Biashara SOKOHAI</h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Chagua aina ya duka unalotaka kufungua sasa:</p>
+        
+        <div onclick="selectSellerType('temporary')" style="background:#f1f5f9; border:2px solid #cbd5e1; padding:15px; border-radius:15px; cursor:pointer; margin-bottom:12px; text-align:left;">
+            <b style="color:var(--primary-dark); display:block;"> Duka la Muda (Temporary)</b>
+            <small style="color:#64748b;">Bure kabisa. Mwisho bidhaa 9. Tangazo hufutwa baada ya kuuzwa.</small>
+        </div>
+
+        <div onclick="selectSellerType('permanent')" style="background:#fffbeb; border:2px solid var(--gold); padding:15px; border-radius:15px; cursor:pointer; text-align:left;">
+            <b style="color:var(--primary-dark); display:block;"> Duka la Kudumu (Permanent)</b>
+            <small style="color:#64748b;">Inahitaji Kifurushi. Bidhaa hazifutwi, zinabaki na lebo ya "Imesahau".</small>
+        </div>
+
+        <button onclick="closeModals()" style="width:100%; margin-top:20px; padding:12px; background:none; border:none; color:gray; text-decoration:underline; cursor:pointer;">Ghairi</button>
+    </div>
+</div>
+
+<!-- BOOST POST MODAL -->
+<div id="boostModal" class="overlay-menu" style="z-index: 8600;">
+    <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:400px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
+        <h3 style="color:var(--primary-dark); margin-top:0; font-size:22px;"> Boost Tangazo Lako</h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Lipa kiasi kidogo ili tangazo lako lionekane kwa watu wengi zaidi na lipate mauzo ya haraka.</p>
+        
+        <div style="text-align:left; background:#f8fafc; padding:20px; border-radius:16px; border:1px solid #e2e8f0; margin-bottom:20px;">
+            <label style="font-size:13px; font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:8px;">Target Views (Lengo la Watazamaji):</label>
+            <input type="number" id="boostViews" value="1000" oninput="calculateBoost()" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
+            
+            <label style="font-size:13px; font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:8px;">Siku (Days):</label>
+            <input type="number" id="boostDays" value="3" oninput="calculateBoost()" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
+            
+            <label style="font-size:13px; font-weight:bold; color:var(--terracotta); display:block; margin-bottom:8px;">Gharama ya Kulipia (TSh):</label>
+            <input type="text" id="boostCostDisplay" readonly value="2,000" style="width:100%; padding:15px; border-radius:10px; border:1px solid #cbd5e1; background:#fffbeb; font-size:18px; font-weight:900; color:var(--terracotta); outline:none; text-align:right;">
+        </div>
+
+        <button onclick="payForBoost()" id="btnPayBoost" style="width:100%; padding:16px; background:linear-gradient(45deg, #FFD700, #FDB931); color:var(--primary-dark); border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; text-transform:uppercase; box-shadow:0 4px 15px rgba(253, 185, 49, 0.3);">LIPA NA U-BOOST SASA</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:14px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; text-transform:uppercase;">Ghairi</button>
+    </div>
+</div>
+
+<!-- SUBSCRIPTION MODAL (VIFURUSHI VYA PERMANENT) -->
+<div id="subModal" class="overlay-menu" style="z-index: 8650;">
+    <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:400px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out; max-height:85vh; overflow-y:auto;">
+        <div style="font-size:40px; margin-bottom:10px;"></div>
+        <h3 style="color:var(--primary-dark); margin-top:0; font-size:20px;">Nunua Kifurushi </h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Kuwa Muuzaji wa Kudumu (Permanent). Matangazo yako yataonekana muda wote bila kufichwa (Hide).</p>
+        
+        <div id="subPackagesContainer" style="text-align:left; display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+            <!-- Vifurushi vitachorwa hapa na Javascript -->
+        </div>
+        
+        <button onclick="closeModals()" style="width:100%; padding:14px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; text-transform:uppercase;">Funga X</button>
+    </div>
+</div>
+<!-- ESCROW DISPUTE / CONFIRM MODAL -->
+<div id="escrowModal" class="overlay-menu" style="z-index: 8700;">
+    <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:400px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
+        <h3 style="color:var(--primary-dark); margin-top:0; font-size:20px;"> Usimamizi wa Oda</h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Sokohai Escrow: Pesa yako ipo salama. Thibitisha au weka malalamiko.</p>
+        
+        <input type="hidden" id="activeOrderId">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <button onclick="confirmEscrowOrder()" style="padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.3);"> NIMEPOKEA MZIGO VIZURI</button>
+            <button onclick="disputeEscrowOrder()" style="padding:16px; background:#fee2e2; color:#ef4444; border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer;"> NINA MALALAMIKO (DISPUTE)</button>
+        </div>
+        <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:14px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold; text-transform:uppercase;">Funga</button>
+    </div>
+</div>
+
+<!-- WELCOME ALERT MODAL -->
+<div id="welcomeModal" class="overlay-menu" style="z-index: 9000; background:rgba(0, 34, 68, 0.95);">
+    <div style="background:white; border-radius:24px; padding:0 0 30px 0; width:90%; max-width:360px; text-align:center; box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow:hidden; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div style="background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue)); height: 120px; position:relative; border-bottom: 5px solid var(--gold);">
+            <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); width: 80px; height: 80px; background: white; border-radius: 50%; border: 4px solid var(--gold); display:flex; align-items:center; justify-content:center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); overflow:hidden; animation: popIn .5s ease;"><img src="assets/sokohai-s-mark.png" alt="SokoHai" style="width:58px; height:auto; object-fit:contain;"></div>
+        </div>
+        <div style="padding: 55px 25px 0;">
+            <h3 data-i18n="onboard_welcome" style="color:var(--text-muted); margin:0 0 8px; font-size:14px; letter-spacing:1px; text-transform:uppercase;">Karibu Kwenye</h3>
+            <h2 class="skh-wordmark-host" style="margin:0 0 5px;"><span data-skh-wm="200"></span> 👋</h2>
+            <h2 id="welcomeName" data-i18n="onboard_user" style="color:var(--terracotta); margin:0 0 20px; font-size:20px; font-weight:800; text-transform:uppercase; border-bottom: 2px dashed #e2e8f0; padding-bottom: 10px; display:inline-block;">MTUMIAJI</h2>
+            <p data-i18n="onboard_tag" style="font-size:14px; color:#475569; margin-bottom:25px; line-height:1.6;">Tafuta, Nunua, Uza, Like, Comment, na Lipa kwa usalama zaidi (Escrow).</p>
+            <button onclick="unlockSystem(); closeWelcome();" data-i18n="onboard_cta" style="width:100%; padding:16px; background:linear-gradient(90deg, var(--green), #0da271); color:white; border:none; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4); transition:0.3s; text-transform:uppercase; letter-spacing:1px;">ENDELEA NDANI </button>
+        </div>
+    </div>
+</div>
+
+<!-- MAP MODAL -->
+<div id="mapModal" class="overlay-menu" style="z-index: 9500;">
+    <div style="background:white; width:95%; border-radius:24px; position:relative; overflow:hidden; display:flex; flex-direction:column;">
+        
+        <!-- HII NDIYO DIV YA RAMANI - HAKIKISHA IPO HIVI -->
+        <div id="map"></div> 
+        
+        <div id="mapStatus" style="padding:15px; background:#f8fafc; font-size:12px; border-top:1px solid #eee;">
+            <b> GPS:</b> <span id="gpsText">Inatafuta mawasiliano...</span>
+        </div>
+        <button onclick="closeModals()" style="position:absolute; top:10px; right:10px; z-index:1000; background:white; border:none; width:40px; height:40px; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,0.2); font-weight:bold;"><span class="skh-ico" data-ico="x"></span></button>
+    </div>
+</div>
+<!-- DIRECT HIRE MODAL (Imesafishwa 100%) -->
+<div id="directHireModal" class="overlay-menu" style="z-index: 9600;">
+    <div class="form-box" style="display:block; max-width:400px; border-top: 8px solid var(--terracotta);">
+        <h3 style="margin-bottom:5px;"> Ombi la Usafiri</h3>
+        <div id="dhVehicleDisplay" style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:20px; border-left:4px solid var(--terracotta);">
+            <!-- Hapa JS itajaza Jina la Dereva na Gari automatically -->
+        </div>
+        
+        <input type="hidden" id="dhTargetDriverId">
+        <input type="hidden" id="dhVehicleType">
+
+        <!-- Sehemu ya Safari tu -->
+        <label style="font-size:12px; font-weight:bold;"> Mzigo upo wapi sasa? (Pickup) *</label>
+        <input type="text" id="dhFrom" placeholder="Mf: Kariakoo, Mtaa wa Aggrey" required>
+
+        <label style="font-size:12px; font-weight:bold;"> Unapelekwa wapi? (Destination) *</label>
+        <input type="text" id="dhTo" placeholder="Mf: Mbezi, Karibu na Kanisa" required>
+
+        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+        <!-- Sehemu ya Mzigo -->
+        <label style="font-size:12px; font-weight:bold;"> Unasafirisha nini? (Maelezo) *</label>
+        <input type="text" id="dhCargoName" placeholder="Mf: TV Inchi 55 na Sofa 2" required>
+
+        <label style="font-size:12px; font-weight:bold;"><span class="skh-ico" data-ico="scales"></span> Uzito/Ukubwa Makadirio (Kg/Pcs)</label>
+        <input type="text" id="dhWeight" placeholder="Mf: 20kg au Box 5">
+
+        <button onclick="submitDirectHire()" id="btnSubmitDh" style="background:var(--primary-dark); width:100%; padding:16px; border-radius:14px; color:white; font-weight:900; margin-top:15px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">TUMA OMBI KWA DEREVA </button>
+        <button type="button" class="btn-close" onclick="closeModals()" style="margin-top:10px; background:none; color:gray; text-decoration:underline;">Ghairi</button>
+    </div>
+</div>

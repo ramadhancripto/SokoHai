@@ -1,0 +1,79 @@
+<!-- FOMU YA KUHARIRI TANGAZO (EDIT MODAL) -->
+    <form id="editModal" class="form-box" onsubmit="submitEditForm(event)">
+        <h3><span class="skh-ico" data-ico="edit"></span> Hariri Tangazo Lako</h3>
+        <input type="hidden" id="editId">
+        <input type="hidden" id="editCollection">
+        
+        <label style="color:var(--primary-dark);">Mtindo wa Kuuza (Market Mode):</label>
+        <select id="editSaleMode" onchange="toggleEditModeFields()" style="background:#fffbeb; border-color:var(--gold);">
+            <option value="free_market"> Soko Huru (Kawaida)</option>
+            <option value="auction"> Mnada (Live Auction)</option>
+            <option value="price_drop"> Bei Kushuka</option>
+            <option value="wholesale"> Kuuza kwa Jumla</option>
+            <option value="group_buy"> Group Buy</option>
+        </select>
+        <small id="editModeWarning" style="color:red; font-weight:bold; display:none; margin-bottom:10px;"> Huwezi kubadili Mfumo huu mpaka muda wake uishe!</small>
+
+        <div id="editDynamicModeFields" style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:10px; display:none;">
+            <div id="edit_mode_auction" style="display:none;">
+                <label>Tarehe na Muda Kuisha:</label>
+                <input type="datetime-local" class="mode-input" id="editAucEndTime">
+            </div>
+            <div id="edit_mode_price_drop" style="display:none;">
+                <input type="number" class="mode-input" id="editPdMinPrice" placeholder="Bei ya Chini Kabisa (TSh)">
+                <label>Kishuke Kila Baada ya:</label>
+                <select class="mode-input" id="editPdIntervalType">
+                    <option value="1000">Kila Sekunde 1</option>
+                    <option value="60000">Kila Dakika 1</option>
+                    <option value="3600000">Kila Saa 1</option>
+                </select>
+                <label>Tarehe na Muda Kuisha:</label>
+                <input type="datetime-local" class="mode-input" id="editPdEndTime">
+            </div>
+            <div id="edit_mode_wholesale" style="display:none;">
+                <input type="number" class="mode-input" id="editWsDiscount" placeholder="Punguzo Kila Pc 1 Inapoongezeka">
+                <select class="mode-input" id="editWsDiscountType"><option value="amount">TSh</option><option value="percent">%</option></select>
+                <!-- [§23-§24M] Wahariyeri wa minQty/tiers zatendrana na creation form -->
+                <label style="font-size:12px; color:#0B4F7A;">IDADI YA CHINI YA JUMLA (minQty):</label>
+                <input type="number" class="mode-input" id="editWsMinQty" placeholder="Mfano: 10">
+                <label style="font-size:12px; color:#0B4F7A;">TIERS ZA JUMLA ("minQty:bei" kwa ";"):</label>
+                <input type="text" class="mode-input" id="editWsTiersText" placeholder="Mfano: 10:9000; 50:8000; 100:7000">
+            </div>
+            <div id="edit_mode_group_buy" style="display:none;">
+                <input type="number" class="mode-input" id="editGbDiscount" placeholder="Punguzo Kila Mtu Akiongezeka">
+                <select class="mode-input" id="editGbDiscountType"><option value="amount">TSh</option><option value="percent">%</option></select>
+              <label>Lengo la Watu (Target):</label>
+<input type="number" class="mode-input" id="editGbMaxPeople" placeholder="Mfano: 10">
+
+<label>Tarehe Kufungwa Kundi:</label>
+<input type="datetime-local" class="mode-input" id="editGbEndTime">
+            </div>
+        </div>
+
+        <label>Jina la Tangazo / Bidhaa:</label>
+
+        <input type="text" id="editTitle" required>
+        
+        <label>Bei Mpya (TSh):</label>
+        <input type="number" id="editPrice">
+        
+        <label>Eneo linapopatikana:</label>
+        <input type="text" id="editLocation" required>
+        
+        <label>Maelezo Mapya:</label>
+        <textarea id="editDesc" required></textarea>
+        <div id="editProductFoundationFields" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;">
+            <div><label>Publication</label><select id="editPublicationStatus"><option value="published">Published</option><option value="draft">Draft</option><option value="archived">Archived</option></select></div>
+            <div><label>Availability</label><select id="editAvailabilityStatus"><option value="available">Available</option><option value="low_stock">Low stock</option><option value="out_of_stock">Out of stock</option><option value="pre_order">Pre-order</option><option value="made_to_order">Made to order</option><option value="hidden">Hidden</option></select></div>
+            <div><label>Product type</label><select id="editProductType"><option value="physical">Physical</option><option value="digital">Digital</option><option value="retail">Retail</option><option value="wholesale">Wholesale</option><option value="custom">Custom</option><option value="made_to_order">Made to order</option></select></div>
+            <div><label>Condition</label><select id="editCondition"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option><option value="not_applicable">Not applicable</option></select></div>
+            <div style="grid-column:1/-1"><label>Variants (hiari)</label><textarea id="editVariants" placeholder="Color: Black, White; Size: S, M, L"></textarea></div>
+        </div>
+        
+        <button type="submit" id="btnSubmitEdit" style="background:var(--primary-blue);"> HIFADHI MABADILIKO</button>
+<button type="button" class="btn-close" onclick="goBackToMenu()">&lsaquo; Rudi Nyuma</button>
+    </form>
+
+<!--  SOKOPAY TRUST & ESCROW CENTRAL PORTAL (REFINED CORE ENGINE) -->
+<div id="sokopayForm" class="form-box" style="padding: 0; max-width: 1200px; width: 96%; height: 90vh; border-top: 8px solid var(--primary-blue); border-radius: 28px; overflow: hidden; display: none;">
+    <div style="display: flex; height: 100%; width: 100%; background: #F8FAFC; flex-direction: row; text-align: left;" id="sokopayMainLayout">

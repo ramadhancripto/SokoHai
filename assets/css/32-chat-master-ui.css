@@ -1,0 +1,120 @@
+/* SokoHai Chat — master interaction states (2026-09-22)
+   Additive only: preserves the existing Chat authority and commerce surfaces. */
+
+#chatEditChip,
+#chatReplyChip {
+  flex: 0 0 auto;
+  padding: 7px 10px 0;
+  background: #fff;
+}
+
+#chatEditChip[hidden] { display: none !important; }
+
+.ch-editchip,
+.ch-replychip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-left: 3px solid #18A982;
+  border-radius: 10px;
+  background: #EAF8F2;
+  color: #18352D;
+}
+
+.ch-editchip > span {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ch-editchip b { font-size: 12px; color: #178864; }
+.ch-editchip small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-editchip button,
+.ch-replychip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+#chatComposer.is-editing {
+  box-shadow: inset 0 2px 0 rgba(24, 169, 130, .12), 0 -1px 6px rgba(15, 23, 42, .05) !important;
+}
+
+#chatSendBtn.is-busy { opacity: .68; cursor: wait; }
+#chatSendBtn:disabled { pointer-events: none; }
+
+#chatHeaderAvatar,
+.ch-head-id {
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ch-head-id { background: transparent; }
+
+.ch-conversation-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-bottom: 1px solid #DCE8E3;
+  background: #F8FBFA;
+  color: #178864;
+}
+.ch-conversation-search[hidden] { display: none !important; }
+.ch-conversation-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid #c9dae4;
+  border-radius: 18px;
+  outline: 0;
+  background: #fff;
+  color: #173b56;
+  font-size: 14px;
+}
+.ch-conversation-search input:focus {
+  border-color: #18A982;
+  box-shadow: 0 0 0 3px rgba(24, 169, 130, .1);
+}
+.ch-conversation-search button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+@media (max-width: 420px) {
+  #chatEditChip,
+  #chatReplyChip { padding-inline: 7px; }
+  .ch-editchip,
+  .ch-replychip { padding: 7px 8px; }
+}

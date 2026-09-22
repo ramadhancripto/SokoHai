@@ -1,0 +1,133 @@
+<!-- 5 KPI CARDS ROW -->
+    <div class="sp-kpi-grid">
+        <div class="sp-kpi-card" style="border-left: 4px solid #18A982;">
+            <span class="sp-kpi-title">Wallet Balance</span>
+            <span class="sp-kpi-value" id="lblWalletBalanceVal">TZS 0</span>
+            <span class="sp-kpi-sub" style="color: #18A982;">Available Balance</span>
+        </div>
+        <div class="sp-kpi-card" style="border-left: 4px solid #D8B83A;">
+            <span class="sp-kpi-title">Escrow / Locked</span>
+            <span class="sp-kpi-value" id="lblEscrowBalanceVal">TZS 0</span>
+            <span class="sp-kpi-sub" style="color: #D8B83A;">Locked in Contracts</span>
+        </div>
+        <div class="sp-kpi-card" style="border-left: 4px solid #4D91AA;">
+            <span class="sp-kpi-title">Active Contracts</span>
+            <span class="sp-kpi-value" id="lblActiveContractsVal">0</span>
+            <span class="sp-kpi-sub" style="color: #4D91AA;">Running Contracts</span>
+        </div>
+        <div class="sp-kpi-card" style="border-left: 4px solid #B88916;">
+            <span class="sp-kpi-title">Pending Confirmations</span>
+            <span class="sp-kpi-value" id="lblPendingConfirmationsVal">0</span>
+            <span class="sp-kpi-sub" style="color: #B88916;">Awaiting Action</span>
+        </div>
+        <div class="sp-kpi-card" style="border-left: 4px solid #18A982;">
+            <span class="sp-kpi-title">Total Earnings (This Month)</span>
+            <span class="sp-kpi-value" id="lblTotalEarningsVal">TZS 0</span>
+            <span class="sp-kpi-sub" style="color: #18A982;">&nbsp;</span>
+        </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN SPLIT GRID -->
+    <div class="sp-dashboard-grid">
+        
+        <!-- LEFT COLUMN: MAIN ACTIONS & TIMELINES -->
+        <div class="sp-main-col">
+            
+            <!-- 1. Active Contracts Overview -->
+            <div class="sp-widget-card">
+                <span class="sp-widget-title">Active Contracts Overview</span>
+                <div class="sp-overview-grid">
+                    <div class="sp-overview-box">
+                        <span></span>
+                        <b>Products</b>
+                        <small id="lblOvProducts">8 In Progress</small>
+                    </div>
+                    <div class="sp-overview-box">
+                        <span></span>
+                        <b>Services</b>
+                        <small id="lblOvServices">3 In Progress</small>
+                    </div>
+                    <div class="sp-overview-box">
+                        <span></span>
+                        <b>Logistics</b>
+                        <small id="lblOvLogistics">2 In Transit</small>
+                    </div>
+                    <div class="sp-overview-box">
+                        <span></span>
+                        <b>Companies</b>
+                        <small id="lblOvCompanies">1 Active</small>
+                    </div>
+                    <div class="sp-overview-box">
+                        <span></span>
+                        <b>Government</b>
+                        <small id="lblOvGov">0 Pending</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Live Tracking Overview (Ramani & CCTV Placeholder) -->
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 15px; margin-bottom: 20px;" class="sp-kpi-grid">
+                
+                <div class="sp-widget-card" style="margin-bottom: 0;">
+                    <span class="sp-widget-title">Live Tracking Overview</span>
+                    <small style="color: gray; display:block; margin-bottom: 8px;">Shipment: <b>Package #LOG-78391</b> (Electronics) - <b style="color: #18A982;">● Live</b></small>
+                    <div id="liveTrackingMiniMap" style="height: 180px; background: #e5e7eb; border-radius: 12px; margin-bottom: 10px;"></div>
+                </div>
+
+                <div class="sp-widget-card" style="margin-bottom: 0;">
+                    <span class="sp-widget-title">Construction Project Monitoring</span>
+                    <small style="color: gray; display:block; margin-bottom: 8px;">Project: <b>New Office Building</b></small>
+                    <div style="height: 140px; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;">
+                        <img src="img/hero-product.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
+                        <span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 3px 8px; border-radius: 12px; font-size: 12.5px;"> Live Camera 1</span>
+                        <button style="position: absolute; width: 45px; height: 45px; border-radius: 50%; border: none; background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;"></button>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 13px;">
+                        <span>Progress: <b>65% Complete</b></span>
+                        <span>Expected: <b>Aug 30, 2024</b></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- [Mikataba ya Hivi Karibuni na Timeline yako vitaendelea chini hapa] -->
+
+        </div>
+
+        <!-- RIGHT COLUMN: FINANCIAL HEALTH & CHARTS -->
+        <div class="sp-side-col">
+            
+            <!-- 1. Wallet Summary Doughnut Chart -->
+            <div class="sp-widget-card" style="text-align: center;">
+                <span class="sp-widget-title">Wallet Summary</span>
+                <div style="height: 180px; position: relative; margin-top: 15px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="spDashboardWalletChart"></canvas>
+                    <div style="position: absolute; text-align: center; pointer-events: none;">
+                        <small style="color: gray; font-size: 12.5px; font-weight: bold; text-transform: uppercase; display:block;">Total Assets</small>
+                        <b style="font-size: 16px; color: #4D91AA;" id="lblSpTotalAssetsVal">TZS 0</b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [Quick Actions na Jopo la miamala ya hivi karibuni vitakuwepo hapa] -->
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<!--  BOTTOM AREA WRAPPER (bottom nav + "+" button) -->
+
+<div class="bottom-area-wrapper">
+    
+  <div class="sell-action-fab" onclick="window.togglePlusMenu()">
+    <div class="sell-circle-glow">
+        <span class="sell-text-btn">+</span>
+    </div>
+</div>
+
+    <div class="bottom-nav-main">
+        <div class="main-nav-icons">

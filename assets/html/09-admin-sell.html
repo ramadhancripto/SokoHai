@@ -1,0 +1,435 @@
+<!-- ADMIN SETTINGS MODAL -->
+<div id="adminSettingsModal" class="overlay-menu" style="z-index: 8800;">
+    <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:400px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
+        <h3 style="color:var(--primary-dark); margin-top:0; font-size:20px;"><span class="skh-ico" data-ico="settings"></span> Admin Settings</h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Weka akaunti ya kupokelea mapato ya Boost.</p>
+        <div style="text-align:left;">
+            <label style="font-size:13px; font-weight:bold;">Akaunti ya Bank/Simu:</label>
+            <input type="text" id="adminAccountInput" placeholder="Mf: 07XX XXX XXX au Namba ya Benki" style="width:100%; padding:14px; margin:8px 0 20px; border-radius:12px; border:1px solid #cbd5e1; outline:none;">
+        </div>
+        <button onclick="saveAdminSettings()" style="width:100%; padding:16px; background:var(--primary-dark); color:white; border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer;">HIFADHI AKAUNTI</button>
+        <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:14px; background:#e2e8f0; color:#475569; border:none; border-radius:14px; cursor:pointer; font-weight:bold;">Funga</button>
+    </div>
+</div>
+
+<!-- =========================================
+     FOMU ZA KUPANDISHA BIDHAA NA MENU YAKE (PLUS BUTTON)
+     ========================================= -->
+<div class="overlay-menu" id="plusMenu" onclick="if(event.target===this){togglePlusMenu();window.closeModals();}">
+
+<!--  UNIVERSAL PRODUCT FORM (BOS ENGINE v8.0) -->
+<form id="sellerForm" class="form-box" onsubmit="submitSeller(event)" style="padding: 25px; max-width: 500px; width: 95%;">
+    <h3 style="color: var(--primary-dark); font-weight: 900; text-align: center; margin-top: 0; text-transform: uppercase;"> Weka Bidhaa / Stoo</h3>
+    
+    <!-- SWALI LA KWANZA: MTINDO WA MAUZO (VISIBILITY) -->
+    <div style="background: #f0f9ff; padding: 12px; border-radius: 12px; border: 1.5px solid var(--primary-blue); margin-bottom: 15px; text-align: left;">
+        <label style="font-weight: 900; font-size: 13px; color: var(--primary-dark); display: block; margin-bottom: 6px; text-transform: uppercase;"> Bidhaa Itaonekana Wapi? *</label>
+        <select id="prodVisibility" onchange="window.toggleProductFormFields()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:bold; background:white;" required>
+            <option value="hybrid" selected> Hybrid (POS Dukani + Online Soko Kuu)</option>
+            <option value="offline_only"> Offline Only (POS na Stoo ya Ndani tu)</option>
+            <option value="online_only"> Online Only (Duka la Mtandaoni tu)</option>
+        </select>
+    </div>
+
+    <!-- 1. TAARIFA ZA MSINGI (BASIC INFO) -->
+    <div style="text-align: left;">
+        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA BIDHAA / SIFA *</label>
+        <input type="text" id="prodName" placeholder="Mfano: Viatu vya Ngozi / Panadol 500mg" required maxlength="140" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px; outline:none;">
+        <!-- PRODUCT FOUNDATION: optional fields; no parallel product form/database. -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">AINA YA BIDHAA</label><select id="prodProductType" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="physical">Physical</option><option value="digital">Digital</option><option value="retail">Retail</option><option value="wholesale">Wholesale</option><option value="custom">Custom</option><option value="made_to_order">Made to order</option></select></div>
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">HALI</label><select id="prodCondition" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option><option value="not_applicable">Not applicable</option></select></div>
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">UCHAPISHAJI</label><select id="prodPublicationStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="published">Published</option><option value="draft">Draft</option></select></div>
+            <div><label style="font-size:12px;font-weight:800;color:#64748b;">UPATIKANAJI</label><select id="prodAvailabilityStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="available">Available</option><option value="pre_order">Pre-order</option><option value="made_to_order">Made to order</option><option value="out_of_stock">Out of stock</option><option value="hidden">Hidden</option></select></div>
+        </div>
+        <label style="font-size:12px;font-weight:800;color:#64748b;">VARIANTS (HIARI)</label>
+        <textarea id="prodVariants" placeholder="Mfano: Color: Black, White; Size: S, M, L" style="width:100%;height:55px;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:12px;"></textarea>
+<!-- Mfumo mgumu wa Dropdowns kwa kuuza ONLINE tu (Online & Hybrid) -->
+<div id="onlineCategorySection" style="display:block; margin-bottom:12px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div>
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KATEGORIA *</label>
+            <select id="prodCategory" onchange="window.updateFormSubcats()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;"></select>
+        </div>
+        <div id="subCategoryContainer" style="display:none;">
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">SUB-CATEGORY *</label>
+            <select id="prodSubCategory" onchange="window.generateSellerFilters()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;"></select>
+        </div>
+    </div>
+</div>
+
+<!-- Mfumo rahisi wa kuandika tu kwa OFFLINE STORE tu (Inarahisisha kazi kwa muuzaji) -->
+<div id="offlineCategorySection" style="display:none; margin-bottom:12px;">
+    <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KATEGORIA YA NDANI (HIARI - ANDIKA MWENYEWE)</label>
+    <input type="text" id="prodOfflineCategory" placeholder="Mfano: Vinywaji, Sabuni, Vyakula, nk" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:#f8fafc;">
+</div>
+    </div>
+
+    <!-- 2. QUANTITY & MEASUREMENT ENGINE (VIPIMO MAALUM) -->
+    <div style="background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #cbd5e1; margin-bottom: 15px; text-align: left;">
+        <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;"><span class="skh-ico" data-ico="scales"></span> Injini ya Vipimo na Ugeuzaji</b>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KIPIMO CHA CHINI (BASE UNIT) *</label>
+                <select id="prodBaseUnit" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white;">
+                    <option value="Piece">Piece (Pcs / Kipande)</option>
+                    <option value="Kg">Kilogram (kg)</option>
+                    <option value="Gram">Gram (g)</option>
+                    <option value="Litre">Litre (L)</option>
+                    <option value="Ml">Millilitre (ml)</option>
+                    <option value="Meter">Meter (m)</option>
+                    <option value="Pair">Pair (Jozi)</option>
+                    <option value="Tablet">Tablet (Kidonge)</option>
+                    <option value="Bottle">Bottle (Chupa)</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">BARCODE (HIARI)</label>
+                <input type="text" id="prodBarcode" placeholder="Scan / Andika Barcode" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
+            </div>
+        </div>
+
+        <!-- Tiketi ya ufungaji wa jumla / Carton / Box -->
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:12px; color:var(--primary-blue); margin-bottom:10px;">
+            <input type="checkbox" id="prodHasBulk" onchange="window.toggleBulkPackagingFields()" style="width:18px; height:18px;">
+            Je, inauzwa kwa Katoni / Box / Jumla pia?
+        </label>
+
+        <!-- Dynamic Bulk Setup Fields -->
+        <div id="bulkPackagingFields" style="display:none; background:white; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-top:8px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">KIPIMO CHA JUMLA (BULK UNIT)</label>
+                    <select id="prodBulkUnit" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;">
+                        <option value="Box">Box (Sanduku)</option>
+                        <option value="Carton">Carton (Katoni)</option>
+                        <option value="Crate">Crate (Kesi)</option>
+                        <option value="Sack">Sack (Gunia)</option>
+                        <option value="Bag">Bag (Mfuko)</option>
+                        <option value="Tray">Tray (Trei)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">PC NGAPI NDANI? *</label>
+                    <input type="number" id="prodConversionRatio" value="12" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; outline:none;">
+                </div>
+            </div>
+            <small style="color:var(--primary-dark); font-size: 12.5px; display:block;">Mfano: <b>1 Katoni = Vipande 12 vya Base Unit</b>. Ukiingiza stock ya Katoni 5, mfumo utatengeneza vipande 60 stoo kuu yenyewe.</small>
+        </div>
+    </div>
+
+    <!-- 3. SMART CATEGORY INTELLIGENCE (DAWA, SIMU, NK) -->
+    <div id="smartCategoryFieldsBox" style="background:#fffbeb; border:1.5px dashed var(--gold); padding:15px; border-radius:15px; display:none; margin-bottom:15px; text-align:left;">
+        <b style="color:#b45309; font-size:12px; display:block; margin-bottom:8px; text-transform:uppercase;"> Akili ya Kategoria (Dynamic Rules)</b>
+        
+        <!-- Pharmacy / Expiry fields -->
+        <div id="smartExpiryFields" style="display:none;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div>
+                    <label style="font-size: 13px; font-weight:bold; color:#78350f;">EXPIRE DATE *</label>
+                    <input type="date" id="prodExpiryDate" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--gold); background:white;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight:bold; color:#78350f;">BATCH NUMBER *</label>
+                    <input type="text" id="prodBatchNumber" placeholder="BATCH-001X" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--gold); outline:none;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Shop / IMEI fields -->
+        <div id="smartImeiFields" style="display:none;">
+            <label style="font-size: 13px; font-weight:bold; color:#78350f;">IMEI / SERIAL NUMBER (TENGENEZA KWA COMA KAMA NI NYINGI) *</label>
+            <input type="text" id="prodImeiNumbers" placeholder="IMEI1, IMEI2, IMEI3..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--gold); outline:none;">
+        </div>
+    </div>
+
+    <!-- 4. GLOBAL PRICING ENGINE -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left;">
+        <div>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">BEI YA KUNUNUA (TSH) *</label>
+            <input type="number" id="prodBuyPrice" placeholder="Mfano: 20,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+        </div>
+        <div>
+            <label style="font-size: 13px; font-weight:bold; color:gray;" id="priceLabel">BEI YA KUUZA REJAREJA (TSH) *</label>
+            <input type="number" id="prodPrice" placeholder="Mfano: 35,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold; color:green;">
+        </div>
+    </div>
+
+    <!-- Dynamic Wholesale Price Field -->
+    <div id="wholesalePriceFieldDiv" style="display:none; text-align:left; margin-top:10px;">
+        <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue);">BEI YA KUUZA JUMLA / WHOLESALE (TSH) *</label>
+        <input type="number" id="prodWholesalePrice" placeholder="Mfano: 30,000" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--primary-blue); outline:none; font-weight:bold; color:var(--primary-blue);">
+    </div>
+
+    <!-- 5. STOCK INPUT SYSTEM -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left;">
+        <div>
+            <label style="font-size: 13px; font-weight:bold; color:gray;" id="stockQuantityLabel">IDADI YA STOCK *</label>
+            <input type="number" id="prodStock" value="1" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+        </div>
+        <div>
+            <label style="font-size: 13px; font-weight:bold; color:gray;">LOW STOCK ALERT *</label>
+            <input type="number" id="prodLowStockAlert" value="5" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+        </div>
+    </div>
+
+    <!-- 6. ONLINE ONLY / MARKET MODES FIELDS (SEHEMU YA SOKO LA MTANDAONI) -->
+    <div id="onlineSpecificFields" style="display:none; text-align:left; margin-top:10px;">
+        <div id="dynamicFiltersContainer" style="background:#f8fafc; padding:10px; border-radius:10px; margin-top:10px; display:none; border: 1px solid #e2e8f0;">
+            <b style="font-size: 13px; color:var(--primary-dark);">Sifa Maalum za Soko Kuu (Filters)</b>
+            <div id="filtersInputsArea"></div>
+        </div>
+
+        <label style="margin-top:10px; display:block; font-size: 13px; font-weight:bold; color:gray;">MTINDO WA KUUZA MTANDAONI (MARKET MODE) *</label>
+        <select id="prodSaleMode" onchange="toggleModeFields()" style="background:#fffbeb; border:1.5px solid var(--gold); margin-top:5px; width: 100%; padding:12px; border-radius:10px; font-weight:bold;">
+            <option value="free_market" selected> Soko Huru (Kawaida)</option>
+            <option value="auction"> Mnada (Live Auction)</option>
+            <option value="price_drop"> Bei Kushuka Kiotomatiki</option>
+            <option value="wholesale"> Kuuza kwa Jumla (Wholesale)</option>
+            <option value="group_buy"> Group Buy (Punguzo la Kundi)</option>
+        </select>
+
+        <!-- SEHEMU ZINAZOJIFICHA NA KUTOKEA KULINGANA NA MODE -->
+        <div id="dynamicModeFields" style="background:#f1f5f9; padding:10px; border-radius:10px; margin-top:10px; display:none; text-align:left;">
+
+            <!--  MNADA (LIVE AUCTION) -->
+            <div id="mode_auction_fields" style="display:none;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:4px;"> MUDA WA MNADA KUISHA *</label>
+                <input type="datetime-local" id="aucEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+            </div>
+
+            <!--  BEI KUSHUKA KIOTOMATIKI (PRICE DROP) -->
+            <div id="mode_price_drop_fields" style="display:none;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:4px;"> BEI YA MWISHO / CHINI (TSH) *</label>
+                <input type="number" id="pdMinPrice" placeholder="Mfano: 20,000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> MUDA WA KILA KUSHUKA *</label>
+                <select id="pdIntervalType" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white; font-weight:bold;">
+                    <option value="60000">Kila Dakika 1</option>
+                    <option value="300000">Kila Dakika 5</option>
+                    <option value="3600000" selected>Kila Saa 1</option>
+                    <option value="86400000">Kila Siku 1</option>
+                </select>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> DEAL INAISHIA LINI *</label>
+                <input type="datetime-local" id="pdEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+            </div>
+
+            <!--  WHOLESALE + GROUP BUY -->
+            <div id="mode_bulk_fields" style="display:none;">
+                <div id="mode_wholesale_fields" style="display:none;">
+                    <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue); display:block; margin-top:4px;"> PUNGUZO LA WHOLESALE (KWA KANDO YA TIERS) *</label>
+                    <input type="number" id="wsDiscount" placeholder="Mfano: 5000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                    <select id="wsDiscountType" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white; font-weight:bold;">
+                        <option value="amount">TSh (Kiasi Kilichopunguzwa)</option>
+                        <option value="percent">% (Asilimia)</option>
+                    </select>
+                    <!-- [§19-§22 WHOLESALE QTY/ TIERS] kiwango cha chini cha jumla na
+                         tiers za bei za kipande (halisi — hazina kuunda schema
+                         nyingine; huenda modeData kwenye product doc). -->
+                    <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue); display:block; margin-top:8px;"> IDADI YACHINI YA JUMLA (minQty) *</label>
+                    <input type="number" id="wsMinQty" placeholder="Mfano: 10" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                    <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue); display:block; margin-top:8px;"> TIERS ZA JUMLA (hiari — "minQty:bei" zimegawaywa na "; ") </label>
+                    <input type="text" id="wsTiersText" placeholder="Mfano: 10:9000; 50:8000; 100:7000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                    <small style="display:block; color:#64748b; margin-top:4px;">Kama hautaweka tiers, punguzo la juu (TSh/%) litatumika kwa minQty pekee — ukizijaza, tiers ndizo halisi unazowaonyesha wanunuzi.</small>
+                </div>
+                <div id="mode_groupbuy_fields" style="display:none;">
+                    <label style="font-size: 13px; font-weight:bold; color:#ea580c; display:block; margin-top:8px;"> PUNGUZO LA GROUP BUY (KWA KILA MTU) *</label>
+                    <input type="number" id="gbDiscount" placeholder="Mfano: 2000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                    <select id="gbDiscountType" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white; font-weight:bold;">
+                        <option value="amount">TSh (Kiasi)</option>
+                        <option value="percent">% (Asilimia)</option>
+                    </select>
+                    <label style="font-size: 13px; font-weight:bold; color:#ea580c; display:block; margin-top:8px;"> GROUP BUY INAISHIA LINI *</label>
+                    <input type="datetime-local" id="gbEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                    <label style="font-size: 13px; font-weight:bold; color:#ea580c; display:block; margin-top:8px;"> IDADI YA WATU WANAOLENGWA *</label>
+                    <input type="number" id="gbMaxPeople" value="10" placeholder="Mfano: 10" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                </div>
+            </div>
+        </div>
+
+        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">MAELEZO YA BIDHAA (DESCRIPTION) *</label>
+        <textarea id="prodDesc" placeholder="Eleza bidhaa yako kwa kina: faida zake, matumizi, ukubwa, rangi n.k..." style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; outline:none; resize:none;"></textarea>
+        
+        <!-- PRODUCT FOUNDATION: primary + additional images kupitia uploader uliopo. -->
+        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px; margin-bottom:5px;"> PICHA ZA BIDHAA (ANGALAU 1) * <span id="prodImageCount" style="color:#16a34a;"></span></label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button type="button" onclick="document.getElementById('prodImageCam').click()" style="padding:12px; background:#526962; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> PIGA PICHA</button>
+            <button type="button" onclick="document.getElementById('prodImage').click()" style="padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> KUTOKA GALARI</button>
+        </div>
+        <input type="file" id="prodImage" accept="image/*" multiple style="display:none;">
+        <input type="file" id="prodImageCam" accept="image/*" capture="environment" style="display:none;">
+        <div id="prodImagePreviews" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+        <script>/* Product media: primary + up to 5 additional images. */ if (window.skhInitPhotoPicker) { try { window.skhProdPicker = window.skhInitPhotoPicker({ galleryInput: 'prodImage', cameraInput: 'prodImageCam', previewId: 'prodImagePreviews', max: 6, min: 1, hintId: 'prodImageCount' }); } catch (e) { console.warn('picker:', e && e.message); } }</script>
+    </div>
+
+    <!--  MPYA: SOKOHAI WAREHOUSE ZONE & LOCATION ENGINE -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;">
+        <input type="text" id="prodLocation" placeholder="Location (Mtaa/Soko) *" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
+        <input type="text" id="prodWarehouseZone" placeholder="Eneo la Ghala (Shelf / Zone - Mf: Shelf A-3)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
+    </div>
+
+    <button type="submit" id="btnSeller" style="background: var(--primary-blue); color: white; width: 100%; padding: 16px; border-radius: 14px; font-weight: 900; margin-top: 15px; border: none; cursor: pointer; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(0,80,157,0.2);"> CHAPISHA BIDHAA SOKONI</button>
+    <button type="button" class="btn-close" onclick="goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">&lsaquo; Rudi Nyuma</button>
+</form>
+
+<!--  SOKOHAI SMART POS & TRANSACTION HUB (v2.0.0) -->
+<form id="businessOSForm" class="form-box" style="padding:25px; max-width:550px; width:95%; border-top: 10px solid var(--business-purple);">
+    <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
+        <div style="font-size:36px;"></div>
+        <h3 style="color:var(--primary-dark); margin:5px 0 0 0; font-weight: 950; text-transform: uppercase;">SOKOHAI SMART POS</h3>
+        <p style="font-size: 13px; color:#64748b; margin-top:3px; font-weight: bold;">KITOVU KUU CHA MIAMALA (TRANSACTION HUB)</p>
+    </div>
+
+    <!-- MAIN POS TRANSACTION SELECTOR -->
+    <div style="background: #f8fafc; padding: 15px; border-radius: 16px; border: 1.5px solid #cbd5e1; margin-bottom: 20px; text-align: left;">
+        <label style="font-weight: 900; font-size: 13px; color: var(--primary-dark); display: block; margin-bottom: 6px; text-transform: uppercase;"> CHAGUA KITENDO CHA POS (ACTION CENTER)</label>
+        <select id="posActionType" onchange="window.switchPosActionType()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:900; background:white; color:#0f172a;">
+            <option value="sale" selected> CASH SALE (Mauzo ya Taslimu)</option>
+            <option value="debt"> DEBT SALE (Kuuza kwa Deni/Mkopo)</option>
+            <option value="receive_payment"> RECEIVE PAYMENT (Kukusanya Madeni)</option>
+            <option value="return"> RETURN SALE (Mteja Kurudisha Mzigo)</option>
+            <option value="expense"> RECORD EXPENSE (Rekodi Matumizi)</option>
+            <option value="supplier"> SUPPLIER PAYMENT (Malipo ya Supplier)</option>
+        </select>
+    </div>
+
+    <!-- AREA 1: CASH SALE & DEBT SALE AREA -->
+    <div id="posSaleArea" style="display:block;">
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <input type="text" id="posSearchInput" oninput="window.searchPosProductsLive()" placeholder=" Tafuta Bidhaa au Scan Barcode hapa..." style="flex:1; padding:12px; border-radius:10px; border:1.5px solid #cbd5e1; outline:none; margin:0;">
+            <button type="button" onclick="window.simulateBarcodeScan()" style="padding:0 15px; background:#526962; color:white; border:none; border-radius:10px; font-weight:bold; font-size:12px; cursor:pointer;"> Scan</button>
+        </div>
+
+        <div id="posSearchResults" style="max-height:180px; overflow-y:auto; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; display:none; margin-bottom:12px; text-align: left;"></div>
+
+        <!-- POS Cart -->
+        <div style="background:#f8fafc; border:1.5px dashed var(--business-purple); border-radius:15px; padding:15px; margin-bottom:15px; text-align: left;">
+            <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; border-bottom:1px solid #cbd5e1; padding-bottom:5px; text-transform: uppercase;"> KIKAPU CHA POS (CART)</b>
+            <div id="posCartItems" style="max-height:180px; overflow-y:auto; margin-bottom:10px;">
+                <p style="text-align:center; color:gray; font-size: 13px; margin:15px 0;">Kikapu kiko wazi. Tafuta bidhaa juu kuingiza.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; border-top:1px solid #cbd5e1; padding-top:10px;">
+                <span style="font-size:13px; color:#64748b;">Jumla Kuu ya Kulipa:</span>
+                <span id="posCartTotal" style="font-size:20px; color:var(--terracotta);">TSh 0</span>
+            </div>
+        </div>
+
+        <!-- NJIA YA MALIPO (Payment Method) -->
+        <div style="margin-bottom:15px; text-align:left;">
+            <label style="font-size: 13px; font-weight:900; color:var(--primary-dark); display:block; margin-bottom:6px; text-transform:uppercase;">NJIA YA MALIPO *</label>
+            <select id="posPayType" onchange="window.togglePosPaymentDetails()" style="width:100%; padding:12px; border-radius:10px; border:1.5px solid #cbd5e1; background:white; font-weight:bold; color:#0f172a;">
+                <option value="Cash" selected> Cash (Pesa Taslimu)</option>
+                <option value="Mpesa"> M-Pesa (Lipa kwa Simu)</option>
+                <option value="Tigo"> Tigo Pesa</option>
+                <option value="Airtel"> Airtel Money</option>
+                <option value="Bank"> Benki (Bank Transfer)</option>
+                <option value="Deni"> Deni (Mteja Atalipa Baadae)</option>
+                <option value="Awamu"> Awamu (Installment / Deposit)</option>
+            </select>
+        </div>
+
+        <!-- PUNGUZO / PROMO -->
+        <div style="margin-bottom:15px; text-align:left;">
+            <label style="font-size: 13px; font-weight:900; color:var(--primary-dark); display:block; margin-bottom:6px; text-transform:uppercase;">PUNGUZO (PROMO) — Hiari</label>
+            <select id="posPromoType" onchange="window.calculatePosChange()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold; color:#0f172a;">
+                <option value="none" selected> Hakuna Punguzo</option>
+                <option value="10"> Punguzo la 10%</option>
+                <option value="weekend"> Punguza TSh 2,000 (zaidi ya elfu 10)</option>
+                <option value="buy2get1"> Nunua 2 Pata 1 Bure</option>
+            </select>
+        </div>
+
+        <!-- MGAWANYO WA CASH VS DEBT SALES -->
+        <div id="posCashArea">
+            <div id="posCashPaymentDetail" style="background:#f0fdf4; border:1px dashed #22c55e; padding:15px; border-radius:14px; margin-bottom:15px; text-align:left;">
+                <label style="font-size: 13px; font-weight:bold; color:#16a34a;">KIASI ALICHOTOA MTEJA (TSH) *</label>
+                <input type="number" id="posCashReceived" oninput="window.calculatePosChange()" placeholder="Ingiza kiasi alichotoa mteja..." style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+                <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; font-weight:bold; color:#15803d;">
+                    <span>Chenji ya Kurudisha:</span>
+                    <span id="posCashChange">TSh 0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="posMnoArea" style="display:none; background:#eff6ff; border:1px dashed #3b82f6; padding:15px; border-radius:14px; margin-bottom:15px; text-align:left;">
+            <label style="font-size: 13px; font-weight:bold; color:#1d4ed8;">NAMBA YA SIMU YA MALIPO</label>
+            <input type="tel" id="posMnoPhone" placeholder="07XXXXXXXX" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+            <small style="display:block; margin-top:8px; color:#475569; font-size: 13px;">Thibitisha malipo kupitia simu/SokoPay kabla ya kuhifadhi mauzo.</small>
+        </div>
+
+        <div id="posDebtFieldsArea" style="display:none;">
+            <div id="posDebtPaymentDetail" style="background:#fef2f2; padding:15px; border-radius:14px; border:1.5px dashed #ef4444; margin-bottom:15px; text-align:left;">
+                <label style="font-size: 13px; font-weight:bold; color:#ef4444;">Jina la Mteja Anayedaiwa *</label>
+                <input type="text" id="posCustomerName" placeholder="Ingiza jina la mteja..." style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px; margin-bottom:10px;">
+                <label style="font-size: 13px; font-weight:bold; color:#ef4444;">Namba ya Simu ya Mteja *</label>
+                <input type="tel" id="posCustomerPhone" placeholder="Mf: 07XXXXXXXX" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px; margin-bottom:10px;">
+                <label style="font-size: 13px; font-weight:bold; color:#ef4444;">Kiasi Alichotanguliza Kulipa (Deposit TSh)</label>
+                <input type="number" id="posCustomerDeposit" value="0" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+            </div>
+        </div>
+
+        <button type="button" onclick="window.submitPosSale()" style="width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform: uppercase;">HIFADHI MAUZO POS </button>
+    </div>
+
+    <!-- AREA 2: RECEIVE PAYMENT FROM CUSTOMER (KULIPA DENI) -->
+    <div id="posReceivePaymentArea" style="display:none; text-align:left;">
+        <p style="font-size:12px; color:#475569; margin-bottom:12px;">Kukusanya na kupokea madeni ya nyuma ya wateja. Tafuta mteja hapa:</p>
+        <input type="text" id="posSearchDebtorInp" oninput="window.searchDebtorsLive()" placeholder=" Andika jina la mteja anayedaiwa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
+        <div id="posDebtorSearchResults" style="max-height:150px; overflow-y:auto; background:#f8fafc; border-radius:10px; border:1px solid #cbd5e1; display:none; margin-bottom:12px;"></div>
+
+        <div id="selectedDebtorBox" style="display:none; background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:14px; margin-bottom:15px;">
+            <input type="hidden" id="selectedDebtDocId">
+            <span style="display:block; font-size:13px;">Mteja: <b id="selectedDebtorName">...</b></span>
+            <span style="display:block; font-size:13px; margin-top:4px;">Deni Analodaiwa: <b id="selectedDebtorAmount" style="color:red;">TSh 0</b></span>
+            
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">KIASI ANACHOLIPA SASA (TSH) *</label>
+            <input type="number" id="debtCollectAmount" placeholder="Kiasi anacholipa..." style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px; background:white;">
+        </div>
+        <button type="button" onclick="window.submitCollectDebtPayment()" style="width:100%; padding:16px; background:var(--primary-blue); color:white; border:none; border-radius:14px; font-weight:900;">THIBITISHA KUPOKEA MALIPO <span class="skh-ico" data-ico="check"></span></button>
+    </div>
+
+    <!-- AREA 3: RETURN SALE (MTEJA KURUDISHA BIDHAA) -->
+    <div id="posReturnArea" style="display:none; text-align:left;">
+        <p style="font-size:12px; color:#475569; margin-bottom:12px;">Sajili bidhaa iliyorudishwa na mteja ili irudi stoo na kurekebisha hesabu za faida:</p>
+        <input type="text" id="posSearchReturnInp" oninput="window.searchProductsForReturnLive()" placeholder=" Tafuta bidhaa iliyorudishwa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
+        <div id="posReturnSearchResults" style="max-height:150px; overflow-y:auto; background:#f8fafc; border-radius:10px; border:1px solid #cbd5e1; display:none; margin-bottom:12px;"></div>
+
+        <div id="selectedReturnProductBox" style="display:none; background:#fef2f2; border:1px solid #fecaca; padding:15px; border-radius:14px; margin-bottom:15px;">
+            <input type="hidden" id="selectedReturnProductId">
+            <span style="display:block; font-size:13px;">Bidhaa: <b id="selectedReturnProductName">...</b></span>
+            <span style="display:block; font-size:13px; margin-top:4px;">Kiasi cha Kurejesha kwa PC (TSh): <b id="selectedReturnProductPrice">0</b></span>
+            
+            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">IDADI ILIYORUDISHWA (PCS) *</label>
+            <input type="number" id="returnProductQty" value="1" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px; background:white;">
+        </div>
+        <button type="button" onclick="window.submitReturnSale()" style="width:100%; padding:16px; background:var(--terracotta); color:white; border:none; border-radius:14px; font-weight:900;">THIBITISHA KUREJESHA MZIGO </button>
+    </div>
+
+    <!-- AREA 4: RECORD EXPENSE (MATUMIZI) -->
+    <div id="posExpenseArea" style="display:none; text-align:left;">
+        <label style="font-size: 13px; font-weight:bold; color:gray;">CHAGUA KATEGORIA YA MATUMIZI *</label>
+        <select id="expCategorySelectOS" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-top:5px; margin-bottom:12px; font-weight:bold;">
+            <option value="Transport"> Usafiri (Transport)</option>
+            <option value="Luku"> Umeme (Luku)</option>
+            <option value="Maji"> Maji (Water)</option>
+            <option value="Kodi"> Kodi ya Banda</option>
+            <option value="Salaries"> Mishahara</option>
+            <option value="Mengineyo"> Mengineyo</option>
+        </select>
+        <label style="font-size: 13px; font-weight:bold; color:gray;">KIASI KILICHOLIPWA (TSH) *</label>
+        <input type="number" id="expAmountInpOS" placeholder="Kiasi kilicholipwa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; margin-bottom:15px; font-weight:900;">
+        <button type="button" onclick="window.submitPredefinedExpense()" style="width:100%; padding:16px; background:var(--terracotta); color:white; border:none; border-radius:14px; font-weight:900;">REKODI MATUMIZI </button>
+    </div>
+
+    <!-- AREA 5: SUPPLIER PAYMENT (MALIPO YA WAUSAJI WA JUMLA) -->
+    <div id="posSupplierArea" style="display:none; text-align:left;">
+        <label style="font-size: 13px; font-weight:bold; color:gray;">JINA LA SUPPLIER / KAMPUNI *</label>
+        <input type="text" id="supplierNameOS" placeholder="Mf: ABC Traders Ltd" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; margin-bottom:12px;">
+        
+        <label style="font-size: 13px; font-weight:bold; color:gray;">KIASI KILICHOLIPWA KWA SUPPLIER (TSH) *</label>
+        <input type="number" id="supplierAmountOS" placeholder="Kiasi cha malipo..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; margin-bottom:15px; font-weight:900;">
+        <button type="button" onclick="window.submitSupplierPaymentOS()" style="width:100%; padding:16px; background:var(--primary-dark); color:white; border:none; border-radius:14px; font-weight:900;">REKODI MALIPO YA SUPPLIER </button>
+    </div>
+
+    <button type="button" class="btn-close" onclick="goBackToMenu()" style="margin-top:15px;">&lsaquo; Rudi Nyuma</button>
+</form>

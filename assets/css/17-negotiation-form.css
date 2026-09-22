@@ -1,0 +1,445 @@
+/* ==== css/17-negotiation-form.css ====
+   SOKOHAI — Dynamic Negotiation Form (Module 01)
+   Bottom-sheet ya majadiliano ndani ya Chat. Inatumia design tokens
+   zilizopo (--skh-*) — haileti mtindo mpya wa brand.
+   Mobile-first; tablet/desktop inakuwa kadi iliyokaa katikati.
+   ================================================================ */
+
+#chatNegotiationHost {
+    position: absolute;
+    inset: 0;
+    z-index: 70;
+    display: none;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+#chatNegotiationHost.is-open {
+    display: block;
+    pointer-events: auto;
+}
+
+.nf-shell {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(11, 30, 48, 0.46);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: nfFade var(--skh-speed, .22s) var(--skh-ease, ease);
+}
+
+.nf-sheet {
+    width: 100%;
+    max-width: 560px;
+    max-height: 100%;
+    background: var(--skh-surface, #fff);
+    border-radius: 20px 20px 0 0;
+    box-shadow: var(--skh-shadow-lg, 0 12px 32px rgba(15,23,42,.16));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: nfSlideUp .28s var(--skh-ease, ease);
+    font-family: var(--skh-font, Inter, system-ui, sans-serif);
+    color: var(--skh-text, #173B56);
+}
+
+/* ---------- Header ---------- */
+.nf-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #F1FBF7;
+    color: #18352D;
+    border-bottom: 1px solid #D9EEE5;
+    flex-shrink: 0;
+}
+.nf-head-t { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.nf-head-ico {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: #EAF8F2;
+    border: 1px solid #CCEBDD;
+    color: #178864;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; flex-shrink: 0;
+}
+.nf-head h2 { margin: 0; font-size: 15.5px; font-weight: 800; line-height: 1.25; }
+.nf-head-sub { display: block; font-size: 12.5px; font-weight: 600; color: #65757A; margin-top: 1px; }
+.nf-x {
+    border: 1px solid #CCEBDD; background: #fff; color: #17604E;
+    width: 34px; height: 34px; border-radius: 50%; font-size: 15px;
+    cursor: pointer; flex-shrink: 0; transition: background .2s;
+}
+.nf-x:hover { background: rgba(255,255,255,.28); }
+.nf-x:focus-visible { outline: 3px solid #f3d88a; outline-offset: 1px; }
+
+/* ---------- Body / scroll ---------- */
+.nf-body {
+    padding: 14px 14px 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--skh-bg, #F6F9FC);
+    flex: 1;
+    min-height: 0;
+}
+
+/* ---------- Context card (bidhaa/huduma/safari) ---------- */
+.nf-ctx {
+    display: flex;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid var(--skh-line, #e2e8f0);
+    border-radius: var(--skh-radius-lg, 16px);
+    padding: 12px;
+    box-shadow: var(--skh-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+}
+.nf-ctx-img {
+    width: 64px; height: 64px; border-radius: 12px; overflow: hidden;
+    flex-shrink: 0; background: var(--skh-primary-light, #e8f1fb);
+    display: flex; align-items: center; justify-content: center;
+}
+.nf-ctx-img img { width: 100%; height: 100%; object-fit: cover; }
+.nf-ctx-img.nf-noimg img { display: none; }
+.nf-ctx-emoji { font-size: 28px; }
+.nf-ctx-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.nf-badge {
+    align-self: flex-start;
+    font-size: 12.5px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase;
+    color: var(--skh-deep, #0B4F7A);
+    background: var(--skh-primary-light, #e8f1fb);
+    padding: 3px 9px; border-radius: var(--skh-radius-pill, 999px);
+}
+.nf-ctx-title {
+    font-size: 14.5px; font-weight: 800; color: var(--skh-ink, #0f172a);
+    line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.nf-ctx-sub { font-size: 13px; color: var(--skh-muted, #64748b); }
+.nf-ctx-seller { font-size: 13px; color: var(--skh-ink-soft, #475569); font-weight: 600; }
+.nf-ctx-price {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--skh-line, #e2e8f0);
+}
+.nf-ctx-price span { font-size: 12.5px; font-weight: 700; color: var(--skh-muted, #64748b); text-transform: uppercase; letter-spacing: .3px; }
+.nf-ctx-price b { font-size: 15px; color: var(--skh-deep, #0B4F7A); font-weight: 800; }
+
+/* ---------- Sheria / hint ---------- */
+.nf-rule-hint {
+    margin-top: 10px;
+    background: var(--skh-info-bg, #eff6ff);
+    border: 1px solid #cfe3f8;
+    color: #1e5a86;
+    font-size: 13px; line-height: 1.45;
+    padding: 9px 12px; border-radius: var(--skh-radius, 12px);
+}
+.nf-rule-hint b { color: var(--skh-deep, #0B4F7A); }
+
+.nf-banner {
+    margin-top: 10px;
+    background: var(--skh-danger-bg, #fef2f2);
+    border: 1px solid #fecaca;
+    color: var(--skh-red-dark, #b91c1c);
+    font-size: 12.5px; font-weight: 600;
+    padding: 10px 12px; border-radius: var(--skh-radius, 12px);
+}
+
+/* ---------- Sections / fields ---------- */
+.nf-section {
+    background: #fff;
+    border: 1px solid var(--skh-line, #e2e8f0);
+    border-radius: var(--skh-radius-lg, 16px);
+    padding: 12px 12px 14px;
+    margin-top: 12px;
+    box-shadow: var(--skh-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+}
+.nf-section h3 {
+    margin: 0 0 10px;
+    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px;
+    color: var(--skh-deep, #0B4F7A);
+    display: flex; align-items: center; gap: 6px;
+}
+.nf-opt-tag {
+    font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: 0;
+    color: var(--skh-muted, #64748b); background: var(--skh-bg, #F6F9FC);
+    border: 1px solid var(--skh-line, #e2e8f0);
+    padding: 2px 8px; border-radius: var(--skh-radius-pill, 999px);
+}
+
+.nf-field { margin-bottom: 11px; }
+.nf-field:last-child { margin-bottom: 0; }
+.nf-field label, .nf-label {
+    display: block; font-size: 13px; font-weight: 700;
+    color: var(--skh-ink-soft, #475569); margin-bottom: 5px;
+}
+.nf-req { color: var(--skh-red, #ef4444); }
+
+.nf-field input,
+.nf-field textarea,
+.nf-field select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;                 /* iOS haizidi zoom chini ya 16px */
+    color: var(--skh-ink, #0f172a);
+    background: #fff;
+    border: 1.5px solid var(--skh-line, #e2e8f0);
+    border-radius: var(--skh-radius, 12px);
+    padding: 12px 13px;
+    outline: none;
+    transition: border-color .18s, box-shadow .18s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.nf-field textarea { resize: vertical; min-height: 64px; line-height: 1.45; }
+.nf-field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    padding-right: 34px;
+}
+.nf-field input::placeholder,
+.nf-field textarea::placeholder { color: #94a3b8; }
+.nf-field input:focus,
+.nf-field textarea:focus,
+.nf-field select:focus {
+    border-color: var(--skh-soft, #2B82BD);
+    box-shadow: 0 0 0 3px rgba(43, 130, 189, .18);
+}
+.nf-field input[readonly] { background: var(--skh-bg, #F6F9FC); color: var(--skh-muted, #64748b); }
+
+/* jozi: namba + kizio (siku, mifuko…) */
+.nf-pair-row { display: flex; gap: 8px; align-items: stretch; }
+.nf-pair-row input { flex: 1 1 auto; min-width: 0; }
+.nf-pair-row select { flex: 0 0 42%; }
+.nf-pair .nf-field-control .nf-pair-row .nf-field { margin: 0; }
+.nf-pair .nf-field-control .nf-pair-row label { display: none; }
+.nf-pair .nf-field-control .nf-pair-row .nf-field select,
+.nf-pair .nf-field-control .nf-pair-row .nf-field input { height: 100%; }
+
+/* Kiambishi cha fedha */
+.nf-money { position: relative; display: flex; align-items: center; }
+.nf-money span {
+    position: absolute; left: 13px; font-size: 12px; font-weight: 800;
+    color: var(--skh-muted, #64748b); pointer-events: none;
+}
+.nf-money input { padding-left: 44px; font-weight: 700; }
+
+/* Jumla (hesabu ya kiotomatiki — haihaririki) */
+.nf-total {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--skh-success-bg, #ecfdf5);
+    border: 1.5px solid #a7e8d4;
+    border-radius: var(--skh-radius, 12px);
+    padding: 12px 14px;
+}
+.nf-total span { font-size: 12px; font-weight: 800; color: var(--skh-green-dark, #0E7A63); text-transform: uppercase; letter-spacing: .3px; }
+.nf-total b { font-size: 19px; font-weight: 900; color: var(--skh-green, #18A982); }
+
+/* Tofauti ya bei (sheria: sokoni vs pendekezo) */
+.nf-price-cmp {
+    margin-top: 7px; font-size: 13px; font-weight: 600;
+    padding: 7px 10px; border-radius: 10px;
+}
+.nf-price-cmp.down { background: var(--skh-success-bg, #ecfdf5); color: var(--skh-green-dark, #0E7A63); border: 1px solid #a7e8d4; }
+.nf-price-cmp.up { background: var(--skh-warn-bg, #fffbeb); color: #92610a; border: 1px solid #fde68a; }
+
+/* Chips za chaguzi (size/color/condition) */
+.nf-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.nf-chip {
+    border: 1.5px solid var(--skh-line, #e2e8f0);
+    background: #fff; color: var(--skh-text, #173B56);
+    font-size: 12.5px; font-weight: 700;
+    padding: 8px 14px; border-radius: var(--skh-radius-pill, 999px);
+    cursor: pointer; transition: all .16s var(--skh-ease, ease);
+    font-family: inherit;
+}
+.nf-chip:hover { border-color: var(--skh-soft, #2B82BD); background: var(--skh-primary-light, #e8f1fb); }
+.nf-chip.on {
+    border-color: var(--skh-primary, #1268A8);
+    background: var(--skh-primary, #1268A8);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(18, 104, 168, .3);
+}
+.nf-chip-other { border-style: dashed; color: var(--skh-muted, #64748b); }
+.nf-chip-input { margin-top: 8px; }
+.hidden { display: none !important; }
+
+/* Makosa */
+.nf-field-error {
+    min-height: 0;
+    font-size: 13px; font-weight: 600;
+    color: var(--skh-red-dark, #b91c1c);
+    margin-top: 4px; display: none;
+}
+.nf-field.has-error .nf-field-error { display: block; }
+.nf-field.has-error input,
+.nf-field.has-error textarea,
+.nf-field.has-error select {
+    border-color: var(--skh-red, #ef4444);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+}
+.nf-hint { font-size: 13px; color: var(--skh-muted, #64748b); margin-top: 4px; }
+
+/* ---------- Live summary ---------- */
+.nf-summary-sec { background: linear-gradient(180deg, #fff, #f7fbff); border-color: #cfe3f8; }
+.nf-sum-head { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.nf-sum-head .nf-badge { align-self: flex-start; }
+.nf-sum-head b {
+    font-size: 14px; font-weight: 800; color: var(--skh-ink, #0f172a); line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.nf-summary { display: flex; flex-direction: column; gap: 7px; }
+.nf-sum-row {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    font-size: 12.5px; color: var(--skh-ink-soft, #475569);
+}
+.nf-sum-row span { white-space: nowrap; }
+.nf-sum-row b { font-weight: 700; color: var(--skh-ink, #0f172a); text-align: right; }
+.nf-sum-row.strong {
+    margin-top: 4px; padding-top: 9px; border-top: 1px dashed var(--skh-line, #e2e8f0);
+    font-size: 13.5px;
+}
+.nf-sum-row.strong span { color: var(--skh-green-dark, #0E7A63); font-weight: 800; }
+.nf-sum-row.strong b { color: var(--skh-green, #18A982); font-size: 15px; font-weight: 900; }
+
+/* ---------- Footer (sticky CTA) ---------- */
+.nf-foot {
+    display: flex; gap: 10px;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    border-top: 1px solid var(--skh-line, #e2e8f0);
+    box-shadow: 0 -4px 14px rgba(15, 23, 42, .06);
+    flex-shrink: 0;
+}
+.nf-btn {
+    border: none; border-radius: var(--skh-radius, 12px);
+    padding: 14px 16px; font-size: 14px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    transition: transform .12s var(--skh-ease, ease), box-shadow .18s, background .18s;
+}
+.nf-btn:active { transform: scale(.985); }
+.nf-btn:focus-visible { outline: 3px solid rgba(212, 175, 55, .55); outline-offset: 2px; }
+.nf-btn-light {
+    flex: 0 0 auto; min-width: 96px;
+    background: var(--skh-bg, #F6F9FC); color: var(--skh-ink-soft, #475569);
+    border: 1.5px solid var(--skh-line, #e2e8f0);
+}
+.nf-btn-light:hover { background: #edf3f9; }
+.nf-btn-primary {
+    flex: 1 1 auto;
+    background: linear-gradient(135deg, var(--skh-soft, #2B82BD), var(--skh-primary, #1268A8));
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(18, 104, 168, .32);
+}
+.nf-btn-primary:hover { box-shadow: 0 8px 20px rgba(18, 104, 168, .4); }
+.nf-btn-primary:disabled { opacity: .65; cursor: not-allowed; box-shadow: none; }
+.nf-btn.is-loading { cursor: wait; }
+.nf-btn.is-success { background: #0E7A63; color: #fff; opacity: 1; }
+.nf-btn.is-error { background: #b91c1c; color: #fff; opacity: 1; }
+.nf-btn[aria-busy="true"]::before {
+    content: ''; display:inline-block; width:13px; height:13px; margin-right:7px;
+    border:2px solid rgba(255,255,255,.45); border-top-color:#fff; border-radius:50%;
+    animation:nfSpin .8s linear infinite; vertical-align:-2px;
+}
+
+/* ---------- Hali (loading / empty / error) ---------- */
+.nf-state {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    gap: 8px; padding: 46px 22px; color: var(--skh-muted, #64748b);
+}
+.nf-state b { color: var(--skh-text, #173B56); font-size: 14.5px; }
+.nf-state span { font-size: 12.5px; line-height: 1.5; max-width: 300px; }
+.nf-state-ico { font-size: 34px; }
+.nf-state .nf-btn { margin-top: 12px; min-width: 140px; }
+.nf-spinner {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 3px solid var(--skh-primary-light, #e8f1fb);
+    border-top-color: var(--skh-primary, #1268A8);
+    animation: nfSpin .8s linear infinite;
+}
+
+/* ---------- Tablet / desktop ---------- */
+@media (min-width: 720px) {
+    .nf-shell { align-items: center; padding: 24px; }
+    .nf-sheet {
+        border-radius: 22px;
+        max-height: 100%;
+        box-shadow: 0 24px 60px rgba(8, 25, 42, .35);
+        animation: nfPop .26s var(--skh-ease, ease);
+    }
+    .nf-body { padding: 18px 20px 22px; }
+    .nf-foot { padding: 14px 20px; }
+}
+
+/* Zuia kujaa kwa upana (no horizontal overflow) */
+.nf-sheet *, .nf-sheet *::before, .nf-sheet *::after { box-sizing: border-box; max-width: 100%; }
+.nf-sheet textarea, .nf-sheet input { max-width: 100%; }
+
+@keyframes nfFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nfSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes nfPop { from { transform: translateY(14px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes nfSpin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .nf-shell, .nf-sheet { animation: none; }
+    .nf-spinner { animation-duration: 1.4s; }
+}
+
+/* ============================================================
+   [ICON POLICY 2026-09] Icons za SVG (hakuna emoji): mpangilio
+   na rangi za icons ndani ya fomu ya majadiliano.
+   ============================================================ */
+.nf-head-ico svg { stroke: #fff; }
+.nf-state-ico svg { stroke: var(--skh-primary, #1268A8); }
+.nf-ctx-emoji svg { stroke: var(--skh-primary, #1268A8); }
+.nf-badge svg { stroke: currentColor; vertical-align: -2px; }
+.nf-ctx-seller svg, .nf-ctx-sub svg { stroke: var(--skh-soft, #2B82BD); vertical-align: -2px; }
+.nf-inline-arrow { display: inline-flex; vertical-align: middle; color: #94A3B8; }
+.nf-inline-arrow svg { stroke: #94A3B8; }
+.nf-rule-hint svg { stroke: #B45309; vertical-align: -2px; }
+.nf-banner svg { stroke: currentColor; vertical-align: -2px; }
+.nf-price-cmp svg { stroke: currentColor; vertical-align: -2px; }
+.nf-sum-row span svg { stroke: var(--skh-soft, #2B82BD); vertical-align: -2px; }
+.nf-sum-row.strong span svg { stroke: var(--skh-green, #18A982); }
+.nf-sum-head h3, .nf-summary-sec h3 { display: flex; align-items: center; gap: 7px; }
+.nf-chip svg { stroke: currentColor; vertical-align: -2px; }
+#nfSendLabel svg { stroke: currentColor; vertical-align: -2px; }
+.nf-x { font-size: 0; }
+.nf-x svg { stroke: #64748B; }
+.nf-x:hover svg { stroke: #0F172A; }
+
+/* [NEGO MOBILE AUTHORITY 2026-09-22] 320–412px: long commerce text and
+   actions wrap inside the sheet; no fixed button width may widen viewport. */
+.nf-sheet, .nf-sheet form, .nf-body, .nf-foot, .nf-context,
+.nf-row, .nf-pair-row, .nf-sum-row, .nf-actions {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.nf-head-t, .nf-ctx-info, .nf-ctx-info *, .nf-sum-row *, .nf-state * {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.nf-foot, .nf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.nf-foot .nf-btn, .nf-actions .nf-btn, .nf-state .nf-btn {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 380px) {
+    .nf-head { padding: 12px 10px; }
+    .nf-body { padding-inline: 10px; }
+    .nf-foot { padding: 10px; }
+    .nf-pair-row { flex-wrap: wrap; }
+    .nf-pair-row > * { flex: 1 1 130px; }
+    .nf-foot .nf-btn, .nf-actions .nf-btn { flex: 1 1 calc(50% - 8px); }
+}
+@media (max-width: 330px) {
+    .nf-foot .nf-btn, .nf-actions .nf-btn { flex-basis: 100%; width: 100%; }
+}

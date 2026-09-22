@@ -1,0 +1,213 @@
+/* ==== css/11-haipay-mobile.css ==== */
+/* ============================================================
+   SOKOPAY — MOBILE-FIRST LAYOUT + BUTTON POLISH (Phase 2.9)
+   Tatizo lililorekebishwa: kwenye kioo wima (portrait), SokoPay
+   ilikuwa inaonyesha sidebar tu; workspace ilionekana baada ya
+   kusroll chini. Sasa sidebar inakuwa upau wa juu (horizontal
+   pills) na workspace inajaza kioo na kuscroll peke yake.
+   Pia: buttons zote za SokoPay zimepigwa msasa (hover/press/focus).
+   ============================================================ */
+
+/* ---------- 1) POLISH YA BUTTONS ZOTE (ukubwa wote) ---------- */
+#sokopayForm button {
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease, background .16s ease, color .16s ease;
+}
+#sokopayForm button:active { transform: scale(.97); }
+#sokopayForm button:focus-visible { outline: 2px solid #00509d; outline-offset: 2px; }
+
+@media (hover: hover) {
+    #sokopayWorkspace button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    }
+    #sokopayWorkspace button:active { transform: translateY(0) scale(.98); }
+}
+
+/* ---------- 2) SIDEBAR LINKS (desktop polish) ---------- */
+.sp-sidebar-link { margin: 2px 0; position: relative; }
+.sp-sidebar-link:hover { background: #F1F8F5 !important; color: #17604E !important; }
+.sp-sidebar-link.active {
+    box-shadow: inset 3px 0 0 #18A982;
+}
+
+/* Brand row iweze kujipanga vizuri hata desktop */
+.sp-sidebar-brand { flex-wrap: wrap; }
+
+/* ---------- 3) BUTTON YA "RUDI" (back) — pill ya bluu, juu-kulia, inayoonekana ---------- */
+.sp-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 36px;
+    padding: 0 14px;
+    flex-shrink: 0;
+    background: #18A982;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 80, 157, 0.28);
+    transition: background .18s ease, transform .15s ease, box-shadow .18s ease;
+}
+.sp-back-btn:hover {
+    background: #17604E;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0, 80, 157, 0.34);
+}
+.sp-back-btn:active { transform: scale(.96); box-shadow: 0 2px 6px rgba(0, 80, 157, 0.24); }
+.sp-back-btn svg { flex-shrink: 0; }
+.sp-back-label { white-space: nowrap; }
+
+/* Wallet chip kwenye top bar (onekana mobile pekee) */
+.sp-wallet-chip {
+    display: none;
+    margin-left: auto;
+    background: rgba(16, 185, 129, 0.14);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* ---------- 4) MOBILE / TABLET (<= 1024px) ---------- */
+@media (max-width: 1024px) {
+
+    /* Fomu kamili ya kioo — SokoPay inachukua screen nzima */
+    #sokopayForm {
+        width: 100% !important;
+        max-width: none !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        border-top: none !important;
+    }
+
+    /* Layout: column (upau juu + workspace chini) */
+    #sokopayMainLayout {
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    /* Sidebar -> upau wa juu (horizontal) */
+    #sokopayLeftSidebar {
+        width: 100% !important;
+        height: auto !important;
+        flex-direction: row !important;
+        align-items: center;
+        padding: 10px 12px !important;
+        border-right: none !important;
+        background: #FFFFFF !important;
+        border-bottom: 1px solid #E5ECEC !important;
+        box-shadow: 0 6px 20px rgba(24, 53, 45, 0.08);
+        z-index: 5;
+        flex-shrink: 0;
+    }
+    #sokopayLeftSidebar > div:first-child {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 8px;
+    }
+
+    /* Brand row: back + logo + jina + wallet chip */
+    #sokopayLeftSidebar .sp-sidebar-brand {
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 10px !important;
+    }
+    #sokopayLeftSidebar .sp-brand-logo { width: 28px !important; height: 28px !important; font-size: 15px !important; }
+    #sokopayLeftSidebar .sp-brand-name { font-size: 16px !important; }
+    .sp-wallet-chip { display: inline-flex !important; }
+
+    /* Ficha vichwa vya kikundi + kadi ya wasifu + help link (mobile) */
+    #sokopayLeftSidebar .sp-menu-heading { display: none !important; }
+    #sokopayLeftSidebar .sp-bottom-section { display: none !important; }
+
+    /* Menu -> horizontal scroll ya pills */
+    #sokopayLeftSidebar .sp-sidebar-menu {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        gap: 8px !important;
+        padding: 2px 2px 4px !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    #sokopayLeftSidebar .sp-sidebar-menu::-webkit-scrollbar { display: none; }
+
+    /* Link -> pill nzuri */
+    #sokopayLeftSidebar .sp-sidebar-link {
+        width: auto !important;
+        flex: 0 0 auto !important;
+        padding: 9px 15px !important;
+        border-radius: 999px !important;
+        white-space: nowrap;
+        font-size: 12px !important;
+        margin: 0 !important;
+        background: #FFFFFF !important;
+        color: #65757A !important;
+        border: 1px solid #E5ECEC !important;
+    }
+    #sokopayLeftSidebar .sp-sidebar-link.active {
+        background: #EAF8F2 !important;
+        color: #17604E !important;
+        border-color: #CCEBDD !important;
+        box-shadow: inset 0 -3px 0 #18A982 !important;
+    }
+    #sokopayLeftSidebar .sp-sidebar-link:hover {
+        background: #F1F8F5 !important;
+        color: #17604E !important;
+    }
+
+    /* Workspace inajaza sehemu iliyobaki na kuscroll peke yake */
+    #sokopayWorkspace {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        padding: 14px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Ficha paneli ya kulia (live tracking demo) — usafi kwenye simu */
+    #sokopayRightSidebar { display: none !important; }
+
+    /* Header ya workspace — compact */
+    .sp-header-bar {
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 14px !important;
+        padding-bottom: 10px !important;
+    }
+    .sp-header-title { font-size: 17px !important; }
+    .sp-header-subtitle { font-size: 13px !important; }
+    .sp-header-controls { gap: 6px !important; }
+    .sp-header-controls .sp-search-box { display: none !important; }
+    .sp-header-btn.sp-hide-mobile { display: none !important; }
+    .sp-header-avatar { width: 30px !important; height: 30px !important; }
+
+    /* Gridi za ndani (Pay / Track) -> safu moja */
+    .sp-dashboard-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+}
+
+/* ---------- 5) SIMU NDEFU SANA (<= 480px) ---------- */
+@media (max-width: 480px) {
+    #sokopayWorkspace { padding: 12px !important; }
+    .sp-kpi-grid-premium { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .sp-back-btn { height: 32px !important; padding: 0 12px !important; font-size: 13px !important; }
+    .sp-back-label { font-size: 13px !important; }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "SokoHai - Ultimate Pro Edition",
+  "short_name": "SokoHai",
+  "description": "SokoHai — soko la mtandaoni la Tanzania. Nunua na uuze bidhaa, huduma na usafiri kwa usalama (escrow).",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#03509d",
+  "icons": [
+    {
+      "src": "assets/sokohai-s-mark.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/sokohai-s-mark.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

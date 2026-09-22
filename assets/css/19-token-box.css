@@ -1,0 +1,253 @@
+/* ============================================================
+   SOKOHAI — TOKEN BOX (css/19, 2026-09)
+   Sanduku la mikode ya makabidhiano (PK/TR/DL) linalojitegemea.
+   Lugha ya brand: Inter, #1268A8/#2B82BD/#0B4F7A/#18A982,
+   bg #F6F9FC, kadi nyeupe, mipaka laini, vivuli hafifu.
+   ============================================================ */
+
+#tokenBoxModal { z-index: 8800; }
+.tb-sheet {
+    width: 100%;
+    max-width: 560px;
+    max-height: 92vh;
+    margin: auto;
+    background: #FFFFFF;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(11, 79, 122, .35);
+    animation: tbPop .25s ease-out;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+@keyframes tbPop { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* Kichwa */
+.tb-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: #fff;
+    border-bottom: 1px solid #E6EDF3;
+    flex: 0 0 auto;
+}
+.tb-head-ic {
+    flex: 0 0 auto;
+    width: 42px; height: 42px;
+    border-radius: 13px;
+    background: #EAF8F2;
+    color: #178864;
+    border: 1px solid #CCEBDD;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 14px rgba(18, 104, 168, .28);
+}
+.tb-head-ic svg { stroke: #178864; width: 21px; height: 21px; }
+.tb-head-txt { flex: 1; min-width: 0; }
+.tb-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #173B56; }
+.tb-sub { display: block; font-size: 13px; color: #64748B; line-height: 1.4; margin-top: 1px; }
+.tb-close {
+    margin-left: auto; flex: 0 0 auto;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: none; background: #F1F5F9; color: #475569;
+    font-size: 20px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.tb-close:hover { background: #E2E8F0; }
+
+/* Vichupo */
+.tb-tabs {
+    display: flex; gap: 6px;
+    padding: 12px 16px 0;
+    background: #FFFFFF;
+    flex: 0 0 auto;
+}
+.tb-tab {
+    flex: 1; border: 1px solid #E2E8F0; background: #fff;
+    border-radius: 99px; padding: 9px 6px;
+    font-size: 12px; font-weight: 800; color: #64748B;
+    cursor: pointer; transition: all .15s ease;
+    font-family: inherit;
+}
+.tb-tab:hover { border-color: #bcd4e8; color: #0B4F7A; }
+.tb-tab.is-active {
+    background: #18A982; border-color: #18A982; color: #fff;
+    box-shadow: 0 4px 10px rgba(24, 169, 130, .20);
+}
+
+/* Orodha */
+.tb-list {
+    padding: 14px 16px 18px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 14px;
+}
+.tb-group-title {
+    display: flex; align-items: center; gap: 7px;
+    margin: 4px 0 -4px;
+    font-size: 12px; font-weight: 800; color: #0B4F7A;
+    text-transform: uppercase; letter-spacing: .03em;
+}
+.tb-group-title svg { stroke: #2B82BD; }
+.tb-group { display: flex; flex-direction: column; gap: 11px; }
+
+/* Kadi */
+.tb-card {
+    background: #fff;
+    border: 1px solid #E6EDF3;
+    border-radius: 18px;
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+}
+.tb-card--mint {
+    background: linear-gradient(180deg, #F0FAF7, #fff);
+    border-color: #bfe9dd;
+}
+.tb-card--booking {
+    background: linear-gradient(180deg, #F2F8FD, #fff);
+    border-color: #cfe4f4;
+}
+.tb-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.tb-kind {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 800; letter-spacing: .02em;
+    padding: 5px 11px; border-radius: 99px;
+    text-transform: uppercase;
+}
+.tb-kind svg { width: 13px; height: 13px; }
+.tb-kind--pickup { background: #E8F1FB; color: #0B4F7A; }
+.tb-kind--pickup svg { stroke: #1268A8; }
+.tb-kind--handover { background: #FFF4E0; color: #92400E; }
+.tb-kind--handover svg { stroke: #D97706; }
+.tb-kind--delivery { background: #E7F7F1; color: #0E7A5F; }
+.tb-kind--delivery svg { stroke: #18A982; }
+.tb-kind--booking { background: #EEF2F7; color: #334155; }
+.tb-kind--booking svg { stroke: #64748B; }
+
+.tb-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12.5px; font-weight: 800;
+    padding: 4px 10px; border-radius: 99px;
+}
+.tb-badge svg { width: 11px; height: 11px; }
+.tb-badge i {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; display: inline-block;
+}
+.tb-badge--active { background: #E7F7F1; color: #0E7A5F; }
+.tb-badge--active i { background: #18A982; box-shadow: 0 0 0 3px rgba(24, 169, 130, .15); animation: tbPulse 1.6s infinite; }
+@keyframes tbPulse { 50% { opacity: .45; } }
+.tb-badge--used { background: #F1F5F9; color: #64748B; }
+.tb-badge--used svg { stroke: #64748B; }
+.tb-badge--expired { background: #FEF2F2; color: #B91C1C; }
+.tb-badge--expired svg { stroke: #B91C1C; }
+
+.tb-cargo { font-size: 14.5px; font-weight: 800; color: #173B56; line-height: 1.3; }
+.tb-route {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    font-size: 12.5px; color: #334155; font-weight: 600;
+}
+.tb-route svg { stroke: #2B82BD; flex: 0 0 auto; width: 13px; height: 13px; }
+.tb-route-arrow { display: inline-flex; color: #94A3B8; }
+.tb-route-arrow svg { stroke: #94A3B8; }
+
+/* Mstari wa code */
+.tb-code-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: #EAF8F2;
+    border: 1px solid #CCEBDD;
+    border-radius: 12px; padding: 10px 14px;
+}
+.tb-code {
+    font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+    font-size: 20px; font-weight: 900; letter-spacing: 2.5px;
+    color: #17604E;
+}
+.tb-icon-btn {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px;
+    border: 1px solid #B9DFCF;
+    background: #fff; color: #178864;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+.tb-icon-btn:hover { background: #F1F8F5; }
+.tb-icon-btn svg { stroke: #178864; width: 15px; height: 15px; }
+
+.tb-meta {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px;
+    font-size: 13px; color: #64748B; font-weight: 600;
+}
+.tb-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.tb-meta svg { width: 12px; height: 12px; stroke: #94A3B8; }
+.tb-ride-status { color: #0B4F7A !important; font-weight: 800; }
+
+.tb-hint, .tb-mint-hint {
+    display: flex; align-items: flex-start; gap: 7px;
+    margin: 0; font-size: 13px; line-height: 1.5; color: #64748B;
+}
+.tb-hint svg, .tb-mint-hint svg { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 1px; stroke: #94A3B8; }
+.tb-mint-hint svg { stroke: #0E7A5F; }
+.tb-mint-hint { color: #0E7A5F; }
+
+/* Vitufe */
+.tb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; border-radius: 12px; padding: 11px 14px;
+    font-size: 13px; font-weight: 800; cursor: pointer;
+    border: 1px solid transparent; font-family: inherit;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.tb-btn svg { width: 15px; height: 15px; }
+.tb-btn:active { transform: scale(.99); }
+.tb-btn-primary {
+    background: #18A982; color: #fff;
+    box-shadow: 0 4px 12px rgba(24, 169, 130, .22);
+}
+.tb-btn-primary:hover { background: #17604E; }
+.tb-btn-primary svg { stroke: #fff; }
+.tb-btn-light { background: #fff; border-color: #CBD5E1; color: #334155; }
+.tb-btn-light:hover { background: #F8FAFC; }
+.tb-btn-light svg { stroke: #475569; }
+.tb-qr-toggle { width: auto; align-self: flex-start; padding: 8px 13px; font-size: 12px; }
+
+/* QR */
+.tb-qr {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 14px; padding: 12px;
+}
+.tb-qr[hidden] { display: none; }
+.tb-qr img { width: 168px; height: 168px; border-radius: 10px; background: #fff; }
+.tb-qr small { font-size: 12.5px; color: #B45309; text-align: center; line-height: 1.4; font-weight: 600; }
+
+/* Hali tupu / upakiaji */
+.tb-loading {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 40px 10px; color: #64748B; font-size: 13px; font-weight: 600;
+}
+.tb-spinner {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2.5px solid #CBD5E1; border-top-color: #18A982;
+    animation: tbSpin .8s linear infinite;
+}
+.tb-spinner--btn { width: 15px; height: 15px; border-width: 2px; border-color: rgba(255,255,255,.4); border-top-color: #fff; }
+@keyframes tbSpin { to { transform: rotate(360deg); } }
+.tb-empty { text-align: center; padding: 44px 18px; color: #64748B; }
+.tb-empty-ic {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: #EAF2F9; color: #1268A8;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+}
+.tb-empty-ic svg { width: 28px; height: 28px; stroke: #1268A8; }
+.tb-empty b { display: block; font-size: 14.5px; color: #173B56; margin-bottom: 6px; }
+.tb-empty p { font-size: 12.5px; line-height: 1.55; margin: 0 auto; max-width: 380px; }
+
+/* Rununu: bottom-sheet */
+@media (max-width: 600px) {
+    #tokenBoxModal { align-items: flex-end !important; padding: 0 !important; }
+    .tb-sheet {
+        max-width: 100%; border-radius: 22px 22px 0 0;
+        height: 92vh; max-height: 92vh;
+    }
+    .tb-code { font-size: 18px; letter-spacing: 2px; }
+}
