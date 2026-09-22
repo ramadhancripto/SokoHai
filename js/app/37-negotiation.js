@@ -706,7 +706,7 @@ import { skh } from './00-bootstrap.js';
         // index ya Firestore isiyopelekwa, snapshot ya kadi pekee).
         const dflt = handlers.__default__ || function (c) {
             return 'window.skhNegoCommand(' + JSON.stringify(c)
-                + ',' + JSON.stringify({ negotiationId: nego.negotiationId }) + ')';
+                + ',' + JSON.stringify({ negotiationId: nego.negotiationId }) + ',this)';
         };
         return '<div class="ch-nego-actions">' + actions.map(function (a) {
             const fn = handlers[a.command] || dflt(a.command, nego, a);

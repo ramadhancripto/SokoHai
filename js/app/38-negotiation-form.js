@@ -39,170 +39,49 @@ import {
      * ============================================================ */
     function core() { return skh.chatCore || {}; }
 
-    function lastCardMessage(kind) {
-        var msgs = (core().msgs || []);
-        var refKey = kind === 'product' ? 'productRef' : (kind === 'service' ? 'serviceRef' : 'transportRef');
-        var snapKey = kind === 'product' ? 'productSnapshot' : (kind === 'service' ? 'serviceSnapshot' : 'transportSnapshot');
-        for (var i = msgs.length - 1; i >= 0; i--) {
-            var m = msgs[i];
-            if (m[refKey] && m[refKey].id) {
-                var s = m[snapKey] || {};
-                return {
-                    id: m[refKey].id, collection: m[refKey].collection || (kind === 'transport' ? 'ride_requests' : kind + 's'),
-                    title: s.title || '', price: s.price != null ? s.price : null, fare: s.fare != null ? s.fare : null,
-                    image: s.image || '',
-                    sellerId: s.sellerId || s.providerId || s.driverId || s.userId || null,
-                    sellerName: s.sellerName || s.providerName || s.driverName || s.ownerName || s.company || '',
-                    scope: s.scope || '', route: s.route || null, fromLocation: s.fromLocation || (s.route && s.route.from) || '', toLocation: s.toLocation || (s.route && s.route.to) || '',
-                    packageDescription: s.packageDescription || '', vehicleType: s.vehicleType || ''
-                };
-            }
-        }
-        return null;
-    }
-
-    function relatedEntity() {
-        var c = core().conv || {};
-        var rel = c.related || skh.chatRelated || null;
-        if (!rel) return null;
-        if (rel.productId) return { id: rel.productId, collection: rel.productCollection || 'products', sellerId: rel.sellerId || null, title: rel.productTitle || '', price: rel.productPrice != null ? rel.productPrice : null, image: rel.productImage || '' };
-        if (rel.serviceId) return { id: rel.serviceId, collection: 'services', sellerId: rel.sellerId || null, title: rel.serviceTitle || 'Huduma' };
-        if (rel.transportId || rel.rideRequestId) return { id: rel.transportId || rel.rideRequestId, collection: rel.transportCollection || rel.productCollection || 'ride_requests', sellerId: rel.sellerId || null, sellerName: rel.sellerName || '', title: rel.transportTitle || 'Usafiri' };
-        return null;
-    }
-
-    // Kadi ya MAJADILIANO iliyopo kwenye chat ndiyo mamlaka kuu ya aina
-    // (hasa wakati wa Counter) — snapshot.commerceType haiwezi kudanganywa
-    // na kadi ya bidhaa iliyoshirikiwa kwenye mazungumzo yaleyale.
-    function lastNegotiationCard() {
-        var msgs = (core().msgs || []);
-        for (var i = msgs.length - 1; i >= 0; i--) {
-            var m = msgs[i];
-            if (m && m.type === 'negotiation' && m.negotiationId) {
-                var snap = m.negotiationSnapshot || (m.nego && m.nego.snapshot) || m.negotiation || null;
-                if (snap && snap.negotiationId) return snap;
-            }
-        }
-        return null;
-    }
-
-    function entityFromNegotiation(n) {
-        n = n || {};
-        var t = (n.commerceType === NF_TYPES.SERVICE) ? NF_TYPES.SERVICE
-            : (n.commerceType === NF_TYPES.TRANSPORT) ? NF_TYPES.TRANSPORT : NF_TYPES.PRODUCT;
-        var base = {
-            negotiationId: n.negotiationId,
-            sellerId: n.sellerId || null, sellerName: n.sellerName || '',
-            isCounter: true
-        };
-        if (t === NF_TYPES.TRANSPORT) {
-            var route = n.route || {};
-            return Object.assign(base, {
-                id: n.transportId || n.productId || '',
-                collection: n.transportCollection || n.productCollection || 'ride_requests',
-                title: n.transportTitle || n.productTitle || 'Usafiri',
-                image: n.transportImage || n.productImage || '',
-                fare: n.currentUnitPrice != null ? n.currentUnitPrice : null,
-                price: n.originalUnitPrice != null ? n.originalUnitPrice : (n.currentUnitPrice != null ? n.currentUnitPrice : null),
-                route: route, fromLocation: route.from || '', toLocation: route.to || '',
-                packageDescription: n.packageDescription || '', packageQuantity: n.packageQuantity || '',
-                weight: n.weight != null ? n.weight : null,
-                pickupDate: n.pickupDate || '', deliveryDeadline: n.deliveryDeadline || '',
-                vehicleType: n.vehicleType || '', specialRequirements: n.specialRequirements || ''
-            });
-        }
-        if (t === NF_TYPES.SERVICE) {
-            return Object.assign(base, {
-                id: n.serviceId || n.productId || '',
-                collection: n.serviceCollection || n.productCollection || 'services',
-                title: n.serviceTitle || n.productTitle || 'Huduma',
-                image: n.serviceImage || n.productImage || '',
-                price: n.originalUnitPrice != null ? n.originalUnitPrice : (n.currentUnitPrice != null ? n.currentUnitPrice : null),
-                scope: n.scope || '', location: n.location || '',
-                deadline: n.deadline || '', deadlineDate: n.deadlineDate || '',
-                requirements: n.requirements || '', quantity: n.quantity || 1
-            });
-        }
-        return Object.assign(base, {
-            id: n.productId || '',
-            collection: n.productCollection || 'products',
-            title: n.productTitle || 'Bidhaa',
-            image: n.productImage || '',
-            price: n.originalUnitPrice != null ? n.originalUnitPrice : (n.currentUnitPrice != null ? n.currentUnitPrice : null),
-            quantity: n.quantity || 1, variants: n.variants || null,
-            deliveryLocation: n.deliveryLocation || '', preferredDate: n.preferredDate || ''
-        });
-    }
-
-    function productEntityFrom(p) {
-        p = p || {};
-        var col = p.collectionName || p.itemCollection || skh.currentFeedCollection || 'products';
-        if (col === 'drivers') {
-            return { type: NF_TYPES.TRANSPORT, entity: {
-                id: p.id, collectionName: 'drivers',
-                title: p.title || p.driverName || p.company || 'Usafiri',
-                price: p.price, fare: p.fare != null ? p.fare : p.price,
-                image: p.image || '', vehicleType: p.vehicleType || '',
-                route: p.route || { from: p.pickupRegion || p.fromRegion || '', to: p.destinationRegion || p.toRegion || '' },
-                fromLocation: p.fromLocation || p.pickupRegion || '', toLocation: p.toLocation || p.destinationRegion || '',
-                sellerId: p.userId || p.sellerId, sellerName: p.driverName || p.ownerName || p.company || '',
-                weight: p.maxWeight != null ? Number(p.maxWeight) : null
-            } };
-        }
-        if (col === 'services') {
-            return { type: NF_TYPES.SERVICE, entity: {
-                id: p.id, collectionName: 'services',
-                title: p.title || p.serviceName, price: p.price, image: p.image,
-                sellerId: p.userId || p.providerId || p.sellerId, sellerName: p.ownerName || p.sellerName || '',
-                scope: p.scope || p.description || ''
-            } };
-        }
-        return { type: NF_TYPES.PRODUCT, entity: { id: p.id, collection: col, title: p.title || p.itemTitle, price: p.price, image: p.image || (p.images && p.images[0]) || p.photo || '', sellerId: p.userId, sellerName: p.ownerName || '', category: p.category, stockQuantity: p.stockQuantity, saleMode: p.saleMode, selectedVariants: p.selectedVariants } };
-    }
-
     function detectTypeAndEntity(opts) {
-        if (opts && opts.type) return { type: opts.type, entity: opts.entity || null };
-        
-        // Ikiwa ametuma entity moja kwa moja (bila kuifunga ndani ya { type, entity })
-        if (opts && (opts.id || opts.productId || opts.serviceId || opts.transportId)) {
-            var rawCol = (opts.collectionName || opts.collection || '').toLowerCase();
-            var guessType = (rawCol === 'services' || opts.serviceId) ? NF_TYPES.SERVICE
-                : ((rawCol === 'drivers' || rawCol === 'ride_requests' || opts.transportId) ? NF_TYPES.TRANSPORT : NF_TYPES.PRODUCT);
-            return { type: guessType, entity: opts };
+        opts = opts || {};
+        var type = String(opts.type || '').toLowerCase();
+        if ([NF_TYPES.PRODUCT, NF_TYPES.SERVICE, NF_TYPES.TRANSPORT].indexOf(type) === -1) {
+            return { type: null, entity: null };
         }
+        if (!opts.entity || !opts.entity.id) return { type: null, entity: null };
+        return { type: type, entity: opts.entity };
+    }
 
-        // 1) Majadiliano yaliyopo (Counter) — aina hufuata snapshot halisi.
-        var negoSnap = lastNegotiationCard();
-        if (negoSnap) {
-            var ent = entityFromNegotiation(negoSnap);
-            return { type: ent.collection === 'services' ? NF_TYPES.SERVICE
-                : ((ent.collection === 'ride_requests' || ent.collection === 'drivers') ? NF_TYPES.TRANSPORT : NF_TYPES.PRODUCT),
-                entity: ent };
-        }
-        // 2) Muktadha wa chat uliohifadhiwa (fahamu collection kweli).
-        if (skh.activeChatTransport && skh.activeChatTransport.id) {
-            var t = skh.activeChatTransport;
-            var tcol = t.collectionName || t.collection || 'ride_requests';
-            return { type: NF_TYPES.TRANSPORT, entity: { id: t.id, collection: tcol, collectionName: tcol, title: t.title || t.cargoName || 'Usafiri', fare: t.price != null ? t.price : t.fare, route: t.route, fromLocation: t.fromLocation, toLocation: t.toLocation, packageDescription: t.packageDescription, sellerId: t.userId || t.providerId || t.driverId || t.sellerId, sellerName: t.driverName || t.ownerName || t.sellerName || '', vehicleType: t.vehicleType || '' } };
-        }
-        if (skh.activeChatService && skh.activeChatService.id) {
-            var s = skh.activeChatService;
-            return { type: NF_TYPES.SERVICE, entity: { id: s.id, collection: s.collectionName || s.collection || 'services', title: s.title || s.serviceName, price: s.price, image: s.image, sellerId: s.userId || s.providerId || s.sellerId, sellerName: s.ownerName || s.sellerName || '', scope: s.scope || s.description || '' } };
-        }
-        if (skh.activeChatProduct && skh.activeChatProduct.id) {
-            return productEntityFrom(skh.activeChatProduct);
-        }
-        // 3) Rejeo la mazungumzo (conversation.related).
-        var rel = relatedEntity();
-        if (rel) return { type: (rel.collection === 'services' ? NF_TYPES.SERVICE : ((rel.collection === 'ride_requests' || rel.collection === 'drivers') ? NF_TYPES.TRANSPORT : NF_TYPES.PRODUCT)), entity: rel };
-        // 4) Kadi zilizoshirikiwa kwenye uzi.
-        var tt = lastCardMessage('transport');
-        if (tt) return { type: NF_TYPES.TRANSPORT, entity: tt };
-        var ts = lastCardMessage('service');
-        if (ts) return { type: NF_TYPES.SERVICE, entity: ts };
-        var tp = lastCardMessage('product');
-        if (tp) return { type: NF_TYPES.PRODUCT, entity: tp };
-        return { type: null, entity: null };
+    function lockEntity(type, src) {
+        src = src || {};
+        var owner = src.sellerId || src.providerId || src.driverId || src.userId || null;
+        var base = {
+            id: String(src.id || ''),
+            collection: src.collection || src.collectionName || (type === NF_TYPES.SERVICE ? 'services' : type === NF_TYPES.TRANSPORT ? 'ride_requests' : 'products'),
+            title: src.title || src.itemTitle || src.serviceName || src.cargoName || (type === NF_TYPES.SERVICE ? 'Huduma' : type === NF_TYPES.TRANSPORT ? 'Usafiri' : 'Bidhaa'),
+            price: src.price != null ? src.price : (src.fare != null ? src.fare : null),
+            image: src.image || (src.images && src.images[0]) || src.photo || '',
+            sellerId: owner,
+            sellerName: src.sellerName || src.providerName || src.driverName || src.ownerName || src.company || ''
+        };
+        if (type === NF_TYPES.PRODUCT) return Object.assign(base, {
+            category: src.category || '', stockQuantity: src.stockQuantity,
+            minQty: src.minQty, saleMode: src.saleMode || '', selectedVariants: src.selectedVariants || null,
+            variants: src.variants || null
+        });
+        if (type === NF_TYPES.SERVICE) return Object.assign(base, {
+            scope: src.scope || src.description || '', quantity: src.quantity || 1,
+            negotiationScheduleRequired: src.negotiationScheduleRequired === true,
+            bookingRequired: src.bookingRequired === true,
+            negotiationAllowed: src.negotiationAllowed
+        });
+        var route = src.route || {};
+        return Object.assign(base, {
+            fare: src.fare != null ? src.fare : src.price,
+            route: { from: route.from || src.fromLocation || src.pickupRegion || '', to: route.to || src.toLocation || src.destinationRegion || '' },
+            fromLocation: route.from || src.fromLocation || src.pickupRegion || '',
+            toLocation: route.to || src.toLocation || src.destinationRegion || '',
+            packageDescription: src.packageDescription || src.cargoName || '',
+            packageQuantity: src.packageQuantity || '', weight: src.weight,
+            vehicleType: src.vehicleType || '', negotiationAllowed: src.negotiationAllowed
+        });
     }
 
     // Vuta taarifa HALISI za bidhaa/huduma/safari kutoka Firestore
@@ -242,6 +121,8 @@ import {
                     sellerName: d.ownerName || entity.sellerName || '',
                     description: d.description || '', location: d.location || '',
                     category: d.category || '', scope: entity.scope || d.description || '',
+                    negotiationScheduleRequired: d.negotiationScheduleRequired === true || entity.negotiationScheduleRequired === true,
+                    bookingRequired: d.bookingRequired === true || entity.bookingRequired === true,
                     // [NEGO LOCK §21/§22] Provider Settings: mtoa huduma anaweza kuzima
                     // negotiation kwa huduma maalum. Default ON kwa matangazo ya zamani.
                     negotiationAllowed: d.negotiationAllowed === false ? false : true
@@ -297,15 +178,11 @@ import {
      * 2) SHELL YA FOMU (bottom sheet — mobile first)
      * ============================================================ */
     function close() {
-        var shell = document.getElementById('nfShell');
-        if (shell) shell.remove();
-        /* [NEGO-FIX 2026-09-21] Usirudishe scroll ya background kama chat
-           bado iko wazi chini ya fomu (fomu hufunguka NDANI ya chat). */
-        try {
-            var cm = document.getElementById('chatModal');
-            document.body.style.overflow = (cm && cm.style.display !== 'none') ? 'hidden' : '';
-        } catch (e) { document.body.style.overflow = ''; }
+        var host = document.getElementById('chatNegotiationHost');
+        if (host) { host.innerHTML = ''; host.classList.remove('is-open'); }
+        document.removeEventListener('keydown', escHandler);
         state = null;
+        skh.activeNegotiationContext = null;
     }
     window.skhNegoFormClose = close;
 
@@ -693,38 +570,75 @@ import {
     /* ============================================================
      * 8) KUTUMA — hakiki -> hesabu -> proposal -> njia ILIYOPO ya chat
      * ============================================================ */
+    function setSubmitPhase(phase, message) {
+        if (!state) return;
+        state.phase = phase;
+        var btn = document.getElementById('nfSendBtn');
+        var label = document.getElementById('nfSendLabel');
+        if (!btn || !label) return;
+        btn.classList.remove('is-loading', 'is-success', 'is-error');
+        btn.removeAttribute('aria-busy');
+        if (phase === 'VALIDATING') {
+            btn.disabled = true; btn.classList.add('is-loading'); btn.setAttribute('aria-busy', 'true');
+            label.textContent = 'Inahakiki…';
+        } else if (phase === 'PREPARING_CONVERSATION') {
+            btn.disabled = true; btn.classList.add('is-loading'); btn.setAttribute('aria-busy', 'true');
+            label.textContent = 'Inaandaa mazungumzo…';
+        } else if (phase === 'SUBMITTING') {
+            btn.disabled = true; btn.classList.add('is-loading'); btn.setAttribute('aria-busy', 'true');
+            label.textContent = 'Inatuma ofa…';
+        } else if (phase === 'SUCCESS') {
+            btn.disabled = true; btn.classList.add('is-success');
+            label.textContent = '✓ Ofa imetumwa';
+        } else if (phase === 'ERROR') {
+            btn.disabled = false; btn.classList.add('is-error');
+            label.textContent = 'Jaribu tena';
+        } else {
+            btn.disabled = false;
+            label.innerHTML = nfIco('send', 14) + ' ' + esc(NF_META[state.type].cta);
+        }
+        if (message) showBanner(message);
+    }
+
     async function onSubmit() {
-        if (!state || state.sending) return;
+        if (!state || state.sending || state.phase === 'SUCCESS') return;
+        state.sending = true;
+        setSubmitPhase('VALIDATING');
+
         var values = readValues();
         var check = validateForm(state.type, values, state.entity);
         state.errors = check.errors || {};
         showErrors(state.errors);
         if (!check.valid) {
+            state.sending = false;
+            setSubmitPhase('ERROR', 'Jaza sehemu zilizowekwa alama kisha jaribu tena.');
             var firstKey = Object.keys(state.errors)[0];
             var firstEl = document.getElementById(fid(firstKey)) || document.querySelector('.nf-field.has-error input,.nf-field.has-error textarea,.nf-field.has-error select');
             if (firstEl) { try { firstEl.focus(); } catch (e) {} }
-            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Jaza sehemu zilizokosekana.', 'error', 3200);
             return;
         }
 
+        setSubmitPhase('PREPARING_CONVERSATION');
         var c = core();
-        var lockedChat = state.chatContext || {};
-        if (!lockedChat.convId || !lockedChat.partnerUid) { showBanner('Mazungumzo na muuzaji hayajathibitishwa.'); return; }
-        if (c.convId !== lockedChat.convId || c.partnerUid !== lockedChat.partnerUid) {
-            showBanner('Mazungumzo yamebadilika. Funga fomu na ufungue ofa tena kwenye tangazo sahihi.');
+        if (c.convId !== state.context.conversationId || c.partnerUid !== state.context.partnerUid) {
+            c = await ensureContextConversation(state.type, state.entity);
+        }
+        if (!c || !c.convId || c.partnerUid !== state.context.partnerUid) {
+            state.sending = false;
+            setSubmitPhase('ERROR', 'Imeshindikana kuandaa mazungumzo. Jaribu tena.');
             return;
         }
+        state.context.conversationId = c.convId;
+        state.chatContext.convId = c.convId;
 
         var proposal = currentProposal();
+        proposal.conversationId = c.convId;
         if (!proposal.sellerId) proposal.sellerId = c.partnerUid;
         if (!proposal.sellerName) proposal.sellerName = c.partnerName || '';
+        if (!state.requestId) state.requestId = 'offer_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        proposal.commandId = state.requestId;
 
-        state.sending = true;
-        var btn = document.getElementById('nfSendBtn');
-        var label = document.getElementById('nfSendLabel');
-        if (btn) btn.disabled = true;
-        if (label) label.textContent = 'Inatuma…';
-
+        setSubmitPhase('SUBMITTING');
         var res = null;
         try {
             if (typeof window.skhChatSubmitNegotiationProposal !== 'function') throw new Error('submit_unavailable');
@@ -733,103 +647,117 @@ import {
             res = { ok: false, error: (e && e.message) || 'Imeshindwa kutuma ofa.' };
         }
 
-        state.sending = false;
         if (res && res.ok) {
-            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Ofa yako imetumwa kwa ' + (proposal.sellerName || 'muuzaji') + '. Inasubiri jibu.', 'success', 3600);
-            close();
+            setSubmitPhase('SUCCESS');
+            var foot = document.getElementById('nfFoot');
+            if (foot && !document.getElementById('nfReturnChatBtn')) {
+                var back = document.createElement('button');
+                back.type = 'button'; back.id = 'nfReturnChatBtn'; back.className = 'nf-btn nf-btn-light';
+                back.textContent = 'Rudi Chat'; back.addEventListener('click', close); foot.insertBefore(back, foot.firstChild);
+            }
+            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('✓ Ofa imetumwa. Inasubiri jibu.', 'success', 3600);
             return;
         }
-        if (btn) btn.disabled = false;
-        if (label) label.innerHTML = nfIco('send', 14) + ' ' + esc(NF_META[state.type].cta);
-        showBanner((res && res.error) ? res.error : 'Imeshindikana. Angalia mtandao.');
+        state.sending = false;
+        setSubmitPhase('ERROR', (res && res.error) ? res.error : 'Imeshindikana kutuma ofa. Jaribu tena.');
     }
 
     /* ============================================================
      * 9) KUFUNGUA FOMU
      * ============================================================ */
+    async function ensureContextConversation(type, entity) {
+        var partnerUid = entity.sellerId || null;
+        var c = core();
+        if (partnerUid && c.convId && c.partnerUid === partnerUid && c.state !== 'ERROR') return c;
+        if (!partnerUid || typeof window.skhChatOpen !== 'function') return null;
+        var opened = await window.skhChatOpen(partnerUid, entity.sellerName || '', {
+            type: 'direct', commerceKind: type, commerceId: entity.id
+        });
+        c = core();
+        return opened && c.convId && c.partnerUid === partnerUid ? c : null;
+    }
+
     window.skhNegoFormOpen = async function (opts) {
-        if (!skh.requireAuth || !skh.requireAuth()) return;
-        opts = opts || {};
+        if (!skh.requireAuth || !skh.requireAuth()) return { ok: false, error: 'auth' };
         window.skhNegoFormClose();
 
-        var guessed = detectTypeAndEntity(opts);
-        var type = opts.type || guessed.type;
-        var baseEntity = opts.entity || guessed.entity;
-        // Funga entity/type/conversation wakati wa open; historia ya jozi inaweza
-        // kuwa na bidhaa, huduma na usafiri tofauti lakini form hii haiwezi kubadilika.
-        var openCore = core();
-        var openChat = {
-            convId: openCore.convId || null,
-            partnerUid: openCore.partnerUid || null,
-            partnerName: openCore.partnerName || ''
-        };
-
-        var host = document.createElement('div');
-        var meta0 = type ? NF_META[type] : NF_META.product;
-        host.innerHTML = shellHtml(meta0);
-        document.body.appendChild(host.firstChild);
-        document.body.style.overflow = 'hidden';
-        // Tumia meneja mmoja wa modal/LIFO; hii huiweka nfShell juu ya Chat
-        // hata Chat ikiwa imepandishwa hadi z-index 100010 na repair layer.
-        if (typeof window.skhBringToFront === 'function') window.skhBringToFront('nfShell');
-        var body = document.getElementById('nfBody');
-
-        if (!type || !baseEntity || !baseEntity.id) {
-            body.innerHTML = unavailableHtml(meta0, 'Hatujapata bidhaa, huduma au safari kwenye mazungumzo haya.');
-            var b0 = document.getElementById('nfUnavailClose');
-            if (b0) b0.addEventListener('click', close);
-            document.getElementById('nfCloseBtn').addEventListener('click', close);
-            document.addEventListener('keydown', escHandler);
-            return;
+        var exact = detectTypeAndEntity(opts);
+        var type = exact.type;
+        var baseEntity = type && exact.entity ? lockEntity(type, exact.entity) : null;
+        if (!type || !baseEntity || !baseEntity.id || !baseEntity.sellerId) {
+            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Muktadha wa negotiation haujakamilika. Fungua tena kutoka kwenye tangazo sahihi.', 'error', 4200);
+            return { ok: false, error: 'invalid_context' };
+        }
+        if (baseEntity.sellerId === myUid()) {
+            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Huwezi kujitolea ofa kwenye tangazo lako mwenyewe.', 'error', 3600);
+            return { ok: false, error: 'self_offer' };
         }
 
-        body.innerHTML = loadingHtml(NF_META[type]);
-        var entity = await enrichEntity(type, baseEntity);
+        // Conversation setup ni ya ndani; hakuna sharti la ujumbe wa kawaida.
+        var c = await ensureContextConversation(type, baseEntity);
+        if (!c) {
+            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Imeshindikana kuandaa mazungumzo na mmiliki wa tangazo. Jaribu tena.', 'error', 4200);
+            return { ok: false, error: 'conversation_not_ready' };
+        }
 
-        // [NEGO LOCK §21/§22 — FRONT GATE] Mmiliki wa tangazo (provider/transporter)
-        // kama amezima negotiation → fomu haifungulwi kamwe. KM bado inafanya kazi
-        // (spec §23: chatting ≠ negotiation). Backend gate iko kwenye
-        // skhNegoNativeCreate (34-chat-core) — hii ni UX ya haraka tu, si gate pekee.
+        var host = document.getElementById('chatNegotiationHost');
+        var chatModal = document.getElementById('chatModal');
+        if (!host || !chatModal || chatModal.style.display === 'none') {
+            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Negotiation hufunguliwa ndani ya Chat. Fungua Chat kisha jaribu tena.', 'error', 4200);
+            return { ok: false, error: 'chat_host_missing' };
+        }
+
+        var context = {
+            kind: type,
+            entityId: baseEntity.id,
+            conversationId: c.convId,
+            partnerUid: c.partnerUid,
+            partnerName: c.partnerName || baseEntity.sellerName || '',
+            snapshot: baseEntity
+        };
+        skh.activeNegotiationContext = context;
+
+        host.innerHTML = shellHtml(NF_META[type]);
+        host.classList.add('is-open');
+        var body = document.getElementById('nfBody');
+        body.innerHTML = loadingHtml(NF_META[type]);
+        document.getElementById('nfCloseBtn').addEventListener('click', close);
+        document.addEventListener('keydown', escHandler);
+
+        var entity = lockEntity(type, await enrichEntity(type, baseEntity));
+        var liveCore = core();
+        if (!skh.activeNegotiationContext || skh.activeNegotiationContext !== context
+            || liveCore.convId !== context.conversationId || liveCore.partnerUid !== context.partnerUid) {
+            close();
+            return { ok: false, error: 'context_changed' };
+        }
+        context.snapshot = entity;
+
         if ((type === NF_TYPES.SERVICE || type === NF_TYPES.TRANSPORT) && entity.negotiationAllowed === false) {
             body.innerHTML = unavailableHtml(NF_META[type],
-                'Negotiation haijaruhusiwa na mmiliki wa tangazo hili. Bei iliyotangazwa ndiyo sahihi — unaweza kuzungumza nae bado kupitia chat hii.');
-            var b0 = document.getElementById('nfUnavailClose');
-            if (b0) b0.addEventListener('click', close);
-            document.getElementById('nfCloseBtn').addEventListener('click', close);
-            return;
+                'Negotiation haijaruhusiwa na mmiliki wa tangazo hili. Unaweza kuzungumza kupitia Chat.');
+            var blockedClose = document.getElementById('nfUnavailClose');
+            if (blockedClose) blockedClose.addEventListener('click', close);
+            return { ok: false, error: 'negotiation_disabled' };
         }
 
-        // Thibitisha upande wa pili (usiruhusu kujitolea ofa mwenyewe).
-        var c = core();
-        var sellerId = entity.sellerId || c.partnerUid;
-        if (sellerId && sellerId === myUid()) {
-            body.innerHTML = unavailableHtml(NF_META[type], 'Huwezi kujitolea ofa kwenye tangazo lako mwenyewe.');
-            var b1 = document.getElementById('nfUnavailClose');
-            if (b1) b1.addEventListener('click', close);
-            document.getElementById('nfCloseBtn').addEventListener('click', close);
-            return;
-        }
-
-        var liveCore = core();
-        if (!openChat.convId || !openChat.partnerUid || liveCore.convId !== openChat.convId || liveCore.partnerUid !== openChat.partnerUid) {
-            body.innerHTML = unavailableHtml(NF_META[type], 'Mazungumzo na mmiliki wa tangazo hayajathibitishwa.');
-            var b2 = document.getElementById('nfUnavailClose');
-            if (b2) b2.addEventListener('click', close);
-            document.getElementById('nfCloseBtn').addEventListener('click', close);
-            return;
-        }
-        state = { type: type, entity: entity, chatContext: openChat, values: defaultValues(type, entity), errors: {}, sending: false, _fieldIndex: {} };
+        state = {
+            phase: 'IDLE', type: type, entity: entity, context: context,
+            chatContext: { convId: context.conversationId, partnerUid: context.partnerUid, partnerName: context.partnerName },
+            values: defaultValues(type, entity), errors: {}, sending: false,
+            requestId: null, _fieldIndex: {}
+        };
         body.innerHTML = formHtml(type, entity, state.values);
         document.getElementById('nfFoot').style.display = 'flex';
         document.getElementById('nfFoot').innerHTML = footerHtml(NF_META[type]);
         bindEvents();
         refreshLive();
 
-        // Focus ya kwanza (keyboard-friendly) — kwenye idadi au bei.
-        setTimeout(function () {
-            var first = document.getElementById(fIdSafe(type)) || document.querySelector('#nfBody input:not([type=date]),#nfBody textarea');
-            if (first) { try { first.focus(); } catch (e) {} }
-        }, 120);
+        var first = document.getElementById(fIdSafe(type)) || document.querySelector('#nfBody input:not([type=date]),#nfBody textarea');
+        if (first && typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(function () { try { first.focus({ preventScroll: true }); first.scrollIntoView({ block: 'nearest' }); } catch (e) {} });
+        }
+        return { ok: true, context: context };
     };
 function fIdSafe(type) {
         if (type === NF_TYPES.TRANSPORT) return fid('packageDescription');

@@ -340,8 +340,12 @@
 .ch-nego-btn.primary:hover { background: #023f7c; }
 /* [NEGO CLICK FIX 2026-09-17] busy state: amri ikiprocess vitufe hu-
    jificha kidogo + spinner — mtumiaji anajua click imepokelewa. */
-.ch-nego-btn:disabled, .ch-nego-btn.skh-nego-busy { opacity: .5; cursor: wait; }
+.ch-nego-btn:disabled, .ch-nego-btn.skh-nego-busy { opacity: .65; cursor: wait; }
 .ch-nego-btn.skh-nego-busy { position: relative; }
+.ch-nego-btn.skh-nego-success { background:#0E7A63; border-color:#0E7A63; color:#fff; opacity:1; }
+.ch-nego-btn.skh-nego-error { background:#fff1f2; border-color:#e11d48; color:#be123c; opacity:1; }
+.ch-sn-btn[aria-busy="true"], .ch-sn-btn.skh-nego-busy { opacity:.7; cursor:wait; }
+.ch-sn-btn.skh-nego-error { outline:2px solid #e11d48; outline-offset:2px; }
 .ch-nego-btn.skh-nego-busy::after {
     content: ""; display: inline-block; width: 10px; height: 10px; margin-left: 6px;
     border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%;

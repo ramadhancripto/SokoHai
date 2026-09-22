@@ -130,37 +130,42 @@ export function resolveVariantFields(entity) {
 export function sectionsFor(type, entity) {
     entity = entity || {};
     if (type === NF_TYPES.SERVICE) {
-        return [
+        const serviceSections = [
             {
-                id: 'serviceScope', title: 'Scope — Unataka nini hasa?',
+                id: 'serviceScope', title: 'Huduma na Masharti',
                 fields: [
-                    { key: 'scope', kind: 'textarea', rows: 2, label: 'Maelezo ya kazi (Scope) *', placeholder: 'Mfano: Suti mbili rasmi za wanawake', required: true, maxLength: 240, minLength: 3 },
-                    { key: 'quantity', kind: 'number', label: 'Idadi / Vitengo vya kazi *', placeholder: '2', required: true, min: 1, step: 1, default: 1, inputMode: 'numeric' }
+                    { key: 'scope', kind: 'textarea', rows: 2, label: 'Maelezo ya huduma unayotaka *', placeholder: 'Mfano: Kushona suti mbili rasmi', required: true, maxLength: 240, minLength: 3 },
+                    { key: 'quantity', kind: 'number', label: 'Idadi / Vitengo *', placeholder: '1', required: true, min: 1, step: 1, default: 1, inputMode: 'numeric' }
                 ]
             },
             {
                 id: 'servicePricing', title: 'Bei',
                 fields: [
-                    { key: 'unitPrice', kind: 'money', label: 'Bei unayopendekeza kwa kila kitengo (TSh) *', placeholder: '100,000', required: true, min: 1, step: 100, inputMode: 'numeric' },
+                    { key: 'unitPrice', kind: 'money', label: 'Bei unayopendekeza (TSh) *', placeholder: '65,000', required: true, min: 1, step: 100, inputMode: 'numeric' },
                     { key: 'total', kind: 'total', label: 'Jumla ya makadirio' }
-                ]
-            },
-            {
-                id: 'serviceDelivery', title: 'Muda na Mahali',
-                fields: [
-                    { key: 'deadlineQty', kind: 'number', label: 'Muda wa kukamilisha *', placeholder: '10', required: true, min: 1, step: 1, default: 2, inputMode: 'numeric', pairedWith: 'deadlineUnit' },
-                    { key: 'deadlineUnit', kind: 'select', label: 'Kipimo cha muda *', required: true, options: DEADLINE_UNITS.map(function (u) { return { value: u.key, label: u.label }; }), default: 'siku' },
-                    { key: 'location', kind: 'text', label: 'Mahali pa kazi / huduma *', placeholder: 'Mfano: Tabora', required: true, maxLength: 120, minLength: 2 }
-                ]
-            },
-            {
-                id: 'serviceRequirements', title: 'Mahitaji na Maelezo',
-                fields: [
-                    { key: 'requirements', kind: 'textarea', rows: 2, label: 'Nyenzo / Mahitaji (hiari)', placeholder: 'Mfano: Mteja atatoa vitambaa (fabric).', maxLength: 400, optional: true },
-                    { key: 'notes', kind: 'textarea', rows: 3, label: 'Maelezo ya ziada / Maagizo (hiari)', placeholder: 'Mfano: Suti nyeusi, slim fit.', maxLength: 500, optional: true }
                 ]
             }
         ];
+        // Ratiba/mahali si delivery fields za lazima. Huonekana tu ikiwa model ya
+        // huduma yenyewe imetangaza wazi kuwa booking/schedule ni sehemu ya terms.
+        if (entity.negotiationScheduleRequired === true || entity.bookingRequired === true) {
+            serviceSections.push({
+                id: 'serviceSchedule', title: 'Ratiba ya Huduma',
+                fields: [
+                    { key: 'deadlineQty', kind: 'number', label: 'Muda wa kukamilisha *', placeholder: '2', required: true, min: 1, step: 1, default: 2, inputMode: 'numeric', pairedWith: 'deadlineUnit' },
+                    { key: 'deadlineUnit', kind: 'select', label: 'Kipimo cha muda *', required: true, options: DEADLINE_UNITS.map(function (u) { return { value: u.key, label: u.label }; }), default: 'siku' },
+                    { key: 'location', kind: 'text', label: 'Mahali pa huduma *', placeholder: 'Mfano: Tabora', required: true, maxLength: 120, minLength: 2 }
+                ]
+            });
+        }
+        serviceSections.push({
+            id: 'serviceRequirements', title: 'Ujumbe / Maelezo',
+            fields: [
+                { key: 'requirements', kind: 'textarea', rows: 2, label: 'Masharti au mahitaji (hiari)', placeholder: 'Mfano: Mteja atatoa vitambaa.', maxLength: 400, optional: true },
+                { key: 'notes', kind: 'textarea', rows: 3, label: 'Ujumbe wa ofa (hiari)', placeholder: 'Ongeza maelezo ya ofa yako.', maxLength: 500, optional: true }
+            ]
+        });
+        return serviceSections;
     }
 
     if (type === NF_TYPES.TRANSPORT) {
@@ -222,16 +227,9 @@ export function sectionsFor(type, entity) {
         sections.push({ id: 'productVariants', title: 'Chaguzi / Vipimo (kama vinahusika)', optional: true, fields: variantFields });
     }
     sections.push({
-        id: 'productDelivery', title: 'Uwasilishaji (hiari)',
+        id: 'productNotes', title: 'Ujumbe / Maelezo',
         fields: [
-            { key: 'deliveryLocation', kind: 'text', label: 'Mahali pa kupeleka (hiari)', placeholder: 'Mfano: Pangale, Mbeya', maxLength: 120, optional: true },
-            { key: 'preferredDate', kind: 'date', label: 'Siku unayopendelea kupokea (hiari)', optional: true, minDate: 'today' }
-        ]
-    });
-    sections.push({
-        id: 'productNotes', title: 'Mahitaji / Maelezo',
-        fields: [
-            { key: 'notes', kind: 'textarea', rows: 3, label: 'Mahitaji na maelezo ya oda yako (hiari)', placeholder: 'Mfano: Nahitaji mchele ulio safi, uliopakiwa kwenye mifuko mipya.', maxLength: 500, optional: true }
+            { key: 'notes', kind: 'textarea', rows: 3, label: 'Ujumbe wa ofa (hiari)', placeholder: 'Ongeza masharti au maelezo ya ofa yako.', maxLength: 500, optional: true }
         ]
     });
     return sections;
@@ -336,8 +334,6 @@ export function validateForm(type, values, entity) {
         else if (entity.stockQuantity > 0 && qty > entity.stockQuantity && entity.saleMode !== 'auction')
             setErr(errors, 'quantity', 'Kiasi kinachopatikana ni ' + entity.stockQuantity + '. Tafadhali punguza idadi.');
         requirePositiveMoney('unitPrice', 'bei unayopendekeza');
-        if (values.deliveryLocation && String(values.deliveryLocation).trim().length < 2) setErr(errors, 'deliveryLocation', 'Andika mahali sahihi au acha wazi.');
-        if (values.preferredDate && !nfDateNotPast(values.preferredDate)) setErr(errors, 'preferredDate', 'Chagua tarehe ya leo au ya baadaye.');
         if (values.notes && String(values.notes).length > 500) setErr(errors, 'notes', 'Maelezo yazidi urefu (herufi 500).');
     }
 
@@ -348,12 +344,14 @@ export function validateForm(type, values, entity) {
         const qty = nfToInt(values.quantity);
         if (qty == null || !Number.isInteger(qty) || qty < 1) setErr(errors, 'quantity', 'Idadi inapaswa kuwa nambari kamili ya 1 au zaidi.');
         requirePositiveMoney('unitPrice', 'bei unayopendekeza');
-        const dq = nfToInt(values.deadlineQty);
-        if (dq == null || !Number.isInteger(dq) || dq < 1) setErr(errors, 'deadlineQty', 'Weka muda halali wa kukamilisha.');
-        if (!values.deadlineUnit) setErr(errors, 'deadlineUnit', 'Chagua kizio cha muda.');
-        const loc = String(values.location || '').trim();
-        if (!loc) setErr(errors, 'location', 'Tafadhali weka mahali pa kazi.');
-        else if (loc.length < 2) setErr(errors, 'location', 'Andika mahali sahihi.');
+        if (entity.negotiationScheduleRequired === true || entity.bookingRequired === true) {
+            const dq = nfToInt(values.deadlineQty);
+            if (dq == null || !Number.isInteger(dq) || dq < 1) setErr(errors, 'deadlineQty', 'Weka muda halali wa kukamilisha.');
+            if (!values.deadlineUnit) setErr(errors, 'deadlineUnit', 'Chagua kizio cha muda.');
+            const loc = String(values.location || '').trim();
+            if (!loc) setErr(errors, 'location', 'Tafadhali weka mahali pa huduma.');
+            else if (loc.length < 2) setErr(errors, 'location', 'Andika mahali sahihi.');
+        }
         if (values.requirements && String(values.requirements).length > 400) setErr(errors, 'requirements', 'Mahitaji yazidi urefu (herufi 400).');
         if (values.notes && String(values.notes).length > 500) setErr(errors, 'notes', 'Maelezo yazidi urefu (herufi 500).');
     }
@@ -442,25 +440,8 @@ export function buildProposal(type, entity, values, ctx) {
         proposalVersion: 1,
         version: 1,
         notes: String(values.notes || '').trim(),
-        variants: null,
-        // Type-specific (hujaa kulingana na aina — si kila shamba kila fomu)
-        scope: null,
-        scopeUnit: null,
-        deadline: null,
-        deadlineDate: null,
-        location: null,
-        requirements: null,
-        deliveryLocation: null,
-        preferredDate: null,
-        route: null,
-        packageDescription: null,
-        packageQuantity: null,
-        weight: null,
-        pickupDate: null,
-        pickupTime: null,
-        deliveryDeadline: null,
-        vehicleType: null,
-        specialRequirements: null,
+        // Type-specific fields huongezwa kwa branch yake tu; hakuna object ya
+        // Product yenye delivery/Service/Transport keys tupu.
         createdAt: now,
         updatedAt: now
     };
@@ -472,8 +453,6 @@ export function buildProposal(type, entity, values, ctx) {
             if (val) variants[k] = val;
         });
         p.variants = Object.keys(variants).length ? variants : null;
-        p.deliveryLocation = String(values.deliveryLocation || '').trim() || null;
-        p.preferredDate = values.preferredDate || null;
         p.requirements = p.notes || null;
     }
 
@@ -485,10 +464,12 @@ export function buildProposal(type, entity, values, ctx) {
         p.scope = String(values.scope || '').trim();
         p.scopeUnit = null;
         p.quantity = totals.quantity;
-        const dl = deadlineText(values);
-        p.deadline = dl.text;
-        p.deadlineDate = dl.date;
-        p.location = String(values.location || '').trim();
+        if (entity.negotiationScheduleRequired === true || entity.bookingRequired === true) {
+            const dl = deadlineText(values);
+            p.deadline = dl.text;
+            p.deadlineDate = dl.date;
+            p.location = String(values.location || '').trim();
+        }
         p.requirements = String(values.requirements || '').trim() || null;
     }
 
@@ -534,9 +515,7 @@ export function summaryLines(type, p) {
             }).join(' · ');
             if (vv) lines.push({ icon: 'tag', label: 'Chaguzi', value: vv });
         }
-        if (p.deliveryLocation) lines.push({ icon: 'map', label: 'Uwasilishaji', value: p.deliveryLocation });
-        if (p.preferredDate) lines.push({ icon: 'calendar', label: 'Tarehe', value: p.preferredDate });
-        if (p.notes) lines.push({ icon: 'edit', label: 'Maelezo', value: p.notes });
+        if (p.notes) lines.push({ icon: 'edit', label: 'Ujumbe', value: p.notes });
     } else if (type === NF_TYPES.SERVICE) {
         if (p.scope) lines.push({ icon: 'target', label: 'Scope', value: p.scope });
         lines.push({ icon: 'hash', label: 'Idadi', value: String(p.quantity != null ? p.quantity : '—') });

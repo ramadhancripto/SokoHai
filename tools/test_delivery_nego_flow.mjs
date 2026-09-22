@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
 
-const dom = new JSDOM('<!doctype html><html><body><div id="chatMessages"></div></body></html>',
+const dom = new JSDOM('<!doctype html><html><body><div id="chatModal" style="display:flex"><div id="chatMainSurface"><div id="chatMessages"></div><div id="chatNegotiationHost"></div><div id="chatComposer"></div></div></div></body></html>',
     { url: 'http://localhost/', runScripts: 'dangerously' });
 const { window } = dom;
 globalThis.window = window;
@@ -161,7 +161,11 @@ console.log('\n[2] Counter ya usafiri: chat yenye negotiation ya transport + kad
     };
     skh.activeChatProduct = { id: 'p9', collectionName: 'products', title: 'Mahindi', price: 1000, userId: 'sellerZ' };
     skh.activeChatTransport = null;
-    await window.skhNegoFormOpen({});
+    await window.skhNegoFormOpen({ type: 'transport', entity: {
+        id: nego.transportId, collection: nego.transportCollection, title: nego.transportTitle,
+        fare: nego.currentUnitPrice, price: nego.originalUnitPrice, sellerId: nego.sellerId,
+        sellerName: nego.sellerName, route: nego.route, packageDescription: nego.packageDescription
+    } });
     await new Promise(r => setTimeout(r, 60));
     const html = ($('#nfShell') || {}).innerHTML || '';
     ok('fomu ya counter ni ya USAFIRI', html.includes('Jadili Nauli ya Usafiri'));
@@ -185,11 +189,15 @@ console.log('\n[3] Counter ya huduma: negotiation card ya service');
         { id: 'm1', senderId: 'system', system: true, type: 'negotiation', negotiationId: 'nego_s1', negotiationSnapshot: nego }
     ] };
     skh.activeChatProduct = null; skh.activeChatTransport = null;
-    await window.skhNegoFormOpen({});
+    await window.skhNegoFormOpen({ type: 'service', entity: {
+        id: nego.serviceId, collection: 'services', title: nego.serviceTitle,
+        price: nego.originalUnitPrice, sellerId: nego.sellerId, sellerName: nego.sellerName,
+        scope: nego.scope
+    } });
     await new Promise(r => setTimeout(r, 60));
     const html = ($('#nfShell') || {}).innerHTML || '';
     ok('fomu ya counter ni ya HUDUMA', html.includes('Jadili Ofa ya Huduma'));
-    ok('ina sehemu ya scope', html.includes('Maelezo ya kazi'));
+    ok('ina sehemu ya scope', html.includes('Maelezo ya huduma'));
     ok('muktadha ni huduma husika', html.includes('Ufundi wa TV'));
     if ($('#nfShell')) window.skhNegoFormClose();
 }
@@ -198,10 +206,11 @@ console.log('\n[4] startChat() kutoka tangazo la dereva → activeChatTransport 
 {
     skh.currentOpenProduct = Object.assign(driverPost(), { userEmail: 'juma@x.co' });
     skh.chatCore = null;
-    window.startChat();
+    await window.startChat();
     ok('activeChatTransport kimewekwa', !!(skh.activeChatTransport && skh.activeChatTransport.id === 'dr1'));
     ok('activeChatProduct ni tupu', skh.activeChatProduct == null);
-    const guessed = await window.skhNegoFormOpen({}).then(() => 1).catch(() => 1);
+    skh.chatCore = { convId: 'c4', partnerUid: 'driverUid1', partnerName: 'Juma', conv: {}, msgs: [] };
+    await window.skhNegoFormOpen({ type: 'transport', entity: skh.activeChatTransport });
     await new Promise(r => setTimeout(r, 60));
     const html = ($('#nfShell') || {}).innerHTML || '';
     ok('fomu inayofunguliwa ni ya USAFIRI', html.includes('Jadili Nauli ya Usafiri'));

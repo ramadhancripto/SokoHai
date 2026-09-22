@@ -297,7 +297,8 @@ import { skh } from './00-bootstrap.js';
         // Composer ya mtumiaji husubiri first snapshot; matukio ya mfumo
         // (negotiation/order) yanaweza kuandikwa mara parent conversation
         // imethibitishwa — mtumiaji asilazimishwe kutuma ujumbe wa kawaida kwanza.
-        if (!opts.system && (core.state === CHAT_STATES.CONNECTING || core.state === CHAT_STATES.RETRYING || core.state === CHAT_STATES.ERROR)) {
+        if (core.state === CHAT_STATES.ERROR
+            || (!opts.system && (core.state === CHAT_STATES.CONNECTING || core.state === CHAT_STATES.RETRYING))) {
             return { ok: false, error: 'not_ready', code: 'CONVERSATION_NOT_READY' };
         }
         text = text == null ? '' : String(text);
@@ -3638,7 +3639,9 @@ import { skh } from './00-bootstrap.js';
     window.skhNegoNativeCreate = async function (offerData) {
         var me = myUid();
         var now = nowIso();
-        var negoId = 'nego_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        var stableCommand = String(offerData.commandId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96);
+        var negoId = stableCommand ? ('nego_' + stableCommand)
+            : ('nego_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10));
         var negotiation = {
             negotiationId: negoId,
             conversationId: offerData.conversationId || null,
@@ -4292,7 +4295,7 @@ import { skh } from './00-bootstrap.js';
         if (!myUid() || !partnerUid || !convId) {
             return { ok: false, error: 'Fungua mazungumzo na muuzaji kwanza.' };
         }
-        var commandId = 'send_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        var commandId = p.commandId || ('send_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8));
         var ctype = p.commerceType || 'product';
         var sellerId = p.sellerId || partnerUid;
         var sellerName = p.sellerName || core.partnerName || '';
@@ -4337,11 +4340,7 @@ import { skh } from './00-bootstrap.js';
                 specialRequirements: p.specialRequirements || ''
             });
         } else {
-            Object.assign(payload, {
-                variants: p.variants || null,
-                deliveryLocation: p.deliveryLocation || '',
-                preferredDate: p.preferredDate || ''
-            });
+            Object.assign(payload, { variants: p.variants || null });
         }
 
         var fn = cfCallable('negotiationSendOffer');
@@ -4363,10 +4362,14 @@ import { skh } from './00-bootstrap.js';
         }
 
         // Tukio la mfumo kwenye chat (kadi ya negotiation) — si ujumbe wa kawaida.
-        await sendInternal(p.notes || '', {
+        var messageResult = await sendInternal(p.notes || '', {
             conversationId: convId, partnerUid: partnerUid, type: 'negotiation',
-            negotiationId: negoId, nego: { snapshot: snap }, system: true
+            negotiationId: negoId, nego: { snapshot: snap }, system: true,
+            docId: 'negoevent_' + String(commandId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 96)
         });
+        if (!messageResult || !messageResult.ok) {
+            return { ok: false, error: 'Ofa imeandaliwa lakini haijaingia kwenye Chat. Bonyeza Jaribu tena.', negotiationId: negoId };
+        }
         skh.negoCurrent = snap;
         updateConvCommerce(convId, {
             negotiationId: negoId,
@@ -4627,7 +4630,7 @@ import { skh } from './00-bootstrap.js';
         } else {
             html += '<div class="ch-sn-note">' + ico('shield-check', 12)
                  +  ' Bei ikikubaliwa hapa, inagandishwa na kulindwa na SokoPay.</div>'
-                 +  '<button type="button" class="ch-sn-btn" onclick="window.skhChatStartNego(\'' + kind + '\')">'
+                 +  '<button type="button" class="ch-sn-btn" onclick="window.skhChatStartNego(\'' + kind + '\',this)">'
                  +  ico('tag', 14) + ' ' + esc(meta.cta) + '</button>';
         }
         html += '</div>';
@@ -4643,24 +4646,34 @@ import { skh } from './00-bootstrap.js';
     };
 
     /** Fungua fomu ya ofa kwa muktadha wa mazungumzo haya */
-    window.skhChatStartNego = function (kind) {
+    window.skhChatStartNego = async function (kind, triggerBtn) {
+        var oldHtml = triggerBtn ? triggerBtn.innerHTML : '';
+        function finish(ok) {
+            if (!triggerBtn) return;
+            triggerBtn.disabled = false;
+            triggerBtn.removeAttribute('aria-busy');
+            triggerBtn.classList.remove('skh-nego-busy', 'skh-nego-error');
+            triggerBtn.innerHTML = oldHtml;
+            if (!ok) triggerBtn.classList.add('skh-nego-error');
+        }
+        if (triggerBtn) {
+            triggerBtn.disabled = true; triggerBtn.setAttribute('aria-busy', 'true');
+            triggerBtn.classList.add('skh-nego-busy'); triggerBtn.textContent = 'Inafungua…';
+        }
         var t = null;
         try {
             t = kind === 'transport' ? transportCtx()
-              : kind === 'service'   ? serviceCtx()
+              : kind === 'service' ? serviceCtx()
               : productCtx();
         } catch (e) {}
-        if (!t || !t.id) { skhToast('Hatujapata bidhaa/huduma ya kujadili.', 'info', 3000); return; }
-        // [NEGO LOCK §21/§22 — UX halisi] Chat ≠ Negotiation (§23): chat hubaki,
-        // lakini ofa hawezi kuanza ikiwa mmiliki wa tangazo amezima. Cache inajulikana
-        // hapa tu kama msingi wa ukweli; kadi huchungulia fomu inayorekebisha bado.
+        if (!t || !t.id) { skhToast('Hatujapata bidhaa/huduma ya kujadili.', 'info', 3000); finish(false); return; }
         if (kind !== 'product' && negoIsLocked(kind, t)) {
             skhToast('Negotiation haijaruhusiwa kwa tangazo hili. Bei ni ile iliyotangazwa — unaweza kuzungumza bado.', 'info', 4200);
-            return;
+            finish(false); return;
         }
         if (typeof window.skhNegoFormOpen !== 'function') {
             skhToast('Fomu ya majadiliano haipatikani kwa sasa.', 'error');
-            return;
+            finish(false); return;
         }
         var entity = Object.assign({}, t, {
             collection: t.collection || t.collectionName ||
@@ -4668,7 +4681,9 @@ import { skh } from './00-bootstrap.js';
             sellerId: t.sellerId || t.providerId || null,
             sellerName: t.sellerName || t.providerName || ''
         });
-        window.skhNegoFormOpen({ type: kind, entity: entity });
+        var result = await window.skhNegoFormOpen({ type: kind, entity: entity });
+        finish(!!(result && result.ok));
+        return result;
     };
 
     function ensureCommerceAnchor() {
@@ -5178,9 +5193,21 @@ import { skh } from './00-bootstrap.js';
     }
 
     // Amri moja kutoka anchor/vitufe → negotiationAction (server-authoritative).
-    window.skhNegoCommand = async function (cmd, payload) {
-        if (!skh.requireAuth()) return;
+    window.skhNegoCommand = async function (cmd, payload, actionBtn) {
+        if (!skh.requireAuth()) return { ok: false, error: 'auth' };
         payload = payload || {};
+        function actionState(kind, text) {
+            if (!actionBtn) return;
+            var label = actionBtn.querySelector ? actionBtn.querySelector('span') : null;
+            if (!actionBtn.dataset.skhLabel) actionBtn.dataset.skhLabel = label ? label.textContent : actionBtn.textContent;
+            actionBtn.classList.remove('skh-nego-busy', 'skh-nego-success', 'skh-nego-error');
+            actionBtn.removeAttribute('aria-busy');
+            if (kind === 'loading') { actionBtn.disabled = true; actionBtn.classList.add('skh-nego-busy'); actionBtn.setAttribute('aria-busy', 'true'); }
+            if (kind === 'success') { actionBtn.disabled = true; actionBtn.classList.add('skh-nego-success'); }
+            if (kind === 'error') { actionBtn.disabled = false; actionBtn.classList.add('skh-nego-error'); }
+            var out = text || actionBtn.dataset.skhLabel;
+            if (label) label.textContent = out; else actionBtn.textContent = out;
+        }
         var N = window.skhNego || null;
         var nego = skh.negoCurrent || null;
         var negoId = payload.negotiationId || (nego && nego.negotiationId) || null;
@@ -5200,12 +5227,14 @@ import { skh } from './00-bootstrap.js';
 
         // [NEGO CLICK FIX] amri 1 kwa wakati + busy state la papo hapo.
         var _guardKey = negoId + '::' + cmd;
-        if (!negoGuardAcquire(_guardKey)) return;
+        if (!negoGuardAcquire(_guardKey)) return { ok: false, error: 'busy' };
+        actionState('loading', 'Inashughulikia…');
         // [QUOTA GUARD] Quota imeshika? shindwa MARA moja — usigusi network.
-        if (skhQuotaActive()) { negoGuardRelease(_guardKey); quotaNotice(); return; }
+        if (skhQuotaActive()) { negoGuardRelease(_guardKey); actionState('error', 'Jaribu tena'); quotaNotice(); return { ok: false, error: 'quota' }; }
         var fn = cfCallable('negotiationAction');
         var core = skh.chatCore || {};
         var commandId = cmd + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        var commandOk = false;
         try {
             var r = null;
             if (!fn) throw Object.assign(new Error('NO_FUNCTIONS'), { code: 'unavailable' });
@@ -5232,6 +5261,8 @@ import { skh } from './00-bootstrap.js';
             r = res && res.data;
             if (!r || !r.ok) throw Object.assign(new Error((r && r.error) || 'Imeshindwa.'), { code: (r && r.code) || null });
             await negoApplySuccess(r, core);
+            commandOk = true;
+            return { ok: true, status: r.status };
         } catch (e) {
             if (isFunctionsDown(e)) {
                 // FIREBASE-NATIVE fallback — hakuna Cloud Functions.
@@ -5243,8 +5274,13 @@ import { skh } from './00-bootstrap.js';
                     vehicleType: payload.vehicleType, packageDescription: payload.packageDescription,
                     packageQuantity: payload.packageQuantity, specialRequirements: payload.specialRequirements
                 });
-                if (nr && nr.ok) await negoApplySuccess(nr, core);
-                return;
+                if (nr && nr.ok) {
+                    await negoApplySuccess(nr, core);
+                    commandOk = true;
+                    return { ok: true, status: nr.status };
+                }
+                actionState('error', 'Jaribu tena');
+                return { ok: false, error: (nr && nr.error) || 'failed' };
             }
             // [QUOTA GUARD] Quota hit: toast yenye maana, bila refresh-loop.
             if (quotaGuardHit(e)) { quotaNotice(); return; }
@@ -5264,6 +5300,8 @@ import { skh } from './00-bootstrap.js';
             if (typeof window.skhNegoListen === 'function') { try { window.skhNegoListen((skh.chatCore || {}).convId); } catch (e2) {} }
         } finally {
             negoGuardRelease(_guardKey);
+            if (commandOk) actionState('success', '✓ Imekamilika');
+            else actionState('error', 'Jaribu tena');
         }
     };
 

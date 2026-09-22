@@ -693,7 +693,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <div id="chatModal" class="overlay-menu" style="z-index: 7800; padding:0;">
     <div class="chat-card" style="background:#ffffff; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.45); animation: popIn 0.3s ease-out;">
         <div class="chat-head-bar">
-            <button id="chatBackBtn" class="ch-hbtn" onclick="window.skhChatBackToList()" title="Rudi kwenye orodha" aria-label="Rudi">
+            <button id="chatBackBtn" class="ch-hbtn" onclick="document.getElementById('nfShell') ? window.skhNegoFormClose() : window.skhChatBackToList()" title="Rudi kwenye orodha" aria-label="Rudi">
                 <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <div id="chatHeaderAvatar" class="chat-head-avatar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#0B4F7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg></div>
@@ -717,10 +717,12 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         </div>
         <div id="chatBody" style="display:flex; flex:1; min-height:0;">
             <div id="chatSidePane" style="display:none; width:320px; min-width:320px; border-right:1px solid #e5e7eb; background:#f8fafc; flex-direction:column; overflow-y:auto; flex-shrink:0;"></div>
-            <div style="flex:1; display:flex; flex-direction:column; min-width:0; min-height:0;">
+            <div id="chatMainSurface" style="position:relative; flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden;">
         <div id="chatMessages" style="flex:1; min-height:0; padding:12px 10px; overflow-y:auto; display:flex; flex-direction:column;">
             <div style="text-align:center; font-size: 13px; color:#667781; margin-bottom:16px; background:#fff; padding:6px 14px; border-radius:8px; align-self:center; box-shadow:0 1px 1px rgba(0,0,0,0.08);"><span class="skh-ico" data-ico="lock"></span> Mawasiliano yanalindwa na Sokohai</div>
         </div>
+        <!-- Host moja authoritative ya negotiation; form haiondoki nje ya Chat. -->
+        <div id="chatNegotiationHost" aria-live="polite"></div>
         <!-- Bidhaa iliyoambatishwa kwenye chat (inaonekana hadi ujumbe wa kwanza utumwe) -->
         <div id="chatAttachedProduct" style="display:none;"></div>
         <div id="chatComposer" style="position:relative; padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); background:#ffffff; display:flex; gap:8px; align-items:center; border-top:1px solid #e2e8f0; flex-shrink:0; box-shadow:0 -1px 6px rgba(15,23,42,.05);">

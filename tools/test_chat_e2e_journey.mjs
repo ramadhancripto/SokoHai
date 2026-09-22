@@ -212,9 +212,6 @@ await loadApp('js/app/34-chat-core.js', '_tmp_e2e_chat.mjs');
 await loadApp('js/app/38-negotiation-form.js', '_tmp_e2e_form.mjs', [['./38-nego-form-logic.js', logicURL('38-nego-form-logic.js')]]);
 await loadApp('js/app/69-chat-groups.js', '_tmp_e2e_grp.mjs');
 await loadApp('js/app/39-product-showcase.js', '_tmp_e2e_ps.mjs', [['./39-showcase-logic.js', logicURL('39-showcase-logic.js')]]);
-// Meneja halisi wa LIFO lazima ajue dynamic negotiation shell.
-await import('file://' + path.join(ROOT, 'js/94-modal-stack.js') + '?t=' + Date.now());
-
 let pass = 0, fail = 0;
 const ok = (n, c) => { if (c) { pass++; console.log('  ✅ ' + n); } else { fail++; console.log('  ❌ ' + n); } };
 const $ = (s) => document.querySelector(s);
@@ -269,20 +266,13 @@ console.log('\n[J3] Tuma ujumbe — optimistic + reconcile bila duplicate');
 console.log('\n[J4] Toa Ofa kutoka chat — fomu inafunguka NDANI ya chat');
 let negoId = null;
 {
-  // Rudia conflict halisi: repair layer iliinua Chat juu ya z-index ya form.
-  // jsdom haipakii CSS ya index, hivyo weka properties zilezile hapa.
-  $('#chatModal').style.position = 'fixed';
-  $('#chatModal').style.setProperty('z-index', '100010', 'important');
-  const nfCss = document.createElement('style');
-  nfCss.textContent = '.nf-shell{position:fixed;z-index:9000}';
-  document.head.appendChild(nfCss);
   window.skhChatStartNego('product');
   await tick(10);
   ok('fomu (nfShell) imefunguka', !!$('#nfShell'));
   ok('chatModal bado wazi (fomu ndani ya chat)', ($('#chatModal') || {}).style.display !== 'none');
-  ok('fomu iko JUU ya Chat iliyoinuliwa', Number(window.getComputedStyle($('#nfShell')).zIndex) > Number(window.getComputedStyle($('#chatModal')).zIndex));
+  ok('fomu ni descendant wa host authoritative ndani ya Chat', $('#nfShell').parentElement === $('#chatNegotiationHost') && $('#chatNegotiationHost').closest('#chatModal'));
   ok('product ina quantity na proposed price', !!$('#nf_quantity') && !!$('#nf_unitPrice'));
-  ok('product HAINA schema ya service/transport', !$('#nf_scope') && !$('#nf_fee') && !$('#nf_pickupDate'));
+  ok('product HAINA schema ya service/transport/delivery', !$('#nf_scope') && !$('#nf_fee') && !$('#nf_pickupDate') && !$('#nf_deliveryLocation') && !$('#nf_preferredDate'));
   // Jaza fields zote required kwa heuristics
   $$('#nfShell [data-k]').forEach((el) => {
     const k = (el.getAttribute('data-k') || '').toLowerCase();
@@ -300,6 +290,7 @@ let negoId = null;
   $$('#nfShell .nf-chip').forEach((c, i) => { if (i === 0) c.click(); });
   const before = [...store.keys()].filter((k) => k.startsWith('negotiations/')).length;
   $('#nfSendBtn').click();
+  $('#nfSendBtn').click(); // rapid duplicate lazima izuiwe
   await tick(30);
   const negos = [...store.entries()].filter(([p]) => p.startsWith('negotiations/'));
   ok('negotiation imeundwa', negos.length === before + 1);
@@ -307,9 +298,11 @@ let negoId = null;
     negoId = negos[negos.length - 1][0].split('/').pop();
     const nd = negos[negos.length - 1][1];
     ok('version=1 + OFFER_SENT + buyer sahihi', nd.version === 1 && nd.currentState === 'OFFER_SENT' && nd.buyerId === 'buyer_1');
-    ok('fomu imefungwa baada ya kutuma', !$('#nfShell'));
+    ok('success state inaonekana baada ya confirmation', !!$('#nfShell') && ($('#nfSendLabel') || {}).textContent.includes('Ofa imetumwa'));
     const nmsgs = msgsIn(convId).filter(([pp, d]) => d.type === 'negotiation');
     ok('ujumbe wa negotiation umeingia chat', nmsgs.length >= 1);
+    ($('#nfReturnChatBtn') || {}).click();
+    ok('Rudi Chat inafunga form na kubaki Chat', !$('#nfShell') && ($('#chatModal') || {}).style.display !== 'none');
   }
 }
 
@@ -385,6 +378,30 @@ console.log('\n[J8] 39: skhChatNegotiate — await open halisi + fomu ndani ya c
   await window.skhChatNegotiate('product');
   await tick(5);
   ok('double-call hairudii fomu', $$('#nfShell').length === shells);
+  window.skhNegoFormClose();
+}
+
+console.log('\n[J8b] Context isolation: Product → Service → Transport → Product');
+{
+  const product = { id: 'p_iso', title: 'Simu', price: 500000, sellerId: 'seller_2', collection: 'products' };
+  const service = { id: 's_iso', title: 'Ushonaji', price: 80000, sellerId: 'seller_2', collection: 'services' };
+  const transport = { id: 't_iso', title: 'Safari ya mzigo', fare: 30000, sellerId: 'seller_2', collection: 'ride_requests', route: { from: 'Tabora', to: 'Pangale' } };
+
+  await window.skhNegoFormOpen({ type: 'product', entity: product });
+  ok('Product only: price+qty, hakuna delivery/service/transport', skh.activeNegotiationContext.kind === 'product' && !!$('#nf_quantity') && !!$('#nf_unitPrice') && !$('#nf_scope') && !$('#nf_from') && !$('#nf_deliveryLocation'));
+  window.skhNegoFormClose();
+
+  await window.skhNegoFormOpen({ type: 'service', entity: service });
+  ok('Service only: scope+price, hakuna product variants/transport/pickup', skh.activeNegotiationContext.kind === 'service' && !!$('#nf_scope') && !!$('#nf_unitPrice') && !$('#nf_from') && !$('#nf_pickupDate') && !$('#nf_deliveryLocation'));
+  window.skhNegoFormClose();
+
+  await window.skhNegoFormOpen({ type: 'transport', entity: transport });
+  ok('Transport only: route+fare, hakuna product/service fields', skh.activeNegotiationContext.kind === 'transport' && !!$('#nf_from') && !!$('#nf_to') && !!$('#nf_fee') && !$('#nf_scope') && !$('#nf_unitPrice'));
+  window.skhNegoFormClose();
+
+  await window.skhNegoFormOpen({ type: 'product', entity: product });
+  ok('Product tena: stale Transport imefutwa', skh.activeNegotiationContext.kind === 'product' && skh.activeNegotiationContext.entityId === 'p_iso' && !!$('#nf_quantity') && !$('#nf_from') && !$('#nf_fee'));
+  window.skhNegoFormClose();
 }
 
 console.log('\n[J9] Conversation create failure — fail-closed, si listener/send bandia');

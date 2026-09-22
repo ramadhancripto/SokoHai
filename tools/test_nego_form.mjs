@@ -28,6 +28,7 @@ const serviceEntity = {
     id: 's_tailor', collection: 'services', title: 'Ushonaji wa Suti',
     price: 120000, sellerId: 'prov_1', sellerName: 'Fundi Mosi'
 };
+const serviceScheduled = Object.assign({}, serviceEntity, { negotiationScheduleRequired: true });
 const transportEntity = {
     id: 'ride_1', collection: 'ride_requests', title: 'Mifuko ya mchele',
     fare: 30000, route: { from: 'Tabora', to: 'Pangale' },
@@ -40,13 +41,16 @@ console.log('\n[1] CONFIG — fomu inajua aina za biashara');
     const p = sectionsFor(NF_TYPES.PRODUCT, productEntity);
     const s = sectionsFor(NF_TYPES.SERVICE, serviceEntity);
     const t = sectionsFor(NF_TYPES.TRANSPORT, transportEntity);
-    ok('product ina sections', p.length >= 4);
-    ok('service ina scope/deadline/location', JSON.stringify(s).includes('scope') && JSON.stringify(s).includes('deadlineQty') && JSON.stringify(s).includes('location'));
+    ok('product ina sections za bei/quantity + ujumbe', p.length >= 2);
+    ok('service basic ina scope/bei bila delivery/pickup', JSON.stringify(s).includes('scope') && JSON.stringify(s).includes('unitPrice') && !JSON.stringify(s).includes('pickup') && !JSON.stringify(s).includes('deliveryLocation'));
+    ok('service basic hailazimishi ratiba/mahali', !JSON.stringify(s).includes('deadlineQty') && !JSON.stringify(s).includes('location'));
+    const scheduled = sectionsFor(NF_TYPES.SERVICE, Object.assign({}, serviceEntity, { negotiationScheduleRequired: true }));
+    ok('service yenye business rule wazi ina ratiba', JSON.stringify(scheduled).includes('deadlineQty') && JSON.stringify(scheduled).includes('location'));
     ok('transport ina route/cargo/dates/fee', JSON.stringify(t).includes('from') && JSON.stringify(t).includes('to') && JSON.stringify(t).includes('pickupDate') && JSON.stringify(t).includes('deliveryDeadline') && JSON.stringify(t).includes('fee'));
     const tKeys = t.flatMap(sec => sec.fields.map(f => f.key));
     ok('transport HAINA color/size', !tKeys.includes('color') && !tKeys.includes('size'));
     const pKeys = p.flatMap(sec => sec.fields.map(f => f.key));
-    ok('product haina pickup/destination', !pKeys.includes('pickupDate') && !pKeys.includes('from'));
+    ok('product haina pickup/destination/delivery choice', !pKeys.includes('pickupDate') && !pKeys.includes('from') && !pKeys.includes('deliveryLocation') && !pKeys.includes('preferredDate'));
 }
 
 console.log('\n[2] VARIANTS — zinaonekana kwa bidhaa zinazofaa tu');
@@ -82,8 +86,7 @@ console.log('\n[4] PRODUCT — validation');
     eq('qty juu ya stock imekataliwa', validateForm('product', Object.assign({}, base, { quantity: 99 }), productEntity).valid, false);
     eq('bei hasi imekataliwa', validateForm('product', Object.assign({}, base, { unitPrice: -100 }), productEntity).valid, false);
     eq('bei tupu imekataliwa', validateForm('product', Object.assign({}, base, { unitPrice: '' }), productEntity).valid, false);
-    eq('tarehe ya nyuma imekataliwa', validateForm('product', Object.assign({}, base, { preferredDate: '2020-01-01' }), productEntity).valid, false);
-    eq('tarehe ya baadaye inaruhusiwa', validateForm('product', Object.assign({}, base, { preferredDate: nfAddDaysISO(nfTodayISO(), 3) }), productEntity).valid, true);
+    eq('delivery fields haziathiri basic negotiation', validateForm('product', Object.assign({}, base, { preferredDate: '2020-01-01', deliveryLocation: 'X' }), productEntity).valid, true);
     const r = validateForm('product', Object.assign({}, base, { quantity: 0 }), productEntity);
     ok('ujumbe wa kirafiki wa qty', /idadi/i.test(r.errors.quantity));
 }
@@ -102,7 +105,8 @@ console.log('\n[5] PRODUCT — proposal inahifadhi IDs na bei ya sokoni HAIGUSWI
     eq('hali ya mwanzo OFFER_SENT', p.currentState, 'OFFER_SENT');
     eq('version 1', p.version, 1);
     eq('maelezo yamehifadhiwa', p.notes, 'Mchele safi, mifuko mipya');
-    eq('delivery location', p.deliveryLocation, 'Pangale');
+    ok('Product proposal HAINA deliveryLocation/preferredDate', !Object.prototype.hasOwnProperty.call(p, 'deliveryLocation') && !Object.prototype.hasOwnProperty.call(p, 'preferredDate'));
+    ok('Product proposal HAINA transport pickup fields', !Object.prototype.hasOwnProperty.call(p, 'pickupDate') && !Object.prototype.hasOwnProperty.call(p, 'route'));
     // SHERIA MUHIMU: entity haijabadilishwa
     eq('bei ya entity bado 75000', productEntity.price, 75000);
     // Variant zilizo tupu haziandikwi
@@ -121,13 +125,13 @@ console.log('\n[6] PRODUCT — variants zimejengwa (fashion)');
 
 console.log('\n[7] SERVICE — scope, idadi, bei, jumla, deadline, mahali');
 {
-    const v = defaultValues('service', serviceEntity);
+    const v = defaultValues('service', serviceScheduled);
     eq('default deadline qty', v.deadlineQty, 2);
     const values = Object.assign({}, v, { scope: 'Suti mbili rasmi za wanawake', quantity: 2, unitPrice: 100000, deadlineQty: 10, deadlineUnit: 'siku', location: 'Tabora', requirements: 'Mteja atatoa vitambaa', notes: 'Nyeusi, slim fit' });
-    const check = validateForm('service', values, serviceEntity);
+    const check = validateForm('service', values, serviceScheduled);
     eq('service valid', check.valid, true);
     eq('service total 2×100k', check.totals.total, 200000);
-    const p = buildProposal('service', serviceEntity, values, Object.assign({}, ctx, { sellerId: 'prov_1', sellerName: 'Fundi Mosi' }));
+    const p = buildProposal('service', serviceScheduled, values, Object.assign({}, ctx, { sellerId: 'prov_1', sellerName: 'Fundi Mosi' }));
     eq('serviceId', p.serviceId, 's_tailor');
     eq('scope', p.scope, 'Suti mbili rasmi za wanawake');
     eq('deadline text', p.deadline, 'siku 10');
@@ -136,10 +140,10 @@ console.log('\n[7] SERVICE — scope, idadi, bei, jumla, deadline, mahali');
     eq('requirements', p.requirements, 'Mteja atatoa vitambaa');
     eq('bado OFFER_SENT (si oda)', p.currentState, 'OFFER_SENT');
     // validation errors
-    eq('scope tupu imekataliwa', validateForm('service', Object.assign({}, values, { scope: '' }), serviceEntity).valid, false);
-    eq('mahali tupu imekataliwa', validateForm('service', Object.assign({}, values, { location: '' }), serviceEntity).valid, false);
-    eq('deadline 0 imekataliwa', validateForm('service', Object.assign({}, values, { deadlineQty: 0 }), serviceEntity).valid, false);
-    eq('bei 0 imekataliwa', validateForm('service', Object.assign({}, values, { unitPrice: 0 }), serviceEntity).valid, false);
+    eq('scope tupu imekataliwa', validateForm('service', Object.assign({}, values, { scope: '' }), serviceScheduled).valid, false);
+    eq('mahali tupu imekataliwa', validateForm('service', Object.assign({}, values, { location: '' }), serviceScheduled).valid, false);
+    eq('deadline 0 imekataliwa', validateForm('service', Object.assign({}, values, { deadlineQty: 0 }), serviceScheduled).valid, false);
+    eq('bei 0 imekataliwa', validateForm('service', Object.assign({}, values, { unitPrice: 0 }), serviceScheduled).valid, false);
 }
 
 console.log('\n[8] TRANSPORT — njia, mzigo, tarehe, nauli');

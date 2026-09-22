@@ -197,32 +197,9 @@ console.log('[61-full-repair] loading — P0-P4 stabilization...');
   patchChatPrivacy();
   setTimeout(patchChatPrivacy, 1200);
 
-  // Negotiation — ensure structured, not just chat text
-  function patchNegotiation() {
-    // Ensure negotiation form opens with correct context
-    if (typeof window.skhNegoFormOpen === 'function' && !window.skhNegoFormOpen._patched61) {
-      const orig = window.skhNegoFormOpen;
-      window.skhNegoFormOpen = function (opts) {
-        ensureIdentityEarly();
-        // Validate opts
-        if (!opts || !opts.type) {
-          console.warn('[61] Nego form opened without type — inferring');
-        }
-        // Ensure entity has correct collection
-        if (opts && opts.entity && !opts.entity.collectionName) {
-          const t = (opts.type || '').toLowerCase();
-          if (t === 'service') opts.entity.collectionName = 'services';
-          else if (t === 'transport') opts.entity.collectionName = 'drivers';
-          else opts.entity.collectionName = 'products';
-        }
-        return orig.apply(this, arguments);
-      };
-      window.skhNegoFormOpen._patched61 = true;
-      console.log('[61] skhNegoFormOpen patched — structured');
-    }
-  }
-  patchNegotiation();
-  setTimeout(patchNegotiation, 1500);
+  // Negotiation authority lives in 38-negotiation-form.js. A late wrapper used
+  // to mutate entity.collectionName here and could turn ride_requests into
+  // drivers; it was removed so type/entity have one owner.
 
   // ========================================================================
   // PHASE 4 — TRANSACTIONS: Cart, Checkout, Orders
@@ -615,7 +592,7 @@ console.log('[61-full-repair] loading — P0-P4 stabilization...');
     checks.push({ phase: '2 SEARCH', test: 'handleSearch debounced', ok: !!(window.handleSearch && window.handleSearch._patched61) });
     // Phase 3
     checks.push({ phase: '3 CHAT', test: 'Chat privacy patched', ok: !!(window.openChatList && window.openChatList._patched61) });
-    checks.push({ phase: '3 NEGO', test: 'Nego form structured', ok: !!(window.skhNegoFormOpen && window.skhNegoFormOpen._patched61) });
+    checks.push({ phase: '3 NEGO', test: 'Nego form structured', ok: typeof window.skhNegoFormOpen === 'function' });
     // Phase 4
     checks.push({ phase: '4 CART', test: 'Cart patched', ok: !!(window.openCart && window.openCart._patched61) });
     // Phase 5
