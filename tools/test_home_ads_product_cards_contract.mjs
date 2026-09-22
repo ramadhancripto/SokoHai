@@ -24,6 +24,11 @@ t('showcase supports logo, brand, headline and CTA',ad.includes('logoUrl')&&ad.i
 t('Home advertisement is rendered as a clear sponsored post',ad.includes('skh-ann-post-head')&&ad.includes('Sponsored · Advertisement')&&ad.includes('skh-ann-post-actions'));
 t('advertisement image preserves the whole creative',adCss.includes('aspect-ratio:4/3')&&adCss.includes('skh-ann-media-main')&&adCss.includes('object-fit:contain!important'));
 t('preview and Home share the canonical advertisement card',ad.includes('window.skhAdvertisementCardHtml=cardHtml')&&admin.includes("typeof window.skhAdvertisementCardHtml==='function'"));
+t('admin can edit primary, accent, text and surface colors',['annPrimaryColor','annAccentColor','annTextColor','annSurfaceColor'].every(id=>admin.includes(id)));
+t('frame opacity is editable and persisted',admin.includes('annFrameOpacity')&&admin.includes('skhAdOpacityChanged')&&engine.includes('frameOpacity'));
+t('theme colors are sanitized before rendering and saving',ad.includes('safeColor')&&engine.includes("/^#[0-9a-f]{6}$/i"));
+t('graphic design presets and contrast guidance are available',admin.includes('skhAdApplyPreset')&&admin.includes('annContrastHint')&&admin.includes('ratio>=4.5'));
+t('custom theme variables drive card frame, text and gradient',ad.includes('--ad-primary:')&&adCss.includes('var(--ad-frame-alpha')&&adCss.includes('var(--ad-text')&&adCss.includes('var(--ad-accent'));
 t('engagement metrics display only when authentic count is positive',ad.includes("return n>0?")&&ad.includes('a.likeCount')&&ad.includes('a.viewCount'));
 t('published Firestore write updates Home immediately',engine.includes('window.__sokohaiAnnouncementsCache = cache')&&engine.includes('window.__sokohaiOnAnnouncementsUpdate(cache)'));
 t('new advertisement defaults to Publish with explicit button label',admin.includes("existing?(existing.status||((existing.active===false)?'draft':'published')):'published'")&&admin.includes("'Publish Advertisement':'Save Draft'"));

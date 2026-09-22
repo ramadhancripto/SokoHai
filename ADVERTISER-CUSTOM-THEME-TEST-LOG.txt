@@ -1,0 +1,1566 @@
+
+> test
+> node tools/test_product_foundation_contract.mjs && node tools/test_discover_phase2_contract.mjs && node tools/test_global_white_system_contract.mjs && node tools/test_white_system_modules_contract.mjs && node tools/test_white_system_checkpoint2_contract.mjs && node tools/test_white_system_forms_contract.mjs && node tools/test_white_system_final_contract.mjs && node tools/test_buyer_dashboard_contract.mjs && node tools/test_advertiser_billing_coming_soon_contract.mjs && node tools/test_home_ads_product_cards_contract.mjs && node tools/test_market_ranking.mjs && node tools/test_market_visual_contract.mjs && node tools/test_chat_home_identity_contract.mjs && node tools/test_nego_form.mjs && node tools/test_negotiation_engine.mjs && node tools/test_showcase.mjs && node tools/test_negotiation_dom.mjs && node tools/test_chat_header_sides.mjs && node tools/test_commerce_flow.mjs && node tools/test_delivery_nego_flow.mjs && node tools/test_route_matcher.mjs && node tools/test_routing.mjs && node tools/test_token_inbox.mjs && node tools/test_logistics_market.mjs && node tools/test_card_discovery.mjs && node tools/test_delivery_choice.mjs && node tools/test_commerce_cards.mjs && node tools/test_functions_resilience.mjs && node tools/test_chat_commerce_cards.mjs && node tools/test_chat_e2e_journey.mjs && node tools/test_chat_authority_contract.mjs && node tools/verify_nav_chain.mjs
+
+PASS canonical write keeps existing title/price/stock vocabulary
+PASS publication and availability are separate
+PASS structured pricing foundation
+PASS variants normalize without forcing them
+PASS search metadata covers identity/taxonomy/attributes
+PASS exact name outranks description-only match
+PASS filter service supports category, price, location, condition and sorting
+PASS draft/archived/hidden/offline records do not surface
+PASS legacy status and stock reconcile safely
+PASS validation rejects invalid price/stock and allows digital without physical location
+PASS product rules enforce owner/admin/approved-agent writes
+PASS product client deletion is disabled and archive flow exists
+PASS creation and editing both use the foundation fields
+PASS existing taxonomy and uploader remain in use
+PASS feed and smart search consume shared eligibility/relevance
+PASS orders retain product/quantity/unit-price/variant snapshots
+PASS no second product collection was introduced
+PASS Company Ads and Discover automation stay outside foundation module
+
+PRODUCT FOUNDATION CONTRACT: 18 passed, 0 failed
+PASS intent detects product + seller + location + price
+PASS service intent
+PASS transport intent
+PASS wholesale, auction and group buy are explicit real-mode constraints
+PASS normalization preserves model distinction
+PASS no fallback or denied location can create nearby context
+PASS public profile projection is opt-in and excludes sensitive fields
+PASS query + price + location + availability combine
+PASS nearby only works with valid context and real distance
+PASS sorting supports relevance/newest/price/popular
+PASS facets are derived from real results
+PASS counts come from actual section arrays
+PASS URL state round-trips
+PASS query extracts category-specific weight, storage and size constraints
+PASS catalog-backed typo variation resolves without inventing a stronger model
+PASS product hierarchy separates exact, variant, submodel, related and accessory
+PASS dynamic attributes come only from actual product records
+PASS attribute, location, availability and price filters remain cumulative
+PASS resolved context exposes only real ecosystem counts
+PASS active context back stack moves one level at a time
+PASS Discover UI reuses existing Product/Service/Transport cards
+PASS smart strip is horizontally scrollable and real-count driven
+PASS filters are context-aware and facet-derived
+PASS active chips, single clear action, and mobile bottom sheet exist
+PASS deep search URL state recovers on refresh
+PASS no fabricated Dar fallback remains
+PASS people and businesses query privacy projection, not users
+PASS public profile rules whitelist only commercial/public fields
+PASS account discoverability cannot be changed by another signed-in user
+PASS public groups are discoverable while private group headers remain blocked
+PASS partial source errors do not discard successful sections
+PASS search and direct product opening activate the shared Discovery Context
+PASS desktop sidebar and mobile discovery drawer preserve the product detail
+PASS automation sections are actionable and hidden when empty
+PASS hierarchical product results remain in canonical Product cards
+PASS comparison uses actual selected product fields
+PASS no Discover database, payment or notification system added
+
+DISCOVER PHASE 2 CONTRACT: 37 passed, 0 failed
+PASS canonical green token exists
+PASS canonical green dark token exists
+PASS canonical support blue token exists
+PASS canonical white background token exists
+PASS canonical cream gold token exists
+PASS compat primary points to green
+PASS design-system page background points to white
+PASS shared primary button is green
+PASS shared focus ring is green
+PASS bottom nav source is white
+PASS bottom nav final authority is white
+PASS bottom nav active state is green
+PASS bottom nav has small green active indicator
+PASS sell action source is green not premium gold
+PASS dashboard sidebar source is white
+PASS dashboard sidebar active state is green
+PASS dashboard workspace source is white
+PASS install banner no longer dark gradient
+PASS SokoPay sidebar final scoped surface is white
+PASS SokoPay active nav is soft green
+PASS SokoPay runtime tab colors match white design
+PASS account drawer header is light
+PASS account settings header is light
+PASS chat header is light green not dark gradient
+PASS chat keeps WhatsApp light message surface
+PASS chat dark OS theme no longer creates dark chat
+PASS danger remains semantic
+
+GLOBAL WHITE SYSTEM PHASE A: 27 passed, 0 failed
+PASS Discover and Group shared sheet header is light
+PASS shared sheet controls are white-green
+PASS group message area keeps WhatsApp light surface
+PASS group header avatar uses soft blue identity
+PASS group send actions are green
+PASS group creation actions are green
+PASS group order actions are green
+PASS negotiation header is light green
+PASS late negotiation heading color matches light header
+PASS profile fallback cover is light
+PASS profile primary action is green
+PASS Discover active controls are green
+PASS transport information hero is light blue
+PASS delivery chooser header is light
+PASS post-payment delivery header is light
+PASS driver live dashboard banner is white
+PASS admin control panel no longer uses dark block
+PASS Buyer Dashboard static header is white-first
+PASS Buyer Dashboard selected tab is green
+
+WHITE SYSTEM MODULE CONTRACT: 19 passed, 0 failed
+PASS SokoPay inner primary actions are green
+PASS SokoPay governance map no longer uses black panel
+PASS SokoPay fragment has no dark action backgrounds
+PASS SokoPay mobile bar is white
+PASS SokoPay mobile active pill is soft green
+PASS Token Box sheet is white
+PASS Token Box active tab is green
+PASS Token code strip is soft green
+PASS Token primary action is green
+PASS Request Inbox sheet is white
+PASS Request Inbox header icon is soft blue
+PASS Request Inbox active tab is green
+PASS Cart header is light green
+PASS Cart total is soft green not dark
+PASS Buyer order header is light
+PASS Logistics cart headers are light blue
+PASS Smart cart injected CSS has no legacy dark header backgrounds
+PASS Logistics role sidebar is white
+PASS Service provider sidebar dark theme removed
+PASS Agent assist dark hero removed
+PASS Agent primary actions are green
+PASS Hub charts use green blue gold system palette
+PASS Unread notification uses light green row
+PASS Notification icons have semantic type classes
+PASS Notification semantic CSS includes green blue and gold
+PASS KPI palette has no purple identity
+PASS Pending KPI no longer uses danger red
+PASS Buyer order launch actions are green
+PASS Checkout payment action is green
+
+WHITE SYSTEM CHECKPOINT 2: 29 passed, 0 failed
+PASS auth accent strip is green only
+PASS auth logo surface is soft green
+PASS auth strip does not spend premium gold
+PASS market language selected state is green
+PASS seller follow action is green
+PASS comments send action is green
+PASS comments focus uses green ring
+PASS seller form gallery action is green
+PASS seller form utility camera action is neutral not black
+PASS form runtime save action is green
+
+WHITE SYSTEM FORMS: 10 passed, 0 failed
+PASS top navigation management identity is soft green
+PASS runtime toast is a white semantic surface
+PASS legacy chat inbox header is light
+PASS chat v2 active and unread states use green identity
+PASS commerce route panel uses supporting blue softly
+PASS commerce route action remains primary green
+PASS product mode summary cards no longer use dark full panels
+PASS seller fallback cover is soft green
+PASS seller comments header is a light surface
+PASS print workspace header is soft green
+PASS lifecycle active tab is primary green
+PASS state retry action is primary green
+PASS account save action is primary green
+PASS legacy announcement source no longer has dark navy strip
+PASS old core announcement source no longer has dark navy strip
+PASS dialogs do not use legacy blue primary background
+PASS discover engine does not use legacy blue CTA literal
+PASS discover completion does not use legacy blue CTA literal
+
+Final white-system contract: 18 passed, 0 failed
+PASS existing My SokoHai surface is the single Buyer dashboard
+PASS all required Buyer sections exist
+PASS Overview is default and active
+PASS dashboard contains no marketplace search input
+PASS Kazi Buyer opens dashboard rather than duplicate marketplace mode
+PASS Home has a separate explicit action
+PASS Back delegates to one-level navigation
+PASS Orders are owner-filtered at query
+PASS Requests are owner-filtered at query
+PASS Negotiations are owner-filtered at query
+PASS Deliveries are owner-filtered at query
+PASS Saved, likes and follows use existing relationship collections
+PASS Negotiation shortcut opens existing Chat
+PASS Orders shortcut opens existing tracking/order authority
+PASS Delivery shortcut opens existing tracking authority
+PASS SokoPay shortcut opens existing SokoPay
+PASS Notifications remain a global shortcut
+PASS Chat remains a global shortcut
+PASS empty states return to Home only
+PASS summary values use server counts, not sample numbers
+PASS active commerce summaries use scoped real-time listeners
+PASS recent view uses the existing central event stream
+PASS recent view uses deterministic bounded IDs
+PASS orders rules enforce participant isolation
+PASS requests rules enforce sender/receiver isolation
+PASS private activity rule is owner-only except search signals
+
+BUYER DASHBOARD CONTRACT: 26 passed, 0 failed
+PASS Kazi includes one Advertiser entry
+PASS Advertiser entry opens dedicated existing-role surface
+PASS account management menu includes Advertiser entry
+PASS Advertiser dashboard modal exists once
+PASS Billing entry is visible and accessibility-disabled
+PASS Billing professional card is disabled-styled
+PASS locked entry provides explicit feedback rather than doing nothing
+PASS Coming Soon dialog exists once
+PASS dialog contains required Swahili explanation
+PASS dialog contains Coming Soon state
+PASS dialog has Sawa close action
+PASS Advertiser billing handlers do not open SokoPay
+PASS Advertiser billing handlers do not open checkout
+PASS Advertiser billing handlers do not call wallet or payment gateway
+PASS no advertising billing collection was introduced
+PASS no advertising billing Cloud Function was introduced
+PASS visual state uses neutral disabled styling
+PASS responsive mobile breakpoint exists
+PASS small-phone breakpoint exists
+PASS Billing UI has no overflowing fixed desktop width
+
+ADVERTISER BILLING COMING SOON: 20 passed, 0 failed
+PASS product front card keeps image/title/price/location
+PASS product front card omits seller details
+PASS product front card omits mode/detail controls
+PASS product image has stable wide aspect ratio
+PASS product title uses readable two-line clamp
+PASS desktop card grid uses wide minimum
+PASS small phone uses one clear column
+PASS Home advertisement precedes Search
+PASS Home showcase hides when no active ad
+PASS showcase derives active/scheduled/expired/archive state
+PASS showcase supports priority ordering and rotation
+PASS showcase wakes at schedule boundaries without a reload
+PASS showcase labels promotional content honestly
+PASS showcase supports image creative
+PASS showcase supports video with safe controls
+PASS showcase supports audio controls
+PASS showcase supports poster image
+PASS showcase supports logo, brand, headline and CTA
+PASS Home advertisement is rendered as a clear sponsored post
+PASS advertisement image preserves the whole creative
+PASS preview and Home share the canonical advertisement card
+PASS admin can edit primary, accent, text and surface colors
+PASS frame opacity is editable and persisted
+PASS theme colors are sanitized before rendering and saving
+PASS graphic design presets and contrast guidance are available
+PASS custom theme variables drive card frame, text and gradient
+PASS engagement metrics display only when authentic count is positive
+PASS published Firestore write updates Home immediately
+PASS new advertisement defaults to Publish with explicit button label
+PASS Admin manager has required status filters
+PASS Admin manager has Create Advertisement
+PASS creative wizard supports all required types
+PASS admin must confirm preview before publish
+PASS creative validation checks image/video/audio
+PASS CTA requires a real HTTPS destination
+PASS existing shared Cloudinary uploader is reused
+PASS media bytes are not written to Firestore
+PASS media library records dimensions/date/type
+PASS active media cannot be archived while in use
+PASS media reference deletion is guarded and accurately scoped
+PASS advertisement writes are Admin-only in rules
+PASS media library is Admin-only in rules
+PASS archive replaces destructive ad deletion
+PASS Company Ads remains Coming Soon only
+PASS external advertiser system was not added
+
+HOME ADS + PRODUCT CARDS CONTRACT: 45 passed, 0 failed
+✅ listing halisi yenye id/title inastahili
+✅ deleted/suspended/draft hazistahili
+✅ boost lazima iwe active na haija-expire
+✅ boost iliyofikisha target haisongi boosted rank
+✅ legacy boost haidumu milele
+✅ haversine inatoa umbali halisi
+✅ nearby ina record yenye distance, si dummy
+✅ trending inatumia recent activity
+✅ most searched inahitaji search signal
+✅ boosted ina active boost tu
+✅ dedupe inapunguza kurudia sections mfululizo
+✅ search events halisi zinaweza kupanga most searched bila hardcode
+✅ boost isiyohusiana na query haishindi relevance
+MARKET RANKING: 13 passed, 0 failed
+✅ white-first stylesheet imeunganishwa
+✅ sections nne zina hosts tofauti
+✅ boosted disclosure ipo
+✅ ranking centralized inatumika na UI
+✅ search activity halisi inasomwa
+✅ future boosts zina expiry
+✅ announcement si marquee nzito
+✅ announcement hutumia records za Firestore cache
+✅ announcement image ni field halisi
+✅ white ni dominant kwenye marketplace surfaces
+✅ green primary na blue support zimetenganishwa
+✅ gold ni boost/premium accent
+MARKET VISUAL CONTRACT: 12 passed, 0 failed
+PASS authoritative inbox maps real conversation goHead
+PASS order group classification is data-derived
+PASS person rows have semantic identity class
+PASS business rows have restrained stronger identity hook
+PASS normal groups have semantic identity class
+PASS order groups have semantic identity class
+PASS group label rendered
+PASS order group label rendered
+PASS order progress uses actual total and target
+PASS real profile avatar helper remains in use
+PASS group navigation remains existing group destination
+PASS personal navigation remains existing user destination
+PASS required identity filter set exists
+PASS existing commerce and role filters are preserved
+PASS group member count remains visible from real record
+PASS stored group emoji avatar is preserved without surrogate splitting
+PASS order group uses real stored avatar before cart fallback
+PASS group draft state remains data-derived and visible
+PASS group mute state remains visible
+PASS pin and archive states remain connected to records
+PASS all view groups real rows into people groups and order groups
+PASS old inline-styled group avatar removed from authority
+PASS final identity stylesheet is loaded after marketplace stylesheet
+PASS white row remains dominant for every type
+PASS personal identity is soft green and circular
+PASS group identity uses requested distant blue
+PASS order identity uses restrained cream gold
+PASS order progress is semantically green
+PASS long identity names are ellipsized
+PASS red is not introduced by Chat Home identity stylesheet
+
+Chat Home identity contract: 30 passed, 0 failed
+
+[1] CONFIG — fomu inajua aina za biashara
+  ✅ product ina sections za bei/quantity + ujumbe
+  ✅ service basic ina scope/bei bila delivery/pickup
+  ✅ service basic hailazimishi ratiba/mahali
+  ✅ service yenye business rule wazi ina ratiba
+  ✅ transport ina route/cargo/dates/fee
+  ✅ transport HAINA color/size
+  ✅ product haina pickup/destination/delivery choice
+
+[2] VARIANTS — zinaonekana kwa bidhaa zinazofaa tu
+  ✅ mavazi yana size na color
+  ✅ chakula hakina size/color/model
+  ✅ tech ina model/condition
+  ✅ variants waliozwa na muuzaji wanaheshimiwa
+
+[3] PRODUCT — idadi, bei, jumla ya kiotomatiki
+  ✅ bei ya kuanzia = bei ya sokoni
+  ✅ jumla qty 1
+  ✅ jumla qty 2
+  ✅ jumla inabadilika bei ikibadilika
+  ✅ bila bei hakuna jumla
+
+[4] PRODUCT — validation
+  ✅ valid kabisa
+  ✅ qty 0 imekataliwa
+  ✅ qty hasi imekataliwa
+  ✅ qty juu ya stock imekataliwa
+  ✅ bei hasi imekataliwa
+  ✅ bei tupu imekataliwa
+  ✅ delivery fields haziathiri basic negotiation
+  ✅ ujumbe wa kirafiki wa qty
+
+[5] PRODUCT — proposal inahifadhi IDs na bei ya sokoni HAIGUSWI
+  ✅ productId imehifadhiwa
+  ✅ sellerId imehifadhiwa
+  ✅ buyerId imehifadhiwa
+  ✅ conversationId imehifadhiwa
+  ✅ jumla = 2×68000
+  ✅ bei ya sokoni 75000 imebaki
+  ✅ pendekezo 68000
+  ✅ hali ya mwanzo OFFER_SENT
+  ✅ version 1
+  ✅ maelezo yamehifadhiwa
+  ✅ Product proposal HAINA deliveryLocation/preferredDate
+  ✅ Product proposal HAINA transport pickup fields
+  ✅ bei ya entity bado 75000
+  ✅ variants tupu = null
+
+[6] PRODUCT — variants zimejengwa (fashion)
+  ✅ variant size L
+  ✅ variant color Blue
+  ✅ summary ina chaguzi
+
+[7] SERVICE — scope, idadi, bei, jumla, deadline, mahali
+  ✅ default deadline qty
+  ✅ service valid
+  ✅ service total 2×100k
+  ✅ serviceId
+  ✅ scope
+  ✅ deadline text
+  ✅ deadline date imekokotolewa
+  ✅ location
+  ✅ requirements
+  ✅ bado OFFER_SENT (si oda)
+  ✅ scope tupu imekataliwa
+  ✅ mahali tupu imekataliwa
+  ✅ deadline 0 imekataliwa
+  ✅ bei 0 imekataliwa
+
+[8] TRANSPORT — njia, mzigo, tarehe, nauli
+  ✅ transport valid
+  ✅ jumla = nauli (si ×qty)
+  ✅ transportId
+  ✅ route from
+  ✅ route to
+  ✅ packageQuantity
+  ✅ weight kg
+  ✅ pickup
+  ✅ deadline
+  ✅ qty 1 (nauli ya safari)
+  ✅ total = fee
+  ✅ special req
+  ✅ pickup tupu imekataliwa
+  ✅ destination tupu imekataliwa
+  ✅ from == to imekataliwa
+  ✅ deadline kabla ya pickup imekataliwa
+  ✅ nauli 0 imekataliwa
+  ✅ cargo tupu imekataliwa
+  ✅ uzito hasi umekataliwa
+
+[9] LIVE SUMMARY — mistari inafuata aina na thamani za sasa
+  ✅ summary ina idadi/bei/jumla
+  ✅ jumla kwenye summary
+  ✅ summary ya usafiri ina njia
+
+[10] DEADLINE CALC — wiki/miezi
+  ✅ wiki 2 = siku 14
+  ✅ tarehe wiki moja mbele
+
+[11] HAKUNA MABADILIKO YA MFUMO WA NJE (no silent mutation)
+  ✅ entity haijaguswa baada ya proposal
+
+========================================
+ALL 80 NEGO FORM TESTS PASSED ✅
+
+[SCENARIO 1] Mnunuzi atuma ofa → zamu ya muuzaji
+  ✅ hali OFFER_SENT
+  ✅ turn ya seller
+  ✅ waitingForUserId = seller
+  ✅ version 1
+  ✅ jumla imehesabiwa
+  ✅ muuzaji ana Kubali/Counter/Kataa
+  ✅ mnunuzi hana jibu (anaweza kughairi tu)
+  ✅ mgeni kataliwa
+  ✅ mnunuzi hawezi ACCEPT wakati si zamu yake
+
+[SCENARIO 2] Muuzaji counter → zamu ya mnunuzi
+  ✅ hali COUNTER_OFFER
+  ✅ turn ya buyer
+  ✅ waitingForUserId = buyer
+  ✅ bei ya counter
+  ✅ jumla mpya
+  ✅ mnunuzi sasa ana Kubali/Counter/Kataa
+  ✅ muuzaji hana tena vitufe vya kujibu
+
+[SCENARIO 3] Makubaliano → vitufe vya majadiliano kutoweka, Oda kwa mnunuzi
+  ✅ hali AGREEMENT
+  ✅ makubaliano yamerekodiwa
+  ✅ mnunuzi ana CREATE_ORDER
+  ✅ mnunuzi ana REQUEST_QUANTITY_CHANGE
+  ✅ hakuna tena Counter baada ya makubaliano
+  ✅ muuzaji haoni CREATE_ORDER
+  ✅ muuzaji haoni Accept/Counter/Reject
+  ✅ hali ORDER_CREATED
+  ✅ orderId imetolewa
+
+[SCENARIO 4] Ombi la kiasi baada ya makubaliano (current → requested)
+  ✅ muuzaji hawezi REQUEST_QUANTITY_CHANGE
+  ✅ hali CHANGE_REQUESTED
+  ✅ turn ya seller
+  ✅ kiasi cha sasa bado 2
+  ✅ kiasi kilichoombwa 5 (pending)
+  ✅ pending huonyesha 2 → 5
+  ✅ muuzaji ana ACCEPT/COUNTER/REJECT za kiasi
+  ✅ mnunuzi hana vitufe vya kujibu ombi lake mwenyewe
+  ✅ hali FINAL_AGREEMENT
+  ✅ kiasi sasa 5
+  ✅ jumla mpya 340000
+  ✅ pendingQuantity imefutwa
+  ✅ hali RE_NEGOTIATION
+  ✅ turn ya buyer baada ya counter
+  ✅ counter imeweka kiasi 4
+  ✅ kukataa ombi kunarudisha AGREEMENT
+
+[SCENARIO 5] HUDUMA — majadiliano ya scope
+  ✅ ofa ya huduma OFFER_SENT
+  ✅ provider ana CHANGE_SCOPE
+  ✅ hali SCOPE_CHANGE_REQUESTED
+  ✅ pending scope imehifadhiwa
+  ✅ pending huonyesha scope mpya
+
+[SCENARIO 6] USAMBARAZAJI — njia/nauli, booking baada ya makubaliano
+  ✅ transporter ana CHANGE_ROUTE
+  ✅ makubaliano ya safari AGREEMENT
+  ✅ mnunuzi ana CREATE_BOOKING
+  ✅ booking imefungwa (ORDER_CREATED)
+  ✅ njia imeandikwa "Dar es Salaam → Mwanza"
+  ✅ nauli TSh 150,000 imo
+
+[SCENARIO 7] Kukataa → terminal, mnunuzi anaweza kutuma ofa mpya
+  ✅ hali REJECTED
+  ✅ REJECTED ni terminal
+  ✅ muuzaji hana vitufe tena
+  ✅ mnunuzi anaweza kutuma ofa mpya
+  ✅ kughairi → CANCELLED terminal
+
+[SCENARIO 8] ODA YA BIDHAA — pipeline ya uwasilishaji (kwa pande)
+  ✅ muuzaji hawezi kuandaa kabla ya malipo
+  ✅ mnunuzi hawezi PREPARE_ORDER
+  ✅ mgeni kataliwa kwenye oda
+  ✅ PREPARE → prepared/shipped
+  ✅ TRANSIT → in_transit
+  ✅ kuruka prepared hairuhusiwi
+  ✅ DELIVERED → delivered
+  ✅ muuzaji hawezi kuthibitisha kupokea
+  ✅ CONFIRM → confirmed/completed
+  ✅ tukio (event) limeandaliwa
+  ✅ arifa inamfikia muuzaji
+
+[SCENARIO 9] ODA YA HUDUMA — pipeline ya utekelezaji
+  ✅ START_SERVICE → service_in_progress (status bado held)
+  ✅ SUBMIT_WORK → service_submitted
+  ✅ muuzaji hawezi CONFIRM_COMPLETION
+  ✅ REQUEST_REVISION → revision_requested
+  ✅ SUBMIT_WORK tena baada ya marekebisho
+  ✅ CONFIRM_COMPLETION → completed
+
+[SCENARIO 10] BOOKING YA USAMBARAZAJI — booking → pickup → safari → handover
+  ✅ CONFIRM_BOOKING → booking_confirmed
+  ✅ START_PICKUP → pickup
+  ✅ START_TRANSIT → in_transit
+  ✅ CONFIRM_HANDOVER → handover
+  ✅ mnunuzi athibitishe kupokea → confirmed/completed
+  ✅ PREPARE_ORDER haifanyi kazi kwa booking
+
+[SCENARIO 11] SAFARI YA UKAGUZI — ofa→counter→counter→kubali→oda (bei ILIYOGANDISHWA)
+  ✅ hali AGREEMENT
+  ✅ bei ya makubaliano 70,000
+  ✅ jumla 140,000
+  ✅ muuzaji hana CREATE_ORDER baada ya makubaliano
+  ✅ muuzaji hana ACCEPT/COUNTER/REJECT baada ya makubaliano
+  ✅ mnunuzi ana CREATE_ORDER
+  ✅ CREATE_ORDER imefanikiwa
+  ✅ oda ina unit 70,000 (si bei ya sasa ya katalogi 75,000)
+  ✅ oda ina jumla 140,000
+  ✅ oda ina idadi 2
+  ✅ oda inaunganisha negotiationId
+  ✅ oda ina conversationId
+  ✅ oda ina snapshot ya makubaliano
+  ✅ snapshot ya makubaliano pia 70,000
+  ✅ oda mpya haijalipwa (payment_pending)
+  ✅ paymentStatus pending
+  ✅ helper wa umma: unit 70,000
+  ✅ helper wa umma: jumla 140,000
+  ✅ baada ya oda muuzaji hana ACCEPT/COUNTER/REJECT
+
+[ZIADA] Oda mpya za huduma/usafiri huanzia payment_pending
+  ✅ service order huanzia payment_pending
+  ✅ booking huanzia payment_pending
+
+[ZIADA] Uandishi wa terms, jumla na usalama wa HTML
+  ✅ Jumla 136,000 kwenye terms
+  ✅ Bei 68,000 kwenye terms
+  ✅ thamani chafu ya requirements huachiliwa
+  ✅ maandishi tupu hayana <b>
+  ✅ kila onclick ina negotiationId
+  ✅ nukta za ndani zimefungwa (&quot;)
+  ✅ hakuna markup mbichi ya function kwenye onclick
+
+==================================================
+NEGO ENGINE (Scenarios 1–7): 108 zimepita, 0 zimeshindwa
+✅ INJINI YA MAJADILIANO SAHIHI
+
+[A) Misaada ya msingi]
+  ✅ psMoney: bei na maelewano
+  ✅ psNum inakataa namba zisizo halali
+  ✅ psPresent inatambua N/A na tupu
+  ✅ psIsVideo: viendelezi na Cloudinary video
+  ✅ psTitle kulingana na aina
+
+[B) Upatikanaji (availability — data ikijulikana tu)]
+  ✅ bidhaa zipo nyingi
+  ✅ zimebaki chache
+  ✅ zimeisha: hairuhusu kununua
+  ✅ stock isiyojulikana: haibandiki uwongo
+  ✅ dukani pekee (offline_only) hali tofauti
+  ✅ huduma: inapatikana kila mara
+  ✅ mnada: hai vs uliofungwa; CanBid
+
+[C) Sifa zinazoonyeshwa (zilizopo tu)]
+  ✅ bidhaa kamili na filters na wholesale
+  ✅ barcode haionyeshwi kwa mteja; N/A zimeachwa
+  ✅ huduma: section, category, filters, eneo
+  ✅ dereva: chombo, huduma, njia
+  ✅ psHasDetails: description tu / tupu kabisa
+
+[D) Tathmini (reviews)]
+  ✅ wastani, idadi, mpangilio wa hivi karibuni
+  ✅ bila tathmini: sifuri salama
+  ✅ psRatingDisplay: comments hushinda field ya zamani
+
+[E) Variants za data (si vya kubahatisha)]
+  ✅ Mavazi: saizi fallback, rangi hazibuniwi
+  ✅ Mavazi: rangi huchukuliwa kutoka filters/ data
+  ✅ sizePrices huongeza bei (delta); XXL haina tena +2000 ya kubuni
+  ✅ variants kamili vya muuzaji (explicit)
+  ✅ bidhaa isiyo na variants: hamna chips
+  ✅ psVariantLabel
+
+[F) Alama za related (scoring)]
+  ✅ tokens: maneno mafupi na ya kawaida huondolewa
+  ✅ subcategory hushinda; muuzaji mwingine anapendelewa; zimeisha zinarudi nyuma
+
+[G) Rails za related (ugawaji + mipaka)]
+  ✅ bidhaa ya sasa haijirudi; duplicates zinaondolewa; collection inazingatiwa
+  ✅ similar hushika za subcategory; moreCategory za category; otherSellers ni wauzaji tofauti
+  ✅ otherSellers hujazwa na wauzaji wengine hata kama si category hiyo
+  ✅ idadi huzuiwa (cap)
+  ✅ mtandao mtupu: rails tupu salama
+  ✅ kundi lisilohusiana kabisa hujaza recommended (ukuta usiwe tupu)
+
+==================================================
+MATOKEO: 34 zimepita, 0 zimeshindwa
+✅ SHOWCASE LOGIC: MAJARIBIO YOTE YAMEPITA
+
+[1] MUUZAJI anaona ofa — vitufe vya kujibu + bango la zamu
+  ✅ kadi ya negotiation imejengwa
+  ✅ jina la bidhaa lipo
+  ✅ MUUZAJI anaona KUBALI
+  ✅ MUUZAJI anaona COUNTER
+  ✅ MUUZAJI anaona KATAA
+  ✅ bango: JIBU LAKO linahitajika
+  ✅ hapasomeki "Inasubiri muuzaji" kwa muuzaji
+  ✅ vitufe vina negotiationId katika amri
+
+[1b] KUBOFYA kweli — amri + negotiationId vinapokelewa
+  ✅ kubofya Kubali kunaita ACCEPT_OFFER
+  ✅ amri ina negotiationId ya kadi
+  ✅ kubofya Counter kunaita COUNTER_OFFER
+
+[2] MNUNUZI baada ya ofa — kusubiri tu, HANA vitufe
+  ✅ bango: Inasubiri muuzaji
+  ✅ hakuna kifungo cha kujibu kwa mnunuzi
+
+[3] COUNTER ya muuzaji — sasa zamu ya mnunuzi
+  ✅ mnunuzi anaona Jibu lako
+  ✅ mnunuzi ana vitufe 3
+  ✅ muuzaji anaona Inasubiri mnunuzi
+
+[4] MAKUBALIANO — majadiliano kufichwa, Oda kwa mnunuzi
+  ✅ bango la makubaliano
+  ✅ mnunuzi anaona kitufe cha Oda
+  ✅ hakuna Counter/Kataa baada ya makubaliano
+  ✅ muuzaji hana vitufe vya kujibu
+
+[4b] OMBI LA KIASI — seller aone 2 → 5 na vitufe
+  ✅ muuzaji anaona ombi 2 → 5
+  ✅ muuzaji ana vitufe vya kiasi
+  ✅ bango Jibu lako kwa muuzaji
+  ✅ mnunuzi anaona Inasubiri muuzaji
+  ✅ mnunuzi hana vitufe vya kujibu ombi lake
+
+[5] HTML IMEEPUKWA — hakuna &lt;b&gt;, XSS imezuiwa
+  ✅ hakuna mfuatano wa &lt;b&gt; mbichi
+  ✅ hakuna <img> cha sindano
+  ✅ thamani mbovu imeachiliwa
+  ✅ mfumo bado unatumia <b> halali
+
+[6] Terms za bidhaa (idadi, bei, jumla, uwasilishaji)
+  ✅ idadi 2 imo
+  ✅ bei 68,000 imo
+  ✅ jumla 136,000 imo
+  ✅ uwasilishaji Pangale imo
+
+[7] API ya terms salama
+  ✅ parts zipo
+  ✅ html line ina <b> halali
+  ✅ plain text lines HAZINA <b>
+
+[8] KADI YA ODA — vitufe hufuata upande na hatua
+  ✅ mnunuzi ana Lipia kabla ya malipo
+  ✅ muuzaji hana vitufe vya oda/malipo kabla ya malipo
+  ✅ muuzaji ana Andaa baada ya malipo
+  ✅ mnunuzi hana Andaa
+  ✅ mnunuzi ana Nimepokea
+  ✅ transporter ana Thibitisha Booking
+
+[9] FALLBACK YA ASILI — amri ya oda huandika transaction
+  ✅ transaction imeandika prepared
+  ✅ tukio la ukaguzi limeandikwa
+
+[10] BAADA YA MAKUBALIANO — bango la jukumu (mnunuzi huunda oda)
+  ✅ mnunuzi aambiwe kufungua oda
+  ✅ muuzaji aone "inasubiri mnunuzi kutengeneza oda"
+  ✅ muuzaji hana Kabali/Counter/Kataa
+
+[11] ODA IMEFUNGWA, BADO HAIJALIPWA — kadi + bango hujua jukumu
+  ✅ mnunuzi: bango la kulipa SokoPay
+  ✅ kadi: Inasubiri Malipo
+  ✅ mnunuzi ana kitufe cha kulipa
+  ✅ muuzaji: inasubiri malipo ya mnunuzi
+  ✅ muuzaji hana kitufe cha kulipa
+
+[12] KADI YA ODA KAMA UJUMBE — inasubiri vs imelindwa escrow
+  ✅ kadi ya oda ipo
+  ✅ bei ya makubaliano 70,000 imeonyeshwa
+  ✅ jumla 140,000 imeonyeshwa
+  ✅ beji ya kusubiri malipo
+  ✅ bado haionyeshi imelindwa
+  ✅ kadi ya imelindwa ipo
+  ✅ beji ya SokoPay Imelindwa
+  ✅ muuzaji naye anaona SokoPay Imelindwa
+
+[13] MALIPO YA DEMO — bei ILIYOGANDISHWA ndiyo inayolipwa, kind negotiation_order
+   [alert] 🛡 Malipo yamelindwa na SokoPay Escrow! Muuzaji amearifiwa atayarishe oda.
+  ✅ malipo yameanza
+  ✅ kind = negotiation_order
+  ✅ kiasi ni cha makubaliano 140,000
+  ✅ context ina orderId
+  ✅ context ina negotiationId
+  ✅ context ina conversationId
+  ✅ oda iliyolipwa hairudii malipo (hufungua modal)
+
+[14] REGRESSION — counter ya muuzaji ISIKWAME kwa mnunuzi (live listener stale / composite index imekosa)
+  ✅ bei mpya ya counter 65,000 yaonekana
+  ✅ bango: JIBU LAKO (mnunuzi) linahitajika
+  ✅ bango la zamani "Inasubiri muuzaji" halionekani
+  ✅ mnunuzi amerejeshewa vitufe vya kujibu
+  ✅ global imekumeza snapshot mpya (version 2)
+  ✅ muuzaji anaona Inasubiri mnunuzi
+  ✅ muuzaji hana Kabali/Counter/Kataa
+  ✅ listener moja authoritative tu imesajiliwa
+  ✅ query ya negotiation haitumii orderBy/composite index
+
+==================================================
+NEGO DIALOGUE DOM: 76 zimepita, 0 zimeshindwa
+✅ MAZUNGUMZO YA MAJADILIANO SAHIHI KWA PANDE ZOTE
+
+[1] Muundo wa TOP BAR (header nyembamba)
+  ✅ header ipo
+  ✅ kitufe cha kurudi (mshale) kipo
+  ✅ kina SVG ya mshale
+  ✅ hakuna kitufe cha pili cha ✕/closeModals
+  ✅ vitufe vya navigation ni vitatu (rudi + search + menyu)
+  ✅ jina lipo (#chatWith)
+  ✅ sub ya kichwa imeanza tupu (jina tu)
+  ✅ kitufe cha menyu ya dots tatu kipo
+  ✅ menyu imefichwa mwanzoni
+  ✅ kipengele cha menyu: chatMenuMute
+  ✅ kipengele cha menyu: chatMenuArchive
+  ✅ kipengele cha menyu: chatMenuBlock
+  ✅ kipengele cha menyu: chatMenuReport
+  ✅ header haina emoji
+
+[2] Fungua mazungumzo — jina + menyu inafanya kazi
+[inbox] conversations found: 0
+  ✅ jina la mwenzako limeandikwa
+  ✅ kubofya dots tatu kunafungua menyu
+  ✅ kila kipengele kina SVG
+  ✅ kubofya nje kunafunga menyu
+[inbox] loadInbox complete: total items = 0
+[inbox] conversations found: 0
+[inbox] loadInbox complete: total items = 0
+  ✅ kubofya Zuia kunaandika chatBlock
+  ✅ lebo yageuka "Ondoa Mzuio"
+
+[3] Kiashiria cha "anaandika…" kwa maandishi madogo tu
+  ✅ sub inaonyesha anaandika
+  ✅ sub inarudi tupu asipoandika
+
+[4] Kadi za negotiation zinafuata UPANDE wa aliyetenda
+  ✅ matukio mawili ya kadi yamepakwa upande
+  ✅ ofa yangu upande wa kulia (data-mine=1)
+  ✅ counter ya muuzaji upande wa kushoto (data-mine=0)
+  ✅ kadi yangu ina bango la kijani na "Wewe"
+  ✅ kadi yao ina jina la duka na nafasi Muuzaji
+  ✅ ukumbusho wa maandishi wa mfumo umesalia katikati
+
+MATOKEO: 28 pass, 0 fail
+
+[1] HUDUMA — kitufe cha detail hufungua negotiation (si requests)
+  ✅ skhNegoFormOpen imeitwa
+  ✅ aina ni service
+  ✅ entity ni huduma iliyofunguliwa
+  ✅ mfumo wa zamani (requests) HAUKUITWA
+
+[2] USAFIRI — kitufe cha detail hufungua negotiation (si direct-hire)
+  ✅ skhNegoFormOpen imeitwa
+  ✅ aina ni transport
+  ✅ entity ni safari iliyofunguliwa
+  ✅ direct-hire wa zamani HAUKUITWA
+
+[3] MAONI — sheet hufunguka juu ya tangazo (si chini ya ukurasa)
+  ✅ root ya maoni imeundwa ndani ya sheet
+  ✅ sheet imefichwa kabla ya kufunguliwa
+  ✅ baada ya kufungua, layer haina hidden
+  ✅ baada ya kufungua, class is-open imewekwa
+  ✅ composer waandaliwa ndani ya sheet
+  ✅ kufunga kunaondoa is-open
+  ✅ kufunga kunarudisha hidden
+
+[4] MAONI — skhHeroComments na toggle huelekeza kwenye sheet
+  ✅ skhHeroComments hufungua sheet
+  ✅ skhCommentsToggle(true) hufungua sheet
+  ✅ skhCommentsToggle(false) hufunga sheet
+
+==================================================
+COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
+✅ HUDUMA/USAFIRI KUPITIA NEGOTIATION + COMMENTS PANEL SAHIHI
+
+[1] Tangazo la DEREVA → fomu ya usafiri + kutuma (functions fnDown → native)
+  ✅ shell imejengwa
+  ✅ kichwa ni cha nauli (Jadili Nauli ya Usafiri)
+  ✅ hakisomeki "Bei ya Bidhaa"
+  ✅ hati ya bei inasema "Nauli ya tangazo"
+  ✅ dokezo linataja msafirishaji
+  ✅ sehemu ya njia ipo
+  ✅ sehemu ya mzigo ipo
+  ✅ nauli ya tangazo imeonyeshwa (25,000)
+  ✅ njia imejazwa pickupRegion
+  ✅ njia imejazwa destinationRegion
+  ✅ chombo cha tangazo kimechaguliwa (Daladala)
+[negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatikani kwa sasa.
+    at file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:100:29
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17901160552830.4226274413702804:4457:29)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17901160552990.7299058697364436:645:32)
+    at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
+    at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
+    at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
+    at HTMLButtonElementImpl._dispatch (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:243:9)
+    at fireAnEvent (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/helpers/events.js:18:36)
+    at HTMLButtonElementImpl.click (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/nodes/HTMLElement-impl.js:85:5)
+    at HTMLButtonElement.click (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/HTMLElement.js:111:34) {
+  code: 'fnDown',
+  fnDown: true,
+  friendlyMessage: 'huduma hazipatikani'
+}
+  ✅ hakuna bango la kosa
+  ✅ negotiation imeundwa kwa njia ya asili
+  ✅ commerceType = transport
+  ✅ sellerId = userId wa dereva
+  ✅ transportCollection = drivers
+  ✅ transportId = dr1
+  ✅ currentUnitPrice = 23000 (nauli)
+  ✅ currentTotal = 23000 (si idadi × bei)
+  ✅ route sahihi
+  ✅ vehicleType imehifadhiwa
+
+[2] Counter ya usafiri: chat yenye negotiation ya transport + kadi ya bidhaa
+  ✅ fomu ya counter ni ya USAFIRI
+  ✅ haionyeshi fomu ya bidhaa
+  ✅ muktadha ni tangazo la usafiri
+
+[3] Counter ya huduma: negotiation card ya service
+  ✅ fomu ya counter ni ya HUDUMA
+  ✅ ina sehemu ya scope
+  ✅ muktadha ni huduma husika
+
+[4] startChat() kutoka tangazo la dereva → activeChatTransport (si activeChatProduct)
+[SOKOHAI][CHAT_CONVERSATION] {
+  code: 'CHAT_CONVERSATION',
+  error: TypeError: snap.exists is not a function
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17901160552830.4226274413702804:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17901160552830.4226274413702804:2170:24)
+      at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
+  meta: {
+    conversationId: 'conv_buyer1_driverUid1',
+    partnerUid: 'driverUid1'
+  }
+}
+[SOKOHAI][CHAT_OPEN] {
+  code: 'CHAT_OPEN',
+  error: TypeError: snap.exists is not a function
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17901160552830.4226274413702804:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17901160552830.4226274413702804:2170:24)
+      at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
+  meta: {
+    partnerUid: 'driverUid1',
+    conversationId: 'conv_buyer1_driverUid1'
+  }
+}
+  ✅ activeChatTransport kimewekwa
+  ✅ activeChatProduct ni tupu
+  ✅ fomu inayofunguliwa ni ya USAFIRI
+
+MATOKEO: 30 pass, 0 fail
+
+[1] SKH ROUTE MATCH ENDS — alama za ncha za njia
+  ✅ ncha zote mbili zimepatikana
+  ✅ asili imepatikana, hatua ya mwisho hapana
+  ✅ njia ngeni hakuna hata ncha moja
+  ✅ stoo ya kati inalingana
+
+[2] KUPANGA MAGARI — vinafaa vs mapendekezo
+  ✅ gari linalofaa kabisa lipo exact
+  ✅ gari la njia pungufu (asili tu) liko mapendekezo
+  ✅ chombo tofauti kiko mapendekezo (route inafaa)
+  ✅ aliyezima hayumo kabisa
+  ✅ njia ngeni hayumo kabisa
+  ✅ uwezo mdogo wa uzita uko mapendekezo (si exact)
+  ✅ hajirudishwi mara mbili / asiyeohusika haorodheshwi
+
+[3] MPANGILIO — alama ya juu iko mbele
+  ✅ ncha zote mbili zinatangulia ncha moja
+
+[4] UWEZO — tani zinahesabiwa kwa kg
+  ✅ tani 5 zinatosha mzigo 800kg
+  ✅ kg 500 hazitoshi mzigo 800kg
+  ✅ bila taarifa ya uwezo haizuiwi (anaulizwa tu)
+
+[5] AINA ZA SAFARI — ramani ya huduma
+  ✅ Bajaji ya abiria inafanya kazi ya abiria
+  ✅ Lori la cargo linapokea mifugo (uwezo wa kutosha)
+
+[6] USALAMA — mteja haoni chombo chake mwenyewe
+  ✅ chombo cha mteja mwenyewe hakionyeshwi
+
+[7] DOM — utafutaji unafungua matokeo, kadi inaingilia nego
+  ✅ modali ya matokeo imefunguliwa
+  ✅ kundi "Vinafaa kabisa" linaonekana
+  ✅ gari linalolingana limeorodheshwa
+  ✅ Bajaji kipo kwenye mapendekezo (chombo tofauti)
+  ✅ kadi ina kitufe cha majadiliano
+  ✅ hakuna emoji kwenye matokeo
+  ✅ vigezo vimeandikwa juu
+  ✅ skhNegoFormOpen imeitwa
+  ✅ aina ya nego ni transport
+  ✅ entity ina route ya mteja
+  ✅ entity ina muuzaji sahihi (drivers doc)
+  ✅ broadcast wa zamani unapatikana kama njia ya pili
+
+==================================================
+ROUTE MATCHER: 30 zimepita, 0 zimeshindwa
+✅ UCHAMBUZI WA MAGARI KWA NJIA NI SAHIHI
+
+[A] MATCHING — madereva
+  ✅ route kamili + chombo/uwezo → exact
+  ✅ routeScore 2 (ncha zote)
+  ✅ ncha moja tu → si exact (pendekezo)
+  ✅ chombo tofauti → si exact
+  ✅ uwezo duni (500<800 kg) → capacityOk false
+  ✅ tani 2 zinahesabiwa kama 2000 kg
+  ✅ kg hubaki kg
+  ✅ aliyezima (online=false) ametengwa
+  ✅ mwombaji mwenyewe ametengwa
+  ✅ asiyepitia route ametengwa
+  ✅ abiria + chombo cha abiria → exact
+  ✅ mizigo haifai kwa chombo cha abiria tu
+
+[B] RANK — mpangilio na mawakala
+  ✅ exact wawili mbele
+  ✅ aliye alama juu/bei nafuu atangulia
+  ✅ ncha moja yuko mapendekezo
+  ✅ chaguo kina max 5
+  ✅ wakala wa eneo amechaguliwa
+  ✅ wakala wa mkoa mwingine ametengwa
+  ✅ wakala asiyeidhinishwa ametengwa
+  ✅ deregva akipatikana wakala hachaguliwi
+
+[C] STATE MACHINE — decline / expiry / reassignment
+  ✅ sweep kabla ya kuisha: hakuna mabadiliko
+  ✅ a0 amekataa → declined
+  ✅ a1 amefunguliwa (offered)
+  ✅ a1 anarifiwa
+  ✅ bado kuna wakala: hakuna failed
+  ✅ a1 akikataa → a2 afunguliwe
+  ✅ wote wamekataa → failed_assignment
+  ✅ roundFailed inatambua
+
+[D] STATE MACHINE — muda kuisha (lazy sweep)
+  ✅ r0 ameisha muda → expired
+  ✅ r1 amefunguliwa baada ya kuisha
+  ✅ wote wakiisha → failed_assignment
+
+[E] STATE MACHINE — accept (atomiki + mbio)
+  ✅ a0 amekubali → accepted
+  ✅ wengine wameghairiwa
+  ✅ ride imegawiwa
+  ✅ accepted anaripotiwa
+  ✅ waiting hawezi accept
+  ✅ ofa ya mwingine imekataliwa
+  ✅ accept baada ya kuisha imekataliwa
+  ✅ accept baada ya mwingine kukubali
+  ✅ decline ya accepted imekataliwa
+
+[F] Mengine
+  ✅ cancel_round yafunga yote wazi
+  ✅ roundFailed si kweli wakiwa waiting
+  ✅ roundFailed kweli wakiwa terminal
+  ✅ roundFailed si kweli mmoja akikubali
+  ✅ matchEnds hugundua kituo ndani ya fullRoute
+
+[G] DATA LAYER — order → ride → offers → reassignment
+  ✅ routeBooking imerudisha rideId
+  ✅ wagombea 2 (dereva wa nje na wakala hawamo)
+  ✅ ride inaundwa status searching/routing
+  ✅ ride inaunganishwa na order
+  ✅ ride ina route na mzigo kutoka order
+  ✅ order inaunganishwa na delivery (deliveryId)
+  ✅ ofaya d0 (rating 5) ni ya kwanza na offered
+  ✅ d1 ni waiting
+  ✅ kadi ya ofa ina snapshot ya ombi
+  ✅ participants ni mteja na wakala
+  ✅ activeOfferId ya d0
+  ✅ baada ya decline: d0 declined
+  ✅ baada ya decline: d1 offered
+  ✅ wote wakikataa → failed_assignment
+  ✅ retry: d0 offered tena round 2
+  ✅ retry: routing round 2 na seeking
+  ✅ asiye husika hawezi decline
+
+[H] DATA LAYER — expiry sweep na no-match
+  ✅ sweep imeona mabadiliko
+  ✅ d0 imeisha
+  ✅ d1 amefunguliwa baada ya kuisha
+  ✅ hakuna mwenye route → no_match
+  ✅ no_match → failed_assignment (soko la jumla)
+
+[I] Idempotency
+  ✅ mwito wa pili baada ya assignment ni idempotent
+  ✅ order isiyo booking inakataliwa
+
+========================================
+ROUTING TESTS: 69 pass, 0 fail
+========================================
+
+[1] TOKEN BOX — kusanya na kuzalisha kadi
+  ✅ kadi ya ombi linalotafuta imejengwa
+  ✅ idadi ya mawakala inaonekana
+  ✅ kadi ya PK hai ina code
+  ✅ kadi ya PK niliyopokea kama dereva imo
+  ✅ kitufe cha kutoa DL (mint) kipo
+  ✅ hakuna emoji za kadi
+  ✅ kitufe cha DL hupiga skhCustodyMintTransferToken
+  ✅ tab used ina hali tupu inayofaa
+
+[2] REQUEST INBOX — kadi za NEW REQUEST na vitendo
+  ✅ sweep ya muda-kuisha inapigwa wakati wa kufungua
+  ✅ OMBI JIPYA card ina mzigo/njia/fee
+  ✅ tarehe ya pickup inaoneshwa
+  ✅ vitufe Angalia/Kataa/Kubali vipo
+  ✅ beji ya route inayolingana ipo
+  ✅ waiting anaelezwa kusubiri zamu
+  ✅ accepted haipo kwenye tab ya mapya
+  ✅ View Request inafungua maelezo (mzigo/maagizo)
+  ✅ Accept hupiga server callable na offerId sahihi
+  ✅ baada ya accept Token Box inafunguliwa
+  ✅ Decline hupiga server callable na offerId sahihi
+  ✅ historia ina ombi nililokubali
+  ✅ kadi ya accepted ina kitufe cha Token Box
+  ✅ historia haina OMBI JIPYA hai
+
+[3] Hali tupu na mtumiaji bila ofa/tokeni
+  ✅ token box tupu ina ujumbe unaofaa
+  ✅ inbox tupu ina ujumbe unaofaa
+
+========================================
+TOKEN BOX + INBOX DOM: 24 pass, 0 fail
+========================================
+
+[1] Soko la maombi — kadi, hesabu, chujio
+  ✅ msikilizaji mmoja tu wa soko umeanzishwa
+  ✅ ombi completed halionekani sokoni
+  ✅ ombi la chombo kingini halionekani (Lori pekee)
+  ✅ kadi 3 zinaonekana (mizigo 2 + mifugo 1 ya Lori)
+  ✅ jina la mzigo lipo
+  ✅ sehemu ya kuchukua ipo
+  ✅ sehemu ya kupeleka ipo
+  ✅ nauli iliyopendekezwa inaonekana
+  ✅ ombi bila nauli huandikwa "Maelewano"
+  ✅ tarehe ya kuchukua inaonekana
+  ✅ tahadhari ya dhaifu inaonekana
+  ✅ muda jamaa unaonyeshwa
+  ✅ kitufe cha kukubali kipo
+  ✅ kadi ya mifugo ina chip ya wanyama
+  ✅ hakuna HTML mbichi ya emoji pekee
+  ✅ hesabu jumla ni 3
+  ✅ hesabu Mizigo ni 2
+  ✅ hesabu Watu ni 0
+  ✅ hesabu Mifugo ni 1
+  ✅ bango la juu linaonyesha 3
+  ✅ chujio hakianzishi msikilizizi mpya
+  ✅ baada ya chujio kadi 2 za mizigo tu
+  ✅ mifugo haipo kwenye chujio Cargo
+  ✅ kichupo kilichochaguliwa kina class active
+  ✅ kichupo cha zamani kimeondolewa active
+  ✅ hali tupu inaonyeshwa kwa chujio tupu
+  ✅ hali tupu inatoa kitufe cha "Yaliyotumwa Kwako"
+  ✅ kurudi kazi zote yarejesha kadi 3
+
+[2] Mifupa ya upakiaji + dereva asiyejulikana huona soko lote
+  ✅ mifupa ya upakiaji inatengenezwa
+  ✅ bila profile ya chombo, ombi bado laonekana (asikose kazi)
+
+========================================
+LOGISTICS MARKET: 30 pass, 0 fail ✅
+
+[A) DISCOVERY foleni (buildQueue)]
+  ✅ bidhaa: kategoria inachuja ("p1,p3" === "p1,p3")
+  ✅ bidhaa: huduma/usafiri haviingii ("p1,p2,p3" === "p1,p2,p3")
+  ✅ huduma: section/groupType inachuja ("s2" === "s2")
+  ✅ usafiri: supportedServices inachuja ("d1" === "d1")
+  ✅ usafiri: subcategory = vehicleType ("d2" === "d2")
+  ✅ utafutaji: jina/maelezo ("p2" === "p2")
+  ✅ utafutaji: usafiri hutafuta vehicleType ("d1" === "d1")
+
+[B) DISCOVERY urambazaji (DOM)]
+
+[C) MAONI sheet — ufungaji na upakiaji mvivu]
+
+[C2) MAONI — uthibitisho wa oda ukifungua ushahidi]
+
+[C3) MAONI — targetType kwa huduma]
+
+[D) QTY — kuheshimu stock na min]
+  ✅ mwanzo 1 ("1" === "1")
+  ✅ minus imezimwa kwenye min
+  ✅ imezuiwa kwenye stock 5 ("5" === "5")
+  ✅ plus imezimwa kwenye stock
+  ✅ shuka hadi 4 ("4" === "4")
+  ✅ plus imefunguliwa tena
+  ✅ min order 2 imeheshimiwa ("2" === "2")
+  ✅ minus imezimwa kwenye min 2
+
+[E) Muundo na maandishi yaliyoagizwa]
+  ✅ rail: Like → Save → Share → Maoni
+  ✅ kitufe cha Maoni chamwita skhOpenMaoni
+  ✅ jina la Maoni lipo kwenye rail
+  ✅ hakuna kigushi kidogo kuliko 32px kwenye rail
+  ✅ maoniLayer ipo
+  ✅ maoniSheetBody ipo
+  ✅ muuzaji ndani ya hero
+  ✅ pmSellerRole ipo
+  ✅ qty mstari kabla ya vitendo
+  ✅ pmStockInfo ipo
+  ✅ lebo Weka Kikapuni
+  ✅ lebo Lipa Sasa
+  ✅ jina Mtoa Huduma
+  ✅ jina Mtoa Usafiri
+  ✅ skhHeroComments huelekeza skhOpenMaoni
+  ✅ huduma bado hupitia skhPsOfferService
+  ✅ usafiri bado hupitia skhPsOfferTransport
+  ✅ cart/startChat/addToCart zimehifadhiwa
+  ✅ lebo Oda Imethibitishwa
+  ✅ lebo Delivery Imethibitishwa
+  ✅ commentsEvidence callable inaitwa
+  ✅ server: exports.commentsEvidence
+  ✅ server: resolveCommentEvidence yaangalia orders
+  ✅ server: verifiedDelivery huandikwa
+  ✅ server: ride_requests huchunguzwa delivery
+  ✅ hakuna emoji/ishara za mshale kwenye js/app/42-discovery-feed.js
+  ✅ hakuna emoji/ishara za mshale kwenye css/21-discovery-maoni.css
+  ✅ hakuna emoji/ishara za mshale kwenye html/05-modals-market.html
+  ✅ kaunta baada ya kufungua ("1/4" === "1/4")
+  ✅ prev imezimwa mwanzo
+  ✅ move(1) yafungua b2 ("b2" === "b2")
+  ✅ kaunta 2/4 ("2/4" === "2/4")
+  ✅ b3 imefunguliwa ("b3" === "b3")
+  ✅ tangazo jipya laanza juu (scroll 0) (0 === 0)
+  ✅ b2 imerejeshwa ("b2" === "b2")
+  ✅ scroll ya b2 imekumbukwa (320 === 320)
+  ✅ kaunta 4/4 ("4/4" === "4/4")
+  ✅ next imezimwa mwisho
+  ✅ mwisho: move haifungui kingine (6 === 6)
+  ✅ Maoni wazi: move imezuiwa (6 === 6)
+  ✅ dfPrevBtn yapo
+  ✅ dfNextBtn yapo
+  ✅ sheet imefichwa mwanzoni
+  ✅ root imo ndani ya #maoniSheetBody
+  ✅ pmReviewsSec imehamishwa kwenye sheet
+  ✅ sheet imefunguliwa (is-open)
+  ✅ kichwa kinaitwa Maoni
+  ✅ composer ipo
+  ✅ orodha tupu ina ujumbe wa Maoni
+  ✅ kiambatisho kimefungwa bila uthibitisho
+  ✅ FILE INPUT bado ipo (iliyofichwa)
+  ✅ skhCloseMaoni inafuta is-open
+  ✅ commentsPublish imeitwa
+  ✅ targetType product ("product" === "product")
+  ✅ maandishi yamefika ("Nimepokea vizuri?" === "Nimepokea vizuri?")
+  ✅ beji haibandikwi na client
+  ✅ media ni safu tupu
+  ✅ maoni tupu hayachapishwi (1 === 1)
+  ✅ kitufe cha ushahidi kipo
+  ✅ kiambatisho kimefunguliwa baada ya oda kuthibitishwa
+  ✅ ujumbe wa oda uliothibitishwa waonyeshwa
+  ✅ chipu ya midia imejitokeza
+  ✅ chipu imeondolewa
+  ✅ huduma imechapishwa
+  ✅ targetType service ("service" === "service")
+
+========================================
+MAJARIBIO CARD/DISCOVERY: 80 pass, 0 fail
+========================================
+
+[A) Chujio la matangazo halisi ya usafiri]
+  ✅ madereva wanaolingana ni 2 (route+capacity) (2)
+  ✅ wamepangwa bei/ufaa: ABC kwanza ("p1")
+  ✅ p5 naye yuko
+  ✅ mzigo mwepesi: offline/abiria hawatokei
+  ✅ ride.orderId ("ORD-1")
+  ✅ ride.preferredDriverId ("d1")
+  ✅ ride.preferredPostId ("p1")
+  ✅ ride.productOrder (true)
+  ✅ ride.reqCategory ("Cargo")
+  ✅ ride huanza searching ("searching")
+  ✅ fallback carriers ni tupu (0)
+  ✅ loadSokoHaiCarriers haitoi tena bandia (0)
+  ✅ kichaguzi kimefunguliwa ("flex")
+  ✅ kadi halisi ya ABC imechorwa kwa TransportPostCard
+  ✅ hakuna kadi bandia ya "Moto Delivery"
+  ✅ redio ya Sitahitaji ipo
+  ✅ redio ya Nahitaji ipo
+  ✅ proceed inakatawa kabla ya kuchagua
+  ✅ oda imeandikwa
+  ✅ delivery.required=false (false)
+  ✅ njia self_collection ("self_collection")
+  ✅ HAKUNA shipments bandia
+  ✅ HAKUNA logistics_assignments bandia
+  ✅ checkout modal imefunguliwa
+  ✅ post imechaguliwa ("p1")
+  ✅ provider amehifadhiwa ("d1")
+  ✅ oda yenye delivery ipo
+  ✅ logisticPostId ("p1")
+  ✅ logisticProviderId ("d1")
+  ✅ njia selected_listing ("selected_listing")
+  ✅ pickup inatoka eneo la muuzaji
+  ✅ sokopay core imeandikwa
+  ✅ routing imeenda server ("server")
+  ✅ server imepata orderId ("ORD-REAL-1")
+  ✅ server imepata preferredDriverId ("d1")
+  ✅ fallback imeunda ride_request ("fallback_ride_request")
+  ✅ ride_request imeandikwa
+  ✅ ride ina orderId ("ORD-REAL-2")
+  ✅ ride ina dereva aliyechaguliwa ("d1")
+  ✅ dispatch notifications imefanyika
+  ✅ mtoa usafiri aliyechaguliwa amepata taarifa
+  ✅ fnDown ya server inaangukia fallback ("fallback_ride_request")
+  ✅ ride_request imeandikwa licha ya fnDown
+  ✅ self collection haiungi (true)
+  ✅ hakuna ride iliyoundwa (0)
+
+[G) Server — oda ya bidhaa → ride → ofa kwa mtoa usafiri]
+  ✅ routing imefanikiwa
+  ✅ ofA MOJA kwa mtoa aliyechaguliwa (1)
+  ✅ ofA inaenda kwa d1 ("d1")
+  ✅ ofA ni offered ("offered")
+  ✅ ride_request imeundwa (1)
+  ✅ ride ni ya oda ya bidhaa (true)
+  ✅ ride imeunganishwa na orderId ("ord1")
+  ✅ ride ina post teule ("post1")
+  ✅ order imeunganishwa na ride
+  ✅ delivery.status sent_to_logistics ("sent_to_logistics")
+  ✅ baada ya kukataa: ride yarudi searching ("searching")
+  ✅ preferred ameondolewa (null)
+
+[G2) Server — oda bila delivery hairuhusiwi]
+  ✅ inakataa oda isiyohitaji delivery ("not_a_booking")
+
+========================================
+MAJARIBIO DELIVERY CHOICE: 58 pass, 0 fail
+========================================
+
+[1] BIDHAA — muundo wa teaser
+  ✅ kadi ina darasa la bidhaa
+  ✅ picha ndiyo kichwa cha kadi
+  ✅ Like HAPO mbele ya kadi
+  ✅ Save HAPO mbele ya kadi
+  ✅ hakuna kitufe cha engagement juu ya picha
+  ✅ jina lipo
+  ✅ bei ni TSh 75,000
+  ✅ bei haina "Kuanzia" kwa bidhaa
+  ✅ front card haina seller details nyingi
+  ✅ eneo la pini lipo
+  ✅ verified pill kwenye picha
+  ✅ hakuna footer ya Imelindwa/CTA
+  ✅ hakuna chips za ndani ya mwili
+  ✅ hakuna idadi ya stock kwenye teaser
+  ✅ idadi ya picha inaonyeshwa
+  ✅ kufungua kadi kuna openProduct
+  ✅ role/aria kwa ufikivu
+
+[2] HUDUMA — bei "Kuanzia", mtoa + tathmini + eneo
+  ✅ kadi ya huduma
+  ✅ bei inaanzia "Kuanzia"
+  ✅ tathmini inaonyeshwa
+  ✅ idadi ya maoni imo
+  ✅ mtoa huduma + tiki
+  ✅ eneo lipo
+  ✅ kibandiko cha aina ya huduma juu ya picha
+
+[3] USAFIRI — njia juu ya picha, chombo, bei, msafirishaji
+  ✅ kadi ya usafiri
+  ✅ njia Tabora ➜ Pangale juu ya picha
+  ✅ mshale wa njia ni icon ya SVG (sio emoji)
+  ✅ jina la chombo (aina) lipo
+  ✅ bei "Kuanzia"
+  ✅ msafirishaji + tathmini
+  ✅ eneo la mwanzo (pini)
+  ✅ kufungua ni openProduct(d1,drivers)
+
+[4] HALI MAALUMU
+  ✅ zimeisha: pill + picha kijivu
+  ✅ mnada: beji ya mnada juu ya picha
+  ✅ bila bei: "Maelewano"
+  ✅ bila uthibitisho: hakuna verified pill
+  ✅ bila eneo: mstari wa eneo haujengwi
+  ✅ huduma isiyo na tathmini haionyeshi nyota
+
+[5] USAWA WA FAMILIA (aina zote tatu)
+  ✅ products: jina ndiyo kwanza mwilini
+  ✅ products: bei iko juu mara tu baada ya jina
+  ✅ products: front-card metadata policy ni sahihi
+  ✅ services: jina ndiyo kwanza mwilini
+  ✅ services: bei iko juu mara tu baada ya jina
+  ✅ services: front-card metadata policy ni sahihi
+  ✅ drivers: jina ndiyo kwanza mwilini
+  ✅ drivers: bei iko juu mara tu baada ya jina/chombo
+  ✅ drivers: front-card metadata policy ni sahihi
+
+==================================================
+COMMERCE CARDS: 47 zimepita, 0 zimeshindwa
+✅ KADI ZA DISCOVERY SAFI KULINGANA NA REFERENCE
+
+[1] KUTAMBUA KOSA LA MIUNDOMBINU (server haipo)
+  ✅ functions/not-found → fnDown
+  ✅ functions/internal + ujumbe INTERNAL → fnDown
+  ✅ functions/unavailable → fnDown
+  ✅ functions/deadline-exceeded → fnDown
+  ✅ bare internal code → fnDown
+  ✅ Failed to fetch → fnDown
+
+[2] MAKOSA HALISI HAYACHANGANYWI NA SERVER KUTOSEMA
+  ✅ permission-denied SI fnDown
+  ✅ invalid-argument SI fnDown
+  ✅ unauthenticated SI fnDown
+  ✅ failed-precondition SI fnDown
+
+[3] UJUMBE WA MTUMIAJI — hakuna INTERNAL mbichi
+[Cloud Functions] haipatikani (pesapalCheckout): functions/not-found
+  ✅ umepigwa chapa fnDown
+  ✅ una friendlyMessage
+  ✅ skhFnErrText haina neno INTERNAL
+  ✅ ujumbe asili (code) umehifadhiwa kwa fallback
+  ✅ kosa halali hurudisha ujumbe halisi
+  ✅ kosa halali halina chapa fnDown
+
+[4] wrapCallable — mtiririko wa mafanikio na kushindwa
+  ✅ jibu la mafanikio linapita
+  ✅ kosa la chini linapitishwa (lazima fallback ifanye kazi)
+  ✅ bendela la kimataifa limewashwa
+  ✅ permission-denied linapita bila chapa
+  ✅ bendela HALIWASHWI na kosa halali
+
+[5] CIRCUIT BREAKER — hakuna mtandao wakati wa cooldown, hujifungua baada ya mafanikio
+  ✅ mwito wa kwanza uligusa server na kushindwa
+  ✅ mwito wa pili HAUGUSI mtandao (cooldown)
+  ✅ mwito wa pili unarudisha kosa la down mara moja
+  ✅ baada ya cooldown hujaribu server tena
+  ✅ mafanalikio hufungua kizingiti
+
+==================================================
+FUNCTIONS RESILIENCE: 26 zimepita, 0 zimeshindwa
+✅ CLOUD FUNCTIONS ZIKISHINDWA, MTUMIAJI HAONI "INTERNAL" NA FALLBACK ZAENDELEA
+--- TEST SUITE: CHAT COMMERCE CARDS ---
+✅ 1. Product card renders with full actions for Buyer
+✅ 2. Product card renders with seller actions for Seller
+✅ 3. Service card renders correctly for both Buyer and Provider
+✅ 4. Transport card renders correctly for both Buyer and Driver
+✅ 5. Text message with product context reconstructs card properly
+✅ 6. Commerce Anchor renders initial negotiation card
+✅ 7a. Buyer sending service message attaches serviceRef, snapshot, and persists conversation related
+✅ 7b. Driver sending transport message attaches transportRef, snapshot, and persists conversation related
+========================================
+ALL CHAT COMMERCE CARD TESTS PASSED! ✅
+
+[J1] INBOX tupu + reload
+[inbox] conversations found: 0
+[inbox] loadInbox complete: total items = 0
+[inbox] conversations found: 0
+[inbox] loadInbox complete: total items = 0
+  ✅ inbox list ipo
+
+[J2] Fungua chat kutoka bidhaa (startChat → conv + ujumbe wa bidhaa)
+[inbox] conversations found: 1
+[inbox] loadInbox complete: total items = 1
+  ✅ convId imeundwa
+  ✅ conv doc ipo store
+  ✅ chatModal inaonekana
+  ✅ jina la partner limeandikwa
+  ✅ input ime-prefill na salamu ya bidhaa
+  ✅ context ya bidhaa imewekwa
+  ✅ salamu iliyotumwa ni type=product + snapshot
+
+[J3] Tuma ujumbe — optimistic + reconcile bila duplicate
+  ✅ bubble ya papo hapo (optimistic)
+  ✅ ujumbe mmoja tu umehifadhiwa (hakuna dup)
+  ✅ hakuna bubble iliyokwama pending/failed
+
+[J3b] Hariri ujumbe ndani ya composer — message ileile, si duplicate
+  ✅ edit mode ina preview na composer
+  ✅ send imebadilika kuwa save
+  ✅ ujumbe uleule umehaririwa
+  ✅ edit haijatengeneza duplicate
+  ✅ edit mode imefungwa baada ya save
+
+[J3c] Search ya conversation — header control halisi
+  ✅ search bar imefunguka kutoka header
+  ✅ search inaonyesha ujumbe unaolingana
+  ✅ kufunga search kunarudisha stream kamili
+
+[J4] Toa Ofa kutoka chat — fomu inafunguka NDANI ya chat
+  ✅ fomu (nfShell) imefunguka
+  ✅ chatModal bado wazi (fomu ndani ya chat)
+  ✅ fomu ni descendant wa host authoritative ndani ya Chat
+  ✅ product ina quantity na proposed price
+  ✅ product HAINA schema ya service/transport/delivery
+[negotiationSendOffer] Falling back to Firestore-native: Error: NO_FUNCTIONS
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17901160709120.5431811919002307:4456:42)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17901160709210.5176420781314275:645:32)
+    at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
+    at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
+    at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
+    at HTMLButtonElementImpl._dispatch (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:243:9)
+    at fireAnEvent (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/helpers/events.js:18:36)
+    at HTMLButtonElementImpl.click (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/nodes/HTMLElement-impl.js:85:5)
+    at HTMLButtonElement.click (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/HTMLElement.js:111:34)
+    at file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:322:19 {
+  code: 'unavailable'
+}
+  ✅ negotiation imeundwa
+  ✅ version=1 + OFFER_SENT + buyer sahihi
+  ✅ success state inaonekana baada ya confirmation
+  ✅ ujumbe wa negotiation umeingia chat
+  ✅ Rudi Chat inafunga form na kubaki Chat
+
+[J5] Muuzaji: counter → mnunuzi: accept (native path, bila functions)
+  ✅ counter: COUNTER_OFFER + version 2
+  ✅ accept: AGREEMENT + version 3
+
+[J6] Group: create → send → order
+  ✅ group imeundwa
+  ✅ chatGroups doc ipo
+  ✅ conv_group_ doc ipo (inbox row)
+  ✅ member (owner) doc ipo
+  ✅ ujumbe wa group umetumwa
+
+[J7] Group order: create → join
+  ✅ group order imeundwa
+  ✅ groupOrders doc ipo
+  ✅ mwanachama amejiunga na order
+
+[J8] 39: skhChatNegotiate — await open halisi + fomu ndani ya chat (NEGO-FIX)
+  ✅ fomu imefunguka kupitia negotiate
+  ✅ chat bado wazi (hakuna fomu ya Home)
+  ✅ muktadha umefungwa kwa product ya sasa
+  ✅ service ya zamani haijachanganywa na product
+  ✅ negotiation haijazi/halazimishi greeting ya kawaida
+  ✅ Toa Ofa inaonyesha price + quantity, si service/transport
+  ✅ double-call hairudii fomu
+
+[J8b] Context isolation: Product → Service → Transport → Product
+  ✅ Product only: price+qty, hakuna delivery/service/transport
+  ✅ Service only: scope+price, hakuna product variants/transport/pickup
+  ✅ Transport only: route+fare, hakuna product/service fields
+  ✅ Product tena: stale Transport imefutwa
+
+[J9] Conversation create failure — fail-closed, si listener/send bandia
+[SOKOHAI][CHAT_CONVERSATION] {
+  code: 'PERMISSION_DENIED',
+  error: Error: Missing or insufficient permissions
+      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17901160709120.5431811919002307:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17901160709120.5431811919002307:2170:24)
+      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
+    code: 'permission-denied'
+  },
+  meta: {
+    conversationId: 'conv_buyer_1_seller_denied',
+    partnerUid: 'seller_denied'
+  }
+}
+[SOKOHAI][CHAT_OPEN] {
+  code: 'PERMISSION_DENIED',
+  error: Error: Missing or insufficient permissions
+      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17901160709120.5431811919002307:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17901160709120.5431811919002307:2170:24)
+      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
+    code: 'permission-denied'
+  },
+  meta: {
+    partnerUid: 'seller_denied',
+    conversationId: 'conv_buyer_1_seller_denied'
+  }
+}
+  ✅ open inarudisha null permission ikikataa create
+  ✅ state ni ERROR, si CONNECTING milele
+  ✅ parent conversation bandia haikuundwa
+  ✅ message listener mpya haikuunganishwa
+
+[J10] Switch partner — old realtime callback haiwezi kuvuja
+  ✅ partner mpya ana canonical conversation yake
+  ✅ ujumbe wa conversation ya zamani haujaingia partner mpya
+  ✅ listener hai imefungwa kwa conversation mpya
+
+MATOKEO E2E: 57 pass, 0 fail
+--- CHAT AUTHORITY / MOBILE / SECURITY CONTRACT ---
+✅ skhChatOpen implementation moja tu
+✅ state machine ina IDLE/CONNECTING/READY/EMPTY/ERROR/RETRYING
+✅ conversation error haimezwi
+✅ message listener ina stale conversation guard
+✅ conversation listener ina stale conversation guard
+✅ unread update ni atomic increment
+✅ negotiation pair-wide listeners zimeondolewa
+✅ mobile 320px iko ndani ya breakpoint iliyofunikwa
+✅ mobile 360px iko ndani ya breakpoint iliyofunikwa
+✅ mobile 375px iko ndani ya breakpoint iliyofunikwa
+✅ mobile 390px iko ndani ya breakpoint iliyofunikwa
+✅ mobile 412px iko ndani ya breakpoint iliyofunikwa
+✅ message/card long text hutumia overflow-wrap:anywhere
+✅ commerce cards hazina effective fixed min-width
+✅ negotiation actions zina-wrap
+✅ 320px negotiation buttons zinaweza kuwa row moja kamili
+✅ Chat ina negotiation host moja authoritative
+✅ negotiation shell inaingia Chat host, si document.body
+✅ Product schema haina delivery/pickup fields
+✅ commerce type na entity ni explicit kabla ya render
+✅ submit ina VALIDATING/PREPARING/SUBMITTING/SUCCESS/ERROR
+✅ Accept/Reject/Counter buttons zinapeleka clicked button kwa feedback
+✅ command lifecycle ina loading/success/error UI
+✅ late repair layer haifungi tena skhNegoFormOpen
+✅ stale duplicate app haipo tena ndani ya fonts/
+✅ legacy Product delivery labels hazipo kwenye deploy tree
+✅ service worker inafuta cache za build ya zamani
+✅ Firebase haitunzi HTML na app modules za zamani
+✅ message create rule inahitaji sender awe participant
+✅ legacy chats read imefungwa kwa sender/receiver
+✅ legacy chats haina update/delete ya client
+✅ script 93 inabaki baada ya core na ni inbox authority
+ALL 32 CHAT CONTRACT CHECKS PASSED
+--- CHAT/NAV AUTHORITY INVARIANTS ---
+  ✅ js/app/79-one-ui-at-a-time.js: navigation chain flags preserved
+  ✅ js/app/81-absolute-one-ui-live.js: navigation chain flags preserved
+  ✅ js/app/91-discover-fixes.js: navigation chain flags preserved
+  ✅ 34: direct chat implementation exists exactly once
+  ✅ 34: lifecycle states are authoritative
+  ✅ 34: conversation failure is re-thrown (not fake success)
+  ✅ js/app/78-chat-fix-blink.js: haibadilishi direct skhChatOpen
+  ✅ js/app/81-absolute-one-ui-live.js: haibadilishi direct skhChatOpen
+  ✅ js/app/90-chat-fixes.js: haibadilishi direct skhChatOpen
+  ✅ js/app/92-chat-auth-fix.js: haibadilishi direct skhChatOpen
+  ✅ 90: hakuna composer polling/setInterval
+  ✅ 92: hakuna auth polling/listener ya pili
+  ✅ 92: haibadilishi requireAuth
+  ✅ 93: hakuna setInterval/re-assert clobber
+  ✅ 93: direct chat delegated to core
+  ✅ 93: timeout hufungua retry badala ya loading-lock
+  ✅ 79: defer kwa 81 (chat/inbox/group)
+  ✅ 81: closeModals hurithi flags
+==================================================
+CHAT/NAV AUTHORITY: 18 zimepita, 0 zimeshindwa
+NPM_TEST_EXIT=0

@@ -9,6 +9,8 @@
   const safeUrl = v => { const s=String(v||'').trim(); return /^(https:\/\/|\/|#)/i.test(s)&&!/["'<>\s]/.test(s)?s:''; };
   const short = (v,n) => { const s=String(v||'').replace(/\s+/g,' ').trim(); return s.length>n?s.slice(0,n-1).trim()+'…':s; };
   const mediaType = a => String(a.creativeType||a.mediaType||a.type||'image_text').toLowerCase();
+  const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(String(v||'').trim())?String(v).trim():fallback;
+  const safeOpacity=v=>{const n=Number(v);return Number.isFinite(n)?Math.max(.08,Math.min(1,n)):0.42};
 
   function stateOf(a, now) {
     if (!a || a.archived === true || a.status === 'archived') return 'archived';
@@ -51,7 +53,9 @@
     const metrics=countLabel(a.likeCount||a.likesCount,'likes')+countLabel(a.viewCount||a.views,'views')+countLabel(a.clickCount||a.clicks,'clicks');
     const copy=withText?'<strong class="skh-ann-title">'+esc(title)+'</strong>'+(message&&message!==title?'<p>'+esc(message)+'</p>':''):'';
     const actionButton=link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">→</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
-    return '<article class="skh-ann-card">'
+    const primary=safeColor(a.primaryColor,'#0E7A5F'),accent=safeColor(a.accentColor,'#167A91'),textColor=safeColor(a.textColor,'#FFFFFF'),surface=safeColor(a.surfaceColor,'#FFFFFF'),frameOpacity=safeOpacity(a.frameOpacity);
+    const theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity;
+    return '<article class="skh-ann-card" style="'+theme+'">'
       +'<header class="skh-ann-post-head">'+(logo?'<img class="skh-ann-brand-logo" src="'+esc(logo)+'" alt="'+esc(brand)+'">':'<span class="skh-ann-brand-fallback">'+initial+'</span>')
       +'<div class="skh-ann-brand-copy"><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored · Advertisement')+'</small></div><span class="skh-ann-sponsored">AD</span></header>'
       +(media?(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+media:'<div class="skh-ann-text-creative"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div><div class="skh-ann-text-cta">'+actionButton+'</div></div>')
