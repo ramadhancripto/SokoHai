@@ -80,6 +80,7 @@
                         status: c.status, pinned: !!(c.pinned && c.pinned[me]),
                         memberCount: (c.participants || []).length,
                         avatar: c.avatar || '#',
+                        goHead: c.goHead || null,
                         drafts: c.drafts || null, archived: !!(c.archived && c.archived[me]),
                         hiddenForMe: !!(c.deletedForUser && c.deletedForUser[me]),
                         muted: !!(c.muted && c.muted[me])
@@ -166,15 +167,26 @@
     function rowHtml93(it) {
         if (it.type === 'group') {
             var gLast = it.lastMessage ? truncate(it.lastMessage.text || '', 60) : '';
+            var gSender = it.lastMessage && (it.lastMessage.senderName || it.lastMessage.authorName) || '';
+            var gPreview = gLast ? ((gSender ? gSender + ': ' : '') + gLast) : 'Gusa kufungua kikundi';
             var gTime = it.lastMessageAt ? fmtTime(it.lastMessageAt) : '';
-            var gUnr = (it.unread > 0) ? '<span class="ch-unread">' + (it.unread > 99 ? '99+' : it.unread) + '</span>' : '';
-            var gCls = 'ch-contact ch-grp-row ch-tint-group' + (it.pinned ? ' ch-pinned' : '') + (it.unread > 0 ? ' ch-unread-row' : '');
+            var isOrderGroup = !!(it.goHead && (it.goHead.targetQty || it.goHead.status));
+            var gUnr = (it.unread > 0) ? '<span class="ch-unread ' + (isOrderGroup ? 'is-order' : 'is-group') + '">' + (it.unread > 99 ? '99+' : it.unread) + '</span>' : '';
+            var gCls = 'ch-contact ch-grp-row ' + (isOrderGroup ? 'ch-order-group-row ch-tint-group-order has-go' : 'ch-group-row ch-tint-group') + (it.pinned ? ' ch-pinned' : '') + (it.unread > 0 ? ' ch-unread-row' : '');
+            var avatarText = String(it.avatar || it.name || 'G').trim().charAt(0).toUpperCase() || 'G';
+            var target = Number(it.goHead && it.goHead.targetQty) || 0;
+            var total = Number(it.goHead && it.goHead.totalQty) || 0;
+            var pct = target > 0 ? Math.max(0, Math.min(100, Math.round(total * 100 / target))) : 0;
+            var orderProgress = isOrderGroup ? '<span class="ch-order-progress"><i></i>'
+                + (target ? esc(total + '/' + target + ' · ' + pct + '% imefikiwa') : esc(String(it.goHead.status || 'Inaendelea').replace(/_/g, ' '))) + '</span>' : '';
             return '<div class="' + gCls + '" data-gid="' + esc(it.gid) + '" data-conv="' + esc(it.convId || '') + '" onclick="window.__skhInboxOpenRow93(\'g:' + jsEsc(it.gid || '') + '\')">'
-                + '<div class="ch-cc-avatar"><span style="display:inline-flex;width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1268A8,#18A982);color:#fff;align-items:center;justify-content:center;font-weight:900;font-size:19px;">' + esc(it.avatar || '#') + '</span></div>'
+                + '<div class="ch-cc-avatar ch-identity-avatar ' + (isOrderGroup ? 'is-order' : 'is-group') + '"><span>'
+                + (isOrderGroup && window.skhNavIcon ? window.skhNavIcon('cart', 20) : esc(avatarText)) + '</span></div>'
                 + '<div class="ch-cc-info">'
-                + '<span class="ch-cc-name">' + esc(it.name || 'Kikundi') + '</span>'
-                + '<span class="ch-cc-msg">' + (gLast ? esc(gLast) : 'Gusa kufungua kikundi') + '</span>'
-                + '<span class="ch-cc-meta"><span class="ch-acct-badge">👥 Kikundi' + (it.memberCount ? ' · ' + it.memberCount : '') + '</span></span>'
+                + '<span class="ch-name-row"><span class="ch-name-block ' + (isOrderGroup ? 'is-order' : 'is-group') + '"><span>' + esc(it.name || 'Kikundi') + '</span></span>'
+                + '<span class="ch-type-badge ' + (isOrderGroup ? 'is-order' : 'is-group') + '">' + (isOrderGroup ? 'ORDER GROUP' : 'GROUP') + '</span></span>'
+                + '<span class="ch-cc-msg">' + esc(gPreview) + '</span>'
+                + orderProgress
                 + '</div>'
                 + '<div class="ch-cc-side">' + (gTime ? '<span class="ch-cc-time">' + esc(gTime) + '</span>' : '') + gUnr + '</div>'
                 + '</div>';
@@ -189,18 +201,22 @@
         var me = myUid();
         var draftText = (it.drafts && it.drafts[me] && it.drafts[me].text) || '';
         var draftBadge = draftText ? '<span class="ch-draft-badge">📝 Rasimu</span>' : '';
-        var muteIco = it.muted ? '<span class="ch-mute-ico" title="Imewekwa kimya">🔕</span>' : '';
-        var cls = 'ch-contact' + (it.pinned ? ' ch-pinned' : '') + (it.unread > 0 ? ' ch-unread-row' : '');
+        var muteIco = it.muted ? '<span class="ch-state-badge" title="Imewekwa kimya">Mute</span>' : '';
+        var businessRole = ['seller', 'business', 'merchant', 'agent'].indexOf(String(it.role || '').toLowerCase()) >= 0;
+        var cls = 'ch-contact ch-person-row' + (businessRole ? ' ch-business-row' : '') + (it.pinned ? ' ch-pinned' : '') + (it.unread > 0 ? ' ch-unread-row' : '');
         return '<div class="' + cls + '" data-uid="' + esc(it.otherUid || '') + '" data-conv="' + esc(it.convId || '') + '" onclick="window.__skhInboxOpenRow93(\'' + jsEsc(it.otherUid || '') + '\')">'
-            + '<div class="ch-cc-avatar">' + dp + '</div>'
+            + '<div class="ch-cc-avatar ch-identity-avatar is-person">' + dp + '</div>'
             + '<div class="ch-cc-info">'
-            + '<span class="ch-cc-name">' + esc(it.name || 'Mawasiliano') + verified + '</span>'
-            + '<span class="ch-cc-time">' + esc(timeStr) + '</span>'
-            + '<span class="ch-cc-msg">' + (draftBadge ? draftBadge : '') + (lastText ? esc(lastText) : '<i style="color:#94a3b8;">Bonyeza kuanza mazungumzo</i>') + '</span>'
+            + '<span class="ch-name-row"><span class="ch-name-block is-person"><span>' + esc(it.name || 'Mawasiliano') + '</span>' + verified + '</span></span>'
+            + '<span class="ch-cc-msg">' + (draftBadge ? draftBadge : '') + (lastText ? esc(lastText) : '<i>Bonyeza kuanza mazungumzo</i>') + '</span>'
             + (acct ? '<span class="ch-cc-meta">' + acct + '</span>' : '')
             + '</div>'
-            + '<div class="ch-cc-side">' + muteIco + unreadBadge + '</div>'
+            + '<div class="ch-cc-side">' + (timeStr ? '<span class="ch-cc-time">' + esc(timeStr) + '</span>' : '') + muteIco + unreadBadge + '</div>'
             + '</div>';
+    }
+
+    function isOrderGroup93(it) {
+        return !!(it && it.type === 'group' && it.goHead && (it.goHead.targetQty || it.goHead.status));
     }
 
     function matches93(it) {
@@ -208,10 +224,9 @@
         if (tab93 === 'archive') return !!it.archived;
         if (it.archived) return false;
         if (tab93 === 'unread') return (it.unread || 0) > 0;
-        if (tab93 === 'buyers') return !!(it.related && it.related.sellerId && it.related.sellerId === myUid());
-        if (tab93 === 'sellers') return !!(it.related && it.related.buyerId && it.related.buyerId === myUid());
-        if (tab93 === 'transport') return it.type === 'delivery' || (it.related && it.related.deliveryId);
-        if (tab93 === 'agents') return String(it.role || '').toLowerCase() === 'agent' || it.type === 'agent';
+        if (tab93 === 'people') return it.type !== 'group';
+        if (tab93 === 'groups') return it.type === 'group' && !isOrderGroup93(it);
+        if (tab93 === 'order_groups') return isOrderGroup93(it);
         return true;
     }
 
@@ -220,7 +235,7 @@
         var chipsHost = document.getElementById('inboxChips');
         var clearBtn = document.getElementById('inboxSearchClear');
         if (chipsHost) {
-            var tabs = [['all', 'Zote'], ['unread', 'Zisizosomwa'], ['buyers', 'Wanunuzi'], ['sellers', 'Wauzaji'], ['transport', 'Wasafirishaji'], ['agents', 'Mawakala'], ['archive', 'Kumbukumbu']];
+            var tabs = [['all', 'Zote'], ['people', 'Watu'], ['groups', 'Groups'], ['order_groups', 'Order Groups'], ['unread', 'Zisizosomwa'], ['archive', 'Kumbukumbu']];
             chipsHost.innerHTML = tabs.map(function (t) {
                 return '<button type="button" class="ch-tab' + (tab93 === t[0] ? ' active' : '') + '" onclick="window.__skhInboxTab93(\'' + t[0] + '\')">' + t[1] + '</button>';
             }).join('');
@@ -253,7 +268,14 @@
         var recent = rows.filter(function (r) { return !r.pinned; });
         var html = '';
         if (pinned.length) html += '<div class="ch-inbox-sec">' + (window.skhNavIcon ? window.skhNavIcon('tag', 14) : '') + ' Iliyobandikwa</div>' + pinned.map(rowHtml93).join('');
-        if (recent.length) {
+        if (tab93 === 'all' && !query93) {
+            var people = recent.filter(function (r) { return r.type !== 'group'; });
+            var groups = recent.filter(function (r) { return r.type === 'group' && !isOrderGroup93(r); });
+            var orders = recent.filter(isOrderGroup93);
+            if (people.length) html += '<div class="ch-inbox-sec">Watu</div>' + people.map(rowHtml93).join('');
+            if (groups.length) html += '<div class="ch-inbox-sec is-group">Groups</div>' + groups.map(rowHtml93).join('');
+            if (orders.length) html += '<div class="ch-inbox-sec is-order">Order Groups</div>' + orders.map(rowHtml93).join('');
+        } else if (recent.length) {
             if (pinned.length) html += '<div class="ch-inbox-sec">Hivi Karibuni</div>';
             html += recent.map(rowHtml93).join('');
         }
