@@ -263,6 +263,36 @@ console.log('\n[J3] Tuma ujumbe — optimistic + reconcile bila duplicate');
   ok('hakuna bubble iliyokwama pending/failed', !/Jaribu Tena/.test(($('#chatMessages') || {}).textContent || ''));
 }
 
+console.log('\n[J3b] Hariri ujumbe ndani ya composer — message ileile, si duplicate');
+{
+  const before = msgsIn(convId);
+  const row = before.find(([pp, d]) => d.text === 'Hujambo, bado inapatikana?');
+  const msgId = row && row[0].split('/').pop();
+  await window.skhChatEdit(msgId);
+  ok('edit mode ina preview na composer', !!$('#chatEditChip') && !$('#chatEditChip').hidden && $('#chatInput').value === 'Hujambo, bado inapatikana?');
+  ok('send imebadilika kuwa save', !!$('#chatSendBtn .ch-save-icon') && !$('#chatSendBtn .ch-save-icon').hidden);
+  $('#chatInput').value = 'Hujambo, bado bidhaa inapatikana?';
+  await window.sendMessage();
+  await tick(10);
+  const after = msgsIn(convId);
+  const edited = after.filter(([pp, d]) => pp.endsWith('/' + msgId) && d.text === 'Hujambo, bado bidhaa inapatikana?' && d.editedAt);
+  ok('ujumbe uleule umehaririwa', edited.length === 1);
+  ok('edit haijatengeneza duplicate', after.length === before.length);
+  ok('edit mode imefungwa baada ya save', $('#chatEditChip').hidden && $('#chatInput').value === '');
+}
+
+console.log('\n[J3c] Search ya conversation — header control halisi');
+{
+  window.skhChatToggleSearch(true);
+  await tick(1);
+  ok('search bar imefunguka kutoka header', !$('#chatSearchBar').hidden && $('#chatSearchInput') === document.activeElement);
+  $('#chatSearchInput').value = 'bidhaa inapatikana';
+  window.skhChatSearchMessages($('#chatSearchInput').value);
+  ok('search inaonyesha ujumbe unaolingana', (($('#chatMessages') || {}).textContent || '').includes('Hujambo, bado bidhaa inapatikana?'));
+  window.skhChatToggleSearch(false);
+  ok('kufunga search kunarudisha stream kamili', $('#chatSearchBar').hidden && (($('#chatMessages') || {}).textContent || '').includes('Kiatu cha Ngozi'));
+}
+
 console.log('\n[J4] Toa Ofa kutoka chat — fomu inafunguka NDANI ya chat');
 let negoId = null;
 {

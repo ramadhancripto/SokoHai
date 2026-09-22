@@ -5,12 +5,15 @@
             <button id="chatBackBtn" class="ch-hbtn" onclick="document.getElementById('nfShell') ? window.skhNegoFormClose() : window.skhChatBackToList()" title="Rudi kwenye orodha" aria-label="Rudi">
                 <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
-            <div id="chatHeaderAvatar" class="chat-head-avatar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#0B4F7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg></div>
-            <div class="ch-head-id">
+            <button id="chatHeaderAvatar" type="button" class="chat-head-avatar" onclick="window.skhChatOpenPartnerProfile()" aria-label="Fungua wasifu"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#0B4F7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg></button>
+            <button type="button" class="ch-head-id" onclick="window.skhChatOpenPartnerProfile()" aria-label="Fungua wasifu">
                 <b id="chatWith">Muuzaji</b>
                 <small id="chatSub" class="ch-head-sub"></small>
-            </div>
+            </button>
             <div class="ch-head-right">
+                <button id="chatSearchBtn" class="ch-hbtn" type="button" onclick="window.skhChatToggleSearch()" title="Tafuta kwenye mazungumzo" aria-label="Tafuta">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+                </button>
                 <button id="chatMenuBtn" class="ch-hbtn" type="button" onclick="window.skhChatToggleHeadMenu(event)" title="Chaguo za mazungumzo" aria-label="Menyu" aria-haspopup="true" aria-expanded="false">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                 </button>
@@ -23,6 +26,11 @@
                     <button type="button" id="chatMenuReport" class="is-danger"><span class="ch-hm-ic" id="chatMenuReportIc"></span><span>Ripoti tatizo</span></button>
                 </div>
             </div>
+        </div>
+        <div id="chatSearchBar" class="ch-conversation-search" hidden>
+            <span aria-hidden="true"><span class="skh-ico" data-ico="search"></span></span>
+            <input id="chatSearchInput" type="search" autocomplete="off" placeholder="Tafuta ujumbe..." oninput="window.skhChatSearchMessages(this.value)">
+            <button type="button" onclick="window.skhChatToggleSearch(false)" aria-label="Funga utafutaji"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="chatBody" style="display:flex; flex:1; min-height:0;">
             <div id="chatSidePane" style="display:none; width:320px; min-width:320px; border-right:1px solid #e5e7eb; background:#f8fafc; flex-direction:column; overflow-y:auto; flex-shrink:0;"></div>
@@ -46,8 +54,9 @@
             </div>
             <input type="text" id="chatInput" placeholder="Andika ujumbe..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" style="flex:1; min-width:0; padding:11px 16px; border-radius:24px; border:1px solid #cbd5e1; outline:none; font-size:15px; background:#f8fafc; color:#173B56; caret-color:#1268A8;">
             <span title="Rekodi Sauti" aria-label="Rekodi Sauti" onclick="toggleVoiceRecord()" id="voiceBtn" style="cursor:pointer; color:#54656F; display:inline-flex; align-items:center;"><span class="skh-ico" data-ico="phone"></span></span>
-            <button onclick="sendMessage()" style="background:linear-gradient(135deg,#18A982,#1268A8); color:white; border:none; border-radius:50%; width:46px; height:46px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 8px rgba(18,104,168,.35);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <button id="chatSendBtn" type="button" onclick="sendMessage()" aria-label="Tuma ujumbe" style="background:linear-gradient(135deg,#18A982,#1268A8); color:white; border:none; border-radius:50%; width:46px; height:46px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 8px rgba(18,104,168,.35);">
+                <svg class="ch-send-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <svg class="ch-save-icon" hidden width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
         </div>
             </div>

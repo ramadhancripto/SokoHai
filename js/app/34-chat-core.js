@@ -1746,6 +1746,7 @@ import { skh } from './00-bootstrap.js';
             partnerUid: partnerUid,
             partnerName: partnerName,
             replyTo: null,
+            editingMessage: null,
             msgs: [],
             conv: conv.data,
             subEl: null,
@@ -1804,6 +1805,7 @@ import { skh } from './00-bootstrap.js';
         renderCommerceAnchor();
         window.skhNegoListen(conv.id);
         renderReplyChip();
+        renderEditMode();
         closeHeadMenu();
         wireHeadMenu(partnerUid, conv.id);
         // [NAV §23 2026-09-16] Kumbuka modal ya tangazo iliyokuwa WAZI kabla
@@ -2092,6 +2094,7 @@ import { skh } from './00-bootstrap.js';
             partnerUid: uid,
             partnerName: skh.chatPartner,
             replyTo: null,
+            editingMessage: null,
             msgs: [],
             conv: {},
             subEl: null,
@@ -2236,19 +2239,77 @@ import { skh } from './00-bootstrap.js';
         var txt = m.text || (m.productSnapshot && m.productSnapshot.title) || '';
         if (typeof window.skhCopyText === 'function') window.skhCopyText(txt); else alert(txt);
     };
+    function renderEditMode() {
+        var core = skh.chatCore || {};
+        var composer = document.getElementById('chatComposer');
+        var input = document.getElementById('chatInput');
+        var send = document.getElementById('chatSendBtn');
+        if (!composer || !input) return;
+        var host = document.getElementById('chatEditChip');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'chatEditChip';
+            host.setAttribute('aria-live', 'polite');
+            composer.parentElement.insertBefore(host, composer);
+        }
+        var editing = core.editingMessage || null;
+        if (!editing) {
+            host.hidden = true;
+            host.innerHTML = '';
+            composer.classList.remove('is-editing');
+            input.placeholder = T('ch_write', 'Andika ujumbe...');
+            if (send) {
+                send.disabled = false;
+                send.setAttribute('aria-label', T('ch_send', 'Tuma ujumbe'));
+                var si = send.querySelector('.ch-send-icon');
+                var sv = send.querySelector('.ch-save-icon');
+                if (si) si.hidden = false;
+                if (sv) sv.hidden = true;
+            }
+            return;
+        }
+        host.hidden = false;
+        host.innerHTML = '<div class="ch-editchip"><span><b>' + esc(T('ch_editing', 'Unahariri ujumbe')) + '</b><small>'
+            + esc(truncate(editing.originalText || '', 90)) + '</small></span>'
+            + '<button type="button" onclick="window.skhChatCancelEdit()" aria-label="' + esc(T('ch_cancel', 'Ghairi')) + '">'
+            + (window.skhNavIcon ? window.skhNavIcon('x', 17) : '×') + '</button></div>';
+        composer.classList.add('is-editing');
+        input.placeholder = T('ch_edit_msg', 'Hariri ujumbe');
+        if (send) {
+            send.setAttribute('aria-label', T('ch_save', 'Hifadhi'));
+            var sendIcon = send.querySelector('.ch-send-icon');
+            var saveIcon = send.querySelector('.ch-save-icon');
+            if (sendIcon) sendIcon.hidden = true;
+            if (saveIcon) saveIcon.hidden = false;
+        }
+    }
+
+    window.skhChatCancelEdit = function () {
+        var core = skh.chatCore || {};
+        var editing = core.editingMessage;
+        core.editingMessage = null;
+        var input = document.getElementById('chatInput');
+        if (input && editing && input.value === editing.draftText) input.value = '';
+        renderEditMode();
+        if (input) input.focus();
+    };
+
     window.skhChatEdit = async function (msgId) {
         var m = await getMsg(msgId);
-        if (!m) return;
         var core = skh.chatCore || {};
-        var oldText = m.text || '';
-        var convId = core.convId;
-        var doEdit = function (newText) {
-            newText = (newText == null ? '' : String(newText)).trim();
-            if (!newText) return;
-            skh.updateDoc(skh.doc(skh.db, 'conversations/' + convId + '/messages', msgId), { text: newText, editedAt: nowIso() }).catch(function (e) { alert('Imeshindwa: ' + e.message); });
-        };
-        if (typeof window.customPrompt === 'function') window.customPrompt(T('ch_edit_msg', 'Hariri ujumbe'), oldText, doEdit);
-        else { var v = await skhPrompt(T('ch_edit_msg', 'Hariri ujumbe'), oldText); if (v != null) doEdit(v); }
+        if (!m || !core.convId || m.senderId !== myUid() || (m.type || 'text') !== 'text' || m.deletedAt) return;
+        var oldText = String(m.text || '');
+        if (!oldText.trim()) return;
+        core.replyTo = null;
+        renderReplyChip();
+        core.editingMessage = { id: msgId, originalText: oldText, draftText: oldText };
+        var input = document.getElementById('chatInput');
+        if (input) {
+            input.value = oldText;
+            input.setSelectionRange(oldText.length, oldText.length);
+        }
+        renderEditMode();
+        if (input) input.focus();
     };
     window.skhChatDelete = async function (msgId) {
         var convId = (skh.chatCore || {}).convId;
@@ -3150,6 +3211,50 @@ import { skh } from './00-bootstrap.js';
             if (typeof window._skhLegacySendMessage === 'function') return window._skhLegacySendMessage();
             return;
         }
+
+        // Edit mode hubadilisha ujumbe uleule; HAITENGENEZI message mpya.
+        // Ownership inakaguliwa hapa na Firestore rules pia.
+        if (core.editingMessage) {
+            var editing = core.editingMessage;
+            var live = await getMsg(editing.id);
+            if (!live || live.senderId !== myUid() || (live.type || 'text') !== 'text' || live.deletedAt) {
+                core.editingMessage = null;
+                renderEditMode();
+                if (typeof window.skhToast === 'function') window.skhToast(T('ch_edit_not_allowed', 'Ujumbe huu hauwezi kuhaririwa.'), 'error', 3200);
+                return;
+            }
+            if (text === String(live.text || '').trim()) {
+                core.editingMessage = null;
+                input.value = '';
+                renderEditMode();
+                return;
+            }
+            var sendBtn = document.getElementById('chatSendBtn');
+            if (sendBtn && sendBtn.disabled) return;
+            if (sendBtn) { sendBtn.disabled = true; sendBtn.classList.add('is-busy'); }
+            input.disabled = true;
+            try {
+                await skh.updateDoc(skh.doc(skh.db, 'conversations/' + core.convId + '/messages', editing.id), {
+                    text: text,
+                    editedAt: nowIso()
+                });
+                (core.msgs || []).forEach(function (m) {
+                    if (m.id === editing.id) { m.text = text; m.editedAt = nowIso(); }
+                });
+                core.editingMessage = null;
+                input.value = '';
+                renderEditMode();
+                renderChatStream();
+                if (typeof window.skhToast === 'function') window.skhToast(T('ch_edited_ok', 'Ujumbe umehaririwa.'), 'success', 2200);
+            } catch (eEdit) {
+                if (typeof window.skhToast === 'function') window.skhToast(T('ch_edit_fail', 'Imeshindwa kuhariri. Jaribu tena.'), 'error', 3500);
+            } finally {
+                input.disabled = false;
+                if (sendBtn) { sendBtn.disabled = false; sendBtn.classList.remove('is-busy'); }
+                if (input) input.focus();
+            }
+            return;
+        }
         /* [SEND-FIX 2026-09-21] Kutuma kusinyamaze kimya — kila kushindwa
            kuna ujumbe kwa mtumiaji, na bubble nyekundu ya kujaribu tena. */
         var res = null;
@@ -3472,7 +3577,9 @@ import { skh } from './00-bootstrap.js';
             html += item('🔖', T('ch_save', 'Hifadhi'), "window.skhChatMsgMenuClose();window.skhChatSave('" + esc(msgId) + "')");
         }
         if (isMe && !deleted) {
-            html += item('✏️', T('ch_edit', 'Hariri'), "window.skhChatMsgMenuClose();window.skhChatEdit('" + esc(msgId) + "')");
+            if ((msg.type || 'text') === 'text' && String(msg.text || '').trim()) {
+                html += item('✏️', T('ch_edit', 'Hariri'), "window.skhChatMsgMenuClose();window.skhChatEdit('" + esc(msgId) + "')");
+            }
             html += item('' + (window.skhNavIcon?window.skhNavIcon('trash',14):'') + '', T('ch_delete', 'Futa'), "window.skhChatMsgMenuClose();window.skhChatDelete('" + esc(msgId) + "')");
         }
         if (!isMe && !deleted) html += item('' + (window.skhNavIcon?window.skhNavIcon('alert',14):'') + '️', T('ch_report', 'Ripoti'), "window.skhChatMsgMenuClose();window.skhChatReportMsg('" + esc(msgId) + "')");
@@ -5842,6 +5949,33 @@ import { skh } from './00-bootstrap.js';
     }
 
     var msgSearch = '';
+    window.skhChatOpenPartnerProfile = function () {
+        var core = skh.chatCore || {};
+        if (!core.partnerUid) return;
+        if (typeof window.openSellerProfile === 'function') {
+            window.openSellerProfile(core.partnerUid, core.partnerName || '');
+            return;
+        }
+        if (typeof window.openUserProfile === 'function') window.openUserProfile(core.partnerUid);
+    };
+
+    window.skhChatToggleSearch = function (force) {
+        var bar = document.getElementById('chatSearchBar');
+        var input = document.getElementById('chatSearchInput');
+        var btn = document.getElementById('chatSearchBtn');
+        if (!bar) return;
+        var open = (typeof force === 'boolean') ? force : bar.hidden;
+        bar.hidden = !open;
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) {
+            if (input) { input.value = msgSearch; setTimeout(function () { input.focus(); }, 0); }
+        } else {
+            msgSearch = '';
+            if (input) input.value = '';
+            window.skhChatSearchMessages('');
+        }
+    };
+
     window.skhChatSearchMessages = function (q) {
         msgSearch = String(q || '').trim().toLowerCase();
         var core = skh.chatCore; if (!core) return;
