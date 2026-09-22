@@ -495,8 +495,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
   ✅ chombo cha tangazo kimechaguliwa (Daladala)
 [negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatikani kwa sasa.
     at file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:100:29
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900333194270.6478329709856239:4323:29)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900333194420.5610588316383784:725:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900357912720.7032247017606472:4351:29)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900357912890.622803214630941:731:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -535,8 +535,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'CHAT_CONVERSATION',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900333194270.6478329709856239:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900333194270.6478329709856239:2151:24),
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900357912720.7032247017606472:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900357912720.7032247017606472:2166:24),
   meta: {
     conversationId: 'conv_buyer1_driverUid1',
     partnerUid: 'driverUid1'
@@ -545,8 +545,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_OPEN] {
   code: 'CHAT_OPEN',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900333194270.6478329709856239:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900333194270.6478329709856239:2151:24),
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900357912720.7032247017606472:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900357912720.7032247017606472:2166:24),
   meta: {
     partnerUid: 'driverUid1',
     conversationId: 'conv_buyer1_driverUid1'
@@ -1071,9 +1071,12 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
 [J4] Toa Ofa kutoka chat — fomu inafunguka NDANI ya chat
   ✅ fomu (nfShell) imefunguka
   ✅ chatModal bado wazi (fomu ndani ya chat)
+  ✅ fomu iko JUU ya Chat iliyoinuliwa
+  ✅ product ina quantity na proposed price
+  ✅ product HAINA schema ya service/transport
 [negotiationSendOffer] Falling back to Firestore-native: Error: NO_FUNCTIONS
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900333357120.7714864385827467:4322:42)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900333357250.2799986433507282:725:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900358076990.12207830137086173:4350:42)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900358077210.5006133951309888:731:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -1081,7 +1084,7 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
     at fireAnEvent (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/helpers/events.js:18:36)
     at HTMLButtonElementImpl.click (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/nodes/HTMLElement-impl.js:85:5)
     at HTMLButtonElement.click (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/HTMLElement.js:111:34)
-    at file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:290:19 {
+    at file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:302:19 {
   code: 'unavailable'
 }
   ✅ negotiation imeundwa
@@ -1108,16 +1111,20 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
 [J8] 39: skhChatNegotiate — await open halisi + fomu ndani ya chat (NEGO-FIX)
   ✅ fomu imefunguka kupitia negotiate
   ✅ chat bado wazi (hakuna fomu ya Home)
+  ✅ muktadha umefungwa kwa product ya sasa
+  ✅ service ya zamani haijachanganywa na product
+  ✅ negotiation haijazi/halazimishi greeting ya kawaida
+  ✅ Toa Ofa inaonyesha price + quantity, si service/transport
   ✅ double-call hairudii fomu
 
 [J9] Conversation create failure — fail-closed, si listener/send bandia
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
-      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:372:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900333357120.7714864385827467:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900333357120.7714864385827467:2151:24)
-      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:373:15 {
+      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:394:58)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900358076990.12207830137086173:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900358076990.12207830137086173:2166:24)
+      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:395:15 {
     code: 'permission-denied'
   },
   meta: {
@@ -1128,10 +1135,10 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
 [SOKOHAI][CHAT_OPEN] {
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
-      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:372:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900333357120.7714864385827467:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900333357120.7714864385827467:2151:24)
-      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:373:15 {
+      at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:394:58)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900358076990.12207830137086173:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900358076990.12207830137086173:2166:24)
+      at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:395:15 {
     code: 'permission-denied'
   },
   meta: {
@@ -1149,7 +1156,7 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ ujumbe wa conversation ya zamani haujaingia partner mpya
   ✅ listener hai imefungwa kwa conversation mpya
 
-MATOKEO E2E: 37 pass, 0 fail
+MATOKEO E2E: 44 pass, 0 fail
 --- CHAT AUTHORITY / MOBILE / SECURITY CONTRACT ---
 ✅ skhChatOpen implementation moja tu
 ✅ state machine ina IDLE/CONNECTING/READY/EMPTY/ERROR/RETRYING
@@ -1193,3 +1200,4 @@ ALL 20 CHAT CONTRACT CHECKS PASSED
   ✅ 81: closeModals hurithi flags
 ==================================================
 CHAT/NAV AUTHORITY: 18 zimepita, 0 zimeshindwa
+NPM_TEST_EXIT=0

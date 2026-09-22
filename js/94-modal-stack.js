@@ -25,7 +25,7 @@
     if (window.__skhModalStack) return;
     window.__skhModalStack = true;
 
-    var SEL = '.overlay-menu,[id$="Modal"],[id$="Form"],.skh-discover-engine,.skh-discover-overlay';
+    var SEL = '.overlay-menu,[id$="Modal"],[id$="Form"],.nf-shell,.skh-discover-engine,.skh-discover-overlay';
     var SKIP = { buyerView: 1, sellerView: 1, mainFeed: 1, homeView: 1, appRoot: 1, skhDiscFab: 1 };
     var MAX_Z = 2000000000;
 

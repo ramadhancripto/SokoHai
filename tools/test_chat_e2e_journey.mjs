@@ -212,6 +212,8 @@ await loadApp('js/app/34-chat-core.js', '_tmp_e2e_chat.mjs');
 await loadApp('js/app/38-negotiation-form.js', '_tmp_e2e_form.mjs', [['./38-nego-form-logic.js', logicURL('38-nego-form-logic.js')]]);
 await loadApp('js/app/69-chat-groups.js', '_tmp_e2e_grp.mjs');
 await loadApp('js/app/39-product-showcase.js', '_tmp_e2e_ps.mjs', [['./39-showcase-logic.js', logicURL('39-showcase-logic.js')]]);
+// Meneja halisi wa LIFO lazima ajue dynamic negotiation shell.
+await import('file://' + path.join(ROOT, 'js/94-modal-stack.js') + '?t=' + Date.now());
 
 let pass = 0, fail = 0;
 const ok = (n, c) => { if (c) { pass++; console.log('  ✅ ' + n); } else { fail++; console.log('  ❌ ' + n); } };
@@ -267,10 +269,20 @@ console.log('\n[J3] Tuma ujumbe — optimistic + reconcile bila duplicate');
 console.log('\n[J4] Toa Ofa kutoka chat — fomu inafunguka NDANI ya chat');
 let negoId = null;
 {
+  // Rudia conflict halisi: repair layer iliinua Chat juu ya z-index ya form.
+  // jsdom haipakii CSS ya index, hivyo weka properties zilezile hapa.
+  $('#chatModal').style.position = 'fixed';
+  $('#chatModal').style.setProperty('z-index', '100010', 'important');
+  const nfCss = document.createElement('style');
+  nfCss.textContent = '.nf-shell{position:fixed;z-index:9000}';
+  document.head.appendChild(nfCss);
   window.skhChatStartNego('product');
   await tick(10);
   ok('fomu (nfShell) imefunguka', !!$('#nfShell'));
   ok('chatModal bado wazi (fomu ndani ya chat)', ($('#chatModal') || {}).style.display !== 'none');
+  ok('fomu iko JUU ya Chat iliyoinuliwa', Number(window.getComputedStyle($('#nfShell')).zIndex) > Number(window.getComputedStyle($('#chatModal')).zIndex));
+  ok('product ina quantity na proposed price', !!$('#nf_quantity') && !!$('#nf_unitPrice'));
+  ok('product HAINA schema ya service/transport', !$('#nf_scope') && !$('#nf_fee') && !$('#nf_pickupDate'));
   // Jaza fields zote required kwa heuristics
   $$('#nfShell [data-k]').forEach((el) => {
     const k = (el.getAttribute('data-k') || '').toLowerCase();
@@ -353,11 +365,21 @@ console.log('\n[J7] Group order: create → join');
 
 console.log('\n[J8] 39: skhChatNegotiate — await open halisi + fomu ndani ya chat (NEGO-FIX)');
 {
+  // Historia ya conversation hiyo hiyo ina service mpya zaidi; isiibe product flow.
+  await skh.setDoc(skh.doc(skh.db, 'negotiations', 'nego_old_service'), {
+    negotiationId: 'nego_old_service', conversationId: convId, commerceType: 'service',
+    serviceId: 'svc_old', productId: 'svc_old', sellerId: 'seller_2', buyerId: 'buyer_1',
+    currentState: 'OFFER_SENT', currentUnitPrice: 99999, updatedAt: '2099-01-01T00:00:00.000Z'
+  });
   skh.currentOpenProduct = { id: 'p_101', title: 'Kiatu cha Ngozi', price: 45000, userId: 'seller_2', collectionName: 'products', ownerName: 'Shoe Shop', userEmail: 's@t.co' };
   await window.skhChatNegotiate('product');
   await tick(10);
   ok('fomu imefunguka kupitia negotiate', !!$('#nfShell'));
   ok('chat bado wazi (hakuna fomu ya Home)', ($('#chatModal') || {}).style.display !== 'none');
+  ok('muktadha umefungwa kwa product ya sasa', skh.chatCore.activeCommerce && skh.chatCore.activeCommerce.kind === 'product' && skh.chatCore.activeCommerce.id === 'p_101');
+  ok('service ya zamani haijachanganywa na product', !skh.negoCurrent || (skh.negoCurrent.commerceType || 'product') === 'product');
+  ok('negotiation haijazi/halazimishi greeting ya kawaida', ($('#chatInput') || {}).value === '');
+  ok('Toa Ofa inaonyesha price + quantity, si service/transport', !!$('#nf_quantity') && !!$('#nf_unitPrice') && !$('#nf_scope') && !$('#nf_fee'));
   // In-flight guard: wito wa pili mara moja haurudii
   const shells = $$('#nfShell').length;
   await window.skhChatNegotiate('product');

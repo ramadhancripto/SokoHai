@@ -294,7 +294,10 @@ import { skh } from './00-bootstrap.js';
             chatLog('CHAT_PARTNER', new Error('Partner or conversation missing'), { partnerUid: partnerUid, conversationId: convId });
             return { ok: false, error: 'no_partner', code: !partnerUid ? 'PARTNER_MISSING' : 'CONVERSATION_MISSING' };
         }
-        if (core.state === CHAT_STATES.CONNECTING || core.state === CHAT_STATES.RETRYING || core.state === CHAT_STATES.ERROR) {
+        // Composer ya mtumiaji husubiri first snapshot; matukio ya mfumo
+        // (negotiation/order) yanaweza kuandikwa mara parent conversation
+        // imethibitishwa — mtumiaji asilazimishwe kutuma ujumbe wa kawaida kwanza.
+        if (!opts.system && (core.state === CHAT_STATES.CONNECTING || core.state === CHAT_STATES.RETRYING || core.state === CHAT_STATES.ERROR)) {
             return { ok: false, error: 'not_ready', code: 'CONVERSATION_NOT_READY' };
         }
         text = text == null ? '' : String(text);
@@ -955,6 +958,15 @@ import { skh } from './00-bootstrap.js';
         if (at !== bt) return at > bt;
         return false;
     }
+    function negotiationMatchesActiveCommerce(nego) {
+        if (!nego) return false;
+        var active = (skh.chatCore || {}).activeCommerce || null;
+        if (!active || !active.kind || !active.id) return true;
+        var kind = nego.commerceType || 'product';
+        var id = kind === 'service' ? (nego.serviceId || nego.productId)
+            : (kind === 'transport' ? (nego.transportId || nego.productId) : nego.productId);
+        return kind === active.kind && String(id || '') === String(active.id);
+    }
     function nIcon(name, size) { return (typeof window !== 'undefined' && window.skhNavIcon) ? window.skhNavIcon(name, size || 15) : ''; }
     function negoTypeIcon(nego) {
         var t = (nego && nego.commerceType) || 'product';
@@ -970,6 +982,7 @@ import { skh } from './00-bootstrap.js';
             var m = msgs[i];
             if (m.type !== 'negotiation' || !m.negotiationId || !m.negotiationSnapshot) continue;
             var snap = m.negotiationSnapshot;
+            if (!negotiationMatchesActiveCommerce(snap)) continue;
             var live = skh.negoCurrent;
             if (!live || live.negotiationId !== snap.negotiationId || negoNewer(snap, live)) {
                 skh.negoCurrent = snap;
@@ -1738,6 +1751,7 @@ import { skh } from './00-bootstrap.js';
             openToken: opts.openToken || chatOpenSeq,
             state: CHAT_STATES.CONNECTING,
             error: null,
+            activeCommerce: opts.activeCommerce || previousCore.activeCommerce || null,
             openRequest: previousCore.openRequest || { uid: partnerUid, name: partnerName, opts: {} }
         };
         var cw = document.getElementById('chatWith');
@@ -2083,6 +2097,7 @@ import { skh } from './00-bootstrap.js';
             openToken: openToken,
             state: CHAT_STATES.CONNECTING,
             error: null,
+            activeCommerce: (opts.commerceKind && opts.commerceId) ? { kind: opts.commerceKind, id: opts.commerceId } : null,
             openRequest: { uid: uid, name: name || '', opts: Object.assign({}, opts) }
         };
         setChatState(opts.retry ? CHAT_STATES.RETRYING : CHAT_STATES.CONNECTING);
@@ -2152,7 +2167,10 @@ import { skh } from './00-bootstrap.js';
             if (openToken !== chatOpenSeq) return null;
 
             // Unganisha conversation kikamilifu
-            attachConversation(conv, uid, partnerName, { ctx: ctx, related: related, openToken: openToken });
+            attachConversation(conv, uid, partnerName, {
+                ctx: ctx, related: related, openToken: openToken,
+                activeCommerce: (opts.commerceKind && opts.commerceId) ? { kind: opts.commerceKind, id: opts.commerceId } : null
+            });
 
             // Run merge na legacy bila kuzuia mtumiaji kuanza kuandika
             Promise.allSettled([
@@ -3178,8 +3196,9 @@ import { skh } from './00-bootstrap.js';
         window.skhChatOpen(uid || '', name || '', { email: email || '' });
     };
 
-    window.startChat = function () {
+    window.startChat = function (openOpts) {
         if (!skh.requireAuth() || !skh.currentOpenProduct) return;
+        openOpts = openOpts || {};
         var p = skh.currentOpenProduct || {};
         var myId = myUid();
         
@@ -3202,25 +3221,34 @@ import { skh } from './00-bootstrap.js';
         skh.currentChatEmail = sellerEmail;
         skh.chatPartner = sellerName;
 
-        var pCol = p.collectionName || p.itemCollection || skh.currentFeedCollection || 'products';
+        var pCol = String(p.collectionName || p.itemCollection || skh.currentFeedCollection || 'products').toLowerCase();
+        var requestedKind = String(openOpts.commerceKind || '').toLowerCase();
+        var commerceKind = requestedKind === 'service' || requestedKind === 'transport' || requestedKind === 'product'
+            ? requestedKind
+            : (pCol === 'services' ? 'service'
+                : ((pCol === 'drivers' || pCol === 'ride_requests' || pCol === 'transport_profiles') ? 'transport' : 'product'));
         skh.activeChatProduct = null;
         skh.activeChatService = null;
         skh.activeChatTransport = null;
         var greetRef = 'tangazo hili';
-        if (pCol === 'drivers') {
-            skh.activeChatTransport = Object.assign({}, p, { collectionName: 'drivers', sellerId: sellerUid, sellerName: sellerName });
+        if (commerceKind === 'transport') {
+            skh.activeChatTransport = Object.assign({}, p, { collectionName: pCol, sellerId: sellerUid, sellerName: sellerName });
             greetRef = 'tangazo lenu la usafiri';
-        } else if (pCol === 'services') {
+        } else if (commerceKind === 'service') {
             skh.activeChatService = Object.assign({}, p, { collectionName: 'services', sellerId: sellerUid, sellerName: sellerName });
             greetRef = 'huduma yenu';
         } else {
-            skh.activeChatProduct = Object.assign({}, p, { collectionName: 'products', sellerId: sellerUid, sellerName: sellerName });
+            skh.activeChatProduct = Object.assign({}, p, { collectionName: pCol || 'products', sellerId: sellerUid, sellerName: sellerName });
             greetRef = 'bidhaa hii';
         }
         var input = document.getElementById('chatInput');
-        if (input) input.value = 'Habari, nimevutiwa na ' + greetRef + ': ' + (p.title || '');
-        
-        return window.skhChatOpen(sellerUid, sellerName, { ctx: 'p_' + p.id, type: 'direct', email: sellerEmail });
+        if (input && openOpts.prefill !== false) input.value = 'Habari, nimevutiwa na ' + greetRef + ': ' + (p.title || '');
+        if (input && openOpts.prefill === false) input.value = '';
+
+        return window.skhChatOpen(sellerUid, sellerName, {
+            ctx: 'p_' + p.id, type: 'direct', email: sellerEmail,
+            commerceKind: commerceKind, commerceId: p.id || null
+        });
     };
 
     /* ---------- Kadi za kushiriki (share) — Phase 4 ---------- */
@@ -4522,10 +4550,25 @@ import { skh } from './00-bootstrap.js';
 
     function renderStartNegoCard(host) {
         var t = null, kind = null;
+        var active = (skh.chatCore || {}).activeCommerce || null;
 
-        try { t = transportCtx(); if (t && t.id) kind = 'transport'; } catch (e) {}
-        if (!kind) { try { t = serviceCtx(); if (t && t.id) kind = 'service'; } catch (e) {} }
-        if (!kind) { try { t = productCtx(); if (t && t.id) kind = 'product'; } catch (e) {} }
+        // Tangazo lililofungua chat ndiyo authority. Conversation ya jozi moja
+        // inaweza kuwa na historia ya product/service/transport zote; priority ya
+        // aina ya zamani haipaswi kubadili "Toa Ofa" ya tangazo la sasa.
+        if (active && active.kind) {
+            kind = active.kind;
+            try {
+                t = kind === 'transport' ? transportCtx()
+                  : kind === 'service' ? serviceCtx()
+                  : productCtx();
+            } catch (e) { t = null; }
+            if (!t || !t.id || (active.id && String(t.id) !== String(active.id))) { t = null; kind = null; }
+        }
+        if (!kind) {
+            try { t = transportCtx(); if (t && t.id) kind = 'transport'; } catch (e2) {}
+            if (!kind) { try { t = serviceCtx(); if (t && t.id) kind = 'service'; } catch (e3) {} }
+            if (!kind) { try { t = productCtx(); if (t && t.id) kind = 'product'; } catch (e4) {} }
+        }
 
         if (!kind || !t) { host.style.display = 'none'; host.innerHTML = ''; return; }
 
@@ -4789,6 +4832,7 @@ import { skh } from './00-bootstrap.js';
     async function negoFallbackFetch(convId) {
         try {
             var docs = await negoFallbackQuery(convId);
+            docs = docs.filter(negotiationMatchesActiveCommerce);
             if (!docs.length) return null;
             docs.sort(negoDocsCmp);
             return docs[0];
@@ -4837,6 +4881,7 @@ import { skh } from './00-bootstrap.js';
                 if ((skh.chatCore || {}).convId !== convId) return;
                 var docs = [];
                 if (snap && snap.forEach) snap.forEach(function (d) { docs.push(Object.assign({}, d.data(), { id: d.id })); });
+                docs = docs.filter(negotiationMatchesActiveCommerce);
                 if (!docs.length) return;
                 docs.sort(negoDocsCmp);
                 var n = docs[0];
@@ -4987,6 +5032,7 @@ import { skh } from './00-bootstrap.js';
                 if ((skh.chatCore || {}).convId !== convId) return;
                 var docs = [];
                 if (snap && snap.forEach) snap.forEach(function (d) { docs.push(Object.assign({}, d.data(), { id: d.id })); });
+                docs = docs.filter(negotiationMatchesActiveCommerce);
                 if (docs.length > 0) {
                     docs.sort(negoDocsCmp);
                     adoptNego(docs[0], convId);

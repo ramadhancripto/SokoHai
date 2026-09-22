@@ -720,7 +720,10 @@ import {
             });
             // (2–3) Fungua conversation kwanza; SUBIRI promise yenyewe (na
             // timeout ya 10s) — si polling vipofu ya 6s kama awali.
-            var openPromise = (typeof window.startChat === 'function') ? window.startChat() : null;
+            // Negotiation si ujumbe wa kawaida: fungua chat na muktadha uliofungwa,
+            // bila kuweka greeting inayomfanya mtumiaji aamini lazima aitume kwanza.
+            var openPromise = (typeof window.startChat === 'function')
+                ? window.startChat({ prefill: false, commerceKind: kind }) : null;
             if (openPromise && typeof openPromise.then === 'function') {
                 try {
                     await Promise.race([
@@ -757,7 +760,7 @@ import {
             });
 
             if (typeof window.skhNegoFormOpen === 'function') {
-                window.skhNegoFormOpen({ type: kind, entity: negoEntity });
+                await window.skhNegoFormOpen({ type: kind, entity: negoEntity });
             } else if (typeof window.skhOpenNegoForm === 'function') {
                 window.skhOpenNegoForm(negoEntity, { chatId: cc.convId, sellerId: sellerId });
             } else if (typeof window.openNegotiationForm === 'function') {

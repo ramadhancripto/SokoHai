@@ -531,13 +531,14 @@ import {
     function currentProposal() {
         var c = core();
         var values = readValues();
+        var lockedChat = state.chatContext || {};
         var ctx = {
-            conversationId: c.convId || null,
+            conversationId: lockedChat.convId || c.convId || null,
             buyerId: myUid(), buyerName: myName(),
             // Mmiliki halisi wa tangazo ndiye mpokeaji; ikiwa hajulikani,
             // mwenyeji wa chat (muuzaji/mtoa huduma/dereva) ndiye mpokeaji.
-            sellerId: state.entity.sellerId || state.entity.providerId || state.entity.driverId || state.entity.userId || c.partnerUid || null,
-            sellerName: state.entity.sellerName || state.entity.providerName || state.entity.driverName || state.entity.ownerName || state.entity.company || c.partnerName || ''
+            sellerId: state.entity.sellerId || state.entity.providerId || state.entity.driverId || state.entity.userId || lockedChat.partnerUid || c.partnerUid || null,
+            sellerName: state.entity.sellerName || state.entity.providerName || state.entity.driverName || state.entity.ownerName || state.entity.company || lockedChat.partnerName || c.partnerName || ''
         };
         return buildProposal(state.type, state.entity, values, ctx);
     }
@@ -707,7 +708,12 @@ import {
         }
 
         var c = core();
-        if (!c.convId || !c.partnerUid) { showBanner('Anza mazungumzo kwanza.'); return; }
+        var lockedChat = state.chatContext || {};
+        if (!lockedChat.convId || !lockedChat.partnerUid) { showBanner('Mazungumzo na muuzaji hayajathibitishwa.'); return; }
+        if (c.convId !== lockedChat.convId || c.partnerUid !== lockedChat.partnerUid) {
+            showBanner('Mazungumzo yamebadilika. Funga fomu na ufungue ofa tena kwenye tangazo sahihi.');
+            return;
+        }
 
         var proposal = currentProposal();
         if (!proposal.sellerId) proposal.sellerId = c.partnerUid;
@@ -749,12 +755,23 @@ import {
         var guessed = detectTypeAndEntity(opts);
         var type = opts.type || guessed.type;
         var baseEntity = opts.entity || guessed.entity;
+        // Funga entity/type/conversation wakati wa open; historia ya jozi inaweza
+        // kuwa na bidhaa, huduma na usafiri tofauti lakini form hii haiwezi kubadilika.
+        var openCore = core();
+        var openChat = {
+            convId: openCore.convId || null,
+            partnerUid: openCore.partnerUid || null,
+            partnerName: openCore.partnerName || ''
+        };
 
         var host = document.createElement('div');
         var meta0 = type ? NF_META[type] : NF_META.product;
         host.innerHTML = shellHtml(meta0);
         document.body.appendChild(host.firstChild);
         document.body.style.overflow = 'hidden';
+        // Tumia meneja mmoja wa modal/LIFO; hii huiweka nfShell juu ya Chat
+        // hata Chat ikiwa imepandishwa hadi z-index 100010 na repair layer.
+        if (typeof window.skhBringToFront === 'function') window.skhBringToFront('nfShell');
         var body = document.getElementById('nfBody');
 
         if (!type || !baseEntity || !baseEntity.id) {
@@ -793,7 +810,15 @@ import {
             return;
         }
 
-        state = { type: type, entity: entity, values: defaultValues(type, entity), errors: {}, sending: false, _fieldIndex: {} };
+        var liveCore = core();
+        if (!openChat.convId || !openChat.partnerUid || liveCore.convId !== openChat.convId || liveCore.partnerUid !== openChat.partnerUid) {
+            body.innerHTML = unavailableHtml(NF_META[type], 'Mazungumzo na mmiliki wa tangazo hayajathibitishwa.');
+            var b2 = document.getElementById('nfUnavailClose');
+            if (b2) b2.addEventListener('click', close);
+            document.getElementById('nfCloseBtn').addEventListener('click', close);
+            return;
+        }
+        state = { type: type, entity: entity, chatContext: openChat, values: defaultValues(type, entity), errors: {}, sending: false, _fieldIndex: {} };
         body.innerHTML = formHtml(type, entity, state.values);
         document.getElementById('nfFoot').style.display = 'flex';
         document.getElementById('nfFoot').innerHTML = footerHtml(NF_META[type]);
