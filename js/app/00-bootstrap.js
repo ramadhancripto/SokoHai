@@ -451,7 +451,7 @@ window.closeModals = function(forceAll) {
             });
         } catch(e) {}
         const fomuZote = [ 'sellerForm','serviceForm','deliveryForm','sokopayForm', 'offlineMemberForm','editModal','businessOSForm','rideRequestModal', 'userPaymentModal','buyerOrdersModal', 'authModal', 'productModal', 'cartModal', 'chatModal', 'chatListModal', 'notifModal', 'directHireModal', 'deliveryChoiceModal', 'actionRequestModal', 'logisticsTokenModal', 'deliveriesModal', 'tripsModal', 'savedItemsModal',
-            'sidebarMenuModal','plusMenu','mainMenu','sokohaiAccountSettingModal','mySokoHaiModal','advertiserDashboardModal','advertiserBillingSoonModal','sellerProfileModal','tokenBoxModal','requestInboxModal','routeMatchModal','skhDiscoverOverlay','skhDiscoverEngine'
+            'sidebarMenuModal','plusMenu','mainMenu','sokohaiAccountSettingModal','mySokoHaiModal','advertiserDashboardModal','advertiserBillingSoonModal','companyAdsSoonModal','sellerProfileModal','tokenBoxModal','requestInboxModal','routeMatchModal','skhDiscoverOverlay','skhDiscoverEngine'
         ];
         fomuZote.forEach(id => {
             const el = document.getElementById(id);
@@ -2184,8 +2184,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
         ${skh.cardImage(data, overlays, skh.cardImageClass(data, 'products'))}
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_product_def', 'Bidhaa'))}</h3>
             ${skh.cardPriceHtml(data, 'products')}
-            ${skh.cardModeSignalLine(data)}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'shop')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'products')}</div> </div> </div>`;
+            <div class="skh-meta-row">${skh.cardPinLocation(data, 'products')}</div> </div> </div>`;
 };
 
 // [ServicePostCard] TEASER: picha -> jina -> bei (Kuanzia) -> mtoa   -> eneo.

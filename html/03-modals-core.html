@@ -78,13 +78,14 @@
         <div class="adv-layout">
             <nav class="adv-nav" aria-label="Advertiser sections">
                 <button type="button" class="adv-nav-item active" aria-current="page">Overview</button>
+                <button type="button" class="adv-nav-item locked" aria-disabled="true" onclick="window.skhOpenCompanyAdsSoon()"><span>Company Ads</span><span class="adv-lock">Coming Soon</span></button>
                 <button type="button" class="adv-nav-item locked" aria-disabled="true" onclick="window.skhOpenAdvertiserBillingSoon()"><span>Billing &amp; Payments</span><span class="adv-lock">Coming Soon</span></button>
             </nav>
             <main class="adv-main">
                 <h1 class="adv-title">Advertiser Dashboard</h1>
                 <p class="adv-lead">Manage company advertising activity from one workspace. Existing advertising creation flows remain unchanged.</p>
                 <div class="adv-grid">
-                    <section class="adv-card"><h3>Advertising Workspace</h3><p>Campaign tools and advertiser activity will remain organized within this dashboard as capabilities are enabled.</p></section>
+                    <button type="button" class="adv-card adv-billing-card" aria-disabled="true" onclick="window.skhOpenCompanyAdsSoon()"><h3>Company Ads</h3><p>Tangaza kampuni, brand, website, app, event au campaign yako kwa watumiaji wa SokoHai.</p><span class="adv-coming">Coming Soon</span></button>
                     <button type="button" class="adv-card adv-billing-card" aria-disabled="true" onclick="window.skhOpenAdvertiserBillingSoon()">
                         <h3>Billing &amp; Payments</h3>
                         <p>Manage advertising budget, payments and campaign spending.</p>
@@ -105,6 +106,16 @@
         <p>Mfumo wa malipo na usimamizi wa gharama za matangazo unakuja hivi karibuni.</p>
         <span class="adv-coming">Coming Soon</span>
         <button type="button" class="adv-ok" onclick="window.skhCloseAdvertiserBillingSoon()">Sawa</button>
+    </section>
+</div>
+
+<div id="companyAdsSoonModal" class="overlay-menu" style="z-index:8560;">
+    <section class="adv-soon-card" role="dialog" aria-modal="true" aria-labelledby="companyAdsSoonTitle">
+        <div class="adv-soon-icon"><span class="skh-ico" data-ico="lock"></span></div>
+        <h2 id="companyAdsSoonTitle">Company Ads</h2>
+        <p>Tangaza kampuni, brand, website, app, event au campaign yako kwa watumiaji wa SokoHai.</p>
+        <span class="adv-coming">Coming Soon</span>
+        <button type="button" class="adv-ok" onclick="window.skhCloseCompanyAdsSoon()">Sawa</button>
     </section>
 </div>
 

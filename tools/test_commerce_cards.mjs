@@ -66,7 +66,7 @@ console.log('\n[1] BIDHAA — muundo wa teaser');
     ok('jina lipo', c.querySelector('.skh-title').textContent.includes('Mchele Mbeya'));
     ok('bei ni TSh 75,000', c.querySelector('.skh-price').textContent.replace(/\s/g, '').includes('75,000'));
     ok('bei haina "Kuanzia" kwa bidhaa', !c.querySelector('.skh-price-prefix'));
-    ok('duka + tiki vipo', !!c.querySelector('.skh-seller-mini .skh-verified'));
+    ok('front card haina seller details nyingi', !c.querySelector('.skh-seller-mini'));
     ok('eneo la pini lipo', c.querySelector('.skh-pinloc').textContent.includes('Tabora'));
     ok('verified pill kwenye picha', !!c.querySelector('.skh-img .skh-verified-pill'));
     ok('hakuna footer ya Imelindwa/CTA', !c.querySelector('.skh-foot'));
@@ -132,8 +132,10 @@ console.log('\n[5] USAWA WA FAMILIA (aina zote tatu)');
         const priceIdx = order.findIndex(o => o.includes('skh-price'));
         const expectedPriceIdx = col === 'drivers' && order[1].includes('skh-card-sub') ? 2 : 1;
         ok(col + ': bei iko juu mara tu baada ya jina' + (col === 'drivers' ? '/chombo' : ''), priceIdx === expectedPriceIdx);
-        ok(col + ': muuzaji na eneo vipo kwa mpangilio uleule',
-            order.some(o => o.includes('skh-seller-row')) && order.some(o => o.includes('skh-meta-row')));
+        ok(col + ': front-card metadata policy ni sahihi',
+            col === 'products'
+                ? (!order.some(o => o.includes('skh-seller-row')) && order.some(o => o.includes('skh-meta-row')))
+                : (order.some(o => o.includes('skh-seller-row')) && order.some(o => o.includes('skh-meta-row'))));
     }
 }
 

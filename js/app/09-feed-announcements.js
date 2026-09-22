@@ -150,15 +150,27 @@ window.sokohaiStartAnnouncementsListener = function(){
 
 window.sokohaiSaveAnnouncement = async function(payload, editId){
     try {
+        const isAdmin = !!((window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin) || (skh.currentUser && skh.currentUser.email === skh.MY_ADMIN_EMAIL));
+        if(!isAdmin) throw new Error('Admin authorization required.');
         const data = {
-            text: String(payload.text || '').trim(),
-            icon: String(payload.icon || '').trim(),
-            image: String(payload.image || '').trim(),
-            type: payload.type || 'normal',
+            text: String(payload.text || payload.description || '').trim(),
+            description: String(payload.description || payload.text || '').trim(),
+            headline: String(payload.headline || '').trim(),
+            brandName: String(payload.brandName || '').trim(),
+            creativeType: payload.creativeType || 'image_text',
+            image: String(payload.image || payload.imageUrl || '').trim(),
+            imageUrl: String(payload.imageUrl || payload.image || '').trim(),
+            videoUrl: String(payload.videoUrl || '').trim(),
+            audioUrl: String(payload.audioUrl || '').trim(),
+            logoUrl: String(payload.logoUrl || '').trim(),
+            ctaLabel: String(payload.ctaLabel || '').trim(),
             link: String(payload.link || '').trim(),
             startAt: payload.startAt || '',
             endAt: payload.endAt || '',
-            active: payload.active !== false,
+            priority: Math.max(0, Number(payload.priority) || 0),
+            status: payload.status || 'draft',
+            archived: payload.archived === true,
+            active: payload.status === 'published' && payload.archived !== true,
             updatedAt: new Date().toISOString()
         };
         if(editId) {
@@ -167,6 +179,7 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
             data.createdAt = new Date().toISOString();
             await skh.addDoc(skh.collection(skh.db, "announcements"), data);
         }
+        if(typeof window.skhToast === 'function') window.skhToast(editId ? 'Advertisement updated.' : 'Advertisement saved.', 'success');
         return true;
     } catch(e) {
         console.error("Kosa kuhifadhi tangazo:", e);
@@ -176,11 +189,11 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
 };
 
 window.sokohaiDeleteAnnouncement = async function(id){
-    if(!await skhConfirm("Una uhakika unataka kufuta tangazo hili kabisa?")) return;
+    if(!await skhConfirm("Archive advertisement hii? Haitaonekana Home.")) return;
     try {
-        await skh.deleteDoc(skh.doc(skh.db, "announcements", id));
+        await skh.updateDoc(skh.doc(skh.db, "announcements", id), { archived:true, status:'archived', active:false, archivedAt:new Date().toISOString() });
     } catch(e) {
-        alert(" Imeshindwa kufuta tangazo: " + e.message);
+        alert(" Imeshindwa ku-archive advertisement: " + e.message);
     }
 };
 

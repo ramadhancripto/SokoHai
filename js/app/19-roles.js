@@ -673,3 +673,13 @@ window.skhCloseAdvertiserBillingSoon = function () {
     var modal = document.getElementById('advertiserBillingSoonModal');
     if (modal) modal.style.display = 'none';
 };
+
+// Company Ads remains informational only; no external campaign workflow exists.
+window.skhOpenCompanyAdsSoon = function () {
+    var modal = document.getElementById('companyAdsSoonModal');
+    if (modal) modal.style.display = 'flex';
+};
+window.skhCloseCompanyAdsSoon = function () {
+    var modal = document.getElementById('companyAdsSoonModal');
+    if (modal) modal.style.display = 'none';
+};
