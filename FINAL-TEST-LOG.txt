@@ -41,7 +41,9 @@ PASS order progress uses actual total and target
 PASS real profile avatar helper remains in use
 PASS group navigation remains existing group destination
 PASS personal navigation remains existing user destination
-PASS required real-record filter set exists
+PASS required identity filter set exists
+PASS existing commerce and role filters are preserved
+PASS group member count remains visible from real record
 PASS all view groups real rows into people groups and order groups
 PASS old inline-styled group avatar removed from authority
 PASS final identity stylesheet is loaded after marketplace stylesheet
@@ -53,7 +55,7 @@ PASS order progress is semantically green
 PASS long identity names are ellipsized
 PASS red is not introduced by Chat Home identity stylesheet
 
-Chat Home identity contract: 23 passed, 0 failed
+Chat Home identity contract: 25 passed, 0 failed
 
 [1] CONFIG — fomu inajua aina za biashara
   ✅ product ina sections za bei/quantity + ujumbe
@@ -549,8 +551,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
   ✅ chombo cha tangazo kimechaguliwa (Daladala)
 [negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatikani kwa sasa.
     at file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:100:29
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900922755080.25931618887099295:4457:29)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900922755210.8249202612107112:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900935416960.6518615184235681:4457:29)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900935417060.46711343304301933:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -587,8 +589,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'CHAT_CONVERSATION',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900922755080.25931618887099295:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900922755080.25931618887099295:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900935416960.6518615184235681:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900935416960.6518615184235681:2170:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     conversationId: 'conv_buyer1_driverUid1',
@@ -598,8 +600,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_OPEN] {
   code: 'CHAT_OPEN',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900922755080.25931618887099295:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900922755080.25931618887099295:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900935416960.6518615184235681:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900935416960.6518615184235681:2170:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     partnerUid: 'driverUid1',
@@ -1143,8 +1145,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ product ina quantity na proposed price
   ✅ product HAINA schema ya service/transport/delivery
 [negotiationSendOffer] Falling back to Firestore-native: Error: NO_FUNCTIONS
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900922902270.9092330385350986:4456:42)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900922902340.21997174314892498:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900935564920.003076925824131438:4456:42)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900935565120.1804430949918936:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -1197,8 +1199,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900922902270.9092330385350986:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900922902270.9092330385350986:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900935564920.003076925824131438:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900935564920.003076925824131438:2170:24)
       at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },
@@ -1211,8 +1213,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:441:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900922902270.9092330385350986:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900922902270.9092330385350986:2170:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900935564920.003076925824131438:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900935564920.003076925824131438:2170:24)
       at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },

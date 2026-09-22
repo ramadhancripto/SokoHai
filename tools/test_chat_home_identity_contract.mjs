@@ -24,7 +24,9 @@ check('order progress uses actual total and target', /total\s*\+\s*'\/'\s*\+\s*t
 check('real profile avatar helper remains in use', inbox.includes('window.skhUserAvatar(it.photo || null, it.name, 48)'));
 check('group navigation remains existing group destination', inbox.includes("window.__skhInboxOpenRow93(\\'g:"));
 check('personal navigation remains existing user destination', inbox.includes("window.__skhInboxOpenRow93(\\'' + jsEsc(it.otherUid"));
-check('required real-record filter set exists', ['people', 'groups', 'order_groups', 'unread', 'archive'].every(k => inbox.includes("['" + k + "'")));
+check('required identity filter set exists', ['people', 'groups', 'order_groups', 'unread', 'archive'].every(k => inbox.includes("['" + k + "'")));
+check('existing commerce and role filters are preserved', ['buyers', 'sellers', 'transport', 'agents'].every(k => inbox.includes("['" + k + "'")));
+check('group member count remains visible from real record', inbox.includes("(it.memberCount ? ' · ' + esc(it.memberCount) : '')"));
 check('all view groups real rows into people groups and order groups', /var people = recent\.filter/.test(inbox) && /var groups = recent\.filter/.test(inbox) && /var orders = recent\.filter/.test(inbox));
 check('old inline-styled group avatar removed from authority', !inbox.includes('<div class="ch-cc-avatar"><span style="display:inline-flex;width:48px'));
 check('final identity stylesheet is loaded after marketplace stylesheet', head.indexOf('34-chat-inbox-identity.css') > head.indexOf('33-white-marketplace.css'));

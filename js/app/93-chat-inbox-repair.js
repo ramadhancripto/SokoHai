@@ -184,7 +184,7 @@
                 + (isOrderGroup && window.skhNavIcon ? window.skhNavIcon('cart', 20) : esc(avatarText)) + '</span></div>'
                 + '<div class="ch-cc-info">'
                 + '<span class="ch-name-row"><span class="ch-name-block ' + (isOrderGroup ? 'is-order' : 'is-group') + '"><span>' + esc(it.name || 'Kikundi') + '</span></span>'
-                + '<span class="ch-type-badge ' + (isOrderGroup ? 'is-order' : 'is-group') + '">' + (isOrderGroup ? 'ORDER GROUP' : 'GROUP') + '</span></span>'
+                + '<span class="ch-type-badge ' + (isOrderGroup ? 'is-order' : 'is-group') + '">' + (isOrderGroup ? 'ORDER GROUP' : 'GROUP') + (it.memberCount ? ' · ' + esc(it.memberCount) : '') + '</span></span>'
                 + '<span class="ch-cc-msg">' + esc(gPreview) + '</span>'
                 + orderProgress
                 + '</div>'
@@ -227,6 +227,11 @@
         if (tab93 === 'people') return it.type !== 'group';
         if (tab93 === 'groups') return it.type === 'group' && !isOrderGroup93(it);
         if (tab93 === 'order_groups') return isOrderGroup93(it);
+        /* Existing commerce/role filters stay available; the identity tabs extend them. */
+        if (tab93 === 'buyers') return !!(it.related && it.related.sellerId && it.related.sellerId === myUid());
+        if (tab93 === 'sellers') return !!(it.related && it.related.buyerId && it.related.buyerId === myUid());
+        if (tab93 === 'transport') return it.type === 'delivery' || !!(it.related && it.related.deliveryId);
+        if (tab93 === 'agents') return String(it.role || '').toLowerCase() === 'agent' || it.type === 'agent';
         return true;
     }
 
@@ -235,7 +240,7 @@
         var chipsHost = document.getElementById('inboxChips');
         var clearBtn = document.getElementById('inboxSearchClear');
         if (chipsHost) {
-            var tabs = [['all', 'Zote'], ['people', 'Watu'], ['groups', 'Groups'], ['order_groups', 'Order Groups'], ['unread', 'Zisizosomwa'], ['archive', 'Kumbukumbu']];
+            var tabs = [['all', 'Zote'], ['people', 'Watu'], ['groups', 'Groups'], ['order_groups', 'Order Groups'], ['unread', 'Zisizosomwa'], ['buyers', 'Wanunuzi'], ['sellers', 'Wauzaji'], ['transport', 'Wasafirishaji'], ['agents', 'Mawakala'], ['archive', 'Kumbukumbu']];
             chipsHost.innerHTML = tabs.map(function (t) {
                 return '<button type="button" class="ch-tab' + (tab93 === t[0] ? ' active' : '') + '" onclick="window.__skhInboxTab93(\'' + t[0] + '\')">' + t[1] + '</button>';
             }).join('');
