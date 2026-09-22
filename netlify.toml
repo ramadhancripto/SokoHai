@@ -1,0 +1,53 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/sokohai-sw.js"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/fonts/sokohai-sw.js"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/js/app/*"
+  [headers.values]
+    Cache-Control = "no-cache, max-age=0, must-revalidate"
+
+# The repository previously contained a second stale application under /fonts/.
+# Old bookmarks and service-worker-controlled requests must return to one root app.
+[[redirects]]
+  from = "/fonts/js/*"
+  to = "/js/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fonts/css/*"
+  to = "/css/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fonts/html/*"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/fonts/"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

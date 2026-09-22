@@ -497,8 +497,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
   ✅ chombo cha tangazo kimechaguliwa (Daladala)
 [negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatikani kwa sasa.
     at file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:100:29
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900719480210.47718202924973196:4350:29)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900719480390.1643202155276744:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:4350:29)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_form.mjs?t=17900762173990.19679575502302993:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -535,8 +535,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'CHAT_CONVERSATION',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900719480210.47718202924973196:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900719480210.47718202924973196:2167:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:2167:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     conversationId: 'conv_buyer1_driverUid1',
@@ -546,8 +546,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_OPEN] {
   code: 'CHAT_OPEN',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900719480210.47718202924973196:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900719480210.47718202924973196:2167:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_chat.mjs?t=17900762173860.1950039793760585:2167:24)
       at async file:///home/user/SokoHai/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     partnerUid: 'driverUid1',
@@ -1079,8 +1079,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ product ina quantity na proposed price
   ✅ product HAINA schema ya service/transport/delivery
 [negotiationSendOffer] Falling back to Firestore-native: Error: NO_FUNCTIONS
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900719656060.9852442353626085:4349:42)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900719656200.13193446736744874:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:4349:42)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai/js/app/_tmp_e2e_form.mjs?t=17900762324920.15564963660800069:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -1133,8 +1133,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:411:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900719656060.9852442353626085:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900719656060.9852442353626085:2167:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:2167:24)
       at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:412:15 {
     code: 'permission-denied'
   },
@@ -1147,8 +1147,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:411:58)
-      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900719656060.9852442353626085:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900719656060.9852442353626085:2167:24)
+      at ensureConversation (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai/js/app/_tmp_e2e_chat.mjs?t=17900762324840.11398074005964909:2167:24)
       at async file:///home/user/SokoHai/tools/test_chat_e2e_journey.mjs:412:15 {
     code: 'permission-denied'
   },
