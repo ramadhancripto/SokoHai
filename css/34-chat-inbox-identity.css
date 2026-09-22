@@ -114,7 +114,7 @@
   background: transparent !important;
 }
 #chatListModal #inboxList .ch-contact.ch-unread-row::before { background: var(--ch-home-green) !important; }
-#chatListModal #inboxList .ch-contact.ch-pinned::before { background: #c49b39 !important; }
+#chatListModal #inboxList .ch-contact.ch-pinned::before { background: #809a92 !important; }
 
 #chatListModal .ch-identity-avatar {
   width: 50px;
@@ -241,6 +241,8 @@
   text-overflow: ellipsis;
 }
 #chatListModal .ch-cc-msg i { color: #8c999f !important; }
+#chatListModal .ch-cc-msg.has-draft,
+#chatListModal .ch-draft-badge { color: #217a57 !important; font-weight: 750; }
 #chatListModal .ch-cc-meta { margin-top: 2px; }
 #chatListModal .ch-acct-badge {
   padding: 2px 6px !important;

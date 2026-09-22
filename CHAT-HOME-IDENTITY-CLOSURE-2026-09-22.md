@@ -19,6 +19,8 @@ Refined the existing Chat Home only. No sample conversations, duplicate Chat app
 - Identity filters expose Zote, Watu, Groups, Order Groups, Zisizosomwa, and Kumbukumbu.
 - Existing Wanunuzi, Wauzaji, Wasafirishaji, and Mawakala filters remain available in the same horizontal filter rail.
 - Real group member counts remain visible beside `GROUP` / `ORDER GROUP`.
+- Stored group emoji avatars are preserved whole (including surrogate-pair emoji); Order Groups use the real stored avatar before the commerce-icon fallback.
+- Group draft and mute states remain visible, while pin/archive continue to use their real record flags. Pin uses a neutral accent rather than borrowing premium gold.
 - The all view organizes non-pinned records into Watu, Groups, and Order Groups while preserving real ordering inside each set.
 
 ## Preserved behavior
@@ -34,7 +36,7 @@ Search, timestamps, unread counts, real profile photos, last messages, member co
 - `FINAL-TEST-LOG.txt`
 
 ## Verification
-- Chat Home identity contract: **25 passed, 0 failed**.
+- Chat Home identity contract: **30 passed, 0 failed**.
 - Full `npm test`: **exit 0**.
 - Chat E2E: **57 passed, 0 failed**.
 - Chat authority contract: **32 passed**.

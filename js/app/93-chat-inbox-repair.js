@@ -79,7 +79,7 @@
                         lastMessageAt: c.lastMessageAt, unread: (c.unread || {})[me] || 0,
                         status: c.status, pinned: !!(c.pinned && c.pinned[me]),
                         memberCount: (c.participants || []).length,
-                        avatar: c.avatar || '#',
+                        avatar: c.avatar || '',
                         goHead: c.goHead || null,
                         drafts: c.drafts || null, archived: !!(c.archived && c.archived[me]),
                         hiddenForMe: !!(c.deletedForUser && c.deletedForUser[me]),
@@ -168,12 +168,20 @@
         if (it.type === 'group') {
             var gLast = it.lastMessage ? truncate(it.lastMessage.text || '', 60) : '';
             var gSender = it.lastMessage && (it.lastMessage.senderName || it.lastMessage.authorName) || '';
-            var gPreview = gLast ? ((gSender ? gSender + ': ' : '') + gLast) : 'Gusa kufungua kikundi';
+            var gMe = myUid();
+            var gDraft = (it.drafts && it.drafts[gMe] && it.drafts[gMe].text) || '';
+            var gPreview = gDraft
+                ? ('Rasimu: ' + truncate(gDraft, 52))
+                : (gLast ? ((gSender ? gSender + ': ' : '') + gLast) : 'Gusa kufungua kikundi');
             var gTime = it.lastMessageAt ? fmtTime(it.lastMessageAt) : '';
             var isOrderGroup = !!(it.goHead && (it.goHead.targetQty || it.goHead.status));
             var gUnr = (it.unread > 0) ? '<span class="ch-unread ' + (isOrderGroup ? 'is-order' : 'is-group') + '">' + (it.unread > 99 ? '99+' : it.unread) + '</span>' : '';
             var gCls = 'ch-contact ch-grp-row ' + (isOrderGroup ? 'ch-order-group-row ch-tint-group-order has-go' : 'ch-group-row ch-tint-group') + (it.pinned ? ' ch-pinned' : '') + (it.unread > 0 ? ' ch-unread-row' : '');
-            var avatarText = String(it.avatar || it.name || 'G').trim().charAt(0).toUpperCase() || 'G';
+            /* Group avatars are real stored emoji (up to four UTF-16 units). Never split them with charAt(0). */
+            var storedAvatar = String(it.avatar || '').trim();
+            var avatarText = (storedAvatar && storedAvatar !== '#')
+                ? storedAvatar
+                : (Array.from(String(it.name || 'G').trim())[0] || 'G').toUpperCase();
             var target = Number(it.goHead && it.goHead.targetQty) || 0;
             var total = Number(it.goHead && it.goHead.totalQty) || 0;
             var pct = target > 0 ? Math.max(0, Math.min(100, Math.round(total * 100 / target))) : 0;
@@ -181,14 +189,15 @@
                 + (target ? esc(total + '/' + target + ' · ' + pct + '% imefikiwa') : esc(String(it.goHead.status || 'Inaendelea').replace(/_/g, ' '))) + '</span>' : '';
             return '<div class="' + gCls + '" data-gid="' + esc(it.gid) + '" data-conv="' + esc(it.convId || '') + '" onclick="window.__skhInboxOpenRow93(\'g:' + jsEsc(it.gid || '') + '\')">'
                 + '<div class="ch-cc-avatar ch-identity-avatar ' + (isOrderGroup ? 'is-order' : 'is-group') + '"><span>'
-                + (isOrderGroup && window.skhNavIcon ? window.skhNavIcon('cart', 20) : esc(avatarText)) + '</span></div>'
+                + (storedAvatar && storedAvatar !== '#' ? esc(avatarText) : (isOrderGroup && window.skhNavIcon ? window.skhNavIcon('cart', 20) : esc(avatarText))) + '</span></div>'
                 + '<div class="ch-cc-info">'
                 + '<span class="ch-name-row"><span class="ch-name-block ' + (isOrderGroup ? 'is-order' : 'is-group') + '"><span>' + esc(it.name || 'Kikundi') + '</span></span>'
                 + '<span class="ch-type-badge ' + (isOrderGroup ? 'is-order' : 'is-group') + '">' + (isOrderGroup ? 'ORDER GROUP' : 'GROUP') + (it.memberCount ? ' · ' + esc(it.memberCount) : '') + '</span></span>'
-                + '<span class="ch-cc-msg">' + esc(gPreview) + '</span>'
+                + '<span class="ch-cc-msg' + (gDraft ? ' has-draft' : '') + '">' + esc(gPreview) + '</span>'
                 + orderProgress
                 + '</div>'
-                + '<div class="ch-cc-side">' + (gTime ? '<span class="ch-cc-time">' + esc(gTime) + '</span>' : '') + gUnr + '</div>'
+                + '<div class="ch-cc-side">' + (gTime ? '<span class="ch-cc-time">' + esc(gTime) + '</span>' : '')
+                + (it.muted ? '<span class="ch-state-badge" title="Imewekwa kimya">Mute</span>' : '') + gUnr + '</div>'
                 + '</div>';
         }
         var dp = (typeof window.skhUserAvatar === 'function') ? window.skhUserAvatar(it.photo || null, it.name, 48) : '';
@@ -200,7 +209,7 @@
         var acct = roleBadge(it);
         var me = myUid();
         var draftText = (it.drafts && it.drafts[me] && it.drafts[me].text) || '';
-        var draftBadge = draftText ? '<span class="ch-draft-badge">📝 Rasimu</span>' : '';
+        var draftBadge = draftText ? '<span class="ch-draft-badge">Rasimu · </span>' : '';
         var muteIco = it.muted ? '<span class="ch-state-badge" title="Imewekwa kimya">Mute</span>' : '';
         var businessRole = ['seller', 'business', 'merchant', 'agent'].indexOf(String(it.role || '').toLowerCase()) >= 0;
         var cls = 'ch-contact ch-person-row' + (businessRole ? ' ch-business-row' : '') + (it.pinned ? ' ch-pinned' : '') + (it.unread > 0 ? ' ch-unread-row' : '');
