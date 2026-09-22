@@ -16,13 +16,13 @@ t('showcase derives active/scheduled/expired/archive state',ad.includes("return 
 t('showcase supports priority ordering and rotation',ad.includes('Number(b.priority)')&&ad.includes('rotationTimer'));
 t('showcase wakes at schedule boundaries without a reload',ad.includes('armScheduleRefresh')&&ad.includes('scheduleTimer=setTimeout(renderCurrent')&&ad.includes('if(s>now)times.push(s)')&&ad.includes('if(e>now)times.push(e+50)'));
 t('showcase labels promotional content honestly',ad.includes('Advertisement'));
-t('showcase supports image creative',ad.includes("<img src=\"")&&ad.includes('a.image || a.imageUrl'));
+t('showcase supports image creative',ad.includes('skh-ann-media-main')&&ad.includes('a.image || a.imageUrl'));
 t('showcase supports video with safe controls',ad.includes('<video')&&ad.includes('muted playsinline controls')&&ad.includes('preload="metadata"'));
 t('showcase supports audio controls',ad.includes('<audio')&&ad.includes('preload="none"'));
 t('showcase supports poster image',ad.includes('poster='));
 t('showcase supports logo, brand, headline and CTA',ad.includes('logoUrl')&&ad.includes('brandName')&&ad.includes('headline')&&ad.includes('ctaLabel'));
 t('Home advertisement is rendered as a clear sponsored post',ad.includes('skh-ann-post-head')&&ad.includes('Sponsored · Advertisement')&&ad.includes('skh-ann-post-actions'));
-t('advertisement image preserves the whole creative',adCss.includes('aspect-ratio:16/9')&&adCss.includes('object-fit:contain!important'));
+t('advertisement image preserves the whole creative',adCss.includes('aspect-ratio:4/3')&&adCss.includes('skh-ann-media-main')&&adCss.includes('object-fit:contain!important'));
 t('preview and Home share the canonical advertisement card',ad.includes('window.skhAdvertisementCardHtml=cardHtml')&&admin.includes("typeof window.skhAdvertisementCardHtml==='function'"));
 t('engagement metrics display only when authentic count is positive',ad.includes("return n>0?")&&ad.includes('a.likeCount')&&ad.includes('a.viewCount'));
 t('published Firestore write updates Home immediately',engine.includes('window.__sokohaiAnnouncementsCache = cache')&&engine.includes('window.__sokohaiOnAnnouncementsUpdate(cache)'));

@@ -33,7 +33,7 @@
     const image=safeUrl(a.image || a.imageUrl || a.mediaUrl || a.photo), video=safeUrl(a.videoUrl), poster=safeUrl(a.posterUrl || image), audio=safeUrl(a.audioUrl);
     let visual='';
     if (type.indexOf('video')!==-1 && video) visual='<video class="skh-ann-video" muted playsinline controls preload="metadata" '+(poster?'poster="'+esc(poster)+'" ':'')+'><source src="'+esc(video)+'"></video>';
-    else if (image) visual='<img src="'+esc(image)+'" alt="'+esc(title)+'" loading="eager" decoding="async">';
+    else if (image) visual='<img class="skh-ann-media-blur" src="'+esc(image)+'" alt="" aria-hidden="true"><img class="skh-ann-media-main" src="'+esc(image)+'" alt="'+esc(title)+'" loading="eager" decoding="async">';
     if (!visual) return '';
     return '<div class="skh-ann-media">'+visual+(audio?'<audio class="skh-ann-audio" controls preload="none" src="'+esc(audio)+'"></audio>':'')+'</div>';
   }
@@ -49,13 +49,14 @@
     const media=mediaHtml(a,title,type), withText=type.indexOf('text')!==-1||!!(a.headline||a.description||a.text);
     const initial=esc((brand.charAt(0)||'S').toUpperCase());
     const metrics=countLabel(a.likeCount||a.likesCount,'likes')+countLabel(a.viewCount||a.views,'views')+countLabel(a.clickCount||a.clicks,'clicks');
+    const copy=withText?'<strong class="skh-ann-title">'+esc(title)+'</strong>'+(message&&message!==title?'<p>'+esc(message)+'</p>':''):'';
+    const actionButton=link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">→</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
     return '<article class="skh-ann-card">'
       +'<header class="skh-ann-post-head">'+(logo?'<img class="skh-ann-brand-logo" src="'+esc(logo)+'" alt="'+esc(brand)+'">':'<span class="skh-ann-brand-fallback">'+initial+'</span>')
-      +'<div><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored · Advertisement')+'</small></div><span class="skh-ann-sponsored">Ad</span></header>'
-      +(withText?'<div class="skh-ann-copy"><strong class="skh-ann-title">'+esc(title)+'</strong>'+(message&&message!==title?'<p>'+esc(message)+'</p>':'')+'</div>':'')
-      +media
+      +'<div class="skh-ann-brand-copy"><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored · Advertisement')+'</small></div><span class="skh-ann-sponsored">AD</span></header>'
+      +(media?(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+media:'<div class="skh-ann-text-creative"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div><div class="skh-ann-text-cta">'+actionButton+'</div></div>')
       +(metrics?'<div class="skh-ann-metrics">'+metrics+'</div>':'')
-      +'<footer class="skh-ann-post-actions">'+(link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\')">'+esc(action)+'</button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>')+'</footer>'
+      +(media?'<footer class="skh-ann-post-actions">'+actionButton+'</footer>':'')
       +'</article>';
   }
   window.skhAdvertisementCardHtml=cardHtml;
