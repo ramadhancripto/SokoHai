@@ -81,7 +81,7 @@ export function designSuggestions(c){
 export function validateCreative(c,{forPublish=false}={}){
   const x=normalizeCreative(c),errors=[];if(!x.layers.some(l=>l.visible))errors.push({code:'EMPTY',message:'Add at least one visible layer.'});
   x.layers.filter(l=>l.visible).forEach(l=>{if(l.type==='text'&&!clean(l.content))errors.push({code:'EMPTY_TEXT',layerId:l.id,message:`${l.name} has no text.`});if(l.x+l.width<0||l.y+l.height<0||l.x>x.canvas.width||l.y>x.canvas.height)errors.push({code:'OUTSIDE',layerId:l.id,message:`${l.name} is outside the canvas.`});if(l.type==='image'&&!/^https:\/\//i.test(l.src||''))errors.push({code:'IMAGE',layerId:l.id,message:`${l.name} image is not loaded.`});});
-  if(forPublish){if(!x.destination||!x.destination.type||!x.destination.id)errors.push({code:'DESTINATION',message:'Choose a real SokoHai destination before publishing.'});if(!x.linkedEntity||!x.linkedEntity.id)errors.push({code:'ENTITY',message:'Linked entity is required for interactive advertising.'});}
+  if(forPublish){const internal=!!(x.destination&&x.destination.type&&x.destination.id),external=!!(x.destination&&x.destination.type==='external'&&/^https:\/\//i.test(x.destination.url||''));if(!internal&&!external)errors.push({code:'DESTINATION',message:'Choose a real SokoHai destination or valid HTTPS link before publishing.'});if(x.linkedEntity&&!x.linkedEntity.id)errors.push({code:'ENTITY',message:'The selected SokoHai entity is incomplete.'});}
   return{ok:errors.length===0,errors};
 }
 export function serializeCreative(c){return JSON.stringify(normalizeCreative(c));}

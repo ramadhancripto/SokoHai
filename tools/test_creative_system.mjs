@@ -19,4 +19,10 @@ const studio=fs.readFileSync('js/app/95-creative-studio.js','utf8'),rules=fs.rea
 for(const token of ['SokoHaiCreativeStudio','Auto Design','saveDraft','exportCreative','creativePublish','creativeTrackEvent'])assert.ok(studio.includes(token)||fn.includes(token),token);
 for(const token of ['match /creatives/{id}','match /versions/{versionId}','request.resource.data.ownerId == request.auth.uid','allow write: if false'])assert.ok(rules.includes(token),token);
 assert.ok(scripts.includes('95-creative-studio.js'));assert.ok(fn.includes('canonicalEntity'));assert.ok(fn.includes('immutable:true'));
+const adminForm=fs.readFileSync('js/app/16-pos-admin-jobs.js','utf8'),studioCss=fs.readFileSync('css/39-creative-studio.css','utf8');
+assert.ok(adminForm.includes('Advanced Design (Optional)'),'familiar advertisement form exposes optional advanced design');
+assert.ok(studio.includes("activeTab='content'"),'simple content workflow is default');
+assert.ok(studio.includes('Weka maneno yako')&&studio.includes('Weka picha')&&studio.includes('Chagua muonekano'),'guided workflow is understandable');
+assert.ok(!studio.includes('window.openAnnouncementFormModal=function'),'Studio does not replace the existing advertisement mechanism');
+assert.ok(studioCss.includes('SIMPLE-FIRST MODE'),'simple-first layout contract exists');
 console.log('Creative System model/security/integration contracts: PASS');

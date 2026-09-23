@@ -36,3 +36,7 @@
 @media(max-width:600px){#topAnnouncement.skh-ann-post{width:calc(100% - 20px)!important;margin:10px auto!important}.adm-ad-preview.skh-ann-post{padding:8px}.skh-ann-post .skh-ann-card{border-radius:18px}.skh-ann-post .skh-ann-post-head{padding:12px 13px 10px;grid-template-columns:42px minmax(0,1fr) auto}.skh-ann-post .skh-ann-brand-logo,.skh-ann-post .skh-ann-brand-fallback{width:42px;height:42px;border-radius:13px}.skh-ann-post .skh-ann-brand-copy b{font-size:14px}.skh-ann-post .skh-ann-copy{padding:13px 14px 14px!important}.skh-ann-post .skh-ann-title{font-size:20px!important}.skh-ann-post .skh-ann-copy p{font-size:13.5px!important;line-height:1.5!important}.skh-ann-post .skh-ann-media{min-height:220px!important;max-height:460px;aspect-ratio:4/3}.skh-ann-post .skh-ann-post-actions{padding:10px 13px 13px}.skh-ann-post .skh-ann-action{width:100%}.skh-ann-post .skh-ann-text-creative{min-height:330px;padding:32px 23px}.skh-ann-post .skh-ann-text-content .skh-ann-title{font-size:31px!important}.skh-ann-post .skh-ann-text-content p{font-size:14px!important}.skh-ann-post .skh-ann-orb.one{right:-25px;top:35px}.skh-ann-post .skh-ann-text-cta{width:100%}}
 @media(prefers-reduced-motion:reduce){.skh-ann-post .skh-ann-shine{animation:none}.skh-ann-post .skh-ann-action{transition:none}}
 
+
+/* Optional enhancement: the familiar form remains primary; advanced design is opt-in. */
+.adm-ad-advanced{width:100%;margin-top:12px;border-style:dashed!important}
+.adm-ad-advanced-note{font-size:11px;color:#65757A;line-height:1.4;margin:6px 0 0}

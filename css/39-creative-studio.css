@@ -4,3 +4,24 @@
 @media(max-width:420px){.skh-cs-brand b{font-size:12px}.skh-cs-top{padding:6px}.skh-cs-tools button{white-space:nowrap;padding:7px 9px}.skh-cs-left{max-height:48vh}.skh-cs-stage{padding-top:15px}.skh-cs-work footer label{display:none}}
 .cs-mobile-props{display:none}
 @media(max-width:900px){.cs-mobile-props{display:inline-flex}.skh-cs-right.mobile-open{display:block;z-index:8}}
+
+/* SIMPLE-FIRST MODE — preserves the familiar form → live preview mechanism. */
+.skh-cs:not(.advanced) .skh-cs-layout{grid-template-columns:360px minmax(420px,1fr)}
+.skh-cs:not(.advanced) .skh-cs-right{display:none}
+.skh-cs:not(.advanced) .skh-cs-left{grid-template-columns:92px 1fr}
+.skh-cs:not(.advanced) .cs-advanced-only{display:none!important}
+.skh-cs.advanced .cs-advanced-only{display:inline-flex}
+.skh-cs:not(.advanced) .skh-cs-stage{padding:28px}
+.cs-simple-head{display:flex;gap:10px;align-items:center;margin:5px 0 12px;padding-bottom:10px;border-bottom:1px solid #E5E9EE}
+.cs-simple-head>span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#0E7A5F;color:#fff;font-weight:900;flex:none}
+.cs-simple-head h3,.cs-simple-head p{margin:0}.cs-simple-head p{margin-top:2px}
+.cs-simple-tip{padding:10px;border-radius:10px;background:#ECFDF5;color:#075F49!important;line-height:1.5}
+.cs-theme-picks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 16px}
+.cs-theme-picks button{display:flex;align-items:center;gap:8px;text-align:left}
+.cs-theme-picks i{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#0E7A5F,#167A91)}
+.cs-theme-picks button:nth-child(1) i{background:linear-gradient(135deg,#F8FAFC,#CBD5E1)}
+.cs-theme-picks button:nth-child(2) i{background:linear-gradient(135deg,#102A43,#0E7A5F)}
+.cs-theme-picks button:nth-child(3) i{background:linear-gradient(135deg,#2E1F2B,#D4AF37)}
+.cs-theme-picks button:nth-child(4) i{background:linear-gradient(135deg,#7F1D1D,#FBBF24)}
+.adm-ad-advanced{width:100%;margin-top:12px;border-style:dashed!important}.adm-ad-advanced-note{font-size:11px;color:#65757A;line-height:1.4;margin:6px 0 0}
+@media(max-width:900px){.skh-cs:not(.advanced) .skh-cs-layout{grid-template-columns:1fr}.skh-cs:not(.advanced) .skh-cs-left{display:grid;transform:translateY(0);top:auto;max-height:46vh}.skh-cs:not(.advanced) .skh-cs-stage{padding:18px 8px 48vh}.skh-cs:not(.advanced) .skh-cs-work footer{display:none}.skh-cs:not(.advanced) .skh-cs-top{z-index:9}}

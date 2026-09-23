@@ -8,6 +8,19 @@
 
 One reusable, responsive SVG Creative Studio now supports Product, Service, Business, Seller, Transport and custom contexts without creating separate editors.
 
+## Simple-first usability correction
+
+Following user review, the existing Advertisement Manager form and its original save/preview/publish mechanism remain the primary workflow. It is no longer replaced by the full canvas.
+
+The normal flow is now:
+
+1. **Weka maneno yako** — headline, description, price and CTA.
+2. **Weka picha** — upload or existing HTTPS/SokoHai media.
+3. **Chagua muonekano** — template, font strength and simple color style.
+4. Preview, save or publish.
+
+The advanced canvas is explicitly optional through **Advanced Design (Optional)** or **More design tools**. Layers, shapes, detailed typography, Brand Kit, resize, Auto Design and export remain available without crowding the default screen.
+
 ### Stage A — Audit
 
 - Created `docs/AD-CREATIVE-SYSTEM-AUDIT.md`.

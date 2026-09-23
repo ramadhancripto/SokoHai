@@ -847,8 +847,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
   ✅ chombo cha tangazo kimechaguliwa (Daladala)
 [negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatikani kwa sasa.
     at file:///home/user/SokoHai-github-audit/tools/test_delivery_nego_flow.mjs:100:29
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901211317350.03758074002798373:4457:29)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai-github-audit/js/app/_tmp_form.mjs?t=17901211317510.8464745285907089:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901247326970.19499989037475673:4457:29)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai-github-audit/js/app/_tmp_form.mjs?t=17901247327150.08926245167865043:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai-github-audit/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai-github-audit/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai-github-audit/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -885,8 +885,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_CONVERSATION] {
   code: 'CHAT_CONVERSATION',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901211317350.03758074002798373:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901211317350.03758074002798373:2170:24)
+      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901247326970.19499989037475673:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901247326970.19499989037475673:2170:24)
       at async file:///home/user/SokoHai-github-audit/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     conversationId: 'conv_buyer1_driverUid1',
@@ -896,8 +896,8 @@ COMMERCE FLOW: 18 zimepita, 0 zimeshindwa
 [SOKOHAI][CHAT_OPEN] {
   code: 'CHAT_OPEN',
   error: TypeError: snap.exists is not a function
-      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901211317350.03758074002798373:181:45)
-      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901211317350.03758074002798373:2170:24)
+      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901247326970.19499989037475673:181:45)
+      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_chat.mjs?t=17901247326970.19499989037475673:2170:24)
       at async file:///home/user/SokoHai-github-audit/tools/test_delivery_nego_flow.mjs:209:5,
   meta: {
     partnerUid: 'driverUid1',
@@ -1441,8 +1441,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   ✅ product ina quantity na proposed price
   ✅ product HAINA schema ya service/transport/delivery
 [negotiationSendOffer] Falling back to Firestore-native: Error: NO_FUNCTIONS
-    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901211483000.7330142232755619:4456:42)
-    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_form.mjs?t=17901211483080.2457122445055131:645:32)
+    at window.skhChatSubmitNegotiationProposal (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901247509010.42884459031862443:4456:42)
+    at HTMLButtonElement.onSubmit (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_form.mjs?t=17901247509150.8277853591586135:645:32)
     at HTMLButtonElement.callTheUserObjectsOperation (/home/user/SokoHai-github-audit/node_modules/jsdom/lib/generated/idl/EventListener.js:26:30)
     at innerInvokeEventListeners (/home/user/SokoHai-github-audit/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:360:16)
     at invokeEventListeners (/home/user/SokoHai-github-audit/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:296:3)
@@ -1495,8 +1495,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai-github-audit/tools/test_chat_e2e_journey.mjs:441:58)
-      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901211483000.7330142232755619:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901211483000.7330142232755619:2170:24)
+      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901247509010.42884459031862443:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901247509010.42884459031862443:2170:24)
       at async file:///home/user/SokoHai-github-audit/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },
@@ -1509,8 +1509,8 @@ ALL CHAT COMMERCE CARD TESTS PASSED! ✅
   code: 'PERMISSION_DENIED',
   error: Error: Missing or insufficient permissions
       at skh.runTransaction (file:///home/user/SokoHai-github-audit/tools/test_chat_e2e_journey.mjs:441:58)
-      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901211483000.7330142232755619:200:27)
-      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901211483000.7330142232755619:2170:24)
+      at ensureConversation (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901247509010.42884459031862443:200:27)
+      at async window.skhChatOpen (file:///home/user/SokoHai-github-audit/js/app/_tmp_e2e_chat.mjs?t=17901247509010.42884459031862443:2170:24)
       at async file:///home/user/SokoHai-github-audit/tools/test_chat_e2e_journey.mjs:442:15 {
     code: 'permission-denied'
   },
