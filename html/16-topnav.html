@@ -6,11 +6,10 @@
             <span class="brand-text skh-wordmark-host" aria-label="SokoHai" style="display:inline-flex;align-items:center;"><span data-skh-wm="132"></span></span>
         </div>
         
-                <div class="top-nav-icons">
+        <div class="top-nav-icons">
             <!-- USIMAMIZI (badala ya "Badili Mode") -->
             <span title="Usimamizi" onclick="openModeMenu()" class="usimamizi-btn" style="display:inline-flex; align-items:center; gap:3px; background:#EAF8F2; color:#17604E; border:1px solid #CCEBDD; padding:4px 7px; border-radius:999px; font-size: 10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.2px; cursor:pointer; box-shadow:0 2px 6px rgba(3,80,157,0.25);">
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                <!-- [NAV BALANCE 2026-09-17] "Kazi" badala ya "Usimamizi": fupi -->
                 <b>Kazi</b>
             </span>
 
@@ -30,7 +29,6 @@
                     <svg class="lang-caret" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
                 <div class="lang-dropdown" id="langDropdown" role="listbox" style="display:none;">
-                    <!-- [R21 KAMUSI-FIX] 🌐 inafungua MENU: Lugha / Kamusi ya SokoHai (founder §1) -->
                     <div id="langMenuMain">
                         <div class="menu-title-row" data-i18n="lm_menu">Menu ya Lugha</div>
                         <button type="button" id="langMenuLugha" class="lang-menu-opt" role="option">
@@ -59,95 +57,71 @@
         </div>
     </div> 
 
-<!-- 2. Search Row -->
+    <!-- 2. Search Row -->
     <div class="search-nav-row" id="topSearchRow">
-     
-     <div class="user-dp-wrapper" onclick="triggerDpUpload()">
-           <img src="img/avatar-gray.png" class="user-dp" id="searchProfilePic" alt="Profile">
+        <div class="user-dp-wrapper" onclick="triggerDpUpload()">
+            <img src="img/avatar-gray.png" class="user-dp" id="searchProfilePic" alt="Profile">
         </div>
         <div class="search-wrap">
             <input type="text" id="searchInput" oninput="window.handleSearch()" data-i18n-placeholder="search_placeholder" placeholder="Tafuta Bidhaa, Huduma au Usafirishaji...">
-           
-           <span class="camera-icon" title="Tafuta kwa picha" aria-label="Tafuta kwa picha" data-skh-icon="camera" data-skh-size="18" onclick="document.getElementById('imageSearchInput').click()"></span>
-           
+            <span class="camera-icon" title="Tafuta kwa picha" aria-label="Tafuta kwa picha" data-skh-icon="camera" data-skh-size="18" onclick="document.getElementById('imageSearchInput').click()"></span>
         </div>
     </div>
-<!-- Upau wa Location kwa juu — chujio la Mkoa (mikoa yote ya Tanzania) -->
-<div id="locationFilterBar" style="display:flex; justify-content:space-between; align-items:center; gap:10px; background:#f1f5f9; border-bottom:1.5px solid #cbd5e1; padding:8px 15px; font-size: 13px; font-weight:800; color:var(--primary-dark);">
-    <span id="userLocationStatus" onclick="window.requestUserLocation(true)" data-i18n="locating" style="cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--primary-blue); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1 1 auto;">
-         Inatafuta eneo...
-    </span>
-    <div style="display:flex; align-items:center; gap:6px; flex:0 0 auto; justify-content:flex-end;">
-        <span style="white-space:nowrap; color:#64748b;"></span>
-        <select id="regionFilterSelect" onchange="window.filterByRegion(this.value)" style="padding:7px 10px; border-radius:10px; border:1.5px solid #cbd5e1; background:white; font-weight:800; font-size: 13px; color:var(--primary-dark); max-width:190px; outline:none; cursor:pointer;">
-            <option value="" data-i18n="region_all"> Tanzania Nzima</option>
-            <option value="nearme" data-i18n="region_near"> Karibu Nawe (GPS)</option>
-            <optgroup label=" Mikoa ya Tanzania Bara" data-i18n-label="region_mainland">
-                <option value="Arusha">Arusha</option>
-                <option value="Dar es Salaam">Dar es Salaam</option>
-                <option value="Dodoma">Dodoma</option>
-                <option value="Geita">Geita</option>
-                <option value="Iringa">Iringa</option>
-                <option value="Kagera">Kagera</option>
-                <option value="Katavi">Katavi</option>
-                <option value="Kigoma">Kigoma</option>
-                <option value="Kilimanjaro">Kilimanjaro</option>
-                <option value="Lindi">Lindi</option>
-                <option value="Manyara">Manyara</option>
-                <option value="Mara">Mara</option>
-                <option value="Mbeya">Mbeya</option>
-                <option value="Morogoro">Morogoro</option>
-                <option value="Mtwara">Mtwara</option>
-                <option value="Mwanza">Mwanza</option>
-                <option value="Njombe">Njombe</option>
-                <option value="Pwani">Pwani (Coast)</option>
-                <option value="Rukwa">Rukwa</option>
-                <option value="Ruvuma">Ruvuma</option>
-                <option value="Shinyanga">Shinyanga</option>
-                <option value="Simiyu">Simiyu</option>
-                <option value="Singida">Singida</option>
-                <option value="Songwe">Songwe</option>
-                <option value="Tabora">Tabora</option>
-                <option value="Tanga">Tanga</option>
-            </optgroup>
-            <optgroup label=" Visiwani (Zanzibar)" data-i18n-label="region_islands">
-                <option value="Unguja Kaskazini">Unguja Kaskazini</option>
-                <option value="Unguja Kusini">Unguja Kusini</option>
-                <option value="Mjini Magharibi">Mjini Magharibi</option>
-                <option value="Pemba Kaskazini">Pemba Kaskazini</option>
-                <option value="Pemba Kusini">Pemba Kusini</option>
-            </optgroup>
-        </select>
-    </div>
-</div>
 
-<!-- Home Advertisement Showcase: placed UNDER Search bar & Location bar; hidden when no active ad. -->
+    <!-- Upau wa Location kwa juu — chujio la Mkoa (mikoa yote ya Tanzania) -->
+    <div id="locationFilterBar" style="display:flex; justify-content:space-between; align-items:center; gap:10px; background:#f1f5f9; border-bottom:1.5px solid #cbd5e1; padding:8px 15px; font-size: 13px; font-weight:800; color:var(--primary-dark);">
+        <span id="userLocationStatus" onclick="window.requestUserLocation(true)" data-i18n="locating" style="cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--primary-blue); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1 1 auto;">
+             Inatafuta eneo...
+        </span>
+        <div style="display:flex; align-items:center; gap:6px; flex:0 0 auto; justify-content:flex-end;">
+            <select id="regionFilterSelect" onchange="window.filterByRegion(this.value)" style="padding:7px 10px; border-radius:10px; border:1.5px solid #cbd5e1; background:white; font-weight:800; font-size: 13px; color:var(--primary-dark); max-width:190px; outline:none; cursor:pointer;">
+                <option value="" data-i18n="region_all"> Tanzania Nzima</option>
+                <option value="nearme" data-i18n="region_near"> Karibu Nawe (GPS)</option>
+                <optgroup label=" Mikoa ya Tanzania Bara" data-i18n-label="region_mainland">
+                    <option value="Arusha">Arusha</option>
+                    <option value="Dar es Salaam">Dar es Salaam</option>
+                    <option value="Dodoma">Dodoma</option>
+                    <option value="Geita">Geita</option>
+                    <option value="Iringa">Iringa</option>
+                    <option value="Kagera">Kagera</option>
+                    <option value="Katavi">Katavi</option>
+                    <option value="Kigoma">Kigoma</option>
+                    <option value="Kilimanjaro">Kilimanjaro</option>
+                    <option value="Lindi">Lindi</option>
+                    <option value="Manyara">Manyara</option>
+                    <option value="Mara">Mara</option>
+                    <option value="Mbeya">Mbeya</option>
+                    <option value="Morogoro">Morogoro</option>
+                    <option value="Mtwara">Mtwara</option>
+                    <option value="Mwanza">Mwanza</option>
+                    <option value="Njombe">Njombe</option>
+                    <option value="Pwani">Pwani (Coast)</option>
+                    <option value="Rukwa">Rukwa</option>
+                    <option value="Ruvuma">Ruvuma</option>
+                    <option value="Shinyanga">Shinyanga</option>
+                    <option value="Simiyu">Simiyu</option>
+                    <option value="Singida">Singida</option>
+                    <option value="Songwe">Songwe</option>
+                    <option value="Tabora">Tabora</option>
+                    <option value="Tanga">Tanga</option>
+                </optgroup>
+                <optgroup label=" Visiwani (Zanzibar)" data-i18n-label="region_islands">
+                    <option value="Unguja Kaskazini">Unguja Kaskazini</option>
+                    <option value="Unguja Kusini">Unguja Kusini</option>
+                    <option value="Mjini Magharibi">Mjini Magharibi</option>
+                    <option value="Pemba Kaskazini">Pemba Kaskazini</option>
+                    <option value="Pemba Kusini">Pemba Kusini</option>
+                </optgroup>
+            </select>
+        </div>
+    </div>
+
+    <!-- Home Advertisement Showcase: placed UNDER Search bar & Location bar; hidden when no active ad. -->
     <div class="big-announcement" id="topAnnouncement">
         <div class="marquee-text" id="sokohaiAnnouncementText" data-i18n="welcome_banner"> Karibu SokoHai — Nunua, Uza na Lipa kwa Usalama</div>
     </div>
-                <option value="Ruvuma">Ruvuma</option>
-                <option value="Shinyanga">Shinyanga</option>
-                <option value="Simiyu">Simiyu</option>
-                <option value="Singida">Singida</option>
-                <option value="Songwe">Songwe</option>
-                <option value="Tabora">Tabora</option>
-                <option value="Tanga">Tanga</option>
-            </optgroup>
-            <optgroup label=" Visiwani (Zanzibar)" data-i18n-label="region_islands">
-                <option value="Unguja Kaskazini">Unguja Kaskazini</option>
-                <option value="Unguja Kusini">Unguja Kusini</option>
-                <option value="Mjini Magharibi">Mjini Magharibi</option>
-                <option value="Pemba Kaskazini">Pemba Kaskazini</option>
-                <option value="Pemba Kusini">Pemba Kusini</option>
-            </optgroup>
-        </select>
-    </div>
-</div>
 
-
-
-
-    <!-- SEHEMU YA TABS ZA KUUZA BIDHAA -->
+    <!-- SEHEMU YA TABS ZA KUUZA BIDHAA (zilizofichwa kwa default ili kuzuia clutter) -->
     <div class="market-modes-nav" id="marketModesNav" style="display:none;">
         <button class="mode-tab-btn active" data-skh-mode="all_modes" data-i18n="mode_all" onclick="setMarketMode('all_modes', this)"> Vyote</button>
         <button class="mode-tab-btn" data-skh-mode="free_market" data-i18n="mode_free_market" onclick="setMarketMode('free_market', this)"> Soko Huru</button>
@@ -166,7 +140,7 @@
         <button class="mode-tab-btn" data-i18n="svc_rental" onclick="setServiceSection('rental', this)"> Rental Services</button>
     </div>
 
-    <!-- SEHEMU YA TABS ZA USAFIRI (TUMEIREKEBISHA ILI IONEKANE) -->
+    <!-- SEHEMU YA TABS ZA USAFIRI -->
     <div class="market-modes-nav" id="deliveryModesNav" style="display:none; border-bottom: 2px solid var(--terracotta);">
         <button class="mode-tab-btn active" data-i18n="dlv_all" onclick="setDeliverySection('all', this)"> Zote</button>
         <button class="mode-tab-btn" data-i18n="dlv_passenger" onclick="setDeliverySection('Passenger', this)"> Watu (Ride)</button>
@@ -174,3 +148,4 @@
         <button class="mode-tab-btn" data-i18n="dlv_cargo" onclick="setDeliverySection('Cargo', this)"> Mizigo Mikubwa</button>
         <button class="mode-tab-btn" data-i18n="dlv_emergency" onclick="setDeliverySection('Emergency', this)"> Dharura (Express)</button>
     </div>
+</div>

@@ -279,6 +279,10 @@ window.sokohaiStartAnnouncementsListener();
 // Wakala aliyekwisha idhinishwa na Admin ataonekana "approved" hapa mara moja.
 window.skhAgentApproval = async function() {
     if (!skh.currentUser) return { approved: false };
+    if (skh.currentUserData && (skh.currentUserData.role === 'admin' || skh.currentUserData.isApprovedAgent === true || skh.currentUserData.role === 'agent' || skh.currentUserData.isAgent === true)) {
+        window.__skhAgentApproved = true;
+        return { approved: true, exists: true, status: 'approved' };
+    }
     try {
         const q = skh.query(skh.collection(skh.db, "agents"), skh.where("userId", "==", skh.currentUser.uid), skh.limit(50));
         const snap = await skh.getDocs(q);
@@ -294,44 +298,36 @@ window.skhAgentApproval = async function() {
         if (approved) window.__skhAgentApproved = true;
         return { approved: approved, exists: true, docId: best.id, data: data, status: data.status };
     } catch (e) {
+        if (skh.currentUserData && (skh.currentUserData.isApprovedAgent === true || skh.currentUserData.role === 'agent')) {
+            return { approved: true, exists: true, status: 'approved' };
+        }
         return { approved: false, error: e };
     }
 };
 
 window.checkAgentAndShowForm = async function(formId) {
-        // [PHASE 6.0] kila mtumiaji anaona kitufe (menyu); asiye wakala approved
-        // anafunguliwa fomu ya KUJIUNGE KUWA WAKALA (agentForm) — si kifo mguu.
-        const ap = await window.skhAgentApproval();
-        if (!ap.approved) {
-            alert("Akaunti yako ya Uwakala bado haijaidhinishwa.");
-            showForm('agentForm');
-            return;
-        }
-        showForm(formId);
-    };
+    const ap = await window.skhAgentApproval();
+    if (!ap.approved) {
+        alert("Akaunti yako ya Uwakala bado haijaidhinishwa na Admin.");
+        showForm('agentForm');
+        return;
+    }
+    showForm(formId);
+};
 
 setInterval(() => {
-        // [FIX 2026-09] Menyu ya "SAJILI MWANACHAMA" inaonekana siku zote (agizo la
-        // mmiliki) — uthibitisho unafanyika ndani ya checkAgentAndShowForm (live).
-        const agentMenu = document.querySelector('.agent-only-menu');
-        if (agentMenu) {
-            agentMenu.style.display = 'flex';
-        }
-    }, 2000);
+    const agentMenu = document.querySelector('.agent-only-menu');
+    if (agentMenu) {
+        agentMenu.style.display = 'flex';
+    }
+}, 2000);
 
-// [IDENTITY-FIX BUG-05 2026-09-16] NJIA MOJA YA USAJILI — awali kulikuwa na
-// flow MBILI za kusajili mwanachama: #offlineMemberForm (index.html, isiyo na
-// confirm-PIN, isiyo na member card) na skhAssistRegisterView (31, flow kamili
-// ya hatua 2: taarifa → mwanachama aandika PIN yeye mwenyewe → kadi ya
-// Member ID). Sasa menyu hufungua flow YENYEWE iliyoko agent dashboard pekee.
 window.skhOpenMemberRegistration = async function() {
     if (!skh.requireAuth()) return;
 
-    // [FIX 2026-09] Kagua uwanja wa wakala LIVE (agents collection) — sio
-    // currentUserData.isApprovedAgent ya zamani.
     const ap = await window.skhAgentApproval();
     if (!ap.approved) {
-        alert(" Huna idhini ya usajili wa wanachama bado.");
+        alert("Akaunti yako ya Uwakala bado haijaidhinishwa.\n\nTafadhali jaza fomu ya kujiunga kuwa Wakala ili kupata idhini.");
         showForm('agentForm');
         return;
     }

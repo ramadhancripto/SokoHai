@@ -13,17 +13,17 @@ function T(key, en, vars) {
 }
 
 window.submitAgent = async function(event) {
-    if(event) event.preventDefault();
+    if(event && typeof event.preventDefault === 'function') event.preventDefault();
     if(!skh.requireAuth()) return;
 
-    const name = document.getElementById('agentName').value.trim();
-    let phone = document.getElementById('agentPhone').value.trim();
-    const email = document.getElementById('agentEmail').value.trim();
-    const region = document.getElementById('agentRegion').value;
-    const bio = document.getElementById('agentBio').value.trim();
+    const name = document.getElementById('agentName')?.value?.trim();
+    let phone = document.getElementById('agentPhone')?.value?.trim();
+    const email = document.getElementById('agentEmail')?.value?.trim() || '';
+    const region = document.getElementById('agentRegion')?.value;
+    const bio = document.getElementById('agentBio')?.value?.trim();
 
     if(!name || !phone || !region || !bio) {
-        alert(T('pa_fill_agent', "Enter your Name, Phone, Region, and Description."));
+        alert(T('pa_fill_agent', "Tafadhali jaza Jina, Simu, Mkoa na Maelezo ya Uzoefu wako."));
         return;
     }
 
@@ -31,15 +31,26 @@ window.submitAgent = async function(event) {
     const txRef = "AGTStand_" + Date.now();
 
     const btn = document.getElementById('btnAgent');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = " INATUMA OMBI...";
-    btn.disabled = true;
+    const originalText = btn ? btn.innerHTML : " TUMA OMBI LAKO";
+    if (btn) {
+        btn.innerHTML = " INATUMA OMBI...";
+        btn.disabled = true;
+    }
 
     try {
+        let photoUrl = '';
+        const photoFile = document.getElementById('agentPhoto')?.files?.[0];
+        if (photoFile && typeof window.skhUploadFromFile === 'function') {
+            try {
+                const upRes = await window.skhUploadFromFile(photoFile, { folder: 'sokohai/agents' });
+                photoUrl = typeof upRes === 'string' ? upRes : (upRes && upRes.url) || '';
+            } catch(e) { console.warn('Photo upload skipped/fallback:', e); }
+        }
+
         // [FIX: MAOMBI YAFIKE KWA ADMIN] Ombi linaandikwa kwenye Firestore MARA MOJA
         // (status: pending) — hata kabla ya malipo ya ada. Admin anaona kila ombi.
         const isFreeMode = !skh.paymentGate('agent_registration');
-        const agentRef = await skh.addDoc(skh.collection(skh.db, "agents"), {
+        const agentPayload = {
             userId: skh.currentUser.uid,
             userEmail: skh.currentUser.email || '',
             fullName: name,
@@ -47,6 +58,7 @@ window.submitAgent = async function(event) {
             email: email || '',
             location: region,
             bio: bio || '',
+            photoUrl: photoUrl || '',
             status: 'pending',
             paymentStatus: isFreeMode ? 'free' : 'pending',
             isPaid: false,
@@ -54,18 +66,30 @@ window.submitAgent = async function(event) {
             paymentRef: txRef,
             source: 'agent_form',
             createdAt: new Date().toISOString()
-        });
+        };
+
+        const agentRef = await skh.addDoc(skh.collection(skh.db, "agents"), agentPayload);
         const agentDocId = agentRef.id;
 
+        // Pia weka rekodi kwenye user profile
+        try {
+            await skh.setDoc(skh.doc(skh.db, "users", skh.currentUser.uid), {
+                agentRequestStatus: 'pending',
+                agentDocId: agentDocId,
+                agentPhone: phone,
+                agentRegion: region
+            }, { merge: true });
+        } catch(e) {}
+
         if (isFreeMode) {
-            alert(T('pa_agent_sent_free', "Your Agency application has been SENT to Admin.\n\nThe AGENCY fee is off (FREE MODE) — no TSh 3,100 fee for now.\nAdmin will review and approve you."));
-            window.loadAgentDashboard();
+            alert(T('pa_agent_sent_free', "Ombi lako la Uwakala LIMETUMWA kwa Admin.\n\nAda ya UWAKALA imezimwa (FREE MODE) — hakuna ada inayohitajika kwa sasa.\nAdmin atakagua na kukuidhinisha hivi punde."));
+            if (typeof window.loadAgentDashboard === 'function') window.loadAgentDashboard();
+            else if (typeof window.goBackToMenu === 'function') window.goBackToMenu();
             return;
         }
 
         try {
-            // [PesaPal] Hosted checkout — malipo yakikamilika, 17-pesapal-return itasasisha
-            // document hii hii (agentDocId) kuwa paymentStatus: 'paid'.
+            // [PesaPal] Hosted checkout
             const pay = await window.skhPesaPalPay({
                 amount: 3100,
                 kind: 'agent_registration',
@@ -77,11 +101,17 @@ window.submitAgent = async function(event) {
             if (!pay.ok) throw new Error(pay.error || "Malipo ya ada yameshindikana.");
         } catch (payErr) {
             // Malipo hayakuanza (mf. backend haipo), lakini ombi LIMESHAFIKA kwa admin.
-            alert(T('pa_agent_sent_pending', "Your Agency application has been SENT to Admin (status: pending).\n\nThe fee (TSh 3,100) will be required before approval — you can pay later.\nReference: ") + txRef);
+            alert(T('pa_agent_sent_pending', "Ombi lako la Uwakala LIMETUMWA kwa Admin (status: pending).\n\nKumbukumbu: ") + txRef);
+            if (typeof window.goBackToMenu === 'function') window.goBackToMenu();
         }
 
-    } catch(e) { alert(T('pa_error', "Error: ") + e.message); }
-    finally { btn.innerHTML = " TUMA OMBI LAKO"; btn.disabled = false; }
+    } catch(e) { alert(T('pa_error', "Hitilafu: ") + (e && e.message ? e.message : e)); }
+    finally { 
+        if (btn) {
+            btn.innerHTML = originalText; 
+            btn.disabled = false; 
+        }
+    }
 };
 
 window.skhRefreshStats = async function() {
