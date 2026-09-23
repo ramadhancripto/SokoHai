@@ -91,9 +91,14 @@
     const badgeStyle=String(a.badgeStyle||'pill').toLowerCase();
     const badgeAnim=String(a.badgeAnimation||a.badgeAnim||'none').toLowerCase();
     const badgeAnimClass=badgeAnim&&badgeAnim!=='none'?' badge-anim-'+esc(badgeAnim):'';
+    const badgeSize=['sm','md','lg'].indexOf(String(a.badgeSize))>=0?String(a.badgeSize):'md';
+    const badgePos=['tl','tr','bl','br'].indexOf(String(a.badgePosition))>=0?String(a.badgePosition):'tr';
+    const badgeOpacity=Number.isFinite(Number(a.badgeOpacity))?Math.max(.4,Math.min(1,Number(a.badgeOpacity))):1;
+    const badgeIconMap={fire:'\u{1F525}',bolt:'\u26A1',tag:'\u{1F3F7}\uFE0F',star:'\u2B50',truck:'\u{1F69A}',sparkle:'\u2728'};
+    const badgeIcon=badgeIconMap[String(a.badgeIcon)]||'';
     let badgeHtml='';
     if (badgeText) {
-      badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+badgeAnimClass+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+';"><span class="skh-badge-inner">'+esc(badgeText)+'</span></div>';
+      badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+badgeAnimClass+' size-'+esc(badgeSize)+' pos-'+esc(badgePos)+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+(badgeOpacity<1?';opacity:'+badgeOpacity:'')+';"><span class="skh-badge-inner">'+(badgeIcon?badgeIcon+' ':'')+esc(badgeText)+'</span></div>';
     }
 
     // Custom design properties
@@ -111,7 +116,7 @@
     const priceTag=String(a.priceTag||a.price||'').trim();
     const ctaStyle=String(a.ctaStyle||'solid').toLowerCase();
     const ctaIcon=String(a.ctaIcon||'arrow');
-    const ctaIconHtml=ctaIcon==='cart'?'🛒':ctaIcon==='phone'?'📞':ctaIcon==='whatsapp'?'💬':ctaIcon==='star'?'⭐':'→';
+    const ctaIconHtml=(typeof window.skhCtaIcon==='function'?window.skhCtaIcon(ctaIcon):(ctaIcon==='cart'?'🛒':ctaIcon==='phone'?'📞':ctaIcon==='whatsapp'?'💬':ctaIcon==='star'?'⭐':'→'));
 
     // Animation Engine settings
     const anim=typeof a.animation==='object'&&a.animation?a.animation:{};
@@ -135,6 +140,13 @@
           const delay=animDelay+(i*animStagger);
           return '<span class="skh-anim-word'+enterClass+'" style="animation-delay:'+delay+'ms;--anim-duration:'+animDuration+'ms;">'+esc(w)+'</span>';
         }).join(' ');
+      } else if (animMode==='line') {
+        const rows=title.split(/\r?\n+/).filter(function(r){return r.trim();});
+        const lineList=rows.length>1?rows:[title];
+        titleFormatted=lineList.map(function(row,i){
+          const delay=animDelay+(i*animStagger);
+          return '<span class="skh-anim-line'+enterClass+'" style="display:block;animation-delay:'+delay+'ms;--anim-duration:'+animDuration+'ms;">'+esc(row)+'</span>';
+        }).join('');
       } else if (animMode==='character') {
         const chars=[...title];
         titleFormatted=chars.map((ch,i)=>{
@@ -154,7 +166,11 @@
 
     const actionButton=link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+ctaAnimClass+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
 
-    const theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity+';--ad-angle:'+gradientAngle+'deg;--ad-radius:'+borderRadius+'px;';
+    let theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity+';--ad-angle:'+gradientAngle+'deg;--ad-radius:'+borderRadius+'px;';
+    const pal=(a.paletteId&&typeof window.skhPaletteTokens==='function')?window.skhPaletteTokens(a.paletteId):null;
+    if(pal){
+      theme+='--ad-pal-background:'+pal.background+';--ad-surface-alt:'+pal.surfaceAlt+';--ad-primary-dark:'+pal.primaryDark+';--ad-primary-light:'+pal.primaryLight+';--ad-secondary:'+pal.secondary+';--ad-muted:'+pal.mutedText+';--ad-border:'+pal.border+';--ad-cta-bg:'+pal.ctaBackground+';--ad-cta-text:'+pal.ctaText+';--ad-badge-bg:'+pal.badgeBackground+';--ad-badge-text:'+pal.badgeText+';--ad-overlay:'+pal.overlay+';--ad-grad-start:'+pal.gradientStart+';--ad-grad-mid:'+pal.gradientMiddle+';--ad-grad-end:'+pal.gradientEnd+';--ad-shadow:'+pal.shadow+';--ad-glow:'+pal.glow+';';
+    }
 
     return '<article class="skh-ann-card layout-'+esc(type)+'" style="'+theme+'border-radius:var(--ad-radius,22px);">'
       +badgeHtml
@@ -179,7 +195,7 @@
   }
 
   function armScheduleRefresh(){clearTimeout(scheduleTimer);const now=Date.now(),source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[],times=[];source.forEach(a=>{if(a&&a.archived!==true&&a.status!=='archived'&&a.active!==false&&a.status!=='draft'){const s=Date.parse(a.startAt||''),e=Date.parse(a.endAt||'');if(s>now)times.push(s);if(e>now)times.push(e+50);}});if(times.length){const delay=Math.max(250,Math.min(3600000,Math.min.apply(Math,times)-now));scheduleTimer=setTimeout(renderCurrent,delay);}}
-  function renderCurrent(){clearTimeout(rotationTimer);armScheduleRefresh();if(liveNotice){renderAd(liveNotice,true);return;}const list=activeAds();if(!list.length){hide();return;}if(activeIndex>=list.length)activeIndex=0;renderAd(list[activeIndex],false);if(list.length>1)rotationTimer=setTimeout(()=>{activeIndex=(activeIndex+1)%list.length;renderCurrent();},Math.max(5000,Number(list[activeIndex].rotationMs)||9000));}
+  function renderCurrent(){clearTimeout(rotationTimer);armScheduleRefresh();if(liveNotice){renderAd(liveNotice,true);return;}const list=activeAds();if(!list.length){hide();return;}if(activeIndex>=list.length)activeIndex=0;renderAd(list[activeIndex],false);if(list.length>1){const dMs=Number(list[activeIndex].displayDurationSeconds)>0?Number(list[activeIndex].displayDurationSeconds)*1000:Number(list[activeIndex].rotationMs)||9000;rotationTimer=setTimeout(()=>{activeIndex=(activeIndex+1)%list.length;renderCurrent();},Math.max(5000,Math.min(59000,dMs)));}}
   window.startSokoHaiSmoothMarquee=renderCurrent;window.startSokoHaiAnnouncementRotator=renderCurrent;window.startSokoHaiProAnnouncementBar=renderCurrent;window.playNextSokoHaiProAnnouncement=function(){activeIndex++;renderCurrent();};window.rotateSokoHaiAnnouncement=window.playNextSokoHaiProAnnouncement;
   window.__sokohaiOnAnnouncementsUpdate=function(){activeIndex=0;renderCurrent();};
   window.updateLiveTicker=function(type,message,subject,forceReset){clearTimeout(liveTimer);if(type==='normal'||forceReset){liveNotice=null;renderCurrent();return;}liveNotice={creativeType:'solid_text',brandName:'SokoHai',headline:subject||'Taarifa muhimu',description:message||'',active:true};renderCurrent();liveTimer=setTimeout(()=>{liveNotice=null;renderCurrent();},16000);};

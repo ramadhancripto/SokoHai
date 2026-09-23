@@ -85,6 +85,11 @@ export const CTA_ANIMATIONS = Object.freeze([
   'none','fade','slide','pulse','glow','scale','shine'
 ]);
 
+export const DISPLAY_DURATION_SECONDS = Object.freeze({min:5,max:59,default:9});
+/* Ad placement display time is a SEPARATE concept from media/timeline duration:
+   a 10-second video stays a 10-second video; the placement rotator may show the
+   same creative for up to ~5..59 seconds depending on placement rules. */
+
 export const FIT_MODES = Object.freeze([
   'cover','contain','fill','original'
 ]);
@@ -218,6 +223,16 @@ export function createCreative(context={}){
     brandKit:null,
     linkedEntity:context.sourceId?{type:context.sourceType||'custom',id:context.sourceId}:null,
     destination:context.destination||null,
+    // --- Canonical advertisement state (Creator Studio upgrade 2026-09-23) ---
+    category:clean(context.category)||'general',      // WHAT is advertised (what-is-it), vs format/preset (how it looks)
+    campaignName:clean(context.campaignName),
+    campaignId:clean(context.campaignId),
+    offer:clean(context.offer),                        // price/offer tag shown on the published post
+    paletteId:clean(context.paletteId),                // selected design palette (js/app/creative/ad-palettes.js)
+    priority:Math.max(0,Number(context.priority)||0),
+    startAt:context.startAt||'',
+    endAt:context.endAt||'',
+    displayDurationSeconds:Number.isFinite(+context.displayDurationSeconds)?+context.displayDurationSeconds:DISPLAY_DURATION_SECONDS.default,
     version:1,
     status:'DRAFT',
     title:'Untitled Creative',
@@ -234,8 +249,17 @@ export function normalizeCreative(input){
   const out={
     ...base,...input,
     preset:input.preset||base.preset,
-    duration:Math.min(30,Math.max(1,Number(input.duration)||base.duration)),
+    duration:Math.min(30,Math.max(1,Number(input.duration)||base.duration)), // media/timeline duration only
     maxDuration:30,
+    category:clean(input.category||base.category)||'general',
+    campaignName:clean(input.campaignName),
+    campaignId:clean(input.campaignId),
+    offer:clean(input.offer),
+    paletteId:clean(input.paletteId),
+    priority:Math.max(0,Number(input.priority)||0),
+    startAt:typeof input.startAt==='string'?input.startAt:base.startAt,
+    endAt:typeof input.endAt==='string'?input.endAt:base.endAt,
+    displayDurationSeconds:clamp(input.displayDurationSeconds==null?base.displayDurationSeconds:input.displayDurationSeconds,DISPLAY_DURATION_SECONDS.min,DISPLAY_DURATION_SECONDS.max),
     audioMix:{...base.audioMix,...(input.audioMix||{})},
     timeline:Array.isArray(input.timeline)?input.timeline:base.timeline,
     canvas:{...base.canvas,...(input.canvas||{})},
@@ -455,6 +479,8 @@ export function validateCreative(c,{forPublish=false}={}){
     const internal=!!(x.destination&&x.destination.type&&x.destination.id),external=!!(x.destination&&x.destination.type==='external'&&/^https:\/\//i.test(x.destination.url||''));
     if(!internal&&!external)errors.push({code:'DESTINATION',message:'Choose a real SokoHai destination or valid HTTPS link before publishing.'});
     if(x.linkedEntity&&!x.linkedEntity.id)errors.push({code:'ENTITY',message:'The selected SokoHai entity is incomplete.'});
+    if(x.startAt&&x.endAt&&Date.parse(x.endAt)<=Date.parse(x.startAt))errors.push({code:'SCHEDULE',message:'End date lazima iwe baada ya Start date.'});
+    if(!(Number(x.displayDurationSeconds)>=DISPLAY_DURATION_SECONDS.min&&Number(x.displayDurationSeconds)<=DISPLAY_DURATION_SECONDS.max))errors.push({code:'DISPLAY_DURATION',message:'Display duration lazima iwe sekunde '+DISPLAY_DURATION_SECONDS.min+'–'+DISPLAY_DURATION_SECONDS.max+' (media duration ni kitu kingine).'});
   }
   return{ok:errors.length===0,errors};
 }

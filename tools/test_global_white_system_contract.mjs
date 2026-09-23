@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-const root=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');
+import { fileURLToPath } from 'node:url';
+
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const tokens=read('css/00-tokens.css');
 const core=read('css/01-core.css');

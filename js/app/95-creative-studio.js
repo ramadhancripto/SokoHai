@@ -114,6 +114,24 @@ function syncBackToLegacyForm(){
   if(state.brandKit?.name)set('annBrand',state.brandKit.name);
   if(state.brandKit?.logoUrl)set('annLogo',state.brandKit.logoUrl);
   if(state.destination?.url)set('annLink',state.destination.url);
+  // --- Canonical advertisement meta (Creator Studio upgrade) ---
+  const bdg=state.layers.find(l=>l.role==='badge');
+  if(bdg){
+    set('annBadgeText',bdg.content);
+    if(/^#[0-9a-f]{6}$/i.test(bdg.style?.backgroundColor||''))set('annBadgeColor',bdg.style.backgroundColor);
+    if(/^#[0-9a-f]{6}$/i.test(bdg.style?.fill||''))set('annBadgeTextColor',bdg.style.fill);
+    if(bdg.animation&&(bdg.animation.emphasis!=='none'||bdg.animation.entrance!=='none'))set('annBadgeAnimation',bdg.animation.emphasis!=='none'?bdg.animation.emphasis:bdg.animation.entrance);
+  }
+  if(state.offer)set('annPriceTag',state.offer);
+  if(state.category)set('annCategory',state.category);
+  if(state.campaignName!=null)set('annCampaignName',state.campaignName);
+  if(state.campaignId!=null)set('annCampaignId',state.campaignId);
+  if(state.paletteId!=null)set('annPaletteId',state.paletteId);
+  if(state.priority!=null)set('annPriority',state.priority);
+  if(state.startAt)set('annStartAt',String(state.startAt).slice(0,16));
+  if(state.endAt)set('annEndAt',String(state.endAt).slice(0,16));
+  if(state.displayDurationSeconds)set('annDisplayDuration',state.displayDurationSeconds);
+  if(state.id)set('annCreativeId',state.id);
   if(typeof window.skhRenderAdminAdPreview==='function'){
     window.skhRenderAdminAdPreview();
   }
@@ -216,6 +234,8 @@ function bind(m){
     if(qcol)applyQuickColor(qcol);
     const pal=e.target.closest('[data-palpreset]')?.dataset.palpreset;
     if(pal)applyPalettePreset(pal);
+    const npal=e.target.closest('[data-namedpalette]')?.dataset.namedpalette;
+    if(npal)applyNamedPalette(npal);
     const grad=e.target.closest('[data-gradpreset]')?.dataset.gradpreset;
     if(grad)applyGradientPreset(grad);
     const fpair=e.target.closest('[data-fpair]')?.dataset.fpair;
@@ -792,6 +812,20 @@ function contentControls(){
     <label class="cs-upload">Chagua picha<input id="csImageFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></label>
     <label>Image URL<input data-simple="image" value="${esc(img?.src||'')}" placeholder="https://..."></label>
     <label>CTA destination / website<input data-simple="destination" value="${esc(state.destination?.url||'')}" placeholder="https://... (si lazima kama umetoka kwenye Product/Service)"></label>
+    <div class="cs-simple-head"><span>✦</span><div><h3>Advertisement / Campaign</h3><p>Nini kinachotangazwa, ratiba na muda wa kuonyeshwa. Si lazima kwa post za kawaida.</p></div></div>
+    <div class="cs-two">
+      <label>Advertisement category<select data-simple="category">${((window.SKH_AD_CATEGORIES&&window.SKH_AD_CATEGORIES.length?window.SKH_AD_CATEGORIES:[{id:'general',label:'General Advertisement'}]).map(cat=>`<option value="${esc(cat.id)}" ${state.category===cat.id?'selected':''}>${esc(cat.label)}</option>`).join(''))}</select></label>
+      <label>Campaign name<input data-simple="campaignName" value="${esc(state.campaignName||'')}" placeholder="Mfano: Ofa ya Wiki ya Saba"></label>
+    </div>
+    <div class="cs-two">
+      <label>Start (si lazima)<input data-simple="startAt" type="datetime-local" value="${esc(state.startAt?String(state.startAt).slice(0,16):'')}"></label>
+      <label>End (si lazima)<input data-simple="endAt" type="datetime-local" value="${esc(state.endAt?String(state.endAt).slice(0,16):'')}"></label>
+    </div>
+    <div class="cs-two">
+      <label>Priority<input data-simple="priority" type="number" min="0" max="999" value="${Number(state.priority)||0}"></label>
+      <label>Display duration (5–59s)<input data-simple="displayDurationSeconds" type="number" min="5" max="59" step="1" value="${Number(state.displayDurationSeconds)||9}"></label>
+    </div>
+    <p class="cs-simple-tip">Display duration ni muda wa tangazo kukaa Home kwenye rotation (5–59s). <b>Sio</b> media duration — video/audio inabaki na urefu wake.</p>
     <p class="cs-simple-tip">Kisha chagua Template au Muonekano. Advanced tools zipo kwenye “More design tools”.</p>`;
 }
 
@@ -925,6 +959,12 @@ function updateSimple(key,val){
     else if(key==='background'){n.background.color=val;rememberColor(val);}
     else if(key==='background2'){n.background.color2=val;rememberColor(val);}
     else if(key==='destination'){n.destination=val?{type:'external',url:val}:null;}
+    // --- Canonical advertisement state (Creator Studio upgrade) ---
+    else if(key==='category'){n.category=val;}else if(key==='campaignName'){n.campaignName=val;}
+    else if(key==='offer'){n.offer=val;let p=role('price');if(!p&&val){p=makeLayer('text',{role:'price',x:80,y:n.canvas.height*.58,width:400,height:90,style:{fill:'#FFFFFF',fontSize:52,fontWeight:900}});n.layers.push(p);}if(p&&val)p.content=val;}
+    else if(key==='startAt'){n.startAt=val?new Date(val).toISOString():'';}else if(key==='endAt'){n.endAt=val?new Date(val).toISOString():'';}
+    else if(key==='priority'){n.priority=Math.max(0,+val||0);}
+    else if(key==='displayDurationSeconds'){n.displayDurationSeconds=Math.max(5,Math.min(59,+val||9));}
   });
 }
 
@@ -964,6 +1004,24 @@ function applyPalettePreset(harmony){
     n.layers.filter(l=>l.role==='cta-bg').forEach(l=>l.style.fill=pal.cta);
   });
   toast(`Applied ${harmony} palette.`);
+}
+
+/* Named SokoHai Design Palettes — canonical tokens (js/app/creative/ad-palettes.js).
+   Selecting a palette updates the canvas immediately and stores paletteId so the
+   saved/published creative re-uses the same token set in the Home renderer. */
+function applyNamedPalette(id){
+  const tok=(typeof window.skhPaletteTokens==='function')?window.skhPaletteTokens(id):null;
+  if(!tok){toast('Palette tokens hazijapakiwa bado.','error');return;}
+  commit(n=>{
+    n.paletteId=tok.id;
+    n.background.color=tok.primary;
+    n.background.color2=tok.secondary;
+    n.layers.filter(l=>l.type==='text'&&l.role!=='cta').forEach(l=>l.style.fill=tok.headline);
+    n.layers.filter(l=>l.role==='cta-bg').forEach(l=>l.style.fill=tok.ctaBackground);
+    n.layers.filter(l=>l.role==='cta').forEach(l=>l.style.fill=tok.ctaText);
+    if(n.brandKit)n.brandKit={...n.brandKit,primary:tok.primary,secondary:tok.secondary,accent:tok.accent};
+  },'Named Palette '+tok.id);
+  toast('Palette applied: '+tok.label);
 }
 
 function applyGradientPreset(key){
@@ -1364,7 +1422,6 @@ function renderProperties(){
     </div>
   `;
 }
-}
 
 function updateProp(path,input){
   const value=input.type==='number'||input.type==='range'?+input.value:input.value;
@@ -1655,8 +1712,28 @@ window.skhOpenAdvancedFromLegacy=function(){
   if(video)c.layers.push(makeLayer('video',{name:'Advertisement video',src:video,videoUrl:video,x:580,y:190,width:530,height:390,zIndex:2,style:{fit:'cover',radius:26}}));
   const audio=get('annAudio');
   if(audio)c.layers.push(makeLayer('audio',{name:'Advertisement audio',src:audio,audioUrl:audio,x:80,y:520,width:460,height:60,zIndex:3}));
+  const logo=get('annLogo');
+  if(logo)c.layers.push(makeLayer('logo',{name:'Brand logo',src:logo,originalSrc:logo,x:c.canvas.width*.82,y:c.canvas.height*.05,width:c.canvas.width*.13,height:c.canvas.width*.13,zIndex:8,style:{fit:'contain',radius:16}}));
+  const bdg=get('annBadgeText');
+  if(bdg){
+    c.layers.push(makeLayer('text',{name:'Promo badge',role:'badge',content:bdg,
+      x:c.canvas.width*.055,y:c.canvas.height*.055,width:c.canvas.width*.3,height:c.canvas.height*.055,zIndex:9,
+      style:{fill:get('annBadgeTextColor')||'#FFFFFF',backgroundColor:get('annBadgeColor')||'#F59E0B',fontSize:Math.round(c.canvas.width*.022),fontWeight:900,padding:10,radius:get('annBadgeStyle')==='ribbon'?8:999,textAlign:'center'},
+      animation:{enabled:get('annBadgeAnimation')!=='none',entrance:get('annBadgeAnimation')==='pop'?'pop':'none',emphasis:get('annBadgeAnimation')!=='none'&&get('annBadgeAnimation')!=='pop'?get('annBadgeAnimation'):'none'}}));
+  }
   c.brandKit={name:get('annBrand'),logoUrl:get('annLogo'),primary:c.background.color,secondary:c.background.color2,accent:'#F4C542'};
   if(/^https:\/\//i.test(get('annLink')))c.destination={type:'external',url:get('annLink')};
+  // Canonical advertisement meta from the simple form
+  c.category=get('annCategory')||'general';
+  c.campaignName=get('annCampaignName');
+  c.campaignId=get('annCampaignId');
+  c.offer=get('annPriceTag');
+  c.paletteId=get('annPaletteId');
+  c.priority=Math.max(0,+get('annPriority')||0);
+  c.startAt=get('annStartAt')?new Date(get('annStartAt')).toISOString():'';
+  c.endAt=get('annEndAt')?new Date(get('annEndAt')).toISOString():'';
+  const dd=+get('annDisplayDuration')||0;if(dd>=5&&dd<=59)c.displayDurationSeconds=dd;
+  const annCreativeId=get('annCreativeId');if(annCreativeId&&!c.id)c.id=annCreativeId;
   document.getElementById('announcementFormModal')?.style.setProperty('display','none');
   open({creative:c,advanced:false});
 };

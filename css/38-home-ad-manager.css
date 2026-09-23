@@ -237,3 +237,47 @@
     transition: none !important;
   }
 }
+
+/* ============================================================
+   CREATOR STUDIO UPGRADE 2026-09-23
+   Additive styles only — existing rules above are untouched.
+   ============================================================ */
+
+/* Badge styles: Stamp & Outline (new; pill/ribbon/sticker/glass above stay canonical) */
+.skh-ann-badge-tag.style-stamp{border-radius:50%;width:64px;height:64px;padding:8px;background:var(--badge-bg,#DC2626);color:var(--badge-text,#fff);font-size:9.5px;font-weight:950;letter-spacing:.02em;text-transform:uppercase;text-align:center;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg);border:3px double rgba(255,255,255,.85)}
+.skh-ann-badge-tag.style-stamp .skh-badge-inner{max-width:54px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.skh-ann-badge-tag.style-outline{border-radius:999px;padding:4px 12px;background:transparent;color:var(--badge-bg,#F59E0B);border:2px solid var(--badge-bg,#F59E0B);font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;box-shadow:none}
+
+/* Badge size modifiers (md = untouched base sizes) */
+.skh-ann-badge-tag.size-sm{font-size:9px!important;padding:3px 8px}
+.skh-ann-badge-tag.size-sm.style-stamp{width:52px;height:52px;font-size:8px}
+.skh-ann-badge-tag.size-lg{font-size:13.5px!important;padding:6px 15px}
+.skh-ann-badge-tag.size-lg.style-stamp{width:80px;height:80px;font-size:11px}
+
+/* Badge position modifiers (base = top right, untouched) */
+.skh-ann-badge-tag.pos-tl{top:12px;left:14px;right:auto}
+.skh-ann-badge-tag.pos-br{top:auto;right:14px;bottom:12px}
+.skh-ann-badge-tag.pos-bl{top:auto;left:14px;right:auto;bottom:12px}
+
+/* CTA styles (new) — consume canonical palette tokens when a palette is saved,
+   falling back to the legacy --ad-primary/--ad-accent variables. */
+.skh-ann-post .skh-ann-action.cta-style-gradient{background:linear-gradient(var(--ad-angle,135deg),var(--ad-grad-start,var(--ad-primary,#0E7A5F)),var(--ad-grad-mid,var(--ad-primary,#0E7A5F)),var(--ad-grad-end,var(--ad-accent,#18A982)))!important;color:var(--ad-cta-text,#fff)!important}
+.skh-ann-post .skh-ann-action.cta-style-pill{border-radius:999px!important;background:var(--ad-cta-bg,var(--ad-primary,#0E7A5F))!important;color:var(--ad-cta-text,#fff)!important}
+.skh-ann-post .skh-ann-action.cta-style-border{background:transparent!important;border:2px solid var(--ad-cta-bg,var(--ad-accent,#167A91))!important;color:var(--ad-cta-bg,var(--ad-accent,#167A91))!important;box-shadow:none;border-radius:13px!important}
+.skh-ann-post .skh-ann-action.cta-style-glow{background:linear-gradient(var(--ad-angle,135deg),var(--ad-primary,#0E7A5F),var(--ad-accent,#18A982))!important;color:#fff!important;box-shadow:0 0 0 1px rgba(255,255,255,.14) inset,0 0 22px var(--ad-glow,rgba(24,169,130,.55))}
+.skh-ann-post .skh-ann-action.cta-style-glow:hover{box-shadow:0 0 0 1px rgba(255,255,255,.2) inset,0 0 30px var(--ad-glow,rgba(24,169,130,.7))}
+
+/* Palette token affordances on the whole card when a palette is saved */
+.skh-ann-post .skh-ann-card[style*="--ad-surface-alt"] .skh-ann-post-actions,
+.skh-ann-post .skh-ann-card[style*="--ad-surface-alt"] .skh-ann-metrics{background:var(--ad-surface-alt,#fff)}
+.skh-ann-post .skh-ann-card[style*="--ad-muted"] .skh-ann-copy p, .skh-ann-post .skh-ann-card[style*="--ad-muted"] .skh-ann-metrics{color:var(--ad-muted)!important}
+
+/* Text animation: line-by-line mode spacing */
+.skh-anim-line{margin:0;line-height:1.18}
+
+/* Create Advertisement — Creator Studio section structure (additive) */
+.adm-ad-form .adm-ad-section{border:1.5px solid #dbe7e3;border-radius:16px;padding:14px 14px 10px;margin:14px 0 4px;background:#fbfdfc}
+.adm-ad-form .adm-ad-section>legend{font-size:12px;font-weight:950;letter-spacing:.06em;text-transform:uppercase;color:#0E7A5F;background:#fff;border:1px solid #cfe3dc;border-radius:999px;padding:5px 14px;margin-left:6px;box-shadow:0 2px 8px rgba(14,122,95,.07)}
+.adm-ad-form .adm-ad-section-note{font-size:11.5px;color:#68797A;margin:2px 0 10px;font-weight:550}
+.adm-ad-form .adm-ad-pal-hint{display:block;font-size:11px;color:#0E7A5F;margin-top:4px;font-weight:700;min-height:14px}
+.adm-ad-form [data-ad-preset].active{outline:2px solid #0E7A5F;outline-offset:2px;background:#0E7A5F!important;color:#fff!important;font-weight:900}
