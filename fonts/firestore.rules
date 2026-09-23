@@ -1,0 +1,539 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- HESHIMA ZA MSINGI ----
+    function signedIn() { return request.auth != null; }
+
+    // [CUSTODY/FIX 2026-09] Admin halisi: custom claim (`admin` au `role:admin`)
+    // + email fallback (sawa na `skh.MY_ADMIN_EMAIL` kwenye client).
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.admin == true ||
+        request.auth.token.role == 'admin' ||
+        (request.auth.token.email != null &&
+         request.auth.token.email.lower() == 'rshabansaid@gmail.com')
+      );
+    }
+
+    // [OFFLINE-MEMBER 2026-09] Wakala aliyedhinishwa (users.isApprovedAgent) —
+    // ndiye pekee anayeruhusiwa kuandika nyaraka za usajili wa mwanachama
+    // offline (memberSecrets/agentMembers) bila Cloud Functions.
+    function isApprovedAgent() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApprovedAgent == true;
+    }
+
+    // [CHAT BLOCK 2026-09] Utekelezaji wa block NI WA BACKEND (rules):
+    // ujumbe HAUWEZI kutumwa ikiwa kuna block kati ya wahusika wawili —
+    // hata kwa client iliyobadilishwa (bypass). Block ni ya mweleke mmoja:
+    // A__B (A amemzuia B) ≠ B__A (B amemzuia A).
+    function isBlockedPair(a, b) {
+      return exists(/databases/$(database)/documents/chatBlocks/$(a)__$(b))
+          || exists(/databases/$(database)/documents/chatBlocks/$(b)__$(a));
+    }
+
+    // ============================================================
+    // SOKO (public browsing): bidhaa/huduma/matangazo zinabaki wazi
+    // kwa watu wote kusoma; kuandika kunahitaji login.
+    // ============================================================
+    // [REVIEWS 2026-09] `comments` (tathmini) huandikwa na SERVER pekee
+    // (reviewsPublish) — browser hairuhusiwi kuandika verifiedPurchase bandia.
+    match /products/{id} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update: if signedIn()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments']);
+      allow delete: if signedIn();
+    }
+    match /services/{id}              { allow read: if true; allow write: if signedIn(); }
+    match /announcements/{id}         { allow read: if true; allow write: if signedIn(); }
+    // [FIX 2026-09] drivers ilikuwa haipo -> ilikuwa ikiangukia kwenye
+    // "allow read: if false" na kufanya tab ya Usafirishaji ionyeshe tupu.
+    match /drivers/{id}               { allow read: if true; allow write: if signedIn(); }
+
+    // ============================================================
+    // WATUMIAJI (users) — login inahitajika kusoma/kuandika.
+    // ULINZI MKUU: walletBalance HAIWEZI kuandikwa na browser —
+    // ni Cloud Functions (Admin SDK) pekee. Hii inasimamisha
+    // "kujilipia" / "kujiongezea salio" kutoka kwa kivinjari.
+    // ============================================================
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && (!('walletBalance' in request.resource.data) || request.resource.data.walletBalance == 0)
+        && (!('role' in request.resource.data) || request.resource.data.role != 'admin');
+      // [CUSTODY/FIX 2026-09] role ni SERVER-ONLY: mtu asiweze kujipandisha
+      // cheo kuwa admin (hii ilikuwa inawezesha privilege escalation popote
+      // rules zinapotumia users.role == 'admin').
+      allow update: if signedIn()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['walletBalance', 'role']);
+      allow delete: if false;
+    }
+
+    // [CUSTODY/FIX 2026-09] Vidhibiti vya mfumo (system/config) — mtu yeyote
+    // aliye-login anaweza kusoma (live config), lakini ADMIN pekee anaweza
+    // kuandika. Hii inarejesha uwezo wa paneli ya "WASHA/ZIMA" kusave kihalisi.
+    match /system/{doc} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // ============================================================
+    // BIASHARA (login inahitajika) — HaiPay, oda, notifications, n.k.
+    // ============================================================
+    match /sokopay_links/{id}     { allow read, write: if signedIn(); allow delete: if false; }
+
+    // ============================================================
+    // HAIPAY: vitu vilivyohifadhiwa (token/linki/QR) vya mtumiaji.
+    // Kila mtumiaji anaweza kuona vyake tu; kuandika/futa kwa umiliki.
+    // ============================================================
+    match /haipay_saved/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+    match /orders/{id}            { allow read, write: if signedIn(); allow delete: if false; }
+    match /notifications/{id}     { allow read, write: if signedIn(); }
+    match /chats/{id}             { allow read, write: if signedIn(); }
+
+    // ============================================================
+    // COMMERCE CHAT (2026-09) — mazungumzo yenye mfano wa conversation.
+    // Ufikiaji unategemea participants (si signedIn() pekee) ili mtu
+    // asiyehusika asisome mazungumzo ya wengine.
+    // ============================================================
+    match /conversations/{convId} {
+      allow read: if signedIn()
+        && resource.data.participants.hasAny([request.auth.uid]);
+      allow create: if signedIn()
+        && request.resource.data.participants.hasAll([request.auth.uid])
+        && request.resource.data.participants.size() == 2;
+      allow update: if signedIn()
+        && resource.data.participants.hasAny([request.auth.uid])
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participants']);
+      allow delete: if false;
+    }
+    match /conversations/{convId}/messages/{msgId} {
+      allow read: if signedIn()
+        && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]);
+      allow create: if signedIn()
+        && request.resource.data.senderId == request.auth.uid
+        // [CHAT BLOCK 2026-09] Backend inakataa ujumbe ikiwa kuna block.
+        && !isBlockedPair(
+             get(/databases/$(database)/documents/conversations/$(convId)).data.participants[0],
+             get(/databases/$(database)/documents/conversations/$(convId)).data.participants[1]
+           );
+      // [REACTIONS 2026-09] Mshiriki yeyote anaweza kuongeza/kuondoa `reactions`
+      // (emoji map). Uhariri wa maandishi unabaki kwa mtumaji pekee.
+      allow update: if signedIn()
+        && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
+        && (
+          (resource.data.senderId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt', 'deletedAt', 'readBy']))
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+        );
+      allow delete: if signedIn() && resource.data.senderId == request.auth.uid;
+    }
+
+    // ============================================================
+    // COMMENTS (2026-09) — maoni ya umma (threads + likes).
+    // verifiedPurchase ni SERVER-ONLY: browser haiwezi kuandika badge.
+    // ============================================================
+    match /comments/{id} {
+      allow read: if true;
+      // [COMMENTS 2026-09] Browser inaweza kuandika maoni YAKE tu, na uga
+      // zilizoidhinishwa pekee. Uga za SERVER-ONLY (verifiedPurchase,
+      // moderationStatus, authorRole, authorVerified, likeCount, replyCount)
+      // HAZIRUHUSIWI kuandikwa na client — zinadhibitiwa na callables.
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+             'targetType', 'targetId', 'authorId', 'authorName', 'authorPhoto',
+             'parentId', 'rootId', 'text', 'media', 'productRef',
+             'createdAt', 'updatedAt', 'deletedAt'
+           ]);
+      allow update: if signedIn()
+        && resource.data.authorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'media', 'editedAt', 'deletedAt']);
+      // [COMMENT-LIKES 2026-09] likeCount inaweza kubadilishwa na mtumiaji
+      // yeyote aliye-login (kwa +1/-1 pekee), lakini NYARAKA ya like
+      // (commentLikes) ndiyo inayothibitisha "like 1 kwa user/comment".
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+        && request.resource.data.likeCount is int
+        && request.resource.data.likeCount >= 0
+        && resource.data.likeCount is int;
+      allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+    }
+    match /commentLikes/{id} {
+      allow read: if true;
+      // [COMMENT-LIKES 2026-09] Client inaweza kuunda/kufuta like YAKE TU:
+      // id = uid + '__' + commentId → user HAWEZI kupiga like mara MBILI kwa
+      // comment moja (1 like kwa user/comment — spec).
+      allow create: if signedIn()
+        && id == request.resource.data.commentId + '__' + request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ============================================================
+    // [FIREBASE-NATIVE 2026-09] MAJADILIANO YA BIASHARA — bila Cloud
+    // Functions (Firestore + RTDB pekee), RULES ndiye backend:
+    //   - washiriki (buyer/seller) pekee wanaweza kuandika
+    //   - version lazima iongezeke kwa 1 (concurrency — spec §31)
+    //   - transition halali tu (state machine — spec §5, §30)
+    //   - nafasi (role/turn) inathibitishwa (spec §35)
+    //   - fields za msingi HAZIBADILIKI (spec §14)
+    // Wakati Cloud Functions zipo, njia ya server inabaki kuwa bora.
+    // ============================================================
+    function isNegoState(s) {
+      return s in ['DRAFT','OFFER_SENT','COUNTER_OFFER','AGREEMENT','CHANGE_REQUESTED',
+                   'SCOPE_CHANGE_REQUESTED','ROUTE_CHANGE_REQUESTED',
+                   'RE_NEGOTIATION','FINAL_AGREEMENT','ORDER_CREATED','COMPLETED',
+                   'REJECTED','EXPIRED','CANCELLED'];
+    }
+    // (from) -> { to: actor }  — actor ∈ buyer|seller|turn|any|system
+    function negoNext(from) {
+      return {
+        'DRAFT':            { OFFER_SENT: 'buyer', CANCELLED: 'any' },
+        'OFFER_SENT':       { AGREEMENT: 'turn', COUNTER_OFFER: 'turn', REJECTED: 'turn', SCOPE_CHANGE_REQUESTED: 'turn', ROUTE_CHANGE_REQUESTED: 'turn', CANCELLED: 'any', EXPIRED: 'system' },
+        'COUNTER_OFFER':    { AGREEMENT: 'turn', COUNTER_OFFER: 'turn', REJECTED: 'turn', SCOPE_CHANGE_REQUESTED: 'turn', ROUTE_CHANGE_REQUESTED: 'turn', CANCELLED: 'any', EXPIRED: 'system' },
+        'AGREEMENT':        { CHANGE_REQUESTED: 'buyer', SCOPE_CHANGE_REQUESTED: 'buyer', ROUTE_CHANGE_REQUESTED: 'buyer', RE_NEGOTIATION: 'buyer', ORDER_CREATED: 'buyer', CANCELLED: 'any' },
+        'CHANGE_REQUESTED': { FINAL_AGREEMENT: 'seller', AGREEMENT: 'seller', RE_NEGOTIATION: 'seller', CANCELLED: 'any' },
+        'SCOPE_CHANGE_REQUESTED': { FINAL_AGREEMENT: 'turn', AGREEMENT: 'turn', COUNTER_OFFER: 'turn', CANCELLED: 'any' },
+        'ROUTE_CHANGE_REQUESTED': { FINAL_AGREEMENT: 'turn', AGREEMENT: 'turn', COUNTER_OFFER: 'turn', CANCELLED: 'any' },
+        'RE_NEGOTIATION':   { FINAL_AGREEMENT: 'turn', RE_NEGOTIATION: 'turn', AGREEMENT: 'turn', CANCELLED: 'any', EXPIRED: 'system' },
+        'FINAL_AGREEMENT':  { ORDER_CREATED: 'buyer', CHANGE_REQUESTED: 'buyer', SCOPE_CHANGE_REQUESTED: 'buyer', ROUTE_CHANGE_REQUESTED: 'buyer', CANCELLED: 'any' },
+        'ORDER_CREATED':    { CHANGE_REQUESTED: 'buyer', CANCELLED: 'any' }
+      }.get(from, {});
+    }
+    function negoActorOk(needed, uid, r) {
+      let role = uid == r.buyerId ? 'buyer' : (uid == r.sellerId ? 'seller' : 'none');
+      // Actor model (spec §4/§6): waitingForUserId ndio chanzo cha ukweli;
+      // fallback kwa `turn` (role) kwa majadiliano ya zamani.
+      let turnRole = r.turn;
+      if (r.waitingForUserId == r.sellerId) turnRole = 'seller';
+      else if (r.waitingForUserId == r.buyerId) turnRole = 'buyer';
+      return needed == 'any'
+        || (needed == 'buyer' && role == 'buyer')
+        || (needed == 'seller' && role == 'seller')
+        || (needed == 'turn' && role == turnRole);
+    }
+
+    // ============================================================
+    // OFA (price negotiation) — buyer anaumba; washiriki wanaweza
+    // kusasisha uga chache za status (accept/counter) bila functions.
+    // ============================================================
+    match /offers/{id} {
+      allow read: if signedIn()
+        && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if signedIn()
+        && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','currentPrice','proposedPrice','counterOfferId','acceptedOrderId','expiresAt','updatedAt']);
+      allow delete: if false;
+    }
+
+    match /negotiations/{negoId} {
+      allow read: if signedIn()
+        && (resource.data.buyerId == request.auth.uid
+            || resource.data.sellerId == request.auth.uid
+            || (resource.data.conversationId is string
+                && resource.data.conversationId.size() > 0
+                && get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participants.hasAny([request.auth.uid])));
+      // Kuunda (SEND_OFFER) — mnunuzi pekee, hali ya mwanzo sahihi.
+      allow create: if signedIn()
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.sellerId is string
+        && request.resource.data.sellerId != request.auth.uid
+        && request.resource.data.version == 1
+        && request.resource.data.currentState == 'OFFER_SENT'
+        && request.resource.data.currentUnitPrice is number
+        && request.resource.data.currentUnitPrice > 0
+        && request.resource.data.quantity is number
+        && request.resource.data.quantity >= 1;
+      // Kuendeleza (amri) — washiriki pekee, version+1, transition halali.
+      allow update: if signedIn()
+        && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
+        && request.resource.data.version == resource.data.version + 1
+        && request.resource.data.currentState is string
+        && isNegoState(request.resource.data.currentState)
+        && request.resource.data.currentState != resource.data.currentState
+        && negoNext(resource.data.currentState).get(request.resource.data.currentState, '') != ''
+        && negoActorOk(negoNext(resource.data.currentState).get(request.resource.data.currentState, ''), request.auth.uid, resource.data)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['negotiationId','buyerId','sellerId','productId','productTitle','productImage','serviceId','serviceTitle','transportId','transportTitle','commerceType','currency','createdAt','originalUnitPrice','conversationId'])
+        && (request.resource.data.currentUnitPrice is number && request.resource.data.currentUnitPrice > 0
+            || request.resource.data.currentUnitPrice == null)
+        && (request.resource.data.quantity is number && request.resource.data.quantity >= 1);
+      // Ukumbusho wa kiotomatiki (spec §35) — mshiriki anaweza kusasisha
+      // lastReminderAt/lastReminderActorId PEKEE, bila kubadilisha hali/version.
+      allow update: if signedIn()
+        && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastReminderAt', 'lastReminderActorId']);
+      allow delete: if false;
+    }
+    // Audit trail (spec §41) — append-only; mwandishi ni mshiriki wa nego.
+    match /negotiation_events/{id} {
+      allow read: if signedIn()
+        && resource.data.negotiationId is string
+        && (get(/databases/$(database)/documents/negotiations/$(resource.data.negotiationId)).data.buyerId == request.auth.uid
+            || get(/databases/$(database)/documents/negotiations/$(resource.data.negotiationId)).data.sellerId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.negotiationId is string
+        && request.resource.data.commandId is string
+        && request.resource.data.actorId == request.auth.uid
+        && (get(/databases/$(database)/documents/negotiations/$(request.resource.data.negotiationId)).data.buyerId == request.auth.uid
+            || get(/databases/$(database)/documents/negotiations/$(request.resource.data.negotiationId)).data.sellerId == request.auth.uid);
+      allow update, delete: if false;
+    }
+    // Nyongeza za oda iliyolipwa (spec §24–25): washiriki wa oda wanaweza kuumba.
+    match /order_adjustments/{id} {
+      allow read: if signedIn()
+        && resource.data.parentOrderId is string
+        && (get(/databases/$(database)/documents/orders/$(resource.data.parentOrderId)).data.buyerId == request.auth.uid
+            || get(/databases/$(database)/documents/orders/$(resource.data.parentOrderId)).data.sellerId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.parentOrderId is string
+        && (get(/databases/$(database)/documents/orders/$(request.resource.data.parentOrderId)).data.buyerId == request.auth.uid
+            || get(/databases/$(database)/documents/orders/$(request.resource.data.parentOrderId)).data.sellerId == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // ============================================================
+    // BLOCK / REPORT — block ni ya mhusika; report ni ya mtoa taarifa.
+    // ============================================================
+    match /chatBlocks/{id} {
+      allow read: if signedIn()
+        && (resource.data.blockerId == request.auth.uid || resource.data.blockedId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.blockerId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.blockerId == request.auth.uid;
+    }
+    match /chatReports/{id} {
+      allow read: if signedIn()
+        && (resource.data.reportedBy == request.auth.uid
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      allow create: if signedIn() && request.resource.data.reportedBy == request.auth.uid;
+      allow update, delete: if false;
+    }
+    // [CUSTODY 2026-09] ride_requests — msingi wa chain-of-custody.
+    // Kusoma: walio-login (soko la usafiri linahitaji kuona safari zinazopatikana).
+    // Kuandika: FIELD-LEVEL — browser hairuhusiwi kugusa sehemu muhimu za custody
+    // (currentCustodian, tokeni/hash, custodyLegs, custodyStage, transferCode,
+    // nextTransporter, uthibitisho wa handover, malipo ya mwisho, n.k.).
+    // Mabadiliko ya custody yote yanapitia Cloud Functions
+    // (deliveryAccept / deliveryGenerateToken / deliveryConfirmCustody /
+    // deliveryStartTransit / deliveryComplete / deliveryDispute /
+    // deliveryRevokeTokens). driverId/driverName inaruhusiwa kubadilishwa
+    // tu iwapo inawekwa `null` (mf. breakdown/recovery) — si kwa dereva mpya.
+    match /ride_requests/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+             'currentCustodian','currentCustodianName',
+             'pickupToken','pickupTokenHash','pickupTokenRef','pickupTokenStatus','pickupTokenCreatedAt','pickupTokenExpiresAt',
+             'handoverToken','handoverTokenHash','handoverTokenRef','handoverTokenStatus','handoverTokenCreatedAt','handoverTokenExpiresAt',
+             'custodyLegs','custodyStage',
+             'nextTransporterId','nextTransporterName',
+             'handoverFromConfirmed','handoverFromConfirmedAt','activeHandoverId',
+             'transferCode','transferCodeHash','transferCodeRef','transferTokenStatus','transferTokenCreatedAt','transferTokenExpiresAt',
+             'finalPayout','verifiedPickupCount','verifiedArrivalCount',
+             'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
+             // [REQUEST ROUTING 2026-09] hali ya ofa/assignment ni server-authoritative
+             'routingStatus','routingRound','routingMatchedAt','offersCount','activeOfferId',
+             'assignmentStatus','assignedAgentId','routingMatchedAgentIds'
+           ])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['driverId','driverName'])
+            || request.resource.data.driverId == resource.data.driverId
+            || request.resource.data.driverId == null);
+      // [LIVE-FIX 2026-09] "Futa historia ya safari" (deleteRideOrder) ilikuwa
+      // inakataliwa kabisa (delete: if false) → feature haikufanya kazi live.
+      // Sasa: MTEJA (owner) anaweza kufuta safari YAKE TU, na TU ikiwa haipo
+      // kwenye custody inayoendelea (mlolongo wa makabidhiano unalindwa).
+      allow delete: if signedIn()
+        && resource.data.customerId == request.auth.uid
+        && ('status' in resource.data)
+        && !(resource.data.status in [
+             'accepted','pickup_pending','seller_confirmed_handover',
+             'transporter_confirmed_receipt','picked_up','in_transit',
+             'awaiting_handover'
+           ]);
+    }
+    // [CUSTODY 2026-09] Matukio ya makabidhiano (audit) — SERVER PEKEE
+    // (browser haiwezi kughushi timeline ya custody).
+    match /delivery_events/{id}   { allow read: if signedIn(); allow write: if false; }
+    // [CUSTODY 2026-09] Rekodi za makabidhiano (handover) — SERVER PEKEE
+    // (uthibitisho wa pandembili unafanywa na deliveryConfirmCustody).
+    match /delivery_handovers/{id}{ allow read: if signedIn(); allow write: if false; }
+    // [CUSTODY PHASE B 2026-09] Tokeni halisi zinaishi hapa (PRIVATE) — mtu
+    // yeyote aliye-login HAZIONI; ni wahusika wa safari husika pekee.
+    // Kuandika ni SERVER PEKEE.
+    match /delivery_tokens/{id} {
+      allow read: if signedIn() && resource.data.participants.hasAny([request.auth.uid]);
+      allow write: if false;
+    }
+    // [CUSTODY PHASE B 2026-09] Hesabu ya majaribio mabaya ya token — SERVER PEKEE.
+    match /custody_attempts/{id}  { allow read, write: if false; }
+    // [REQUEST ROUTING 2026-09] Ofa za Routing Engine (Agent Request Inbox).
+    // Kusoma: mteja aliyeomba au wakala aliyepewa ofa. Kuandika: SERVER PEKEE
+    // (deliveryRouteBooking / deliveryOfferAccept / deliveryOfferDecline /
+    //  deliveryRouteSweep / deliveryRouteRetry).
+    match /delivery_offers/{id} {
+      allow read: if signedIn()
+        && (resource.data.customerId == request.auth.uid
+            || resource.data.agentId == request.auth.uid
+            || (resource.data.participants is list
+                && resource.data.participants.hasAny([request.auth.uid])));
+      allow create, update, delete: if false;
+    }
+    match /shop_ledger/{id}       { allow read, write: if signedIn(); }
+    match /adminRevenue/{id}      { allow read: if signedIn(); allow write: if signedIn(); }
+    match /agents/{id}            { allow read, write: if signedIn(); }
+    match /shop_staff/{id}        { allow read, write: if signedIn(); }
+    match /stock_transfers/{id}   { allow read, write: if signedIn(); }
+    match /requests/{id}          { allow read, write: if signedIn(); }
+    match /purchase_orders/{id}   { allow read, write: if signedIn(); }
+    match /staff_attendance/{id}  { allow read, write: if signedIn(); }
+    match /shipments/{id}         { allow read, write: if signedIn(); }
+    match /shift_logs/{id}        { allow read, write: if signedIn(); }
+    match /activity_logs/{id}     { allow read, write: if signedIn(); }
+    match /suppliers/{id}         { allow read, write: if signedIn(); }
+    match /garage_services/{id}   { allow read, write: if signedIn(); }
+    match /repairs/{id}           { allow read, write: if signedIn(); }
+    match /construction_projects/{id} { allow read, write: if signedIn(); }
+
+    // ============================================================
+    // SERVER-ONLY (Cloud Functions / Admin SDK pekee) —
+    // browser haiwezi kuandika hata kama ame-login.
+    // ============================================================
+    match /wallet_ledger/{id}     { allow read: if signedIn(); allow write: if false; }
+    match /platform_stats/{id}    { allow read: if signedIn(); allow write: if false; }
+
+    // ============================================================
+    // AGENT ASSISTED ACCESS — ulinzi mkali (2026)
+    // ------------------------------------------------------------
+    // memberSecrets: PIN hash/salt ya mwanachama. Browser/wakala
+    // HAWARUHUSIWI kabisa kuisoma wala kuandika — ni server tu.
+    // ============================================================
+    match /memberSecrets/{uid} {
+      allow read: if false;
+      // [OFFLINE-MEMBER 2026-09] Wakala aliyedhinishwa anaweza KUUMBA siri ya
+      // mwanachama mpya wa offline (PBKDF2 client-side) wakati functions hazipo.
+      // Update/delete zinabaki server-authoritative (PIN, majaribio, kufunga).
+      allow create: if isApprovedAgent()
+        && uid.matches('skhm_.*')
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasAll(['pinSalt', 'pinHash'])
+        && (!('pinAttempts' in request.resource.data) || request.resource.data.pinAttempts == 0)
+        && get(/databases/$(database)/documents/users/$(uid)).data.isOfflineUser == true
+        && get(/databases/$(database)/documents/users/$(uid)).data.createdByAgentId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Uhusiano wakala↔mwanachama: wakala anaona wake tu; mwanachama wake.
+    match /agentMembers/{id} {
+      allow read: if signedIn()
+        && (resource.data.agentId == request.auth.uid || resource.data.memberId == request.auth.uid);
+      // [OFFLINE-MEMBER 2026-09] Fallback bila functions: wakala aliyedhinishwa
+      // anaunda uhusiano wake mwenyewe (ACTIVE). Status inabadilishwa na server.
+      allow create: if isApprovedAgent()
+        && request.resource.data.agentId == request.auth.uid
+        && request.resource.data.status == 'ACTIVE';
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Vikao vya msaada: mwanachama na wakala husika pekee wanaweza kusoma.
+    // Uumbaji/kuandika ni server pekee.
+    match /assistedSessions/{id} {
+      allow read: if signedIn()
+        && (resource.data.userId == request.auth.uid || resource.data.agentId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    // Kumbukumbu ya shughuli za msaada: wakala na mwanachama husika pekee.
+    match /assistedActivity/{id} {
+      allow read: if signedIn()
+        && (resource.data.userId == request.auth.uid || resource.data.agentId == request.auth.uid);
+      allow create, update, delete: if false;   // server pekee (audit isiyobadilishwa)
+    }
+
+    // ============================================================
+    // [RULES-AUDIT 2026-09] COLLECTIONS ZILIZOPOTEA — zilikuwa zinatumiwa
+    // na client lakini HAZIKUWA na block → deny-all ilikuwa inazizuia
+    // (features zilikuwa zimeshindwa kimyakimya production).
+    // Kila moja imewekwa kulingana na desturi za rules zilizopo.
+    // ============================================================
+
+    // -- Ushiriki wa mnunuzi (relational: id = uid + '__' + entityId) --
+    match /productLikes/{id} {
+      allow read: if true;
+      allow create: if signedIn()
+        && id == request.resource.data.userId + '__' + request.resource.data.productId
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+    match /productWatches/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+    match /savedProducts/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+    match /sellerFollowers/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.followerId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.followerId == request.auth.uid;
+      allow update: if false;
+    }
+    match /productPriceHistory/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+    match /recommendationEvents/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+    // Kusoma prefs za watumiaji WENGINE kunahitajika (arifa kwa wafuasi) —
+    // kwa hiyo read ni signedIn; kuandika ni uga wa MTU MWENYEWE tu.
+    match /notificationPreferences/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && uid == request.auth.uid;
+      allow delete: if false;
+    }
+    match /savedMessages/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // -- Biashara / SokoPay / Smart Cart / Logistics / Uchapishaji --
+    match /sokopay_core_transactions/{id} { allow read, write: if signedIn(); allow delete: if false; }
+    match /sokopay_tokens/{id}        { allow read, write: if signedIn(); allow delete: if false; }
+    match /smart_cart_checkouts/{id}  { allow read, write: if signedIn(); allow delete: if false; }
+    match /cart_seller_messages/{id}  { allow read, write: if signedIn(); }
+    match /seller_order_inbox/{id}    { allow read, write: if signedIn(); allow delete: if false; }
+    match /logistics_assignments/{id} { allow read, write: if signedIn(); allow delete: if false; }
+    match /logistics_companies/{id}   { allow read: if true; allow write: if signedIn(); }
+    match /transport_profiles/{id}    { allow read: if true; allow write: if signedIn(); }
+    match /driver_expenses/{id}       { allow read, write: if signedIn(); }
+    match /printing_jobs/{id}         { allow read, write: if signedIn(); }
+    match /customers/{id}             { allow read, write: if signedIn(); }
+    match /serious_deposits/{id}      { allow read, write: if signedIn(); }
+
+    // ============================================================
+    // DEFAULT: kila kingine — kataa (fail-closed).
+    // ============================================================
+    match /{document=**}          { allow read, write: if false; }
+  }
+}

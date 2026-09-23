@@ -1,0 +1,485 @@
+/* ==== css/07-market-polish.css ==== */
+/* ============================================================
+   SOKOHAI MARKETPLACE POLISH (Phase 3.4) — Home & Feed
+   ⚠️ ADDITIVE tu: hakina template ya JS kinachoabadilishwa,
+   hakuna logic. Zote ni visual (hover, shadow, snap, fades).
+   ============================================================ */
+
+/* ---------- 1) KADI ZA FEED (.feed-card-box) ---------- */
+.feed-card-box {
+    transition: transform .2s var(--skh-ease, ease-out), box-shadow .2s ease, border-color .2s ease;
+    will-change: transform;
+}
+@media (hover: hover) {
+    .feed-card-box:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--skh-shadow, 0 4px 14px rgba(15, 23, 42, .10));
+        border-color: #c7d6e6;
+        z-index: 2;
+    }
+    /* Picha inakuwa kidogo (zoom) bila kuvunja mwonekano */
+    .feed-card-box:hover .feed-img-box img {
+        transform: scale(1.05);
+    }
+}
+.feed-card-box:active { transform: scale(.975); }
+
+/* Picha: placeholder gradient laini + zoom laini */
+.feed-img-box {
+    background: linear-gradient(135deg, #eef2f7 0%, #e2e8f0 100%);
+}
+.feed-img-box img {
+    transition: transform .3s var(--skh-ease, ease-out);
+}
+
+/* Bei: msisitizo mpya */
+.feed-card-box .price {
+    letter-spacing: .2px;
+}
+
+/* Badges za mode (zina style za inline — tunapandizia juu yake kidogo) */
+.feed-card-box .boost-badge {
+    box-shadow: 0 4px 10px rgba(212, 175, 55, .45);
+}
+
+/* ---------- 2) GRID ---------- */
+.feed-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+}
+@media (max-width: 380px) {
+    .feed-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+}
+
+/* ---------- 3) SLIDERS (Zinazovuma / Karibu Nawe / Zinazotafutwa) ---------- */
+/* [DARK-BLUE FIX 2026-09] Msingi wa bluu nzito wa zamani umeondolewa —
+   sehemu hizi sasa zinatumia kadi nyepesi (.skh-section) kutoka 16-commerce-card.
+   Hakuna "duplicates" za bluu nzito wala mistari ya rangi mbili. */
+.strategy-row {
+    background: transparent !important;
+    box-shadow: none !important;
+    position: relative;
+}
+.item-slider {
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+}
+.item-slider > * { scroll-snap-align: start; }
+
+/* Kadi za slider: lift nzuri */
+.large-card {
+    transition: transform .18s var(--skh-ease, ease-out), box-shadow .18s ease;
+}
+@media (hover: hover) {
+    .large-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 22px rgba(2, 13, 28, .22);
+    }
+    .large-card:hover .card-img img { transform: scale(1.05); }
+}
+.large-card .card-img { background: #eef2f7; overflow: hidden; }
+.large-card .card-img img { transition: transform .3s var(--skh-ease, ease-out); }
+
+/* ---------- 4) SEARCH BAR ---------- */
+.search-wrap {
+    transition: box-shadow .18s ease, border-color .18s ease;
+}
+.search-wrap:focus-within {
+    border-color: var(--skh-primary, #03509d) !important;
+    box-shadow: 0 0 0 4px rgba(3, 80, 157, .12);
+}
+.search-wrap .camera-icon {
+    transition: transform .15s ease, background .15s ease;
+    border-radius: 50%;
+}
+.search-wrap .camera-icon:hover {
+    transform: scale(1.12);
+    background: rgba(3, 80, 157, .08);
+}
+
+/* ---------- 5) LOCATION BAR ---------- */
+#locationFilterBar {
+    background: linear-gradient(90deg, #f8fafc, #eef4fb) !important;
+    border-bottom: 1.5px solid #dbe6f2 !important;
+}
+#locationFilterBar input[type="checkbox"] { accent-color: var(--skh-primary, #03509d); }
+
+/* ---------- 6) FEED TITLE (Uwanja wa Mchanganyiko) ---------- */
+#feedTitleText {
+    letter-spacing: 1.2px;
+}
+
+/* ---------- 7) Loader ya infinite scroll ---------- */
+#bottomTrigger { letter-spacing: .4px; }
+
+/* ---------- Upunguzaji wa motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .feed-card-box, .large-card, .feed-img-box img, .item-slider { transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- 6) BUYER ENGAGEMENT KADI (Like/Save) — hufichwa mpaka hover ---------- */
+/* Kanuni: kadi ibaki safi; icons zinaonekana tu ukielekeza (desktop) au baada
+   ya kubofya. Active state (liked/saved) huonekana kwa rangi wakati wa hover. */
+.skh-eng-btn {
+    position: absolute;
+    top: 8px;
+    z-index: 12;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.94);
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity .18s ease, visibility .18s ease, transform .18s ease, color .18s ease, background .18s ease;
+    line-height: 0;
+}
+.skh-eng-btn svg { pointer-events: none; }
+.skh-eng-btn.card-eng-like { left: 8px; }
+.skh-eng-btn.card-eng-save { right: 8px; }
+
+/* Kadi iki-hover (desktop): icons zinaonekana kwa ulaini */
+.feed-card-box:hover .skh-eng-btn,
+.feed-card-box:focus-within .skh-eng-btn,
+.skh-eng-btn.skh-eng-touched {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Hali ACTIVE (liked/saved) — rangi zinaonekana tu wakati wa hover/touched */
+.skh-eng-btn.skh-eng-on.card-eng-like { color: #ef4444; }
+.skh-eng-btn.skh-eng-on.card-eng-save { color: #f59e0b; }
+.skh-eng-btn.skh-eng-on.card-eng-like:hover { background: #fef2f2; }
+.skh-eng-btn.skh-eng-on.card-eng-save:hover { background: #fffbeb; }
+
+/* Kwenye simu (hakuna hover): kadi ibaki SAFI — Like/Save zipo ndani ya
+   bidhaa/taarifa (product modal) na My SokoHai. */
+@media (hover: none) {
+    .feed-card-box .skh-eng-btn:not(.skh-eng-touched):not(.skh-eng-on) {
+        display: none;
+    }
+    .skh-eng-btn.skh-eng-on {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+/* ============================================================
+   [FIX 2026-09] POLISH YA BIDHAA — website-like (si "bumbwa bumbwaa")
+   ============================================================ */
+
+/* ---------- Badge ya idadi ya picha kwenye kadi ---------- */
+.photo-count-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(15, 23, 42, .72);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+    z-index: 3;
+    letter-spacing: .3px;
+}
+
+/* ---------- Kadi za feed: pembe laini + mpangilio safi ---------- */
+.feed-card-box {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #eef2f6;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15,23,42,.05);
+}
+.feed-img-box {
+    position: relative;
+    border-radius: 0;
+}
+.feed-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.feed-info-box {
+    padding: 10px 11px 11px;
+}
+.feed-info-box b {
+    display: block;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--primary-dark, #0f172a);
+    max-height: 34px;
+    overflow: hidden;
+}
+
+/* ---------- FOMU YA BIDHAA (#sellerForm): website-like ---------- */
+#sellerForm h3 {
+    letter-spacing: .4px;
+}
+#sellerForm label {
+    color: #475569;
+}
+#sellerForm input[type="text"],
+#sellerForm input[type="number"],
+#sellerForm input[type="tel"],
+#sellerForm input[type="datetime-local"],
+#sellerForm input:not([type]),
+#sellerForm select,
+#sellerForm textarea {
+    transition: border-color .15s ease, box-shadow .15s ease;
+    font-size: 14px;
+    color: #0f172a;
+    background: #fff;
+}
+#sellerForm input:focus,
+#sellerForm select:focus,
+#sellerForm textarea:focus {
+    border-color: var(--primary-blue, #00509d) !important;
+    box-shadow: 0 0 0 3px rgba(0, 80, 157, .12);
+    outline: none;
+}
+#sellerForm .universal-filter-input {
+    font-size: 13px;
+}
+/* Vichwa vya sehemu (swali) viwe nadhifu */
+#sellerForm > div[style*="f0f9ff"],
+#sellerForm > div[style*="fffbeb"] {
+    border-radius: 14px;
+}
+
+/* ---------- Vihakiki vya picha (previews) ---------- */
+#prodImagePreviews > div {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(15,23,42,.12);
+}
+#prodImagePreviews img {
+    border-radius: 12px;
+}
+
+/* ---------- Slider ya picha kwenye modal ya bidhaa ---------- */
+#pmImageSlider { scrollbar-width: none; -ms-overflow-style: none; }
+#pmImageSlider::-webkit-scrollbar { display: none; }
+#pmPrevBtn:hover, #pmNextBtn:hover { background: #fff !important; transform: translateY(-50%) scale(1.08); }
+#pmPrevBtn:active, #pmNextBtn:active { transform: translateY(-50%) scale(.95); }
+
+/* ---------- GRID: nafasi sawa kwenye skrini kubwa ---------- */
+@media (min-width: 768px) {
+    .feed-grid { gap: 16px; }
+}
+
+/* ---------- [FIX 2026-09] "Recommended for You" (likes/saves/follows) ----------
+   Kadi nadhifu iliyofungamana na sliders nyingine — si kitu kinachoelea juu. */
+#recommendedFeed {
+    background: #fff;
+    border: 1px solid #eef2f6;
+    border-radius: 14px;
+    padding: 12px 12px 4px;
+    margin: 4px 0 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+#recommendedFeed .strategy-header {
+    margin-bottom: 10px;
+    padding: 0 2px;
+}
+#recommendedFeed .large-card {
+    height: 190px;
+}
+
+/* ============================================================
+   [FIX 2026-09] LUGHA (i18n) + USAFI WA UI — humanized, block-like
+   ============================================================ */
+
+/* ---------- Switchi ya lugha (button moja → options) ---------- */
+.lang-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+.lang-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: #0f172a;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.lang-toggle:hover,
+.lang-toggle.open {
+    background: #03509d;
+    border-color: #03509d;
+    color: #ffffff;
+}
+.lang-toggle .lang-caret { color: currentColor; transition: transform .18s ease; }
+.lang-toggle.open .lang-caret { transform: rotate(180deg); }
+
+.lang-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 168px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22);
+    padding: 6px;
+    z-index: 45000;
+    position: absolute;
+    animation: langPop .16s ease;
+}
+@keyframes langPop {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.lang-dropdown-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    cursor: pointer;
+    text-align: left;
+    line-height: 1.2;
+    transition: background .14s ease, color .14s ease;
+}
+.lang-dropdown-opt:hover { background: #eef4fb; }
+.lang-dropdown-opt.active {
+    background: #03509d;
+    color: #ffffff;
+}
+.lang-dropdown-opt .lang-check {
+    width: 16px;
+    text-align: center;
+    font-weight: 900;
+    color: currentColor;
+    visibility: hidden;
+}
+.lang-dropdown-opt.active .lang-check { visibility: visible; }
+.lang-dropdown-opt .lang-opt-text { flex: 1; }
+
+/* ---------- Menyu kuu: blocks nadhifu ---------- */
+.menu-item {
+    border-radius: 14px;
+    border: 1px solid #eef2f6;
+    border-left-width: 4px;
+}
+.menu-item b {
+    letter-spacing: .3px;
+    font-size: 12px;
+}
+.menu-item span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* ---------- Vichwa vya sehemu (sliders) ---------- */
+.strategy-header {
+    padding: 0 2px;
+}
+.strategy-header b {
+    font-size: 13px;
+    letter-spacing: .5px;
+}
+
+/* ---------- Page background safi ---------- */
+.scroll-content {
+    background: #f7f9fc;
+}
+.feed-grid {
+    gap: 12px;
+}
+
+/* ---------- Fomu: blocks zenye nafasi ---------- */
+.form-box {
+    border-radius: 18px;
+}
+.form-box h3 {
+    letter-spacing: .5px;
+}
+
+/* ---------- HATUA YA 2: Modali ya Bidhaa, Engagement, My SokoHai ---------- */
+/* Seller mini-dashboard ndani ya product modal: block safi */
+#sellerMiniDash {
+    background: #f8fafc;
+    border: 1px solid #e6edf5;
+    border-radius: 14px;
+}
+
+/* Row ya Follow / Like / Save / Watch: blocks nadhifu */
+#btnFollow, #btnLike, #btnSave, #btnWatch {
+    border-radius: 12px;
+    border: 1px solid #dbe3ee;
+    background: #fff;
+    transition: transform .12s ease, background .15s ease, color .15s ease, border-color .15s ease;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+}
+#btnFollow:active, #btnLike:active, #btnSave:active, #btnWatch:active {
+    transform: scale(.97);
+}
+#btnFollow.skh-eng-active, #btnLike.skh-eng-active, #btnSave.skh-eng-active, #btnWatch.skh-eng-active {
+    background: #fff;
+}
+
+/* Recommended for You header: kadi safi juu ya feed */
+#recommendedFeed .strategy-header {
+    background: #fff;
+    border: 1px solid #e6edf5;
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+/* Quantity block */
+#pmQtyArea {
+    background: #fff;
+    border: 1px solid #e6edf5;
+    border-radius: 14px;
+}
+
+/* Comments block */
+.comments-section {
+    background: #f8fafc;
+    border: 1px solid #e6edf5;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+/* My SokoHai: vipengele vya orodha kama blocks */
+#mySokoHaiContent .list-item {
+    background: #fff;
+    border: 1px solid #e6edf5;
+    border-radius: 14px;
+    margin-bottom: 8px;
+    padding: 12px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+}
+#mySokoHaiContent > div[style*="padding:12px"] {
+    background: #f8fafc !important;
+    border: 1px solid #e6edf5 !important;
+    border-radius: 14px !important;
+}

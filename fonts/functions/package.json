@@ -1,0 +1,14 @@
+{
+  "name": "sokohai-functions",
+  "description": "SokoHai / HaiPay server-authoritative Cloud Functions (wallet, escrow, PesaPal).",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.1"
+  }
+}

@@ -1,0 +1,68 @@
+/* ==== css/00-tokens.css ==== */
+/* ============================================================
+   SOKOHAI DESIGN TOKENS (Phase 3)
+   Msingi wa rangi/nafasi/kivuli wa mfumo mzima.
+   ⚠️ Hii ni ADDITIVE tu — haibadilishi style yoyote iliyopo
+   (01-core.css na zake zinaendelea kutumika kama kawaida).
+   Matumizi mapya: var(--skh-...)
+   ============================================================ */
+:root {
+    /* --- Rangi za brand (zinazingatia 01-core) --- */
+    --skh-primary:        #1268A8;
+    --skh-soft:           #2B82BD;
+    --skh-deep:           #0B4F7A;
+    --skh-primary-dark:   #022b52;
+    --skh-primary-light:  #e8f1fb;
+    --skh-gold:           #d4af37;
+    --skh-green:          #18A982;
+    --skh-green-dark:     #0E7A63;
+    --skh-red:            #ef4444;
+    --skh-red-dark:       #b91c1c;
+    --skh-orange:         #f59e0b;
+
+    /* --- Neutrals --- */
+    --skh-ink:            #0f172a;
+    --skh-ink-soft:       #475569;
+    --skh-muted:          #64748b;
+    --skh-line:           #e2e8f0;
+    --skh-bg:             #F6F9FC;
+    --skh-text:           #173B56;
+    --skh-surface:        #ffffff;
+
+    /* --- Status --- */
+    --skh-success-bg:     #ecfdf5;
+    --skh-warn-bg:        #fffbeb;
+    --skh-danger-bg:      #fef2f2;
+    --skh-info-bg:        #eff6ff;
+
+    /* --- Radius --- */
+    --skh-radius-sm:      8px;
+    --skh-radius:         12px;
+    --skh-radius-lg:      16px;
+    --skh-radius-pill:    999px;
+
+    /* --- Shadows --- */
+    --skh-shadow-sm:      0 1px 3px rgba(15, 23, 42, 0.08);
+    --skh-shadow:         0 4px 14px rgba(15, 23, 42, 0.10);
+    --skh-shadow-lg:      0 12px 32px rgba(15, 23, 42, 0.16);
+
+    /* --- Spacing --- */
+    --skh-space-1: 4px;
+    --skh-space-2: 8px;
+    --skh-space-3: 12px;
+    --skh-space-4: 16px;
+    --skh-space-5: 24px;
+    --skh-space-6: 32px;
+
+    /* --- Typography --- */
+    --skh-font:           'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+    --skh-font-size-xs:   11px;
+    --skh-font-size-sm:   13px;
+    --skh-font-size-md:   15px;
+    --skh-font-size-lg:   18px;
+    --skh-weight-bold:    800;
+
+    /* --- Motion --- */
+    --skh-ease:           cubic-bezier(.22,1,.36,1);
+    --skh-speed:          0.22s;
+}

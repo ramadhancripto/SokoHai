@@ -1,0 +1,237 @@
+/* ============================================================
+   SOKOHAI — DELIVERY CHOICE (css/22, 2026-09)
+   ------------------------------------------------------------
+   Chaguo la hiari la usafirishaji ndani ya Cart/Checkout na
+   kichaguzi cha matangazo HALISI ya usafiri (drivers).
+   Kanuni: malipo (SokoPay) na usafirishaji vimetengwa;
+   hakuna carrier bandia/anayeumbwa na mfumo.
+   Rangi za brand: blue #1268A8, green #18A982, gold #D4AF37.
+   ============================================================ */
+
+/* ---------- Sehemu ya chaguo ndani ya Cart ---------- */
+.skh-dchoice {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
+    text-align: left;
+}
+.skh-dchoice-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 10px;
+}
+.skh-dchoice-head b { color: #0f172a; font-size: 13px; }
+.skh-dchoice-tag {
+    font-size: 12px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .03em; color: #0B4F7A;
+    background: #eaf2f9; border-radius: 999px; padding: 3px 9px;
+    white-space: nowrap;
+}
+
+.skh-dchoice-radios { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.skh-dchoice-radio {
+    position: relative;
+    display: flex; gap: 9px; align-items: flex-start;
+    border: 1.5px solid #dbe3ee; border-radius: 14px;
+    padding: 11px 12px; cursor: pointer;
+    background: #fff; transition: border-color .15s, background .15s, box-shadow .15s;
+    min-height: 58px;
+}
+.skh-dchoice-radio:hover { border-color: #bcd4e8; }
+.skh-dchoice-radio input { position: absolute; opacity: 0; pointer-events: none; }
+.skh-dchoice-radio .skh-dot {
+    flex: 0 0 auto;
+    width: 17px; height: 17px; border-radius: 50%;
+    border: 2px solid #94a3b8; margin-top: 1px;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: border-color .15s;
+}
+.skh-dchoice-radio .skh-dot::after {
+    content: ''; width: 9px; height: 9px; border-radius: 50%;
+    background: #1268A8; transform: scale(0); transition: transform .14s;
+}
+.skh-dchoice-radio.is-on { border-color: #1268A8; background: #f4f9fd; box-shadow: 0 0 0 3px rgba(18,104,168,.10); }
+.skh-dchoice-radio.is-on .skh-dot { border-color: #1268A8; }
+.skh-dchoice-radio.is-on .skh-dot::after { transform: scale(1); }
+.skh-dchoice-radio.is-on.green { border-color: #0E7A5F; background: #f2fbf8; box-shadow: 0 0 0 3px rgba(24,169,130,.12); }
+.skh-dchoice-radio.is-on.green .skh-dot { border-color: #0E7A5F; }
+.skh-dchoice-radio.is-on.green .skh-dot::after { background: #0E7A5F; }
+.skh-dchoice-radio b { display: block; font-size: 12px; color: #0f172a; line-height: 1.3; }
+.skh-dchoice-radio small { display: block; font-size: 12.5px; color: #64748b; line-height: 1.35; margin-top: 2px; }
+
+.skh-dchoice-body { margin-top: 11px; }
+.skh-dchoice-field { margin-bottom: 9px; }
+.skh-dchoice-field label {
+    display: block; font-size: 12px; font-weight: 900; color: #64748b;
+    text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px;
+}
+.skh-dchoice-field input,
+.skh-dchoice-field textarea {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid #cbd5e1; border-radius: 11px;
+    padding: 9px 11px; font-size: 12px; background: #fff; outline: none;
+    font-family: inherit;
+}
+.skh-dchoice-field input:focus,
+.skh-dchoice-field textarea:focus { border-color: #1268A8; box-shadow: 0 0 0 3px rgba(18,104,168,.12); }
+.skh-dchoice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Tangazo la usafiri lililochaguliwa / muhtasari */
+.skh-dpick-selected {
+    display: flex; gap: 10px; align-items: center;
+    border: 1px solid #9ad9c9; background: #f0faf7;
+    border-radius: 14px; padding: 10px; margin-top: 8px;
+}
+.skh-dpick-selected img {
+    width: 54px; height: 54px; border-radius: 11px; object-fit: cover;
+    background: #e2e8f0; flex: 0 0 auto;
+}
+.skh-dpick-selected .skh-dpick-sel-info { flex: 1 1 auto; min-width: 0; }
+.skh-dpick-selected b { font-size: 12.5px; color: #0f172a; display: block;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skh-dpick-selected small { display: block; color: #0E7A5F; font-size: 12.5px; font-weight: 700; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skh-dpick-sel-actions { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+.skh-dpick-mini {
+    border: 1px solid #9ad9c9; background: #fff; color: #0E7A5F;
+    border-radius: 10px; padding: 7px 11px; font-size: 13px; font-weight: 900;
+    cursor: pointer; white-space: nowrap;
+}
+.skh-dpick-mini.alt { border-color: #cbd5e1; color: #64748b; }
+.skh-dpick-note {
+    background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+    border-radius: 12px; padding: 9px 11px; font-size: 13px; line-height: 1.5;
+    margin-top: 9px;
+}
+.skh-dpick-fareline {
+    display: flex; justify-content: space-between; gap: 8px;
+    font-size: 13px; color: #475569; margin-top: 8px;
+    border-top: 1px dashed #e2e8f0; padding-top: 8px;
+}
+.skh-dpick-fareline b { color: #0f172a; }
+
+/* ---------- Modali ya kichaguzi cha matangazo halisi ---------- */
+#skhDpickModal { z-index: 100012 !important; }
+.skh-dpick-shell {
+    width: 96%; max-width: 1040px; max-height: 92vh;
+    background: #fff; border-radius: 24px; overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 74px rgba(15,23,42,.45);
+}
+.skh-dpick-head {
+    background: linear-gradient(135deg, #0f172a, #0E7A5F);
+    color: #fff; padding: 15px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.skh-dpick-head h2 { margin: 0; font-size: 16px; }
+.skh-dpick-head small { color: #ccfbf1; font-size: 12.5px; display: block; margin-top: 2px; }
+.skh-dpick-x {
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,.14); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; flex: 0 0 auto;
+}
+.skh-dpick-body { background: #f8fafc; padding: 14px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.skh-dpick-route {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+    padding: 12px; margin-bottom: 12px;
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;
+}
+.skh-dpick-route label {
+    display: block; font-size: 12px; font-weight: 900; color: #64748b;
+    text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px;
+}
+.skh-dpick-route input, .skh-dpick-route select {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid #cbd5e1; border-radius: 11px; padding: 10px;
+    font-size: 12px; background: #fff; outline: none;
+}
+.skh-dpick-route button {
+    border: none; border-radius: 11px; background: #0E7A5F; color: #fff;
+    font-size: 12px; font-weight: 900; padding: 11px 16px; cursor: pointer;
+    height: 40px; white-space: nowrap;
+}
+.skh-dpick-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+}
+.skh-dpick-card {
+    position: relative; border-radius: 18px; overflow: hidden;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.skh-dpick-card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(15,23,42,.12); }
+/* Usiruhusu kadi ya soko kufungua ukurasa ndani ya kichaguzi */
+.skh-dpick-card .feed-card-box { cursor: default; }
+.skh-dpick-actions {
+    display: flex; gap: 8px; padding: 10px 12px;
+    background: #fff; border-top: 1px solid #f1f5f9;
+}
+.skh-dpick-actions button {
+    flex: 1 1 0; min-height: 40px; border-radius: 11px;
+    font-size: 12px; font-weight: 900; cursor: pointer; border: 1px solid #cbd5e1;
+}
+.skh-dpick-view { background: #eef2f7; color: #0f172a; }
+.skh-dpick-select { background: #0E7A5F; color: #fff; border-color: #0E7A5F !important; }
+.skh-dpick-empty {
+    background: #fff; border: 1px dashed #cbd5e1; border-radius: 18px;
+    padding: 30px 20px; text-align: center; color: #64748b;
+}
+.skh-dpick-empty .skh-dpick-empty-ic {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #f1f5f9; color: #94a3b8;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+}
+.skh-dpick-empty b { color: #0f172a; font-size: 14px; display: block; margin-bottom: 6px; }
+.skh-dpick-empty p { font-size: 12px; line-height: 1.6; margin: 0 0 14px; }
+.skh-dpick-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.skh-dpick-empty-actions button {
+    border: none; border-radius: 11px; padding: 10px 15px;
+    font-size: 12px; font-weight: 900; cursor: pointer;
+}
+.skh-dpick-empty-actions .primary { background: #0E7A5F; color: #fff; }
+.skh-dpick-empty-actions .light { background: #eef2f7; color: #0f172a; }
+.skh-dpick-empty-actions .blue { background: #1268A8; color: #fff; }
+.skh-dpick-loading { text-align: center; color: #64748b; font-size: 12.5px; padding: 40px 0; }
+.skh-dpick-loading .ri-spinner {
+    display: inline-block; width: 26px; height: 26px;
+    border: 3px solid #dbe3ee; border-top-color: #0E7A5F;
+    border-radius: 50%; animation: skhdspin .8s linear infinite;
+    margin-bottom: 10px;
+}
+@keyframes skhdspin { to { transform: rotate(360deg); } }
+
+/* Hatua ya baada ya malipo (chaguo bado halijafanyika) */
+#skhDpostModal { z-index: 100013 !important; }
+.skh-dpost-shell {
+    width: 96%; max-width: 520px; max-height: 90vh; overflow: hidden;
+    background: #fff; border-radius: 24px;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 74px rgba(15,23,42,.45);
+}
+.skh-dpost-head { background: linear-gradient(135deg,#0f172a,#1268A8); color:#fff; padding:16px; }
+.skh-dpost-head h2 { margin:0; font-size:16px; }
+.skh-dpost-head small { color:#cbd5e1; font-size: 13px; display:block; margin-top:3px; }
+.skh-dpost-body { padding: 15px; overflow-y: auto; background: #f8fafc; }
+.skh-dpost-order {
+    background:#fff; border:1px solid #e2e8f0; border-radius:14px;
+    padding:10px 12px; margin-bottom:10px; font-size:12px; color:#334155;
+}
+.skh-dpost-order b { color:#0f172a; }
+.skh-dpost-actions { display:flex; gap:9px; margin-top:12px; }
+.skh-dpost-actions button {
+    flex:1 1 0; min-height:46px; border:none; border-radius:13px;
+    font-size:12.5px; font-weight:900; cursor:pointer;
+}
+.skh-dpost-actions .green { background:#0E7A5F; color:#fff; }
+.skh-dpost-actions .light { background:#eef2f7; color:#0f172a; }
+.skh-dpost-note { font-size: 13px; color:#64748b; line-height:1.55; margin-top:10px; text-align:center; }
+
+@media (max-width: 640px) {
+    .skh-dchoice-radios { grid-template-columns: 1fr; }
+    .skh-dpick-route { grid-template-columns: 1fr; }
+    .skh-dpick-route button { width: 100%; }
+    .skh-dchoice-row { grid-template-columns: 1fr; }
+}

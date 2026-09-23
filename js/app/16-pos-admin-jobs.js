@@ -13,17 +13,17 @@ function T(key, en, vars) {
 }
 
 window.submitAgent = async function(event) {
-    if(event) event.preventDefault();
+    if(event && typeof event.preventDefault === 'function') event.preventDefault();
     if(!skh.requireAuth()) return;
 
-    const name = document.getElementById('agentName').value.trim();
-    let phone = document.getElementById('agentPhone').value.trim();
-    const email = document.getElementById('agentEmail').value.trim();
-    const region = document.getElementById('agentRegion').value;
-    const bio = document.getElementById('agentBio').value.trim();
+    const name = document.getElementById('agentName')?.value?.trim();
+    let phone = document.getElementById('agentPhone')?.value?.trim();
+    const email = document.getElementById('agentEmail')?.value?.trim() || '';
+    const region = document.getElementById('agentRegion')?.value;
+    const bio = document.getElementById('agentBio')?.value?.trim();
 
     if(!name || !phone || !region || !bio) {
-        alert(T('pa_fill_agent', "Enter your Name, Phone, Region, and Description."));
+        alert(T('pa_fill_agent', "Tafadhali jaza Jina, Simu, Mkoa na Maelezo ya Uzoefu wako."));
         return;
     }
 
@@ -31,15 +31,26 @@ window.submitAgent = async function(event) {
     const txRef = "AGTStand_" + Date.now();
 
     const btn = document.getElementById('btnAgent');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = " INATUMA OMBI...";
-    btn.disabled = true;
+    const originalText = btn ? btn.innerHTML : " TUMA OMBI LAKO";
+    if (btn) {
+        btn.innerHTML = " INATUMA OMBI...";
+        btn.disabled = true;
+    }
 
     try {
+        let photoUrl = '';
+        const photoFile = document.getElementById('agentPhoto')?.files?.[0];
+        if (photoFile && typeof window.skhUploadFromFile === 'function') {
+            try {
+                const upRes = await window.skhUploadFromFile(photoFile, { folder: 'sokohai/agents' });
+                photoUrl = typeof upRes === 'string' ? upRes : (upRes && upRes.url) || '';
+            } catch(e) { console.warn('Photo upload skipped/fallback:', e); }
+        }
+
         // [FIX: MAOMBI YAFIKE KWA ADMIN] Ombi linaandikwa kwenye Firestore MARA MOJA
         // (status: pending) — hata kabla ya malipo ya ada. Admin anaona kila ombi.
         const isFreeMode = !skh.paymentGate('agent_registration');
-        const agentRef = await skh.addDoc(skh.collection(skh.db, "agents"), {
+        const agentPayload = {
             userId: skh.currentUser.uid,
             userEmail: skh.currentUser.email || '',
             fullName: name,
@@ -47,6 +58,7 @@ window.submitAgent = async function(event) {
             email: email || '',
             location: region,
             bio: bio || '',
+            photoUrl: photoUrl || '',
             status: 'pending',
             paymentStatus: isFreeMode ? 'free' : 'pending',
             isPaid: false,
@@ -54,18 +66,30 @@ window.submitAgent = async function(event) {
             paymentRef: txRef,
             source: 'agent_form',
             createdAt: new Date().toISOString()
-        });
+        };
+
+        const agentRef = await skh.addDoc(skh.collection(skh.db, "agents"), agentPayload);
         const agentDocId = agentRef.id;
 
+        // Pia weka rekodi kwenye user profile
+        try {
+            await skh.setDoc(skh.doc(skh.db, "users", skh.currentUser.uid), {
+                agentRequestStatus: 'pending',
+                agentDocId: agentDocId,
+                agentPhone: phone,
+                agentRegion: region
+            }, { merge: true });
+        } catch(e) {}
+
         if (isFreeMode) {
-            alert(T('pa_agent_sent_free', "Your Agency application has been SENT to Admin.\n\nThe AGENCY fee is off (FREE MODE) — no TSh 3,100 fee for now.\nAdmin will review and approve you."));
-            window.loadAgentDashboard();
+            alert(T('pa_agent_sent_free', "Ombi lako la Uwakala LIMETUMWA kwa Admin.\n\nAda ya UWAKALA imezimwa (FREE MODE) — hakuna ada inayohitajika kwa sasa.\nAdmin atakagua na kukuidhinisha hivi punde."));
+            if (typeof window.loadAgentDashboard === 'function') window.loadAgentDashboard();
+            else if (typeof window.goBackToMenu === 'function') window.goBackToMenu();
             return;
         }
 
         try {
-            // [PesaPal] Hosted checkout — malipo yakikamilika, 17-pesapal-return itasasisha
-            // document hii hii (agentDocId) kuwa paymentStatus: 'paid'.
+            // [PesaPal] Hosted checkout
             const pay = await window.skhPesaPalPay({
                 amount: 3100,
                 kind: 'agent_registration',
@@ -77,11 +101,17 @@ window.submitAgent = async function(event) {
             if (!pay.ok) throw new Error(pay.error || "Malipo ya ada yameshindikana.");
         } catch (payErr) {
             // Malipo hayakuanza (mf. backend haipo), lakini ombi LIMESHAFIKA kwa admin.
-            alert(T('pa_agent_sent_pending', "Your Agency application has been SENT to Admin (status: pending).\n\nThe fee (TSh 3,100) will be required before approval — you can pay later.\nReference: ") + txRef);
+            alert(T('pa_agent_sent_pending', "Ombi lako la Uwakala LIMETUMWA kwa Admin (status: pending).\n\nKumbukumbu: ") + txRef);
+            if (typeof window.goBackToMenu === 'function') window.goBackToMenu();
         }
 
-    } catch(e) { alert(T('pa_error', "Error: ") + e.message); }
-    finally { btn.innerHTML = " TUMA OMBI LAKO"; btn.disabled = false; }
+    } catch(e) { alert(T('pa_error', "Hitilafu: ") + (e && e.message ? e.message : e)); }
+    finally { 
+        if (btn) {
+            btn.innerHTML = originalText; 
+            btn.disabled = false; 
+        }
+    }
 };
 
 window.skhRefreshStats = async function() {
@@ -282,6 +312,16 @@ window.skhAdFormHtml=function(){return '<section class="adm-ad-form"><div class=
 +'<div class="adm-ad-two"><div><label>Bei / Offer Tag</label><input id="annPriceTag" maxlength="40" oninput="window.skhRenderAdminAdPreview()" placeholder="Mfano: TSh 45,000 au OFA"></div><div><label>Promotional Badge / Ribbon</label><input id="annBadgeText" maxlength="40" oninput="window.skhRenderAdminAdPreview()" placeholder="Mfano: 🔥 OFA MAALUM"></div></div>'
 +'<div class="adm-ad-badge-presets"><label style="font-size:11px;color:#65757A;margin:0 0 4px;display:block;">Quick Badges:</label><div class="adm-ad-presets"><button type="button" onclick="window.skhSetAdBadge(\'🔥 OFA MAALUM\',\'#E11D48\')">🔥 Ofa Maalum</button><button type="button" onclick="window.skhSetAdBadge(\'⚡ FLASH SALE\',\'#D97706\')">⚡ Flash Sale</button><button type="button" onclick="window.skhSetAdBadge(\'🏷️ PUNGUZO 50%\',\'#059669\')">🏷️ Punguzo 50%</button><button type="button" onclick="window.skhSetAdBadge(\'⭐ BORA\',\'#7C3AED\')">⭐ Bora</button><button type="button" onclick="window.skhSetAdBadge(\'🚚 USAFIRI BURE\',\'#0284C7\')">🚚 Usafiri Bure</button><button type="button" onclick="window.skhSetAdBadge(\'✨ MPYA\',\'#0E7A5F\')">✨ Mpya</button><button type="button" onclick="window.skhSetAdBadge(\'\',\'\')">✕ Bila Badge</button></div></div>'
 +'<div class="adm-ad-two"><div><label>Badge Style</label><select id="annBadgeStyle" onchange="window.skhRenderAdminAdPreview()"><option value="pill">Pill Tag</option><option value="ribbon">Ribbon Banner</option><option value="sticker">Stamp Sticker</option><option value="glass">Glass Tag</option></select></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div><label>Badge Color</label><input id="annBadgeColor" type="color" value="#F59E0B" oninput="window.skhRenderAdminAdPreview()"></div><div><label>Text Color</label><input id="annBadgeTextColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></div></div></div>'
++'<div class="adm-ad-two"><div><label>Badge Animation</label><select id="annBadgeAnimation" onchange="window.skhRenderAdminAdPreview()"><option value="none">Bila Animation</option><option value="pop">Pop In</option><option value="pulse">Pulse Loop</option><option value="glow">Glow Loop</option><option value="slide">Slide Right</option><option value="shake">Subtle Shake</option><option value="scale">Scale Loop</option></select></div><div><label>CTA Button Animation</label><select id="annCtaAnimation" onchange="window.skhRenderAdminAdPreview()"><option value="none">Bila Animation</option><option value="pulse">Pulse Loop</option><option value="glow">Glow Loop</option><option value="slide">Slide Up</option><option value="scale">Scale Loop</option><option value="shine">Shimmer Shine</option></select></div></div>'
++'<fieldset class="adm-ad-theme"><legend>Text Animation Engine &amp; Typography</legend><p>Ongeza animated typography kwa headline na maneno ya tangazo.</p>'
++'<div class="adm-ad-two"><div><label>Entrance Animation</label><select id="annTextAnimation" onchange="window.skhRenderAdminAdPreview()"><option value="none">Bila Entrance</option><option value="fade">Fade In</option><option value="slide-up">Slide Up</option><option value="slide-down">Slide Down</option><option value="slide-left">Slide Left</option><option value="slide-right">Slide Right</option><option value="zoom-in">Zoom In</option><option value="pop">Pop Elastic</option><option value="bounce">Bounce In</option><option value="typewriter">Typewriter Reveal</option><option value="reveal">Mask Reveal</option><option value="blur-in">Blur In</option></select></div><div><label>Emphasis (Attention)</label><select id="annTextEmphasis" onchange="window.skhRenderAdminAdPreview()"><option value="none">Bila Emphasis</option><option value="pulse">Pulse Loop</option><option value="glow">Glow Loop</option><option value="shake">Shake Attention</option><option value="wobble">Wobble</option><option value="scale">Scale Loop</option><option value="highlight">Highlight</option></select></div></div>'
++'<div class="adm-ad-two" style="margin-top:6px;"><div><label>Animation Mode</label><select id="annAnimationMode" onchange="window.skhRenderAdminAdPreview()"><option value="whole">Maandishi Yote (Whole Text)</option><option value="word">Neno kwa Neno (Word by Word)</option><option value="character">Herufi kwa Herufi (Character by Char)</option></select></div><div><label><span>Duration <b id="annDurationVal">600ms</b></span><input id="annAnimationDuration" type="range" min="200" max="2000" step="100" value="600" oninput="document.getElementById(\'annDurationVal\').textContent=this.value+\'ms\';window.skhRenderAdminAdPreview()"></label></div></div>'
++'</fieldset>'
++'<fieldset class="adm-ad-theme"><legend>Media Layer &amp; Video System</legend><p>Mpangilio na muonekano wa picha na video ya tangazo.</p>'
++'<div class="adm-ad-two"><div><label>Media Aspect Ratio</label><select id="annMediaAspect" onchange="window.skhRenderAdminAdPreview()"><option value="16:9">Landscape 16:9 (Standard)</option><option value="1:1">Square 1:1 (Feed/Card)</option><option value="4:5">Portrait 4:5</option><option value="9:16">Story 9:16</option></select></div><div><label>Object Fit Mode</label><select id="annMediaFit" onchange="window.skhRenderAdminAdPreview()"><option value="cover">Cover (Fill container)</option><option value="contain">Contain (Show whole media)</option><option value="fill">Stretch / Fill</option><option value="original">Original Size</option></select></div></div>'
++'<div class="adm-ad-two" style="margin-top:6px;"><div><label>Focal Point / Focus</label><select id="annFocalPoint" onchange="window.skhRenderAdminAdPreview()"><option value="center">Center (Katikati)</option><option value="top">Top (Juu)</option><option value="bottom">Bottom (Chini)</option><option value="left">Left (Kushoto)</option><option value="right">Right (Kulia)</option></select></div><div style="display:flex;align-items:center;gap:12px;padding-top:18px;"><label style="font-size:12px;"><input id="annVideoAutoplay" type="checkbox" checked onchange="window.skhRenderAdminAdPreview()"> Autoplay Video</label><label style="font-size:12px;"><input id="annVideoLoop" type="checkbox" checked onchange="window.skhRenderAdminAdPreview()"> Loop Video</label></div></div>'
++'<div class="adm-ad-two" style="margin-top:6px;"><div><label><span>Brightness <b id="annBrightVal">100%</b></span><input id="annBrightness" type="range" min="40" max="180" step="5" value="100" oninput="document.getElementById(\'annBrightVal\').textContent=this.value+\'%\';window.skhRenderAdminAdPreview()"></label></div><div><label><span>Contrast <b id="annContrastVal">100%</b></span><input id="annContrast" type="range" min="40" max="180" step="5" value="100" oninput="document.getElementById(\'annContrastVal\').textContent=this.value+\'%\';window.skhRenderAdminAdPreview()"></label></div></div>'
++'</fieldset>'
 +'<fieldset class="adm-ad-theme"><legend>Graphic Design &amp; Typography Tools</legend><p>Buni muonekano wa tangazo. Mabadiliko yote yanaonekana live kwenye preview papo hapo.</p>'
 +'<div class="adm-ad-color-grid"><label><span>Primary</span><input id="annPrimaryColor" type="color" value="#0E7A5F" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Accent</span><input id="annAccentColor" type="color" value="#167A91" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Headline/Text</span><input id="annTextColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Card surface</span><input id="annSurfaceColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></label></div>'
 +'<div class="adm-ad-two" style="margin-top:9px;"><div><label class="adm-ad-opacity"><span>Frame opacity <b id="annFrameOpacityValue">42%</b></span><input id="annFrameOpacity" type="range" min="8" max="100" step="1" value="42" oninput="window.skhAdOpacityChanged(this.value)"></label></div><div><label><span>Gradient Angle <b id="annGradientAngleValue">135°</b></span><input id="annGradientAngle" type="range" min="0" max="360" step="15" value="135" oninput="document.getElementById(\'annGradientAngleValue\').textContent=this.value+\'°\';window.skhRenderAdminAdPreview()"></label></div></div>'
@@ -313,9 +353,44 @@ window.skhToggleMobileAdPreview=function(){
     }
 };
 
-window.openAnnouncementFormModal=function(editId){if(!((window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin)||(skh.currentUser&&skh.currentUser.email===skh.MY_ADMIN_EMAIL))){alert('Admin authorization required.');return;}window.__editingAnnouncementId=editId||null;const existing=editId?(window.__sokohaiAnnouncementsCache||[]).find(a=>a.id===editId):null;let modal=document.getElementById('announcementFormModal');if(!modal){modal=document.createElement('div');modal.id='announcementFormModal';modal.className='overlay-menu';modal.style.cssText='z-index:9999;display:none;';document.body.appendChild(modal);}modal.innerHTML=window.skhAdFormHtml();const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};set('annCreativeType',existing?.creativeType||existing?.layoutStyle||'image_text');set('annBrand',existing?.brandName||'');set('annHeadline',existing?.headline||existing?.title||'');set('annText',existing?.description||existing?.text||'');set('annPriceTag',existing?.priceTag||existing?.price||'');set('annBadgeText',existing?.badgeText||'');set('annBadgeStyle',existing?.badgeStyle||'pill');set('annBadgeColor',existing?.badgeColor||'#F59E0B');set('annBadgeTextColor',existing?.badgeTextColor||'#FFFFFF');set('annCta',existing?.ctaLabel||'');set('annCtaStyle',existing?.ctaStyle||'solid');set('annCtaIcon',existing?.ctaIcon||'arrow');set('annLink',existing?.link||'');set('annImage',existing?.image||existing?.imageUrl||'');set('annVideo',existing?.videoUrl||'');set('annAudio',existing?.audioUrl||'');set('annLogo',existing?.logoUrl||'');set('annPrimaryColor',existing?.primaryColor||'#0E7A5F');set('annAccentColor',existing?.accentColor||'#167A91');set('annTextColor',existing?.textColor||'#FFFFFF');set('annSurfaceColor',existing?.surfaceColor||'#FFFFFF');set('annFrameOpacity',Math.round((existing?.frameOpacity??0.42)*100));set('annGradientAngle',existing?.gradientAngle??135);set('annBorderRadius',existing?.borderRadius??22);set('annFontWeight',existing?.fontWeight||'950');set('annTextAlign',existing?.textAlign||'left');set('annTextShadow',existing?.textShadow||'none');set('annStartAt',existing?.startAt?existing.startAt.slice(0,16):'');set('annEndAt',existing?.endAt?existing.endAt.slice(0,16):'');set('annPriority',existing?.priority||0);set('annStatus',existing?(existing.status||((existing.active===false)?'draft':'published')):'published');document.getElementById('annFormTitle').textContent=existing?'Edit Advertisement':'Create Advertisement';modal.style.display='flex';window.skhRenderAdminAdPreview();window.skhAdStatusChanged();window.skhAdOpacityChanged(document.getElementById('annFrameOpacity')?.value||42,false);};
+window.openAnnouncementFormModal=function(editId){if(!((window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin)||(skh.currentUser&&skh.currentUser.email===skh.MY_ADMIN_EMAIL))){alert('Admin authorization required.');return;}window.__editingAnnouncementId=editId||null;const existing=editId?(window.__sokohaiAnnouncementsCache||[]).find(a=>a.id===editId):null;let modal=document.getElementById('announcementFormModal');if(!modal){modal=document.createElement('div');modal.id='announcementFormModal';modal.className='overlay-menu';modal.style.cssText='z-index:9999;display:none;';document.body.appendChild(modal);}modal.innerHTML=window.skhAdFormHtml();const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};set('annCreativeType',existing?.creativeType||existing?.layoutStyle||'image_text');set('annBrand',existing?.brandName||'');set('annHeadline',existing?.headline||existing?.title||'');set('annText',existing?.description||existing?.text||'');set('annPriceTag',existing?.priceTag||existing?.price||'');set('annBadgeText',existing?.badgeText||'');set('annBadgeStyle',existing?.badgeStyle||'pill');set('annBadgeColor',existing?.badgeColor||'#F59E0B');set('annBadgeTextColor',existing?.badgeTextColor||'#FFFFFF');set('annCta',existing?.ctaLabel||'');set('annCtaStyle',existing?.ctaStyle||'solid');set('annCtaIcon',existing?.ctaIcon||'arrow');set('annLink',existing?.link||'');set('annImage',existing?.image||existing?.imageUrl||'');set('annVideo',existing?.videoUrl||'');set('annAudio',existing?.audioUrl||'');set('annLogo',existing?.logoUrl||'');set('annPrimaryColor',existing?.primaryColor||'#0E7A5F');set('annAccentColor',existing?.accentColor||'#167A91');set('annTextColor',existing?.textColor||'#FFFFFF');set('annSurfaceColor',existing?.surfaceColor||'#FFFFFF');set('annFrameOpacity',Math.round((existing?.frameOpacity??0.42)*100));set('annGradientAngle',existing?.gradientAngle??135);set('annBorderRadius',existing?.borderRadius??22);set('annFontWeight',existing?.fontWeight||'950');set('annTextAlign',existing?.textAlign||'left');set('annTextShadow',existing?.textShadow||'none');
+set('annBadgeAnimation',existing?.badgeAnimation||existing?.badgeAnim||'none');set('annCtaAnimation',existing?.ctaAnimation||existing?.ctaAnim||'none');
+set('annTextAnimation',existing?.textAnimation||existing?.headlineAnimation||'none');set('annTextEmphasis',existing?.textEmphasis||'none');
+set('annAnimationMode',existing?.animationMode||'whole');set('annAnimationDuration',existing?.animationDuration||600);
+set('annMediaAspect',existing?.aspectRatio||existing?.format||'16:9');set('annMediaFit',existing?.objectFit||existing?.fit||'cover');
+set('annFocalPoint',existing?.focalPoint||'center');set('annBrightness',existing?.brightness??100);set('annContrast',existing?.contrast??100);
+const vAuto=document.getElementById('annVideoAutoplay'),vLoop=document.getElementById('annVideoLoop');
+if(vAuto)vAuto.checked=existing?.videoAutoplay!==false&&existing?.autoplay!==false;
+if(vLoop)vLoop.checked=existing?.videoLoop!==false&&existing?.loop!==false;
+set('annStartAt',existing?.startAt?existing.startAt.slice(0,16):'');set('annEndAt',existing?.endAt?existing.endAt.slice(0,16):'');set('annPriority',existing?.priority||0);set('annStatus',existing?(existing.status||((existing.active===false)?'draft':'published')):'published');document.getElementById('annFormTitle').textContent=existing?'Edit Advertisement':'Create Advertisement';modal.style.display='flex';window.skhRenderAdminAdPreview();window.skhAdStatusChanged();window.skhAdOpacityChanged(document.getElementById('annFrameOpacity')?.value||42,false);};
 
-window.skhAdFormData=function(){const v=id=>(document.getElementById(id)?.value||'').trim();return{creativeType:v('annCreativeType')||'image_text',layoutStyle:v('annCreativeType')||'image_text',brandName:v('annBrand'),headline:v('annHeadline'),description:v('annText'),text:v('annText'),priceTag:v('annPriceTag'),badgeText:v('annBadgeText'),badgeStyle:v('annBadgeStyle')||'pill',badgeColor:v('annBadgeColor')||'#F59E0B',badgeTextColor:v('annBadgeTextColor')||'#FFFFFF',ctaLabel:v('annCta'),ctaStyle:v('annCtaStyle')||'solid',ctaIcon:v('annCtaIcon')||'arrow',link:v('annLink'),image:v('annImage'),imageUrl:v('annImage'),videoUrl:v('annVideo'),audioUrl:v('annAudio'),logoUrl:v('annLogo'),primaryColor:v('annPrimaryColor')||'#0E7A5F',accentColor:v('annAccentColor')||'#167A91',textColor:v('annTextColor')||'#FFFFFF',surfaceColor:v('annSurfaceColor')||'#FFFFFF',frameOpacity:Math.max(.08,Math.min(1,(Number(v('annFrameOpacity'))||42)/100)),gradientAngle:Number(v('annGradientAngle'))||135,borderRadius:Number(v('annBorderRadius'))||22,fontWeight:v('annFontWeight')||'950',textAlign:v('annTextAlign')||'left',textShadow:v('annTextShadow')||'none',startAt:v('annStartAt')?new Date(v('annStartAt')).toISOString():'',endAt:v('annEndAt')?new Date(v('annEndAt')).toISOString():'',priority:Math.max(0,Number(v('annPriority'))||0),status:v('annStatus')||'draft',active:v('annStatus')==='published',archived:false};};
+window.skhAdFormData=function(){const v=id=>(document.getElementById(id)?.value||'').trim();return{
+  creativeType:v('annCreativeType')||'image_text',layoutStyle:v('annCreativeType')||'image_text',brandName:v('annBrand'),headline:v('annHeadline'),description:v('annText'),text:v('annText'),priceTag:v('annPriceTag'),
+  badgeText:v('annBadgeText'),badgeStyle:v('annBadgeStyle')||'pill',badgeColor:v('annBadgeColor')||'#F59E0B',badgeTextColor:v('annBadgeTextColor')||'#FFFFFF',
+  badgeAnimation:v('annBadgeAnimation')||'none',badgeAnim:v('annBadgeAnimation')||'none',
+  ctaLabel:v('annCta'),ctaStyle:v('annCtaStyle')||'solid',ctaIcon:v('annCtaIcon')||'arrow',ctaAnimation:v('annCtaAnimation')||'none',ctaAnim:v('annCtaAnimation')||'none',
+  link:v('annLink'),image:v('annImage'),imageUrl:v('annImage'),videoUrl:v('annVideo'),audioUrl:v('annAudio'),logoUrl:v('annLogo'),
+  aspectRatio:v('annMediaAspect')||'16:9',format:v('annMediaAspect')||'16:9',objectFit:v('annMediaFit')||'cover',fit:v('annMediaFit')||'cover',
+  focalPoint:v('annFocalPoint')||'center',
+  focalX:v('annFocalPoint')==='left'?20:v('annFocalPoint')==='right'?80:50,
+  focalY:v('annFocalPoint')==='top'?20:v('annFocalPoint')==='bottom'?80:50,
+  videoAutoplay:!!document.getElementById('annVideoAutoplay')?.checked,
+  videoLoop:!!document.getElementById('annVideoLoop')?.checked,
+  autoplay:!!document.getElementById('annVideoAutoplay')?.checked,
+  loop:!!document.getElementById('annVideoLoop')?.checked,
+  brightness:Number(v('annBrightness'))||100,contrast:Number(v('annContrast'))||100,
+  textAnimation:v('annTextAnimation')||'none',headlineAnimation:v('annTextAnimation')||'none',textEmphasis:v('annTextEmphasis')||'none',
+  animationMode:v('annAnimationMode')||'whole',animationDuration:Number(v('annAnimationDuration'))||600,
+  animation:{
+    enabled:v('annTextAnimation')!=='none'||v('annTextEmphasis')!=='none',
+    entrance:v('annTextAnimation')||'none',
+    emphasis:v('annTextEmphasis')||'none',
+    mode:v('annAnimationMode')||'whole',
+    duration:Number(v('annAnimationDuration'))||600,
+    delay:0,stagger:100,repeat:1,easing:'ease-out'
+  },
+  primaryColor:v('annPrimaryColor')||'#0E7A5F',accentColor:v('annAccentColor')||'#167A91',textColor:v('annTextColor')||'#FFFFFF',surfaceColor:v('annSurfaceColor')||'#FFFFFF',frameOpacity:Math.max(.08,Math.min(1,(Number(v('annFrameOpacity'))||42)/100)),gradientAngle:Number(v('annGradientAngle'))||135,borderRadius:Number(v('annBorderRadius'))||22,fontWeight:v('annFontWeight')||'950',textAlign:v('annTextAlign')||'left',textShadow:v('annTextShadow')||'none',startAt:v('annStartAt')?new Date(v('annStartAt')).toISOString():'',endAt:v('annEndAt')?new Date(v('annEndAt')).toISOString():'',priority:Math.max(0,Number(v('annPriority'))||0),status:v('annStatus')||'draft',active:v('annStatus')==='published',archived:false
+};};
 window.skhRenderAdminAdPreview=function(){
     const host=document.getElementById('annPreview');if(!host)return;
     const a=window.skhAdFormData();

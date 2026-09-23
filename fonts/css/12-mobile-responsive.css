@@ -1,0 +1,532 @@
+/* ==== css/12-mobile-responsive.css ==== */
+/* ============================================================
+   SOKOHAI — RESPONSIVE: VIOO TOFAUTI (Phone / Tablet / Desktop)
+   Lengo: mfumo ujibadilishe kwa kila kioo. Vitufe viweze
+   kuonekana vizuri na kubofya kwa urahisi kwenye SIMU.
+   ============================================================ */
+
+/* ---------- 1) UKURASA MSINGI: usiruhusu kuvuja upana ---------- */
+html, body {
+    overflow-x: hidden;
+}
+body {
+    min-height: 100vh;
+}
+
+/* ---------- 2) TOP NAV — usibane kwenye simu ---------- */
+/* Simu (<=480px): Usimamizi inakuwa ICON TU (neno linafichwa),
+   mapengo yanapungua, chapa inakaa vizuri. */
+@media (max-width: 480px) {
+    .top-nav-row {
+        padding: 10px 12px !important;
+        gap: 8px;
+    }
+    .brand-text {
+        font-size: 14px !important;
+    }
+    .menu-btn {
+        font-size: 22px !important;
+    }
+    .top-nav-icons {
+        gap: 9px !important;
+        font-size: 18px !important;
+    }
+    /* [FIX 2026-09] NENO "USIMAMIZI" LAZIMA LIONEKANE KWENYE SIMU —
+       halifichwa tena; linabanwa kwa fonti/padding ndogo badala yake. */
+    .usimamizi-btn {
+        padding: 6px 9px !important;
+        gap: 4px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        letter-spacing: 0 !important;
+    }
+    .usimamizi-btn b {
+        display: inline !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+    }
+    .usimamizi-btn svg { width: 12px !important; height: 12px !important; flex-shrink: 0; }
+    .top-nav-icons [data-skh-icon] {
+        font-size: 18px !important;
+    }
+}
+
+/* Simu ndogo sana (<=360px): bana zaidi BILA kuficha neno */
+@media (max-width: 360px) {
+    .brand-text { font-size: 13px !important; }
+    .top-nav-icons { gap: 6px !important; }
+    .usimamizi-btn { padding: 5px 8px !important; font-size: 12px !important; gap: 3px !important; }
+    .usimamizi-btn b { font-size: 12px !important; }
+    .usimamizi-btn svg { width: 11px !important; height: 11px !important; }
+    /* Kifungo cha lugha kibane ili neno "Usimamizi" lipate nafasi */
+    .lang-toggle { padding: 5px 7px !important; }
+    .lang-caret { display: none; }
+}
+
+/* ---------- 3) UPAA WA CHINI (Bottom Nav) + Kitufe cha "+" ---------- */
+@media (max-width: 480px) {
+    .main-nav-icons {
+        padding: 4px 6px 8px !important;
+        gap: 0 !important;
+    }
+    .nav-tab {
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+    }
+    .nav-tab svg {
+        width: 16px !important;
+        height: 16px !important;
+        margin-bottom: 3px !important;
+    }
+    /* [FIX NAV 2026-09-14] Labels zilikuwa zinakatika ("NYUMBANI" -> "NYUMBAN")
+       kwenye simu za 320-360px. Chanzo: UPPERCASE + weight 900 + letter-spacing
+       huongeza upana ~35%. Suluhisho: herufi za kawaida (si CAPS), uzito mdogo
+       na ukubwa unaobadilika kulingana na upana halisi wa skrini. */
+    .nav-tab span {
+        font-size: clamp(10px, 2.9vw, 12px) !important;
+        font-weight: 700 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: clip;
+        max-width: 100%;
+    }
+    /* Kitufe cha "+" kisifunike kwa vidole */
+    .sell-circle-glow {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    .sell-text-btn { font-size: 24px !important; }
+    /* Usalama kwa simu zenye notch */
+    .bottom-area-wrapper {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+}
+
+/* ---------- 4) VITUFE: ukubwa wa kugusa (touch target) ---------- */
+/* Kwenye modali/fomu, vitufe vidogo vinapandishwa kimo ili
+   kubofya kwa raha na kidole kwenye simu. */
+@media (max-width: 480px) {
+    #productModal button,
+    #chatModal button,
+    #cartModal button,
+    #plusMenu button,
+    #modeMenuModal button,
+    .form-box button {
+        min-height: 42px;
+    }
+    /* Vitufe vya duara (fungua ✕ / zoom +-) visipandishwe kimo */
+    #productModal button[style*="border-radius:50%"],
+    #productModal button[style*="border-radius: 50%"],
+    #chatModal button[style*="border-radius:50%"],
+    #chatModal button[style*="border-radius: 50%"] {
+        min-height: 0;
+    }
+    /* Maandishi ya vitufe yasikatike / yasivujike */
+    button, .menu-item, .menu-item-new {
+        max-width: 100%;
+    }
+}
+
+/* ---------- 5) PRODUCT MODAL — vifungo vya kununua ---------- */
+@media (max-width: 380px) {
+    #pmActionArea {
+        gap: 10px !important;
+    }
+    /* "Weka Cart" na "Chat Naye" ziwe safu moja yenye nafasi */
+    #pmActionArea > div[style*="display:flex"] {
+        gap: 8px !important;
+    }
+    #pmActionArea button {
+        font-size: 13px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        white-space: nowrap;
+    }
+    /* Chagua Qty isiingiliane */
+    #pmQtyArea {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* ---------- 6) MENU ZA USAFIRISHAJI / HUDUMA (tabs juu) ---------- */
+@media (max-width: 480px) {
+    .market-modes-nav,
+    .service-modes-nav,
+    .delivery-modes-nav {
+        padding: 4px 6px !important;
+        gap: 4px !important;
+    }
+    .mode-tab-btn {
+        padding: 8px 10px !important;
+        font-size: 12.5px !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}
+
+/* ---------- 7) MENU ZA USIMAMIZI / PLUS — ziteleze vizuri ---------- */
+@media (max-width: 480px) {
+    #modeMenuModal > div,
+    #plusMenu {
+        max-height: 88vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    .menu-item, .menu-item-new {
+        padding: 12px 14px !important;
+    }
+}
+
+/* ---------- 8) FOMU ZA KUPOST (seller/service/delivery) ---------- */
+@media (max-width: 480px) {
+    .form-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 94vh !important;
+        padding: 20px 16px !important;
+    }
+    .form-box input,
+    .form-box select,
+    .form-box textarea {
+        font-size: 16px !important; /* Epuka auto-zoom ya iOS */
+    }
+}
+
+/* ---------- 9) CHAT — sanduku la kuandika lisionekane vibaya ---------- */
+@media (max-width: 480px) {
+    #chatModal {
+        padding: 0 !important;
+    }
+    #chatModal > div {
+        border-radius: 0 !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-width: 100% !important;
+    }
+    #chatMessages { padding: 12px 10px !important; }
+    /* Sanduku la kuandika lisifichwe na home-indicator (iPhone) wala bottom nav */
+    #chatModal > div > div:last-child {
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
+
+/* ---------- 10) KADI ZA BIDHAA — gridi safi kwenye simu ---------- */
+@media (max-width: 480px) {
+    .feed-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+        gap: 10px !important;
+        padding: 0 10px;
+    }
+    .feed-info-box b { font-size: 12px !important; }
+    /* [R8 MOBILE CARDS] Bei 16px (readable na kasi): kwaraza ya kujíficha; spec ya kadi inahtaji bei kuonekana */
+    .feed-info-box .price { font-size: 16px !important; }
+}
+@media (max-width: 360px) {
+    .feed-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)) !important; }
+}
+
+/* ---------- 11) DASHBOARD (Usimamizi) kwenye simu ---------- */
+@media (max-width: 480px) {
+    .ct-workspace { padding: 10px !important; }
+    /* Vitufe vya dashboard visibanwe */
+    .ct-header-actions { flex-wrap: wrap; gap: 8px !important; }
+    .ct-header-actions button {
+        font-size: 13px !important;
+        padding: 9px 14px !important;
+    }
+}
+
+/* ---------- 12) Kitufe cha Rudi (SokoPay) — ionekane vizuri ---------- */
+@media (max-width: 480px) {
+    .sp-header-controls .sp-back-btn {
+        order: -1; /* ionekane upande wa kushoto kwanza */
+        height: 34px !important;
+    }
+}
+
+/* ---------- 13) Epuka maandishi kusimama wima kwenye vitufe na chips ---------- */
+@media (max-width: 480px) {
+    button, a, .menu-item b, .menu-item-new span {
+        overflow-wrap: break-word;
+        word-break: normal;
+        writing-mode: horizontal-tb !important;
+        text-orientation: mixed !important;
+    }
+    .ch-head-menu button,
+    .mode-tab-btn,
+    .ch-tab,
+    .dc88-tab,
+    .skh-de-feed-tab,
+    .skh-de-chip,
+    .skh-k-chip,
+    .usimamizi-btn,
+    .nav-tab span {
+        white-space: nowrap !important;
+        writing-mode: horizontal-tb !important;
+        text-orientation: mixed !important;
+        flex-shrink: 0;
+    }
+}
+
+/* ---------- 14) UPAA WA ENEO (Location bar) kwenye simu ---------- */
+@media (max-width: 480px) {
+    #locationFilterBar {
+        padding: 7px 10px !important;
+        gap: 8px !important;
+        flex-wrap: wrap;
+    }
+    #locationFilterBar #userLocationStatus {
+        font-size: 12.5px !important;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #regionFilterSelect {
+        max-width: 140px !important;
+        font-size: 12.5px !important;
+        padding: 6px 8px !important;
+    }
+}
+
+
+
+/* ============================================================
+   15) USIMAMIZI DASHBOARDS (Control Tower / Cockpit) kwenye simu
+   ============================================================ */
+
+/* --- 15a) Hamburger ☰ + Sidebar (drawer) --- */
+@media (max-width: 900px) {
+    /* Hamburger ☰ ionekane (kwa sasa inafichwa na display:none inline) */
+    .ct-menu-toggle-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        flex-shrink: 0;
+        color: #0f172a !important;
+        font-size: 22px !important;
+        line-height: 1;
+    }
+
+    /* Drawer iko nje ya kioo kabisa ikifungwa — haionekani hata kidogo */
+    .ct-sidebar {
+        width: 300px !important;
+        max-width: 86vw;
+        left: -320px !important;
+        transition: left 0.28s ease, box-shadow 0.28s ease;
+        padding: 18px 14px calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+        overflow-y: auto !important;
+    }
+    .ct-sidebar.active {
+        left: 0 !important;
+        box-shadow: 10px 0 45px rgba(2, 6, 23, 0.4) !important;
+    }
+
+    /* Kivuli cha nyuma (backdrop) kinachojiondoa chenyewe */
+    body:has(.ct-sidebar.active)::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        z-index: 999997;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
+    /* Vitufe vya dashboard (sidebar) — vikubwa, rahisi kubofya kwa kidole */
+    .ct-sidebar-menu-btn {
+        min-height: 48px !important;
+        font-size: 14px !important;
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+        width: 100% !important;
+        box-sizing: border-box;
+        margin: 2px 0;
+        display: flex;
+        align-items: center;
+    }
+    .ct-sidebar-group-title {
+        font-size: 12.5px !important;
+        letter-spacing: 1px !important;
+        margin-top: 18px !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* Header bar ya dashboard — iruhusiwe ku-wrap, isibanwe */
+    .ct-header-bar {
+        flex-wrap: wrap !important;
+        padding: 10px 12px !important;
+        height: auto !important;
+        min-height: 56px;
+        gap: 8px !important;
+        row-gap: 8px !important;
+    }
+    .ct-header-bar > div {
+        max-width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .ct-header-bar b {
+        white-space: normal;
+    }
+}
+
+/* --- 15b) Simu (<=640px): gridi za ndani zijipange safi --- */
+@media (max-width: 640px) {
+    /* Gridi za KPI/stat (repeat N) -> nguzo zinazojibadilisha (2 kwa mstari simuni) */
+    #richDashboardContainer [style*="grid-template-columns"][style*="repeat("]:not([style*="auto-fit"]) {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    }
+    /* Mipangilio ya fr (1fr 1fr, 2.2fr 1.3fr, 1fr 1.2fr 1fr...) -> safu moja */
+    #richDashboardContainer [style*="grid-template-columns"]:not([style*="repeat("]):not([style*="auto-fit"]) {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Vitufe vyote vya ndani ya dashboard viwe vya kugusa vizuri */
+    #richDashboardContainer button {
+        min-height: 42px;
+    }
+}
+
+/* --- 15c) Simu ndogo (<=480px): header, toggles, majedwali --- */
+@media (max-width: 480px) {
+    /* Ficha utafutaji — hauna nafasi simuni */
+    .ct-header-search {
+        display: none !important;
+    }
+    /* POS na vitufe vya header visibanwe */
+    .ct-pos-btn {
+        padding: 9px 13px !important;
+        font-size: 12px !important;
+    }
+
+    /* Toggle sw-l (admin) — kubwa, wazi, rahisi kugusa */
+    .sw-l {
+        min-height: 46px !important;
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+        border-radius: 10px !important;
+    }
+
+    /* Majedwali ya dashboard yateleze kwa mlalo bila kuvunja ukurasa */
+    #richDashboardContainer table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+    }
+
+    /* Dashboard ijaze kioo kizima (bila mapengo ya pembeni) */
+    #dashboardViews {
+        padding: 0 !important;
+    }
+    #richDashboardContainer > div {
+        max-width: 100%;
+    }
+    .ct-workspace {
+        padding: 12px !important;
+        gap: 14px !important;
+    }
+}
+
+/* ---------- CHAT: sanduku la kuandika lisifichike KAMWE ---------- */
+/* (Global — kwa simu na desktop) */
+#chatMessages {
+    min-height: 0 !important;   /* ruhusu kupungua ndani ya flex ili input ibaki juu */
+}
+#chatModal > div {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 100vh;
+    max-height: 100dvh;
+}
+#chatModal > div > div:last-child {
+    flex-shrink: 0 !important;  /* sanduku la kuandika lisifinywe wala kufichwa */
+    position: relative;
+    z-index: 5;
+    background: #F0F0F0;
+}
+/* Sanduku la kuandika (composer) liweze kuonekana DAIMA — hakuna kufichwa */
+#chatComposer {
+    flex: 0 0 auto !important;
+    min-height: 62px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+#chatComposer input#chatInput {
+    display: block !important;
+    visibility: visible !important;
+    min-width: 0 !important;
+}
+#chatModal > div {
+    max-height: 100vh;
+    max-height: 100dvh;
+}
+/* Kuhakikisha chat inakaa juu ya bottom-nav kila wakati */
+#chatModal, #chatListModal {
+    z-index: 7800 !important;
+}
+/* Menu ya pembeni (sidebar) ijaze urefu wote na kusogea vizuri */
+.skh-menu-drawer { height: 100%; }
+.skh-menu-scroll { -webkit-overflow-scrolling: touch; }
+
+/* Bottom nav isifiche maudhui ya mwisho wa ukurasa */
+@media (max-width: 480px) {
+    .scroll-content {
+        padding-bottom: 150px !important;
+    }
+}
+
+/* ---------- SIDEBAR: sehemu zinazokunjwa (accordion) ---------- */
+.skh-menu-sec-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    margin-top: 8px;
+    font-size: 12.5px;
+    font-weight: 950;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    background: #eef2f7;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+.skh-menu-sec-h .skh-sec-chev {
+    font-size: 12px;
+    transition: transform .2s ease;
+    color: #64748b;
+}
+.skh-menu-sec-h.open .skh-sec-chev {
+    transform: rotate(180deg);
+}
+.skh-menu-sec-body {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-top: 7px;
+}
+.skh-menu-sec-body.skh-sec-hidden {
+    display: none !important;
+}
+.skh-menu-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 14px 4px;
+}

@@ -89,8 +89,26 @@ import { skh } from './00-bootstrap.js';
     // Inafunguliwa nje (tests + mahali pengine): vuta jina la account halisi.
     window.skhResolveWelcomeName = resolveWelcomeName;
 
-    /* Trigger ya welcomeModal (haikuwepo kabisa): onyesha mara moja kwa kifaa.
-       Usionyeshe kama modal nyingine tayari wazi — tusivunje onboarding nannyengine. */
+    /* [WELCOME-ALERT] Onyesha welcome alert modal kwa jina la mtumiaji */
+    window.skhShowWelcomeAlert = function (name) {
+        try {
+            var wm = byId('welcomeModal');
+            if (!wm) return;
+            var nameEl = byId('welcomeName');
+            if (name && String(name).trim() && !/^mtumiaji$/i.test(String(name).trim())) {
+                if (nameEl) nameEl.textContent = String(name).trim();
+            } else {
+                resolveWelcomeName(function (nm) {
+                    if (nameEl) nameEl.textContent = nm || 'Mwanachama';
+                });
+            }
+            wm.style.display = 'flex';
+        } catch (e) {
+            console.warn('[welcome] show error:', e);
+        }
+    };
+
+    /* Trigger ya welcomeModal: onyesha kwa wageni au kwenye kiungo mara ya kwanza */
     setTimeout(function () {
         try {
             var wm = byId('welcomeModal');
@@ -109,7 +127,7 @@ import { skh } from './00-bootstrap.js';
                 if (el) el.textContent = nm;
             });
         } catch (e) { console.warn('[63] welcome wiring:', e && e.message); }
-    }, 1400);
+    }, 600);
 
     /* ------------------------------------------------------------------ 2
        proceedToSelfPickup() — §13: mtumiaji hahitaji usafiri wa SokoHai.

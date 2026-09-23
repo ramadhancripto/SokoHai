@@ -1,0 +1,80 @@
+<!-- 4. Kitufe Kipya cha Kategoria & Sliders -->
+    <div class="cat-trigger-btn" id="topFilterToggles" onclick="openCategoryModal()">
+        <span id="activeCategoryText" data-i18n="cat_all">Kategoria: Bidhaa Zote Sokoni</span>
+        <span style="background: var(--gold); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">+</span>
+    </div>
+
+    <!-- Hapa ndipo Subcategories na Filters zitateleza kutokea kulia -->
+    <div class="dynamic-sliders-container" id="dynamicSliders">
+        <b data-i18n="filter_type" style="font-size: 11px; color: #94a3b8; text-transform: uppercase; margin-bottom: -5px;">Aina ya Bidhaa (Telezesha ↔)</b>
+        <div class="slide-row-wrap" id="subcatRow"></div>
+
+        <b data-i18n="filters_label" style="font-size: 11px; color: #94a3b8; text-transform: uppercase; margin-bottom: -5px;">Vichujio (Filters)</b>
+        <div class="slide-row-wrap" id="filterRow"></div>
+    </div>
+</div>
+
+
+<div class="scroll-content">
+    
+    <!-- =========================================
+         A) BUYER VIEW (DEFAULT SOKO) 
+         ========================================= -->
+    <div id="buyerView">
+        <div class="search-strategy">
+            <section class="strategy-row skh-section">
+                <div class="strategy-header skh-section-head">
+                    <div class="skh-section-title">
+                        <span class="skh-section-icon skh-section-icon--hot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+                        <div class="skh-section-text">
+                            <b data-i18n="sec_trending">Zinazovuma Sasa</b>
+                            <small data-i18n="sec_trending_sub">Bidhaa zinazovuma wiki hii</small>
+                        </div>
+                    </div>
+                    <button class="skh-seeall" onclick="document.getElementById('mainFeed').scrollIntoView({behavior: 'smooth'})" aria-label="Ona zote"><span data-i18n="see_all">Ona zote</span></button>
+                </div>
+                <div class="item-slider" id="slider1"></div>
+            </section>
+            <section class="strategy-row skh-section">
+                <div class="strategy-header skh-section-head">
+                    <div class="skh-section-title">
+                        <span class="skh-section-icon skh-section-icon--nearby"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                        <div class="skh-section-text">
+                            <b data-i18n="sec_nearby">Karibu Nawe</b>
+                            <small data-i18n="sec_nearby_sub">Kutoka kwa wauzaji wa karibu yako</small>
+                        </div>
+                    </div>
+                    <button class="skh-seeall" onclick="document.getElementById('mainFeed').scrollIntoView({behavior: 'smooth'})" aria-label="Ona zote"><span data-i18n="see_all">Ona zote</span></button>
+                </div>
+                <div class="item-slider" id="slider2"></div>
+            </section>
+            <section class="strategy-row skh-section">
+                <div class="strategy-header skh-section-head">
+                    <div class="skh-section-title">
+                        <span class="skh-section-icon skh-section-icon--search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg></span>
+                        <div class="skh-section-text">
+                            <b data-i18n="sec_searched">Zinazotafutwa Sana</b>
+                            <small data-i18n="sec_searched_sub">Wanunuzi wanatafuta nini sasa</small>
+                        </div>
+                    </div>
+                    <button class="skh-seeall" onclick="document.getElementById('mainFeed').scrollIntoView({behavior: 'smooth'})" aria-label="Ona zote"><span data-i18n="see_all">Ona zote</span></button>
+                </div>
+                <div class="item-slider" id="slider3"></div>
+            </section>
+        </div>
+        
+        <div class="main-feed">
+            <div id="recommendedFeed" style="display:none; margin-bottom:6px;"></div>
+            <div style="font-size:16px;font-weight:800;color:var(--primary-dark);margin:22px 2px 14px;display:flex;align-items:center;gap:8px;" id="feedTitleText" data-i18n="feed_title"> Uwanja wa Mchanganyiko</div>
+            <div class="feed-grid" id="mainFeed"></div>
+            <div id="bottomTrigger" style="text-align:center; padding:40px 10px; font-size:14px; font-weight:bold; color:var(--primary-blue); display:none;">
+                <span style="display:inline-block; animation: spin 1s linear infinite; font-size:20px;"></span><br><span data-i18n="loading_more">Inatafuta matokeo zaidi...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         B) COMPREHENSIVE DASHBOARD VIEWS (CONTROL TOWER)
+         ========================================= -->
+    <div id="dashboardViews" class="dashboard-view" style="display: none; padding: 0; margin: 0; min-height: 100vh;">
+       <div id="richDashboardContainer" style="width: 100%; min-height: 100vh; text-align: left;">

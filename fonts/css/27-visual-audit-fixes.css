@@ -1,0 +1,201 @@
+/* ==== css/27-visual-audit-fixes.css ====
+   ============================================================================
+   SOKOHAI — VISUAL/INTERACTION AUDIT FIXES (2026-09-16)
+   ----------------------------------------------------------------------------
+   Marekebisho HAYA YOTE yana proof ya runtime (Playwright rects/screenshots).
+   Hakuna rewrite: ni adjustments zilizo na targeted selectors (scope:
+   #productModal / header chips tu) ambazo huzishinda legacy rules kwa
+   load-order (faili hii inapakiwa Mwishoni) — hazivunji design tokens.
+   ============================================================================ */
+
+/* ------------------------------------------------------------------ F-V1 (P1)
+   HERO YA BIDHAA: kuziba "indicator clutter".
+   MATUKIO YA RUNTIME (390px, rects halisi):
+     - .pm-hero-bottom (views + counter) iliyotakiwa 'bottom:12' ilikuwa
+       ikitawanyika CENTER (top 109, chini ya df-nav pill) — offset parent
+       ambaye sio .pm-hero (legacy rule nyingine inabatilisha bottom anchor).
+     - .pm-dots (bottom:14) nayo ilifukuzwa juu (top 143) — duplicate ya
+       counter (#pmImageCounter "1/3") na arrows zilizopo tayari.
+   SULUHISHO (de-dup, §29 hoja iko: kuwa na indicator MOJA ya picha):
+     1) views pill + counter zinakuwa safu MOJA safi chini ya kitufe cha
+        kufunga (close) — pembeni kulia, hazigusani na chochote.
+     2) dots zimezimwa (dupliketi — taarifa ile ile ipo kwenye counter). */
+#productModal .pm-hero {
+    position: relative; /* hakikisha absolute children wana-anchor hapa */
+}
+#productModal .pm-hero-bottom {
+    top: 112px;
+    bottom: auto;
+    left: auto;
+    right: 12px;
+    width: auto;
+    justify-content: flex-end;
+    gap: 8px;
+    z-index: 6;
+}
+#productModal .pm-dots {
+    display: none; /* info iko kwenye #pmImageCounter + arrows (legacy dup) */
+}
+
+/* ------------------------------------------------------------------ F-V2 (P3)
+   TOUCH TARGETS ndani ya modal — vitu vidogo lakini clickable:
+   runtime: .pm-arrow 34x34, .pm-circle 38x38, .pm-rail-grid-btn 28px.
+   SUA: ongeza HIT AREA bila kubadilisha umbo (pseudo-element hit-zone). */
+/* .pm-arrow tayari ni position:absolute (base CSS) — hit zone kwa pseudo tu.
+   (.pm-circle haitaguswa: zoom/close zinaategemea flex row ya hero-top) */
+#productModal .pm-arrow::before {
+    content: '';
+    position: absolute;
+    inset: -5px;          /* 34→44 hit zone — si visual */
+    border-radius: 50%;
+}
+#productModal .pm-rail-grid-btn {
+    min-height: 36px;
+    padding: 8px 14px;    /* ilikuwa 28px — sasa inafikika kidole */
+}
+
+/* ------------------------------------------------------------------ F-V3 (P3)
+   DUPLICATE LOCATION: "Dodoma" ilionekana mbili mfululizo —
+   ndani ya seller card (.pm-seller-loc, top 368) na chini ya kichwa
+   (.skh-loc, top 419). Location inabaki MOJA (chini ya title). */
+#productModal .pm-hero-seller .pm-seller-loc {
+    display: none;
+}
+
+/* ------------------------------------------------------------------ F-V4 (P3)
+   QTY ROW: label "IDADI" iligandamizwa na kitufe cha kupunguza (−) —
+   row haina gap wala margin (runtime: overlap dhahiri screenshot). */
+#productModal .pm-qty-row {
+    gap: 10px;
+    align-items: center;
+}
+#productModal .pm-qty-lbl {
+    flex: 0 0 auto;
+}
+#productModal .pm-qty-row .pm-stock,
+#productModal .pm-qty-row #pmStockInfo {
+    margin-inline-start: auto; /* "Zipo N" iishie kulia — row inapumua */
+}
+
+/* ------------------------------------------------------------------ F-V5 (P3)
+   HEADER CHIPS — touch targets ndogo (runtime):
+   .usimamizi-btn 24px juu, .menu-btn span 20x34, .skh-seller-mini 22px. */
+.usimamizi-btn {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+}
+.menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    margin: -8px;       /* ongeza hit-zone bila kusogezesha layout */
+}
+.feed-mini .skh-seller-mini, .skh-seller-mini {
+    min-height: 30px;
+    align-items: center;
+}
+
+/* ------------------------------------------------------------------ F-V6 (P3)
+   FOCUS STATE ya picha/thumb chips ndani ya modal — taratibu za keyboard:
+   vitufe vya chips visipoteze focus-ring (inaonekana vizuri default, lakini
+   outline inaingeana kwenye bg nyeupe — imarisho kidogo). */
+#productModal .pm-chip:focus-visible,
+#productModal .pm-bar-btn:focus-visible,
+#productModal .pm-qty-btn:focus-visible {
+    outline: 2px solid #1268A8;
+    outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ F-V10 (P1)
+   NEGOTIATION-FORM HEADER — h2 "Jadili Nauli ya Usafiri" ilikuwa
+   isiyosomeka: 13-ui-polish.css `h1..h6{color:var(--primary-dark)}` (global)
+   + 25-typography.css `h2{font-size:var(--fs-2xl)!important}` zimemkula
+   muundo wa component (.nf-head = gradient ya #0B4F7A→#1268A8).
+   RUNTIME proof: computed color rgb(3,80,157) juu ya gradient ya bluu,
+   font 20px badala ya 15.5px — kichwa kinaonekana "kimechanganyika".
+   Restore design intention ya 17-negotiation-form.css (.nf-head h2). */
+.nf-shell .nf-head h2 {
+    color: #fff;                          /* white juu ya gradient ya bluu */
+    font-size: 15.5px !important;         /* reclaim component sizing */
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 0;
+}
+
+/* ------------------------------------------------------------------ F-V11 (P2)
+   RAIL ZA "ZINAZOFANANA / RECOMMENDED" — user: "zile kwa chini zimebanwa
+   sana mtu anashindwa kuona vizuri". Card 140px, picha 96px, title 12px —
+   ndogo mno. Panuia kidogo (bila kubadilisha muundo wa rail wala kubadilisha
+   architecture): width 152px, picha 110px, title 13px, bei 14px. */
+#productModal .pm-rel-card { flex: 0 0 152px; }
+#productModal .pm-rel-img { height: 110px; }
+#productModal .pm-rel-title { font-size: 13px; min-height: 36px; }
+#productModal .pm-rel-price { font-size: 14px; }
+#productModal .pm-rel-body { padding: 9px 11px 11px; }
+/* Modal sections zisile "uda wa kubana" juu — recoup nafasi kiasi. */
+#productModal .pm-sec { padding-top: 10px; padding-bottom: 10px; }
+
+/* ------------------------------------------------------------------ F-V12 (P1)
+   NAV-BACK BAR kama FLEX-SIBLING ya modal shell:
+   `56-nav-back.js::injectBack(el)` ina-insert `.skh-backbar` DIRECT kwenye
+   overlay div (ambayo iko `display:flex; justify-content:center`) — suluhisho
+   la `.skh-backbar{position:sticky;top:0}` linafanya kazi TU ikitiwa ndani ya
+   CARD unayosoea. iliyotiwa kwenye OVERLAY inakuwa flex item KANDO ya shell.
+   RUNTIME proof (probe21): sellerProfileModal ya width:96% ilibainishwa
+   kuwa contextWidth 181px halafu ikakimbilia pembeni (left:201) — modal
+   ilikuwa isioneone kama nusu-upana bali nusu-upana hramani sawa kulia.
+   SULUHISHO: backbar muhara absolute juu-kushoto — ifanane kwa cover. */
+.overlay-menu > .skh-backbar {
+    position: absolute;
+    top: 14px; left: 14px; right: auto;
+    z-index: 40;
+    padding: 0;
+    background: rgba(246, 249, 252, .92);
+    border-bottom: none;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(2, 16, 38, .16);
+    width: auto;
+}
+
+/* ------------------------------------------------------------------ F-V13 (P1)
+   [HORIZONTAL WRITING MODE & NO VERTICAL TEXT ON MOBILE/PORTRAIT]
+   Kuhakikisha maandishi na herufi zote zinalala mlalo (horizontal) daima,
+   bila kusimama wima wala kukatika herufi moja moja kwenye kioo cha simu. */
+html, body, div, span,
+h1, h2, h3, h4, h5, h6, p,
+a, em, small, strong, b, u, i,
+ul, ol, li, form, label,
+table, tr, th, td,
+header, footer, nav, section,
+button, input, select, textarea {
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+}
+
+/* Kuzuia kuvunjika kwa herufi wima kwenye vichwa, vitufe na tabs za simu */
+@media (max-width: 600px) {
+    .ch-hbtn, .skh-discover-back, .skh-discover-gear {
+        flex-shrink: 0 !important;
+    }
+    .ch-head-menu, .ch-plus-menu, #chPlusMenu {
+        min-width: 220px !important;
+        width: max-content !important;
+        max-width: 90vw !important;
+    }
+    .ch-head-menu button, .ch-plus-item {
+        white-space: nowrap !important;
+    }
+    .skh-discover-title, .skh-discover-sub, .ch-head-id b, .ch-head-sub {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .ch-tab, .mode-tab-btn, .dc88-tab, .skh-de-feed-tab, .skh-de-chip, .skh-k-chip {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+

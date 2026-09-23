@@ -1,0 +1,151 @@
+/* ==== css/08-dashboard-pos-polish.css ==== */
+/* ============================================================
+   SOKOHAI DASHBOARD + POS POLISH (Phase 3.5) — additive tu
+   A) KPI cards na widgets za dashboard ya muuzaji
+   B) Sidebar menu
+   C) POS (scoped kwa IDs — search, cart, quick buttons, submit)
+   Hakuna layout/logic inayobadilika.
+   ============================================================ */
+
+/* ---------- A) KPI CARDS ---------- */
+.sp-kpi-card {
+    position: relative;
+    transition: transform .18s var(--skh-ease, ease-out), box-shadow .18s ease, border-color .18s ease;
+    overflow: hidden;
+}
+.sp-kpi-card::after {
+    /* Mwangaza mwepu wa juu (sheen) */
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .55), transparent);
+    pointer-events: none;
+}
+@media (hover: hover) {
+    .sp-kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--skh-shadow, 0 4px 14px rgba(15, 23, 42, .10));
+        border-color: #b9c9db;
+    }
+}
+.sp-kpi-value {
+    font-variant-numeric: tabular-nums; /* tarakimu zinapangwa vizuri */
+    letter-spacing: .2px;
+}
+.sp-kpi-sub { letter-spacing: .3px; }
+
+/* ---------- WIDGET CARDS ---------- */
+.sp-widget-card {
+    transition: box-shadow .18s ease, transform .18s ease;
+}
+@media (hover: hover) {
+    .sp-widget-card:hover {
+        box-shadow: var(--skh-shadow, 0 4px 14px rgba(15, 23, 42, .10));
+    }
+}
+
+/* ---------- B) SIDEBAR MENU ---------- */
+.menu-item-new {
+    position: relative;
+    transition: background .15s ease, color .15s ease, transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.menu-item-new:active { transform: scale(.985); }
+.menu-item-new span {
+    transition: transform .15s ease;
+}
+@media (hover: hover) {
+    .menu-item-new:hover span { transform: scale(1.15); }
+    .menu-item-new:hover {
+        background: #eef4fb;
+    }
+}
+.menu-item-new:focus-visible {
+    outline: 2px solid var(--skh-primary, #03509d);
+    outline-offset: 2px;
+}
+
+/* ---------- C) POS ---------- */
+/* Chaguo la kitendo (Action Center) */
+#posActionType {
+    transition: border-color .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+}
+#posActionType:focus {
+    border-color: var(--skh-primary, #03509d) !important;
+    box-shadow: 0 0 0 4px rgba(3, 80, 157, .12);
+    outline: none;
+}
+
+/* Tafuta bidhaa / barcode */
+#posSearchInput {
+    font-size: 16px !important; /* inazuia iOS auto-zoom */
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+#posSearchInput:focus {
+    border-color: var(--skh-primary, #03509d) !important;
+    box-shadow: 0 0 0 4px rgba(3, 80, 157, .12);
+    outline: none;
+}
+/* Kitufe cha Scan */
+#posSaleArea button[type="button"]:not(.pos-quick-btn) {
+    transition: transform .14s ease, filter .14s ease;
+}
+@media (hover: hover) {
+    #posSaleArea button[type="button"]:not(.pos-quick-btn):hover {
+        transform: translateY(-1px);
+        filter: brightness(1.15);
+    }
+}
+#posSaleArea button[type="button"]:not(.pos-quick-btn):active { transform: scale(.97); }
+
+/* Kikapu cha POS: scrollbar nzuri */
+#posCartItems::-webkit-scrollbar { width: 5px; }
+#posCartItems::-webkit-scrollbar-track { background: transparent; }
+#posCartItems::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+/* Safu za kikapu */
+.pos-cart-item-row {
+    transition: background .14s ease, border-color .14s ease, transform .14s ease;
+}
+@media (hover: hover) {
+    .pos-cart-item-row:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        transform: translateX(2px);
+    }
+}
+
+/* Quick buttons (filters) */
+.pos-quick-btn {
+    transition: all .15s var(--skh-ease, ease);
+    -webkit-tap-highlight-color: transparent;
+}
+.pos-quick-btn:active { transform: scale(.94); }
+.pos-quick-btn:focus-visible {
+    outline: 2px solid var(--skh-primary, #03509d);
+    outline-offset: 2px;
+}
+
+/* Jumla kuu — msisitizo */
+#posCartTotal { font-variant-numeric: tabular-nums; letter-spacing: .3px; }
+
+/* Matukio ya kiasi (cash received / change / return / supplier) */
+#posCashReceived, #posCustomerDeposit, #posCustomerName, #posCustomerPhone,
+#posSearchDebtorInp, #posSearchReturnInp {
+    font-size: 16px !important; /* iOS zoom-fix */
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+#posCashReceived:focus, #posCustomerDeposit:focus, #posCustomerName:focus,
+#posCustomerPhone:focus, #posSearchDebtorInp:focus, #posSearchReturnInp:focus {
+    border-color: var(--skh-primary, #03509d) !important;
+    box-shadow: 0 0 0 4px rgba(3, 80, 157, .10);
+    outline: none;
+}
+
+/* ---------- Upunguzaji wa motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .sp-kpi-card, .sp-widget-card, .menu-item-new, .menu-item-new span,
+    .pos-cart-item-row, .pos-quick-btn, #posSaleArea button { transition: none !important; }
+}
