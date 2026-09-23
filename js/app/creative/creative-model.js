@@ -41,12 +41,60 @@ export const GRADIENT_PRESETS = Object.freeze({
   Bright:['#7F00FF','#E100FF']
 });
 
+export const MULTIMEDIA_PRESETS = Object.freeze({
+  static: { id: 'static', label: 'Image + Text (Static)', duration: 0, required: ['image', 'text'] },
+  motion: { id: 'motion', label: 'Motion Poster (Animated Text)', duration: 6, required: ['image', 'text'] },
+  short_video: { id: 'short_video', label: 'Short Video (≤ 30s)', duration: 30, maxDuration: 30, required: ['video'] },
+  audio_visual: { id: 'audio_visual', label: 'Audio-Visual (Image + Audio)', duration: 30, maxDuration: 30, required: ['image', 'audio'] },
+  video_audio: { id: 'video_audio', label: 'Video + Audio Mix (≤ 30s)', duration: 30, maxDuration: 30, required: ['video', 'audio'] },
+  full_mix: { id: 'full_mix', label: 'Full Multimedia Mix (Image + Video + Audio)', duration: 30, maxDuration: 30, required: ['image', 'video', 'audio', 'text'] },
+  story: { id: 'story', label: 'Story Format (9:16)', format: 'story', duration: 15, maxDuration: 30 },
+  feed: { id: 'feed', label: 'Feed Card (1:1 / 4:5)', format: 'square', duration: 15, maxDuration: 30 },
+  landscape: { id: 'landscape', label: 'Landscape Banner (16:9)', format: 'landscape', duration: 15, maxDuration: 30 }
+});
+
 export const PATTERNS = Object.freeze([
   'dots','grid','lines','waves','geometric','circles','squares','diagonal'
 ]);
 
 export const TEXTURES = Object.freeze([
   'none','paper','grain','noise','fabric','canvas','concrete','vintage','abstract'
+]);
+
+export const ENTRANCE_ANIMATIONS = Object.freeze([
+  'none','fade','slide-up','slide-down','slide-left','slide-right','zoom-in','pop','bounce','typewriter','reveal','blur-in'
+]);
+
+export const EMPHASIS_ANIMATIONS = Object.freeze([
+  'none','pulse','glow','shake','bounce','scale','wobble','highlight'
+]);
+
+export const EXIT_ANIMATIONS = Object.freeze([
+  'none','fade-out','slide-out','zoom-out','blur-out'
+]);
+
+export const ANIMATION_MODES = Object.freeze([
+  'whole','word','character','line'
+]);
+
+export const BADGE_ANIMATIONS = Object.freeze([
+  'none','pop','pulse','glow','slide','scale','shake'
+]);
+
+export const CTA_ANIMATIONS = Object.freeze([
+  'none','fade','slide','pulse','glow','scale','shine'
+]);
+
+export const FIT_MODES = Object.freeze([
+  'cover','contain','fill','original'
+]);
+
+export const FOCAL_POINTS = Object.freeze([
+  'center','top','bottom','left','right','top-left','top-right','bottom-left','bottom-right'
+]);
+
+export const ASPECT_RATIOS = Object.freeze([
+  '1:1','4:5','9:16','16:9'
 ]);
 
 export const TEXT_STYLE_PRESETS = Object.freeze({
@@ -77,7 +125,27 @@ const clean=s=>String(s==null?'':s).replace(/[\u0000-\u001f]/g,' ').trim();
 const color=(v,f='#0E7A5F')=>/^#[0-9a-f]{6}$/i.test(String(v||''))?String(v):f;
 
 export function makeLayer(type,patch={}){
-  const common={id:uid(),type,x:120,y:120,width:620,height:type==='text'?150:420,rotation:0,opacity:1,zIndex:1,locked:false,visible:true,name:type[0].toUpperCase()+type.slice(1),groupId:null};
+  const common={
+    id:uid(),type,x:120,y:120,width:620,height:type==='text'?150:type==='audio'?80:420,
+    rotation:0,opacity:1,zIndex:1,locked:false,visible:true,
+    name:type[0].toUpperCase()+type.slice(1),groupId:null,
+    src:patch.src||'',originalSrc:patch.originalSrc||patch.src||'',
+    videoUrl:patch.videoUrl||(type==='video'?patch.src||'':''),
+    audioUrl:patch.audioUrl||(type==='audio'?patch.src||'':''),
+    posterUrl:patch.posterUrl||'',
+    focalPoint:patch.focalPoint||'center',
+    startTime:Number.isFinite(+patch.startTime)?+patch.startTime:0,
+    endTime:Number.isFinite(+patch.endTime)?+patch.endTime:30,
+    duration:Number.isFinite(+patch.duration)?+patch.duration:30,
+    crop:{x:0,y:0,width:100,height:100,zoom:1,...(patch.crop||{})},
+    videoMeta:{autoplay:true,muted:true,loop:true,trimStart:0,trimEnd:30,duration:0,controls:false,...(patch.videoMeta||{})},
+    audioMeta:{volume:1,fadeIn:0,fadeOut:0,loop:true,trimStart:0,trimEnd:30,duration:0,track:'background',...(patch.audioMeta||{})},
+    animation:{
+      enabled:false,entrance:'none',emphasis:'none',exit:'none',mode:'whole',
+      duration:600,delay:0,stagger:100,repeat:1,direction:'normal',easing:'ease-out',
+      trigger:'load',intensity:5,...(patch.animation||{})
+    }
+  };
   const style={
     fill:'#102A43',fontFamily:'Inter',fontSize:72,fontWeight:800,fontStyle:'normal',textDecoration:'none',
     letterSpacing:0,lineHeight:1.1,textAlign:'left',textTransform:'none',
@@ -88,11 +156,23 @@ export function makeLayer(type,patch={}){
     filter:{brightness:100,contrast:100,saturation:100,blur:0,temperature:0,sharpness:0,exposure:100,highlights:100,shadows:100},
     flipX:false,flipY:false,
     frameShape:'rounded',
-    cropX:0,cropY:0,zoom:1,fit:'cover',
-    originalSrc:'',
+    fit:'cover',focalX:50,focalY:50,
+    overlayColor:'#000000',overlayOpacity:0,
+    cropX:0,cropY:0,zoom:1,
+    originalSrc:patch.originalSrc||patch.src||'',
     cutoutDataUrl:''
   };
-  return {...common,content:type==='text'?'Andika hapa':'',style,...patch,style:{...style,...(patch.style||{}),filter:{...style.filter,...((patch.style&&patch.style.filter)||{})}}};
+  return {
+    ...common,
+    content:type==='text'?'Andika hapa':'',
+    style,
+    ...patch,
+    crop:{...common.crop,...(patch.crop||{})},
+    videoMeta:{...common.videoMeta,...(patch.videoMeta||{})},
+    audioMeta:{...common.audioMeta,...(patch.audioMeta||{})},
+    animation:{...common.animation,...(patch.animation||{})},
+    style:{...style,...(patch.style||{}),filter:{...style.filter,...((patch.style&&patch.style.filter)||{})}}
+  };
 }
 
 function defaultLayers(c){
@@ -114,6 +194,9 @@ export function createCreative(context={}){
     ownerId:context.ownerId||'',
     type:context.publicationType||'advertisement',
     format,
+    preset:context.preset||'static',
+    duration:Math.min(30,Math.max(1,Number(context.duration)||30)),
+    maxDuration:30,
     canvas:{width:p.width,height:p.height,safe:p.safe,bleed:0,custom:false},
     background:{
       type:'gradient',color:'#0E7A5F',color2:'#075C7A',angle:135,opacity:1,
@@ -122,6 +205,16 @@ export function createCreative(context={}){
       filter:{brightness:100,contrast:100,saturation:100,blur:0}
     },
     layers:[],
+    audioMix:{
+      originalVideoVolume:1,
+      musicVolume:0.8,
+      voiceVolume:1,
+      muteOriginal:false,
+      ...(context.audioMix||{})
+    },
+    timeline:context.timeline||[
+      {id:'tl_0',layerId:'main_media',startTime:0,endTime:30,type:'media'}
+    ],
     brandKit:null,
     linkedEntity:context.sourceId?{type:context.sourceType||'custom',id:context.sourceId}:null,
     destination:context.destination||null,
@@ -140,6 +233,11 @@ export function normalizeCreative(input){
   const base=createCreative({format:input&&input.format}); if(!input||typeof input!=='object')return base;
   const out={
     ...base,...input,
+    preset:input.preset||base.preset,
+    duration:Math.min(30,Math.max(1,Number(input.duration)||base.duration)),
+    maxDuration:30,
+    audioMix:{...base.audioMix,...(input.audioMix||{})},
+    timeline:Array.isArray(input.timeline)?input.timeline:base.timeline,
     canvas:{...base.canvas,...(input.canvas||{})},
     background:{...base.background,...(input.background||{}),filter:{...base.background.filter,...((input.background&&input.background.filter)||{})}}
   };
@@ -155,6 +253,9 @@ export function normalizeCreative(input){
     height:clamp(l.height,1,out.canvas.height*3),
     rotation:clamp(l.rotation,-360,360),
     opacity:clamp(l.opacity,0,1),
+    startTime:Math.max(0,Number(l.startTime)||0),
+    endTime:Math.min(30,Number(l.endTime)||30),
+    duration:Math.max(0,Number(l.duration)||30),
     zIndex:Number.isFinite(+l.zIndex)?+l.zIndex:i+1,
     content:clean(l.content),
     groupId:l.groupId||null
@@ -339,6 +440,16 @@ export function validateCreative(c,{forPublish=false}={}){
     if(l.type==='text'&&!clean(l.content))errors.push({code:'EMPTY_TEXT',layerId:l.id,message:`${l.name} has no text.`});
     if(l.x+l.width<0||l.y+l.height<0||l.x>x.canvas.width||l.y>x.canvas.height)errors.push({code:'OUTSIDE',layerId:l.id,message:`${l.name} is outside the canvas.`});
     if(l.type==='image'&&!/^https:\/\/|^data:image/i.test(l.src||''))errors.push({code:'IMAGE',layerId:l.id,message:`${l.name} image is not loaded.`});
+    if(l.type==='video'){
+      if(!/^https:\/\/|^blob:/i.test(l.src||l.videoUrl||''))errors.push({code:'VIDEO',layerId:l.id,message:`${l.name} video URL is not loaded.`});
+      const vDur = (l.videoMeta?.trimEnd - l.videoMeta?.trimStart) || l.videoMeta?.duration || l.duration || 0;
+      if(vDur > 30){
+        errors.push({code:'VIDEO_DURATION',layerId:l.id,message:`Video "${l.name}" inazidi sekunde 30 (Duration: ${Math.round(vDur)}s). Maximum ni 30s.`});
+      }
+    }
+    if(l.type==='audio'&&l.src&&!/^https:\/\/|^blob:|^data:audio/i.test(l.src||l.audioUrl||'')){
+      errors.push({code:'AUDIO',layerId:l.id,message:`${l.name} audio URL si sahihi.`});
+    }
   });
   if(forPublish){
     const internal=!!(x.destination&&x.destination.type&&x.destination.id),external=!!(x.destination&&x.destination.type==='external'&&/^https:\/\//i.test(x.destination.url||''));

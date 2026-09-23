@@ -32,3 +32,13 @@
 .cs-theme-picks button:nth-child(4) i{background:linear-gradient(135deg,#7F1D1D,#FBBF24)}
 .adm-ad-advanced{width:100%;margin-top:12px;border-style:dashed!important}.adm-ad-advanced-note{font-size:11px;color:#65757A;line-height:1.4;margin:6px 0 0}
 @media(max-width:900px){.skh-cs:not(.advanced) .skh-cs-layout{grid-template-columns:1fr}.skh-cs:not(.advanced) .skh-cs-left{display:grid;transform:translateY(0);top:auto;max-height:46vh}.skh-cs:not(.advanced) .skh-cs-stage{padding:18px 8px 48vh}.skh-cs:not(.advanced) .skh-cs-work footer{display:none}.skh-cs:not(.advanced) .skh-cs-top{z-index:9}}
+
+/* Timeline Scrubber & Multimedia Bar */
+.cs-timeline-bar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:#0F172A;color:#F8FAFC;border-top:1px solid #1E293B;z-index:3}
+.cs-tb-controls{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.cs-tb-controls button{background:#1E293B;color:#F8FAFC;border:1px solid #334155;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer}
+.cs-tb-controls button:hover{background:#0E7A5F;border-color:#0E7A5F}
+#csTimelineScrubber{flex:1;accent-color:#10B981;cursor:pointer}
+.cs-tb-vol{display:flex;align-items:center;gap:6px}
+.cs-tb-vol button{background:#1E293B;color:#F8FAFC;border:1px solid #334155;border-radius:6px;padding:4px 6px;font-size:12px;cursor:pointer}
+#csMasterVolume{accent-color:#10B981;cursor:pointer}

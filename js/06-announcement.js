@@ -45,11 +45,31 @@
 
   function mediaHtml(a,title,type) {
     const image=safeUrl(a.image || a.imageUrl || a.mediaUrl || a.photo), video=safeUrl(a.videoUrl), poster=safeUrl(a.posterUrl || image), audio=safeUrl(a.audioUrl);
+    const aspect=String(a.aspectRatio || a.format || '16:9').replace(':','-');
+    const fit=String(a.objectFit || a.fit || 'cover').toLowerCase();
+    const focalX=Number.isFinite(Number(a.focalX))?Number(a.focalX):50;
+    const focalY=Number.isFinite(Number(a.focalY))?Number(a.focalY):50;
+    const brightness=Number.isFinite(Number(a.brightness))?Number(a.brightness):100;
+    const contrast=Number.isFinite(Number(a.contrast))?Number(a.contrast):100;
+    const saturation=Number.isFinite(Number(a.saturation))?Number(a.saturation):100;
+    const blur=Number.isFinite(Number(a.blur))?Number(a.blur):0;
+    const overlayColor=safeColor(a.overlayColor, '#000000');
+    const overlayOpacity=Number.isFinite(Number(a.overlayOpacity))?Number(a.overlayOpacity):0;
+
+    const filterStyle=(brightness!==100||contrast!==100||saturation!==100||blur>0)?`filter:brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) blur(${blur}px);`:'';
+    const posStyle=`object-position:${focalX}% ${focalY}%;`;
+    const mediaInlineStyle=filterStyle+posStyle;
+
+    const overlayHtml=overlayOpacity>0?`<div class="skh-ann-media-overlay" style="position:absolute;inset:0;z-index:3;background:${overlayColor};opacity:${overlayOpacity};pointer-events:none;"></div>`:'';
+
     let visual='';
-    if (type.indexOf('video')!==-1 && video) visual='<video class="skh-ann-video" muted playsinline controls preload="metadata" '+(poster?'poster="'+esc(poster)+'" ':'')+'><source src="'+esc(video)+'"></video>';
-    else if (image) visual='<img class="skh-ann-media-blur" src="'+esc(image)+'" alt="" aria-hidden="true"><img class="skh-ann-media-main" src="'+esc(image)+'" alt="'+esc(title)+'" loading="eager" decoding="async">';
+    if (type.indexOf('video')!==-1 && video) {
+      visual='<video class="skh-ann-video" muted playsinline controls preload="metadata" '+(poster?'poster="'+esc(poster)+'" ':'')+'style="'+mediaInlineStyle+'"><source src="'+esc(video)+'"></video>'+overlayHtml;
+    } else if (image) {
+      visual='<img class="skh-ann-media-blur" src="'+esc(image)+'" alt="" aria-hidden="true"><img class="skh-ann-media-main" src="'+esc(image)+'" alt="'+esc(title)+'" loading="eager" decoding="async" style="'+mediaInlineStyle+'">'+overlayHtml;
+    }
     if (!visual) return '';
-    return '<div class="skh-ann-media">'+visual+(audio?'<audio class="skh-ann-audio" controls preload="none" src="'+esc(audio)+'"></audio>':'')+'</div>';
+    return '<div class="skh-ann-media aspect-'+esc(aspect)+' fit-'+esc(fit)+'">'+visual+(audio?'<audio class="skh-ann-audio" controls preload="none" src="'+esc(audio)+'"></audio>':'')+'</div>';
   }
 
   function countLabel(value, label) {
@@ -64,14 +84,16 @@
     const initial=esc((brand.charAt(0)||'S').toUpperCase());
     const metrics=countLabel(a.likeCount||a.likesCount,'likes')+countLabel(a.viewCount||a.views,'views')+countLabel(a.clickCount||a.clicks,'clicks');
     
-    // Badge / Sticker / Ribbon
+    // Badge / Sticker / Ribbon + Animation
     const badgeText=String(a.badgeText||'').trim();
     const badgeColor=safeColor(a.badgeColor, '#F59E0B');
     const badgeTextColor=safeColor(a.badgeTextColor, '#FFFFFF');
     const badgeStyle=String(a.badgeStyle||'pill').toLowerCase();
+    const badgeAnim=String(a.badgeAnimation||a.badgeAnim||'none').toLowerCase();
+    const badgeAnimClass=badgeAnim&&badgeAnim!=='none'?' badge-anim-'+esc(badgeAnim):'';
     let badgeHtml='';
     if (badgeText) {
-      badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+';"><span class="skh-badge-inner">'+esc(badgeText)+'</span></div>';
+      badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+badgeAnimClass+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+';"><span class="skh-badge-inner">'+esc(badgeText)+'</span></div>';
     }
 
     // Custom design properties
@@ -91,11 +113,46 @@
     const ctaIcon=String(a.ctaIcon||'arrow');
     const ctaIconHtml=ctaIcon==='cart'?'🛒':ctaIcon==='phone'?'📞':ctaIcon==='whatsapp'?'💬':ctaIcon==='star'?'⭐':'→';
 
+    // Animation Engine settings
+    const anim=typeof a.animation==='object'&&a.animation?a.animation:{};
+    const entrance=String(a.textAnimation||a.headlineAnimation||anim.entrance||'none').toLowerCase();
+    const emphasis=String(a.textEmphasis||anim.emphasis||'none').toLowerCase();
+    const animMode=String(a.animationMode||anim.mode||'whole').toLowerCase();
+    const animDuration=Number(a.animationDuration||anim.duration)||600;
+    const animDelay=Number(a.animationDelay||anim.delay)||0;
+    const animStagger=Number(a.animationStagger||anim.stagger)||100;
+    const ctaAnim=String(a.ctaAnimation||a.ctaAnim||'none').toLowerCase();
+    const ctaAnimClass=ctaAnim&&ctaAnim!=='none'?' cta-anim-'+esc(ctaAnim):'';
+
+    // Animated title formatting (whole, word-by-word, character-by-character)
+    let titleFormatted='';
+    if (entrance!=='none'||emphasis!=='none') {
+      const enterClass=entrance!=='none'?' anim-enter-'+esc(entrance):'';
+      const emphClass=emphasis!=='none'?' anim-emph-'+esc(emphasis):'';
+      if (animMode==='word') {
+        const words=title.split(/\s+/);
+        titleFormatted=words.map((w,i)=>{
+          const delay=animDelay+(i*animStagger);
+          return '<span class="skh-anim-word'+enterClass+'" style="animation-delay:'+delay+'ms;--anim-duration:'+animDuration+'ms;">'+esc(w)+'</span>';
+        }).join(' ');
+      } else if (animMode==='character') {
+        const chars=[...title];
+        titleFormatted=chars.map((ch,i)=>{
+          const delay=animDelay+(i*Math.round(animStagger/2));
+          return ch===' '?' ':'<span class="skh-anim-char'+enterClass+'" style="animation-delay:'+delay+'ms;--anim-duration:'+animDuration+'ms;">'+esc(ch)+'</span>';
+        }).join('');
+      } else {
+        titleFormatted='<span class="skh-anim-text'+enterClass+emphClass+'" style="display:inline-block;--anim-duration:'+animDuration+'ms;--anim-delay:'+animDelay+'ms;">'+esc(title)+'</span>';
+      }
+    } else {
+      titleFormatted=esc(title);
+    }
+
     // Copy block
     const titleStyleAttr='font-weight:'+esc(fontWeight)+';text-align:'+esc(textAlign)+';'+(fontSize?'font-size:'+fontSize+'px!important;':'')+(textShadow==='subtle'?'text-shadow:0 2px 8px rgba(0,0,0,0.25);':textShadow==='strong'?'text-shadow:0 4px 16px rgba(0,0,0,0.45);':'');
-    const copy=withText?'<div class="skh-ann-title-wrap">'+(priceTag?'<span class="skh-ann-price-pill">'+esc(priceTag)+'</span>':'')+'<strong class="skh-ann-title" style="'+titleStyleAttr+'">'+esc(title)+'</strong></div>'+(message&&message!==title?'<p style="text-align:'+esc(textAlign)+'">'+esc(message)+'</p>':''):'';
+    const copy=withText?'<div class="skh-ann-title-wrap">'+(priceTag?'<span class="skh-ann-price-pill">'+esc(priceTag)+'</span>':'')+'<strong class="skh-ann-title" style="'+titleStyleAttr+'">'+titleFormatted+'</strong></div>'+(message&&message!==title?'<p style="text-align:'+esc(textAlign)+'">'+esc(message)+'</p>':''):'';
 
-    const actionButton=link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
+    const actionButton=link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+ctaAnimClass+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
 
     const theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity+';--ad-angle:'+gradientAngle+'deg;--ad-radius:'+borderRadius+'px;';
 

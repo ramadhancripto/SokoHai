@@ -118,3 +118,122 @@
 /* Optional enhancement: the familiar form remains primary; advanced design is opt-in. */
 .adm-ad-advanced{width:100%;margin-top:12px;border-style:dashed!important}
 .adm-ad-advanced-note{font-size:11px;color:#65757A;line-height:1.4;margin:6px 0 0}
+
+/* ==========================================================================
+   SOKOHAI CREATIVE MEDIA & ANIMATION ENGINE STYLES
+   ========================================================================== */
+
+/* Keyframes for Entrance Animations */
+@keyframes skhAnimFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes skhAnimSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes skhAnimSlideDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes skhAnimSlideLeft { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes skhAnimSlideRight { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes skhAnimZoomIn { from { opacity: 0; transform: scale(0.65); } to { opacity: 1; transform: scale(1); } }
+@keyframes skhAnimPop { 0% { opacity: 0; transform: scale(0.4); } 70% { transform: scale(1.12); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes skhAnimBounceIn { 0% { opacity: 0; transform: translateY(-30px); } 60% { transform: translateY(8px); } 80% { transform: translateY(-4px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes skhAnimBlurIn { from { opacity: 0; filter: blur(12px); transform: scale(0.95); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
+@keyframes skhAnimTypewriter { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes skhAnimReveal { from { clip-path: inset(100% 0 0 0); transform: translateY(16px); } to { clip-path: inset(0 0 0 0); transform: translateY(0); } }
+
+/* Keyframes for Emphasis & Attention Animations */
+@keyframes skhAnimPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes skhAnimGlow { 0%, 100% { text-shadow: 0 0 4px rgba(255,255,255,0.4); filter: drop-shadow(0 0 4px rgba(244,197,66,0.3)); } 50% { text-shadow: 0 0 16px rgba(255,255,255,0.9), 0 0 24px rgba(244,197,66,0.8); filter: drop-shadow(0 0 14px rgba(244,197,66,0.8)); } }
+@keyframes skhAnimShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+@keyframes skhAnimWobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+@keyframes skhAnimScale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes skhAnimBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes skhAnimHighlight { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+
+/* Keyframes for Exit Animations */
+@keyframes skhAnimFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes skhAnimSlideOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-24px); } }
+@keyframes skhAnimZoomOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.7); } }
+@keyframes skhAnimBlurOut { from { opacity: 1; filter: blur(0); } to { opacity: 0; filter: blur(12px); } }
+
+/* Keyframes for CTA Shimmer */
+@keyframes skhCtaShimmer { 0% { transform: translateX(-150%) skewX(-20deg); } 100% { transform: translateX(250%) skewX(-20deg); } }
+
+/* Entrance Utility Classes */
+.anim-enter-fade { animation: skhAnimFadeIn var(--anim-duration, 600ms) var(--anim-easing, ease-out) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-slide-up { animation: skhAnimSlideUp var(--anim-duration, 600ms) var(--anim-easing, ease-out) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-slide-down { animation: skhAnimSlideDown var(--anim-duration, 600ms) var(--anim-easing, ease-out) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-slide-left { animation: skhAnimSlideLeft var(--anim-duration, 600ms) var(--anim-easing, ease-out) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-slide-right { animation: skhAnimSlideRight var(--anim-duration, 600ms) var(--anim-easing, ease-out) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-zoom-in { animation: skhAnimZoomIn var(--anim-duration, 600ms) var(--anim-easing, ease-out) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-pop { animation: skhAnimPop var(--anim-duration, 600ms) cubic-bezier(0.34, 1.56, 0.64, 1) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-bounce { animation: skhAnimBounceIn var(--anim-duration, 700ms) ease-out var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-typewriter { animation: skhAnimTypewriter var(--anim-duration, 1000ms) steps(30, end) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-reveal { animation: skhAnimReveal var(--anim-duration, 700ms) cubic-bezier(0.16, 1, 0.3, 1) var(--anim-delay, 0ms) 1 forwards; }
+.anim-enter-blur-in { animation: skhAnimBlurIn var(--anim-duration, 600ms) ease-out var(--anim-delay, 0ms) 1 forwards; }
+
+/* Emphasis Utility Classes */
+.anim-emph-pulse { animation: skhAnimPulse 2s ease-in-out infinite; }
+.anim-emph-glow { animation: skhAnimGlow 2.5s ease-in-out infinite; }
+.anim-emph-shake { animation: skhAnimShake 3s ease-in-out infinite; }
+.anim-emph-wobble { animation: skhAnimWobble 3s ease-in-out infinite; }
+.anim-emph-scale { animation: skhAnimScale 2s ease-in-out infinite; }
+.anim-emph-bounce { animation: skhAnimBounce 2s ease-in-out infinite; }
+.anim-emph-highlight { animation: skhAnimHighlight 2s ease-in-out infinite; }
+
+/* Word, Character, and Line Stagger */
+.skh-anim-word, .skh-anim-char, .skh-anim-line {
+  display: inline-block;
+  opacity: 0;
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+/* Badge Animations */
+.skh-ann-badge-tag.badge-anim-pop { animation: skhAnimPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.skh-ann-badge-tag.badge-anim-pulse { animation: skhAnimPulse 2s ease-in-out infinite; }
+.skh-ann-badge-tag.badge-anim-glow { animation: skhAnimGlow 2.5s ease-in-out infinite; }
+.skh-ann-badge-tag.badge-anim-slide { animation: skhAnimSlideRight 0.6s ease-out; }
+.skh-ann-badge-tag.badge-anim-shake { animation: skhAnimShake 3.5s ease-in-out infinite; }
+.skh-ann-badge-tag.badge-anim-scale { animation: skhAnimScale 2s ease-in-out infinite; }
+
+/* CTA Animations */
+.skh-ann-action.cta-anim-pulse { animation: skhAnimPulse 2s ease-in-out infinite; }
+.skh-ann-action.cta-anim-glow { animation: skhAnimGlow 2s ease-in-out infinite; }
+.skh-ann-action.cta-anim-slide { animation: skhAnimSlideUp 0.6s ease-out; }
+.skh-ann-action.cta-anim-scale { animation: skhAnimScale 2s ease-in-out infinite; }
+.skh-ann-action.cta-anim-shine, .skh-ann-action.cta-style-shine {
+  position: relative;
+  overflow: hidden;
+}
+.skh-ann-action.cta-anim-shine::after, .skh-ann-action.cta-style-shine::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 45%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: skhCtaShimmer 3.5s infinite;
+  pointer-events: none;
+}
+
+/* Aspect Ratio Containers */
+.skh-ann-media.aspect-1-1 { aspect-ratio: 1 / 1; min-height: 280px; }
+.skh-ann-media.aspect-4-5 { aspect-ratio: 4 / 5; min-height: 320px; }
+.skh-ann-media.aspect-9-16 { aspect-ratio: 9 / 16; min-height: 420px; }
+.skh-ann-media.aspect-16-9 { aspect-ratio: 16 / 9; min-height: 220px; }
+
+/* Object Fit & Object Position Controls */
+.skh-ann-media.fit-contain img, .skh-ann-media.fit-contain video { object-fit: contain !important; }
+.skh-ann-media.fit-cover img, .skh-ann-media.fit-cover video { object-fit: cover !important; }
+.skh-ann-media.fit-fill img, .skh-ann-media.fit-fill video { object-fit: fill !important; }
+.skh-ann-media.fit-original img, .skh-ann-media.fit-original video { object-fit: none !important; }
+
+@media(prefers-reduced-motion:reduce){
+  .skh-anim-word, .skh-anim-char, .skh-anim-line, .skh-anim-text,
+  .skh-ann-badge-tag, .skh-ann-action, .anim-enter-fade, .anim-enter-slide-up,
+  .anim-enter-slide-down, .anim-enter-slide-left, .anim-enter-slide-right,
+  .anim-enter-zoom-in, .anim-enter-pop, .anim-enter-bounce, .anim-enter-typewriter,
+  .anim-enter-reveal, .anim-enter-blur-in, .anim-emph-pulse, .anim-emph-glow,
+  .anim-emph-shake, .anim-emph-wobble, .anim-emph-scale, .anim-emph-bounce,
+  .anim-emph-highlight {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+}

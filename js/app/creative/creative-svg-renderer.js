@@ -21,6 +21,32 @@ function defs(c){
   const x1=Math.round(50+Math.cos(rad-Math.PI)*50)+'%',y1=Math.round(50+Math.sin(rad-Math.PI)*50)+'%';
   const x2=Math.round(50+Math.cos(rad)*50)+'%',y2=Math.round(50+Math.sin(rad)*50)+'%';
   let s=`<defs>
+    <style>
+      @keyframes skh_anim_fade { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes skh_anim_slide_up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes skh_anim_slide_down { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes skh_anim_slide_left { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+      @keyframes skh_anim_slide_right { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+      @keyframes skh_anim_zoom_in { from { opacity: 0; transform: scale(0.65); } to { opacity: 1; transform: scale(1); } }
+      @keyframes skh_anim_pop { 0% { opacity: 0; transform: scale(0.4); } 70% { transform: scale(1.12); } 100% { opacity: 1; transform: scale(1); } }
+      @keyframes skh_anim_bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+      @keyframes skh_anim_bounce_in { 0% { opacity: 0; transform: translateY(-30px); } 60% { transform: translateY(8px); } 80% { transform: translateY(-4px); } 100% { opacity: 1; transform: translateY(0); } }
+      @keyframes skh_anim_blur_in { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }
+      @keyframes skh_anim_typewriter { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+      @keyframes skh_anim_reveal { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+      @keyframes skh_anim_pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+      @keyframes skh_anim_glow { 0%, 100% { filter: drop-shadow(0 0 4px rgba(244,197,66,0.3)); } 50% { filter: drop-shadow(0 0 16px rgba(244,197,66,0.9)); } }
+      @keyframes skh_anim_shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+      @keyframes skh_anim_wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+      @keyframes skh_anim_scale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+      @keyframes skh_anim_highlight { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+      @keyframes skh_anim_fade_out { from { opacity: 1; } to { opacity: 0; } }
+      @keyframes skh_anim_slide_out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-24px); } }
+      @keyframes skh_anim_zoom_out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.7); } }
+      @keyframes skh_anim_blur_out { from { opacity: 1; filter: blur(0); } to { opacity: 0; filter: blur(10px); } }
+      .skh-anim-word, .skh-anim-char, .skh-anim-line { display: inline-block; animation-fill-mode: forwards; }
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; } }
+    </style>
     <linearGradient id="bgGrad" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">
       <stop offset="0%" stop-color="${esc(bg.color||'#0E7A5F')}"/>
       <stop offset="100%" stop-color="${esc(bg.color2||bg.color||'#075C7A')}"/>
@@ -82,20 +108,84 @@ function layerSvg(l){
     const fs=num(st.fontSize,48),lh=fs*num(st.lineHeight,1.1),ls=lines(l.content,l.width,fs);
     const anchor=st.textAlign==='center'?'middle':st.textAlign==='right'?'end':'start';
     const x=anchor==='middle'?l.width/2:anchor==='end'?l.width:0;
+    const anim=l.animation||{};
+    const isAnim=anim.enabled||(anim.entrance&&anim.entrance!=='none')||(anim.emphasis&&anim.emphasis!=='none');
+
     let tsp='';
+    let wordIdx=0;
     ls.forEach((line,i)=>{
       const formatted=st.textTransform==='uppercase'?line.toUpperCase():st.textTransform==='lowercase'?line.toLowerCase():line;
-      tsp+=`<tspan x="${x}" dy="${i?lh:fs}">${esc(formatted)}</tspan>`;
+      if(isAnim&&anim.mode==='word'){
+        const words=formatted.split(/(\s+)/);
+        let lineSpans='';
+        words.forEach(w=>{
+          if(!w.trim()) {
+            lineSpans+=esc(w);
+          } else {
+            const delay=num(anim.delay,0)+wordIdx*num(anim.stagger,100);
+            wordIdx++;
+            const enterCls=anim.entrance&&anim.entrance!=='none'?`skh_anim_${anim.entrance.replace(/-/g,'_')}`:'';
+            const styleAttr=enterCls?`style="animation:${enterCls} ${num(anim.duration,600)}ms ${anim.easing||'ease-out'} ${delay}ms 1 forwards; opacity:0;"`:'';
+            lineSpans+=`<tspan class="skh-anim-word" ${styleAttr}>${esc(w)}</tspan>`;
+          }
+        });
+        tsp+=`<tspan x="${x}" dy="${i?lh:fs}">${lineSpans}</tspan>`;
+      } else {
+        tsp+=`<tspan x="${x}" dy="${i?lh:fs}">${esc(formatted)}</tspan>`;
+      }
     });
+
     const shadow=num(st.shadowOpacity)>0||num(st.glowBlur)>0
       ?`style="filter:drop-shadow(${num(st.shadowX)}px ${num(st.shadowY)}px ${num(st.shadowBlur||st.glowBlur)}px ${esc(st.shadowColor||st.glowColor||'#000000')}88)"`:'';
     const bgRect=st.backgroundColor&&st.backgroundColor!=='transparent'
       ?`<rect x="-${num(st.padding,0)}" y="0" width="${num(l.width)+2*num(st.padding,0)}" height="${num(l.height)}" rx="${num(st.radius,0)}" fill="${esc(st.backgroundColor)}"/>`:'' ;
 
-    return `<g ${common}>${bgRect}<text x="${x}" y="0" text-anchor="${anchor}" fill="${esc(st.fill||'#102A43')}" font-family="${esc(st.fontFamily||'Inter')}" font-size="${fs}" font-weight="${num(st.fontWeight,600)}" font-style="${esc(st.fontStyle||'normal')}" text-decoration="${esc(st.textDecoration||'none')}" letter-spacing="${num(st.letterSpacing)}" stroke="${esc(st.stroke||'none')}" stroke-width="${num(st.strokeWidth)}" stroke-opacity="${num(st.strokeOpacity,1)}" ${shadow}>${tsp}</text></g>`;
+    let animWrapperStart='', animWrapperEnd='';
+    if(isAnim&&(!anim.mode||anim.mode==='whole')){
+      const enterCls=anim.entrance&&anim.entrance!=='none'?`skh_anim_${anim.entrance.replace(/-/g,'_')}`:'';
+      const emphCls=anim.emphasis&&anim.emphasis!=='none'?`skh_anim_${anim.emphasis.replace(/-/g,'_')}`:'';
+      const enterAnim=enterCls?`${enterCls} ${num(anim.duration,600)}ms ${anim.easing||'ease-out'} ${num(anim.delay,0)}ms 1 forwards`:'';
+      const emphAnim=emphCls?`${emphCls} 2s ease-in-out ${num(anim.delay,0)+num(anim.duration,600)}ms infinite`:'';
+      const combined=[enterAnim,emphAnim].filter(Boolean).join(', ');
+      if(combined){
+        animWrapperStart=`<g style="animation:${combined}; transform-origin:${num(l.width)/2}px ${num(l.height)/2}px;">`;
+        animWrapperEnd=`</g>`;
+      }
+    }
+
+    return `<g ${common}>${animWrapperStart}${bgRect}<text x="${x}" y="0" text-anchor="${anchor}" fill="${esc(st.fill||'#102A43')}" font-family="${esc(st.fontFamily||'Inter')}" font-size="${fs}" font-weight="${num(st.fontWeight,600)}" font-style="${esc(st.fontStyle||'normal')}" text-decoration="${esc(st.textDecoration||'none')}" letter-spacing="${num(st.letterSpacing)}" stroke="${esc(st.stroke||'none')}" stroke-width="${num(st.strokeWidth)}" stroke-opacity="${num(st.strokeOpacity,1)}" ${shadow}>${tsp}</text>${animWrapperEnd}</g>`;
   }
 
-  if(l.type==='image'){
+  if(l.type==='video'){
+    const videoSrc=esc(l.videoUrl||l.src||'');
+    const posterSrc=esc(l.posterUrl||l.src||'');
+    const shape=st.frameShape||'rounded';
+    let rx=num(st.radius,20);
+    if(shape==='circle')rx=Math.min(num(l.width),num(l.height))/2;
+    if(shape==='square')rx=0;
+
+    const fitMode=st.fit==='contain'?'xMidYMid meet':st.fit==='fill'?'none':'xMidYMid slice';
+    const overlay=st.overlayOpacity>0?`<rect width="${num(l.width)}" height="${num(l.height)}" rx="${rx}" fill="${esc(st.overlayColor||'#000')}" opacity="${num(st.overlayOpacity,0.3)}"/>`:'';
+
+    const playBtn=`<g transform="translate(${num(l.width)/2} ${num(l.height)/2})">
+      <circle cx="0" cy="0" r="32" fill="rgba(16,42,67,0.75)" stroke="#ffffff" stroke-width="2.5"/>
+      <polygon points="-8,-12 14,0 -8,12" fill="#ffffff"/>
+      <rect x="-38" y="42" width="76" height="22" rx="11" fill="rgba(16,42,67,0.85)"/>
+      <text x="0" y="57" text-anchor="middle" fill="#ffffff" font-family="Inter,sans-serif" font-size="11" font-weight="900" letter-spacing="1">VIDEO</text>
+    </g>`;
+
+    return `<g ${common}>
+      <clipPath id="clip_${esc(l.id)}">
+        <rect width="${num(l.width)}" height="${num(l.height)}" rx="${rx}"/>
+      </clipPath>
+      <image href="${posterSrc||videoSrc}" crossorigin="anonymous" x="${num(st.cropX)}" y="${num(st.cropY)}" width="${num(l.width)*num(st.zoom,1)}" height="${num(l.height)*num(st.zoom,1)}" preserveAspectRatio="${fitMode}" clip-path="url(#clip_${esc(l.id)})"/>
+      ${overlay}
+      ${playBtn}
+      <rect width="${num(l.width)}" height="${num(l.height)}" rx="${rx}" fill="none" stroke="${esc(st.borderColor||'none')}" stroke-width="${num(st.borderWidth)}"/>
+    </g>`;
+  }
+
+  if(l.type==='image'||l.type==='logo'){
     const imgSrc=esc(l.cutoutDataUrl||st.cutoutDataUrl||l.src||st.originalSrc||'');
     const shape=st.frameShape||'rounded';
     let rx=num(st.radius,20);
@@ -107,13 +197,37 @@ function layerSvg(l){
       polaroidFrame=`<rect width="${num(l.width)}" height="${num(l.height)}" fill="#ffffff" rx="12" filter="drop-shadow(0 10px 25px rgba(0,0,0,0.25))"/><rect x="16" y="16" width="${num(l.width)-32}" height="${num(l.height)-75}" rx="8" fill="#f1f5f9"/>`;
     }
 
+    const fitMode=st.fit==='contain'?'xMidYMid meet':st.fit==='fill'?'none':'xMidYMid slice';
+    const overlay=st.overlayOpacity>0?`<rect width="${num(l.width)}" height="${num(l.height)}" rx="${rx}" fill="${esc(st.overlayColor||'#000')}" opacity="${num(st.overlayOpacity,0.3)}"/>`:'';
+
     return `<g ${common}>
       ${polaroidFrame}
       <clipPath id="clip_${esc(l.id)}">
         <rect ${shape==='polaroid'?'x="16" y="16" width="'+(num(l.width)-32)+'" height="'+(num(l.height)-75)+'"':'width="'+num(l.width)+'" height="'+num(l.height)+'"'} rx="${rx}"/>
       </clipPath>
-      <image href="${imgSrc}" crossorigin="anonymous" x="${num(st.cropX)}" y="${num(st.cropY)}" width="${num(l.width)*num(st.zoom,1)}" height="${num(l.height)*num(st.zoom,1)}" preserveAspectRatio="${st.fit==='contain'?'xMidYMid meet':'xMidYMid slice'}" clip-path="url(#clip_${esc(l.id)})"/>
+      <image href="${imgSrc}" crossorigin="anonymous" x="${num(st.cropX)}" y="${num(st.cropY)}" width="${num(l.width)*num(st.zoom,1)}" height="${num(l.height)*num(st.zoom,1)}" preserveAspectRatio="${fitMode}" clip-path="url(#clip_${esc(l.id)})"/>
+      ${overlay}
       <rect width="${num(l.width)}" height="${num(l.height)}" rx="${rx}" fill="none" stroke="${esc(st.borderColor||'none')}" stroke-width="${num(st.borderWidth)}"/>
+    </g>`;
+  }
+
+  if(l.type==='audio'){
+    const audioName=esc(l.name||'Audio track');
+    const vol=Math.round((num(l.audioMeta?.volume,1))*100);
+    return `<g ${common}>
+      <rect width="${num(l.width)}" height="${num(l.height)}" rx="16" fill="rgba(16,42,67,0.88)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+      <circle cx="36" cy="${num(l.height)/2}" r="20" fill="#0E7A5F"/>
+      <text x="36" y="${num(l.height)/2+6}" text-anchor="middle" fill="#FFFFFF" font-size="16">🔊</text>
+      <text x="70" y="${num(l.height)/2-2}" fill="#FFFFFF" font-family="Inter,sans-serif" font-size="15" font-weight="800">${audioName}</text>
+      <text x="70" y="${num(l.height)/2+18}" fill="#94A3B8" font-family="Inter,sans-serif" font-size="12" font-weight="600">Volume: ${vol}% · 0:00 - 0:${String(Math.round(num(l.duration,30))).padStart(2,'0')}</text>
+      <g transform="translate(${num(l.width)-110} ${num(l.height)/2-12})">
+        <rect x="0" y="8" width="4" height="12" fill="#10B981" rx="2"/>
+        <rect x="8" y="2" width="4" height="24" fill="#10B981" rx="2"/>
+        <rect x="16" y="5" width="4" height="18" fill="#10B981" rx="2"/>
+        <rect x="24" y="0" width="4" height="28" fill="#10B981" rx="2"/>
+        <rect x="32" y="6" width="4" height="16" fill="#10B981" rx="2"/>
+        <rect x="40" y="10" width="4" height="8" fill="#10B981" rx="2"/>
+      </g>
     </g>`;
   }
 

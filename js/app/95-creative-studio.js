@@ -3,6 +3,8 @@ import { skh } from './00-bootstrap.js';
 import {
   createCreative,normalizeCreative,duplicateCreative,resizeCreative,applyEntity,makeLayer,
   FORMAT_PRESETS,VERIFIED_FONTS,QUICK_COLORS,SOKOHAI_BRAND_COLORS,GRADIENT_PRESETS,PATTERNS,TEXTURES,
+  ENTRANCE_ANIMATIONS,EMPHASIS_ANIMATIONS,EXIT_ANIMATIONS,ANIMATION_MODES,BADGE_ANIMATIONS,CTA_ANIMATIONS,
+  FIT_MODES,FOCAL_POINTS,ASPECT_RATIOS,MULTIMEDIA_PRESETS,
   TEXT_STYLE_PRESETS,FONT_PAIRING_PRESETS,generatePalette,alignLayers,
   templatesFor,autoDesignVariations,designSuggestions,validateCreative
 } from './creative/creative-model.js';
@@ -11,14 +13,111 @@ import {renderCreativeSvg,exportCreative,downloadBlob,removeBackgroundClient} fr
 
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)], esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state=null,history=null,selected='',activeTab='content',saveTimer=null,drag=null,zoom=.58,guides=true,variations=[],advancedMode=false,recentColors=[];
+let isPlaying=false,currentTime=0,playInterval=null,isMuted=false,masterVolume=1,audioElement=null;
 const storageKey=c=>'skh_creative_draft_'+(c.id||'new_'+(c.linkedEntity?.id||'blank'));
 
 function toast(m,t='success'){if(window.skhToast)window.skhToast(m,t);else alert(m);}
 function ensureCss(){if($('#skhCreativeCss'))return;const l=document.createElement('link');l.id='skhCreativeCss';l.rel='stylesheet';l.href='css/39-creative-studio.css';document.head.appendChild(l);}
 function currentLayer(){return state?.layers.find(l=>l.id===selected)||null;}
-function commit(mutator,label){const next=JSON.parse(JSON.stringify(state));mutator(next);next.updatedAt=new Date().toISOString();state=history.commit(next);render(label);scheduleSave();}
-function replace(next){state=history.replace(normalizeCreative(next));selected='';render();scheduleSave();}
+function commit(mutator,label){
+  const next=JSON.parse(JSON.stringify(state));
+  mutator(next);
+  next.updatedAt=new Date().toISOString();
+  state=history.commit(next);
+  render(label);
+  syncBackToLegacyForm();
+  scheduleSave();
+}
+function replace(next){
+  state=history.replace(normalizeCreative(next));
+  selected='';
+  render();
+  syncBackToLegacyForm();
+  scheduleSave();
+}
 function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveDraft(false),900);}
+
+function togglePlay(){
+  isPlaying=!isPlaying;
+  const btn=$('#csPlayBtn');
+  if(btn)btn.textContent=isPlaying?'⏸':'▶';
+  if(isPlaying){
+    const dur=state?.duration||30;
+    if(currentTime>=dur)currentTime=0;
+    playInterval=setInterval(()=>{
+      currentTime+=0.2;
+      const d=state?.duration||30;
+      if(currentTime>=d){
+        currentTime=d;
+        togglePlay();
+      }
+      updateTimelineUI();
+    },200);
+  }else{
+    clearInterval(playInterval);
+  }
+}
+
+function restartPlayback(){
+  currentTime=0;
+  updateTimelineUI();
+  if(!isPlaying)togglePlay();
+}
+
+function toggleMute(){
+  isMuted=!isMuted;
+  const btn=$('#csMuteBtn');
+  if(btn)btn.textContent=isMuted?'🔇':'🔊';
+  if(audioElement)audioElement.muted=isMuted;
+}
+
+function updateTimelineUI(){
+  const scr=$('#csTimelineScrubber');
+  const ct=$('#csCurrentTime');
+  const dur=state?.duration||30;
+  if(scr){scr.max=dur;scr.value=currentTime;}
+  if(ct){
+    const mins=Math.floor(currentTime/60);
+    const secs=Math.floor(currentTime%60);
+    ct.textContent=`${mins}:${secs<10?'0':''}${secs}`;
+  }
+}
+
+function syncBackToLegacyForm(){
+  const modal=document.getElementById('announcementFormModal');
+  if(!modal||!state)return;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=val;};
+  const role=r=>state.layers.find(l=>l.role===r);
+  const head=role('headline'),body=role('body'),price=role('price'),cta=role('cta');
+  const img=state.layers.find(l=>l.type==='image'||l.type==='video');
+  const isVideo=img?.type==='video';
+  const aud=state.layers.find(l=>l.type==='audio');
+  if(head?.content)set('annHeadline',head.content);
+  if(body?.content)set('annText',body.content);
+  if(price?.content)set('annPriceTag',price.content);
+  if(cta?.content)set('annCta',cta.content);
+  if(state.background?.color)set('annPrimaryColor',state.background.color);
+  if(state.background?.color2)set('annAccentColor',state.background.color2);
+  if(head?.style?.fill)set('annTextColor',head.style.fill);
+  if(head?.style?.fontWeight)set('annFontWeight',head.style.fontWeight);
+  if(head?.animation?.entrance)set('annTextAnimation',head.animation.entrance);
+  if(head?.animation?.emphasis)set('annTextEmphasis',head.animation.emphasis);
+  if(head?.animation?.mode)set('annAnimationMode',head.animation.mode);
+  if(head?.animation?.duration)set('annAnimationDuration',head.animation.duration);
+  if(img?.src){
+    if(isVideo){set('annVideo',img.src);set('annImage','');}
+    else{set('annImage',img.src);set('annVideo','');}
+  }
+  if(aud?.src)set('annAudio',aud.src);
+  if(img?.style?.fit)set('annMediaFit',img.style.fit);
+  if(img?.focalPoint)set('annFocalPoint',img.focalPoint);
+  if(state.brandKit?.name)set('annBrand',state.brandKit.name);
+  if(state.brandKit?.logoUrl)set('annLogo',state.brandKit.logoUrl);
+  if(state.destination?.url)set('annLink',state.destination.url);
+  if(typeof window.skhRenderAdminAdPreview==='function'){
+    window.skhRenderAdminAdPreview();
+  }
+}
 
 function rememberColor(hex){
   if(!hex||!/^#[0-9a-f]{6}$/i.test(hex))return;
@@ -50,7 +149,7 @@ function shell(){
  <main class="skh-cs-layout">
    <aside class="skh-cs-left">
      <nav>
-       ${['content','templates','style','effects','cutout','uploads','advanced'].map(x=>`<button data-tab="${x}">${x}</button>`).join('')}
+       ${['presets','content','media','audio','animation','timeline','templates','style','effects','cutout','uploads','advanced'].map(x=>`<button data-tab="${x}">${x}</button>`).join('')}
      </nav>
      <div id="csLibrary" class="skh-cs-library"></div>
    </aside>
@@ -58,6 +157,18 @@ function shell(){
      <div class="skh-cs-status"><span id="csFormat"></span><span id="csSaveState">Draft</span></div>
      <div id="csStage" class="skh-cs-stage">
        <div id="csCanvas" class="skh-cs-canvas"></div>
+     </div>
+     <div class="cs-timeline-bar" id="csTimelineBar">
+       <div class="cs-tb-controls">
+         <button data-a="playtoggle" id="csPlayBtn" title="Play/Pause">▶</button>
+         <button data-a="restart" title="Restart">⏮</button>
+         <span id="csCurrentTime">0:00</span> / <span id="csTotalDuration">0:30</span>
+       </div>
+       <input type="range" id="csTimelineScrubber" min="0" max="30" step="0.1" value="0">
+       <div class="cs-tb-vol">
+         <button data-a="mutetoggle" id="csMuteBtn">🔊</button>
+         <input type="range" id="csMasterVolume" min="0" max="100" value="100" style="width:70px;">
+       </div>
      </div>
      <footer>
        <label>Zoom <input id="csZoom" type="range" min="20" max="100" value="58"></label>
@@ -93,6 +204,8 @@ function bind(m){
     }
     const add=e.target.closest('[data-add]')?.dataset.add;
     if(add)addLayer(add,e.target.closest('[data-add]').dataset.value);
+    const mKind=e.target.closest('[data-media-kind]')?.dataset.mediaKind;
+    if(mKind)setMediaKind(mKind);
     const ly=e.target.closest('[data-layer]')?.dataset.layer;
     if(ly){selected=ly;renderCanvas();renderProperties();renderQuickBar();}
     const vari=e.target.closest('[data-variation]')?.dataset.variation;
@@ -113,20 +226,38 @@ function bind(m){
     if(frame)applyFrameShape(frame);
     const align=e.target.closest('[data-align]')?.dataset.align;
     if(align)applyAlignment(align);
+    const adP=e.target.closest('[data-adpreset]')?.dataset.adpreset;
+    if(adP)applyAdPreset(adP);
+    const fmtSw=e.target.closest('[data-format-switch]')?.dataset.formatSwitch;
+    if(fmtSw)switchFormat(fmtSw);
   });
 
   m.addEventListener('input',e=>{
     if(e.target.id==='csZoom'){zoom=+e.target.value/100;scaleCanvas();return;}
     if(e.target.id==='csTitle'){state.title=e.target.value;scheduleSave();return;}
     if(e.target.id==='csToolSearch'){filterTools(e.target.value);return;}
+    if(e.target.id==='csTimelineScrubber'){currentTime=+e.target.value;updateTimelineUI();return;}
+    if(e.target.id==='csMasterVolume'){masterVolume=+e.target.value/100;if(audioElement)audioElement.volume=masterVolume;return;}
     if(e.target.dataset.simple){updateSimple(e.target.dataset.simple,e.target.value);return;}
+    if(e.target.dataset.anim){updateAnim(e.target.dataset.anim,e.target);return;}
+    if(e.target.dataset.vmeta){updateVmeta(e.target.dataset.vmeta,e.target);return;}
+    if(e.target.dataset.audio){updateAudio(e.target.dataset.audio,e.target);return;}
+    if(e.target.dataset.mix){updateMix(e.target.dataset.mix,e.target);return;}
+    if(e.target.dataset.timelineDur){updateTimelineDur(+e.target.value);return;}
+    if(e.target.dataset.layerTime){updateLayerTime(e.target.dataset.layerTime,e.target.dataset.timeField,+e.target.value);return;}
     const key=e.target.dataset.prop;
     if(key)updateProp(key,e.target);
   });
 
   m.addEventListener('change',e=>{
+    if(e.target.id==='csAnimTargetLayer'){selected=e.target.value;renderCanvas();renderProperties();renderQuickBar();return;}
+    if(e.target.dataset.anim){updateAnim(e.target.dataset.anim,e.target);return;}
+    if(e.target.dataset.vmeta){updateVmeta(e.target.dataset.vmeta,e.target);return;}
+    if(e.target.dataset.audio){updateAudio(e.target.dataset.audio,e.target);return;}
+    if(e.target.dataset.mix){updateMix(e.target.dataset.mix,e.target);return;}
     if(e.target.dataset.bg)updateBackground(e.target.dataset.bg,e.target);
-    if(e.target.id==='csImageFile')uploadImage(e.target);
+    if(e.target.id==='csImageFile'||e.target.id==='csMediaFile')uploadMedia(e.target);
+    if(e.target.id==='csAudioFileInput')uploadAudio(e.target);
   });
 
   $('#csCanvas',m).addEventListener('pointerdown',pointerStart);
@@ -175,6 +306,35 @@ function action(a){
   if(a==='removebg'){doRemoveBackground();return;}
   if(a==='eraser'){showEraserModal();return;}
   if(a==='restoreimage'){doRestoreImage();return;}
+  if(a==='playtoggle'){togglePlay();return;}
+  if(a==='restart'){restartPlayback();return;}
+  if(a==='mutetoggle'){toggleMute();return;}
+  if(a==='testaudio'){testAudioPlayback();return;}
+  if(a==='flipx'){
+    const l=currentLayer();
+    if(l){
+      commit(n=>{
+        const t=n.layers.find(x=>x.id===l.id);
+        if(t){t.style=t.style||{};t.style.flipX=!t.style.flipX;}
+      },'Flip X');
+    }
+    return;
+  }
+  if(a==='flipy'){
+    const l=currentLayer();
+    if(l){
+      commit(n=>{
+        const t=n.layers.find(x=>x.id===l.id);
+        if(t){t.style=t.style||{};t.style.flipY=!t.style.flipY;}
+      },'Flip Y');
+    }
+    return;
+  }
+  if(a==='replayanim'){
+    renderCanvas();
+    toast('Playing animation preview...','info');
+    return;
+  }
 }
 
 function render(){
@@ -211,19 +371,18 @@ function renderQuickBar(){
   const l=currentLayer();
   if(!l){bar.hidden=true;bar.innerHTML='';return;}
   bar.hidden=false;
-  if(l.type==='image'){
-    bar.innerHTML=`<span class="cs-qb-label">🖼️ ${esc(l.name)}</span>
-      <button data-a="removebg" class="cs-qb-btn">🪄 Remove BG</button>
-      <button data-a="eraser" class="cs-qb-btn">🧽 Erase</button>
-      <button data-tab="effects" class="cs-qb-btn">✨ Frames & Effects</button>
-      <button data-prop="style.flipX" value="${!l.style.flipX}" class="cs-qb-btn">↔ Flip</button>
+  if(l.type==='image'||l.type==='video'){
+    const isVid=l.type==='video';
+    bar.innerHTML=`<span class="cs-qb-label">${isVid?'🎬':'🖼️'} ${esc(l.name)}</span>
+      ${!isVid?'<button data-a="removebg" class="cs-qb-btn">🪄 Remove BG</button><button data-a="eraser" class="cs-qb-btn">🧽 Erase</button>':''}
+      <button data-tab="media" class="cs-qb-btn">🎛️ Media Controls</button>
+      <button data-a="flipx" class="cs-qb-btn">↔ Flip</button>
       <button data-a="restoreimage" class="cs-qb-btn">↺ Restore</button>
       <button data-a="toggleadvanced" class="cs-qb-btn">⚙️ Advanced</button>`;
   }else if(l.type==='text'){
     bar.innerHTML=`<span class="cs-qb-label">📝 ${esc(l.name)}</span>
       <button data-tstyle="Headline" class="cs-qb-btn">Headline</button>
-      <button data-tstyle="Price" class="cs-qb-btn">🏷️ Price Pill</button>
-      <button data-tstyle="CTA" class="cs-qb-btn">⭐ CTA Button</button>
+      <button data-tab="animation" class="cs-qb-btn">✨ Animate Text</button>
       <button data-prop="style.fontWeight" value="${+l.style.fontWeight>=800?400:900}" class="cs-qb-btn"><b>B</b> Bold</button>
       <button data-tab="style" class="cs-qb-btn">🎨 Colors</button>
       <button data-a="toggleadvanced" class="cs-qb-btn">⚙️ Advanced</button>`;
@@ -238,7 +397,12 @@ function renderQuickBar(){
 function renderLibrary(showVars=false){
   const box=$('#csLibrary');if(!box)return;
   $$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
-  if(activeTab==='content')box.innerHTML=contentControls();
+  if(activeTab==='presets')box.innerHTML=presetsControls();
+  else if(activeTab==='content')box.innerHTML=contentControls();
+  else if(activeTab==='media')box.innerHTML=mediaControls();
+  else if(activeTab==='audio')box.innerHTML=audioControls();
+  else if(activeTab==='animation')box.innerHTML=animationControls();
+  else if(activeTab==='timeline')box.innerHTML=timelineControls();
   else if(activeTab==='style')box.innerHTML=quickStyleControls();
   else if(activeTab==='effects')box.innerHTML=effectsControls();
   else if(activeTab==='cutout')box.innerHTML=cutoutControls();
@@ -247,9 +411,371 @@ function renderLibrary(showVars=false){
   else if(activeTab==='templates')box.innerHTML='<h3>Editable Templates</h3><p>Every element remains a layer.</p>'+templateCards();
   else if(activeTab==='elements')box.innerHTML=`<h3>Elements & Shapes</h3><div class="cs-addgrid"><button data-add="shape" data-value="rectangle">Rectangle</button><button data-add="shape" data-value="circle">Circle</button><button data-add="shape" data-value="line">Line</button><button data-add="shape" data-value="arrow">Arrow</button><button data-add="shape" data-value="badge">Badge</button>${['phone','location','chat','cart','delivery','clock','calendar','price','discount','verified','star','arrow'].map(i=>`<button data-add="icon" data-value="${i}">${i}</button>`).join('')}</div>`;
   else if(activeTab==='text')box.innerHTML=`<h3>Typography</h3><div class="cs-addgrid"><button data-tstyle="Headline">Headline</button><button data-tstyle="Subheadline">Subheadline</button><button data-tstyle="Body">Body text</button><button data-tstyle="Price">Price Tag</button><button data-tstyle="Discount">Discount Pill</button><button data-tstyle="CTA">CTA Button</button><button data-tstyle="Badge">Badge</button><button data-tstyle="Location">Location</button></div><hr><h4>Font Pairings</h4><div class="cs-theme-picks">${FONT_PAIRING_PRESETS.map(p=>`<button data-fpair="${p.name}"><b>${p.name}</b><small>${p.headline} + ${p.body}</small></button>`).join('')}</div>`;
-  else if(activeTab==='uploads')box.innerHTML=`<h3>Uploads</h3><label class="cs-upload">Upload image<input id="csImageFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></label><button class="cs-wide" data-add="image-url">Use HTTPS image URL</button><p>Uses the existing SokoHai Cloudinary uploader. Originals are not stored in Firestore.</p>`;
+  else if(activeTab==='uploads')box.innerHTML=`<h3>Uploads</h3><label class="cs-upload">Upload media<input id="csMediaFile" type="file" accept="image/*,video/*,audio/*" hidden></label><button class="cs-wide" data-add="image-url">Use HTTPS media URL</button><p>Uses the existing SokoHai Cloudinary uploader. Originals are not stored in Firestore.</p>`;
   else if(activeTab==='background')box.innerHTML=backgroundControls();
   else if(activeTab==='brand')box.innerHTML=brandControls();
+}
+
+function presetsControls(){
+  return `
+    <div class="cs-simple-head"><span>🚀</span><div><h3>Smart Ad Creation Presets</h3><p>Chagua aina ya tangazo ili kusanidi muundo haraka.</p></div></div>
+    
+    <div class="cs-theme-picks">
+      <button data-adpreset="static"><b>🖼️ Static Ad</b><small>Image + Text</small></button>
+      <button data-adpreset="motion"><b>✨ Motion Poster</b><small>Image + Animated Text</small></button>
+      <button data-adpreset="short_video"><b>🎬 Short Video</b><small>Video ≤ 30 Seconds</small></button>
+      <button data-adpreset="audio_visual"><b>🎵 Audio-Visual</b><small>Image + Audio Music</small></button>
+      <button data-adpreset="video_audio"><b>🎥 Video + Audio Mix</b><small>Video + Voiceover / Music</small></button>
+      <button data-adpreset="full_mix"><b>🌟 Full Multimedia</b><small>Image + Video + Audio + Text</small></button>
+    </div>
+
+    <h4>Ad Formats</h4>
+    <div class="cs-addgrid">
+      <button data-format-switch="square">Square 1:1</button>
+      <button data-format-switch="portrait">Portrait 4:5</button>
+      <button data-format-switch="story">Story 9:16</button>
+      <button data-format-switch="landscape">Landscape 16:9</button>
+    </div>
+  `;
+}
+
+function audioControls(){
+  const audioLayer = state.layers.find(l => l.type === 'audio') || null;
+  const aMeta = audioLayer?.audioMeta || {};
+  const mix = state.audioMix || { originalVideoVolume: 1, musicVolume: 0.8, voiceVolume: 1, muteOriginal: false };
+
+  return `
+    <div class="cs-simple-head"><span>🎵</span><div><h3>Audio &amp; Voice System</h3><p>Muziki wa background, sauti au voiceover ya tangazo.</p></div></div>
+    
+    <h4>Audio Track Source</h4>
+    <label class="cs-upload">Upload Audio (Cloudinary)<input id="csAudioFileInput" type="file" accept="audio/*" hidden></label>
+    <label>Audio HTTPS URL<input data-audio="src" value="${esc(audioLayer?.src||audioLayer?.audioUrl||'')}" placeholder="https://..."></label>
+    
+    <div style="margin:10px 0;">
+      <button data-a="testaudio" class="primary" style="width:100%;">▶ Play / Test Audio Track</button>
+    </div>
+
+    <h4>Track Settings</h4>
+    <div class="cs-two">
+      <label>Track Volume (${Math.round((aMeta.volume??0.8)*100)}%)<input data-audio="volume" type="range" min="0" max="1" step="0.05" value="${aMeta.volume??0.8}"></label>
+      <label>Fade In (${aMeta.fadeIn||0}s)<input data-audio="fadeIn" type="range" min="0" max="5" step="0.5" value="${aMeta.fadeIn||0}"></label>
+    </div>
+    <div class="cs-two">
+      <label>Trim Start (${aMeta.trimStart||0}s)<input data-audio="trimStart" type="range" min="0" max="30" step="1" value="${aMeta.trimStart||0}"></label>
+      <label>Trim End (${aMeta.trimEnd||30}s)<input data-audio="trimEnd" type="range" min="0" max="30" step="1" value="${aMeta.trimEnd||30}"></label>
+    </div>
+
+    <h4>Multi-Track Audio Mixing</h4>
+    <label><input type="checkbox" data-mix="muteOriginal" ${mix.muteOriginal?'checked':''}> Mute Original Video Audio</label>
+    <div class="cs-two" style="margin-top:6px;">
+      <label>Original Video Sound (${Math.round(mix.originalVideoVolume*100)}%)<input data-mix="originalVideoVolume" type="range" min="0" max="1" step="0.05" value="${mix.originalVideoVolume}"></label>
+      <label>Background Music (${Math.round(mix.musicVolume*100)}%)<input data-mix="musicVolume" type="range" min="0" max="1" step="0.05" value="${mix.musicVolume}"></label>
+    </div>
+    <label>Voiceover Volume (${Math.round(mix.voiceVolume*100)}%)<input data-mix="voiceVolume" type="range" min="0" max="1" step="0.05" value="${mix.voiceVolume}"></label>
+  `;
+}
+
+function timelineControls(){
+  return `
+    <div class="cs-simple-head"><span>⏱️</span><div><h3>Timeline Orchestration</h3><p>Panga muda wa kila layer kuanzia sekunde 0 hadi 30.</p></div></div>
+    
+    <label>Total Creative Duration: <b id="csTotalDurVal">${state.duration||30}s (Max 30s)</b>
+      <input data-timeline-dur type="range" min="3" max="30" step="1" value="${state.duration||30}">
+    </label>
+
+    <h4>Layer Timings (0s - 30s)</h4>
+    <div class="cs-timeline-tracks">
+      ${state.layers.map(l => {
+        const start = l.startTime || 0, end = l.endTime || 30;
+        return `
+          <div class="cs-tl-row" style="margin-bottom:12px; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px;">
+            <b style="font-size:13px; color:#E2E8F0;">${esc(l.name||l.role||l.type)}</b>
+            <div class="cs-two" style="margin-top:4px;">
+              <label>Start: ${start}s <input data-layer-time="${l.id}" data-time-field="startTime" type="range" min="0" max="30" value="${start}"></label>
+              <label>End: ${end}s <input data-layer-time="${l.id}" data-time-field="endTime" type="range" min="0" max="30" value="${end}"></label>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function applyAdPreset(presetKey){
+  const p = MULTIMEDIA_PRESETS[presetKey];
+  if (!p) return;
+  commit(n => {
+    n.preset = presetKey;
+    if (p.duration) n.duration = p.duration;
+    if (p.format) {
+      n.format = p.format;
+      const fp = FORMAT_PRESETS[p.format];
+      if (fp) { n.canvas.width = fp.width; n.canvas.height = fp.height; }
+    }
+    if (presetKey === 'short_video' || presetKey === 'video_audio' || presetKey === 'full_mix') {
+      if (!n.layers.some(l => l.type === 'video')) {
+        n.layers.push(makeLayer('video', { name: 'Video Layer', x: n.canvas.width*0.1, y: n.canvas.height*0.2, width: n.canvas.width*0.8, height: n.canvas.height*0.5 }));
+      }
+    }
+    if (presetKey === 'audio_visual' || presetKey === 'video_audio' || presetKey === 'full_mix') {
+      if (!n.layers.some(l => l.type === 'audio')) {
+        n.layers.push(makeLayer('audio', { name: 'Background Audio', x: 80, y: n.canvas.height*0.82, width: n.canvas.width*0.8, height: 70 }));
+      }
+    }
+    if (presetKey === 'motion' || presetKey === 'full_mix') {
+      const head = n.layers.find(l => l.role === 'headline');
+      if (head) {
+        head.animation = { enabled: true, entrance: 'slide-up', emphasis: 'pulse', mode: 'word', duration: 600, delay: 100, stagger: 120, repeat: 1, easing: 'ease-out' };
+      }
+    }
+  }, `Apply Preset ${presetKey}`);
+  if (presetKey === 'short_video') activeTab = 'media';
+  else if (presetKey === 'audio_visual' || presetKey === 'video_audio') activeTab = 'audio';
+  else if (presetKey === 'motion') activeTab = 'animation';
+  else activeTab = 'content';
+  renderLibrary();
+  toast(`Applied preset: ${p.label}`);
+}
+
+function switchFormat(fmtKey){
+  const p = FORMAT_PRESETS[fmtKey];
+  if (!p) return;
+  commit(n => {
+    n.format = fmtKey;
+    n.canvas.width = p.width;
+    n.canvas.height = p.height;
+  }, `Switch Format ${fmtKey}`);
+  toast(`Switched format: ${p.label}`);
+}
+
+function updateAudio(key, el){
+  const val = el.type === 'checkbox' ? el.checked : (el.type === 'range' || el.type === 'number' ? +el.value : el.value);
+  commit(n => {
+    let l = n.layers.find(x => x.type === 'audio');
+    if (!l) {
+      l = makeLayer('audio', { name: 'Audio Track', src: '' });
+      n.layers.push(l);
+    }
+    if (key === 'src') {
+      l.src = val;
+      l.audioUrl = val;
+    } else {
+      l.audioMeta = l.audioMeta || {};
+      l.audioMeta[key] = val;
+      if (key === 'trimStart' || key === 'trimEnd') {
+        const start = l.audioMeta.trimStart || 0;
+        const end = l.audioMeta.trimEnd || 30;
+        l.audioMeta.duration = Math.max(1, Math.min(30, end - start));
+        l.duration = l.audioMeta.duration;
+      }
+    }
+  }, 'Update Audio');
+}
+
+function updateMix(key, el){
+  const val = el.type === 'checkbox' ? el.checked : (el.type === 'range' || el.type === 'number' ? +el.value : el.value);
+  commit(n => {
+    n.audioMix = n.audioMix || { originalVideoVolume: 1, musicVolume: 0.8, voiceVolume: 1, muteOriginal: false };
+    n.audioMix[key] = val;
+  }, 'Update Audio Mix');
+}
+
+function updateTimelineDur(val){
+  commit(n => {
+    n.duration = Math.min(30, Math.max(1, +val));
+    const totalEl = $('#csTotalDuration');
+    if (totalEl) totalEl.textContent = `0:${String(n.duration).padStart(2, '0')}`;
+  }, 'Update Duration');
+}
+
+function updateLayerTime(layerId, field, val){
+  commit(n => {
+    const l = n.layers.find(x => x.id === layerId);
+    if (l) {
+      l[field] = Math.min(30, Math.max(0, +val));
+      if (l.startTime != null && l.endTime != null && l.endTime > l.startTime) {
+        l.duration = l.endTime - l.startTime;
+      }
+    }
+  }, 'Update Layer Timing');
+}
+
+async function uploadAudio(input){
+  const file = input.files?.[0]; if (!file) return;
+  input.disabled = true;
+  try {
+    if (typeof window.skhUploadFromFile !== 'function') throw new Error('SokoHai media uploader is unavailable.');
+    const uploaded = await window.skhUploadFromFile(file, 'audio');
+    const secureUrl = uploaded?.secure_url || uploaded?.url;
+    if (!secureUrl) throw new Error('Upload succeeded without secure URL.');
+    commit(n => {
+      let l = n.layers.find(x => x.type === 'audio');
+      if (!l) {
+        l = makeLayer('audio', { name: file.name || 'Audio Track' });
+        n.layers.push(l);
+      }
+      l.src = secureUrl;
+      l.audioUrl = secureUrl;
+      l.name = file.name || l.name;
+    }, 'Upload Audio');
+    toast('Audio uploaded successfully.');
+  } catch (err) {
+    console.error('Audio upload failed:', err);
+    toast(err.message || 'Audio upload failed.', 'error');
+  } finally {
+    input.disabled = false;
+    input.value = '';
+  }
+}
+
+function testAudioPlayback(){
+  const aud = state.layers.find(l => l.type === 'audio')?.src;
+  if (!aud) return toast('No audio URL found. Upload or enter audio first.', 'warning');
+  if (!audioElement) {
+    audioElement = new Audio(aud);
+  } else {
+    audioElement.src = aud;
+  }
+  audioElement.volume = masterVolume;
+  audioElement.muted = isMuted;
+  audioElement.play().catch(e => toast('Audio playback: ' + e.message, 'warning'));
+  toast('Playing audio track...', 'info');
+}
+
+function mediaControls(){
+  const mediaLayer = state.layers.find(l => l.id === selected && (l.type === 'image' || l.type === 'video')) || state.layers.find(l => l.type === 'image' || l.type === 'video') || null;
+  const isVideo = mediaLayer?.type === 'video';
+  const st = mediaLayer?.style || {};
+  const f = st.filter || {};
+  const vMeta = mediaLayer?.videoMeta || {};
+
+  return `
+    <div class="cs-simple-head"><span>🎬</span><div><h3>Media Layer System</h3><p>Picha au video kama object/layer inayohaririwa.</p></div></div>
+    
+    <div class="cs-two">
+      <button class="${!isVideo?'primary':''}" data-media-kind="image">Picha (Image)</button>
+      <button class="${isVideo?'primary':''}" data-media-kind="video">Video (Clip)</button>
+    </div>
+
+    <h4>Media Source &amp; Upload</h4>
+    <label class="cs-upload">Upload Media (Cloudinary)<input id="csMediaFile" type="file" accept="${isVideo?'video/*':'image/*'}" hidden></label>
+    <label>Media HTTPS URL<input data-prop="src" value="${esc(mediaLayer?.src||mediaLayer?.videoUrl||'')}" placeholder="https://..."></label>
+    ${isVideo?`<label>Poster / Cover Image URL<input data-prop="posterUrl" value="${esc(mediaLayer?.posterUrl||'')}" placeholder="https://..."></label>`:''}
+
+    <h4>Fit &amp; Focal Point</h4>
+    <div class="cs-two">
+      <label>Fit Mode<select data-prop="style.fit">
+        <option value="cover" ${st.fit==='cover'?'selected':''}>Cover</option>
+        <option value="contain" ${st.fit==='contain'?'selected':''}>Contain</option>
+        <option value="fill" ${st.fit==='fill'?'selected':''}>Fill</option>
+        <option value="original" ${st.fit==='original'?'selected':''}>Original</option>
+      </select></label>
+      <label>Focal Point<select data-prop="focalPoint">
+        <option value="center" ${mediaLayer?.focalPoint==='center'?'selected':''}>Center</option>
+        <option value="top" ${mediaLayer?.focalPoint==='top'?'selected':''}>Top</option>
+        <option value="bottom" ${mediaLayer?.focalPoint==='bottom'?'selected':''}>Bottom</option>
+        <option value="left" ${mediaLayer?.focalPoint==='left'?'selected':''}>Left</option>
+        <option value="right" ${mediaLayer?.focalPoint==='right'?'selected':''}>Right</option>
+      </select></label>
+    </div>
+
+    ${isVideo?`
+    <h4>Video Playback &amp; 30s Trimming</h4>
+    <div style="background:#0F172A; padding:8px 12px; border-radius:8px; margin-bottom:8px;">
+      <span style="font-size:12px; color:${(vMeta.duration||30)>30?'#EF4444':'#10B981'}; font-weight:700;">
+        ⏱ Duration: ${Math.round(vMeta.duration||30)}s ${(vMeta.duration||30)>30?'⚠️ (Max 30s limit exceeded!)':'✓ (Within 30s limit)'}
+      </span>
+    </div>
+    <div class="cs-two">
+      <label>Trim Start (${vMeta.trimStart||0}s)<input data-vmeta="trimStart" type="range" min="0" max="30" step="1" value="${vMeta.trimStart||0}"></label>
+      <label>Trim End (${vMeta.trimEnd||30}s)<input data-vmeta="trimEnd" type="range" min="0" max="30" step="1" value="${vMeta.trimEnd||30}"></label>
+    </div>
+    <div class="cs-two">
+      <label><input type="checkbox" data-vmeta="autoplay" ${vMeta.autoplay!==false?'checked':''}> Autoplay</label>
+      <label><input type="checkbox" data-vmeta="muted" ${vMeta.muted!==false?'checked':''}> Muted</label>
+    </div>
+    <div class="cs-two">
+      <label><input type="checkbox" data-vmeta="loop" ${vMeta.loop!==false?'checked':''}> Loop</label>
+      <label><input type="checkbox" data-vmeta="controls" ${vMeta.controls?'checked':''}> Controls</label>
+    </div>`:''}
+
+    <h4>Frame Shape &amp; Transform</h4>
+    <div class="cs-theme-picks">
+      <button data-frame="rounded">Rounded</button>
+      <button data-frame="circle">Circle</button>
+      <button data-frame="square">Square</button>
+      <button data-frame="polaroid">Polaroid</button>
+    </div>
+    <div class="cs-two">
+      <button data-a="flipx">↔ Flip X</button>
+      <button data-a="flipy">↕ Flip Y</button>
+    </div>
+
+    <h4>Adjustments &amp; Filters</h4>
+    <label>Brightness: ${f.brightness||100}%<input data-prop="style.filter.brightness" type="range" min="40" max="180" value="${f.brightness||100}"></label>
+    <label>Contrast: ${f.contrast||100}%<input data-prop="style.filter.contrast" type="range" min="40" max="180" value="${f.contrast||100}"></label>
+    <label>Saturation: ${f.saturation||100}%<input data-prop="style.filter.saturation" type="range" min="0" max="200" value="${f.saturation||100}"></label>
+    <label>Warmth: ${f.temperature||0}<input data-prop="style.filter.temperature" type="range" min="-100" max="100" value="${f.temperature||0}"></label>
+    <label>Blur: ${f.blur||0}px<input data-prop="style.filter.blur" type="range" min="0" max="20" value="${f.blur||0}"></label>
+
+    <div class="cs-actions-grid" style="margin-top:12px;">
+      <button data-a="removebg" class="accent">🪄 Cutout / Remove BG</button>
+      <button data-a="restoreimage">↺ Restore Original</button>
+    </div>
+  `;
+}
+
+function animationControls(){
+  const target = currentLayer() || state.layers.find(l => l.role === 'headline') || state.layers.find(l => l.type === 'text') || state.layers[0];
+  const anim = target?.animation || {};
+
+  return `
+    <div class="cs-simple-head"><span>✨</span><div><h3>Animation Engine</h3><p>Harakati za maneno na vitu kwenye tangazo.</p></div></div>
+    
+    <label>Target Layer<select id="csAnimTargetLayer">
+      ${state.layers.map(l => `<option value="${l.id}" ${l.id===(target?.id)?'selected':''}>${esc(l.name||l.role||l.type)} (${esc(l.type)})</option>`).join('')}
+    </select></label>
+
+    <h4>Entrance Animation (Kuingia)</h4>
+    <label>Entrance Type<select data-anim="entrance">
+      ${ENTRANCE_ANIMATIONS.map(opt => `<option value="${opt}" ${anim.entrance===opt?'selected':''}>${opt.replace(/-/g,' ').toUpperCase()}</option>`).join('')}
+    </select></label>
+
+    <h4>Emphasis (Mvuto wa Kudumu)</h4>
+    <label>Emphasis Type<select data-anim="emphasis">
+      ${EMPHASIS_ANIMATIONS.map(opt => `<option value="${opt}" ${anim.emphasis===opt?'selected':''}>${opt.replace(/-/g,' ').toUpperCase()}</option>`).join('')}
+    </select></label>
+
+    <h4>Exit Animation (Kutoka)</h4>
+    <label>Exit Type<select data-anim="exit">
+      ${EXIT_ANIMATIONS.map(opt => `<option value="${opt}" ${anim.exit===opt?'selected':''}>${opt.replace(/-/g,' ').toUpperCase()}</option>`).join('')}
+    </select></label>
+
+    <h4>Word &amp; Character Splitting Mode</h4>
+    <label>Animation Mode<select data-anim="mode">
+      ${ANIMATION_MODES.map(m => `<option value="${m}" ${anim.mode===m?'selected':''}>${m==='whole'?'Maandishi Yote (Whole Text)':m==='word'?'Neno kwa Neno (Word by Word)':m==='character'?'Herufi kwa Herufi (Character)':m==='line'?'Mstari kwa Mstari (Line)':m}</option>`).join('')}
+    </select></label>
+
+    <h4>Timing &amp; Dynamics</h4>
+    <div class="cs-two">
+      <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="100" max="3000" step="100" value="${anim.duration||600}"></label>
+      <label>Delay (${anim.delay||0}ms)<input data-anim="delay" type="range" min="0" max="2000" step="50" value="${anim.delay||0}"></label>
+    </div>
+    <div class="cs-two">
+      <label>Stagger (${anim.stagger||100}ms)<input data-anim="stagger" type="range" min="20" max="400" step="20" value="${anim.stagger||100}"></label>
+      <label>Easing<select data-anim="easing">
+        <option value="ease-out" ${anim.easing==='ease-out'?'selected':''}>Ease Out</option>
+        <option value="ease-in-out" ${anim.easing==='ease-in-out'?'selected':''}>Ease In Out</option>
+        <option value="ease-in" ${anim.easing==='ease-in'?'selected':''}>Ease In</option>
+        <option value="linear" ${anim.easing==='linear'?'selected':''}>Linear</option>
+        <option value="cubic-bezier(0.34, 1.56, 0.64, 1)" ${anim.easing?.includes('cubic')?'selected':''}>Elastic</option>
+      </select></label>
+    </div>
+
+    <div style="margin-top:14px;">
+      <button data-a="replayanim" class="primary" style="width:100%;min-height:42px;font-weight:900;">▶ Play Animation Preview</button>
+    </div>
+  `;
 }
 
 function contentControls(){
@@ -653,19 +1179,67 @@ function addLayer(type,value){
   }
 }
 
-async function uploadImage(input){
+function setMediaKind(kind){
+  commit(n=>{
+    let l=n.layers.find(x=>x.id===selected&&(x.type==='image'||x.type==='video'))||n.layers.find(x=>x.type==='image'||x.type==='video');
+    if(!l){
+      l=makeLayer(kind,{name:kind==='video'?'Video layer':'Image layer',x:n.canvas.width*.2,y:n.canvas.height*.2,width:n.canvas.width*.6,height:n.canvas.height*.5});
+      n.layers.push(l);
+    }else{
+      l.type=kind;
+      l.name=kind==='video'?'Video layer':'Image layer';
+    }
+    selected=l.id;
+  },'Set Media Kind');
+}
+
+function updateAnim(key,el){
+  const targetId=$('#csAnimTargetLayer')?.value||selected||state.layers.find(l=>l.role==='headline')?.id||state.layers[0]?.id;
+  const val=el.type==='range'?+el.value:el.value;
+  commit(n=>{
+    const l=n.layers.find(x=>x.id===targetId);
+    if(l){
+      l.animation=l.animation||{};
+      l.animation[key]=val;
+      l.animation.enabled=(l.animation.entrance&&l.animation.entrance!=='none')||(l.animation.emphasis&&l.animation.emphasis!=='none');
+    }
+  },'Update Animation');
+}
+
+function updateVmeta(key,el){
+  const val=el.type==='checkbox'?el.checked:el.value;
+  commit(n=>{
+    const l=n.layers.find(x=>x.id===selected&&x.type==='video')||n.layers.find(x=>x.type==='video');
+    if(l){
+      l.videoMeta=l.videoMeta||{};
+      l.videoMeta[key]=val;
+    }
+  },'Update Video Meta');
+}
+
+async function uploadMedia(input){
   const file=input.files?.[0];if(!file)return;
+  const isVideo=file.type.startsWith('video/');
   input.disabled=true;
   try{
     if(typeof window.skhUploadFromFile!=='function')throw new Error('SokoHai media uploader is unavailable.');
-    const uploaded=await window.skhUploadFromFile(file,{folder:'sokohai/creative-assets'});
+    const uploaded=await window.skhUploadFromFile(file,{resourceType:isVideo?'video':'image',folder:'sokohai/creative-assets'});
     const url=typeof uploaded==='string'?uploaded:uploaded&&uploaded.url;
     if(!url)throw new Error('Upload returned no URL.');
     commit(n=>{
-      const l=makeLayer('image',{src:url,originalSrc:url,name:file.name,x:120,y:180,width:700,height:600,zIndex:n.layers.length+1,style:{fit:'cover',radius:22,originalSrc:url}});
-      n.layers.push(l);selected=l.id;
-    });
-    toast('Image uploaded to the existing media service.');
+      let l=n.layers.find(x=>x.id===selected&&(x.type==='image'||x.type==='video'))||n.layers.find(x=>x.type===(isVideo?'video':'image'));
+      if(!l){
+        l=makeLayer(isVideo?'video':'image',{src:url,videoUrl:url,originalSrc:url,name:file.name,x:120,y:180,width:700,height:600,zIndex:n.layers.length+1,style:{fit:'cover',radius:22,originalSrc:url}});
+        n.layers.push(l);
+      }else{
+        l.type=isVideo?'video':'image';
+        l.src=url;
+        l.videoUrl=url;
+        l.originalSrc=url;
+      }
+      selected=l.id;
+    },'Upload Media');
+    toast(`${isVideo?'Video':'Image'} uploaded successfully.`);
   }catch(e){
     toast(e.message,'error');
   }finally{
@@ -677,67 +1251,119 @@ function renderProperties(){
   const box=$('#csProperties');if(!box)return;
   const l=currentLayer();
   if(!l){
-    box.innerHTML='<div class="cs-empty"><b>Select an element</b><p>Click a layer on the canvas or open Layers.</p></div>';
+    box.innerHTML='<div class="cs-empty"><b>Select an element</b><p>Click a layer on the canvas or choose from Layers tab.</p></div>';
     return;
   }
   const st=l.style||{};
+  const f=st.filter||{};
+  const anim=l.animation||{};
+
+  let specificControls='';
+
+  if(l.type==='text'){
+    specificControls=`
+      <label>Text Content<textarea data-prop="content" rows="3">${esc(l.content)}</textarea></label>
+      <label>Font Family<select data-prop="style.fontFamily">${VERIFIED_FONTS.map(f=>`<option value="${f.family}" ${f.family===st.fontFamily?'selected':''}>${f.family}</option>`).join('')}</select></label>
+      <div class="cs-two">
+        <label>Font Weight<select data-prop="style.fontWeight">
+          <option value="400" ${+st.fontWeight===400?'selected':''}>400 Normal</option>
+          <option value="600" ${+st.fontWeight===600?'selected':''}>600 SemiBold</option>
+          <option value="700" ${+st.fontWeight===700?'selected':''}>700 Bold</option>
+          <option value="800" ${+st.fontWeight===800?'selected':''}>800 ExtraBold</option>
+          <option value="900" ${+st.fontWeight===900?'selected':''}>900 Black</option>
+          <option value="950" ${+st.fontWeight===950?'selected':''}>950 Ultra</option>
+        </select></label>
+        <label>Text Align<select data-prop="style.textAlign">
+          <option value="left" ${st.textAlign==='left'?'selected':''}>Left</option>
+          <option value="center" ${st.textAlign==='center'?'selected':''}>Center</option>
+          <option value="right" ${st.textAlign==='right'?'selected':''}>Right</option>
+        </select></label>
+      </div>
+      <div class="cs-two">
+        <label>Font Size<input data-prop="style.fontSize" type="range" min="14" max="140" value="${st.fontSize||48}"></label>
+        <label>Text Color<input data-prop="style.fill" type="color" value="${st.fill||'#FFFFFF'}"></label>
+      </div>
+
+      <h4>Animation Settings</h4>
+      <div class="cs-two">
+        <label>Entrance<select data-anim="entrance">
+          ${ENTRANCE_ANIMATIONS.map(opt=>`<option value="${opt}" ${anim.entrance===opt?'selected':''}>${opt}</option>`).join('')}
+        </select></label>
+        <label>Emphasis<select data-anim="emphasis">
+          ${EMPHASIS_ANIMATIONS.map(opt=>`<option value="${opt}" ${anim.emphasis===opt?'selected':''}>${opt}</option>`).join('')}
+        </select></label>
+      </div>
+      <div class="cs-two">
+        <label>Mode<select data-anim="mode">
+          ${ANIMATION_MODES.map(m=>`<option value="${m}" ${anim.mode===m?'selected':''}>${m}</option>`).join('')}
+        </select></label>
+        <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="200" max="2000" step="100" value="${anim.duration||600}"></label>
+      </div>
+    `;
+  } else if(l.type==='image'||l.type==='video'||l.type==='logo'){
+    const isVid=l.type==='video';
+    specificControls=`
+      <label>Media Source URL<input data-prop="src" value="${esc(l.src||l.videoUrl||'')}"></label>
+      ${isVid?`<label>Poster Cover URL<input data-prop="posterUrl" value="${esc(l.posterUrl||'')}"></label>`:''}
+      <div class="cs-two">
+        <label>Fit Mode<select data-prop="style.fit">
+          <option value="cover" ${st.fit==='cover'?'selected':''}>Cover</option>
+          <option value="contain" ${st.fit==='contain'?'selected':''}>Contain</option>
+          <option value="fill" ${st.fit==='fill'?'selected':''}>Fill</option>
+        </select></label>
+        <label>Corner Radius<input data-prop="style.radius" type="range" min="0" max="300" value="${st.radius||0}"></label>
+      </div>
+      <div class="cs-two">
+        <label>Brightness (${f.brightness||100}%)<input data-prop="style.filter.brightness" type="range" min="40" max="180" value="${f.brightness||100}"></label>
+        <label>Contrast (${f.contrast||100}%)<input data-prop="style.filter.contrast" type="range" min="40" max="180" value="${f.contrast||100}"></label>
+      </div>
+      <div class="cs-two">
+        <label>Saturation (${f.saturation||100}%)<input data-prop="style.filter.saturation" type="range" min="0" max="200" value="${f.saturation||100}"></label>
+        <label>Warmth (${f.temperature||0})<input data-prop="style.filter.temperature" type="range" min="-100" max="100" value="${f.temperature||0}"></label>
+      </div>
+      <div class="cs-two">
+        <label>Blur (${f.blur||0}px)<input data-prop="style.filter.blur" type="range" min="0" max="20" value="${f.blur||0}"></label>
+        <label>Opacity<input data-prop="opacity" type="range" min="10" max="100" value="${Math.round((l.opacity??1)*100)}"></label>
+      </div>
+      <div class="cs-two">
+        <button data-a="flipx">Flip Horizontal</button>
+        <button data-a="flipy">Flip Vertical</button>
+      </div>
+    `;
+  } else if(l.type==='shape'){
+    specificControls=`
+      <div class="cs-two">
+        <label>Fill Color<input data-prop="style.fill" type="color" value="${st.fill||'#18A982'}"></label>
+        <label>Corner Radius<input data-prop="style.radius" type="range" min="0" max="500" value="${st.radius||0}"></label>
+      </div>
+      <div class="cs-two">
+        <label>Border Width<input data-prop="style.borderWidth" type="range" min="0" max="20" value="${st.borderWidth||0}"></label>
+        <label>Border Color<input data-prop="style.borderColor" type="color" value="${st.borderColor||'#000000'}"></label>
+      </div>
+    `;
+  }
+
   box.innerHTML=`
-    <div class="cs-prop-head"><input data-prop="name" value="${esc(l.name)}"><button data-add="duplicate-layer">Duplicate</button><button data-add="delete-layer">Delete</button></div>
-    ${l.type==='text'?`
-      <label>Text<textarea data-prop="content" rows="4">${esc(l.content)}</textarea></label>
-      <label>Font<select data-prop="style.fontFamily">${VERIFIED_FONTS.map(f=>`<option value="${f.family}" ${st.fontFamily===f.family?'selected':''}>${f.family} (${f.category})</option>`).join('')}</select></label>
-      <div class="cs-two">
-        <label>Size<input data-prop="style.fontSize" type="number" value="${st.fontSize}"></label>
-        <label>Weight<select data-prop="style.fontWeight">${[400,500,600,700,800,900].map(v=>`<option value="${v}" ${+st.fontWeight===v?'selected':''}>${v}</option>`).join('')}</select></label>
-      </div>
-      <label>Color<input data-prop="style.fill" type="color" value="${st.fill||'#000000'}"></label>
-      <div class="cs-three">
-        <button data-prop="style.fontStyle" value="${st.fontStyle==='italic'?'normal':'italic'}">Italic</button>
-        <button data-prop="style.textDecoration" value="${st.textDecoration==='underline'?'none':'underline'}">Underline</button>
-        <select data-prop="style.textAlign"><option value="left" ${st.textAlign==='left'?'selected':''}>left</option><option value="center" ${st.textAlign==='center'?'selected':''}>center</option><option value="right" ${st.textAlign==='right'?'selected':''}>right</option></select>
-      </div>
-      <label>Line height<input data-prop="style.lineHeight" type="range" min="0.8" max="2" step="0.05" value="${st.lineHeight||1.1}"></label>
-      <label>Letter spacing<input data-prop="style.letterSpacing" type="range" min="-4" max="24" value="${st.letterSpacing||0}"></label>
-      <fieldset><legend>Stroke</legend>
-        <label>Width<input data-prop="style.strokeWidth" type="range" min="0" max="10" step=".5" value="${st.strokeWidth||0}"></label>
-        <label>Color<input data-prop="style.stroke" type="color" value="${st.stroke||'#FFFFFF'}"></label>
-      </fieldset>
-      <fieldset><legend>Shadow & Glow</legend>
-        <label>Opacity<input data-prop="style.shadowOpacity" type="range" min="0" max="1" step=".05" value="${st.shadowOpacity||0}"></label>
-        <label>Blur<input data-prop="style.shadowBlur" type="range" min="0" max="40" value="${st.shadowBlur||0}"></label>
-      </fieldset>
-    `:''}
-    ${l.type==='image'?`
-      <label>Image URL<input data-prop="src" value="${esc(l.src||'')}"></label>
-      <label>Fit<select data-prop="style.fit"><option value="cover" ${st.fit==='cover'?'selected':''}>cover</option><option value="contain" ${st.fit==='contain'?'selected':''}>contain</option></select></label>
-      <label>Frame Shape<select data-prop="style.frameShape"><option value="rounded" ${st.frameShape==='rounded'?'selected':''}>Rounded Card</option><option value="circle" ${st.frameShape==='circle'?'selected':''}>Circle</option><option value="square" ${st.frameShape==='square'?'selected':''}>Square</option><option value="polaroid" ${st.frameShape==='polaroid'?'selected':''}>Polaroid</option></select></label>
-      <div style="display:flex;gap:6px;margin:8px 0;">
-        <button data-a="removebg" class="primary" style="flex:1;">🪄 Remove BG</button>
-        <button data-a="eraser" style="flex:1;">🧽 Eraser</button>
-      </div>
-      <label>Brightness<input data-prop="style.filter.brightness" type="range" min="20" max="180" value="${st.filter?.brightness||100}"></label>
-      <label>Contrast<input data-prop="style.filter.contrast" type="range" min="20" max="180" value="${st.filter?.contrast||100}"></label>
-      <label>Saturation<input data-prop="style.filter.saturation" type="range" min="0" max="200" value="${st.filter?.saturation||100}"></label>
-      <label>Warmth<input data-prop="style.filter.temperature" type="range" min="-100" max="100" value="${st.filter?.temperature||0}"></label>
-      <label>Blur<input data-prop="style.filter.blur" type="range" min="0" max="20" value="${st.filter?.blur||0}"></label>
-    `:''}
-    ${l.type!=='text'&&l.type!=='image'?`
-      <label>Fill<input data-prop="style.fill" type="color" value="${st.fill||'#FFFFFF'}"></label>
-      <label>Radius<input data-prop="style.radius" type="range" min="0" max="300" value="${st.radius||0}"></label>
-    `:''}
-    <fieldset><legend>Position & Size</legend>
-      <div class="cs-two">
-        <label>X<input data-prop="x" type="number" value="${Math.round(l.x)}"></label>
-        <label>Y<input data-prop="y" type="number" value="${Math.round(l.y)}"></label>
-        <label>Width<input data-prop="width" type="number" value="${Math.round(l.width)}"></label>
-        <label>Height<input data-prop="height" type="number" value="${Math.round(l.height)}"></label>
-      </div>
+    <div class="cs-prop-head"><input data-prop="name" value="${esc(l.name)}"><button data-add="duplicate-layer">Copy</button><button data-add="delete-layer">Del</button></div>
+    <div class="cs-two">
+      <label>Position X<input data-prop="x" type="number" value="${Math.round(l.x)}"></label>
+      <label>Position Y<input data-prop="y" type="number" value="${Math.round(l.y)}"></label>
+    </div>
+    <div class="cs-two">
+      <label>Width<input data-prop="width" type="number" value="${Math.round(l.width)}"></label>
+      <label>Height<input data-prop="height" type="number" value="${Math.round(l.height)}"></label>
+    </div>
+    <div class="cs-two">
       <label>Rotation<input data-prop="rotation" type="range" min="-180" max="180" value="${l.rotation||0}"></label>
-      <label>Opacity<input data-prop="opacity" type="range" min="0" max="1" step=".05" value="${l.opacity||1}"></label>
-    </fieldset>
-    <div class="cs-align">
+      <label>Layer Order (Z)<input data-prop="zIndex" type="number" min="1" max="100" value="${l.zIndex||1}"></label>
+    </div>
+    <hr>
+    ${specificControls}
+    <div class="cs-align" style="margin-top:10px;">
       ${['left','center','right','top','middle','bottom'].map(x=>`<button data-align="${x}">${x}</button>`).join('')}
-    </div>`;
+    </div>
+  `;
+}
 }
 
 function updateProp(path,input){
@@ -993,7 +1619,10 @@ async function open(context={}){
 
 function close(){
   clearTimeout(saveTimer);
-  if(state)saveDraft(false);
+  if(state){
+    saveDraft(false);
+    syncBackToLegacyForm();
+  }
   $('#skhCreativeStudio')?.classList.remove('open');
   document.body.classList.remove('skh-cs-open');
 }
@@ -1022,6 +1651,10 @@ window.skhOpenAdvancedFromLegacy=function(){
   c.layers.filter(l=>l.type==='text'&&l.role!=='cta').forEach(l=>l.style.fill=get('annTextColor')||l.style.fill);
   const image=get('annImage');
   if(image)c.layers.push(makeLayer('image',{name:'Advertisement image',src:image,originalSrc:image,x:580,y:190,width:530,height:390,zIndex:2,style:{fit:'cover',radius:26,originalSrc:image}}));
+  const video=get('annVideo');
+  if(video)c.layers.push(makeLayer('video',{name:'Advertisement video',src:video,videoUrl:video,x:580,y:190,width:530,height:390,zIndex:2,style:{fit:'cover',radius:26}}));
+  const audio=get('annAudio');
+  if(audio)c.layers.push(makeLayer('audio',{name:'Advertisement audio',src:audio,audioUrl:audio,x:80,y:520,width:460,height:60,zIndex:3}));
   c.brandKit={name:get('annBrand'),logoUrl:get('annLogo'),primary:c.background.color,secondary:c.background.color2,accent:'#F4C542'};
   if(/^https:\/\//i.test(get('annLink')))c.destination={type:'external',url:get('annLink')};
   document.getElementById('announcementFormModal')?.style.setProperty('display','none');
