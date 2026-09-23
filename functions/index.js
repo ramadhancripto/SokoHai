@@ -2531,6 +2531,12 @@ exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
  * spec §1, §46). Zinatolewa hapa ili Firebase Functions izideploy.
  * chatOfferAction (juu) sasa ni daraJA linaloelekeza kwenye injini hiyo hiyo.
  * ============================================================ */
+// [CREATIVE STUDIO] Server-authoritative ownership, immutable versions,
+// publication moderation and privacy-bounded event aggregation.
+const creativeEngine = require('./creative');
+exports.creativePublish = creativeEngine.creativePublish;
+exports.creativeTrackEvent = creativeEngine.creativeTrackEvent;
+
 const negotiationEngine = require('./negotiation');
 // [REQUEST ROUTING 2026-09] Injini ya kupeleka booking kwa mawakala
 // waliostahili (offers + reassignment). Accept imo hapa index.js.

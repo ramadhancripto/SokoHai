@@ -138,7 +138,13 @@ window.sokohaiStartAnnouncementsListener = function(){
     try {
         // [LIVE-FIX 2026-09] Ongeza limit(50) — usivute matangazo YOTE (scan-all
         // ni ghali kwa watumiaji wengi wanaosikiliza live listener kwa wakati mmoja).
-        const annQ = skh.query(skh.collection(skh.db, "announcements"), skh.orderBy("createdAt", "desc"), skh.limit(50));
+        const canManageAll = !!((window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin)
+            || (skh.currentUser && skh.currentUser.email === skh.MY_ADMIN_EMAIL));
+        // Privacy boundary: public clients never download drafts, moderation records,
+        // archived ads or editable design state. Admin keeps the complete manager view.
+        const annQ = canManageAll
+            ? skh.query(skh.collection(skh.db, "announcements"), skh.orderBy("createdAt", "desc"), skh.limit(50))
+            : skh.query(skh.collection(skh.db, "announcements"), skh.where("status", "==", "published"), skh.where("archived", "==", false), skh.orderBy("createdAt", "desc"), skh.limit(50));
         window.__sokohaiAnnouncementsUnsub = skh.onSnapshot(annQ, (snap) => {
             const all = [];
             snap.forEach(docSnap => all.push({ id: docSnap.id, ...docSnap.data() }));

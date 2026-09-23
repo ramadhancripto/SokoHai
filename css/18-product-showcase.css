@@ -872,3 +872,7 @@
         border-radius: 0 !important;
     }
 }
+
+/* Creative Studio contextual launcher — entity data is loaded from canonical record. */
+.pm-creative-launch{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:10px 14px;border:1px solid #0E7A5F;border-radius:12px;background:#ecfdf5;color:#075f49;font:800 12px/1.2 Inter,system-ui,sans-serif;cursor:pointer}
+.pm-creative-launch:hover{background:#0E7A5F;color:#fff}

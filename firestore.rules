@@ -95,11 +95,46 @@ service cloud.firestore {
         && request.resource.data.userId == resource.data.userId;
       allow delete: if false;
     }
-    // Home Advertisement Showcase: public read, authorized Admin write only.
+    // Home Advertisement Showcase. Public users receive published projections only;
+    // drafts/editable Creative JSON are private to owner/Admin.
     match /announcements/{id} {
-      allow read: if true;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.advertiserId == request.auth.uid)
+        || (resource.data.status == 'published' && resource.data.archived == false);
       allow create, update, delete: if isAdmin();
     }
+    // Editable Creative authority. ownerId is immutable and must equal Auth UID;
+    // the server, not the browser, writes immutable published versions.
+    match /creatives/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status in ['DRAFT', 'PREVIEW', 'READY'];
+      allow update: if signedIn()
+        && (isAdmin() || resource.data.ownerId == request.auth.uid)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.version == resource.data.version
+        && request.resource.data.status in ['DRAFT', 'PREVIEW', 'READY', 'ARCHIVED'];
+      allow delete: if false;
+      match /versions/{versionId} {
+        allow read: if signedIn() && (isAdmin()
+          || get(/databases/$(database)/documents/creatives/$(id)).data.ownerId == request.auth.uid);
+        allow write: if false;
+      }
+    }
+    match /brandKits/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if signedIn() && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+    match /creativePublications/{id} {
+      allow read: if resource.data.status == 'PUBLISHED'
+        || (signedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid));
+      allow write: if false;
+    }
+    match /creativeEvents/{id} { allow read, write: if false; }
     // Cloudinary media references/metadata only; media bytes never enter Firestore.
     match /adminMedia/{id} {
       allow read, create, update, delete: if isAdmin();

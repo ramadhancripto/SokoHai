@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createCreative,makeLayer,normalizeCreative,duplicateCreative,resizeCreative,applyEntity,templatesFor,autoDesignVariations,designSuggestions,validateCreative,FORMAT_PRESETS,VERIFIED_FONTS} from '../js/app/creative/creative-model.js';
+import {CreativeHistory} from '../js/app/creative/creative-history.js';
+import {renderCreativeSvg} from '../js/app/creative/creative-svg-renderer.js';
+
+const c=createCreative({format:'square',sourceType:'product',sourceId:'p1'});
+assert.equal(c.canvas.width,1080);assert.equal(c.canvas.height,1080);assert.ok(c.layers.length>=5);assert.equal(VERIFIED_FONTS.length,1);assert.equal(VERIFIED_FONTS[0].family,'Inter');
+const product={id:'p1',title:'Real Phone',price:59000,shopName:'Real Shop',location:'Kinondoni',imageUrl:'https://res.cloudinary.com/demo/image/upload/a.jpg'};
+const adapted=applyEntity(c,product,'product');assert.equal(adapted.linkedEntity.snapshot.price,59000);assert.ok(adapted.layers.some(l=>l.content==='TZS 59,000'));assert.equal(adapted.destination.id,'p1');
+const story=resizeCreative(adapted,'story');assert.deepEqual([story.canvas.width,story.canvas.height],[1080,1920]);assert.ok(story.layers.every(l=>Number.isFinite(l.x)&&Number.isFinite(l.y)));
+assert.equal(templatesFor('square').length,19);assert.equal(autoDesignVariations(adapted).length,5);assert.ok(Array.isArray(designSuggestions(adapted)));
+const valid=validateCreative(adapted,{forPublish:true});assert.equal(valid.ok,true);
+const invalid=validateCreative(createCreative(),{forPublish:true});assert.equal(invalid.ok,false);assert.ok(invalid.errors.some(e=>e.code==='DESTINATION'));
+const dup=duplicateCreative(adapted);assert.equal(dup.id,'');assert.notEqual(dup.layers[0].id,adapted.layers[0].id);
+const h=new CreativeHistory(c);const changed=normalizeCreative({...c,title:'Changed'});h.commit(changed);assert.equal(h.undo().title,'Untitled Creative');assert.equal(h.redo().title,'Changed');
+const svg=renderCreativeSvg(adapted,{guides:true,selectedId:adapted.layers[0].id});assert.match(svg,/^<svg/);assert.match(svg,/data-layer-id=/);assert.match(svg,/text-safe|stroke-dasharray/);
+const studio=fs.readFileSync('js/app/95-creative-studio.js','utf8'),rules=fs.readFileSync('firestore.rules','utf8'),fn=fs.readFileSync('functions/creative.js','utf8'),scripts=fs.readFileSync('html/21-scripts.html','utf8');
+for(const token of ['SokoHaiCreativeStudio','Auto Design','saveDraft','exportCreative','creativePublish','creativeTrackEvent'])assert.ok(studio.includes(token)||fn.includes(token),token);
+for(const token of ['match /creatives/{id}','match /versions/{versionId}','request.resource.data.ownerId == request.auth.uid','allow write: if false'])assert.ok(rules.includes(token),token);
+assert.ok(scripts.includes('95-creative-studio.js'));assert.ok(fn.includes('canonicalEntity'));assert.ok(fn.includes('immutable:true'));
+console.log('Creative System model/security/integration contracts: PASS');

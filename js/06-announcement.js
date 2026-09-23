@@ -28,7 +28,8 @@
       .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   }
   function hide(){const h=document.getElementById('topAnnouncement');if(!h)return;h.className='big-announcement skh-ann-story is-empty';h.innerHTML='';h.hidden=true;}
-  function openAction(url){if(!url)return;if(url[0]==='#'||url[0]==='/')location.href=url;else window.open(url,'_blank','noopener');}
+  function track(a,type){if(!a||!a.id||!window.skh||typeof window.skh.callFunction!=='function')return;const key='skh_ad_'+type+'_'+a.id;if(type==='impression'&&sessionStorage.getItem(key))return;try{sessionStorage.setItem(key,'1');window.skh.callFunction('creativeTrackEvent',{announcementId:a.id,type:type}).catch(function(){if(type==='impression')sessionStorage.removeItem(key);});}catch(e){}}
+  function openAction(url,id){if(id)track({id:id},'click');if(!url)return;if(url[0]==='#'||url[0]==='/')location.href=url;else window.open(url,'_blank','noopener');}
   window.skhAnnouncementOpen=openAction;
 
   function mediaHtml(a,title,type) {
@@ -52,7 +53,7 @@
     const initial=esc((brand.charAt(0)||'S').toUpperCase());
     const metrics=countLabel(a.likeCount||a.likesCount,'likes')+countLabel(a.viewCount||a.views,'views')+countLabel(a.clickCount||a.clicks,'clicks');
     const copy=withText?'<strong class="skh-ann-title">'+esc(title)+'</strong>'+(message&&message!==title?'<p>'+esc(message)+'</p>':''):'';
-    const actionButton=link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">→</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
+    const actionButton=link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">→</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
     const primary=safeColor(a.primaryColor,'#0E7A5F'),accent=safeColor(a.accentColor,'#167A91'),textColor=safeColor(a.textColor,'#FFFFFF'),surface=safeColor(a.surfaceColor,'#FFFFFF'),frameOpacity=safeOpacity(a.frameOpacity);
     const theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity;
     return '<article class="skh-ann-card" style="'+theme+'">'
@@ -71,6 +72,7 @@
     host.hidden=false;
     host.className='big-announcement skh-ann-story skh-home-ad skh-ann-post '+(hasMedia?'has-media':'no-media')+(live?' is-live':'');
     host.innerHTML=cardHtml(a,live);
+    if(!live)track(a,'impression');
     const video=host.querySelector('video');
     if(video && a.autoplay!==false){video.muted=true;const play=video.play();if(play&&play.catch)play.catch(function(){});}
   }
