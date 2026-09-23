@@ -1,5 +1,6 @@
 /* ==== js/app/16-pos-admin-jobs.js ==== */
 import { skh } from './00-bootstrap.js';
+import { contrastRatio as skhPaletteContrast } from './creative/creative-model.js';
 
 // Tafsiri (lugha moja kwa wakati) — LMS ikiwa ipo, la sivyo fallback ya Kiingereza
 function T(key, en, vars) {
@@ -318,7 +319,7 @@ window.skhAdFormHtml=function(){return '<section class="adm-ad-form"><div class=
 +'<div class="adm-ad-two" style="margin-top:9px;"><div><label class="adm-ad-opacity"><span>Frame opacity <b id="annFrameOpacityValue">42%</b></span><input id="annFrameOpacity" type="range" min="8" max="100" step="1" value="42" oninput="window.skhAdOpacityChanged(this.value)"></label></div><div><label><span>Gradient Angle <b id="annGradientAngleValue">135°</b></span><input id="annGradientAngle" type="range" min="0" max="360" step="15" value="135" oninput="document.getElementById(\'annGradientAngleValue\').textContent=this.value+\'°\';window.skhRenderAdminAdPreview()"></label></div></div>'
 +'<div class="adm-ad-two" style="margin-top:6px;"><div><label><span>Corner Radius <b id="annBorderRadiusValue">22px</b></span><input id="annBorderRadius" type="range" min="0" max="36" step="2" value="22" oninput="document.getElementById(\'annBorderRadiusValue\').textContent=this.value+\'px\';window.skhRenderAdminAdPreview()"></label></div><div><label>Headline Font Weight</label><select id="annFontWeight" onchange="window.skhRenderAdminAdPreview()"><option value="600">600 Semi-Bold</option><option value="700">700 Bold</option><option value="800">800 Extra-Bold</option><option value="950" selected>950 Ultra Black</option></select></div></div>'
 +'<div class="adm-ad-two" style="margin-top:6px;"><div><label>Text Align</label><select id="annTextAlign" onchange="window.skhRenderAdminAdPreview()"><option value="left">Left Align</option><option value="center">Center Align</option><option value="right">Right Align</option></select></div><div><label>Text Shadow</label><select id="annTextShadow" onchange="window.skhRenderAdminAdPreview()"><option value="none">None</option><option value="subtle">Subtle Shadow</option><option value="strong">Strong Glow</option></select></div></div>'
-+'<div id="annContrastHint" class="adm-ad-contrast"></div><div class="adm-ad-presets"><span style="font-size:11px;color:#65757A;width:100%;display:block;margin-bottom:2px;">Design Palettes:</span><button type="button" data-ad-preset="emerald">Emerald</button><button type="button" data-ad-preset="ocean">Ocean</button><button type="button" data-ad-preset="royal">Royal</button><button type="button" data-ad-preset="sunset">Sunset</button><button type="button" data-ad-preset="mono">Mono</button><button type="button" data-ad-preset="gold">Gold Luxury</button><button type="button" data-ad-preset="rose">Rose</button><button type="button" data-ad-preset="neon">Neon</button></div><input id="annPaletteId" type="hidden" value=""><input id="annCreativeId" type="hidden" value=""><input id="annCampaignId" type="hidden" value=""><small class="adm-ad-pal-hint" id="annPaletteHint"></small>'
++'<div id="annContrastHint" class="adm-ad-contrast"></div><div class="adm-ad-presets"><span style="font-size:11px;color:#65757A;width:100%;display:block;margin-bottom:2px;">Design Palettes:</span><div class="adm-ad-palette-grid" id="annPaletteGrid"></div></div><input id="annPaletteId" type="hidden" value=""><input id="annCreativeId" type="hidden" value=""><input id="annCampaignId" type="hidden" value=""><small class="adm-ad-pal-hint" id="annPaletteHint"></small>'
 +'<div class="adm-ad-two" style="margin-top:8px;"><div><label>Badge Style</label><select id="annBadgeStyle" onchange="window.skhRenderAdminAdPreview()"><option value="pill">Pill Tag</option><option value="ribbon">Ribbon Banner</option><option value="sticker">Stamp Sticker</option><option value="stamp">Stamp Circle</option><option value="glass">Glass Tag</option><option value="outline">Outline Tag</option></select></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div><label>Badge Color</label><input id="annBadgeColor" type="color" value="#F59E0B" oninput="window.skhRenderAdminAdPreview()"></div><div><label>Text Color</label><input id="annBadgeTextColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></div></div></div>'
 +'<div class="adm-ad-two" style="margin-top:6px;"><div><label>Badge Size &amp; Position</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><select id="annBadgeSize" onchange="window.skhRenderAdminAdPreview()"><option value="sm">Small</option><option value="md" selected>Medium</option><option value="lg">Large</option></select><select id="annBadgePosition" onchange="window.skhRenderAdminAdPreview()"><option value="tr" selected>Juu Kulia</option><option value="tl">Juu Kushoto</option><option value="br">Chini Kulia</option><option value="bl">Chini Kushoto</option></select></div></div><div><label>Badge Icon &amp; Opacity</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><select id="annBadgeIcon" onchange="window.skhRenderAdminAdPreview()"><option value="none" selected>Bila Icon</option><option value="fire">🔥 Moto</option><option value="bolt">⚡ Umeme</option><option value="tag">🏷️ Tag</option><option value="star">⭐ Nyota</option><option value="truck">🚚 Gari</option><option value="sparkle">✨ Mwangaza</option></select><input id="annBadgeOpacity" type="range" min="40" max="100" step="5" value="100" oninput="window.skhRenderAdminAdPreview()"></div></div></div></fieldset>'
 +'<fieldset class="adm-ad-section"><legend>MOTION · Animation Engine</legend><p class="adm-ad-section-note">Ongeza animated typography kwa headline na maneno ya tangazo. Animation haivunji matangazo ya static.</p>'
@@ -371,7 +372,7 @@ set('annBadgeSize',existing?.badgeSize||'md');set('annBadgePosition',existing?.b
 set('annDisplayDuration',existing?.displayDurationSeconds||(existing?.rotationMs?Math.round(Number(existing.rotationMs)/1000):9));
 set('annPaletteId',existing?.paletteId||'');set('annCreativeId',existing?.creativeId||'');set('annCampaignId',existing?.campaignId||'');
 {const palHint=document.getElementById('annPaletteHint');if(palHint){const p=window.skhPaletteTokens?window.skhPaletteTokens(existing?.paletteId||''):null;palHint.textContent=p?('Palette: '+p.label+' (tokens zimehifadhiwa)'):'';}}
-document.querySelectorAll('#announcementFormModal [data-ad-preset]').forEach(function(b){b.classList.toggle('active',(existing?.paletteId||'')===b.dataset.adPreset);(b.style.background='');});document.getElementById('annFormTitle').textContent=existing?'Edit Advertisement':'Create Advertisement';modal.style.display='flex';window.skhRenderAdminAdPreview();window.skhAdStatusChanged();window.skhAdOpacityChanged(document.getElementById('annFrameOpacity')?.value||42,false);};
+document.querySelectorAll('#announcementFormModal [data-ad-preset]').forEach(function(b){b.classList.toggle('active',(existing?.paletteId||'')===b.dataset.adPreset);(b.style.background='');});document.getElementById('annFormTitle').textContent=existing?'Edit Advertisement':'Create Advertisement';modal.style.display='flex';if(typeof window.skhRenderAdPaletteSelector==='function')window.skhRenderAdPaletteSelector();window.skhRenderAdminAdPreview();window.skhAdStatusChanged();window.skhAdOpacityChanged(document.getElementById('annFrameOpacity')?.value||42,false);};
 
 window.skhAdFormData=function(){const v=id=>(document.getElementById(id)?.value||'').trim();const dd=Math.max(5,Math.min(59,Number(v('annDisplayDuration'))||9));return{
   creativeId:v('annCreativeId'),
@@ -421,6 +422,27 @@ window.skhRenderAdminAdPreview=function(){
 };
 window.skhAdStatusChanged=function(){const status=document.getElementById('annStatus')?.value||'published',btn=document.getElementById('btnSubmitAnnouncement');if(btn)btn.textContent=status==='published'?'Publish Advertisement':'Save Draft';};
 window.skhAdOpacityChanged=function(value,rerender=true){const n=Math.max(8,Math.min(100,Number(value)||42)),label=document.getElementById('annFrameOpacityValue');if(label)label.textContent=n+'%';if(rerender)window.skhRenderAdminAdPreview();};
+/* Renders the grouped Design Palette selector into #annPaletteGrid.
+   Uses the ONE canonical token system (window.SKH_AD_PALETTES / SKH_AD_PALETTE_GROUPS).
+   Chips keep the existing data-ad-preset contract — the global delegation handler is unchanged. */
+window.skhRenderAdPaletteSelector=function(){
+  const grid=document.getElementById('annPaletteGrid');if(!grid)return;
+  const groups=(window.SKH_AD_PALETTE_GROUPS&&window.SKH_AD_PALETTE_GROUPS.length)?window.SKH_AD_PALETTE_GROUPS:null;
+  const pals=window.SKH_AD_PALETTES?Object.values(window.SKH_AD_PALETTES):null;
+  const cur=document.getElementById('annPaletteId')?.value||'';
+  if(!groups||!pals){
+    // Legacy fallback: the original 8 chips, unchanged
+    grid.innerHTML='<button type="button" data-ad-preset="emerald" class="palette-chip">Emerald</button><button type="button" data-ad-preset="ocean" class="palette-chip">Ocean</button><button type="button" data-ad-preset="royal" class="palette-chip">Royal</button><button type="button" data-ad-preset="sunset" class="palette-chip">Sunset</button><button type="button" data-ad-preset="mono" class="palette-chip">Mono</button><button type="button" data-ad-preset="gold" class="palette-chip">Gold Luxury</button><button type="button" data-ad-preset="rose" class="palette-chip">Rose</button><button type="button" data-ad-preset="neon" class="palette-chip">Neon</button>';
+    return;
+  }
+  const chip=p=>'<button type="button" data-ad-preset="'+p.id+'" class="palette-chip'+(cur===p.id?' active':'')+'" title="'+p.label+'" style="--pal-a:'+p.primary+';--pal-b:'+p.secondary+'"><i></i>'+p.label+'</button>';
+  grid.innerHTML=groups.map(g=>{
+    const items=pals.filter(p=>(p.group||'classics')===g.id);
+    if(!items.length)return '';
+    return '<div class="adm-ad-pal-group">'+g.label+'</div>'+items.map(chip).join('');
+  }).join('');
+};
+
 window.skhAdApplyPreset=function(name){
   // CANONICAL SOURCE: js/app/creative/ad-palettes.js (window.skhPaletteTokens).
   // Fallback table keeps the pre-upgrade behavior if the tokens file was not loaded.
@@ -431,7 +453,7 @@ window.skhAdApplyPreset=function(name){
   const ids=['annPrimaryColor','annAccentColor','annTextColor','annSurfaceColor','annFrameOpacity'];
   ids.forEach((id,i)=>{const el=document.getElementById(id);if(el)el.value=p[i]});
   const hid=document.getElementById('annPaletteId');if(hid)hid.value=name;
-  const hint=document.getElementById('annPaletteHint');if(hint)hint.textContent=tok?('Palette: '+tok.label+' · CTA '+tok.ctaBackground+'/'+tok.ctaText):'';
+  const hint=document.getElementById('annPaletteHint');if(hint){if(!tok)hint.textContent='';else{try{const rT=skhPaletteContrast(tok.headline,tok.primary),rC=skhPaletteContrast(tok.ctaText,tok.ctaBackground);hint.textContent='Palette: '+tok.label+' · kichwa '+rT.toFixed(1)+':1 · CTA '+rC.toFixed(1)+':1';}catch(e){hint.textContent='Palette: '+tok.label;}}}
   document.querySelectorAll('#announcementFormModal [data-ad-preset]').forEach(function(b){b.classList.toggle('active',b.dataset.adPreset===name);});
   window.skhAdOpacityChanged(p[4],false);window.skhRenderAdminAdPreview();
 };

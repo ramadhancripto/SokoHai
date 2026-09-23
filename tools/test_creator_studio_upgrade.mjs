@@ -64,31 +64,97 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   const win={};
   vm.runInNewContext(read('js/app/creative/ad-palettes.js'),{window:win},{filename:'ad-palettes.js'});
   const ids=Object.keys(win.SKH_AD_PALETTES);
-  assert.deepEqual(ids.sort(),['emerald','gold','mono','neon','ocean','rose','royal','sunset'],'8 legacy palettes preserved');
+
+  // 2a. 70 palettes total; 8 legacy IDs preserved + all 62 new IDs present
+  assert.equal(ids.length,70,'70 palettes expected');
+  const legacyIds=['emerald','ocean','royal','sunset','mono','gold','rose','neon'];
+  const newIds=['forest','mint','sage','olive','tropical','earth','sand','terra',
+    'sky','azure','cobalt','deep_ocean','midnight','arctic','cyan','electric_blue',
+    'black_gold','champagne','platinum','silver','ivory','burgundy','royal_gold','velvet',
+    'fire','coral','amber','orange','mango','peach','cherry','crimson',
+    'lavender','violet','lilac','soft_rose','blush','powder_blue','cream','cloud',
+    'electric','cyber','hyper_neon','lime','magenta','electric_purple','electric_cyan',
+    'professional_blue','corporate_navy','trust_blue','executive','enterprise','clean_business','finance','healthcare',
+    'pure_white','soft_white','warm_white','graphite','charcoal','slate','deep_black'];
+  legacyIds.forEach(id=>assert.ok(ids.includes(id),'legacy palette preserved: '+id));
+  newIds.forEach(id=>assert.ok(ids.includes(id),'new palette missing: '+id));
+
+  // 2b. Full canonical token set per palette
   const TOKENS=['background','surface','surfaceAlt','primary','primaryDark','primaryLight','secondary','accent','headline','text','mutedText','border','ctaBackground','ctaText','badgeBackground','badgeText','overlay','gradientStart','gradientMiddle','gradientEnd','shadow','glow'];
   ids.forEach(id=>{
     const p=win.SKH_AD_PALETTES[id];
     TOKENS.forEach(t=>assert.ok(p[t]!=null&&p[t]!=='',`palette ${id} missing token ${t}`));
     assert.ok(Number.isFinite(p.frameOpacity),'palette frameOpacity numeric');
   });
-  // legacy base values preserved exactly
-  assert.equal(win.SKH_AD_PALETTES.emerald.primary,'#0E7A5F');
-  assert.equal(win.SKH_AD_PALETTES.emerald.secondary,'#18A982');
-  assert.equal(win.SKH_AD_PALETTES.gold.primary,'#1E2229');
-  assert.equal(win.SKH_AD_PALETTES.gold.accent,'#D4AF37');
-  assert.equal(Math.round(win.SKH_AD_PALETTES.gold.frameOpacity*100),85,'gold legacy frame opacity 85%');
 
+  // 2c. BACKWARD COMPATIBILITY LOCK — legacy values frozen (snapshot of pre-expansion output)
+  const LEGACY_LOCK={
+    emerald:['#0E7A5F','#18A982','#FFFFFF','#FFFFFF',42,'#F4C542','#102A43','#0E7A5F','#0d6e56','rgba(8,73,57,0.35)','rgba(24,169,130,0.55)'],
+    ocean:['#075E73','#2697B8','#FFFFFF','#FFFFFF',48,'#F4C542','#102A43','#075E73','#065568','rgba(4,56,69,0.35)','rgba(38,151,184,0.55)'],
+    royal:['#343A8F','#7559C7','#FFFFFF','#FFFFFF',50,'#F4C542','#102A43','#343A8F','#2f3481','rgba(31,35,86,0.35)','rgba(117,89,199,0.55)'],
+    sunset:['#A83E27','#E49A36','#FFFFFF','#FFFDFC',55,'#F59E0B','#451A03','#A83E27','#973823','rgba(101,37,23,0.35)','rgba(228,154,54,0.55)'],
+    mono:['#1F2937','#6B7280','#FFFFFF','#FFFFFF',36,'#F59E0B','#111827','#1F2937','#1c2532','rgba(19,25,33,0.35)','rgba(107,114,128,0.55)'],
+    gold:['#1E2229','#D4AF37','#FFFFFF','#111827',85,'#D4AF37','#1E2229','#1E2229','#1b1f25','rgba(18,20,25,0.35)','rgba(212,175,55,0.55)'],
+    rose:['#881337','#E11D48','#FFFFFF','#FFF1F2',50,'#FBBF24','#881337','#881337','#7a1132','rgba(82,11,33,0.35)','rgba(225,29,72,0.55)'],
+    neon:['#064E3B','#10B981','#A7F3D0','#064E3B',60,'#10B981','#064E3B','#064E3B','#054635','rgba(4,47,35,0.35)','rgba(16,185,129,0.55)']
+  };
+  legacyIds.forEach(id=>{
+    const p=win.SKH_AD_PALETTES[id],L=LEGACY_LOCK[id];
+    const got=[p.primary,p.secondary,p.headline,p.surface,Math.round(p.frameOpacity*100),p.ctaBackground,p.ctaText,p.background,p.gradientMiddle,p.shadow,p.glow];
+    const exp=[L[0],L[1],L[2],L[3],L[4],L[5],L[6],L[7],L[8],L[9],L[10]];
+    assert.deepEqual(got,exp,'legacy palette tokens changed: '+id);
+  });
+
+  // 2d. Groups: 9 groups with expected coverage
+  const groups=win.SKH_AD_PALETTE_GROUPS;
+  assert.equal(groups.length,9,'9 palette groups');
+  const coverage={classics:8,nature:8,blue:8,luxury:8,warm:8,soft:8,future:7,corporate:8,neutral:7};
+  Object.keys(coverage).forEach(g=>{
+    const n=ids.filter(id=>win.SKH_AD_PALETTES[id].group===g).length;
+    assert.equal(n,coverage[g],'group '+g+' coverage');
+    assert.ok(groups.some(x=>x.id===g),'group registered: '+g);
+  });
+
+  // 2e. Distinctness — no effectively identical palettes
+  const sigs=new Set();
+  ids.forEach(id=>{
+    const p=win.SKH_AD_PALETTES[id],sig=(p.primary+'|'+p.secondary).toLowerCase();
+    assert.ok(!sigs.has(sig),'duplicate palette colors: '+id);
+    sigs.add(sig);
+    assert.notEqual(p.primary.toLowerCase(),p.headline.toLowerCase(),'unreadable headline/bg: '+id);
+  });
+
+  // 2f. CONTRAST — calculated from the ACTUAL selected colors (no fixed claims)
+  const lum=(v,i)=>{const c=parseInt(v.slice(i,i+2),16)/255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4);};
+  const ratio=(a,b)=>{
+    const la=.2126*lum(a,1)+.7152*lum(a,3)+.0722*lum(a,5),lb=.2126*lum(b,1)+.7152*lum(b,3)+.0722*lum(b,5);
+    return (Math.max(la,lb)+.05)/(Math.min(la,lb)+.05);
+  };
+  let minTitle={r:99,id:''},minCtaNew={r:99,id:''};
+  ids.forEach(id=>{
+    const p=win.SKH_AD_PALETTES[id];
+    assert.ok(/^#[0-9a-f]{6}$/i.test(p.headline)&&/^#[0-9a-f]{6}$/i.test(p.background),'testable colors: '+id);
+    const rT=ratio(p.headline,p.background);
+    assert.ok(rT>=4.5,`palette ${id} headline/background ${rT.toFixed(2)}:1 below 4.5:1`);
+    if(rT<minTitle.r)minTitle={r:rT,id};
+    if(!legacyIds.includes(id)){
+      const rC=ratio(p.ctaText,p.ctaBackground);
+      assert.ok(rC>=3.0,`palette ${id} CTA ${rC.toFixed(2)}:1 below 3:1 (large-text CTA floor)`);
+      if(rC<minCtaNew.r)minCtaNew={r:rC,id};
+    }
+  });
+  console.log('   · real ratios — worst title '+minTitle.id+' '+minTitle.r.toFixed(2)+':1; worst new-CTA '+minCtaNew.id+' '+minCtaNew.r.toFixed(2)+':1; legacy neon CTA '+ratio(win.SKH_AD_PALETTES.neon.ctaText,win.SKH_AD_PALETTES.neon.ctaBackground).toFixed(2)+':1 (preserved)');
+
+  // 2g. CTA presets/icons + categories (unchanged contracts)
   const cta=win.SKH_CTA_PRESETS;
   ['Angalia Sasa','Jifunze Zaidi','Tembelea','Buy Now','Wasiliana Nasi','Pata Ofa Hii','Agiza Hapa','Piga Simu','Download','Install','Apply Now','Book Appointment','Register','Visit Website'].forEach(x=>assert.ok(cta.includes(x),'CTA preset missing: '+x));
   assert.ok(cta.includes('Tazama Zaidi')&&cta.includes('Nunua Sasa'),'legacy CTA labels preserved');
-
   ['arrow','cart','phone','whatsapp','star','download','external','calendar','location'].forEach(x=>assert.ok(x in win.SKH_CTA_ICONS,'CTA icon missing: '+x));
   assert.equal(win.skhCtaIcon('arrow'),'→');
   assert.equal(win.skhCtaIcon('unknown'),'→');
-
   const cats=win.SKH_AD_CATEGORIES.map(c=>c.id);
   ['general','product','service','business','app','school','hospital','event','transport'].forEach(x=>assert.ok(cats.includes(x),'category missing: '+x));
-  console.log('2. canonical palette/CTA/category tokens ... OK ('+TOKENS.length+' tokens × '+ids.length+' palettes)');
+  console.log('2. canonical palette system ... OK (70 palettes · 22 tokens × 70 · 9 groups · legacy locked)');
 }
 
 /* ============ 3. CANONICAL RENDERER (preview = published) ============ */
@@ -148,6 +214,13 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   legacyIds.forEach(id=>assert.ok(form.includes('id=\\"'+id+'\\"')||form.includes('id="'+id+'"'),'legacy control missing from form: '+id));
 
   const newIds=['annCategory','annCampaignName','annBadgeSize','annBadgePosition','annBadgeOpacity','annBadgeIcon','annDisplayDuration','annPaletteId','annCreativeId','annCampaignId'];
+  // Grouped palette selector (single engine, single grid)
+  assert.ok(form.includes('id=\"annPaletteGrid\"'),'palette grid container missing');
+  assert.ok(form.includes('window.skhRenderAdPaletteSelector=function'),'grouped selector renderer missing');
+  assert.equal(form.split('window.skhRenderAdPaletteSelector=function').length-1,1,'exactly one selector renderer (no duplicate palette engine)');
+  assert.ok(form.includes('adm-ad-pal-group'),'group labels in selector');
+  assert.ok(form.includes('skhPaletteContrast')&&form.includes("from './creative/creative-model.js'"),'contrast hint must use canonical contrast engine');
+  assert.ok(!form.includes('5.3:1'),'no fixed contrast claims');
   newIds.forEach(id=>assert.ok(form.includes(id),'new field missing: '+id));
 
   ['BASIC','DESIGN','MOTION','MEDIA','SCHEDULE'].forEach(s=>assert.ok(form.includes('>'+s),'editor section missing: '+s));
@@ -192,6 +265,12 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
     assert.ok(studio.includes(s),'studio bridge missing: '+s);
   });
   assert.ok(!studio.includes("id=\"skhCreativeStudio2\""),'no duplicate studio shell');
+  assert.ok(read('js/app/95-creative-studio.js').split('data-namedpalette').length-1>=2,'studio palette picker markup must exist (chips + click handler)');
+  assert.ok(read('js/app/95-creative-studio.js').includes('contrastRatio(tok.headline'),'studio toast must compute real contrast');
+  const css38=read('css/38-home-ad-manager.css');
+  ['adm-ad-palette-grid','palette-chip','--ad-shadow','--ad-border'].forEach(s=>assert.ok(css38.includes(s),'form/renderer CSS missing: '+s));
+  const css39=read('css/39-creative-studio.css');
+  ['cs-palette-scroll','cs-pal-group'].forEach(s=>assert.ok(css39.includes(s),'studio CSS missing: '+s));
   console.log('6. integration points ... OK');
 }
 

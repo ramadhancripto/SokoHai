@@ -42,3 +42,10 @@
 .cs-tb-vol{display:flex;align-items:center;gap:6px}
 .cs-tb-vol button{background:#1E293B;color:#F8FAFC;border:1px solid #334155;border-radius:6px;padding:4px 6px;font-size:12px;cursor:pointer}
 #csMasterVolume{accent-color:#10B981;cursor:pointer}
+
+/* PALETTE EXPANSION 2026-09-23 — grouped Design Palette picker (additive) */
+.cs-palette-scroll{max-height:280px;overflow-y:auto;padding-right:4px;margin:2px 0 12px}
+.cs-pal-group{font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:#5f7470;margin:10px 0 4px;padding-top:6px;border-top:1px dashed #d7e2de}
+.cs-pal-group:first-child{border-top:0;margin-top:0;padding-top:0}
+.cs-palette-scroll .cs-theme-picks{grid-template-columns:1fr 1fr;margin:4px 0 10px}
+.cs-palette-scroll .cs-theme-picks button i{background:linear-gradient(135deg,var(--a,#0E7A5F),var(--b,#167A91))}

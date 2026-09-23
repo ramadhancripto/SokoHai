@@ -6,7 +6,7 @@ import {
   ENTRANCE_ANIMATIONS,EMPHASIS_ANIMATIONS,EXIT_ANIMATIONS,ANIMATION_MODES,BADGE_ANIMATIONS,CTA_ANIMATIONS,
   FIT_MODES,FOCAL_POINTS,ASPECT_RATIOS,MULTIMEDIA_PRESETS,
   TEXT_STYLE_PRESETS,FONT_PAIRING_PRESETS,generatePalette,alignLayers,
-  templatesFor,autoDesignVariations,designSuggestions,validateCreative
+  templatesFor,autoDesignVariations,designSuggestions,validateCreative,contrastRatio
 } from './creative/creative-model.js';
 import {CreativeHistory} from './creative/creative-history.js';
 import {renderCreativeSvg,exportCreative,downloadBlob,removeBackgroundClient} from './creative/creative-svg-renderer.js';
@@ -840,6 +840,13 @@ function quickStyleControls(){
       <button data-palpreset="monochromatic"><i></i>Monochrome</button>
       <button data-palpreset="luxury"><i></i>Luxury Gold</button>
     </div>
+    <h4>SokoHai Design Palettes</h4>
+    <div class="cs-palette-scroll">
+      ${((window.SKH_AD_PALETTE_GROUPS&&window.SKH_AD_PALETTE_GROUPS.length)?window.SKH_AD_PALETTE_GROUPS:[{id:'classics',label:'Palettes'}]).map(g=>{
+        const pals=(window.SKH_AD_PALETTES?Object.values(window.SKH_AD_PALETTES):[]).filter(p=>(p.group||'classics')===g.id);
+        return pals.length?`<h5 class="cs-pal-group">${esc(g.label)}</h5><div class="cs-theme-picks">${pals.map(p=>`<button data-namedpalette="${p.id}" style="--a:${p.primary};--b:${p.secondary}"><i></i>${esc(p.label)}${state.paletteId===p.id?' · ✓':''}</button>`).join('')}</div>`:'';
+      }).join('')}
+    </div>
     <h4>Quick Colors</h4>
     <div class="cs-quick-swatches">
       ${QUICK_COLORS.map(c=>`<button data-quickcolor="${c}" style="background:${c};" title="${c}"></button>`).join('')}
@@ -1021,7 +1028,10 @@ function applyNamedPalette(id){
     n.layers.filter(l=>l.role==='cta').forEach(l=>l.style.fill=tok.ctaText);
     if(n.brandKit)n.brandKit={...n.brandKit,primary:tok.primary,secondary:tok.secondary,accent:tok.accent};
   },'Named Palette '+tok.id);
-  toast('Palette applied: '+tok.label);
+  try{
+    const rT=contrastRatio(tok.headline,tok.primary),rC=contrastRatio(tok.ctaText,tok.ctaBackground);
+    toast('Palette: '+tok.label+' · kichwa '+rT.toFixed(1)+':1 · CTA '+rC.toFixed(1)+':1');
+  }catch(e){toast('Palette applied: '+tok.label);}
 }
 
 function applyGradientPreset(key){

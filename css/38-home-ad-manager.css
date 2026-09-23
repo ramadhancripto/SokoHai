@@ -281,3 +281,23 @@
 .adm-ad-form .adm-ad-section-note{font-size:11.5px;color:#68797A;margin:2px 0 10px;font-weight:550}
 .adm-ad-form .adm-ad-pal-hint{display:block;font-size:11px;color:#0E7A5F;margin-top:4px;font-weight:700;min-height:14px}
 .adm-ad-form [data-ad-preset].active{outline:2px solid #0E7A5F;outline-offset:2px;background:#0E7A5F!important;color:#fff!important;font-weight:900}
+
+/* ============================================================
+   PALETTE EXPANSION 2026-09-23 (62 new palettes, grouped selector)
+   Additive only.
+   ============================================================ */
+
+/* Grouped palette grid inside the EXISTING Design Palettes area */
+.adm-ad-form .adm-ad-palette-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px;width:100%;max-height:172px;overflow-y:auto;padding:2px;margin-top:4px;border:1px solid #e4eeea;border-radius:12px;background:#fff}
+.adm-ad-form .adm-ad-pal-group{grid-column:1/-1;font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:#5B716B;margin:6px 0 0;padding:4px 6px 0;border-top:1px dashed #e4eeea}
+.adm-ad-form .adm-ad-pal-group:first-child{border-top:0;margin-top:0;padding-top:0}
+.adm-ad-form .palette-chip{display:inline-flex;align-items:center;justify-content:flex-start;gap:5px;font-size:11px;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.adm-ad-form .palette-chip i{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--pal-a,#0E7A5F),var(--pal-b,#18A982));flex:none;border:1px solid rgba(0,0,0,.1)}
+
+/* Full 22-token rendering: shadow & border tokens now visibly consumed
+   without changing default (palette-less) cards. */
+.skh-ann-post .skh-ann-card[style*="--ad-shadow"]{box-shadow:0 14px 34px var(--ad-shadow)}
+.skh-ann-post .skh-ann-card[style*="--ad-border"] .skh-ann-media,
+.skh-ann-post .skh-ann-card[style*="--ad-border"] .skh-ann-post-head,
+.skh-ann-post .skh-ann-card[style*="--ad-border"] .skh-ann-metrics,
+.skh-ann-post .skh-ann-card[style*="--ad-border"] .skh-ann-post-actions{border-color:var(--ad-border)}
