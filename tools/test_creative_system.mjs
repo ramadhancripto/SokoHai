@@ -213,7 +213,9 @@ const studio=fs.readFileSync('js/app/95-creative-studio.js','utf8'),
       ann=fs.readFileSync('js/06-announcement.js','utf8'),
       adminForm=fs.readFileSync('js/app/16-pos-admin-jobs.js','utf8');
 
-for(const token of ['SokoHaiCreativeStudio','Auto Design','saveDraft','exportCreative','creativePublish','creativeTrackEvent','removebg','eraser','improvedesign','mediaControls','animationControls','audioControls','timelineControls','uploadMedia','uploadAudio','MULTIMEDIA_PRESETS']) {
+/* [2026-09-24] mediaControls imegawanywa rasmi kuwa designControls (media+design ya kwanza)
+   na mediaTabControls (playback/trim) — contract mpya ya MEDIA + FIRST-LEVEL DESIGNING. */
+for(const token of ['SokoHaiCreativeStudio','Auto Design','saveDraft','exportCreative','creativePublish','creativeTrackEvent','removebg','eraser','improvedesign','designControls','mediaTabControls','animationControls','audioControls','timelineControls','uploadMedia','uploadAudio','MULTIMEDIA_PRESETS']) {
   assert.ok(studio.includes(token)||fn.includes(token), 'Studio contains contract: ' + token);
 }
 

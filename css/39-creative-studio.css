@@ -49,3 +49,19 @@
 .cs-pal-group:first-child{border-top:0;margin-top:0;padding-top:0}
 .cs-palette-scroll .cs-theme-picks{grid-template-columns:1fr 1fr;margin:4px 0 10px}
 .cs-palette-scroll .cs-theme-picks button i{background:linear-gradient(135deg,var(--a,#0E7A5F),var(--b,#167A91))}
+
+/* ==== MEDIA + FIRST-LEVEL DESIGNING (2026-09-24) ==== */
+#csCanvas{position:relative}
+.cs-video-overlay{pointer-events:none;z-index:2}
+.cs-addmedia{display:grid;gap:7px;margin-bottom:8px}
+.cs-addmedia .cs-upload{padding:14px}
+.cs-addmedia .cs-upload small{margin-top:3px}
+.cs-crop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:6px 0}
+.cs-crop-grid button{padding:7px 4px;font-size:11px}
+.cs-cta-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:6px 0}
+.cs-cta-presets button{padding:7px 4px;font-size:11px}
+.cs-layer-inline article{grid-template-columns:1fr auto auto auto auto;margin:3px 0}
+.cs-layer-inline article button:first-child{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-simple-tip{background:#F0F7FF;border-radius:8px;padding:8px;color:#334E68}
+.cs-preview-card{background:#fff;padding:8px;border-radius:10px}
+.cs-preview-full svg{width:100%;height:auto;max-height:70vh;display:block;margin:0 auto}

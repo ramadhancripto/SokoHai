@@ -12,7 +12,7 @@ import {CreativeHistory} from './creative/creative-history.js';
 import {renderCreativeSvg,exportCreative,downloadBlob,removeBackgroundClient} from './creative/creative-svg-renderer.js';
 
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)], esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state=null,history=null,selected='',activeTab='content',saveTimer=null,drag=null,zoom=.58,guides=true,variations=[],advancedMode=false,recentColors=[];
+let state=null,history=null,selected='',activeTab='basic',saveTimer=null,drag=null,zoom=.58,guides=true,variations=[],advancedMode=false,recentColors=[];
 let isPlaying=false,currentTime=0,playInterval=null,isMuted=false,masterVolume=1,audioElement=null;
 const storageKey=c=>'skh_creative_draft_'+(c.id||'new_'+(c.linkedEntity?.id||'blank'));
 
@@ -167,7 +167,7 @@ function shell(){
  <main class="skh-cs-layout">
    <aside class="skh-cs-left">
      <nav>
-       ${['presets','content','media','audio','animation','timeline','templates','style','effects','cutout','uploads','advanced'].map(x=>`<button data-tab="${x}">${x}</button>`).join('')}
+       ${[['basic','Basic'],['design','Design'],['motion','Motion'],['media','Media'],['cta','CTA'],['schedule','Schedule'],['advanced','Advanced']].map(([x,l])=>`<button data-tab="${x}">${l}</button>`).join('')}
      </nav>
      <div id="csLibrary" class="skh-cs-library"></div>
    </aside>
@@ -226,6 +226,19 @@ function bind(m){
     if(mKind)setMediaKind(mKind);
     const ly=e.target.closest('[data-layer]')?.dataset.layer;
     if(ly){selected=ly;renderCanvas();renderProperties();renderQuickBar();}
+    const lop=e.target.closest('[data-op][data-id]');
+    if(lop){
+      const id=lop.dataset.id,op=lop.dataset.op;
+      if(op==='duplicate'){selected=id;addLayer('duplicate-layer');}
+      else commit(n=>{
+        const l=n.layers.find(x=>x.id===id);if(!l)return;
+        if(op==='up')l.zIndex++;
+        if(op==='down')l.zIndex--;
+        if(op==='lock')l.locked=!l.locked;
+        if(op==='hide')l.visible=!l.visible;
+      },'Layer '+op);
+      return;
+    }
     const vari=e.target.closest('[data-variation]')?.dataset.variation;
     if(vari&&variations[+vari])replace(variations[+vari].creative);
     const theme=e.target.closest('[data-quicktheme]')?.dataset.quicktheme;
@@ -248,6 +261,12 @@ function bind(m){
     if(align)applyAlignment(align);
     const adP=e.target.closest('[data-adpreset]')?.dataset.adpreset;
     if(adP)applyAdPreset(adP);
+    const cropA=e.target.closest('[data-crop-aspect]')?.dataset.cropAspect;
+    if(cropA)applyCropAspect(cropA);
+    const ctaP=e.target.closest('[data-ctapreset]')?.dataset.ctapreset;
+    if(ctaP)updateSimple('cta',ctaP);
+    const ctaS=e.target.closest('[data-cta-style]')?.dataset.ctaStyle;
+    if(ctaS)applyCtaStyle(ctaS);
     const fmtSw=e.target.closest('[data-format-switch]')?.dataset.formatSwitch;
     if(fmtSw)switchFormat(fmtSw);
   });
@@ -259,6 +278,7 @@ function bind(m){
     if(e.target.id==='csTimelineScrubber'){currentTime=+e.target.value;updateTimelineUI();return;}
     if(e.target.id==='csMasterVolume'){masterVolume=+e.target.value/100;if(audioElement)audioElement.volume=masterVolume;return;}
     if(e.target.dataset.simple){updateSimple(e.target.dataset.simple,e.target.value);return;}
+    if(e.target.dataset.ctabg){updateCtaStyle(e.target.dataset.ctabg,e.target.value);return;}
     if(e.target.dataset.anim){updateAnim(e.target.dataset.anim,e.target);return;}
     if(e.target.dataset.vmeta){updateVmeta(e.target.dataset.vmeta,e.target);return;}
     if(e.target.dataset.audio){updateAudio(e.target.dataset.audio,e.target);return;}
@@ -276,8 +296,10 @@ function bind(m){
     if(e.target.dataset.audio){updateAudio(e.target.dataset.audio,e.target);return;}
     if(e.target.dataset.mix){updateMix(e.target.dataset.mix,e.target);return;}
     if(e.target.dataset.bg)updateBackground(e.target.dataset.bg,e.target);
-    if(e.target.id==='csImageFile'||e.target.id==='csMediaFile')uploadMedia(e.target);
-    if(e.target.id==='csAudioFileInput')uploadAudio(e.target);
+    if(e.target.id==='csAddMediaFile')addMediaFromInput(e.target);
+    else if(e.target.id==='csLogoFile')addLogoFromInput(e.target);
+    else if(e.target.id==='csImageFile'||e.target.id==='csMediaFile')uploadMedia(e.target);
+    else if(e.target.id==='csAudioFileInput')uploadAudio(e.target);
   });
 
   $('#csCanvas',m).addEventListener('pointerdown',pointerStart);
@@ -296,13 +318,46 @@ function bind(m){
   });
 }
 
-function action(a){
+function action(a,e){
   if(a==='close'){close();return;}
+  if(a==='openmedialibrary'){openMediaLibraryPicker();return;}
+  if(a==='addmediaurl'){
+    const url=($('#csAddMediaUrl')?.value||'').trim();
+    if(!/^https:\/\//i.test(url))return toast('Weka HTTPS media URL halali.','error');
+    applyAddedMedia(url,detectMediaKindFromUrl(url)||'image',url.split('/').pop().slice(0,40)||'Media',{});
+    const inp=$('#csAddMediaUrl');if(inp)inp.value='';
+    return;
+  }
+  if(a==='applylogourl'){
+    const url=($('#csLogoUrl')?.value||'').trim();
+    if(!/^https:\/\//i.test(url))return toast('Weka HTTPS logo URL halali.','error');
+    applyAddedMedia(url,'image','Logo',{asLogo:true});
+    const inp=$('#csLogoUrl');if(inp)inp.value='';
+    return;
+  }
+  if(a==='removemedia'){
+    const l=currentLayer();
+    if(l&&(l.type==='image'||l.type==='video'||l.type==='logo'||l.type==='audio')){
+      commit(n=>n.layers=n.layers.filter(x=>x.id!==l.id));
+      selected='';render();toast('Media layer imeondolewa.');
+    }
+    return;
+  }
+  if(a==='fitcanvas'){
+    fitMediaToCanvas(e?.target?.closest('[data-a]')?.dataset.fitmode||'fit');return;
+  }
+  if(a==='togglevideo'||a==='togglevideomute'){
+    const v=$('#csCanvas .cs-video-overlay');
+    if(!v)return toast('Hakuna video kwenye canvas bado.','warning');
+    if(a==='togglevideo'){if(v.paused)v.play().catch(()=>toast('Browser imezuia autoplay — tumia button tena.','warning'));else v.pause();}
+    else{v.muted=!v.muted;toast(v.muted?'Video: muted':'Video: sound on','info');}
+    return;
+  }
   if(a==='toggleadvanced'){
     advancedMode=!advancedMode;
     $('#skhCreativeStudio')?.classList.toggle('advanced',advancedMode);
     if(advancedMode){activeTab='advanced';renderLibrary();}
-    else{activeTab='content';selected='';render();}
+    else{activeTab='basic';selected='';render();}
     return;
   }
   if(a==='mobileprops'){$('.skh-cs-right')?.classList.toggle('mobile-open');return;}
@@ -378,6 +433,28 @@ function renderCanvas(){
   $$('[data-layer-id]',box).forEach(n=>{
     n.style.cursor='move';n.setAttribute('tabindex','0');
   });
+  renderVideoOverlays(box);
+}
+
+/* Editor-only live video preview layered over the SVG canvas (same layer model,
+   same coordinates). The published renderer (js/06-announcement.js) is untouched. */
+function renderVideoOverlays(box){
+  if(!box||!state)return;
+  state.layers.filter(l=>l.type==='video'&&l.visible!==false&&(l.videoUrl||l.src)).forEach(l=>{
+    const vm=l.videoMeta||{},st=l.style||{};
+    const v=document.createElement('video');
+    v.className='cs-video-overlay';
+    v.src=l.videoUrl||l.src;
+    if(l.posterUrl)v.poster=l.posterUrl;
+    v.muted=vm.muted!==false;
+    v.loop=vm.loop!==false;
+    v.playsInline=true;
+    if(vm.autoplay!==false)v.autoplay=true;
+    const fit=st.fit==='contain'?'contain':st.fit==='fill'?'fill':'cover';
+    v.style.cssText=`position:absolute;left:${(l.x||0)*zoom}px;top:${(l.y||0)*zoom}px;width:${(l.width||0)*zoom}px;height:${(l.height||0)*zoom}px;object-fit:${fit};border-radius:${(st.radius||0)*zoom}px;transform:rotate(${l.rotation||0}deg);opacity:${l.opacity??1};pointer-events:none;background:#000;`;
+    box.appendChild(v);
+    if(vm.autoplay!==false){const p=v.play&&v.play();if(p&&p.catch)p.catch(()=>{});}
+  });
 }
 
 function scaleCanvas(){
@@ -394,21 +471,22 @@ function renderQuickBar(){
   if(l.type==='image'||l.type==='video'){
     const isVid=l.type==='video';
     bar.innerHTML=`<span class="cs-qb-label">${isVid?'🎬':'🖼️'} ${esc(l.name)}</span>
-      ${!isVid?'<button data-a="removebg" class="cs-qb-btn">🪄 Remove BG</button><button data-a="eraser" class="cs-qb-btn">🧽 Erase</button>':''}
-      <button data-tab="media" class="cs-qb-btn">🎛️ Media Controls</button>
+      ${!isVid?'<button data-a="removebg" class="cs-qb-btn">🪄 Remove BG</button>':''}
+      <button data-tab="design" class="cs-qb-btn">✂️ Crop & Design</button>
+      ${isVid?'<button data-tab="media" class="cs-qb-btn">🎬 Playback & Trim</button><button data-a="togglevideo" class="cs-qb-btn">⏯ Play</button><button data-a="togglevideomute" class="cs-qb-btn">🔊 Mute</button>':'<button data-tab="media" class="cs-qb-btn">🎛️ Media Controls</button>'}
       <button data-a="flipx" class="cs-qb-btn">↔ Flip</button>
       <button data-a="restoreimage" class="cs-qb-btn">↺ Restore</button>
       <button data-a="toggleadvanced" class="cs-qb-btn">⚙️ Advanced</button>`;
   }else if(l.type==='text'){
     bar.innerHTML=`<span class="cs-qb-label">📝 ${esc(l.name)}</span>
       <button data-tstyle="Headline" class="cs-qb-btn">Headline</button>
-      <button data-tab="animation" class="cs-qb-btn">✨ Animate Text</button>
+      <button data-tab="motion" class="cs-qb-btn">✨ Animate Text</button>
       <button data-prop="style.fontWeight" value="${+l.style.fontWeight>=800?400:900}" class="cs-qb-btn"><b>B</b> Bold</button>
-      <button data-tab="style" class="cs-qb-btn">🎨 Colors</button>
+      <button data-tab="design" class="cs-qb-btn">🎨 Colors</button>
       <button data-a="toggleadvanced" class="cs-qb-btn">⚙️ Advanced</button>`;
   }else{
     bar.innerHTML=`<span class="cs-qb-label">🔷 ${esc(l.name)}</span>
-      <button data-tab="style" class="cs-qb-btn">🎨 Fill Color</button>
+      <button data-tab="design" class="cs-qb-btn">🎨 Fill Color</button>
       <button data-add="duplicate-layer" class="cs-qb-btn">Duplicate</button>
       <button data-a="toggleadvanced" class="cs-qb-btn">⚙️ Advanced</button>`;
   }
@@ -417,23 +495,16 @@ function renderQuickBar(){
 function renderLibrary(showVars=false){
   const box=$('#csLibrary');if(!box)return;
   $$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
-  if(activeTab==='presets')box.innerHTML=presetsControls();
-  else if(activeTab==='content')box.innerHTML=contentControls();
-  else if(activeTab==='media')box.innerHTML=mediaControls();
-  else if(activeTab==='audio')box.innerHTML=audioControls();
-  else if(activeTab==='animation')box.innerHTML=animationControls();
-  else if(activeTab==='timeline')box.innerHTML=timelineControls();
-  else if(activeTab==='style')box.innerHTML=quickStyleControls();
-  else if(activeTab==='effects')box.innerHTML=effectsControls();
-  else if(activeTab==='cutout')box.innerHTML=cutoutControls();
+  if(activeTab==='basic')box.innerHTML=basicControls();
+  else if(activeTab==='design')box.innerHTML=designControls();
+  else if(activeTab==='motion')box.innerHTML=animationControls();
+  else if(activeTab==='media')box.innerHTML=mediaTabControls();
+  else if(activeTab==='cta')box.innerHTML=ctaControls();
+  else if(activeTab==='schedule')box.innerHTML=scheduleControls();
   else if(activeTab==='advanced')box.innerHTML=advancedControls();
+  else if(activeTab==='timeline')box.innerHTML=timelineControls(); /* Advanced sub-view */
   else if(showVars||variations.length&&activeTab==='templates')box.innerHTML='<h3>Auto Design Variations</h3><p>Choose a labeled layout. None is called “best”.</p><div class="cs-templates">'+variations.map((v,i)=>`<button data-variation="${i}" style="--a:${v.creative.background.color};--b:${v.creative.background.color2}"><i></i><b>${esc(v.name)}</b></button>`).join('')+'</div><hr><h3>Templates</h3>'+templateCards();
   else if(activeTab==='templates')box.innerHTML='<h3>Editable Templates</h3><p>Every element remains a layer.</p>'+templateCards();
-  else if(activeTab==='elements')box.innerHTML=`<h3>Elements & Shapes</h3><div class="cs-addgrid"><button data-add="shape" data-value="rectangle">Rectangle</button><button data-add="shape" data-value="circle">Circle</button><button data-add="shape" data-value="line">Line</button><button data-add="shape" data-value="arrow">Arrow</button><button data-add="shape" data-value="badge">Badge</button>${['phone','location','chat','cart','delivery','clock','calendar','price','discount','verified','star','arrow'].map(i=>`<button data-add="icon" data-value="${i}">${i}</button>`).join('')}</div>`;
-  else if(activeTab==='text')box.innerHTML=`<h3>Typography</h3><div class="cs-addgrid"><button data-tstyle="Headline">Headline</button><button data-tstyle="Subheadline">Subheadline</button><button data-tstyle="Body">Body text</button><button data-tstyle="Price">Price Tag</button><button data-tstyle="Discount">Discount Pill</button><button data-tstyle="CTA">CTA Button</button><button data-tstyle="Badge">Badge</button><button data-tstyle="Location">Location</button></div><hr><h4>Font Pairings</h4><div class="cs-theme-picks">${FONT_PAIRING_PRESETS.map(p=>`<button data-fpair="${p.name}"><b>${p.name}</b><small>${p.headline} + ${p.body}</small></button>`).join('')}</div>`;
-  else if(activeTab==='uploads')box.innerHTML=`<h3>Uploads</h3><label class="cs-upload">Upload media<input id="csMediaFile" type="file" accept="image/*,video/*,audio/*" hidden></label><button class="cs-wide" data-add="image-url">Use HTTPS media URL</button><p>Uses the existing SokoHai Cloudinary uploader. Originals are not stored in Firestore.</p>`;
-  else if(activeTab==='background')box.innerHTML=backgroundControls();
-  else if(activeTab==='brand')box.innerHTML=brandControls();
 }
 
 function presetsControls(){
@@ -463,14 +534,9 @@ function audioControls(){
   const audioLayer = state.layers.find(l => l.type === 'audio') || null;
   const aMeta = audioLayer?.audioMeta || {};
   const mix = state.audioMix || { originalVideoVolume: 1, musicVolume: 0.8, voiceVolume: 1, muteOriginal: false };
+  if(!audioLayer)return `<p class="cs-note">Hakuna audio track bado. Tumia <b>DESIGN → + Add Media</b> kupakia audio.</p>`;
 
   return `
-    <div class="cs-simple-head"><span>🎵</span><div><h3>Audio &amp; Voice System</h3><p>Muziki wa background, sauti au voiceover ya tangazo.</p></div></div>
-    
-    <h4>Audio Track Source</h4>
-    <label class="cs-upload">Upload Audio (Cloudinary)<input id="csAudioFileInput" type="file" accept="audio/*" hidden></label>
-    <label>Audio HTTPS URL<input data-audio="src" value="${esc(audioLayer?.src||audioLayer?.audioUrl||'')}" placeholder="https://..."></label>
-    
     <div style="margin:10px 0;">
       <button data-a="testaudio" class="primary" style="width:100%;">▶ Play / Test Audio Track</button>
     </div>
@@ -549,10 +615,9 @@ function applyAdPreset(presetKey){
       }
     }
   }, `Apply Preset ${presetKey}`);
-  if (presetKey === 'short_video') activeTab = 'media';
-  else if (presetKey === 'audio_visual' || presetKey === 'video_audio') activeTab = 'audio';
-  else if (presetKey === 'motion') activeTab = 'animation';
-  else activeTab = 'content';
+  if (presetKey === 'short_video'||presetKey==='audio_visual'||presetKey==='video_audio'||presetKey==='full_mix') activeTab = 'design';
+  else if (presetKey === 'motion') activeTab = 'motion';
+  else activeTab = 'basic';
   renderLibrary();
   toast(`Applied preset: ${p.label}`);
 }
@@ -622,30 +687,8 @@ function updateLayerTime(layerId, field, val){
 
 async function uploadAudio(input){
   const file = input.files?.[0]; if (!file) return;
-  input.disabled = true;
-  try {
-    if (typeof window.skhUploadFromFile !== 'function') throw new Error('SokoHai media uploader is unavailable.');
-    const uploaded = await window.skhUploadFromFile(file, 'audio');
-    const secureUrl = uploaded?.secure_url || uploaded?.url;
-    if (!secureUrl) throw new Error('Upload succeeded without secure URL.');
-    commit(n => {
-      let l = n.layers.find(x => x.type === 'audio');
-      if (!l) {
-        l = makeLayer('audio', { name: file.name || 'Audio Track' });
-        n.layers.push(l);
-      }
-      l.src = secureUrl;
-      l.audioUrl = secureUrl;
-      l.name = file.name || l.name;
-    }, 'Upload Audio');
-    toast('Audio uploaded successfully.');
-  } catch (err) {
-    console.error('Audio upload failed:', err);
-    toast(err.message || 'Audio upload failed.', 'error');
-  } finally {
-    input.disabled = false;
-    input.value = '';
-  }
+  input.value = '';
+  await addMediaFile(file, { kind: 'audio' });
 }
 
 function testAudioPlayback(){
@@ -662,27 +705,203 @@ function testAudioPlayback(){
   toast('Playing audio track...', 'info');
 }
 
-function mediaControls(){
-  const mediaLayer = state.layers.find(l => l.id === selected && (l.type === 'image' || l.type === 'video')) || state.layers.find(l => l.type === 'image' || l.type === 'video') || null;
-  const isVideo = mediaLayer?.type === 'video';
-  const st = mediaLayer?.style || {};
-  const f = st.filter || {};
-  const vMeta = mediaLayer?.videoMeta || {};
+/* ==== DESIGN tab helpers ==== */
+function designMediaLayer(){
+  const sel=state.layers.find(l=>l.id===selected&&(l.type==='image'||l.type==='video'||l.type==='logo'));
+  return sel||state.layers.find(l=>l.type==='image'||l.type==='video')||null;
+}
+function detectMediaKind(file){
+  const t=(file&&file.type)||'';
+  if(t.startsWith('video/'))return 'video';
+  if(t.startsWith('audio/'))return 'audio';
+  if(t.startsWith('image/'))return 'image'; /* includes GIF, SVG, WebP */
+  const ext=String(file&&file.name||'').split('.').pop().toLowerCase();
+  if(['mp4','webm','mov','m4v','avi','mkv'].includes(ext))return 'video';
+  if(['mp3','wav','m4a','aac','ogg','flac'].includes(ext))return 'audio';
+  if(['jpg','jpeg','png','webp','gif','svg','bmp','avif'].includes(ext))return 'image';
+  return null;
+}
+function detectMediaKindFromUrl(url){
+  const u=String(url||'').toLowerCase().split('?')[0];
+  if(/\.(mp4|webm|mov|m4v|avi|mkv)$/.test(u))return 'video';
+  if(/\.(mp3|wav|m4a|aac|ogg|flac)$/.test(u))return 'audio';
+  if(/\.(jpg|jpeg|png|webp|gif|svg|bmp|avif)$/.test(u))return 'image';
+  return null;
+}
+/* Reuses the single canonical uploader (js/11-uploads.js) and the Admin Media
+   Library pipeline (adminMedia collection — reference metadata only, bytes stay
+   on Cloudinary). Same size limits as the Announcement Form. */
+const SKH_MEDIA_LIMITS={image:8*1024*1024,logo:4*1024*1024,video:80*1024*1024,audio:20*1024*1024};
+async function addMediaFile(file,opts={}){
+  if(!file)return;
+  const kind=opts.kind||detectMediaKind(file);
+  if(!kind){toast('Aina ya media haitambuliki. Tumia image, video au audio.','error');return;}
+  const limitKey=opts.asLogo?'logo':(kind==='video'?'video':kind==='audio'?'audio':'image');
+  const limit=SKH_MEDIA_LIMITS[limitKey];
+  if(file.size&&file.size>limit){toast(`File ni kubwa kuliko kiwango (${Math.round(limit/1048576)}MB) kwa ${limitKey}.`,'error');return;}
+  try{
+    if(typeof window.skhUploadFromFile!=='function')throw new Error('SokoHai media uploader is unavailable.');
+    toast('Uploading '+kind+'…','info');
+    const uploaded=await window.skhUploadFromFile(file,{resourceType:kind==='audio'||kind==='video'?'video':'image',folder:'sokohai/creative-assets'});
+    const url=uploaded&&(uploaded.url||uploaded.secure_url);
+    if(!url)throw new Error('Upload failed.');
+    try{ /* existing Admin Media Library pipeline (admin-only per Firestore rules; silent skip otherwise) */
+      if(skh.currentUser){
+        const d=uploaded.data||{};
+        skh.addDoc(skh.collection(skh.db,'adminMedia'),{url,name:file.name,type:opts.asLogo?'logo':kind,mime:file.type,size:file.size,width:d.width||null,height:d.height||null,duration:d.duration||null,uploadedAt:new Date().toISOString(),uploadedBy:skh.currentUser.uid,archived:false}).catch(()=>{});
+      }
+    }catch(e){}
+    applyAddedMedia(url,opts.asLogo?'image':kind,file.name||'Media',uploaded.data||{},opts);
+  }catch(err){
+    toast(err.message||'Upload failed.','error');
+  }
+}
+function addMediaFromInput(input){const file=input.files&&input.files[0];input.value='';addMediaFile(file);}
+function addLogoFromInput(input){const file=input.files&&input.files[0];input.value='';addMediaFile(file,{asLogo:true});}
+function applyAddedMedia(url,kind,name,meta,opts={}){
+  commit(n=>{
+    let l=null;
+    if(opts.asLogo)l=n.layers.find(x=>x.type==='logo');
+    else if(kind==='audio')l=n.layers.find(x=>x.type==='audio');
+    else l=n.layers.find(x=>x.id===selected&&(x.type===kind||((kind==='image')&&(x.type==='image'||x.type==='logo'))))||n.layers.find(x=>x.type===kind||(kind==='image'&&x.type==='logo'));
+    if(!l){
+      if(kind==='audio'){
+        l=makeLayer('audio',{name:name||'Audio track',x:80,y:Math.round(n.canvas.height*.82),width:Math.round(n.canvas.width*.8),height:70,zIndex:Math.max(0,...n.layers.map(q=>q.zIndex))+1});
+        n.layers.push(l);
+      }else{
+        const type=opts.asLogo?'logo':kind;
+        l=makeLayer(type,{name:name||(kind==='video'?'Video layer':'Media'),
+          x:opts.asLogo?Math.round(n.canvas.width*.8):Math.round(n.canvas.width*.14),
+          y:opts.asLogo?Math.round(n.canvas.height*.05):Math.round(n.canvas.height*.18),
+          width:opts.asLogo?Math.round(n.canvas.width*.15):Math.round(n.canvas.width*.72),
+          height:opts.asLogo?Math.round(n.canvas.width*.15):Math.round(n.canvas.height*.52),
+          zIndex:Math.max(0,...n.layers.map(q=>q.zIndex))+1,
+          style:{fit:opts.asLogo?'contain':'cover',radius:opts.asLogo?16:22}});
+        n.layers.push(l);
+      }
+    }
+    if(kind==='video'){l.type='video';l.videoUrl=url;}
+    l.src=url;
+    l.originalSrc=l.originalSrc||url;
+    if(name&&name!=='Media')l.name=name;
+    if(meta&&meta.duration&&kind==='video'){
+      l.videoMeta=l.videoMeta||{};l.videoMeta.duration=meta.duration;
+      if(meta.duration>30)l.videoMeta.trimEnd=30; /* existing 30s rule stays authoritative */
+    }
+    selected=l.id;
+  },'Add Media');
+  toast((opts.asLogo?'Logo':kind[0].toUpperCase()+kind.slice(1))+' imeongezwa kwenye canvas.');
+}
+function openMediaLibraryPicker(){
+  if(typeof window.skhOpenAdminMediaLibrary!=='function'){toast('Media Library haipatikani bado.','error');return;}
+  window.skhOpenAdminMediaLibrary('studio');
+}
+window.skhStudioApplyLibraryMedia=function(url,type){
+  if(!url)return;
+  const kind=type==='audio'?'audio':type==='video'?'video':'image';
+  applyAddedMedia(url,kind,'Library media',{});
+};
 
-  return `
-    <div class="cs-simple-head"><span>🎬</span><div><h3>Media Layer System</h3><p>Picha au video kama object/layer inayohaririwa.</p></div></div>
-    
+const SKH_CROP_RATIOS=['original','1:1','4:5','16:9','9:16','4:3','3:4','custom'];
+function applyCropAspect(ratio){
+  const l=currentLayer();
+  if(!l||(l.type!=='image'&&l.type!=='video'&&l.type!=='logo'))return toast('Chagua media kwanza.','warning');
+  commit(n=>{
+    const t=n.layers.find(x=>x.id===l.id);if(!t)return;
+    t.cropAspect=ratio;
+    if(ratio==='original'){
+      t.crop={x:0,y:0,width:100,height:100,zoom:1};
+      t.style.cropX=0;t.style.cropY=0;t.style.zoom=1;t.style.fit='cover';
+      return;
+    }
+    if(ratio==='custom')return; /* free resize on canvas = custom crop */
+    const parts=ratio.split(':').map(Number);if(parts.length!==2||!parts[0]||!parts[1])return;
+    const cx=t.x+t.width/2,cy=t.y+t.height/2;
+    let w=t.width,h=w*parts[1]/parts[0];
+    if(h>n.canvas.height*1.05){h=n.canvas.height*.9;w=h*parts[0]/parts[1];}
+    t.width=Math.max(20,Math.round(w));t.height=Math.max(20,Math.round(h));
+    t.x=Math.round(cx-t.width/2);t.y=Math.round(cy-t.height/2);
+    t.style=t.style||{};t.style.fit='cover';
+  },'Crop '+ratio);
+}
+function fitMediaToCanvas(mode){
+  const l=currentLayer();
+  if(!l||(l.type!=='image'&&l.type!=='video'&&l.type!=='logo'))return toast('Chagua media kwanza.','warning');
+  commit(n=>{
+    const t=n.layers.find(x=>x.id===l.id);if(!t)return;
+    t.x=0;t.y=0;t.width=n.canvas.width;t.height=n.canvas.height;
+    t.style=t.style||{};
+    t.style.fit=mode==='contain'?'contain':mode==='fill'?'fill':'cover';
+  },'Fit media '+mode);
+}
+function updateCtaStyle(key,val){
+  commit(n=>{
+    const bg=n.layers.find(x=>x.role==='cta-bg'),cta=n.layers.find(x=>x.role==='cta');
+    if(key==='fill'&&bg){bg.style=bg.style||{};bg.style.fill=val;}
+    if(key==='text'&&cta){cta.style=cta.style||{};cta.style.fill=val;}
+  },'CTA Style');
+}
+function applyCtaStyle(shape){
+  commit(n=>{
+    const bg=n.layers.find(x=>x.role==='cta-bg');if(!bg)return;
+    bg.style=bg.style||{};
+    bg.style.radius=shape==='pill'?999:shape==='square'?8:22;
+  },'CTA Shape');
+}
+
+/* ==== DESIGN tab — media + first-level designing (Step 2) ==== */
+function designControls(){
+  const media=designMediaLayer();
+  if(media&&selected!==media.id&&!currentLayer())selected=media.id;
+  const st=media?.style||{},f=st.filter||{};
+  const isVideo=media?.type==='video',isAudioSel=currentLayer()?.type==='audio';
+  const audioLayer=state.layers.find(l=>l.type==='audio');
+
+  const addMediaBlock=`
+    <div class="cs-simple-head"><span>2</span><div><h3>Design — Media & Visuals</h3><p>Pakia media, kisha crop/size/position hapa hapa.</p></div></div>
+    <h4>+ Add Media</h4>
+    <div class="cs-addmedia">
+      <label class="cs-upload">📤 Upload from device<small style="display:block;font-weight:500;">Image · Video · GIF · SVG · Audio</small><input id="csAddMediaFile" type="file" accept="image/*,video/*,audio/*" hidden></label>
+      <button class="cs-wide" data-a="openmedialibrary">🗂 Select from Media Library</button>
+      <label>Media HTTPS URL<input id="csAddMediaUrl" placeholder="https://..."></label>
+      <button class="cs-wide" data-a="addmediaurl">Link media URL</button>
+    </div>`;
+
+  const mediaBlock=media?`
+    <h4>Selected Media — ${esc(media.name||media.type)}</h4>
     <div class="cs-two">
-      <button class="${!isVideo?'primary':''}" data-media-kind="image">Picha (Image)</button>
-      <button class="${isVideo?'primary':''}" data-media-kind="video">Video (Clip)</button>
+      <button data-media-kind="image" ${!isVideo?'class="primary"':''}>Picha</button>
+      <button data-media-kind="video" ${isVideo?'class="primary"':''}>Video</button>
+    </div>
+    <label>Replace media URL<input data-prop="src" value="${esc(media.src||media.videoUrl||'')}" placeholder="https://..."></label>
+    <div class="cs-two">
+      <button data-a="removemedia">🗑 Remove media</button>
+      ${isVideo?'<button data-tab="media">🎬 Playback &amp; Trim</button>':''}
     </div>
 
-    <h4>Media Source &amp; Upload</h4>
-    <label class="cs-upload">Upload Media (Cloudinary)<input id="csMediaFile" type="file" accept="${isVideo?'video/*':'image/*'}" hidden></label>
-    <label>Media HTTPS URL<input data-prop="src" value="${esc(mediaLayer?.src||mediaLayer?.videoUrl||'')}" placeholder="https://..."></label>
-    ${isVideo?`<label>Poster / Cover Image URL<input data-prop="posterUrl" value="${esc(mediaLayer?.posterUrl||'')}" placeholder="https://..."></label>`:''}
+    <h4>Crop / Cut-out</h4>
+    <div class="cs-crop-grid">
+      ${SKH_CROP_RATIOS.map(r=>`<button data-crop-aspect="${r}" ${media.cropAspect===r?'class="primary"':''}>${r==='original'?'Original':r==='custom'?'Custom':r}</button>`).join('')}
+    </div>
+    <div class="cs-two">
+      <label>Pan X (${st.cropX||0})<input data-prop="style.cropX" type="range" min="-1200" max="1200" step="10" value="${st.cropX||0}"></label>
+      <label>Pan Y (${st.cropY||0})<input data-prop="style.cropY" type="range" min="-1200" max="1200" step="10" value="${st.cropY||0}"></label>
+    </div>
+    <label>Zoom / crop-in (${(st.zoom||1).toFixed(2)}×)<input data-prop="style.zoom" type="range" min="1" max="3" step="0.05" value="${st.zoom||1}"></label>
 
-    <h4>Fit &amp; Focal Point</h4>
+    <h4>Size &amp; Position</h4>
+    <div class="cs-crop-grid">
+      <button data-a="fitcanvas" data-fitmode="fit">Fit canvas</button>
+      <button data-a="fitcanvas" data-fitmode="fill">Fill</button>
+      <button data-a="fitcanvas" data-fitmode="contain">Contain</button>
+      <button data-align="center">Center H</button>
+    </div>
+    <div class="cs-crop-grid">
+      <button data-align="middle">Center V</button>
+      <button data-align="left">Left</button>
+      <button data-align="right">Right</button>
+      <button data-align="top">Top</button>
+    </div>
     <div class="cs-two">
       <label>Fit Mode<select data-prop="style.fit">
         <option value="cover" ${st.fit==='cover'?'selected':''}>Cover</option>
@@ -691,21 +910,130 @@ function mediaControls(){
         <option value="original" ${st.fit==='original'?'selected':''}>Original</option>
       </select></label>
       <label>Focal Point<select data-prop="focalPoint">
-        <option value="center" ${mediaLayer?.focalPoint==='center'?'selected':''}>Center</option>
-        <option value="top" ${mediaLayer?.focalPoint==='top'?'selected':''}>Top</option>
-        <option value="bottom" ${mediaLayer?.focalPoint==='bottom'?'selected':''}>Bottom</option>
-        <option value="left" ${mediaLayer?.focalPoint==='left'?'selected':''}>Left</option>
-        <option value="right" ${mediaLayer?.focalPoint==='right'?'selected':''}>Right</option>
+        ${['center','top','bottom','left','right'].map(fp=>`<option value="${fp}" ${media.focalPoint===fp?'selected':''}>${fp}</option>`).join('')}
       </select></label>
     </div>
+    <div class="cs-two">
+      <label>Rotation (${media.rotation||0}°)<input data-prop="rotation" type="range" min="-180" max="180" value="${media.rotation||0}"></label>
+      <label>Opacity (${Math.round((media.opacity??1)*100)}%)<input data-prop="opacity" type="range" min="10" max="100" value="${Math.round((media.opacity??1)*100)}"></label>
+    </div>
 
-    ${isVideo?`
-    <h4>Video Playback &amp; 30s Trimming</h4>
+    <h4>Appearance</h4>
+    <div class="cs-two">
+      <label>Border radius<input data-prop="style.radius" type="range" min="0" max="300" value="${st.radius||0}"></label>
+      <label>Border width<input data-prop="style.borderWidth" type="range" min="0" max="20" value="${st.borderWidth||0}"></label>
+    </div>
+    <div class="cs-two">
+      <label>Border color<input data-prop="style.borderColor" type="color" value="${esc(st.borderColor||'#000000')}"></label>
+      <label>Overlay color<input data-prop="style.overlayColor" type="color" value="${esc(st.overlayColor||'#000000')}"></label>
+    </div>
+    <label>Overlay strength (${Math.round((st.overlayOpacity||0)*100)}%)<input data-prop="style.overlayOpacity" type="range" min="0" max="0.9" step="0.05" value="${st.overlayOpacity||0}"></label>
+    <label>Shadow (${st.shadowOpacity||0})<input data-prop="style.shadowOpacity" type="range" min="0" max="1" step="0.05" value="${st.shadowOpacity||0}"></label>
+    <h4>Frame Shape</h4>
+    <div class="cs-crop-grid">
+      <button data-frame="rounded">Rounded</button>
+      <button data-frame="circle">Circle</button>
+      <button data-frame="square">Square</button>
+      <button data-frame="polaroid">Polaroid</button>
+    </div>
+    <div class="cs-two">
+      <button data-a="flipx">↔ Flip X</button>
+      <button data-a="flipy">↕ Flip Y</button>
+    </div>
+    <h4>Basic Filters</h4>
+    <label>Brightness: ${f.brightness||100}%<input data-prop="style.filter.brightness" type="range" min="40" max="180" value="${f.brightness||100}"></label>
+    <label>Contrast: ${f.contrast||100}%<input data-prop="style.filter.contrast" type="range" min="40" max="180" value="${f.contrast||100}"></label>
+    <label>Saturation: ${f.saturation||100}%<input data-prop="style.filter.saturation" type="range" min="0" max="200" value="${f.saturation||100}"></label>
+    <label>Warmth: ${f.temperature||0}<input data-prop="style.filter.temperature" type="range" min="-100" max="100" value="${f.temperature||0}"></label>
+    <label>Blur: ${f.blur||0}px<input data-prop="style.filter.blur" type="range" min="0" max="20" value="${f.blur||0}"></label>
+    ${media.type==='image'?`<div class="cs-actions-grid" style="margin-top:8px;">
+      <button data-a="removebg" class="accent">🪄 Cutout / Remove BG</button>
+      <button data-a="restoreimage">↺ Restore Original</button>
+    </div>`:''}
+  `:`
+    <p class="cs-note">Hakuna media bado — tumia <b>+ Add Media</b> hapo juu. Media itaonekana moja kwa moja kwenye canvas.</p>`;
+
+  const layersBlock=`
+    <h4>Layers</h4>
+    <div class="cs-layer-list cs-layer-inline">
+      ${[...state.layers].sort((a,b)=>b.zIndex-a.zIndex).map(l=>`<article><button data-layer="${l.id}" ${l.id===selected?'class="primary"':''}>${l.visible===false?'○':'●'} ${esc(l.name||l.type)}</button><button data-op="up" data-id="${l.id}" title="Bring forward">↑</button><button data-op="down" data-id="${l.id}" title="Send backward">↓</button><button data-op="lock" data-id="${l.id}">${l.locked?'🔓':'🔒'}</button><button data-op="duplicate" data-id="${l.id}" title="Duplicate">⧉</button></article>`).join('')}
+    </div>
+    <p class="cs-simple-tip">Kuchagua layer: click jina lake au click kwenye canvas. Position/size za kina ziko kwenye paneli ya Properties (kulia).</p>`;
+
+  const textBlock=`
+    <h4>Text</h4>
+    <div class="cs-addgrid">
+      <button data-tstyle="Headline">Headline</button>
+      <button data-tstyle="Subheadline">Subheadline</button>
+      <button data-tstyle="Body">Body text</button>
+      <button data-tstyle="Price">Price Tag</button>
+      <button data-tstyle="Discount">Discount Pill</button>
+      <button data-tstyle="Badge">Badge</button>
+      <button data-tstyle="Location">Location</button>
+      <button data-tstyle="Contact">Contact</button>
+    </div>
+    <div class="cs-theme-picks">${FONT_PAIRING_PRESETS.map(p=>`<button data-fpair="${p.name}"><b>${p.name}</b><small>${p.headline} + ${p.body}</small></button>`).join('')}</div>`;
+
+  const logoBlock=`
+    <h4>Logo</h4>
+    <div class="cs-two">
+      <label class="cs-upload" style="padding:10px;">📤 Upload logo<input id="csLogoFile" type="file" accept="image/*" hidden></label>
+      <label>Logo HTTPS URL<input id="csLogoUrl" placeholder="https://..."></label>
+    </div>
+    <button class="cs-wide" data-a="applylogourl">Add / Replace logo</button>`;
+
+  const shapesBlock=`
+    <h4>Shapes &amp; Icons</h4>
+    <div class="cs-addgrid">
+      <button data-add="shape" data-value="rectangle">Rectangle</button>
+      <button data-add="shape" data-value="circle">Circle</button>
+      <button data-add="shape" data-value="line">Line</button>
+      <button data-add="shape" data-value="arrow">Arrow</button>
+      <button data-add="shape" data-value="badge">Badge</button>
+      ${['phone','location','chat','cart','delivery','clock','calendar','price','discount','verified','star'].map(i=>`<button data-add="icon" data-value="${i}">${i}</button>`).join('')}
+    </div>`;
+
+  const templatesBlock=`
+    <h4>Templates &amp; Background</h4>
+    <button class="cs-wide" data-tab="templates">📐 Editable Templates</button>
+    ${backgroundControls()}`;
+
+  return addMediaBlock+mediaBlock+layersBlock+textBlock+logoBlock+shapesBlock+quickStyleControls()+templatesBlock;
+}
+
+/* ==== MEDIA tab — media-itself controls (NO uploader duplication) ==== */
+function mediaTabControls(){
+  const mediaLayer=state.layers.find(l=>l.id===selected&&(l.type==='image'||l.type==='video'||l.type==='audio'))||state.layers.find(l=>l.type==='video')||state.layers.find(l=>l.type==='audio')||null;
+  if(mediaLayer&&selected!==mediaLayer.id&&!currentLayer())selected=mediaLayer.id;
+  const isVideo=mediaLayer?.type==='video';
+  const vMeta=mediaLayer?.videoMeta||{};
+  const audioLayer=state.layers.find(l=>l.type==='audio');
+
+  let html=`
+    <div class="cs-simple-head"><span>🎛</span><div><h3>Media Controls</h3><p>Playback, trim na mipangilio ya media yenyewe. (Upload iko DESIGN → + Add Media.)</p></div></div>`;
+
+  if(!mediaLayer&&!audioLayer){
+    html+=`<p class="cs-note">Hakuna media bado. Enda kwenye <b>DESIGN → + Add Media</b> kupakia image, video, GIF au audio.</p>`;
+    return html;
+  }
+
+  if(mediaLayer){
+    html+=`
+    <h4>${isVideo?'🎬 Video':'🖼️ '+esc(mediaLayer.name||'Media')} ${mediaLayer.src?'':'· (bado haina source)'}</h4>
+    <p style="word-break:break-all;font-size:11px;">${esc(mediaLayer.src||mediaLayer.videoUrl||'—')}</p>`;
+    if(isVideo){
+      html+=`
     <div style="background:#0F172A; padding:8px 12px; border-radius:8px; margin-bottom:8px;">
       <span style="font-size:12px; color:${(vMeta.duration||30)>30?'#EF4444':'#10B981'}; font-weight:700;">
         ⏱ Duration: ${Math.round(vMeta.duration||30)}s ${(vMeta.duration||30)>30?'⚠️ (Max 30s limit exceeded!)':'✓ (Within 30s limit)'}
       </span>
     </div>
+    <div class="cs-two">
+      <button data-a="togglevideo">⏯ Play / Pause preview</button>
+      <button data-a="togglevideomute">🔊 Mute / Unmute</button>
+    </div>
+    <label>Poster / Cover Image URL<input data-prop="posterUrl" value="${esc(mediaLayer.posterUrl||'')}" placeholder="https://..."></label>
+    <h4>Basic Video Trim (Start ─ End)</h4>
     <div class="cs-two">
       <label>Trim Start (${vMeta.trimStart||0}s)<input data-vmeta="trimStart" type="range" min="0" max="30" step="1" value="${vMeta.trimStart||0}"></label>
       <label>Trim End (${vMeta.trimEnd||30}s)<input data-vmeta="trimEnd" type="range" min="0" max="30" step="1" value="${vMeta.trimEnd||30}"></label>
@@ -717,32 +1045,17 @@ function mediaControls(){
     <div class="cs-two">
       <label><input type="checkbox" data-vmeta="loop" ${vMeta.loop!==false?'checked':''}> Loop</label>
       <label><input type="checkbox" data-vmeta="controls" ${vMeta.controls?'checked':''}> Controls</label>
-    </div>`:''}
-
-    <h4>Frame Shape &amp; Transform</h4>
-    <div class="cs-theme-picks">
-      <button data-frame="rounded">Rounded</button>
-      <button data-frame="circle">Circle</button>
-      <button data-frame="square">Square</button>
-      <button data-frame="polaroid">Polaroid</button>
     </div>
-    <div class="cs-two">
-      <button data-a="flipx">↔ Flip X</button>
-      <button data-a="flipy">↕ Flip Y</button>
-    </div>
+    <p class="cs-simple-tip">Media duration ni kitu tofauti na display duration (SCHEDULE). Deep timeline editing iko ADVANCED.</p>`;
+    }else{
+      html+=`<p class="cs-simple-tip">Crop, size, position na filters za media hii ziko kwenye <b>DESIGN</b>. Preview ya video playback iko hapo hapo kwenye canvas.</p>`;
+    }
+  }
 
-    <h4>Adjustments &amp; Filters</h4>
-    <label>Brightness: ${f.brightness||100}%<input data-prop="style.filter.brightness" type="range" min="40" max="180" value="${f.brightness||100}"></label>
-    <label>Contrast: ${f.contrast||100}%<input data-prop="style.filter.contrast" type="range" min="40" max="180" value="${f.contrast||100}"></label>
-    <label>Saturation: ${f.saturation||100}%<input data-prop="style.filter.saturation" type="range" min="0" max="200" value="${f.saturation||100}"></label>
-    <label>Warmth: ${f.temperature||0}<input data-prop="style.filter.temperature" type="range" min="-100" max="100" value="${f.temperature||0}"></label>
-    <label>Blur: ${f.blur||0}px<input data-prop="style.filter.blur" type="range" min="0" max="20" value="${f.blur||0}"></label>
-
-    <div class="cs-actions-grid" style="margin-top:12px;">
-      <button data-a="removebg" class="accent">🪄 Cutout / Remove BG</button>
-      <button data-a="restoreimage">↺ Restore Original</button>
-    </div>
-  `;
+  if(audioLayer){
+    html+=`<h4>🎵 Audio Track</h4>`+audioControls();
+  }
+  return html;
 }
 
 function animationControls(){
@@ -798,25 +1111,49 @@ function animationControls(){
   `;
 }
 
-function contentControls(){
-  const role=r=>state.layers.find(l=>l.role===r),head=role('headline'),body=role('body'),price=role('price'),cta=role('cta'),img=state.layers.find(l=>l.type==='image');
-  return `
-    <div class="cs-simple-head"><span>1</span><div><h3>Weka maneno yako</h3><p>Andika tu; preview inabadilika papo hapo.</p></div></div>
+/* ==== BASIC tab — ad presets + content information (Step 1) ==== */
+function basicControls(){
+  const role=r=>state.layers.find(l=>l.role===r),head=role('headline'),body=role('body'),price=role('price');
+  return presetsControls()+`
+    <div class="cs-simple-head"><span>1</span><div><h3>Content / Advertisement information</h3><p>Andika maneno; preview inabadilika papo hapo.</p></div></div>
     <label>Kichwa kikuu<input data-simple="headline" value="${esc(head?.content||'')}" placeholder="Mfano: Ofa kubwa ya wiki"></label>
     <label>Maelezo mafupi<textarea data-simple="body" rows="3" placeholder="Eleza bidhaa au huduma">${esc(body?.content||'')}</textarea></label>
-    <div class="cs-two">
-      <label>Bei / offer<input data-simple="price" value="${esc(price?.content||'')}" placeholder="TZS 59,000"></label>
-      <label>Kitufe (CTA)<input data-simple="cta" value="${esc(cta?.content||'TAZAMA ZAIDI')}"></label>
-    </div>
-    <div class="cs-simple-head"><span>2</span><div><h3>Weka picha</h3><p>Upload au tumia picha iliyopo SokoHai.</p></div></div>
-    <label class="cs-upload">Chagua picha<input id="csImageFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></label>
-    <label>Image URL<input data-simple="image" value="${esc(img?.src||'')}" placeholder="https://..."></label>
+    <label>Bei / offer<input data-simple="price" value="${esc(price?.content||'')}" placeholder="TZS 59,000"></label>
+    <p class="cs-simple-tip">Endelea kwenye <b>DESIGN</b> kupakia media na ku-design. CTA iko kwenye tab ya <b>CTA</b>; ratiba iko <b>SCHEDULE</b>.</p>`;
+}
+
+/* ==== CTA tab — call-to-action ==== */
+function ctaControls(){
+  const cta=state.layers.find(l=>l.role==='cta'),bg=state.layers.find(l=>l.role==='cta-bg');
+  const presets=(window.SKH_CTA_PRESETS&&window.SKH_CTA_PRESETS.length)?window.SKH_CTA_PRESETS:['TAZAMA ZAIDI'];
+  return `
+    <div class="cs-simple-head"><span>✦</span><div><h3>CTA — Kitufe cha Kitendo</h3><p>Kitufe kinachomwambia mtumiaji achague nini.</p></div></div>
+    <label>CTA text<input data-simple="cta" value="${esc(cta?.content||'TAZAMA ZAIDI')}"></label>
+    <h4>Label Presets</h4>
+    <div class="cs-cta-presets">${presets.map(p=>`<button data-ctapreset="${esc(p)}" ${cta?.content===p?'class="primary"':''}>${esc(p)}</button>`).join('')}</div>
     <label>CTA destination / website<input data-simple="destination" value="${esc(state.destination?.url||'')}" placeholder="https://... (si lazima kama umetoka kwenye Product/Service)"></label>
-    <div class="cs-simple-head"><span>✦</span><div><h3>Advertisement / Campaign</h3><p>Nini kinachotangazwa, ratiba na muda wa kuonyeshwa. Si lazima kwa post za kawaida.</p></div></div>
+    <h4>Button Style</h4>
+    <div class="cs-two">
+      <label>Button color<input data-ctabg="fill" type="color" value="${esc(bg?.style?.fill||'#F4C542')}"></label>
+      <label>Text color<input data-ctabg="text" type="color" value="${esc(cta?.style?.fill||'#102A43')}"></label>
+    </div>
+    <div class="cs-cta-presets">
+      <button data-cta-style="pill">Pill</button>
+      <button data-cta-style="rounded">Rounded</button>
+      <button data-cta-style="square">Square</button>
+    </div>
+    <p class="cs-simple-tip">Rangi za CTA pia hufuata palette uliyochagua kwenye DESIGN.</p>`;
+}
+
+/* ==== SCHEDULE tab — campaign dates, priority, duration ==== */
+function scheduleControls(){
+  return `
+    <div class="cs-simple-head"><span>🗓</span><div><h3>Schedule & Campaign</h3><p>Nani anatangazwa, lini, na kwa muda gani.</p></div></div>
     <div class="cs-two">
       <label>Advertisement category<select data-simple="category">${((window.SKH_AD_CATEGORIES&&window.SKH_AD_CATEGORIES.length?window.SKH_AD_CATEGORIES:[{id:'general',label:'General Advertisement'}]).map(cat=>`<option value="${esc(cat.id)}" ${state.category===cat.id?'selected':''}>${esc(cat.label)}</option>`).join(''))}</select></label>
       <label>Campaign name<input data-simple="campaignName" value="${esc(state.campaignName||'')}" placeholder="Mfano: Ofa ya Wiki ya Saba"></label>
     </div>
+    <label>Campaign ID<input data-simple="campaignId" value="${esc(state.campaignId||'')}" placeholder="(hiari) id ya campaign"></label>
     <div class="cs-two">
       <label>Start (si lazima)<input data-simple="startAt" type="datetime-local" value="${esc(state.startAt?String(state.startAt).slice(0,16):'')}"></label>
       <label>End (si lazima)<input data-simple="endAt" type="datetime-local" value="${esc(state.endAt?String(state.endAt).slice(0,16):'')}"></label>
@@ -825,8 +1162,7 @@ function contentControls(){
       <label>Priority<input data-simple="priority" type="number" min="0" max="999" value="${Number(state.priority)||0}"></label>
       <label>Display duration (5–59s)<input data-simple="displayDurationSeconds" type="number" min="5" max="59" step="1" value="${Number(state.displayDurationSeconds)||9}"></label>
     </div>
-    <p class="cs-simple-tip">Display duration ni muda wa tangazo kukaa Home kwenye rotation (5–59s). <b>Sio</b> media duration — video/audio inabaki na urefu wake.</p>
-    <p class="cs-simple-tip">Kisha chagua Template au Muonekano. Advanced tools zipo kwenye “More design tools”.</p>`;
+    <p class="cs-simple-tip">Display duration ni muda wa tangazo kukaa Home kwenye rotation (5–59s). <b>Sio</b> media duration — video/audio inabaki na urefu wake.</p>`;
 }
 
 function quickStyleControls(){
@@ -862,57 +1198,18 @@ function quickStyleControls(){
     </div>`;
 }
 
-function effectsControls(){
-  const img=state.layers.find(l=>l.type==='image');
-  return `
-    <h3>Image Frames & Effects</h3>
-    <p>Chagua umbo la picha na muonekano wa kuvutia.</p>
-    <h4>Frame Shapes</h4>
-    <div class="cs-addgrid">
-      <button data-frame="rounded">Rounded Card</button>
-      <button data-frame="circle">Circle</button>
-      <button data-frame="square">Sharp Square</button>
-      <button data-frame="polaroid">Polaroid Photo</button>
-    </div>
-    <hr>
-    <h4>Background Patterns</h4>
-    <div class="cs-addgrid">
-      ${PATTERNS.map(p=>`<button data-prop="background.pattern" value="${p}">${p}</button>`).join('')}
-      <button data-prop="background.pattern" value="none">None</button>
-    </div>`;
-}
-
-function cutoutControls(){
-  const img=state.layers.find(l=>l.type==='image');
-  return `
-    <h3>Cutout & Background Removal</h3>
-    <p>Ondoa background ya picha ili kubaki na bidhaa au mtu tu.</p>
-    ${img?`
-      <div style="background:#fff;border:1px solid #d7e0e8;border-radius:12px;padding:12px;text-align:center;">
-        <img src="${esc(img.cutoutDataUrl||img.src)}" style="max-width:100%;max-height:160px;border-radius:8px;object-fit:contain;background:#eef2f6;">
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <button data-a="removebg" class="primary" style="flex:1;">🪄 Auto Remove BG</button>
-          <button data-a="eraser" style="flex:1;">🧽 Manual Brush</button>
-        </div>
-        ${img.cutoutDataUrl?`<button data-a="restoreimage" style="width:100%;margin-top:8px;">↺ Restore Original</button>`:''}
-      </div>
-    `:`<p class="cs-note">Weka picha kwanza kwenye tab ya Content au Uploads ili kutumia Cutout.</p>`}`;
-}
-
 function advancedControls(){
   return `
-    <h3>Advanced Design Tools</h3>
-    <p>Zana za kina za graphics, tabaka na vipimo.</p>
+    <h3>Advanced Editing</h3>
+    <p>Zana za kina kwa editing ya kitaalamu. Basic designing yote (media, crop, text, shapes, logo, CTA) iko kwenye tab ya <b>DESIGN</b>.</p>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      <button class="cs-wide" data-tab="text">📝 Typography & Font Pairings</button>
-      <button class="cs-wide" data-tab="elements">🔷 Shapes & Icons</button>
-      <button class="cs-wide" data-tab="background">🌄 Background, Textures & Gradients</button>
-      <button class="cs-wide" data-tab="effects">✨ Filters & Patterns</button>
-      <button class="cs-wide" data-tab="cutout">✂️ Cutout & Background Eraser</button>
+      <button class="cs-wide" data-tab="timeline">⏱️ Deep Timeline Orchestration</button>
+      <button class="cs-wide" data-a="layers">📑 Layers &amp; Grouping (deep)</button>
+      <button class="cs-wide" data-a="eraser">🎭 Advanced Masking (Manual Eraser)</button>
       <button class="cs-wide" data-tab="brand">🏢 Brand Kit</button>
-      <button class="cs-wide" data-a="layers">📑 Layers & Grouping</button>
       <button class="cs-wide" data-a="improvedesign">✨ Smart Design Improver</button>
-    </div>`;
+    </div>
+    <p class="cs-note">Toolbar ya juu (advanced mode): Duplicate · Resize · Auto Design · Export. Keyframes, deep SVG na waveform editing ni features za baadaye.</p>`;
 }
 
 function backgroundControls(){
@@ -967,7 +1264,7 @@ function updateSimple(key,val){
     else if(key==='background2'){n.background.color2=val;rememberColor(val);}
     else if(key==='destination'){n.destination=val?{type:'external',url:val}:null;}
     // --- Canonical advertisement state (Creator Studio upgrade) ---
-    else if(key==='category'){n.category=val;}else if(key==='campaignName'){n.campaignName=val;}
+    else if(key==='category'){n.category=val;}else if(key==='campaignName'){n.campaignName=val;}else if(key==='campaignId'){n.campaignId=val;}
     else if(key==='offer'){n.offer=val;let p=role('price');if(!p&&val){p=makeLayer('text',{role:'price',x:80,y:n.canvas.height*.58,width:400,height:90,style:{fill:'#FFFFFF',fontSize:52,fontWeight:900}});n.layers.push(p);}if(p&&val)p.content=val;}
     else if(key==='startAt'){n.startAt=val?new Date(val).toISOString():'';}else if(key==='endAt'){n.endAt=val?new Date(val).toISOString():'';}
     else if(key==='priority'){n.priority=Math.max(0,+val||0);}
@@ -1227,6 +1524,23 @@ function showImproveDesign(){
 
 function addLayer(type,value){
   const z=Math.max(0,...state.layers.map(l=>l.zIndex))+1;
+  if(type==='duplicate-layer'){
+    const l=currentLayer();if(!l)return;
+    commit(n=>{
+      const src=n.layers.find(x=>x.id===l.id);if(!src)return;
+      const copy=JSON.parse(JSON.stringify(src));
+      copy.id='ly_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
+      copy.x=(copy.x||0)+24;copy.y=(copy.y||0)+24;copy.zIndex=Math.max(0,...n.layers.map(q=>q.zIndex))+1;
+      copy.name=(copy.name||'Layer')+' copy';
+      n.layers.push(copy);selected=copy.id;
+    },'Duplicate Layer');
+    return;
+  }
+  if(type==='delete-layer'){
+    const l=currentLayer();if(!l)return;
+    commit(n=>n.layers=n.layers.filter(x=>x.id!==l.id));
+    selected='';render();return;
+  }
   if(type==='text'){
     const content=value==='headline'?'YOUR HEADLINE':value==='price'?'TZS 0':value==='cta'?'TAZAMA ZAIDI':value==='subheadline'?'Subheadline':'Add your message';
     const fs=value==='headline'?72:value==='price'?64:value==='cta'?36:42;
@@ -1285,34 +1599,11 @@ function updateVmeta(key,el){
   },'Update Video Meta');
 }
 
+/* Legacy entries (content/media tab file inputs) — delegated to the unified
+   Add Media pipeline so there is ONE upload mechanism. */
 async function uploadMedia(input){
   const file=input.files?.[0];if(!file)return;
-  const isVideo=file.type.startsWith('video/');
-  input.disabled=true;
-  try{
-    if(typeof window.skhUploadFromFile!=='function')throw new Error('SokoHai media uploader is unavailable.');
-    const uploaded=await window.skhUploadFromFile(file,{resourceType:isVideo?'video':'image',folder:'sokohai/creative-assets'});
-    const url=typeof uploaded==='string'?uploaded:uploaded&&uploaded.url;
-    if(!url)throw new Error('Upload returned no URL.');
-    commit(n=>{
-      let l=n.layers.find(x=>x.id===selected&&(x.type==='image'||x.type==='video'))||n.layers.find(x=>x.type===(isVideo?'video':'image'));
-      if(!l){
-        l=makeLayer(isVideo?'video':'image',{src:url,videoUrl:url,originalSrc:url,name:file.name,x:120,y:180,width:700,height:600,zIndex:n.layers.length+1,style:{fit:'cover',radius:22,originalSrc:url}});
-        n.layers.push(l);
-      }else{
-        l.type=isVideo?'video':'image';
-        l.src=url;
-        l.videoUrl=url;
-        l.originalSrc=url;
-      }
-      selected=l.id;
-    },'Upload Media');
-    toast(`${isVideo?'Video':'Image'} uploaded successfully.`);
-  }catch(e){
-    toast(e.message,'error');
-  }finally{
-    input.disabled=false;input.value='';
-  }
+  input.value='';await addMediaFile(file);
 }
 
 function renderProperties(){
@@ -1558,8 +1849,38 @@ function showResize(){
   };
 }
 
+/* Map canonical creative state to the announcement shape consumed by the
+   existing Home card renderer (window.skhAdvertisementCardHtml). */
+function creativeAsAnnouncement(c){
+  const role=r=>c.layers.find(l=>l.role===r);
+  const img=c.layers.find(l=>l.type==='image')||c.layers.find(l=>l.type==='logo');
+  const vid=c.layers.find(l=>l.type==='video');
+  const aud=c.layers.find(l=>l.type==='audio');
+  return {
+    headline:role('headline')?.content||c.title,
+    text:role('body')?.content||'',
+    priceTag:role('price')?.content||c.offer||'',
+    image:img?.src||'',videoUrl:vid?.src||'',audioUrl:aud?.src||'',
+    posterUrl:vid?.posterUrl||'',
+    ctaLabel:role('cta')?.content||'',badgeText:role('badge')?.content||'',
+    primaryColor:c.background?.color,accentColor:c.background?.color2,
+    textColor:role('headline')?.style?.fill||'#FFFFFF'
+  };
+}
 function showPreview(){
-  sheet(`<h2>Preview modes</h2><div class="cs-previews"><article><b>Feed</b><div>${renderCreativeSvg(state)}</div></article><article class="phone"><b>Mobile / Story</b><div>${renderCreativeSvg(state)}</div></article><article class="desktop"><b>Desktop</b><div>${renderCreativeSvg(state)}</div></article></div>`);
+  const card=typeof window.skhAdvertisementCardHtml==='function'
+    ?window.skhAdvertisementCardHtml(creativeAsAnnouncement(state))
+    :renderCreativeSvg(state);
+  const s=sheet(`<h2>Preview modes</h2>
+    <div class="cs-previews">
+      <article><b>Feed / Card (Home)</b><div class="cs-preview-card">${card}</div></article>
+      <article class="phone"><b>Mobile / Story</b><div>${renderCreativeSvg(state)}</div></article>
+      <article class="desktop"><b>Desktop / Web</b><div>${renderCreativeSvg(state)}</div></article>
+    </div>
+    <div style="margin-top:14px;"><button id="csPreviewFull" class="primary cs-wide">⛶ Fullscreen preview</button></div>`);
+  $('#csPreviewFull',s).onclick=()=>{
+    sheet(`<h2>Fullscreen preview</h2><div class="cs-preview-full">${renderCreativeSvg(state)}</div>`);
+  };
 }
 
 function showExport(){
@@ -1676,7 +1997,7 @@ async function open(context={}){
   history=new CreativeHistory(c);
   selected='';
   advancedMode=context.advanced===true;
-  activeTab=advancedMode?'advanced':'content';
+  activeTab=advancedMode?'advanced':'basic';
   m.classList.toggle('advanced',advancedMode);
   m.classList.add('open');
   document.body.classList.add('skh-cs-open');

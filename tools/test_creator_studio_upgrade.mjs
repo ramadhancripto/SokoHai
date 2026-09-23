@@ -286,4 +286,92 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   console.log('7. security guards unchanged ... OK');
 }
 
+/* ============ 8. MEDIA + FIRST-LEVEL DESIGNING (2026-09-24) ============ */
+{
+  const studio=read('js/app/95-creative-studio.js');
+  const form=read('js/app/16-pos-admin-jobs.js');
+
+  // 8a. The required 7-tab structure, in order, replaces the old 12-tab nav
+  const nav=studio.match(/\[\['basic','Basic'\],\['design','Design'\],\['motion','Motion'\],\['media','Media'\],\['cta','CTA'\],\['schedule','Schedule'\],\['advanced','Advanced'\]\]/);
+  assert.ok(nav,'studio nav must be BASIC·DESIGN·MOTION·MEDIA·CTA·SCHEDULE·ADVANCED');
+  ['presets','content','style','effects','cutout','uploads'].forEach(old=>{
+    assert.ok(!studio.includes(`data-tab="${old}"`),'old nav tab removed: '+old);
+  });
+  // templates/timeline/brand remain only as sub-views reached FROM the 7 tabs
+  assert.ok(studio.includes(`data-tab="templates"`),'templates sub-view reachable from Design');
+
+  // 8b. Add Media — single unified flow in DESIGN (device + library + URL)
+  ['id="csAddMediaFile"','accept="image/*,video/*,audio/*"','data-a="openmedialibrary"','id="csAddMediaUrl"','data-a="addmediaurl"']
+    .forEach(s=>assert.ok(studio.includes(s),'Add Media flow missing: '+s));
+
+  // 8c. ONE upload mechanism — studio reuses skhUploadFromFile, never its own Cloudinary call
+  assert.ok(studio.includes('window.skhUploadFromFile'),'studio reuses canonical uploader');
+  assert.ok(!studio.includes('api.cloudinary.com'),'studio must not contain a second uploader');
+  assert.ok(studio.includes('await addMediaFile(file);')||studio.includes('addMediaFile(file)'),'legacy inputs delegate to unified Add Media');
+
+  // 8d. Media types auto-detected & validated (incl. GIF/SVG), reusing form size limits
+  assert.ok(studio.includes("image/gif")||/image\/\*/.test(studio),'not locked to JPG/PNG');
+  ['detectMediaKind','SKH_MEDIA_LIMITS','image:8*1024*1024','video:80*1024*1024','audio:20*1024*1024']
+    .forEach(s=>assert.ok(studio.includes(s),'media validation missing: '+s));
+
+  // 8e. Crop / cut-out in DESIGN with required aspect ratios + custom, reusing existing crop fields
+  ['original','1:1','4:5','16:9','9:16','4:3','3:4','custom'].forEach(r=>assert.ok(studio.includes(r),'crop ratio missing: '+r));
+  ['applyCropAspect','style.cropX','style.cropY','style.zoom'].forEach(s=>assert.ok(studio.includes(s),'crop engine wiring missing: '+s));
+  assert.ok(!/cropEngine|new Cropper|cropperjs/i.test(studio),'no second crop engine');
+
+  // 8f. Size/position/fit/align/rotate/opacity in DESIGN
+  ['fitMediaToCanvas','data-align="center"','data-align="middle"','data-prop="rotation"','data-prop="opacity"','data-prop="style.radius"','data-prop="style.borderWidth"','data-prop="style.overlayOpacity"']
+    .forEach(s=>assert.ok(studio.includes(s),'design control missing: '+s));
+
+  // 8g. Basic designing tools in DESIGN: text, logo, shapes, layers, templates, background
+  ['data-tstyle="Headline"','id="csLogoFile"','data-a="applylogourl"','data-add="shape"','data-add="icon"','data-tab="templates"','backgroundControls()']
+    .forEach(s=>assert.ok(studio.includes(s),'design tool missing: '+s));
+  // layer basic ops wired globally (up/down/lock/duplicate)
+  assert.ok(studio.includes("closest('[data-op][data-id]')"),'inline layer ops handler present');
+  assert.ok(studio.includes("addLayer('duplicate-layer')"),'duplicate layer implemented');
+  assert.ok(studio.includes("type==='delete-layer'"),'delete layer implemented');
+
+  // 8h. Media Library reused — no second library; studio is a new target of the existing one
+  assert.ok(form.includes("window.__adminMediaTarget==='studio'"),'existing library accepts studio target');
+  assert.ok(studio.includes('window.skhStudioApplyLibraryMedia'),'studio receives library selection');
+  assert.ok(studio.includes("skh.collection(skh.db,'adminMedia')"),'studio upload flows into existing adminMedia pipeline');
+  assert.ok(!/skhOpenAdminMediaLibrary2|adminMediaLibrary2|secondMediaLibrary/.test(studio),'no duplicate media library');
+
+  // 8i. Video preview + trim + 30s rule preserved
+  ['renderVideoOverlays','cs-video-overlay','data-a="togglevideo"','data-a="togglevideomute"','data-prop="posterUrl"']
+    .forEach(s=>assert.ok(studio.includes(s),'video preview missing: '+s));
+  ['data-vmeta="trimStart"','data-vmeta="trimEnd"'].forEach(s=>assert.ok(studio.includes(s),'video trim missing: '+s));
+  const model=read('js/app/creative/creative-model.js');
+  assert.ok(model.includes('inazidi sekunde 30')||model.includes('> 30'),'30-second media validation rule intact');
+
+  // 8j. Advanced cleaned: basic controls OUT, deep tools IN; timeline preserved as Advanced sub-view
+  const adv=studio.slice(studio.indexOf('function advancedControls()'),studio.indexOf('function advancedControls()')+900);
+  ['data-tab="timeline"','data-a="layers"','data-a="eraser"','data-a="improvedesign"'].forEach(s=>assert.ok(adv.includes(s),'advanced must keep: '+s));
+  ['data-tab="text"','data-tab="elements"','data-tab="uploads"'].forEach(s=>assert.ok(!adv.includes(s),'advanced must not expose basic: '+s));
+  assert.ok(studio.includes('function timelineControls()'),'deep timeline preserved');
+
+  // 8k. Preview modes reuse existing card renderer + fullscreen; no new renderer
+  assert.ok(studio.includes('window.skhAdvertisementCardHtml'),'feed/card preview reuses existing renderer');
+  assert.ok(studio.includes('Fullscreen preview'),'fullscreen preview present');
+  assert.ok(!/function renderCreativeSvg2|skhNewRenderer/.test(studio),'no duplicate renderer');
+
+  // 8l. Save/reopen round-trip keeps crop, trim, playback, layer order
+  const rt=normalizeCreative({layers:[{type:'image',src:'https://x/img.png',crop:{x:5,y:6,width:80,height:90,zoom:1.4},style:{cropX:33,cropY:-40,zoom:1.5,fit:'contain',radius:18,overlayOpacity:0.3},rotation:12,opacity:0.8,zIndex:4},
+    {type:'video',src:'https://x/v.mp4',videoMeta:{trimStart:3,trimEnd:21,autoplay:true,muted:true,loop:true},posterUrl:'https://x/p.jpg'},
+    {type:'audio',src:'https://x/a.mp3',audioMeta:{volume:0.6,trimStart:2,trimEnd:25}}]});
+  const im=rt.layers.find(l=>l.type==='image'),vi=rt.layers.find(l=>l.type==='video'),au=rt.layers.find(l=>l.type==='audio');
+  assert.equal(im.style.cropX,33,'cropX survives reopen');assert.equal(im.style.zoom,1.5,'zoom survives reopen');
+  assert.equal(im.rotation,12,'rotation survives reopen');assert.equal(im.opacity,0.8,'opacity survives reopen');
+  assert.equal(im.style.fit,'contain','fit survives reopen');assert.equal(im.zIndex,4,'layer order survives reopen');
+  assert.equal(vi.videoMeta.trimStart,3,'video trim survives reopen');assert.equal(vi.videoMeta.trimEnd,21,'video trim end survives reopen');
+  assert.equal(vi.posterUrl,'https://x/p.jpg','poster survives reopen');
+  assert.equal(au.audioMeta.volume,0.6,'audio settings survive reopen');
+
+  // 8m. Responsive layout rules still present (canvas left / controls, mobile sheet)
+  const css=read('css/39-creative-studio.css');
+  ['skh-cs-sheet','max-width:900px','cs-addmedia','cs-crop-grid','cs-video-overlay'].forEach(s=>assert.ok(css.includes(s),'studio CSS missing: '+s));
+
+  console.log('8. media + first-level designing ... OK');
+}
+
 console.log('\nALL CREATOR STUDIO UPGRADE TESTS PASSED ✔');
