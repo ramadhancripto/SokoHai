@@ -146,10 +146,17 @@ window.doLogin = async function(event) {
         const p = document.getElementById('loginPass')?.value; 
         if(!e || !p) { alert(" Jaza email na password yako."); return; } 
         try { 
-            await skh.signInWithEmailAndPassword(skh.auth, e, p); 
+            const cred = await skh.signInWithEmailAndPassword(skh.auth, e, p); 
             // [OFFLINE 2026-09] Kumbuka email — akipoteza session, isimwombe tena.
             try { skh.localStorage.setItem('sokohai_last_email', e); } catch (e2) {}
             closeModals(); 
+            const user = cred.user;
+            const displayName = user?.displayName || (e.indexOf('@') > 0 ? e.split('@')[0] : 'Mwanachama');
+            setTimeout(function() {
+                if (typeof window.skhShowWelcomeAlert === 'function') {
+                    window.skhShowWelcomeAlert(displayName);
+                }
+            }, 300);
         } catch(err) { 
             alert(" Kosa: " + err.message); 
         } 
@@ -182,26 +189,18 @@ window.doSignup = async function(event) {
             following:[] 
         }); 
         
-        alert(" Akaunti imetengenezwa! Tumekutumia email ya uthibitisho.");
         // [OFFLINE 2026-09] Kumbuka email ya usajili kwa kuingia baadaye.
         try { skh.localStorage.setItem('sokohai_last_email', e); } catch (e2) {}
         closeModals(); 
-        // [ONBOARDING §11] Baada ya signup, mwalike mtumiaji kukamilisha wasifu
-        // wake (DP = picha yake binafsi, Cover = picha ya biashara) — HIARI,
-        // akipiga Funga ('X') au acha, hakikulazimishwi kamwe. Non-blocking:
-        // hakuna redirect/hakuna modal zinazofunguka kiotomatiki; ni kirai-dokezo
-        // tu linalofungua Profile (Edit) modal, ambayo tayari ina vitufe vya
-        // kupandisha DP + Cover (64-my-profile.js — muundo unaoheshimiwa).
+        
+        // Onyesha Welcome Alert yenye jina lake halisi mara moja baada ya signup
         setTimeout(function () {
             try {
-                if (typeof window.openProfile === 'function') {
-                    window.openProfile();
-                    if (typeof window.skhToast === 'function') {
-                        window.skhToast('Karibu ' + n + '! Unaweza kuweka DP na Cover yako hapa sasa hivi (hiari).', 'info', 5200);
-                    }
+                if (typeof window.skhShowWelcomeAlert === 'function') {
+                    window.skhShowWelcomeAlert(n);
                 }
-            } catch (e3) { /* onboarding haizuii signup successful */ }
-        }, 700);
+            } catch (e3) { /* non-blocking */ }
+        }, 300);
     } catch(err) { 
         alert(" Kosa: " + err.message); 
     } 
@@ -228,6 +227,11 @@ window.doGoogleLogin = async function() {
             });
         }
         closeModals();
+        setTimeout(function() {
+            if (typeof window.skhShowWelcomeAlert === 'function') {
+                window.skhShowWelcomeAlert(user.displayName);
+            }
+        }, 300);
         console.log("Karibu " + user.displayName);
     } catch (error) {
         alert("Kosa la Google Login: " + error.message);

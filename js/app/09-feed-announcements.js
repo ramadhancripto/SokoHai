@@ -136,26 +136,45 @@ window.__sokohaiAnnouncementsUnsub = null;
 window.sokohaiStartAnnouncementsListener = function(){
     if(window.__sokohaiAnnouncementsUnsub) return; // tayari inasikiliza
     try {
-        // [LIVE-FIX 2026-09] Ongeza limit(50) — usivute matangazo YOTE (scan-all
-        // ni ghali kwa watumiaji wengi wanaosikiliza live listener kwa wakati mmoja).
         const canManageAll = !!((window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin)
             || (skh.currentUser && skh.currentUser.email === skh.MY_ADMIN_EMAIL));
-        // Privacy boundary: public clients never download drafts, moderation records,
-        // archived ads or editable design state. Admin keeps the complete manager view.
-        const annQ = canManageAll
-            ? skh.query(skh.collection(skh.db, "announcements"), skh.orderBy("createdAt", "desc"), skh.limit(50))
-            : skh.query(skh.collection(skh.db, "announcements"), skh.where("status", "==", "published"), skh.where("archived", "==", false), skh.orderBy("createdAt", "desc"), skh.limit(50));
-        window.__sokohaiAnnouncementsUnsub = skh.onSnapshot(annQ, (snap) => {
+        
+        const handleSnap = (snap) => {
             const all = [];
-            snap.forEach(docSnap => all.push({ id: docSnap.id, ...docSnap.data() }));
+            snap.forEach(docSnap => {
+                const d = docSnap.data();
+                if (canManageAll || (d && d.archived !== true && d.status !== 'archived' && (d.status === 'published' || d.active !== false))) {
+                    all.push({ id: docSnap.id, ...d });
+                }
+            });
             window.__sokohaiAnnouncementsCache = all;
+            try {
+                const publicOnly = all.filter(a => a && a.archived !== true && a.status !== 'archived' && (a.status === 'published' || a.active !== false));
+                localStorage.setItem('skh_cached_announcements', JSON.stringify(publicOnly));
+            } catch(e){}
             if(typeof window.__sokohaiOnAnnouncementsUpdate === 'function') {
                 window.__sokohaiOnAnnouncementsUpdate(all);
             }
             if(typeof window.renderAnnouncementManagerList === 'function') {
                 window.renderAnnouncementManagerList();
             }
-        }, (err) => console.error("Announcements listener error:", err));
+        };
+
+        const annQ = canManageAll
+            ? skh.query(skh.collection(skh.db, "announcements"), skh.orderBy("createdAt", "desc"), skh.limit(50))
+            : skh.query(skh.collection(skh.db, "announcements"), skh.where("status", "==", "published"), skh.where("archived", "==", false), skh.orderBy("createdAt", "desc"), skh.limit(50));
+        
+        window.__sokohaiAnnouncementsUnsub = skh.onSnapshot(annQ, handleSnap, (err) => {
+            console.warn("Announcements primary query failed, falling back to basic stream:", err);
+            try {
+                const fallbackQ = skh.query(skh.collection(skh.db, "announcements"), skh.limit(50));
+                window.__sokohaiAnnouncementsUnsub = skh.onSnapshot(fallbackQ, handleSnap, (err2) => {
+                    console.error("Announcements fallback listener error:", err2);
+                });
+            } catch(e2) {
+                console.error("Fallback query failed:", e2);
+            }
+        });
     } catch(e) { console.error("Imeshindwa kuanzisha listener ya matangazo:", e); }
 };
 
@@ -169,17 +188,31 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
             headline: String(payload.headline || '').trim(),
             brandName: String(payload.brandName || '').trim(),
             creativeType: payload.creativeType || 'image_text',
+            layoutStyle: payload.layoutStyle || payload.creativeType || 'image_text',
             image: String(payload.image || payload.imageUrl || '').trim(),
             imageUrl: String(payload.imageUrl || payload.image || '').trim(),
             videoUrl: String(payload.videoUrl || '').trim(),
             audioUrl: String(payload.audioUrl || '').trim(),
             logoUrl: String(payload.logoUrl || '').trim(),
+            badgeText: String(payload.badgeText || '').trim(),
+            badgeStyle: String(payload.badgeStyle || 'pill').trim(),
+            badgeColor: /^#[0-9a-f]{6}$/i.test(String(payload.badgeColor||'')) ? String(payload.badgeColor) : '#F59E0B',
+            badgeTextColor: /^#[0-9a-f]{6}$/i.test(String(payload.badgeTextColor||'')) ? String(payload.badgeTextColor) : '#FFFFFF',
             primaryColor: /^#[0-9a-f]{6}$/i.test(String(payload.primaryColor||'')) ? String(payload.primaryColor) : '#0E7A5F',
             accentColor: /^#[0-9a-f]{6}$/i.test(String(payload.accentColor||'')) ? String(payload.accentColor) : '#167A91',
             textColor: /^#[0-9a-f]{6}$/i.test(String(payload.textColor||'')) ? String(payload.textColor) : '#FFFFFF',
             surfaceColor: /^#[0-9a-f]{6}$/i.test(String(payload.surfaceColor||'')) ? String(payload.surfaceColor) : '#FFFFFF',
             frameOpacity: Math.max(0.08, Math.min(1, Number(payload.frameOpacity) || 0.42)),
+            gradientAngle: Number.isFinite(Number(payload.gradientAngle)) ? Number(payload.gradientAngle) : 135,
+            borderRadius: Number.isFinite(Number(payload.borderRadius)) ? Math.max(0, Math.min(36, Number(payload.borderRadius))) : 22,
+            fontWeight: String(payload.fontWeight || '950'),
+            fontSize: Number.isFinite(Number(payload.fontSize)) ? Number(payload.fontSize) : 0,
+            textAlign: String(payload.textAlign || 'left'),
+            textShadow: String(payload.textShadow || 'none'),
+            priceTag: String(payload.priceTag || payload.price || '').trim(),
             ctaLabel: String(payload.ctaLabel || '').trim(),
+            ctaStyle: String(payload.ctaStyle || 'solid').trim(),
+            ctaIcon: String(payload.ctaIcon || 'arrow').trim(),
             link: String(payload.link || '').trim(),
             startAt: payload.startAt || '',
             endAt: payload.endAt || '',
@@ -205,6 +238,10 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
         const optimistic = Object.assign({}, at >= 0 ? cache[at] : {}, data, { id: savedId });
         if (at >= 0) cache[at] = optimistic; else cache.unshift(optimistic);
         window.__sokohaiAnnouncementsCache = cache;
+        try {
+            const publicOnly = cache.filter(a => a && a.archived !== true && a.status !== 'archived' && (a.status === 'published' || a.active !== false));
+            localStorage.setItem('skh_cached_announcements', JSON.stringify(publicOnly));
+        } catch(e){}
         if(typeof window.__sokohaiOnAnnouncementsUpdate === 'function') window.__sokohaiOnAnnouncementsUpdate(cache);
         if(typeof window.renderAnnouncementManagerList === 'function') window.renderAnnouncementManagerList();
 

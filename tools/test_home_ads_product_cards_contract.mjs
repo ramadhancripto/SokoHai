@@ -9,8 +9,8 @@ t('product front card omits mode/detail controls',!product.includes('cardModeSig
 t('product image has stable wide aspect ratio',cardCss.includes('aspect-ratio:4/3')&&cardCss.includes('object-fit:cover!important'));
 t('product title uses readable two-line clamp',cardCss.includes('-webkit-line-clamp:2')&&cardCss.includes('font-size:15px!important'));
 t('desktop card grid uses wide minimum',cardCss.includes('minmax(min(100%,220px),1fr)'));
-t('small phone uses one clear column',cardCss.includes('@media(max-width:360px)')&&cardCss.includes('grid-template-columns:1fr!important'));
-t('Home advertisement precedes Search',top.indexOf('id="topAnnouncement"')<top.indexOf('id="topSearchRow"'));
+t('small phone uses balanced compact grid',cardCss.includes('@media(max-width:360px)')&&(cardCss.includes('grid-template-columns:repeat(2,minmax(0,1fr))!important')||cardCss.includes('grid-template-columns:1fr!important')));
+t('Home advertisement is under Search',top.indexOf('id="topAnnouncement"')>top.indexOf('id="topSearchRow"'));
 t('Home showcase hides when no active ad',ad.includes("host.hidden=true")||ad.includes('h.hidden=true'));
 t('showcase derives active/scheduled/expired/archive state',ad.includes("return 'scheduled'")&&ad.includes("return 'expired'")&&ad.includes("return 'archived'"));
 t('showcase supports priority ordering and rotation',ad.includes('Number(b.priority)')&&ad.includes('rotationTimer'));

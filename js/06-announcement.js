@@ -8,9 +8,20 @@
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const safeUrl = v => { const s=String(v||'').trim(); return /^(https:\/\/|\/|#)/i.test(s)&&!/["'<>\s]/.test(s)?s:''; };
   const short = (v,n) => { const s=String(v||'').replace(/\s+/g,' ').trim(); return s.length>n?s.slice(0,n-1).trim()+'…':s; };
-  const mediaType = a => String(a.creativeType||a.mediaType||a.type||'image_text').toLowerCase();
+  const mediaType = a => String(a.creativeType||a.layoutStyle||a.mediaType||a.type||'image_text').toLowerCase();
   const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(String(v||'').trim())?String(v).trim():fallback;
   const safeOpacity=v=>{const n=Number(v);return Number.isFinite(n)?Math.max(.08,Math.min(1,n)):0.42};
+
+  // Recover locally cached announcements immediately on startup
+  try {
+    const cached = localStorage.getItem('skh_cached_announcements');
+    if (cached && (!window.__sokohaiAnnouncementsCache || !window.__sokohaiAnnouncementsCache.length)) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length) {
+        window.__sokohaiAnnouncementsCache = parsed;
+      }
+    }
+  } catch (e) {}
 
   function stateOf(a, now) {
     if (!a || a.archived === true || a.status === 'archived') return 'archived';
@@ -24,7 +35,7 @@
 
   function activeAds() {
     const now=Date.now(), source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[];
-    return source.filter(a=>stateOf(a,now)==='active' && (a.text||a.headline||a.image||a.imageUrl||a.videoUrl))
+    return source.filter(a=>stateOf(a,now)==='active' && (a.text||a.headline||a.image||a.imageUrl||a.videoUrl||a.badgeText))
       .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   }
   function hide(){const h=document.getElementById('topAnnouncement');if(!h)return;h.className='big-announcement skh-ann-story is-empty';h.innerHTML='';h.hidden=true;}
@@ -48,15 +59,48 @@
 
   function cardHtml(a, live) {
     const type=mediaType(a), title=short(a.headline||a.title||a.text||'SokoHai',120), message=short(a.description||a.text||'',320);
-    const brand=short(a.brandName||a.brand||'SokoHai',48), logo=safeUrl(a.logoUrl), link=safeUrl(a.link||a.actionUrl), action=short(a.ctaLabel||a.actionLabel||'Tazama Zaidi',28);
+    const brand=short(a.brandName||a.brand||'SokoHai',48), logo=safeUrl(a.logoUrl), link=safeUrl(a.link||a.actionUrl), action=short(a.ctaLabel||a.actionLabel||'Tazama Zaidi',32);
     const media=mediaHtml(a,title,type), withText=type.indexOf('text')!==-1||!!(a.headline||a.description||a.text);
     const initial=esc((brand.charAt(0)||'S').toUpperCase());
     const metrics=countLabel(a.likeCount||a.likesCount,'likes')+countLabel(a.viewCount||a.views,'views')+countLabel(a.clickCount||a.clicks,'clicks');
-    const copy=withText?'<strong class="skh-ann-title">'+esc(title)+'</strong>'+(message&&message!==title?'<p>'+esc(message)+'</p>':''):'';
-    const actionButton=link?'<button type="button" class="skh-ann-action" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">→</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
-    const primary=safeColor(a.primaryColor,'#0E7A5F'),accent=safeColor(a.accentColor,'#167A91'),textColor=safeColor(a.textColor,'#FFFFFF'),surface=safeColor(a.surfaceColor,'#FFFFFF'),frameOpacity=safeOpacity(a.frameOpacity);
-    const theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity;
-    return '<article class="skh-ann-card" style="'+theme+'">'
+    
+    // Badge / Sticker / Ribbon
+    const badgeText=String(a.badgeText||'').trim();
+    const badgeColor=safeColor(a.badgeColor, '#F59E0B');
+    const badgeTextColor=safeColor(a.badgeTextColor, '#FFFFFF');
+    const badgeStyle=String(a.badgeStyle||'pill').toLowerCase();
+    let badgeHtml='';
+    if (badgeText) {
+      badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+';"><span class="skh-badge-inner">'+esc(badgeText)+'</span></div>';
+    }
+
+    // Custom design properties
+    const primary=safeColor(a.primaryColor,'#0E7A5F');
+    const accent=safeColor(a.accentColor,'#167A91');
+    const textColor=safeColor(a.textColor,'#FFFFFF');
+    const surface=safeColor(a.surfaceColor,'#FFFFFF');
+    const frameOpacity=safeOpacity(a.frameOpacity);
+    const gradientAngle=Number.isFinite(Number(a.gradientAngle))?Number(a.gradientAngle):135;
+    const borderRadius=Number.isFinite(Number(a.borderRadius))?Math.max(0,Math.min(36,Number(a.borderRadius))):22;
+    const fontWeight=String(a.fontWeight||'950');
+    const fontSize=Number.isFinite(Number(a.fontSize))?Number(a.fontSize):0;
+    const textAlign=String(a.textAlign||'left');
+    const textShadow=String(a.textShadow||'none');
+    const priceTag=String(a.priceTag||a.price||'').trim();
+    const ctaStyle=String(a.ctaStyle||'solid').toLowerCase();
+    const ctaIcon=String(a.ctaIcon||'arrow');
+    const ctaIconHtml=ctaIcon==='cart'?'🛒':ctaIcon==='phone'?'📞':ctaIcon==='whatsapp'?'💬':ctaIcon==='star'?'⭐':'→';
+
+    // Copy block
+    const titleStyleAttr='font-weight:'+esc(fontWeight)+';text-align:'+esc(textAlign)+';'+(fontSize?'font-size:'+fontSize+'px!important;':'')+(textShadow==='subtle'?'text-shadow:0 2px 8px rgba(0,0,0,0.25);':textShadow==='strong'?'text-shadow:0 4px 16px rgba(0,0,0,0.45);':'');
+    const copy=withText?'<div class="skh-ann-title-wrap">'+(priceTag?'<span class="skh-ann-price-pill">'+esc(priceTag)+'</span>':'')+'<strong class="skh-ann-title" style="'+titleStyleAttr+'">'+esc(title)+'</strong></div>'+(message&&message!==title?'<p style="text-align:'+esc(textAlign)+'">'+esc(message)+'</p>':''):'';
+
+    const actionButton=link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
+
+    const theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity+';--ad-angle:'+gradientAngle+'deg;--ad-radius:'+borderRadius+'px;';
+
+    return '<article class="skh-ann-card layout-'+esc(type)+'" style="'+theme+'border-radius:var(--ad-radius,22px);">'
+      +badgeHtml
       +'<header class="skh-ann-post-head">'+(logo?'<img class="skh-ann-brand-logo" src="'+esc(logo)+'" alt="'+esc(brand)+'">':'<span class="skh-ann-brand-fallback">'+initial+'</span>')
       +'<div class="skh-ann-brand-copy"><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored · Advertisement')+'</small></div><span class="skh-ann-sponsored">AD</span></header>'
       +(media?(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+media:'<div class="skh-ann-text-creative"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div><div class="skh-ann-text-cta">'+actionButton+'</div></div>')
