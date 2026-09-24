@@ -105,7 +105,9 @@ function layerSvg(l){
   const common=`data-layer-id="${esc(l.id)}" opacity="${num(l.opacity,1)}" transform="${t}" filter="url(#${filterId(l)})"`;
 
   if(l.type==='text'){
-    const fs=num(st.fontSize,48),lh=fs*num(st.lineHeight,1.1),ls=lines(l.content,l.width,fs);
+    const fs=num(st.fontSize,48),lh=fs*num(st.lineHeight,1.1);
+    /* [NON-CANVAS MVP 2026-09-24] style.maxLines (§7) — default unchanged (16). */
+    const ls=lines(l.content,l.width,fs).slice(0,st.maxLines?Math.max(1,Math.min(16,num(st.maxLines,16))):16);
     const anchor=st.textAlign==='center'?'middle':st.textAlign==='right'?'end':'start';
     const x=anchor==='middle'?l.width/2:anchor==='end'?l.width:0;
     const anim=l.animation||{};

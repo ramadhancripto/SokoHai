@@ -363,3 +363,19 @@
 .skh-ads-panel .adm-ad-tab{border:0;border-radius:0;background:transparent;color:#65757A;padding:9px 12px;font-size:12.5px;font-weight:800;box-shadow:inset 0 -2px 0 transparent}
 .skh-ads-panel .adm-ad-tab:hover{color:#17604E;background:#F8FBFA}
 .skh-ads-panel .adm-ad-tab.active{background:transparent;border-color:transparent;color:#0E6E54;box-shadow:inset 0 -2px 0 #18A982}
+
+/* ==== [NON-CANVAS MVP 2026-09-24] SLIDESHOW MEDIA (Type E, spec §15/§16) ====
+   Multi-image sequential ad rendered by the SAME canonical renderer
+   (js/06-announcement.js). Per-slide timing/transition come from inline
+   keyframes emitted per card; this block provides layout + indicators. */
+.skh-ann-media .skh-ann-slideshow{position:absolute;inset:0;overflow:hidden;background:#0B1220}
+.skh-ann-slideshow .skh-ann-slide{position:absolute;inset:0;margin:0;opacity:1}
+.skh-ann-slideshow .skh-ann-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.skh-ann-slideshow .skh-ann-ss-dots{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:5px;z-index:4}
+.skh-ann-slideshow .skh-ann-ss-dot{width:6px;height:6px;border-radius:99px;background:rgba(255,255,255,.45)}
+.skh-ann-slideshow .skh-ann-ss-dot.on{background:#fff;width:14px}
+.skh-ann-slideshow .skh-ann-video-dur{position:absolute;right:8px;bottom:8px;z-index:4}
+@media(prefers-reduced-motion:reduce){
+  .skh-ann-slideshow .skh-ann-slide{animation:none!important}
+  .skh-ann-slideshow .skh-ann-slide:not(:first-child){opacity:0!important}
+}

@@ -49,10 +49,14 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   const v2=validateCreative(beyond,{forPublish:true});
   assert.ok(!v2.errors.some(e=>e.code==='DISPLAY_DURATION'),'59s display duration allowed');
 
-  // video media duration rule unchanged (media duration is a different concept)
-  const vid=normalizeCreative({layers:[makeLayer('video',{src:'https://example.com/v.mp4',videoMeta:{trimEnd:45,trimStart:0}})]});
+  // video media duration rule (media duration is a different concept)
+  /* [2026-09-24 NON-CANVAS MVP] cap 30s→60s (spec §11/§33): 45s no longer
+     rejected; >60s still rejected independently. Assertion updated, not removed. */
+  const vidOk=normalizeCreative({layers:[makeLayer('video',{src:'https://example.com/v.mp4',videoMeta:{trimEnd:45,trimStart:0}})]});
+  assert.equal(validateCreative(vidOk).ok,true,'45s media duration allowed under 60s cap');
+  const vid=normalizeCreative({layers:[makeLayer('video',{src:'https://example.com/v.mp4',videoMeta:{trimEnd:75,trimStart:0}})]});
   const v3=validateCreative(vid);
-  assert.ok(v3.errors.some(e=>e.code==='VIDEO_DURATION'),'media duration (>30s) still rejected independently');
+  assert.ok(v3.errors.some(e=>e.code==='VIDEO_DURATION'),'media duration (>60s) still rejected independently');
 
   assert.equal(DISPLAY_DURATION_SECONDS.min,5);
   assert.equal(DISPLAY_DURATION_SECONDS.max,59);
@@ -342,7 +346,9 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
     .forEach(s=>assert.ok(studio.includes(s),'video preview missing: '+s));
   ['data-vmeta="trimStart"','data-vmeta="trimEnd"'].forEach(s=>assert.ok(studio.includes(s),'video trim missing: '+s));
   const model=read('js/app/creative/creative-model.js');
-  assert.ok(model.includes('inazidi sekunde 30')||model.includes('> 30'),'30-second media validation rule intact');
+  /* [2026-09-24 NON-CANVAS MVP] media validation rule now 60s (spec §33). */
+  assert.ok(model.includes('MAX_AD_MEDIA_SECONDS'),'60-second media validation rule intact (MAX_AD_MEDIA_SECONDS)');
+  assert.ok(model.includes('inazidi sekunde'),'video-over-limit message intact');
 
   // 8j. Advanced cleaned: basic controls OUT, deep tools IN; timeline preserved as Advanced sub-view
   const adv=studio.slice(studio.indexOf('function advancedControls()'),studio.indexOf('function advancedControls()')+900);

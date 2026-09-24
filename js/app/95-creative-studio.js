@@ -6,7 +6,9 @@ import {
   ENTRANCE_ANIMATIONS,EMPHASIS_ANIMATIONS,EXIT_ANIMATIONS,ANIMATION_MODES,BADGE_ANIMATIONS,CTA_ANIMATIONS,
   FIT_MODES,FOCAL_POINTS,ASPECT_RATIOS,MULTIMEDIA_PRESETS,
   TEXT_STYLE_PRESETS,FONT_PAIRING_PRESETS,generatePalette,alignLayers,
-  templatesFor,autoDesignVariations,designSuggestions,validateCreative,contrastRatio
+  templatesFor,autoDesignVariations,designSuggestions,validateCreative,contrastRatio,
+  /* [NON-CANVAS MVP 2026-09-24] */
+  MAX_AD_MEDIA_SECONDS,SLIDESHOW_TRANSITIONS,slideshowTotal,detectComposition,COMPOSITION_LABELS,autoAdDuration
 } from './creative/creative-model.js';
 import {CreativeHistory} from './creative/creative-history.js';
 import {renderCreativeSvg,exportCreative,downloadBlob,removeBackgroundClient} from './creative/creative-svg-renderer.js';
@@ -132,6 +134,17 @@ function syncBackToLegacyForm(){
   if(state.endAt)set('annEndAt',String(state.endAt).slice(0,16));
   if(state.displayDurationSeconds)set('annDisplayDuration',state.displayDurationSeconds);
   if(state.id)set('annCreativeId',state.id);
+  /* [NON-CANVAS MVP 2026-09-24] Carry slideshow + trimmed media duration into
+     the announcement form so Save → published card keeps them (§6/§22). */
+  const ssFeed=state.slideshow&&Array.isArray(state.slideshow.slides)&&state.slideshow.slides.filter(s=>s&&s.src).length>=2?state.slideshow:null;
+  const setH=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val==null?'':String(val);};
+  setH('annSlideshow',ssFeed?JSON.stringify(ssFeed):'');
+  setH('annMediaDuration',(()=>{
+    const v=state.layers.find(l=>l.type==='video');
+    if(v){const vm=v.videoMeta||{};const t=(Number(vm.trimEnd)||0)-(Number(vm.trimStart)||0);return t>0?Math.round(t):Math.round(Number(vm.duration)||0)||'';}
+    if(ssFeed)return Math.round(slideshowTotal(state))||'';
+    return '';
+  })());
   if(typeof window.skhRenderAdminAdPreview==='function'){
     window.skhRenderAdminAdPreview();
   }
@@ -182,7 +195,7 @@ function shell(){
          <button data-a="restart" title="Restart">⏮</button>
          <span id="csCurrentTime">0:00</span> / <span id="csTotalDuration">0:30</span>
        </div>
-       <input type="range" id="csTimelineScrubber" min="0" max="30" step="0.1" value="0">
+       <input type="range" id="csTimelineScrubber" min="0" max="60" step="0.1" value="0">
        <div class="cs-tb-vol">
          <button data-a="mutetoggle" id="csMuteBtn">🔊</button>
          <input type="range" id="csMasterVolume" min="0" max="100" value="100" style="width:70px;">
@@ -269,6 +282,15 @@ function bind(m){
     if(ctaS)applyCtaStyle(ctaS);
     const fmtSw=e.target.closest('[data-format-switch]')?.dataset.formatSwitch;
     if(fmtSw)switchFormat(fmtSw);
+    /* [NON-CANVAS MVP 2026-09-24] 9-grid text position presets (§8) */
+    const ncPos=e.target.closest('[data-nc-pos]')?.dataset.ncPos;
+    if(ncPos)applyTextPositionPreset(ncPos);
+    /* Slideshow slide actions (§15) */
+    const ssAct=e.target.closest('[data-ss-act]')?.dataset.ssAct;
+    if(ssAct!=null){
+      const idx=Number(e.target.closest('[data-ss-act]').dataset.ssIdx)||0;
+      slideshowAction(ssAct,idx);
+    }
   });
 
   m.addEventListener('input',e=>{
@@ -285,12 +307,15 @@ function bind(m){
     if(e.target.dataset.mix){updateMix(e.target.dataset.mix,e.target);return;}
     if(e.target.dataset.timelineDur){updateTimelineDur(+e.target.value);return;}
     if(e.target.dataset.layerTime){updateLayerTime(e.target.dataset.layerTime,e.target.dataset.timeField,+e.target.value);return;}
+    if(e.target.dataset.ssDur!=null){updateSlideshowProp('slideDur',e.target);return;}
+    if(e.target.dataset.ssDefaultDur!=null){updateSlideshowProp('defaultDuration',e.target);return;}
     const key=e.target.dataset.prop;
     if(key)updateProp(key,e.target);
   });
 
   m.addEventListener('change',e=>{
     if(e.target.id==='csAnimTargetLayer'){selected=e.target.value;renderCanvas();renderProperties();renderQuickBar();return;}
+    if(e.target.dataset.durMode){setDurationMode(e.target.dataset.durMode);return;}
     if(e.target.dataset.anim){updateAnim(e.target.dataset.anim,e.target);return;}
     if(e.target.dataset.vmeta){updateVmeta(e.target.dataset.vmeta,e.target);return;}
     if(e.target.dataset.audio){updateAudio(e.target.dataset.audio,e.target);return;}
@@ -300,6 +325,11 @@ function bind(m){
     else if(e.target.id==='csLogoFile')addLogoFromInput(e.target);
     else if(e.target.id==='csImageFile'||e.target.id==='csMediaFile')uploadMedia(e.target);
     else if(e.target.id==='csAudioFileInput')uploadAudio(e.target);
+    /* [NON-CANVAS MVP 2026-09-24] Slideshow inputs */
+    else if(e.target.id==='csSlideFiles')addSlidesFromInput(e.target);
+    else if(e.target.dataset.ssDur!=null)updateSlideshowProp('slideDur',e.target);
+    else if(e.target.dataset.ssTransition!=null)updateSlideshowProp('transition',e.target);
+    else if(e.target.dataset.ssDefaultDur!=null)updateSlideshowProp('defaultDuration',e.target);
   });
 
   $('#csCanvas',m).addEventListener('pointerdown',pointerStart);
@@ -410,12 +440,41 @@ function action(a,e){
     toast('Playing animation preview...','info');
     return;
   }
+  /* [NON-CANVAS MVP 2026-09-24] One-click trim to the 60s ad limit (§11/§33).
+     Original media is NEVER overwritten — only trimStart/trimEnd metadata. */
+  if(a==='trimto60'){
+    const l=currentLayer()?.type==='video'?currentLayer():state.layers.find(x=>x.type==='video');
+    if(!l)return toast('Hakuna video ya kutrima.','warning');
+    commit(n=>{
+      const t=n.layers.find(x=>x.id===l.id);if(!t)return;
+      t.videoMeta=t.videoMeta||{};
+      t.videoMeta.trimStart=0;
+      t.videoMeta.trimEnd=MAX_AD_MEDIA_SECONDS;
+      if(Number(t.videoMeta.duration)>MAX_AD_MEDIA_SECONDS){
+        toast(`Trimmed to 0:00–1:00. Original (${Math.round(t.videoMeta.duration)}s) is preserved for re-editing.`);
+      }else toast('Trim set to 0:00–1:00.');
+    },'Trim video to 60s');
+    renderLibrary();
+    return;
+  }
+  if(a==='manualtrim'){
+    activeTab='media';renderLibrary();
+    toast('Weka Start/End kwenye Video Trim.','info');
+    return;
+  }
+  if(a==='focuscustomcolor'){
+    const inp=$('#csProperties input[type="color"][data-prop="style.fill"]');
+    if(inp){inp.click();inp.focus();}else toast('Chagua text layer kwanza.','warning');
+    return;
+  }
 }
 
 function render(){
   if(!state)return;
   $('#csTitle').value=state.title;
   $('#csFormat').textContent=`${state.format} · ${state.canvas.width} × ${state.canvas.height}`;
+  const totEl=$('#csTotalDuration');
+  if(totEl){const d=state.duration||30;totEl.textContent=`${Math.floor(d/60)}:${String(Math.floor(d%60)).padStart(2,'0')}`;}
   renderCanvas();
   renderLibrary();
   renderProperties();
@@ -450,6 +509,14 @@ function renderVideoOverlays(box){
     v.loop=vm.loop!==false;
     v.playsInline=true;
     if(vm.autoplay!==false)v.autoplay=true;
+    /* [NON-CANVAS MVP 2026-09-24] Preview the TRIMMED segment (spec §11):
+       seek to trimStart on load, and wrap back at trimEnd while looping.
+       Original file remains the source — nothing is cut on disk. */
+    const tS=Number(vm.trimStart)||0,tE=Number(vm.trimEnd)||0;
+    if(tS>0)v.addEventListener('loadedmetadata',()=>{try{v.currentTime=tS;}catch(e){}});
+    if(tE>tS)v.addEventListener('timeupdate',()=>{
+      if(v.currentTime>=tE){v.currentTime=tS||0;if(!vm.loop)v.pause();}
+    });
     const fit=st.fit==='contain'?'contain':st.fit==='fill'?'fill':'cover';
     v.style.cssText=`position:absolute;left:${(l.x||0)*zoom}px;top:${(l.y||0)*zoom}px;width:${(l.width||0)*zoom}px;height:${(l.height||0)*zoom}px;object-fit:${fit};border-radius:${(st.radius||0)*zoom}px;transform:rotate(${l.rotation||0}deg);opacity:${l.opacity??1};pointer-events:none;background:#000;`;
     box.appendChild(v);
@@ -514,7 +581,8 @@ function presetsControls(){
     <div class="cs-theme-picks">
       <button data-adpreset="static"><b>🖼️ Static Ad</b><small>Image + Text</small></button>
       <button data-adpreset="motion"><b>✨ Motion Poster</b><small>Image + Animated Text</small></button>
-      <button data-adpreset="short_video"><b>🎬 Short Video</b><small>Video ≤ 30 Seconds</small></button>
+      <button data-adpreset="short_video"><b>🎬 Short Video</b><small>Video ≤ 60 Seconds</small></button>
+      <button data-adpreset="slideshow"><b>🖼️ Slideshow</b><small>Multi-Image Sequential Ad</small></button>
       <button data-adpreset="audio_visual"><b>🎵 Audio-Visual</b><small>Image + Audio Music</small></button>
       <button data-adpreset="video_audio"><b>🎥 Video + Audio Mix</b><small>Video + Voiceover / Music</small></button>
       <button data-adpreset="full_mix"><b>🌟 Full Multimedia</b><small>Image + Video + Audio + Text</small></button>
@@ -547,8 +615,8 @@ function audioControls(){
       <label>Fade In (${aMeta.fadeIn||0}s)<input data-audio="fadeIn" type="range" min="0" max="5" step="0.5" value="${aMeta.fadeIn||0}"></label>
     </div>
     <div class="cs-two">
-      <label>Trim Start (${aMeta.trimStart||0}s)<input data-audio="trimStart" type="range" min="0" max="30" step="1" value="${aMeta.trimStart||0}"></label>
-      <label>Trim End (${aMeta.trimEnd||30}s)<input data-audio="trimEnd" type="range" min="0" max="30" step="1" value="${aMeta.trimEnd||30}"></label>
+      <label>Trim Start (${aMeta.trimStart||0}s)<input data-audio="trimStart" type="range" min="0" max="60" step="1" value="${aMeta.trimStart||0}"></label>
+      <label>Trim End (${aMeta.trimEnd||60}s)<input data-audio="trimEnd" type="range" min="0" max="60" step="1" value="${aMeta.trimEnd||60}"></label>
     </div>
 
     <h4>Multi-Track Audio Mixing</h4>
@@ -563,22 +631,22 @@ function audioControls(){
 
 function timelineControls(){
   return `
-    <div class="cs-simple-head"><span>⏱️</span><div><h3>Timeline Orchestration</h3><p>Panga muda wa kila layer kuanzia sekunde 0 hadi 30.</p></div></div>
+    <div class="cs-simple-head"><span>⏱️</span><div><h3>Timeline Orchestration</h3><p>Panga muda wa kila layer kuanzia sekunde 0 hadi ${MAX_AD_MEDIA_SECONDS}.</p></div></div>
     
-    <label>Total Creative Duration: <b id="csTotalDurVal">${state.duration||30}s (Max 30s)</b>
-      <input data-timeline-dur type="range" min="3" max="30" step="1" value="${state.duration||30}">
+    <label>Total Creative Duration: <b id="csTotalDurVal">${state.duration||30}s (Max ${MAX_AD_MEDIA_SECONDS}s)</b>
+      <input data-timeline-dur type="range" min="3" max="${MAX_AD_MEDIA_SECONDS}" step="1" value="${state.duration||30}">
     </label>
 
-    <h4>Layer Timings (0s - 30s)</h4>
+    <h4>Layer Timings (0s - ${MAX_AD_MEDIA_SECONDS}s)</h4>
     <div class="cs-timeline-tracks">
       ${state.layers.map(l => {
-        const start = l.startTime || 0, end = l.endTime || 30;
+        const start = l.startTime || 0, end = l.endTime || MAX_AD_MEDIA_SECONDS;
         return `
           <div class="cs-tl-row" style="margin-bottom:12px; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px;">
             <b style="font-size:13px; color:#E2E8F0;">${esc(l.name||l.role||l.type)}</b>
             <div class="cs-two" style="margin-top:4px;">
-              <label>Start: ${start}s <input data-layer-time="${l.id}" data-time-field="startTime" type="range" min="0" max="30" value="${start}"></label>
-              <label>End: ${end}s <input data-layer-time="${l.id}" data-time-field="endTime" type="range" min="0" max="30" value="${end}"></label>
+              <label>Start: ${start}s <input data-layer-time="${l.id}" data-time-field="startTime" type="range" min="0" max="${MAX_AD_MEDIA_SECONDS}" value="${start}"></label>
+              <label>End: ${end}s <input data-layer-time="${l.id}" data-time-field="endTime" type="range" min="0" max="${MAX_AD_MEDIA_SECONDS}" value="${end}"></label>
             </div>
           </div>
         `;
@@ -590,6 +658,15 @@ function timelineControls(){
 function applyAdPreset(presetKey){
   const p = MULTIMEDIA_PRESETS[presetKey];
   if (!p) return;
+  if (presetKey === 'slideshow') {
+    /* [NON-CANVAS MVP 2026-09-24] Guide the user into the slideshow flow
+       instead of guessing media — automation never steals control (§24/§25). */
+    commit(n => { n.preset = 'slideshow'; }, 'Select Slideshow preset');
+    activeTab = 'design';
+    renderLibrary();
+    toast('Slideshow: pakia picha 2+ kisha Enable slideshow.','info');
+    return;
+  }
   commit(n => {
     n.preset = presetKey;
     if (p.duration) n.duration = p.duration;
@@ -649,8 +726,8 @@ function updateAudio(key, el){
       l.audioMeta[key] = val;
       if (key === 'trimStart' || key === 'trimEnd') {
         const start = l.audioMeta.trimStart || 0;
-        const end = l.audioMeta.trimEnd || 30;
-        l.audioMeta.duration = Math.max(1, Math.min(30, end - start));
+        const end = l.audioMeta.trimEnd || MAX_AD_MEDIA_SECONDS;
+        l.audioMeta.duration = Math.max(1, Math.min(MAX_AD_MEDIA_SECONDS, end - start));
         l.duration = l.audioMeta.duration;
       }
     }
@@ -667,7 +744,7 @@ function updateMix(key, el){
 
 function updateTimelineDur(val){
   commit(n => {
-    n.duration = Math.min(30, Math.max(1, +val));
+    n.duration = Math.min(MAX_AD_MEDIA_SECONDS, Math.max(1, +val));
     const totalEl = $('#csTotalDuration');
     if (totalEl) totalEl.textContent = `0:${String(n.duration).padStart(2, '0')}`;
   }, 'Update Duration');
@@ -677,7 +754,7 @@ function updateLayerTime(layerId, field, val){
   commit(n => {
     const l = n.layers.find(x => x.id === layerId);
     if (l) {
-      l[field] = Math.min(30, Math.max(0, +val));
+      l[field] = Math.min(MAX_AD_MEDIA_SECONDS, Math.max(0, +val));
       if (l.startTime != null && l.endTime != null && l.endTime > l.startTime) {
         l.duration = l.endTime - l.startTime;
       }
@@ -786,7 +863,10 @@ function applyAddedMedia(url,kind,name,meta,opts={}){
     if(name&&name!=='Media')l.name=name;
     if(meta&&meta.duration&&kind==='video'){
       l.videoMeta=l.videoMeta||{};l.videoMeta.duration=meta.duration;
-      if(meta.duration>30)l.videoMeta.trimEnd=30; /* existing 30s rule stays authoritative */
+      /* [NON-CANVAS MVP 2026-09-24] HARD 60s cap (spec §11/§33). Original file
+         stays available (src/originalSrc) so the trim can be re-edited. */
+      l.videoMeta.trimStart=0;
+      l.videoMeta.trimEnd=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(1,Math.round(meta.duration)));
     }
     selected=l.id;
   },'Add Media');
@@ -998,7 +1078,11 @@ function designControls(){
     <button class="cs-wide" data-tab="templates">📐 Editable Templates</button>
     ${backgroundControls()}`;
 
-  return addMediaBlock+mediaBlock+layersBlock+textBlock+logoBlock+shapesBlock+quickStyleControls()+templatesBlock;
+  /* [NON-CANVAS MVP 2026-09-24] Slideshow section sits right after media (§3:
+     progressive disclosure — visible whenever DESIGN is open, compact). */
+  const slideshowBlock=slideshowControls();
+
+  return addMediaBlock+mediaBlock+slideshowBlock+layersBlock+textBlock+logoBlock+shapesBlock+quickStyleControls()+templatesBlock;
 }
 
 /* ==== MEDIA tab — media-itself controls (NO uploader duplication) ==== */
@@ -1022,22 +1106,35 @@ function mediaTabControls(){
     <h4>${isVideo?'🎬 Video':'🖼️ '+esc(mediaLayer.name||'Media')} ${mediaLayer.src?'':'· (bado haina source)'}</h4>
     <p style="word-break:break-all;font-size:11px;">${esc(mediaLayer.src||mediaLayer.videoUrl||'—')}</p>`;
     if(isVideo){
+      const vDur=Number(vMeta.duration)||0;
+      const trimEnd=Number(vMeta.trimEnd)||0;
+      const trimStart=Number(vMeta.trimStart)||0;
+      const effective=trimEnd>trimStart?trimEnd-trimStart:vDur;
+      const overVid=vDur>MAX_AD_MEDIA_SECONDS;
+      const overTrim=effective>MAX_AD_MEDIA_SECONDS;
+      const fmtT=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
       html+=`
     <div style="background:#0F172A; padding:8px 12px; border-radius:8px; margin-bottom:8px;">
-      <span style="font-size:12px; color:${(vMeta.duration||30)>30?'#EF4444':'#10B981'}; font-weight:700;">
-        ⏱ Duration: ${Math.round(vMeta.duration||30)}s ${(vMeta.duration||30)>30?'⚠️ (Max 30s limit exceeded!)':'✓ (Within 30s limit)'}
+      <span style="font-size:12px; color:${(overVid||overTrim)?'#EF4444':'#10B981'}; font-weight:700;">
+        ⏱ Video: ${fmtT(vDur)} · Ad maximum: ${fmtT(MAX_AD_MEDIA_SECONDS)} · Trim: ${fmtT(Math.max(0,effective))} ${(!overVid&&!overTrim)?'✓ (≤60s limit)':'⚠️ Trim inahitajika kabla ya Publish!'}
       </span>
+      ${(overVid||overTrim)?`<div style="display:flex;gap:6px;margin-top:8px;">
+        <button data-a="trimto60" class="primary">✂️ Trim to 60s</button>
+        <button data-a="manualtrim">✏️ Edit manually</button>
+      </div>
+      <p style="margin:6px 0 0;font-size:11px;color:#94A3B8;">Video is ${fmtT(vDur)} · Maximum ad duration ${fmtT(MAX_AD_MEDIA_SECONDS)}. Original file remains available — you can re-edit the trim anytime (spec §11/§33).</p>`:''}
     </div>
     <div class="cs-two">
       <button data-a="togglevideo">⏯ Play / Pause preview</button>
       <button data-a="togglevideomute">🔊 Mute / Unmute</button>
     </div>
     <label>Poster / Cover Image URL<input data-prop="posterUrl" value="${esc(mediaLayer.posterUrl||'')}" placeholder="https://..."></label>
-    <h4>Basic Video Trim (Start ─ End)</h4>
+    <h4>Video Trim (Start ─ End)</h4>
     <div class="cs-two">
-      <label>Trim Start (${vMeta.trimStart||0}s)<input data-vmeta="trimStart" type="range" min="0" max="30" step="1" value="${vMeta.trimStart||0}"></label>
-      <label>Trim End (${vMeta.trimEnd||30}s)<input data-vmeta="trimEnd" type="range" min="0" max="30" step="1" value="${vMeta.trimEnd||30}"></label>
+      <label>Start [${fmtT(trimStart)}]<input data-vmeta="trimStart" type="range" min="0" max="${MAX_AD_MEDIA_SECONDS}" step="1" value="${trimStart}"></label>
+      <label>End [${fmtT(trimEnd||MAX_AD_MEDIA_SECONDS)}]<input data-vmeta="trimEnd" type="range" min="1" max="${MAX_AD_MEDIA_SECONDS}" step="1" value="${trimEnd||MAX_AD_MEDIA_SECONDS}"></label>
     </div>
+    <p class="cs-simple-tip">Start/End hupanga clip ya tangazo (max ${MAX_AD_MEDIA_SECONDS}s). Muda asilia wa video (${fmtT(vDur)}) haukati — ubaki kwenye originalSrc.</p>
     <div class="cs-two">
       <label><input type="checkbox" data-vmeta="autoplay" ${vMeta.autoplay!==false?'checked':''}> Autoplay</label>
       <label><input type="checkbox" data-vmeta="muted" ${vMeta.muted!==false?'checked':''}> Muted</label>
@@ -1114,8 +1211,24 @@ function animationControls(){
 /* ==== BASIC tab — ad presets + content information (Step 1) ==== */
 function basicControls(){
   const role=r=>state.layers.find(l=>l.role===r),head=role('headline'),body=role('body'),price=role('price');
+  /* [NON-CANVAS MVP 2026-09-24] Automatic composition indicator (§24) +
+     overall duration Auto/Custom (§21, max 60s). */
+  const comp=detectComposition(state);
+  const compLabel=COMPOSITION_LABELS[comp]||comp;
+  const autoDur=autoAdDuration(state);
+  const isAuto=state.durationAuto!==false&&Math.abs((Number(state.duration)||0)-autoDur)<0.6;
   return presetsControls()+`
     <div class="cs-simple-head"><span>1</span><div><h3>Content / Advertisement information</h3><p>Andika maneno; preview inabadilika papo hapo.</p></div></div>
+    <div class="cs-comp-badge" title="Automatic ad composition (§24) — badilisha manual kwenye presets/media">
+      <b>Detected: ${esc(compLabel)}</b>
+      <label style="display:flex;gap:10px;align-items:center;margin-top:6px;font-weight:700;color:#486581;">
+        <input type="radio" name="csDurMode" data-dur-mode="auto" ${isAuto?'checked':''}> Auto duration (${autoDur}s)
+        <input type="radio" name="csDurMode" data-dur-mode="custom" ${!isAuto?'checked':''}> Custom
+      </label>
+      <div class="cs-two" style="margin-top:6px;">
+        <label>Ad duration (${state.duration||30}s · max ${MAX_AD_MEDIA_SECONDS}s)<input data-simple="duration" type="range" min="1" max="${MAX_AD_MEDIA_SECONDS}" value="${state.duration||30}"></label>
+      </div>
+    </div>
     <label>Kichwa kikuu<input data-simple="headline" value="${esc(head?.content||'')}" placeholder="Mfano: Ofa kubwa ya wiki"></label>
     <label>Maelezo mafupi<textarea data-simple="body" rows="3" placeholder="Eleza bidhaa au huduma">${esc(body?.content||'')}</textarea></label>
     <label>Bei / offer<input data-simple="price" value="${esc(price?.content||'')}" placeholder="TZS 59,000"></label>
@@ -1269,7 +1382,20 @@ function updateSimple(key,val){
     else if(key==='startAt'){n.startAt=val?new Date(val).toISOString():'';}else if(key==='endAt'){n.endAt=val?new Date(val).toISOString():'';}
     else if(key==='priority'){n.priority=Math.max(0,+val||0);}
     else if(key==='displayDurationSeconds'){n.displayDurationSeconds=Math.max(5,Math.min(59,+val||9));}
+    /* [NON-CANVAS MVP 2026-09-24] overall ad duration (§21, max 60s) */
+    else if(key==='duration'){
+      n.durationAuto=false;
+      n.duration=Math.max(1,Math.min(MAX_AD_MEDIA_SECONDS,Math.round(Number(val)||30)));
+    }
   });
+}
+
+/* [NON-CANVAS MVP 2026-09-24] Auto/Manual duration mode (§25). */
+function setDurationMode(mode){
+  commit(n=>{
+    if(mode==='auto'){n.durationAuto=true;n.duration=Math.max(1,Math.min(MAX_AD_MEDIA_SECONDS,Math.round(autoAdDuration(n)||n.duration)));}
+    else n.durationAuto=false;
+  },'Duration mode '+mode);
 }
 
 function applyQuickTheme(t){
@@ -1381,6 +1507,149 @@ function applyAlignment(type){
     const aligned=alignLayers([target],type,n.canvas.width,n.canvas.height);
     if(aligned[0]){target.x=aligned[0].x;target.y=aligned[0].y;}
   });
+}
+
+/* [NON-CANVAS MVP 2026-09-24] 9-grid text position presets (spec §8). */
+const NC_POS_GRID={
+  'top-left':[0,0],'top-center':[.5,0],'top-right':[1,0],
+  'center-left':[0,.5],'center':[.5,.5],'center-right':[1,.5],
+  'bottom-left':[0,1],'bottom-center':[.5,1],'bottom-right':[1,1]
+};
+function applyTextPositionPreset(key){
+  const g=NC_POS_GRID[key];if(!g)return;
+  const l=currentLayer();if(!l||l.type!=='text')return toast('Chagua text layer kwanza.','warning');
+  commit(n=>{
+    const t=n.layers.find(x=>x.id===l.id);if(!t)return;
+    const m=Math.round(n.canvas.safe/2)||40;
+    const fx=g[0],fy=g[1];
+    t.x=Math.round(fx===0?m:fx===1?(n.canvas.width-t.width-m):(n.canvas.width-t.width)/2);
+    t.y=Math.round(fy===0?m:fy===1?(n.canvas.height-t.height-m):(n.canvas.height-t.height)/2);
+    t.style=Object.assign({},t.style,{pos9:key});
+    if(fx===.5)t.style.textAlign='center';
+    else if(fx===1)t.style.textAlign='right';
+    else t.style.textAlign='left';
+  },'Position '+key);
+}
+
+/* ==== [NON-CANVAS MVP 2026-09-24] SLIDESHOW CONTROLS (spec §4/§15/§16) ==== */
+function slideshowControls(){
+  const ss=state.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+  const slides=Array.isArray(ss.slides)?ss.slides:[];
+  const total=slides.reduce((t,s)=>t+(Number(s.duration)||Number(ss.defaultDuration)||3),0);
+  const images=state.layers.filter(l=>l.type==='image'&&l.src);
+  return `
+    <div class="cs-simple-head"><span>🖼</span><div><h3>Slideshow / Carousel</h3><p>Slides 1–${slides.length||'n'} · jumla ${Math.round(total)}s · transition: ${esc(ss.transition||'fade')}</p></div></div>
+    <label class="cs-two" style="align-items:center;">
+      <span>Slideshow mode ${ss.enabled?'✓ ON':'OFF'}</span>
+      <button data-ss-act="toggle" class="${ss.enabled?'primary':''}">${ss.enabled?'Disable':'Enable slideshow'}</button>
+    </label>
+    <h4>Add slides</h4>
+    <div class="cs-addmedia">
+      <label class="cs-upload">📤 Upload image slide(s)<small style="display:block;font-weight:500;">1 / 2 / 3 / 4+ picha — MULTIPLE selection inaruhusiwa</small><input id="csSlideFiles" type="file" accept="image/*" multiple hidden></label>
+      <button class="cs-wide" data-a="openmedialibrary">🗂 Select from Media Library</button>
+      <label>Image HTTPS URL<input id="csSlideUrl" placeholder="https://..."></label>
+      <button class="cs-wide" data-ss-act="addurl">+ Add slide from URL</button>
+    </div>
+    ${slides.length?`
+    <h4>Slides (${slides.length})</h4>
+    <div class="cs-ss-list">
+      ${slides.map((s,i)=>`
+        <div class="cs-ss-row">
+          <b>#${i+1}</b>
+          <span class="cs-ss-src" title="${esc(s.src)}">${esc(s.name||String(s.src).split('/').pop()||'slide')}</span>
+          <label class="cs-ss-dur">${Number(s.duration)||ss.defaultDuration||3}s
+            <input data-ss-dur="${i}" type="range" min="1" max="30" value="${Number(s.duration)||ss.defaultDuration||3}">
+          </label>
+          <button data-ss-act="up" data-ss-idx="${i}" ${i===0?'disabled':''} title="Move up">↑</button>
+          <button data-ss-act="down" data-ss-idx="${i}" ${i===slides.length-1?'disabled':''} title="Move down">↓</button>
+          <button data-ss-act="remove" data-ss-idx="${i}" title="Remove">🗑</button>
+        </div>`).join('')}
+    </div>
+    <div class="cs-two">
+      <label>Default slide duration (${ss.defaultDuration||3}s)<input data-ss-default-dur type="range" min="1" max="15" value="${ss.defaultDuration||3}"></label>
+      <label>Transition<select data-ss-transition>
+        ${SLIDESHOW_TRANSITIONS.map(t=>`<option value="${t}" ${ss.transition===t?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}
+      </select></label>
+    </div>
+    <p class="cs-simple-tip">Jumla ya slideshow: <b>${Math.round(total)}s</b> (max ${MAX_AD_MEDIA_SECONDS}s). Audio ikiwepo inaendelea cross-slide.</p>
+    `:`<p class="cs-note">Ongeza picha 2+ hapo juu kisha bofya <b>Enable slideshow</b>. Kila slide ina muda wake; jumla hujitokeza hapo chini.</p>`}
+    ${images.length&&!slides.length?`<p class="cs-simple-tip">Picha ${images.length} zilizo kwenye canvas zipo kama media ya kawaida. Slideshow ni tofauti — pakia/ongeza slides kwenye list hii.</p>`:''}
+  `;
+}
+
+async function addSlidesFromInput(input){
+  const files=[...(input.files||[])];input.value='';
+  if(!files.length)return;
+  for(const file of files){
+    if(!/image\//.test(file.type||'')){toast('Slideshow inapokea picha tu (JPG/PNG/WEBP/GIF/SVG).','warning');continue;}
+    if(typeof window.skhUploadFromFile!=='function'){toast('Uploader haipatikani.','error');return;}
+    try{
+      toast('Uploading slide…','info');
+      const up=await window.skhUploadFromFile(file,{resourceType:'image',folder:'sokohai/creative-assets'});
+      const url=up&&(up.url||up.secure_url);
+      if(!url)throw new Error('Upload failed');
+      commit(n=>{
+        n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+        n.slideshow.slides=n.slideshow.slides||[];
+        n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||3,name:file.name||'slide'});
+        n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
+      },'Add slideshow slide');
+    }catch(err){toast(err.message||'Slide upload failed.','error');}
+  }
+  activeTab='design';renderLibrary();
+  toast('Slides added.');
+}
+
+function slideshowAction(act,idx){
+  if(act==='toggle'){
+    commit(n=>{
+      n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+      const count=(n.slideshow.slides||[]).filter(s=>s&&s.src).length;
+      if(!n.slideshow.enabled&&count<2){toast('Ongeza picha angalau 2 kwanza.','warning');return;}
+      n.slideshow.enabled=!n.slideshow.enabled;
+      if(n.slideshow.enabled&&count>=2){
+        /* Auto duration when slideshow just enabled (§21 Auto) */
+        n.duration=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||12)));
+        n.preset='slideshow';
+      }
+    },'Toggle slideshow');
+    renderLibrary();render();return;
+  }
+  if(act==='addurl'){
+    const url=($('#csSlideUrl')?.value||'').trim();
+    if(!/^https:\/\//i.test(url))return toast('Weka HTTPS image URL halali.','error');
+    commit(n=>{
+      n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+      n.slideshow.slides=n.slideshow.slides||[];
+      n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||3,name:url.split('/').pop().slice(0,40)||'slide'});
+      n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
+    },'Add slide URL');
+    const inp=$('#csSlideUrl');if(inp)inp.value='';
+    renderLibrary();render();return;
+  }
+  commit(n=>{
+    const ss=n.slideshow;if(!ss||!Array.isArray(ss.slides))return;
+    const slides=ss.slides;
+    if(act==='remove')slides.splice(idx,1);
+    else if(act==='up'&&idx>0)[slides[idx-1],slides[idx]]=[slides[idx],slides[idx-1]];
+    else if(act==='down'&&idx<slides.length-1)[slides[idx+1],slides[idx]]=[slides[idx],slides[idx+1]];
+    ss.enabled=slides.filter(s=>s&&s.src).length>=2&&ss.enabled;
+    if(ss.enabled)n.duration=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
+  },'Slideshow '+act);
+  renderLibrary();render();
+}
+function updateSlideshowProp(key,el){
+  const val=el.type==='range'?Number(el.value):el.value;
+  commit(n=>{
+    n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+    if(key==='transition')n.slideshow.transition=val;
+    else if(key==='defaultDuration')n.slideshow.defaultDuration=Math.min(15,Math.max(1,Number(val)||3));
+    else if(key==='slideDur'){
+      const i=Number(el.dataset.ssDur);
+      if(n.slideshow.slides[i])n.slideshow.slides[i].duration=Math.min(30,Math.max(1,Number(val)||3));
+    }
+    if(n.slideshow.enabled)n.duration=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
+  },'Slideshow setting');
 }
 
 async function doRemoveBackground(){
@@ -1594,7 +1863,17 @@ function updateVmeta(key,el){
     const l=n.layers.find(x=>x.id===selected&&x.type==='video')||n.layers.find(x=>x.type==='video');
     if(l){
       l.videoMeta=l.videoMeta||{};
-      l.videoMeta[key]=val;
+      /* [NON-CANVAS MVP 2026-09-24] trim values are numeric seconds clamped to
+         the 0..60s ad window; original duration/src untouched (spec §11). */
+      if(key==='trimStart'||key==='trimEnd'){
+        let s=Math.max(0,Math.min(MAX_AD_MEDIA_SECONDS,Number(val)||0));
+        const other=key==='trimStart'?Number(l.videoMeta.trimEnd)||MAX_AD_MEDIA_SECONDS:Number(l.videoMeta.trimStart)||0;
+        if(key==='trimEnd'&&s<=other)s=Math.min(MAX_AD_MEDIA_SECONDS,other+1);
+        if(key==='trimStart'&&s>=other)s=Math.max(0,other-1);
+        l.videoMeta[key]=s;
+      }else{
+        l.videoMeta[key]=val;
+      }
     }
   },'Update Video Meta');
 }
@@ -1620,6 +1899,10 @@ function renderProperties(){
   let specificControls='';
 
   if(l.type==='text'){
+    /* [NON-CANVAS MVP 2026-09-24] Full text toolset (spec §7/§8). Every control
+       writes to the SAME layer state → SAME renderer → saved → published. */
+    const tPos=[['top-left',0,0],['top-center',.5,0],['top-right',1,0],['center-left',0,.5],['center',.5,.5],['center-right',1,.5],['bottom-left',0,1],['bottom-center',.5,1],['bottom-right',1,1]];
+    const colorPresets=[['White','#FFFFFF'],['Black','#000000'],['Blue','#3B82F6'],['Green','#10B981'],['Gold','#F4C542']];
     specificControls=`
       <label>Text Content<textarea data-prop="content" rows="3">${esc(l.content)}</textarea></label>
       <label>Font Family<select data-prop="style.fontFamily">${VERIFIED_FONTS.map(f=>`<option value="${f.family}" ${f.family===st.fontFamily?'selected':''}>${f.family}</option>`).join('')}</select></label>
@@ -1639,9 +1922,49 @@ function renderProperties(){
         </select></label>
       </div>
       <div class="cs-two">
-        <label>Font Size<input data-prop="style.fontSize" type="range" min="14" max="140" value="${st.fontSize||48}"></label>
+        <label>Font Size (${st.fontSize||48})<input data-prop="style.fontSize" type="range" min="14" max="220" value="${st.fontSize||48}"></label>
         <label>Text Color<input data-prop="style.fill" type="color" value="${st.fill||'#FFFFFF'}"></label>
       </div>
+      <div class="cs-quick-swatches" title="Quick text colors">
+        ${colorPresets.map(([nm,hex])=>`<button data-quickcolor="${hex}" style="background:${hex};" title="${nm} ${hex}"></button>`).join('')}
+        <button style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);border-radius:50%;" data-a="focuscustomcolor" title="Custom color"></button>
+      </div>
+      <div class="cs-two">
+        <label>Style
+          <span class="cs-two" style="gap:4px;">
+            <button data-prop="style.fontStyle" value="${st.fontStyle==='italic'?'normal':'italic'}" class="${st.fontStyle==='italic'?'primary':''}" title="Italic"><i>I</i> Italic</button>
+            <button data-prop="style.textDecoration" value="${st.textDecoration==='underline'?'none':'underline'}" class="${st.textDecoration==='underline'?'primary':''}" title="Underline"><u>U</u> Under</button>
+          </span>
+        </label>
+        <label>Text Opacity (${Math.round((l.opacity??1)*100)}%)<input data-prop="opacity" type="range" min="10" max="100" value="${Math.round((l.opacity??1)*100)}"></label>
+      </div>
+      <div class="cs-two">
+        <label>Letter Spacing (${st.letterSpacing||0})<input data-prop="style.letterSpacing" type="range" min="-5" max="20" step="0.5" value="${st.letterSpacing||0}"></label>
+        <label>Line Height (${st.lineHeight||1.1})<input data-prop="style.lineHeight" type="range" min="0.8" max="2.2" step="0.05" value="${st.lineHeight||1.1}"></label>
+      </div>
+      <h4>Text Background / Outline / Shadow</h4>
+      <div class="cs-two">
+        <label>Text background<input data-prop="style.backgroundColor" type="color" value="${/^#[0-9a-f]{6}$/i.test(st.backgroundColor||'')?st.backgroundColor:'#0E7A5F'}"></label>
+        <label><button data-prop="style.backgroundColor" value="transparent" class="cs-wide">Clear background</button></label>
+      </div>
+      <div class="cs-two">
+        <label>Outline color<input data-prop="style.stroke" type="color" value="${/^#[0-9a-f]{6}$/i.test(st.stroke||'')?st.stroke:'#000000'}"></label>
+        <label>Outline width (${st.strokeWidth||0})<input data-prop="style.strokeWidth" type="range" min="0" max="8" step="0.5" value="${st.strokeWidth||0}"></label>
+      </div>
+      <div class="cs-two">
+        <label>Shadow color<input data-prop="style.shadowColor" type="color" value="${st.shadowColor||'#000000'}"></label>
+        <label>Shadow strength (${st.shadowOpacity||0})<input data-prop="style.shadowOpacity" type="range" min="0" max="1" step="0.05" value="${st.shadowOpacity||0}"></label>
+      </div>
+      <label>Shadow blur (${st.shadowBlur||12}px)<input data-prop="style.shadowBlur" type="range" min="0" max="40" value="${st.shadowBlur||12}"></label>
+      <h4>Position Preset (9-Grid) + Box</h4>
+      <div class="cs-grid9">
+        ${tPos.map(([k,fx,fy])=>`<button data-nc-pos="${k}" title="${k}" class="${st.pos9===k?'primary':''}">${k.replace('center','·').replace(/-/g,' ').trim()}</button>`).join('')}
+      </div>
+      <div class="cs-two">
+        <label>Width (${Math.round(l.width)})<input data-prop="width" type="range" min="60" max="${state.canvas.width}" value="${Math.round(l.width)}"></label>
+        <label>Max lines (${st.maxLines||'auto'})<input data-prop="style.maxLines" type="number" min="1" max="16" placeholder="auto" value="${st.maxLines||''}"></label>
+      </div>
+      <p class="cs-simple-tip">X/Y/Rotation ziko juu kwenyeProperties. Mabadiliko yote yanaonekana papo hapo kwenye canvas, kwenye Preview, na kwenye tangazo lililochapishwa.</p>
 
       <h4>Animation Settings</h4>
       <div class="cs-two">
@@ -1656,7 +1979,11 @@ function renderProperties(){
         <label>Mode<select data-anim="mode">
           ${ANIMATION_MODES.map(m=>`<option value="${m}" ${anim.mode===m?'selected':''}>${m}</option>`).join('')}
         </select></label>
-        <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="200" max="2000" step="100" value="${anim.duration||600}"></label>
+        <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="200" max="3000" step="100" value="${anim.duration||600}"></label>
+      </div>
+      <div class="cs-two">
+        <label>Delay (${anim.delay||0}ms)<input data-anim="delay" type="range" min="0" max="5000" step="100" value="${anim.delay||0}"></label>
+        <label><button data-a="replayanim" class="primary cs-wide">▶ Play Animation</button></label>
       </div>
     `;
   } else if(l.type==='image'||l.type==='video'||l.type==='logo'){
@@ -1850,36 +2177,83 @@ function showResize(){
 }
 
 /* Map canonical creative state to the announcement shape consumed by the
-   existing Home card renderer (window.skhAdvertisementCardHtml). */
+   existing Home card renderer (window.skhAdvertisementCardHtml).
+   [NON-CANVAS MVP 2026-09-24] FULL field mapping so the preview card IS the
+   published card (§6/§22/§27): slideshow, trimmed video duration, text
+   animation/emphasis/mode/timing, palette, CTA + badge animation, category. */
 function creativeAsAnnouncement(c){
   const role=r=>c.layers.find(l=>l.role===r);
   const img=c.layers.find(l=>l.type==='image')||c.layers.find(l=>l.type==='logo');
   const vid=c.layers.find(l=>l.type==='video');
   const aud=c.layers.find(l=>l.type==='audio');
+  const head=role('headline'),cta=role('cta'),badge=role('badge');
+  const anim=head?.animation||{};
+  const ss=c.slideshow&&Array.isArray(c.slideshow.slides)&&c.slideshow.slides.filter(s=>s&&s.src).length>=2?c.slideshow:null;
+  /* Trimmed video duration (never the raw >60s source length) */
+  let mediaDur=0;
+  if(vid){
+    const vm=vid.videoMeta||{};
+    const t=(Number(vm.trimEnd)||0)-(Number(vm.trimStart)||0);
+    mediaDur=t>0?t:(Number(vm.duration)||0);
+  }else if(ss){
+    mediaDur=slideshowTotal(c);
+  }else if(aud){
+    const am=aud.audioMeta||{};
+    const t=(Number(am.trimEnd)||0)-(Number(am.trimStart)||0);
+    if(t>0)mediaDur=t;
+  }
   return {
-    headline:role('headline')?.content||c.title,
+    headline:head?.content||c.title,
     text:role('body')?.content||'',
     priceTag:role('price')?.content||c.offer||'',
-    image:img?.src||'',videoUrl:vid?.src||'',audioUrl:aud?.src||'',
+    image:ss?ss.slides[0].src:(img?.src||''),
+    videoUrl:vid?.src||'',audioUrl:aud?.src||'',
     posterUrl:vid?.posterUrl||'',
-    ctaLabel:role('cta')?.content||'',badgeText:role('badge')?.content||'',
+    slideshow:ss,
+    mediaDurationSeconds:Math.round(mediaDur)||null,
+    videoControls:vid?.videoMeta?.controls===true,
+    ctaLabel:cta?.content||'',badgeText:badge?.content||'',
+    badgeColor:badge?.style?.backgroundColor||undefined,
+    badgeTextColor:badge?.style?.fill||undefined,
+    badgeAnimation:badge?.animation?.entrance!=='none'&&badge?.animation?.entrance?badge.animation.entrance:(badge?.animation?.emphasis||'none'),
+    ctaAnimation:cta?.animation?.entrance!=='none'&&cta?.animation?.entrance?cta.animation.entrance:(cta?.animation?.emphasis||'none'),
+    category:c.category||'general',
+    paletteId:c.paletteId||'',
+    /* Text animation pipeline (Input → State → Renderer → Preview → Saved → Published) */
+    textAnimation:anim.entrance||'none',
+    textEmphasis:anim.emphasis||'none',
+    animationMode:anim.mode||'whole',
+    animationDuration:anim.duration||600,
+    animationDelay:anim.delay||0,
+    animationStagger:anim.stagger||100,
+    animation:{enabled:!!anim.enabled,entrance:anim.entrance||'none',emphasis:anim.emphasis||'none',mode:anim.mode||'whole',duration:anim.duration||600,delay:anim.delay||0,stagger:anim.stagger||100},
     primaryColor:c.background?.color,accentColor:c.background?.color2,
-    textColor:role('headline')?.style?.fill||'#FFFFFF'
+    textColor:head?.style?.fill||'#FFFFFF',
+    fontWeight:head?.style?.fontWeight||'950',
+    textAlign:head?.style?.textAlign||'left',
+    offer:c.offer||'',
+    brandName:c.brandKit?.name||'',logoUrl:c.brandKit?.logoUrl||'',
+    link:c.destination?.url||''
   };
 }
 function showPreview(){
-  const card=typeof window.skhAdvertisementCardHtml==='function'
+  /* [NON-CANVAS MVP 2026-09-24] §22/§23: EVERY preview mode renders through the
+     SAME canonical published renderer (skhAdvertisementCardHtml) fed by the SAME
+     creative state — what the user previews IS what appears Home. The SVG design
+     canvas remains visible as an extra "Design layout" reference only. */
+  const published=typeof window.skhAdvertisementCardHtml==='function'
     ?window.skhAdvertisementCardHtml(creativeAsAnnouncement(state))
     :renderCreativeSvg(state);
-  const s=sheet(`<h2>Preview modes</h2>
+  const s=sheet(`<h2>Preview modes <small style="font-weight:600;color:#627D98;">(canonical Home renderer — §22)</small></h2>
     <div class="cs-previews">
-      <article><b>Feed / Card (Home)</b><div class="cs-preview-card">${card}</div></article>
-      <article class="phone"><b>Mobile / Story</b><div>${renderCreativeSvg(state)}</div></article>
-      <article class="desktop"><b>Desktop / Web</b><div>${renderCreativeSvg(state)}</div></article>
+      <article><b>Feed / Card (Home)</b><div class="cs-preview-card">${published}</div></article>
+      <article class="phone"><b>Mobile / Story</b><div class="cs-preview-card">${published}</div></article>
+      <article class="desktop"><b>Desktop / Web</b><div class="cs-preview-card">${published}</div></article>
+      <article style="grid-column:1/-1;"><b>Design layout (SVG canvas reference)</b><div>${renderCreativeSvg(state)}</div></article>
     </div>
-    <div style="margin-top:14px;"><button id="csPreviewFull" class="primary cs-wide">⛶ Fullscreen preview</button></div>`);
+    <div style="margin-top:14px;"><button id="csPreviewFull" class="primary cs-wide">⛶ Fullscreen preview (published look)</button></div>`);
   $('#csPreviewFull',s).onclick=()=>{
-    sheet(`<h2>Fullscreen preview</h2><div class="cs-preview-full">${renderCreativeSvg(state)}</div>`);
+    sheet(`<h2>Fullscreen preview</h2><div class="cs-preview-full cs-preview-card">${published}</div>`);
   };
 }
 

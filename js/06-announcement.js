@@ -62,14 +62,55 @@
 
     const overlayHtml=overlayOpacity>0?`<div class="skh-ann-media-overlay" style="position:absolute;inset:0;z-index:3;background:${overlayColor};opacity:${overlayOpacity};pointer-events:none;"></div>`:'';
 
+    /* [NON-CANVAS MVP 2026-09-24] SLIDESHOW MEDIA (Type E, spec §15/§16).
+       Extends THIS canonical renderer — no second renderer. Pure CSS keyframes
+       are emitted per card (unique id) from per-slide durations; slide 1 is
+       visible without animation (reduced-motion + static contexts). */
     let visual='';
-    if (type.indexOf('video')!==-1 && video) {
+    const ssRaw=(a.slideshow&&typeof a.slideshow==='object')?a.slideshow:null;
+    const ssSlides=ssRaw&&Array.isArray(ssRaw.slides)?ssRaw.slides.filter(function(s){return s&&safeUrl(s.src);}).slice(0,12):[];
+    if (ssSlides.length>=2) {
+      const trans=String((ssRaw.transition||'fade')).toLowerCase();
+      const durs=ssSlides.map(function(s){const d=Number(s.duration);return Number.isFinite(d)&&d>0?Math.min(30,d):(Number(ssRaw.defaultDuration)||3);});
+      const total=durs.reduce(function(t,d){return t+d;},0)||1;
+      let hash=0;const seed=ssSlides.map(function(s){return s.src;}).join('|');
+      for(let i=0;i<seed.length;i++){hash=((hash<<5)-hash+seed.charCodeAt(i))|0;}
+      const uid='ss'+Math.abs(hash).toString(36);
+      const p2=function(n){return (Math.round(n*1000)/1000)+'%';};
+      let kf='',slides='';let acc=0;
+      const fadePct=Math.max(1.2,Math.min(8,(1.2/total)*100)); /* ~1.2s crossfade window */
+      for(let i=0;i<ssSlides.length;i++){
+        const sPct=(acc/total)*100, ePct=((acc+durs[i])/total)*100; acc+=durs[i];
+        const fi=Math.min(sPct+fadePct,(sPct+ePct)/2), fo=Math.max(ePct-fadePct,(sPct+ePct)/2);
+        const enter=(trans==='slide')?'transform:translateX(4%);':(trans==='zoom'?'transform:scale(1.07);':'');
+        const mid=(trans==='slide'||trans==='zoom')?'transform:none;':'';
+        const name=uid+'k'+i;
+        if(trans==='none'){
+          /* Hard cuts: visible only inside [start,end). Slide 0 visible from 0%. */
+          let seg='';
+          if(i===0)seg+='0%,'+p2(sPct)+'{opacity:1}';
+          else seg+='0%,'+p2(Math.max(0,sPct-0.001))+'{opacity:0}';
+          seg+=p2(sPct)+','+p2(Math.min(100,ePct))+'{opacity:1}';
+          if(ePct<100)seg+=p2(Math.min(100,ePct+0.001))+',100%{opacity:0}';
+          kf+='@keyframes '+name+'{'+seg+'}';
+        }else{
+          let seg='0%{opacity:'+(i?0:1)+';'+(i?enter:'')+'}';
+          if(i>0)seg+=p2(sPct)+'{opacity:0;'+enter+'}';
+          seg+=p2(fi)+'{opacity:1;'+mid+'}'+p2(fo)+'{opacity:1}'+p2(ePct)+'{opacity:0}100%{opacity:0}';
+          kf+='@keyframes '+name+'{'+seg+'}';
+        }
+        slides+='<figure class="skh-ann-slide" style="animation:'+name+' '+total.toFixed(2)+'s linear infinite;'+(i?'opacity:0;':'')+'"><img src="'+esc(safeUrl(ssSlides[i].src))+'" alt="'+esc(ssSlides[i].name||title)+'" loading="'+(i?'lazy':'eager')+'" style="'+mediaInlineStyle+'"></figure>';
+      }
+      const dots=ssSlides.map(function(_,i){return '<i class="skh-ann-ss-dot'+(i?'':' on')+'"></i>';}).join('');
+      visual='<style>'+kf+'</style><div class="skh-ann-slideshow skh-ss-'+esc(['none','fade','slide','zoom','crossfade'].indexOf(trans)>=0?trans:'fade')+'" data-slides="'+ssSlides.length+'" data-total="'+Math.round(total)+'">'+slides+'<div class="skh-ann-ss-dots" aria-hidden="true">'+dots+'</div><span class="skh-ann-video-dur">'+ssSlides.length+' picha · '+Math.round(total)+'s</span></div>';
+    }
+    if (!visual && type.indexOf('video')!==-1 && video) {
       /* Published video ad = clean presentation: poster + subtle play cue + duration.
          Technical controls remain in Creator Studio; `controls` only via explicit opt-in. */
       const durS=Number(a.mediaDurationSeconds||a.videoDuration||a.durationSeconds)||0;
       const durChip=durS>0?'<span class="skh-ann-video-dur">'+Math.floor(durS/60)+':'+String(Math.floor(durS%60)).padStart(2,'0')+'</span>':'';
       visual='<video class="skh-ann-video" muted playsinline '+(a.videoControls===true?'controls ':'')+'preload="metadata" '+(poster?'poster="'+esc(poster)+'" ':'')+'style="'+mediaInlineStyle+'"><source src="'+esc(video)+'"></video>'+(a.videoControls===true?'':'<span class="skh-ann-video-cue" aria-hidden="true"></span>'+durChip)+overlayHtml;
-    } else if (image) {
+    } else if (!visual && image) {
       visual='<img class="skh-ann-media-blur" src="'+esc(image)+'" alt="" aria-hidden="true"><img class="skh-ann-media-main" src="'+esc(image)+'" alt="'+esc(title)+'" loading="eager" decoding="async" style="'+mediaInlineStyle+'">'+overlayHtml;
     }
     if (!visual) return '';
@@ -185,6 +226,9 @@
     const microLabels=[];
     if(catObj&&a.category!=='general')microLabels.push(esc(String(catObj.label.split('/').pop()||catObj.label).trim().toUpperCase()));
     if(hasVideo)microLabels.push('VIDEO');
+    /* [NON-CANVAS MVP 2026-09-24] Slideshow indicator (Type E) */
+    const ssActive=!!(a.slideshow&&a.slideshow.enabled&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.filter(function(s){return s&&s.src;}).length>=2);
+    if(ssActive)microLabels.push('SLIDESHOW');
     const kickerHtml=microLabels.length?'<div class="skh-ann-kicker skh-ann-micro">'+microLabels.map(function(t){return '<span>'+t+'</span>';}).join('')+'</div>':'';
     const offerHtml=priceTag?'<span class="skh-ann-price-pill skh-ann-offer">'+esc(priceTag)+'</span>':'';
 

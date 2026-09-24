@@ -37,7 +37,10 @@ assert.ok(MULTIMEDIA_PRESETS.short_video);
 assert.ok(MULTIMEDIA_PRESETS.audio_visual);
 assert.ok(MULTIMEDIA_PRESETS.video_audio);
 assert.ok(MULTIMEDIA_PRESETS.full_mix);
-assert.equal(MULTIMEDIA_PRESETS.short_video.maxDuration, 30);
+/* [2026-09-24 NON-CANVAS MVP] Advertisement media hard cap 30s → 60s (spec
+   §11/§21/§33). Assertion updated to the new contract — test NOT removed. */
+assert.equal(MULTIMEDIA_PRESETS.short_video.maxDuration, 60);
+assert.ok(MULTIMEDIA_PRESETS.slideshow, 'slideshow composition preset exists');
 
 // --- TEST 3: Color Harmony & Alignment ---
 const pal=generatePalette('#0E7A5F','complementary');
@@ -94,19 +97,39 @@ assert.equal(videoLayer.type, 'video');
 assert.equal(videoLayer.videoMeta.autoplay, true);
 assert.equal(videoLayer.style.fit, 'cover');
 
-// Enforce 30s Video Limit Validation
+// Enforce 60s Video Limit Validation
+/* [2026-09-24 NON-CANVAS MVP] 30s cap raised to 60s (spec §11/§33):
+   - a 45s video is now VALID (was rejected under the old 30s rule);
+   - a 75s video must be rejected (VIDEO_DURATION) until trimmed. */
+const okVideoLayer = makeLayer('video', {
+  id: 'vid_45s',
+  name: '45s Video',
+  src: 'https://res.cloudinary.com/demo/video/upload/ok45.mp4',
+  videoUrl: 'https://res.cloudinary.com/demo/video/upload/ok45.mp4',
+  videoMeta: { duration: 45, trimStart: 0, trimEnd: 45 }
+});
+const okVideoCreative = createCreative({ format: 'square' });
+okVideoCreative.layers = [okVideoLayer];
+okVideoCreative.destination = { type: 'external', url: 'https://example.com' };
+assert.equal(validateCreative(okVideoCreative).ok, true, '45s video valid under 60s cap');
+
 const longVideoLayer = makeLayer('video', {
   id: 'vid_long',
   name: 'Long Video',
   src: 'https://res.cloudinary.com/demo/video/upload/long.mp4',
   videoUrl: 'https://res.cloudinary.com/demo/video/upload/long.mp4',
-  videoMeta: { duration: 45, trimStart: 0, trimEnd: 45 }
+  videoMeta: { duration: 75, trimStart: 0, trimEnd: 60 }
 });
 const longVideoCreative = createCreative({ format: 'square' });
 longVideoCreative.layers = [longVideoLayer];
+/* Trim window (60s) is fine — but an untrimmed 75s effective duration must fail: */
+longVideoLayer.videoMeta.trimEnd = 75;
 const longValid = validateCreative(longVideoCreative);
 assert.equal(longValid.ok, false);
 assert.ok(longValid.errors.some(e => e.code === 'VIDEO_DURATION'));
+/* Trimmed to ≤60s → valid again (trim, don't delete the original): */
+longVideoLayer.videoMeta.trimEnd = 60;
+assert.equal(validateCreative(longVideoCreative).ok, true, 'trimmed ≤60s video valid');
 
 // --- TEST 6: Audio Layer & Multi-Track Mixing ---
 const audioLayer = makeLayer('audio', {
