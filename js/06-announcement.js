@@ -4,7 +4,7 @@
   if (window.__SOKOHAI_ANNOUNCEMENT_STORY_V2__) return;
   window.__SOKOHAI_ANNOUNCEMENT_STORY_V2__ = true;
 
-  let activeIndex = 0, rotationTimer = null, scheduleTimer = null, liveTimer = null, liveNotice = null;
+  let liveTimer = null, liveNotice = null;
   const ADS_RULES=window.SokoHaiAdsDesignRules;
   if(!ADS_RULES)throw new Error('Shared SokoHai Ads Design rules failed to load before the announcement renderer.');
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -35,14 +35,16 @@
   }
   window.skhAdvertisementState = function(a){ return stateOf(a,Date.now()); };
 
-  function activeAds() {
-    const now=Date.now(), source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[];
-    return source.filter(a=>stateOf(a,now)==='active' && (a.text||a.headline||a.image||a.imageUrl||a.videoUrl||a.audioUrl||a.backgroundImageUrl||a.badgeText||(a.slideshow&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.some(s=>s&&s.src))))
-      .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
-  }
   function hide(){const h=document.getElementById('topAnnouncement');if(!h)return;h.className='big-announcement skh-ann-story is-empty';h.innerHTML='';h.hidden=true;}
   function track(a,type){if(!a||!a.id||!window.skh||typeof window.skh.callFunction!=='function')return;const key='skh_ad_'+type+'_'+a.id;if(type==='impression'&&sessionStorage.getItem(key))return;try{sessionStorage.setItem(key,'1');window.skh.callFunction('creativeTrackEvent',{announcementId:a.id,type:type}).catch(function(){if(type==='impression')sessionStorage.removeItem(key);});}catch(e){}}
-  function openAction(url,id){if(id)track({id:id},'click');if(!url)return;if(url[0]==='#'||url[0]==='/')location.href=url;else window.open(url,'_blank','noopener');}
+  function openAction(url,id){
+    if(id){
+      const tracked=typeof window.skhAdDeliveryTrackForAd==='function'&&window.skhAdDeliveryTrackForAd(id,'clicked');
+      if(!tracked)track({id:id},'click'); /* Preview/legacy action only; live delivery is lease-tracked. */
+    }
+    if(!url)return;
+    if(url[0]==='#'||url[0]==='/')location.href=url;else window.open(url,'_blank','noopener');
+  }
   window.skhAnnouncementOpen=openAction;
 
   function mediaHtml(a,title,type) {
@@ -313,10 +315,11 @@
   function renderAd(a, live) {
     const host=document.getElementById('topAnnouncement');if(!host||!a)return;
     const hasMedia=!!(safeUrl(a.image||a.imageUrl||a.mediaUrl||a.photo||a.videoUrl||a.audioUrl)||(a.slideshow&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.some(s=>s&&safeUrl(s.src))));
+    if(live){host.dataset.skhAdProtected='true';try{if(window.skhAdDeliveryController)window.skhAdDeliveryController.pauseSlot(host);}catch(e){}}
     host.hidden=false;
+    host.style.minHeight='';host.style.opacity='';
     host.className='big-announcement skh-ann-story skh-home-ad skh-ann-post '+(hasMedia?'has-media':'no-media')+(live?' is-live':'');
     host.innerHTML=cardHtml(a,live);
-    if(!live)track(a,'impression');
     /* [FINAL INSTRUCTIONS §11/§24] NEVER auto-play published video: poster +
        Play button initial state; playback starts only on user tap (delegated
        click handler registered once at module load below). */
@@ -325,11 +328,38 @@
     bindAdvertisementVideoControls(host);
   }
 
-  function armScheduleRefresh(){clearTimeout(scheduleTimer);const now=Date.now(),source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[],times=[];source.forEach(a=>{if(a&&a.archived!==true&&a.status!=='archived'&&a.active!==false&&a.status!=='draft'){const s=Date.parse(a.startAt||''),e=Date.parse(a.endAt||'');if(s>now)times.push(s);if(e>now)times.push(e+50);}});if(times.length){const delay=Math.max(250,Math.min(3600000,Math.min.apply(Math,times)-now));scheduleTimer=setTimeout(renderCurrent,delay);}}
-  function renderCurrent(){clearTimeout(rotationTimer);armScheduleRefresh();if(liveNotice){renderAd(liveNotice,true);return;}const list=activeAds();if(!list.length){hide();return;}if(activeIndex>=list.length)activeIndex=0;renderAd(list[activeIndex],false);if(list.length>1){const display=ADS_RULES.DISPLAY_DURATION_SECONDS,dMs=Number(list[activeIndex].displayDurationSeconds)>0?Number(list[activeIndex].displayDurationSeconds)*1000:Number(list[activeIndex].rotationMs)||display.default*1000;rotationTimer=setTimeout(()=>{activeIndex=(activeIndex+1)%list.length;renderCurrent();},Math.max(display.min*1000,Math.min(display.max*1000,dMs)));}}
-  window.startSokoHaiSmoothMarquee=renderCurrent;window.startSokoHaiAnnouncementRotator=renderCurrent;window.startSokoHaiProAnnouncementBar=renderCurrent;window.playNextSokoHaiProAnnouncement=function(){activeIndex++;renderCurrent();};window.rotateSokoHaiAnnouncement=window.playNextSokoHaiProAnnouncement;
-  window.__sokohaiOnAnnouncementsUpdate=function(){activeIndex=0;renderCurrent();};
-  window.updateLiveTicker=function(type,message,subject,forceReset){clearTimeout(liveTimer);if(type==='normal'||forceReset){liveNotice=null;renderCurrent();return;}liveNotice={creativeType:'solid_text',brandName:'SokoHai',headline:subject||'Taarifa muhimu',description:message||'',active:true};renderCurrent();liveTimer=setTimeout(()=>{liveNotice=null;renderCurrent();},16000);};
+  function renderCurrent(){
+    const host=document.getElementById('topAnnouncement');
+    if(!host)return;
+    if(liveNotice){renderAd(liveNotice,true);return;}
+    host.removeAttribute('data-skh-ad-protected');
+    if(window.skhAdDeliveryController&&typeof window.skhAdDeliveryController.refreshSlot==='function'){
+      try{window.skhAdDeliveryController.refreshSlot(host);}catch(e){hide();}
+    }else hide();
+  }
+  window.startSokoHaiSmoothMarquee=renderCurrent;
+  window.startSokoHaiAnnouncementRotator=renderCurrent;
+  window.startSokoHaiProAnnouncementBar=renderCurrent;
+  window.playNextSokoHaiProAnnouncement=function(){
+    const host=document.getElementById('topAnnouncement');
+    if(window.skhAdDeliveryController&&host)window.skhAdDeliveryController.refreshSlot(host,{force:true});
+    else renderCurrent();
+  };
+  window.rotateSokoHaiAnnouncement=window.playNextSokoHaiProAnnouncement;
+  window.__sokohaiOnAnnouncementsUpdate=function(){renderCurrent();};
+  window.updateLiveTicker=function(type,message,subject,forceReset){
+    clearTimeout(liveTimer);
+    if(type==='normal'||forceReset){
+      liveNotice=null;
+      const host=document.getElementById('topAnnouncement');
+      if(host){host.removeAttribute('data-skh-ad-protected');if(window.skhAdDeliveryController)window.skhAdDeliveryController.resumeSlot(host);}
+      renderCurrent();
+      return;
+    }
+    liveNotice={creativeType:'solid_text',brandName:'SokoHai',headline:subject||'Taarifa muhimu',description:message||'',active:true};
+    renderCurrent();
+    liveTimer=setTimeout(function(){liveNotice=null;renderCurrent();},16000);
+  };
   document.addEventListener('DOMContentLoaded',renderCurrent);setTimeout(renderCurrent,250);
 
   /* [FINAL INSTRUCTIONS §11/§24] Poster-first click-to-play, delegated once.

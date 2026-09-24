@@ -9,6 +9,10 @@ const FV = admin.firestore.FieldValue;
 const REGION = 'europe-west1';
 const TYPES = new Set(['advertisement','business_update','product_post','service_post','general_post']);
 const ENTITY_COLLECTIONS = { product:'products', service:'services', transport:'delivery', seller:'publicProfiles', business:'publicProfiles' };
+const DELIVERY_METADATA_FIELDS = [
+  'campaignType','placements','targetCategories','targetKeywords','targetRegions',
+  'targetEntityTypes','targetEntityIds','goals'
+];
 const packagedRules = path.join(__dirname, 'shared', 'ads-design-rules.js');
 const localRules = path.join(__dirname, '..', 'shared', 'ads-design-rules.js');
 const ADS_RULES = require(fs.existsSync(packagedRules) ? packagedRules : localRules);
@@ -153,12 +157,14 @@ exports.creativePublish = onCall({ region:REGION, enforceAppCheck:false }, async
   }
 
   let replacedAnnouncementRef = null;
+  let replacedAnnouncement = null;
   if (replaceAnnouncementId) {
     if (publicationType !== 'advertisement') throw new HttpsError('invalid-argument', 'Only advertisements can replace an announcement.');
     replacedAnnouncementRef = db.collection('announcements').doc(replaceAnnouncementId);
     const replaced = await replacedAnnouncementRef.get();
     if (!replaced.exists) throw new HttpsError('not-found', 'The announcement being replaced no longer exists.');
     const previous = replaced.data() || {};
+    replacedAnnouncement = previous;
     const owners = [previous.advertiserId, previous.ownerId, previous.userId].filter(Boolean).map(String);
     if (!adminUser && !owners.includes(uid)) throw new HttpsError('permission-denied', 'You are not authorized to replace this announcement.');
   }
@@ -232,6 +238,31 @@ exports.creativePublish = onCall({ region:REGION, enforceAppCheck:false }, async
       viewCount:0,
       clickCount:0
     };
+    if (replacedAnnouncement) {
+      DELIVERY_METADATA_FIELDS.forEach(field => {
+        if (Object.prototype.hasOwnProperty.call(replacedAnnouncement, field)) announcement[field] = replacedAnnouncement[field];
+      });
+      const oldMillis = value => {
+        if (value && typeof value.toMillis === 'function') { try { return value.toMillis(); } catch (_) { return 0; } }
+        if (value instanceof Date) return value.getTime();
+        if (typeof value === 'number' && Number.isFinite(value)) return value;
+        const parsed = Date.parse(String(value || ''));
+        return Number.isFinite(parsed) ? parsed : 0;
+      };
+      const oldStart = oldMillis(replacedAnnouncement.startAt || replacedAnnouncement.startsAt || replacedAnnouncement.scheduledAt);
+      const oldEnd = oldMillis(replacedAnnouncement.endAt || replacedAnnouncement.endsAt || replacedAnnouncement.expiresAt);
+      const oldLifecycle = String(replacedAnnouncement.lifecycleStatus || '').toLowerCase();
+      const oldModeration = String(replacedAnnouncement.moderationStatus || '').toLowerCase();
+      const oldCompleted = oldLifecycle === 'completed' || (oldEnd > 0 && oldEnd <= Date.now());
+      const wasPaused = !oldCompleted && (oldLifecycle === 'paused'
+        || (replacedAnnouncement.active === false && String(replacedAnnouncement.status || '').toLowerCase() === 'published'
+          && !(oldStart > Date.now())
+          && (!oldModeration || oldModeration === 'approved')));
+      if (wasPaused) {
+        announcement.lifecycleStatus = 'paused';
+        announcement.active = false;
+      }
+    }
     batch.create(announcementRef, announcement);
     if (replacedAnnouncementRef) {
       batch.update(replacedAnnouncementRef, {
@@ -239,6 +270,7 @@ exports.creativePublish = onCall({ region:REGION, enforceAppCheck:false }, async
         archivedAt:createdAt,
         active:false,
         status:'archived',
+        lifecycleStatus:'archived',
         replacedByCreativeId:id,
         replacedByVersion:version,
         updatedAt:createdAt

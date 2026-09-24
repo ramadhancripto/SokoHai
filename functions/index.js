@@ -2534,8 +2534,17 @@ exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
 // [CREATIVE STUDIO] Server-authoritative ownership, immutable versions,
 // publication moderation and privacy-bounded event aggregation.
 const creativeEngine = require('./creative');
+exports.creativeSaveDraft = creativeEngine.creativeSaveDraft;
 exports.creativePublish = creativeEngine.creativePublish;
 exports.creativeTrackEvent = creativeEngine.creativeTrackEvent;
+
+// Canonical campaign selection, temporary slot leases, frequency/cooldown
+// enforcement and distinct delivery analytics for every placement.
+const adsDeliveryEngine = require('./ads-delivery');
+exports.adsRequestDelivery = adsDeliveryEngine.adsRequestDelivery;
+exports.adsTrackDeliveryEvent = adsDeliveryEngine.adsTrackDeliveryEvent;
+exports.adsUpdateCampaignDelivery = adsDeliveryEngine.adsUpdateCampaignDelivery;
+exports.adsDeliverySweep = adsDeliveryEngine.adsDeliverySweep;
 
 const negotiationEngine = require('./negotiation');
 // [REQUEST ROUTING 2026-09] Injini ya kupeleka booking kwa mawakala

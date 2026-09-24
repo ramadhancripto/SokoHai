@@ -1164,6 +1164,11 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
     // Filters
     html += renderDistanceFilters(sections.distanceFilter || DISTANCE_FILTER.ANY);
 
+    // Sponsored Search slot is an adapter only; campaign policy/selection stays centralized.
+    var adSearchCategory = (sections.products && sections.products[0] && (sections.products[0].categoryName || sections.products[0].category))
+      || (sections.services && sections.services[0] && (sections.services[0].categoryName || sections.services[0].category)) || '';
+    html += '<div data-skh-ad-slot="search" data-skh-ad-surface="search_results" data-skh-ad-query="' + esc(sections.query || '') + '" data-skh-ad-category="' + esc(adSearchCategory) + '" aria-label="Sponsored content" style="margin:10px 0;"></div>';
+
     // Products section
     if (sections.products && sections.products.length) {
       html += '<div class="skh-de-section"><div class="skh-de-section-head"><h3>🛍️ Products (' + sections.products.length + ')</h3></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">' + sections.products.slice(0,12).map(function (r) { return renderProductCard(r); }).join('') + '</div></div>';
@@ -1215,6 +1220,7 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
 
     html += '<div style="margin-bottom:12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:13px;color:#0f172a;">📍 Discovery Location</b><button data-act="de-change-loc" style="border:1px solid #cbd5e1;background:#fff;color:#18A982;font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Change</button></div><small style="color:#64748b;font-size:11.5px;display:block;margin-top:4px;">' + esc(userLoc.name||'') + ' • ' + esc(userLoc.source) + ' • ' + esc(userLoc.lat.toFixed(4) + ', ' + userLoc.lon.toFixed(4)) + '</small>' + renderDistanceFilters(DISTANCE_FILTER.ANY) + '</div>';
 
+    html += '<div data-skh-ad-slot="discover" data-skh-ad-surface="discover_home" aria-label="Sponsored content" style="margin:10px 0;"></div>';
     html += renderQuickCategories('all');
 
     // Near You

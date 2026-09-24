@@ -137,6 +137,15 @@ service cloud.firestore {
       allow write: if false;
     }
     match /creativeEvents/{id} { allow read, write: if false; }
+    // Canonical Ads Delivery state and analytics are server-only. Frequency,
+    // cooldown/fatigue state is separate from immutable delivery-event metrics.
+    match /adDeliveryState/{id} {
+      allow read, write: if false;
+      match /adDeliverySessions/{sessionId} { allow read, write: if false; }
+    }
+    match /adDeliveryLeases/{id}  { allow read, write: if false; }
+    match /adDeliveryMetrics/{id} { allow read, write: if false; }
+    match /adDeliveryEvents/{id}  { allow read, write: if false; }
     // Cloudinary media references/metadata only; media bytes never enter Firestore.
     match /adminMedia/{id} {
       allow read, create, update, delete: if isAdmin();

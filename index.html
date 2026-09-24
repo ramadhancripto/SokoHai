@@ -644,6 +644,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <!-- 2.9 BIDHAA ZINAZOHUSIANA (rails — maduka mbalimbali) -->
             <section class="pm-sec pm-related-sec" id="pmRelatedWrap" hidden></section>
 
+            <!-- Campaign placement is below all commerce actions; mode-specific keys are set by the shared adapter. -->
+            <div id="pmAdSlot" data-skh-ad-slot="product_detail" data-skh-ad-surface="product_details" aria-label="Sponsored content" style="margin:12px 14px 24px;"></div>
+
         </div><!-- /pm-scroll -->
 
 
@@ -872,6 +875,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             </div>
             <div id="chatBlockedUsersList" class="ch-blocked-list"></div>
         </div>
+        <!-- Sponsored placement is only in the inbox surface, never inside a conversation or negotiation. -->
+        <div data-skh-ad-slot="chat" data-skh-ad-surface="chat_inbox" aria-label="Sponsored content" style="margin:8px 12px;"></div>
         <div id="inboxList" class="ch-inbox-scroll">
             <!-- Orodha ya mazungumzo itaingia hapa -->
         </div>
@@ -2863,8 +2868,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         </div>
     </div>
 
-    <!-- Home Advertisement Showcase: placed UNDER Search bar & Location bar; hidden when no active ad. -->
-    <div class="big-announcement" id="topAnnouncement">
+    <!-- Home campaign placement. Shared Delivery Controller leases/rotates ads; system alerts remain separate. -->
+    <div class="big-announcement" id="topAnnouncement" data-skh-ad-slot="home" aria-live="polite">
         <div class="marquee-text" id="sokohaiAnnouncementText" data-i18n="welcome_banner"> Karibu SokoHai — Nunua, Uza na Lipa kwa Usalama</div>
     </div>
 
@@ -3316,6 +3321,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/59-agent-monitor.js"></script>
 <!-- [CREATIVE STUDIO] One shared, lazy-asset editor. CSS/templates/media load only when opened. -->
 <script type="module" src="js/app/95-creative-studio.js"></script>
+<!-- One server-authoritative delivery/rotation controller for all campaign slots. -->
+<script type="module" src="js/app/96-ad-delivery-controller.js"></script>
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->

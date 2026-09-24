@@ -15,7 +15,7 @@ import {CreativeHistory} from './creative/creative-history.js';
 import {renderCreativeSvg,exportCreative,downloadBlob,removeBackgroundClient} from './creative/creative-svg-renderer.js';
 
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)], esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state=null,history=null,selected='',activeTab='basic',saveTimer=null,drag=null,zoom=.58,guides=true,variations=[],advancedMode=false,recentColors=[];
+let state=null,history=null,selected='',activeTab='basic',saveTimer=null,drag=null,zoom=.58,guides=true,variations=[],advancedMode=false,recentColors=[],sourceAnnouncementId='';
 let isPlaying=false,currentTime=0,playInterval=null,isMuted=false,masterVolume=1,audioElement=null;
 const storageKey=c=>'skh_creative_draft_'+(c.id||'new_'+(c.linkedEntity?.id||'blank'));
 
@@ -2404,8 +2404,11 @@ async function publish(){
   $('#csConfirmPublish',s).onclick=async()=>{
     try{
       $('#csConfirmPublish',s).disabled=true;
-      const result=await skh.callFunction('creativePublish',{creativeId:state.id,publicationType:$('#csPubType',s).value});
+      const payload={creativeId:state.id,publicationType:$('#csPubType',s).value};
+      if(sourceAnnouncementId)payload.replaceAnnouncementId=sourceAnnouncementId;
+      const result=await skh.callFunction('creativePublish',payload);
       const d=result.data||result;
+      if(sourceAnnouncementId&&d.announcementId){if(window.__editingAnnouncementId===sourceAnnouncementId)window.__editingAnnouncementId=d.announcementId;sourceAnnouncementId=d.announcementId;}
       state.status=d.status||'READY';
       state.version=d.version||state.version;
       history.replace(state);
@@ -2454,6 +2457,7 @@ async function open(context={}){
     if(skh.currentUser)try{const bs=await skh.getDoc(skh.doc(skh.db,'brandKits',skh.currentUser.uid+'_default'));if(bs.exists())c.brandKit=bs.data();}catch(e){}
   }
   state=c;
+  sourceAnnouncementId=String(context.replaceAnnouncementId||'');
   history=new CreativeHistory(c);
   selected='';
   advancedMode=context.advanced===true;
@@ -2509,7 +2513,7 @@ window.skhOpenAdvancedFromLegacy=async function(){
     if(typeof window.skhPersistBasicCreative==='function')creative=await window.skhPersistBasicCreative(creative);
     if(!window.SokoHaiCreativeStudio?.open)throw new Error('Creator Studio haijapakiwa.');
     // Keep the Basic Creator underneath; closing Studio returns to the same form/state.
-    await window.SokoHaiCreativeStudio.open({creative,creativeId:creative.id,publicationType:'advertisement',advanced:true});
+    await window.SokoHaiCreativeStudio.open({creative,creativeId:creative.id,publicationType:'advertisement',replaceAnnouncementId:window.__editingAnnouncementId||'',advanced:true});
   }catch(error){
     if(window.skhToast)window.skhToast('Imeshindwa kufungua Advanced Design: '+(error.message||error),'error');
     else alert('Imeshindwa kufungua Advanced Design: '+(error.message||error));

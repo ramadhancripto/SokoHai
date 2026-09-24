@@ -351,6 +351,7 @@ import { skh } from './00-bootstrap.js';
                 + '</div>'
                 + '<div id="gsgInfo" style="display:none;"></div>'
                 + '<div id="gsgDesc" style="display:none;margin:7px 12px 0;padding:9px 12px;border-radius:12px;background:#fff;border:1px solid #e2e8f0;color:#475569;font-size:12px;line-height:1.45;"></div>'
+                + '<div id="gsgAdSlot" data-skh-ad-slot="groups" data-skh-ad-protected="true" aria-label="Sponsored content" hidden style="margin:8px 12px;"></div>'
                 + '<div id="gsgTabs" role="tablist" style="display:flex;gap:2px;padding:9px 8px 0;border-bottom:1px solid #e2e8f0;background:#fff;"></div>'
                 + '<div id="gsgTabChat" style="flex:1;min-height:0;display:flex;flex-direction:column;">'
                 + '<div id="gsgAnnounce"></div>'
@@ -419,6 +420,29 @@ import { skh } from './00-bootstrap.js';
                 }
                 CUR.__sendPolicy = g.sendPolicy || 'everyone';
                 try { renderAnnounce(g.announcement || null); } catch (eAN) {}
+                // Organic pinned announcements stay in #gsgAnnounce. Campaign ads
+                // are a separate, optional slot and are enabled only for permanent
+                // community groups (not commerce/transaction groups).
+                try {
+                    var groupAd = document.getElementById('gsgAdSlot');
+                    if (groupAd) {
+                        if (g.groupType === 'PERMANENT_COMMUNITY') {
+                            groupAd.removeAttribute('data-skh-ad-protected');
+                            groupAd.hidden = false;
+                            groupAd.style.display = 'block';
+                            groupAd.dataset.skhAdSurface = 'community_group';
+                            groupAd.dataset.skhAdEntityType = 'group';
+                            groupAd.dataset.skhAdEntityId = gid;
+                            groupAd.dataset.skhAdCategory = String(g.category || 'community');
+                            if (window.skhAdDeliveryController) window.skhAdDeliveryController.refreshSlot(groupAd, { force: true });
+                        } else {
+                            groupAd.dataset.skhAdProtected = 'true';
+                            groupAd.hidden = true;
+                            groupAd.style.display = 'none';
+                            if (window.skhAdDeliveryController) window.skhAdDeliveryController.pauseSlot(groupAd);
+                        }
+                    }
+                } catch (eAd) { /* Group chat remains usable if delivery fails. */ }
 
                 // Uanachama
                 var ms = null;

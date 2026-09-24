@@ -343,7 +343,7 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
 window.sokohaiDeleteAnnouncement = async function(id){
     if(!await skhConfirm("Archive advertisement hii? Haitaonekana Home.")) return;
     try {
-        await skh.updateDoc(skh.doc(skh.db, "announcements", id), { archived:true, status:'archived', active:false, archivedAt:new Date().toISOString() });
+        await skh.updateDoc(skh.doc(skh.db, "announcements", id), { archived:true, status:'archived', lifecycleStatus:'archived', active:false, archivedAt:new Date().toISOString() });
     } catch(e) {
         alert(" Imeshindwa ku-archive advertisement: " + e.message);
     }
@@ -351,7 +351,12 @@ window.sokohaiDeleteAnnouncement = async function(id){
 
 window.sokohaiToggleAnnouncementActive = async function(id, currentlyActive){
     try {
-        await skh.updateDoc(skh.doc(skh.db, "announcements", id), { active: !currentlyActive });
+        const campaign=(window.__sokohaiAnnouncementsCache||[]).find(item=>String(item.id)===String(id));
+        if(!currentlyActive&&campaign&&(campaign.status==='draft'||campaign.lifecycleStatus==='draft'))throw new Error('Draft lazima ipitie publish validation kabla ya activation.');
+        const activating=!currentlyActive;
+        const startAt=campaign&&campaign.startAt?Date.parse(campaign.startAt):0;
+        const lifecycleStatus=activating&&startAt>Date.now()?'scheduled':(activating?'active':'paused');
+        await skh.updateDoc(skh.doc(skh.db, "announcements", id), { active: activating, lifecycleStatus });
     } catch(e) {
         alert(" Imeshindwa kubadili hali ya tangazo: " + e.message);
     }

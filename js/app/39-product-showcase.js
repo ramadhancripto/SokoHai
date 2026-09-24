@@ -956,6 +956,29 @@ import {
      * ================================================================ */
     var lastShowcaseKey = null;
 
+    function refreshProductAdSlot(product, collectionName) {
+        var host = $('pmAdSlot');
+        if (!host || !product) return;
+        var placement = collectionName === PS_SERVICE ? 'service_detail' : 'product_detail';
+        if (collectionName === PS_PRODUCT) {
+            if (product.saleMode === 'auction') placement = 'auction';
+            else if (product.saleMode === 'group_buy') placement = 'group_buy';
+            else if (product.saleMode === 'price_drop') placement = 'price_drop';
+        }
+        host.dataset.skhAdSlot = placement;
+        host.dataset.skhAdEntityType = collectionName === PS_SERVICE ? 'service' : (collectionName === PS_DRIVER ? 'transport' : 'product');
+        host.dataset.skhAdEntityId = String(product.id || '');
+        host.dataset.skhAdCategory = String(product.category || product.categoryName || product.serviceType || '');
+        host.dataset.skhAdRegion = String(product.region || product.location || '');
+        host.dataset.skhAdMode = String(product.saleMode || '');
+        host.dataset.skhAdSurface = placement + '_details';
+        try {
+            if (window.skhAdDeliveryController && typeof window.skhAdDeliveryController.refreshSlot === 'function') {
+                window.skhAdDeliveryController.refreshSlot(host, { force: true });
+            }
+        } catch (_) { /* Delivery is optional and never blocks product details. */ }
+    }
+
     // [FIX] Icons za engagement (♡///＋) zilikuwa hazijawahi kujazwa
     // (skhInitEngagementIcons haikuitwa popote). Jaza sasa na kila render.
     function ensureEngagementIcons() {
@@ -999,6 +1022,7 @@ import {
         if (!found) return;
         col = col || found.collectionName || PS_PRODUCT;
         ensureEngagementIcons();
+        try { refreshProductAdSlot(found, col); } catch (_) {}
         var key = col + '__' + found.id;
         if (key !== lastShowcaseKey) {
             // Bidhaa mpya: rudi juu, qty ya 1, futa expand ya tathmini/related
