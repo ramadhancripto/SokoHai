@@ -351,6 +351,7 @@ import { skh } from './00-bootstrap.js';
   }
   function serverDeliveryEnabled() {
     if (!skh || !skh.isLocalEnv) return true;
+    if (skh.functionsBaseUrl) return true; // local functions server ipo → tumia server delivery halisi
     try { return window.localStorage.getItem('skh_ads_delivery_mode') === 'server'; } catch (_) { return false; }
   }
   function noticeLocal(reason, detail) {

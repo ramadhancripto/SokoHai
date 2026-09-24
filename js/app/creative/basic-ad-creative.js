@@ -38,6 +38,13 @@ const RATIO_BY_FORMAT = Object.freeze({
   banner: '16:9'
 });
 const clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n) || 0));
+const listOf = value => Array.isArray(value) ? value.map(item => String(item)) : (typeof value === 'string' && value ? value.split(',').map(item => item.trim()).filter(Boolean) : []);
+/* Which media each (derived) creative type shows — one table, used by build + UI. */
+export const MEDIA_BY_TYPE = Object.freeze({
+  image: Object.freeze(['image_text', 'image', 'solid_text', 'image_audio', 'full_multimedia', 'image_video']),
+  video: Object.freeze(['video', 'video_text', 'full_multimedia', 'image_video', 'video_audio']),
+  audio: Object.freeze(['image_audio', 'full_multimedia', 'video_audio', 'audio', 'slideshow'])
+});
 const clean = value => String(value == null ? '' : value).replace(/[\u0000-\u001f]/g, ' ').trim();
 const validColor = (value, fallback) => /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value) : fallback;
 
@@ -248,7 +255,15 @@ export function buildBasicCreative(form = {}, previous = null) {
   if (changed('fontSize')) headlineStyle.fontSize = fontSize;
   if (changed('textAlign')) headlineStyle.textAlign = textAlign;
   if (changed('textShadow')) headlineStyle.textShadow = form.textShadow;
-  const headlineChanged = changed('headline', 'textColor', 'fontWeight', 'fontSize', 'textAlign', 'textShadow', 'textAnimation', 'animationDuration');
+  if (changed('headlineLetterSpacing') && form.headlineLetterSpacing != null && form.headlineLetterSpacing !== '') headlineStyle.letterSpacing = clamp(form.headlineLetterSpacing, -3, 8);
+  if (changed('headlineLineHeight') && Number(form.headlineLineHeight) > 0) headlineStyle.lineHeight = clamp(form.headlineLineHeight, .9, 1.6);
+  if (changed('textEmphasis') && form.textEmphasis != null) {
+    animation.emphasis = String(form.textEmphasis || 'none');
+    animation.enabled = String(form.textAnimation || 'none') !== 'none' || animation.emphasis !== 'none';
+  }
+  if (changed('animationMode') && form.animationMode) animation.mode = ['whole', 'word', 'character', 'line'].includes(String(form.animationMode)) ? String(form.animationMode) : 'whole';
+  if (changed('textAnimation') && !oldHead) animation.enabled = entrance !== 'none' || (String(form.textEmphasis || 'none') !== 'none');
+  const headlineChanged = changed('headline', 'textColor', 'fontWeight', 'fontSize', 'textAlign', 'textShadow', 'textAnimation', 'animationDuration', 'headlineLetterSpacing', 'headlineLineHeight', 'textEmphasis', 'animationMode');
   if (headlineChanged) setTextLayer(creative, 'headline', 'Headline', form.headline, headlineStyle, Object.keys(animation).length ? animation : null);
 
   const bodyStyle = {};
@@ -277,11 +292,24 @@ export function buildBasicCreative(form = {}, previous = null) {
   if (changed('badgeColor')) badgeStyle.backgroundColor = validColor(form.badgeColor, '#F59E0B');
   if (changed('badgeFontSize')) badgeStyle.fontSize = badgeFontSize;
   if (changed('badgeTextAlign')) badgeStyle.textAlign = badgeTextAlign;
-  if (changed('badgeText')) setTextLayer(creative, 'badge', 'Promotional badge', form.badgeText || '', badgeStyle);
-  else if (changed('badgeTextColor', 'badgeColor', 'badgeFontSize', 'badgeTextAlign')) {
-    const badge = getRole(creative, 'badge');
-    if (badge) badge.style = { ...badge.style, ...badgeStyle };
+  if (changed('badgeStyle') && form.badgeStyle) badgeStyle.badgeStyle = clean(form.badgeStyle).slice(0, 20);
+  if (changed('badgeSize') && form.badgeSize) badgeStyle.badgeSize = ['sm', 'md', 'lg'].includes(String(form.badgeSize)) ? String(form.badgeSize) : 'md';
+  if (changed('badgePosition') && form.badgePosition) badgeStyle.badgePosition = ['tl', 'tr', 'bl', 'br'].includes(String(form.badgePosition)) ? String(form.badgePosition) : 'tr';
+  if (changed('badgeIcon') && form.badgeIcon) badgeStyle.badgeIcon = clean(form.badgeIcon).slice(0, 20);
+  const badgeStyleKeys = ['badgeTextColor', 'badgeColor', 'badgeFontSize', 'badgeTextAlign', 'badgeStyle', 'badgeSize', 'badgePosition', 'badgeIcon', 'badgeAnimation', 'badgeOpacity'];
+  const badgeAnimation = changed('badgeAnimation') && form.badgeAnimation != null
+    ? { entrance: String(form.badgeAnimation || 'none'), emphasis: 'none', enabled: String(form.badgeAnimation || 'none') !== 'none' }
+    : null;
+  let badgeLayer = null;
+  if (changed('badgeText')) badgeLayer = setTextLayer(creative, 'badge', 'Promotional badge', form.badgeText || '', badgeStyle, badgeAnimation);
+  else if (changed(...badgeStyleKeys)) {
+    badgeLayer = getRole(creative, 'badge');
+    if (badgeLayer) {
+      badgeLayer.style = { ...badgeLayer.style, ...badgeStyle };
+      if (badgeAnimation) badgeLayer.animation = { ...badgeLayer.animation, ...badgeAnimation };
+    }
   }
+  if (badgeLayer && changed('badgeOpacity') && form.badgeOpacity != null && form.badgeOpacity !== '') badgeLayer.opacity = clamp(form.badgeOpacity, .4, 1);
 
   const ctaLabel = clean(form.ctaLabel || form.cta);
   if (changed('ctaLabel', 'cta', 'ctaMode', 'ctaCustom')) {
@@ -291,6 +319,20 @@ export function buildBasicCreative(form = {}, previous = null) {
     const ctaBg = creative.layers.find(layer => layer.role === 'cta-bg');
     if (ctaBg && oldCtaContent !== ctaLabel) ctaBg.visible = !!ctaLabel;
   }
+  if (changed('ctaStyle', 'ctaIcon', 'ctaAlign', 'ctaAnimation', 'ctaLabel', 'cta', 'ctaMode', 'ctaCustom')) {
+    const ctaLayer = getRole(creative, 'cta');
+    if (ctaLayer) {
+      const next = {};
+      if (changed('ctaStyle', 'ctaLabel', 'cta', 'ctaMode', 'ctaCustom') && form.ctaStyle) next.ctaStyle = clean(form.ctaStyle).slice(0, 20);
+      if (changed('ctaIcon', 'ctaLabel', 'cta', 'ctaMode', 'ctaCustom') && form.ctaIcon) next.ctaIcon = clean(form.ctaIcon).slice(0, 20);
+      if (changed('ctaAlign', 'ctaLabel', 'cta', 'ctaMode', 'ctaCustom') && form.ctaAlign !== undefined) next.ctaAlign = ['left', 'center', 'right', 'full'].includes(String(form.ctaAlign)) ? String(form.ctaAlign) : '';
+      ctaLayer.style = { ...ctaLayer.style, ...next };
+      if (changed('ctaAnimation') && form.ctaAnimation != null) {
+        const value = String(form.ctaAnimation || 'none');
+        ctaLayer.animation = { ...ctaLayer.animation, entrance: 'none', emphasis: value, enabled: value !== 'none' };
+      }
+    }
+  }
 
   const slideshow = normalizeBasicSlideshow(form.slideshow || form.slideshowJson);
   if (!previous || form.slideshowChanged === true || changed('slideshow', 'slideshowJson') || typeChanged && (selectedType === 'slideshow' || previous && previous.basicType === 'slideshow')) {
@@ -298,9 +340,9 @@ export function buildBasicCreative(form = {}, previous = null) {
     if (typeChanged && selectedType !== 'slideshow' && previous && previous.basicType === 'slideshow') slideshow.enabled = false;
     creative.slideshow = slideshow;
   }
-  const imagesActive = ['image_text', 'image', 'solid_text', 'image_audio', 'full_multimedia'].includes(type);
-  const videoActive = ['video', 'video_text', 'full_multimedia'].includes(type);
-  const audioActive = ['image_audio', 'full_multimedia'].includes(type);
+  const imagesActive = MEDIA_BY_TYPE.image.includes(type);
+  const videoActive = MEDIA_BY_TYPE.video.includes(type);
+  const audioActive = MEDIA_BY_TYPE.audio.includes(type);
   const imageSource = clean(form.imageUrl || form.image);
   const videoSource = clean(form.videoUrl);
   const audioSource = clean(form.audioUrl);
@@ -323,6 +365,50 @@ export function buildBasicCreative(form = {}, previous = null) {
     manageLegacy:typeChanged
   });
   syncMediaLayer(creative, 'audio', 'basic-audio', audioSource, audioActive, { forceVisibility: typeChanged, manageLegacy:typeChanged });
+  }
+
+  // Media transform (owner: MEDIA section) — written on the managed media layers.
+  const mediaStyleChanged = changed('mediaFit', 'focalX', 'focalY', 'brightness', 'contrast', 'saturation', 'overlayOpacity', 'overlayColor', 'imageUrl', 'image', 'videoUrl');
+  if (mediaStyleChanged) {
+    creative.layers.filter(layer => ['basic-image', 'basic-video'].includes(layer.role)).forEach(layer => {
+      const style = { ...layer.style };
+      if (changed('mediaFit', 'imageUrl', 'image', 'videoUrl') && form.mediaFit) style.fit = ['cover', 'contain', 'fill', 'original'].includes(String(form.mediaFit)) ? String(form.mediaFit) : 'cover';
+      if (changed('focalX', 'imageUrl', 'image', 'videoUrl') && form.focalX != null && form.focalX !== '') style.focalX = clamp(form.focalX, 0, 100);
+      if (changed('focalY', 'imageUrl', 'image', 'videoUrl') && form.focalY != null && form.focalY !== '') style.focalY = clamp(form.focalY, 0, 100);
+      if (changed('overlayOpacity', 'imageUrl', 'image', 'videoUrl') && form.overlayOpacity != null && form.overlayOpacity !== '') style.overlayOpacity = clamp(form.overlayOpacity, 0, .85);
+      if (changed('overlayColor') && form.overlayColor) style.overlayColor = validColor(form.overlayColor, '#000000');
+      const filter = { ...(style.filter || {}) };
+      if (changed('brightness', 'imageUrl', 'image', 'videoUrl') && form.brightness != null && form.brightness !== '') filter.brightness = clamp(form.brightness, 50, 150);
+      if (changed('contrast', 'imageUrl', 'image', 'videoUrl') && form.contrast != null && form.contrast !== '') filter.contrast = clamp(form.contrast, 50, 150);
+      if (changed('saturation', 'imageUrl', 'image', 'videoUrl') && form.saturation != null && form.saturation !== '') filter.saturation = clamp(form.saturation, 0, 200);
+      style.filter = filter;
+      layer.style = style;
+    });
+  }
+
+  // Canonical design block (views, layers visibility/lock/order, surface tokens).
+  const designKeys = ['designMode', 'designViewId', 'presetId', 'fontFamily', 'cardShadow', 'mediaPosition', 'hiddenElements', 'lockedElements', 'elementOrder', 'typeLocked', 'formatLocked', 'touched', 'autoReasons'];
+  if (changed(...designKeys) && designKeys.some(key => form[key] !== undefined)) {
+    const prior = creative.design && typeof creative.design === 'object' ? creative.design : {};
+    const pick = (formKey, designKey) => changed(formKey) && form[formKey] !== undefined ? form[formKey] : prior[designKey];
+    creative.design = {
+      ...prior,
+      version: 2,
+      mode: pick('designMode', 'mode') === 'manual' ? 'manual' : 'auto',
+      viewId: clean(pick('designViewId', 'viewId')),
+      presetId: clean(pick('presetId', 'presetId')),
+      fontFamily: clean(pick('fontFamily', 'fontFamily')),
+      cardShadow: clean(pick('cardShadow', 'cardShadow')),
+      mediaPosition: pick('mediaPosition', 'mediaPosition') === 'bottom' ? 'bottom' : 'top',
+      hidden: listOf(pick('hiddenElements', 'hidden')),
+      locked: listOf(pick('lockedElements', 'locked')),
+      order: listOf(pick('elementOrder', 'order')),
+      typeLocked: pick('typeLocked', 'typeLocked') === true,
+      formatLocked: pick('formatLocked', 'formatLocked') === true,
+      touched: listOf(pick('touched', 'touched')),
+      autoReasons: listOf(pick('autoReasons', 'autoReasons'))
+    };
+    creative.designMode = creative.design.mode;
   }
 
   const timingMode = String(form.timingMode || (form.durationAuto === false ? 'custom' : 'auto'));
@@ -362,6 +448,10 @@ export function basicFormFromCreative(input, fallback = {}) {
   const video = creative.layers.find(layer => layer.type === 'video' && (layer.src || layer.videoUrl));
   const audio = creative.layers.find(layer => layer.type === 'audio' && (layer.src || layer.audioUrl));
   const videoMeta = (video && video.videoMeta) || {};
+  const mediaLayer = creative.layers.find(layer => layer.role === 'basic-image' || layer.role === 'basic-video') || image || video || null;
+  const mediaStyle = (mediaLayer && mediaLayer.style) || {};
+  const mediaFilter = mediaStyle.filter || {};
+  const design = creative.design && typeof creative.design === 'object' ? creative.design : {};
   const format = basicFormatToRatio(creative.format);
   let creativeType = String(creative.basicType || fallback.creativeType || '');
   if (!BASIC_AD_TYPES.includes(creativeType)) {
@@ -401,13 +491,18 @@ export function basicFormFromCreative(input, fallback = {}) {
     badgeTextAlign: clean(badge && badge.style && badge.style.textAlign || fallback.badgeTextAlign || 'center'),
     badgeColor: validColor(badge && badge.style && badge.style.backgroundColor || fallback.badgeColor, '#F59E0B'),
     badgeTextColor: validColor(badge && badge.style && badge.style.fill || fallback.badgeTextColor, '#FFFFFF'),
-    badgeStyle: clean(fallback.badgeStyle || 'pill'),
-    badgeAnimation: clean(fallback.badgeAnimation || (badge && badge.animation && badge.animation.entrance) || 'none'),
+    badgeStyle: clean(badge && badge.style && badge.style.badgeStyle || fallback.badgeStyle || 'pill'),
+    badgeSize: clean(badge && badge.style && badge.style.badgeSize || fallback.badgeSize || 'md'),
+    badgePosition: clean(badge && badge.style && badge.style.badgePosition || fallback.badgePosition || 'tr'),
+    badgeIcon: clean(badge && badge.style && badge.style.badgeIcon || fallback.badgeIcon || 'none'),
+    badgeOpacity: Number.isFinite(Number(badge && badge.opacity)) ? Number(badge.opacity) : (Number(fallback.badgeOpacity) || 1),
+    badgeAnimation: clean((badge && badge.animation && (badge.animation.emphasis && badge.animation.emphasis !== 'none' ? badge.animation.emphasis : badge.animation.entrance)) || fallback.badgeAnimation || 'none'),
     ctaLabel: isCommonCta ? ctaContent : (ctaContent ? 'Custom' : ''),
     ctaCustom: isCommonCta ? '' : ctaContent,
-    ctaStyle: clean(fallback.ctaStyle || 'solid'),
-    ctaIcon: clean(fallback.ctaIcon || 'arrow'),
-    ctaAnimation: clean(fallback.ctaAnimation || (cta && cta.animation && cta.animation.emphasis) || 'none'),
+    ctaStyle: clean(cta && cta.style && cta.style.ctaStyle || fallback.ctaStyle || 'solid'),
+    ctaIcon: clean(cta && cta.style && cta.style.ctaIcon || fallback.ctaIcon || 'arrow'),
+    ctaAlign: clean(cta && cta.style && cta.style.ctaAlign || fallback.ctaAlign || ''),
+    ctaAnimation: clean((cta && cta.animation && cta.animation.emphasis && cta.animation.emphasis !== 'none' ? cta.animation.emphasis : '') || fallback.ctaAnimation || 'none'),
     link: clean(creative.destination && (creative.destination.type === 'external' ? creative.destination.url : (creative.destination.type && creative.destination.id ? '#' + creative.destination.type + '-' + creative.destination.id : '')) || fallback.link),
     imageUrl: clean(first('image') && first('image').src || fallback.image || fallback.imageUrl),
     videoUrl: clean(video && (video.src || video.videoUrl) || fallback.videoUrl),
@@ -425,7 +520,31 @@ export function basicFormFromCreative(input, fallback = {}) {
     fontWeight: Number(head && head.style && head.style.fontWeight) || Number(fallback.fontWeight) || 800,
     fontSize: Number(head && head.style && head.style.fontSize) || Number(fallback.fontSize) || 64,
     textAlign: clean(head && head.style && head.style.textAlign || fallback.textAlign || 'left'),
-    textShadow: clean(fallback.textShadow || 'none'),
+    textShadow: clean(head && head.style && head.style.textShadow || fallback.textShadow || 'none'),
+    textEmphasis: clean(head && head.animation && head.animation.emphasis || fallback.textEmphasis || 'none'),
+    animationMode: clean(head && head.animation && head.animation.mode || fallback.animationMode || 'whole'),
+    headlineLetterSpacing: Number.isFinite(Number(head && head.style && head.style.letterSpacing)) ? Number(head.style.letterSpacing) : (Number(fallback.headlineLetterSpacing) || 0),
+    headlineLineHeight: Number(head && head.style && head.style.lineHeight) || Number(fallback.headlineLineHeight) || 1.1,
+    mediaFit: clean(mediaStyle.fit || fallback.objectFit || fallback.fit || 'cover'),
+    focalX: Number.isFinite(Number(mediaStyle.focalX)) ? Number(mediaStyle.focalX) : (Number.isFinite(Number(fallback.focalX)) ? Number(fallback.focalX) : 50),
+    focalY: Number.isFinite(Number(mediaStyle.focalY)) ? Number(mediaStyle.focalY) : (Number.isFinite(Number(fallback.focalY)) ? Number(fallback.focalY) : 50),
+    overlayOpacity: Number.isFinite(Number(mediaStyle.overlayOpacity)) ? Number(mediaStyle.overlayOpacity) : (Number(fallback.overlayOpacity) || 0),
+    brightness: Number(mediaFilter.brightness) || Number(fallback.brightness) || 100,
+    contrast: Number(mediaFilter.contrast) || Number(fallback.contrast) || 100,
+    saturation: Number.isFinite(Number(mediaFilter.saturation)) ? Number(mediaFilter.saturation) : (Number(fallback.saturation) || 100),
+    designMode: design.mode || (fallback.designMode === 'auto' ? 'auto' : 'manual'),
+    designViewId: clean(design.viewId || fallback.designViewId),
+    presetId: clean(design.presetId || fallback.presetId),
+    fontFamily: clean(design.fontFamily || fallback.headlineFont || fallback.fontFamily),
+    cardShadow: clean(design.cardShadow || fallback.cardShadow),
+    mediaPosition: design.mediaPosition === 'bottom' || fallback.mediaPosition === 'bottom' ? 'bottom' : 'top',
+    hiddenElements: Array.isArray(design.hidden) ? design.hidden.slice() : (Array.isArray(fallback.hiddenElements) ? fallback.hiddenElements.slice() : []),
+    lockedElements: Array.isArray(design.locked) ? design.locked.slice() : [],
+    elementOrder: Array.isArray(design.order) && design.order.length ? design.order.slice() : ['media', 'headline', 'description', 'offer', 'cta'],
+    typeLocked: design.typeLocked === true,
+    formatLocked: design.formatLocked === true,
+    touched: Array.isArray(design.touched) ? design.touched.slice() : [],
+    autoReasons: Array.isArray(design.autoReasons) ? design.autoReasons.slice() : [],
     textAnimation: clean(head && head.animation && head.animation.entrance || fallback.textAnimation || 'none'),
     animationDuration: Number(head && head.animation && head.animation.duration) || Number(fallback.animationDuration) || 600,
     paletteId: clean(creative.paletteId || fallback.paletteId),

@@ -47,6 +47,20 @@
   status = 301
   force = true
 
+# Server-only code & secrets must never be public (functions/ may hold a local
+# service-account.json for the local functions server).
+[[redirects]]
+  from = "/functions/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/service-account*"
+  to = "/index.html"
+  status = 404
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

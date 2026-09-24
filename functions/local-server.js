@@ -1,0 +1,270 @@
+#!/usr/bin/env node
+/* ==========================================================================
+   SokoHai LOCAL FUNCTIONS SERVER — Cloud Functions bila Cloud Billing.
+
+   Inaendesha functions ZILEZILE za functions/index.js (hakuna nakala ya logic):
+     • Callables zote (creativePublish, creativeSaveDraft, adsRequestDelivery, ...)
+       kwa protokali rasmi ya Firebase callable: POST /__fn/<jina>  {data} → {result}
+     • HTTPS functions (pesapalIpn, sitemapXml) kwenye /__fn/<jina>
+     • Scheduled functions (adsDeliverySweep, platformStatsHourly, sokopayAutoRelease)
+       kwa kipima-muda cha ndani
+     • Pia inaserve frontend (kama Firebase Hosting) kwenye http://localhost:5055
+
+   Data ni HALISI: inaandika Firestore/Auth ya project sokonet-3b847 kupitia
+   service account (Spark plan inaruhusu — haihitaji billing).
+
+   Matumizi:
+     1. Firebase Console → Project settings → Service accounts →
+        "Generate new private key" → hifadhi kama ~/.sokohai/service-account.json
+        (nje ya project; au functions/service-account.json — imezuiwa git/Netlify)
+     2. cd functions && npm install
+     3. npm run local            (au: node local-server.js)
+     4. Fungua http://localhost:5055
+
+   Mazingira (hiari):
+     PORT=5055  SKH_SERVICE_ACCOUNT=/njia/key.json  SKH_ALLOWED_ORIGINS=https://a.com,https://b.com
+     SKH_RUN_SCHEDULES=0 (zima scheduled jobs)  SKH_STATIC=0 (usiserve frontend)
+   ========================================================================== */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+
+const ROOT = path.resolve(__dirname, '..');
+const PORT = Number(process.env.PORT || 5055);
+const PROJECT_ID = process.env.GCLOUD_PROJECT || 'sokonet-3b847';
+const FN_PREFIX = '/__fn';
+
+/* ---------- 1. Credentials (service account) ---------- */
+const os = require('os');
+const SAFE_KEY_PATH = path.join(os.homedir(), '.sokohai', 'service-account.json'); // NJE ya project (salama zaidi)
+const keyPath = [process.env.SKH_SERVICE_ACCOUNT, process.env.GOOGLE_APPLICATION_CREDENTIALS, SAFE_KEY_PATH,
+  path.join(__dirname, 'service-account.json')].filter(Boolean).find(p => fs.existsSync(p));
+if (!keyPath) {
+  console.error('\n✗ Service account haijapatikana.\n' +
+    '  Firebase Console → ⚙ Project settings → Service accounts → "Generate new private key"\n' +
+    '  Hifadhi faili kama:  ' + SAFE_KEY_PATH + '   (inapendekezwa — nje ya project)\n' +
+    '  au:                  ' + path.join(__dirname, 'service-account.json') + '\n' +
+    '  (Spark plan inaruhusu hili; HAIHITAJI billing. Usiweke faili hili kwenye git/Netlify.)\n');
+  process.exit(1);
+}
+let key;
+try { key = JSON.parse(fs.readFileSync(keyPath, 'utf8')); } catch (e) { console.error('✗ Service account JSON si sahihi:', e.message); process.exit(1); }
+if (key.project_id && key.project_id !== PROJECT_ID) console.warn('⚠ Service account ni ya project "' + key.project_id + '", si "' + PROJECT_ID + '".');
+if (keyPath.startsWith(ROOT + path.sep)) console.warn('⚠ Service account iko NDANI ya project. Usiipakie Netlify/git; bora iweke ' + SAFE_KEY_PATH);
+process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+process.env.GCLOUD_PROJECT = key.project_id || PROJECT_ID;
+process.env.FIREBASE_CONFIG = process.env.FIREBASE_CONFIG || JSON.stringify({
+  projectId: process.env.GCLOUD_PROJECT, storageBucket: process.env.GCLOUD_PROJECT + '.appspot.com'
+});
+
+/* ---------- 2. Shared rules packaging (same as firebase predeploy) ---------- */
+try { require('./build-shared.js'); } catch (e) { console.warn('⚠ build:shared:', e.message); }
+
+/* ---------- 3. Load the REAL functions ---------- */
+const functionsModule = require('./index.js');
+const admin = require('firebase-admin');
+const callables = {}, httpsFns = {}, schedules = {};
+for (const [name, fn] of Object.entries(functionsModule)) {
+  const ep = (fn && fn.__endpoint) || {};
+  if (ep.callableTrigger && typeof fn.run === 'function') callables[name] = fn;
+  else if (ep.httpsTrigger && typeof fn === 'function') httpsFns[name] = fn;
+  else if (ep.scheduleTrigger && typeof fn.run === 'function') schedules[name] = { fn, schedule: String(ep.scheduleTrigger.schedule || '') };
+}
+
+/* ---------- 4. CORS ---------- */
+const allowedOrigins = new Set(['https://sokohaiworld.netlify.app',
+  'https://' + process.env.GCLOUD_PROJECT + '.web.app', 'https://' + process.env.GCLOUD_PROJECT + '.firebaseapp.com']
+  .concat(String(process.env.SKH_ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)));
+function originAllowed(origin) {
+  if (!origin) return false;
+  if (allowedOrigins.has(origin)) return true;
+  try { const u = new URL(origin); return ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname) || u.hostname.endsWith('.localhost'); } catch (_) { return false; }
+}
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (originAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || 'Content-Type, Authorization, X-Firebase-AppCheck, X-Firebase-GMPID, Firebase-Instance-ID-Token');
+    res.setHeader('Access-Control-Max-Age', '3600');
+    // Chrome Private Network Access: https://sokohaiworld.netlify.app → http://localhost
+    if (req.headers['access-control-request-private-network']) res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  }
+  return originAllowed(origin) || !origin;
+}
+
+/* ---------- 5. Helpers ---------- */
+function sendJson(res, status, body) {
+  const text = JSON.stringify(body);
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(text) });
+  res.end(text);
+}
+function readBody(req, limit = 12 * 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    const chunks = []; let size = 0;
+    req.on('data', c => { size += c.length; if (size > limit) { reject(Object.assign(new Error('Payload kubwa mno'), { status: 413 })); req.destroy(); } else chunks.push(c); });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+function decorateRequest(req, rawBody) {
+  req.rawBody = rawBody;
+  req.header = req.get = h => req.headers[String(h).toLowerCase()];
+  const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  req.ip = fwd || (req.socket && req.socket.remoteAddress) || '';
+  return req;
+}
+const STATUS_HTTP = { OK: 200, CANCELLED: 499, UNKNOWN: 500, INVALID_ARGUMENT: 400, DEADLINE_EXCEEDED: 504, NOT_FOUND: 404,
+  ALREADY_EXISTS: 409, PERMISSION_DENIED: 403, UNAUTHENTICATED: 401, RESOURCE_EXHAUSTED: 429, FAILED_PRECONDITION: 400,
+  ABORTED: 409, OUT_OF_RANGE: 400, UNIMPLEMENTED: 501, INTERNAL: 500, UNAVAILABLE: 503, DATA_LOSS: 500 };
+function callableError(e) {
+  // HttpsError (firebase-functions) → callable wire format
+  if (e && e.httpErrorCode && e.httpErrorCode.canonicalName) {
+    const status = e.httpErrorCode.canonicalName;
+    const body = { status, message: e.message };
+    if (e.details !== undefined) body.details = e.details;
+    return { http: STATUS_HTTP[status] || 500, body };
+  }
+  return { http: 500, body: { status: 'INTERNAL', message: 'INTERNAL (local: ' + String(e && e.message || e).slice(0, 300) + ')' } };
+}
+function toWire(value) { return value === undefined ? null : JSON.parse(JSON.stringify(value, (k, v) => (typeof v === 'bigint' ? String(v) : v))); }
+
+/* ---------- 6. Callable handler (Firebase callable protocol v1) ---------- */
+async function handleCallable(name, req, res) {
+  if (req.method !== 'POST') return sendJson(res, 405, { error: { status: 'INVALID_ARGUMENT', message: 'POST tu' } });
+  const started = Date.now();
+  let payload;
+  try { payload = JSON.parse((await readBody(req)).toString('utf8') || '{}'); }
+  catch (e) { return sendJson(res, e.status || 400, { error: { status: 'INVALID_ARGUMENT', message: 'Body si JSON sahihi' } }); }
+  if (!payload || typeof payload !== 'object' || !('data' in payload)) return sendJson(res, 400, { error: { status: 'INVALID_ARGUMENT', message: 'Body lazima iwe {data: ...}' } });
+  decorateRequest(req, Buffer.from(JSON.stringify(payload)));
+  req.body = payload;
+
+  let auth;
+  const m = /^Bearer\s+(.+)$/i.exec(String(req.headers.authorization || ''));
+  if (m) {
+    try { const token = await admin.auth().verifyIdToken(m[1]); auth = { uid: token.uid, token, rawToken: m[1] }; }
+    catch (e) { console.warn('  ✗ ' + name + ': ID token si sahihi (' + (e.code || e.message) + ')'); return sendJson(res, 401, { error: { status: 'UNAUTHENTICATED', message: 'Unauthenticated' } }); }
+  }
+  try {
+    const result = await callables[name].run({ data: payload.data, auth, rawRequest: req, acceptsStreaming: false });
+    console.log('  ✓ ' + name + ' ' + (auth ? auth.uid.slice(0, 8) : 'anon') + ' ' + (Date.now() - started) + 'ms');
+    sendJson(res, 200, { result: toWire(result) });
+  } catch (e) {
+    const err = callableError(e);
+    if (err.http >= 500) console.error('  ✗ ' + name + ':', e && e.stack || e); else console.log('  • ' + name + ' → ' + err.body.status + ': ' + err.body.message);
+    sendJson(res, err.http, { error: err.body });
+  }
+}
+
+/* ---------- 7. HTTPS functions (express-style handlers) ---------- */
+async function handleHttps(name, req, res, urlObj) {
+  const raw = await readBody(req);
+  decorateRequest(req, raw);
+  req.query = Object.fromEntries(urlObj.searchParams);
+  req.path = urlObj.pathname.slice((FN_PREFIX + '/' + name).length) || '/';
+  const type = String(req.headers['content-type'] || '');
+  try { req.body = /json/.test(type) ? JSON.parse(raw.toString('utf8') || '{}') : /urlencoded/.test(type) ? Object.fromEntries(new URLSearchParams(raw.toString('utf8'))) : raw.toString('utf8'); }
+  catch (_) { req.body = raw.toString('utf8'); }
+  res.status = code => { res.statusCode = code; return res; };
+  res.set = res.header = (k, v) => { if (typeof k === 'object') Object.entries(k).forEach(([a, b]) => res.setHeader(a, b)); else res.setHeader(k, v); return res; };
+  res.send = body => { if (body && typeof body === 'object' && !Buffer.isBuffer(body)) return res.json(body); if (!res.getHeader('Content-Type')) res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(body == null ? '' : body); return res; };
+  res.json = body => { res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(body)); return res; };
+  res.sendStatus = code => { res.statusCode = code; res.end(String(code)); return res; };
+  try { await httpsFns[name](req, res); console.log('  ✓ ' + name + ' (https) ' + res.statusCode); }
+  catch (e) { console.error('  ✗ ' + name + ':', e); if (!res.headersSent) sendJson(res, 500, { error: 'internal' }); }
+}
+
+/* ---------- 8. Static frontend (mirror of firebase.json hosting) ---------- */
+const STATIC_ENABLED = process.env.SKH_STATIC !== '0';
+const BLOCKED = /^\/(functions|html|tools|_originals|docs|node_modules)(\/|$)|\/\.|^\/(firebase\.json|\.firebaserc|firestore\.rules|firestore\.indexes\.json|package(-lock)?\.json)$/i;
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif',
+  '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8' };
+function serveIndex(res) {
+  let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const inject = '<script>window.SKH_FUNCTIONS_URL=' + JSON.stringify(FN_PREFIX) + ';window.SKH_LOCAL_FUNCTIONS_SERVER=true;</script>';
+  html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, m => m + inject) : inject + html;
+  res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store' });
+  res.end(html);
+}
+function serveStatic(req, res, urlObj) {
+  let pathname;
+  try { pathname = decodeURIComponent(urlObj.pathname); } catch (_) { res.writeHead(400); return res.end(); }
+  if (BLOCKED.test(pathname)) { res.writeHead(404); return res.end('Not found'); }
+  if (pathname === '/' || pathname === '/index.html') return serveIndex(res);
+  const file = path.normalize(path.join(ROOT, pathname));
+  if (!file.startsWith(ROOT + path.sep)) { res.writeHead(403); return res.end(); }
+  let target = file;
+  if (!fs.existsSync(target) && fs.existsSync(target + '.html')) target += '.html'; // cleanUrls
+  if (fs.existsSync(target) && fs.statSync(target).isFile()) {
+    if (path.basename(target) === 'index.html') return serveIndex(res);
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(target).toLowerCase()] || 'application/octet-stream', 'Cache-Control': /\.html$|sw\.js$|\/js\/app\//.test(target) ? 'no-cache' : 'public, max-age=300' });
+    return fs.createReadStream(target).pipe(res);
+  }
+  if (path.extname(pathname)) { res.writeHead(404); return res.end('Not found'); }
+  return serveIndex(res); // SPA rewrite ** → /index.html
+}
+
+/* ---------- 9. Server ---------- */
+const server = http.createServer(async (req, res) => {
+  const urlObj = new URL(req.url, 'http://localhost');
+  try {
+    if (urlObj.pathname === FN_PREFIX || urlObj.pathname.startsWith(FN_PREFIX + '/')) {
+      const corsOk = applyCors(req, res);
+      if (req.method === 'OPTIONS') { res.writeHead(corsOk ? 204 : 403); return res.end(); }
+      if (!corsOk) return sendJson(res, 403, { error: { status: 'PERMISSION_DENIED', message: 'Origin hairuhusiwi: ' + req.headers.origin + ' (ongeza kwenye SKH_ALLOWED_ORIGINS)' } });
+      const name = urlObj.pathname.slice(FN_PREFIX.length + 1).split('/')[0];
+      if (!name) return sendJson(res, 200, { ok: true, project: process.env.GCLOUD_PROJECT, callables: Object.keys(callables), https: Object.keys(httpsFns), schedules: Object.keys(schedules) });
+      if (callables[name]) return handleCallable(name, req, res);
+      if (httpsFns[name]) return handleHttps(name, req, res, urlObj);
+      return sendJson(res, 404, { error: { status: 'NOT_FOUND', message: 'Function "' + name + '" haipo kwenye functions/index.js' } });
+    }
+    if (!STATIC_ENABLED) { res.writeHead(404); return res.end('Not found'); }
+    return serveStatic(req, res, urlObj);
+  } catch (e) {
+    console.error('✗ Request error:', e);
+    if (!res.headersSent) sendJson(res, 500, { error: { status: 'INTERNAL', message: 'INTERNAL' } });
+  }
+});
+
+/* ---------- 10. Scheduled functions ---------- */
+function intervalFor(schedule) {
+  const s = schedule.trim();
+  let m = /^every\s+(\d+)\s+minutes?$/i.exec(s); if (m) return Number(m[1]) * 60000;
+  m = /^every\s+(\d+)\s+hours?$/i.exec(s); if (m) return Number(m[1]) * 3600000;
+  m = /^\*\/(\d+)\s+\*\s+\*\s+\*\s+\*$/.exec(s); if (m) return Number(m[1]) * 60000;
+  if (/^\d+\s+\*\s+\*\s+\*\s+\*$/.test(s)) return 3600000;
+  m = /^\d+\s+\*\/(\d+)\s+\*\s+\*\s+\*$/.exec(s); if (m) return Number(m[1]) * 3600000;
+  if (/^\d+\s+\d+\s+\*\s+\*\s+\*$/.test(s)) return 86400000;
+  return 3600000;
+}
+function startSchedules() {
+  if (process.env.SKH_RUN_SCHEDULES === '0') return;
+  for (const [name, { fn, schedule }] of Object.entries(schedules)) {
+    const every = intervalFor(schedule);
+    const tick = async () => {
+      try { await fn.run({ scheduleTime: new Date().toISOString(), jobName: name }); console.log('  ⏱ ' + name + ' imeendeshwa'); }
+      catch (e) { console.error('  ✗ ' + name + ' (schedule):', e && e.message || e); }
+    };
+    setTimeout(tick, 15000 + Math.floor(Math.random() * 5000)).unref();
+    setInterval(tick, every).unref();
+  }
+}
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('\n SokoHai LOCAL FUNCTIONS SERVER');
+  console.log(' ─────────────────────────────────────────────');
+  console.log(' Project     : ' + process.env.GCLOUD_PROJECT + '  (Firestore/Auth HALISI)');
+  console.log(' Credentials : ' + path.relative(ROOT, keyPath));
+  console.log(' Frontend    : ' + (STATIC_ENABLED ? 'http://localhost:' + PORT : '(imezimwa)'));
+  console.log(' Functions   : http://localhost:' + PORT + FN_PREFIX + '/<jina>');
+  console.log(' Callables   : ' + Object.keys(callables).length + '   HTTPS: ' + Object.keys(httpsFns).length + '   Schedules: ' + Object.keys(schedules).length + (process.env.SKH_RUN_SCHEDULES === '0' ? ' (zimezimwa)' : ''));
+  console.log(' Netlify site kwenye kompyuta HII: fungua console na uendeshe');
+  console.log("   skhUseLocalFunctions('http://localhost:" + PORT + FN_PREFIX + "')");
+  console.log(' ─────────────────────────────────────────────\n');
+  startSchedules();
+});
+server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? '✗ Port ' + PORT + ' inatumika. Jaribu: PORT=5056 npm run local' : e); process.exit(1); });

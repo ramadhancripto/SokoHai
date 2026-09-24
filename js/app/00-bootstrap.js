@@ -7,7 +7,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
 
@@ -59,6 +59,7 @@ skh.serverTimestamp = serverTimestamp;
 skh.deleteField = deleteField;  // [FIX TOGGLE 2026-09-14] kusafisha fields bapa
 skh.getFunctions = getFunctions;
 skh.httpsCallable = httpsCallable;
+skh.httpsCallableFromURL = httpsCallableFromURL;
 
 /* ============================================================
    [FUNCTIONS RESILIENCE 2026-09] Safu MOJA ya kati ya Cloud Functions.
@@ -87,6 +88,31 @@ skh.isLocalEnv = (function () {
             || h === '0.0.0.0' || h === '[::1]' || h === '::1' || /\.localhost$/.test(h);
     } catch (e) { return false; }
 })();
+/* [LOCAL FUNCTIONS SERVER 2026-09-24] Njia mbadala ya Cloud Functions bila
+   Cloud Billing: `node functions/local-server.js` inaendesha functions ZILEZILE
+   (functions/index.js) kwenye kompyuta yako. Callables zinaelekezwa huko pale:
+     - ukurasa umefunguliwa kupitia local server (inaweka window.SKH_FUNCTIONS_URL), au
+     - localStorage 'skh_functions_url' (skhUseLocalFunctions()) — mf. site ya Netlify
+       kwenye kompyuta ileile inayoendesha server.
+   Bila mpangilio huo, wiring ya Cloud (europe-west1) haibadiliki. */
+skh.functionsBaseUrl = (function () {
+    var raw = '';
+    try { raw = window.localStorage.getItem('skh_functions_url') || ''; } catch (e) { raw = ''; }
+    if (!raw && typeof window.SKH_FUNCTIONS_URL === 'string') raw = window.SKH_FUNCTIONS_URL;
+    raw = String(raw || '').trim().replace(/\/+$/, '');
+    if (!raw) return '';
+    try { return new URL(raw, window.location.href).href.replace(/\/+$/, ''); } catch (e) { return ''; }
+})();
+window.skhUseLocalFunctions = function (url) {
+    var u = String(url || 'http://localhost:5055/__fn').replace(/\/+$/, '');
+    try { window.localStorage.setItem('skh_functions_url', u); } catch (e) {}
+    console.info('[Functions] Sasa zinaelekezwa: ' + u + ' — ukurasa unapakiwa upya.');
+    window.location.reload();
+};
+window.skhUseCloudFunctions = function () {
+    try { window.localStorage.removeItem('skh_functions_url'); } catch (e) {}
+    window.location.reload();
+};
 skh.functionsDown = false;
 skh._fnDownToastAt = 0;
 
@@ -154,7 +180,9 @@ window.skhIsFunctionsDownError = skh.isFunctionsDownError;
 skh.wrapCallable = function (name) {
     var raw = null;
     try {
-        raw = skh.httpsCallable(skh.getFunctions(skh.fApp, skh._functionsRegion), name);
+        raw = skh.functionsBaseUrl
+            ? skh.httpsCallableFromURL(skh.getFunctions(skh.fApp, skh._functionsRegion), skh.functionsBaseUrl + '/' + name)
+            : skh.httpsCallable(skh.getFunctions(skh.fApp, skh._functionsRegion), name);
     } catch (initErr) {
         return function wrapped() { return Promise.reject(normalizeFnCallError(name, initErr)); };
     }

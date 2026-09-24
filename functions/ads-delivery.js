@@ -31,6 +31,8 @@ const PUBLIC_FIELDS = [
   'animationDuration','animationDelay','animationStagger','ctaAnimation','ctaAnim','compact','paletteId','category',
   'offer','displayDurationSeconds','rotationMs','mediaDurationSeconds','videoDuration','durationSeconds',
   'videoTrimStart','videoTrimEnd','videoOriginalDuration','videoControls','videoAutoplay','autoplay','videoLoop',
+  'ctaAlign','designViewId','designMode','headlineFont','cardShadow','mediaPosition','hiddenElements','elementOrder',
+  'headlineLetterSpacing','headlineLineHeight','textShadow',
   'slideshow','likeCount','likesCount','viewCount','views','clickCount','clicks'
 ];
 

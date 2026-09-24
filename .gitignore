@@ -14,3 +14,7 @@ functions/.env
 *.key
 service-account*.json
 firebase-adminsdk*.json
+# Local functions server credentials (NEVER commit/deploy)
+functions/service-account.json
+service-account*.json
+*-firebase-adminsdk-*.json

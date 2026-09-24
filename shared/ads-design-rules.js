@@ -44,7 +44,13 @@
     cta: Object.freeze({ min: 14, max: 48 })
   });
   const ANIMATION_LIMITS = Object.freeze({ duration: Object.freeze({ min: 100, max: 3000 }), delay: Object.freeze({ min: 0, max: 2000 }), stagger: Object.freeze({ min: 0, max: 400 }), repeat: Object.freeze({ min: 1, max: 20 }) });
-  const BASIC_AD_TYPES = Object.freeze(['image_text', 'image', 'solid_text', 'video', 'video_text', 'image_audio', 'slideshow', 'full_multimedia']);
+  const BASIC_AD_TYPES = Object.freeze(['image_text', 'image', 'solid_text', 'video', 'video_text', 'image_audio', 'slideshow', 'full_multimedia', 'image_video', 'video_audio', 'audio']);
+  /* [AD DESIGNER 2026-09-24] Canonical design block of a creative (one model):
+     view/preset, layers visibility/lock/order, card surface tokens. */
+  const DESIGN_FONT_KEYS = Object.freeze(['sans', 'serif', 'rounded', 'display']);
+  const DESIGN_SHADOWS = Object.freeze(['none', 'soft', 'lifted', 'glow']);
+  const DESIGN_ELEMENTS = Object.freeze(['brand', 'badge', 'media', 'headline', 'description', 'offer', 'cta']);
+  const DESIGN_ORDERABLE = Object.freeze(['media', 'headline', 'description', 'offer', 'cta']);
   const AD_MEDIA_FILE_LIMITS_BYTES = Object.freeze({
     image: 8 * 1024 * 1024,
     logo: 4 * 1024 * 1024,
@@ -156,6 +162,30 @@
     };
   }
 
+  function normalizeDesign(value) {
+    const d = value && typeof value === 'object' ? value : null;
+    if (!d) return null;
+    const list = (v, allowed) => Array.from(new Set((Array.isArray(v) ? v : []).map(String).filter(x => allowed.includes(x))));
+    const order = list(d.order, DESIGN_ORDERABLE);
+    DESIGN_ORDERABLE.forEach(x => { if (!order.includes(x)) order.push(x); });
+    return {
+      version: Math.max(1, finite(d.version, 1)),
+      mode: d.mode === 'manual' ? 'manual' : 'auto',
+      viewId: clean(d.viewId).slice(0, 80),
+      presetId: clean(d.presetId).slice(0, 40),
+      fontFamily: DESIGN_FONT_KEYS.includes(String(d.fontFamily)) ? String(d.fontFamily) : '',
+      cardShadow: DESIGN_SHADOWS.includes(String(d.cardShadow)) ? String(d.cardShadow) : '',
+      mediaPosition: d.mediaPosition === 'bottom' ? 'bottom' : 'top',
+      hidden: list(d.hidden, DESIGN_ELEMENTS),
+      locked: list(d.locked, DESIGN_ELEMENTS),
+      order,
+      typeLocked: d.typeLocked === true,
+      formatLocked: d.formatLocked === true,
+      touched: Array.from(new Set((Array.isArray(d.touched) ? d.touched : []).map(String).filter(x => /^[A-Za-z]{2,40}$/.test(x)))).slice(0, 80),
+      autoReasons: (Array.isArray(d.autoReasons) ? d.autoReasons : []).map(x => clean(x).slice(0, 180)).filter(Boolean).slice(0, 12)
+    };
+  }
+
   function normalizeCreative(input, defaults = {}) {
     const source = input && typeof input === 'object' ? input : {};
     const fallback = defaults && typeof defaults === 'object' ? defaults : {};
@@ -219,6 +249,8 @@
       durationAuto: source.durationAuto === false ? false : (source.durationAuto === true ? true : fallback.durationAuto),
       basicType: Object.prototype.hasOwnProperty.call(source, 'basicType') ? source.basicType : fallback.basicType
     };
+    const design = normalizeDesign(Object.prototype.hasOwnProperty.call(source, 'design') ? source.design : fallback.design);
+    if (design) normalized.design = design; else delete normalized.design;
     if (normalized.durationAuto === true) normalized.duration = autoAdDuration(normalized);
     return normalized;
   }
@@ -355,6 +387,12 @@
           ? { image: '', video: videoLayer, audio: null }
           : type === 'image_audio'
             ? { image: imageLayer && (imageLayer.src || imageLayer.originalSrc) || '', video: '', audio: audioLayer }
+            : type === 'audio'
+              ? { image: '', video: '', audio: audioLayer }
+            : type === 'image_video'
+              ? { image: imageLayer && (imageLayer.src || imageLayer.originalSrc) || '', video: videoLayer, audio: null }
+            : type === 'video_audio'
+              ? { image: '', video: videoLayer, audio: audioLayer }
             : type === 'full_multimedia'
               ? { image: imageLayer && (imageLayer.src || imageLayer.originalSrc) || '', video: videoLayer, audio: audioLayer }
               : type === 'solid_text'
@@ -416,6 +454,8 @@
     const ctaContent = clean(ctaLayer && ctaLayer.content);
     const badgeContent = textVisible ? clean(badgeLayer && badgeLayer.content || fallback.badgeText) : '';
     const poster = videoLayer && (videoLayer.posterUrl || imageLayer && imageLayer.src) || fallback.posterUrl || '';
+    const design = normalizeDesign(c.design) || {};
+    const headFont = String(headStyle.fontFamily || '');
 
     return {
       ...fallback,
@@ -461,6 +501,7 @@
       ctaLabel: ctaContent || clean(fallback.ctaLabel),
       ctaStyle: derivedCtaStyle,
       ctaIcon: String(ctaStyle.ctaIcon || fallback.ctaIcon || 'arrow'),
+      ctaAlign: ['left', 'center', 'right', 'full'].includes(String(ctaStyle.ctaAlign)) ? String(ctaStyle.ctaAlign) : (['left', 'center', 'right', 'full'].includes(String(fallback.ctaAlign)) ? String(fallback.ctaAlign) : ''),
       ctaAnimation: animationToken(ctaAnimation),
       ctaColor: validColor(ctaBgStyle.fill || ctaStyle.backgroundColor, validColor(fallback.ctaColor, '#F4C542')),
       ctaTextColor: validColor(ctaStyle.fill, validColor(fallback.ctaTextColor, '#102A43')),
@@ -529,6 +570,14 @@
       endAt: String(c.endAt || fallback.endAt || ''),
       displayDurationSeconds: finite(c.displayDurationSeconds, finite(fallback.displayDurationSeconds, DISPLAY_DURATION_SECONDS.default)),
       creativeId: clean(c.id || fallback.creativeId),
+      /* [AD DESIGNER 2026-09-24] design system projection (same fields in preview + published) */
+      designViewId: clean(design.viewId || fallback.designViewId),
+      designMode: design.mode || clean(fallback.designMode) || '',
+      headlineFont: DESIGN_FONT_KEYS.includes(headFont) ? headFont : (DESIGN_FONT_KEYS.includes(String(design.fontFamily)) ? design.fontFamily : ''),
+      cardShadow: design.cardShadow || (DESIGN_SHADOWS.includes(String(fallback.cardShadow)) ? String(fallback.cardShadow) : ''),
+      mediaPosition: design.mediaPosition || (fallback.mediaPosition === 'bottom' ? 'bottom' : 'top'),
+      hiddenElements: Array.isArray(design.hidden) ? design.hidden.slice() : (Array.isArray(fallback.hiddenElements) ? fallback.hiddenElements.filter(x => DESIGN_ELEMENTS.includes(String(x))) : []),
+      elementOrder: Array.isArray(design.order) ? design.order.slice() : DESIGN_ORDERABLE.slice(),
       status: clean(fallback.status || 'draft')
     };
   }
@@ -719,6 +768,7 @@
     ENTRANCE_ANIMATIONS, EMPHASIS_ANIMATIONS, EXIT_ANIMATIONS, ANIMATION_MODES, BADGE_ANIMATIONS, CTA_ANIMATIONS,
     TEXT_ALIGNMENTS, ANIMATION_EASINGS, TEXT_ROLE_LIMITS, TEXT_ROLE_SIZES, ANIMATION_LIMITS, FIT_MODES, FOCAL_POINTS,
     BASIC_AD_TYPES,
+    DESIGN_FONT_KEYS, DESIGN_SHADOWS, DESIGN_ELEMENTS, DESIGN_ORDERABLE, normalizeDesign,
     AD_MEDIA_FILE_LIMITS_BYTES,
     AD_MEDIA_UPLOAD_FOLDER,
     COMPOSITION_LABELS,

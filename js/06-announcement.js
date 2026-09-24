@@ -184,7 +184,15 @@
   function cardHtml(a, live) {
     const type=mediaType(a), title=short(a.headline||a.title||a.text||'SokoHai',120), message=short(a.description||a.text||'',320);
     const brand=short(a.brandName||a.brand||'SokoHai',48), logo=safeUrl(a.logoUrl), link=safeUrl(a.link||a.actionUrl), action=short(a.ctaLabel||a.actionLabel||'Tazama Zaidi',32);
-    const media=mediaHtml(a,title,type), withText=type.indexOf('text')!==-1||!!(a.headline||a.description||a.text);
+    /* [AD DESIGNER 2026-09-24] Layers (hide/order), design-system typography,
+       card shadow and placement variants — all in THIS canonical renderer. */
+    const hidden=new Set(Array.isArray(a.hiddenElements)?a.hiddenElements.map(String):[]);
+    const orderList=(Array.isArray(a.elementOrder)?a.elementOrder.map(String):[]).filter(function(x){return ['media','headline','description','offer','cta'].indexOf(x)>=0;});
+    ['media','headline','description','offer','cta'].forEach(function(x){if(orderList.indexOf(x)<0)orderList.push(x);});
+    if(a.mediaPosition==='bottom'&&orderList[0]==='media'){orderList.push(orderList.shift());}
+    const rank=function(x){return orderList.indexOf(x);};
+    const byRank=function(items){return items.slice().sort(function(p,q){return p[0]-q[0];}).map(function(x){return x[1];}).join('');};
+    const media=hidden.has('media')?'':mediaHtml(a,title,type), withText=type.indexOf('text')!==-1||!!(a.headline||a.description||a.text);
     const initial=esc((brand.charAt(0)||'S').toUpperCase());
     const metrics=countLabel(a.likeCount||a.likesCount,'likes')+countLabel(a.viewCount||a.views,'views')+countLabel(a.clickCount||a.clicks,'clicks');
     
@@ -205,7 +213,7 @@
     const badgeIconMap={fire:'\u{1F525}',bolt:'\u26A1',tag:'\u{1F3F7}\uFE0F',star:'\u2B50',truck:'\u{1F69A}',sparkle:'\u2728'};
     const badgeIcon=badgeIconMap[String(a.badgeIcon)]||'';
     let badgeHtml='';
-    if (badgeText) {
+    if (badgeText&&!hidden.has('badge')) {
       badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+badgeAnimClass+' size-'+esc(badgeSize)+' pos-'+esc(badgePos)+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+';font-size:'+badgeFontSize+'px!important;text-align:'+badgeTextAlign+';justify-content:'+badgeJustify+';min-width:74px;'+(badgeOpacity<1?'opacity:'+badgeOpacity+';':'')+'"><span class="skh-badge-inner">'+(badgeIcon?badgeIcon+' ':'')+esc(badgeText)+'</span></div>';
     }
 
@@ -283,10 +291,19 @@
     }
 
     // Copy block — headline hierarchy (Level 2); offer imesogea kwenye action row (Level 3)
-    const titleStyleAttr='font-weight:'+esc(fontWeight)+';text-align:'+esc(textAlign)+';color:'+textColor+'!important;'+(fontSize?'font-size:'+fontSize+'px!important;':'')+(textShadow==='subtle'?'text-shadow:0 2px 8px rgba(0,0,0,0.25);':textShadow==='strong'?'text-shadow:0 4px 16px rgba(0,0,0,0.45);':'');
-    const copy=withText?'<div class="skh-ann-title-wrap"><strong class="skh-ann-title" style="'+titleStyleAttr+'">'+titleFormatted+'</strong></div>'+(message&&message!==title?'<p style="text-align:'+esc(descriptionAlign)+';font-size:'+descriptionSize+'px!important;color:'+descriptionColor+'!important">'+esc(message)+'</p>':''):'';
+    const fontStacks={serif:"Georgia,'Times New Roman',serif",rounded:"'Nunito','Segoe UI Rounded','Arial Rounded MT Bold',system-ui,sans-serif",display:"'Montserrat','Poppins','Segoe UI',system-ui,sans-serif",sans:"Inter,'Segoe UI',system-ui,sans-serif"};
+    const fontKey=String(a.headlineFont||'');
+    const letterSpacing=Number(a.headlineLetterSpacing);
+    const lineHeight=Number(a.headlineLineHeight);
+    const typeAttr=(fontStacks[fontKey]?'font-family:'+fontStacks[fontKey]+';':'')
+      +(Number.isFinite(letterSpacing)&&letterSpacing!==0?'letter-spacing:'+Math.max(-3,Math.min(8,letterSpacing))+'px!important;':'')
+      +(a.designMode&&Number.isFinite(lineHeight)&&lineHeight>0?'line-height:'+Math.max(.9,Math.min(1.6,lineHeight))+'!important;':'');
+    const titleStyleAttr=typeAttr+'font-weight:'+esc(fontWeight)+';text-align:'+esc(textAlign)+';color:'+textColor+'!important;'+(fontSize?'font-size:'+fontSize+'px!important;':'')+(textShadow==='subtle'?'text-shadow:0 2px 8px rgba(0,0,0,0.25);':textShadow==='strong'?'text-shadow:0 4px 16px rgba(0,0,0,0.45);':'');
+    const titleHtml=hidden.has('headline')?'':'<div class="skh-ann-title-wrap"><strong class="skh-ann-title" style="'+titleStyleAttr+'">'+titleFormatted+'</strong></div>';
+    const messageHtml=hidden.has('description')||!(message&&message!==title)?'':'<p style="'+(fontStacks[fontKey]&&fontKey!=='display'?'font-family:'+fontStacks[fontKey]+';':'')+'text-align:'+esc(descriptionAlign)+';font-size:'+descriptionSize+'px!important;color:'+descriptionColor+'!important">'+esc(message)+'</p>';
+    const copy=withText?byRank([[rank('headline'),titleHtml],[rank('description'),messageHtml]]):'';
 
-    const actionButton=link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+ctaAnimClass+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':(a.ctaLabel?'<span class="skh-ann-no-cta">'+esc(action)+'</span>':'');
+    const actionButton=hidden.has('cta')?'':link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+ctaAnimClass+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':(a.ctaLabel?'<span class="skh-ann-no-cta">'+esc(action)+'</span>':'');
     const backgroundImage=safeUrl(a.backgroundImageUrl||'');
     const backgroundMode=String(a.backgroundMode||'gradient');
     const textBackgroundStyle=backgroundImage
@@ -313,17 +330,27 @@
     const ssActive=!!(a.slideshow&&a.slideshow.enabled&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.filter(function(s){return s&&s.src;}).length>=2);
     if(ssActive)microLabels.push('SLIDESHOW');
     const kickerHtml=microLabels.length?'<div class="skh-ann-kicker skh-ann-micro">'+microLabels.map(function(t){return '<span>'+t+'</span>';}).join('')+'</div>':'';
-    const offerHtml=priceTag?'<span class="skh-ann-price-pill skh-ann-offer" style="font-size:'+offerSize+'px!important;color:'+offerTextColor+'!important;background:'+offerColor+'!important;text-align:'+offerAlign+';justify-content:'+offerJustify+';'+offerMargin+'">'+esc(priceTag)+'</span>':'';
-    const actionFooter=(offerHtml||actionButton)?'<footer class="skh-ann-post-actions'+(offerHtml?' has-offer':'')+'">'+offerHtml+actionButton+'</footer>':'';
+    const offerHtml=priceTag&&!hidden.has('offer')?'<span class="skh-ann-price-pill skh-ann-offer" style="font-size:'+offerSize+'px!important;color:'+offerTextColor+'!important;background:'+offerColor+'!important;text-align:'+offerAlign+';justify-content:'+offerJustify+';'+offerMargin+'">'+esc(priceTag)+'</span>':'';
+    const footerInner=rank('offer')<=rank('cta')?offerHtml+actionButton:actionButton+offerHtml;
+    const ctaAlign=['left','center','right','full'].indexOf(String(a.ctaAlign))>=0?' cta-align-'+String(a.ctaAlign):'';
+    const actionFooter=(offerHtml||actionButton)?'<footer class="skh-ann-post-actions'+(offerHtml?' has-offer':'')+ctaAlign+'">'+footerInner+'</footer>':'';
+    const copyRank=Math.min(rank('headline'),rank('description')), actionsRank=Math.min(rank('offer'),rank('cta'));
+    /* Audio without any visual media is still a complete ad: poster + player. */
+    const audioOnly=!media&&!hidden.has('media')&&safeUrl(a.audioUrl)?'<div class="skh-ann-text-audio"><audio class="skh-ann-audio" controls preload="none" src="'+esc(safeUrl(a.audioUrl))+'" aria-label="Sauti ya tangazo"></audio></div>':'';
+    const shadow=['none','soft','lifted','glow'].indexOf(String(a.cardShadow))>=0?' skh-ad-shadow-'+String(a.cardShadow):'';
+    const placement=['home','discover','chat','groups','product','service','dashboard','compact'].indexOf(String(a.placementVariant))>=0?String(a.placementVariant):'';
+    const compact=a.compact===true||placement==='compact'||placement==='chat';
 
-    return '<article class="skh-ann-card layout-'+esc(type)+' skh-comp-'+esc(comp)+' skh-ad-ratio-'+aspectClass+(a.compact===true?' skh-ad-compact':'')+'" style="'+theme+'border-radius:var(--ad-radius,22px);">'
+    return '<article class="skh-ann-card layout-'+esc(type)+' skh-comp-'+esc(comp)+' skh-ad-ratio-'+aspectClass+(compact?' skh-ad-compact':'')+shadow+(placement?' skh-ad-pv-'+placement:'')+(fontStacks[fontKey]?' skh-ad-font-'+fontKey:'')+'" style="'+theme+'border-radius:var(--ad-radius,22px);">'
       +badgeHtml
-      +'<header class="skh-ann-post-head">'+(logo?'<img class="skh-ann-brand-logo" src="'+esc(logo)+'" alt="'+esc(brand)+'">':'<span class="skh-ann-brand-fallback">'+initial+'</span>')
-      +'<div class="skh-ann-brand-copy"><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored')+'</small></div><span class="skh-ann-sponsored">AD</span></header>'
+      +(hidden.has('brand')?'':'<header class="skh-ann-post-head">'+(logo?'<img class="skh-ann-brand-logo" src="'+esc(logo)+'" alt="'+esc(brand)+'">':'<span class="skh-ann-brand-fallback">'+initial+'</span>')
+      +'<div class="skh-ann-brand-copy"><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored')+'</small></div><span class="skh-ann-sponsored">AD</span></header>')
       +(media
-        ? media+'<div class="skh-ann-body">'+kickerHtml+(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+'</div>'+actionFooter
+        ? byRank([[rank('media'),media],[copyRank,'<div class="skh-ann-body">'+kickerHtml+(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+'</div>'],[actionsRank,actionFooter]])
         /* [FINAL §1/§30] Text-only (no-media) ads are complete ads: copy + OFFER + CTA */
-        :'<div class="skh-ann-text-creative" style="'+textBackgroundStyle+'aspect-ratio:var(--ad-aspect-ratio,16/9);"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div>'+(offerHtml?'<div class="skh-ann-text-offer" style="text-align:'+esc(offerAlign)+'">'+offerHtml+'</div>':'')+(actionButton?'<div class="skh-ann-text-cta">'+actionButton+'</div>':'')+'</div>')
+        :'<div class="skh-ann-text-creative" style="'+textBackgroundStyle+'aspect-ratio:var(--ad-aspect-ratio,16/9);"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span>'
+          +byRank([[copyRank,'<div class="skh-ann-text-content">'+copy+'</div>'],[rank('offer'),offerHtml?'<div class="skh-ann-text-offer" style="text-align:'+esc(offerAlign)+'">'+offerHtml+'</div>':''],[rank('cta'),actionButton?'<div class="skh-ann-text-cta'+ctaAlign+'">'+actionButton+'</div>':'']])
+          +audioOnly+'</div>')
       +(metrics?'<div class="skh-ann-metrics">'+metrics+'</div>':'')
       +'</article>';
   }

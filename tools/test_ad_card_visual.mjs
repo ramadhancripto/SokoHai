@@ -9,9 +9,10 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const {JSDOM}=require('jsdom');
 
-const dom=new JSDOM('<body></body>',{url:'https://sokohai.test/'});
+const dom=new JSDOM('<body></body>',{url:'https://sokohai.test/',runScripts:'outside-only'});
 const w=dom.window;
 global.window=w;global.document=w.document;global.localStorage=w.localStorage;global.sessionStorage=w.sessionStorage;
+w.eval(fs.readFileSync(new URL('../shared/ads-design-rules.js',import.meta.url),'utf8'));
 w.eval(fs.readFileSync(new URL('../js/app/creative/ad-palettes.js',import.meta.url),'utf8'));
 w.eval(fs.readFileSync(new URL('../js/06-announcement.js',import.meta.url),'utf8'));
 const card=(a,live=false)=>{

@@ -20,8 +20,12 @@ import {
     validateAdMediaFile
 } from './creative/creative-model.js';
 import {
-    buildBasicCreative, basicFormFromCreative, validateBasicCreative
+    buildBasicCreative, basicFormFromCreative, validateBasicCreative, MEDIA_BY_TYPE
 } from './creative/basic-ad-creative.js';
+import {
+    autoDesign, autoDesignSignature, applyDesignView, recommendDesign, inferCreativeType, analyzeContent,
+    listDesignViews, getDesignView, DESIGN_PRESETS, ELEMENT_STYLE_KEYS, ORDERABLE_ELEMENTS, LAYER_ELEMENTS, STYLE_KEYS
+} from './creative/ad-design-engine.js';
 
 if(typeof window.__skhBasicPreviewMuted!=='boolean')window.__skhBasicPreviewMuted=true;
 if(typeof window.__skhBasicPreviewPaused!=='boolean')window.__skhBasicPreviewPaused=false;
@@ -421,46 +425,55 @@ window.skhOpenAdDeliverySettings=async function(id){
   });
 };
 window.skhAdFormHtml=function(){return `
-<section class="adm-ad-form adm-ad-basic-form">
+<section class="adm-ad-form adm-ad-basic-form adm-ad-designer" data-design-mode="auto" aria-labelledby="annFormTitle">
   <div class="adm-ad-form-head">
-    <div><span class="adm-ad-eyebrow">SokoHai · BASIC AD CREATOR</span><h3 id="annFormTitle">Tengeneza Tangazo</h3><p class="adm-ad-form-lead">Tangazo safi, la kitaalamu — bila kuhitaji Creator Studio.</p></div>
-    <div class="adm-ad-head-actions"><button type="button" class="adm-ad-btn adm-preview-toggle-btn" onclick="window.skhToggleMobileAdPreview()">📱 Preview</button><button type="button" class="adm-ad-btn" onclick="document.getElementById('announcementFormModal').style.display='none'">Funga</button></div>
+    <div><span class="adm-ad-eyebrow">SokoHai · ADVERTISEMENT DESIGNER</span><h3 id="annFormTitle">Tengeneza Tangazo</h3><p class="adm-ad-form-lead">Editor moja — Auto Design au Customize kwenye creative ileile na preview ileile.</p></div>
+    <div class="adm-ad-head-actions">
+      <div class="adm-ad-mode-switch" role="radiogroup" aria-label="Design mode">
+        <button type="button" role="radio" data-design-mode-btn="auto" aria-checked="true">✨ <span>Easy · Auto</span></button>
+        <button type="button" role="radio" data-design-mode-btn="manual" aria-checked="false">🎛 <span>Customize</span></button>
+      </div>
+      <button type="button" class="adm-ad-btn adm-ad-close" aria-label="Funga designer" onclick="document.getElementById('announcementFormModal').style.display='none'">✕ <span>Funga</span></button>
+    </div>
   </div>
-  <div class="adm-ad-form-grid adm-ad-basic-grid">
-    <div class="adm-ad-fields adm-ad-basic-fields">
-      <details class="adm-ad-step" open data-basic-step="type">
-        <summary><span class="adm-ad-step-number">1</span><span class="adm-ad-step-copy"><b>Tangazo linahusu nini?</b><small>Chagua mada moja na aina ya tangazo.</small></span></summary>
-        <div class="adm-ad-step-content">
-          <div class="adm-ad-choice-grid adm-ad-category-grid">
-            <button type="button" data-basic-category="product"><span>▣</span><b>Bidhaa</b></button>
-            <button type="button" data-basic-category="service"><span>✦</span><b>Huduma</b></button>
-            <button type="button" data-basic-category="transport"><span>↗</span><b>Usafiri</b></button>
-            <button type="button" data-basic-category="business"><span>⌂</span><b>Biashara</b></button>
-            <button type="button" data-basic-category="general"><span>◉</span><b>Tangazo la Jumla</b></button>
-          </div>
-          <input id="annCategory" type="hidden" value="general">
-          <label class="adm-ad-field-label">Aina ya tangazo</label>
-          <div class="adm-ad-choice-grid adm-ad-kind-grid">
-            <button type="button" data-basic-type="image_text"><span>▧</span><b>Image + Text</b><small>Picha pamoja na ujumbe</small></button>
-            <button type="button" data-basic-type="image"><span>▣</span><b>Image Only</b><small>Picha pekee</small></button>
-            <button type="button" data-basic-type="solid_text"><span>✎</span><b>Text / Graphic</b><small>Muundo wa rangi na maandishi</small></button>
-            <button type="button" data-basic-type="video"><span>▶</span><b>Video</b><small>Video pekee</small></button>
-            <button type="button" data-basic-type="video_text"><span>▷</span><b>Video + Text</b><small>Video na maelezo</small></button>
-            <button type="button" data-basic-type="image_audio"><span>♫</span><b>Image + Audio</b><small>Picha yenye sauti</small></button>
-            <button type="button" data-basic-type="slideshow"><span>▤</span><b>Slideshow</b><small>Picha nyingi kwa mpangilio</small></button>
-            <button type="button" data-basic-type="full_multimedia"><span>✧</span><b>Full Multimedia</b><small>Picha, video na sauti</small></button>
-          </div>
-          <select id="annCreativeType" hidden aria-hidden="true">
-            <option value="image_text">Image + Text</option><option value="image">Image Only</option><option value="solid_text">Text / Graphic</option><option value="video">Video</option><option value="video_text">Video + Text</option><option value="image_audio">Image + Audio</option><option value="slideshow">Slideshow</option><option value="full_multimedia">Full Multimedia</option>
-          </select>
-          <label class="adm-ad-field-label adm-ad-campaign-field">Campaign name <span>(hiari)</span><input id="annCampaignName" maxlength="80" placeholder="Mfano: Ofa ya Wiki ya Saba" oninput="window.skhRenderAdminAdPreview()"></label>
-          <input id="annCampaignId" type="hidden" value="">
+  <input id="annDesignMode" type="hidden" value="auto">
+  <nav class="adm-ad-section-nav" aria-label="Sehemu za designer">
+    <button type="button" data-jump="content">Content</button><button type="button" data-jump="media">Media</button><button type="button" data-jump="design">Design</button><button type="button" data-jump="text">Text</button><button type="button" data-jump="cta">CTA</button><button type="button" data-jump="layers">Layers</button><button type="button" data-jump="animation">Animation</button><button type="button" data-jump="preview">Preview</button><button type="button" data-jump="publish">Publish</button>
+  </nav>
+
+  <div class="adm-ad-form-grid adm-ad-basic-grid adm-ad-designer-grid">
+    <aside class="adm-ad-preview-wrap adm-ad-basic-preview" id="annPreviewWrapper" data-basic-step="preview" aria-label="Live preview">
+      <div class="adm-ad-preview-header"><div><h4>Live Preview</h4><small id="annTypeReadoutMini" class="adm-ad-type-mini"></small></div><div class="adm-ad-preview-head-actions"><span class="adm-live-pill"><i class="adm-live-dot"></i> LIVE</span><button type="button" class="adm-ad-btn adm-preview-toggle-btn" aria-expanded="true" aria-controls="annPreviewStage" onclick="window.skhToggleMobileAdPreview()">▾ <span>Ficha</span></button></div></div>
+      <div id="annPreviewStage" class="adm-ad-preview-stage">
+        <div class="adm-ad-preview-toolbar">
+          <div class="adm-ad-seg" role="radiogroup" aria-label="Kifaa cha preview"><button type="button" role="radio" data-preview-device="mobile" aria-checked="true">📱 Mobile</button><button type="button" role="radio" data-preview-device="desktop" aria-checked="false">🖥 Desktop</button></div>
+          <label class="adm-ad-placement-pick">Placement<select id="annPreviewPlacement" aria-label="Placement ya preview" onchange="window.skhAdSetPreviewPlacement(this.value)"><option value="home">Home</option><option value="discover">Discover</option><option value="chat">Chat</option><option value="groups">Group</option><option value="product">Product</option><option value="service">Service</option><option value="dashboard">Dashboard</option><option value="compact">Compact</option></select></label>
         </div>
-      </details>
+        <div class="adm-ad-device-frame is-mobile" id="annDeviceFrame"><div id="annPreview" class="adm-ad-preview" aria-live="polite"></div></div>
+        <div class="adm-ad-preview-transport"><button type="button" onclick="window.skhAdPreviewTransport('play')">▶ Preview</button><button type="button" onclick="window.skhAdPreviewTransport('pause')">⏸ Pause</button><button type="button" onclick="window.skhAdPreviewTransport('restart')">↻ Restart</button><button type="button" id="annPreviewMute" onclick="window.skhAdPreviewTransport('mute')">🔇 Mute</button></div>
+        <div class="adm-ad-preview-duration">Duration: <b id="annPreviewDuration">9s</b> <span id="annPreviewSlideTiming"></span></div>
+        <label class="adm-ad-preview-confirm"><input id="annPreviewConfirmed" type="checkbox"> Nimekagua tangazo lilivyoonekana</label>
+        <button type="button" class="adm-ad-btn adm-preview-focus" onclick="window.skhAdPreviewTransport('play')">▶ Preview tangazo</button>
+      </div>
+    </aside>
+
+    <div class="adm-ad-fields adm-ad-basic-fields adm-ad-controls">
+      <div id="annEmptyState" class="adm-ad-empty-state" role="region" aria-label="Anza tangazo">
+        <b>Create your advertisement</b><p>Start with anything — maandishi, picha, video, sauti au Auto Design. Hakuna hatua ya lazima.</p>
+        <div class="adm-ad-empty-actions"><button type="button" class="adm-ad-btn" onclick="window.skhAdEmptyAction('text')">✎ Add Text</button><button type="button" class="adm-ad-btn" onclick="window.skhAdEmptyAction('media')">＋ Add Media</button><button type="button" class="adm-ad-btn primary" onclick="window.skhAdEmptyAction('auto')">✨ Use Auto Design</button></div>
+      </div>
 
       <details class="adm-ad-step" open data-basic-step="content">
-        <summary><span class="adm-ad-step-number">2</span><span class="adm-ad-step-copy"><b>Content</b><small>Jina, kichwa, maelezo na ofa.</small></span></summary>
+        <summary><span class="adm-ad-step-number" aria-hidden="true">✎</span><span class="adm-ad-step-copy"><b>Content</b><small>Biashara, brand, headline, maelezo, bei, ofa na badge.</small></span></summary>
         <div class="adm-ad-step-content">
+          <div class="adm-ad-choice-grid adm-ad-category-grid" role="group" aria-label="Tangazo linahusu nini">
+            <button type="button" data-basic-category="product"><span aria-hidden="true">▣</span><b>Bidhaa</b></button>
+            <button type="button" data-basic-category="service"><span aria-hidden="true">✦</span><b>Huduma</b></button>
+            <button type="button" data-basic-category="transport"><span aria-hidden="true">↗</span><b>Usafiri</b></button>
+            <button type="button" data-basic-category="business"><span aria-hidden="true">⌂</span><b>Biashara</b></button>
+            <button type="button" data-basic-category="general"><span aria-hidden="true">◉</span><b>Tangazo la Jumla</b></button>
+          </div>
+          <input id="annCategory" type="hidden" value="general">
           <label>Brand / Business name<input id="annBrand" maxlength="80" placeholder="Jina la biashara au brand" oninput="window.skhRenderAdminAdPreview()"></label>
           <div class="ann-copy-fields">
             <label>Headline<input id="annHeadline" maxlength="${TEXT_ROLE_LIMITS.headline}" placeholder="Kichwa kifupi kinachovutia" oninput="window.skhRenderAdminAdPreview()"></label>
@@ -471,97 +484,189 @@ window.skhAdFormHtml=function(){return `
             </div>
             <div class="adm-ad-quick-badges"><span>Badges za haraka</span><div class="adm-ad-presets"><button type="button" onclick="window.skhSetAdBadge('🔥 OFA MAALUM','#E11D48')">🔥 Ofa Maalum</button><button type="button" onclick="window.skhSetAdBadge('⚡ FLASH SALE','#D97706')">⚡ Flash Sale</button><button type="button" onclick="window.skhSetAdBadge('🏷️ PUNGUZO 50%','#059669')">🏷️ Punguzo</button><button type="button" onclick="window.skhSetAdBadge('⭐ BORA','#7C3AED')">⭐ Bora</button><button type="button" onclick="window.skhSetAdBadge('🚚 USAFIRI BURE','#0284C7')">🚚 Usafiri Bure</button><button type="button" onclick="window.skhSetAdBadge('✨ MPYA','#0E7A5F')">✨ Mpya</button><button type="button" onclick="window.skhSetAdBadge('','')">✕ Bila Badge</button></div></div>
           </div>
+          <label class="adm-ad-field-label adm-ad-campaign-field">Campaign name <span>(hiari)</span><input id="annCampaignName" maxlength="80" placeholder="Mfano: Ofa ya Wiki ya Saba" oninput="window.skhRenderAdminAdPreview()"></label>
+          <input id="annCampaignId" type="hidden" value="">
         </div>
       </details>
 
       <details class="adm-ad-step" open data-basic-step="media">
-        <summary><span class="adm-ad-step-number">3</span><span class="adm-ad-step-copy"><b>Media</b><small>Ongeza picha, video au sauti kulingana na aina uliyochagua.</small></span></summary>
+        <summary><span class="adm-ad-step-number" aria-hidden="true">▣</span><span class="adm-ad-step-copy"><b>Media</b><small>Zote ni hiari: picha, video, sauti, picha nyingi, logo.</small></span></summary>
         <div class="adm-ad-step-content">
-          <p class="adm-ad-help">Media si lazima kwa <b>Text / Graphic</b>. Unaweza kutumia background, maandishi, offer, badge na CTA pekee.</p>
-          <div class="adm-ad-media-slot" data-media-kind="image">
-            <label>Picha ya tangazo</label><div class="adm-ad-upload"><input id="annImage" type="url" placeholder="HTTPS image URL" oninput="window.skhRenderAdminAdPreview()"><input id="annImageFile" type="file" accept="image/*" hidden onchange="window.skhAdminAdUpload('image',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annImageFile').click()">+ Add Image</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annImage')">Library</button></div>
+          <div id="annMediaDrop" class="adm-ad-dropzone" tabindex="0" role="group" aria-label="Ongeza media — buruta faili hapa au tumia vitufe">
+            <p class="adm-ad-drop-hint">Buruta picha, video au sauti hapa — au chagua:</p>
+            <div class="adm-ad-add-media">
+              <button type="button" class="adm-ad-btn" data-add-media="image">+ Add Image</button>
+              <button type="button" class="adm-ad-btn" data-add-media="video">+ Add Video</button>
+              <button type="button" class="adm-ad-btn" data-add-media="audio">+ Add Audio</button>
+              <button type="button" class="adm-ad-btn" data-add-media="logo">+ Add Logo</button>
+              <button type="button" class="adm-ad-btn" data-add-media="slideshow">+ Picha nyingi</button>
+            </div>
+            <input id="annDropFiles" type="file" accept="image/*,video/*,audio/*" multiple hidden onchange="window.skhAdHandleMediaFiles(this.files);this.value=''">
           </div>
-          <div class="adm-ad-media-slot" data-media-kind="video">
-            <label>Video ya tangazo</label><div class="adm-ad-upload"><input id="annVideo" type="url" placeholder="HTTPS video URL" oninput="window.skhRenderAdminAdPreview()" onchange="window.skhProbeVideoDuration(this.value)"><input id="annVideoFile" type="file" accept="video/*" hidden onchange="window.skhAdminAdUpload('video',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annVideoFile').click()">+ Add Video</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annVideo')">Library</button></div>
+          <div class="adm-ad-type-line"><span>Aina ya tangazo:</span> <b id="annTypeReadout">Auto · Text</b> <button type="button" class="adm-ad-linkbtn" id="annTypeUnlock" hidden onclick="window.skhAdUnlockType()">↺ Rudi Auto</button></div>
+          <details class="adm-ad-type-override"><summary>Badilisha aina mwenyewe (hiari)</summary>
+            <div class="adm-ad-choice-grid adm-ad-kind-grid">
+              <button type="button" data-basic-type="image_text"><span>▧</span><b>Image + Text</b></button>
+              <button type="button" data-basic-type="image"><span>▣</span><b>Image Only</b></button>
+              <button type="button" data-basic-type="solid_text"><span>✎</span><b>Text / Graphic</b></button>
+              <button type="button" data-basic-type="video"><span>▶</span><b>Video</b></button>
+              <button type="button" data-basic-type="video_text"><span>▷</span><b>Video + Text</b></button>
+              <button type="button" data-basic-type="image_audio"><span>♫</span><b>Image + Audio</b></button>
+              <button type="button" data-basic-type="audio"><span>♪</span><b>Audio + Background</b></button>
+              <button type="button" data-basic-type="image_video"><span>▦</span><b>Image + Video</b></button>
+              <button type="button" data-basic-type="video_audio"><span>▶♫</span><b>Video + Audio</b></button>
+              <button type="button" data-basic-type="slideshow"><span>▤</span><b>Slideshow</b></button>
+              <button type="button" data-basic-type="full_multimedia"><span>✧</span><b>Full Multimedia</b></button>
+            </div>
+          </details>
+          <select id="annCreativeType" hidden aria-hidden="true">
+            <option value="image_text">Image + Text</option><option value="image">Image Only</option><option value="solid_text">Text / Graphic</option><option value="video">Video</option><option value="video_text">Video + Text</option><option value="image_audio">Image + Audio</option><option value="slideshow">Slideshow</option><option value="full_multimedia">Full Multimedia</option><option value="image_video">Image + Video</option><option value="video_audio">Video + Audio</option><option value="audio">Audio + Background</option>
+          </select>
+          <input id="annTypeLocked" type="hidden" value=""><input id="annFormatLocked" type="hidden" value="">
+
+          <div class="adm-ad-media-slot" data-media-kind="image" hidden>
+            <div class="adm-ad-slot-head"><b>Picha</b><button type="button" class="adm-ad-remove" aria-label="Ondoa picha" onclick="window.skhAdRemoveMedia('image')">✕ Ondoa</button></div>
+            <div class="adm-ad-upload"><input id="annImage" type="url" placeholder="HTTPS image URL" aria-label="Image URL" oninput="window.skhRenderAdminAdPreview()"><input id="annImageFile" type="file" accept="image/*" hidden onchange="window.skhAdminAdUpload('image',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annImageFile').click()">⬆ Upload</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annImage')">Library</button></div>
+          </div>
+          <div class="adm-ad-media-slot" data-media-kind="video" hidden>
+            <div class="adm-ad-slot-head"><b>Video</b><button type="button" class="adm-ad-remove" aria-label="Ondoa video" onclick="window.skhAdRemoveMedia('video')">✕ Ondoa</button></div>
+            <div class="adm-ad-upload"><input id="annVideo" type="url" placeholder="HTTPS video URL" aria-label="Video URL" oninput="window.skhRenderAdminAdPreview()" onchange="window.skhProbeVideoDuration(this.value)"><input id="annVideoFile" type="file" accept="video/*" hidden onchange="window.skhAdminAdUpload('video',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annVideoFile').click()">⬆ Upload</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annVideo')">Library</button></div>
             <div class="adm-ad-video-meta"><label>Muda wa original video (sekunde)<input id="annVideoOriginalDuration" type="number" min="0" step="0.1" placeholder="Utasomwa moja kwa moja" oninput="window.skhVideoDurationChanged()"></label><span id="annVideoDurationStatus">Duration itasomwa baada ya video kuchaguliwa.</span></div>
             <div id="annVideoTrimPanel" class="adm-ad-trim-panel" hidden><b>Trim Video</b><p id="annVideoTrimNote">Video ya original haibadilishwi; tunahifadhi trim range tu.</p><div class="adm-ad-two"><label>Trim start (s)<input id="annVideoTrimStart" type="number" min="0" max="${MAX_AD_DURATION_SECONDS}" step="0.1" value="0" oninput="window.skhVideoTrimChanged()"></label><label>Trim end (s)<input id="annVideoTrimEnd" type="number" min="${MIN_AD_DURATION_SECONDS}" max="${MAX_AD_DURATION_SECONDS}" step="0.1" value="${MAX_AD_DURATION_SECONDS}" oninput="window.skhVideoTrimChanged()"></label></div><button type="button" class="adm-ad-btn" onclick="window.skhTrimVideoTo59()">Trim Video to max ${MAX_AD_DURATION_SECONDS}s</button><small id="annVideoTrimLength">Final clip: —</small></div>
           </div>
-          <div class="adm-ad-media-slot" data-media-kind="audio">
-            <label>Audio ya tangazo</label><div class="adm-ad-upload"><input id="annAudio" type="url" placeholder="HTTPS audio URL" oninput="window.skhRenderAdminAdPreview()"><input id="annAudioFile" type="file" accept="audio/*" hidden onchange="window.skhAdminAdUpload('audio',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annAudioFile').click()">+ Add Audio</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annAudio')">Library</button></div>
+          <div class="adm-ad-media-slot" data-media-kind="audio" hidden>
+            <div class="adm-ad-slot-head"><b>Sauti</b><button type="button" class="adm-ad-remove" aria-label="Ondoa sauti" onclick="window.skhAdRemoveMedia('audio')">✕ Ondoa</button></div>
+            <div class="adm-ad-upload"><input id="annAudio" type="url" placeholder="HTTPS audio URL" aria-label="Audio URL" oninput="window.skhRenderAdminAdPreview()"><input id="annAudioFile" type="file" accept="audio/*" hidden onchange="window.skhAdminAdUpload('audio',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annAudioFile').click()">⬆ Upload</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annAudio')">Library</button></div>
           </div>
-          <div class="adm-ad-media-slot" data-media-kind="slideshow">
-            <label>Picha za Slideshow</label><div class="adm-ad-upload"><input id="annSlideshowFiles" type="file" accept="image/*" multiple hidden data-target="annSlideshow" onchange="window.skhAdminAdUpload('image',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annSlideshowFiles').click()">+ Add multiple images</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annSlideshow')">Choose from Library</button></div>
+          <div class="adm-ad-media-slot" data-media-kind="logo" hidden>
+            <div class="adm-ad-slot-head"><b>Logo</b><button type="button" class="adm-ad-remove" aria-label="Ondoa logo" onclick="window.skhAdRemoveMedia('logo')">✕ Ondoa</button></div>
+            <div class="adm-ad-upload"><input id="annLogo" type="url" placeholder="HTTPS logo URL" aria-label="Logo URL" oninput="window.skhRenderAdminAdPreview()"><input id="annLogoFile" type="file" accept="image/*" hidden onchange="window.skhAdminAdUpload('logo',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annLogoFile').click()">⬆ Upload</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annLogo')">Library</button></div>
+          </div>
+          <div class="adm-ad-media-slot" data-media-kind="slideshow" hidden>
+            <div class="adm-ad-slot-head"><b>Picha nyingi · Slideshow</b></div>
+            <div class="adm-ad-upload"><input id="annSlideshowFiles" type="file" accept="image/*" multiple hidden data-target="annSlideshow" onchange="window.skhAdminAdUpload('image',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annSlideshowFiles').click()">+ Add multiple images</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annSlideshow')">Choose from Library</button></div>
             <div id="annSlidesList" class="adm-ad-slides-list"></div>
-            <div class="adm-ad-two adm-ad-slide-controls"><label>Transition<select id="annSlideshowTransition" onchange="window.skhSlideshowChanged()"><option value="fade">Fade</option><option value="crossfade">Crossfade</option><option value="slide-left">Slide Left</option><option value="slide-right">Slide Right</option><option value="zoom">Zoom</option><option value="none">None</option></select></label><label>Default duration / slide (s)<input id="annSlideshowDefaultDuration" type="number" min="${MIN_SLIDE_DURATION_SECONDS}" max="${MAX_SLIDE_DURATION_SECONDS}" value="${DEFAULT_SLIDE_DURATION_SECONDS}" onchange="window.skhSlideshowChanged()"></label></div>
+            <label>Default duration / slide (s)<input id="annSlideshowDefaultDuration" type="number" min="${MIN_SLIDE_DURATION_SECONDS}" max="${MAX_SLIDE_DURATION_SECONDS}" value="${DEFAULT_SLIDE_DURATION_SECONDS}" onchange="window.skhSlideshowChanged()"></label>
             <div class="adm-ad-slide-total"><span>Total slideshow duration</span><b id="annSlideshowTotal">0s</b><small id="annSlideshowWarning"></small></div>
           </div>
-
-          <input id="annLogo" type="hidden" value=""><input id="annLogoFile" type="file" accept="image/*" hidden onchange="window.skhAdminAdUpload('logo',this)">
           <input id="annSlideshow" type="hidden" value=""><input id="annMediaDuration" type="hidden" value="">
+
+          <fieldset class="adm-ad-group adm-ad-manual-only" id="annMediaTransform" data-owner="media"><legend>Media transform · crop &amp; position</legend>
+            <label>Fit / crop<select id="annMediaFit" onchange="window.skhRenderAdminAdPreview()"><option value="cover">Cover (jaza frame)</option><option value="contain">Contain (bila kukata)</option><option value="fill">Fill (nyoosha)</option></select></label>
+            <div class="adm-ad-two"><label class="adm-ad-range">Focal X (kushoto ↔ kulia)<span class="adm-ad-range-row"><input id="annFocalX" type="range" min="0" max="100" step="1" value="50" data-unit="%" aria-describedby="annFocalXOut" oninput="window.skhRenderAdminAdPreview()"><output id="annFocalXOut" for="annFocalX">50%</output></span></label><label class="adm-ad-range">Focal Y (juu ↕ chini)<span class="adm-ad-range-row"><input id="annFocalY" type="range" min="0" max="100" step="1" value="50" data-unit="%" aria-describedby="annFocalYOut" oninput="window.skhRenderAdminAdPreview()"><output id="annFocalYOut" for="annFocalY">50%</output></span></label></div>
+            <div class="adm-ad-two"><label class="adm-ad-range">Overlay<span class="adm-ad-range-row"><input id="annOverlayOpacity" type="range" min="0" max="85" step="1" value="0" data-unit="%" aria-describedby="annOverlayOpacityOut" oninput="window.skhRenderAdminAdPreview()"><output id="annOverlayOpacityOut" for="annOverlayOpacity">0%</output></span></label><label class="adm-ad-range">Brightness<span class="adm-ad-range-row"><input id="annBrightness" type="range" min="50" max="150" step="1" value="100" data-unit="%" aria-describedby="annBrightnessOut" oninput="window.skhRenderAdminAdPreview()"><output id="annBrightnessOut" for="annBrightness">100%</output></span></label></div>
+            <div class="adm-ad-two"><label class="adm-ad-range">Contrast<span class="adm-ad-range-row"><input id="annContrast" type="range" min="50" max="150" step="1" value="100" data-unit="%" aria-describedby="annContrastOut" oninput="window.skhRenderAdminAdPreview()"><output id="annContrastOut" for="annContrast">100%</output></span></label><label class="adm-ad-range">Saturation<span class="adm-ad-range-row"><input id="annSaturation" type="range" min="0" max="200" step="1" value="100" data-unit="%" aria-describedby="annSaturationOut" oninput="window.skhRenderAdminAdPreview()"><output id="annSaturationOut" for="annSaturation">100%</output></span></label></div>
+            <input id="annFocalPoint" type="hidden" value="center">
+          </fieldset>
         </div>
       </details>
 
       <details class="adm-ad-step" open data-basic-step="design">
-        <summary><span class="adm-ad-step-number">4</span><span class="adm-ad-step-copy"><b>Design</b><small>Background, format na typography ya msingi.</small></span></summary>
+        <summary><span class="adm-ad-step-number" aria-hidden="true">✦</span><span class="adm-ad-step-copy"><b>Design</b><small>Auto Design, Design Views, presets, layout, background, rangi, effects.</small></span></summary>
         <div class="adm-ad-step-content">
-          <div class="adm-ad-format-block"><label class="adm-ad-field-label">Format</label><div class="adm-ad-format-options">
-            <button type="button" data-basic-format="1:1"><b>Square</b><small>1:1</small></button><button type="button" data-basic-format="4:5"><b>Portrait</b><small>4:5</small></button><button type="button" data-basic-format="9:16"><b>Story</b><small>9:16</small></button><button type="button" data-basic-format="16:9"><b>Landscape</b><small>16:9 · Default</small></button>
-          </div><select id="annMediaAspect" hidden aria-hidden="true"><option value="16:9">Landscape 16:9</option><option value="1:1">Square 1:1</option><option value="4:5">Portrait 4:5</option><option value="9:16">Story 9:16</option></select></div>
-          <div class="adm-ad-design-pair"><label>Background style<select id="annBackgroundMode" onchange="window.skhRenderAdminAdPreview()"><option value="gradient">Gradient</option><option value="solid">Solid color</option></select></label><div class="adm-ad-color-grid"><label><span>Background color</span><input id="annPrimaryColor" type="color" value="#0E7A5F" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Second / gradient color</span><input id="annAccentColor" type="color" value="#167A91" oninput="window.skhRenderAdminAdPreview()"></label></div></div>
-          <div class="adm-ad-background-image">
-            <label>Optional background image · behind text or media</label><div class="adm-ad-upload"><input id="annBackgroundImage" type="url" placeholder="HTTPS background image URL" oninput="window.skhRenderAdminAdPreview()"><input id="annBackgroundImageFile" data-target="annBackgroundImage" type="file" accept="image/*" hidden onchange="window.skhAdminAdUpload('image',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annBackgroundImageFile').click()">Add background image</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annBackgroundImage')">Library</button></div>
+          <div class="adm-ad-auto-panel" role="region" aria-label="Auto Design">
+            <div class="adm-ad-auto-head"><div><b>✨ Auto Design</b><small id="annAutoStatus">Inapanga design kulingana na content, media na placement.</small></div><button type="button" class="adm-ad-btn primary" id="btnAutoDesign" onclick="window.skhAdRunAutoDesign(true)">✨ Auto Design</button></div>
+            <details class="adm-ad-auto-why"><summary>Kwa nini design hii?</summary><ul id="annAutoReasons"></ul></details>
+            <button type="button" class="adm-ad-linkbtn adm-ad-manual-only" id="btnResetManual" onclick="window.skhAdResetManualEdits()">↺ Futa mabadiliko ya manual, rudisha Auto</button>
           </div>
-          <div class="adm-ad-color-grid adm-ad-text-colors adm-ad-text-controls"><label><span>Text color</span><input id="annTextColor" type="color" value="#102A43" oninput="window.__skhBasicTextColorTouched=true;window.skhRenderAdminAdPreview()"></label><label><span>Background surface</span><input id="annSurfaceColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Badge color</span><input id="annBadgeColor" type="color" value="#F59E0B" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Badge text color</span><input id="annBadgeTextColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></label></div>
-          <div class="adm-ad-two adm-ad-text-controls"><label>Headline size<input id="annHeadlineSize" type="range" min="${TEXT_ROLE_SIZES.headline.min}" max="${TEXT_ROLE_SIZES.headline.max}" step="2" value="64" oninput="document.getElementById('annHeadlineSizeValue').textContent=this.value+' px';window.skhRenderAdminAdPreview()"><small id="annHeadlineSizeValue">64 px</small></label><label>Text weight<select id="annFontWeight" onchange="window.skhRenderAdminAdPreview()"><option value="600">Regular bold</option><option value="700">Bold</option><option value="800" selected>Extra bold</option><option value="900">Black</option></select></label></div>
-          <div class="adm-ad-two adm-ad-text-controls"><label>Text alignment<select id="annTextAlign" onchange="window.skhRenderAdminAdPreview()"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label><label>Animation<select id="annTextAnimation" onchange="window.skhRenderAdminAdPreview()"><option value="none">None</option><option value="fade">Fade</option><option value="slide-up">Slide up</option><option value="slide-left">Slide left</option><option value="zoom-in">Zoom in</option><option value="pop">Pop</option></select></label></div>
-          <details class="adm-ad-type-details adm-ad-text-controls"><summary>Typography for description, offer &amp; badge</summary>
-            <div class="adm-ad-two"><label>Description size<input id="annDescriptionSize" type="range" min="${TEXT_ROLE_SIZES.body.min}" max="${TEXT_ROLE_SIZES.body.max}" step="1" value="20" oninput="document.getElementById('annDescriptionSizeValue').textContent=this.value+' px';window.skhRenderAdminAdPreview()"><small id="annDescriptionSizeValue">20 px</small></label><label>Description alignment<select id="annDescriptionAlign" onchange="window.skhRenderAdminAdPreview()"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label></div>
-            <div class="adm-ad-color-grid"><label><span>Description color</span><input id="annDescriptionColor" type="color" value="#102A43" oninput="window.__skhBasicDescriptionColorTouched=true;window.skhRenderAdminAdPreview()"></label><label><span>Offer background</span><input id="annOfferColor" type="color" value="#167A91" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Offer text color</span><input id="annOfferTextColor" type="color" value="#102A43" oninput="window.skhRenderAdminAdPreview()"></label></div>
-            <div class="adm-ad-two"><label>Offer text size<input id="annOfferSize" type="range" min="${TEXT_ROLE_SIZES.price.min}" max="${TEXT_ROLE_SIZES.price.max}" step="1" value="24" oninput="document.getElementById('annOfferSizeValue').textContent=this.value+' px';window.skhRenderAdminAdPreview()"><small id="annOfferSizeValue">24 px</small></label><label>Offer alignment<select id="annOfferAlign" onchange="window.skhRenderAdminAdPreview()"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label></div>
-            <div class="adm-ad-two"><label>Badge text size<input id="annBadgeFontSize" type="range" min="${TEXT_ROLE_SIZES.badge.min}" max="${TEXT_ROLE_SIZES.badge.max}" step="1" value="14" oninput="document.getElementById('annBadgeFontSizeValue').textContent=this.value+' px';window.skhRenderAdminAdPreview()"><small id="annBadgeFontSizeValue">14 px</small></label><label>Badge text alignment<select id="annBadgeTextAlign" onchange="window.skhRenderAdminAdPreview()"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></label></div>
-          </details>
-          <details class="adm-ad-palette-details"><summary>Choose an existing SokoHai palette</summary><div class="adm-ad-palette-grid" id="annPaletteGrid"></div><input id="annPaletteId" type="hidden" value=""><small class="adm-ad-pal-hint" id="annPaletteHint"></small></details>
-          <div id="annContrastHint" class="adm-ad-contrast"></div>
-          <input id="annGradientAngle" type="hidden" value="135"><input id="annBorderRadius" type="hidden" value="22"><input id="annFrameOpacity" type="hidden" value="42"><input id="annBadgeSize" type="hidden" value="md"><input id="annBadgePosition" type="hidden" value="tr"><input id="annBadgeOpacity" type="hidden" value="100"><input id="annBadgeIcon" type="hidden" value="none">
+          <div class="adm-ad-field-label">Presets</div>
+          <div class="adm-ad-preset-row" id="annPresetRow" role="group" aria-label="Design presets"></div>
+          <details class="adm-ad-palette-details adm-ad-views"><summary>Design Views <span id="annViewCount"></span></summary><div class="adm-ad-palette-grid" id="annPaletteGrid" role="group" aria-label="Design Views"></div></details>
+          <input id="annPaletteId" type="hidden" value=""><input id="annDesignViewId" type="hidden" value=""><input id="annPresetId" type="hidden" value="">
+          <small class="adm-ad-pal-hint" id="annPaletteHint"></small>
+          <div class="adm-ad-format-block"><label class="adm-ad-field-label">Layout · Format</label><div class="adm-ad-format-options" role="group" aria-label="Format">
+            <button type="button" data-basic-format="1:1"><b>Square</b><small>1:1</small></button><button type="button" data-basic-format="4:5"><b>Portrait</b><small>4:5</small></button><button type="button" data-basic-format="9:16"><b>Story</b><small>9:16</small></button><button type="button" data-basic-format="16:9"><b>Landscape</b><small>16:9</small></button>
+          </div><select id="annMediaAspect" hidden aria-hidden="true"><option value="16:9">Landscape 16:9</option><option value="1:1">Square 1:1</option><option value="4:5">Portrait 4:5</option><option value="9:16">Story 9:16</option></select></div>
+          <div class="adm-ad-manual-only">
+            <fieldset class="adm-ad-group"><legend>Background</legend>
+              <label>Background style<select id="annBackgroundMode" onchange="window.skhRenderAdminAdPreview()"><option value="gradient">Gradient</option><option value="solid">Solid color</option></select></label>
+              <div class="adm-ad-color-grid"><label><span>Background color</span><input id="annPrimaryColor" type="color" value="#0E7A5F" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Second / gradient color</span><input id="annAccentColor" type="color" value="#167A91" oninput="window.skhRenderAdminAdPreview()"></label></div>
+              <label class="adm-ad-range">Gradient angle<span class="adm-ad-range-row"><input id="annGradientAngle" type="range" min="0" max="360" step="5" value="135" data-unit="°" aria-describedby="annGradientAngleOut" oninput="window.skhRenderAdminAdPreview()"><output id="annGradientAngleOut" for="annGradientAngle">135°</output></span></label>
+              <div class="adm-ad-background-image"><label>Background image (hiari) · nyuma ya maandishi au media</label><div class="adm-ad-upload"><input id="annBackgroundImage" type="url" placeholder="HTTPS background image URL" aria-label="Background image URL" oninput="window.skhRenderAdminAdPreview()"><input id="annBackgroundImageFile" data-target="annBackgroundImage" type="file" accept="image/*" hidden onchange="window.skhAdminAdUpload('image',this)"><button type="button" class="adm-ad-btn" onclick="document.getElementById('annBackgroundImageFile').click()">⬆ Upload</button><button type="button" class="adm-ad-btn" onclick="window.skhOpenAdminMediaLibrary('annBackgroundImage')">Library</button></div></div>
+            </fieldset>
+            <fieldset class="adm-ad-group"><legend>Colors</legend>
+              <div class="adm-ad-color-grid adm-ad-text-colors"><label><span>Headline color</span><input id="annTextColor" type="color" value="#102A43" oninput="window.__skhBasicTextColorTouched=true;window.skhRenderAdminAdPreview()"></label><label><span>Description color</span><input id="annDescriptionColor" type="color" value="#102A43" oninput="window.__skhBasicDescriptionColorTouched=true;window.skhRenderAdminAdPreview()"></label><label><span>Card surface</span><input id="annSurfaceColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Offer background</span><input id="annOfferColor" type="color" value="#167A91" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Offer text</span><input id="annOfferTextColor" type="color" value="#102A43" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Badge color</span><input id="annBadgeColor" type="color" value="#F59E0B" oninput="window.skhRenderAdminAdPreview()"></label><label><span>Badge text</span><input id="annBadgeTextColor" type="color" value="#FFFFFF" oninput="window.skhRenderAdminAdPreview()"></label></div>
+            </fieldset>
+            <fieldset class="adm-ad-group"><legend>Badge &amp; shapes</legend>
+              <div class="adm-ad-two"><label>Badge style<select id="annBadgeStyle" onchange="window.skhRenderAdminAdPreview()"><option value="pill">Pill</option><option value="ribbon">Ribbon</option><option value="sticker">Sticker</option><option value="stamp">Stamp</option><option value="glass">Glass</option><option value="outline">Outline</option></select></label><label>Badge position<select id="annBadgePosition" onchange="window.skhRenderAdminAdPreview()"><option value="tr">Juu kulia</option><option value="tl">Juu kushoto</option><option value="br">Chini kulia</option><option value="bl">Chini kushoto</option></select></label></div>
+              <div class="adm-ad-two"><label>Badge size<select id="annBadgeSize" onchange="window.skhRenderAdminAdPreview()"><option value="sm">Ndogo</option><option value="md">Kati</option><option value="lg">Kubwa</option></select></label><label>Badge icon<select id="annBadgeIcon" onchange="window.skhRenderAdminAdPreview()"><option value="none">Bila icon</option><option value="fire">🔥</option><option value="bolt">⚡</option><option value="tag">🏷️</option><option value="star">⭐</option><option value="truck">🚚</option><option value="sparkle">✨</option></select></label></div>
+              <label class="adm-ad-range">Badge opacity<span class="adm-ad-range-row"><input id="annBadgeOpacity" type="range" min="40" max="100" step="1" value="100" data-unit="%" aria-describedby="annBadgeOpacityOut" oninput="window.skhRenderAdminAdPreview()"><output id="annBadgeOpacityOut" for="annBadgeOpacity">100%</output></span></label>
+            </fieldset>
+            <fieldset class="adm-ad-group"><legend>Effects</legend>
+              <label>Card shadow<select id="annCardShadow" onchange="window.skhRenderAdminAdPreview()"><option value="">Default</option><option value="none">None</option><option value="soft">Soft</option><option value="lifted">Lifted</option><option value="glow">Glow</option></select></label>
+              <div class="adm-ad-two"><label class="adm-ad-range">Corner radius<span class="adm-ad-range-row"><input id="annBorderRadius" type="range" min="0" max="36" step="1" value="22" data-unit="px" aria-describedby="annBorderRadiusOut" oninput="window.skhRenderAdminAdPreview()"><output id="annBorderRadiusOut" for="annBorderRadius">22px</output></span></label><label class="adm-ad-range">Frame opacity<span class="adm-ad-range-row"><input id="annFrameOpacity" type="range" min="8" max="100" step="1" value="42" data-unit="%" aria-describedby="annFrameOpacityOut" oninput="window.skhAdOpacityChanged(this.value)"><output id="annFrameOpacityOut" for="annFrameOpacity">42%</output></span></label></div>
+            </fieldset>
+          </div>
+          <div id="annContrastHint" class="adm-ad-contrast" role="status"></div>
+          <p class="adm-ad-auto-note">Auto Design inasimamia background, rangi na effects. <button type="button" class="adm-ad-linkbtn" data-design-mode-btn="manual">🎛 Customize</button></p>
+        </div>
+      </details>
+
+      <details class="adm-ad-step" data-basic-step="text">
+        <summary><span class="adm-ad-step-number" aria-hidden="true">T</span><span class="adm-ad-step-copy"><b>Text</b><small>Font, weight, size, spacing, alignment, effects.</small></span></summary>
+        <div class="adm-ad-step-content">
+          <p class="adm-ad-auto-note">Typography inapangwa na Auto Design kulingana na urefu wa maandishi. <button type="button" class="adm-ad-linkbtn" data-design-mode-btn="manual">🎛 Customize</button></p>
+          <div class="adm-ad-manual-only adm-ad-text-controls">
+            <div class="adm-ad-two"><label>Font<select id="annFontFamily" onchange="window.skhRenderAdminAdPreview()"><option value="">Default (Inter)</option><option value="sans">Modern Sans</option><option value="display">Display / Bold</option><option value="rounded">Rounded / Friendly</option><option value="serif">Serif / Elegant</option></select></label><label>Headline weight<select id="annFontWeight" onchange="window.skhRenderAdminAdPreview()"><option value="600">Semibold</option><option value="700">Bold</option><option value="750">Bold+</option><option value="800">Extra bold</option><option value="850">Heavy</option><option value="900">Black</option><option value="950">Ultra</option></select></label></div>
+            <div class="adm-ad-two"><label class="adm-ad-range">Headline size<span class="adm-ad-range-row"><input id="annHeadlineSize" type="range" min="${TEXT_ROLE_SIZES.headline.min}" max="${TEXT_ROLE_SIZES.headline.max}" step="1" value="64" data-unit=" px" aria-describedby="annHeadlineSizeOut" oninput="window.skhRenderAdminAdPreview()"><output id="annHeadlineSizeOut" for="annHeadlineSize">64 px</output></span></label><label>Headline alignment<select id="annTextAlign" onchange="window.skhRenderAdminAdPreview()"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label></div>
+            <div class="adm-ad-two"><label class="adm-ad-range">Letter spacing<span class="adm-ad-range-row"><input id="annHeadlineLetterSpacing" type="range" min="-3" max="8" step="0.1" value="0" data-unit=" px" aria-describedby="annHeadlineLetterSpacingOut" oninput="window.skhRenderAdminAdPreview()"><output id="annHeadlineLetterSpacingOut" for="annHeadlineLetterSpacing">0 px</output></span></label><label class="adm-ad-range">Line height<span class="adm-ad-range-row"><input id="annHeadlineLineHeight" type="range" min="0.9" max="1.6" step="0.02" value="1.1" data-unit="" aria-describedby="annHeadlineLineHeightOut" oninput="window.skhRenderAdminAdPreview()"><output id="annHeadlineLineHeightOut" for="annHeadlineLineHeight">1.1</output></span></label></div>
+            <label>Text effect<select id="annTextShadow" onchange="window.skhRenderAdminAdPreview()"><option value="none">None</option><option value="subtle">Subtle shadow</option><option value="strong">Strong shadow</option></select></label>
+            <div class="adm-ad-two"><label class="adm-ad-range">Description size<span class="adm-ad-range-row"><input id="annDescriptionSize" type="range" min="${TEXT_ROLE_SIZES.body.min}" max="${TEXT_ROLE_SIZES.body.max}" step="1" value="20" data-unit=" px" aria-describedby="annDescriptionSizeOut" oninput="window.skhRenderAdminAdPreview()"><output id="annDescriptionSizeOut" for="annDescriptionSize">20 px</output></span></label><label>Description alignment<select id="annDescriptionAlign" onchange="window.skhRenderAdminAdPreview()"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label></div>
+            <div class="adm-ad-two"><label class="adm-ad-range">Offer size<span class="adm-ad-range-row"><input id="annOfferSize" type="range" min="${TEXT_ROLE_SIZES.price.min}" max="${TEXT_ROLE_SIZES.price.max}" step="1" value="24" data-unit=" px" aria-describedby="annOfferSizeOut" oninput="window.skhRenderAdminAdPreview()"><output id="annOfferSizeOut" for="annOfferSize">24 px</output></span></label><label>Offer alignment<select id="annOfferAlign" onchange="window.skhRenderAdminAdPreview()"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label></div>
+            <div class="adm-ad-two"><label class="adm-ad-range">Badge text size<span class="adm-ad-range-row"><input id="annBadgeFontSize" type="range" min="${TEXT_ROLE_SIZES.badge.min}" max="${TEXT_ROLE_SIZES.badge.max}" step="1" value="14" data-unit=" px" aria-describedby="annBadgeFontSizeOut" oninput="window.skhRenderAdminAdPreview()"><output id="annBadgeFontSizeOut" for="annBadgeFontSize">14 px</output></span></label><label>Badge text alignment<select id="annBadgeTextAlign" onchange="window.skhRenderAdminAdPreview()"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></label></div>
+          </div>
         </div>
       </details>
 
       <details class="adm-ad-step" open data-basic-step="cta">
-        <summary><span class="adm-ad-step-number">5</span><span class="adm-ad-step-copy"><b>CTA</b><small>Chagua hatua anayotakiwa kuchukua mtazamaji.</small></span></summary>
+        <summary><span class="adm-ad-step-number" aria-hidden="true">➜</span><span class="adm-ad-step-copy"><b>CTA</b><small>Label, style, action, position.</small></span></summary>
         <div class="adm-ad-step-content">
           <label>Kitufe cha tangazo<select id="annCta" onchange="window.skhCtaChanged()"><option value="">None</option><option value="Nunua Sasa">Nunua Sasa</option><option value="Wasiliana Nasi">Wasiliana Nasi</option><option value="Tazama Zaidi">Tazama Zaidi</option><option value="Jisajili">Jisajili</option><option value="Custom">Custom</option></select></label>
           <div id="annCtaCustomWrap" hidden><label>Maandishi ya CTA yako<input id="annCtaCustom" maxlength="${TEXT_ROLE_LIMITS.cta}" placeholder="Mfano: Omba Ofa" oninput="window.skhRenderAdminAdPreview()"></label></div>
           <div id="annCtaUrlWrap" hidden><label>CTA URL / action<input id="annLink" type="url" placeholder="https://..." oninput="window.skhRenderAdminAdPreview()"><small>Weka HTTPS link pale CTA inapohitaji kufungua ukurasa.</small></label></div>
-          <input id="annCtaStyle" type="hidden" value="solid"><input id="annCtaIcon" type="hidden" value="arrow"><input id="annCtaAnimation" type="hidden" value="none">
+          <div class="adm-ad-manual-only">
+            <div class="adm-ad-two"><label>CTA style<select id="annCtaStyle" onchange="window.skhRenderAdminAdPreview()"><option value="solid">Solid</option><option value="gradient">Gradient</option><option value="pill">Pill</option><option value="outline">Outline</option><option value="border">Border</option><option value="glass">Glass</option><option value="glow">Glow</option><option value="shine">Shine</option></select></label><label>CTA icon<select id="annCtaIcon" onchange="window.skhRenderAdminAdPreview()"><option value="arrow">→ arrow</option><option value="cart">🛒 cart</option><option value="phone">📞 phone</option><option value="whatsapp">💬 whatsapp</option><option value="star">⭐ star</option><option value="download">⬇ download</option><option value="external">↗ external</option><option value="calendar">📅 calendar</option><option value="location">📍 location</option><option value="none">Bila icon</option></select></label></div>
+            <label>CTA position<select id="annCtaAlign" onchange="window.skhRenderAdminAdPreview()"><option value="">Auto</option><option value="left">Kushoto</option><option value="center">Katikati</option><option value="right">Kulia</option><option value="full">Upana wote</option></select></label>
+          </div>
         </div>
       </details>
 
-      <details class="adm-ad-step" open data-basic-step="timing">
-        <summary><span class="adm-ad-step-number">6</span><span class="adm-ad-step-copy"><b>Timing</b><small>Muda wa creative — tofauti na schedule ya kuchapisha.</small></span></summary>
+      <details class="adm-ad-step" data-basic-step="animation">
+        <summary><span class="adm-ad-step-number" aria-hidden="true">◎</span><span class="adm-ad-step-copy"><b>Animation</b><small>Entrance, transition, motion, timing.</small></span></summary>
         <div class="adm-ad-step-content">
-          <div class="adm-ad-radio-row"><label><input type="radio" name="annTimingMode" value="auto" checked onchange="window.skhTimingModeChanged()"><span><b>Auto</b><small>Chagua muda kulingana na content</small></span></label><label><input type="radio" name="annTimingMode" value="custom" onchange="window.skhTimingModeChanged()"><span><b>Custom</b><small>Chagua mwenyewe, ${MIN_AD_DURATION_SECONDS}–${MAX_AD_DURATION_SECONDS} sekunde</small></span></label></div>
-          <label id="annCreativeDurationWrap">Creative duration (sekunde)<input id="annCreativeDuration" type="number" min="${MIN_AD_DURATION_SECONDS}" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${DISPLAY_DURATION_SECONDS.default}" oninput="window.skhTimingDurationChanged()"><small id="annAutoDurationNote">Auto: muda hubadilika kulingana na video/slideshow au content. Mwongozo: ${MIN_AD_DURATION_SECONDS}–${MAX_AD_DURATION_SECONDS}s.</small></label>
-          <div class="adm-ad-duration-readout">Muda wa preview: <b id="annCreativeDurationReadout">9s</b><span id="annMediaDurationReadout"></span></div>
+          <p class="adm-ad-auto-note">Auto Design huchagua mwendo mmoja tulivu. <button type="button" class="adm-ad-linkbtn" data-design-mode-btn="manual">🎛 Customize</button></p>
+          <div class="adm-ad-manual-only">
+            <div class="adm-ad-two"><label>Headline entrance<select id="annTextAnimation" onchange="window.skhRenderAdminAdPreview()"><option value="none">None</option><option value="fade">Fade</option><option value="slide-up">Slide up</option><option value="slide-down">Slide down</option><option value="slide-left">Slide left</option><option value="slide-right">Slide right</option><option value="zoom-in">Zoom in</option><option value="zoom-out">Zoom out</option><option value="pop">Pop</option><option value="bounce">Bounce</option><option value="blur-in">Blur in</option><option value="typewriter">Typewriter</option></select></label><label>Headline motion<select id="annTextEmphasis" onchange="window.skhRenderAdminAdPreview()"><option value="none">None</option><option value="pulse">Pulse</option><option value="glow">Glow</option><option value="shake">Shake</option><option value="bounce">Bounce</option><option value="scale">Scale</option><option value="wobble">Wobble</option><option value="highlight">Highlight</option></select></label></div>
+            <div class="adm-ad-two"><label>Text reveal<select id="annAnimationMode" onchange="window.skhRenderAdminAdPreview()"><option value="whole">Whole</option><option value="word">Word by word</option><option value="character">Character</option><option value="line">Line by line</option></select></label><label class="adm-ad-range">Speed<span class="adm-ad-range-row"><input id="annAnimationDuration" type="range" min="100" max="3000" step="50" value="600" data-unit=" ms" aria-describedby="annAnimationDurationOut" oninput="window.skhRenderAdminAdPreview()"><output id="annAnimationDurationOut" for="annAnimationDuration">600 ms</output></span></label></div>
+            <div class="adm-ad-two"><label>Badge animation<select id="annBadgeAnimation" onchange="window.skhRenderAdminAdPreview()"><option value="none">None</option><option value="pop">Pop</option><option value="pulse">Pulse</option><option value="glow">Glow</option><option value="slide">Slide</option><option value="scale">Scale</option><option value="shake">Shake</option></select></label><label>CTA animation<select id="annCtaAnimation" onchange="window.skhRenderAdminAdPreview()"><option value="none">None</option><option value="pulse">Pulse</option><option value="glow">Glow</option><option value="scale">Scale</option><option value="shine">Shine</option><option value="slide">Slide</option><option value="fade">Fade</option></select></label></div>
+            <label id="annSlideshowTransitionWrap">Slideshow transition<select id="annSlideshowTransition" onchange="window.skhSlideshowChanged()"><option value="fade">Fade</option><option value="crossfade">Crossfade</option><option value="slide-left">Slide Left</option><option value="slide-right">Slide Right</option><option value="zoom">Zoom</option><option value="none">None</option></select></label>
+          </div>
+          <div class="adm-ad-group adm-ad-timing" data-basic-step="timing">
+            <b>Timing</b>
+            <div class="adm-ad-radio-row"><label><input type="radio" name="annTimingMode" value="auto" checked onchange="window.skhTimingModeChanged()"><span><b>Auto</b><small>Muda kulingana na content</small></span></label><label><input type="radio" name="annTimingMode" value="custom" onchange="window.skhTimingModeChanged()"><span><b>Custom</b><small>${MIN_AD_DURATION_SECONDS}–${MAX_AD_DURATION_SECONDS} sekunde</small></span></label></div>
+            <label id="annCreativeDurationWrap">Creative duration (sekunde)<input id="annCreativeDuration" type="number" min="${MIN_AD_DURATION_SECONDS}" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${DISPLAY_DURATION_SECONDS.default}" oninput="window.skhTimingDurationChanged()"><small id="annAutoDurationNote">Auto: muda hubadilika kulingana na video/slideshow au content.</small></label>
+            <div class="adm-ad-duration-readout">Muda wa preview: <b id="annCreativeDurationReadout">9s</b><span id="annMediaDurationReadout"></span></div>
+          </div>
           <input id="annVideoAutoplay" type="checkbox" hidden><input id="annVideoLoop" type="checkbox" checked hidden><input id="annVideoMuted" type="checkbox" checked hidden>
         </div>
       </details>
       <input id="annStatus" type="hidden" value="draft"><input id="annCreativeId" type="hidden" value=""><input id="annCreativeState" type="hidden" value="">
-      <input id="annTextEmphasis" type="hidden" value="none"><input id="annAnimationMode" type="hidden" value="whole"><input id="annAnimationDuration" type="hidden" value="600"><input id="annBadgeAnimation" type="hidden" value="none">
-      <input id="annBrightness" type="hidden" value="100"><input id="annContrast" type="hidden" value="100"><input id="annMediaFit" type="hidden" value="cover"><input id="annFocalPoint" type="hidden" value="center"><input id="annTextShadow" type="hidden" value="none">
+      <input id="annHiddenElements" type="hidden" value=""><input id="annLockedElements" type="hidden" value=""><input id="annElementOrder" type="hidden" value=""><input id="annMediaPosition" type="hidden" value="top"><input id="annTouched" type="hidden" value=""><input id="annAutoReasonsState" type="hidden" value="">
     </div>
 
-    <aside class="adm-ad-preview-wrap adm-ad-basic-preview" id="annPreviewWrapper">
-      <div class="adm-ad-preview-header"><div><span class="adm-ad-step-number">7</span><h4>Basic Live Preview</h4></div><span class="adm-live-pill"><i class="adm-live-dot"></i> LIVE</span></div>
-      <div id="annPreview" class="adm-ad-preview"></div>
-      <div class="adm-ad-preview-transport"><button type="button" onclick="window.skhAdPreviewTransport('play')">▶ Preview</button><button type="button" onclick="window.skhAdPreviewTransport('pause')">⏸ Pause</button><button type="button" onclick="window.skhAdPreviewTransport('restart')">↻ Restart</button><button type="button" id="annPreviewMute" onclick="window.skhAdPreviewTransport('mute')">🔇 Mute</button></div>
-      <div class="adm-ad-preview-duration">Duration: <b id="annPreviewDuration">9s</b> <span id="annPreviewSlideTiming"></span></div>
-      <label class="adm-ad-preview-confirm"><input id="annPreviewConfirmed" type="checkbox"> Nimekagua tangazo lilivyoonekana</label>
-      <button type="button" class="adm-ad-btn adm-preview-focus" onclick="window.skhAdPreviewTransport('play')">▶ Preview tangazo</button>
+    <aside class="adm-ad-properties" id="annPropertiesPanel" aria-label="Properties: mapendekezo na layers">
+      <div class="adm-ad-sheet-handle"><b>Properties</b><button type="button" class="adm-ad-btn adm-ad-sheet-close" aria-label="Funga properties" onclick="window.skhAdToggleProperties(false)">✕</button></div>
+      <section class="adm-ad-suggest" aria-labelledby="annSuggestTitle"><h4 id="annSuggestTitle">💡 Mapendekezo</h4><div id="annSuggestions" class="adm-ad-suggest-list" aria-live="polite"></div></section>
+      <details class="adm-ad-step adm-ad-layers" open data-basic-step="layers">
+        <summary><span class="adm-ad-step-number" aria-hidden="true">≡</span><span class="adm-ad-step-copy"><b>Layers</b><small>Order, show/hide, lock, move, resize.</small></span></summary>
+        <div class="adm-ad-step-content"><ol id="annLayersList" class="adm-ad-layer-list" aria-label="Layers za tangazo"></ol><small class="adm-ad-help">🔒 Lock huzuia Auto Design kubadilisha kipengele hicho.</small></div>
+      </details>
     </aside>
   </div>
 
-  <div class="adm-ad-submit adm-ad-basic-actions" aria-label="Hifadhi au chapisha tangazo">
-    <button type="button" class="adm-ad-btn adm-ad-schedule-trigger" onclick="window.skhToggleAdSchedule()">Ratiba (hiari)</button>
+  <div class="adm-ad-submit adm-ad-basic-actions" data-basic-step="publish" aria-label="Hifadhi au chapisha tangazo">
+    <button type="button" class="adm-ad-btn adm-ad-props-trigger" aria-controls="annPropertiesPanel" onclick="window.skhAdToggleProperties()">💡 <span id="annSuggestCount">0</span></button>
+    <button type="button" class="adm-ad-btn adm-ad-schedule-trigger" onclick="window.skhToggleAdSchedule()">Ratiba</button>
     <button type="button" class="adm-ad-btn" id="btnSaveAdDraft" onclick="window.submitAnnouncementForm('draft')">Hifadhi Draft</button>
     <button type="button" class="adm-ad-btn adm-ad-preview-submit" onclick="window.skhAdPreviewTransport('play')">▶ Preview</button>
     <button type="button" class="adm-ad-btn primary" id="btnSubmitAnnouncement" onclick="window.submitAnnouncementForm('publish')">Publish</button>
@@ -577,14 +682,9 @@ window.skhAdFormHtml=function(){return `
     <button type="button" class="adm-ad-btn primary" id="btnScheduleAnnouncement" onclick="window.submitAnnouncementForm('schedule')">Ratibu tangazo</button>
   </details>
 
-  <div class="adm-ad-advanced-optional"><div><b>Advanced Design Tools</b><p>Design zaidi kwa udhibiti wa kina</p></div><button type="button" class="adm-ad-btn adm-ad-advanced" onclick="window.skhOpenAdvancedFromLegacy()">Advanced Design Tools <span aria-hidden="true">↗</span></button></div>
-
   <div class="adm-ad-hidden-compat" hidden aria-hidden="true">
     <span>BASIC</span><span>DESIGN</span><span>MOTION</span><span>MEDIA</span><span>CTA</span><span>SCHEDULE</span>
-    <select id="annBadgeStyle"><option value="pill">Pill</option><option value="ribbon">Ribbon</option><option value="sticker">Sticker</option><option value="stamp">Stamp</option><option value="glass">Glass</option><option value="outline">Outline</option></select>
     <select id="annCtaCompat"><option>Angalia Sasa</option><option>Jifunze Zaidi</option><option>Tembelea</option><option>Buy Now</option><option>Wasiliana Nasi</option><option>Pata Ofa Hii</option><option>Agiza Hapa</option><option>Piga Simu</option><option>Download</option><option>Install</option><option>Apply Now</option><option>Book Appointment</option><option>Register</option><option>Visit Website</option><option>Tazama Zaidi</option><option>Nunua Sasa</option></select>
-    <select id="annCtaStyleCompat"><option value="solid">Solid</option><option value="gradient">Gradient</option><option value="pill">Pill</option><option value="outline">Outline</option><option value="border">Border</option><option value="glass">Glass</option><option value="glow">Glow</option><option value="shine">Shine</option></select>
-    <select id="annTextModeCompat"><option value="whole">Whole</option><option value="word">Word</option><option value="character">Character</option><option value="line">Line</option></select>
     <input id="annDurationVal" value="600ms"><input id="annBrightVal" value="100%"><input id="annContrastVal" value="100%"><input id="annFrameOpacityValue" value="42%"><input id="annGradientAngleValue" value="135°"><input id="annBorderRadiusValue" value="22px">
   </div>
 </section>`;};
@@ -596,19 +696,19 @@ window.skhSetAdBadge=function(text,color){
     window.skhRenderAdminAdPreview();
 };
 
-window.skhToggleMobileAdPreview=function(){
+window.skhToggleMobileAdPreview=function(force){
     const pw=document.getElementById('annPreviewWrapper');
     if(!pw)return;
-    pw.classList.toggle('mobile-expanded');
-    if(pw.classList.contains('mobile-expanded')){
-        pw.scrollIntoView({behavior:'smooth'});
-    }
+    const collapsed=typeof force==='boolean'?!force:!pw.classList.contains('is-collapsed');
+    pw.classList.toggle('is-collapsed',collapsed);pw.classList.toggle('mobile-expanded',!collapsed);
+    const btn=pw.querySelector('.adm-preview-toggle-btn');
+    if(btn){btn.setAttribute('aria-expanded',String(!collapsed));btn.innerHTML=(collapsed?'▸ <span>Onyesha</span>':'▾ <span>Ficha</span>');}
 };
 
 function adInput(id){return document.getElementById(id);}
 function adValue(id){return String(adInput(id)?.value||'').trim();}
 function adSet(id,value){const el=adInput(id);if(el)el.value=value==null?'':String(value);}
-window.skhAdUpdateReadouts=function(){[['annHeadlineSize','annHeadlineSizeValue'],['annDescriptionSize','annDescriptionSizeValue'],['annOfferSize','annOfferSizeValue'],['annBadgeFontSize','annBadgeFontSizeValue']].forEach(([inputId,labelId])=>{const input=adInput(inputId),label=adInput(labelId);if(input&&label)label.textContent=input.value+' px';});};
+window.skhAdUpdateReadouts=function(){document.querySelectorAll('#announcementFormModal input[type=range][data-unit]').forEach(input=>{const out=adInput(input.id+'Out');if(out)out.textContent=input.value+(input.dataset.unit||'');});};
 function adLocalDate(value){
   if(!value)return '';
   const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value).slice(0,16);
@@ -658,7 +758,7 @@ function adBasicFormValues(){
   const mode=document.querySelector('#announcementFormModal input[name="annTimingMode"]:checked')?.value||'auto';
   return{
     ownerId:skh.currentUser?.uid||'',creativeId:adValue('annCreativeId'),
-    creativeType:adValue('annCreativeType')||'image_text',creativeTypeChanged:!!window.__skhBasicTypeChanged,formatChanged:!!window.__skhBasicFormatChanged,slideshowChanged:!!window.__skhBasicSlideshowChanged,category:adValue('annCategory')||'general',
+    creativeType:adResolvedType(),creativeTypeChanged:!!window.__skhBasicTypeChanged,formatChanged:!!window.__skhBasicFormatChanged,slideshowChanged:!!window.__skhBasicSlideshowChanged,category:adValue('annCategory')||'general',
     campaignName:adValue('annCampaignName'),campaignId:adValue('annCampaignId'),
     brandName:adValue('annBrand'),headline:adValue('annHeadline'),description:adValue('annText'),
     offer:adValue('annPriceTag'),priceTag:adValue('annPriceTag'),
@@ -682,9 +782,21 @@ function adBasicFormValues(){
     timingMode:mode,creativeDuration:adValue('annCreativeDuration')===''?NaN:Number(adValue('annCreativeDuration')),durationAuto:mode!=='custom',
     startAt:adInputDateIso(adValue('annStartAt')),endAt:adInputDateIso(adValue('annEndAt')),
     priority:adValue('annPriority')===''?0:Number(adValue('annPriority')),displayDurationSeconds:adValue('annDisplayDuration')===''?DISPLAY_DURATION_SECONDS.default:Number(adValue('annDisplayDuration')),
-    status:adValue('annStatus')||'draft'
+    status:adValue('annStatus')||'draft',
+    /* [AD DESIGNER 2026-09-24] previously hidden/dropped controls, now persisted */
+    badgeSize:adValue('annBadgeSize')||'md',badgePosition:adValue('annBadgePosition')||'tr',badgeIcon:adValue('annBadgeIcon')||'none',badgeOpacity:Math.max(.4,Math.min(1,(Number(adValue('annBadgeOpacity'))||100)/100)),
+    headlineLetterSpacing:Number(adValue('annHeadlineLetterSpacing'))||0,headlineLineHeight:Number(adValue('annHeadlineLineHeight'))||1.1,
+    mediaFit:adValue('annMediaFit')||'cover',focalX:adNum('annFocalX',50),focalY:adNum('annFocalY',50),overlayOpacity:adNum('annOverlayOpacity',0)/100,
+    brightness:adNum('annBrightness',100),contrast:adNum('annContrast',100),saturation:adNum('annSaturation',100),
+    ctaAlign:adValue('annCtaAlign'),designMode:adValue('annDesignMode')==='manual'?'manual':'auto',designViewId:adValue('annDesignViewId'),presetId:adValue('annPresetId'),
+    fontFamily:adValue('annFontFamily'),cardShadow:adValue('annCardShadow'),mediaPosition:adValue('annMediaPosition')==='bottom'?'bottom':'top',
+    hiddenElements:adList('annHiddenElements'),lockedElements:adList('annLockedElements'),elementOrder:adList('annElementOrder').length?adList('annElementOrder'):ORDERABLE_ELEMENTS.slice(),
+    typeLocked:adValue('annTypeLocked')==='1',formatLocked:adValue('annFormatLocked')==='1',touched:adList('annTouched'),autoReasons:adJson('annAutoReasonsState',[])
   };
 }
+function adNum(id,fallback){const v=adValue(id);if(v==='')return fallback;const n=Number(v);return Number.isFinite(n)?n:fallback;}
+function adList(id){return adValue(id).split(',').map(x=>x.trim()).filter(Boolean);}
+function adJson(id,fallback){try{const v=JSON.parse(adValue(id)||'null');return v==null?fallback:v;}catch(e){return fallback;}}
 function adCurrentCreative(){
   const raw=adValue('annCreativeState');let current=window.__skhBasicCreative||null;
   if(raw)try{current=JSON.parse(raw);}catch(e){}
@@ -713,7 +825,7 @@ function adTypeFromLegacy(value,existing){
 function adFillFromCreative(creative,existing={}){
   const f=basicFormFromCreative(creative,existing),set=(id,v)=>adSet(id,v);
   const preserveOption=(id,value)=>{const el=adInput(id),v=String(value==null?'':value);if(!el||!v||Array.from(el.options||[]).some(option=>option.value===v))return;const option=document.createElement('option');option.value=v;option.textContent='Advanced value (preserved) · '+v;option.hidden=true;el.appendChild(option);};
-  [['annTextAnimation',f.textAnimation],['annFontWeight',f.fontWeight],['annTextAlign',f.textAlign],['annDescriptionAlign',f.descriptionAlign],['annOfferAlign',f.offerAlign],['annBadgeTextAlign',f.badgeTextAlign]].forEach(([id,value])=>preserveOption(id,value));
+  [['annTextAnimation',f.textAnimation],['annFontWeight',f.fontWeight],['annTextAlign',f.textAlign],['annDescriptionAlign',f.descriptionAlign],['annOfferAlign',f.offerAlign],['annBadgeTextAlign',f.badgeTextAlign],['annTextEmphasis',f.textEmphasis],['annCtaStyle',f.ctaStyle],['annCtaIcon',f.ctaIcon],['annBadgeStyle',f.badgeStyle],['annBadgeAnimation',f.badgeAnimation],['annCtaAnimation',f.ctaAnimation],['annMediaFit',f.mediaFit],['annTextShadow',f.textShadow]].forEach(([id,value])=>preserveOption(id,value));
   const type=adTypeFromLegacy(f.creativeType,existing);
   if(type==='slideshow'&&creative.slideshow&&Array.isArray(creative.slideshow.slides)&&creative.slideshow.slides.length>=2&&!creative.slideshow.enabled){
     creative.slideshow={...creative.slideshow,enabled:true};f.slideshow=creative.slideshow;
@@ -733,8 +845,18 @@ function adFillFromCreative(creative,existing={}){
     annPriority:f.priority,annStartAt:adLocalDate(f.startAt),annEndAt:adLocalDate(f.endAt),annDisplayDuration:f.displayDurationSeconds,
     annCreativeDuration:f.creativeDuration,annCreativeId:f.creativeId,annStatus:f.status||'draft',
     annBadgeAnimation:f.badgeAnimation,annCtaAnimation:f.ctaAnimation,annAnimationDuration:f.animationDuration,
-    annBadgeSize:f.badgeSize||'md',annBadgePosition:f.badgePosition||'tr',annBadgeOpacity:Math.round((f.badgeOpacity||1)*100),annBadgeIcon:f.badgeIcon||'none'
+    annBadgeSize:f.badgeSize||'md',annBadgePosition:f.badgePosition||'tr',annBadgeOpacity:Math.round((f.badgeOpacity||1)*100),annBadgeIcon:f.badgeIcon||'none',
+    annTextEmphasis:f.textEmphasis||'none',annAnimationMode:f.animationMode||'whole',annCtaStyle:f.ctaStyle||'solid',annCtaIcon:f.ctaIcon||'arrow',annCtaAlign:f.ctaAlign||'',
+    annHeadlineLetterSpacing:f.headlineLetterSpacing||0,annHeadlineLineHeight:f.headlineLineHeight||1.1,
+    annMediaFit:f.mediaFit||'cover',annFocalX:f.focalX??50,annFocalY:f.focalY??50,annOverlayOpacity:Math.round((f.overlayOpacity||0)*100),
+    annBrightness:f.brightness||100,annContrast:f.contrast||100,annSaturation:f.saturation??100,
+    annDesignMode:f.designMode==='auto'?'auto':'manual',annDesignViewId:f.designViewId||'',annPresetId:f.presetId||'',annFontFamily:f.fontFamily||'',annCardShadow:f.cardShadow||'',
+    annMediaPosition:f.mediaPosition||'top',annHiddenElements:(f.hiddenElements||[]).join(','),annLockedElements:(f.lockedElements||[]).join(','),annElementOrder:(f.elementOrder||ORDERABLE_ELEMENTS).join(','),
+    annTouched:(f.touched||[]).join(','),annAutoReasonsState:JSON.stringify(f.autoReasons||[]),annFormatLocked:f.formatLocked?'1':''
   };
+  /* Old creatives keep their stored type (no silent restyle); new/auto ones follow their content. */
+  const inferred=inferCreativeType({headline:f.headline,description:f.description,offer:f.offer,badgeText:f.badgeText,imageUrl:f.imageUrl,videoUrl:f.videoUrl,audioUrl:f.audioUrl,slideshow:f.slideshow});
+  values.annTypeLocked=(f.typeLocked||(existing&&existing.__isExisting&&inferred!==type))?'1':'';
   Object.keys(values).forEach(id=>set(id,values[id]));
   const timing=document.querySelectorAll('#announcementFormModal input[name="annTimingMode"]');timing.forEach(r=>r.checked=r.value===(f.timingMode||'auto'));
   const loop=adInput('annVideoLoop'),auto=adInput('annVideoAutoplay');if(loop)loop.checked=f.videoLoop!==false;if(auto)auto.checked=false;
@@ -745,27 +867,30 @@ function adFillFromCreative(creative,existing={}){
 }
 
 window.skhAdInitializeForm=function(){
+  window.__skhAdAutoSig='';window.__skhAdDismissed=new Set();
+  adSetMode(adValue('annDesignMode')==='manual'?'manual':'auto',false);
   window.skhSetAdBasicType(adValue('annCreativeType')||'image_text',false);
   window.skhSetAdBasicCategory(adValue('annCategory')||'general',false);
   window.skhSetAdBasicFormat(adValue('annMediaAspect')||'16:9',false);
   window.skhCtaChanged(false);adRenderSlideshow();window.skhVideoDurationChanged(false);window.skhTimingModeChanged(false);
   if(typeof window.skhAdUpdateReadouts==='function')window.skhAdUpdateReadouts();
   if(typeof window.skhRenderAdPaletteSelector==='function')window.skhRenderAdPaletteSelector();
+  adRenderPresetRow();adRenderLayers();adSyncMediaSlots();
   window.__skhBasicInitialFormValues=adBasicFormValues();
   window.__skhBasicTypeChanged=false;window.__skhBasicFormatChanged=false;window.__skhBasicSlideshowChanged=false;
+  window.__skhAdAutoSig=autoDesignSignature(adEngineState(),adMediaInfo());
   window.skhRenderAdminAdPreview();
   const opacity=adInput('annFrameOpacity');if(opacity)window.skhAdOpacityChanged(opacity.value,false);
 };
 
 window.skhSetAdBasicType=function(type,rerender=true){
   const allowed=BASIC_AD_TYPES;
-  const value=allowed.includes(type)?type:'image_text';if(rerender&&adValue('annCreativeType')!==value){const initial=window.__skhBasicInitialFormValues;window.__skhBasicTypeChanged=initial?initial.creativeType!==value:true;}adSet('annCreativeType',value);
-  document.querySelectorAll('#announcementFormModal [data-basic-type]').forEach(b=>b.classList.toggle('active',b.dataset.basicType===value));
-  const media={image:['image_text','image','solid_text','image_audio','full_multimedia'],video:['video','video_text','full_multimedia'],audio:['image_audio','full_multimedia'],slideshow:['slideshow']};
-  document.querySelectorAll('#announcementFormModal [data-media-kind]').forEach(slot=>{const k=slot.dataset.mediaKind;slot.hidden=!(media[k]||[]).includes(value);});
-  const copy=document.querySelector('#announcementFormModal .ann-copy-fields');if(copy)copy.hidden=['image','video'].includes(value);
-  const designText=document.querySelectorAll('#announcementFormModal .adm-ad-text-controls');designText.forEach(row=>row.hidden=['image','video'].includes(value));
-  if(!window.__skhBasicTextColorTouched){const text=adInput('annTextColor');if(text)text.value=value==='solid_text'&&!adValue('annImage')?'#FFFFFF':'#102A43';}
+  const value=allowed.includes(type)?type:'image_text';
+  if(rerender){adSet('annTypeLocked','1');}
+  if(rerender&&adValue('annCreativeType')!==value){const initial=window.__skhBasicInitialFormValues;window.__skhBasicTypeChanged=initial?initial.creativeType!==value:true;}adSet('annCreativeType',value);
+  document.querySelectorAll('#announcementFormModal [data-basic-type]').forEach(b=>{const on=b.dataset.basicType===value&&adValue('annTypeLocked')==='1';b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+  adSyncMediaSlots();
+  if(!window.__skhBasicTextColorTouched&&adValue('annDesignMode')!=='auto'){const text=adInput('annTextColor');if(text&&!adValue('annPaletteId'))text.value=value==='solid_text'&&!adValue('annImage')?'#FFFFFF':'#102A43';}
   if(!window.__skhBasicDescriptionColorTouched){const description=adInput('annDescriptionColor'),headline=adInput('annTextColor');if(description&&headline)description.value=headline.value||'#102A43';}
   if(rerender)window.skhRenderAdminAdPreview();
 };
@@ -774,8 +899,10 @@ window.skhSetAdBasicCategory=function(value,rerender=true){
   document.querySelectorAll('#announcementFormModal [data-basic-category]').forEach(b=>b.classList.toggle('active',b.dataset.basicCategory===selected));
   if(rerender)window.skhRenderAdminAdPreview();
 };
-window.skhSetAdBasicFormat=function(ratio,rerender=true){
-  const value=['1:1','4:5','9:16','16:9'].includes(ratio)?ratio:'16:9';if(rerender&&adValue('annMediaAspect')!==value){const initial=window.__skhBasicInitialFormValues;window.__skhBasicFormatChanged=initial?initial.format!==value:true;}adSet('annMediaAspect',value);
+window.skhSetAdBasicFormat=function(ratio,rerender=true,fromAuto=false){
+  const value=['1:1','4:5','9:16','16:9'].includes(ratio)?ratio:'16:9';
+  if(rerender&&!fromAuto)adSet('annFormatLocked','1'); /* user's explicit choice is respected by Auto Design */
+  if((rerender||fromAuto)&&adValue('annMediaAspect')!==value){const initial=window.__skhBasicInitialFormValues;window.__skhBasicFormatChanged=initial?initial.format!==value:true;}adSet('annMediaAspect',value);
   document.querySelectorAll('#announcementFormModal [data-basic-format]').forEach(b=>b.classList.toggle('active',b.dataset.basicFormat===value));
   if(rerender)window.skhRenderAdminAdPreview();
 };
@@ -893,6 +1020,8 @@ window.openAnnouncementFormModal=async function(editId){
     primaryColor:existing?.primaryColor||'#0E7A5F',accentColor:existing?.accentColor||'#167A91',textColor:existing?.textColor||'#102A43',surfaceColor:existing?.surfaceColor||'#FFFFFF',frameOpacity:existing?.frameOpacity??.42,gradientAngle:existing?.gradientAngle||135,
     fontWeight:existing?.fontWeight||800,fontSize:existing?.fontSize||64,textAlign:existing?.textAlign||'left',textShadow:existing?.textShadow||'none',textAnimation:existing?.textAnimation||'none',animationDuration:existing?.animationDuration||600,
     paletteId:existing?.paletteId||'',format:existing?.aspectRatio||existing?.format||'16:9',slideshow:existing?.slideshow||null,
+    designMode:existing?(existing.designMode==='auto'?'auto':'manual'):'auto',designViewId:existing?.designViewId||'',cardShadow:existing?.cardShadow||'',hiddenElements:existing?.hiddenElements||[],
+    badgeSize:existing?.badgeSize||'md',badgePosition:existing?.badgePosition||'tr',badgeIcon:existing?.badgeIcon||'none',objectFit:existing?.objectFit||'cover',focalX:existing?.focalX??50,focalY:existing?.focalY??50,
     creativeDuration:existing?.creativeDuration||existing?.mediaDurationSeconds||DISPLAY_DURATION_SECONDS.default,timingMode:existing?.durationAuto===false?'custom':'auto',videoOriginalDuration:existing?.videoOriginalDuration||existing?.mediaDurationSeconds||0,
     videoTrimStart:existing?.videoTrimStart||0,videoTrimEnd:existing?.videoTrimEnd||existing?.mediaDurationSeconds||0,videoLoop:existing?.videoLoop!==false,
     priority:existing?.priority||0,startAt:existing?.startAt||'',endAt:existing?.endAt||'',displayDurationSeconds:existing?.displayDurationSeconds||(existing?.rotationMs?Math.round(existing.rotationMs/1000):DISPLAY_DURATION_SECONDS.default),status:existing?.status||'draft'
@@ -903,21 +1032,26 @@ window.openAnnouncementFormModal=async function(editId){
       if(snap.exists()){
         const model=JSON.parse(JSON.stringify(snap.data()));model.id=snap.id;
         const creative=normalizeCreative(model);creative.id=snap.id;
-        adFillFromCreative(creative,{...defaults,...existing,status:existing.status||'draft'});
+        adFillFromCreative(creative,{...defaults,...existing,status:existing.status||'draft',__isExisting:true});
       }
     }catch(e){if(window.skhToast)window.skhToast('Creative state haikupakiwa; nimeendelea na data ya advertisement.','warning');}
   }
   if(!window.__skhBasicCreative){
     const creative=buildBasicCreative({...defaults,ownerId:skh.currentUser?.uid||''});
     creative.id=existing?.creativeId||'';
-    adFillFromCreative(creative,{...defaults,...existing,status:existing?.status||'draft'});
+    adFillFromCreative(creative,{...defaults,...existing,status:existing?.status||'draft',__isExisting:!!existing});
   }
   adSet('annFormTitle',existing?'Hariri Tangazo':'Tengeneza Tangazo');
   const title=adInput('annFormTitle');if(title)title.textContent=existing?'Hariri Tangazo':'Tengeneza Tangazo';
   adSet('annStartAt',adLocalDate(existing?.startAt));adSet('annEndAt',adLocalDate(existing?.endAt));
   adSet('annStatus',existing?.status||'draft');
   if(typeof window.skhRenderAdPaletteSelector==='function')window.skhRenderAdPaletteSelector();
+  window.__skhAdInitialised=false;window.__skhAdOpenSlots=new Set();window.__skhAdPreviewPlacement='home';window.__skhAdPreviewDevice='mobile';
   window.skhAdInitializeForm();
+  /* New ads start in Easy/Auto: design is generated AFTER the baseline so it is persisted. */
+  if(!existing&&adValue('annDesignMode')==='auto')window.skhAdRunAutoDesign(false);
+  else adRenderReasons(adJson('annAutoReasonsState',[]));
+  window.__skhAdInitialised=true;
   window.__skhBasicPreviewMuted=true;
   if(adValue('annVideo'))window.skhProbeVideoDuration(adValue('annVideo'),true);
 };
@@ -941,10 +1075,13 @@ window.skhRenderAdminAdPreview=function(){
     if(textColor)textColor.value=fallback;
     if(!window.__skhBasicDescriptionColorTouched){const description=adInput('annDescriptionColor');if(description)description.value=fallback;}
   }
+  adSyncResolvedType();
   const a=window.skhAdFormData();
+  a.placementVariant=window.__skhAdPreviewPlacement||'home';
   const creative=window.__skhBasicCreative;
   const contrastHint=adInput('annContrastHint');
-  if(contrastHint){const ratio=skhPaletteContrast(a.textColor||'#102A43',a.primaryColor||'#0E7A5F');contrastHint.className='adm-ad-contrast '+(ratio>=4.5?'good':'warn');contrastHint.textContent=(ratio>=4.5?'✓':'⚠')+' Text contrast '+ratio.toFixed(1)+':1';}
+  const textOnlyCard=!(a.imageUrl||a.videoUrl||(a.slideshow&&a.slideshow.slides&&a.slideshow.slides.length>1));
+  if(contrastHint){const ratio=skhPaletteContrast(a.textColor||'#102A43',textOnlyCard?(a.primaryColor||'#0E7A5F'):(a.surfaceColor||'#FFFFFF'));contrastHint.className='adm-ad-contrast '+(ratio>=4.5?'good':'warn');contrastHint.textContent=(ratio>=4.5?'✓':'⚠')+' Text contrast '+ratio.toFixed(1)+':1';}
   const hasMedia=!!(a.imageUrl||a.videoUrl||a.audioUrl||a.slideshow?.slides?.length>0);
   host.className='adm-ad-preview skh-home-ad skh-ann-story skh-ann-post '+(hasMedia?'has-media':'no-media');
   if(typeof window.skhAdvertisementCardHtml==='function')host.innerHTML=window.skhAdvertisementCardHtml(a,false);
@@ -958,8 +1095,291 @@ window.skhRenderAdminAdPreview=function(){
   const mediaReadout=adInput('annMediaDurationReadout');if(mediaReadout)mediaReadout.textContent=a.slideshow?.slides?.length?' · Slideshow '+(a.mediaDurationSeconds||0)+'s':a.videoUrl?' · Video '+(a.mediaDurationSeconds||0)+'s':'';
   const slideTiming=adInput('annPreviewSlideTiming');if(slideTiming&&a.slideshow?.slides?.length>1)slideTiming.textContent='Slideshow · '+(a.mediaDurationSeconds||0)+'s';
   host.classList.toggle('adm-ad-preview-paused',!!window.__skhBasicPreviewPaused);
+  adAfterRender();
 };
 window.skhAdOpacityChanged=function(value,rerender=true){const n=Math.max(8,Math.min(100,Number(value)||42)),label=adInput('annFrameOpacityValue');if(label)label.textContent=n+'%';if(rerender)window.skhRenderAdminAdPreview();};
+
+/* ==========================================================================
+   [AD DESIGNER 2026-09-24] ONE Advertisement Designer controller.
+   Easy/Auto and Customize are MODES of this editor over the SAME canonical
+   creative (buildBasicCreative → normalizeCreative) and the SAME renderer
+   (skhAdvertisementCardHtml). Design logic lives in ad-design-engine.js.
+   ========================================================================== */
+const AD_FIELD_IDS=Object.freeze({
+  paletteId:'annPaletteId',designViewId:'annDesignViewId',presetId:'annPresetId',backgroundMode:'annBackgroundMode',gradientAngle:'annGradientAngle',
+  primaryColor:'annPrimaryColor',accentColor:'annAccentColor',surfaceColor:'annSurfaceColor',textColor:'annTextColor',descriptionColor:'annDescriptionColor',
+  offerColor:'annOfferColor',offerTextColor:'annOfferTextColor',badgeColor:'annBadgeColor',badgeTextColor:'annBadgeTextColor',frameOpacity:'annFrameOpacity',
+  borderRadius:'annBorderRadius',cardShadow:'annCardShadow',fontFamily:'annFontFamily',fontWeight:'annFontWeight',fontSize:'annHeadlineSize',textAlign:'annTextAlign',
+  headlineLetterSpacing:'annHeadlineLetterSpacing',headlineLineHeight:'annHeadlineLineHeight',textShadow:'annTextShadow',descriptionSize:'annDescriptionSize',
+  descriptionAlign:'annDescriptionAlign',offerSize:'annOfferSize',offerAlign:'annOfferAlign',badgeStyle:'annBadgeStyle',badgePosition:'annBadgePosition',
+  badgeSize:'annBadgeSize',badgeFontSize:'annBadgeFontSize',badgeIcon:'annBadgeIcon',badgeOpacity:'annBadgeOpacity',ctaStyle:'annCtaStyle',ctaIcon:'annCtaIcon',ctaAlign:'annCtaAlign',
+  ctaAnimation:'annCtaAnimation',badgeAnimation:'annBadgeAnimation',textAnimation:'annTextAnimation',textEmphasis:'annTextEmphasis',animationMode:'annAnimationMode',
+  animationDuration:'annAnimationDuration',mediaFit:'annMediaFit',focalX:'annFocalX',focalY:'annFocalY',overlayOpacity:'annOverlayOpacity',brightness:'annBrightness',
+  contrast:'annContrast',saturation:'annSaturation',mediaPosition:'annMediaPosition'
+});
+const AD_PERCENT_KEYS=Object.freeze({frameOpacity:1,overlayOpacity:1,badgeOpacity:1});
+const AD_ID_TO_FIELD=Object.freeze(Object.keys(AD_FIELD_IDS).reduce((m,k)=>{m[AD_FIELD_IDS[k]]=k;return m;},{annMediaAspect:'format'}));
+const AD_TYPE_LABELS=Object.freeze({image_text:'Image + Text',image:'Image Only',solid_text:'Text / Graphic',video:'Video',video_text:'Video + Text',image_audio:'Image + Audio',slideshow:'Slideshow',full_multimedia:'Full Multimedia',image_video:'Image + Video',video_audio:'Video + Audio',audio:'Audio + Background'});
+const AD_LAYER_LABELS=Object.freeze({brand:'Brand header',badge:'Badge',media:'Media',headline:'Headline',description:'Description',offer:'Offer / Price',cta:'CTA button'});
+const AD_LAYER_EDIT=Object.freeze({brand:['content','annBrand'],badge:['text','annBadgeFontSize'],media:['media','annMediaFit'],headline:['text','annHeadlineSize'],description:['text','annDescriptionSize'],offer:['text','annOfferSize'],cta:['cta','annCtaStyle']});
+const adEsc=v=>(skh&&typeof skh.skhEscape==='function')?skh.skhEscape(String(v==null?'':v)):String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+if(!window.__skhAdMediaInfo)window.__skhAdMediaInfo={};
+
+function adModal(){return document.getElementById('announcementFormModal');}
+function adContentState(){
+  const mode=adValue('annCta'),cta=mode==='Custom'?adValue('annCtaCustom'):(mode==='None'?'':mode);
+  return{headline:adValue('annHeadline'),description:adValue('annText'),offer:adValue('annPriceTag'),badgeText:adValue('annBadgeText'),imageUrl:adValue('annImage'),videoUrl:adValue('annVideo'),audioUrl:adValue('annAudio'),logoUrl:adValue('annLogo'),backgroundImageUrl:adValue('annBackgroundImage'),slideshow:adReadSlideshow(),link:adValue('annLink'),ctaLabel:cta,category:adValue('annCategory')||'general'};
+}
+function adResolvedType(){
+  if(adValue('annTypeLocked')==='1'){const v=adValue('annCreativeType');if(BASIC_AD_TYPES.includes(v))return v;}
+  return inferCreativeType(adContentState());
+}
+function adSyncResolvedType(){
+  const locked=adValue('annTypeLocked')==='1',type=adResolvedType();
+  if(!locked&&adValue('annCreativeType')!==type){adSet('annCreativeType',type);const initial=window.__skhBasicInitialFormValues;window.__skhBasicTypeChanged=initial?initial.creativeType!==type:true;}
+  const label=(locked?'🔒 ':'Auto · ')+(AD_TYPE_LABELS[type]||type);
+  const r=adInput('annTypeReadout');if(r)r.textContent=label;
+  const mini=adInput('annTypeReadoutMini');if(mini)mini.textContent=label;
+  const unlock=adInput('annTypeUnlock');if(unlock)unlock.hidden=!locked;
+  document.querySelectorAll('#announcementFormModal [data-basic-type]').forEach(b=>{const on=locked&&b.dataset.basicType===type;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+  return type;
+}
+window.skhAdUnlockType=function(){adSet('annTypeLocked','');window.skhRenderAdminAdPreview();};
+function adMediaInfo(){
+  const c=adContentState(),info=window.__skhAdMediaInfo||{};
+  const firstSlide=c.slideshow&&c.slideshow.slides&&c.slideshow.slides[0]&&c.slideshow.slides[0].src;
+  const imgUrl=c.imageUrl||firstSlide||'';
+  if(imgUrl&&!info[imgUrl])adMeasureMedia(imgUrl,'image');
+  if(c.videoUrl&&!info[c.videoUrl])adMeasureMedia(c.videoUrl,'video');
+  return{imageAspect:imgUrl&&info[imgUrl]>0?info[imgUrl]:0,videoAspect:c.videoUrl&&info[c.videoUrl]>0?info[c.videoUrl]:0,placement:window.__skhAdPreviewPlacement||'home',device:window.__skhAdPreviewDevice||'mobile'};
+}
+function adMeasureMedia(url,kind){
+  const info=window.__skhAdMediaInfo;if(!url||info[url])return;info[url]=-1; // pending; lazy, once per URL
+  try{
+    if(kind==='video'){const v=document.createElement('video');v.preload='metadata';v.muted=true;v.onloadedmetadata=()=>{if(v.videoWidth&&v.videoHeight){info[url]=v.videoWidth/v.videoHeight;adScheduleDesigner(true);}};v.src=url;}
+    else{const img=new Image();img.decoding='async';img.onload=()=>{if(img.naturalWidth&&img.naturalHeight){info[url]=img.naturalWidth/img.naturalHeight;adScheduleDesigner(true);}};img.src=url;}
+  }catch(e){}
+}
+function adEngineState(forAuto){
+  const f=adBasicFormValues(),touched=new Set(f.touched);
+  const s={...f,slideshowTransition:adValue('annSlideshowTransition')||'fade'};
+  if(forAuto&&!touched.has('designViewId')){s.designViewId='';s.paletteId='';}
+  return s;
+}
+function adSetMode(mode,run=true){
+  const m=mode==='manual'?'manual':'auto';adSet('annDesignMode',m);
+  const root=document.querySelector('#announcementFormModal .adm-ad-designer');if(root)root.dataset.designMode=m;
+  document.querySelectorAll('#announcementFormModal .adm-ad-mode-switch [data-design-mode-btn]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.designModeBtn===m)));
+  const status=adInput('annAutoStatus');
+  if(status&&m==='manual')status.textContent='Customize: mabadiliko yako yanalindwa. Bonyeza Auto Design kupanga upya (edits zako zinabaki).';
+  if(run&&m==='auto')window.skhAdRunAutoDesign(true);
+}
+window.skhAdSetDesignMode=function(mode){
+  adSetMode(mode,true);
+  if(mode==='manual'){const text=document.querySelector('#announcementFormModal [data-basic-step="text"]');if(text&&text.tagName==='DETAILS')text.open=true;}
+  window.skhRenderAdminAdPreview();
+};
+function adApplyPatch(patch){
+  Object.keys(patch||{}).forEach(key=>{
+    const v=patch[key];
+    if(key==='format'){window.skhSetAdBasicFormat(v,false,true);return;}
+    if(key==='slideshowTransition'){adSet('annSlideshowTransition',v);const ss=adReadSlideshow();if(ss.slides&&ss.slides.length){ss.transition=v;adWriteSlideshow(ss,false);}return;}
+    if(key==='cta'){adSet('annCta',v);window.skhCtaChanged(false);return;}
+    if(key==='badgeText'){adSet('annBadgeText',v);return;}
+    const id=AD_FIELD_IDS[key];if(!id)return;
+    const el=adInput(id);if(!el)return;
+    const val=String(AD_PERCENT_KEYS[key]?Math.round(Number(v)*100):v);
+    if(el.tagName==='SELECT'&&!Array.from(el.options).some(o=>o.value===val)){const o=document.createElement('option');o.value=val;o.textContent=val;el.appendChild(o);}
+    el.value=val;
+  });
+  if(patch&&('textColor' in patch||'paletteId' in patch)){window.__skhBasicTextColorTouched=true;window.__skhBasicDescriptionColorTouched=true;}
+  const pal=adValue('annPaletteId'),view=adValue('annDesignViewId');
+  document.querySelectorAll('#announcementFormModal [data-ad-preset]').forEach(b=>{const on=b.dataset.adPreset===view||(!view.startsWith('preset:')&&b.dataset.adPreset===pal);b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+  document.querySelectorAll('#announcementFormModal [data-design-view]').forEach(b=>{const on=b.dataset.designView===view;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+  window.skhAdUpdateReadouts();window.skhAdOpacityChanged(adValue('annFrameOpacity'),false);
+}
+function adRenderReasons(reasons){
+  const list=adInput('annAutoReasons');if(list)list.innerHTML=(reasons||[]).map(r=>'<li>'+adEsc(r)+'</li>').join('')||'<li>Bado — ongeza content au bonyeza Auto Design.</li>';
+}
+window.skhAdRunAutoDesign=function(force=false){
+  const state=adEngineState(true),media=adMediaInfo();
+  const res=autoDesign(state,{media,keep:adList('annTouched'),locked:adList('annLockedElements'),formatLocked:adValue('annFormatLocked')==='1'});
+  window.__skhAdAutoSig=autoDesignSignature(adEngineState(true),media);
+  adApplyPatch(res.patch);
+  adSet('annAutoReasonsState',JSON.stringify(res.reasons.slice(0,12)));
+  adRenderReasons(res.reasons);
+  const status=adInput('annAutoStatus'),view=getDesignView(res.viewId);
+  if(status)status.textContent='Imepangwa · '+(view?view.label:'')+' · '+(AD_TYPE_LABELS[res.creativeType]||res.creativeType)+(res.kept.length?' · edits '+res.kept.length+' zimehifadhiwa':'');
+  window.__skhAdAutoSig=autoDesignSignature(adEngineState(true),media);
+  window.skhRenderAdminAdPreview();
+  if(force===true&&window.skhToast&&window.__skhAdInitialised)window.skhToast('Auto Design imetumika — content yako haijaguswa.','success');
+  return res;
+};
+window.skhAdResetManualEdits=function(){adSet('annTouched','');adSet('annFormatLocked','');adSetMode('auto',false);window.skhAdRunAutoDesign(true);};
+let adDesignerTimer=null;
+function adScheduleDesigner(mediaMeasured){
+  clearTimeout(adDesignerTimer);
+  adDesignerTimer=setTimeout(()=>{
+    if(!adModal()||!adInput('annPreview'))return;
+    if(adValue('annDesignMode')==='auto'){
+      const sig=autoDesignSignature(adEngineState(true),adMediaInfo());
+      if(sig!==window.__skhAdAutoSig){window.skhAdRunAutoDesign(false);return;}
+    }
+    adRefreshSuggestions();
+  },mediaMeasured?60:260);
+}
+function adRefreshSuggestions(){
+  const box=adInput('annSuggestions');if(!box)return;
+  const list=recommendDesign(adEngineState(false),{media:adMediaInfo(),dismissed:[...(window.__skhAdDismissed||new Set())]});
+  window.__skhAdSuggestions=list;
+  box.innerHTML=list.length?list.map(item=>'<article class="adm-ad-suggest-item level-'+adEsc(item.level)+'"><div><b>'+(item.level==='warning'?'⚠ ':'💡 ')+adEsc(item.title)+'</b><p>'+adEsc(item.detail)+'</p></div><div class="adm-ad-suggest-actions">'+(item.patch?'<button type="button" class="adm-ad-btn primary" data-suggest-apply="'+adEsc(item.id)+'">Apply</button>':'')+'<button type="button" class="adm-ad-btn" data-suggest-keep="'+adEsc(item.id)+'">Keep current</button></div></article>').join(''):'<p class="adm-ad-suggest-empty">✓ Hakuna pendekezo kwa sasa.</p>';
+  const count=adInput('annSuggestCount');if(count)count.textContent=String(list.length);
+}
+window.skhAdApplySuggestion=function(id){
+  const item=(window.__skhAdSuggestions||[]).find(x=>x.id===id);if(!item||!item.patch)return;
+  (window.__skhAdDismissed=window.__skhAdDismissed||new Set()).add(id);
+  if(item.patch.__applyView){window.skhAdApplyView(item.patch.__applyView);return;}
+  adApplyPatch(item.patch);
+  const touched=new Set(adList('annTouched'));Object.keys(item.patch).filter(k=>STYLE_KEYS.includes(k)).forEach(k=>touched.add(k));adSet('annTouched',[...touched].join(','));
+  window.skhRenderAdminAdPreview();
+};
+window.skhAdKeepSuggestion=function(id){(window.__skhAdDismissed=window.__skhAdDismissed||new Set()).add(id);adRefreshSuggestions();};
+window.skhAdApplyView=function(viewId){
+  const res=applyDesignView(viewId,adEngineState(false),{media:adMediaInfo(),locked:adList('annLockedElements')});
+  if(!res.view)return false;
+  adApplyPatch(res.patch);
+  const touched=new Set(adList('annTouched'));Object.keys(res.patch).forEach(k=>touched.delete(k));touched.add('designViewId');adSet('annTouched',[...touched].join(','));
+  const hint=adInput('annPaletteHint');
+  if(hint){const tok=res.view.tokens.colors;try{const text=adValue('annTextColor'),bgc=(adValue('annImage')||adValue('annVideo'))?tok.surface:tok.primary;hint.textContent='Design View: '+res.view.label+' · '+res.view.recipe+' · kichwa '+skhPaletteContrast(text,bgc).toFixed(1)+':1 · CTA '+skhPaletteContrast(tok.ctaText,tok.cta).toFixed(1)+':1';}catch(e){hint.textContent='Design View: '+res.view.label;}}
+  window.skhRenderAdminAdPreview();
+  return true;
+};
+function adRenderPresetRow(){
+  const row=adInput('annPresetRow');if(!row)return;
+  const cur=adValue('annDesignViewId');
+  row.innerHTML=DESIGN_PRESETS.map(p=>{const v=getDesignView('preset:'+p.id);if(!v)return '';const c=v.tokens.colors;return '<button type="button" class="adm-ad-preset-chip'+(cur===v.id?' active':'')+'" data-design-view="'+v.id+'" aria-pressed="'+(cur===v.id)+'" style="--pal-a:'+c.primary+';--pal-b:'+c.accent+'"><i aria-hidden="true"></i>'+adEsc(p.label)+'</button>';}).join('');
+  const count=adInput('annViewCount');if(count)count.textContent='('+listDesignViews().length+')';
+}
+function adOrder(){const o=adList('annElementOrder').filter(x=>ORDERABLE_ELEMENTS.includes(x));ORDERABLE_ELEMENTS.forEach(x=>{if(!o.includes(x))o.push(x);});return o;}
+function adRenderLayers(){
+  const list=adInput('annLayersList');if(!list)return;
+  const hidden=new Set(adList('annHiddenElements')),locked=new Set(adList('annLockedElements')),order=adOrder(),c=adContentState();
+  const present={brand:true,badge:!!c.badgeText,media:!!(c.imageUrl||c.videoUrl||c.audioUrl||(c.slideshow.slides||[]).length),headline:!!c.headline,description:!!c.description,offer:!!c.offer,cta:!!c.ctaLabel};
+  const seq=['brand','badge'].concat(order);
+  list.innerHTML=seq.map(el=>{
+    const idx=order.indexOf(el),orderable=idx>=0,isHidden=hidden.has(el),isLocked=locked.has(el),name=AD_LAYER_LABELS[el];
+    return '<li class="adm-ad-layer'+(isHidden?' is-hidden':'')+(present[el]?'':' is-empty')+'"><span class="adm-ad-layer-name">'+name+(present[el]?'':' <small>(tupu)</small>')+'</span><span class="adm-ad-layer-actions">'
+      +'<button type="button" data-layer="'+el+'" data-layer-action="toggle" aria-pressed="'+(!isHidden)+'" aria-label="'+(isHidden?'Onyesha ':'Ficha ')+name+'">'+(isHidden?'🚫':'👁')+'</button>'
+      +'<button type="button" data-layer="'+el+'" data-layer-action="lock" aria-pressed="'+isLocked+'" aria-label="'+(isLocked?'Fungua ':'Funga ')+name+'">'+(isLocked?'🔒':'🔓')+'</button>'
+      +(orderable?'<button type="button" data-layer="'+el+'" data-layer-action="up" aria-label="Sogeza '+name+' juu"'+(idx===0?' disabled':'')+'>↑</button><button type="button" data-layer="'+el+'" data-layer-action="down" aria-label="Sogeza '+name+' chini"'+(idx===order.length-1?' disabled':'')+'>↓</button>':'')
+      +'<button type="button" data-layer="'+el+'" data-layer-action="edit" aria-label="Badilisha ukubwa/mtindo wa '+name+'">⤢</button></span></li>';
+  }).join('');
+}
+window.skhAdLayerAction=function(el,action){
+  if(!LAYER_ELEMENTS.includes(el))return;
+  if(action==='toggle'||action==='lock'){
+    const id=action==='toggle'?'annHiddenElements':'annLockedElements',set=new Set(adList(id));
+    if(set.has(el))set.delete(el);else set.add(el);adSet(id,[...set].join(','));
+  }else if(action==='up'||action==='down'){
+    const order=adOrder(),i=order.indexOf(el),j=i+(action==='up'?-1:1);
+    if(i<0||j<0||j>=order.length)return;[order[i],order[j]]=[order[j],order[i]];
+    adSet('annElementOrder',order.join(','));adSet('annMediaPosition',order[0]==='media'?'top':'bottom');
+  }else if(action==='edit'){
+    const [step,control]=AD_LAYER_EDIT[el]||[];if(step!=='content')adSetMode('manual',false);
+    const section=document.querySelector('#announcementFormModal [data-basic-step="'+step+'"]');if(section&&section.tagName==='DETAILS')section.open=true;
+    window.skhAdToggleProperties(false);
+    const target=adInput(control);if(target){if(target.scrollIntoView)target.scrollIntoView({block:'center',behavior:'smooth'});try{target.focus({preventScroll:true});}catch(e){}}
+    return;
+  }
+  adRenderLayers();window.skhRenderAdminAdPreview();
+};
+function adSyncMediaSlots(){
+  const c=adContentState(),open=window.__skhAdOpenSlots||(window.__skhAdOpenSlots=new Set());
+  const has={image:!!c.imageUrl,video:!!c.videoUrl,audio:!!c.audioUrl,logo:!!c.logoUrl,slideshow:(c.slideshow.slides||[]).length>0};
+  document.querySelectorAll('#announcementFormModal [data-media-kind]').forEach(slot=>{const k=slot.dataset.mediaKind;slot.hidden=!(has[k]||open.has(k));});
+  const transform=adInput('annMediaTransform');if(transform)transform.hidden=!(has.image||has.video||(c.slideshow.slides||[]).length>1);
+  const tw=adInput('annSlideshowTransitionWrap');if(tw)tw.hidden=(c.slideshow.slides||[]).length<2;
+  const empty=adInput('annEmptyState');if(empty)empty.hidden=!!(c.headline||c.description||c.offer||c.badgeText||adValue('annBrand')||has.image||has.video||has.audio||has.logo||has.slideshow);
+}
+window.skhAdAddMedia=function(kind){
+  (window.__skhAdOpenSlots=window.__skhAdOpenSlots||new Set()).add(kind);adSyncMediaSlots();
+  const picker={image:'annImageFile',video:'annVideoFile',audio:'annAudioFile',logo:'annLogoFile',slideshow:'annSlideshowFiles'}[kind];
+  const slot=document.querySelector('#announcementFormModal [data-media-kind="'+kind+'"]');if(slot&&slot.scrollIntoView)slot.scrollIntoView({block:'nearest',behavior:'smooth'});
+  const input=adInput(picker);if(input&&typeof input.click==='function')input.click(); // native picker = mobile-friendly
+};
+window.skhAdRemoveMedia=function(kind){
+  const ids={image:['annImage'],video:['annVideo','annVideoOriginalDuration'],audio:['annAudio'],logo:['annLogo']}[kind]||[];
+  ids.forEach(id=>adSet(id,''));
+  if(kind==='video'){adSet('annVideoTrimStart',0);adSet('annVideoTrimEnd','');window.skhVideoDurationChanged(false);}
+  if(window.__skhAdOpenSlots)window.__skhAdOpenSlots.delete(kind);
+  window.skhRenderAdminAdPreview();
+};
+window.skhAdHandleMediaFiles=function(fileList){
+  const files=Array.from(fileList||[]);if(!files.length)return;
+  const rules=window.SokoHaiAdsDesignRules,kindOf=f=>rules&&rules.detectAdMediaKind?rules.detectAdMediaKind(f):(String(f.type).split('/')[0]||'');
+  const images=files.filter(f=>kindOf(f)==='image'),videos=files.filter(f=>kindOf(f)==='video'),audios=files.filter(f=>kindOf(f)==='audio');
+  const stub=(list,target)=>({files:list,dataset:target?{target}:{},disabled:false,value:''});
+  const jobs=[];
+  if(images.length>1||(images.length&&(adValue('annImage')||adReadSlideshow().slides.length))){
+    const ss=adReadSlideshow();
+    if(!ss.slides.length&&adValue('annImage')){ss.slides.push({src:adValue('annImage'),name:'Picha 1',duration:DEFAULT_SLIDE_DURATION_SECONDS});adWriteSlideshow(ss,false);adSet('annImage','');}
+    jobs.push(()=>window.skhAdminAdUpload('image',stub(images,'annSlideshow')));
+  }else if(images.length)jobs.push(()=>window.skhAdminAdUpload('image',stub(images)));
+  if(videos.length)jobs.push(()=>window.skhAdminAdUpload('video',stub(videos.slice(0,1))));
+  if(audios.length)jobs.push(()=>window.skhAdminAdUpload('audio',stub(audios.slice(0,1))));
+  if(!jobs.length){alert('Aina ya faili haitambuliki. Tumia picha, video au sauti.');return;}
+  jobs.reduce((p,job)=>p.then(job),Promise.resolve());
+};
+function adBindDropzone(){
+  const zone=adInput('annMediaDrop');if(!zone||zone.dataset.bound==='1')return;zone.dataset.bound='1';
+  ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('is-drag');}));
+  ['dragleave','dragend'].forEach(ev=>zone.addEventListener(ev,()=>zone.classList.remove('is-drag')));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('is-drag');window.skhAdHandleMediaFiles(e.dataTransfer&&e.dataTransfer.files);});
+  zone.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target===zone){e.preventDefault();adInput('annDropFiles')?.click();}});
+}
+window.skhAdEmptyAction=function(kind){
+  if(kind==='auto'){adSetMode('auto',false);window.skhAdRunAutoDesign(true);return;}
+  const step=kind==='media'?'media':'content',section=document.querySelector('#announcementFormModal [data-basic-step="'+step+'"]');
+  if(section&&section.tagName==='DETAILS')section.open=true;
+  const target=adInput(kind==='media'?'annMediaDrop':'annHeadline');
+  if(target){if(target.scrollIntoView)target.scrollIntoView({block:'center',behavior:'smooth'});try{target.focus({preventScroll:true});}catch(e){}}
+};
+window.skhAdSetPreviewDevice=function(device){
+  window.__skhAdPreviewDevice=device==='desktop'?'desktop':'mobile';
+  const frame=adInput('annDeviceFrame');if(frame){frame.classList.toggle('is-mobile',window.__skhAdPreviewDevice==='mobile');frame.classList.toggle('is-desktop',window.__skhAdPreviewDevice==='desktop');}
+  document.querySelectorAll('#announcementFormModal [data-preview-device]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.previewDevice===window.__skhAdPreviewDevice)));
+};
+window.skhAdSetPreviewPlacement=function(p){window.__skhAdPreviewPlacement=p||'home';const s=adInput('annPreviewPlacement');if(s&&s.value!==window.__skhAdPreviewPlacement)s.value=window.__skhAdPreviewPlacement;window.skhRenderAdminAdPreview();};
+window.skhAdToggleProperties=function(force){const panel=adInput('annPropertiesPanel');if(!panel)return;const open=typeof force==='boolean'?force:!panel.classList.contains('is-open');panel.classList.toggle('is-open',open);document.querySelector('#announcementFormModal .adm-ad-props-trigger')?.setAttribute('aria-expanded',String(open));};
+function adAfterRender(){adSyncMediaSlots();adRenderLayers();adBindDropzone();adScheduleDesigner(false);}
+
+/* Touched = style fields the user changed by hand; Auto Design keeps them. */
+function adTrackTouched(e){
+  const el=e.target;if(!el||!el.id||!el.closest||!el.closest('#announcementFormModal'))return;
+  const key=AD_ID_TO_FIELD[el.id];if(!key||key==='designViewId'||key==='paletteId')return;
+  const touched=new Set(adList('annTouched'));if(!touched.has(key)){touched.add(key);adSet('annTouched',[...touched].join(','));}
+  if(el.type==='range'){const out=adInput(el.id+'Out');if(out)out.textContent=el.value+(el.dataset.unit||'');}
+}
+document.addEventListener('input',adTrackTouched,true);
+document.addEventListener('change',adTrackTouched,true);
+document.addEventListener('click',function(e){
+  const t=e.target&&e.target.closest?e.target:null;if(!t||!t.closest('#announcementFormModal'))return;
+  const mode=t.closest('[data-design-mode-btn]');if(mode){e.preventDefault();window.skhAdSetDesignMode(mode.dataset.designModeBtn);return;}
+  const view=t.closest('[data-design-view]');if(view){e.preventDefault();window.skhAdApplyView(view.dataset.designView);return;}
+  const apply=t.closest('[data-suggest-apply]');if(apply){e.preventDefault();window.skhAdApplySuggestion(apply.dataset.suggestApply);return;}
+  const keep=t.closest('[data-suggest-keep]');if(keep){e.preventDefault();window.skhAdKeepSuggestion(keep.dataset.suggestKeep);return;}
+  const layer=t.closest('[data-layer-action]');if(layer){e.preventDefault();window.skhAdLayerAction(layer.dataset.layer,layer.dataset.layerAction);return;}
+  const add=t.closest('[data-add-media]');if(add){e.preventDefault();window.skhAdAddMedia(add.dataset.addMedia);return;}
+  const dev=t.closest('[data-preview-device]');if(dev){e.preventDefault();window.skhAdSetPreviewDevice(dev.dataset.previewDevice);return;}
+  const jump=t.closest('[data-jump]');if(jump){
+    e.preventDefault();const key=jump.dataset.jump;
+    if(key==='layers')window.skhAdToggleProperties(true);
+    if(key==='preview')window.skhToggleMobileAdPreview(true);
+    const sec=document.querySelector('#announcementFormModal [data-basic-step="'+key+'"]');
+    if(sec){if(sec.tagName==='DETAILS')sec.open=true;if(sec.scrollIntoView)sec.scrollIntoView({block:'start',behavior:'smooth'});}
+  }
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&adInput('annPropertiesPanel')?.classList.contains('is-open')){window.skhAdToggleProperties(false);}});
 
 /* Renders the grouped Design Palette selector into #annPaletteGrid.
    Uses the ONE canonical token system (window.SKH_AD_PALETTES / SKH_AD_PALETTE_GROUPS).
@@ -984,8 +1404,11 @@ window.skhRenderAdPaletteSelector=function(){
 
 window.skhAdApplyPreset=function(name){
   // CANONICAL SOURCE: js/app/creative/ad-palettes.js (window.skhPaletteTokens).
-  // Fallback table keeps the pre-upgrade behavior if the tokens file was not loaded.
+  // [AD DESIGNER] Every palette chip is a complete Design View (tokens + recipe),
+  // applied media-aware (text colour chosen by real contrast on its background).
   const tok=(window.skhPaletteTokens&&window.skhPaletteTokens(name))||null;
+  if(tok&&getDesignView(name)){window.skhAdApplyView(name);return;}
+  // Fallback table keeps the pre-upgrade behavior if the tokens file was not loaded.
   const legacy={emerald:['#0E7A5F','#18A982','#FFFFFF','#FFFFFF',42],ocean:['#075E73','#2697B8','#FFFFFF','#FFFFFF',48],royal:['#343A8F','#7559C7','#FFFFFF','#FFFFFF',50],sunset:['#A83E27','#E49A36','#FFFFFF','#FFFDFC',55],mono:['#1F2937','#6B7280','#FFFFFF','#FFFFFF',36],gold:['#1E2229','#D4AF37','#FFFFFF','#111827',85],rose:['#881337','#E11D48','#FFFFFF','#FFF1F2',50],neon:['#064E3B','#10B981','#A7F3D0','#064E3B',60]}[name];
   if(!tok&&!legacy)return;
   const p=tok?[tok.primary,tok.secondary,tok.headline,tok.surface,Math.round((tok.frameOpacity||.42)*100)]:legacy;
