@@ -5,7 +5,10 @@
          ========================================= -->
     <div id="buyerView">
         <!-- Kitufe cha Kategoria & Subcategories (chini ya Ads Card) -->
-        <div class="cat-trigger-btn" id="topFilterToggles" onclick="openCategoryModal()" style="display:none;">
+        <!-- [FIX 2026-09-24] Inline display:none ILIFANICHA KATEGORIA MILELE —
+             scroll-handler na CSS (.cat-trigger-btn display:flex) zilishatakiwa
+             ionekane. Sasa inaonekana moja kwa moja chini ya ad card. -->
+        <div class="cat-trigger-btn" id="topFilterToggles" onclick="openCategoryModal()">
             <span id="activeCategoryText" data-i18n="cat_all">Kategoria: Bidhaa Zote Sokoni</span>
             <span style="background: var(--gold); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">+</span>
         </div>

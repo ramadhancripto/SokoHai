@@ -43,15 +43,13 @@
     }
 
     function bar() {
-        var el = document.getElementById('skhHomeFilterBar');
-        if (el) return el;
-        var anchor = document.getElementById('topFilterToggles')
-            || document.getElementById('locationFilterBar');
-        if (!anchor || !anchor.parentNode) return null;
-        el = document.createElement('div');
-        el.id = 'skhHomeFilterBar';
-        anchor.parentNode.insertBefore(el, anchor);
-        return el;
+        // [REMOVED 2026-09-24] Vitufe vya Vyote/Bidhaa/Huduma/Usafiri vya
+        // #skhHomeFilterBar vimeONDOLEWA kwa maombi ya mmiliki — vinaJIRUDIA
+        // na bottom navigation (Home/Bidhaa/Huduma/Usafiri) ambayo tayari
+        // inafanya kazi hiyo hiyo. Hivyo hatuunda tena bar hii; hooks za
+        // renderFeedUI/updateApp zinaendelea kufanya kazi kama pass-through
+        // (skhHomeFilter hubaki 'all') ili mtiririko wa feed usivunjike.
+        return null;
     }
 
     window.skhRenderHomeFilters = function () {
