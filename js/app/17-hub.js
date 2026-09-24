@@ -1867,21 +1867,16 @@ window.executeSokoPayWalletPayment = async function(linkDocId, price) {
     }
 
     try {
-        const buyerDocRef = skh.doc(skh.db, "users", skh.currentUserData.docId);
-        const linkDocRef = skh.doc(skh.db, "sokopay_links", linkDocId);
-
-        // A. Kata kiasi cha mkataba kwenye salio la Wallet ya mnunuzi
-        // [PHASE 5.2b] kituo kimoja — skhWalletAdjust (legacy 1:1 geti likiwa off; server+ledger ikiwa on)
-        await window.skhWalletAdjust(buyerDocRef, -price, { type: 'purchase', ledgerKey: 'splink_buy_' + linkDocId, note: 'Ununuzi wa mkataba wa SokoPay kutoka wallet' });
-
-        // B. Sasisha mkataba kwenye sokopay_links uwe 'held' (Escrow Active)
-        await skh.updateDoc(linkDocRef, {
-            status: "held",
-            buyerId: skh.currentUser.uid,
-            buyerName: skh.currentUser.displayName || "Mwanachama",
-            paidAt: new Date().toISOString(),
-            paymentType: "Wallet Payout"
-        });
+        // A+B. [PHASE 1 SECURITY 2026-09] Makato ya wallet + link 'held' + ushahidi wa
+        // escrow hufanyika na SERVER kwa transaction MOJA (sokopayLinkWalletPay).
+        // Awali: walletAdjust(-price) kisha updateDoc(link 'held') kutoka kivinjari
+        // (si atomic; na 'held' ya kivinjari ilitumika kutoa pesa bila malipo).
+        const payCall = (typeof skh.wrapCallable === "function") ? skh.wrapCallable("sokopayLinkWalletPay") : null;
+        if (!payCall) throw new Error("Huduma ya SokoPay Wallet haipatikani kwa sasa.");
+        const payRes = await payCall({ linkId: linkDocId, expectedPrice: price, buyerName: skh.currentUser.displayName || "Mwanachama" });
+        if (!payRes || !payRes.data || payRes.data.ok !== true) {
+            throw new Error((payRes && payRes.data && payRes.data.message) || "Malipo ya wallet hayakukamilika.");
+        }
 
         // C. Sajili muamala kwenye orders collection kwa mnyororo mkuu wa kufuatilia (Tracking)
         await skh.addDoc(skh.collection(skh.db, "orders"), {

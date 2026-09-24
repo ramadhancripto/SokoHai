@@ -45,7 +45,11 @@
             amountTSh: amountTSh,
             type: opts.type || 'adjustment',
             ledgerKey: opts.ledgerKey || (String(Date.now()) + '_' + Math.random().toString(36).slice(2, 8)),
-            note: opts.note || ''
+            note: opts.note || '',
+            // [PHASE 1 SECURITY 2026-09] rejea za ushahidi (server huthibitisha PesaPal)
+            orderTrackingId: opts.orderTrackingId || null,
+            purpose: opts.purpose || null,
+            memberUid: opts.memberUid || null
         });
         return res && res.data;
     };

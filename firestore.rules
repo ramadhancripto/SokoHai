@@ -29,8 +29,10 @@ service cloud.firestore {
     // hata kwa client iliyobadilishwa (bypass). Block ni ya mweleke mmoja:
     // A__B (A amemzuia B) ≠ B__A (B amemzuia A).
     function isBlockedPair(a, b) {
-      return exists(/databases/$(database)/documents/chatBlocks/$(a)__$(b))
-          || exists(/databases/$(database)/documents/chatBlocks/$(b)__$(a));
+      // [PHASE 1 2026-09] SYNTAX FIX tu: `$(a)__$(b)` haikubaliki na compiler ya
+      // rules (faili lote lilikataliwa). Maana ni ileile: doc id "<a>__<b>".
+      return exists(/databases/$(database)/documents/chatBlocks/$(a + '__' + b))
+          || exists(/databases/$(database)/documents/chatBlocks/$(b + '__' + a));
     }
 
     // ============================================================
@@ -201,7 +203,41 @@ service cloud.firestore {
     // ============================================================
     // BIASHARA (login inahitajika) — HaiPay, oda, notifications, n.k.
     // ============================================================
-    match /sokopay_links/{id}     { allow read, write: if signedIn(); allow delete: if false; }
+    // [PHASE 1 SECURITY 2026-09] sokopay_links: hali ya malipo ni ya SERVER.
+    //  • status 'held'/'completed', paidAt, paymentVerified, verifiedAmount,
+    //    sellerEarned, autoReleased* → huandikwa na Cloud Functions PEKEE
+    //    (settlePesaPalPayment / sokopayLinkWalletPay / haipayReleaseLink /
+    //    sokopayAutoRelease). Kivinjari hakiwezi tena "kujilipa" kwa kuandika
+    //    status:'held' + paidAt ya zamani.
+    //  • Muuzaji (userId) anaunda link 'pending' na kuhariri maelezo akiwa pending.
+    //  • Mnunuzi anadai link iliyo 'pending' (buyerId/transactionId) kabla ya
+    //    kulipa — haitoi pesa; server hulinganisha na PesaPal.
+    //  • Mhusika (mnunuzi/muuzaji) anafungua mgogoro kwenye link iliyo 'held'.
+    //  • Admin: suluhu ya migogoro.
+    match /sokopay_links/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.get('status', 'pending') == 'pending'
+        && !request.resource.data.keys().hasAny(['buyerId','buyerName','paidAt','transactionId',
+             'paymentVerified','verifiedAmount','sellerEarned','completedAt','autoReleased','autoReleasedAt']);
+      allow update: if signedIn() && (
+        isAdmin()
+        || (resource.data.userId == request.auth.uid
+            && resource.data.get('status', 'pending') == 'pending'
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId','status','buyerId','buyerName',
+                 'paidAt','transactionId','paymentVerified','verifiedAmount','sellerEarned','completedAt','autoReleased','autoReleasedAt']))
+        || (resource.data.get('status', 'pending') == 'pending'
+            && resource.data.userId != request.auth.uid
+            && request.resource.data.buyerId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['buyerId','buyerName','transactionId','paymentType']))
+        || (resource.data.status == 'held'
+            && (resource.data.buyerId == request.auth.uid || resource.data.userId == request.auth.uid)
+            && request.resource.data.status == 'disputed'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','disputeReason','disputedAt']))
+      );
+      allow delete: if false;
+    }
 
     // ============================================================
     // HAIPAY: vitu vilivyohifadhiwa (token/linki/QR) vya mtumiaji.
@@ -351,27 +387,31 @@ service cloud.firestore {
                    'REJECTED','EXPIRED','CANCELLED'];
     }
     // (from) -> { to: actor }  — actor ∈ buyer|seller|turn|any|system
+    // [PHASE 1 2026-09] SYNTAX FIX tu: funguo za map zimewekwa kwenye nukuu
+    // (compiler ya rules haikubali funguo zisizo na nukuu). Mantiki ileile.
     function negoNext(from) {
       return {
-        'DRAFT':            { OFFER_SENT: 'buyer', CANCELLED: 'any' },
-        'OFFER_SENT':       { AGREEMENT: 'turn', COUNTER_OFFER: 'turn', REJECTED: 'turn', SCOPE_CHANGE_REQUESTED: 'turn', ROUTE_CHANGE_REQUESTED: 'turn', CANCELLED: 'any', EXPIRED: 'system' },
-        'COUNTER_OFFER':    { AGREEMENT: 'turn', COUNTER_OFFER: 'turn', REJECTED: 'turn', SCOPE_CHANGE_REQUESTED: 'turn', ROUTE_CHANGE_REQUESTED: 'turn', CANCELLED: 'any', EXPIRED: 'system' },
-        'AGREEMENT':        { CHANGE_REQUESTED: 'buyer', SCOPE_CHANGE_REQUESTED: 'buyer', ROUTE_CHANGE_REQUESTED: 'buyer', RE_NEGOTIATION: 'buyer', ORDER_CREATED: 'buyer', CANCELLED: 'any' },
-        'CHANGE_REQUESTED': { FINAL_AGREEMENT: 'seller', AGREEMENT: 'seller', RE_NEGOTIATION: 'seller', CANCELLED: 'any' },
-        'SCOPE_CHANGE_REQUESTED': { FINAL_AGREEMENT: 'turn', AGREEMENT: 'turn', COUNTER_OFFER: 'turn', CANCELLED: 'any' },
-        'ROUTE_CHANGE_REQUESTED': { FINAL_AGREEMENT: 'turn', AGREEMENT: 'turn', COUNTER_OFFER: 'turn', CANCELLED: 'any' },
-        'RE_NEGOTIATION':   { FINAL_AGREEMENT: 'turn', RE_NEGOTIATION: 'turn', AGREEMENT: 'turn', CANCELLED: 'any', EXPIRED: 'system' },
-        'FINAL_AGREEMENT':  { ORDER_CREATED: 'buyer', CHANGE_REQUESTED: 'buyer', SCOPE_CHANGE_REQUESTED: 'buyer', ROUTE_CHANGE_REQUESTED: 'buyer', CANCELLED: 'any' },
-        'ORDER_CREATED':    { CHANGE_REQUESTED: 'buyer', CANCELLED: 'any' }
+        'DRAFT':            { 'OFFER_SENT': 'buyer', 'CANCELLED': 'any' },
+        'OFFER_SENT':       { 'AGREEMENT': 'turn', 'COUNTER_OFFER': 'turn', 'REJECTED': 'turn', 'SCOPE_CHANGE_REQUESTED': 'turn', 'ROUTE_CHANGE_REQUESTED': 'turn', 'CANCELLED': 'any', 'EXPIRED': 'system' },
+        'COUNTER_OFFER':    { 'AGREEMENT': 'turn', 'COUNTER_OFFER': 'turn', 'REJECTED': 'turn', 'SCOPE_CHANGE_REQUESTED': 'turn', 'ROUTE_CHANGE_REQUESTED': 'turn', 'CANCELLED': 'any', 'EXPIRED': 'system' },
+        'AGREEMENT':        { 'CHANGE_REQUESTED': 'buyer', 'SCOPE_CHANGE_REQUESTED': 'buyer', 'ROUTE_CHANGE_REQUESTED': 'buyer', 'RE_NEGOTIATION': 'buyer', 'ORDER_CREATED': 'buyer', 'CANCELLED': 'any' },
+        'CHANGE_REQUESTED': { 'FINAL_AGREEMENT': 'seller', 'AGREEMENT': 'seller', 'RE_NEGOTIATION': 'seller', 'CANCELLED': 'any' },
+        'SCOPE_CHANGE_REQUESTED': { 'FINAL_AGREEMENT': 'turn', 'AGREEMENT': 'turn', 'COUNTER_OFFER': 'turn', 'CANCELLED': 'any' },
+        'ROUTE_CHANGE_REQUESTED': { 'FINAL_AGREEMENT': 'turn', 'AGREEMENT': 'turn', 'COUNTER_OFFER': 'turn', 'CANCELLED': 'any' },
+        'RE_NEGOTIATION':   { 'FINAL_AGREEMENT': 'turn', 'RE_NEGOTIATION': 'turn', 'AGREEMENT': 'turn', 'CANCELLED': 'any', 'EXPIRED': 'system' },
+        'FINAL_AGREEMENT':  { 'ORDER_CREATED': 'buyer', 'CHANGE_REQUESTED': 'buyer', 'SCOPE_CHANGE_REQUESTED': 'buyer', 'ROUTE_CHANGE_REQUESTED': 'buyer', 'CANCELLED': 'any' },
+        'ORDER_CREATED':    { 'CHANGE_REQUESTED': 'buyer', 'CANCELLED': 'any' }
       }.get(from, {});
     }
     function negoActorOk(needed, uid, r) {
       let role = uid == r.buyerId ? 'buyer' : (uid == r.sellerId ? 'seller' : 'none');
       // Actor model (spec §4/§6): waitingForUserId ndio chanzo cha ukweli;
       // fallback kwa `turn` (role) kwa majadiliano ya zamani.
-      let turnRole = r.turn;
-      if (r.waitingForUserId == r.sellerId) turnRole = 'seller';
-      else if (r.waitingForUserId == r.buyerId) turnRole = 'buyer';
+      // [PHASE 1 2026-09] SYNTAX FIX tu: rules hazina `if` ndani ya function
+      // (faili lote lilikataliwa na compiler). Mantiki ileile kwa ternary.
+      let waiting = r.get('waitingForUserId', null);
+      let turnRole = waiting != null && waiting == r.sellerId ? 'seller'
+        : (waiting != null && waiting == r.buyerId ? 'buyer' : r.get('turn', null));
       return needed == 'any'
         || (needed == 'buyer' && role == 'buyer')
         || (needed == 'seller' && role == 'seller')
@@ -485,9 +525,33 @@ service cloud.firestore {
     // tu iwapo inawekwa `null` (mf. breakdown/recovery) — si kwa dereva mpya.
     match /ride_requests/{id} {
       allow read: if signedIn();
-      allow create: if signedIn();
+      // [PHASE 1 SECURITY 2026-09] Kuunda: mteja mwenyewe (customerId), hali
+      // ya mwanzo tu, na BILA uga za custody/malipo za server (acceptedAt,
+      // custodyStage, token hashes, finalPayout...). Awali safari ya uongo
+      // ingeweza kuundwa ikiwa tayari 'in_transit' na kulipwa na deliveryComplete.
+      allow create: if signedIn()
+        && request.resource.data.customerId == request.auth.uid
+        && !(request.resource.data.get('status', 'searching') in ['accepted', 'pickup_pending', 'seller_confirmed_handover',
+             'picked_up', 'in_transit', 'awaiting_handover', 'delivered', 'completed'])
+        && !request.resource.data.keys().hasAny([
+             'currentCustodian','currentCustodianName',
+             'pickupTokenHash','pickupTokenRef','pickupTokenCreatedAt','pickupTokenExpiresAt',
+             'handoverTokenHash','handoverTokenRef','handoverTokenCreatedAt','handoverTokenExpiresAt',
+             'transferCode','transferCodeHash','transferCodeRef','transferTokenCreatedAt','transferTokenExpiresAt',
+             'custodyLegs','custodyStage','nextTransporterId','nextTransporterName',
+             'handoverFromConfirmed','handoverFromConfirmedAt','activeHandoverId',
+             'finalPayout','payoutStatus','verifiedPickupCount','verifiedArrivalCount',
+             'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
+             'assignedAgentId','routingMatchedAgentIds','routingMatchedAt'])
+        && request.resource.data.get('pickupToken', null) == null
+        && request.resource.data.get('handoverToken', null) == null
+        && request.resource.data.get('pickupTokenStatus', 'unissued') == 'unissued'
+        && request.resource.data.get('handoverTokenStatus', 'unissued') == 'unissued'
+        && request.resource.data.get('transferTokenStatus', 'unissued') == 'unissued';
       allow update: if signedIn()
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+             // [PHASE 1 SECURITY 2026-09] wahusika/kiungo cha oda na hali ya malipo haviwezi kubadilishwa
+             'customerId','orderId','payoutStatus',
              'currentCustodian','currentCustodianName',
              'pickupToken','pickupTokenHash','pickupTokenRef','pickupTokenStatus','pickupTokenCreatedAt','pickupTokenExpiresAt',
              'handoverToken','handoverTokenHash','handoverTokenRef','handoverTokenStatus','handoverTokenCreatedAt','handoverTokenExpiresAt',

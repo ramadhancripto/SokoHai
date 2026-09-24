@@ -10,20 +10,35 @@
        kwa kipima-muda cha ndani
      • Pia inaserve frontend (kama Firebase Hosting) kwenye http://localhost:5055
 
-   Data ni HALISI: inaandika Firestore/Auth ya project sokonet-3b847 kupitia
-   service account (Spark plan inaruhusu — haihitaji billing).
+   Data ni HALISI (isipokuwa ukitumia Firebase Emulator): inaandika
+   Firestore/Auth ya project sokonet-3b847 (Spark plan — haihitaji billing).
+
+   UTAMBULISHO (credentials) — kwa mpangilio huu (hakuna key inayochapishwa):
+     A) Firebase Emulator (SALAMA ZAIDI kwa majaribio — haigusi production):
+          FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
+          GCLOUD_PROJECT=demo-sokohai  → credentials HAZIHITAJIKI.
+     B) Faili la service account (kama lipo; njia ya zamani bado inafanya kazi):
+          SKH_SERVICE_ACCOUNT → GOOGLE_APPLICATION_CREDENTIALS →
+          ~/.sokohai/service-account.json → functions/service-account.json
+     C) Google Application Default Credentials (hakuna key ya kuunda —
+        inafaa pale org policy inazuia service-account keys):
+          gcloud auth application-default login
+          gcloud auth application-default set-quota-project sokonet-3b847
+        (faili: %APPDATA%\gcloud\application_default_credentials.json au
+         ~/.config/gcloud/application_default_credentials.json)
 
    Matumizi:
-     1. Firebase Console → Project settings → Service accounts →
-        "Generate new private key" → hifadhi kama ~/.sokohai/service-account.json
-        (nje ya project; au functions/service-account.json — imezuiwa git/Netlify)
-     2. cd functions && npm install
-     3. npm run local            (au: node local-server.js)
-     4. Fungua http://localhost:5055
+     1. cd functions && npm install
+     2. npm run local            (au: node local-server.js)
+     3. Fungua http://localhost:5055
 
    Mazingira (hiari):
-     PORT=5055  SKH_SERVICE_ACCOUNT=/njia/key.json  SKH_ALLOWED_ORIGINS=https://a.com,https://b.com
-     SKH_RUN_SCHEDULES=0 (zima scheduled jobs)  SKH_STATIC=0 (usiserve frontend)
+     PORT=5055  SKH_ALLOWED_ORIGINS=https://a.com,https://b.com  SKH_STATIC=0 (usiserve frontend)
+     SKH_HOST=127.0.0.1 (default — kompyuta hii TU). SKH_HOST=0.0.0.0 = LAN/Wi-Fi (hatari, kwa makusudi tu)
+     SKH_RUN_SCHEDULES=1 (washa scheduled jobs; default IMEZIMWA — zinaweza kubadilisha data/pesa halisi)
+     SKH_ALLOW_PROD_SCHEDULES=1 (inahitajika PIA ili schedules ziendeshwe dhidi ya production)
+     SKH_SERVICE_ACCOUNT_ID=<sa-email> (hiari, kwa createCustomToken ukitumia ADC)
+     ADMIN_EMAILS=a@b.com (email za admin — lazima ziwe verified — kwa functions za admin)
    ========================================================================== */
 'use strict';
 const fs = require('fs');
@@ -35,28 +50,55 @@ const PORT = Number(process.env.PORT || 5055);
 const PROJECT_ID = process.env.GCLOUD_PROJECT || 'sokonet-3b847';
 const FN_PREFIX = '/__fn';
 
-/* ---------- 1. Credentials (service account) ---------- */
+/* ---------- 1. Credentials ---------- */
+// [PHASE 1 SECURITY 2026-09] Emulator → faili la service account → Google ADC.
+// Tunasoma `type` na project TU kutoka kwenye faili — maudhui hayachapishwi.
 const os = require('os');
+const EMULATOR = !!process.env.FIRESTORE_EMULATOR_HOST;
 const SAFE_KEY_PATH = path.join(os.homedir(), '.sokohai', 'service-account.json'); // NJE ya project (salama zaidi)
-const keyPath = [process.env.SKH_SERVICE_ACCOUNT, process.env.GOOGLE_APPLICATION_CREDENTIALS, SAFE_KEY_PATH,
-  path.join(__dirname, 'service-account.json')].filter(Boolean).find(p => fs.existsSync(p));
-if (!keyPath) {
-  console.error('\n✗ Service account haijapatikana.\n' +
-    '  Firebase Console → ⚙ Project settings → Service accounts → "Generate new private key"\n' +
-    '  Hifadhi faili kama:  ' + SAFE_KEY_PATH + '   (inapendekezwa — nje ya project)\n' +
-    '  au:                  ' + path.join(__dirname, 'service-account.json') + '\n' +
-    '  (Spark plan inaruhusu hili; HAIHITAJI billing. Usiweke faili hili kwenye git/Netlify.)\n');
-  process.exit(1);
+const ADC_PATH = process.env.CLOUDSDK_CONFIG
+  ? path.join(process.env.CLOUDSDK_CONFIG, 'application_default_credentials.json')
+  : (process.platform === 'win32'
+    ? path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'gcloud', 'application_default_credentials.json')
+    : path.join(os.homedir(), '.config', 'gcloud', 'application_default_credentials.json'));
+const credCandidates = [
+  ['SKH_SERVICE_ACCOUNT', process.env.SKH_SERVICE_ACCOUNT],
+  ['GOOGLE_APPLICATION_CREDENTIALS', process.env.GOOGLE_APPLICATION_CREDENTIALS],
+  ['~/.sokohai/service-account.json', SAFE_KEY_PATH],
+  ['functions/service-account.json', path.join(__dirname, 'service-account.json')],
+  ['Google ADC (gcloud)', ADC_PATH]
+].filter(c => c[1]);
+const found = EMULATOR ? null : credCandidates.find(c => fs.existsSync(c[1]));
+const keyPath = found ? found[1] : null;
+let credType = EMULATOR ? 'emulator' : '';
+if (!EMULATOR) {
+  if (!keyPath) {
+    console.error('\n✗ Hakuna credentials zilizopatikana.\n' +
+      '  Chaguo salama (hakuna private key inayohitajika):\n' +
+      '    1) Firebase Emulator:  FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=demo-sokohai\n' +
+      '    2) Google ADC:         gcloud auth application-default login\n' +
+      '                           gcloud auth application-default set-quota-project ' + PROJECT_ID + '\n' +
+      '  (Njia ya zamani bado inakubalika: SKH_SERVICE_ACCOUNT=/njia/key.json au ' + SAFE_KEY_PATH + ')\n' +
+      '  Usiweke credentials kwenye git/Netlify.\n');
+    process.exit(1);
+  }
+  let meta;
+  try { meta = JSON.parse(fs.readFileSync(keyPath, 'utf8')); } catch (e) { console.error('✗ Faili la credentials si JSON sahihi (' + found[0] + ').'); process.exit(1); }
+  credType = String(meta.type || 'unknown');
+  const credProject = meta.project_id || meta.quota_project_id || '';
+  if (credProject && credProject !== PROJECT_ID) console.warn('⚠ Credentials ni za project "' + credProject + '", si "' + PROJECT_ID + '".');
+  if (keyPath.startsWith(ROOT + path.sep)) console.warn('⚠ Credentials ziko NDANI ya project. Usizipakie Netlify/git; bora ziweke ' + SAFE_KEY_PATH);
+  meta = null;
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+  process.env.GCLOUD_PROJECT = (credType === 'service_account' && credProject) ? credProject : PROJECT_ID;
+} else {
+  process.env.GCLOUD_PROJECT = PROJECT_ID;
 }
-let key;
-try { key = JSON.parse(fs.readFileSync(keyPath, 'utf8')); } catch (e) { console.error('✗ Service account JSON si sahihi:', e.message); process.exit(1); }
-if (key.project_id && key.project_id !== PROJECT_ID) console.warn('⚠ Service account ni ya project "' + key.project_id + '", si "' + PROJECT_ID + '".');
-if (keyPath.startsWith(ROOT + path.sep)) console.warn('⚠ Service account iko NDANI ya project. Usiipakie Netlify/git; bora iweke ' + SAFE_KEY_PATH);
-process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
-process.env.GCLOUD_PROJECT = key.project_id || PROJECT_ID;
-process.env.FIREBASE_CONFIG = process.env.FIREBASE_CONFIG || JSON.stringify({
+process.env.GOOGLE_CLOUD_PROJECT = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+process.env.FIREBASE_CONFIG = process.env.FIREBASE_CONFIG || JSON.stringify(Object.assign({
   projectId: process.env.GCLOUD_PROJECT, storageBucket: process.env.GCLOUD_PROJECT + '.appspot.com'
-});
+}, process.env.SKH_SERVICE_ACCOUNT_ID ? { serviceAccountId: process.env.SKH_SERVICE_ACCOUNT_ID } : {}));
+const PROD_DATA = !EMULATOR; // bila emulator → Firestore/Auth HALISI
 
 /* ---------- 2. Shared rules packaging (same as firebase predeploy) ---------- */
 try { require('./build-shared.js'); } catch (e) { console.warn('⚠ build:shared:', e.message); }
@@ -241,8 +283,22 @@ function intervalFor(schedule) {
   if (/^\d+\s+\d+\s+\*\s+\*\s+\*$/.test(s)) return 86400000;
   return 3600000;
 }
+// [PHASE 1 SECURITY 2026-09] Schedules (mf. sokopayAutoRelease — hutoa PESA)
+// HAZIENDESHWI kwa default. Kuziwasha: SKH_RUN_SCHEDULES=1; dhidi ya
+// production pia SKH_ALLOW_PROD_SCHEDULES=1 (onyo kubwa linaonyeshwa).
+const SCHEDULES_REQUESTED = process.env.SKH_RUN_SCHEDULES === '1';
+const SCHEDULES_ENABLED = SCHEDULES_REQUESTED && (!PROD_DATA || process.env.SKH_ALLOW_PROD_SCHEDULES === '1');
 function startSchedules() {
-  if (process.env.SKH_RUN_SCHEDULES === '0') return;
+  if (!SCHEDULES_ENABLED) {
+    if (SCHEDULES_REQUESTED) console.warn('⚠ SKH_RUN_SCHEDULES=1 lakini data ni ya PRODUCTION — schedules HAZIJAWASHWA.\n' +
+      '  Zinaweza kutoa pesa (sokopayAutoRelease) na kubadilisha data halisi. Tumia Firebase Emulator,\n' +
+      '  au weka pia SKH_ALLOW_PROD_SCHEDULES=1 ikiwa kweli unakusudia hivyo.');
+    return;
+  }
+  if (PROD_DATA) {
+    console.warn('\n' + '!'.repeat(64) + '\n  ⚠ ONYO: SCHEDULED JOBS ZINAENDESHWA DHIDI YA FIREBASE YA PRODUCTION (' + process.env.GCLOUD_PROJECT + ').\n' +
+      '    ' + Object.keys(schedules).join(', ') + ' zinaweza KUBADILISHA DATA HALISI na KUTOA PESA.\n' + '!'.repeat(64) + '\n');
+  }
   for (const [name, { fn, schedule }] of Object.entries(schedules)) {
     const every = intervalFor(schedule);
     const tick = async () => {
@@ -254,17 +310,25 @@ function startSchedules() {
   }
 }
 
-server.listen(PORT, '0.0.0.0', () => {
+// [PHASE 1 SECURITY 2026-09] Default: localhost PEKEE. LAN/Wi-Fi ni kwa makusudi (SKH_HOST=0.0.0.0).
+const HOST = String(process.env.SKH_HOST || '127.0.0.1').trim();
+const LAN_EXPOSED = !/^(127\.\d+\.\d+\.\d+|localhost|::1)$/i.test(HOST);
+server.listen(PORT, HOST, () => {
   console.log('\n SokoHai LOCAL FUNCTIONS SERVER');
   console.log(' ─────────────────────────────────────────────');
-  console.log(' Project     : ' + process.env.GCLOUD_PROJECT + '  (Firestore/Auth HALISI)');
-  console.log(' Credentials : ' + path.relative(ROOT, keyPath));
+  console.log(' Project     : ' + process.env.GCLOUD_PROJECT + (PROD_DATA ? '  (Firestore/Auth HALISI)' : '  (FIREBASE EMULATOR — si production)'));
+  console.log(' Credentials : ' + (EMULATOR ? 'emulator (hazihitajiki)' : found[0] + ' [' + credType + ']'));
+  console.log(' Listening   : ' + HOST + ':' + PORT + (LAN_EXPOSED ? '  ⚠ INAONEKANA KWENYE MTANDAO (LAN/Wi-Fi)' : '  (kompyuta hii tu)'));
   console.log(' Frontend    : ' + (STATIC_ENABLED ? 'http://localhost:' + PORT : '(imezimwa)'));
   console.log(' Functions   : http://localhost:' + PORT + FN_PREFIX + '/<jina>');
-  console.log(' Callables   : ' + Object.keys(callables).length + '   HTTPS: ' + Object.keys(httpsFns).length + '   Schedules: ' + Object.keys(schedules).length + (process.env.SKH_RUN_SCHEDULES === '0' ? ' (zimezimwa)' : ''));
+  console.log(' Callables   : ' + Object.keys(callables).length + '   HTTPS: ' + Object.keys(httpsFns).length + '   Schedules: ' + Object.keys(schedules).length + (SCHEDULES_ENABLED ? ' (ZIMEWASHWA)' : ' (zimezimwa — SKH_RUN_SCHEDULES=1 kuwasha)'));
   console.log(' Netlify site kwenye kompyuta HII: fungua console na uendeshe');
   console.log("   skhUseLocalFunctions('http://localhost:" + PORT + FN_PREFIX + "')");
   console.log(' ─────────────────────────────────────────────\n');
+  if (LAN_EXPOSED) {
+    console.warn('⚠ SKH_HOST=' + HOST + ': vifaa vingine kwenye mtandao wako vinaweza kufikia functions hizi' + (PROD_DATA ? ' (zenye nguvu za Admin SDK dhidi ya PRODUCTION)' : '') + '.\n' +
+      '  Tumia tu kwenye mtandao unaouamini; default salama ni SKH_HOST=127.0.0.1.');
+  }
   startSchedules();
 });
 server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? '✗ Port ' + PORT + ' inatumika. Jaribu: PORT=5056 npm run local' : e); process.exit(1); });

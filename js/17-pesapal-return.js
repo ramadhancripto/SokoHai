@@ -186,7 +186,8 @@
         });
         if (opts.skipCommission !== true) {
             if (typeof window.skhWalletAdjust === 'function' && ctx.agentDocId) {
-                await window.skhWalletAdjust(fb.doc(fb.db, 'users', ctx.agentDocId), 1260, { type: 'commission', ledgerKey: 'offreg_' + newUid, note: 'Kamisheni ya wakala - usajili wa mwanachama' });
+                // [PHASE 1 SECURITY 2026-09] server huthibitisha ada kwa PesaPal (orderTrackingId) + mwanachama
+                await window.skhWalletAdjust(fb.doc(fb.db, 'users', ctx.agentDocId), 1260, { type: 'commission', ledgerKey: 'offreg_' + newUid, note: 'Kamisheni ya wakala - usajili wa mwanachama', purpose: 'offline_registration', memberUid: newUid, orderTrackingId: opts.orderTrackingId || null });
             }
             await fb.addDoc(fb.collection(fb.db, 'adminRevenue'), { type: 'offline_registration', amount: 840, agentCode: ctx.agentCode, date: new Date().toISOString() });
         }
@@ -265,6 +266,20 @@
     };
 
     // ---------- uthibitisho wa muamala (server pekee) ----------
+    // [PHASE 1 SECURITY 2026-09] Baada ya oda/link kuandaliwa, iombe SERVER
+    // ifunge escrow kwa muamala huu (pesapalTransactionStatus → PesaPal
+    // GetTransactionStatus → escrow_holds). Idempotent; IPN hufanya vivyo hivyo.
+    async function settleWithServer(orderTrackingId) {
+        try {
+            if (!orderTrackingId || typeof window.skhServerPaymentsStatus !== 'function') return null;
+            var res = await window.skhServerPaymentsStatus({ orderTrackingId: orderTrackingId });
+            return (res && res.data) || null;
+        } catch (e) {
+            console.warn('[payments] server settle imeshindikana (IPN itajaribu tena):', e && e.message);
+            return null;
+        }
+    }
+
     async function verifyTx(orderTrackingId) {
         if (typeof window.skhServerPaymentsStatus !== 'function') return { state: 'unknown' };
         try {
@@ -424,8 +439,11 @@
         // SokoPay link
         if (pending.product && pending.product.isSokoPay) {
             try {
+                // [PHASE 1 SECURITY 2026-09] Kivinjari kinadai link tu (buyerId + rejea ya
+                // PesaPal). 'held' + paidAt huwekwa na SERVER baada ya kuthibitisha
+                // PesaPal (settleWithServer hapa chini / IPN).
                 await fb.updateDoc(fb.doc(fb.db, 'sokopay_links', String(pending.product.id)), {
-                    status: 'held', buyerId: buyerUid, buyerName: buyerName, paidAt: now, transactionId: tid
+                    buyerId: buyerUid, buyerName: buyerName, transactionId: tid
                 });
                 await fb.addDoc(fb.collection(fb.db, 'notifications'), {
                     userId: pending.product.userId, title: ' Malipo ya SokoPay Yamepokelewa!',
@@ -469,7 +487,7 @@
 
             case 'deposit': // wallet top-up (SokoPay)
                 if (typeof window.skhWalletAdjust === 'function' && ctx.docId) {
-                    await window.skhWalletAdjust(fb.doc(fb.db, 'users', ctx.docId), pending.amount, { type: 'deposit', ledgerKey: 'deposit_' + tid, note: 'Deposit ya wallet (PesaPal)' });
+                    await window.skhWalletAdjust(fb.doc(fb.db, 'users', ctx.docId), pending.amount, { type: 'deposit', ledgerKey: 'deposit_' + tid, note: 'Deposit ya wallet (PesaPal)', orderTrackingId: tid });
                 }
                 await fb.addDoc(fb.collection(fb.db, 'shop_ledger'), { shopOwnerId: ctx.uid, type: 'income_offline', title: 'Weka Pesa: Wallet Top-Up (PesaPal)', amount: pending.amount, profit: pending.amount, date: now });
                 await fb.addDoc(fb.collection(fb.db, 'notifications'), { userId: ctx.uid, title: ' SokoPay: Salio Limeongezeka!', body: 'Umefanikiwa kuongeza ' + money(pending.amount) + ' kwenye wallet yako kupitia PesaPal.', createdAt: now, read: false });
@@ -533,7 +551,7 @@
                 break;
 
             case 'offline_registration': // usajili wa mwanachama wa offline
-                var offRes = await window.skhCreateOfflineMember(ctx, { skipCommission: false });
+                var offRes = await window.skhCreateOfflineMember(ctx, { skipCommission: false, orderTrackingId: tid });
                 summary = 'Usajili umekamilika! ID ya Mteja: ' + esc(offRes.offlineAccountId) + (offRes.businessId ? ' · Biashara: ' + esc(offRes.businessId) : '') + '<br>TSh 1,260 imewekwa kwenye Wallet yako kama kamisheni ya uwakala.';
                 break;
 
@@ -581,6 +599,7 @@
                     try { summary = await completePayment(paymentPending); } catch (e) { summary = 'Malipo yamethibitishwa, lakini kukamilisha kumeshindikana: ' + esc((e && e.message) || ''); }
                     window.skhPesaPalPendingClear();
                 }
+                await settleWithServer(st.transactionId || orderTrackingId);
                 setModal(mi('check'), 'Malipo Yamekamilika!', summary + extra + '<br><small style="color:#94a3b8;">Ref: ' + esc(orderTrackingId) + '</small>',
                     btn(' Endelea', 'window.skhPesaPalReturnClose(); if(window.openBuyerOrdersModal) window.openBuyerOrdersModal();', '#e2e8f0', '#334155') +
                     btn('Funga', 'window.skhPesaPalReturnClose()'));

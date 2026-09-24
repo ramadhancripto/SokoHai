@@ -138,8 +138,268 @@ const ADMIN_EMAILS = () => String(process.env.ADMIN_EMAILS || '')
 function isAdmin(context) {
     if (!context || !context.auth) return false;
     const em = (context.auth.token && context.auth.token.email || '').toLowerCase();
-    if (ADMIN_EMAILS().includes(em)) return true;
+    // [PHASE 1 SECURITY 2026-09] Email ya admin lazima iwe IMETHIBITISHWA
+    // (email_verified) — vinginevyo mtu angesajili akaunti kwa email hiyo.
+    if (em && context.auth.token.email_verified === true && ADMIN_EMAILS().includes(em)) return true;
     return !!(context.auth.token && context.auth.token.admin === true);
+}
+
+/* ============================================================
+ * [PHASE 1 SECURITY 2026-09] USHAHIDI WA MALIPO WA SERVER (escrow_holds)
+ * ------------------------------------------------------------
+ *  Kanuni: pesa haitolewi (release/payout) mpaka SERVER iwe na ushahidi
+ *  huru wa malipo. Uga za oda/link kama status:'held', paymentStatus:'paid'
+ *  au paymentVerified:true zinaweza kuandikwa na kivinjari — HAZIAMINIWI
+ *  tena kama uthibitisho wa malipo.
+ *
+ *  Vyanzo halali vya ushahidi (vilivyopo tayari kwenye mfumo):
+ *    1) PesaPal GetTransactionStatus (IPN / pesapalTransactionStatus) —
+ *       server inathibitisha COMPLETED + kiasi, kisha inaandika
+ *       `escrow_holds/order_<id>` au `escrow_holds/link_<id>`.
+ *    2) Wallet ya SokoPay — makato ya server (wallet_ledger) ya mnunuzi:
+ *       `sokopayLinkWalletPay` (atomic) au rekodi ya zamani
+ *       `wallet_ledger/splink_buy_<linkId>` (legacy, iliyoandikwa na server).
+ *  `escrow_holds` haina rule ya client → catch-all deny (server pekee).
+ *  Kila hold inaweza kutolewa MARA MOJA (released:true) — inazuia malipo
+ *  mara mbili kati ya escrowRelease / deliveryComplete / auto-release.
+ * ========================================================== */
+const ESCROW_HOLDS = 'escrow_holds';
+const MONEY_EPS = 0.5; // TSh — uvumilivu wa rounding tu
+
+function safeKey(s) {
+    return String(s || '').replace(/[^A-Za-z0-9_\-]/g, '_').slice(0, 300);
+}
+function moneyOf(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
+}
+function sameMoney(a, b) {
+    return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= MONEY_EPS;
+}
+
+// users/{uid} au users where uid == uid (mfumo una aina zote mbili za doc id).
+async function userDocFor(uid) {
+    if (!uid) return null;
+    const direct = await db.doc('users/' + uid).get();
+    if (direct.exists) return { id: direct.id, data: direct.data() || {} };
+    const q = await db.collection('users').where('uid', '==', uid).limit(1).get();
+    if (q.empty) return null;
+    return { id: q.docs[0].id, data: q.docs[0].data() || {} };
+}
+
+// PesaPal: thibitisha muamala kwa GetTransactionStatus (njia ILIYOPO).
+async function ppVerifyTransaction(trackingId) {
+    const id = String(trackingId || '').trim();
+    if (!id) return { paid: false, reason: 'missing_tracking_id' };
+    let d = {};
+    try {
+        const c = ppConfig();
+        const token = await pesapalToken();
+        const r = await ppFetchJson(c.baseUrl + '/api/Transactions/GetTransactionStatus?orderTrackingId=' + encodeURIComponent(id), { method: 'GET', token });
+        d = r.json || {};
+    } catch (e) {
+        return { paid: false, reason: 'pesapal_unavailable', message: (e && e.message) || '' };
+    }
+    return ppTxFromStatus(d, id);
+}
+
+function ppTxFromStatus(d, id) {
+    d = d || {};
+    const amount = moneyOf(d.amount);
+    const currency = String(d.currency || '').toUpperCase();
+    const paid = isPesaPalPaid(d) && amount > 0 && (!currency || currency === 'TZS');
+    return {
+        paid: paid,
+        reason: paid ? '' : 'not_paid',
+        amount: amount,
+        currency: currency,
+        trackingId: String(d.order_tracking_id || id || ''),
+        merchantReference: String(d.merchant_reference || ''),
+        raw: d
+    };
+}
+
+/* Aliyeanzisha malipo (pesapalCheckout huandika escrow_holds/ppinit_<merchantRef>).
+ * null = malipo ya zamani bila rekodi (tabia ya awali inabaki). */
+async function ppInitiatorUid(tx) {
+    const ref = String((tx && tx.merchantReference) || '').trim();
+    if (!ref) return null;
+    try {
+        const s = await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(ref)).get();
+        return s.exists ? (String((s.data() || {}).uid || '') || null) : null;
+    } catch (e) { return null; }
+}
+
+/* Funga oda/link zilizolipwa kwa muamala wa PesaPal ULIOTHIBITISHWA.
+ * Rejea (paymentRef ya oda / transactionId ya link) zinalinganishwa na
+ * tracking id NA merchant_reference iliyorudishwa na PesaPal yenyewe.
+ * Jumla ya oda/link zinazofungwa HAIWEZI kuzidi kiasi kilicholipwa
+ * (escrow_holds/pptx_<tracking> huhesabu kilichotumika). */
+async function settlePesaPalPayment(tx, source) {
+    const out = { ok: false, settled: [], skipped: [] };
+    if (!tx || !tx.paid) return out;
+    const refs = Array.from(new Set([tx.trackingId, tx.merchantReference].filter(Boolean)));
+    const usageRef = db.collection(ESCROW_HOLDS).doc('pptx_' + safeKey(tx.trackingId));
+    const now = new Date().toISOString();
+    const events = [];
+    const initiatorUid = await ppInitiatorUid(tx);
+    await db.runTransaction(async (t) => {
+        out.settled = []; out.skipped = []; events.length = 0;
+        const usageSnap = await t.get(usageRef);
+        const usage = usageSnap.exists ? (usageSnap.data() || {}) : {};
+        let used = Number(usage.usedAmount || 0);
+        const targets = Array.isArray(usage.targets) ? usage.targets.slice() : [];
+        const cands = [];
+        for (const ref of refs) {
+            const oq = await t.get(db.collection('orders').where('paymentRef', '==', ref).limit(20));
+            oq.forEach(d => cands.push({ kind: 'order', id: d.id, ref: d.ref, data: d.data() || {} }));
+            const lq = await t.get(db.collection('sokopay_links').where('transactionId', '==', ref).limit(20));
+            lq.forEach(d => cands.push({ kind: 'link', id: d.id, ref: d.ref, data: d.data() || {} }));
+        }
+        const seen = new Set();
+        const list = cands.filter(c => {
+            const k = c.kind + '_' + c.id;
+            if (seen.has(k)) return false;
+            seen.add(k); return true;
+        }).sort((a, b) => (a.kind + a.id).localeCompare(b.kind + b.id));
+        const holds = [];
+        for (const c of list) holds.push(await t.get(db.collection(ESCROW_HOLDS).doc(c.kind + '_' + c.id)));
+
+        list.forEach((c, i) => {
+            const key = c.kind + '_' + c.id;
+            if (holds[i].exists) { out.skipped.push({ target: key, reason: 'already_verified' }); return; }
+            const amount = moneyOf(c.kind === 'order' ? c.data.amount : c.data.price);
+            const payer = String(c.data.buyerId || '');
+            const payee = String(c.kind === 'order' ? (c.data.sellerId || '') : (c.data.userId || ''));
+            if (!(amount > 0) || !payer || !payee || payer === payee) {
+                out.skipped.push({ target: key, reason: 'invalid_amount_or_parties' }); return;
+            }
+            if (initiatorUid && payer !== initiatorUid) {
+                out.skipped.push({ target: key, reason: 'payer_not_initiator' }); return;
+            }
+            if (used + amount > tx.amount + MONEY_EPS) {
+                out.skipped.push({ target: key, reason: 'amount_exceeds_payment' }); return;
+            }
+            used += amount;
+            targets.push(key);
+            t.set(db.collection(ESCROW_HOLDS).doc(key), {
+                kind: 'escrow_hold', target: c.kind, targetId: c.id,
+                amount: amount, payerUid: payer, payeeUid: payee,
+                method: 'pesapal', source: String(source || 'pesapal'),
+                pesapalTrackingId: tx.trackingId, merchantReference: tx.merchantReference || null,
+                paidAmount: tx.amount, verifiedAt: now, released: false
+            });
+            if (c.kind === 'order') {
+                const od = c.data;
+                const patch = {
+                    paymentStatus: 'paid', paymentVerified: true, paymentVerifiedBy: 'pesapal',
+                    verifiedAmount: amount, paymentProtectedAt: now, paidAt: od.paidAt || now,
+                    ipnAt: now, updatedAt: now
+                };
+                // Usirudishe nyuma oda iliyokwisha songa mbele (shipped/in_transit...).
+                if (['shipped', 'awaiting_pickup', 'in_transit', 'delivered', 'completed'].indexOf(String(od.status || '')) === -1) {
+                    patch.status = 'held';
+                    patch.heldAt = now;
+                    if (od.commerceType === 'service') patch.serviceStatus = 'held';
+                    else if (od.commerceType === 'transport') patch.transportStatus = 'held';
+                    else patch.deliveryStatus = 'held';
+                }
+                t.update(c.ref, patch);
+                events.push({ id: c.id, data: od });
+            } else {
+                const L = c.data;
+                const patch = { paymentVerified: true, verifiedAmount: amount, updatedAt: now };
+                if (!L.status || L.status === 'pending' || L.status === 'held') { patch.status = 'held'; patch.paidAt = now; }
+                t.update(c.ref, patch);
+            }
+            out.settled.push(key);
+        });
+        t.set(usageRef, {
+            kind: 'pesapal_tx', trackingId: tx.trackingId, merchantReference: tx.merchantReference || null,
+            paidAmount: tx.amount, usedAmount: used, targets: targets, updatedAt: now
+        }, { merge: true });
+    });
+    for (const ev of events) {
+        await postOrderPaymentProtectedEvent(db, ev.id, ev.data, tx.trackingId, now);
+    }
+    out.ok = true;
+    return out;
+}
+
+/* Ushahidi wa escrow wa oda au link. Hurudisha { ok, amount, holdId, hold,
+ * payerUid, payeeUid, legacy } au { ok:false, reason }. */
+async function getEscrowEvidence(kind, id, doc, opts) {
+    opts = opts || {};
+    doc = doc || {};
+    const holdsCol = db.collection(ESCROW_HOLDS);
+    async function readHold(holdId) {
+        const s = await holdsCol.doc(holdId).get();
+        return s.exists ? Object.assign({ holdId: holdId }, s.data() || {}) : null;
+    }
+    async function legacyWalletLink(linkId, buyerUid, price) {
+        // Rekodi ya zamani ya server: walletAdjust(-price, ledgerKey splink_buy_<linkId>).
+        if (!linkId) return null;
+        const s = await db.doc('wallet_ledger/splink_buy_' + linkId).get();
+        if (!s.exists) return null;
+        const L = s.data() || {};
+        if (!buyerUid || String(L.callerUid || '') !== buyerUid) return null;
+        if (!sameMoney(-moneyOf(L.amountTSh), moneyOf(price))) return null;
+        return { holdId: 'link_' + linkId, amount: moneyOf(price), payerUid: buyerUid, method: 'wallet_legacy', legacy: true, released: false, verifiedAt: L.createdAt || null };
+    }
+
+    let hold = await readHold(kind + '_' + id);
+    if (!hold && kind === 'order' && doc.itemId) {
+        // Oda ya kufuatilia ya SokoPay link (itemId = linkId) — chanzo ni link.
+        hold = await readHold('link_' + doc.itemId);
+        if (!hold) {
+            const ls = await db.doc('sokopay_links/' + doc.itemId).get();
+            if (ls.exists) hold = await legacyWalletLink(doc.itemId, String(doc.buyerId || ''), (ls.data() || {}).price);
+        }
+    }
+    if (!hold && kind === 'link') hold = await legacyWalletLink(id, String(doc.buyerId || ''), doc.price);
+
+    if (!hold && opts.recheckPesaPal) {
+        // Malipo yanaweza kuwa yamekamilika kabla IPN kufika — thibitisha
+        // tena kwa PesaPal (njia iliyopo), kisha funga kwa settlePesaPalPayment.
+        const refs = Array.from(new Set([doc.transactionId, doc.paymentRef].map(x => String(x || '').trim()).filter(Boolean)));
+        for (const r of refs) {
+            const tx = await ppVerifyTransaction(r);
+            if (tx.paid) {
+                await settlePesaPalPayment(tx, 'recheck');
+                hold = await readHold(kind + '_' + id);
+                if (hold) break;
+            }
+        }
+    }
+    if (!hold) return { ok: false, reason: 'payment_not_verified' };
+    const payer = String(hold.payerUid || '');
+    if (payer && String(doc.buyerId || '') !== payer) return { ok: false, reason: 'buyer_mismatch', hold };
+    if (hold.payeeUid) {
+        const payeeNow = String(kind === 'link' ? (doc.userId || '') : (doc.sellerId || ''));
+        // Oda ya kufuatilia ya link: muuzaji wa oda lazima alingane na mmiliki wa link.
+        if (payeeNow !== String(hold.payeeUid)) return { ok: false, reason: 'seller_mismatch', hold };
+    }
+    return { ok: true, amount: moneyOf(hold.amount), holdId: hold.holdId, hold, payerUid: payer, legacy: !!hold.legacy };
+}
+
+function evidenceError(ev) {
+    const why = {
+        payment_not_verified: 'Malipo hayajathibitishwa na server (PesaPal/Wallet). Escrow haiwezi kutolewa.',
+        buyer_mismatch: 'Mnunuzi wa oda hailingani na aliyelipa.',
+        seller_mismatch: 'Muuzaji wa oda hailingani na aliyelipwa kwenye escrow.',
+        amount_mismatch: 'Kiasi cha oda hakilingani na kiasi kilicholipwa na kuthibitishwa.',
+        self_trade: 'Mnunuzi na muuzaji hawawezi kuwa mtu mmoja.'
+    };
+    return new HttpsError('failed-precondition', why[ev && ev.reason] || 'Escrow haikubaliki.');
+}
+
+// Funguo za ledger za suluhu ya mgogoro ya admin (21-sokopay.js) → id ya oda/link.
+function adminDisputeTargetId(key) {
+    key = String(key || '');
+    let m = /^dispwin_(.+)_(buyer|seller)$/.exec(key);
+    let id = m ? m[1] : null;
+    if (!id) { m = /^splitref_(buyer|seller)_(.+)$/.exec(key); id = m ? m[2] : null; }
+    return (id && id.indexOf('/') === -1) ? id : null;
 }
 
 /* ============================================================
@@ -152,10 +412,10 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
     const docId = String(data.docId || '');
     const amountTSh = Number(data.amountTSh);
     const type = String(data.type || 'adjustment');
-    const ledgerKey = String(data.ledgerKey || ('auto_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)));
-    const note = String(data.note || '');
+    const rawLedgerKey = String(data.ledgerKey || ('auto_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)));
+    const note = String(data.note || '').slice(0, 300);
 
-    if (!docId) throw new HttpsError('invalid-argument', 'docId inahitajika.');
+    if (!docId || docId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'docId inahitajika.');
     if (!Number.isFinite(amountTSh) || amountTSh === 0) {
         throw new HttpsError('invalid-argument', 'amountTSh lazima iwe namba isiyo sifuri.');
     }
@@ -165,41 +425,140 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
     }
 
     const userRef = db.doc('users/' + docId);
-    const ledgerRef = db.doc('wallet_ledger/' + ledgerKey);
-
     const userSnap = await userRef.get();
     if (!userSnap.exists) throw new HttpsError('not-found', 'Akaunti ya mtumiaji haipatikani (users/' + docId + ').');
+    const ud = userSnap.data() || {};
 
-    // ULINZI: mtu hawezi kujiongezea salio mwenyewe — isipokuwa aina halali za malipo
-    const ALLOW_SELF_CREDIT = [
-        'commission', 'agent_commission', 'payout', 'refund',
-        'escrow_release', 'carrier_share', 'deposit', 'wallet_topup',
-        'sales_income', 'income_offline', 'settlement'
-    ];
-    if (amountTSh > 0 && docId === auth.uid && ALLOW_SELF_CREDIT.indexOf(type) === -1) {
-        throw new HttpsError('permission-denied', 'Huwezi kujiongezea salio mwenyewe (type: ' + type + ').');
+    /* [PHASE 1 SECURITY 2026-09] Uidhinishaji wa SERVER:
+     *  • Admin (custom claim `admin` au ADMIN_EMAILS iliyothibitishwa) — anaweza
+     *    kurekebisha wallet yoyote (mf. suluhu ya migogoro / split refund).
+     *  • Mtumiaji wa kawaida — wallet YAKE TU:
+     *      - kutoa (amount < 0): ruhusa (anatumia salio lake mwenyewe);
+     *      - kuongeza (amount > 0): TU kwa ushahidi wa server:
+     *          'deposit'/'wallet_topup' → muamala wa PesaPal uliothibitishwa;
+     *          'commission' (purpose offline_registration) → ada ya usajili
+     *          iliyolipwa PesaPal + mwanachama aliyesajiliwa na wakala huyu.
+     *    Aina nyingine zote za kuongeza (payout, escrow_release, refund...)
+     *    zinafanyika NDANI ya server (escrowRelease/deliveryComplete/...).
+     *  • ledgerKey ya mtumiaji wa kawaida inawekwa namespace yake (u_<uid>_…)
+     *    ili asiweze "kukalia" funguo za server (order_*_released, splink_buy_*). */
+    const admin_ = isAdmin(req);
+    const ownsWallet = (docId === auth.uid) || (String(ud.uid || '') === auth.uid);
+    let ledgerKey = rawLedgerKey;
+    let pesapalUse = null;      // { tx, amount } — matumizi ya muamala wa PesaPal
+    let ledgerExtra = {};
+
+    if (!admin_) {
+        if (!ownsWallet) {
+            throw new HttpsError('permission-denied', 'Huwezi kubadilisha wallet ya mtumiaji mwingine.');
+        }
+        if (amountTSh > 0) {
+            if (type === 'deposit' || type === 'wallet_topup') {
+                const tid = String(data.orderTrackingId || '').trim()
+                    || (rawLedgerKey.indexOf('deposit_') === 0 ? rawLedgerKey.slice('deposit_'.length) : '');
+                if (!tid) throw new HttpsError('failed-precondition', 'Deposit inahitaji muamala wa PesaPal (orderTrackingId).');
+                const tx = await ppVerifyTransaction(tid);
+                if (!tx.paid) throw new HttpsError('failed-precondition', 'Malipo ya PesaPal hayajathibitishwa (' + (tx.reason || 'not_paid') + ').');
+                if (!sameMoney(moneyOf(amountTSh), tx.amount)) {
+                    throw new HttpsError('failed-precondition', 'Kiasi cha deposit hakilingani na kilicholipwa PesaPal.');
+                }
+                const initUid = await ppInitiatorUid(tx);
+                if (initUid && initUid !== auth.uid) throw new HttpsError('permission-denied', 'Muamala huu wa PesaPal si wako.');
+                pesapalUse = { tx, amount: moneyOf(amountTSh), target: 'deposit_' + docId };
+                ledgerKey = 'pesapal_deposit_' + safeKey(tx.trackingId); // muamala mmoja = deposit moja
+                ledgerExtra = { pesapalTrackingId: tx.trackingId, verifiedBy: 'pesapal' };
+            } else if (type === 'commission' && String(data.purpose || '') === 'offline_registration') {
+                const COMMISSION = Number(process.env.OFFLINE_REG_COMMISSION || 1260);
+                const FEE = Number(process.env.OFFLINE_REG_FEE || 2100);
+                const memberUid = String(data.memberUid || '').trim();
+                const tid = String(data.orderTrackingId || '').trim();
+                if (!memberUid || !tid) throw new HttpsError('failed-precondition', 'Kamisheni inahitaji memberUid na muamala wa PesaPal.');
+                if (!sameMoney(moneyOf(amountTSh), COMMISSION)) throw new HttpsError('failed-precondition', 'Kiasi cha kamisheni si sahihi.');
+                const ms = await db.doc('users/' + memberUid).get();
+                const md = ms.exists ? (ms.data() || {}) : {};
+                if (!ms.exists || String(md.registeredThroughAgentId || md.managedByAgentUid || '') !== auth.uid) {
+                    throw new HttpsError('permission-denied', 'Mwanachama huyu hakusajiliwa na wewe.');
+                }
+                const tx = await ppVerifyTransaction(tid);
+                if (!tx.paid || tx.amount + MONEY_EPS < FEE) throw new HttpsError('failed-precondition', 'Ada ya usajili haijathibitishwa na PesaPal.');
+                const initUid = await ppInitiatorUid(tx);
+                if (initUid && initUid !== auth.uid) throw new HttpsError('permission-denied', 'Muamala huu wa PesaPal si wako.');
+                pesapalUse = { tx, amount: tx.amount, target: 'offreg_' + memberUid };
+                ledgerKey = 'offreg_' + safeKey(memberUid); // mwanachama mmoja = kamisheni moja
+                ledgerExtra = { pesapalTrackingId: tx.trackingId, verifiedBy: 'pesapal', memberUid };
+            } else {
+                throw new HttpsError('permission-denied', 'Huwezi kujiongezea salio mwenyewe (type: ' + type + ').');
+            }
+        } else {
+            ledgerKey = 'u_' + safeKey(auth.uid) + '_' + safeKey(rawLedgerKey);
+        }
     }
+    const ledgerRef = db.doc('wallet_ledger/' + ledgerKey);
+    const usageRef = pesapalUse ? db.collection(ESCROW_HOLDS).doc('pptx_' + safeKey(pesapalUse.tx.trackingId)) : null;
+    // [PHASE 1 VERIFY 2026-09] Suluhu ya mgogoro ya ADMIN (21-sokopay.js:
+    // 'dispwin_<id>_<winner>' na 'splitref_<buyer|seller>_<id>') hulipa pesa ya
+    // escrow — hivyo ushahidi wa escrow wa oda/link hiyo UNATUMIKA (released).
+    // Bila hili, hali ya oda (client-writable) ingerudishwa 'held'/'shipped'
+    // na escrowRelease/auto-release zingelipa MARA YA PILI.
+    const disputeId = admin_ ? adminDisputeTargetId(rawLedgerKey) : null;
 
     let applied = false;
     await db.runTransaction(async (t) => {
+        applied = false;
         const ls = await t.get(ledgerRef);
         if (ls.exists) return; // idempotent — tayari imetekelezwa
-
         const us = await t.get(userRef);
         if (!us.exists) throw new Error('USER_MISSING');
+        let usage = null;
+        if (usageRef) {
+            const u = await t.get(usageRef);
+            usage = u.exists ? (u.data() || {}) : {};
+            const used = Number(usage.usedAmount || 0);
+            if (used + pesapalUse.amount > pesapalUse.tx.amount + MONEY_EPS) {
+                throw new HttpsError('failed-precondition', 'Muamala huu wa PesaPal tayari umetumika.');
+            }
+        }
+        const disputeHolds = [];
+        if (disputeId) {
+            const os = await t.get(db.doc('orders/' + disputeId));
+            const ls2 = await t.get(db.doc('sokopay_links/' + disputeId));
+            if (os.exists) disputeHolds.push('order_' + disputeId);
+            if (ls2.exists) disputeHolds.push('link_' + disputeId);
+            const itemId = os.exists ? String((os.data() || {}).itemId || '') : '';
+            if (itemId && itemId.indexOf('/') === -1 && itemId !== disputeId) {
+                const li = await t.get(db.doc('sokopay_links/' + itemId));
+                if (li.exists) disputeHolds.push('link_' + itemId);
+            }
+        }
         const cur = Number(us.data().walletBalance || 0);
         const next = cur + amountTSh;
-        if (next < 0) throw new Error('INSUFFICIENT_BALANCE');
+        if (next < 0) throw new HttpsError('failed-precondition', 'INSUFFICIENT_BALANCE: Salio halitoshi.');
 
-        t.set(ledgerRef, {
+        t.set(ledgerRef, Object.assign({
             userId: docId,
             callerUid: auth.uid,
             amountTSh,
             type,
             note,
+            byAdmin: admin_,
             createdAt: new Date().toISOString()
-        });
+        }, ledgerExtra));
         t.update(userRef, { walletBalance: FieldValue.increment(amountTSh) });
+        disputeHolds.forEach(h => t.set(db.collection(ESCROW_HOLDS).doc(h), {
+            released: true, releasedAt: new Date().toISOString(), releasedFor: 'admin_dispute',
+            releaseTrigger: 'admin_dispute', resolutionLedgerId: ledgerKey
+        }, { merge: true }));
+        if (usageRef) {
+            const targets = Array.isArray(usage.targets) ? usage.targets.slice() : [];
+            targets.push(pesapalUse.target);
+            t.set(usageRef, {
+                kind: 'pesapal_tx', trackingId: pesapalUse.tx.trackingId,
+                merchantReference: pesapalUse.tx.merchantReference || null,
+                paidAmount: pesapalUse.tx.amount,
+                usedAmount: Number(usage.usedAmount || 0) + pesapalUse.amount,
+                targets, updatedAt: new Date().toISOString()
+            }, { merge: true });
+        }
         applied = true;
     });
 
@@ -220,12 +579,34 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
 exports.escrowRelease = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);
     const orderId = String((req.data || {}).orderId || '');
-    if (!orderId) throw new HttpsError('invalid-argument', 'orderId inahitajika.');
+    if (!orderId || orderId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId inahitajika.');
 
+    const orderSnap = await db.doc('orders/' + orderId).get();
+    if (!orderSnap.exists) throw new HttpsError('not-found', 'Oda haipatikani.');
+    const o = orderSnap.data() || {};
+
+    // [PHASE 1 SECURITY 2026-09] Mnunuzi wa oda (kutoka hali ya server) au admin PEKEE.
+    const admin_ = isAdmin(req);
+    if (!admin_ && String(o.buyerId || '') !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Ni mnunuzi wa oda hii (au admin) pekee anayeweza kutoa escrow.');
+    }
+    return releaseOrderEscrow(orderId, { callerUid: auth.uid, trigger: admin_ ? 'admin' : 'buyer' });
+});
+
+/* Utoaji wa escrow ya ODA — smart-split atomic (muuzaji + carrier + wakala +
+ * platform). Inatumiwa na escrowRelease, deliveryComplete na auto-release.
+ * Uidhinishaji wa MPIGAJI unafanywa na function inayoita; hapa tunathibitisha
+ * hali ya server: wahusika, hali ya oda, ushahidi wa malipo na kiasi.
+ *   ctx.trigger:  'buyer' | 'admin' | 'delivery_complete' | 'auto_release'
+ *   ctx.carrier:  { rideId, driverUid, amount } — (deliveryComplete) au null
+ *   ctx.noCarrier: true → usitafute carrier (auto-release: tabia ya awali)
+ *   ctx.requireStatus: hali pekee inayokubalika (auto-release: 'shipped') */
+async function releaseOrderEscrow(orderId, ctx) {
+    ctx = ctx || {};
     const orderRef = db.doc('orders/' + orderId);
     const orderSnap = await orderRef.get();
     if (!orderSnap.exists) throw new HttpsError('not-found', 'Oda haipatikani.');
-    const o = orderSnap.data();
+    const o = orderSnap.data() || {};
 
     if (o.status === 'completed') {
         return {
@@ -237,55 +618,77 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
             }
         };
     }
-    if (['held', 'shipped', 'awaiting_pickup', 'in_transit'].indexOf(o.status) === -1) {
+    const okStatuses = ctx.requireStatus ? [ctx.requireStatus] : ['held', 'shipped', 'awaiting_pickup', 'in_transit'];
+    if (okStatuses.indexOf(o.status) === -1) {
         throw new HttpsError('failed-precondition', 'Oda si kwenye escrow (status: ' + o.status + ').');
     }
 
-    const totalAmount = Number(o.amount || 0);
     const sellerId = String(o.sellerId || '');
-    const buyerId = String(o.buyerId || auth.uid);
+    const buyerId = String(o.buyerId || '');
     const itemId = String(o.itemId || '');
+    if (!sellerId || !buyerId) throw new HttpsError('failed-precondition', 'Oda haina mnunuzi/muuzaji halali.');
+    if (sellerId === buyerId) throw evidenceError({ reason: 'self_trade' });
 
-    // carrier share (ride_requests ya mnunuzi iliyoko in_transit)
-    let carrierShare = 0, driverId = null, rideDocId = null;
-    try {
-        // [FIX 2026-09] Field MOJA (customerId) + uchujaji status kwenye memory
-        // — haiitaji composite index (query ya customerId+status ilirusha
-        // "internal" na carrier share ilipotea bila index).
-        const rideSnap = await db.collection('ride_requests')
-            .where('customerId', '==', buyerId)
-            .limit(20).get();
-        let rideMatch = null;
-        rideSnap.forEach(function (dd) { if (!rideMatch && dd.data().status === 'in_transit') rideMatch = dd; });
-        if (rideMatch) {
-            const rd = rideMatch.data();
-            rideDocId = rideMatch.id;
-            driverId = rd.driverId || null;
-            carrierShare = Number(rd.price || 0) || Math.round(totalAmount * 0.15);
-        }
-    } catch (e) { /* carrier ni hiari */ }
+    // Ushahidi wa malipo wa SERVER (si status ya kivinjari).
+    const ev = await getEscrowEvidence('order', orderId, o, { recheckPesaPal: true });
+    if (!ev.ok) throw evidenceError(ev);
+    const orderAmount = moneyOf(o.amount);
+    if (!(orderAmount > 0) || !sameMoney(orderAmount, ev.amount)) throw evidenceError({ reason: 'amount_mismatch' });
+    const totalAmount = ev.amount;
 
     // [ADMIN PAYMENTS SWITCH] Global OFF = FREE → kamisheni 0.
     const platformFee = (await paymentGate('commission')) ? Math.round(totalAmount * 0.05) : 0;
+    const maxCarrier = Math.max(0, totalAmount - platformFee);
+
+    // Carrier: safari ILIYOUNGANISHWA na oda hii, iliyokubaliwa na SERVER
+    // (acceptedAt) na iliyobeba mzigo (custodyStage transit/completed).
+    let carrierShare = 0, driverId = null, rideDocId = null;
+    if (ctx.carrier && ctx.carrier.driverUid) {
+        driverId = String(ctx.carrier.driverUid);
+        rideDocId = ctx.carrier.rideId || null;
+        const want = Number(ctx.carrier.amount) > 0 ? Number(ctx.carrier.amount) : Math.round(totalAmount * 0.15);
+        carrierShare = Math.min(Math.max(0, want), maxCarrier);
+    } else if (!ctx.noCarrier) {
+        try {
+            const cands = [];
+            const linkedId = String(o.rideRequestId || o.deliveryId || '');
+            if (linkedId && linkedId.indexOf('/') === -1) {
+                const s = await db.doc('ride_requests/' + linkedId).get();
+                if (s.exists) cands.push(s);
+            }
+            const q = await db.collection('ride_requests').where('orderId', '==', orderId).limit(5).get();
+            q.forEach(d => cands.push(d));
+            const match = cands.find(d => {
+                const rd = d.data() || {};
+                return rd.driverId && rd.acceptedAt && String(rd.customerId || '') === buyerId
+                    && ['transit', 'handover', 'completed'].indexOf(String(rd.custodyStage || '')) !== -1
+                    && rd.driverId !== sellerId;
+            });
+            if (match) {
+                const rd = match.data();
+                rideDocId = match.id;
+                driverId = rd.driverId;
+                const base = Number(rd.fare || 0) || Number(rd.price || 0) || Math.round(totalAmount * 0.15);
+                carrierShare = Math.min(Math.max(0, base), maxCarrier);
+            }
+        } catch (e) { /* carrier ni hiari */ }
+    }
+    if (driverId && driverId === buyerId) { driverId = null; carrierShare = 0; } // mnunuzi hajilipi mwenyewe
+    if (!driverId) carrierShare = 0;
     const sellerEarned = Math.max(0, totalAmount - platformFee - carrierShare);
 
     // tafuta docs za wahusika
     let sellerDocId = null, sellerAgentCode = null;
-    if (sellerId) {
-        const sq = await db.collection('users').where('uid', '==', sellerId).limit(1).get();
-        if (!sq.empty) { sellerDocId = sq.docs[0].id; sellerAgentCode = sq.docs[0].data().agentCode || null; }
-    }
+    const sdoc = await userDocFor(sellerId);
+    if (sdoc) { sellerDocId = sdoc.id; sellerAgentCode = sdoc.data.agentCode || null; }
     let driverDocId = null;
-    if (driverId) {
-        const dq = await db.collection('users').where('uid', '==', driverId).limit(1).get();
-        if (!dq.empty) driverDocId = dq.docs[0].id;
-    }
+    if (driverId) { const ddoc = await userDocFor(driverId); if (ddoc) driverDocId = ddoc.id; }
     let agentDocId = null, agentUid = null, agentShare = 0, adminShare = platformFee;
     if (sellerAgentCode) {
         const aq = await db.collection('users').where('myAgentCode', '==', sellerAgentCode).limit(1).get();
         if (!aq.empty) {
             const au = aq.docs[0].data();
-            if (String(au.uid || '') !== sellerId) {
+            if (String(au.uid || '') !== sellerId && String(au.uid || '') !== buyerId) {
                 agentDocId = aq.docs[0].id;
                 agentUid = au.uid || null;
                 agentShare = Math.round(platformFee * 0.60);
@@ -298,45 +701,64 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
     const sellerKey = 'order_' + orderId + '_seller';
     const carrierKey = 'order_' + orderId + '_carrier';
     const agentKey = 'order_' + orderId + '_agent';
+    const holdRef = db.collection(ESCROW_HOLDS).doc(ev.holdId);
     const now = new Date().toISOString();
+    const callerUid = String(ctx.callerUid || 'system');
 
-    let applied = false;
+    let applied = false, alreadyReleased = false;
     await db.runTransaction(async (t) => {
+        applied = false; alreadyReleased = false;
         const rel = await t.get(db.doc('wallet_ledger/' + releaseKey));
-        if (rel.exists) return; // tayari ilitolewa (idempotent)
+        if (rel.exists) { alreadyReleased = true; return; } // tayari ilitolewa (idempotent)
+        const cur = await t.get(orderRef);
+        const co = cur.data() || {};
+        if (co.status === 'completed') { alreadyReleased = true; return; }
+        if (okStatuses.indexOf(co.status) === -1 || !sameMoney(moneyOf(co.amount), totalAmount)
+            || String(co.buyerId || '') !== buyerId || String(co.sellerId || '') !== sellerId) {
+            throw new HttpsError('aborted', 'Oda imebadilika wakati wa kutoa escrow. Jaribu tena.');
+        }
+        const hs = await t.get(holdRef);
+        if (hs.exists && hs.data().released === true) { alreadyReleased = true; return; } // chanzo kimeshatumika
+        let linkRef = null, linkSnap = null;
+        if (itemId && itemId.indexOf('/') === -1) {
+            linkRef = db.doc('sokopay_links/' + itemId);
+            linkSnap = await t.get(linkRef);
+        }
 
+        t.set(holdRef, Object.assign(hs.exists ? {} : {
+            kind: 'escrow_hold', target: ev.holdId.split('_')[0], targetId: ev.holdId.slice(ev.holdId.indexOf('_') + 1),
+            amount: totalAmount, payerUid: buyerId, method: (ev.hold && ev.hold.method) || 'wallet_legacy', verifiedAt: now
+        }, { released: true, releasedAt: now, releasedFor: 'order_' + orderId, releaseTrigger: ctx.trigger || 'buyer' }), { merge: true });
         t.set(db.doc('wallet_ledger/' + releaseKey), {
-            orderId, type: 'escrow_release_marker', callerUid: auth.uid, createdAt: now
+            orderId, type: 'escrow_release_marker', callerUid, trigger: ctx.trigger || 'buyer',
+            holdId: ev.holdId, amount: totalAmount, createdAt: now
         });
-        t.update(orderRef, {
+        const orderPatch = {
             status: 'completed', commission: platformFee,
             carrierEarned: carrierShare, sellerEarned, completedAt: now
-        });
-        if (rideDocId) t.update(db.doc('ride_requests/' + rideDocId), { status: 'completed' });
-
-        if (itemId) {
-            const linkRef = db.doc('sokopay_links/' + itemId);
-            const ls = await t.get(linkRef);
-            if (ls.exists) t.update(linkRef, { status: 'completed' });
-        }
+        };
+        if (ctx.trigger === 'auto_release') { orderPatch.autoReleased = true; orderPatch.autoReleasedAt = now; }
+        t.update(orderRef, orderPatch);
+        if (rideDocId && !ctx.carrier) t.update(db.doc('ride_requests/' + rideDocId), { status: 'completed' });
+        if (linkSnap && linkSnap.exists) t.update(linkRef, { status: 'completed', completedAt: now });
 
         if (sellerDocId && sellerEarned > 0) {
             t.set(db.doc('wallet_ledger/' + sellerKey), {
-                userId: sellerDocId, callerUid: auth.uid, amountTSh: sellerEarned,
+                userId: sellerDocId, callerUid, amountTSh: sellerEarned,
                 type: 'escrow_release', note: 'Escrow release — muuzaji', createdAt: now
             });
             t.update(db.doc('users/' + sellerDocId), { walletBalance: FieldValue.increment(sellerEarned) });
         }
         if (driverDocId && carrierShare > 0) {
             t.set(db.doc('wallet_ledger/' + carrierKey), {
-                userId: driverDocId, callerUid: auth.uid, amountTSh: carrierShare,
-                type: 'escrow_release', note: 'Escrow release — carrier', createdAt: now
+                userId: driverDocId, callerUid, amountTSh: carrierShare,
+                type: 'escrow_release', note: 'Escrow release — carrier', rideId: rideDocId || null, createdAt: now
             });
             t.update(db.doc('users/' + driverDocId), { walletBalance: FieldValue.increment(carrierShare) });
         }
         if (agentDocId && agentShare > 0) {
             t.set(db.doc('wallet_ledger/' + agentKey), {
-                userId: agentDocId, callerUid: auth.uid, amountTSh: agentShare,
+                userId: agentDocId, callerUid, amountTSh: agentShare,
                 type: 'escrow_release', note: 'Escrow release — kamisheni ya wakala', createdAt: now
             });
             t.update(db.doc('users/' + agentDocId), { walletBalance: FieldValue.increment(agentShare) });
@@ -347,6 +769,14 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
         });
         applied = true;
     });
+
+    if (alreadyReleased) {
+        const fresh = (await orderRef.get()).data() || {};
+        return {
+            ok: true, already: true, orderId,
+            split: { sellerEarned: Number(fresh.sellerEarned || 0), carrierShare: Number(fresh.carrierEarned || 0), platformFee: Number(fresh.commission || 0) }
+        };
+    }
 
     // taarifa (baada ya transaction — si muhimu kuwa atomic)
     try {
@@ -374,10 +804,10 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
     } catch (e) { /* notifications si muhimu ku-crash */ }
 
     return {
-        ok: true, orderId, ledgerId: releaseKey,
+        ok: true, orderId, ledgerId: releaseKey, applied,
         split: { sellerEarned, carrierShare, platformFee }
     };
-});
+}
 
 /* ============================================================
  * 4) haipayReleaseLink — kutoa escrow ya SokoPay payment link
@@ -385,55 +815,91 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
 exports.haipayReleaseLink = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);
     const linkId = String((req.data || {}).linkId || '');
-    if (!linkId) throw new HttpsError('invalid-argument', 'linkId inahitajika.');
+    if (!linkId || linkId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'linkId inahitajika.');
+    const linkSnap = await db.doc('sokopay_links/' + linkId).get();
+    if (!linkSnap.exists) throw new HttpsError('not-found', 'Link haipatikani.');
+    const L = linkSnap.data() || {};
+    // [PHASE 1 SECURITY 2026-09] Mnunuzi wa link (aliyelipa) au admin PEKEE.
+    const admin_ = isAdmin(req);
+    if (!admin_ && String(L.buyerId || '') !== auth.uid) {
+        throw new HttpsError('permission-denied', 'Ni mnunuzi aliyelipia link hii (au admin) pekee anayeweza kuitoa.');
+    }
+    return releaseLinkEscrow(linkId, { callerUid: auth.uid, trigger: admin_ ? 'admin' : 'buyer' });
+});
 
+async function releaseLinkEscrow(linkId, ctx) {
+    ctx = ctx || {};
     const linkRef = db.doc('sokopay_links/' + linkId);
     const linkSnap = await linkRef.get();
     if (!linkSnap.exists) throw new HttpsError('not-found', 'Link haipatikani.');
-    const L = linkSnap.data();
+    const L = linkSnap.data() || {};
 
     if (L.status === 'completed') return { ok: true, already: true, linkId };
     if (L.status !== 'held') {
         throw new HttpsError('failed-precondition', 'Link si kwenye escrow (status: ' + L.status + ').');
     }
-
-    const totalAmount = Number(L.price || 0);
     const sellerId = String(L.userId || '');
     const buyerId = String(L.buyerId || '');
-    const carrierShare = Number(L.carrierShare || 0);
+    if (!sellerId || !buyerId) throw new HttpsError('failed-precondition', 'Link haina mnunuzi/muuzaji halali.');
+    if (sellerId === buyerId) throw evidenceError({ reason: 'self_trade' });
+
+    const ev = await getEscrowEvidence('link', linkId, L, { recheckPesaPal: true });
+    if (!ev.ok) throw evidenceError(ev);
+    const price = moneyOf(L.price);
+    if (!(price > 0) || !sameMoney(price, ev.amount)) throw evidenceError({ reason: 'amount_mismatch' });
+    const totalAmount = ev.amount;
+
     // [ADMIN PAYMENTS SWITCH] Global OFF = FREE → kamisheni 0.
     const platformFee = (await paymentGate('commission')) ? Math.round(totalAmount * 0.05) : 0;
+    const carrierShare = Math.min(Math.max(0, Number(L.carrierShare || 0)), Math.max(0, totalAmount - platformFee));
     const sellerEarned = Math.max(0, totalAmount - platformFee - carrierShare);
 
     let sellerDocId = null;
-    if (sellerId) {
-        const sq = await db.collection('users').where('uid', '==', sellerId).limit(1).get();
-        if (!sq.empty) sellerDocId = sq.docs[0].id;
-    }
+    const sdoc = await userDocFor(sellerId);
+    if (sdoc) sellerDocId = sdoc.id;
 
-    const releaseKey = 'spman_link_' + linkId;
+    const releaseKey = ctx.trigger === 'auto_release' ? ('spauto_link_' + linkId) : ('spman_link_' + linkId);
+    const holdRef = db.collection(ESCROW_HOLDS).doc(ev.holdId);
     const now = new Date().toISOString();
+    const callerUid = String(ctx.callerUid || 'system');
 
+    let applied = false;
     await db.runTransaction(async (t) => {
+        applied = false;
+        const hs = await t.get(holdRef);
+        if (hs.exists && hs.data().released === true) return; // chanzo kimeshatumika (oda au link)
         const rel = await t.get(db.doc('wallet_ledger/' + releaseKey));
         if (rel.exists) return;
+        const cur = await t.get(linkRef);
+        const cl = cur.data() || {};
+        if (cl.status !== 'held' || !sameMoney(moneyOf(cl.price), totalAmount)
+            || String(cl.buyerId || '') !== buyerId || String(cl.userId || '') !== sellerId) return;
 
+        t.set(holdRef, Object.assign(hs.exists ? {} : {
+            kind: 'escrow_hold', target: 'link', targetId: linkId, amount: totalAmount,
+            payerUid: buyerId, payeeUid: sellerId, method: (ev.hold && ev.hold.method) || 'wallet_legacy', verifiedAt: now
+        }, { released: true, releasedAt: now, releasedFor: 'link_' + linkId, releaseTrigger: ctx.trigger || 'buyer' }), { merge: true });
         t.set(db.doc('wallet_ledger/' + releaseKey), {
-            linkId, type: 'haipay_release', callerUid: auth.uid, createdAt: now
+            linkId, type: ctx.trigger === 'auto_release' ? 'haipay_auto_release' : 'haipay_release',
+            callerUid, holdId: ev.holdId, amount: totalAmount, createdAt: now
         });
-        t.update(linkRef, { status: 'completed', sellerEarned, platformFee, completedAt: now });
+        const patch = { status: 'completed', sellerEarned, platformFee, completedAt: now };
+        if (ctx.trigger === 'auto_release') { patch.autoReleased = true; patch.autoReleasedAt = now; }
+        t.update(linkRef, patch);
 
         if (sellerDocId && sellerEarned > 0) {
             t.set(db.doc('wallet_ledger/' + releaseKey + '_seller'), {
-                userId: sellerDocId, callerUid: auth.uid, amountTSh: sellerEarned,
-                type: 'escrow_release', note: 'SokoPay link release', createdAt: now
+                userId: sellerDocId, callerUid, amountTSh: sellerEarned,
+                type: 'escrow_release', note: ctx.trigger === 'auto_release' ? 'SokoPay auto-release (saa 24) - mkataba' : 'SokoPay link release', createdAt: now
             });
             t.update(db.doc('users/' + sellerDocId), { walletBalance: FieldValue.increment(sellerEarned) });
         }
         t.set(db.collection('adminRevenue').doc(), {
-            type: 'sokopay_commission', amount: platformFee, linkId, date: now
+            type: 'sokopay_commission', amount: platformFee, linkId, contractCode: L.code || null, date: now
         });
+        applied = true;
     });
+    if (!applied) return { ok: true, already: true, linkId };
 
     try {
         if (sellerId) {
@@ -456,6 +922,72 @@ exports.haipayReleaseLink = onCall({ region: REGION }, async (req) => {
         ok: true, linkId, ledgerId: releaseKey,
         split: { sellerEarned, carrierShare, platformFee }
     };
+}
+
+/* ============================================================
+ * 4b) sokopayLinkWalletPay — [PHASE 1 SECURITY 2026-09] kulipia SokoPay
+ *     link kwa salio la wallet. ATOMIC: makato ya mnunuzi + link 'held' +
+ *     ushahidi wa escrow (escrow_holds/link_<id>) katika transaction MOJA.
+ *     Inachukua nafasi ya: walletAdjust(-price) + updateDoc(link 'held')
+ *     ya kivinjari (hatua mbili zisizo za atomic, 'held' ya client).
+ *     Inatumia wallet ILE ILE (users.walletBalance + wallet_ledger).
+ * ========================================================== */
+exports.sokopayLinkWalletPay = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const data = req.data || {};
+    const linkId = String(data.linkId || '');
+    if (!linkId || linkId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'linkId inahitajika.');
+    const buyer = await userDocFor(auth.uid);
+    if (!buyer) throw new HttpsError('not-found', 'Akaunti yako haipatikani.');
+    const linkRef = db.doc('sokopay_links/' + linkId);
+    const buyerRef = db.doc('users/' + buyer.id);
+    const holdRef = db.collection(ESCROW_HOLDS).doc('link_' + linkId);
+    const ledgerRef = db.doc('wallet_ledger/splink_buy_' + linkId);
+    const CAP = Number(process.env.WALLET_MAX_ABS || 50000000);
+    const now = new Date().toISOString();
+    let result = null;
+    await db.runTransaction(async (t) => {
+        const ls = await t.get(linkRef);
+        if (!ls.exists) throw new HttpsError('not-found', 'Link haipatikani.');
+        const L = ls.data() || {};
+        const hs = await t.get(holdRef);
+        if (hs.exists) {
+            if (String(hs.data().payerUid || '') === auth.uid) { result = { ok: true, already: true, linkId }; return; }
+            throw new HttpsError('failed-precondition', 'Link hii tayari imelipiwa.');
+        }
+        const led = await t.get(ledgerRef);
+        if (led.exists) throw new HttpsError('failed-precondition', 'Link hii tayari imelipiwa.');
+        if ((L.status || 'pending') !== 'pending') throw new HttpsError('failed-precondition', 'Link hii haiko wazi kwa malipo (status: ' + L.status + ').');
+        const sellerId = String(L.userId || '');
+        if (!sellerId) throw new HttpsError('failed-precondition', 'Link haina muuzaji.');
+        if (sellerId === auth.uid) throw evidenceError({ reason: 'self_trade' });
+        const price = moneyOf(L.price);
+        if (!(price > 0) || price > CAP) throw new HttpsError('failed-precondition', 'Bei ya link si sahihi.');
+        if (data.expectedPrice != null && !sameMoney(moneyOf(data.expectedPrice), price)) {
+            throw new HttpsError('failed-precondition', 'Bei ya link imebadilika. Hakiki tena kabla ya kulipa.');
+        }
+        const bs = await t.get(buyerRef);
+        const bal = Number((bs.data() || {}).walletBalance || 0);
+        if (bal < price) throw new HttpsError('failed-precondition', 'INSUFFICIENT_BALANCE: Salio halitoshi.');
+
+        t.set(ledgerRef, {
+            userId: buyer.id, callerUid: auth.uid, amountTSh: -price, type: 'purchase',
+            note: 'Ununuzi wa mkataba wa SokoPay kutoka wallet', linkId, createdAt: now
+        });
+        t.update(buyerRef, { walletBalance: FieldValue.increment(-price) });
+        t.set(holdRef, {
+            kind: 'escrow_hold', target: 'link', targetId: linkId, amount: price,
+            payerUid: auth.uid, payeeUid: sellerId, method: 'wallet', source: 'sokopayLinkWalletPay',
+            verifiedAt: now, released: false
+        });
+        t.update(linkRef, {
+            status: 'held', buyerId: auth.uid,
+            buyerName: String(data.buyerName || (bs.data() || {}).fullName || 'Mwanachama').slice(0, 120),
+            paidAt: now, paymentType: 'Wallet Payout', paymentVerified: true, verifiedAmount: price
+        });
+        result = { ok: true, linkId, amount: price, sellerId };
+    });
+    return result;
 });
 
 /* ============================================================
@@ -512,6 +1044,20 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
         const msg = (data.error && (data.error.message || data.error)) || 'PesaPal imekataa ombi la malipo.';
         throw new HttpsError('internal', 'PesaPal (SubmitOrderRequest): ' + String(msg));
     }
+    // [PHASE 1 SECURITY 2026-09] Rekodi ya server: nani alianzisha malipo haya
+    // (merchant reference). settlePesaPalPayment/walletAdjust hukataa kufunga
+    // oda/link/deposit ya mtu mwingine kwa muamala huu.
+    try {
+        await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(orderTrackingId)).create({
+            kind: 'pesapal_init', uid: req.auth.uid, amount: body.amount, merchantReference: orderTrackingId,
+            pesapalTrackingId: String(data.order_tracking_id || ''), createdAt: new Date().toISOString()
+        });
+    } catch (e) {
+        const ex = await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(orderTrackingId)).get().catch(() => null);
+        if (ex && ex.exists && String((ex.data() || {}).uid || '') !== req.auth.uid) {
+            throw new HttpsError('already-exists', 'Rejea hii ya malipo tayari inatumika.');
+        }
+    }
     const redirectUrlOut = data.redirect_url || data.redirectUrl || null;
     if (!redirectUrlOut) {
         throw new HttpsError('internal', 'PesaPal haikurudisha URL ya malipo.');
@@ -539,7 +1085,16 @@ exports.pesapalTransactionStatus = onCall({ region: REGION }, async (req) => {
     } catch (e) {
         throw new HttpsError('internal', 'PesaPal (GetTransactionStatus): ' + ((e && e.message) || 'Muunganisho umeshindikana.'));
     }
-    return { ok: true, raw: data, paid: isPesaPalPaid(data) };
+    // [PHASE 1 SECURITY 2026-09] Ikiwa PesaPal inathibitisha COMPLETED, SERVER
+    // inafunga oda/link zenye rejea hii (paymentRef / transactionId) —
+    // kivinjari hakiandiki tena uthibitisho wa malipo kinachoaminiwa.
+    let settled = [];
+    const tx = ppTxFromStatus(data, orderTrackingId);
+    if (tx.paid) {
+        try { settled = (await settlePesaPalPayment(tx, 'status_check')).settled; }
+        catch (e) { console.warn('[pesapalTransactionStatus] settle:', e && e.message); }
+    }
+    return { ok: true, raw: data, paid: isPesaPalPaid(data), settled };
 });
 
 /* ============================================================
@@ -634,47 +1189,14 @@ exports.pesapalIpn = onRequest({ region: REGION }, async (req, res) => {
     if (orderTrackingId || merchantReference) {
         try {
             // Kamwe usiamini IPN pekee — thibitisha hali halisi kwa GetTransactionStatus
-            let paid = false;
-            try {
-                const c = ppConfig();
-                const token = await pesapalToken();
-                const key = orderTrackingId || merchantReference;
-                const sr = await ppFetchJson(c.baseUrl + '/api/Transactions/GetTransactionStatus?orderTrackingId=' + encodeURIComponent(key), { method: 'GET', token });
-                paid = isPesaPalPaid(sr.json);
-            } catch (e) { /* endelea na IPN params */ }
-
-            const refKey = String(orderTrackingId || merchantReference);
-            const now = new Date().toISOString();
-            if (paid) {
-                const ordersQ = await db.collection('orders').where('paymentRef', '==', refKey).limit(20).get();
-                const orderSettles = [];
-                ordersQ.forEach(docSnap => {
-                    const od = docSnap.data() || {};
-                    const alreadyHeld = (od.status === 'held' || od.status === 'completed' || od.paymentVerified === true || od.paymentStatus === 'paid');
-                    if (!alreadyHeld) {
-                        const patch = {
-                            status: 'held', paymentStatus: 'paid', paymentVerified: true,
-                            paymentProtectedAt: now, paidAt: od.paidAt || now, heldAt: now, ipnAt: now, updatedAt: now
-                        };
-                        if (od.commerceType === 'service') patch.serviceStatus = 'held';
-                        else if (od.commerceType === 'transport') patch.transportStatus = 'held';
-                        else patch.deliveryStatus = 'held';
-                        orderSettles.push(
-                            db.doc('orders/' + docSnap.id).update(patch)
-                                // [COMMERCE 2026-09] Tukio la mfumo ndani ya chat ya
-                                // majadiliano: "🛡 SokoPay Imelindwa" (pande zote).
-                                .then(() => postOrderPaymentProtectedEvent(db, docSnap.id, od, refKey, now))
-                                .catch(() => {})
-                        );
-                    }
-                });
-                await Promise.all(orderSettles).catch(() => {});
-                // sokopay_links pia
-                const linksQ = await db.collection('sokopay_links').where('transactionId', '==', refKey).limit(20).get();
-                linksQ.forEach(docSnap => {
-                    db.doc('sokopay_links/' + docSnap.id).update({ status: 'held', paidAt: now }).catch(() => {});
-                });
-            }
+            // [PHASE 1 SECURITY 2026-09] Uthibitisho + kiasi vinatoka PesaPal;
+            // settlePesaPalPayment hufunga oda/link kwa rejea (tracking id AU
+            // merchant_reference ya PesaPal) bila kuzidi kiasi kilicholipwa.
+            // (Awali oda iliyowekwa 'held' na kivinjari iliachwa bila
+            // uthibitisho wa server — sasa ushahidi ni escrow_holds.)
+            const key = orderTrackingId || merchantReference;
+            const tx = await ppVerifyTransaction(key);
+            if (tx.paid) await settlePesaPalPayment(tx, 'ipn');
         } catch (e) { /* log tu */ }
     }
 
@@ -751,53 +1273,36 @@ exports.sokopayAutoRelease = onSchedule(
 async function runSokoPayAutoRelease() {
     const nowMs = Date.now();
     const timeLimitMs = 24 * 60 * 60 * 1000; // saa 24 za usalama
-    let commission = false;
-    try { commission = await paymentGate('commission'); } catch (e) { commission = false; }
+    const out = { orders: { released: 0, skipped: 0 }, links: { released: 0, skipped: 0 } };
+
+    /* [PHASE 1 SECURITY 2026-09] Auto-release hutoa pesa TU pale server ina
+     * ushahidi huru wa malipo (escrow_holds / ledger ya wallet ya server).
+     * Rekodi zilizoandikwa na kivinjari (status 'held'/'shipped', paidAt,
+     * shippedAt) pekee HAZITOSHI. Muda wa saa 24 unahesabiwa pia kuanzia
+     * wakati SERVER ilipothibitisha malipo — tarehe ya client (shippedAt /
+     * paidAt) haiwezi kurudishwa nyuma ili kuharakisha malipo. Utoaji
+     * unatumia njia ZILEZILE za escrowRelease/haipayReleaseLink (atomic +
+     * idempotent + hold moja = release moja). */
+    function heldLongEnough(clientIso, ev) {
+        const clientMs = clientIso ? Date.parse(clientIso) : 0;
+        if (!(clientMs > 0 && (nowMs - clientMs) >= timeLimitMs)) return false;
+        const verifiedMs = Date.parse((ev && ev.hold && ev.hold.verifiedAt) || '') || 0;
+        return !(verifiedMs > 0 && (nowMs - verifiedMs) < timeLimitMs);
+    }
 
     // --- A. ODA ZA SOKO KUU (status: shipped → completed baada ya 24h) ---
     try {
         const shipped = await db.collection('orders').where('status', '==', 'shipped').get();
         for (const snap of shipped.docs) {
             const od = snap.data() || {};
-            const shippedTime = od.shippedAt ? new Date(od.shippedAt).getTime() : 0;
-            if (!(shippedTime > 0 && (nowMs - shippedTime) >= timeLimitMs)) continue;
-
-            const orderId = snap.id;
-            const orderRef = db.doc('orders/' + orderId);
-            let flipped = false;
+            const clientMs = od.shippedAt ? Date.parse(od.shippedAt) : 0;
+            if (!(clientMs > 0 && (nowMs - clientMs) >= timeLimitMs)) continue;
+            const ev = await getEscrowEvidence('order', snap.id, od, { recheckPesaPal: false });
+            if (!ev.ok || !heldLongEnough(od.shippedAt, ev)) { out.orders.skipped++; continue; }
             try {
-                await db.runTransaction(async (t) => {
-                    const os = await t.get(orderRef);
-                    if (!os.exists) return;
-                    if (String(os.data().status || '') !== 'shipped') return; // tayari imechakatwa
-                    t.update(orderRef, { status: 'completed', autoReleased: true, autoReleasedAt: new Date().toISOString() });
-                    flipped = true;
-                });
-            } catch (e) { continue; }
-            if (!flipped) continue;
-
-            const amount = parseFloat(od.amount || 0);
-            const sellerId = od.sellerId;
-            const platformFee = commission ? amount * 0.05 : 0;
-            const sellerEarned = amount - platformFee;
-
-            if (sellerId && sellerEarned > 0) {
-                const sq = await db.collection('users').where('uid', '==', sellerId).limit(1).get();
-                if (!sq.empty) {
-                    const sellerDocId = sq.docs[0].id;
-                    await creditWallet(sellerDocId, sellerEarned, 'escrow_release', 'spauto_order_' + orderId, 'SokoPay auto-release (saa 24) - oda');
-                    await db.collection('notifications').add({
-                        userId: sellerId,
-                        title: ' SokoPay: Auto-Release Imekamilika!',
-                        body: `Mteja hajaanzisha mgogoro wowote ndani ya saa 24 tangu usafirishaji kuanza kwa mkataba wa "${String(od.itemTitle || '')}". TSh ${sellerEarned.toLocaleString()} imesukumwa kwenye wallet yako automatically [1].`,
-                        createdAt: new Date().toISOString(), read: false, type: 'wallet'
-                    }).catch(() => {});
-                }
-            }
-            await db.collection('adminRevenue').add({
-                type: 'sokopay_commission', amount: platformFee,
-                contractCode: od.paymentRef || 'AUTO_RELEASE', date: new Date().toISOString()
-            }).catch(() => {});
+                const r = await releaseOrderEscrow(snap.id, { trigger: 'auto_release', callerUid: 'system', noCarrier: true, requireStatus: 'shipped' });
+                if (r && r.ok && !r.already) out.orders.released++; else out.orders.skipped++;
+            } catch (e) { out.orders.skipped++; console.warn('sokopayAutoRelease (order ' + snap.id + '):', e && e.message); }
         }
     } catch (e) { console.error('sokopayAutoRelease (orders):', e && e.message); }
 
@@ -806,50 +1311,18 @@ async function runSokoPayAutoRelease() {
         const held = await db.collection('sokopay_links').where('status', '==', 'held').get();
         for (const snap of held.docs) {
             const ld = snap.data() || {};
-            const paidTime = ld.paidAt ? new Date(ld.paidAt).getTime() : 0;
-            if (!(paidTime > 0 && (nowMs - paidTime) >= timeLimitMs)) continue;
-
-            const linkId = snap.id;
-            const linkRef = db.doc('sokopay_links/' + linkId);
-            let flipped = false;
+            const clientMs = ld.paidAt ? Date.parse(ld.paidAt) : 0;
+            if (!(clientMs > 0 && (nowMs - clientMs) >= timeLimitMs)) continue;
+            const ev = await getEscrowEvidence('link', snap.id, ld, { recheckPesaPal: false });
+            if (!ev.ok || !heldLongEnough(ld.paidAt, ev)) { out.links.skipped++; continue; }
             try {
-                await db.runTransaction(async (t) => {
-                    const ls = await t.get(linkRef);
-                    if (!ls.exists) return;
-                    if (String(ls.data().status || '') !== 'held') return;
-                    t.update(linkRef, { status: 'completed', autoReleased: true, autoReleasedAt: new Date().toISOString() });
-                    flipped = true;
-                });
-            } catch (e) { continue; }
-            if (!flipped) continue;
-
-            const amount = parseFloat(ld.price || 0);
-            const sellerId = ld.userId;
-            const carrierShare = parseFloat(ld.carrierShare || 0);
-            const platformFee = commission ? amount * 0.05 : 0;
-            const sellerEarned = amount - (platformFee + carrierShare);
-
-            if (sellerId && sellerEarned > 0) {
-                const sq = await db.collection('users').where('uid', '==', sellerId).limit(1).get();
-                if (!sq.empty) {
-                    const sellerDocId = sq.docs[0].id;
-                    await creditWallet(sellerDocId, sellerEarned, 'escrow_release', 'spauto_link_' + linkId, 'SokoPay auto-release (saa 24) - mkataba');
-                    await db.collection('notifications').add({
-                        userId: sellerId,
-                        title: ' SokoPay: Auto-Release ya Mkataba!',
-                        body: `Mkataba wako wa SokoPay "${String(ld.title || '')}" umekamilishwa kiotomatiki baada ya saa 24 [1]. Kiasi cha TSh ${sellerEarned.toLocaleString()} imewekwa kwenye wallet yako.`,
-                        createdAt: new Date().toISOString(), read: false, type: 'wallet'
-                    }).catch(() => {});
-                }
-            }
-            await db.collection('adminRevenue').add({
-                type: 'sokopay_commission', amount: platformFee,
-                contractCode: ld.code || 'AUTO_RELEASE', date: new Date().toISOString()
-            }).catch(() => {});
+                const r = await releaseLinkEscrow(snap.id, { trigger: 'auto_release', callerUid: 'system' });
+                if (r && r.ok && !r.already) out.links.released++; else out.links.skipped++;
+            } catch (e) { out.links.skipped++; console.warn('sokopayAutoRelease (link ' + snap.id + '):', e && e.message); }
         }
     } catch (e) { console.error('sokopayAutoRelease (links):', e && e.message); }
+    return out;
 }
-
 
 /* ============================================================
  * 9) SOKOHAI AGENT ASSISTED ACCESS SYSTEM
@@ -1389,27 +1862,6 @@ async function custodyAttemptFail(rideId, role) {
 }
 async function custodyAttemptClear(rideId, role) {
     try { await db.collection('custody_attempts').doc(rideId + '_' + role).delete(); } catch (e) { /* hiari */ }
-}
-
-// [PHASE B] Mkopo wa wallet wa server (atomic + idempotent) — kwa malipo ya
-// dereva kwenye deliveryComplete (hakuna self-credit ya browser).
-async function creditWallet(docId, amountTSh, type, ledgerKey, note) {
-    if (!docId || !Number.isFinite(amountTSh) || amountTSh <= 0) return;
-    try {
-        const userRef = db.doc('users/' + docId);
-        const ledgerRef = db.doc('wallet_ledger/' + ledgerKey);
-        await db.runTransaction(async (t) => {
-            const ls = await t.get(ledgerRef);
-            if (ls.exists) return; // idempotent
-            const us = await t.get(userRef);
-            if (!us.exists) return;
-            t.set(ledgerRef, {
-                userId: docId, callerUid: 'system', amountTSh: amountTSh,
-                type: type, note: note || '', createdAt: new Date().toISOString()
-            });
-            t.update(userRef, { walletBalance: FieldValue.increment(amountTSh) });
-        });
-    } catch (e) { /* malipo si muhimu kusitisha custody */ }
 }
 
 /* [CUSTODY 2026-09] Kukubali kazi (accept) ni ya SERVER — browser haiwezi
@@ -1977,10 +2429,29 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
     if (['picked_up', 'in_transit', 'delivered'].indexOf(rd.status) === -1) {
         throw new HttpsError('failed-precondition', 'Safari haiko kwenye hatua ya uwasilishaji (status: ' + rd.status + ').');
     }
+    /* [PHASE 1 SECURITY 2026-09] Mnyororo wa custody lazima uwe wa SERVER:
+     *  • dereva amekabidhiwa na server (acceptedAt — deliveryAccept/OfferAccept);
+     *  • mzigo umepita pickup/handover/boarding ya server (custodyStage 'transit').
+     *  `status` ya ride inaweza kuandikwa na kivinjari — haitoshi peke yake. */
+    if (!rd.driverId || !rd.acceptedAt) {
+        throw new HttpsError('failed-precondition', 'Safari hii haijakabidhiwa dereva na server (deliveryAccept).');
+    }
+    if (String(rd.custodyStage || '') !== 'transit') {
+        throw new HttpsError('failed-precondition', 'Mnyororo wa custody haujakamilika (pickup token / handover ya server haijathibitishwa).');
+    }
     // Token C (DL) — mpokeaji wa mwisho. Ikiwa imewekwa, lazima ilingane.
     // [PHASE B] Uthibitisho wa hash-first (transferCodeHash) na fallback ya
     // legacy plaintext (transferCode) kwa safari za zamani.
-    if (rd.transferCode || rd.transferCodeHash) {
+    // [PHASE 1] Mshika mzigo (si mpokeaji) HAWEZI kukamilisha bila Token C:
+    // Token C ndiyo uthibitisho kwamba mpokeaji amepokea.
+    const hasTokenC = !!(rd.transferCode || rd.transferCodeHash);
+    if (!hasTokenC && !isReceiver) {
+        throw new HttpsError('failed-precondition', 'Token C (DL) inahitajika: mwombe mpokeaji aizalishe kisha aikupe wakati wa kupokea mzigo.');
+    }
+    if (hasTokenC) {
+        if (await custodyAttemptsExceeded(rideId, 'delivery')) {
+            throw new HttpsError('resource-exhausted', 'Majaribio mengi sana. Subiri dakika 15 kisha ujaribu tena.');
+        }
         const given = String(data.transferCode || '').trim().toUpperCase();
         if (!custodyTokenOk(rd, 'transfer', given)) {
             await custodyAttemptFail(rideId, 'delivery');
@@ -1990,18 +2461,23 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
     await custodyAttemptClear(rideId, 'delivery');
     await custodyMarkTokenStatus(rideId, 'transfer', 'used');
 
-    // Hesabu malipo (pamoja na faini ya mifugo kama inatumika).
-    const finalPrice = Number(rd.cargoPrice || rd.price || 40000);
-    let finalPayout = finalPrice;
+    /* Nauli ya dereva (pamoja na faini ya mifugo kama inatumika).
+     * [PHASE 1] Kiasi hiki ni MAKADIRIO tu — malipo halisi hutoka kwenye
+     * escrow iliyothibitishwa ya oda iliyounganishwa (tazama chini) na
+     * yamefungwa ndani ya kiasi hicho. Bei ya ride (cargoPrice/price) ni
+     * data ya kivinjari — haitengenezi pesa tena. `cargoPrice` ya oda za
+     * bidhaa ni THAMANI ya bidhaa, si nauli, hivyo haitumiki. */
+    const fareBase = Number(rd.fare || 0) || Number(rd.price || 0);
+    let finalPayout = fareBase;
     let arrivalCount = null;
     if (rd.reqCategory === 'Livestock') {
         const pickupCount = Number(rd.verifiedPickupCount || rd.animalCount || 0);
         arrivalCount = Number(data.arrivalCount);
         if (isNaN(arrivalCount)) arrivalCount = pickupCount;
-        if (arrivalCount < pickupCount) {
+        if (arrivalCount < pickupCount && finalPayout > 0) {
             const lost = pickupCount - arrivalCount;
-            const penalty = Math.round(finalPrice * 0.15) * lost;
-            finalPayout = Math.max(0, finalPrice - penalty);
+            const penalty = Math.round(finalPayout * 0.15) * lost;
+            finalPayout = Math.max(0, finalPayout - penalty);
         }
     }
 
@@ -2010,55 +2486,78 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
         completedAt: now,
         currentCustodian: rd.customerId || null,
         currentCustodianName: rd.customerName || 'Mnunuzi',
-        finalPayout: finalPayout,
+        finalPayout: 0,
+        payoutStatus: 'pending',
         verifiedArrivalCount: arrivalCount,
         custodyStage: 'completed'
     });
     await custodyEvent(rideId, 'DELIVERY_CONFIRMED', auth, { actorRole: isReceiver ? 'receiver' : 'transporter' });
     await custodyEvent(rideId, 'DELIVERY_COMPLETED', auth, { actorRole: isReceiver ? 'receiver' : 'transporter' });
 
-    // Malipo ya dereva (server, atomic + idempotent). [PHASE B] skipPayout=true
-    // inatumika pale malipo tayari yanashughulikiwa na mtiririko mwingine
-    // (mfano escrowRelease ya marketplace) ili kuepuka malipo mara mbili.
-    if (rd.driverId && finalPayout > 0 && data.skipPayout !== true) {
-        await creditWallet(rd.driverId, finalPayout, 'payout', 'deliverycomplete_' + rideId, 'Malipo ya safari (deliveryComplete)');
+    /* [PHASE 1 SECURITY 2026-09] MALIPO — kutoka escrow iliyothibitishwa PEKEE.
+     * Oda iliyounganishwa: rd.orderId (routing ya server) au mnyororo wa zamani
+     * (orders.itemId/productId == parentRideId). Mnunuzi wa oda LAZIMA awe
+     * mpokeaji (customerId) wa safari. Utoaji unatumia releaseOrderEscrow
+     * (ushahidi wa malipo + kiasi + hold moja = release moja):
+     *   • oda ya bidhaa → muuzaji + nauli ya dereva (≤ escrow);
+     *   • oda ya usafiri (booking) ambayo muuzaji NDIYE dereva → dereva analipwa kama muuzaji.
+     * Hakuna oda iliyothibitishwa → hakuna malipo ya wallet (payoutStatus 'unfunded'). */
+    let paidToDriver = 0;
+    let payoutStatus = 'unfunded';
+    let releaseInfo = null;
+    if (data.skipPayout !== true && rd.customerId) {
+        try {
+            let orderId = null;
+            if (rd.orderId && String(rd.orderId).indexOf('/') === -1) {
+                const os = await db.doc('orders/' + rd.orderId).get();
+                if (os.exists && String((os.data() || {}).buyerId || '') === rd.customerId) orderId = os.id;
+            }
+            if (!orderId && rd.parentRideId) {
+                // [FIX 2026-09] Field MOJA (buyerId) + uchujaji itemId/status kwenye
+                // memory — haiitaji composite index.
+                const orderSnap = await db.collection('orders').where('buyerId', '==', rd.customerId).limit(50).get();
+                orderSnap.forEach(function (dd) {
+                    if (orderId) return;
+                    const od2 = dd.data();
+                    if (od2.status === 'held' && (od2.itemId === rd.parentRideId || od2.productId === rd.parentRideId)) orderId = dd.id;
+                });
+            }
+            if (orderId) {
+                const od = (await db.doc('orders/' + orderId).get()).data() || {};
+                const driverIsSeller = String(od.sellerId || '') === String(rd.driverId || '');
+                releaseInfo = await releaseOrderEscrow(orderId, {
+                    callerUid: auth.uid,
+                    trigger: 'delivery_complete',
+                    carrier: driverIsSeller ? null : { rideId, driverUid: rd.driverId, amount: finalPayout },
+                    noCarrier: true
+                });
+                if (releaseInfo && releaseInfo.ok) {
+                    const sp = releaseInfo.split || {};
+                    paidToDriver = driverIsSeller ? Number(sp.sellerEarned || 0) : Number(sp.carrierShare || 0);
+                    payoutStatus = releaseInfo.already ? 'already_released' : 'paid_from_escrow';
+                }
+            }
+        } catch (e) {
+            payoutStatus = 'unfunded';
+            console.warn('[deliveryComplete] escrow haikutolewa:', rideId, e && e.message);
+        }
+    } else if (data.skipPayout === true) {
+        payoutStatus = 'skipped';
+    }
+    try { await ref.update({ finalPayout: paidToDriver, payoutStatus: payoutStatus }); } catch (e) { /* hiari */ }
+
+    if (rd.driverId && paidToDriver > 0 && payoutStatus === 'paid_from_escrow') {
         await custodyNotify(rd.driverId, 'SokoPay: Malipo ya Safari Yamepokelewa!',
-            'Mteja amethibitisha kupokea mzigo. TSh ' + Number(finalPayout).toLocaleString() + ' imeingizwa kwenye wallet yako.');
+            'Mteja amethibitisha kupokea mzigo. TSh ' + Number(paidToDriver).toLocaleString() + ' imeingizwa kwenye wallet yako.');
+    } else if (rd.driverId && payoutStatus === 'unfunded') {
+        await custodyNotify(rd.driverId, 'Uwasilishaji Umekamilika',
+            'Safari imekamilika. Hakuna malipo ya escrow yaliyothibitishwa kwa safari hii, hivyo hakuna kiasi kilichoingizwa kwenye wallet.');
     }
     if (rd.customerId) {
         await custodyNotify(rd.customerId, 'Uwasilishaji Umekamilika', 'Mzigo wako umewasilishwa na kuthibitishwa. Asante kwa kutumia SokoHai.');
     }
 
-    // AUTO-RELEASE ya bidhaa inayohusiana na safari (chain order), kama ipo.
-    try {
-        // [FIX 2026-09] Field MOJA (buyerId) + uchujaji itemId/status kwenye
-        // memory — haiitaji composite index (query ya field TATU ilirusha
-        // "internal" na auto-release ya chain order ilipotea bila index).
-        const orderSnap = await db.collection('orders')
-            .where('buyerId', '==', rd.customerId)
-            .limit(50).get();
-        let orderMatch = null;
-        orderSnap.forEach(function (dd) {
-            if (orderMatch) return;
-            const od2 = dd.data();
-            if (od2.status === 'held' && (od2.itemId === (rd.parentRideId || 'N/A') || od2.productId === (rd.parentRideId || 'N/A'))) orderMatch = dd;
-        });
-        if (orderMatch) {
-            const orderDoc = orderMatch;
-            const od = orderDoc.data();
-            await db.doc('orders/' + orderDoc.id).update({ status: 'completed' });
-            if (od.sellerId) {
-                const sq = await db.collection('users').where('uid', '==', od.sellerId).limit(1).get();
-                if (!sq.empty) {
-                    const platformFee = (await paymentGate('commission')) ? Math.round(Number(od.amount || 0) * 0.05) : 0;
-                    const sellerEarned = Math.max(0, Number(od.amount || 0) - platformFee);
-                    await creditWallet(sq.docs[0].id, sellerEarned, 'escrow_release', 'chain_order_' + orderDoc.id, 'Auto-release ya bidhaa ya safari (chain)');
-                }
-            }
-        }
-    } catch (e) { /* chain order si muhimu kusitisha uwasilishaji */ }
-
-    return { ok: true, status: 'completed', finalPayout: finalPayout };
+    return { ok: true, status: 'completed', finalPayout: paidToDriver, payoutStatus: payoutStatus };
 });
 
 /* ============================================================
