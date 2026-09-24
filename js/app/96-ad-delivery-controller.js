@@ -2,6 +2,18 @@
    One client controller for every campaign placement. It owns lazy requests,
    leases, viewport/viewability events, rotation and fail-open DOM behavior.
    Campaign eligibility/frequency policy is server-authoritative in Functions.
+
+   [REGRESSION FIX 2026-09-24] Local rendering path (no lease, no analytics):
+   - 'local-env'             : localhost is not the deployed Cloud; render from
+                               the Firestore announcements cache instead of
+                               calling adsRequestDelivery (opt in to server with
+                               localStorage skh_ads_delivery_mode=server).
+   - 'functions-unavailable' : adsRequestDelivery failed with an INFRASTRUCTURE
+                               error (e.fnDown). Business/no-fill answers from
+                               the server are always respected (slot hidden).
+   - 'admin-preview'         : the server never leases to admins
+                               (ADMIN_CONTEXT); admins see a preview instead of
+                               an empty slot, without counting impressions.
 */
 import { skh } from './00-bootstrap.js';
 
@@ -24,6 +36,8 @@ import { skh } from './00-bootstrap.js';
   let observerMargin = null;
   let scanQueued = false;
   let disposed = false;
+  const localDismissed = new Set();
+  const localNotices = new Set();
   const SESSION_KEY = 'skh_ad_delivery_session_v1';
   const PROTECTED_ID = /(^|[-_])(admin|checkout|payment|wallet|sokopay|escrow|security|critical)([-_]|$)/i;
 
@@ -78,7 +92,9 @@ import { skh } from './00-bootstrap.js';
     return false;
   }
   function isProtectedSlot(host, placement, context) {
-    if (isAdmin()) return true;
+    // Admin identity no longer blanks consumer slots; admin *surfaces* stay
+    // protected via ids/data attributes/context below. Admin gets a local,
+    // untracked preview in load() because the server returns ADMIN_CONTEXT.
     if (context && (context.protected || context.adminDashboard || context.isAdmin)) return true;
     if (context && [context.surface, context.flow, context.screen, context.contextType].some(value => {
       return /(^|[-_])(admin|checkout|payment|wallet|sokopay|escrow|security|critical|transaction)([-_]|$)/i.test(String(value || ''));
@@ -282,6 +298,7 @@ import { skh } from './00-bootstrap.js';
       event.stopPropagation();
       if (record.dismissed) return;
       record.dismissed = true;
+      if (!record.leaseId && record.ad && record.ad.id) localDismissed.add(String(record.ad.id));
       track(record, 'dismissed');
       release(record, 'lease_released');
       record.leaseId = '';
@@ -332,6 +349,77 @@ import { skh } from './00-bootstrap.js';
     track(record, 'rendered');
     return true;
   }
+  function serverDeliveryEnabled() {
+    if (!skh || !skh.isLocalEnv) return true;
+    try { return window.localStorage.getItem('skh_ads_delivery_mode') === 'server'; } catch (_) { return false; }
+  }
+  function noticeLocal(reason, detail) {
+    const key = reason + '|' + (detail || '');
+    if (localNotices.has(key)) return;
+    localNotices.add(key);
+    try {
+      console.warn('[ads-delivery] local rendering (' + reason + (detail ? ': ' + detail : '')
+        + ') — campaigns from the Firestore announcements cache; no lease, no delivery analytics.');
+    } catch (_) {}
+  }
+  function localCandidates(record) {
+    if (typeof window.skhLocalActiveCampaigns !== 'function') return [];
+    try {
+      const list = window.skhLocalActiveCampaigns(record.placement, record.context) || [];
+      return list.filter(ad => ad && ad.id && !localDismissed.has(String(ad.id)));
+    } catch (_) { return []; }
+  }
+  // Renders a real announcement from the local cache. Never creates a lease and
+  // never calls adsTrackDeliveryEvent (track() is a no-op without leaseId).
+  function renderLocal(record, reason) {
+    if (!record || !record.host || !record.host.isConnected || record.dismissed) return false;
+    const host = record.host;
+    clearTimers(record);
+    record.leaseId = '';
+    record.events.clear();
+    record.localSource = reason;
+    host.dataset.skhAdSource = reason;
+    const list = localCandidates(record);
+    if (!list.length || typeof window.skhAdvertisementCardHtml !== 'function') {
+      record.ad = null;
+      emptySlot(record, true);
+      return false;
+    }
+    const index = (Number(record.localIndex) || 0) % list.length;
+    const ad = list[index];
+    addRenderingClasses(host);
+    host.hidden = false;
+    host.style.minHeight = '';
+    host.style.opacity = '';
+    host.innerHTML = window.skhAdvertisementCardHtml(ad, false);
+    const hasMedia = !!(ad.image || ad.imageUrl || ad.mediaUrl || ad.photo || ad.videoUrl || ad.audioUrl
+      || (ad.slideshow && Array.isArray(ad.slideshow.slides) && ad.slideshow.slides.some(slide => slide && slide.src)));
+    host.classList.toggle('has-media', hasMedia);
+    host.classList.toggle('no-media', !hasMedia);
+    record.ad = ad;
+    record.localIndex = index;
+    addDismissButton(record);
+    if (list.length > 1 || reason === 'functions-unavailable') {
+      record.rotateTimer = window.setTimeout(function () {
+        record.rotateTimer = null;
+        if (disposed || !record.host.isConnected || record.dismissed || record.localSource !== reason
+            || isProtectedSlot(record.host, record.placement, record.context)) return;
+        record.localIndex = index + 1;
+        // Infrastructure fallback retries the server on every rotation (the
+        // shared circuit breaker keeps this cheap); local modes rotate locally.
+        if (reason === 'functions-unavailable') { record.localSource = ''; load(record); }
+        else renderLocal(record, reason);
+      }, displayDuration(record));
+    }
+    return true;
+  }
+  function refreshLocalSlots() {
+    records.forEach(record => {
+      if (!record.localSource || record.requestPromise || record.dismissed || !record.host.isConnected) return;
+      if (isProtectedSlot(record.host, record.placement, record.context)) return;
+      renderLocal(record, record.localSource);
+    });
+  }
   async function load(record) {
     if (!record || record.requestPromise || record.leaseId || record.dismissed || !record.host.isConnected) return;
     if (isProtectedSlot(record.host, record.placement, record.context) || hiddenByLayout(record.host)) return;
@@ -340,15 +428,19 @@ import { skh } from './00-bootstrap.js';
       record.retryTimer = window.setTimeout(function () { record.retryTimer = null; load(record); }, policy.lazy.requestThrottleMs - elapsed + 15);
       return;
     }
+    if (nearObserver) { try { nearObserver.unobserve(record.host); } catch (_) {} }
+    if (isAdmin()) { renderLocal(record, 'admin-preview'); return; }
+    if (!serverDeliveryEnabled()) { noticeLocal('local-env'); renderLocal(record, 'local-env'); return; }
     record.lastRequestAt = Date.now();
     record.requestId = randomToken();
-    if (nearObserver) { try { nearObserver.unobserve(record.host); } catch (_) {} }
     record.requestPromise = (async function () {
       try {
         if (!skh || typeof skh.callFunction !== 'function') return;
         const raw = await skh.callFunction('adsRequestDelivery', buildRequest(record));
         const response = unwrap(raw) || {};
         if (response.config) configure(response.config);
+        record.localSource = '';
+        try { delete record.host.dataset.skhAdSource; } catch (_) {}
         if (response.status !== 'DELIVERED' || !response.leaseId || !response.campaign) {
           record.noAd = true;
           emptySlot(record, true);
@@ -366,6 +458,14 @@ import { skh } from './00-bootstrap.js';
         if (record.leaseId) {
           track(record, 'lease_released');
           record.leaseId = '';
+        }
+        // Only infrastructure failures (Functions not deployed/unreachable)
+        // fall back to local data; real server/business errors stay visible.
+        if (error && error.fnDown === true) {
+          noticeLocal('functions-unavailable', String(error.code || error.message || 'unavailable'));
+          record.requestPromise = null;
+          renderLocal(record, 'functions-unavailable');
+          return;
         }
         emptySlot(record, true);
         try { console.warn('[ads-delivery] slot skipped:', error && (error.code || error.message) || 'unavailable'); } catch (_) {}
@@ -499,6 +599,12 @@ import { skh } from './00-bootstrap.js';
     releaseSlot: function (host) {
       const record = host && records.get(host);
       if (record) discard(record, { clear: true, hide: true });
+    },
+    refreshLocalSlots,
+    getStatus: function () {
+      const slots = [];
+      records.forEach(record => slots.push({ placement: record.placement, source: record.localSource || (record.leaseId ? 'server' : 'none'), campaignId: record.ad ? String(record.ad.id) : '' }));
+      return { serverDeliveryEnabled: serverDeliveryEnabled(), localEnv: !!(skh && skh.isLocalEnv), slots };
     },
     getPolicy: function () { return JSON.parse(JSON.stringify(policy)); },
     getSlotCount: function () { return records.size; },

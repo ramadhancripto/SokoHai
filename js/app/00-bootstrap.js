@@ -75,6 +75,18 @@ skh.httpsCallable = httpsCallable;
      mbichi inayorushwa kwa mtumiaji.
    ============================================================ */
 skh._functionsRegion = 'europe-west1';
+// [ADS DELIVERY REGRESSION FIX 2026-09-24] Local dev host SI mazingira ya Cloud
+// yaliyodeployiwa. Wito wa callables bado unaelekea endpoint ile ile (wiring
+// haijabadilika), lakini features za hiari (mf. ads delivery) zinaweza kuamua
+// kutotegemea backend hapa. Kuwasha server delivery locally:
+//   localStorage.setItem('skh_ads_delivery_mode','server')
+skh.isLocalEnv = (function () {
+    try {
+        var h = String(window.location.hostname || '').toLowerCase();
+        return window.location.protocol === 'file:' || h === 'localhost' || h === '127.0.0.1'
+            || h === '0.0.0.0' || h === '[::1]' || h === '::1' || /\.localhost$/.test(h);
+    } catch (e) { return false; }
+})();
 skh.functionsDown = false;
 skh._fnDownToastAt = 0;
 

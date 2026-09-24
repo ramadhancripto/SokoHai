@@ -4,7 +4,7 @@
   if (window.__SOKOHAI_ANNOUNCEMENT_STORY_V2__) return;
   window.__SOKOHAI_ANNOUNCEMENT_STORY_V2__ = true;
 
-  let liveTimer = null, liveNotice = null;
+  let liveTimer = null, liveNotice = null, scheduleTimer = null;
   const ADS_RULES=window.SokoHaiAdsDesignRules;
   if(!ADS_RULES)throw new Error('Shared SokoHai Ads Design rules failed to load before the announcement renderer.');
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -34,6 +34,51 @@
     return 'active';
   }
   window.skhAdvertisementState = function(a){ return stateOf(a,Date.now()); };
+
+  /* [ADS DELIVERY REGRESSION FIX 2026-09-24] Local campaign selection restored.
+     Commit 0538616 removed activeAds(), so Home could only render after a
+     server lease from adsRequestDelivery. This selector reads ONLY the real
+     Firestore-backed announcements cache (no mock data) and mirrors the server
+     static rules (lifecycle, moderation, placement, targeting). It is used by
+     the Delivery Controller solely as a fallback/preview: it never creates a
+     lease and never records delivery analytics. */
+  const listOf=v=>Array.isArray(v)?v:(typeof v==='string'?v.split(/[;,|]/):[]);
+  const norm=v=>String(v==null?'':v).trim().toLowerCase();
+  const firstDefined=(obj,keys)=>{for(const k of keys){const v=obj[k];if(v!==undefined&&v!==null&&v!=='')return v;}return undefined;};
+  const hasCreative=a=>!!(a.text||a.headline||a.image||a.imageUrl||a.videoUrl||a.audioUrl||a.backgroundImageUrl||a.badgeText||(a.slideshow&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.some(s=>s&&s.src)));
+  function placementsOf(a){
+    const raw=firstDefined(a,['placements','targetPlacements','adPlacements']);
+    const list=listOf(raw!==undefined?raw:(a.delivery&&a.delivery.placements)).map(norm).filter(Boolean);
+    return list.length?list:['home']; // historical announcements stay Home-only (same as server)
+  }
+  function lifecycleAllows(a){
+    const status=norm(firstDefined(a,['lifecycleStatus','campaignStatus'])||'');
+    const moderation=norm(a.moderationStatus||'');
+    if(a.paused===true||['paused','completed','draft','archived'].includes(status))return false;
+    if(moderation&&!['approved','published','active'].includes(moderation))return false;
+    return true;
+  }
+  function targetingMatches(a,ctx){
+    const t=a.targeting&&typeof a.targeting==='object'?a.targeting:{};
+    const L=(keys,fallback)=>listOf(firstDefined(a,keys)!==undefined?firstDefined(a,keys):fallback).map(norm).filter(Boolean);
+    const cats=L(['targetCategories','categories'],t.categories),kws=L(['targetKeywords','keywords'],t.keywords),
+      regions=L(['targetRegions','regions'],t.regions),types=L(['targetEntityTypes'],t.entityTypes),ids=L(['targetEntityIds'],t.entityIds);
+    const c=ctx||{},query=norm(c.query);
+    const ctxCats=new Set([c.category].concat(listOf(c.categories),listOf(c.interests)).map(norm).filter(Boolean));
+    if(cats.length&&!cats.some(x=>ctxCats.has(x)))return false;
+    if(kws.length&&!kws.some(x=>query.includes(x)))return false;
+    if(regions.length&&!regions.includes(norm(c.region)))return false;
+    if(types.length&&!types.includes(norm(c.entityType)))return false;
+    if(ids.length&&!ids.includes(norm(c.entityId)))return false;
+    return true;
+  }
+  function activeAds(placement,context) {
+    const now=Date.now(),p=norm(placement||'home'),source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[];
+    return source.filter(a=>a&&a.id&&stateOf(a,now)==='active'&&lifecycleAllows(a)&&hasCreative(a)
+        &&(placementsOf(a).includes(p)||placementsOf(a).includes('*'))&&targetingMatches(a,context))
+      .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  }
+  window.skhLocalActiveCampaigns=activeAds;
 
   function hide(){const h=document.getElementById('topAnnouncement');if(!h)return;h.className='big-announcement skh-ann-story is-empty';h.innerHTML='';h.hidden=true;}
   function track(a,type){if(!a||!a.id||!window.skh||typeof window.skh.callFunction!=='function')return;const key='skh_ad_'+type+'_'+a.id;if(type==='impression'&&sessionStorage.getItem(key))return;try{sessionStorage.setItem(key,'1');window.skh.callFunction('creativeTrackEvent',{announcementId:a.id,type:type}).catch(function(){if(type==='impression')sessionStorage.removeItem(key);});}catch(e){}}
@@ -328,13 +373,22 @@
     bindAdvertisementVideoControls(host);
   }
 
+  /* Schedule boundaries (start/end) re-evaluate local fallback/preview slots
+     without a reload — restored from the pre-0538616 flow. */
+  function armScheduleRefresh(){clearTimeout(scheduleTimer);const now=Date.now(),source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[],times=[];source.forEach(a=>{if(a&&a.archived!==true&&a.status!=='archived'&&a.active!==false&&a.status!=='draft'){const s=Date.parse(a.startAt||''),e=Date.parse(a.endAt||'');if(s>now)times.push(s);if(e>now)times.push(e+50);}});if(times.length){const delay=Math.max(250,Math.min(3600000,Math.min.apply(Math,times)-now));scheduleTimer=setTimeout(renderCurrent,delay);}}
   function renderCurrent(){
+    armScheduleRefresh();
     const host=document.getElementById('topAnnouncement');
     if(!host)return;
     if(liveNotice){renderAd(liveNotice,true);return;}
     host.removeAttribute('data-skh-ad-protected');
-    if(window.skhAdDeliveryController&&typeof window.skhAdDeliveryController.refreshSlot==='function'){
-      try{window.skhAdDeliveryController.refreshSlot(host);}catch(e){hide();}
+    const controller=window.skhAdDeliveryController;
+    if(controller&&typeof controller.refreshSlot==='function'){
+      try{
+        controller.refreshSlot(host);
+        // Cache/schedule changed: slots running on local data re-select now.
+        if(typeof controller.refreshLocalSlots==='function')controller.refreshLocalSlots();
+      }catch(e){hide();}
     }else hide();
   }
   window.startSokoHaiSmoothMarquee=renderCurrent;

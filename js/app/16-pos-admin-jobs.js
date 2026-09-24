@@ -417,7 +417,7 @@ window.skhOpenAdDeliverySettings=async function(id){
       if(index>=0)cache[index]=Object.assign({},cache[index],result);window.__sokohaiAnnouncementsCache=cache;
       if(typeof window.__sokohaiOnAnnouncementsUpdate==='function')window.__sokohaiOnAnnouncementsUpdate(cache);if(typeof window.renderAnnouncementManagerList==='function')window.renderAnnouncementManagerList();
       close();if(window.skhToast)window.skhToast('Delivery settings zimehifadhiwa.','success');
-    }catch(error){if(window.skhToast)window.skhToast('Imeshindwa kuhifadhi delivery settings: '+(error.message||error),'error');else alert(error.message||error);button.disabled=false;button.textContent='Save delivery settings';}
+    }catch(error){/* Backend failure stays a failure: nothing is written to the cache, the modal stays open. */const reason=typeof window.skhFnErrText==='function'?window.skhFnErrText(error,'adsUpdateCampaignDelivery'):(error&&error.message||String(error));if(window.skhToast)window.skhToast('Imeshindwa kuhifadhi delivery settings: '+reason,'error');else alert('Imeshindwa kuhifadhi delivery settings: '+reason);button.disabled=false;button.textContent='Save delivery settings';}
   });
 };
 window.skhAdFormHtml=function(){return `

@@ -13,7 +13,8 @@ t('small phone uses balanced compact grid',cardCss.includes('@media(max-width:36
 t('Home advertisement is under Search',top.indexOf('id="topAnnouncement"')>top.indexOf('id="topSearchRow"'));
 t('Home showcase hides when no active ad',ad.includes("host.hidden=true")||ad.includes('h.hidden=true'));
 t('showcase derives active/scheduled/expired/archive state',ad.includes("return 'scheduled'")&&ad.includes("return 'expired'")&&ad.includes("return 'archived'"));
-t('showcase supports priority ordering and rotation',ad.includes('Number(b.priority)')&&ad.includes('rotationTimer'));
+/* [2026-09-24] Rotation moved to the shared Delivery Controller (96) in 0538616; priority ordering lives in 06 local selector. */
+t('showcase supports priority ordering and rotation',ad.includes('Number(b.priority)')&&(ad.includes('rotationTimer')||r('js/app/96-ad-delivery-controller.js').includes('record.rotateTimer = window.setTimeout')));
 t('showcase wakes at schedule boundaries without a reload',ad.includes('armScheduleRefresh')&&ad.includes('scheduleTimer=setTimeout(renderCurrent')&&ad.includes('if(s>now)times.push(s)')&&ad.includes('if(e>now)times.push(e+50)'));
 t('showcase labels promotional content honestly',ad.includes('Advertisement'));
 t('showcase supports image creative',ad.includes('skh-ann-media-main')&&ad.includes('a.image || a.imageUrl'));
