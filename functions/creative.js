@@ -2,31 +2,286 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const db = admin.firestore();
 const FV = admin.firestore.FieldValue;
 const REGION = 'europe-west1';
 const TYPES = new Set(['advertisement','business_update','product_post','service_post','general_post']);
-const ENTITY_COLLECTIONS = {product:'products',service:'services',transport:'delivery',seller:'publicProfiles',business:'publicProfiles'};
-function isAdmin(token){return token && (token.admin===true||token.role==='admin'||String(token.email||'').toLowerCase()==='rshabansaid@gmail.com')}
-function text(v,n=240){return String(v==null?'':v).trim().slice(0,n)}
-function validateDesign(c){if(!c||!c.canvas||!Array.isArray(c.layers))throw new HttpsError('failed-precondition','Creative design is incomplete.');if(c.layers.length<1||c.layers.length>150)throw new HttpsError('failed-precondition','Creative must contain 1–150 layers.');const w=Number(c.canvas.width),h=Number(c.canvas.height);if(w<240||h<240||w>4096||h>4096)throw new HttpsError('failed-precondition','Creative canvas dimensions are invalid.');}
-async function canonicalEntity(linked,destination,uid,adminUser,creative){if(!linked||!linked.type||!linked.id){if(destination&&destination.type==='external'&&/^https:\/\//i.test(String(destination.url||'')))return{id:'custom_'+uid,type:'custom',name:text(creative.title,160)||'Advertisement',image:'',price:null,location:'',ownerId:uid,externalUrl:text(destination.url,1000)};throw new HttpsError('failed-precondition','Choose a linked SokoHai entity or valid HTTPS destination.');}const col=ENTITY_COLLECTIONS[linked.type];if(!col)throw new HttpsError('invalid-argument','Unsupported linked entity type.');const snap=await db.collection(col).doc(String(linked.id)).get();if(!snap.exists)throw new HttpsError('not-found','Linked destination no longer exists.');const d=snap.data()||{};const owners=[d.ownerId,d.sellerId,d.userId,d.uid,d.providerId,d.driverId,snap.id].filter(Boolean).map(String);if(!adminUser&&!owners.includes(uid))throw new HttpsError('permission-denied','You are not authorized to advertise this entity.');return{id:snap.id,type:linked.type,name:text(d.title||d.name||d.serviceName||d.company||d.driverName,160),image:text(d.imageUrl||d.image||d.photo||d.logoUrl||(Array.isArray(d.images)&&d.images[0]),1000),price:Number.isFinite(Number(d.price||d.currentPrice||d.servicePrice))?Number(d.price||d.currentPrice||d.servicePrice):null,location:text(d.location||d.region||d.serviceArea||d.pickupRegion,160),ownerId:owners[0]||uid};}
-exports.creativePublish = onCall({region:REGION,enforceAppCheck:false},async request=>{
- if(!request.auth)throw new HttpsError('unauthenticated','Sign in before publishing.');const uid=request.auth.uid,adminUser=isAdmin(request.auth.token),id=text(request.data&&request.data.creativeId,128),publicationType=text(request.data&&request.data.publicationType,40)||'advertisement';if(!id)throw new HttpsError('invalid-argument','creativeId is required.');if(!TYPES.has(publicationType))throw new HttpsError('invalid-argument','Unsupported publication type.');
- const ref=db.collection('creatives').doc(id),snap=await ref.get();if(!snap.exists)throw new HttpsError('not-found','Creative not found.');const c=snap.data();if(c.ownerId!==uid&&!adminUser)throw new HttpsError('permission-denied','This Creative belongs to another advertiser.');validateDesign(c);const entity=await canonicalEntity(c.linkedEntity,c.destination,uid,adminUser,c);if(entity.type!=='custom'&&(!c.destination||String(c.destination.id)!==entity.id))throw new HttpsError('failed-precondition','Creative destination must match its linked entity.');
- const version=Math.max(0,Number(c.publishedVersion)||0)+1,versionId='v'+version,createdAt=FV.serverTimestamp(),versionRef=ref.collection('versions').doc(versionId),pubRef=db.collection('creativePublications').doc(),moderationStatus=adminUser?'approved':'pending',status=adminUser?'PUBLISHED':'READY';
- const frozen={creativeId:id,version,ownerId:c.ownerId,type:publicationType,canvas:c.canvas,background:c.background,layers:c.layers,brandSnapshot:c.brandKit||null,linkedEntitySnapshot:entity,destinationSnapshot:entity.type==='custom'?{type:'external',url:entity.externalUrl}:{type:entity.type,id:entity.id},createdBy:uid,createdAt,immutable:true,schemaVersion:c.schemaVersion||1};
- const batch=db.batch();batch.create(versionRef,frozen);batch.set(pubRef,{creativeId:id,creativeVersion:version,versionPath:versionRef.path,ownerId:c.ownerId,publicationType,linkedEntity:{type:entity.type,id:entity.id},destination:entity.type==='custom'?{type:'external',url:entity.externalUrl}:{type:entity.type,id:entity.id},status:adminUser?'PUBLISHED':'PENDING_MODERATION',moderationStatus,createdAt,updatedAt:createdAt});batch.update(ref,{publishedVersion:version,status,updatedAt:createdAt});
- let announcementId=null;if(publicationType==='advertisement'){const ann=db.collection('announcements').doc();announcementId=ann.id;const head=c.layers.find(l=>l.type==='text'&&l.role==='headline')||c.layers.find(l=>l.type==='text'),body=c.layers.find(l=>l.type==='text'&&l.role==='body'),img=c.layers.find(l=>l.type==='image');const priceLayer=c.layers.find(l=>l.type==='text'&&l.role==='price'),ctaLayer=c.layers.find(l=>l.type==='text'&&l.role==='cta'),badgeLayer=c.layers.find(l=>l.type==='text'&&l.role==='badge'),logoLayer=c.layers.find(l=>l.type==='logo'),vid=c.layers.find(l=>l.type==='video'),aud=c.layers.find(l=>l.type==='audio');const ddS=Math.max(5,Math.min(59,Number(c.displayDurationSeconds)||9));const headAnim=head&&head.animation?head.animation:{};
- batch.set(ann,{creativeId:id,creativeVersion:version,advertiserId:c.ownerId,publicationId:pubRef.id,publicationType,entityType:entity.type,entityId:entity.id,linkedEntity:{type:entity.type,id:entity.id},destination:entity.type==='custom'?{type:'external',url:entity.externalUrl}:{type:entity.type,id:entity.id},headline:text(head&&head.content,120)||entity.name,description:text(body&&body.content,240),text:text(body&&body.content,240),brandName:text(c.brandKit&&c.brandKit.name,80)||entity.name,image:img&&text(img.src,1000)||entity.image,imageUrl:img&&text(img.src,1000)||entity.image,creativeType:'versioned_creative',primaryColor:text(c.background&&c.background.color,20)||'#0E7A5F',accentColor:text(c.background&&c.background.color2,20)||'#167A91',textColor:(head&&head.style&&/^#[0-9a-f]{6}$/i.test(String(head.style.fill||''))?String(head.style.fill):'#FFFFFF'),fontWeight:text(head&&head.style&&head.style.fontWeight,12)||'950',textAlign:text(head&&head.style&&head.style.textAlign,12)||'left',surfaceColor:'#FFFFFF',frameOpacity:.42,ctaLabel:text(ctaLayer&&ctaLayer.content,40)||'Tazama Zaidi',link:entity.type==='custom'?entity.externalUrl:'#'+entity.type+'-'+entity.id,status:adminUser?'published':'moderation_pending',moderationStatus,active:adminUser,archived:false,priority:Math.max(0,Number(c.priority)||0),createdAt,updatedAt:createdAt,viewCount:0,clickCount:0,
- // --- Canonical advertisement state (Creator Studio upgrade; safe fallbacks for older creatives) ---
- category:text(c.category,40)||'general',campaignName:text(c.campaignName,80),campaignId:text(c.campaignId,80),
- offer:text(c.offer,40)||text(priceLayer&&priceLayer.content,40),priceTag:text(c.offer,40)||text(priceLayer&&priceLayer.content,40),
- paletteId:text(c.paletteId,40),logoUrl:text(logoLayer&&logoLayer.src,1000),videoUrl:text(vid&&(vid.src||vid.videoUrl),1000),audioUrl:text(aud&&(aud.src||aud.audioUrl),1000),
- badgeText:text(badgeLayer&&badgeLayer.content,40),badgeColor:/^#[0-9a-f]{6}$/i.test(String(badgeLayer&&badgeLayer.style&&badgeLayer.style.backgroundColor||''))?String(badgeLayer.style.backgroundColor):'#F59E0B',badgeTextColor:/^#[0-9a-f]{6}$/i.test(String(badgeLayer&&badgeLayer.style&&badgeLayer.style.fill||''))?String(badgeLayer.style.fill):'#FFFFFF',posterUrl:text(vid&&vid.posterUrl,1000),videoControls:!!(vid&&vid.videoMeta&&vid.videoMeta.controls===true),mediaDurationSeconds:(function(){if(vid&&vid.videoMeta){const t=(Number(vid.videoMeta.trimEnd)||0)-(Number(vid.videoMeta.trimStart)||0);const eff=t>0?t:Math.min(59,Number(vid.videoMeta.duration)||0);return eff>0&&eff<60?Math.round(eff):null;}if(c.slideshow&&Array.isArray(c.slideshow.slides)&&c.slideshow.slides.filter(function(q){return q&&q.src;}).length>=2){const tot=c.slideshow.slides.reduce(function(a2,q){return a2+(Number(q.duration)||Number(c.slideshow.defaultDuration)||3);},0);return tot>0&&tot<60?Math.round(tot):null;}return null;})(),slideshow:(function(){const ss=c.slideshow;if(!ss||typeof ss!=='object'||!Array.isArray(ss.slides))return null;const slides=ss.slides.filter(function(q){return q&&q.src;}).slice(0,12);if(slides.length<2)return null;const tr=String(ss.transition||'fade');return{enabled:ss.enabled!==false,transition:['none','fade','slide','slide-left','slide-right','zoom','crossfade'].indexOf(tr)>=0?tr:'fade',defaultDuration:Math.max(1,Math.min(15,Number(ss.defaultDuration)||3)),slides:slides.map(function(q){return{src:String(q.src),name:text(q.name,80),duration:Math.max(1,Math.min(30,Number(q.duration)||3))};})};})(),badgeAnimation:text(badgeLayer&&badgeLayer.animation&&(badgeLayer.animation.emphasis!=='none'?badgeLayer.animation.emphasis:badgeLayer.animation.entrance),20)||'none',ctaAnimation:text(ctaLayer&&ctaLayer.animation&&(ctaLayer.animation.emphasis!=='none'?ctaLayer.animation.emphasis:ctaLayer.animation.entrance),20)||'none',
- startAt:typeof c.startAt==='string'?c.startAt:'',endAt:typeof c.endAt==='string'?c.endAt:'',
- displayDurationSeconds:ddS,rotationMs:ddS*1000,
- textAnimation:text(headAnim.entrance,20)||'none',headlineAnimation:text(headAnim.entrance,20)||'none',textEmphasis:text(headAnim.emphasis,20)||'none',animationMode:text(headAnim.mode,12)||'whole',animationDuration:Number(headAnim.duration)||600,animationDelay:Number(headAnim.delay)||0,animationStagger:Number(headAnim.stagger)||100});}
- await batch.commit();return{ok:true,creativeId:id,version,publicationId:pubRef.id,announcementId,status,moderationStatus};
+const ENTITY_COLLECTIONS = { product:'products', service:'services', transport:'delivery', seller:'publicProfiles', business:'publicProfiles' };
+const packagedRules = path.join(__dirname, 'shared', 'ads-design-rules.js');
+const localRules = path.join(__dirname, '..', 'shared', 'ads-design-rules.js');
+const ADS_RULES = require(fs.existsSync(packagedRules) ? packagedRules : localRules);
+
+function isAdmin(token) {
+  return token && (token.admin === true || token.role === 'admin' || String(token.email || '').toLowerCase() === 'rshabansaid@gmail.com');
+}
+function text(value, max = 240) { return String(value == null ? '' : value).trim().slice(0, max); }
+function validateDesign(input, options = {}) {
+  const creative = ADS_RULES.normalizeCreative(input || {});
+  const validation = ADS_RULES.validateCreative(creative, {
+    forPublish: true,
+    requireSchedule: options.requireSchedule === true,
+    now: Date.now()
+  });
+  if (!validation.ok) {
+    throw new HttpsError('failed-precondition', validation.errors.map(error => error.message).join(' '), {
+      errors: validation.errors.map(({ code, layerId, message }) => ({ code, layerId: layerId || null, message }))
+    });
+  }
+  return creative;
+}
+function projectAnnouncement(creative, entity = {}, status = 'draft') {
+  const link = entity.type === 'custom' ? entity.externalUrl : entity.type && entity.id ? '#' + entity.type + '-' + entity.id : '';
+  const projected = ADS_RULES.creativeToAdvertisement(creative, {
+    brandName:entity.name || (creative.brandKit && creative.brandKit.name) || 'SokoHai',
+    image:entity.image || '',
+    link,
+    status
+  });
+  const headlineLayer = creative.layers.find(layer => layer && layer.role === 'headline' && layer.type === 'text');
+  return {
+    ...projected,
+    headline:projected.headline || text(headlineLayer && headlineLayer.content, 120) || text(creative.title, 160),
+    brandName:projected.brandName || entity.name || 'SokoHai',
+    image:projected.image || '',
+    imageUrl:projected.imageUrl || '',
+    link:projected.link || link,
+    status
+  };
+}
+
+async function canonicalEntity(linked, destination, uid, adminUser, creative) {
+  if (!linked || !linked.type || !linked.id) {
+    if (destination && destination.type === 'external' && /^https:\/\//i.test(String(destination.url || ''))) {
+      return { id:'custom_' + uid, type:'custom', name:text(creative.title, 160) || 'Advertisement', image:'', price:null, location:'', ownerId:uid, externalUrl:text(destination.url, 1000) };
+    }
+    throw new HttpsError('failed-precondition', 'Choose a linked SokoHai entity or valid HTTPS destination.');
+  }
+  const collection = ENTITY_COLLECTIONS[linked.type];
+  if (!collection) throw new HttpsError('invalid-argument', 'Unsupported linked entity type.');
+  const snap = await db.collection(collection).doc(String(linked.id)).get();
+  if (!snap.exists) throw new HttpsError('not-found', 'Linked destination no longer exists.');
+  const data = snap.data() || {};
+  const owners = [data.ownerId, data.sellerId, data.userId, data.uid, data.providerId, data.driverId, snap.id].filter(Boolean).map(String);
+  if (!adminUser && !owners.includes(uid)) throw new HttpsError('permission-denied', 'You are not authorized to advertise this entity.');
+  return {
+    id:snap.id,
+    type:linked.type,
+    name:text(data.title || data.name || data.serviceName || data.company || data.driverName, 160),
+    image:text(data.imageUrl || data.image || data.photo || data.logoUrl || (Array.isArray(data.images) && data.images[0]), 1000),
+    price:Number.isFinite(Number(data.price || data.currentPrice || data.servicePrice)) ? Number(data.price || data.currentPrice || data.servicePrice) : null,
+    location:text(data.location || data.region || data.serviceArea || data.pickupRegion, 160),
+    ownerId:owners[0] || uid
+  };
+}
+
+exports.creativeSaveDraft = onCall({ region:REGION, enforceAppCheck:false }, async request => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in before saving a Creative draft.');
+  const uid = request.auth.uid;
+  const adminUser = isAdmin(request.auth.token);
+  const id = text(request.data && request.data.creativeId, 128);
+  const sourceAnnouncementId = text(request.data && request.data.announcementId, 128);
+  if (!id) throw new HttpsError('invalid-argument', 'creativeId is required.');
+  const creativeRef = db.collection('creatives').doc(id);
+  const creativeSnap = await creativeRef.get();
+  if (!creativeSnap.exists) throw new HttpsError('not-found', 'Creative not found.');
+  const creative = ADS_RULES.normalizeCreative(creativeSnap.data() || {});
+  if (creative.ownerId !== uid && !adminUser) throw new HttpsError('permission-denied', 'This Creative belongs to another advertiser.');
+  const createdAt = FV.serverTimestamp();
+  const announcementRef = sourceAnnouncementId ? db.collection('announcements').doc(sourceAnnouncementId) : null;
+  let updateDraft = false;
+  let source = null;
+  if (announcementRef) {
+    const sourceSnap = await announcementRef.get();
+    if (sourceSnap.exists) {
+      source = sourceSnap.data() || {};
+      const owners = [source.advertiserId, source.ownerId, source.userId].filter(Boolean).map(String);
+      if (!adminUser && !owners.includes(uid)) throw new HttpsError('permission-denied', 'You are not authorized to save this announcement draft.');
+      updateDraft = source.status === 'draft' && source.archived !== true;
+    }
+  }
+  const targetRef = updateDraft ? announcementRef : db.collection('announcements').doc();
+  const projected = projectAnnouncement(creative, {}, 'draft');
+  const payload = {
+    ...projected,
+    advertiserId:creative.ownerId || uid,
+    creativeId:id,
+    creativeVersion:Math.max(0, Number(creative.publishedVersion) || 0),
+    publicationType:'advertisement',
+    entityType:creative.linkedEntity && creative.linkedEntity.type || creative.destination && creative.destination.type || '',
+    entityId:creative.linkedEntity && creative.linkedEntity.id || creative.destination && creative.destination.id || '',
+    linkedEntity:creative.linkedEntity || null,
+    destination:creative.destination || null,
+    moderationStatus:'draft',
+    active:false,
+    archived:false,
+    priority:Math.max(0, Number(creative.priority) || 0),
+    updatedAt:createdAt
+  };
+  if (!updateDraft) {
+    payload.createdAt = createdAt;
+    if (sourceAnnouncementId) payload.draftSourceAnnouncementId = sourceAnnouncementId;
+  }
+  const batch = db.batch();
+  if (updateDraft) batch.set(targetRef, payload, { merge:true });
+  else batch.create(targetRef, payload);
+  await batch.commit();
+  return { ok:true, creativeId:id, announcementId:targetRef.id, status:'draft' };
 });
-exports.creativeTrackEvent = onCall({region:REGION,enforceAppCheck:false},async request=>{const id=text(request.data&&request.data.announcementId,128),type=text(request.data&&request.data.type,20);if(!id||!['impression','click'].includes(type))throw new HttpsError('invalid-argument','Invalid event.');const ann=db.collection('announcements').doc(id),snap=await ann.get();if(!snap.exists||snap.data().status!=='published'||snap.data().archived===true)throw new HttpsError('failed-precondition','Advertisement is not active.');const ip=text(request.rawRequest&&request.rawRequest.ip,100),bucket=Math.floor(Date.now()/(type==='impression'?3600000:60000)),key=crypto.createHash('sha256').update(id+'|'+type+'|'+ip+'|'+bucket).digest('hex'),ev=db.collection('creativeEvents').doc(key);await db.runTransaction(async tx=>{const e=await tx.get(ev);if(e.exists)return;tx.create(ev,{announcementId:id,creativeId:snap.data().creativeId||null,creativeVersion:snap.data().creativeVersion||null,type,createdAt:FV.serverTimestamp(),expiresBucket:bucket});tx.update(ann,{[type==='click'?'clickCount':'viewCount']:FV.increment(1)});});return{ok:true};});
+
+exports.creativePublish = onCall({ region:REGION, enforceAppCheck:false }, async request => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in before publishing.');
+  const uid = request.auth.uid;
+  const adminUser = isAdmin(request.auth.token);
+  const id = text(request.data && request.data.creativeId, 128);
+  const publicationType = text(request.data && request.data.publicationType, 40) || 'advertisement';
+  const action = text(request.data && request.data.action, 20) === 'schedule' ? 'schedule' : 'publish';
+  const replaceAnnouncementId = text(request.data && request.data.replaceAnnouncementId, 128);
+  if (!id) throw new HttpsError('invalid-argument', 'creativeId is required.');
+  if (!TYPES.has(publicationType)) throw new HttpsError('invalid-argument', 'Unsupported publication type.');
+
+  const creativeRef = db.collection('creatives').doc(id);
+  const creativeSnap = await creativeRef.get();
+  if (!creativeSnap.exists) throw new HttpsError('not-found', 'Creative not found.');
+  const storedCreative = creativeSnap.data() || {};
+  if (storedCreative.ownerId !== uid && !adminUser) throw new HttpsError('permission-denied', 'This Creative belongs to another advertiser.');
+  const creative = validateDesign(storedCreative, { requireSchedule: action === 'schedule' });
+  const entity = await canonicalEntity(creative.linkedEntity, creative.destination, uid, adminUser, creative);
+  if (entity.type !== 'custom' && (!creative.destination || String(creative.destination.id) !== entity.id)) {
+    throw new HttpsError('failed-precondition', 'Creative destination must match its linked entity.');
+  }
+
+  let replacedAnnouncementRef = null;
+  if (replaceAnnouncementId) {
+    if (publicationType !== 'advertisement') throw new HttpsError('invalid-argument', 'Only advertisements can replace an announcement.');
+    replacedAnnouncementRef = db.collection('announcements').doc(replaceAnnouncementId);
+    const replaced = await replacedAnnouncementRef.get();
+    if (!replaced.exists) throw new HttpsError('not-found', 'The announcement being replaced no longer exists.');
+    const previous = replaced.data() || {};
+    const owners = [previous.advertiserId, previous.ownerId, previous.userId].filter(Boolean).map(String);
+    if (!adminUser && !owners.includes(uid)) throw new HttpsError('permission-denied', 'You are not authorized to replace this announcement.');
+  }
+
+  const version = Math.max(0, Number(creative.publishedVersion) || 0) + 1;
+  const versionId = 'v' + version;
+  const createdAt = FV.serverTimestamp();
+  const versionRef = creativeRef.collection('versions').doc(versionId);
+  const publicationRef = db.collection('creativePublications').doc();
+  const moderationStatus = adminUser ? 'approved' : 'pending';
+  const creativeStatus = adminUser ? 'PUBLISHED' : 'READY';
+  const destinationSnapshot = entity.type === 'custom'
+    ? { type:'external', url:entity.externalUrl }
+    : { type:entity.type, id:entity.id };
+  const frozen = {
+    creativeId:id,
+    version,
+    ownerId:creative.ownerId,
+    type:publicationType,
+    canvas:creative.canvas,
+    background:creative.background,
+    layers:creative.layers,
+    slideshow:creative.slideshow,
+    creativeSnapshot:creative,
+    brandSnapshot:creative.brandKit || null,
+    linkedEntitySnapshot:entity,
+    destinationSnapshot,
+    createdBy:uid,
+    createdAt,
+    immutable:true,
+    schemaVersion:creative.schemaVersion || 1
+  };
+  const batch = db.batch();
+  batch.create(versionRef, frozen);
+  batch.set(publicationRef, {
+    creativeId:id,
+    creativeVersion:version,
+    versionPath:versionRef.path,
+    ownerId:creative.ownerId,
+    publicationType,
+    linkedEntity:{ type:entity.type, id:entity.id },
+    destination:destinationSnapshot,
+    status:adminUser ? 'PUBLISHED' : 'PENDING_MODERATION',
+    moderationStatus,
+    createdAt,
+    updatedAt:createdAt
+  });
+  batch.set(creativeRef, { ...creative, publishedVersion:version, status:creativeStatus, updatedAt:createdAt }, { merge:true });
+
+  let announcementId = null;
+  if (publicationType === 'advertisement') {
+    const announcementRef = db.collection('announcements').doc();
+    announcementId = announcementRef.id;
+    const announcement = {
+      ...projectAnnouncement(creative, entity, adminUser ? 'published' : 'moderation_pending'),
+      creativeId:id,
+      creativeVersion:version,
+      advertiserId:creative.ownerId,
+      publicationId:publicationRef.id,
+      publicationType,
+      entityType:entity.type,
+      entityId:entity.id,
+      linkedEntity:{ type:entity.type, id:entity.id },
+      destination:destinationSnapshot,
+      moderationStatus,
+      active:adminUser,
+      archived:false,
+      priority:Math.max(0, Number(creative.priority) || 0),
+      createdAt,
+      updatedAt:createdAt,
+      viewCount:0,
+      clickCount:0
+    };
+    batch.create(announcementRef, announcement);
+    if (replacedAnnouncementRef) {
+      batch.update(replacedAnnouncementRef, {
+        archived:true,
+        archivedAt:createdAt,
+        active:false,
+        status:'archived',
+        replacedByCreativeId:id,
+        replacedByVersion:version,
+        updatedAt:createdAt
+      });
+    }
+  }
+
+  await batch.commit();
+  return {
+    ok:true,
+    creativeId:id,
+    version,
+    publicationId:publicationRef.id,
+    announcementId,
+    status:creativeStatus,
+    moderationStatus,
+    action
+  };
+});
+
+exports.creativeTrackEvent = onCall({ region:REGION, enforceAppCheck:false }, async request => {
+  const id = text(request.data && request.data.announcementId, 128);
+  const type = text(request.data && request.data.type, 20);
+  if (!id || !['impression', 'click'].includes(type)) throw new HttpsError('invalid-argument', 'Invalid event.');
+  const announcementRef = db.collection('announcements').doc(id);
+  const snap = await announcementRef.get();
+  if (!snap.exists || snap.data().status !== 'published' || snap.data().archived === true) throw new HttpsError('failed-precondition', 'Advertisement is not active.');
+  const ip = text(request.rawRequest && request.rawRequest.ip, 100);
+  const bucket = Math.floor(Date.now() / (type === 'impression' ? 3600000 : 60000));
+  const key = crypto.createHash('sha256').update(id + '|' + type + '|' + ip + '|' + bucket).digest('hex');
+  const eventRef = db.collection('creativeEvents').doc(key);
+  await db.runTransaction(async transaction => {
+    const event = await transaction.get(eventRef);
+    if (event.exists) return;
+    transaction.create(eventRef, {
+      announcementId:id,
+      creativeId:snap.data().creativeId || null,
+      creativeVersion:snap.data().creativeVersion || null,
+      type,
+      createdAt:FV.serverTimestamp(),
+      expiresBucket:bucket
+    });
+    transaction.update(announcementRef, { [type === 'click' ? 'clickCount' : 'viewCount']:FV.increment(1) });
+  });
+  return { ok:true };
+});

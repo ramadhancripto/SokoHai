@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const r=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
-const market=r('js/app/00-bootstrap.js'), cardCss=r('css/37-product-card-visual.css'), adCss=r('css/38-home-ad-manager.css'), top=r('html/16-topnav.html'), ad=r('js/06-announcement.js'), admin=r('js/app/16-pos-admin-jobs.js'), engine=r('js/app/09-feed-announcements.js'), rules=r('firestore.rules'), upload=r('js/11-uploads.js'), adv=r('html/03-modals-core.html');
+const market=r('js/app/00-bootstrap.js'), cardCss=r('css/37-product-card-visual.css'), adCss=r('css/38-home-ad-manager.css'), top=r('html/16-topnav.html'), ad=r('js/06-announcement.js'), admin=r('js/app/16-pos-admin-jobs.js'), basic=r('js/app/creative/basic-ad-creative.js'), adsRules=r('shared/ads-design-rules.js'), advanced=r('js/app/95-creative-studio.js'), engine=r('js/app/09-feed-announcements.js'), rules=r('firestore.rules'), upload=r('js/11-uploads.js'), adv=r('html/03-modals-core.html');
 let pass=0,fail=0;function t(n,v){if(v){pass++;console.log('PASS '+n)}else{fail++;console.error('FAIL '+n)}}
 const product=market.slice(market.indexOf('skh.ProductPostCard'),market.indexOf('skh.ServicePostCard'));
 t('product front card keeps image/title/price/location',product.includes('skh.cardImage')&&product.includes('skh-title')&&product.includes("cardPriceHtml(data, 'products')")&&product.includes("cardPinLocation(data, 'products')"));
@@ -34,17 +34,17 @@ t('graphic design presets and contrast guidance are available',admin.includes('s
 t('custom theme variables drive card frame, text and gradient',ad.includes('--ad-primary:')&&adCss.includes('var(--ad-frame-alpha')&&adCss.includes('var(--ad-text')&&adCss.includes('var(--ad-accent'));
 t('engagement metrics display only when authentic count is positive',ad.includes("return n>0?")&&ad.includes('a.likeCount')&&ad.includes('a.viewCount'));
 t('published Firestore write updates Home immediately',engine.includes('window.__sokohaiAnnouncementsCache = cache')&&engine.includes('window.__sokohaiOnAnnouncementsUpdate(cache)'));
-t('new advertisement defaults to Publish with explicit button label',admin.includes("existing?(existing.status||((existing.active===false)?'draft':'published')):'published'")&&admin.includes("'Publish Advertisement':'Save Draft'"));
+t('new advertisement defaults to Draft with distinct draft/publish actions',admin.includes('id="annStatus" type="hidden" value="draft"')&&admin.includes("submitAnnouncementForm('draft')")&&admin.includes("submitAnnouncementForm('publish')"));
 t('Admin manager has required status filters',['active','scheduled','draft','expired','archived'].every(x=>admin.includes(x.charAt(0).toUpperCase()+x.slice(1))));
 /* [2026-09-24] primary action label ya Ads top-nav sasa '+ Tengeneza Tangazo'. */
 t('Admin manager has Create Advertisement',admin.includes('+ Tengeneza Tangazo'));
-t('creative wizard supports all required types',['image','image_text','graphic','video','video_text','image_audio','video_audio'].every(x=>admin.includes('value="'+x+'"')));
-t('admin must confirm preview before publish',admin.includes('annPreviewConfirmed')&&admin.includes('Kagua na uthibitishe Preview'));
-t('creative validation checks image/video/audio',admin.includes('needImage')&&admin.includes('needVideo')&&admin.includes('needAudio'));
-t('CTA requires a real HTTPS destination',admin.includes("a.ctaLabel&&!/^https:"));
+t('Basic wizard supports all eight shared creative types',['image_text','image','solid_text','video','video_text','image_audio','slideshow','full_multimedia'].every(x=>admin.includes('value="'+x+'"'))&&adsRules.includes('BASIC_AD_TYPES = Object.freeze'));
+t('admin must confirm the rendered preview before publish',admin.includes('annPreviewConfirmed')&&admin.includes("if(!adInput('annPreviewConfirmed')?.checked)"));
+t('Basic publish uses the shared image/video/audio validation rules',admin.includes('validateBasicCreative(form,creative')&&basic.includes('validateCreative(creative, { forPublish: options.forPublish !== false')&&adsRules.includes("image_text: ['image'], image: ['image']")&&adsRules.includes("video: ['video'], video_text: ['video']")&&adsRules.includes("image_audio: ['image', 'audio']"));
+t('CTA destination is an internal SokoHai entity or a valid HTTPS URL',adsRules.includes("c.destination.type === 'external' && isHttps(c.destination.url)")&&adsRules.includes('Choose a real SokoHai destination or valid HTTPS link'));
 t('existing shared Cloudinary uploader is reused',admin.includes('window.skhUploadFromFile')&&upload.includes('window.skhUploadFromFile'));
 t('media bytes are not written to Firestore',admin.includes("collection(skh.db,'adminMedia')")&&!admin.match(/adminMedia[^\n]*(base64|dataUrl|arrayBuffer)/i));
-t('media library records dimensions/date/type',admin.includes('width:d.width')&&admin.includes('height:d.height')&&admin.includes('uploadedAt')&&admin.includes('type:kind'));
+t('media library records dimensions/date/type',advanced.includes('width:d.width')&&advanced.includes('height:d.height')&&advanced.includes('uploadedAt')&&advanced.includes("type:opts.asLogo?'logo':kind"));
 t('active media cannot be archived while in use',admin.includes("skhAdminAdState(a)==='active'")&&admin.includes('Replace creative kwanza'));
 t('media reference deletion is guarded and accurately scoped',admin.includes('window.skhDeleteAdminMedia')&&admin.includes('if(inUse)return alert')&&admin.includes('Cloudinary asset haitafutwa bila signed deletion')&&admin.includes("deleteDoc(skh.doc(skh.db,'adminMedia',id))"));
 t('advertisement writes are Admin-only in rules',/match \/announcements\/\{id\}[\s\S]*?allow create, update, delete: if isAdmin\(\)/.test(rules));

@@ -5,6 +5,8 @@
   window.__SOKOHAI_ANNOUNCEMENT_STORY_V2__ = true;
 
   let activeIndex = 0, rotationTimer = null, scheduleTimer = null, liveTimer = null, liveNotice = null;
+  const ADS_RULES=window.SokoHaiAdsDesignRules;
+  if(!ADS_RULES)throw new Error('Shared SokoHai Ads Design rules failed to load before the announcement renderer.');
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const safeUrl = v => { const s=String(v||'').trim(); return /^(https:\/\/|\/|#)/i.test(s)&&!/["'<>\s]/.test(s)?s:''; };
   const short = (v,n) => { const s=String(v||'').replace(/\s+/g,' ').trim(); return s.length>n?s.slice(0,n-1).trim()+'…':s; };
@@ -35,7 +37,7 @@
 
   function activeAds() {
     const now=Date.now(), source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[];
-    return source.filter(a=>stateOf(a,now)==='active' && (a.text||a.headline||a.image||a.imageUrl||a.videoUrl||a.badgeText))
+    return source.filter(a=>stateOf(a,now)==='active' && (a.text||a.headline||a.image||a.imageUrl||a.videoUrl||a.audioUrl||a.backgroundImageUrl||a.badgeText||(a.slideshow&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.some(s=>s&&s.src))))
       .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   }
   function hide(){const h=document.getElementById('topAnnouncement');if(!h)return;h.className='big-announcement skh-ann-story is-empty';h.innerHTML='';h.hidden=true;}
@@ -46,6 +48,12 @@
   function mediaHtml(a,title,type) {
     const image=safeUrl(a.image || a.imageUrl || a.mediaUrl || a.photo), video=safeUrl(a.videoUrl), poster=safeUrl(a.posterUrl || image), audio=safeUrl(a.audioUrl);
     const aspect=String(a.aspectRatio || a.format || '16:9').replace(':','-');
+    const backgroundImage=safeUrl(a.backgroundImageUrl||'');
+    const backgroundPrimary=safeColor(a.primaryColor,'#0E7A5F');
+    const backgroundAccent=safeColor(a.accentColor,'#167A91');
+    const mediaBackgroundStyle=backgroundImage
+      ?'background-color:'+backgroundPrimary+';background-image:linear-gradient(180deg,rgba(8,20,18,.2),rgba(8,20,18,.2)),url(&quot;'+esc(backgroundImage)+'&quot;);background-size:cover;background-position:center;'
+      :String(a.backgroundMode||'gradient')==='solid'?'background:'+backgroundPrimary+';':'background:linear-gradient(135deg,'+backgroundPrimary+','+backgroundAccent+');';
     const fit=String(a.objectFit || a.fit || 'cover').toLowerCase();
     const focalX=Number.isFinite(Number(a.focalX))?Number(a.focalX):50;
     const focalY=Number.isFinite(Number(a.focalY))?Number(a.focalY):50;
@@ -67,11 +75,11 @@
        are emitted per card (unique id) from per-slide durations; slide 1 is
        visible without animation (reduced-motion + static contexts). */
     let visual='';
-    const ssRaw=(a.slideshow&&typeof a.slideshow==='object')?a.slideshow:null;
-    const ssSlides=ssRaw&&Array.isArray(ssRaw.slides)?ssRaw.slides.filter(function(s){return s&&safeUrl(s.src);}).slice(0,12):[];
+    const ssRaw=a.slideshow&&typeof a.slideshow==='object'?ADS_RULES.normalizeSlideshow(a.slideshow):null;
+    const ssSlides=ssRaw&&ssRaw.enabled&&Array.isArray(ssRaw.slides)?ssRaw.slides.filter(function(s){return s&&safeUrl(s.src);}).slice(0,ADS_RULES.MAX_SLIDESHOW_SLIDES):[];
     if (ssSlides.length>=2) {
       const trans=String((ssRaw.transition||'fade')).toLowerCase();
-      const durs=ssSlides.map(function(s){const d=Number(s.duration);return Number.isFinite(d)&&d>0?Math.min(30,d):(Number(ssRaw.defaultDuration)||3);});
+      const durs=ssSlides.map(function(s){const d=Number(s.duration),fallback=Number(ssRaw.defaultDuration)||ADS_RULES.DEFAULT_SLIDE_DURATION_SECONDS;return Number.isFinite(d)&&d>0?Math.max(ADS_RULES.MIN_SLIDE_DURATION_SECONDS,Math.min(ADS_RULES.MAX_SLIDE_DURATION_SECONDS,d)):fallback;});
       const total=durs.reduce(function(t,d){return t+d;},0)||1;
       let hash=0;const seed=ssSlides.map(function(s){return s.src;}).join('|');
       for(let i=0;i<seed.length;i++){hash=((hash<<5)-hash+seed.charCodeAt(i))|0;}
@@ -103,20 +111,22 @@
       }
       const dots=ssSlides.map(function(_,i){return '<i class="skh-ann-ss-dot'+(i?'':' on')+'"></i>';}).join('');
       visual='<style>'+kf+'</style><div class="skh-ann-slideshow skh-ss-'+esc(['none','fade','slide','slide-left','slide-right','zoom','crossfade'].indexOf(trans)>=0?trans:'fade')+'" data-slides="'+ssSlides.length+'" data-total="'+Math.round(total)+'">'+slides+'<div class="skh-ann-ss-dots" aria-hidden="true">'+dots+'</div><span class="skh-ann-video-dur">'+ssSlides.length+' picha · '+Math.round(total)+'s</span></div>';
+    }else if(ssSlides.length===1){
+      visual='<img class="skh-ann-media-main" src="'+esc(safeUrl(ssSlides[0].src))+'" alt="'+esc(ssSlides[0].name||title)+'" loading="eager" decoding="async" style="'+mediaInlineStyle+'">'+overlayHtml;
     }
-    if (!visual && type.indexOf('video')!==-1 && video) {
+    if (!visual && type.indexOf('video')!==-1 && video || (!visual && type==='full_multimedia' && video)) {
       /* [FINAL INSTRUCTIONS §11/§24] Poster-first: initial state = POSTER + subtle
          Play cue. Motion + audio start ONLY after the user taps Play (delegated
          handler below). Technical controls remain in Creator Studio; `controls`
          only via explicit opt-in. */
       const durS=Number(a.mediaDurationSeconds||a.videoDuration||a.durationSeconds)||0;
       const durChip=durS>0?'<span class="skh-ann-video-dur">'+Math.floor(durS/60)+':'+String(Math.floor(durS%60)).padStart(2,'0')+'</span>':'';
-      visual='<div class="skh-ann-video-wrap"><video class="skh-ann-video" muted playsinline '+(a.videoControls===true?'controls ':'')+'preload="metadata" '+(poster?'poster="'+esc(poster)+'" ':'')+'style="'+mediaInlineStyle+'"><source src="'+esc(video)+'"></video>'+(a.videoControls===true?'':'<button type="button" class="skh-ann-video-cue skh-ann-video-play" aria-label="Play video"><span class="skh-visually-hidden">Play</span></button>'+durChip)+'</div>'+overlayHtml;
+      visual='<div class="skh-ann-video-wrap"><video class="skh-ann-video" muted playsinline '+(a.videoControls===true?'controls ':'')+'preload="metadata" data-trim-start="'+Math.max(0,Number(a.videoTrimStart)||0)+'" data-trim-end="'+Math.max(0,Number(a.videoTrimEnd)||0)+'" data-video-loop="'+(a.videoLoop!==false)+'" '+(poster?'poster="'+esc(poster)+'" ':'')+'style="'+mediaInlineStyle+'"><source src="'+esc(video)+'"></video>'+(a.videoControls===true?'':'<button type="button" class="skh-ann-video-cue skh-ann-video-play" aria-label="Play video"><span class="skh-visually-hidden">Play</span></button>'+durChip)+'</div>'+overlayHtml;
     } else if (!visual && image) {
       visual='<img class="skh-ann-media-blur" src="'+esc(image)+'" alt="" aria-hidden="true"><img class="skh-ann-media-main" src="'+esc(image)+'" alt="'+esc(title)+'" loading="eager" decoding="async" style="'+mediaInlineStyle+'">'+overlayHtml;
     }
     if (!visual) return '';
-    return '<div class="skh-ann-media aspect-'+esc(aspect)+' fit-'+esc(fit)+'">'+visual+(audio?'<audio class="skh-ann-audio" controls preload="none" src="'+esc(audio)+'"></audio>':'')+'</div>';
+    return '<div class="skh-ann-media aspect-'+esc(aspect)+' fit-'+esc(fit)+'" style="'+mediaBackgroundStyle+'">'+visual+(audio?'<audio class="skh-ann-audio" controls preload="none" src="'+esc(audio)+'"></audio>':'')+'</div>';
   }
 
   function countLabel(value, label) {
@@ -141,24 +151,42 @@
     const badgeSize=['sm','md','lg'].indexOf(String(a.badgeSize))>=0?String(a.badgeSize):'md';
     const badgePos=['tl','tr','bl','br'].indexOf(String(a.badgePosition))>=0?String(a.badgePosition):'tr';
     const badgeOpacity=Number.isFinite(Number(a.badgeOpacity))?Math.max(.4,Math.min(1,Number(a.badgeOpacity))):1;
+    const badgeLimits=ADS_RULES.TEXT_ROLE_SIZES.badge;
+    const badgeFontSize=Number.isFinite(Number(a.badgeFontSize))?Math.max(badgeLimits.min,Math.min(badgeLimits.max,Number(a.badgeFontSize))):14;
+    const badgeTextAlign=ADS_RULES.TEXT_ALIGNMENTS.includes(String(a.badgeTextAlign))?String(a.badgeTextAlign):'center';
+    const badgeJustify=badgeTextAlign==='left'?'flex-start':badgeTextAlign==='right'?'flex-end':'center';
     const badgeIconMap={fire:'\u{1F525}',bolt:'\u26A1',tag:'\u{1F3F7}\uFE0F',star:'\u2B50',truck:'\u{1F69A}',sparkle:'\u2728'};
     const badgeIcon=badgeIconMap[String(a.badgeIcon)]||'';
     let badgeHtml='';
     if (badgeText) {
-      badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+badgeAnimClass+' size-'+esc(badgeSize)+' pos-'+esc(badgePos)+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+(badgeOpacity<1?';opacity:'+badgeOpacity:'')+';"><span class="skh-badge-inner">'+(badgeIcon?badgeIcon+' ':'')+esc(badgeText)+'</span></div>';
+      badgeHtml='<div class="skh-ann-badge-tag style-'+esc(badgeStyle)+badgeAnimClass+' size-'+esc(badgeSize)+' pos-'+esc(badgePos)+'" style="--badge-bg:'+badgeColor+';--badge-text:'+badgeTextColor+';font-size:'+badgeFontSize+'px!important;text-align:'+badgeTextAlign+';justify-content:'+badgeJustify+';min-width:74px;'+(badgeOpacity<1?'opacity:'+badgeOpacity+';':'')+'"><span class="skh-badge-inner">'+(badgeIcon?badgeIcon+' ':'')+esc(badgeText)+'</span></div>';
     }
 
     // Custom design properties
     const primary=safeColor(a.primaryColor,'#0E7A5F');
     const accent=safeColor(a.accentColor,'#167A91');
     const textColor=safeColor(a.textColor,'#FFFFFF');
+    const descriptionColor=safeColor(a.descriptionColor,textColor);
+    const bodyLimits=ADS_RULES.TEXT_ROLE_SIZES.body;
+    const descriptionSize=Number.isFinite(Number(a.descriptionSize))?Math.max(bodyLimits.min,Math.min(bodyLimits.max,Number(a.descriptionSize))):20;
+    const descriptionAlign=ADS_RULES.TEXT_ALIGNMENTS.includes(String(a.descriptionAlign))?String(a.descriptionAlign):(ADS_RULES.TEXT_ALIGNMENTS.includes(String(a.textAlign))?String(a.textAlign):'left');
+    const offerColor=safeColor(a.offerColor,accent);
+    const offerTextColor=safeColor(a.offerTextColor,textColor);
+    const offerLimits=ADS_RULES.TEXT_ROLE_SIZES.price;
+    const offerSize=Number.isFinite(Number(a.offerSize))?Math.max(offerLimits.min,Math.min(offerLimits.max,Number(a.offerSize))):24;
+    const offerAlign=ADS_RULES.TEXT_ALIGNMENTS.includes(String(a.offerAlign))?String(a.offerAlign):'left';
+    const offerJustify=offerAlign==='left'?'flex-start':offerAlign==='right'?'flex-end':'center';
+    const offerMargin=offerAlign==='center'?'margin-left:auto;margin-right:auto;':offerAlign==='right'?'margin-left:auto;':'';
     const surface=safeColor(a.surfaceColor,'#FFFFFF');
     const frameOpacity=safeOpacity(a.frameOpacity);
     const gradientAngle=Number.isFinite(Number(a.gradientAngle))?Number(a.gradientAngle):135;
     const borderRadius=Number.isFinite(Number(a.borderRadius))?Math.max(0,Math.min(36,Number(a.borderRadius))):22;
     const fontWeight=String(a.fontWeight||'950');
-    const fontSize=Number.isFinite(Number(a.fontSize))?Number(a.fontSize):0;
-    const textAlign=String(a.textAlign||'left');
+    const headlineLimits=ADS_RULES.TEXT_ROLE_SIZES.headline;
+    const fontSize=Number.isFinite(Number(a.fontSize))?Math.max(headlineLimits.min,Math.min(headlineLimits.max,Number(a.fontSize))):0;
+    const textAlign=ADS_RULES.TEXT_ALIGNMENTS.includes(String(a.textAlign))?String(a.textAlign):'left';
+    const aspectRatio=String(a.aspectRatio||a.format||'16:9');
+    const aspectCss=({'1:1':'1 / 1','4:5':'4 / 5','9:16':'9 / 16','16:9':'16 / 9'})[aspectRatio]||'16 / 9';
     const textShadow=String(a.textShadow||'none');
     const priceTag=String(a.priceTag||a.price||'').trim();
     const ctaStyle=String(a.ctaStyle||'solid').toLowerCase();
@@ -208,20 +236,26 @@
     }
 
     // Copy block — headline hierarchy (Level 2); offer imesogea kwenye action row (Level 3)
-    const titleStyleAttr='font-weight:'+esc(fontWeight)+';text-align:'+esc(textAlign)+';'+(fontSize?'font-size:'+fontSize+'px!important;':'')+(textShadow==='subtle'?'text-shadow:0 2px 8px rgba(0,0,0,0.25);':textShadow==='strong'?'text-shadow:0 4px 16px rgba(0,0,0,0.45);':'');
-    const copy=withText?'<div class="skh-ann-title-wrap"><strong class="skh-ann-title" style="'+titleStyleAttr+'">'+titleFormatted+'</strong></div>'+(message&&message!==title?'<p style="text-align:'+esc(textAlign)+'">'+esc(message)+'</p>':''):'';
+    const titleStyleAttr='font-weight:'+esc(fontWeight)+';text-align:'+esc(textAlign)+';color:'+textColor+'!important;'+(fontSize?'font-size:'+fontSize+'px!important;':'')+(textShadow==='subtle'?'text-shadow:0 2px 8px rgba(0,0,0,0.25);':textShadow==='strong'?'text-shadow:0 4px 16px rgba(0,0,0,0.45);':'');
+    const copy=withText?'<div class="skh-ann-title-wrap"><strong class="skh-ann-title" style="'+titleStyleAttr+'">'+titleFormatted+'</strong></div>'+(message&&message!==title?'<p style="text-align:'+esc(descriptionAlign)+';font-size:'+descriptionSize+'px!important;color:'+descriptionColor+'!important">'+esc(message)+'</p>':''):'';
 
-    const actionButton=link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+ctaAnimClass+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':'<span class="skh-ann-no-cta">Tangazo la SokoHai</span>';
+    const actionButton=link?'<button type="button" class="skh-ann-action cta-style-'+esc(ctaStyle)+ctaAnimClass+'" onclick="window.skhAnnouncementOpen(\''+esc(link)+'\',\''+esc(a.id||'')+'\')"><span>'+esc(action)+'</span><b aria-hidden="true">'+ctaIconHtml+'</b></button>':(a.ctaLabel?'<span class="skh-ann-no-cta">'+esc(action)+'</span>':'');
+    const backgroundImage=safeUrl(a.backgroundImageUrl||'');
+    const backgroundMode=String(a.backgroundMode||'gradient');
+    const textBackgroundStyle=backgroundImage
+      ?'background-color:'+primary+';background-image:linear-gradient(180deg,rgba(8,20,18,.35),rgba(8,20,18,.3)),url(&quot;'+esc(backgroundImage)+'&quot;);background-size:cover;background-position:center;'
+      :backgroundMode==='solid'?'background:'+primary+';':'background:linear-gradient('+gradientAngle+'deg,'+primary+','+accent+');';
 
-    let theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity+';--ad-angle:'+gradientAngle+'deg;--ad-radius:'+borderRadius+'px;';
+    let theme='--ad-primary:'+primary+';--ad-accent:'+accent+';--ad-text:'+textColor+';--ad-surface:'+surface+';--ad-frame-alpha:'+frameOpacity+';--ad-angle:'+gradientAngle+'deg;--ad-radius:'+borderRadius+'px;--ad-aspect-ratio:'+aspectCss+';';
     const pal=(a.paletteId&&typeof window.skhPaletteTokens==='function')?window.skhPaletteTokens(a.paletteId):null;
     if(pal){
       theme+='--ad-pal-background:'+pal.background+';--ad-surface-alt:'+pal.surfaceAlt+';--ad-primary-dark:'+pal.primaryDark+';--ad-primary-light:'+pal.primaryLight+';--ad-secondary:'+pal.secondary+';--ad-muted:'+pal.mutedText+';--ad-border:'+pal.border+';--ad-cta-bg:'+pal.ctaBackground+';--ad-cta-text:'+pal.ctaText+';--ad-badge-bg:'+pal.badgeBackground+';--ad-badge-text:'+pal.badgeText+';--ad-overlay:'+pal.overlay+';--ad-grad-start:'+pal.gradientStart+';--ad-grad-mid:'+pal.gradientMiddle+';--ad-grad-end:'+pal.gradientEnd+';--ad-shadow:'+pal.shadow+';--ad-glow:'+pal.glow+';';
     }
 
     /* Auto-composition (existing fields tu): video > offer > product > text */
-    const hasVideo=type.indexOf('video')!==-1&&!!safeUrl(a.videoUrl);
+    const hasVideo=(type.indexOf('video')!==-1||type==='full_multimedia')&&!!safeUrl(a.videoUrl);
     const comp=(!media)?'text':hasVideo?'video':(priceTag?'offer':'product');
+    const aspectClass=({'1:1':'1-1','4:5':'4-5','9:16':'9-16','16:9':'16-9'})[aspectRatio]||'16-9';
     /* Micro-labels: zinazohitajika tu (category + VIDEO) — si labels zote */
     const catList=(window.SKH_AD_CATEGORIES&&window.SKH_AD_CATEGORIES.length)?window.SKH_AD_CATEGORIES:[];
     const catObj=a.category?catList.find(function(c){return c.id===a.category;}):null;
@@ -232,24 +266,53 @@
     const ssActive=!!(a.slideshow&&a.slideshow.enabled&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.filter(function(s){return s&&s.src;}).length>=2);
     if(ssActive)microLabels.push('SLIDESHOW');
     const kickerHtml=microLabels.length?'<div class="skh-ann-kicker skh-ann-micro">'+microLabels.map(function(t){return '<span>'+t+'</span>';}).join('')+'</div>':'';
-    const offerHtml=priceTag?'<span class="skh-ann-price-pill skh-ann-offer">'+esc(priceTag)+'</span>':'';
+    const offerHtml=priceTag?'<span class="skh-ann-price-pill skh-ann-offer" style="font-size:'+offerSize+'px!important;color:'+offerTextColor+'!important;background:'+offerColor+'!important;text-align:'+offerAlign+';justify-content:'+offerJustify+';'+offerMargin+'">'+esc(priceTag)+'</span>':'';
+    const actionFooter=(offerHtml||actionButton)?'<footer class="skh-ann-post-actions'+(offerHtml?' has-offer':'')+'">'+offerHtml+actionButton+'</footer>':'';
 
-    return '<article class="skh-ann-card layout-'+esc(type)+' skh-comp-'+esc(comp)+(a.compact===true?' skh-ad-compact':'')+'" style="'+theme+'border-radius:var(--ad-radius,22px);">'
+    return '<article class="skh-ann-card layout-'+esc(type)+' skh-comp-'+esc(comp)+' skh-ad-ratio-'+aspectClass+(a.compact===true?' skh-ad-compact':'')+'" style="'+theme+'border-radius:var(--ad-radius,22px);">'
       +badgeHtml
       +'<header class="skh-ann-post-head">'+(logo?'<img class="skh-ann-brand-logo" src="'+esc(logo)+'" alt="'+esc(brand)+'">':'<span class="skh-ann-brand-fallback">'+initial+'</span>')
       +'<div class="skh-ann-brand-copy"><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored')+'</small></div><span class="skh-ann-sponsored">AD</span></header>'
       +(media
-        ? media+'<div class="skh-ann-body">'+kickerHtml+(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+'</div><footer class="skh-ann-post-actions'+(offerHtml?' has-offer':'')+'">'+offerHtml+actionButton+'</footer>'
+        ? media+'<div class="skh-ann-body">'+kickerHtml+(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+'</div>'+actionFooter
         /* [FINAL §1/§30] Text-only (no-media) ads are complete ads: copy + OFFER + CTA */
-        :'<div class="skh-ann-text-creative"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div>'+(offerHtml?'<div class="skh-ann-text-offer">'+offerHtml+'</div>':'')+'<div class="skh-ann-text-cta">'+actionButton+'</div></div>')
+        :'<div class="skh-ann-text-creative" style="'+textBackgroundStyle+'aspect-ratio:var(--ad-aspect-ratio,16/9);"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div>'+(offerHtml?'<div class="skh-ann-text-offer" style="text-align:'+esc(offerAlign)+'">'+offerHtml+'</div>':'')+(actionButton?'<div class="skh-ann-text-cta">'+actionButton+'</div>':'')+'</div>')
       +(metrics?'<div class="skh-ann-metrics">'+metrics+'</div>':'')
       +'</article>';
   }
   window.skhAdvertisementCardHtml=cardHtml;
 
+  function bindAdvertisementVideoControls(root){
+    if(!root||!root.querySelectorAll)return;
+    root.querySelectorAll('video.skh-ann-video').forEach(function(video){
+      if(video.dataset.skhTrimBound==='1')return;
+      video.dataset.skhTrimBound='1';
+      const start=Math.max(0,Number(video.dataset.trimStart)||0);
+      const end=Math.max(0,Number(video.dataset.trimEnd)||0);
+      const loop=video.dataset.videoLoop!=='false';
+      const seekStart=function(){
+        if(!start||!Number.isFinite(Number(video.duration))||video.duration<=0)return;
+        try{video.currentTime=Math.min(start,Math.max(0,video.duration-.05));}catch(e){}
+      };
+      video.addEventListener('loadedmetadata',seekStart);
+      video.addEventListener('timeupdate',function(){
+        if(!end||end<=start||video.currentTime<end-.05)return;
+        const wrap=video.closest('.skh-ann-video-wrap'),cue=wrap&&wrap.querySelector('.skh-ann-video-play');
+        if(loop){
+          try{video.currentTime=Math.min(start,Math.max(0,video.duration-.05));if(!video.paused)video.play().catch(function(){});}catch(e){}
+        }else{
+          video.pause();try{video.currentTime=Math.min(end,video.duration||end);}catch(e){}
+          if(wrap)wrap.classList.remove('is-playing');if(cue)cue.style.display='';
+        }
+      });
+      if(video.readyState>=1)seekStart();
+    });
+  }
+  window.skhBindAdvertisementVideoControls=bindAdvertisementVideoControls;
+
   function renderAd(a, live) {
     const host=document.getElementById('topAnnouncement');if(!host||!a)return;
-    const hasMedia=!!safeUrl(a.image||a.imageUrl||a.mediaUrl||a.photo||a.videoUrl);
+    const hasMedia=!!(safeUrl(a.image||a.imageUrl||a.mediaUrl||a.photo||a.videoUrl||a.audioUrl)||(a.slideshow&&Array.isArray(a.slideshow.slides)&&a.slideshow.slides.some(s=>s&&safeUrl(s.src))));
     host.hidden=false;
     host.className='big-announcement skh-ann-story skh-home-ad skh-ann-post '+(hasMedia?'has-media':'no-media')+(live?' is-live':'');
     host.innerHTML=cardHtml(a,live);
@@ -258,11 +321,12 @@
        Play button initial state; playback starts only on user tap (delegated
        click handler registered once at module load below). */
     const video=host.querySelector('video');
-    if(video){try{video.pause();video.currentTime=0;}catch(e){}}
+    if(video){try{video.pause();video.currentTime=Number(video.dataset.trimStart)||0;}catch(e){}}
+    bindAdvertisementVideoControls(host);
   }
 
   function armScheduleRefresh(){clearTimeout(scheduleTimer);const now=Date.now(),source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[],times=[];source.forEach(a=>{if(a&&a.archived!==true&&a.status!=='archived'&&a.active!==false&&a.status!=='draft'){const s=Date.parse(a.startAt||''),e=Date.parse(a.endAt||'');if(s>now)times.push(s);if(e>now)times.push(e+50);}});if(times.length){const delay=Math.max(250,Math.min(3600000,Math.min.apply(Math,times)-now));scheduleTimer=setTimeout(renderCurrent,delay);}}
-  function renderCurrent(){clearTimeout(rotationTimer);armScheduleRefresh();if(liveNotice){renderAd(liveNotice,true);return;}const list=activeAds();if(!list.length){hide();return;}if(activeIndex>=list.length)activeIndex=0;renderAd(list[activeIndex],false);if(list.length>1){const dMs=Number(list[activeIndex].displayDurationSeconds)>0?Number(list[activeIndex].displayDurationSeconds)*1000:Number(list[activeIndex].rotationMs)||9000;rotationTimer=setTimeout(()=>{activeIndex=(activeIndex+1)%list.length;renderCurrent();},Math.max(5000,Math.min(59000,dMs)));}}
+  function renderCurrent(){clearTimeout(rotationTimer);armScheduleRefresh();if(liveNotice){renderAd(liveNotice,true);return;}const list=activeAds();if(!list.length){hide();return;}if(activeIndex>=list.length)activeIndex=0;renderAd(list[activeIndex],false);if(list.length>1){const display=ADS_RULES.DISPLAY_DURATION_SECONDS,dMs=Number(list[activeIndex].displayDurationSeconds)>0?Number(list[activeIndex].displayDurationSeconds)*1000:Number(list[activeIndex].rotationMs)||display.default*1000;rotationTimer=setTimeout(()=>{activeIndex=(activeIndex+1)%list.length;renderCurrent();},Math.max(display.min*1000,Math.min(display.max*1000,dMs)));}}
   window.startSokoHaiSmoothMarquee=renderCurrent;window.startSokoHaiAnnouncementRotator=renderCurrent;window.startSokoHaiProAnnouncementBar=renderCurrent;window.playNextSokoHaiProAnnouncement=function(){activeIndex++;renderCurrent();};window.rotateSokoHaiAnnouncement=window.playNextSokoHaiProAnnouncement;
   window.__sokohaiOnAnnouncementsUpdate=function(){activeIndex=0;renderCurrent();};
   window.updateLiveTicker=function(type,message,subject,forceReset){clearTimeout(liveTimer);if(type==='normal'||forceReset){liveNotice=null;renderCurrent();return;}liveNotice={creativeType:'solid_text',brandName:'SokoHai',headline:subject||'Taarifa muhimu',description:message||'',active:true};renderCurrent();liveTimer=setTimeout(()=>{liveNotice=null;renderCurrent();},16000);};
@@ -280,7 +344,10 @@
     const v=wrap&&wrap.querySelector?wrap.querySelector('video'):null;
     if(!v)return;
     if(v.paused){
-      v.muted=false; /* user gesture → audio allowed (§11: motion + audio after Play) */
+      const basicPreview=!!(v.closest('.adm-ad-preview'));
+      v.muted=basicPreview?window.__skhBasicPreviewMuted!==false:false;
+      const trimStart=Math.max(0,Number(v.dataset.trimStart)||0),trimEnd=Math.max(0,Number(v.dataset.trimEnd)||0);
+      if(v.currentTime<trimStart||(trimEnd>trimStart&&v.currentTime>=trimEnd))try{v.currentTime=trimStart;}catch(err){}
       const p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;v.play().catch(function(){});});
       wrap.classList.add('is-playing');
       if(cue)cue.style.display='none';

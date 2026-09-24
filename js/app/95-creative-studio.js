@@ -3,12 +3,13 @@ import { skh } from './00-bootstrap.js';
 import {
   createCreative,normalizeCreative,duplicateCreative,resizeCreative,applyEntity,makeLayer,
   FORMAT_PRESETS,VERIFIED_FONTS,QUICK_COLORS,SOKOHAI_BRAND_COLORS,GRADIENT_PRESETS,PATTERNS,TEXTURES,
-  ENTRANCE_ANIMATIONS,EMPHASIS_ANIMATIONS,EXIT_ANIMATIONS,ANIMATION_MODES,BADGE_ANIMATIONS,CTA_ANIMATIONS,
+  ENTRANCE_ANIMATIONS,EMPHASIS_ANIMATIONS,EXIT_ANIMATIONS,ANIMATION_MODES,BADGE_ANIMATIONS,CTA_ANIMATIONS,ANIMATION_EASINGS,
   FIT_MODES,FOCAL_POINTS,ASPECT_RATIOS,MULTIMEDIA_PRESETS,
   TEXT_STYLE_PRESETS,FONT_PAIRING_PRESETS,generatePalette,alignLayers,
   templatesFor,autoDesignVariations,designSuggestions,validateCreative,contrastRatio,
   /* [NON-CANVAS MVP 2026-09-24] */
-  MAX_AD_MEDIA_SECONDS,MAX_AD_DURATION_SECONDS,SLIDESHOW_TRANSITIONS,slideshowTotal,detectComposition,COMPOSITION_LABELS,autoAdDuration
+  MAX_AD_MEDIA_SECONDS,MAX_AD_DURATION_SECONDS,MIN_AD_DURATION_SECONDS,SLIDESHOW_TRANSITIONS,slideshowTotal,detectComposition,COMPOSITION_LABELS,autoAdDuration,creativeToAdvertisement,
+  DISPLAY_DURATION_SECONDS,MIN_SLIDE_DURATION_SECONDS,MAX_SLIDE_DURATION_SECONDS,DEFAULT_SLIDE_DURATION_SECONDS,MAX_SLIDESHOW_SLIDES,MAX_SLIDESHOW_DURATION_SECONDS,ANIMATION_LIMITS,TEXT_ROLE_LIMITS,TEXT_ROLE_SIZES,validateAdMediaFile,detectAdMediaKind,AD_MEDIA_UPLOAD_FOLDER
 } from './creative/creative-model.js';
 import {CreativeHistory} from './creative/creative-history.js';
 import {renderCreativeSvg,exportCreative,downloadBlob,removeBackgroundClient} from './creative/creative-svg-renderer.js';
@@ -88,75 +89,91 @@ function updateTimelineUI(){
 function syncBackToLegacyForm(){
   const modal=document.getElementById('announcementFormModal');
   if(!modal||!state)return;
-  const ssFeed=state.slideshow&&Array.isArray(state.slideshow.slides)&&state.slideshow.slides.filter(s=>s&&s.src).length>=2?state.slideshow:null;
-  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=val;};
+  const ssState=state.slideshow&&Array.isArray(state.slideshow.slides)&&state.slideshow.slides.length?state.slideshow:null;
+  const ssFeed=ssState&&ssState.enabled&&ssState.slides.filter(s=>s&&s.src).length>=2?ssState:null;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=String(val);};
+  const setH=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val==null?'':String(val);};
   const role=r=>state.layers.find(l=>l.role===r);
   const head=role('headline'),body=role('body'),price=role('price'),cta=role('cta');
-  const img=state.layers.find(l=>l.type==='image'||l.type==='video');
-  const isVideo=img?.type==='video';
-  const aud=state.layers.find(l=>l.type==='audio');
-  /* [FINAL INSTRUCTIONS §1/§6] Map composition → form creativeType so the
-     simple-form save path never forces media on a text/graphic-only ad. */
-  const compNow=detectComposition(state);
-  const typeForComp={poster:'solid_text',image:'image_text',sponsored:'image_text',image_audio:'image_audio',
-    video:'video',video_text:'video_text',video_audio:'video_audio',slideshow:'image_text',
-    slideshow_audio:'image_audio',image_video:'video',full_mix:'video_audio',audio:'solid_text'}[compNow]||'image_text';
+  const image=state.layers.find(l=>l.type==='image'&&l.visible!==false&&l.src);
+  const video=state.layers.find(l=>l.type==='video'&&l.visible!==false&&(l.src||l.videoUrl));
+  const aud=state.layers.find(l=>l.type==='audio'&&l.visible!==false&&(l.src||l.audioUrl));
+  const composition=detectComposition(state);
+  const inferred={poster:'solid_text',image:'image_text',sponsored:'image_text',image_audio:'image_audio',
+    video:'video',video_text:'video_text',video_audio:'full_multimedia',slideshow:'slideshow',
+    slideshow_audio:'slideshow',image_video:'full_multimedia',full_mix:'full_multimedia',audio:'solid_text'}[composition]||'image_text';
+  const typeForComp=state.basicType||inferred;
   set('annCreativeType',typeForComp);
-  if(head?.content)set('annHeadline',head.content);
-  if(body?.content)set('annText',body.content);
-  if(price?.content)set('annPriceTag',price.content);
-  if(cta?.content)set('annCta',cta.content);
-  if(state.background?.color)set('annPrimaryColor',state.background.color);
-  if(state.background?.color2)set('annAccentColor',state.background.color2);
-  if(head?.style?.fill)set('annTextColor',head.style.fill);
-  if(head?.style?.fontWeight)set('annFontWeight',head.style.fontWeight);
-  if(head?.animation?.entrance)set('annTextAnimation',head.animation.entrance);
-  if(head?.animation?.emphasis)set('annTextEmphasis',head.animation.emphasis);
-  if(head?.animation?.mode)set('annAnimationMode',head.animation.mode);
-  if(head?.animation?.duration)set('annAnimationDuration',head.animation.duration);
-  if(img?.src){
-    if(isVideo){set('annVideo',img.src);set('annImage','');}
-    else{set('annImage',img.src);set('annVideo','');}
-  }else if(ssFeed&&ssFeed.slides&&ssFeed.slides[0]?.src){
-    set('annImage',ssFeed.slides[0].src);set('annVideo','');
-  }
-  if(aud?.src)set('annAudio',aud.src);
-  if(img?.style?.fit)set('annMediaFit',img.style.fit);
-  if(img?.focalPoint)set('annFocalPoint',img.focalPoint);
-  if(state.brandKit?.name)set('annBrand',state.brandKit.name);
-  if(state.brandKit?.logoUrl)set('annLogo',state.brandKit.logoUrl);
-  if(state.destination?.url)set('annLink',state.destination.url);
-  // --- Canonical advertisement meta (Creator Studio upgrade) ---
-  const bdg=state.layers.find(l=>l.role==='badge');
-  if(bdg){
-    set('annBadgeText',bdg.content);
-    if(/^#[0-9a-f]{6}$/i.test(bdg.style?.backgroundColor||''))set('annBadgeColor',bdg.style.backgroundColor);
-    if(/^#[0-9a-f]{6}$/i.test(bdg.style?.fill||''))set('annBadgeTextColor',bdg.style.fill);
-    if(bdg.animation&&(bdg.animation.emphasis!=='none'||bdg.animation.entrance!=='none'))set('annBadgeAnimation',bdg.animation.emphasis!=='none'?bdg.animation.emphasis:bdg.animation.entrance);
-  }
-  if(state.offer)set('annPriceTag',state.offer);
-  if(state.category)set('annCategory',state.category);
-  if(state.campaignName!=null)set('annCampaignName',state.campaignName);
-  if(state.campaignId!=null)set('annCampaignId',state.campaignId);
-  if(state.paletteId!=null)set('annPaletteId',state.paletteId);
-  if(state.priority!=null)set('annPriority',state.priority);
+  set('annCategory',state.category||'general');
+  set('annBrand',state.brandKit?.name||'');
+  set('annLogo',state.brandKit?.logoUrl||'');
+  set('annHeadline',head?.content||'');
+  set('annText',body?.content||'');
+  set('annDescriptionColor',body?.style?.fill||head?.style?.fill||'#102A43');
+  set('annDescriptionSize',body?.style?.fontSize||20);
+  set('annDescriptionAlign',body?.style?.textAlign||head?.style?.textAlign||'left');
+  set('annPriceTag',state.offer||price?.content||'');
+  set('annOfferColor',price?.style?.backgroundColor||state.background?.color2||'#167A91');
+  set('annOfferTextColor',price?.style?.fill||head?.style?.fill||'#102A43');
+  set('annOfferSize',price?.style?.fontSize||24);
+  set('annOfferAlign',price?.style?.textAlign||'left');
+  const ctaText=cta?.content||'';
+  const commonCtas=['Nunua Sasa','Wasiliana Nasi','Tazama Zaidi','Jisajili'];
+  set('annCta',commonCtas.includes(ctaText)?ctaText:(ctaText?'Custom':''));
+  set('annCtaCustom',commonCtas.includes(ctaText)?'':ctaText);
+  set('annLink',state.destination?.url||'');
+  set('annImage',image?.src||(ssState?.slides?.[0]?.src)||'');
+  set('annVideo',video?.src||video?.videoUrl||'');
+  set('annAudio',aud?.src||aud?.audioUrl||'');
+  set('annBackgroundImage',state.background?.imageUrl||'');
+  set('annBackgroundMode',state.background?.type==='color'?'solid':'gradient');
+  set('annPrimaryColor',state.background?.color||'#0E7A5F');
+  set('annAccentColor',state.background?.color2||'#167A91');
+  set('annTextColor',head?.style?.fill||'#102A43');
+  set('annFontWeight',head?.style?.fontWeight||800);
+  set('annHeadlineSize',head?.style?.fontSize||64);
+  set('annTextAlign',head?.style?.textAlign||'left');
+  set('annTextAnimation',head?.animation?.entrance||'none');
+  set('annTextEmphasis',head?.animation?.emphasis||'none');
+  set('annAnimationMode',head?.animation?.mode||'whole');
+  set('annAnimationDuration',head?.animation?.duration||600);
+  set('annMediaFit',image?.style?.fit||video?.style?.fit||'cover');
+  set('annFocalPoint',image?.focalPoint||video?.focalPoint||'center');
+  set('annMediaAspect',({square:'1:1',feed:'1:1',portrait:'4:5',story:'9:16',landscape:'16:9',banner:'16:9'})[state.format]||'16:9');
+  set('annCreativeDuration',state.duration||9);
+  set('annVideoOriginalDuration',video?.videoMeta?.duration||'');
+  set('annVideoTrimStart',video?.videoMeta?.trimStart||0);
+  set('annVideoTrimEnd',video?.videoMeta?.trimEnd||video?.videoMeta?.duration||'');
+  set('annCampaignName',state.campaignName||'');set('annCampaignId',state.campaignId||'');
+  set('annPaletteId',state.paletteId||'');set('annPriority',state.priority||0);
   if(state.startAt)set('annStartAt',String(state.startAt).slice(0,16));
   if(state.endAt)set('annEndAt',String(state.endAt).slice(0,16));
-  if(state.displayDurationSeconds)set('annDisplayDuration',state.displayDurationSeconds);
-  if(state.id)set('annCreativeId',state.id);
-  /* [NON-CANVAS MVP 2026-09-24] Carry slideshow + trimmed media duration into
-     the announcement form so Save → published card keeps them (§6/§22). */
-  const setH=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val==null?'':String(val);};
-  setH('annSlideshow',ssFeed?JSON.stringify(ssFeed):'');
+  set('annDisplayDuration',state.displayDurationSeconds||9);set('annCreativeId',state.id||'');
+  const badge=role('badge');
+  set('annBadgeText',badge?.content||'');
+  set('annBadgeColor',badge?.style?.backgroundColor||'#F59E0B');
+  set('annBadgeTextColor',badge?.style?.fill||'#FFFFFF');
+  set('annBadgeFontSize',badge?.style?.fontSize||14);
+  set('annBadgeTextAlign',badge?.style?.textAlign||'center');
+  set('annBadgeAnimation',badge?.animation?.emphasis&&badge.animation.emphasis!=='none'?badge.animation.emphasis:(badge?.animation?.entrance||'none'));
+  const timing=document.querySelectorAll('#announcementFormModal input[name="annTimingMode"]');
+  timing.forEach(r=>r.checked=r.value===(state.durationAuto===false?'custom':'auto'));
+  const loop=document.getElementById('annVideoLoop');if(loop)loop.checked=video?.videoMeta?.loop!==false;
+  const autoplay=document.getElementById('annVideoAutoplay');if(autoplay)autoplay.checked=false;
+  setH('annSlideshow',ssState?JSON.stringify(ssState):'');
   setH('annMediaDuration',(()=>{
-    const v=state.layers.find(l=>l.type==='video');
-    if(v){const vm=v.videoMeta||{};const t=(Number(vm.trimEnd)||0)-(Number(vm.trimStart)||0);return t>0?Math.round(t):Math.round(Number(vm.duration)||0)||'';}
+    if(video){const vm=video.videoMeta||{},t=(Number(vm.trimEnd)||0)-(Number(vm.trimStart)||0);return t>0?Math.round(t):Math.round(Number(vm.duration)||0)||'';}
     if(ssFeed)return Math.round(slideshowTotal(state))||'';
     return '';
   })());
-  if(typeof window.skhRenderAdminAdPreview==='function'){
-    window.skhRenderAdminAdPreview();
-  }
+  setH('annCreativeState',JSON.stringify(state));
+  window.__skhBasicCreative=state;window.__skhBasicTextColorTouched=true;window.__skhBasicDescriptionColorTouched=true;
+  if(typeof window.skhSetAdBasicType==='function')window.skhSetAdBasicType(typeForComp,false);
+  if(typeof window.skhSetAdBasicCategory==='function')window.skhSetAdBasicCategory(state.category||'general',false);
+  if(typeof window.skhSetAdBasicFormat==='function')window.skhSetAdBasicFormat(({square:'1:1',feed:'1:1',portrait:'4:5',story:'9:16',landscape:'16:9',banner:'16:9'})[state.format]||'16:9',false);
+  if(typeof window.skhCtaChanged==='function')window.skhCtaChanged(false);
+  if(typeof window.skhAdUpdateReadouts==='function')window.skhAdUpdateReadouts();
+  if(typeof window.skhRenderAdminAdPreview==='function')window.skhRenderAdminAdPreview();
 }
 
 function rememberColor(hex){
@@ -205,7 +222,7 @@ function shell(){
          <button data-a="restart" title="Restart">⏮</button>
          <span id="csCurrentTime">0:00</span> / <span id="csTotalDuration">0:30</span>
        </div>
-       <input type="range" id="csTimelineScrubber" min="0" max="59" step="0.1" value="0">
+       <input type="range" id="csTimelineScrubber" min="0" max="${MAX_AD_DURATION_SECONDS}" step="0.1" value="0">
        <div class="cs-tb-vol">
          <button data-a="mutetoggle" id="csMuteBtn">🔊</button>
          <input type="range" id="csMasterVolume" min="0" max="100" value="100" style="width:70px;">
@@ -650,8 +667,8 @@ function audioControls(){
     </div>
     <label>Fade Out (${aMeta.fadeOut||0}s)<input data-audio="fadeOut" type="range" min="0" max="5" step="0.5" value="${aMeta.fadeOut||0}"></label>
     <div class="cs-two">
-      <label>Trim Start (${aMeta.trimStart||0}s)<input data-audio="trimStart" type="range" min="0" max="59" step="1" value="${aMeta.trimStart||0}"></label>
-      <label>Trim End (${aMeta.trimEnd||59}s)<input data-audio="trimEnd" type="range" min="0" max="59" step="1" value="${aMeta.trimEnd||59}"></label>
+      <label>Trim Start (${aMeta.trimStart||0}s)<input data-audio="trimStart" type="range" min="0" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${aMeta.trimStart||0}"></label>
+      <label>Trim End (${aMeta.trimEnd||MAX_AD_DURATION_SECONDS}s)<input data-audio="trimEnd" type="range" min="0" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${aMeta.trimEnd||MAX_AD_DURATION_SECONDS}"></label>
     </div>
     <div class="cs-two">
       <label><input type="checkbox" data-audio="loop" ${aMeta.loop!==false?'checked':''}> Loop audio</label>
@@ -827,17 +844,7 @@ function designMediaLayer(){
   const sel=state.layers.find(l=>l.id===selected&&(l.type==='image'||l.type==='video'||l.type==='logo'));
   return sel||state.layers.find(l=>l.type==='image'||l.type==='video')||null;
 }
-function detectMediaKind(file){
-  const t=(file&&file.type)||'';
-  if(t.startsWith('video/'))return 'video';
-  if(t.startsWith('audio/'))return 'audio';
-  if(t.startsWith('image/'))return 'image'; /* includes GIF, SVG, WebP */
-  const ext=String(file&&file.name||'').split('.').pop().toLowerCase();
-  if(['mp4','webm','mov','m4v','avi','mkv'].includes(ext))return 'video';
-  if(['mp3','wav','m4a','aac','ogg','flac'].includes(ext))return 'audio';
-  if(['jpg','jpeg','png','webp','gif','svg','bmp','avif'].includes(ext))return 'image';
-  return null;
-}
+function detectMediaKind(file){return detectAdMediaKind(file)||null;}
 function detectMediaKindFromUrl(url){
   const u=String(url||'').toLowerCase().split('?')[0];
   if(/\.(mp4|webm|mov|m4v|avi|mkv)$/.test(u))return 'video';
@@ -845,21 +852,18 @@ function detectMediaKindFromUrl(url){
   if(/\.(jpg|jpeg|png|webp|gif|svg|bmp|avif)$/.test(u))return 'image';
   return null;
 }
-/* Reuses the single canonical uploader (js/11-uploads.js) and the Admin Media
-   Library pipeline (adminMedia collection — reference metadata only, bytes stay
-   on Cloudinary). Same size limits as the Announcement Form. */
-const SKH_MEDIA_LIMITS={image:8*1024*1024,logo:4*1024*1024,video:80*1024*1024,audio:20*1024*1024};
+/* Reuses the single canonical uploader, shared file validator and Admin Media
+   Library pipeline (adminMedia stores references; media bytes stay on Cloudinary). */
 async function addMediaFile(file,opts={}){
   if(!file)return;
   const kind=opts.kind||detectMediaKind(file);
   if(!kind){toast('Aina ya media haitambuliki. Tumia image, video au audio.','error');return;}
-  const limitKey=opts.asLogo?'logo':(kind==='video'?'video':kind==='audio'?'audio':'image');
-  const limit=SKH_MEDIA_LIMITS[limitKey];
-  if(file.size&&file.size>limit){toast(`File ni kubwa kuliko kiwango (${Math.round(limit/1048576)}MB) kwa ${limitKey}.`,'error');return;}
+  const validation=validateAdMediaFile(file,{kind:opts.asLogo?'image':kind,asLogo:opts.asLogo===true});
+  if(!validation.ok){toast(validation.message||'File type au size si sahihi.','error');return;}
   try{
     if(typeof window.skhUploadFromFile!=='function')throw new Error('SokoHai media uploader is unavailable.');
     toast('Uploading '+kind+'…','info');
-    const uploaded=await window.skhUploadFromFile(file,{resourceType:kind==='audio'||kind==='video'?'video':'image',folder:'sokohai/creative-assets'});
+    const uploaded=await window.skhUploadFromFile(file,{resourceType:kind==='audio'||kind==='video'?'video':'image',folder:AD_MEDIA_UPLOAD_FOLDER});
     const url=uploaded&&(uploaded.url||uploaded.secure_url);
     if(!url)throw new Error('Upload failed.');
     try{ /* existing Admin Media Library pipeline (admin-only per Firestore rules; silent skip otherwise) */
@@ -1176,7 +1180,7 @@ function mediaTabControls(){
     <h4>Video Trim (Start ─ End)</h4>
     <div class="cs-two">
       <label>Start [${fmtT(trimStart)}]<input data-vmeta="trimStart" type="range" min="0" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${trimStart}"></label>
-      <label>End [${fmtT(trimEnd||MAX_AD_DURATION_SECONDS)}]<input data-vmeta="trimEnd" type="range" min="1" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${trimEnd||MAX_AD_DURATION_SECONDS}"></label>
+      <label>End [${fmtT(trimEnd||MAX_AD_DURATION_SECONDS)}]<input data-vmeta="trimEnd" type="range" min="${MIN_AD_DURATION_SECONDS}" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${trimEnd||MAX_AD_DURATION_SECONDS}"></label>
     </div>
     <p class="cs-simple-tip">Start/End hupanga clip ya tangazo (0 &lt; duration &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s). Muda asilia wa video (${fmtT(vDur)}) haukati — ubaki kwenye originalSrc.</p>
     <div class="cs-two">
@@ -1202,6 +1206,8 @@ function mediaTabControls(){
 function animationControls(){
   const target = currentLayer() || state.layers.find(l => l.role === 'headline') || state.layers.find(l => l.type === 'text') || state.layers[0];
   const anim = target?.animation || {};
+  const entranceOptions=target?.role==='badge'?BADGE_ANIMATIONS:target?.role==='cta'?CTA_ANIMATIONS:ENTRANCE_ANIMATIONS;
+  const emphasisOptions=target?.role==='badge'?BADGE_ANIMATIONS:target?.role==='cta'?CTA_ANIMATIONS:EMPHASIS_ANIMATIONS;
 
   return `
     <div class="cs-simple-head"><span>✨</span><div><h3>Animation Engine</h3><p>Harakati za maneno na vitu kwenye tangazo.</p></div></div>
@@ -1212,12 +1218,12 @@ function animationControls(){
 
     <h4>Entrance Animation (Kuingia)</h4>
     <label>Entrance Type<select data-anim="entrance">
-      ${ENTRANCE_ANIMATIONS.map(opt => `<option value="${opt}" ${anim.entrance===opt?'selected':''}>${opt.replace(/-/g,' ').toUpperCase()}</option>`).join('')}
+      ${entranceOptions.map(opt => `<option value="${opt}" ${anim.entrance===opt?'selected':''}>${opt.replace(/-/g,' ').toUpperCase()}</option>`).join('')}
     </select></label>
 
     <h4>Emphasis (Mvuto wa Kudumu)</h4>
     <label>Emphasis Type<select data-anim="emphasis">
-      ${EMPHASIS_ANIMATIONS.map(opt => `<option value="${opt}" ${anim.emphasis===opt?'selected':''}>${opt.replace(/-/g,' ').toUpperCase()}</option>`).join('')}
+      ${emphasisOptions.map(opt => `<option value="${opt}" ${anim.emphasis===opt?'selected':''}>${opt.replace(/-/g,' ').toUpperCase()}</option>`).join('')}
     </select></label>
 
     <h4>Exit Animation (Kutoka)</h4>
@@ -1232,17 +1238,13 @@ function animationControls(){
 
     <h4>Timing &amp; Dynamics</h4>
     <div class="cs-two">
-      <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="100" max="3000" step="100" value="${anim.duration||600}"></label>
-      <label>Delay (${anim.delay||0}ms)<input data-anim="delay" type="range" min="0" max="2000" step="50" value="${anim.delay||0}"></label>
+      <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="${ANIMATION_LIMITS.duration.min}" max="${ANIMATION_LIMITS.duration.max}" step="100" value="${anim.duration||600}"></label>
+      <label>Delay (${anim.delay||0}ms)<input data-anim="delay" type="range" min="${ANIMATION_LIMITS.delay.min}" max="${ANIMATION_LIMITS.delay.max}" step="50" value="${anim.delay||0}"></label>
     </div>
     <div class="cs-two">
-      <label>Stagger (${anim.stagger||100}ms)<input data-anim="stagger" type="range" min="20" max="400" step="20" value="${anim.stagger||100}"></label>
+      <label>Stagger (${anim.stagger||100}ms)<input data-anim="stagger" type="range" min="${ANIMATION_LIMITS.stagger.min}" max="${ANIMATION_LIMITS.stagger.max}" step="20" value="${anim.stagger||100}"></label>
       <label>Easing<select data-anim="easing">
-        <option value="ease-out" ${anim.easing==='ease-out'?'selected':''}>Ease Out</option>
-        <option value="ease-in-out" ${anim.easing==='ease-in-out'?'selected':''}>Ease In Out</option>
-        <option value="ease-in" ${anim.easing==='ease-in'?'selected':''}>Ease In</option>
-        <option value="linear" ${anim.easing==='linear'?'selected':''}>Linear</option>
-        <option value="cubic-bezier(0.34, 1.56, 0.64, 1)" ${anim.easing?.includes('cubic')?'selected':''}>Elastic</option>
+        ${ANIMATION_EASINGS.map(easing=>`<option value="${easing}" ${anim.easing===easing?'selected':''}>${easing.includes('cubic')?'Elastic':easing.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join('')}
       </select></label>
     </div>
 
@@ -1277,13 +1279,13 @@ function basicControls(){
         <input type="radio" name="csDurMode" data-dur-mode="custom" ${!isAuto?'checked':''}> Custom
       </label>
       <div class="cs-two" style="margin-top:6px;">
-        <label>Ad duration (${state.duration||30}s · 0 &lt; d &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s)<input data-simple="duration" type="range" min="1" max="${MAX_AD_DURATION_SECONDS}" value="${state.duration||30}"></label>
+        <label>Ad duration (${state.duration||30}s · 0 &lt; d &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s)<input data-simple="duration" type="range" min="${MIN_AD_DURATION_SECONDS}" max="${MAX_AD_DURATION_SECONDS}" value="${state.duration||30}"></label>
       </div>
     </div>
-    <label>Kichwa kikuu (Headline)<input data-simple="headline" value="${esc(head?.content||'')}" placeholder="Mfano: Ofa kubwa ya wiki"></label>
-    <label>Maelezo mafupi (Description)<textarea data-simple="body" rows="3" placeholder="Eleza bidhaa au huduma">${esc(body?.content||'')}</textarea></label>
-    <label>Bei / offer<input data-simple="price" value="${esc(price?.content||'')}" placeholder="TZS 59,000"></label>
-    <label>Promotional badge<input data-simple="badge" value="${esc(badge?.content||'')}" placeholder="Mfano: 🔥 OFA MAALUM"></label>
+    <label>Kichwa kikuu (Headline)<input data-simple="headline" maxlength="${TEXT_ROLE_LIMITS.headline}" value="${esc(head?.content||'')}" placeholder="Mfano: Ofa kubwa ya wiki"></label>
+    <label>Maelezo mafupi (Description)<textarea data-simple="body" maxlength="${TEXT_ROLE_LIMITS.body}" rows="3" placeholder="Eleza bidhaa au huduma">${esc(body?.content||'')}</textarea></label>
+    <label>Bei / offer<input data-simple="price" maxlength="${TEXT_ROLE_LIMITS.price}" value="${esc(price?.content||'')}" placeholder="TZS 59,000"></label>
+    <label>Promotional badge<input data-simple="badge" maxlength="${TEXT_ROLE_LIMITS.badge}" value="${esc(badge?.content||'')}" placeholder="Mfano: 🔥 OFA MAALUM"></label>
     <p class="cs-simple-tip"><b>Media NI optional (§1).</b> Blank creative + Background + Headline + Description + Offer + Badge + CTA + Animation = tangazo halali. Image/Video/Audio ni nyongeza tu. CTA iko <b>CTA</b>; ratiba <b>SCHEDULE</b>.</p>`;
 }
 
@@ -1293,7 +1295,7 @@ function ctaControls(){
   const presets=(window.SKH_CTA_PRESETS&&window.SKH_CTA_PRESETS.length)?window.SKH_CTA_PRESETS:['TAZAMA ZAIDI'];
   return `
     <div class="cs-simple-head"><span>✦</span><div><h3>CTA — Kitufe cha Kitendo</h3><p>Kitufe kinachomwambia mtumiaji achague nini.</p></div></div>
-    <label>CTA text<input data-simple="cta" value="${esc(cta?.content||'TAZAMA ZAIDI')}"></label>
+    <label>CTA text<input data-simple="cta" maxlength="${TEXT_ROLE_LIMITS.cta}" value="${esc(cta?.content||'TAZAMA ZAIDI')}"></label>
     <h4>Label Presets</h4>
     <div class="cs-cta-presets">${presets.map(p=>`<button data-ctapreset="${esc(p)}" ${cta?.content===p?'class="primary"':''}>${esc(p)}</button>`).join('')}</div>
     <label>CTA destination / website<input data-simple="destination" value="${esc(state.destination?.url||'')}" placeholder="https://... (si lazima kama umetoka kwenye Product/Service)"></label>
@@ -1325,9 +1327,9 @@ function scheduleControls(){
     </div>
     <div class="cs-two">
       <label>Priority<input data-simple="priority" type="number" min="0" max="999" value="${Number(state.priority)||0}"></label>
-      <label>Display duration (5–59s)<input data-simple="displayDurationSeconds" type="number" min="5" max="59" step="1" value="${Number(state.displayDurationSeconds)||9}"></label>
+      <label>Display duration (${DISPLAY_DURATION_SECONDS.min}–${DISPLAY_DURATION_SECONDS.max}s)<input data-simple="displayDurationSeconds" type="number" min="${DISPLAY_DURATION_SECONDS.min}" max="${DISPLAY_DURATION_SECONDS.max}" step="1" value="${Number(state.displayDurationSeconds)||DISPLAY_DURATION_SECONDS.default}"></label>
     </div>
-    <p class="cs-simple-tip">Display duration ni muda wa tangazo kukaa Home kwenye rotation (5–59s). <b>Sio</b> media duration — video/audio inabaki na urefu wake.</p>`;
+    <p class="cs-simple-tip">Display duration ni muda wa tangazo kukaa Home kwenye rotation (${DISPLAY_DURATION_SECONDS.min}–${DISPLAY_DURATION_SECONDS.max}s). <b>Sio</b> media duration — video/audio inabaki na urefu wake.</p>`;
 }
 
 function quickStyleControls(){
@@ -1419,7 +1421,7 @@ function updateSimple(key,val){
     const role=r=>n.layers.find(l=>l.role===r);
     if(key==='headline'){const h=role('headline');if(h)h.content=val;}
     else if(key==='body'){const b=role('body');if(b)b.content=val;}
-    else if(key==='price'){let p=role('price');if(!p){p=makeLayer('text',{role:'price',x:80,y:n.canvas.height*.58,width:400,height:90,style:{fill:'#FFFFFF',fontSize:52,fontWeight:900}});n.layers.push(p);}p.content=val;}
+    else if(key==='price'){let p=role('price');if(!p){p=makeLayer('text',{role:'price',x:80,y:n.canvas.height*.58,width:400,height:90,style:{fill:'#FFFFFF',fontSize:TEXT_ROLE_SIZES.price.max,fontWeight:900}});n.layers.push(p);}p.content=val;}
     else if(key==='cta'){let c=role('cta');if(c)c.content=val;}
     else if(key==='image'){let img=n.layers.find(l=>l.type==='image');if(!img){img=makeLayer('image',{src:val,originalSrc:val,x:n.canvas.width*.45,y:n.canvas.height*.38,width:n.canvas.width*.48,height:n.canvas.height*.48,style:{fit:'cover',radius:24}});n.layers.push(img);}else{img.src=val;img.originalSrc=val;}}
     else if(key==='headlineWeight'){const h=role('headline');if(h)h.style.fontWeight=+val;}
@@ -1427,17 +1429,17 @@ function updateSimple(key,val){
     else if(key==='textColor'){n.layers.filter(l=>l.type==='text'&&l.role!=='cta').forEach(l=>l.style.fill=val);rememberColor(val);}
     else if(key==='background'){n.background.color=val;rememberColor(val);}
     else if(key==='background2'){n.background.color2=val;rememberColor(val);}
-    else if(key==='destination'){n.destination=val?{type:'external',url:val}:null;}
+    else if(key==='destination'){n.destination=val?{type:'external',url:val}:null;if(val)n.linkedEntity=null;}
     // --- Canonical advertisement state (Creator Studio upgrade) ---
     else if(key==='category'){n.category=val;}else if(key==='campaignName'){n.campaignName=val;}else if(key==='campaignId'){n.campaignId=val;}
-    else if(key==='offer'){n.offer=val;let p=role('price');if(!p&&val){p=makeLayer('text',{role:'price',x:80,y:n.canvas.height*.58,width:400,height:90,style:{fill:'#FFFFFF',fontSize:52,fontWeight:900}});n.layers.push(p);}if(p&&val)p.content=val;}
+    else if(key==='offer'){n.offer=val;let p=role('price');if(!p&&val){p=makeLayer('text',{role:'price',x:80,y:n.canvas.height*.58,width:400,height:90,style:{fill:'#FFFFFF',fontSize:TEXT_ROLE_SIZES.price.max,fontWeight:900}});n.layers.push(p);}if(p&&val)p.content=val;}
     else if(key==='startAt'){n.startAt=val?new Date(val).toISOString():'';}else if(key==='endAt'){n.endAt=val?new Date(val).toISOString():'';}
     else if(key==='priority'){n.priority=Math.max(0,+val||0);}
-    else if(key==='displayDurationSeconds'){n.displayDurationSeconds=Math.max(5,Math.min(59,+val||9));}
+    else if(key==='displayDurationSeconds'){n.displayDurationSeconds=Math.max(DISPLAY_DURATION_SECONDS.min,Math.min(DISPLAY_DURATION_SECONDS.max,+val||DISPLAY_DURATION_SECONDS.default));}
     /* [NON-CANVAS MVP 2026-09-24] overall ad duration (§21, max 60s) */
     else if(key==='duration'){
       n.durationAuto=false;
-      n.duration=Math.max(1,Math.min(MAX_AD_DURATION_SECONDS,Math.round(Number(val)||30)));
+      n.duration=Math.max(MIN_AD_DURATION_SECONDS,Math.min(MAX_AD_DURATION_SECONDS,Math.round(Number(val)||DISPLAY_DURATION_SECONDS.default)));
     }
     /* [§1/§3] Badge = real text layer (role: badge), rendered everywhere */
     else if(key==='badge'){
@@ -1603,9 +1605,9 @@ function applyTextPositionPreset(key){
 
 /* ==== [NON-CANVAS MVP 2026-09-24] SLIDESHOW CONTROLS (spec §4/§15/§16) ==== */
 function slideshowControls(){
-  const ss=state.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+  const ss=state.slideshow||{enabled:false,transition:'fade',defaultDuration:DEFAULT_SLIDE_DURATION_SECONDS,slides:[]};
   const slides=Array.isArray(ss.slides)?ss.slides:[];
-  const total=slides.reduce((t,s)=>t+(Number(s.duration)||Number(ss.defaultDuration)||3),0);
+  const total=slides.reduce((t,s)=>t+(Number(s.duration)||Number(ss.defaultDuration)||DEFAULT_SLIDE_DURATION_SECONDS),0);
   const images=state.layers.filter(l=>l.type==='image'&&l.src);
   return `
     <div class="cs-simple-head"><span>🖼</span><div><h3>Slideshow / Carousel</h3><p>Slides 1–${slides.length||'n'} · jumla ${Math.round(total)}s · transition: ${esc(ss.transition||'fade')}</p></div></div>
@@ -1627,8 +1629,8 @@ function slideshowControls(){
         <div class="cs-ss-row">
           <b>#${i+1}</b>
           <span class="cs-ss-src" title="${esc(s.src)}">${esc(s.name||String(s.src).split('/').pop()||'slide')}</span>
-          <label class="cs-ss-dur">${Number(s.duration)||ss.defaultDuration||3}s
-            <input data-ss-dur="${i}" type="range" min="1" max="30" value="${Number(s.duration)||ss.defaultDuration||3}">
+          <label class="cs-ss-dur">${Number(s.duration)||ss.defaultDuration||DEFAULT_SLIDE_DURATION_SECONDS}s
+            <input data-ss-dur="${i}" type="range" min="${MIN_SLIDE_DURATION_SECONDS}" max="${MAX_SLIDE_DURATION_SECONDS}" value="${Number(s.duration)||ss.defaultDuration||DEFAULT_SLIDE_DURATION_SECONDS}">
           </label>
           <button data-ss-act="up" data-ss-idx="${i}" ${i===0?'disabled':''} title="Move up">↑</button>
           <button data-ss-act="down" data-ss-idx="${i}" ${i===slides.length-1?'disabled':''} title="Move down">↓</button>
@@ -1636,12 +1638,12 @@ function slideshowControls(){
         </div>`).join('')}
     </div>
     <div class="cs-two">
-      <label>Default slide duration (${ss.defaultDuration||3}s)<input data-ss-default-dur type="range" min="1" max="15" value="${ss.defaultDuration||3}"></label>
+      <label>Default slide duration (${ss.defaultDuration||DEFAULT_SLIDE_DURATION_SECONDS}s)<input data-ss-default-dur type="range" min="${MIN_SLIDE_DURATION_SECONDS}" max="${MAX_SLIDE_DURATION_SECONDS}" value="${ss.defaultDuration||DEFAULT_SLIDE_DURATION_SECONDS}"></label>
       <label>Transition<select data-ss-transition>
         ${SLIDESHOW_TRANSITIONS.map(t=>`<option value="${t}" ${ss.transition===t?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}
       </select></label>
     </div>
-    <p class="cs-simple-tip">Jumla ya slideshow: <b>${Math.round(total)}s</b> (0 &lt; jumla &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s). Audio ikiwepo inaendelea cross-slide.</p>
+    <p class="cs-simple-tip">Jumla ya slideshow: <b>${Math.round(total)}s</b> (${MIN_AD_DURATION_SECONDS}–${MAX_SLIDESHOW_DURATION_SECONDS}s max). Audio ikiwepo inaendelea cross-slide.</p>
     `:`<p class="cs-note">Ongeza picha 2+ hapo juu kisha bofya <b>Enable slideshow</b>. Kila slide ina muda wake; jumla hujitokeza hapo chini.</p>`}
     ${images.length&&!slides.length?`<p class="cs-simple-tip">Picha ${images.length} zilizo kwenye canvas zipo kama media ya kawaida. Slideshow ni tofauti — pakia/ongeza slides kwenye list hii.</p>`:''}
   `;
@@ -1650,18 +1652,21 @@ function slideshowControls(){
 async function addSlidesFromInput(input){
   const files=[...(input.files||[])];input.value='';
   if(!files.length)return;
+  const existingSlides=(state.slideshow&&Array.isArray(state.slideshow.slides)?state.slideshow.slides:[]).length;
+  if(existingSlides+files.length>MAX_SLIDESHOW_SLIDES){toast('Slideshow inaweza kuwa na picha zisizozidi '+MAX_SLIDESHOW_SLIDES+'.','warning');return;}
   for(const file of files){
-    if(!/image\//.test(file.type||'')){toast('Slideshow inapokea picha tu (JPG/PNG/WEBP/GIF/SVG).','warning');continue;}
+    const validation=validateAdMediaFile(file,{kind:'image'});
+    if(!validation.ok){toast(validation.message||'Picha ya slideshow haikubaliki.','warning');continue;}
     if(typeof window.skhUploadFromFile!=='function'){toast('Uploader haipatikani.','error');return;}
     try{
       toast('Uploading slide…','info');
-      const up=await window.skhUploadFromFile(file,{resourceType:'image',folder:'sokohai/creative-assets'});
+      const up=await window.skhUploadFromFile(file,{resourceType:'image',folder:AD_MEDIA_UPLOAD_FOLDER});
       const url=up&&(up.url||up.secure_url);
       if(!url)throw new Error('Upload failed');
       commit(n=>{
-        n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+        n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:DEFAULT_SLIDE_DURATION_SECONDS,slides:[]};
         n.slideshow.slides=n.slideshow.slides||[];
-        n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||3,name:file.name||'slide'});
+        n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||DEFAULT_SLIDE_DURATION_SECONDS,name:file.name||'slide'});
         /* [§18] Auto mode suggests enabling; Manual waits for explicit Enable. */
         if(n.designMode!=='manual')n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
       },'Add slideshow slide');
@@ -1674,13 +1679,13 @@ async function addSlidesFromInput(input){
 function slideshowAction(act,idx){
   if(act==='toggle'){
     commit(n=>{
-      n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+      n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:DEFAULT_SLIDE_DURATION_SECONDS,slides:[]};
       const count=(n.slideshow.slides||[]).filter(s=>s&&s.src).length;
       if(!n.slideshow.enabled&&count<2){toast('Ongeza picha angalau 2 kwanza.','warning');return;}
       n.slideshow.enabled=!n.slideshow.enabled;
       if(n.slideshow.enabled&&count>=2){
         /* Auto duration when slideshow just enabled (§21 Auto) */
-        n.duration=Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||12)));
+        n.duration=autoAdDuration(n);
         n.preset='slideshow';
       }
     },'Toggle slideshow');
@@ -1689,10 +1694,11 @@ function slideshowAction(act,idx){
   if(act==='addurl'){
     const url=($('#csSlideUrl')?.value||'').trim();
     if(!/^https:\/\//i.test(url))return toast('Weka HTTPS image URL halali.','error');
+    if((state.slideshow&&Array.isArray(state.slideshow.slides)?state.slideshow.slides.length:0)>=MAX_SLIDESHOW_SLIDES)return toast('Slideshow inaweza kuwa na picha zisizozidi '+MAX_SLIDESHOW_SLIDES+'.','warning');
     commit(n=>{
-      n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+      n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:DEFAULT_SLIDE_DURATION_SECONDS,slides:[]};
       n.slideshow.slides=n.slideshow.slides||[];
-      n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||3,name:url.split('/').pop().slice(0,40)||'slide'});
+      n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||DEFAULT_SLIDE_DURATION_SECONDS,name:url.split('/').pop().slice(0,40)||'slide'});
       if(n.designMode!=='manual')n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
     },'Add slide URL');
     const inp=$('#csSlideUrl');if(inp)inp.value='';
@@ -1705,21 +1711,21 @@ function slideshowAction(act,idx){
     else if(act==='up'&&idx>0)[slides[idx-1],slides[idx]]=[slides[idx],slides[idx-1]];
     else if(act==='down'&&idx<slides.length-1)[slides[idx+1],slides[idx]]=[slides[idx],slides[idx+1]];
     ss.enabled=slides.filter(s=>s&&s.src).length>=2&&ss.enabled;
-    if(ss.enabled)n.duration=Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
+    if(ss.enabled)n.duration=autoAdDuration(n);
   },'Slideshow '+act);
   renderLibrary();render();
 }
 function updateSlideshowProp(key,el){
   const val=el.type==='range'?Number(el.value):el.value;
   commit(n=>{
-    n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
+    n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:DEFAULT_SLIDE_DURATION_SECONDS,slides:[]};
     if(key==='transition')n.slideshow.transition=val;
-    else if(key==='defaultDuration')n.slideshow.defaultDuration=Math.min(15,Math.max(1,Number(val)||3));
+    else if(key==='defaultDuration')n.slideshow.defaultDuration=Math.min(MAX_SLIDE_DURATION_SECONDS,Math.max(MIN_SLIDE_DURATION_SECONDS,Number(val)||DEFAULT_SLIDE_DURATION_SECONDS));
     else if(key==='slideDur'){
       const i=Number(el.dataset.ssDur);
-      if(n.slideshow.slides[i])n.slideshow.slides[i].duration=Math.min(30,Math.max(1,Number(val)||3));
+      if(n.slideshow.slides[i])n.slideshow.slides[i].duration=Math.min(MAX_SLIDE_DURATION_SECONDS,Math.max(MIN_SLIDE_DURATION_SECONDS,Number(val)||DEFAULT_SLIDE_DURATION_SECONDS));
     }
-    if(n.slideshow.enabled)n.duration=Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
+    if(n.slideshow.enabled)n.duration=autoAdDuration(n);
   },'Slideshow setting');
 }
 
@@ -1923,13 +1929,17 @@ function setMediaKind(kind){
 
 function updateAnim(key,el){
   const targetId=$('#csAnimTargetLayer')?.value||selected||state.layers.find(l=>l.role==='headline')?.id||state.layers[0]?.id;
-  const val=el.type==='range'?+el.value:el.value;
+  let val=el.type==='range'?+el.value:el.value;
+  if(Object.prototype.hasOwnProperty.call(ANIMATION_LIMITS,key)){
+    const bounds=ANIMATION_LIMITS[key];val=Math.max(bounds.min,Math.min(bounds.max,Number(val)||bounds.min));
+  }
+  if(key==='easing'&&!ANIMATION_EASINGS.includes(String(val)))return toast('Animation easing haijatambuliwa.','warning');
   commit(n=>{
     const l=n.layers.find(x=>x.id===targetId);
     if(l){
       l.animation=l.animation||{};
       l.animation[key]=val;
-      l.animation.enabled=(l.animation.entrance&&l.animation.entrance!=='none')||(l.animation.emphasis&&l.animation.emphasis!=='none');
+      l.animation.enabled=[l.animation.entrance,l.animation.emphasis,l.animation.exit].some(value=>value&&value!=='none');
     }
   },'Update Animation');
 }
@@ -1973,16 +1983,20 @@ function renderProperties(){
   const st=l.style||{};
   const f=st.filter||{};
   const anim=l.animation||{};
+  const entranceOptions=l.role==='badge'?BADGE_ANIMATIONS:l.role==='cta'?CTA_ANIMATIONS:ENTRANCE_ANIMATIONS;
+  const emphasisOptions=l.role==='badge'?BADGE_ANIMATIONS:l.role==='cta'?CTA_ANIMATIONS:EMPHASIS_ANIMATIONS;
 
   let specificControls='';
 
   if(l.type==='text'){
+    const textLimits=TEXT_ROLE_LIMITS[l.role]||null;
+    const textSize=TEXT_ROLE_SIZES[l.role]||{min:14,max:220};
     /* [NON-CANVAS MVP 2026-09-24] Full text toolset (spec §7/§8). Every control
        writes to the SAME layer state → SAME renderer → saved → published. */
     const tPos=[['top-left',0,0],['top-center',.5,0],['top-right',1,0],['center-left',0,.5],['center',.5,.5],['center-right',1,.5],['bottom-left',0,1],['bottom-center',.5,1],['bottom-right',1,1]];
     const colorPresets=[['White','#FFFFFF'],['Black','#000000'],['Blue','#3B82F6'],['Green','#10B981'],['Gold','#F4C542']];
     specificControls=`
-      <label>Text Content<textarea data-prop="content" rows="3">${esc(l.content)}</textarea></label>
+      <label>Text Content<textarea data-prop="content" rows="3" ${textLimits?`maxlength="${textLimits}"`:''}>${esc(l.content)}</textarea></label>
       <label>Font Family<select data-prop="style.fontFamily">${VERIFIED_FONTS.map(f=>`<option value="${f.family}" ${f.family===st.fontFamily?'selected':''}>${f.family}</option>`).join('')}</select></label>
       <div class="cs-two">
         <label>Font Weight<select data-prop="style.fontWeight">
@@ -2000,7 +2014,7 @@ function renderProperties(){
         </select></label>
       </div>
       <div class="cs-two">
-        <label>Font Size (${st.fontSize||48})<input data-prop="style.fontSize" type="range" min="14" max="220" value="${st.fontSize||48}"></label>
+        <label>Font Size (${st.fontSize||48})<input data-prop="style.fontSize" type="range" min="${textSize.min}" max="${textSize.max}" value="${st.fontSize||48}"></label>
         <label>Text Color<input data-prop="style.fill" type="color" value="${st.fill||'#FFFFFF'}"></label>
       </div>
       <div class="cs-quick-swatches" title="Quick text colors">
@@ -2051,20 +2065,20 @@ function renderProperties(){
       <h4>Animation Settings</h4>
       <div class="cs-two">
         <label>Entrance<select data-anim="entrance">
-          ${ENTRANCE_ANIMATIONS.map(opt=>`<option value="${opt}" ${anim.entrance===opt?'selected':''}>${opt}</option>`).join('')}
+          ${entranceOptions.map(opt=>`<option value="${opt}" ${anim.entrance===opt?'selected':''}>${opt}</option>`).join('')}
         </select></label>
         <label>Emphasis<select data-anim="emphasis">
-          ${EMPHASIS_ANIMATIONS.map(opt=>`<option value="${opt}" ${anim.emphasis===opt?'selected':''}>${opt}</option>`).join('')}
+          ${emphasisOptions.map(opt=>`<option value="${opt}" ${anim.emphasis===opt?'selected':''}>${opt}</option>`).join('')}
         </select></label>
       </div>
       <div class="cs-two">
         <label>Mode<select data-anim="mode">
           ${ANIMATION_MODES.map(m=>`<option value="${m}" ${anim.mode===m?'selected':''}>${m}</option>`).join('')}
         </select></label>
-        <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="200" max="3000" step="100" value="${anim.duration||600}"></label>
+        <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="${ANIMATION_LIMITS.duration.min}" max="${ANIMATION_LIMITS.duration.max}" step="100" value="${anim.duration||600}"></label>
       </div>
       <div class="cs-two">
-        <label>Delay / Start (${anim.delay||0}ms)<input data-anim="delay" type="range" min="0" max="5000" step="100" value="${anim.delay||0}"></label>
+        <label>Delay / Start (${anim.delay||0}ms)<input data-anim="delay" type="range" min="${ANIMATION_LIMITS.delay.min}" max="${ANIMATION_LIMITS.delay.max}" step="100" value="${anim.delay||0}"></label>
         <label>End: ${(((anim.delay||0)+(anim.duration||600))/1000).toFixed(1)}s</label>
         <label><button data-a="replayanim" class="primary cs-wide">▶ Play Animation</button></label>
       </div>
@@ -2263,65 +2277,9 @@ function showResize(){
   };
 }
 
-/* Map canonical creative state to the announcement shape consumed by the
-   existing Home card renderer (window.skhAdvertisementCardHtml).
-   [NON-CANVAS MVP 2026-09-24] FULL field mapping so the preview card IS the
-   published card (§6/§22/§27): slideshow, trimmed video duration, text
-   animation/emphasis/mode/timing, palette, CTA + badge animation, category. */
-function creativeAsAnnouncement(c){
-  const role=r=>c.layers.find(l=>l.role===r);
-  const img=c.layers.find(l=>l.type==='image')||c.layers.find(l=>l.type==='logo');
-  const vid=c.layers.find(l=>l.type==='video');
-  const aud=c.layers.find(l=>l.type==='audio');
-  const head=role('headline'),cta=role('cta'),badge=role('badge');
-  const anim=head?.animation||{};
-  const ss=c.slideshow&&Array.isArray(c.slideshow.slides)&&c.slideshow.slides.filter(s=>s&&s.src).length>=2?c.slideshow:null;
-  /* Trimmed video duration (never the raw >60s source length) */
-  let mediaDur=0;
-  if(vid){
-    const vm=vid.videoMeta||{};
-    const t=(Number(vm.trimEnd)||0)-(Number(vm.trimStart)||0);
-    mediaDur=t>0?t:(Number(vm.duration)||0);
-  }else if(ss){
-    mediaDur=slideshowTotal(c);
-  }else if(aud){
-    const am=aud.audioMeta||{};
-    const t=(Number(am.trimEnd)||0)-(Number(am.trimStart)||0);
-    if(t>0)mediaDur=t;
-  }
-  return {
-    headline:head?.content||c.title,
-    text:role('body')?.content||'',
-    priceTag:role('price')?.content||c.offer||'',
-    image:ss?ss.slides[0].src:(img?.src||''),
-    videoUrl:vid?.src||'',audioUrl:aud?.src||'',
-    posterUrl:vid?.posterUrl||'',
-    slideshow:ss,
-    mediaDurationSeconds:Math.round(mediaDur)||null,
-    videoControls:vid?.videoMeta?.controls===true,
-    ctaLabel:cta?.content||'',badgeText:badge?.content||'',
-    badgeColor:badge?.style?.backgroundColor||undefined,
-    badgeTextColor:badge?.style?.fill||undefined,
-    badgeAnimation:badge?.animation?.entrance!=='none'&&badge?.animation?.entrance?badge.animation.entrance:(badge?.animation?.emphasis||'none'),
-    ctaAnimation:cta?.animation?.entrance!=='none'&&cta?.animation?.entrance?cta.animation.entrance:(cta?.animation?.emphasis||'none'),
-    category:c.category||'general',
-    paletteId:c.paletteId||'',
-    /* Text animation pipeline (Input → State → Renderer → Preview → Saved → Published) */
-    textAnimation:anim.entrance||'none',
-    textEmphasis:anim.emphasis||'none',
-    animationMode:anim.mode||'whole',
-    animationDuration:anim.duration||600,
-    animationDelay:anim.delay||0,
-    animationStagger:anim.stagger||100,
-    animation:{enabled:!!anim.enabled,entrance:anim.entrance||'none',emphasis:anim.emphasis||'none',mode:anim.mode||'whole',duration:anim.duration||600,delay:anim.delay||0,stagger:anim.stagger||100},
-    primaryColor:c.background?.color,accentColor:c.background?.color2,
-    textColor:head?.style?.fill||'#FFFFFF',
-    fontWeight:head?.style?.fontWeight||'950',
-    textAlign:head?.style?.textAlign||'left',
-    offer:c.offer||'',
-    brandName:c.brandKit?.name||'',logoUrl:c.brandKit?.logoUrl||'',
-    link:c.destination?.url||''
-  };
+/* Use the shared canonical projection used by Basic, publish and Home. */
+function creativeAsAnnouncement(creative){
+  return creativeToAdvertisement(normalizeCreative(creative||{}),{status:'draft'});
 }
 function showPreview(){
   /* [NON-CANVAS MVP 2026-09-24] §22/§23: EVERY preview mode renders through the
@@ -2398,25 +2356,40 @@ async function saveBrandKit(){
 }
 window.saveBrandKit=saveBrandKit;
 
-async function saveDraft(notify){
-  localStorage.setItem(storageKey(state),JSON.stringify(state));
-  $('#csSaveState').textContent='Saved locally';
+async function persistCreativeDraft(input){
+  const draft=normalizeCreative(input||state);
+  if(!draft)throw new Error('Hakuna creative ya kuhifadhi.');
+  draft.ownerId=draft.ownerId||(skh.currentUser&&skh.currentUser.uid)||'';
+  draft.status=draft.status||'DRAFT';
+  draft.updatedAt=new Date().toISOString();
+  try{localStorage.setItem(storageKey(draft),JSON.stringify(draft));}catch(e){}
   if(skh.currentUser){
-    try{
-      const payload={...state,ownerId:skh.currentUser.uid,status:state.status||'DRAFT',updatedAt:new Date().toISOString()};
-      if(state.id)await skh.setDoc(skh.doc(skh.db,'creatives',state.id),payload,{merge:true});
-      else{
-        payload.createdAt=payload.createdAt||new Date().toISOString();
-        const ref=await skh.addDoc(skh.collection(skh.db,'creatives'),payload);
-        state.id=ref.id;history.replace(state);
-      }
-      $('#csSaveState').textContent='Saved';
-      if(notify)toast('Editable Creative saved.');
-    }catch(e){
-      $('#csSaveState').textContent='Local save only';
-      if(notify)toast('Cloud save failed: '+e.message,'error');
+    const payload={...draft,ownerId:draft.ownerId||skh.currentUser.uid,status:draft.status||'DRAFT',updatedAt:new Date().toISOString()};
+    if(draft.id)await skh.setDoc(skh.doc(skh.db,'creatives',draft.id),payload,{merge:true});
+    else{
+      payload.createdAt=payload.createdAt||new Date().toISOString();
+      const ref=await skh.addDoc(skh.collection(skh.db,'creatives'),payload);
+      draft.id=ref.id;
     }
-  }else if(notify)toast('Saved on this device. Sign in for cloud save.','warning');
+    draft.ownerId=payload.ownerId;
+    try{localStorage.setItem(storageKey(draft),JSON.stringify(draft));}catch(e){}
+  }
+  return draft;
+}
+window.skhPersistCreativeDraft=persistCreativeDraft;
+
+async function saveDraft(notify){
+  if(!state)return;
+  const hadId=!!state.id;
+  try{
+    state=await persistCreativeDraft(state);
+    if(!hadId&&state.id&&history)history.replace(state);
+    const saveState=$('#csSaveState');if(saveState)saveState.textContent=skh.currentUser?'Saved':'Saved locally';
+    if(notify)toast(skh.currentUser?'Editable Creative saved.':'Saved on this device. Sign in for cloud save.',skh.currentUser?'success':'warning');
+  }catch(e){
+    const saveState=$('#csSaveState');if(saveState)saveState.textContent='Local save only';
+    if(notify)toast('Cloud save failed: '+e.message,'error');
+  }
 }
 
 async function publish(){
@@ -2514,46 +2487,33 @@ window.skhAdvertiseOpenEntity=function(){
   open({sourceType,sourceId:p.id,format:'square',publicationType:'advertisement'});
 };
 
-window.skhOpenAdvancedFromLegacy=function(){
-  const get=id=>document.getElementById(id)?.value||'',c=createCreative({format:'landscape',publicationType:'advertisement',ownerId:skh.currentUser?.uid||''});
-  c.title=get('annHeadline')||'Advertisement';
-  c.background.color=get('annPrimaryColor')||c.background.color;
-  c.background.color2=get('annAccentColor')||c.background.color2;
-  const setRole=(r,v)=>{const l=c.layers.find(x=>x.role===r);if(l&&v)l.content=v;};
-  setRole('headline',get('annHeadline'));
-  setRole('body',get('annText'));
-  setRole('cta',get('annCta'));
-  c.layers.filter(l=>l.type==='text'&&l.role!=='cta').forEach(l=>l.style.fill=get('annTextColor')||l.style.fill);
-  const image=get('annImage');
-  if(image)c.layers.push(makeLayer('image',{name:'Advertisement image',src:image,originalSrc:image,x:580,y:190,width:530,height:390,zIndex:2,style:{fit:'cover',radius:26,originalSrc:image}}));
-  const video=get('annVideo');
-  if(video)c.layers.push(makeLayer('video',{name:'Advertisement video',src:video,videoUrl:video,x:580,y:190,width:530,height:390,zIndex:2,style:{fit:'cover',radius:26}}));
-  const audio=get('annAudio');
-  if(audio)c.layers.push(makeLayer('audio',{name:'Advertisement audio',src:audio,audioUrl:audio,x:80,y:520,width:460,height:60,zIndex:3}));
-  const logo=get('annLogo');
-  if(logo)c.layers.push(makeLayer('logo',{name:'Brand logo',src:logo,originalSrc:logo,x:c.canvas.width*.82,y:c.canvas.height*.05,width:c.canvas.width*.13,height:c.canvas.width*.13,zIndex:8,style:{fit:'contain',radius:16}}));
-  const bdg=get('annBadgeText');
-  if(bdg){
-    c.layers.push(makeLayer('text',{name:'Promo badge',role:'badge',content:bdg,
-      x:c.canvas.width*.055,y:c.canvas.height*.055,width:c.canvas.width*.3,height:c.canvas.height*.055,zIndex:9,
-      style:{fill:get('annBadgeTextColor')||'#FFFFFF',backgroundColor:get('annBadgeColor')||'#F59E0B',fontSize:Math.round(c.canvas.width*.022),fontWeight:900,padding:10,radius:get('annBadgeStyle')==='ribbon'?8:999,textAlign:'center'},
-      animation:{enabled:get('annBadgeAnimation')!=='none',entrance:get('annBadgeAnimation')==='pop'?'pop':'none',emphasis:get('annBadgeAnimation')!=='none'&&get('annBadgeAnimation')!=='pop'?get('annBadgeAnimation'):'none'}}));
+window.skhOpenAdvancedFromLegacy=async function(){
+  if(typeof window.skhAdFormData==='function')window.skhAdFormData();
+  let creative=window.__skhBasicCreative||null;
+  const snapshot=document.getElementById('annCreativeState')?.value||'';
+  if(snapshot)try{creative=JSON.parse(snapshot);}catch(e){}
+  if(!creative){
+    const get=id=>document.getElementById(id)?.value||'';
+    creative=createCreative({format:'landscape',publicationType:'advertisement',ownerId:skh.currentUser?.uid||''});
+    const head=creative.layers.find(l=>l.role==='headline'),body=creative.layers.find(l=>l.role==='body');
+    if(head)head.content=get('annHeadline');if(body)body.content=get('annText');
   }
-  c.brandKit={name:get('annBrand'),logoUrl:get('annLogo'),primary:c.background.color,secondary:c.background.color2,accent:'#F4C542'};
-  if(/^https:\/\//i.test(get('annLink')))c.destination={type:'external',url:get('annLink')};
-  // Canonical advertisement meta from the simple form
-  c.category=get('annCategory')||'general';
-  c.campaignName=get('annCampaignName');
-  c.campaignId=get('annCampaignId');
-  c.offer=get('annPriceTag');
-  c.paletteId=get('annPaletteId');
-  c.priority=Math.max(0,+get('annPriority')||0);
-  c.startAt=get('annStartAt')?new Date(get('annStartAt')).toISOString():'';
-  c.endAt=get('annEndAt')?new Date(get('annEndAt')).toISOString():'';
-  const dd=+get('annDisplayDuration')||0;if(dd>=5&&dd<=59)c.displayDurationSeconds=dd;
-  const annCreativeId=get('annCreativeId');if(annCreativeId&&!c.id)c.id=annCreativeId;
-  document.getElementById('announcementFormModal')?.style.setProperty('display','none');
-  open({creative:c,advanced:false});
+  creative=normalizeCreative(creative);
+  creative.id=creative.id||document.getElementById('annCreativeId')?.value||'';
+  creative.ownerId=creative.ownerId||skh.currentUser?.uid||'';
+  const logo=creative.brandKit?.logoUrl;
+  if(logo&&!creative.layers.some(layer=>layer.type==='logo'&&(layer.src===logo||layer.originalSrc===logo))){
+    creative.layers.push(makeLayer('logo',{name:'Brand logo',src:logo,originalSrc:logo,x:creative.canvas.width*.82,y:creative.canvas.height*.05,width:creative.canvas.width*.13,height:creative.canvas.width*.13,zIndex:Math.max(1,...creative.layers.map(layer=>Number(layer.zIndex)||0))+1,style:{fit:'contain',radius:16}}));
+  }
+  try{
+    if(typeof window.skhPersistBasicCreative==='function')creative=await window.skhPersistBasicCreative(creative);
+    if(!window.SokoHaiCreativeStudio?.open)throw new Error('Creator Studio haijapakiwa.');
+    // Keep the Basic Creator underneath; closing Studio returns to the same form/state.
+    await window.SokoHaiCreativeStudio.open({creative,creativeId:creative.id,publicationType:'advertisement',advanced:true});
+  }catch(error){
+    if(window.skhToast)window.skhToast('Imeshindwa kufungua Advanced Design: '+(error.message||error),'error');
+    else alert('Imeshindwa kufungua Advanced Design: '+(error.message||error));
+  }
 };
 
 window.skhOpenCompanyAdsSoon=function(){

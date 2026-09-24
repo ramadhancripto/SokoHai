@@ -7,6 +7,9 @@
     "node": "20"
   },
   "main": "index.js",
+  "scripts": {
+    "build:shared": "node build-shared.js"
+  },
   "dependencies": {
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.0.1"

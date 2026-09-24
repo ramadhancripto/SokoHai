@@ -21,10 +21,11 @@ t('§9 STRICT: exclusive ceiling 60, largest valid duration 59',()=>{
   assert.equal(MAX_AD_MEDIA_SECONDS,60);
   assert.equal(MAX_AD_DURATION_SECONDS,59);
 });
-t('§21 duration clamps to 59 (0 < duration < 60)',()=>{
-  const c=normalizeCreative({duration:120});
-  assert.equal(c.duration,59);
+t('§21 custom duration is preserved, then rejected above 59 (0 < duration < 60)',()=>{
+  const c=normalizeCreative({duration:120,durationAuto:false});
+  assert.equal(c.duration,120,'normalization does not hide an invalid custom duration');
   assert.equal(c.maxDuration,59);
+  assert.ok(validateCreative(c,{forPublish:true}).errors.some(e=>e.code==='CREATIVE_DURATION'));
 });
 t('§1 media OPTIONAL: blank creative (bg+text+CTA+anim, no media) is valid',()=>{
   const blank=normalizeCreative({destination:{type:'external',url:'https://x.com'}});
@@ -153,6 +154,7 @@ console.log('== NON-CANVAS MVP: canonical Home renderer (§22/§23) ==');
 /* Boot js/06-announcement.js in a minimal window sandbox and drive cardHtml. */
 const sandbox={window:{},console,localStorage:{getItem:()=>null,setItem:()=>{}},sessionStorage:{getItem:()=>null,setItem:()=>{}},
   document:{getElementById:()=>null,querySelector:()=>null,querySelectorAll:()=>[],addEventListener:()=>{},createElement:()=>({style:{},setAttribute(){},addEventListener(){}}),body:{appendChild(){}}},
+  SokoHaiAdsDesignRules:globalThis.SokoHaiAdsDesignRules,
   Date,Math,JSON,Number,String,Array,Object,RegExp,Promise,setInterval:()=>0,clearInterval:()=>{},setTimeout:()=>0,clearTimeout:()=>{}};
 sandbox.window=sandbox;
 sandbox.globalThis=sandbox;
@@ -211,6 +213,7 @@ console.log('== NON-CANVAS MVP: studio integration (source contracts) ==');
 
 const studio=fs.readFileSync('js/app/95-creative-studio.js','utf8');
 const model=fs.readFileSync('js/app/creative/creative-model.js','utf8');
+const shared=fs.readFileSync('shared/ads-design-rules.js','utf8');
 const admin=fs.readFileSync('js/app/16-pos-admin-jobs.js','utf8');
 const ann=fs.readFileSync('js/06-announcement.js','utf8');
 const adCss=fs.readFileSync('css/38-home-ad-manager.css','utf8');
@@ -246,19 +249,18 @@ t('§21 duration: Auto/Custom + 60s cap in studio',()=>{
     .forEach(s=>assert.ok(studio.includes(s),'duration control missing: '+s));
   assert.ok(!studio.includes('max="30" step="1" value="${state.duration'),'timeline still capped at 30');
 });
-t('§22 preview uses SAME canonical renderer with full mapping',()=>{
+t('§22 preview uses the shared creative-to-advertisement projection',()=>{
   assert.ok(studio.includes('skhAdvertisementCardHtml'),'preview → canonical card renderer');
-  assert.ok(studio.includes('slideshow:ss'),'creativeAsAnnouncement maps slideshow');
-  assert.ok(studio.includes('mediaDurationSeconds'),'creativeAsAnnouncement maps trimmed duration');
-  assert.ok(studio.includes('textAnimation:anim.entrance'),'creativeAsAnnouncement maps text animation');
-  assert.ok(studio.includes('paletteId:c.paletteId'),'creativeAsAnnouncement maps palette');
+  assert.ok(studio.includes('creativeToAdvertisement(normalizeCreative(creative||{})'),'Advanced preview uses shared projection');
+  assert.ok(model.includes('ADS_RULES.creativeToAdvertisement'),'canonical model exports shared projection');
+  assert.ok(admin.includes('creativeToAdvertisement(creative'),'Basic preview uses shared projection');
 });
 t('§6 legacy-form carry-through: hidden fields exist and are written',()=>{
   assert.ok(admin.includes('id="annSlideshow"'),'hidden annSlideshow field in form');
   assert.ok(admin.includes('id="annMediaDuration"'),'hidden annMediaDuration field in form');
   assert.ok(admin.includes("setH('annSlideshow'")||studio.includes("setH('annSlideshow'"),'studio writes annSlideshow');
   assert.ok(studio.includes('annMediaDuration'),'studio writes annMediaDuration');
-  assert.ok(admin.includes('slideshow:slideshow'),'skhAdFormData passes slideshow to save');
+  assert.ok(admin.includes('slideshow:ss'),'Basic form values pass the local shared-normalized slideshow object');
   assert.ok(admin.includes('mediaDurationSeconds'),'skhAdFormData passes media duration to save');
 });
 t('§33 no leftover 30s caps in studio trim/timeline sources',()=>{
@@ -357,10 +359,11 @@ t('§8 slide-left/slide-right transitions flow renderer→save→published',()=>
 t('§9 save whitelist clamps mediaDurationSeconds to 59',()=>{
   assert.ok(feed.includes('Math.min(59, Math.round(Number(payload.mediaDurationSeconds)))'),'feed clamp 59');
 });
-t('§25 publish payload (functions) carries slideshow/trim/poster/anim/color',()=>{
-  ['slideshow:','mediaDurationSeconds:','posterUrl:','videoControls:','badgeAnimation:','ctaAnimation:','textColor:(head&&head.style']
-    .forEach(x=>assert.ok(fnSrc.includes(x),'functions payload missing: '+x));
-  assert.ok(fnSrc.includes("['none','fade','slide','slide-left','slide-right','zoom','crossfade']"),'functions validates transitions');
+t('§25 Cloud Functions validate and project through the shared Ads Design module',()=>{
+  assert.ok(fnSrc.includes('ADS_RULES.validateCreative'),'publish validation uses the shared module');
+  assert.ok(fnSrc.includes('ADS_RULES.creativeToAdvertisement'),'published announcement uses shared projection');
+  assert.ok(fnSrc.includes('creativeSnapshot:creative'),'immutable version preserves full Creative state');
+  assert.ok(fnSrc.includes("require(fs.existsSync(packagedRules) ? packagedRules : localRules)"),'Functions loads deploy-packaged shared rules');
 });
 t('§26 Ads Management: Management→Matangazo with required views',()=>{
   ['Media Library','Draft','Active','Scheduled','Expired','Archived','campaigns','analytics']
@@ -373,8 +376,8 @@ t('§11 form autoplay default OFF',()=>{
 });
 t('§4 glow controls + §5 mask-reveal/zoom-out entrances',()=>{
   assert.ok(studio.includes('style.glowBlur')&&studio.includes('style.glowColor'),'glow controls');
-  assert.ok(model.includes("'mask-reveal'"),'mask-reveal entrance in model');
-  assert.ok(model.includes("'zoom-out'"),'zoom-out entrance in model');
+  assert.ok(shared.includes("'mask-reveal'"),'mask-reveal entrance in shared rules');
+  assert.ok(shared.includes("'zoom-out'"),'zoom-out entrance in shared rules');
   assert.ok(fs.readFileSync('css/38-home-ad-manager.css','utf8').includes('anim-enter-zoom-out'),'zoom-out entrance CSS visible-final');
 });
 t('§5 animation timing shows start/duration/end',()=>{
@@ -399,7 +402,7 @@ t('§29/§30 journey: blank → text design → save/reload → media → slides
   c.offer='TZS 45,000';
   const cta=c.layers.find(l=>l.role==='cta');cta.content='NUNUA SASA';
   /* 10b. Badge via role layer (same as updateSimple badge) */
-  c.layers.push(makeLayer('text',{role:'badge',content:'🔥 OFA MAALUM',x:60,y:60,width:340,height:60,zIndex:9}));
+  c.layers.push(makeLayer('text',{role:'badge',content:'🔥 OFA MAALUM',x:60,y:60,width:340,height:60,zIndex:9,style:{fontSize:14}}));
   /* text-only ad is publishable (media optional §1) */
   let v=validateCreative(c,{forPublish:true});
   assert.equal(v.ok,true,'text-only journey ad valid at publish gate: '+JSON.stringify(v.errors));

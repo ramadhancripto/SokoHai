@@ -1,4 +1,8 @@
-/* SokoHai Creative Studio — pure, reusable design model. No Firebase/DOM dependency. */
+/* SokoHai Creative Studio — canonical state model. Ads rules live in one shared browser/server module. */
+import '../../../shared/ads-design-rules.js';
+
+const ADS_RULES = globalThis.SokoHaiAdsDesignRules;
+if (!ADS_RULES) throw new Error('Shared SokoHai Ads Design rules failed to load.');
 export const CREATIVE_SCHEMA_VERSION = 2;
 export const FORMAT_PRESETS = Object.freeze({
   square:{label:'Square 1:1',width:1080,height:1080,safe:72},
@@ -48,14 +52,14 @@ export const GRADIENT_PRESETS = Object.freeze({
 export const MULTIMEDIA_PRESETS = Object.freeze({
   static: { id: 'static', label: 'Image + Text (Static)', duration: 0, required: ['image', 'text'] },
   motion: { id: 'motion', label: 'Motion Poster (Animated Text)', duration: 6, required: ['image', 'text'] },
-  slideshow: { id: 'slideshow', label: 'Slideshow (Multiple Images)', duration: 12, maxDuration: 59, required: ['image', 'text'] },
-  short_video: { id: 'short_video', label: 'Short Video (< 60s)', duration: 30, maxDuration: 59, required: ['video'] },
-  audio_visual: { id: 'audio_visual', label: 'Audio-Visual (Image + Audio)', duration: 30, maxDuration: 59, required: ['image', 'audio'] },
-  video_audio: { id: 'video_audio', label: 'Video + Audio Mix (< 60s)', duration: 30, maxDuration: 59, required: ['video', 'audio'] },
-  full_mix: { id: 'full_mix', label: 'Full Multimedia Mix (Image + Video + Audio)', duration: 30, maxDuration: 59, required: ['image', 'video', 'audio', 'text'] },
-  story: { id: 'story', label: 'Story Format (9:16)', format: 'story', duration: 15, maxDuration: 59 },
-  feed: { id: 'feed', label: 'Feed Card (1:1 / 4:5)', format: 'square', duration: 15, maxDuration: 59 },
-  landscape: { id: 'landscape', label: 'Landscape Banner (16:9)', format: 'landscape', duration: 15, maxDuration: 59 }
+  slideshow: { id: 'slideshow', label: 'Slideshow (Multiple Images)', duration: 12, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS, required: ['image', 'text'] },
+  short_video: { id: 'short_video', label: 'Short Video (< 60s)', duration: 30, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS, required: ['video'] },
+  audio_visual: { id: 'audio_visual', label: 'Audio-Visual (Image + Audio)', duration: 30, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS, required: ['image', 'audio'] },
+  video_audio: { id: 'video_audio', label: 'Video + Audio Mix (< 60s)', duration: 30, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS, required: ['video', 'audio'] },
+  full_mix: { id: 'full_mix', label: 'Full Multimedia Mix (Image + Video + Audio)', duration: 30, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS, required: ['image', 'video', 'audio', 'text'] },
+  story: { id: 'story', label: 'Story Format (9:16)', format: 'story', duration: 15, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS },
+  feed: { id: 'feed', label: 'Feed Card (1:1 / 4:5)', format: 'square', duration: 15, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS },
+  landscape: { id: 'landscape', label: 'Landscape Banner (16:9)', format: 'landscape', duration: 15, maxDuration: ADS_RULES.MAX_AD_DURATION_SECONDS }
 });
 
 export const PATTERNS = Object.freeze([
@@ -66,32 +70,37 @@ export const TEXTURES = Object.freeze([
   'none','paper','grain','noise','fabric','canvas','concrete','vintage','abstract'
 ]);
 
-export const ENTRANCE_ANIMATIONS = Object.freeze([
-  'none','fade','slide-up','slide-down','slide-left','slide-right','zoom-in','zoom-out','pop','bounce','typewriter','reveal','mask-reveal','blur-in'
-  /* [NON-CANVAS MVP 2026-09-24] zoom-out added per spec §9 list; renderer keyframes (skh_anim_zoom_out) already exist. */
-]);
+export const ENTRANCE_ANIMATIONS = ADS_RULES.ENTRANCE_ANIMATIONS;
 
-export const EMPHASIS_ANIMATIONS = Object.freeze([
-  'none','pulse','glow','shake','bounce','scale','wobble','highlight'
-]);
+export const EMPHASIS_ANIMATIONS = ADS_RULES.EMPHASIS_ANIMATIONS;
 
-export const EXIT_ANIMATIONS = Object.freeze([
-  'none','fade-out','slide-out','zoom-out','blur-out'
-]);
+export const EXIT_ANIMATIONS = ADS_RULES.EXIT_ANIMATIONS;
 
-export const ANIMATION_MODES = Object.freeze([
-  'whole','word','character','line'
-]);
+export const ANIMATION_MODES = ADS_RULES.ANIMATION_MODES;
 
-export const BADGE_ANIMATIONS = Object.freeze([
-  'none','pop','pulse','glow','slide','scale','shake'
-]);
+export const BADGE_ANIMATIONS = ADS_RULES.BADGE_ANIMATIONS;
 
-export const CTA_ANIMATIONS = Object.freeze([
-  'none','fade','slide','pulse','glow','scale','shine'
-]);
+export const CTA_ANIMATIONS = ADS_RULES.CTA_ANIMATIONS;
 
-export const DISPLAY_DURATION_SECONDS = Object.freeze({min:5,max:59,default:9});
+export const DISPLAY_DURATION_SECONDS = ADS_RULES.DISPLAY_DURATION_SECONDS;
+export const MIN_AD_DURATION_SECONDS = ADS_RULES.MIN_AD_DURATION_SECONDS;
+export const MAX_SLIDESHOW_SLIDES = ADS_RULES.MAX_SLIDESHOW_SLIDES;
+export const MIN_SLIDESHOW_SLIDES = ADS_RULES.MIN_SLIDESHOW_SLIDES;
+export const MIN_SLIDE_DURATION_SECONDS = ADS_RULES.MIN_SLIDE_DURATION_SECONDS;
+export const MAX_SLIDE_DURATION_SECONDS = ADS_RULES.MAX_SLIDE_DURATION_SECONDS;
+export const DEFAULT_SLIDE_DURATION_SECONDS = ADS_RULES.DEFAULT_SLIDE_DURATION_SECONDS;
+export const MAX_SLIDESHOW_DURATION_SECONDS = ADS_RULES.MAX_SLIDESHOW_DURATION_SECONDS;
+export const AD_MEDIA_FILE_LIMITS_BYTES = ADS_RULES.AD_MEDIA_FILE_LIMITS_BYTES;
+export const AD_MEDIA_UPLOAD_FOLDER = ADS_RULES.AD_MEDIA_UPLOAD_FOLDER;
+export const BASIC_AD_TYPES = ADS_RULES.BASIC_AD_TYPES;
+export const TEXT_ROLE_LIMITS = ADS_RULES.TEXT_ROLE_LIMITS;
+export const TEXT_ROLE_SIZES = ADS_RULES.TEXT_ROLE_SIZES;
+export const ANIMATION_LIMITS = ADS_RULES.ANIMATION_LIMITS;
+export const TEXT_ALIGNMENTS = ADS_RULES.TEXT_ALIGNMENTS;
+export const ANIMATION_EASINGS = ADS_RULES.ANIMATION_EASINGS;
+export const validateAdMediaFile = ADS_RULES.validateAdMediaFile;
+export const detectAdMediaKind = ADS_RULES.detectAdMediaKind;
+export const creativeToAdvertisement = ADS_RULES.creativeToAdvertisement;
 /* Ad placement display time is a SEPARATE concept from media/timeline duration:
    a 10-second video stays a 10-second video; the placement rotator may show the
    same creative for up to ~5..59 seconds depending on placement rules. */
@@ -102,19 +111,15 @@ export const DISPLAY_DURATION_SECONDS = Object.freeze({min:5,max:59,default:9});
    EXCLUSIVE ceiling (60); MAX_AD_DURATION_SECONDS is the largest valid
    integer duration (59). Not the same as DISPLAY_DURATION_SECONDS
    (placement rotation time, 5–59s, unchanged). */
-export const MAX_AD_MEDIA_SECONDS = 60;
-export const MAX_AD_DURATION_SECONDS = 59;
+export const MAX_AD_MEDIA_SECONDS = ADS_RULES.MAX_AD_MEDIA_SECONDS;
+export const MAX_AD_DURATION_SECONDS = ADS_RULES.MAX_AD_DURATION_SECONDS;
 
 /* [§8] Slideshow transitions (incl. explicit slide-left / slide-right). */
-export const SLIDESHOW_TRANSITIONS = Object.freeze(['none','fade','slide','slide-left','slide-right','zoom','crossfade']);
+export const SLIDESHOW_TRANSITIONS = ADS_RULES.SLIDESHOW_TRANSITIONS;
 
-export const FIT_MODES = Object.freeze([
-  'cover','contain','fill','original'
-]);
+export const FIT_MODES = ADS_RULES.FIT_MODES;
 
-export const FOCAL_POINTS = Object.freeze([
-  'center','top','bottom','left','right','top-left','top-right','bottom-left','bottom-right'
-]);
+export const FOCAL_POINTS = ADS_RULES.FOCAL_POINTS;
 
 export const ASPECT_RATIOS = Object.freeze([
   '1:1','4:5','9:16','16:9'
@@ -148,131 +153,17 @@ const clean=s=>String(s==null?'':s).replace(/[\u0000-\u001f]/g,' ').trim();
 const color=(v,f='#0E7A5F')=>/^#[0-9a-f]{6}$/i.test(String(v||''))?String(v):f;
 
 export function makeLayer(type,patch={}){
-  const common={
-    id:uid(),type,x:120,y:120,width:620,height:type==='text'?150:type==='audio'?80:420,
-    rotation:0,opacity:1,zIndex:1,locked:false,visible:true,
-    name:type[0].toUpperCase()+type.slice(1),groupId:null,
-    src:patch.src||'',originalSrc:patch.originalSrc||patch.src||'',
-    videoUrl:patch.videoUrl||(type==='video'?patch.src||'':''),
-    audioUrl:patch.audioUrl||(type==='audio'?patch.src||'':''),
-    posterUrl:patch.posterUrl||'',
-    focalPoint:patch.focalPoint||'center',
-    startTime:Number.isFinite(+patch.startTime)?+patch.startTime:0,
-    endTime:Number.isFinite(+patch.endTime)?+patch.endTime:30,
-    duration:Number.isFinite(+patch.duration)?+patch.duration:30,
-    crop:{x:0,y:0,width:100,height:100,zoom:1,...(patch.crop||{})},
-    videoMeta:{autoplay:false,muted:true,loop:true,trimStart:0,trimEnd:30,duration:0,controls:false,...(patch.videoMeta||{})},
-    audioMeta:{volume:1,fadeIn:0,fadeOut:0,loop:true,trimStart:0,trimEnd:30,duration:0,track:'background',...(patch.audioMeta||{})},
-    animation:{
-      enabled:false,entrance:'none',emphasis:'none',exit:'none',mode:'whole',
-      duration:600,delay:0,stagger:100,repeat:1,direction:'normal',easing:'ease-out',
-      trigger:'load',intensity:5,...(patch.animation||{})
-    }
-  };
-  const style={
-    fill:'#102A43',fontFamily:'Inter',fontSize:72,fontWeight:800,fontStyle:'normal',textDecoration:'none',
-    letterSpacing:0,lineHeight:1.1,textAlign:'left',textTransform:'none',
-    stroke:'#FFFFFF',strokeWidth:0,strokeOpacity:1,
-    shadowColor:'#000000',shadowOpacity:0,shadowBlur:12,shadowX:0,shadowY:5,
-    glowColor:'#18A982',glowBlur:0,
-    radius:24,borderColor:'#000000',borderWidth:0,backgroundColor:'transparent',padding:0,
-    filter:{brightness:100,contrast:100,saturation:100,blur:0,temperature:0,sharpness:0,exposure:100,highlights:100,shadows:100},
-    flipX:false,flipY:false,
-    frameShape:'rounded',
-    fit:'cover',focalX:50,focalY:50,
-    overlayColor:'#000000',overlayOpacity:0,
-    cropX:0,cropY:0,zoom:1,
-    originalSrc:patch.originalSrc||patch.src||'',
-    cutoutDataUrl:''
-  };
-  return {
-    ...common,
-    content:type==='text'?'Andika hapa':'',
-    style,
-    ...patch,
-    crop:{...common.crop,...(patch.crop||{})},
-    videoMeta:{...common.videoMeta,...(patch.videoMeta||{})},
-    audioMeta:{...common.audioMeta,...(patch.audioMeta||{})},
-    animation:{...common.animation,...(patch.animation||{})},
-    style:{...style,...(patch.style||{}),filter:{...style.filter,...((patch.style&&patch.style.filter)||{})}}
-  };
+  return ADS_RULES.createLayer(type,patch);
 }
 
-/* [NON-CANVAS MVP 2026-09-24] Slideshow state (spec §4/§15/§16). Lives INSIDE
-   the canonical creative model — no second model. Safe defaults keep every
-   existing creative valid (slideshow disabled unless explicitly enabled). */
-function normalizeSlideshow(input){
-  const base={enabled:false,transition:'fade',defaultDuration:3,slides:[]};
-  if(!input||typeof input!=='object')return base;
-  const defDur=Math.min(30,Math.max(1,Number(input.defaultDuration)||3));
-  const slides=Array.isArray(input.slides)?input.slides.slice(0,12).map(s=>({
-    src:clean(s&&s.src),
-    duration:Math.min(30,Math.max(1,Number((s&&s.duration)||0)||defDur)),
-    name:clean(s&&s.name).slice(0,80)
-  })).filter(s=>s.src):[];
-  return {
-    enabled:!!input.enabled&&slides.length>=1,
-    transition:SLIDESHOW_TRANSITIONS.includes(input.transition)?input.transition:'fade',
-    defaultDuration:defDur,
-    slides
-  };
-}
-
-/* Sum of per-slide durations (seconds). */
-export function slideshowTotal(c){
-  const ss=(c&&c.slideshow)||null;
-  if(!ss||!Array.isArray(ss.slides)||!ss.slides.length)return 0;
-  return ss.slides.reduce((t,s)=>t+(Number(s.duration)||0),0);
-}
-
-/* [§24 AUTOMATIC AD COMPOSITION] Detect composition from media present.
-   System suggests; the user always keeps manual override (presets/tabs). */
-export function detectComposition(c){
-  const x=(c&&Array.isArray(c.layers))?c:normalizeCreative(c);
-  const ss=x.slideshow;
-  const hasSlides=!!(ss&&ss.enabled&&Array.isArray(ss.slides)&&ss.slides.filter(s=>s&&s.src).length>=2);
-  const vid=x.layers.some(l=>l.type==='video'&&l.visible!==false&&(l.src||l.videoUrl));
-  const img=x.layers.some(l=>(l.type==='image'||l.type==='logo')&&l.visible!==false&&l.src);
-  const aud=x.layers.some(l=>l.type==='audio'&&l.visible!==false&&(l.src||l.audioUrl));
-  /* [§18] offer/price present → Sponsored Post / Video Text Ad */
-  const hasOffer=!!(String(x.offer||'').trim())||x.layers.some(l=>l.role==='price'&&l.visible!==false&&String(l.content||'').trim());
-  if(hasSlides)return aud?'slideshow_audio':'slideshow';           // TYPE E
-  if(vid&&img)return aud?'full_mix':'image_video';                // TYPE F
-  if(vid)return hasOffer?'video_text':(aud?'video_audio':'video');// TYPE B
-  if(img)return aud?'image_audio':(hasOffer?'sponsored':'image'); // TYPE A / Sponsored Post
-  if(aud)return 'audio';                                          // TYPE C (no poster)
-  return 'poster';                                                // Graphic/Text ad (media OPTIONAL §1)
-}
-/* [FINAL INSTRUCTIONS §9] Labels per Design Mode Auto mapping (§18). */
-export const COMPOSITION_LABELS=Object.freeze({
-  image:'Hero Image Advertisement',video:'Video Advertisement',audio:'Audio Advertisement',
-  image_audio:'Image Audio Advertisement',image_video:'Image + Video Advertisement',
-  slideshow:'Slideshow',slideshow_audio:'Slideshow + Audio Advertisement',
-  video_audio:'Video + Audio Advertisement',video_text:'Video Text Advertisement',
-  full_mix:'Full Multimedia Ad',poster:'Graphic/Text Advertisement',sponsored:'Sponsored Post'
-});
-
-/* [§21 AUTO DURATION] Best-guess overall ad duration from the media present.
-   Never exceeds MAX_AD_DURATION_SECONDS (59 = strictly < 60). */
-export function autoAdDuration(c){
-  const x=(c&&Array.isArray(c.layers))?c:normalizeCreative(c);
-  const comp=detectComposition(x);
-  if(comp==='slideshow'||comp==='slideshow_audio')return Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(x)||6)));
-  const vid=x.layers.find(l=>l.type==='video'&&(l.src||l.videoUrl));
-  if(vid){
-    const vm=vid.videoMeta||{};
-    const trimmed=(Number(vm.trimEnd)||0)-(Number(vm.trimStart)||0);
-    const d=trimmed>0?trimmed:(Number(vm.duration)||0);
-    if(d>0)return Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Math.round(d)));
-  }
-  const aud=x.layers.find(l=>l.type==='audio'&&(l.src||l.audioUrl));
-  if(aud){
-    const am=aud.audioMeta||{};
-    const trimmed=(Number(am.trimEnd)||0)-(Number(am.trimStart)||0);
-    if(trimmed>0)return Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Math.round(trimmed)));
-  }
-  return DISPLAY_DURATION_SECONDS.default;
-}
+/* Shared slideshow normalization, composition, duration and validation rules. */
+const normalizeSlideshow = ADS_RULES.normalizeSlideshow;
+export const normalizeAdSlideshow = ADS_RULES.normalizeSlideshow;
+export const normalizeAdCreative = ADS_RULES.normalizeCreative;
+export const slideshowTotal = ADS_RULES.slideshowTotal;
+export const detectComposition = ADS_RULES.detectComposition;
+export const COMPOSITION_LABELS = ADS_RULES.COMPOSITION_LABELS;
+export const autoAdDuration = ADS_RULES.autoAdDuration;
 
 function defaultLayers(c){
   const w=c.canvas.width,h=c.canvas.height;
@@ -296,7 +187,7 @@ export function createCreative(context={}){
     preset:context.preset||'static',
     /* [NON-CANVAS MVP 2026-09-24] media/timeline duration: STRICT `duration < 60`
        (FINAL INSTRUCTIONS §21) — largest valid integer = MAX_AD_DURATION_SECONDS (59). */
-    duration:Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Number(context.duration)||30)),
+    duration:context.duration!=null&&context.duration!==''&&Number.isFinite(Number(context.duration))?Math.max(0,Number(context.duration)):30,
     maxDuration:MAX_AD_DURATION_SECONDS,
     slideshow:normalizeSlideshow(context.slideshow),
     /* [§18] Design Mode: Auto (system suggests composition/timing) vs Manual. */
@@ -304,6 +195,7 @@ export function createCreative(context={}){
     canvas:{width:p.width,height:p.height,safe:p.safe,bleed:0,custom:false},
     background:{
       type:'gradient',color:'#0E7A5F',color2:'#075C7A',angle:135,opacity:1,
+      surfaceColor:'#FFFFFF',frameOpacity:.42,borderRadius:22,
       texture:'none',textureOpacity:.08,pattern:'none',patternOpacity:.12,
       imageUrl:'',blur:0,
       filter:{brightness:100,contrast:100,saturation:100,blur:0}
@@ -344,50 +236,9 @@ export function createCreative(context={}){
 }
 
 export function normalizeCreative(input){
-  const base=createCreative({format:input&&input.format}); if(!input||typeof input!=='object')return base;
-  const out={
-    ...base,...input,
-    preset:input.preset||base.preset,
-    /* [FINAL INSTRUCTIONS §21] media/timeline duration strictly < 60 (59 max).
-       Old creatives without `slideshow` get a safe disabled default (§28). */
-    duration:Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Number(input.duration)||base.duration)),
-    maxDuration:MAX_AD_DURATION_SECONDS,
-    slideshow:normalizeSlideshow(input.slideshow),
-    designMode:input.designMode==='manual'?'manual':'auto',
-    category:clean(input.category||base.category)||'general',
-    campaignName:clean(input.campaignName),
-    campaignId:clean(input.campaignId),
-    offer:clean(input.offer),
-    paletteId:clean(input.paletteId),
-    priority:Math.max(0,Number(input.priority)||0),
-    startAt:typeof input.startAt==='string'?input.startAt:base.startAt,
-    endAt:typeof input.endAt==='string'?input.endAt:base.endAt,
-    displayDurationSeconds:clamp(input.displayDurationSeconds==null?base.displayDurationSeconds:input.displayDurationSeconds,DISPLAY_DURATION_SECONDS.min,DISPLAY_DURATION_SECONDS.max),
-    audioMix:{...base.audioMix,...(input.audioMix||{})},
-    timeline:Array.isArray(input.timeline)?input.timeline:base.timeline,
-    canvas:{...base.canvas,...(input.canvas||{})},
-    background:{...base.background,...(input.background||{}),filter:{...base.background.filter,...((input.background&&input.background.filter)||{})}}
-  };
-  out.canvas.width=clamp(out.canvas.width,240,4096);
-  out.canvas.height=clamp(out.canvas.height,240,4096);
-  out.canvas.safe=clamp(out.canvas.safe,0,Math.min(out.canvas.width,out.canvas.height)/3);
-  out.layers=(Array.isArray(input.layers)?input.layers:base.layers).slice(0,150).map((l,i)=>makeLayer(l.type||'shape',{
-    ...l,
-    id:clean(l.id)||uid(),
-    x:clamp(l.x,-out.canvas.width,out.canvas.width*2),
-    y:clamp(l.y,-out.canvas.height,out.canvas.height*2),
-    width:clamp(l.width,1,out.canvas.width*3),
-    height:clamp(l.height,1,out.canvas.height*3),
-    rotation:clamp(l.rotation,-360,360),
-    opacity:clamp(l.opacity,0,1),
-    startTime:Math.max(0,Number(l.startTime)||0),
-    endTime:Math.min(MAX_AD_DURATION_SECONDS,Number(l.endTime)||MAX_AD_DURATION_SECONDS),
-    duration:Math.max(0,Number(l.duration)||MAX_AD_DURATION_SECONDS),
-    zIndex:Number.isFinite(+l.zIndex)?+l.zIndex:i+1,
-    content:clean(l.content),
-    groupId:l.groupId||null
-  }));
-  return out;
+  const base=createCreative({format:input&&input.format});
+  if(!input||typeof input!=='object')return base;
+  return ADS_RULES.normalizeCreative(input,base);
 }
 
 export function duplicateCreative(c){
@@ -436,7 +287,7 @@ export function applyEntity(c,entity={},sourceType='product'){
     x.layers.push(makeLayer('text',{
       name:'Real price',role:'price',content:'TZS '+price.toLocaleString('en-US'),
       x:x.canvas.width*.08,y:x.canvas.height*.58,width:x.canvas.width*.42,height:x.canvas.height*.1,
-      zIndex:7,style:{fill:'#FFFFFF',fontSize:Math.round(x.canvas.width*.047),fontWeight:900}
+      zIndex:7,style:{fill:'#FFFFFF',fontSize:clamp(Math.round(x.canvas.width*.047),TEXT_ROLE_SIZES.price.min,TEXT_ROLE_SIZES.price.max),fontWeight:900}
     }));
   }
   x.destination={type:sourceType,id:clean(entity.id)};x.updatedAt=now();
@@ -560,46 +411,8 @@ export function alignLayers(layers,type,canvasWidth,canvasHeight){
   });
 }
 
-export function validateCreative(c,{forPublish=false}={}){
-  const x=normalizeCreative(c),errors=[];
-  if(!x.layers.some(l=>l.visible))errors.push({code:'EMPTY',message:'Add at least one visible layer.'});
-  x.layers.filter(l=>l.visible).forEach(l=>{
-    if(l.type==='text'&&!clean(l.content))errors.push({code:'EMPTY_TEXT',layerId:l.id,message:`${l.name} has no text.`});
-    if(l.x+l.width<0||l.y+l.height<0||l.x>x.canvas.width||l.y>x.canvas.height)errors.push({code:'OUTSIDE',layerId:l.id,message:`${l.name} is outside the canvas.`});
-    if(l.type==='image'&&!/^https:\/\/|^data:image/i.test(l.src||''))errors.push({code:'IMAGE',layerId:l.id,message:`${l.name} image is not loaded.`});
-    if(l.type==='video'){
-      if(!/^https:\/\/|^blob:/i.test(l.src||l.videoUrl||''))errors.push({code:'VIDEO',layerId:l.id,message:`${l.name} video URL is not loaded.`});
-      const vDur = (l.videoMeta?.trimEnd - l.videoMeta?.trimStart) || l.videoMeta?.duration || l.duration || 0;
-      /* [FINAL INSTRUCTIONS §9/§33] STRICT rule: `duration < 60`
-         → 59s ✅, 60s ❌, 61s ❌. Publish blocked until trimmed; original kept. */
-      if(vDur >= MAX_AD_MEDIA_SECONDS){
-        errors.push({code:'VIDEO_DURATION',layerId:l.id,message:`Video "${l.name}" lazima iwe CHINI ya sekunde ${MAX_AD_MEDIA_SECONDS} (sasa: ${Math.round(vDur)}s — max ${MAX_AD_DURATION_SECONDS}s). Tumia Trim. Original inabaki salama.`});
-      }
-    }
-    if(l.type==='audio'&&l.src&&!/^https:\/\/|^blob:|^data:audio/i.test(l.src||l.audioUrl||'')){
-      errors.push({code:'AUDIO',layerId:l.id,message:`${l.name} audio URL si sahihi.`});
-    }
-  });
-  if(forPublish){
-    /* [NON-CANVAS MVP 2026-09-24] Slideshow publish gates (spec §15/§21):
-       ≥2 real slides, total duration ≤ 60s. */
-    const ss=x.slideshow;
-    if(ss&&ss.enabled){
-      if(!ss.slides||ss.slides.filter(s=>s&&s.src).length<2){
-        errors.push({code:'SLIDESHOW_SLIDES',message:'Slideshow inahitaji picha angalau 2 zenye source halisi.'});
-      }
-      const total=slideshowTotal(x);
-      if(total>=MAX_AD_MEDIA_SECONDS){
-        errors.push({code:'SLIDESHOW_DURATION',message:`Slideshow lazima iwe CHINI ya sekunde ${MAX_AD_MEDIA_SECONDS} (Jumla: ${Math.round(total)}s — max ${MAX_AD_DURATION_SECONDS}s). Punguza muda wa slides.`});
-      }
-    }
-    const internal=!!(x.destination&&x.destination.type&&x.destination.id),external=!!(x.destination&&x.destination.type==='external'&&/^https:\/\//i.test(x.destination.url||''));
-    if(!internal&&!external)errors.push({code:'DESTINATION',message:'Choose a real SokoHai destination or valid HTTPS link before publishing.'});
-    if(x.linkedEntity&&!x.linkedEntity.id)errors.push({code:'ENTITY',message:'The selected SokoHai entity is incomplete.'});
-    if(x.startAt&&x.endAt&&Date.parse(x.endAt)<=Date.parse(x.startAt))errors.push({code:'SCHEDULE',message:'End date lazima iwe baada ya Start date.'});
-    if(!(Number(x.displayDurationSeconds)>=DISPLAY_DURATION_SECONDS.min&&Number(x.displayDurationSeconds)<=DISPLAY_DURATION_SECONDS.max))errors.push({code:'DISPLAY_DURATION',message:'Display duration lazima iwe sekunde '+DISPLAY_DURATION_SECONDS.min+'–'+DISPLAY_DURATION_SECONDS.max+' (media duration ni kitu kingine).'});
-  }
-  return{ok:errors.length===0,errors};
+export function validateCreative(c,options={}){
+  return ADS_RULES.validateCreative(c,options);
 }
 
 export function serializeCreative(c){return JSON.stringify(normalizeCreative(c));}

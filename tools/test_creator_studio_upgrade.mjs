@@ -22,9 +22,11 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   assert.notEqual(c.displayDurationSeconds,c.duration);
 
   const tooLong=normalizeCreative({displayDurationSeconds:120});
-  assert.equal(tooLong.displayDurationSeconds,59,'display duration clamped to 59s max');
+  assert.equal(tooLong.displayDurationSeconds,120,'custom display duration is preserved for publish validation');
+  assert.ok(validateCreative(tooLong,{forPublish:true}).errors.some(e=>e.code==='DISPLAY_DURATION'),'display duration above 59s is rejected at publish');
   const tooShort=normalizeCreative({displayDurationSeconds:1});
-  assert.equal(tooShort.displayDurationSeconds,5,'display duration clamped to 5s min');
+  assert.equal(tooShort.displayDurationSeconds,1,'custom display duration is preserved for publish validation');
+  assert.ok(validateCreative(tooShort,{forPublish:true}).errors.some(e=>e.code==='DISPLAY_DURATION'),'display duration below 5s is rejected at publish');
   const missing=normalizeCreative({});
   assert.equal(missing.displayDurationSeconds,9,'default display duration preserved');
   const mediaUntouched=normalizeCreative({duration:10,displayDurationSeconds:45});
@@ -172,7 +174,9 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
     setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},
     location:{href:''}
   };
-  // palette tokens first (plain script), then renderer
+  // canonical shared rules + palette tokens first (plain scripts), then renderer
+  vm.runInNewContext(read('shared/ads-design-rules.js'),sandbox,{filename:'ads-design-rules.js'});
+  win.SokoHaiAdsDesignRules=sandbox.SokoHaiAdsDesignRules;
   vm.runInNewContext(read('js/app/creative/ad-palettes.js'),{window:win}, {filename:'ad-palettes.js'});
   vm.runInNewContext(read('js/06-announcement.js'),sandbox,{filename:'06-announcement.js'});
   assert.equal(typeof win.skhAdvertisementCardHtml,'function','canonical renderer exported');
@@ -259,10 +263,14 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   assert.ok(idx.includes('js/app/95-creative-studio.js'),'creative studio module still loaded');
 
   const fn=read('functions/creative.js');
-  ['category:text(c.category','displayDurationSeconds:ddS','rotationMs:ddS*1000','paletteId:text(c.paletteId','campaignName:text(c.campaignName','offer:text(c.offer','textAnimation:text(headAnim.entrance'].forEach(s=>{
-    assert.ok(fn.includes(s),'creativePublish mapping missing: '+s);
+  const shared=read('shared/ads-design-rules.js');
+  assert.ok(fn.includes('validateDesign(storedCreative'),'Cloud Functions validates the stored creative before publishing');
+  assert.ok(fn.includes('ADS_RULES.validateCreative(creative'),'Cloud Functions use canonical shared validation');
+  assert.ok(fn.includes('ADS_RULES.creativeToAdvertisement(creative'),'Cloud Functions use the shared creative-to-ad projection');
+  ['category: clean(c.category','displayDurationSeconds: finite(c.displayDurationSeconds','priority: Math.max(0, finite(c.priority','campaignName: clean(c.campaignName','offer: priceText','textAnimation: String(headAnimation.entrance'].forEach(s=>{
+    assert.ok(shared.includes(s),'shared projection missing: '+s);
   });
-  assert.ok(fn.includes("priority:Math.max(0,Number(c.priority)||0)"),'creativePublish priority mapping');
+  assert.ok(fn.includes('priority:Math.max(0, Number(creative.priority) || 0)'),'creativePublish priority mapping');
 
   const studio=read('js/app/95-creative-studio.js');
   ['applyNamedPalette','data-namedpalette','data-simple="category"','data-simple="displayDurationSeconds"',"set('annPaletteId'","set('annDisplayDuration'",'role:\'badge\'','makeLayer(\'logo\''].forEach(s=>{
@@ -313,10 +321,12 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   assert.ok(!studio.includes('api.cloudinary.com'),'studio must not contain a second uploader');
   assert.ok(studio.includes('await addMediaFile(file);')||studio.includes('addMediaFile(file)'),'legacy inputs delegate to unified Add Media');
 
-  // 8d. Media types auto-detected & validated (incl. GIF/SVG), reusing form size limits
-  assert.ok(studio.includes("image/gif")||/image\/\*/.test(studio),'not locked to JPG/PNG');
-  ['detectMediaKind','SKH_MEDIA_LIMITS','image:8*1024*1024','video:80*1024*1024','audio:20*1024*1024']
-    .forEach(s=>assert.ok(studio.includes(s),'media validation missing: '+s));
+  // 8d. Media types auto-detected & validated by the same shared rule module
+  const adsRules=read('shared/ads-design-rules.js');
+  assert.ok(adsRules.includes('gif|svg'),'shared media rules include GIF/SVG, not just JPG/PNG');
+  assert.ok(studio.includes('validateAdMediaFile')&&studio.includes('detectAdMediaKind'),'studio routes media through shared detection/validation');
+  ['function detectAdMediaKind','function validateAdMediaFile','AD_MEDIA_FILE_LIMITS_BYTES','image: 8 * 1024 * 1024','video: 80 * 1024 * 1024','audio: 20 * 1024 * 1024']
+    .forEach(s=>assert.ok(adsRules.includes(s),'shared media validation missing: '+s));
 
   // 8e. Crop / cut-out in DESIGN with required aspect ratios + custom, reusing existing crop fields
   ['original','1:1','4:5','16:9','9:16','4:3','3:4','custom'].forEach(r=>assert.ok(studio.includes(r),'crop ratio missing: '+r));
@@ -349,7 +359,7 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
   /* [2026-09-24 NON-CANVAS MVP · FINAL §9] STRICT `duration < 60` rule. */
   assert.ok(model.includes('MAX_AD_MEDIA_SECONDS'),'exclusive 60s ceiling constant intact');
   assert.ok(model.includes('MAX_AD_DURATION_SECONDS'),'valid max 59s constant intact');
-  assert.ok(model.includes('CHINI ya sekunde'),'video-over-limit (<60) message intact');
+  assert.ok(adsRules.includes('clip ya mwisho')&&adsRules.includes('MAX_AD_DURATION_SECONDS'),'shared video trim validator reports and enforces the <60s limit');
 
   // 8j. Advanced cleaned: basic controls OUT, deep tools IN; timeline preserved as Advanced sub-view
   const adv=studio.slice(studio.indexOf('function advancedControls()'),studio.indexOf('function advancedControls()')+900);
