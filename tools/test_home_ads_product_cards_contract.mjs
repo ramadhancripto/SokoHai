@@ -17,11 +17,14 @@ t('showcase supports priority ordering and rotation',ad.includes('Number(b.prior
 t('showcase wakes at schedule boundaries without a reload',ad.includes('armScheduleRefresh')&&ad.includes('scheduleTimer=setTimeout(renderCurrent')&&ad.includes('if(s>now)times.push(s)')&&ad.includes('if(e>now)times.push(e+50)'));
 t('showcase labels promotional content honestly',ad.includes('Advertisement'));
 t('showcase supports image creative',ad.includes('skh-ann-media-main')&&ad.includes('a.image || a.imageUrl'));
-t('showcase supports video with safe controls',ad.includes('<video')&&ad.includes('muted playsinline controls')&&ad.includes('preload="metadata"'));
+/* [2026-09-24] published video ad = clean presentation (subtle cue + duration),
+   full player controls zimeondolewa kwa mujibu wa Ad Visual System; `controls` ni opt-in tu. */
+t('showcase supports video with safe controls',ad.includes('<video')&&ad.includes('muted playsinline')&&ad.includes('preload="metadata"')&&!ad.includes('playsinline controls')&&ad.includes('skh-ann-video-cue'));
 t('showcase supports audio controls',ad.includes('<audio')&&ad.includes('preload="none"'));
 t('showcase supports poster image',ad.includes('poster='));
 t('showcase supports logo, brand, headline and CTA',ad.includes('logoUrl')&&ad.includes('brandName')&&ad.includes('headline')&&ad.includes('ctaLabel'));
-t('Home advertisement is rendered as a clear sponsored post',ad.includes('skh-ann-post-head')&&ad.includes('Sponsored · Advertisement')&&ad.includes('skh-ann-post-actions'));
+/* [2026-09-24] ad indicator moja tu ya subtle ('Sponsored' + AD pill) — redundant 'Sponsored · Advertisement' iliondolewa. */
+t('Home advertisement is rendered as a clear sponsored post',ad.includes('skh-ann-post-head')&&ad.includes("'Sponsored'")&&ad.includes('skh-ann-sponsored')&&ad.includes('skh-ann-post-actions'));
 t('advertisement image preserves the whole creative',adCss.includes('aspect-ratio:4/3')&&adCss.includes('skh-ann-media-main')&&adCss.includes('object-fit:contain!important'));
 t('preview and Home share the canonical advertisement card',ad.includes('window.skhAdvertisementCardHtml=cardHtml')&&admin.includes("typeof window.skhAdvertisementCardHtml==='function'"));
 t('admin can edit primary, accent, text and surface colors',['annPrimaryColor','annAccentColor','annTextColor','annSurfaceColor'].every(id=>admin.includes(id)));
@@ -33,7 +36,8 @@ t('engagement metrics display only when authentic count is positive',ad.includes
 t('published Firestore write updates Home immediately',engine.includes('window.__sokohaiAnnouncementsCache = cache')&&engine.includes('window.__sokohaiOnAnnouncementsUpdate(cache)'));
 t('new advertisement defaults to Publish with explicit button label',admin.includes("existing?(existing.status||((existing.active===false)?'draft':'published')):'published'")&&admin.includes("'Publish Advertisement':'Save Draft'"));
 t('Admin manager has required status filters',['active','scheduled','draft','expired','archived'].every(x=>admin.includes(x.charAt(0).toUpperCase()+x.slice(1))));
-t('Admin manager has Create Advertisement',admin.includes('+ Create Advertisement'));
+/* [2026-09-24] primary action label ya Ads top-nav sasa '+ Tengeneza Tangazo'. */
+t('Admin manager has Create Advertisement',admin.includes('+ Tengeneza Tangazo'));
 t('creative wizard supports all required types',['image','image_text','graphic','video','video_text','image_audio','video_audio'].every(x=>admin.includes('value="'+x+'"')));
 t('admin must confirm preview before publish',admin.includes('annPreviewConfirmed')&&admin.includes('Kagua na uthibitishe Preview'));
 t('creative validation checks image/video/audio',admin.includes('needImage')&&admin.includes('needVideo')&&admin.includes('needAudio'));
