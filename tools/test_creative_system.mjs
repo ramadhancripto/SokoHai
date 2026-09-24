@@ -37,9 +37,9 @@ assert.ok(MULTIMEDIA_PRESETS.short_video);
 assert.ok(MULTIMEDIA_PRESETS.audio_visual);
 assert.ok(MULTIMEDIA_PRESETS.video_audio);
 assert.ok(MULTIMEDIA_PRESETS.full_mix);
-/* [2026-09-24 NON-CANVAS MVP] Advertisement media hard cap 30s → 60s (spec
-   §11/§21/§33). Assertion updated to the new contract — test NOT removed. */
-assert.equal(MULTIMEDIA_PRESETS.short_video.maxDuration, 60);
+/* [2026-09-24 NON-CANVAS MVP · FINAL §9] STRICT rule `duration < 60`:
+   maxDuration is 59 (largest integer < 60). Test updated, NOT removed. */
+assert.equal(MULTIMEDIA_PRESETS.short_video.maxDuration, 59);
 assert.ok(MULTIMEDIA_PRESETS.slideshow, 'slideshow composition preset exists');
 
 // --- TEST 3: Color Harmony & Alignment ---
@@ -127,9 +127,11 @@ longVideoLayer.videoMeta.trimEnd = 75;
 const longValid = validateCreative(longVideoCreative);
 assert.equal(longValid.ok, false);
 assert.ok(longValid.errors.some(e => e.code === 'VIDEO_DURATION'));
-/* Trimmed to ≤60s → valid again (trim, don't delete the original): */
+/* [FINAL §9] STRICT <60: trimEnd=60 is INVALID, 59 is valid (original kept): */
 longVideoLayer.videoMeta.trimEnd = 60;
-assert.equal(validateCreative(longVideoCreative).ok, true, 'trimmed ≤60s video valid');
+assert.equal(validateCreative(longVideoCreative).ok, false, 'trimEnd=60 rejected (must be < 60)');
+longVideoLayer.videoMeta.trimEnd = 59;
+assert.equal(validateCreative(longVideoCreative).ok, true, 'trimmed 59s video valid (< 60)');
 
 // --- TEST 6: Audio Layer & Multi-Track Mixing ---
 const audioLayer = makeLayer('audio', {

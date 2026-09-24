@@ -8,7 +8,7 @@ import {
   TEXT_STYLE_PRESETS,FONT_PAIRING_PRESETS,generatePalette,alignLayers,
   templatesFor,autoDesignVariations,designSuggestions,validateCreative,contrastRatio,
   /* [NON-CANVAS MVP 2026-09-24] */
-  MAX_AD_MEDIA_SECONDS,SLIDESHOW_TRANSITIONS,slideshowTotal,detectComposition,COMPOSITION_LABELS,autoAdDuration
+  MAX_AD_MEDIA_SECONDS,MAX_AD_DURATION_SECONDS,SLIDESHOW_TRANSITIONS,slideshowTotal,detectComposition,COMPOSITION_LABELS,autoAdDuration
 } from './creative/creative-model.js';
 import {CreativeHistory} from './creative/creative-history.js';
 import {renderCreativeSvg,exportCreative,downloadBlob,removeBackgroundClient} from './creative/creative-svg-renderer.js';
@@ -88,12 +88,20 @@ function updateTimelineUI(){
 function syncBackToLegacyForm(){
   const modal=document.getElementById('announcementFormModal');
   if(!modal||!state)return;
+  const ssFeed=state.slideshow&&Array.isArray(state.slideshow.slides)&&state.slideshow.slides.filter(s=>s&&s.src).length>=2?state.slideshow:null;
   const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=val;};
   const role=r=>state.layers.find(l=>l.role===r);
   const head=role('headline'),body=role('body'),price=role('price'),cta=role('cta');
   const img=state.layers.find(l=>l.type==='image'||l.type==='video');
   const isVideo=img?.type==='video';
   const aud=state.layers.find(l=>l.type==='audio');
+  /* [FINAL INSTRUCTIONS §1/§6] Map composition → form creativeType so the
+     simple-form save path never forces media on a text/graphic-only ad. */
+  const compNow=detectComposition(state);
+  const typeForComp={poster:'solid_text',image:'image_text',sponsored:'image_text',image_audio:'image_audio',
+    video:'video',video_text:'video_text',video_audio:'video_audio',slideshow:'image_text',
+    slideshow_audio:'image_audio',image_video:'video',full_mix:'video_audio',audio:'solid_text'}[compNow]||'image_text';
+  set('annCreativeType',typeForComp);
   if(head?.content)set('annHeadline',head.content);
   if(body?.content)set('annText',body.content);
   if(price?.content)set('annPriceTag',price.content);
@@ -109,6 +117,8 @@ function syncBackToLegacyForm(){
   if(img?.src){
     if(isVideo){set('annVideo',img.src);set('annImage','');}
     else{set('annImage',img.src);set('annVideo','');}
+  }else if(ssFeed&&ssFeed.slides&&ssFeed.slides[0]?.src){
+    set('annImage',ssFeed.slides[0].src);set('annVideo','');
   }
   if(aud?.src)set('annAudio',aud.src);
   if(img?.style?.fit)set('annMediaFit',img.style.fit);
@@ -136,7 +146,6 @@ function syncBackToLegacyForm(){
   if(state.id)set('annCreativeId',state.id);
   /* [NON-CANVAS MVP 2026-09-24] Carry slideshow + trimmed media duration into
      the announcement form so Save → published card keeps them (§6/§22). */
-  const ssFeed=state.slideshow&&Array.isArray(state.slideshow.slides)&&state.slideshow.slides.filter(s=>s&&s.src).length>=2?state.slideshow:null;
   const setH=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val==null?'':String(val);};
   setH('annSlideshow',ssFeed?JSON.stringify(ssFeed):'');
   setH('annMediaDuration',(()=>{
@@ -165,6 +174,7 @@ function shell(){
    <div class="skh-cs-tools">
      <button data-a="undo" title="Undo">↶ Undo</button>
      <button data-a="redo" title="Redo">↷ Redo</button>
+     <button data-a="reset" title="Reset design to blank creative">⟲ Reset</button>
      <button data-a="preview">Preview</button>
      <button data-a="save">Save draft</button>
      <button class="cs-advanced-only" data-a="duplicate">Duplicate</button>
@@ -195,7 +205,7 @@ function shell(){
          <button data-a="restart" title="Restart">⏮</button>
          <span id="csCurrentTime">0:00</span> / <span id="csTotalDuration">0:30</span>
        </div>
-       <input type="range" id="csTimelineScrubber" min="0" max="60" step="0.1" value="0">
+       <input type="range" id="csTimelineScrubber" min="0" max="59" step="0.1" value="0">
        <div class="cs-tb-vol">
          <button data-a="mutetoggle" id="csMuteBtn">🔊</button>
          <input type="range" id="csMasterVolume" min="0" max="100" value="100" style="width:70px;">
@@ -316,6 +326,7 @@ function bind(m){
   m.addEventListener('change',e=>{
     if(e.target.id==='csAnimTargetLayer'){selected=e.target.value;renderCanvas();renderProperties();renderQuickBar();return;}
     if(e.target.dataset.durMode){setDurationMode(e.target.dataset.durMode);return;}
+    if(e.target.dataset.designMode){setDesignMode(e.target.dataset.designMode);return;}
     if(e.target.dataset.anim){updateAnim(e.target.dataset.anim,e.target);return;}
     if(e.target.dataset.vmeta){updateVmeta(e.target.dataset.vmeta,e.target);return;}
     if(e.target.dataset.audio){updateAudio(e.target.dataset.audio,e.target);return;}
@@ -393,6 +404,17 @@ function action(a,e){
   if(a==='mobileprops'){$('.skh-cs-right')?.classList.toggle('mobile-open');return;}
   if(a==='undo'){state=history.undo();render();return;}
   if(a==='redo'){state=history.redo();render();return;}
+  /* [§17] Reset via the SAME state/history mechanism (replace → undo still works) */
+  if(a==='reset'){
+    if(!confirm('Reset design yote kurudi blank creative? (Undo inaweza kurudisha)'))return;
+    const keep={format:state.format,ownerId:state.ownerId,id:state.id,destination:state.destination,
+      linkedEntity:state.linkedEntity,category:state.category,campaignName:state.campaignName,
+      campaignId:state.campaignId,brandKit:state.brandKit,displayDurationSeconds:state.displayDurationSeconds,
+      publicationType:state.type,designMode:state.designMode};
+    replace(createCreative(keep));
+    toast('Design ime-reset. Undo inaweza kurudisha.','info');
+    return;
+  }
   if(a==='guides'){guides=!guides;renderCanvas();return;}
   if(a==='fit'){
     zoom=Math.min(.8,Math.max(.2,($('#csStage').clientHeight-80)/state.canvas.height));
@@ -448,12 +470,13 @@ function action(a,e){
     commit(n=>{
       const t=n.layers.find(x=>x.id===l.id);if(!t)return;
       t.videoMeta=t.videoMeta||{};
+      /* [§9] largest valid window = 59s (STRICT < 60) */
       t.videoMeta.trimStart=0;
-      t.videoMeta.trimEnd=MAX_AD_MEDIA_SECONDS;
-      if(Number(t.videoMeta.duration)>MAX_AD_MEDIA_SECONDS){
-        toast(`Trimmed to 0:00–1:00. Original (${Math.round(t.videoMeta.duration)}s) is preserved for re-editing.`);
-      }else toast('Trim set to 0:00–1:00.');
-    },'Trim video to 60s');
+      t.videoMeta.trimEnd=MAX_AD_DURATION_SECONDS;
+      if(Number(t.videoMeta.duration)>=MAX_AD_MEDIA_SECONDS){
+        toast(`Trimmed to 0:00–0:59 (duration < 60). Original (${Math.round(t.videoMeta.duration)}s) preserved for re-editing.`);
+      }else toast('Trim set to 0:00–0:59.');
+    },'Trim video to <60s');
     renderLibrary();
     return;
   }
@@ -508,19 +531,30 @@ function renderVideoOverlays(box){
     v.muted=vm.muted!==false;
     v.loop=vm.loop!==false;
     v.playsInline=true;
-    if(vm.autoplay!==false)v.autoplay=true;
-    /* [NON-CANVAS MVP 2026-09-24] Preview the TRIMMED segment (spec §11):
-       seek to trimStart on load, and wrap back at trimEnd while looping.
-       Original file remains the source — nothing is cut on disk. */
+    /* [FINAL INSTRUCTIONS §10/§11/§25] Trim-aware, poster-first preview:
+       - seek into the trimmed segment on load; wrap at trimEnd while looping;
+       - HTTPS URL videos: capture real duration once (drives <60s validation);
+       - NO autoplay: initial state = poster; click = Play/Pause; original file
+         remains the source — nothing is cut on disk. */
     const tS=Number(vm.trimStart)||0,tE=Number(vm.trimEnd)||0;
-    if(tS>0)v.addEventListener('loadedmetadata',()=>{try{v.currentTime=tS;}catch(e){}});
+    v.addEventListener('loadedmetadata',()=>{
+      if(v.duration&&Number.isFinite(v.duration)&&v.duration>0&&(!vm.duration||Math.abs(Number(vm.duration)-v.duration)>0.5)){
+        commit(n=>{const t=n.layers.find(x=>x.id===l.id);if(t&&t.videoMeta){
+          t.videoMeta.duration=Math.round(v.duration);
+          if(!t.videoMeta.trimEnd||t.videoMeta.trimEnd>MAX_AD_DURATION_SECONDS)t.videoMeta.trimEnd=Math.min(MAX_AD_DURATION_SECONDS,Math.round(v.duration));
+        }},'Video duration detected');
+      }
+      if(tS>0){try{v.currentTime=tS;}catch(e){}}
+    });
     if(tE>tS)v.addEventListener('timeupdate',()=>{
       if(v.currentTime>=tE){v.currentTime=tS||0;if(!vm.loop)v.pause();}
     });
-    const fit=st.fit==='contain'?'contain':st.fit==='fill'?'fill':'cover';
-    v.style.cssText=`position:absolute;left:${(l.x||0)*zoom}px;top:${(l.y||0)*zoom}px;width:${(l.width||0)*zoom}px;height:${(l.height||0)*zoom}px;object-fit:${fit};border-radius:${(st.radius||0)*zoom}px;transform:rotate(${l.rotation||0}deg);opacity:${l.opacity??1};pointer-events:none;background:#000;`;
+    const fitMode=st.fit==='contain'?'contain':st.fit==='fill'?'fill':'cover';
+    v.style.cssText=`position:absolute;left:${(l.x||0)*zoom}px;top:${(l.y||0)*zoom}px;width:${(l.width||0)*zoom}px;height:${(l.height||0)*zoom}px;object-fit:${fitMode};border-radius:${(st.radius||0)*zoom}px;transform:rotate(${l.rotation||0}deg);opacity:${l.opacity??1};pointer-events:auto;cursor:pointer;background:#000;`;
+    v.title='Click: Play / Pause (poster-first)';
+    v.addEventListener('click',()=>{if(v.paused)v.play().catch(()=>{});else v.pause();});
     box.appendChild(v);
-    if(vm.autoplay!==false){const p=v.play&&v.play();if(p&&p.catch)p.catch(()=>{});}
+    /* NO autoplay — initial state is the poster (§11/§24) */
   });
 }
 
@@ -581,7 +615,7 @@ function presetsControls(){
     <div class="cs-theme-picks">
       <button data-adpreset="static"><b>🖼️ Static Ad</b><small>Image + Text</small></button>
       <button data-adpreset="motion"><b>✨ Motion Poster</b><small>Image + Animated Text</small></button>
-      <button data-adpreset="short_video"><b>🎬 Short Video</b><small>Video ≤ 60 Seconds</small></button>
+      <button data-adpreset="short_video"><b>🎬 Short Video</b><small>Video &lt; 60 Seconds (59s max)</small></button>
       <button data-adpreset="slideshow"><b>🖼️ Slideshow</b><small>Multi-Image Sequential Ad</small></button>
       <button data-adpreset="audio_visual"><b>🎵 Audio-Visual</b><small>Image + Audio Music</small></button>
       <button data-adpreset="video_audio"><b>🎥 Video + Audio Mix</b><small>Video + Voiceover / Music</small></button>
@@ -614,10 +648,16 @@ function audioControls(){
       <label>Track Volume (${Math.round((aMeta.volume??0.8)*100)}%)<input data-audio="volume" type="range" min="0" max="1" step="0.05" value="${aMeta.volume??0.8}"></label>
       <label>Fade In (${aMeta.fadeIn||0}s)<input data-audio="fadeIn" type="range" min="0" max="5" step="0.5" value="${aMeta.fadeIn||0}"></label>
     </div>
+    <label>Fade Out (${aMeta.fadeOut||0}s)<input data-audio="fadeOut" type="range" min="0" max="5" step="0.5" value="${aMeta.fadeOut||0}"></label>
     <div class="cs-two">
-      <label>Trim Start (${aMeta.trimStart||0}s)<input data-audio="trimStart" type="range" min="0" max="60" step="1" value="${aMeta.trimStart||0}"></label>
-      <label>Trim End (${aMeta.trimEnd||60}s)<input data-audio="trimEnd" type="range" min="0" max="60" step="1" value="${aMeta.trimEnd||60}"></label>
+      <label>Trim Start (${aMeta.trimStart||0}s)<input data-audio="trimStart" type="range" min="0" max="59" step="1" value="${aMeta.trimStart||0}"></label>
+      <label>Trim End (${aMeta.trimEnd||59}s)<input data-audio="trimEnd" type="range" min="0" max="59" step="1" value="${aMeta.trimEnd||59}"></label>
     </div>
+    <div class="cs-two">
+      <label><input type="checkbox" data-audio="loop" ${aMeta.loop!==false?'checked':''}> Loop audio</label>
+      <label><input type="checkbox" data-audio="muted" ${aMeta.muted?'checked':''}> Muted</label>
+    </div>
+    <button class="cs-wide" data-tab="design">🔁 Replace audio (DESIGN → + Add Media)</button>
 
     <h4>Multi-Track Audio Mixing</h4>
     <label><input type="checkbox" data-mix="muteOriginal" ${mix.muteOriginal?'checked':''}> Mute Original Video Audio</label>
@@ -631,22 +671,22 @@ function audioControls(){
 
 function timelineControls(){
   return `
-    <div class="cs-simple-head"><span>⏱️</span><div><h3>Timeline Orchestration</h3><p>Panga muda wa kila layer kuanzia sekunde 0 hadi ${MAX_AD_MEDIA_SECONDS}.</p></div></div>
+    <div class="cs-simple-head"><span>⏱️</span><div><h3>Timeline Orchestration</h3><p>Panga muda wa kila layer: start · duration · end (0 – ${MAX_AD_DURATION_SECONDS}s).</p></div></div>
     
-    <label>Total Creative Duration: <b id="csTotalDurVal">${state.duration||30}s (Max ${MAX_AD_MEDIA_SECONDS}s)</b>
-      <input data-timeline-dur type="range" min="3" max="${MAX_AD_MEDIA_SECONDS}" step="1" value="${state.duration||30}">
+    <label>Total Creative Duration: <b id="csTotalDurVal">${state.duration||30}s (0 &lt; duration &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s)</b>
+      <input data-timeline-dur type="range" min="3" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${state.duration||30}">
     </label>
 
-    <h4>Layer Timings (0s - ${MAX_AD_MEDIA_SECONDS}s)</h4>
+    <h4>Layer Timings (start · duration · end)</h4>
     <div class="cs-timeline-tracks">
       ${state.layers.map(l => {
-        const start = l.startTime || 0, end = l.endTime || MAX_AD_MEDIA_SECONDS;
+        const start = l.startTime || 0, end = l.endTime || MAX_AD_DURATION_SECONDS;
         return `
           <div class="cs-tl-row" style="margin-bottom:12px; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px;">
             <b style="font-size:13px; color:#E2E8F0;">${esc(l.name||l.role||l.type)}</b>
             <div class="cs-two" style="margin-top:4px;">
-              <label>Start: ${start}s <input data-layer-time="${l.id}" data-time-field="startTime" type="range" min="0" max="${MAX_AD_MEDIA_SECONDS}" value="${start}"></label>
-              <label>End: ${end}s <input data-layer-time="${l.id}" data-time-field="endTime" type="range" min="0" max="${MAX_AD_MEDIA_SECONDS}" value="${end}"></label>
+              <label>Start: ${start}s <input data-layer-time="${l.id}" data-time-field="startTime" type="range" min="0" max="${MAX_AD_DURATION_SECONDS}" value="${start}"></label>
+              <label>End: ${end}s · Duration: ${Math.max(0,end-start)}s <input data-layer-time="${l.id}" data-time-field="endTime" type="range" min="0" max="${MAX_AD_DURATION_SECONDS}" value="${end}"></label>
             </div>
           </div>
         `;
@@ -726,8 +766,8 @@ function updateAudio(key, el){
       l.audioMeta[key] = val;
       if (key === 'trimStart' || key === 'trimEnd') {
         const start = l.audioMeta.trimStart || 0;
-        const end = l.audioMeta.trimEnd || MAX_AD_MEDIA_SECONDS;
-        l.audioMeta.duration = Math.max(1, Math.min(MAX_AD_MEDIA_SECONDS, end - start));
+        const end = l.audioMeta.trimEnd || MAX_AD_DURATION_SECONDS;
+        l.audioMeta.duration = Math.max(1, Math.min(MAX_AD_DURATION_SECONDS, end - start));
         l.duration = l.audioMeta.duration;
       }
     }
@@ -744,7 +784,7 @@ function updateMix(key, el){
 
 function updateTimelineDur(val){
   commit(n => {
-    n.duration = Math.min(MAX_AD_MEDIA_SECONDS, Math.max(1, +val));
+    n.duration = Math.min(MAX_AD_DURATION_SECONDS, Math.max(1, +val));
     const totalEl = $('#csTotalDuration');
     if (totalEl) totalEl.textContent = `0:${String(n.duration).padStart(2, '0')}`;
   }, 'Update Duration');
@@ -754,7 +794,7 @@ function updateLayerTime(layerId, field, val){
   commit(n => {
     const l = n.layers.find(x => x.id === layerId);
     if (l) {
-      l[field] = Math.min(MAX_AD_MEDIA_SECONDS, Math.max(0, +val));
+      l[field] = Math.min(MAX_AD_DURATION_SECONDS, Math.max(0, +val));
       if (l.startTime != null && l.endTime != null && l.endTime > l.startTime) {
         l.duration = l.endTime - l.startTime;
       }
@@ -866,7 +906,8 @@ function applyAddedMedia(url,kind,name,meta,opts={}){
       /* [NON-CANVAS MVP 2026-09-24] HARD 60s cap (spec §11/§33). Original file
          stays available (src/originalSrc) so the trim can be re-edited. */
       l.videoMeta.trimStart=0;
-      l.videoMeta.trimEnd=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(1,Math.round(meta.duration)));
+      /* [§9] STRICT <60: trim window max = 59s */
+      l.videoMeta.trimEnd=Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Math.round(meta.duration)));
     }
     selected=l.id;
   },'Add Media');
@@ -1066,8 +1107,10 @@ function designControls(){
     <h4>Shapes &amp; Icons</h4>
     <div class="cs-addgrid">
       <button data-add="shape" data-value="rectangle">Rectangle</button>
+      <button data-add="shape" data-value="rounded">Rounded Rectangle</button>
       <button data-add="shape" data-value="circle">Circle</button>
       <button data-add="shape" data-value="line">Line</button>
+      <button data-add="shape" data-value="divider">Divider</button>
       <button data-add="shape" data-value="arrow">Arrow</button>
       <button data-add="shape" data-value="badge">Badge</button>
       ${['phone','location','chat','cart','delivery','clock','calendar','price','discount','verified','star'].map(i=>`<button data-add="icon" data-value="${i}">${i}</button>`).join('')}
@@ -1110,19 +1153,20 @@ function mediaTabControls(){
       const trimEnd=Number(vMeta.trimEnd)||0;
       const trimStart=Number(vMeta.trimStart)||0;
       const effective=trimEnd>trimStart?trimEnd-trimStart:vDur;
-      const overVid=vDur>MAX_AD_MEDIA_SECONDS;
-      const overTrim=effective>MAX_AD_MEDIA_SECONDS;
+      /* [FINAL INSTRUCTIONS §9] STRICT rule: duration < 60 → 59s max */
+      const overVid=vDur>=MAX_AD_MEDIA_SECONDS;
+      const overTrim=effective>=MAX_AD_MEDIA_SECONDS;
       const fmtT=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
       html+=`
     <div style="background:#0F172A; padding:8px 12px; border-radius:8px; margin-bottom:8px;">
       <span style="font-size:12px; color:${(overVid||overTrim)?'#EF4444':'#10B981'}; font-weight:700;">
-        ⏱ Video: ${fmtT(vDur)} · Ad maximum: ${fmtT(MAX_AD_MEDIA_SECONDS)} · Trim: ${fmtT(Math.max(0,effective))} ${(!overVid&&!overTrim)?'✓ (≤60s limit)':'⚠️ Trim inahitajika kabla ya Publish!'}
+        ⏱ Video: ${fmtT(vDur)} · Ad maximum: ${fmtT(MAX_AD_DURATION_SECONDS)} (&lt; 60s) · Trim: ${fmtT(Math.max(0,effective))} ${(!overVid&&!overTrim)?'✓ (duration &lt; 60s)':'⚠️ Video hii ni ndefu kuliko kiwango cha tangazo — chagua sehemu iliyo chini ya sekunde 60!'}
       </span>
       ${(overVid||overTrim)?`<div style="display:flex;gap:6px;margin-top:8px;">
-        <button data-a="trimto60" class="primary">✂️ Trim to 60s</button>
+        <button data-a="trimto60" class="primary">✂️ Trim to 59s (&lt;60s)</button>
         <button data-a="manualtrim">✏️ Edit manually</button>
       </div>
-      <p style="margin:6px 0 0;font-size:11px;color:#94A3B8;">Video is ${fmtT(vDur)} · Maximum ad duration ${fmtT(MAX_AD_MEDIA_SECONDS)}. Original file remains available — you can re-edit the trim anytime (spec §11/§33).</p>`:''}
+      <p style="margin:6px 0 0;font-size:11px;color:#94A3B8;">Video hii ni ndefu kuliko kiwango cha tangazo (${fmtT(vDur)}). Chagua sehemu iliyo chini ya sekunde 60. Original media ibaki salama — unaweza kurekebisha trim tena wakati wowote (§10).</p>`:''}
     </div>
     <div class="cs-two">
       <button data-a="togglevideo">⏯ Play / Pause preview</button>
@@ -1131,10 +1175,10 @@ function mediaTabControls(){
     <label>Poster / Cover Image URL<input data-prop="posterUrl" value="${esc(mediaLayer.posterUrl||'')}" placeholder="https://..."></label>
     <h4>Video Trim (Start ─ End)</h4>
     <div class="cs-two">
-      <label>Start [${fmtT(trimStart)}]<input data-vmeta="trimStart" type="range" min="0" max="${MAX_AD_MEDIA_SECONDS}" step="1" value="${trimStart}"></label>
-      <label>End [${fmtT(trimEnd||MAX_AD_MEDIA_SECONDS)}]<input data-vmeta="trimEnd" type="range" min="1" max="${MAX_AD_MEDIA_SECONDS}" step="1" value="${trimEnd||MAX_AD_MEDIA_SECONDS}"></label>
+      <label>Start [${fmtT(trimStart)}]<input data-vmeta="trimStart" type="range" min="0" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${trimStart}"></label>
+      <label>End [${fmtT(trimEnd||MAX_AD_DURATION_SECONDS)}]<input data-vmeta="trimEnd" type="range" min="1" max="${MAX_AD_DURATION_SECONDS}" step="1" value="${trimEnd||MAX_AD_DURATION_SECONDS}"></label>
     </div>
-    <p class="cs-simple-tip">Start/End hupanga clip ya tangazo (max ${MAX_AD_MEDIA_SECONDS}s). Muda asilia wa video (${fmtT(vDur)}) haukati — ubaki kwenye originalSrc.</p>
+    <p class="cs-simple-tip">Start/End hupanga clip ya tangazo (0 &lt; duration &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s). Muda asilia wa video (${fmtT(vDur)}) haukati — ubaki kwenye originalSrc.</p>
     <div class="cs-two">
       <label><input type="checkbox" data-vmeta="autoplay" ${vMeta.autoplay!==false?'checked':''}> Autoplay</label>
       <label><input type="checkbox" data-vmeta="muted" ${vMeta.muted!==false?'checked':''}> Muted</label>
@@ -1217,22 +1261,30 @@ function basicControls(){
   const compLabel=COMPOSITION_LABELS[comp]||comp;
   const autoDur=autoAdDuration(state);
   const isAuto=state.durationAuto!==false&&Math.abs((Number(state.duration)||0)-autoDur)<0.6;
+  const dMode=state.designMode==='manual'?'manual':'auto';
+  const badge=role('badge');
   return presetsControls()+`
     <div class="cs-simple-head"><span>1</span><div><h3>Content / Advertisement information</h3><p>Andika maneno; preview inabadilika papo hapo.</p></div></div>
-    <div class="cs-comp-badge" title="Automatic ad composition (§24) — badilisha manual kwenye presets/media">
+    <div class="cs-comp-badge" title="Automatic composition (§24) + Design Mode (§18)">
       <b>Detected: ${esc(compLabel)}</b>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:7px;font-weight:800;color:#334E68;">
+        <span style="font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;">Design Mode</span>
+        <label style="display:flex;gap:4px;align-items:center;margin:0;font-weight:700;color:#486581;"><input type="radio" name="csDesignMode" data-design-mode="auto" ${dMode==='auto'?'checked':''}> Auto</label>
+        <label style="display:flex;gap:4px;align-items:center;margin:0;font-weight:700;color:#486581;"><input type="radio" name="csDesignMode" data-design-mode="manual" ${dMode==='manual'?'checked':''}> Manual</label>
+      </div>
       <label style="display:flex;gap:10px;align-items:center;margin-top:6px;font-weight:700;color:#486581;">
         <input type="radio" name="csDurMode" data-dur-mode="auto" ${isAuto?'checked':''}> Auto duration (${autoDur}s)
         <input type="radio" name="csDurMode" data-dur-mode="custom" ${!isAuto?'checked':''}> Custom
       </label>
       <div class="cs-two" style="margin-top:6px;">
-        <label>Ad duration (${state.duration||30}s · max ${MAX_AD_MEDIA_SECONDS}s)<input data-simple="duration" type="range" min="1" max="${MAX_AD_MEDIA_SECONDS}" value="${state.duration||30}"></label>
+        <label>Ad duration (${state.duration||30}s · 0 &lt; d &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s)<input data-simple="duration" type="range" min="1" max="${MAX_AD_DURATION_SECONDS}" value="${state.duration||30}"></label>
       </div>
     </div>
-    <label>Kichwa kikuu<input data-simple="headline" value="${esc(head?.content||'')}" placeholder="Mfano: Ofa kubwa ya wiki"></label>
-    <label>Maelezo mafupi<textarea data-simple="body" rows="3" placeholder="Eleza bidhaa au huduma">${esc(body?.content||'')}</textarea></label>
+    <label>Kichwa kikuu (Headline)<input data-simple="headline" value="${esc(head?.content||'')}" placeholder="Mfano: Ofa kubwa ya wiki"></label>
+    <label>Maelezo mafupi (Description)<textarea data-simple="body" rows="3" placeholder="Eleza bidhaa au huduma">${esc(body?.content||'')}</textarea></label>
     <label>Bei / offer<input data-simple="price" value="${esc(price?.content||'')}" placeholder="TZS 59,000"></label>
-    <p class="cs-simple-tip">Endelea kwenye <b>DESIGN</b> kupakia media na ku-design. CTA iko kwenye tab ya <b>CTA</b>; ratiba iko <b>SCHEDULE</b>.</p>`;
+    <label>Promotional badge<input data-simple="badge" value="${esc(badge?.content||'')}" placeholder="Mfano: 🔥 OFA MAALUM"></label>
+    <p class="cs-simple-tip"><b>Media NI optional (§1).</b> Blank creative + Background + Headline + Description + Offer + Badge + CTA + Animation = tangazo halali. Image/Video/Audio ni nyongeza tu. CTA iko <b>CTA</b>; ratiba <b>SCHEDULE</b>.</p>`;
 }
 
 /* ==== CTA tab — call-to-action ==== */
@@ -1385,7 +1437,18 @@ function updateSimple(key,val){
     /* [NON-CANVAS MVP 2026-09-24] overall ad duration (§21, max 60s) */
     else if(key==='duration'){
       n.durationAuto=false;
-      n.duration=Math.max(1,Math.min(MAX_AD_MEDIA_SECONDS,Math.round(Number(val)||30)));
+      n.duration=Math.max(1,Math.min(MAX_AD_DURATION_SECONDS,Math.round(Number(val)||30)));
+    }
+    /* [§1/§3] Badge = real text layer (role: badge), rendered everywhere */
+    else if(key==='badge'){
+      let b=n.layers.find(l=>l.role==='badge');
+      if(!b&&String(val||'').trim()){
+        b=makeLayer('text',{role:'badge',name:'Promo badge',content:String(val),
+          x:Math.round(n.canvas.width*.055),y:Math.round(n.canvas.height*.055),
+          width:Math.round(n.canvas.width*.34),height:Math.round(n.canvas.height*.055),
+          zIndex:9,style:{fill:'#FFFFFF',backgroundColor:'#F59E0B',fontSize:Math.max(16,Math.round(n.canvas.width*.022)),fontWeight:900,padding:10,radius:999,textAlign:'center'}});
+        n.layers.push(b);
+      }else if(b)b.content=String(val||'');
     }
   });
 }
@@ -1393,9 +1456,16 @@ function updateSimple(key,val){
 /* [NON-CANVAS MVP 2026-09-24] Auto/Manual duration mode (§25). */
 function setDurationMode(mode){
   commit(n=>{
-    if(mode==='auto'){n.durationAuto=true;n.duration=Math.max(1,Math.min(MAX_AD_MEDIA_SECONDS,Math.round(autoAdDuration(n)||n.duration)));}
+    if(mode==='auto'){n.durationAuto=true;n.duration=Math.max(1,Math.min(MAX_AD_DURATION_SECONDS,Math.round(autoAdDuration(n)||n.duration)));}
     else n.durationAuto=false;
   },'Duration mode '+mode);
+}
+/* [§18] Design Mode: Auto = system suggests composition/timing; Manual = user
+   chooses everything. Automation is NEVER mandatory. */
+function setDesignMode(mode){
+  commit(n=>{n.designMode=mode==='manual'?'manual':'auto';},'Design Mode '+mode);
+  renderLibrary();
+  toast(mode==='manual'?'Manual mode — kila kitu utachagua mwenyewe.':'Auto mode — composition/timing suggestion imewashwa.','info');
 }
 
 function applyQuickTheme(t){
@@ -1571,7 +1641,7 @@ function slideshowControls(){
         ${SLIDESHOW_TRANSITIONS.map(t=>`<option value="${t}" ${ss.transition===t?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}
       </select></label>
     </div>
-    <p class="cs-simple-tip">Jumla ya slideshow: <b>${Math.round(total)}s</b> (max ${MAX_AD_MEDIA_SECONDS}s). Audio ikiwepo inaendelea cross-slide.</p>
+    <p class="cs-simple-tip">Jumla ya slideshow: <b>${Math.round(total)}s</b> (0 &lt; jumla &lt; 60 → max ${MAX_AD_DURATION_SECONDS}s). Audio ikiwepo inaendelea cross-slide.</p>
     `:`<p class="cs-note">Ongeza picha 2+ hapo juu kisha bofya <b>Enable slideshow</b>. Kila slide ina muda wake; jumla hujitokeza hapo chini.</p>`}
     ${images.length&&!slides.length?`<p class="cs-simple-tip">Picha ${images.length} zilizo kwenye canvas zipo kama media ya kawaida. Slideshow ni tofauti — pakia/ongeza slides kwenye list hii.</p>`:''}
   `;
@@ -1592,7 +1662,8 @@ async function addSlidesFromInput(input){
         n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
         n.slideshow.slides=n.slideshow.slides||[];
         n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||3,name:file.name||'slide'});
-        n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
+        /* [§18] Auto mode suggests enabling; Manual waits for explicit Enable. */
+        if(n.designMode!=='manual')n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
       },'Add slideshow slide');
     }catch(err){toast(err.message||'Slide upload failed.','error');}
   }
@@ -1609,7 +1680,7 @@ function slideshowAction(act,idx){
       n.slideshow.enabled=!n.slideshow.enabled;
       if(n.slideshow.enabled&&count>=2){
         /* Auto duration when slideshow just enabled (§21 Auto) */
-        n.duration=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||12)));
+        n.duration=Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||12)));
         n.preset='slideshow';
       }
     },'Toggle slideshow');
@@ -1622,7 +1693,7 @@ function slideshowAction(act,idx){
       n.slideshow=n.slideshow||{enabled:false,transition:'fade',defaultDuration:3,slides:[]};
       n.slideshow.slides=n.slideshow.slides||[];
       n.slideshow.slides.push({src:url,duration:Number(n.slideshow.defaultDuration)||3,name:url.split('/').pop().slice(0,40)||'slide'});
-      n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
+      if(n.designMode!=='manual')n.slideshow.enabled=n.slideshow.slides.filter(s=>s&&s.src).length>=2;
     },'Add slide URL');
     const inp=$('#csSlideUrl');if(inp)inp.value='';
     renderLibrary();render();return;
@@ -1634,7 +1705,7 @@ function slideshowAction(act,idx){
     else if(act==='up'&&idx>0)[slides[idx-1],slides[idx]]=[slides[idx],slides[idx-1]];
     else if(act==='down'&&idx<slides.length-1)[slides[idx+1],slides[idx]]=[slides[idx],slides[idx+1]];
     ss.enabled=slides.filter(s=>s&&s.src).length>=2&&ss.enabled;
-    if(ss.enabled)n.duration=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
+    if(ss.enabled)n.duration=Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
   },'Slideshow '+act);
   renderLibrary();render();
 }
@@ -1648,7 +1719,7 @@ function updateSlideshowProp(key,el){
       const i=Number(el.dataset.ssDur);
       if(n.slideshow.slides[i])n.slideshow.slides[i].duration=Math.min(30,Math.max(1,Number(val)||3));
     }
-    if(n.slideshow.enabled)n.duration=Math.min(MAX_AD_MEDIA_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
+    if(n.slideshow.enabled)n.duration=Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(n)||n.duration)));
   },'Slideshow setting');
 }
 
@@ -1819,7 +1890,13 @@ function addLayer(type,value){
     });
   }else if(type==='shape'){
     commit(n=>{
-      const l=makeLayer('shape',{shape:value,x:180,y:220,width:420,height:value==='line'||value==='arrow'?50:260,zIndex:z,style:{fill:'#F4C542',radius:value==='badge'?999:24}});
+      /* [§14] rounded = real rounded-rect layer; divider = real thin line layer */
+      const shape=(value==='rounded'||value==='divider')?'rectangle':value;
+      const h=value==='line'||value==='arrow'||value==='divider'?(value==='divider'?6:50):260;
+      const l=makeLayer('shape',{shape,x:180,y:220,width:420,height:h,zIndex:z,
+        style:{fill:value==='divider'?'#FFFFFF':'#F4C542',radius:value==='rounded'?48:(value==='badge'?999:24),
+               opacity:value==='divider'?.6:1}});
+      l.name=value==='rounded'?'Rounded rectangle':value==='divider'?'Divider':(value[0].toUpperCase()+value.slice(1));
       n.layers.push(l);selected=l.id;
     });
   }else if(type==='icon'){
@@ -1866,9 +1943,10 @@ function updateVmeta(key,el){
       /* [NON-CANVAS MVP 2026-09-24] trim values are numeric seconds clamped to
          the 0..60s ad window; original duration/src untouched (spec §11). */
       if(key==='trimStart'||key==='trimEnd'){
-        let s=Math.max(0,Math.min(MAX_AD_MEDIA_SECONDS,Number(val)||0));
-        const other=key==='trimStart'?Number(l.videoMeta.trimEnd)||MAX_AD_MEDIA_SECONDS:Number(l.videoMeta.trimStart)||0;
-        if(key==='trimEnd'&&s<=other)s=Math.min(MAX_AD_MEDIA_SECONDS,other+1);
+        /* [§9] STRICT <60 → trim window bounded to 59s */
+        let s=Math.max(0,Math.min(MAX_AD_DURATION_SECONDS,Number(val)||0));
+        const other=key==='trimStart'?Number(l.videoMeta.trimEnd)||MAX_AD_DURATION_SECONDS:Number(l.videoMeta.trimStart)||0;
+        if(key==='trimEnd'&&s<=other)s=Math.min(MAX_AD_DURATION_SECONDS,other+1);
         if(key==='trimStart'&&s>=other)s=Math.max(0,other-1);
         l.videoMeta[key]=s;
       }else{
@@ -1956,6 +2034,10 @@ function renderProperties(){
         <label>Shadow strength (${st.shadowOpacity||0})<input data-prop="style.shadowOpacity" type="range" min="0" max="1" step="0.05" value="${st.shadowOpacity||0}"></label>
       </div>
       <label>Shadow blur (${st.shadowBlur||12}px)<input data-prop="style.shadowBlur" type="range" min="0" max="40" value="${st.shadowBlur||12}"></label>
+      <div class="cs-two">
+        <label>Glow color<input data-prop="style.glowColor" type="color" value="${st.glowColor||'#18A982'}"></label>
+        <label>Glow strength (${st.glowBlur||0})<input data-prop="style.glowBlur" type="range" min="0" max="30" value="${st.glowBlur||0}"></label>
+      </div>
       <h4>Position Preset (9-Grid) + Box</h4>
       <div class="cs-grid9">
         ${tPos.map(([k,fx,fy])=>`<button data-nc-pos="${k}" title="${k}" class="${st.pos9===k?'primary':''}">${k.replace('center','·').replace(/-/g,' ').trim()}</button>`).join('')}
@@ -1982,7 +2064,8 @@ function renderProperties(){
         <label>Duration (${anim.duration||600}ms)<input data-anim="duration" type="range" min="200" max="3000" step="100" value="${anim.duration||600}"></label>
       </div>
       <div class="cs-two">
-        <label>Delay (${anim.delay||0}ms)<input data-anim="delay" type="range" min="0" max="5000" step="100" value="${anim.delay||0}"></label>
+        <label>Delay / Start (${anim.delay||0}ms)<input data-anim="delay" type="range" min="0" max="5000" step="100" value="${anim.delay||0}"></label>
+        <label>End: ${(((anim.delay||0)+(anim.duration||600))/1000).toFixed(1)}s</label>
         <label><button data-a="replayanim" class="primary cs-wide">▶ Play Animation</button></label>
       </div>
     `;
@@ -2137,7 +2220,7 @@ function sheet(html){
 }
 
 function showLayers(){
-  const s=sheet('<h2>Layers & Grouping</h2><p>Select two or more layers to group them.</p><div style="display:flex;gap:8px;margin-bottom:12px;"><button data-group="group" class="primary">Group selected</button> <button data-group="ungroup">Ungroup selected</button></div><div class="cs-layer-list">'+[...state.layers].sort((a,b)=>b.zIndex-a.zIndex).map(l=>`<article><input type="checkbox" data-pick="${l.id}" aria-label="Select ${esc(l.name)}"><button data-layer="${l.id}">${l.visible===false?'○':'●'} ${esc(l.name)}${l.groupId?' · grouped':''}</button><button data-op="up" data-id="${l.id}">↑</button><button data-op="down" data-id="${l.id}">↓</button><button data-op="lock" data-id="${l.id}">${l.locked?'Unlock':'Lock'}</button><button data-op="hide" data-id="${l.id}">${l.visible===false?'Show':'Hide'}</button></article>`).join('')+'</div>');
+  const s=sheet('<h2>Layers & Grouping</h2><p>Select two or more layers to group them.</p><div style="display:flex;gap:8px;margin-bottom:12px;"><button data-group="group" class="primary">Group selected</button> <button data-group="ungroup">Ungroup selected</button></div><div class="cs-layer-list">'+[...state.layers].sort((a,b)=>b.zIndex-a.zIndex).map(l=>`<article><input type="checkbox" data-pick="${l.id}" aria-label="Select ${esc(l.name)}"><button data-layer="${l.id}">${l.visible===false?'○':'●'} ${esc(l.name)}${l.groupId?' · grouped':''}</button><button data-op="front" data-id="${l.id}" title="Bring to front">⤒</button><button data-op="up" data-id="${l.id}" title="Forward">↑</button><button data-op="down" data-id="${l.id}" title="Backward">↓</button><button data-op="back" data-id="${l.id}" title="Send to back">⤓</button><button data-op="lock" data-id="${l.id}">${l.locked?'🔓':'🔒'}</button><button data-op="hide" data-id="${l.id}">${l.visible===false?'Show':'Hide'}</button><button data-op="duplicate" data-id="${l.id}" title="Duplicate">⧉</button><button data-op="delete" data-id="${l.id}" title="Delete">🗑</button></article>`).join('')+'</div>');
   s.onclick=e=>{
     const grouping=e.target.dataset.group;
     if(grouping){
@@ -2152,12 +2235,16 @@ function showLayers(){
     }
     const id=e.target.dataset.id,op=e.target.dataset.op;
     if(!id||!op)return;
+    if(op==='duplicate'){selected=id;addLayer('duplicate-layer');showLayers();return;}
+    if(op==='delete'){selected=id;addLayer('delete-layer');showLayers();return;}
     commit(n=>{
       const l=n.layers.find(x=>x.id===id);
       if(op==='up')l.zIndex++;
-      if(op==='down')l.zIndex--;
-      if(op==='lock')l.locked=!l.locked;
-      if(op==='hide')l.visible=!l.visible;
+      else if(op==='down')l.zIndex--;
+      else if(op==='front')l.zIndex=Math.max(...n.layers.map(q=>q.zIndex))+1;
+      else if(op==='back')l.zIndex=Math.max(0,Math.min(...n.layers.map(q=>q.zIndex))-1);
+      else if(op==='lock')l.locked=!l.locked;
+      else if(op==='hide')l.visible=!l.visible;
     });
     showLayers();
   };
@@ -2251,9 +2338,35 @@ function showPreview(){
       <article class="desktop"><b>Desktop / Web</b><div class="cs-preview-card">${published}</div></article>
       <article style="grid-column:1/-1;"><b>Design layout (SVG canvas reference)</b><div>${renderCreativeSvg(state)}</div></article>
     </div>
+    <div class="cs-pv-transport">
+      <button id="csPvPause">⏸ Pause</button>
+      <button id="csPvRestart">↺ Restart</button>
+      <button id="csPvMute">🔊 Mute</button>
+      <label style="display:flex;align-items:center;gap:8px;flex:1;margin:0;font-weight:700;color:#486581;">Timeline
+        <input id="csPvTime" type="range" min="0" max="${state.duration||30}" step="0.1" value="0" style="flex:1;">
+        <span id="csPvTimeLabel">0.0s / ${state.duration||30}s</span>
+      </label>
+    </div>
     <div style="margin-top:14px;"><button id="csPreviewFull" class="primary cs-wide">⛶ Fullscreen preview (published look)</button></div>`);
   $('#csPreviewFull',s).onclick=()=>{
     sheet(`<h2>Fullscreen preview</h2><div class="cs-preview-full cs-preview-card">${published}</div>`);
+  };
+  /* [§20] Preview transport: same renderer + Play/Pause/Restart/Mute/Timeline */
+  let pvPaused=false,pvMuted=false;
+  const pvMedia=()=>$$('video,audio',s);
+  const pvSyncMedia=()=>pvMedia().forEach(m=>{m.muted=pvMuted;if(pvPaused){try{m.pause();}catch(e){}}});
+  $('#csPvPause',s).onclick=e=>{
+    pvPaused=!pvPaused;
+    e.target.textContent=pvPaused?'▶ Play':'⏸ Pause';
+    s.classList.toggle('cs-anim-paused',pvPaused);
+    pvSyncMedia();
+  };
+  $('#csPvRestart',s).onclick=()=>{showPreview();};
+  $('#csPvMute',s).onclick=e=>{pvMuted=!pvMuted;e.target.textContent=pvMuted?'🔇 Unmute':'🔊 Mute';pvSyncMedia();};
+  $('#csPvTime',s).oninput=e=>{
+    const t=Number(e.target.value);
+    const lbl=$('#csPvTime',s);if(lbl)lbl.textContent=`${t.toFixed(1)}s / ${state.duration||30}s`;
+    pvMedia().forEach(m=>{try{if(Number.isFinite(m.duration)&&m.duration>0)m.currentTime=Math.min(m.duration,t);}catch(err){}});
   };
 }
 

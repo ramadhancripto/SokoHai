@@ -82,8 +82,8 @@
       for(let i=0;i<ssSlides.length;i++){
         const sPct=(acc/total)*100, ePct=((acc+durs[i])/total)*100; acc+=durs[i];
         const fi=Math.min(sPct+fadePct,(sPct+ePct)/2), fo=Math.max(ePct-fadePct,(sPct+ePct)/2);
-        const enter=(trans==='slide')?'transform:translateX(4%);':(trans==='zoom'?'transform:scale(1.07);':'');
-        const mid=(trans==='slide'||trans==='zoom')?'transform:none;':'';
+        const enter=(trans==='slide'||trans==='slide-left')?'transform:translateX(-6%);':(trans==='slide-right'?'transform:translateX(6%);':(trans==='zoom'?'transform:scale(1.07);':''));
+        const mid=(trans==='slide'||trans==='slide-left'||trans==='slide-right'||trans==='zoom')?'transform:none;':'';
         const name=uid+'k'+i;
         if(trans==='none'){
           /* Hard cuts: visible only inside [start,end). Slide 0 visible from 0%. */
@@ -102,14 +102,16 @@
         slides+='<figure class="skh-ann-slide" style="animation:'+name+' '+total.toFixed(2)+'s linear infinite;'+(i?'opacity:0;':'')+'"><img src="'+esc(safeUrl(ssSlides[i].src))+'" alt="'+esc(ssSlides[i].name||title)+'" loading="'+(i?'lazy':'eager')+'" style="'+mediaInlineStyle+'"></figure>';
       }
       const dots=ssSlides.map(function(_,i){return '<i class="skh-ann-ss-dot'+(i?'':' on')+'"></i>';}).join('');
-      visual='<style>'+kf+'</style><div class="skh-ann-slideshow skh-ss-'+esc(['none','fade','slide','zoom','crossfade'].indexOf(trans)>=0?trans:'fade')+'" data-slides="'+ssSlides.length+'" data-total="'+Math.round(total)+'">'+slides+'<div class="skh-ann-ss-dots" aria-hidden="true">'+dots+'</div><span class="skh-ann-video-dur">'+ssSlides.length+' picha · '+Math.round(total)+'s</span></div>';
+      visual='<style>'+kf+'</style><div class="skh-ann-slideshow skh-ss-'+esc(['none','fade','slide','slide-left','slide-right','zoom','crossfade'].indexOf(trans)>=0?trans:'fade')+'" data-slides="'+ssSlides.length+'" data-total="'+Math.round(total)+'">'+slides+'<div class="skh-ann-ss-dots" aria-hidden="true">'+dots+'</div><span class="skh-ann-video-dur">'+ssSlides.length+' picha · '+Math.round(total)+'s</span></div>';
     }
     if (!visual && type.indexOf('video')!==-1 && video) {
-      /* Published video ad = clean presentation: poster + subtle play cue + duration.
-         Technical controls remain in Creator Studio; `controls` only via explicit opt-in. */
+      /* [FINAL INSTRUCTIONS §11/§24] Poster-first: initial state = POSTER + subtle
+         Play cue. Motion + audio start ONLY after the user taps Play (delegated
+         handler below). Technical controls remain in Creator Studio; `controls`
+         only via explicit opt-in. */
       const durS=Number(a.mediaDurationSeconds||a.videoDuration||a.durationSeconds)||0;
       const durChip=durS>0?'<span class="skh-ann-video-dur">'+Math.floor(durS/60)+':'+String(Math.floor(durS%60)).padStart(2,'0')+'</span>':'';
-      visual='<video class="skh-ann-video" muted playsinline '+(a.videoControls===true?'controls ':'')+'preload="metadata" '+(poster?'poster="'+esc(poster)+'" ':'')+'style="'+mediaInlineStyle+'"><source src="'+esc(video)+'"></video>'+(a.videoControls===true?'':'<span class="skh-ann-video-cue" aria-hidden="true"></span>'+durChip)+overlayHtml;
+      visual='<div class="skh-ann-video-wrap"><video class="skh-ann-video" muted playsinline '+(a.videoControls===true?'controls ':'')+'preload="metadata" '+(poster?'poster="'+esc(poster)+'" ':'')+'style="'+mediaInlineStyle+'"><source src="'+esc(video)+'"></video>'+(a.videoControls===true?'':'<button type="button" class="skh-ann-video-cue skh-ann-video-play" aria-label="Play video"><span class="skh-visually-hidden">Play</span></button>'+durChip)+'</div>'+overlayHtml;
     } else if (!visual && image) {
       visual='<img class="skh-ann-media-blur" src="'+esc(image)+'" alt="" aria-hidden="true"><img class="skh-ann-media-main" src="'+esc(image)+'" alt="'+esc(title)+'" loading="eager" decoding="async" style="'+mediaInlineStyle+'">'+overlayHtml;
     }
@@ -238,7 +240,8 @@
       +'<div class="skh-ann-brand-copy"><b>'+esc(brand)+'</b><small>'+(live?'SokoHai Live':'Sponsored')+'</small></div><span class="skh-ann-sponsored">AD</span></header>'
       +(media
         ? media+'<div class="skh-ann-body">'+kickerHtml+(copy?'<div class="skh-ann-copy">'+copy+'</div>':'')+'</div><footer class="skh-ann-post-actions'+(offerHtml?' has-offer':'')+'">'+offerHtml+actionButton+'</footer>'
-        :'<div class="skh-ann-text-creative"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div><div class="skh-ann-text-cta">'+actionButton+'</div></div>')
+        /* [FINAL §1/§30] Text-only (no-media) ads are complete ads: copy + OFFER + CTA */
+        :'<div class="skh-ann-text-creative"><i class="skh-ann-orb one"></i><i class="skh-ann-orb two"></i><i class="skh-ann-shine"></i><span class="skh-ann-text-kicker">Featured on SokoHai</span><div class="skh-ann-text-content">'+copy+'</div>'+(offerHtml?'<div class="skh-ann-text-offer">'+offerHtml+'</div>':'')+'<div class="skh-ann-text-cta">'+actionButton+'</div></div>')
       +(metrics?'<div class="skh-ann-metrics">'+metrics+'</div>':'')
       +'</article>';
   }
@@ -251,8 +254,11 @@
     host.className='big-announcement skh-ann-story skh-home-ad skh-ann-post '+(hasMedia?'has-media':'no-media')+(live?' is-live':'');
     host.innerHTML=cardHtml(a,live);
     if(!live)track(a,'impression');
+    /* [FINAL INSTRUCTIONS §11/§24] NEVER auto-play published video: poster +
+       Play button initial state; playback starts only on user tap (delegated
+       click handler registered once at module load below). */
     const video=host.querySelector('video');
-    if(video && a.autoplay!==false){video.muted=true;const play=video.play();if(play&&play.catch)play.catch(function(){});}
+    if(video){try{video.pause();video.currentTime=0;}catch(e){}}
   }
 
   function armScheduleRefresh(){clearTimeout(scheduleTimer);const now=Date.now(),source=Array.isArray(window.__sokohaiAnnouncementsCache)?window.__sokohaiAnnouncementsCache:[],times=[];source.forEach(a=>{if(a&&a.archived!==true&&a.status!=='archived'&&a.active!==false&&a.status!=='draft'){const s=Date.parse(a.startAt||''),e=Date.parse(a.endAt||'');if(s>now)times.push(s);if(e>now)times.push(e+50);}});if(times.length){const delay=Math.max(250,Math.min(3600000,Math.min.apply(Math,times)-now));scheduleTimer=setTimeout(renderCurrent,delay);}}
@@ -261,4 +267,27 @@
   window.__sokohaiOnAnnouncementsUpdate=function(){activeIndex=0;renderCurrent();};
   window.updateLiveTicker=function(type,message,subject,forceReset){clearTimeout(liveTimer);if(type==='normal'||forceReset){liveNotice=null;renderCurrent();return;}liveNotice={creativeType:'solid_text',brandName:'SokoHai',headline:subject||'Taarifa muhimu',description:message||'',active:true};renderCurrent();liveTimer=setTimeout(()=>{liveNotice=null;renderCurrent();},16000);};
   document.addEventListener('DOMContentLoaded',renderCurrent);setTimeout(renderCurrent,250);
+
+  /* [FINAL INSTRUCTIONS §11/§24] Poster-first click-to-play, delegated once.
+     First tap → motion + audio (unmute on user gesture, browser-safe);
+     second tap → pause, Play cue returns. Works for Home card, live preview
+     and Creator Studio Preview (all render this canonical markup). */
+  document.addEventListener('click',function(e){
+    const cue=e.target.closest&&e.target.closest('.skh-ann-video-play');
+    const vidEl=e.target.closest&&e.target.closest('.skh-ann-video');
+    if(!cue&&!vidEl)return;
+    const wrap=(cue||vidEl).closest('.skh-ann-video-wrap')||((cue||vidEl).parentNode);
+    const v=wrap&&wrap.querySelector?wrap.querySelector('video'):null;
+    if(!v)return;
+    if(v.paused){
+      v.muted=false; /* user gesture → audio allowed (§11: motion + audio after Play) */
+      const p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;v.play().catch(function(){});});
+      wrap.classList.add('is-playing');
+      if(cue)cue.style.display='none';
+    }else{
+      v.pause();
+      wrap.classList.remove('is-playing');
+      if(cue)cue.style.display='';
+    }
+  });
 })();

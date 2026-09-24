@@ -40,3 +40,25 @@ HTML5 media overlays) is the upgrade target and stays separate.
 - Slideshow = new `slideshow` field in the SAME creative model; rendered by extending the SAME canonical renderer (`06-announcement.js`) additively. No second renderer.
 - Existing creatives normalize with safe defaults (`slideshow.enabled=false`, animation `none`) — backward compatible.
 - Tests that encode the old 30s contract are updated to the new 60s contract with dated comments (never deleted).
+
+---
+
+# ROUND-2 AUDIT (Final Implementation Instructions — same day)
+
+| Area | Finding | Action |
+|---|---|---|
+| §9 duration rule | Round-1 used `≤ 60`. New rule is **STRICT `duration < 60`** (59✅ 60❌). | `MAX_AD_DURATION_SECONDS=59` clamps + `>= MAX_AD_MEDIA_SECONDS` reject |
+| §1 media-optional | Model already media-optional ✓; **form path** default `image_text` forced image; **text-only card had NO offer pill**; publish payload missing slideshow/trim. | sync sets `annCreativeType` by composition; cardHtml no-media branch now renders Offer; `functions/creative.js` payload extended |
+| §11 autoplay | **`renderAd` auto-played published video** (`a.autoplay!==false → play()`); editor overlays autoplayed; form checkbox default checked. | Autorun removed → poster + subtle Play cue (delegated click); editor poster-first + click-to-play; checkbox default off |
+| §8 transitions | Only `slide`; spec wants **Slide Left + Slide Right** separately. | `slide-left`/`slide-right` added model→renderer→save→publish |
+| §18 Design Mode | No Auto/Manual mode (only duration Auto/Custom). | `designMode` on model + radios; Manual disables slideshow auto-enable |
+| §17 Reset | Missing. | Toolbar **⟲ Reset** via existing `replace(createCreative(keep))` — undo-capable, no second history system |
+| §20 Preview transport | Sheet had no controls (main timeline hidden under sheet). | In-sheet Play/Pause (animation-play-state) / Restart / Mute / Timeline seek of media |
+| §26 Ads Manager | Tabs: Active/Scheduled/Draft/Expired/Archived + Media Library; **Campaigns & Analytics missing**; in `Management → Matangazo` ✓ placement correct. | Added Campaigns (group-by) + Analytics (views/clicks/CTR) views |
+| §21 Home placement | `topnav → #topAnnouncement (inline) → mode-navs → #buyerView feed`. No popup/modal/interstitial/scroll-lock/in-feed injection found. | No change needed — documented compliant |
+| §14 Shapes | No explicit rounded-rect/divider (radius existed on rect). | Added `rounded` + `divider` as real layers |
+| §12 Audio | fadeOut/loop/mute/replace UI missing (model fields existed). | UI added to existing audioControls |
+| §4 Glow | glowColor/glowBlur model fields existed, no UI. | Controls added |
+| §5 Entrances | `zoom-out` entrance would use EXIT keyframe (ends invisible); mask-reveal missing. | New end-visible keyframes (`zoom_out_in`, `mask_reveal`) in BOTH renderers + CSS |
+| §16 Layers ops | Sheet lacked front/back/duplicate/delete. | Added (existing ops untouched) |
+| §25 URL videos | Duration unknown until metadata → `<60` rule unenforceable. | `loadedmetadata` probe writes `videoMeta.duration` once |

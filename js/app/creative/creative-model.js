@@ -44,17 +44,18 @@ export const GRADIENT_PRESETS = Object.freeze({
 /* [NON-CANVAS MVP 2026-09-24] maxDuration 30→60: advertisement media hard cap
    is now MAX_AD_MEDIA_SECONDS (60s) per spec §11/§33. `duration` values stay as
    defaults only. */
+/* [FINAL INSTRUCTIONS §9] maxDuration 59 = largest integer with `duration < 60`. */
 export const MULTIMEDIA_PRESETS = Object.freeze({
   static: { id: 'static', label: 'Image + Text (Static)', duration: 0, required: ['image', 'text'] },
   motion: { id: 'motion', label: 'Motion Poster (Animated Text)', duration: 6, required: ['image', 'text'] },
-  slideshow: { id: 'slideshow', label: 'Slideshow (Multiple Images)', duration: 12, maxDuration: 60, required: ['image', 'text'] },
-  short_video: { id: 'short_video', label: 'Short Video (≤ 60s)', duration: 30, maxDuration: 60, required: ['video'] },
-  audio_visual: { id: 'audio_visual', label: 'Audio-Visual (Image + Audio)', duration: 30, maxDuration: 60, required: ['image', 'audio'] },
-  video_audio: { id: 'video_audio', label: 'Video + Audio Mix (≤ 60s)', duration: 30, maxDuration: 60, required: ['video', 'audio'] },
-  full_mix: { id: 'full_mix', label: 'Full Multimedia Mix (Image + Video + Audio)', duration: 30, maxDuration: 60, required: ['image', 'video', 'audio', 'text'] },
-  story: { id: 'story', label: 'Story Format (9:16)', format: 'story', duration: 15, maxDuration: 60 },
-  feed: { id: 'feed', label: 'Feed Card (1:1 / 4:5)', format: 'square', duration: 15, maxDuration: 60 },
-  landscape: { id: 'landscape', label: 'Landscape Banner (16:9)', format: 'landscape', duration: 15, maxDuration: 60 }
+  slideshow: { id: 'slideshow', label: 'Slideshow (Multiple Images)', duration: 12, maxDuration: 59, required: ['image', 'text'] },
+  short_video: { id: 'short_video', label: 'Short Video (< 60s)', duration: 30, maxDuration: 59, required: ['video'] },
+  audio_visual: { id: 'audio_visual', label: 'Audio-Visual (Image + Audio)', duration: 30, maxDuration: 59, required: ['image', 'audio'] },
+  video_audio: { id: 'video_audio', label: 'Video + Audio Mix (< 60s)', duration: 30, maxDuration: 59, required: ['video', 'audio'] },
+  full_mix: { id: 'full_mix', label: 'Full Multimedia Mix (Image + Video + Audio)', duration: 30, maxDuration: 59, required: ['image', 'video', 'audio', 'text'] },
+  story: { id: 'story', label: 'Story Format (9:16)', format: 'story', duration: 15, maxDuration: 59 },
+  feed: { id: 'feed', label: 'Feed Card (1:1 / 4:5)', format: 'square', duration: 15, maxDuration: 59 },
+  landscape: { id: 'landscape', label: 'Landscape Banner (16:9)', format: 'landscape', duration: 15, maxDuration: 59 }
 });
 
 export const PATTERNS = Object.freeze([
@@ -66,7 +67,7 @@ export const TEXTURES = Object.freeze([
 ]);
 
 export const ENTRANCE_ANIMATIONS = Object.freeze([
-  'none','fade','slide-up','slide-down','slide-left','slide-right','zoom-in','zoom-out','pop','bounce','typewriter','reveal','blur-in'
+  'none','fade','slide-up','slide-down','slide-left','slide-right','zoom-in','zoom-out','pop','bounce','typewriter','reveal','mask-reveal','blur-in'
   /* [NON-CANVAS MVP 2026-09-24] zoom-out added per spec §9 list; renderer keyframes (skh_anim_zoom_out) already exist. */
 ]);
 
@@ -95,15 +96,17 @@ export const DISPLAY_DURATION_SECONDS = Object.freeze({min:5,max:59,default:9});
    a 10-second video stays a 10-second video; the placement rotator may show the
    same creative for up to ~5..59 seconds depending on placement rules. */
 
-/* [NON-CANVAS MVP 2026-09-24] HARD RULE (spec §11/§21/§33): advertisement
-   video/media duration MUST NOT exceed 60 seconds. Replaces the previous 30s
-   cap. Videos longer than this must be TRIMMED (original preserved via
-   videoMeta.duration + originalSrc) before publishing. NOT the same concept
-   as DISPLAY_DURATION_SECONDS above (placement rotation time). */
+/* [NON-CANVAS MVP 2026-09-24] HARD RULE — FINAL INSTRUCTIONS §9/§19/§33:
+   Advertisement media/duration MUST be STRICTLY LESS THAN 60 seconds
+   (`duration < 60`): 59s ✅ … 60s ❌ 61s ❌. MAX_AD_MEDIA_SECONDS is the
+   EXCLUSIVE ceiling (60); MAX_AD_DURATION_SECONDS is the largest valid
+   integer duration (59). Not the same as DISPLAY_DURATION_SECONDS
+   (placement rotation time, 5–59s, unchanged). */
 export const MAX_AD_MEDIA_SECONDS = 60;
+export const MAX_AD_DURATION_SECONDS = 59;
 
-/* [NON-CANVAS MVP 2026-09-24] Slideshow transitions (spec §15). */
-export const SLIDESHOW_TRANSITIONS = Object.freeze(['none','fade','slide','zoom','crossfade']);
+/* [§8] Slideshow transitions (incl. explicit slide-left / slide-right). */
+export const SLIDESHOW_TRANSITIONS = Object.freeze(['none','fade','slide','slide-left','slide-right','zoom','crossfade']);
 
 export const FIT_MODES = Object.freeze([
   'cover','contain','fill','original'
@@ -158,7 +161,7 @@ export function makeLayer(type,patch={}){
     endTime:Number.isFinite(+patch.endTime)?+patch.endTime:30,
     duration:Number.isFinite(+patch.duration)?+patch.duration:30,
     crop:{x:0,y:0,width:100,height:100,zoom:1,...(patch.crop||{})},
-    videoMeta:{autoplay:true,muted:true,loop:true,trimStart:0,trimEnd:30,duration:0,controls:false,...(patch.videoMeta||{})},
+    videoMeta:{autoplay:false,muted:true,loop:true,trimStart:0,trimEnd:30,duration:0,controls:false,...(patch.videoMeta||{})},
     audioMeta:{volume:1,fadeIn:0,fadeOut:0,loop:true,trimStart:0,trimEnd:30,duration:0,track:'background',...(patch.audioMeta||{})},
     animation:{
       enabled:false,entrance:'none',emphasis:'none',exit:'none',mode:'whole',
@@ -231,38 +234,42 @@ export function detectComposition(c){
   const vid=x.layers.some(l=>l.type==='video'&&l.visible!==false&&(l.src||l.videoUrl));
   const img=x.layers.some(l=>(l.type==='image'||l.type==='logo')&&l.visible!==false&&l.src);
   const aud=x.layers.some(l=>l.type==='audio'&&l.visible!==false&&(l.src||l.audioUrl));
+  /* [§18] offer/price present → Sponsored Post / Video Text Ad */
+  const hasOffer=!!(String(x.offer||'').trim())||x.layers.some(l=>l.role==='price'&&l.visible!==false&&String(l.content||'').trim());
   if(hasSlides)return aud?'slideshow_audio':'slideshow';           // TYPE E
   if(vid&&img)return aud?'full_mix':'image_video';                // TYPE F
-  if(vid)return aud?'video_audio':'video';                        // TYPE B
-  if(img)return aud?'image_audio':'image';                        // TYPE A/D
+  if(vid)return hasOffer?'video_text':(aud?'video_audio':'video');// TYPE B
+  if(img)return aud?'image_audio':(hasOffer?'sponsored':'image'); // TYPE A / Sponsored Post
   if(aud)return 'audio';                                          // TYPE C (no poster)
-  return 'poster';
+  return 'poster';                                                // Graphic/Text ad (media OPTIONAL §1)
 }
+/* [FINAL INSTRUCTIONS §9] Labels per Design Mode Auto mapping (§18). */
 export const COMPOSITION_LABELS=Object.freeze({
-  image:'Static Image Ad',video:'Video Ad',audio:'Audio Ad',
-  image_audio:'Image + Audio Ad',image_video:'Image + Video Ad',
-  slideshow:'Slideshow Ad',slideshow_audio:'Slideshow + Audio Ad',
-  video_audio:'Video + Audio Ad',full_mix:'Full Multimedia Ad',poster:'Poster / Text Ad'
+  image:'Hero Image Advertisement',video:'Video Advertisement',audio:'Audio Advertisement',
+  image_audio:'Image Audio Advertisement',image_video:'Image + Video Advertisement',
+  slideshow:'Slideshow',slideshow_audio:'Slideshow + Audio Advertisement',
+  video_audio:'Video + Audio Advertisement',video_text:'Video Text Advertisement',
+  full_mix:'Full Multimedia Ad',poster:'Graphic/Text Advertisement',sponsored:'Sponsored Post'
 });
 
 /* [§21 AUTO DURATION] Best-guess overall ad duration from the media present.
-   Never exceeds MAX_AD_MEDIA_SECONDS (60s). */
+   Never exceeds MAX_AD_DURATION_SECONDS (59 = strictly < 60). */
 export function autoAdDuration(c){
   const x=(c&&Array.isArray(c.layers))?c:normalizeCreative(c);
   const comp=detectComposition(x);
-  if(comp==='slideshow'||comp==='slideshow_audio')return Math.min(MAX_AD_MEDIA_SECONDS,Math.max(3,Math.round(slideshowTotal(x)||6)));
+  if(comp==='slideshow'||comp==='slideshow_audio')return Math.min(MAX_AD_DURATION_SECONDS,Math.max(3,Math.round(slideshowTotal(x)||6)));
   const vid=x.layers.find(l=>l.type==='video'&&(l.src||l.videoUrl));
   if(vid){
     const vm=vid.videoMeta||{};
     const trimmed=(Number(vm.trimEnd)||0)-(Number(vm.trimStart)||0);
     const d=trimmed>0?trimmed:(Number(vm.duration)||0);
-    if(d>0)return Math.min(MAX_AD_MEDIA_SECONDS,Math.max(1,Math.round(d)));
+    if(d>0)return Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Math.round(d)));
   }
   const aud=x.layers.find(l=>l.type==='audio'&&(l.src||l.audioUrl));
   if(aud){
     const am=aud.audioMeta||{};
     const trimmed=(Number(am.trimEnd)||0)-(Number(am.trimStart)||0);
-    if(trimmed>0)return Math.min(MAX_AD_MEDIA_SECONDS,Math.max(1,Math.round(trimmed)));
+    if(trimmed>0)return Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Math.round(trimmed)));
   }
   return DISPLAY_DURATION_SECONDS.default;
 }
@@ -287,10 +294,13 @@ export function createCreative(context={}){
     type:context.publicationType||'advertisement',
     format,
     preset:context.preset||'static',
-    /* [NON-CANVAS MVP 2026-09-24] media/timeline duration cap 30→60 (spec §21) */
-    duration:Math.min(MAX_AD_MEDIA_SECONDS,Math.max(1,Number(context.duration)||30)),
-    maxDuration:MAX_AD_MEDIA_SECONDS,
+    /* [NON-CANVAS MVP 2026-09-24] media/timeline duration: STRICT `duration < 60`
+       (FINAL INSTRUCTIONS §21) — largest valid integer = MAX_AD_DURATION_SECONDS (59). */
+    duration:Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Number(context.duration)||30)),
+    maxDuration:MAX_AD_DURATION_SECONDS,
     slideshow:normalizeSlideshow(context.slideshow),
+    /* [§18] Design Mode: Auto (system suggests composition/timing) vs Manual. */
+    designMode:context.designMode==='manual'?'manual':'auto',
     canvas:{width:p.width,height:p.height,safe:p.safe,bleed:0,custom:false},
     background:{
       type:'gradient',color:'#0E7A5F',color2:'#075C7A',angle:135,opacity:1,
@@ -338,11 +348,12 @@ export function normalizeCreative(input){
   const out={
     ...base,...input,
     preset:input.preset||base.preset,
-    /* [NON-CANVAS MVP 2026-09-24] media/timeline duration cap 30→60 (spec §21).
+    /* [FINAL INSTRUCTIONS §21] media/timeline duration strictly < 60 (59 max).
        Old creatives without `slideshow` get a safe disabled default (§28). */
-    duration:Math.min(MAX_AD_MEDIA_SECONDS,Math.max(1,Number(input.duration)||base.duration)),
-    maxDuration:MAX_AD_MEDIA_SECONDS,
+    duration:Math.min(MAX_AD_DURATION_SECONDS,Math.max(1,Number(input.duration)||base.duration)),
+    maxDuration:MAX_AD_DURATION_SECONDS,
     slideshow:normalizeSlideshow(input.slideshow),
+    designMode:input.designMode==='manual'?'manual':'auto',
     category:clean(input.category||base.category)||'general',
     campaignName:clean(input.campaignName),
     campaignId:clean(input.campaignId),
@@ -370,8 +381,8 @@ export function normalizeCreative(input){
     rotation:clamp(l.rotation,-360,360),
     opacity:clamp(l.opacity,0,1),
     startTime:Math.max(0,Number(l.startTime)||0),
-    endTime:Math.min(MAX_AD_MEDIA_SECONDS,Number(l.endTime)||MAX_AD_MEDIA_SECONDS),
-    duration:Math.max(0,Number(l.duration)||MAX_AD_MEDIA_SECONDS),
+    endTime:Math.min(MAX_AD_DURATION_SECONDS,Number(l.endTime)||MAX_AD_DURATION_SECONDS),
+    duration:Math.max(0,Number(l.duration)||MAX_AD_DURATION_SECONDS),
     zIndex:Number.isFinite(+l.zIndex)?+l.zIndex:i+1,
     content:clean(l.content),
     groupId:l.groupId||null
@@ -559,10 +570,10 @@ export function validateCreative(c,{forPublish=false}={}){
     if(l.type==='video'){
       if(!/^https:\/\/|^blob:/i.test(l.src||l.videoUrl||''))errors.push({code:'VIDEO',layerId:l.id,message:`${l.name} video URL is not loaded.`});
       const vDur = (l.videoMeta?.trimEnd - l.videoMeta?.trimStart) || l.videoMeta?.duration || l.duration || 0;
-      /* [NON-CANVAS MVP 2026-09-24] 30s→60s hard cap (spec §11/§33). Publish is
-         blocked until the video is trimmed to ≤60s; original stays available. */
-      if(vDur > MAX_AD_MEDIA_SECONDS){
-        errors.push({code:'VIDEO_DURATION',layerId:l.id,message:`Video "${l.name}" inazidi sekunde ${MAX_AD_MEDIA_SECONDS} (Duration: ${Math.round(vDur)}s). Maximum ni ${MAX_AD_MEDIA_SECONDS}s — tumia Trim.`});
+      /* [FINAL INSTRUCTIONS §9/§33] STRICT rule: `duration < 60`
+         → 59s ✅, 60s ❌, 61s ❌. Publish blocked until trimmed; original kept. */
+      if(vDur >= MAX_AD_MEDIA_SECONDS){
+        errors.push({code:'VIDEO_DURATION',layerId:l.id,message:`Video "${l.name}" lazima iwe CHINI ya sekunde ${MAX_AD_MEDIA_SECONDS} (sasa: ${Math.round(vDur)}s — max ${MAX_AD_DURATION_SECONDS}s). Tumia Trim. Original inabaki salama.`});
       }
     }
     if(l.type==='audio'&&l.src&&!/^https:\/\/|^blob:|^data:audio/i.test(l.src||l.audioUrl||'')){
@@ -578,8 +589,8 @@ export function validateCreative(c,{forPublish=false}={}){
         errors.push({code:'SLIDESHOW_SLIDES',message:'Slideshow inahitaji picha angalau 2 zenye source halisi.'});
       }
       const total=slideshowTotal(x);
-      if(total>MAX_AD_MEDIA_SECONDS){
-        errors.push({code:'SLIDESHOW_DURATION',message:`Slideshow inazidi sekunde ${MAX_AD_MEDIA_SECONDS} (Jumla: ${Math.round(total)}s). Punguza muda wa slides.`});
+      if(total>=MAX_AD_MEDIA_SECONDS){
+        errors.push({code:'SLIDESHOW_DURATION',message:`Slideshow lazima iwe CHINI ya sekunde ${MAX_AD_MEDIA_SECONDS} (Jumla: ${Math.round(total)}s — max ${MAX_AD_DURATION_SECONDS}s). Punguza muda wa slides.`});
       }
     }
     const internal=!!(x.destination&&x.destination.type&&x.destination.id),external=!!(x.destination&&x.destination.type==='external'&&/^https:\/\//i.test(x.destination.url||''));

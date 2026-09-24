@@ -346,9 +346,10 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
     .forEach(s=>assert.ok(studio.includes(s),'video preview missing: '+s));
   ['data-vmeta="trimStart"','data-vmeta="trimEnd"'].forEach(s=>assert.ok(studio.includes(s),'video trim missing: '+s));
   const model=read('js/app/creative/creative-model.js');
-  /* [2026-09-24 NON-CANVAS MVP] media validation rule now 60s (spec §33). */
-  assert.ok(model.includes('MAX_AD_MEDIA_SECONDS'),'60-second media validation rule intact (MAX_AD_MEDIA_SECONDS)');
-  assert.ok(model.includes('inazidi sekunde'),'video-over-limit message intact');
+  /* [2026-09-24 NON-CANVAS MVP · FINAL §9] STRICT `duration < 60` rule. */
+  assert.ok(model.includes('MAX_AD_MEDIA_SECONDS'),'exclusive 60s ceiling constant intact');
+  assert.ok(model.includes('MAX_AD_DURATION_SECONDS'),'valid max 59s constant intact');
+  assert.ok(model.includes('CHINI ya sekunde'),'video-over-limit (<60) message intact');
 
   // 8j. Advanced cleaned: basic controls OUT, deep tools IN; timeline preserved as Advanced sub-view
   const adv=studio.slice(studio.indexOf('function advancedControls()'),studio.indexOf('function advancedControls()')+900);

@@ -14,6 +14,14 @@ function lines(text,width,fontSize){
 }
 
 function filterId(l){return `fx_${String(l.id).replace(/[^a-z0-9_]/gi,'')}`;}
+/* [FINAL INSTRUCTIONS §5] entrance name → END-VISIBLE keyframe
+   (zoom-out/mask-reveal are entrances; shared exit keyframes would hide text). */
+function entranceAnimClass(e){
+  if(!e||e==='none')return '';
+  if(e==='zoom-out')return 'skh_anim_zoom_out_in';
+  if(e==='mask-reveal')return 'skh_anim_mask_reveal';
+  return `skh_anim_${e.replace(/-/g,'_')}`;
+}
 
 function defs(c){
   const bg=c.background||{};
@@ -43,6 +51,8 @@ function defs(c){
       @keyframes skh_anim_fade_out { from { opacity: 1; } to { opacity: 0; } }
       @keyframes skh_anim_slide_out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-24px); } }
       @keyframes skh_anim_zoom_out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.7); } }
+      @keyframes skh_anim_zoom_out_in { from { opacity: 0; transform: scale(1.55); } to { opacity: 1; transform: scale(1); } }
+      @keyframes skh_anim_mask_reveal { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
       @keyframes skh_anim_blur_out { from { opacity: 1; filter: blur(0); } to { opacity: 0; filter: blur(10px); } }
       .skh-anim-word, .skh-anim-char, .skh-anim-line { display: inline-block; animation-fill-mode: forwards; }
       @media (prefers-reduced-motion: reduce) { * { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; } }
@@ -126,7 +136,7 @@ function layerSvg(l){
           } else {
             const delay=num(anim.delay,0)+wordIdx*num(anim.stagger,100);
             wordIdx++;
-            const enterCls=anim.entrance&&anim.entrance!=='none'?`skh_anim_${anim.entrance.replace(/-/g,'_')}`:'';
+            const enterCls=entranceAnimClass(anim.entrance);
             const styleAttr=enterCls?`style="animation:${enterCls} ${num(anim.duration,600)}ms ${anim.easing||'ease-out'} ${delay}ms 1 forwards; opacity:0;"`:'';
             lineSpans+=`<tspan class="skh-anim-word" ${styleAttr}>${esc(w)}</tspan>`;
           }
@@ -144,7 +154,7 @@ function layerSvg(l){
 
     let animWrapperStart='', animWrapperEnd='';
     if(isAnim&&(!anim.mode||anim.mode==='whole')){
-      const enterCls=anim.entrance&&anim.entrance!=='none'?`skh_anim_${anim.entrance.replace(/-/g,'_')}`:'';
+      const enterCls=entranceAnimClass(anim.entrance);
       const emphCls=anim.emphasis&&anim.emphasis!=='none'?`skh_anim_${anim.emphasis.replace(/-/g,'_')}`:'';
       const enterAnim=enterCls?`${enterCls} ${num(anim.duration,600)}ms ${anim.easing||'ease-out'} ${num(anim.delay,0)}ms 1 forwards`:'';
       const emphAnim=emphCls?`${emphCls} 2s ease-in-out ${num(anim.delay,0)+num(anim.duration,600)}ms infinite`:'';

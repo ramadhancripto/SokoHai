@@ -379,3 +379,18 @@
   .skh-ann-slideshow .skh-ann-slide{animation:none!important}
   .skh-ann-slideshow .skh-ann-slide:not(:first-child){opacity:0!important}
 }
+
+/* ==== [FINAL INSTRUCTIONS §11/§24] POSTER-FIRST VIDEO (initial state only) ==== */
+.skh-ann-video-wrap{position:relative}
+.skh-ann-post .skh-ann-video-play{pointer-events:auto;cursor:pointer;border:1.5px solid rgba(255,255,255,.85);transition:transform .15s,background .15s;background:rgba(10,30,25,.55)}
+.skh-ann-post .skh-ann-video-play:hover{transform:translate(-50%,-50%) scale(1.07);background:rgba(14,122,95,.75)}
+.skh-ann-post .skh-ann-video-play:focus-visible{outline:2px solid #18A982;outline-offset:3px}
+.skh-ann-video-wrap.is-playing .skh-ann-video-play{display:none}
+.skh-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* [§9 list] remaining entrance classes → visible-final entrance keyframes */
+@keyframes skhAnimZoomOutEnter { from { opacity:0; transform:scale(1.55); } to { opacity:1; transform:scale(1); } }
+.anim-enter-zoom-out{animation:skhAnimZoomOutEnter var(--anim-duration,600ms) var(--anim-easing, ease-out) var(--anim-delay, 0ms) 1 forwards}
+.anim-enter-mask-reveal{animation:skhAnimReveal var(--anim-duration,700ms) cubic-bezier(0.16,1,0.3,1) var(--anim-delay,0ms) 1 forwards}
+/* [FINAL §1] Offer pill inside text-only (no-media) advertisement */
+.skh-ann-text-creative .skh-ann-text-offer{margin-top:10px}
+.skh-ann-text-creative .skh-ann-text-offer .skh-ann-price-pill{display:inline-flex}

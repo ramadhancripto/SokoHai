@@ -1,4 +1,4 @@
-import fs from'node:fs';import path from'node:path';import {fileURLToPath} from'node:url';const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');const r=p=>fs.readFileSync(path.join(root,p),'utf8');
+import fs from'node:fs';import path from'node:path';const root=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');const r=p=>fs.readFileSync(path.join(root,p),'utf8');
 const auth=r('css/06-auth-polish.css'),market=r('css/07-market-polish.css'),social=r('css/21-discovery-maoni.css'),sell=r('html/09-admin-sell.html'),forms=r('js/app/05-forms.js');let p=0,f=0;const c=(n,v)=>{if(v){p++;console.log('PASS',n)}else{f++;console.error('FAIL',n)}};
 c('auth accent strip is green only',auth.includes('linear-gradient(90deg, #18A982 0%, #35B892 100%)'));
 c('auth logo surface is soft green',auth.includes('background: #EAF8F2 !important'));

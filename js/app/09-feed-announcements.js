@@ -264,14 +264,14 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
             slideshow: (payload.slideshow && typeof payload.slideshow === 'object' && Array.isArray(payload.slideshow.slides) && payload.slideshow.slides.filter(function(s){return s && s.src;}).length >= 1)
                 ? {
                     enabled: payload.slideshow.enabled !== false && payload.slideshow.slides.filter(function(s){return s && s.src;}).length >= 2,
-                    transition: ['none','fade','slide','zoom','crossfade'].includes(String(payload.slideshow.transition||'')) ? String(payload.slideshow.transition) : 'fade',
+                    transition: ['none','fade','slide','slide-left','slide-right','zoom','crossfade'].includes(String(payload.slideshow.transition||'')) ? String(payload.slideshow.transition) : 'fade',
                     defaultDuration: Math.max(1, Math.min(15, Number(payload.slideshow.defaultDuration) || 3)),
                     slides: payload.slideshow.slides.filter(function(s){return s && s.src;}).slice(0,12).map(function(s){
                         return { src: String(s.src), name: String(s.name||'').slice(0,80), duration: Math.max(1, Math.min(30, Number(s.duration)||Number(payload.slideshow.defaultDuration)||3)) };
                     })
                 } : null,
             mediaDurationSeconds: Number.isFinite(Number(payload.mediaDurationSeconds)) && Number(payload.mediaDurationSeconds) > 0
-                ? Math.min(60, Math.round(Number(payload.mediaDurationSeconds))) : null,
+                ? Math.min(59, Math.round(Number(payload.mediaDurationSeconds))) : null, /* [§9] STRICT < 60 */
             videoControls: payload.videoControls === true,
             // --- Canonical advertisement state (Creator Studio upgrade) ---
             creativeId: String(payload.creativeId || '').trim(),
