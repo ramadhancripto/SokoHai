@@ -257,14 +257,70 @@ service cloud.firestore {
         || resource.data.sellerId == request.auth.uid
         || resource.data.providerId == request.auth.uid
         || resource.data.courierId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid;
+      // [PHASE 2 P2] Kuunda: mnunuzi mwenyewe, bila matokeo ya malipo ya server
+      // (mgawanyo, kamisheni, auto-release, suluhu ya mgogoro) na si hali ya mwisho.
+      allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid
+        && !request.resource.data.keys().hasAny(['sellerEarned','carrierEarned','commission','autoReleased','autoReleasedAt',
+             'disputeWinner','disputeResolvedAt','verifiedAmount','paymentProtectedAt','buyerRefund','completedAt'])
+        && !(request.resource.data.get('status', 'payment_pending') in ['completed','refunded_by_admin','split_refund_resolved']);
+      // [PHASE 2 P2] Mamlaka ya hali ya oda na pesa ni ya SERVER. Mhusika (si admin):
+      //  • hawezi kubadilisha kiasi / malipo / mgawanyo / suluhu (orderMoneyKeys);
+      //  • viungo vya uwasilishaji (rideRequestId/deliveryId/driverId/transportRequestId)
+      //    vinawekwa mara moja tu (tupu → thamani), kisha haviwezi kubadilishwa;
+      //  • paymentStatus: thamani za taarifa tu (rejected/verification_*), si 'paid',
+      //    na kamwe baada ya server kuthibitisha;
+      //  • status: orodha ndogo ya mabadiliko halali pekee (orderStatusOk).
       allow update: if signedIn()
-        && (isAdmin() || resource.data.buyerId == request.auth.uid
-            || resource.data.sellerId == request.auth.uid
-            || resource.data.providerId == request.auth.uid
-            || resource.data.courierId == request.auth.uid)
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['buyerId','sellerId','providerId','courierId']);
+        && (isAdmin() || (
+            (resource.data.buyerId == request.auth.uid
+              || resource.data.sellerId == request.auth.uid
+              || resource.data.providerId == request.auth.uid
+              || resource.data.courierId == request.auth.uid)
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['buyerId','sellerId','providerId','courierId'])
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(orderMoneyKeys())
+            && orderLinkOnce('rideRequestId') && orderLinkOnce('deliveryId')
+            && orderLinkOnce('driverId') && orderLinkOnce('transportRequestId')
+            && orderPaymentInfoOk()
+            && orderStatusOk()
+          ));
       allow delete: if false;
+    }
+    function orderMoneyKeys() {
+      return ['amount','verifiedAmount','paymentProtectedAt','paidAt','heldAt',
+              'sellerEarned','carrierEarned','commission','completedAt','autoReleased','autoReleasedAt',
+              'disputeResolvedAt','disputeWinner','buyerRefund','verifiedByServer','paymentVerifiedBy','ipnAt'];
+    }
+    function orderLinkOnce(k) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([k])
+        || resource.data.get(k, null) == null;
+    }
+    function orderPaymentInfoOk() {
+      // Taarifa za kivinjari (kurasa ya kurudi PesaPal): kukataliwa / uthibitisho
+      // unasubiri — kamwe 'paid'/paymentVerified=true, na kamwe baada ya server kuthibitisha.
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['paymentStatus','paymentVerified'])
+        || (resource.data.get('paymentVerified', false) != true
+            && resource.data.get('paymentStatus', '') != 'paid'
+            && !(resource.data.get('status', '') in ['held','shipped','awaiting_pickup','in_transit','delivered','completed','disputed'])
+            && request.resource.data.get('paymentVerified', false) == false
+            && request.resource.data.get('paymentStatus', '') in ['rejected','verification_pending','verification_unavailable','pending','payment_pending','']);
+    }
+    function orderStatusOk() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status','shippedAt'])
+        // Mnunuzi: kufungua mgogoro kwenye oda iliyo kwenye escrow (si baada ya kukamilika).
+        || (resource.data.buyerId == request.auth.uid
+            && request.resource.data.get('status', '') == 'disputed'
+            && resource.data.get('status', '') in ['held','shipped','awaiting_pickup','in_transit','delivered']
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shippedAt']))
+        // Mhusika: kughairi oda ambayo bado haijalipwa.
+        || ((resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
+            && request.resource.data.get('status', '') == 'cancelled'
+            && resource.data.get('status', 'payment_pending') in ['payment_pending','pending']
+            && resource.data.get('paymentVerified', false) != true
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shippedAt']))
+        // Muuzaji/mtoa huduma: held → shipped (+ shippedAt katika uandishi huo huo).
+        || ((resource.data.sellerId == request.auth.uid || resource.data.get('providerId', '') == request.auth.uid)
+            && resource.data.get('status', '') == 'held'
+            && request.resource.data.get('status', '') == 'shipped');
     }
     match /notifications/{id} {
       allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
@@ -542,13 +598,24 @@ service cloud.firestore {
              'handoverFromConfirmed','handoverFromConfirmedAt','activeHandoverId',
              'finalPayout','payoutStatus','verifiedPickupCount','verifiedArrivalCount',
              'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
-             'assignedAgentId','routingMatchedAgentIds','routingMatchedAt'])
+             'assignedAgentId','routingMatchedAgentIds','routingMatchedAt',
+             // [PHASE 2 P1] nauli iliyogandishwa / makabidhiano ya muuzaji ni za server
+             'agreedFare','sellerConfirmedBy'])
         && request.resource.data.get('pickupToken', null) == null
         && request.resource.data.get('handoverToken', null) == null
         && request.resource.data.get('pickupTokenStatus', 'unissued') == 'unissued'
         && request.resource.data.get('handoverTokenStatus', 'unissued') == 'unissued'
         && request.resource.data.get('transferTokenStatus', 'unissued') == 'unissued';
-      allow update: if signedIn()
+      // [PHASE 2 P1/P6] Kusasisha: WAHUSIKA tu (mteja / dereva / mshika mzigo)
+      // au admin. Nauli (fare/price/cargoPrice) inabadilishwa na mteja tu KABLA
+      // ya kukubaliwa (acceptedAt ya server); agreedFare/sellerConfirmedBy ni
+      // za server. driverId → null: dereva mwenyewe (breakdown) au mteja kabla
+      // ya pickup. Hali (status) ya kivinjari: 'searching' (kurudisha sokoni) au
+      // 'cancelled' (mteja kabla ya pickup) tu — hatua za custody ni za server.
+      allow update: if signedIn() && (isAdmin() || (
+        (resource.data.get('customerId', '') == request.auth.uid
+          || resource.data.get('driverId', '') == request.auth.uid
+          || resource.data.get('currentCustodian', '') == request.auth.uid)
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
              // [PHASE 1 SECURITY 2026-09] wahusika/kiungo cha oda na hali ya malipo haviwezi kubadilishwa
              'customerId','orderId','payoutStatus',
@@ -563,11 +630,25 @@ service cloud.firestore {
              'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
              // [REQUEST ROUTING 2026-09] hali ya ofa/assignment ni server-authoritative
              'routingStatus','routingRound','routingMatchedAt','offersCount','activeOfferId',
-             'assignmentStatus','assignedAgentId','routingMatchedAgentIds'
+             'assignmentStatus','assignedAgentId','routingMatchedAgentIds',
+             // [PHASE 2 P1] nauli iliyogandishwa + rekodi za server
+             'agreedFare','sellerConfirmedBy','sellerId','productOrder','source'
            ])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fare','price','cargoPrice'])
+            || (resource.data.get('customerId', '') == request.auth.uid
+                && resource.data.get('acceptedAt', null) == null
+                && resource.data.get('driverId', null) == null))
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['driverId','driverName'])
-            || request.resource.data.driverId == resource.data.driverId
-            || request.resource.data.driverId == null);
+            || request.resource.data.get('driverId', null) == resource.data.get('driverId', null)
+            || (request.resource.data.get('driverId', null) == null && rideReleaseDriverOk()))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+            || (request.resource.data.status == 'searching'
+                && request.resource.data.get('driverId', null) == null
+                && (resource.data.get('driverId', null) == null || rideReleaseDriverOk()))
+            || (request.resource.data.status == 'cancelled'
+                && resource.data.get('customerId', '') == request.auth.uid
+                && resource.data.get('status', 'searching') in ridePrePickupStates()))
+      ));
       // [LIVE-FIX 2026-09] "Futa historia ya safari" (deleteRideOrder) ilikuwa
       // inakataliwa kabisa (delete: if false) → feature haikufanya kazi live.
       // Sasa: MTEJA (owner) anaweza kufuta safari YAKE TU, na TU ikiwa haipo
@@ -580,6 +661,16 @@ service cloud.firestore {
              'transporter_confirmed_receipt','picked_up','in_transit',
              'awaiting_handover'
            ]);
+    }
+    function ridePrePickupStates() {
+      return ['searching','pending_acceptance','accepted','pickup_pending','awaiting_pickup'];
+    }
+    // Kumwondoa dereva: dereva aliyepo mwenyewe (breakdown/recovery) au mteja
+    // kabla ya pickup (kubadilisha msafirishaji). Si mgeni, si baada ya custody.
+    function rideReleaseDriverOk() {
+      return resource.data.get('driverId', '') == request.auth.uid
+        || (resource.data.get('customerId', '') == request.auth.uid
+            && resource.data.get('status', 'searching') in ridePrePickupStates());
     }
     // [CUSTODY 2026-09] Matukio ya makabidhiano (audit) — SERVER PEKEE
     // (browser haiwezi kughushi timeline ya custody).

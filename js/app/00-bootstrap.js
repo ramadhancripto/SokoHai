@@ -5,8 +5,8 @@
 // Mutable state & helpers zote za kiwango cha juu zimehamia kwenye `skh` object.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
@@ -534,11 +534,43 @@ skh.firebaseConfig = {
         appId: "1:950677961118:web:4cd8177bae10dc9f743e8f"
     };
 
+/* [ADS-AUTH FIX 2026-09-25] LOCAL EMULATOR TU. local-server.js (emulator mode)
+   huweka window.SKH_EMULATOR. Bila hii, browser ilitumia Auth/Firestore ya
+   PRODUCTION wakati functions za local zinatumia emulator → kila callable yenye
+   token = 401 (aud mismatch), na creatives/announcements ziliandikwa production
+   huku creativePublish/adsRequestDelivery zikisoma emulator. Production hosting
+   haiweki SKH_EMULATOR, na tunadai isLocalEnv + SKH_LOCAL_FUNCTIONS_SERVER →
+   tabia ya production haibadiliki. */
+skh.emulator = (function () {
+    try {
+        var e = window.SKH_EMULATOR;
+        if (!skh.isLocalEnv || window.SKH_LOCAL_FUNCTIONS_SERVER !== true || !e || typeof e !== 'object') return null;
+        if (!/^demo-[a-z0-9-]+$/.test(String(e.projectId || ''))) return null; // emulator demo projects tu
+        if (!e.firestore || !e.firestore.host || !(Number(e.firestore.port) > 0)) return null;
+        return e;
+    } catch (err) { return null; }
+})();
+if (skh.emulator) {
+    skh.firebaseConfig = Object.assign({}, skh.firebaseConfig, {
+        projectId: skh.emulator.projectId,
+        authDomain: skh.emulator.projectId + '.firebaseapp.com',
+        storageBucket: skh.emulator.projectId + '.appspot.com'
+    });
+}
+
 skh.fApp = skh.initializeApp(skh.firebaseConfig);
 
 skh.auth = skh.getAuth(skh.fApp);
 
 skh.db = skh.getFirestore(skh.fApp);
+
+if (skh.emulator) {
+    try {
+        if (skh.emulator.authUrl) connectAuthEmulator(skh.auth, skh.emulator.authUrl, { disableWarnings: true });
+        connectFirestoreEmulator(skh.db, skh.emulator.firestore.host, Number(skh.emulator.firestore.port));
+        console.info('[SokoHai] LOCAL EMULATOR: project ' + skh.emulator.projectId + ' — Auth ' + (skh.emulator.authUrl || '(production!)') + ', Firestore ' + skh.emulator.firestore.host + ':' + skh.emulator.firestore.port);
+    } catch (err) { console.warn('[SokoHai] emulator connect failed:', err && err.message); }
+}
 
 if (window.skhRegisterFirestore) window.skhRegisterFirestore(skh.onSnapshot);
 

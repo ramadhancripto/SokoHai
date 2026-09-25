@@ -2304,7 +2304,7 @@ window.completeServiceTaskPro = async function(orderId, buyerId, title) {
     try {
         if (!orderId.startsWith('mock_')) {
             // Badilisha status kuwa shipped ili mteja aweke DL Code kukubali
-            await skh.updateDoc(skh.doc(skh.db, "orders", orderId), { status: "shipped", completedAt: new Date().toISOString() });
+            await skh.updateDoc(skh.doc(skh.db, "orders", orderId), { status: "shipped", shippedAt: new Date().toISOString() /* [PHASE 2 P2] completedAt ni ya server */ });
             
             // Tuma notification kwa mteja kuthibitisha kupokea ukarabati
             await skh.addDoc(skh.collection(skh.db, "notifications"), {

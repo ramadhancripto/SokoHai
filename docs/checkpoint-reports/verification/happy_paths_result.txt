@@ -1,0 +1,13 @@
+  PASS J1 buyer creates product order from the browser (rules)
+  PASS J2 valid PesaPal payment → server escrow hold (status held)
+  PASS J3 seller cannot manipulate protected money fields
+  PASS J4 buyer creates delivery request (rules) and links it to the order once
+  PASS J5 driver accepts → agreedFare snapshot; fare frozen after acceptance
+  PASS J6 auto-release cannot bypass the active delivery
+  PASS J7 seller custody/handover with token; buyer cannot fake it
+  PASS J8 pickup/transfer token → transit
+  PASS J9 delivery completion → escrow release: seller payout + eligible carrier payout
+  PASS J10 dispute path cannot double-pay; release/auto-release are once-only
+  PASS J11 negotiation product: PREPARE → TRANSIT → DELIVERED → CONFIRM_RECEIPT releases once
+  PASS J12 negotiation service: START → SUBMIT → CONFIRM_COMPLETION releases once
+HAPPY-PATH JOURNEY: 12 passed, 0 failed

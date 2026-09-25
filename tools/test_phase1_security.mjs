@@ -402,7 +402,9 @@ async function main() {
   async function ride(id, o) {
     await db.doc('ride_requests/' + id).set(Object.assign({
       customerId: 'cust', driverId: 'driver', status: 'in_transit', acceptedAt: hoursAgo(2), custodyStage: 'transit',
-      transferCodeHash: H(TOKEN_C), transferTokenStatus: 'issued', fare: 3000, price: 3000
+      transferCodeHash: H(TOKEN_C), transferTokenStatus: 'issued', fare: 3000, price: 3000,
+      // [PHASE 2 P1] nauli iliyogandishwa na server (deliveryAccept) + makabidhiano ya muuzaji halisi
+      agreedFare: 3000, sellerConfirmedBy: 'seller'
     }, o || {}));
   }
   await ppPaid('TX-R1', 20000, 'cust');
@@ -708,11 +710,12 @@ async function main() {
   await test('negotiationOrderAction: "held" ya client haisababishi malipo', async () => {
     await db.doc('orders/n1').set({ source: 'negotiation', commerceType: 'product', buyerId: 'buyer', sellerId: 'seller', amount: 50000, status: 'held', paymentStatus: 'paid', paymentVerified: true, deliveryStatus: 'held' });
     const w0 = await bal('seller');
-    for (const [who, cmd] of [['seller', 'PREPARE_ORDER'], ['seller', 'START_TRANSIT'], ['seller', 'MARK_DELIVERED'], ['buyer', 'CONFIRM_RECEIPT']]) {
-      const r = await call('negotiationOrderAction', who, { orderId: 'n1', command: cmd });
-      assert(r.ok, cmd + ': ' + r.message);
-    }
-    eq((await db.doc('orders/n1').get()).data().status, 'completed', 'imekamilika (hali tu)');
+    // [PHASE 2 P4] lango la "imelipwa" sasa ni ushahidi wa server (getEscrowEvidence):
+    // hali ya kughushi haipiti hata hatua ya kwanza, na CONFIRM_RECEIPT haikamilishi bila escrow.
+    denied(await call('negotiationOrderAction', 'seller', { orderId: 'n1', command: 'PREPARE_ORDER' }), ['failed-precondition'], 'PREPARE_ORDER (forged paid)');
+    await db.doc('orders/n1').update({ status: 'delivered', negotiationStage: 'delivered', deliveryStatus: 'delivered' });
+    denied(await call('negotiationOrderAction', 'buyer', { orderId: 'n1', command: 'CONFIRM_RECEIPT' }), ['failed-precondition'], 'CONFIRM_RECEIPT bila escrow');
+    assert((await db.doc('orders/n1').get()).data().status !== 'completed', 'haikukamilishwa bila escrow');
     await db.doc('orders/n1').update({ status: 'shipped', shippedAt: hoursAgo(72) });
     await fns.sokopayAutoRelease.run({ scheduleTime: new Date().toISOString() });
     denied(await call('escrowRelease', 'buyer', { orderId: 'n1' }), ['failed-precondition'], 'hakuna ushahidi');

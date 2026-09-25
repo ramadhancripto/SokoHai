@@ -1,0 +1,120 @@
+diff --git a/functions/local-server.js b/functions/local-server.js
+index 3dfe875..d499ffc 100644
+--- a/functions/local-server.js
++++ b/functions/local-server.js
+@@ -188,7 +188,18 @@ async function handleCallable(name, req, res) {
+   const m = /^Bearer\s+(.+)$/i.exec(String(req.headers.authorization || ''));
+   if (m) {
+     try { const token = await admin.auth().verifyIdToken(m[1]); auth = { uid: token.uid, token, rawToken: m[1] }; }
+-    catch (e) { console.warn('  ✗ ' + name + ': ID token si sahihi (' + (e.code || e.message) + ')'); return sendJson(res, 401, { error: { status: 'UNAUTHENTICATED', message: 'Unauthenticated' } }); }
++    catch (e) {
++      // [ADS-AUTH FIX 2026-09-25] Jibu halijabadilika (401). Log inaeleza chanzo:
++      // token ya project nyingine (mf. browser bado iko kwenye Auth ya production).
++      let tokenProject = '';
++      try { tokenProject = String(JSON.parse(Buffer.from(String(m[1]).split('.')[1] || '', 'base64url').toString('utf8')).aud || ''); } catch (_) {}
++      const hint = (tokenProject && tokenProject !== process.env.GCLOUD_PROJECT)
++        ? ' — token ni ya project "' + tokenProject + '", server inatarajia "' + process.env.GCLOUD_PROJECT + '"'
++          + (EMULATOR ? '. Fungua app kupitia http://localhost:' + PORT + ' (inaunganisha Auth/Firestore Emulator) kisha ingia upya kwa akaunti ya emulator.' : '.')
++        : '';
++      console.warn('  ✗ ' + name + ': ID token si sahihi (' + (e.code || e.message) + ')' + hint);
++      return sendJson(res, 401, { error: { status: 'UNAUTHENTICATED', message: 'Unauthenticated' } });
++    }
+   }
+   try {
+     const result = await callables[name].run({ data: payload.data, auth, rawRequest: req, acceptsStreaming: false });
+@@ -225,9 +236,34 @@ const BLOCKED = /^\/(functions|html|tools|_originals|docs|node_modules)(\/|$)|\/
+ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+   '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif',
+   '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8' };
++/* [ADS-AUTH FIX 2026-09-25] Emulator mode: Admin SDK (hapa) inathibitisha tokens
++   za Auth Emulator (project GCLOUD_PROJECT) na kusoma Firestore Emulator. Browser
++   ilibaki kwenye Auth/Firestore ya production → kila callable yenye token ilipata
++   401 (aud mismatch) na data ikagawanyika (browser→prod, functions→emulator).
++   Tunaiambia browser iunganishe emulators ZILEZILE. Haiwekwi kabisa bila emulator
++   (PROD_DATA mode) wala kwenye hosting ya production. */
++function emulatorHostPort(v) {
++  const m = /^\[?([^\]]*?)\]?:(\d+)$/.exec(String(v || '').trim());
++  if (!m) return null;
++  const host = (m[1] === '0.0.0.0' || m[1] === '::' || m[1] === '') ? '127.0.0.1' : m[1];
++  return { host, port: Number(m[2]) };
++}
++function emulatorClientConfig() {
++  if (!EMULATOR) return null;
++  const fsHp = emulatorHostPort(process.env.FIRESTORE_EMULATOR_HOST);
++  const authHp = emulatorHostPort(process.env.FIREBASE_AUTH_EMULATOR_HOST);
++  if (!fsHp) return null;
++  return {
++    projectId: String(process.env.GCLOUD_PROJECT || ''),
++    firestore: fsHp,
++    authUrl: authHp ? 'http://' + authHp.host + ':' + authHp.port : ''
++  };
++}
+ function serveIndex(res) {
+   let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+-  const inject = '<script>window.SKH_FUNCTIONS_URL=' + JSON.stringify(FN_PREFIX) + ';window.SKH_LOCAL_FUNCTIONS_SERVER=true;</script>';
++  const emu = emulatorClientConfig();
++  const inject = '<script>window.SKH_FUNCTIONS_URL=' + JSON.stringify(FN_PREFIX) + ';window.SKH_LOCAL_FUNCTIONS_SERVER=true;'
++    + (emu ? 'window.SKH_EMULATOR=' + JSON.stringify(emu).replace(/</g, '\\u003c') + ';' : '') + '</script>';
+   html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, m => m + inject) : inject + html;
+   res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store' });
+   res.end(html);
+diff --git a/js/app/00-bootstrap.js b/js/app/00-bootstrap.js
+index e549643..9e2f707 100644
+--- a/js/app/00-bootstrap.js
++++ b/js/app/00-bootstrap.js
+@@ -5,8 +5,8 @@
+ // Mutable state & helpers zote za kiwango cha juu zimehamia kwenye `skh` object.
+ 
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
++import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
++import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+ import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+ import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
+ import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
+@@ -534,12 +534,44 @@ skh.firebaseConfig = {
+         appId: "1:950677961118:web:4cd8177bae10dc9f743e8f"
+     };
+ 
++/* [ADS-AUTH FIX 2026-09-25] LOCAL EMULATOR TU. local-server.js (emulator mode)
++   huweka window.SKH_EMULATOR. Bila hii, browser ilitumia Auth/Firestore ya
++   PRODUCTION wakati functions za local zinatumia emulator → kila callable yenye
++   token = 401 (aud mismatch), na creatives/announcements ziliandikwa production
++   huku creativePublish/adsRequestDelivery zikisoma emulator. Production hosting
++   haiweki SKH_EMULATOR, na tunadai isLocalEnv + SKH_LOCAL_FUNCTIONS_SERVER →
++   tabia ya production haibadiliki. */
++skh.emulator = (function () {
++    try {
++        var e = window.SKH_EMULATOR;
++        if (!skh.isLocalEnv || window.SKH_LOCAL_FUNCTIONS_SERVER !== true || !e || typeof e !== 'object') return null;
++        if (!/^demo-[a-z0-9-]+$/.test(String(e.projectId || ''))) return null; // emulator demo projects tu
++        if (!e.firestore || !e.firestore.host || !(Number(e.firestore.port) > 0)) return null;
++        return e;
++    } catch (err) { return null; }
++})();
++if (skh.emulator) {
++    skh.firebaseConfig = Object.assign({}, skh.firebaseConfig, {
++        projectId: skh.emulator.projectId,
++        authDomain: skh.emulator.projectId + '.firebaseapp.com',
++        storageBucket: skh.emulator.projectId + '.appspot.com'
++    });
++}
++
+ skh.fApp = skh.initializeApp(skh.firebaseConfig);
+ 
+ skh.auth = skh.getAuth(skh.fApp);
+ 
+ skh.db = skh.getFirestore(skh.fApp);
+ 
++if (skh.emulator) {
++    try {
++        if (skh.emulator.authUrl) connectAuthEmulator(skh.auth, skh.emulator.authUrl, { disableWarnings: true });
++        connectFirestoreEmulator(skh.db, skh.emulator.firestore.host, Number(skh.emulator.firestore.port));
++        console.info('[SokoHai] LOCAL EMULATOR: project ' + skh.emulator.projectId + ' — Auth ' + (skh.emulator.authUrl || '(production!)') + ', Firestore ' + skh.emulator.firestore.host + ':' + skh.emulator.firestore.port);
++    } catch (err) { console.warn('[SokoHai] emulator connect failed:', err && err.message); }
++}
++
+ if (window.skhRegisterFirestore) window.skhRegisterFirestore(skh.onSnapshot);
+ 
+ if (window.skhSyncRegisterFirestore) window.skhSyncRegisterFirestore({ db: skh.db, doc: skh.doc, setDoc: skh.setDoc, getDoc: skh.getDoc });

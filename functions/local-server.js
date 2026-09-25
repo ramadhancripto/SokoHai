@@ -188,7 +188,18 @@ async function handleCallable(name, req, res) {
   const m = /^Bearer\s+(.+)$/i.exec(String(req.headers.authorization || ''));
   if (m) {
     try { const token = await admin.auth().verifyIdToken(m[1]); auth = { uid: token.uid, token, rawToken: m[1] }; }
-    catch (e) { console.warn('  ✗ ' + name + ': ID token si sahihi (' + (e.code || e.message) + ')'); return sendJson(res, 401, { error: { status: 'UNAUTHENTICATED', message: 'Unauthenticated' } }); }
+    catch (e) {
+      // [ADS-AUTH FIX 2026-09-25] Jibu halijabadilika (401). Log inaeleza chanzo:
+      // token ya project nyingine (mf. browser bado iko kwenye Auth ya production).
+      let tokenProject = '';
+      try { tokenProject = String(JSON.parse(Buffer.from(String(m[1]).split('.')[1] || '', 'base64url').toString('utf8')).aud || ''); } catch (_) {}
+      const hint = (tokenProject && tokenProject !== process.env.GCLOUD_PROJECT)
+        ? ' — token ni ya project "' + tokenProject + '", server inatarajia "' + process.env.GCLOUD_PROJECT + '"'
+          + (EMULATOR ? '. Fungua app kupitia http://localhost:' + PORT + ' (inaunganisha Auth/Firestore Emulator) kisha ingia upya kwa akaunti ya emulator.' : '.')
+        : '';
+      console.warn('  ✗ ' + name + ': ID token si sahihi (' + (e.code || e.message) + ')' + hint);
+      return sendJson(res, 401, { error: { status: 'UNAUTHENTICATED', message: 'Unauthenticated' } });
+    }
   }
   try {
     const result = await callables[name].run({ data: payload.data, auth, rawRequest: req, acceptsStreaming: false });
@@ -225,9 +236,34 @@ const BLOCKED = /^\/(functions|html|tools|_originals|docs|node_modules)(\/|$)|\/
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif',
   '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8' };
+/* [ADS-AUTH FIX 2026-09-25] Emulator mode: Admin SDK (hapa) inathibitisha tokens
+   za Auth Emulator (project GCLOUD_PROJECT) na kusoma Firestore Emulator. Browser
+   ilibaki kwenye Auth/Firestore ya production → kila callable yenye token ilipata
+   401 (aud mismatch) na data ikagawanyika (browser→prod, functions→emulator).
+   Tunaiambia browser iunganishe emulators ZILEZILE. Haiwekwi kabisa bila emulator
+   (PROD_DATA mode) wala kwenye hosting ya production. */
+function emulatorHostPort(v) {
+  const m = /^\[?([^\]]*?)\]?:(\d+)$/.exec(String(v || '').trim());
+  if (!m) return null;
+  const host = (m[1] === '0.0.0.0' || m[1] === '::' || m[1] === '') ? '127.0.0.1' : m[1];
+  return { host, port: Number(m[2]) };
+}
+function emulatorClientConfig() {
+  if (!EMULATOR) return null;
+  const fsHp = emulatorHostPort(process.env.FIRESTORE_EMULATOR_HOST);
+  const authHp = emulatorHostPort(process.env.FIREBASE_AUTH_EMULATOR_HOST);
+  if (!fsHp) return null;
+  return {
+    projectId: String(process.env.GCLOUD_PROJECT || ''),
+    firestore: fsHp,
+    authUrl: authHp ? 'http://' + authHp.host + ':' + authHp.port : ''
+  };
+}
 function serveIndex(res) {
   let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  const inject = '<script>window.SKH_FUNCTIONS_URL=' + JSON.stringify(FN_PREFIX) + ';window.SKH_LOCAL_FUNCTIONS_SERVER=true;</script>';
+  const emu = emulatorClientConfig();
+  const inject = '<script>window.SKH_FUNCTIONS_URL=' + JSON.stringify(FN_PREFIX) + ';window.SKH_LOCAL_FUNCTIONS_SERVER=true;'
+    + (emu ? 'window.SKH_EMULATOR=' + JSON.stringify(emu).replace(/</g, '\\u003c') + ';' : '') + '</script>';
   html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, m => m + inject) : inject + html;
   res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store' });
   res.end(html);

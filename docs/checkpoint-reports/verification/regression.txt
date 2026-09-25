@@ -1,0 +1,49 @@
+=== Phase 1 security: PHASE 1 SECURITY: 57 passed, 0 failed
+=== Phase 2 security: PHASE 2 SECURITY: 28 passed, 0 failed
+PASS test_local_functions_server
+PASS test_ads_delivery_engine
+PASS test_ads_local_delivery_regression
+PASS test_ads_governance
+PASS test_creative_system
+PASS test_creator_studio_upgrade
+PASS test_noncanvas_ad_designer
+PASS test_unified_ad_designer
+PASS test_functions_resilience
+PASS test_home_ads_product_cards_contract
+  npm-test FAIL tools/test_chat_authority_contract.mjs
+=== npm test chain (per file): 39 pass / 1 fail of 40
+=== npm test (as-is chain) exit=1 ; stops at:   ✅ chombo cha tangazo kimechaguliwa (Daladala) [negotiationSendOffer] Falling back to Firestore-native: Error: Samahani, huduma za seva ya SokoHai hazipatika
+=== syntax
+OK   functions/index.js
+OK   functions/local-server.js
+OK   functions/negotiation.js
+OK   js/17-pesapal-return.js
+OK   js/app/00-bootstrap.js
+OK   js/app/16-pos-admin-jobs.js
+OK   js/app/52-transport-inbox.js
+OK   tools/test_phase1_security.mjs
+OK   tools/test_phase2_security.mjs
+OK   package.json (valid JSON)
+=== git diff --check: clean
+=== secret scan (diff + untracked + whole tree, excl node_modules/.git)
+diff hits: 0
+tree hit: ./functions/node_modules/@google-cloud/storage/build/cjs/src/storage.js
+tree hit: ./functions/node_modules/@google-cloud/storage/build/cjs/src/storage.d.ts
+tree hit: ./functions/node_modules/@google-cloud/storage/build/esm/src/storage.js
+tree hit: ./functions/node_modules/@google-cloud/storage/build/esm/src/storage.d.ts
+tree hit: ./functions/node_modules/firebase-admin/lib/app/credential-factory.js
+tree hit: ./functions/node_modules/firebase-admin/lib/app/credential-internal.js
+tree hit: ./functions/node_modules/firebase-admin/lib/app/credential-factory.d.ts
+tree hit: ./functions/node_modules/firebase-admin/lib/credential/index.js
+tree hit: ./functions/node_modules/firebase-admin/lib/credential/index.d.ts
+tree hit: ./functions/node_modules/google-auth-library/build/src/auth/baseexternalclient.js
+AIza keys in diff: 0
+tracked+untracked (non-node_modules) secret-pattern hits: 0
+tracked files with sensitive names: 0
+=== Node v26.10.0 compatibility
+FAIL(node26) test_local_functions_server: LOCAL FUNCTIONS SERVER: 11 passed, 1 failed   ✗ loads real callables from functions/index.js → "Packaged shared Ads Design rules at functions/shared/ads-design-rules.js\n\n SokoHai LOCAL FUNCTIONS
+PASS(node26) test_ads_delivery_engine
+FAIL(node26) test_functions_resilience:  Node.js v26.10.0 
+Phase1 (node26): (Use `node --trace-warnings ...` to show where the warning was created) PHASE 1 SECURITY: 57 passed, 0 failed 
+Phase2 (node26): PHASE 2 SECURITY: 28 passed, 0 failed
+functions/index.js loads under v26.10.0

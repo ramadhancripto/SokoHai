@@ -1034,6 +1034,15 @@ function orderDefsForType(t) {
     return PRODUCT_ORDER_DEFS;
 }
 
+/* [PHASE 2 P4] Injini ya escrow ILIYOPO (index.js: releaseOrderEscrow +
+ * getEscrowEvidence) inaingizwa hapa kwa setter — hakuna logic ya malipo
+ * iliyohamishwa wala moduli mpya. Bila injini → fail-closed. */
+let escrowEngine = null;
+exports.setEscrowEngine = function (engine) {
+    escrowEngine = (engine && typeof engine.releaseOrderEscrow === 'function'
+        && typeof engine.getEscrowEvidence === 'function') ? engine : null;
+};
+
 exports.negotiationOrderAction = onCall({ region: REGION }, async (req) => {
     const auth = req.auth;
     if (!auth) throw new HttpsError('unauthenticated', 'Login inahitajika.');
@@ -1081,8 +1090,11 @@ exports.negotiationOrderAction = onCall({ region: REGION }, async (req) => {
     }
 
     // 4) malipo: lazima ilipwe kabla ya utekelezaji (spec §26 — SokoPay ndiye mamlaka).
-    const paid = (o.paymentStatus === 'paid') || (o.paymentVerified === true) || (o.status === 'held');
-    if (!paid) {
+    // [PHASE 2 P4] Ushahidi wa malipo wa SERVER (escrow_holds / PesaPal recheck) —
+    // si paymentStatus/status za kivinjari.
+    if (!escrowEngine) throw new HttpsError('unavailable', 'Injini ya escrow haipatikani. Jaribu tena baadaye.');
+    const ev = await escrowEngine.getEscrowEvidence('order', orderId, o, { recheckPesaPal: true });
+    if (!ev || !ev.ok) {
         throw new HttpsError('failed-precondition', 'Oda haijalipwa bado. Mnunuzi alipe kupitia SokoPay kwanza.');
     }
 
@@ -1095,8 +1107,14 @@ exports.negotiationOrderAction = onCall({ region: REGION }, async (req) => {
     // 6) kuandika
     const patch = Object.assign({ status: def.status, updatedAt: now }, { [stageField]: def.stage });
     if (def.at) patch[def.at] = now;
+    let release = null;
     if (command === 'CONFIRM_RECEIPT' || command === 'CONFIRM_COMPLETION') {
-        patch.completedAt = now;
+        // [PHASE 2 P4] Uthibitisho wa mnunuzi = kutoa escrow kupitia injini ILIYOPO
+        // (atomic, hold moja = release moja, split ya muuzaji/carrier/wakala/platform).
+        // Ikishindikana, hatua haiandikwi (hakuna 'completed' bila malipo).
+        release = await escrowEngine.releaseOrderEscrow(orderId, { callerUid: auth.uid, trigger: 'buyer_confirm' });
+        if (!release || !release.ok) throw new HttpsError('failed-precondition', 'Escrow haikutolewa.');
+        delete patch.completedAt;   // imewekwa na releaseOrderEscrow
         patch.deliveryConfirmedAt = now;
         patch.status = 'completed';
     }

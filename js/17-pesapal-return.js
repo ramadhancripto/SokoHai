@@ -104,7 +104,13 @@
         if (existing.commerceType === 'service') patch.serviceStatus = 'held';
         else if (existing.commerceType === 'transport') patch.transportStatus = 'held';
         else patch.deliveryStatus = 'held';
-        if (!pending.demo) patch.verifiedByServer = true; // [AUDIT-FIX §42] thibitisho la server
+        if (!pending.demo) {
+            /* [PHASE 2 P2] Kivinjari SI mamlaka ya malipo: status/paid/held/
+             * paymentVerified huandikwa na SERVER (settlePesaPalPayment kupitia
+             * uthibitisho ulio juu, oda yenye paymentRef). Hapa: taarifa za UI tu. */
+            ['status', 'paymentStatus', 'paymentVerified', 'paidAt', 'heldAt'].forEach(function (k) { delete patch[k]; });
+            if (existing.paymentRef) delete patch.paymentRef;
+        }
         await fb.updateDoc(fb.doc(fb.db, 'orders', String(orderId)), patch);
 
         try {
@@ -407,9 +413,10 @@
                 for (var pi = 0; pi < pending.postPayDelivery.length; pi++) {
                     var pp = pending.postPayDelivery[pi];
                     try {
+                        // [PHASE 2 P2] Unganisha kumbukumbu ya malipo tu — 'held'/'paid'
+                        // huandikwa na server (settlePesaPalPayment) kupitia paymentRef.
                         await fb.updateDoc(fb.doc(fb.db, 'orders', pp.orderDocId), {
-                            status: 'held', paymentStatus: 'paid', paymentVerified: true,
-                            paymentRef: pending.txRef, transactionId: tid, paidAt: now
+                            paymentRef: pending.txRef, transactionId: tid
                         });
                     } catch (e) {}
                     if (pp.delivery && pp.delivery.required) {

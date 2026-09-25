@@ -442,11 +442,13 @@ import { skh } from './00-bootstrap.js';
         if (!ok) return;
         skhBusy(true, 'Inakamilisha…');
         try {
-            await skh.updateDoc(skh.doc(skh.db, 'ride_requests', rideId), {
-                status: 'completed',
-                receiverConfirmedAt: new Date().toISOString(),
-                receiverConfirmedBy: myUid()
-            });
+            // [PHASE 2 P6] Kukamilisha safari ni kwa SERVER (deliveryComplete) —
+            // rules haziruhusu tena kivinjari kuandika status 'completed'.
+            if (typeof window.skhCustodyCompleteDelivery !== 'function') throw new Error('server_unavailable');
+            var tc = null;
+            try { tc = window.skhCustodyReadToken ? await window.skhCustodyReadToken(rideId, 'transfer') : null; } catch (e2) { tc = null; }
+            var r = await window.skhCustodyCompleteDelivery(rideId, tc || null, null, {});
+            if (!r || r.ok === false) throw new Error((r && r.error) || 'failed');
             await sysMsg('Mpokeaji amethibitisha. Safari imekamilika.');
             skhBusy(false); skhToast('Asante! Safari imekamilika.', 'success');
             bust(); window.skhTxRender();
