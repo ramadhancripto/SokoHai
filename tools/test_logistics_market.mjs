@@ -21,7 +21,7 @@ function ok(name, cond) {
 function makeDom() {
     const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/' });
     const win = dom.window;
-    globalThis.window = win; globalThis.document = win.document; globalThis.navigator = win.navigator;
+    globalThis.window = win; globalThis.document = win.document; Object.defineProperty(globalThis, 'navigator', { value: win.navigator, configurable: true, writable: true });
     return dom;
 }
 function snap(docs) {

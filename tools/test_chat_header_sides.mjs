@@ -1,9 +1,9 @@
-/* ============================================================
- * SOKOHAI — Jaribio la TOP BAR ya chat + pande za kadi za
+﻿/* ============================================================
+ * SOKOHAI â€” Jaribio la TOP BAR ya chat + pande za kadi za
  * biashara (jsdom).
  *  - Top bar nyembamba: kitufe KIMOJA cha kurudi (mshale), jina tu,
  *    menyu ya nukta tatu (Nyamazisha/Hifadhi/Zuia/Ripoti).
- *  - "anaandika…" huonekana kwa maandishi madogo tu wakati wa kuandika.
+ *  - "anaandikaâ€¦" huonekana kwa maandishi madogo tu wakati wa kuandika.
  *  - Matukio ya negotiation hufuata upande wa aliyetenda (kijani kulia
  *    kwa mimi, buluu kushoto kwa mwenzangu) + jina/nafasi; ukumbusho wa
  *    maandishi wa mfumo husalia katikati.
@@ -12,7 +12,7 @@
 import { JSDOM } from 'jsdom';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -24,7 +24,11 @@ const dom = new JSDOM('<!doctype html><html><body>' + fragment + '</body></html>
 const { window } = dom;
 globalThis.window = window;
 globalThis.document = window.document;
-globalThis.navigator = window.navigator;
+Object.defineProperty(globalThis, 'navigator', {
+    value: window.navigator,
+    configurable: true,
+    writable: true
+});
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -73,14 +77,14 @@ async function loadApp(rel, outName) {
         .replace("import { skh } from './00-bootstrap.js';", 'const skh = window.skh;');
     const tmp = path.join(ROOT, 'js/app', outName);
     fs.writeFileSync(tmp, src);
-    await import('file://' + tmp + '?t=' + Date.now() + Math.random());
+    await import(pathToFileURL(tmp).href + '?t=' + Date.now() + Math.random());
     fs.unlinkSync(tmp);
 }
 await loadApp('js/app/37-negotiation.js', '_tmp_eng.mjs');
 await loadApp('js/app/34-chat-core.js', '_tmp_chat.mjs');
 
 let pass = 0, fail = 0;
-const ok = (n, c) => { if (c) { pass++; console.log('  ✅ ' + n); } else { fail++; console.log('  ❌ ' + n); } };
+const ok = (n, c) => { if (c) { pass++; console.log('  âœ… ' + n); } else { fail++; console.log('  âŒ ' + n); } };
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 
@@ -91,9 +95,9 @@ console.log('\n[1] Muundo wa TOP BAR (header nyembamba)');
     const back = $('#chatBackBtn');
     ok('kitufe cha kurudi (mshale) kipo', !!back);
     ok('kina SVG ya mshale', !!back.querySelector('svg'));
-    // Hakuna kitufe cha pili cha kufunga (✕) ndani ya header.
+    // Hakuna kitufe cha pili cha kufunga (âœ•) ndani ya header.
     const closeBtns = $$('.chat-head-bar button').filter(b => /closeModals/.test(b.getAttribute('onclick') || ''));
-    ok('hakuna kitufe cha pili cha ✕/closeModals', closeBtns.length === 0);
+    ok('hakuna kitufe cha pili cha âœ•/closeModals', closeBtns.length === 0);
     const navBtns = [$('#chatBackBtn'), $('#chatSearchBtn'), $('#chatMenuBtn')].filter(Boolean);
     ok('vitufe vya navigation ni vitatu (rudi + search + menyu)', navBtns.length === 3);
     ok('jina lipo (#chatWith)', !!$('#chatWith'));
@@ -108,7 +112,7 @@ console.log('\n[1] Muundo wa TOP BAR (header nyembamba)');
     ok('header haina emoji', !/[\u{1F300}-\u{1FAFF}]/u.test(bar.textContent));
 }
 
-console.log('\n[2] Fungua mazungumzo — jina + menyu inafanya kazi');
+console.log('\n[2] Fungua mazungumzo â€” jina + menyu inafanya kazi');
 {
     await window.skhChatOpen('seller1', 'Duka la Mbeya', { email: 's@x.co' });
     ok('jina la mwenzako limeandikwa', $('#chatWith').textContent === 'Duka la Mbeya');
@@ -120,7 +124,7 @@ console.log('\n[2] Fungua mazungumzo — jina + menyu inafanya kazi');
     // Kubofya kando kuifunge
     document.body.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     ok('kubofya nje kunafunga menyu', menu.hidden === true);
-    // Zuia kupitia menyu → lebo yabadilika
+    // Zuia kupitia menyu â†’ lebo yabadilika
     $('#chatMenuBtn').click();
     $('#chatMenuBlock').click();
     await new Promise(r => setTimeout(r, 60));
@@ -128,7 +132,7 @@ console.log('\n[2] Fungua mazungumzo — jina + menyu inafanya kazi');
     ok('lebo yageuka "Ondoa Mzuio"', /Ondoa Mzuio/i.test($('#chatMenuBlockLbl').textContent));
 }
 
-console.log('\n[3] Kiashiria cha "anaandika…" kwa maandishi madogo tu');
+console.log('\n[3] Kiashiria cha "anaandikaâ€¦" kwa maandishi madogo tu');
 {
     const sub = $('#chatSub');
     // Piga callback ya conversation snapshot na typing ya hivi karibuni.
@@ -183,3 +187,4 @@ console.log('\n[4] Kadi za negotiation zinafuata UPANDE wa aliyetenda');
 
 console.log('\nMATOKEO: ' + pass + ' pass, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
+

@@ -1,12 +1,12 @@
-/* ============================================================
- * SOKOHAI — Jaribio la mzunguko wa MAJADILIANO YA USAFIRI (jsdom).
+﻿/* ============================================================
+ * SOKOHAI â€” Jaribio la mzunguko wa MAJADILIANO YA USAFIRI (jsdom).
  * Huhakiki:
- *  1. Tangazo la dereva (`drivers`) → fomu ya USAFIRI (si bidhaa),
+ *  1. Tangazo la dereva (`drivers`) â†’ fomu ya USAFIRI (si bidhaa),
  *     njia/nauli/chombo kujazwa kutoka tangazo, na kutuma kunafanikiwa
  *     kupitia njia ya ASILI (Cloud Functions zikiwa chini ya fnDown).
  *  2. Counter ya usafiri katika chat yenye kadi ya negotiation ya
- *     transport pamoja na kadi ya bidhaa → bado fomu ya transport.
- *  3. Counter ya huduma → fomu ya service.
+ *     transport pamoja na kadi ya bidhaa â†’ bado fomu ya transport.
+ *  3. Counter ya huduma â†’ fomu ya service.
  *  4. startChat() huweka muktadha unaofuata collection ya tangazo.
  * Endesha:  node tools/test_delivery_nego_flow.mjs
  * Inahitaji: npm i jsdom (node_modules haijajumuishwa kwenye ZIP).
@@ -14,7 +14,7 @@
 import { JSDOM } from 'jsdom';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -24,7 +24,7 @@ const dom = new JSDOM('<!doctype html><html><body><div id="chatModal" style="dis
 const { window } = dom;
 globalThis.window = window;
 globalThis.document = window.document;
-globalThis.navigator = window.navigator;
+Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true, writable: true });
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -34,7 +34,7 @@ const addDocs = [];
 
 function driverDoc() {
     return {
-        title: 'Magufuli Bus — Dar to Dodoma',
+        title: 'Magufuli Bus â€” Dar to Dodoma',
         driverName: 'Juma Magufuli', userId: 'driverUid1', ownerName: 'Juma Magufuli',
         price: 25000, pickupRegion: 'Dar es Salaam', destinationRegion: 'Dodoma',
         vehicleType: 'Daladala', supportedServices: ['Passenger', 'Cargo'],
@@ -76,7 +76,7 @@ async function loadApp(rel, outName) {
         .replace("import { skh } from './00-bootstrap.js';", 'const skh = window.skh;');
     const tmp = path.join(ROOT, 'js/app', outName);
     fs.writeFileSync(tmp, src);
-    await import('file://' + tmp + '?t=' + Date.now() + Math.random());
+    await import(pathToFileURL(tmp).href + '?t=' + Date.now() + Math.random());
     fs.unlinkSync(tmp);
 }
 
@@ -93,7 +93,7 @@ function driverPost() {
     return Object.assign({ id: 'dr1', collectionName: 'drivers' }, driverDoc());
 }
 
-console.log('\n[1] Tangazo la DEREVA → fomu ya usafiri + kutuma (functions fnDown → native)');
+console.log('\n[1] Tangazo la DEREVA â†’ fomu ya usafiri + kutuma (functions fnDown â†’ native)');
 {
     // Wrapper wa functions hurudisha kosa la fnDown (seva haijadeploywa).
     skh.wrapCallable = () => async () => {
@@ -134,7 +134,7 @@ console.log('\n[1] Tangazo la DEREVA → fomu ya usafiri + kutuma (functions fnD
     ok('transportCollection = drivers', n.transportCollection === 'drivers');
     ok('transportId = dr1', n.transportId === 'dr1');
     ok('currentUnitPrice = 23000 (nauli)', n.currentUnitPrice === 23000);
-    ok('currentTotal = 23000 (si idadi × bei)', n.currentTotal === 23000);
+    ok('currentTotal = 23000 (si idadi Ã— bei)', n.currentTotal === 23000);
     ok('route sahihi', n.route && n.route.from === 'Dar es Salaam' && n.route.to === 'Dodoma');
     ok('vehicleType imehifadhiwa', n.vehicleType === 'Daladala');
     if ($('#nfShell')) window.skhNegoFormClose();
@@ -202,7 +202,7 @@ console.log('\n[3] Counter ya huduma: negotiation card ya service');
     if ($('#nfShell')) window.skhNegoFormClose();
 }
 
-console.log('\n[4] startChat() kutoka tangazo la dereva → activeChatTransport (si activeChatProduct)');
+console.log('\n[4] startChat() kutoka tangazo la dereva â†’ activeChatTransport (si activeChatProduct)');
 {
     skh.currentOpenProduct = Object.assign(driverPost(), { userEmail: 'juma@x.co' });
     skh.chatCore = null;
@@ -219,3 +219,5 @@ console.log('\n[4] startChat() kutoka tangazo la dereva → activeChatTransport 
 
 console.log('\nMATOKEO: ' + pass + ' pass, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
+
+

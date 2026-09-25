@@ -497,18 +497,8 @@ skh.firebaseConfig = {
 skh.fApp = skh.initializeApp(skh.firebaseConfig);
 
 skh.auth = skh.getAuth(skh.fApp);
-skh.db = skh.getFirestore(skh.fApp);
 
-// [LOCAL FIRESTORE EMULATOR]
-// Local SokoHai (localhost) hutumia Firestore Emulator.
-// Production/Netlify inaendelea kutumia Cloud Firestore kama kawaida.
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    try {
-        skh.connectFirestoreEmulator = skh.connectFirestoreEmulator || function (db, host, port) {
-            // placeholder replaced below
-        };
-    } catch (e) {}
-}
+skh.db = skh.getFirestore(skh.fApp);
 
 if (window.skhRegisterFirestore) window.skhRegisterFirestore(skh.onSnapshot);
 

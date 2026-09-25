@@ -1,13 +1,13 @@
-/* ============================================================
- * SOKOHAI — E2E JOURNEY: inbox → open → send → negotiate →
- * counter → accept → group create → group send (jsdom +
+﻿/* ============================================================
+ * SOKOHAI â€” E2E JOURNEY: inbox â†’ open â†’ send â†’ negotiate â†’
+ * counter â†’ accept â†’ group create â†’ group send (jsdom +
  * in-memory Firestore mock). Moduli HALISI: 37, 34, 38, 69, 39.
  * Endesha: node tools/test_chat_e2e_journey.mjs
  * ============================================================ */
 import { JSDOM } from 'jsdom';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -19,7 +19,7 @@ const dom = new JSDOM('<!doctype html><html><head></head><body>' + fragment + '<
 const { window } = dom;
 globalThis.window = window;
 globalThis.document = window.document;
-globalThis.navigator = window.navigator;
+Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true, writable: true });
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -77,7 +77,7 @@ function docSnap(p) {
   return d === undefined ? { exists: () => false, data: () => null, id: p.split('/').pop() }
     : { exists: () => true, id: p.split('/').pop(), data: () => JSON.parse(JSON.stringify(d)) };
 }
-function snapKeyDoc(p) { const d = store.get(p); return d === undefined ? '∅' : JSON.stringify(d); }
+function snapKeyDoc(p) { const d = store.get(p); return d === undefined ? 'âˆ…' : JSON.stringify(d); }
 function snapKeyQuery(path, q) {
   const s = snapFor(path, q);
   return JSON.stringify(s.docs.map((d) => [d.id, d.data()]));
@@ -203,17 +203,17 @@ async function loadApp(rel, outName, logicRewrite) {
   }
   const tmp = path.join(ROOT, 'js/app', outName);
   fs.writeFileSync(tmp, src);
-  await import('file://' + tmp + '?t=' + Date.now() + Math.random());
+  await import(pathToFileURL(tmp).href + '?t=' + Date.now() + Math.random());
   fs.unlinkSync(tmp);
 }
-const logicURL = (f) => 'file://' + path.join(ROOT, 'js/app', f);
+const logicURL = (f) => pathToFileURL(path.join(ROOT, 'js/app', f)).href;
 await loadApp('js/app/37-negotiation.js', '_tmp_e2e_eng.mjs');
 await loadApp('js/app/34-chat-core.js', '_tmp_e2e_chat.mjs');
 await loadApp('js/app/38-negotiation-form.js', '_tmp_e2e_form.mjs', [['./38-nego-form-logic.js', logicURL('38-nego-form-logic.js')]]);
 await loadApp('js/app/69-chat-groups.js', '_tmp_e2e_grp.mjs');
 await loadApp('js/app/39-product-showcase.js', '_tmp_e2e_ps.mjs', [['./39-showcase-logic.js', logicURL('39-showcase-logic.js')]]);
 let pass = 0, fail = 0;
-const ok = (n, c) => { if (c) { pass++; console.log('  ✅ ' + n); } else { fail++; console.log('  ❌ ' + n); } };
+const ok = (n, c) => { if (c) { pass++; console.log('  âœ… ' + n); } else { fail++; console.log('  âŒ ' + n); } };
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 const msgsIn = (convId) => [...store.entries()].filter(([p]) => p.startsWith(`conversations/${convId}/messages/`));
@@ -225,10 +225,10 @@ console.log('\n[J1] INBOX tupu + reload');
   ok('inbox list ipo', !!$('#inboxList'));
 }
 
-console.log('\n[J2] Fungua chat kutoka bidhaa (startChat → conv + ujumbe wa bidhaa)');
+console.log('\n[J2] Fungua chat kutoka bidhaa (startChat â†’ conv + ujumbe wa bidhaa)');
 let convId = null;
 {
-  // Safari halisi: mtumiaji yuko kwenye ukurasa wa bidhaa → startChat (34) → skhChatOpen.
+  // Safari halisi: mtumiaji yuko kwenye ukurasa wa bidhaa â†’ startChat (34) â†’ skhChatOpen.
   skh.currentOpenProduct = { id: 'p_101', title: 'Kiatu cha Ngozi', price: 45000, image: 'http://img/x.jpg', userId: 'seller_2', collectionName: 'products', ownerName: 'Shoe Shop', userEmail: 's@t.co' };
   skh.activeChatProduct = null;
   await window.startChat();
@@ -239,17 +239,17 @@ let convId = null;
   const cm = $('#chatModal');
   ok('chatModal inaonekana', !!cm && cm.style.display !== 'none');
   ok('jina la partner limeandikwa', ($('#chatWith') || {}).textContent === 'Shoe Shop');
-  // startChat hai-tumi auto — hu-prefill input + huweka context (mtumiaji hubonyeza send).
+  // startChat hai-tumi auto â€” hu-prefill input + huweka context (mtumiaji hubonyeza send).
   ok('input ime-prefill na salamu ya bidhaa', /nimevutiwa na bidhaa hii: Kiatu/.test(($('#chatInput') || {}).value || ''));
   ok('context ya bidhaa imewekwa', !!(skh.activeChatProduct && skh.activeChatProduct.id === 'p_101'));
-  // Mtumiaji hutuma salamu → inakuwa ujumbe wa type=product wenye snapshot.
+  // Mtumiaji hutuma salamu â†’ inakuwa ujumbe wa type=product wenye snapshot.
   const p2 = window.sendMessage();
   await p2; await tick(10);
   const ms = convId ? msgsIn(convId) : [];
   ok('salamu iliyotumwa ni type=product + snapshot', ms.some(([pp, d]) => d.type === 'product' && d.productSnapshot && d.productSnapshot.title === 'Kiatu cha Ngozi'));
 }
 
-console.log('\n[J3] Tuma ujumbe — optimistic + reconcile bila duplicate');
+console.log('\n[J3] Tuma ujumbe â€” optimistic + reconcile bila duplicate');
 {
   const before = msgsIn(convId).length;
   $('#chatInput').value = 'Hujambo, bado inapatikana?';
@@ -263,7 +263,7 @@ console.log('\n[J3] Tuma ujumbe — optimistic + reconcile bila duplicate');
   ok('hakuna bubble iliyokwama pending/failed', !/Jaribu Tena/.test(($('#chatMessages') || {}).textContent || ''));
 }
 
-console.log('\n[J3b] Hariri ujumbe ndani ya composer — message ileile, si duplicate');
+console.log('\n[J3b] Hariri ujumbe ndani ya composer â€” message ileile, si duplicate');
 {
   const before = msgsIn(convId);
   const row = before.find(([pp, d]) => d.text === 'Hujambo, bado inapatikana?');
@@ -281,7 +281,7 @@ console.log('\n[J3b] Hariri ujumbe ndani ya composer — message ileile, si dupl
   ok('edit mode imefungwa baada ya save', $('#chatEditChip').hidden && $('#chatInput').value === '');
 }
 
-console.log('\n[J3c] Search ya conversation — header control halisi');
+console.log('\n[J3c] Search ya conversation â€” header control halisi');
 {
   window.skhChatToggleSearch(true);
   await tick(1);
@@ -293,7 +293,7 @@ console.log('\n[J3c] Search ya conversation — header control halisi');
   ok('kufunga search kunarudisha stream kamili', $('#chatSearchBar').hidden && (($('#chatMessages') || {}).textContent || '').includes('Kiatu cha Ngozi'));
 }
 
-console.log('\n[J4] Toa Ofa kutoka chat — fomu inafunguka NDANI ya chat');
+console.log('\n[J4] Toa Ofa kutoka chat â€” fomu inafunguka NDANI ya chat');
 let negoId = null;
 {
   window.skhChatStartNego('product');
@@ -336,10 +336,10 @@ let negoId = null;
   }
 }
 
-console.log('\n[J5] Muuzaji: counter → mnunuzi: accept (native path, bila functions)');
+console.log('\n[J5] Muuzaji: counter â†’ mnunuzi: accept (native path, bila functions)');
 {
   skh.currentUser = { uid: 'seller_2', displayName: 'Shoe Shop', email: 's@t.co' };
-  // Fungua counter modal kupitia amri (inahitaji data zaidi → modal)
+  // Fungua counter modal kupitia amri (inahitaji data zaidi â†’ modal)
   await window.skhNegoCommand('COUNTER_OFFER', { negotiationId: negoId, _direct: true, price: 42000, quantity: 2 });
   await tick(20);
   const nd1 = store.get('negotiations/' + negoId) || {};
@@ -351,7 +351,7 @@ console.log('\n[J5] Muuzaji: counter → mnunuzi: accept (native path, bila func
   ok('accept: AGREEMENT + version 3', nd2.currentState === 'AGREEMENT' && nd2.version === 3);
 }
 
-console.log('\n[J6] Group: create → send → order');
+console.log('\n[J6] Group: create â†’ send â†’ order');
 let gidE2E = null;
 {
   skh.currentUser = { uid: 'buyer_1', displayName: 'Buyer', email: 'b@t.co' };
@@ -369,7 +369,7 @@ let gidE2E = null;
   ok('ujumbe wa group umetumwa', gm.length >= 1 && gm.some(([pp, d]) => d.text === 'Habari kikundi'));
 }
 
-console.log('\n[J7] Group order: create → join');
+console.log('\n[J7] Group order: create â†’ join');
 {
   const r = await window.skhGroupOrderCreate(gidE2E, {
     productName: 'Mchele Basmati', targetQty: 10, myQty: 2, targetPrice: 3500,
@@ -386,7 +386,7 @@ console.log('\n[J7] Group order: create → join');
   skh.currentUser = { uid: 'buyer_1', displayName: 'Buyer', email: 'b@t.co' };
 }
 
-console.log('\n[J8] 39: skhChatNegotiate — await open halisi + fomu ndani ya chat (NEGO-FIX)');
+console.log('\n[J8] 39: skhChatNegotiate â€” await open halisi + fomu ndani ya chat (NEGO-FIX)');
 {
   // Historia ya conversation hiyo hiyo ina service mpya zaidi; isiibe product flow.
   await skh.setDoc(skh.doc(skh.db, 'negotiations', 'nego_old_service'), {
@@ -411,7 +411,7 @@ console.log('\n[J8] 39: skhChatNegotiate — await open halisi + fomu ndani ya c
   window.skhNegoFormClose();
 }
 
-console.log('\n[J8b] Context isolation: Product → Service → Transport → Product');
+console.log('\n[J8b] Context isolation: Product â†’ Service â†’ Transport â†’ Product');
 {
   const product = { id: 'p_iso', title: 'Simu', price: 500000, sellerId: 'seller_2', collection: 'products' };
   const service = { id: 's_iso', title: 'Ushonaji', price: 80000, sellerId: 'seller_2', collection: 'services' };
@@ -434,7 +434,7 @@ console.log('\n[J8b] Context isolation: Product → Service → Transport → Pr
   window.skhNegoFormClose();
 }
 
-console.log('\n[J9] Conversation create failure — fail-closed, si listener/send bandia');
+console.log('\n[J9] Conversation create failure â€” fail-closed, si listener/send bandia');
 {
   const realTx = skh.runTransaction;
   const beforeListeners = listeners.length;
@@ -448,7 +448,7 @@ console.log('\n[J9] Conversation create failure — fail-closed, si listener/sen
   skh.runTransaction = realTx;
 }
 
-console.log('\n[J10] Switch partner — old realtime callback haiwezi kuvuja');
+console.log('\n[J10] Switch partner â€” old realtime callback haiwezi kuvuja');
 {
   await window.skhChatOpen('seller_3', 'Seller Three', {});
   await tick(8);
@@ -465,3 +465,5 @@ console.log('\n[J10] Switch partner — old realtime callback haiwezi kuvuja');
 
 console.log(`\nMATOKEO E2E: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
+
+

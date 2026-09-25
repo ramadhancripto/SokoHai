@@ -16,7 +16,7 @@ service cloud.firestore {
       );
     }
 
-    // [OFFLINE-MEMBER 2026-09] Wakala aliyedhinishwa (users.isApprovedAgent) Ã¢â‚¬â€
+    // [OFFLINE-MEMBER 2026-09] Wakala aliyedhinishwa (users.isApprovedAgent) â€”
     // ndiye pekee anayeruhusiwa kuandika nyaraka za usajili wa mwanachama
     // offline (memberSecrets/agentMembers) bila Cloud Functions.
     function isApprovedAgent() {
@@ -25,9 +25,9 @@ service cloud.firestore {
     }
 
     // [CHAT BLOCK 2026-09] Utekelezaji wa block NI WA BACKEND (rules):
-    // ujumbe HAUWEZI kutumwa ikiwa kuna block kati ya wahusika wawili Ã¢â‚¬â€
+    // ujumbe HAUWEZI kutumwa ikiwa kuna block kati ya wahusika wawili â€”
     // hata kwa client iliyobadilishwa (bypass). Block ni ya mweleke mmoja:
-    // A__B (A amemzuia B) Ã¢â€°Â  B__A (B amemzuia A).
+    // A__B (A amemzuia B) â‰  B__A (B amemzuia A).
     function isBlockedPair(a, b) {
       // [PHASE 1 2026-09] SYNTAX FIX tu: `$(a)__$(b)` haikubaliki na compiler ya
       // rules (faili lote lilikataliwa). Maana ni ileile: doc id "<a>__<b>".
@@ -40,11 +40,11 @@ service cloud.firestore {
     // kwa watu wote kusoma; kuandika kunahitaji login.
     // ============================================================
     // [REVIEWS 2026-09] `comments` (tathmini) huandikwa na SERVER pekee
-    // (reviewsPublish) Ã¢â‚¬â€ browser hairuhusiwi kuandika verifiedPurchase bandia.
+    // (reviewsPublish) â€” browser hairuhusiwi kuandika verifiedPurchase bandia.
     function ownsProduct(data) {
       return signedIn() && (
         data.userId == request.auth.uid ||
-        (('managedByAgentUid' in data) && data.managedByAgentUid == request.auth.uid) ||
+        data.managedByAgentUid == request.auth.uid ||
         isAdmin()
       );
     }
@@ -64,7 +64,7 @@ service cloud.firestore {
       allow read: if true;
       allow create: if signedIn() && validProduct(request.resource.data)
         && (request.resource.data.userId == request.auth.uid
-          || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
+          || (request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsProduct(resource.data) && validProduct(request.resource.data)
         && request.resource.data.userId == resource.data.userId
@@ -75,7 +75,7 @@ service cloud.firestore {
     function ownsService(data) {
       return signedIn() && (
         data.userId == request.auth.uid ||
-        (('managedByAgentUid' in data) && data.managedByAgentUid == request.auth.uid) ||
+        data.managedByAgentUid == request.auth.uid ||
         isAdmin()
       );
     }
@@ -91,7 +91,7 @@ service cloud.firestore {
       allow read: if true;
       allow create: if signedIn() && validService(request.resource.data)
         && (request.resource.data.userId == request.auth.uid
-          || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
+          || (request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsService(resource.data) && validService(request.resource.data)
         && request.resource.data.userId == resource.data.userId;
@@ -157,8 +157,8 @@ service cloud.firestore {
     match /drivers/{id}               { allow read: if true; allow write: if signedIn(); }
 
     // ============================================================
-    // WATUMIAJI (users) Ã¢â‚¬â€ login inahitajika kusoma/kuandika.
-    // ULINZI MKUU: walletBalance HAIWEZI kuandikwa na browser Ã¢â‚¬â€
+    // WATUMIAJI (users) â€” login inahitajika kusoma/kuandika.
+    // ULINZI MKUU: walletBalance HAIWEZI kuandikwa na browser â€”
     // ni Cloud Functions (Admin SDK) pekee. Hii inasimamisha
     // "kujilipia" / "kujiongezea salio" kutoka kwa kivinjari.
     // ============================================================
@@ -192,7 +192,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // [CUSTODY/FIX 2026-09] Vidhibiti vya mfumo (system/config) Ã¢â‚¬â€ mtu yeyote
+    // [CUSTODY/FIX 2026-09] Vidhibiti vya mfumo (system/config) â€” mtu yeyote
     // aliye-login anaweza kusoma (live config), lakini ADMIN pekee anaweza
     // kuandika. Hii inarejesha uwezo wa paneli ya "WASHA/ZIMA" kusave kihalisi.
     match /system/{doc} {
@@ -201,19 +201,19 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // BIASHARA (login inahitajika) Ã¢â‚¬â€ HaiPay, oda, notifications, n.k.
+    // BIASHARA (login inahitajika) â€” HaiPay, oda, notifications, n.k.
     // ============================================================
     // [PHASE 1 SECURITY 2026-09] sokopay_links: hali ya malipo ni ya SERVER.
-    //  Ã¢â‚¬Â¢ status 'held'/'completed', paidAt, paymentVerified, verifiedAmount,
-    //    sellerEarned, autoReleased* Ã¢â€ â€™ huandikwa na Cloud Functions PEKEE
+    //  â€¢ status 'held'/'completed', paidAt, paymentVerified, verifiedAmount,
+    //    sellerEarned, autoReleased* â†’ huandikwa na Cloud Functions PEKEE
     //    (settlePesaPalPayment / sokopayLinkWalletPay / haipayReleaseLink /
     //    sokopayAutoRelease). Kivinjari hakiwezi tena "kujilipa" kwa kuandika
     //    status:'held' + paidAt ya zamani.
-    //  Ã¢â‚¬Â¢ Muuzaji (userId) anaunda link 'pending' na kuhariri maelezo akiwa pending.
-    //  Ã¢â‚¬Â¢ Mnunuzi anadai link iliyo 'pending' (buyerId/transactionId) kabla ya
-    //    kulipa Ã¢â‚¬â€ haitoi pesa; server hulinganisha na PesaPal.
-    //  Ã¢â‚¬Â¢ Mhusika (mnunuzi/muuzaji) anafungua mgogoro kwenye link iliyo 'held'.
-    //  Ã¢â‚¬Â¢ Admin: suluhu ya migogoro.
+    //  â€¢ Muuzaji (userId) anaunda link 'pending' na kuhariri maelezo akiwa pending.
+    //  â€¢ Mnunuzi anadai link iliyo 'pending' (buyerId/transactionId) kabla ya
+    //    kulipa â€” haitoi pesa; server hulinganisha na PesaPal.
+    //  â€¢ Mhusika (mnunuzi/muuzaji) anafungua mgogoro kwenye link iliyo 'held'.
+    //  â€¢ Admin: suluhu ya migogoro.
     match /sokopay_links/{id} {
       allow read: if signedIn();
       allow create: if signedIn()
@@ -264,12 +264,12 @@ service cloud.firestore {
              'disputeWinner','disputeResolvedAt','verifiedAmount','paymentProtectedAt','buyerRefund','completedAt'])
         && !(request.resource.data.get('status', 'payment_pending') in ['completed','refunded_by_admin','split_refund_resolved']);
       // [PHASE 2 P2] Mamlaka ya hali ya oda na pesa ni ya SERVER. Mhusika (si admin):
-      //  Ã¢â‚¬Â¢ hawezi kubadilisha kiasi / malipo / mgawanyo / suluhu (orderMoneyKeys);
-      //  Ã¢â‚¬Â¢ viungo vya uwasilishaji (rideRequestId/deliveryId/driverId/transportRequestId)
-      //    vinawekwa mara moja tu (tupu Ã¢â€ â€™ thamani), kisha haviwezi kubadilishwa;
-      //  Ã¢â‚¬Â¢ paymentStatus: thamani za taarifa tu (rejected/verification_*), si 'paid',
+      //  â€¢ hawezi kubadilisha kiasi / malipo / mgawanyo / suluhu (orderMoneyKeys);
+      //  â€¢ viungo vya uwasilishaji (rideRequestId/deliveryId/driverId/transportRequestId)
+      //    vinawekwa mara moja tu (tupu â†’ thamani), kisha haviwezi kubadilishwa;
+      //  â€¢ paymentStatus: thamani za taarifa tu (rejected/verification_*), si 'paid',
       //    na kamwe baada ya server kuthibitisha;
-      //  Ã¢â‚¬Â¢ status: orodha ndogo ya mabadiliko halali pekee (orderStatusOk).
+      //  â€¢ status: orodha ndogo ya mabadiliko halali pekee (orderStatusOk).
       allow update: if signedIn()
         && (isAdmin() || (
             (resource.data.buyerId == request.auth.uid
@@ -296,7 +296,7 @@ service cloud.firestore {
     }
     function orderPaymentInfoOk() {
       // Taarifa za kivinjari (kurasa ya kurudi PesaPal): kukataliwa / uthibitisho
-      // unasubiri Ã¢â‚¬â€ kamwe 'paid'/paymentVerified=true, na kamwe baada ya server kuthibitisha.
+      // unasubiri â€” kamwe 'paid'/paymentVerified=true, na kamwe baada ya server kuthibitisha.
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['paymentStatus','paymentVerified'])
         || (resource.data.get('paymentVerified', false) != true
             && resource.data.get('paymentStatus', '') != 'paid'
@@ -317,7 +317,7 @@ service cloud.firestore {
             && resource.data.get('status', 'payment_pending') in ['payment_pending','pending']
             && resource.data.get('paymentVerified', false) != true
             && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shippedAt']))
-        // Muuzaji/mtoa huduma: held Ã¢â€ â€™ shipped (+ shippedAt katika uandishi huo huo).
+        // Muuzaji/mtoa huduma: held â†’ shipped (+ shippedAt katika uandishi huo huo).
         || ((resource.data.sellerId == request.auth.uid || resource.data.get('providerId', '') == request.auth.uid)
             && resource.data.get('status', '') == 'held'
             && request.resource.data.get('status', '') == 'shipped');
@@ -340,7 +340,7 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // COMMERCE CHAT (2026-09) Ã¢â‚¬â€ mazungumzo yenye mfano wa conversation.
+    // COMMERCE CHAT (2026-09) â€” mazungumzo yenye mfano wa conversation.
     // Ufikiaji unategemea participants (si signedIn() pekee) ili mtu
     // asiyehusika asisome mazungumzo ya wengine.
     // ============================================================
@@ -388,7 +388,7 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // COMMENTS (2026-09) Ã¢â‚¬â€ maoni ya umma (threads + likes).
+    // COMMENTS (2026-09) â€” maoni ya umma (threads + likes).
     // verifiedPurchase ni SERVER-ONLY: browser haiwezi kuandika badge.
     // ============================================================
     match /comments/{id} {
@@ -396,7 +396,7 @@ service cloud.firestore {
       // [COMMENTS 2026-09] Browser inaweza kuandika maoni YAKE tu, na uga
       // zilizoidhinishwa pekee. Uga za SERVER-ONLY (verifiedPurchase,
       // moderationStatus, authorRole, authorVerified, likeCount, replyCount)
-      // HAZIRUHUSIWI kuandikwa na client Ã¢â‚¬â€ zinadhibitiwa na callables.
+      // HAZIRUHUSIWI kuandikwa na client â€” zinadhibitiwa na callables.
       allow create: if signedIn()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.keys().hasOnly([
@@ -420,8 +420,8 @@ service cloud.firestore {
     match /commentLikes/{id} {
       allow read: if true;
       // [COMMENT-LIKES 2026-09] Client inaweza kuunda/kufuta like YAKE TU:
-      // id = uid + '__' + commentId Ã¢â€ â€™ user HAWEZI kupiga like mara MBILI kwa
-      // comment moja (1 like kwa user/comment Ã¢â‚¬â€ spec).
+      // id = uid + '__' + commentId â†’ user HAWEZI kupiga like mara MBILI kwa
+      // comment moja (1 like kwa user/comment â€” spec).
       allow create: if signedIn()
         && id == request.resource.data.commentId + '__' + request.auth.uid
         && request.resource.data.userId == request.auth.uid;
@@ -430,13 +430,13 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // [FIREBASE-NATIVE 2026-09] MAJADILIANO YA BIASHARA Ã¢â‚¬â€ bila Cloud
+    // [FIREBASE-NATIVE 2026-09] MAJADILIANO YA BIASHARA â€” bila Cloud
     // Functions (Firestore + RTDB pekee), RULES ndiye backend:
     //   - washiriki (buyer/seller) pekee wanaweza kuandika
-    //   - version lazima iongezeke kwa 1 (concurrency Ã¢â‚¬â€ spec Ã‚Â§31)
-    //   - transition halali tu (state machine Ã¢â‚¬â€ spec Ã‚Â§5, Ã‚Â§30)
-    //   - nafasi (role/turn) inathibitishwa (spec Ã‚Â§35)
-    //   - fields za msingi HAZIBADILIKI (spec Ã‚Â§14)
+    //   - version lazima iongezeke kwa 1 (concurrency â€” spec Â§31)
+    //   - transition halali tu (state machine â€” spec Â§5, Â§30)
+    //   - nafasi (role/turn) inathibitishwa (spec Â§35)
+    //   - fields za msingi HAZIBADILIKI (spec Â§14)
     // Wakati Cloud Functions zipo, njia ya server inabaki kuwa bora.
     // ============================================================
     function isNegoState(s) {
@@ -445,7 +445,7 @@ service cloud.firestore {
                    'RE_NEGOTIATION','FINAL_AGREEMENT','ORDER_CREATED','COMPLETED',
                    'REJECTED','EXPIRED','CANCELLED'];
     }
-    // (from) -> { to: actor }  Ã¢â‚¬â€ actor Ã¢Ë†Ë† buyer|seller|turn|any|system
+    // (from) -> { to: actor }  â€” actor âˆˆ buyer|seller|turn|any|system
     // [PHASE 1 2026-09] SYNTAX FIX tu: funguo za map zimewekwa kwenye nukuu
     // (compiler ya rules haikubali funguo zisizo na nukuu). Mantiki ileile.
     function negoNext(from) {
@@ -464,7 +464,7 @@ service cloud.firestore {
     }
     function negoActorOk(needed, uid, r) {
       let role = uid == r.buyerId ? 'buyer' : (uid == r.sellerId ? 'seller' : 'none');
-      // Actor model (spec Ã‚Â§4/Ã‚Â§6): waitingForUserId ndio chanzo cha ukweli;
+      // Actor model (spec Â§4/Â§6): waitingForUserId ndio chanzo cha ukweli;
       // fallback kwa `turn` (role) kwa majadiliano ya zamani.
       // [PHASE 1 2026-09] SYNTAX FIX tu: rules hazina `if` ndani ya function
       // (faili lote lilikataliwa na compiler). Mantiki ileile kwa ternary.
@@ -478,7 +478,7 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // OFA (price negotiation) Ã¢â‚¬â€ buyer anaumba; washiriki wanaweza
+    // OFA (price negotiation) â€” buyer anaumba; washiriki wanaweza
     // kusasisha uga chache za status (accept/counter) bila functions.
     // ============================================================
     match /offers/{id} {
@@ -498,7 +498,7 @@ service cloud.firestore {
             || (resource.data.conversationId is string
                 && resource.data.conversationId.size() > 0
                 && get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participants.hasAny([request.auth.uid])));
-      // Kuunda (SEND_OFFER) Ã¢â‚¬â€ mnunuzi pekee, hali ya mwanzo sahihi.
+      // Kuunda (SEND_OFFER) â€” mnunuzi pekee, hali ya mwanzo sahihi.
       allow create: if signedIn()
         && request.resource.data.buyerId == request.auth.uid
         && request.resource.data.sellerId is string
@@ -509,7 +509,7 @@ service cloud.firestore {
         && request.resource.data.currentUnitPrice > 0
         && request.resource.data.quantity is number
         && request.resource.data.quantity >= 1;
-      // Kuendeleza (amri) Ã¢â‚¬â€ washiriki pekee, version+1, transition halali.
+      // Kuendeleza (amri) â€” washiriki pekee, version+1, transition halali.
       allow update: if signedIn()
         && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
         && request.resource.data.version == resource.data.version + 1
@@ -522,14 +522,14 @@ service cloud.firestore {
         && (request.resource.data.currentUnitPrice is number && request.resource.data.currentUnitPrice > 0
             || request.resource.data.currentUnitPrice == null)
         && (request.resource.data.quantity is number && request.resource.data.quantity >= 1);
-      // Ukumbusho wa kiotomatiki (spec Ã‚Â§35) Ã¢â‚¬â€ mshiriki anaweza kusasisha
+      // Ukumbusho wa kiotomatiki (spec Â§35) â€” mshiriki anaweza kusasisha
       // lastReminderAt/lastReminderActorId PEKEE, bila kubadilisha hali/version.
       allow update: if signedIn()
         && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastReminderAt', 'lastReminderActorId']);
       allow delete: if false;
     }
-    // Audit trail (spec Ã‚Â§41) Ã¢â‚¬â€ append-only; mwandishi ni mshiriki wa nego.
+    // Audit trail (spec Â§41) â€” append-only; mwandishi ni mshiriki wa nego.
     match /negotiation_events/{id} {
       allow read: if signedIn()
         && resource.data.negotiationId is string
@@ -543,7 +543,7 @@ service cloud.firestore {
             || get(/databases/$(database)/documents/negotiations/$(request.resource.data.negotiationId)).data.sellerId == request.auth.uid);
       allow update, delete: if false;
     }
-    // Nyongeza za oda iliyolipwa (spec Ã‚Â§24Ã¢â‚¬â€œ25): washiriki wa oda wanaweza kuumba.
+    // Nyongeza za oda iliyolipwa (spec Â§24â€“25): washiriki wa oda wanaweza kuumba.
     match /order_adjustments/{id} {
       allow read: if signedIn()
         && resource.data.parentOrderId is string
@@ -557,11 +557,10 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // BLOCK / REPORT Ã¢â‚¬â€ block ni ya mhusika; report ni ya mtoa taarifa.
+    // BLOCK / REPORT â€” block ni ya mhusika; report ni ya mtoa taarifa.
     // ============================================================
     match /chatBlocks/{id} {
       allow read: if signedIn()
-        && resource != null
         && (resource.data.blockerId == request.auth.uid || resource.data.blockedId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.blockerId == request.auth.uid;
       allow delete: if signedIn() && resource.data.blockerId == request.auth.uid;
@@ -573,16 +572,16 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.reportedBy == request.auth.uid;
       allow update, delete: if false;
     }
-    // [CUSTODY 2026-09] ride_requests Ã¢â‚¬â€ msingi wa chain-of-custody.
+    // [CUSTODY 2026-09] ride_requests â€” msingi wa chain-of-custody.
     // Kusoma: walio-login (soko la usafiri linahitaji kuona safari zinazopatikana).
-    // Kuandika: FIELD-LEVEL Ã¢â‚¬â€ browser hairuhusiwi kugusa sehemu muhimu za custody
+    // Kuandika: FIELD-LEVEL â€” browser hairuhusiwi kugusa sehemu muhimu za custody
     // (currentCustodian, tokeni/hash, custodyLegs, custodyStage, transferCode,
     // nextTransporter, uthibitisho wa handover, malipo ya mwisho, n.k.).
     // Mabadiliko ya custody yote yanapitia Cloud Functions
     // (deliveryAccept / deliveryGenerateToken / deliveryConfirmCustody /
     // deliveryStartTransit / deliveryComplete / deliveryDispute /
     // deliveryRevokeTokens). driverId/driverName inaruhusiwa kubadilishwa
-    // tu iwapo inawekwa `null` (mf. breakdown/recovery) Ã¢â‚¬â€ si kwa dereva mpya.
+    // tu iwapo inawekwa `null` (mf. breakdown/recovery) â€” si kwa dereva mpya.
     match /ride_requests/{id} {
       allow read: if signedIn();
       // [PHASE 1 SECURITY 2026-09] Kuunda: mteja mwenyewe (customerId), hali
@@ -613,9 +612,9 @@ service cloud.firestore {
       // [PHASE 2 P1/P6] Kusasisha: WAHUSIKA tu (mteja / dereva / mshika mzigo)
       // au admin. Nauli (fare/price/cargoPrice) inabadilishwa na mteja tu KABLA
       // ya kukubaliwa (acceptedAt ya server); agreedFare/sellerConfirmedBy ni
-      // za server. driverId Ã¢â€ â€™ null: dereva mwenyewe (breakdown) au mteja kabla
+      // za server. driverId â†’ null: dereva mwenyewe (breakdown) au mteja kabla
       // ya pickup. Hali (status) ya kivinjari: 'searching' (kurudisha sokoni) au
-      // 'cancelled' (mteja kabla ya pickup) tu Ã¢â‚¬â€ hatua za custody ni za server.
+      // 'cancelled' (mteja kabla ya pickup) tu â€” hatua za custody ni za server.
       allow update: if signedIn() && (isAdmin() || (
         (resource.data.get('customerId', '') == request.auth.uid
           || resource.data.get('driverId', '') == request.auth.uid
@@ -654,7 +653,7 @@ service cloud.firestore {
                 && resource.data.get('status', 'searching') in ridePrePickupStates()))
       ));
       // [LIVE-FIX 2026-09] "Futa historia ya safari" (deleteRideOrder) ilikuwa
-      // inakataliwa kabisa (delete: if false) Ã¢â€ â€™ feature haikufanya kazi live.
+      // inakataliwa kabisa (delete: if false) â†’ feature haikufanya kazi live.
       // Sasa: MTEJA (owner) anaweza kufuta safari YAKE TU, na TU ikiwa haipo
       // kwenye custody inayoendelea (mlolongo wa makabidhiano unalindwa).
       allow delete: if signedIn()
@@ -676,20 +675,20 @@ service cloud.firestore {
         || (resource.data.get('customerId', '') == request.auth.uid
             && resource.data.get('status', 'searching') in ridePrePickupStates());
     }
-    // [CUSTODY 2026-09] Matukio ya makabidhiano (audit) Ã¢â‚¬â€ SERVER PEKEE
+    // [CUSTODY 2026-09] Matukio ya makabidhiano (audit) â€” SERVER PEKEE
     // (browser haiwezi kughushi timeline ya custody).
     match /delivery_events/{id}   { allow read: if signedIn(); allow write: if false; }
-    // [CUSTODY 2026-09] Rekodi za makabidhiano (handover) Ã¢â‚¬â€ SERVER PEKEE
+    // [CUSTODY 2026-09] Rekodi za makabidhiano (handover) â€” SERVER PEKEE
     // (uthibitisho wa pandembili unafanywa na deliveryConfirmCustody).
     match /delivery_handovers/{id}{ allow read: if signedIn(); allow write: if false; }
-    // [CUSTODY PHASE B 2026-09] Tokeni halisi zinaishi hapa (PRIVATE) Ã¢â‚¬â€ mtu
+    // [CUSTODY PHASE B 2026-09] Tokeni halisi zinaishi hapa (PRIVATE) â€” mtu
     // yeyote aliye-login HAZIONI; ni wahusika wa safari husika pekee.
     // Kuandika ni SERVER PEKEE.
     match /delivery_tokens/{id} {
       allow read: if signedIn() && resource.data.participants.hasAny([request.auth.uid]);
       allow write: if false;
     }
-    // [CUSTODY PHASE B 2026-09] Hesabu ya majaribio mabaya ya token Ã¢â‚¬â€ SERVER PEKEE.
+    // [CUSTODY PHASE B 2026-09] Hesabu ya majaribio mabaya ya token â€” SERVER PEKEE.
     match /custody_attempts/{id}  { allow read, write: if false; }
     // [REQUEST ROUTING 2026-09] Ofa za Routing Engine (Agent Request Inbox).
     // Kusoma: mteja aliyeomba au wakala aliyepewa ofa. Kuandika: SERVER PEKEE
@@ -729,22 +728,22 @@ service cloud.firestore {
     match /construction_projects/{id} { allow read, write: if signedIn(); }
 
     // ============================================================
-    // USER STATE â€” kila mwanachama anaweza kusoma/kuandika state yake mwenyewe tu.
+    // USER STATE — kila mwanachama anaweza kusoma/kuandika state yake mwenyewe tu.
     match /user_state/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
-    // SERVER-ONLY (Cloud Functions / Admin SDK pekee) Ã¢â‚¬â€
+    // SERVER-ONLY (Cloud Functions / Admin SDK pekee) â€”
     // browser haiwezi kuandika hata kama ame-login.
     // ============================================================
     match /wallet_ledger/{id}     { allow read: if signedIn(); allow write: if false; }
     match /platform_stats/{id}    { allow read: if signedIn(); allow write: if false; }
 
     // ============================================================
-    // AGENT ASSISTED ACCESS Ã¢â‚¬â€ ulinzi mkali (2026)
+    // AGENT ASSISTED ACCESS â€” ulinzi mkali (2026)
     // ------------------------------------------------------------
     // memberSecrets: PIN hash/salt ya mwanachama. Browser/wakala
-    // HAWARUHUSIWI kabisa kuisoma wala kuandika Ã¢â‚¬â€ ni server tu.
+    // HAWARUHUSIWI kabisa kuisoma wala kuandika â€” ni server tu.
     // ============================================================
     match /memberSecrets/{uid} {
       allow read: if false;
@@ -761,7 +760,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Uhusiano wakalaÃ¢â€ â€mwanachama: wakala anaona wake tu; mwanachama wake.
+    // Uhusiano wakalaâ†”mwanachama: wakala anaona wake tu; mwanachama wake.
     match /agentMembers/{id} {
       allow read: if signedIn()
         && (resource.data.agentId == request.auth.uid || resource.data.memberId == request.auth.uid);
@@ -790,8 +789,8 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // [RULES-AUDIT 2026-09] COLLECTIONS ZILIZOPOTEA Ã¢â‚¬â€ zilikuwa zinatumiwa
-    // na client lakini HAZIKUWA na block Ã¢â€ â€™ deny-all ilikuwa inazizuia
+    // [RULES-AUDIT 2026-09] COLLECTIONS ZILIZOPOTEA â€” zilikuwa zinatumiwa
+    // na client lakini HAZIKUWA na block â†’ deny-all ilikuwa inazizuia
     // (features zilikuwa zimeshindwa kimyakimya production).
     // Kila moja imewekwa kulingana na desturi za rules zilizopo.
     // ============================================================
@@ -845,7 +844,7 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid;
       allow delete: if false;
     }
-    // Kusoma prefs za watumiaji WENGINE kunahitajika (arifa kwa wafuasi) Ã¢â‚¬â€
+    // Kusoma prefs za watumiaji WENGINE kunahitajika (arifa kwa wafuasi) â€”
     // kwa hiyo read ni signedIn; kuandika ni uga wa MTU MWENYEWE tu.
     match /notificationPreferences/{uid} {
       allow read: if signedIn();
@@ -884,9 +883,8 @@ service cloud.firestore {
     match /serious_deposits/{id}      { allow read, write: if signedIn(); }
 
     // ============================================================
-    // DEFAULT: kila kingine Ã¢â‚¬â€ kataa (fail-closed).
+    // DEFAULT: kila kingine â€” kataa (fail-closed).
     // ============================================================
     match /{document=**}          { allow read, write: if false; }
   }
 }
-

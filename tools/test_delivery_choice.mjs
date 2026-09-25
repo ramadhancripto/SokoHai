@@ -101,7 +101,7 @@ section('A) Chujio la matangazo halisi ya usafiri');
 {
     // setup DOM/window globals for module 43
     const dom = new JSDOM('<!doctype html><html><body><div id="cartModal" style="display:none"></div><div id="checkoutModal" style="display:none"><input id="checkoutAmount"></div></body></html>', { url: 'http://localhost/' });
-    globalThis.window = dom.window; globalThis.document = dom.window.document; globalThis.navigator = dom.window.navigator;
+    globalThis.window = dom.window; globalThis.document = dom.window.document; Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true, writable: true });
     globalThis.sessionStorage = dom.window.sessionStorage; globalThis.localStorage = dom.window.localStorage;
     globalThis.alert = m => { window.__lastAlert = m; }; globalThis.confirm = () => true;
     globalThis.HTMLElement = dom.window.HTMLElement;

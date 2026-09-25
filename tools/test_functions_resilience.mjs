@@ -1,7 +1,7 @@
-/* ============================================================
- * SOKOHAI — Jaribio la SAFU YA KATI YA CLOUD FUNCTIONS (jsdom).
+﻿/* ============================================================
+ * SOKOHAI â€” Jaribio la SAFU YA KATI YA CLOUD FUNCTIONS (jsdom).
  * Huthibitisha:
- *  - makosa ya miundombinu (function haijapelekwa → not-found/INTERNAL,
+ *  - makosa ya miundombinu (function haijapelekwa â†’ not-found/INTERNAL,
  *    unavailable, deadline, network) yatambuliwe kama fnDown;
  *  - makosa HALISI ya biashara (permission-denied, invalid-argument,
  *    unauthenticated) yASICHANGANYWE na "server haipo";
@@ -14,7 +14,7 @@
 import { JSDOM } from 'jsdom';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -23,10 +23,10 @@ const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http:
 const { window } = dom;
 globalThis.window = window;
 globalThis.document = window.document;
-globalThis.navigator = window.navigator;
+Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true, writable: true });
 globalThis.CustomEvent = window.CustomEvent;
 
-// Tabia za callables za majaribio (jina → () => Promise).
+// Tabia za callables za majaribio (jina â†’ () => Promise).
 const behaviors = {};
 globalThis.__fnBehaviors = behaviors;
 
@@ -76,13 +76,13 @@ const tmp = path.join(ROOT, 'js', 'app', '_tmp_bootstrap.mjs');
 fs.writeFileSync(tmp, src);
 let skh;
 try {
-    ({ skh } = await import('file://' + tmp));
+    ({ skh } = await import(pathToFileURL(tmp).href));
 } finally {
     fs.unlinkSync(tmp);
 }
 
 let pass = 0, fail = 0;
-const ok = (n, c) => { if (c) { pass++; console.log('  ✅ ' + n); } else { fail++; console.log('  ❌ ' + n); } };
+const ok = (n, c) => { if (c) { pass++; console.log('  âœ… ' + n); } else { fail++; console.log('  âŒ ' + n); } };
 
 function fnErr(code, message, details) {
     const e = new Error(message || code);
@@ -92,12 +92,12 @@ function fnErr(code, message, details) {
 }
 
 console.log('\n[1] KUTAMBUA KOSA LA MIUNDOMBINU (server haipo)');
-ok('functions/not-found → fnDown', skh.isFunctionsDownError(fnErr('functions/not-found', 'NOT_FOUND')) === true);
-ok('functions/internal + ujumbe INTERNAL → fnDown', skh.isFunctionsDownError(fnErr('functions/internal', 'internal')) === true);
-ok('functions/unavailable → fnDown', skh.isFunctionsDownError(fnErr('functions/unavailable', 'Service unavailable.')) === true);
-ok('functions/deadline-exceeded → fnDown', skh.isFunctionsDownError(fnErr('functions/deadline-exceeded', 'deadline')) === true);
-ok('bare internal code → fnDown', skh.isFunctionsDownError(fnErr('internal', 'internal')) === true);
-ok('Failed to fetch → fnDown', skh.isFunctionsDownError(new Error('Failed to fetch')) === true);
+ok('functions/not-found â†’ fnDown', skh.isFunctionsDownError(fnErr('functions/not-found', 'NOT_FOUND')) === true);
+ok('functions/internal + ujumbe INTERNAL â†’ fnDown', skh.isFunctionsDownError(fnErr('functions/internal', 'internal')) === true);
+ok('functions/unavailable â†’ fnDown', skh.isFunctionsDownError(fnErr('functions/unavailable', 'Service unavailable.')) === true);
+ok('functions/deadline-exceeded â†’ fnDown', skh.isFunctionsDownError(fnErr('functions/deadline-exceeded', 'deadline')) === true);
+ok('bare internal code â†’ fnDown', skh.isFunctionsDownError(fnErr('internal', 'internal')) === true);
+ok('Failed to fetch â†’ fnDown', skh.isFunctionsDownError(new Error('Failed to fetch')) === true);
 
 console.log('\n[2] MAKOSA HALISI HAYACHANGANYWI NA SERVER KUTOSEMA');
 ok('permission-denied SI fnDown', skh.isFunctionsDownError(fnErr('functions/permission-denied', 'Hauruhusiwi.')) === false);
@@ -105,7 +105,7 @@ ok('invalid-argument SI fnDown', skh.isFunctionsDownError(fnErr('functions/inval
 ok('unauthenticated SI fnDown', skh.isFunctionsDownError(fnErr('functions/unauthenticated', 'Ingia kwanza.')) === false);
 ok('failed-precondition SI fnDown', skh.isFunctionsDownError(fnErr('functions/failed-precondition', 'Hatua si sahihi.')) === false);
 
-console.log('\n[3] UJUMBE WA MTUMIAJI — hakuna INTERNAL mbichi');
+console.log('\n[3] UJUMBE WA MTUMIAJI â€” hakuna INTERNAL mbichi');
 const downErr = fnErr('functions/not-found', 'NOT_FOUND');
 const wrapped = skh.normalizeFnError('pesapalCheckout', downErr);
 ok('umepigwa chapa fnDown', wrapped.fnDown === true);
@@ -116,7 +116,7 @@ const realErr = fnErr('functions/invalid-argument', 'Bei ni ndogo mno.');
 ok('kosa halali hurudisha ujumbe halisi', window.skhFnErrText(realErr).indexOf('Bei ni ndogo mno') !== -1);
 ok('kosa halali halina chapa fnDown', realErr.fnDown !== true);
 
-console.log('\n[4] wrapCallable — mtiririko wa mafanikio na kushindwa');
+console.log('\n[4] wrapCallable â€” mtiririko wa mafanikio na kushindwa');
 {
     // Mazingira safi: kizingiti kisiathiriwe na miito ya muda wa kupakia.
     skh.functionsDown = false;
@@ -145,7 +145,7 @@ console.log('\n[4] wrapCallable — mtiririko wa mafanikio na kushindwa');
     delete behaviors.deliveryAccept;
 }
 
-console.log('\n[5] CIRCUIT BREAKER — hakuna mtandao wakati wa cooldown, hujifungua baada ya mafanikio');
+console.log('\n[5] CIRCUIT BREAKER â€” hakuna mtandao wakati wa cooldown, hujifungua baada ya mafanikio');
 {
     skh.functionsDown = false;
     skh.functionsDownSince = 0;
@@ -160,7 +160,7 @@ console.log('\n[5] CIRCUIT BREAKER — hakuna mtandao wakati wa cooldown, hujifu
     ok('mwito wa pili HAUGUSI mtandao (cooldown)', downCalls === 1);
     ok('mwito wa pili unarudisha kosa la down mara moja', !!c2 && c2.fnDown === true && c2.code === 'functions/unavailable');
 
-    // Cooldown ikipita, jaribu tena — ikifanikiwa kizingiti hufunguka.
+    // Cooldown ikipita, jaribu tena â€” ikifanikiwa kizingiti hufunguka.
     skh.functionsDownSince = Date.now() - 31000;
     delete behaviors.flakyFn;
     let recoverCalls = 0;
@@ -174,4 +174,6 @@ console.log('\n[5] CIRCUIT BREAKER — hakuna mtandao wakati wa cooldown, hujifu
 console.log('\n==================================================');
 console.log(`FUNCTIONS RESILIENCE: ${pass} zimepita, ${fail} zimeshindwa`);
 if (fail) process.exit(1);
-console.log('✅ CLOUD FUNCTIONS ZIKISHINDWA, MTUMIAJI HAONI "INTERNAL" NA FALLBACK ZAENDELEA');
+console.log('âœ… CLOUD FUNCTIONS ZIKISHINDWA, MTUMIAJI HAONI "INTERNAL" NA FALLBACK ZAENDELEA');
+
+

@@ -18,3 +18,10 @@ firebase-adminsdk*.json
 functions/service-account.json
 service-account*.json
 *-firebase-adminsdk-*.json
+
+# Local test/auth/token files - NEVER commit
+admin-login.json
+auth-admin.json
+auth-test.json
+auth-users.json
+token.txt

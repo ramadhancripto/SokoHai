@@ -1,6 +1,6 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /* ==== tools/test_card_discovery.mjs ====
-   SOKOHAI — Majaribio ya CARD/DISCOVERY/MAONI (2026-09):
+   SOKOHAI â€” Majaribio ya CARD/DISCOVERY/MAONI (2026-09):
    A) buildQueue tupu (vichujio vya kategoria/sehemu/utafutaji,
       hakuna kuchanganya aina).
    B) DOM: urambazaji wa wima (next/prev), kumbukumbu ya scroll,
@@ -14,7 +14,7 @@
    ================================================================ */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { JSDOM } from 'jsdom';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -22,8 +22,8 @@ const ROOT = path.resolve(here, '..');
 
 let pass = 0, fail = 0;
 function ok(name, cond) {
-    if (cond) { pass++; console.log('  ✅ ' + name); }
-    else { fail++; console.error('  ❌ ' + name); }
+    if (cond) { pass++; console.log('  âœ… ' + name); }
+    else { fail++; console.error('  âŒ ' + name); }
 }
 function eq(name, a, b) { ok(name + ' (' + JSON.stringify(a) + ' === ' + JSON.stringify(b) + ')', a === b); }
 function section(name) { console.log('\n[' + name + ']'); }
@@ -35,7 +35,7 @@ function makeDom() {
     const win = dom.window;
     globalThis.window = win;
     globalThis.document = win.document;
-    globalThis.navigator = win.navigator;
+    Object.defineProperty(globalThis, 'navigator', { value: win.navigator, configurable: true, writable: true });
     globalThis.HTMLElement = win.HTMLElement;
     globalThis.Image = win.Image;
     globalThis.requestAnimationFrame = (cb) => setTimeout(cb, 0);
@@ -88,7 +88,7 @@ function baseSkh(over) {
 }
 
 /* ================================================================
-   A) buildQueue — mantiki tupu
+   A) buildQueue â€” mantiki tupu
    ================================================================ */
 section('A) DISCOVERY foleni (buildQueue)');
 
@@ -125,7 +125,7 @@ section('A) DISCOVERY foleni (buildQueue)');
 }
 
 /* ================================================================
-   B) DOM — urambazaji wa wima
+   B) DOM â€” urambazaji wa wima
    ================================================================ */
 section('B) DISCOVERY urambazaji (DOM)');
 
@@ -170,7 +170,7 @@ let runB;
         eq('b3 imefunguliwa', openCalls[openCalls.length - 1].id, 'b3');
         eq('tangazo jipya laanza juu (scroll 0)', sc.scrollTop, 0);
 
-        // Sasa rudi b2 — nafasi 320 irudishwe
+        // Sasa rudi b2 â€” nafasi 320 irudishwe
         window.skhDiscoveryMove(-1);
         await new Promise(r => setTimeout(r, 380));
         eq('b2 imerejeshwa', openCalls[openCalls.length - 1].id, 'b2');
@@ -187,7 +187,7 @@ let runB;
         window.skhDiscoveryMove(1); // haifai kuitisha
         eq('mwisho: move haifungui kingine', openCalls.length, callsBefore);
 
-        // Maoni wazi → discovery imezuiwa
+        // Maoni wazi â†’ discovery imezuiwa
         const maoni = document.getElementById('maoniLayer');
         maoni.hidden = false; maoni.classList.add('is-open');
         window.skhDiscoveryMove(-1);
@@ -229,7 +229,7 @@ function makeCommentsEnv(evidenceResult) {
 }
 
 const C_RUNS = [];
-section('C) MAONI sheet — ufungaji na upakiaji mvivu');
+section('C) MAONI sheet â€” ufungaji na upakiaji mvivu');
 
 {
     async function runC1() {
@@ -275,7 +275,7 @@ section('C) MAONI sheet — ufungaji na upakiaji mvivu');
         ok('beji haibandikwi na client', !('verifiedPurchase' in pl) && !('verifiedDelivery' in pl));
         ok('media ni safu tupu', Array.isArray(pl.media) && pl.media.length === 0);
 
-        // Tupu kabisa → haichapishi
+        // Tupu kabisa â†’ haichapishi
         const before = env.calls.publish.length;
         document.getElementById('skhCommentInput').value = '   ';
         await window.skhCommentsSubmit();
@@ -284,7 +284,7 @@ section('C) MAONI sheet — ufungaji na upakiaji mvivu');
     C_RUNS.push(runC1);
 }
 
-section('C2) MAONI — uthibitisho wa oda ukifungua ushahidi');
+section('C2) MAONI â€” uthibitisho wa oda ukifungua ushahidi');
 
 {
     async function runC2() {
@@ -309,7 +309,7 @@ section('C2) MAONI — uthibitisho wa oda ukifungua ushahidi');
     C_RUNS.push(runC2);
 }
 
-section('C3) MAONI — targetType kwa huduma');
+section('C3) MAONI â€” targetType kwa huduma');
 
 {
     async function runC3() {
@@ -329,9 +329,9 @@ section('C3) MAONI — targetType kwa huduma');
 }
 
 /* ================================================================
-   D) changeQty — min/stock clamp
+   D) changeQty â€” min/stock clamp
    ================================================================ */
-section('D) QTY — kuheshimu stock na min');
+section('D) QTY â€” kuheshimu stock na min');
 
 {
     const dom = makeDom();
@@ -365,7 +365,7 @@ section('D) QTY — kuheshimu stock na min');
 }
 
 /* ================================================================
-   E) Muundo wa kadi — rail, sheet, maandishi
+   E) Muundo wa kadi â€” rail, sheet, maandishi
    ================================================================ */
 section('E) Muundo na maandishi yaliyoagizwa');
 
@@ -375,7 +375,7 @@ section('E) Muundo na maandishi yaliyoagizwa');
     const iSave = stack.indexOf('id="btnSave"');
     const iShare = stack.indexOf('id="pmShareBtn"');
     const iMaoni = stack.indexOf('id="pmBtnComments"');
-    ok('rail: Like → Save → Share → Maoni', iLike > -1 && iLike < iSave && iSave < iShare && iShare < iMaoni);
+    ok('rail: Like â†’ Save â†’ Share â†’ Maoni', iLike > -1 && iLike < iSave && iSave < iShare && iShare < iMaoni);
     ok('kitufe cha Maoni chamwita skhOpenMaoni', /pmBtnComments[\s\S]{0,200}skhOpenMaoni/.test(stack));
     ok('jina la Maoni lipo kwenye rail', stack.indexOf('>Maoni<') !== -1);
     ok('hakuna kigushi kidogo kuliko 32px kwenye rail', /class="pm-act"/.test(stack));
@@ -418,7 +418,7 @@ section('E) Muundo na maandishi yaliyoagizwa');
     ok('server: verifiedDelivery huandikwa', fn.indexOf('verifiedDelivery: verifiedDelivery') !== -1);
     ok('server: ride_requests huchunguzwa delivery', fn.indexOf("collection('ride_requests')") !== -1);
 
-    // Emoji za rangi haziruhusiwi katika faili mpya (✓/✕ alama za maandishi
+    // Emoji za rangi haziruhusiwi katika faili mpya (âœ“/âœ• alama za maandishi
     // zilizoagizwa na user zinaruhusiwa).
     const emojiRe = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{26FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{2190}-\u{21FF}]/u;
     // Ondoa maoni ya maandishi (mishale ya hati hairuhusiwi kwenye UI).
@@ -447,3 +447,5 @@ runAll().then(() => setTimeout(() => {
     console.log('========================================');
     process.exit(fail ? 1 : 0);
 }, 400));
+
+

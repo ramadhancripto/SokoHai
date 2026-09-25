@@ -1,12 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
 const inbox = fs.readFileSync(path.join(root, 'js/app/93-chat-inbox-repair.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'css/34-chat-inbox-identity.css'), 'utf8');
 const head = fs.readFileSync(path.join(root, 'html/00-head.html'), 'utf8');
+
 let pass = 0;
 let fail = 0;
+
 function check(name, ok) {
   if (ok) { pass++; console.log('PASS', name); }
   else { fail++; console.error('FAIL', name); }
@@ -43,5 +47,6 @@ check('order progress is semantically green', /ch-order-progress[\s\S]*color:\s*
 check('long identity names are ellipsized', /ch-name-block > span:first-child[\s\S]*text-overflow:\s*ellipsis/.test(css));
 check('red is not introduced by Chat Home identity stylesheet', !/#(?:f00|ff0000|dc2626|ef4444|b91c1c)/i.test(css));
 
-console.log(`\nChat Home identity contract: ${pass} passed, ${fail} failed`);
+console.log('\nChat Home identity contract: ' + pass + ' passed, ' + fail + ' failed');
+
 if (fail) process.exit(1);

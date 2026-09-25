@@ -1,4 +1,4 @@
-/**
+﻿/**
  * tools/test_chat_commerce_cards.mjs
  *
  * Verifies:
@@ -15,7 +15,7 @@ import { JSDOM } from 'jsdom';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -86,7 +86,7 @@ async function loadApp(rel, outName) {
       .replace("import { skh } from './00-bootstrap.js';", 'const skh = window.skh;');
   const tmp = path.join(ROOT, 'js/app', outName);
   fs.writeFileSync(tmp, src);
-  await import('file://' + tmp + '?t=' + Date.now() + Math.random());
+  await import(pathToFileURL(tmp).href + '?t=' + Date.now() + Math.random());
   fs.unlinkSync(tmp);
 }
 
@@ -130,7 +130,7 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   assert(html.includes('Pendekeza Bei'), 'Buyer must see "Pendekeza Bei" button');
   assert(html.includes('Weka Kikapu'), 'Buyer must see "Weka Kikapu" button');
   assert(html.includes('Habari, nataka kununua hii.'), 'Accompanying text must render');
-  console.log('✅ 1. Product card renders with full actions for Buyer');
+  console.log('âœ… 1. Product card renders with full actions for Buyer');
 }
 
 // 2. Test Product message rendering for SELLER
@@ -144,7 +144,7 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
 
   assert(html.includes('Kiatu cha Ngozi'), 'Product title must render for seller');
   assert(html.includes('Tuma Ofa'), 'Seller must see "Tuma Ofa" button');
-  console.log('✅ 2. Product card renders with seller actions for Seller');
+  console.log('âœ… 2. Product card renders with seller actions for Seller');
 }
 
 // 3. Test Service message rendering for BUYER and PROVIDER
@@ -187,7 +187,7 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   window.skhChatRenderStream();
   html = document.getElementById('chatMessages').innerHTML;
   assert(html.includes('Tuma Ofa'), 'Provider must see "Tuma Ofa"');
-  console.log('✅ 3. Service card renders correctly for both Buyer and Provider');
+  console.log('âœ… 3. Service card renders correctly for both Buyer and Provider');
 }
 
 // 4. Test Transport message rendering for BUYER and DRIVER
@@ -233,7 +233,7 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   window.skhChatRenderStream();
   html = document.getElementById('chatMessages').innerHTML;
   assert(html.includes('Tuma Ofa'), 'Driver must see "Tuma Ofa"');
-  console.log('✅ 4. Transport card renders correctly for both Buyer and Driver');
+  console.log('âœ… 4. Transport card renders correctly for both Buyer and Driver');
 }
 
 // 5. Text message containing legacy/loose productId
@@ -264,7 +264,7 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   assert(html.includes('Simu ya Samsung A14'), 'Loose/legacy product must render card');
   assert(html.includes('280,000'), 'Loose product price must render');
   assert(html.includes('Hii simu bado ipo?'), 'Accompanying text must render');
-  console.log('✅ 5. Text message with product context reconstructs card properly');
+  console.log('âœ… 5. Text message with product context reconstructs card properly');
 }
 
 // 6. Test Commerce Anchor rendering (Start Negotiation State)
@@ -282,7 +282,7 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   assert(anchor && anchor.style.display !== 'none', 'Anchor must be visible when context exists');
   assert(anchor.innerHTML.includes('Bado hamjajadiliana'), 'Must show initial state note');
   assert(anchor.innerHTML.includes('Toa Ofa ya Bei'), 'Must show action to initiate offer');
-  console.log('✅ 6. Commerce Anchor renders initial negotiation card');
+  console.log('âœ… 6. Commerce Anchor renders initial negotiation card');
 }
 
 // 7. Test sendInternal attaches context for Product, Service, and Transport for both sides
@@ -320,7 +320,7 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   assert.equal(writtenDoc.serviceSnapshot.title, 'Kupaka Rangi', 'Service title must match');
   assert(updatedConv && updatedConv['related.serviceId'], 'Conversation related must be persisted atomically');
   assert.equal(updatedConv['related.serviceId'], 'srv_1', 'Conversation related serviceId must match');
-  console.log('✅ 7a. Buyer sending service message attaches serviceRef, snapshot, and persists conversation related');
+  console.log('âœ… 7a. Buyer sending service message attaches serviceRef, snapshot, and persists conversation related');
 
   // B: Transporter (Seller/Owner) sends transport context
   writtenDoc = null;
@@ -346,8 +346,9 @@ console.log('--- TEST SUITE: CHAT COMMERCE CARDS ---');
   assert.equal(writtenDoc.transportSnapshot.fare, 25000, 'Transport fare must match');
   assert(updatedConv && updatedConv['related.transportId'], 'Conversation related must be persisted for transport');
   assert.equal(updatedConv['related.transportId'], 'tr_1', 'Conversation related transportId must match');
-  console.log('✅ 7b. Driver sending transport message attaches transportRef, snapshot, and persists conversation related');
+  console.log('âœ… 7b. Driver sending transport message attaches transportRef, snapshot, and persists conversation related');
 }
 
 console.log('========================================');
-console.log('ALL CHAT COMMERCE CARD TESTS PASSED! ✅');
+console.log('ALL CHAT COMMERCE CARD TESTS PASSED! âœ…');
+

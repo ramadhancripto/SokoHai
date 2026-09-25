@@ -1,5 +1,5 @@
-/* ============================================================
-   SOKOHAI — Jaribio la MTIRIRIKO WA COMMERCE (Huduma/Usafiri + Comments)
+﻿/* ============================================================
+   SOKOHAI â€” Jaribio la MTIRIRIKO WA COMMERCE (Huduma/Usafiri + Comments)
    Huhakiki (jsdom):
    1. Vifungo vya detail vya HUDUMA/USAFIRI hufungua injini ya majadiliano
       (skhNegoFormOpen), si mifumo ya zamani (requests/direct-hire).
@@ -9,7 +9,7 @@
 import { JSDOM } from 'jsdom';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -17,7 +17,14 @@ const ROOT = path.resolve(here, '..');
 const dom = new JSDOM('<!doctype html><html><body></body></html>',
     { url: 'http://localhost/', runScripts: 'dangerously' });
 const { window } = dom;
-globalThis.window = window; globalThis.document = window.document; globalThis.navigator = window.navigator;
+globalThis.window = window;
+globalThis.document = window.document;
+
+Object.defineProperty(globalThis, 'navigator', {
+    value: window.navigator,
+    configurable: true,
+    writable: true
+});
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -46,7 +53,7 @@ async function loadApp(rel, tmpName) {
         .replace("import { skh } from './00-bootstrap.js';", 'const skh = window.skh;');
     const tmp = path.join(ROOT, 'js/app', tmpName);
     fs.writeFileSync(tmp, src);
-    await import('file://' + tmp);
+    await import(pathToFileURL(tmp).href);
     fs.unlinkSync(tmp);
 }
 
@@ -61,9 +68,9 @@ await loadApp('js/app/39-product-showcase.js', '_tmp_showcase.mjs');
 await loadApp('js/app/35-comments.js', '_tmp_comments.mjs');
 
 let pass = 0, fail = 0;
-const ok = (n, c) => { if (c) { pass++; console.log('  ✅ ' + n); } else { fail++; console.log('  ❌ ' + n); } };
+const ok = (n, c) => { if (c) { pass++; console.log('  âœ… ' + n); } else { fail++; console.log('  âŒ ' + n); } };
 
-console.log('\n[1] HUDUMA — kitufe cha detail hufungua negotiation (si requests)');
+console.log('\n[1] HUDUMA â€” kitufe cha detail hufungua negotiation (si requests)');
 {
     let opened = null, legacy = 0;
     window.skhNegoFormOpen = (o) => { opened = o; };
@@ -76,7 +83,7 @@ console.log('\n[1] HUDUMA — kitufe cha detail hufungua negotiation (si request
     ok('mfumo wa zamani (requests) HAUKUITWA', legacy === 0);
 }
 
-console.log('\n[2] USAFIRI — kitufe cha detail hufungua negotiation (si direct-hire)');
+console.log('\n[2] USAFIRI â€” kitufe cha detail hufungua negotiation (si direct-hire)');
 {
     let opened = null, legacy = 0;
     window.skhNegoFormOpen = (o) => { opened = o; };
@@ -89,7 +96,7 @@ console.log('\n[2] USAFIRI — kitufe cha detail hufungua negotiation (si direct
     ok('direct-hire wa zamani HAUKUITWA', legacy === 0);
 }
 
-console.log('\n[3] MAONI — sheet hufunguka juu ya tangazo (si chini ya ukurasa)');
+console.log('\n[3] MAONI â€” sheet hufunguka juu ya tangazo (si chini ya ukurasa)');
 {
     const p = { id: 'p1', userId: 's1', title: 'Bidhaa' };
     skh.currentOpenProduct = p;
@@ -111,7 +118,7 @@ console.log('\n[3] MAONI — sheet hufunguka juu ya tangazo (si chini ya ukurasa
     ok('kufunga kunarudisha hidden', layer.hidden === true);
 }
 
-console.log('\n[4] MAONI — skhHeroComments na toggle huelekeza kwenye sheet');
+console.log('\n[4] MAONI â€” skhHeroComments na toggle huelekeza kwenye sheet');
 {
     const layer = window.document.getElementById('maoniLayer');
     // skhHeroComments (kutoka 39) hupasua sheet
@@ -131,4 +138,5 @@ console.log('\n[4] MAONI — skhHeroComments na toggle huelekeza kwenye sheet');
 console.log('\n==================================================');
 console.log(`COMMERCE FLOW: ${pass} zimepita, ${fail} zimeshindwa`);
 if (fail) process.exit(1);
-console.log('✅ HUDUMA/USAFIRI KUPITIA NEGOTIATION + COMMENTS PANEL SAHIHI');
+console.log('âœ… HUDUMA/USAFIRI KUPITIA NEGOTIATION + COMMENTS PANEL SAHIHI');
+

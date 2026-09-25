@@ -1,14 +1,14 @@
-/* ============================================================
- * SOKOHAI — Jaribio la DOM: TOKEN BOX + AGENT REQUEST INBOX
+﻿/* ============================================================
+ * SOKOHAI â€” Jaribio la DOM: TOKEN BOX + AGENT REQUEST INBOX
  * Huhakiki modali mpya zinajenga kadi/vitufe kwa usahihi
  * (routing card, kadi za tokeni/DL mint, NEW REQUEST cards,
  * Accept/Decline/View, tab za historia) kwa JSDOM na data
- * bandia — bila Firebase.
+ * bandia â€” bila Firebase.
  * Endesha:  node tools/test_token_inbox.mjs
  * ============================================================ */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { JSDOM } from 'jsdom';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -18,8 +18,8 @@ const DRIVER = 'dereva1';
 
 let pass = 0, fail = 0;
 function ok(name, cond) {
-    if (cond) { pass++; console.log('  ✅ ' + name); }
-    else { fail++; console.log('  ❌ ' + name); }
+    if (cond) { pass++; console.log('  âœ… ' + name); }
+    else { fail++; console.log('  âŒ ' + name); }
 }
 
 /* ------------------ mazingira ya kawaida ------------------ */
@@ -30,7 +30,7 @@ function makeDom() {
     const win = dom.window;
     globalThis.window = win;
     globalThis.document = win.document;
-    globalThis.navigator = win.navigator;
+    Object.defineProperty(globalThis, 'navigator', { value: win.navigator, configurable: true, writable: true });
     globalThis.confirm = () => true;
     win.skhNavIcon = (name, size) => '<svg data-ic="' + name + '" width="' + (size || 14) + '"></svg>';
     win.sokohaiToast = () => {};
@@ -51,7 +51,7 @@ function snap(docs) {
 /* ============================================================
  * TOKEN BOX
  * ============================================================ */
-console.log('\n[1] TOKEN BOX — kusanya na kuzalisha kadi');
+console.log('\n[1] TOKEN BOX â€” kusanya na kuzalisha kadi');
 
 {
 
@@ -113,7 +113,10 @@ console.log('\n[1] TOKEN BOX — kusanya na kuzalisha kadi');
     ok('kadi ya PK hai ina code', html.includes('PK-BBBBBBBB'));
     ok('kadi ya PK niliyopokea kama dereva imo', html.includes('PK-CCCCCCCC') && html.includes('Msafirishaji mkuu'));
     ok('kitufe cha kutoa DL (mint) kipo', html.includes('skhTokenBoxMintDL') && html.includes('Tengeneza Tokeni ya Mwisho'));
-    ok('hakuna emoji za kadi', !/[☀-➿🚚-🛺🗑👍✅⭐📦🔑📍📅💰🔒]/u.test(html));
+   ok(
+    'hakuna emoji za kadi',
+    !/[\u2600-\u27BF\u{1F300}-\u{1F6FF}\u{1F5D1}\u{1F44D}\u{2705}\u{2B50}\u{1F4E6}\u{1F510}\u{1F4C5}\u{1F4B0}\u{1F512}]/u.test(html)
+);
 
     // DL mint action
     let mintCalled = false;
@@ -121,7 +124,7 @@ console.log('\n[1] TOKEN BOX — kusanya na kuzalisha kadi');
     await win.skhTokenBoxMintDL('rideB');
     ok('kitufe cha DL hupiga skhCustodyMintTransferToken', mintCalled);
 
-    // Tab ya historia (used/expired) — bado haina tokeni zilizotumika
+    // Tab ya historia (used/expired) â€” bado haina tokeni zilizotumika
     document.querySelector('[data-tb-tab="used"]').click();
     await new Promise(r => setTimeout(r, 10));
     ok('tab used ina hali tupu inayofaa', document.getElementById('tbList').innerHTML.includes('Hamna mikodi') || document.getElementById('tbList').innerHTML.includes('kundi hili'));
@@ -130,7 +133,7 @@ console.log('\n[1] TOKEN BOX — kusanya na kuzalisha kadi');
 /* ============================================================
  * REQUEST INBOX
  * ============================================================ */
-console.log('\n[2] REQUEST INBOX — kadi za NEW REQUEST na vitendo');
+console.log('\n[2] REQUEST INBOX â€” kadi za NEW REQUEST na vitendo');
 
 {
 
@@ -198,7 +201,7 @@ console.log('\n[2] REQUEST INBOX — kadi za NEW REQUEST na vitendo');
     // Decline (confirm imerudisha true)
     win.skhRequestInboxDecline('rideX_a0');
     await new Promise(r => setTimeout(r, 30));
-    // (kadi bado inafunguliwa kwa snapshot bandia — thibitisha tu wito ulitoka)
+    // (kadi bado inafunguliwa kwa snapshot bandia â€” thibitisha tu wito ulitoka)
     ok('Decline hupiga server callable na offerId sahihi', !!(declinedWith && declinedWith.offerId === 'rideX_a0'));
 
     // Historia
@@ -240,3 +243,5 @@ console.log('\n========================================');
 console.log('TOKEN BOX + INBOX DOM: ' + pass + ' pass, ' + fail + ' fail');
 console.log('========================================');
 process.exit(fail ? 1 : 0);
+
+
