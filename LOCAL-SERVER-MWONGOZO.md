@@ -74,9 +74,8 @@ Safari na simu za wateja hazitaweza kuifikia.
   - kwenye Emulator: `SKH_RUN_SCHEDULES=1`;
   - dhidi ya production: `SKH_RUN_SCHEDULES=1` **na** `SKH_ALLOW_PROD_SCHEDULES=1` (onyo kubwa
     linaonyeshwa). Bila hiyo ya pili, server inakataa kuziwasha.
-- Kubadilisha port:
-  - Mac/Linux: `PORT=5056 npm run local`
-  - Windows PowerShell: `$env:PORT=5056; npm run local`
+- **Usibadilishe port ya mamlaka kwa majaribio ya kawaida:** SokoHai hutumia `5055`.
+  Ikiwa port hiyo inatumika, simamisha process ya zamani kisha endesha tena; usitengeneze server ya pili kwenye port nyingine bila mpango wa wazi wa test.
 
 ## Kuhakiki
 

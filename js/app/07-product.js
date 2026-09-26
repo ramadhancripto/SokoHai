@@ -255,10 +255,6 @@ window.openProduct = async function(id, manualCollection = null) {
         if (typeof window.skhRenderShowcase === 'function') {
             window.skhRenderShowcase(found, colToUse);
         }
-        // Search and direct product opening share the same Discovery Context.
-        if (typeof window.skhActivateProductDiscovery === 'function') {
-            try { window.skhActivateProductDiscovery(found, colToUse); } catch (eDiscovery) { console.warn('[product discovery context]', eDiscovery); }
-        }
 
             // Ongeza view moja kiotomatiki (Ikiwa haijawa viewed)
             if(!sessionStorage.getItem('v_'+id)) {

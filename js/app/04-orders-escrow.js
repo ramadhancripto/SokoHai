@@ -291,12 +291,8 @@ window.confirmEscrowOrder = async function() {
             }
 
             // Rekodi mapato ya msimamizi (Platform Revenue)
-            await skh.addDoc(skh.collection(skh.db, "adminRevenue"), { 
-                type: "commission", 
-                amount: adminShare, 
-                date: new Date().toISOString() 
-            });
-            
+            // Accounting is server-authoritative; no client adminRevenue write.
+
             alert(` SMART SPLIT PAYOUT SUCCESS!\n\n• Muuzaji amelipwa: TSh ${sellerEarned.toLocaleString()}\n• Dereva/Carrier amelipwa: TSh ${carrierShare.toLocaleString()}\n• Platform Fee (System): TSh ${platformFee.toLocaleString()}`);
             window.closeModals(); 
             if(window.loadBuyerOrdersWithTracking) window.loadBuyerOrdersWithTracking();

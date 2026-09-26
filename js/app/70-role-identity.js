@@ -6,11 +6,9 @@
  *   - skhGetUserRoles(u) → roles HALISI kutoka backend/account fields
  *     (§14 DO NOT FAKE: hakuna role kutoka interaction, ni account state tu)
  *   - skhRoleBadgesFor(u) → multi-role badges (§3: mtu mmoja, roles nyingi)
- *   - Multi-role discoverability (§10): discovery.rolesVisible[ROLE]=false
- *     huficha role hiyo (isieonekane badge wala ku-match kwenye search)
  *   - Role ≠ Verification (§4): verified badge ni status tofauti kabisa —
  *     hainaunganishwi na role badges.
- * Inaunganishwa na: Discover (person cards + settings + search keywords),
+ * Inaunganishwa na: account/profile identity, Soga header, and Groups.
  * Soga header (participant overlay), Groups (member context baadaye R19+).
  * ================================================================ */
 import { skh } from './00-bootstrap.js';
@@ -72,63 +70,4 @@ import { skh } from './00-bootstrap.js';
         return ROLE_ORDER.filter(function (r) { return roles.includes(r); });
     };
 
-    /* --------- Visibility ya roles (§10 — discoverability per-role) --------- */
-    function hiddenRoles(u) {
-        var d = u.discovery || {};
-        var rv = d.rolesVisible || {};
-        return ROLE_ORDER.filter(function (r) { return rv[r] === false; });
-    }
-    window.skhVisibleUserRoles = function (u) {
-        var all = window.skhGetUserRoles(u);
-        var hid = hiddenRoles(u);
-        return all.filter(function (r) { return !hid.includes(r); });
-    };
-    window.skhRoleBadgesFor = function (u, opts) {
-        var roles = (opts && opts.all) ? window.skhGetUserRoles(u) : window.skhVisibleUserRoles(u);
-        var max = (opts && opts.max) || 3;
-        var html = roles.slice(0, max).map(function (r) { return window.skhRoleBadge(r); }).join('');
-        if (roles.length > max) html += '<span class="skh-rb skh-rb--more" title="' + roles.slice(max).join(', ') + '">+' + (roles.length - max) + '</span>';
-        return html ? '<span class="skh-rb-wrap">' + html + '</span>' : '';
-    };
-
-    /* --------- Keywords za search → roles (Discover §3/§5) --------- */
-    var ROLE_KEYWORDS = {
-        TRANSPORTER: ['transporter', 'transporters', 'msafirishaji', 'wasafirishaji', 'driver', 'boda', 'bajaji'],
-        SERVICE_PROVIDER: ['service', 'provider', 'fundi', 'washonaji', 'ushonaji', 'mtoa huduma', 'watoa huduma', 'technician'],
-        SELLER: ['seller', 'sellers', 'muuzaji', 'wauzaji', 'duka'],
-        BUSINESS: ['business', 'biashara', 'company', 'kampuni', 'maduka'],
-        AGENT: ['agent', 'wakala', 'mawakala'],
-        BUYER: ['buyer', 'buyers', 'mnunuzi', 'wanunuzi']
-    };
-    window.skhRoleKeywordsFor = function (q) {
-        var ql = String(q || '').toLowerCase();
-        var hit = [];
-        Object.keys(ROLE_KEYWORDS).forEach(function (r) {
-            if (ROLE_KEYWORDS[r].some(function (k) { return ql.includes(k); })) hit.push(r);
-        });
-        return hit;
-    };
-    // discover matcher hook (68 ina kwa "kind" — hii ina nyongeza ya keywords)
-    window.skhRoleSignalMatch = function (u, q) {
-        var wanted = window.skhRoleKeywordsFor(q);
-        if (!wanted.length) return null;                 // hapana role signal kwenye query
-        var roles = window.skhVisibleUserRoles(u);       // roles zinazoonekana tu (§10)
-        return wanted.some(function (r) { return roles.includes(r); });
-    };
-
-    /* --------- Persistable roles visibility (§10) --------- */
-    window.skhSetRoleVisibility = async function (role, visible) {
-        try {
-            var me = (skh.currentUser && skh.currentUser.uid) || null;
-            if (!me) return;
-            var u = skh.currentUserData || {};
-            var d = u.discovery || {};
-            var rv = Object.assign({}, d.rolesVisible || {});
-            rv[role] = !!visible;
-            var discovery = Object.assign({}, d, { rolesVisible: rv });
-            await skh.setDoc(skh.doc(skh.db, 'users', me), { discovery: discovery, updatedAt: new Date().toISOString() }, { merge: true });
-            skh.currentUserData = Object.assign({}, u, { discovery: discovery });
-            return rv;
-        } catch (e) { return null; }
-    };
 })();

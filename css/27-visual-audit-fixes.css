@@ -176,7 +176,7 @@ button, input, select, textarea {
 
 /* Kuzuia kuvunjika kwa herufi wima kwenye vichwa, vitufe na tabs za simu */
 @media (max-width: 600px) {
-    .ch-hbtn, .skh-discover-back, .skh-discover-gear {
+    .ch-hbtn, .skh-sheet-back, .skh-sheet-gear {
         flex-shrink: 0 !important;
     }
     .ch-head-menu, .ch-plus-menu, #chPlusMenu {
@@ -187,7 +187,7 @@ button, input, select, textarea {
     .ch-head-menu button, .ch-plus-item {
         white-space: nowrap !important;
     }
-    .skh-discover-title, .skh-discover-sub, .ch-head-id b, .ch-head-sub {
+    .skh-sheet-title, .skh-sheet-sub, .ch-head-id b, .ch-head-sub {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;

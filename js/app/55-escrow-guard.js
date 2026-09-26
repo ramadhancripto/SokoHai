@@ -245,15 +245,8 @@ import { skh } from './00-bootstrap.js';
                         });
                     } catch (e) {}
                 }
-                // Audit trail (§32) — collection iliyopo
-                try {
-                    await skh.addDoc(skh.collection(skh.db, 'activity_logs'), {
-                        type: 'ESCROW_RELEASED', transactionId: id,
-                        rideId: ride ? ride.id : null,
-                        actorId: (skh.currentUser && skh.currentUser.uid) || null,
-                        amount: chk.summary.amount, at: now()
-                    });
-                } catch (e) {}
+                // Escrow settlement is authoritative in the trusted Function;
+                // do not append a client-forged settlement audit record here.
 
                 skhBusy(false);
                 skhToast('Asante! Fedha zimeachiwa muuzaji.', 'success', 3600);

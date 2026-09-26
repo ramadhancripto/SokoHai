@@ -262,15 +262,9 @@ import { skh } from './00-bootstrap.js';
             orderStatus: 'Completed', contractStatus: 'Completed',
             environment: 'test', isTest: true
         }, 'Escrow Released (TEST)');
-        // Commission kwenye collection ILIYOPO
-        try {
-            await skh.addDoc(skh.collection(skh.db, 'adminRevenue'), {
-                type: 'commission', amount: fee, sourceId: coreId || null,
-                sellerId: sellerId || null, at: nowIso(),
-                environment: 'test', isTest: true
-            });
-        } catch (e) {}
-        skhToast('TEST: Escrow imeachiwa. Kamisheni ' + money(fee) + ' imerekodiwa.', 'success', 3200);
+        // Accounting is server-authoritative; test settlement does not write
+        // adminRevenue from the browser.
+        skhToast('TEST: Escrow imeachiwa. Accounting ya kamisheni inahitaji server event.', 'success', 3200);
         return { ok: true, released: amount, commission: fee };
     };
 

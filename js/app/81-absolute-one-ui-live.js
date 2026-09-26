@@ -38,8 +38,6 @@ import { skh } from './00-bootstrap.js';
 
   // Orodha kamili ya overlays — lazima zote zifichwe isipokuwa target
   const ALL_IDS = [
-    'skhDiscoverEngine','skhDiscoverOverlay','skhDiscoverRequestModal',
-    'skhDiscPersonModal','skhDiscInviteModal','skhDiscGrpModal',
     'chatListModal','chatModal',
     'skhGroupSogaModal','gsgGoDetail','gsgCoWS','gsgCoWSCard',
     'productModal','mySokoHaiModal','sellerProfileModal',
@@ -79,7 +77,7 @@ import { skh } from './00-bootstrap.js';
         var el = byId(id);
         if(el){
           // usifunge FAB au mainFeed
-          if(el.id==='skhDiscFab' || el.id==='mainFeed' || el.id==='appRoot') return;
+          if(el.id==='mainFeed' || el.id==='appRoot') return;
           el.style.display='none';
           if(el.classList) el.classList.remove('open');
         }
@@ -87,15 +85,14 @@ import { skh } from './00-bootstrap.js';
       document.querySelectorAll('.overlay-menu').forEach(function(ov){
         if(exceptId && ov.id===exceptId) return;
         // usifunge FAB
-        if(ov.id==='skhDiscFab') return;
-        ov.style.display='none';
+                ov.style.display='none';
         if(ov.classList) ov.classList.remove('open');
       });
       // pia yeyote anayeishia na Modal/Form na z>=100 fixed
       document.querySelectorAll('[id$="Modal"],[id$="Form"]').forEach(function(el){
         if(exceptId && el.id===exceptId) return;
         if(ALL_IDS.indexOf(el.id)!==-1) return;
-        if(el.id==='skhDiscFab' || el.id==='mainFeed' || el.id==='appRoot' || el.id==='skhDiscoverEngineInput') return;
+        if(el.id==='mainFeed' || el.id==='appRoot') return;
         try{
           var cs = getComputedStyle(el);
           if((cs.position==='fixed' || cs.position==='absolute') && (parseInt(cs.zIndex,10)||0)>=100){
@@ -143,18 +140,10 @@ import { skh } from './00-bootstrap.js';
 
       var el = byId(id);
       if(!el){
-        if(id==='skhDiscoverEngine'){
-          // let builder create it — but we need to create placeholder instantly to avoid home flash
+        if(id==='skhGroupSogaModal'){
           el = document.createElement('div');
           el.id = id;
-          el.className = 'skh-discover-engine open';
-          el.style.cssText = 'position:fixed;inset:0;z-index:100001;background:#F6F9FC;display:flex;flex-direction:column;overflow:hidden;';
-          el.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#64748b;"><div style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#1268A8;border-radius:50%;animation:spin 0.8s linear infinite;"></div><small>Inafungua Discover...</small><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>';
-          document.body.appendChild(el);
-        } else if(id==='skhGroupSogaModal'){
-          el = document.createElement('div');
-          el.id = id;
-          el.className = 'skh-discover-overlay open';
+          el.className = 'skh-sheet-overlay open';
           el.style.zIndex = '100010';
           el.style.display = 'flex';
           document.body.appendChild(el);
@@ -234,95 +223,6 @@ import { skh } from './00-bootstrap.js';
   };
 
   // ---------- PATCH ALL OPEN FUNCTIONS — ABSOLUTE ONE UI ----------
-
-  function patchDiscoverEngine(){
-    var orig = window.skhDiscoverEngineOpen;
-    if(!orig || orig.__abs81) return;
-    window.skhDiscoverEngineOpen = function(q, opts){
-      try{
-        var el = byId('skhDiscoverEngine');
-        var isAlreadyOpen = el && el.style.display!=='none' && el.classList.contains('open');
-        if(isAlreadyOpen){
-          // second click — usiblink, baki wazi, refresh content tu
-          console.log('[81 discover] already open, refreshing content not blinking');
-          el.style.display='flex';
-          el.classList.add('open');
-          el.style.opacity='1';
-          document.body.style.overflow='hidden';
-          currentUI='skhDiscoverEngine';
-          // refresh content without hiding
-          try{ return orig.apply(this, arguments); }catch(e){ console.error(e); }
-          return;
-        }
-        if(!canOpen('skhDiscoverEngine')) {
-          console.log('[81 discover] blocked double click <600ms');
-          return;
-        }
-        // ABSOLUTE show only discover SYNC
-        window.skhAbsoluteShowOnly('skhDiscoverEngine','flex',true);
-        // then run original logic for content (renderHome/search) — but without hiding
-        try{
-          return orig.apply(this, arguments);
-        }catch(e){
-          console.error('[81 discoverEngineOpen orig error]',e);
-          try{ if(window.showToast) window.showToast('Discover error: '+(e.message||''),'error'); }catch(e2){}
-          // keep discover open with error message, don't go to home
-          var eng = byId('skhDiscoverEngine');
-          if(eng){
-            var body = byId('skhDiscoverEngineBody');
-            if(body) body.innerHTML = '<div style="padding:20px;text-align:center;"><b style="color:#b91c1c;">Imeshindikana</b><br><small style="color:#64748b;">'+esc(e.message||'')+'</small><br><button onclick="window.skhDiscoverEngineClose()" style="margin-top:12px;padding:10px 18px;border:none;background:#18A982;color:#fff;border-radius:10px;font-weight:800;">Funga</button></div>';
-          }
-        }
-      }catch(e){ console.error('[81 patchDiscoverEngine]',e); try{ return orig.apply(this, arguments); }catch(e2){} }
-    };
-    __skhCopyChainFlags(orig, window.skhDiscoverEngineOpen);
-    window.skhDiscoverEngineOpen.__abs81=true;
-    window.skhDiscoverEngineOpen.__orig=orig;
-
-    var origClose = window.skhDiscoverEngineClose;
-    if(origClose && !origClose.__abs81){
-      window.skhDiscoverEngineClose = function(){
-        try{
-          if(!canOpen('closeDiscover')) {
-            // allow close even if quick? we want close to work always
-          }
-          window.skhAbsoluteClose('skhDiscoverEngine');
-          try{ return origClose.apply(this, arguments); }catch(e){}
-        }catch(e){ try{ return origClose.apply(this, arguments); }catch(e2){} }
-      };
-      __skhCopyChainFlags(origClose, window.skhDiscoverEngineClose);
-      window.skhDiscoverEngineClose.__abs81=true;
-    }
-  }
-
-  function patchDiscoverGlobal(){
-    if(window.skhDiscoverOpen && !window.skhDiscoverOpen.__abs81){
-      var orig = window.skhDiscoverOpen;
-      window.skhDiscoverOpen = function(kind){
-        try{
-          if(!kind || kind==='all' || ['products','services','businesses','nearby','transport','people','sellers','groups'].indexOf(kind)!==-1){
-            // ABSOLUTE
-            if(!canOpen('skhDiscoverEngine') && byId('skhDiscoverEngine') && byId('skhDiscoverEngine').style.display!=='none'){
-              console.log('[81 discoverOpen] already open, not blinking');
-              return;
-            }
-            window.skhAbsoluteShowOnly('skhDiscoverEngine','flex',true);
-            if(window.skhDiscoverEngineOpen && window.skhDiscoverEngineOpen.__orig){
-              return window.skhDiscoverEngineOpen.__orig('', { entityTypes: kind==='products'?['PRODUCT']:kind==='services'?['SERVICE']:kind==='businesses'?['BUSINESS']:kind==='transport'?['TRANSPORTER']:kind==='people'?['PERSON']:kind==='groups'?['GROUP']:kind==='sellers'?['BUSINESS','PERSON']:undefined });
-            } else if(window.skhDiscoverEngineOpen){
-              return window.skhDiscoverEngineOpen('', { entityTypes: kind==='products'?['PRODUCT']:kind==='services'?['SERVICE']:kind==='businesses'?['BUSINESS']:kind==='transport'?['TRANSPORTER']:kind==='people'?['PERSON']:kind==='groups'?['GROUP']:kind==='sellers'?['BUSINESS','PERSON']:undefined });
-            }
-            return;
-          }
-          // legacy
-          window.skhAbsoluteShowOnly('skhDiscoverOverlay','flex',true);
-          return orig.apply(this, arguments);
-        }catch(e){ console.error('[81 discoverOpen]',e); return orig.apply(this, arguments); }
-      };
-      __skhCopyChainFlags(orig, window.skhDiscoverOpen);
-      window.skhDiscoverOpen.__abs81=true;
-    }
-  }
 
   function patchChatInbox(){
     var orig = window.skhChatOpenInbox;
@@ -435,14 +335,6 @@ import { skh } from './00-bootstrap.js';
     }
   }
 
-  function patchFab(){
-    // REMOVED: 81 no longer adds a second click listener to FAB
-    // 68-chat-discover.js already has a click listener that calls skhDiscoverOpen()
-    // 81's skhDiscoverOpen wrapper already handles skhAbsoluteShowOnly
-    // Adding a second listener caused: stopPropagation blocking 68's listener,
-    // and canOpen race condition preventing second click from working
-  }
-
   function patchCloseModalsAbsolute(){
     var origCloseModals = window.closeModals;
     if(!origCloseModals || origCloseModals.__abs81) return;
@@ -507,16 +399,15 @@ import { skh } from './00-bootstrap.js';
     var style = document.createElement('style');
     style.id='skhAbsoluteOneUICSS';
     style.textContent = `
-      .skh-discover-engine, .skh-discover-overlay, #skhGroupSogaModal, #chatListModal, #chatModal, #gsgGoDetail, #gsgCoWS, #gsgCoWSCard, .overlay-menu {
+       .skh-sheet-overlay, #skhGroupSogaModal, #chatListModal, #chatModal, #gsgGoDetail, #gsgCoWS, #gsgCoWSCard, .overlay-menu {
         transition: none !important;
         animation: none !important;
       }
-      .skh-discover-engine.open, #skhGroupSogaModal.open, #chatListModal[style*="flex"], #chatModal[style*="flex"], #gsgCoWS[style*="flex"] {
+      #skhGroupSogaModal.open, #chatListModal[style*="flex"], #chatModal[style*="flex"], #gsgCoWS[style*="flex"] {
         opacity:1 !important; transform:none !important; visibility:visible !important;
       }
-      #skhDiscFab { pointer-events:auto !important; z-index:4800 !important; }
       /* Prevent home flash: when any modal open, mainFeed should be hidden? No, overlay covers it, but ensure no transparent gap */
-      .skh-discover-engine, #skhGroupSogaModal, #chatListModal, #chatModal {
+      .skh-sheet-overlay, #skhGroupSogaModal, #chatListModal, #chatModal {
         will-change: transform;
         backface-visibility: hidden;
       }
@@ -526,14 +417,11 @@ import { skh } from './00-bootstrap.js';
 
   function init(){
     injectCSS();
-    patchDiscoverEngine();
-    patchDiscoverGlobal();
     patchChatInbox();
     patchDirectChat();
     patchGroupRow();
     patchSoga();
     patchGO();
-    patchFab();
     patchCloseModalsAbsolute();
 
     // Ensure currentUI detection on load
@@ -546,7 +434,7 @@ import { skh } from './00-bootstrap.js';
       });
     }catch(e){}
 
-    console.log('[81-absolute-one-ui-live] FINAL PATCHED — absolute one UI, no home flash, discover second click fixed, live safe');
+    console.log('[81-absolute-one-ui-live] FINAL PATCHED — absolute one UI, no home flash, chat/group stable, live safe');
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
@@ -555,16 +443,5 @@ import { skh } from './00-bootstrap.js';
   setTimeout(init, 1000);
   setTimeout(init, 2500);
 
-  // FAB retry
-  var fabRetry = setInterval(function(){
-    var fab = byId('skhDiscFab');
-    if(fab && !fab.__abs81){
-      patchFab();
-    }
-    if(fab && fab.__abs81){
-      clearInterval(fabRetry);
-    }
-  }, 500);
-  setTimeout(function(){ clearInterval(fabRetry); }, 12000);
 
 })();

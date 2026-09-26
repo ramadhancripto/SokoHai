@@ -13,7 +13,6 @@ const go = r('js/app/74-group-order-system.js');
 const nego = r('css/17-negotiation-form.css');
 const late = r('css/27-visual-audit-fixes.css');
 const profile = r('css/28-my-profile.css');
-const discover = r('css/30-discover-engine.css');
 
 const logistics = r('css/23-logistics-market.css');
 const delivery = r('css/22-delivery-choice.css');
@@ -37,7 +36,7 @@ const c = (n, v) => {
 
 c(
   'Discover and Group shared sheet header is light',
-  nav.includes('.skh-discover-head') &&
+  nav.includes('.skh-sheet-head') &&
   nav.includes('background: #F1FBF7')
 );
 
@@ -100,12 +99,7 @@ c(
   profile.includes('.mp-btn-brand { background: #18A982')
 );
 
-c(
-  'Discover active controls are green',
-  discover.includes(
-    'background: #18A982; border-color: #18A982; color: #fff'
-  )
-);
+
 
 c(
   'transport information hero is light blue',

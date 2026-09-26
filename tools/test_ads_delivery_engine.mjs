@@ -344,14 +344,11 @@ await test('placement adapters keep Admin/critical surfaces clear and preserve o
   assert.ok(product.includes("placement = 'group_buy'"));
   assert.ok(product.includes("placement = 'price_drop'"));
 });
-await test('Discover, Search, buyer overview, and Home use safe optional adapters', async () => {
-  const discover = await readFile(new URL('../js/app/75-discover-engine.js', import.meta.url), 'utf8');
+await test('Search, buyer overview, and Home use safe optional adapters', async () => {
   const buyer = await readFile(new URL('../js/app/28-buyer-engagement.js', import.meta.url), 'utf8');
   const topnav = await readFile(new URL('../html/16-topnav.html', import.meta.url), 'utf8');
-  assert.ok(discover.includes('data-skh-ad-slot="discover"'));
-  assert.ok(discover.includes('data-skh-ad-slot="search"'));
-  assert.ok(buyer.includes('data-skh-ad-slot="dashboard"'));
-  assert.ok(topnav.includes('data-skh-ad-slot="home"'));
+  assert.ok(buyer.includes('data-skh-ad-slot=\"dashboard\"'));
+  assert.ok(topnav.includes('data-skh-ad-slot=\"home\"'));
 });
 await test('client request is lazy, render is not an impression, and viewability needs threshold plus duration', async () => {
   const dom = new JSDOM('<!doctype html><html><body><div id="slot" data-skh-ad-slot="home"></div></body></html>', {

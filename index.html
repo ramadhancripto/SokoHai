@@ -62,18 +62,16 @@
 <link rel="stylesheet" href="css/18-product-showcase.css">
 <link rel="stylesheet" href="css/19-token-box.css">
 <link rel="stylesheet" href="css/20-request-inbox.css">
-<link rel="stylesheet" href="css/21-discovery-maoni.css">
 <link rel="stylesheet" href="css/22-delivery-choice.css">
 <link rel="stylesheet" href="css/23-logistics-market.css">
 <link rel="stylesheet" href="css/24-chat-ui-v2.css">
-<link rel="stylesheet" href="css/30-discover-engine.css">
 <link rel="stylesheet" href="css/31-product-actions.css"><!-- [FIX 2026-09-20] vitufe vya kadi sticky -->
 <link rel="stylesheet" href="css/32-chat-master-ui.css"><!-- Chat edit/selection/master interaction states -->
-<link rel="stylesheet" href="css/33-white-marketplace.css"><!-- White-first marketplace + real discovery sections -->
+<link rel="stylesheet" href="css/33-white-marketplace.css"><!-- White-first marketplace + real marketplace sections -->
 <link rel="stylesheet" href="css/34-chat-inbox-identity.css"><!-- Chat Home person/group/order-group identity hierarchy -->
 <link rel="stylesheet" href="css/35-buyer-dashboard.css"><!-- Buyer personal activity & commerce center -->
 <link rel="stylesheet" href="css/36-advertiser-coming-soon.css"><!-- Advertiser Billing UI-only Coming Soon state -->
-<link rel="stylesheet" href="css/37-product-card-visual.css"><!-- Large visual product discovery cards -->
+<link rel="stylesheet" href="css/37-product-card-visual.css"><!-- Large visual marketplace cards -->
 <link rel="stylesheet" href="css/38-home-ad-manager.css"><!-- Admin Home Advertisement Manager -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
@@ -83,7 +81,7 @@
     <link rel="stylesheet" href="css/27-visual-audit-fixes.css">
     <!-- [MY-PROFILE 2026-09-16] 28) My Profile (DP + Business Cover) — professional identity -->
     <link rel="stylesheet" href="css/28-my-profile.css">
-    <!-- [R19] responsive top-nav + role badges + Discover FAB + Kamusi -->
+    <!-- [R19] responsive top-nav + role badges + Kamusi -->
     <link rel="stylesheet" href="css/29-nav-dict.css">
 <style id="skhBootCloakCss">
  html.skh-booting body{visibility:hidden!important}
@@ -487,21 +485,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <div class="pm-hero" id="pmImgWrapper">
             <div class="pm-image-slider" id="pmImageSlider"><!-- slaidi hujazwa na JS --></div>
 
-            <!-- Juu: kukuza (kushoto), urambazaji wa discovery (katikati), funga (kulia) -->
+            <!-- Juu: kukuza (kushoto), funga (kulia) -->
             <div class="pm-hero-top">
                 <button type="button" class="pm-circle" id="pmZoomInBtn" aria-label="Tazama picha kubwa" onclick="window.zoomProductImage(1)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>
                 </button>
-                <!-- [DISCOVERY 2026-09] Urambazaji wa wima kati ya matangazo -->
-                <div class="df-nav" role="group" aria-label="Tangazo linalofuata au la nyuma">
-                    <button type="button" class="df-nav-btn" id="dfPrevBtn" aria-label="Tangazo la nyuma" onclick="window.skhDiscoveryMove(-1)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="m18 15-6-6-6 6"/></svg>
-                    </button>
-                    <span class="df-nav-count" id="dfCount" aria-live="polite">•</span>
-                    <button type="button" class="df-nav-btn" id="dfNextBtn" aria-label="Tangazo linalofuata" onclick="window.skhDiscoveryMove(1)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                </div>
                 <button type="button" class="pm-circle pm-close" aria-label="Funga" onclick="closeModals()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
@@ -840,7 +828,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 </div>
 
 <!-- GROUP SOGA MODAL (Vikundi) -->
-<div id="skhGroupSogaModal" class="skh-discover-overlay" style="display:none; z-index: 100010;"></div>
+<div id="skhGroupSogaModal" class="skh-sheet-overlay" style="display:none; z-index: 100010;"></div>
 
 <!-- CHAT LIST (INBOX) — Ukurasa KAMILI wa Chat (Chat UI v1.0, 2026-09) -->
 <div id="chatListModal" class="overlay-menu" style="z-index: 7750; padding:0;">
@@ -1764,7 +1752,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px; text-align:left;">
         <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#14532d; cursor:pointer;">
             <input type="checkbox" id="servTravelAvailable" style="margin-top:2px; width:18px; height:18px;">
-            <span><b>Ninaweza kusafiri kwenda eneo la mteja</b><br><small>Chagua tu ikiwa uwezo huu ni wa kweli. Discover haitakadiria umbali au njia.</small></span>
+            <span><b>Ninaweza kusafiri kwenda eneo la mteja</b><br><small>Chagua tu ikiwa uwezo huu ni wa kweli. Mfumo hautakadiria umbali au njia.</small></span>
         </label>
     </div>
 
@@ -3280,14 +3268,12 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/34-chat-core.js"></script>
 <script type="module" src="js/app/35-comments.js"></script>
 <script type="module" src="js/app/36-seller-chat-comments.js"></script>
-<!-- [SHOWCASE MODULE 02] Product Detail & Discovery UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
+<!-- [SHOWCASE MODULE 02] Product Detail UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
 <script type="module" src="js/app/39-product-showcase.js"></script>
 <!-- [TOKEN BOX 2026-09] Sanduku la mikode ya makabidhiano (PK/TR/DL) linalojitegemea -->
 <script type="module" src="js/app/40-token-box.js"></script>
 <!-- [REQUEST ROUTING 2026-09] Agent Request Inbox (NEW REQUEST / Accept / Decline) -->
 <script type="module" src="js/app/41-request-inbox.js"></script>
-<!-- [DISCOVERY CARD 2026-09] Vertical discovery feed + Maoni sheet wiring -->
-<script type="module" src="js/app/42-discovery-feed.js"></script>
 <script type="module" src="js/app/43-delivery-choice.js"></script>
 <script type="module" src="js/app/54-error-core.js"></script>
 <script type="module" src="js/app/60-identity-layer.js"></script>
@@ -3298,13 +3284,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/65-content-l10n.js"></script>
 <script type="module" src="js/app/66-wordmark.js"></script>
 <script type="module" src="js/app/67-payment-accounts.js"></script>
-<script type="module" src="js/app/68-chat-discover.js"></script>
 <script type="module" src="js/app/69-chat-groups.js"></script>
 <script type="module" src="js/app/70-role-identity.js"></script>
 <script type="module" src="js/app/71-visual-dictionary.js"></script>
 <script type="module" src="js/app/73-group-soga.js"></script>
 <script type="module" src="js/app/74-group-order-system.js"></script>
-<script type="module" src="js/app/75-discover-engine.js"></script>
 <script type="module" src="js/app/76-group-order-production-enhancement.js"></script>
 <script type="module" src="js/app/64-my-profile.js"></script>
 <script type="module" src="js/app/50-lifecycle-core.js"></script>
@@ -4090,10 +4074,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
 
 <!-- [NEGO MODULE 01] Dynamic Negotiation Form (context-aware PRODUCT/SERVICE/TRANSPORT) -->
-<!-- [SHOWCASE MODULE 02] Product Detail & Discovery UI -->
+<!-- [SHOWCASE MODULE 02] Product Detail UI -->
 <!-- [TOKEN BOX 2026-09] Sanduku la mikode ya makabidhiano -->
 <!-- [REQUEST ROUTING 2026-09] Agent Request Inbox -->
-<!-- [DISCOVERY CARD 2026-09] Vertical discovery + Maoni sheet -->
 <!-- [LOGISTICS MARKETPLACE 2026-09] Soko la maombi ya usafirishaji (dashi dereva) -->
 <!--  SOKOHAI JAVASCRIPT MARQUEE ENGINE - GUARANTEED MOVING FINAL FIX -->
 <script src="js/app/creative/ad-palettes.js"></script> <!-- [CREATOR STUDIO 2026-09-23] canonical palette/CTA tokens (kabla ya renderer na module scripts) -->
@@ -4118,10 +4101,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script src="js/23-smart-search.js"></script>
 <script src="js/20-search-chat.js"></script>
 <script src="js/21-home-filters.js"></script>
-<script type="module" src="js/app/88-discover-complete.js"></script>
 <!-- [CHAT FIXES 2026-09-20] Marekebisho ya chat system: background, loader isiyokwisha, group chat, inbox timeout, message-cache -->
 <script src="js/app/90-chat-fixes.js" defer></script>
-<!-- [DISCOVER FIXES 2026-09-20] Marekebisho ya Discover: mobile responsive, errors visible, full account profiles open -->
 <!-- [CHAT AUTH RACE FIX 2026-09-20] Tatizo kubwa la chat kushindwa kufungua: race kati ya Firebase auth na currentUser -->
 <script src="js/app/92-chat-auth-fix.js" defer></script>
 <script src="js/app/93-chat-inbox-repair.js" defer></script>

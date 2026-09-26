@@ -142,20 +142,6 @@ import { skh } from './00-bootstrap.js';
         }
         return { active: nowActive, membership: mem };
     };
-    // Discover stub (R17 Discover) sasa ina target halisi
-    window.skhDiscoverJoinGroup = async function (gid) {
-        var r = await window.skhGroupJoin(gid);
-        if (!r) return;
-        try {
-            if (r.active) window.showToast ? window.showToast(tk('grp_joined', 'Umejiunga kikundi hiki'), 'success') : 0;
-            else if (r.already) window.showToast ? window.showToast(tk('grp_already', 'Tayari wewe ni mwanachama'), 'info') : 0;
-            else window.showToast ? window.showToast(tk('grp_requested', 'Ombi la kujiunga limetumwa'), 'info') : 0;
-        } catch (eT) {}
-        // rudisha matokeo yatayarishe Discover kwa membership mpya
-        try { if (window.skhDiscoverSearch) window.skhDiscoverSearch(window.skhDiscoverLastQ ? window.skhDiscoverLastQ() : '', 'all'); } catch (eR) {}
-    };
-    if (!window.skhDiscoverLastQ) window.skhDiscoverLastQ = function () { return ''; };  // 68 ndiyo ina q halisi
-
     // [R22] sharedContext.participants — REMOVE helper (leave/remove/rejectivate)
     async function removeCtxParticipant(gid, targetUid) {
         try {
@@ -1524,11 +1510,11 @@ import { skh } from './00-bootstrap.js';
 })();
 
 /* ================================================================
- * UI — DISCOVER PANEL EXTENSION (extend, si rebuild)
+ * UI — group panel extension (existing groups only)
  *  - "+ Kikundi" button karibu na vichujio
  *  - Create modal (name/type/visibility/joinPolicy)
  *  - "VIKUNDI VYANGU" block (skhMyGroups) + Leave/Archive actions
- *  - Refresh ya Discover baada ya group events
+ *  - Refresh ya group data after group events
  * ================================================================ */
 import { skh as _skh } from './00-bootstrap.js';
 (function () {
@@ -1731,7 +1717,7 @@ import { skh as _skh } from './00-bootstrap.js';
                 + '<div style="flex:1;min-width:0;"><b style="display:block;font-size:13.5px;color:#0f172a;">' + esc(c.name) + '</b>'
                 + '<small style="color:#64748b;font-size:11.5px;text-transform:capitalize;">' + esc(roleLabel(c.role) || 'user') + '</small></div>'
                 + '</div>';
-        }).join('') : '<small style="color:#94a3b8;display:block;text-align:center;padding:18px;">' + tk('pkr_none', 'Hakuna contacts bado — wasiliane na mtu kwanza au tumia 🔎 Discover.') + '</small>';
+        }).join('') : '<small style="color:#94a3b8;display:block;text-align:center;padding:18px;">' + tk('pkr_none', 'Hakuna contacts bado — wasiliane na mtu kwanza au tafuta au wasiliana kwanza.') + '</small>';
         host.onclick = function (ev) {
             var r = ev.target && ev.target.closest ? ev.target.closest('[data-pkruid]') : null;
             if (!r) return;
@@ -1822,7 +1808,7 @@ import { skh as _skh } from './00-bootstrap.js';
             } catch (eT) {}
             try { if (window.skhChatReloadInbox) window.skhChatReloadInbox(); } catch (eR) {}
             try { if (window.skhOpenGroupSoga) window.skhOpenGroupSoga(r.id); } catch (eO) {}
-            try { if (window.skhDiscoverSearch) window.skhDiscoverSearch('', 'all'); } catch (eR2) {}
+            // Discover refresh removed; this screen reloads its own group data.
         });
     }
 

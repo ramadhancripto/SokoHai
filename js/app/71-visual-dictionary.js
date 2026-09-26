@@ -237,19 +237,19 @@ import { skh } from './00-bootstrap.js';
         if (m) return m;
         m = document.createElement('div');
         m.id = 'skhKamusiPage';
-        m.className = 'skh-discover-overlay';
-        m.innerHTML = '<div class="skh-discover-sheet skh-k-sheet">'
-            + '<div class="skh-discover-head">'
-            + '<button type="button" class="skh-discover-back" data-act="k-close" aria-label="' + tk('back', 'Rudi') + '">' + (window.skhNavIcon ? window.skhNavIcon('back', 18) : '‹') + '</button>'
-            + '<div style="flex:1;min-width:0;"><b class="skh-discover-title">' + tk('kamus_title', 'Kamusi ya SokoHai') + '</b><br>'
-            + '<small class="skh-discover-sub">' + tk('kamus_sub', 'Icons, alama, badges & maana zake — single source of truth') + '</small></div>'
+        m.className = 'skh-sheet-overlay';
+        m.innerHTML = '<div class="skh-sheet skh-k-sheet">'
+            + '<div class="skh-sheet-head">'
+            + '<button type="button" class="skh-sheet-back" data-act="k-close" aria-label="' + tk('back', 'Rudi') + '">' + (window.skhNavIcon ? window.skhNavIcon('back', 18) : '‹') + '</button>'
+            + '<div style="flex:1;min-width:0;"><b class="skh-sheet-title">' + tk('kamus_title', 'Kamusi ya SokoHai') + '</b><br>'
+            + '<small class="skh-sheet-sub">' + tk('kamus_sub', 'Icons, alama, badges & maana zake — single source of truth') + '</small></div>'
             + '</div>'
-            + '<div class="skh-discover-search">'
-            + '<span class="skh-discover-svg">' + (window.skhNavIcon ? window.skhNavIcon('search', 15) : '⌕') + '</span>'
+            + '<div class="skh-sheet-search">'
+            + '<span class="skh-sheet-svg">' + (window.skhNavIcon ? window.skhNavIcon('search', 15) : '⌕') + '</span>'
             + '<input id="skhKQ" type="text" autocomplete="off" placeholder="' + tk('kamus_ph', 'Tafuta alama, icon au neno...') + '">'
             + '</div>'
-            + '<div id="skhKCats" class="skh-discover-tabs skh-k-tabs">' + catChipsHtml() + '</div>'
-            + '<div id="skhKResults" class="skh-discover-results skh-k-results"></div>'
+            + '<div id="skhKCats" class="skh-sheet-tabs skh-k-tabs">' + catChipsHtml() + '</div>'
+            + '<div id="skhKResults" class="skh-sheet-results skh-k-results"></div>'
             + '</div>';
         document.body.appendChild(m);
         m.querySelector('#skhKQ').addEventListener('input', function () {

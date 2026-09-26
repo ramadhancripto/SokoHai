@@ -617,14 +617,8 @@ window.paySubscription = async function(amount, title) {
                     subStatus: "Active"
                 });
             }
-            await skh.addDoc(skh.collection(skh.db, "adminRevenue"), { 
-                type: "subscription", 
-                amount: 0, 
-                package: title,
-                userEmail: skh.currentUser.email,
-                waived: true,
-                date: new Date().toISOString() 
-            });
+            // Accounting is server-authoritative; no client adminRevenue write.
+
             alert(` Ada ya SUBSCRIPTION imezimwa (FREE MODE)! Kifurushi chako cha ${title} kimeamilishwa BURE.`);
             closeModals();
             loadAndRenderDashboard();

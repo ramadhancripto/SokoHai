@@ -195,7 +195,7 @@
                 // [PHASE 1 SECURITY 2026-09] server huthibitisha ada kwa PesaPal (orderTrackingId) + mwanachama
                 await window.skhWalletAdjust(fb.doc(fb.db, 'users', ctx.agentDocId), 1260, { type: 'commission', ledgerKey: 'offreg_' + newUid, note: 'Kamisheni ya wakala - usajili wa mwanachama', purpose: 'offline_registration', memberUid: newUid, orderTrackingId: opts.orderTrackingId || null });
             }
-            await fb.addDoc(fb.collection(fb.db, 'adminRevenue'), { type: 'offline_registration', amount: 840, agentCode: ctx.agentCode, date: new Date().toISOString() });
+                // Accounting is server-authoritative; no client adminRevenue write.
         }
         return { newUid: newUid, offlineAccountId: offlineAccountId, businessId: businessId, businessSetupComplete: businessSetupComplete };
     };
@@ -503,7 +503,7 @@
 
             case 'deposit_item': // serious deposit (group buy / mnada / price drop)
                 await fb.setDoc(fb.doc(fb.db, 'serious_deposits', ctx.depositId), { uid: ctx.uid, itemId: ctx.itemId, hasActiveDeposit: true, amountPaid: 1300, transactionId: tid, date: now });
-                await fb.addDoc(fb.collection(fb.db, 'adminRevenue'), { type: 'serious_deposit', amount: 1300, user: ctx.email, itemId: ctx.itemId, date: now });
+                // Accounting is server-authoritative; no client adminRevenue write.
                 summary = 'Deposit imekubaliwa na kuhakikiwa! Sasa unaweza kushiriki kwenye mfumo huu.';
                 break;
 
@@ -528,7 +528,7 @@
                     var boostExpiresAt = ctx.boostExpiresAt || new Date(Date.parse(now) + boostDays * 86400000).toISOString();
                     await fb.updateDoc(fb.doc(fb.db, ctx.collectionName, ctx.itemId), { isBoosted: true, boostTargetViews: ctx.targetViews || 1000, boostedViewsCount: 0, boostDays: boostDays, boostedAt: now, boostExpiresAt: boostExpiresAt });
                 }
-                await fb.addDoc(fb.collection(fb.db, 'adminRevenue'), { type: 'boost', amount: pending.amount, status: 'success', date: now });
+                // Accounting is server-authoritative; no client adminRevenue write.
                 summary = 'Tangazo lako limekuwa Boosted!';
                 break;
 
@@ -543,9 +543,8 @@
                     // Legacy fallback: hakuna draft -> andika sasa.
                     await fb.addDoc(fb.collection(fb.db, 'agents'), { userId: ctx.uid, userEmail: ctx.email, fullName: ctx.name, contact: ctx.phone, email: ctx.agentEmail || '', location: ctx.region, bio: ctx.bio || '', status: 'pending', paymentStatus: 'paid', isPaid: true, paymentRef: ctx.txRef || tid, createdAt: now });
                 }
-                if (ctx.recordRevenue !== false) {
-                    await fb.addDoc(fb.collection(fb.db, 'adminRevenue'), { type: 'agent_registration', amount: pending.amount, paymentRef: ctx.txRef || tid, userEmail: ctx.email, date: now });
-                }
+                // Accounting is server-authoritative; no client adminRevenue write.
+                // `recordRevenue` is retained in context for compatibility only.
                 summary = 'Ombi lako la uwakala limetumwa! (Ref: ' + esc(ctx.txRef || tid) + ')';
                 break;
 
@@ -553,7 +552,7 @@
                 if (ctx.docId) {
                     await fb.updateDoc(fb.doc(fb.db, 'users', ctx.docId), { isSubscribed: true, subscriptionType: ctx.title, subscriptionValidUntil: ctx.subExpiryDate || now, subStatus: 'Active' });
                 }
-                await fb.addDoc(fb.collection(fb.db, 'adminRevenue'), { type: 'subscription', amount: pending.amount, package: ctx.title, userEmail: ctx.email, date: now });
+                // Accounting is server-authoritative; no client adminRevenue write.
                 summary = 'Kifurushi chako (' + esc(ctx.title || '') + ') kimeamilishwa.';
                 break;
 

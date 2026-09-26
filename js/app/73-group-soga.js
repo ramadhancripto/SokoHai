@@ -76,7 +76,7 @@ import { skh } from './00-bootstrap.js';
         var m = document.getElementById('skhGroupSogaModal');
         if (m) return m;
         m = document.createElement('div');
-        m.className = 'skh-discover-overlay';
+        m.className = 'skh-sheet-overlay';
         m.id = 'skhGroupSogaModal';
         m.style.zIndex = '100010';
         document.body.appendChild(m);
@@ -341,13 +341,13 @@ import { skh } from './00-bootstrap.js';
         var m = buildModal();
         if (m) {
             // [ABRUPT FAST UI] Fungua dirisha kamili la kikundi MARA MOJA bila kusubiri queries
-            m.innerHTML = '<div class="skh-discover-sheet" style="max-height:92vh;display:flex;flex-direction:column;">'
-                + '<div class="skh-discover-head">'
-                + '<button type="button" class="skh-discover-back" data-act="gsg-close" aria-label="' + tk('back', 'Rudi') + '">' + (window.skhNavIcon ? window.skhNavIcon('back', 18) : '‹') + '</button>'
+            m.innerHTML = '<div class="skh-sheet" style="max-height:92vh;display:flex;flex-direction:column;">'
+                + '<div class="skh-sheet-head">'
+                + '<button type="button" class="skh-sheet-back" data-act="gsg-close" aria-label="' + tk('back', 'Rudi') + '">' + (window.skhNavIcon ? window.skhNavIcon('back', 18) : '‹') + '</button>'
                 + '<div id="gsgAvatarTile" style="width:38px;height:38px;border-radius:11px;background:#EAF3FA;border:1px solid #CFDFEB;color:#39779B;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
-                + '<div style="flex:1;min-width:0;"><b id="gsgTitleEl" class="skh-discover-title" style="font-size:15px;">' + tk('group', 'Kikundi') + '</b><br>'
-                + '<small id="gsgSubEl" class="skh-discover-sub">' + tk('loading', 'Inapakia...') + '</small></div>'
-                + '<button type="button" class="skh-discover-back" data-act="gsg-info" title="' + tk('gsg_info', 'Taarifa za kikundi') + '" style="margin-left:6px;">' + (window.skhNavIcon ? window.skhNavIcon('menu', 18) : '☰') + '</button>'
+                + '<div style="flex:1;min-width:0;"><b id="gsgTitleEl" class="skh-sheet-title" style="font-size:15px;">' + tk('group', 'Kikundi') + '</b><br>'
+                + '<small id="gsgSubEl" class="skh-sheet-sub">' + tk('loading', 'Inapakia...') + '</small></div>'
+                + '<button type="button" class="skh-sheet-back" data-act="gsg-info" title="' + tk('gsg_info', 'Taarifa za kikundi') + '" style="margin-left:6px;">' + (window.skhNavIcon ? window.skhNavIcon('menu', 18) : '☰') + '</button>'
                 + '</div>'
                 + '<div id="gsgInfo" style="display:none;"></div>'
                 + '<div id="gsgDesc" style="display:none;margin:7px 12px 0;padding:9px 12px;border-radius:12px;background:#fff;border:1px solid #e2e8f0;color:#475569;font-size:12px;line-height:1.45;"></div>'
@@ -2145,7 +2145,7 @@ import { skh } from './00-bootstrap.js';
                     try {
                         if (window.showToast) window.showToast(g2 ? tk('gsg_info_saved', 'Taarifa zimehifadhiwa ✓') : tk('gsg_nothing_changed', 'Hakuna mabadiliko'), g2 ? 'success' : 'info');
                     } catch (eSI) {}
-                    if (g2 && g2.name) { try { var tt = document.querySelector('#skhGroupSogaModal .skh-discover-title'); if (tt) tt.textContent = g2.name; } catch (eTT) {} }
+                    if (g2 && g2.name) { try { var tt = document.querySelector('#skhGroupSogaModal .skh-sheet-title'); if (tt) tt.textContent = g2.name; } catch (eTT) {} }
                     if (g2) { try { renderInfoDrawer(gidSi); } catch (eR2c) {} try { if (window.skhChatReloadInbox) window.skhChatReloadInbox(); } catch (eR2d) {} }
                 })();
                 return;

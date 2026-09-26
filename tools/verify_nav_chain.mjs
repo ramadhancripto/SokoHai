@@ -18,7 +18,7 @@ function check(name, cond, detail = '') {
 }
 
 console.log('--- CHAT/NAV AUTHORITY INVARIANTS ---');
-for (const f of ['js/app/79-one-ui-at-a-time.js','js/app/81-absolute-one-ui-live.js','js/app/91-discover-fixes.js']) {
+for (const f of ['js/app/79-one-ui-at-a-time.js','js/app/81-absolute-one-ui-live.js']) {
     const src = read(f);
     const hasHelper = src.includes('function __skhCopyChainFlags');
     const uses = (src.match(/__skhCopyChainFlags\(/g) || []).length;

@@ -8,7 +8,7 @@
       b&b au cover-up — mpangilio ni flex row yenye ngog'wa
       zinazoshusha uzuri.
    2) RoleBadge component styles (70-role-identity).
-   3) Discover FAB (Gundua).
+   3) shared role/navigation styles.
    4) Kamusi (71) entry misc.
    ============================================================ */
 
@@ -76,35 +76,14 @@
 }
 .skh-verified-badge svg { width: 9px; height: 9px; }
 
-/* ---------- 3) DISCOVER FAB ---------- */
-#skhDiscFab {
-    position: fixed;
-    right: 14px;
-    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
-    z-index: 4800;
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 11px 16px;
-    border: none; border-radius: 999px;
-    background: linear-gradient(135deg, #1268A8, #18A982);
-    color: #fff;
-    font-weight: 800; font-size: 13px;
-    box-shadow: 0 8px 24px rgba(18,104,168,.38);
-    cursor: pointer;
-    transition: transform .18s ease, box-shadow .18s ease;
-    font-family: inherit;
-}
-#skhDiscFab:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 30px rgba(18,104,168,.45); }
-#skhDiscFab:active { transform: scale(.97); }
-#skhDiscFab svg { width: 15px; height: 15px; flex: 0 0 auto; }
-@media (min-width: 901px) { #skhDiscFab { right: 22px; bottom: 22px; padding: 13px 20px; font-size: 13.5px; } }
-
+/* ---------- 3) shared sheet overlays ---------- */
 /* ---------- 4) KAMUSI misc ---------- */
 #sokohaiLanguageCenterModal .skh-settings-modal-card { overflow-y: auto; }
 #skhDictResults { max-height: 48vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .skh-d-cat { transition: background .15s ease; }
 
-/* ---------- [R20] GLOBAL DISCOVER overlay + Group Soga ---------- */
-.skh-discover-overlay {
+/* ---------- shared sheet overlay for Group Soga and Kamusi ---------- */
+.skh-sheet-overlay {
     position: fixed; inset: 0; z-index: 9600;
     background: rgba(11, 47, 80, .42);
     display: flex; justify-content: center; align-items: flex-end;
@@ -113,8 +92,8 @@
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
 }
-.skh-discover-overlay.open { opacity: 1; pointer-events: auto; }
-.skh-discover-sheet {
+.skh-sheet-overlay.open { opacity: 1; pointer-events: auto; }
+.skh-sheet {
     width: 100%; max-width: 720px;
     max-height: 92vh; height: 92vh;
     background: #FFFFFF;
@@ -123,7 +102,7 @@
     overflow: hidden;
     box-shadow: 0 -12px 44px rgba(11,47,80,.28);
 }
-.skh-discover-head {
+.skh-sheet-head {
     display: flex; align-items: center; gap: 10px;
     padding: 14px 14px 10px;
     background: #F1FBF7;
@@ -132,61 +111,61 @@
     white-space: nowrap !important;
     writing-mode: horizontal-tb !important;
 }
-.skh-discover-title {
+.skh-sheet-title {
     font-size: 17px; letter-spacing: .2px;
     white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; display: block;
     writing-mode: horizontal-tb !important;
 }
-.skh-discover-sub {
+.skh-sheet-sub {
     opacity: .82; font-size: 11.5px;
     white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; display: block;
     writing-mode: horizontal-tb !important;
 }
-.skh-discover-back {
+.skh-sheet-back {
     width: 34px; height: 34px; border-radius: 10px;
     border: 1px solid #CCEBDD; background: #fff; color: #17604E;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.skh-discover-back svg { width: 17px; height: 17px; }
-.skh-discover-gear {
+.skh-sheet-back svg { width: 17px; height: 17px; }
+.skh-sheet-gear {
     width: 34px; height: 34px; border-radius: 10px; border: none;
     background: #fff; color: #17604E; border-color: #CCEBDD; font-size: 16px; cursor: pointer;
 }
-.skh-discover-search {
+.skh-sheet-search {
     display: flex; align-items: center; gap: 9px;
     margin: 12px 12px 8px; padding: 0 13px;
     background: #fff; border: 1.5px solid #dbe4ed; border-radius: 14px;
 }
-.skh-discover-search input {
+.skh-sheet-search input {
     flex: 1; border: none; outline: none; padding: 12px 0;
     font-size: 14.5px; font-family: inherit; background: transparent; color: #0f172a;
 }
-.skh-discover-svg { color: #1268A8; display: flex; align-items: center; }
-.skh-discover-tabs {
+.skh-sheet-svg { color: #1268A8; display: flex; align-items: center; }
+.skh-sheet-tabs {
     display: flex; gap: 6px; padding: 2px 12px 10px;
     overflow-x: auto; scrollbar-width: none;
 }
-.skh-discover-tabs::-webkit-scrollbar { display: none; }
-.skh-discover-results { flex: 1; overflow-y: auto; padding: 4px 12px 24px; -webkit-overflow-scrolling: touch; }
+.skh-sheet-tabs::-webkit-scrollbar { display: none; }
+.skh-sheet-results { flex: 1; overflow-y: auto; padding: 4px 12px 24px; -webkit-overflow-scrolling: touch; }
 
-/* modals ndogo za Discover (profaili, preview, vialio) */
-.skh-disc-modal {
+/* shared modal sheets (profiles, preview, dictionary) */
+.skh-modal {
     display: none; position: fixed; inset: 0; z-index: 100020;
     background: rgba(15,23,42,.55); align-items: center; justify-content: center;
 }
-.skh-disc-modal-card {
+.skh-modal-card {
     background: #fff; border-radius: 20px; padding: 18px;
     width: 92%; max-width: 400px; max-height: 86vh; overflow-y: auto;
 }
-.skh-disc-x {
+.skh-modal-x {
     border: none; background: #f1f5f9; width: 30px; height: 30px;
     border-radius: 50%; cursor: pointer; font-weight: 800; font-size: 15px; color: #475569;
 }
 
 /* desktop: overlay ikuu inakuwa centered card */
 @media (min-width: 901px) {
-    .skh-discover-overlay { align-items: center; }
-    .skh-discover-sheet { height: 84vh; max-height: 84vh; border-radius: 22px; }
+    .skh-sheet-overlay { align-items: center; }
+    .skh-sheet { height: 84vh; max-height: 84vh; border-radius: 22px; }
 }
 
 /* ================= [R21 KAMUSI PAGE + LANGUAGE MENU] ================= */

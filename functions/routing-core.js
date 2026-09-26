@@ -77,6 +77,38 @@ async function collectCandidates(myDb) {
 
 /* ------------------ tengeneza/unganisha safari kutoka order ------------------ */
 
+// [DELIVERY CONTRACT 2026-09] Manifest snapshot. Product/order remains the
+// authority; this is only the immutable transport view of the order items.
+// Never trust a client-supplied cargo description as the item identity.
+function cargoManifestFromOrder(order, orderId, delivery) {
+    order = order || {};
+    delivery = delivery || order.delivery || {};
+    const raw = Array.isArray(order.items) && order.items.length ? order.items : [{}];
+    const items = raw.map(function (item, index) {
+        item = item || {};
+        const quantity = Math.max(1, Number(item.quantity || item.qty || (index === 0 ? order.quantity : 1) || 1));
+        return {
+            orderItemId: String(item.orderItemId || item.itemId || item.id || ('item_' + index)),
+            productId: item.productId || item.productRef || order.productId || null,
+            variantId: item.variantId || item.variant || null,
+            titleSnapshot: String(item.title || item.name || (index === 0 ? order.itemTitle : '') || 'Mzigo wa oda').slice(0, 180),
+            quantity: quantity,
+            packageCount: Math.max(1, Number(item.packageCount || (index === 0 ? delivery.packageCount : 1) || 1)),
+            category: String(item.category || order.category || delivery.reqCategory || 'product').slice(0, 60)
+        };
+    });
+    return {
+        source: 'order',
+        orderId: orderId,
+        shipmentId: order.shipmentId || delivery.shipmentId || null,
+        items: items,
+        packageCount: Math.max(1, Number(delivery.packageCount || items.reduce(function (n, i) { return n + i.packageCount; }, 0) || 1)),
+        declaredWeightKg: Number(delivery.packageWeightKg || order.cargoWeight || order.weight || 0) || null,
+        category: String(delivery.reqCategory || order.reqCategory || 'product').slice(0, 60),
+        verifiedPickupCount: null
+    };
+}
+
 // [DELIVERY OPTION 2026-09] Oda za BIDHAA zenye delivery.required = true
 // huungana na mfumo huohuo wa ride_request → delivery_offers → Request
 // Inbox. Hakuna mkusanyiko mpya wa bandia: oda inabeba snapshot ya
@@ -87,6 +119,8 @@ function rideFromProductOrder(order, orderId) {
     const cargoName = order.itemTitle || firstItem.title || d.packageDescription || 'Mzigo wa oda';
     return {
         customerId: order.buyerId,
+        buyerId: order.buyerId || null,
+        sellerId: order.sellerId || null,
         customerName: order.buyerName || 'Mteja',
         customerPhone: d.customerPhone || '',
         reqCategory: d.reqCategory || 'Cargo',
@@ -100,6 +134,9 @@ function rideFromProductOrder(order, orderId) {
         fare: Number(d.fare || 0),
         cargoWeight: Number(d.packageWeightKg || 0),
         cargoSize: d.packageQuantity || '',
+        cargoManifest: cargoManifestFromOrder(order, orderId, d),
+        requestedByUid: order.deliveryRequestedByUid || order.requestedByUid || order.buyerId || null,
+        requestedByRole: order.deliveryRequestedByRole || order.requestedByRole || 'buyer',
         pickupDate: d.pickupDate || '',
         pickupTime: d.pickupTime || '',
         specialRequirements: d.notes || '',
@@ -149,6 +186,8 @@ async function ensureRideForOrder(myDb, order, orderId, opts) {
     const cargoName = order.itemTitle || order.packageDescription || 'Mzigo';
     const ride = {
         customerId: order.buyerId,
+        buyerId: order.buyerId || null,
+        sellerId: order.sellerId || null,
         customerName: order.buyerName || 'Mteja',
         customerPhone: order.buyerPhone || '',
         reqCategory: order.reqCategory || 'Cargo',
@@ -162,6 +201,9 @@ async function ensureRideForOrder(myDb, order, orderId, opts) {
         fare: Number(order.fare || order.amount || 0),
         cargoWeight: Number(order.cargoWeight || order.weight || 0),
         cargoSize: order.packageQuantity || '',
+        cargoManifest: cargoManifestFromOrder(order, orderId, order.delivery || {}),
+        requestedByUid: order.deliveryRequestedByUid || order.requestedByUid || order.buyerId || null,
+        requestedByRole: order.deliveryRequestedByRole || order.requestedByRole || 'buyer',
         pickupDate: order.pickupDate || '',
         pickupTime: order.pickupTime || '',
         specialRequirements: order.specialRequirements || '',
@@ -311,7 +353,13 @@ async function routeBookingFromOrder(myDb, orderId, opts) {
             currency: order.currency || 'TZS',
             requirements: ride.specialRequirements || '',
             weight: ride.cargoWeight || 0,
+            cargoManifest: ride.cargoManifest || null,
+            shipmentId: ride.cargoManifest && ride.cargoManifest.shipmentId || order.shipmentId || null,
+            requestedByUid: ride.requestedByUid || order.buyerId || null,
+            requestedByRole: ride.requestedByRole || 'buyer',
+            // Preserve the existing offer visibility contract (buyer + carrier).
             participants: [order.buyerId, c.uid],
+            deliveryParticipants: [order.buyerId, order.sellerId, c.uid].filter(Boolean),
             createdAt: nowIso()
         };
         if (isFirst) {

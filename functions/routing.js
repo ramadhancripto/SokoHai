@@ -114,6 +114,39 @@ exports.deliveryRouteBooking = onCall({ region: REGION }, async (req) => {
     });
 });
 
+// Recovery/breakdown is server-authoritative. Before pickup the assignment may
+// be released; after pickup custody is preserved and the ride is flagged for a
+// controlled transfer/reassignment rather than silently moving the cargo.
+exports.deliveryReportTransportFault = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const rideId = String((req.data || {}).rideId || '');
+    const reason = String((req.data || {}).reason || 'transport_fault').slice(0, 240);
+    if (!rideId) throw new HttpsError('invalid-argument', 'rideId inahitajika.');
+    const rideRef = db.doc('ride_requests/' + rideId);
+    let result;
+    await db.runTransaction(async (t) => {
+        const snap = await t.get(rideRef);
+        if (!snap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+        const rd = snap.data() || {};
+        const owner = String(rd.currentCustodian || rd.driverId || '');
+        if (owner !== auth.uid) throw new HttpsError('permission-denied', 'Ni msafirishaji aliyepewa/custodian pekee.');
+        if (['completed', 'cancelled', 'disputed'].indexOf(String(rd.status || '')) !== -1) {
+            throw new HttpsError('failed-precondition', 'Safari imefungwa tayari.');
+        }
+        const activeCustody = ['picked_up', 'in_transit', 'awaiting_handover'].indexOf(String(rd.status || '')) !== -1
+            || String(rd.custodyStage || '') === 'transit';
+        if (activeCustody) {
+            t.update(rideRef, { status: 'reassignment_required', recoveryStatus: 'custody_preserved', transportFaultAt: new Date().toISOString(), transportFaultReason: reason });
+            result = { status: 'reassignment_required', custodyPreserved: true };
+        } else {
+            t.update(rideRef, { status: 'searching', routingStatus: 'recovery', assignmentStatus: 'seeking', driverId: null, driverName: null, driverPhone: null, driverVehicleReg: null, recoveryStatus: 'pre_pickup_released', transportFaultAt: new Date().toISOString(), transportFaultReason: reason });
+            result = { status: 'searching', custodyPreserved: false };
+        }
+    });
+    await routingEvent(db, rideId, 'TRANSPORT_FAULT_REPORTED', auth.uid, { reason: reason, custodyPreserved: !!(result && result.custodyPreserved) });
+    return Object.assign({ ok: true, rideId: rideId }, result || {});
+});
+
 // Wakala akatae ofa.
 exports.deliveryOfferDecline = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);

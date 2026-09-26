@@ -25,8 +25,8 @@ check('account save action is primary green', has('js/app/67-payment-accounts.js
 check('legacy announcement source no longer has dark navy strip', lacks('css/05-announcement.css', 'background:linear-gradient(90deg,#002244,#00509d,#10b981)'));
 check('old core announcement source no longer has dark navy strip', lacks('css/01-core.css', 'background: linear-gradient(90deg, #002244, #00509d)'));
 check('dialogs do not use legacy blue primary background', lacks('js/05-dialogs.js', 'background:#1268A8'));
-check('discover engine does not use legacy blue CTA literal', lacks('js/app/75-discover-engine.js', '#1268A8'));
-check('discover completion does not use legacy blue CTA literal', lacks('js/app/88-discover-complete.js', '#1268A8'));
+check('current Discover engine is removed', !fs.existsSync(new URL('../js/app/75-discover-engine.js', import.meta.url)));
+check('current Discover completion UI is removed', !fs.existsSync(new URL('../js/app/88-discover-complete.js', import.meta.url)));
 
 console.log(`\nFinal white-system contract: ${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

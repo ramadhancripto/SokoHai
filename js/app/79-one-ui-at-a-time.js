@@ -38,8 +38,6 @@ import { skh } from './00-bootstrap.js';
 
   // Orodha kamili ya overlays zinazojulikana — lazima zote zifichwe isipokuwa target
   const ALL_OVERLAY_IDS = [
-    'skhDiscoverEngine', 'skhDiscoverOverlay', 'skhDiscoverRequestModal',
-    'skhDiscPersonModal', 'skhDiscInviteModal', 'skhDiscGrpModal',
     'chatListModal', 'chatModal',
     'skhGroupSogaModal', 'gsgGoDetail', 'gsgCoWS', 'gsgCoWSCard',
     'productModal', 'mySokoHaiModal', 'sellerProfileModal',
@@ -77,7 +75,7 @@ import { skh } from './00-bootstrap.js';
         if(exceptId && el.id===exceptId) return;
         if(ALL_OVERLAY_IDS.indexOf(el.id)!==-1) return; // already handled
         // usifunge FAB au mainFeed
-        if(el.id==='skhDiscFab' || el.id==='mainFeed' || el.id==='appRoot') return;
+        if(el.id==='mainFeed' || el.id==='appRoot') return;
         // only hide if it looks like overlay (fixed/absolute + high z)
         try{
           var cs=getComputedStyle(el);
@@ -99,15 +97,10 @@ import { skh } from './00-bootstrap.js';
       window.skhHideAllOverlaysExcept(id);
       var el=byId(id);
       if(!el){
-        // create if not exists for discover engine / group soga
-        if(id==='skhDiscoverEngine'){
-          // let original builder create it
-          return false;
-        }
         if(id==='skhGroupSogaModal'){
           el=document.createElement('div');
           el.id=id;
-          el.className='skh-discover-overlay';
+          el.className='skh-sheet-overlay';
           el.style.zIndex='100010';
           document.body.appendChild(el);
         }
@@ -134,26 +127,6 @@ import { skh } from './00-bootstrap.js';
     }catch(e){ console.error('[oneUI show]',id,e); }
     return false;
   };
-
-  // ---------- PATCH DISCOVER ----------
-  // REMOVED: 79 no longer patches skhDiscoverEngineOpen or skhDiscoverOpen
-  // These are now handled by 81-absolute-one-ui-live.js (single source of truth)
-  function patchDiscover(){
-    // No-op: discover patches is now handled by 81
-    // But still patch close to restore body overflow
-    var origEngineClose=window.skhDiscoverEngineClose;
-    if(origEngineClose && !origEngineClose.__oneUI){
-      window.skhDiscoverEngineClose = function(){
-        try{
-          var el=byId('skhDiscoverEngine');
-          if(el){ el.style.display='none'; el.classList.remove('open'); }
-          document.body.style.overflow='auto';
-          return origEngineClose.apply(this, arguments);
-        }catch(e){ return origEngineClose.apply(this, arguments); }
-      };
-      window.skhDiscoverEngineClose.__oneUI=true;
-    }
-  }
 
   // ---------- PATCH CHAT INBOX ----------
   function patchChatInbox(){
@@ -224,7 +197,7 @@ import { skh } from './00-bootstrap.js';
           if(!m){
             m=document.createElement('div');
             m.id='skhGroupSogaModal';
-            m.className='skh-discover-overlay';
+            m.className='skh-sheet-overlay';
             m.style.zIndex='100010';
             document.body.appendChild(m);
           }
@@ -252,7 +225,7 @@ import { skh } from './00-bootstrap.js';
           if(!m){
             m=document.createElement('div');
             m.id='skhGroupSogaModal';
-            m.className='skh-discover-overlay';
+            m.className='skh-sheet-overlay';
             m.style.zIndex='100010';
             document.body.appendChild(m);
           }
@@ -266,36 +239,6 @@ import { skh } from './00-bootstrap.js';
       __skhCopyChainFlags(base, window.skhOpenGroupSoga);
       window.skhOpenGroupSoga.__oneUIAtomic=true;
     }
-  }
-
-  // ---------- PATCH FAB — make it instant, no polling delay ----------
-  function patchFab(){
-    try{
-      var fab=byId('skhDiscFab');
-      if(!fab) return false;
-      if(fab.__oneUI) return true;
-      fab.__oneUI=true;
-      // remove old listeners by cloning? simpler: add capture listener that does atomic first
-      fab.addEventListener('click', function(ev){
-        try{
-          ev.stopPropagation();
-          ev.preventDefault();
-          window.skhHideAllOverlaysExcept('skhDiscoverEngine');
-          var eng=byId('skhDiscoverEngine');
-          if(eng){
-            eng.style.display='flex';
-            eng.classList.add('open');
-            eng.style.opacity='1';
-            document.body.style.overflow='hidden';
-          }
-          if(window.skhDiscoverOpen){
-            // call after instant show
-            setTimeout(function(){ try{ window.skhDiscoverOpen(); }catch(e){} },0);
-          }
-        }catch(e){}
-      }, true);
-      return true;
-    }catch(e){ return false; }
   }
 
   // ---------- PATCH closeModals wrapper to be truly one-UI-at-a-time ----------
@@ -336,12 +279,10 @@ import { skh } from './00-bootstrap.js';
 
   // ---------- INIT WITH RETRY ----------
   function init(){
-    patchDiscover();
     patchChatInbox();
     patchDirect();
     patchGroupRow();
     patchSoga();
-    patchFab();
     patchCloseModals();
     // ensure discover engine CSS has no transition that causes blink
     try{
@@ -349,14 +290,13 @@ import { skh } from './00-bootstrap.js';
       style.id='skhOneUIStyle';
       if(!byId('skhOneUIStyle')){
         style.textContent=`
-          .skh-discover-engine, .skh-discover-overlay, #skhGroupSogaModal, #chatListModal, #chatModal, #gsgGoDetail, #gsgCoWS {
+          .skh-sheet-overlay, #skhGroupSogaModal, #chatListModal, #chatModal, #gsgGoDetail, #gsgCoWS {
             transition: none !important;
             animation: none !important;
           }
-          .skh-discover-engine.open, #skhGroupSogaModal.open, #chatListModal[style*=\"flex\"], #chatModal[style*=\"flex\"] {
+          #skhGroupSogaModal.open, #chatListModal[style*=\"flex\"], #chatModal[style*=\"flex\"] {
             opacity:1 !important; transform:none !important;
           }
-          #skhDiscFab { pointer-events: auto !important; }
         `;
         document.head.appendChild(style);
       }
@@ -372,11 +312,5 @@ import { skh } from './00-bootstrap.js';
   setTimeout(init, 1000);
   setTimeout(init, 2500);
 
-  // keep trying FAB
-  var fabRetry=setInterval(function(){
-    if(patchFab()){ clearInterval(fabRetry); }
-  }, 500);
-  setTimeout(function(){ clearInterval(fabRetry); }, 10000);
-
-  console.log('[79-one-ui-at-a-time] patched — one UI at a time, no blink, discover fixed');
+  console.log('[79-one-ui-at-a-time] patched — one UI at a time, no blink, chat/group stable');
 })();

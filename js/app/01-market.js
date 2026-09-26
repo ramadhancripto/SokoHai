@@ -741,9 +741,8 @@ window.payForBoost = async function() {
                 boostedAt: boostStart.toISOString(),
                 boostExpiresAt: boostExpiresAt
             });
-            await skh.addDoc(skh.collection(skh.db, "adminRevenue"), { 
-                type: "boost", amount: 0, status: "success", waived: true, date: new Date().toISOString() 
-            });
+            // Accounting is server-authoritative; no client adminRevenue write.
+
             alert(" Ada ya BOOST imezimwa (FREE MODE)! Tangazo lako limekuwa Boosted BURE.");
             closeModals();
             loadAndRenderDashboard();

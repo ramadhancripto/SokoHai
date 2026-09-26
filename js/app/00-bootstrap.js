@@ -502,7 +502,7 @@ window.closeModals = function(forceAll) {
             });
         } catch(e) {}
         const fomuZote = [ 'sellerForm','serviceForm','deliveryForm','sokopayForm', 'offlineMemberForm','editModal','businessOSForm','rideRequestModal', 'userPaymentModal','buyerOrdersModal', 'authModal', 'productModal', 'cartModal', 'chatModal', 'chatListModal', 'notifModal', 'directHireModal', 'deliveryChoiceModal', 'actionRequestModal', 'logisticsTokenModal', 'deliveriesModal', 'tripsModal', 'savedItemsModal',
-            'sidebarMenuModal','plusMenu','mainMenu','sokohaiAccountSettingModal','mySokoHaiModal','advertiserDashboardModal','advertiserBillingSoonModal','companyAdsSoonModal','sellerProfileModal','tokenBoxModal','requestInboxModal','routeMatchModal','skhDiscoverOverlay','skhDiscoverEngine'
+            'sidebarMenuModal','plusMenu','mainMenu','sokohaiAccountSettingModal','mySokoHaiModal','advertiserDashboardModal','advertiserBillingSoonModal','companyAdsSoonModal','sellerProfileModal','tokenBoxModal','requestInboxModal','routeMatchModal'
         ];
         fomuZote.forEach(id => {
             const el = document.getElementById(id);
@@ -613,6 +613,7 @@ try { window.skhCustodyServerPassengerBoard = skh.wrapCallable("deliveryPassenge
 try { window.skhRoutingServerRouteBooking = skh.wrapCallable("deliveryRouteBooking"); } catch (e) { console.warn("[Routing] routeBooking callable haikusajiliwa:", e && e.message); }
 try { window.skhRoutingServerOfferAccept = skh.wrapCallable("deliveryOfferAccept"); } catch (e) { console.warn("[Routing] offerAccept callable haikusajiliwa:", e && e.message); }
 try { window.skhRoutingServerOfferDecline = skh.wrapCallable("deliveryOfferDecline"); } catch (e) { console.warn("[Routing] offerDecline callable haikusajiliwa:", e && e.message); }
+try { window.skhRoutingServerTransportFault = skh.wrapCallable("deliveryReportTransportFault"); } catch (e) { console.warn("[Routing] transportFault callable haikusajiliwa:", e && e.message); }
 try { window.skhRoutingServerSweep = skh.wrapCallable("deliveryRouteSweep"); } catch (e) { console.warn("[Routing] sweep callable haikusajiliwa:", e && e.message); }
 try { window.skhRoutingServerRetry = skh.wrapCallable("deliveryRouteRetry"); } catch (e) { console.warn("[Routing] retry callable haikusajiliwa:", e && e.message); }
 

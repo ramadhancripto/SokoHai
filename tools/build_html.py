@@ -40,7 +40,7 @@ FRAGMENTS = [
     ('13-form-edit.html',           '<!-- 1. LEFT SIDEBAR OF SOKOPAY'),
     ('14-haipay.html',              '<!-- MAIN MENU (PLUS BUTTON)'),
     ('15-main-menu.html',           '<!-- 1. Top Row -->'),
-    ('16-topnav.html',              '<!-- 4. Kitufe Kipya cha Kategoria & Sliders -->'),
+    ('16-topnav.html',              '<!-- Kitufe cha Kategoria & Subcategories (chini ya Ads Card) -->'),
     ('17-sliders.html',             '<!-- 5 KPI CARDS ROW -->'),
     ('18-buyer-view.html',          '<!-- 1. HOME -->'),
     ('19-bottomnav.html',           '<!-- RATING & REVIEWS MODAL'),

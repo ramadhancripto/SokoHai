@@ -1146,7 +1146,7 @@ server.on(
       e.code === 'EADDRINUSE'
         ? '✗ Port ' +
           PORT +
-          ' inatumika. Jaribu: PORT=5056 npm run local'
+          ' inatumika. Simamisha server nyingine ya SokoHai kwenye port 5055 kisha endesha tena.'
         : e
     );
 

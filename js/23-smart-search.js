@@ -475,7 +475,8 @@
         var i = $('searchInput'); if (i && i.value.trim()) addRecent(i.value.trim());
         window.skhSearchClose();
         if (typeof window.handleSearch === 'function') window.handleSearch();
-        if (i && i.value.trim() && typeof window.skhDiscoverEngineOpen === 'function') window.skhDiscoverEngineOpen(i.value.trim(), { entityType:'products' });
+        // Discover was intentionally removed. Keep the existing search surface
+        // safe; full taxonomy/search replacement is deferred.
     };
 
     /* ========================================================================
@@ -627,7 +628,7 @@
                 var v = input.value.trim();
                 if (v) { addRecent(v); window.skhSearchClose();
                          if (typeof window.handleSearch === 'function') window.handleSearch();
-                         if (typeof window.skhDiscoverEngineOpen === 'function') window.skhDiscoverEngineOpen(v, { entityType:'products' }); }
+                         /* Discover removed intentionally; do not open a replacement. */ }
             }
         });
 

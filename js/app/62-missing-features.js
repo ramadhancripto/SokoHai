@@ -367,12 +367,13 @@
       const ref = db.collection('platform_stats').doc('current');
       const snap = await ref.get();
       if (!snap.exists) {
-        await ref.set({ totalRevenue: 0, revenueCount: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date(), updatedAt: firebase.firestore.FieldValue.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date() });
-        console.log('[platform_stats] seeded');
+        // platform_stats is server-authoritative. The browser may read it, but
+        // must never create/update the document (see firestore.rules).
+        console.info('[platform_stats] not initialized; waiting for platformStatsRefresh');
       }
     }catch(e){ console.warn('[platform_stats] seed fail', e); }
   };
-  // Auto-seed after auth
+  // Read-only health check after auth; initialization belongs to the server.
   setTimeout(()=>{ try{ window.skhEnsurePlatformStats(); }catch(_){} }, 3000);
 
   // ========= 7. REAL CUSTOMTOKEN FLOW FOR OFFLINE MEMBER =========

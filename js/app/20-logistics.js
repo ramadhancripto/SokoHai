@@ -51,23 +51,16 @@ window.triggerVehicleBreakdown = async function(rideId, cargoName) {
     if(!await skhConfirm(` EMERGENCY BREAKDOWN RECOVERY ENGINE:\n\nJe, chombo chako kimepata hitilafu au dharura njiani?\n\nMfumo utahifadhi mkataba na Escrow yote, lakini utarudisha safari ya "${cargoName}" sokoni ili dereva wa karibu aje kuendeleza safari ya mzigo salama.`)) return;
 
     try {
-        const rideRef = skh.doc(skh.db, "ride_requests", rideId);
-        
-        // Rudisha safari sokoni na weka alama ya uokoaji
-        await skh.updateDoc(rideRef, {
-            status: "searching", // Mzigo unarudi kutafuta dereva mpya
-            oldDriverId: skh.currentUser.uid,
-            oldDriverName: skh.currentUser.displayName,
-            driverId: null,      // Ondoa dereva aliyepata ajali/hitilafu
-            driverName: null,
-            driverPhone: null,
-            driverVehicleReg: null,
-            isRecoveryActive: true,
-            breakdownAt: new Date().toISOString()
-        });
+        // Recovery is a custody-sensitive transition. Never rewrite ride_requests
+        // from the browser; the server preserves active custody and decides whether
+        // this is a pre-pickup release or a controlled reassignment.
+        if (typeof window.skhRoutingServerTransportFault !== 'function') throw new Error('recovery_service_unavailable');
+        const recovery = await window.skhRoutingServerTransportFault({ rideId: rideId, reason: 'vehicle_breakdown' });
+        const recoveryData = (recovery && recovery.data) || recovery || {};
+        if (!recoveryData.ok) throw new Error('recovery_rejected');
 
         // Vuta taarifa za safari ili kujua mnunuzi
-        const docSnap = await skh.getDoc(rideRef);
+        const docSnap = await skh.getDoc(skh.doc(skh.db, "ride_requests", rideId));
         if(docSnap.exists()) {
             const rd = docSnap.data();
             

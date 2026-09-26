@@ -1934,17 +1934,44 @@ function custodyMaskToken(t) {
     return t.slice(0, 3) + '••••••' + t.slice(-2);
 }
 
-async function custodySetToken(rideId, kind, token, participants) {
+async function custodySetToken(rideId, kind, token, participants, opts) {
+    opts = opts || {};
     const now = new Date().toISOString();
-    await db.collection('delivery_tokens').doc(rideId + '_' + kind).set({
+    let ride = {};
+    try {
+        const rs = await db.doc('ride_requests/' + rideId).get();
+        ride = rs.exists ? (rs.data() || {}) : {};
+    } catch (e) {}
+    const tokenId = rideId + '_' + kind + (opts.legId ? '_' + String(opts.legId) : '');
+    await db.collection('delivery_tokens').doc(tokenId).set({
+        tokenId: tokenId,
         rideId: rideId,
+        shipmentId: opts.shipmentId || ride.shipmentId || (ride.cargoManifest && ride.cargoManifest.shipmentId) || null,
+        orderId: opts.orderId || ride.orderId || null,
         kind: kind,
+        tokenType: kind === 'pickup' ? 'PICKUP_TOKEN' : (kind === 'handover' ? 'TRANSFER_TOKEN' : 'DELIVERY_TOKEN'),
+        stage: kind === 'pickup' ? 'pickup' : (kind === 'handover' ? 'transfer' : 'delivery'),
+        legId: opts.legId || null,
         token: token,
         participants: participants || [],
+        issuerUid: opts.issuerUid || null,
+        issuerRole: opts.issuerRole || null,
+        intendedActorUid: opts.intendedActorUid || null,
+        intendedActorRole: opts.intendedActorRole || null,
+        fromPartyUid: opts.fromPartyUid || null,
+        fromPartyRole: opts.fromPartyRole || null,
+        toPartyUid: opts.toPartyUid || null,
+        toPartyRole: opts.toPartyRole || null,
         createdAt: now,
+        issuedAt: now,
+        presentedAt: null,
+        verifiedAt: null,
+        consumedAt: null,
         expiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
-        status: 'pending'
-    });
+        status: 'issued',
+        attemptCount: 0
+    }, { merge: true });
+    return tokenId;
 }
 
 async function custodyGetToken(rideId, kind) {
@@ -1955,7 +1982,16 @@ async function custodyGetToken(rideId, kind) {
 }
 
 async function custodyMarkTokenStatus(rideId, kind, status) {
-    try { await db.doc('delivery_tokens/' + rideId + '_' + kind).update({ status: status, usedAt: new Date().toISOString() }); } catch (e) { /* hiari */ }
+    try {
+        const patch = { status: status };
+        const now = new Date().toISOString();
+        if (status === 'presented') patch.presentedAt = now;
+        if (status === 'verified') patch.verifiedAt = now;
+        if (status === 'used' || status === 'consumed') patch.consumedAt = now;
+        if (status === 'expired') patch.expiredAt = now;
+        if (status === 'revoked') patch.revokedAt = now;
+        await db.doc('delivery_tokens/' + rideId + '_' + kind).update(patch);
+    } catch (e) { /* hiari */ }
 }
 
 // Uthibitisho wa token: hash ya sasa (PHASE B) au plaintext ya zamani (legacy).
@@ -2154,6 +2190,19 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
 
         // Pickup Token (PK) — crypto-random, single-use, 72h (kama deliveryAccept).
         pk = custodyToken('PK-');
+        t.set(db.collection('delivery_tokens').doc(rideId + '_pickup'), {
+            tokenId: rideId + '_pickup',
+            rideId: rideId,
+            orderId: orderId || null,
+            shipmentId: rd.shipmentId || (rd.cargoManifest && rd.cargoManifest.shipmentId) || null,
+            kind: 'pickup', tokenType: 'PICKUP_TOKEN', stage: 'pickup',
+            token: pk, participants: [customerId, auth.uid].filter(Boolean),
+            issuerUid: auth.uid, issuerRole: 'transporter',
+            intendedActorUid: customerId || null, intendedActorRole: 'seller_or_sender',
+            createdAt: now, issuedAt: now, presentedAt: null, verifiedAt: null, consumedAt: null,
+            expiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
+            status: 'issued', attemptCount: 0
+        }, { merge: true });
         t.update(rideRef, {
             status: 'accepted',
             driverId: auth.uid,
@@ -3260,6 +3309,7 @@ exports.deliveryRouteBooking = routingEngine.deliveryRouteBooking;
 exports.deliveryOfferDecline = routingEngine.deliveryOfferDecline;
 exports.deliveryRouteSweep = routingEngine.deliveryRouteSweep;
 exports.deliveryRouteRetry = routingEngine.deliveryRouteRetry;
+exports.deliveryReportTransportFault = routingEngine.deliveryReportTransportFault;
 exports.negotiationSendOffer = negotiationEngine.negotiationSendOffer;
 exports.negotiationAction = negotiationEngine.negotiationAction;
 // [DELIVERY FLOW 2026-09] Mtiririko wa uwasilishaji wa oda za majadiliano

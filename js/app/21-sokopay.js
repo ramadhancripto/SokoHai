@@ -98,11 +98,7 @@ window.confirmSokoPayLinkDirect = async function(docId, sellerId, totalAmount, c
         }
 
         // 3. Rekodi makusanyo ya platform revenue
-        await skh.addDoc(skh.collection(skh.db, "adminRevenue"), {
-            type: "sokopay_commission",
-            amount: platformFee,
-            date: new Date().toISOString()
-        });
+            // Accounting is server-authoritative; no client adminRevenue write.
 
         alert(T('sp_contract_done', "Congratulations! Contract completed safely and money sent to the seller."));
         window.trackSokoPayTransaction(); // Refresh taarifa

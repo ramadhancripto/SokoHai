@@ -33,10 +33,8 @@ import { skh } from './00-bootstrap.js';
     if (window.__skhOpening && (now - window.__skhOpening.at) < 900){
       if (uid2 && window.__skhOpening.uid===uid2) return false;
       if (gid2 && window.__skhOpening.gid===gid2) return false;
-      if (extra==='discover' && window.__skhOpening.disc && (now-window.__skhOpening.at)<900) return false;
     }
-    window.__skhOpening = { at: now, uid: uid2||'', gid: gid2||'', disc: extra==='discover'?'1':(window.__skhOpening.disc||''), oid: window.__skhOpening.oid||'' };
-    if(extra==='discover') window.__skhOpening.discAt=now;
+    window.__skhOpening = { at: now, uid: uid2||'', gid: gid2||'', oid: window.__skhOpening.oid||'' };
     return true;
   }
 
@@ -47,8 +45,6 @@ import { skh } from './00-bootstrap.js';
       else {
         var inbox=document.getElementById('chatListModal');
         if(inbox) { inbox.style.display='none'; inbox.classList.remove('open'); }
-        var disc=document.getElementById('skhDiscoverEngine');
-        if(disc){ disc.style.display='none'; disc.classList.remove('open'); }
       }
     }catch(e){}
     try{
@@ -68,8 +64,6 @@ import { skh } from './00-bootstrap.js';
       else {
         var inbox=document.getElementById('chatListModal');
         if(inbox){ inbox.style.display='none'; inbox.classList.remove('open'); }
-        var disc=document.getElementById('skhDiscoverEngine');
-        if(disc){ disc.style.display='none'; disc.classList.remove('open'); }
         var cm=document.getElementById('chatModal');
         if(cm && !isDesktop()){ cm.style.display='none'; }
       }
@@ -78,14 +72,14 @@ import { skh } from './00-bootstrap.js';
     if(!m){
       m=document.createElement('div');
       m.id='skhGroupSogaModal';
-      m.className='skh-discover-overlay';
+      m.className='skh-sheet-overlay';
       m.style.zIndex='100010';
       document.body.appendChild(m);
     }
     // instant skeleton, no await
     if(!m.classList.contains('open') || !m.innerHTML){
-      m.innerHTML='<div class="skh-discover-sheet" style="max-height:92vh;display:flex;flex-direction:column;">'
-        +'<div class="skh-discover-head" style="padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;">'
+      m.innerHTML='<div class="skh-sheet" style="max-height:92vh;display:flex;flex-direction:column;">'
+        +'<div class="skh-sheet-head" style="padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;">'
         +'<div style="width:38px;height:38px;border-radius:11px;background:#EAF3FA;color:#39779B;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
         +'<div style="flex:1;"><b style="font-size:15px;color:#0f172a;">Inafungua...</b><br><small style="color:#64748b;">Tafadhali subiri</small></div></div>'
         +'<div style="flex:1;padding:20px;text-align:center;color:#94a3b8;"><div style="display:inline-block;width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#1268A8;border-radius:50%;animation:spin 0.8s linear infinite;"></div><br><br><small>Inapakia mazungumzo...</small></div></div>'

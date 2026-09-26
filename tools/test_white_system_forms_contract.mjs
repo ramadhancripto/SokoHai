@@ -7,7 +7,7 @@ const r = p => fs.readFileSync(path.join(root, p), 'utf8');
 
 const auth = r('css/06-auth-polish.css');
 const market = r('css/07-market-polish.css');
-const social = r('css/21-discovery-maoni.css');
+const social = r('css/15-chat-comments.css');
 const sell = r('html/09-admin-sell.html');
 const forms = r('js/app/05-forms.js');
 
@@ -43,21 +43,8 @@ c(
   market.includes('background: #18A982')
 );
 
-c(
-  'seller follow action is green',
-  social.includes('border: 1.5px solid #18A982') &&
-  social.includes('background: #18A982')
-);
 
-c(
-  'comments send action is green',
-  /\.maoni-body \.skh-cm-send[\s\S]*background:\s*#18A982/.test(social)
-);
 
-c(
-  'comments focus uses green ring',
-  social.includes('rgba(24, 169, 130, .12)')
-);
 
 c(
   'seller form gallery action is green',

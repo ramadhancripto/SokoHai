@@ -5,7 +5,7 @@
    UCHUNGUZI ULIOFANYIKA (§1) — matokeo halisi, si dhana:
 
      LOCAL DEVELOPMENT:
-       Functions -> http://127.0.0.1:5056/__fn/*
+       Functions -> http://127.0.0.1:5055/__fn/*
        Firestore -> http://127.0.0.1:8085
 
      PRODUCTION:
@@ -442,7 +442,7 @@ import { skh } from './00-bootstrap.js';
        6) UCHUNGUZI WA HALI YA BACKEND — kwa developer/admin
        ------------------------------------------------------------------------
        LOCAL:
-         Functions -> http://127.0.0.1:5056/__fn/
+         Functions -> http://127.0.0.1:5055/__fn/
          Firestore -> http://127.0.0.1:8085/
 
        PRODUCTION:
@@ -470,7 +470,7 @@ import { skh } from './00-bootstrap.js';
          * Local Functions server.
          */
         var localFnBase =
-            'http://127.0.0.1:5056/__fn/';
+            'http://127.0.0.1:5055/__fn/';
 
         /*
          * Production Functions server.

@@ -176,12 +176,8 @@ window.runSokoPayTimeLockChronJob = async function() {
                 }
 
                 // 3. Rekodi platform commission
-                await skh.addDoc(skh.collection(skh.db, "adminRevenue"), {
-                    type: "sokopay_commission",
-                    amount: platformFee,
-                    contractCode: od.paymentRef || "AUTO_RELEASE",
-                    date: new Date().toISOString()
-                });
+            // Accounting is server-authoritative; no client adminRevenue write.
+
             }
         });
 
@@ -235,12 +231,8 @@ window.runSokoPayTimeLockChronJob = async function() {
                 }
 
                 // 3. Rekodi platform commission
-                await skh.addDoc(skh.collection(skh.db, "adminRevenue"), {
-                    type: "sokopay_commission",
-                    amount: platformFee,
-                    contractCode: ld.code,
-                    date: new Date().toISOString()
-                });
+            // Accounting is server-authoritative; no client adminRevenue write.
+
             }
         });
 
