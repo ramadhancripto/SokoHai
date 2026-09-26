@@ -1,0 +1,4 @@
+SokoHai Full Step 1 Repaired Source Package
+Date: 2026-09-26
+Includes the complete current workspace source with the repaired js/94-modal-stack.js and existing systems.
+Excluded: .git, node_modules, .env/credentials, emulator/build/cache artifacts, prior zip archives.
