@@ -511,7 +511,13 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         availabilityStatus: availabilityStatus,
         variants: variants,
         currency: 'TZS',
-        stock: finalCalculatedStock, // Existing canonical stock field
+        // Stock starts at zero; the server creates the audited opening movement.
+        stock: 0,
+        openingStockPending: true,
+        openingStockInitialized: false,
+        // Canonical Business/Store references; legacy userId remains for compatibility.
+        businessId: skh.currentUserData?.businessId || null,
+        storeId: skh.currentUserData?.storeId || null,
         barcode: barcode,
 
         // Baini na hifadhi alama (flags) kwa usahihi kulingana na aina 3 za visibility
@@ -535,6 +541,23 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
     });
         
     if(docId) {
+        try {
+            await skh.wrapCallable('inventoryAdjust')({
+                productId: docId,
+                delta: Math.max(0, Number(finalCalculatedStock) || 0),
+                movementType: 'OPENING_BALANCE',
+                source: 'PRODUCT_CREATION',
+                reason: 'Initial stock at product creation',
+                businessId: skh.currentUserData?.businessId || undefined,
+                storeId: skh.currentUserData?.storeId || undefined,
+                idempotencyKey: 'opening-' + docId
+            });
+        } catch (e) {
+            console.error('[product-opening-stock]', e);
+            alert('Bidhaa imeundwa lakini opening stock haikukamilika; jaribu tena.');
+            skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
+            return;
+        }
         const doneMsg = isStoreOnly
             ? " Bidhaa imehifadhiwa kikamilifu kwenye Inventory ya duka!"
             : " Bidhaa imechapishwa kikamilifu kwenye Soko la Mtandaoni!";

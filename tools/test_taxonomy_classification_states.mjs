@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import pkg from '../shared/taxonomy-classification-state.js';
+const { CLASSIFICATION_STATES, isClassificationState, fallbackForLevel, isFallbackState } = pkg;
+assert.ok(CLASSIFICATION_STATES.includes('CANONICAL'));
+assert.ok(CLASSIFICATION_STATES.includes('SELLER_CONFIRMED'));
+assert.ok(CLASSIFICATION_STATES.includes('OTHER_PRODUCT_TYPE'));
+assert.equal(isClassificationState('canonical'), true);
+assert.equal(isClassificationState('not-a-state'), false);
+assert.equal(fallbackForLevel('CATEGORY'), 'OTHER_CATEGORY');
+assert.equal(fallbackForLevel('product_type'), 'OTHER_PRODUCT_TYPE');
+assert.equal(fallbackForLevel('bad-level'), 'UNCLASSIFIED');
+assert.equal(isFallbackState('OTHER_OPTION_VALUE'), true);
+assert.equal(isFallbackState('CANONICAL'), false);
+console.log('CLASSIFICATION STATE CONTRACT: all checks passed');

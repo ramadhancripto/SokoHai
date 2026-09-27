@@ -3284,6 +3284,28 @@ exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
  * spec §1, §46). Zinatolewa hapa ili Firebase Functions izideploy.
  * chatOfferAction (juu) sasa ni daraJA linaloelekeza kwenye injini hiyo hiyo.
  * ============================================================ */
+// [BUSINESS/STORE FOUNDATION] Owner-scoped canonical context bridge. It creates
+// only the authenticated owner's Business/Store pair and preserves legacy fields.
+const businessEngine = require('./business');
+exports.businessEnsureContext = businessEngine.businessEnsureContext;
+
+// [STEP 3A-0] One server-authoritative POS sale and inventory adjustment path.
+// Product.stock is mutated here only, inside Firestore transactions; the client
+// receives an idempotent result and never writes transactional stock directly.
+const inventoryAuthority = require('./inventory-authority');
+exports.posSale = inventoryAuthority.posSale;
+exports.posReturn = inventoryAuthority.posReturn;
+exports.posRefund = inventoryAuthority.posRefund;
+exports.posCreditAdjustment = inventoryAuthority.posCreditAdjustment;
+exports.posVoid = inventoryAuthority.posVoid;
+exports.posReceipt = inventoryAuthority.posReceipt;
+exports.posReconcile = inventoryAuthority.posReconcile;
+exports.inventoryAdjust = inventoryAuthority.inventoryAdjust;
+
+// POS-7 server-authoritative reports; projections are derived from existing POS authorities.
+const reportingAuthority = require('./reporting-authority');
+exports.posReports = reportingAuthority.posReports;
+
 // [CREATIVE STUDIO] Server-authoritative ownership, immutable versions,
 // publication moderation and privacy-bounded event aggregation.
 const creativeEngine = require('./creative');

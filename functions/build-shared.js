@@ -1,10 +1,13 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const source = path.resolve(__dirname, '..', 'shared', 'ads-design-rules.js');
+const sharedSource = path.resolve(__dirname, '..', 'shared');
 const outputDirectory = path.join(__dirname, 'shared');
-const output = path.join(outputDirectory, 'ads-design-rules.js');
-if (!fs.existsSync(source)) throw new Error('Shared Ads Design rules source is missing: ' + source);
+const files = ['ads-design-rules.js', 'business-context-core.js'];
 fs.mkdirSync(outputDirectory, { recursive:true });
-fs.copyFileSync(source, output);
-console.log('Packaged shared Ads Design rules at functions/shared/ads-design-rules.js');
+files.forEach((name) => {
+  const source = path.join(sharedSource, name);
+  if (!fs.existsSync(source)) throw new Error('Shared source is missing: ' + source);
+  fs.copyFileSync(source, path.join(outputDirectory, name));
+});
+console.log('Packaged shared rules/context at functions/shared/');

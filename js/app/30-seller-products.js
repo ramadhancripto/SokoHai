@@ -232,7 +232,19 @@ import { skh } from './00-bootstrap.js';
         var n = Number(v);
         if (isNaN(n) || n < 0) { alert(T('smp_stock_invalid', 'Please enter a valid number (0 or more).')); return; }
         try {
-            await skh.updateDoc(skh.doc(skh.db, 'products', id), { stock: n, availabilityStatus: n <= 0 ? 'out_of_stock' : (n <= 3 ? 'low_stock' : 'available'), updatedAt: new Date().toISOString() });
+            var delta = n - Number(current || 0);
+            if (delta !== 0) {
+                await skh.wrapCallable('inventoryAdjust')({
+                    productId: id,
+                    delta: delta,
+                    movementType: 'ADJUSTMENT',
+                    source: 'SELLER_STOCK_EDIT',
+                    reason: 'Seller manual stock adjustment',
+                    idempotencyKey: 'seller-adjust-' + id + '-' + Date.now(),
+                    businessId: skh.currentUserData?.businessId || undefined,
+                    storeId: skh.currentUserData?.storeId || undefined
+                });
+            }
             alert(T('smp_stock_updated', 'Stock updated to {n}.', { n: n }));
             window.skhRenderMyProducts();
         } catch (e) { alert(T('smp_stock_failed', 'Failed to update stock:') + ' ' + (e && e.message)); }

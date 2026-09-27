@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import assertStrict from 'node:assert/strict';
+const hub = fs.readFileSync(new URL('../js/app/17-hub.js', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../html/09-admin-sell.html', import.meta.url), 'utf8');
+assert.match(hub, /loadOriginalSaleReturnIdentity/);
+assert.match(hub, /selectedReturnVariantId/);
+assert.match(hub, /selectedReturnSku/);
+assert.match(hub, /selectedReturnUnitId/);
+assert.match(hub, /selectedReturnInventoryKey/);
+assert.match(hub, /items: \[\{ productId, originalSaleItemId, quantity, variantId, sku, unitId, unitMode, inventoryKey \}\]/);
+assert.match(html, /onblur="window\.loadOriginalSaleReturnIdentity\(\)"/);
+assert.match(html, /id="selectedReturnVariantId"/);
+assertStrict.equal(typeof hub, 'string');
+console.log('POS variant return UI checks passed');

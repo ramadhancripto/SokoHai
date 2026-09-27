@@ -210,38 +210,225 @@ window.runBusinessAlertsEngine = function(data) {
     }).join('');
 };
 
-window.addEventListener('online', async () => {
-    let queue = JSON.parse(skh.localStorage.getItem('sokohai_offline_sales')) || [];
-    if (queue.length === 0) return;
+const POS_SYNC_LEASE_KEY = 'sokohai_pos_offline_sync_lease';
+const POS_SYNC_LEASE_MS = 30000;
+const POS_SYNC_MAX_ATTEMPTS = 5;
+const POS_SYNC_OWNER = 'tab-' + ((window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : Date.now() + '-' + Math.random());
 
-    console.log(` Mtandao umerudi! Kusawazisha miamala...`);
-    for (let tx of queue) {
-        try {
-            let totalAmount = 0;
-            let profit = 0;
-            
-            for (let item of tx.cart) {
-                const currentPrice = item.isWholesale ? item.wholesalePrice : item.retailPrice;
-                totalAmount += currentPrice * item.qty;
-                profit += (currentPrice - (item.price * 0.6)) * item.qty;
+const posSyncReadQueue = () => window.posOfflineQueue ? window.posOfflineQueue.read() : [];
+const posSyncWriteQueue = queue => window.posOfflineQueue ? window.posOfflineQueue.write(queue) : false;
 
-                await skh.updateDoc(skh.doc(skh.db, "products", item.id), { stock: skh.increment(-item.qty) });
-            }
+function posSyncUpdate(queueId, patch) {
+    const queue = posSyncReadQueue();
+    const next = queue.map(item => item.queueId === queueId ? Object.assign({}, item, patch) : item);
+    posSyncWriteQueue(next);
+    renderPosOfflineQueueStatus(next);
+    return next.find(item => item.queueId === queueId) || null;
+}
 
-            await skh.addDoc(skh.collection(skh.db, "shop_ledger"), {
-                shopOwnerId: tx.ownerUid,
-                type: "income_offline",
-                title: `Offline Sale: ${tx.cart.length} items (${tx.payMethod})`,
-                amount: totalAmount,
-                profit: profit,
-                date: tx.date
-            });
-        } catch (err) { console.error("Sync error:", err); }
+function renderPosOfflineQueueStatus(queue = posSyncReadQueue()) {
+    const el = document.getElementById('posOfflineQueueStatus');
+    if (!el) return;
+    const legacy = queue.filter(item => item && item.legacy).length;
+    const pending = queue.filter(item => item && ['QUEUED', 'SYNCING', 'RETRY_WAIT'].includes(item.status)).length;
+    const failed = queue.filter(item => item && ['FAILED', 'CONFLICT'].includes(item.status)).length;
+    const synced = queue.filter(item => item && item.status === 'SYNCED').length;
+    const parts = [];
+    if (pending) parts.push(`${pending} pending`);
+    if (failed) parts.push(`${failed} review`);
+    if (legacy) parts.push(`${legacy} legacy`);
+    if (synced) parts.push(`${synced} synced`);
+    el.textContent = parts.length ? 'Offline POS: ' + parts.join(' · ') : 'Offline POS: hakuna mauzo yanayosubiri.';
+}
+
+function posSyncLeaseActive() {
+    try {
+        const raw = skh.localStorage.getItem(POS_SYNC_LEASE_KEY);
+        const lease = raw ? JSON.parse(raw) : null;
+        return lease && lease.expiresAt > Date.now() && lease.owner !== POS_SYNC_OWNER;
+    } catch (e) {
+        return false;
     }
-    skh.localStorage.removeItem('sokohai_offline_sales');
-    alert(T('ck_sync', "[Sokohai Sync]: All your offline transactions have been synced online now!"));
-    window.loadAndRenderDashboard();
-});
+}
+
+function posSyncAcquireLease() {
+    if (posSyncLeaseActive()) return false;
+    const lease = { owner: POS_SYNC_OWNER, expiresAt: Date.now() + POS_SYNC_LEASE_MS };
+    try {
+        skh.localStorage.setItem(POS_SYNC_LEASE_KEY, JSON.stringify(lease));
+        const check = JSON.parse(skh.localStorage.getItem(POS_SYNC_LEASE_KEY) || '{}');
+        return check.owner === POS_SYNC_OWNER;
+    } catch (e) {
+        return false;
+    }
+}
+
+function posSyncReleaseLease() {
+    try {
+        const lease = JSON.parse(skh.localStorage.getItem(POS_SYNC_LEASE_KEY) || '{}');
+        if (lease.owner === POS_SYNC_OWNER) skh.localStorage.removeItem(POS_SYNC_LEASE_KEY);
+    } catch (e) {}
+}
+
+function posSyncErrorCode(error) {
+    return String(error && (error.code || error.status) || '').toLowerCase();
+}
+
+function posSyncErrorText(error) {
+    return String(error && error.message || error || 'Unknown sync error');
+}
+
+function posSyncIsTransient(error) {
+    const code = posSyncErrorCode(error);
+    const message = posSyncErrorText(error).toLowerCase();
+    return !navigator.onLine
+        || ['unavailable', 'deadline-exceeded', 'internal', 'unknown', 'network-error'].includes(code)
+        || message.includes('network')
+        || message.includes('timeout');
+}
+
+function posSyncIsConflict(error) {
+    const code = posSyncErrorCode(error);
+    const message = posSyncErrorText(error).toLowerCase();
+    return code === 'already-exists'
+        || message.includes('stock haitoshi')
+        || message.includes('stock')
+        || message.includes('price')
+        || message.includes('bei')
+        || message.includes('conflict')
+        || message.includes('idempotency key');
+}
+
+async function posSyncCheckPriceConflict(item) {
+    const snapshots = Array.isArray(item.displayPriceSnapshots) ? item.displayPriceSnapshots : [];
+    if (!snapshots.length || !skh.getDoc || !skh.doc) return null;
+    for (const snapshot of snapshots) {
+        const productSnap = await skh.getDoc(skh.doc(skh.db, 'products', snapshot.productId));
+        if (!productSnap.exists()) return `Product ${snapshot.productId} haipo tena.`;
+        const product = productSnap.data() || {};
+        const expected = item.items.find(line => line.productId === snapshot.productId);
+        const selectedPrice = expected && expected.pricingMode === 'wholesale' ? Number(product.wholesalePrice) : Number(product.price);
+        const queuedPrice = expected && expected.pricingMode === 'wholesale' ? Number(snapshot.wholesalePrice) : Number(snapshot.retailPrice);
+        if (Number.isFinite(queuedPrice) && Number.isFinite(selectedPrice) && Math.abs(queuedPrice - selectedPrice) > 0.0001) {
+            return `Bei ya Product ${snapshot.productId} imebadilika tangu sale iwe queued.`;
+        }
+    }
+    return null;
+}
+
+function posSyncPayload(item) {
+    return {
+        idempotencyKey: item.idempotencyKey,
+        businessId: item.businessId,
+        storeId: item.storeId,
+        items: item.items,
+        discountRequest: item.discountRequest,
+        payment: item.payment,
+        customer: item.customer
+    };
+}
+
+async function syncOnePosQueueItem(item) {
+    try {
+        if (window.posOfflineQueue && window.posOfflineQueue.fingerprint && window.posOfflineQueue.fingerprintInput) {
+            const currentFingerprint = await window.posOfflineQueue.fingerprint(window.posOfflineQueue.fingerprintInput(item));
+            if (currentFingerprint !== item.requestFingerprint) {
+                posSyncUpdate(item.queueId, { status: 'CONFLICT', lastError: 'QUEUE_PAYLOAD_FINGERPRINT_MISMATCH', nextAttemptAt: null });
+                return 'conflict';
+            }
+        }
+        const priceConflict = await posSyncCheckPriceConflict(item);
+        if (priceConflict) {
+            posSyncUpdate(item.queueId, { status: 'CONFLICT', lastError: priceConflict, nextAttemptAt: null });
+            return 'conflict';
+        }
+
+        const response = await skh.wrapCallable('posSale')(posSyncPayload(item));
+        const result = response && response.data ? response.data : response;
+        posSyncUpdate(item.queueId, {
+            status: 'SYNCED',
+            serverSaleId: result && result.saleId ? result.saleId : null,
+            lastAttemptAt: new Date().toISOString(),
+            nextAttemptAt: null,
+            lastError: null
+        });
+        return 'synced';
+    } catch (error) {
+        const attempts = Number(item.attempts || 0);
+        const message = posSyncErrorText(error);
+        if (posSyncIsConflict(error)) {
+            posSyncUpdate(item.queueId, { status: 'CONFLICT', lastAttemptAt: new Date().toISOString(), nextAttemptAt: null, lastError: message });
+            return 'conflict';
+        }
+        if (posSyncIsTransient(error) && attempts < POS_SYNC_MAX_ATTEMPTS) {
+            const delay = Math.min(15 * 60 * 1000, 15000 * (2 ** Math.max(0, attempts - 1)));
+            posSyncUpdate(item.queueId, { status: 'RETRY_WAIT', lastAttemptAt: new Date().toISOString(), nextAttemptAt: new Date(Date.now() + delay).toISOString(), lastError: message });
+            setTimeout(() => { if (navigator.onLine) syncPosOfflineQueue('backoff'); }, delay + 50);
+            return 'retry';
+        }
+        posSyncUpdate(item.queueId, { status: 'FAILED', lastAttemptAt: new Date().toISOString(), nextAttemptAt: null, lastError: message });
+        return 'failed';
+    }
+}
+
+const isLegacyPosQueueItem = item => Boolean(item && item.legacy === true);
+
+async function syncPosOfflineQueue(reason = 'manual') {
+    renderPosOfflineQueueStatus();
+    if (!navigator.onLine || !skh.currentUser || !window.posOfflineQueue) return { skipped: true, reason };
+    if (!posSyncAcquireLease()) return { skipped: true, reason: 'another-tab' };
+
+    try {
+        let queue = posSyncReadQueue();
+        // Legacy records are preserved and identified, never replayed as POS-2 aggregates.
+        queue = queue.map(item => {
+            if (isLegacyPosQueueItem(item)) return item;
+            if (item && item.schemaVersion === 1 && item.idempotencyKey && Array.isArray(item.items)) return item;
+            if (item) return Object.assign({}, item, { legacy: true, status: 'FAILED', lastError: 'LEGACY_QUEUE_REQUIRES_MANUAL_HANDLING' });
+            return item;
+        });
+        posSyncWriteQueue(queue);
+        renderPosOfflineQueueStatus(queue);
+
+        for (const current of queue) {
+            // Legacy records are manual-only and must be excluded before any
+            // normal status/retry eligibility logic is evaluated.
+            if (isLegacyPosQueueItem(current)) continue;
+            if (!current || current.status === 'SYNCED' || current.status === 'FAILED' || current.status === 'CONFLICT') continue;
+            if (!['QUEUED', 'RETRY_WAIT'].includes(current.status)) continue;
+            if (current.nextAttemptAt && new Date(current.nextAttemptAt).getTime() > Date.now()) continue;
+            if (!navigator.onLine) break;
+
+            const claimed = posSyncUpdate(current.queueId, {
+                status: 'SYNCING',
+                attempts: Number(current.attempts || 0) + 1,
+                lastAttemptAt: new Date().toISOString(),
+                lastError: null
+            });
+            if (!claimed) continue;
+            await syncOnePosQueueItem(claimed);
+        }
+        if (typeof window.warmPosProductsCache === 'function' && navigator.onLine) {
+            try { await window.warmPosProductsCache(); } catch (e) {}
+        }
+        renderPosOfflineQueueStatus();
+        return { skipped: false };
+    } finally {
+        posSyncReleaseLease();
+    }
+}
+
+window.posOfflineSync = window.posOfflineSync || {};
+window.posOfflineSync.syncQueue = syncPosOfflineQueue;
+window.posOfflineSync.manualSync = () => syncPosOfflineQueue('manual');
+window.renderPosOfflineQueueStatus = renderPosOfflineQueueStatus;
+
+window.addEventListener('online', () => { syncPosOfflineQueue('online'); });
+const startPosOfflineSync = () => setTimeout(() => syncPosOfflineQueue('startup'), 1000);
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startPosOfflineSync, { once: true });
+else startPosOfflineSync();
+renderPosOfflineQueueStatus();
+
 
 window.openProcurementModal = function() {
     window.closeModals();
@@ -405,7 +592,16 @@ window.receivePurchaseOrder = async function(poId, productId, quantity, totalCos
         const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
 
         // 1. Ongeza stock kiotomatiki (Stock Intake)
-        await skh.updateDoc(prodRef, { stock: skh.increment(quantity) });
+        await skh.wrapCallable('inventoryAdjust')({
+            productId,
+            delta: Math.round(Number(quantity) || 0),
+            movementType: 'PURCHASE',
+            source: 'PURCHASE_ORDER',
+            reason: 'Purchase order received: ' + productName,
+            idempotencyKey: 'purchase-' + poId,
+            businessId: skh.currentUserData?.businessId || undefined,
+            storeId: skh.currentUserData?.storeId || undefined
+        });
 
         // 2. Mark PO kama 'completed'
         await skh.updateDoc(poRef, { status: "completed" });
@@ -524,8 +720,15 @@ window.openSpoilagePrompt = function(productId, productName, buyPrice) {
 
             try {
                 // 1. Kata stock automatically
-                await skh.updateDoc(skh.doc(skh.db, "products", productId), {
-                    stock: skh.increment(-qty)
+                await skh.wrapCallable('inventoryAdjust')({
+                    productId,
+                    delta: -Math.round(qty),
+                    movementType: 'CONSUMPTION',
+                    source: 'SPOILAGE',
+                    reason,
+                    idempotencyKey: 'spoilage-' + productId + '-' + Date.now(),
+                    businessId: skh.currentUserData?.businessId || undefined,
+                    storeId: skh.currentUserData?.storeId || undefined
                 });
 
                 // 2. Rekodi hasara kwenye Ledger
@@ -967,5 +1170,32 @@ window.switchDashTab = function(tabName) {
     }
     if (typeof originalSwitchDashTab === 'function') {
         originalSwitchDashTab(tabName);
+    }
+};
+
+// POS-7 uses the server-authoritative reporting callable; browser values are filters only.
+window.loadPosReports = async function() {
+    const startInput = document.getElementById('posReportStart');
+    const endInput = document.getElementById('posReportEnd');
+    const summary = document.getElementById('posReportSummary');
+    const detail = document.getElementById('posReportDetail');
+    if (!summary || !detail) return;
+    const now = new Date();
+    const start = startInput && startInput.value ? new Date(startInput.value).toISOString() : new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const end = endInput && endInput.value ? new Date(endInput.value).toISOString() : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+    try {
+        const response = await skh.wrapCallable('posReports')({
+            businessId: skh.currentUserData?.businessId || null,
+            storeId: skh.currentUserData?.storeId || null,
+            period: { start, end }
+        });
+        const report = response && response.data ? response.data : response;
+        const s = report.summary || {};
+        const cards = [['Gross Sales', s.grossSales], ['Returns', s.returnedAmount], ['Net Sales', s.netSales], ['Cash Collected', s.cashCollected], ['Credit Outstanding', s.creditOutstanding], ['Refunds Pending', s.refundsPending], ['Expenses', s.expenses], ['Void Value', s.voidValue]];
+        summary.innerHTML = cards.map(([label, value]) => `<div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:10px;"><small style="color:#64748b;display:block;">${label}</small><b style="font-size:16px;color:#14532d;">TSh ${Number(value || 0).toLocaleString()}</b></div>`).join('');
+        detail.textContent = JSON.stringify({ period: report.period, payments: report.payments, cashiers: report.cashiers, products: report.products, inventory: report.inventory, statusSemantics: report.statusSemantics }, null, 2);
+    } catch (error) {
+        summary.innerHTML = '<div style="color:#b91c1c;padding:10px;">Report haikuweza kupakiwa.</div>';
+        detail.textContent = String(error && error.message || error);
     }
 };

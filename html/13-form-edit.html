@@ -68,6 +68,7 @@
             <div><label>Product type</label><select id="editProductType"><option value="physical">Physical</option><option value="digital">Digital</option><option value="retail">Retail</option><option value="wholesale">Wholesale</option><option value="custom">Custom</option><option value="made_to_order">Made to order</option></select></div>
             <div><label>Condition</label><select id="editCondition"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option><option value="not_applicable">Not applicable</option></select></div>
             <div style="grid-column:1/-1"><label>Variants (hiari)</label><textarea id="editVariants" placeholder="Color: Black, White; Size: S, M, L"></textarea></div>
+            <div style="grid-column:1/-1"><label>Concrete variant combinations (JSON, hiari)</label><textarea id="editVariantCombinations" rows="5" placeholder='[{"variantId":"var_red_l","sku":"TSH-RED-L","price":25000,"stock":10,"unitId":"piece","options":{"Color":"Red","Size":"L"},"inventoryKey":"PRODUCT_ID:var_red_l:piece","status":"ACTIVE"}]'></textarea><small>Usiandike combination mpya bila SKU, variantId, unit, stock na identity sahihi.</small></div>
         </div>
         
         <button type="submit" id="btnSubmitEdit" style="background:var(--primary-blue);"> HIFADHI MABADILIKO</button>

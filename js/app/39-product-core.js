@@ -30,10 +30,22 @@ export function availabilityStatus(p){
 export function productEligible(p){
   return !!p && publicationStatus(p)==='published' && !p.archivedAt && p.isOnline!==false && availabilityStatus(p)!=='hidden';
 }
+export function normalizeTaxonomyMetadata(input){
+  const p=input||{};
+  const taxonomy = p.taxonomy && typeof p.taxonomy === 'object' ? {...p.taxonomy} : {};
+  const fields = ['categoryId','subcategoryId','productTypeId','classificationState','attributeValues','optionValues','taxonomyFilters','taxonomyFeatures','variantRule','complianceProfile','marketContext','commercialMode','tradeContext'];
+  fields.forEach(key=>{ if (p[key] !== undefined && taxonomy[key] === undefined) taxonomy[key]=p[key]; });
+  if (!Object.keys(taxonomy).length) return undefined;
+  if (taxonomy.attributeValues && typeof taxonomy.attributeValues !== 'object') taxonomy.attributeValues={};
+  if (taxonomy.optionValues && typeof taxonomy.optionValues !== 'object') taxonomy.optionValues={};
+  if (taxonomy.classificationState == null) taxonomy.classificationState='LEGACY_MAPPED';
+  return taxonomy;
+}
 export function buildSearchMetadata(p){
   const attrs=p&&p.filters&&typeof p.filters==='object'?Object.entries(p.filters).flat():[];
+  const taxonomy=p&&p.taxonomy&&typeof p.taxonomy==='object'?Object.values(p.taxonomy).flatMap(v=>typeof v==='object'?Object.values(v):[v]):[];
   const variants=normalizeVariants(p&&p.variants).flatMap(v=>[v.name,...v.options]);
-  const source=[p&&p.title,p&&p.brand,p&&p.model,p&&p.category,p&&p.subCategory,p&&p.description,p&&p.condition,...attrs,...variants,...(Array.isArray(p&&p.tags)?p.tags:[])].filter(Boolean).join(' ');
+  const source=[p&&p.title,p&&p.brand,p&&p.model,p&&p.category,p&&p.subCategory,p&&p.description,p&&p.condition,...attrs,...taxonomy,...variants,...(Array.isArray(p&&p.tags)?p.tags:[])].filter(Boolean).join(' ');
   return {version:1,text:low(source).slice(0,4000),tokens:words(source)};
 }
 export function validateProduct(p){
@@ -46,12 +58,43 @@ export function validateProduct(p){
   const variants=normalizeVariants(p&&p.variants); if(variants.some(v=>!v.name||!v.options.length)) errors.push('Variants hazijakamilika.');
   return {ok:!errors.length,errors};
 }
+export function normalizeConcreteVariantCombinations(value, productId){
+  if (value === undefined || value === null || value === '') return { ok: true, combinations: undefined };
+  let rows = value;
+  if (typeof rows === 'string') { try { rows = JSON.parse(rows); } catch (e) { return { ok: false, error: 'Concrete variants lazima ziwe JSON halali.' }; } }
+  if (!Array.isArray(rows)) return { ok: false, error: 'Concrete variants lazima ziwe list.' };
+  const ids = new Set(), skus = new Set();
+  try {
+  const combinations = rows.map(row => {
+    if (!row || !txt(row.variantId) || !txt(row.sku) || !txt(row.unitId) || !row.options || typeof row.options !== 'object') throw new Error('Concrete variant identity haijakamilika.');
+    const stock = Number(row.stock), price = Number(row.price);
+    if (!Number.isSafeInteger(stock) || stock < 0 || !Number.isFinite(price) || price <= 0) throw new Error('Concrete variant price/stock si halali.');
+    const inventoryKey = `${txt(productId)}:${txt(row.variantId)}:${txt(row.unitId)}`;
+    if (row.inventoryKey !== inventoryKey) throw new Error('Inventory identity si canonical.');
+    if (ids.has(row.variantId)) throw new Error('Duplicate variantId.');
+    if (skus.has(row.sku)) throw new Error('Duplicate SKU.');
+    ids.add(row.variantId); skus.add(row.sku);
+    return { ...row, variantId: txt(row.variantId), sku: txt(row.sku), unitId: txt(row.unitId), price, stock, inventoryKey, status: txt(row.status) || 'ACTIVE' };
+  });
+  return { ok: true, combinations };
+  } catch (error) { return { ok: false, error: error.message }; }
+}
+
 export function buildProductWrite(input){
   const p={...input};
+  if (Object.prototype.hasOwnProperty.call(p, 'variantCombinations')) {
+    const checked = normalizeConcreteVariantCombinations(p.variantCombinations, p.productId || p.id);
+    if (!checked.ok) throw new Error(checked.error);
+    p.variantCombinations = checked.combinations;
+  }
   p.title=txt(p.title); p.price=number(p.price); p.stock=Math.max(0,number(p.stock));
   p.currency=txt(p.currency)||'TZS'; p.baseUnit=txt(p.baseUnit)||'Piece';
   p.productType=TYPES.has(low(p.productType))?low(p.productType):'physical';
   p.condition=CONDITIONS.has(low(p.condition))?low(p.condition):(p.productType==='digital'?'not_applicable':'new');
+  // Canonical taxonomy metadata is additive and optional: legacy products keep
+  // their original category/subcategory/title fields unchanged.
+  const taxonomy = normalizeTaxonomyMetadata(p);
+  if (taxonomy) p.taxonomy = taxonomy;
   p.publicationStatus=PUB.has(low(p.publicationStatus))?low(p.publicationStatus):'published';
   p.availabilityStatus=AVAIL.has(low(p.availabilityStatus))?low(p.availabilityStatus):availabilityStatus(p);
   p.status=p.publicationStatus==='published'?'active':p.publicationStatus;

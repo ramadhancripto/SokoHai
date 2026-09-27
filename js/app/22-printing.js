@@ -271,7 +271,16 @@ window.reducePrintingPaperStock = async function(ownerUid, sheetsUsed){
     try{
         const qInv=skh.query(skh.collection(skh.db,'products'), skh.where('userId','==',ownerUid));
         const snap=await skh.getDocs(qInv);
-        for(const d of snap.docs){ const p=d.data(); const name=String(p.name||p.title||'').toLowerCase(); if(name.includes('karatasi')||name.includes('ream')||name.includes('paper')){ await skh.updateDoc(skh.doc(skh.db,'products',d.id), { stock: skh.increment(-Math.max(1,sheetsUsed)) }); return true; } }
+        for(const d of snap.docs){ const p=d.data(); const name=String(p.name||p.title||'').toLowerCase(); if(name.includes('karatasi')||name.includes('ream')||name.includes('paper')){ await skh.wrapCallable('inventoryAdjust')({
+                    productId: d.id,
+                    delta: -Math.max(1, Math.round(Number(sheetsUsed) || 0)),
+                    movementType: 'CONSUMPTION',
+                    source: 'PRINTING',
+                    reason: 'Printing paper consumption',
+                    idempotencyKey: 'printing-' + Date.now() + '-' + d.id,
+                    businessId: skh.currentUserData?.businessId || undefined,
+                    storeId: skh.currentUserData?.storeId || undefined
+                }); return true; } }
     }catch(e){ console.log('paper stock reduce skipped', e); }
     return false;
 };

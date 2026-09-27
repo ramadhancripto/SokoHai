@@ -491,7 +491,16 @@ window.releaseCargoWithToken = async function() {
 
                 // UKWELI WA DATA: Ongeza stock live kwenye bidhaa ya tawi la pili
                 const prodRef = skh.doc(skh.db, "products", td.productId);
-                await skh.updateDoc(prodRef, { stock: skh.increment(td.quantity) });
+                await skh.wrapCallable('inventoryAdjust')({
+                    productId: td.productId,
+                    delta: Math.round(Number(td.quantity) || 0),
+                    movementType: 'TRANSFER',
+                    source: 'ONBOARDING_TRANSFER',
+                    reason: 'Onboarding stock transfer received',
+                    idempotencyKey: 'onboarding-receive-' + rideId,
+                    businessId: skh.currentUserData?.businessId || undefined,
+                    storeId: skh.currentUserData?.storeId || undefined
+                });
 
                 await skh.updateDoc(transRef, {
                     status: "completed",
@@ -866,6 +875,12 @@ window.saveShopSetup = async function() {
         shopName: name,
         isTemporaryStore: storeType === 'temporary',
         sellMode: window.onboardingData.businessMode,
+        sellerMode: (typeof window.skhNormalizeSellerMode === 'function'
+            ? window.skhNormalizeSellerMode(window.onboardingData.businessMode)
+            : window.onboardingData.businessMode),
+        // Management is independent from seller mode. BASIC is the safe
+        // compatibility default until the capability editor is introduced.
+        management: { enabled: true, level: 'BASIC' },
         shopRole: 'owner',
         shopOwnerUid: skh.currentUser.uid,
         myShopCode: businessId,
@@ -911,11 +926,36 @@ window.saveShopSetup = async function() {
         // Hifadhi kwenye profile ya User Firebase
         await skh.updateDoc(skh.doc(skh.db, "users", skh.currentUser.uid), payload);
 
+        // Canonical Business + Store bridge. Legacy profile save above remains
+        // compatible; this call is owner-authenticated and server-authoritative.
+        let canonicalContext = null;
+        let canonicalContextError = null;
+        if (typeof window.skhEnsureBusinessContext === 'function') {
+            try {
+                canonicalContext = await window.skhEnsureBusinessContext({
+                    businessName: name,
+                    storeName: name,
+                    businessType: payload.primaryProfile || 'general',
+                    categoryId: payload.primaryProfile || '',
+                    sellerMode: payload.sellerMode,
+                    management: payload.management,
+                    visibility: payload.storeVisibility || 'private'
+                });
+            } catch (contextError) {
+                canonicalContextError = contextError;
+                console.warn('[Business/Store] canonical context haikusawazishwa:', contextError);
+            }
+        }
+
         // Pia kumuandalia database ya duka (Kama anatumia Auto smart setup)
         if (storeType === 'permanent' && window.onboardingData.setupMode === 'auto') {
             await window.autoGenerateStaffAndRules(payload.primaryProfile, payload.workforceSize);
         }
-alert(` HONGERA!\nDuka la "${name}" limesajiliwa kwa ufanisi.\n\nBusiness Code yako ni: ${businessId}`);
+if (canonicalContextError) {
+    alert(` Duka la "${name}" limehifadhiwa kwenye profile ya zamani, lakini Business/Store context ya canonical haikusawazishwa.\n\nHakuna duplicate iliyoundwa. Jaribu tena ukiwa online.`);
+} else {
+    alert(` HONGERA!\nDuka la "${name}" limesajiliwa kwa ufanisi.\n\nBusiness Code yako ni: ${businessId}`);
+}
         window.closeModals();
         window.switchMode('seller'); // Mtume moja kwa moja kwenye duka badala ya kurefresh
     } catch(e) {

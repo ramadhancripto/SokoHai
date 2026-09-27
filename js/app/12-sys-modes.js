@@ -299,6 +299,7 @@ window.openEditModal = async function(id, collectionName) {
         setV('editProductType', itemToEdit.productType || 'physical');
         setV('editCondition', itemToEdit.condition || 'new');
         setV('editVariants', (itemToEdit.variants || []).map(v => v.name + ': ' + (v.options || []).join(', ')).join('; '));
+        setV('editVariantCombinations', itemToEdit.variantCombinations ? JSON.stringify(itemToEdit.variantCombinations, null, 2) : '');
     }
 
     const modeSelect = document.getElementById('editSaleMode');
@@ -421,7 +422,18 @@ window.submitEditForm = async function(event) {
             updateMap.productType = document.getElementById('editProductType')?.value || 'physical';
             updateMap.condition = document.getElementById('editCondition')?.value || 'new';
             updateMap.variants = skh.normalizeProductVariants(document.getElementById('editVariants')?.value || '');
-            const merged = skh.buildProductWrite(Object.assign({}, fresh.data(), updateMap));
+            const concreteText = document.getElementById('editVariantCombinations')?.value.trim() || '';
+            if (concreteText) {
+                try {
+                    const concrete = skh.normalizeConcreteVariantCombinations(concreteText, id);
+                    if (!concrete.ok) throw new Error(concrete.error);
+                    updateMap.variantCombinations = concrete.combinations;
+                } catch (variantError) {
+                    alert('Concrete variant haijahifadhiwa: ' + variantError.message);
+                    btn.innerHTML = originalText; btn.disabled = false; return;
+                }
+            }
+            const merged = skh.buildProductWrite(Object.assign({}, fresh.data(), updateMap, { productId: id }));
             updateMap.searchMetadata = merged.searchMetadata;
             updateMap.schemaVersion = skh.PRODUCT_SCHEMA_VERSION;
             if (pub === 'archived') updateMap.archivedAt = new Date().toISOString();

@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import pkg from '../shared/taxonomy-legacy-mapping.js';
+const { DIRECT_CATEGORY_MAPPINGS, mapLegacyCategory, mappingCoverage } = pkg;
+assert.equal(mapLegacyCategory('Vyakula na Vinywaji (Food)'), 'CAT-01');
+assert.equal(mapLegacyCategory('Biashara ya Jumla (Wholesale)'), 'CAT-40');
+assert.equal(mapLegacyCategory('Biashara ya Jumla'), null);
+assert.equal(mapLegacyCategory('Maagizo ya Nje (Import/Export)'), 'CAT-41');
+const result = mappingCoverage(['Vyakula na Vinywaji (Food)', 'Unknown Legacy Label']);
+assert.deepEqual(result.mapped, ['Vyakula na Vinywaji (Food)']);
+assert.deepEqual(result.unmapped, ['Unknown Legacy Label']);
+assert.ok(Object.keys(DIRECT_CATEGORY_MAPPINGS).length > 0);
+console.log('LEGACY TAXONOMY MAPPING CONTRACT: all checks passed');

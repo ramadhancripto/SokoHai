@@ -1,0 +1,4 @@
+SokoHai Step 2 Business/Store Foundation Package
+Date: 2026-09-26
+Includes the current full source, Business/Store foundation implementation, legacy compatibility adapter, tests and report.
+Not deployed. Existing systems preserved; Step 3 not started.

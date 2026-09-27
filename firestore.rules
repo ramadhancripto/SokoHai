@@ -80,19 +80,55 @@ service cloud.firestore {
         && (!('variants' in data) || data.variants is list)
         && (!('imagesArray' in data) || data.imagesArray is list);
     }
+    function canonicalProductScopeValid(data) {
+      return (data.get('businessId', '') == ''
+        || (exists(/databases/$(database)/documents/businesses/$(data.businessId))
+          && (isAdmin()
+            || get(/databases/$(database)/documents/businesses/$(data.businessId)).data.ownerUid == request.auth.uid
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shopOwnerUid', '')
+              == get(/databases/$(database)/documents/businesses/$(data.businessId)).data.ownerUid)))
+        && (data.get('storeId', '') == ''
+          || (exists(/databases/$(database)/documents/stores/$(data.storeId))
+            && get(/databases/$(database)/documents/stores/$(data.storeId)).data.get('businessId', '') == data.get('businessId', '')
+            && (isAdmin()
+              || get(/databases/$(database)/documents/stores/$(data.storeId)).data.ownerUid == request.auth.uid
+              || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shopOwnerUid', '')
+                == get(/databases/$(database)/documents/stores/$(data.storeId)).data.ownerUid)));
+    }
     match /products/{id} {
       // Legacy public marketplace compatibility. Sensitive seller/POS fields should
       // be migrated to owner-only documents before public field-level separation.
       allow read: if true;
       allow create: if signedIn() && validProduct(request.resource.data)
+        && request.resource.data.stock == 0
+        && request.resource.data.get('openingStockPending', false) == true
+        && canonicalProductScopeValid(request.resource.data)
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsProduct(resource.data) && validProduct(request.resource.data)
         && request.resource.data.userId == resource.data.userId
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'comments','stock','businessId','storeId','ownerUid','shopOwnerUid','shopOwnerId','sellerId','userId','openingStockPending','openingStockInitialized'
+        ]);
       // Product lifecycle is archive/unpublish. Physical deletion is server-only.
       allow delete: if false;
+    }
+
+    // [STEP 3A-0] Transactional stock and sale authority is Admin SDK only.
+    // Clients may read only records belonging to the authenticated owner;
+    // POS/inventory mutations go through the server transaction callables.
+    match /sales/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.sellerId == request.auth.uid
+        || resource.data.cashierId == request.auth.uid);
+      allow write: if false;
+    }
+    match /inventory_movements/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.ownerUid == request.auth.uid
+        || resource.data.actorUid == request.auth.uid);
+      allow write: if false;
     }
     function ownsService(data) {
       return signedIn() && (
@@ -223,6 +259,19 @@ service cloud.firestore {
     }
 
     // ============================================================
+    // BUSINESS / STORE FOUNDATION
+    // Canonical documents are written by businessEnsureContext (Admin SDK).
+    // Browser writes stay disabled; reads are owner-scoped until a public
+    // visibility projection is explicitly published later.
+    match /businesses/{businessId} {
+      allow read: if signedIn() && (isAdmin() || resource.data.ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+    match /stores/{storeId} {
+      allow read: if signedIn() && (isAdmin() || resource.data.ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+
     // BIASHARA (login inahitajika) Ã¢â‚¬â€ HaiPay, oda, notifications, n.k.
     // ============================================================
     // [PHASE 1 SECURITY 2026-09] sokopay_links: hali ya malipo ni ya SERVER.

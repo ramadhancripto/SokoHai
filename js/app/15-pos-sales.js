@@ -140,11 +140,20 @@ window.updateExistingStockAmount = async function() {
     }
 
     try {
-        const itemRef = skh.doc(skh.db, "products", id); 
-        await skh.updateDoc(itemRef, {
-            stock: skh.increment(qtyNew),
-            ...(buyPriceNew > 0 && { buyPrice: buyPriceNew })
+        const adjust = skh.wrapCallable('inventoryAdjust');
+        const response = await adjust({
+            productId: id,
+            delta: qtyNew,
+            reason: 'Stock received via POS',
+            idempotencyKey: (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('adjust-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
+            businessId: skh.currentUserData?.businessId || undefined,
+            storeId: skh.currentUserData?.storeId || undefined
         });
+        // Buy price remains a catalogue cost edit and is deliberately separate
+        // from the authoritative stock movement.
+        if (buyPriceNew > 0) {
+            await skh.updateDoc(skh.doc(skh.db, 'products', id), { buyPrice: buyPriceNew });
+        }
 
         alert(T('pos_stock_received', "New stock received and added successfully."));
         document.getElementById('offlineStockModal').style.display = 'none';
@@ -187,16 +196,30 @@ window.saveOfflineInventoryItem = async function() {
             category: cat,
             unitType: unit,
             pcsPerUnit: pcsPerUnit,
-            stock: qtyUnits * pcsPerUnit, 
             isOffline: true, 
             isOnline: true, 
             userId: ownerUid,
+            businessId: skh.currentUserData?.businessId || null,
+            storeId: skh.currentUserData?.storeId || null,
+            stock: 0,
+            openingStockPending: true,
+            openingStockInitialized: false,
             ownerName: skh.currentUser.displayName || "Duka letu",
             userEmail: skh.currentUser.email,
             createdAt: new Date().toISOString()
         });
 
         if (docId) {
+            await skh.wrapCallable('inventoryAdjust')({
+                productId: docId,
+                delta: qtyUnits * pcsPerUnit,
+                movementType: 'OPENING_BALANCE',
+                source: 'PRODUCT_CREATION',
+                reason: 'Initial stock at POS product creation',
+                businessId: skh.currentUserData?.businessId || undefined,
+                storeId: skh.currentUserData?.storeId || undefined,
+                idempotencyKey: 'opening-' + docId
+            });
             alert(T('pos_product_registered', 'Product "{n}" has been registered in the main database!\nIt is now live on the Online Market and in the POS.', { n: name }));
             const stockModal = document.getElementById('offlineStockModal');
             if (stockModal) stockModal.style.display = 'none';
@@ -249,104 +272,81 @@ window.processSmartOfflineSale = async function(itemId, pcsPerUnit, sellPrice, n
 
     if (qty <= 0) { alert(T('pos_valid_qty', "Enter a valid quantity.")); return; }
 
-    const pcsToDeduct = (method === 'unit') ? (qty * pcsPerUnit) : qty;
-    const pricePerItem = (method === 'unit') ? (sellPrice * pcsPerUnit) : sellPrice;
-    const totalAmount = pricePerItem * qty;
+    const creditName = document.getElementById('posDebtClientName')?.value.trim() || '';
+    const creditPhone = document.getElementById('posDebtClientPhone')?.value.trim() || '';
+    const deposit = parseFloat(document.getElementById('posDebtDepositPaid')?.value) || 0;
+    if (payMethod === 'Deni' && !creditName) {
+        alert(T('pos_debt_client_name', "Enter the name of the customer being credited."));
+        return;
+    }
 
-    try {
-        const itemRef = skh.doc(skh.db, "products", itemId);
-        const itemSnap = await skh.getDoc(itemRef);
-        if(!itemSnap.exists()) return;
+    const idempotencyKey = (window.crypto && window.crypto.randomUUID)
+        ? window.crypto.randomUUID()
+        : ('pos-' + Date.now() + '-' + Math.random().toString(36).slice(2));
 
-        const currentTotalPcs = itemSnap.data().stock || 0;
-        if (currentTotalPcs < pcsToDeduct) {
-            alert(T('pos_insufficient_stock', "Not enough stock! Restock first."));
+    if (!navigator.onLine) {
+        const quickCashInput = document.getElementById('posQuickCashReceived') || document.getElementById('posCashReceived');
+        const quickCashReceived = quickCashInput && quickCashInput.value !== '' ? parseFloat(quickCashInput.value) : null;
+        if (payMethod === 'Cash' && (!Number.isFinite(quickCashReceived) || quickCashReceived < 0)) {
+            alert('Ingiza kiasi cha cash kilichopokelewa ili kuhifadhi mauzo offline.');
             return;
         }
-
-        const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
-        await skh.updateDoc(itemRef, { stock: skh.increment(-pcsToDeduct) });
-
-        let profit = totalAmount * 0.4; 
-        
-        if (payMethod === 'Deni') {
-            const clientName = document.getElementById('posDebtClientName').value.trim();
-            const clientPhone = document.getElementById('posDebtClientPhone').value.trim();
-            const deposit = parseFloat(document.getElementById('posDebtDepositPaid').value) || 0;
-            const remainingDebt = totalAmount - deposit;
-
-            if (!clientName) {
-                alert(T('pos_debt_client_name', "Enter the name of the customer being credited."));
-                return;
+        try {
+            if (!window.posOfflineQueue || typeof window.posOfflineQueue.queueAggregate !== 'function') {
+                throw new Error('Offline queue haijapakiwa.');
             }
-
-            await skh.addDoc(skh.collection(skh.db, "shop_ledger"), {
-                shopOwnerId: ownerUid,
-                type: "debt",
-                title: `Deni: ${skh.skhEscape(clientName)} - Mauzo ya ${name}`,
-                amount: remainingDebt,
-                notes: `Simu: ${clientPhone} | Jumla Mauzo: TSh ${totalAmount.toLocaleString()} | Alilipa: TSh ${deposit.toLocaleString()}`,
-                /* [AUDIT-FIX §42] fields za muundo kwa ajili ya analytics halisi */
-                productId: itemId, productName: name, qty: qty, unitPrice: pricePerItem, payMethod: payMethod,
-                status: "pending",
-                recordedBy: skh.currentUser.displayName || "POS",
-                date: new Date().toISOString()
+            const queued = await window.posOfflineQueue.queueAggregate({
+                businessId: skh.currentUserData?.businessId || null,
+                storeId: skh.currentUserData?.storeId || null,
+                sellerId: skh.currentUser?.uid || null,
+                cashierId: skh.currentUser?.uid || null,
+                items: [{ productId: itemId, quantity: qty, unitMode: method, pricingMode: 'retail' }],
+                displayPriceSnapshots: [{ productId: itemId, retailPrice: Number(sellPrice) || null, wholesalePrice: null }],
+                discountRequest: { type: 'none' },
+                payment: {
+                    method: payMethod,
+                    reference: null,
+                    cashReceived: payMethod === 'Cash' ? quickCashReceived : null,
+                    deposit: payMethod === 'Deni' ? deposit : null
+                },
+                customer: creditName ? { name: creditName, phone: creditPhone || null } : null
             });
-
-            if (deposit > 0) {
-                await skh.addDoc(skh.collection(skh.db, "shop_ledger"), {
-                    shopOwnerId: ownerUid,
-                    type: "income_offline",
-                    title: `Deposit: ${skh.skhEscape(clientName)} - Mauzo ya ${name}`,
-                    amount: deposit,
-                    profit: profit * (deposit / totalAmount),
-                    /* [AUDIT-FIX §42] fields za muundo kwa ajili ya analytics halisi */
-                    productId: itemId, productName: name, qty: qty, unitPrice: pricePerItem, payMethod: payMethod,
-                    date: new Date().toISOString()
-                });
-            }
-
-            alert(T('pos_debt_saved', 'Sale and credit of TSh {d} for {c} recorded!', { d: remainingDebt.toLocaleString(), c: skh.skhEscape(clientName) }));
-        } else {
-            await skh.addDoc(skh.collection(skh.db, "shop_ledger"), {
-                shopOwnerId: ownerUid,
-                type: "income_offline",
-                title: `Uzo POS: ${qty} Pcs - ${name} (${payMethod})`,
-                amount: totalAmount,
-                profit: profit,
-                /* [AUDIT-FIX §42] fields za muundo kwa ajili ya analytics halisi
-                   (kabla entries za zamani zilitegemea title tu — parser inazisoma pia) */
-                productId: itemId, productName: name, qty: qty, unitPrice: pricePerItem, payMethod: payMethod,
-                date: new Date().toISOString()
-            });
-            alert(T('pos_sale_done', 'You sold TSh {t} via {m}!', { t: totalAmount.toLocaleString(), m: payMethod }));
+            window.posOfflineQueue.decrementCachedStock(queued.items);
+            alert(T('pos_offline_queued', 'Sale imewekwa kwenye offline queue: {id}.', { id: queued.queueId }));
+            document.getElementById('quickOfflineSaleModal')?.remove();
+        } catch (offlineError) {
+            alert('Offline queue error: ' + (offlineError && offlineError.message ? offlineError.message : 'hitilafu.'));
         }
+        return;
+    }
 
-        if (skh.currentUserData && skh.currentUserData.shopRole !== 'owner') {
-            const staffQuery = skh.query(skh.collection(skh.db, "shop_staff"), skh.where("shopOwnerId", "==", ownerUid), skh.where("name", "==", skh.currentUser.displayName));
-            const staffSnap = await skh.getDocs(staffQuery);
-            if (!staffSnap.empty) {
-                const staffDocId = staffSnap.docs[0].id;
-                const staffRef = skh.doc(skh.db, "shop_staff", staffDocId);
-                const s = staffSnap.docs[0].data();
-                
-                let currentScore = Math.min(100, (s.performanceScore || 50) + 2); 
-                let level = "Bronze";
-                if(currentScore >= 95) level = "Diamond";
-                else if(currentScore >= 85) level = "Platinum";
-                else if(currentScore >= 70) level = "Gold";
-                else if(currentScore >= 50) level = "Silver";
-
-                await skh.updateDoc(staffRef, {
-                    performanceScore: currentScore,
-                    performanceLevel: level
-                });
-            }
-        }
-
-        document.getElementById('quickOfflineSaleModal').remove();
+    try {
+        const sell = skh.wrapCallable('posSale');
+        const response = await sell({
+            productId: itemId,
+            quantity: qty,
+            unitMode: method,
+            // The server resolves the authoritative catalogue price. This value
+            // is retained only for diagnostics and is never trusted for totals.
+            unitPrice: sellPrice,
+            paymentMethod: payMethod,
+            customerName: creditName || undefined,
+            customerPhone: creditPhone || undefined,
+            deposit: payMethod === 'Deni' ? deposit : 0,
+            businessId: skh.currentUserData?.businessId || undefined,
+            storeId: skh.currentUserData?.storeId || undefined,
+            idempotencyKey
+        });
+        const result = response && response.data ? response.data : response;
+        alert(T('pos_sale_done', 'Sale recorded: TSh {t} via {m}.', {
+            t: Number(result && result.total || 0).toLocaleString(), m: payMethod
+        }));
+        document.getElementById('quickOfflineSaleModal')?.remove();
         window.loadAndRenderDashboard();
-    } catch(e) { alert("Kosa: " + e.message); }
+    } catch (e) {
+        const msg = e && e.message ? e.message : 'Sale haikuweza kuhifadhiwa.';
+        alert('Kosa: ' + msg);
+    }
 };
 
 window.saveLedgerEntry = async function() {

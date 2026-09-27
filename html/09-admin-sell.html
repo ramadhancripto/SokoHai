@@ -290,7 +290,18 @@
             <option value="return"> RETURN SALE (Mteja Kurudisha Mzigo)</option>
             <option value="expense"> RECORD EXPENSE (Rekodi Matumizi)</option>
             <option value="supplier"> SUPPLIER PAYMENT (Malipo ya Supplier)</option>
+            <option value="reports"> POS REPORTS (Reports & Accounting)</option>
         </select>
+    </div>
+
+    <div id="posReportsArea" style="display:none;">
+        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:12px;">
+            <label style="font-size:12px;font-weight:800;">START <input type="datetime-local" id="posReportStart"></label>
+            <label style="font-size:12px;font-weight:800;">END <input type="datetime-local" id="posReportEnd"></label>
+            <button type="button" onclick="window.loadPosReports()" style="padding:9px 14px;background:var(--green);color:white;border:0;border-radius:8px;font-weight:800;">LOAD REPORT</button>
+        </div>
+        <div id="posReportSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;"></div>
+        <pre id="posReportDetail" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;max-height:340px;overflow:auto;"></pre>
     </div>
 
     <!-- AREA 1: CASH SALE & DEBT SALE AREA -->
@@ -314,6 +325,11 @@
             </div>
         </div>
 
+        <div id="posOfflineQueuePanel" style="display:flex; align-items:center; justify-content:space-between; gap:10px; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:9px 11px; margin-bottom:15px; text-align:left;">
+            <span id="posOfflineQueueStatus" style="font-size:12px; color:#9a3412;">Offline POS: hakuna mauzo yanayosubiri.</span>
+            <button type="button" onclick="window.posOfflineSync && window.posOfflineSync.manualSync()" style="padding:8px 10px; border:1px solid #fdba74; background:white; color:#9a3412; border-radius:8px; font-weight:bold; font-size:11px; cursor:pointer;">SYNC</button>
+        </div>
+
         <!-- NJIA YA MALIPO (Payment Method) -->
         <div style="margin-bottom:15px; text-align:left;">
             <label style="font-size: 13px; font-weight:900; color:var(--primary-dark); display:block; margin-bottom:6px; text-transform:uppercase;">NJIA YA MALIPO *</label>
@@ -334,8 +350,8 @@
             <select id="posPromoType" onchange="window.calculatePosChange()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold; color:#0f172a;">
                 <option value="none" selected> Hakuna Punguzo</option>
                 <option value="10"> Punguzo la 10%</option>
-                <option value="weekend"> Punguza TSh 2,000 (zaidi ya elfu 10)</option>
-                <option value="buy2get1"> Nunua 2 Pata 1 Bure</option>
+                <option value="weekend" disabled> Punguza TSh 2,000 (haipatikani kwa sasa)</option>
+                <option value="buy2get1" disabled> Nunua 2 Pata 1 Bure (haipatikani kwa sasa)</option>
             </select>
         </div>
 
@@ -390,19 +406,40 @@
 
     <!-- AREA 3: RETURN SALE (MTEJA KURUDISHA BIDHAA) -->
     <div id="posReturnArea" style="display:none; text-align:left;">
-        <p style="font-size:12px; color:#475569; margin-bottom:12px;">Sajili bidhaa iliyorudishwa na mteja ili irudi stoo na kurekebisha hesabu za faida:</p>
+        <p style="font-size:12px; color:#475569; margin-bottom:12px;">Sajili return kupitia sale ya awali. Bei, kiasi kinachorudika, stock na status vitathibitishwa na server.</p>
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px; margin-bottom:12px;">
+            <label style="font-size:12px; font-weight:900; color:#1e3a8a;">ORIGINAL SALE ID *</label>
+            <input type="text" id="posReturnSaleId" onblur="window.loadOriginalSaleReturnIdentity()" placeholder="Mf: pos_abc123" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+            <label style="font-size:12px; font-weight:900; color:#1e3a8a; display:block; margin-top:9px;">ORIGINAL SALE ITEM REFERENCE *</label>
+            <input type="text" id="posReturnSaleItemId" placeholder="Mf: saleId:item:0" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+            <small style="display:block; margin-top:6px; color:#475569;">Reference lazima itoke kwenye sale halisi; usitengeneze UUID mpya.</small>
+        </div>
         <input type="text" id="posSearchReturnInp" oninput="window.searchProductsForReturnLive()" placeholder=" Tafuta bidhaa iliyorudishwa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
         <div id="posReturnSearchResults" style="max-height:150px; overflow-y:auto; background:#f8fafc; border-radius:10px; border:1px solid #cbd5e1; display:none; margin-bottom:12px;"></div>
 
         <div id="selectedReturnProductBox" style="display:none; background:#fef2f2; border:1px solid #fecaca; padding:15px; border-radius:14px; margin-bottom:15px;">
             <input type="hidden" id="selectedReturnProductId">
+            <input type="hidden" id="selectedReturnVariantId">
+            <input type="hidden" id="selectedReturnSku">
+            <input type="hidden" id="selectedReturnUnitId">
+            <input type="hidden" id="selectedReturnUnitMode">
+            <input type="hidden" id="selectedReturnInventoryKey">
             <span style="display:block; font-size:13px;">Bidhaa: <b id="selectedReturnProductName">...</b></span>
+            <span style="display:block; font-size:13px; margin-top:4px; color:#7f1d1d;" id="selectedReturnIdentity">Identity ya sale itapakiwa kutoka snapshot ya awali.</span>
             <span style="display:block; font-size:13px; margin-top:4px;">Kiasi cha Kurejesha kwa PC (TSh): <b id="selectedReturnProductPrice">0</b></span>
             
             <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">IDADI ILIYORUDISHWA (PCS) *</label>
             <input type="number" id="returnProductQty" value="1" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px; background:white;">
         </div>
-        <button type="button" onclick="window.submitReturnSale()" style="width:100%; padding:16px; background:var(--terracotta); color:white; border:none; border-radius:14px; font-weight:900;">THIBITISHA KUREJESHA MZIGO </button>
+        <label style="font-size:12px; font-weight:900; color:#475569; display:block; margin-bottom:4px;">SABABU YA RETURN *</label>
+        <textarea id="posReturnReason" rows="2" placeholder="Mf: bidhaa imeharibika / mteja amebadilisha uamuzi" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:10px;"></textarea>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <div><label style="font-size:12px; font-weight:900; color:#475569;">INVENTORY</label><select id="posReturnDisposition" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;"><option value="SELLABLE_RETURN">Sellable stock</option><option value="DAMAGED_RETURN">Damaged return</option></select></div>
+            <div><label style="font-size:12px; font-weight:900; color:#475569;">REFUND INTENT</label><select id="posReturnRefundMethod" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;"><option value="Cash">Cash</option><option value="Mpesa">Mpesa</option><option value="TigoPesa">TigoPesa</option><option value="AirtelMoney">Airtel Money</option><option value="Bank">Bank</option><option value="CREDIT_ADJUSTMENT">Credit adjustment</option></select></div>
+        </div>
+        <button type="button" id="posReturnSubmitBtn" onclick="window.submitReturnSale()" style="width:100%; padding:16px; background:var(--terracotta); color:white; border:none; border-radius:14px; font-weight:900;">THIBITISHA KUREJESHA MZIGO </button>
+        <div id="posReturnServerResult" style="display:none; margin-top:12px; padding:12px; border-radius:10px; background:#f8fafc; font-size:12px;"></div>
+        <div style="margin-top:18px; border-top:1px solid #e2e8f0; padding-top:14px;"><b style="font-size:12px; color:var(--primary-dark);">TRANSACTION HISTORY</b><div style="display:flex; gap:6px; margin-top:8px;"><input id="posHistorySearch" placeholder="Sale ID / reference" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:8px;"><button type="button" onclick="window.loadPosTransactionHistory()" style="padding:10px; background:var(--primary-blue); color:white; border:0; border-radius:8px; font-weight:bold;">TAFUTA</button></div><div id="posTransactionHistoryResults" style="margin-top:10px;"></div><div id="posTransactionReceipt" style="display:none; margin-top:12px; padding:12px; border:1px solid #e2e8f0; border-radius:10px; background:white;"></div></div>
     </div>
 
     <!-- AREA 4: RECORD EXPENSE (MATUMIZI) -->
