@@ -17,7 +17,7 @@ import { skh } from './00-bootstrap.js';
 import {
     psAvailability, psCanBid, psSpecRows, psHasDetails,
     psSummarizeReviews, psRatingDisplay, psVariantGroups, psVariantDelta,
-    psBuildRails, psMoney, psNum, psTitle, psSellerName,
+    psBuildRails, psMoney, psNum, psTitle, psSellerName, psResolveStructuredVariant, psOptionValueAvailable,
     psIsVideo, PS_PRODUCT, PS_SERVICE, PS_DRIVER, PS_FETCH_CAP, PS_LOW_STOCK
 } from './39-showcase-logic.js';
 
@@ -132,23 +132,28 @@ import {
         groups.forEach(function (g) {
             html += '<div class="pm-var-group"><div class="pm-var-label">' + esc(g.label) + '</div><div class="pm-var-chips">';
             g.options.forEach(function (o, i) {
+                var available = psOptionValueAvailable(p, p.psVariants, g.key, o.value);
                 var deltaTxt = o.delta ? ' <small class="pm-chip-delta">+' + Math.round(o.delta).toLocaleString() + '</small>' : '';
-                html += '<button type="button" class="pm-chip' + (i === 0 ? ' pm-chip--on' : '') + '"'
-                    + ' data-g="' + esc(g.key) + '" data-v="' + esc(o.value) + '" aria-pressed="' + (i === 0) + '"'
+                html += '<button type="button" class="pm-chip' + (i === 0 && available ? ' pm-chip--on' : '') + (available ? '' : ' pm-chip--disabled') + '"'
+                    + ' data-g="' + esc(g.key) + '" data-v="' + esc(o.value) + '" aria-pressed="' + (i === 0 && available) + '"' + (available ? '' : ' disabled aria-disabled="true"')
                     + ' onclick="window.skhSelectVariant(this.getAttribute(\'data-g\'), this.getAttribute(\'data-v\'), this)">'
                     + esc(o.value) + deltaTxt + '</button>';
             });
             html += '</div></div>';
             // chaguo-msingi: cha kwanza
-            p.psVariants[g.key] = g.options[0].value;
-            if (g.key === 'size') p.selectedVariants.size = g.options[0].value;
-            if (g.key === 'color') p.selectedVariants.color = g.options[0].value;
+            var firstAvailable = g.options.find(function (o) { return psOptionValueAvailable(p, p.psVariants, g.key, o.value); }) || g.options[0];
+            p.psVariants[g.key] = firstAvailable.value;
+            if (g.key === 'size') p.selectedVariants.size = firstAvailable.value;
+            if (g.key === 'color') p.selectedVariants.color = firstAvailable.value;
         });
         html += '<div class="pm-var-delta" id="pmVarDelta"></div>';
         area.innerHTML = html;
         area.hidden = false;
+        p.selectedStructuredVariant = psResolveStructuredVariant(p, p.psVariants);
+        var structuredPrice = p.selectedStructuredVariant && psNum(p.selectedStructuredVariant.price);
         var delta = psVariantDelta(p, p.psVariants);
-        if (delta) p.tempVariantPrice = (psNum(p.price) || 0) + delta;
+        if (structuredPrice !== null && structuredPrice !== undefined) p.tempVariantPrice = structuredPrice;
+        else if (delta) p.tempVariantPrice = (psNum(p.price) || 0) + delta;
         refreshTotals(p);
     }
 
@@ -203,7 +208,9 @@ import {
         var p = skh.currentOpenProduct;
         if (!p) return;
         p.psVariants = p.psVariants || {};
+        if (!psOptionValueAvailable(p, p.psVariants, groupKey, value)) return;
         p.psVariants[groupKey] = value;
+        p.selectedStructuredVariant = psResolveStructuredVariant(p, p.psVariants);
         if (groupKey === 'size') p.selectedVariants.size = value;
         if (groupKey === 'color') p.selectedVariants.color = value;
         if (el) {
@@ -214,8 +221,10 @@ import {
             el.classList.add('pm-chip--on');
             el.setAttribute('aria-pressed', 'true');
         }
+        var structuredPrice = p.selectedStructuredVariant && psNum(p.selectedStructuredVariant.price);
         var delta = psVariantDelta(p, p.psVariants);
-        if (delta) p.tempVariantPrice = (psNum(p.price) || 0) + delta;
+        if (structuredPrice !== null && structuredPrice !== undefined) p.tempVariantPrice = structuredPrice;
+        else if (delta) p.tempVariantPrice = (psNum(p.price) || 0) + delta;
         else delete p.tempVariantPrice;
         var dEl = $('pmVarDelta');
         if (dEl) dEl.textContent = delta ? 'Ongezeko la chaguo: ' + psMoney(delta) : '';

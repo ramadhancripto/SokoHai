@@ -148,6 +148,11 @@ function rowsFromFilters(p, out) {
 export function psSpecRows(p, col) {
     if (!p) return [];
     const out = [];
+    if (col === PS_PRODUCT) {
+        (Array.isArray(p.attributes) ? p.attributes : []).filter(a => a && a.display !== false && a.value !== '' && a.value != null).forEach(a => out.push(row(a.name, Array.isArray(a.value) ? a.value.join(', ') : a.value)));
+        (Array.isArray(p.features) ? p.features : []).filter(f => f && f.value !== '' && f.value != null).forEach(f => out.push(row(f.name, f.value === true ? 'Yes' : f.value)));
+        (Array.isArray(p.additionalInfo) ? p.additionalInfo : []).filter(i => i && i.display !== false && i.value !== '' && i.value != null).forEach(i => out.push(row(i.name, i.value)));
+    }
 
     if (col === PS_DRIVER) {
         out.push(row('Chombo', p.vehicleType));
@@ -280,6 +285,14 @@ function deltasFor(p, values, maps) {
 export function psVariantGroups(p, col) {
     if (!p || col !== PS_PRODUCT) return [];
     const groups = [];
+    if (Array.isArray(p.options) && p.options.length) {
+        return p.options.filter(o => o && o.display !== false && Array.isArray(o.values) && o.values.length).map(o => ({
+            key: String(o.name),
+            label: String(o.name),
+            selectorType: o.selectorType || 'button',
+            options: o.values.filter(v => v && v.disabled !== true).map(v => ({ value: String(v.value || v.label), delta: 0, images: Array.isArray(v.images) ? v.images : [] }))
+        })).filter(g => g.options.length);
+    }
 
     // 4a) Muundo wa jumla: p.variants (array ya {name,options} au object)
     const explicit = [];
@@ -332,6 +345,26 @@ export function psVariantDelta(p, selections) {
         if (opt) delta += Number(opt.delta) || 0;
     });
     return delta;
+}
+
+export function psResolveStructuredVariant(p, selections) {
+    const rows = Array.isArray(p && p.variantsStructured) ? p.variantsStructured : [];
+    if (!rows.length) return null;
+    return rows.find(v => {
+        if (!v || v.status === 'INACTIVE' || v.available === false) return false;
+        const opts = v.options || {};
+        return Object.entries(selections || {}).every(([key, value]) => String(opts[key] || '') === String(value || ''));
+    }) || null;
+}
+
+export function psOptionValueAvailable(p, selections, key, value) {
+    const rows = Array.isArray(p && p.variantsStructured) ? p.variantsStructured.filter(v => v && v.status !== 'INACTIVE' && v.available !== false) : [];
+    if (!rows.length) return true;
+    return rows.some(v => {
+        const opts = v.options || {};
+        if (String(opts[key] || '') !== String(value)) return false;
+        return Object.entries(selections || {}).every(([k, val]) => k === key || !val || String(opts[k] || '') === String(val));
+    });
 }
 
 export function psVariantLabel(selections, groups) {
