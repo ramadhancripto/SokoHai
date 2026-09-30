@@ -1,0 +1,24 @@
+# MANIFEST — sokohai-marekebisho
+# msingi: 0ac2c17 | tarehe: 2026-09-30T10:13:52Z
+
+FILE                                                             SHA256
+SOMA-KWANZA.md                                                   fb64676393eca5e4ec213798b8c20123d326f0da07d3acf93e26448ca37362d1
+css/38-product-builder-seed.css                                  f118b82b7e7928638203a0410581a057c40100a364bc166df54512cd0fd1cf66
+docs/taxonomy/mission/FINAL-COMPLETION-REPORT.md                 029cd6af00fdc2f3245808196bd5336e2b033c482b50a629d99a823e899053c8
+docs/taxonomy/mission/PRODUCT-BUILDER-RUNTIME-BLOCKER.md         bc795eb767f8c6f952e93d24072d20e1e846749cd9fe64f262d6c51e5f7ef9dc
+docs/taxonomy/mission/RECOVERY-RESULTS.md                        6a36060fe9e6571b742d185c3637e63d753362c9a6b72ee6afb1196c843d8997
+docs/taxonomy/mission/SEEDING-COVERAGE-AUDIT.md                  76b020e1e54e45f92a80609a57ac2ed4641c948dee2188e93714488798350c5b
+docs/taxonomy/mission/TAXONOMY-UI-AND-ADVERTISER-FIX.md          31b21a70934ee62469043f78d1cf9bef1efd0a960dd5deee43d82cd1500adbc3
+docs/taxonomy/mission/authority-drift-justification.md           6c0c260d207916d0868ded53e283f17bf59026e5cdac0a406c1b2c2d8f532797
+docs/taxonomy/mission/authority-hashes.json                      9bd17c220ba4827f73889f7581fdb95afa0a99cdc5a163201b91bebd3a37784a
+html/00-head.html                                                c9508f864524e4022e913c0125a8d7d99906fe44c90dc892180504f281aa9e51
+index.html                                                       09a17145deb08c71cf32564622ea0d4b82b164878e508d886ea949a84225b1fe
+js/app/05-forms.js                                               aee7a4e3e602693fcedb0ad3392c44267b360bf1adb3b447bdbee2364c882cb5
+js/app/06-product-builder.js                                     24c553276151b0c99c390050b5c2f7ef4be9ecf22ab0c6f224406262fe67c2dd
+js/app/08-app-state.js                                           6cd67bcb39febecbc2d80a4ac14e64fc8b4924eee6f244437fb2e41e2f3b9b71
+package.json                                                     94e1a8287750fe829dc9793536cc26bc32bcf07539239bb1dc7bcf5d09972213
+shared/product-taxonomy-bridge.mjs                               b66630b642beb1bb7a3a37b2b49b15c657a3cbabed68966dbd695b1282044f73
+tools/build_taxonomy_mission_audit.mjs                           f5b1ee5f96faae4504db8c253a59fceeb294b92f8a2363a07573dc378a3198fc
+tools/test_product_builder_ui_contract.mjs                       4a0991b6637e59c5372b565c6f8c39456902dcc4718c03218c8d1d5968825f39
+tools/test_product_taxonomy_bridge.mjs                           75d4ab1e60341ad00f00947fd7e0e2cf88639a2a41d52572a6ef27671b118b41
+tools/test_taxonomy_mission_contract.mjs                         06c5f66b23fa223fa03d2f17d3ba8ad13b512150c47fea8b44dfee2182eb2c3b

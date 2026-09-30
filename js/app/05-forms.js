@@ -1,5 +1,8 @@
 /* ==== js/app/05-forms.js ==== */
 import { skh } from './00-bootstrap.js';
+// Canonical taxonomy is the authority for the visible seller category list.
+// Existing skh.advancedCategories is still passed in, unchanged, for compatibility.
+import { getSellerCategoryOptions } from '../../shared/product-taxonomy-bridge.mjs';
 
 // Tafsiri (lugha moja kwa wakati) — LMS ikiwa ipo, la sivyo fallback ya Kiingereza
 function T(key, en, vars) {
@@ -159,22 +162,33 @@ window.populateFormCategories = function() {
     };
 
     const recommendedCats = profileMap[primaryProfile] || [];
-    
-    let recommendedHtml = '';
-    let otherHtml = '';
 
-    for (const catName in skh.advancedCategories) {
-        if (recommendedCats.includes(catName)) {
-            recommendedHtml += `<option value="${catName}" style="font-weight:bold; color:var(--green);">${T('suggested', 'Suggested')}: ${catName}</option>`;
+    // CANONICAL FIRST. The visible list now comes from the canonical taxonomy registry
+    // through the existing bridge, instead of iterating the legacy skh.advancedCategories
+    // map directly. Legacy-only categories are still offered, in their own group, so old
+    // routes and saved products keep working. Nothing is deleted or reclassified.
+    const options = getSellerCategoryOptions(skh.advancedCategories || {});
+    const esc = function (v) { try { return skh.skhEscape(String(v)); } catch (e) { return String(v); } };
+
+    let recommendedHtml = '';
+    let canonicalHtml = '';
+    let legacyHtml = '';
+
+    for (const opt of options) {
+        if (recommendedCats.includes(opt.label) || recommendedCats.includes(opt.value)) {
+            recommendedHtml += `<option value="${esc(opt.value)}" style="font-weight:bold; color:var(--green);">${T('suggested', 'Suggested')}: ${esc(opt.label)}</option>`;
+        } else if (opt.source === 'LEGACY_COMPATIBILITY') {
+            legacyHtml += `<option value="${esc(opt.value)}">${esc(opt.label)}</option>`;
         } else {
-            otherHtml += `<option value="${catName}">${catName}</option>`;
+            canonicalHtml += `<option value="${esc(opt.value)}">${esc(opt.label)}</option>`;
         }
     }
 
     catSelect.innerHTML = `
         <option value="">${T('pf_choose_category', '-- Choose Category --')}</option>
         ${recommendedHtml ? `<optgroup label="${T('pf_recommended_for', 'Recommended for')} ${primaryProfile}">${recommendedHtml}</optgroup>` : ''}
-        <optgroup label="${T('pf_other_categories', 'Other SokoHai Categories')}">${otherHtml}</optgroup> `;
+        ${canonicalHtml ? `<optgroup label="${T('pf_other_categories', 'Other SokoHai Categories')}">${canonicalHtml}</optgroup>` : ''}
+        ${legacyHtml ? `<optgroup label="${T('pf_legacy_categories', 'Legacy categories (compatibility)')}">${legacyHtml}</optgroup>` : ''} `;
 };
 
 window.generateSellerFilters = function() {
@@ -183,12 +197,18 @@ window.generateSellerFilters = function() {
     const filterContainer = document.getElementById('dynamicFiltersContainer');
     const filtersArea = document.getElementById('filtersInputsArea');
 
-    if(!subVal || !skh.advancedCategories[catVal].subcategories[subVal]) {
+    // Canonical categories (CAT-xx) are not present in the legacy map. Guard the lookup
+    // so a canonical route cannot throw here; canonical filter guidance is rendered by the
+    // Product Builder's own Filters section, not by this legacy filter strip.
+    const legacyCat = skh.advancedCategories ? skh.advancedCategories[catVal] : null;
+    const legacyLeaf = legacyCat && legacyCat.subcategories ? legacyCat.subcategories[subVal] : null;
+
+    if(!subVal || !legacyLeaf) {
         filterContainer.style.display = 'none';
         return;
     }
 
-    const filters = skh.advancedCategories[catVal].subcategories[subVal].filters;
+    const filters = legacyLeaf.filters;
     if(filters && filters.length > 0) {
         let inputsHtml = '';
         filters.forEach(f => {

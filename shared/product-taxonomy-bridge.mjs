@@ -1,7 +1,37 @@
 import projection from './product-taxonomy-browser.mjs';
-import { productSchemaPilots } from './product-schema-pilots.mjs';
-import { schemaRefinements, schemaBatchForCategory, reviewedLiveLeafAliases } from './product-schema-refinements.mjs';
+// Reviewed schema overlays are OPTIONAL dependencies. They are authoritative when
+// present, but they are not reconstructed here when absent: the two source modules
+// (product-schema-pilots.mjs / product-schema-refinements.mjs) were never committed
+// and remain an explicit blocker. When missing we degrade to canonical-only routing
+// and report it through schemaOverlayStatus — we never substitute invented data.
+let productSchemaPilots = [];
+let schemaRefinements = {};
+let schemaBatchForCategory = {};
+let reviewedLiveLeafAliases = [];
+const schemaOverlayStatus = { pilots: 'MISSING', refinements: 'MISSING', degraded: true };
+try {
+  const m = await import('./product-schema-pilots.mjs');
+  productSchemaPilots = m.productSchemaPilots || [];
+  schemaOverlayStatus.pilots = 'LOADED';
+} catch { /* explicit blocker: module absent from repository */ }
+try {
+  const m = await import('./product-schema-refinements.mjs');
+  schemaRefinements = m.schemaRefinements || {};
+  schemaBatchForCategory = m.schemaBatchForCategory || {};
+  reviewedLiveLeafAliases = m.reviewedLiveLeafAliases || [];
+  schemaOverlayStatus.refinements = 'LOADED';
+} catch { /* explicit blocker: module absent from repository */ }
+schemaOverlayStatus.degraded = schemaOverlayStatus.pilots !== 'LOADED' || schemaOverlayStatus.refinements !== 'LOADED';
+export { schemaOverlayStatus };
 const norm=value=>String(value||'').trim().toLowerCase();
+// A canonical field counts as "defined" only when it carries real meaning, so an
+// empty array/object/string still allows legacy compatibility data to fill the gap.
+const defined=value=>{
+ if(value===undefined||value===null||value==='')return false;
+ if(Array.isArray(value))return value.length>0;
+ if(typeof value==='object')return Object.keys(value).length>0;
+ return true;
+};
 const clean=list=>(Array.isArray(list)?list:[]).filter(x=>! /^(others?|nyingine)$/i.test(typeof x==='string'?x:x?.name||''));
 function categoryIdFor(value){return projection.categories.find(c=>[c.id,c.displayName,c.name].some(n=>n&&norm(n)===norm(value)))?.id || projection.mappings[value] || null;}
 function getProductSuggestions(category,subcategory,liveConfig=null){
@@ -12,10 +42,24 @@ function getProductSuggestions(category,subcategory,liveConfig=null){
  const definitions=projection.categories.find(c=>c.id===ref.categoryId)?.definitions;
  const canonical=definitions?.[ref.subcategory||'default'] || definitions?.default;
  const live=liveConfig?.subcategories?.[subcategory];
- // Existing live leaf hints win over broad canonical defaults; pilot profiles are explicit leaf overlays.
- const base={...(canonical||{}),...(live||{}),...(pilot||{})};
+ // PRECEDENCE: canonical → legacy compatibility → explicit reviewed overlay.
+ // Canonical is the authoritative visible schema. A legacy live hint may only FILL a
+ // field canonical does not define; it can no longer silently replace a source-backed
+ // canonical definition. Pilot profiles stay authoritative because they are explicit,
+ // reviewed leaf overlays. Saved product data is never read or migrated here.
+ const canonicalBase=canonical||{};
+ const legacyFill={},legacyFillFields=[],legacySuppressed=[];
+ for(const [key,value] of Object.entries(live||{})){
+  if(defined(canonicalBase[key])){legacySuppressed.push(key);continue;}
+  legacyFill[key]=value;legacyFillFields.push(key);
+ }
+ const base={...canonicalBase,...legacyFill,...(pilot||{})};
  const options=Object.fromEntries(Object.entries(base.options||{}).filter(([k])=>! /^(others?|nyingine)$/i.test(k)));
- const result={source:pilot?'PILOT_SCHEMA':live?'LEGACY_LIVE':canonical?'CANONICAL':'GENERIC_FALLBACK',categoryId:categoryId||ref.categoryId,canonicalRef:ref,profileId:pilot?.id||null,schemaVersion:1,
+ // Canonical wins the source label whenever a canonical definition exists; a legacy
+ // hint is only reported as the source when canonical defines nothing for the leaf.
+ const result={source:pilot?'PILOT_SCHEMA':canonical?'CANONICAL':live?'LEGACY_LIVE':'GENERIC_FALLBACK',
+  taxonomyPrecedence:{order:'CANONICAL_THEN_LEGACY_THEN_REVIEWED_OVERLAY',canonicalDefined:!!canonical,legacyFillFields,legacySuppressedFields:legacySuppressed,overlayStatus:schemaOverlayStatus},
+  categoryId:categoryId||ref.categoryId,canonicalRef:ref,profileId:pilot?.id||null,schemaVersion:1,
   definitionState:base.definitionState||'SUGGESTED',options,attributes:clean(base.attributes||live?.filters),filters:clean(base.filters),features:clean(base.features),additionalInfo:clean(base.additionalInfo),
   suggestedUnits:clean(base.suggestedUnits||base.stockTypes),variantRule:base.variantRule||null,variantCapableFields:clean(base.variantCapableFields||base.variantRule?.candidates||Object.keys(options)),mediaRequirements:base.mediaRequirements||{required:false,product:{min:0},selectorValues:[],variantImages:true}};
  return resolveSchemaRoles(result,base,definitions,ref,pilot,{category,subcategory,alias});
@@ -99,19 +143,33 @@ function resolveSchemaRoles(result,base,definitions,ref,pilot,input){
 }
 // Add reviewed paths to seller controls only. Never mutate the live catalog object
 // or relabel existing options/products; only validated canonical paths are exposed.
+// CANONICAL FIRST. The visible Product Builder taxonomy is the canonical registry.
+// Legacy-only categories are retained for backward compatibility but are listed after
+// canonical, tagged LEGACY_COMPATIBILITY, and never duplicated when they already
+// resolve to a canonical ID through taxonomy-legacy-mapping. Nothing here mutates
+// skh.advancedCategories or reclassifies any saved product.
 function getSellerCategoryOptions(live={}){
- const options=Object.keys(live).map(value=>({value,label:value}));
- // Explicit canonical-ID routes coexist with unchanged legacy routes. They are
- // not aliases and do not rewrite any existing product classification.
- for(const [id,leaves] of Object.entries(projection.productLeaves||{}))if(leaves.length&&!options.some(o=>o.value===id)){
+ const options=[];
+ for(const [id,leaves] of Object.entries(projection.productLeaves||{})){
+  if(!leaves.length)continue;
   const category=projection.categories.find(c=>c.id===id);
-  if(category)options.push({value:id,label:category.displayName});
+  if(category)options.push({value:id,label:category.displayName,source:'CANONICAL',canonicalId:id});
+ }
+ for(const value of Object.keys(live)){
+  const id=categoryIdFor(value);
+  // Already represented by its canonical route — do not show a duplicate entry.
+  if(id&&options.some(o=>o.canonicalId===id))continue;
+  if(options.some(o=>o.value===value))continue;
+  options.push({value,label:value,source:'LEGACY_COMPATIBILITY',canonicalId:id||null});
  }
  return options;
 }
+// Canonical product leaves lead; legacy-only leaves follow for compatibility.
+// unique() keeps the canonical occurrence when a leaf exists on both sides, so a
+// canonical route always wins over an identically named legacy route.
 function getSellerSubcategories(category,live={}){
  const id=categoryIdFor(category), existing=Object.keys(live[category]?.subcategories||{});
- return unique([...existing,...(projection.productLeaves?.[id]||[])]);
+ return unique([...(projection.productLeaves?.[id]||[]),...existing]);
 }
 export {categoryIdFor,getProductSuggestions,getSellerSubcategories,getSellerCategoryOptions};
 

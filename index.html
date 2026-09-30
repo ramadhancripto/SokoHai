@@ -70,7 +70,8 @@
 <link rel="stylesheet" href="css/33-white-marketplace.css"><!-- White-first marketplace + real marketplace sections -->
 <link rel="stylesheet" href="css/34-chat-inbox-identity.css"><!-- Chat Home person/group/order-group identity hierarchy -->
 <link rel="stylesheet" href="css/35-buyer-dashboard.css"><!-- Buyer personal activity & commerce center -->
-<link rel="stylesheet" href="css/36-advertiser-coming-soon.css"><!-- Advertiser Billing UI-only Coming Soon state -->
+<link rel="stylesheet" href="css/36-advertiser-coming-soon.css">
+<link rel="stylesheet" href="css/38-product-builder-seed.css"><!-- Product Builder canonical category seeding --><!-- Advertiser Billing UI-only Coming Soon state -->
 <link rel="stylesheet" href="css/37-product-card-visual.css"><!-- Large visual marketplace cards -->
 <link rel="stylesheet" href="css/38-home-ad-manager.css"><!-- Admin Home Advertisement Manager -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
@@ -1252,8 +1253,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <div><label style="font-size:12px;font-weight:800;color:#64748b;">UCHAPISHAJI</label><select id="prodPublicationStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="published">Published</option><option value="draft">Draft</option></select></div>
             <div><label style="font-size:12px;font-weight:800;color:#64748b;">UPATIKANAJI</label><select id="prodAvailabilityStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="available">Available</option><option value="pre_order">Pre-order</option><option value="made_to_order">Made to order</option><option value="out_of_stock">Out of stock</option><option value="hidden">Hidden</option></select></div>
         </div>
-        <label style="font-size:12px;font-weight:800;color:#64748b;">VARIANTS (HIARI)</label>
-        <textarea id="prodVariants" placeholder="Mfano: Color: Black, White; Size: S, M, L" style="width:100%;height:55px;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:12px;"></textarea>
+        <input type="hidden" id="prodVariants">
 <!-- Mfumo mgumu wa Dropdowns kwa kuuza ONLINE tu (Online & Hybrid) -->
 <div id="onlineCategorySection" style="display:block; margin-bottom:12px;">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -1274,6 +1274,23 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <input type="text" id="prodOfflineCategory" placeholder="Mfano: Vinywaji, Sabuni, Vyakula, nk" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:#f8fafc;">
 </div>
     </div>
+
+
+    <div id="spbCreateMount">
+    <section id="productBuilder" class="spb" aria-label="Product Builder">
+      <header><span class="spb-kicker">PRODUCT BUILDER</span><h3>Taarifa za bidhaa</h3><p>Simple products are complete without variants. Add attributes, price, stock, SKU and optional images, then save.</p></header>
+      <label>Product SKU <input id="spbProductSku" type="text" autocomplete="off" placeholder="Seller SKU (optional)"></label>
+      <div id="spbNotice" role="status" aria-live="polite"></div>
+      <details open><summary>Mapendekezo ya category · hiari</summary><p>Use / Edit / Skip. Hakuna kinachohifadhiwa bila kuthibitisha.</p><div id="spbSuggestions"></div></details>
+      <p id="spbVariantChoice"><button type="button" id="spbSkipVariants">Skip Variants · keep simple</button></p><section><h4>Optional selectors</h4><div id="spbSelectorDetails" hidden><p>Buyer anachagua values kupata combination. Kila value inaweza kuwa na picha.</p><div id="spbOptions"></div></div><button type="button" id="spbAddOption">＋ Add Selector</button></section>
+      <section id="spbCombinationSection" hidden><h4>Variant combinations</h4><div class="spb-actions"><button type="button" id="spbGenerate">Generate variants</button><button type="button" id="spbManualVariant">＋ Add Variant Manually</button></div><p>Generated rows zinaanza disabled. Review bei, SKU, unit na stock kisha enable. Generate haitafuti rows zako.</p><div id="spbVariants"></div></section>
+      <section><h4>03 · Attributes</h4><p>Taarifa za bidhaa, si chaguo la variant.</p><div id="spbAttributes"></div><button type="button" id="spbAddAttribute">＋ Add Attribute</button></section>
+      <section><h4>04 · Filters</h4><p>Kwa discovery tu. Chagua attribute hapa; value yake haitarudiwa kwenye form.</p><div id="spbFilters"></div><button type="button" id="spbAddFilter">＋ Add custom filter</button></section>
+      <section><h4>05 · Features</h4><div id="spbFeatures"></div><button type="button" id="spbAddFeature">＋ Add Feature</button></section>
+      <section><h4>06 · Additional Information</h4><div id="spbAdditional"></div><button type="button" id="spbAddAdditional">＋ Add Information</button></section>
+      <section><h4>Others → Add Custom</h4><p>Seller fallback tu — si category ya kuonyesha buyer. Preview pendekezo, Use / Edit / Skip.</p><label for="spbOtherInput">Andika unachotaka kuongeza</label><textarea id="spbOtherInput" placeholder="64GB, 128GB, 256GB · Nike · Waterproof · Made in Tanzania"></textarea><button type="button" id="spbSuggestOther">Suggest &amp; Preview</button><div id="spbOtherPreview"></div></section>
+      <div id="spbEditor" hidden></div>
+    </section></div>
 
     <!-- 2. QUANTITY & MEASUREMENT ENGINE (VIPIMO MAALUM) -->
     <div style="background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #cbd5e1; margin-bottom: 15px; text-align: left;">
@@ -1376,11 +1393,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left;">
         <div>
             <label style="font-size: 13px; font-weight:bold; color:gray;" id="stockQuantityLabel">IDADI YA STOCK *</label>
-            <input type="number" id="prodStock" value="1" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+            <input type="number" id="prodStock" min="0" step="1" value="1" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
         </div>
         <div>
             <label style="font-size: 13px; font-weight:bold; color:gray;">LOW STOCK ALERT *</label>
-            <input type="number" id="prodLowStockAlert" value="5" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+            <input type="number" id="prodLowStockAlert" min="0" step="1" value="5" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
         </div>
     </div>
 
@@ -1457,6 +1474,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             </div>
         </div>
 
+    </div>
+    <div id="productContentMedia">
         <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">MAELEZO YA BIDHAA (DESCRIPTION) *</label>
         <textarea id="prodDesc" placeholder="Eleza bidhaa yako kwa kina: faida zake, matumizi, ukubwa, rangi n.k..." style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; outline:none; resize:none;"></textarea>
         
@@ -1478,6 +1497,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <input type="text" id="prodWarehouseZone" placeholder="Eneo la Ghala (Shelf / Zone - Mf: Shelf A-3)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
     </div>
 
+    <button type="submit" id="spbSaveDraft" formnovalidate>Save Draft</button>
     <button type="submit" id="btnSeller" style="background: var(--primary-blue); color: white; width: 100%; padding: 16px; border-radius: 14px; font-weight: 900; margin-top: 15px; border: none; cursor: pointer; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(0,80,157,0.2);"> CHAPISHA BIDHAA SOKONI</button>
     <button type="button" class="btn-close" onclick="goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">&lsaquo; Rudi Nyuma</button>
 </form>
@@ -1500,7 +1520,18 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <option value="return"> RETURN SALE (Mteja Kurudisha Mzigo)</option>
             <option value="expense"> RECORD EXPENSE (Rekodi Matumizi)</option>
             <option value="supplier"> SUPPLIER PAYMENT (Malipo ya Supplier)</option>
+            <option value="reports"> POS REPORTS (Reports & Accounting)</option>
         </select>
+    </div>
+
+    <div id="posReportsArea" style="display:none;">
+        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:12px;">
+            <label style="font-size:12px;font-weight:800;">START <input type="datetime-local" id="posReportStart"></label>
+            <label style="font-size:12px;font-weight:800;">END <input type="datetime-local" id="posReportEnd"></label>
+            <button type="button" onclick="window.loadPosReports()" style="padding:9px 14px;background:var(--green);color:white;border:0;border-radius:8px;font-weight:800;">LOAD REPORT</button>
+        </div>
+        <div id="posReportSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;"></div>
+        <pre id="posReportDetail" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;max-height:340px;overflow:auto;"></pre>
     </div>
 
     <!-- AREA 1: CASH SALE & DEBT SALE AREA -->
@@ -1524,6 +1555,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             </div>
         </div>
 
+        <div id="posOfflineQueuePanel" style="display:flex; align-items:center; justify-content:space-between; gap:10px; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:9px 11px; margin-bottom:15px; text-align:left;">
+            <span id="posOfflineQueueStatus" style="font-size:12px; color:#9a3412;">Offline POS: hakuna mauzo yanayosubiri.</span>
+            <button type="button" onclick="window.posOfflineSync && window.posOfflineSync.manualSync()" style="padding:8px 10px; border:1px solid #fdba74; background:white; color:#9a3412; border-radius:8px; font-weight:bold; font-size:11px; cursor:pointer;">SYNC</button>
+        </div>
+
         <!-- NJIA YA MALIPO (Payment Method) -->
         <div style="margin-bottom:15px; text-align:left;">
             <label style="font-size: 13px; font-weight:900; color:var(--primary-dark); display:block; margin-bottom:6px; text-transform:uppercase;">NJIA YA MALIPO *</label>
@@ -1544,8 +1580,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <select id="posPromoType" onchange="window.calculatePosChange()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold; color:#0f172a;">
                 <option value="none" selected> Hakuna Punguzo</option>
                 <option value="10"> Punguzo la 10%</option>
-                <option value="weekend"> Punguza TSh 2,000 (zaidi ya elfu 10)</option>
-                <option value="buy2get1"> Nunua 2 Pata 1 Bure</option>
+                <option value="weekend" disabled> Punguza TSh 2,000 (haipatikani kwa sasa)</option>
+                <option value="buy2get1" disabled> Nunua 2 Pata 1 Bure (haipatikani kwa sasa)</option>
             </select>
         </div>
 
@@ -1600,19 +1636,40 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
     <!-- AREA 3: RETURN SALE (MTEJA KURUDISHA BIDHAA) -->
     <div id="posReturnArea" style="display:none; text-align:left;">
-        <p style="font-size:12px; color:#475569; margin-bottom:12px;">Sajili bidhaa iliyorudishwa na mteja ili irudi stoo na kurekebisha hesabu za faida:</p>
+        <p style="font-size:12px; color:#475569; margin-bottom:12px;">Sajili return kupitia sale ya awali. Bei, kiasi kinachorudika, stock na status vitathibitishwa na server.</p>
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px; margin-bottom:12px;">
+            <label style="font-size:12px; font-weight:900; color:#1e3a8a;">ORIGINAL SALE ID *</label>
+            <input type="text" id="posReturnSaleId" onblur="window.loadOriginalSaleReturnIdentity()" placeholder="Mf: pos_abc123" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+            <label style="font-size:12px; font-weight:900; color:#1e3a8a; display:block; margin-top:9px;">ORIGINAL SALE ITEM REFERENCE *</label>
+            <input type="text" id="posReturnSaleItemId" placeholder="Mf: saleId:item:0" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+            <small style="display:block; margin-top:6px; color:#475569;">Reference lazima itoke kwenye sale halisi; usitengeneze UUID mpya.</small>
+        </div>
         <input type="text" id="posSearchReturnInp" oninput="window.searchProductsForReturnLive()" placeholder=" Tafuta bidhaa iliyorudishwa..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
         <div id="posReturnSearchResults" style="max-height:150px; overflow-y:auto; background:#f8fafc; border-radius:10px; border:1px solid #cbd5e1; display:none; margin-bottom:12px;"></div>
 
         <div id="selectedReturnProductBox" style="display:none; background:#fef2f2; border:1px solid #fecaca; padding:15px; border-radius:14px; margin-bottom:15px;">
             <input type="hidden" id="selectedReturnProductId">
+            <input type="hidden" id="selectedReturnVariantId">
+            <input type="hidden" id="selectedReturnSku">
+            <input type="hidden" id="selectedReturnUnitId">
+            <input type="hidden" id="selectedReturnUnitMode">
+            <input type="hidden" id="selectedReturnInventoryKey">
             <span style="display:block; font-size:13px;">Bidhaa: <b id="selectedReturnProductName">...</b></span>
+            <span style="display:block; font-size:13px; margin-top:4px; color:#7f1d1d;" id="selectedReturnIdentity">Identity ya sale itapakiwa kutoka snapshot ya awali.</span>
             <span style="display:block; font-size:13px; margin-top:4px;">Kiasi cha Kurejesha kwa PC (TSh): <b id="selectedReturnProductPrice">0</b></span>
             
             <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">IDADI ILIYORUDISHWA (PCS) *</label>
             <input type="number" id="returnProductQty" value="1" style="width:100%; padding:11px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px; background:white;">
         </div>
-        <button type="button" onclick="window.submitReturnSale()" style="width:100%; padding:16px; background:var(--terracotta); color:white; border:none; border-radius:14px; font-weight:900;">THIBITISHA KUREJESHA MZIGO </button>
+        <label style="font-size:12px; font-weight:900; color:#475569; display:block; margin-bottom:4px;">SABABU YA RETURN *</label>
+        <textarea id="posReturnReason" rows="2" placeholder="Mf: bidhaa imeharibika / mteja amebadilisha uamuzi" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:10px;"></textarea>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <div><label style="font-size:12px; font-weight:900; color:#475569;">INVENTORY</label><select id="posReturnDisposition" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;"><option value="SELLABLE_RETURN">Sellable stock</option><option value="DAMAGED_RETURN">Damaged return</option></select></div>
+            <div><label style="font-size:12px; font-weight:900; color:#475569;">REFUND INTENT</label><select id="posReturnRefundMethod" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;"><option value="Cash">Cash</option><option value="Mpesa">Mpesa</option><option value="TigoPesa">TigoPesa</option><option value="AirtelMoney">Airtel Money</option><option value="Bank">Bank</option><option value="CREDIT_ADJUSTMENT">Credit adjustment</option></select></div>
+        </div>
+        <button type="button" id="posReturnSubmitBtn" onclick="window.submitReturnSale()" style="width:100%; padding:16px; background:var(--terracotta); color:white; border:none; border-radius:14px; font-weight:900;">THIBITISHA KUREJESHA MZIGO </button>
+        <div id="posReturnServerResult" style="display:none; margin-top:12px; padding:12px; border-radius:10px; background:#f8fafc; font-size:12px;"></div>
+        <div style="margin-top:18px; border-top:1px solid #e2e8f0; padding-top:14px;"><b style="font-size:12px; color:var(--primary-dark);">TRANSACTION HISTORY</b><div style="display:flex; gap:6px; margin-top:8px;"><input id="posHistorySearch" placeholder="Sale ID / reference" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:8px;"><button type="button" onclick="window.loadPosTransactionHistory()" style="padding:10px; background:var(--primary-blue); color:white; border:0; border-radius:8px; font-weight:bold;">TAFUTA</button></div><div id="posTransactionHistoryResults" style="margin-top:10px;"></div><div id="posTransactionReceipt" style="display:none; margin-top:12px; padding:12px; border:1px solid #e2e8f0; border-radius:10px; background:white;"></div></div>
     </div>
 
     <!-- AREA 4: RECORD EXPENSE (MATUMIZI) -->
@@ -1972,6 +2029,17 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <div><label>Product type</label><select id="editProductType"><option value="physical">Physical</option><option value="digital">Digital</option><option value="retail">Retail</option><option value="wholesale">Wholesale</option><option value="custom">Custom</option><option value="made_to_order">Made to order</option></select></div>
             <div><label>Condition</label><select id="editCondition"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option><option value="not_applicable">Not applicable</option></select></div>
             <div style="grid-column:1/-1"><label>Variants (hiari)</label><textarea id="editVariants" placeholder="Color: Black, White; Size: S, M, L"></textarea></div>
+            <div style="grid-column:1/-1"><label>Concrete variant combinations (JSON, hiari)</label><textarea id="editVariantCombinations" rows="5" placeholder='[{"variantId":"var_red_l","sku":"TSH-RED-L","price":25000,"stock":10,"unitId":"piece","options":{"Color":"Red","Size":"L"},"inventoryKey":"PRODUCT_ID:var_red_l:piece","status":"ACTIVE"}]'></textarea><small>Usiandike combination mpya bila SKU, variantId, unit, stock na identity sahihi.</small></div>
+        </div>
+        <div id="editStructuredFields" style="display:none;margin:12px 0;background:#f8fafc;border:1px solid #dbe3ec;border-radius:12px;padding:12px;text-align:left;">
+            <b style="font-size:13px;color:#0f172a;">Structured product information</b>
+            <div id="editStructuredAttributes"></div><button type="button" id="editAddAttribute" class="spb-btn">＋ Add attribute</button>
+            <div id="editStructuredOptions" style="margin-top:10px"></div><button type="button" id="editAddOption" class="spb-btn">＋ Add option</button>
+            <div id="editStructuredVariants" style="margin-top:10px"></div><button type="button" id="editAddVariant" class="spb-btn">＋ Add variant</button>
+            <div id="editStructuredFeatures" style="margin-top:10px"></div><button type="button" id="editAddFeature" class="spb-btn">＋ Add feature</button>
+            <div id="editStructuredAdditional" style="margin-top:10px"></div><button type="button" id="editAddAdditional" class="spb-btn">＋ Add information</button>
+            <div id="editStructuredMedia" style="margin-top:10px"></div>
+            <small style="display:block;color:#64748b;margin-top:8px">Existing legacy fields and identities remain preserved.</small>
         </div>
         
         <button type="submit" id="btnSubmitEdit" style="background:var(--primary-blue);"> HIFADHI MABADILIKO</button>
@@ -3234,6 +3302,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/03-dashboard.js"></script>
 <script type="module" src="js/app/04-orders-escrow.js"></script>
 <script type="module" src="js/app/05-forms.js"></script>
+<script type="module" src="js/app/06-product-builder.js"></script>
 <script type="module" src="js/app/06-navigation.js"></script>
 <script type="module" src="js/app/07-product.js"></script>
 <script type="module" src="js/app/08-app-state.js"></script>
@@ -3241,6 +3310,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/10-dashboard-tabs.js"></script>
 <script type="module" src="js/app/11-analytics.js"></script>
 <script type="module" src="js/app/12-sys-modes.js"></script>
+<script type="module" src="js/app/06-product-edit-builder.js"></script>
 <script type="module" src="js/app/13-community.js"></script>
 <script type="module" src="js/app/14-map-onboarding.js"></script>
 <script type="module" src="js/app/15-pos-sales.js"></script>

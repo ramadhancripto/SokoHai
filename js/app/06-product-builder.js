@@ -22,13 +22,30 @@ function btn(action, label, data = '', disabled = false) { return `<button type=
 function img(url, alt = '') { return `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy">`; }
 function media(item, target) { return `<div class="spb-media">${imageList(item.images).map((url, i) => `<span>${img(url)}${btn('remove-image', '×', target + ':' + i)}</span>`).join('')}${btn('attach', '＋ Image', target)}</div>`; }
 function exportState() { window.skhProductBuilderExport = { attributes: state.attributes, options: state.options, features: state.features, additionalInfo: state.additionalInfo, [state.canonical ? 'variantCombinations' : 'variantsStructured']: state.variants }; }
+// MUANZILISHI WA CATEGORY. Canonical taxonomy inaanzisha kila section kabla ya
+// seller kuongeza chochote; "＋ Add ..." inabaki kama nyongeza ya hiari baada ya
+// mapendekezo. Rows hizi ni DRAFT tu — hakuna kinachohifadhiwa mpaka Use/Edit,
+// na Skip inaondoa pendekezo bila kugusa data ya seller.
+function seedAccepted(r) {
+  const field = { option:'options', attribute:'attributes', feature:'features', additional:'additionalInfo' }[r.kind];
+  if (field) return state[field].some(x => key(x.name) === key(r.name));
+  if (r.kind === 'filter') return state.attributes.some(a => (key(a.name) === key(r.name) || key(a.filterKey) === key(r.name)) && a.filterable)
+    || Object.keys(state.filters || {}).some(n => key(n) === key(r.name));
+  return false;
+}
+function seedRows(kind) { return suggestionRows.map((r, i) => [r, i]).filter(([r]) => r.kind === kind && r.state !== 'skipped' && !seedAccepted(r)); }
+function seedBlock(kind) {
+  const rows = seedRows(kind);
+  if (!rows.length) return '';
+  return `<div class="spb-seed"><small class="spb-seed-head">Mapendekezo ya category · thibitisha</small>${rows.map(([r, i]) => `<div class="spb-row spb-seed-row"><span><small>${r.kind === 'option' ? 'Selector' : esc(r.kind)}</small><b>${esc(r.name)}</b>${r.value ? `<small>${esc(String(r.value))}</small>` : ''}${r.guidance ? `<small>Suggested values (choose or customize): ${esc(r.guidance)}</small>` : ''}</span>${btn('suggest-use', 'Use', i)}${btn('suggest-edit', 'Edit', i)}${btn('suggest-skip', 'Skip', i)}</div>`).join('')}</div>`;
+}
 function render() {
   if($('spbProductSku')){$('spbProductSku').value=state.productSku || state.original.sku || '';$('spbProductSku').readOnly=!!state.original.sku;}
   if (!$('productBuilder')) return;
-  if($('spbSelectorDetails'))$('spbSelectorDetails').hidden=!state.options.length&&!state.variants.length;
+  if($('spbSelectorDetails'))$('spbSelectorDetails').hidden=!state.options.length&&!state.variants.length&&!seedRows('option').length;
   if($('spbCombinationSection'))$('spbCombinationSection').hidden=!state.options.length&&!state.variants.length;
   if($('spbSkipVariants'))$('spbSkipVariants').disabled=!!state.options.length||!!state.variants.length;
-  $('spbOptions').innerHTML = state.options.map((o, i) => `<article class="spb-card"><div class="spb-row"><b>${esc(o.name)}</b><small>${esc(o.selectorType)}</small>${btn('edit-option','Edit',i)}${btn('up-option','↑',i,i===0)}${btn('down-option','↓',i,i===state.options.length-1)}${btn('remove-option','Remove',i)}</div><div class="spb-values">${o.values.map((v,j) => `<div class="spb-value"><b>${esc(v.label || v.value)}</b>${media(v,`value:${i}:${j}`)}<div class="spb-actions">${btn('edit-value','Edit',`${i}:${j}`)}${btn('up-value','↑',`${i}:${j}`,j===0)}${btn('down-value','↓',`${i}:${j}`,j===o.values.length-1)}${btn('remove-value','Remove',`${i}:${j}`)}</div></div>`).join('')}</div>${btn('add-value','＋ Add value',i)}</article>`).join('') || '<p class="spb-empty">No selectors. Simple products are welcome.</p>';
+  $('spbOptions').innerHTML = state.options.map((o, i) => `<article class="spb-card"><div class="spb-row"><b>${esc(o.name)}</b><small>${esc(o.selectorType)}</small>${btn('edit-option','Edit',i)}${btn('up-option','↑',i,i===0)}${btn('down-option','↓',i,i===state.options.length-1)}${btn('remove-option','Remove',i)}</div><div class="spb-values">${o.values.map((v,j) => `<div class="spb-value"><b>${esc(v.label || v.value)}</b>${media(v,`value:${i}:${j}`)}<div class="spb-actions">${btn('edit-value','Edit',`${i}:${j}`)}${btn('up-value','↑',`${i}:${j}`,j===0)}${btn('down-value','↓',`${i}:${j}`,j===o.values.length-1)}${btn('remove-value','Remove',`${i}:${j}`)}</div></div>`).join('')}</div>${btn('add-value','＋ Add value',i)}</article>`).join('') + seedBlock('option') || '<p class="spb-empty">No selectors. Simple products are welcome.</p>';
   $('spbVariants').innerHTML = (state.variants.length ? `<p>${state.variants.filter(v=>!v.removed).length} combinations · ${state.variants.filter(v=>v.status==='ACTIVE' && !v.removed).length} enabled</p>` : '<p class="spb-empty">Generate combinations or add one manually.</p>') + state.variants.map((v,i) => {
     if (v.removed) return '';
     const saved = array(state.original.variantCombinations).some(x=>x.variantId===v.variantId);
@@ -39,10 +56,10 @@ function render() {
     }).join('')}${saved?`<label>Adjust stock by (+ / −)<input type="number" step="1" data-field="stockDelta" data-row="${i}" value="${state.stockDeltas[v.variantId] || 0}"></label>`:''}</div>${saved?'<small>SKU / unit identity retained. Stock changes are audited adjustments.</small>':legacy?'<small>Legacy stock snapshot — inventory changes use the product stock adjustment above.</small>':''}${media(v,`variant:${i}`)}${btn('edit-variant','Edit combination',i)}${btn('remove-variant','Remove',i)}</article>`;
   }).join('');
   [['attributes','spbAttributes','attribute'],['features','spbFeatures','feature'],['additionalInfo','spbAdditional','additional']].forEach(([field,host,kind])=>{
-    $(host).innerHTML = state[field].map((a,i)=>`<div class="spb-row"><div><b>${esc(a.name)}</b><small>${esc(Array.isArray(a.value)?a.value.join(', '):a.value)}${a.type?' · '+esc(a.type):''}</small></div>${btn('edit-'+kind,'Edit',i)}${btn('remove-'+kind,'Remove',i)}</div>`).join('') || '<p class="spb-empty">Nothing added yet.</p>';
+    $(host).innerHTML = state[field].map((a,i)=>`<div class="spb-row"><div><b>${esc(a.name)}</b><small>${esc(Array.isArray(a.value)?a.value.join(', '):a.value)}${a.type?' · '+esc(a.type):''}</small></div>${btn('edit-'+kind,'Edit',i)}${btn('remove-'+kind,'Remove',i)}</div>`).join('') + seedBlock(kind) || '<p class="spb-empty">Nothing added yet.</p>';
   });
-  $('spbFilters').innerHTML = state.attributes.map((a,i)=>`<label class="spb-check"><input type="checkbox" data-filter-attr="${i}" ${a.filterable?'checked':''}> ${esc(a.name)} · ${esc(Array.isArray(a.value)?a.value.join(', '):a.value)}</label>`).join('') + Object.entries(state.filters).map(([name,val],i)=>`<div class="spb-row"><span>${esc(name)}: ${esc(val)}</span>${btn('edit-filter','Edit',i)}${btn('remove-filter','Remove',i)}</div>`).join('');
-  if (mode === 'edit') $('spbEditImages').innerHTML = state.images.map((u,i)=>`<span class="spb-general">${img(u)}${btn('up-general','←',i,i===0)}${btn('remove-general','Remove',i)}</span>`).join('');
+  $('spbFilters').innerHTML = state.attributes.map((a,i)=>`<label class="spb-check"><input type="checkbox" data-filter-attr="${i}" ${a.filterable?'checked':''}> ${esc(a.name)} · ${esc(Array.isArray(a.value)?a.value.join(', '):a.value)}</label>`).join('') + Object.entries(state.filters).map(([name,val],i)=>`<div class="spb-row"><span>${esc(name)}: ${esc(val)}</span>${btn('edit-filter','Edit',i)}${btn('remove-filter','Remove',i)}</div>`).join('') + seedBlock('filter');
+  if (mode === 'edit' && $('spbEditImages')) $('spbEditImages').innerHTML = state.images.map((u,i)=>`<span class="spb-general">${img(u)}${btn('up-general','←',i,i===0)}${btn('remove-general','Remove',i)}</span>`).join('');
   exportState();
 }
 function closeEditor() { $('spbEditor').hidden = true; $('spbEditor').innerHTML = ''; }
@@ -140,7 +157,15 @@ function categorySuggestions() {
   hint.textContent=cat+' → '+sub+' · '+(bridge.variantCapableFields.length?'Optional selector recommendations: '+bridge.variantCapableFields.join(', '):'No evidenced selector recommendation; simple products can be saved.')+' · Images are optional unless an explicit source rule applies. Accepted fields are kept; remove fields you no longer need.';
   if(bridge.unitGuidance)hint.textContent+=' '+bridge.unitGuidance.note;
   // Source gaps remain in schema provenance/audit, not a false seller validation error.
-  $('spbSuggestions').innerHTML=suggestionRows.map((r,i)=>`<div class="spb-row"><span><small>${r.kind==='option'?'Selector':esc(r.kind)}</small><b>${esc(r.name)}</b>${r.guidance?`<small>Suggested values (choose or customize): ${esc(r.guidance)}</small>`:''}</span>${btn('suggest-use','Use',i)}${btn('suggest-edit','Edit',i)}${btn('suggest-skip','Skip',i)}</div>`).join('') || '<p class="spb-empty">Add custom fields below. Taxonomy is guidance, not a restriction.</p>';
+  // Sections zenyewe ndizo zinabeba mapendekezo (muanzilishi). Panel hii inabaki
+  // kwa muhtasari na kwa aina zisizo na section yake, mfano Suggested unit.
+  const sectioned=new Set(['option','attribute','feature','filter','additional']);
+  const loose=suggestionRows.map((r,i)=>[r,i]).filter(([r])=>!sectioned.has(r.kind)&&!r.state);
+  const pending=suggestionRows.filter(r=>sectioned.has(r.kind)&&!r.state).length;
+  $('spbSuggestions').innerHTML=(pending?`<p class="spb-seed-summary">Mapendekezo ${pending} kutoka taxonomy yamewekwa kwenye sections hapa chini. Thibitisha kwa Use / Edit, au Skip.</p>`:'')
+    +loose.map(([r,i])=>`<div class="spb-row"><span><small>${esc(r.kind)}</small><b>${esc(r.name)}</b></span>${btn('suggest-use','Use',i)}${btn('suggest-edit','Edit',i)}${btn('suggest-skip','Skip',i)}</div>`).join('')
+    ||'<p class="spb-empty">Hakuna pendekezo la category kwa njia hii. Ongeza custom hapa chini; taxonomy ni mwongozo, si kizuizi.</p>';
+  render();
 }
 function previewOther() {
   const r=suggestCustom(value('spbOtherInput')); if(!r){notice('Andika custom input kwanza.',true);return;}
@@ -209,7 +234,7 @@ function action(event) {
     else if(/^(edit|remove)-(attribute|feature|additional)$/.test(a)) {
       const kind=a.split('-')[1],field={attribute:'attributes',feature:'features',additional:'additionalInfo'}[kind];
       if(a.startsWith('edit'))showEditor(kind,i);else{state[field].splice(i,1);render();}
-    } else if(a.startsWith('suggest-')) { if(a!=='suggest-skip')useSuggestion(suggestionRows[i],a==='suggest-edit');el.closest('.spb-row').remove(); }
+    } else if(a.startsWith('suggest-')) { const row=suggestionRows[i]; if(a==='suggest-skip'){ if(row)row.state='skipped'; } else useSuggestion(row,a==='suggest-edit'); render(); }
     else if(a.startsWith('other-')) { if(a==='other-use'||a==='other-edit')useSuggestion(suggestCustom(value('spbOtherInput')),a==='other-edit');$('spbOtherPreview').innerHTML=''; }
   } catch(e){notice(e.message,true);}
 }
@@ -246,8 +271,8 @@ function load(product={}, target='create') {
   state.variants=copy(array(product.variantCombinations || product.variantsStructured)).map(v=>({...v,images:imageList(v.images || v.imageRefs || v.image)}));
   state.filters=copy(product.filters || {});
   state.attributes.filter(a=>a.filterable).forEach(a=>{delete state.filters[a.filterKey];delete state.filters[a.name];});
-  $('spbEditFields').hidden=target!=='edit'; $('spbEditDraft').hidden=target!=='edit';
-  $(target==='edit'?'spbEditMount':'spbCreateMount').appendChild($('productBuilder'));
+  if($('spbEditFields'))$('spbEditFields').hidden=target!=='edit'; if($('spbEditDraft'))$('spbEditDraft').hidden=target!=='edit';
+  $(target==='edit'?'spbEditMount':'spbCreateMount')?.appendChild($('productBuilder'));
   if(target==='edit')fillEdit(product);
   closeEditor();render();categorySuggestions();notice('');
 }
@@ -345,7 +370,7 @@ function bind() {
   $('productBuilder').dataset.bound='1';
   $('spbSkipVariants')?.addEventListener('click',()=>{if(state.options.length||state.variants.length)return;closeEditor();notice('Simple product selected. No selectors or combinations are required.');render();});
   const bindings={spbAddOption:()=>showEditor('option'),spbAddAttribute:()=>showEditor('attribute'),spbAddFeature:()=>showEditor('feature'),spbAddAdditional:()=>showEditor('additional'),spbAddFilter:()=>filterEditor(),spbGenerate:generate,spbManualVariant:()=>manual(),spbSuggestOther:previewOther,spbAddGeneralImage:()=>attach('general')};
-  Object.entries(bindings).forEach(([id,fn])=>$(id).addEventListener('click',fn));
+  Object.entries(bindings).forEach(([id,fn])=>$(id)?.addEventListener('click',fn));
   document.addEventListener('click',action);$('productBuilder').addEventListener('input',readChange);
   ['prodCategory','prodSubCategory','editCategory','editSubCategory'].forEach(id=>$(id)?.addEventListener('change',()=>{
     if(id==='editCategory')fillSelect('editSubCategory',getSellerSubcategories(value(id),skh.advancedCategories),'');
@@ -355,9 +380,9 @@ function bind() {
   document.addEventListener('change',event=>{if(event.target.id==='prodCategory'){const el=$('prodSubCategory'),cat=value('prodCategory');if(!skh.advancedCategories?.[cat]){el.innerHTML='';el.add(new Option('— Select —',''));}const leaves=getSellerSubcategories(cat,skh.advancedCategories);for(const leaf of leaves)if(![...el.options].some(o=>o.value===leaf))el.add(new Option(leaf,leaf));if(leaves.length)$('subCategoryContainer').style.display='block';el.disabled=false;categorySuggestions();}});
   new MutationObserver(()=>{if($('sellerForm').style.display && $('sellerForm').style.display!=='none')resumeCreate();}).observe($('sellerForm'),{attributes:true,attributeFilter:['style']});
   $('sellerForm').addEventListener('reset',()=>{if(mode==='create'){state=empty();session++;closeEditor();render();notice('');}});
-  $('spbSaveDraft').addEventListener('click',()=>{$('prodPublicationStatus').value='draft';});
-  $('btnSeller').addEventListener('click',()=>{if($('prodPublicationStatus').value==='draft')notice('Saving draft. Chagua Published ili kuchapisha.');});
-  $('spbEditDraft').addEventListener('click',()=>{$('editPublicationStatus').value='draft';});
+  $('spbSaveDraft')?.addEventListener('click',()=>{const el=$('prodPublicationStatus');if(el)el.value='draft';});
+  $('btnSeller')?.addEventListener('click',()=>{if($('prodPublicationStatus')?.value==='draft')notice('Saving draft. Chagua Published ili kuchapisha.');});
+  $('spbEditDraft')?.addEventListener('click',()=>{const el=$('editPublicationStatus');if(el)el.value='draft';});
   render();categorySuggestions();
 }
 window.skhProductBuilder={load,collect,stockRequests,resumeCreate,hasPending:()=>pending>0,afterMetadata:()=>{state.metadataVersion++;},getOriginal:()=>copy(state.original)};

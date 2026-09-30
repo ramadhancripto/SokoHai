@@ -1,0 +1,91 @@
+/* Product Builder — canonical category seeding (muanzilishi).
+   Scoped to the seed block only. Does not restyle the existing builder. */
+
+.spb-seed{
+  margin:8px 0 10px;
+  padding:10px 10px 6px;
+  border:1px dashed #b9d8c9;
+  border-radius:12px;
+  background:#f4fbf7;
+}
+.spb-seed-head{
+  display:block;
+  margin-bottom:8px;
+  font-size:11.5px;
+  font-weight:800;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  color:#17604e;
+}
+.spb-seed-summary{
+  margin:0 0 10px;
+  padding:9px 11px;
+  border-left:3px solid #17604e;
+  border-radius:8px;
+  background:#eaf8f2;
+  font-size:12.5px;
+  line-height:1.45;
+  color:#164c38;
+}
+.spb-seed-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:7px 9px;
+  margin-bottom:6px;
+  border:1px solid #dbeee5;
+  border-radius:10px;
+  background:#fff;
+}
+.spb-seed-row:last-child{margin-bottom:0}
+.spb-seed-row > span{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+  flex:1 1 150px;
+  min-width:0;
+}
+.spb-seed-row > span > small{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#6b8f80;
+}
+.spb-seed-row > span > b{
+  font-size:13.5px;
+  font-weight:800;
+  color:#0f3d2e;
+  overflow-wrap:anywhere;
+}
+.spb-seed-row > span > small + small{
+  text-transform:none;
+  letter-spacing:0;
+  font-weight:500;
+  color:#5d7a6e;
+}
+.spb-seed-row button{
+  flex:0 0 auto;
+  padding:5px 11px;
+  border:1px solid #cfe5da;
+  border-radius:999px;
+  background:#fff;
+  font-size:12px;
+  font-weight:700;
+  color:#17604e;
+  cursor:pointer;
+}
+.spb-seed-row button:hover{background:#eaf8f2}
+.spb-seed-row button[data-spb="suggest-use"]{
+  background:#17604e;
+  border-color:#17604e;
+  color:#fff;
+}
+.spb-seed-row button[data-spb="suggest-use"]:hover{background:#0f4a3b}
+.spb-seed-row button[data-spb="suggest-skip"]{color:#8a6d3b;border-color:#e6dcc4}
+
+@media(max-width:400px){
+  .spb-seed-row{gap:6px;padding:6px 8px}
+  .spb-seed-row button{padding:4px 9px;font-size:11.5px}
+}

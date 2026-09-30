@@ -4,7 +4,8 @@
   "description": "SokoHai static frontend (ES modules). Root package.json enables Node ESM tooling/tests; backend lives in functions/.",
   "type": "module",
   "devDependencies": {
-    "jsdom": "^29.1.1"
+    "jsdom": "^29.1.1",
+    "playwright": "^1.47.2"
   },
   "scripts": {
     "test:nego": "node tools/test_nego_form.mjs",

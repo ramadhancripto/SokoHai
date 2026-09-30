@@ -74,7 +74,15 @@ Full canonical baseline/current and all 12 protected-file pairs in authority-has
 
 ## 18. Execution authority hashes
 
-12/12 other recorded baseline authority/core files unchanged. Existing products, writer/save path, uploader, inventory and POS authority not replaced. This does not mean all working-tree files are unchanged; builder, bridge, markup, generated projection, tooling and tests changed.
+**CORRECTED 2026-09-30 during checkpoint 0ac2c17 recovery. The previous "12/12 other recorded baseline authority/core files unchanged" claim was NOT reproducible and has been withdrawn.**
+
+Verified against the actual committed state of `0ac2c17`, the 13 recorded files are: **1 intentionally changed canonical file** (`shared/canonical-taxonomy-data.js`); **7 protected files actually changed**; **5 protected files verified unchanged**.
+
+The 7 protected files that did change are `js/app/00-bootstrap.js`, `js/app/08-app-state.js`, `js/app/12-sys-modes.js`, `js/app/39-product-core.js`, `functions/inventory-authority.js`, `js/app/39-product-showcase.js`, `js/app/39-showcase-logic.js`. The original record wrongly marked all seven `changed: false`, because the audit generator computes `after` at generation time and ran before those edits landed in the same commit (the two showcase files changed in `6056472`). This was confirmed as real content drift, not a CRLF artifact.
+
+All seven diffs are small additive extensions of existing authorities; per-file justification and the full classification are recorded in `docs/taxonomy/mission/authority-drift-justification.md`. `authority-hashes.json` has been corrected in-schema and now verifies 0-drift against the tree.
+
+The 5 verified-unchanged protected files include the uploader `js/11-uploads.js` and `shared/pos-product-identity-core.js`, both byte-identical to baseline. Existing products collection, writer/save path, uploader, inventory and POS identity authority are not replaced. This does not mean all working-tree files are unchanged; builder, bridge, markup, generated projection, tooling and tests changed.
 
 ## 19. Product Builder verification
 

@@ -1,5 +1,8 @@
 /* ==== js/app/08-app-state.js ==== */
 import { skh } from './00-bootstrap.js';
+// Canonical taxonomy is the authority for the visible seller subcategory list.
+// Existing skh.advancedCategories is still passed in, unchanged, for compatibility.
+import { getSellerSubcategories } from '../../shared/product-taxonomy-bridge.mjs';
 
 // Onyesha / ficha kitufe cha "+" (UZA) kwenye bottom nav.
 // Nav tabs hubaki — ni kitufe cha "+" tu kinachobadilika.
@@ -309,7 +312,9 @@ window.updateFormSubcats = function() {
     if(batchInput) batchInput.removeAttribute('required');
     if(imeiInput) imeiInput.removeAttribute('required');
 
-    if(!catVal || !skh.advancedCategories[catVal]) {
+    // Canonical categories (CAT-xx) are not keys of the legacy map, so only bail when the
+    // category is empty. Canonical routes must reach the subcategory list below.
+    if(!catVal) {
         if(subContainer) subContainer.style.display = 'none';
         return;
     }
@@ -330,11 +335,14 @@ window.updateFormSubcats = function() {
         console.log(" BOT SUGGESTION: IMEI / Serial numbers tracking imewashwa!");
     }
 
-    const subcats = Object.keys(skh.advancedCategories[catVal].subcategories);
+    // CANONICAL FIRST: canonical product leaves lead, legacy-only leaves follow for
+    // backward compatibility. getSellerSubcategories dedupes, so a canonical route always
+    // wins over an identically named legacy route. skh.advancedCategories is unchanged.
+    const subcats = getSellerSubcategories(catVal, skh.advancedCategories || {});
     subSelect.innerHTML = `<option value="">-- Chagua Aina ya Bidhaa --</option>` + 
                           subcats.map(s => `<option value="${s}">${s}</option>`).join('');
-    
-    if(subContainer) subContainer.style.display = 'block';
+
+    if(subContainer) subContainer.style.display = subcats.length ? 'block' : 'none';
     document.getElementById('dynamicFiltersContainer').style.display = 'none';
 };
 

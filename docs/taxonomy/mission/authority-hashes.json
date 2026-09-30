@@ -30,30 +30,30 @@
   {
     "file": "js/app/00-bootstrap.js",
     "before": "38d2425d737f2631a70aa876eafbca1c067c486e384ff60292b62fa9cd42253b",
-    "after": "38d2425d737f2631a70aa876eafbca1c067c486e384ff60292b62fa9cd42253b",
+    "after": "f540cf92b112e61d31876ec5aa5b704599566bb27321248fad26ed267d2f5fe0",
     "scope": "PROTECTED_EXECUTION_OR_CORE",
-    "changed": false
+    "changed": true
   },
   {
     "file": "js/app/08-app-state.js",
     "before": "07ed46037abfe03e7c4f2f26e74ec4ec403adfe3821185da9cc76326df386103",
-    "after": "07ed46037abfe03e7c4f2f26e74ec4ec403adfe3821185da9cc76326df386103",
+    "after": "6cd67bcb39febecbc2d80a4ac14e64fc8b4924eee6f244437fb2e41e2f3b9b71",
     "scope": "PROTECTED_EXECUTION_OR_CORE",
-    "changed": false
+    "changed": true
   },
   {
     "file": "js/app/12-sys-modes.js",
     "before": "fb925726c398197066b684c3d8808d1ddb11f00eebb3f67aade990b7d62adf4f",
-    "after": "fb925726c398197066b684c3d8808d1ddb11f00eebb3f67aade990b7d62adf4f",
+    "after": "fe1d851bfe364a05e5008d4eb2651968db1f531cdb157a9f4e130b9a77d8d11c",
     "scope": "PROTECTED_EXECUTION_OR_CORE",
-    "changed": false
+    "changed": true
   },
   {
     "file": "js/app/39-product-core.js",
     "before": "267856ffaba01e421b2bdac692d082a4eb30162afc4c4488210424243b5d289b",
-    "after": "267856ffaba01e421b2bdac692d082a4eb30162afc4c4488210424243b5d289b",
+    "after": "2f03a178bb04e6dfdd3098a210e7d9e5b370e3b58b4a41ce9ccdc3e8820412a5",
     "scope": "PROTECTED_EXECUTION_OR_CORE",
-    "changed": false
+    "changed": true
   },
   {
     "file": "js/11-uploads.js",
@@ -65,9 +65,9 @@
   {
     "file": "functions/inventory-authority.js",
     "before": "6a0f090e76600adc60fb1dcd4460281c09f0ce72f8b5b263853fcb543f875530",
-    "after": "6a0f090e76600adc60fb1dcd4460281c09f0ce72f8b5b263853fcb543f875530",
+    "after": "630278c6e16f0557fc58d3ead28e51e6f9129878ce7bbcece9ac1fa2b632d3cc",
     "scope": "PROTECTED_EXECUTION_OR_CORE",
-    "changed": false
+    "changed": true
   },
   {
     "file": "shared/pos-product-identity-core.js",
@@ -79,15 +79,15 @@
   {
     "file": "js/app/39-product-showcase.js",
     "before": "5059045dd64610907332f346e91be2ee45d72681fa0210ba18261d9a492913ee",
-    "after": "5059045dd64610907332f346e91be2ee45d72681fa0210ba18261d9a492913ee",
+    "after": "d6fa1cb542dfe2efc566c4b2dcc6e500c58bb55b2c8e8a5de32d1188a561f59d",
     "scope": "PROTECTED_EXECUTION_OR_CORE",
-    "changed": false
+    "changed": true
   },
   {
     "file": "js/app/39-showcase-logic.js",
     "before": "0358e3da7a845c10c9f5cf7e9642c0d0d624252221757d5c21293333e63d3995",
-    "after": "0358e3da7a845c10c9f5cf7e9642c0d0d624252221757d5c21293333e63d3995",
+    "after": "042fca1a86557b7982a9c6ce5316134781cf83c36c94c5d01b7ed70d9465ff24",
     "scope": "PROTECTED_EXECUTION_OR_CORE",
-    "changed": false
+    "changed": true
   }
 ]
