@@ -1,0 +1,602 @@
+[
+  {
+    "categoryId": "CAT-01",
+    "leaf": "Nafaka, Unga & Mikunde",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_9a8e3de8-3a78-422f-90d9-c7533a7b92d6",
+        "sku": "SKU-c7533a7b92d6",
+        "unitId": "Piece",
+        "inventoryKey": "p1:variant_9a8e3de8-3a78-422f-90d9-c7533a7b92d6:Piece"
+      },
+      {
+        "variantId": "variant_0f0250ad-395d-4635-b2f0-58202ca9d851",
+        "sku": "SKU-58202ca9d851",
+        "unitId": "Piece",
+        "inventoryKey": "p1:variant_0f0250ad-395d-4635-b2f0-58202ca9d851:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-02",
+    "leaf": "Mbegu",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_d62859dd-6a3a-4ee7-bd0e-551edff3e10c",
+        "sku": "SKU-551edff3e10c",
+        "unitId": "Piece",
+        "inventoryKey": "p2:variant_d62859dd-6a3a-4ee7-bd0e-551edff3e10c:Piece"
+      },
+      {
+        "variantId": "variant_dff83bb1-f480-4219-874b-f4dbe3bc865b",
+        "sku": "SKU-f4dbe3bc865b",
+        "unitId": "Piece",
+        "inventoryKey": "p2:variant_dff83bb1-f480-4219-874b-f4dbe3bc865b:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-03",
+    "leaf": "Nafaka",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_803aaac2-7d8e-4ca9-bdfe-0b27b1dcd37d",
+        "sku": "SKU-0b27b1dcd37d",
+        "unitId": "Piece",
+        "inventoryKey": "p3:variant_803aaac2-7d8e-4ca9-bdfe-0b27b1dcd37d:Piece"
+      },
+      {
+        "variantId": "variant_93d368ac-d183-458d-bd71-4cb5ff8a3f55",
+        "sku": "SKU-4cb5ff8a3f55",
+        "unitId": "Piece",
+        "inventoryKey": "p3:variant_93d368ac-d183-458d-bd71-4cb5ff8a3f55:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-04",
+    "leaf": "Ng'ombe",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_a0355638-4f45-48ff-950b-fed4fba1be32",
+        "sku": "SKU-fed4fba1be32",
+        "unitId": "Piece",
+        "inventoryKey": "p4:variant_a0355638-4f45-48ff-950b-fed4fba1be32:Piece"
+      },
+      {
+        "variantId": "variant_b58d79ed-3466-47df-b57b-3c059ebd51f6",
+        "sku": "SKU-3c059ebd51f6",
+        "unitId": "Piece",
+        "inventoryKey": "p4:variant_b58d79ed-3466-47df-b57b-3c059ebd51f6:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-05",
+    "leaf": "Samaki wa Maji Safi",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_bc282494-904e-458f-896e-56d9acf0d734",
+        "sku": "SKU-56d9acf0d734",
+        "unitId": "Piece",
+        "inventoryKey": "p5:variant_bc282494-904e-458f-896e-56d9acf0d734:Piece"
+      },
+      {
+        "variantId": "variant_49a3d2c9-a1b9-4ed8-ae96-cda4723c4d35",
+        "sku": "SKU-cda4723c4d35",
+        "unitId": "Piece",
+        "inventoryKey": "p5:variant_49a3d2c9-a1b9-4ed8-ae96-cda4723c4d35:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-06",
+    "leaf": "Miti & Magogo",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_b7bf172a-e093-4aa6-9b63-d0d5392f64ac",
+        "sku": "SKU-d0d5392f64ac",
+        "unitId": "Piece",
+        "inventoryKey": "p6:variant_b7bf172a-e093-4aa6-9b63-d0d5392f64ac:Piece"
+      },
+      {
+        "variantId": "variant_6ef11ca1-65e5-4a5e-addb-810c4a2db32e",
+        "sku": "SKU-810c4a2db32e",
+        "unitId": "Piece",
+        "inventoryKey": "p6:variant_6ef11ca1-65e5-4a5e-addb-810c4a2db32e:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-07",
+    "leaf": "Vitambaa",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_f7f874b4-da28-4c42-b120-2ce93eedf4a4",
+        "sku": "SKU-2ce93eedf4a4",
+        "unitId": "Piece",
+        "inventoryKey": "p7:variant_f7f874b4-da28-4c42-b120-2ce93eedf4a4:Piece"
+      },
+      {
+        "variantId": "variant_b56d5268-2031-472d-bef4-f4c9272d14c8",
+        "sku": "SKU-f4c9272d14c8",
+        "unitId": "Piece",
+        "inventoryKey": "p7:variant_b56d5268-2031-472d-bef4-f4c9272d14c8:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-08",
+    "leaf": "Skincare",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_75ccb5c9-0170-469d-b37b-e13571c33d64",
+        "sku": "SKU-e13571c33d64",
+        "unitId": "Piece",
+        "inventoryKey": "p8:variant_75ccb5c9-0170-469d-b37b-e13571c33d64:Piece"
+      },
+      {
+        "variantId": "variant_f8a119d2-0dce-4263-abb7-9556418456c2",
+        "sku": "SKU-9556418456c2",
+        "unitId": "Piece",
+        "inventoryKey": "p8:variant_f8a119d2-0dce-4263-abb7-9556418456c2:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-09",
+    "leaf": "Samani",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_5a9b49f4-52e4-40cb-89a4-7e6c00d4609f",
+        "sku": "SKU-7e6c00d4609f",
+        "unitId": "Piece",
+        "inventoryKey": "p9:variant_5a9b49f4-52e4-40cb-89a4-7e6c00d4609f:Piece"
+      },
+      {
+        "variantId": "variant_d4e04fe9-5b4d-4111-a873-8d1f1f167a14",
+        "sku": "SKU-8d1f1f167a14",
+        "unitId": "Piece",
+        "inventoryKey": "p9:variant_d4e04fe9-5b4d-4111-a873-8d1f1f167a14:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-10",
+    "leaf": "Cement, Lime & Binders",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_63a315d3-2edc-499f-9562-0b11f1779781",
+        "sku": "SKU-0b11f1779781",
+        "unitId": "Piece",
+        "inventoryKey": "p10:variant_63a315d3-2edc-499f-9562-0b11f1779781:Piece"
+      },
+      {
+        "variantId": "variant_192331eb-b433-4039-85a6-c25e678d2865",
+        "sku": "SKU-c25e678d2865",
+        "unitId": "Piece",
+        "inventoryKey": "p10:variant_192331eb-b433-4039-85a6-c25e678d2865:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-11",
+    "leaf": "TVs & Home Entertainment",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_fadf56fc-dd84-4fd4-8efb-46046c9a3ee6",
+        "sku": "SKU-46046c9a3ee6",
+        "unitId": "Piece",
+        "inventoryKey": "p11:variant_fadf56fc-dd84-4fd4-8efb-46046c9a3ee6:Piece"
+      },
+      {
+        "variantId": "variant_61749eba-7b22-49ca-8595-49377f870278",
+        "sku": "SKU-49377f870278",
+        "unitId": "Piece",
+        "inventoryKey": "p11:variant_61749eba-7b22-49ca-8595-49377f870278:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-12",
+    "leaf": "Simu za Mkononi",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_bd88fe14-6d86-49fe-a002-91dc263b6b6d",
+        "sku": "SKU-91dc263b6b6d",
+        "unitId": "Piece",
+        "inventoryKey": "p12:variant_bd88fe14-6d86-49fe-a002-91dc263b6b6d:Piece"
+      },
+      {
+        "variantId": "variant_c0f300c8-c58f-4603-b0b9-d75675373515",
+        "sku": "SKU-d75675373515",
+        "unitId": "Piece",
+        "inventoryKey": "p12:variant_c0f300c8-c58f-4603-b0b9-d75675373515:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-13",
+    "leaf": "Laptops",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_3b2c0923-1f25-4806-bbe7-56162d7d98a6",
+        "sku": "SKU-56162d7d98a6",
+        "unitId": "Piece",
+        "inventoryKey": "p13:variant_3b2c0923-1f25-4806-bbe7-56162d7d98a6:Piece"
+      },
+      {
+        "variantId": "variant_16d85e4e-24ae-4bee-aad0-008b050961e1",
+        "sku": "SKU-008b050961e1",
+        "unitId": "Piece",
+        "inventoryKey": "p13:variant_16d85e4e-24ae-4bee-aad0-008b050961e1:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-14",
+    "leaf": "Magari Madogo",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_2581d18e-fbdb-4f26-a19c-5c9470d4f3b1",
+        "sku": "SKU-5c9470d4f3b1",
+        "unitId": "Piece",
+        "inventoryKey": "p14:variant_2581d18e-fbdb-4f26-a19c-5c9470d4f3b1:Piece"
+      },
+      {
+        "variantId": "variant_560d01bc-3f14-484d-8669-1515a4a0d5f7",
+        "sku": "SKU-1515a4a0d5f7",
+        "unitId": "Piece",
+        "inventoryKey": "p14:variant_560d01bc-3f14-484d-8669-1515a4a0d5f7:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-15",
+    "leaf": "Engine Parts",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_bfee3621-8501-4f24-be6f-f57a1c8c8da0",
+        "sku": "SKU-f57a1c8c8da0",
+        "unitId": "Piece",
+        "inventoryKey": "p15:variant_bfee3621-8501-4f24-be6f-f57a1c8c8da0:Piece"
+      },
+      {
+        "variantId": "variant_2db7ff8c-7029-452a-a6b8-b1708cb85c40",
+        "sku": "SKU-b1708cb85c40",
+        "unitId": "Piece",
+        "inventoryKey": "p15:variant_2db7ff8c-7029-452a-a6b8-b1708cb85c40:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-19",
+    "leaf": "Dawa na Medicinal Products",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_71ee57c0-08a2-453e-94f9-22293ad54b40",
+        "sku": "SKU-22293ad54b40",
+        "unitId": "Piece",
+        "inventoryKey": "p16:variant_71ee57c0-08a2-453e-94f9-22293ad54b40:Piece"
+      },
+      {
+        "variantId": "variant_4e684e58-d12e-40d7-895b-a681ba81b65f",
+        "sku": "SKU-a681ba81b65f",
+        "unitId": "Piece",
+        "inventoryKey": "p16:variant_4e684e58-d12e-40d7-895b-a681ba81b65f:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-27",
+    "leaf": "Michoro & Paintings",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_19d5d8bf-9ffc-41f9-b2df-8eac04e0d8dd",
+        "sku": "SKU-8eac04e0d8dd",
+        "unitId": "Piece",
+        "inventoryKey": "p17:variant_19d5d8bf-9ffc-41f9-b2df-8eac04e0d8dd:Piece"
+      },
+      {
+        "variantId": "variant_3c023cb2-7ba9-44fc-981f-93854b5b1093",
+        "sku": "SKU-93854b5b1093",
+        "unitId": "Piece",
+        "inventoryKey": "p17:variant_3c023cb2-7ba9-44fc-981f-93854b5b1093:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-28",
+    "leaf": "Nguo za Jadi & Traditional Wear",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_441ac872-d849-4733-9a86-f974f4808bcd",
+        "sku": "SKU-f974f4808bcd",
+        "unitId": "Piece",
+        "inventoryKey": "p18:variant_441ac872-d849-4733-9a86-f974f4808bcd:Piece"
+      },
+      {
+        "variantId": "variant_4c404b06-3895-4a8a-bbf3-45147ac0b6f8",
+        "sku": "SKU-45147ac0b6f8",
+        "unitId": "Piece",
+        "inventoryKey": "p18:variant_4c404b06-3895-4a8a-bbf3-45147ac0b6f8:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-29",
+    "leaf": "Wedding Dresses & Bridal Wear",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_43d3fe60-9033-4b81-b528-53bed09c0f54",
+        "sku": "SKU-53bed09c0f54",
+        "unitId": "Piece",
+        "inventoryKey": "p19:variant_43d3fe60-9033-4b81-b528-53bed09c0f54:Piece"
+      },
+      {
+        "variantId": "variant_cce34177-ed6e-4ed5-9448-a6c65eed26ac",
+        "sku": "SKU-a6c65eed26ac",
+        "unitId": "Piece",
+        "inventoryKey": "p19:variant_cce34177-ed6e-4ed5-9448-a6c65eed26ac:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-30",
+    "leaf": "Maternity Wear",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_8c473165-2cd8-4423-b122-1bfee98a7f9b",
+        "sku": "SKU-1bfee98a7f9b",
+        "unitId": "Piece",
+        "inventoryKey": "p20:variant_8c473165-2cd8-4423-b122-1bfee98a7f9b:Piece"
+      },
+      {
+        "variantId": "variant_b3911f82-19f0-4d22-b155-12f2f666f5f1",
+        "sku": "SKU-12f2f666f5f1",
+        "unitId": "Piece",
+        "inventoryKey": "p20:variant_b3911f82-19f0-4d22-b155-12f2f666f5f1:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-31",
+    "leaf": "Pets / Companion Animals",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_5f6fc062-8d70-4a77-9c71-b2948fbe9c99",
+        "sku": "SKU-b2948fbe9c99",
+        "unitId": "Piece",
+        "inventoryKey": "p21:variant_5f6fc062-8d70-4a77-9c71-b2948fbe9c99:Piece"
+      },
+      {
+        "variantId": "variant_710ad7c4-6f76-4193-8751-db9b6ef3c224",
+        "sku": "SKU-db9b6ef3c224",
+        "unitId": "Piece",
+        "inventoryKey": "p21:variant_710ad7c4-6f76-4193-8751-db9b6ef3c224:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-32",
+    "leaf": "Paper & Paper Products",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_2e4e16ea-1d86-4715-ad2d-3d39c79d528c",
+        "sku": "SKU-3d39c79d528c",
+        "unitId": "Piece",
+        "inventoryKey": "p22:variant_2e4e16ea-1d86-4715-ad2d-3d39c79d528c:Piece"
+      },
+      {
+        "variantId": "variant_0dd01ddc-0c6a-4438-b9db-3a6bda60e3e4",
+        "sku": "SKU-3a6bda60e3e4",
+        "unitId": "Piece",
+        "inventoryKey": "p22:variant_0dd01ddc-0c6a-4438-b9db-3a6bda60e3e4:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-33",
+    "leaf": "Industrial Machinery",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_081c1bfe-aec9-4ea6-af60-519311843330",
+        "sku": "SKU-519311843330",
+        "unitId": "Piece",
+        "inventoryKey": "p23:variant_081c1bfe-aec9-4ea6-af60-519311843330:Piece"
+      },
+      {
+        "variantId": "variant_7285b3bb-ae9f-489c-814c-5787e039ec0d",
+        "sku": "SKU-5787e039ec0d",
+        "unitId": "Piece",
+        "inventoryKey": "p23:variant_7285b3bb-ae9f-489c-814c-5787e039ec0d:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-34",
+    "leaf": "Solar Energy Products",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_54f4bf8d-5f05-4414-95e8-36415cd11050",
+        "sku": "SKU-36415cd11050",
+        "unitId": "Piece",
+        "inventoryKey": "p24:variant_54f4bf8d-5f05-4414-95e8-36415cd11050:Piece"
+      },
+      {
+        "variantId": "variant_4a81e145-c079-4aab-9d51-f2f47ee22276",
+        "sku": "SKU-f2f47ee22276",
+        "unitId": "Piece",
+        "inventoryKey": "p24:variant_4a81e145-c079-4aab-9d51-f2f47ee22276:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-35",
+    "leaf": "Water Storage",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_122d68f5-61b7-4a24-9144-e4e3f3989e73",
+        "sku": "SKU-e4e3f3989e73",
+        "unitId": "Piece",
+        "inventoryKey": "p25:variant_122d68f5-61b7-4a24-9144-e4e3f3989e73:Piece"
+      },
+      {
+        "variantId": "variant_967cbf40-1002-4f54-a8f5-df77647e70fe",
+        "sku": "SKU-df77647e70fe",
+        "unitId": "Piece",
+        "inventoryKey": "p25:variant_967cbf40-1002-4f54-a8f5-df77647e70fe:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-36",
+    "leaf": "Physical Locks",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_89919ad5-d1bc-4dfd-8443-a46698f5f037",
+        "sku": "SKU-a46698f5f037",
+        "unitId": "Piece",
+        "inventoryKey": "p26:variant_89919ad5-d1bc-4dfd-8443-a46698f5f037:Piece"
+      },
+      {
+        "variantId": "variant_13647d20-9e06-463d-bb59-9ff1d002f51a",
+        "sku": "SKU-9ff1d002f51a",
+        "unitId": "Piece",
+        "inventoryKey": "p26:variant_13647d20-9e06-463d-bb59-9ff1d002f51a:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-37",
+    "leaf": "Printed Marketing Materials",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_a4d3ffb6-149d-4191-9a6d-e339dc4aeb2e",
+        "sku": "SKU-e339dc4aeb2e",
+        "unitId": "Piece",
+        "inventoryKey": "p27:variant_a4d3ffb6-149d-4191-9a6d-e339dc4aeb2e:Piece"
+      },
+      {
+        "variantId": "variant_29fce9b1-8b07-4bcd-a34d-211dbb9a0e4a",
+        "sku": "SKU-211dbb9a0e4a",
+        "unitId": "Piece",
+        "inventoryKey": "p27:variant_29fce9b1-8b07-4bcd-a34d-211dbb9a0e4a:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-38",
+    "leaf": "Software",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_191c8ec3-a1cc-41ae-8dc3-b6d0218c9708",
+        "sku": "SKU-b6d0218c9708",
+        "unitId": "Piece",
+        "inventoryKey": "p28:variant_191c8ec3-a1cc-41ae-8dc3-b6d0218c9708:Piece"
+      },
+      {
+        "variantId": "variant_df08d8b1-e97e-483c-b587-c98d38d51e3f",
+        "sku": "SKU-c98d38d51e3f",
+        "unitId": "Piece",
+        "inventoryKey": "p28:variant_df08d8b1-e97e-483c-b587-c98d38d51e3f:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-42",
+    "leaf": "Viwanja",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_6057a7aa-e468-40e9-930e-d85b94cbec17",
+        "sku": "SKU-d85b94cbec17",
+        "unitId": "Piece",
+        "inventoryKey": "p29:variant_6057a7aa-e468-40e9-930e-d85b94cbec17:Piece"
+      },
+      {
+        "variantId": "variant_07195705-b98f-4990-a30c-8862188ee49b",
+        "sku": "SKU-8862188ee49b",
+        "unitId": "Piece",
+        "inventoryKey": "p29:variant_07195705-b98f-4990-a30c-8862188ee49b:Piece"
+      }
+    ]
+  },
+  {
+    "categoryId": "CAT-43",
+    "leaf": "Metallic Minerals",
+    "status": "PASS",
+    "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
+    "identities": [
+      {
+        "variantId": "variant_75ec0a4f-db66-450d-bc7f-06990d227fcb",
+        "sku": "SKU-06990d227fcb",
+        "unitId": "Piece",
+        "inventoryKey": "p30:variant_75ec0a4f-db66-450d-bc7f-06990d227fcb:Piece"
+      },
+      {
+        "variantId": "variant_cdacdc83-2c39-4109-9e04-fa9a6fb11627",
+        "sku": "SKU-fa9a6fb11627",
+        "unitId": "Piece",
+        "inventoryKey": "p30:variant_cdacdc83-2c39-4109-9e04-fa9a6fb11627:Piece"
+      }
+    ]
+  }
+]

@@ -28,16 +28,6 @@ function resolveSchemaRoles(result,base,definitions,ref,pilot,input){
  const exact=definitions?.[ref.subcategory], partial=exact?.status==='PARTIAL';
  const review=schemaRefinements[ref.categoryId]?.find(r=>r[0]===ref.subcategory);
  if(!review){
-  // Hierarchy coverage is not semantic evidence. Category defaults must never
-  // become leaf recommendations on newly exposed canonical paths. Persisted
-  // product state and seller custom additions are untouched.
-  const canonicalPath=projection.productLeaves?.[ref.categoryId]?.includes(ref.subcategory);
-  if(canonicalPath&&!pilot){
-   const usable=exact&&(exact.status!=='PARTIAL'||exact.fieldEvidenceVerified===true);
-   if(!usable)result={...result,options:{},attributes:[],attributeValues:{},filters:[],features:[],additionalInfo:[],suggestedUnits:[],variantCapableFields:[],variantRule:{mode:'UNSPECIFIED',candidates:[]},
-    mediaRequirements:{required:false,product:{min:0},selectorValues:[],variantImages:true,recommendedViews:[],evidence:'UNSPECIFIED'}};
-   result.schemaReference={canonicalCategoryId:ref.categoryId,canonicalLeaf:ref.subcategory,inputCategory:input.category,inputLeaf:input.subcategory,mapping:input.alias?'REVIEWED_LEAF_ALIAS':'CANONICAL_PATH'};
-  }
   // An unreviewed exact canonical enum remains informational. Existing pilots
   // and legacy-only schemas keep their separate, already reviewed behavior.
   if(exact&&!partial&&!pilot){
@@ -47,10 +37,6 @@ function resolveSchemaRoles(result,base,definitions,ref,pilot,input){
     attributes:unique([...(exact.attributes||[]),...informational.map(([name])=>name)]).filter(name=>!names.includes(name)),attributeValues:Object.fromEntries(informational),
     variantRule:evidence.recommendedRule||{mode:'UNSPECIFIED',candidates:[]}};
   }
-  // A filter is a reference, never an independent duplicate attribute authority.
-  result.filterMappings=unique(result.filters||[]).map(name=>({name,field:name,source:Object.hasOwn(result.options||{},name)?'SELECTOR':result.attributes.includes(name)?'ATTRIBUTE':result.features.includes(name)?'FEATURE':productFilters[name]?'PRODUCT':'UNRESOLVED'}));
-  result.filters=unique(result.filterMappings.filter(f=>f.source==='ATTRIBUTE').map(f=>f.field));
-  result.schemaGaps=(result.filterMappings||[]).filter(f=>f.source==='UNRESOLVED').map(f=>'FILTER_UNRESOLVED:'+f.name);
   return {...result,completionState:pilot?'PILOT':partial?'EXPLICIT_INCOMPLETE':exact?'EXACT_REQUIRES_REVIEW':definitions?.default?'INHERITED_REQUIRES_REVIEW':'UNMAPPED_LIVE'};
  }
  const [,names,units,additionalFields,aliases={},overrides={}]=review;
@@ -101,9 +87,7 @@ function resolveSchemaRoles(result,base,definitions,ref,pilot,input){
 // or relabel existing options/products; only validated canonical paths are exposed.
 function getSellerCategoryOptions(live={}){
  const options=Object.keys(live).map(value=>({value,label:value}));
- // Explicit canonical-ID routes coexist with unchanged legacy routes. They are
- // not aliases and do not rewrite any existing product classification.
- for(const [id,leaves] of Object.entries(projection.productLeaves||{}))if(leaves.length&&!options.some(o=>o.value===id)){
+ for(const id of Object.keys(schemaRefinements))if(!options.some(o=>categoryIdFor(o.value)===id)){
   const category=projection.categories.find(c=>c.id===id);
   if(category)options.push({value:id,label:category.displayName});
  }
@@ -111,7 +95,7 @@ function getSellerCategoryOptions(live={}){
 }
 function getSellerSubcategories(category,live={}){
  const id=categoryIdFor(category), existing=Object.keys(live[category]?.subcategories||{});
- return unique([...existing,...(projection.productLeaves?.[id]||[])]);
+ return unique([...existing,...(schemaRefinements[id]||[]).map(r=>r[0])]);
 }
 export {categoryIdFor,getProductSuggestions,getSellerSubcategories,getSellerCategoryOptions};
 

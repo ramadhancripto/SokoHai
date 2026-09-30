@@ -928,6 +928,11 @@ window.addToCart = async function(isBuyNow = false) {
     // Ulinzi wa Optional Chaining
     const chosenColor = skh.currentOpenProduct?.selectedVariants?.color || "N/A";
     const chosenSize = skh.currentOpenProduct?.selectedVariants?.size || "N/A";
+    const structuredVariant = skh.currentOpenProduct?.selectedStructuredVariant || null;
+    if (Array.isArray(skh.currentOpenProduct.options) && skh.currentOpenProduct.options.length && Array.isArray(skh.currentOpenProduct.variantsStructured) && skh.currentOpenProduct.variantsStructured.length && !structuredVariant) {
+        alert('Mchanganyiko huu wa chaguo haupatikani.');
+        return;
+    }
     const qty = parseInt(document.getElementById('pmQty')?.value) || 1;
 
     if(isBuyNow) {
@@ -944,6 +949,7 @@ window.addToCart = async function(isBuyNow = false) {
         const cartMeta = skh.orchProductMeta ? skh.orchProductMeta(liveProduct) : null;
         const buyItem = {
             ...liveProduct, qty, chosenColor, chosenSize,
+            ...(structuredVariant ? { variantId: structuredVariant.variantId, sku: structuredVariant.sku || null, barcode: structuredVariant.barcode || null, unitId: structuredVariant.unitId || liveProduct.baseUnit, inventoryKey: structuredVariant.inventoryKey || null, selectedOptions: structuredVariant.options || {}, price: structuredVariant.price ?? liveProduct.price, variantImages: structuredVariant.images || [] } : {}),
             sellerId: liveProduct.userId || liveProduct.sellerId,
             sellerName: liveProduct.sellerName || liveProduct.ownerName || 'Seller',
             cartMeta, escrowEligible: true, orchestrationReady: true,
@@ -974,7 +980,9 @@ window.addToCart = async function(isBuyNow = false) {
             }
         }
 
-        let cartItem = {...skh.currentOpenProduct, price: effectivePrice, chosenColor, chosenSize, qty};
+        let cartItem = {...skh.currentOpenProduct, price: structuredVariant?.price ?? effectivePrice, chosenColor, chosenSize, qty,
+            ...(structuredVariant ? { variantId: structuredVariant.variantId, sku: structuredVariant.sku || null, barcode: structuredVariant.barcode || null, unitId: structuredVariant.unitId || skh.currentOpenProduct.baseUnit, inventoryKey: structuredVariant.inventoryKey || null, selectedOptions: structuredVariant.options || {}, variantImages: structuredVariant.images || [] } : {})
+        };
         if (!Array.isArray(skh.myCart)) skh.myCart = [];
         skh.myCart.push(cartItem);
         if (typeof skh.smartCartSave === 'function') skh.smartCartSave(); // Hifadhi local + cloud mara moja

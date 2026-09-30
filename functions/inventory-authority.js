@@ -19,6 +19,9 @@ const PAYMENT_METHOD_ALIASES = Object.freeze({
   Airtel: 'AirtelMoney',
   AirtelMoney: 'AirtelMoney',
   Bank: 'Bank',
+  // Card is accepted by the Basic POS UI and stored under the existing
+  // Bank settlement authority until a distinct card processor is configured.
+  Card: 'Bank',
   Deni: 'Deni',
   Awamu: 'Awamu'
 });

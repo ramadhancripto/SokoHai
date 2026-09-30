@@ -42,8 +42,7 @@
             <div><label style="font-size:12px;font-weight:800;color:#64748b;">UCHAPISHAJI</label><select id="prodPublicationStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="published">Published</option><option value="draft">Draft</option></select></div>
             <div><label style="font-size:12px;font-weight:800;color:#64748b;">UPATIKANAJI</label><select id="prodAvailabilityStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="available">Available</option><option value="pre_order">Pre-order</option><option value="made_to_order">Made to order</option><option value="out_of_stock">Out of stock</option><option value="hidden">Hidden</option></select></div>
         </div>
-        <label style="font-size:12px;font-weight:800;color:#64748b;">VARIANTS (HIARI)</label>
-        <textarea id="prodVariants" placeholder="Mfano: Color: Black, White; Size: S, M, L" style="width:100%;height:55px;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:12px;"></textarea>
+        <input type="hidden" id="prodVariants">
 <!-- Mfumo mgumu wa Dropdowns kwa kuuza ONLINE tu (Online & Hybrid) -->
 <div id="onlineCategorySection" style="display:block; margin-bottom:12px;">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -64,6 +63,23 @@
     <input type="text" id="prodOfflineCategory" placeholder="Mfano: Vinywaji, Sabuni, Vyakula, nk" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:#f8fafc;">
 </div>
     </div>
+
+
+    <div id="spbCreateMount">
+    <section id="productBuilder" class="spb" aria-label="Product Builder">
+      <header><span class="spb-kicker">PRODUCT BUILDER</span><h3>Taarifa za bidhaa</h3><p>Simple products are complete without variants. Add attributes, price, stock, SKU and optional images, then save.</p></header>
+      <label>Product SKU <input id="spbProductSku" type="text" autocomplete="off" placeholder="Seller SKU (optional)"></label>
+      <div id="spbNotice" role="status" aria-live="polite"></div>
+      <details open><summary>Mapendekezo ya category · hiari</summary><p>Use / Edit / Skip. Hakuna kinachohifadhiwa bila kuthibitisha.</p><div id="spbSuggestions"></div></details>
+      <p id="spbVariantChoice"><button type="button" id="spbSkipVariants">Skip Variants · keep simple</button></p><section><h4>Optional selectors</h4><div id="spbSelectorDetails" hidden><p>Buyer anachagua values kupata combination. Kila value inaweza kuwa na picha.</p><div id="spbOptions"></div></div><button type="button" id="spbAddOption">＋ Add Selector</button></section>
+      <section id="spbCombinationSection" hidden><h4>Variant combinations</h4><div class="spb-actions"><button type="button" id="spbGenerate">Generate variants</button><button type="button" id="spbManualVariant">＋ Add Variant Manually</button></div><p>Generated rows zinaanza disabled. Review bei, SKU, unit na stock kisha enable. Generate haitafuti rows zako.</p><div id="spbVariants"></div></section>
+      <section><h4>03 · Attributes</h4><p>Taarifa za bidhaa, si chaguo la variant.</p><div id="spbAttributes"></div><button type="button" id="spbAddAttribute">＋ Add Attribute</button></section>
+      <section><h4>04 · Filters</h4><p>Kwa discovery tu. Chagua attribute hapa; value yake haitarudiwa kwenye form.</p><div id="spbFilters"></div><button type="button" id="spbAddFilter">＋ Add custom filter</button></section>
+      <section><h4>05 · Features</h4><div id="spbFeatures"></div><button type="button" id="spbAddFeature">＋ Add Feature</button></section>
+      <section><h4>06 · Additional Information</h4><div id="spbAdditional"></div><button type="button" id="spbAddAdditional">＋ Add Information</button></section>
+      <section><h4>Others → Add Custom</h4><p>Seller fallback tu — si category ya kuonyesha buyer. Preview pendekezo, Use / Edit / Skip.</p><label for="spbOtherInput">Andika unachotaka kuongeza</label><textarea id="spbOtherInput" placeholder="64GB, 128GB, 256GB · Nike · Waterproof · Made in Tanzania"></textarea><button type="button" id="spbSuggestOther">Suggest &amp; Preview</button><div id="spbOtherPreview"></div></section>
+      <div id="spbEditor" hidden></div>
+    </section></div>
 
     <!-- 2. QUANTITY & MEASUREMENT ENGINE (VIPIMO MAALUM) -->
     <div style="background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #cbd5e1; margin-bottom: 15px; text-align: left;">
@@ -166,11 +182,11 @@
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left;">
         <div>
             <label style="font-size: 13px; font-weight:bold; color:gray;" id="stockQuantityLabel">IDADI YA STOCK *</label>
-            <input type="number" id="prodStock" value="1" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+            <input type="number" id="prodStock" min="0" step="1" value="1" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
         </div>
         <div>
             <label style="font-size: 13px; font-weight:bold; color:gray;">LOW STOCK ALERT *</label>
-            <input type="number" id="prodLowStockAlert" value="5" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+            <input type="number" id="prodLowStockAlert" min="0" step="1" value="5" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
         </div>
     </div>
 
@@ -247,6 +263,8 @@
             </div>
         </div>
 
+    </div>
+    <div id="productContentMedia">
         <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">MAELEZO YA BIDHAA (DESCRIPTION) *</label>
         <textarea id="prodDesc" placeholder="Eleza bidhaa yako kwa kina: faida zake, matumizi, ukubwa, rangi n.k..." style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; outline:none; resize:none;"></textarea>
         
@@ -268,6 +286,7 @@
         <input type="text" id="prodWarehouseZone" placeholder="Eneo la Ghala (Shelf / Zone - Mf: Shelf A-3)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
     </div>
 
+    <button type="submit" id="spbSaveDraft" formnovalidate>Save Draft</button>
     <button type="submit" id="btnSeller" style="background: var(--primary-blue); color: white; width: 100%; padding: 16px; border-radius: 14px; font-weight: 900; margin-top: 15px; border: none; cursor: pointer; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(0,80,157,0.2);"> CHAPISHA BIDHAA SOKONI</button>
     <button type="button" class="btn-close" onclick="goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">&lsaquo; Rudi Nyuma</button>
 </form>

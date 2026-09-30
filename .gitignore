@@ -25,3 +25,8 @@ auth-admin.json
 auth-test.json
 auth-users.json
 token.txt
+# Large local taxonomy research sources / generated mission artifacts
+docs/taxonomy/mission/sources/*.pdf
+docs/taxonomy/mission/sources/*.pages.json
+docs/taxonomy/mission/execution-queue.json
+docs/taxonomy/mission/master-tracking.json

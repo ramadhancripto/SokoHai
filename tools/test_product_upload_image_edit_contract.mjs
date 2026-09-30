@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { buildProductWrite } from '../js/app/39-product-core.js';
+const edit = fs.readFileSync(new URL('../js/app/06-product-edit-builder.js', import.meta.url), 'utf8');
+for (const token of ['data-eov-images','data-eov-upload','data-eov-remove','data-ev-images','data-ev-upload','data-ef-images','data-ef-upload','skhUploadPicked','imagesArray']) assert.ok(edit.includes(token), `missing edit image capability ${token}`);
+const product={productId:'p1',title:'Item',price:10,stock:1,category:'Test',location:'Dar',imagesArray:['general.jpg'],options:[{id:'o',name:'Color',selectorType:'color',values:[{id:'red',value:'Red',label:'Red',images:['red.jpg'],availability:'available'}]}],variantsStructured:[{variantId:'red-1',options:{Color:'Red'},images:['variant-red.jpg'],status:'ACTIVE',available:true,price:10,stock:1,sku:'RED',unitId:'piece',inventoryKey:'p1:red-1:piece'}],features:[{id:'f',name:'Wood',value:true,images:['wood.jpg']} ]};
+const written=buildProductWrite(product);
+assert.equal(written.options[0].values[0].images[0],'red.jpg');
+assert.equal(written.variantsStructured[0].images[0],'variant-red.jpg');
+assert.equal(written.features[0].images[0],'wood.jpg');
+const removed=buildProductWrite({...written,options:[],variantsStructured:[{...written.variantsStructured[0],images:[]}],features:[{...written.features[0],images:[]}]});
+assert.deepEqual(removed.options,[]);
+assert.deepEqual(removed.variantsStructured[0].images,[]);
+assert.deepEqual(removed.features[0].images,[]);
+console.log('PRODUCT UPLOAD IMAGE EDIT CONTRACT: passed option-value, variant, feature image references and removal semantics.');

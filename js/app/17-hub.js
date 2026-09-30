@@ -258,7 +258,8 @@ const posOfflineFingerprint = async function(value) {
 };
 
 const posOfflineNormalizeMethod = function(method) {
-    return ({ Tigo: 'TigoPesa', Airtel: 'AirtelMoney' })[method] || method;
+    // Keep Basic POS Card sales compatible with the existing Bank authority.
+    return ({ Tigo: 'TigoPesa', Airtel: 'AirtelMoney', Card: 'Bank' })[method] || method;
 };
 
 const posOfflineDeviceId = function() {

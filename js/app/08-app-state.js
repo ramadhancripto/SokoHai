@@ -490,6 +490,11 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
     //  Capture eneo la ghala/rafu ya bidhaa
     const whZone = document.getElementById('prodWarehouseZone') ? document.getElementById('prodWarehouseZone').value.trim() : "N/A";
 
+    const structuredProduct = window.skhProductBuilderExport || {};
+    const structuredFields = {};
+    ['attributes','options','variantsStructured','features','additionalInfo'].forEach(function (key) {
+        if (Array.isArray(structuredProduct[key]) && structuredProduct[key].length) structuredFields[key] = structuredProduct[key];
+    });
     const docId = await skh.saveData('products', {
         title: title,
         price: price,
@@ -497,6 +502,7 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         category: category,
         subCategory: subCategory,
         filters: itemFilters,
+        ...structuredFields,
         description: (visibility !== 'offline_only') ? document.getElementById('prodDesc').value : "In-store Product",
         location: loc,
         warehouseZone: whZone, // Hifadhi eneo la rafu ghala
@@ -564,6 +570,7 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
         alert(doneMsg);
         try { if (window.skhClearPickedPhotos && window.skhClearPickedPhotos['prodImage']) window.skhClearPickedPhotos['prodImage'](); } catch (e) {}
         document.getElementById('sellerForm').reset();
+        if (typeof window.skhProductBuilderReset === 'function') window.skhProductBuilderReset();
         document.getElementById('onlineSpecificFields').style.display = 'none';
         document.getElementById('bulkPackagingFields').style.display = 'none';
         document.getElementById('wholesalePriceFieldDiv').style.display = 'none';

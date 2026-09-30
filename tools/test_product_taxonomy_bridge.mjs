@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { getProductSuggestions, categoryIdFor } from '../shared/product-taxonomy-bridge.mjs';
+assert.equal(categoryIdFor('Chakula & Vinywaji'), 'CAT-01');
+const canonical = getProductSuggestions('Mifugo', 'Ng\'ombe');
+assert.equal(canonical.source, 'CANONICAL');
+assert.ok(canonical.attributes.includes('Breed'));
+const fallback = getProductSuggestions('Mifugo', 'Livestock Services');
+assert.ok(['GENERIC_FALLBACK','LEGACY_LIVE'].includes(fallback.source));
+assert.ok(Array.isArray(fallback.attributes));
+console.log('PRODUCT TAXONOMY BRIDGE: passed canonical lookup, canonical suggestions, and incomplete-category fallback.');

@@ -1,0 +1,93 @@
+[
+  {
+    "file": "shared/canonical-taxonomy-data.js",
+    "before": "df57665ece15bc7509b99ac075b854b01d8659af2678dd92981f194b561a2180",
+    "after": "ae45822e835c6c69aa6128316b204a162036410e6f00ff426703128928c90d71",
+    "scope": "CANONICAL",
+    "changed": true
+  },
+  {
+    "file": "shared/canonical-taxonomy-core.js",
+    "before": "1be8675c90f05689ea767f6eb82fc3819cd72f4af9fe3a27ee33e7fcf6798be6",
+    "after": "1be8675c90f05689ea767f6eb82fc3819cd72f4af9fe3a27ee33e7fcf6798be6",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "shared/taxonomy-legacy-mapping.js",
+    "before": "d82ccb74b3385789f79f02fe6306502609ddd5c7b26d94e2e8629cf7cecdbf90",
+    "after": "d82ccb74b3385789f79f02fe6306502609ddd5c7b26d94e2e8629cf7cecdbf90",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "shared/taxonomy-classification-state.js",
+    "before": "5ce5bdf19c01b13cb57cc35f86f81b76333fdbbfbf18e5d9ada5df2f8c35353f",
+    "after": "5ce5bdf19c01b13cb57cc35f86f81b76333fdbbfbf18e5d9ada5df2f8c35353f",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "js/app/00-bootstrap.js",
+    "before": "38d2425d737f2631a70aa876eafbca1c067c486e384ff60292b62fa9cd42253b",
+    "after": "38d2425d737f2631a70aa876eafbca1c067c486e384ff60292b62fa9cd42253b",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "js/app/08-app-state.js",
+    "before": "07ed46037abfe03e7c4f2f26e74ec4ec403adfe3821185da9cc76326df386103",
+    "after": "07ed46037abfe03e7c4f2f26e74ec4ec403adfe3821185da9cc76326df386103",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "js/app/12-sys-modes.js",
+    "before": "fb925726c398197066b684c3d8808d1ddb11f00eebb3f67aade990b7d62adf4f",
+    "after": "fb925726c398197066b684c3d8808d1ddb11f00eebb3f67aade990b7d62adf4f",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "js/app/39-product-core.js",
+    "before": "267856ffaba01e421b2bdac692d082a4eb30162afc4c4488210424243b5d289b",
+    "after": "267856ffaba01e421b2bdac692d082a4eb30162afc4c4488210424243b5d289b",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "js/11-uploads.js",
+    "before": "6c37c678b7eb4a3e55bbb7732a9129aa46de62a173f7b243ef026552fbad21c3",
+    "after": "6c37c678b7eb4a3e55bbb7732a9129aa46de62a173f7b243ef026552fbad21c3",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "functions/inventory-authority.js",
+    "before": "6a0f090e76600adc60fb1dcd4460281c09f0ce72f8b5b263853fcb543f875530",
+    "after": "6a0f090e76600adc60fb1dcd4460281c09f0ce72f8b5b263853fcb543f875530",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "shared/pos-product-identity-core.js",
+    "before": "c78b80c0f84050782284e038f4091e59ecf0303a28c7f1ec4ed225bb1f517534",
+    "after": "c78b80c0f84050782284e038f4091e59ecf0303a28c7f1ec4ed225bb1f517534",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "js/app/39-product-showcase.js",
+    "before": "5059045dd64610907332f346e91be2ee45d72681fa0210ba18261d9a492913ee",
+    "after": "5059045dd64610907332f346e91be2ee45d72681fa0210ba18261d9a492913ee",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  },
+  {
+    "file": "js/app/39-showcase-logic.js",
+    "before": "0358e3da7a845c10c9f5cf7e9642c0d0d624252221757d5c21293333e63d3995",
+    "after": "0358e3da7a845c10c9f5cf7e9642c0d0d624252221757d5c21293333e63d3995",
+    "scope": "PROTECTED_EXECUTION_OR_CORE",
+    "changed": false
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "name": "node tools/test_taxonomy_mission_contract.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_mission_contract_mjs.log"
+  },
+  {
+    "name": "node tools/test_product_upload_runtime.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_product_upload_runtime_mjs.log"
+  },
+  {
+    "name": "node tools/test_product_builder_ui.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_product_builder_ui_mjs.log"
+  },
+  {
+    "name": "node tools/test_product_builder_viewports.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_product_builder_viewports_mjs.log"
+  },
+  {
+    "name": "node tools/test_category_schema_pilots.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_category_schema_pilots_mjs.log"
+  },
+  {
+    "name": "node tools/test_category_schema_browser.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_category_schema_browser_mjs.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_batch_a.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_batch_a_mjs.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_batch_a_browser.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_batch_a_browser_mjs.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_resolution.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_resolution_mjs.log"
+  },
+  {
+    "name": "node tools/test_canonical_controlled_changes.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_canonical_controlled_changes_mjs.log"
+  },
+  {
+    "name": "node tools/test_canonical_taxonomy_contract.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_canonical_taxonomy_contract_mjs.log"
+  },
+  {
+    "name": "node tools/test_final_product_taxonomy_verification.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_final_product_taxonomy_verification_mjs.log"
+  },
+  {
+    "name": "node tools/test_legacy_taxonomy_mapping.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_legacy_taxonomy_mapping_mjs.log"
+  },
+  {
+    "name": "node tools/test_product_taxonomy_integration.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_product_taxonomy_integration_mjs.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_classification_states.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_classification_states_mjs.log"
+  },
+  {
+    "name": "node tools/test_service_taxonomy_contract.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_service_taxonomy_contract_mjs.log"
+  },
+  {
+    "name": "node tools/test_variant_unit_foundation.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_variant_unit_foundation_mjs.log"
+  },
+  {
+    "name": "node tools/test_pos_product_variant_unit_integration.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_pos_product_variant_unit_integration_mjs.log"
+  },
+  {
+    "name": "node tools/test_showcase.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_showcase_mjs.log"
+  },
+  {
+    "name": "node tools/test_product_interactive_preview.mjs",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_product_interactive_preview_mjs.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_evidence_batches.mjs B",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_evidence_batches_mjs_B.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_evidence_browser.mjs B",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_evidence_browser_mjs_B.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_evidence_batches.mjs C",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_evidence_batches_mjs_C.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_evidence_browser.mjs C",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_evidence_browser_mjs_C.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_evidence_batches.mjs D",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_evidence_batches_mjs_D.log"
+  },
+  {
+    "name": "node tools/test_taxonomy_evidence_browser.mjs D",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/node_tools_test_taxonomy_evidence_browser_mjs_D.log"
+  },
+  {
+    "name": "npm run build:html",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/npm_run_build_html.log"
+  },
+  {
+    "name": "npm run check:html",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/npm_run_check_html.log"
+  },
+  {
+    "name": "git diff --check",
+    "status": "PASS",
+    "exit": 0,
+    "log": "docs/taxonomy/mission/logs/git_diff_--check.log"
+  },
+  {
+    "name": "npm test",
+    "status": "FAIL",
+    "exit": 1,
+    "log": "docs/taxonomy/mission/logs/npm_test.log"
+  }
+]

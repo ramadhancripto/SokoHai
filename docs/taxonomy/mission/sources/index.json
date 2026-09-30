@@ -1,0 +1,16 @@
+[
+  {
+    "document": "eac-cet-2025",
+    "url": "https://www.eac.int/documents?controller=download&task=download.file&file=45388100-f05b-4615-b2f8-dc9abfe2e9b7&name=CET%202022%20VERSION%20updated%20June%202025.pdf",
+    "sha256": "9d894c290304a75b2a77db3d16eabc73aa172eeb3a09a0d76668e6fc95b9af9f",
+    "dateRetrieved": "2026-09-30",
+    "scope": "Classification/definition reference only; no automatic selector or stock conversion authority"
+  },
+  {
+    "document": "un-cpc21",
+    "url": "https://unstats.un.org/unsd/classifications/unsdclassifications/cpcv21.pdf",
+    "sha256": "f5a10be7b476dd12942d9a233f4818f5e0074add013772a4ca63cd3fc1d8289f",
+    "dateRetrieved": "2026-09-30",
+    "scope": "Classification/definition reference only; no automatic selector or stock conversion authority"
+  }
+]

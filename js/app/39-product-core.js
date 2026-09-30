@@ -1,5 +1,7 @@
 /* SOKOHAI PRODUCT FOUNDATION — one compatibility layer for the existing products collection.
    It reconciles legacy field names without creating a second product database or UI. */
+import { normalizeProductUploadData, resolveVariantImages } from '../../shared/product-upload-data-core.mjs';
+export { normalizeProductUploadData, resolveVariantImages };
 const PUB = new Set(['draft','published','archived']);
 const AVAIL = new Set(['available','low_stock','out_of_stock','pre_order','made_to_order','hidden']);
 const TYPES = new Set(['physical','digital','wholesale','retail','used','new','custom','made_to_order']);
@@ -99,6 +101,15 @@ export function buildProductWrite(input){
   p.availabilityStatus=AVAIL.has(low(p.availabilityStatus))?low(p.availabilityStatus):availabilityStatus(p);
   p.status=p.publicationStatus==='published'?'active':p.publicationStatus;
   p.variants=normalizeVariants(p.variants);
+  // Additive structured upload data. Legacy fields above remain authoritative
+  // for existing consumers; these fields are only written when populated.
+  const uploadData = normalizeProductUploadData(p);
+  if (uploadData.attributes) p.attributes = uploadData.attributes;
+  if (uploadData.filters) p.filters = uploadData.filters;
+  if (uploadData.options) p.options = uploadData.options;
+  if (uploadData.variantsStructured) p.variantsStructured = uploadData.variantsStructured;
+  if (uploadData.features) p.features = uploadData.features;
+  if (uploadData.additionalInfo) p.additionalInfo = uploadData.additionalInfo;
   p.minimumOrderQuantity=Math.max(1,number(p.minimumOrderQuantity)||(p.saleMode==='wholesale'&&p.modeData?number(p.modeData.minQty):1));
   p.searchMetadata=buildSearchMetadata(p); p.schemaVersion=2; p.updatedAt=new Date().toISOString();
   return p;

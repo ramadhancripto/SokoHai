@@ -1,0 +1,5206 @@
+{
+  "results": [
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Nafaka, Unga & Mikunde",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 19
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Mboga & Fresh Produce",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 17
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Matunda",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Mizizi & Viazi",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 2
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Nyama",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 4
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Samaki & Seafood",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Maziwa & Dairy",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Mayai",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 4
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Mafuta & Cooking Ingredients",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Viungo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Vyakula Vilivyopikwa",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Bakery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Snacks & Sweets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Vinywaji",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Local & Traditional Foods",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Food Ingredients",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-01",
+      "leaf": "Food Packaging",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Mbegu",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 29
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Miche & Nursery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Mbolea",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 24
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Dawa za Mimea & Crop Protection",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 26
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Zana za Kilimo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Mashine & Equipment za Kilimo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Umwagiliaji & Water Management",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Greenhouse & Controlled Farming",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Soil & Land Preparation Inputs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Farm Protection & Storage",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Harvesting & Post-Harvest",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Farm Supplies & Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Agricultural Technology",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-02",
+      "leaf": "Organic & Sustainable Farming Inputs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Nafaka",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Mikunde & Pulses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Mizizi & Viazi",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Mbegu za Mafuta / Oil Crops",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Horticulture — Mboga",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Horticulture — Matunda",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Kahawa",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Chai",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Korosho",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Pamba",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Tumbaku",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Mkonge / Sisal",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Miwa & Sugar Crops",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Kakao",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Nazi & Coconut Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Karafuu & Spices Crops",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Mazao ya Asili / Indigenous Crops",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Hay & Crop Residues",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Mazao Yaliyokaushwa",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Agricultural Bulk Commodities",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Grading, Sorting & Quality State",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-03",
+      "leaf": "Agricultural Processing State",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Ng'ombe",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 26
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Mbuzi",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 20
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Kondoo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Nguruwe",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Kuku",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 18
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Bata, Bata Mzinga & Poultry nyingine",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Sungura",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Nyuki & Ufugaji wa Nyuki",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Maziwa",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 18
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Mayai",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Nyama",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Ngozi, Hides & Skins",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Manure & Livestock By-products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 12
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Livestock Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Incubators & Poultry Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Livestock Feed",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-04",
+      "leaf": "Animal Health Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Samaki wa Maji Safi",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 21
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Samaki wa Bahari",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 18
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Dagaa & Small Fish",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 17
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Kamba & Crustaceans",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Pweza, Chaza & Shellfish",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Samaki Waliokaushwa",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Frozen Fish & Seafood",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Fish Fillets & Cuts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Aquaculture",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 18
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Fish Fingerlings & Juveniles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Fish Breeding & Hatchery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Seaweed & Aquatic Plants",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Pearl & Shell Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 10
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Fishing Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Boats & Fishing Vessels",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Aquaculture Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Fish Feed & Aquaculture Inputs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-05",
+      "leaf": "Fish Processing & Cold Chain Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Miti & Magogo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 22
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Mbao / Sawn Timber",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 20
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Poles & Posts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Plywood & Engineered Wood",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 19
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Veneer",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 12
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Sawdust & Wood Residues",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 10
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Firewood",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 12
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Charcoal & Biomass Fuel",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Bamboo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Rattan, Canes & Reeds",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Natural Fibres",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Resins, Gums & Latex",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Wild Fruits, Nuts & Seeds",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Mushrooms & Wild Foods",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 12
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Medicinal Plants & Herbs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Natural Dyes & Aromatics",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 12
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Thatch & Natural Roofing Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 11
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Tree Seeds & Nursery Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Forest Products Used for Construction",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 13
+    },
+    {
+      "categoryId": "CAT-06",
+      "leaf": "Forest & Wood Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 16
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Vitambaa",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Kitenge & Khanga",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Nguo za Kiume",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Nguo za Kike",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Nguo za Watoto",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Nguo za Watoto Wachanga",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Nguo za Jadi & Kitamaduni",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Nguo za Kazi & Uniform",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Sportswear & Activewear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Underwear & Sleepwear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Nguo za Sherehe & Occasion Wear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Hijab & Modest Wear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Outerwear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Swimwear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Viatu",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 14
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Mifuko & Fashion Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Textile Accessories & Trims",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Tailoring Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Made-to-Measure / Custom Clothing",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Clothing Rental",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Second-hand / Mitumba",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-07",
+      "leaf": "Handmade / Local Made",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Skincare",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Haircare",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Hair Styling & Treatment Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Makeup & Cosmetics",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Fragrance & Perfume",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Bath & Body Care",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Oral & Dental Personal Care",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Nail Care",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Shaving & Grooming",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Men's Grooming",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Feminine Personal Care",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Baby Personal Care",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Deodorants & Antiperspirants",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Sun Care",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Beauty Tools & Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Hair Extensions & Wigs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Beauty Accessories & Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Natural & Herbal Beauty Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Beauty Packaging",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Professional Beauty Supplies",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-08",
+      "leaf": "Beauty Services",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Samani",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Living Room",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Bedroom",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Kitchen Furniture & Storage",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Dining",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Office & Home Office",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Bathroom Furniture",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Outdoor & Garden Furniture",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Mattresses & Bedding",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Curtains & Window Coverings",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Rugs, Carpets & Mats",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Home Décor",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Lighting & Decorative Lighting",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Kitchenware & Tableware",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Home Storage & Organization",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Household Textiles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Cleaning & Household Supplies",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Home Safety & Utility Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Handmade & Traditional Home Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Custom-Made Furniture",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Home Sets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-09",
+      "leaf": "Furniture/Household Trade & Custom Orders",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Cement, Lime & Binders",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Sand, Aggregates & Fillers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Bricks, Blocks & Masonry",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Concrete Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Steel & Reinforcement",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Structural Steel & Metal Sections",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Roofing Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Timber for Construction",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Boards & Panels",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Doors, Windows & Frames",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Flooring & Wall Finishes",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Paints, Coatings & Finishes",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Waterproofing & Sealants",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Plumbing & Water Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Sanitaryware",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Electrical Installation Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Fasteners & Fixings",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Hand Tools",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Power Tools",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Construction Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Safety & PPE",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Building Chemicals & Additives",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Fencing & Gates",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Glass & Glazing",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Insulation & Ceiling Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Scaffolding & Formwork",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "General Hardware",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-10",
+      "leaf": "Bulk / Construction Trade",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "TVs & Home Entertainment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Audio & Speakers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Cameras & Imaging",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Home Appliances",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Kitchen Appliances",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Cooling & Heating",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Washing & Laundry",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Personal Care Appliances",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Small Electrical Appliances",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Power & Backup Devices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Batteries & Chargers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Smart Home",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Electronic Components",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Cables, Adapters & Connectors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Gadgets & Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Office Electronics",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Commercial Appliances",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Professional / Industrial Electronics",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-11",
+      "leaf": "Replacement Electronic Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Simu za Mkononi",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Tablets & Mobile Computing",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Simu za Kawaida / Feature Phones",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Smartphones",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 15
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Foldable & Specialty Phones",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Mobile Modems & MiFi",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Routers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Wi-Fi & Wireless Networking",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Network Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Antennas & Signal Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "SIM & eSIM Related Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Wearables & Communication Devices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "GPS & Tracking Devices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "IoT & M2M",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Communication Radios",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Intercom & Communication Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Phone Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Mobile Power",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Mobile Replacement Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-12",
+      "leaf": "Network Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Laptops",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Desktop Computers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "All-in-One Computers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Mini PCs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Workstations",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Servers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Thin Clients",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Tablets/Hybrid Computers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Computer Components",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "CPUs & Processors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Motherboards",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "RAM & Memory",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Graphics Cards",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Storage Devices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Power Supplies",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Computer Cases",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Cooling Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Monitors & Displays",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Keyboards & Mice",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Printers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Scanners",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Projectors & Presentation",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "POS & Business Computing",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "UPS & Computer Power",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Network/IT Infrastructure",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Cables & Adapters",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "External Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Servers & Data Center Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Software & Licenses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "Refurbished & Used IT",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-13",
+      "leaf": "IT Trade / Bulk / Custom Builds",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Magari Madogo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "SUVs & 4x4",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Pickups",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Vans & Minibuses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Buses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Trucks",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Trailers & Semi-Trailers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Motorcycles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Tricycles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Electric Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Hybrid Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Agricultural Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Construction & Special Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Emergency & Special Purpose Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Recreational Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Commercial Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Boats & Watercraft",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Vehicle Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Vehicle Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Used Vehicles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Vehicle Trade / Import",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-14",
+      "leaf": "Vehicle Rental / Sale Context",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Engine Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Transmission & Drivetrain",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Fuel System",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Air Intake & Exhaust",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Cooling System",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Electrical & Ignition",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Starting & Charging",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Suspension",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Steering",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Braking System",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Wheels & Tyres",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Body Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Interior Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Glass & Mirrors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Lighting",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "HVAC / Air Conditioning",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Filters",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Lubrication",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Exhaust & Emission",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "EV & Hybrid Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Motorcycle Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Truck & Heavy Equipment Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Trailer Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Marine/Boat Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Performance Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Safety Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Vehicle Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Tools & Workshop Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Used / Salvaged Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "OEM Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Aftermarket Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-15",
+      "leaf": "Bulk / Trade Parts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Dawa na Medicinal Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Medical Devices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Medical Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "First Aid & Emergency Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Personal Health & Wellness Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Dental Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Vision & Eye-care Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Hearing & Assistive Devices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Maternal & Reproductive Health Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Baby Health Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Veterinary Health Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Health Supplements & Nutrition Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Hospital & Clinical Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Laboratory Products & Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Health Storage & Cold-chain Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Health Packaging",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-19",
+      "leaf": "Used / Refurbished Medical Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Michoro & Paintings",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Sculptures & 3D Art",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Photography Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Posters & Prints",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Handmade Creative Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Beads, Jewellery & Artistic Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Textile Art & Creative Fabric Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Calligraphy & Typography Art",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Cultural & Traditional Art Objects",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Pottery, Ceramics & Artistic Clay Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Wood Art & Carving",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Metal Art",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Glass Art",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Leather Art & Craft",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Paper & Book Art",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Creative Gifts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Souvenirs & Collectibles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Art Materials — PRODUCTS",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Frames & Display Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-27",
+      "leaf": "Art Collections & Sets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Nguo za Jadi & Traditional Wear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Vikapu & Weaving Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Pottery & Ceramics",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Woodcraft",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Masks & Ceremonial Objects",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Jewellery & Ornaments",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Musical Instruments",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Household Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Kitchen & Utensils",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Agricultural & Rural Tools",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Hunting/Fishing Craft Objects",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Food Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Beauty & Personal-care Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Indigenous Natural Craft Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Textiles & Handwoven Fabrics",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Leather Craft",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Footwear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Toys & Cultural Children’s Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional Decorative & Heritage Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Traditional & Cultural Gift Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Cultural Souvenirs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-28",
+      "leaf": "Collectible & Heritage Items",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding Dresses & Bridal Wear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Groom Wear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Bridesmaids & Wedding Party Wear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding Veils & Head Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding Jewellery & Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding Shoes",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding Invitations & Stationery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding Gift Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding Décor Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Balloons & Balloon Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Party Decorations",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Birthday Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Graduation Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Baby Shower Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Baby Celebration Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Religious Celebration Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Seasonal Celebration Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Party Tableware",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Cake & Dessert Decoration Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Party Favors & Guest Gifts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Gift Packaging",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Event Lighting Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Event Signs & Boards",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Party Costumes & Props",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Wedding & Party Furniture — PRODUCTS",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Event Equipment — PRODUCTS",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Custom Event Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-29",
+      "leaf": "Event Bundles / Sets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Maternity Wear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Maternity Support Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Maternity Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Clothing — Newborn",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Children’s Clothing",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Shoes & Footwear",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Diapers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Changing Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Wipes & Hygiene",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Bath Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Feeding Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Breastfeeding Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Food Storage & Preparation",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Nursery & Sleeping Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Furniture",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Strollers & Prams",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Car Seats",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Carriers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Safety Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Monitors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Toys & Development Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby Books & Learning Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Children’s School Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Family Travel Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Family Care & Household Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Baby & Children’s Gifts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-30",
+      "leaf": "Maternity & Baby Bags",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pets / Companion Animals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Food",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Dog Food",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Cat Food",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Rabbit & Small-Animal Food",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Bird Food",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Fish & Aquarium Animals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Aquarium Fish Food",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Treats",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Supplements",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Bowls & Feeding Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Beds & Sleeping Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Kennels, Cages & Enclosures",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Carriers & Travel",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Collars, Leashes & Harnesses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Identification Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Grooming Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Hygiene Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Toys",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Cat Scratching & Climbing Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Clothing & Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Furniture",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Safety Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Health Products — NON-MEDICINE",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Waste Management",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Travel & Outdoor Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Aquarium Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Aquarium Décor",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Breeding / Reproductive Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Animal Housing & Farm-Pet Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Gift Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-31",
+      "leaf": "Pet Product Bundles",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Paper & Paper Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Writing Instruments",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Pencils & Drawing Instruments",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Erasers & Correction Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Sharpeners",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Notebooks & Exercise Books",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Registers & Business Books",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Files & Folders",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Filing & Archive Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Desk Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Staplers & Staples",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Scissors & Cutting Tools",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Rulers & Measuring Tools",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Geometry & Mathematical Sets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "School Bags & Cases",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Lunch & School Containers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Classroom Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Whiteboards & Writing Boards",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Educational Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Books & Educational Publications",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Art & Craft Supplies",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Printer & Copier Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Labels & Identification",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Packaging & Mailing Stationery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Calendars, Diaries & Planners",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Stamps & Stamp Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "ID, Card & Badge Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Office & School Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-32",
+      "leaf": "Custom Printed Stationery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Industrial Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Production Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Food Processing Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Grain & Crop Processing Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Oil Processing Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Textile & Garment Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Woodworking Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Metalworking Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Welding Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Machine Tools",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Dies, Moulds & Tooling",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Pumps",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Compressors & Air Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Boilers & Steam Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Industrial Mixers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Industrial Ovens & Dryers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Industrial Cooling & Refrigeration Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Material Handling Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Lifting Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Conveyors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Plastic & Rubber Processing Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Printing & Industrial Finishing Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Mining & Mineral Processing Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Recycling & Waste Processing Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Industrial Cleaning Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Workshop Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Machine Components",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Industrial Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Used Industrial Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Refurbished Machinery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-33",
+      "leaf": "Attachments",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Energy Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar PV Modules",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Inverters",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Charge Controllers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Batteries & Energy Storage",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Battery Packs & Energy Storage Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Kits",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Mounting & Installation Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Cables & Connectors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Lighting",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Water Heating",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Solar Water Pumping",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Generators",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Generator Components",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Inverters & Backup Power",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "UPS Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Portable Power Stations",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Batteries — General",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Battery Chargers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Electrical Distribution Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Circuit Protection",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Switches & Sockets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Transformers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Voltage Regulators & Stabilizers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Cables & Wires",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Cable Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Earthing & Lightning Protection",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Lighting Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Electric Motors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Motor Controllers & Drives",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "EV Charging Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Energy Monitoring Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Power Quality Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Electrical Test Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Smart Energy Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Industrial / Commercial Energy Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-34",
+      "leaf": "Energy-Related Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Storage",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Tanks",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Containers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Collection Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Rainwater Harvesting Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Pipes & Tubing",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Pipe Fittings",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Valves",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Pumps",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Pressure Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Filtration",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Purification",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Treatment Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Disinfection Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Testing Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Drinking Water Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water Dispensers & Coolers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Sanitation Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Toilets & Toilet Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Handwashing Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Hygiene & Cleaning Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Cleaning Chemicals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Waste Bins & Containers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Waste Sorting & Recycling",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Composting Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Waste Processing Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Wastewater & Septic Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Drainage Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Environmental Monitoring Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Air Quality Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Eco-Friendly Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Biodegradable & Compostable Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Environmental Protection Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-35",
+      "leaf": "Water & Environment Kits",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Physical Locks",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Door Locks",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Smart Locks",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Safes & Strongboxes",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Access Control",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Access Credentials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "CCTV & Video Surveillance",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Security Camera Profile",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "DVR / NVR",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Surveillance Storage",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "CCTV Accessories",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Alarm Systems",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Intrusion Sensors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Sirens & Warning Devices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Panic & Emergency Buttons",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Intercom & Entry Communication",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Video Doorbells",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Security Lighting",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Security Mirrors",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Perimeter Security",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Bollards",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Vehicle Security",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "GPS Tracking",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Personal Security Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Identification & Access Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Security Storage",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-36",
+      "leaf": "Security Accessories & Consumables",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Printed Marketing Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Business Cards",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Flyers & Leaflets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Brochures & Catalogues",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Posters",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Large Format Printing Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Roll-up Banners",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Flags & Branded Flags",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Signboards",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Shop Signs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Illuminated Signs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Labels & Stickers",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Barcode & QR Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Window & Glass Branding",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Promotional Merchandise",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Branded Clothing",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Branded Bags",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Promotional Bottles & Mugs",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Pens & Promotional Stationery",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Display Stands",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Exhibition Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "POS Marketing Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Packaging Branding",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Branded Boxes",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Branded Tape",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Promotional Gifts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Media Production Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Photography Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Video Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Audio Recording Equipment",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Studio Lighting",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Projectors & Presentation Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-37",
+      "leaf": "Outdoor Advertising Hardware",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Software",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Mobile Apps",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Desktop Software",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Web Applications",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "SaaS Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Software License",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Activation Keys & Digital Codes",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Content",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "E-books",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Courses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Educational Digital Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Business Templates",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Spreadsheet Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Design Assets",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Fonts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Icons",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Stock Photography",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Media",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Games",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Gift Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Memberships",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Community Access",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "APIs & Developer Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "API Access",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Plugins & Extensions",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Themes",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Data Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Reports",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-38",
+      "leaf": "Digital Maps & Geographic Data",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Viwanja",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ardhi ya Kilimo",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ardhi ya Makazi",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ardhi ya Biashara",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ardhi ya Viwanda",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ardhi ya Ufugaji",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ardhi ya Misitu / Asili",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ardhi ya Taasisi / Community",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Nyumba",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Apartments",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Vyumba / Rooms",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Villas",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Townhouses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Commercial Buildings",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Offices",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Shops / Retail Spaces",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Warehouses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Workshops",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Industrial Properties",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Farms",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Ranches",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Hotels / Lodges",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Guest Houses",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Rental Properties",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Property for Sale",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Property for Lease",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Property for Rent",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Property Development",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Property Projects",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-42",
+      "leaf": "Property Investment Opportunities",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Metallic Minerals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Precious Metals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Gemstones",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Industrial Minerals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Construction Minerals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Energy Minerals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Strategic / Critical Minerals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Rare Earth Elements & Minerals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Ores",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Mineral Concentrates",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Processed Minerals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Refined Minerals & Metals",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Mineral Salts",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Dimension Stone",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Aggregates & Stone Materials",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Sand, Gravel & Clay",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Mineral By-products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Mineral Samples & Specimens",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Gem Rough",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Cut & Polished Gemstones",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    },
+    {
+      "categoryId": "CAT-43",
+      "leaf": "Mineral Trade Products",
+      "status": "PASS",
+      "scope": "real dropdown selection, suggestion membership, duplicate IDs, width",
+      "suggestions": 0
+    }
+  ],
+  "errors": []
+}

@@ -9,7 +9,7 @@ import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPas
 import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
-import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, normalizeConcreteVariantCombinations, normalizeTaxonomyMetadata, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
+import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, normalizeConcreteVariantCombinations, normalizeTaxonomyMetadata, normalizeProductUploadData, resolveVariantImages, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
 
 const skh = {};
 // Canonical Product Foundation service; existing screens reuse this one interface.
@@ -23,6 +23,8 @@ skh.productPublicationStatus = publicationStatus;
 skh.productAvailabilityStatus = availabilityStatus;
 skh.normalizeProductVariants = normalizeVariants;
 skh.normalizeConcreteVariantCombinations = normalizeConcreteVariantCombinations;
+skh.normalizeProductUploadData = normalizeProductUploadData;
+skh.resolveVariantImages = resolveVariantImages;
 skh.PRODUCT_SCHEMA_VERSION = PRODUCT_SCHEMA_VERSION;
 
 // Mirror ya Firebase imports -> skh (faili za feature zinazifikia kupitia skh)

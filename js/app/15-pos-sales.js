@@ -1,5 +1,42 @@
 /* ==== js/app/15-pos-sales.js ==== */
 import { skh } from './00-bootstrap.js';
+import { POS_LEVELS, getPosLevel, setPosLevel, getPosCapabilities } from '../../shared/pos-level-core.mjs';
+
+window.POS_LEVELS = POS_LEVELS;
+window.getPosLevel = getPosLevel;
+window.getPosCapabilities = getPosCapabilities;
+
+window.setPOSLevel = function(level) {
+    const selected = setPosLevel(level);
+    const select = document.getElementById('posLevelSelect');
+    if (select) select.value = selected;
+    const label = document.getElementById('posLevelLabel');
+    if (label) label.textContent = POS_LEVELS[selected].label;
+    const action = document.getElementById('posActionType');
+    if (action) {
+        const capabilities = POS_LEVELS[selected];
+        [...action.options].forEach(option => {
+            const required = option.dataset.posCapability || 'sales';
+            option.hidden = capabilities[required] !== true;
+            option.disabled = capabilities[required] !== true;
+        });
+        if (action.selectedOptions[0]?.disabled) action.value = 'sale';
+        if (typeof window.switchPosActionType === 'function') window.switchPosActionType();
+    }
+    document.querySelectorAll('[data-pos-level-required]').forEach(el => {
+        const required = el.dataset.posLevelRequired;
+        const visible = POS_LEVELS[selected][required] === true;
+        el.hidden = !visible;
+        el.setAttribute('aria-hidden', String(!visible));
+    });
+    window.dispatchEvent(new CustomEvent('sokohai:pos-level-changed', { detail: { level: selected, capabilities } }));
+    return selected;
+};
+window.initializePOSLevel = function() {
+    const select = document.getElementById('posLevelSelect');
+    if (select) { select.value = getPosLevel(); window.setPOSLevel(select.value); }
+};
+window.addEventListener('DOMContentLoaded', window.initializePOSLevel);
 
 // Tafsiri (lugha moja kwa wakati) — LMS ikiwa ipo, la sivyo fallback ya Kiingereza
 function T(key, en, vars) {

@@ -1,0 +1,272 @@
+[
+  {
+    "categoryId": "CAT-01",
+    "leaf": "Nafaka, Unga & Mikunde",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-01-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p1:product:Piece"
+  },
+  {
+    "categoryId": "CAT-02",
+    "leaf": "Mbegu",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-02-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p2:product:Piece"
+  },
+  {
+    "categoryId": "CAT-03",
+    "leaf": "Nafaka",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-03-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p3:product:Piece"
+  },
+  {
+    "categoryId": "CAT-04",
+    "leaf": "Ng'ombe",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-04-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p4:product:Piece"
+  },
+  {
+    "categoryId": "CAT-05",
+    "leaf": "Samaki wa Maji Safi",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-05-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p5:product:Piece"
+  },
+  {
+    "categoryId": "CAT-06",
+    "leaf": "Miti & Magogo",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-06-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p6:product:Piece"
+  },
+  {
+    "categoryId": "CAT-07",
+    "leaf": "Vitambaa",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-07-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p7:product:Piece"
+  },
+  {
+    "categoryId": "CAT-08",
+    "leaf": "Skincare",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-08-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p8:product:Piece"
+  },
+  {
+    "categoryId": "CAT-09",
+    "leaf": "Samani",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-09-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p9:product:Piece"
+  },
+  {
+    "categoryId": "CAT-10",
+    "leaf": "Cement, Lime & Binders",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-10-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p10:product:Piece"
+  },
+  {
+    "categoryId": "CAT-11",
+    "leaf": "TVs & Home Entertainment",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-11-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p11:product:Piece"
+  },
+  {
+    "categoryId": "CAT-12",
+    "leaf": "Simu za Mkononi",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-12-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p12:product:Piece"
+  },
+  {
+    "categoryId": "CAT-13",
+    "leaf": "Laptops",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-13-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p13:product:Piece"
+  },
+  {
+    "categoryId": "CAT-14",
+    "leaf": "Magari Madogo",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-14-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p14:product:Piece"
+  },
+  {
+    "categoryId": "CAT-15",
+    "leaf": "Engine Parts",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-15-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p15:product:Piece"
+  },
+  {
+    "categoryId": "CAT-19",
+    "leaf": "Dawa na Medicinal Products",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-19-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p16:product:Piece"
+  },
+  {
+    "categoryId": "CAT-27",
+    "leaf": "Michoro & Paintings",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-27-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p17:product:Piece"
+  },
+  {
+    "categoryId": "CAT-28",
+    "leaf": "Nguo za Jadi & Traditional Wear",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-28-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p18:product:Piece"
+  },
+  {
+    "categoryId": "CAT-29",
+    "leaf": "Wedding Dresses & Bridal Wear",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-29-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p19:product:Piece"
+  },
+  {
+    "categoryId": "CAT-30",
+    "leaf": "Maternity Wear",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-30-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p20:product:Piece"
+  },
+  {
+    "categoryId": "CAT-31",
+    "leaf": "Pets / Companion Animals",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-31-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p21:product:Piece"
+  },
+  {
+    "categoryId": "CAT-32",
+    "leaf": "Paper & Paper Products",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-32-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p22:product:Piece"
+  },
+  {
+    "categoryId": "CAT-33",
+    "leaf": "Industrial Machinery",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-33-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p23:product:Piece"
+  },
+  {
+    "categoryId": "CAT-34",
+    "leaf": "Solar Energy Products",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-34-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p24:product:Piece"
+  },
+  {
+    "categoryId": "CAT-35",
+    "leaf": "Water Storage",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-35-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p25:product:Piece"
+  },
+  {
+    "categoryId": "CAT-36",
+    "leaf": "Physical Locks",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-36-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p26:product:Piece"
+  },
+  {
+    "categoryId": "CAT-37",
+    "leaf": "Printed Marketing Materials",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-37-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p27:product:Piece"
+  },
+  {
+    "categoryId": "CAT-38",
+    "leaf": "Software",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-38-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p28:product:Piece"
+  },
+  {
+    "categoryId": "CAT-42",
+    "leaf": "Viwanja",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-42-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p29:product:Piece"
+  },
+  {
+    "categoryId": "CAT-43",
+    "leaf": "Metallic Minerals",
+    "status": "PASS",
+    "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
+    "sku": "CAT-43-SKU",
+    "unitId": "Piece",
+    "inventoryKey": "p30:product:Piece"
+  }
+]

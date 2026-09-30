@@ -284,8 +284,12 @@ window.openEditModal = async function(id, collectionName) {
         const owns = itemToEdit.userId === skh.currentUser.uid || itemToEdit.managedByAgentUid === skh.currentUser.uid;
         if (!owns && !isAdmin) { alert('Huna ruhusa ya kuhariri bidhaa hii.'); return; }
     }
+    window.__skhLastEditProduct = itemToEdit;
     document.getElementById('editId').value = itemToEdit.id;
     document.getElementById('editCollection').value = collectionName;
+    const editStructuredBox = document.getElementById('editStructuredFields');
+    if (editStructuredBox) editStructuredBox.style.display = collectionName === 'products' ? 'block' : 'none';
+    if (typeof window.skhLoadEditStructuredProduct === 'function' && collectionName === 'products') window.skhLoadEditStructuredProduct(itemToEdit);
     document.getElementById('editTitle').value = itemToEdit.title || '';
     document.getElementById('editPrice').value = itemToEdit.price || '';
     document.getElementById('editLocation').value = itemToEdit.location || '';
@@ -413,7 +417,17 @@ window.submitEditForm = async function(event) {
             btn.innerHTML = originalText; btn.disabled = false; return;
         }
         // Protection B: bei (au bei ya kuanza-hiyo-hiyo) haiwezi kurekebishwa baada ya zabuni.
-        const updateMap = { title: title, price: price, location: location, description: desc, saleMode: saleMode, updatedAt: new Date().toISOString() };
+        const structuredEdit = window.skhEditStructuredExport;
+        const structuredPatch = structuredEdit ? {
+            attributes: structuredEdit.attributes,
+            options: structuredEdit.options,
+            variantsStructured: structuredEdit.variantsStructured,
+            features: structuredEdit.features,
+            additionalInfo: structuredEdit.additionalInfo,
+            imagesArray: structuredEdit.imagesArray,
+            image: structuredEdit.imagesArray?.[0] || null
+        } : {};
+        const updateMap = { title: title, price: price, location: location, description: desc, saleMode: saleMode, updatedAt: new Date().toISOString(), ...structuredPatch };
         if (collectionName === 'products') {
             const pub = document.getElementById('editPublicationStatus')?.value || skh.productPublicationStatus(fresh.data());
             updateMap.publicationStatus = pub;

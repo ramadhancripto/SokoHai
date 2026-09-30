@@ -70,6 +70,16 @@
             <div style="grid-column:1/-1"><label>Variants (hiari)</label><textarea id="editVariants" placeholder="Color: Black, White; Size: S, M, L"></textarea></div>
             <div style="grid-column:1/-1"><label>Concrete variant combinations (JSON, hiari)</label><textarea id="editVariantCombinations" rows="5" placeholder='[{"variantId":"var_red_l","sku":"TSH-RED-L","price":25000,"stock":10,"unitId":"piece","options":{"Color":"Red","Size":"L"},"inventoryKey":"PRODUCT_ID:var_red_l:piece","status":"ACTIVE"}]'></textarea><small>Usiandike combination mpya bila SKU, variantId, unit, stock na identity sahihi.</small></div>
         </div>
+        <div id="editStructuredFields" style="display:none;margin:12px 0;background:#f8fafc;border:1px solid #dbe3ec;border-radius:12px;padding:12px;text-align:left;">
+            <b style="font-size:13px;color:#0f172a;">Structured product information</b>
+            <div id="editStructuredAttributes"></div><button type="button" id="editAddAttribute" class="spb-btn">＋ Add attribute</button>
+            <div id="editStructuredOptions" style="margin-top:10px"></div><button type="button" id="editAddOption" class="spb-btn">＋ Add option</button>
+            <div id="editStructuredVariants" style="margin-top:10px"></div><button type="button" id="editAddVariant" class="spb-btn">＋ Add variant</button>
+            <div id="editStructuredFeatures" style="margin-top:10px"></div><button type="button" id="editAddFeature" class="spb-btn">＋ Add feature</button>
+            <div id="editStructuredAdditional" style="margin-top:10px"></div><button type="button" id="editAddAdditional" class="spb-btn">＋ Add information</button>
+            <div id="editStructuredMedia" style="margin-top:10px"></div>
+            <small style="display:block;color:#64748b;margin-top:8px">Existing legacy fields and identities remain preserved.</small>
+        </div>
         
         <button type="submit" id="btnSubmitEdit" style="background:var(--primary-blue);"> HIFADHI MABADILIKO</button>
 <button type="button" class="btn-close" onclick="goBackToMenu()">&lsaquo; Rudi Nyuma</button>

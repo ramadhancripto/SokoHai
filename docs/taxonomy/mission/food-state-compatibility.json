@@ -1,0 +1,14 @@
+{
+  "file": "shared/canonical-taxonomy-data.js",
+  "beforeHash": "04124fcb1e75731aa159483484267962fe46deff87ce7fb0cbf4e3ea20295c97",
+  "afterHash": "ae45822e835c6c69aa6128316b204a162036410e6f00ff426703128928c90d71",
+  "paths": [
+    "CAT-01/Mizizi & Viazi",
+    "CAT-01/Nyama",
+    "CAT-01/Mayai"
+  ],
+  "before": "SOURCE_SUPPORTED_PARTIAL",
+  "after": "SPECIFIED_BUT_INCOMPLETE",
+  "reason": "Retain existing incomplete definitionState sentinel for metadata compatibility. NOTE: reconciliation actually uses structural counts, so this sentinel alone does NOT prevent SPECIFIED_AND_IMPLEMENTED; mission status separately checks PARTIAL.",
+  "test": "test_final_product_taxonomy_verification"
+}

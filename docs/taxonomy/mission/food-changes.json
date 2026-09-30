@@ -1,0 +1,366 @@
+[
+  {
+    "categoryId": "CAT-01",
+    "leaf": "Mizizi & Viazi",
+    "file": "shared/canonical-taxonomy-data.js",
+    "before": {
+      "definitionState": "SPECIFIED_BUT_INCOMPLETE",
+      "status": "PARTIAL",
+      "productTypes": [],
+      "attributes": [],
+      "options": {},
+      "filters": [],
+      "features": [],
+      "variantRule": {
+        "mode": "UNSPECIFIED",
+        "candidates": []
+      },
+      "allowedUnits": {},
+      "sellingUnit": "UNSPECIFIED",
+      "stockUnit": "UNSPECIFIED",
+      "displayUnit": "UNSPECIFIED",
+      "measurementUnit": "UNSPECIFIED",
+      "complianceProfile": null
+    },
+    "after": {
+      "definitionState": "SOURCE_SUPPORTED_PARTIAL",
+      "status": "PARTIAL",
+      "productTypes": [
+        "Potatoes",
+        "Cassava",
+        "Sweet potatoes",
+        "Yams",
+        "Taro"
+      ],
+      "attributes": [
+        "Crop Type"
+      ],
+      "options": {},
+      "filters": [
+        "Crop Type"
+      ],
+      "features": [],
+      "variantRule": {
+        "mode": "UNSPECIFIED",
+        "candidates": []
+      },
+      "allowedUnits": {},
+      "sellingUnit": "UNSPECIFIED",
+      "stockUnit": "UNSPECIFIED",
+      "displayUnit": "UNSPECIFIED",
+      "measurementUnit": "UNSPECIFIED",
+      "complianceProfile": null,
+      "description": "Edible starchy roots and tubers for human consumption; cited CPC group excludes roots primarily for feed or sugar production and those classified as vegetables.",
+      "fieldEvidenceVerified": true,
+      "sourceEvidence": {
+        "document": "UN CPC Version 2.1 (2015)",
+        "url": "https://unstats.un.org/unsd/classifications/unsdclassifications/cpcv21.pdf",
+        "pdfPages": [
+          171
+        ],
+        "sections": [
+          "015",
+          "01510",
+          "01520",
+          "01530",
+          "01540",
+          "01550"
+        ],
+        "reviewed": "2026-09-30",
+        "scope": "Product meaning and informational characteristics only; not variant or selling-unit authority"
+      },
+      "mediaRequirements": {
+        "required": false,
+        "product": {
+          "min": 0
+        },
+        "evidence": "UNSPECIFIED"
+      },
+      "remainingEvidence": [
+        "Buyer-selectable behavior",
+        "Selling-unit guidance",
+        "Complete leaf breadth"
+      ]
+    },
+    "beforeHash": "6fa550c9a94790b90d2915164cc22cba3a6ef44eace393c74d53fe70ec9307f4",
+    "afterHash": "b5ebb1db02f0f7326f01172ff1dfdf228615850aaf6e4a585d2817e7632930ac",
+    "source": {
+      "document": "UN CPC Version 2.1 (2015)",
+      "url": "https://unstats.un.org/unsd/classifications/unsdclassifications/cpcv21.pdf",
+      "pdfPages": [
+        171
+      ],
+      "sections": [
+        "015",
+        "01510",
+        "01520",
+        "01530",
+        "01540",
+        "01550"
+      ],
+      "reviewed": "2026-09-30",
+      "scope": "Product meaning and informational characteristics only; not variant or selling-unit authority"
+    },
+    "evidence": [
+      {
+        "pdfPage": 171,
+        "verbatim": "Explanatory notes \n \n015 \nEdible roots and tubers with high starch or inulin content \n \nThis group includes roots and tubers, i.e. plants grown generally as annual crops, yielding roots, \ntubers, rhizomes, corms and stems that are mainly used for human consumption. Excluded from this \ngroup are roots and tubers used mainly for feed, for processing into sugar, and those classified as \nvegetables. \n \n0151 \nPotatoes \n \n01510 \nPotatoes \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0701. \n \n0152 \nCassava \n \n01520 \nCassava \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0714.10. \n \n0153 \nSweet potatoes \n \n01530 \nSweet potatoes \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0714.20. \n \n0154 \nYams \n \n01540 \nYams \n \nThis subclass includes: \n- yams, tubers from vines of the genus Dioscorea \n• D. batatas \n• D. trifida \n• D. alata \n• D. bulbifera \n• D. rotunda \n• D. cayenensis \n• D. exculenta \n• D. dumetorum \n \nThis subclass does not include: \n- sweet potatoes, cf. 01530 \n \n0155 \nTaro \n \n01550 \nTaro  \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0714.40. \n \n0159 \nOther edible roots and tubers with high starch or inulin content \n \n01591 \nYautia \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0714.50. \n \n157\n"
+      }
+    ],
+    "reason": "Replace empty placeholder with scoped official classification evidence; no selector/stock semantics inferred",
+    "compatibility": "Same category and leaf, existing generic builder, no required fields, no writer/identity changes",
+    "tests": "PASS: test_canonical_controlled_changes; test_taxonomy_mission_contract; test_final_product_taxonomy_verification; all-leaf browser 743/743. Supplemental sentinel change in food-state-compatibility.json",
+    "fullyResolved": false
+  },
+  {
+    "categoryId": "CAT-01",
+    "leaf": "Nyama",
+    "file": "shared/canonical-taxonomy-data.js",
+    "before": {
+      "definitionState": "SPECIFIED_BUT_INCOMPLETE",
+      "status": "PARTIAL",
+      "productTypes": [],
+      "attributes": [],
+      "options": {},
+      "filters": [],
+      "features": [],
+      "variantRule": {
+        "mode": "UNSPECIFIED",
+        "candidates": []
+      },
+      "allowedUnits": {},
+      "sellingUnit": "UNSPECIFIED",
+      "stockUnit": "UNSPECIFIED",
+      "displayUnit": "UNSPECIFIED",
+      "measurementUnit": "UNSPECIFIED",
+      "complianceProfile": null
+    },
+    "after": {
+      "definitionState": "SOURCE_SUPPORTED_PARTIAL",
+      "status": "PARTIAL",
+      "productTypes": [
+        "Beef",
+        "Goat meat",
+        "Mutton",
+        "Pork",
+        "Chicken meat",
+        "Duck meat",
+        "Turkey meat"
+      ],
+      "attributes": [
+        "Animal Source",
+        "Preservation State"
+      ],
+      "options": {},
+      "filters": [
+        "Animal Source",
+        "Preservation State"
+      ],
+      "features": [],
+      "variantRule": {
+        "mode": "UNSPECIFIED",
+        "candidates": []
+      },
+      "allowedUnits": {},
+      "sellingUnit": "UNSPECIFIED",
+      "stockUnit": "UNSPECIFIED",
+      "displayUnit": "UNSPECIFIED",
+      "measurementUnit": "UNSPECIFIED",
+      "complianceProfile": null,
+      "description": "Meat from mammals or poultry; cited subclasses distinguish animal source and fresh/chilled/frozen states. This amendment does not establish a complete cuts/offal/processed-meat ontology.",
+      "fieldEvidenceVerified": true,
+      "sourceEvidence": {
+        "document": "UN CPC Version 2.1 (2015)",
+        "url": "https://unstats.un.org/unsd/classifications/unsdclassifications/cpcv21.pdf",
+        "pdfPages": [
+          212,
+          213,
+          215,
+          216,
+          217
+        ],
+        "sections": [
+          "2111",
+          "2112",
+          "2113",
+          "2114",
+          "2115",
+          "2116"
+        ],
+        "reviewed": "2026-09-30",
+        "scope": "Product meaning and informational characteristics only; not variant or selling-unit authority"
+      },
+      "mediaRequirements": {
+        "required": false,
+        "product": {
+          "min": 0
+        },
+        "evidence": "UNSPECIFIED"
+      },
+      "remainingEvidence": [
+        "Buyer-selectable behavior",
+        "Selling-unit guidance",
+        "Complete leaf breadth"
+      ]
+    },
+    "beforeHash": "b5ebb1db02f0f7326f01172ff1dfdf228615850aaf6e4a585d2817e7632930ac",
+    "afterHash": "48b747eba37c3335fc686491f14e32d5cef02353c6303936195e0af3b1848c0c",
+    "source": {
+      "document": "UN CPC Version 2.1 (2015)",
+      "url": "https://unstats.un.org/unsd/classifications/unsdclassifications/cpcv21.pdf",
+      "pdfPages": [
+        212,
+        213,
+        215,
+        216,
+        217
+      ],
+      "sections": [
+        "2111",
+        "2112",
+        "2113",
+        "2114",
+        "2115",
+        "2116"
+      ],
+      "reviewed": "2026-09-30",
+      "scope": "Product meaning and informational characteristics only; not variant or selling-unit authority"
+    },
+    "evidence": [
+      {
+        "pdfPage": 212,
+        "verbatim": "Central Product Classification, Version 2.1 \n \n \nSection 2 \nFood products, beverages and tobacco; textiles, apparel and leather products \n \n \n21 \nMeat, fish, fruits, vegetables, oils and fats \n \n211 \nMeat and meat products \n \n2111 \nMeat of mammals, fresh or chilled \n \n21111 \nMeat of cattle, fresh or chilled \n \nThis subclass includes: \n- meat of cattle, animals of subclass 02111, fresh or chilled \n \nThis subclass does not include: \n- meat of cattle, frozen, cf. 21131 \n- edible offal of cattle, cf. 21151 \n \n21112 \nMeat of buffalo, fresh or chilled \n \nThis subclass includes: \n- meat of buffalo, animals of subclass 02112, fresh or chilled \n \nThis subclass does not include: \n- meat of buffalo, frozen, cf. 21132 \n- edible offal of buffalo, cf. 21152 \n \n21113 \nMeat of pigs, fresh or chilled \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0203.11 - .19. \n \n21114 \nMeat of rabbits and hares, fresh or chilled \n \nThis subclass includes: \n- meat of rabbits and hares, animals of subclass 02191, fresh or chilled \n \nThis subclass does not include: \n- meat of rabbits and hares, frozen, cf. 21134 \n- edible offal of rabbits and hares, cf. 21159 \n \n21115 \nMeat of sheep, fresh or chilled \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0204.10 - .23. \n \n21116 \nMeat of goat, fresh or chilled \n \nThis subclass includes: \n- meat of goat, animals of subclass 02123, fresh or chilled \n \nThis subclass does not include: \n- meat of goat, frozen, cf. 21136 \n- edible offal of goat, cf. 21156 \n \n198\n"
+      },
+      {
+        "pdfPage": 213,
+        "verbatim": "Explanatory notes \n \n21117 \nMeat of camels and camelids, fresh or chilled \n \nThis subclass includes: \n- meat of camels and camelids, animals of subclass 02121, fresh or chilled \n \nThis subclass does not include: \n- meat of camels and camelids, frozen, cf. 21137 \n- edible offal of camels and camelids, cf. 21159 \n \n21118 \nMeat of horses and other equines, fresh or chilled \n \nThis subclass includes: \n- meat of horses and other equines, animals of subclass 02130, fresh or chilled \n \nThis subclass does not include: \n- meat of horses and other equines, frozen, cf. 21138 \n- edible offal of horses and other equines, cf. 21159 \n \n21119 \nOther meat of mammals, fresh or chilled \n \nThis subclass includes: \n- meat of mammals, fresh or chilled, not elsewhere classified: \n• meat of animals of subclass 02129 (i.e., ruminants other than cattle, buffalo, camelids, goats and \nsheep), fresh or chilled \n• meat of animals of subclass 02192 (i.e., mammals other than ruminants, equines, swine and \nrabbits and hares), fresh or chilled \n \nThis subclass does not include: \n- meat of animals listed above, frozen, cf. 21139 \n- edible offal of animals listed above, cf. 21159 \n \n2112 \nMeat of poultry, fresh or chilled \n \n21121 \nMeat of chickens, fresh or chilled \n \nThis subclass includes: \n- meat of chickens, Gallus domesticus, birds of subclass 02151, fresh or chilled \n \nThis subclass does not include: \n- meat of chickens, frozen, cf. 21141 \n- edible offal of chicken, cf. 21160 \n \n21122 \nMeat of ducks, fresh or chilled \n \nThis subclass includes: \n- meat of ducks, birds of subclass 02154, fresh or chilled \n \nThis subclass does not include: \n- meat of ducks, frozen, cf. 21142 \n- fatty liver of duck, cf. 21160 \n- edible offal of duck, cf. 21160 \n \n199\n"
+      },
+      {
+        "pdfPage": 215,
+        "verbatim": "Explanatory notes \n \n21134 \nMeat of rabbits and hares, frozen \n \nThis subclass includes: \n- meat of rabbits and hares, animals of subclass 02191, frozen \n \nThis subclass does not include: \n- meat of rabbits and hares, fresh or chilled, cf. 21114 \n- edible offal of rabbits and hares, cf. 21159 \n \n21135 \nMeat of sheep, frozen \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0204.30 - .43. \n \n21136 \nMeat of goat, frozen \n \nThis subclass includes: \n- meat of goat, animals of subclass 02123, frozen \n \nThis subclass does not include: \n- meat of goat, fresh or chilled, cf. 21116 \n- edible offal of goat, cf. 21156 \n \n21137 \nMeat of camels and camelids, frozen \n \nThis subclass includes: \n- meat of camels and camelids, animals of subclass 02121, frozen \n \nThis subclass does not include: \n- meat of camels and camelids, fresh or chilled, cf. 21117 \n- edible offal of camels and camelids, cf. 21159 \n \n21138 \nMeat of horses and other equines, frozen \n \nThis subclass includes: \n- meat of horses and other equines, animals of subclass 02130, frozen \n \nThis subclass does not include: \n- meat of horses and other equines, fresh or chilled, cf. 21118 \n- edible offal of horses and other equines, cf. 21159 \n \n21139 \nOther meat of mammals, frozen \n \nThis subclass includes: \n- meat of mammals, frozen, not elsewhere classified: \n• meat of animals of subclass 02129 (i.e., ruminants other than cattle, buffalo, camelids, goats and \nsheep), frozen \n• meat of animals of subclass 02192 (i.e., mammals other than ruminants, equines, swine and \nrabbits and hares), frozen \n \nThis subclass does not include: \n- meat of animals listed above, fresh or chilled, cf. 21119 \n- edible offal of animals listed above, cf. 21159 \n \n201\n"
+      },
+      {
+        "pdfPage": 216,
+        "verbatim": "Central Product Classification, Version 2.1 \n \n2114 \nMeat of poultry, frozen \n \n21141 \nMeat of chickens, frozen \n \nThis subclass includes: \n- meat of chickens, Gallus domesticus, birds of subclass 02151, frozen \n \nThis subclass does not include: \n- meat of chickens, fresh or chilled, cf. 21121 \n- edible offal of chicken, cf. 21160 \n \n21142 \nMeat of ducks, frozen \n \nThis subclass includes: \n- meat of ducks, birds of subclass 02154, frozen \n \nThis subclass does not include: \n- meat of ducks, fresh or chilled, cf. 21122 \n- edible offal of duck, cf. 21160 \n- fatty liver of duck, cf. 21160 \n \n21143 \nMeat of geese, frozen \n \nThis subclass includes: \n- meat of geese, birds of subclass 02153, frozen \n \nThis subclass does not include: \n- meat of geese, fresh or chilled, cf. 21123 \n- edible offal of geese, cf. 21160 \n- fatty liver of geese, cf. 21160 \n \n21144 \nMeat of turkeys, frozen \n \nThis subclass includes: \n- meat of turkeys, birds of subclass 02152, frozen \n \nThis subclass does not include: \n- meat of turkeys, fresh or chilled, cf. 21124 \n- edible offal of turkey, cf. 21160 \n \n21145 \nMeat of guinea fowl, frozen \n \nThis subclass includes: \n- meat of guinea fowl, birds of subclass 02155, frozen \n \nThis subclass does not include: \n- meat of guinea fowl, fresh or chilled, cf. 21125 \n- edible offal of guinea fowl, cf. 21160 \n- fatty liver of guinea fowl, cf. 21160 \n \n202\n"
+      },
+      {
+        "pdfPage": 217,
+        "verbatim": "Explanatory notes \n \n2115 \nEdible offal of mammals, fresh, chilled or frozen \n \n21151 \nEdible offal of cattle, fresh, chilled or frozen \n \nThis subclass includes: \n- edible offal of cattle, animals of subclass 02111, fresh, chilled or frozen \n \nThis subclass does not include: \n- edible offal of buffalo, cf. 21152 \n \n21152 \nEdible offal of buffalo, fresh, chilled or frozen \n \nThis subclass includes: \n- edible offal of buffalo, animals of subclass 02112, fresh, chilled or frozen \n \nThis subclass does not include: \n- edible offal of cattle, cf. 21151 \n \n21153 \nEdible offal of pigs, fresh, chilled or frozen \n \nThis subclass includes: \n- edible offal of pigs, animals of subclass 02140, fresh, chilled or frozen \n \n21155 \nEdible offal of sheep, fresh, chilled or frozen \n \nThis subclass includes: \n- edible offal of sheep, animals of subclass 02122, fresh, chilled or frozen \n \n21156 \nEdible offal of goat, fresh, chilled or frozen \n \nThis subclass includes: \n- edible offal of goat, animals of subclass 02123, fresh, chilled or frozen \n \n21159 \nEdible offal of mammals, fresh, chilled or frozen, n.e.c. \n \nThis subclass includes: \n- edible offal of mammals, fresh, chilled or frozen, not elsewhere classified: \n• edible offal of animals of subclass 02121, camels and camelids, fresh, chilled or frozen \n• edible offal of animals of subclass 02129, ruminants other than cattle, buffalo, camelids, goats \nand sheep, fresh, chilled or frozen \n• edible offal of animals of subclass 02130, horses and other equines, fresh, chilled or frozen \n• edible offal of animals of subclass 02191, rabbits and hares, fresh, chilled or frozen \n• edible offal of animals of subclass 02192, mammals other than ruminants, equines, swine and \nrabbits and hares, fresh, chilled or frozen \n \n2116 \nEdible offal of poultry, fresh, chilled or frozen \n \n21160 \nEdible offal of poultry, fresh, chilled or frozen \n \nThis subclass includes: \n- edible offal, including fatty livers, fresh, chilled or frozen, of poultry: \n• chicken, Gallus domesticus, birds of subclass 02151 \n• turkeys, birds of subclass 02152 \n• geese, birds of subclass 02153 \n• ducks, birds of subclass 02154 \n• guinea fowl, birds of subclass 02155 \n203\n"
+      }
+    ],
+    "reason": "Replace empty placeholder with scoped official classification evidence; no selector/stock semantics inferred",
+    "compatibility": "Same category and leaf, existing generic builder, no required fields, no writer/identity changes",
+    "tests": "PASS: test_canonical_controlled_changes; test_taxonomy_mission_contract; test_final_product_taxonomy_verification; all-leaf browser 743/743. Supplemental sentinel change in food-state-compatibility.json",
+    "fullyResolved": false
+  },
+  {
+    "categoryId": "CAT-01",
+    "leaf": "Mayai",
+    "file": "shared/canonical-taxonomy-data.js",
+    "before": {
+      "definitionState": "SPECIFIED_BUT_INCOMPLETE",
+      "status": "PARTIAL",
+      "productTypes": [],
+      "attributes": [],
+      "options": {},
+      "filters": [],
+      "features": [],
+      "variantRule": {
+        "mode": "UNSPECIFIED",
+        "candidates": []
+      },
+      "allowedUnits": {},
+      "sellingUnit": "UNSPECIFIED",
+      "stockUnit": "UNSPECIFIED",
+      "displayUnit": "UNSPECIFIED",
+      "measurementUnit": "UNSPECIFIED",
+      "complianceProfile": null
+    },
+    "after": {
+      "definitionState": "SOURCE_SUPPORTED_PARTIAL",
+      "status": "PARTIAL",
+      "productTypes": [
+        "Hen eggs",
+        "Other bird eggs"
+      ],
+      "attributes": [
+        "Bird Species",
+        "Preservation State"
+      ],
+      "options": {},
+      "filters": [
+        "Bird Species",
+        "Preservation State"
+      ],
+      "features": [],
+      "variantRule": {
+        "mode": "UNSPECIFIED",
+        "candidates": []
+      },
+      "allowedUnits": {},
+      "sellingUnit": "UNSPECIFIED",
+      "stockUnit": "UNSPECIFIED",
+      "displayUnit": "UNSPECIFIED",
+      "measurementUnit": "UNSPECIFIED",
+      "complianceProfile": null,
+      "description": "Bird eggs intended as food; references distinguish fresh in-shell eggs and preserved/cooked in-shell eggs. Hatching eggs are not automatically food products.",
+      "fieldEvidenceVerified": true,
+      "sourceEvidence": {
+        "document": "UN CPC Version 2.1 (2015)",
+        "url": "https://unstats.un.org/unsd/classifications/unsdclassifications/cpcv21.pdf",
+        "pdfPages": [
+          184,
+          247
+        ],
+        "sections": [
+          "023",
+          "22300"
+        ],
+        "reviewed": "2026-09-30",
+        "scope": "Product meaning and informational characteristics only; not variant or selling-unit authority"
+      },
+      "mediaRequirements": {
+        "required": false,
+        "product": {
+          "min": 0
+        },
+        "evidence": "UNSPECIFIED"
+      },
+      "remainingEvidence": [
+        "Buyer-selectable behavior",
+        "Selling-unit guidance",
+        "Complete leaf breadth"
+      ]
+    },
+    "beforeHash": "48b747eba37c3335fc686491f14e32d5cef02353c6303936195e0af3b1848c0c",
+    "afterHash": "04124fcb1e75731aa159483484267962fe46deff87ce7fb0cbf4e3ea20295c97",
+    "source": {
+      "document": "UN CPC Version 2.1 (2015)",
+      "url": "https://unstats.un.org/unsd/classifications/unsdclassifications/cpcv21.pdf",
+      "pdfPages": [
+        184,
+        247
+      ],
+      "sections": [
+        "023",
+        "22300"
+      ],
+      "reviewed": "2026-09-30",
+      "scope": "Product meaning and informational characteristics only; not variant or selling-unit authority"
+    },
+    "evidence": [
+      {
+        "pdfPage": 184,
+        "verbatim": "Central Product Classification, Version 2.1 \n \n023 \nEggs of hens or other birds in shell, fresh \n \n0231 \nHen eggs in shell, fresh \n \n02311 \nHen eggs in shell, fresh, for hatching \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0407.11. \n \n02312 \nOther hen eggs in shell, fresh \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0407.21. \n \n0232 \nEggs from other birds in shell, fresh, n.e.c. \n \n02321 \nEggs from other birds in shell, fresh, for hatching \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0407.19. \n \n02322 \nOther eggs from other birds in shell, fresh \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0407.29. \n \n024 \nReproductive materials of animals \n \n0241 \nSemen \n \n02411 \nBovine semen \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 0511.10. \n \n02419 \nSemen, n.e.c. \n \nThis subclass includes: \n- semen from animals other than bovines, such as sheep, goats, etc. \n \nThis subclass does not include: \n- semen from bovine animals, cf. 02411 \n \n0242 \nEmbryos \n \n02420 \nEmbryos \n \nThis subclass includes: \n- animal embryos \n \nThis subclass does not include: \n- insect eggs, larvae, chrysalis and similar, cf. 39110 \n \n170\n"
+      },
+      {
+        "pdfPage": 247,
+        "verbatim": "Explanatory notes \n \n• products consisting of natural milk constituents, in liquid or paste form, not elsewhere specified \nor included \n• reconstituted milk, in liquid or paste form, with a quantitative or qualitative composition \ndifferent from the natural product \n \nThis subclass does not include: \n- products similar to those above, in solid form, cf. 22219 \n- lactose and lactose syrup, cf. 23210 \n- coloured or flavoured lactose syrup, cf. 23999 \n- whey cheese, cf. 2225 \n- reconstituted milk, in liquid or paste form, with a quantitative or qualitative composition similar to \nthe natural product: \n• concentrated, unsweetened, cf. 22221 \n• concentrated, sweetened, cf. 22222 \n• not concentrated, unsweetened, cf. 22110 \n• not concentrated, sweetened, cf. 22229 \n \n223 \nEggs, in shell, preserved or cooked \n \n2230 \nEggs, in shell, preserved or cooked \n \n22300 \nEggs, in shell, preserved or cooked \n \nThis subclass includes: \n- eggs, in shell, preserved or cooked \n \nThis subclass does not include: \n- eggs, fresh: \n• from hens, cf. 0231 \n• from other birds, cf. 0232 \n- eggs, not in shell, cf. 23993 \n \n \n \n23 \nGrain mill products, starches and starch products; other food products \n \n231 \nGrain mill products \n \n2311 \nWheat and meslin flour \n \n23110 \nWheat and meslin flour \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 1101. \n \n2312 \nOther cereal flours \n \n23120 \nOther cereal flours \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 1102. \n \n2313 \nGroats, meal and pellets of wheat and other cereals \n \n23130 \nGroats, meal and pellets of wheat and other cereals \n \nThis subclass is defined through the following headings/subheadings of the HS 2007: 1103.11 - .20. \n \n233\n"
+      }
+    ],
+    "reason": "Replace empty placeholder with scoped official classification evidence; no selector/stock semantics inferred",
+    "compatibility": "Same category and leaf, existing generic builder, no required fields, no writer/identity changes",
+    "tests": "PASS: test_canonical_controlled_changes; test_taxonomy_mission_contract; test_final_product_taxonomy_verification; all-leaf browser 743/743. Supplemental sentinel change in food-state-compatibility.json",
+    "fullyResolved": false
+  }
+]
