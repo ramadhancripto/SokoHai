@@ -84,6 +84,8 @@
 <script type="module" src="js/app/95-creative-studio.js"></script>
 <!-- One server-authoritative delivery/rotation controller for all campaign slots. -->
 <script type="module" src="js/app/96-ad-delivery-controller.js"></script>
+<script type="module" src="js/app/97-escrow-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Escrow (server-only actions) -->
+<script type="module" src="js/app/98-admin-control-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Udhibiti wa Admin (server-only actions) -->
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->
@@ -592,6 +594,12 @@
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Hybrid (Online + Offline)</b>
                     <small style="color:#64748b; font-size: 13px;">Unganisha mauzo ya POS dukani na duka la mtandaoni kote kwa pamoja.</small>
                 </div>
+                <!-- [2026-10-31] Kusimamia tu: stoo na kumbukumbu za biashara, bila POS wala soko. Channels zinaweza kuwashwa baadaye. -->
+                <div class="setup-option-card" id="modeCard_manage" onclick="window.selectOnboardingOption('businessMode', 'manage_only', this)">
+                    <div style="font-size:24px; margin-bottom:5px;"></div>
+                    <b style="color:var(--primary-dark); display:block; font-size:14px;">Kusimamia Tu (Stoo na Kumbukumbu)</b>
+                    <small style="color:#64748b; font-size: 13px;">Simamia stock, bei na kumbukumbu za biashara bila kuuza POS wala mtandaoni. Unaweza kuwasha mauzo baadaye bila kupoteza data.</small>
+                </div>
             </div>
 
             <!-- STEP 3: IDENTITY & TEMPORARY OPTIONS -->
@@ -600,6 +608,13 @@
                 
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA DUKA *</label>
                 <input type="text" id="regShopName" placeholder="Mfano: Ramadhan Fashion Sale" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; outline:none;">
+
+                <!-- [2026-10-31] Anwani ya duka: inajazwa mara moja na kutumika kama mahali pa bidhaa (na pickup ukikubali). -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">MAHALI PA DUKA / STOO (HIARI)</label>
+                <input type="text" id="regStoreAddress" placeholder="Mfano: Kariakoo, Mtaa wa Congo, Dar es Salaam" maxlength="160" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:8px; outline:none;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--primary-dark); margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="regPickupAvailable" style="width:18px; height:18px;"> Wateja wanaweza kuchukua bidhaa hapa (pickup)
+                </label>
 
                 <!-- Hizi zitaonekana TU kama akichagua TEMPORARY STORE -->
                 <div id="temporaryOnlyFields">

@@ -1,0 +1,122 @@
+{
+ "mobile:hybrid": {
+  "visibleFields": 20,
+  "visibleRequired": 9,
+  "requiredEmpty": 6,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3472
+ },
+ "mobile:offline_only": {
+  "visibleFields": 19,
+  "visibleRequired": 7,
+  "requiredEmpty": 4,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3365
+ },
+ "mobile:online_only": {
+  "visibleFields": 20,
+  "visibleRequired": 9,
+  "requiredEmpty": 6,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3472
+ },
+ "mobile:manage_only": {
+  "visibleFields": 19,
+  "visibleRequired": 7,
+  "requiredEmpty": 4,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3365
+ },
+ "desktop:hybrid": {
+  "visibleFields": 20,
+  "visibleRequired": 9,
+  "requiredEmpty": 6,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3373
+ },
+ "desktop:offline_only": {
+  "visibleFields": 19,
+  "visibleRequired": 7,
+  "requiredEmpty": 4,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3266
+ },
+ "desktop:online_only": {
+  "visibleFields": 20,
+  "visibleRequired": 9,
+  "requiredEmpty": 6,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3373
+ },
+ "desktop:manage_only": {
+  "visibleFields": 19,
+  "visibleRequired": 7,
+  "requiredEmpty": 4,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodBuyPrice",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 3266
+ }
+}

@@ -908,7 +908,7 @@ import { skh } from './00-bootstrap.js';
     var snap = await skh.getDoc(ref);
     if (!(snap && snap.exists && snap.exists())) return { ok: false, reason: 'not_found' };
     var tName = transporterId;
-    try { var us = await skh.getDoc(skh.doc(skh.db, 'users', transporterId)); if (us && us.exists && us.exists()) tName = us.data().fullName || us.data().displayName || tName; } catch (e) {}
+    try { var us = await skh.getUserCard(transporterId); if (us && us.exists && us.exists()) tName = us.data().fullName || us.data().displayName || tName; } catch (e) {}
     await skh.updateDoc(ref, {
       transporterId: transporterId,
       transporterName: tName,
@@ -1864,10 +1864,14 @@ import { skh } from './00-bootstrap.js';
   }
 
   // ---------- Public API ----------
-  window.skhGroupOrderWizardOpen = function (gid) { openWizardModal(gid); };
+  // [REPAIR 2026-10 Phase 5] feature flag (see 69-chat-groups.js skhGroupOrdersEnabled)
+  function goEnabled() { return typeof window.skhGroupOrdersEnabled === 'function' && window.skhGroupOrdersEnabled(); }
+  function goOff() { return typeof window.skhGroupOrdersDisabledNotice === 'function' ? window.skhGroupOrdersDisabledNotice() : { ok: false, reason: 'feature_disabled' }; }
+  window.skhGroupOrderWizardOpen = function (gid) { if (!goEnabled()) { goOff(); return; } openWizardModal(gid); };
   window.skhGroupOrderWizardClose = closeWizardModal;
 
   window.skhGroupOrderCreateFull = async function (gid, wizardData) {
+    if (!goEnabled()) return goOff();
     // direct API for tests / programmatic
     if (wizardData) wizardState.data = Object.assign(wizardState.data, wizardData);
     wizardState.gid = gid;
@@ -1875,6 +1879,7 @@ import { skh } from './00-bootstrap.js';
   };
 
   window.skhGroupOrderJoinFull = async function (gid, goid, qty, extra) {
+    if (!goEnabled()) return goOff();
     // enhanced join with scalable subcollection
     var memCheck = null;
     try { var ms = await skh.getDoc(skh.doc(skh.db, 'chatGroups/' + gid + '/members', uid())); memCheck = ms && ms.exists && ms.exists() ? ms.data() : null; } catch (e) {}
@@ -2241,11 +2246,17 @@ import { skh } from './00-bootstrap.js';
         var cta = document.createElement('div');
         cta.id = 'goWizardCTA';
         cta.style.cssText = 'margin-bottom:12px;display:flex;gap:8px;';
+        if (!goEnabled()) {
+          cta.innerHTML = '<div data-go-disabled=\"1\" style=\"flex:1;border:1px dashed #cbd5e1;background:#f8fafc;color:#475569;font-weight:700;padding:12px;border-radius:12px;text-align:center;\">Oda za Pamoja zinakuja hivi karibuni. Kwa sasa tumia Group Buy kwenye ukurasa wa bidhaa.</div>';
+          ordersTab.prepend(cta);
+          return;
+        }
         cta.innerHTML = '<button type=\"button\" data-act=\"go-wiz-open\" style=\"flex:1;border:none;background:linear-gradient(135deg,#1268A8,#18A982);color:#fff;font-weight:900;padding:12px;border-radius:12px;cursor:pointer;\">+ New Group Order (8 Steps)</button>';
         ordersTab.prepend(cta);
         cta.querySelector('[data-act=\"go-wiz-open\"]').addEventListener('click', function () {
           var gid = window.__skhGroupSogaCurGid || (function () { try { return document.getElementById('skhGroupSogaModal').getAttribute('data-gid') || CUR && CUR.gid; } catch (e) { return null; } })() || (typeof CUR !== 'undefined' ? CUR.gid : null);
           if (!gid) { alert('Fungua kikundi kwanza'); return; }
+          if (!goEnabled()) { goOff(); return; }
           openWizardModal(gid);
         });
       }

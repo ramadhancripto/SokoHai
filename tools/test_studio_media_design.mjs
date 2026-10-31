@@ -10,7 +10,11 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const harness=fs.mkdtempSync(path.join(os.tmpdir(),'skh-studio-'));
+// [REPAIR 2026-10] creative-model.js imports '../../../shared/ads-design-rules.js'.
+// With --preserve-symlinks the harness must sit two levels below the repo root so
+// that relative import resolves to <root>/shared (os.tmpdir() resolved to '/shared').
+fs.mkdirSync(path.join(root,'.tmp'),{recursive:true});
+const harness=fs.mkdtempSync(path.join(root,'.tmp','skh-studio-'));
 fs.mkdirSync(path.join(harness,'creative'),{recursive:true});
 for(const f of ['creative-model.js','creative-history.js','creative-svg-renderer.js']){
   fs.symlinkSync(path.join(root,'js/app/creative',f),path.join(harness,'creative',f));

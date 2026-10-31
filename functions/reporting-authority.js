@@ -3,6 +3,8 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const { resolveBusinessStoreContext } = require('./business-store-authority');
+// [POS 2026-11-01] decimal (kg/L/m) quantities: totals are cleaned of float drift once, at the end.
+const Q = require('./shared/quantity-core');
 const db = admin.firestore();
 const REGION = 'europe-west1';
 
@@ -94,6 +96,8 @@ function aggregateReport(input = {}) {
   report.summary.netSales = report.summary.grossSales - report.summary.returnedAmount - report.summary.voidValue;
   for (const row of Object.values(report.products)) row.netSales = row.grossSales - row.returnsValue;
   report.summary.netSales = Math.round(report.summary.netSales * 100) / 100;
+  for (const row of Object.values(report.products)) ['quantitySold', 'quantityReturned', 'quantityVoided'].forEach(k => { if (typeof row[k] === 'number') row[k] = Q.sumQuantities([row[k]]); });
+  if (report.inventory && typeof report.inventory === 'object') Object.keys(report.inventory).forEach(k => { if (typeof report.inventory[k] === 'number') report.inventory[k] = Q.sumQuantities([report.inventory[k]]); });
   return report;
 }
 

@@ -66,7 +66,11 @@ Object.keys(skh.masterCommands).forEach(key => {
     if (typeof cmd === 'function') window[key] = cmd;
 });
 
-populateFormCategories();
+// [REPAIR 2026-10] 05-forms.js defines this; in the browser it can finish after
+// this module (it loads the large taxonomy first), which threw a ReferenceError
+// and stopped the rest of 17-hub.js. Call it now if ready, otherwise on load.
+if (typeof window.populateFormCategories === 'function') window.populateFormCategories();
+else window.addEventListener('load', function () { if (typeof window.populateFormCategories === 'function') window.populateFormCategories(); }, { once: true });
 
 skh.localStorage.setItem('sokohai_mode', 'buyer');
 
@@ -1263,7 +1267,10 @@ window.generateSokoPayCode = async function() {
             contractType: type,
             title: name,
             price: amount,
-            platformFee: platformFee,
+            // [REPAIR 2026-10 B-13] platformFee is a server-only field (rules); the
+            // server computes the real fee at release. Sending it made every link
+            // creation fail with PERMISSION_DENIED. Kept only as an estimate.
+            estimatedPlatformFee: platformFee,
             carrierShare: carrierShare,
             sellerShare: sellerShare,
             partnerContact: partner,
@@ -1869,7 +1876,7 @@ window.verifyAndPreviewSokoPay = async function() {
 
     try {
         // Tafuta mkataba kwenye Firestore wenye msimbo huu na ambao haujalipiwa (status == pending)
-        const q = skh.query(skh.collection(skh.db, "sokopay_links"), skh.where("code", "==", code), skh.where("status", "==", "pending"));
+        const q = skh.query(skh.collection(skh.db, "sokopay_links"), skh.where("code", "==", code), skh.where("status", "==", "pending"), skh.limit(1));
         const snap = await skh.getDocs(q);
 
         if (snap.empty) {
@@ -1949,33 +1956,13 @@ window.executeSokoPayWalletPayment = async function(linkDocId, price) {
             throw new Error((payRes && payRes.data && payRes.data.message) || "Malipo ya wallet hayakukamilika.");
         }
 
-        // C. Sajili muamala kwenye orders collection kwa mnyororo mkuu wa kufuatilia (Tracking)
-        await skh.addDoc(skh.collection(skh.db, "orders"), {
-            buyerId: skh.currentUser.uid,
-            buyerName: skh.currentUser.displayName || "Mwanachama",
-            sellerId: skh.currentOpenProduct.userId,
-            sellerName: skh.currentOpenProduct.ownerName,
-            itemId: linkDocId,
-            itemTitle: skh.currentOpenProduct.title,
-            amount: price,
-            status: "held", // Pesa ipo locked salama
-            paymentRef: skh.currentOpenProduct.code,
-            paymentType: "Wallet Payout",
-            date: new Date().toISOString(),
-            ...(typeof window.skhAssistMeta === 'function' ? window.skhAssistMeta() : {})
-        });
+        // C. [REPAIR 2026-10 C2] Oda ya kufuatilia (tracking) sasa inaundwa na SERVER
+        // ndani ya transaction ileile ya sokopayLinkWalletPay (orders/splink_<linkId>),
+        // ikiwa tayari 'held' + paymentVerified. Kivinjari hakiandiki tena 'held'.
 
-        // D. Mtumie muuzaji/mtoa huduma taarifa (Notification) kwamba mkataba umefungwa na pesa ipo salama
-        await skh.addDoc(skh.collection(skh.db, "notifications"), {
-            userId: skh.currentOpenProduct.userId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.escrowFunded',
-                params: { title: String(skh.currentOpenProduct.title || ''), amount: price.toLocaleString() },
-            title: " SokoPay: Malipo ya Escrow Yamefungwa!",
-            body: `Mteja ameshalipia mkataba wa "${skh.currentOpenProduct.title}" (TSh ${price.toLocaleString()}) kwa kutumia Wallet. Pesa ipo locked kwenye Escrow ya SokoPay, unaweza kuanza kazi/kusafirisha sasa.`,
-            createdAt: new Date().toISOString(),
-            read: false
-        });
+        // D. [PHASE 9 B-16] Taarifa kwa muuzaji ("escrow imefungwa") sasa inatumwa na
+        // SERVER ndani ya sokopayLinkWalletPay baada ya kuthibitisha malipo. Kivinjari
+        // hakiruhusiwi tena kumwambia mtu mwingine kuwa pesa imefika (rules).
 
         alert(` USALAMA IMETIMIA!\n\nTSh ${price.toLocaleString()} imekatwa kwenye Wallet yako na kufungwa salama kwenye Escrow ya SokoPay.\n\nMuuzaji ameshapewa taarifa kuanza kutoa huduma au kusafirisha mzigo.`);
         
@@ -2014,7 +2001,7 @@ window.trackSokoPayTransaction = async function() {
 
     try {
         // Tafuta mkataba kwenye sokopay_links
-        const q = skh.query(skh.collection(skh.db, "sokopay_links"), skh.where("code", "==", code));
+        const q = skh.query(skh.collection(skh.db, "sokopay_links"), skh.where("code", "==", code), skh.limit(1));
         const snap = await skh.getDocs(q);
 
         if (snap.empty) {
@@ -2166,6 +2153,14 @@ window.submitStockTransfer = async function() {
             return;
         }
 
+        // [F7 2026-10-31] The transfer id is created FIRST and is the idempotency
+        // key: retrying the same transfer never deducts twice, and two different
+        // transfers of the same product/quantity are never merged into one.
+        // (The old key used an undeclared ride-id variable -> ReferenceError, so the
+        // transfer always failed before any stock moved.)
+        const transferRef = skh.doc(skh.collection(skh.db, "stock_transfers"));
+        const transferId = transferRef.id;
+
         // Punguza stock ya Tawi Kuu na kuweka kwenye hali ya 'Safarini' (In-Transit)
         await skh.wrapCallable('inventoryAdjust')({
             productId,
@@ -2173,7 +2168,7 @@ window.submitStockTransfer = async function() {
             movementType: 'TRANSFER',
             source: 'STOCK_TRANSFER_OUT',
             reason: 'Stock transfer to ' + dest,
-            idempotencyKey: 'transfer-out-' + (rideId || productId) + '-' + qty,
+            idempotencyKey: 'transfer-out-' + transferId,
             businessId: skh.currentUserData?.businessId || undefined,
             storeId: skh.currentUserData?.storeId || undefined
         });
@@ -2184,7 +2179,9 @@ window.submitStockTransfer = async function() {
         const deliveryToken = (skh.secureToken ? skh.secureToken('DT-') : ("DT-" + Math.random().toString(16).slice(2, 10).toUpperCase()));
 
         // Hifadhi muamala wa mhamisho katika 'stock_transfers'
-        await skh.addDoc(skh.collection(skh.db, "stock_transfers"), {
+        await skh.setDoc(transferRef, {
+            transferId,
+            outMovementKey: 'transfer-out-' + transferId,
             shopOwnerId: skh.currentUserData?.shopOwnerUid || skh.currentUser.uid,
             productId: productId,
             productName: prodSnap.data().title,

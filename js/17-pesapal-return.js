@@ -113,18 +113,9 @@
         }
         await fb.updateDoc(fb.doc(fb.db, 'orders', String(orderId)), patch);
 
-        try {
-            if (existing.sellerId) {
-                // Kitambulisho thabiti -> arifa isirudiwe (DEMO ikibofya mara mbili).
-                await fb.setDoc(fb.doc(fb.db, 'notifications', 'payprot_' + String(orderId)), {
-                    userId: existing.sellerId,
-                    title: ' SokoPay: Malipo Yamelindwa',
-                    body: 'Oda #' + orderId + ' imelipwa na fedha zimehifadhiwa Escrow. Tayarisha/endelea na oda sasa.',
-                    createdAt: now, read: false, type: 'order',
-                    orderId: String(orderId), negotiationId: existing.negotiationId || ctx.negotiationId || null
-                }, { merge: true });
-            }
-        } catch (e) { /* arifa si kikwazo */ }
+        /* [REPAIR 2026-10 M1] Arifa ya 'payprot_<orderId>' (Malipo Yamelindwa) sasa
+           inatumwa na SERVER pekee (postOrderPaymentProtectedEvent) baada ya
+           kuthibitisha PesaPal. Kivinjari hakiwezi kughushi arifa hii. */
 
         return { ok: true, orderId: String(orderId), amount: existing.amount };
     }
@@ -160,7 +151,8 @@
         var newUid = null;
         if (apiKey) {
             var signUpUrl = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + encodeURIComponent(apiKey);
-            var regRes = await fetch(signUpUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: authIdentifier, password: defaultPassword, returnSecureToken: false }) });
+            var acHeaders = (typeof window.skhAppCheckHeaders === 'function') ? await window.skhAppCheckHeaders() : {}; // [PHASE 9] App Check
+            var regRes = await fetch(signUpUrl, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, acHeaders), body: JSON.stringify({ email: authIdentifier, password: defaultPassword, returnSecureToken: false }) });
             var regData = await regRes.json();
             if (regData.error) throw new Error(regData.error.message);
             newUid = regData.localId;
@@ -318,14 +310,14 @@
         async function sellerMeta(sellerUid) {
             var out = { agentUid: null, agentCode: null, isOffline: false };
             try {
-                var q = fb.query(fb.collection(fb.db, 'users'), fb.where('uid', '==', String(sellerUid)));
-                var s = await fb.getDocs(q);
-                s.forEach(function (d) {
-                    var u = d.data() || {};
+                // [REPAIR 2026-10 C4] public card (users/{id} is private). agentCode is
+                // not public; the server derives the agent itself at escrow release.
+                var s = await fb.getDoc(fb.doc(fb.db, 'userCards', String(sellerUid)));
+                if (s && s.exists && s.exists()) {
+                    var u = s.data() || {};
                     out.agentUid = u.managedByAgentUid || null;
-                    out.agentCode = u.agentCode || null;
                     out.isOffline = !!u.isOfflineUser;
-                });
+                }
             } catch (e) { /* defensive */ }
             return out;
         }
@@ -367,11 +359,14 @@
                 selectedVariant: it.selectedVariant || null,
                 productSnapshot: { productId: it.id, title: it.title, image: it.image || '', unitPrice: parseFloat(it.price) || 0, selectedVariant: it.selectedVariant || null },
                 amount: items.length === 1 && pending.product ? (pending.amount || 0) : ((parseFloat(it.price) || 0) * Math.max(1, parseInt(it.quantity || 1, 10) || 1) || pending.amount || 0),
-                status: 'held', date: now,
+                /* [REPAIR 2026-10 C2] Oda inaundwa ikiwa HAIJALIPWA. 'held' + paid +
+                   paymentVerified huandikwa na SERVER pekee (settlePesaPalPayment, kupitia
+                   settleWithServer hapa chini au IPN) baada ya kuthibitisha PesaPal. */
+                status: 'payment_pending', paymentStatus: 'pending', date: now,
                 paymentRef: pending.txRef, transactionId: tid,
                 paymentType: pending.provider || 'PesaPal',
                 paymentMode: 'live_pesapal',
-                paymentVerified: true,
+                paymentVerified: false,
                 hostedCheckout: true,
                 delivery: delivery,
                 deliveryRequired: !!delivery.required,
@@ -452,18 +447,16 @@
                 await fb.updateDoc(fb.doc(fb.db, 'sokopay_links', String(pending.product.id)), {
                     buyerId: buyerUid, buyerName: buyerName, transactionId: tid
                 });
-                await fb.addDoc(fb.collection(fb.db, 'notifications'), {
-                    userId: pending.product.userId, title: ' Malipo ya SokoPay Yamepokelewa!',
-                    body: 'Mteja amelipia mkataba kwa PesaPal. Mtumie mzigo sasa na mpe namba ya usafirishaji.',
-                    createdAt: now, read: false
-                });
+                // [PHASE 9 B-16] Muuzaji anaarifiwa na SERVER pale tu PesaPal
+                // inapothibitisha malipo (notifyLinkEscrowFunded). Taarifa ya
+                // kivinjari ilitumwa kabla ya uthibitisho na ingeweza kughushiwa.
             } catch (e) { /* defensive */ }
         }
 
         try { localStorage.setItem('sokohai_cart', JSON.stringify([])); } catch (e) {}
         try {
             if (window.currentUser) {
-                var uq = fb.query(fb.collection(fb.db, 'users'), fb.where('uid', '==', window.currentUser.uid));
+                var uq = fb.query(fb.collection(fb.db, 'users'), fb.where('uid', '==', window.currentUser.uid), fb.limit(1));
                 var us = await fb.getDocs(uq);
                 us.forEach(function (d) { fb.updateDoc(fb.doc(fb.db, 'users', d.id), { cart: [] }); });
             }
@@ -502,9 +495,12 @@
                 break;
 
             case 'deposit_item': // serious deposit (group buy / mnada / price drop)
-                await fb.setDoc(fb.doc(fb.db, 'serious_deposits', ctx.depositId), { uid: ctx.uid, itemId: ctx.itemId, hasActiveDeposit: true, amountPaid: 1300, transactionId: tid, date: now });
-                // Accounting is server-authoritative; no client adminRevenue write.
-                summary = 'Deposit imekubaliwa na kuhakikiwa! Sasa unaweza kushiriki kwenye mfumo huu.';
+                /* [REPAIR 2026-10] Deposit inathibitishwa na SERVER (entitlementGrant):
+                   PesaPal paid + mlipaji ni wewe + kiasi >= bei ya server. */
+                var _eg = (window.skh && window.skh.wrapCallable) ? window.skh.wrapCallable('entitlementGrant') : (typeof window.skhCallable === 'function' ? window.skhCallable('entitlementGrant') : null);
+                if (!_eg) throw new Error('Huduma ya server (entitlementGrant) haipatikani.');
+                await _eg({ kind: 'deposit_item', itemId: ctx.itemId, orderTrackingId: tid });
+                summary = 'Deposit imethibitishwa na server! Sasa unaweza kushiriki kwenye mfumo huu.';
                 break;
 
             case 'payroll': // mshahara wa mfanyakazi
@@ -523,36 +519,27 @@
                 break;
 
             case 'boost': // boost ya tangazo
-                if (ctx.collectionName && ctx.itemId) {
-                    var boostDays = Math.max(1, Number(ctx.boostDays) || (ctx.collectionName === 'products' ? 3 : 7));
-                    var boostExpiresAt = ctx.boostExpiresAt || new Date(Date.parse(now) + boostDays * 86400000).toISOString();
-                    await fb.updateDoc(fb.doc(fb.db, ctx.collectionName, ctx.itemId), { isBoosted: true, boostTargetViews: ctx.targetViews || 1000, boostedViewsCount: 0, boostDays: boostDays, boostedAt: now, boostExpiresAt: boostExpiresAt });
-                }
-                // Accounting is server-authoritative; no client adminRevenue write.
+                // [REPAIR 2026-10] Boost inaamilishwa na SERVER baada ya kuthibitisha PesaPal na bei.
+                var _eg = (window.skh && window.skh.wrapCallable) ? window.skh.wrapCallable('entitlementGrant') : (typeof window.skhCallable === 'function' ? window.skhCallable('entitlementGrant') : null);
+                if (!_eg) throw new Error('Huduma ya server (entitlementGrant) haipatikani.');
+                await _eg({ kind: 'boost', collectionName: ctx.collectionName, itemId: ctx.itemId, targetViews: ctx.targetViews, boostDays: ctx.boostDays, orderTrackingId: tid });
                 summary = 'Tangazo lako limekuwa Boosted!';
                 break;
 
             case 'agent_registration': // usajili wa wakala
-                // [FIX] Kama ombi tayari liliandikwa kabla ya malipo (status: pending kwa admin),
-                // tunasasisha document hiyo hiyo kuwa 'paid' — hatufanyi duplicate.
-                if (ctx.agentDocId) {
-                    try {
-                        await fb.updateDoc(fb.doc(fb.db, 'agents', ctx.agentDocId), { paymentStatus: 'paid', isPaid: true, paymentRef: ctx.txRef || tid, paidAt: now });
-                    } catch (e) { /* document inaweza kukosekana kwenye legacy flow */ }
-                } else {
-                    // Legacy fallback: hakuna draft -> andika sasa.
-                    await fb.addDoc(fb.collection(fb.db, 'agents'), { userId: ctx.uid, userEmail: ctx.email, fullName: ctx.name, contact: ctx.phone, email: ctx.agentEmail || '', location: ctx.region, bio: ctx.bio || '', status: 'pending', paymentStatus: 'paid', isPaid: true, paymentRef: ctx.txRef || tid, createdAt: now });
-                }
-                // Accounting is server-authoritative; no client adminRevenue write.
-                // `recordRevenue` is retained in context for compatibility only.
-                summary = 'Ombi lako la uwakala limetumwa! (Ref: ' + esc(ctx.txRef || tid) + ')';
+                // [REPAIR 2026-10 C1] Ada ya wakala inathibitishwa na SERVER; ombi linabaki 'pending'
+                // mpaka Admin aidhinishe kupitia adminApproveAgent.
+                var _eg = (window.skh && window.skh.wrapCallable) ? window.skh.wrapCallable('entitlementGrant') : (typeof window.skhCallable === 'function' ? window.skhCallable('entitlementGrant') : null);
+                if (!_eg) throw new Error('Huduma ya server (entitlementGrant) haipatikani.');
+                if (ctx.agentDocId) await _eg({ kind: 'agent_registration', agentDocId: ctx.agentDocId, orderTrackingId: tid });
+                summary = 'Ada ya uwakala imethibitishwa. Ombi lako linasubiri uamuzi wa Admin. (Ref: ' + esc(ctx.txRef || tid) + ')';
                 break;
 
             case 'subscription': // usajili wa kifurushi
-                if (ctx.docId) {
-                    await fb.updateDoc(fb.doc(fb.db, 'users', ctx.docId), { isSubscribed: true, subscriptionType: ctx.title, subscriptionValidUntil: ctx.subExpiryDate || now, subStatus: 'Active' });
-                }
-                // Accounting is server-authoritative; no client adminRevenue write.
+                // [REPAIR 2026-10] Kifurushi kinaamilishwa na SERVER kwa bei ya server.
+                var _eg = (window.skh && window.skh.wrapCallable) ? window.skh.wrapCallable('entitlementGrant') : (typeof window.skhCallable === 'function' ? window.skhCallable('entitlementGrant') : null);
+                if (!_eg) throw new Error('Huduma ya server (entitlementGrant) haipatikani.');
+                await _eg({ kind: 'subscription', title: ctx.title, orderTrackingId: tid });
                 summary = 'Kifurushi chako (' + esc(ctx.title || '') + ') kimeamilishwa.';
                 break;
 

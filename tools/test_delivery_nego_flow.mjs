@@ -57,7 +57,8 @@ const skh = {
     doc: (db, coll, id) => ({ _coll: coll, _id: id }),
     query: () => ({}), where: () => ({}), orderBy: () => ({}), limit: () => ({}),
     onSnapshot: () => () => {}, getDocs: async () => ({ forEach() {} }),
-    getDoc: async (ref) => ({ exists: true, data: () => ref && ref._coll === 'drivers' ? driverDoc() : {} }),
+    getDoc: async (ref) => ({ exists: () => !!(ref && ref._coll === 'drivers'), // [REPAIR 2026-10] Firebase v10: exists() ni method
+    data: () => ref && ref._coll === 'drivers' ? driverDoc() : {} }),
     setDoc: async (ref, data) => { if (ref && ref._coll === 'negotiations') setNegotiations.push(data); },
     addDoc: async (col, data) => { addDocs.push({ col: col && col._col, data }); return { id: 'newdoc_x' }; },
     updateDoc: async () => {}, deleteDoc: async () => {},
@@ -118,8 +119,11 @@ console.log('\n[1] Tangazo la DEREVA â†’ fomu ya usafiri + kutuma (function
 
     $('#nf_packageDescription').value = 'Mfuko wa mahindi 2';
     $('#nf_packageCount').value = '1';
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const tomorrowStr = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    // [REPAIR 2026-10] tarehe ya KIENYEJI (kama fomu: nfTodayISO). toISOString() ni UTC,
+    // na kati ya 00:00–03:00 EAT ilitoa "jana" -> test ilishindwa kwa sababu ya saa.
+    const localISO = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const todayStr = localISO(new Date());
+    const tomorrowStr = localISO(new Date(Date.now() + 86400000));
     $('#nf_pickupDate').value = todayStr;
     $('#nf_deliveryDeadline').value = tomorrowStr;
     $('#nf_fee').value = '23000';

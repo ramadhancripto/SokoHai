@@ -25,7 +25,7 @@ try{
  for(const id of families){
   const leaf=queue.find(r=>r.categoryId===id).leaf;
   try{
-   await page.click('#previewSeller');await page.evaluate(()=>{skhProductBuilderReset();testDocs.clear();});
+   await page.click('#previewSeller');await page.evaluate(()=>{skhProductBuilderReset();testDocs.clear();/* [UX 2026-10-31] SKU + variants live in a collapsible group */const d=document.getElementById('sellerVariantsDetails');if(d)d.open=true;});
    await page.selectOption('#prodCategory',id);await page.selectOption('#prodSubCategory',leaf);
    await page.fill('#prodName',`${id} · Local test product`);await page.fill('#prodPrice','1000');await page.fill('#prodStock','3');await page.fill('#prodLocation','Dar es Salaam');await page.fill('#prodDesc',`Local UI verification: ${leaf}. Seller-entered test, not a source claim.`);await page.fill('#prodBarcode',id+'-TEST');await page.selectOption('#prodBaseUnit','Piece');
    await page.fill('#spbProductSku',id+'-SKU');await page.click('#spbSkipVariants');

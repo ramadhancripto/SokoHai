@@ -220,55 +220,33 @@ window.saveAdminSettings = function() {
     };
 
 window.approveAgent = async function(agentDocId, userUid) {
+        /* [REPAIR 2026-10 C1] Uidhinishaji wa wakala ni wa SERVER (adminApproveAgent):
+           server inathibitisha cheo cha admin, inatengeneza namba ya wakala ya kipekee,
+           inaandika users.isApprovedAgent + agents.status kwa transaction moja, na
+           kuweka rekodi ya kudumu kwenye admin_audit_log. Kivinjari hakiandiki tena. */
         if(!await skhConfirm("Una uhakika unataka kumpitisha mtumiaji huyu kuwa Wakala Rasmi?")) return;
-        
         try {
-            // 1. Tengeneza Namba ya Wakala
-            const generatedCode = "AGT-" + Math.floor(10000 + Math.random() * 90000);
-            
-            // 2. Badili status ya wakala na umpe code
-            await skh.updateDoc(skh.doc(skh.db, "agents", agentDocId), { status: "approved", agentCode: generatedCode });
-            
-            // 3. Mtafute user kwenye database umpe cheo na namba
-            const userQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", userUid));
-            const userSnap = await skh.getDocs(userQ);
-            
-            if(!userSnap.empty) {
-                const userDocId = userSnap.docs[0].id;
-                await skh.updateDoc(skh.doc(skh.db, "users", userDocId), { 
-                    isApprovedAgent: true,
-                    myAgentCode: generatedCode
-                });
-                
-                // 4. Mtumie Notification Mtumiaji
-                await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                    userId: userUid,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'agent.activated',
-                params: { code: generatedCode },
-                    title: " Hongera! Umeingia Kazini",
-                    body: `Sasa wewe ni Wakala Rasmi. Namba yako ni ${generatedCode}. Unaweza kusajili watu na kuanza kupiga hela!`,
-                    createdAt: new Date().toISOString(),
-                    read: false,
-                    type: 'agent'
-                });
-            }
-            alert(` Umempitisha Wakala! Namba yake ni ${generatedCode}`);
+            const call = (typeof skh.wrapCallable === 'function') ? skh.wrapCallable('adminApproveAgent') : null;
+            if (!call) throw new Error('Huduma ya server (adminApproveAgent) haipatikani.');
+            const res = await call({ agentDocId: agentDocId });
+            const code = res && res.data && res.data.agentCode;
+            alert(` Umempitisha Wakala! Namba yake ni ${code || '(imehifadhiwa)'}`);
             loadAdminDashboard();
         } catch(e) {
-            alert("Kosa: " + e.message);
+            alert("Kosa: " + ((e && e.message) || e));
         }
     };
 
 window.rejectAgent = async function(agentDocId) {
         const sababu = await skhPrompt("Andika sababu ya kumkataa (k.m. Picha haionekani vizuri):");
         if(sababu === null) return; // Kama admin amecancel
-        
         try {
-            await skh.updateDoc(skh.doc(skh.db, "agents", agentDocId), { status: "rejected", rejectReason: sababu });
+            const call = (typeof skh.wrapCallable === 'function') ? skh.wrapCallable('adminRejectAgent') : null;
+            if (!call) throw new Error('Huduma ya server (adminRejectAgent) haipatikani.');
+            await call({ agentDocId: agentDocId, reason: sababu });
             alert(" Umekataa ombi hili.");
             loadAdminDashboard(); // Refresh dashbodi
         } catch(e) {
-            alert("Kosa: " + e.message);
+            alert("Kosa: " + ((e && e.message) || e));
         }
     };

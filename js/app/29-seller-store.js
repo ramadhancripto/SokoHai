@@ -37,7 +37,7 @@ import { skh } from './00-bootstrap.js';
     async function getSellerDoc(uid) {
         if (!uid) return null;
         try {
-            var d = await skh.getDoc(skh.doc(skh.db, 'users', uid));
+            var d = await skh.getUserCard(uid);
             if (snapExists(d)) return d.data();
         } catch (e) {}
         return null;

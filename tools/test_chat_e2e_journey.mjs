@@ -371,6 +371,12 @@ let gidE2E = null;
 
 console.log('\n[J7] Group order: create â†’ join');
 {
+  // [REPAIR 2026-10 Phase 5] Group orders are behind system/config.features.chatGroupOrders
+  // until their server engine exists. Off -> clear refusal; on -> the UI flow below.
+  skh.sysConfig = Object.assign({}, skh.sysConfig || {}, { features: {} });
+  const off = await window.skhGroupOrderCreate(gidE2E, { productName: 'X', targetQty: 1, myQty: 1, targetPrice: 1 });
+  ok('group order imezimwa bila feature flag (ujumbe wazi)', !!(off && off.ok === false && off.reason === 'feature_disabled'));
+  skh.sysConfig.features.chatGroupOrders = true;
   const r = await window.skhGroupOrderCreate(gidE2E, {
     productName: 'Mchele Basmati', targetQty: 10, myQty: 2, targetPrice: 3500,
     deadline: '2026-12-31', deliveryMethod: 'shared', deliveryArea: 'Tegeta',

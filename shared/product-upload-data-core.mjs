@@ -165,4 +165,81 @@ function resolveVariantImages(product = {}, variant = {}) {
   return cleanList(product.images || product.image).map(text).filter(Boolean);
 }
 
-export { TEXT_TYPES, SELECTOR_TYPES, normalizeAttribute, normalizeAttributes, normalizeFilters, normalizeOption, normalizeOptions, normalizeVariant, normalizeFeatures, normalizeAdditionalInfo, normalizeProductUploadData, resolveVariantImages };
+/* [REPAIR 2026-10] Helpers the Product Builder (js/app/06-product-builder.js)
+   imports. They were referenced since commit 0ac2c17 but never exported, so the
+   whole builder module failed to load in the browser ("does not provide an
+   export named 'combinationKey'"). Pure functions, unit-tested in
+   tools/test_product_builder_helpers.mjs. */
+
+// Image URLs from a string, an array of strings, or upload objects {url|secure_url|src}.
+function imageList(value) {
+  const list = Array.isArray(value) ? value : (value ? [value] : []);
+  const urls = list.map(x => typeof x === 'string' ? x : (x && typeof x === 'object' ? (x.url || x.secure_url || x.src || '') : '')).map(text).filter(Boolean);
+  return [...new Set(urls)];
+}
+
+// Order-independent, case-insensitive signature of a variant's option map.
+function combinationKey(options) {
+  const o = options && typeof options === 'object' ? options : {};
+  return Object.keys(o)
+    .map(k => [text(k).toLowerCase(), text(o[k]).toLowerCase()])
+    .filter(([k, v]) => k && v)
+    .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+    .map(([k, v]) => k + '=' + v)
+    .join('|');
+}
+
+const MAX_COMBINATIONS = 500;
+// Cartesian product of selector values. Existing rows (same combination) keep
+// their price/stock/SKU/images/status; new rows get `defaults`, an id from
+// makeId() and start INACTIVE until the seller enables them.
+function generateCombinations(options, existing = [], makeId, defaults = {}) {
+  const opts = cleanList(options)
+    .map(o => ({ name: text(o && o.name), values: [...new Set(cleanList(o && o.values).map(v => text(v && typeof v === 'object' ? v.value : v)).filter(Boolean))] }))
+    .filter(o => o.name && o.values.length);
+  if (!opts.length) return [];
+  let combos = [{}];
+  for (const o of opts) {
+    const next = [];
+    for (const c of combos) for (const v of o.values) { if (next.length >= MAX_COMBINATIONS) break; next.push({ ...c, [o.name]: v }); }
+    combos = next;
+  }
+  const byKey = new Map(cleanList(existing).filter(v => v && v.options).map(v => [combinationKey(v.options), v]));
+  return combos.map((opt, i) => {
+    const prev = byKey.get(combinationKey(opt));
+    if (prev) return { ...prev, options: opt };
+    const id = typeof makeId === 'function' ? makeId() : stableId('variant', Object.values(opt).join('-'), i);
+    // New rows start switched OFF: the seller turns on the combinations they really stock.
+    return { ...defaults, variantId: String(id), options: opt, images: [], status: 'INACTIVE', available: false };
+  });
+}
+
+const COLOR_WORDS = new Set(['red', 'blue', 'green', 'black', 'white', 'yellow', 'pink', 'purple', 'orange', 'brown', 'grey', 'gray', 'gold', 'silver',
+  'nyekundu', 'bluu', 'kijani', 'nyeusi', 'nyeupe', 'njano', 'zambarau', 'kahawia', 'kijivu', 'dhahabu', 'fedha']);
+// Free text from "Others -> Add Custom" -> one suggestion {kind, name, value}
+// (kind: option | attribute | feature | additional). The seller still confirms
+// with Use / Edit / Skip, so this is a best guess, never a final decision.
+function suggestCustom(input) {
+  const raw = text(input).replace(/\s+/g, ' ');
+  if (!raw) return null;
+  const colon = raw.match(/^([^:]{1,60}):\s*(.+)$/);
+  if (colon) {
+    const name = text(colon[1]), value = text(colon[2]);
+    return value.includes(',') ? { kind: 'option', name, value: value.split(',').map(text).filter(Boolean).join(', '), selectorType: 'button' }
+      : { kind: 'attribute', name, value };
+  }
+  if (raw.includes(',')) {
+    const vals = raw.split(',').map(text).filter(Boolean);
+    let name = 'Option', selectorType = 'button';
+    if (vals.every(v => /^\d+(\.\d+)?\s*(gb|tb|mb)$/i.test(v))) name = 'Storage';
+    else if (vals.every(v => COLOR_WORDS.has(v.toLowerCase()))) { name = 'Color'; selectorType = 'color'; }
+    else if (vals.every(v => /^(xxs|xs|s|m|l|xl|xxl|xxxl|\d{1,3})$/i.test(v))) name = 'Size';
+    return { kind: 'option', name, value: vals.join(', '), selectorType };
+  }
+  const made = raw.match(/^(made in|imetengenezwa)\s+(.+)$/i);
+  if (made) return { kind: 'additional', name: 'Country of origin', value: text(made[2]) };
+  if (/^[A-Z][\w&.'-]{1,30}$/.test(raw)) return { kind: 'attribute', name: 'Brand', value: raw };
+  return { kind: 'feature', name: raw.slice(0, 80), value: raw };
+}
+
+export { TEXT_TYPES, SELECTOR_TYPES, normalizeAttribute, normalizeAttributes, normalizeFilters, normalizeOption, normalizeOptions, normalizeVariant, normalizeFeatures, normalizeAdditionalInfo, normalizeProductUploadData, resolveVariantImages, imageList, combinationKey, generateCombinations, suggestCustom };

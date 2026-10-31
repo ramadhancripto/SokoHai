@@ -1231,121 +1231,61 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <!--  UNIVERSAL PRODUCT FORM (BOS ENGINE v8.0) -->
 <form id="sellerForm" class="form-box" onsubmit="submitSeller(event)" style="padding: 25px; max-width: 500px; width: 95%;">
     <h3 style="color: var(--primary-dark); font-weight: 900; text-align: center; margin-top: 0; text-transform: uppercase;"> Weka Bidhaa / Stoo</h3>
-    
-    <!-- SWALI LA KWANZA: MTINDO WA MAUZO (VISIBILITY) -->
-    <div style="background: #f0f9ff; padding: 12px; border-radius: 12px; border: 1.5px solid var(--primary-blue); margin-bottom: 15px; text-align: left;">
-        <label style="font-weight: 900; font-size: 13px; color: var(--primary-dark); display: block; margin-bottom: 6px; text-transform: uppercase;"> Bidhaa Itaonekana Wapi? *</label>
+    <!-- [UX 2026-10-31] ONE seller form, grouped by what the seller is doing. Every id is unchanged;
+         groups that do not apply to the chosen sales mode are hidden (their values are kept). -->
+    <ol id="sellerFormProgress" aria-label="Maendeleo ya fomu" style="list-style:none; display:flex; flex-wrap:wrap; gap:6px; padding:0; margin:0 0 12px 0; font-size:12px;">
+        <li data-group="channel">1 · Inauzwa wapi</li><li data-group="what">2 · Bidhaa</li><li data-group="price">3 · Bei &amp; stock</li><li data-group="online">4 · Soko</li><li data-group="location">5 · Mahali</li>
+    </ol>
+    <div id="sellerDraftBanner" role="status" hidden style="background:#EAF8F2; border:1px solid #18A982; border-radius:12px; padding:10px 12px; margin-bottom:12px; text-align:left; font-size:13px;">
+        <span id="sellerDraftText">Una rasimu ambayo hukumaliza.</span>
+        <div style="display:flex; gap:8px; margin-top:8px;"><button type="button" id="sellerDraftRestore" style="padding:8px 12px; background:#18A982; color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Endelea nayo</button><button type="button" id="sellerDraftDiscard" style="padding:8px 12px; background:#e2e8f0; color:#334155; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Anza upya</button></div>
+    </div>
+    <div id="sellerCopyBanner" role="status" hidden style="background:#f0f9ff; border:1px solid var(--primary-blue); border-radius:12px; padding:10px 12px; margin-bottom:12px; text-align:left; font-size:13px;"></div>
+
+    <!-- 1. INAUZWA WAPI (sales mode; default = business mode) -->
+    <div data-sf-group="channel" style="background: #f0f9ff; padding: 12px; border-radius: 12px; border: 1.5px solid var(--primary-blue); margin-bottom: 14px; text-align: left;">
+        <label for="prodVisibility" style="font-weight: 900; font-size: 13px; color: var(--primary-dark); display: block; margin-bottom: 6px; text-transform: uppercase;">1 · Bidhaa inauzwa wapi? *</label>
         <select id="prodVisibility" onchange="window.toggleProductFormFields()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:bold; background:white;" required>
-            <option value="hybrid" selected> Hybrid (POS Dukani + Online Soko Kuu)</option>
-            <option value="offline_only"> Offline Only (POS na Stoo ya Ndani tu)</option>
-            <option value="online_only"> Online Only (Duka la Mtandaoni tu)</option>
+            <option value="hybrid" selected>Dukani + Mtandaoni (POS + Soko)</option>
+            <option value="offline_only">Dukani tu (POS na stoo)</option>
+            <option value="online_only">Mtandaoni tu (Soko la SokoHai)</option>
+            <option value="manage_only">Kusimamia tu (stoo pekee, haiuzwi)</option>
         </select>
+        <small id="prodVisibilityHint" style="display:block; color:#475569; margin-top:6px; font-size:12px;"></small>
     </div>
 
-    <!-- 1. TAARIFA ZA MSINGI (BASIC INFO) -->
-    <div style="text-align: left;">
-        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA BIDHAA / SIFA *</label>
+    <!-- 2. BIDHAA NI NINI (name + taxonomy, search first) -->
+    <div data-sf-group="what" style="background:#f8fafc; padding:14px; border-radius:15px; border:1px solid #cbd5e1; margin-bottom:14px; text-align:left;">
+        <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;">2 · Bidhaa ni nini?</b>
+        <label for="prodName" style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA BIDHAA *</label>
         <input type="text" id="prodName" placeholder="Mfano: Viatu vya Ngozi / Panadol 500mg" required maxlength="140" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px; outline:none;">
-        <!-- PRODUCT FOUNDATION: optional fields; no parallel product form/database. -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-            <div><label style="font-size:12px;font-weight:800;color:#64748b;">AINA YA BIDHAA</label><select id="prodProductType" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="physical">Physical</option><option value="digital">Digital</option><option value="retail">Retail</option><option value="wholesale">Wholesale</option><option value="custom">Custom</option><option value="made_to_order">Made to order</option></select></div>
-            <div><label style="font-size:12px;font-weight:800;color:#64748b;">HALI</label><select id="prodCondition" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option><option value="not_applicable">Not applicable</option></select></div>
-            <div><label style="font-size:12px;font-weight:800;color:#64748b;">UCHAPISHAJI</label><select id="prodPublicationStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="published">Published</option><option value="draft">Draft</option></select></div>
-            <div><label style="font-size:12px;font-weight:800;color:#64748b;">UPATIKANAJI</label><select id="prodAvailabilityStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="available">Available</option><option value="pre_order">Pre-order</option><option value="made_to_order">Made to order</option><option value="out_of_stock">Out of stock</option><option value="hidden">Hidden</option></select></div>
-        </div>
+        <label for="prodTaxonomySearch" style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">TAFUTA KATEGORIA <span id="prodTaxonomyNeed" style="font-weight:normal;"></span></label>
+        <input type="search" id="prodTaxonomySearch" autocomplete="off" placeholder="Andika: simu, mchele, viatu, saruji..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
+        <div id="prodTaxonomyResults" role="listbox" aria-label="Kategoria zinazolingana" style="display:flex; flex-direction:column; gap:6px; margin:8px 0 10px 0;"></div>
         <input type="hidden" id="prodVariants">
-<!-- Mfumo mgumu wa Dropdowns kwa kuuza ONLINE tu (Online & Hybrid) -->
+<!-- Kategoria (taxonomy): inaonekana kwa kila njia ya mauzo; ni lazima kwa soko tu -->
 <div id="onlineCategorySection" style="display:block; margin-bottom:12px;">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         <div>
-            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KATEGORIA *</label>
+            <label for="prodCategory" style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KATEGORIA <span class="sf-req">*</span></label>
             <select id="prodCategory" onchange="window.updateFormSubcats()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;"></select>
         </div>
         <div id="subCategoryContainer" style="display:none;">
-            <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">SUB-CATEGORY *</label>
+            <label for="prodSubCategory" style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">AINA NDOGO <span class="sf-req">*</span></label>
             <select id="prodSubCategory" onchange="window.generateSellerFilters()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; font-weight:bold;"></select>
         </div>
     </div>
 </div>
 
-<!-- Mfumo rahisi wa kuandika tu kwa OFFLINE STORE tu (Inarahisisha kazi kwa muuzaji) -->
+<!-- Dukani/kusimamia: kundi la ndani kama hutachagua kategoria -->
 <div id="offlineCategorySection" style="display:none; margin-bottom:12px;">
-    <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KATEGORIA YA NDANI (HIARI - ANDIKA MWENYEWE)</label>
+    <label for="prodOfflineCategory" style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KUNDI LA NDANI (HIARI, KAMA HUJACHAGUA KATEGORIA)</label>
     <input type="text" id="prodOfflineCategory" placeholder="Mfano: Vinywaji, Sabuni, Vyakula, nk" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:#f8fafc;">
 </div>
-    </div>
-
-
-    <div id="spbCreateMount">
-    <section id="productBuilder" class="spb" aria-label="Product Builder">
-      <header><span class="spb-kicker">PRODUCT BUILDER</span><h3>Taarifa za bidhaa</h3><p>Simple products are complete without variants. Add attributes, price, stock, SKU and optional images, then save.</p></header>
-      <label>Product SKU <input id="spbProductSku" type="text" autocomplete="off" placeholder="Seller SKU (optional)"></label>
-      <div id="spbNotice" role="status" aria-live="polite"></div>
-      <details open><summary>Mapendekezo ya category · hiari</summary><p>Use / Edit / Skip. Hakuna kinachohifadhiwa bila kuthibitisha.</p><div id="spbSuggestions"></div></details>
-      <p id="spbVariantChoice"><button type="button" id="spbSkipVariants">Skip Variants · keep simple</button></p><section><h4>Optional selectors</h4><div id="spbSelectorDetails" hidden><p>Buyer anachagua values kupata combination. Kila value inaweza kuwa na picha.</p><div id="spbOptions"></div></div><button type="button" id="spbAddOption">＋ Add Selector</button></section>
-      <section id="spbCombinationSection" hidden><h4>Variant combinations</h4><div class="spb-actions"><button type="button" id="spbGenerate">Generate variants</button><button type="button" id="spbManualVariant">＋ Add Variant Manually</button></div><p>Generated rows zinaanza disabled. Review bei, SKU, unit na stock kisha enable. Generate haitafuti rows zako.</p><div id="spbVariants"></div></section>
-      <section><h4>03 · Attributes</h4><p>Taarifa za bidhaa, si chaguo la variant.</p><div id="spbAttributes"></div><button type="button" id="spbAddAttribute">＋ Add Attribute</button></section>
-      <section><h4>04 · Filters</h4><p>Kwa discovery tu. Chagua attribute hapa; value yake haitarudiwa kwenye form.</p><div id="spbFilters"></div><button type="button" id="spbAddFilter">＋ Add custom filter</button></section>
-      <section><h4>05 · Features</h4><div id="spbFeatures"></div><button type="button" id="spbAddFeature">＋ Add Feature</button></section>
-      <section><h4>06 · Additional Information</h4><div id="spbAdditional"></div><button type="button" id="spbAddAdditional">＋ Add Information</button></section>
-      <section><h4>Others → Add Custom</h4><p>Seller fallback tu — si category ya kuonyesha buyer. Preview pendekezo, Use / Edit / Skip.</p><label for="spbOtherInput">Andika unachotaka kuongeza</label><textarea id="spbOtherInput" placeholder="64GB, 128GB, 256GB · Nike · Waterproof · Made in Tanzania"></textarea><button type="button" id="spbSuggestOther">Suggest &amp; Preview</button><div id="spbOtherPreview"></div></section>
-      <div id="spbEditor" hidden></div>
-    </section></div>
-
-    <!-- 2. QUANTITY & MEASUREMENT ENGINE (VIPIMO MAALUM) -->
-    <div style="background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #cbd5e1; margin-bottom: 15px; text-align: left;">
-        <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;"><span class="skh-ico" data-ico="scales"></span> Injini ya Vipimo na Ugeuzaji</b>
-        
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-            <div>
-                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KIPIMO CHA CHINI (BASE UNIT) *</label>
-                <select id="prodBaseUnit" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white;">
-                    <option value="Piece">Piece (Pcs / Kipande)</option>
-                    <option value="Kg">Kilogram (kg)</option>
-                    <option value="Gram">Gram (g)</option>
-                    <option value="Litre">Litre (L)</option>
-                    <option value="Ml">Millilitre (ml)</option>
-                    <option value="Meter">Meter (m)</option>
-                    <option value="Pair">Pair (Jozi)</option>
-                    <option value="Tablet">Tablet (Kidonge)</option>
-                    <option value="Bottle">Bottle (Chupa)</option>
-                </select>
-            </div>
-            <div>
-                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">BARCODE (HIARI)</label>
-                <input type="text" id="prodBarcode" placeholder="Scan / Andika Barcode" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
-            </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;">
+            <div><label for="prodProductType" style="font-size:12px;font-weight:800;color:#64748b;">AINA</label><select id="prodProductType" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="physical">Inashikika (physical)</option><option value="digital">Kidijitali (digital)</option><option value="retail">Rejareja</option><option value="wholesale">Jumla</option><option value="custom">Maalum (custom)</option><option value="made_to_order">Inatengenezwa kwa oda</option></select></div>
+            <div><label for="prodCondition" style="font-size:12px;font-weight:800;color:#64748b;">HALI</label><select id="prodCondition" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="new">Mpya</option><option value="used">Imetumika</option><option value="refurbished">Imekarabatiwa</option><option value="not_applicable">Haihusiki</option></select></div>
         </div>
-
-        <!-- Tiketi ya ufungaji wa jumla / Carton / Box -->
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:12px; color:var(--primary-blue); margin-bottom:10px;">
-            <input type="checkbox" id="prodHasBulk" onchange="window.toggleBulkPackagingFields()" style="width:18px; height:18px;">
-            Je, inauzwa kwa Katoni / Box / Jumla pia?
-        </label>
-
-        <!-- Dynamic Bulk Setup Fields -->
-        <div id="bulkPackagingFields" style="display:none; background:white; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-top:8px;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                <div>
-                    <label style="font-size: 13px; font-weight:bold; color:gray;">KIPIMO CHA JUMLA (BULK UNIT)</label>
-                    <select id="prodBulkUnit" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;">
-                        <option value="Box">Box (Sanduku)</option>
-                        <option value="Carton">Carton (Katoni)</option>
-                        <option value="Crate">Crate (Kesi)</option>
-                        <option value="Sack">Sack (Gunia)</option>
-                        <option value="Bag">Bag (Mfuko)</option>
-                        <option value="Tray">Tray (Trei)</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size: 13px; font-weight:bold; color:gray;">PC NGAPI NDANI? *</label>
-                    <input type="number" id="prodConversionRatio" value="12" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; outline:none;">
-                </div>
-            </div>
-            <small style="color:var(--primary-dark); font-size: 12.5px; display:block;">Mfano: <b>1 Katoni = Vipande 12 vya Base Unit</b>. Ukiingiza stock ya Katoni 5, mfumo utatengeneza vipande 60 stoo kuu yenyewe.</small>
-        </div>
-    </div>
-
     <!-- 3. SMART CATEGORY INTELLIGENCE (DAWA, SIMU, NK) -->
     <div id="smartCategoryFieldsBox" style="background:#fffbeb; border:1.5px dashed var(--gold); padding:15px; border-radius:15px; display:none; margin-bottom:15px; text-align:left;">
         <b style="color:#b45309; font-size:12px; display:block; margin-bottom:8px; text-transform:uppercase;"> Akili ya Kategoria (Dynamic Rules)</b>
@@ -1371,36 +1311,97 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         </div>
     </div>
 
-    <!-- 4. GLOBAL PRICING ENGINE -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left;">
-        <div>
-            <label style="font-size: 13px; font-weight:bold; color:gray;">BEI YA KUNUNUA (TSH) *</label>
-            <input type="number" id="prodBuyPrice" placeholder="Mfano: 20,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+    </div>
+
+    <!-- 3. BEI NA STOCK -->
+    <div data-sf-group="price" style="background:#f8fafc; padding:14px; border-radius:15px; border:1px solid #cbd5e1; margin-bottom:14px; text-align:left;">
+        <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;">3 · Bei na stock</b>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left;">
+            <div>
+                <label style="font-size: 13px; font-weight:bold; color:gray;" id="priceLabel" for="prodPrice">BEI YA KUUZA (TSH) <span class="sf-req">*</span></label>
+                <input type="number" id="prodPrice" placeholder="Mfano: 35,000" required min="0" inputmode="numeric" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold; color:green;">
+            </div>
+            <div>
+                <label for="prodBuyPrice" style="font-size: 13px; font-weight:bold; color:gray;">BEI YA KUNUNUA (HIARI)</label>
+                <input type="number" id="prodBuyPrice" placeholder="Kwa hesabu ya faida" min="0" inputmode="numeric" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+            </div>
         </div>
-        <div>
-            <label style="font-size: 13px; font-weight:bold; color:gray;" id="priceLabel">BEI YA KUUZA REJAREJA (TSH) *</label>
-            <input type="number" id="prodPrice" placeholder="Mfano: 35,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold; color:green;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; margin-bottom:12px; text-align: left;">
+            <div>
+                <label style="font-size: 13px; font-weight:bold; color:gray;" id="stockQuantityLabel" for="prodStock">IDADI YA STOCK *</label>
+                <input type="number" id="prodStock" min="0" step="1" value="1" required inputmode="numeric" style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+            </div>
+            <div>
+                <label for="prodLowStockAlert" style="font-size: 13px; font-weight:bold; color:gray;">TAHADHARI STOCK IKIFIKA *</label>
+                <input type="number" id="prodLowStockAlert" min="0" step="1" value="5" required inputmode="numeric" style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
+            </div>
+        </div>
+    <!-- 2. QUANTITY & MEASUREMENT ENGINE (VIPIMO MAALUM) -->
+    <div style="background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #cbd5e1; margin-bottom: 15px; text-align: left;">
+        <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;"><span class="skh-ico" data-ico="scales"></span> Kipimo, barcode na pakiti</b>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">KIPIMO (UNIT) *</label>
+                <select id="prodBaseUnit" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white;">
+                    <option value="Piece">Piece (Pcs / Kipande)</option>
+                    <option value="Kg">Kilogram (kg)</option>
+                    <option value="Gram">Gram (g)</option>
+                    <option value="Litre">Litre (L)</option>
+                    <option value="Ml">Millilitre (ml)</option>
+                    <option value="Meter">Meter (m)</option>
+                    <option value="Pair">Pair (Jozi)</option>
+                    <option value="Tablet">Tablet (Kidonge)</option>
+                    <option value="Bottle">Bottle (Chupa)</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">BARCODE (HIARI)</label>
+                <input type="text" id="prodBarcode" placeholder="Scan / Andika Barcode" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
+            </div>
+        </div>
+
+        <!-- Tiketi ya ufungaji wa jumla / Carton / Box -->
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:12px; color:var(--primary-blue); margin-bottom:10px;">
+            <input type="checkbox" id="prodHasBulk" onchange="window.toggleBulkPackagingFields()" style="width:18px; height:18px;">
+            Je, inauzwa pia kwa Katoni / Box (pakiti yenye idadi na bei yake)?
+        </label>
+
+        <!-- Dynamic Bulk Setup Fields -->
+        <div id="bulkPackagingFields" style="display:none; background:white; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-top:8px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">KIPIMO CHA PAKITI (PACK UNIT)</label>
+                    <select id="prodBulkUnit" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:white;">
+                        <option value="Box">Box (Sanduku)</option>
+                        <option value="Carton">Carton (Katoni)</option>
+                        <option value="Crate">Crate (Kesi)</option>
+                        <option value="Sack">Sack (Gunia)</option>
+                        <option value="Bag">Bag (Mfuko)</option>
+                        <option value="Tray">Tray (Trei)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight:bold; color:gray;">PC NGAPI NDANI? *</label>
+                    <input type="number" id="prodConversionRatio" value="12" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; outline:none;">
+                </div>
+            </div>
+            <small style="color:var(--primary-dark); font-size: 12.5px; display:block;">Mfano: <b>1 Katoni = Vipande 12 vya Base Unit</b>. Ukiingiza stock ya Katoni 5, mfumo utatengeneza vipande 60 stoo kuu yenyewe.</small>
         </div>
     </div>
 
     <!-- Dynamic Wholesale Price Field -->
     <div id="wholesalePriceFieldDiv" style="display:none; text-align:left; margin-top:10px;">
         <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue);">BEI YA KUUZA JUMLA / WHOLESALE (TSH) *</label>
+        <div style="font-size:11px;color:#64748b;margin:2px 0 6px;">Bei ya jumla ni punguzo kwa idadi kubwa (wholesale). Si bei ya katoni/pakiti: hiyo inawekwa kwenye sehemu ya pakiti.</div>
         <input type="number" id="prodWholesalePrice" placeholder="Mfano: 30,000" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--primary-blue); outline:none; font-weight:bold; color:var(--primary-blue);">
     </div>
 
-    <!-- 5. STOCK INPUT SYSTEM -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left;">
-        <div>
-            <label style="font-size: 13px; font-weight:bold; color:gray;" id="stockQuantityLabel">IDADI YA STOCK *</label>
-            <input type="number" id="prodStock" min="0" step="1" value="1" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
-        </div>
-        <div>
-            <label style="font-size: 13px; font-weight:bold; color:gray;">LOW STOCK ALERT *</label>
-            <input type="number" id="prodLowStockAlert" min="0" step="1" value="5" required style="width: 100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-weight:bold;">
-        </div>
     </div>
 
+    <!-- 4. SOKO LA MTANDAONI (only when the product is sold online) -->
+    <div id="sellerOnlineSection" data-sf-group="online" style="background:#f8fafc; padding:14px; border-radius:15px; border:1px solid #cbd5e1; margin-bottom:14px; text-align:left;">
+        <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;">4 · Soko la mtandaoni</b>
     <!-- 6. ONLINE ONLY / MARKET MODES FIELDS (SEHEMU YA SOKO LA MTANDAONI) -->
     <div id="onlineSpecificFields" style="display:none; text-align:left; margin-top:10px;">
         <div id="dynamicFiltersContainer" style="background:#f8fafc; padding:10px; border-radius:10px; margin-top:10px; display:none; border: 1px solid #e2e8f0;">
@@ -1491,13 +1492,50 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <script>/* Product media: primary + up to 5 additional images. */ if (window.skhInitPhotoPicker) { try { window.skhProdPicker = window.skhInitPhotoPicker({ galleryInput: 'prodImage', cameraInput: 'prodImageCam', previewId: 'prodImagePreviews', max: 6, min: 1, hintId: 'prodImageCount' }); } catch (e) { console.warn('picker:', e && e.message); } }</script>
     </div>
 
-    <!--  MPYA: SOKOHAI WAREHOUSE ZONE & LOCATION ENGINE -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;">
-        <input type="text" id="prodLocation" placeholder="Location (Mtaa/Soko) *" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
-        <input type="text" id="prodWarehouseZone" placeholder="Eneo la Ghala (Shelf / Zone - Mf: Shelf A-3)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
     </div>
 
-    <button type="submit" id="spbSaveDraft" formnovalidate>Save Draft</button>
+    <!-- 5. MAHALI (default = store address from the business profile) -->
+    <div data-sf-group="location" style="background:#f8fafc; padding:14px; border-radius:15px; border:1px solid #cbd5e1; margin-bottom:14px; text-align:left;">
+        <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:10px; text-transform:uppercase;">5 · Mahali bidhaa ilipo</b>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <input type="text" id="prodLocation" aria-label="Mahali (mtaa/soko)" placeholder="Mahali (Mtaa/Soko) *" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
+            <input type="text" id="prodWarehouseZone" aria-label="Rafu au eneo la ghala" placeholder="Rafu / eneo la ghala (hiari)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
+        </div>
+        <small id="prodLocationHint" style="display:block; color:#475569; margin-top:6px; font-size:12px;"></small>
+    </div>
+
+    <!-- 6. VARIANTS NA SIFA (hiari) -->
+    <details id="sellerVariantsDetails" style="text-align:left; margin-bottom:12px;">
+        <summary style="cursor:pointer; font-weight:800; color:var(--primary-dark); padding:10px 0;">6 · Rangi, saizi, variants na sifa za bidhaa · hiari</summary>
+    <div id="spbCreateMount">
+    <section id="productBuilder" class="spb" aria-label="Product Builder">
+      <header><span class="spb-kicker">VARIANTS NA SIFA</span><h3>Rangi, saizi na aina nyingine</h3><p>Bidhaa rahisi haihitaji variants. Ongeza chaguo (mf. Rangi, Saizi) tu kama mnunuzi anachagua, na kila variant ina bei, stock au picha yake.</p></header>
+      <label>SKU ya bidhaa (hiari) <input id="spbProductSku" type="text" autocomplete="off" placeholder="SKU yako (hiari)"></label>
+      <div id="spbNotice" role="status" aria-live="polite"></div>
+      <details open><summary>Mapendekezo kutoka kategoria · hiari</summary><p>Tumia / Hariri / Ruka. Hakuna kinachohifadhiwa bila wewe kuthibitisha.</p><div id="spbSuggestions"></div></details>
+      <p id="spbVariantChoice"><button type="button" id="spbSkipVariants">Haina variants · bidhaa rahisi</button></p><section><h4>Chaguo za mnunuzi (selectors) · hiari</h4><div id="spbSelectorDetails" hidden><p>Mnunuzi anachagua values kupata variant. Kila value (mf. rangi Nyeusi) inaweza kuwa na picha zake.</p><div id="spbOptions"></div></div><button type="button" id="spbAddOption">＋ Ongeza chaguo (mf. Rangi, Saizi)</button></section>
+      <section id="spbCombinationSection" hidden><h4>Variants (mchanganyiko)</h4><div class="spb-actions"><button type="button" id="spbGenerate">Tengeneza variants (Generate variants)</button><button type="button" id="spbManualVariant">＋ Ongeza variant mwenyewe (Add Variant Manually)</button></div><p>Variants mpya zinaanza zimezimwa. Kagua bei, SKU na stock kisha washa zilizopo; zima zisizokuwepo (mf. Nyeupe + Ndogo). Kutengeneza tena hakufuti variants zako.</p><div id="spbBulkApply" class="spb-actions" hidden><label>Bei kwa zote <input id="spbBulkPrice" type="number" min="0" inputmode="numeric"></label><label>Stock kwa zote <input id="spbBulkStock" type="number" min="0" step="1" inputmode="numeric"></label><button type="button" id="spbBulkApplyBtn">Weka kwa variants zilizowashwa</button></div><div id="spbVariants"></div></section>
+      <section><h4>Sifa za bidhaa (attributes)</h4><p>Maelezo ya bidhaa (mf. Brand, Material). Hayabadilishi bei wala stock.</p><div id="spbAttributes"></div><button type="button" id="spbAddAttribute">＋ Ongeza sifa</button></section>
+      <details id="spbMoreDetails" class="spb-more"><summary>Maelezo ya ziada · hiari (filters, features, taarifa nyingine)</summary>
+      <section><h4>Filters za utafutaji</h4><p>Kwa utafutaji sokoni tu. Chagua sifa iliyopo; thamani yake haijazwi tena.</p><div id="spbFilters"></div><button type="button" id="spbAddFilter">＋ Ongeza filter</button></section>
+      <section><h4>Features</h4><div id="spbFeatures"></div><button type="button" id="spbAddFeature">＋ Ongeza feature</button></section>
+      <section><h4>Taarifa nyingine</h4><div id="spbAdditional"></div><button type="button" id="spbAddAdditional">＋ Ongeza taarifa</button></section>
+      <section><h4>Nyingine → andika mwenyewe</h4><p>Kama hukupata unachotaka hapo juu. Ona pendekezo kisha Tumia / Hariri / Ruka.</p><label for="spbOtherInput">Andika unachotaka kuongeza</label><textarea id="spbOtherInput" placeholder="64GB, 128GB, 256GB · Nike · Waterproof · Made in Tanzania"></textarea><button type="button" id="spbSuggestOther">Pendekeza na onyesha</button><div id="spbOtherPreview"></div></section>
+      </details>
+      <div id="spbEditor" hidden></div>
+    </section></div>
+    </details>
+
+    <!-- 7. MIPANGILIO ZAIDI (defaults are fine for most sellers) -->
+    <details id="sellerMoreSettings" style="text-align:left; margin-bottom:6px;">
+        <summary style="cursor:pointer; font-weight:800; color:var(--primary-dark); padding:10px 0;">Mipangilio zaidi · hiari</summary>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><label for="prodPublicationStatus" style="font-size:12px;font-weight:800;color:#64748b;">UCHAPISHAJI</label><select id="prodPublicationStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="published">Chapisha (published)</option><option value="draft">Rasimu (draft)</option></select></div>
+            <div><label for="prodAvailabilityStatus" style="font-size:12px;font-weight:800;color:#64748b;">UPATIKANAJI</label><select id="prodAvailabilityStatus" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;"><option value="available">Inapatikana</option><option value="pre_order">Pre-order</option><option value="made_to_order">Inatengenezwa kwa oda</option><option value="out_of_stock">Imeisha</option><option value="hidden">Imefichwa</option></select></div>
+        </div>
+    </details>
+
+    <button type="submit" id="spbSaveDraft" formnovalidate>Hifadhi rasimu</button>
     <button type="submit" id="btnSeller" style="background: var(--primary-blue); color: white; width: 100%; padding: 16px; border-radius: 14px; font-weight: 900; margin-top: 15px; border: none; cursor: pointer; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(0,80,157,0.2);"> CHAPISHA BIDHAA SOKONI</button>
     <button type="button" class="btn-close" onclick="goBackToMenu()" style="width:100%; padding:12px; background:#e2e8f0; color:#334155; border:none; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">&lsaquo; Rudi Nyuma</button>
 </form>
@@ -3379,6 +3417,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/95-creative-studio.js"></script>
 <!-- One server-authoritative delivery/rotation controller for all campaign slots. -->
 <script type="module" src="js/app/96-ad-delivery-controller.js"></script>
+<script type="module" src="js/app/97-escrow-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Escrow (server-only actions) -->
+<script type="module" src="js/app/98-admin-control-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Udhibiti wa Admin (server-only actions) -->
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->
@@ -3887,6 +3927,12 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <b style="color:var(--primary-dark); display:block; font-size:14px;">Hybrid (Online + Offline)</b>
                     <small style="color:#64748b; font-size: 13px;">Unganisha mauzo ya POS dukani na duka la mtandaoni kote kwa pamoja.</small>
                 </div>
+                <!-- [2026-10-31] Kusimamia tu: stoo na kumbukumbu za biashara, bila POS wala soko. Channels zinaweza kuwashwa baadaye. -->
+                <div class="setup-option-card" id="modeCard_manage" onclick="window.selectOnboardingOption('businessMode', 'manage_only', this)">
+                    <div style="font-size:24px; margin-bottom:5px;"></div>
+                    <b style="color:var(--primary-dark); display:block; font-size:14px;">Kusimamia Tu (Stoo na Kumbukumbu)</b>
+                    <small style="color:#64748b; font-size: 13px;">Simamia stock, bei na kumbukumbu za biashara bila kuuza POS wala mtandaoni. Unaweza kuwasha mauzo baadaye bila kupoteza data.</small>
+                </div>
             </div>
 
             <!-- STEP 3: IDENTITY & TEMPORARY OPTIONS -->
@@ -3895,6 +3941,13 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">JINA LA DUKA *</label>
                 <input type="text" id="regShopName" placeholder="Mfano: Ramadhan Fashion Sale" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; outline:none;">
+
+                <!-- [2026-10-31] Anwani ya duka: inajazwa mara moja na kutumika kama mahali pa bidhaa (na pickup ukikubali). -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">MAHALI PA DUKA / STOO (HIARI)</label>
+                <input type="text" id="regStoreAddress" placeholder="Mfano: Kariakoo, Mtaa wa Congo, Dar es Salaam" maxlength="160" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:8px; outline:none;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--primary-dark); margin-bottom:15px; cursor:pointer;">
+                    <input type="checkbox" id="regPickupAvailable" style="width:18px; height:18px;"> Wateja wanaweza kuchukua bidhaa hapa (pickup)
+                </label>
 
                 <!-- Hizi zitaonekana TU kama akichagua TEMPORARY STORE -->
                 <div id="temporaryOnlyFields">

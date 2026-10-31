@@ -1,0 +1,152 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/taxonomy/mission/all-leaf-browser.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/taxonomy/mission/family-lifecycles.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/taxonomy/mission/family-variants.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'firebase.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'firestore.indexes.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'firestore.rules', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/ads-delivery.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/build-shared.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/creative.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/index.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/inventory-authority.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/negotiation.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/reporting-authority.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/shared/business-context-core.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'html/09-admin-sell.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'html/21-scripts.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/00-config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/11-uploads.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/17-pesapal-return.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/00-bootstrap.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/01-market.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/02-checkout.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/03-dashboard.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/04-orders-escrow.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/05-forms.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/06-product-builder.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/07-product.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/08-app-state.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/09-feed-announcements.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/12-sys-modes.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/14-map-onboarding.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/15-pos-sales.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/16-pos-admin-jobs.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/17-hub.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/21-sokopay.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/23-smart-cart.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/28-buyer-engagement.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/29-seller-store.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/30-seller-products.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/31-agent-assist.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/34-chat-core.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/39-product-core.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/39-product-showcase.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/39-showcase-logic.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/43-delivery-choice.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/54-error-core.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/64-my-profile.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/69-chat-groups.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/73-group-soga.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/74-group-order-system.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/95-creative-studio.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'netlify.toml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'seed-local-test-accounts.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'shared/business-context-core.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'shared/pos-product-identity-core.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'shared/product-upload-data-core.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/fixtures/product-preview-start.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_chat_e2e_journey.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_delivery_nego_flow.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_final_product_taxonomy_verification.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_functions_resilience.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_home_ads_product_cards_contract.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_local_functions_server.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_phase1_security.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_phase2_security.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_phase3_security.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_showcase.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_studio_media_design.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_taxonomy_all_leaf_browser.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/test_taxonomy_family_variants.mjs', LF will be replaced by CRLF the next time Git touches it
+8	1	.gitignore
+65	65	docs/taxonomy/mission/all-leaf-browser.json
+30	30	docs/taxonomy/mission/family-lifecycles.json
+180	180	docs/taxonomy/mission/family-variants.json
+2	2	firebase.json
+42	0	firestore.indexes.json
+924	478	firestore.rules
+3	3	functions/ads-delivery.js
+3	1	functions/build-shared.js
+3	3	functions/creative.js
+865	53	functions/index.js
+225	82	functions/inventory-authority.js
+3	0	functions/negotiation.js
+20	16	functions/package-lock.json
+1	1	functions/package.json
+4	0	functions/reporting-authority.js
+65	3	functions/shared/business-context-core.js
+132	94	html/09-admin-sell.html
+15	0	html/21-scripts.html
+147	94	index.html
+6	1	js/00-config.js
+38	4	js/11-uploads.js
+40	53	js/17-pesapal-return.js
+41	3	js/app/00-bootstrap.js
+4	9	js/app/01-market.js
+14	36	js/app/02-checkout.js
+11	5	js/app/03-dashboard.js
+7	5	js/app/04-orders-escrow.js
+216	1	js/app/05-forms.js
+49	16	js/app/06-product-builder.js
+37	64	js/app/07-product.js
+75	12	js/app/08-app-state.js
+28	20	js/app/09-feed-announcements.js
+21	5	js/app/12-sys-modes.js
+75	35	js/app/14-map-onboarding.js
+12	6	js/app/15-pos-sales.js
+2	2	js/app/16-pos-admin-jobs.js
+29	32	js/app/17-hub.js
+33	188	js/app/21-sokopay.js
+6	3	js/app/23-smart-cart.js
+7	5	js/app/28-buyer-engagement.js
+1	1	js/app/29-seller-store.js
+1	1	js/app/30-seller-products.js
+2	1	js/app/31-agent-assist.js
+7	2	js/app/34-chat-core.js
+12	0	js/app/39-product-core.js
+26	1	js/app/39-product-showcase.js
+27	4	js/app/39-showcase-logic.js
+1	1	js/app/43-delivery-choice.js
+3	1	js/app/54-error-core.js
+1	1	js/app/64-my-profile.js
+21	4	js/app/69-chat-groups.js
+10	5	js/app/73-group-soga.js
+13	2	js/app/74-group-order-system.js
+1	1	js/app/95-creative-studio.js
+16	1	netlify.toml
+31	1	package-lock.json
+10	3	package.json
+16	6	seed-local-test-accounts.mjs
+65	3	shared/business-context-core.js
+3	1	shared/pos-product-identity-core.js
+78	1	shared/product-upload-data-core.mjs
+4	0	tools/fixtures/product-preview-start.mjs
+6	0	tools/test_chat_e2e_journey.mjs
+7	3	tools/test_delivery_nego_flow.mjs
+10	6	tools/test_final_product_taxonomy_verification.mjs
+2	0	tools/test_functions_resilience.mjs
+3	2	tools/test_home_ads_product_cards_contract.mjs
+1	1	tools/test_local_functions_server.mjs
+44	15	tools/test_phase1_security.mjs
+87	29	tools/test_phase2_security.mjs
+1	1	tools/test_phase3_security.mjs
+9	4	tools/test_showcase.mjs
+5	1	tools/test_studio_media_design.mjs
+1	1	tools/test_taxonomy_all_leaf_browser.mjs
+2	2	tools/test_taxonomy_family_variants.mjs

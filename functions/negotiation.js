@@ -297,6 +297,9 @@ async function createOrderDoc(db, nego, negotiationId, agreements) {
         amount: total,
         currency: nego.currency || 'TZS',
         source: 'negotiation',
+        // [REPAIR 2026-10 H2] Price comes from the server-side negotiation record.
+        pricedByServer: true,
+        priceSource: 'negotiation',
         status: 'payment_pending',
         paymentStatus: 'pending',
         createdAt: nowIso(),

@@ -267,7 +267,7 @@ import { skh } from './00-bootstrap.js';
                 var u2 = active[i].userId;
                 if (u2 === uid()) continue;
                 var nm2 = u2;
-                try { var us = await skh.getDoc(skh.doc(skh.db, 'users', u2)); if (us && us.exists && us.exists()) nm2 = us.data().fullName || us.data().displayName || u2; } catch (eN) {}
+                try { var us = await skh.getUserCard(u2); if (us && us.exists && us.exists()) nm2 = us.data().fullName || us.data().displayName || u2; } catch (eN) {}
                 if (nm2 && txt.toLowerCase().indexOf('@' + String(nm2).toLowerCase()) >= 0) out.push(u2);
             }
         } catch (e) {}
@@ -535,7 +535,23 @@ import { skh } from './00-bootstrap.js';
     var GSG_GO_DELIVERY = ['individual', 'shared'];
     window.__GSG_GO_STATES = GSG_GO_STATES;
 
+    /* [REPAIR 2026-10 Phase 5] Oda za Pamoja ndani ya makundi ya chat zinahitaji
+     * injini ya server (malipo, mgawanyo, usafirishaji) ambayo bado haijajengwa;
+     * Firestore rules zinakataa maandishi ya kivinjari ya groupOrders. Mpaka Super
+     * Admin awashe system/config.features.chatGroupOrders === true, kuunda/kujiunga
+     * kunaonyesha ujumbe wa wazi badala ya kushindwa kimyakimya. Group Buy ya
+     * bidhaa (groupBuyJoin) haiathiriwi. */
+    window.skhGroupOrdersEnabled = function () {
+        var f = (skh.sysConfig && skh.sysConfig.features) || {};
+        return f.chatGroupOrders === true;
+    };
+    window.skhGroupOrdersDisabledNotice = function () {
+        var msg = 'Oda za Pamoja za kikundi zitafunguliwa hivi karibuni. Kwa sasa tumia Group Buy kwenye ukurasa wa bidhaa.';
+        try { if (typeof window.skhToast === 'function') window.skhToast(msg, 'info', 5000); } catch (e) {}
+        return { ok: false, reason: 'feature_disabled', message: msg };
+    };
     window.skhGroupOrderCreate = async function (gid, cfg) {
+        if (!window.skhGroupOrdersEnabled()) return window.skhGroupOrdersDisabledNotice();
         cfg = cfg || {};
         if (!uid()) return { ok: false, reason: 'auth' };
         var gs = await skh.getDoc(gRef(gid));
@@ -689,6 +705,7 @@ import { skh } from './00-bootstrap.js';
     };
 
     window.skhGroupOrderJoin = async function (gid, goid, qtyIn, extraIn) {
+        if (!window.skhGroupOrdersEnabled()) return window.skhGroupOrdersDisabledNotice();
         var mem = await goActiveMember(gid); if (!mem) return { ok: false, reason: 'not_member' };
         var ref = goRef(gid, goid);
         var snap = await skh.getDoc(ref);
@@ -909,7 +926,7 @@ import { skh } from './00-bootstrap.js';
             var pu = uids2[i], part = pcs[pu] || {}, qty = +part.qty || 0;
             seq++;
             var bName = pu;
-            try { var us = await skh.getDoc(skh.doc(skh.db, 'users', pu)); if (us && us.exists && us.exists()) bName = us.data().fullName || us.data().displayName || bName; } catch (eBN) {}
+            try { var us = await skh.getUserCard(pu); if (us && us.exists && us.exists()) bName = us.data().fullName || us.data().displayName || bName; } catch (eBN) {}
             var humanId = 'SH-2' + String(seq).padStart(3, '0');
             var amount = Math.round(qty * price);
             var oRef = await skh.addDoc(skh.collection(skh.db, 'orders'), {
@@ -1089,7 +1106,7 @@ import { skh } from './00-bootstrap.js';
                 var tUid = extra && extra.transporterUid;
                 if (!tUid) return { ok: false, reason: 'need_transporter' };
                 var tName = tUid;
-                try { var ts = await skh.getDoc(skh.doc(skh.db, 'users', tUid)); if (ts && ts.exists && ts.exists()) tName = ts.data().fullName || tName; } catch (eT) {}
+                try { var ts = await skh.getUserCard(tUid); if (ts && ts.exists && ts.exists()) tName = ts.data().fullName || tName; } catch (eT) {}
                 return fin({ transporterId: tUid, transporterName: tName, deliveryRequired: true }, 'assign_transporter');
             }
             case 'mark_ready': {
@@ -1620,7 +1637,7 @@ import { skh as _skh } from './00-bootstrap.js';
         var needs = Object.values(out).filter(function (r) { return !r.name; }).map(function (r) { return r.uid; });
         for (var i = 0; i < needs.length; i++) {
             try {
-                var us = await _skh.getDoc(_skh.doc(_skh.db, 'users', needs[i]));
+                var us = await _skh.getUserCard(needs[i]);
                 if (us && us.exists && us.exists()) { var u = us.data() || {}; out[needs[i]].name = u.fullName || u.displayName || u.username || needs[i]; }
             } catch (e2) {}
         }

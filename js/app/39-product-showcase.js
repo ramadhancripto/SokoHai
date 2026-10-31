@@ -17,7 +17,7 @@ import { skh } from './00-bootstrap.js';
 import {
     psAvailability, psCanBid, psSpecRows, psHasDetails,
     psSummarizeReviews, psRatingDisplay, psVariantGroups, psVariantDelta,
-    psBuildRails, psMoney, psNum, psTitle, psSellerName, psResolveStructuredVariant, psOptionValueAvailable,
+    psBuildRails, psMoney, psNum, psTitle, psSellerName, psResolveStructuredVariant, psOptionValueAvailable, psImagesForSelection,
     psIsVideo, PS_PRODUCT, PS_SERVICE, PS_DRIVER, PS_FETCH_CAP, PS_LOW_STOCK
 } from './39-showcase-logic.js';
 
@@ -229,7 +229,32 @@ import {
         var dEl = $('pmVarDelta');
         if (dEl) dEl.textContent = delta ? 'Ongezeko la chaguo: ' + psMoney(delta) : '';
         refreshTotals(p);
+        psShowSelectionImages(p);
     };
+
+    // [2026-10-31] Swap the gallery to the chosen variant's / colour's own pictures
+    // (then the general pictures, no repeats). Nothing chosen -> general pictures.
+    var psGeneralImages = new WeakMap(); // product object -> its general gallery (never written to data)
+    function psShowSelectionImages(p) {
+        var slider = $('pmImageSlider');
+        if (!slider) return;
+        if (!psGeneralImages.has(p)) psGeneralImages.set(p, (window.skhZoomImages || []).slice());
+        var general = psGeneralImages.get(p);
+        var own = psImagesForSelection(p, p.psVariants);
+        var pics = own.concat(general.filter(function (u) { return own.indexOf(u) === -1; }));
+        if (!pics.length) return;
+        var key = pics.join('|');
+        if (slider.getAttribute('data-variant-gallery') === key) return;
+        slider.setAttribute('data-variant-gallery', key);
+        window.skhZoomImages = pics;
+        window.skhZoomIndex = 0;
+        var esc = function (u) { try { return skh.skhEscape(String(u)); } catch (e) { return String(u); } };
+        var opt = function (u) { try { return skh.getOptimizedImageUrl(u); } catch (e) { return u; } };
+        slider.innerHTML = pics.map(function (pic, i) {
+            return '<div data-variant-image="' + (i < own.length ? 'own' : 'general') + '" onclick="window.openImageZoom(window.skhZoomImages, ' + i + ')" style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; cursor:zoom-in;"><img src="' + esc(opt(pic)) + '" alt="" style="width:100%; height:100%; object-fit:contain; pointer-events:none;"></div>';
+        }).join('');
+        slider.scrollLeft = 0;
+    }
 
     // Wrappers za urithi (18-cockpit selectors sasa ni data-driven;
     // hakuna tena ongezeko la kubahatisha la XXL).

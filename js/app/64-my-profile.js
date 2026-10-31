@@ -202,7 +202,7 @@
                 : {};
         } catch (e) { }
         try {
-            var d = await skh.getDoc(skh.doc(skh.db, 'users', uid));
+            var d = await skh.getUserCard(uid);
             if (d && d.exists && d.exists()) {
                 var dd = d.data() || {};
                 // firestore doc huwa na taarifa za firawa — zitangulize kabla ya cache.

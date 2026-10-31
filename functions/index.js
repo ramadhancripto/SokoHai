@@ -28,7 +28,12 @@ const admin = require('firebase-admin');
 const crypto = require('crypto');
 
 // Region ILIYOFUNGWA: client anaita getFunctions(app, "europe-west1")
-setGlobalOptions({ region: 'europe-west1', maxInstances: 10 });
+// [REPAIR 2026-10 M3] App Check on every callable. Roll-out: deploy with
+// APP_CHECK_ENFORCE unset (monitor in Firebase Console -> App Check -> Metrics),
+// then set APP_CHECK_ENFORCE=true in functions/.env and deploy again.
+// HTTP endpoints (pesapalIpn, sitemapXml) are not callables and stay open.
+const APP_CHECK_ENFORCE = String(process.env.APP_CHECK_ENFORCE || '').toLowerCase() === 'true';
+setGlobalOptions({ region: 'europe-west1', maxInstances: 10, enforceAppCheck: APP_CHECK_ENFORCE });
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -51,6 +56,25 @@ function ppConfig() {
     };
 }
 
+/* [PHASE 9] Live-money guard. The LIVE PesaPal host is only allowed in the
+ * production Firebase project (sokonet-3b847). A staging/emulator project that
+ * was given live keys or left PESAPAL_BASE_URL unset (default = live) is refused,
+ * unless PESAPAL_ALLOW_LIVE=true is set on purpose. */
+const PRODUCTION_PROJECT_ID = 'sokonet-3b847';
+function currentProjectId() {
+    if (process.env.GCLOUD_PROJECT) return process.env.GCLOUD_PROJECT;
+    try { return JSON.parse(process.env.FIREBASE_CONFIG || '{}').projectId || ''; } catch (e) { return ''; }
+}
+function pesapalLiveGuard(baseUrl) {
+    let host = '';
+    try { host = new URL(baseUrl).hostname; } catch (e) { throw new Error('PESAPAL_BASE_URL si URL halali.'); }
+    const live = host === 'pay.pesapal.com';
+    if (live && currentProjectId() !== PRODUCTION_PROJECT_ID && String(process.env.PESAPAL_ALLOW_LIVE || '').toLowerCase() !== 'true') {
+        throw new Error('PesaPal LIVE imezuiwa kwenye project "' + (currentProjectId() || '?') + '". Tumia sandbox (https://cybqa.pesapal.com/pesapalv3) kwenye staging.');
+    }
+    return { host, live };
+}
+
 // Token ya PesaPal inaishi ~dakika 5 — tunacache mpaka inakaribia kuisha
 let _ppToken = { value: '', expiresAt: 0 };
 
@@ -59,6 +83,7 @@ async function pesapalToken() {
     if (!c.consumerKey || !c.consumerSecret) {
         throw new Error('PESAPAL_CONSUMER_KEY / PESAPAL_CONSUMER_SECRET hazijasanidiwa (angalia functions/.env).');
     }
+    pesapalLiveGuard(c.baseUrl);
     const now = Date.now();
     if (_ppToken.value && _ppToken.expiresAt > now + 30000) return _ppToken.value;
 
@@ -141,7 +166,8 @@ function isAdmin(context) {
     // [PHASE 1 SECURITY 2026-09] Email ya admin lazima iwe IMETHIBITISHWA
     // (email_verified) — vinginevyo mtu angesajili akaunti kwa email hiyo.
     if (em && context.auth.token.email_verified === true && ADMIN_EMAILS().includes(em)) return true;
-    return !!(context.auth.token && context.auth.token.admin === true);
+    const tk = context.auth.token || {};
+    return tk.admin === true || tk.superAdmin === true || tk.role === 'admin';
 }
 
 /* ============================================================
@@ -230,6 +256,103 @@ async function ppInitiatorUid(tx) {
     } catch (e) { return null; }
 }
 
+/* ============================================================
+ * [REPAIR 2026-10 H2] SERVER PRICE CHECK
+ * ------------------------------------------------------------
+ * A browser-created order carries a browser-chosen `amount`. Before PesaPal
+ * money is attached to an order as escrow, the server recomputes the lowest
+ * legitimate price from its own records and refuses to settle an order that
+ * was under-priced. Sources (first match wins):
+ *   1. pricedByServer orders (negotiation engine, SokoPay link tracking order);
+ *   2. negotiationId  -> agreed unit price x quantity in `negotiations`;
+ *   3. sokopay link   -> link price;
+ *   4. products/{id}  -> base or variant price, adjusted for the commerce mode
+ *                        (price drop, group buy, wholesale tier, won auction);
+ *   5. services/{id}  -> fixed price only (negotiable services must negotiate);
+ *   6. Smart Cart `items[]` -> sum of the above per item.
+ * Anything else is held for admin review (status 'price_review'), never paid.
+ * ========================================================== */
+const { modeUnitPrice, modeEligibility, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
+// [PHASE 3 2026-10-31] Online reservation / stock commit (OFF unless system_config/inventory.mode says otherwise).
+const inventoryReservation = require('./inventory-reservation');
+const stockCore = require('./shared/inventory-reservation-core');
+async function expectedItemAmount(item, buyerUid, nowMs) {
+    const qty = Math.max(1, parseInt(item.quantity || item.qty || 1, 10) || 1);
+    const pid = String(item.productId || item.itemId || item.id || '');
+    if (pid && pid.indexOf('/') === -1) {
+        const ps = await db.doc('products/' + pid).get();
+        if (ps.exists) {
+            const p = ps.data() || {};
+            if (item.sellerId && String(p.userId || '') !== String(item.sellerId)) return { ok: false, reason: 'seller_mismatch' };
+            const elig = modeEligibility(p, buyerUid, nowMs);
+            if (elig) return { ok: false, reason: elig };
+            const vp = variantPrice(p, item.selectedVariant || item.variant || item.variantId);
+            const unit = modeUnitPrice(vp ? Object.assign({}, p, { price: vp }) : p, qty, buyerUid, nowMs);
+            return { ok: unit > 0, amount: unit * qty, source: 'products', reason: unit > 0 ? '' : 'no_price' };
+        }
+        const ss = await db.doc('services/' + pid).get();
+        if (ss.exists) {
+            const sv = ss.data() || {};
+            if (['negotiable', 'quotation_required', 'range', 'starting'].indexOf(String(sv.pricingModel || 'fixed')) !== -1) return { ok: false, reason: 'service_requires_negotiation' };
+            const unit = Number(sv.price || 0);
+            return { ok: unit > 0, amount: unit * qty, source: 'services', reason: unit > 0 ? '' : 'no_price' };
+        }
+    }
+    return { ok: false, reason: 'unknown_item' };
+}
+async function expectedOrderAmount(o, docId) {
+    const nowMs = Date.now();
+    if (o.pricedByServer === true) return { ok: true, amount: moneyOf(o.amount), source: o.priceSource || 'server' };
+    if (o.priceApprovedBy && Number(o.priceApprovedAmount) > 0) {
+        // [REPAIR 2026-10 B-01] Trust an admin price approval only when the
+        // permanent audit record written by adminApproveOrderPrice exists.
+        const aid = String(o.priceApprovalAuditId || '');
+        if (aid && aid.indexOf('/') === -1) {
+            const as = await db.doc('admin_audit_log/' + aid).get();
+            const a = as.exists ? (as.data() || {}) : {};
+            if (a.action === 'ORDER_PRICE_APPROVED' && a.target && docId && String(a.target.id || '') === String(docId)
+                && sameMoney(moneyOf((a.details || {}).amount), moneyOf(o.priceApprovedAmount))) {
+                return { ok: true, amount: moneyOf(o.priceApprovedAmount), source: 'admin_review' };
+            }
+        }
+        return { ok: false, reason: 'price_approval_unverified' };
+    }
+    if (o.negotiationId && String(o.negotiationId).indexOf('/') === -1) {
+        const ns = await db.doc('negotiations/' + o.negotiationId).get();
+        if (ns.exists) {
+            const n = ns.data() || {};
+            if (String(n.buyerId) !== String(o.buyerId) || String(n.sellerId) !== String(o.sellerId)) return { ok: false, reason: 'negotiation_parties_mismatch' };
+            const agreed = ['AGREEMENT', 'FINAL_AGREEMENT', 'ORDER_CREATED', 'COMPLETED'].indexOf(String(n.currentState || '')) !== -1;
+            const unit = Number(n.agreedUnitPrice || n.currentUnitPrice || 0);
+            const qty = Math.max(1, Number(n.quantity || 1));
+            if (!agreed || !(unit > 0)) return { ok: false, reason: 'negotiation_not_agreed' };
+            return { ok: true, amount: Math.round(Number(n.agreedTotal) > 0 ? Number(n.agreedTotal) : unit * qty), source: 'negotiation' };
+        }
+    }
+    const itemId = String(o.itemId || '');
+    if (itemId && itemId.indexOf('/') === -1) {
+        const ls = await db.doc('sokopay_links/' + itemId).get();
+        if (ls.exists) {
+            const L = ls.data() || {};
+            if (String(L.userId || '') !== String(o.sellerId || '')) return { ok: false, reason: 'seller_mismatch' };
+            return { ok: Number(L.price) > 0, amount: moneyOf(L.price), source: 'sokopay_link', reason: Number(L.price) > 0 ? '' : 'no_price' };
+        }
+    }
+    if (Array.isArray(o.items) && o.items.length) {
+        let sum = 0;
+        for (const it of o.items.slice(0, 50)) {
+            const r = await expectedItemAmount(Object.assign({ sellerId: o.sellerId }, it), o.buyerId, nowMs);
+            if (!r.ok) return r;
+            sum += r.amount;
+        }
+        return { ok: true, amount: sum, source: 'cart_items' };
+    }
+    if (o.productId || o.itemId || o.serviceId) {
+        return expectedItemAmount({ productId: o.productId || o.serviceId || o.itemId, quantity: o.quantity, selectedVariant: o.selectedVariant, sellerId: o.sellerId }, o.buyerId, nowMs);
+    }
+    return { ok: false, reason: 'no_price_source' };
+}
+
 /* Funga oda/link zilizolipwa kwa muamala wa PesaPal ULIOTHIBITISHWA.
  * Rejea (paymentRef ya oda / transactionId ya link) zinalinganishwa na
  * tracking id NA merchant_reference iliyorudishwa na PesaPal yenyewe.
@@ -242,9 +365,23 @@ async function settlePesaPalPayment(tx, source) {
     const usageRef = db.collection(ESCROW_HOLDS).doc('pptx_' + safeKey(tx.trackingId));
     const now = new Date().toISOString();
     const events = [];
+    const linkEvents = [];
     const initiatorUid = await ppInitiatorUid(tx);
+    // [REPAIR H2] Server price check for every candidate order (outside the
+    // transaction: product/negotiation prices are only a lower bound).
+    const priceOf = {};
+    for (const ref of refs) {
+        const pre = await db.collection('orders').where('paymentRef', '==', ref).limit(20).get();
+        for (const d of pre.docs) {
+            if (priceOf[d.id]) continue;
+            try { priceOf[d.id] = await expectedOrderAmount(d.data() || {}, d.id); }
+            catch (e) { priceOf[d.id] = { ok: false, reason: 'price_check_error' }; }
+        }
+    }
+    const stockConfig = await inventoryReservation._internal.loadConfig();
+    const unmatchedRef = db.collection('payment_reviews').doc(stockCore.ids.unmatchedReview(tx.trackingId));
     await db.runTransaction(async (t) => {
-        out.settled = []; out.skipped = []; events.length = 0;
+        out.settled = []; out.skipped = []; out.review = []; events.length = 0;
         const usageSnap = await t.get(usageRef);
         const usage = usageSnap.exists ? (usageSnap.data() || {}) : {};
         let used = Number(usage.usedAmount || 0);
@@ -264,6 +401,10 @@ async function settlePesaPalPayment(tx, source) {
         }).sort((a, b) => (a.kind + a.id).localeCompare(b.kind + b.id));
         const holds = [];
         for (const c of list) holds.push(await t.get(db.collection(ESCROW_HOLDS).doc(c.kind + '_' + c.id)));
+        // [PHASE 3] every stock read happens here, before the first write.
+        const fresh = list.filter((c, i) => c.kind === 'order' && !holds[i].exists);
+        const stockState = await inventoryReservation._internal.settlementPrepare(t, fresh, stockConfig);
+        const unmatchedSnap = list.length ? null : await t.get(unmatchedRef);
 
         list.forEach((c, i) => {
             const key = c.kind + '_' + c.id;
@@ -280,40 +421,79 @@ async function settlePesaPalPayment(tx, source) {
             if (used + amount > tx.amount + MONEY_EPS) {
                 out.skipped.push({ target: key, reason: 'amount_exceeds_payment' }); return;
             }
+            if (c.kind === 'order') {
+                const pc = priceOf[c.id];
+                if (!pc || !pc.ok || !(amount + MONEY_EPS >= moneyOf(pc.amount))) {
+                    const why = !pc ? 'price_unchecked' : (!pc.ok ? pc.reason : 'underpriced');
+                    out.skipped.push({ target: key, reason: 'price_' + why });
+                    t.update(c.ref, { paymentStatus: 'price_review', priceReviewReason: why,
+                        priceExpected: pc && pc.ok ? moneyOf(pc.amount) : null, priceReviewAt: now,
+                        pesapalTrackingId: tx.trackingId });
+                    return;
+                }
+            }
             used += amount;
             targets.push(key);
-            t.set(db.collection(ESCROW_HOLDS).doc(key), {
+            // [PHASE 3] stock is committed in THIS transaction, together with the
+            // escrow hold: a duplicate IPN finds the hold above and never commits twice.
+            const stockResult = c.kind === 'order'
+                ? inventoryReservation._internal.settlementDecide(stockState, c.id, c.data, now)
+                : { action: 'LEGACY', orderPatch: {} };
+            const needsReview = stockResult.action === 'NEEDS_REVIEW';
+            t.set(db.collection(ESCROW_HOLDS).doc(key), Object.assign({
                 kind: 'escrow_hold', target: c.kind, targetId: c.id,
                 amount: amount, payerUid: payer, payeeUid: payee,
                 method: 'pesapal', source: String(source || 'pesapal'),
                 pesapalTrackingId: tx.trackingId, merchantReference: tx.merchantReference || null,
                 paidAmount: tx.amount, verifiedAt: now, released: false
-            });
+            }, needsReview ? { blocked: true, blockedReason: 'INVENTORY_' + stockResult.reason } : {}));
             if (c.kind === 'order') {
                 const od = c.data;
+                const pcx = priceOf[c.id] || {};
                 const patch = {
+                    pricedByServer: true, priceSource: pcx.source || 'server_check', priceExpected: moneyOf(pcx.amount),
                     paymentStatus: 'paid', paymentVerified: true, paymentVerifiedBy: 'pesapal',
                     verifiedAmount: amount, paymentProtectedAt: now, paidAt: od.paidAt || now,
                     ipnAt: now, updatedAt: now
                 };
                 // Usirudishe nyuma oda iliyokwisha songa mbele (shipped/in_transit...).
-                if (['shipped', 'awaiting_pickup', 'in_transit', 'delivered', 'completed'].indexOf(String(od.status || '')) === -1) {
+                if (!needsReview && ['shipped', 'awaiting_pickup', 'in_transit', 'delivered', 'completed'].indexOf(String(od.status || '')) === -1) {
                     patch.status = 'held';
                     patch.heldAt = now;
                     if (od.commerceType === 'service') patch.serviceStatus = 'held';
                     else if (od.commerceType === 'transport') patch.transportStatus = 'held';
                     else patch.deliveryStatus = 'held';
                 }
+                Object.assign(patch, stockResult.orderPatch);
                 t.update(c.ref, patch);
-                events.push({ id: c.id, data: od });
+                if (needsReview) {
+                    // Money is verified but the goods are not secured: no shipping, no
+                    // release; admin re-reserves or refunds (adminPaymentReviewResolve).
+                    t.set(db.collection('payment_reviews').doc(stockCore.ids.review(c.id)), {
+                        kind: 'order_inventory', orderId: c.id, state: 'NEEDS_REVIEW', reason: stockResult.reason,
+                        buyerId: payer, sellerId: payee, amount, pesapalTrackingId: tx.trackingId,
+                        reviewDeadlineAt: stockResult.orderPatch.reviewDeadlineAt, createdAt: now, updatedAt: now
+                    }, { merge: true });
+                    out.review.push(key);
+                } else {
+                    events.push({ id: c.id, data: od });
+                }
             } else {
                 const L = c.data;
                 const patch = { paymentVerified: true, verifiedAmount: amount, updatedAt: now };
                 if (!L.status || L.status === 'pending' || L.status === 'held') { patch.status = 'held'; patch.paidAt = now; }
                 t.update(c.ref, patch);
+                linkEvents.push({ id: c.id, sellerId: L.userId || L.sellerId || '', title: L.title || L.itemTitle || '', amount });
             }
             out.settled.push(key);
         });
+        inventoryReservation._internal.settlementFlush(t, stockState, now);
+        // [PHASE 3] A verified payment that matches no order/link is kept for review (never applied).
+        if (!list.length && unmatchedSnap && !unmatchedSnap.exists) {
+            t.set(unmatchedRef, { kind: 'unmatched_payment', state: 'UNAPPLIED', pesapalTrackingId: tx.trackingId,
+                merchantReference: tx.merchantReference || null, paidAmount: tx.amount, initiatorUid: initiatorUid || null,
+                source: String(source || 'pesapal'), createdAt: now, updatedAt: now });
+        }
         t.set(usageRef, {
             kind: 'pesapal_tx', trackingId: tx.trackingId, merchantReference: tx.merchantReference || null,
             paidAmount: tx.amount, usedAmount: used, targets: targets, updatedAt: now
@@ -321,6 +501,9 @@ async function settlePesaPalPayment(tx, source) {
     });
     for (const ev of events) {
         await postOrderPaymentProtectedEvent(db, ev.id, ev.data, tx.trackingId, now);
+    }
+    for (const le of linkEvents) {
+        if (le.sellerId) await notifyLinkEscrowFunded(db, le.id, le.sellerId, le.title, le.amount, 'pesapal');
     }
     out.ok = true;
     return out;
@@ -539,6 +722,12 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
     // escrow — hivyo ushahidi wa escrow wa oda/link hiyo UNATUMIKA (released).
     // Bila hili, hali ya oda (client-writable) ingerudishwa 'held'/'shipped'
     // na escrowRelease/auto-release zingelipa MARA YA PILI.
+    // [REPAIR 2026-10 §4] An admin cannot change a balance silently: a written
+    // reason is required and an audit record is written in the same transaction.
+    const adminActing = admin_ && !(ownsWallet && amountTSh < 0);
+    if (adminActing && note.trim().length < 5) {
+        throw new HttpsError('invalid-argument', 'Admin: andika sababu (note) ya mabadiliko haya ya wallet (angalau herufi 5).');
+    }
     const disputeTarget = admin_ ? adminDisputeTarget(rawLedgerKey) : null;
     const disputeId = disputeTarget ? disputeTarget.id : null;
     if (disputeId && !(amountTSh > 0)) {
@@ -642,6 +831,14 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
             createdAt: new Date().toISOString()
         }, ledgerExtra));
         t.update(userRef, { walletBalance: FieldValue.increment(amountTSh) });
+        if (adminActing) {
+            t.set(db.collection('admin_audit_log').doc(), {
+                action: disputeTarget ? 'DISPUTE_PAYOUT' : 'WALLET_ADJUST',
+                actorUid: auth.uid, actorEmail: (auth.token && auth.token.email) || null, actorRole: 'admin',
+                target: { kind: 'wallet', userDocId: docId }, details: { amountTSh, type, ledgerKey, note, balanceBefore: cur },
+                createdAt: new Date().toISOString()
+            });
+        }
         if (dispHold) {
             const nowIso = new Date().toISOString();
             t.set(db.collection(ESCROW_HOLDS).doc(dispHold.id), Object.assign(dispHold.synth ? dispHold.data : {}, {
@@ -694,10 +891,25 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
 
     // [PHASE 1 SECURITY 2026-09] Mnunuzi wa oda (kutoka hali ya server) au admin PEKEE.
     const admin_ = isAdmin(req);
-    if (!admin_ && String(o.buyerId || '') !== auth.uid) {
+    const isBuyer = String(o.buyerId || '') === auth.uid;
+    if (!admin_ && !isBuyer) {
         throw new HttpsError('permission-denied', 'Ni mnunuzi wa oda hii (au admin) pekee anayeweza kutoa escrow.');
     }
-    return releaseOrderEscrow(orderId, { callerUid: auth.uid, trigger: admin_ ? 'admin' : 'buyer' });
+    if (o.status === 'disputed' || await hasOpenDispute('order', orderId)) {
+        throw new HttpsError('failed-precondition', 'Kuna mgogoro ulio wazi. Uamuzi wa Admin (adminResolveDispute) unahitajika.');
+    }
+    // [REPAIR 2026-10 §4] Admin override (not the buyer) needs a written reason
+    // and leaves a permanent audit record.
+    if (admin_ && !isBuyer) {
+        const reason = String((req.data || {}).reason || '').trim();
+        if (reason.length < 10) throw new HttpsError('invalid-argument', 'Admin: andika sababu ya kutoa escrow kwa niaba ya mnunuzi (angalau herufi 10).');
+        const r = await releaseOrderEscrow(orderId, { callerUid: auth.uid, trigger: 'admin' });
+        await adminAuth.writeAudit(req, 'ESCROW_RELEASE_OVERRIDE', { kind: 'order', id: orderId }, { reason, already: !!(r && r.already) });
+        return r;
+    }
+    const r = await releaseOrderEscrow(orderId, { callerUid: auth.uid, trigger: 'buyer' });
+    if (r && r.ok && !r.already) { try { await db.doc('orders/' + orderId).update({ buyerConfirmedAt: new Date().toISOString() }); } catch (e) {} }
+    return r;
 });
 
 /* Utoaji wa escrow ya ODA — smart-split atomic (muuzaji + carrier + wakala +
@@ -741,6 +953,11 @@ async function releaseOrderEscrow(orderId, ctx) {
         : ['held', 'shipped', 'awaiting_pickup', 'in_transit', 'delivered'].concat(stuckCompleted ? ['completed'] : []);
     if (okStatuses.indexOf(o.status) === -1) {
         throw new HttpsError('failed-precondition', 'Oda si kwenye escrow (status: ' + o.status + ').');
+    }
+    // [PHASE 3] A paid order whose goods were not secured (late payment, no stock)
+    // is under review: its escrow can only be refunded or re-reserved by admin.
+    if (stockCore.escrowReleaseBlocked(o)) {
+        throw new HttpsError('failed-precondition', 'Oda iko kwenye ukaguzi wa stock/refund (' + o.inventoryReviewState + '); escrow haiwezi kutolewa.');
     }
 
     const sellerId = String(o.sellerId || '');
@@ -843,6 +1060,9 @@ async function releaseOrderEscrow(orderId, ctx) {
         }
         const hs = await t.get(holdRef);
         if (hs.exists && hs.data().released === true) { alreadyReleased = true; return; } // chanzo kimeshatumika
+        if ((hs.exists && hs.data().blocked === true) || stockCore.escrowReleaseBlocked(co)) {
+            throw new HttpsError('failed-precondition', 'Escrow imezuiwa kwa ukaguzi wa stock/refund.');
+        }
         let linkRef = null, linkSnap = null;
         if (itemId && itemId.indexOf('/') === -1) {
             linkRef = db.doc('sokopay_links/' + itemId);
@@ -945,10 +1165,18 @@ exports.haipayReleaseLink = onCall({ region: REGION }, async (req) => {
     const L = linkSnap.data() || {};
     // [PHASE 1 SECURITY 2026-09] Mnunuzi wa link (aliyelipa) au admin PEKEE.
     const admin_ = isAdmin(req);
-    if (!admin_ && String(L.buyerId || '') !== auth.uid) {
+    const isBuyer = String(L.buyerId || '') === auth.uid;
+    if (!admin_ && !isBuyer) {
         throw new HttpsError('permission-denied', 'Ni mnunuzi aliyelipia link hii (au admin) pekee anayeweza kuitoa.');
     }
-    return releaseLinkEscrow(linkId, { callerUid: auth.uid, trigger: admin_ ? 'admin' : 'buyer' });
+    if (admin_ && !isBuyer) {
+        const reason = String((req.data || {}).reason || '').trim();
+        if (reason.length < 10) throw new HttpsError('invalid-argument', 'Admin: andika sababu ya kutoa escrow ya link (angalau herufi 10).');
+        const r = await releaseLinkEscrow(linkId, { callerUid: auth.uid, trigger: 'admin' });
+        await adminAuth.writeAudit(req, 'LINK_RELEASE_OVERRIDE', { kind: 'link', id: linkId }, { reason });
+        return r;
+    }
+    return releaseLinkEscrow(linkId, { callerUid: auth.uid, trigger: 'buyer' });
 });
 
 async function releaseLinkEscrow(linkId, ctx) {
@@ -1104,15 +1332,51 @@ exports.sokopayLinkWalletPay = onCall({ region: REGION }, async (req) => {
             payerUid: auth.uid, payeeUid: sellerId, method: 'wallet', source: 'sokopayLinkWalletPay',
             verifiedAt: now, released: false
         });
+        const buyerName = String(data.buyerName || (bs.data() || {}).fullName || 'Mwanachama').slice(0, 120);
         t.update(linkRef, {
             status: 'held', buyerId: auth.uid,
-            buyerName: String(data.buyerName || (bs.data() || {}).fullName || 'Mwanachama').slice(0, 120),
+            buyerName,
             paidAt: now, paymentType: 'Wallet Payout', paymentVerified: true, verifiedAmount: price
         });
-        result = { ok: true, linkId, amount: price, sellerId };
+        // [REPAIR 2026-10 C2] Tracking order is created by the SERVER in the same
+        // transaction (the browser may no longer create 'held' orders). Its escrow
+        // evidence is the link hold (getEscrowEvidence follows order.itemId).
+        const trackRef = db.doc('orders/splink_' + safeKey(linkId));
+        t.set(trackRef, {
+            buyerId: auth.uid, buyerName,
+            sellerId, sellerName: String(L.sellerName || L.ownerName || '').slice(0, 120),
+            itemId: linkId, itemTitle: String(L.title || L.itemTitle || 'SokoPay').slice(0, 180),
+            amount: price, quantity: 1, unitPrice: price, currency: 'TZS',
+            status: 'held', paymentStatus: 'paid', paymentVerified: true, paymentVerifiedBy: 'wallet',
+            verifiedAmount: price, paidAt: now, heldAt: now, paymentProtectedAt: now,
+            paymentRef: String(L.code || linkId), paymentType: 'Wallet Payout',
+            pricedByServer: true, priceSource: 'sokopay_link',
+            commerceType: L.commerceType || 'product', source: 'sokopayLinkWalletPay',
+            date: now, createdAt: now
+        }, { merge: true });
+        result = { ok: true, linkId, amount: price, sellerId, orderId: trackRef.id, title: String(L.title || 'SokoPay') };
     });
+    // [PHASE 9 B-16] The seller learns about the payment from the SERVER (the
+    // browser may no longer send "escrow funded" notices to other users).
+    if (result && result.ok && result.sellerId) await notifyLinkEscrowFunded(db, linkId, result.sellerId, result.title, result.amount, 'wallet');
     return result;
 });
+
+/* [PHASE 9 B-16] Idempotent "escrow funded" notice for a SokoPay link
+ * (server-only id prefix "escrow_", which the rules refuse to clients). */
+async function notifyLinkEscrowFunded(db, linkId, sellerId, title, amount, method) {
+    try {
+        const amt = Number(amount || 0);
+        await db.collection('notifications').doc('escrow_link_' + safeKey(linkId)).set({
+            userId: String(sellerId), type: 'escrow', system: true,
+            event: 'wallet.escrowFunded', params: { title: String(title || ''), amount: amt.toLocaleString() },
+            title: ' SokoPay: Malipo ya Escrow Yamefungwa!',
+            body: 'Mteja amelipia "' + String(title || 'mkataba') + '" (TSh ' + amt.toLocaleString() + ') kwa ' + (method === 'wallet' ? 'Wallet' : 'PesaPal')
+                + '. Pesa imethibitishwa na server na iko salama kwenye Escrow ya SokoPay. Unaweza kuanza kazi/kusafirisha sasa.',
+            linkId: String(linkId), createdAt: new Date().toISOString(), read: false
+        }, { merge: true });
+    } catch (e) { /* taarifa si kikwazo cha malipo */ }
+}
 
 /* ============================================================
  * 5) pesapalCheckout — kuanzisha malipo ya PesaPal (secret server-side)
@@ -1127,7 +1391,15 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
     const orderTrackingId = String(d.orderTrackingId || ('SKH_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)));
     const description = String(d.description || 'SokoHai Purchase').slice(0, 180);
     const merchantReference = String(d.merchantReference || d.externalId || orderTrackingId);
-    const redirectUrl = String(d.redirectUrl || c.defaultCallback);
+    // [REPAIR 2026-10 M5] Only return to SokoHai's own origins (no open redirect).
+    const allowedOrigins = String(process.env.PESAPAL_ALLOWED_RETURN_ORIGINS
+        || 'https://sokohaimarket.netlify.app,https://sokohaicom.netlify.app' + (process.env.FUNCTIONS_EMULATOR === 'true' ? ',http://localhost:5000,http://127.0.0.1:5000' : ''))
+        .split(',').map(x => x.trim().replace(/\/+$/, '')).filter(Boolean);
+    let redirectUrl = String(d.redirectUrl || c.defaultCallback);
+    try {
+        const ru = new URL(redirectUrl);
+        if (allowedOrigins.indexOf(ru.origin) === -1) redirectUrl = c.defaultCallback || allowedOrigins[0];
+    } catch (e) { redirectUrl = c.defaultCallback || allowedOrigins[0]; }
     const email = String(d.email || '');
     const phone = String(d.phone || '').replace(/^0/, '255');
     const names = String(d.customerName || 'Mteja').split(/\s+/).filter(Boolean);
@@ -1417,43 +1689,51 @@ async function runSokoPayAutoRelease(evt) {
         return !(verifiedMs > 0 && (nowMs - verifiedMs) < timeLimitMs);
     }
 
-    // --- A. ODA ZA SOKO KUU (status: shipped → completed baada ya 24h) ---
-    try {
-        const shipped = await db.collection('orders').where('status', '==', 'shipped').get();
-        for (const snap of shipped.docs) {
-            const od = snap.data() || {};
-            const clientMs = od.shippedAt ? Date.parse(od.shippedAt) : 0;
-            if (!(clientMs > 0 && (nowMs - clientMs) >= timeLimitMs)) continue;
-            // [PHASE 2 P3] Muda wa SERVER wa uandishi wa mwisho wa oda (Firestore
-            // updateTime) — shippedAt ya kivinjari haiwezi kurudishwa nyuma.
-            const updMs = snap.updateTime && typeof snap.updateTime.toMillis === 'function' ? snap.updateTime.toMillis() : 0;
-            if (!(updMs > 0 && (nowMs - updMs) >= timeLimitMs)) { out.orders.skipped++; continue; }
-            const ev = await getEscrowEvidence('order', snap.id, od, { recheckPesaPal: false });
-            if (!ev.ok || !heldLongEnough(od.shippedAt, ev)) { out.orders.skipped++; continue; }
-            // [PHASE 2 P6] Uwasilishaji unaoendelea → deliveryComplete italipa muuzaji + carrier.
-            if (await orderHasActiveDelivery(snap.id, od)) { out.orders.skipped++; continue; }
-            try {
-                const r = await releaseOrderEscrow(snap.id, { trigger: 'auto_release', callerUid: 'system', noCarrier: true, requireStatus: 'shipped' });
-                if (r && r.ok && !r.already) out.orders.released++; else out.orders.skipped++;
-            } catch (e) { out.orders.skipped++; console.warn('sokopayAutoRelease (order ' + snap.id + '):', e && e.message); }
-        }
-    } catch (e) { console.error('sokopayAutoRelease (orders):', e && e.message); }
+    // [REPAIR 2026-10 H3] Policy-driven fallback release (see PHASE 3 header).
+    // The old rule ("seller marks shipped, money moves 24h later") is removed:
+    // a seller can no longer collect escrow without independent delivery proof.
+    const cfg = await escrowConfig();
+    out.config = cfg;
+    // --- A. Orders with SERVER delivery proof, past the configured wait ---
+    if (cfg.autoReleaseAfterDeliveryHours) {
+        try {
+            const delivered = await db.collection('orders').where('status', '==', 'delivered').limit(500).get();
+            for (const snap of delivered.docs) {
+                const od = snap.data() || {};
+                const proofMs = Date.parse(od.deliveryProofAt || '') || 0;
+                if (!proofMs || ['buyer_code', 'courier_token_c'].indexOf(String(od.deliveryProofBy || '')) === -1) { out.orders.skipped++; continue; }
+                if (nowMs - proofMs < cfg.autoReleaseAfterDeliveryHours * 3600000) continue;
+                if (await hasOpenDispute('order', snap.id)) { out.orders.skipped++; continue; }
+                const ev = await getEscrowEvidence('order', snap.id, od, { recheckPesaPal: false });
+                if (!ev.ok) { out.orders.skipped++; continue; }
+                if (await orderHasActiveDelivery(snap.id, od)) { out.orders.skipped++; continue; }
+                try {
+                    const r = await releaseOrderEscrow(snap.id, { trigger: 'auto_release', callerUid: 'system', noCarrier: true, requireStatus: 'delivered' });
+                    if (r && r.ok && !r.already) out.orders.released++; else out.orders.skipped++;
+                } catch (e) { out.orders.skipped++; console.warn('sokopayAutoRelease (order ' + snap.id + '):', e && e.message); }
+            }
+        } catch (e) { console.error('sokopayAutoRelease (orders):', e && e.message); }
+    }
 
-    // --- B. MIKATABA YA NJE YA SOKOPAY (status: held → completed baada ya 24h) ---
-    try {
-        const held = await db.collection('sokopay_links').where('status', '==', 'held').get();
-        for (const snap of held.docs) {
-            const ld = snap.data() || {};
-            const clientMs = ld.paidAt ? Date.parse(ld.paidAt) : 0;
-            if (!(clientMs > 0 && (nowMs - clientMs) >= timeLimitMs)) continue;
-            const ev = await getEscrowEvidence('link', snap.id, ld, { recheckPesaPal: false });
-            if (!ev.ok || !heldLongEnough(ld.paidAt, ev)) { out.links.skipped++; continue; }
-            try {
-                const r = await releaseLinkEscrow(snap.id, { trigger: 'auto_release', callerUid: 'system' });
-                if (r && r.ok && !r.already) out.links.released++; else out.links.skipped++;
-            } catch (e) { out.links.skipped++; console.warn('sokopayAutoRelease (link ' + snap.id + '):', e && e.message); }
-        }
-    } catch (e) { console.error('sokopayAutoRelease (links):', e && e.message); }
+    // --- B. SokoPay links: only when an admin configured linkAutoReleaseHours ---
+    if (cfg.linkAutoReleaseHours) {
+        const linkLimitMs = cfg.linkAutoReleaseHours * 3600000;
+        try {
+            const held = await db.collection('sokopay_links').where('status', '==', 'held').limit(500).get();
+            for (const snap of held.docs) {
+                const ld = snap.data() || {};
+                const ev = await getEscrowEvidence('link', snap.id, ld, { recheckPesaPal: false });
+                if (!ev.ok) { out.links.skipped++; continue; }
+                const verifiedMs = Date.parse((ev.hold && ev.hold.verifiedAt) || '') || 0;
+                if (!(verifiedMs > 0 && (nowMs - verifiedMs) >= linkLimitMs)) continue;
+                if (await hasOpenDispute('link', snap.id)) { out.links.skipped++; continue; }
+                try {
+                    const r = await releaseLinkEscrow(snap.id, { trigger: 'auto_release', callerUid: 'system' });
+                    if (r && r.ok && !r.already) out.links.released++; else out.links.skipped++;
+                } catch (e) { out.links.skipped++; console.warn('sokopayAutoRelease (link ' + snap.id + '):', e && e.message); }
+            }
+        } catch (e) { console.error('sokopayAutoRelease (links):', e && e.message); }
+    }
     return out;
 }
 
@@ -1499,7 +1779,13 @@ async function requireApprovedAgent(context) {
         .where('userId', '==', auth.uid)
         .limit(50).get();
     let approved = false;
-    q.forEach(d => { if (d.data().status === 'approved') approved = true; });
+    // [REPAIR 2026-10 B-03] Before the C1 fix anyone could write agents.status /
+    // users.isApprovedAgent, so a bare 'approved' flag cannot be trusted. Only an
+    // approval stamped by the server for an admin (approvedBy / agentApprovedBy,
+    // written by adminApproveAgent) or the custom claim `agent` counts.
+    const tk = (auth && auth.token) || {};
+    if (tk.agent === true) approved = true;
+    q.forEach(d => { const a = d.data() || {}; if (a.status === 'approved' && a.approvedBy) approved = true; });
     // [FIX 2026-09] Kama agents bado haionyeshi approved, angalia alama ya
     // mtumiaji (users.isApprovedAgent) — approveAgent inaweka zote mbili,
     // lakini data ya zamani inaweza kuwa imekosa moja. Usimzuie wakala
@@ -1509,8 +1795,18 @@ async function requireApprovedAgent(context) {
             const uq = await db.collection('users')
                 .where('uid', '==', auth.uid)
                 .limit(5).get();
-            uq.forEach(d => { if (d.data().isApprovedAgent === true) approved = true; });
+            uq.forEach(d => { const u = d.data() || {}; if (u.isApprovedAgent === true && u.agentApprovedBy) approved = true; });
         } catch (e) { /* hiari — agents ndiyo chanzo kikuu */ }
+    }
+    // [REPAIR 2026-10 C1] Both signals are now admin/server-only (rules). A
+    // suspended/revoked agent or a suspended account is refused.
+    if (approved) {
+        try {
+            const ud = await userDocFor(auth.uid);
+            const u = (ud && ud.data) || {};
+            if (u.isSuspended === true || u.accountStatus === 'suspended'
+                || ['suspended', 'revoked'].indexOf(String(u.agentStatus || '')) !== -1) approved = false;
+        } catch (e) { /* keep decision */ }
     }
     if (!approved) throw new HttpsError('permission-denied', 'Wakala wako hajaidhinishwa kutumia Msaada wa Mwanachama. Subiri Admin akubali ombi lako.');
     return auth;
@@ -3301,6 +3597,15 @@ exports.posVoid = inventoryAuthority.posVoid;
 exports.posReceipt = inventoryAuthority.posReceipt;
 exports.posReconcile = inventoryAuthority.posReconcile;
 exports.inventoryAdjust = inventoryAuthority.inventoryAdjust;
+exports.productVariantsSave = inventoryAuthority.productVariantsSave;
+// [PHASE 3 2026-10-31] Online reservation (OFF by default; system_config/inventory).
+exports.inventoryReserve = inventoryReservation.inventoryReserve;
+exports.inventoryReleaseReservation = inventoryReservation.inventoryReleaseReservation;
+exports.inventoryReconcile = inventoryReservation.inventoryReconcile;
+exports.inventoryOrderCreated = inventoryReservation.inventoryOrderCreated;
+exports.inventoryOrderUpdated = inventoryReservation.inventoryOrderUpdated;
+exports.inventoryReservationSweep = inventoryReservation.inventoryReservationSweep;
+Object.defineProperty(exports, '_inventoryReservationForTest', { enumerable: false, value: Object.assign({}, inventoryReservation._internal, { settlePesaPalPayment }) });
 
 // POS-7 server-authoritative reports; projections are derived from existing POS authorities.
 const reportingAuthority = require('./reporting-authority');
@@ -3337,3 +3642,510 @@ exports.negotiationAction = negotiationEngine.negotiationAction;
 // [DELIVERY FLOW 2026-09] Mtiririko wa uwasilishaji wa oda za majadiliano
 // (paid → prepared → in_transit → delivered → confirmed). Server-authoritative.
 exports.negotiationOrderAction = negotiationEngine.negotiationOrderAction;
+
+// [REPAIR 2026-10] Server-only privileged admin actions with a permanent audit
+// trail (admin_audit_log). Agent approval, account suspension, role grants,
+// provider verification and listing moderation are no longer browser writes.
+// [REPAIR 2026-10 Phase 5] Auction bids and Group Buy joins are server-authoritative.
+const commerceModes = require('./commerce-modes');
+exports.auctionPlaceBid = commerceModes.auctionPlaceBid;
+exports.groupBuyJoin = commerceModes.groupBuyJoin;
+exports.commerceModesSweep = commerceModes.commerceModesSweep;
+// Test hook (emulator only): run the auction sweep now. Not a deployed function (not an onCall/onSchedule).
+Object.defineProperty(exports, '_commerceSweepForTest', { enumerable: false, value: () => commerceModes._testing.sweepAuctions() });
+const adminAuthority = require('./admin-authority');
+exports.adminApproveAgent = adminAuthority.adminApproveAgent;
+exports.adminRejectAgent = adminAuthority.adminRejectAgent;
+exports.adminSetAgentStatus = adminAuthority.adminSetAgentStatus;
+exports.adminSetAccountStatus = adminAuthority.adminSetAccountStatus;
+exports.adminSetRole = adminAuthority.adminSetRole;
+exports.adminSetVerification = adminAuthority.adminSetVerification;
+exports.adminModerateListing = adminAuthority.adminModerateListing;
+exports.adminAuditQuery = adminAuthority.adminAuditQuery;
+exports.adminWhoAmI = adminAuthority.adminWhoAmI;
+exports.adminSetEscrowPolicy = adminAuthority.adminSetEscrowPolicy;
+// [REPAIR 2026-10 C4] Public user cards: other people are read from userCards,
+// never from users/{id} (which now holds private data only for its owner).
+const userCards = require('./user-cards');
+exports.userCardSync = userCards.userCardSync;
+exports.adminBackfillUserCards = userCards.adminBackfillUserCards;
+Object.defineProperty(exports, '_userCardsForTest', { enumerable: false, value: userCards._testing });
+// [REPAIR 2026-10 M7] Every change to system/* settings is copied to admin_audit_log.
+const systemAudit = require('./system-audit');
+exports.systemConfigAudit = systemAudit.systemConfigAudit;
+exports.announcementsAudit = systemAudit.announcementsAudit;
+exports.adminMediaAudit = systemAudit.adminMediaAudit;
+// [PHASE 9 B-18] signed admin edits of orders / products / users
+exports.ordersAdminAudit = systemAudit.ordersAdminAudit;
+exports.productsAdminAudit = systemAudit.productsAdminAudit;
+exports.usersAdminAudit = systemAudit.usersAdminAudit;
+// [REPAIR 2026-10 H7] Signed Cloudinary uploads (secret stays on the server).
+const uploadSigning = require('./upload-signing');
+exports.uploadSignature = uploadSigning.uploadSignature;
+exports._pesapalGuardForTest = { pesapalLiveGuard, currentProjectId };
+Object.defineProperty(exports, '_uploadSigningForTest', { enumerable: false, value: uploadSigning._testing });
+Object.defineProperty(exports, '_systemAuditForTest', { enumerable: false, value: systemAudit._testing });
+
+/* =====================================================================
+ * [REPAIR 2026-10] PHASE 3 — SOKOPAY ESCROW POLICY, DELIVERY PROOF,
+ * DISPUTES, PRICE REVIEW AND PAID ENTITLEMENTS
+ * ---------------------------------------------------------------------
+ * Escrow release policy (system/config.escrow — set by a Super Admin):
+ *   1. Preferred: the BUYER confirms receipt (escrowRelease).
+ *   2. Courier deliveries: deliveryComplete (Token C from the receiver).
+ *   3. Seller/self delivery: the buyer gets a one-time delivery code
+ *      (orderDeliveryCodeIssue) and gives it to the seller only on hand-over;
+ *      the seller submits it (orderConfirmDelivery). The seller can never
+ *      generate or view that code.
+ *   4. Fallback auto-release only when `escrow.autoReleaseAfterDeliveryHours`
+ *      is a positive number AND server delivery proof exists AND no dispute
+ *      is open. If the setting is absent, there is NO automatic release.
+ *   5. SokoPay links (no delivery tracking) auto-release only when
+ *      `escrow.linkAutoReleaseHours` is set. Absent = buyer/admin release only.
+ *   6. An open dispute freezes the funds until adminResolveDispute.
+ * ===================================================================== */
+const adminAuth = require('./admin-authority')._internal;
+
+async function escrowConfig() {
+    let e = {};
+    try { const s = await db.doc('system/config').get(); e = (s.exists && (s.data() || {}).escrow) || {}; } catch (x) { e = {}; }
+    const num = v => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null);
+    return {
+        autoReleaseAfterDeliveryHours: num(e.autoReleaseAfterDeliveryHours),
+        linkAutoReleaseHours: num(e.linkAutoReleaseHours),
+        disputeWindowHours: num(e.disputeWindowHours),
+        deliveryCodeTtlHours: num(e.deliveryCodeTtlHours) || 168
+    };
+}
+async function hasOpenDispute(kind, id) {
+    const q = await db.collection('disputes').where('targetKey', '==', kind + '_' + id).limit(10).get();
+    let open = false;
+    q.forEach(d => { if (['open', 'under_review'].indexOf(String((d.data() || {}).status || '')) !== -1) open = true; });
+    return open;
+}
+
+/* Buyer: get (or re-issue) the one-time delivery code for a paid order. */
+exports.orderDeliveryCodeIssue = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const orderId = String((req.data || {}).orderId || '');
+    if (!orderId || orderId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId inahitajika.');
+    const snap = await db.doc('orders/' + orderId).get();
+    if (!snap.exists) throw new HttpsError('not-found', 'Oda haipatikani.');
+    const o = snap.data() || {};
+    if (String(o.buyerId || '') !== auth.uid) throw new HttpsError('permission-denied', 'Mnunuzi pekee ndiye anapata namba ya kupokea.');
+    if (['held', 'shipped', 'awaiting_pickup', 'in_transit'].indexOf(String(o.status || '')) === -1 || o.paymentVerified !== true) {
+        throw new HttpsError('failed-precondition', 'Oda hii haiko kwenye escrow iliyothibitishwa (status: ' + o.status + ').');
+    }
+    const cfg = await escrowConfig();
+    const code = custodyToken('DL-');
+    const now = new Date();
+    await db.doc('delivery_tokens/order_' + safeKey(orderId)).set({
+        kind: 'order_delivery', orderId, participants: [auth.uid],
+        tokenHash: custodyHash(code), tokenRef: custodyMaskToken(code), status: 'pending',
+        createdAt: now.toISOString(), expiresAt: new Date(now.getTime() + cfg.deliveryCodeTtlHours * 3600000).toISOString(), attempts: 0
+    });
+    return { ok: true, code, expiresInHours: cfg.deliveryCodeTtlHours };
+});
+
+/* Seller/provider: confirm hand-over with the buyer's code (= delivery proof). */
+exports.orderConfirmDelivery = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const d = req.data || {};
+    const orderId = String(d.orderId || '');
+    const code = String(d.code || '').trim().toUpperCase();
+    if (!orderId || orderId.indexOf('/') !== -1 || !code) throw new HttpsError('invalid-argument', 'orderId na code zinahitajika.');
+    const orderRef = db.doc('orders/' + orderId);
+    const tokRef = db.doc('delivery_tokens/order_' + safeKey(orderId));
+    const cfg = await escrowConfig();
+    let result = null;
+    await db.runTransaction(async (t) => {
+        const os = await t.get(orderRef);
+        if (!os.exists) throw new HttpsError('not-found', 'Oda haipatikani.');
+        const o = os.data() || {};
+        const isSeller = String(o.sellerId || '') === auth.uid || String(o.providerId || '') === auth.uid;
+        if (!isSeller) throw new HttpsError('permission-denied', 'Muuzaji/mtoa huduma wa oda hii pekee.');
+        if (String(o.buyerId || '') === auth.uid) throw new HttpsError('permission-denied', 'Mnunuzi hawezi kuthibitisha upande wa muuzaji.');
+        if (['held', 'shipped', 'awaiting_pickup', 'in_transit'].indexOf(String(o.status || '')) === -1) {
+            throw new HttpsError('failed-precondition', 'Oda haiko tayari kwa makabidhiano (status: ' + o.status + ').');
+        }
+        const ts = await t.get(tokRef);
+        if (!ts.exists) throw new HttpsError('failed-precondition', 'Mnunuzi bado hajapata namba ya kupokea. Mwombe aifungue kwenye oda yake.');
+        const tk = ts.data() || {};
+        if (Number(tk.attempts || 0) >= 5) throw new HttpsError('resource-exhausted', 'Majaribio mengi mno. Mnunuzi atoe namba mpya.');
+        if (tk.expiresAt && Date.parse(tk.expiresAt) < Date.now()) throw new HttpsError('deadline-exceeded', 'Namba imeisha muda. Mnunuzi atoe mpya.');
+        if (tk.status !== 'pending' || custodyHash(code) !== tk.tokenHash) {
+            t.update(tokRef, { attempts: FieldValue.increment(1), lastFailAt: new Date().toISOString() });
+            result = { ok: false, reason: 'wrong_code' };
+            return;
+        }
+        const now = new Date().toISOString();
+        const eligible = cfg.autoReleaseAfterDeliveryHours ? new Date(Date.now() + cfg.autoReleaseAfterDeliveryHours * 3600000).toISOString() : null;
+        t.update(tokRef, { status: 'used', usedAt: now, usedBy: auth.uid });
+        t.update(orderRef, {
+            status: 'delivered', deliveredAt: now, deliveryProofAt: now, deliveryProofBy: 'buyer_code',
+            releaseEligibleAt: eligible, updatedAt: now
+        });
+        result = { ok: true, status: 'delivered', releaseEligibleAt: eligible };
+    });
+    if (!result.ok) throw new HttpsError('permission-denied', 'Namba ya kupokea si sahihi.');
+    const o = (await orderRef.get()).data() || {};
+    try {
+        await db.collection('notifications').add({ userId: o.buyerId, title: 'Mzigo umekabidhiwa',
+            body: 'Muuzaji amethibitisha makabidhiano kwa namba yako. Thibitisha kupokea au fungua mgogoro ikiwa kuna tatizo.',
+            createdAt: new Date().toISOString(), read: false, type: 'order', orderId });
+    } catch (e) {}
+    return result;
+});
+
+/* Buyer or seller opens a dispute: freezes escrow until an admin decides. */
+exports.disputeOpen = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const d = req.data || {};
+    const kind = d.linkId ? 'link' : 'order';
+    const id = String(d.linkId || d.orderId || '');
+    const reason = String(d.reason || '').trim().slice(0, 1000);
+    if (!id || id.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId au linkId inahitajika.');
+    if (reason.length < 5) throw new HttpsError('invalid-argument', 'Eleza tatizo (angalau herufi 5).');
+    const ref = db.doc((kind === 'order' ? 'orders/' : 'sokopay_links/') + id);
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpsError('not-found', 'Muamala haupatikani.');
+    const x = snap.data() || {};
+    const buyerId = String(x.buyerId || '');
+    const sellerId = String(kind === 'order' ? (x.sellerId || '') : (x.userId || ''));
+    if (auth.uid !== buyerId && auth.uid !== sellerId) throw new HttpsError('permission-denied', 'Mhusika wa muamala pekee.');
+    const okStates = kind === 'order' ? ['held', 'shipped', 'awaiting_pickup', 'in_transit', 'delivered'] : ['held'];
+    if (okStates.indexOf(String(x.status || '')) === -1) throw new HttpsError('failed-precondition', 'Mgogoro unafunguliwa tu fedha zikiwa escrow (status: ' + x.status + ').');
+    const cfg = await escrowConfig();
+    if (cfg.disputeWindowHours && x.deliveryProofAt && Date.now() - Date.parse(x.deliveryProofAt) > cfg.disputeWindowHours * 3600000) {
+        throw new HttpsError('deadline-exceeded', 'Muda wa kufungua mgogoro umepita (saa ' + cfg.disputeWindowHours + ' baada ya makabidhiano).');
+    }
+    const disputeRef = db.collection('disputes').doc(kind + '_' + safeKey(id));
+    const now = new Date().toISOString();
+    await db.runTransaction(async (t) => {
+        const ds = await t.get(disputeRef);
+        if (ds.exists && ['open', 'under_review'].indexOf(String((ds.data() || {}).status)) !== -1) return;
+        t.set(disputeRef, {
+            targetKind: kind, targetId: id, targetKey: kind + '_' + id, buyerId, sellerId,
+            openedBy: auth.uid, openedByRole: auth.uid === buyerId ? 'buyer' : 'seller', reason,
+            amount: moneyOf(kind === 'order' ? x.amount : x.price), status: 'open', previousStatus: x.status || null,
+            createdAt: now, updatedAt: now
+        });
+        t.update(ref, { status: 'disputed', disputeReason: reason, disputedAt: now, disputeId: disputeRef.id });
+    });
+    const other = auth.uid === buyerId ? sellerId : buyerId;
+    try { await db.collection('notifications').add({ userId: other, title: 'Mgogoro umefunguliwa', body: 'Fedha zimesimamishwa kwenye escrow mpaka Admin atoe uamuzi. Sababu: ' + reason, createdAt: now, read: false, type: 'dispute' }); } catch (e) {}
+    return { ok: true, disputeId: disputeRef.id };
+});
+
+/* Admin decision on a dispute — atomic payout from the server escrow hold. */
+exports.adminResolveDispute = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Admin pekee.');
+    const d = req.data || {};
+    const kind = d.linkId ? 'link' : 'order';
+    const id = String(d.linkId || d.orderId || '');
+    const outcome = String(d.outcome || '');
+    const reason = String(d.reason || '').trim();
+    if (!id || id.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId au linkId inahitajika.');
+    if (['release_seller', 'refund_buyer', 'split'].indexOf(outcome) === -1) throw new HttpsError('invalid-argument', 'outcome: release_seller | refund_buyer | split');
+    if (reason.length < 10) throw new HttpsError('invalid-argument', 'Andika sababu ya uamuzi (angalau herufi 10).');
+    const ref = db.doc((kind === 'order' ? 'orders/' : 'sokopay_links/') + id);
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpsError('not-found', 'Muamala haupatikani.');
+    const x = snap.data() || {};
+    const ev = await getEscrowEvidence(kind, id, x, { recheckPesaPal: true });
+    if (!ev.ok) throw evidenceError(ev);
+    const total = moneyOf(ev.amount);
+    let buyerAmt = outcome === 'refund_buyer' ? total : (outcome === 'release_seller' ? 0 : moneyOf(d.buyerAmount));
+    if (!(buyerAmt >= 0) || buyerAmt > total + MONEY_EPS) throw new HttpsError('invalid-argument', 'Kiasi cha mnunuzi si sahihi (0 - ' + total + ').');
+    const sellerAmt = Math.max(0, moneyOf(total - buyerAmt));
+    const buyerUid = String(x.buyerId || '');
+    const sellerUid = String(kind === 'order' ? x.sellerId : x.userId);
+    const bdoc = await userDocFor(buyerUid);
+    const sdoc = await userDocFor(sellerUid);
+    if ((buyerAmt > 0 && !bdoc) || (sellerAmt > 0 && !sdoc)) throw new HttpsError('failed-precondition', 'Akaunti ya mhusika haipatikani.');
+    const holdRef = db.collection(ESCROW_HOLDS).doc(ev.holdId);
+    const disputeRef = db.collection('disputes').doc(kind + '_' + safeKey(id));
+    const now = new Date().toISOString();
+    let applied = false;
+    await db.runTransaction(async (t) => {
+        const hs = await t.get(holdRef);
+        if (hs.exists && hs.data().released === true) return; // already paid out
+        const cur = (await t.get(ref)).data() || {};
+        if (['completed', 'refunded_by_admin', 'split_refund_resolved'].indexOf(String(cur.status || '')) !== -1) return;
+        if (buyerAmt > 0) {
+            t.set(db.doc('wallet_ledger/dispute_' + kind + '_' + safeKey(id) + '_buyer'), { userId: bdoc.id, callerUid: auth.uid, amountTSh: buyerAmt, type: 'refund', note: 'Uamuzi wa mgogoro: ' + reason.slice(0, 200), byAdmin: true, createdAt: now });
+            t.update(db.doc('users/' + bdoc.id), { walletBalance: FieldValue.increment(buyerAmt) });
+        }
+        if (sellerAmt > 0) {
+            t.set(db.doc('wallet_ledger/dispute_' + kind + '_' + safeKey(id) + '_seller'), { userId: sdoc.id, callerUid: auth.uid, amountTSh: sellerAmt, type: 'escrow_release', note: 'Uamuzi wa mgogoro: ' + reason.slice(0, 200), byAdmin: true, createdAt: now });
+            t.update(db.doc('users/' + sdoc.id), { walletBalance: FieldValue.increment(sellerAmt) });
+        }
+        t.set(holdRef, Object.assign(hs.exists ? {} : (ev.hold || {}), { released: true, releasedAt: now, releasedFor: 'admin_dispute', releaseTrigger: 'admin_dispute', disputePaid: total }), { merge: true });
+        const status = outcome === 'refund_buyer' ? 'refunded_by_admin' : (outcome === 'release_seller' ? 'completed' : 'split_refund_resolved');
+        t.update(ref, { status, disputeResolvedAt: now, disputeWinner: outcome === 'split' ? 'split' : (outcome === 'refund_buyer' ? 'buyer' : 'seller'),
+            buyerRefund: buyerAmt, sellerEarned: sellerAmt, completedAt: now, refundStatus: buyerAmt > 0 ? 'refunded_to_wallet' : null });
+        t.set(disputeRef, { targetKind: kind, targetId: id, targetKey: kind + '_' + id, buyerId: buyerUid, sellerId: sellerUid,
+            status: 'resolved', outcome, buyerAmount: buyerAmt, sellerAmount: sellerAmt, resolvedBy: auth.uid, resolvedAt: now, resolutionReason: reason, updatedAt: now }, { merge: true });
+        t.set(db.collection('admin_audit_log').doc(), adminAuth.auditEntry(req, 'DISPUTE_RESOLVED', { kind, id }, { outcome, buyerAmt, sellerAmt, total, reason }));
+        applied = true;
+    });
+    if (!applied) return { ok: true, already: true };
+    for (const [uid, amt, who] of [[buyerUid, buyerAmt, 'mnunuzi'], [sellerUid, sellerAmt, 'muuzaji']]) {
+        try { await db.collection('notifications').add({ userId: uid, title: 'Uamuzi wa mgogoro', body: 'Admin ametoa uamuzi. Kiasi kwako (' + who + '): TSh ' + amt.toLocaleString() + '. Sababu: ' + reason.slice(0, 200), createdAt: now, read: false, type: 'dispute' }); } catch (e) {}
+    }
+    return { ok: true, outcome, buyerAmount: buyerAmt, sellerAmount: sellerAmt };
+});
+
+/* [PHASE 3 2026-10-31] T6 — admin decision on a PAID order whose goods were not
+ * secured (late payment without stock, unresolved variant...). Exactly one of:
+ *   fulfil: stock is back -> reserve+commit atomically, order goes to 'held'.
+ *   refund: escrow hold -> buyer wallet ONCE (deterministic wallet_ledger id,
+ *           refunds/online_<id> record, hold marked released, audit entry).
+ * A provider (PesaPal / mobile money) refund API is NOT used: none is
+ * integrated or verified; that decision belongs to the owner. */
+exports.adminPaymentReviewResolve = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Admin pekee.');
+    const d = req.data || {};
+    const orderId = String(d.orderId || '');
+    const action = String(d.action || '');
+    const reason = String(d.reason || '').trim();
+    if (!orderId || orderId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId inahitajika.');
+    if (['refund', 'fulfil'].indexOf(action) === -1) throw new HttpsError('invalid-argument', 'action: refund | fulfil');
+    if (reason.length < 10) throw new HttpsError('invalid-argument', 'Andika sababu (angalau herufi 10).');
+    const ref = db.doc('orders/' + orderId);
+    const first = await ref.get();
+    if (!first.exists) throw new HttpsError('not-found', 'Oda haipo.');
+    const o0 = first.data() || {};
+    if (o0.inventoryReviewState === 'REFUNDED' || o0.inventoryReviewState === 'RESOLVED_FULFILLED') return { ok: true, already: true, state: o0.inventoryReviewState };
+    if (!stockCore.escrowReleaseBlocked(o0)) throw new HttpsError('failed-precondition', 'Oda haiko kwenye ukaguzi.');
+    const holdRef = db.collection(ESCROW_HOLDS).doc('order_' + orderId);
+    const reviewRef = db.collection('payment_reviews').doc(stockCore.ids.review(orderId));
+    const now = new Date().toISOString();
+    let result = null;
+    if (action === 'fulfil') {
+        const cfg = Object.assign({}, await inventoryReservation._internal.loadConfig(), { mode: 'all' });
+        await db.runTransaction(async (t) => {
+            const cur = (await t.get(ref)).data() || {};
+            if (['NEEDS_REVIEW', 'REFUND_PENDING'].indexOf(cur.inventoryReviewState) === -1) { result = { ok: true, already: true, state: cur.inventoryReviewState }; return; }
+            const hs = await t.get(holdRef);
+            if (!hs.exists || hs.data().released === true) throw new HttpsError('failed-precondition', 'Hakuna escrow hai ya oda hii.');
+            const state = await inventoryReservation._internal.settlementPrepare(t, [{ id: orderId, data: cur }], cfg);
+            const r = inventoryReservation._internal.settlementDecide(state, orderId, cur, now);
+            if (r.action !== 'COMMITTED') throw new HttpsError('failed-precondition', 'Stock bado haitoshi (' + (r.reason || r.action) + ').');
+            inventoryReservation._internal.settlementFlush(t, state, now);
+            stockCore.assertTransition('review', cur.inventoryReviewState, 'RESOLVED_FULFILLED');
+            t.update(ref, Object.assign({}, r.orderPatch, { status: 'held', heldAt: now, deliveryStatus: 'held', inventoryReviewState: 'RESOLVED_FULFILLED', reviewResolvedAt: now, reviewResolvedBy: auth.uid, updatedAt: now }));
+            t.set(holdRef, { blocked: false, unblockedAt: now, unblockedBy: auth.uid }, { merge: true });
+            t.set(reviewRef, { state: 'RESOLVED_FULFILLED', resolvedBy: auth.uid, resolvedAt: now, resolutionReason: reason, updatedAt: now }, { merge: true });
+            t.set(db.collection('admin_audit_log').doc(), adminAuth.auditEntry(req, 'PAYMENT_REVIEW_FULFILLED', { kind: 'order', id: orderId }, { reason }));
+            result = { ok: true, state: 'RESOLVED_FULFILLED' };
+        });
+        return result;
+    }
+    const buyerUid = String(o0.buyerId || '');
+    const bdoc = await userDocFor(buyerUid);
+    if (!bdoc) throw new HttpsError('failed-precondition', 'Akaunti ya mnunuzi haipatikani.');
+    const refundRef = db.collection('refunds').doc(stockCore.ids.refund(orderId));
+    const ledgerRef = db.doc('wallet_ledger/' + stockCore.ids.refundLedger(orderId));
+    await db.runTransaction(async (t) => {
+        const cur = (await t.get(ref)).data() || {};
+        const ls = await t.get(ledgerRef);
+        const rs = await t.get(refundRef);
+        const hs = await t.get(holdRef);
+        if (ls.exists || (rs.exists && rs.data().status === 'COMPLETED') || cur.inventoryReviewState === 'REFUNDED') { result = { ok: true, already: true, state: 'REFUNDED' }; return; }
+        if (['NEEDS_REVIEW', 'REFUND_PENDING', 'REFUND_FAILED'].indexOf(cur.inventoryReviewState) === -1) throw new HttpsError('failed-precondition', 'Oda haiko kwenye ukaguzi.');
+        if (!hs.exists || hs.data().released === true) throw new HttpsError('failed-precondition', 'Hakuna escrow hai ya kurudisha.');
+        const hold = hs.data() || {};
+        if (String(hold.payerUid || '') !== buyerUid) throw new HttpsError('failed-precondition', 'Mlipaji wa escrow si mnunuzi wa oda.');
+        const amount = moneyOf(hold.amount);
+        if (!(amount > 0)) throw new HttpsError('failed-precondition', 'Kiasi cha escrow si sahihi.');
+        let from = cur.inventoryReviewState;
+        if (from === 'NEEDS_REVIEW') from = stockCore.assertTransition('review', 'NEEDS_REVIEW', 'REFUND_PENDING');
+        if (from === 'REFUND_FAILED') from = stockCore.assertTransition('review', 'REFUND_FAILED', 'REFUND_PENDING');
+        stockCore.assertTransition('review', from, 'REFUNDED');
+        t.create(ledgerRef, { userId: bdoc.id, callerUid: auth.uid, amountTSh: amount, type: 'refund', orderId,
+            note: 'Refund: oda ililipwa bila stock (' + String(cur.inventoryReviewReason || '') + '). ' + reason.slice(0, 160), byAdmin: true, createdAt: now });
+        t.update(db.doc('users/' + bdoc.id), { walletBalance: FieldValue.increment(amount) });
+        t.set(holdRef, { released: true, releasedAt: now, releasedFor: 'late_payment_refund', releaseTrigger: 'admin_payment_review', refundedAmount: amount }, { merge: true });
+        t.set(refundRef, { refundId: refundRef.id, orderId, buyerId: buyerUid, amount, method: 'wallet', status: 'COMPLETED',
+            ledgerId: ledgerRef.id, reason, createdBy: auth.uid, createdAt: rs.exists ? (rs.data().createdAt || now) : now, completedAt: now });
+        t.update(ref, { status: 'cancelled_not_fulfilled', inventoryReviewState: 'REFUNDED', refundStatus: 'refunded_to_wallet',
+            refundedAt: now, buyerRefund: amount, refundId: refundRef.id, reviewResolvedAt: now, reviewResolvedBy: auth.uid, updatedAt: now });
+        t.set(reviewRef, { state: 'REFUNDED', refundId: refundRef.id, resolvedBy: auth.uid, resolvedAt: now, resolutionReason: reason, updatedAt: now }, { merge: true });
+        t.set(db.collection('admin_audit_log').doc(), adminAuth.auditEntry(req, 'PAYMENT_REVIEW_REFUNDED', { kind: 'order', id: orderId }, { amount, reason }));
+        result = { ok: true, state: 'REFUNDED', amount };
+    });
+    if (result && result.ok && !result.already) {
+        try { await db.collection('notifications').doc('refund_late_' + safeKey(orderId)).set({ userId: buyerUid, type: 'refund', system: true, title: 'Refund ya oda', body: 'Oda yako haikuweza kutimizwa kwa sababu ya stock. TSh ' + Number(result.amount).toLocaleString() + ' zimerudishwa kwenye wallet yako.', createdAt: now, read: false }); } catch (e) {}
+    }
+    return result;
+});
+
+/* Admin approves the price of an order held in 'price_review', then settles. */
+exports.adminApproveOrderPrice = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Admin pekee.');
+    const d = req.data || {};
+    const orderId = String(d.orderId || '');
+    const reason = String(d.reason || '').trim();
+    if (!orderId || orderId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId inahitajika.');
+    if (reason.length < 10) throw new HttpsError('invalid-argument', 'Andika sababu (angalau herufi 10).');
+    const ref = db.doc('orders/' + orderId);
+    const s = await ref.get();
+    if (!s.exists) throw new HttpsError('not-found', 'Oda haipatikani.');
+    const o = s.data() || {};
+    if (o.paymentStatus !== 'price_review') throw new HttpsError('failed-precondition', 'Oda haiko kwenye ukaguzi wa bei.');
+    const now = new Date().toISOString();
+    const auditId = await adminAuth.writeAudit(req, 'ORDER_PRICE_APPROVED', { kind: 'order', id: orderId }, { amount: moneyOf(o.amount), reason });
+    await ref.update({ priceApprovedBy: auth.uid, priceApprovedAt: now, priceApprovedAmount: moneyOf(o.amount), priceApprovalReason: reason,
+        priceApprovalAuditId: auditId, paymentStatus: 'verification_pending' });
+    let settled = [];
+    const tid = String(o.pesapalTrackingId || o.transactionId || o.paymentRef || '');
+    if (tid) {
+        const tx = await ppVerifyTransaction(tid);
+        if (tx.paid) settled = (await settlePesaPalPayment(tx, 'admin_price_review')).settled;
+    }
+    return { ok: true, settled };
+});
+
+/* ---------------------------------------------------------------------
+ * PAID ENTITLEMENTS — boost, subscription, agent fee, serious deposit.
+ * The server checks the admin fee switch; when a fee applies it verifies the
+ * PesaPal transaction (paid, caller started it, amount >= server price, not
+ * reused) before granting. The browser no longer writes these flags.
+ * ------------------------------------------------------------------- */
+async function consumePesaPal(tid, uid, minAmount, target) {
+    const tx = await ppVerifyTransaction(tid);
+    if (!tx.paid) throw new HttpsError('failed-precondition', 'Malipo ya PesaPal hayajathibitishwa (' + (tx.reason || 'not_paid') + ').');
+    const initUid = await ppInitiatorUid(tx);
+    if (initUid && initUid !== uid) throw new HttpsError('permission-denied', 'Muamala huu wa PesaPal si wako.');
+    if (tx.amount + MONEY_EPS < minAmount) throw new HttpsError('failed-precondition', 'Kiasi kilicholipwa (TSh ' + tx.amount + ') ni pungufu ya bei (TSh ' + minAmount + ').');
+    const usageRef = db.collection(ESCROW_HOLDS).doc('pptx_' + safeKey(tx.trackingId));
+    await db.runTransaction(async (t) => {
+        const u = await t.get(usageRef);
+        const usage = u.exists ? (u.data() || {}) : {};
+        const targets = Array.isArray(usage.targets) ? usage.targets : [];
+        if (targets.indexOf(target) !== -1) return; // idempotent re-grant
+        if (Number(usage.usedAmount || 0) + minAmount > tx.amount + MONEY_EPS) throw new HttpsError('failed-precondition', 'Muamala huu wa PesaPal tayari umetumika.');
+        t.set(usageRef, { kind: 'pesapal_tx', trackingId: tx.trackingId, paidAmount: tx.amount, usedAmount: Number(usage.usedAmount || 0) + minAmount,
+            targets: targets.concat([target]), updatedAt: new Date().toISOString() }, { merge: true });
+    });
+    return tx;
+}
+/* [2026-10-31] Seller account lifecycle: temporary <-> permanent on the SAME account.
+ * Server-only (rules stop the browser from self-promoting). The uid, businessId,
+ * storeId, products, services, inventory, orders, reviews and wallet are untouched;
+ * only sellerType/productLimit change, with a status history entry and an audit row.
+ * Requirement enforced: an active subscription when the subscription fee is ON
+ * (paymentGate('subscription')) - the rule the UI already states. Identity
+ * verification is reported (pendingVerification) but not invented as a legal rule. */
+const businessCore = require('./shared/business-context-core');
+exports.sellerLifecycleChange = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'Ingia kwanza.');
+    const target = String((req.data || {}).target || '').toLowerCase();
+    const u = await userDocFor(req.auth.uid);
+    if (!u) throw new HttpsError('not-found', 'Akaunti haipatikani.');
+    const subscriptionRequired = await paymentGate('subscription');
+    // Configurable verification (server-only doc; absent = nothing required, gaps only reported).
+    const vcSnap = await db.doc('system_config/seller_verification').get();
+    const verificationConfig = vcSnap.exists ? (vcSnap.data() || {}) : null;
+    const nowIso = new Date().toISOString();
+    let result;
+    await db.runTransaction(async t => {
+        const ref = db.doc('users/' + u.id);
+        const snap = await t.get(ref);
+        const profile = snap.data() || {};
+        const subscriptionActive = profile.isSubscribed === true && String(profile.subscriptionValidUntil || '') > nowIso;
+        const plan = businessCore.planSellerLifecycleChange({ profile, target, subscriptionRequired, subscriptionActive, verificationConfig });
+        if (!plan.ok) throw new HttpsError('failed-precondition', plan.error + (plan.verificationUnmet && plan.verificationUnmet.length ? ': ' + plan.verificationUnmet.join(',') : ''));
+        if (plan.noop) { result = { ok: true, already: true, sellerType: plan.to }; return; }
+        const entry = { from: plan.from, to: plan.to, at: nowIso, by: req.auth.uid, reason: 'self_service', subscriptionRequired, subscriptionActive };
+        const history = (Array.isArray(profile.sellerStatusHistory) ? profile.sellerStatusHistory : []).slice(-49).concat([entry]);
+        t.update(ref, {
+            sellerType: plan.to,
+            isTemporaryStore: plan.to === 'temporary',
+            productLimit: plan.limits.productLimit,
+            sellerStatusHistory: history,
+            sellerLifecycleUpdatedAt: nowIso
+        });
+        t.set(db.collection('seller_lifecycle_log').doc(), Object.assign({ uid: req.auth.uid, userDocId: u.id }, entry, { pendingVerification: plan.pendingVerification || [] }));
+        result = { ok: true, from: plan.from, sellerType: plan.to, productLimit: plan.limits.productLimit, pendingVerification: plan.pendingVerification || [] };
+    });
+    return result;
+});
+
+exports.entitlementGrant = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const d = req.data || {};
+    const kind = String(d.kind || '');
+    const tid = String(d.orderTrackingId || '').trim();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    if (kind === 'boost') {
+        const col = String(d.collectionName || '');
+        if (['products', 'services'].indexOf(col) === -1) throw new HttpsError('invalid-argument', 'collectionName: products | services');
+        const id = String(d.itemId || '');
+        if (!id || id.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'itemId inahitajika.');
+        const ref = db.doc(col + '/' + id);
+        const s = await ref.get();
+        if (!s.exists) throw new HttpsError('not-found', 'Tangazo halipo.');
+        const it = s.data() || {};
+        if (String(it.userId || '') !== auth.uid && String(it.managedByAgentUid || '') !== auth.uid) throw new HttpsError('permission-denied', 'Unaweza ku-boost tangazo lako tu.');
+        const views = Math.min(1000000, Math.max(100, parseInt(d.targetViews, 10) || 1000));
+        const days = Math.min(90, Math.max(1, parseInt(d.boostDays, 10) || (col === 'products' ? 3 : 7)));
+        const price = boostPrice(col, views, days);
+        if (await paymentGate('boost')) {
+            if (!tid) throw new HttpsError('failed-precondition', 'Boost inahitaji malipo ya PesaPal (orderTrackingId).');
+            await consumePesaPal(tid, auth.uid, price, 'boost_' + col + '_' + id + '_' + safeKey(tid));
+        }
+        await ref.update({ isBoosted: true, boostTargetViews: views, boostedViewsCount: 0, boostDays: days, boostedAt: nowIso,
+            boostExpiresAt: new Date(now.getTime() + days * 86400000).toISOString(), boostPaidRef: tid || null, boostPrice: price });
+        return { ok: true, price, views, days };
+    }
+    if (kind === 'subscription') {
+        const title = String(d.title || '').toUpperCase();
+        const price = SUBSCRIPTION_PRICES[title];
+        if (!price) throw new HttpsError('invalid-argument', 'Kifurushi hakijulikani.');
+        if (await paymentGate('subscription')) {
+            if (!tid) throw new HttpsError('failed-precondition', 'Kifurushi kinahitaji malipo ya PesaPal.');
+            await consumePesaPal(tid, auth.uid, price, 'sub_' + auth.uid + '_' + safeKey(tid));
+        }
+        const until = new Date(now.getTime());
+        if (title.indexOf('YEAR') !== -1) until.setFullYear(until.getFullYear() + 1); else until.setMonth(until.getMonth() + 1);
+        const u = await userDocFor(auth.uid);
+        if (!u) throw new HttpsError('not-found', 'Akaunti haipatikani.');
+        await db.doc('users/' + u.id).update({ isSubscribed: true, subscriptionType: title, subscriptionValidUntil: until.toISOString(), subStatus: 'Active', subscriptionPaidRef: tid || null });
+        return { ok: true, title, validUntil: until.toISOString() };
+    }
+    if (kind === 'agent_registration') {
+        const agentDocId = String(d.agentDocId || '');
+        if (!agentDocId || agentDocId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'agentDocId inahitajika.');
+        const ref = db.doc('agents/' + agentDocId);
+        const s = await ref.get();
+        if (!s.exists || String((s.data() || {}).userId || '') !== auth.uid) throw new HttpsError('permission-denied', 'Ombi hili si lako.');
+        const fee = Number(process.env.AGENT_REG_FEE || 3100);
+        if (!(await paymentGate('agent_registration'))) return { ok: true, free: true };
+        if (!tid) throw new HttpsError('failed-precondition', 'Ada ya wakala inahitaji malipo ya PesaPal.');
+        await consumePesaPal(tid, auth.uid, fee, 'agentfee_' + agentDocId);
+        await ref.update({ isPaid: true, paymentStatus: 'paid', paidAt: nowIso, paymentRef: tid, verifiedPaymentRef: tid });
+        return { ok: true, paid: true };
+    }
+    if (kind === 'deposit_item') {
+        const itemId = String(d.itemId || '');
+        if (!itemId || itemId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'itemId inahitajika.');
+        const fee = Number(process.env.SERIOUS_DEPOSIT_FEE || 1300);
+        const depId = auth.uid + '_' + itemId;
+        if (!(await paymentGate('deposit'))) {
+            await db.doc('serious_deposits/' + depId).set({ uid: auth.uid, itemId, hasActiveDeposit: true, verified: true, verifiedBy: 'free_mode', amountPaid: 0, verifiedAt: nowIso }, { merge: true });
+            return { ok: true, free: true };
+        }
+        if (!tid) throw new HttpsError('failed-precondition', 'Deposit inahitaji malipo ya PesaPal.');
+        const tx = await consumePesaPal(tid, auth.uid, fee, 'deposit_' + depId);
+        await db.doc('serious_deposits/' + depId).set({ uid: auth.uid, itemId, hasActiveDeposit: true, verified: true, verifiedBy: 'pesapal', amountPaid: fee,
+            verifiedAmount: tx.amount, transactionId: tid, verifiedAt: nowIso, date: nowIso }, { merge: true });
+        return { ok: true, paid: true };
+    }
+    throw new HttpsError('invalid-argument', 'kind: boost | subscription | agent_registration | deposit_item');
+});

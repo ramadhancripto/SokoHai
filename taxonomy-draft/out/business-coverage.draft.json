@@ -1,0 +1,407 @@
+{
+ "meta": {
+  "status": "DRAFT",
+  "note": "Hali ya feature imethibitishwa kwa kusoma code (regex kwenye files halisi), si kwa madai."
+ },
+ "posFeatures": [
+  {
+   "id": "units_and_packs",
+   "label": "Vipimo + pakiti (katoni)",
+   "status": "IMPLEMENTED",
+   "evidence": "prodBaseUnit, prodBulkUnit, normalizePricing"
+  },
+  {
+   "id": "barcode",
+   "label": "Barcode (scan/andika)",
+   "status": "IMPLEMENTED",
+   "evidence": "js/app/15-pos-sales.js scanner prompt"
+  },
+  {
+   "id": "weighing_fractional",
+   "label": "Kupima uzito (kiasi cha desimali)",
+   "status": "IMPLEMENTED",
+   "evidence": "quantity-core (kg/L/m, quantityPrecision opt-in) kwenye posSale/adjust/return/void/ripoti; kikapu kikuu cha POS bado kwa 1"
+  },
+  {
+   "id": "batch_expiry",
+   "label": "Batch + tarehe ya kuisha",
+   "status": "PARTIAL",
+   "evidence": "batch/expiry moja kwa bidhaa; hakuna stock kwa kila batch (FEFO)"
+  },
+  {
+   "id": "serial_imei",
+   "label": "Serial / IMEI",
+   "status": "PARTIAL",
+   "evidence": "orodha ya maandishi; hakuna ufuatiliaji wa kila kipande kinachouzwa"
+  },
+  {
+   "id": "variants_at_pos",
+   "label": "Variants dukani (POS)",
+   "status": "IMPLEMENTED",
+   "evidence": "posSale variantId + tests za pos variant"
+  },
+  {
+   "id": "purchases",
+   "label": "Manunuzi (stock in)",
+   "status": "IMPLEMENTED",
+   "evidence": "inventoryAdjust movementType 'PURCHASE'"
+  },
+  {
+   "id": "returns_voids",
+   "label": "Returns / void / refund",
+   "status": "IMPLEMENTED",
+   "evidence": "posReturn, posVoid, posRefund"
+  },
+  {
+   "id": "expenses",
+   "label": "Matumizi (expenses)",
+   "status": "IMPLEMENTED",
+   "evidence": "shop_ledger (kivinjari)"
+  },
+  {
+   "id": "credit_sales",
+   "label": "Mauzo ya deni",
+   "status": "IMPLEMENTED",
+   "evidence": "madeni kwenye ledger"
+  },
+  {
+   "id": "reports",
+   "label": "Ripoti za POS",
+   "status": "IMPLEMENTED",
+   "evidence": "posReports (server)"
+  },
+  {
+   "id": "online_reservation",
+   "label": "Stock moja POS + online",
+   "status": "IMPLEMENTED_OFF_BY_DEFAULT",
+   "evidence": "Awamu 3 (local + emulator)"
+  },
+  {
+   "id": "multi_location",
+   "label": "Maduka/ghala nyingi",
+   "status": "PARTIAL",
+   "evidence": "location moja kwa bidhaa; Awamu 4"
+  },
+  {
+   "id": "service_orders",
+   "label": "Oda za huduma / job cards",
+   "status": "MISSING",
+   "evidence": "hakuna module ya job card"
+  },
+  {
+   "id": "restaurant_tables",
+   "label": "Meza / jikoni (restaurant)",
+   "status": "MISSING",
+   "evidence": "hakuna oda za meza/jikoni"
+  }
+ ],
+ "businessTypes": [
+  {
+   "id": "retail",
+   "label": "Duka la rejareja",
+   "taxonomyCategories": [
+    "CAT-01 Chakula & Vinywaji",
+    "CAT-08 Urembo & Utunzaji Binafsi",
+    "CAT-32 Ofisi, Shule & Vifaa vya Kuandikia"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "units_and_packs",
+    "barcode",
+    "credit_sales"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "wholesale",
+   "label": "Jumla (wholesale)",
+   "taxonomyCategories": [
+    "CAT-01 Chakula & Vinywaji",
+    "CAT-08 Urembo & Utunzaji Binafsi",
+    "CAT-10 Ujenzi & Hardware"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "units_and_packs",
+    "purchases",
+    "credit_sales"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "supermarket",
+   "label": "Supermarket",
+   "taxonomyCategories": [
+    "CAT-01 Chakula & Vinywaji",
+    "CAT-08 Urembo & Utunzaji Binafsi",
+    "CAT-32 Ofisi, Shule & Vifaa vya Kuandikia"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "barcode",
+    "units_and_packs",
+    "batch_expiry",
+    "weighing_fractional"
+   ],
+   "gaps": [
+    "batch_expiry"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "minimarket",
+   "label": "Mini-market",
+   "taxonomyCategories": [
+    "CAT-01 Chakula & Vinywaji",
+    "CAT-08 Urembo & Utunzaji Binafsi"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "barcode",
+    "units_and_packs"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "hardware",
+   "label": "Hardware",
+   "taxonomyCategories": [
+    "CAT-10 Ujenzi & Hardware",
+    "CAT-33 Viwanda & Mashine",
+    "CAT-34 Nishati & Umeme"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "units_and_packs",
+    "purchases"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "pharmacy",
+   "label": "Famasia / vifaa tiba",
+   "taxonomyCategories": [
+    "CAT-19 Afya & Bidhaa za Afya"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "batch_expiry",
+    "barcode"
+   ],
+   "gaps": [
+    "batch_expiry"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "electronics",
+   "label": "Electronics",
+   "taxonomyCategories": [
+    "CAT-11 Electronics & Vifaa vya Nyumbani",
+    "CAT-12 Simu & Mawasiliano",
+    "CAT-13 Kompyuta & TEHAMA"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "serial_imei",
+    "variants_at_pos",
+    "returns_voids"
+   ],
+   "gaps": [
+    "serial_imei"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "fashion",
+   "label": "Nguo na mitindo",
+   "taxonomyCategories": [
+    "CAT-07 Nguo, Mavazi & Mitindo"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "variants_at_pos",
+    "returns_voids"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "agrovet",
+   "label": "Agrovet",
+   "taxonomyCategories": [
+    "CAT-02 Pembejeo & Zana za Kilimo",
+    "CAT-04 Mifugo",
+    "CAT-19 Afya & Bidhaa za Afya"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "batch_expiry",
+    "units_and_packs"
+   ],
+   "gaps": [
+    "batch_expiry"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "produce",
+   "label": "Mazao ya kilimo",
+   "taxonomyCategories": [
+    "CAT-01 Chakula & Vinywaji",
+    "CAT-03 Mazao & Biashara ya Kilimo"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "weighing_fractional",
+    "units_and_packs"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "livestock",
+   "label": "Mifugo",
+   "taxonomyCategories": [
+    "CAT-04 Mifugo"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "units_and_packs"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "restaurant",
+   "label": "Mgahawa / chakula",
+   "taxonomyCategories": [
+    "CAT-25 Migahawa & Catering",
+    "CAT-01 Chakula & Vinywaji"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "restaurant_tables",
+    "expenses"
+   ],
+   "gaps": [
+    "restaurant_tables"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "salon",
+   "label": "Saluni / kinyozi",
+   "taxonomyCategories": [
+    "CAT-17 Huduma za Nyumbani"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "service_orders"
+   ],
+   "gaps": [
+    "service_orders"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "garage",
+   "label": "Gereji / karakana",
+   "taxonomyCategories": [
+    "CAT-15 Vipuri & Vifaa vya Magari",
+    "CAT-18 Ufundi & Matengenezo"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "service_orders",
+    "purchases"
+   ],
+   "gaps": [
+    "service_orders"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "furniture",
+   "label": "Samani",
+   "taxonomyCategories": [
+    "CAT-09 Nyumba & Samani"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "variants_at_pos",
+    "purchases"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "building",
+   "label": "Vifaa vya ujenzi",
+   "taxonomyCategories": [
+    "CAT-10 Ujenzi & Hardware"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "units_and_packs",
+    "purchases"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "online_store",
+   "label": "Duka la mtandaoni",
+   "taxonomyCategories": [
+    "CAT-07 Nguo, Mavazi & Mitindo",
+    "CAT-11 Electronics & Vifaa vya Nyumbani"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "online_reservation"
+   ],
+   "gaps": [],
+   "status": "SUPPORTED"
+  },
+  {
+   "id": "services",
+   "label": "Biashara za huduma",
+   "taxonomyCategories": [
+    "CAT-16 Usafiri & Usafirishaji",
+    "CAT-17 Huduma za Nyumbani",
+    "CAT-18 Ufundi & Matengenezo",
+    "CAT-21 Huduma za Kitaalamu & Biashara",
+    "CAT-24 Hoteli, Malazi & Utalii"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "service_orders"
+   ],
+   "gaps": [
+    "service_orders"
+   ],
+   "status": "PARTIAL"
+  },
+  {
+   "id": "warehouse",
+   "label": "Ghala / msambazaji",
+   "taxonomyCategories": [
+    "CAT-49 Vifungashio & Vifaa vya Kufunga",
+    "CAT-16 Usafiri & Usafirishaji"
+   ],
+   "missingCategories": [],
+   "needs": [
+    "multi_location",
+    "purchases"
+   ],
+   "gaps": [
+    "multi_location"
+   ],
+   "status": "PARTIAL"
+  }
+ ]
+}

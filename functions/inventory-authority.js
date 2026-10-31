@@ -8,7 +8,14 @@ const db = admin.firestore();
 const REGION = 'europe-west1';
 const FieldValue = admin.firestore.FieldValue;
 const { resolveBusinessStoreContext } = require('./business-store-authority');
-const productIdentity = require('../shared/pos-product-identity-core');
+// [PHASE 3 2026-10-31] ./shared is the packaged copy (functions/build-shared.js);
+// ../shared is outside the deploy source and would not exist in Cloud Functions.
+const productIdentity = require('./shared/pos-product-identity-core');
+// [POS 2026-11-01] Decimal quantities (kg/L/m) with exact scaled-integer arithmetic.
+const Q = require('./shared/quantity-core');
+const QP = Q.MAX_PRECISION;
+const isQty = (q, p = QP, allowZero = false) => Q.isValidQuantity(q, p, { allowZero });
+const stockCore = require('./shared/inventory-reservation-core');
 
 const PAYMENT_METHODS = new Set(['Cash', 'Mpesa', 'TigoPesa', 'AirtelMoney', 'Bank', 'Deni', 'Awamu']);
 const PAYMENT_METHOD_ALIASES = Object.freeze({
@@ -51,6 +58,13 @@ function integer(value, name) {
   if (!Number.isSafeInteger(n) || n <= 0 || n > MAX_QTY) {
     throw new HttpsError('invalid-argument', name + ' si sahihi.');
   }
+  return n;
+}
+
+/** POS line quantity: whole units, or up to 3 decimals; the PRODUCT decides later if decimals are allowed. */
+function lineQuantity(value, name) {
+  const n = Number(value);
+  if (!isQty(n) || n > MAX_QTY) throw new HttpsError('invalid-argument', name + ' si sahihi.');
   return n;
 }
 
@@ -159,8 +173,8 @@ function normalizeReturnRequest(data) {
     const productId = requiredReturnText(raw.productId, `items[${index}].productId`);
     const originalSaleItemId = requiredReturnText(raw.originalSaleItemId, `items[${index}].originalSaleItemId`, 240);
     const quantity = raw.quantity;
-    if (typeof quantity !== 'number' || !Number.isSafeInteger(quantity) || quantity <= 0) {
-      throw returnValidationError(`items[${index}].quantity must be a positive integer.`);
+    if (typeof quantity !== 'number' || !isQty(quantity)) {
+      throw returnValidationError(`items[${index}].quantity must be a positive quantity.`);
     }
     const variantId = text(raw.variantId, 160) || null;
     const sku = text(raw.sku, 160) || null;
@@ -241,7 +255,7 @@ function validateSaleCompatibility(sale, request) {
     return { status: RETURN_STATES.NOT_SUPPORTED, reason: 'SALE_SNAPSHOT_UNSUPPORTED' };
   }
   const snapshotItems = sale.items.map((item, itemIndex) => {
-    if (!item || typeof item !== 'object' || !item.productId || !Number.isSafeInteger(item.quantity) || item.quantity <= 0 ||
+    if (!item || typeof item !== 'object' || !item.productId || !isQty(item.quantity) ||
         typeof item.unitPriceAtSale !== 'number' || !Number.isFinite(item.unitPriceAtSale)) return null;
     return {
       ...item,
@@ -269,28 +283,28 @@ function validateSaleCompatibility(sale, request) {
 }
 
 function calculateReturnableQuantity(originalSoldQuantity, previousApprovedOrCompletedReturnQuantity) {
-  if (!Number.isSafeInteger(originalSoldQuantity) || originalSoldQuantity <= 0) {
+  if (!isQty(originalSoldQuantity)) {
     return { status: RETURN_STATES.NOT_SUPPORTED, reason: 'ORIGINAL_QUANTITY_INVALID' };
   }
   if (previousApprovedOrCompletedReturnQuantity === undefined || previousApprovedOrCompletedReturnQuantity === null) {
     return { status: RETURN_STATES.NOT_VERIFIABLE, reason: 'RETURN_HISTORY_NOT_VERIFIABLE' };
   }
-  if (!Number.isSafeInteger(previousApprovedOrCompletedReturnQuantity) || previousApprovedOrCompletedReturnQuantity < 0 || previousApprovedOrCompletedReturnQuantity > originalSoldQuantity) {
+  if (!isQty(previousApprovedOrCompletedReturnQuantity, QP, true) || Q.compare(previousApprovedOrCompletedReturnQuantity, originalSoldQuantity, QP) > 0) {
     return { status: RETURN_STATES.NOT_VERIFIABLE, reason: 'RETURN_HISTORY_INVALID' };
   }
   return {
     status: 'VERIFIABLE',
-    returnableQuantity: originalSoldQuantity - previousApprovedOrCompletedReturnQuantity
+    returnableQuantity: Q.sub(originalSoldQuantity, previousApprovedOrCompletedReturnQuantity, QP)
   };
 }
 
 function validateReturnQuantity(originalSoldQuantity, previousApprovedOrCompletedReturnQuantity, requestedQuantity) {
   const result = calculateReturnableQuantity(originalSoldQuantity, previousApprovedOrCompletedReturnQuantity);
   if (result.status !== 'VERIFIABLE') return result;
-  if (!Number.isSafeInteger(requestedQuantity) || requestedQuantity <= 0) {
+  if (!isQty(requestedQuantity)) {
     return { status: RETURN_STATES.NOT_SUPPORTED, reason: 'REQUESTED_QUANTITY_INVALID' };
   }
-  if (requestedQuantity > result.returnableQuantity) {
+  if (Q.compare(requestedQuantity, result.returnableQuantity, QP) > 0) {
     return { status: RETURN_STATES.NOT_SUPPORTED, reason: 'QUANTITY_EXCEEDS_RETURNABLE', returnableQuantity: result.returnableQuantity };
   }
   return { status: 'VALID', returnableQuantity: result.returnableQuantity, requestedQuantity };
@@ -307,7 +321,7 @@ function buildReturnAdjustmentShape({ adjustmentId, request, originalSaleItemId,
   requiredReturnText(originalSaleItemId, 'originalSaleItemId', 240);
   requiredReturnText(productId, 'productId', 160);
   requiredReturnText(createdBy, 'createdBy', 160);
-  if (!Number.isSafeInteger(quantity) || quantity <= 0) throw returnValidationError('quantity must be a positive integer.');
+  if (!isQty(quantity)) throw returnValidationError('quantity must be a positive quantity.');
     return {
       adjustmentId,
       adjustmentType: 'RETURN',
@@ -383,7 +397,7 @@ function normalizeItems(data) {
         variantId,
         sku,
         unitId,
-        quantity: integer(raw.quantity, `Quantity ya item ${index + 1}`),
+        quantity: lineQuantity(raw.quantity, `Quantity ya item ${index + 1}`),
         unitMode: raw.unitMode === 'unit' ? 'unit' : raw.unitMode === 'pc' ? 'pc' : null,
         pricingMode: raw.pricingMode === 'wholesale' ? 'wholesale' : raw.pricingMode === 'retail' ? 'retail' : null
       };
@@ -395,7 +409,7 @@ function normalizeItems(data) {
     variantId: text(data.variantId, 160) || null,
     sku: text(data.sku, 160) || null,
     unitId: text(data.unitId, 160) || null,
-    quantity: integer(data.quantity, 'Quantity'),
+    quantity: lineQuantity(data.quantity, 'Quantity'),
     unitMode: data.unitMode === 'unit' ? 'unit' : data.unitMode === 'pc' ? 'pc' : null,
     pricingMode: 'retail'
   }];
@@ -422,9 +436,12 @@ function authoritativeItemSnapshot(product, requested, index) {
     if (resolved.error === 'PRICE_NOT_AVAILABLE') throw new HttpsError('failed-precondition', requested.pricingMode === 'wholesale' ? 'Product haina wholesale price halali.' : 'Product haina bei halali.');
     throw new HttpsError('failed-precondition', resolved.error);
   }
-  const stockQuantity = requested.unitMode === 'unit' ? requested.quantity * resolved.unit.conversion : requested.quantity;
+  // [POS 2026-11-01] Decimals only for products that opted in (quantityPrecision, kg/L/m).
+  const precision = Q.precisionOf(product);
+  if (!isQty(requested.quantity, precision)) throw new HttpsError('failed-precondition', `QUANTITY_DECIMAL_NOT_ALLOWED: item ${index + 1} inauzwa kwa ${precision ? precision + ' desimali' : 'idadi kamili'} tu.`);
+  const stockQuantity = requested.unitMode === 'unit' ? Q.mulInt(requested.quantity, resolved.unit.conversion, precision) : requested.quantity;
   const resolvedUnitPrice = requested.unitMode === 'unit' ? resolved.basePrice * resolved.unit.conversion : resolved.basePrice;
-  if (stockQuantity <= 0 || !Number.isSafeInteger(stockQuantity)) throw new HttpsError('failed-precondition', 'INVENTORY_QUANTITY_INVALID');
+  if (!isQty(stockQuantity, precision)) throw new HttpsError('failed-precondition', 'INVENTORY_QUANTITY_INVALID');
   return {
     productId: requested.productId,
     variantId: resolved.variantId,
@@ -440,7 +457,8 @@ function authoritativeItemSnapshot(product, requested, index) {
     pricingMode: requested.pricingMode,
     pcsPerUnit: resolved.unit.conversion,
     unitPriceAtSale: resolvedUnitPrice,
-    lineTotal: Math.round(resolvedUnitPrice * requested.quantity * 100) / 100,
+    lineTotal: Q.lineTotal(resolvedUnitPrice, requested.quantity),
+    ...(precision ? { quantityPrecision: precision } : {}),
     authoritativeStock: resolved.stock
   };
 }
@@ -458,6 +476,27 @@ function validateCredit(paymentMethod, customer, deposit, total, legacyRequest) 
     throw new HttpsError('invalid-argument', 'Deposit haiwezi kuzidi jumla ya mauzo.');
   }
   return { deposit: resolvedDeposit, outstanding: total - resolvedDeposit };
+}
+
+// [PHASE 3 2026-10-31] Return/void stock increases. Several lines may point at
+// the SAME Product (two variants): apply them to one working copy and write the
+// Product once, so no variant update is lost.
+function writeStockIncreases(tx, stockDeltas, states, now, onError) {
+  const working = new Map();
+  for (const [identityKey, delta] of stockDeltas) {
+    const state = states.get(identityKey);
+    const entry = working.get(state.ref.path) || { ref: state.ref, original: state.data, data: state.data };
+    try {
+      entry.data = stockCore.applyDelta(entry.data, state.variantId || null, { stock: delta });
+    } catch (error) {
+      onError(error.code === 'VARIANT_NOT_FOUND' ? 'VARIANT_NOT_FOUND' : 'STOCK_INVALID');
+    }
+    working.set(state.ref.path, entry);
+  }
+  for (const entry of working.values()) {
+    const patch = stockCore.productPatch(entry.original, entry.data, now);
+    if (Object.keys(patch).length) tx.set(entry.ref, patch, { merge: true });
+  }
 }
 
 exports.posSale = onCall({ region: REGION }, async req => {
@@ -528,16 +567,43 @@ exports.posSale = onCall({ region: REGION }, async req => {
       throw new HttpsError('failed-precondition', 'Items za sale lazima ziwe ndani ya Business/Store moja.');
     }
     const scope = products[0].scope;
+    // [PHASE 1 2026-10-31] An explicit channel list without 'pos' (manage_only,
+    // marketplace-only) cannot be sold at the till. Legacy products (no list) sell as before.
+    products.forEach((entry, index) => {
+      const channels = entry.product.salesChannels;
+      if (Array.isArray(channels) && channels.length && !channels.includes('pos')) {
+        throw new HttpsError('failed-precondition', `CHANNEL_NOT_POS: item ${index + 1} haiuzwi POS (${channels.join(', ')}).`);
+      }
+    });
+    // POS location safeguard: legacy sellers without a Store sell from the default location, with a warning.
+    const locationId = scope.storeId || 'default';
+    const locationWarning = scope.storeId ? null : (scope.businessId ? 'NO_STORE_LOCATION' : 'LEGACY_DEFAULT_LOCATION');
     const items = products.map((entry, index) => authoritativeItemSnapshot(entry.product, requestedItems[index], index));
 
     // Validate every stock value before any write is issued.
     // Legacy structural contract retained; authoritative variant stock is resolved below.
     const stocks = products.map(({ product }) => Number(product.stock));
     const authoritativeStocks = items.map(item => Number(item.authoritativeStock));
+    // [PHASE 3 2026-10-31] One working copy per Product: two lines of the same
+    // Product/variant are applied one after the other (no lost update), and a
+    // sale may only use AVAILABLE stock (stock - reserved for online orders).
+    const workingProducts = {};
+    const originalProducts = {};
+    const lineStock = [];
     items.forEach((item, index) => {
       const stock = authoritativeStocks[index];
-      if (!Number.isSafeInteger(stock) || stock < 0) throw new HttpsError('failed-precondition', `Stock ya item ${index + 1} si halali.`);
+      if (!isQty(stock, Q.precisionOf(products[index].product), true)) throw new HttpsError('failed-precondition', `Stock ya item ${index + 1} si halali.`);
       if (stock < item.stockQuantity) throw new HttpsError('failed-precondition', `Stock haitoshi kwa item ${index + 1}.`);
+      if (!originalProducts[item.productId]) originalProducts[item.productId] = products[index].product;
+      const current = workingProducts[item.productId] || products[index].product;
+      const avail = stockCore.checkAvailable(current, item.variantId || null, item.stockQuantity);
+      if (!avail.ok) {
+        throw new HttpsError('failed-precondition', avail.error === 'INSUFFICIENT_AVAILABLE'
+          ? `Stock haitoshi kwa item ${index + 1} (inayopatikana: ${avail.available}, imehifadhiwa kwa oda za online: ${avail.reserved}).`
+          : `Stock ya item ${index + 1} si halali (${avail.error}).`);
+      }
+      workingProducts[item.productId] = stockCore.applyDelta(current, item.variantId || null, { stock: -item.stockQuantity });
+      lineStock.push({ previous: avail.stock, resulting: Q.sub(avail.stock, item.stockQuantity, avail.precision) });
     });
 
     const subtotal = Math.round(items.reduce((sum, item) => sum + item.lineTotal, 0) * 100) / 100;
@@ -569,6 +635,8 @@ exports.posSale = onCall({ region: REGION }, async req => {
       channel: 'OFFLINE_POS',
       businessId: scope.businessId,
       storeId: scope.storeId,
+      locationId,
+      locationWarning,
       sellerId: scope.ownerUid,
       cashierId: auth.uid,
       items,
@@ -591,27 +659,30 @@ exports.posSale = onCall({ region: REGION }, async req => {
       immutableSnapshot: true
     };
 
-    items.forEach((item, index) => {
-      const stock = stocks[index];
-      const product = products[index].product;
-      const resultingStock = stock - item.stockQuantity;
-      if (item.variantId) {
-        // Legacy contract marker: tx.set(productRefs[index], ...)
-        // is represented by the identity-aware branch.
-        const combinations = Array.isArray(product.variantCombinations) ? product.variantCombinations : [];
-        const variantIndex = combinations.findIndex(variant => variant && variant.variantId === item.variantId);
-        if (variantIndex < 0) throw new HttpsError('failed-precondition', 'VARIANT_NOT_FOUND');
-        const nextCombinations = combinations.map((variant, combinationIndex) => combinationIndex === variantIndex
-          ? { ...variant, stock: resultingStock, availabilityStatus: resultingStock <= 0 ? 'out_of_stock' : (resultingStock <= 3 ? 'low_stock' : 'available') }
-          : variant);
-        tx.set(productRefs[index], { variantCombinations: nextCombinations, updatedAt: now }, { merge: true });
-      } else {
-        tx.set(productRefs[index], {
-          stock: resultingStock,
-          availabilityStatus: resultingStock <= 0 ? 'out_of_stock' : (resultingStock <= 3 ? 'low_stock' : 'available'),
-          updatedAt: now
-        }, { merge: true });
+    // [PHASE 3 2026-10-31] F5 fix: previous/resulting stock come from the line's
+    // OWN record (variant or product), never from product.stock for a variant.
+    Object.keys(workingProducts).forEach(productId => {
+      const original = originalProducts[productId];
+      const working = workingProducts[productId];
+      const patch = { updatedAt: now };
+      if (working.variantCombinations !== original.variantCombinations) {
+        patch.variantCombinations = working.variantCombinations.map((variant, combinationIndex) => {
+          const before = (original.variantCombinations || [])[combinationIndex];
+          if (!before || before.stock === variant.stock) return variant;
+          // legacy POS availability thresholds for variants
+          const available = variant.stock - Number(variant.reserved || 0);
+          return { ...variant, availabilityStatus: available <= 0 ? 'out_of_stock' : (available <= 3 ? 'low_stock' : 'available') };
+        });
       }
+      if (working.stock !== original.stock) {
+        patch.stock = working.stock;
+        patch.availabilityStatus = working.stock - Number(working.reservedStock || 0) <= 0 ? 'out_of_stock' : (working.stock - Number(working.reservedStock || 0) <= 3 ? 'low_stock' : 'available');
+      }
+      const index = items.findIndex(item => item.productId === productId);
+      tx.set(productRefs[index], patch, { merge: true });
+    });
+    items.forEach((item, index) => {
+      const stock = lineStock[index].previous;
       tx.create(movementRefs[index], {
         movementId: movementRefs[index].id,
         type: 'SALE',
@@ -619,15 +690,17 @@ exports.posSale = onCall({ region: REGION }, async req => {
         saleId: saleRef.id,
         idempotencyKey,
         productId: item.productId,
+        variantId: item.variantId || null,
+        inventoryKey: item.inventoryKey || null,
         quantity: -item.stockQuantity,
         previousStock: stock,
-        resultingStock: stock - item.stockQuantity,
+        resultingStock: lineStock[index].resulting,
         businessId: scope.businessId,
         storeId: scope.storeId,
         actorUid: auth.uid,
         createdAt: now
       });
-      item.resultingStock = stock - item.stockQuantity;
+      item.resultingStock = lineStock[index].resulting;
     });
     tx.create(saleRef, sale);
 
@@ -658,6 +731,8 @@ exports.posSale = onCall({ region: REGION }, async req => {
       status: sale.status,
       stock: items.length === 1 ? items[0].resultingStock : undefined,
       total,
+      locationId,
+      locationWarning,
       idempotent: false,
       totals: sale.totals,
       payment: sale.payment,
@@ -682,10 +757,11 @@ function returnPaymentStatus(method) {
 function returnItemStockQuantity(item, quantity) {
   const soldQuantity = Number(item.quantity);
   const soldStockQuantity = Number(item.stockQuantity);
-  if (!Number.isSafeInteger(soldQuantity) || soldQuantity <= 0 || !Number.isSafeInteger(soldStockQuantity) || soldStockQuantity <= 0 || soldStockQuantity % soldQuantity !== 0) {
-    return null;
-  }
-  return (soldStockQuantity / soldQuantity) * quantity;
+  if (!isQty(soldQuantity) || !isQty(soldStockQuantity)) return null;
+  // stock units per sold unit must be a whole pack factor (1 for base-unit and decimal sales)
+  const a = Q.toScaled(soldStockQuantity, QP), b = Q.toScaled(soldQuantity, QP);
+  if (a % b !== 0) return null;
+  return Q.mulInt(quantity, a / b, QP);
 }
 
 exports.posReturn = onCall({ region: REGION }, async req => {
@@ -759,10 +835,10 @@ exports.posReturn = onCall({ region: REGION }, async req => {
       if (Array.isArray(history.items)) {
         history.items.forEach(item => {
           const key = item.originalSaleItemId;
-          if (key) returnedByItem.set(key, (returnedByItem.get(key) || 0) + Number(item.quantity || 0));
+          if (key) returnedByItem.set(key, Q.add(returnedByItem.get(key) || 0, Number(item.quantity || 0), QP));
         });
       } else if (history.originalSaleItemId) {
-        returnedByItem.set(history.originalSaleItemId, (returnedByItem.get(history.originalSaleItemId) || 0) + Number(history.quantity || 0));
+        returnedByItem.set(history.originalSaleItemId, Q.add(returnedByItem.get(history.originalSaleItemId) || 0, Number(history.quantity || 0), QP));
       }
     });
 
@@ -786,7 +862,7 @@ exports.posReturn = onCall({ region: REGION }, async req => {
       const item = compatibility.items.find(candidate => (candidate.inventoryKey || [candidate.productId, candidate.variantId || 'product', candidate.unitId || 'default'].join(':')) === identityKey);
       const variant = item && item.variantId ? (Array.isArray(product.variantCombinations) ? product.variantCombinations.find(candidate => candidate && candidate.variantId === item.variantId) : null) : null;
       const stock = Number(variant ? variant.stock : product.stock);
-      if (!Number.isSafeInteger(stock) || stock < 0) returnAuthorityError('RETURN_NOT_SUPPORTED', 'Inventory stock is invalid.');
+      if (!isQty(stock, Q.precisionOf(product), true)) returnAuthorityError('RETURN_NOT_SUPPORTED', 'Inventory stock is invalid.');
       productSnaps.set(identityKey, { ref: productRef, data: product, stock, variantId: item && item.variantId, unitId: item && item.unitId });
     }
 
@@ -796,15 +872,15 @@ exports.posReturn = onCall({ region: REGION }, async req => {
     let allItemsFullyReturned = true;
     for (const item of compatibility.items) {
       const previousReturned = returnedByItem.get(item.originalSaleItemId) || 0;
-      const remaining = item.quantity - previousReturned - item.requestedQuantity;
+      const remaining = Q.sub(Q.sub(item.quantity, previousReturned, QP), item.requestedQuantity, QP);
       if (remaining > 0) allItemsFullyReturned = false;
-      const itemAmount = Math.round(Number(item.unitPriceAtSale) * item.requestedQuantity * 100) / 100;
+      const itemAmount = Q.lineTotal(item.unitPriceAtSale, item.requestedQuantity);
       amount = Math.round((amount + itemAmount) * 100) / 100;
       const stockQuantity = returnItemStockQuantity(item, item.requestedQuantity);
       if (request.inventoryDisposition === 'SELLABLE_RETURN') {
         if (stockQuantity === null) returnAuthorityError('RETURN_NOT_SUPPORTED', 'Sale stock quantity is unavailable.');
         const identityKey = item.inventoryKey || [item.productId, item.variantId || 'product', item.unitId || 'default'].join(':');
-        stockDeltas.set(identityKey, (stockDeltas.get(identityKey) || 0) + stockQuantity);
+        stockDeltas.set(identityKey, Q.add(stockDeltas.get(identityKey) || 0, stockQuantity, QP));
       }
       const resultItem = { productId: item.productId, originalSaleItemId: item.originalSaleItemId, quantity: item.requestedQuantity, amount: itemAmount };
       if (item.variantId) resultItem.variantId = item.variantId;
@@ -852,18 +928,7 @@ exports.posReturn = onCall({ region: REGION }, async req => {
     };
 
     // All reads and validation are complete before the first write.
-    for (const [identityKey, delta] of stockDeltas) {
-      const productState = productSnaps.get(identityKey);
-      const resultingStock = productState.stock + delta;
-      if (productState.variantId) {
-        const combinations = Array.isArray(productState.data.variantCombinations) ? productState.data.variantCombinations : [];
-        const variantIndex = combinations.findIndex(candidate => candidate && candidate.variantId === productState.variantId);
-        if (variantIndex < 0) returnAuthorityError('VARIANT_NOT_FOUND');
-        tx.set(productState.ref, { variantCombinations: combinations.map((candidate, index) => index === variantIndex ? { ...candidate, stock: resultingStock } : candidate), updatedAt: now }, { merge: true });
-      } else {
-        tx.set(productState.ref, { stock: resultingStock, availabilityStatus: resultingStock <= 0 ? 'out_of_stock' : (resultingStock <= 3 ? 'low_stock' : 'available'), updatedAt: now }, { merge: true });
-      }
-    }
+    writeStockIncreases(tx, stockDeltas, productSnaps, now, returnAuthorityError);
     tx.create(adjustmentRef, adjustment);
     itemResults.forEach((item, index) => {
       if (!inventoryApplied) return;
@@ -916,7 +981,8 @@ exports.inventoryAdjust = onCall({ region: REGION }, async req => {
     ? String(data.movementType).toUpperCase() : 'ADJUSTMENT';
   const movementSource = text(data.source || 'MANUAL', 40);
   const isOpeningBalance = movementType === 'OPENING_BALANCE';
-  const validDelta = Number.isSafeInteger(delta) && Math.abs(delta) <= MAX_QTY && (isOpeningBalance ? delta >= 0 : delta !== 0);
+  // [POS 2026-11-01] up to 3 decimals here; the product's own precision is checked in the transaction.
+  const validDelta = Number.isFinite(delta) && Q.toScaled(delta, QP) !== null && Math.abs(delta) <= MAX_QTY && (isOpeningBalance ? delta >= 0 : delta !== 0);
   if (!productId || !validDelta || !reason || (isOpeningBalance && movementSource !== 'PRODUCT_CREATION')) {
     throw new HttpsError('invalid-argument', 'Product, delta, source na sababu vinahitajika.');
   }
@@ -942,25 +1008,112 @@ exports.inventoryAdjust = onCall({ region: REGION }, async req => {
     if (variant && requestedSku && variant.sku !== requestedSku) throw new HttpsError('failed-precondition', 'SKU_VARIANT_MISMATCH');
     const inventoryKey = requestedInventoryKey || [productId, requestedVariantId || 'product', requestedUnitId || 'default'].join(':');
     const stock = Number(variant ? variant.stock : product.stock);
-    if (!Number.isSafeInteger(stock) || stock < 0 || stock + delta < 0) throw new HttpsError('failed-precondition', 'Stock mpya si halali.');
-    if (isOpeningBalance && (stock !== 0 || product.openingStockPending !== true || product.openingStockInitialized === true)) {
+    const precision = Q.precisionOf(product);
+    if (delta !== 0 && !isQty(Math.abs(delta), precision)) throw new HttpsError('failed-precondition', `QUANTITY_DECIMAL_NOT_ALLOWED: bidhaa hii inapokea ${precision ? precision + ' desimali' : 'idadi kamili'} tu.`);
+    if (!isQty(stock, precision, true) || stock + delta < 0 || Q.add(stock, delta, precision) < 0) throw new HttpsError('failed-precondition', 'Stock mpya si halali.');
+    // [PHASE 3 2026-10-31] Stock reserved for unpaid online orders cannot be adjusted away.
+    const adjustCheck = stockCore.checkAdjust(product, variant ? requestedVariantId : null, delta);
+    if (!adjustCheck.ok && adjustCheck.error === 'BELOW_RESERVED') {
+      throw new HttpsError('failed-precondition', `BELOW_RESERVED: stock haiwezi kushuka chini ya kiasi kilichohifadhiwa kwa oda za online (${adjustCheck.reserved}).`);
+    }
+    // [2026-10-31] Opening stock is once per stock record. A product's own opening
+    // uses the product flags; each variant has its own flag (the product opening
+    // runs first at creation, so the product flags must not block the variants).
+    const openingBlocked = variant
+      ? (stock !== 0 || variant.openingStockInitialized === true)
+      : (stock !== 0 || product.openingStockPending !== true || product.openingStockInitialized === true);
+    if (isOpeningBalance && openingBlocked) {
       throw new HttpsError('failed-precondition', 'Opening stock tayari imeanzishwa au haijaidhinishwa.');
     }
     const now = new Date().toISOString();
-    const resultingStock = stock + delta;
+    const resultingStock = Q.add(stock, delta, precision);
     if (variant) {
-      const combinations = product.variantCombinations.map(candidate => candidate.variantId === requestedVariantId ? { ...candidate, stock: resultingStock } : candidate);
+      const combinations = product.variantCombinations.map(candidate => candidate.variantId === requestedVariantId ? { ...candidate, stock: resultingStock, ...(isOpeningBalance ? { openingStockInitialized: true } : {}) } : candidate);
       tx.set(productRef, { variantCombinations: combinations, updatedAt: now }, { merge: true });
     } else {
       tx.set(productRef, {
         stock: resultingStock,
-        availabilityStatus: resultingStock <= 0 ? 'out_of_stock' : (resultingStock <= 3 ? 'low_stock' : 'available'),
+        // [PHASE 3 2026-10-31] availability counts only unreserved stock.
+        availabilityStatus: (resultingStock - Number(product.reservedStock || 0)) <= 0 ? 'out_of_stock' : ((resultingStock - Number(product.reservedStock || 0)) <= 3 ? 'low_stock' : 'available'),
         ...(isOpeningBalance ? { openingStockPending: false, openingStockInitialized: true } : {}),
         updatedAt: now
       }, { merge: true });
     }
     tx.create(movementRef, { movementId: movementRef.id, type: movementType, movementType, source: movementSource, productId, variantId: requestedVariantId, sku: requestedSku, unitId: requestedUnitId, inventoryKey, quantity: delta, previousStock: stock, resultingStock, reason, businessId: scope.businessId, storeId: scope.storeId, ownerUid, actorUid: auth.uid, createdBy: auth.uid, createdAt: now });
     result = { movementId: movementRef.id, idempotent: false, resultingStock };
+  });
+  return result;
+});
+
+// [PHASE 2 F6 2026-10-31] Variant combinations are written by the server only.
+// Firestore rules cannot compare every element of a list within their 1000
+// expression budget, so the client sends its edited combinations here and the
+// server keeps every LIVE stock / reserved counter, keeps stored variants (none
+// is dropped; use status INACTIVE), and starts new variants at stock 0.
+const MAX_VARIANT_COMBINATIONS = 200;
+const VARIANT_SERVER_KEYS = ['stock', 'reserved', 'openingStockInitialized'];
+function variantAdmin(auth) {
+  const t = auth.token || {};
+  const email = String(t.email || '').toLowerCase();
+  const list = String(process.env.ADMIN_EMAILS || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean);
+  return (email && t.email_verified === true && list.includes(email)) || t.admin === true || t.superAdmin === true || t.role === 'admin';
+}
+function cleanVariantRow(row) {
+  if (!row || typeof row !== 'object' || Array.isArray(row)) throw new HttpsError('invalid-argument', 'VARIANT_ROW_INVALID');
+  const out = JSON.parse(JSON.stringify(row));
+  VARIANT_SERVER_KEYS.forEach(key => { delete out[key]; });
+  return out;
+}
+function mergeVariantCombinations(live, incoming) {
+  const liveList = Array.isArray(live) ? live.filter(Boolean) : [];
+  const rows = incoming.map(cleanVariantRow);
+  const ids = new Set();
+  rows.forEach(row => {
+    const id = text(row.variantId, 160);
+    if (!id) throw new HttpsError('invalid-argument', 'VARIANT_ID_REQUIRED');
+    if (ids.has(id)) throw new HttpsError('invalid-argument', 'DUPLICATE_VARIANT_ID');
+    ids.add(id);
+  });
+  const merged = liveList.map(current => {
+    const row = rows.find(candidate => candidate.variantId === current.variantId);
+    if (!row) return current;
+    const next = { ...row, stock: isQty(current.stock, QP, true) ? current.stock : 0 };
+    if (Object.prototype.hasOwnProperty.call(current, 'reserved')) next.reserved = current.reserved;
+    if (current.openingStockInitialized === true) next.openingStockInitialized = true;
+    return next;
+  });
+  rows.filter(row => !liveList.some(current => current.variantId === row.variantId)).forEach(row => merged.push({ ...row, stock: 0 }));
+  return { merged, kept: liveList.filter(current => !ids.has(current.variantId)).length, added: merged.length - liveList.length };
+}
+
+exports.productVariantsSave = onCall({ region: REGION }, async req => {
+  const auth = authOf(req);
+  const data = req.data && typeof req.data === 'object' ? req.data : {};
+  const productId = text(data.productId, 160);
+  if (!productId || productId.includes('/')) throw new HttpsError('invalid-argument', 'productId inahitajika.');
+  if (!Array.isArray(data.variantCombinations) || data.variantCombinations.length > MAX_VARIANT_COMBINATIONS) {
+    throw new HttpsError('invalid-argument', `variantCombinations lazima iwe orodha (max ${MAX_VARIANT_COMBINATIONS}).`);
+  }
+  if (Buffer.byteLength(JSON.stringify(data.variantCombinations)) > 400000) throw new HttpsError('invalid-argument', 'VARIANTS_TOO_LARGE');
+  const productRef = db.doc('products/' + productId);
+  let result;
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(productRef);
+    if (!snap.exists) throw new HttpsError('not-found', 'Product haipo.');
+    const product = snap.data() || {};
+    let allowed = String(product.userId || '') === auth.uid || variantAdmin(auth);
+    if (!allowed && String(product.managedByAgentUid || '') === auth.uid) {
+      const agent = await tx.get(db.doc('users/' + auth.uid));
+      allowed = agent.exists && (agent.data() || {}).isApprovedAgent === true;
+    }
+    if (!allowed) throw new HttpsError('permission-denied', 'Si bidhaa yako.');
+    const { merged, kept, added } = mergeVariantCombinations(product.variantCombinations, data.variantCombinations);
+    if (merged.length > MAX_VARIANT_COMBINATIONS) throw new HttpsError('invalid-argument', 'TOO_MANY_VARIANTS');
+    const check = productIdentity.validateConcreteCombinations({ productId, variantCombinations: merged });
+    if (!check.ok) throw new HttpsError('failed-precondition', check.error);
+    const now = new Date().toISOString();
+    tx.set(productRef, { variantCombinations: merged, updatedAt: now, lastChangedBy: auth.uid, lastChangedAt: now }, { merge: true });
+    result = { ok: true, productId, count: merged.length, added, keptUnsent: kept };
   });
   return result;
 });
@@ -993,8 +1146,8 @@ function validateVoidSaleSnapshot(sale, saleId) {
   if (sale.voidStatus === 'VOIDED' || sale.voidId) return { status: 'SALE_ALREADY_VOIDED', reason: 'VOID_DERIVED_STATUS' };
   if (sale.immutableSnapshot !== true || !Array.isArray(sale.items) || sale.items.length === 0) return { status: 'VOID_NOT_SUPPORTED', reason: 'SALE_SNAPSHOT_UNSUPPORTED' };
   const items = sale.items.map(item => {
-    if (!item || typeof item !== 'object' || !item.productId || !Number.isSafeInteger(item.quantity) || item.quantity <= 0 ||
-        !Number.isSafeInteger(item.stockQuantity) || item.stockQuantity <= 0 || typeof item.unitPriceAtSale !== 'number' || !Number.isFinite(item.unitPriceAtSale)) return null;
+    if (!item || typeof item !== 'object' || !item.productId || !isQty(item.quantity) ||
+        !isQty(item.stockQuantity) || typeof item.unitPriceAtSale !== 'number' || !Number.isFinite(item.unitPriceAtSale)) return null;
     return { ...item, itemIndex: sale.items.indexOf(item), reversalQuantity: item.stockQuantity };
   });
   if (items.some(item => !item)) return { status: 'VOID_NOT_SUPPORTED', reason: 'SALE_ITEM_SNAPSHOT_UNSUPPORTED' };
@@ -1076,7 +1229,7 @@ exports.posVoid = onCall({ region: REGION }, async req => {
       const item = eligibility.items.find(candidate => (candidate.inventoryKey || [candidate.productId, candidate.variantId || 'product', candidate.unitId || 'default'].join(':')) === identityKey);
       const variant = item && item.variantId ? (Array.isArray(product.variantCombinations) ? product.variantCombinations.find(candidate => candidate && candidate.variantId === item.variantId) : null) : null;
       const stock = Number(variant ? variant.stock : product.stock);
-      if (!Number.isSafeInteger(stock) || stock < 0) moneyReversalError('VOID_NOT_SUPPORTED', 'Inventory stock is invalid.');
+      if (!isQty(stock, Q.precisionOf(product), true)) moneyReversalError('VOID_NOT_SUPPORTED', 'Inventory stock is invalid.');
       productStates.set(identityKey, { ref: productRef, data: product, stock, variantId: item && item.variantId });
     }
 
@@ -1085,7 +1238,7 @@ exports.posVoid = onCall({ region: REGION }, async req => {
     const stockDeltas = new Map();
     const items = eligibility.items.map(item => {
       const identityKey = item.inventoryKey || [item.productId, item.variantId || 'product', item.unitId || 'default'].join(':');
-      stockDeltas.set(identityKey, (stockDeltas.get(identityKey) || 0) + item.reversalQuantity);
+      stockDeltas.set(identityKey, Q.add(stockDeltas.get(identityKey) || 0, item.reversalQuantity, QP));
       return {
         productId: item.productId,
         variantId: item.variantId || null,
@@ -1132,18 +1285,7 @@ exports.posVoid = onCall({ region: REGION }, async req => {
         originalSaleTotal
       }
     };
-    for (const [identityKey, delta] of stockDeltas) {
-      const state = productStates.get(identityKey);
-      const resultingStock = state.stock + delta;
-      if (state.variantId) {
-        const combinations = Array.isArray(state.data.variantCombinations) ? state.data.variantCombinations : [];
-        const variantIndex = combinations.findIndex(candidate => candidate && candidate.variantId === state.variantId);
-        if (variantIndex < 0) moneyReversalError('VARIANT_NOT_FOUND');
-        tx.set(state.ref, { variantCombinations: combinations.map((candidate, index) => index === variantIndex ? { ...candidate, stock: resultingStock } : candidate), updatedAt: now }, { merge: true });
-      } else {
-        tx.set(state.ref, { stock: resultingStock, availabilityStatus: resultingStock <= 0 ? 'out_of_stock' : (resultingStock <= 3 ? 'low_stock' : 'available'), updatedAt: now }, { merge: true });
-      }
-    }
+    writeStockIncreases(tx, stockDeltas, productStates, now, moneyReversalError);
     tx.create(voidRef, record);
     items.forEach(item => {
       const movementRef = db.doc('inventory_movements/void_' + request.idempotencyKey + '_' + item.originalSaleItemId.split(':').pop());
@@ -1571,6 +1713,7 @@ exports.posCreditAdjustment = onCall({ region: REGION }, async req => {
 });
 
 exports._testing = {
+  mergeVariantCombinations,
   keyOf,
   validateCredit,
   RETURN_INVENTORY_DISPOSITIONS,

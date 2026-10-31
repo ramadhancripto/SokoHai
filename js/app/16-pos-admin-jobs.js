@@ -1503,7 +1503,7 @@ window.skhAdminAdUpload=async function(kind,input){
       const up=await window.skhUploadFromFile(file,{resourceType:kind==='video'||kind==='audio'?'video':'image',folder:AD_MEDIA_UPLOAD_FOLDER});
       if(!up||!up.url)throw new Error('Upload failed');
       const d=up.data||{},mediaKind=kind==='logo'?'logo':kind;
-      await skh.addDoc(skh.collection(skh.db,'adminMedia'),{url:up.url,name:file.name,type:mediaKind,mime:file.type,size:file.size,width:d.width||null,height:d.height||null,duration:d.duration||null,uploadedAt:new Date().toISOString(),uploadedBy:skh.currentUser.uid,archived:false});
+      await skh.addDoc(skh.collection(skh.db,'adminMedia'),{url:up.url,name:file.name,type:mediaKind,mime:file.type,size:file.size,width:d.width||null,height:d.height||null,duration:d.duration||null,uploadedAt:new Date().toISOString(),uploadedBy:skh.currentUser.uid,archived:false,...(window.skhAdminStamp?window.skhAdminStamp():{})});
       if(target==='annSlideshow')window.skhAddSlideshowSlide(up.url,file.name);
       else{
         const inputTarget=adInput(target);if(inputTarget)inputTarget.value=up.url;
@@ -1541,7 +1541,7 @@ window.skhSelectAdminMedia=function(id){
   if(targetName==='annVideo')window.skhProbeVideoDuration(item.url);
   document.getElementById('adminMediaLibraryModal').style.display='none';window.skhRenderAdminAdPreview();
 };
-window.skhArchiveAdminMedia=async function(id){const x=(window.__adminMediaCache||[]).find(a=>a.id===id);if(!x)return;const inUse=(window.__sokohaiAnnouncementsCache||[]).some(a=>window.skhAdminAdState(a)==='active'&&[a.image,a.imageUrl,a.videoUrl,a.audioUrl,a.logoUrl].includes(x.url));if(inUse)return alert('Media hii inatumiwa na advertisement active. Replace creative kwanza.');if(!await skhConfirm('Archive media hii?'))return;await skh.updateDoc(skh.doc(skh.db,'adminMedia',id),{archived:true,archivedAt:new Date().toISOString()});x.archived=true;window.skhRenderAdminMediaLibrary();if(window.skhToast)window.skhToast('Media archived.','success');};
+window.skhArchiveAdminMedia=async function(id){const x=(window.__adminMediaCache||[]).find(a=>a.id===id);if(!x)return;const inUse=(window.__sokohaiAnnouncementsCache||[]).some(a=>window.skhAdminAdState(a)==='active'&&[a.image,a.imageUrl,a.videoUrl,a.audioUrl,a.logoUrl].includes(x.url));if(inUse)return alert('Media hii inatumiwa na advertisement active. Replace creative kwanza.');if(!await skhConfirm('Archive media hii?'))return;await skh.updateDoc(skh.doc(skh.db,'adminMedia',id),{archived:true,archivedAt:new Date().toISOString(),...(window.skhAdminStamp?window.skhAdminStamp():{})});x.archived=true;window.skhRenderAdminMediaLibrary();if(window.skhToast)window.skhToast('Media archived.','success');};
 window.skhDeleteAdminMedia=async function(id){const x=(window.__adminMediaCache||[]).find(a=>a.id===id);if(!x)return;const inUse=(window.__sokohaiAnnouncementsCache||[]).some(a=>window.skhAdminAdState(a)==='active'&&[a.image,a.imageUrl,a.videoUrl,a.audioUrl,a.logoUrl].includes(x.url));if(inUse)return alert('Media hii inatumiwa na advertisement active. Replace creative kwanza.');if(!await skhConfirm('Delete media reference hii? Cloudinary asset haitafutwa bila signed deletion.'))return;await skh.deleteDoc(skh.doc(skh.db,'adminMedia',id));window.__adminMediaCache=(window.__adminMediaCache||[]).filter(a=>a.id!==id);window.skhRenderAdminMediaLibrary();if(window.skhToast)window.skhToast('Media reference deleted.','success');};
 
 window.enableOfflineManagement = function(uid, name, shopName) {

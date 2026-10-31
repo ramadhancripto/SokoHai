@@ -31,12 +31,15 @@ for (const definitions of Object.values(data.PRODUCT_TYPE_DEFINITIONS)) for (con
   if (definition.variantRule) ruleCount++;
   if (definition.complianceProfile) compliance.add(definition.complianceProfile);
 }
-assert.equal(typeOccurrences, 705);
-assert.equal(attrOccurrences, 1116);
+// [REPAIR 2026-10] Snapshot updated to the canonical data changed intentionally in
+// commit 0ac2c17 (see docs/taxonomy/mission/authority-drift-justification.md, class A).
+// Previous snapshot (42c20a5): 705 / 1116 / 387 / 676 / 207 / 111.
+assert.equal(typeOccurrences, 720);
+assert.equal(attrOccurrences, 1122);
 assert.equal(optionValueOccurrences, 387);
-assert.equal(filterOccurrences, 676);
-assert.equal(featureOccurrences, 207);
-assert.equal(ruleCount, 111);
+assert.equal(filterOccurrences, 681);
+assert.equal(featureOccurrences, 209);
+assert.equal(ruleCount, 112);
 assert.equal(compliance.size, 19);
 assert.equal(data.PROFILE_LIBRARY.commerce.includes('Unit'), true);
 assert.ok(taxonomy.getUnitDefinitions().groups.weight);
@@ -70,7 +73,8 @@ assert.ok(specificationArtifact.includes('CAT-16 Product branch specification = 
 assert.ok(specificationArtifact.includes('CAT-19 = Product + Service'));
 const reconciliation = taxonomy.reconcileProductSpecification();
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-16' && row.classification === 'GENUINELY_UNSPECIFIED'));
-assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Mizizi & Viazi' && row.classification === 'SPECIFIED_BUT_INCOMPLETE'));
+assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Samaki & Seafood' && row.classification === 'SPECIFIED_BUT_INCOMPLETE'));
+assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Mizizi & Viazi' && row.classification === 'SPECIFIED_AND_IMPLEMENTED')); // [REPAIR 2026-10] completed in 0ac2c17
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Mboga & Fresh Produce' && row.classification === 'SPECIFIED_AND_IMPLEMENTED'));
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-17' && row.classification === 'SERVICE'));
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-39' && row.classification === 'OVERLAY'));

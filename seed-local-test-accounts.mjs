@@ -1,5 +1,14 @@
 import admin from "./functions/node_modules/firebase-admin/lib/index.js";
+import { randomBytes } from "node:crypto";
+/* [REPAIR 2026-10 C5] LOCAL EMULATOR ONLY. No real e-mail address and no fixed
+   password is stored here any more. Passwords come from SEED_PASSWORD or are
+   generated per run and printed once. This file is never deployed (dist/). */
 const PROJECT_ID = "demo-sokohai";
+if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+  console.error("REFUSED: seed runs only against the Firebase emulators (set FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST).");
+  process.exit(2);
+}
+const SEED_PASSWORD = process.env.SEED_PASSWORD || ("Local-" + randomBytes(9).toString("base64url") + "1!");
 
 admin.initializeApp({
   projectId: PROJECT_ID
@@ -10,8 +19,8 @@ const db = admin.firestore();
 
 const accounts = [
   {
-    email: "rshabansaid@gmail.com",
-    password: "000000",
+    email: "admin@sokohai.test",
+    password: SEED_PASSWORD,
     displayName: "SokoHai Admin",
     profile: {
       userRole: "admin",
@@ -21,7 +30,7 @@ const accounts = [
   },
   {
     email: "seller1@sokohai.test",
-    password: "SokoHai123!",
+    password: SEED_PASSWORD,
     displayName: "Test Seller",
     profile: {
       userRole: "seller",
@@ -35,7 +44,7 @@ const accounts = [
   },
   {
     email: "buyer1@sokohai.test",
-    password: "SokoHai123!",
+    password: SEED_PASSWORD,
     displayName: "Test Buyer",
     profile: {
       userRole: "buyer",
@@ -44,7 +53,7 @@ const accounts = [
   },
   {
     email: "agent1@sokohai.test",
-    password: "SokoHai123!",
+    password: SEED_PASSWORD,
     displayName: "Test Agent",
     profile: {
       userRole: "agent",
@@ -54,7 +63,7 @@ const accounts = [
   },
   {
     email: "driver1@sokohai.test",
-    password: "SokoHai123!",
+    password: SEED_PASSWORD,
     displayName: "Test Driver",
     profile: {
       userRole: "driver",
@@ -70,6 +79,7 @@ const accounts = [
 async function main() {
   console.log("\nSokoHai LOCAL TEST ACCOUNTS");
   console.log("Project:", PROJECT_ID);
+  console.log("Password for all seeded test accounts (this run):", SEED_PASSWORD);
   console.log("--------------------------------");
 
   for (const a of accounts) {

@@ -64,6 +64,19 @@
         }
     };
 
+    // Ask the server for a one-time upload signature. Returns {mode:'signed'|...},
+    // {mode:'unsigned'} (server not configured yet) or {error}. Login required.
+    window.skhUploadSignature = async function (resourceType, folder) {
+        try {
+            var s = window.skh;
+            if (!s || typeof s.wrapCallable !== 'function') return { error: 'functions_unavailable' };
+            var r = await s.wrapCallable('uploadSignature')({ resourceType: resourceType || 'image', folder: folder || '' });
+            return (r && r.data) || { error: 'empty' };
+        } catch (e) {
+            return { error: String((e && (e.message || e.code)) || e) };
+        }
+    };
+
     window.skhUploadFromFile = async function (file, opts) {
         opts = opts || {};
         if (!file) return null;
@@ -73,11 +86,32 @@
             }
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('upload_preset', window.SOKOHAI_UPLOADS.preset);
-            if (opts.folder) fd.append('folder', opts.folder);
+            let resource = opts.resourceType || 'auto'; // 'auto' | 'image' | 'video'
+            let cloud = window.SOKOHAI_UPLOADS.cloud;
+            // [REPAIR 2026-10 H7] Signed upload: the server signs (secret never in the
+            // browser), chooses the folder and applies a quota. 'unsigned' is returned
+            // only while the server is in transition mode (not yet configured).
+            const sig = await window.skhUploadSignature(resource, opts.folder);
+            if (sig && sig.mode === 'signed') {
+                cloud = sig.cloudName || cloud;
+                // [PHASE 9] The server decides the resource type and the allowed
+                // file formats; both are covered by its signature.
+                if (sig.resourceType) resource = sig.resourceType;
+                if (sig.allowedFormats) fd.append('allowed_formats', sig.allowedFormats);
+                fd.append('api_key', sig.apiKey);
+                fd.append('timestamp', String(sig.timestamp));
+                fd.append('signature', sig.signature);
+                fd.append('folder', sig.folder);
+                fd.append('upload_preset', sig.uploadPreset);
+            } else if (sig && sig.mode === 'unsigned') {
+                fd.append('upload_preset', window.SOKOHAI_UPLOADS.preset);
+                if (opts.folder) fd.append('folder', opts.folder);
+            } else {
+                console.error('skhUploadFromFile: upload imekataliwa na server', sig && sig.error);
+                return null;
+            }
 
-            const resource = opts.resourceType || 'auto'; // 'auto' | 'image' | 'video' | 'raw'
-            const res = await fetch( `https://api.cloudinary.com/v1_1/${window.SOKOHAI_UPLOADS.cloud}/${resource}/upload`,
+            const res = await fetch( `https://api.cloudinary.com/v1_1/${cloud}/${resource}/upload`,
                 { method: 'POST', body: fd }
             );
             const data = await res.json();

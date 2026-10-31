@@ -1,6 +1,7 @@
 /* SOKOHAI PRODUCT FOUNDATION — one compatibility layer for the existing products collection.
    It reconciles legacy field names without creating a second product database or UI. */
 import { normalizeProductUploadData, resolveVariantImages } from '../../shared/product-upload-data-core.mjs';
+import { listingProjection, normalizeChannels, legacyFlagsFor } from '../../shared/product-listing-core.mjs';
 export { normalizeProductUploadData, resolveVariantImages };
 const PUB = new Set(['draft','published','archived']);
 const AVAIL = new Set(['available','low_stock','out_of_stock','pre_order','made_to_order','hidden']);
@@ -111,6 +112,17 @@ export function buildProductWrite(input){
   if (uploadData.features) p.features = uploadData.features;
   if (uploadData.additionalInfo) p.additionalInfo = uploadData.additionalInfo;
   p.minimumOrderQuantity=Math.max(1,number(p.minimumOrderQuantity)||(p.saleMode==='wholesale'&&p.modeData?number(p.modeData.minQty):1));
+  // [PHASE 1/2 2026-10-31] Separate concepts, additive fields: salesChannels
+  // (manage_only | marketplace | pos), nature, and one pricing projection
+  // (packs vs wholesale tiers). Legacy isOnline/isOffline stay authoritative
+  // for existing readers and are kept in step with salesChannels.
+  const explicit = Array.isArray(p.salesChannels) ? normalizeChannels(p.salesChannels) : null;
+  if (explicit && !explicit.ok) throw new Error(explicit.error === 'MANAGE_ONLY_IS_EXCLUSIVE' ? 'Kusimamia tu hakuwezi kuchanganywa na channel nyingine.' : 'Chagua angalau channel moja.');
+  const listing = listingProjection(explicit ? { ...p, salesChannels: explicit.channels } : p);
+  p.salesChannels = listing.salesChannels;
+  if (explicit) Object.assign(p, legacyFlagsFor(explicit.channels));
+  p.nature = listing.nature;
+  p.pricing = { basePrice: listing.pricing.basePrice, baseUnitId: listing.pricing.baseUnitId, packs: listing.pricing.packs, wholesaleTiers: listing.pricing.wholesaleTiers };
   p.searchMetadata=buildSearchMetadata(p); p.schemaVersion=2; p.updatedAt=new Date().toISOString();
   return p;
 }

@@ -1,0 +1,1007 @@
+{
+ "counts": {
+  "byLevel": {
+   "SECTOR": 15,
+   "CATEGORY": 46,
+   "SUBCATEGORY": 891,
+   "SUBSUBCATEGORY": 38,
+   "PRODUCT_SERVICE_TYPE": 2454
+  },
+  "byOrigin": {
+   "PROPOSED": 971,
+   "CANONICAL": 1504,
+   "SYSTEM": 969
+  },
+  "bySector": {
+   "SEC-01": {
+    "name": "Chakula, Kilimo & Rasilimali Hai",
+    "categories": 6,
+    "subcategories": 108,
+    "types": 636,
+    "otherNodes": 120
+   },
+   "SEC-02": {
+    "name": "Mitindo, Urembo & Binafsi",
+    "categories": 2,
+    "subcategories": 45,
+    "types": 117,
+    "otherNodes": 49
+   },
+   "SEC-03": {
+    "name": "Nyumba, Ujenzi & Hardware",
+    "categories": 2,
+    "subcategories": 50,
+    "types": 81,
+    "otherNodes": 54
+   },
+   "SEC-04": {
+    "name": "Teknolojia & Electronics",
+    "categories": 3,
+    "subcategories": 70,
+    "types": 58,
+    "otherNodes": 74
+   },
+   "SEC-05": {
+    "name": "Magari, Usafiri & Logistics",
+    "categories": 3,
+    "subcategories": 63,
+    "types": 48,
+    "otherNodes": 69
+   },
+   "SEC-06": {
+    "name": "Afya & Ustawi",
+    "categories": 1,
+    "subcategories": 24,
+    "types": 26,
+    "otherNodes": 26
+   },
+   "SEC-07": {
+    "name": "Familia, Watoto, Wanyama Vipenzi & Michezo",
+    "categories": 4,
+    "subcategories": 81,
+    "types": 107,
+    "otherNodes": 88
+   },
+   "SEC-08": {
+    "name": "Elimu, Ofisi, Media & Digital",
+    "categories": 5,
+    "subcategories": 109,
+    "types": 87,
+    "otherNodes": 119
+   },
+   "SEC-09": {
+    "name": "Sanaa, Utamaduni & Sherehe",
+    "categories": 3,
+    "subcategories": 74,
+    "types": 52,
+    "otherNodes": 80
+   },
+   "SEC-10": {
+    "name": "Viwanda, Nishati, Mazingira & Usalama",
+    "categories": 6,
+    "subcategories": 147,
+    "types": 103,
+    "otherNodes": 157
+   },
+   "SEC-11": {
+    "name": "Ardhi, Mali Isiyohamishika & Madini",
+    "categories": 2,
+    "subcategories": 51,
+    "types": 24,
+    "otherNodes": 54
+   },
+   "SEC-12": {
+    "name": "Huduma za Nyumbani & Ufundi",
+    "categories": 2,
+    "subcategories": 22,
+    "types": 75,
+    "otherNodes": 26
+   },
+   "SEC-13": {
+    "name": "Huduma za Kitaalamu, Fedha & Ajira",
+    "categories": 3,
+    "subcategories": 20,
+    "types": 61,
+    "otherNodes": 26
+   },
+   "SEC-14": {
+    "name": "Ukarimu, Utalii, Chakula & Burudani",
+    "categories": 3,
+    "subcategories": 19,
+    "types": 56,
+    "otherNodes": 25
+   },
+   "SEC-99": {
+    "name": "Nyingine / Haijapangwa",
+    "categories": 1,
+    "subcategories": 0,
+    "types": 0,
+    "otherNodes": 2
+   }
+  },
+  "byType": {
+   "both": 17,
+   "system": 4,
+   "product": 2968,
+   "service": 455
+  },
+  "legacy": {
+   "advancedCategories": 25,
+   "advancedSubcategories": 120,
+   "serviceSubcategories": 72,
+   "legacyByAction": {
+    "MAP": 124,
+    "NEEDS_HUMAN_DECISION": 8,
+    "SPLIT": 8,
+    "LEGACY_ALIAS": 5
+   },
+   "serviceByAction": {
+    "MAP": 72
+   }
+  },
+  "multiLeafTypes": 3
+ },
+ "duplicates": {
+  "sameEnglishNameAcrossCategories": [
+   {
+    "name": "roots & tubers",
+    "ids": [
+     "SC-CAT-01-MIZIZI_VIAZI",
+     "SC-CAT-03-MIZIZI_VIAZI"
+    ]
+   },
+   {
+    "name": "meat",
+    "ids": [
+     "SC-CAT-01-NYAMA",
+     "SC-CAT-04-NYAMA"
+    ]
+   },
+   {
+    "name": "eggs",
+    "ids": [
+     "SC-CAT-01-MAYAI",
+     "SC-CAT-04-MAYAI"
+    ]
+   },
+   {
+    "name": "vehicle accessories",
+    "ids": [
+     "SC-CAT-14-VEHICLE_ACCESSORIES",
+     "SC-CAT-15-VEHICLE_ACCESSORIES"
+    ]
+   }
+  ],
+  "duplicateTypeLabels": [
+   {
+    "label": "tent hire",
+    "ids": [
+     "PT-CAT-24-KAMBI_HEMA_LA_KUKODI",
+     "PT-CAT-26-KUKODISHA_VIFAA_VYA_MATUKIO_MAHEMA"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "growers",
+    "ids": [
+     "PT-CAT-04-NGURUWE_GROWERS",
+     "PT-CAT-04-SUNGURA_GROWERS"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "kanga",
+    "ids": [
+     "PT-CAT-04-BATA_BATA_MZINGA_POULTRY_NYINGINE_KANGA",
+     "PT-CAT-28-DEFAULT_KANGA"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "honey",
+    "ids": [
+     "PT-CAT-04-NYUKI_UFUGAJI_WA_NYUKI_HONEY",
+     "PT-CAT-01-VYAKULA_VYA_ASILI_ASALI"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "fresh milk",
+    "ids": [
+     "PT-CAT-04-MAZIWA_FRESH_MILK",
+     "PT-CAT-01-MAZIWA_BIDHAA_ZA_MAZIWA_MAZIWA_FRESH"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "beef",
+    "ids": [
+     "PT-CAT-04-NYAMA_BEEF",
+     "PT-CAT-01-NYAMA_BEEF"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "goat meat",
+    "ids": [
+     "PT-CAT-04-NYAMA_GOAT_MEAT",
+     "PT-CAT-01-NYAMA_GOAT_MEAT"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "mutton",
+    "ids": [
+     "PT-CAT-04-NYAMA_MUTTON",
+     "PT-CAT-01-NYAMA_MUTTON"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "pork",
+    "ids": [
+     "PT-CAT-04-NYAMA_PORK",
+     "PT-CAT-01-NYAMA_PORK"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "compost",
+    "ids": [
+     "PT-CAT-04-MANURE_LIVESTOCK_BY_PRODUCTS_COMPOST",
+     "PT-CAT-02-MBOLEA_COMPOST",
+     "PT-CAT-02-PEMBEJEO_ZA_UDONGO_MAANDALIZI_YA_SHAMBA_MBOJI"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "feeders",
+    "ids": [
+     "PT-CAT-04-LIVESTOCK_EQUIPMENT_FEEDERS",
+     "PT-CAT-05-AQUACULTURE_EQUIPMENT_FEEDERS"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "hay",
+    "ids": [
+     "PT-CAT-04-LIVESTOCK_FEED_HAY",
+     "PT-CAT-03-MAJANI_YA_MIFUGO_MABAKI_YA_MAZAO_HAY_MAJANI_MAKAVU"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "sardines",
+    "ids": [
+     "PT-CAT-05-SAMAKI_WA_BAHARI_SARDINES",
+     "PT-CAT-05-DAGAA_SMALL_FISH_SARDINES"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "prawns",
+    "ids": [
+     "PT-CAT-05-KAMBA_CRUSTACEANS_PRAWNS",
+     "PT-CAT-05-AQUACULTURE_PRAWNS",
+     "PT-CAT-01-SAMAKI_VYAKULA_VYA_BAHARINI_KAMBA"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "crabs",
+    "ids": [
+     "PT-CAT-05-KAMBA_CRUSTACEANS_CRABS",
+     "PT-CAT-05-AQUACULTURE_CRABS"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "oysters",
+    "ids": [
+     "PT-CAT-05-PWEZA_CHAZA_SHELLFISH_OYSTERS",
+     "PT-CAT-05-AQUACULTURE_OYSTERS"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "fish cages",
+    "ids": [
+     "PT-CAT-05-FISHING_EQUIPMENT_FISH_CAGES",
+     "PT-CAT-05-AQUACULTURE_EQUIPMENT_FISH_CAGES"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "firewood logs",
+    "ids": [
+     "PT-CAT-06-MITI_MAGOGO_FIREWOOD_LOGS",
+     "PT-CAT-06-FIREWOOD_FIREWOOD_LOGS"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "boards",
+    "ids": [
+     "PT-CAT-06-MBAO_SAWN_TIMBER_BOARDS",
+     "PT-CAT-06-FOREST_PRODUCTS_USED_FOR_CONSTRUCTION_BOARDS"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "building poles",
+    "ids": [
+     "PT-CAT-06-POLES_POSTS_BUILDING_POLES",
+     "PT-CAT-10-MBAO_ZA_UJENZI_FITO_ZA_UJENZI"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "bark",
+    "ids": [
+     "PT-CAT-06-SAWDUST_WOOD_RESIDUES_BARK",
+     "PT-CAT-06-MEDICINAL_PLANTS_HERBS_BARK"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "sisal fibre",
+    "ids": [
+     "PT-CAT-06-NATURAL_FIBRES_SISAL_FIBRE",
+     "PT-CAT-03-MKONGE_NYUZI_ZA_MKONGE"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "nyanya",
+    "ids": [
+     "PT-CAT-01-MBOGA_FRESH_PRODUCE_NYANYA",
+     "PT-CAT-03-DEFAULT_NYANYA"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "parachichi",
+    "ids": [
+     "PT-CAT-01-MATUNDA_PARACHICHI",
+     "PT-CAT-03-DEFAULT_PARACHICHI"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "mahindi",
+    "ids": [
+     "PT-CAT-01-NAFAKA_UNGA_MIKUNDE_MAHINDI",
+     "PT-CAT-03-DEFAULT_MAHINDI"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "mchele",
+    "ids": [
+     "PT-CAT-01-NAFAKA_UNGA_MIKUNDE_MCHELE",
+     "PT-CAT-03-DEFAULT_MCHELE"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "maharage",
+    "ids": [
+     "PT-CAT-01-NAFAKA_UNGA_MIKUNDE_MAHARAGE",
+     "PT-CAT-03-DEFAULT_MAHARAGE"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "cassava",
+    "ids": [
+     "PT-CAT-01-MIZIZI_VIAZI_CASSAVA",
+     "PT-CAT-03-MIZIZI_VIAZI_MUHOGO"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "organic fertilizer",
+    "ids": [
+     "PT-CAT-02-MBOLEA_ORGANIC_FERTILIZER",
+     "PT-CAT-02-PEMBEJEO_ZA_KILIMO_HAI_MBOLEA_HAI"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "hair dryer",
+    "ids": [
+     "PT-CAT-08-DEFAULT_HAIR_DRYER",
+     "PT-CAT-11-DEFAULT_HAIR_DRYER"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "printer",
+    "ids": [
+     "PT-CAT-11-DEFAULT_PRINTER",
+     "PT-CAT-13-DEFAULT_PRINTER"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "gps tracker",
+    "ids": [
+     "PT-CAT-12-DEFAULT_GPS_TRACKER",
+     "PT-CAT-36-DEFAULT_GPS_TRACKER"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "battery",
+    "ids": [
+     "PT-CAT-15-DEFAULT_BATTERY",
+     "PT-CAT-34-DEFAULT_BATTERY"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   },
+   {
+    "label": "poster",
+    "ids": [
+     "PT-CAT-27-DEFAULT_POSTER",
+     "PT-CAT-37-DEFAULT_POSTER"
+    ],
+    "resolution": "Weka type moja ya msingi + alsoListedUnder, au badilisha label kuonyesha muktadha (si kufuta)."
+   }
+  ],
+  "overlayLikeLeaves": [
+   {
+    "id": "SC-CAT-03-AGRICULTURAL_BULK_COMMODITIES",
+    "name": "Agricultural Bulk Commodities",
+    "overlay": "CAT-40 saleMode",
+    "proposal": "LEGACY_ALIAS → saleMode=bulk/trade; leaf ifichwe kwenye menu baada ya migration."
+   },
+   {
+    "id": "SC-CAT-07-SECOND_HAND_MITUMBA",
+    "name": "Second-hand / Mitumba",
+    "overlay": "CAT-39 condition",
+    "proposal": "Baki kama leaf (mitumba ni soko kubwa) + weka condition attribute; buyer filter ya condition iwe chanzo kikuu."
+   },
+   {
+    "id": "SC-CAT-09-FURNITURE_HOUSEHOLD_TRADE_CUSTOM_ORDERS",
+    "name": "Furniture/Household Trade & Custom Orders",
+    "overlay": "CAT-40 saleMode",
+    "proposal": "LEGACY_ALIAS → saleMode=bulk/trade; leaf ifichwe kwenye menu baada ya migration."
+   },
+   {
+    "id": "SC-CAT-10-BULK_CONSTRUCTION_TRADE",
+    "name": "Bulk / Construction Trade",
+    "overlay": "CAT-40 saleMode",
+    "proposal": "LEGACY_ALIAS → saleMode=bulk/trade; leaf ifichwe kwenye menu baada ya migration."
+   },
+   {
+    "id": "SC-CAT-13-REFURBISHED_USED_IT",
+    "name": "Refurbished & Used IT",
+    "overlay": "CAT-39 condition",
+    "proposal": "Baki kama leaf (mitumba ni soko kubwa) + weka condition attribute; buyer filter ya condition iwe chanzo kikuu."
+   },
+   {
+    "id": "SC-CAT-13-IT_TRADE_BULK_CUSTOM_BUILDS",
+    "name": "IT Trade / Bulk / Custom Builds",
+    "overlay": "CAT-40 saleMode",
+    "proposal": "LEGACY_ALIAS → saleMode=bulk/trade; leaf ifichwe kwenye menu baada ya migration."
+   },
+   {
+    "id": "SC-CAT-14-USED_VEHICLES",
+    "name": "Used Vehicles",
+    "overlay": "CAT-39 condition",
+    "proposal": "Baki kama leaf (mitumba ni soko kubwa) + weka condition attribute; buyer filter ya condition iwe chanzo kikuu."
+   },
+   {
+    "id": "SC-CAT-14-VEHICLE_TRADE_IMPORT",
+    "name": "Vehicle Trade / Import",
+    "overlay": "CAT-40 saleMode",
+    "proposal": "LEGACY_ALIAS → saleMode=bulk/trade; leaf ifichwe kwenye menu baada ya migration."
+   },
+   {
+    "id": "SC-CAT-15-USED_SALVAGED_PARTS",
+    "name": "Used / Salvaged Parts",
+    "overlay": "CAT-39 condition",
+    "proposal": "Baki kama leaf (mitumba ni soko kubwa) + weka condition attribute; buyer filter ya condition iwe chanzo kikuu."
+   },
+   {
+    "id": "SC-CAT-15-BULK_TRADE_PARTS",
+    "name": "Bulk / Trade Parts",
+    "overlay": "CAT-40 saleMode",
+    "proposal": "LEGACY_ALIAS → saleMode=bulk/trade; leaf ifichwe kwenye menu baada ya migration."
+   },
+   {
+    "id": "SC-CAT-19-USED_REFURBISHED_MEDICAL_EQUIPMENT",
+    "name": "Used / Refurbished Medical Equipment",
+    "overlay": "CAT-39 condition",
+    "proposal": "Baki kama leaf (mitumba ni soko kubwa) + weka condition attribute; buyer filter ya condition iwe chanzo kikuu."
+   },
+   {
+    "id": "SC-CAT-33-USED_INDUSTRIAL_MACHINERY",
+    "name": "Used Industrial Machinery",
+    "overlay": "CAT-39 condition",
+    "proposal": "Baki kama leaf (mitumba ni soko kubwa) + weka condition attribute; buyer filter ya condition iwe chanzo kikuu."
+   },
+   {
+    "id": "SC-CAT-33-REFURBISHED_MACHINERY",
+    "name": "Refurbished Machinery",
+    "overlay": "CAT-39 condition",
+    "proposal": "Baki kama leaf (mitumba ni soko kubwa) + weka condition attribute; buyer filter ya condition iwe chanzo kikuu."
+   },
+   {
+    "id": "SC-CAT-43-MINERAL_TRADE_PRODUCTS",
+    "name": "Mineral Trade Products",
+    "overlay": "CAT-40 saleMode",
+    "proposal": "LEGACY_ALIAS → saleMode=bulk/trade; leaf ifichwe kwenye menu baada ya migration."
+   }
+  ],
+  "serviceLeavesInProductDomains": [
+   {
+    "id": "SC-CAT-08-BEAUTY_SERVICES",
+    "name": "Beauty Services",
+    "proposal": "MERGE kwenye service domain husika; leaf ibaki kama alias hadi bidhaa zihamishwe."
+   }
+  ],
+  "attributeLikeLeaves": [
+   {
+    "id": "SC-CAT-03-GRADING_SORTING_QUALITY_STATE",
+    "name": "Grading, Sorting & Quality State",
+    "attribute": "qualityState/profile",
+    "proposal": "Ni attribute, si aina ya bidhaa."
+   },
+   {
+    "id": "SC-CAT-03-AGRICULTURAL_PROCESSING_STATE",
+    "name": "Agricultural Processing State",
+    "attribute": "qualityState/profile",
+    "proposal": "Ni attribute, si aina ya bidhaa."
+   },
+   {
+    "id": "SC-CAT-07-CLOTHING_RENTAL",
+    "name": "Clothing Rental",
+    "attribute": "listingType",
+    "proposal": "Badili kuwa listingType ∈ {sale, rent, lease}."
+   },
+   {
+    "id": "SC-CAT-14-VEHICLE_RENTAL_SALE_CONTEXT",
+    "name": "Vehicle Rental / Sale Context",
+    "attribute": "listingType",
+    "proposal": "Badili kuwa listingType ∈ {sale, rent, lease}."
+   },
+   {
+    "id": "SC-CAT-15-OEM_PARTS",
+    "name": "OEM Parts",
+    "attribute": "partOrigin",
+    "proposal": "Ni attribute, si aina ya bidhaa."
+   },
+   {
+    "id": "SC-CAT-15-AFTERMARKET_PARTS",
+    "name": "Aftermarket Parts",
+    "attribute": "partOrigin",
+    "proposal": "Ni attribute, si aina ya bidhaa."
+   },
+   {
+    "id": "SC-CAT-27-ART_MATERIALS_PRODUCTS",
+    "name": "Art Materials — PRODUCTS",
+    "attribute": "label-suffix",
+    "proposal": "Ondoa \"— PRODUCTS\" kwenye displayName (ID haibadiliki)."
+   },
+   {
+    "id": "SC-CAT-29-WEDDING_PARTY_FURNITURE_PRODUCTS",
+    "name": "Wedding & Party Furniture — PRODUCTS",
+    "attribute": "label-suffix",
+    "proposal": "Ondoa \"— PRODUCTS\" kwenye displayName (ID haibadiliki)."
+   },
+   {
+    "id": "SC-CAT-29-EVENT_EQUIPMENT_PRODUCTS",
+    "name": "Event Equipment — PRODUCTS",
+    "attribute": "label-suffix",
+    "proposal": "Ondoa \"— PRODUCTS\" kwenye displayName (ID haibadiliki)."
+   },
+   {
+    "id": "SC-CAT-36-SECURITY_CAMERA_PROFILE",
+    "name": "Security Camera Profile",
+    "attribute": "qualityState/profile",
+    "proposal": "Ni attribute, si aina ya bidhaa."
+   },
+   {
+    "id": "SC-CAT-42-RENTAL_PROPERTIES",
+    "name": "Rental Properties",
+    "attribute": "listingType",
+    "proposal": "Badili kuwa listingType ∈ {sale, rent, lease}."
+   },
+   {
+    "id": "SC-CAT-42-PROPERTY_FOR_SALE",
+    "name": "Property for Sale",
+    "attribute": "listingType",
+    "proposal": "Badili kuwa listingType ∈ {sale, rent, lease}."
+   },
+   {
+    "id": "SC-CAT-42-PROPERTY_FOR_LEASE",
+    "name": "Property for Lease",
+    "attribute": "listingType",
+    "proposal": "Badili kuwa listingType ∈ {sale, rent, lease}."
+   },
+   {
+    "id": "SC-CAT-42-PROPERTY_FOR_RENT",
+    "name": "Property for Rent",
+    "attribute": "listingType",
+    "proposal": "Badili kuwa listingType ∈ {sale, rent, lease}."
+   }
+  ],
+  "manualOverlaps": [
+   {
+    "ids": [
+     "SC-CAT-01-NAFAKA_UNGA_MIKUNDE",
+     "SC-CAT-03-NAFAKA",
+     "SC-CAT-03-MIKUNDE_PULSES"
+    ],
+    "kind": "context",
+    "resolution": "KEEP both: CAT-01 = rejareja ya mlaji, CAT-03 = zao/bidhaa ghafi ya jumla. Buyer search iunganishe kwa alias."
+   },
+   {
+    "ids": [
+     "SC-CAT-01-MAYAI",
+     "SC-CAT-04-MAYAI"
+    ],
+    "kind": "context",
+    "resolution": "KEEP: CAT-04 = mzalishaji/trei za shambani; CAT-01 = rejareja. Mwongozo wa seller unahitajika."
+   },
+   {
+    "ids": [
+     "SC-CAT-01-NYAMA",
+     "SC-CAT-04-NYAMA"
+    ],
+    "kind": "context",
+    "resolution": "Kama juu."
+   },
+   {
+    "ids": [
+     "SC-CAT-01-SAMAKI_SEAFOOD",
+     "SC-CAT-05-SAMAKI_WA_BAHARI"
+    ],
+    "kind": "context",
+    "resolution": "KEEP; CAT-05 ni chanzo/jumla."
+   },
+   {
+    "ids": [
+     "SC-CAT-12-TABLETS_MOBILE_COMPUTING",
+     "SC-CAT-13-TABLETS_HYBRID_COMPUTERS"
+    ],
+    "kind": "duplicate",
+    "resolution": "MERGE pendekezo: tablets → CAT-12; hybrids (2-in-1) → CAT-13. NEEDS_HUMAN_DECISION."
+   },
+   {
+    "ids": [
+     "SC-CAT-13-SERVERS",
+     "SC-CAT-13-SERVERS_DATA_CENTER_EQUIPMENT"
+    ],
+    "kind": "duplicate",
+    "resolution": "MERGE → \"Servers & Data Center Equipment\"; \"Servers\" kuwa alias."
+   },
+   {
+    "ids": [
+     "SC-CAT-13-SOFTWARE_LICENSES",
+     "SC-CAT-38-SOFTWARE",
+     "SC-CAT-38-SOFTWARE_LICENSE"
+    ],
+    "kind": "duplicate",
+    "resolution": "MERGE → CAT-38; CAT-13 leaf iwe alias."
+   },
+   {
+    "ids": [
+     "SC-CAT-13-PROJECTORS_PRESENTATION",
+     "SC-CAT-37-PROJECTORS_PRESENTATION_PRODUCTS"
+    ],
+    "kind": "duplicate",
+    "resolution": "MERGE → CAT-13; CAT-37 alias."
+   },
+   {
+    "ids": [
+     "SC-CAT-11-CABLES_ADAPTERS_CONNECTORS",
+     "SC-CAT-13-CABLES_ADAPTERS"
+    ],
+    "kind": "overlap",
+    "resolution": "KEEP kwa muktadha (AV vs IT) + cross-link."
+   },
+   {
+    "ids": [
+     "SC-CAT-11-POWER_BACKUP_DEVICES",
+     "SC-CAT-13-UPS_COMPUTER_POWER",
+     "SC-CAT-34-UPS_SYSTEMS",
+     "SC-CAT-34-INVERTERS_BACKUP_POWER"
+    ],
+    "kind": "overlap",
+    "resolution": "Canonical: CAT-34; zingine alias. NEEDS_HUMAN_DECISION."
+   },
+   {
+    "ids": [
+     "SC-CAT-34-SOLAR_BATTERIES_ENERGY_STORAGE",
+     "SC-CAT-34-BATTERY_PACKS_ENERGY_STORAGE_SYSTEMS",
+     "SC-CAT-34-BATTERIES_GENERAL",
+     "SC-CAT-11-BATTERIES_CHARGERS"
+    ],
+    "kind": "overlap",
+    "resolution": "Tofautisha kwa attribute chemistry/use; MERGE ya leaves mbili za storage inapendekezwa."
+   },
+   {
+    "ids": [
+     "SC-CAT-12-GPS_TRACKING_DEVICES",
+     "SC-CAT-36-GPS_TRACKING"
+    ],
+    "kind": "duplicate",
+    "resolution": "MERGE → CAT-12 (TCRA); CAT-36 alias."
+   },
+   {
+    "ids": [
+     "SC-CAT-14-VEHICLE_ACCESSORIES",
+     "SC-CAT-15-VEHICLE_ACCESSORIES"
+    ],
+    "kind": "duplicate",
+    "resolution": "MERGE → CAT-15."
+   },
+   {
+    "ids": [
+     "SC-CAT-15-AIR_INTAKE_EXHAUST",
+     "SC-CAT-15-EXHAUST_EMISSION"
+    ],
+    "kind": "overlap",
+    "resolution": "Gawa: Air Intake peke yake + Exhaust & Emission."
+   },
+   {
+    "ids": [
+     "SC-CAT-11-CAMERAS_IMAGING",
+     "SC-CAT-37-PHOTOGRAPHY_EQUIPMENT"
+    ],
+    "kind": "overlap",
+    "resolution": "Mlaji → CAT-11; studio/kitaalamu → CAT-37."
+   },
+   {
+    "ids": [
+     "SC-CAT-19-VETERINARY_HEALTH_PRODUCTS",
+     "SC-CAT-04-ANIMAL_HEALTH_PRODUCTS",
+     "SC-CAT-31-PET_HEALTH_PRODUCTS_NON_MEDICINE"
+    ],
+    "kind": "overlap",
+    "resolution": "Dawa (TMDA) → CAT-19; zisizo dawa → CAT-04/CAT-31."
+   },
+   {
+    "ids": [
+     "SC-CAT-08-BABY_PERSONAL_CARE",
+     "SC-CAT-30-BABY_WIPES_HYGIENE",
+     "SC-CAT-30-BABY_BATH_PRODUCTS"
+    ],
+    "kind": "overlap",
+    "resolution": "Canonical CAT-30; CAT-08 alias."
+   },
+   {
+    "ids": [
+     "SC-CAT-09-CLEANING_HOUSEHOLD_SUPPLIES",
+     "SC-CAT-35-HYGIENE_CLEANING_PRODUCTS",
+     "SC-CAT-35-CLEANING_CHEMICALS"
+    ],
+    "kind": "overlap",
+    "resolution": "Rejareja ya nyumbani → CAT-09; viwanda/taasisi → CAT-35."
+   },
+   {
+    "ids": [
+     "SC-CAT-27-BEADS_JEWELLERY_ARTISTIC_ACCESSORIES",
+     "SC-CAT-28-TRADITIONAL_JEWELLERY_ORNAMENTS",
+     "SC-CAT-29-WEDDING_JEWELLERY_ACCESSORIES",
+     "SC-CAT-07-VITO_SAA"
+    ],
+    "kind": "context",
+    "resolution": "KEEP kwa muktadha; jewellery ya biashara ya kawaida → CAT-07 Vito & Saa (mpya)."
+   },
+   {
+    "ids": [
+     "SC-CAT-01-FOOD_PACKAGING",
+     "SC-CAT-08-BEAUTY_PACKAGING",
+     "SC-CAT-19-HEALTH_PACKAGING",
+     "SC-CAT-29-GIFT_PACKAGING",
+     "SC-CAT-32-PACKAGING_MAILING_STATIONERY"
+    ],
+    "kind": "scattered",
+    "resolution": "Weka alias kwenye CAT-49 (mpya); leaves zibaki."
+   },
+   {
+    "ids": [
+     "SC-CAT-36-ACCESS_CONTROL",
+     "SC-CAT-36-ACCESS_CREDENTIALS",
+     "SC-CAT-36-IDENTIFICATION_ACCESS_PRODUCTS"
+    ],
+    "kind": "overlap",
+    "resolution": "MERGE credentials + identification."
+   },
+   {
+    "ids": [
+     "SC-CAT-08-BEAUTY_SERVICES",
+     "SC-CAT-17-UREMBO_UNYOAJI"
+    ],
+    "kind": "service_in_product",
+    "resolution": "MERGE → CAT-17."
+   }
+  ],
+  "ambiguousAliases": [
+   {
+    "alias": "building materials (legacy)",
+    "ids": [
+     "SC-CAT-06-THATCH_NATURAL_ROOFING_MATERIALS",
+     "SC-CAT-10-BRICKS_BLOCKS_MASONRY"
+    ],
+    "status": "NEEDS_ADMIN_DECISION",
+    "interim": "Search inaonyesha nodes zote na path kamili; muuzaji anachagua."
+   }
+  ]
+ },
+ "missing": {
+  "subcategoriesWithoutTypes": [
+   {
+    "categoryId": "CAT-01",
+    "missing": 1,
+    "of": 17
+   },
+   {
+    "categoryId": "CAT-03",
+    "missing": 3,
+    "of": 22
+   },
+   {
+    "categoryId": "CAT-07",
+    "missing": 4,
+    "of": 24
+   },
+   {
+    "categoryId": "CAT-08",
+    "missing": 2,
+    "of": 21
+   },
+   {
+    "categoryId": "CAT-09",
+    "missing": 15,
+    "of": 22
+   },
+   {
+    "categoryId": "CAT-10",
+    "missing": 1,
+    "of": 28
+   },
+   {
+    "categoryId": "CAT-11",
+    "missing": 12,
+    "of": 19
+   },
+   {
+    "categoryId": "CAT-12",
+    "missing": 1,
+    "of": 20
+   },
+   {
+    "categoryId": "CAT-13",
+    "missing": 21,
+    "of": 31
+   },
+   {
+    "categoryId": "CAT-14",
+    "missing": 13,
+    "of": 23
+   },
+   {
+    "categoryId": "CAT-15",
+    "missing": 25,
+    "of": 33
+   },
+   {
+    "categoryId": "CAT-19",
+    "missing": 11,
+    "of": 24
+   },
+   {
+    "categoryId": "CAT-27",
+    "missing": 10,
+    "of": 22
+   },
+   {
+    "categoryId": "CAT-28",
+    "missing": 12,
+    "of": 23
+   },
+   {
+    "categoryId": "CAT-29",
+    "missing": 20,
+    "of": 29
+   },
+   {
+    "categoryId": "CAT-30",
+    "missing": 19,
+    "of": 27
+   },
+   {
+    "categoryId": "CAT-31",
+    "missing": 24,
+    "of": 32
+   },
+   {
+    "categoryId": "CAT-32",
+    "missing": 19,
+    "of": 29
+   },
+   {
+    "categoryId": "CAT-33",
+    "missing": 23,
+    "of": 32
+   },
+   {
+    "categoryId": "CAT-34",
+    "missing": 29,
+    "of": 37
+   },
+   {
+    "categoryId": "CAT-35",
+    "missing": 26,
+    "of": 34
+   },
+   {
+    "categoryId": "CAT-36",
+    "missing": 18,
+    "of": 27
+   },
+   {
+    "categoryId": "CAT-37",
+    "missing": 25,
+    "of": 33
+   },
+   {
+    "categoryId": "CAT-38",
+    "missing": 17,
+    "of": 29
+   },
+   {
+    "categoryId": "CAT-42",
+    "missing": 19,
+    "of": 30
+   },
+   {
+    "categoryId": "CAT-43",
+    "missing": 13,
+    "of": 21
+   }
+  ],
+  "categoriesWithoutAttributeDefinitions": [
+   "CAT-16",
+   "CAT-17",
+   "CAT-18",
+   "CAT-20",
+   "CAT-21",
+   "CAT-22",
+   "CAT-23",
+   "CAT-24",
+   "CAT-25",
+   "CAT-26",
+   "CAT-45",
+   "CAT-46",
+   "CAT-47",
+   "CAT-48",
+   "CAT-49"
+  ],
+  "typesWithSourceLabelOnly": 720,
+  "legacyNeedsHumanDecision": 8,
+  "unverifiedRegulators": [
+   "REG-UNVERIFIED-HEALTH",
+   "REG-UNVERIFIED-FIN"
+  ],
+  "categoryDecisions": [
+   {
+    "id": "CAT-16",
+    "proposedKind": "SERVICE_DOMAIN",
+    "action": "NEEDS_HUMAN_DECISION",
+    "why": "Imeandikwa PRODUCT_DOMAIN lakini haina leaves; maudhui yake ni huduma za usafiri (CPC 64–68)."
+   },
+   {
+    "id": "CAT-19",
+    "proposedKind": "HYBRID_DOMAIN",
+    "action": "NEEDS_HUMAN_DECISION",
+    "why": "SERVICE_DOMAIN yenye leaves 17 za bidhaa (dawa/vifaa tiba). Pendekezo: type=both, bila kubadilisha ID."
+   }
+  ]
+ },
+ "generatorIssues": []
+}

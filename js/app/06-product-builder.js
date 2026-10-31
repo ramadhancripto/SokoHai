@@ -2,6 +2,8 @@
  * No collection, product writer or stock authority lives in this module. */
 import { skh } from './00-bootstrap.js';
 import { getProductSuggestions, getSellerSubcategories, getSellerCategoryOptions } from '../../shared/product-taxonomy-bridge.mjs';
+import { channelsFromVisibility, legacyFlagsFor } from '../../shared/product-listing-core.mjs';
+import { canonicalKey } from '../../shared/attribute-alias-core.mjs';
 import { normalizeAttributes, normalizeOptions, normalizeFeatures, normalizeAdditionalInfo, normalizeFilters, imageList, generateCombinations, combinationKey, suggestCustom } from '../../shared/product-upload-data-core.mjs';
 
 const $ = id => document.getElementById(id);
@@ -9,6 +11,8 @@ const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const copy = v => JSON.parse(JSON.stringify(v));
 const uid = (prefix = 'variant') => prefix + '_' + (globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2));
 const key = v => String(v).trim().toLowerCase();
+// [2026-11-01] Attribute/selector NAMES compare by canonical attribute (Colour = Color); values and filter keys keep key().
+const nameKey = v => canonicalKey(v) || key(v);
 const array = v => Array.isArray(v) ? v : [];
 let mode = 'create', pending = 0, suggestionRows = [], session = 0;
 let state, createState;
@@ -28,9 +32,9 @@ function exportState() { window.skhProductBuilderExport = { attributes: state.at
 // na Skip inaondoa pendekezo bila kugusa data ya seller.
 function seedAccepted(r) {
   const field = { option:'options', attribute:'attributes', feature:'features', additional:'additionalInfo' }[r.kind];
-  if (field) return state[field].some(x => key(x.name) === key(r.name));
-  if (r.kind === 'filter') return state.attributes.some(a => (key(a.name) === key(r.name) || key(a.filterKey) === key(r.name)) && a.filterable)
-    || Object.keys(state.filters || {}).some(n => key(n) === key(r.name));
+  if (field) return state[field].some(x => nameKey(x.name) === nameKey(r.name));
+  if (r.kind === 'filter') return state.attributes.some(a => (nameKey(a.name) === nameKey(r.name) || key(a.filterKey) === key(r.name)) && a.filterable)
+    || Object.keys(state.filters || {}).some(n => nameKey(n) === nameKey(r.name));
   return false;
 }
 function seedRows(kind) { return suggestionRows.map((r, i) => [r, i]).filter(([r]) => r.kind === kind && r.state !== 'skipped' && !seedAccepted(r)); }
@@ -44,6 +48,7 @@ function render() {
   if (!$('productBuilder')) return;
   if($('spbSelectorDetails'))$('spbSelectorDetails').hidden=!state.options.length&&!state.variants.length&&!seedRows('option').length;
   if($('spbCombinationSection'))$('spbCombinationSection').hidden=!state.options.length&&!state.variants.length;
+  if($('spbBulkApply'))$('spbBulkApply').hidden=!state.variants.some(v=>!v.removed);
   if($('spbSkipVariants'))$('spbSkipVariants').disabled=!!state.options.length||!!state.variants.length;
   $('spbOptions').innerHTML = state.options.map((o, i) => `<article class="spb-card"><div class="spb-row"><b>${esc(o.name)}</b><small>${esc(o.selectorType)}</small>${btn('edit-option','Edit',i)}${btn('up-option','↑',i,i===0)}${btn('down-option','↓',i,i===state.options.length-1)}${btn('remove-option','Remove',i)}</div><div class="spb-values">${o.values.map((v,j) => `<div class="spb-value"><b>${esc(v.label || v.value)}</b>${media(v,`value:${i}:${j}`)}<div class="spb-actions">${btn('edit-value','Edit',`${i}:${j}`)}${btn('up-value','↑',`${i}:${j}`,j===0)}${btn('down-value','↓',`${i}:${j}`,j===o.values.length-1)}${btn('remove-value','Remove',`${i}:${j}`)}</div></div>`).join('')}</div>${btn('add-value','＋ Add value',i)}</article>`).join('') + seedBlock('option') || '<p class="spb-empty">No selectors. Simple products are welcome.</p>';
   $('spbVariants').innerHTML = (state.variants.length ? `<p>${state.variants.filter(v=>!v.removed).length} combinations · ${state.variants.filter(v=>v.status==='ACTIVE' && !v.removed).length} enabled</p>` : '<p class="spb-empty">Generate combinations or add one manually.</p>') + state.variants.map((v,i) => {
@@ -71,7 +76,7 @@ function editor(title, fields, save) {
   host.scrollIntoView?.({block:'nearest',behavior:'smooth'}); host.querySelector('input,select,textarea')?.focus();
 }
 const input = (id,label,val='',type='text') => `<label>${label}<input id="${id}" type="${type}" value="${esc(val)}"></label>`;
-function requireName(name, list, index) { if (!name) throw Error('Jina linahitajika.'); if (list.some((a,i)=>i!==index && key(a.name)===key(name))) throw Error('Jina hili tayari lipo.'); }
+function requireName(name, list, index) { if (!name) throw Error('Jina linahitajika.'); if (list.some((a,i)=>i!==index && nameKey(a.name)===nameKey(name))) throw Error('Jina hili tayari lipo.'); }
 function showEditor(kind, index = -1, suggestion = {}) {
   const field = {attribute:'attributes',option:'options',feature:'features',additional:'additionalInfo'}[kind];
   const current = index >= 0 ? state[field][index] : suggestion;
@@ -135,7 +140,7 @@ function filterEditor(index=-1) {
   const [name='',val='']=Object.entries(state.filters)[index] || [];
   editor('Discovery filter',input('spbFilterName','Name',name)+input('spbFilterValue','Value',val),()=>{
     const n=value('spbFilterName'),v=value('spbFilterValue'); if(!n||!v)throw Error('Name na value zinahitajika.');
-    const a=state.attributes.find(a=>key(a.name)===key(n) || key(a.filterKey)===key(n));
+    const a=state.attributes.find(a=>nameKey(a.name)===nameKey(n) || key(a.filterKey)===key(n));
     if (a) { a.filterable=true; notice('Filter imeunganishwa na attribute '+a.name+'. Badili value kwenye attribute.'); }
     else { if(n!==name && Object.hasOwn(state.filters,n))throw Error('Filter tayari ipo.'); state.filters[n]=v; }
     if (name && (n!==name || a)) delete state.filters[name];
@@ -145,11 +150,13 @@ function categorySuggestions() {
   const cat=value(mode==='edit'?'editCategory':'prodCategory'), sub=value(mode==='edit'?'editSubCategory':'prodSubCategory');
   const bridge=getProductSuggestions(cat,sub,skh.advancedCategories?.[cat]);
   suggestionRows=[];
-  const add=(kind,name,values)=>{ if (typeof name==='string' && name && !/^(others?|nyingine)$/i.test(name) && !suggestionRows.some(x=>x.kind===kind&&key(x.name)===key(name))) suggestionRows.push({kind,name,value:Array.isArray(values)?values.join(', '):values || '',selectorType:/colou?r|rangi/i.test(name)?'color':'button'}); };
+  const add=(kind,name,values)=>{ if (typeof name==='string' && name && !/^(others?|nyingine)$/i.test(name) && !suggestionRows.some(x=>x.kind===kind&&nameKey(x.name)===nameKey(name))) suggestionRows.push({kind,name,value:Array.isArray(values)?values.join(', '):values || '',selectorType:/colou?r|rangi/i.test(name)?'color':'button'}); };
   Object.entries(bridge.options || {}).forEach(([n,v])=>add('option',n,v));
   (bridge.attributes || []).forEach(n=>{add('attribute',n,'');const row=suggestionRows.find(r=>r.kind==='attribute'&&r.name===n);if(row)row.guidance=bridge.attributeValues?.[n]?.join(' / ') || '';});
   (bridge.features || []).forEach(n=>add('feature',n,true));
   (bridge.filters || []).forEach(n=>{add('filter',n,'');const row=suggestionRows.find(r=>r.kind==='filter'&&r.name===n);if(row)row.attributeReference=(bridge.attributes||[]).includes(n);});
+  // [UX 2026-10-31] The taxonomy says this leaf has buyer choices: show it on the collapsed group.
+  {const d=$('sellerVariantsDetails'),sm=d&&d.querySelector('summary');if(sm&&mode==='create'){const n=suggestionRows.filter(r=>r.kind==='option').length;sm.textContent='6 · Rangi, saizi, variants na sifa za bidhaa · hiari'+(n?' · mapendekezo '+n+' kwa kategoria hii':'');}}
   (bridge.additionalInfo || []).forEach(n=>add('additional',typeof n==='string'?n:n.name,typeof n==='object'?n.value:''));
   (bridge.suggestedUnits || []).forEach(n=>add('unit',n,n));
   $('productBuilder').dataset.schema=bridge.profileId || bridge.source;
@@ -173,14 +180,14 @@ function previewOther() {
 }
 function useSuggestion(r, edit=false) {
   if (!r) return;
-  if(r.kind==='filter'){const a=state.attributes.find(a=>key(a.name)===key(r.name)||key(a.filterKey)===key(r.name));if(a&&!edit){a.filterable=true;render();return;}if(r.attributeReference){showEditor('attribute',a?state.attributes.indexOf(a):-1,a?{}:{name:r.name,value:'',filterable:true});return;}filterEditor();$('spbFilterName').value=r.name;if(a)$('spbFilterValue').value=Array.isArray(a.value)?a.value.join(', '):String(a.value);return;}
+  if(r.kind==='filter'){const a=state.attributes.find(a=>nameKey(a.name)===nameKey(r.name)||key(a.filterKey)===key(r.name));if(a&&!edit){a.filterable=true;render();return;}if(r.attributeReference){showEditor('attribute',a?state.attributes.indexOf(a):-1,a?{}:{name:r.name,value:'',filterable:true});return;}filterEditor();$('spbFilterName').value=r.name;if(a)$('spbFilterValue').value=Array.isArray(a.value)?a.value.join(', '):String(a.value);return;}
   if(r.kind==='unit'){
     const id=mode==='edit'?'editBaseUnit':'prodBaseUnit';
     editor('Suggested unit',input('spbSuggestedUnit','Unit',r.name),()=>{const el=$(id),v=value('spbSuggestedUnit');if(!v)throw Error('Unit required');if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=v;});return;
   }
   if (edit || r.value==='' || r.kind==='option' && !r.value) {showEditor(r.kind,-1,r);return;}
   const fields={option:'options',attribute:'attributes',feature:'features',additional:'additionalInfo'}, field=fields[r.kind];
-  if(state[field].some(a=>key(a.name)===key(r.name))) {notice('Tayari ipo: '+r.name+'. Tumia Edit.',true);return;}
+  if(state[field].some(a=>nameKey(a.name)===nameKey(r.name))) {notice('Tayari ipo: '+r.name+'. Tumia Edit.',true);return;}
   if(r.kind==='option') { state.options.push({id:uid('selector'),name:r.name,selectorType:r.selectorType||'button',display:true,values:String(r.value).split(',').map(v=>({id:uid('value'),value:v.trim(),label:v.trim(),images:[]}))}); state.selectorsDirty=true; }
   else state[field].push({id:uid(r.kind),name:r.name,value:r.value,type:'text',display:true,source:'SUGGESTION',filterable:false});
   render();
@@ -295,9 +302,11 @@ function collect(productId, fresh=state.original) {
   state.options.forEach((o,i)=>{requireName(o.name,state.options,i);if(!o.values.length)throw Error('Selector '+o.name+' haina values. Ongeza values au Remove.');});
   const patch={attributes:state.attributes,options:state.options,features:state.features,additionalInfo:state.additionalInfo,filters:normalizeFilters(state.filters,state.attributes),builderRevision:state.metadataVersion+1};
   if(state.original.sku || state.productSku)patch.sku=state.original.sku || state.productSku;
-  const offlineCreate=mode==='create'&&value('prodVisibility')==='offline_only';
-  const chosenCategory=offlineCreate?(value('prodOfflineCategory')||'Mchanganyiko'):value(mode==='edit'?'editCustomCategory':'') || value(mode==='edit'?'editCategory':'prodCategory');
-  const chosenLeaf=offlineCreate?'N/A':value(mode==='edit'?'editSubCategory':'prodSubCategory');
+  const offlineCreate=mode==='create'&&['offline_only','manage_only'].includes(value('prodVisibility'));
+  // [UX 2026-10-31] An offline/manage product may still pick a taxonomy category (same rule as submitSeller).
+  const offlineTaxonomy=offlineCreate&&value('prodCategory');
+  const chosenCategory=offlineCreate?(offlineTaxonomy||value('prodOfflineCategory')||'Mchanganyiko'):value(mode==='edit'?'editCustomCategory':'') || value(mode==='edit'?'editCategory':'prodCategory');
+  const chosenLeaf=offlineCreate?(offlineTaxonomy?(value('prodSubCategory')||'N/A'):'N/A'):value(mode==='edit'?'editSubCategory':'prodSubCategory');
   const schema=getProductSuggestions(chosenCategory,chosenLeaf,skh.advancedCategories?.[chosenCategory]);
   // Read-only provenance through the existing writer, not buyer/stock authority.
   // Don't rewrite legacy taxonomy or invent a canonical subcategory ID.
@@ -331,14 +340,19 @@ function collect(productId, fresh=state.original) {
     return row;
   });
   // Preserve identities created in another tab; never overwrite live stock with form stock.
-  if(state.canonical)array(fresh.variantCombinations).forEach(v=>{if(!rows.some(r=>r.variantId===v.variantId))rows.push(v);});
-  if(rows.length || Object.hasOwn(state.original,state.canonical?'variantCombinations':'variantsStructured'))patch[state.canonical?'variantCombinations':'variantsStructured']=rows;
+  // [F6 2026-10-31] Keep every stored variant at its stored index (rules compare
+  // variantCombinations index by index; stock/reserved are server-only) and
+  // append new combinations at the end.
+  const ordered=state.canonical?array(fresh.variantCombinations).map(v=>rows.find(r=>r.variantId===v.variantId) || v).concat(rows.filter(r=>!array(fresh.variantCombinations).some(v=>v.variantId===r.variantId))):rows;
+  if(state.canonical)ordered.forEach((row,i)=>{const live=array(fresh.variantCombinations)[i];if(live && live.variantId===row.variantId){row.stock=live.stock ?? 0;if(Object.hasOwn(live,'reserved'))row.reserved=live.reserved;else delete row.reserved;}else{row.stock=0;delete row.reserved;}});
+  if(ordered.length || Object.hasOwn(state.original,state.canonical?'variantCombinations':'variantsStructured'))patch[state.canonical?'variantCombinations':'variantsStructured']=ordered;
   if(mode==='edit') {
     const cat=value('editCustomCategory') || value('editCategory');
     patch.category=cat===categoryLabel(state.original.category)?state.original.category:cat;
     const sub=value('editSubCategory');patch.subCategory=sub===categoryLabel(state.original.subCategory)?state.original.subCategory:sub;
     if(Object.hasOwn(state.original,'subcategory'))patch.subcategory=sub;
-    const vis=value('editVisibility');patch.isOnline=vis!=='offline_only';patch.isOffline=vis!=='online_only';
+    // [PHASE 1 2026-10-31] Only an explicit visibility choice changes the channels (an empty value used to force hybrid).
+    const vis=value('editVisibility');const ch=channelsFromVisibility(vis);if(ch){Object.assign(patch,legacyFlagsFor(ch));patch.salesChannels=ch;}
     patch.buyPrice=Number(value('editBuyPrice'));patch.wholesalePrice=Number(value('editWholesalePrice'));
     patch.baseUnit=value('editBaseUnit');patch.barcode=value('editBarcode');patch.lowStockThreshold=integer(value('editLowStock'),'Low stock');patch.lowStockAlert=patch.lowStockThreshold;
     patch.hasBulkPackaging=$('editHasBulk').checked;patch.bulkUnit=value('editBulkUnit');patch.conversionRatio=integer(value('editConversionRatio'),'Ratio');
@@ -369,7 +383,7 @@ function bind() {
   if(!$('productBuilder') || $('productBuilder').dataset.bound)return;
   $('productBuilder').dataset.bound='1';
   $('spbSkipVariants')?.addEventListener('click',()=>{if(state.options.length||state.variants.length)return;closeEditor();notice('Simple product selected. No selectors or combinations are required.');render();});
-  const bindings={spbAddOption:()=>showEditor('option'),spbAddAttribute:()=>showEditor('attribute'),spbAddFeature:()=>showEditor('feature'),spbAddAdditional:()=>showEditor('additional'),spbAddFilter:()=>filterEditor(),spbGenerate:generate,spbManualVariant:()=>manual(),spbSuggestOther:previewOther,spbAddGeneralImage:()=>attach('general')};
+  const bindings={spbBulkApplyBtn:()=>bulkApply(),spbAddOption:()=>showEditor('option'),spbAddAttribute:()=>showEditor('attribute'),spbAddFeature:()=>showEditor('feature'),spbAddAdditional:()=>showEditor('additional'),spbAddFilter:()=>filterEditor(),spbGenerate:generate,spbManualVariant:()=>manual(),spbSuggestOther:previewOther,spbAddGeneralImage:()=>attach('general')};
   Object.entries(bindings).forEach(([id,fn])=>$(id)?.addEventListener('click',fn));
   document.addEventListener('click',action);$('productBuilder').addEventListener('input',readChange);
   ['prodCategory','prodSubCategory','editCategory','editSubCategory'].forEach(id=>$(id)?.addEventListener('change',()=>{
@@ -385,6 +399,25 @@ function bind() {
   $('spbEditDraft')?.addEventListener('click',()=>{const el=$('editPublicationStatus');if(el)el.value='draft';});
   render();categorySuggestions();
 }
-window.skhProductBuilder={load,collect,stockRequests,resumeCreate,hasPending:()=>pending>0,afterMetadata:()=>{state.metadataVersion++;},getOriginal:()=>copy(state.original)};
+// [UX 2026-10-31] Bulk entry: one price/stock for every ENABLED variant. Stock of a variant that
+// is already saved changes only through the audited stock adjustment, so it is skipped here.
+function bulkApply(){
+  const price=value('spbBulkPrice'),stock=value('spbBulkStock');let changed=0,skipped=0;
+  state.variants.forEach(v=>{if(v.removed||v.status!=='ACTIVE')return;
+    if(price!=='' && Number(price)>0){v.price=Number(price);changed++;}
+    if(stock!==''){const saved=array(state.original.variantCombinations).some(x=>x.variantId===v.variantId);if(saved)skipped++;else{v.stock=Math.max(0,Math.trunc(Number(stock)||0));changed++;}}});
+  state.variantsDirty=true;exportState();render();
+  notice(changed?`Imewekwa kwa variants ${state.variants.filter(v=>!v.removed&&v.status==='ACTIVE').length} zilizowashwa.`+(skipped?` Stock ya variants ${skipped} zilizohifadhiwa haikubadilishwa (tumia marekebisho ya stock).`:''):'Washa variants kwanza, kisha weka bei au stock.');
+}
+// [UX 2026-10-31] Copy a previous product: selectors/attributes/features as a TEMPLATE only
+// (no variant ids, SKUs, stock or images; the seller generates this product's own variants).
+function prefill(t){
+  if(mode!=='create')resumeCreate();
+  state={...empty(),options:normalizeOptions(array(t&&t.options)),attributes:normalizeAttributes(array(t&&t.attributes)),features:normalizeFeatures(array(t&&t.features))};
+  state.options.forEach(o=>{o.id=uid('selector');o.values.forEach(v=>{v.id=uid('value');v.images=[];});});
+  session++;closeEditor();render();
+  if(state.options.length){const d=$('sellerVariantsDetails');if(d)d.open=true;notice('Chaguo za variants zimenakiliwa. Bonyeza "Tengeneza variants" upate variants mpya za bidhaa hii.');}
+}
+window.skhProductBuilder={load,collect,stockRequests,resumeCreate,prefill,bulkApply,hasPending:()=>pending>0,afterMetadata:()=>{state.metadataVersion++;},getOriginal:()=>copy(state.original)};
 window.skhProductBuilderReset=()=>{state=empty();session++;closeEditor();render();};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();

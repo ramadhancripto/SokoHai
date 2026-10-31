@@ -48,8 +48,9 @@ t('media bytes are not written to Firestore',admin.includes("collection(skh.db,'
 t('media library records dimensions/date/type',advanced.includes('width:d.width')&&advanced.includes('height:d.height')&&advanced.includes('uploadedAt')&&advanced.includes("type:opts.asLogo?'logo':kind"));
 t('active media cannot be archived while in use',admin.includes("skhAdminAdState(a)==='active'")&&admin.includes('Replace creative kwanza'));
 t('media reference deletion is guarded and accurately scoped',admin.includes('window.skhDeleteAdminMedia')&&admin.includes('if(inUse)return alert')&&admin.includes('Cloudinary asset haitafutwa bila signed deletion')&&admin.includes("deleteDoc(skh.doc(skh.db,'adminMedia',id))"));
-t('advertisement writes are Admin-only in rules',/match \/announcements\/\{id\}[\s\S]*?allow create, update, delete: if isAdmin\(\)/.test(rules));
-t('media library is Admin-only in rules',/match \/adminMedia\/\{id\}[\s\S]*?allow read, create, update, delete: if isAdmin\(\)/.test(rules));
+// [REPAIR 2026-10] still Admin-only; browser writes now also carry an audited author stamp.
+t('advertisement writes are Admin-only in rules',/match \/announcements\/\{id\}[\s\S]*?allow create, update: if isAdmin\(\) && adminStampOk\(\);\s*allow delete: if isAdmin\(\);/.test(rules));
+t('media library is Admin-only in rules',/match \/adminMedia\/\{id\}[\s\S]*?allow read, delete: if isAdmin\(\);\s*allow create, update: if isAdmin\(\) && adminStampOk\(\);/.test(rules));
 t('archive replaces destructive ad deletion',engine.includes("status:'archived'")&&!engine.includes('deleteDoc(skh.doc(skh.db, "announcements"'));
 t('Company Ads remains Coming Soon only',adv.includes('id="companyAdsSoonModal"')&&adv.includes('Company Ads')&&adv.includes('Coming Soon'));
 t('external advertiser system was not added',!rules.match(/advertiserCampaigns|adBilling|adPricing|campaignWallet/i));

@@ -155,7 +155,10 @@ async function paidOrder(id, amount, o) {
   o = o || {};
   const buyer = o.buyerId || 'buyer';
   await ppPaid('TX-' + id, amount, buyer);
-  await db.doc('orders/' + id).set(Object.assign({ buyerId: buyer, sellerId: 'seller', amount, status: 'held', paymentRef: 'TX-' + id, itemId: 'item_' + id }, o));
+  const od = Object.assign({ buyerId: buyer, sellerId: 'seller', amount, status: 'held', paymentRef: 'TX-' + id, itemId: 'item_' + id }, o);
+  // [REPAIR 2026-10 H2] chanzo cha bei cha server: bidhaa halisi yenye bei = kiasi.
+  if (!od.negotiationId && !od.pricedByServer) await db.doc('products/' + od.itemId).set({ title: 'Bidhaa ' + od.itemId, price: Number(od.amount || 0), stock: 5, userId: od.sellerId });
+  await db.doc('orders/' + id).set(od);
   const st = await call('pesapalTransactionStatus', buyer, { orderTrackingId: 'TX-' + id });
   assert(st.ok, 'settle ' + id + ': ' + st.message);
   assert(await exists('escrow_holds/order_' + id), 'hold ya server ' + id);
@@ -180,6 +183,14 @@ async function signUp(email) {
     body: JSON.stringify({ email, password: 'secret123', returnSecureToken: true })
   });
   const j = await r.json(); assert(j.idToken, 'signUp ' + email);
+  return { token: j.idToken, uid: j.localId };
+}
+async function signIn(email) {
+  const r = await realFetch(`http://${AUTH_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password: 'secret123', returnSecureToken: true })
+  });
+  const j = await r.json(); assert(j.idToken, 'signIn ' + email);
   return { token: j.idToken, uid: j.localId };
 }
 const autoRelease = (hoursAhead) => fns.sokopayAutoRelease.run({ scheduleTime: later(hoursAhead || 0) });
@@ -332,9 +343,24 @@ async function main() {
     eq(await restCreate(B.token, 'orders', 't14c', { buyerId: B.uid, sellerId: S.uid, amount: 100, status: 'payment_pending', disputeWinner: 'buyer' }), 403, 'disputeWinner');
     eq(await restCreate(B.token, 'orders', 't14d', { buyerId: B.uid, sellerId: S.uid, amount: 100, status: 'payment_pending', paymentStatus: 'pending' }), 200, 'kawaida');
     eq(await restCreate(B.token, 'orders', 't14e', { buyerId: S.uid, sellerId: B.uid, amount: 100, status: 'payment_pending' }), 403, 'buyerId ya mwingine');
+    // [REPAIR 2026-10 C2/B-01] alama za "imelipwa" na idhini ya bei ni za server tu
+    eq(await restCreate(B.token, 'orders', 't14g', { buyerId: B.uid, sellerId: S.uid, amount: 100, status: 'held', paymentStatus: 'paid', paymentVerified: true }), 403, 'oda ya "held/paid" ya kughushi');
+    eq(await restCreate(B.token, 'orders', 't14h', { buyerId: B.uid, sellerId: S.uid, amount: 1, status: 'payment_pending', priceApprovedBy: B.uid, priceApprovedAmount: 1 }), 403, 'priceApproved ya kughushi');
+    eq(await restCreate(B.token, 'orders', 't14i', { buyerId: B.uid, sellerId: S.uid, amount: 1, status: 'payment_pending', pricedByServer: true }), 403, 'pricedByServer ya kughushi');
+    await oDoc('t14j', { status: 'payment_pending', paymentStatus: 'pending', paymentVerified: false });
+    eq(await restPatch(B.token, 'orders/t14j', { priceApprovedBy: B.uid, priceApprovedAmount: 1, priceApprovalAuditId: 'x' }), 403, 'priceApproved kwa update');
+    // [REPAIR 2026-10 H1] email ya admin ISIYOTHIBITISHWA si admin tena (rules).
     const AD = await signUp('rshabansaid@gmail.com');
     await oDoc('t14f', { status: 'disputed' });
-    eq(await restPatch(AD.token, 'orders/t14f', { status: 'refunded_by_admin', disputeResolvedAt: 'x', disputeWinner: 'buyer' }), 200, 'admin (21-sokopay) bado anaweza kusuluhisha');
+    eq(await restPatch(AD.token, 'orders/t14f', { status: 'refunded_by_admin', disputeResolvedAt: 'x', disputeWinner: 'buyer' }), 403, 'email ya admin bila uthibitisho = si admin');
+    // [PHASE 9 B-18] Sera mpya: admin (claim) akihariri oda kutoka kivinjari lazima
+    // asaini (lastChangedBy/lastChangedAt) na HAWEZI kugusa fedha/uamuzi wa mgogoro;
+    // uamuzi wa mgogoro unapitia adminResolveDispute (sababu + kumbukumbu ya ukaguzi).
+    await admin.auth().setCustomUserClaims(AD.uid, { admin: true });
+    const AD2 = await signIn('rshabansaid@gmail.com');
+    eq(await restPatch(AD2.token, 'orders/t14f', { status: 'refunded_by_admin', disputeResolvedAt: 'x', disputeWinner: 'buyer' }), 403, 'admin bila sahihi: imekataliwa');
+    eq(await restPatch(AD2.token, 'orders/t14f', { disputeResolvedAt: 'x', disputeWinner: 'buyer', lastChangedBy: AD2.uid, lastChangedAt: '2026-10-31T10:00:00Z' }), 403, 'admin hawezi kuamua mgogoro kwa patch (tumia callable)');
+    eq(await restPatch(AD2.token, 'orders/t14f', { adminNote: 'nimeikagua', lastChangedBy: AD2.uid, lastChangedAt: '2026-10-31T10:00:01Z' }), 200, 'admin (claim) anaweza kuongeza maelezo yenye sahihi');
   });
 
   /* ================= P3 — auto-release / stuck completed ================= */
@@ -352,18 +378,39 @@ async function main() {
     const r2 = await call('escrowRelease', 'buyer', { orderId: 'o15' });
     assert(r2.ok && r2.data.already, 'replay = already'); eq(await bal('seller'), 10000, 'mara moja tu');
   });
-  await test('T16 auto-release inatumia updateTime ya server (shippedAt iliyorudishwa nyuma haitoshi)', async () => {
-    await paidOrder('o16', 5000, { sellerId: 'seller16' }); await user('seller16');
+  await test('T16 [H3] "shipped" pekee haitoi pesa; uthibitisho wa mnunuzi + muda wa mpangilio ndio unaotoa', async () => {
+    await user('seller16');
+    await paidOrder('o16', 5000, { sellerId: 'seller16' });
     await db.doc('escrow_holds/order_o16').update({ verifiedAt: hoursAgo(72) });
-    await db.doc('orders/o16').update({ status: 'shipped', shippedAt: hoursAgo(72) }); // uandishi wa sasa hivi
-    await autoRelease(0);
-    eq(await bal('seller16'), 0, 'haijatolewa: updateTime ni sasa hivi');
-    eq((await get('orders/o16')).status, 'shipped', 'bado shipped');
-    await autoRelease(25); // saa ya emulator +25h
-    eq(await bal('seller16'), 5000, 'imetolewa baada ya saa 24 za server');
+    await db.doc('orders/o16').update({ status: 'shipped', shippedAt: hoursAgo(72) });
+    await autoRelease(25); await autoRelease(200);
+    eq(await bal('seller16'), 0, 'muuzaji hawezi kujilipa kwa "shipped" peke yake');
+    // Mpangilio wa Super Admin: saa 48 baada ya uthibitisho wa makabidhiano
+    await db.doc('system/config').set({ escrow: { autoReleaseAfterDeliveryHours: 48 } }, { merge: true });
+    denied(await call('orderDeliveryCodeIssue', 'seller16', { orderId: 'o16' }), ['permission-denied'], 'muuzaji hawezi kutoa namba ya kupokea');
+    const code = await call('orderDeliveryCodeIssue', 'buyer', { orderId: 'o16' }); assert(code.ok, code.message);
+    denied(await call('orderConfirmDelivery', 'seller16', { orderId: 'o16', code: 'DL-WRONG1' }), ['permission-denied'], 'namba isiyo sahihi');
+    denied(await call('orderConfirmDelivery', 'buyer', { orderId: 'o16', code: code.data.code }), ['permission-denied'], 'mnunuzi si muuzaji');
+    const ok = await call('orderConfirmDelivery', 'seller16', { orderId: 'o16', code: code.data.code }); assert(ok.ok, ok.message);
+    eq((await get('orders/o16')).deliveryProofBy, 'buyer_code', 'ushahidi wa server');
+    eq((await get('orders/o16')).status, 'delivered', 'delivered');
+    await autoRelease(24);
+    eq(await bal('seller16'), 0, 'kabla ya saa 48 hakuna malipo');
+    await autoRelease(49);
+    eq(await bal('seller16'), 5000, 'imetolewa baada ya saa 48 za server');
     eq((await get('orders/o16')).status, 'completed', 'completed');
-    await autoRelease(26);
+    await autoRelease(80);
     eq(await bal('seller16'), 5000, 'mara moja tu');
+    // Mgogoro ndani ya muda unazuia auto-release
+    await user('seller16b');
+    await paidOrder('o16b', 4000, { sellerId: 'seller16b' });
+    const c2 = await call('orderDeliveryCodeIssue', 'buyer', { orderId: 'o16b' }); assert(c2.ok, c2.message);
+    assert((await call('orderConfirmDelivery', 'seller16b', { orderId: 'o16b', code: c2.data.code })).ok, 'confirm o16b');
+    const dsp = await call('disputeOpen', 'buyer', { orderId: 'o16b', reason: 'Bidhaa imefika ikiwa mbovu' }); assert(dsp.ok, dsp.message);
+    await autoRelease(100);
+    eq(await bal('seller16b'), 0, 'mgogoro unazuia auto-release');
+    denied(await call('escrowRelease', 'buyer', { orderId: 'o16b' }), ['failed-precondition'], 'hata mnunuzi: mgogoro uko wazi');
+    await db.doc('system/config').set({ escrow: {} }, { merge: true });
   });
 
   /* ================= P4 — negotiation → escrow engine ================= */
@@ -373,6 +420,8 @@ async function main() {
 
   await test('T17 negotiation happy path: PREPARE → TRANSIT → DELIVERED → CONFIRM_RECEIPT inalipa muuzaji mara moja', async () => {
     await ppPaid('TX-N17', 30000, 'buyer');
+    // [REPAIR 2026-10 H2] bei ya oda inathibitishwa dhidi ya makubaliano ya server
+    await db.doc('negotiations/neg17').set({ buyerId: 'buyer', sellerId: 'seller', currentState: 'ORDER_CREATED', agreedUnitPrice: 30000, currentUnitPrice: 30000, quantity: 1 });
     await db.doc('orders/n17').set({ source: 'negotiation', commerceType: 'product', negotiationId: 'neg17', buyerId: 'buyer', sellerId: 'seller', amount: 30000, status: 'payment_pending', paymentStatus: 'pending', paymentRef: 'TX-N17', deliveryStatus: 'held' });
     const st = await call('pesapalTransactionStatus', 'buyer', { orderTrackingId: 'TX-N17' }); assert(st.ok, st.message);
     eq((await get('orders/n17')).status, 'held', 'server imefunga escrow');
@@ -401,9 +450,18 @@ async function main() {
     eq((await get('orders/n18')).status, 'delivered', 'haikukamilishwa');
     eq(await bal('seller'), 30000, 'hakuna pesa mpya');
   });
+  await test('T18b oda ya majadiliano yenye bei pungufu ya makubaliano haipati escrow (price_review)', async () => {
+    await ppPaid('TX-N18B', 1000, 'buyer');
+    await db.doc('negotiations/neg18b').set({ buyerId: 'buyer', sellerId: 'seller', currentState: 'ORDER_CREATED', agreedUnitPrice: 30000, quantity: 1 });
+    await db.doc('orders/n18b').set({ source: 'negotiation', commerceType: 'product', negotiationId: 'neg18b', buyerId: 'buyer', sellerId: 'seller', amount: 1000, status: 'payment_pending', paymentStatus: 'pending', paymentRef: 'TX-N18B' });
+    await call('pesapalTransactionStatus', 'buyer', { orderTrackingId: 'TX-N18B' });
+    assert(!(await exists('escrow_holds/order_n18b')), 'hakuna hold kwa bei pungufu');
+    eq((await get('orders/n18b')).paymentStatus, 'price_review', 'imepelekwa ukaguzi wa bei');
+    eq((await get('orders/n18b')).priceExpected, 30000, 'bei inayotarajiwa ya server');
+  });
   await test('T19 huduma: CONFIRM_COMPLETION inatoa escrow (split moja)', async () => {
     await ppPaid('TX-N19', 12000, 'buyer');
-    await db.doc('orders/n19').set({ source: 'negotiation', commerceType: 'service', buyerId: 'buyer', sellerId: 'seller', amount: 12000, status: 'payment_pending', paymentRef: 'TX-N19', serviceStatus: 'held' });
+    await db.doc('orders/n19').set({ pricedByServer: true, priceSource: 'negotiation', source: 'negotiation', commerceType: 'service', buyerId: 'buyer', sellerId: 'seller', amount: 12000, status: 'payment_pending', paymentRef: 'TX-N19', serviceStatus: 'held' });
     await call('pesapalTransactionStatus', 'buyer', { orderTrackingId: 'TX-N19' });
     for (const [who, cmd] of [['seller', 'START_SERVICE'], ['seller', 'SUBMIT_WORK'], ['buyer', 'CONFIRM_COMPLETION']]) {
       const r = await call('negotiationOrderAction', who, { orderId: 'n19', command: cmd }); assert(r.ok, cmd + ': ' + r.message);
@@ -421,44 +479,44 @@ async function main() {
     await paidOrder('o20', 20000);
     assert((await call('escrowRelease', 'buyer', { orderId: 'o20' })).ok, 'release');
     await db.doc('orders/o20').update({ status: 'disputed', amount: 5000000 }); // data ya zamani (kupita rules)
-    denied(await call('walletAdjust', ADMIN, { docId: 'buyer', amountTSh: 5000000, type: 'refund', ledgerKey: 'dispwin_o20_buyer' }), ['failed-precondition'], 'double pay');
-    denied(await call('walletAdjust', ADMIN, { docId: 'buyer', amountTSh: 20000, type: 'refund', ledgerKey: 'dispwin_o20_buyer' }), ['failed-precondition'], 'hata kiasi halisi');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer', amountTSh: 5000000, type: 'refund', ledgerKey: 'dispwin_o20_buyer' }), ['failed-precondition'], 'double pay');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer', amountTSh: 20000, type: 'refund', ledgerKey: 'dispwin_o20_buyer' }), ['failed-precondition'], 'hata kiasi halisi');
     eq(await bal('buyer'), 0, 'mnunuzi hakulipwa'); eq(await bal('seller'), 20000, 'muuzaji');
   });
   await test('T21 hakuna hold / kiasi ≤ 0 → suluhu inakataliwa', async () => {
     await db.doc('orders/o21').set({ buyerId: 'buyer', sellerId: 'seller', amount: 7000, status: 'disputed' });
-    denied(await call('walletAdjust', ADMIN, { docId: 'buyer', amountTSh: 7000, type: 'refund', ledgerKey: 'dispwin_o21_buyer' }), ['failed-precondition'], 'hakuna hold');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer', amountTSh: 7000, type: 'refund', ledgerKey: 'dispwin_o21_buyer' }), ['failed-precondition'], 'hakuna hold');
     await paidOrder('o21b', 7000);
-    denied(await call('walletAdjust', ADMIN, { docId: 'buyer', amountTSh: -100, type: 'refund', ledgerKey: 'dispwin_o21b_buyer' }), ['invalid-argument'], 'hasi');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer', amountTSh: -100, type: 'refund', ledgerKey: 'dispwin_o21b_buyer' }), ['invalid-argument'], 'hasi');
     eq(await bal('buyer'), 0, 'hakuna malipo');
   });
   await test('T22 split: jumla ≤ hold; malipo ya ziada / ya tatu yanakataliwa; winner kamili halali', async () => {
     await user('seller22'); await user('buyer22');
     await paidOrder('o22', 10000, { sellerId: 'seller22', buyerId: 'buyer22' });
     await db.doc('orders/o22').update({ status: 'split_refund_resolved' });
-    denied(await call('walletAdjust', ADMIN, { docId: 'buyer22', amountTSh: 12000, type: 'refund', ledgerKey: 'splitref_buyer_o22' }), ['failed-precondition'], 'zaidi ya hold');
-    assert((await call('walletAdjust', ADMIN, { docId: 'buyer22', amountTSh: 6000, type: 'refund', ledgerKey: 'splitref_buyer_o22' })).ok, 'buyer 6000');
-    denied(await call('walletAdjust', ADMIN, { docId: 'seller22', amountTSh: 5000, type: 'escrow_release', ledgerKey: 'splitref_seller_o22' }), ['failed-precondition'], 'seller > remainder');
-    assert((await call('walletAdjust', ADMIN, { docId: 'seller22', amountTSh: 4000, type: 'escrow_release', ledgerKey: 'splitref_seller_o22' })).ok, 'seller 4000');
-    denied(await call('walletAdjust', ADMIN, { docId: 'buyer22', amountTSh: 1, type: 'refund', ledgerKey: 'dispwin_o22_buyer' }), ['failed-precondition'], 'hold imetumika yote');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer22', amountTSh: 12000, type: 'refund', ledgerKey: 'splitref_buyer_o22' }), ['failed-precondition'], 'zaidi ya hold');
+    assert((await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer22', amountTSh: 6000, type: 'refund', ledgerKey: 'splitref_buyer_o22' })).ok, 'buyer 6000');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'seller22', amountTSh: 5000, type: 'escrow_release', ledgerKey: 'splitref_seller_o22' }), ['failed-precondition'], 'seller > remainder');
+    assert((await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'seller22', amountTSh: 4000, type: 'escrow_release', ledgerKey: 'splitref_seller_o22' })).ok, 'seller 4000');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer22', amountTSh: 1, type: 'refund', ledgerKey: 'dispwin_o22_buyer' }), ['failed-precondition'], 'hold imetumika yote');
     const h = await get('escrow_holds/order_o22');
     eq(h.disputePaid, 10000, 'disputePaid'); eq(h.releasedFor, 'admin_dispute', 'releasedFor');
     eq(await bal('buyer22'), 6000, 'buyer'); eq(await bal('seller22'), 4000, 'seller');
     // release ya kawaida baada ya suluhu → haipo
-    const er = await call('escrowRelease', ADMIN, { orderId: 'o22' });
+    const er = await call('escrowRelease', ADMIN, { reason: 'Uthibitisho wa admin (test fixture)',  orderId: 'o22' });
     assert(!er.ok || er.data.already, 'hakuna release baada ya suluhu'); eq(await bal('seller22'), 4000, 'seller hakuongezwa');
     await paidOrder('o22w', 8000);
     await db.doc('orders/o22w').update({ status: 'refunded_by_admin' });
-    assert((await call('walletAdjust', ADMIN, { docId: 'buyer', amountTSh: 8000, type: 'refund', ledgerKey: 'dispwin_o22w_buyer' })).ok, 'winner buyer halali');
+    assert((await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer', amountTSh: 8000, type: 'refund', ledgerKey: 'dispwin_o22w_buyer' })).ok, 'winner buyer halali');
     eq(await bal('buyer'), 8000, 'buyer +8000');
-    const rep = await call('walletAdjust', ADMIN, { docId: 'buyer', amountTSh: 8000, type: 'refund', ledgerKey: 'dispwin_o22w_buyer' });
+    const rep = await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer', amountTSh: 8000, type: 'refund', ledgerKey: 'dispwin_o22w_buyer' });
     assert(rep.ok && rep.data.already, 'replay = already'); eq(await bal('buyer'), 8000, 'mara moja');
   });
   await test('T23 mpokeaji lazima alingane na nafasi (buyer/seller) ya escrow', async () => {
     await paidOrder('o23', 9000);
-    denied(await call('walletAdjust', ADMIN, { docId: 'eve', amountTSh: 9000, type: 'refund', ledgerKey: 'dispwin_o23_buyer' }), ['permission-denied'], 'eve kama buyer');
-    denied(await call('walletAdjust', ADMIN, { docId: 'buyer', amountTSh: 9000, type: 'escrow_release', ledgerKey: 'dispwin_o23_seller' }), ['permission-denied'], 'buyer kama seller');
-    assert((await call('walletAdjust', ADMIN, { docId: 'seller', amountTSh: 9000, type: 'escrow_release', ledgerKey: 'dispwin_o23_seller' })).ok, 'seller halali');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'eve', amountTSh: 9000, type: 'refund', ledgerKey: 'dispwin_o23_buyer' }), ['permission-denied'], 'eve kama buyer');
+    denied(await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'buyer', amountTSh: 9000, type: 'escrow_release', ledgerKey: 'dispwin_o23_seller' }), ['permission-denied'], 'buyer kama seller');
+    assert((await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'seller', amountTSh: 9000, type: 'escrow_release', ledgerKey: 'dispwin_o23_seller' })).ok, 'seller halali');
     eq(await bal('eve'), 0, 'eve');
   });
 
@@ -540,12 +598,12 @@ async function main() {
     eq(await bal('driver'), 3000, 'carrier = agreedFare'); eq(await bal('seller'), 17000, 'muuzaji');
     await autoRelease(60);
     eq(await bal('seller'), 17000, 'hakuna malipo ya pili');
-    // oda bila uwasilishaji: tabia ya zamani (auto-release baada ya saa 24)
+    // [REPAIR 2026-10 H3] oda bila uwasilishaji wala ushahidi: HAKUNA auto-release
     await paidOrder('o28b', 6000);
     await db.doc('escrow_holds/order_o28b').update({ verifiedAt: hoursAgo(72) });
     await db.doc('orders/o28b').update({ status: 'shipped', shippedAt: hoursAgo(72) });
     await autoRelease(30);
-    eq(await bal('seller'), 23000, 'oda bila uwasilishaji imetolewa');
+    eq(await bal('seller'), 17000, '"shipped" bila ushahidi haitoi pesa');
   });
 
   /* ---------------- muhtasari ---------------- */

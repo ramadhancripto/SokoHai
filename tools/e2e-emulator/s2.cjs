@@ -1,0 +1,46 @@
+const L = require('./lib.cjs'); const { step, assert, db, admin } = L;
+const SHOT = n => L.SCR + '/e2e/shot-' + n + '.png';
+(async () => {
+  await fetch('http://127.0.0.1:8085/emulator/v1/projects/demo-sokohai/databases/(default)/documents', { method: 'DELETE' });
+  await fetch('http://127.0.0.1:9099/emulator/v1/projects/demo-sokohai/accounts', { method: 'DELETE' });
+  const PW = 'Passw0rd!x';
+  const owner = await L.authUser('owner@sokohai.test', PW, 'Owner');
+  await admin.auth().setCustomUserClaims(owner, { admin: true, superAdmin: true });
+  await db.doc('users/' + owner).set({ uid: owner, fullName: 'Owner Admin', email: 'owner@sokohai.test', walletBalance: 0, followers: [], following: [], createdAt: new Date().toISOString() });
+  const S = await L.open();
+  let p = S.p, sellerUid;
+  await step('1 Seller sign-up through the real form', async () => {
+    await p.evaluate(() => { window.openAuthModal(); window.toggleAuth('signup'); });
+    await p.fill('#signupName', 'Juma Muuzaji'); await p.fill('#signupEmail', 'seller@sokohai.test'); await p.fill('#signupPhone', '0712000001'); await p.fill('#signupPass', PW);
+    await p.evaluate(() => window.doSignup()); await p.waitForTimeout(3000);
+    sellerUid = (await admin.auth().getUserByEmail('seller@sokohai.test')).uid;
+    assert((await db.doc('users/' + sellerUid).get()).exists, 'users doc missing: ' + S.log.alerts.join('|'));
+    await p.waitForFunction(() => window.skh.currentUserData && window.skh.currentUserData.uid, null, { timeout: 15000 });
+    return 'profile created + loaded';
+  });
+  let productId;
+  await step('2 Seller publishes a product (real form, emulator rules)', async () => {
+    await p.evaluate(() => window.showForm('sellerForm')); await p.waitForTimeout(800);
+    const cat = await p.evaluate(() => { const s = document.getElementById('prodCategory'); const o = [...s.options].find(o => o.value && /Electronics|Simu|Elektroniki/i.test(o.value + o.text)) || [...s.options].find(o => o.value); return o.value; });
+    await p.selectOption('#prodCategory', cat); await p.waitForTimeout(400);
+    const sub = await p.evaluate(() => { const s = document.getElementById('prodSubCategory'); const o = s && [...s.options].find(o => o.value); return o ? o.value : ''; });
+    if (sub) await p.selectOption('#prodSubCategory', sub);
+    await p.fill('#prodName', 'Simu E2E Test'); await p.fill('#prodBuyPrice', '120000'); await p.fill('#prodPrice', '150000'); await p.fill('#prodStock', '4'); await p.fill('#prodLocation', 'Dar es Salaam');
+    await p.fill('#prodDesc', 'Bidhaa ya majaribio ya E2E (emulator).');
+    await p.locator('#prodImage').setInputFiles({ name: 'p.png', mimeType: 'image/png', buffer: L.IMG });
+    await p.screenshot({ path: SHOT('02-product-form'), fullPage: false });
+    const inval = await p.evaluate(() => [...document.querySelectorAll('#sellerForm :invalid')].map(e => e.id + ':' + e.tagName + ':' + (e.offsetParent ? 'visible' : 'hidden')));
+    console.log('invalid fields', inval);
+    await p.evaluate(() => { const o = window.skh.addDoc; window.skh.addDoc = (c, d) => { window.__lastWrite = JSON.parse(JSON.stringify(d)); return o(c, d); }; });
+    await p.click('#btnSeller'); await p.waitForTimeout(5000);
+    console.log('status texts', await p.evaluate(() => [...document.querySelectorAll('.skh-toast,#spbStatus,[id*=Status]')].map(e => e.id + '=' + e.textContent.trim().slice(0, 80)).filter(x => x.length > 3).slice(0, 8)));
+    const q = await db.collection('products').where('userId', '==', sellerUid).get();
+    if (q.size !== 1) console.log('PAYLOAD', JSON.stringify(await p.evaluate(() => window.__lastWrite)).slice(0, 3000));
+    assert(q.size === 1, 'product docs=' + q.size + ' alerts=' + S.log.alerts.slice(-3).join(' | '));
+    productId = q.docs[0].id; const d = q.docs[0].data();
+    return `cat=${cat}/${sub} status=${d.publicationStatus||d.status} stock=${d.stock} images=${(d.imagesArray||d.images||[]).length} sku=${d.sku||(d.variantCombinations&&d.variantCombinations[0]&&d.variantCombinations[0].sku)||'-'} uploads=${S.log.uploads}`;
+  });
+  console.log('alerts', S.log.alerts); console.log(L.realErrs(S.log).slice(0, 12).join('\n').slice(0, 3000)); console.log('blocked', [...S.log.hosts]);
+  await S.b.close();
+  require('fs').writeFileSync(L.SCR + '/e2e/state.json', JSON.stringify({ owner, sellerUid, productId }));
+})();

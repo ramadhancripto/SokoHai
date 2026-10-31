@@ -544,7 +544,9 @@ import { skh } from './00-bootstrap.js';
                   project +
                   '/databases/(default)/documents/products?pageSize=1';
 
-            var fr = await fetch(firestoreUrl);
+            // [PHASE 9] App Check token (diagnostics keep working under enforcement)
+            var acH = (!isLocal && typeof window.skhAppCheckHeaders === 'function') ? await window.skhAppCheckHeaders() : {};
+            var fr = await fetch(firestoreUrl, { headers: acH });
 
             fire = fr.status;
 

@@ -1,77 +1,102 @@
 rules_version = '2';
+// =====================================================================
+// SokoHai Firestore Security Rules
+// [REPAIR 2026-10] Full hardening pass (see docs/repair/IMPLEMENTATION-REPORT.md).
+//  * Admin = custom claim; email fallback only when email_verified.
+//  * Privileged profile fields (agent approval, verification, wallet,
+//    role, suspension) are admin/server only.
+//  * No collection is open to "any signed-in user" for writes anymore.
+//  * `allow write` is never combined with a `delete: if false` (Firestore
+//    ORs allow statements, so that pattern used to permit deletes).
+//  * Money/payment/escrow truth is server-only (Cloud Functions, Admin SDK).
+//  * Bulk list queries on personal/financial collections are limited.
+// =====================================================================
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---- HESHIMA ZA MSINGI ----
+    // ---------------------------------------------------------------
+    // HELPERS
+    // ---------------------------------------------------------------
     function signedIn() { return request.auth != null; }
 
-    // [CUSTODY/FIX 2026-09] Admin halisi: custom claim (`admin` au `role:admin`)
-    // + email fallback (sawa na `skh.MY_ADMIN_EMAIL` kwenye client).
     function isAdmin() {
       return request.auth != null && (
         request.auth.token.admin == true ||
         request.auth.token.role == 'admin' ||
-        (request.auth.token.email != null &&
+        request.auth.token.superAdmin == true ||
+        (request.auth.token.email_verified == true &&
+         request.auth.token.email != null &&
+         request.auth.token.email.lower() == 'rshabansaid@gmail.com')
+      );
+    }
+    function isSuperAdmin() {
+      return request.auth != null && (
+        request.auth.token.superAdmin == true ||
+        (request.auth.token.email_verified == true &&
+         request.auth.token.email != null &&
          request.auth.token.email.lower() == 'rshabansaid@gmail.com')
       );
     }
 
-    // [OFFLINE-MEMBER 2026-09] Wakala aliyedhinishwa (users.isApprovedAgent) Ã¢â‚¬â€
-    // ndiye pekee anayeruhusiwa kuandika nyaraka za usajili wa mwanachama
-    // offline (memberSecrets/agentMembers) bila Cloud Functions.
+    function myUserExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function myUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    // users.isApprovedAgent is admin/server-only (privilegedUserKeys).
     function isApprovedAgent() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApprovedAgent == true;
+      return request.auth != null && myUserExists()
+        && myUser().get('isApprovedAgent', false) == true
+        // [REPAIR 2026-10 B-03] only approvals stamped by adminApproveAgent count
+        && myUser().get('agentApprovedBy', '') != '';
+    }
+    function myShopOwnerUid() {
+      return myUserExists() ? myUser().get('shopOwnerUid', '') : '';
     }
 
-    // Procurement documents belong to a shop owner. An approved agent may act
-    // only for the shopOwnerUid recorded on the agent's own user profile.
+    // Shop back-office records carry shopOwnerId. Staff act for the owner in
+    // users.shopOwnerUid, which a user may only set to their own uid.
     function ownsShopRecord(data) {
       return signedIn() && (
         isAdmin()
         || data.get('shopOwnerId', '') == request.auth.uid
-        || (isApprovedAgent()
-            && data.get('shopOwnerId', '') == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shopOwnerUid', ''))
+        || (data.get('shopOwnerId', '') != '' && data.get('shopOwnerId', '') == myShopOwnerUid())
       );
     }
-
-    function activityActor(data) {
+    function ownsByField(data) {
       return signedIn() && (
-        isAdmin()
-        || data.get('userId', '') == request.auth.uid
-        || data.get('actorId', '') == request.auth.uid
-        || data.get('agentId', '') == request.auth.uid
-        || data.get('memberUid', '') == request.auth.uid
-        || data.get('shopOwnerId', '') == request.auth.uid
+        data.get('userId', '') == request.auth.uid
+        || data.get('ownerId', '') == request.auth.uid
+        || data.get('uid', '') == request.auth.uid
       );
     }
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function unchanged(keys) { return !changed().hasAny(keys); }
+    // List queries must carry a small limit so collections cannot be dumped.
+    function smallQuery(n) {
+      return request.query.limit != null && request.query.limit <= n;
+    }
 
-    // [CHAT BLOCK 2026-09] Utekelezaji wa block NI WA BACKEND (rules):
-    // ujumbe HAUWEZI kutumwa ikiwa kuna block kati ya wahusika wawili Ã¢â‚¬â€
-    // hata kwa client iliyobadilishwa (bypass). Block ni ya mweleke mmoja:
-    // A__B (A amemzuia B) Ã¢â€°Â  B__A (B amemzuia A).
+    // Chat block (one direction: A__B means A blocked B).
     function isBlockedPair(a, b) {
-      // [PHASE 1 2026-09] SYNTAX FIX tu: `$(a)__$(b)` haikubaliki na compiler ya
-      // rules (faili lote lilikataliwa). Maana ni ileile: doc id "<a>__<b>".
       return exists(/databases/$(database)/documents/chatBlocks/$(a + '__' + b))
           || exists(/databases/$(database)/documents/chatBlocks/$(b + '__' + a));
     }
 
-    // ============================================================
-    // SOKO (public browsing): bidhaa/huduma/matangazo zinabaki wazi
-    // kwa watu wote kusoma; kuandika kunahitaji login.
-    // ============================================================
-    // [REVIEWS 2026-09] `comments` (tathmini) huandikwa na SERVER pekee
-    // (reviewsPublish) Ã¢â‚¬â€ browser hairuhusiwi kuandika verifiedPurchase bandia.
+    // ---------------------------------------------------------------
+    // PRODUCTS / SERVICES (public browsing)
+    // ---------------------------------------------------------------
     function ownsProduct(data) {
       return signedIn() && (
         data.userId == request.auth.uid ||
-        (('managedByAgentUid' in data) && data.managedByAgentUid == request.auth.uid) ||
+        (('managedByAgentUid' in data) && data.managedByAgentUid == request.auth.uid && isApprovedAgent()) ||
         isAdmin()
       );
     }
     function validProduct(data) {
       return data.title is string && data.title.size() >= 2 && data.title.size() <= 140
+        && (!('quantityPrecision' in data) || data.quantityPrecision in [0, 1, 2, 3])
         && data.price is number && data.price > 0
         && data.stock is number && data.stock >= 0
         && data.userId is string && data.userId.size() > 0
@@ -80,44 +105,82 @@ service cloud.firestore {
         && (!('variants' in data) || data.variants is list)
         && (!('imagesArray' in data) || data.imagesArray is list);
     }
+    // [REPAIR 2026-10 B-10] The product form sends businessId/storeId = null for
+    // sellers without a business; null must count as "no scope" (it used to
+    // cause an evaluation error, so every product publish was denied).
     function canonicalProductScopeValid(data) {
-      return (data.get('businessId', '') == ''
+      return (data.get('businessId', '') in ['', null]
         || (exists(/databases/$(database)/documents/businesses/$(data.businessId))
           && (isAdmin()
             || get(/databases/$(database)/documents/businesses/$(data.businessId)).data.ownerUid == request.auth.uid
-            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shopOwnerUid', '')
-              == get(/databases/$(database)/documents/businesses/$(data.businessId)).data.ownerUid)))
-        && (data.get('storeId', '') == ''
+            || myShopOwnerUid() == get(/databases/$(database)/documents/businesses/$(data.businessId)).data.ownerUid)))
+        && (data.get('storeId', '') in ['', null]
           || (exists(/databases/$(database)/documents/stores/$(data.storeId))
             && get(/databases/$(database)/documents/stores/$(data.storeId)).data.get('businessId', '') == data.get('businessId', '')
             && (isAdmin()
               || get(/databases/$(database)/documents/stores/$(data.storeId)).data.ownerUid == request.auth.uid
-              || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('shopOwnerUid', '')
-                == get(/databases/$(database)/documents/stores/$(data.storeId)).data.ownerUid)));
+              || myShopOwnerUid() == get(/databases/$(database)/documents/stores/$(data.storeId)).data.ownerUid)));
     }
+    // [PHASE 2 F6 2026-10-31] variantCombinations carries per-variant stock and
+    // reserved counters. A per-element rule check does not fit the 1000-expression
+    // budget (measured in the emulator), so the whole list is server-only:
+    // clients save variants through the productVariantsSave callable, which keeps
+    // live stock/reserved and starts new variants at 0.
+    // Auction / price-drop / group state lives in modeData and is written by the
+    // server (auctionPlaceBid etc.); sellers configure it only before any bid.
     match /products/{id} {
-      // Legacy public marketplace compatibility. Sensitive seller/POS fields should
-      // be migrated to owner-only documents before public field-level separation.
       allow read: if true;
       allow create: if signedIn() && validProduct(request.resource.data)
         && request.resource.data.stock == 0
         && request.resource.data.get('openingStockPending', false) == true
+        && request.resource.data.get('reservedStock', 0) == 0
+        && !('variantCombinations' in request.resource.data)
         && canonicalProductScopeValid(request.resource.data)
+        && !request.resource.data.keys().hasAny(['moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
+        // [REPAIR 2026-10 Phase 5] no pre-filled auction winner / bids / group members
+        && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
+        && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
+        && request.resource.data.get('modeData', {}).get('participants', []).size() == 0
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsProduct(resource.data) && validProduct(request.resource.data)
         && request.resource.data.userId == resource.data.userId
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'comments','stock','businessId','storeId','ownerUid','shopOwnerUid','shopOwnerId','sellerId','userId','openingStockPending','openingStockInitialized'
-        ]);
-      // Product lifecycle is archive/unpublish. Physical deletion is server-only.
+        // [PHASE 9 B-18] admin changing another seller's listing must sign it
+        // (productsAdminAudit logs it); nobody may sign as someone else.
+        && (resource.data.userId == request.auth.uid
+            || (('managedByAgentUid' in resource.data) && resource.data.managedByAgentUid == request.auth.uid)
+            || adminStampOk())
+        && (unchanged(['lastChangedBy','lastChangedAt']) || request.resource.data.get('lastChangedBy', '') == request.auth.uid)
+        // [PHASE 3 2026-10-31] reservedStock and variant stock/reserved are server-only for everyone.
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reservedStock','variantCombinations'])
+        // [POS 2026-11-01] decimal precision is fixed once stock exists in that precision (server/admin only after create).
+        && (isAdmin() || unchanged(['quantityPrecision']))
+        && (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments','stock','businessId','storeId','ownerUid','shopOwnerUid','shopOwnerId','sellerId','userId','openingStockPending','openingStockInitialized','moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
+        // [REPAIR 2026-10 Phase 5] Once buyers took part (a bid, or a Group Buy join)
+        // the mode runtime belongs to the server (auctionPlaceBid / groupBuyJoin);
+        // the seller can no longer rewrite it (e.g. reset the winner or the group).
+        && (isAdmin() || unchanged(['modeData'])
+            || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
+                && resource.data.get('modeData', {}).get('participants', []).size() == 0
+                && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
+                && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
+                && request.resource.data.get('modeData', {}).get('participants', []).size() == 0))
+        && (isAdmin() || unchanged(['saleMode']) || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
+                && resource.data.get('modeData', {}).get('participants', []).size() == 0));
+      // [REPAIR 2026-10 B-12] Found by the browser E2E: buyers opening or sharing a
+      // product could never count a view/share (owner-only update), so product
+      // analytics stayed at 0. A signed-in user may add exactly 1 to views or
+      // shares and change nothing else.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
+        && request.resource.data.views == resource.data.get('views', 0) + 1;
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shares'])
+        && request.resource.data.shares == resource.data.get('shares', 0) + 1;
       allow delete: if false;
     }
 
-    // [STEP 3A-0] Transactional stock and sale authority is Admin SDK only.
-    // Clients may read only records belonging to the authenticated owner;
-    // POS/inventory mutations go through the server transaction callables.
     match /sales/{id} {
       allow read: if signedIn() && (isAdmin()
         || resource.data.sellerId == request.auth.uid
@@ -130,10 +193,11 @@ service cloud.firestore {
         || resource.data.actorUid == request.auth.uid);
       allow write: if false;
     }
+
     function ownsService(data) {
       return signedIn() && (
         data.userId == request.auth.uid ||
-        (('managedByAgentUid' in data) && data.managedByAgentUid == request.auth.uid) ||
+        (('managedByAgentUid' in data) && data.managedByAgentUid == request.auth.uid && isApprovedAgent()) ||
         isAdmin()
       );
     }
@@ -148,25 +212,32 @@ service cloud.firestore {
     match /services/{id} {
       allow read: if true;
       allow create: if signedIn() && validService(request.resource.data)
+        && !request.resource.data.keys().hasAny(['providerVerified','moderationStatus','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsService(resource.data) && validService(request.resource.data)
-        && request.resource.data.userId == resource.data.userId;
+        && request.resource.data.userId == resource.data.userId
+        && (isAdmin() || unchanged(['providerVerified','moderationStatus','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']));
       allow delete: if false;
     }
-    // Home Advertisement Showcase. Public users receive published projections only;
-    // drafts/editable Creative JSON are private to owner/Admin.
+
+    // ---------------------------------------------------------------
+    // ADS / CREATIVE
+    // ---------------------------------------------------------------
     match /announcements/{id} {
       allow read: if isAdmin()
-        || (signedIn() && resource.data.advertiserId == request.auth.uid)
-        || resource.data.status == 'published'
-        || resource.data.active == true
-        || (resource.data.status == 'published' && resource.data.archived == false);
-      allow create, update, delete: if isAdmin();
+        || (signedIn() && resource.data.get('advertiserId', '') == request.auth.uid)
+        || resource.data.get('status', '') == 'published'
+        || (resource.data.get('active', false) == true && !('status' in resource.data));
+      // [REPAIR 2026-10] browser admin writes carry an author stamp -> audit trigger.
+      allow create, update: if isAdmin() && adminStampOk();
+      allow delete: if isAdmin();
     }
-    // Editable Creative authority. ownerId is immutable and must equal Auth UID;
-    // the server, not the browser, writes immutable published versions.
+    function adminStampOk() {
+      return request.resource.data.get('lastChangedBy', '') == request.auth.uid
+        && (resource == null || request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastChangedAt']));
+    }
     match /creatives/{id} {
       allow read: if signedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
       allow create: if signedIn()
@@ -197,8 +268,6 @@ service cloud.firestore {
       allow write: if false;
     }
     match /creativeEvents/{id} { allow read, write: if false; }
-    // Canonical Ads Delivery state and analytics are server-only. Frequency,
-    // cooldown/fatigue state is separate from immutable delivery-event metrics.
     match /adDeliveryState/{id} {
       allow read, write: if false;
       match /adDeliverySessions/{sessionId} { allow read, write: if false; }
@@ -206,22 +275,14 @@ service cloud.firestore {
     match /adDeliveryLeases/{id}  { allow read, write: if false; }
     match /adDeliveryMetrics/{id} { allow read, write: if false; }
     match /adDeliveryEvents/{id}  { allow read, write: if false; }
-    // Cloudinary media references/metadata only; media bytes never enter Firestore.
     match /adminMedia/{id} {
-      allow read, create, update, delete: if isAdmin();
+      allow read, delete: if isAdmin();
+      allow create, update: if isAdmin() && adminStampOk();
     }
-    // [FIX 2026-09] drivers ilikuwa haipo -> ilikuwa ikiangukia kwenye
-    // "allow read: if false" na kufanya tab ya Usafirishaji ionyeshe tupu.
-    match /drivers/{id}               { allow read: if true; allow write: if signedIn(); }
 
-    // ============================================================
-    // WATUMIAJI (users) Ã¢â‚¬â€ login inahitajika kusoma/kuandika.
-    // ULINZI MKUU: walletBalance HAIWEZI kuandikwa na browser Ã¢â‚¬â€
-    // ni Cloud Functions (Admin SDK) pekee. Hii inasimamisha
-    // "kujilipia" / "kujiongezea salio" kutoka kwa kivinjari.
-    // ============================================================
-    // Privacy-safe public projection consumed by Discover. It contains no phone,
-    // email, exact address, orders, chat data, wallet or private activity.
+    // ---------------------------------------------------------------
+    // USERS AND IDENTITY
+    // ---------------------------------------------------------------
     match /publicProfiles/{uid} {
       allow read: if true;
       allow create, update: if signedIn() && uid == request.auth.uid
@@ -234,35 +295,126 @@ service cloud.firestore {
       allow delete: if signedIn() && uid == request.auth.uid;
     }
 
-    match /users/{uid} {
-      allow read: if signedIn();
+    // Fields only an admin (client admin panel) or the server may set.
+    function privilegedUserKeys() {
+      return ['walletBalance','role','admin','isAdmin','superAdmin','adminRole','adminPermissions',
+              'isApprovedAgent','myAgentCode','agentStatus','agentApprovedAt','agentApprovedBy',
+              'isVerified','verificationStatus','sellerVerified','verifiedSeller','driverVerified','providerVerified',
+              'accountStatus','suspended','isSuspended','suspendedAt','suspendedBy','suspendReason',
+              'createdByAgentId','managedByAgentUid','isOfflineUser','memberId',
+              'isSubscribed','subscriptionType','subscriptionValidUntil','subStatus','subscriptionPaidRef',
+              // [2026-11-01] verification evidence is written by admin/server only
+              'verificationChecks'];
+    }
+    // Self-registration: no privileged keys, zero balance, shop owner = self.
+    // [REPAIR 2026-10 B-09] walletBalance is checked separately (must be 0 on
+    // create). Excluding it here fixes sign-up: doSignup / Google sign-in send
+    // walletBalance: 0, which the old check rejected (every new account failed).
+    // [2026-10-31] Seller lifecycle is server-owned (sellerLifecycleChange): the
+    // browser may start or stay TEMPORARY, never self-promote to permanent, and
+    // never write the status history or raise productLimit above the temporary limit.
+    function sellerLifecycleCreateOk(d) {
+      return d.get('sellerType', 'temporary') == 'temporary'
+        && d.get('productLimit', 0) <= 9
+        && !d.keys().hasAny(['sellerStatusHistory','sellerLifecycleUpdatedAt']);
+    }
+    function sellerLifecycleUpdateOk() {
+      return unchanged(['sellerStatusHistory','sellerLifecycleUpdatedAt'])
+        && (unchanged(['productLimit']) || request.resource.data.get('productLimit', 0) <= 9)
+        && (unchanged(['sellerType'])
+            || (request.resource.data.get('sellerType', '') == 'temporary'
+                && resource.data.get('sellerType', 'temporary') == 'temporary'));
+    }
+    function selfProfileCreateOk(d) {
+      return !d.keys().removeAll(['walletBalance']).hasAny(privilegedUserKeys())
+        && sellerLifecycleCreateOk(d)
+        && d.get('shopOwnerUid', request.auth.uid) == request.auth.uid
+        && d.get('registeredThroughAgentId', '') != request.auth.uid;
+    }
+    // Approved agent registering an offline member (fallback when functions are down).
+    function agentMemberCreateOk(memberUid, d) {
+      return isApprovedAgent()
+        && memberUid != request.auth.uid
+        && d.get('uid', '') == memberUid
+        && d.get('isOfflineUser', false) == true
+        && d.get('registeredThroughAgentId', '') == request.auth.uid
+        && d.get('createdByAgentId', request.auth.uid) == request.auth.uid
+        && d.get('managedByAgentUid', request.auth.uid) == request.auth.uid
+        && d.get('walletBalance', 0) == 0
+        && !d.keys().hasAny(['role','admin','isAdmin','superAdmin','isApprovedAgent','myAgentCode',
+                             'isVerified','sellerVerified','verifiedSeller','driverVerified','providerVerified',
+                             'accountStatus','suspended','isSuspended','shopOwnerUid']);
+    }
+    match /users/{userDocId} {
+      // [REPAIR 2026-10 C4] Private profile: owner, admin, or the agent who
+      // manages this offline member. Everyone else reads the public card in
+      // userCards/{uid} (server-maintained, no e-mail / private phone / wallet).
+      allow get: if signedIn() && ((resource == null && userDocId == request.auth.uid) || userDocReader(resource.data));
+      allow list: if signedIn() && userDocReader(resource.data);
       allow create: if signedIn()
-        && (uid == request.auth.uid || request.resource.data.uid == request.auth.uid || isAdmin())
         && (!('walletBalance' in request.resource.data) || request.resource.data.walletBalance == 0)
-        && (!('role' in request.resource.data) || request.resource.data.role != 'admin');
-      // [CUSTODY/FIX 2026-09] role ni SERVER-ONLY: mtu asiweze kujipandisha
-      // cheo kuwa admin (hii ilikuwa inawezesha privilege escalation popote
-      // rules zinapotumia users.role == 'admin').
+        && (
+          isAdmin()
+          || ((userDocId == request.auth.uid || request.resource.data.get('uid', '') == request.auth.uid)
+              && request.resource.data.get('uid', request.auth.uid) == request.auth.uid
+              && selfProfileCreateOk(request.resource.data))
+          || agentMemberCreateOk(userDocId, request.resource.data)
+        );
       allow update: if signedIn()
-        && (uid == request.auth.uid || resource.data.uid == request.auth.uid || isAdmin())
-        && (!('uid' in resource.data) || request.resource.data.uid == resource.data.uid)
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['walletBalance', 'role']);
+        && (!('uid' in resource.data) || request.resource.data.get('uid', '') == resource.data.uid)
+        && unchanged(['walletBalance'])
+        && (
+          // [PHASE 9 B-18] An admin editing SOMEONE ELSE's profile from the browser
+          // must sign the change (lastChangedBy/lastChangedAt); usersAdminAudit
+          // copies it into admin_audit_log.
+          (isAdmin() && (userDocId == request.auth.uid || adminStampOk()))
+          || ((userDocId == request.auth.uid || resource.data.get('uid', '') == request.auth.uid)
+              && unchanged(privilegedUserKeys())
+              && sellerLifecycleUpdateOk()
+              && (unchanged(['lastChangedBy','lastChangedAt']) || request.resource.data.get('lastChangedBy', '') == request.auth.uid)
+              && (unchanged(['shopOwnerUid']) || request.resource.data.get('shopOwnerUid', '') == request.auth.uid)
+              && (unchanged(['registeredThroughAgentId']) || resource.data.get('registeredThroughAgentId', null) == null)
+              && (unchanged(['agentCode']) || resource.data.get('agentCode', null) == null || resource.data.get('agentCode', '') == ''))
+        );
+      // Follow / unfollow: anyone signed in may add or remove ONLY their own uid
+      // in someone else's `followers` list, and change nothing else.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers'])
+        && request.resource.data.followers is list
+        && request.resource.data.followers.size() <= 20000
+        && (
+          (request.resource.data.followers.toSet().difference(resource.data.get('followers', []).toSet()) == [request.auth.uid].toSet()
+            && resource.data.get('followers', []).toSet().difference(request.resource.data.followers.toSet()).size() == 0)
+          || (resource.data.get('followers', []).toSet().difference(request.resource.data.followers.toSet()) == [request.auth.uid].toSet()
+            && request.resource.data.followers.toSet().difference(resource.data.get('followers', []).toSet()).size() == 0)
+        );
       allow delete: if false;
     }
-
-    // [CUSTODY/FIX 2026-09] Vidhibiti vya mfumo (system/config) Ã¢â‚¬â€ mtu yeyote
-    // aliye-login anaweza kusoma (live config), lakini ADMIN pekee anaweza
-    // kuandika. Hii inarejesha uwezo wa paneli ya "WASHA/ZIMA" kusave kihalisi.
-    match /system/{doc} {
-      allow read: if signedIn();
-      allow write: if isAdmin();
+    function userDocReader(d) {
+      return isAdmin()
+        || d.get('uid', '') == request.auth.uid
+        || d.get('managedByAgentUid', '') == request.auth.uid
+        || d.get('createdByAgentId', '') == request.auth.uid
+        || d.get('registeredThroughAgentId', '') == request.auth.uid;
+    }
+    // Public projection of users written only by the userCardSync function.
+    match /userCards/{uid} {
+      allow get: if true;
+      allow list: if smallQuery(30);
+      allow write: if false;
     }
 
-    // ============================================================
-    // BUSINESS / STORE FOUNDATION
-    // Canonical documents are written by businessEnsureContext (Admin SDK).
-    // Browser writes stay disabled; reads are owner-scoped until a public
-    // visibility projection is explicitly published later.
+    match /system/{doc} {
+      allow read: if signedIn();
+      // [REPAIR 2026-10 M7] config writes must name their author; the server
+      // (systemConfigAudit) copies every change into admin_audit_log.
+      allow create, update: if (isSuperAdmin() && (doc != 'config' || (request.resource.data.get('lastChangedBy', '') == request.auth.uid
+          && request.resource.data.get('lastChangedVia', '') == 'browser'
+          && (resource == null || request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastChangedAt'])))))
+        || (isAdmin() && doc != 'config');
+      allow delete: if isSuperAdmin() && doc != 'config';
+    }
+
     match /businesses/{businessId} {
       allow read: if signedIn() && (isAdmin() || resource.data.ownerUid == request.auth.uid);
       allow write: if false;
@@ -272,83 +424,102 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // BIASHARA (login inahitajika) Ã¢â‚¬â€ HaiPay, oda, notifications, n.k.
-    // ============================================================
-    // [PHASE 1 SECURITY 2026-09] sokopay_links: hali ya malipo ni ya SERVER.
-    //  Ã¢â‚¬Â¢ status 'held'/'completed', paidAt, paymentVerified, verifiedAmount,
-    //    sellerEarned, autoReleased* Ã¢â€ â€™ huandikwa na Cloud Functions PEKEE
-    //    (settlePesaPalPayment / sokopayLinkWalletPay / haipayReleaseLink /
-    //    sokopayAutoRelease). Kivinjari hakiwezi tena "kujilipa" kwa kuandika
-    //    status:'held' + paidAt ya zamani.
-    //  Ã¢â‚¬Â¢ Muuzaji (userId) anaunda link 'pending' na kuhariri maelezo akiwa pending.
-    //  Ã¢â‚¬Â¢ Mnunuzi anadai link iliyo 'pending' (buyerId/transactionId) kabla ya
-    //    kulipa Ã¢â‚¬â€ haitoi pesa; server hulinganisha na PesaPal.
-    //  Ã¢â‚¬Â¢ Mhusika (mnunuzi/muuzaji) anafungua mgogoro kwenye link iliyo 'held'.
-    //  Ã¢â‚¬Â¢ Admin: suluhu ya migogoro.
+    // ---------------------------------------------------------------
+    // SOKOPAY LINKS (contracts) — payment state is server-only.
+    // ---------------------------------------------------------------
+    function sokopayServerKeys() {
+      return ['buyerId','buyerName','paidAt','transactionId','paymentVerified','verifiedAmount',
+              'sellerEarned','platformFee','completedAt','autoReleased','autoReleasedAt'];
+    }
     match /sokopay_links/{id} {
-      allow read: if signedIn();
+      allow get: if signedIn();
+      allow list: if signedIn() && (isAdmin()
+        || resource.data.get('userId', '') == request.auth.uid
+        || resource.data.get('buyerId', '') == request.auth.uid
+        || smallQuery(1));
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.get('status', 'pending') == 'pending'
-        && !request.resource.data.keys().hasAny(['buyerId','buyerName','paidAt','transactionId',
-             'paymentVerified','verifiedAmount','sellerEarned','completedAt','autoReleased','autoReleasedAt']);
+        && request.resource.data.get('price', 0) is number && request.resource.data.get('price', 0) > 0
+        && !request.resource.data.keys().hasAny(sokopayServerKeys());
       allow update: if signedIn() && (
         isAdmin()
         || (resource.data.userId == request.auth.uid
             && resource.data.get('status', 'pending') == 'pending'
-            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId','status','buyerId','buyerName',
-                 'paidAt','transactionId','paymentVerified','verifiedAmount','sellerEarned','completedAt','autoReleased','autoReleasedAt']))
+            && unchanged(['userId','status']) && unchanged(sokopayServerKeys()))
         || (resource.data.get('status', 'pending') == 'pending'
             && resource.data.userId != request.auth.uid
             && request.resource.data.buyerId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['buyerId','buyerName','transactionId','paymentType']))
+            && changed().hasOnly(['buyerId','buyerName','transactionId','paymentType']))
         || (resource.data.status == 'held'
             && (resource.data.buyerId == request.auth.uid || resource.data.userId == request.auth.uid)
             && request.resource.data.status == 'disputed'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','disputeReason','disputedAt']))
+            && changed().hasOnly(['status','disputeReason','disputedAt']))
       );
       allow delete: if false;
     }
-
-    // ============================================================
-    // HAIPAY: vitu vilivyohifadhiwa (token/linki/QR) vya mtumiaji.
-    // Kila mtumiaji anaweza kuona vyake tu; kuandika/futa kwa umiliki.
-    // ============================================================
     match /haipay_saved/{id} {
-      allow read: if signedIn();
+      allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
-    // Buyer isolation: order details are visible only to its buyer, seller/provider,
-    // assigned courier, or admin. Party identifiers cannot be swapped by an update.
+
+    // ---------------------------------------------------------------
+    // ORDERS — money, payment and completion are server-owned.
+    // ---------------------------------------------------------------
+    function orderMoneyKeys() {
+      return ['amount','unitPrice','quantity','verifiedAmount','paymentProtectedAt','paidAt','heldAt',
+              'sellerEarned','carrierEarned','commission','completedAt','autoReleased','autoReleasedAt',
+              'disputeResolvedAt','disputeWinner','buyerRefund','verifiedByServer','paymentVerifiedBy','ipnAt',
+              'pricedByServer','priceSource','releaseEligibleAt','buyerConfirmedAt','deliveryProofAt','deliveryProofBy',
+              'refundStatus','refundedAt','escrowStatus',
+              'priceApprovedBy','priceApprovedAt','priceApprovedAmount','priceApprovalReason',
+              'priceReviewReason','priceExpected','priceReviewAt','pesapalTrackingId','disputeId','priceApprovalAuditId',
+              // [PHASE 3 2026-10-31] reservation / stock commit / payment review are server-only
+              'reservationId','reservationStatus','reservationExpiresAt','reservationAttempt','reservationFailReason',
+              'reservationCheckedAt','reservationEndedAt','stockCommitted','stockCommittedAt','inventoryReviewState',
+              'inventoryReviewReason','reviewDeadlineAt','refundPendingAt','refundId','reviewResolvedAt','reviewResolvedBy'];
+    }
+    function orderServerOnlyCreateKeys() {
+      return ['sellerEarned','carrierEarned','commission','autoReleased','autoReleasedAt',
+              'disputeWinner','disputeResolvedAt','verifiedAmount','paymentProtectedAt','buyerRefund','completedAt',
+              'paidAt','heldAt','verifiedByServer','paymentVerifiedBy','ipnAt','pricedByServer','priceSource',
+              'releaseEligibleAt','buyerConfirmedAt','deliveryProofAt','deliveryProofBy','refundStatus','refundedAt',
+              // [REPAIR 2026-10 B-01] admin price approval / server price review are server-only
+              'priceApprovedBy','priceApprovedAt','priceApprovedAmount','priceApprovalReason',
+              'priceReviewReason','priceExpected','priceReviewAt','pesapalTrackingId','disputeId','priceApprovalAuditId',
+              'reservationId','reservationStatus','reservationExpiresAt','reservationAttempt','reservationFailReason',
+              'reservationCheckedAt','reservationEndedAt','stockCommitted','stockCommittedAt','inventoryReviewState',
+              'inventoryReviewReason','reviewDeadlineAt','refundPendingAt','refundId','reviewResolvedAt','reviewResolvedBy'];
+    }
     match /orders/{id} {
       allow read: if signedIn() && (isAdmin()
         || resource.data.buyerId == request.auth.uid
         || resource.data.sellerId == request.auth.uid
-        || resource.data.providerId == request.auth.uid
-        || resource.data.courierId == request.auth.uid);
-      // [PHASE 2 P2] Kuunda: mnunuzi mwenyewe, bila matokeo ya malipo ya server
-      // (mgawanyo, kamisheni, auto-release, suluhu ya mgogoro) na si hali ya mwisho.
+        || resource.data.get('providerId', '') == request.auth.uid
+        || resource.data.get('courierId', '') == request.auth.uid);
+      // [REPAIR C2] A browser-created order always starts unpaid. Only the server
+      // (settlePesaPalPayment / sokopayLinkWalletPay / orderCreate) marks it paid.
       allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid
-        && !request.resource.data.keys().hasAny(['sellerEarned','carrierEarned','commission','autoReleased','autoReleasedAt',
-             'disputeWinner','disputeResolvedAt','verifiedAmount','paymentProtectedAt','buyerRefund','completedAt'])
-        && !(request.resource.data.get('status', 'payment_pending') in ['completed','refunded_by_admin','split_refund_resolved']);
-      // [PHASE 2 P2] Mamlaka ya hali ya oda na pesa ni ya SERVER. Mhusika (si admin):
-      //  Ã¢â‚¬Â¢ hawezi kubadilisha kiasi / malipo / mgawanyo / suluhu (orderMoneyKeys);
-      //  Ã¢â‚¬Â¢ viungo vya uwasilishaji (rideRequestId/deliveryId/driverId/transportRequestId)
-      //    vinawekwa mara moja tu (tupu Ã¢â€ â€™ thamani), kisha haviwezi kubadilishwa;
-      //  Ã¢â‚¬Â¢ paymentStatus: thamani za taarifa tu (rejected/verification_*), si 'paid',
-      //    na kamwe baada ya server kuthibitisha;
-      //  Ã¢â‚¬Â¢ status: orodha ndogo ya mabadiliko halali pekee (orderStatusOk).
+        && request.resource.data.get('sellerId', '') is string
+        && request.resource.data.get('sellerId', '') != request.auth.uid
+        && !request.resource.data.keys().hasAny(orderServerOnlyCreateKeys())
+        && request.resource.data.get('status', 'payment_pending') in ['payment_pending','pending','pending_choice','new_order','awaiting_payment']
+        && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
+        && request.resource.data.get('paymentVerified', false) == false;
       allow update: if signedIn()
-        && (isAdmin() || (
-            (resource.data.buyerId == request.auth.uid
+        // [PHASE 9 B-18] Admin browser edits: signed, never money fields (money
+        // moves only through audited callables); ordersAdminAudit logs them.
+        && ((isAdmin() && adminStampOk() && unchanged(orderMoneyKeys())) || (
+            unchanged(['lastChangedBy','lastChangedAt'])
+            && (resource.data.buyerId == request.auth.uid
               || resource.data.sellerId == request.auth.uid
-              || resource.data.providerId == request.auth.uid
-              || resource.data.courierId == request.auth.uid)
+              || resource.data.get('providerId', '') == request.auth.uid
+              || resource.data.get('courierId', '') == request.auth.uid)
             && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['buyerId','sellerId','providerId','courierId'])
-            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(orderMoneyKeys())
+            && unchanged(orderMoneyKeys())
             && orderLinkOnce('rideRequestId') && orderLinkOnce('deliveryId')
             && orderLinkOnce('driverId') && orderLinkOnce('transportRequestId')
             && orderPaymentInfoOk()
@@ -356,50 +527,90 @@ service cloud.firestore {
           ));
       allow delete: if false;
     }
-    function orderMoneyKeys() {
-      return ['amount','verifiedAmount','paymentProtectedAt','paidAt','heldAt',
-              'sellerEarned','carrierEarned','commission','completedAt','autoReleased','autoReleasedAt',
-              'disputeResolvedAt','disputeWinner','buyerRefund','verifiedByServer','paymentVerifiedBy','ipnAt'];
-    }
     function orderLinkOnce(k) {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([k])
-        || resource.data.get(k, null) == null;
+      return !changed().hasAny([k]) || resource.data.get(k, null) == null;
     }
     function orderPaymentInfoOk() {
-      // Taarifa za kivinjari (kurasa ya kurudi PesaPal): kukataliwa / uthibitisho
-      // unasubiri Ã¢â‚¬â€ kamwe 'paid'/paymentVerified=true, na kamwe baada ya server kuthibitisha.
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['paymentStatus','paymentVerified'])
+      return !changed().hasAny(['paymentStatus','paymentVerified'])
         || (resource.data.get('paymentVerified', false) != true
             && resource.data.get('paymentStatus', '') != 'paid'
             && !(resource.data.get('status', '') in ['held','shipped','awaiting_pickup','in_transit','delivered','completed','disputed'])
             && request.resource.data.get('paymentVerified', false) == false
             && request.resource.data.get('paymentStatus', '') in ['rejected','verification_pending','verification_unavailable','pending','payment_pending','']);
     }
+    // Status changes a party may make. Completion and payout are server-only.
     function orderStatusOk() {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status','shippedAt'])
-        // Mnunuzi: kufungua mgogoro kwenye oda iliyo kwenye escrow (si baada ya kukamilika).
+      return !changed().hasAny(['status','shippedAt'])
+        // Buyer opens a dispute while funds are in escrow (blocks auto-release).
         || (resource.data.buyerId == request.auth.uid
             && request.resource.data.get('status', '') == 'disputed'
             && resource.data.get('status', '') in ['held','shipped','awaiting_pickup','in_transit','delivered']
-            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shippedAt']))
-        // Mhusika: kughairi oda ambayo bado haijalipwa.
+            && unchanged(['shippedAt']))
+        // Either party cancels an unpaid order.
         || ((resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
             && request.resource.data.get('status', '') == 'cancelled'
-            && resource.data.get('status', 'payment_pending') in ['payment_pending','pending']
+            && resource.data.get('status', 'payment_pending') in ['payment_pending','pending','pending_choice','new_order','awaiting_payment']
             && resource.data.get('paymentVerified', false) != true
-            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shippedAt']))
-        // Muuzaji/mtoa huduma: held Ã¢â€ â€™ shipped (+ shippedAt katika uandishi huo huo).
+            && unchanged(['shippedAt']))
+        // Seller/provider marks a paid order as shipped (does NOT release funds).
         || ((resource.data.sellerId == request.auth.uid || resource.data.get('providerId', '') == request.auth.uid)
             && resource.data.get('status', '') == 'held'
+            && resource.data.get('paymentVerified', false) == true
             && request.resource.data.get('status', '') == 'shipped');
+    }
+
+    // ---------------------------------------------------------------
+    // DISPUTES — opened by a party, resolved by admin through the server.
+    // ---------------------------------------------------------------
+    match /disputes/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.get('buyerId', '') == request.auth.uid
+        || resource.data.get('sellerId', '') == request.auth.uid);
+      allow write: if false;
+      match /evidence/{evId} {
+        allow read: if signedIn() && (isAdmin()
+          || get(/databases/$(database)/documents/disputes/$(id)).data.get('buyerId', '') == request.auth.uid
+          || get(/databases/$(database)/documents/disputes/$(id)).data.get('sellerId', '') == request.auth.uid);
+        allow create: if signedIn()
+          && request.resource.data.authorId == request.auth.uid
+          && (get(/databases/$(database)/documents/disputes/$(id)).data.get('buyerId', '') == request.auth.uid
+              || get(/databases/$(database)/documents/disputes/$(id)).data.get('sellerId', '') == request.auth.uid)
+          && get(/databases/$(database)/documents/disputes/$(id)).data.get('status', 'open') in ['open','under_review'];
+        allow update, delete: if false;
+      }
+    }
+    // Permanent admin audit trail and security events: server-only writes.
+    match /admin_audit_log/{id}   { allow read: if isAdmin(); allow write: if false; }
+    match /security_events/{id}   { allow read: if isAdmin(); allow write: if false; }
+
+    // ---------------------------------------------------------------
+    // NOTIFICATIONS
+    // ---------------------------------------------------------------
+    function moneyClaimNotif(d) {
+      return (d.get('event', '') is string
+              && d.get('event', '').matches('^(wallet|payment|escrow)[.].*')
+              && d.get('event', '') != 'wallet.paymentLink')
+        || (d.get('title', '') is string
+              && d.get('title', '').lower().matches('.*(escrow|malipo|salio|imeingizwa|imelipwa|payout|wallet).*'));
     }
     match /notifications/{id} {
       allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.userId is string;
-      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      // [REPAIR M1] Clients may notify others, but cannot forge server/system
+      // notifications (payment protected, escrow, admin) or reuse their ids.
+      allow create: if signedIn() && request.resource.data.userId is string
+        && (isAdmin() || (
+          !id.matches('^(payprot|escrow|admin|sys)_.*')
+          && request.resource.data.get('system', false) != true
+          && !(request.resource.data.get('type', '') in ['payment_protected','escrow','admin','security'])
+          && request.resource.data.get('fromUid', request.auth.uid) == request.auth.uid
+          // [PHASE 9 B-16] A user may not tell ANOTHER user that money arrived
+          // (fake "escrow funded / malipo yamepokelewa" -> seller ships unpaid).
+          // Those notices now come only from the server after it verified payment.
+          && (request.resource.data.userId == request.auth.uid || !moneyClaimNotif(request.resource.data))));
+      allow update: if signedIn() && resource.data.userId == request.auth.uid
+        && changed().hasOnly(['read','readAt','seen','seenAt','archived']);
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
-    // Legacy compatibility only. Canonical chat ni conversations/messages.
-    // Legacy doc haisomeki na mtumiaji mwingine aliye-login bila kuwa mhusika.
     match /chats/{id} {
       allow read: if signedIn()
         && (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
@@ -410,17 +621,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ============================================================
-    // COMMERCE CHAT (2026-09) Ã¢â‚¬â€ mazungumzo yenye mfano wa conversation.
-    // Ufikiaji unategemea participants (si signedIn() pekee) ili mtu
-    // asiyehusika asisome mazungumzo ya wengine.
-    // ============================================================
+    // ---------------------------------------------------------------
+    // CHAT (participants only)
+    // ---------------------------------------------------------------
+    function convParticipants(convId) {
+      return get(/databases/$(database)/documents/conversations/$(convId)).data.participants;
+    }
     match /conversations/{convId} {
       allow read: if signedIn()
-        && (
-          !exists(/databases/$(database)/documents/conversations/$(convId))
-          || resource.data.participants.hasAny([request.auth.uid])
-        );
+        && (resource == null || resource.data.participants.hasAny([request.auth.uid]));
       allow create: if signedIn()
         && request.resource.data.participants is list
         && request.resource.data.participants.hasAll([request.auth.uid])
@@ -430,44 +639,42 @@ service cloud.firestore {
         && request.resource.data.participants[0] != request.resource.data.participants[1];
       allow update: if signedIn()
         && resource.data.participants.hasAny([request.auth.uid])
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participants']);
+        && unchanged(['participants','createdAt','createdBy']);
       allow delete: if false;
     }
+    // A client message may never pose as a server "payment protected" event.
+    function clientMessageOk(msgId, d) {
+      return !msgId.matches('^payprot_.*')
+        && d.get('eventKind', '') != 'payment_protected'
+        && d.get('senderId', '') != 'system'
+        && d.get('orderSnapshot', {}).get('protected', false) != true
+        && d.get('order', {}).get('snapshot', {}).get('protected', false) != true;
+    }
     match /conversations/{convId}/messages/{msgId} {
-      allow read: if signedIn()
-        && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]);
+      allow read: if signedIn() && convParticipants(convId).hasAny([request.auth.uid]);
       allow create: if signedIn()
         && request.resource.data.senderId == request.auth.uid
-        // Mwandishi lazima awe mshiriki wa parent conversation; kujua convId
-        // pekee hakumpi mtu ruhusa ya kuingiza ujumbe.
         && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
-        // [CHAT BLOCK 2026-09] Backend inakataa ujumbe ikiwa kuna block.
-        && !isBlockedPair(
-             get(/databases/$(database)/documents/conversations/$(convId)).data.participants[0],
-             get(/databases/$(database)/documents/conversations/$(convId)).data.participants[1]
-           );
-      // [REACTIONS 2026-09] Mshiriki yeyote anaweza kuongeza/kuondoa `reactions`
-      // (emoji map). Uhariri wa maandishi unabaki kwa mtumaji pekee.
+        && clientMessageOk(msgId, request.resource.data)
+        && !isBlockedPair(convParticipants(convId)[0], convParticipants(convId)[1]);
       allow update: if signedIn()
-        && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
+        && convParticipants(convId).hasAny([request.auth.uid])
         && (
           (resource.data.senderId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt', 'deletedAt', 'readBy']))
-          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+            && changed().hasOnly(['text', 'editedAt', 'deletedAt', 'readBy']))
+          || (changed().hasOnly(['readBy'])
+            && request.resource.data.readBy.toSet().difference(resource.data.get('readBy', []).toSet()).hasOnly([request.auth.uid]))
+          || (changed().hasOnly(['reactions'])
+            && request.resource.data.get('reactions', {}).diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([request.auth.uid]))
         );
       allow delete: if signedIn() && resource.data.senderId == request.auth.uid;
     }
 
-    // ============================================================
-    // COMMENTS (2026-09) Ã¢â‚¬â€ maoni ya umma (threads + likes).
-    // verifiedPurchase ni SERVER-ONLY: browser haiwezi kuandika badge.
-    // ============================================================
+    // ---------------------------------------------------------------
+    // COMMENTS / REVIEWS (verifiedPurchase is server-only)
+    // ---------------------------------------------------------------
     match /comments/{id} {
       allow read: if true;
-      // [COMMENTS 2026-09] Browser inaweza kuandika maoni YAKE tu, na uga
-      // zilizoidhinishwa pekee. Uga za SERVER-ONLY (verifiedPurchase,
-      // moderationStatus, authorRole, authorVerified, likeCount, replyCount)
-      // HAZIRUHUSIWI kuandikwa na client Ã¢â‚¬â€ zinadhibitiwa na callables.
       allow create: if signedIn()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.keys().hasOnly([
@@ -477,22 +684,21 @@ service cloud.firestore {
            ]);
       allow update: if signedIn()
         && resource.data.authorId == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'media', 'editedAt', 'deletedAt']);
-      // [COMMENT-LIKES 2026-09] likeCount inaweza kubadilishwa na mtumiaji
-      // yeyote aliye-login (kwa +1/-1 pekee), lakini NYARAKA ya like
-      // (commentLikes) ndiyo inayothibitisha "like 1 kwa user/comment".
+        && changed().hasOnly(['text', 'media', 'editedAt', 'deletedAt']);
+      // [REPAIR L1] likeCount moves by exactly one and needs the caller's like doc.
       allow update: if signedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+        && changed().hasOnly(['likeCount'])
         && request.resource.data.likeCount is int
+        && resource.data.get('likeCount', 0) is int
         && request.resource.data.likeCount >= 0
-        && resource.data.likeCount is int;
+        && ((request.resource.data.likeCount == resource.data.get('likeCount', 0) + 1
+             && existsAfter(/databases/$(database)/documents/commentLikes/$(id + '__' + request.auth.uid)))
+            || (request.resource.data.likeCount == resource.data.get('likeCount', 0) - 1
+             && !existsAfter(/databases/$(database)/documents/commentLikes/$(id + '__' + request.auth.uid))));
       allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
     }
     match /commentLikes/{id} {
       allow read: if true;
-      // [COMMENT-LIKES 2026-09] Client inaweza kuunda/kufuta like YAKE TU:
-      // id = uid + '__' + commentId Ã¢â€ â€™ user HAWEZI kupiga like mara MBILI kwa
-      // comment moja (1 like kwa user/comment Ã¢â‚¬â€ spec).
       allow create: if signedIn()
         && id == request.resource.data.commentId + '__' + request.auth.uid
         && request.resource.data.userId == request.auth.uid;
@@ -500,25 +706,15 @@ service cloud.firestore {
       allow update: if false;
     }
 
-    // ============================================================
-    // [FIREBASE-NATIVE 2026-09] MAJADILIANO YA BIASHARA Ã¢â‚¬â€ bila Cloud
-    // Functions (Firestore + RTDB pekee), RULES ndiye backend:
-    //   - washiriki (buyer/seller) pekee wanaweza kuandika
-    //   - version lazima iongezeke kwa 1 (concurrency Ã¢â‚¬â€ spec Ã‚Â§31)
-    //   - transition halali tu (state machine Ã¢â‚¬â€ spec Ã‚Â§5, Ã‚Â§30)
-    //   - nafasi (role/turn) inathibitishwa (spec Ã‚Â§35)
-    //   - fields za msingi HAZIBADILIKI (spec Ã‚Â§14)
-    // Wakati Cloud Functions zipo, njia ya server inabaki kuwa bora.
-    // ============================================================
+    // ---------------------------------------------------------------
+    // NEGOTIATION
+    // ---------------------------------------------------------------
     function isNegoState(s) {
       return s in ['DRAFT','OFFER_SENT','COUNTER_OFFER','AGREEMENT','CHANGE_REQUESTED',
                    'SCOPE_CHANGE_REQUESTED','ROUTE_CHANGE_REQUESTED',
                    'RE_NEGOTIATION','FINAL_AGREEMENT','ORDER_CREATED','COMPLETED',
                    'REJECTED','EXPIRED','CANCELLED'];
     }
-    // (from) -> { to: actor }  Ã¢â‚¬â€ actor Ã¢Ë†Ë† buyer|seller|turn|any|system
-    // [PHASE 1 2026-09] SYNTAX FIX tu: funguo za map zimewekwa kwenye nukuu
-    // (compiler ya rules haikubali funguo zisizo na nukuu). Mantiki ileile.
     function negoNext(from) {
       return {
         'DRAFT':            { 'OFFER_SENT': 'buyer', 'CANCELLED': 'any' },
@@ -533,12 +729,8 @@ service cloud.firestore {
         'ORDER_CREATED':    { 'CHANGE_REQUESTED': 'buyer', 'CANCELLED': 'any' }
       }.get(from, {});
     }
-    function negoActorOk(needed, uid, r) {
-      let role = uid == r.buyerId ? 'buyer' : (uid == r.sellerId ? 'seller' : 'none');
-      // Actor model (spec Ã‚Â§4/Ã‚Â§6): waitingForUserId ndio chanzo cha ukweli;
-      // fallback kwa `turn` (role) kwa majadiliano ya zamani.
-      // [PHASE 1 2026-09] SYNTAX FIX tu: rules hazina `if` ndani ya function
-      // (faili lote lilikataliwa na compiler). Mantiki ileile kwa ternary.
+    function negoActorOk(needed, actor, r) {
+      let role = actor == r.buyerId ? 'buyer' : (actor == r.sellerId ? 'seller' : 'none');
       let waiting = r.get('waitingForUserId', null);
       let turnRole = waiting != null && waiting == r.sellerId ? 'seller'
         : (waiting != null && waiting == r.buyerId ? 'buyer' : r.get('turn', null));
@@ -547,29 +739,23 @@ service cloud.firestore {
         || (needed == 'seller' && role == 'seller')
         || (needed == 'turn' && role == turnRole);
     }
-
-    // ============================================================
-    // OFA (price negotiation) Ã¢â‚¬â€ buyer anaumba; washiriki wanaweza
-    // kusasisha uga chache za status (accept/counter) bila functions.
-    // ============================================================
     match /offers/{id} {
       allow read: if signedIn()
         && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.get('sellerId', '') != request.auth.uid;
       allow update: if signedIn()
         && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','currentPrice','proposedPrice','counterOfferId','acceptedOrderId','expiresAt','updatedAt']);
+        && changed().hasOnly(['status','currentPrice','proposedPrice','counterOfferId','acceptedOrderId','expiresAt','updatedAt']);
       allow delete: if false;
     }
-
     match /negotiations/{negoId} {
       allow read: if signedIn()
         && (resource.data.buyerId == request.auth.uid
             || resource.data.sellerId == request.auth.uid
-            || (resource.data.conversationId is string
-                && resource.data.conversationId.size() > 0
-                && get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participants.hasAny([request.auth.uid])));
-      // Kuunda (SEND_OFFER) Ã¢â‚¬â€ mnunuzi pekee, hali ya mwanzo sahihi.
+            || (resource.data.get('conversationId', '') is string
+                && resource.data.get('conversationId', '').size() > 0
+                && convParticipants(resource.data.conversationId).hasAny([request.auth.uid])));
       allow create: if signedIn()
         && request.resource.data.buyerId == request.auth.uid
         && request.resource.data.sellerId is string
@@ -579,28 +765,34 @@ service cloud.firestore {
         && request.resource.data.currentUnitPrice is number
         && request.resource.data.currentUnitPrice > 0
         && request.resource.data.quantity is number
-        && request.resource.data.quantity >= 1;
-      // Kuendeleza (amri) Ã¢â‚¬â€ washiriki pekee, version+1, transition halali.
+        && request.resource.data.quantity >= 1
+        && !request.resource.data.keys().hasAny(['orderId','agreedUnitPrice','agreedTotal','lockedAt']);
+      // Client fallback transitions (server engine is preferred). The agreed
+      // price and the order link are written by the server only.
       allow update: if signedIn()
         && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
         && request.resource.data.version == resource.data.version + 1
         && request.resource.data.currentState is string
         && isNegoState(request.resource.data.currentState)
         && request.resource.data.currentState != resource.data.currentState
+        && request.resource.data.currentState != 'ORDER_CREATED'
         && negoNext(resource.data.currentState).get(request.resource.data.currentState, '') != ''
+        && negoNext(resource.data.currentState).get(request.resource.data.currentState, '') != 'system'
         && negoActorOk(negoNext(resource.data.currentState).get(request.resource.data.currentState, ''), request.auth.uid, resource.data)
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['negotiationId','buyerId','sellerId','productId','productTitle','productImage','serviceId','serviceTitle','transportId','transportTitle','commerceType','currency','createdAt','originalUnitPrice','conversationId'])
-        && (request.resource.data.currentUnitPrice is number && request.resource.data.currentUnitPrice > 0
+        && unchanged(['negotiationId','buyerId','sellerId','productId','productTitle','productImage','serviceId','serviceTitle','transportId','transportTitle','commerceType','currency','createdAt','originalUnitPrice','conversationId','orderId','agreedUnitPrice','agreedTotal','lockedAt'])
+        // [REPAIR 2026-10 B-04] Accepting = agreeing to the price and quantity already
+        // on the table (proposed by the other side). The accepting write may not
+        // change them, otherwise one party could "agree" to its own new price.
+        && (!(request.resource.data.currentState in ['AGREEMENT','FINAL_AGREEMENT'])
+            || unchanged(['currentUnitPrice','quantity','currentTotal','unitPrice','totalPrice']))
+        && ((request.resource.data.currentUnitPrice is number && request.resource.data.currentUnitPrice > 0)
             || request.resource.data.currentUnitPrice == null)
         && (request.resource.data.quantity is number && request.resource.data.quantity >= 1);
-      // Ukumbusho wa kiotomatiki (spec Ã‚Â§35) Ã¢â‚¬â€ mshiriki anaweza kusasisha
-      // lastReminderAt/lastReminderActorId PEKEE, bila kubadilisha hali/version.
       allow update: if signedIn()
         && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastReminderAt', 'lastReminderActorId']);
+        && changed().hasOnly(['lastReminderAt', 'lastReminderActorId']);
       allow delete: if false;
     }
-    // Audit trail (spec Ã‚Â§41) Ã¢â‚¬â€ append-only; mwandishi ni mshiriki wa nego.
     match /negotiation_events/{id} {
       allow read: if signedIn()
         && resource.data.negotiationId is string
@@ -614,7 +806,6 @@ service cloud.firestore {
             || get(/databases/$(database)/documents/negotiations/$(request.resource.data.negotiationId)).data.sellerId == request.auth.uid);
       allow update, delete: if false;
     }
-    // Nyongeza za oda iliyolipwa (spec Ã‚Â§24Ã¢â‚¬â€œ25): washiriki wa oda wanaweza kuumba.
     match /order_adjustments/{id} {
       allow read: if signedIn()
         && resource.data.parentOrderId is string
@@ -622,101 +813,113 @@ service cloud.firestore {
             || get(/databases/$(database)/documents/orders/$(resource.data.parentOrderId)).data.sellerId == request.auth.uid);
       allow create: if signedIn()
         && request.resource.data.parentOrderId is string
+        && request.resource.data.get('paymentStatus', 'pending') in ['pending','']
         && (get(/databases/$(database)/documents/orders/$(request.resource.data.parentOrderId)).data.buyerId == request.auth.uid
             || get(/databases/$(database)/documents/orders/$(request.resource.data.parentOrderId)).data.sellerId == request.auth.uid);
       allow update, delete: if false;
     }
 
-    // ============================================================
-    // BLOCK / REPORT Ã¢â‚¬â€ block ni ya mhusika; report ni ya mtoa taarifa.
-    // ============================================================
+    // ---------------------------------------------------------------
+    // BLOCK / REPORT
+    // ---------------------------------------------------------------
     match /chatBlocks/{id} {
       allow read: if signedIn()
         && resource != null
         && (resource.data.blockerId == request.auth.uid || resource.data.blockedId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.blockerId == request.auth.uid;
+      // [REPAIR 2026-10 B-11] Found by the browser E2E: the chat listens to
+      // chatBlocks/{me}__{partner} and {partner}__{me}. When no block exists (the
+      // normal case) the read was denied, the listener died, and a later block
+      // was never seen live. A user may learn that a pair involving THEM has no
+      // block document - nothing else.
+      allow get: if signedIn() && resource == null
+        && (id.split('__')[0] == request.auth.uid || id.split('__')[1] == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.blockerId == request.auth.uid
+        && id == request.auth.uid + '__' + request.resource.data.get('blockedId', '');
       allow delete: if signedIn() && resource.data.blockerId == request.auth.uid;
     }
     match /chatReports/{id} {
-      allow read: if signedIn()
-        && (resource.data.reportedBy == request.auth.uid
-            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      allow read: if signedIn() && (resource.data.reportedBy == request.auth.uid || isAdmin());
       allow create: if signedIn() && request.resource.data.reportedBy == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if isAdmin();
+      allow delete: if false;
     }
-    // [CUSTODY 2026-09] ride_requests Ã¢â‚¬â€ msingi wa chain-of-custody.
-    // Kusoma: walio-login (soko la usafiri linahitaji kuona safari zinazopatikana).
-    // Kuandika: FIELD-LEVEL Ã¢â‚¬â€ browser hairuhusiwi kugusa sehemu muhimu za custody
-    // (currentCustodian, tokeni/hash, custodyLegs, custodyStage, transferCode,
-    // nextTransporter, uthibitisho wa handover, malipo ya mwisho, n.k.).
-    // Mabadiliko ya custody yote yanapitia Cloud Functions
-    // (deliveryAccept / deliveryGenerateToken / deliveryConfirmCustody /
-    // deliveryStartTransit / deliveryComplete / deliveryDispute /
-    // deliveryRevokeTokens). driverId/driverName inaruhusiwa kubadilishwa
-    // tu iwapo inawekwa `null` (mf. breakdown/recovery) Ã¢â‚¬â€ si kwa dereva mpya.
+
+    // ---------------------------------------------------------------
+    // TRANSPORT / DELIVERY CUSTODY
+    // ---------------------------------------------------------------
+    function rideCustodyKeys() {
+      return ['currentCustodian','currentCustodianName',
+              'pickupToken','pickupTokenHash','pickupTokenRef','pickupTokenStatus','pickupTokenCreatedAt','pickupTokenExpiresAt',
+              'handoverToken','handoverTokenHash','handoverTokenRef','handoverTokenStatus','handoverTokenCreatedAt','handoverTokenExpiresAt',
+              'transferCode','transferCodeHash','transferCodeRef','transferTokenStatus','transferTokenCreatedAt','transferTokenExpiresAt',
+              'custodyLegs','custodyStage','nextTransporterId','nextTransporterName',
+              'handoverFromConfirmed','handoverFromConfirmedAt','activeHandoverId',
+              'finalPayout','payoutStatus','verifiedPickupCount','verifiedArrivalCount',
+              'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
+              'routingStatus','routingRound','routingMatchedAt','offersCount','activeOfferId',
+              'assignmentStatus','assignedAgentId','routingMatchedAgentIds',
+              'agreedFare','sellerConfirmedBy','deliveredAt','deliveryProofAt'];
+    }
+    // Custody keys a browser may never write at creation (see rideCustodyKeys);
+    // placeholders checked by value in the create rule are excluded here.
+    function rideCreateForbiddenKeys() {
+      return ['currentCustodian','currentCustodianName',
+              'pickupTokenHash','pickupTokenRef','pickupTokenCreatedAt','pickupTokenExpiresAt',
+              'handoverTokenHash','handoverTokenRef','handoverTokenCreatedAt','handoverTokenExpiresAt',
+              'transferCode','transferCodeHash','transferCodeRef','transferTokenCreatedAt','transferTokenExpiresAt',
+              'custodyLegs','custodyStage','nextTransporterId','nextTransporterName',
+              'handoverFromConfirmed','handoverFromConfirmedAt','activeHandoverId',
+              'finalPayout','payoutStatus','verifiedPickupCount','verifiedArrivalCount',
+              'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
+              'routingMatchedAt','assignedAgentId','routingMatchedAgentIds',
+              'agreedFare','sellerConfirmedBy','deliveredAt','deliveryProofAt'];
+    }
+    function rideParty() {
+      return resource.data.get('customerId', '') == request.auth.uid
+        || resource.data.get('driverId', '') == request.auth.uid
+        || resource.data.get('currentCustodian', '') == request.auth.uid
+        || resource.data.get('sellerId', '') == request.auth.uid;
+    }
     match /ride_requests/{id} {
-      allow read: if signedIn();
-      // [PHASE 1 SECURITY 2026-09] Kuunda: mteja mwenyewe (customerId), hali
-      // ya mwanzo tu, na BILA uga za custody/malipo za server (acceptedAt,
-      // custodyStage, token hashes, finalPayout...). Awali safari ya uongo
-      // ingeweza kuundwa ikiwa tayari 'in_transit' na kulipwa na deliveryComplete.
+      // Open rides are visible to transporters (marketplace); parties see theirs.
+      allow get: if signedIn();
+      allow list: if signedIn() && (isAdmin()
+        || resource.data.get('customerId', '') == request.auth.uid
+        || resource.data.get('driverId', '') == request.auth.uid
+        || resource.data.get('currentCustodian', '') == request.auth.uid
+        || (resource.data.get('status', '') in ['searching','pending_acceptance','open','pending'] && smallQuery(100))
+        // Approved agents run pickup points and see accepted jobs awaiting handover.
+        || (isApprovedAgent() && smallQuery(100)));
       allow create: if signedIn()
         && request.resource.data.customerId == request.auth.uid
         && !(request.resource.data.get('status', 'searching') in ['accepted', 'pickup_pending', 'seller_confirmed_handover',
              'picked_up', 'in_transit', 'awaiting_handover', 'delivered', 'completed'])
-        && !request.resource.data.keys().hasAny([
-             'currentCustodian','currentCustodianName',
-             'pickupTokenHash','pickupTokenRef','pickupTokenCreatedAt','pickupTokenExpiresAt',
-             'handoverTokenHash','handoverTokenRef','handoverTokenCreatedAt','handoverTokenExpiresAt',
-             'transferCode','transferCodeHash','transferCodeRef','transferTokenCreatedAt','transferTokenExpiresAt',
-             'custodyLegs','custodyStage','nextTransporterId','nextTransporterName',
-             'handoverFromConfirmed','handoverFromConfirmedAt','activeHandoverId',
-             'finalPayout','payoutStatus','verifiedPickupCount','verifiedArrivalCount',
-             'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
-             'assignedAgentId','routingMatchedAgentIds','routingMatchedAt',
-             // [PHASE 2 P1] nauli iliyogandishwa / makabidhiano ya muuzaji ni za server
-             'agreedFare','sellerConfirmedBy'])
+        // [REPAIR 2026-10 B-02] Clients (43-delivery-choice, 08-app-state,
+        // 57-checkout-bridge) create rides with initial placeholders. Those exact
+        // initial values are allowed; every other custody/payout key stays server-only.
+        && !request.resource.data.keys().hasAny(rideCreateForbiddenKeys())
         && request.resource.data.get('pickupToken', null) == null
         && request.resource.data.get('handoverToken', null) == null
+        && request.resource.data.get('routingStatus', 'routing') == 'routing'
+        && request.resource.data.get('assignmentStatus', 'seeking') == 'seeking'
+        && request.resource.data.get('routingRound', 1) == 1
+        && request.resource.data.get('offersCount', 0) == 0
+        && request.resource.data.get('activeOfferId', null) == null
         && request.resource.data.get('pickupTokenStatus', 'unissued') == 'unissued'
         && request.resource.data.get('handoverTokenStatus', 'unissued') == 'unissued'
         && request.resource.data.get('transferTokenStatus', 'unissued') == 'unissued';
-      // [PHASE 2 P1/P6] Kusasisha: WAHUSIKA tu (mteja / dereva / mshika mzigo)
-      // au admin. Nauli (fare/price/cargoPrice) inabadilishwa na mteja tu KABLA
-      // ya kukubaliwa (acceptedAt ya server); agreedFare/sellerConfirmedBy ni
-      // za server. driverId Ã¢â€ â€™ null: dereva mwenyewe (breakdown) au mteja kabla
-      // ya pickup. Hali (status) ya kivinjari: 'searching' (kurudisha sokoni) au
-      // 'cancelled' (mteja kabla ya pickup) tu Ã¢â‚¬â€ hatua za custody ni za server.
       allow update: if signedIn() && (isAdmin() || (
-        (resource.data.get('customerId', '') == request.auth.uid
-          || resource.data.get('driverId', '') == request.auth.uid
-          || resource.data.get('currentCustodian', '') == request.auth.uid)
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-             // [PHASE 1 SECURITY 2026-09] wahusika/kiungo cha oda na hali ya malipo haviwezi kubadilishwa
-             'customerId','orderId','payoutStatus',
-             'currentCustodian','currentCustodianName',
-             'pickupToken','pickupTokenHash','pickupTokenRef','pickupTokenStatus','pickupTokenCreatedAt','pickupTokenExpiresAt',
-             'handoverToken','handoverTokenHash','handoverTokenRef','handoverTokenStatus','handoverTokenCreatedAt','handoverTokenExpiresAt',
-             'custodyLegs','custodyStage',
-             'nextTransporterId','nextTransporterName',
-             'handoverFromConfirmed','handoverFromConfirmedAt','activeHandoverId',
-             'transferCode','transferCodeHash','transferCodeRef','transferTokenStatus','transferTokenCreatedAt','transferTokenExpiresAt',
-             'finalPayout','verifiedPickupCount','verifiedArrivalCount',
-             'acceptedAt','sellerConfirmedAt','transporterConfirmedAt','completedAt','dispatchedAt',
-             // [REQUEST ROUTING 2026-09] hali ya ofa/assignment ni server-authoritative
-             'routingStatus','routingRound','routingMatchedAt','offersCount','activeOfferId',
-             'assignmentStatus','assignedAgentId','routingMatchedAgentIds',
-             // [PHASE 2 P1] nauli iliyogandishwa + rekodi za server
-             'agreedFare','sellerConfirmedBy','sellerId','productOrder','source'
-           ])
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fare','price','cargoPrice'])
+        rideParty()
+        && unchanged(['customerId','orderId','sellerId','productOrder','source'])
+        && unchanged(rideCustodyKeys())
+        && (unchanged(['fare','price','cargoPrice'])
             || (resource.data.get('customerId', '') == request.auth.uid
                 && resource.data.get('acceptedAt', null) == null
                 && resource.data.get('driverId', null) == null))
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['driverId','driverName'])
+        && (unchanged(['driverId','driverName'])
             || request.resource.data.get('driverId', null) == resource.data.get('driverId', null)
             || (request.resource.data.get('driverId', null) == null && rideReleaseDriverOk()))
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+        && (unchanged(['status'])
             || (request.resource.data.status == 'searching'
                 && request.resource.data.get('driverId', null) == null
                 && (resource.data.get('driverId', null) == null || rideReleaseDriverOk()))
@@ -724,48 +927,47 @@ service cloud.firestore {
                 && resource.data.get('customerId', '') == request.auth.uid
                 && resource.data.get('status', 'searching') in ridePrePickupStates()))
       ));
-      // [LIVE-FIX 2026-09] "Futa historia ya safari" (deleteRideOrder) ilikuwa
-      // inakataliwa kabisa (delete: if false) Ã¢â€ â€™ feature haikufanya kazi live.
-      // Sasa: MTEJA (owner) anaweza kufuta safari YAKE TU, na TU ikiwa haipo
-      // kwenye custody inayoendelea (mlolongo wa makabidhiano unalindwa).
       allow delete: if signedIn()
         && resource.data.customerId == request.auth.uid
         && ('status' in resource.data)
-        && !(resource.data.status in [
-             'accepted','pickup_pending','seller_confirmed_handover',
-             'transporter_confirmed_receipt','picked_up','in_transit',
-             'awaiting_handover'
-           ]);
+        && resource.data.status in ['searching','cancelled','completed','expired','rejected'];
     }
     function ridePrePickupStates() {
       return ['searching','pending_acceptance','accepted','pickup_pending','awaiting_pickup'];
     }
-    // Kumwondoa dereva: dereva aliyepo mwenyewe (breakdown/recovery) au mteja
-    // kabla ya pickup (kubadilisha msafirishaji). Si mgeni, si baada ya custody.
     function rideReleaseDriverOk() {
       return resource.data.get('driverId', '') == request.auth.uid
         || (resource.data.get('customerId', '') == request.auth.uid
             && resource.data.get('status', 'searching') in ridePrePickupStates());
     }
-    // [CUSTODY 2026-09] Matukio ya makabidhiano (audit) Ã¢â‚¬â€ SERVER PEKEE
-    // (browser haiwezi kughushi timeline ya custody).
-    match /delivery_events/{id}   { allow read: if signedIn(); allow write: if false; }
-    // [CUSTODY 2026-09] Rekodi za makabidhiano (handover) Ã¢â‚¬â€ SERVER PEKEE
-    // (uthibitisho wa pandembili unafanywa na deliveryConfirmCustody).
-    match /delivery_handovers/{id}{ allow read: if signedIn(); allow write: if false; }
-    // [CUSTODY PHASE B 2026-09] Tokeni halisi zinaishi hapa (PRIVATE) Ã¢â‚¬â€ mtu
-    // yeyote aliye-login HAZIONI; ni wahusika wa safari husika pekee.
-    // Kuandika ni SERVER PEKEE.
+    function rideOf(rideId) {
+      return get(/databases/$(database)/documents/ride_requests/$(rideId)).data;
+    }
+    function isRidePartyOf(rideId) {
+      return exists(/databases/$(database)/documents/ride_requests/$(rideId))
+        && (rideOf(rideId).get('customerId', '') == request.auth.uid
+            || rideOf(rideId).get('driverId', '') == request.auth.uid
+            || rideOf(rideId).get('currentCustodian', '') == request.auth.uid
+            || rideOf(rideId).get('sellerId', '') == request.auth.uid);
+    }
+    // [REPAIR C4] custody timelines are visible to the ride's parties only.
+    match /delivery_events/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || (resource.data.get('rideId', '') != '' && isRidePartyOf(resource.data.rideId)));
+      allow write: if false;
+    }
+    match /delivery_handovers/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.get('fromUid', '') == request.auth.uid
+        || resource.data.get('toUid', '') == request.auth.uid
+        || (resource.data.get('rideId', '') != '' && isRidePartyOf(resource.data.rideId)));
+      allow write: if false;
+    }
     match /delivery_tokens/{id} {
       allow read: if signedIn() && resource.data.participants.hasAny([request.auth.uid]);
       allow write: if false;
     }
-    // [CUSTODY PHASE B 2026-09] Hesabu ya majaribio mabaya ya token Ã¢â‚¬â€ SERVER PEKEE.
     match /custody_attempts/{id}  { allow read, write: if false; }
-    // [REQUEST ROUTING 2026-09] Ofa za Routing Engine (Agent Request Inbox).
-    // Kusoma: mteja aliyeomba au wakala aliyepewa ofa. Kuandika: SERVER PEKEE
-    // (deliveryRouteBooking / deliveryOfferAccept / deliveryOfferDecline /
-    //  deliveryRouteSweep / deliveryRouteRetry).
     match /delivery_offers/{id} {
       allow read: if signedIn()
         && (resource.data.customerId == request.auth.uid
@@ -774,47 +976,127 @@ service cloud.firestore {
                 && resource.data.participants.hasAny([request.auth.uid])));
       allow create, update, delete: if false;
     }
-    match /shop_ledger/{id}       { allow read, write: if signedIn(); }
-    // ACCOUNTING AUTHORITY: revenue records are written only by Admin SDK
-    // settlement functions. Admins may read; ordinary clients may not inspect
-    // or forge platform accounting.
-    match /adminRevenue/{id}      { allow read: if isAdmin(); allow write: if false; }
-    match /agents/{id}            { allow read, write: if signedIn(); }
-    match /shop_staff/{id}        { allow read, write: if signedIn(); }
-    match /stock_transfers/{id}   { allow read, write: if signedIn(); }
-    match /requests/{id} {
+
+    // Transport provider profiles: public read, owner write, verification = admin.
+    function providerAdminKeys() {
+      return ['verified','isVerified','approved','approvalStatus','verificationStatus','verifiedAt','verifiedBy','rating','ratingCount','suspended'];
+    }
+    match /drivers/{id} {
+      allow read: if true;
+      allow create: if signedIn() && (isAdmin() || (ownsByField(request.resource.data)
+        && !request.resource.data.keys().hasAny(providerAdminKeys())));
+      allow update: if signedIn() && (isAdmin() || (ownsByField(resource.data)
+        && unchanged(['userId','ownerId','uid']) && unchanged(providerAdminKeys())));
+      allow delete: if isAdmin() || ownsByField(resource.data);
+    }
+    match /transport_profiles/{id} {
+      allow read: if true;
+      allow create: if signedIn() && (isAdmin() || (ownsByField(request.resource.data)
+        && !request.resource.data.keys().hasAny(providerAdminKeys())));
+      allow update: if signedIn() && (isAdmin() || (ownsByField(resource.data)
+        && unchanged(['userId','ownerId','uid']) && unchanged(providerAdminKeys())));
+      allow delete: if isAdmin() || ownsByField(resource.data);
+    }
+    match /logistics_companies/{id} {
+      allow read: if true;
+      allow create: if signedIn() && (isAdmin() || (ownsByField(request.resource.data)
+        && !request.resource.data.keys().hasAny(providerAdminKeys())));
+      allow update: if signedIn() && (isAdmin() || (ownsByField(resource.data)
+        && unchanged(['userId','ownerId','uid']) && unchanged(providerAdminKeys())));
+      allow delete: if isAdmin();
+    }
+    match /driver_expenses/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('driverId', '') == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.get('driverId', '') == request.auth.uid;
+      allow update: if signedIn() && resource.data.get('driverId', '') == request.auth.uid
+        && unchanged(['driverId']);
+      allow delete: if signedIn() && resource.data.get('driverId', '') == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------
+    // SMART CART / SOKOPAY CORE (tracking records; money is NOT moved here)
+    // ---------------------------------------------------------------
+    function txParty(data) {
+      return data.get('buyerId', '') == request.auth.uid
+        || data.get('sellerId', '') == request.auth.uid
+        || data.get('userId', '') == request.auth.uid
+        || data.get('courierId', '') == request.auth.uid
+        || data.get('assignedTo', '') == request.auth.uid
+        || data.get('acceptedBy', '') == request.auth.uid;
+    }
+    function coreServerKeys() {
+      return ['escrowReleased','releasedAt','payoutStatus','paymentVerified','verifiedAmount','refundStatus'];
+    }
+    match /sokopay_core_transactions/{id} {
+      allow read: if signedIn() && (isAdmin() || txParty(resource.data));
+      allow create: if signedIn() && request.resource.data.get('buyerId', '') == request.auth.uid
+        && !request.resource.data.keys().hasAny(coreServerKeys());
+      allow update: if signedIn() && (isAdmin() || (txParty(resource.data)
+        && unchanged(['buyerId','sellerId','amount','orderId']) && unchanged(coreServerKeys())));
+      allow delete: if false;
+    }
+    match /sokopay_tokens/{id} {
+      allow read: if signedIn() && (isAdmin() || txParty(resource.data));
+      allow create: if signedIn() && (request.resource.data.get('buyerId', '') == request.auth.uid
+        || request.resource.data.get('sellerId', '') == request.auth.uid);
+      allow update: if signedIn() && (isAdmin() || (txParty(resource.data)
+        && unchanged(['buyerId','sellerId','token','tokenType'])));
+      allow delete: if false;
+    }
+    match /smart_cart_checkouts/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.get('buyerId', '') == request.auth.uid;
+      allow update, delete: if false;
+    }
+    match /cart_seller_messages/{id} {
+      allow read: if signedIn() && (isAdmin() || txParty(resource.data));
+      allow create: if signedIn() && request.resource.data.get('userId', '') == request.auth.uid;
+      allow update, delete: if false;
+    }
+    match /seller_order_inbox/{id} {
       allow read: if signedIn() && (isAdmin()
-        || resource.data.senderId == request.auth.uid
-        || resource.data.receiverId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
-      allow update: if signedIn()
-        && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid)
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['senderId','receiverId']);
+        || resource.data.get('sellerId', '') == request.auth.uid
+        || resource.data.get('buyerDetails', {}).get('buyerId', '') == request.auth.uid
+        || resource.data.get('buyerId', '') == request.auth.uid);
+      allow create: if signedIn() && (request.resource.data.get('buyerId', '') == request.auth.uid
+        || request.resource.data.get('buyerDetails', {}).get('buyerId', '') == request.auth.uid
+        || request.resource.data.get('sellerId', '') == request.auth.uid);
+      allow update: if signedIn() && (isAdmin() || resource.data.get('sellerId', '') == request.auth.uid)
+        && unchanged(['sellerId','buyerId','buyerDetails','paymentStatus','escrowStatus']);
       allow delete: if false;
     }
-    // PROCUREMENT: this is shop purchasing, not a marketplace buyer order.
-    // Owner/approved-agent scope is required; shop ownership is immutable.
-    match /purchase_orders/{id} {
-      allow read: if ownsShopRecord(resource.data);
-      allow create: if ownsShopRecord(request.resource.data)
-        && request.resource.data.get('status', 'pending') == 'pending'
-        && request.resource.data.shopOwnerId is string
-        && request.resource.data.supplierId is string
-        && request.resource.data.productId is string
-        && request.resource.data.quantity is number && request.resource.data.quantity > 0
-        && request.resource.data.unitCost is number && request.resource.data.unitCost > 0
-        && request.resource.data.totalCost is number && request.resource.data.totalCost > 0;
-      allow update: if ownsShopRecord(resource.data)
-        && request.resource.data.shopOwnerId == resource.data.shopOwnerId
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-        && resource.data.get('status', 'pending') == 'pending'
-        && request.resource.data.status == 'completed';
+    match /logistics_assignments/{id} {
+      // Assignment board for logistics partners: open items are listable.
+      allow read: if signedIn() && (isAdmin() || txParty(resource.data)
+        || resource.data.get('assignmentStatus', '') == 'new_assignment');
+      allow create: if signedIn() && (request.resource.data.get('buyerId', '') == request.auth.uid
+        || request.resource.data.get('sellerId', '') == request.auth.uid);
+      allow update: if signedIn() && unchanged(['buyerId','sellerId','userId','amount'])
+        && (isAdmin() || txParty(resource.data)
+            || (resource.data.get('assignmentStatus', '') == 'new_assignment'
+                && request.resource.data.get('acceptedBy', '') == request.auth.uid));
       allow delete: if false;
     }
-    match /staff_attendance/{id}  { allow read, write: if signedIn(); }
-    // TOP-LEVEL SHIPMENTS: relationship is anchored to the existing
-    // sokopay_core_transactions document. Sensitive delivery/payment/custody
-    // state is server-owned; this rule is not a replacement delivery engine.
+    match /shipments/{id} {
+      allow read: if shipmentParty(resource.data);
+      allow create: if shipmentParty(request.resource.data)
+        && shipmentCoreMatches(request.resource.data)
+        && (request.resource.data.buyerId == request.auth.uid
+            || request.resource.data.sellerId == request.auth.uid
+            || isAdmin())
+        && request.resource.data.get('status', '') in ['pending','Pending','Courier Assigned','created'];
+      allow update: if shipmentParty(resource.data)
+        && request.resource.data.orderId == resource.data.orderId
+        && request.resource.data.buyerId == resource.data.buyerId
+        && request.resource.data.sellerId == resource.data.sellerId
+        && request.resource.data.sokopayCoreId == resource.data.sokopayCoreId
+        && unchanged([
+          'status','escrowStatus','paymentStatus','chainOfCustody','pickupToken',
+          'handoverToken','transferToken','masterShipmentToken','stageTokens',
+          'deliveryPermissionVisibility','trackingTokenVisibility'
+        ]);
+      allow delete: if false;
+    }
     function shipmentParty(data) {
       return signedIn() && (
         isAdmin()
@@ -832,109 +1114,223 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/sokopay_core_transactions/$(data.sokopayCoreId)).data.get('buyerId', '') == data.get('buyerId', '')
         && get(/databases/$(database)/documents/sokopay_core_transactions/$(data.sokopayCoreId)).data.get('sellerId', '') == data.get('sellerId', '');
     }
-    match /shipments/{id} {
-      allow read: if shipmentParty(resource.data);
-      allow create: if shipmentParty(request.resource.data)
-        && shipmentCoreMatches(request.resource.data)
-        && (request.resource.data.buyerId == request.auth.uid
-            || request.resource.data.sellerId == request.auth.uid
-            || isAdmin())
-        && request.resource.data.get('status', '') in ['pending','Pending','Courier Assigned','created'];
-      allow update: if shipmentParty(resource.data)
-        && request.resource.data.orderId == resource.data.orderId
-        && request.resource.data.buyerId == resource.data.buyerId
-        && request.resource.data.sellerId == resource.data.sellerId
-        && request.resource.data.sokopayCoreId == resource.data.sokopayCoreId
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'status','escrowStatus','paymentStatus','chainOfCustody','pickupToken',
-          'handoverToken','transferToken','masterShipmentToken','stageTokens',
-          'deliveryPermissionVisibility','trackingTokenVisibility'
-        ]);
-      allow delete: if false;
-    }
-    match /shift_logs/{id}  { allow read, write: if signedIn(); }
-    // User-scoped operational activity is allowed; cross-user and arbitrary
-    // audit records are not. Sensitive settlement truth remains server-side.
-    match /activity_logs/{id} {
-      allow read: if activityActor(resource.data);
-      allow create: if activityActor(request.resource.data)
-        && request.resource.data.get('createdAt', request.resource.data.get('at', null)) != null;
-      allow update, delete: if false;
-    }
-    match /suppliers/{id}         { allow read, write: if signedIn(); }
-    match /garage_services/{id}   { allow read, write: if signedIn(); }
-    match /repairs/{id}           { allow read, write: if signedIn(); }
-    match /construction_projects/{id} { allow read, write: if signedIn(); }
 
-    // ============================================================
-    // USER STATE â€” kila mwanachama anaweza kusoma/kuandika state yake mwenyewe tu.
-    match /user_state/{uid} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
+    // ---------------------------------------------------------------
+    // SERVER-ONLY FINANCE
+    // ---------------------------------------------------------------
+    match /adminRevenue/{id}      { allow read: if isAdmin(); allow write: if false; }
+    // [REPAIR C4] Ledger entries are visible to the wallet owner / caller only.
+    match /wallet_ledger/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.get('userId', '') == request.auth.uid
+        || resource.data.get('callerUid', '') == request.auth.uid
+        || resource.data.get('uid', '') == request.auth.uid);
+      allow write: if false;
+    }
+    match /platform_stats/{id}    { allow read: if isAdmin(); allow write: if false; }
+    match /escrow_holds/{id}      { allow read: if isAdmin(); allow write: if false; }
+    // [PHASE 3 2026-10-31] Online reservations, payment reviews and refunds are
+    // written by Cloud Functions only.
+    match /inventory_reservations/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.get('buyerId', '') == request.auth.uid
+        || resource.data.get('sellerId', '') == request.auth.uid);
+      allow write: if false;
+    }
+    match /payment_reviews/{id} { allow read: if isAdmin(); allow write: if false; }
+    // [2026-10-31] Seller lifecycle audit (written by sellerLifecycleChange only).
+    match /seller_lifecycle_log/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('uid', '') == request.auth.uid);
+      allow write: if false;
+    }
+    match /refunds/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid);
+      allow write: if false;
     }
 
-    // SERVER-ONLY (Cloud Functions / Admin SDK pekee) Ã¢â‚¬â€
-    // browser haiwezi kuandika hata kama ame-login.
-    // ============================================================
-    match /wallet_ledger/{id}     { allow read: if signedIn(); allow write: if false; }
-    match /platform_stats/{id}    { allow read: if signedIn(); allow write: if false; }
-
-    // ============================================================
-    // AGENT ASSISTED ACCESS Ã¢â‚¬â€ ulinzi mkali (2026)
-    // ------------------------------------------------------------
-    // memberSecrets: PIN hash/salt ya mwanachama. Browser/wakala
-    // HAWARUHUSIWI kabisa kuisoma wala kuandika Ã¢â‚¬â€ ni server tu.
-    // ============================================================
-    match /memberSecrets/{uid} {
+    // ---------------------------------------------------------------
+    // AGENTS
+    // ---------------------------------------------------------------
+    // [REPAIR C1] An applicant may file ONE pending application for themselves.
+    // Approval/rejection/codes are admin-only (adminApproveAgent).
+    function agentAdminKeys() {
+      return ['status','agentCode','approvedAt','approvedBy','rejectReason','rejectedAt','rejectedBy',
+              'paymentStatus','isPaid','paymentRef','paidAt','commissionRate','suspended','feeWaived','verifiedPaymentRef'];
+    }
+    match /agents/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid);
+      // feeWaived/paymentStatus:'free' are informational only: the server decides
+      // whether a fee is due (system/config.fees) when an admin approves.
+      allow create: if signedIn()
+        && request.resource.data.get('userId', '') == request.auth.uid
+        && request.resource.data.get('status', 'pending') == 'pending'
+        && request.resource.data.get('isPaid', false) == false
+        && request.resource.data.get('paymentStatus', 'pending') in ['pending','free']
+        && !request.resource.data.keys().hasAny(['agentCode','approvedAt','approvedBy','paidAt','commissionRate','verifiedPaymentRef']);
+      allow update: if isAdmin()
+        || (signedIn() && resource.data.get('userId', '') == request.auth.uid
+            && resource.data.get('status', 'pending') == 'pending'
+            && unchanged(['userId']) && unchanged(agentAdminKeys()));
+      allow delete: if isAdmin();
+    }
+    match /memberSecrets/{memberUid} {
       allow read: if false;
-      // [OFFLINE-MEMBER 2026-09] Wakala aliyedhinishwa anaweza KUUMBA siri ya
-      // mwanachama mpya wa offline (PBKDF2 client-side) wakati functions hazipo.
-      // Update/delete zinabaki server-authoritative (PIN, majaribio, kufunga).
       allow create: if isApprovedAgent()
-        && uid.matches('skhm_.*')
-        && request.resource.data.uid == uid
+        && memberUid.matches('skhm_.*')
+        && request.resource.data.uid == memberUid
         && request.resource.data.keys().hasAll(['pinSalt', 'pinHash'])
         && (!('pinAttempts' in request.resource.data) || request.resource.data.pinAttempts == 0)
-        && get(/databases/$(database)/documents/users/$(uid)).data.isOfflineUser == true
-        && get(/databases/$(database)/documents/users/$(uid)).data.createdByAgentId == request.auth.uid;
+        && get(/databases/$(database)/documents/users/$(memberUid)).data.isOfflineUser == true
+        && get(/databases/$(database)/documents/users/$(memberUid)).data.createdByAgentId == request.auth.uid;
       allow update, delete: if false;
     }
-
-    // Uhusiano wakalaÃ¢â€ â€mwanachama: wakala anaona wake tu; mwanachama wake.
     match /agentMembers/{id} {
       allow read: if signedIn()
-        && (resource.data.agentId == request.auth.uid || resource.data.memberId == request.auth.uid);
-      // [OFFLINE-MEMBER 2026-09] Fallback bila functions: wakala aliyedhinishwa
-      // anaunda uhusiano wake mwenyewe (ACTIVE). Status inabadilishwa na server.
+        && (isAdmin() || resource.data.agentId == request.auth.uid || resource.data.memberId == request.auth.uid);
+      // Fallback: an approved agent links a member that agent created.
       allow create: if isApprovedAgent()
         && request.resource.data.agentId == request.auth.uid
-        && request.resource.data.status == 'ACTIVE';
-      allow update: if false;
-      allow delete: if false;
+        && request.resource.data.status == 'ACTIVE'
+        && exists(/databases/$(database)/documents/users/$(request.resource.data.memberId))
+        && get(/databases/$(database)/documents/users/$(request.resource.data.memberId)).data.get('registeredThroughAgentId', '') == request.auth.uid;
+      allow update, delete: if false;
     }
-
-    // Vikao vya msaada: mwanachama na wakala husika pekee wanaweza kusoma.
-    // Uumbaji/kuandika ni server pekee.
     match /assistedSessions/{id} {
       allow read: if signedIn()
-        && (resource.data.userId == request.auth.uid || resource.data.agentId == request.auth.uid);
+        && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.agentId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+    match /assistedActivity/{id} {
+      allow read: if signedIn()
+        && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.agentId == request.auth.uid);
       allow create, update, delete: if false;
     }
 
-    // Kumbukumbu ya shughuli za msaada: wakala na mwanachama husika pekee.
-    match /assistedActivity/{id} {
-      allow read: if signedIn()
-        && (resource.data.userId == request.auth.uid || resource.data.agentId == request.auth.uid);
-      allow create, update, delete: if false;   // server pekee (audit isiyobadilishwa)
+    // ---------------------------------------------------------------
+    // SHOP BACK-OFFICE (owner / assigned staff / admin)
+    // ---------------------------------------------------------------
+    match /shop_ledger/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if false;
+    }
+    match /shop_staff/{id} {
+      allow read: if ownsShopRecord(resource.data) || (signedIn() && resource.data.get('userId', '') == request.auth.uid);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if signedIn() && (isAdmin() || resource.data.get('shopOwnerId', '') == request.auth.uid);
+    }
+    match /stock_transfers/{id} {
+      allow read: if ownsShopRecord(resource.data)
+        || (signedIn() && resource.data.get('driverId', '') == request.auth.uid);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if (ownsShopRecord(resource.data) || (signedIn() && resource.data.get('driverId', '') == request.auth.uid))
+        && unchanged(['shopOwnerId','productId','quantity','pickupToken','deliveryToken']);
+      allow delete: if false;
+    }
+    match /staff_attendance/{id} {
+      allow read: if ownsShopRecord(resource.data) || (signedIn() && resource.data.get('staffId', '') == request.auth.uid);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if false;
+    }
+    match /shift_logs/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if false;
+    }
+    match /suppliers/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if ownsShopRecord(resource.data);
+    }
+    match /customers/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if ownsShopRecord(resource.data);
+    }
+    match /garage_services/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if ownsShopRecord(resource.data);
+    }
+    match /repairs/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if ownsShopRecord(resource.data);
+    }
+    match /construction_projects/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if ownsShopRecord(resource.data);
+    }
+    match /printing_jobs/{id} {
+      allow read: if ownsShopRecord(resource.data) || (signedIn() && resource.data.get('customerId', '') == request.auth.uid);
+      allow create: if ownsShopRecord(request.resource.data);
+      allow update: if ownsShopRecord(resource.data) && unchanged(['shopOwnerId']);
+      allow delete: if ownsShopRecord(resource.data);
+    }
+    match /purchase_orders/{id} {
+      allow read: if ownsShopRecord(resource.data);
+      allow create: if ownsShopRecord(request.resource.data)
+        && request.resource.data.get('status', 'pending') == 'pending'
+        && request.resource.data.shopOwnerId is string
+        && request.resource.data.supplierId is string
+        && request.resource.data.productId is string
+        && request.resource.data.quantity is number && request.resource.data.quantity > 0
+        && request.resource.data.unitCost is number && request.resource.data.unitCost > 0
+        && request.resource.data.totalCost is number && request.resource.data.totalCost > 0;
+      allow update: if ownsShopRecord(resource.data)
+        && request.resource.data.shopOwnerId == resource.data.shopOwnerId
+        && changed().hasOnly(['status'])
+        && resource.data.get('status', 'pending') == 'pending'
+        && request.resource.data.status == 'completed';
+      allow delete: if false;
+    }
+    match /requests/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.senderId == request.auth.uid
+        || resource.data.receiverId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if signedIn()
+        && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid)
+        && unchanged(['senderId','receiverId']);
+      allow delete: if false;
+    }
+    match /activity_logs/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.get('userId', '') == request.auth.uid
+        || resource.data.get('actorId', '') == request.auth.uid
+        || resource.data.get('agentId', '') == request.auth.uid
+        || resource.data.get('memberUid', '') == request.auth.uid
+        || resource.data.get('shopOwnerId', '') == request.auth.uid);
+      allow create: if signedIn()
+        && (request.resource.data.get('userId', '') == request.auth.uid
+            || request.resource.data.get('actorId', '') == request.auth.uid
+            || request.resource.data.get('agentId', '') == request.auth.uid
+            || request.resource.data.get('shopOwnerId', '') == request.auth.uid)
+        && request.resource.data.get('createdAt', request.resource.data.get('at', null)) != null;
+      allow update, delete: if false;
+    }
+    match /serious_deposits/{id} {
+      // Written only by the server (entitlementGrant verifies PesaPal or free mode).
+      allow read: if signedIn() && (isAdmin() || resource.data.get('uid', '') == request.auth.uid);
+      allow write: if false;
     }
 
-    // ============================================================
-    // [RULES-AUDIT 2026-09] COLLECTIONS ZILIZOPOTEA Ã¢â‚¬â€ zilikuwa zinatumiwa
-    // na client lakini HAZIKUWA na block Ã¢â€ â€™ deny-all ilikuwa inazizuia
-    // (features zilikuwa zimeshindwa kimyakimya production).
-    // Kila moja imewekwa kulingana na desturi za rules zilizopo.
-    // ============================================================
-
-    // -- Ushiriki wa mnunuzi (relational: id = uid + '__' + entityId) --
+    // ---------------------------------------------------------------
+    // USER STATE / ENGAGEMENT
+    // ---------------------------------------------------------------
+    match /user_state/{stateUid} {
+      allow read, write: if signedIn() && request.auth.uid == stateUid;
+    }
     match /productLikes/{id} {
       allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if signedIn()
@@ -967,13 +1363,16 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.followerId == request.auth.uid;
       allow update: if false;
     }
+    // Price history is appended by the product owner when the price changes.
     match /productPriceHistory/{id} {
       allow read: if true;
-      allow write: if signedIn();
+      allow create, update: if signedIn() && (isAdmin()
+        || (request.resource.data.get('productId', '') != ''
+            && exists(/databases/$(database)/documents/products/$(request.resource.data.productId))
+            && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.userId == request.auth.uid));
+      allow delete: if isAdmin();
     }
     match /recommendationEvents/{id} {
-      // Search signals are non-private ranking inputs; every other activity event
-      // is private to its owner. Deterministic recent-view/review docs may update.
       allow read: if signedIn() && (isAdmin()
         || resource.data.userId == request.auth.uid
         || resource.data.type == 'search');
@@ -983,48 +1382,95 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid;
       allow delete: if false;
     }
-    // Kusoma prefs za watumiaji WENGINE kunahitajika (arifa kwa wafuasi) Ã¢â‚¬â€
-    // kwa hiyo read ni signedIn; kuandika ni uga wa MTU MWENYEWE tu.
-    match /notificationPreferences/{uid} {
+    match /notificationPreferences/{prefUid} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && uid == request.auth.uid;
+      allow create, update: if signedIn() && prefUid == request.auth.uid;
       allow delete: if false;
     }
     match /savedMessages/{id} {
-      allow read: if signedIn();
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
       allow update: if false;
     }
 
-    // Public/discoverable group headers only. Private group content/subcollections
-    // remain fail-closed unless their dedicated participant rules are added.
+    // ---------------------------------------------------------------
+    // GROUPS (chat groups, Group Buy)
+    // ---------------------------------------------------------------
+    function groupOf(gid) { return get(/databases/$(database)/documents/chatGroups/$(gid)).data; }
+    function isGroupMember(gid) {
+      return signedIn() && exists(/databases/$(database)/documents/chatGroups/$(gid)/members/$(request.auth.uid));
+    }
+    function isGroupOwner(gid) {
+      return signedIn() && exists(/databases/$(database)/documents/chatGroups/$(gid))
+        && (groupOf(gid).get('createdBy', '') == request.auth.uid
+            || groupOf(gid).get('ownerId', '') == request.auth.uid
+            || (groupOf(gid).get('admins', []) is list && groupOf(gid).get('admins', []).hasAny([request.auth.uid])));
+    }
     match /chatGroups/{id} {
-      allow read: if resource.data.visibility == 'public' && resource.data.discoverable != false;
+      allow read: if (('visibility' in resource.data) && resource.data.visibility == 'public' && resource.data.get('discoverable', true) != false)
+        || isAdmin() || isGroupMember(id) || (signedIn() && resource.data.get('createdBy', '') == request.auth.uid);
       allow create: if signedIn() && request.resource.data.createdBy == request.auth.uid;
-      allow update: if signedIn() && (isAdmin() || resource.data.createdBy == request.auth.uid)
+      allow update: if signedIn() && (isAdmin() || isGroupOwner(id))
         && request.resource.data.createdBy == resource.data.createdBy;
       allow delete: if false;
+
+      match /members/{memberUid} {
+        allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);
+        // Join a public group yourself, or the owner adds/approves members.
+        allow create: if signedIn() && (isGroupOwner(id)
+          || (memberUid == request.auth.uid
+              && groupOf(id).get('visibility', 'public') == 'public'
+              && request.resource.data.get('role', 'member') == 'member'));
+        allow update: if signedIn() && (isGroupOwner(id)
+          || (memberUid == request.auth.uid && unchanged(['role','status','approvedBy'])));
+        allow delete: if signedIn() && (isGroupOwner(id) || memberUid == request.auth.uid);
+      }
+      match /events/{eventId} {
+        allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);
+        allow create: if (isGroupMember(id) || isGroupOwner(id))
+          && request.resource.data.get('actorId', request.resource.data.get('senderId', request.auth.uid)) == request.auth.uid;
+        allow update, delete: if false;
+      }
+      match /messages/{msgId} {
+        allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);
+        allow create: if (isGroupMember(id) || isGroupOwner(id))
+          && request.resource.data.get('senderId', '') == request.auth.uid;
+        allow update: if signedIn() && resource.data.get('senderId', '') == request.auth.uid
+          && changed().hasOnly(['text','editedAt','deletedAt']);
+        allow delete: if signedIn() && (resource.data.get('senderId', '') == request.auth.uid || isGroupOwner(id));
+      }
+      match /invitations/{invId} {
+        allow read: if signedIn() && (isGroupOwner(id)
+          || resource.data.get('inviteeId', '') == request.auth.uid
+          || resource.data.get('invitedUid', '') == request.auth.uid);
+        allow create: if isGroupOwner(id) || isGroupMember(id);
+        allow update: if signedIn() && (isGroupOwner(id)
+          || ((resource.data.get('inviteeId', '') == request.auth.uid || resource.data.get('invitedUid', '') == request.auth.uid)
+              && changed().hasOnly(['status','respondedAt'])));
+        allow delete: if isGroupOwner(id);
+      }
+      // Group Buy: the order header and pledges are written by the server
+      // (groupBuyJoin / groupBuyFinalize). Members read; nobody edits money.
+      match /groupOrders/{goid} {
+        allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);
+        allow write: if false;
+        match /{sub=**} {
+          allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);
+          allow write: if false;
+        }
+      }
     }
 
-    // -- Biashara / SokoPay / Smart Cart / Logistics / Uchapishaji --
-    match /sokopay_core_transactions/{id} { allow read, write: if signedIn(); allow delete: if false; }
-    match /sokopay_tokens/{id}        { allow read, write: if signedIn(); allow delete: if false; }
-    match /smart_cart_checkouts/{id}  { allow read, write: if signedIn(); allow delete: if false; }
-    match /cart_seller_messages/{id}  { allow read, write: if signedIn(); }
-    match /seller_order_inbox/{id}    { allow read, write: if signedIn(); allow delete: if false; }
-    match /logistics_assignments/{id} { allow read, write: if signedIn(); allow delete: if false; }
-    match /logistics_companies/{id}   { allow read: if true; allow write: if signedIn(); }
-    match /transport_profiles/{id}    { allow read: if true; allow write: if signedIn(); }
-    match /driver_expenses/{id}       { allow read, write: if signedIn(); }
-    match /printing_jobs/{id}         { allow read, write: if signedIn(); }
-    match /customers/{id}             { allow read, write: if signedIn(); }
-    match /serious_deposits/{id}      { allow read, write: if signedIn(); }
+    // Auction bids: server-written (auctionPlaceBid), readable by everyone signed in.
+    match /products/{pid}/bids/{bidId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
 
-    // ============================================================
-    // DEFAULT: kila kingine Ã¢â‚¬â€ kataa (fail-closed).
-    // ============================================================
-    match /{document=**}          { allow read, write: if false; }
+    // ---------------------------------------------------------------
+    // DEFAULT: deny everything else.
+    // ---------------------------------------------------------------
+    match /{document=**} { allow read, write: if false; }
   }
 }
-

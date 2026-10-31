@@ -88,7 +88,7 @@ const other = await tokenFor('other');
 // Minimal relationship documents used by the actual active schemas.
 await db.doc(`users/${buyer.uid}`).set({ uid: buyer.uid, walletBalance: 0 });
 await db.doc(`users/${seller.uid}`).set({ uid: seller.uid, walletBalance: 0 });
-await db.doc(`users/${agent.uid}`).set({ uid: agent.uid, walletBalance: 0, isApprovedAgent: true, shopOwnerUid: seller.uid });
+await db.doc(`users/${agent.uid}`).set({ uid: agent.uid, walletBalance: 0, isApprovedAgent: true, agentApprovedBy: 'admin1', shopOwnerUid: seller.uid });
 await db.doc(`users/${other.uid}`).set({ uid: other.uid, walletBalance: 0 });
 await db.doc('suppliers/supplier_phasec').set({ name: 'TEST_SUPPLIER', shopOwnerId: seller.uid });
 await db.doc('products/product_phasec').set({ title: 'TEST_PRODUCT', price: 100, stock: 10, userId: seller.uid });

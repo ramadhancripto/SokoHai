@@ -171,12 +171,17 @@ test('psRatingDisplay: comments hushinda field ya zamani', () => {
 /* ---------------------------------------------------------------- */
 section('E) Variants za data (si vya kubahatisha)');
 
-test('Mavazi: saizi fallback, rangi hazibuniwi', () => {
+// [REPAIR 2026-10 B-08] policy change: sizes are never invented. A buyer could
+// otherwise order a size the seller never offered.
+test('Mavazi bila data: saizi wala rangi hazibuniwi', () => {
     const g = psVariantGroups({ category: 'Mavazi', price: 10000 }, PS_PRODUCT);
     const keys = g.map(x => x.key);
-    assert.ok(keys.includes('size'));
+    assert.ok(!keys.includes('size'));
     assert.ok(!keys.includes('color'));
-    assert.deepEqual(g[0].options.map(o => o.value), ['S', 'M', 'L', 'XL', 'XXL']);
+});
+test('Mavazi: saizi za muuzaji (filters) zinaonyeshwa', () => {
+    const g = psVariantGroups({ category: 'Mavazi', price: 10000, filters: { Saizi: 'M, L' } }, PS_PRODUCT);
+    assert.deepEqual(g.find(x => x.key === 'size').options.map(o => o.value), ['M', 'L']);
 });
 test('Mavazi: rangi huchukuliwa kutoka filters/ data', () => {
     const g = psVariantGroups({ category: 'Mavazi', filters: { 'Rangi': 'Nyekundu, Bluu' } }, PS_PRODUCT);
@@ -212,7 +217,7 @@ test('bidhaa isiyo na variants: hamna chips', () => {
     assert.deepEqual(psVariantGroups({}, PS_SERVICE), []);
 });
 test('psVariantLabel', () => {
-    const groups = psVariantGroups({ category: 'Mavazi', colors: ['Black'] }, PS_PRODUCT);
+    const groups = psVariantGroups({ category: 'Mavazi', sizes: ['L'], colors: ['Black'] }, PS_PRODUCT); // sizes from seller data (B-08)
     assert.equal(psVariantLabel({ size: 'L', color: 'Black' }, groups), 'L / Black');
     assert.equal(psVariantLabel({ size: 'N/A', color: 'N/A' }, groups), '');
 });

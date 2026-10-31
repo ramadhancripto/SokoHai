@@ -3,6 +3,8 @@ import { skh } from './00-bootstrap.js';
 // Canonical taxonomy is the authority for the visible seller subcategory list.
 // Existing skh.advancedCategories is still passed in, unchanged, for compatibility.
 import { getSellerSubcategories } from '../../shared/product-taxonomy-bridge.mjs';
+import { channelsFromVisibility } from '../../shared/product-listing-core.mjs';
+import '../../shared/quantity-core.js'; // [POS 2026-11-01] sets globalThis.SKHQuantityCore (kg/L/m decimals)
 
 // Onyesha / ficha kitufe cha "+" (UZA) kwenye bottom nav.
 // Nav tabs hubaki — ni kitufe cha "+" tu kinachobadilika.
@@ -359,10 +361,19 @@ window.submitSeller = async function(event) {
 let category = "";
 let subCategory = "";
 
-if (visibility === 'offline_only') {
+if (visibility === 'offline_only' || visibility === 'manage_only') {
+    // [UX 2026-10-31] Taxonomy works for POS/stock too: a chosen category is kept;
+    // without one, the free-text local group (or "Mchanganyiko") is used as before.
+    const chosenCat = document.getElementById('prodCategory') ? document.getElementById('prodCategory').value : '';
+    const chosenSub = document.getElementById('prodSubCategory') ? document.getElementById('prodSubCategory').value : '';
     const offlineInp = document.getElementById('prodOfflineCategory');
-    category = (offlineInp && offlineInp.value.trim() !== '') ? offlineInp.value.trim() : "Mchanganyiko";
-    subCategory = "N/A"; // Duka la ndani halihitaji sub-category ngumu
+    if (chosenCat) {
+        category = chosenCat;
+        subCategory = chosenSub || "N/A";
+    } else {
+        category = (offlineInp && offlineInp.value.trim() !== '') ? offlineInp.value.trim() : "Mchanganyiko";
+        subCategory = "N/A"; // Duka la ndani halihitaji sub-category ngumu
+    }
 } else {
     category = document.getElementById('prodCategory').value;
     subCategory = document.getElementById('prodSubCategory') ? document.getElementById('prodSubCategory').value : "";
@@ -376,15 +387,27 @@ if (visibility === 'offline_only') {
     const availabilityStatus = document.getElementById('prodAvailabilityStatus')?.value || 'available';
     const condition = document.getElementById('prodCondition')?.value || (productType === 'digital' ? 'not_applicable' : 'new');
     const variants = skh.normalizeProductVariants(document.getElementById('prodVariants')?.value || '');
-if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !== 'offline_only' && !category)) {
-    alert("Jaza jina, bei halali, kategoria, na eneo kwa bidhaa ya physical.");
+if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !== 'offline_only' && visibility !== 'manage_only' && !category)) {
+    // [UX 2026-10-31] Say exactly what is missing and go there; nothing typed is cleared.
+    const missing = [];
+    if (!title) missing.push(['prodName', 'jina la bidhaa']);
+    if (price <= 0) missing.push(['prodPrice', 'bei ya kuuza']);
+    if (visibility !== 'offline_only' && visibility !== 'manage_only' && !category) missing.push(['prodCategory', 'kategoria (lazima kwa soko)']);
+    if (productType !== 'digital' && !loc) missing.push(['prodLocation', 'mahali bidhaa ilipo']);
+    if (typeof window.skhSellerFieldIssue === 'function') window.skhSellerFieldIssue(missing);
+    else alert("Jaza: " + missing.map(m => m[1]).join(', ') + ".");
     return;
 }
     // --- QUANTITY & UNIT CONVERSION CALCULATION ---
     const baseUnit = document.getElementById('prodBaseUnit').value;
     const hasBulk = document.getElementById('prodHasBulk').checked;
     
-    let rawQtyEntered = parseInt(document.getElementById('prodStock').value) || 1;
+    // [POS 2026-11-01] kg / litre / metre products keep decimals (e.g. 12.5 kg); others stay whole units.
+    const QC = globalThis.SKHQuantityCore;
+    const quantityPrecision = QC ? QC.precisionForUnit(baseUnit) : 0;
+    const stockRaw = Number(document.getElementById('prodStock').value);
+    let rawQtyEntered = quantityPrecision && QC.isValidQuantity(stockRaw, quantityPrecision, { allowZero: true })
+        ? stockRaw : (parseInt(document.getElementById('prodStock').value) || 1);
     let finalCalculatedStock = rawQtyEntered;
     let bulkUnit = "";
     let conversionRatio = 1;
@@ -396,7 +419,7 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         wholesalePrice = parseFloat(document.getElementById('prodWholesalePrice').value) || 0;
         
         // Piga Hesabu Kiotomatiki: Vipande vyote vya stoo kuu
-        finalCalculatedStock = rawQtyEntered * conversionRatio;
+        finalCalculatedStock = quantityPrecision ? QC.mulInt(rawQtyEntered, conversionRatio, quantityPrecision) : rawQtyEntered * conversionRatio;
     }
 
     // --- DYNAMIC INTEL FIELDS CAPTURING ---
@@ -409,7 +432,7 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
     let modeData = {};
     let imageUrls = [];
 
-    if (visibility !== 'offline_only') {
+    if (visibility !== 'offline_only' && visibility !== 'manage_only') {
         saleMode = document.getElementById('prodSaleMode').value;
         const desc = document.getElementById('prodDesc').value.trim();
         if(!desc) { alert("Weka maelezo ya kina (Description) kwa soko la mtandaoni!"); return; }
@@ -484,15 +507,19 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         imageUrls = [];
     }
 
-    if (!imageUrls || imageUrls.length < 1) {
+    // [UX 2026-10-31] A photo is required to SELL ONLINE. Dukani-tu / kusimamia-tu products
+    // (POS, stock) may be saved without one; a photo can be added later in Edit.
+    const photoRequired = !(visibility === 'offline_only' || visibility === 'manage_only');
+    if (!imageUrls) imageUrls = [];
+    if (photoRequired && imageUrls.length < 1) {
         skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
         window.skhUpdateSellerSubmitLabel();
         alert("Weka angalau picha 1 ya bidhaa.");
         return;
     }
 
-    const mainImage = imageUrls[0];
-    const isStoreOnly = (visibility === 'offline_only');
+    const mainImage = imageUrls[0] || '';
+    const isStoreOnly = (visibility === 'offline_only' || visibility === 'manage_only');
     if (btn) btn.innerHTML = isStoreOnly ? ' INAHIFADHI KATIKA INVENTORY...' : ' INACHAPISHA BIDHAA SOKONI...';
 
     //  Capture eneo la ghala/rafu ya bidhaa
@@ -537,9 +564,13 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         // Baini na hifadhi alama (flags) kwa usahihi kulingana na aina 3 za visibility
 isOnline: (visibility === 'online_only' || visibility === 'hybrid'),
 isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
+        // [PHASE 1 2026-10-31] explicit channels; 'manage_only' = inventory record only (not sold online or at POS)
+        salesChannels: channelsFromVisibility(visibility) || ['marketplace', 'pos'],
         
         // Vipimo & Multi Pricing Engine Elements
         baseUnit: baseUnit,
+        // [POS 2026-11-01] decimals allowed for kg / litre / metre (POS + stock authority read this)
+        ...(quantityPrecision ? { quantityPrecision } : {}),
         hasBulkPackaging: hasBulk,
         bulkUnit: bulkUnit,
         conversionRatio: conversionRatio,
@@ -572,10 +603,40 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
             skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
             return;
         }
+        // [REPAIR 2026-10 B-07] The builder's own authority (collect/stockRequests)
+        // was never called on CREATE, so the product SKU, canonical variant
+        // combinations (SKU, unit, inventory key) and their opening stock were
+        // silently dropped. Persist them now that the product id exists; variant
+        // opening stock goes through the audited inventoryAdjust callable.
+        try {
+            const pb = window.skhProductBuilder;
+            if (pb && typeof pb.collect === 'function') {
+                const patch = pb.collect(docId, {}) || {};
+                ['stock', 'userId', 'businessId', 'storeId', 'openingStockPending', 'openingStockInitialized', 'reservedStock'].forEach(k => { delete patch[k]; });
+                // [F6 2026-10-31] Variant combinations (with their stock counters) are
+                // saved by the server; the browser never writes variant stock.
+                const combos = patch.variantCombinations;
+                delete patch.variantCombinations;
+                if (Object.keys(patch).length) await skh.updateDoc(skh.doc(skh.db, 'products', docId), patch);
+                if (Array.isArray(combos) && combos.length) await skh.wrapCallable('productVariantsSave')({ productId: docId, variantCombinations: combos });
+                const reqs = typeof pb.stockRequests === 'function' ? pb.stockRequests(docId, true) : [];
+                for (const r of reqs) {
+                    await skh.wrapCallable('inventoryAdjust')(Object.assign({}, r, {
+                        businessId: skh.currentUserData?.businessId || undefined,
+                        storeId: skh.currentUserData?.storeId || undefined
+                    }));
+                }
+            }
+        } catch (e) {
+            console.error('[product-builder-create]', e);
+            alert('Bidhaa imeundwa, lakini SKU/variants hazijakamilika: ' + (e && e.message ? e.message : e) + '. Fungua Edit ukamilishe.');
+        }
         const doneMsg = isStoreOnly
             ? " Bidhaa imehifadhiwa kikamilifu kwenye Inventory ya duka!"
             : " Bidhaa imechapishwa kikamilifu kwenye Soko la Mtandaoni!";
         alert(doneMsg);
+        // [UX 2026-10-31] Saved: forget the local draft, remember the location for the next product.
+        if (typeof window.skhSellerAfterSave === 'function') window.skhSellerAfterSave({ location: loc });
         try { if (window.skhClearPickedPhotos && window.skhClearPickedPhotos['prodImage']) window.skhClearPickedPhotos['prodImage'](); } catch (e) {}
         document.getElementById('sellerForm').reset();
         if (typeof window.skhProductBuilderReset === 'function') window.skhProductBuilderReset();
@@ -613,7 +674,9 @@ window.submitRating = async function() {
         // 2. Ikiwa mteja ameweka picha, ipandishe Cloudinary
         if(photoFile) {
             // [PHASE 4.2] Uploader mmoja wa pamoja
-            uploadedPhotoUrl = await window.skhUploadFromFile(photoFile) || "";
+            // [PHASE 9 B-17] skhUploadFromFile returns {url, data}; keep the link only.
+            const ratingUp = await window.skhUploadFromFile(photoFile);
+            uploadedPhotoUrl = (ratingUp && ratingUp.url) || "";
         }
         const videoUrl = (document.getElementById('ratingVideoUrl') && document.getElementById('ratingVideoUrl').value || "").trim();
         const media = [];

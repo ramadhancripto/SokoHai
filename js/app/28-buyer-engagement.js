@@ -128,9 +128,10 @@ import { skh } from './00-bootstrap.js';
     window.skhFollowerCount = async function (sellerId) {
         if (!sellerId || !skh.db) return null;
         try {
-            var snap = await skh.getDoc(skh.doc(skh.db, 'users', sellerId));
+            var snap = await skh.getUserCard(sellerId);
             if (!snap || !snap.exists || !snap.exists()) return null;
             var d = snap.data() || {};
+            if (typeof d.followersCount === 'number') return d.followersCount;
             if (Array.isArray(d.followers)) return d.followers.length;
             if (typeof d.followerCount === 'number') return d.followerCount;
             return null;
@@ -295,10 +296,11 @@ import { skh } from './00-bootstrap.js';
             // Sync ya zamani (users.following/followers) kwa dashboard za sasa
             try {
                 const myDocRef = skh.doc(skh.db, "users", skh.currentUserData && skh.currentUserData.docId ? skh.currentUserData.docId : skh.currentUser.uid);
-                const q = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId));
-                const snap = await skh.getDocs(q);
-                if (!snap.empty) {
-                    const tRef = skh.doc(skh.db, "users", snap.docs[0].id);
+                // [REPAIR 2026-10 C4] Seller's doc id comes from the public card
+                // (users/{id} is private); rules allow only our own uid in followers.
+                const card = await skh.getUserCard(sellerId);
+                if (card.exists()) {
+                    const tRef = skh.doc(skh.db, "users", (card.data() || {}).docId || sellerId);
                     if (!wasFollowing) {
                         await skh.updateDoc(myDocRef, { following: skh.arrayUnion(sellerId) });
                         await skh.updateDoc(tRef, { followers: skh.arrayUnion(skh.currentUser.uid) });

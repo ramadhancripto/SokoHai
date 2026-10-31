@@ -116,17 +116,21 @@ window.toggleSellerType = async function() {
     const newType = currentType === 'permanent' ? 'temporary' : 'permanent';
     
     const confirmMsg = currentType === 'permanent' 
-        ? "Je, unataka kurudi kwenye Duka la Muda (Temporary)? Matangazo yako yatafutwa baada ya kuuzwa." 
+        ? "Je, unataka kurudi kwenye Duka la Muda (Temporary)? Bidhaa na data zako zilizopo zinabaki; ukomo wa bidhaa mpya ni 9." 
         : "Je, unataka kubadili kuwa Duka la Kudumu (Permanent)? Utapata uwezo wa kusave bidhaa hata zikiuzwa (Locked by Subscription).";
 
     if(await skhConfirm(confirmMsg)) {
         try {
-            await skh.updateDoc(skh.doc(skh.db, "users", skh.currentUser.uid), { sellerType: newType });
-            skh.currentUserData.sellerType = newType;
+            // [2026-10-31] Server inabadili hali ya akaunti ileile (masharti + audit); bidhaa hazifutwi.
+            const res = await skh.wrapCallable('sellerLifecycleChange')({ target: newType });
+            const r = (res && res.data) || {};
+            skh.currentUserData.sellerType = r.sellerType || newType;
+            if (r.productLimit) skh.currentUserData.productLimit = r.productLimit;
             alert(T('db_role_switched', 'Success! You are now a Seller of {t}.', { t: newType.toUpperCase() }));
             loadAndRenderDashboard(); // Refresh dashbodi hapo hapo
         } catch(e) { 
-            alert(T('db_error', "Error: ") + e.message); 
+            const msg = String(e && e.message || '');
+            alert(/SUBSCRIPTION_REQUIRED/.test(msg) ? 'Duka la Kudumu linahitaji kifurushi kilicholipiwa. Lipia kifurushi kisha ujaribu tena; data yako haijabadilika.' : T('db_error', "Error: ") + msg); 
         }
     }
 };
@@ -153,7 +157,9 @@ window.markShipped = async function(orderId, buyerId, itemTitle) {
         try {
             // 2. Pandisha picha Cloudinary
             // [PHASE 4.2] Uploader mmoja wa pamoja (js/11-uploads.js)
-            const receiptUrl = await window.skhUploadFromFile(file);
+            // [PHASE 9 B-17] skhUploadFromFile returns {url, data}; store the link only.
+            const receiptUp = await window.skhUploadFromFile(file);
+            const receiptUrl = receiptUp && receiptUp.url;
 
             if(!receiptUrl) throw new Error("Imeshindwa kupata picha ya risti.");
 

@@ -728,8 +728,8 @@ async function updateCampaignDelivery(request) {
   };
 }
 
-exports.adsRequestDelivery = onCall({ region: REGION, enforceAppCheck: false }, requestDelivery);
-exports.adsTrackDeliveryEvent = onCall({ region: REGION, enforceAppCheck: false }, trackDeliveryEvent);
-exports.adsUpdateCampaignDelivery = onCall({ region: REGION, enforceAppCheck: false }, updateCampaignDelivery);
+exports.adsRequestDelivery = onCall({ region: REGION }, requestDelivery);
+exports.adsTrackDeliveryEvent = onCall({ region: REGION }, trackDeliveryEvent);
+exports.adsUpdateCampaignDelivery = onCall({ region: REGION }, updateCampaignDelivery);
 exports.adsDeliverySweep = onSchedule({ region: REGION, schedule: 'every 60 minutes', timeZone: 'Africa/Dar_es_Salaam' }, deliverySweep);
 exports._testing = { requestDelivery, trackDeliveryEvent, updateCampaignDelivery, deliverySweep, publicCampaign, eventDocument };

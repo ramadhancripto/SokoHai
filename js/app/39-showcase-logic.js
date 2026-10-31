@@ -176,7 +176,7 @@ export function psSpecRows(p, col) {
     }
 
     // PRODUCTS
-    out.push(row('Kategoria', p.category));
+    out.push(row('Kategoria', (typeof window !== 'undefined' && typeof window.skhCategoryLabel === 'function') ? window.skhCategoryLabel(p.category) : p.category)); // [B-15]
     const sub = psPresent(p.subCategory) && String(p.subCategory).toLowerCase() !== 'n/a' ? p.subCategory : null;
     out.push(row('Aina', sub));
     rowsFromFilters(p, out);
@@ -319,9 +319,11 @@ export function psVariantGroups(p, col) {
         p.filters && (p.filters.Saizi || p.filters.Size || p.filters.Ukubwa));
     if (sizes.length) {
         groups.push({ key: 'size', label: 'Saizi', options: deltasFor(p, sizes, [p.sizePrices, p.sizePriceDeltas, p.variantPriceDeltas && p.variantPriceDeltas.size]) });
-    } else if (isFashion) {
-        // Saizi za kawaida; lakini bado heshimu sizePrices za muuzaji zikiwepo
-        groups.push({ key: 'size', label: 'Saizi', options: deltasFor(p, ['S', 'M', 'L', 'XL', 'XXL'], [p.sizePrices, p.sizePriceDeltas]) });
+    } else if (isFashion && p.sizePrices && typeof p.sizePrices === 'object' && Object.keys(p.sizePrices).length) {
+        // [REPAIR 2026-10 B-08] Saizi zinaonyeshwa TU kama muuzaji amezitaja (hapa:
+        // bei kwa kila saizi). Awali kila bidhaa ya mavazi ilionyesha S–XXL za
+        // kubuni hata kama muuzaji hakuziuza — mnunuzi angeagiza saizi isiyopo.
+        groups.push({ key: 'size', label: 'Saizi', options: deltasFor(p, Object.keys(p.sizePrices), [p.sizePrices, p.sizePriceDeltas]) });
     }
 
     // 4c) Rangi — DATA tu (hatutengezi rangi zisizouzwa)
@@ -355,6 +357,27 @@ export function psResolveStructuredVariant(p, selections) {
         const opts = v.options || {};
         return Object.entries(selections || {}).every(([key, value]) => String(opts[key] || '') === String(value || ''));
     }) || null;
+}
+
+// [2026-10-31] Pictures for the buyer's current choice: the exact variant's own images,
+// else the images of each chosen value (e.g. colour Black), else [] (keep the general gallery).
+// Reads both canonical variantCombinations and legacy variantsStructured.
+export function psImagesForSelection(p, selections) {
+    const sel = selections || {};
+    const keys = Object.keys(sel).filter(k => sel[k]);
+    if (!p || !keys.length) return [];
+    const rows = [].concat(Array.isArray(p.variantCombinations) ? p.variantCombinations : [], Array.isArray(p.variantsStructured) ? p.variantsStructured : []);
+    const groups = psVariantGroups(p, PS_PRODUCT);
+    const complete = groups.length > 0 && groups.every(g => sel[g.key]);
+    const exact = complete ? rows.find(v => v && v.status !== 'INACTIVE' && v.available !== false && keys.every(k => String((v.options || {})[k] || '') === String(sel[k]))) : null;
+    if (exact && Array.isArray(exact.images) && exact.images.length) return exact.images.slice();
+    const out = [];
+    groups.forEach(g => {
+        const s = sel[g.key]; if (!s) return;
+        const o = g.options.find(x => String(x.value) === String(s));
+        (o && Array.isArray(o.images) ? o.images : []).forEach(u => { if (u && out.indexOf(u) === -1) out.push(u); });
+    });
+    return out;
 }
 
 export function psOptionValueAvailable(p, selections, key, value) {

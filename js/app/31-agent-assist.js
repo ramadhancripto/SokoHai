@@ -251,7 +251,8 @@ import { skh } from './00-bootstrap.js';
         if (!/^\d{4,6}$/.test(String(pin || ''))) throw new Error('PIN lazima iwe tarakimu 4 hadi 6.');
 
         // 1) Tafuta mwanachama kwa memberId
-        var q = skh.query(skh.collection(skh.db, 'users'), skh.where('memberId', '==', code), skh.limit(1));
+        // [REPAIR 2026-10 C4] an agent may only look up members it registered.
+        var q = skh.query(skh.collection(skh.db, 'users'), skh.where('memberId', '==', code), skh.where('createdByAgentId', '==', skh.currentUser.uid), skh.limit(1));
         var snap = await skh.getDocs(q);
         var docs = (snap && snap.docs) || [];
         if (!docs.length) throw new Error('Member ID haipatikani. Hakikisha namba ni sahihi.');
