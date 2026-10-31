@@ -80,7 +80,7 @@ async function canonicalEntity(linked, destination, uid, adminUser, creative) {
   };
 }
 
-exports.creativeSaveDraft = onCall({ region:REGION, enforceAppCheck:false }, async request => {
+exports.creativeSaveDraft = onCall({ region:REGION }, async request => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in before saving a Creative draft.');
   const uid = request.auth.uid;
   const adminUser = isAdmin(request.auth.token);
@@ -134,7 +134,7 @@ exports.creativeSaveDraft = onCall({ region:REGION, enforceAppCheck:false }, asy
   return { ok:true, creativeId:id, announcementId:targetRef.id, status:'draft' };
 });
 
-exports.creativePublish = onCall({ region:REGION, enforceAppCheck:false }, async request => {
+exports.creativePublish = onCall({ region:REGION }, async request => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in before publishing.');
   const uid = request.auth.uid;
   const adminUser = isAdmin(request.auth.token);
@@ -291,7 +291,7 @@ exports.creativePublish = onCall({ region:REGION, enforceAppCheck:false }, async
   };
 });
 
-exports.creativeTrackEvent = onCall({ region:REGION, enforceAppCheck:false }, async request => {
+exports.creativeTrackEvent = onCall({ region:REGION }, async request => {
   const id = text(request.data && request.data.announcementId, 128);
   const type = text(request.data && request.data.type, 20);
   if (!id || !['impression', 'click'].includes(type)) throw new HttpsError('invalid-argument', 'Invalid event.');

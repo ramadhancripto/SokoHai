@@ -1,0 +1,114 @@
+{
+ "mobile:hybrid": {
+  "visibleFields": 17,
+  "visibleRequired": 8,
+  "requiredEmpty": 5,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 2343
+ },
+ "mobile:offline_only": {
+  "visibleFields": 16,
+  "visibleRequired": 6,
+  "requiredEmpty": 3,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 10,
+  "missing": null,
+  "pageHeight": 2036
+ },
+ "mobile:online_only": {
+  "visibleFields": 17,
+  "visibleRequired": 8,
+  "requiredEmpty": 5,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 2343
+ },
+ "mobile:manage_only": {
+  "visibleFields": 16,
+  "visibleRequired": 6,
+  "requiredEmpty": 3,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 10,
+  "missing": null,
+  "pageHeight": 2036
+ },
+ "desktop:hybrid": {
+  "visibleFields": 17,
+  "visibleRequired": 8,
+  "requiredEmpty": 5,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 2280
+ },
+ "desktop:offline_only": {
+  "visibleFields": 16,
+  "visibleRequired": 6,
+  "requiredEmpty": 3,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 10,
+  "missing": null,
+  "pageHeight": 1937
+ },
+ "desktop:online_only": {
+  "visibleFields": 17,
+  "visibleRequired": 8,
+  "requiredEmpty": 5,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodCategory",
+   "prodPrice",
+   "prodDesc",
+   "prodLocation"
+  ],
+  "visibleHeadings": 11,
+  "missing": null,
+  "pageHeight": 2261
+ },
+ "desktop:manage_only": {
+  "visibleFields": 16,
+  "visibleRequired": 6,
+  "requiredEmpty": 3,
+  "requiredEmptyIds": [
+   "prodName",
+   "prodPrice",
+   "prodLocation"
+  ],
+  "visibleHeadings": 10,
+  "missing": null,
+  "pageHeight": 1937
+ }
+}

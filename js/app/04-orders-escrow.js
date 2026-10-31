@@ -18,7 +18,7 @@ const qRides = skh.query(
 );
         const [snapOrders, snapRides] = await Promise.all([skh.getDocs(qOrders), skh.getDocs(qRides)]);
 
-        let html = '';
+        let html = '<button onclick="window.skhOpenEscrowCenter && window.skhOpenEscrowCenter()" style="width:100%;padding:12px;margin-bottom:12px;background:#00509d;color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer;">Kituo cha Escrow — Namba ya Kupokea, Nimepokea, Mgogoro</button>';
 
         // 2. CHORA ODA ZA BIDHAA
         if(!snapOrders.empty) {
@@ -218,7 +218,7 @@ window.confirmEscrowOrder = async function() {
             } catch(spErr) { console.log("Sio SokoPay link"); }
             
             // 5. Mpe Muuzaji pesa yake kwenye Wallet
-            const sellerQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId)));
+            const sellerQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId), skh.limit(1)));
             let sellerAgentCode = null;
 
             if(!sellerQuery.empty) {
@@ -244,7 +244,7 @@ window.confirmEscrowOrder = async function() {
 
             // 6. LIPA DEREVA / CARRIER (Kama alikuwepo kwenye mzunguko)
             if(driverId && carrierShare > 0) {
-                const driverQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", driverId)));
+                const driverQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", driverId), skh.limit(1)));
                 if(!driverQuery.empty) {
                     const driverDocId = driverQuery.docs[0].id;
                     // [PHASE 5.2a] kituo kimoja
@@ -267,7 +267,7 @@ window.confirmEscrowOrder = async function() {
             // 7. MGAWANYO WA KAMISHENI YA WAKALA (60% kwa Wakala aliyeandikisha muuzaji, 40% kwa System)
             let adminShare = platformFee;
             if(sellerAgentCode) {
-                const agentQ = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("myAgentCode", "==", sellerAgentCode)));
+                const agentQ = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("myAgentCode", "==", sellerAgentCode), skh.limit(1)));
                 if(!agentQ.empty) {
                     const agentDocId = agentQ.docs[0].id;
                     const agentShare = platformFee * 0.60;
@@ -317,7 +317,9 @@ window.disputeEscrowOrder = async function() {
         
         const sababu = await skhPrompt("Eleza tatizo la mzigo huu kwa ufupi:");
         if(sababu) {
-            await skh.updateDoc(skh.doc(skh.db, "orders", oid), { status: "disputed", disputeReason: sababu });
+            /* [REPAIR 2026-10] Mgogoro unafunguliwa na SERVER (disputeOpen): rekodi ya
+               kudumu kwenye 'disputes' + fedha zinasimamishwa (auto-release inazuiwa). */
+            await skh.wrapCallable('disputeOpen')({ orderId: oid, reason: sababu });
             alert(" Tumepokea malalamiko yako. Pesa itaendelea kushikiliwa mpaka tatizo litatuliwe na Admin.");
             closeModals(); 
             if (typeof window.loadBuyerOrdersWithTracking === 'function') window.loadBuyerOrdersWithTracking();

@@ -22,6 +22,13 @@ window.skhHealSysConfig = function (data) {
     return { fixed: out, count: flat.length, flatKeys: flat };
 };
 
+/* [REPAIR 2026-10 M7] Every browser write to system/config carries who changed
+   it (rules require lastChangedBy == your uid); the server records the before/
+   after values in admin_audit_log (functions/system-audit.js). */
+window.skhSysStamp = function () {
+    return { lastChangedBy: (skh.currentUser && skh.currentUser.uid) || '', lastChangedAt: new Date().toISOString(), lastChangedVia: 'browser' };
+};
+
 window.toggleSysMode = async function(modeName) {
     if(!skh.sysConfig) skh.sysConfig = {};
     if(!skh.sysConfig.modes) skh.sysConfig.modes = {};
@@ -40,8 +47,8 @@ window.toggleSysMode = async function(modeName) {
                     try {
                         var patch = {};
                         heal.flatKeys.forEach(function (k) { patch[k] = skh.deleteField ? skh.deleteField() : null; });
-                        await skh.setDoc(configRef, heal.fixed, { merge: true });
-                        if (skh.deleteField) await skh.updateDoc(configRef, patch);
+                        await skh.setDoc(configRef, Object.assign({}, heal.fixed, window.skhSysStamp()), { merge: true });
+                        if (skh.deleteField) await skh.updateDoc(configRef, Object.assign(patch, window.skhSysStamp()));
                     } catch (e) { /* si lazima ifanikiwe */ }
                 } else {
                     skh.sysConfig = Object.assign({}, raw);
@@ -60,11 +67,11 @@ window.toggleSysMode = async function(modeName) {
         // `updateDoc` ndiyo inayoelewa dot-paths; `setDoc` ya nested ni fallback
         // ikiwa doc bado haijaundwa.
         try {
-            await skh.updateDoc(configRef, { ['modes.' + modeName]: newVal });
+            await skh.updateDoc(configRef, Object.assign({ ['modes.' + modeName]: newVal }, window.skhSysStamp()));
         } catch (errUpd) {
             var nested = { modes: {} };
             nested.modes[modeName] = newVal;
-            await skh.setDoc(configRef, nested, { merge: true });
+            await skh.setDoc(configRef, Object.assign(nested, window.skhSysStamp()), { merge: true });
         }
         console.log(`Mode ${modeName} imebadilishwa -> ${newVal ? 'WASHA' : 'ZIMA'}.`);
 
@@ -153,7 +160,8 @@ window.verifyAndProceedSeriousAction = async function(actionName, itemMode, item
     
     try {
         const depSnap = await skh.getDoc(depositRef);
-        if (depSnap.exists() && depSnap.data().hasActiveDeposit) {
+        // [REPAIR 2026-10] Deposit halali ni ile iliyothibitishwa na SERVER pekee (verified).
+        if (depSnap.exists() && depSnap.data().hasActiveDeposit && depSnap.data().verified === true) {
             callbackFn(); // Alishalipa hapo mwanzo, mruhusu aendelee
             return;
         }
@@ -436,11 +444,17 @@ window.submitEditForm = async function(event) {
             updateMap.productType = document.getElementById('editProductType')?.value || 'physical';
             updateMap.condition = document.getElementById('editCondition')?.value || 'new';
             updateMap.variants = skh.normalizeProductVariants(document.getElementById('editVariants')?.value || '');
+            // function-scoped on purpose: read after the product update below
+            var pendingVariantCombinations = null;
             const concreteText = document.getElementById('editVariantCombinations')?.value.trim() || '';
             if (concreteText) {
                 try {
                     const concrete = skh.normalizeConcreteVariantCombinations(concreteText, id);
                     if (!concrete.ok) throw new Error(concrete.error);
+                    // [F6 2026-10-31] Variant combinations are saved by the server
+                    // (productVariantsSave keeps live stock/reserved); only the
+                    // search metadata below uses them locally.
+                    pendingVariantCombinations = concrete.combinations;
                     updateMap.variantCombinations = concrete.combinations;
                 } catch (variantError) {
                     alert('Concrete variant haijahifadhiwa: ' + variantError.message);
@@ -522,7 +536,9 @@ window.submitEditForm = async function(event) {
             }
         }
 
+        delete updateMap.variantCombinations;
         await skh.updateDoc(prodRef, updateMap);
+        if (pendingVariantCombinations) await skh.wrapCallable('productVariantsSave')({ productId: id, variantCombinations: pendingVariantCombinations });
         alert(" Tangazo limehaririwa!");
         window.closeModals();
         loadAndRenderDashboard();

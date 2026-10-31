@@ -78,7 +78,7 @@ window.confirmSokoPayLinkDirect = async function(docId, sellerId, totalAmount, c
         const platformFee = skh.paymentGate('commission') ? totalAmount * 0.05 : 0; // 5% Platform Fee
         const sellerEarned = totalAmount - (platformFee + carrierShare);
 
-        const sellerQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId)));
+        const sellerQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId), skh.limit(1)));
         if (!sellerQuery.empty) {
             const sellerDocId = sellerQuery.docs[0].id;
             // [PHASE 5.2b] kituo kimoja — skhWalletAdjust (legacy 1:1 geti likiwa off; server+ledger ikiwa on)
@@ -112,12 +112,8 @@ window.raiseSokoPayLinkDispute = async function(docId) {
     if(!reason) return alert(T('sp_dispute_reason', "You must write a reason to open a dispute."));
 
     try {
-        const linkRef = skh.doc(skh.db, "sokopay_links", docId);
-        await skh.updateDoc(linkRef, {
-            status: "disputed",
-            disputeReason: reason,
-            disputedAt: new Date().toISOString()
-        });
+        // [REPAIR 2026-10] Mgogoro wa link unafunguliwa na server (rekodi + kusimamisha auto-release).
+        await skh.wrapCallable('disputeOpen')({ linkId: docId, reason: reason });
 
         alert(T('sp_dispute_opened', "Dispute opened and your SokoPay account has been locked! Admin will review your complaint now."));
         window.trackSokoPayTransaction();
@@ -947,91 +943,20 @@ window.switchEventSubTab = function(subTabName, element) {
 };
 
 window.resolvePlatformDispute = async function(orderId, winner) {
-    if (!await skhConfirm(`Je, unathibitisha kuamua mgogoro huu kwa manufaa ya ${winner.toUpperCase()}? Mfumo utahamisha fedha zote za Escrow sasa hivi.`)) return;
-
+    /* [REPAIR 2026-10 §4] Uamuzi wa mgogoro ni wa SERVER (adminResolveDispute):
+       malipo yanatoka kwenye ushahidi wa escrow (escrow_holds) kwa transaction
+       moja, mara moja tu, na rekodi ya kudumu kwenye admin_audit_log. */
+    if (winner !== 'buyer' && winner !== 'seller') return alert(" Mshindi si sahihi.");
+    const reason = await skhPrompt(`Andika SABABU ya uamuzi huu (itahifadhiwa kwenye kumbukumbu ya kudumu):\nMshindi: ${winner === 'buyer' ? 'MNUNUZI (rejesho)' : 'MUUZAJI (malipo)'}`);
+    if (!reason || reason.trim().length < 10) return alert(" Sababu ni lazima (angalau herufi 10).");
     try {
-        let orderRef = skh.doc(skh.db, "orders", orderId);
-        let orderSnap = await skh.getDoc(orderRef);
-        let amount = 0;
-        let targetId = "";
-        let title = "";
-        let buyerId = "";
-        let sellerId = "";
-
-        // A. Kagua kama mgogoro upo kwenye orders au sokopay_links
-        if (orderSnap.exists()) {
-            const od = orderSnap.data();
-            amount = parseFloat(od.amount || 0);
-            buyerId = od.buyerId;
-            sellerId = od.sellerId;
-            title = od.itemTitle || "Order Dispute";
-            targetId = winner === 'buyer' ? od.buyerId : od.sellerId;
-            
-            // Sasisha hali ya oda kwenye database
-            await skh.updateDoc(orderRef, {
-                status: winner === 'buyer' ? "refunded_by_admin" : "completed",
-                disputeResolvedAt: new Date().toISOString(),
-                disputeWinner: winner
-            });
-        } else {
-            const linkRef = skh.doc(skh.db, "sokopay_links", orderId);
-            const linkSnap = await skh.getDoc(linkRef);
-            if (linkSnap.exists()) {
-                const ld = linkSnap.data();
-                amount = parseFloat(ld.price || ld.amount || 0);
-                buyerId = ld.buyerId;
-                sellerId = ld.userId;
-                title = ld.title || "SokoPay Link Dispute";
-                targetId = winner === 'buyer' ? ld.buyerId : ld.userId;
-
-                await skh.updateDoc(linkRef, {
-                    status: winner === 'buyer' ? "refunded_by_admin" : "completed",
-                    disputeResolvedAt: new Date().toISOString(),
-                    disputeWinner: winner
-                });
-            } else {
-                alert(" Hitilafu: Mgogoro au muamala huu haujapatikana katika kanzidata!");
-                return;
-            }
-        }
-
-        // B. MTUME MSHINDI FEDHA KWENYE WALLET YAKE
-        const userQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", targetId));
-        const userSnap = await skh.getDocs(userQ);
-        if (!userSnap.empty) {
-            const userDocId = userSnap.docs[0].id;
-            // [PHASE 5.2b] kituo kimoja — skhWalletAdjust (legacy 1:1 geti likiwa off; server+ledger ikiwa on)
-            await window.skhWalletAdjust(skh.doc(skh.db, "users", userDocId), amount, { type: 'refund', ledgerKey: 'dispwin_' + orderId + '_' + winner, note: 'Ushindi wa mgogoro - utatuzi wa Admin' });
-
-            // Mtumie mshindi taarifa (Notification) ya ushindi na malipo
-            await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                userId: targetId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.disputeWin',
-                params: { title: String(title || ''), amount: amount.toLocaleString() },
-                title: " SokoPay: Utatuzi wa Mgogoro!",
-                body: `Msimamizi (Admin) ametatua mgogoro wa mkataba wa "${title}" na kuamua kuwa upewe TSh ${amount.toLocaleString()} [1]. Salio limeongezeka kwenye wallet yako.`,
-                createdAt: new Date().toISOString(),
-                read: false
-            });
-        }
-
-        // C. MTUMIE ALIYEKOSA TAARIFA YA UTATUZI
-        const loserId = winner === 'buyer' ? sellerId : buyerId;
-        await skh.addDoc(skh.collection(skh.db, "notifications"), {
-            userId: loserId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.disputeLose',
-                params: { title: String(title || '') },
-            title: " SokoPay: Uamuzi wa Mgogoro",
-            body: `Mgogoro wa mkataba wa "${title}" umefungwa na kuamuliwa kwa manufaa ya upande wa pili [1]. Fedha zimetolewa kwenye Escrow.`,
-            createdAt: new Date().toISOString(),
-            read: false
-        }).catch(() => {});
-
-        alert(` MGOGORO UMETATULIWA!\n\nTSh ${amount.toLocaleString()} imetumwa salama kwenye wallet ya ${winner.toUpperCase()}.`);
-        window.loadAdminDashboard(); // Refresh Admin Control Panel
-
+        const isOrder = (await skh.getDoc(skh.doc(skh.db, "orders", orderId))).exists();
+        const payload = Object.assign(isOrder ? { orderId } : { linkId: orderId }, { outcome: winner === 'buyer' ? 'refund_buyer' : 'release_seller', reason: reason.trim() });
+        const res = await skh.wrapCallable('adminResolveDispute')(payload);
+        const d = (res && res.data) || {};
+        if (d.already) alert(" Mgogoro huu tayari ulishatatuliwa (hakuna malipo mara mbili).");
+        else alert(` MGOGORO UMETATULIWA!\n\nMnunuzi: TSh ${(d.buyerAmount || 0).toLocaleString()}\nMuuzaji: TSh ${(d.sellerAmount || 0).toLocaleString()}`);
+        window.loadAdminDashboard();
     } catch (e) {
         alert(" Imeshindwa kutatua mgogoro: " + e.message);
     }
@@ -1039,106 +964,26 @@ window.resolvePlatformDispute = async function(orderId, winner) {
 
 window.processSplitRefundPrompt = async function(orderId) {
     try {
-        let orderRef = skh.doc(skh.db, "orders", orderId);
-        let orderSnap = await skh.getDoc(orderRef);
-        let amount = 0;
-        let buyerId = "";
-        let sellerId = "";
-        let title = "";
-        let isOrder = true;
-
-        if (orderSnap.exists()) {
-            const od = orderSnap.data();
-            amount = parseFloat(od.amount || 0);
-            buyerId = od.buyerId;
-            sellerId = od.sellerId;
-            title = od.itemTitle || "Order";
-        } else {
-            const linkRef = skh.doc(skh.db, "sokopay_links", orderId);
-            const linkSnap = await skh.getDoc(linkRef);
-            if (linkSnap.exists()) {
-                const ld = linkSnap.data();
-                amount = parseFloat(ld.price || ld.amount || 0);
-                buyerId = ld.buyerId;
-                sellerId = ld.userId;
-                title = ld.title || "SokoPay Link";
-                isOrder = false;
-            } else {
-                alert(" Hitilafu: Mkataba huu haujapatikana!");
-                return;
-            }
+        const orderSnap = await skh.getDoc(skh.doc(skh.db, "orders", orderId));
+        let amount = 0, isOrder = true;
+        if (orderSnap.exists()) { amount = parseFloat(orderSnap.data().amount || 0); }
+        else {
+            const linkSnap = await skh.getDoc(skh.doc(skh.db, "sokopay_links", orderId));
+            if (!linkSnap.exists()) return alert(" Hitilafu: Mkataba huu haujapatikana!");
+            amount = parseFloat(linkSnap.data().price || linkSnap.data().amount || 0); isOrder = false;
         }
-
-        // Muulize Admin kiasi cha kumrejeshea mnunuzi (Refund amount)
-        const refundInp = await skhPrompt(` SPLIT REFUND COCKPIT\nJumla ya Escrow iliyopo: TSh ${amount.toLocaleString()}\n\nAndika kiasi cha kumrudishia MNUNUZI (Buyer Refund):`, (amount / 2).toString());
-        if (refundInp === null) return; // Mteja amebofya cancel
-
+        const refundInp = await skhPrompt(` SPLIT REFUND\nJumla ya Escrow: TSh ${amount.toLocaleString()}\n\nAndika kiasi cha kumrudishia MNUNUZI:`, (amount / 2).toString());
+        if (refundInp === null) return;
         const refundAmount = parseFloat(refundInp);
-        if (isNaN(refundAmount) || refundAmount < 0 || refundAmount > amount) {
-            alert(" Kiasi si sahihi au kimezidi kiasi kilichopo kwenye Escrow!");
-            return;
-        }
-
-        const sellerAmount = amount - refundAmount; // Kiasi kinachobaki kinaenda kwa muuzaji
-
-        if (!await skhConfirm(`Je, unathibitisha kugawa Escrow hivi:\n\n• Kurudisha kwa Mnunuzi: TSh ${refundAmount.toLocaleString()}\n• Kumlipa Muuzaji: TSh ${sellerAmount.toLocaleString()}`)) return;
-
-        // A. Sasisha hali ya mkataba au oda kwenye database kuwa imetatuliwa kwa maelewano
-        if (isOrder) {
-            await skh.updateDoc(orderRef, { 
-                status: "split_refund_resolved",
-                buyerRefund: refundAmount,
-                sellerPayout: sellerAmount,
-                resolvedAt: new Date().toISOString()
-            });
-        } else {
-            await skh.updateDoc(skh.doc(skh.db, "sokopay_links", orderId), { 
-                status: "split_refund_resolved",
-                buyerRefund: refundAmount,
-                sellerPayout: sellerAmount,
-                resolvedAt: new Date().toISOString()
-            });
-        }
-
-        // B. LIPIA MNUNUZI (REFUND WALLET PAYMENT)
-        const buyerQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", buyerId));
-        const buyerSnap = await skh.getDocs(buyerQ);
-        if (!buyerSnap.empty) {
-            // [PHASE 5.2b] kituo kimoja — skhWalletAdjust (legacy 1:1 geti likiwa off; server+ledger ikiwa on)
-            await window.skhWalletAdjust(skh.doc(skh.db, "users", buyerSnap.docs[0].id), refundAmount, { type: 'refund', ledgerKey: 'splitref_buyer_' + orderId, note: 'Split refund - rejesho la mnunuzi' });
-            await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                userId: buyerId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.splitRefund',
-                params: { title: String(title || ''), amount: refundAmount.toLocaleString() },
-                title: " SokoPay: Rejesho la Maelewano (Split Refund)!",
-                body: `Mkataba wa "${title}" umesuluhishwa kwa maelewano [1]. Umerejeshewa TSh ${refundAmount.toLocaleString()} kwenye wallet yako.`,
-                createdAt: new Date().toISOString(),
-                read: false
-            });
-        }
-
-        // C. LIPIA MUUZAJI (SELLER PAYOUT WALLET)
-        const sellerQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId));
-        const sellerSnap = await skh.getDocs(sellerQ);
-        if (!sellerSnap.empty) {
-            // [PHASE 5.2b] kituo kimoja — skhWalletAdjust (legacy 1:1 geti likiwa off; server+ledger ikiwa on)
-            await window.skhWalletAdjust(skh.doc(skh.db, "users", sellerSnap.docs[0].id), sellerAmount, { type: 'escrow_release', ledgerKey: 'splitref_seller_' + orderId, note: 'Split refund - malipo ya muuzaji' });
-            await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                userId: sellerId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.splitPayment',
-                params: { title: String(title || ''), amount: sellerAmount.toLocaleString() },
-                title: " SokoPay: Malipo ya Maelewano!",
-                body: `Mkataba wa "${title}" umesuluhishwa kwa maelewano [1]. Umeingiziwa TSh ${sellerAmount.toLocaleString()} kwenye wallet yako.`,
-                createdAt: new Date().toISOString(),
-                read: false
-            });
-        }
-
-        alert(` UTATUZI WA MAELEWANO UMEKABILIKA!\n\n• Mnunuzi amerudishiwa: TSh ${refundAmount.toLocaleString()}\n• Muuzaji amelipwa: TSh ${sellerAmount.toLocaleString()}`);
+        if (isNaN(refundAmount) || refundAmount < 0 || refundAmount > amount) return alert(" Kiasi si sahihi au kimezidi escrow!");
+        const reason = await skhPrompt("Andika SABABU ya mgawanyo huu (itahifadhiwa kwenye kumbukumbu ya kudumu):");
+        if (!reason || reason.trim().length < 10) return alert(" Sababu ni lazima (angalau herufi 10).");
+        if (!await skhConfirm(`Thibitisha mgawanyo:\n• Mnunuzi: TSh ${refundAmount.toLocaleString()}\n• Muuzaji: TSh ${(amount - refundAmount).toLocaleString()}`)) return;
+        const payload = Object.assign(isOrder ? { orderId } : { linkId: orderId }, { outcome: 'split', buyerAmount: refundAmount, reason: reason.trim() });
+        const res = await skh.wrapCallable('adminResolveDispute')(payload);
+        const d = (res && res.data) || {};
+        alert(d.already ? " Tayari ulishatatuliwa." : ` UTATUZI UMEKAMILIKA!\n• Mnunuzi: TSh ${(d.buyerAmount || 0).toLocaleString()}\n• Muuzaji: TSh ${(d.sellerAmount || 0).toLocaleString()}`);
         window.loadAdminDashboard();
-
     } catch (e) {
         alert(" Imeshindwa kugawa Escrow: " + e.message);
     }

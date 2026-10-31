@@ -75,5 +75,10 @@ window.SOKOHAI_CONFIG = {
     //                  (Awali browser iliandika mafanikio ya malipo bila uthibitisho —
     //                  mtumiaji angeweza kufake malipo kwa link ya kurudi.)
     //   false        = kurudisha tabia ya zamani (SIYO salama — achiwa kwa dharura tu).
-    PAYMENT_VERIFY_ON_RETURN: true
+    PAYMENT_VERIFY_ON_RETURN: true,
+
+    // [REPAIR 2026-10 M3] Firebase App Check — reCAPTCHA Enterprise SITE key
+    // (PUBLIC, si siri). Firebase Console -> App Check -> Apps -> Web app ->
+    // reCAPTCHA Enterprise. Tupu = App Check imezimwa.
+    APP_CHECK_SITE_KEY: ''
 };

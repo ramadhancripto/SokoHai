@@ -1,0 +1,79 @@
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS Signup via UI (seller) — uid cJ18Uo, users doc saved under rules
+alerts []
+
+blocked hosts [ 'nominatim.openstreetmap.org' ]
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS 1 Seller sign-up through the real form — profile created + loaded
+invalid fields []
+status texts [
+  'mapStatus=GPS: Inatafuta mawasiliano...',
+  'prodPublicationStatus=PublishedRasimu',
+  'prodAvailabilityStatus=AvailablePre-orderMade to orderZimeishaHidden',
+  'posOfflineQueueStatus=Offline POS: hakuna mauzo yanayosubiri.',
+  'editPublicationStatus=PublishedRasimuArchived',
+  'editAvailabilityStatus=AvailableLow stockZimeishaPre-orderMade to orderHidden',
+  'spLipaStatusBanner=DIRECT LIPA SECURED: Mfumo salama wa malipo ya papo hapo uliounganishwa na SokoP',
+  'userLocationStatus=Inatafuta eneo...'
+]
+PASS 2 Seller publishes a product (real form, emulator rules) — cat=CAT-11/TVs & Home Entertainment status=published stock=4 images=1 sku=- uploads=1
+alerts [ ' Bidhaa imechapishwa kikamilifu kwenye Soko la Mtandaoni!' ]
+
+blocked [ 'nominatim.openstreetmap.org', 'ui-avatars.com' ]
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS 3 Super admin backfills public user cards (callable via local server) — {"ok":true,"written":2,"next":null,"done":true} card fields: uid,docId,fullName,createdAt,followersCount,updatedAt
+PASS 4 Buyer sign-up (real form) and sees the product in the market feed — feed shows the product
+PASS 5 Buyer opens product page; seller identity comes from userCards (no private data) — title + price shown; e-mail/phone of seller not exposed
+PASS 6 Chat: buyer messages seller, seller receives it — conversation conv_9MpU9 with 1 message(s)
+-- owner alerts []
+
+blocked [ 'nominatim.openstreetmap.org' ]
+-- buyer alerts []
+
+blocked [ 'nominatim.openstreetmap.org' ]
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS 7 Seller creates a SokoPay escrow link (real form) — code SP-VQGLKT status pending
+PASS 8 Buyer pays the link from wallet -> funds HELD in escrow (server transaction) — order held, wallet 80000 -> 30000, escrow_holds record exists
+PASS 9 Seller cannot see the delivery code; buyer gets it (escrow center) — seller denied (permission-denied); buyer code DL-3****
+PASS 10 Seller confirms hand-over with the buyer code (wrong code refused) — status delivered, still held until buyer confirms
+PASS 11 Buyer confirms receipt -> seller wallet credited, ledger written — order completed, seller wallet TSh 50000 (fee deducted from 50000), ledger rows 1
+PASS 12 Double release is refused (idempotent) — returned already=true
+-- seller alerts [
+  'Kosa: Namba ya kupokea si sahihi.',
+  'Makabidhiano yamethibitishwa na server. Fedha zitatolewa mnunuzi akithibitisha, au kwa muj'
+]
+
+-- buyer alerts [
+  ' USALAMA IMETIMIA!\n' +
+    '\n' +
+    'TSh 50,000 imekatwa kwenye Wallet yako na kufungwa salama kwenye Escro',
+  'NAMBA YAKO YA KUPOKEA: DL-351E8BC6\n' +
+    '\n' +
+    'Mpe muuzaji/msafirishaji namba hii TU baada ya kupokea',
+  'Asante! Malipo yametolewa kwa muuzaji (TSh 50,000).'
+]
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS 13 System settings reach a signed-in tab (B-14 fix) — initial value and a live change both received
+PASS 14 Seller registers a service (real Huduma Hub form) — Home & Personal / Cleaning Services saved
+PASS 15 POS: seller sells 1 unit at the counter -> sale recorded, stock 4 -> 3 — cart total "TSh 150,000", sales=1, stock 3
+PASS 16 Seller dashboard / analytics opens without errors — 5 dashboard tabs rendered
+PASS 17 Group orders clearly disabled for users — policy change by seller refused (functions/permission-denied)
+PASS 18 Admin control center: open, find user, escrow policy rejects group orders — whoAmI {"ok":true,"uid":"0TYe2I85jgjjAD12Vq4615UJSkPr","admin":true,"superAdmin":true,"; group-orders refused; audit query ok (1 rows)
+PASS 19 Admin moderates the product (hide) -> audit row; then restores — hidden=true, restore ok, audit rows 3
+PASS 20 Ads: admin creates a Home announcement with author stamp (rules)  — stamped create ok, unstamped denied; adsRequestDelivery ok
+PASS 21 Creative studio opens (ads designer) — opened without page errors
+PASS 22 Platform analytics refresh (super admin) — {"ok":true,"totalRevenue":0,"eventCount":1}
+-- seller alerts [
+  ' HUDUMA IMESAJILIWA!\n' +
+    'Huduma yako ya "Fundi Simu E2E" imesajiliwa kikamilifu kwenye database ya Sokoh',
+  ' POS sale imehifadhiwa: TSh 150,000'
+]
+
+-- owner alerts []
+
+PASS 23 Responsive mobile 390px: 9 screens, no horizontal scroll, no page errors — ok
+PASS 23 Responsive tablet 820px: 9 screens, no horizontal scroll, no page errors — ok
+PASS 23 Responsive desktop 1366px: 9 screens, no horizontal scroll, no page errors — ok
+PASS 24 Signed-out visitor: home loads, product readable, no page errors — ok (the signed-out system/config read is refused by design and no longer logged as an app error)
+

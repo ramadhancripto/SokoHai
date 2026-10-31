@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const quantityCore = require('./quantity-core');
 
 const text = value => String(value == null ? '' : value).trim();
 const keyText = value => text(value).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -159,7 +160,8 @@ function resolveProductIdentity(product, request) {
   const basePrice = pricingMode === 'wholesale' ? (variantWholesale ?? Number(product.wholesalePrice)) : (variantPrice ?? Number(product.price));
   if (!Number.isFinite(basePrice) || basePrice <= 0) return { ok: false, error: 'PRICE_NOT_AVAILABLE' };
   const stock = variant ? Number(variant.stock) : Number(product.stock);
-  if (!Number.isSafeInteger(stock) || stock < 0) return { ok: false, error: 'INVENTORY_NOT_VALID' };
+  // [POS 2026-11-01] Whole units unless the product opts in to decimals (quantityPrecision, kg/L/m).
+  if (!quantityCore.isValidQuantity(stock, quantityCore.precisionOf(product), { allowZero: true })) return { ok: false, error: 'INVENTORY_NOT_VALID' };
   const variantId = variant ? variant.variantId : null;
   const sku = variant ? variant.sku : text(product.sku) || null;
   return { ok: true, variant, variantId, sku, unit: unitResult, inventoryKey: variant ? (variant.inventoryKey || deterministicInventoryKey(product.productId || request.productId, variantId, unitResult.unitId)) : deterministicInventoryKey(product.productId || request.productId, null, unitResult.unitId), stock, basePrice };

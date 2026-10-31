@@ -153,7 +153,7 @@ import { skh } from './00-bootstrap.js';
     // ---------- Meta ya mshiriki (snapshot ndogo) ----------
     async function participantMeta(uid) {
         try {
-            var s = await skh.getDoc(skh.doc(skh.db, 'users', uid));
+            var s = await skh.getUserCard(uid);
             if (s && s.exists && s.exists()) {
                 var u = s.data();
                 return {
@@ -2146,7 +2146,7 @@ import { skh } from './00-bootstrap.js';
             // Background resolution ya User profile
             if (!email || !partnerName) {
                 try {
-                    var s = await skh.getDoc(skh.doc(skh.db, 'users', uid));
+                    var s = await skh.getUserCard(uid);
                     if (s && s.exists && s.exists()) {
                         var u = s.data();
                         email = email || u.email || u.userEmail || '';
@@ -5064,6 +5064,11 @@ import { skh } from './00-bootstrap.js';
     }
 
     async function maybePostPaymentProtected(order, nego) {
+        /* [REPAIR 2026-10 H6] Tukio la "SokoPay Imelindwa" ni la SERVER pekee
+           (postOrderPaymentProtectedEvent, likiandikwa na settlePesaPalPayment
+           au sokopayLinkWalletPay). Firestore rules zinakataa kadi hii kutoka
+           kwa kivinjari, kwa hiyo hapa hatutumi kitu. */
+        return;
         if (!order || !(order.orderId || order.id)) return;
         var oid = String(order.orderId || order.id);
         if (negoPayEventsSent[oid]) return;

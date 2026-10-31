@@ -8,6 +8,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
 import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, normalizeConcreteVariantCombinations, normalizeTaxonomyMetadata, normalizeProductUploadData, resolveVariantImages, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
 
@@ -64,6 +65,22 @@ skh.deleteField = deleteField;  // [FIX TOGGLE 2026-09-14] kusafisha fields bapa
 skh.getFunctions = getFunctions;
 skh.httpsCallable = httpsCallable;
 skh.httpsCallableFromURL = httpsCallableFromURL;
+
+/* [REPAIR 2026-10 C4] Public profile of ANOTHER person (name, photo, shop,
+   region, rating, business phone). Reads the server-maintained `userCards`
+   projection; `users/{id}` is private to its owner, admins and the managing
+   agent. Returns a Firestore snapshot, or an empty snapshot-like object. */
+skh.getUserCard = async function getUserCard(uid) {
+    uid = String(uid || '');
+    const empty = { id: uid, exists: function () { return false; }, data: function () { return null; } };
+    if (!uid || uid.indexOf('/') !== -1 || !skh.db) return empty;
+    const mine = !!(skh.currentUser && skh.currentUser.uid === uid);
+    try {
+        const snap = await getDoc(doc(skh.db, mine ? 'users' : 'userCards', uid));
+        if (snap && snap.exists()) return snap;
+    } catch (e) { /* offline / not found: empty card */ }
+    return empty;
+};
 
 /* ============================================================
    [FUNCTIONS RESILIENCE 2026-09] Safu MOJA ya kati ya Cloud Functions.
@@ -563,6 +580,27 @@ if (skh.emulator) {
 }
 
 skh.fApp = skh.initializeApp(skh.firebaseConfig);
+
+/* [REPAIR 2026-10 M3] Firebase App Check (reCAPTCHA Enterprise). Must start
+   before Auth/Firestore/Functions are used. The site key is PUBLIC and lives in
+   js/00-config.js (APP_CHECK_SITE_KEY). Empty key = App Check off (local /
+   emulator). Enforcement is switched on separately on the server and in the
+   Firebase Console, after the metrics show real traffic is verified. */
+skh.appCheck = null;
+try {
+    const acKey = (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.APP_CHECK_SITE_KEY) || '';
+    if (acKey && !skh.emulator) {
+        skh.appCheck = initializeAppCheck(skh.fApp, { provider: new ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true });
+    }
+} catch (acErr) { console.warn('[SokoHai] App Check init failed:', acErr && acErr.message); }
+/* [PHASE 9] For the few places that call Google REST APIs with fetch() instead of
+   the SDK (offline-member sign-up, admin diagnostics): attach the App Check token
+   so they keep working once enforcement is switched on. Empty when App Check is off. */
+window.skhAppCheckHeaders = async function () {
+    if (!skh.appCheck) return {};
+    try { const r = await getToken(skh.appCheck, false); return r && r.token ? { 'X-Firebase-AppCheck': r.token } : {}; }
+    catch (e) { return {}; }
+};
 
 skh.auth = skh.getAuth(skh.fApp);
 
@@ -2237,11 +2275,11 @@ skh.hydrateFollowerCounts = async function hydrateFollowerCounts(rootEl) {
         for (let i = 0; i < uids.length; i += 10) batches.push(uids.slice(i, i + 10));
         await Promise.all(batches.map(async (batch) => {
             try {
-                const q = skh.query(skh.collection(skh.db, 'users'), skh.where('uid', 'in', batch));
+                const q = skh.query(skh.collection(skh.db, 'userCards'), skh.where('uid', 'in', batch), skh.limit(10));
                 const snap = await skh.getDocs(q);
                 snap.forEach(function (d) {
                     const x = d.data() || {};
-                    counts[x.uid] = Array.isArray(x.followers) ? x.followers.length : 0;
+                    counts[x.uid] = Number(x.followersCount || x.followerCount || 0);
                 });
             } catch (e) { /* batch flieptask — mashushe haitakuza */ }
         }));
@@ -2941,7 +2979,7 @@ skh.buildSokoPayCoreTx = function buildSokoPayCoreTx({ orderId, transactionToken
         items:sellerItems, amount:subtotal, totals:calc,
         paymentStatus:'Payment Pending', escrowStatus:'Waiting Payment', shipmentStatus:'Preparing', contractStatus:'Contract Active', orderStatus:'Pending', tokenStatus:'Tokens Ready',
         courier:{ name:'Not assigned', phone:'', vehicle:'', currentLocation:null, eta:'—', distance:'—' },
-        sellerDetails:{ rating:sellerProfile?.rating || '—', businessName:sellerProfile?.shopName || sellerItems[0]?.sellerName || 'Seller', supportContact:sellerProfile?.phone || sellerItems[0]?.sellerPhone || '' },
+        sellerDetails:{ rating:sellerProfile?.rating || '—', businessName:sellerProfile?.shopName || sellerItems[0]?.sellerName || 'Seller', supportContact:(sellerProfile?.phone || sellerProfile?.businessPhone) || sellerItems[0]?.sellerPhone || '' },
         contract:{ warranty:'Warranty Active', returnPolicy:'Return Policy Available', protectionEnds:new Date(Date.now()+7*86400000).toISOString(), digitalAgreement:'Generated' },
         documents:{ receipt:true, invoice:true, deliveryNote:true, warranty:true, contract:true },
         timeline:skh.spTimelineBase().map((x,idx)=>({ title:x[0], description:x[1], at: idx===0?new Date().toISOString():null, done:idx===0 })),

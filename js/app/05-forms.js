@@ -2,7 +2,19 @@
 import { skh } from './00-bootstrap.js';
 // Canonical taxonomy is the authority for the visible seller category list.
 // Existing skh.advancedCategories is still passed in, unchanged, for compatibility.
-import { getSellerCategoryOptions } from '../../shared/product-taxonomy-bridge.mjs';
+import { getSellerCategoryOptions, getSellerSubcategories } from '../../shared/product-taxonomy-bridge.mjs';
+import { visibilityForBusinessMode, sellerFormRules, duplicateTemplate, DRAFT_FIELDS, draftKey, draftHasContent } from '../../shared/product-listing-core.mjs';
+
+/* [REPAIR 2026-10 B-15] Products now store the canonical category id (e.g.
+   "CAT-11"); buyers saw that raw id on the product page. Display-only lookup:
+   id -> seller-facing label from the same registry the form uses. */
+window.skhCategoryLabel = function (v) {
+    try {
+        const s = String(v == null ? '' : v); if (!/^CAT-\d+$/.test(s)) return s;
+        const o = getSellerCategoryOptions(skh.advancedCategories || {}).find(x => x && x.value === s);
+        return (o && o.label) || s;
+    } catch (e) { return String(v == null ? '' : v); }
+};
 
 // Tafsiri (lugha moja kwa wakati) — LMS ikiwa ipo, la sivyo fallback ya Kiingereza
 function T(key, en, vars) {
@@ -286,6 +298,8 @@ window.showForm = function(formId) {
         targetForm.style.display = 'block';
         if(formId === 'sellerForm') {
             populateFormCategories();
+            // [UX 2026-10-31] defaults from the business profile + draft offer (nothing is overwritten).
+            if (typeof window.skhSellerFormOpened === 'function') window.skhSellerFormOpened();
             // [FIX] Hakikisha sehemu za mtandaoni (Maelezo, Mode ya Kuuza, Picha) zinaonekana
             // kulingana na default ya Visibility (Hybrid) — kabla haijabadilishwa na mtumiaji.
             if (window.toggleProductFormFields) window.toggleProductFormFields();
@@ -326,3 +340,204 @@ if(skh.mm) skh.mm.style.display = 'flex';
 document.querySelectorAll('form').forEach(form => form.reset());
 
 ;
+
+
+/* =====================================================================
+ * [UX 2026-10-31] ONE seller form: defaults, progress, taxonomy search,
+ * local draft, clear validation messages and "copy a previous product".
+ * Same form, same ids, same save path (submitSeller). No second builder.
+ * ===================================================================== */
+(function () {
+    const $ = id => document.getElementById(id);
+    const uid = () => (skh.currentUser && skh.currentUser.uid) || 'anon';
+    const store = {
+        get(k) { try { return JSON.parse(window.localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
+        set(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode: drafts are optional */ } },
+        del(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
+    };
+    const fire = (el, type) => el && el.dispatchEvent(new Event(type, { bubbles: true }));
+    const visibleIn = el => !!el && el.getClientRects().length > 0;
+    let touched = false;
+    let restoring = false;
+
+    function fieldValue(id) { const el = $(id); if (!el) return ''; return el.type === 'checkbox' ? el.checked : el.value; }
+    function setField(id, v) {
+        const el = $(id); if (!el || v === undefined || v === null) return;
+        if (el.type === 'checkbox') { el.checked = v === true; fire(el, 'change'); return; }
+        if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === String(v))) return;
+        el.value = String(v); fire(el, 'change');
+    }
+
+    /* ---- progress: which groups are complete (required fields only) ---- */
+    window.skhSellerFormProgress = function () {
+        const list = $('sellerFormProgress'); if (!list) return;
+        const rules = sellerFormRules(fieldValue('prodVisibility'));
+        const filled = id => String(fieldValue(id) || '').trim() !== '';
+        const photos = () => { const p = $('prodImagePreviews'); return !!(p && p.children.length); };
+        const done = {
+            channel: true,
+            what: filled('prodName') && (rules.taxonomy !== 'required' || filled('prodCategory')),
+            price: filled('prodPrice') && filled('prodStock'),
+            online: filled('prodDesc') && photos(),
+            location: filled('prodLocation')
+        };
+        list.querySelectorAll('li').forEach(li => {
+            const ok = !!done[li.dataset.group];
+            li.style.cssText = 'padding:4px 8px; border-radius:999px; border:1px solid ' + (ok ? '#18A982' : '#cbd5e1') + '; background:' + (ok ? '#EAF8F2' : '#fff') + '; color:' + (ok ? '#0f6e55' : '#475569') + ';' + (rules.groups[li.dataset.group] ? '' : 'display:none;');
+            li.setAttribute('aria-label', li.textContent.replace(/^\s*✓\s*/, '') + (ok ? ' (imekamilika)' : ' (bado)'));
+            li.textContent = (ok ? '✓ ' : '') + li.textContent.replace(/^✓\s*/, '');
+        });
+    };
+
+    /* ---- inline messages; never clears what the seller typed ---- */
+    window.skhSellerFieldIssue = function (missing) {
+        document.querySelectorAll('#sellerForm .sf-issue').forEach(n => n.remove());
+        (missing || []).forEach(([id, label]) => {
+            const el = $(id); if (!el) return;
+            const msg = document.createElement('small');
+            msg.className = 'sf-issue'; msg.setAttribute('role', 'alert');
+            msg.style.cssText = 'display:block; color:#b91c1c; font-size:12px; margin:4px 0 8px;';
+            msg.textContent = 'Jaza ' + label + '.';
+            el.insertAdjacentElement('afterend', msg);
+            el.setAttribute('aria-invalid', 'true');
+        });
+        const first = missing && missing[0] && $(missing[0][0]);
+        if (first) { first.scrollIntoView({ block: 'center' }); try { first.focus({ preventScroll: true }); } catch (e) {} }
+    };
+
+    /* ---- local draft (per seller, this device only) ---- */
+    function saveDraft() {
+        if (restoring) return;
+        const fields = {}; DRAFT_FIELDS.forEach(id => { if ($(id)) fields[id] = fieldValue(id); });
+        const draft = { v: 1, savedAt: new Date().toISOString(), fields };
+        if (draftHasContent(draft)) store.set(draftKey(uid()), draft);
+    }
+    let saveTimer = null;
+    function scheduleSave() { if (restoring) return; touched = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 600); }
+    function restoreDraft(draft) {
+        restoring = true;
+        const f = draft.fields || {};
+        setField('prodVisibility', f.prodVisibility);
+        if (f.prodCategory) { setField('prodCategory', f.prodCategory); if (window.updateFormSubcats) window.updateFormSubcats(); }
+        DRAFT_FIELDS.filter(id => id !== 'prodVisibility' && id !== 'prodCategory').forEach(id => setField(id, f[id]));
+        restoring = false; touched = true;
+        if (window.toggleProductFormFields) window.toggleProductFormFields();
+        window.skhSellerFormProgress();
+    }
+    window.skhSellerAfterSave = function ({ location } = {}) {
+        store.del(draftKey(uid()));
+        if (location) store.set('skh_last_location_' + uid(), String(location).slice(0, 160));
+        touched = false;
+        if ($('sellerCopyBanner')) $('sellerCopyBanner').hidden = true;
+    };
+
+    /* ---- defaults when the form opens ---- */
+    window.skhSellerFormOpened = function () {
+        const form = $('sellerForm'); if (!form) return;
+        const profile = skh.currentUserData || {};
+        const draft = store.get(draftKey(uid()));
+        const banner = $('sellerDraftBanner');
+        const wasTouched = touched;
+        restoring = true; // defaults are not seller edits
+        if (!touched) {
+            // Sales mode default = the business mode (each product can still differ).
+            setField('prodVisibility', visibilityForBusinessMode(profile));
+            // Location default = store address, else the last location this seller used.
+            const loc = $('prodLocation');
+            if (loc && !loc.value.trim()) {
+                const fromStore = String(profile.storeAddress || '').trim();
+                const last = store.get('skh_last_location_' + uid());
+                const v = fromStore || last || '';
+                if (v) { loc.value = v; if ($('prodLocationHint')) $('prodLocationHint').textContent = fromStore ? 'Imejazwa kutoka anwani ya duka lako. Unaweza kubadilisha.' : 'Imejazwa kutoka bidhaa yako iliyopita. Unaweza kubadilisha.'; }
+            }
+        }
+        restoring = false;
+        if (banner) {
+            const offer = draft && draftHasContent(draft) && !wasTouched;
+            banner.hidden = !offer;
+            if (offer && $('sellerDraftText')) $('sellerDraftText').textContent = 'Una rasimu ya "' + (draft.fields.prodName || 'bidhaa') + '" uliyoianza ' + new Date(draft.savedAt).toLocaleString() + '.';
+        }
+        if (window.toggleProductFormFields) window.toggleProductFormFields();
+        window.skhSellerFormProgress();
+    };
+
+    /* ---- search-first taxonomy (canonical list + legacy compatibility, same as the selects) ---- */
+    const norm = v => String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    function taxonomyIndex() {
+        const out = [];
+        const cats = getSellerCategoryOptions(skh.advancedCategories || {});
+        cats.forEach(c => {
+            out.push({ cat: c.value, catLabel: c.label, leaf: '', text: norm(c.label + ' ' + c.value) });
+            getSellerSubcategories(c.value, skh.advancedCategories || {}).forEach(leaf => out.push({ cat: c.value, catLabel: c.label, leaf, text: norm(leaf + ' ' + c.label) }));
+        });
+        return out;
+    }
+    let index = null;
+    window.skhSellerTaxonomySearch = function (q) {
+        const box = $('prodTaxonomyResults'); if (!box) return [];
+        const words = norm(q).split(/\s+/).filter(Boolean);
+        if (!words.length) { box.innerHTML = ''; return []; }
+        index = index || taxonomyIndex();
+        const hits = index.filter(r => words.every(w => r.text.includes(w)))
+            .sort((a, b) => (a.leaf ? 0 : 1) - (b.leaf ? 0 : 1)).slice(0, 8);
+        const esc = v => String(v).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+        box.innerHTML = hits.length ? hits.map((h, i) => `<button type="button" role="option" data-tx="${i}" style="text-align:left; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; background:white; cursor:pointer;">${esc(h.leaf || h.catLabel)}${h.leaf ? ` <small style="color:#64748b;">· ${esc(h.catLabel)}</small>` : ''}</button>`).join('')
+            : '<small style="color:#64748b;">Hakuna kinacholingana. Chagua kwenye orodha hapa chini au tumia "Nyingine".</small>';
+        box.querySelectorAll('[data-tx]').forEach(btn => btn.addEventListener('click', () => {
+            const h = hits[Number(btn.dataset.tx)];
+            setField('prodCategory', h.cat); if (window.updateFormSubcats) window.updateFormSubcats();
+            if (h.leaf) setField('prodSubCategory', h.leaf);
+            box.innerHTML = `<small style="color:#0f6e55;">Umechagua: ${esc(h.catLabel)}${h.leaf ? ' › ' + esc(h.leaf) : ''}</small>`;
+            $('prodTaxonomySearch').value = '';
+            window.skhSellerFormProgress(); scheduleSave();
+        }));
+        return hits;
+    };
+
+    /* ---- copy a previous product (settings only; never identity, stock or photos) ---- */
+    window.skhDuplicateProduct = async function (productId) {
+        const snap = await skh.getDoc(skh.doc(skh.db, 'products', String(productId)));
+        if (!snap.exists()) { alert('Bidhaa haipatikani.'); return; }
+        const t = duplicateTemplate(Object.assign({ id: snap.id }, snap.data()));
+        if (window.showForm) window.showForm('sellerForm');
+        if (typeof window.skhProductBuilderReset === 'function') window.skhProductBuilderReset();
+        restoring = true;
+        setField('prodVisibility', t.visibility);
+        if (window.toggleProductFormFields) window.toggleProductFormFields();
+        setField('prodName', t.title || t.name || '');
+        if (t.category) { setField('prodCategory', t.category); if (window.updateFormSubcats) window.updateFormSubcats(); setField('prodSubCategory', t.subCategory || t.subcategory); }
+        if (t.offlineCategory) setField('prodOfflineCategory', t.offlineCategory);
+        setField('prodProductType', t.productType); setField('prodCondition', t.condition);
+        setField('prodBaseUnit', t.baseUnit); setField('prodHasBulk', t.hasBulkPackaging === true);
+        setField('prodBulkUnit', t.bulkUnit); setField('prodConversionRatio', t.conversionRatio);
+        setField('prodPrice', t.price); setField('prodBuyPrice', t.buyPrice); setField('prodWholesalePrice', t.wholesalePrice);
+        setField('prodLowStockAlert', t.lowStockAlert != null ? t.lowStockAlert : t.lowStockThreshold);
+        setField('prodSaleMode', t.saleMode); setField('prodDesc', t.description);
+        setField('prodLocation', t.location); setField('prodWarehouseZone', t.warehouseZone);
+        setField('prodStock', 0); setField('prodBarcode', ''); setField('spbProductSku', '');
+        restoring = false; touched = true;
+        if (window.skhProductBuilder && typeof window.skhProductBuilder.prefill === 'function') window.skhProductBuilder.prefill(t);
+        const cb = $('sellerCopyBanner');
+        if (cb) { cb.hidden = false; cb.textContent = 'Umenakili mipangilio ya "' + (snap.data().title || 'bidhaa') + '". SKU, barcode, stock, picha na variants zake HAZIJANAKILIWA: weka za bidhaa hii mpya.'; }
+        window.skhSellerFormProgress();
+        return t;
+    };
+
+    function bind() {
+        const form = $('sellerForm'); if (!form || form.dataset.uxBound) return;
+        form.dataset.uxBound = '1';
+        form.addEventListener('input', e => { if (e.target && e.target.id === 'prodTaxonomySearch') return; e.target && e.target.removeAttribute && e.target.removeAttribute('aria-invalid'); const n = e.target && e.target.nextElementSibling; if (n && n.classList && n.classList.contains('sf-issue')) n.remove(); scheduleSave(); window.skhSellerFormProgress(); });
+        form.addEventListener('change', () => { if (restoring) return; scheduleSave(); window.skhSellerFormProgress(); });
+        form.addEventListener('reset', () => { touched = false; });
+        // Native validation on a hidden/collapsed field: open its group and show our message instead of a silent block.
+        form.addEventListener('invalid', e => { const d = e.target.closest('details'); if (d) d.open = true; }, true);
+        // [POS 2026-11-01] measured units (kg, litre, metre) accept decimal stock.
+        $('prodBaseUnit')?.addEventListener('change', () => { const qc = globalThis.SKHQuantityCore; const p = qc ? qc.precisionForUnit(fieldValue('prodBaseUnit')) : 0; const st = $('prodStock'); if (st) st.step = p ? String(1 / Math.pow(10, p)) : '1'; });
+        let t = null;
+        $('prodTaxonomySearch')?.addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => window.skhSellerTaxonomySearch(e.target.value), 150); });
+        $('sellerDraftRestore')?.addEventListener('click', () => { const d = store.get(draftKey(uid())); if (d) restoreDraft(d); $('sellerDraftBanner').hidden = true; });
+        $('sellerDraftDiscard')?.addEventListener('click', () => { store.del(draftKey(uid())); $('sellerDraftBanner').hidden = true; });
+    }
+    window.skhSellerDraftForTest = { save: saveDraft, key: () => draftKey(uid()), read: () => store.get(draftKey(uid())) };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true }); else bind();
+})();

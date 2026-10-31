@@ -14,6 +14,10 @@ skh.getOptimizedImageUrl=x=>x;
 const realFetch=window.fetch.bind(window);
 window.fetch=async(input,opts)=>{if(String(input).includes('api.cloudinary.com')){const file=opts?.body?.get('file');if(!(file instanceof Blob))throw Error('Preview upload missing file');return new Response(JSON.stringify({secure_url:URL.createObjectURL(file)}),{headers:{'Content-Type':'application/json'}});}return realFetch(input,opts);};
 window.openImageZoom=()=>{};window.zoomProductImage=()=>{};
+// [REPAIR 2026-10] Fixture shims for helpers that live in modules this preview
+// does not load (14-map-onboarding.js, the product modal in 07-product.js).
+if(typeof window.skhUpdateSellerSubmitLabel!=='function')window.skhUpdateSellerSubmitLabel=()=>{};
+if(typeof window.skhRenderProductMedia!=='function')window.skhRenderProductMedia=(pics)=>{const s=$('pmImageSlider');if(!s)return;s.innerHTML=(pics||[]).map(u=>'<img src="'+String(u)+'" alt="" style="width:100%">').join('');};
 populateFormCategories();
 const bar=document.createElement('aside');bar.id='previewNavigation';bar.style='position:sticky;top:0;z-index:99999;background:#edf8f2;padding:12px;border-bottom:1px solid #99bea9;display:flex;gap:8px;flex-wrap:wrap;color:#164c38';
 bar.innerHTML='<strong>LOCAL PRODUCT PREVIEW · mock cloud · session-only</strong><button id="previewSeller">Seller</button><button id="previewEdit">Edit last saved</button><button id="previewBuyer">Buyer: last saved</button><span id="previewStatus">No real uploads, accounts or orders.</span>';

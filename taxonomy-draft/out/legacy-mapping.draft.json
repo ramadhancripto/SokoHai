@@ -1,0 +1,3437 @@
+{
+ "advancedCategories": [
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-01",
+   "targetNodeId": "CAT-01",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-01"
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Grains & Cereals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-NAFAKA_UNGA_MIKUNDE",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Origin",
+    "Grade",
+    "Moisture",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Bag",
+    "Sack",
+    "Ton"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Cooking Oils",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-MAFUTA_COOKING_INGREDIENTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Volume",
+    "Type",
+    "Origin",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bottle",
+    "Tin",
+    "Drum",
+    "Litre"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Dairy Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-MAZIWA_DAIRY",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Volume",
+    "Fat Content",
+    "Expiry",
+    "Others"
+   ],
+   "stockTypes": [
+    "Packet",
+    "Bottle",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Snacks & Confectionery",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-SNACKS_SWEETS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Flavor",
+    "Weight",
+    "Expiry",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Sugar & Sweeteners",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-FOOD_INGREDIENTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Weight",
+    "Purity",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Bag",
+    "Sack"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Salt Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-FOOD_INGREDIENTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Weight",
+    "Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Bag"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Spices & Seasonings",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-VIUNGO",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Weight",
+    "Origin",
+    "Others"
+   ],
+   "stockTypes": [
+    "Pack",
+    "Kg",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Bakery Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-BAKERY",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Weight",
+    "Freshness",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Beverages",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-VINYWAJI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Volume",
+    "Flavor",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bottle",
+    "Can",
+    "Crate"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Meat Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-NYAMA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Weight",
+    "Freshness",
+    "Source",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Tray"
+   ]
+  },
+  {
+   "legacyCategory": "Vyakula na Vinywaji (Food)",
+   "legacySub": "Fish & Seafood",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-01-SAMAKI_SEAFOOD",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Weight",
+    "Freshness",
+    "Source",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Crate",
+    "Piece"
+   ]
+  },
+  {
+   "legacyCategory": "Kilimo (Agriculture)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-02",
+   "targetNodeId": "CAT-02",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-02"
+  },
+  {
+   "legacyCategory": "Kilimo (Agriculture)",
+   "legacySub": "Crop Production",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-03-AGRICULTURAL_BULK_COMMODITIES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Variety",
+    "Season",
+    "Moisture",
+    "Grade",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Bag",
+    "Sack",
+    "Ton"
+   ]
+  },
+  {
+   "legacyCategory": "Kilimo (Agriculture)",
+   "legacySub": "Seeds & Planting",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-02-MBEGU",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Variety",
+    "Germination Rate",
+    "Treatment",
+    "Others"
+   ],
+   "stockTypes": [
+    "Packet",
+    "Kg",
+    "Bag"
+   ]
+  },
+  {
+   "legacyCategory": "Kilimo (Agriculture)",
+   "legacySub": "Fertilizers",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-02-MBOLEA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "NPK Ratio",
+    "Weight",
+    "Form",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bag",
+    "Kg",
+    "Ton"
+   ]
+  },
+  {
+   "legacyCategory": "Kilimo (Agriculture)",
+   "legacySub": "Pesticides & Herbicides",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-02-DAWA_ZA_MIMEA_CROP_PROTECTION",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Active Ingredient",
+    "Volume",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bottle",
+    "Can",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Kilimo (Agriculture)",
+   "legacySub": "Farm Tools",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-02-ZANA_ZA_KILIMO",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Material",
+    "Size",
+    "Power Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Kilimo (Agriculture)",
+   "legacySub": "Irrigation Supplies",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-02-UMWAGILIAJI_WATER_MANAGEMENT",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Size",
+    "Material",
+    "Capacity",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Roll",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Ufugaji (Livestock)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-04",
+   "targetNodeId": "CAT-04",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-04"
+  },
+  {
+   "legacyCategory": "Ufugaji (Livestock)",
+   "legacySub": "Live Animals",
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetNodeId": "SC-CAT-04-NGOMBE",
+   "overlay": null,
+   "note": "NEEDS_HUMAN_DECISION: legacy haitaji spishi — default Ng'ombe ni pendekezo tu; seller athibitishe spishi.",
+   "filters": [
+    "Breed",
+    "Age",
+    "Weight",
+    "Gender",
+    "Health",
+    "Others"
+   ],
+   "stockTypes": [
+    "Head",
+    "Piece"
+   ]
+  },
+  {
+   "legacyCategory": "Ufugaji (Livestock)",
+   "legacySub": "Meat & Protein",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-04-NYAMA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Cut Type",
+    "Fresh/Frozen",
+    "Weight",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Tray"
+   ]
+  },
+  {
+   "legacyCategory": "Ufugaji (Livestock)",
+   "legacySub": "Dairy & Animal Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-04-MAZIWA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Volume",
+    "Fat Content",
+    "Brand",
+    "Expiry",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bottle",
+    "Packet",
+    "Tray"
+   ]
+  },
+  {
+   "legacyCategory": "Ufugaji (Livestock)",
+   "legacySub": "Animal Feed & Nutrition",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-04-LIVESTOCK_FEED",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Animal Type",
+    "Form",
+    "Weight",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bag",
+    "Kg",
+    "Sack"
+   ]
+  },
+  {
+   "legacyCategory": "Ufugaji (Livestock)",
+   "legacySub": "Poultry Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-04-KUKU",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Breed",
+    "Age",
+    "Health",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bird",
+    "Tray",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Ufugaji (Livestock)",
+   "legacySub": "Fish & Aquaculture",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-05-AQUACULTURE",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Weight",
+    "Source",
+    "Freshness",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Fingerling",
+    "Crate"
+   ]
+  },
+  {
+   "legacyCategory": "Afya na Pharmacy (Health)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-19",
+   "targetNodeId": "CAT-19",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Afya na Pharmacy (Health)",
+   "legacySub": "Medicines",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-19-DAWA_NA_MEDICINAL_PRODUCTS",
+   "overlay": null,
+   "note": "Regulated: REG-TMDA + REG-PHARMACY — bidhaa zilizopo zipitiwe kabla ya kuonekana.",
+   "filters": [
+    "Generic Name",
+    "Brand",
+    "Dosage",
+    "Form",
+    "Prescription",
+    "Others"
+   ],
+   "stockTypes": [
+    "Tablet",
+    "Bottle",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Afya na Pharmacy (Health)",
+   "legacySub": "Medical Supplies",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-19-MEDICAL_CONSUMABLES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Size",
+    "Sterility",
+    "Disposable",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Afya na Pharmacy (Health)",
+   "legacySub": "OTC Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-19-DAWA_NA_MEDICINAL_PRODUCTS",
+   "overlay": null,
+   "note": "Regulated (TMDA).",
+   "filters": [
+    "Brand",
+    "Usage",
+    "Form",
+    "Age Group",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Bottle",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Afya na Pharmacy (Health)",
+   "legacySub": "Veterinary Medicines",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-19-VETERINARY_HEALTH_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Animal Type",
+    "Dosage",
+    "Form",
+    "Others"
+   ],
+   "stockTypes": [
+    "Tablet",
+    "Bottle",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Afya na Pharmacy (Health)",
+   "legacySub": "Health Supplements",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-19-HEALTH_SUPPLEMENTS_NUTRITION_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Ingredient",
+    "Form",
+    "Target Group",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bottle",
+    "Box",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Afya na Pharmacy (Health)",
+   "legacySub": "Personal Health Care",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-19-PERSONAL_HEALTH_WELLNESS_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Purpose",
+    "Skin Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Bottle",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Mavazi na Fashoni (Fashion)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-07",
+   "targetNodeId": "CAT-07",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-07"
+  },
+  {
+   "legacyCategory": "Mavazi na Fashoni (Fashion)",
+   "legacySub": "Men's Wear",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-NGUO_ZA_KIUME",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Fit Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Bale"
+   ]
+  },
+  {
+   "legacyCategory": "Mavazi na Fashoni (Fashion)",
+   "legacySub": "Women's Wear",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-NGUO_ZA_KIKE",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Size",
+    "Color",
+    "Material",
+    "Style",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Bale"
+   ]
+  },
+  {
+   "legacyCategory": "Mavazi na Fashoni (Fashion)",
+   "legacySub": "Footwear",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-VIATU",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Shoe Size",
+    "Color",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Pair",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Mavazi na Fashoni (Fashion)",
+   "legacySub": "Kids & Baby Wear",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-NGUO_ZA_WATOTO",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Age Group",
+    "Size",
+    "Color",
+    "Material",
+    "Gender",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Vito na Saa (Luxury)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-07",
+   "targetNodeId": "CAT-07",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Vito na Saa (Luxury)",
+   "legacySub": "Jewelry",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-VITO_SAA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Purity",
+    "Weight",
+    "Gemstone",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Gram",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Vito na Saa (Luxury)",
+   "legacySub": "Watches",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-VITO_SAA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Movement",
+    "Water Resistance",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vito na Saa (Luxury)",
+   "legacySub": "Luxury Accessories",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-MIFUKO_FASHION_ACCESSORIES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Material",
+    "Gender",
+    "Authenticity",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vito na Saa (Luxury)",
+   "legacySub": "Precious Materials & Gems",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-43-CUT_POLISHED_GEMSTONES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Carat",
+    "Clarity",
+    "Certification",
+    "Others"
+   ],
+   "stockTypes": [
+    "Gram",
+    "Piece"
+   ]
+  },
+  {
+   "legacyCategory": "Electronics & Teknoloji (Tech)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-11",
+   "targetNodeId": "CAT-11",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-11"
+  },
+  {
+   "legacyCategory": "Electronics & Teknoloji (Tech)",
+   "legacySub": "Mobile Phones",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-12-SMARTPHONES",
+   "overlay": null,
+   "note": "Simu za kawaida zitahitaji kuhamishwa kwa mkono (seller confirm) — default Smartphones.",
+   "filters": [
+    "Brand",
+    "Model",
+    "RAM",
+    "Storage",
+    "Battery",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Electronics & Teknoloji (Tech)",
+   "legacySub": "Computers & Laptops",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-13-LAPTOPS",
+   "overlay": null,
+   "note": "Desktop → CAT-13 Desktop Computers kwa ukaguzi.",
+   "filters": [
+    "Brand",
+    "Processor",
+    "RAM",
+    "Storage",
+    "Graphics",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Electronics & Teknoloji (Tech)",
+   "legacySub": "TVs & Displays",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-11-TVS_HOME_ENTERTAINMENT",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Size",
+    "Resolution",
+    "Smart Features",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Electronics & Teknoloji (Tech)",
+   "legacySub": "Audio Devices",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-11-AUDIO_SPEAKERS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Type",
+    "Connectivity",
+    "Battery",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Electronics & Teknoloji (Tech)",
+   "legacySub": "Gaming Devices",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-47-MICHEZO_YA_VIDEO_CONSOLES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Console Type",
+    "Storage",
+    "Condition",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Electronics & Teknoloji (Tech)",
+   "legacySub": "Office Technology",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-11-OFFICE_ELECTRONICS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Type",
+    "Connectivity",
+    "Color Support",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Samani na Nyumbani (Home)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-09",
+   "targetNodeId": "CAT-09",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-09"
+  },
+  {
+   "legacyCategory": "Samani na Nyumbani (Home)",
+   "legacySub": "Furniture",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-09-SAMANI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Size",
+    "Color",
+    "Assembly Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Samani na Nyumbani (Home)",
+   "legacySub": "Bedroom Essentials",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-09-BEDROOM",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Size",
+    "Material",
+    "Thickness",
+    "Color",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Samani na Nyumbani (Home)",
+   "legacySub": "Kitchen & Dining",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-09-KITCHENWARE_TABLEWARE",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Capacity",
+    "Set Type",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Samani na Nyumbani (Home)",
+   "legacySub": "Home Appliances",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-11-HOME_APPLIANCES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Power",
+    "Capacity",
+    "Warranty",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Samani na Nyumbani (Home)",
+   "legacySub": "Home Decor",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-09-HOME_DECOR",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Style",
+    "Color",
+    "Material",
+    "Size",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Samani na Nyumbani (Home)",
+   "legacySub": "Storage & Organization",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-09-HOME_STORAGE_ORGANIZATION",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Size",
+    "Capacity",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Ujenzi na Hardware (Hardware)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-10",
+   "targetNodeId": "CAT-10",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-10"
+  },
+  {
+   "legacyCategory": "Ujenzi na Hardware (Hardware)",
+   "legacySub": "Building Materials",
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetNodeId": "SC-CAT-10-BRICKS_BLOCKS_MASONRY",
+   "overlay": null,
+   "note": "Jina pana — NEEDS_HUMAN_DECISION per product (bricks/roofing/timber).",
+   "filters": [
+    "Type",
+    "Grade",
+    "Dimensions",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Ton",
+    "Truck Load",
+    "Bag",
+    "Cubic Meter"
+   ]
+  },
+  {
+   "legacyCategory": "Ujenzi na Hardware (Hardware)",
+   "legacySub": "Cement & Concrete",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-10-CEMENT_LIME_BINDERS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Weight",
+    "Strength Grade",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bag",
+    "Ton"
+   ]
+  },
+  {
+   "legacyCategory": "Ujenzi na Hardware (Hardware)",
+   "legacySub": "Tools & Equipment",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-10-HAND_TOOLS",
+   "overlay": null,
+   "note": "Hand vs Power tools — seller confirm.",
+   "filters": [
+    "Brand",
+    "Power Type",
+    "Size",
+    "Warranty",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Ujenzi na Hardware (Hardware)",
+   "legacySub": "Electrical Supplies",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-10-ELECTRICAL_INSTALLATION_MATERIALS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Voltage",
+    "Type",
+    "Amperage",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Roll",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Ujenzi na Hardware (Hardware)",
+   "legacySub": "Plumbing Supplies",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-10-PLUMBING_WATER_SYSTEMS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Material",
+    "Size",
+    "Pressure",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Roll"
+   ]
+  },
+  {
+   "legacyCategory": "Ujenzi na Hardware (Hardware)",
+   "legacySub": "Paints & Chemicals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-10-PAINTS_COATINGS_FINISHES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Color",
+    "Volume",
+    "Finish",
+    "Others"
+   ],
+   "stockTypes": [
+    "Can",
+    "Bucket",
+    "Litre"
+   ]
+  },
+  {
+   "legacyCategory": "Magari na Vyombo (Automotive)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-14",
+   "targetNodeId": "CAT-14",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-14"
+  },
+  {
+   "legacyCategory": "Magari na Vyombo (Automotive)",
+   "legacySub": "Vehicles",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-14-MAGARI_MADOGO",
+   "overlay": null,
+   "note": "Aina ya gari (SUV/pickup/truck) — seller confirm.",
+   "filters": [
+    "Brand",
+    "Model",
+    "Year",
+    "Fuel Type",
+    "Transmission",
+    "Others"
+   ],
+   "stockTypes": [
+    "Unit"
+   ]
+  },
+  {
+   "legacyCategory": "Magari na Vyombo (Automotive)",
+   "legacySub": "Spare Parts",
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetNodeId": "SC-CAT-15-ENGINE_PARTS",
+   "overlay": null,
+   "note": "Jina pana — NEEDS_HUMAN_DECISION per product.",
+   "filters": [
+    "Car Model",
+    "Part Name",
+    "Part Number",
+    "OEM/Aftermarket",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Magari na Vyombo (Automotive)",
+   "legacySub": "Tyres & Wheels",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-15-WHEELS_TYRES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Size",
+    "Width",
+    "Brand",
+    "Vehicle Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pair",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Magari na Vyombo (Automotive)",
+   "legacySub": "Batteries & Electrical",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-15-STARTING_CHARGING",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Voltage",
+    "Capacity",
+    "Warranty",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Magari na Vyombo (Automotive)",
+   "legacySub": "Lubricants & Fluids",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-15-LUBRICATION",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Viscosity",
+    "Volume",
+    "Engine Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bottle",
+    "Litre",
+    "Can"
+   ]
+  },
+  {
+   "legacyCategory": "Vitabu na Elimu (Education)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-45",
+   "targetNodeId": "CAT-45",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Vitabu na Elimu (Education)",
+   "legacySub": "Books & Publications",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-45-VITABU_VISIVYO_VYA_HADITHI",
+   "overlay": null,
+   "note": "Vitabu vya kiada vibaki CAT-32 \"Books & Educational Publications\" — seller confirm.",
+   "filters": [
+    "Author",
+    "Publisher",
+    "Edition",
+    "Language",
+    "Subject",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vitabu na Elimu (Education)",
+   "legacySub": "School Supplies",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-32-CLASSROOM_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Age Group",
+    "Size",
+    "Color",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Vitabu na Elimu (Education)",
+   "legacySub": "Office Stationery",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-32-DESK_ACCESSORIES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Type",
+    "Color",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vitabu na Elimu (Education)",
+   "legacySub": "Printing & Paper Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-32-PAPER_PAPER_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Size",
+    "GSM",
+    "Quantity",
+    "Others"
+   ],
+   "stockTypes": [
+    "Pack",
+    "Box",
+    "Ream"
+   ]
+  },
+  {
+   "legacyCategory": "Vitabu na Elimu (Education)",
+   "legacySub": "Educational Tools",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-32-EDUCATIONAL_MATERIALS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Subject",
+    "Material",
+    "Age Group",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Michezo na Mazoezi (Sports)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-46",
+   "targetNodeId": "CAT-46",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Michezo na Mazoezi (Sports)",
+   "legacySub": "Sports Equipment",
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetNodeId": "SC-CAT-46-VIFAA_VYA_TIMU_KLABU",
+   "overlay": null,
+   "note": "Jina pana — NEEDS_HUMAN_DECISION (football/racket/...).",
+   "filters": [
+    "Sport Type",
+    "Size",
+    "Material",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Michezo na Mazoezi (Sports)",
+   "legacySub": "Fitness & Gym",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-46-GYM_MAZOEZI_YA_VIUNGO",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Weight",
+    "Resistance",
+    "Material",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pair"
+   ]
+  },
+  {
+   "legacyCategory": "Michezo na Mazoezi (Sports)",
+   "legacySub": "Outdoor & Camping",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-46-KAMBI_KUPANDA_MILIMA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Capacity",
+    "Waterproof",
+    "Material",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Michezo na Mazoezi (Sports)",
+   "legacySub": "Sportswear",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-07-SPORTSWEAR_ACTIVEWEAR",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Size",
+    "Gender",
+    "Material",
+    "Brand",
+    "Sport Type",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pair"
+   ]
+  },
+  {
+   "legacyCategory": "Michezo na Mazoezi (Sports)",
+   "legacySub": "Accessories",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-46-VIFAA_VYA_TIMU_KLABU",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Brand",
+    "Type",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Vichezeo na Michezo (Toys)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-47",
+   "targetNodeId": "CAT-47",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Vichezeo na Michezo (Toys)",
+   "legacySub": "Toys",
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetNodeId": "SC-CAT-47-VICHEZEO_VYA_KIELIMU_STEM",
+   "overlay": null,
+   "note": "Jina pana — NEEDS_HUMAN_DECISION per product.",
+   "filters": [
+    "Age Group",
+    "Material",
+    "Battery Operated",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vichezeo na Michezo (Toys)",
+   "legacySub": "Games",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-47-MICHEZO_YA_BODI_KADI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Players Count",
+    "Age Group",
+    "Game Type",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Vichezeo na Michezo (Toys)",
+   "legacySub": "Puzzles & Brain Games",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-47-MAFUMBO",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Piece Count",
+    "Difficulty",
+    "Age Group",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Vichezeo na Michezo (Toys)",
+   "legacySub": "Collectibles & Models",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-47-VITU_VYA_MKUSANYIKO_MODELI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Scale Size",
+    "Material",
+    "Brand",
+    "Condition",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vichezeo na Michezo (Toys)",
+   "legacySub": "Creative Kits",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-47-UBUNIFU_UFUNDI_WA_WATOTO",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Skill Level",
+    "Material",
+    "Age Group",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Sauti na Muziki (Music)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-27",
+   "targetNodeId": "CAT-27",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Sauti na Muziki (Music)",
+   "legacySub": "Musical Instruments",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-VYOMBO_VYA_MUZIKI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Size",
+    "Material",
+    "Brand",
+    "Skill Level",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Sauti na Muziki (Music)",
+   "legacySub": "Audio Systems",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-11-AUDIO_SPEAKERS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Power Output",
+    "Connectivity",
+    "Channel Type",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Sauti na Muziki (Music)",
+   "legacySub": "Studio & Recording",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-37-AUDIO_RECORDING_EQUIPMENT",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Frequency",
+    "Connectivity",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Sauti na Muziki (Music)",
+   "legacySub": "DJ Equipment",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-VYOMBO_VYA_MUZIKI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Channels",
+    "Connectivity",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Sanaa na Ubunifu (Arts)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-27",
+   "targetNodeId": "CAT-27",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Sanaa na Ubunifu (Arts)",
+   "legacySub": "Drawing & Painting",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-MICHORO_PAINTINGS",
+   "overlay": null,
+   "note": "Inaweza kuwa vifaa (materials) badala ya kazi ya sanaa — seller confirm.",
+   "filters": [
+    "Medium",
+    "Brand",
+    "Size",
+    "Quality",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Sanaa na Ubunifu (Arts)",
+   "legacySub": "Craft Materials",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-ART_MATERIALS_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Color",
+    "Size",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Roll"
+   ]
+  },
+  {
+   "legacyCategory": "Sanaa na Ubunifu (Arts)",
+   "legacySub": "Art Tools",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-ART_MATERIALS_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Tool Type",
+    "Material",
+    "Size",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Sanaa na Ubunifu (Arts)",
+   "legacySub": "DIY Kits",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-ART_COLLECTIONS_SETS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Skill Level",
+    "Age Group",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Sanaa na Ubunifu (Arts)",
+   "legacySub": "Decorative",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-HANDMADE_CREATIVE_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Size",
+    "Theme",
+    "Handmade",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Dini na Utamaduni (Religion)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-28",
+   "targetNodeId": "CAT-28",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Dini na Utamaduni (Religion)",
+   "legacySub": "Religious Books",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-45-VITABU_VYA_DINI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Religion",
+    "Language",
+    "Publisher",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Dini na Utamaduni (Religion)",
+   "legacySub": "Worship Items",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-28-BIDHAA_ZA_DINI_IBADA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Religion",
+    "Material",
+    "Size",
+    "Handmade",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Dini na Utamaduni (Religion)",
+   "legacySub": "Clothing & Accessories",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-28-BIDHAA_ZA_DINI_IBADA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Religion",
+    "Gender",
+    "Size",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Pair"
+   ]
+  },
+  {
+   "legacyCategory": "Dini na Utamaduni (Religion)",
+   "legacySub": "Ritual & Ceremonial",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-28-MASKS_CEREMONIAL_OBJECTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Culture",
+    "Material",
+    "Usage",
+    "Handmade",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Dini na Utamaduni (Religion)",
+   "legacySub": "Cultural Artifacts",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-28-COLLECTIBLE_HERITAGE_ITEMS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Culture",
+    "Material",
+    "Age",
+    "Handmade",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Zawadi na Sherehe (Gifts)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-29",
+   "targetNodeId": "CAT-29",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Zawadi na Sherehe (Gifts)",
+   "legacySub": "Gifts",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-29-ZAWADI_MAUA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Occasion",
+    "Gender",
+    "Age Group",
+    "Personalization",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Zawadi na Sherehe (Gifts)",
+   "legacySub": "Flowers",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-29-ZAWADI_MAUA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Flower Type",
+    "Color",
+    "Size",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Bouquet",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Zawadi na Sherehe (Gifts)",
+   "legacySub": "Party Supplies",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-29-PARTY_DECORATIONS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Occasion",
+    "Color",
+    "Material",
+    "Quantity",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Zawadi na Sherehe (Gifts)",
+   "legacySub": "Celebration Decorations",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-29-PARTY_DECORATIONS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Event Type",
+    "Material",
+    "Size",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Zawadi na Sherehe (Gifts)",
+   "legacySub": "Greeting Cards",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-29-ZAWADI_MAUA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Occasion",
+    "Language",
+    "Customizable",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Pet Products (Pet)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-31",
+   "targetNodeId": "CAT-31",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-31"
+  },
+  {
+   "legacyCategory": "Pet Products (Pet)",
+   "legacySub": "Pet Food",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-31-PET_FOOD",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Animal Type",
+    "Age Stage",
+    "Brand",
+    "Weight",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Packet",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Pet Products (Pet)",
+   "legacySub": "Pet Health",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-31-PET_HEALTH_PRODUCTS_NON_MEDICINE",
+   "overlay": null,
+   "note": "Dawa za wanyama → CAT-19 Veterinary Health Products (REG-TMDA) — seller confirm.",
+   "filters": [
+    "Animal Type",
+    "Usage",
+    "Prescription",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Bottle",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Pet Products (Pet)",
+   "legacySub": "Pet Accessories",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-31-COLLARS_LEASHES_HARNESSES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Animal Type",
+    "Size",
+    "Material",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Pet Products (Pet)",
+   "legacySub": "Pet Housing",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-31-KENNELS_CAGES_ENCLOSURES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Animal Type",
+    "Size",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Pet Products (Pet)",
+   "legacySub": "Live Pets",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-31-PETS_COMPANION_ANIMALS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Animal Type",
+    "Breed",
+    "Age",
+    "Gender",
+    "Health",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece"
+   ]
+  },
+  {
+   "legacyCategory": "Vifungashio na Printi (Packaging)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-49",
+   "targetNodeId": "CAT-49",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Vifungashio na Printi (Packaging)",
+   "legacySub": "Packaging Materials",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-49-MIFUKO_YA_KUFUNGASHIA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Size",
+    "Thickness",
+    "Recyclable",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Box",
+    "Roll"
+   ]
+  },
+  {
+   "legacyCategory": "Vifungashio na Printi (Packaging)",
+   "legacySub": "Printing Materials",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-37-PRINTED_MARKETING_MATERIALS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Printing Type",
+    "Size",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Pack",
+    "Box",
+    "Roll"
+   ]
+  },
+  {
+   "legacyCategory": "Vifungashio na Printi (Packaging)",
+   "legacySub": "Labelling & Branding",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-37-LABELS_STICKERS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Label Type",
+    "Adhesive",
+    "Waterproof",
+    "Customizable",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pack",
+    "Roll"
+   ]
+  },
+  {
+   "legacyCategory": "Vifungashio na Printi (Packaging)",
+   "legacySub": "Packaging Machines",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-49-MASHINE_ZA_KUFUNGASHIA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Power Type",
+    "Capacity",
+    "Speed",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Vifungashio na Printi (Packaging)",
+   "legacySub": "Industrial Wrapping",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-49-VIFAA_VYA_KUFUNGA_KULINDA",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Thickness",
+    "Size",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Roll"
+   ]
+  },
+  {
+   "legacyCategory": "Ulinzi na Usalama (Safety)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-36",
+   "targetNodeId": "CAT-36",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-36"
+  },
+  {
+   "legacyCategory": "Ulinzi na Usalama (Safety)",
+   "legacySub": "Personal Safety",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-36-PERSONAL_SECURITY_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Protection Level",
+    "Material",
+    "Size",
+    "Certification",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pair",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Ulinzi na Usalama (Safety)",
+   "legacySub": "Home Security",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-36-ALARM_SYSTEMS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "System Type",
+    "Connectivity",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Ulinzi na Usalama (Safety)",
+   "legacySub": "Surveillance",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-36-CCTV_VIDEO_SURVEILLANCE",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Resolution",
+    "Night Vision",
+    "Connectivity",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Ulinzi na Usalama (Safety)",
+   "legacySub": "Fire Safety",
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetNodeId": "SC-CAT-33-VIFAA_VYA_USALAMA_KAZINI_VIWANDANI",
+   "overlay": null,
+   "note": "NEEDS_HUMAN_DECISION: CAT-36 haina leaf ya Fire Safety; pendekezo ni kuongeza leaf \"Fire Safety\" CAT-36 badala ya CAT-33.",
+   "filters": [
+    "Fire Class",
+    "Capacity",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box"
+   ]
+  },
+  {
+   "legacyCategory": "Ulinzi na Usalama (Safety)",
+   "legacySub": "Security Tools",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-36-SECURITY_ACCESSORIES_CONSUMABLES",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Lock Type",
+    "Material",
+    "Brand",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Biashara ya Jumla (Wholesale)",
+   "legacySub": null,
+   "action": "LEGACY_ALIAS",
+   "targetCategory": "@saleMode",
+   "targetNodeId": null,
+   "overlay": "CAT-40",
+   "currentBrowserMapping": "CAT-40"
+  },
+  {
+   "legacyCategory": "Biashara ya Jumla (Wholesale)",
+   "legacySub": "Bulk Food",
+   "action": "LEGACY_ALIAS",
+   "targetNodeId": null,
+   "overlay": "@saleMode=wholesale + CAT-01",
+   "note": null,
+   "filters": [
+    "Unit Type",
+    "Weight",
+    "Grade",
+    "Origin",
+    "Others"
+   ],
+   "stockTypes": [
+    "Sack",
+    "Bag",
+    "Ton"
+   ]
+  },
+  {
+   "legacyCategory": "Biashara ya Jumla (Wholesale)",
+   "legacySub": "Industrial Bulk",
+   "action": "LEGACY_ALIAS",
+   "targetNodeId": null,
+   "overlay": "@saleMode=bulk + NEEDS_HUMAN_DECISION",
+   "note": null,
+   "filters": [
+    "Measurement",
+    "Weight",
+    "Grade",
+    "Industry",
+    "Others"
+   ],
+   "stockTypes": [
+    "Ton",
+    "Bag",
+    "Truck Load"
+   ]
+  },
+  {
+   "legacyCategory": "Maagizo ya Nje (Import/Export)",
+   "legacySub": null,
+   "action": "LEGACY_ALIAS",
+   "targetCategory": "@tradeOrigin",
+   "targetNodeId": null,
+   "overlay": "CAT-41",
+   "currentBrowserMapping": "CAT-41"
+  },
+  {
+   "legacyCategory": "Maagizo ya Nje (Import/Export)",
+   "legacySub": "Container Goods",
+   "action": "LEGACY_ALIAS",
+   "targetNodeId": null,
+   "overlay": "@tradeOrigin=imported + NEEDS_HUMAN_DECISION",
+   "note": null,
+   "filters": [
+    "Country",
+    "Container Type",
+    "Duty Status",
+    "Others"
+   ],
+   "stockTypes": [
+    "Container",
+    "Pallet",
+    "Crate"
+   ]
+  },
+  {
+   "legacyCategory": "Vitu vya Kale na Thamani (Antiques)",
+   "legacySub": null,
+   "action": "MAP",
+   "targetCategory": "CAT-27",
+   "targetNodeId": "CAT-27",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Vitu vya Kale na Thamani (Antiques)",
+   "legacySub": "Antiques",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-27-VITU_VYA_KALE_MIKUSANYIKO_YA_THAMANI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Age",
+    "Rarity",
+    "Origin",
+    "Condition",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Mchanganyiko (General Merchandise)",
+   "legacySub": null,
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetCategory": "CAT-44",
+   "targetNodeId": "CAT-44",
+   "overlay": null,
+   "currentBrowserMapping": null
+  },
+  {
+   "legacyCategory": "Mchanganyiko (General Merchandise)",
+   "legacySub": "Mixed Retail",
+   "action": "NEEDS_HUMAN_DECISION",
+   "targetNodeId": "OTHER-SC-CAT-44",
+   "overlay": null,
+   "note": "Kila bidhaa ipangwe upya na seller/admin; inabaki kuonekana kwa alias.",
+   "filters": [
+    "Category",
+    "Brand",
+    "Usage",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Box",
+    "Pack"
+   ]
+  },
+  {
+   "legacyCategory": "Asili na Utamaduni (Traditional)",
+   "legacySub": null,
+   "action": "SPLIT",
+   "targetCategory": "CAT-28",
+   "targetNodeId": "CAT-28",
+   "overlay": null,
+   "currentBrowserMapping": "CAT-28"
+  },
+  {
+   "legacyCategory": "Asili na Utamaduni (Traditional)",
+   "legacySub": "Traditional Furniture",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-09-HANDMADE_TRADITIONAL_HOME_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Aina ya Mbao",
+    "Size",
+    "Handmade",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Asili na Utamaduni (Traditional)",
+   "legacySub": "Honey & Bee Products",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-04-NYUKI_UFUGAJI_WA_NYUKI",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Aina ya Asali",
+    "Origin",
+    "Weight",
+    "Organic",
+    "Others"
+   ],
+   "stockTypes": [
+    "Bottle",
+    "Kg",
+    "Tin"
+   ]
+  },
+  {
+   "legacyCategory": "Asili na Utamaduni (Traditional)",
+   "legacySub": "Traditional Farm",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-28-TRADITIONAL_AGRICULTURAL_RURAL_TOOLS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Origin",
+    "Msimu",
+    "Organic",
+    "Weight",
+    "Others"
+   ],
+   "stockTypes": [
+    "Kg",
+    "Bag",
+    "Sack"
+   ]
+  },
+  {
+   "legacyCategory": "Asili na Utamaduni (Traditional)",
+   "legacySub": "Handicrafts",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-28-INDIGENOUS_NATURAL_CRAFT_PRODUCTS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Material",
+    "Origin",
+    "Handmade",
+    "Size",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Set"
+   ]
+  },
+  {
+   "legacyCategory": "Asili na Utamaduni (Traditional)",
+   "legacySub": "Building Materials",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-06-THATCH_NATURAL_ROOFING_MATERIALS",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Length",
+    "Weight",
+    "Origin",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Roll",
+    "Truck Load"
+   ]
+  },
+  {
+   "legacyCategory": "Asili na Utamaduni (Traditional)",
+   "legacySub": "Cultural Wear",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-28-NGUO_ZA_JADI_TRADITIONAL_WEAR",
+   "overlay": null,
+   "note": null,
+   "filters": [
+    "Type",
+    "Gender",
+    "Material",
+    "Others"
+   ],
+   "stockTypes": [
+    "Piece",
+    "Pair",
+    "Set"
+   ]
+  }
+ ],
+ "serviceDataMap": [
+  {
+   "group": "physical",
+   "legacyCategory": "Home & Personal",
+   "legacySub": "Cleaning Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-USAFI_WA_NYUMBA",
+   "filters": [
+    "Type of cleaning",
+    "House size (rooms)",
+    "Frequency (daily/weekly)"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Home & Personal",
+   "legacySub": "Beauty & Grooming",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-UREMBO_UNYOAJI",
+   "filters": [
+    "Service type",
+    "Gender",
+    "Location (home/salon)"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Home & Personal",
+   "legacySub": "Laundry Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-KUFUA_LAUNDRY",
+   "filters": [
+    "Weight (kg)",
+    "Type of clothes",
+    "Pickup & delivery"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Home & Personal",
+   "legacySub": "Home Cooking",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-UPISHI_WA_NYUMBANI_MPISHI_BINAFSI",
+   "filters": [
+    "Number of people",
+    "Menu type",
+    "Cooking location"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Home & Personal",
+   "legacySub": "Home Maintenance",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UJENZI_UKARABATI_WA_MAJENGO",
+   "filters": [
+    "Problem type",
+    "Urgency level",
+    "Tools required"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Home & Personal",
+   "legacySub": "Personal Care",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-UREMBO_UNYOAJI",
+   "filters": [
+    "Age group",
+    "Duration",
+    "Special needs"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Construction & Handyman",
+   "legacySub": "Building Construction",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UJENZI_UKARABATI_WA_MAJENGO",
+   "filters": [
+    "Project type",
+    "Size of building",
+    "Materials included"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Construction & Handyman",
+   "legacySub": "Electrical Installation",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UMEME_WA_MAJENGO",
+   "filters": [
+    "Type of electrical work",
+    "House size",
+    "Safety inspection needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Construction & Handyman",
+   "legacySub": "Plumbing Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-BOMBA_MAJI",
+   "filters": [
+    "Problem type",
+    "Water system type",
+    "Materials included"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Construction & Handyman",
+   "legacySub": "Carpentry & Furniture",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-USEREMALA_SAMANI",
+   "filters": [
+    "Custom design",
+    "Material type",
+    "Size"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Construction & Handyman",
+   "legacySub": "Painting & Finishing",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-RANGI_FINISHING",
+   "filters": [
+    "Area size (m²)",
+    "Paint type",
+    "Interior/exterior"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Construction & Handyman",
+   "legacySub": "General Repairs",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UJENZI_UKARABATI_WA_MAJENGO",
+   "filters": [
+    "Type of repair",
+    "Urgency level",
+    "Parts required"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Construction & Handyman",
+   "legacySub": "Welding & Metal Works",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UCHOMELEAJI_CHUMA",
+   "filters": [
+    "Material type",
+    "Design complexity",
+    "Installation needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Cleaning & Maintenance",
+   "legacySub": "House Cleaning",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-USAFI_WA_NYUMBA",
+   "filters": [
+    "Number of rooms",
+    "Frequency",
+    "Deep cleaning",
+    "Materials provided"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Cleaning & Maintenance",
+   "legacySub": "Office Cleaning",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-USAFI_WA_OFISI_BIASHARA",
+   "filters": [
+    "Office size",
+    "Number of rooms",
+    "Working hours"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Cleaning & Maintenance",
+   "legacySub": "Vehicle Cleaning",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-KUOSHA_MAGARI",
+   "filters": [
+    "Vehicle type",
+    "Wash type",
+    "Location"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Cleaning & Maintenance",
+   "legacySub": "Deep Cleaning",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-USAFI_WA_NYUMBA",
+   "filters": [
+    "Area size",
+    "Dirt level",
+    "Chemicals required"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Cleaning & Maintenance",
+   "legacySub": "Pest Control",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-KUDHIBITI_WADUDU",
+   "filters": [
+    "Type of pest",
+    "Area size",
+    "Frequency",
+    "Safety precautions"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Cleaning & Maintenance",
+   "legacySub": "Outdoor Maintenance",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-BUSTANI_MANDHARI",
+   "filters": [
+    "Area size",
+    "Frequency",
+    "Tools provided",
+    "Waste disposal"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Event & Entertainment",
+   "legacySub": "Event Planning",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-KUPANGA_MATUKIO",
+   "filters": [
+    "Event type",
+    "Guest count",
+    "Location",
+    "Budget range"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Event & Entertainment",
+   "legacySub": "DJ & Music",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-MC_DJ_MUZIKI",
+   "filters": [
+    "Event type",
+    "Duration (hours)",
+    "Music genre",
+    "Equipment provided"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Event & Entertainment",
+   "legacySub": "Sound Systems",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-KUKODISHA_VIFAA_VYA_MATUKIO",
+   "filters": [
+    "Event size",
+    "Indoor/outdoor",
+    "Technician needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Event & Entertainment",
+   "legacySub": "Decoration Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-KUPANGA_MATUKIO",
+   "filters": [
+    "Theme type",
+    "Venue size",
+    "Color scheme"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Event & Entertainment",
+   "legacySub": "Photography & Video",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-PICHA_VIDEO_ZA_MATUKIO",
+   "filters": [
+    "Event duration",
+    "Number of photographers",
+    "Editing required"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Event & Entertainment",
+   "legacySub": "MC / Host Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-MC_DJ_MUZIKI",
+   "filters": [
+    "Event type",
+    "Language preference",
+    "Duration"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Event & Entertainment",
+   "legacySub": "Entertainment Performers",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-MC_DJ_MUZIKI",
+   "filters": [
+    "Performance type",
+    "Duration",
+    "Audience size"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Tech & Repair",
+   "legacySub": "Phone Repair",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UKARABATI_WA_SIMU",
+   "filters": [
+    "Phone brand/model",
+    "Problem type",
+    "Spare parts needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Tech & Repair",
+   "legacySub": "Computer Repair",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UKARABATI_WA_KOMPYUTA_PRINTA",
+   "filters": [
+    "Device type",
+    "Problem category",
+    "Onsite/offsite"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Tech & Repair",
+   "legacySub": "Network Setup",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-MITANDAO_CCTV",
+   "filters": [
+    "Location size",
+    "Number of devices",
+    "Speed requirements"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Tech & Repair",
+   "legacySub": "Electronics Repair",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UKARABATI_WA_ELECTRONICS_VIFAA_VYA_NYUMBANI",
+   "filters": [
+    "Device type",
+    "Fault description",
+    "Warranty needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Tech & Repair",
+   "legacySub": "Printer Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-UKARABATI_WA_KOMPYUTA_PRINTA",
+   "filters": [
+    "Machine type",
+    "Error type",
+    "Replacement parts needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Tech & Repair",
+   "legacySub": "CCTV Systems",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-MITANDAO_CCTV",
+   "filters": [
+    "Number of cameras",
+    "Indoor/outdoor",
+    "Remote access needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Industrial Support",
+   "legacySub": "Machine Maintenance",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-MASHINE_VIWANDA",
+   "filters": [
+    "Machine type",
+    "Industry type",
+    "Downtime urgency"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Industrial Support",
+   "legacySub": "Industrial Installation",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-MASHINE_VIWANDA",
+   "filters": [
+    "Plant size",
+    "Machine complexity",
+    "Installation timeline"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Industrial Support",
+   "legacySub": "Warehouse Support",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-16-UHIFADHI_MAGHALA",
+   "filters": [
+    "Warehouse size",
+    "Type of goods",
+    "Staff required"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Industrial Support",
+   "legacySub": "Logistics Handling",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-16-UHIFADHI_MAGHALA",
+   "filters": [
+    "Load weight",
+    "Transport type",
+    "Distance"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Industrial Support",
+   "legacySub": "Quality Control",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-18-MASHINE_VIWANDA",
+   "filters": [
+    "Product type",
+    "Inspection depth",
+    "Certification needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Industrial Support",
+   "legacySub": "Heavy Equipment",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-16-KUKODISHA_MAGARI_MASHINE",
+   "filters": [
+    "Equipment type",
+    "Job size",
+    "Operator required"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Agriculture Support",
+   "legacySub": "Farm Preparation",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-USHAURI_WA_KILIMO_MIFUGO",
+   "filters": [
+    "Farm size",
+    "Type of land",
+    "Equipment needed"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Agriculture Support",
+   "legacySub": "Crop Production",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-USHAURI_WA_KILIMO_MIFUGO",
+   "filters": [
+    "Crop type",
+    "Growth stage",
+    "Pest type"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Agriculture Support",
+   "legacySub": "Irrigation Systems",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-USHAURI_WA_KILIMO_MIFUGO",
+   "filters": [
+    "Farm size",
+    "Water source",
+    "System type"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Agriculture Support",
+   "legacySub": "Livestock Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-USHAURI_WA_KILIMO_MIFUGO",
+   "filters": [
+    "Animal type",
+    "Herd size",
+    "Disease issue"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Agriculture Support",
+   "legacySub": "Agricultural Advisory",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-USHAURI_WA_KILIMO_MIFUGO",
+   "filters": [
+    "Farm goal",
+    "Crop type",
+    "Soil condition"
+   ]
+  },
+  {
+   "group": "physical",
+   "legacyCategory": "Agriculture Support",
+   "legacySub": "Post-Harvest Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-USHAURI_WA_KILIMO_MIFUGO",
+   "filters": [
+    "Crop type",
+    "Quantity",
+    "Storage duration"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Creative Freelancing",
+   "legacySub": "Graphic Design",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-UBUNIFU_MEDIA",
+   "filters": [
+    "Design type",
+    "Purpose",
+    "File format"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Creative Freelancing",
+   "legacySub": "Video Production",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-UBUNIFU_MEDIA",
+   "filters": [
+    "Video length",
+    "Platform",
+    "Style"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Creative Freelancing",
+   "legacySub": "Photography",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-UBUNIFU_MEDIA",
+   "filters": [
+    "Event type",
+    "Number of photos",
+    "Editing level"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Creative Freelancing",
+   "legacySub": "Content Writing",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-UBUNIFU_MEDIA",
+   "filters": [
+    "Topic",
+    "Word count",
+    "Tone"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Creative Freelancing",
+   "legacySub": "Web & App Design",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-IT_SOFTWARE_WEB",
+   "filters": [
+    "Project type",
+    "Number of pages",
+    "Features required"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Creative Freelancing",
+   "legacySub": "Social Media Management",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-UBUNIFU_MEDIA",
+   "filters": [
+    "Platform",
+    "Posting frequency",
+    "Ad budget"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Creative Freelancing",
+   "legacySub": "Digital AI Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-IT_SOFTWARE_WEB",
+   "filters": [
+    "Use case",
+    "Platform integration",
+    "Complexity level"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Software & IT",
+   "legacySub": "Web & App Dev",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-IT_SOFTWARE_WEB",
+   "filters": [
+    "Project type",
+    "Programming language",
+    "Required skills"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Digital Marketing",
+   "legacySub": "Campaigns",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-UBUNIFU_MEDIA",
+   "filters": [
+    "Platform",
+    "Campaign duration",
+    "Target audience"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Writing & Translation",
+   "legacySub": "Languages",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-TAFSIRI_UANDISHI",
+   "filters": [
+    "Topic",
+    "Word count",
+    "Languages"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Media Production",
+   "legacySub": "Editing",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-UBUNIFU_MEDIA",
+   "filters": [
+    "Video length",
+    "Platform",
+    "Style"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "AI Services",
+   "legacySub": "Prompt Engineering",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-IT_SOFTWARE_WEB",
+   "filters": [
+    "Use case",
+    "Platform integration",
+    "Complexity level"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Virtual Business",
+   "legacySub": "Office Support",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-MSAADA_WA_OFISI",
+   "filters": [
+    "Task type",
+    "Work hours",
+    "Remote/onsite"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Online Coaching",
+   "legacySub": "Coaching & Lessons",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-20-TUITION_MASOMO_YA_ZIADA",
+   "filters": [
+    "Session Type",
+    "Subject",
+    "Duration"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Website Services",
+   "legacySub": "Site Setup",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-IT_SOFTWARE_WEB",
+   "filters": [
+    "Project type",
+    "Number of pages",
+    "Features required"
+   ]
+  },
+  {
+   "group": "online",
+   "legacyCategory": "Remote Support",
+   "legacySub": "Tech Help",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-21-IT_SOFTWARE_WEB",
+   "filters": [
+    "Technical Support",
+    "Software Troubleshooting",
+    "Device Configuration"
+   ]
+  },
+  {
+   "group": "food",
+   "legacyCategory": "Food Services",
+   "legacySub": "Restaurants Food",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-25-MIGAHAWA",
+   "filters": [
+    "Restaurant type",
+    "Menu items",
+    "Serving size"
+   ]
+  },
+  {
+   "group": "food",
+   "legacyCategory": "Food Services",
+   "legacySub": "Catering Services",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-25-CATERING_YA_MATUKIO",
+   "filters": [
+    "Event type",
+    "Number of guests",
+    "Menu selection"
+   ]
+  },
+  {
+   "group": "food",
+   "legacyCategory": "Food Services",
+   "legacySub": "Street Food",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-25-CHAKULA_CHA_MTAANI",
+   "filters": [
+    "Food type",
+    "Portion size",
+    "Location"
+   ]
+  },
+  {
+   "group": "food",
+   "legacyCategory": "Food Services",
+   "legacySub": "Personal Chef",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-UPISHI_WA_NYUMBANI_MPISHI_BINAFSI",
+   "filters": [
+    "Service duration",
+    "Meal plan type",
+    "Number of people"
+   ]
+  },
+  {
+   "group": "food",
+   "legacyCategory": "Food Services",
+   "legacySub": "Food Delivery",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-25-DELIVERY_YA_CHAKULA",
+   "filters": [
+    "Pickup location",
+    "Delivery location",
+    "Urgency"
+   ]
+  },
+  {
+   "group": "food",
+   "legacyCategory": "Food Services",
+   "legacySub": "Meal Prep Plans",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-17-UPISHI_WA_NYUMBANI_MPISHI_BINAFSI",
+   "filters": [
+    "Goal",
+    "Calories target",
+    "Duration plan"
+   ]
+  },
+  {
+   "group": "rental",
+   "legacyCategory": "Rental Services",
+   "legacySub": "Property Rentals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-24-NYUMBA_ZA_KUKAA_MUDA_MFUPI",
+   "filters": [
+    "Property type",
+    "Location",
+    "Size",
+    "Duration"
+   ]
+  },
+  {
+   "group": "rental",
+   "legacyCategory": "Rental Services",
+   "legacySub": "Vehicle Rentals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-16-KUKODISHA_MAGARI_MASHINE",
+   "filters": [
+    "Vehicle type",
+    "Fuel policy",
+    "Driver included"
+   ]
+  },
+  {
+   "group": "rental",
+   "legacyCategory": "Rental Services",
+   "legacySub": "Equipment Rentals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-16-KUKODISHA_MAGARI_MASHINE",
+   "filters": [
+    "Equipment type",
+    "Power capacity",
+    "Duration"
+   ]
+  },
+  {
+   "group": "rental",
+   "legacyCategory": "Rental Services",
+   "legacySub": "Event Rentals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-KUKODISHA_VIFAA_VYA_MATUKIO",
+   "filters": [
+    "Event type",
+    "Guest size",
+    "Setup needed"
+   ]
+  },
+  {
+   "group": "rental",
+   "legacyCategory": "Rental Services",
+   "legacySub": "Agricultural Rentals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-16-KUKODISHA_MAGARI_MASHINE",
+   "filters": [
+    "Farm size",
+    "Crop type",
+    "Duration"
+   ]
+  },
+  {
+   "group": "rental",
+   "legacyCategory": "Rental Services",
+   "legacySub": "Furniture Rentals",
+   "action": "MAP",
+   "targetNodeId": "SC-CAT-26-KUKODISHA_VIFAA_VYA_MATUKIO",
+   "filters": [
+    "Item type",
+    "Condition",
+    "Duration"
+   ]
+  }
+ ]
+}

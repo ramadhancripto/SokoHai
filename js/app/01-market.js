@@ -732,15 +732,10 @@ window.payForBoost = async function() {
         btn.innerHTML = " INABOOST (FREE)...";
         btn.disabled = true;
         try {
-            const ref = skh.doc(skh.db, skh.activeBoostItem.collectionName, skh.activeBoostItem.id);
-            await skh.updateDoc(ref, { 
-                isBoosted: true, 
-                boostTargetViews: targetViews,
-                boostedViewsCount: 0,
-                boostDays: boostDays,
-                boostedAt: boostStart.toISOString(),
-                boostExpiresAt: boostExpiresAt
-            });
+            // [REPAIR 2026-10] Boost (hata FREE MODE) inaamilishwa na SERVER, ambayo
+            // inakagua swichi ya ada na umiliki wa tangazo.
+            await skh.wrapCallable('entitlementGrant')({ kind: 'boost', collectionName: skh.activeBoostItem.collectionName,
+                itemId: skh.activeBoostItem.id, targetViews: targetViews, boostDays: boostDays });
             // Accounting is server-authoritative; no client adminRevenue write.
 
             alert(" Ada ya BOOST imezimwa (FREE MODE)! Tangazo lako limekuwa Boosted BURE.");

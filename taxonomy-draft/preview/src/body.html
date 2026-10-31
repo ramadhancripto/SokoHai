@@ -1,0 +1,95 @@
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>Soko<span>Hai</span></b><small>Taxonomy &amp; Seller Builder</small><span class="draftpill" title="Data kutoka taxonomy-draft; hakuna Firebase">Rasimu · Preview ya ndani</span></div>
+    <nav class="tabs" aria-label="Sehemu za preview">
+      <a href="#builder" data-view="builder">1 · Seller Builder</a>
+      <a href="#stock" data-view="stock">2 · Stock &amp; Reservation</a>
+      <a href="#explorer" data-view="explorer">3 · Taxonomy Explorer</a>
+      <a href="#info" data-view="info">4 · Taarifa za Bidhaa</a>
+      <a href="#proposals" data-view="proposals">5 · Other / Mapendekezo</a>
+      <a href="#admin" data-view="admin">6 · Admin</a>
+      <a href="#flow" data-view="flow">7 · Maamuzi &amp; Awamu</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="view-builder" aria-labelledby="h-builder">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><h1 id="h-builder">Seller Product / Service Builder</h1>
+        <p class="lede">Mlango mmoja wa bidhaa na huduma. Hatua zisizohusika zinarukwa. Chagua biashara ya mfano au anza mwenyewe.</p></div>
+      <div class="row"><span class="small muted">Mwonekano:</span>
+        <div class="seg" role="group" aria-label="Ukubwa wa skrini"><button type="button" id="vw-desktop" aria-pressed="true">Desktop</button><button type="button" id="vw-phone" aria-pressed="false">Simu</button></div>
+        <button type="button" class="btn sm" id="b-reset">Anza upya</button></div>
+    </div>
+    <div class="scen" id="scenarios" role="group" aria-label="Mifano ya kujaribu"></div>
+    <div id="builderFrame" style="margin-top:12px">
+      <div class="builder">
+        <ol class="steps" id="steps" aria-label="Hatua za fomu"></ol>
+        <div class="panel stack" id="stepPanel" aria-live="polite"></div>
+        <aside class="side" aria-label="Muhtasari">
+          <div class="panel stack"><h2>Rekodi itakayohifadhiwa</h2><p class="small muted">Inaonyesha sehemu mpya (PROPOSED) pamoja na sehemu za zamani zinazobaki kwa backward compatibility.</p><pre class="rec" id="record"></pre></div>
+          <div class="panel stack"><h2>Dependencies za chaguo hili</h2><div class="dep" id="deps"></div></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-stock" aria-labelledby="h-stock" hidden>
+    <h1 id="h-stock">Stock authority &amp; online reservation</h1>
+    <p class="lede">Mfano wa jinsi server inavyoshikilia, kuthibitisha, kuachilia na kuisha kwa reservation (Awamu 3, imetekelezwa local na kupimwa kwenye emulator; haija-deploy na iko OFF kwa default). Marketplace na POS zinatumia rekodi moja ya stock: <span class="mono">products.stock</span> + <span class="mono">reservedStock</span> (au <span class="mono">variantCombinations[i].stock/reserved</span>). Funguo ya location (Awamu 4) inaonyeshwa kama muundo wa baadaye. Jaribu matukio ya kawaida, marudio (idempotency) na race ya kipande cha mwisho.</p>
+    <div id="stock-body"></div>
+  </section>
+
+  <section class="view" id="view-explorer" aria-labelledby="h-explorer" hidden>
+    <h1 id="h-explorer">Taxonomy Explorer</h1>
+    <p class="lede">Mti wote wa rasimu: Sekta › Category › Subcategory › Sub-subcategory › Aina ya bidhaa/huduma. Bofya node kuona taarifa zake; tafuta kwa jina la Kiswahili, Kiingereza, alias au ID.</p>
+    <div class="explorer">
+      <div class="panel stack">
+        <div class="row"><input type="search" id="ex-q" placeholder="Tafuta: mfano mahindi, solar, wiring, CAT-12…" aria-label="Tafuta kwenye taxonomy" style="flex:1;min-width:180px">
+          <select id="ex-type" aria-label="Aina ya node" style="width:auto"><option value="">Bidhaa + huduma</option><option value="product">Bidhaa tu</option><option value="service">Huduma tu</option></select>
+          <label class="row small"><input type="checkbox" id="ex-other"> Onyesha nodes za Other</label></div>
+        <div class="row"><button type="button" class="btn sm" id="ex-expand">Panua sekta zote</button><button type="button" class="btn sm" id="ex-collapse">Funga zote</button><span class="small muted" id="ex-hits"></span></div>
+        <div class="stats" id="ex-stats"></div>
+        <div class="tree" id="tree" role="tree" aria-label="Mti wa taxonomy"></div>
+      </div>
+      <aside class="panel stack" id="ex-detail" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section class="view" id="view-info" aria-labelledby="h-info" hidden>
+    <h1 id="h-info">Product Information Preview</h1>
+    <p class="lede">Kwa kila aina: attributes zilizopo kwenye canonical definitions, template ya jumla, sehemu za masharti (conditional), units, options na sheria za variants. Hakuna kilichobuniwa: kila kipengele kinaonyesha chanzo chake.</p>
+    <div class="info">
+      <div class="panel stack"><h2>Mifano</h2><div class="exlist" id="info-list"></div>
+        <label class="f">Au tafuta aina yoyote<input type="search" id="info-q" placeholder="Andika jina la aina…"></label><div class="sugg" id="info-sugg"></div></div>
+      <div class="stack" id="info-body"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-proposals" aria-labelledby="h-prop" hidden>
+    <h1 id="h-prop">Other / Specify na mapendekezo</h1>
+    <p class="lede">Muuzaji haandiki kwenye taxonomy rasmi. Anaandika pendekezo; mfumo unakagua marudio; admin anaamua. Maneno ya muuzaji yanahifadhiwa kama yalivyo kwa audit.</p>
+    <div class="admin">
+      <div class="panel stack" id="prop-form"></div>
+      <div class="panel stack"><h2>Foleni ya mapendekezo</h2><p class="small muted">Mapendekezo yaliyoandikwa kama “Mfano” ni ya kuonyesha tu. Mapendekezo unayoyatuma kwenye Builder yanaongezwa hapa.</p><div class="stack" id="prop-queue"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-admin" aria-labelledby="h-admin" hidden>
+    <h1 id="h-admin">Admin Taxonomy Preview</h1>
+    <p class="lede">Chagua node, kisha ihariri, ihamishe, iunganishe au izime. Hakuna kitufe cha kufuta: kila mabadiliko yanaingia kwenye historia, na node iliyozimwa au kuunganishwa inabaki kwa bidhaa za zamani.</p>
+    <div class="admin">
+      <div class="panel stack"><label class="f">Tafuta node<input type="search" id="ad-q" placeholder="Jina au ID…"></label><div class="sugg" id="ad-sugg"></div><div id="ad-node"></div></div>
+      <div class="stack"><div class="panel stack"><h2>Historia ya mabadiliko (append-only)</h2><div class="log" id="ad-log"></div></div>
+        <div class="panel stack"><h2>Ruhusa (zinazopendekezwa)</h2><div class="dep" id="ad-roles"></div></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-flow" aria-labelledby="h-flow" hidden>
+    <h1 id="h-flow">Maamuzi, dhana na awamu</h1>
+    <p class="lede">Dhana tano tofauti: taxonomy (bidhaa ni nini), usimamizi wa bidhaa, sales channel (inauzwa wapi), store/location (stock iko wapi) na delivery/pickup (inamfikiaje mnunuzi). Kila uwezo umewekewa alama ya hali yake kwenye code ya sasa.</p>
+    <div class="stack" id="flow-body"></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>

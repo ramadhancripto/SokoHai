@@ -71,6 +71,8 @@ const declMap = {};
 declMap.httpsCallable = 'function httpsCallable(_app, name) { return function (data) { var b = globalThis.__fnBehaviors[name]; if (!b) return Promise.resolve({ data: {} }); try { return Promise.resolve(b(data)); } catch (e) { return Promise.reject(e); } }; }';
 const decls = Object.keys(declMap).map(function (k) { return declMap[k]; });
 src = src.replace(/^import[\s\S]*?firebase-functions\.js";\s*$/m, decls.join('\n') + '\n');
+// Any other CDN import (e.g. firebase-app-check.js) is already declared above.
+src = src.replace(/^import\s*\{[^}]*\}\s*from\s*"https:\/\/[^"]+";\s*$/gm, '');
 
 const tmp = path.join(ROOT, 'js', 'app', '_tmp_bootstrap.mjs');
 fs.writeFileSync(tmp, src);

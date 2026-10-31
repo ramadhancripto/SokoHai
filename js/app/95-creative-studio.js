@@ -869,7 +869,7 @@ async function addMediaFile(file,opts={}){
     try{ /* existing Admin Media Library pipeline (admin-only per Firestore rules; silent skip otherwise) */
       if(skh.currentUser){
         const d=uploaded.data||{};
-        skh.addDoc(skh.collection(skh.db,'adminMedia'),{url,name:file.name,type:opts.asLogo?'logo':kind,mime:file.type,size:file.size,width:d.width||null,height:d.height||null,duration:d.duration||null,uploadedAt:new Date().toISOString(),uploadedBy:skh.currentUser.uid,archived:false}).catch(()=>{});
+        skh.addDoc(skh.collection(skh.db,'adminMedia'),{url,name:file.name,type:opts.asLogo?'logo':kind,mime:file.type,size:file.size,width:d.width||null,height:d.height||null,duration:d.duration||null,uploadedAt:new Date().toISOString(),uploadedBy:skh.currentUser.uid,archived:false,...(window.skhAdminStamp?window.skhAdminStamp():{})}).catch(()=>{});
       }
     }catch(e){}
     applyAddedMedia(url,opts.asLogo?'image':kind,file.name||'Media',uploaded.data||{},opts);

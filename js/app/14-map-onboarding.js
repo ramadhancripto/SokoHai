@@ -1,5 +1,6 @@
 /* ==== js/app/14-map-onboarding.js ==== */
 import { skh } from './00-bootstrap.js';
+import { sellerFormRules } from '../../shared/product-listing-core.mjs';
 
 window.handleSearch = function() {
     const input = document.getElementById('searchInput');
@@ -78,42 +79,48 @@ window.skhUpdateSellerSubmitLabel = function() {
     const btn = document.getElementById('btnSeller');
     if (!btn) return;
     const v = vis ? vis.value : 'hybrid';
-    if (v === 'offline_only') {
+    if (v === 'offline_only' || v === 'manage_only') {
         btn.innerHTML = ' HIFADHI KWENYE INVENTORY';
     } else {
         btn.innerHTML = ' CHAPISHA BIDHAA SOKONI';
     }
 };
 
+// [UX 2026-10-31] Progressive disclosure for the ONE seller form. Rules come from
+// shared/product-listing-core.mjs (sellerFormRules) so the form, tests and preview agree.
+// Hidden groups keep their values: switching the sales mode back never loses typing.
+const SKH_VIS_HINTS = {
+    hybrid: 'Inauzwa dukani (POS) na sokoni. Stock moja inatumika kwa njia zote mbili.',
+    offline_only: 'Inauzwa dukani tu. Haionekani sokoni; maelezo ya soko na picha si lazima.',
+    online_only: 'Inauzwa sokoni tu. POS si lazima; stock inatoka mahali ulipochagua.',
+    manage_only: 'Inahifadhiwa kwenye stoo tu (haiuzwi). Unaweza kuiwasha POS au sokoni baadaye bila kupoteza data.'
+};
 window.toggleProductFormFields = function() {
     const visibility = document.getElementById('prodVisibility').value;
-    const onlineFields = document.getElementById('onlineSpecificFields');
-    const descInput = document.getElementById('prodDesc');
-    const imgInput = document.getElementById('prodImage');
-
-    const onlineCatSec = document.getElementById('onlineCategorySection');
-    const offlineCatSec = document.getElementById('offlineCategorySection');
-    const prodCatSelect = document.getElementById('prodCategory');
-
-    if (visibility === 'offline_only') {
-        if(onlineFields) onlineFields.style.display = 'none';
-        if(descInput) descInput.removeAttribute('required');
-        if(imgInput) imgInput.removeAttribute('required');
-        if(prodCatSelect) prodCatSelect.removeAttribute('required');
-
-        if(onlineCatSec) onlineCatSec.style.display = 'none';
-        if(offlineCatSec) offlineCatSec.style.display = 'block';
-    } else {
-        if(onlineFields) onlineFields.style.display = 'block';
-        if(descInput) descInput.setAttribute('required', 'true');
-        if(imgInput) imgInput.setAttribute('required', 'true');
-        if(prodCatSelect) prodCatSelect.setAttribute('required', 'true');
-
-        if(onlineCatSec) onlineCatSec.style.display = 'block';
-        if(offlineCatSec) offlineCatSec.style.display = 'none';
-    }
+    const rules = sellerFormRules(visibility);
+    const online = rules.groups.online;
+    const $ = id => document.getElementById(id);
+    const onlineSection = $('sellerOnlineSection');
+    const onlineFields = $('onlineSpecificFields');
+    if (onlineSection) onlineSection.style.display = online ? 'block' : 'none';
+    if (onlineFields) onlineFields.style.display = online ? 'block' : 'none';
+    const setReq = (el, on) => { if (!el) return; if (on) el.setAttribute('required', 'true'); else el.removeAttribute('required'); };
+    setReq($('prodDesc'), online);
+    setReq($('prodImage'), online);
+    setReq($('prodCategory'), online);
+    setReq($('prodPrice'), rules.priceRequired);
+    // Taxonomy stays visible for every mode (POS + reports use it); required only for the marketplace.
+    if ($('onlineCategorySection')) $('onlineCategorySection').style.display = 'block';
+    if ($('offlineCategorySection')) $('offlineCategorySection').style.display = online ? 'none' : 'block';
+    document.querySelectorAll('#onlineCategorySection .sf-req').forEach(el => { el.style.display = online ? '' : 'none'; });
+    if ($('prodTaxonomyNeed')) $('prodTaxonomyNeed').textContent = online ? '(lazima kwa soko)' : '(hiari)';
+    const priceStar = document.querySelector('#priceLabel .sf-req');
+    if (priceStar) priceStar.style.display = rules.priceRequired ? '' : 'none';
+    if ($('prodVisibilityHint')) $('prodVisibilityHint').textContent = SKH_VIS_HINTS[visibility] || '';
+    document.querySelectorAll('#sellerFormProgress li').forEach(li => { li.style.display = rules.groups[li.dataset.group] ? '' : 'none'; });
 
     window.skhUpdateSellerSubmitLabel();
+    if (typeof window.skhSellerFormProgress === 'function') window.skhSellerFormProgress();
 
     // [FIX 2026-09] Swichi za modes (mnada/bei kushuka/group buy) ziheshimiwe
     // kwenye chaguo la mode ya bidhaa (prodSaleMode).
@@ -154,7 +161,7 @@ window.runSokoPayTimeLockChronJob = async function() {
                 const platformFee = skh.paymentGate('commission') ? (amount * 0.05) : 0; // 5% platform fee
                 const sellerEarned = amount - platformFee;
 
-                const sellerQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId));
+                const sellerQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId), skh.limit(1));
                 const sellerSnap = await skh.getDocs(sellerQ);
                 if (!sellerSnap.empty) {
                     const sellerDocId = sellerSnap.docs[0].id;
@@ -210,7 +217,7 @@ window.runSokoPayTimeLockChronJob = async function() {
                 const platformFee = skh.paymentGate('commission') ? (amount * 0.05) : 0;
                 const sellerEarned = amount - (platformFee + carrierShare);
 
-                const sellerQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId));
+                const sellerQ = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId), skh.limit(1));
                 const sellerSnap = await skh.getDocs(sellerQ);
                 if (!sellerSnap.empty) {
                     const sellerDocId = sellerSnap.docs[0].id;
@@ -390,11 +397,15 @@ window.setupDriverRealtimeQuery = function() {
     const driverVehicleType = skh.currentUserData?.vehicleType || "Bodaboda";
     const driverServices = skh.currentUserData?.supportedServices || ["Passenger", "Parcel", "Cargo"];
 
-    const qRides = skh.query(skh.collection(skh.db, "ride_requests"), skh.orderBy("createdAt", "desc"), skh.limit(40));
+    /* [REPAIR 2026-10 C4] Badala ya kusoma safari zote za mfumo, tunasikiliza
+       (a) safari za dereva huyu, na (b) safari zilizo wazi sokoni — kisha tunaziunganisha. */
+    const qMineRides = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("driverId", "==", skh.currentUser.uid), skh.limit(40));
+    const qOpenRides = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("status", "in", ["searching", "pending_acceptance"]), skh.limit(40));
 
     if (window.driverRealtimeUnsubscribe) window.driverRealtimeUnsubscribe();
 
-    window.driverRealtimeUnsubscribe = skh.onSnapshot(qRides, (snapshot) => {
+    const _driverSnaps = { mine: null, open: null };
+    const _driverRender = (snapshot) => {
         let activeJobsHtml = '';
         let availableJobsHtml = '';
         let activeCount = 0;
@@ -460,7 +471,16 @@ window.setupDriverRealtimeQuery = function() {
 
         availableContainer.innerHTML = availableJobsHtml || `
             <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; padding:25px; border-radius:18px; text-align:center; width:100%;"> <div style="font-size:36px; margin-bottom:5px;"></div> <b style="color:gray; font-size:12px;">Hakuna kazi mpya zinazofaa gari lako kwa sasa.</b> </div>`;
-    });
+     };
+    const _driverMerged = () => {
+        const seen = {}; const docs = [];
+        [_driverSnaps.mine, _driverSnaps.open].forEach(s => { if (s) s.forEach(d => { if (!seen[d.id]) { seen[d.id] = 1; docs.push(d); } }); });
+        docs.sort((a, b) => String((b.data() || {}).createdAt || '').localeCompare(String((a.data() || {}).createdAt || '')));
+        _driverRender({ forEach: (fn) => docs.forEach(fn), empty: docs.length === 0, size: docs.length, docs: docs });
+    };
+    const _unMine = skh.onSnapshot(qMineRides, (s) => { _driverSnaps.mine = s; _driverMerged(); }, (e) => console.warn('[driver] mine', e && e.message));
+    const _unOpen = skh.onSnapshot(qOpenRides, (s) => { _driverSnaps.open = s; _driverMerged(); }, (e) => console.warn('[driver] open', e && e.message));
+    window.driverRealtimeUnsubscribe = () => { try { _unMine(); } catch (e) {} try { _unOpen(); } catch (e) {} };
 };
 
 window.releaseCargoWithToken = async function() {
@@ -894,6 +914,11 @@ window.saveShopSetup = async function() {
 
         createdAt: new Date().toISOString()
     };
+    // [2026-10-31] Anwani ya duka (hiari) inatumika tena kama mahali pa bidhaa na pickup.
+    const storeAddressEl = document.getElementById('regStoreAddress');
+    if (storeAddressEl && storeAddressEl.value.trim()) payload.storeAddress = storeAddressEl.value.trim().slice(0, 160);
+    const pickupEl = document.getElementById('regPickupAvailable');
+    if (pickupEl) payload.pickupAvailable = pickupEl.checked === true;
 
     if (storeType === 'temporary') {
         const duration = parseInt(document.getElementById('regStoreDuration').value) || 30;
@@ -904,7 +929,7 @@ window.saveShopSetup = async function() {
         payload.storeVisibility = document.getElementById('regStoreVisibility').value;
         payload.storeExpiryDate = expiryDate.toISOString();
         payload.sellerType = 'temporary';
-        payload.productLimit = 9; // Ukomo rahisi wa Temporary
+        payload.productLimit = 9; // Ukomo rahisi wa Temporary (taarifa; haijalazimishwa na server bado)
     } else {
         // Permanent Store
         const secProfiles = Array.from(document.querySelectorAll('.reg-sec-profile:checked')).map(cb => cb.value);
@@ -913,8 +938,8 @@ window.saveShopSetup = async function() {
         payload.secondaryProfiles = secProfiles;
         payload.workforceSize = document.getElementById('regWorkforceSize').value;
         payload.setupMode = window.onboardingData.setupMode;
-        payload.sellerType = 'permanent';
-        payload.productLimit = 9999; // Unlimited kwa permanent
+        // [2026-10-31] Permanent ni hali ya akaunti inayowekwa na SERVER (sellerLifecycleChange)
+        // baada ya kukagua masharti (kifurushi kikiwa kimewashwa). Kivinjari hakijipandishi.
 
         // Auto-Generate staff structure if "auto" was selected
         if (window.onboardingData.setupMode === 'auto') {
@@ -947,6 +972,21 @@ window.saveShopSetup = async function() {
             }
         }
 
+        // [2026-10-31] Permanent: akaunti ileile inapandishwa na server (audit + history).
+        let lifecycleNote = '';
+        if (storeType === 'permanent') {
+            try {
+                const lc = await skh.wrapCallable('sellerLifecycleChange')({ target: 'permanent' });
+                const r = (lc && lc.data) || {};
+                if (r.sellerType) { payload.sellerType = r.sellerType; payload.productLimit = r.productLimit; }
+            } catch (lcErr) {
+                lifecycleNote = /SUBSCRIPTION_REQUIRED/.test(String(lcErr && lcErr.message))
+                    ? '\n\nDuka limeanza kama la MUDA. Lipia kifurushi kisha bonyeza "Badili kuwa Kudumu" kwenye dashibodi; bidhaa na data zako zitabaki zilezile.'
+                    : '\n\nHali ya Kudumu haikuthibitishwa sasa; jaribu tena kwenye dashibodi.';
+                console.warn('[sellerLifecycleChange]', lcErr);
+            }
+        }
+
         // Pia kumuandalia database ya duka (Kama anatumia Auto smart setup)
         if (storeType === 'permanent' && window.onboardingData.setupMode === 'auto') {
             await window.autoGenerateStaffAndRules(payload.primaryProfile, payload.workforceSize);
@@ -954,7 +994,7 @@ window.saveShopSetup = async function() {
 if (canonicalContextError) {
     alert(` Duka la "${name}" limehifadhiwa kwenye profile ya zamani, lakini Business/Store context ya canonical haikusawazishwa.\n\nHakuna duplicate iliyoundwa. Jaribu tena ukiwa online.`);
 } else {
-    alert(` HONGERA!\nDuka la "${name}" limesajiliwa kwa ufanisi.\n\nBusiness Code yako ni: ${businessId}`);
+    alert(` HONGERA!\nDuka la "${name}" limesajiliwa kwa ufanisi.\n\nBusiness Code yako ni: ${businessId}` + lifecycleNote);
 }
         window.closeModals();
         window.switchMode('seller'); // Mtume moja kwa moja kwenye duka badala ya kurefresh

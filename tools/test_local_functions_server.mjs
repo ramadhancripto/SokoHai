@@ -14,7 +14,7 @@ let log = ''; child.stdout.on('data', d => log += d); child.stderr.on('data', d 
 let passed = 0; const fails = []; const ok = (c, n, x) => c ? passed++ : fails.push(n + (x !== undefined ? ' → ' + JSON.stringify(x) : ''));
 try {
   for (let i = 0; i < 50 && !/LOCAL FUNCTIONS SERVER/.test(log); i++) await new Promise(r => setTimeout(r, 200));
-  ok(/Callables\s+:\s+4\d/.test(log), 'loads real callables from functions/index.js', log.slice(-400));
+  ok((m => m && Number(m[1]) >= 40)(log.match(/Callables\s+:\s+(\d+)/)), 'loads real callables from functions/index.js', log.slice(-400));
   let r = await fetch(B + '/__fn/creativePublish', { method: 'OPTIONS', headers: { Origin: 'https://sokohaiworld.netlify.app', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Private-Network': 'true' } });
   ok(r.status === 204 && r.headers.get('access-control-allow-origin') === 'https://sokohaiworld.netlify.app', 'CORS preflight for Netlify origin');
   ok(r.headers.get('access-control-allow-private-network') === 'true', 'Private Network Access header');

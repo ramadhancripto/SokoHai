@@ -509,7 +509,7 @@ import { skh } from './00-bootstrap.js';
                     var names = {};
                     for (var i = 0; i < pend.length; i++) {
                         try {
-                            var us = await skh.getDoc(skh.doc(skh.db, 'users', pend[i].userId));
+                            var us = await skh.getUserCard(pend[i].userId);
                             names[pend[i].userId] = (us && us.exists && us.exists()) ? (us.data().fullName || us.data().displayName || pend[i].userId) : pend[i].userId;
                         } catch (eN) { names[pend[i].userId] = pend[i].userId; }
                     }
@@ -574,7 +574,7 @@ import { skh } from './00-bootstrap.js';
         var out = {};
         for (var i = 0; i < uids2.length; i++) {
             try {
-                var us = await skh.getDoc(skh.doc(skh.db, 'users', uids2[i]));
+                var us = await skh.getUserCard(uids2[i]);
                 out[uids2[i]] = (us && us.exists && us.exists()) ? (us.data().fullName || us.data().displayName || uids2[i]) : uids2[i];
             } catch (eN) { out[uids2[i]] = uids2[i]; }
         }
@@ -777,9 +777,9 @@ import { skh } from './00-bootstrap.js';
         var rowsAll = rows; rows = rows.filter(fMatch);
         var head = filterBar + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
             + '<b style="flex:1;font-size:13px;color:#0f172a;">' + tk('gsg_tab_orders', 'Group Orders') + ' (' + rows.length + ')</b>'
-            + (g_sendPolicy_blocked() ? '' : '<button type="button" data-act="gsg-at-gorder" style="border:1px solid #D8B83A;background:#FFFBE8;color:#8a6d00;font-weight:800;font-size:11px;padding:7px 12px;border-radius:99px;cursor:pointer;">+ ' + tk('gsg_go_new', 'unda') + '</button>')
+            + (g_sendPolicy_blocked() ? '' : !goOn() ? goSoonBadge() : '<button type="button" data-act="gsg-at-gorder" style="border:1px solid #D8B83A;background:#FFFBE8;color:#8a6d00;font-weight:800;font-size:11px;padding:7px 12px;border-radius:99px;cursor:pointer;">+ ' + tk('gsg_go_new', 'unda') + '</button>')
             + '</div>';
-        if (!rows.length) { host.innerHTML = head + gsgEmptyTabHtml(tk('gsg_no_orders', 'Bado hakuna Group Order'), tk('gsg_no_orders_sub2', 'Tumia [+ unda] juu au kwenye composer — zimetimunya PHASE 4.')); return; }
+        if (!rows.length) { host.innerHTML = head + (goOn() ? gsgEmptyTabHtml(tk('gsg_no_orders', 'Bado hakuna Group Order'), tk('gsg_no_orders_sub2', 'Tumia [+ unda] juu au kwenye composer — zimetimunya PHASE 4.')) : gsgEmptyTabHtml('Oda za Pamoja hazijafunguliwa bado', 'Huduma hii inakuja hivi karibuni. Kwa sasa tumia Group Buy kwenye ukurasa wa bidhaa.')); return; }
         rows.sort(function (a, b) { return String(b.createdAt || b.updatedAt || '').localeCompare(String(a.createdAt || a.updatedAt || '')); });
         host.innerHTML = head + rows.map(function (o) {
             var st = String(o.status || 'OPEN').replace(/_/g, ' ');
@@ -1429,6 +1429,10 @@ import { skh } from './00-bootstrap.js';
     }
 
     function closeAttachPop() { var x = document.getElementById('gsgAttachPop'); if (x) x.remove(); }
+    // [REPAIR 2026-10] Oda za Pamoja za kikundi: engine ya server haijajengwa.
+    // Ikiwa imezimwa, UI inaonyesha "Inakuja hivi karibuni" badala ya kitufe kinachofanya kazi.
+    function goOn() { return typeof window.skhGroupOrdersEnabled === 'function' && window.skhGroupOrdersEnabled(); }
+    function goSoonBadge() { return '<span data-go-disabled="1" title="Inakuja hivi karibuni" style="border:1px dashed #cbd5e1;background:#f8fafc;color:#64748b;font-weight:700;font-size:10.5px;padding:6px 11px;border-radius:99px;">Inakuja hivi karibuni</span>'; }
     function atChip(act, icon, label, extra) {
         return '<button type="button" data-act="' + act + '" ' + (extra || '') + ' style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border:1px solid #dbe4ed;background:#fff;border-radius:13px;cursor:pointer;min-width:72px;">'
             + '<span style="font-size:20px;line-height:1;">' + icon + '</span><small style="font-size:10.5px;font-weight:700;color:#334155;">' + esc(label) + '</small></button>';
@@ -1457,7 +1461,7 @@ import { skh } from './00-bootstrap.js';
             + atChip('gsg-at-service', '\u{1F527}', tk('gsg_p_serv', 'Huduma'))
             + atChip('gsg-at-poll', '\u{1F4CB}', tk('gsg_p_poll', 'Kura'))
             + (canManage ? atChip('gsg-at-announce', '\u{1F4E2}', tk('gsg_p_ann', 'Tangazo')) : '')   // [§46] UI hides invalid
-            + atChip('gsg-at-gorder', '\u{1F4E6}', 'Group Order')
+            + (goOn() ? atChip('gsg-at-gorder', '\u{1F4E6}', 'Group Order') : '')
             + '</div></div>';
         pop.addEventListener('click', function (ev) { if (ev.target === pop) closeAttachPop(); });
         document.body.appendChild(pop);
@@ -1829,6 +1833,7 @@ import { skh } from './00-bootstrap.js';
                 return;
             }
             else if (act === 'gsg-at-gorder') {
+                if (!goOn()) { if (typeof window.skhGroupOrdersDisabledNotice === 'function') window.skhGroupOrdersDisabledNotice(); return; }
                 // [§14] Group Order creation form — fields zote za spec
                 openTypedForm('Group Order — ' + tk('gsg_go_new', 'unda oda ya pamoja'), [
                     { id: 'productName', ph: tk('gsg_go_pn_ph', 'Bidhaa (mf: Mahindi jumla, magunia)') },

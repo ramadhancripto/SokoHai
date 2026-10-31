@@ -6,7 +6,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-01-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p1:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-02",
@@ -15,7 +15,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-02-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p2:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-03",
@@ -24,7 +24,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-03-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p3:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-04",
@@ -33,7 +33,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-04-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p4:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-05",
@@ -42,7 +42,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-05-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p5:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-06",
@@ -51,7 +51,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-06-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p6:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-07",
@@ -60,7 +60,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-07-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p7:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-08",
@@ -69,7 +69,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-08-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p8:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-09",
@@ -78,7 +78,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-09-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p9:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-10",
@@ -87,7 +87,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-10-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p10:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-11",
@@ -96,7 +96,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-11-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p11:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-12",
@@ -105,7 +105,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-12-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p12:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-13",
@@ -114,7 +114,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-13-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p13:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-14",
@@ -123,7 +123,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-14-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p14:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-15",
@@ -132,7 +132,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-15-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p15:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-19",
@@ -141,7 +141,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-19-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p16:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-27",
@@ -150,7 +150,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-27-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p17:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-28",
@@ -159,7 +159,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-28-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p18:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-29",
@@ -168,7 +168,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-29-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p19:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-30",
@@ -177,7 +177,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-30-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p20:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-31",
@@ -186,7 +186,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-31-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p21:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-32",
@@ -195,7 +195,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-32-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p22:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-33",
@@ -204,7 +204,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-33-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p23:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-34",
@@ -213,7 +213,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-34-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p24:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-35",
@@ -222,7 +222,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-35-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p25:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-36",
@@ -231,7 +231,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-36-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p26:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-37",
@@ -240,7 +240,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-37-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p27:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-38",
@@ -249,7 +249,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-38-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p28:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-42",
@@ -258,7 +258,7 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-42-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p29:product:Piece"
+    "inventoryKey": ":product:Piece"
   },
   {
     "categoryId": "CAT-43",
@@ -267,6 +267,6 @@
     "scope": "Seller-selected simple, save, edit, buyer, upload mocked, three viewport screenshots",
     "sku": "CAT-43-SKU",
     "unitId": "Piece",
-    "inventoryKey": "p30:product:Piece"
+    "inventoryKey": ":product:Piece"
   }
 ]

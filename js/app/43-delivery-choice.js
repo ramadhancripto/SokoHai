@@ -525,7 +525,7 @@ import { skh } from './00-bootstrap.js';
                 var sellerItems = groups[sid];
                 var sellerProfile = null;
                 try {
-                    var sp = await skh.getDoc(skh.doc(skh.db, 'users', sid));
+                    var sp = await skh.getUserCard(sid);
                     if (sp.exists) sellerProfile = sp.data();
                 } catch (e) {}
                 var calc = {

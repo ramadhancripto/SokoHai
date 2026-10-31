@@ -1,0 +1,7587 @@
+{
+ "meta": {
+  "generatedFrom": [
+   "shared/canonical-taxonomy-data.js",
+   "taxonomy-draft/out/sokohai-taxonomy-v1.draft.json",
+   "taxonomy-draft/src/model.mjs"
+  ],
+  "status": "DRAFT",
+  "rule": "L0 common → L1 profile groups → L2 variant-family axes → L3 leaf definition (overrides) → L4 seller Other/Specify"
+ },
+ "totals": {
+  "categories": 45,
+  "leaves": 845,
+  "explicit": 54,
+  "partial": 33,
+  "inheritOnly": 758,
+  "withFamily": 45,
+  "withExamples": 45,
+  "attributeKeys": 462,
+  "sharedAcrossCategories": 122,
+  "registryAttributes": 439
+ },
+ "registry": [
+  {
+   "key": "origin",
+   "labels": [
+    "Origin"
+   ],
+   "categories": 9,
+   "leaves": 46,
+   "usedAs": [
+    "leafAttribute",
+    "profile:identity",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "weight",
+   "labels": [
+    "Weight"
+   ],
+   "categories": 15,
+   "leaves": 42,
+   "usedAs": [
+    "familyAxis:bulk_commodities",
+    "familyAxis:food_fresh",
+    "familyAxis:livestock",
+    "familyAxis:sports_toys",
+    "leafAttribute",
+    "profile:mineral",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "packaging",
+   "labels": [
+    "Packaging"
+   ],
+   "categories": 6,
+   "leaves": 30,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:commerce",
+    "registry"
+   ]
+  },
+  {
+   "key": "brand",
+   "labels": [
+    "Brand"
+   ],
+   "categories": 20,
+   "leaves": 28,
+   "usedAs": [
+    "leafAttribute",
+    "profile:identity",
+    "registry"
+   ]
+  },
+  {
+   "key": "grade",
+   "labels": [
+    "Grade"
+   ],
+   "categories": 8,
+   "leaves": 28,
+   "usedAs": [
+    "familyAxis:bulk_commodities",
+    "familyAxis:food_fresh",
+    "leafAttribute",
+    "leafOption",
+    "profile:food",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "species",
+   "labels": [
+    "Species"
+   ],
+   "categories": 4,
+   "leaves": 28,
+   "usedAs": [
+    "leafAttribute",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "condition",
+   "labels": [
+    "Condition"
+   ],
+   "categories": 23,
+   "leaves": 26,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:identity",
+    "profile:machine",
+    "profile:overlays",
+    "registry"
+   ]
+  },
+  {
+   "key": "size",
+   "labels": [
+    "Size"
+   ],
+   "categories": 21,
+   "leaves": 22,
+   "usedAs": [
+    "familyAxis:apparel",
+    "familyAxis:arts_culture",
+    "familyAxis:furniture",
+    "familyAxis:hardware",
+    "familyAxis:sports_toys",
+    "familyAxis:stationery_packaging",
+    "leafAttribute",
+    "leafOption",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "color",
+   "labels": [
+    "Color",
+    "Colour"
+   ],
+   "categories": 26,
+   "leaves": 19,
+   "usedAs": [
+    "familyAxis:apparel",
+    "familyAxis:arts_culture",
+    "familyAxis:electronics",
+    "familyAxis:furniture",
+    "familyAxis:hardware",
+    "familyAxis:sports_toys",
+    "familyAxis:stationery_packaging",
+    "leafAttribute",
+    "leafOption",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "producttype",
+   "labels": [
+    "Product Type"
+   ],
+   "categories": 17,
+   "leaves": 17,
+   "usedAs": [
+    "leafAttribute",
+    "profile:identity",
+    "registry"
+   ]
+  },
+  {
+   "key": "material",
+   "labels": [
+    "Material"
+   ],
+   "categories": 14,
+   "leaves": 17,
+   "usedAs": [
+    "familyAxis:apparel",
+    "familyAxis:arts_culture",
+    "familyAxis:furniture",
+    "leafAttribute",
+    "leafOption",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "processing",
+   "labels": [
+    "Processing"
+   ],
+   "categories": 4,
+   "leaves": 16,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "capacity",
+   "labels": [
+    "Capacity"
+   ],
+   "categories": 16,
+   "leaves": 15,
+   "usedAs": [
+    "familyAxis:electronics",
+    "familyAxis:hardware",
+    "leafAttribute",
+    "profile:machine",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "model",
+   "labels": [
+    "Model"
+   ],
+   "categories": 14,
+   "leaves": 15,
+   "usedAs": [
+    "leafAttribute",
+    "profile:identity",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "moisture",
+   "labels": [
+    "Moisture"
+   ],
+   "categories": 4,
+   "leaves": 15,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "warranty",
+   "labels": [
+    "Warranty"
+   ],
+   "categories": 14,
+   "leaves": 14,
+   "usedAs": [
+    "leafAttribute",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "quantity",
+   "labels": [
+    "Quantity"
+   ],
+   "categories": 7,
+   "leaves": 14,
+   "usedAs": [
+    "leafAttribute",
+    "profile:commerce",
+    "registry"
+   ]
+  },
+  {
+   "key": "certification",
+   "labels": [
+    "Certification"
+   ],
+   "categories": 6,
+   "leaves": 13,
+   "usedAs": [
+    "leafAttribute",
+    "profile:agriculture",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "length",
+   "labels": [
+    "Length"
+   ],
+   "categories": 8,
+   "leaves": 12,
+   "usedAs": [
+    "familyAxis:hardware",
+    "leafAttribute",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "age",
+   "labels": [
+    "Age"
+   ],
+   "categories": 3,
+   "leaves": 12,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "unit",
+   "labels": [
+    "Unit"
+   ],
+   "categories": 9,
+   "leaves": 11,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:commerce",
+    "registry"
+   ]
+  },
+  {
+   "key": "dimensions",
+   "labels": [
+    "Dimensions"
+   ],
+   "categories": 10,
+   "leaves": 10,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "compatibility",
+   "labels": [
+    "Compatibility"
+   ],
+   "categories": 9,
+   "leaves": 9,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "power",
+   "labels": [
+    "Power"
+   ],
+   "categories": 9,
+   "leaves": 9,
+   "usedAs": [
+    "leafAttribute",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "breed",
+   "labels": [
+    "Breed"
+   ],
+   "categories": 3,
+   "leaves": 9,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "packsize",
+   "labels": [
+    "Pack Size",
+    "Package Size"
+   ],
+   "categories": 22,
+   "leaves": 8,
+   "usedAs": [
+    "familyAxis:beauty",
+    "familyAxis:bulk_commodities",
+    "familyAxis:food_fresh",
+    "familyAxis:hardware",
+    "familyAxis:parts",
+    "familyAxis:sports_toys",
+    "familyAxis:stationery_packaging",
+    "leafAttribute",
+    "leafOption",
+    "profile:commerce",
+    "registry"
+   ]
+  },
+  {
+   "key": "sex",
+   "labels": [
+    "Sex"
+   ],
+   "categories": 2,
+   "leaves": 8,
+   "usedAs": [
+    "familyAxis:livestock",
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "treatment",
+   "labels": [
+    "Treatment"
+   ],
+   "categories": 2,
+   "leaves": 8,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:agriculture",
+    "registry"
+   ]
+  },
+  {
+   "key": "variety",
+   "labels": [
+    "Variety"
+   ],
+   "categories": 5,
+   "leaves": 7,
+   "usedAs": [
+    "familyAxis:food_fresh",
+    "leafAttribute",
+    "leafOption",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "purpose",
+   "labels": [
+    "Purpose"
+   ],
+   "categories": 1,
+   "leaves": 7,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "volume",
+   "labels": [
+    "Volume"
+   ],
+   "categories": 9,
+   "leaves": 6,
+   "usedAs": [
+    "familyAxis:beauty",
+    "familyAxis:stationery_packaging",
+    "leafAttribute",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "batchlot",
+   "labels": [
+    "Batch/Lot"
+   ],
+   "categories": 6,
+   "leaves": 6,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "diameter",
+   "labels": [
+    "Diameter"
+   ],
+   "categories": 6,
+   "leaves": 6,
+   "usedAs": [
+    "familyAxis:hardware",
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "finish",
+   "labels": [
+    "Finish"
+   ],
+   "categories": 6,
+   "leaves": 6,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "voltage",
+   "labels": [
+    "Voltage"
+   ],
+   "categories": 6,
+   "leaves": 6,
+   "usedAs": [
+    "leafAttribute",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "expiry",
+   "labels": [
+    "Expiry"
+   ],
+   "categories": 5,
+   "leaves": 6,
+   "usedAs": [
+    "leafAttribute",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "freshness",
+   "labels": [
+    "Freshness"
+   ],
+   "categories": 3,
+   "leaves": 6,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "application",
+   "labels": [
+    "Application"
+   ],
+   "categories": 5,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "serialnumber",
+   "labels": [
+    "Serial Number"
+   ],
+   "categories": 5,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "width",
+   "labels": [
+    "Width"
+   ],
+   "categories": 4,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "harvestdate",
+   "labels": [
+    "Harvest Date"
+   ],
+   "categories": 3,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "organic",
+   "labels": [
+    "Organic"
+   ],
+   "categories": 3,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "thickness",
+   "labels": [
+    "Thickness"
+   ],
+   "categories": 3,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "freshdried",
+   "labels": [
+    "Fresh/Dried"
+   ],
+   "categories": 2,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "health",
+   "labels": [
+    "Health"
+   ],
+   "categories": 1,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "vaccination",
+   "labels": [
+    "Vaccination"
+   ],
+   "categories": 1,
+   "leaves": 5,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ingredients",
+   "labels": [
+    "Ingredients"
+   ],
+   "categories": 4,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "pattern",
+   "labels": [
+    "Pattern"
+   ],
+   "categories": 4,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "region",
+   "labels": [
+    "Region"
+   ],
+   "categories": 4,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "resolution",
+   "labels": [
+    "Resolution"
+   ],
+   "categories": 4,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "equipmenttype",
+   "labels": [
+    "Equipment Type"
+   ],
+   "categories": 3,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "intendeduse",
+   "labels": [
+    "Intended Use"
+   ],
+   "categories": 3,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "lifestage",
+   "labels": [
+    "Life Stage"
+   ],
+   "categories": 3,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "purity",
+   "labels": [
+    "Purity"
+   ],
+   "categories": 3,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "quality",
+   "labels": [
+    "Quality"
+   ],
+   "categories": 3,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "animalsource",
+   "labels": [
+    "Animal Source"
+   ],
+   "categories": 2,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "breedingstatus",
+   "labels": [
+    "Breeding Status",
+    "Breeding status"
+   ],
+   "categories": 2,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "healthstatus",
+   "labels": [
+    "Health Status",
+    "Health status"
+   ],
+   "categories": 2,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "localname",
+   "labels": [
+    "Local Name"
+   ],
+   "categories": 2,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "source",
+   "labels": [
+    "Source"
+   ],
+   "categories": 2,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "identification",
+   "labels": [
+    "Identification"
+   ],
+   "categories": 1,
+   "leaves": 4,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "batteryhealth",
+   "labels": [
+    "Battery Health"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "connectivity",
+   "labels": [
+    "Connectivity"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "form",
+   "labels": [
+    "Form"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "frequency",
+   "labels": [
+    "Frequency"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fuel",
+   "labels": [
+    "Fuel"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "harvestseason",
+   "labels": [
+    "Harvest Season"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "height",
+   "labels": [
+    "Height"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "profile:physical",
+    "registry"
+   ]
+  },
+  {
+   "key": "manufacturer",
+   "labels": [
+    "Manufacturer"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "modelnumber",
+   "labels": [
+    "Model Number"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "partnumber",
+   "labels": [
+    "Part Number"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "profile:identity",
+    "registry"
+   ]
+  },
+  {
+   "key": "processingstate",
+   "labels": [
+    "Processing State"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "productionmethod",
+   "labels": [
+    "Production Method"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "ram",
+   "labels": [
+    "RAM"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "familyAxis:electronics",
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "style",
+   "labels": [
+    "Style"
+   ],
+   "categories": 3,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "cut",
+   "labels": [
+    "Cut"
+   ],
+   "categories": 2,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "feedtype",
+   "labels": [
+    "Feed Type"
+   ],
+   "categories": 2,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "freshfrozen",
+   "labels": [
+    "Fresh/Frozen"
+   ],
+   "categories": 2,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "scientificname",
+   "labels": [
+    "Scientific Name"
+   ],
+   "categories": 2,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "watertype",
+   "labels": [
+    "Water Type"
+   ],
+   "categories": 2,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "capturefarmed",
+   "labels": [
+    "Capture/Farmed"
+   ],
+   "categories": 1,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "dryness",
+   "labels": [
+    "Dryness"
+   ],
+   "categories": 1,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "pregnancy",
+   "labels": [
+    "Pregnancy"
+   ],
+   "categories": 1,
+   "leaves": 3,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "edition",
+   "labels": [
+    "Edition"
+   ],
+   "categories": 3,
+   "leaves": 2,
+   "usedAs": [
+    "familyAxis:media_books",
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "screensize",
+   "labels": [
+    "Screen Size"
+   ],
+   "categories": 3,
+   "leaves": 2,
+   "usedAs": [
+    "familyAxis:electronics",
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "storage",
+   "labels": [
+    "Storage"
+   ],
+   "categories": 3,
+   "leaves": 2,
+   "usedAs": [
+    "familyAxis:electronics",
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "activeingredient",
+   "labels": [
+    "Active Ingredient"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "agegroup",
+   "labels": [
+    "Age Group"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "animaltype",
+   "labels": [
+    "Animal Type"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "area",
+   "labels": [
+    "Area"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "battery",
+   "labels": [
+    "Battery"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "crop",
+   "labels": [
+    "Crop"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "profile:agriculture",
+    "registry"
+   ]
+  },
+  {
+   "key": "croptype",
+   "labels": [
+    "Crop Type"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "documentation",
+   "labels": [
+    "Documentation"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "doors",
+   "labels": [
+    "Doors"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "expirydate",
+   "labels": [
+    "Expiry Date"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "flowrate",
+   "labels": [
+    "Flow Rate"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "generation",
+   "labels": [
+    "Generation"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "gsm",
+   "labels": [
+    "GSM"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "indooroutdoor",
+   "labels": [
+    "Indoor/Outdoor"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "iprating",
+   "labels": [
+    "IP Rating"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "manufacturedate",
+   "labels": [
+    "Manufacture Date"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "operatingsystem",
+   "labels": [
+    "Operating System"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "packquantity",
+   "labels": [
+    "Pack Quantity"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "papertype",
+   "labels": [
+    "Paper Type"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "phase",
+   "labels": [
+    "Phase"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "productionsystem",
+   "labels": [
+    "Production System"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "protein",
+   "labels": [
+    "Protein %"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "registration",
+   "labels": [
+    "Registration"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "seats",
+   "labels": [
+    "Seats"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sizesystem",
+   "labels": [
+    "Size System"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "storagecondition",
+   "labels": [
+    "Storage Condition"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "strength",
+   "labels": [
+    "Strength"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "technique",
+   "labels": [
+    "Technique"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "transmission",
+   "labels": [
+    "Transmission"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "trim",
+   "labels": [
+    "Trim"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "type",
+   "labels": [
+    "Type"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "usage",
+   "labels": [
+    "Usage"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "year",
+   "labels": [
+    "Year"
+   ],
+   "categories": 2,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "applicationmethod",
+   "labels": [
+    "Application Method"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "profile:agriculture",
+    "registry"
+   ]
+  },
+  {
+   "key": "averageweight",
+   "labels": [
+    "Average Weight"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "catchdate",
+   "labels": [
+    "Catch Date"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "drying",
+   "labels": [
+    "Drying"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "dryingmethod",
+   "labels": [
+    "Drying Method"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "hatchery",
+   "labels": [
+    "Hatchery"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "preservationstate",
+   "labels": [
+    "Preservation State"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "strain",
+   "labels": [
+    "Strain"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "surface",
+   "labels": [
+    "Surface"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "targetspecies",
+   "labels": [
+    "Target Species"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "waterbody",
+   "labels": [
+    "Water Body"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "woodspecies",
+   "labels": [
+    "Wood Species"
+   ],
+   "categories": 1,
+   "leaves": 2,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "duration",
+   "labels": [
+    "Duration"
+   ],
+   "categories": 12,
+   "leaves": 1,
+   "usedAs": [
+    "familyAxis:services",
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "format",
+   "labels": [
+    "Format"
+   ],
+   "categories": 2,
+   "leaves": 1,
+   "usedAs": [
+    "familyAxis:media_books",
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "language",
+   "labels": [
+    "Language"
+   ],
+   "categories": 2,
+   "leaves": 1,
+   "usedAs": [
+    "familyAxis:media_books",
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "accessduration",
+   "labels": [
+    "Access Duration"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "accessmethod",
+   "labels": [
+    "Access Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "accuracy",
+   "labels": [
+    "Accuracy"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ah",
+   "labels": [
+    "Ah"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "animalstage",
+   "labels": [
+    "Animal Stage"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "applicationrate",
+   "labels": [
+    "Application Rate"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "artisan",
+   "labels": [
+    "Artisan"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "artist",
+   "labels": [
+    "Artist"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "arttype",
+   "labels": [
+    "Art Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ashcontent",
+   "labels": [
+    "Ash Content"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "assay",
+   "labels": [
+    "Assay"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "assembly",
+   "labels": [
+    "Assembly"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "authenticity",
+   "labels": [
+    "Authenticity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "automation",
+   "labels": [
+    "Automation"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafOption"
+   ]
+  },
+  {
+   "key": "automationlevel",
+   "labels": [
+    "Automation Level"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "availability",
+   "labels": [
+    "Availability"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:commerce",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "axle",
+   "labels": [
+    "Axle"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "bathrooms",
+   "labels": [
+    "Bathrooms"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "batterycapacity",
+   "labels": [
+    "Battery Capacity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "batterychemistry",
+   "labels": [
+    "Battery Chemistry"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "bedrooms",
+   "labels": [
+    "Bedrooms"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "binding",
+   "labels": [
+    "Binding"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "birdspecies",
+   "labels": [
+    "Bird Species"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "bluetooth",
+   "labels": [
+    "Bluetooth"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "boattype",
+   "labels": [
+    "Boat Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "bodycondition",
+   "labels": [
+    "Body Condition"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "bodytype",
+   "labels": [
+    "Body Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "bonein",
+   "labels": [
+    "Bone-in"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "boneinboneless",
+   "labels": [
+    "Bone-in/Boneless"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "boneless",
+   "labels": [
+    "Boneless"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "brandingmethod",
+   "labels": [
+    "Branding Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "breedstrain",
+   "labels": [
+    "Breed/Strain"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "bundlesize",
+   "labels": [
+    "Bundle Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cameratype",
+   "labels": [
+    "Camera Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "catcharea",
+   "labels": [
+    "Catch Area"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "charging",
+   "labels": [
+    "Charging"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "chassisnumber",
+   "labels": [
+    "Chassis Number"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cleancontaminated",
+   "labels": [
+    "Clean/Contaminated"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "closure",
+   "labels": [
+    "Closure"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "colonyage",
+   "labels": [
+    "Colony Age"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "colonystrength",
+   "labels": [
+    "Colony Strength"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "compliance",
+   "labels": [
+    "Compliance"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "concentration",
+   "labels": [
+    "Concentration"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "connection",
+   "labels": [
+    "Connection"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "container",
+   "labels": [
+    "Container"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cores",
+   "labels": [
+    "Cores"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "coretype",
+   "labels": [
+    "Core Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "coveragearea",
+   "labels": [
+    "Coverage Area"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cpu",
+   "labels": [
+    "CPU"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cpufamily",
+   "labels": [
+    "CPU Family"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cropyear",
+   "labels": [
+    "Crop Year"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "culturalcontext",
+   "labels": [
+    "Cultural Context"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "culturedwild",
+   "labels": [
+    "Cultured/Wild"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "current",
+   "labels": [
+    "Current"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "customization",
+   "labels": [
+    "Customization"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "custommade",
+   "labels": [
+    "Custom Made"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cuttingcapacity",
+   "labels": [
+    "Cutting Capacity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "cyclelife",
+   "labels": [
+    "Cycle Life"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "deliverymode",
+   "labels": [
+    "Delivery Mode"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafOption"
+   ]
+  },
+  {
+   "key": "depth",
+   "labels": [
+    "Depth"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "detectionmethod",
+   "labels": [
+    "Detection Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "developmentstage",
+   "labels": [
+    "Development Stage"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "devices",
+   "labels": [
+    "Devices"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "diseaseresistance",
+   "labels": [
+    "Disease Resistance"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:agriculture",
+    "registry"
+   ]
+  },
+  {
+   "key": "displacement",
+   "labels": [
+    "Displacement"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "displaysize",
+   "labels": [
+    "Display Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "disposable",
+   "labels": [
+    "Disposable"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "dosageform",
+   "labels": [
+    "Dosage Form"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "downloadable",
+   "labels": [
+    "Downloadable"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "drawers",
+   "labels": [
+    "Drawers"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "drivetype",
+   "labels": [
+    "Drive Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "drm",
+   "labels": [
+    "DRM"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "droughttolerance",
+   "labels": [
+    "Drought Tolerance"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "eartag",
+   "labels": [
+    "Ear Tag"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ediblestatus",
+   "labels": [
+    "Edible Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "editionnumber",
+   "labels": [
+    "Edition Number"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "efficiency",
+   "labels": [
+    "Efficiency"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "eggproduction",
+   "labels": [
+    "Egg Production"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "energy",
+   "labels": [
+    "Energy"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "energyrating",
+   "labels": [
+    "Energy Rating"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "energytype",
+   "labels": [
+    "Energy Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafOption"
+   ]
+  },
+  {
+   "key": "engine",
+   "labels": [
+    "Engine"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "enginecode",
+   "labels": [
+    "Engine Code"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "enginepower",
+   "labels": [
+    "Engine Power"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "enginetype",
+   "labels": [
+    "Engine Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "esim",
+   "labels": [
+    "eSIM"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "eventcontext",
+   "labels": [
+    "Event Context"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "expiration",
+   "labels": [
+    "Expiration"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "extractionmethod",
+   "labels": [
+    "Extraction Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fabrictype",
+   "labels": [
+    "Fabric Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "farmingmethod",
+   "labels": [
+    "Farming Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "farmlocation",
+   "labels": [
+    "Farm Location"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "farmtype",
+   "labels": [
+    "Farm Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fatcontent",
+   "labels": [
+    "Fat Content"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fatlevel",
+   "labels": [
+    "Fat Level"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fertilizertype",
+   "labels": [
+    "Fertilizer Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fibretype",
+   "labels": [
+    "Fibre Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "filesize",
+   "labels": [
+    "File Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "filtertype",
+   "labels": [
+    "Filter Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "filtrationmethod",
+   "labels": [
+    "Filtration Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fireresistance",
+   "labels": [
+    "Fire Resistance"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fishingmethod",
+   "labels": [
+    "Fishing Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "fit",
+   "labels": [
+    "Fit"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fixedcarbon",
+   "labels": [
+    "Fixed Carbon"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "flexibility",
+   "labels": [
+    "Flexibility"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "floralsource",
+   "labels": [
+    "Floral Source"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "foodcontact",
+   "labels": [
+    "Food Contact"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "foodtype",
+   "labels": [
+    "Food Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "foresttype",
+   "labels": [
+    "Forest Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "formfactor",
+   "labels": [
+    "Form Factor"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "formulation",
+   "labels": [
+    "Formulation"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "fragrance",
+   "labels": [
+    "Fragrance"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "frequencybands",
+   "labels": [
+    "Frequency Bands"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "frozenstate",
+   "labels": [
+    "Frozen State"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "fueltype",
+   "labels": [
+    "Fuel Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "furnituretype",
+   "labels": [
+    "Furniture Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "garmenttype",
+   "labels": [
+    "Garment Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "gender",
+   "labels": [
+    "Gender"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "gendertarget",
+   "labels": [
+    "Gender/Target"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "genericname",
+   "labels": [
+    "Generic Name"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "germination",
+   "labels": [
+    "Germination"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "germinationrate",
+   "labels": [
+    "Germination Rate"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "glazing",
+   "labels": [
+    "Glazing"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "gps",
+   "labels": [
+    "GPS"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "gpu",
+   "labels": [
+    "GPU"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "gridmode",
+   "labels": [
+    "Grid Mode"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafOption"
+   ]
+  },
+  {
+   "key": "growthstage",
+   "labels": [
+    "Growth Stage"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "hairtype",
+   "labels": [
+    "Hair Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "handmade",
+   "labels": [
+    "Handmade"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "harvestmethod",
+   "labels": [
+    "Harvest Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "heatvalue",
+   "labels": [
+    "Heat Value"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "hivetype",
+   "labels": [
+    "Hive Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "honeytype",
+   "labels": [
+    "Honey Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "hoursused",
+   "labels": [
+    "Hours Used"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "hybridopenpollinated",
+   "labels": [
+    "Hybrid/Open Pollinated"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "imei",
+   "labels": [
+    "IMEI"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "inciingredients",
+   "labels": [
+    "INCI Ingredients"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "inkcolor",
+   "labels": [
+    "Ink Color"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafOption"
+   ]
+  },
+  {
+   "key": "inktype",
+   "labels": [
+    "Ink Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "interface",
+   "labels": [
+    "Interface"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "isbn",
+   "labels": [
+    "ISBN"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "kilndriedairdried",
+   "labels": [
+    "Kiln Dried/Air Dried"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "kwh",
+   "labels": [
+    "kWh"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "lactation",
+   "labels": [
+    "Lactation"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "lactationstatus",
+   "labels": [
+    "Lactation Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "landtype",
+   "labels": [
+    "Land Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "landuse",
+   "labels": [
+    "Land Use"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "leaseterms",
+   "labels": [
+    "Lease Terms"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "licencetradecontext",
+   "labels": [
+    "Licence/Trade Context"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "licensetype",
+   "labels": [
+    "License Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "location",
+   "labels": [
+    "Location"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "locktype",
+   "labels": [
+    "Lock Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "loglength",
+   "labels": [
+    "Log Length"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "machinetype",
+   "labels": [
+    "Machine Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "madetoorder",
+   "labels": [
+    "Made-to-order"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "make",
+   "labels": [
+    "Make"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "manufacturerpartnumber",
+   "labels": [
+    "Manufacturer Part Number"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "materialspecies",
+   "labels": [
+    "Material Species"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "materialtype",
+   "labels": [
+    "Material Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "maturityperiod",
+   "labels": [
+    "Maturity Period"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:agriculture",
+    "registry"
+   ]
+  },
+  {
+   "key": "measurementrange",
+   "labels": [
+    "Measurement Range"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "medium",
+   "labels": [
+    "Medium"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "meshsize",
+   "labels": [
+    "Mesh Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "micronrating",
+   "labels": [
+    "Micron Rating"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "mileage",
+   "labels": [
+    "Mileage"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "milktype",
+   "labels": [
+    "Milk Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "milkyield",
+   "labels": [
+    "Milk Yield"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "mineralgroup",
+   "labels": [
+    "Mineral Group"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "mineraltype",
+   "labels": [
+    "Mineral Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "minesource",
+   "labels": [
+    "Mine/Source"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "minimumorderquantity",
+   "labels": [
+    "Minimum Order Quantity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:commerce",
+    "registry"
+   ]
+  },
+  {
+   "key": "modelyear",
+   "labels": [
+    "Model Year"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "moistureresistance",
+   "labels": [
+    "Moisture Resistance"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "moq",
+   "labels": [
+    "MOQ"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:overlays",
+    "registry"
+   ]
+  },
+  {
+   "key": "motif",
+   "labels": [
+    "Motif"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "mounting",
+   "labels": [
+    "Mounting"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "netweight",
+   "labels": [
+    "Net Weight"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "networkcompatibility",
+   "labels": [
+    "Network Compatibility"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "networkgeneration",
+   "labels": [
+    "Network Generation"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "nfc",
+   "labels": [
+    "NFC"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "npkratio",
+   "labels": [
+    "NPK Ratio"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "nutrientcomposition",
+   "labels": [
+    "Nutrient Composition"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "nutrientcontent",
+   "labels": [
+    "Nutrient Content"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "oemaftermarket",
+   "labels": [
+    "OEM/Aftermarket"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "oemnumber",
+   "labels": [
+    "OEM Number"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "operatinghours",
+   "labels": [
+    "Operating Hours"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "operatingspeed",
+   "labels": [
+    "Operating Speed"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "organicwildharvested",
+   "labels": [
+    "Organic/Wild Harvested"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "originalreproduction",
+   "labels": [
+    "Original/Reproduction"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "origintype",
+   "labels": [
+    "Origin Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafOption"
+   ]
+  },
+  {
+   "key": "osversion",
+   "labels": [
+    "OS Version"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "oxygencapacity",
+   "labels": [
+    "Oxygen Capacity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "packagequantity",
+   "labels": [
+    "Package Quantity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "pagecount",
+   "labels": [
+    "Page Count"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "papersize",
+   "labels": [
+    "Paper Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafOption"
+   ]
+  },
+  {
+   "key": "particlesize",
+   "labels": [
+    "Particle Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "parttype",
+   "labels": [
+    "Part Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "payload",
+   "labels": [
+    "Payload"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "pelletsize",
+   "labels": [
+    "Pellet Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "personalization",
+   "labels": [
+    "Personalization"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "physicalsim",
+   "labels": [
+    "Physical SIM"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "pieces",
+   "labels": [
+    "Pieces"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "piecesize",
+   "labels": [
+    "Piece Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "pipediameter",
+   "labels": [
+    "Pipe Diameter"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "planedunplaned",
+   "labels": [
+    "Planed/Unplaned"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "plantationnatural",
+   "labels": [
+    "Plantation/Natural"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "plantfibresource",
+   "labels": [
+    "Plant/Fibre Source"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "plantingseason",
+   "labels": [
+    "Planting Season"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "plantpart",
+   "labels": [
+    "Plant Part"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "plantspecies",
+   "labels": [
+    "Plant Species"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "platform",
+   "labels": [
+    "Platform"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "ports",
+   "labels": [
+    "Ports"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "position",
+   "labels": [
+    "Position"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "pregnancystatus",
+   "labels": [
+    "Pregnancy Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "prescriptionrestrictionstatus",
+   "labels": [
+    "Prescription/Restriction status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "prescriptionstatus",
+   "labels": [
+    "Prescription Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "pressure",
+   "labels": [
+    "Pressure"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:machine",
+    "registry"
+   ]
+  },
+  {
+   "key": "pressurerating",
+   "labels": [
+    "Pressure Rating"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "price",
+   "labels": [
+    "Price"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:commerce",
+    "registry"
+   ]
+  },
+  {
+   "key": "printable",
+   "labels": [
+    "Printable"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "printcolor",
+   "labels": [
+    "Print Color"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "printmethod",
+   "labels": [
+    "Print Method"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "processor",
+   "labels": [
+    "Processor"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "productionstage",
+   "labels": [
+    "Production Stage"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "profile",
+   "labels": [
+    "Profile"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "propertytype",
+   "labels": [
+    "Property Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "provenance",
+   "labels": [
+    "Provenance"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:mineral",
+    "registry"
+   ]
+  },
+  {
+   "key": "queenstatus",
+   "labels": [
+    "Queen Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ramcapacity",
+   "labels": [
+    "RAM Capacity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ramspeed",
+   "labels": [
+    "RAM Speed"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ramtype",
+   "labels": [
+    "RAM Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "range",
+   "labels": [
+    "Range"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ratedpower",
+   "labels": [
+    "Rated Power"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "rawprocessed",
+   "labels": [
+    "Raw/Processed"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "refreshrate",
+   "labels": [
+    "Refresh Rate"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "registrationnumber",
+   "labels": [
+    "Registration Number"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "registrationstatus",
+   "labels": [
+    "Registration Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "rentalterms",
+   "labels": [
+    "Rental Terms"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "replicaoriginal",
+   "labels": [
+    "Replica/Original"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "reusable",
+   "labels": [
+    "Reusable"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "ripeness",
+   "labels": [
+    "Ripeness"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:food",
+    "registry"
+   ]
+  },
+  {
+   "key": "route",
+   "labels": [
+    "Route"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "safetyequipment",
+   "labels": [
+    "Safety Equipment"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "safetyfeatures",
+   "labels": [
+    "Safety Features"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "season",
+   "labels": [
+    "Season"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "securityfunction",
+   "labels": [
+    "Security Function"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "seedtype",
+   "labels": [
+    "Seed Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:agriculture",
+    "registry"
+   ]
+  },
+  {
+   "key": "servicehistory",
+   "labels": [
+    "Service History"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sexmonosex",
+   "labels": [
+    "Sex/Monosex"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "shade",
+   "labels": [
+    "Shade"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "familyAxis:beauty",
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sheetcount",
+   "labels": [
+    "Sheet Count"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sheetsize",
+   "labels": [
+    "Sheet Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "side",
+   "labels": [
+    "Side"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "simcount",
+   "labels": [
+    "SIM Count"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "simtype",
+   "labels": [
+    "SIM Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "skinless",
+   "labels": [
+    "Skinless"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "skinon",
+   "labels": [
+    "Skin-on"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "skintype",
+   "labels": [
+    "Skin Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "smoking",
+   "labels": [
+    "Smoking"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "soiltype",
+   "labels": [
+    "Soil Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sourceanimal",
+   "labels": [
+    "Source Animal"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sourcematerial",
+   "labels": [
+    "Source Material"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sourceplant",
+   "labels": [
+    "Source Plant"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sourcespecies",
+   "labels": [
+    "Source Species"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "standard",
+   "labels": [
+    "Standard"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "sterile",
+   "labels": [
+    "Sterile"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "stockingdensity",
+   "labels": [
+    "Stocking Density"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "storagecapacity",
+   "labels": [
+    "Storage Capacity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "storagetemperature",
+   "labels": [
+    "Storage Temperature"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "storagetype",
+   "labels": [
+    "Storage Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "registry"
+   ]
+  },
+  {
+   "key": "strengthclass",
+   "labels": [
+    "Strength Class"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "subject",
+   "labels": [
+    "Subject"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "tanningstate",
+   "labels": [
+    "Tanning State"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "target",
+   "labels": [
+    "Target"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "targetanimal",
+   "labels": [
+    "Target Animal"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "targetcrop",
+   "labels": [
+    "Target Crop"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "targetpest",
+   "labels": [
+    "Target Pest"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "technology",
+   "labels": [
+    "Technology"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "teststatus",
+   "labels": [
+    "Test Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "texture",
+   "labels": [
+    "Texture"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "theme",
+   "labels": [
+    "Theme"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "threads",
+   "labels": [
+    "Threads"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "throughput",
+   "labels": [
+    "Throughput"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "tipsize",
+   "labels": [
+    "Tip Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "traditionaluse",
+   "labels": [
+    "Traditional Use"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "transactiontype",
+   "labels": [
+    "Transaction Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "treeage",
+   "labels": [
+    "Tree Age"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "typeapproval",
+   "labels": [
+    "Type Approval"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "tyresize",
+   "labels": [
+    "Tyre Size"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "usagerights",
+   "labels": [
+    "Usage Rights"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "usb",
+   "labels": [
+    "USB"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "users",
+   "labels": [
+    "Users"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "utilities",
+   "labels": [
+    "Utilities"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "vaccinationstatus",
+   "labels": [
+    "Vaccination Status"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "vehiclemake",
+   "labels": [
+    "Vehicle Make"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "vehiclemodel",
+   "labels": [
+    "Vehicle Model"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "vehicletype",
+   "labels": [
+    "Vehicle Type"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "verification",
+   "labels": [
+    "Verification"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "leafOption",
+    "profile:property",
+    "registry"
+   ]
+  },
+  {
+   "key": "version",
+   "labels": [
+    "Version"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:digital",
+    "registry"
+   ]
+  },
+  {
+   "key": "vin",
+   "labels": [
+    "VIN"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "vram",
+   "labels": [
+    "VRAM"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "wallthickness",
+   "labels": [
+    "Wall Thickness"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "waterparameters",
+   "labels": [
+    "Water Parameters"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "weightcapacity",
+   "labels": [
+    "Weight Capacity"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "wh",
+   "labels": [
+    "Wh"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "wifi",
+   "labels": [
+    "Wi-Fi"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "yearcreated",
+   "labels": [
+    "Year Created"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "yearfrom",
+   "labels": [
+    "Year From"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "yearmanufactured",
+   "labels": [
+    "Year Manufactured"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "yearto",
+   "labels": [
+    "Year To"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "registry"
+   ]
+  },
+  {
+   "key": "yieldpotential",
+   "labels": [
+    "Yield Potential"
+   ],
+   "categories": 1,
+   "leaves": 1,
+   "usedAs": [
+    "leafAttribute",
+    "profile:agriculture",
+    "registry"
+   ]
+  },
+  {
+   "key": "groupsize",
+   "labels": [
+    "Group Size"
+   ],
+   "categories": 11,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:services"
+   ]
+  },
+  {
+   "key": "packagetier",
+   "labels": [
+    "Package/Tier"
+   ],
+   "categories": 11,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:services"
+   ]
+  },
+  {
+   "key": "roomtype",
+   "labels": [
+    "Room Type"
+   ],
+   "categories": 11,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:services"
+   ]
+  },
+  {
+   "key": "ageband",
+   "labels": [
+    "Age Band"
+   ],
+   "categories": 6,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:livestock",
+    "familyAxis:sports_toys"
+   ]
+  },
+  {
+   "key": "gauge",
+   "labels": [
+    "Gauge"
+   ],
+   "categories": 5,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:hardware"
+   ]
+  },
+  {
+   "key": "powerrating",
+   "labels": [
+    "Power Rating"
+   ],
+   "categories": 5,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:hardware"
+   ]
+  },
+  {
+   "key": "gradeconcentration",
+   "labels": [
+    "Grade/Concentration"
+   ],
+   "categories": 4,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:stationery_packaging"
+   ]
+  },
+  {
+   "key": "fitmentposition",
+   "labels": [
+    "Fitment Position"
+   ],
+   "categories": 1,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:parts"
+   ]
+  },
+  {
+   "key": "scent",
+   "labels": [
+    "Scent"
+   ],
+   "categories": 1,
+   "leaves": 0,
+   "usedAs": [
+    "familyAxis:beauty"
+   ]
+  },
+  {
+   "key": "commercialmode",
+   "labels": [
+    "Commercial Mode"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:overlays"
+   ]
+  },
+  {
+   "key": "countryoforigin",
+   "labels": [
+    "Country of Origin"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:overlays"
+   ]
+  },
+  {
+   "key": "cropvariety",
+   "labels": [
+    "Crop Variety"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:agriculture"
+   ]
+  },
+  {
+   "key": "destination",
+   "labels": [
+    "Destination"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:overlays"
+   ]
+  },
+  {
+   "key": "trademode",
+   "labels": [
+    "Trade Mode"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:commerce"
+   ]
+  },
+  {
+   "key": "tradeoperation",
+   "labels": [
+    "Trade Operation"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:overlays"
+   ]
+  },
+  {
+   "key": "tradeunit",
+   "labels": [
+    "Trade Unit"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:overlays"
+   ]
+  },
+  {
+   "key": "workingwidth",
+   "labels": [
+    "Working Width"
+   ],
+   "categories": 0,
+   "leaves": 0,
+   "usedAs": [
+    "profile:machine"
+   ]
+  }
+ ],
+ "families": [
+  {
+   "id": "apparel",
+   "categories": [
+    "CAT-07",
+    "CAT-29"
+   ],
+   "axes": [
+    "Size",
+    "Colour",
+    "Material"
+   ],
+   "forbidden": [
+    "Brand",
+    "Gender",
+    "Condition"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": "Gender/age ni attribute ya leaf, si variant."
+  },
+  {
+   "id": "footwear",
+   "categories": [],
+   "axes": [
+    "Shoe Size",
+    "Colour",
+    "Width"
+   ],
+   "forbidden": [
+    "Brand",
+    "Condition"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": null
+  },
+  {
+   "id": "beauty",
+   "categories": [
+    "CAT-08"
+   ],
+   "axes": [
+    "Volume",
+    "Shade",
+    "Scent",
+    "Pack Size"
+   ],
+   "forbidden": [
+    "Ingredients",
+    "Expiry"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": "Expiry ni sifa ya batch (inventory lot), si variant."
+  },
+  {
+   "id": "food_fresh",
+   "categories": [
+    "CAT-01",
+    "CAT-03"
+   ],
+   "axes": [
+    "Weight",
+    "Pack Size",
+    "Grade",
+    "Variety"
+   ],
+   "forbidden": [
+    "Origin+Organic combined with different price unit"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "food"
+   ],
+   "note": "Variants lazima ziwe na unitGroup moja (WEIGHT au COUNT, si zote mbili)."
+  },
+  {
+   "id": "livestock",
+   "categories": [
+    "CAT-04",
+    "CAT-05"
+   ],
+   "axes": [
+    "Weight",
+    "Age Band",
+    "Sex"
+   ],
+   "forbidden": [
+    "Breed"
+   ],
+   "profiles": [
+    "commerce",
+    "food"
+   ],
+   "note": "Mnyama hai mmoja = listing moja; variants kwa lots tu."
+  },
+  {
+   "id": "electronics",
+   "categories": [
+    "CAT-11",
+    "CAT-12",
+    "CAT-13"
+   ],
+   "axes": [
+    "Storage",
+    "RAM",
+    "Colour",
+    "Screen Size",
+    "Capacity"
+   ],
+   "forbidden": [
+    "Model",
+    "Condition",
+    "Serial Number"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical",
+    "machine"
+   ],
+   "note": "Model tofauti = product tofauti."
+  },
+  {
+   "id": "unique_assets",
+   "categories": [
+    "CAT-14",
+    "CAT-42"
+   ],
+   "axes": [],
+   "forbidden": [
+    "*"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "property"
+   ],
+   "note": "Kila gari/mali ni kipengee cha kipekee (VIN/plot no.) — hakuna variants."
+  },
+  {
+   "id": "parts",
+   "categories": [
+    "CAT-15"
+   ],
+   "axes": [
+    "Fitment Position",
+    "Pack Size"
+   ],
+   "forbidden": [
+    "Vehicle Make/Model"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": "Fitment ni compatibility list, si variant."
+  },
+  {
+   "id": "hardware",
+   "categories": [
+    "CAT-10",
+    "CAT-33",
+    "CAT-34",
+    "CAT-35",
+    "CAT-36"
+   ],
+   "axes": [
+    "Size",
+    "Length",
+    "Diameter",
+    "Gauge",
+    "Capacity",
+    "Power Rating",
+    "Pack Size",
+    "Colour"
+   ],
+   "forbidden": [
+    "Brand",
+    "Standard/Grade mixing"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": null
+  },
+  {
+   "id": "furniture",
+   "categories": [
+    "CAT-09"
+   ],
+   "axes": [
+    "Colour",
+    "Material",
+    "Size"
+   ],
+   "forbidden": [
+    "Brand"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": null
+  },
+  {
+   "id": "media_books",
+   "categories": [
+    "CAT-45",
+    "CAT-38"
+   ],
+   "axes": [
+    "Format",
+    "Language",
+    "Edition"
+   ],
+   "forbidden": [
+    "Title",
+    "Author"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "digital"
+   ],
+   "note": "Kichwa tofauti = product tofauti."
+  },
+  {
+   "id": "sports_toys",
+   "categories": [
+    "CAT-46",
+    "CAT-47",
+    "CAT-30",
+    "CAT-31"
+   ],
+   "axes": [
+    "Size",
+    "Colour",
+    "Weight",
+    "Age Band",
+    "Pack Size"
+   ],
+   "forbidden": [
+    "Brand"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": null
+  },
+  {
+   "id": "arts_culture",
+   "categories": [
+    "CAT-27",
+    "CAT-28"
+   ],
+   "axes": [
+    "Size",
+    "Colour",
+    "Material"
+   ],
+   "forbidden": [
+    "*unique"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": "Kazi ya kipekee (one-of-a-kind) haina variants; prints/replicas zinaruhusiwa."
+  },
+  {
+   "id": "stationery_packaging",
+   "categories": [
+    "CAT-32",
+    "CAT-37",
+    "CAT-49",
+    "CAT-48"
+   ],
+   "axes": [
+    "Size",
+    "Pack Size",
+    "Colour",
+    "Grade/Concentration",
+    "Volume"
+   ],
+   "forbidden": [
+    "Hazard Class"
+   ],
+   "profiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "note": null
+  },
+  {
+   "id": "bulk_commodities",
+   "categories": [
+    "CAT-43",
+    "CAT-06",
+    "CAT-02"
+   ],
+   "axes": [
+    "Grade",
+    "Weight",
+    "Pack Size"
+   ],
+   "forbidden": [
+    "Origin licence"
+   ],
+   "profiles": [
+    "commerce",
+    "food",
+    "agriculture"
+   ],
+   "note": null
+  },
+  {
+   "id": "digital",
+   "categories": [],
+   "axes": [
+    "Licence Tier",
+    "Duration",
+    "Seats"
+   ],
+   "forbidden": [
+    "Platform mixing without SKU"
+   ],
+   "profiles": [
+    "identity",
+    "digital"
+   ],
+   "note": null
+  },
+  {
+   "id": "services",
+   "categories": [
+    "CAT-16",
+    "CAT-17",
+    "CAT-18",
+    "CAT-19",
+    "CAT-20",
+    "CAT-21",
+    "CAT-22",
+    "CAT-23",
+    "CAT-24",
+    "CAT-25",
+    "CAT-26"
+   ],
+   "axes": [
+    "Package/Tier",
+    "Duration",
+    "Room Type",
+    "Group Size"
+   ],
+   "forbidden": [
+    "Service Area"
+   ],
+   "profiles": [],
+   "note": "Huduma hutumia \"packages\" badala ya stock; capacity = slots."
+  }
+ ],
+ "mapping": [
+  {
+   "categoryId": "CAT-01",
+   "name": "Chakula & Vinywaji",
+   "kind": "product",
+   "leaves": 17,
+   "canonicalLeaves": 17,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 17,
+   "leavesInheritOnly": 0,
+   "variantFamily": "food_fresh",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "food"
+   ],
+   "sampleLeaf": "Nafaka, Unga & Mikunde",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L3_LEAF",
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Nyanya",
+    "Vitunguu",
+    "Karoti"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-02",
+   "name": "Pembejeo & Zana za Kilimo",
+   "kind": "product",
+   "leaves": 14,
+   "canonicalLeaves": 14,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 14,
+   "leavesInheritOnly": 0,
+   "variantFamily": "bulk_commodities",
+   "inheritedProfiles": [
+    "commerce",
+    "food",
+    "agriculture"
+   ],
+   "sampleLeaf": "Mbegu",
+   "sampleResolvedAttributes": 42,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L3_LEAF",
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Mbegu za Mahindi",
+    "Mbegu za Mpunga",
+    "Mbegu za Mboga"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-03",
+   "name": "Mazao & Biashara ya Kilimo",
+   "kind": "product",
+   "leaves": 22,
+   "canonicalLeaves": 22,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 22,
+   "variantFamily": "food_fresh",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "food"
+   ],
+   "sampleLeaf": "Nafaka",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Mahindi",
+    "Mchele",
+    "Maharage"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-04",
+   "name": "Mifugo",
+   "kind": "product",
+   "leaves": 17,
+   "canonicalLeaves": 17,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 16,
+   "leavesWithPartialDefinition": 1,
+   "leavesInheritOnly": 0,
+   "variantFamily": "livestock",
+   "inheritedProfiles": [
+    "commerce",
+    "food"
+   ],
+   "sampleLeaf": "Ng'ombe",
+   "sampleResolvedAttributes": 44,
+   "sampleLayers": [
+    "L3_LEAF",
+    "L2_FAMILY_AXIS",
+    "L1_PROFILE",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Ng'ombe wa nyama",
+    "Ng'ombe wa maziwa",
+    "Ng'ombe wa mchanganyiko"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-05",
+   "name": "Uvuvi & Bidhaa za Majini",
+   "kind": "product",
+   "leaves": 18,
+   "canonicalLeaves": 18,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 17,
+   "leavesWithPartialDefinition": 1,
+   "leavesInheritOnly": 0,
+   "variantFamily": "livestock",
+   "inheritedProfiles": [
+    "commerce",
+    "food"
+   ],
+   "sampleLeaf": "Samaki wa Maji Safi",
+   "sampleResolvedAttributes": 38,
+   "sampleLayers": [
+    "L2_FAMILY_AXIS",
+    "L1_PROFILE",
+    "L0_COMMON",
+    "L3_LEAF"
+   ],
+   "examples": [
+    "Sato / Tilapia",
+    "Kambale / African Catfish",
+    "Sangara"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-06",
+   "name": "Misitu, Mbao & Bidhaa Asilia",
+   "kind": "product",
+   "leaves": 20,
+   "canonicalLeaves": 20,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 20,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 0,
+   "variantFamily": "bulk_commodities",
+   "inheritedProfiles": [
+    "commerce",
+    "food",
+    "agriculture"
+   ],
+   "sampleLeaf": "Miti & Magogo",
+   "sampleResolvedAttributes": 46,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L0_COMMON",
+    "L3_LEAF",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Round logs",
+    "Tree trunks",
+    "Saw logs"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-07",
+   "name": "Nguo, Mavazi & Mitindo",
+   "kind": "product",
+   "leaves": 24,
+   "canonicalLeaves": 22,
+   "proposedLeaves": 2,
+   "leavesWithExplicitDefinition": 1,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 23,
+   "variantFamily": "apparel",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Viatu",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L3_LEAF",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Golf Shoe",
+    "T-Shirt",
+    "Shirt"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-08",
+   "name": "Urembo & Utunzaji Binafsi",
+   "kind": "product",
+   "leaves": 21,
+   "canonicalLeaves": 21,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 21,
+   "variantFamily": "beauty",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Skincare",
+   "sampleResolvedAttributes": 32,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Face Wash",
+    "Body Lotion",
+    "Shampoo"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-09",
+   "name": "Nyumba & Samani",
+   "kind": "product",
+   "leaves": 22,
+   "canonicalLeaves": 22,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 22,
+   "variantFamily": "furniture",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Samani",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Sofa",
+    "Table",
+    "Chair"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-10",
+   "name": "Ujenzi & Hardware",
+   "kind": "product",
+   "leaves": 28,
+   "canonicalLeaves": 28,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 28,
+   "variantFamily": "hardware",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Cement, Lime & Binders",
+   "sampleResolvedAttributes": 33,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Cement",
+    "Building Sand",
+    "Reinforcement Bars"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-11",
+   "name": "Electronics & Vifaa vya Nyumbani",
+   "kind": "product",
+   "leaves": 19,
+   "canonicalLeaves": 19,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 19,
+   "variantFamily": "electronics",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical",
+    "machine"
+   ],
+   "sampleLeaf": "TVs & Home Entertainment",
+   "sampleResolvedAttributes": 40,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Smart TV",
+    "Bluetooth Speaker",
+    "Refrigerator"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-12",
+   "name": "Simu & Mawasiliano",
+   "kind": "product",
+   "leaves": 17,
+   "canonicalLeaves": 17,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 17,
+   "variantFamily": "electronics",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical",
+    "machine"
+   ],
+   "sampleLeaf": "Simu za Mkononi",
+   "sampleResolvedAttributes": 40,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Smartphone",
+    "Feature Phone",
+    "Tablet"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-13",
+   "name": "Kompyuta & TEHAMA",
+   "kind": "product",
+   "leaves": 23,
+   "canonicalLeaves": 23,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 23,
+   "variantFamily": "electronics",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical",
+    "machine"
+   ],
+   "sampleLeaf": "Laptops",
+   "sampleResolvedAttributes": 40,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Laptop",
+    "Desktop Computer",
+    "Workstation"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-14",
+   "name": "Magari & Vyombo vya Usafiri",
+   "kind": "product",
+   "leaves": 23,
+   "canonicalLeaves": 22,
+   "proposedLeaves": 1,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 23,
+   "variantFamily": "unique_assets",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "property"
+   ],
+   "sampleLeaf": "Magari Madogo",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Sedan",
+    "SUV",
+    "Pickup"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-15",
+   "name": "Vipuri & Vifaa vya Magari",
+   "kind": "product",
+   "leaves": 33,
+   "canonicalLeaves": 33,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 33,
+   "variantFamily": "parts",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Engine Parts",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Brake Pad",
+    "Oil Filter",
+    "Shock Absorber"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-16",
+   "name": "Usafiri & Usafirishaji",
+   "kind": "service",
+   "leaves": 7,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 7,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 7,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Freight Transport",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Lori la Mizigo",
+    "Mizigo ya Pikipiki/Guta",
+    "Usafirishaji wa Baridi"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-17",
+   "name": "Huduma za Nyumbani",
+   "kind": "service",
+   "leaves": 9,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 9,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 9,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "House Cleaning",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Usafi wa Kawaida",
+    "Usafi wa Kina",
+    "Usafi Baada ya Ujenzi"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-18",
+   "name": "Ufundi & Matengenezo",
+   "kind": "service",
+   "leaves": 13,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 13,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 13,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Electrical Installation & Repair",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Wiring ya Nyumba",
+    "Kufunga Solar",
+    "Kurekebisha Hitilafu ya Umeme"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-19",
+   "name": "Afya & Bidhaa za Afya",
+   "kind": "product",
+   "leaves": 24,
+   "canonicalLeaves": 17,
+   "proposedLeaves": 7,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 24,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Dawa na Medicinal Products",
+   "sampleResolvedAttributes": 15,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Tablets",
+    "Capsules",
+    "Syrups"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-20",
+   "name": "Elimu & Mafunzo",
+   "kind": "service",
+   "leaves": 8,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 8,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 8,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Tutoring & Extra Classes",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Tuition ya Msingi",
+    "Tuition ya Sekondari",
+    "Maandalizi ya Mtihani"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-21",
+   "name": "Huduma za Kitaalamu & Biashara",
+   "kind": "service",
+   "leaves": 10,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 10,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 10,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Legal Services",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Wakili",
+    "Mikataba",
+    "Notary / Commissioner for Oaths"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-22",
+   "name": "Fedha & Bima",
+   "kind": "service",
+   "leaves": 5,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 5,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 5,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Loans & Credit",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Mkopo wa Biashara Ndogo",
+    "Mkopo wa Mshahara",
+    "Mkopo wa Vifaa"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-23",
+   "name": "Ajira & Kazi",
+   "kind": "service",
+   "leaves": 5,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 5,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 5,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Job Vacancies",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Kazi ya Kudumu",
+    "Kazi ya Muda",
+    "Mkataba"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-24",
+   "name": "Hoteli, Malazi & Utalii",
+   "kind": "service",
+   "leaves": 6,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 6,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 6,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Hotels",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Chumba cha Hoteli",
+    "Suite",
+    "Ukumbi wa Mikutano"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-25",
+   "name": "Migahawa & Catering",
+   "kind": "service",
+   "leaves": 6,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 6,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 6,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Restaurants",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Mgahawa wa Kukaa",
+    "Mama Lishe",
+    "Fast Food"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-26",
+   "name": "Burudani, Michezo & Matukio",
+   "kind": "service",
+   "leaves": 7,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 7,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 7,
+   "variantFamily": "services",
+   "inheritedProfiles": [],
+   "sampleLeaf": "Event Planning",
+   "sampleResolvedAttributes": 11,
+   "sampleLayers": [
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Mpangaji wa Harusi",
+    "Mpangaji wa Tukio",
+    "Mapambo ya Ukumbi"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-27",
+   "name": "Sanaa & Ubunifu",
+   "kind": "product",
+   "leaves": 22,
+   "canonicalLeaves": 20,
+   "proposedLeaves": 2,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 22,
+   "variantFamily": "arts_culture",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Michoro & Paintings",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Painting",
+    "Sculpture",
+    "Photo Print"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-28",
+   "name": "Bidhaa za Jadi & Utamaduni",
+   "kind": "product",
+   "leaves": 23,
+   "canonicalLeaves": 22,
+   "proposedLeaves": 1,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 23,
+   "variantFamily": "arts_culture",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Nguo za Jadi & Traditional Wear",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Kanga",
+    "Basket",
+    "Traditional Pottery"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-29",
+   "name": "Harusi & Sherehe",
+   "kind": "product",
+   "leaves": 29,
+   "canonicalLeaves": 28,
+   "proposedLeaves": 1,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 29,
+   "variantFamily": "apparel",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Wedding Dresses & Bridal Wear",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Wedding Dress",
+    "Invitation",
+    "Balloon"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-30",
+   "name": "Mama, Mtoto & Familia",
+   "kind": "product",
+   "leaves": 27,
+   "canonicalLeaves": 27,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 27,
+   "variantFamily": "sports_toys",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Maternity Wear",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L2_FAMILY_AXIS",
+    "L1_PROFILE",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Maternity Wear",
+    "Baby Clothing",
+    "Baby Diaper"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-31",
+   "name": "Wanyama Vipenzi",
+   "kind": "product",
+   "leaves": 26,
+   "canonicalLeaves": 26,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 26,
+   "variantFamily": "sports_toys",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Pets / Companion Animals",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L2_FAMILY_AXIS",
+    "L1_PROFILE",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Dog",
+    "Cat",
+    "Pet Food"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-32",
+   "name": "Ofisi, Shule & Vifaa vya Kuandikia",
+   "kind": "product",
+   "leaves": 29,
+   "canonicalLeaves": 29,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 29,
+   "variantFamily": "stationery_packaging",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Paper & Paper Products",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "A4 Paper",
+    "Ballpoint Pen",
+    "Notebook"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-33",
+   "name": "Viwanda & Mashine",
+   "kind": "product",
+   "leaves": 32,
+   "canonicalLeaves": 31,
+   "proposedLeaves": 1,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 32,
+   "variantFamily": "hardware",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Industrial Machinery",
+   "sampleResolvedAttributes": 33,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Industrial Machine",
+    "Food Processing Machine",
+    "Pump"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-34",
+   "name": "Nishati & Umeme",
+   "kind": "product",
+   "leaves": 27,
+   "canonicalLeaves": 27,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 27,
+   "variantFamily": "hardware",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Solar Energy Products",
+   "sampleResolvedAttributes": 33,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Solar Panel",
+    "Solar Inverter",
+    "Battery"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-35",
+   "name": "Maji, Usafi & Mazingira",
+   "kind": "product",
+   "leaves": 34,
+   "canonicalLeaves": 34,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 34,
+   "variantFamily": "hardware",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Water Storage",
+   "sampleResolvedAttributes": 33,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Water Tank",
+    "Water Filter",
+    "Purification System"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-36",
+   "name": "Usalama & Ulinzi",
+   "kind": "product",
+   "leaves": 23,
+   "canonicalLeaves": 23,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 23,
+   "variantFamily": "hardware",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Physical Locks",
+   "sampleResolvedAttributes": 33,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Padlock",
+    "Door Lock",
+    "Smart Lock"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-37",
+   "name": "Matangazo, Media & Branding",
+   "kind": "product",
+   "leaves": 33,
+   "canonicalLeaves": 33,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 33,
+   "variantFamily": "stationery_packaging",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Printed Marketing Materials",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Business Card",
+    "Flyer",
+    "Poster"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-38",
+   "name": "Bidhaa za Kidijitali",
+   "kind": "product",
+   "leaves": 29,
+   "canonicalLeaves": 29,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 29,
+   "variantFamily": "media_books",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "digital"
+   ],
+   "sampleLeaf": "Software",
+   "sampleResolvedAttributes": 32,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Software",
+    "Mobile App",
+    "SaaS Product"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-42",
+   "name": "Ardhi & Mali Isiyohamishika",
+   "kind": "product",
+   "leaves": 23,
+   "canonicalLeaves": 23,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 23,
+   "variantFamily": "unique_assets",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "property"
+   ],
+   "sampleLeaf": "Viwanja",
+   "sampleResolvedAttributes": 30,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Land",
+    "Plot",
+    "House"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-43",
+   "name": "Madini, Mawe & Rasilimali",
+   "kind": "product",
+   "leaves": 21,
+   "canonicalLeaves": 21,
+   "proposedLeaves": 0,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 21,
+   "variantFamily": "bulk_commodities",
+   "inheritedProfiles": [
+    "commerce",
+    "food",
+    "agriculture"
+   ],
+   "sampleLeaf": "Metallic Minerals",
+   "sampleResolvedAttributes": 37,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L0_COMMON",
+    "L2_FAMILY_AXIS"
+   ],
+   "examples": [
+    "Gold",
+    "Silver",
+    "Tanzanite"
+   ],
+   "examplesSource": "canonical PRODUCT_TYPE_REGISTRY"
+  },
+  {
+   "categoryId": "CAT-45",
+   "name": "Vitabu, Muziki & Media",
+   "kind": "product",
+   "leaves": 10,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 10,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 10,
+   "variantFamily": "media_books",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "digital"
+   ],
+   "sampleLeaf": "Fiction & Novels",
+   "sampleResolvedAttributes": 32,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Riwaya",
+    "Hadithi Fupi",
+    "Mashairi"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-46",
+   "name": "Michezo, Mazoezi & Burudani ya Nje",
+   "kind": "product",
+   "leaves": 12,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 12,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 12,
+   "variantFamily": "sports_toys",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Football",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L2_FAMILY_AXIS",
+    "L1_PROFILE",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Mpira wa Miguu",
+    "Viatu vya Mpira",
+    "Jezi za Timu"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-47",
+   "name": "Vichezeo & Michezo",
+   "kind": "product",
+   "leaves": 10,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 10,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 10,
+   "variantFamily": "sports_toys",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Educational & STEM Toys",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L2_FAMILY_AXIS",
+    "L1_PROFILE",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Vipande vya Kujenga",
+    "Kit ya Sayansi",
+    "Kit ya Robotiki"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-48",
+   "name": "Kemikali, Maabara & Sayansi",
+   "kind": "product",
+   "leaves": 8,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 8,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 8,
+   "variantFamily": "stationery_packaging",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Industrial Chemicals",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Asidi",
+    "Alkali",
+    "Solvent"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  },
+  {
+   "categoryId": "CAT-49",
+   "name": "Vifungashio & Vifaa vya Kufunga",
+   "kind": "product",
+   "leaves": 9,
+   "canonicalLeaves": 0,
+   "proposedLeaves": 9,
+   "leavesWithExplicitDefinition": 0,
+   "leavesWithPartialDefinition": 0,
+   "leavesInheritOnly": 9,
+   "variantFamily": "stationery_packaging",
+   "inheritedProfiles": [
+    "identity",
+    "commerce",
+    "physical"
+   ],
+   "sampleLeaf": "Packaging Bags",
+   "sampleResolvedAttributes": 31,
+   "sampleLayers": [
+    "L1_PROFILE",
+    "L2_FAMILY_AXIS",
+    "L0_COMMON"
+   ],
+   "examples": [
+    "Mfuko wa Karatasi",
+    "Mfuko wa Kitambaa/Non-woven",
+    "Gunia la Polypropylene"
+   ],
+   "examplesSource": "draft (PROPOSED types)"
+  }
+ ],
+ "duplicates": {
+  "labelVariants": [
+   {
+    "key": "color",
+    "labels": [
+     "Color",
+     "Colour"
+    ],
+    "status": "SAME_KEY_DIFFERENT_SPELLING",
+    "action": "Chagua lebo moja ya kuonyesha; ID/thamani zilizopo hazibadilishwi."
+   },
+   {
+    "key": "packsize",
+    "labels": [
+     "Pack Size",
+     "Package Size"
+    ],
+    "status": "SAME_KEY_DIFFERENT_SPELLING",
+    "action": "Chagua lebo moja ya kuonyesha; ID/thamani zilizopo hazibadilishwi."
+   },
+   {
+    "key": "breedingstatus",
+    "labels": [
+     "Breeding Status",
+     "Breeding status"
+    ],
+    "status": "SAME_KEY_DIFFERENT_SPELLING",
+    "action": "Chagua lebo moja ya kuonyesha; ID/thamani zilizopo hazibadilishwi."
+   },
+   {
+    "key": "healthstatus",
+    "labels": [
+     "Health Status",
+     "Health status"
+    ],
+    "status": "SAME_KEY_DIFFERENT_SPELLING",
+    "action": "Chagua lebo moja ya kuonyesha; ID/thamani zilizopo hazibadilishwi."
+   }
+  ],
+  "synonymCandidates": [
+   {
+    "labels": [
+     "Color",
+     "Colour",
+     "Shade"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Package Size",
+     "Pack Size",
+     "Packaging"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Size",
+     "Dimensions"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Storage",
+     "Storage Capacity",
+     "Capacity"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Weight",
+     "Net Weight"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Volume",
+     "Capacity"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Power",
+     "Power Rating"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Crop",
+     "Crop Type"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Variety",
+     "Crop Variety"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Grade",
+     "Quality"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   },
+   {
+    "labels": [
+     "Model",
+     "Model Number"
+    ],
+    "status": "NEEDS_HUMAN_DECISION",
+    "note": "Huenda zina maana moja au tofauti halisi (mf. Size vs Shoe Size). Hazijaunganishwa."
+   }
+  ]
+ },
+ "missing": {
+  "categoriesWithoutVariantFamily": [],
+  "categoriesWithNoLeafDefinition": [
+   "CAT-03 Mazao & Biashara ya Kilimo",
+   "CAT-08 Urembo & Utunzaji Binafsi",
+   "CAT-09 Nyumba & Samani",
+   "CAT-10 Ujenzi & Hardware",
+   "CAT-11 Electronics & Vifaa vya Nyumbani",
+   "CAT-12 Simu & Mawasiliano",
+   "CAT-13 Kompyuta & TEHAMA",
+   "CAT-14 Magari & Vyombo vya Usafiri",
+   "CAT-15 Vipuri & Vifaa vya Magari",
+   "CAT-16 Usafiri & Usafirishaji",
+   "CAT-17 Huduma za Nyumbani",
+   "CAT-18 Ufundi & Matengenezo",
+   "CAT-19 Afya & Bidhaa za Afya",
+   "CAT-20 Elimu & Mafunzo",
+   "CAT-21 Huduma za Kitaalamu & Biashara",
+   "CAT-22 Fedha & Bima",
+   "CAT-23 Ajira & Kazi",
+   "CAT-24 Hoteli, Malazi & Utalii",
+   "CAT-25 Migahawa & Catering",
+   "CAT-26 Burudani, Michezo & Matukio",
+   "CAT-27 Sanaa & Ubunifu",
+   "CAT-28 Bidhaa za Jadi & Utamaduni",
+   "CAT-29 Harusi & Sherehe",
+   "CAT-30 Mama, Mtoto & Familia",
+   "CAT-31 Wanyama Vipenzi",
+   "CAT-32 Ofisi, Shule & Vifaa vya Kuandikia",
+   "CAT-33 Viwanda & Mashine",
+   "CAT-34 Nishati & Umeme",
+   "CAT-35 Maji, Usafi & Mazingira",
+   "CAT-36 Usalama & Ulinzi",
+   "CAT-37 Matangazo, Media & Branding",
+   "CAT-38 Bidhaa za Kidijitali",
+   "CAT-42 Ardhi & Mali Isiyohamishika",
+   "CAT-43 Madini, Mawe & Rasilimali",
+   "CAT-45 Vitabu, Muziki & Media",
+   "CAT-46 Michezo, Mazoezi & Burudani ya Nje",
+   "CAT-47 Vichezeo & Michezo",
+   "CAT-48 Kemikali, Maabara & Sayansi",
+   "CAT-49 Vifungashio & Vifaa vya Kufunga"
+  ],
+  "categoriesWithoutExamples": []
+ }
+}

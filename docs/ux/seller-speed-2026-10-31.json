@@ -1,0 +1,254 @@
+{
+ "model": {
+  "type": 6,
+  "choose": 3,
+  "click": 1,
+  "photo": 8
+ },
+ "note": "Makadirio ya muda kwa modeli rahisi (si utafiti wa watumiaji). Hesabu za fields zimepimwa kwenye DOM halisi.",
+ "form": {
+  "mobile:hybrid": {
+   "before": {
+    "visibleFields": 20,
+    "mustFill": 6,
+    "heightPx": 3472
+   },
+   "after": {
+    "visibleFields": 17,
+    "mustFill": 5,
+    "heightPx": 2343
+   }
+  },
+  "mobile:offline_only": {
+   "before": {
+    "visibleFields": 19,
+    "mustFill": 4,
+    "heightPx": 3365
+   },
+   "after": {
+    "visibleFields": 16,
+    "mustFill": 3,
+    "heightPx": 2036
+   }
+  },
+  "mobile:online_only": {
+   "before": {
+    "visibleFields": 20,
+    "mustFill": 6,
+    "heightPx": 3472
+   },
+   "after": {
+    "visibleFields": 17,
+    "mustFill": 5,
+    "heightPx": 2343
+   }
+  },
+  "mobile:manage_only": {
+   "before": {
+    "visibleFields": 19,
+    "mustFill": 4,
+    "heightPx": 3365
+   },
+   "after": {
+    "visibleFields": 16,
+    "mustFill": 3,
+    "heightPx": 2036
+   }
+  },
+  "desktop:hybrid": {
+   "before": {
+    "visibleFields": 20,
+    "mustFill": 6,
+    "heightPx": 3373
+   },
+   "after": {
+    "visibleFields": 17,
+    "mustFill": 5,
+    "heightPx": 2280
+   }
+  },
+  "desktop:offline_only": {
+   "before": {
+    "visibleFields": 19,
+    "mustFill": 4,
+    "heightPx": 3266
+   },
+   "after": {
+    "visibleFields": 16,
+    "mustFill": 3,
+    "heightPx": 1937
+   }
+  },
+  "desktop:online_only": {
+   "before": {
+    "visibleFields": 20,
+    "mustFill": 6,
+    "heightPx": 3373
+   },
+   "after": {
+    "visibleFields": 17,
+    "mustFill": 5,
+    "heightPx": 2261
+   }
+  },
+  "desktop:manage_only": {
+   "before": {
+    "visibleFields": 19,
+    "mustFill": 4,
+    "heightPx": 3266
+   },
+   "after": {
+    "visibleFields": 16,
+    "mustFill": 3,
+    "heightPx": 1937
+   }
+  }
+ },
+ "scenarios": [
+  {
+   "id": "duka_dogo",
+   "label": "Duka dogo la rejareja (hybrid, bidhaa rahisi, picha 1)",
+   "mode": "hybrid",
+   "before": {
+    "steps": 10,
+    "seconds": 48
+   },
+   "after": {
+    "steps": 8,
+    "seconds": 40
+   },
+   "afterWithStoreAddress": {
+    "steps": 7,
+    "seconds": 34
+   }
+  },
+  {
+   "id": "jumla",
+   "label": "Duka la jumla (offline, pakiti + bei ya jumla)",
+   "mode": "offline_only",
+   "before": {
+    "steps": 9,
+    "seconds": 43
+   },
+   "after": {
+    "steps": 7,
+    "seconds": 34
+   },
+   "afterWithStoreAddress": {
+    "steps": 6,
+    "seconds": 28
+   }
+  },
+  {
+   "id": "online_only",
+   "label": "Online-only seller (picha 2)",
+   "mode": "online_only",
+   "before": {
+    "steps": 11,
+    "seconds": 56
+   },
+   "after": {
+    "steps": 9,
+    "seconds": 48
+   },
+   "afterWithStoreAddress": {
+    "steps": 8,
+    "seconds": 42
+   }
+  },
+  {
+   "id": "offline_only",
+   "label": "Offline-only (POS tu)",
+   "mode": "offline_only",
+   "before": {
+    "steps": 6,
+    "seconds": 28
+   },
+   "after": {
+    "steps": 4,
+    "seconds": 19
+   },
+   "afterWithStoreAddress": {
+    "steps": 3,
+    "seconds": 13
+   }
+  },
+  {
+   "id": "hybrid",
+   "label": "Hybrid (POS + soko, picha 1)",
+   "mode": "hybrid",
+   "before": {
+    "steps": 10,
+    "seconds": 48
+   },
+   "after": {
+    "steps": 8,
+    "seconds": 40
+   },
+   "afterWithStoreAddress": {
+    "steps": 7,
+    "seconds": 34
+   }
+  },
+  {
+   "id": "manage_only",
+   "label": "Kusimamia tu (stoo pekee)",
+   "mode": "manage_only",
+   "before": {
+    "steps": 6,
+    "seconds": 28
+   },
+   "after": {
+    "steps": 4,
+    "seconds": 19
+   },
+   "afterWithStoreAddress": {
+    "steps": 3,
+    "seconds": 13
+   }
+  },
+  {
+   "id": "variants_12",
+   "label": "Bidhaa yenye variants 12 (rangi 3 × saizi 4), bei/stock moja kwa zote",
+   "mode": "hybrid",
+   "before": {
+    "steps": 51,
+    "seconds": 219
+   },
+   "after": {
+    "steps": 29,
+    "seconds": 81
+   },
+   "afterWithStoreAddress": {
+    "steps": 28,
+    "seconds": 75
+   }
+  },
+  {
+   "id": "second_similar",
+   "label": "Bidhaa ya pili inayofanana (Nakili)",
+   "mode": "hybrid",
+   "before": {
+    "steps": 10,
+    "seconds": 48
+   },
+   "after": {
+    "steps": 5,
+    "seconds": 22
+   },
+   "afterWithStoreAddress": {
+    "steps": 5,
+    "seconds": 22
+   }
+  },
+  {
+   "id": "service",
+   "label": "Muuzaji wa huduma (fomu ya huduma)",
+   "mode": "service",
+   "before": null,
+   "after": null,
+   "afterWithStoreAddress": null,
+   "note": "Fomu ya huduma (html/10-form-agent.html: fields 12, required 7) haijabadilishwa katika kazi hii; haijapimwa upya."
+  }
+ ]
+}

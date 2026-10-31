@@ -258,7 +258,7 @@ window.openProduct = async function(id, manualCollection = null) {
 
             // Ongeza view moja kiotomatiki (Ikiwa haijawa viewed)
             if(!sessionStorage.getItem('v_'+id)) {
-                skh.updateDoc(docRef, { views: skh.increment(1) });
+                skh.updateDoc(docRef, { views: skh.increment(1) }).catch(function () { /* counter only; never block the page */ });
                 sessionStorage.setItem('v_'+id, '1');
             }
             
@@ -397,17 +397,19 @@ window.skhGroupBuyJoin = async function (productId) {
         if (c.group.status !== 'active') return { ok: false, error: 'group_' + c.group.status };
         if ((c.group.participants || []).indexOf(meUid) !== -1) return { ok: true, already: true, joined: c.group.joined };
 
-        await skh.updateDoc(prodRef, {
-            'modeData.joinedUsers': skh.increment(1),
-            'modeData.participants': skh.arrayUnion(meUid)
-        });
-
-        // [§37 LIFECYCLE] Mtalengo gusa → successful + arifa (guarded mara moja)
-        const newP = Object.assign({}, p, { modeData: Object.assign({}, p.modeData, {
-            joinedUsers: c.group.joined + 1, participants: (c.group.participants || []).concat([meUid])
-        }) });
-        try { await window.skhModesLifecycle(newP); } catch (e) {}
-        return { ok: true, joined: c.group.joined + 1 };
+        /* [REPAIR 2026-10 Phase 5] Kujiunga kunafanywa na SERVER (groupBuyJoin):
+         * mtu mmoja = nafasi moja, muuzaji hawezi kujiunga, na arifa za "lengo
+         * limefikiwa" hutumwa mara moja. Kivinjari hakiandiki modeData. */
+        const fn = (typeof skh.wrapCallable === 'function') ? skh.wrapCallable('groupBuyJoin') : null;
+        if (!fn) return { ok: false, error: 'huduma_haipatikani' };
+        try {
+            const res = await fn({ productId: productId });
+            const d = (res && res.data) || {};
+            if (d.ok !== true) return { ok: false, error: d.message || 'error' };
+            return { ok: true, already: !!d.already, joined: d.joined };
+        } catch (e2) {
+            return { ok: false, error: String((e2 && e2.message) || 'error') };
+        }
     } catch (e) {
         return { ok: false, error: (e && e.message) || 'error' };
     }
@@ -600,6 +602,11 @@ window.skhModesNotify = function (userId, title, body, type, meta) {
  * wa kufungua ukurasa wa bidhaa (listener iko tayari) na baada ya actions. */
 window.skhModesLifecycle = async function (p) {
     if (!p || !p.id || !p.collectionName) return;
+    /* [REPAIR 2026-10 Phase 5] Mwisho wa mnada na mafanikio ya Group Buy sasa
+     * yanaandikwa na SERVER (commerceModesSweep / groupBuyJoin). Firestore rules
+     * zinakataa maandishi haya kutoka kwa mnunuzi, na kwa muuzaji baada ya zabuni
+     * ya kwanza — kwa hiyo kivinjari hakiandiki tena hapa. */
+    return;
     const c = window.skhModesCompute(p);
     const prodRef = skh.doc(skh.db, p.collectionName, p.id);
     try {
@@ -676,56 +683,22 @@ window.skhAuctionPlaceBid = async function (productId, bidValue) {
     const minRequired = c.auction.minNextBid; // =1.05 × dau la juu (policy iliyopo)
     if (bid < minRequired) return { ok: false, error: 'chini_ya_' + minRequired, minRequired: minRequired };
 
-    const prevLeader = c.auction.winnerId;
-    const prevBid = c.auction.currentBid;
     const myName = (skh.currentUser && skh.currentUser.displayName)
         || (skh.currentUser && skh.currentUser.email ? skh.currentUser.email.split('@')[0] : 'Mteja');
 
+    /* [REPAIR 2026-10 Phase 5] Dau linawekwa na SERVER (auctionPlaceBid) kwa
+     * transaction moja: uthibitisho wa kiwango cha chini, mshindi, historia ya
+     * zabuni (bids) na arifa. Kivinjari hakiandiki tena modeData ya bidhaa. */
     try {
-        if (typeof skh.runTransaction === 'function') {
-            await skh.runTransaction(skh.db, async function (tx) {
-                const fresh = await tx.get(prodRef);
-                if (!fresh.exists()) throw new Error('bidhaa_haipo');
-                const fp = fresh.data() || {};
-                const fmd = fp.modeData || {};
-                const fBid = parseFloat(fmd.currentBid) || (parseFloat(fp.price) || 0);
-                if (Number(fmd.endTime) > 0 && Date.now() >= Number(fmd.endTime)) throw new Error('mnada_umefungwa');
-                if (fmd.ended) throw new Error('mnada_umefungwa');
-                if (bid < Math.round(fBid * 1.05)) throw new Error('waliokuzidi');
-                tx.set(prodRef, { modeData: Object.assign({}, fmd, {
-                    currentBid: bid, maxBidder: skh.currentUser.uid, maxBidderName: myName,
-                    totalBids: (parseInt(fmd.totalBids) || 0) + 1
-                }) }, { merge: true });
-            });
-        } else {
-            await skh.updateDoc(prodRef, {
-                'modeData.currentBid': bid, 'modeData.maxBidder': skh.currentUser.uid,
-                'modeData.maxBidderName': myName, 'modeData.totalBids': skh.increment(1)
-            });
-        }
-
-        // [§33] ARIFA HALISI: outbid + seller alert (wote — kama != mimi)
-        const t = p.title || 'bidhaa';
-        if (prevLeader && prevLeader !== skh.currentUser.uid) {
-            window.skhModesNotify(prevLeader, ' Umezidiwa Dau',
-                'Mteja mwingine ameweka TSh ' + Number(bid).toLocaleString() + ' kwenye mnada wa ' + t + ' (dau lako lilikuwa TSh ' + Number(prevBid).toLocaleString() + ').', 'auction_outbid',
-                { productId: productId, commerceMode: 'AUCTION' });
-        }
-        if (p.userId && p.userId !== skh.currentUser.uid) {
-            window.skhModesNotify(p.userId, 'Dau jipya kwenye mnada wako',
-                myName + ' ameweka TSh ' + Number(bid).toLocaleString() + ' (zabuni: ' + (c.auction.totalBids + 1) + ').', 'auction_bid',
-                { productId: productId, commerceMode: 'AUCTION' });
-        }
-        // Reje[§8] Hesabu halisi za historia — andika na bid doc (Firestore).
-        try {
-            await skh.addDoc(skh.collection(skh.db, col, productId, 'bids'), {
-                uid: skh.currentUser.uid, name: myName, amount: bid,
-                prevBid: prevBid || null, createdAt: new Date().toISOString()
-            });
-        } catch (e2) { /* historia ya ziada — bid kuu imeshahifadhiwa */ }
-        return { ok: true, bid: bid, totalBids: c.auction.totalBids + 1 };
+        const fn = (typeof skh.wrapCallable === 'function') ? skh.wrapCallable('auctionPlaceBid') : null;
+        if (!fn) return { ok: false, error: 'huduma_haipatikani' };
+        const res = await fn({ productId: productId, amount: bid, bidderName: myName });
+        const d = (res && res.data) || {};
+        if (d.ok !== true) return { ok: false, error: d.message || 'error' };
+        return { ok: true, bid: d.bid, totalBids: d.totalBids };
     } catch (e) {
-        var code = (e && e.message) || 'error';
+        // HttpsError message = msimbo unaoeleweka na UI (waliokuzidi, mnada_umefungwa...)
+        var code = String((e && e.message) || 'error').replace(/^.*?:\s*(?=[a-z_]+(:\d+)?$)/, '');
         return { ok: false, error: code };
     }
 };
@@ -896,11 +869,11 @@ window.toggleFollow = async function() {
         if(targetUid === skh.currentUser.uid) return;
         
         try {
-            const qTarget = skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", targetUid)); 
-            const snapTarget = await skh.getDocs(qTarget);
-            if(snapTarget.empty) return; 
+            // [REPAIR 2026-10 C4] doc id from the public card (users/{id} is private).
+            const cardTarget = await skh.getUserCard(targetUid);
+            if(!cardTarget.exists()) return; 
             
-            const targetDocRef = skh.doc(skh.db, "users", snapTarget.docs[0].id); 
+            const targetDocRef = skh.doc(skh.db, "users", (cardTarget.data() || {}).docId || targetUid); 
             const myDocRef = skh.doc(skh.db, "users", skh.currentUserData.docId);
             const isFollowing = skh.currentUserData.following && skh.currentUserData.following.includes(targetUid);
             
@@ -1144,7 +1117,7 @@ window.skhSetChatHeaderAvatar = function(uid, photo, name) {
     el.innerHTML = window.skhUserAvatar(photo || null, name || 'Mawasiliano', 42);
     if (uid && !photo) {
         try {
-            skh.getDoc(skh.doc(skh.db, "users", uid)).then((us) => {
+            skh.getUserCard(uid).then((us) => {
                 if (us && us.exists && us.exists()) {
                     const ud = us.data();
                     const pu = ud.photoURL || ud.profileImage || ud.logo || '';
@@ -1209,7 +1182,7 @@ window.skhFetchSellerAvatar = function(uid, photo, name) {
     el.innerHTML = window.skhUserAvatar(photo || null, name || 'Muuzaji', 38);
     if (uid && !photo) {
         try {
-            skh.getDoc(skh.doc(skh.db, "users", uid)).then((us) => {
+            skh.getUserCard(uid).then((us) => {
                 if (us && us.exists && us.exists()) {
                     const ud = us.data();
                     const pu = ud.photoURL || ud.profileImage || ud.logo || '';
@@ -1424,7 +1397,7 @@ window.openChatList = async function() {
             const otherUid = isMeSender ? chat.receiverUid : chat.senderUid;
             if (!otherUid) return;
             try {
-                const us = await skh.getDoc(skh.doc(skh.db, "users", otherUid));
+                const us = await skh.getUserCard(otherUid);
                 if (us && us.exists && us.exists()) {
                     const ud = us.data();
                     uidToPhoto[otherUid] = ud.photoURL || ud.profileImage || ud.logo || '';

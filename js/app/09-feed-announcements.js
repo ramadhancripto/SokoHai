@@ -1,12 +1,19 @@
 /* ==== js/app/09-feed-announcements.js ==== */
 import { skh } from './00-bootstrap.js';
+/* [REPAIR 2026-10] Author stamp for admin-only browser writes (announcements,
+   adminMedia). Rules require it; functions/system-audit.js records the change. */
+window.skhAdminStamp = function () {
+    return { lastChangedBy: (skh.currentUser && skh.currentUser.uid) || '', lastChangedAt: new Date().toISOString() };
+};
 
 window.deleteAd = async function(id, collectionName, title) {
     // Products are durable commerce entities: archive, never client-delete.
     if (collectionName === 'products') {
         if (!await skhConfirm('Archive "' + (title || 'bidhaa') + '"? Historia ya oda/review itabaki salama.')) return;
         await skh.updateDoc(skh.doc(skh.db, 'products', id), {
-            publicationStatus: 'archived', status: 'archived', archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+            publicationStatus: 'archived', status: 'archived', archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+            // [PHASE 9 B-18] signed: required (and audited) when an admin archives someone else's listing
+            ...window.skhAdminStamp()
         });
         if (skh._feedCache) skh._feedCache.clear();
         loadAndRenderDashboard();
@@ -87,11 +94,11 @@ window.toggleSys = async function(category, feature) {
                     payload[category + '.enabled'] = skh.deleteField();
                 }
             } catch (eDel0) {}
-            await skh.updateDoc(configRef, payload);
+            await skh.updateDoc(configRef, Object.assign(payload, (window.skhSysStamp ? window.skhSysStamp() : { lastChangedBy: (skh.currentUser && skh.currentUser.uid) || '', lastChangedAt: new Date().toISOString(), lastChangedVia: 'browser' })));
         } catch (errUpd) {
             var nested2 = {}; nested2[category] = {};
             nested2[category][feature] = newVal;
-            await skh.setDoc(configRef, nested2, { merge: true });
+            await skh.setDoc(configRef, Object.assign(nested2, (window.skhSysStamp ? window.skhSysStamp() : { lastChangedBy: (skh.currentUser && skh.currentUser.uid) || '', lastChangedAt: new Date().toISOString(), lastChangedVia: 'browser' })), { merge: true });
         }
 
         console.log(`Mabadiliko: ${category} ${feature} sasa ni ${newVal}`);
@@ -111,7 +118,12 @@ window.toggleSys = async function(category, feature) {
     try { loadAdminDashboard(); } catch(e) { console.error("Refresh ya admin imeshindwa:", e); }
 };
 
-window.skhOnSnapshot('system-config', skh.doc(skh.db, "system", "config"), (docSnap) => {
+/* [REPAIR 2026-10 B-14] Found by the browser E2E: this listener started while
+   the visitor was still signed out, the rules (system: signed-in read) refused
+   it, and Firestore closed it for good. Admin switches (modes, fees, alerts)
+   were then never received in that tab. It now (re)starts on every sign-in;
+   the same tag replaces the previous listener (13-listeners.js). */
+const skhSystemConfigSnap = (docSnap) => {
     if(docSnap.exists()) {
         const prevAlertsActive = skh.sysConfig?.alerts?.active !== false;
         skh.sysConfig = docSnap.data();
@@ -127,7 +139,10 @@ window.skhOnSnapshot('system-config', skh.doc(skh.db, "system", "config"), (docS
             window.updateLiveTicker('normal', '', '', true);
         }
     }
-});
+};
+const skhStartSystemConfigListener = () => window.skhOnSnapshot('system-config', skh.doc(skh.db, "system", "config"), skhSystemConfigSnap,
+    (err) => console.warn('[SokoHai] system/config listener:', err && err.code));
+skh.onAuthStateChanged(skh.auth, (u) => { if (u) skhStartSystemConfigListener(); });
 
 window.__sokohaiAnnouncementsCache = [];
 
@@ -309,10 +324,10 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
         };
         let savedId = editId || '';
         if(editId) {
-            await skh.updateDoc(skh.doc(skh.db, "announcements", editId), data);
+            await skh.updateDoc(skh.doc(skh.db, "announcements", editId), Object.assign(data, window.skhAdminStamp()));
         } else {
             data.createdAt = new Date().toISOString();
-            const created = await skh.addDoc(skh.collection(skh.db, "announcements"), data);
+            const created = await skh.addDoc(skh.collection(skh.db, "announcements"), Object.assign(data, window.skhAdminStamp()));
             savedId = created.id;
         }
 
@@ -343,7 +358,7 @@ window.sokohaiSaveAnnouncement = async function(payload, editId){
 window.sokohaiDeleteAnnouncement = async function(id){
     if(!await skhConfirm("Archive advertisement hii? Haitaonekana Home.")) return;
     try {
-        await skh.updateDoc(skh.doc(skh.db, "announcements", id), { archived:true, status:'archived', lifecycleStatus:'archived', active:false, archivedAt:new Date().toISOString() });
+        await skh.updateDoc(skh.doc(skh.db, "announcements", id), Object.assign({ archived:true, status:'archived', lifecycleStatus:'archived', active:false, archivedAt:new Date().toISOString() }, window.skhAdminStamp()));
     } catch(e) {
         alert(" Imeshindwa ku-archive advertisement: " + e.message);
     }
@@ -356,7 +371,7 @@ window.sokohaiToggleAnnouncementActive = async function(id, currentlyActive){
         const activating=!currentlyActive;
         const startAt=campaign&&campaign.startAt?Date.parse(campaign.startAt):0;
         const lifecycleStatus=activating&&startAt>Date.now()?'scheduled':(activating?'active':'paused');
-        await skh.updateDoc(skh.doc(skh.db, "announcements", id), { active: activating, lifecycleStatus });
+        await skh.updateDoc(skh.doc(skh.db, "announcements", id), Object.assign({ active: activating, lifecycleStatus }, window.skhAdminStamp()));
     } catch(e) {
         alert(" Imeshindwa kubadili hali ya tangazo: " + e.message);
     }
@@ -518,9 +533,8 @@ window.skhAgentPayPendingFee = async function(agentDocId) {
 
     // [ADMIN PAYMENTS SWITCH] Ada ya wakala imezimwa -> hakuna ada; weka alama ya FREE.
     if (!skh.paymentGate('agent_registration')) {
-        try {
-            await skh.updateDoc(skh.doc(skh.db, "agents", agentDocId), { paymentStatus: 'free', feeWaived: true });
-        } catch (e) {}
+        // [REPAIR 2026-10] Hakuna kuandika 'free' kutoka kivinjari: server inaamua ada
+        // (system/config.fees) wakati Admin anaidhinisha.
         alert(" Ada ya UWAKALA imezimwa (FREE MODE) — hakuna ada ya usajili wa wakala kwa sasa.\nOmbi lako litakaguliwa na Admin.");
         window.loadAgentDashboard();
         return;
@@ -609,14 +623,8 @@ window.paySubscription = async function(amount, title) {
 
         // B. IKIWA BURE — amilisha moja kwa moja (hakuna malipo, hakuna namba inayohitajika)
         if (isFreeMode) {
-            if(skh.currentUserData && skh.currentUserData.docId) {
-                await skh.updateDoc(skh.doc(skh.db, "users", skh.currentUserData.docId), { 
-                    isSubscribed: true,
-                    subscriptionType: title,
-                    subscriptionValidUntil: subExpiryDate.toISOString(),
-                    subStatus: "Active"
-                });
-            }
+            // [REPAIR 2026-10] Kifurushi kinaamilishwa na SERVER (inakagua swichi ya ada).
+            await skh.wrapCallable('entitlementGrant')({ kind: 'subscription', title: title });
             // Accounting is server-authoritative; no client adminRevenue write.
 
             alert(` Ada ya SUBSCRIPTION imezimwa (FREE MODE)! Kifurushi chako cha ${title} kimeamilishwa BURE.`);

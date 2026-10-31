@@ -6,16 +6,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_9a8e3de8-3a78-422f-90d9-c7533a7b92d6",
-        "sku": "SKU-c7533a7b92d6",
+        "variantId": "variant_fa240e74-ece0-4a70-940d-bae61d9d43e1",
+        "sku": "SKU-bae61d9d43e1",
         "unitId": "Piece",
-        "inventoryKey": "p1:variant_9a8e3de8-3a78-422f-90d9-c7533a7b92d6:Piece"
+        "inventoryKey": "preview_1:variant_fa240e74-ece0-4a70-940d-bae61d9d43e1:Piece"
       },
       {
-        "variantId": "variant_0f0250ad-395d-4635-b2f0-58202ca9d851",
-        "sku": "SKU-58202ca9d851",
+        "variantId": "variant_59776400-d937-41cc-b86a-6e4bfc68dff1",
+        "sku": "SKU-6e4bfc68dff1",
         "unitId": "Piece",
-        "inventoryKey": "p1:variant_0f0250ad-395d-4635-b2f0-58202ca9d851:Piece"
+        "inventoryKey": "preview_1:variant_59776400-d937-41cc-b86a-6e4bfc68dff1:Piece"
       }
     ]
   },
@@ -26,16 +26,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_d62859dd-6a3a-4ee7-bd0e-551edff3e10c",
-        "sku": "SKU-551edff3e10c",
+        "variantId": "variant_6e2c4afc-5b0d-48d4-8e21-93eca1143ed2",
+        "sku": "SKU-93eca1143ed2",
         "unitId": "Piece",
-        "inventoryKey": "p2:variant_d62859dd-6a3a-4ee7-bd0e-551edff3e10c:Piece"
+        "inventoryKey": "preview_2:variant_6e2c4afc-5b0d-48d4-8e21-93eca1143ed2:Piece"
       },
       {
-        "variantId": "variant_dff83bb1-f480-4219-874b-f4dbe3bc865b",
-        "sku": "SKU-f4dbe3bc865b",
+        "variantId": "variant_cc83b9d1-3b3b-467d-ba7c-3f57ac5284a5",
+        "sku": "SKU-3f57ac5284a5",
         "unitId": "Piece",
-        "inventoryKey": "p2:variant_dff83bb1-f480-4219-874b-f4dbe3bc865b:Piece"
+        "inventoryKey": "preview_2:variant_cc83b9d1-3b3b-467d-ba7c-3f57ac5284a5:Piece"
       }
     ]
   },
@@ -46,16 +46,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_803aaac2-7d8e-4ca9-bdfe-0b27b1dcd37d",
-        "sku": "SKU-0b27b1dcd37d",
+        "variantId": "variant_265e8918-e515-4c4f-abf5-61daf3e9b6e0",
+        "sku": "SKU-61daf3e9b6e0",
         "unitId": "Piece",
-        "inventoryKey": "p3:variant_803aaac2-7d8e-4ca9-bdfe-0b27b1dcd37d:Piece"
+        "inventoryKey": "preview_3:variant_265e8918-e515-4c4f-abf5-61daf3e9b6e0:Piece"
       },
       {
-        "variantId": "variant_93d368ac-d183-458d-bd71-4cb5ff8a3f55",
-        "sku": "SKU-4cb5ff8a3f55",
+        "variantId": "variant_e00a49ee-04cc-4bac-bcb2-c4361b190cd6",
+        "sku": "SKU-c4361b190cd6",
         "unitId": "Piece",
-        "inventoryKey": "p3:variant_93d368ac-d183-458d-bd71-4cb5ff8a3f55:Piece"
+        "inventoryKey": "preview_3:variant_e00a49ee-04cc-4bac-bcb2-c4361b190cd6:Piece"
       }
     ]
   },
@@ -66,16 +66,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_a0355638-4f45-48ff-950b-fed4fba1be32",
-        "sku": "SKU-fed4fba1be32",
+        "variantId": "variant_1d24bcc1-8e84-4994-8944-c2524da3ebbc",
+        "sku": "SKU-c2524da3ebbc",
         "unitId": "Piece",
-        "inventoryKey": "p4:variant_a0355638-4f45-48ff-950b-fed4fba1be32:Piece"
+        "inventoryKey": "preview_4:variant_1d24bcc1-8e84-4994-8944-c2524da3ebbc:Piece"
       },
       {
-        "variantId": "variant_b58d79ed-3466-47df-b57b-3c059ebd51f6",
-        "sku": "SKU-3c059ebd51f6",
+        "variantId": "variant_b8fb2afd-1119-4038-903d-c1f9fae9e1f1",
+        "sku": "SKU-c1f9fae9e1f1",
         "unitId": "Piece",
-        "inventoryKey": "p4:variant_b58d79ed-3466-47df-b57b-3c059ebd51f6:Piece"
+        "inventoryKey": "preview_4:variant_b8fb2afd-1119-4038-903d-c1f9fae9e1f1:Piece"
       }
     ]
   },
@@ -86,16 +86,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_bc282494-904e-458f-896e-56d9acf0d734",
-        "sku": "SKU-56d9acf0d734",
+        "variantId": "variant_e233d4d4-dc87-452e-9d36-5b2596899840",
+        "sku": "SKU-5b2596899840",
         "unitId": "Piece",
-        "inventoryKey": "p5:variant_bc282494-904e-458f-896e-56d9acf0d734:Piece"
+        "inventoryKey": "preview_5:variant_e233d4d4-dc87-452e-9d36-5b2596899840:Piece"
       },
       {
-        "variantId": "variant_49a3d2c9-a1b9-4ed8-ae96-cda4723c4d35",
-        "sku": "SKU-cda4723c4d35",
+        "variantId": "variant_0f5c8d45-c33c-4f27-bcd6-cfb15c3ef055",
+        "sku": "SKU-cfb15c3ef055",
         "unitId": "Piece",
-        "inventoryKey": "p5:variant_49a3d2c9-a1b9-4ed8-ae96-cda4723c4d35:Piece"
+        "inventoryKey": "preview_5:variant_0f5c8d45-c33c-4f27-bcd6-cfb15c3ef055:Piece"
       }
     ]
   },
@@ -106,16 +106,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_b7bf172a-e093-4aa6-9b63-d0d5392f64ac",
-        "sku": "SKU-d0d5392f64ac",
+        "variantId": "variant_708f90f8-f360-4484-9e59-3d70867bce59",
+        "sku": "SKU-3d70867bce59",
         "unitId": "Piece",
-        "inventoryKey": "p6:variant_b7bf172a-e093-4aa6-9b63-d0d5392f64ac:Piece"
+        "inventoryKey": "preview_6:variant_708f90f8-f360-4484-9e59-3d70867bce59:Piece"
       },
       {
-        "variantId": "variant_6ef11ca1-65e5-4a5e-addb-810c4a2db32e",
-        "sku": "SKU-810c4a2db32e",
+        "variantId": "variant_16c4f0cb-fbc3-4524-99bb-021abba34c1e",
+        "sku": "SKU-021abba34c1e",
         "unitId": "Piece",
-        "inventoryKey": "p6:variant_6ef11ca1-65e5-4a5e-addb-810c4a2db32e:Piece"
+        "inventoryKey": "preview_6:variant_16c4f0cb-fbc3-4524-99bb-021abba34c1e:Piece"
       }
     ]
   },
@@ -126,16 +126,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_f7f874b4-da28-4c42-b120-2ce93eedf4a4",
-        "sku": "SKU-2ce93eedf4a4",
+        "variantId": "variant_ed2d3364-feb2-4f4a-8b1d-6d4d32b68367",
+        "sku": "SKU-6d4d32b68367",
         "unitId": "Piece",
-        "inventoryKey": "p7:variant_f7f874b4-da28-4c42-b120-2ce93eedf4a4:Piece"
+        "inventoryKey": "preview_7:variant_ed2d3364-feb2-4f4a-8b1d-6d4d32b68367:Piece"
       },
       {
-        "variantId": "variant_b56d5268-2031-472d-bef4-f4c9272d14c8",
-        "sku": "SKU-f4c9272d14c8",
+        "variantId": "variant_c4f5a0c4-b9c7-4fc4-bd8b-c902d451ef7b",
+        "sku": "SKU-c902d451ef7b",
         "unitId": "Piece",
-        "inventoryKey": "p7:variant_b56d5268-2031-472d-bef4-f4c9272d14c8:Piece"
+        "inventoryKey": "preview_7:variant_c4f5a0c4-b9c7-4fc4-bd8b-c902d451ef7b:Piece"
       }
     ]
   },
@@ -146,16 +146,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_75ccb5c9-0170-469d-b37b-e13571c33d64",
-        "sku": "SKU-e13571c33d64",
+        "variantId": "variant_e61a5878-bde1-457b-b18e-b67725cc3753",
+        "sku": "SKU-b67725cc3753",
         "unitId": "Piece",
-        "inventoryKey": "p8:variant_75ccb5c9-0170-469d-b37b-e13571c33d64:Piece"
+        "inventoryKey": "preview_8:variant_e61a5878-bde1-457b-b18e-b67725cc3753:Piece"
       },
       {
-        "variantId": "variant_f8a119d2-0dce-4263-abb7-9556418456c2",
-        "sku": "SKU-9556418456c2",
+        "variantId": "variant_81398b7a-a84d-48f2-a3e5-a46bf211c356",
+        "sku": "SKU-a46bf211c356",
         "unitId": "Piece",
-        "inventoryKey": "p8:variant_f8a119d2-0dce-4263-abb7-9556418456c2:Piece"
+        "inventoryKey": "preview_8:variant_81398b7a-a84d-48f2-a3e5-a46bf211c356:Piece"
       }
     ]
   },
@@ -166,16 +166,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_5a9b49f4-52e4-40cb-89a4-7e6c00d4609f",
-        "sku": "SKU-7e6c00d4609f",
+        "variantId": "variant_435d8eb8-b30f-471d-85f7-a0cdaaed5ea7",
+        "sku": "SKU-a0cdaaed5ea7",
         "unitId": "Piece",
-        "inventoryKey": "p9:variant_5a9b49f4-52e4-40cb-89a4-7e6c00d4609f:Piece"
+        "inventoryKey": "preview_9:variant_435d8eb8-b30f-471d-85f7-a0cdaaed5ea7:Piece"
       },
       {
-        "variantId": "variant_d4e04fe9-5b4d-4111-a873-8d1f1f167a14",
-        "sku": "SKU-8d1f1f167a14",
+        "variantId": "variant_990a4a60-ac2b-4b85-b545-20f0e864807d",
+        "sku": "SKU-20f0e864807d",
         "unitId": "Piece",
-        "inventoryKey": "p9:variant_d4e04fe9-5b4d-4111-a873-8d1f1f167a14:Piece"
+        "inventoryKey": "preview_9:variant_990a4a60-ac2b-4b85-b545-20f0e864807d:Piece"
       }
     ]
   },
@@ -186,16 +186,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_63a315d3-2edc-499f-9562-0b11f1779781",
-        "sku": "SKU-0b11f1779781",
+        "variantId": "variant_06342fe1-5388-464a-8333-10eb896743cd",
+        "sku": "SKU-10eb896743cd",
         "unitId": "Piece",
-        "inventoryKey": "p10:variant_63a315d3-2edc-499f-9562-0b11f1779781:Piece"
+        "inventoryKey": "preview_10:variant_06342fe1-5388-464a-8333-10eb896743cd:Piece"
       },
       {
-        "variantId": "variant_192331eb-b433-4039-85a6-c25e678d2865",
-        "sku": "SKU-c25e678d2865",
+        "variantId": "variant_5d7c62f0-51cd-4124-93c0-f8361755621b",
+        "sku": "SKU-f8361755621b",
         "unitId": "Piece",
-        "inventoryKey": "p10:variant_192331eb-b433-4039-85a6-c25e678d2865:Piece"
+        "inventoryKey": "preview_10:variant_5d7c62f0-51cd-4124-93c0-f8361755621b:Piece"
       }
     ]
   },
@@ -206,16 +206,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_fadf56fc-dd84-4fd4-8efb-46046c9a3ee6",
-        "sku": "SKU-46046c9a3ee6",
+        "variantId": "variant_65fa282d-e358-4ed6-84f6-e97df2b9fd95",
+        "sku": "SKU-e97df2b9fd95",
         "unitId": "Piece",
-        "inventoryKey": "p11:variant_fadf56fc-dd84-4fd4-8efb-46046c9a3ee6:Piece"
+        "inventoryKey": "preview_11:variant_65fa282d-e358-4ed6-84f6-e97df2b9fd95:Piece"
       },
       {
-        "variantId": "variant_61749eba-7b22-49ca-8595-49377f870278",
-        "sku": "SKU-49377f870278",
+        "variantId": "variant_84c3b37a-c628-4859-a744-ab0202c80c54",
+        "sku": "SKU-ab0202c80c54",
         "unitId": "Piece",
-        "inventoryKey": "p11:variant_61749eba-7b22-49ca-8595-49377f870278:Piece"
+        "inventoryKey": "preview_11:variant_84c3b37a-c628-4859-a744-ab0202c80c54:Piece"
       }
     ]
   },
@@ -226,16 +226,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_bd88fe14-6d86-49fe-a002-91dc263b6b6d",
-        "sku": "SKU-91dc263b6b6d",
+        "variantId": "variant_f0e93b10-8995-4bb5-947e-5a7b33446b27",
+        "sku": "SKU-5a7b33446b27",
         "unitId": "Piece",
-        "inventoryKey": "p12:variant_bd88fe14-6d86-49fe-a002-91dc263b6b6d:Piece"
+        "inventoryKey": "preview_12:variant_f0e93b10-8995-4bb5-947e-5a7b33446b27:Piece"
       },
       {
-        "variantId": "variant_c0f300c8-c58f-4603-b0b9-d75675373515",
-        "sku": "SKU-d75675373515",
+        "variantId": "variant_6fd08356-15ad-41bf-bd09-9a88d16ae480",
+        "sku": "SKU-9a88d16ae480",
         "unitId": "Piece",
-        "inventoryKey": "p12:variant_c0f300c8-c58f-4603-b0b9-d75675373515:Piece"
+        "inventoryKey": "preview_12:variant_6fd08356-15ad-41bf-bd09-9a88d16ae480:Piece"
       }
     ]
   },
@@ -246,16 +246,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_3b2c0923-1f25-4806-bbe7-56162d7d98a6",
-        "sku": "SKU-56162d7d98a6",
+        "variantId": "variant_7d251b04-5076-4ee8-a0f3-be8ad505c7df",
+        "sku": "SKU-be8ad505c7df",
         "unitId": "Piece",
-        "inventoryKey": "p13:variant_3b2c0923-1f25-4806-bbe7-56162d7d98a6:Piece"
+        "inventoryKey": "preview_13:variant_7d251b04-5076-4ee8-a0f3-be8ad505c7df:Piece"
       },
       {
-        "variantId": "variant_16d85e4e-24ae-4bee-aad0-008b050961e1",
-        "sku": "SKU-008b050961e1",
+        "variantId": "variant_4d0b1b24-2f34-4974-831c-0adf4b0f6132",
+        "sku": "SKU-0adf4b0f6132",
         "unitId": "Piece",
-        "inventoryKey": "p13:variant_16d85e4e-24ae-4bee-aad0-008b050961e1:Piece"
+        "inventoryKey": "preview_13:variant_4d0b1b24-2f34-4974-831c-0adf4b0f6132:Piece"
       }
     ]
   },
@@ -266,16 +266,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_2581d18e-fbdb-4f26-a19c-5c9470d4f3b1",
-        "sku": "SKU-5c9470d4f3b1",
+        "variantId": "variant_b9ecac56-fd52-4174-a858-6639be2e3ceb",
+        "sku": "SKU-6639be2e3ceb",
         "unitId": "Piece",
-        "inventoryKey": "p14:variant_2581d18e-fbdb-4f26-a19c-5c9470d4f3b1:Piece"
+        "inventoryKey": "preview_14:variant_b9ecac56-fd52-4174-a858-6639be2e3ceb:Piece"
       },
       {
-        "variantId": "variant_560d01bc-3f14-484d-8669-1515a4a0d5f7",
-        "sku": "SKU-1515a4a0d5f7",
+        "variantId": "variant_d8f673e1-6144-4df8-a6d4-8a9d5e31642f",
+        "sku": "SKU-8a9d5e31642f",
         "unitId": "Piece",
-        "inventoryKey": "p14:variant_560d01bc-3f14-484d-8669-1515a4a0d5f7:Piece"
+        "inventoryKey": "preview_14:variant_d8f673e1-6144-4df8-a6d4-8a9d5e31642f:Piece"
       }
     ]
   },
@@ -286,16 +286,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_bfee3621-8501-4f24-be6f-f57a1c8c8da0",
-        "sku": "SKU-f57a1c8c8da0",
+        "variantId": "variant_b49bbc6e-e3a5-4aa0-9195-cee236c22e3f",
+        "sku": "SKU-cee236c22e3f",
         "unitId": "Piece",
-        "inventoryKey": "p15:variant_bfee3621-8501-4f24-be6f-f57a1c8c8da0:Piece"
+        "inventoryKey": "preview_15:variant_b49bbc6e-e3a5-4aa0-9195-cee236c22e3f:Piece"
       },
       {
-        "variantId": "variant_2db7ff8c-7029-452a-a6b8-b1708cb85c40",
-        "sku": "SKU-b1708cb85c40",
+        "variantId": "variant_907d7c61-8846-4d39-9324-38e0ffa17e4b",
+        "sku": "SKU-38e0ffa17e4b",
         "unitId": "Piece",
-        "inventoryKey": "p15:variant_2db7ff8c-7029-452a-a6b8-b1708cb85c40:Piece"
+        "inventoryKey": "preview_15:variant_907d7c61-8846-4d39-9324-38e0ffa17e4b:Piece"
       }
     ]
   },
@@ -306,16 +306,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_71ee57c0-08a2-453e-94f9-22293ad54b40",
-        "sku": "SKU-22293ad54b40",
+        "variantId": "variant_b5f69368-cb1c-45b9-b0b8-0515e75dc3ef",
+        "sku": "SKU-0515e75dc3ef",
         "unitId": "Piece",
-        "inventoryKey": "p16:variant_71ee57c0-08a2-453e-94f9-22293ad54b40:Piece"
+        "inventoryKey": "preview_16:variant_b5f69368-cb1c-45b9-b0b8-0515e75dc3ef:Piece"
       },
       {
-        "variantId": "variant_4e684e58-d12e-40d7-895b-a681ba81b65f",
-        "sku": "SKU-a681ba81b65f",
+        "variantId": "variant_aca04462-aa11-4baa-9b65-cba4e0388929",
+        "sku": "SKU-cba4e0388929",
         "unitId": "Piece",
-        "inventoryKey": "p16:variant_4e684e58-d12e-40d7-895b-a681ba81b65f:Piece"
+        "inventoryKey": "preview_16:variant_aca04462-aa11-4baa-9b65-cba4e0388929:Piece"
       }
     ]
   },
@@ -326,16 +326,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_19d5d8bf-9ffc-41f9-b2df-8eac04e0d8dd",
-        "sku": "SKU-8eac04e0d8dd",
+        "variantId": "variant_95699ea1-6e22-485b-8792-09b308b3b778",
+        "sku": "SKU-09b308b3b778",
         "unitId": "Piece",
-        "inventoryKey": "p17:variant_19d5d8bf-9ffc-41f9-b2df-8eac04e0d8dd:Piece"
+        "inventoryKey": "preview_17:variant_95699ea1-6e22-485b-8792-09b308b3b778:Piece"
       },
       {
-        "variantId": "variant_3c023cb2-7ba9-44fc-981f-93854b5b1093",
-        "sku": "SKU-93854b5b1093",
+        "variantId": "variant_8131cd6b-30e4-4bd5-bdde-784f46b28e82",
+        "sku": "SKU-784f46b28e82",
         "unitId": "Piece",
-        "inventoryKey": "p17:variant_3c023cb2-7ba9-44fc-981f-93854b5b1093:Piece"
+        "inventoryKey": "preview_17:variant_8131cd6b-30e4-4bd5-bdde-784f46b28e82:Piece"
       }
     ]
   },
@@ -346,16 +346,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_441ac872-d849-4733-9a86-f974f4808bcd",
-        "sku": "SKU-f974f4808bcd",
+        "variantId": "variant_e8e96a42-1aaa-4263-8611-a532cf0c7c89",
+        "sku": "SKU-a532cf0c7c89",
         "unitId": "Piece",
-        "inventoryKey": "p18:variant_441ac872-d849-4733-9a86-f974f4808bcd:Piece"
+        "inventoryKey": "preview_18:variant_e8e96a42-1aaa-4263-8611-a532cf0c7c89:Piece"
       },
       {
-        "variantId": "variant_4c404b06-3895-4a8a-bbf3-45147ac0b6f8",
-        "sku": "SKU-45147ac0b6f8",
+        "variantId": "variant_5f5b70b0-f126-4fc9-9825-f6e0f3b978c4",
+        "sku": "SKU-f6e0f3b978c4",
         "unitId": "Piece",
-        "inventoryKey": "p18:variant_4c404b06-3895-4a8a-bbf3-45147ac0b6f8:Piece"
+        "inventoryKey": "preview_18:variant_5f5b70b0-f126-4fc9-9825-f6e0f3b978c4:Piece"
       }
     ]
   },
@@ -366,16 +366,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_43d3fe60-9033-4b81-b528-53bed09c0f54",
-        "sku": "SKU-53bed09c0f54",
+        "variantId": "variant_9835fe32-2dee-40cd-ae7f-26e5bbab72ea",
+        "sku": "SKU-26e5bbab72ea",
         "unitId": "Piece",
-        "inventoryKey": "p19:variant_43d3fe60-9033-4b81-b528-53bed09c0f54:Piece"
+        "inventoryKey": "preview_19:variant_9835fe32-2dee-40cd-ae7f-26e5bbab72ea:Piece"
       },
       {
-        "variantId": "variant_cce34177-ed6e-4ed5-9448-a6c65eed26ac",
-        "sku": "SKU-a6c65eed26ac",
+        "variantId": "variant_da39e52c-2cad-469a-b152-f910313ee500",
+        "sku": "SKU-f910313ee500",
         "unitId": "Piece",
-        "inventoryKey": "p19:variant_cce34177-ed6e-4ed5-9448-a6c65eed26ac:Piece"
+        "inventoryKey": "preview_19:variant_da39e52c-2cad-469a-b152-f910313ee500:Piece"
       }
     ]
   },
@@ -386,16 +386,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_8c473165-2cd8-4423-b122-1bfee98a7f9b",
-        "sku": "SKU-1bfee98a7f9b",
+        "variantId": "variant_c35d8131-cba5-4355-9e5d-7e6b7c18718f",
+        "sku": "SKU-7e6b7c18718f",
         "unitId": "Piece",
-        "inventoryKey": "p20:variant_8c473165-2cd8-4423-b122-1bfee98a7f9b:Piece"
+        "inventoryKey": "preview_20:variant_c35d8131-cba5-4355-9e5d-7e6b7c18718f:Piece"
       },
       {
-        "variantId": "variant_b3911f82-19f0-4d22-b155-12f2f666f5f1",
-        "sku": "SKU-12f2f666f5f1",
+        "variantId": "variant_485cf227-82d1-4f7b-901b-170d67660c29",
+        "sku": "SKU-170d67660c29",
         "unitId": "Piece",
-        "inventoryKey": "p20:variant_b3911f82-19f0-4d22-b155-12f2f666f5f1:Piece"
+        "inventoryKey": "preview_20:variant_485cf227-82d1-4f7b-901b-170d67660c29:Piece"
       }
     ]
   },
@@ -406,16 +406,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_5f6fc062-8d70-4a77-9c71-b2948fbe9c99",
-        "sku": "SKU-b2948fbe9c99",
+        "variantId": "variant_a98a53d9-e6f2-4691-8a5a-5b99262bdf9d",
+        "sku": "SKU-5b99262bdf9d",
         "unitId": "Piece",
-        "inventoryKey": "p21:variant_5f6fc062-8d70-4a77-9c71-b2948fbe9c99:Piece"
+        "inventoryKey": "preview_21:variant_a98a53d9-e6f2-4691-8a5a-5b99262bdf9d:Piece"
       },
       {
-        "variantId": "variant_710ad7c4-6f76-4193-8751-db9b6ef3c224",
-        "sku": "SKU-db9b6ef3c224",
+        "variantId": "variant_80efee82-c7de-4ccb-aee9-7b66d90bd6b5",
+        "sku": "SKU-7b66d90bd6b5",
         "unitId": "Piece",
-        "inventoryKey": "p21:variant_710ad7c4-6f76-4193-8751-db9b6ef3c224:Piece"
+        "inventoryKey": "preview_21:variant_80efee82-c7de-4ccb-aee9-7b66d90bd6b5:Piece"
       }
     ]
   },
@@ -426,16 +426,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_2e4e16ea-1d86-4715-ad2d-3d39c79d528c",
-        "sku": "SKU-3d39c79d528c",
+        "variantId": "variant_c847be78-1c4f-4c80-a62b-f02be4152a15",
+        "sku": "SKU-f02be4152a15",
         "unitId": "Piece",
-        "inventoryKey": "p22:variant_2e4e16ea-1d86-4715-ad2d-3d39c79d528c:Piece"
+        "inventoryKey": "preview_22:variant_c847be78-1c4f-4c80-a62b-f02be4152a15:Piece"
       },
       {
-        "variantId": "variant_0dd01ddc-0c6a-4438-b9db-3a6bda60e3e4",
-        "sku": "SKU-3a6bda60e3e4",
+        "variantId": "variant_06515e21-72c1-4c29-bdbd-87d100ca6770",
+        "sku": "SKU-87d100ca6770",
         "unitId": "Piece",
-        "inventoryKey": "p22:variant_0dd01ddc-0c6a-4438-b9db-3a6bda60e3e4:Piece"
+        "inventoryKey": "preview_22:variant_06515e21-72c1-4c29-bdbd-87d100ca6770:Piece"
       }
     ]
   },
@@ -446,16 +446,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_081c1bfe-aec9-4ea6-af60-519311843330",
-        "sku": "SKU-519311843330",
+        "variantId": "variant_397f4465-dded-4378-b76c-b4713fd5718c",
+        "sku": "SKU-b4713fd5718c",
         "unitId": "Piece",
-        "inventoryKey": "p23:variant_081c1bfe-aec9-4ea6-af60-519311843330:Piece"
+        "inventoryKey": "preview_23:variant_397f4465-dded-4378-b76c-b4713fd5718c:Piece"
       },
       {
-        "variantId": "variant_7285b3bb-ae9f-489c-814c-5787e039ec0d",
-        "sku": "SKU-5787e039ec0d",
+        "variantId": "variant_8df119ae-8ed1-4033-85c2-b5b43767f27e",
+        "sku": "SKU-b5b43767f27e",
         "unitId": "Piece",
-        "inventoryKey": "p23:variant_7285b3bb-ae9f-489c-814c-5787e039ec0d:Piece"
+        "inventoryKey": "preview_23:variant_8df119ae-8ed1-4033-85c2-b5b43767f27e:Piece"
       }
     ]
   },
@@ -466,16 +466,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_54f4bf8d-5f05-4414-95e8-36415cd11050",
-        "sku": "SKU-36415cd11050",
+        "variantId": "variant_62c7146c-0754-428e-be6a-fad0d33b7b5c",
+        "sku": "SKU-fad0d33b7b5c",
         "unitId": "Piece",
-        "inventoryKey": "p24:variant_54f4bf8d-5f05-4414-95e8-36415cd11050:Piece"
+        "inventoryKey": "preview_24:variant_62c7146c-0754-428e-be6a-fad0d33b7b5c:Piece"
       },
       {
-        "variantId": "variant_4a81e145-c079-4aab-9d51-f2f47ee22276",
-        "sku": "SKU-f2f47ee22276",
+        "variantId": "variant_fd46579a-9be4-4587-b4d5-8693af6e1ff7",
+        "sku": "SKU-8693af6e1ff7",
         "unitId": "Piece",
-        "inventoryKey": "p24:variant_4a81e145-c079-4aab-9d51-f2f47ee22276:Piece"
+        "inventoryKey": "preview_24:variant_fd46579a-9be4-4587-b4d5-8693af6e1ff7:Piece"
       }
     ]
   },
@@ -486,16 +486,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_122d68f5-61b7-4a24-9144-e4e3f3989e73",
-        "sku": "SKU-e4e3f3989e73",
+        "variantId": "variant_6f1792f7-5fd4-473c-a28f-cc4fb1ecdecd",
+        "sku": "SKU-cc4fb1ecdecd",
         "unitId": "Piece",
-        "inventoryKey": "p25:variant_122d68f5-61b7-4a24-9144-e4e3f3989e73:Piece"
+        "inventoryKey": "preview_25:variant_6f1792f7-5fd4-473c-a28f-cc4fb1ecdecd:Piece"
       },
       {
-        "variantId": "variant_967cbf40-1002-4f54-a8f5-df77647e70fe",
-        "sku": "SKU-df77647e70fe",
+        "variantId": "variant_102473f7-bf37-40f8-85d6-3c537862636e",
+        "sku": "SKU-3c537862636e",
         "unitId": "Piece",
-        "inventoryKey": "p25:variant_967cbf40-1002-4f54-a8f5-df77647e70fe:Piece"
+        "inventoryKey": "preview_25:variant_102473f7-bf37-40f8-85d6-3c537862636e:Piece"
       }
     ]
   },
@@ -506,16 +506,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_89919ad5-d1bc-4dfd-8443-a46698f5f037",
-        "sku": "SKU-a46698f5f037",
+        "variantId": "variant_0fd8a5d5-065a-4c1b-abd2-fd185fc54d63",
+        "sku": "SKU-fd185fc54d63",
         "unitId": "Piece",
-        "inventoryKey": "p26:variant_89919ad5-d1bc-4dfd-8443-a46698f5f037:Piece"
+        "inventoryKey": "preview_26:variant_0fd8a5d5-065a-4c1b-abd2-fd185fc54d63:Piece"
       },
       {
-        "variantId": "variant_13647d20-9e06-463d-bb59-9ff1d002f51a",
-        "sku": "SKU-9ff1d002f51a",
+        "variantId": "variant_cb6ddc5e-0524-4509-afd1-cccc03a7941f",
+        "sku": "SKU-cccc03a7941f",
         "unitId": "Piece",
-        "inventoryKey": "p26:variant_13647d20-9e06-463d-bb59-9ff1d002f51a:Piece"
+        "inventoryKey": "preview_26:variant_cb6ddc5e-0524-4509-afd1-cccc03a7941f:Piece"
       }
     ]
   },
@@ -526,16 +526,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_a4d3ffb6-149d-4191-9a6d-e339dc4aeb2e",
-        "sku": "SKU-e339dc4aeb2e",
+        "variantId": "variant_8895c19d-48d8-4a9f-8ef1-55b26c0e39bf",
+        "sku": "SKU-55b26c0e39bf",
         "unitId": "Piece",
-        "inventoryKey": "p27:variant_a4d3ffb6-149d-4191-9a6d-e339dc4aeb2e:Piece"
+        "inventoryKey": "preview_27:variant_8895c19d-48d8-4a9f-8ef1-55b26c0e39bf:Piece"
       },
       {
-        "variantId": "variant_29fce9b1-8b07-4bcd-a34d-211dbb9a0e4a",
-        "sku": "SKU-211dbb9a0e4a",
+        "variantId": "variant_2a7aad3a-28e2-43d6-ba41-b8667ae301f2",
+        "sku": "SKU-b8667ae301f2",
         "unitId": "Piece",
-        "inventoryKey": "p27:variant_29fce9b1-8b07-4bcd-a34d-211dbb9a0e4a:Piece"
+        "inventoryKey": "preview_27:variant_2a7aad3a-28e2-43d6-ba41-b8667ae301f2:Piece"
       }
     ]
   },
@@ -546,16 +546,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_191c8ec3-a1cc-41ae-8dc3-b6d0218c9708",
-        "sku": "SKU-b6d0218c9708",
+        "variantId": "variant_b015cefb-a58a-4890-820a-07f845758444",
+        "sku": "SKU-07f845758444",
         "unitId": "Piece",
-        "inventoryKey": "p28:variant_191c8ec3-a1cc-41ae-8dc3-b6d0218c9708:Piece"
+        "inventoryKey": "preview_28:variant_b015cefb-a58a-4890-820a-07f845758444:Piece"
       },
       {
-        "variantId": "variant_df08d8b1-e97e-483c-b587-c98d38d51e3f",
-        "sku": "SKU-c98d38d51e3f",
+        "variantId": "variant_8cd439ea-b5ac-4ab2-b497-c53e2160c680",
+        "sku": "SKU-c53e2160c680",
         "unitId": "Piece",
-        "inventoryKey": "p28:variant_df08d8b1-e97e-483c-b587-c98d38d51e3f:Piece"
+        "inventoryKey": "preview_28:variant_8cd439ea-b5ac-4ab2-b497-c53e2160c680:Piece"
       }
     ]
   },
@@ -566,16 +566,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_6057a7aa-e468-40e9-930e-d85b94cbec17",
-        "sku": "SKU-d85b94cbec17",
+        "variantId": "variant_609bc27a-57d9-43f9-a44b-e07fc0b8ad7c",
+        "sku": "SKU-e07fc0b8ad7c",
         "unitId": "Piece",
-        "inventoryKey": "p29:variant_6057a7aa-e468-40e9-930e-d85b94cbec17:Piece"
+        "inventoryKey": "preview_29:variant_609bc27a-57d9-43f9-a44b-e07fc0b8ad7c:Piece"
       },
       {
-        "variantId": "variant_07195705-b98f-4990-a30c-8862188ee49b",
-        "sku": "SKU-8862188ee49b",
+        "variantId": "variant_4050acdf-a0f7-4979-bc22-cb46ad341020",
+        "sku": "SKU-cb46ad341020",
         "unitId": "Piece",
-        "inventoryKey": "p29:variant_07195705-b98f-4990-a30c-8862188ee49b:Piece"
+        "inventoryKey": "preview_29:variant_4050acdf-a0f7-4979-bc22-cb46ad341020:Piece"
       }
     ]
   },
@@ -586,16 +586,16 @@
     "scope": "Seller-custom selector capability only, NOT verified taxonomy variant rule",
     "identities": [
       {
-        "variantId": "variant_75ec0a4f-db66-450d-bc7f-06990d227fcb",
-        "sku": "SKU-06990d227fcb",
+        "variantId": "variant_483154bb-604b-4600-90a6-49c87bb25f5f",
+        "sku": "SKU-49c87bb25f5f",
         "unitId": "Piece",
-        "inventoryKey": "p30:variant_75ec0a4f-db66-450d-bc7f-06990d227fcb:Piece"
+        "inventoryKey": "preview_30:variant_483154bb-604b-4600-90a6-49c87bb25f5f:Piece"
       },
       {
-        "variantId": "variant_cdacdc83-2c39-4109-9e04-fa9a6fb11627",
-        "sku": "SKU-fa9a6fb11627",
+        "variantId": "variant_ae923822-3d91-47bb-bcde-b48c3bb8d6a4",
+        "sku": "SKU-b48c3bb8d6a4",
         "unitId": "Piece",
-        "inventoryKey": "p30:variant_cdacdc83-2c39-4109-9e04-fa9a6fb11627:Piece"
+        "inventoryKey": "preview_30:variant_ae923822-3d91-47bb-bcde-b48c3bb8d6a4:Piece"
       }
     ]
   }

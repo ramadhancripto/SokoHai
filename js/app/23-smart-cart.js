@@ -420,7 +420,7 @@ window.confirmSmartCartOrder = async function(){
     const createdTxIds=[];
     try{
         for(const [sellerId,sellerItems] of Object.entries(grouped)){
-            let sellerProfile=null; try{ const s=await skh.getDoc(skh.doc(skh.db,'users',sellerId)); if(s.exists()) sellerProfile=s.data(); }catch(e){}
+            let sellerProfile=null; try{ const s=await skh.getUserCard(sellerId); if(s.exists()) sellerProfile=s.data(); }catch(e){}
             let core=skh.buildSokoPayCoreTx({ orderId, transactionToken, sellerId, sellerItems, calc, sellerProfile });
             core.shippingService=carrier.service; core.selectedCarrier=carrier; core.shippingCost=carrier.price||calc.shipping; core.package=calc.package; core.escrowBreakdown={ productCost:core.amount, shippingCost:core.shippingCost, escrowTotal:core.amount+core.shippingCost, escrowFee:calc.escrowFee };
             const coreRef=await skh.addDoc(skh.collection(skh.db,'sokopay_core_transactions'), core); core.sokopayCoreId=coreRef.id; createdTxIds.push(coreRef.id);
@@ -648,7 +648,10 @@ window.loadLogisticsAssignments = function(){
     const box=document.getElementById('logisticsOpsList'); if(!box) return;
     try{
         // Show recent assignments. In production, filter by logistics company ID/user membership.
-        const qA=skh.query(skh.collection(skh.db,'logistics_assignments'), skh.orderBy('createdAt','desc'), skh.limit(50));
+        // [REPAIR 2026-10 C3] Rules zinaonyesha kazi zilizo wazi (new_assignment) kwa
+        // washirika wa usafirishaji, na zile ulizokubali wewe (acceptedBy). Hakuna tena
+        // usomaji wa assignments zote za mfumo.
+        const qA=skh.query(skh.collection(skh.db,'logistics_assignments'), skh.where('assignmentStatus','==','new_assignment'), skh.limit(50));
         window.skhOnSnapshot('seller-orders', qA, snap=>{
             if(snap.empty){ box.innerHTML='<div class="ops-card" style="text-align:center;color:#64748b;">Hakuna pickup requests bado.</div>'; return; }
             box.innerHTML='';
@@ -658,7 +661,7 @@ window.loadLogisticsAssignments = function(){
 };
 
 window.logisticsAcceptAssignment = async function(id, shipmentDocId, coreId){
-    await skh.updateDoc(skh.doc(skh.db,'logistics_assignments',id), { assignmentStatus:'accepted', logisticsDashboardStatus:'accepted', status:'Courier Assigned', acceptedAt:new Date().toISOString() }).catch(()=>{});
+    await skh.updateDoc(skh.doc(skh.db,'logistics_assignments',id), { assignmentStatus:'accepted', logisticsDashboardStatus:'accepted', status:'Courier Assigned', acceptedAt:new Date().toISOString(), acceptedBy:skh.currentUser.uid }).catch(()=>{});
     if(shipmentDocId) await skh.updateDoc(skh.doc(skh.db,'shipments',shipmentDocId), { status:'Courier Assigned', updatedAt:new Date().toISOString() }).catch(()=>{});
     if(coreId) await skh.updateDoc(skh.doc(skh.db,'sokopay_core_transactions',coreId), { shipmentStatus:'Courier Assigned', updatedAt:new Date().toISOString(), timeline:skh.arrayUnion({title:'Courier Assigned',description:'Logistics company accepted shipment.',at:new Date().toISOString(),done:true}) }).catch(()=>{});
 };
