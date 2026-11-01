@@ -1,0 +1,903 @@
+/* ============================================================================
+   SokoHai — 43-marketplace-ads-studio.css
+   ----------------------------------------------------------------------------
+   [ADS STUDIO REBUILD · 2026-11-01] Presentation for the SokoHai Marketplace
+   Ads Studio (`js/app/101-marketplace-ads-studio.js`).
+
+   Scope: everything is under #masRoot / .mas-*, so no other screen is restyled.
+   Identity: white/light surfaces, green #18A982, supporting blue #3B82F6,
+   gold #D4A72C, Inter, fine borders, 12–16px radii, no heavy shadows.
+   ========================================================================== */
+
+:root {
+    --mas-line: #E2E8F0;
+    --mas-line-soft: #EEF2F6;
+    --mas-ink: #0F172A;
+    --mas-ink-2: #41564F;
+    --mas-ink-3: #64748B;
+    --mas-bg: #F7FAF9;
+    --mas-green: #18A982;
+    --mas-green-dark: #12866A;
+    --mas-green-soft: #EAF8F3;
+    --mas-gold: #D4A72C;
+    --mas-gold-soft: #FFF8E6;
+    --mas-blue: #3B82F6;
+    --mas-blue-soft: #EFF6FF;
+}
+
+.mas-root {
+    position: fixed;
+    inset: 0;
+    z-index: 9600;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(13, 23, 20, .62);
+    backdrop-filter: blur(3px);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--mas-ink);
+}
+.mas-root.open { display: flex; }
+body.mas-open { overflow: hidden; }
+
+.mas-shell {
+    display: flex;
+    flex-direction: column;
+    width: min(1160px, 100%);
+    height: min(92dvh, 880px);
+    background: var(--mas-bg);
+    border: 1px solid var(--mas-line);
+    border-radius: 18px;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, .18);
+    overflow: hidden;
+}
+
+/* ------------------------------------------------------------------- header */
+.mas-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--mas-line);
+    flex: 0 0 auto;
+}
+.mas-head-copy b { display: block; font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+.mas-head-copy small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--mas-ink-3); }
+.mas-head-actions { display: flex; align-items: center; gap: 8px; }
+.mas-icon-btn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--mas-line);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--mas-ink-3);
+    cursor: pointer;
+}
+.mas-icon-btn:hover { border-color: #CBD5E1; color: var(--mas-ink); }
+
+/* --------------------------------------------------------------------- body */
+.mas-body { display: flex; min-height: 0; flex: 1 1 auto; }
+
+.mas-nav {
+    flex: 0 0 214px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 10px;
+    background: #fff;
+    border-right: 1px solid var(--mas-line);
+    overflow-y: auto;
+}
+.mas-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--mas-ink-2);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+.mas-nav-item svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.mas-nav-item span { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mas-nav-item:hover { background: #F6FCF9; color: var(--mas-green-dark); }
+.mas-nav-item.active {
+    background: var(--mas-green-soft);
+    border-color: #B9E3D4;
+    color: var(--mas-green-dark);
+}
+.mas-nav-count {
+    min-width: 18px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: var(--mas-green);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.mas-main { flex: 1 1 auto; min-width: 0; overflow-y: auto; padding: 16px; }
+/* align-content:start — bila hii, grid inanyoosha kila kadi hadi kujaza urefu
+   wa skrini, ndiyo maana Mipangilio ilionekana na nafasi tupu kubwa katikati
+   ya kadi (na ndani ya kadi). Kadi sasa zinachukua urefu wa maudhui yao pekee. */
+.mas-view { display: grid; gap: 14px; align-content: start; }
+
+/* ------------------------------------------------------------------ pieces */
+.mas-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 13px;
+    border: 1px solid var(--mas-line);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--mas-ink-2);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+}
+.mas-btn svg { width: 14px; height: 14px; }
+.mas-btn:hover { border-color: #CBD5E1; color: var(--mas-ink); }
+.mas-btn.primary { background: var(--mas-green); border-color: var(--mas-green); color: #fff; }
+.mas-btn.primary:hover { background: var(--mas-green-dark); border-color: var(--mas-green-dark); }
+.mas-btn.lg { min-height: 40px; padding: 0 18px; font-size: 13px; }
+.mas-btn.sm { min-height: 30px; padding: 0 10px; font-size: 11.5px; }
+.mas-btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+.mas-card {
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 16px;
+}
+.mas-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.mas-card h2, .mas-h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: var(--mas-ink);
+}
+.mas-h2 { display: flex; align-items: center; gap: 8px; }
+.mas-muted { margin: 5px 0 0; font-size: 12px; line-height: 1.5; color: var(--mas-ink-3); }
+.mas-help { margin: 8px 0 0; font-size: 11px; line-height: 1.5; color: var(--mas-ink-3); }
+.mas-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border: 1px solid #B9E3D4;
+    border-radius: 999px;
+    background: var(--mas-green-soft);
+    color: var(--mas-green-dark);
+    font-size: 10.5px;
+    font-weight: 800;
+}
+.mas-pill.soft { background: #F1F5F4; border-color: var(--mas-line); color: var(--mas-ink-3); }
+.mas-count {
+    min-width: 18px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #F1F5F4;
+    color: var(--mas-ink-3);
+    font-size: 10px;
+    font-weight: 800;
+}
+
+/* -------------------------------------------------------------------- hero */
+.mas-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px;
+    border: 1px solid #D8EDE4;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #F2FBF7 0%, #FFFFFF 62%);
+}
+.mas-hero h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.mas-hero p { margin: 6px 0 0; max-width: 62ch; font-size: 12.5px; line-height: 1.55; color: var(--mas-ink-3); }
+
+.mas-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.mas-stat {
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 14px;
+}
+.mas-stat b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.02em; color: var(--mas-ink); }
+.mas-stat small { display: block; margin-top: 2px; font-size: 11px; font-weight: 700; color: var(--mas-ink-3); }
+.mas-stat.green b { color: var(--mas-green-dark); }
+.mas-stat.gold b { color: #8A6510; }
+.mas-stat.blue b { color: #1D4ED8; }
+
+.mas-type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.mas-type-card {
+    display: grid;
+    gap: 5px;
+    padding: 14px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, transform .1s;
+}
+.mas-type-card:hover { border-color: #B9E3D4; box-shadow: 0 2px 10px rgba(18, 134, 106, .08); }
+.mas-type-card:active { transform: translateY(1px); }
+.mas-type-ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--mas-green-soft);
+    color: var(--mas-green-dark);
+}
+.mas-type-card b { font-size: 13px; font-weight: 800; color: var(--mas-ink); }
+.mas-type-card small { font-size: 11.5px; line-height: 1.45; color: var(--mas-ink-3); }
+.mas-type-meta { margin-top: 2px; font-size: 10.5px; font-weight: 800; color: var(--mas-green-dark); }
+
+.mas-flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+}
+.mas-flow li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 12px;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 11px;
+    font-size: 12px;
+    color: var(--mas-ink-2);
+}
+.mas-flow li span {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--mas-green-soft);
+    color: var(--mas-green-dark);
+    font-size: 10.5px;
+    font-weight: 800;
+}
+.mas-flow li b { font-weight: 700; }
+
+/* ------------------------------------------------------------------ wizard */
+.mas-steps {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 10px 12px;
+    list-style: none;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.mas-steps::-webkit-scrollbar { display: none; }
+.mas-steps li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    border-radius: 999px;
+    color: var(--mas-ink-3);
+    font-size: 11px;
+    font-weight: 700;
+}
+.mas-steps li span {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #F1F5F4;
+    color: var(--mas-ink-3);
+    font-size: 10.5px;
+    font-weight: 800;
+}
+.mas-steps li.done { color: var(--mas-green-dark); }
+.mas-steps li.done span { background: var(--mas-green-soft); color: var(--mas-green-dark); }
+.mas-steps li.current { background: var(--mas-green-soft); color: var(--mas-green-dark); }
+.mas-steps li.current span { background: var(--mas-green); color: #fff; }
+.mas-steps li b { font-weight: 800; }
+/* Simu: sehemu 11 + hatua 7 haziwezi kutosha mstari mmoja. Tunabakiza namba
+   tu kwa hatua zisizo za sasa, na jina la hatua ya sasa — hakuna kukatika. */
+@media (max-width: 620px) {
+    .mas-steps { padding: 8px 10px; scroll-snap-type: x proximity; }
+    .mas-steps li { padding: 3px 5px; scroll-snap-align: center; }
+    .mas-steps li b { display: none; }
+    .mas-steps li.current b { display: inline; }
+    .mas-steps li.current { padding: 4px 10px; }
+}
+
+.mas-step-body { min-height: 0; }
+.mas-choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 12px; }
+.mas-choice {
+    display: grid;
+    gap: 4px;
+    padding: 14px;
+    text-align: left;
+    background: #fff;
+    border: 1.5px solid var(--mas-line);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.mas-choice:hover { border-color: #B9E3D4; }
+.mas-choice.active { border-color: var(--mas-green); background: #F7FCFA; }
+.mas-choice-ico {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--mas-green-soft);
+    color: var(--mas-green-dark);
+}
+.mas-choice b { font-size: 13px; font-weight: 800; }
+.mas-choice small { font-size: 11.5px; line-height: 1.45; color: var(--mas-ink-3); }
+
+.mas-search {
+    width: 100%;
+    min-height: 38px;
+    margin: 10px 0;
+    padding: 8px 11px;
+    border: 1px solid #D7E1DE;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--mas-ink);
+    background: #fff;
+}
+.mas-search:focus-visible { outline: none; border-color: var(--mas-green); box-shadow: 0 0 0 3px rgba(24, 169, 130, .16); }
+
+.mas-listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 9px; }
+.mas-listing {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px;
+    text-align: left;
+    background: #fff;
+    border: 1.5px solid var(--mas-line);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.mas-listing:hover { border-color: #B9E3D4; }
+.mas-listing.selected { border-color: var(--mas-green); background: #F7FCFA; }
+.mas-listing.disabled { cursor: not-allowed; background: #FAFBFA; opacity: .78; }
+.mas-listing-img {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 9px;
+    overflow: hidden;
+    background: #F1F5F4;
+    display: grid;
+    place-items: center;
+    color: var(--mas-ink-3);
+}
+.mas-listing-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mas-listing-body { display: grid; gap: 2px; min-width: 0; }
+.mas-listing-body b {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--mas-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.mas-listing-price { font-size: 12px; font-weight: 800; color: var(--mas-green-dark); }
+.mas-listing-body small { font-size: 11px; color: var(--mas-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mas-listing-why { margin-top: 2px; font-size: 10.5px; font-weight: 700; color: #B42318; }
+.mas-listing-check {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--mas-green);
+    color: #fff;
+}
+
+.mas-listing-source {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid var(--mas-line-soft);
+    border-radius: 12px;
+    background: #FBFDFC;
+}
+.mas-listing-source img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
+.mas-listing-source b { display: block; font-size: 12.5px; font-weight: 800; }
+.mas-listing-source small { display: block; margin-top: 2px; font-size: 11px; color: var(--mas-ink-3); }
+
+.mas-facts { display: grid; gap: 6px; margin: 10px 0 0; }
+.mas-facts > div {
+    display: grid;
+    grid-template-columns: minmax(120px, 210px) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 6px 14px;
+    padding: 7px 10px;
+    border: 1px solid var(--mas-line-soft);
+    border-radius: 9px;
+    background: #FCFEFD;
+}
+.mas-facts dt { font-size: 11px; font-weight: 700; color: var(--mas-ink-3); }
+.mas-facts dd {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--mas-ink);
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+/* kwenye simu: lebo juu, thamani chini — hakuna kubana wala kukatika */
+@media (max-width: 560px) {
+    .mas-facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .mas-facts dd { color: var(--mas-ink); }
+}
+
+.mas-fields { display: grid; gap: 10px; margin-top: 12px; }
+.mas-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mas-field { display: block; }
+.mas-field > span { display: block; margin-bottom: 4px; font-size: 11.5px; font-weight: 700; color: var(--mas-ink-2); }
+.mas-field > small { display: block; margin-top: 4px; font-size: 10.5px; color: var(--mas-ink-3); }
+.mas-field input,
+.mas-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 38px;
+    padding: 8px 11px;
+    border: 1px solid #D7E1DE;
+    border-radius: 10px;
+    background: #fff;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--mas-ink);
+    transition: border-color .15s, box-shadow .15s;
+}
+.mas-field textarea { min-height: 74px; resize: vertical; line-height: 1.45; }
+.mas-field input:focus-visible,
+.mas-field textarea:focus-visible { outline: none; border-color: var(--mas-green); box-shadow: 0 0 0 3px rgba(24, 169, 130, .16); }
+
+.mas-surface-list { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.mas-surface-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--mas-line-soft);
+    border-radius: 10px;
+    background: #FCFEFD;
+    font-size: 11.5px;
+    color: var(--mas-ink-2);
+}
+.mas-surface-list li svg { flex: 0 0 auto; margin-top: 1px; color: var(--mas-green-dark); }
+
+.mas-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-top: 12px;
+    padding: 11px 12px;
+    border: 1px solid #DCE9F1;
+    border-radius: 12px;
+    background: #F4FAFD;
+    color: #2F6280;
+}
+.mas-note.warn { border-color: #F3E2B4; background: var(--mas-gold-soft); color: #8A6510; }
+.mas-note.info { border-color: #C7DFF7; background: var(--mas-blue-soft); color: #1D4ED8; }
+.mas-note svg { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 1px; }
+.mas-note b { display: block; font-size: 12px; font-weight: 800; }
+.mas-note p { margin: 2px 0 0; font-size: 11.5px; line-height: 1.5; }
+
+.mas-wizard-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 14px;
+}
+.mas-wizard-hint { flex: 1 1 auto; text-align: center; font-size: 11px; font-weight: 700; color: var(--mas-ink-3); }
+
+/* ----------------------------------------------------------------- preview */
+.mas-preview-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+.mas-preview-col { min-width: 0; }
+.mas-preview-label { display: block; margin-bottom: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--mas-ink-3); }
+.mas-preview-frame {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 220px;
+    padding: 10px;
+    border: 1px solid var(--mas-line);
+    border-radius: 14px;
+    background: #F4F7F6;
+}
+.mas-preview-frame.plain { background: #FBFDFC; }
+/* the ad cell keeps the marketplace geometry it has in the feed */
+.mas-preview-cell { width: 230px; max-width: 100%; }
+.mas-preview-cell .skh-ad-dismiss-button { display: none !important; }   /* a preview has nothing to dismiss */
+.mas-preview-cell .skh-ann-card { min-height: 0 !important; height: auto !important; aspect-ratio: auto !important; }
+.mas-preview-cell .skh-ann-media,
+.mas-preview-cell .skh-ann-media img,
+.mas-preview-cell .skh-ann-video { max-height: 146px !important; min-height: 0 !important; }
+.mas-preview-cell .skh-ann-media img { object-fit: cover !important; width: 100% !important; }
+.mas-preview-cell .skh-ann-offer,
+.mas-preview-cell .skh-ann-price-pill { font-size: 13px !important; }
+.mas-preview-cell .skh-ann-action { min-height: 26px !important; padding: 4px 8px !important; font-size: 10.5px !important; }
+.mas-preview-cell .skh-ann-text-creative { height: auto !important; max-height: none !important; flex: 1 1 auto !important; }
+.mas-preview-frame .feed-card-box { width: 230px; max-width: 100%; margin: 0; }
+.mas-preview-empty { font-size: 12px; color: var(--mas-ink-3); }
+
+.mas-submit-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.mas-submit-actions .mas-btn { flex: 1 1 180px; min-height: 40px; }
+
+/* --------------------------------------------------------------- campaigns */
+.mas-view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.mas-view-head h1 { margin: 0; flex: 1 1 auto; min-width: 0; font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+.mas-group { display: grid; gap: 8px; }
+.mas-campaign {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 11px;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 14px;
+}
+.mas-campaign-thumb {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #F1F5F4;
+    display: grid;
+    place-items: center;
+    color: var(--mas-ink-3);
+}
+.mas-campaign-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mas-campaign-body { flex: 1 1 auto; min-width: 0; }
+.mas-campaign-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mas-campaign-title b { font-size: 12.5px; font-weight: 800; color: var(--mas-ink); }
+.mas-campaign-body p { margin: 3px 0 0; }
+.mas-campaign-metrics { display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
+.mas-campaign-metrics span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--mas-ink-3);
+}
+.mas-campaign-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+.mas-state {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .02em;
+    background: #F1F5F4;
+    color: var(--mas-ink-3);
+    border: 1px solid var(--mas-line);
+}
+.mas-state.active { background: var(--mas-green-soft); border-color: #B9E3D4; color: var(--mas-green-dark); }
+.mas-state.pending, .mas-state.scheduled { background: var(--mas-gold-soft); border-color: #F3E2B4; color: #8A6510; }
+.mas-state.paused { background: var(--mas-blue-soft); border-color: #C7DFF7; color: #1D4ED8; }
+.mas-state.rejected { background: #FEF4F4; border-color: #F6C9C9; color: #B42318; }
+.mas-state.draft { background: #F8FAF9; }
+
+/* -------------------------------------------------------------------- table */
+.mas-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.mas-table th, .mas-table td { padding: 8px 10px; text-align: left; font-size: 11.5px; border-bottom: 1px solid var(--mas-line-soft); }
+.mas-table th { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--mas-ink-3); }
+.mas-table td { color: var(--mas-ink-2); }
+.mas-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------ alerts */
+.mas-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin-top: 12px;
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--mas-line);
+    background: #fff;
+}
+.mas-alert > svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; }
+.mas-alert > div { flex: 1 1 auto; min-width: 0; }
+.mas-alert b { display: block; font-size: 12px; font-weight: 800; }
+.mas-alert p { margin: 2px 0 0; font-size: 11.5px; line-height: 1.5; }
+.mas-alert.error { border-color: #F6C9C9; background: #FEF4F4; color: #7F1D1D; }
+.mas-alert.ok { border-color: #B9E3D4; background: #F4FBF8; color: #12866A; }
+
+.mas-empty { text-align: left; }
+.mas-empty b { display: block; font-size: 13px; font-weight: 800; }
+.mas-empty .mas-btn { margin-top: 10px; }
+/* place-items:start ilikuwa inabana VITU VYOTE kwa upana wa maudhui yao —
+   ikifanya kadi ya "hakuna kampeni" na kichwa kujikunja upande mmoja.
+   Tunataka kuzuia kunyoshwa KWA WIMA pekee; upana unabaki kamili. */
+.mas-empty-page { align-items: start; justify-items: stretch; }
+
+.mas-loading { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--mas-ink-3); }
+.mas-spinner {
+    width: 13px;
+    height: 13px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: masSpin .7s linear infinite;
+    display: inline-block;
+}
+@keyframes masSpin { to { transform: rotate(360deg); } }
+
+/* -------------------------------------------------------------------- modal */
+.mas-modal-host:empty { display: none; }
+.mas-modal-host {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(15, 23, 42, .45);
+    z-index: 5;
+}
+.mas-modal {
+    width: min(460px, 100%);
+    max-height: 86dvh;
+    overflow: auto;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--mas-line);
+    box-shadow: 0 18px 48px rgba(15, 23, 42, .22);
+}
+.mas-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--mas-line);
+}
+.mas-modal-head b { font-size: 13px; font-weight: 800; }
+.mas-modal-body { padding: 14px; }
+.mas-modal-img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; }
+
+/* ---------------------------------------------------------------- responsive */
+@media (max-width: 980px) {
+    .mas-root { padding: 0; }
+    .mas-shell { width: 100%; height: 100dvh; max-height: none; border-radius: 0; border: 0; }
+    .mas-body { flex-direction: column; }
+    .mas-nav {
+        flex: 0 0 auto;
+        flex-direction: row;
+        gap: 4px;
+        padding: 8px 26px 8px 10px;
+        border-right: 0;
+        border-bottom: 1px solid var(--mas-line);
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        /* fade ya upande wa kulia: inaonyesha kuna sehemu zaidi, badala ya
+           kitufe kinachoonekana "kimekatwa" ghafla */
+        mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
+    }
+    .mas-nav::-webkit-scrollbar { display: none; }
+    .mas-nav-item { flex: 0 0 auto; padding: 8px 10px; white-space: nowrap; scroll-snap-align: center; }
+    .mas-nav-item span { flex: 0 0 auto; }
+    .mas-main { padding: 12px; }
+    .mas-preview-pair { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 620px) {
+    .mas-head { padding: 10px 12px; }
+    .mas-head-copy small { display: none; }
+    .mas-head-actions .mas-btn span { display: none; }
+    .mas-head-actions .mas-btn { padding: 0 10px; }
+    .mas-hero { padding: 14px; }
+    .mas-hero h1 { font-size: 17px; }
+    .mas-hero .mas-btn.lg { width: 100%; }
+    .mas-field-row { grid-template-columns: 1fr; }
+    .mas-campaign { flex-wrap: wrap; }
+    .mas-campaign-actions { width: 100%; }
+    .mas-campaign-actions .mas-btn { flex: 1 1 auto; }
+    .mas-wizard-actions { flex-wrap: wrap; }
+    .mas-wizard-actions .mas-btn.primary { flex: 1 1 100%; order: 3; }
+    .mas-steps { padding: 8px; }
+    .mas-listing-grid { grid-template-columns: minmax(0, 1fr); }
+    .mas-stats { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    .mas-table th:nth-child(2), .mas-table td:nth-child(2) { display: none; }
+}
+
+/* ============================ [ADS PLATFORM · 11 sections] ==================
+   Components introduced with the approved 11-section structure:
+   grouped rail, campaign filter chips, date-range control, "unavailable"
+   metric tiles, honest chart placeholder, simple key/value rows.
+   ========================================================================== */
+
+.mas-nav-group {
+    margin: 10px 10px 4px;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mas-ink-3);
+}
+.mas-nav-group:first-child { margin-top: 0; }
+.mas-nav-item { min-height: 32px; }
+
+/* campaign filter chips */
+.mas-filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0 4px; }
+.mas-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 30px;
+    padding: 0 11px;
+    border: 1px solid var(--mas-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--mas-ink-2);
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.mas-filter:hover { border-color: #CBD5E1; }
+.mas-filter.active { background: var(--mas-green-soft); border-color: #B9E3D4; color: var(--mas-green-dark); }
+.mas-filter b {
+    min-width: 16px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: #F1F5F4;
+    color: var(--mas-ink-3);
+    font-size: 9.5px;
+    text-align: center;
+}
+.mas-filter.active b { background: #fff; color: var(--mas-green-dark); }
+
+/* date range — present, disabled, and honest about why */
+.mas-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid var(--mas-line);
+    border-radius: 12px;
+}
+.mas-range-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--mas-ink-3);
+}
+.mas-range-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 27px;
+    padding: 0 10px;
+    border: 1px solid var(--mas-line);
+    border-radius: 8px;
+    background: #F8FAF9;
+    color: #94A3B8;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: not-allowed;
+}
+.mas-range-why { font-size: 10.5px; color: var(--mas-ink-3); }
+
+/* metric tiles: real vs unavailable are visually different on purpose */
+.mas-stat em { display: block; font-style: normal; }
+.mas-stat-why { margin-top: 3px; font-size: 10px; font-weight: 700; color: #8A6510; line-height: 1.35; }
+.mas-stat-src { margin-top: 3px; font-size: 9.5px; font-weight: 700; color: var(--mas-ink-3); letter-spacing: .01em; }
+.mas-stat.na { border-style: dashed; background: repeating-linear-gradient(135deg, #FCFDFC 0 9px, #F7FAF8 9px 18px); }
+.mas-stat.na b { font-size: 12.5px; font-weight: 800; color: #8A6510; }
+.mas-stat.na small { color: var(--mas-ink-2); }
+
+/* honest chart placeholder */
+.mas-chart-ph {
+    display: grid;
+    place-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    padding: 22px 16px;
+    border: 1.5px dashed #D7E1DE;
+    border-radius: 13px;
+    background: repeating-linear-gradient(135deg, #FBFDFC 0 10px, #F6FAF8 10px 20px);
+    text-align: center;
+    color: var(--mas-ink-3);
+}
+.mas-chart-ph svg { color: #A9BCB6; }
+.mas-chart-ph b { font-size: 12.5px; color: var(--mas-ink-2); }
+.mas-chart-ph p { margin: 0; max-width: 58ch; font-size: 11.5px; line-height: 1.5; }
+
+/* key/value rows used by placements and analytics breakdowns */
+.mas-rows { display: grid; gap: 5px; margin-top: 10px; }
+.mas-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 10px;
+    border: 1px solid var(--mas-line-soft);
+    border-radius: 9px;
+    background: #FCFEFD;
+}
+.mas-row-nm { display: flex; align-items: baseline; gap: 6px; font-size: 11.5px; font-weight: 800; color: var(--mas-ink); }
+.mas-row-key { font-size: 9.5px; font-weight: 700; color: #9AA9A4; letter-spacing: .01em; }
+.mas-row.on { border-color: #CDE7DD; background: #FAFEFC; }
+.mas-row.on .mas-row-val { color: var(--mas-green-dark); }
+.mas-rows.cols { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.mas-row-val { flex: none; white-space: nowrap; font-size: 11px; font-weight: 700; color: var(--mas-ink-3); text-align: right; }
+
+/* two-column configuration layout */
+.mas-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; }
+
+/* stacked alerts on the overview */
+.mas-alert-list { display: grid; gap: 7px; margin-top: 10px; }
+
+@media (max-width: 980px) {
+    .mas-nav-group { display: none; }
+    .mas-range-why { flex: 1 1 100%; }
+}
+
+/* footer row for secondary actions inside a card */
+.mas-card-actions { margin-top: 11px; }
+.mas-card-foot {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: 11px;
+    padding-top: 10px;
+    border-top: 1px solid var(--mas-line-soft);
+}
+.mas-btn.ghost { background: transparent; border-color: var(--mas-line); color: var(--mas-ink-2); }
+.mas-btn.ghost:hover { background: #F7FAF9; }

@@ -84,6 +84,13 @@
     <link rel="stylesheet" href="css/28-my-profile.css">
     <!-- [R19] responsive top-nav + role badges + Kamusi -->
     <link rel="stylesheet" href="css/29-nav-dict.css">
+    <!-- [2026-11-01] Refinement layer — loaded last, additive only (see file header) -->
+    <link rel="stylesheet" href="css/40-ui-refinement.css">
+    <!-- [TASK 01] Compact, integrated advertising presentation (presentation only) -->
+    <link rel="stylesheet" href="css/41-ads-marketplace.css">
+    <link rel="stylesheet" href="css/42-ads-studio.css">
+    <!-- [ADS STUDIO REBUILD] SokoHai Marketplace Ads Studio presentation (scoped to #masRoot) -->
+    <link rel="stylesheet" href="css/43-marketplace-ads-studio.css">
 <style id="skhBootCloakCss">
  html.skh-booting body{visibility:hidden!important}
  /* [LOGO-SPLASH 2026-09-17] Splash inabeba LOGO halisi ya SokoHai — funika
@@ -233,7 +240,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <section class="adv-shell" role="dialog" aria-modal="true" aria-labelledby="advDashboardTitle">
         <header class="adv-head">
             <button type="button" class="adv-head-btn" onclick="window.skhAdvertiserBack()" aria-label="Rudi"><span class="skh-ico" data-ico="arrow-left"></span></button>
-            <div class="adv-head-copy"><b id="advDashboardTitle">Advertiser</b><small>Company advertising workspace</small></div>
+            <div class="adv-head-copy"><b id="advDashboardTitle">Matangazo</b><small>Eneo la mfanyabiashara · SokoHai Ads</small></div>
             <button type="button" class="adv-head-btn" onclick="window.skhCloseAdvertiserDashboard()" aria-label="Funga"><span class="skh-ico" data-ico="x"></span></button>
         </header>
         <div class="adv-layout">
@@ -253,6 +260,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                         <span class="adv-coming">Coming Soon</span>
                     </button>
                 </div>
+                <ol class="adv-steps" aria-label="Jinsi matangazo yanavyofanya kazi">
+                    <li><span class="adv-step-n">1</span><div><b>Tengeneza creative</b><small>Picha, video, maandishi au Auto Design — kitu kimoja kinachotumika kwenye sehemu zote.</small></div></li>
+                    <li><span class="adv-step-n">2</span><div><b>Chagua placement</b><small>Home, Discover, Search, Product, Chat na nyingine — zote zipo tayari kwenye mfumo.</small></div></li>
+                    <li><span class="adv-step-n">3</span><div><b>Fuatilia na simamia</b><small>Campaign Manager inaonyesha impressions, clicks na CTR kwa kila tangazo.</small></div></li>
+                </ol>
                 <div class="adv-note">Billing is not enabled. No payment, wallet, checkout, pricing or campaign-spend operation can start from this entry.</div>
             </main>
         </div>
@@ -1480,16 +1492,22 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">MAELEZO YA BIDHAA (DESCRIPTION) *</label>
         <textarea id="prodDesc" placeholder="Eleza bidhaa yako kwa kina: faida zake, matumizi, ukubwa, rangi n.k..." style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; outline:none; resize:none;"></textarea>
         
-        <!-- PRODUCT FOUNDATION: primary + additional images kupitia uploader uliopo. -->
-        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px; margin-bottom:5px;"> PICHA ZA BIDHAA (ANGALAU 1) * <span id="prodImageCount" style="color:#16a34a;"></span></label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <button type="button" onclick="document.getElementById('prodImageCam').click()" style="padding:12px; background:#526962; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> PIGA PICHA</button>
-            <button type="button" onclick="document.getElementById('prodImage').click()" style="padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> KUTOKA GALARI</button>
+        <!-- PRODUCT FOUNDATION: primary + up to 5 additional images.
+             [REPAIR 2026-11-01] The picker is now DECLARED here (data-skh-photo-picker)
+             and bound by js/11-uploads.js, instead of being initialised by an inline
+             script that ran before the uploader module existed. -->
+        <div class="skh-field" data-skh-photo-picker='{"galleryInput":"prodImage","cameraInput":"prodImageCam","previewId":"prodImagePreviews","max":6,"min":1,"hintId":"prodImageCount"}'>
+            <label class="skh-field-label" for="prodImage">Picha za bidhaa <span class="skh-req">*</span></label>
+            <p class="skh-field-help">Picha ya kwanza ni picha kuu itakayoonekana kwenye soko. Unaweza kuongeza hadi 6.</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <button type="button" onclick="document.getElementById('prodImageCam').click()" style="padding:12px; background:#4b5f59; color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:13px;">Piga picha</button>
+                <button type="button" onclick="document.getElementById('prodImage').click()" style="padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:13px;">Chagua kutoka galari</button>
+            </div>
+            <input type="file" id="prodImage" accept="image/*" multiple style="display:none;">
+            <input type="file" id="prodImageCam" accept="image/*" capture="environment" style="display:none;">
+            <div id="prodImagePreviews" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+            <p id="prodImageCount" class="skh-field-help" style="color:#64748b; margin-top:8px;"></p>
         </div>
-        <input type="file" id="prodImage" accept="image/*" multiple style="display:none;">
-        <input type="file" id="prodImageCam" accept="image/*" capture="environment" style="display:none;">
-        <div id="prodImagePreviews" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
-        <script>/* Product media: primary + up to 5 additional images. */ if (window.skhInitPhotoPicker) { try { window.skhProdPicker = window.skhInitPhotoPicker({ galleryInput: 'prodImage', cameraInput: 'prodImageCam', previewId: 'prodImagePreviews', max: 6, min: 1, hintId: 'prodImageCount' }); } catch (e) { console.warn('picker:', e && e.message); } }</script>
     </div>
 
     </div>
@@ -3418,7 +3436,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <!-- One server-authoritative delivery/rotation controller for all campaign slots. -->
 <script type="module" src="js/app/96-ad-delivery-controller.js"></script>
 <script type="module" src="js/app/97-escrow-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Escrow (server-only actions) -->
-<script type="module" src="js/app/98-admin-control-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Udhibiti wa Admin (server-only actions) -->
+<script type="module" src="js/app/98-admin-control-center.js"></script>
+<script type="module" src="js/app/99-ads-marketplace.js"></script>
+<script type="module" src="js/app/100-ads-studio-ui.js"></script><!-- [TASK 01] in-feed ads + true-size studio preview -->
+<!-- [ADS STUDIO REBUILD 2026-11-01] SokoHai Marketplace Ads Studio (product / service / transport only) -->
+<script type="module" src="js/app/101-marketplace-ads-studio.js"></script>
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->

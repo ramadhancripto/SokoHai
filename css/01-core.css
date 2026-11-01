@@ -260,6 +260,30 @@
 
 
 /* 2. Style ya UZA (Dhahabu) - Ipo mda wote */
+/* [BOTTOM NAV · SCROLL SLIDE · 2026-11-01]
+   Upau wa chini unateleza chini unaposhuka, unarudi unapovuta juu (Facebook style).
+   Tunatumia transform pekee: haibadilishi nafasi ya ukurasa, kwa hiyo hakuna
+   kuruka kwa maudhui na hakuna kifungu cha maandishi kinachofunikwa. */
+@media (max-width: 1024px) {
+    .bottom-area-wrapper {
+        transition: transform 220ms cubic-bezier(.22, .61, .36, 1);
+        will-change: transform;
+    }
+    /* +18px = ziada ya kifuto cha "Uza" (margin-bottom:-8px) na kivuli cha juu */
+    .bottom-area-wrapper.nav-slide-hidden {
+        transform: translate3d(0, calc(100% + 18px), 0);
+        pointer-events: none;
+    }
+    .bottom-area-wrapper.nav-slide-hidden .sell-action-fab,
+    .bottom-area-wrapper.nav-slide-hidden .bottom-nav-main {
+        pointer-events: none;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .bottom-area-wrapper,
+    .bottom-area-wrapper.nav-slide-hidden { transition: none; }
+}
+
 .sell-circle-glow {
     background: #18A982 !important;
     box-shadow: 0 7px 18px rgba(24,169,130,.28) !important;

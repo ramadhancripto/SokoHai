@@ -1,0 +1,1020 @@
+/* ============================================================================
+   SokoHai — 42-ads-studio.css
+   ----------------------------------------------------------------------------
+   [2026-11-01 ADS PHASE 1 · C/D/F] Presentation + state styling for the
+   Advertisement Designer (Ads Creator Studio) and its management surfaces.
+
+   SCOPE
+   Everything here is prefixed with #announcementFormModal / .adm-ad-* so no
+   other part of SokoHai is restyled. No markup is re-created: the designer keeps
+   its existing sections, ids, handlers and validation. This file only decides
+   how the existing controls look, how they stack at each width, and how their
+   busy / invalid / disabled states read.
+
+   ORDER
+   Loaded after css/38-home-ad-manager.css (the original designer styles) and
+   after css/41-ads-marketplace.css, so it refines rather than replaces.
+   ========================================================================== */
+
+:root {
+    --skhst-line: #E2E8F0;
+    --skhst-line-soft: #EEF2F6;
+    --skhst-ink: #0F172A;
+    --skhst-ink-2: #41564F;
+    --skhst-ink-3: #64748B;
+    --skhst-bg: #F7FAF9;
+    --skhst-green: #18A982;
+    --skhst-green-dark: #12866A;
+    --skhst-green-soft: #EAF8F3;
+    --skhst-gold: #D4A72C;
+    --skhst-blue: #3B82F6;
+}
+
+/* --------------------------------------------------------------- 1. THE SHELL
+   One scroll container, sticky header, sticky action bar. Everything inside
+   uses the same 16 px radius / fine border / no heavy shadow as the
+   marketplace cards, so the studio and the feed feel like one product. */
+#announcementFormModal.overlay-menu {
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(13, 23, 20, .62);
+    backdrop-filter: blur(3px);
+}
+#announcementFormModal .adm-ad-form {
+    width: min(98vw, 1280px);
+    max-height: min(94dvh, 1000px);
+    padding: 0;
+    background: var(--skhst-bg);
+    border: 1px solid var(--skhst-line);
+    border-radius: 18px;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, .18);
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--skhst-ink);
+}
+
+/* 1a. Header — sticky, quiet, always shows the primary action context. */
+#announcementFormModal .adm-ad-form-head {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin: 0;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, .94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--skhst-line);
+}
+#announcementFormModal .adm-ad-eyebrow {
+    display: inline-block;
+    color: var(--skhst-green-dark);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+#announcementFormModal .adm-ad-form-head h3 {
+    margin: 2px 0 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: var(--skhst-ink);
+}
+#announcementFormModal .adm-ad-form-lead {
+    margin: 3px 0 0;
+    max-width: 62ch;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--skhst-ink-3);
+}
+
+/* 1b. Mode switch + close: same button geometry for both. */
+#announcementFormModal .adm-ad-mode-switch {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: #F1F5F4;
+    border: 1px solid var(--skhst-line);
+    border-radius: 11px;
+}
+#announcementFormModal .adm-ad-mode-switch button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--skhst-ink-2);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, color .15s, box-shadow .15s;
+}
+#announcementFormModal .adm-ad-mode-switch button[aria-checked="true"] {
+    background: #fff;
+    color: var(--skhst-green-dark);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+}
+#announcementFormModal .adm-ad-close {
+    min-height: 34px;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid var(--skhst-line);
+    border-radius: 10px;
+    color: var(--skhst-ink-2);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#announcementFormModal .adm-ad-close:hover { border-color: #CBD5E1; color: var(--skhst-ink); }
+
+/* 1c. Section nav — a scrollable stepper that marks where you are. */
+#announcementFormModal .adm-ad-section-nav {
+    position: sticky;
+    top: 71px;
+    z-index: 25;
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, .94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--skhst-line);
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+}
+#announcementFormModal .adm-ad-section-nav::-webkit-scrollbar { display: none; }
+#announcementFormModal .adm-ad-section-nav button {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--skhst-ink-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+#announcementFormModal .adm-ad-section-nav button:hover {
+    border-color: #B9E3D4;
+    color: var(--skhst-green-dark);
+    background: #F6FCF9;
+}
+#announcementFormModal .adm-ad-section-nav button[aria-current="true"] {
+    background: var(--skhst-green-soft);
+    border-color: #B9E3D4;
+    color: var(--skhst-green-dark);
+    font-weight: 800;
+}
+
+/* 1d. Body grid — form · preview · properties. */
+#announcementFormModal .adm-ad-designer-grid {
+    gap: 14px;
+    padding: 14px 18px 0;
+    grid-template-columns: minmax(0, 1.08fr) minmax(340px, .98fr) minmax(248px, .74fr);
+    grid-template-areas: "controls preview props";
+    align-items: start;
+}
+
+/* 1e. Action bar — always reachable, never covers a field (it is the last row). */
+#announcementFormModal .adm-ad-submit {
+    position: sticky;
+    bottom: 0;
+    z-index: 28;
+    margin: 0;
+    margin-top: 12px;
+    padding: 11px 18px calc(11px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, .96);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--skhst-line);
+    gap: 8px;
+}
+#announcementFormModal .adm-ad-submit .adm-ad-btn {
+    min-height: 38px;
+    padding: 0 15px;
+    border-radius: 10px;
+    border: 1px solid var(--skhst-line);
+    background: #fff;
+    color: var(--skhst-ink-2);
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .1s;
+}
+#announcementFormModal .adm-ad-submit .adm-ad-btn:hover { border-color: #CBD5E1; }
+#announcementFormModal .adm-ad-submit .adm-ad-btn:active { transform: translateY(1px); }
+#announcementFormModal .adm-ad-submit .adm-ad-btn.primary {
+    background: var(--skhst-green);
+    border-color: var(--skhst-green);
+    color: #fff;
+}
+#announcementFormModal .adm-ad-submit .adm-ad-btn.primary:hover { background: var(--skhst-green-dark); border-color: var(--skhst-green-dark); }
+#announcementFormModal .adm-ad-props-trigger { display: none; }   /* mobile only, see §6 */
+
+/* 1f. Disabled + busy states. Every async action in the studio already
+   disables its buttons; this makes that state legible instead of silent. */
+#announcementFormModal .adm-ad-btn[disabled],
+#announcementFormModal .adm-ad-submit .adm-ad-btn[disabled] {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+#announcementFormModal .adm-ad-btn.is-busy {
+    position: relative;
+    padding-left: 32px;
+    opacity: .85;
+}
+#announcementFormModal .adm-ad-btn.is-busy::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    margin-top: -6px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: skhstSpin .7s linear infinite;
+}
+@keyframes skhstSpin { to { transform: rotate(360deg); } }
+#announcementFormModal .adm-ad-form[aria-busy="true"] { cursor: progress; }
+
+/* -------------------------------------------------------- 2. FORM CONTROLS
+   One label style, one input style, one focus ring, everywhere. */
+#announcementFormModal .adm-ad-fields {
+    background: #fff;
+    border: 1px solid var(--skhst-line);
+    border-radius: 16px;
+    padding: 16px;
+}
+#announcementFormModal .adm-ad-fields label,
+#announcementFormModal .adm-ad-step-content label {
+    display: block;
+    margin: 13px 0 5px;
+    color: var(--skhst-ink-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+#announcementFormModal .adm-ad-fields label > span,
+#announcementFormModal .adm-ad-field-label > span {
+    color: var(--skhst-ink-3);
+    font-weight: 600;
+}
+#announcementFormModal input:not([type="range"]):not([type="checkbox"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
+#announcementFormModal select,
+#announcementFormModal textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 40px;
+    padding: 9px 11px;
+    border: 1px solid #D7E1DE;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--skhst-ink);
+    font: inherit;
+    font-size: 13px;
+    transition: border-color .15s, box-shadow .15s;
+}
+#announcementFormModal textarea { min-height: 74px; resize: vertical; line-height: 1.45; }
+#announcementFormModal input:focus-visible,
+#announcementFormModal select:focus-visible,
+#announcementFormModal textarea:focus-visible {
+    outline: none;
+    border-color: var(--skhst-green);
+    box-shadow: 0 0 0 3px rgba(24, 169, 130, .16);
+}
+#announcementFormModal input::placeholder,
+#announcementFormModal textarea::placeholder { color: #9AA8A3; }
+
+/* 2a. Invalid field + the summary the studio shows instead of an alert(). */
+#announcementFormModal .is-invalid,
+#announcementFormModal input.is-invalid,
+#announcementFormModal textarea.is-invalid {
+    border-color: #DC2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .12) !important;
+}
+#skhAdValidation {
+    display: none;
+    margin: 0 18px 12px;
+    padding: 12px 14px;
+    border: 1px solid #F6C9C9;
+    border-left: 4px solid #DC2626;
+    border-radius: 12px;
+    background: #FEF4F4;
+    color: #7F1D1D;
+}
+#skhAdValidation.is-visible { display: block; }
+#skhAdValidation b { display: block; font-size: 12.5px; margin-bottom: 4px; }
+#skhAdValidation ul { margin: 0; padding-left: 18px; }
+#skhAdValidation li { font-size: 12px; line-height: 1.5; }
+#skhAdValidation .adm-ad-close { margin-top: 8px; min-height: 28px; font-size: 11.5px; }
+
+/* 2b. Section cards inside the form. */
+#announcementFormModal .adm-ad-step {
+    background: #fff;
+    border: 1px solid var(--skhst-line);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+#announcementFormModal .adm-ad-step > summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 13px;
+    cursor: pointer;
+    list-style: none;
+}
+#announcementFormModal .adm-ad-step > summary::-webkit-details-marker { display: none; }
+#announcementFormModal .adm-ad-step[open] > summary { border-bottom: 1px solid var(--skhst-line-soft); }
+#announcementFormModal .adm-ad-step-number {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    background: var(--skhst-green-soft);
+    color: var(--skhst-green-dark);
+    font-size: 13px;
+}
+#announcementFormModal .adm-ad-step-copy { display: block; min-width: 0; }
+#announcementFormModal .adm-ad-step-copy b { display: block; font-size: 13px; font-weight: 800; color: var(--skhst-ink); }
+#announcementFormModal .adm-ad-step-copy small { display: block; font-size: 11.5px; line-height: 1.35; color: var(--skhst-ink-3); }
+#announcementFormModal .adm-ad-step-content { padding: 4px 13px 13px; }
+#announcementFormModal .adm-ad-help { display: block; margin-top: 6px; font-size: 11px; color: var(--skhst-ink-3); }
+
+/* 2c. Category / type chips: equal height, no ragged wrap. */
+#announcementFormModal .adm-ad-choice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 7px;
+    margin-top: 10px;
+}
+#announcementFormModal .adm-ad-choice-grid button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 7px 9px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--skhst-ink-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+}
+#announcementFormModal .adm-ad-choice-grid button span { font-size: 12px; opacity: .75; }
+#announcementFormModal .adm-ad-choice-grid button b { font-weight: 700; }
+#announcementFormModal .adm-ad-choice-grid button:hover { border-color: #B9E3D4; background: #F6FCF9; }
+#announcementFormModal .adm-ad-choice-grid button.active,
+#announcementFormModal .adm-ad-choice-grid button[aria-pressed="true"] {
+    border-color: var(--skhst-green);
+    background: var(--skhst-green-soft);
+    color: var(--skhst-green-dark);
+}
+
+/* 2d. Empty state — a short, honest starting point. */
+#announcementFormModal .adm-ad-empty-state {
+    padding: 14px;
+    border: 1px dashed #CFE0D9;
+    border-radius: 14px;
+    background: #FBFDFC;
+    text-align: left;
+}
+#announcementFormModal .adm-ad-empty-state b { font-size: 13px; color: var(--skhst-ink); }
+#announcementFormModal .adm-ad-empty-state p { margin: 4px 0 10px; font-size: 11.5px; line-height: 1.45; color: var(--skhst-ink-3); }
+#announcementFormModal .adm-ad-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 7px;
+}
+#announcementFormModal .adm-ad-empty-actions .adm-ad-btn {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--skhst-ink-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#announcementFormModal .adm-ad-empty-actions .adm-ad-btn.primary {
+    background: var(--skhst-green);
+    border-color: var(--skhst-green);
+    color: #fff;
+}
+
+/* 2e. Dropzone / media slots. */
+#announcementFormModal .adm-ad-dropzone {
+    margin-top: 10px;
+    padding: 14px;
+    border: 1px dashed #CFE0D9;
+    border-radius: 12px;
+    background: #FBFDFC;
+}
+#announcementFormModal .adm-ad-dropzone.is-drag {
+    border-color: var(--skhst-green);
+    background: var(--skhst-green-soft);
+}
+#announcementFormModal .adm-ad-drop-hint { margin: 0 0 9px; font-size: 11.5px; color: var(--skhst-ink-3); }
+#announcementFormModal .adm-ad-add-media { display: flex; flex-wrap: wrap; gap: 7px; }
+#announcementFormModal .adm-ad-add-media .adm-ad-btn,
+#announcementFormModal .adm-ad-media-slot .adm-ad-btn {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--skhst-ink-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#announcementFormModal .adm-ad-media-slot {
+    margin-top: 10px;
+    padding: 11px;
+    border: 1px solid var(--skhst-line-soft);
+    border-radius: 12px;
+    background: #FCFEFD;
+}
+#announcementFormModal .adm-ad-slot-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#announcementFormModal .adm-ad-slot-head b { font-size: 12px; color: var(--skhst-ink); }
+#announcementFormModal .adm-ad-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 26px;
+    padding: 0 9px;
+    border: 1px solid #F3D6D6;
+    border-radius: 8px;
+    background: #fff;
+    color: #B42318;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#announcementFormModal .adm-ad-upload { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+#announcementFormModal .adm-ad-upload input[type="url"] { flex: 1 1 180px; min-width: 0; }
+#announcementFormModal .adm-ad-type-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    font-size: 11.5px;
+    color: var(--skhst-ink-3);
+}
+#announcementFormModal .adm-ad-type-line b { color: var(--skhst-ink); font-size: 11.5px; }
+#announcementFormModal .adm-ad-linkbtn {
+    border: 0;
+    background: transparent;
+    color: var(--skhst-green-dark);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* 2f. Range rows: label, slider and value on one line. */
+#announcementFormModal .adm-ad-range { display: block; }
+#announcementFormModal .adm-ad-range-row { display: flex; align-items: center; gap: 8px; }
+#announcementFormModal .adm-ad-range-row input[type="range"] { flex: 1 1 auto; accent-color: var(--skhst-green); }
+#announcementFormModal .adm-ad-range-row output {
+    flex: 0 0 auto;
+    min-width: 38px;
+    text-align: right;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--skhst-ink-2);
+}
+
+/* ------------------------------------------------------------- 3. PREVIEW
+   The preview is the product: it shows the ad the way the marketplace shows
+   it, at the size the marketplace uses. */
+#announcementFormModal .adm-ad-preview-wrap {
+    position: sticky;
+    top: 120px;
+    background: #fff;
+    border: 1px solid var(--skhst-line);
+    border-radius: 16px;
+    padding: 14px;
+}
+#announcementFormModal .adm-ad-preview-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+#announcementFormModal .adm-ad-preview-header > div:first-child { min-width: 0; flex: 1 1 auto; }
+#announcementFormModal .adm-ad-preview-head-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+#announcementFormModal .adm-ad-preview-header h4 { font-size: 13px; font-weight: 800; color: var(--skhst-ink); }
+#announcementFormModal .adm-ad-type-mini { display: block; font-size: 11px; color: var(--skhst-ink-3); }
+#announcementFormModal .adm-live-pill {
+    background: var(--skhst-green-soft);
+    color: var(--skhst-green-dark);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .05em;
+}
+#announcementFormModal .adm-ad-preview-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 9px;
+}
+#announcementFormModal .adm-ad-seg {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: #F1F5F4;
+    border: 1px solid var(--skhst-line);
+    border-radius: 9px;
+}
+#announcementFormModal .adm-ad-seg button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--skhst-ink-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#announcementFormModal .adm-ad-seg button[aria-checked="true"] {
+    background: #fff;
+    color: var(--skhst-green-dark);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+}
+#announcementFormModal .adm-ad-placement-pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--skhst-ink-3);
+}
+#announcementFormModal .adm-ad-placement-pick select { width: auto; min-height: 32px; padding: 4px 8px; font-size: 11.5px; }
+
+/* 3a. The size switch (full size ⇄ how it looks in the marketplace). */
+#skhAdPreviewMode {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    background: #F1F5F4;
+    border: 1px solid var(--skhst-line);
+    border-radius: 999px;
+    margin-bottom: 8px;
+}
+#skhAdPreviewMode button { transition: background .15s, color .15s, box-shadow .15s; }
+#skhAdPreviewMode button {
+    background: transparent !important;
+    color: var(--skhst-ink-3) !important;
+}
+#skhAdPreviewMode button.active {
+    background: #fff !important;
+    color: var(--skhst-green-dark) !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+}
+
+#announcementFormModal .adm-ad-device-frame {
+    border: 1px solid var(--skhst-line);
+    border-radius: 14px;
+    background: #F4F7F6;
+    padding: 10px;
+    overflow: hidden;
+}
+#announcementFormModal .adm-ad-preview {
+    border: 1px solid var(--skhst-line);
+    border-radius: 12px;
+    background: #fff;
+    min-height: 220px;
+    box-shadow: none;
+}
+/* Market-size mode: the card sets the height, not a 220px grey block. */
+#announcementFormModal .adm-ad-preview.is-market {
+    min-height: 0;
+    padding: 10px;
+    background: #F4F7F6;
+}
+/* The live card must not clip its own copy: in the feed the row gives it room,
+   in the preview it sizes to its content instead of a fixed 156px box. */
+#announcementFormModal .adm-ad-preview.is-market .skh-ad-cell,
+#announcementFormModal .adm-ad-preview.is-market .skh-ann-card {
+    height: auto !important;
+    /* a feed card inherits the row height it sits in (measured 222×285 in the
+       real grid), so the preview uses that same height instead of a shorter box
+       that would clip the advertiser's own copy */
+    min-height: 280px !important;
+    max-height: none !important;
+}
+#announcementFormModal .adm-ad-preview.is-market .skh-ann-text-creative {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
+    padding: 10px !important;
+}
+/* the copy block defines its own height; the clamps live on the paragraphs */
+#announcementFormModal .adm-ad-preview.is-market .skh-ann-offer { max-width: 100% !important; }
+#announcementFormModal .adm-ad-preview.is-market .skh-ann-text-content {
+    height: auto !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+/* the market preview is a caption + one card: centre both, never side by side */
+#announcementFormModal .adm-ad-preview.is-market > * { margin-left: auto; margin-right: auto; }
+#announcementFormModal .adm-ad-device-frame.is-market-frame { background: #F4F7F6; }
+#announcementFormModal .adm-ad-preview-transport {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 9px;
+}
+#announcementFormModal .adm-ad-preview-transport button {
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--skhst-ink-2);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#announcementFormModal .adm-ad-preview-transport button:hover { border-color: #B9E3D4; color: var(--skhst-green-dark); }
+#announcementFormModal .adm-ad-preview-duration {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--skhst-ink-3);
+}
+#announcementFormModal .adm-ad-preview-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 9px;
+    padding: 9px 10px;
+    border: 1px solid var(--skhst-line-soft);
+    border-radius: 10px;
+    background: #FBFDFC;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--skhst-ink-2);
+}
+#announcementFormModal .adm-ad-preview-confirm input { margin: 1px 0 0; accent-color: var(--skhst-green); }
+#announcementFormModal .adm-preview-focus { display: none; }
+
+/* ---------------------------------------------------------- 4. PROPERTIES
+   Suggestions and layers: readable rows, quiet controls, no icon soup. */
+#announcementFormModal .adm-ad-properties {
+    position: sticky;
+    top: 120px;
+    max-height: calc(100dvh - 220px);
+    overflow: auto;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+}
+#announcementFormModal .adm-ad-suggest h4 {
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--skhst-ink);
+}
+#announcementFormModal .adm-ad-suggest-list { display: grid; gap: 7px; }
+#announcementFormModal .adm-ad-suggest-list > * {
+    padding: 9px 10px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 11px;
+    background: #fff;
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--skhst-ink-2);
+}
+#announcementFormModal .adm-ad-layers { margin: 0; }
+#announcementFormModal .adm-ad-layer-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+#announcementFormModal .adm-ad-layer-list > li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 7px 8px;
+    border: 1px solid var(--skhst-line-soft);
+    border-radius: 10px;
+    background: #fff;
+}
+#announcementFormModal .adm-ad-layer-list > li > b,
+#announcementFormModal .adm-ad-layer-list > li strong {
+    flex: 1 1 84px;
+    min-width: 0;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--skhst-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#announcementFormModal .adm-ad-layer-list button {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--skhst-line);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--skhst-ink-3);
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+}
+#announcementFormModal .adm-ad-layer-list button:hover {
+    border-color: #B9E3D4;
+    color: var(--skhst-green-dark);
+    background: #F6FCF9;
+}
+#announcementFormModal .adm-ad-sheet-handle { display: none; }
+/* a layer row keeps its name on one line and its controls in a tidy strip */
+#announcementFormModal .adm-ad-layer { align-items: center; }
+#announcementFormModal .adm-ad-layer-name {
+    flex: 1 1 100%;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--skhst-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#announcementFormModal .adm-ad-layer-name small { color: var(--skhst-ink-3); font-weight: 600; }
+#announcementFormModal .adm-ad-layer-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+#announcementFormModal .adm-ad-layer.is-hidden .adm-ad-layer-name { opacity: .55; text-decoration: line-through; }
+#announcementFormModal .adm-ad-layer.is-empty .adm-ad-layer-name { color: var(--skhst-ink-3); }
+#announcementFormModal .adm-ad-layer-list button[aria-pressed="false"] { color: #94A3B8; background: #F8FAF9; }
+#announcementFormModal .adm-ad-layer-list button[disabled] { opacity: .35; cursor: not-allowed; }
+
+/* 4a. Icons injected by js/app/100-ads-studio-ui.js. */
+#announcementFormModal .adm-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+#announcementFormModal .adm-ico { display: inline-flex !important; }
+#announcementFormModal .adm-ico svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+}
+
+/* --------------------------------------------------------- 5. RESPONSIVE
+   Reorganised per width, never a shrunken desktop. */
+@media (max-width: 1320px) {
+    #announcementFormModal .adm-ad-designer-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+        grid-template-areas: "controls preview" "props props";
+    }
+    #announcementFormModal .adm-ad-preview-wrap,
+    #announcementFormModal .adm-ad-properties { position: static; max-height: none; }
+    #announcementFormModal .adm-ad-properties {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        align-items: start;
+    }
+}
+
+@media (max-width: 940px) {
+    #announcementFormModal.overlay-menu { padding: 0; align-items: stretch; }
+    #announcementFormModal .adm-ad-form {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: none;
+        border-radius: 0;
+        border: 0;
+    }
+    #announcementFormModal .adm-ad-form-head { padding: 12px 14px; }
+    #announcementFormModal .adm-ad-form-head h3 { font-size: 17px; }
+    #announcementFormModal .adm-ad-form-lead { display: none; }
+    #announcementFormModal .adm-ad-section-nav { top: 63px; padding: 9px 14px; }
+    #announcementFormModal .adm-ad-designer-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "preview" "controls" "props";
+        padding: 12px 14px 0;
+    }
+    #announcementFormModal .adm-ad-preview-wrap { padding: 12px; }
+    #announcementFormModal .adm-ad-fields { padding: 12px; }
+    #announcementFormModal .adm-ad-submit { padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); }
+    #announcementFormModal .adm-ad-submit .adm-ad-btn { flex: 1 1 auto; min-height: 42px; }
+    #announcementFormModal .adm-ad-props-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex: 0 0 auto !important;
+    }
+    /* Properties becomes a sheet on phones/tablets. */
+    #announcementFormModal .adm-ad-properties {
+        position: fixed;
+        inset: auto 0 0 0;
+        z-index: 60;
+        display: block;
+        max-height: 72dvh;
+        overflow: auto;
+        padding: 0 12px 16px;
+        background: #fff;
+        border-top: 1px solid var(--skhst-line);
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -12px 32px rgba(15, 23, 42, .18);
+        transform: translateY(102%);
+        transition: transform .22s ease;
+    }
+    #announcementFormModal .adm-ad-properties.is-open { transform: translateY(0); }
+    #announcementFormModal .adm-ad-properties > * + * { margin-top: 10px; }
+    #announcementFormModal .adm-ad-sheet-handle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        position: sticky;
+        top: 0;
+        padding: 12px 0 10px;
+        background: #fff;
+        border-bottom: 1px solid var(--skhst-line-soft);
+        margin-bottom: 10px;
+    }
+    #announcementFormModal .adm-ad-sheet-handle b { font-size: 13px; color: var(--skhst-ink); }
+}
+
+@media (max-width: 560px) {
+    /* collapse the words, keep the icon */
+    #announcementFormModal .adm-ad-mode-switch button > span:not(.adm-ico) { display: none; }
+    #announcementFormModal .adm-ad-mode-switch button { padding: 0 10px; }
+    #announcementFormModal .adm-ad-close > span:not(.adm-ico) { display: none; }
+    #announcementFormModal .adm-ad-choice-grid { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+    #announcementFormModal .adm-ad-submit { flex-wrap: wrap; }
+    #announcementFormModal .adm-ad-submit .adm-ad-btn.primary { flex: 1 1 100%; order: 9; }
+    #skhAdValidation { margin: 0 14px 10px; }
+    #announcementFormModal .adm-ad-preview-transport button { flex: 1 1 auto; }
+    /* No example card is shown at this width, so its legend would label nothing. */
+    #announcementFormModal .adm-ad-preview.is-market .skh-ad-preview-caption .skh-ad-legend { display: none; }
+    #announcementFormModal .adm-ad-preview.is-market .skh-ad-preview-caption { justify-content: flex-start; margin-bottom: 6px; }
+}
+
+/* Print/short viewports: keep the action bar in flow. */
+@media (max-height: 620px) {
+    #announcementFormModal .adm-ad-submit { position: static; }
+}
+
+/* ============================================================================
+   6. ADVERTISER SHELL (overview)
+   The workspace entry was a two-card page with a large empty area. It now
+   states what the existing system actually does, in the existing design
+   language. Nothing here enables a feature that does not exist: Creative
+   Studio and Billing keep their current behaviour and labels.
+   ========================================================================== */
+#advertiserDashboardModal .adv-shell {
+    background: #F7FAF9;
+    border: 1px solid var(--skhst-line);
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, .18);
+}
+#advertiserDashboardModal .adv-head {
+    padding: 13px 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--skhst-line);
+}
+#advertiserDashboardModal .adv-head-copy b { font-size: 15px; font-weight: 800; color: var(--skhst-ink); }
+#advertiserDashboardModal .adv-head-copy small { font-size: 11.5px; color: var(--skhst-ink-3); }
+#advertiserDashboardModal .adv-head-btn {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--skhst-ink-2);
+    cursor: pointer;
+}
+#advertiserDashboardModal .adv-head-btn:hover { border-color: #CBD5E1; color: var(--skhst-ink); }
+#advertiserDashboardModal .adv-nav { background: #fff; border-right: 1px solid var(--skhst-line); padding: 14px 12px; }
+#advertiserDashboardModal .adv-nav-item {
+    border-radius: 10px;
+    padding: 10px 11px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--skhst-ink-2);
+}
+#advertiserDashboardModal .adv-nav-item.active {
+    background: var(--skhst-green-soft);
+    border-color: #B9E3D4;
+    color: var(--skhst-green-dark);
+}
+#advertiserDashboardModal .adv-nav-item.locked { background: #F8FAF9; color: #7A8888; border-color: var(--skhst-line-soft); }
+#advertiserDashboardModal .adv-lock {
+    background: #EEF1F0;
+    color: var(--skhst-ink-3);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    border-radius: 999px;
+    padding: 3px 7px;
+}
+#advertiserDashboardModal .adv-main { padding: 20px 22px; }
+#advertiserDashboardModal .adv-title { font-size: 20px; font-weight: 800; letter-spacing: -.02em; color: var(--skhst-ink); }
+#advertiserDashboardModal .adv-lead { margin: 4px 0 16px; font-size: 12.5px; line-height: 1.5; color: var(--skhst-ink-3); }
+#advertiserDashboardModal .adv-grid { gap: 12px; }
+#advertiserDashboardModal .adv-card {
+    border: 1px solid var(--skhst-line);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: none;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+}
+#advertiserDashboardModal .adv-card:hover { border-color: #B9E3D4; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+#advertiserDashboardModal .adv-card h3 { font-size: 14px; font-weight: 800; color: var(--skhst-ink); margin-bottom: 5px; }
+#advertiserDashboardModal .adv-card p { font-size: 12px; line-height: 1.5; color: var(--skhst-ink-3); }
+#advertiserDashboardModal .adv-coming {
+    margin-top: 11px;
+    background: var(--skhst-green-soft);
+    color: var(--skhst-green-dark);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    padding: 5px 9px;
+}
+#advertiserDashboardModal .adv-billing-card { background: #FCFDFC; border-style: dashed; }
+#advertiserDashboardModal .adv-billing-card .adv-coming { background: #EEF1F0; color: var(--skhst-ink-3); }
+#advertiserDashboardModal .adv-note {
+    margin-top: 12px;
+    padding: 11px 12px;
+    border: 1px solid #DCE9F1;
+    border-radius: 12px;
+    background: #F4FAFD;
+    color: #39779B;
+    font-size: 11.5px;
+    line-height: 1.5;
+}
+/* the three honest steps of the existing flow */
+#advertiserDashboardModal .adv-steps {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+#advertiserDashboardModal .adv-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 1px solid var(--skhst-line);
+    border-radius: 12px;
+    background: #fff;
+}
+#advertiserDashboardModal .adv-step-n {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--skhst-green-soft);
+    color: var(--skhst-green-dark);
+    font-size: 11px;
+    font-weight: 800;
+}
+#advertiserDashboardModal .adv-steps b { display: block; font-size: 12.5px; font-weight: 800; color: var(--skhst-ink); }
+#advertiserDashboardModal .adv-steps small { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.45; color: var(--skhst-ink-3); }
+@media (max-width: 680px) {
+    #advertiserDashboardModal .adv-steps { margin-top: 12px; }
+    #advertiserDashboardModal .adv-main { padding: 16px 14px calc(20px + env(safe-area-inset-bottom)); }
+}

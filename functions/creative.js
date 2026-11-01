@@ -8,7 +8,20 @@ const db = admin.firestore();
 const FV = admin.firestore.FieldValue;
 const REGION = 'europe-west1';
 const TYPES = new Set(['advertisement','business_update','product_post','service_post','general_post']);
-const ENTITY_COLLECTIONS = { product:'products', service:'services', transport:'delivery', seller:'publicProfiles', business:'publicProfiles' };
+/* [ADS STUDIO REBUILD 2026-11-01] Listing-linked advertising resolves each
+   entity type to the collection(s) that actually hold that listing.
+   `transport` used to point at `delivery` only, but the live Usafiri feed stores
+   transport listings in `drivers` (see functions/index.js: `transport -> drivers`),
+   so a seller's transport listing could never be linked. `delivery` is kept
+   FIRST-WINS as a legacy alias so historical docs/creatives keep resolving.
+   This is additive and non-destructive: no document is read, moved or rewritten. */
+const ENTITY_COLLECTIONS = {
+  product:['products'],
+  service:['services'],
+  transport:['delivery','drivers'],
+  seller:['publicProfiles'],
+  business:['publicProfiles']
+};
 const DELIVERY_METADATA_FIELDS = [
   'campaignType','placements','targetCategories','targetKeywords','targetRegions',
   'targetEntityTypes','targetEntityIds','goals'
@@ -62,10 +75,14 @@ async function canonicalEntity(linked, destination, uid, adminUser, creative) {
     }
     throw new HttpsError('failed-precondition', 'Choose a linked SokoHai entity or valid HTTPS destination.');
   }
-  const collection = ENTITY_COLLECTIONS[linked.type];
-  if (!collection) throw new HttpsError('invalid-argument', 'Unsupported linked entity type.');
-  const snap = await db.collection(collection).doc(String(linked.id)).get();
-  if (!snap.exists) throw new HttpsError('not-found', 'Linked destination no longer exists.');
+  const collections = ENTITY_COLLECTIONS[linked.type];
+  if (!collections) throw new HttpsError('invalid-argument', 'Unsupported linked entity type.');
+  let snap = null;
+  for (const collection of collections) {
+    const candidate = await db.collection(collection).doc(String(linked.id)).get();
+    if (candidate.exists) { snap = candidate; break; }
+  }
+  if (!snap) throw new HttpsError('not-found', 'Linked destination no longer exists.');
   const data = snap.data() || {};
   const owners = [data.ownerId, data.sellerId, data.userId, data.uid, data.providerId, data.driverId, snap.id].filter(Boolean).map(String);
   if (!adminUser && !owners.includes(uid)) throw new HttpsError('permission-denied', 'You are not authorized to advertise this entity.');

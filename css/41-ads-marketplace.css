@@ -1,0 +1,818 @@
+/* ============================================================================
+   SokoHai — 41-ads-marketplace.css
+   ----------------------------------------------------------------------------
+   [2026-11-01 TASK 01] Compact, integrated advertising presentation.
+
+   WHAT THIS FILE DOES
+   It does not touch the ads engine, the canonical creative renderer
+   (js/06-announcement.js → skhAdvertisementCardHtml) or campaign policy. It
+   only re-presents the SAME creative markup in two contexts:
+
+     1. .skh-ad-cell            → an in-feed sponsored cell that occupies one
+                                  ordinary product-card slot in .feed-grid.
+     2. .skh-ann-post.skh-ad-slot-inline → standalone slot hosts (home strip,
+                                  product details, chat, discover, search),
+                                  capped so they can never dominate a screen.
+
+   MEASURED BEFORE (real browser, 1440×900):
+     home ad slot     820 × 659 px   ·  ordinary product card 173 × 248 px
+   TARGET AFTER:
+     in-feed ad cell  ≈ same width as the product card next to it
+     standalone slots ≤ 190 px tall on phones, ≤ 210 px on desktop
+
+   Everything is expressed with the existing SokoHai tokens: green #18A982,
+   blue #3B82F6, gold #D4A72C, light green #EAF8F3, Inter, fine borders.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- 1. IN-FEED CELL
+   The ad occupies a real grid cell of .feed-grid, so its width, gap and
+   alignment are the ones the products already use. No fixed widths here. */
+.skh-ad-cell {
+    min-width: 0;
+    display: flex;
+    align-self: stretch;
+    animation: skhAdCellIn .22s ease-out both;
+}
+@keyframes skhAdCellIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.skh-ad-cell > .skh-ad-delivery-slot,
+.skh-ad-cell .skh-ad-delivery-slot {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    /* Override the old blanket “story” layout that forced a 190–300px media. */
+    min-height: 0;
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* The card itself: product-card geometry, ad content. */
+.skh-ad-cell .skh-ann-card,
+.skh-ad-cell.skh-ann-post .skh-ann-card {
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0 !important;
+    max-height: none;
+    overflow: hidden;
+    background: #fff !important;
+    border: 1px solid var(--skh-line, #E2E8F0) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 1px 8px rgba(15, 23, 42, .04) !important;
+    text-align: left;
+    position: relative;
+}
+/* The decorative double frame/gradient border is removed in the feed: an ad in a
+   product grid must not shout. A fine gold hairline is the only distinction. */
+.skh-ad-cell .skh-ann-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    border: 1.5px solid rgba(212, 167, 44, .55);
+    border-radius: inherit;
+    pointer-events: none;
+}
+.skh-ad-cell .skh-ann-card:hover {
+    border-color: #D4A72C !important;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, .05), 0 8px 20px rgba(212, 167, 44, .14) !important;
+}
+
+/* 1a. Brand row = the seller row of a product card (small, quiet). */
+.skh-ad-cell .skh-ann-post-head {
+    order: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 34px 6px 10px !important;   /* right padding reserves room for the dismiss control */
+    border: 0 !important;
+    background: #fff !important;
+    min-height: 0;
+}
+.skh-ad-cell .skh-ann-brand-logo,
+.skh-ad-cell .skh-ann-brand-fallback {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px;
+    border-radius: 6px !important;
+    font-size: 10px !important;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    object-fit: cover;
+}
+.skh-ad-cell .skh-ann-brand-copy { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.skh-ad-cell .skh-ann-brand-copy b {
+    max-width: 92px;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--skh-ink-3, #64748B) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+/* “SokoHai Live / Sponsored” subtitle is redundant next to the chip. */
+.skh-ad-cell .skh-ann-brand-copy small { display: none !important; }
+/* The legacy “AD” tag becomes the single, elegant Sponsored label. */
+.skh-ad-cell .skh-ann-sponsored {
+    margin-left: auto;
+    white-space: nowrap;
+    overflow: visible;
+    flex: 0 0 auto;
+    flex: 0 0 auto;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    color: #8A6510 !important;
+    background: #FFF8E6 !important;
+    border: 1px solid #F3E2B4 !important;
+    border-radius: 999px !important;
+    padding: 2px 6px !important;
+    line-height: 1.2;
+}
+
+/* 1b. Media: same 4:3 proportion as a product photo, never a hero. */
+.skh-ad-cell .skh-ann-media,
+.skh-ad-cell.skh-ann-post .skh-ann-media {
+    order: 1;
+    position: relative;
+    width: 100%;
+    height: auto !important;
+    min-height: 120px !important;
+    max-height: none !important;
+    flex: 1 1 auto;                 /* absorbs the card's free space, like a product photo */
+    aspect-ratio: 4 / 3 !important;
+    background: #F1F5F4 !important;
+    border: 0 !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid var(--skh-line-soft, #EEF2F6) !important;
+    display: block !important;
+    overflow: hidden;
+}
+.skh-ad-cell .skh-ann-media-main {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    filter: none !important;
+}
+.skh-ad-cell .skh-ann-media-blur { display: none !important; }
+.skh-ad-cell .skh-ann-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    background: #0D1714;
+}
+.skh-ad-cell .skh-ann-audio { display: none !important; }
+
+/* 1c. Copy: title like a product name, description clamped, offer like a price. */
+.skh-ad-cell .skh-ann-body {
+    order: 2;
+    padding: 8px 10px 0 !important;
+    min-width: 0;
+    flex: 0 0 auto;
+}
+.skh-ad-cell .skh-ann-kicker { display: none !important; }   /* category chips add noise here */
+.skh-ad-cell .skh-ann-copy { display: block !important; }
+.skh-ad-cell .skh-ann-title-wrap { margin: 0 !important; }
+.skh-ad-cell .skh-ann-title,
+.skh-ad-cell .skh-ann-title-wrap strong {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+    color: var(--skh-ink, #0F172A) !important;
+    text-shadow: none !important;
+    letter-spacing: 0 !important;
+    text-align: left !important;
+    min-height: 0 !important;
+}
+.skh-ad-cell .skh-ann-copy p {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 4px 0 0 !important;
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
+    color: var(--skh-ink-3, #64748B) !important;
+    text-align: left !important;
+    max-width: none !important;
+}
+
+/* 1d. Offer + CTA row: price on the left like a product card, small action. */
+.skh-ad-cell .skh-ann-post-actions {
+    order: 3;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    /* [ADS STUDIO REBUILD] In a product-grid cell the card is ~220px wide: a price
+       and a CTA cannot share one line without the price being cut mid-number.
+       Wrapping keeps the price whole and drops the small CTA onto its own line. */
+    flex-wrap: wrap;
+    row-gap: 5px;
+    margin-top: auto;
+    padding: 8px 10px 10px !important;
+    background: #fff !important;
+    border: 0 !important;
+    border-top: 0 !important;
+}
+/* [ADS STUDIO REBUILD] The card model renders the offer as an inline-flex pill.
+   Inside a marketplace card the offer shares one row with the CTA, so it must be a
+   block box: a flex box cannot ellipsize, and the price was being cut mid-number
+   ("TSh 21") instead of reading as a price. */
+.skh-ad-cell .skh-ann-price-pill,
+.skh-ad-cell .skh-ann-offer {
+    display: block !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: var(--skh-green-dark, #12866A) !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.skh-ad-cell .skh-ann-action {
+    flex: 0 0 auto;
+    max-width: 100%;
+    margin-left: auto;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    min-height: 28px !important;
+    padding: 5px 9px !important;
+    border-radius: 9px !important;
+    background: var(--skh-green, #18A982) !important;
+    background-image: none !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    box-shadow: none !important;
+    border: 0 !important;
+}
+.skh-ad-cell .skh-ann-action b { font-size: 11px !important; line-height: 1; }
+.skh-ad-cell .skh-ann-action:hover { background: var(--skh-green-dark, #12866A) !important; }
+.skh-ad-cell .skh-ann-no-cta { font-size: 10.5px; color: var(--skh-ink-3, #64748B); }
+
+/* 1e. Text-only creatives: the advertiser's dark gradient is replaced by a LIGHT
+   marketplace surface. A dark, heavy block inside a white product grid is exactly
+   the "dominance" this task removes — the ad keeps its words, offer and action,
+   and gets one green accent instead of a poster background. */
+.skh-ad-cell .skh-ann-text-creative {
+    order: 1;
+    min-height: 132px !important;
+    height: auto !important;
+    flex: 1 1 auto;
+    aspect-ratio: auto !important;
+    padding: 12px 12px 10px !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    overflow: hidden;
+    background: linear-gradient(170deg, #EAF8F3 0%, #F7FCFA 46%, #FFFFFF 96%) !important;
+    background-image: linear-gradient(170deg, #EAF8F3 0%, #F7FCFA 46%, #FFFFFF 96%) !important;
+    border-bottom: 1px solid var(--skh-line-soft, #EEF2F6);
+    position: relative;
+}
+/* No decorative accent bar: the legacy ::after on this element is sized by the
+   advertiser's design layer and stretched into a solid block inside the card.
+   The card frame is already the only decoration this ad needs. */
+.skh-ad-cell .skh-ann-text-creative::after { content: none !important; display: none !important; }
+.skh-ad-cell .skh-ann-text-creative .skh-ann-orb,
+.skh-ad-cell .skh-ann-shine,
+.skh-ad-cell .skh-ann-text-kicker { display: none !important; }
+.skh-ad-cell .skh-ann-text-content {
+    margin-top: 10px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    /* a text-only creative has no media and often no CTA, so its words are
+       centred in the card instead of leaving a hole under them */
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+}
+.skh-ad-cell .skh-ann-text-content .skh-ann-title-wrap strong {
+    color: var(--skh-ink, #0F172A) !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+    text-shadow: none !important;
+    -webkit-line-clamp: 3;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: left !important;
+}
+.skh-ad-cell .skh-ann-text-content p {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    color: var(--skh-ink-3, #64748B) !important;
+    opacity: 1;
+    margin: 4px 0 0 !important;
+}
+.skh-ad-cell .skh-ann-text-offer { margin-top: 6px !important; }
+.skh-ad-cell .skh-ann-text-offer .skh-ann-offer {
+    color: var(--skh-green-dark, #12866A) !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    /* in a text creative the offer sits on its own line — the 55% cap exists
+       only for the footer row where a CTA shares the width */
+    max-width: 100% !important;
+}
+/* the text creative's own CTA stays: it is the only action in this layout */
+.skh-ad-cell .skh-ann-text-cta {
+    margin-top: auto !important;
+    padding-top: 8px;
+    display: flex !important;
+}
+.skh-ad-cell .skh-ann-text-cta .skh-ann-action {
+    min-height: 28px !important;
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+}
+
+/* 1f. Badges, metrics, dismiss: present but unobtrusive. */
+/* One label per ad in the feed. The advertiser's custom badge (e.g. "BORA") is
+   still used in every full-size placement; in a product grid it competes with the
+   Sponsored chip and adds no shopping value. */
+.skh-ad-cell .skh-ann-badge-tag { display: none !important; }
+.skh-ad-cell .skh-ann-metrics { display: none !important; }
+.skh-ad-cell .skh-ad-dismiss-button {
+    width: 22px !important;
+    height: 22px !important;
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    border: 1px solid rgba(15, 23, 42, .14) !important;
+    background: rgba(255, 255, 255, .92) !important;
+    color: #334155 !important;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, .12) !important;
+    z-index: 30;
+}
+.skh-ad-cell .skh-ann-card:not(:has(.skh-ann-media)) .skh-ad-dismiss-button { color: #fff; background: rgba(15, 23, 42, .35); border-color: rgba(255,255,255,.35) }
+
+/* 1g. The tiny “why am I seeing this” line under an in-feed ad. */
+.skh-ad-cell-foot {
+    display: block;
+    margin: -6px 2px 2px;
+    font-size: 10px;
+    line-height: 1.3;
+    color: #94A3B8;
+    letter-spacing: .1px;
+}
+
+/* --------------------------------------------------- 2. STANDALONE SLOT HOSTS
+   Slots that live in a page column (home strip, product details, chat, discover,
+   search) render the SAME product-card cell as the in-feed ad — they are simply
+   width-capped so a single ad never becomes a full-width banner.
+
+   Kept as a separate block from §1 because these hosts already carry the legacy
+   `skh-ann-post` / `skh-home-ad` layout classes; the shared `.skh-ad-cell` rules
+   below are re-applied here with the same values, not duplicated ad-hoc. */
+.skh-ad-slot-inline {
+    display: flex !important;
+    justify-content: flex-start;
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
+    margin: 12px 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    min-height: 0 !important;
+    overflow: visible;
+}
+.skh-ad-slot-inline > .skh-ann-card {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 !important;
+}
+
+/* Same internal composition as the in-feed cell (single source of truth: §1).
+   The selectors are listed explicitly so this block wins over the legacy
+   `.skh-ann-post` / `.skh-home-ad` rules regardless of load order. */
+.skh-ad-slot-inline.skh-ann-post .skh-ann-card,
+.skh-ad-slot-inline.skh-home-ad .skh-ann-card {
+    display: flex !important;
+    flex-direction: column;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden;
+    background: #fff !important;
+    border: 1px solid var(--skh-line, #E2E8F0) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 1px 8px rgba(15, 23, 42, .04) !important;
+    text-align: left;
+    position: relative;
+}
+.skh-ad-slot-inline.skh-ann-post .skh-ann-card::before { display: none !important; }
+
+.skh-ad-slot-inline .skh-ann-post-head {
+    order: 0;
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 34px 6px 10px !important;
+    border: 0 !important; border-bottom: 1px solid var(--skh-line-soft, #EEF2F6) !important;
+    background: #fff !important; min-height: 0;
+}
+.skh-ad-slot-inline .skh-ann-brand-logo,
+.skh-ad-slot-inline .skh-ann-brand-fallback {
+    width: 20px !important; height: 20px !important; min-width: 20px;
+    border-radius: 6px !important; font-size: 10px !important;
+    display: grid; place-items: center; overflow: hidden; object-fit: cover;
+}
+.skh-ad-slot-inline .skh-ann-brand-copy { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.skh-ad-slot-inline .skh-ann-brand-copy b {
+    max-width: 120px; font-size: 12px !important; font-weight: 700 !important;
+    color: var(--skh-ink-3, #64748B) !important;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.skh-ad-slot-inline .skh-ann-brand-copy small { display: none !important; }
+.skh-ad-slot-inline .skh-ann-sponsored {
+    margin-left: auto; flex: 0 0 auto; white-space: nowrap;
+    font-size: 9.5px !important; font-weight: 800 !important;
+    letter-spacing: .3px; text-transform: uppercase;
+    color: #8A6510 !important; background: #FFF8E6 !important;
+    border: 1px solid #F3E2B4 !important; border-radius: 999px !important;
+    padding: 2px 7px !important; line-height: 1.2;
+}
+
+.skh-ad-slot-inline .skh-ann-media {
+    order: 1; position: relative; width: 100%;
+    min-height: 130px !important; max-height: none !important;
+    flex: 1 1 auto; aspect-ratio: 4 / 3 !important;
+    background: #F1F5F4 !important;
+    border: 0 !important; border-bottom: 1px solid var(--skh-line-soft, #EEF2F6) !important;
+    display: block !important; overflow: hidden;
+}
+.skh-ad-slot-inline .skh-ann-media-main { width: 100% !important; height: 100% !important; object-fit: cover !important; filter: none !important; }
+.skh-ad-slot-inline .skh-ann-media-blur { display: none !important; }
+.skh-ad-slot-inline .skh-ann-video { width: 100% !important; height: 100% !important; object-fit: cover !important; background: #0D1714; }
+.skh-ad-slot-inline .skh-ann-audio { display: none !important; }
+
+.skh-ad-slot-inline .skh-ann-body { order: 2; padding: 8px 10px 0 !important; min-width: 0; flex: 0 0 auto; }
+.skh-ad-slot-inline .skh-ann-kicker { display: none !important; }
+.skh-ad-slot-inline .skh-ann-title {
+    font-size: 14px !important; line-height: 1.3 !important; margin: 0 !important;
+    font-weight: 700 !important; color: var(--skh-ink, #0F172A) !important;
+    text-shadow: none !important; text-align: left !important; letter-spacing: 0 !important;
+    display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.skh-ad-slot-inline .skh-ann-copy p {
+    display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    margin: 4px 0 0 !important; font-size: 11.5px !important; line-height: 1.35 !important;
+    color: var(--skh-ink-3, #64748B) !important; text-align: left !important; max-width: none !important;
+}
+
+.skh-ad-slot-inline .skh-ann-post-actions {
+    order: 3; display: flex !important; align-items: center; justify-content: space-between;
+    gap: 6px; flex-wrap: nowrap; margin-top: auto;
+    padding: 8px 10px 10px !important; background: #fff !important; border: 0 !important;
+}
+.skh-ad-slot-inline .skh-ann-offer {
+    font-size: 14px !important; font-weight: 800 !important;
+    color: var(--skh-green-dark, #12866A) !important;
+    background: transparent !important; border: 0 !important; padding: 0 !important;
+    max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.skh-ad-slot-inline .skh-ann-action {
+    flex: 0 0 auto; display: inline-flex !important; align-items: center; gap: 4px;
+    min-height: 30px !important; padding: 6px 11px !important; border-radius: 9px !important;
+    background: var(--skh-green, #18A982) !important; background-image: none !important;
+    color: #fff !important; font-size: 11.5px !important; font-weight: 800 !important;
+    box-shadow: none !important; border: 0 !important;
+}
+.skh-ad-slot-inline .skh-ann-metrics,
+.skh-ad-slot-inline .skh-ann-badge-tag { display: none !important; }
+.skh-ad-slot-inline .skh-ad-dismiss-button {
+    width: 22px !important; height: 22px !important; min-height: 0 !important; line-height: 1 !important;
+    padding: 0 !important; display: grid !important; place-items: center;
+    top: 6px !important; right: 6px !important;
+    font-size: 14px !important; box-shadow: 0 1px 4px rgba(15,23,42,.12) !important; z-index: 30;
+}
+
+/* Text-only creative in a standalone slot: light surface, same as the feed. */
+.skh-ad-slot-inline .skh-ann-text-content { display: flex !important; flex-direction: column; justify-content: center; height: 100%; }
+.skh-ad-slot-inline .skh-ann-text-creative {
+    order: 1; min-height: 130px !important; max-height: none; flex: 1 1 auto;
+    aspect-ratio: auto !important; padding: 12px !important; border-radius: 0 !important;
+    display: flex !important; flex-direction: column; justify-content: flex-start; gap: 6px;
+    overflow: hidden; position: relative;
+    background: linear-gradient(180deg, #F2FBF7 0%, #FFFFFF 78%) !important;
+    background-image: linear-gradient(180deg, #F2FBF7 0%, #FFFFFF 78%) !important;
+    border-bottom: 1px solid var(--skh-line-soft, #EEF2F6);
+}
+.skh-ad-slot-inline .skh-ann-orb,
+.skh-ad-slot-inline .skh-ann-shine,
+.skh-ad-slot-inline .skh-ann-text-kicker { display: none !important; }
+.skh-ad-slot-inline .skh-ann-text-content .skh-ann-title-wrap strong {
+    color: var(--skh-ink, #0F172A) !important; font-size: 15px !important; font-weight: 800 !important;
+    line-height: 1.3 !important; text-shadow: none !important; text-align: left !important;
+    display: -webkit-box !important; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.skh-ad-slot-inline .skh-ann-text-content p {
+    display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    font-size: 11.5px !important; line-height: 1.4 !important; color: var(--skh-ink-3, #64748B) !important;
+    opacity: 1; margin: 4px 0 0 !important; text-align: left !important;
+}
+.skh-ad-slot-inline .skh-ann-text-offer { margin-top: 6px !important; }
+.skh-ad-slot-inline .skh-ann-text-offer .skh-ann-offer {
+    color: var(--skh-green-dark, #12866A) !important; background: transparent !important;
+    border: 0 !important; padding: 0 !important; font-size: 14px !important;
+}
+.skh-ad-slot-inline .skh-ann-text-cta { margin-top: auto !important; padding-top: 8px; display: flex !important; }
+
+/* Video-only creatives (no copy, no CTA) still get a finished card: the media
+   fills it and the player controls stay usable. */
+.skh-ad-slot-inline .skh-ann-card:not(:has(.skh-ann-body)) .skh-ann-media,
+.skh-ad-slot-inline .skh-ann-card:not(:has(.skh-ann-body)) .skh-ann-video { min-height: 180px !important; }
+
+@media (max-width: 560px) {
+    .skh-ad-slot-inline > .skh-ann-card { max-width: 100%; }
+    .skh-ad-slot-inline .skh-ann-brand-copy { display: none !important; }
+    .skh-ad-slot-inline .skh-ann-title { font-size: 13.5px !important; }
+}
+
+/* The home strip host is #topAnnouncement, which legacy rules size to a centred
+   820px box (css/33-white-marketplace.css §announcement, css/38-home-ad-manager.css).
+   Left alone, a single 320px card sits inside an 820px frame and the dismiss
+   control floats ~500px away from it. Same specificity (id + class), loaded
+   later, so the host now hugs the card it contains. */
+#topAnnouncement.skh-ad-slot-inline {
+    display: block !important;
+    width: -moz-fit-content !important;
+    width: fit-content !important;
+    max-width: min(calc(100% - 24px), 344px) !important;
+    margin: 10px 12px 14px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    isolation: isolate;
+}
+#topAnnouncement.skh-ad-slot-inline > .skh-ann-card { max-width: 320px; }
+#topAnnouncement.skh-ad-slot-inline .skh-ad-dismiss-button { top: 8px !important; right: 8px !important; }
+
+@media (max-width: 600px) {
+    /* On a phone the strip is the only thing in its row, so it takes the full
+       column width instead of hugging a 320px card and leaving a void; the
+       media drops to 16:10 so the block does not become a tall hero. */
+    #topAnnouncement.skh-ad-slot-inline { width: auto !important; margin: 8px 10px 12px !important; max-width: none !important; }
+    #topAnnouncement.skh-ad-slot-inline > .skh-ann-card { max-width: 100%; }
+    #topAnnouncement.skh-ad-slot-inline .skh-ann-media { aspect-ratio: 16 / 10 !important; min-height: 0 !important; }
+}
+
+/* ---------------------------------------------------------- 3. AD SPACING RHYTHM
+   Ad hosts that live directly in a page column get the same vertical rhythm as
+   the sections around them, never an oversized full-width banner. */
+.skh-ad-slot-page {
+    display: block;
+    margin: 12px 14px !important;
+    max-width: 100%;
+}
+
+/* ------------------------------------------------------------- 4. RESPONSIVE */
+@media (max-width: 900px) {
+    .skh-ad-slot-inline > .skh-ann-card { max-width: 300px; }
+}
+
+@media (max-width: 560px) {
+    /* Keep the ad's internal stack as tight as a product card, so an ad row is the
+       same height as a product row and the grid keeps one rhythm. */
+    .skh-ad-cell .skh-ann-post-head { padding: 5px 30px 5px 8px !important; }
+    .skh-ad-cell .skh-ann-brand-logo,
+    .skh-ad-cell .skh-ann-brand-fallback { width: 16px !important; height: 16px !important; min-width: 16px; font-size: 9px !important; }
+    /* At ~170px wide, a brand name and a Sponsored chip cannot both be legible.
+       The logo keeps identity; the label keeps disclosure. */
+    .skh-ad-cell .skh-ann-sponsored { font-size: 9px !important; padding: 2px 6px !important; }
+    .skh-ad-cell .skh-ann-brand-copy { display: none !important; }
+    .skh-ad-cell .skh-ann-body { padding: 6px 8px 0 !important; }
+    .skh-ad-cell .skh-ann-copy p { display: none !important; }   /* product cards show title + price only */
+    .skh-ad-cell .skh-ann-post-actions { padding: 5px 8px 7px !important; }
+    .skh-ad-cell .skh-ad-dismiss-button { width: 20px !important; height: 20px !important; top: 4px !important; right: 4px !important; font-size: 12px !important; }
+
+    /* The text creative must not grow past the product card it sits beside. */
+    .skh-ad-cell .skh-ann-text-creative {
+        aspect-ratio: auto !important;
+        flex: 1 1 auto;
+        height: auto;
+        min-height: 120px !important;
+        max-height: 150px;
+        justify-content: flex-start;
+        padding: 10px 10px 8px !important;
+    }
+    .skh-ad-cell .skh-ann-text-creative::after { left: 10px; right: 10px; top: 6px; }
+    .skh-ad-cell .skh-ann-text-content { margin-top: 8px; }
+    .skh-ad-cell .skh-ann-text-content .skh-ann-title-wrap strong {
+        font-size: 13px !important;
+        -webkit-line-clamp: 2 !important;
+    }
+    .skh-ad-cell .skh-ann-text-content p { -webkit-line-clamp: 1 !important; font-size: 11px !important; }
+    .skh-ad-cell .skh-ann-text-offer .skh-ann-offer { font-size: 13px !important; }
+    .skh-ad-cell .skh-ann-text-cta .skh-ann-action { min-height: 26px !important; font-size: 10.5px !important; }
+
+    .skh-ad-cell .skh-ann-title,
+    .skh-ad-cell .skh-ann-title-wrap strong { font-size: 13px !important; }
+    .skh-ad-cell .skh-ann-copy p { -webkit-line-clamp: 1; font-size: 11px !important; }
+    .skh-ad-cell .skh-ann-post-actions { padding: 6px 8px 8px !important; }
+    .skh-ad-cell .skh-ann-price-pill,
+    .skh-ad-cell .skh-ann-offer { font-size: 13px !important; }
+    .skh-ad-cell .skh-ann-action { font-size: 10.5px !important; min-height: 26px !important; padding: 4px 8px !important; }
+
+}
+
+/* ------------------------------------------- 5. STUDIO: TRUE-SIZE MARKET PREVIEW
+   The designer preview must be able to show the SAME compact cell that the
+   marketplace uses, at the SAME size — so “what you see” is “what ships”. */
+.adm-ad-preview.is-market {
+    background: #F1F5F4 !important;
+    padding: 14px !important;
+    border: 1px solid var(--skh-line, #E2E8F0) !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+    min-height: 0 !important;
+}
+.adm-ad-preview.is-market .skh-ad-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    align-items: stretch;
+}
+/* Ordinary product card sample, so the difference is obvious (example only). */
+.adm-ad-preview .skh-ad-example-card {
+    background: #fff;
+    border: 1px solid var(--skh-line, #E2E8F0);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.adm-ad-preview .skh-ad-example-card .skh-ad-example-img {
+    aspect-ratio: 4 / 3;
+    background: repeating-linear-gradient(135deg, #EDF2F7, #EDF2F7 8px, #F6F9FB 8px, #F6F9FB 16px);
+    display: grid;
+    place-items: center;
+    color: #94A3B8;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .2px;
+}
+.adm-ad-preview .skh-ad-example-card .skh-ad-example-body { padding: 8px 10px 10px; }
+.adm-ad-preview .skh-ad-example-card b { display: block; font-size: 13px; color: var(--skh-ink, #0F172A); font-weight: 700; line-height: 1.3; }
+.adm-ad-preview .skh-ad-example-card span { display: block; margin-top: 6px; font-size: 13.5px; font-weight: 800; color: var(--skh-green-dark, #12866A); }
+/* The preview column is narrow: keep the creative's copy at marketplace sizes. */
+.adm-ad-preview.is-market .skh-ann-text-content .skh-ann-title-wrap strong,
+.adm-ad-preview.is-market .skh-ann-title {
+    font-size: 14px !important;
+    line-height: 1.3 !important;
+    text-align: left !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+.adm-ad-preview.is-market .skh-ann-text-content p { font-size: 11px !important; text-align: left !important; -webkit-line-clamp: 2; }
+.adm-ad-preview.is-market .skh-ann-text-creative { min-height: 120px !important; max-height: 170px; padding: 10px !important; }
+
+/* The preview-size switch sits on its own line so it never crowds the title. */
+#skhAdPreviewMode { order: 9; flex: 1 0 100%; justify-content: flex-start; margin-top: 8px; }
+.adm-ad-preview-header { flex-wrap: wrap; align-items: center; }
+
+.adm-ad-preview .skh-ad-preview-caption {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--skh-ink-3, #64748B);
+    flex-wrap: wrap;
+}
+.adm-ad-preview .skh-ad-preview-caption .skh-ad-legend {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #fff; border: 1px solid var(--skh-line, #E2E8F0);
+    border-radius: 999px; padding: 2px 8px; font-size: 10.5px;
+}
+.adm-ad-preview .skh-ad-preview-caption .skh-ad-legend.is-ad { border-color: #F3E2B4; background: #FFF8E6; color: #8A6510; }
+
+/* The designer's phone frame must not clip the true-size marketplace preview. */
+.adm-ad-device-frame.is-market-frame {
+    max-width: 100% !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+/* ============================================================================
+   6. CAMPAIGN MANAGER POLISH
+   The list itself is fine; the problem was one shouting destructive button in
+   every row and mixed Swahili/English tab labels (labels fixed in
+   js/app/16-pos-admin-jobs.js). Nothing here changes behaviour or actions.
+   ========================================================================== */
+.skh-ads-panel .adm-ad-tabs {
+    gap: 6px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--skh-line-soft, #EEF2F6);
+    scrollbar-width: thin;
+}
+.skh-ads-panel .adm-ad-tab {
+    border-radius: 999px;
+    padding: 6px 11px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--skh-ink-3, #64748B);
+    background: #fff;
+    border: 1px solid var(--skh-line, #E2E8F0);
+}
+.skh-ads-panel .adm-ad-tab.active {
+    background: var(--skh-green-soft, #EAF8F3);
+    border-color: #BFE5D8;
+    color: var(--skh-green-dark, #12866A);
+}
+
+.skh-ads-panel .adm-ad-list { gap: 8px; }
+.skh-ads-panel .adm-ad-row {
+    border-radius: 14px;
+    border: 1px solid var(--skh-line, #E2E8F0);
+    padding: 10px 12px;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.skh-ads-panel .adm-ad-row:hover {
+    border-color: #CFE9E0;
+    box-shadow: 0 2px 10px rgba(24, 169, 130, .08);
+}
+.skh-ads-panel .adm-ad-thumb {
+    width: 64px; height: 52px; border-radius: 10px;
+    border: 1px solid var(--skh-line-soft, #EEF2F6);
+    object-fit: cover;
+}
+.skh-ads-panel .adm-ad-row h5 {
+    font-size: 13.5px; font-weight: 800; color: var(--skh-ink, #0F172A);
+    line-height: 1.3;
+}
+.skh-ads-panel .adm-ad-row p { font-size: 11.5px; color: var(--skh-ink-3, #64748B); }
+.skh-ads-panel .adm-ad-state { font-size: 9.5px; letter-spacing: .3px; padding: 3px 8px; }
+
+/* Actions: the primary pair is quiet; the destructive archive is a plain text
+   action, so a row of ads no longer reads as a row of red buttons. */
+.skh-ads-panel .adm-ad-row-actions { gap: 4px; }
+.skh-ads-panel .adm-ad-mini {
+    background: #fff;
+    border: 1px solid var(--skh-line, #E2E8F0);
+    color: var(--skh-ink-2, #334155);
+    font-weight: 800;
+    font-size: 11.5px;
+    border-radius: 9px;
+    padding: 7px 10px;
+}
+.skh-ads-panel .adm-ad-mini:hover { border-color: var(--skh-green, #18A982); color: var(--skh-green-dark, #12866A); background: #F7FDFB; }
+.skh-ads-panel .adm-ad-mini.danger {
+    background: transparent;
+    border-color: transparent;
+    color: #94A3B8;
+    font-weight: 700;
+}
+.skh-ads-panel .adm-ad-mini.danger:hover { background: #FEF2F2; border-color: #FBD5D5; color: #B91C1C; }
+
+@media (max-width: 720px) {
+    .skh-ads-panel .adm-ad-row { grid-template-columns: 52px minmax(0, 1fr); }
+    .skh-ads-panel .adm-ad-thumb { width: 52px; height: 44px; }
+    .skh-ads-panel .adm-ad-row-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}

@@ -499,12 +499,24 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
     }
 
     // Product media: picha ya msingi ni lazima; nyingine ni hiari.
+    // [REPAIR 2026-11-01] Upload outcome is now reported truthfully:
+    // before this, ANY failure (network down, not signed in, Cloudinary refused
+    // the preset) collapsed into the same "Weka angalau picha 1" alert, which
+    // told the seller the wrong thing and hid the real cause.
     skh.setLoading('btnSeller', true, ' INAPANDISHA PICHA...');
+    var uploadOutcome = { urls: [], attempted: 0, failed: [] };
     try {
-        imageUrls = await window.skhUploadPicked('prodImage', 6);
+        if (typeof window.skhUploadPickedDetailed === 'function') {
+            uploadOutcome = await window.skhUploadPickedDetailed('prodImage', 6);
+            imageUrls = uploadOutcome.urls || [];
+        } else {
+            imageUrls = await window.skhUploadPicked('prodImage', 6);
+            uploadOutcome.attempted = (imageUrls || []).length;
+        }
     } catch (e) {
         console.warn('[5.7] upload ya picha imeshindikana:', e && e.message);
         imageUrls = [];
+        uploadOutcome = { urls: [], attempted: 0, failed: [{ name: '-', error: (e && e.message) || 'kosa lisilojulikana' }] };
     }
 
     // [UX 2026-10-31] A photo is required to SELL ONLINE. Dukani-tu / kusimamia-tu products
@@ -514,8 +526,23 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
     if (photoRequired && imageUrls.length < 1) {
         skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
         window.skhUpdateSellerSubmitLabel();
-        alert("Weka angalau picha 1 ya bidhaa.");
+        var pickerCount = (typeof window.skhPhotoPickerFiles === 'function') ? window.skhPhotoPickerFiles('prodImage').length : 0;
+        var firstErr = uploadOutcome.failed && uploadOutcome.failed[0];
+        if (uploadOutcome.failed && uploadOutcome.failed.length) {
+            window.alert('Picha haikupandishwa.\n\nSababu: ' + (firstErr.error || 'kosa la mtandao') +
+                '\n\nBidhaa yako bado ipo kwenye fomu — jaribu tena bila kuandika upya.');
+        } else if (!pickerCount) {
+            window.alert('Weka angalau picha 1 ya bidhaa.\n\nBonyeza "Chagua kutoka galari" au "Piga picha".');
+        } else {
+            window.alert('Picha ulizochagua hazikupandishwa. Hakikisha una mtandao kisha ujaribu tena.');
+        }
         return;
+    }
+    if (uploadOutcome.failed && uploadOutcome.failed.length) {
+        // Partial success: publish with the photos that made it, and say so.
+        try {
+            window.sokohaiToast('Picha ' + uploadOutcome.failed.length + ' hazikupanda — bidhaa itatumia zilizofanikiwa.', 'warn', 5000);
+        } catch (e) {}
     }
 
     const mainImage = imageUrls[0] || '';
@@ -1240,3 +1267,91 @@ window.addEventListener('scroll', () => {
         
         skh.lastScrollY = currentScrollY;
     });
+
+/* ============================================================================
+   [BOTTOM NAV · SCROLL SLIDE · 2026-11-01]
+   Upau wa chini (Home/Bidhaa/Huduma/Usafiri/Chat + kitufe cha "Uza") unajificha
+   unaposhuka chini, na unarudi mara mtu anapovuta juu — kama Facebook.
+
+   Kanuni zilizowekwa kwa makusudi:
+     · mtu akiwa karibu na juu ya ukurasa (chini ya 60px) upau UNAONEKANA KILA MARA;
+     · ukurasa usioweza kuscroll → upau haufichwi kamwe;
+     · ukifika mwisho wa ukurasa → upau unarudi (usimzuie mtu kugusa kitu cha mwisho);
+     · mabadiliko madogo (<8px) hayabadilishi hali (hakuna kutetemeka);
+     · hubadilisha class pekee; nafasi ya ukurasa (padding-bottom) haibadiliki,
+       kwa hiyo hakuna kuruka kwa maudhui (layout shift) wala kufunikwa kwa maandishi.
+   ============================================================================ */
+(function skhBottomNavAutoHide() {
+    if (window.__skhBottomNavScroll) return;      // usisikize mara mbili
+    window.__skhBottomNavScroll = true;
+
+    var HIDE_AFTER = 120;       // lazima ushuke hivi kabla ya kuficha
+    var TOP_ALWAYS = 60;        // karibu na juu: onyesha kila mara
+    var HYSTERESIS = 8;         // puuza mienendo midogo
+    var lastY = window.scrollY || 0;
+    var ticking = false;
+    var hidden = false;
+
+    function wrapper() { return document.querySelector('.bottom-area-wrapper'); }
+
+    function apply(hide) {
+        var el = wrapper();
+        if (!el) return;
+        if (hide === hidden && el.classList.contains('nav-slide-hidden') === hide) return;
+        hidden = hide;
+        el.classList.toggle('nav-slide-hidden', hide);
+        el.setAttribute('data-nav-hidden', hide ? '1' : '0');
+    }
+
+    function maxScroll() {
+        var doc = document.documentElement;
+        return Math.max(0, (doc.scrollHeight || 0) - window.innerHeight);
+    }
+
+    function evaluate() {
+        ticking = false;
+        var y = Math.max(0, window.scrollY || window.pageYOffset || 0);
+        var limit = maxScroll();
+        var delta = y - lastY;
+
+        // hakuna mahali pa kuscroll, au tuko juu kabisa → onyesha
+        if (limit <= 80 || y <= TOP_ALWAYS) { lastY = y; apply(false); return; }
+        // mwisho wa ukurasa → onyesha (tusimzuie mtu kugusa nav)
+        // 80px si "karibu" tu: picha za feed zinazoanza kuonekana hubadilisha
+        // urefu wa ukurasa, kwa hiyo scroll ya mwisho mara nyingi inaishia
+        // px chache kabla ya maxY halisi.
+        if (y >= limit - 80) { lastY = y; apply(false); return; }
+        if (Math.abs(delta) < HYSTERESIS) return;
+
+        if (delta > 0 && y > HIDE_AFTER) apply(true);   // anashuka chini → ficha
+        else if (delta < 0) apply(false);               // anavuta juu → rudisha
+
+        lastY = y;
+    }
+
+    function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        (window.requestAnimationFrame || function (fn) { return setTimeout(fn, 16); })(evaluate);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('orientationchange', function () { apply(false); }, { passive: true });
+    window.addEventListener('resize', function () { if (maxScroll() <= 80) apply(false); }, { passive: true });
+    // kubadilisha ukurasa/chat/modal: upau urudi ili usikosekane
+    window.addEventListener('hashchange', function () { apply(false); });
+    document.addEventListener('click', function (e) {
+        var t = e.target && e.target.closest ? e.target.closest('.nav-tab, .sell-action-fab') : null;
+        if (t) apply(false);
+    }, true);
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { apply(false); });
+    else apply(false);
+
+    // kwa majaribio/uchunguzi
+    window.skhBottomNav = {
+        hide: function () { apply(true); },
+        show: function () { apply(false); },
+        isHidden: function () { return hidden; }
+    };
+})();
