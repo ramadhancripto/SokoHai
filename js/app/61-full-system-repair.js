@@ -112,7 +112,7 @@ console.log('[61-full-repair] loading — P0-P4 stabilization...');
   function patchSaveDataRobust() {
     if (!skh.saveData || skh.saveData._patched61) return;
     const orig = skh.saveData;
-    skh.saveData = async function (col, data) {
+    skh.saveData = async function (col, data, opts) {
       // Strip undefined recursively — Firestore doesn't allow it
       function stripUndef(obj) {
         if (!obj || typeof obj !== 'object') return obj;
@@ -128,16 +128,23 @@ console.log('[61-full-repair] loading — P0-P4 stabilization...');
       // Ensure identity applied
       ensureIdentityEarly();
       const cleaned = stripUndef(data);
+      /* [2026-11-01] `opts` LAZIMA ipitelee — ndani yake kuna `clientId` (identity
+         ya kudumu inayozuia nakala wakati foleni inasambaza) na `skipQueue`.
+         Awali ilipotea hapa, hivyo usambazaji ulizalisha hati mpya kila mara. */
       try {
-        return await orig.call(this, col, cleaned);
+        return await orig.call(this, col, cleaned, opts);
       } catch (e) {
-        // If still fails due to undefined, try with nulls
-        console.warn('[61] saveData retry after strip', e.message);
+        /* Rudia TU kwa kasoro ya `undefined` — si kwa ruhusa, mtandao, wala
+           makosa ya kanuni. Kurudia kwa kila kosa kulizalisha bidhaa za nakala
+           (mtumiaji aliona "inagoma" mara mbili, akaandika mara mbili). */
+        const msg = String((e && e.message) || '');
+        if (!/unsupported field value|undefined/i.test(msg)) throw e;
+        console.warn('[61] saveData retry after strip', msg);
         const withNulls = {};
         Object.keys(cleaned).forEach(k => {
           withNulls[k] = cleaned[k] === undefined ? null : cleaned[k];
         });
-        return await orig.call(this, col, stripUndef(withNulls));
+        return await orig.call(this, col, stripUndef(withNulls), opts);
       }
     };
     skh.saveData._patched61 = true;

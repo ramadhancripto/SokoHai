@@ -129,6 +129,10 @@ import { listingEligible } from './39-market-ranking.js';
         notifications: null,
         notificationsLoading: false,
         notifAll: false,
+        moderation: null,      // admin: matangazo yanayosubiri idhini
+        moderationBusy: '',
+        outbox: null,          // kampeni zilizohifadhiwa kwenye kifaa, zinasubiri server
+        outboxBusy: false,
         busy: '',
         error: '',
         notice: '',
@@ -318,6 +322,122 @@ import { listingEligible } from './39-market-ranking.js';
         return '';
     }
 
+    /* ======================= OUTBOX · hifadhi kwa ndani, sambaza baadaye =======
+       Kama server haipatikani (mtandao, CORS, function haijasambazwa, n.k.) tangazo
+       HALIPOTEYI: creative yote inahifadhiwa kwenye kifaa na kusambazwa server
+       mara muunganisho utakapopatikana. Ni fallback ya upande wa mteja pekee —
+       haibadilishi kanuni za server wala idhini: tangazo bado linapitia
+       `creativePublish` na idhini ya SokoHai kama kawaida.
+       ========================================================================= */
+    var OUTBOX_KEY = 'skh_ads_outbox_v1';
+    var OUTBOX_MAX = 20;
+
+    function outboxRead() {
+        try {
+            var raw = window.localStorage.getItem(OUTBOX_KEY);
+            var list = raw ? JSON.parse(raw) : [];
+            return Array.isArray(list) ? list : [];
+        } catch (e) { return []; }
+    }
+
+    function outboxWrite(list) {
+        try {
+            window.localStorage.setItem(OUTBOX_KEY, JSON.stringify(list.slice(0, OUTBOX_MAX)));
+        } catch (e) {
+            /* kumbukumbu imejaa: isivunje UI, lakini mwambie mtumiaji */
+            S.error = 'Kifaa hakina nafasi ya kuhifadhi tangazo kwa ndani. Fungua nafasi kisha ujaribu tena.';
+        }
+        S.outbox = list.slice(0, OUTBOX_MAX);
+    }
+
+    function outboxCount() {
+        return (S.outbox || []).length;
+    }
+
+    function outboxStore(creative, reason) {
+        var d = S.draft || {};
+        var item = {
+            id: 'ob_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            createdAt: new Date().toISOString(),
+            type: d.type || '',
+            headline: String(d.headline || (d.listing && d.listing.title) || 'Tangazo').slice(0, 120),
+            listingId: d.listing ? String(d.listing.id) : '',
+            creative: creative,
+            attempts: 0,
+            status: 'pending',           // pending | blocked
+            lastError: String(reason || '').slice(0, 300)
+        };
+        var list = outboxRead();
+        list.unshift(item);
+        outboxWrite(list);
+        return item;
+    }
+
+    function outboxRemove(id) {
+        outboxWrite(outboxRead().filter(function (i) { return i.id !== id; }));
+    }
+
+    function outboxUpdate(id, patch) {
+        var list = outboxRead().map(function (i) {
+            return i.id === id ? Object.assign({}, i, patch) : i;
+        });
+        outboxWrite(list);
+    }
+
+    /* Makosa ya kudumu: kurudia hakutasaidia bila mtumiaji kubadilisha kitu. */
+    function isPermanentFailure(msg) {
+        return /permission-denied|invalid-argument|failed-precondition|not-found|hauna ruhusa|hailingani|haipo tena|haiwezi|si sahihi|size lazima|ongеza picha|ongeza picha/i.test(String(msg || ''));
+    }
+
+    async function flushOutbox(opts) {
+        opts = opts || {};
+        if (S.outboxBusy) return { skipped: true };
+        var list = outboxRead();
+        if (!list.length) { S.outbox = list; return { done: 0, failed: 0 }; }
+        if (!uid()) {
+            if (opts.manual) { S.error = 'Ingia kwenye akaunti kwanza ili kutuma tangazo lililohifadhiwa.'; render(); }
+            return { needsAuth: true };
+        }
+        S.outboxBusy = true;
+        if (opts.manual) render();
+        var done = 0, failed = 0, lastMsg = '';
+        for (var i = list.length - 1; i >= 0; i--) {
+            var item = list[i];
+            if (item.status === 'blocked' && !opts.forceBlocked) continue;
+            try {
+                var saved = await persistCreative(item.creative);
+                var res = await window.skh.callFunction('creativePublish', {
+                    creativeId: saved.id,
+                    publicationType: 'advertisement'
+                });
+                var data = (res && res.data) || res || {};
+                if (data.ok === false) throw new Error('Tangazo halikupitishwa.');
+                outboxRemove(item.id);
+                done++;
+            } catch (e) {
+                var msg = readableError(e);
+                lastMsg = msg;
+                failed++;
+                outboxUpdate(item.id, {
+                    attempts: Number(item.attempts || 0) + 1,
+                    status: isPermanentFailure(msg) ? 'blocked' : 'pending',
+                    lastError: msg
+                });
+            }
+        }
+        S.outbox = outboxRead();
+        S.outboxBusy = false;
+        if (done) S.campaigns = null;
+        if (done && opts.manual) {
+            S.notice = done + ' tangazo' + (done === 1 ? '' : ' zaidi') + ' zimetumwa sasa kwa idhini ya SokoHai.';
+            toast(S.notice, 'success');
+        } else if (failed && opts.manual) {
+            S.error = 'Bado haiwezi kusambazwa: ' + lastMsg;
+        }
+        render();
+        return { done: done, failed: failed };
+    }
+
     /* ------------------------------------------------------ creative building */
 
     /* Build the creative for the chosen listing using the canonical model.
@@ -450,13 +570,40 @@ import { listingEligible } from './39-market-ranking.js';
 
     /* ------------------------------------------------------------ persistence */
 
+    /* [FIRESTORE UNDEFINED FIX 2026-11-01] Firestore inakataa `undefined` kwenye
+       hati: "Unsupported field value: undefined (found in field X)". Badala ya
+       kurekebisha uwanja mmoja mmoja kila unapotokea, tunasafisha payload yote
+       kabla ya kuandika — hakuna uwanja usiojulikana unaoweza kuvunja kuhifadhi.
+       `null` inabaki kama ilivyo (Firestore inaruhusu), `undefined` huondolewa. */
+    function stripUndefined(value, depth) {
+        depth = depth || 0;
+        if (depth > 12) return value;
+        if (Array.isArray(value)) {
+            return value
+                .filter(function (v) { return v !== undefined; })
+                .map(function (v) { return stripUndefined(v, depth + 1); });
+        }
+        if (value && typeof value === 'object') {
+            // Date/Timestamp/FieldValue/Blob n.k. zisipeperushwe
+            var proto = Object.getPrototypeOf(value);
+            if (proto !== Object.prototype && proto !== null) return value;
+            var out = {};
+            Object.keys(value).forEach(function (k) {
+                if (value[k] === undefined) return;
+                out[k] = stripUndefined(value[k], depth + 1);
+            });
+            return out;
+        }
+        return value;
+    }
+
     async function persistCreative(creative) {
         if (typeof window.skhPersistBasicCreative === 'function') {
-            var saved = await window.skhPersistBasicCreative(creative);
+            var saved = await window.skhPersistBasicCreative(stripUndefined(creative));
             return (saved && saved.id) ? saved : creative;
         }
         if (!window.skh || !uid()) throw new Error('Hakuna akaunti iliyoingia.');
-        var payload = Object.assign({}, creative, { ownerId: uid(), updatedAt: new Date().toISOString() });
+        var payload = stripUndefined(Object.assign({}, creative, { ownerId: uid(), updatedAt: new Date().toISOString() }));
         if (creative.id) {
             await window.skh.setDoc(window.skh.doc(window.skh.db, 'creatives', creative.id), payload, { merge: true });
             return payload;
@@ -500,9 +647,10 @@ import { listingEligible } from './39-market-ranking.js';
         var problem = validateDraft(false);
         if (problem.length) { S.error = problem.join(' '); S.step = firstBadStep(problem); render(); return; }
         S.busy = 'submit'; S.error = ''; render();
+        var creative = null;
         try {
             if (!uid()) throw new Error('Ingia kwenye akaunti kwanza.');
-            var creative = buildCreative();
+            creative = buildCreative();
             var saved = await persistCreative(creative);
             var payload = { creativeId: saved.id, publicationType: 'advertisement' };
             if (S.draft.announcementId) payload.replaceAnnouncementId = S.draft.announcementId;
@@ -519,7 +667,21 @@ import { listingEligible } from './39-market-ranking.js';
                 : 'Tangazo limetumwa. Linahitaji idhini ya SokoHai kabla ya kuonekana kwenye soko.';
             toast(admin ? 'Tangazo limechapishwa.' : 'Tangazo limetumwa kwa idhini.', 'success');
         } catch (e) {
-            S.error = 'Imeshindwa kutuma tangazo: ' + readableError(e);
+            /* HALI MBAYA YA MTANDAO/SERVER: tangazo linahifadhiwa kwenye kifaa.
+               Hatuachi mtumiaji na kosa tupu — kazi yake haipotei. */
+            var msg = readableError(e);
+            try {
+                if (typeof creative !== 'undefined' && creative) {
+                    var queued = outboxStore(creative, msg);
+                    S.error = 'Imeshindwa kutuma sasa: ' + msg + ' — tangazo limehifadhiwa kwenye kifaa chako na litatumwa server ikipatikana.';
+                    S.notice = 'Kampeni iliyohifadhiwa: ' + queued.headline;
+                    S.view = 'campaigns';
+                } else {
+                    S.error = 'Imeshindwa kutuma tangazo: ' + msg;
+                }
+            } catch (qe) {
+                S.error = 'Imeshindwa kutuma tangazo: ' + msg;
+            }
         } finally {
             S.busy = ''; render();
         }
@@ -527,6 +689,24 @@ import { listingEligible } from './39-market-ranking.js';
 
     function readableError(e) {
         var msg = (e && (e.message || e.msg)) || String(e);
+        var code = String((e && e.code) || '');
+        if (code === 'unavailable' || /unavailable|network|networkrequestfailed|failed to fetch|load failed|offline|timeout/i.test(msg)) {
+            return 'mtandao haupatikani kwa sasa';
+        }
+        /* `internal` = Cloud Function iliyokwama ndani (HTTP 500). Sababu za kawaida
+           tatu, kwa mpangilio: (1) function haijasambazwa, (2) toleo la server ni la
+           zamani ukilinganisha na msimbo huu, (3) Firestore index/ruhusa inakosekana.
+           Tunaeleza hilo LAKINI tunaweka pia jibu halisi la server — hatufichi. */
+        if (code === 'internal' || /^internal$/i.test(String(msg).trim()) || /^INTERNAL$/i.test(String(msg).trim())) {
+            return 'server imekwama (internal) — huduma haijasambazwa au toleo la server ni la zamani. '
+                + 'Sambaza functions kisha ujaribu tena';
+        }
+        if (code === 'not-found' && /function|not found/i.test(String(msg))) {
+            return 'huduma ya server haipo (function haijasambazwa)';
+        }
+        if (code === 'unimplemented') {
+            return 'huduma hii haijasambazwa kwenye server bado';
+        }
         if (/permission-denied|not authorized/i.test(msg)) return 'Hauna ruhusa ya kufanya hivi kwa listing hii.';
         if (/unauthenticated|sign in/i.test(msg)) return 'Ingia kwenye akaunti kwanza.';
         if (/not-found/i.test(msg)) return 'Listing haipo tena au imeondolewa.';
@@ -598,6 +778,7 @@ import { listingEligible } from './39-market-ranking.js';
         { key: 'campaigns', label: 'Kampeni Zangu', icon: 'clipboard', group: 'Simamia' },
         { key: 'library', label: 'Maktaba', icon: 'image', group: 'Simamia' },
         { key: 'notifications', label: 'Arifa', icon: 'bell', group: 'Simamia' },
+        { key: 'moderation', label: 'Idhini', icon: 'check', group: 'Simamia', adminOnly: true },
         { key: 'audience', label: 'Hadhira', icon: 'target', group: 'Sanidi' },
         { key: 'placements', label: 'Mahali', icon: 'grid', group: 'Sanidi' },
         { key: 'analytics', label: 'Uchanganuzi', icon: 'chart', group: 'Uchanganuzi' },
@@ -611,6 +792,7 @@ import { listingEligible } from './39-market-ranking.js';
         var html = '<nav class="mas-nav" aria-label="Sehemu za Ads Studio">';
         var group = '';
         VIEWS.forEach(function (item) {
+            if (item.adminOnly && !isAdmin()) return;
             if (item.group !== group) {
                 group = item.group;
                 if (group) html += '<div class="mas-nav-group">' + esc(group) + '</div>';
@@ -647,6 +829,7 @@ import { listingEligible } from './39-market-ranking.js';
         else if (S.view === 'campaigns') body = campaignsHtml();
         else if (S.view === 'library') body = libraryHtml();
         else if (S.view === 'notifications') body = notificationsHtml();
+        else if (S.view === 'moderation') body = (isAdmin() ? moderationHtml() : overviewHtml());
         else if (S.view === 'audience') body = audienceHtml();
         else if (S.view === 'placements') body = placementsHtml();
         else if (S.view === 'analytics') body = analyticsHtml();
@@ -1006,6 +1189,36 @@ import { listingEligible } from './39-market-ranking.js';
         { key: 'rejected', label: 'Zimekataliwa' }
     ];
 
+    function outboxHtml() {
+        var items = S.outbox || outboxRead();
+        if (!items.length) return '';
+        var blocked = items.filter(function (i) { return i.status === 'blocked'; }).length;
+        return '<div class="mas-card mas-outbox">'
+            + '<div class="mas-card-head"><h2>' + icon('upload', 15) + ' Zinasubiri kusambazwa <span class="mas-count">' + items.length + '</span></h2>'
+            + '<button type="button" class="mas-btn sm primary" data-mas-act="flush-outbox"'
+            + (S.outboxBusy ? ' disabled' : '') + '>' + icon('refresh', 14)
+            + '<span>' + (S.outboxBusy ? 'Inatuma…' : 'Tuma sasa') + '</span></button></div>'
+            + '<p class="mas-help">Tangazo hili limehifadhiwa kwenye kifaa chako. Litajitumia server yenyewe mtandao ukipatikana'
+            + (blocked ? ' — ' + blocked + ' linahitaji marekebisho kabla ya kutumwa' : '') + '.</p>'
+            + '<div class="mas-rows">' + items.map(function (i) {
+                var when = fmtDate(i.createdAt);
+                return '<div class="mas-row outbox' + (i.status === 'blocked' ? ' blocked' : '') + '">'
+                    + '<span class="mas-row-nm">' + icon(i.status === 'blocked' ? 'alert' : 'clock', 13)
+                    + '<span>' + esc(i.headline) + '</span>'
+                    + '<code class="mas-row-key">' + esc(TYPE_META[i.type] ? TYPE_META[i.type].label : '—') + '</code></span>'
+                    + '<span class="mas-row-val">' + (i.status === 'blocked' ? 'Inahitaji marekebisho' : 'Inasubiri mtandao')
+                    + (when ? ' · ' + esc(when) : '') + (i.attempts ? ' · majaribio ' + i.attempts : '') + '</span>'
+                    + '<span class="mas-outbox-actions">'
+                    + (i.status === 'blocked'
+                        ? '<button type="button" class="mas-btn sm" data-mas-act="outbox-retry" data-id="' + esc(i.id) + '">Jaribu tena</button>'
+                        : '')
+                    + '<button type="button" class="mas-btn sm ghost" data-mas-act="outbox-delete" data-id="' + esc(i.id) + '">Ondoa</button>'
+                    + '</span></div>';
+            }).join('') + '</div>'
+            + (blocked ? honestNote('Kwa nini imezuiwa', 'Sababu: ' + esc(items.filter(function (i) { return i.status === 'blocked'; })[0].lastError || '—'), 'warn') : '')
+            + '</div>';
+    }
+
     function campaignsHtml() {
         if (S.campaigns === null && !S.campaignsLoading) loadCampaigns();
         if (S.campaignsLoading || S.campaigns === null) {
@@ -1025,7 +1238,7 @@ import { listingEligible } from './39-market-ranking.js';
         });
         var order = ['pending', 'active', 'paused', 'draft', 'scheduled', 'completed', 'expired', 'rejected', 'archived'];
 
-        var chips = '<div class="mas-filters">' + CAMPAIGN_FILTERS.map(function (f) {
+        var chips = outboxHtml() + '<div class="mas-filters">' + CAMPAIGN_FILTERS.map(function (f) {
             var n = f.key === 'all' ? all.length
                 : (f.key === 'completed'
                     ? all.filter(function (a) { return ['completed', 'expired', 'archived'].indexOf(campaignState(a)) >= 0; }).length
@@ -1241,6 +1454,94 @@ import { listingEligible } from './39-market-ranking.js';
             return tb - ta;
         });
         return out;
+    }
+
+    /* ==================== IDHINI (admin pekee) =========================
+       Bila sehemu hii, `creativePublish` iliweka kila tangazo la mfanyabiashara
+       kama 'pending', na injini ya delivery ilikataa kuipa nafasi yoyote.
+       Ndiyo sababu matangazo yalibaki kwenye studio tu. Hapa admin anaamua.
+       Server callable: creativeModerationQueue / creativeModerate.
+       =================================================================== */
+    async function loadModeration(force) {
+        if (!isAdmin()) return;
+        if (S.moderationBusy === 'load') return;
+        if (S.moderation && !force) return;
+        S.moderationBusy = 'load'; render();
+        try {
+            var res = await window.skh.callFunction('creativeModerationQueue', { limit: 40 });
+            var data = (res && res.data) || res || {};
+            S.moderation = { items: Array.isArray(data.items) ? data.items : [], error: '' };
+        } catch (e) {
+            S.moderation = { items: [], error: moderationErrorText(e) };
+        }
+        S.moderationBusy = '';
+        render();
+    }
+
+    function moderationErrorText(e) {
+        var msg = String((e && (e.message || e.code)) || e || '');
+        if (/not-found|internal|unavailable|not deployed/i.test(msg)) {
+            return 'Huduma ya idhini haijasambazwa bado (creativeModerationQueue). Sambaza functions kisha ujaribu tena.';
+        }
+        if (/permission-denied/i.test(msg)) return 'Admin pekee anaweza kufungua idhini.';
+        return msg;
+    }
+
+    async function moderateAd(creativeId, decision) {
+        if (!creativeId || !isAdmin()) return;
+        var note = '';
+        if (decision === 'reject') {
+            note = window.prompt('Sababu ya kukataa (itaonekana kwa mfanyabiashara):', '') || '';
+            if (note === null) return;
+        }
+        S.moderationBusy = creativeId; render();
+        try {
+            await window.skh.callFunction('creativeModerate', { creativeId: creativeId, decision: decision, note: note });
+            S.notice = decision === 'approve'
+                ? 'Tangazo limeidhinishwa — linaanza kuonekana sokoni.'
+                : 'Tangazo limekataliwa.';
+            toast(S.notice, decision === 'approve' ? 'success' : 'warn');
+            S.moderation = null;
+            S.campaigns = null;
+        } catch (e) {
+            S.error = moderationErrorText(e);
+        }
+        S.moderationBusy = '';
+        loadModeration(true);
+    }
+
+    function moderationHtml() {
+        var d = S.moderation;
+        if (!d) { loadModeration(false); }
+        var head = '<div class="mas-view-head"><div><h1>Idhini ya matangazo</h1>'
+            + '<p class="mas-muted">Matangazo ya wafanyabiashara yanaonekana sokoni baada ya kuidhinishwa hapa. Admin pekee.</p></div>'
+            + '<button type="button" class="mas-btn sm" data-mas-act="moderation-reload">' + icon('refresh', 14) + '<span>Onyesha upya</span></button></div>';
+        if (!d || S.moderationBusy === 'load') {
+            return head + '<div class="mas-empty"><span class="mas-spinner"></span><p class="mas-muted">Inapakia…</p></div>';
+        }
+        if (d.error) {
+            return head + '<div class="mas-alert error">' + icon('alert', 15) + '<div><b>Imeshindwa kupakia</b><p>' + esc(d.error) + '</p></div></div>'
+                + honestNote('Kwa nini', 'Foleni ya idhini ni callable ya server (admin pekee). Hadi itakaposambazwa, matangazo yote ya wafanyabiashara yatabaki "Inasubiri idhini" — hiyo ni hali halisi, haitafichwa.', 'warn');
+        }
+        if (!d.items.length) {
+            return head + '<div class="mas-empty"><b>Hakuna tangazo linalosubiri</b>'
+                + '<p class="mas-muted">Kila tangazo lililotumwa limekwisha shughulikiwa.</p></div>';
+        }
+        return head
+            + '<div class="mas-rows">' + d.items.map(function (it) {
+                var busy = S.moderationBusy === it.creativeId;
+                return '<div class="mas-row mod">'
+                    + '<span class="mas-row-nm"><b>' + esc(it.headline || 'Tangazo') + '</b>'
+                    + '<code class="mas-row-key">' + esc(TYPE_META[it.type] ? TYPE_META[it.type].label : (it.type || '—')) + '</code></span>'
+                    + '<span class="mas-row-val">' + esc(fmtDate(it.submittedAt) || '') + '</span>'
+                    + '<span class="mas-outbox-actions">'
+                    + '<button type="button" class="mas-btn sm primary" data-mas-act="moderate-approve" data-id="' + esc(it.creativeId) + '"'
+                    + (busy ? ' disabled' : '') + '>' + icon('check', 14) + '<span>Idhinisha</span></button>'
+                    + '<button type="button" class="mas-btn sm" data-mas-act="moderate-reject" data-id="' + esc(it.creativeId) + '"'
+                    + (busy ? ' disabled' : '') + '><span>Kataa</span></button>'
+                    + '</span></div>';
+            }).join('') + '</div>'
+            + honestNote('Kinachotokea ukibonyeza', 'Idhinisha: tangazo linaingia sokoni mara moja (moderationStatus: approved, active: true). Kataa: linabaki kwa mfanyabiashara likiwa na sababu yako. Hakuna kipimo kinachobuniwa.', 'info');
     }
 
     async function loadNotifications(force) {
@@ -1562,12 +1863,25 @@ import { listingEligible } from './39-market-ranking.js';
 
     /* ---------------------------------------------------------------- actions */
 
+    /* Usambazaji wa kiotomatiki: mtandao unarudi, au mtumiaji anafungua studio. */
+    function outboxAutoFlush() {
+        if (!S.outbox) S.outbox = outboxRead();
+        if (!S.outbox.length) return;
+        if (S.outboxBusy || !uid()) return;
+        flushOutbox({}).catch(function () { /* kimya: jaribio la nyuma */ });
+    }
+    window.addEventListener('online', function () { try { outboxAutoFlush(); } catch (e) {} });
+    document.addEventListener('skh:auth-ready', function () { try { outboxAutoFlush(); } catch (e) {} });
+
     function goView(view) {
         S.view = view;
         S.error = ''; S.notice = '';
         if (view === 'campaigns' || view === 'analytics' || view === 'budget' || view === 'overview') loadCampaigns(!S.campaigns);
         if (view === 'library') loadLibrary();
         if (view === 'notifications') loadNotifications();
+        if (view === 'moderation') loadModeration(false);
+        S.outbox = outboxRead();
+        if (view === 'campaigns') outboxAutoFlush();
         render();
     }
 
@@ -1796,6 +2110,12 @@ import { listingEligible } from './39-market-ranking.js';
             case 'clear-error': S.error = ''; render(); break;
             case 'filter-campaigns': S.campaignFilter = actionEl.getAttribute('data-filter') || 'all'; render(); break;
             case 'export-csv': exportCampaignsCsv(); break;
+            case 'moderate-approve': moderateAd(id, 'approve'); break;
+            case 'moderate-reject': moderateAd(id, 'reject'); break;
+            case 'moderation-reload': loadModeration(true); break;
+            case 'flush-outbox': flushOutbox({ manual: true }); break;
+            case 'outbox-retry': flushOutbox({ manual: true, forceBlocked: true }); break;
+            case 'outbox-delete': outboxRemove(actionEl.getAttribute('data-id')); render(); break;
             case 'toggle-notif-all': S.notifAll = !S.notifAll; render(); break;
             case 'open-app-notifications':
                 if (typeof window.openNotifications === 'function') window.openNotifications();

@@ -334,3 +334,121 @@ exports.creativeTrackEvent = onCall({ region:REGION }, async request => {
   });
   return { ok:true };
 });
+
+/* ============================================================================
+   [2026-11-01 — IDHINI] creativeModerate / creativeModerationQueue
+   ----------------------------------------------------------------------------
+   KASORO ILIYOREKEBISHWA: `creativePublish` inaweka `moderationStatus:'pending'`
+   kwa kila mchapishaji asiye admin, NA hakuna callable yoyote ya kuidhinisha.
+   Injini ya delivery (ads-delivery-core) inakataa `MODERATION_NOT_APPROVED`.
+   Matokeo: kila tangazo linabaki "Inasubiri idhini" milele na haliingii sokoni —
+   ndiyo sababu matangazo yalibaki kwenye Creator Studio tu.
+
+   Hizi ni callable MBILI mpya, admin pekee:
+     • creativeModerationQueue — orodha ya yanayosubiri (read-only)
+     • creativeModerate        — approve | reject, na audit trail
+   Hazibadilishi kanuni zilizopo: zinatumia `isAdmin` ile ile, na zinaandika
+   nyaraka zile zile (`creatives`, `creativePublications`, `announcements`).
+   ========================================================================= */
+
+function adminGate(request) {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
+  if (!isAdmin(request.auth.token)) throw new HttpsError('permission-denied', 'Admins only.');
+  return request.auth.uid;
+}
+
+exports.creativeModerationQueue = onCall({ region: REGION }, async request => {
+  adminGate(request);
+  const limit = Math.min(100, Math.max(1, Number(request.data && request.data.limit) || 40));
+  const snap = await db.collection('creatives')
+    .where('moderationStatus', '==', 'pending')
+    .limit(limit)
+    .get();
+  return {
+    ok: true,
+    items: snap.docs.map(doc => {
+      const c = doc.data() || {};
+      return {
+        creativeId: doc.id,
+        ownerId: c.ownerId || '',
+        headline: text(c.headline || (c.layers && c.layers[0] && c.layers[0].text), 160),
+        type: c.type || '',
+        linkedEntity: c.linkedEntity || null,
+        submittedAt: c.updatedAt || c.createdAt || null,
+        moderationStatus: c.moderationStatus || 'pending'
+      };
+    })
+  };
+});
+
+exports.creativeModerate = onCall({ region: REGION }, async request => {
+  const moderator = adminGate(request);
+  const id = text(request.data && request.data.creativeId, 128);
+  const decision = text(request.data && request.data.decision, 20).toLowerCase();
+  const note = text(request.data && request.data.note, 500);
+  if (!id) throw new HttpsError('invalid-argument', 'creativeId is required.');
+  if (decision !== 'approve' && decision !== 'reject') {
+    throw new HttpsError('invalid-argument', 'decision must be approve or reject.');
+  }
+
+  const creativeRef = db.collection('creatives').doc(id);
+  const creativeSnap = await creativeRef.get();
+  if (!creativeSnap.exists) throw new HttpsError('not-found', 'Creative not found.');
+
+  const now = FV.serverTimestamp();
+  const approved = decision === 'approve';
+  const moderationStatus = approved ? 'approved' : 'rejected';
+
+  const announcements = await db.collection('announcements').where('creativeId', '==', id).limit(20).get();
+  const announcementsUpdated = [];
+
+  await db.runTransaction(async transaction => {
+    transaction.set(creativeRef, {
+      moderationStatus,
+      status: approved ? 'PUBLISHED' : 'REJECTED',
+      moderationNote: note || null,
+      moderatedAt: now,
+      moderatedBy: moderator,
+      updatedAt: now
+    }, { merge: true });
+
+    announcements.forEach(doc => {
+      const a = doc.data() || {};
+      /* Tangazo la zamani lililokwisha kufa (archived/completed) halifufuliwi. */
+      const revivable = approved && a.archived !== true && String(a.status || '').toLowerCase() !== 'completed';
+      const patch = {
+        moderationStatus,
+        status: approved ? (revivable ? 'published' : (a.status || 'published')) : 'rejected',
+        active: revivable,
+        moderationNote: note || null,
+        moderatedAt: now,
+        moderatedBy: moderator,
+        updatedAt: now
+      };
+      if (approved && revivable && !a.lifecycleStatus) patch.lifecycleStatus = 'active';
+      transaction.set(doc.ref, patch, { merge: true });
+      announcementsUpdated.push(doc.id);
+    });
+  });
+
+  /* Publication ledger: hali ya uchapishaji ifuatilie uamuzi huu. */
+  try {
+    const pubs = await db.collection('creativePublications').where('creativeId', '==', id).limit(20).get();
+    const batch = db.batch();
+    pubs.forEach(doc => {
+      const p = doc.data() || {};
+      batch.set(doc.ref, {
+        status: approved ? 'PUBLISHED' : 'REJECTED',
+        moderationStatus,
+        moderatedBy: moderator,
+        moderatedAt: now,
+        updatedAt: now
+      }, { merge: true });
+    });
+    if (!pubs.empty) await batch.commit();
+  } catch (e) {
+    console.warn('[creativeModerate] publication update:', e && e.message);
+  }
+
+  return { ok: true, creativeId: id, moderationStatus, announcements: announcementsUpdated };
+});

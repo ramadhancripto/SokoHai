@@ -816,3 +816,212 @@
     .skh-ads-panel .adm-ad-thumb { width: 52px; height: 44px; }
     .skh-ads-panel .adm-ad-row-actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
+
+/* ---------------------------------------------------------------- ad badge ---
+   [2026-11-01] Tangazo dogo (badge) kwa dashboard na chat.
+   Kadi ya tangazo ni ile ile ya mfumo (skh-ann-card) — hatuna renderer ya pili.
+   Hapa tunaibana tu kuwa mstari mmoja mwembamba: picha 56px, kichwa, na
+   "Sponsored". Bila hivi kadi ya poster ingechukua skrini nzima na kuvuruga
+   kazi ya mtumiaji — ndiyo kinyume cha kile kilichoombwa. */
+.skh-ad-badge-wrap { position: relative; margin: 0 0 10px; border-radius: 12px; }
+.skh-ad-badge {
+  display: block;
+  border: 1px solid #E4EAF1;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 0 !important;
+  max-height: 92px;
+}
+.skh-ad-badge > .skh-ann-card,
+.skh-ad-badge .skh-ann-card.skh-comp-product {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  height: auto !important;
+  max-height: 90px !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+  padding: 8px 34px 8px 10px !important;
+  overflow: hidden !important;
+}
+/* picha: kithumbnail kidogo badala ya poster */
+.skh-ad-badge .skh-ann-media {
+  flex: none !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  aspect-ratio: auto !important;
+  border-radius: 9px !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+.skh-ad-badge .skh-ann-media-blur { display: none !important; }
+.skh-ad-badge .skh-ann-media-main {
+  width: 56px !important; height: 56px !important; object-fit: cover !important;
+}
+/* maandishi: mstari mmoja */
+.skh-ad-badge .skh-ann-body {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.skh-ad-badge .skh-ann-post-head {
+  padding: 0 !important; margin: 0 !important; border: none !important;
+  display: flex !important; align-items: center !important; gap: 6px !important;
+  background: transparent !important;
+}
+.skh-ad-badge .skh-ann-brand-copy small { display: none !important; }
+.skh-ad-badge .skh-ann-brand-copy b,
+.skh-ad-badge .skh-ann-brand-fallback {
+  font-size: 11.5px !important; color: #64748b !important; font-weight: 700 !important;
+}
+.skh-ad-badge .skh-ann-sponsored {
+  font-size: 9.5px !important; letter-spacing: .05em !important;
+  background: #F1F5F9 !important; color: #475569 !important;
+  border-radius: 999px !important; padding: 2px 7px !important; margin: 0 !important;
+}
+.skh-ad-badge .skh-ann-title,
+.skh-ad-badge .skh-ann-title-wrap span,
+.skh-ad-badge .skh-ann-title-wrap strong {
+  font-size: 13.5px !important;
+  line-height: 1.25 !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-shadow: none !important;
+  background: none !important;
+  /* mstari mmoja tu */
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.skh-ad-badge .skh-ann-copy p,
+.skh-ad-badge .skh-ann-copy br,
+.skh-ad-badge .skh-ann-text-content,
+.skh-ad-badge .skh-ann-cta,
+.skh-ad-badge .skh-ann-actions,
+.skh-ad-badge .skh-ann-offer { display: none !important; }
+.skh-ad-badge .skh-ann-copy { padding: 0 !important; margin: 0 !important; background: none !important; }
+.skh-ad-dismiss-button { display: none !important; }
+.skh-ad-badge-close {
+  position: absolute; top: 6px; right: 6px; width: 24px; height: 24px;
+  border: none; background: transparent; color: #94a3b8; font-size: 17px;
+  line-height: 1; cursor: pointer; border-radius: 50%;
+}
+.skh-ad-badge-close:hover { background: #F1F5F9; color: #475569; }
+@media (max-width: 520px) {
+  .skh-ad-badge > .skh-ann-card { padding: 7px 30px 7px 8px !important; max-height: 78px !important; }
+  .skh-ad-badge .skh-ann-media, .skh-ad-badge .skh-ann-media-main { width: 48px !important; height: 48px !important; min-width: 48px !important; }
+  .skh-ad-badge .skh-ann-title, .skh-ad-badge .skh-ann-title-wrap span, .skh-ad-badge .skh-ann-title-wrap strong { font-size: 12.5px !important; }
+}
+
+/* [2026-11-01] Marekebisho ya mgongano: slot ya badge inapokea madarasa ya
+   `.skh-ann-story .skh-home-ad` kutoka kwa renderer, na kanuni zake za poster
+   zinashinda za badge. Hii inaweka specificity ya kutosha kwa muundo mwembamba. */
+.skh-ad-badge-wrap .skh-ad-badge.skh-ann-story,
+.skh-ad-badge-wrap .skh-ad-badge {
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: #fff !important;
+  border: 1px solid #E4EAF1 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  max-height: 92px !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card.skh-comp-product {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  max-height: 90px !important;
+  padding: 8px 34px 8px 10px !important;
+  aspect-ratio: auto !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-media,
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-media.aspect-16-9,
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-story .skh-ann-media {
+  flex: 0 0 56px !important;
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  aspect-ratio: auto !important;
+  border-radius: 9px !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  order: 0 !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-media-main {
+  width: 56px !important; height: 56px !important; object-fit: cover !important; border-radius: 9px !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-body,
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-post-head {
+  padding: 0 !important; margin: 0 0 2px !important; border: 0 !important;
+  background: transparent !important; order: 0 !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-title-wrap,
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-title {
+  padding: 0 !important; margin: 0 !important; background: none !important;
+  overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
+  display: block !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-title span,
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-title strong {
+  font-size: 13.5px !important; line-height: 1.3 !important; font-weight: 800 !important;
+  color: #0f172a !important; background: none !important; -webkit-text-fill-color: #0f172a !important;
+  display: inline !important;
+}
+
+/* [2026-11-01] Muundo wa mwisho wa badge: gridi ndogo
+   [picha] [brand · Sponsored]
+           [kichwa cha tangazo]                                      [×] */
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card.skh-comp-product {
+  display: grid !important;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  grid-template-areas: "media head" "media body";
+  column-gap: 10px !important;
+  row-gap: 2px !important;
+  align-items: center !important;
+  max-height: 92px !important;
+  padding: 10px 36px 10px 10px !important;
+}
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-media { grid-area: media !important; align-self: center !important; }
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-post-head { grid-area: head !important; }
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-body,
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-copy { grid-area: body !important; }
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-copy,
+.skh-ad-badge-wrap .skh-ad-badge .skh-ann-card .skh-ann-title-wrap { width: 100% !important; max-width: 100% !important; }

@@ -613,6 +613,35 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
     });
         
     if(docId) {
+        /* [PUBLISH OUTBOX 2026-11-01] Mtandao ulikatika: bidhaa imehifadhiwa kwenye
+           kifaa. Hatuendi kwenye `inventoryAdjust` (server haipo), tunaambatanisha
+           stock ya kuanzia kwenye kipengele cha foleni ili ikamilike inaposambazwa. */
+        if (typeof window.skhIsLocalId === 'function' && window.skhIsLocalId(docId)) {
+            try {
+                window.skhPublishOutbox.attach(docId, {
+                    openingStock: Math.max(0, Number(finalCalculatedStock) || 0),
+                    businessId: skh.currentUserData?.businessId || null,
+                    storeId: skh.currentUserData?.storeId || null
+                });
+            } catch (e) { console.warn('[publish-outbox] attach:', e && e.message); }
+            alert('Bidhaa yako imehifadhiwa kwenye kifaa chako.\n\n' +
+                'Itachapishwa sokoni mtandao ukipatikana — huna haja ya kuandika tena.\n' +
+                'Unaweza kuiona kwenye "Bidhaa Zangu" ikiwa na alama ya kusubiri.');
+            if (typeof window.skhSellerAfterSave === 'function') window.skhSellerAfterSave({ location: loc });
+            try { if (window.skhClearPickedPhotos && window.skhClearPickedPhotos['prodImage']) window.skhClearPickedPhotos['prodImage'](); } catch (e) {}
+            const f = document.getElementById('sellerForm'); if (f) f.reset();
+            if (typeof window.skhProductBuilderReset === 'function') window.skhProductBuilderReset();
+            ['onlineSpecificFields','bulkPackagingFields','wholesalePriceFieldDiv','smartCategoryFieldsBox'].forEach(function (id) {
+                const el = document.getElementById(id); if (el) el.style.display = 'none';
+            });
+            skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
+            window.skhUpdateSellerSubmitLabel();
+            closeModals();
+            if (window.skhPublishOutbox) window.skhPublishOutbox.refresh();
+            loadAndRenderDashboard();
+            return;
+        }
+        let openingStockNote = '';
         try {
             await skh.wrapCallable('inventoryAdjust')({
                 productId: docId,
@@ -625,10 +654,12 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
                 idempotencyKey: 'opening-' + docId
             });
         } catch (e) {
+            /* [2026-11-01] Bidhaa ILIUNDWA. Zamani tulirudi nyuma na kumwambia
+               mtumiaji "jaribu tena" — hiyo ilizalisha bidhaa ya PILI kila mara.
+               Sasa tunamalizia mchakato na kueleza ukweli kuhusu stock. */
             console.error('[product-opening-stock]', e);
-            alert('Bidhaa imeundwa lakini opening stock haikukamilika; jaribu tena.');
-            skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
-            return;
+            openingStockNote = '\n\nKumbuka: stock ya kuanzia haijakamilika bado. ' +
+                'Usirudie kuichapisha (ingekuwa bidhaa ya pili) — ongeza stock kupitia "Bidhaa Zangu" → Stock.';
         }
         // [REPAIR 2026-10 B-07] The builder's own authority (collect/stockRequests)
         // was never called on CREATE, so the product SKU, canonical variant
@@ -658,9 +689,9 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
             console.error('[product-builder-create]', e);
             alert('Bidhaa imeundwa, lakini SKU/variants hazijakamilika: ' + (e && e.message ? e.message : e) + '. Fungua Edit ukamilishe.');
         }
-        const doneMsg = isStoreOnly
+        const doneMsg = (isStoreOnly
             ? " Bidhaa imehifadhiwa kikamilifu kwenye Inventory ya duka!"
-            : " Bidhaa imechapishwa kikamilifu kwenye Soko la Mtandaoni!";
+            : " Bidhaa imechapishwa kikamilifu kwenye Soko la Mtandaoni!") + openingStockNote;
         alert(doneMsg);
         // [UX 2026-10-31] Saved: forget the local draft, remember the location for the next product.
         if (typeof window.skhSellerAfterSave === 'function') window.skhSellerAfterSave({ location: loc });
@@ -867,6 +898,13 @@ window.submitService = async function(event) {
         });
 
         if(docId) {
+            if (typeof window.skhIsLocalId === 'function' && window.skhIsLocalId(docId)) {
+                alert('Huduma yako imehifadhiwa kwenye kifaa chako.\n\nItachapishwa mtandao ukipatikana.');
+                const f = document.getElementById('serviceForm'); if (f) f.reset();
+                closeModals(); if (window.skhPublishOutbox) window.skhPublishOutbox.refresh();
+                if (typeof loadAndRenderDashboard === 'function') loadAndRenderDashboard();
+                return;
+            }
             alert(" Huduma imechapishwa kikamilifu!");
             document.getElementById('serviceForm').reset();
             closeModals();
@@ -970,6 +1008,13 @@ window.submitDelivery = async function(event) {
         const docId = await skh.saveData('drivers', deliveryData);
 
         if(docId) {
+            if (typeof window.skhIsLocalId === 'function' && window.skhIsLocalId(docId)) {
+                alert('Usafiri wako umehifadhiwa kwenye kifaa chako.\n\nUtasajiliwa mtandao ukipatikana.');
+                const f = document.getElementById('deliveryForm'); if (f) f.reset();
+                closeModals(); if (window.skhPublishOutbox) window.skhPublishOutbox.refresh();
+                if (typeof loadAndRenderDashboard === 'function') loadAndRenderDashboard();
+                return;
+            }
             alert(" HONGERA!\nUsafiri wako umesajiliwa kikamilifu kwenye database ya Sokohai Transport Network.");
             document.getElementById('deliveryForm').reset();
             closeModals();

@@ -1547,7 +1547,8 @@ skh.uploadMultipleImages = async function uploadMultipleImages(inputId) {
         return window.skhUploadManyFromInput(inputId, 4);
     }
 
-skh.saveData = async function saveData(col, data) { 
+skh.saveData = async function saveData(col, data, opts) { 
+    opts = opts || {};
     if(!skh.requireAuth()) return null; 
     /* [FIX 2026-09-15] Kinga ya jumla: Firestore hukataa `undefined`.
        Ondoa funguo zenye undefined kabla ya kuandika — hii inazuia
@@ -1564,6 +1565,7 @@ skh.saveData = async function saveData(col, data) {
         return out;
     }
 
+    let queuePayload = null;
     try { 
         // Angalia kama kuna usimamizi wa offline user ulio hai
         const managedUid = sessionStorage.getItem('currently_managed_offline_uid');
@@ -1615,7 +1617,22 @@ skh.saveData = async function saveData(col, data) {
             docData.managedByAgentUid = skh.currentUser.uid;
         }
 
-        const docRef = await skh.addDoc(skh.collection(skh.db, col), stripUndefined(docData));
+        /* [PUBLISH OUTBOX 2026-11-01] Kama mtandao haupo, tangazo/bidhaa
+           haipaswi kupotea: tunaandika kwa kifaa na kusambaza baadaye.
+           (shauri: ops.skipQueue hutumika wakati foleni yenyewe inasambaza). */
+        const QUEUEABLE = { products:1, services:1, drivers:1 };
+        queuePayload = stripUndefined(docData);
+        if (!opts.skipQueue && QUEUEABLE[col] && typeof window.skhPublishOutbox === 'object' && navigator.onLine === false) {
+            return window.skhPublishOutbox.enqueue(col, queuePayload, opts);
+        }
+        let docRef;
+        if (opts.clientId) {
+            /* Kusambaza foleni kwa usalama: kitambulisho kilekile => hakuna nakala mbili. */
+            await skh.setDoc(skh.doc(skh.db, col, opts.clientId), queuePayload);
+            docRef = { id: opts.clientId };
+        } else {
+            docRef = await skh.addDoc(skh.collection(skh.db, col), queuePayload);
+        }
         // [PERF 2026-09] Kitu kipya kimehifadhiwa -> futa cache ya feed ili
         // tangazo jipya lionekane mara moja (badala ya kusubiri TTL).
         if (skh._feedCache) skh._feedCache.clear();
@@ -1625,7 +1642,27 @@ skh.saveData = async function saveData(col, data) {
         }
         return docRef.id;
     } catch(e) { 
-        alert("Kosa wakati wa kuhifadhi data: " + e.message); 
+        var code = String((e && e.code) || '');
+        var msg = String((e && e.message) || e);
+        var isNetwork = code === 'unavailable' || code === 'deadline-exceeded' ||
+            /offline|network|failed to fetch|load failed|timeout|unavailable/i.test(msg);
+        /* [PUBLISH OUTBOX 2026-11-01] Mtandao umekatika wakati wa kuandika:
+           hifadhi kwa kifaa, usimwambie mtumiaji kazi yake imepotea. */
+        if (isNetwork && !opts.skipQueue && typeof window.skhPublishOutbox === 'object'
+            && ({ products:1, services:1, drivers:1 })[col]) {
+            try {
+                if (queuePayload) return window.skhPublishOutbox.enqueue(col, queuePayload, opts);
+            } catch (qe) { console.warn('[publish-outbox] enqueue imeshindwa:', qe && qe.message); }
+        }
+        if (code === 'permission-denied' || /insufficient permissions|not authorized/i.test(msg)) {
+            alert('Hauna ruhusa ya kuhifadhi ' + (col === 'products' ? 'bidhaa' : col === 'services' ? 'huduma' : 'taarifa') + ' kwa akaunti hii.\n\n' +
+                'Hakikisha umeingia kwa akaunti yako ya muuzaji na wasifu wako umekamilika.\n' +
+                'Bidhaa yako bado ipo kwenye fomu — haikupotea.');
+        } else if (isNetwork) {
+            alert('Mtandao umekatika wakati wa kuhifadhi.\n\nBidhaa yako bado ipo kwenye fomu.\nJaribu tena mtandao ukipatikana.');
+        } else {
+            alert("Kosa wakati wa kuhifadhi data: " + msg);
+        }
         return null; 
     }
 }
@@ -2396,10 +2433,34 @@ skh.renderMarketplaceSections = function renderMarketplaceSections(items) {
                 + '</div>';
         }).join('');
     };
+    // [2026-11-01] Empty rails no longer render as three grey "Hakuna…" boxes that
+    // make the home page look unfinished. Each rail now keeps its empty-state
+    // markup (so tests/helpers can still read it) but its SECTION is collapsed
+    // until it has at least one item.
     targets.forEach(function (entry) {
         const host = document.getElementById(entry[0]);
-        if (host) host.innerHTML = render(entry[1], entry[2]);
+        if (!host) return;
+        host.innerHTML = render(entry[1], entry[2]);
+        const section = host.closest('section');
+        if (section) section.hidden = !(entry[1] && entry[1].length);
     });
+    // If every rail is empty, show one calm explanation instead of nothing.
+    const railsHost = targets.map(function (t) { return document.getElementById(t[0]); }).filter(Boolean)
+        .map(function (h) { return h.closest('section'); }).filter(Boolean);
+    let allEmptyNote = document.getElementById('skhRailsAllEmpty');
+    if (railsHost.length && railsHost.every(function (s) { return s.hidden; })) {
+        if (!allEmptyNote) {
+            allEmptyNote = document.createElement('div');
+            allEmptyNote.id = 'skhRailsAllEmpty';
+            allEmptyNote.className = 'skh-state';
+            allEmptyNote.innerHTML = '<b>Bado hakuna bidhaa za kuonyesha hapa</b><span>Bidhaa mpya zitaonekana mara tu wauzaji watakapozichapisha.</span>';
+            const first = railsHost[0];
+            if (first && first.parentNode) first.parentNode.insertBefore(allEmptyNote, first);
+        }
+        allEmptyNote.hidden = false;
+    } else if (allEmptyNote) {
+        allEmptyNote.hidden = true;
+    }
     return sections;
 };
 

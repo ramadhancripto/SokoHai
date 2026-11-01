@@ -3616,6 +3616,11 @@ exports.posReports = reportingAuthority.posReports;
 const creativeEngine = require('./creative');
 exports.creativeSaveDraft = creativeEngine.creativeSaveDraft;
 exports.creativePublish = creativeEngine.creativePublish;
+
+/* [2026-11-01] Idhini ya matangazo: admin pekee. Bila hizi, kila tangazo
+   linabaki 'pending' na haliingii sokoni (MODERATION_NOT_APPROVED). */
+exports.creativeModerationQueue = creativeEngine.creativeModerationQueue;
+exports.creativeModerate = creativeEngine.creativeModerate;
 exports.creativeTrackEvent = creativeEngine.creativeTrackEvent;
 
 // Canonical campaign selection, temporary slot leases, frequency/cooldown

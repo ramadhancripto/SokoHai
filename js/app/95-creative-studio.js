@@ -2356,6 +2356,25 @@ async function saveBrandKit(){
 }
 window.saveBrandKit=saveBrandKit;
 
+/* [FIRESTORE UNDEFINED FIX 2026-11-01] Firestore inakataa `undefined` kwenye hati
+   ("Unsupported field value: undefined (found in field durationAuto)"). Njia zote
+   za kuhifadhi (Basic admin, Advanced studio, Marketplace Ads) zinapita hapa, kwa
+   hiyo kusafisha hapa kunakinga zote kwa mpigo. `null` inabaki; `undefined` huondolewa. */
+function skhStripUndefined(value,depth){
+  depth=depth||0;
+  if(depth>12)return value;
+  if(Array.isArray(value))return value.filter(v=>v!==undefined).map(v=>skhStripUndefined(v,depth+1));
+  if(value&&typeof value==='object'){
+    const proto=Object.getPrototypeOf(value);
+    if(proto!==Object.prototype&&proto!==null)return value;   // Date/Timestamp/FieldValue n.k.
+    const out={};
+    Object.keys(value).forEach(k=>{ if(value[k]===undefined)return; out[k]=skhStripUndefined(value[k],depth+1); });
+    return out;
+  }
+  return value;
+}
+window.skhStripUndefined=skhStripUndefined;
+
 async function persistCreativeDraft(input){
   const draft=normalizeCreative(input||state);
   if(!draft)throw new Error('Hakuna creative ya kuhifadhi.');
@@ -2364,7 +2383,7 @@ async function persistCreativeDraft(input){
   draft.updatedAt=new Date().toISOString();
   try{localStorage.setItem(storageKey(draft),JSON.stringify(draft));}catch(e){}
   if(skh.currentUser){
-    const payload={...draft,ownerId:draft.ownerId||skh.currentUser.uid,status:draft.status||'DRAFT',updatedAt:new Date().toISOString()};
+    const payload=skhStripUndefined({...draft,ownerId:draft.ownerId||skh.currentUser.uid,status:draft.status||'DRAFT',updatedAt:new Date().toISOString()});
     if(draft.id)await skh.setDoc(skh.doc(skh.db,'creatives',draft.id),payload,{merge:true});
     else{
       payload.createdAt=payload.createdAt||new Date().toISOString();

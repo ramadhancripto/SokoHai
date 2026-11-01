@@ -25,8 +25,12 @@
   if (window.skhAdsMarketplace) return;
 
   var CFG = {
-    feedPosition: 5,      // insert the sponsored cell after the 5th product
-    minProducts: 6,       // never advertise in a grid too small to read as a grid
+    /* [2026-11-01 — kipaumbele] Mtumiaji: "juu mwanzo wa bidhaa inapita vizuri
+       zaidi bila usumbufu". Tangazo linakaa nafasi ya KWANZA ya gridi (kabla ya
+       bidhaa ya kwanza), sio baada ya ya tano. Bado ni seli MOJA kwa gridi, na
+       inatumia upana/urefu wa kadi ya bidhaa — hivyo mtiririko hauvunjiki. */
+    feedPosition: 1,      // sponsored cell goes first, ahead of product #1
+    minProducts: 2,       // a 2-product grid is enough to read as a marketplace grid
     maxPerGrid: 1,        // frequency: one in-feed ad per grid view
     // The marketplace feed is the 'home' delivery surface, and today that is the
     // only placement with live inventory. The discover/search slots inside the
@@ -105,9 +109,14 @@
     var products = gridProducts(grid);
     if (products.length < CFG.minProducts) return false;
     var cell = makeCell(grid, placement, surface);
-    var anchor = products[Math.min(position || CFG.feedPosition, products.length) - 1];
-    if (anchor && anchor.nextSibling) grid.insertBefore(cell, anchor.nextSibling);
-    else grid.appendChild(cell);
+    var pos = Math.max(1, Math.min(position || CFG.feedPosition, products.length));
+    /* pos 1 = mwanzo kabisa: kabla ya bidhaa ya kwanza (kipaumbele). */
+    if (pos === 1) grid.insertBefore(cell, products[0]);
+    else {
+      var anchor = products[pos - 1];
+      if (anchor && anchor.nextSibling) grid.insertBefore(cell, anchor.nextSibling);
+      else grid.appendChild(cell);
+    }
 
     // Ask the existing controller to fill this host. Delivery is lazy
     // (IntersectionObserver + lease), so we only judge "empty" AFTER the cell has

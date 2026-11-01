@@ -226,6 +226,9 @@
       ? finite(fallback.displayDurationSeconds, DISPLAY_DURATION_SECONDS.default)
       : finite(source.displayDurationSeconds, finite(fallback.displayDurationSeconds, DISPLAY_DURATION_SECONDS.default));
     const slideshow = normalizeSlideshow(Object.prototype.hasOwnProperty.call(source, 'slideshow') ? source.slideshow : fallback.slideshow);
+    /* Kama awali: auto-timing inatumika pale tu ilipowekwa wazi (source au fallback). */
+    const autoDurationExplicit = source.durationAuto === true
+      || (source.durationAuto !== false && fallback.durationAuto === true);
     const normalized = {
       ...merged,
       canvas,
@@ -246,12 +249,23 @@
       displayDurationSeconds: displayValue,
       audioMix: { ...(fallback.audioMix || {}), ...(source.audioMix || {}) },
       timeline: Array.isArray(source.timeline) ? source.timeline : (Array.isArray(fallback.timeline) ? fallback.timeline : []),
-      durationAuto: source.durationAuto === false ? false : (source.durationAuto === true ? true : fallback.durationAuto),
-      basicType: Object.prototype.hasOwnProperty.call(source, 'basicType') ? source.basicType : fallback.basicType
+      /* [FIRESTORE UNDEFINED FIX 2026-11-01] Mara zote mbili (source na fallback)
+         zisipotoa thamani, hapa ilikuwa `undefined` — na Firestore inakataa
+         `undefined` kwenye hati ("Unsupported field value: undefined (found in
+         field durationAuto)"). `durationAuto` sasa ni boolean KILA MARA (chaguo
+         la msingi ni auto-timing), na `basicType` huondolewa kama haijulikani. */
+      /* Thamani iliyohifadhiwa ni boolean KILA MARA (Firestore inakataa undefined),
+         lakini mantiki ya kuhesabu `duration` haibadiliki: tunahesabu upya pale
+         tu ambapo awali `durationAuto` ilikuwa `true` kwa uwazi. */
+      durationAuto: autoDurationExplicit,
+      basicType: Object.prototype.hasOwnProperty.call(source, 'basicType')
+        ? source.basicType
+        : fallback.basicType
     };
+    if (normalized.basicType === undefined) delete normalized.basicType;
     const design = normalizeDesign(Object.prototype.hasOwnProperty.call(source, 'design') ? source.design : fallback.design);
     if (design) normalized.design = design; else delete normalized.design;
-    if (normalized.durationAuto === true) normalized.duration = autoAdDuration(normalized);
+    if (autoDurationExplicit) normalized.duration = autoAdDuration(normalized);
     return normalized;
   }
 

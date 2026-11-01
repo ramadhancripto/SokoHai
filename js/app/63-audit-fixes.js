@@ -50,20 +50,70 @@ import { skh } from './00-bootstrap.js';
        2) HATUA B (async): vuta `users/{uid}` — account halisi iliyosajiliwa.
        Fallback ya mwisho (mgeni bila account): "Mgeni".
        Kunaanuru: mara moja pekee kwa kifaa — hakuna kuwatesa wanachama. */
+    /* [WELCOME-NAME FIX 2026-11-01] Jina la mtumiaji lilikuwa linaandikwa kisha
+       KUFUTWA na i18n: `#welcomeName` ilikuwa na data-i18n="onboard_user" ambao
+       unatafsiriwa kuwa "MTUMIAJI", na MutationObserver ya `LMS.apply()` hufanya
+       hivyo baada ya kila mabadiliko ya DOM — hivyo hata mtumiaji aliyejisajili
+       alionyesha "MTUMIAJI". Sasa jina ni thamani ya utambulisho (si lebo):
+       linahifadhiwa hapa na kuandikwa upya kila i18n inapogusa ukurasa. */
+    var welcomeNameCache = null;
+
+    function writeWelcomeName(nm) {
+        var el = byId('welcomeName');
+        if (!el) return;
+        el.setAttribute('data-no-i18n', '1');
+        if (el.hasAttribute('data-i18n')) el.removeAttribute('data-i18n');
+        nm = String(nm == null ? '' : nm).trim();
+        if (!nm) return;
+        welcomeNameCache = nm;
+        if (String(el.textContent || '').trim() !== nm) el.textContent = nm;
+        guardWelcomeNameEl(el);
+    }
+
+    /* Kama kitu kingine kitaandika juu ya jina (mf. tafsiri ya baadaye),
+       tunarudisha jina la mtumiaji. Hii inagusa jina letu pekee. */
+    function guardWelcomeNameEl(el) {
+        if (!el || el.__skhNameGuarded) return;
+        el.__skhNameGuarded = true;
+        try {
+            new MutationObserver(function () {
+                if (!welcomeNameCache) return;
+                if (String(el.textContent || '').trim() !== welcomeNameCache) {
+                    el.textContent = welcomeNameCache;
+                }
+            }).observe(el, { childList: true, characterData: true, subtree: true });
+        } catch (e) { /* defensive */ }
+    }
+    window.skhWelcomeNameCache = function () { return welcomeNameCache; };
+
     function resolveWelcomeName(cb) {
         function clean(n) {
             if (!n) return null;
-            n = String(n).trim();
-            if (!n || /^mtumiaji$/i.test(n)) return null;
+            n = String(n).trim().replace(/\s+/g, ' ');
+            if (!n || /^mtumiaji$/i.test(n) || /^user$/i.test(n) || /^mwanachama$/i.test(n)) return null;
             return n;
+        }
+        /* Jina kamili la akaunti: majina mengi yanayowezekana kutoka users/{uid},
+           kisha auth profile, kisha sehemu ya barua pepe. */
+        function fromDoc(d) {
+            if (!d || typeof d !== 'object') return null;
+            var first = clean(d.firstName) || clean(d.jinaLaKwanza);
+            var last = clean(d.lastName) || clean(d.jinaLaMwisho);
+            var both = (first && last) ? (first + ' ' + last) : null;
+            return clean(d.fullName) || clean(d.displayName) || clean(d.name) || both
+                || clean(d.storeName) || clean(d.shopName) || clean(d.businessName)
+                || clean(d.sellerName) || clean(d.userName) || clean(d.username) || first;
         }
         function pick() {
             var u = skh.currentUserData || {};
             var au = skh.currentUser || {};
-            var n = clean(u.fullName) || clean(u.displayName) || clean(u.name) || clean(u.storeName) || clean(au.displayName);
+            var n = fromDoc(u) || clean(au.displayName);
             if (n) return n;
             var em = u.email || au.email || '';
-            if (em && String(em).indexOf('@') > 0) return String(em).split('@')[0];
+            if (em && String(em).indexOf('@') > 0) {
+                var pre = String(em).split('@')[0];
+                if (pre && !/^\d+$/.test(pre)) return pre;
+            }
             return null;
         }
         var n0 = pick();
@@ -75,10 +125,13 @@ import { skh } from './00-bootstrap.js';
                 var n1 = pick();
                 if (!n1 && s && s.exists && s.exists()) {
                     var d = s.data() || {};
-                    n1 = clean(d.fullName) || clean(d.displayName) || clean(d.name) || clean(d.storeName) || clean(d.userName);
+                    n1 = fromDoc(d);
                     if (!n1) {
                         var em = d.email || d.userEmail || '';
-                        if (em && String(em).indexOf('@') > 0) n1 = String(em).split('@')[0];
+                        if (em && String(em).indexOf('@') > 0) {
+                            var pre = String(em).split('@')[0];
+                            if (pre && !/^\d+$/.test(pre)) n1 = pre;
+                        }
                     }
                 }
                 cb(n1 || 'Mgeni');
@@ -96,10 +149,10 @@ import { skh } from './00-bootstrap.js';
             if (!wm) return;
             var nameEl = byId('welcomeName');
             if (name && String(name).trim() && !/^mtumiaji$/i.test(String(name).trim())) {
-                if (nameEl) nameEl.textContent = String(name).trim();
+                writeWelcomeName(String(name).trim());
             } else {
                 resolveWelcomeName(function (nm) {
-                    if (nameEl) nameEl.textContent = nm || 'Mwanachama';
+                    writeWelcomeName(nm || 'Mwanachama');
                 });
             }
             wm.style.display = 'flex';
@@ -120,14 +173,33 @@ import { skh } from './00-bootstrap.js';
             });
             if (anyOpen) return;
             var nameEl = byId('welcomeName');
-            if (nameEl) nameEl.textContent = '';
+            if (nameEl) {
+                nameEl.setAttribute('data-no-i18n', '1');
+                nameEl.textContent = '';
+            }
             wm.style.display = 'flex';
-            resolveWelcomeName(function (nm) {
-                var el = byId('welcomeName');
-                if (el) el.textContent = nm;
-            });
+            resolveWelcomeName(function (nm) { writeWelcomeName(nm || 'Mwanachama'); });
         } catch (e) { console.warn('[63] welcome wiring:', e && e.message); }
     }, 600);
+
+    /* [WELCOME-NAME FIX] Kubadilisha lugha hufanya i18n iandike upya ukurasa —
+       jina linarudishwa mara moja baada ya hapo. */
+    document.addEventListener('sokohai:languageChanged', function () {
+        if (welcomeNameCache) writeWelcomeName(welcomeNameCache);
+    });
+
+    /* Mtumiaji akimaliza kuingia / session inapotambuliwa, jina la akaunti
+       linavutwa upya endapo welcome modal bado iko wazi. */
+    document.addEventListener('skh:auth-ready', function () {
+        var wm = byId('welcomeModal');
+        if (!wm || getComputedStyle(wm).display === 'none') return;
+        resolveWelcomeName(function (nm) { writeWelcomeName(nm || 'Mwanachama'); });
+    });
+
+    /* Nje: kurudisha jina kwa mkono (tests / skrini nyingine). */
+    window.skhRefreshWelcomeName = function () {
+        resolveWelcomeName(function (nm) { writeWelcomeName(nm || 'Mwanachama'); });
+    };
 
     /* ------------------------------------------------------------------ 2
        proceedToSelfPickup() — §13: mtumiaji hahitaji usafiri wa SokoHai.

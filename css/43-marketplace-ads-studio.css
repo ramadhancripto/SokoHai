@@ -901,3 +901,17 @@ body.mas-open { overflow: hidden; }
 }
 .mas-btn.ghost { background: transparent; border-color: var(--mas-line); color: var(--mas-ink-2); }
 .mas-btn.ghost:hover { background: #F7FAF9; }
+
+/* ---------------------------------------------------------------- outbox ---
+   Kampeni zilizohifadhiwa kwenye kifaa (zinasubiri server). Rangi ya machungwa
+   inatenganisha hali hii na kampeni zilizokwisha tumwa. */
+.mas-outbox { border-color: #F3D9A6; background: #FFFDF7; }
+.mas-outbox .mas-card-head h2 { display: flex; align-items: center; gap: 7px; }
+.mas-row.outbox { background: #fff; border-color: #F3E3C3; }
+.mas-row.outbox.blocked { border-color: #F3C7C2; background: #FFF9F8; }
+.mas-row.outbox .mas-row-nm { align-items: center; }
+.mas-outbox-actions { display: flex; gap: 6px; flex: none; }
+@media (max-width: 620px) {
+    .mas-row.outbox { flex-wrap: wrap; }
+    .mas-outbox-actions { width: 100%; justify-content: flex-end; }
+}
