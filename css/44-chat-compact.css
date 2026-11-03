@@ -1,0 +1,583 @@
+/* ============================================================================
+   SOKOHAI — CHAT COMPACT · 2026-11-01
+   ----------------------------------------------------------------------------
+   Ombi: "chatting inbox nafasi inachukuliwa kubwa sana; rekebisha dialogue na
+   negotiation zinapoendelea ziwe ndani ya maneno madogo na muonekano mzuri
+   unaoeleweka, lakini sio kubwa sana".
+
+   YALIYOPIMWA KABLA
+     Inbox (desktop) : kadi 94px + nafasi 10px  → safu 6 = 608px
+     Inbox (simu)    : kadi 91px, jina lilikatwa "Naweza kukupa TSh 32,000 kwa …"
+     Ujumbe          : bubble 37px lakini safu 112px — 75px ilikuwa
+                       [muda] + [Jibu][Nakili][Zaidi] kwa KILA ujumbe
+     Ujumbe          : safu zilienea 960px kwenye skrini ya 1280px
+     Kadi/ofa        : padding na picha kubwa mno ndani ya bubble
+
+   MAREKEBISHO (CSS pekee — hakuna mabadiliko ya msimbo wa chat/data)
+     1. Inbox: kadi nyepesi 64px, mpaka mmoja, jina moja (hakuna chip ya pili)
+     2. Ujumbe: safu 112px → ~56px; vitendo vinaonekana kwa hover (desktop)
+        au kwa mguso (simu) badala ya kuwa wazi kila wakati
+     3. Safu za mazungumzo zinabaki katikati, max 780px — si 960px
+     4. Kadi za bidhaa/ofa: picha 44px, bei moja wazi, hali kama chip ndogo
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- 1. INBOX --- */
+/* Safu ya mazungumzo = mstari mmoja mwembamba (sio kadi inayoelea).
+   Selector ina ID mbili ili ishinde sheria za css/24 "FIX 3" na css/34. */
+#chatListModal #inboxList { background: #fff !important; padding: 0 0 12px !important; }
+
+#chatListModal #inboxList .ch-contact,
+#chatListModal #inboxList .ch-contact.ch-tint-group,
+#chatListModal #inboxList .ch-contact.ch-tint-group-order,
+#chatListModal #inboxList .ch-contact.ch-pinned,
+#chatListModal #inboxList .ch-contact.ch-business-row,
+#chatListModal #inboxList .ch-contact.ch-unread-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    padding: 8px 14px !important;
+    min-height: 0 !important;
+    background: #fff !important;
+    border: 0 !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: background .12s ease !important;
+}
+#chatListModal #inboxList .ch-contact:hover,
+#chatListModal #inboxList .ch-contact:active {
+    background: #F6FAF8 !important;
+    border-color: #F1F5F9 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+#chatListModal #inboxList .ch-contact.ch-unread-row { background: #FBFEFC !important; }
+#chatListModal #inboxList .ch-contact.ch-pinned { background: #FFFDF6 !important; }
+
+/* Mstari mwembamba wa rangi upande wa kushoto = ishara ya "mpya" */
+#chatListModal #inboxList .ch-contact::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important; top: 8px !important; bottom: 8px !important;
+    width: 3px !important;
+    border-radius: 0 3px 3px 0 !important;
+    background: transparent !important;
+}
+#chatListModal #inboxList .ch-contact.ch-unread-row::before { background: #12A97F !important; }
+#chatListModal #inboxList .ch-contact.ch-pinned::before { background: #D4A72C !important; }
+
+/* Avatar: mraba mdogo uliozawadiwa pembe */
+#chatListModal #inboxList .ch-cc-avatar,
+#chatListModal #inboxList .ch-identity-avatar {
+    flex: 0 0 40px !important;
+    width: 40px !important; height: 40px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    display: grid !important;
+    place-items: center !important;
+}
+#chatListModal #inboxList .ch-identity-avatar img,
+#chatListModal #inboxList .ch-identity-avatar > div,
+#chatListModal #inboxList .ch-identity-avatar span.skh-av,
+#chatListModal #inboxList .ch-cc-avatar > div {
+    width: 40px !important; height: 40px !important;
+    border-radius: 12px !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    font-size: 15px !important;
+}
+/* Avatar ya kikundi: mraba mliozawadiwa pembe kama watu, rangi ya kijani */
+#chatListModal #inboxList .ch-identity-avatar.is-group,
+#chatListModal #inboxList .ch-identity-avatar.is-order {
+    background: #EAF4EF !important;
+    border-radius: 12px !important;
+    color: #178864 !important;
+}
+#chatListModal #inboxList .ch-identity-avatar.is-group > span:not([class]),
+#chatListModal #inboxList .ch-identity-avatar.is-order > span:not([class]) {
+    color: #178864 !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+}
+#chatListModal #inboxList .ch-identity-avatar::after,
+#chatListModal #inboxList .ch-identity-avatar::before { display: none !important; }
+
+/* Gridi: [jina ..... cheo] / [ujumbe wa mwisho .........] — mistari miwili pekee */
+#chatListModal #inboxList .ch-cc-info {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas: "name meta" "msg msg" !important;
+    align-items: center !important;
+    gap: 1px 6px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+#chatListModal #inboxList .ch-name-row {
+    grid-area: name !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+    order: 0 !important;
+}
+#chatListModal #inboxList .ch-cc-meta {
+    grid-area: meta !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+}
+#chatListModal #inboxList .ch-cc-msg { grid-area: msg !important; }
+
+/* Jina MOJA, bila chip/fremu ya pili */
+#chatListModal #inboxList .ch-name-block {
+    display: block !important;
+    background: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #101E17 !important;
+    letter-spacing: -.01em !important;
+    line-height: 1.35 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+#chatListModal #inboxList .ch-name-block.is-group,
+#chatListModal #inboxList .ch-name-block.is-order { color: #123B2C !important; }
+
+#chatListModal #inboxList .ch-cc-msg {
+    display: block !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    color: #6B7A86 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+#chatListModal #inboxList .ch-unread-row .ch-cc-msg {
+    color: #35434E !important; font-weight: 600 !important;
+}
+
+/* Cheo (Muuzaji / Msafirishaji / GROUP): lebota dogo lisiloongeza urefu */
+#chatListModal #inboxList .ch-acct-badge,
+#chatListModal #inboxList .ch-type-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    height: 16px !important;
+    padding: 0 6px !important;
+    font-size: 9.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: .02em !important;
+    text-transform: none !important;
+    border-radius: 999px !important;
+    background: #F1F6F3 !important;
+    border: 1px solid #E1ECE6 !important;
+    color: #4B7A66 !important;
+    white-space: nowrap !important;
+}
+#chatListModal #inboxList .ch-acct-badge svg { width: 10px !important; height: 10px !important; }
+#chatListModal #inboxList .ch-type-badge.is-group { color: #3D7C9C !important; background: #F0F6FA !important; border-color: #DCEAF2 !important; }
+#chatListModal #inboxList .ch-type-badge.is-order { color: #8B6A1D !important; background: #FFF9E8 !important; border-color: #EFE2BA !important; }
+
+/* Upande wa kulia: muda, unread */
+#chatListModal #inboxList .ch-cc-side {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 3px !important;
+    min-width: 44px !important;
+}
+#chatListModal #inboxList .ch-cc-time { font-size: 10.5px !important; color: #9AA7B2 !important; font-weight: 600 !important; }
+#chatListModal #inboxList .ch-unread-row .ch-cc-time { color: #12A97F !important; }
+#chatListModal #inboxList .ch-unread {
+    min-width: 17px !important; height: 17px !important;
+    padding: 0 5px !important;
+    font-size: 10px !important; font-weight: 800 !important;
+    border-radius: 9px !important;
+    background: #12A97F !important; color: #fff !important;
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+}
+#chatListModal #inboxList .ch-state-badge,
+#chatListModal #inboxList .ch-draft-badge { font-size: 9.5px !important; padding: 0 5px !important; }
+
+/* Kichwa cha sehemu (WATU / GROUPS): kidogo, chenye mstari wa kufunga sehemu */
+#chatListModal #inboxList .ch-inbox-sec,
+#chatListModal #inboxList .ch-sec-head {
+    display: block !important;
+    margin: 0 !important;
+    padding: 12px 14px 5px !important;
+    background: #fff !important;
+    border: 0 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+    color: #9AA7B2 !important;
+}
+
+/* Chips: mstari mmoja unaoteleza, na ukingo unaoonyesha kuna zaidi */
+#chatListModal .ch-inbox-chips,
+#chatListModal #inboxChips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    padding: 9px 12px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    border-bottom: 1px solid #EEF2F6 !important;
+    -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 92%, transparent 100%);
+}
+#chatListModal .ch-inbox-chips::-webkit-scrollbar,
+#chatListModal #inboxChips::-webkit-scrollbar { display: none; }
+#chatListModal .ch-inbox-chips .ch-tab {
+    flex: 0 0 auto !important;
+    height: 30px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    border: 1px solid #E6EBF1 !important;
+    background: #fff !important;
+    color: #5A6B78 !important;
+    box-shadow: none !important;
+    line-height: 28px !important;
+    white-space: nowrap !important;
+}
+#chatListModal .ch-inbox-chips .ch-tab.active {
+    background: #0F6E55 !important;
+    border-color: #0F6E55 !important;
+    color: #fff !important;
+    font-weight: 800 !important;
+    box-shadow: none !important;
+}
+
+/* ------------------------------------------------------- 2. SAFU ZA UJUMBE --- */
+/* [MANDHARI FIX 2026-11] Ile mandhari ya joto (#EFE7DD + madoa laini) ambayo
+   ilionekana wakati wa "Inaunganisha mazungumzo..." ilipotea mara ujumbe
+   ulipopakiwa, kwa sababu sheria hii ilikuwa inaandika `background-image:none`
+   na rangi nyeupe. Sasa mandhari ni ile ile mwanzo hadi mwisho — hakuna
+   kubadilika ghafla kwenda nyeupe. */
+#chatMessages {
+    background-color: #EFE7DD !important;
+    background-image:
+        radial-gradient(circle at 25% 12%, rgba(18, 104, 168, .06) 0, transparent 42%),
+        radial-gradient(circle at 82% 78%, rgba(24, 169, 130, .07) 0, transparent 46%),
+        linear-gradient(180deg, #F0E9DF 0%, #E9E0D6 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100%, 100% 100%, 100% 100% !important;
+    padding: 10px 12px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+#chatMessages > .ch-msg {
+    width: 100% !important;
+    max-width: 780px !important;
+    margin: 0 auto !important;
+    flex-direction: column !important;
+}
+#chatMessages > .ch-msg + .ch-msg { margin-top: 1px !important; }
+
+/* Kundi la ujumbe: pengo dogo kati ya ujumbe wa mtu mmoja */
+.ch-msg { margin-bottom: 4px !important; }
+
+/* Bubble: maandishi madogo, yanayosomeka */
+.ch-msg .chat-bubble {
+    max-width: 78% !important;
+    padding: 7px 11px !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+}
+.ch-msg[data-mine="0"] .chat-bubble {
+    background: #FFFFFF !important;
+    border: 1px solid #E7EDF3 !important;
+    border-bottom-left-radius: 5px !important;
+}
+.ch-msg[data-mine="1"] .chat-bubble {
+    background: #DCF5E4 !important;
+    border: 1px solid #C6EBD3 !important;
+    border-bottom-right-radius: 5px !important;
+}
+.ch-msg .ch-sender { font-size: 11.5px !important; margin-bottom: 2px !important; color: #0F6E55 !important; }
+
+/* Muda: mdogo, karibu na bubble (sio safu yake kubwa) */
+.ch-msg .ch-meta {
+    margin: 2px 2px 0 !important;
+    font-size: 10.5px !important;
+    color: #94A3B8 !important;
+    gap: 4px !important;
+    line-height: 1.2 !important;
+}
+
+/* Vitendo (Jibu · Nakili · Zaidi): hazionekani kila wakati.
+   Kwenye kompyuta zinaonekana kwa hover/focus; kwenye simu ni vibao vidogo. */
+.ch-msg .ch-actions {
+    margin: 2px 0 2px !important;
+    gap: 4px !important;
+    opacity: 1 !important;
+}
+.ch-msg .ch-actions button {
+    min-height: 0 !important;
+    padding: 2px 7px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    background: #EEF2F6 !important;
+    color: #64748B !important;
+    line-height: 1.5 !important;
+}
+@media (hover: hover) and (pointer: fine) {
+    .ch-msg .ch-actions {
+        opacity: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+    }
+    .ch-msg:hover .ch-actions,
+    .ch-msg:focus-within .ch-actions {
+        opacity: 1 !important;
+        height: auto !important;
+        overflow: visible !important;
+        margin: 3px 0 4px !important;
+    }
+}
+
+/* Simu/yoyote isiyo na hover: vitendo havionekani kila wakati (vilevile
+   vinapatikana kwa kubonyeza kwa muda mrefu → menyu ya ujumbe). */
+@media (hover: none), (pointer: coarse) {
+    .ch-msg .ch-actions { display: none !important; }
+    .ch-msg.ch-msg--active .ch-actions,
+    .ch-msg:focus-within .ch-actions { display: flex !important; }
+}
+
+/* Kidokezo cha kutelezesha: kidogo, kisichukue nafasi */
+.ch-swipe-hint {
+    font-size: 11px !important;
+    padding: 3px 10px !important;
+    margin-bottom: 4px !important;
+    background: #EDF2F1 !important;
+    color: #7A8B99 !important;
+    box-shadow: none !important;
+}
+
+/* ------------------------------------------------- 3. KADI NDANI YA CHAT --- */
+/* Ujumbe wenye kadi pekee: bubble isiwe fremu ya pili (kadi yenyewe ni fremu) */
+.ch-msg .chat-bubble:has(.ch-card),
+.ch-msg .chat-bubble:has(.ch-offer-msg),
+.ch-msg[data-mine="0"] .chat-bubble:has(.ch-card),
+.ch-msg[data-mine="1"] .chat-bubble:has(.ch-card),
+.ch-msg[data-mine="0"] .chat-bubble:has(.ch-offer-msg),
+.ch-msg[data-mine="1"] .chat-bubble:has(.ch-offer-msg) {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 88% !important;
+}
+
+.ch-card {
+    align-items: flex-start !important;
+    gap: 9px !important;
+    padding: 8px !important;
+    border-radius: 12px !important;
+    border: 1px solid #E7EDF3 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    max-width: 340px !important;
+}
+.ch-card img {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 9px !important;
+}
+.ch-card-info { gap: 1px !important; }
+.ch-card-title { font-size: 12.5px !important; font-weight: 800 !important; line-height: 1.3 !important; }
+.ch-card-price { font-size: 12.5px !important; font-weight: 800 !important; color: #0F6E55 !important; }
+.ch-card-sub { font-size: 11.5px !important; }
+.ch-card-link { font-size: 11px !important; color: #0F6E55 !important; font-weight: 700 !important; opacity: .9; }
+
+/* Vitendo vya biashara kwenye kadi: vibao vidogo vitatu kwa mstari mmoja */
+.ch-nego-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    margin-top: 6px !important;
+}
+/* css/26 inaweka `button { min-height: 40px }` — hapa tunasema ndogo ni sawa,
+   kwa sababu hizi ni vitendo vya pili ndani ya kadi (sio vitufe vikuu). */
+.ch-nego-btn,
+.ch-actions button,
+.ch-offer-msg-actions button { min-height: 0 !important; max-height: none !important; }
+
+.ch-nego-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    height: 28px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    border: 1px solid #E2E8F0 !important;
+    background: #F8FAFC !important;
+    color: #334155 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+}
+.ch-nego-btn.accept { background: #0F6E55 !important; border-color: #0F6E55 !important; color: #fff !important; }
+.ch-nego-btn.outline { background: #fff !important; color: #0F6E55 !important; border-color: #CFE7DC !important; }
+.ch-nego-btn svg { width: 13px !important; height: 13px !important; }
+
+/* ------------------------------------------------------------- 4. OFA --- */
+.ch-offer-msg {
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    border: 1px solid #F2E3BF !important;
+    background: #FFFDF6 !important;
+    max-width: 340px !important;
+}
+.ch-offer-msg-top {
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: .04em !important;
+    text-transform: uppercase !important;
+    color: #A16207 !important;
+    margin-bottom: 3px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+.ch-offer-msg-top b {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-size: 12px !important;
+    color: #0F172A !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.ch-offer-msg-row {
+    font-size: 11.5px !important;
+    color: #7C5A25 !important;
+    line-height: 1.4 !important;
+}
+.ch-offer-msg-row b {
+    color: #0F172A !important; font-size: 13px !important; font-weight: 800 !important;
+    white-space: nowrap !important; /* "TSh 38,000" isikatike katikati */
+}
+.ch-offer-was { color: #A8A29E !important; font-size: 11px !important; text-decoration: line-through !important; white-space: nowrap !important; }
+.ch-offer-msg-status {
+    margin-top: 5px !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    padding: 2px 8px !important;
+    border-radius: 999px !important;
+    letter-spacing: .01em !important;
+}
+.ch-offer-msg-actions {
+    display: flex !important;
+    gap: 5px !important;
+    margin-top: 6px !important;
+    flex-wrap: wrap !important;
+}
+.ch-offer-msg-actions button {
+    height: 28px !important;
+    padding: 0 10px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    border-radius: 999px !important;
+    border: 1px solid #E2E8F0 !important;
+    background: #fff !important;
+    color: #334155 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+}
+.ch-offer-msg-actions .is-accept { background: #0F6E55 !important; border-color: #0F6E55 !important; color: #fff !important; }
+.ch-offer-msg-actions .is-reject { color: #B91C1C !important; border-color: #F3C7C2 !important; }
+
+/* ------------------------------------------------------------- 5. SIMU --- */
+@media (max-width: 640px) {
+    #chatMessages { padding: 8px 10px 10px !important; }
+    .ch-msg .chat-bubble { max-width: 88% !important; font-size: 14px !important; }
+    .ch-msg .ch-actions button { padding: 2px 8px !important; font-size: 11px !important; }
+    .ch-card, .ch-offer-msg { max-width: 100% !important; }
+    #inboxList .ch-contact, #chatListModal .ch-contact { padding: 8px 12px !important; }
+    #inboxList .ch-cc-avatar, #chatListModal .ch-cc-avatar { flex-basis: 36px !important; }
+    #inboxList .ch-cc-avatar img, #chatListModal .ch-cc-avatar img,
+    #inboxList .ch-cc-avatar > div, #chatListModal .ch-cc-avatar > div {
+        width: 36px !important; height: 36px !important; border-radius: 11px !important;
+    }
+}
+
+/* ------------------------------------------------ 0. FRAME YA INBOX (MODAL) --- */
+/* Zamani: shell ilijaza skrini YOTE (1280×900) kwa safu 6 pekee — nafasi tupu
+   kubwa. Sasa: dirisha dogo lililowekwa katikati kwenye kompyuta; simu inabaki
+   skrini nzima kama kawaida ya programu za simu. */
+#chatListModal { display: none; align-items: center; justify-content: center; }
+#chatListModal.is-open, #chatListModal[style*="flex"] { display: flex; }
+#chatListModal .ch-inbox-shell {
+    /* Urefu unafuata idadi ya mazungumzo — hakuna nafasi tupu ya bure. */
+    width: 100% !important;
+    height: auto !important;
+    max-height: 88dvh !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+}
+#chatListModal .ch-inbox-scroll,
+#chatListModal #inboxList { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; }
+@media (min-width: 900px) {
+    #chatListModal .ch-inbox-shell {
+        max-width: 480px !important;
+        max-height: 78vh !important;
+        border-radius: 18px !important;
+        overflow: hidden !important;
+        box-shadow: 0 24px 64px rgba(8, 32, 25, .28) !important;
+        border: 1px solid #E3EFEA !important;
+    }
+    #chatListModal .ch-inbox-scroll,
+    #chatListModal #inboxList { flex: 1 1 auto !important; min-height: 0 !important; }
+}
+#chatListModal .ch-inbox-head { padding: 11px 14px !important; gap: 8px !important; }
+/* Slot ya matangazo: ikikosa tangazo, isiache nafasi tupu */
+#chatListModal [data-skh-ad-slot="chat"]:empty,
+#chatListModal [data-skh-ad-slot="chat"]:has(> :empty) { display: none !important; }
+#chatListModal .ch-inbox-logo { width: 32px !important; height: 32px !important; border-radius: 10px !important; }
+#chatListModal .ch-inbox-logo svg { width: 16px !important; height: 16px !important; }
+#chatListModal .ch-inbox-title b { font-size: 15px !important; letter-spacing: .04em !important; }
+#chatListModal .ch-inbox-title small { font-size: 11px !important; line-height: 1.25 !important; display: block !important; }
+#chatListModal .ch-inbox-iconbtn { width: 30px !important; height: 30px !important; border-radius: 9px !important; }
+#chatListModal .ch-inbox-search { margin: 8px 12px !important; height: 34px !important; border-radius: 10px !important; }
+#chatListModal #inboxSearchInput { font-size: 12.5px !important; }
+@media (max-width: 640px) {
+    /* Simu: cheo (Muuzaji n.k.) kimefichwa kwenye orodha ili ujumbe usikatwe
+       mapema; cheo kinaonekana ndani ya mazungumzo. */
+    #chatListModal #inboxList .ch-cc-meta { display: none !important; }
+    #chatListModal #inboxList .ch-cc-side { min-width: 40px !important; }
+    #chatListModal .ch-inbox-title b { font-size: 14px !important; }
+    #chatListModal .ch-inbox-title small {
+        display: block !important; font-size: 10.5px !important;
+        white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
+    }
+    #chatListModal .ch-inbox-search { margin: 6px 10px !important; height: 32px !important; }
+}

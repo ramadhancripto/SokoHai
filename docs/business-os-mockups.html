@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai Business OS — UI Mockups (14 screens)</title>
+<style>
+  :root{
+    --g:#18A982; --gd:#17604E; --gl:#EAF7F2; --gll:#F4FBF8;
+    --gold:#D4AF37; --goldl:#FBF5E2; --blue:#2F7BB8; --bluel:#EBF3FA;
+    --red:#B4442F; --redl:#FCEEEA;
+    --ink:#12211C; --mut:#6C7C77; --line:#E4EBE8; --line2:#EFF4F2; --paper:#F6F9F8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .page{max-width:1240px;margin:0 auto;padding:0 18px 70px}
+  .hero{background:linear-gradient(160deg,#0E3B2F,#17604E 60%,#1E7A5F);color:#fff;padding:38px 0 34px;border-bottom:4px solid var(--gold);margin-bottom:28px}
+  .hero .page{padding-bottom:0}
+  .kick{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9FE3C9;font-weight:800}
+  h1{margin:8px 0 8px;font-size:30px;letter-spacing:-.025em;font-weight:800}
+  h1 span{color:#FFD97A}
+  .hero p{margin:0;color:#D6EDE5;max-width:820px;font-size:14.5px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .chips span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px}
+
+  .shot{margin:0 0 30px;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    box-shadow:0 10px 30px rgba(18,33,28,.06)}
+  .shot-hd{display:flex;align-items:flex-start;gap:12px;padding:14px 18px 12px;border-bottom:1px solid var(--line);background:#fff}
+  .shot-n{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--gl);color:var(--gd);
+    font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;border:1px solid #CFEBDD}
+  .shot-hd h2{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.01em}
+  .shot-hd p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+  .shot-body{padding:16px;background:var(--paper)}
+
+  /* ---------- app chrome ---------- */
+  .app{display:flex;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:520px}
+  .app.full{min-height:600px}
+
+  .sbar{flex:0 0 208px;background:#fff;border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:10px}
+  .brand{display:flex;align-items:center;gap:8px;padding:4px 6px 10px;border-bottom:1px solid var(--line2)}
+  .brand .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(140deg,#18A982,#0F7A5B);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
+  .brand b{display:block;font-size:12.5px;letter-spacing:.02em}
+  .brand small{display:block;font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+  .grp{font-size:8.6px;letter-spacing:.1em;text-transform:uppercase;color:#93A6A0;font-weight:800;padding:6px 8px 2px}
+  .nav{display:flex;flex-direction:column;gap:1px}
+  .nav a{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;color:#3A4E48;text-decoration:none;font-size:11.6px;font-weight:600}
+  .nav a.on{background:var(--gl);color:var(--gd);font-weight:800}
+  .nav a i{width:13px;height:13px;flex:0 0 auto;opacity:.75}
+  .nav a.on i{opacity:1}
+  .nav a .dot{margin-left:auto;background:var(--g);color:#fff;font-size:8.5px;font-weight:800;border-radius:999px;padding:1px 5px}
+  .sbar-foot{margin-top:auto;border-top:1px solid var(--line2);padding-top:8px;display:flex;flex-direction:column;gap:4px}
+  .sbar-foot a{font-size:10.6px;color:var(--mut);text-decoration:none;padding:5px 8px;border-radius:7px;display:flex;gap:6px;align-items:center}
+
+  .main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;background:var(--paper)}
+  .top{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#fff;border-bottom:1px solid var(--line)}
+  .biz{display:flex;align-items:center;gap:8px;padding:5px 9px;border:1px solid var(--line);border-radius:9px;background:#fff}
+  .biz .av{width:22px;height:22px;border-radius:7px;background:var(--gl);color:var(--gd);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .biz b{font-size:11.6px}
+  .biz small{display:block;font-size:9px;color:var(--mut);font-weight:700}
+  .search{flex:1 1 auto;max-width:280px;display:flex;align-items:center;gap:6px;background:#F3F7F5;border:1px solid var(--line);border-radius:9px;padding:5px 9px;color:#93A6A0;font-size:11px}
+  .top .sp{flex:1 1 auto}
+  .icon-btn{width:27px;height:27px;border-radius:8px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;color:#4A5C56;position:relative}
+  .icon-btn b{position:absolute;top:-3px;right:-3px;background:var(--red);color:#fff;font-size:7.5px;border-radius:999px;padding:1px 4px}
+
+  .content{padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+  .h{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .h h3{margin:0;font-size:16px;font-weight:800;letter-spacing:-.015em}
+  .h p{margin:2px 0 0;font-size:11.5px;color:var(--mut)}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--g);background:var(--g);color:#fff;
+    font-size:11.5px;font-weight:800;padding:7px 12px;border-radius:9px;text-decoration:none;white-space:nowrap}
+  .btn.gh{background:#fff;color:var(--gd);border-color:#CDE6DD}
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:#3B2F06}
+  .btn.sm{font-size:10.5px;padding:5px 9px;border-radius:8px}
+  .btn.blue{background:var(--blue);border-color:var(--blue)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 11px}
+  .kpi small{display:block;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .kpi b{display:block;font-size:17px;letter-spacing:-.03em;color:var(--gd);font-variant-numeric:tabular-nums;margin-top:2px}
+  .kpi span{font-size:10px;color:#3E8F6E;font-weight:700}
+  .kpi span.dn{color:var(--red)}
+  .kpi.gold b{color:#8A6B0B}
+  .kpi.blue b{color:#205F91}
+  .kpi.red b{color:var(--red)}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px}
+  .panel>.t{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .panel>.t b{font-size:11.6px;font-weight:800}
+  .panel>.t a{font-size:10px;color:var(--g);font-weight:800;text-decoration:none}
+  .cols{display:grid;gap:9px}
+  .c2{grid-template-columns:1.55fr 1fr}
+  .c3{grid-template-columns:repeat(3,1fr)}
+  .c2e{grid-template-columns:1fr 1fr}
+
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{text-align:left;font-size:8.6px;text-transform:uppercase;letter-spacing:.07em;color:#8FA39C;font-weight:800;padding:5px 6px;border-bottom:1px solid var(--line2)}
+  td{padding:6px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  .ri{display:flex;align-items:center;gap:7px}
+  .thumb{width:24px;height:24px;border-radius:6px;background:#F2F7F5;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .num{font-variant-numeric:tabular-nums;font-weight:700}
+
+  .pill{display:inline-block;font-size:8.8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+  .p-ok{background:#E6F7F0;color:#0F7A5B;border-color:#C7EBDD}
+  .p-warn{background:var(--goldl);color:#8A6B0B;border-color:#EFDFAE}
+  .p-bad{background:var(--redl);color:#9A3A26;border-color:#F3D5CC}
+  .p-info{background:var(--bluel);color:#205F91;border-color:#CFE3F3}
+  .p-mut{background:#F2F4F5;color:#5E6E74;border-color:#E2E8EA}
+
+  .bar{height:7px;border-radius:999px;background:#EDF3F1;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:999px;background:var(--g)}
+
+  .note{font-size:10.5px;color:var(--mut);line-height:1.45}
+  .field{margin-bottom:9px}
+  .field label{display:block;font-size:9.4px;text-transform:uppercase;letter-spacing:.06em;color:#7B8E88;font-weight:800;margin-bottom:3px}
+  .input{border:1px solid #D9E4E0;border-radius:8px;padding:7px 9px;font-size:11.5px;background:#fff;color:#2A4038}
+  .input.ph{color:#A6B5B0}
+  .switchw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:1px solid var(--line2);border-radius:9px;background:#fff}
+  .switchw b{font-size:11.3px}
+  .switchw small{display:block;font-size:9.6px;color:var(--mut)}
+  .sw{width:30px;height:17px;border-radius:999px;background:#DDE7E3;position:relative;flex:0 0 auto}
+  .sw i{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .sw.on{background:var(--g)}
+  .sw.on i{left:15px}
+
+  .seg{display:inline-flex;background:#F3F7F5;border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
+  .seg b{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:7px;color:#6C7C77}
+  .seg b.on{background:#fff;color:var(--gd);box-shadow:0 1px 3px rgba(18,33,28,.09)}
+
+  .phone{width:300px;border:8px solid #12211C;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 14px 34px rgba(18,33,28,.19);flex:0 0 auto}
+  .phone .pbar{display:flex;justify-content:space-between;font-size:8.6px;padding:4px 12px;background:#0E3B2F;color:#fff}
+  .phone .phead{background:var(--gd);color:#fff;padding:10px 12px 12px}
+  .phone .pbody{padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--paper);min-height:420px}
+  .phone .pnav{display:flex;justify-content:space-around;background:#fff;border-top:1px solid var(--line);padding:7px 4px 9px}
+  .phone .pnav div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:7.6px;color:#93A6A0;font-weight:800}
+  .phone .pnav div.on{color:var(--g)}
+  .m-kpi{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .m-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+  .m-card small{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:800}
+  .m-card b{font-size:14px;color:var(--gd);font-variant-numeric:tabular-nums}
+  .m-item{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+  .m-item .ic{width:26px;height:26px;border-radius:8px;background:var(--gl);display:flex;align-items:center;justify-content:center;color:var(--gd);flex:0 0 auto}
+  .m-item b{font-size:10.6px;display:block}
+  .m-item small{font-size:8.8px;color:var(--mut)}
+  .fab{position:relative;width:38px;height:38px;border-radius:50%;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:2px auto 0}
+
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.4px;
+    background:#F1F6F4;border:1px solid #E3EDE9;border-radius:4px;padding:0 4px;color:#16544A;white-space:nowrap}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:10.5px;color:#4A5C56;margin-top:10px}
+
+  @media(max-width:1000px){
+    .sbar{display:none}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .c2,.c3,.c2e{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="page">
+    <div class="kick">SokoHai · Business OS · Design proposal</div>
+    <h1>Skrini 14 za <span>Business OS</span> — shell moja inayobadilika</h1>
+    <p>Mockups za design pekee (hakuna code ya app iliyobadilishwa). Rangi: nyeupe, green <b>#18A982</b>,
+      dhahabu <b>#D4AF37</b>, bluu <b>#2F7BB8</b>; typography Inter; nafasi safi, hakuna card kubwa zisizo na kazi.</p>
+    <div class="chips">
+      <span>14 screens</span><span>Desktop + mobile</span><span>Capability-driven</span><span>Hakuna UI crowded</span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ============ 01 DASHBOARD ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">01</div>
+    <div><h2>Business OS — dashboard kuu</h2>
+      <p>KPI 4 za kweli, tahadhari, chati ya siku 7, na “fanya haraka”. Hakuna namba za kubuni.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app full">
+      <aside class="sbar">
+        <div class="brand"><div class="logo">S</div><div><b>SokoHai</b><small>Business OS</small></div></div>
+        <div class="grp">Nyumbani</div>
+        <nav class="nav">
+          <a class="on" href="#"><i>▣</i> Dashibodi</a>
+          <a href="#"><i>▷</i> Uendeshaji wa leo</a>
+        </nav>
+        <div class="grp">Kila siku</div>
+        <nav class="nav">
+          <a href="#"><i>⊞</i> POS <span class="dot">3</span></a>
+          <a href="#"><i>≡</i> Mauzo &amp; risiti</a>
+          <a href="#"><i>◔</i> Zamu &amp; fedha</a>
+          <a href="#"><i>⇩</i> Oda za mtandao <span class="dot">5</span></a>
+        </nav>
+        <div class="grp">Bidhaa &amp; stoo</div>
+        <nav class="nav">
+          <a href="#"><i>▤</i> Bidhaa</a>
+          <a href="#"><i>◈</i> Variants &amp; SKU</a>
+          <a href="#"><i>▥</i> Stoo</a>
+          <a href="#"><i>⇄</i> Manunuzi</a>
+        </nav>
+        <div class="grp">Wateja</div>
+        <nav class="nav">
+          <a href="#"><i>☺</i> Wateja</a>
+          <a href="#"><i>¤</i> Madeni</a>
+        </nav>
+        <div class="sbar-foot">
+          <a href="#"><i>⚙</i> Mipangilio</a>
+          <a href="#"><i>⇱</i> Rudi sokoni</a>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="top">
+          <div class="biz"><div class="av">RM</div><div><b>Ramadhan Fashion</b><small>Duka · Kariakoo</small></div><span style="color:#A6B5B0;font-size:9px">▾</span></div>
+          <div class="search"> Tafuta bidhaa, oda, mteja…</div>
+          <div class="sp"></div>
+          <a class="btn sm" href="#">POS</a>
+          <div class="icon-btn">⚑<b>4</b></div>
+          <div class="icon-btn">☰</div>
+        </div>
+        <div class="content">
+          <div class="h">
+            <div><h3>Habari, Ramadhan </h3><p>Jumatatu, 3 Novemba 2026 · Hybrid · Management: PARTIAL</p></div>
+            <div class="seg"><b class="on">Leo</b><b>Wiki</b><b>Mwezi</b></div>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><small>Mauzo ya leo</small><b>TSh 486,000</b><span>▲ 12% vs jana</span></div>
+            <div class="kpi"><small>Faida (leo)</small><b>TSh 118,400</b><span>▲ 6%</span></div>
+            <div class="kpi gold"><small>Bidhaa zinazoisha</small><b>7</b><span class="dn">3 zimeisha kabisa</span></div>
+            <div class="kpi blue"><small>Oda zinazosubiri</small><b>5</b><span>2 hazijalipwa</span></div>
+          </div>
+          <div class="cols c2">
+            <div class="panel">
+              <div class="t"><b>Mauzo — siku 7</b><a href="#">Ripoti →</a></div>
+              <svg viewBox="0 0 420 110" style="width:100%;height:110px" aria-label="chart">
+                <g stroke="#EFF4F2"><line x1="0" y1="20" x2="420" y2="20"/><line x1="0" y1="55" x2="420" y2="55"/><line x1="0" y1="90" x2="420" y2="90"/></g>
+                <path d="M0,78 L60,66 L120,72 L180,48 L240,54 L300,34 L360,40 L420,26" fill="none" stroke="#18A982" stroke-width="2.4" stroke-linejoin="round"/>
+                <path d="M0,78 L60,66 L120,72 L180,48 L240,54 L300,34 L360,40 L420,26 L420,110 L0,110 Z" fill="#18A982" opacity=".08"/>
+                <g fill="#8FA39C" font-size="7.5" font-family="Inter,sans-serif">
+                  <text x="2" y="106">Jtatu</text><text x="62" y="106">Jnne</text><text x="122" y="106">Jtano</text>
+                  <text x="182" y="106">Jmosi</text><text x="242" y="106">Jpili</text><text x="302" y="106">Jtatu</text><text x="366" y="106">Leo</text>
+                </g>
+              </svg>
+            </div>
+            <div class="panel">
+              <div class="t"><b>Tahadhari</b><a href="#">Zote</a></div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;gap:7px;align-items:flex-start"><span class="pill p-bad">Stoo</span><div class="note"><b>Sukari 2kg</b> imeisha — POS itazuia kuuza.</div></div>
+                <div style="display:flex;gap:7px;align-items:flex-start"><span class="pill p-warn">Deni</span><div class="note"><b>Juma M.</b> ana deni la TSh 75,000 (siku 12).</div></div>
+                <div style="display:flex;gap:7px;align-items:flex-start"><span class="pill p-info">Oda</span><div class="note">Oda <b>#SKH-2481</b> haijalipwa masaa 3.</div></div>
+                <div style="display:flex;gap:7px;align-items:flex-start"><span class="pill p-ok">Zamu</span><div class="note">Zamu ya Amina imefunguliwa 08:12.</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="t"><b>Fanya haraka</b></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+              <a class="btn gh" href="#">＋ Ongeza bidhaa</a>
+              <a class="btn gh" href="#">⊞ Uza POS</a>
+              <a class="btn gh" href="#">⇩ Pokea stoo</a>
+              <a class="btn gh" href="#">≡ Ongeza matumizi</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="legend"><span>◉ Capability: inventory · pos · sales · customers = ON</span><span>◉ Sections zisizowashwa hazionekani</span></div>
+  </div>
+</section>
+
+<!-- ============ 02 SIDEBAR ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">02</div>
+    <div><h2>Sidebar &amp; main navigation</h2>
+      <p>Groups 8; kila item ina badge ya kazi inayosubiri; modules zinazofichwa zinaonyeshwa kwa rangi ya kijivu (state ya “imezimwa”).</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar" style="flex-basis:236px">
+        <div class="brand"><div class="logo">S</div><div><b>Ramadhan Fashion</b><small>Business OS · FULL</small></div></div>
+        <div class="grp">Nyumbani</div>
+        <nav class="nav"><a class="on" href="#"><i>▣</i> Dashibodi</a><a href="#"><i>▷</i> Uendeshaji wa leo</a></nav>
+        <div class="grp">Bidhaa &amp; stoo</div>
+        <nav class="nav">
+          <a href="#"><i>▤</i> Bidhaa</a><a href="#"><i>◈</i> Variants &amp; SKU</a>
+          <a href="#"><i>▥</i> Stoo <span class="dot">7</span></a><a href="#"><i>⇄</i> Uhamisho wa tawi</a>
+          <a href="#"><i>⇄</i> Manunuzi &amp; wauzaji</a>
+        </nav>
+        <div class="grp">Mauzo &amp; wateja</div>
+        <nav class="nav">
+          <a href="#"><i>≡</i> Mauzo</a><a href="#"><i>⇩</i> Oda <span class="dot">5</span></a>
+          <a href="#"><i>☺</i> Wateja</a><a href="#"><i>¤</i> Madeni</a><a href="#"><i>%</i> Punguzo &amp; promo</a>
+        </nav>
+        <div class="grp">Fedha</div>
+        <nav class="nav">
+          <a href="#"><i>¤</i> Mapato &amp; matumizi</a><a href="#"><i>◍</i> SokoPay &amp; escrow</a>
+          <a href="#"><i>◫</i> Zamu &amp; fedha taslimu</a>
+        </nav>
+        <div class="grp">Watu</div>
+        <nav class="nav">
+          <a href="#"><i>◉</i> Wafanyakazi</a><a href="#"><i>⚿</i> Ruhusa</a>
+          <a href="#" style="opacity:.42"><i>▦</i> Matawi <span class="pill p-mut" style="margin-left:auto">imezimwa</span></a>
+        </nav>
+        <div class="grp">Ripoti &amp; mipangilio</div>
+        <nav class="nav"><a href="#"><i>▤</i> Ripoti</a><a href="#"><i>⚙</i> Mipangilio</a><a href="#"><i>⏱</i> Historia ya matukio</a></nav>
+        <div class="sbar-foot"><a href="#"><i>⇱</i> Rudi sokoni</a></div>
+      </aside>
+      <div class="main">
+        <div class="top">
+          <div class="biz"><div class="av">RM</div><div><b>Ramadhan Fashion</b><small>Duka · Kariakoo</small></div></div>
+          <div class="biz" style="border-style:dashed"><div class="av" style="background:#FBF5E2;color:#8A6B0B">＋</div><div><b>Ongeza duka</b><small>Tawi jipya</small></div></div>
+          <div class="sp"></div><div class="icon-btn">⚑<b>4</b></div>
+        </div>
+        <div class="content">
+          <div class="h"><div><h3>Kanuni za navigation</h3><p>Vitu 42 kwa FULL+HYBRID; vitu 13 kwa BASIC+OFFLINE. Sidebar moja tu.</p></div></div>
+          <div class="cols c3">
+            <div class="panel"><div class="t"><b>BASIC · OFFLINE</b></div>
+              <div class="note" style="line-height:1.85">Bidhaa · Mauzo &amp; risiti · POS · Mipangilio · Profaili<br><span style="color:#A6B5B0">(Stoo, Manunuzi, Wateja, Ripoti, Wafanyakazi — zimefichwa)</span></div>
+            </div>
+            <div class="panel"><div class="t"><b>PARTIAL · HYBRID</b></div>
+              <div class="note" style="line-height:1.85">+ Stoo · Manunuzi · Wauzaji · Wateja · Matumizi · Ripoti · Oda<br><span style="color:#A6B5B0">(Wafanyakazi, Matawi, Offline — zimefichwa)</span></div>
+            </div>
+            <div class="panel"><div class="t"><b>FULL · HYBRID</b></div>
+              <div class="note" style="line-height:1.85">Kila kitu: + Wafanyakazi · Ruhusa · Matawi · Barcode · Offline POS · Ripoti za kina</div>
+            </div>
+          </div>
+          <div class="panel"><div class="t"><b>Mobile: drawer + bottom bar</b></div>
+            <div class="note">Simu: buttons 3 za chini (Nyumbani · POS · Zaidi). “Zaidi” inafungua drawer ile ile — hakuna orodha ya pili.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 WIZARD ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">03</div>
+    <div><h2>Business setup wizard — hatua 6</h2>
+      <p>Iliyopo sasa ni hatua 5 (inafanya kazi). Mpya: hatua ya <b>Management Level &amp; Capabilities</b> kabla ya kumaliza.</p></div>
+  </div>
+  <div class="shot-body">
+    <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <span class="pill p-ok">1 · Aina ya duka</span><span class="pill p-ok">2 · Mtindo wa mauzo</span>
+        <span class="pill p-ok">3 · Taarifa</span><span class="pill p-ok">4 · Profaili</span>
+        <span class="pill p-ok">5 · Setup mode</span><span class="pill p-info">6 · Management &amp; uwezo</span>
+      </div>
+      <div class="cols c2e">
+        <div>
+          <div class="field"><label>Aina ya biashara</label><div class="input">Ramadhan Fashion</div></div>
+          <div class="field"><label>Selling mode</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <div class="input" style="border-color:#CDE6DD;background:var(--gll)">✓ Online</div>
+              <div class="input" style="border-color:#CDE6DD;background:var(--gll)">✓ Offline (POS)</div>
+              <div class="input" style="border-color:#18A982;background:#E6F7F0;font-weight:800">✓ Hybrid</div>
+              <div class="input ph">Kusimamia tu</div>
+            </div>
+          </div>
+          <div class="field"><label>Management level</label>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+              <div class="input">BASIC<small class="note" style="display:block">Mauzo &amp; bidhaa</small></div>
+              <div class="input" style="border-color:#18A982;background:#E6F7F0;font-weight:800">PARTIAL<small class="note" style="display:block;color:#0F7A5B">+ stoo, manunuzi, wateja</small></div>
+              <div class="input">FULL<small class="note" style="display:block">+ wafanyakazi, matawi</small></div>
+            </div>
+          </div>
+          <div class="field"><label>Pricing profile</label>
+            <div class="seg"><b class="on">Retail</b><b>Wholesale</b><b>Mixed</b></div>
+          </div>
+        </div>
+        <div>
+          <div class="field"><label>Capabilities (wanaweza kuwashwa/off baadaye)</label></div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="switchw"><div><b>Stoo (inventory)</b><small>Tracks stock kwa POS + mtandao</small></div><div class="sw on"><i></i></div></div>
+            <div class="switchw"><div><b>Wateja (CRM)</b><small>Profaili, historia, madeni</small></div><div class="sw on"><i></i></div></div>
+            <div class="switchw"><div><b>Wafanyakazi</b><small>Cashiers, ruhusa, mishahara</small></div><div class="sw"><i></i></div></div>
+            <div class="switchw"><div><b>Matawi</b><small>Maduka mengi</small></div><div class="sw"><i></i></div></div>
+            <div class="switchw"><div><b>Uwasilishaji</b><small>Delivery &amp; usafirishaji</small></div><div class="sw on"><i></i></div></div>
+          </div>
+          <div class="note" style="margin-top:9px">Data yako haifutwi ukibadilisha level — modules zinafichwa tu na zinarudi ukiwasha.</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px">
+        <a class="btn gh" href="#">← Nyuma</a><a class="btn" href="#">Maliza usanidi →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 CAPABILITY CONTROL ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">04</div>
+    <div><h2>Management Level &amp; Capability Control</h2>
+      <p>Skrini moja ya kudhibiti: Selling mode, level, pricing profile na switches 21. Inaonyesha athari kabla ya kuhifadhi.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">S</div><div><b>Mipangilio</b><small>Uwezo</small></div></div>
+        <nav class="nav"><a href="#"><i>▦</i> Profaili</a><a class="on" href="#"><i>◐</i> Uwezo &amp; level</a><a href="#"><i>▦</i> Maduka</a><a href="#"><i>≡</i> Risiti</a><a href="#"><i>⚿</i> Ruhusa</a></nav>
+      </aside>
+      <div class="main"><div class="content">
+        <div class="h"><div><h3>Uwezo wa biashara</h3><p>Mabadiliko yanaathiri menyu, POS na ruhusa — hayafuti data.</p></div><a class="btn" href="#">Hifadhi</a></div>
+        <div class="cols c2">
+          <div class="panel">
+            <div class="t"><b>Level</b><span class="pill p-info">PARTIAL</span></div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div class="switchw"><div><b>BASIC</b><small>Mauzo · bidhaa · risiti · mipangilio</small></div><div class="sw"><i></i></div></div>
+              <div class="switchw" style="border-color:#18A982;background:var(--gll)"><div><b>PARTIAL ✓</b><small>+ stoo · manunuzi · wateja · wauzaji · matumizi · ripoti</small></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>FULL</b><small>+ wafanyakazi · matawi · barcode · offline · ripoti za kina</small></div><div class="sw"><i></i></div></div>
+            </div>
+            <div style="margin-top:11px" class="field"><label>Selling mode</label>
+              <div class="seg"><b>Online</b><b>Offline</b><b class="on">Hybrid</b><b>Manage</b></div>
+            </div>
+            <div class="field"><label>Pricing profile</label><div class="seg"><b class="on">Retail</b><b>Wholesale</b><b>Mixed</b></div></div>
+          </div>
+          <div class="panel">
+            <div class="t"><b>Capabilities</b><a href="#">Washa zote</a></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div class="switchw"><div><b>POS</b></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>Stoo</b></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>Wateja</b></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>Manunuzi</b></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>Matumizi</b></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>Ripoti</b></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>Wafanyakazi</b></div><div class="sw"><i></i></div></div>
+              <div class="switchw"><div><b>Matawi</b></div><div class="sw"><i></i></div></div>
+              <div class="switchw"><div><b>Uwasilishaji</b></div><div class="sw on"><i></i></div></div>
+              <div class="switchw"><div><b>Promo</b></div><div class="sw on"><i></i></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="border-color:#EFDFAE;background:var(--goldl)">
+          <div class="t"><b style="color:#8A6B0B">Athari ya mabadiliko haya</b></div>
+          <div class="note" style="color:#6B5308">Menyu: <b>42 → 27</b> vitu · POS: staff tab inafichwa · Offline POS inazimwa (mauzo ya zamu hii yanasawazishwa kwanza) · <b>Hakuna data inayofutwa</b>.</div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 PROFILE & STORES ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">05</div>
+    <div><h2>Business profile &amp; store management</h2>
+      <p>Profaili moja, maduka mengi (mpya). Kila duka lina eneo, saa za kazi, pickup/delivery na stoo yake.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">S</div><div><b>Mipangilio</b><small>Profaili</small></div></div>
+        <nav class="nav"><a class="on" href="#"><i>▦</i> Profaili</a><a href="#"><i>◐</i> Uwezo</a><a href="#"><i>▦</i> Maduka</a><a href="#"><i>≡</i> Risiti</a></nav></aside>
+      <div class="main"><div class="content">
+        <div class="cols c2">
+          <div class="panel">
+            <div class="t"><b>Profaili ya biashara</b><span class="pill p-ok">Imethibitishwa</span></div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+              <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(140deg,#18A982,#0F7A5B);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900">RM</div>
+              <div><b style="font-size:13px">Ramadhan Fashion</b><div class="note">Business ID: business_rshaban · Mmiliki: Ramadhan S.</div></div>
+            </div>
+            <div class="field"><label>Jina la biashara</label><div class="input">Ramadhan Fashion</div></div>
+            <div class="cols c2e"><div class="field"><label>Aina</label><div class="input">Boutique</div></div>
+              <div class="field"><label>Simu / WhatsApp</label><div class="input">0712 345 678</div></div></div>
+            <div class="field"><label>Maelezo</label><div class="input" style="height:44px">Nguo za kike na kiume, Kariakoo.</div></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill p-mut">Chat ✓</span><span class="pill p-mut">Simu ✓</span><span class="pill p-mut">Email ✗</span></div>
+          </div>
+          <div class="panel">
+            <div class="t"><b>Maduka / matawi</b><a class="btn sm gh" href="#">＋ Ongeza</a></div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div class="switchw" style="border-color:#18A982;background:var(--gll)">
+                <div><b>Kariakoo (duka kuu)</b><small>Mtaa wa Congo · pickup + delivery · stoo 642</small></div><span class="pill p-ok">Active</span>
+              </div>
+              <div class="switchw"><div><b>Mlimani City</b><small>Pickup pekee · stoo 128</small></div><span class="pill p-ok">Active</span></div>
+              <div class="switchw"><div><b>Ghala — Kigamboni</b><small>Stoo tu (haijaonekani sokoni) · stoo 1,204</small></div><span class="pill p-info">Ghala</span></div>
+            </div>
+            <div class="note" style="margin-top:8px">Stoo inamilikiwa na duka; uhamisho kati ya maduka unatumia <b>stock_transfers</b> iliyopo — hakuna inventory ya pili.</div>
+            <div class="field" style="margin-top:12px"><label>Duka la msingi (default kwa POS)</label><div class="input">Kariakoo ›</div></div>
+            <div class="switchw"><div><b>Ruhusu POS kuchagua duka</b><small>Cashier anaweza kubadili duka kwenye POS</small></div><div class="sw on"><i></i></div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 06 PRODUCTS & INVENTORY ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">06</div>
+    <div><h2>Bidhaa &amp; stoo</h2>
+      <p>Chanzo kimoja: bidhaa inayoonekana sokoni ndio inayouzwa POS. Picha haikatwi, 1:1 contain.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">S</div><div><b>Bidhaa</b><small>&amp; stoo</small></div></div>
+        <nav class="nav"><a class="on" href="#"><i>▤</i> Bidhaa zote</a><a href="#"><i>◈</i> Variants</a><a href="#"><i>▥</i> Stoo</a><a href="#"><i>⇄</i> Uhamisho</a></nav></aside>
+      <div class="main">
+        <div class="content">
+          <div class="h">
+            <div><h3>Bidhaa (48)</h3><p>36 zinaonekana sokoni · 7 zinaisha · 3 zimeisha</p></div>
+            <div style="display:flex;gap:6px"><div class="seg"><b class="on">Zote</b><b>Sokoni</b><b>Zinaisha</b></div><a class="btn sm" href="#">＋ Bidhaa</a></div>
+          </div>
+          <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+            <div class="kpi"><small>Thamani ya stoo</small><b>TSh 12.4M</b><span>kwa bei ya kununua</span></div>
+            <div class="kpi"><small>Thamani sokoni</small><b>TSh 18.9M</b><span>kwa bei ya kuuza</span></div>
+            <div class="kpi gold"><small>Zinaisha</small><b>7</b><span class="dn">Agiza sasa</span></div>
+            <div class="kpi blue"><small>SKU</small><b>112</b><span>48 bidhaa · 64 variants</span></div>
+          </div>
+          <div class="panel">
+            <table>
+              <tr><th style="width:32px"></th><th>Bidhaa</th><th>SKU / Variant</th><th>Stoo</th><th>Bei</th><th>Hali</th><th></th></tr>
+              <tr><td><div class="thumb">▤</div></td><td><b>T-shirt ya pamba</b><div class="note">Mavazi · Kariakoo</div></td><td>SKU-1042 · Rangi/Saizi (8)</td>
+                <td><b class="num">42</b><div class="bar" style="width:52px"><i style="width:60%"></i></div></td><td class="num">TSh 25,000</td><td><span class="pill p-ok">Sokoni</span></td><td><a class="btn sm gh" href="#">Hariri</a></td></tr>
+              <tr><td><div class="thumb">▤</div></td><td><b>Gauni la harusi</b><div class="note">Mavazi</div></td><td>SKU-1043 · Saizi (4)</td>
+                <td><b class="num">6</b><div class="bar" style="width:52px"><i style="width:18%;background:#D4AF37"></i></div></td><td class="num">TSh 180,000</td><td><span class="pill p-warn">Inaisha</span></td><td><a class="btn sm gh" href="#">Hariri</a></td></tr>
+              <tr><td><div class="thumb">▤</div></td><td><b>Mafuta ya nazi 500ml</b><div class="note">Vipodozi</div></td><td>SKU-1044</td>
+                <td><b class="num" style="color:#B4442F">0</b><div class="bar" style="width:52px"><i style="width:2%;background:#B4442F"></i></div></td><td class="num">TSh 8,000</td><td><span class="pill p-bad">Imeisha</span></td><td><a class="btn sm gh" href="#">Pokea</a></td></tr>
+              <tr><td><div class="thumb">▤</div></td><td><b>Jeans ya wanaume</b><div class="note">Mavazi</div></td><td>SKU-1045 · Saizi (5)</td>
+                <td><b class="num">31</b><div class="bar" style="width:52px"><i style="width:44%"></i></div></td><td class="num">TSh 45,000</td><td><span class="pill p-ok">Sokoni</span></td><td><a class="btn sm gh" href="#">Hariri</a></td></tr>
+              <tr><td><div class="thumb">▤</div></td><td><b>Begi la ngozi</b><div class="note">Vifaa</div></td><td>SKU-1046</td>
+                <td><b class="num">14</b><div class="bar" style="width:52px"><i style="width:30%"></i></div></td><td class="num">TSh 65,000</td><td><span class="pill p-mut">Rasimu</span></td><td><a class="btn sm gh" href="#">Hariri</a></td></tr>
+            </table>
+          </div>
+          <div class="note">Variants 8 za T-shirt zina stock yake; POS na marketplace zinatumia <code>variantCombinations[].stock</code> ile ile (server-only).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 POS ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">07</div>
+    <div><h2>POS interface</h2>
+      <p>Action center ipo tayari (sale, deni, malipo, return, matumizi, supplier, ripoti) + level badge linaloonekana na kuzuia kweli.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar" style="flex-basis:190px">
+        <div class="brand"><div class="logo">⇄</div><div><b>POS</b><small>Kariakoo · zamu 08:12</small></div></div>
+        <nav class="nav">
+          <a class="on" href="#"><i>⊞</i> Uza</a><a href="#"><i>¤</i> Deni</a><a href="#"><i>¤</i> Pokea malipo</a>
+          <a href="#"><i>↺</i> Return</a><a href="#"><i>≡</i> Matumizi</a><a href="#"><i>⇄</i> Supplier</a><a href="#"><i>▤</i> Ripoti</a>
+        </nav>
+        <div class="sbar-foot">
+          <div class="switchw" style="border:0;padding:4px"><div><b style="font-size:10px">Level</b><small>PARTIAL</small></div><span class="pill p-info">L2</span></div>
+          <a href="#"><i>■</i> Funga zamu</a>
+        </div>
+      </aside>
+      <div class="main"><div class="content">
+        <div style="display:flex;gap:8px">
+          <div class="input ph" style="flex:1"> Tafuta bidhaa au scan barcode…</div>
+          <a class="btn gh" href="#">≣ Scan</a>
+        </div>
+        <div class="cols c2">
+          <div class="panel">
+            <div class="t"><b>Matokeo</b><span class="note">3 zinapatikana</span></div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <div class="switchw"><div style="display:flex;gap:7px;align-items:center"><div class="thumb">▤</div><div><b>T-shirt · Nyeusi / M</b><small>SKU-1042-BLK-M · stoo 12</small></div></div><b class="num">TSh 25,000</b></div>
+              <div class="switchw"><div style="display:flex;gap:7px;align-items:center"><div class="thumb">▤</div><div><b>T-shirt · Nyeupe / L</b><small>SKU-1042-WHT-L · stoo 6</small></div></div><b class="num">TSh 25,000</b></div>
+              <div class="switchw"><div style="display:flex;gap:7px;align-items:center"><div class="thumb">▤</div><div><b>Jeans · 32</b><small>SKU-1045-32 · stoo 4</small></div></div><b class="num">TSh 45,000</b></div>
+            </div>
+            <div class="note" style="margin-top:6px">Chaguo la variant ni <b>chips</b>, sio <code>prompt()</code>.</div>
+          </div>
+          <div class="panel" style="background:#FBFDFC">
+            <div class="t"><b>Kikapu (3)</b><a href="#">Futa</a></div>
+            <table style="font-size:10.6px">
+              <tr><td>T-shirt Nyeusi M</td><td class="num">×2</td><td class="num">50,000</td></tr>
+              <tr><td>Jeans 32</td><td class="num">×1</td><td class="num">45,000</td></tr>
+              <tr><td>Punguzo (10%)</td><td></td><td class="num" style="color:#B4442F">−9,500</td></tr>
+            </table>
+            <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
+              <b>Jumla</b><b class="num" style="font-size:16px;color:var(--gd)">TSh 85,500</b>
+            </div>
+            <div class="field" style="margin-top:9px"><label>Njia ya malipo</label><div class="input">M-Pesa ›</div></div>
+            <div class="cols c2e"><div class="field"><label>Alitoa</label><div class="input">100,000</div></div><div class="field"><label>Chenji</label><div class="input">14,500</div></div></div>
+            <a class="btn" href="#" style="width:100%;justify-content:center;padding:9px">Kamilisha mauzo · Piga risiti</a>
+            <div class="note" style="margin-top:6px">↑ Ikiwa hakuna internet: inaingia kwenye <b>queue</b> na kusawazishwa yenyewe.</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 08 SALES & ORDERS ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">08</div>
+    <div><h2>Mauzo &amp; oda — skrini moja</h2>
+      <p>Inachanganya POS sales (<code>sales</code>) na oda za mtandao (<code>orders</code>) kwenye orodha moja yenye vichujio.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">≡</div><div><b>Mauzo</b><small>&amp; oda</small></div></div>
+        <nav class="nav"><a class="on" href="#"><i>≡</i> Zote</a><a href="#"><i>⊞</i> POS</a><a href="#"><i>⇩</i> Mtandao</a><a href="#"><i>↺</i> Returns</a><a href="#"><i>≣</i> Risiti</a></nav></aside>
+      <div class="main"><div class="content">
+        <div class="h"><div><h3>Mauzo ya leo</h3><p>POS: 34 · Mtandao: 5 · Jumla TSh 486,000</p></div>
+          <div class="seg"><b class="on">Leo</b><b>Wiki</b><b>Mwezi</b></div></div>
+        <div class="kpis"><div class="kpi"><small>POS (cash)</small><b>TSh 312,000</b><span>28 risiti</span></div>
+          <div class="kpi"><small>POS (mobile)</small><b>TSh 84,000</b><span>6 risiti</span></div>
+          <div class="kpi gold"><small>Deni jipya</small><b>TSh 45,000</b><span class="dn">2 wateja</span></div>
+          <div class="kpi blue"><small>Mtandao</small><b>TSh 45,000</b><span>5 oda · 2 hazijalipwa</span></div></div>
+        <div class="panel"><table>
+          <tr><th>Namba</th><th>Mteja</th><th>Chanzo</th><th>Malipo</th><th>Jumla</th><th>Hali</th><th></th></tr>
+          <tr><td class="num">SALE-10482</td><td>Amina H.</td><td><span class="pill p-mut">POS</span></td><td>Cash</td><td class="num">85,500</td><td><span class="pill p-ok">Imekamilika</span></td><td><a class="btn sm gh" href="#">Risiti</a></td></tr>
+          <tr><td class="num">SALE-10481</td><td>Juma M.</td><td><span class="pill p-mut">POS</span></td><td>Deni</td><td class="num">45,000</td><td><span class="pill p-warn">Deni linaendelea</span></td><td><a class="btn sm gh" href="#">Kumbusha</a></td></tr>
+          <tr><td class="num">SKH-2481</td><td>Neema K.</td><td><span class="pill p-info">Mtandao</span></td><td>M-Pesa</td><td class="num">120,000</td><td><span class="pill p-ok">Escrow held</span></td><td><a class="btn sm gh" href="#">Fuatilia</a></td></tr>
+          <tr><td class="num">SKH-2480</td><td>Baraka S.</td><td><span class="pill p-info">Mtandao</span></td><td>—</td><td class="num">65,000</td><td><span class="pill p-bad">Haijalipwa</span></td><td><a class="btn sm gh" href="#">Kumbusha</a></td></tr>
+          <tr><td class="num">SALE-10479</td><td>—</td><td><span class="pill p-mut">POS</span></td><td>Cash</td><td class="num">18,000</td><td><span class="pill p-bad">Imerudishwa</span></td><td><a class="btn sm gh" href="#">Angalia</a></td></tr>
+        </table></div>
+        <div class="note">Risiti inatengenezwa kwa <code>posReceipt</code> (server) — leo hii injini ipo lakini UI haijaunganishwa; hii ni sehemu ya P2.</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 09 PROCUREMENT ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">09</div>
+    <div><h2>Manunuzi &amp; wauzaji</h2>
+      <p>PO yenye mistari (mpya), kupokea kwa sehemu, na salio la supplier. Ikipokelewa → <code>inventoryAdjust(PURCHASE)</code>.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">⇄</div><div><b>Manunuzi</b><small>&amp; wauzaji</small></div></div>
+        <nav class="nav"><a class="on" href="#"><i>≡</i> Oda za manunuzi</a><a href="#"><i>▦</i> Wauzaji</a><a href="#"><i>⇩</i> Pokea mzigo</a><a href="#"><i>¤</i> Malipo</a></nav></aside>
+      <div class="main"><div class="content">
+        <div class="h"><div><h3>Oda za manunuzi</h3><p>3 zinasubiri · 1 imepokelewa kwa sehemu</p></div><a class="btn" href="#">＋ PO mpya</a></div>
+        <div class="cols c2">
+          <div class="panel">
+            <div class="t"><b>PO #PO-2041</b><span class="pill p-info">Imeagizwa</span></div>
+            <div class="note" style="margin-bottom:7px">Supplier: <b>Kariakoo Textiles</b> · 2 Nov 2026 · Malipo: nusu kabla</div>
+            <table style="font-size:10.6px">
+              <tr><th>Bidhaa</th><th>Qty</th><th>Bei</th><th>Jumla</th></tr>
+              <tr><td>T-shirt pamba (bulk)</td><td class="num">100</td><td class="num">12,000</td><td class="num">1,200,000</td></tr>
+              <tr><td>Jeans (bulk)</td><td class="num">40</td><td class="num">28,000</td><td class="num">1,120,000</td></tr>
+              <tr><td colspan="3"><b>Jumla</b></td><td class="num"><b>2,320,000</b></td></tr>
+            </table>
+            <div style="display:flex;gap:6px;margin-top:9px"><a class="btn sm" href="#">Pokea sehemu</a><a class="btn sm gh" href="#">Rekodi malipo</a></div>
+          </div>
+          <div class="panel">
+            <div class="t"><b>Wauzaji</b><a href="#">Zote</a></div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="switchw"><div><b>Kariakoo Textiles</b><small>2 PO · salio TSh 1,160,000</small></div><span class="pill p-warn">Salio</span></div>
+              <div class="switchw"><div><b>Nida Shoes Ltd</b><small>5 PO · salio TSh 0</small></div><span class="pill p-ok">Safi</span></div>
+              <div class="switchw"><div><b>Bag City</b><small>1 PO · salio TSh 320,000</small></div><span class="pill p-warn">Salio</span></div>
+            </div>
+            <div class="note" style="margin-top:8px">Kila supplier ana daftari lake la malipo (mpya) — yote yanaingia kwenye <code>shop_ledger</code>.</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10 CUSTOMERS & STAFF ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">10</div>
+    <div><h2>Wateja &amp; wafanyakazi</h2>
+      <p>CRM inatumia collection <code>customers</code> iliyopo tayari kwenye rules (haijatumika leo). Wafanyakazi wana role halisi.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">◉</div><div><b>Watu</b><small>wateja · staff</small></div></div>
+        <nav class="nav"><a class="on" href="#"><i>☺</i> Wateja</a><a href="#"><i>¤</i> Madeni</a><a href="#"><i>◉</i> Wafanyakazi</a><a href="#"><i>⚿</i> Ruhusa</a></nav></aside>
+      <div class="main"><div class="content">
+        <div class="cols c2e">
+          <div class="panel">
+            <div class="t"><b>Wateja (128)</b><a class="btn sm gh" href="#">＋ Mteja</a></div>
+            <table style="font-size:10.6px">
+              <tr><th>Mteja</th><th>Manunuzi</th><th>Deni</th><th></th></tr>
+              <tr><td><b>Amina Hassan</b><div class="note">0712 ••• 678</div></td><td class="num">24</td><td class="num" style="color:#0F7A5B">0</td><td><span class="pill p-ok">Mteja mzuri</span></td></tr>
+              <tr><td><b>Juma Mwinyi</b><div class="note">0754 ••• 221</div></td><td class="num">11</td><td class="num" style="color:#B4442F">75,000</td><td><span class="pill p-warn">Deni</span></td></tr>
+              <tr><td><b>Neema Kimaro</b><div class="note">0786 ••• 902</div></td><td class="num">7</td><td class="num" style="color:#0F7A5B">0</td><td><span class="pill p-info">Mtandao</span></td></tr>
+            </table>
+            <div class="note" style="margin-top:7px">Profaili: historia ya manunuzi, deni, credit limit, mawasiliano (chat/WhatsApp).</div>
+          </div>
+          <div class="panel">
+            <div class="t"><b>Wafanyakazi (4)</b><a class="btn sm gh" href="#">＋ Mfanyakazi</a></div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="switchw"><div><b>Amina Said</b><small>Cashier · zamu ya asubuhi</small></div><span class="pill p-ok">Active</span></div>
+              <div class="switchw"><div><b>Yusuf Ali</b><small>Storekeeper · ghala</small></div><span class="pill p-ok">Active</span></div>
+              <div class="switchw"><div><b>Grace Peter</b><small>Manager · ruhusa kamili</small></div><span class="pill p-info">Manager</span></div>
+              <div class="switchw"><div><b>Hamisi J.</b><small>Salesperson · likizo</small></div><span class="pill p-mut">Likizo</span></div>
+            </div>
+            <div class="cols c2e" style="margin-top:8px">
+              <div class="kpi"><small>Waliohudhuria leo</small><b>3 / 4</b></div>
+              <div class="kpi"><small>Mishahara (mwezi)</small><b>TSh 1.15M</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="border-color:#EFDFAE;background:var(--goldl)">
+          <div class="note" style="color:#6B5308"><b>Mabadiliko:</b> namba za “TOTAL STAFF 25 / PRESENT 20” za kubuni zinaondolewa — takwimu zinatoka <code>shop_staff</code> + <code>staff_attendance</code> halisi.</div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 11 FINANCE ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">11</div>
+    <div><h2>Fedha &amp; matumizi</h2>
+      <p>Mapato, matumizi, madeni, zamu na escrow kwenye skrini moja — hesabu inatoka <code>posReports</code>, sio ledger ya mkono.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">¤</div><div><b>Fedha</b><small>mapato · matumizi</small></div></div>
+        <nav class="nav"><a class="on" href="#"><i>▣</i> Muhtasari</a><a href="#"><i>¤</i> Matumizi</a><a href="#"><i>¤</i> Madeni</a><a href="#"><i>◫</i> Zamu</a><a href="#"><i>◍</i> Escrow</a></nav></aside>
+      <div class="main"><div class="content">
+        <div class="h"><div><h3>Muhtasari wa fedha — Novemba</h3><p>Inasoma <code>posReports</code> (business + store scoped)</p></div><div class="seg"><b>Leo</b><b class="on">Mwezi</b><b>Mwaka</b></div></div>
+        <div class="kpis">
+          <div class="kpi"><small>Mauzo ghafi</small><b>TSh 8.42M</b><span>▲ 8%</span></div>
+          <div class="kpi"><small>Matumizi</small><b>TSh 1.96M</b><span class="dn">▲ 4%</span></div>
+          <div class="kpi gold"><small>Faida</small><b>TSh 2.18M</b><span>26% margin</span></div>
+          <div class="kpi blue"><small>Escrow inayosubiri</small><b>TSh 640K</b><span>4 oda</span></div>
+        </div>
+        <div class="cols c2">
+          <div class="panel">
+            <div class="t"><b>Matumizi ya mwezi</b><a class="btn sm gh" href="#">＋ Ongeza</a></div>
+            <table style="font-size:10.6px">
+              <tr><th>Tarehe</th><th>Aina</th><th>Maelezo</th><th>Kiasi</th></tr>
+              <tr><td>02 Nov</td><td><span class="pill p-mut">Kodi</span></td><td>Pango la duka</td><td class="num">650,000</td></tr>
+              <tr><td>02 Nov</td><td><span class="pill p-mut">Usafiri</span></td><td>Kutoka Kariakoo</td><td class="num">45,000</td></tr>
+              <tr><td>01 Nov</td><td><span class="pill p-mut">Mishahara</span></td><td>Cashier + storekeeper</td><td class="num">520,000</td></tr>
+              <tr><td>31 Okt</td><td><span class="pill p-mut">Umeme</span></td><td>TANESCO</td><td class="num">88,000</td></tr>
+            </table>
+            <div class="note" style="margin-top:6px">Kategoria (mpya): kodi · mishahara · usafiri · umeme · uharibifu · nyingine.</div>
+          </div>
+          <div class="panel">
+            <div class="t"><b>Zamu ya leo</b><span class="pill p-ok">Wazi</span></div>
+            <div class="note">Amina S. · 08:12 → sasa · mauzo 28</div>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;font-size:11px">
+              <div style="display:flex;justify-content:space-between"><span>Cash iliyokusanywa</span><b class="num">312,000</b></div>
+              <div style="display:flex;justify-content:space-between"><span>Mobile money</span><b class="num">84,000</b></div>
+              <div style="display:flex;justify-content:space-between"><span>Deni lililotolewa</span><b class="num" style="color:#B4442F">45,000</b></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--line);padding-top:5px"><b>Inatarajiwa drawer</b><b class="num">312,000</b></div>
+            </div>
+            <div class="cols c2e" style="margin-top:8px"><div class="field"><label>Iliyohesabiwa</label><div class="input">311,000</div></div>
+              <div class="field"><label>Tofauti</label><div class="input" style="color:#B4442F;font-weight:800">−1,000</div></div></div>
+            <a class="btn" href="#" style="width:100%;justify-content:center">Funga zamu &amp; hifadhi hesabu</a>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12 REPORTS ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">12</div>
+    <div><h2>Ripoti &amp; uchambuzi</h2>
+      <p>Ripoti moja ya kweli (posReports) + export (mpya). Hakuna “insights” zilizoandikwa kwa mkono.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">▤</div><div><b>Ripoti</b><small>uchambuzi</small></div></div>
+        <nav class="nav"><a class="on" href="#"><i>▣</i> Muhtasari</a><a href="#"><i>⊞</i> Mauzo</a><a href="#"><i>▥</i> Stoo</a><a href="#"><i>◉</i> Wafanyakazi</a><a href="#"><i>¤</i> Faida</a></nav></aside>
+      <div class="main"><div class="content">
+        <div class="h"><div><h3>Mauzo · 1–3 Novemba 2026</h3><p>Gross TSh 8.42M · Net baada ya returns TSh 8.19M</p></div>
+          <div style="display:flex;gap:6px"><a class="btn gh" href="#">CSV</a><a class="btn gh" href="#">PDF</a></div></div>
+        <div class="cols c2">
+          <div class="panel">
+            <div class="t"><b>Mauzo kwa siku</b><span class="note">POS + mtandao</span></div>
+            <svg viewBox="0 0 420 120" style="width:100%;height:120px" aria-label="bars">
+              <g fill="#18A982">
+                <rect x="14" y="52" width="34" height="58" rx="4"/><rect x="74" y="34" width="34" height="76" rx="4"/>
+                <rect x="134" y="60" width="34" height="50" rx="4" opacity=".55"/><rect x="194" y="22" width="34" height="88" rx="4"/>
+                <rect x="254" y="44" width="34" height="66" rx="4"/><rect x="314" y="16" width="34" height="94" rx="4"/>
+                <rect x="374" y="30" width="34" height="80" rx="4" opacity=".55"/>
+              </g>
+              <g font-size="7.5" fill="#8FA39C" font-family="Inter,sans-serif">
+                <text x="20" y="118">28 Okt</text><text x="82" y="118">29</text><text x="142" y="118">30</text>
+                <text x="202" y="118">31</text><text x="262" y="118">1 Nov</text><text x="322" y="118">2</text><text x="382" y="118">3</text>
+              </g>
+            </svg>
+          </div>
+          <div class="panel">
+            <div class="t"><b>Bidhaa zinazoongoza</b></div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div><div style="display:flex;justify-content:space-between;font-size:10.6px"><span>T-shirt pamba</span><b class="num">TSh 1.85M</b></div><div class="bar"><i style="width:82%"></i></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10.6px"><span>Jeans wanaume</span><b class="num">TSh 1.26M</b></div><div class="bar"><i style="width:56%"></i></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10.6px"><span>Gauni la harusi</span><b class="num">TSh 900K</b></div><div class="bar"><i style="width:40%"></i></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10.6px"><span>Begi la ngozi</span><b class="num">TSh 520K</b></div><div class="bar"><i style="width:23%"></i></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="cols c3">
+          <div class="kpi"><small>Returns</small><b>TSh 18,000</b><span>1 risiti</span></div>
+          <div class="kpi"><small>Refunds</small><b>TSh 0</b><span>hakuna</span></div>
+          <div class="kpi"><small>Cashier bora</small><b>Amina S.</b><span>TSh 312,000</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 13 SETTINGS & PERMISSIONS ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">13</div>
+    <div><h2>Mipangilio &amp; ruhusa</h2>
+      <p>Matrix ya ruhusa inayoenda sambamba na kanuni za server — kitu unachokiona hapa ndicho kinachotekelezwa.</p></div>
+  </div>
+  <div class="shot-body">
+    <div class="app">
+      <aside class="sbar"><div class="brand"><div class="logo">⚙</div><div><b>Mipangilio</b><small>ruhusa</small></div></div>
+        <nav class="nav"><a href="#"><i>▦</i> Profaili</a><a href="#"><i>◐</i> Uwezo</a><a href="#"><i>⚿</i> Ruhusa</a><a class="on" href="#"><i>≡</i> Risiti &amp; kodi</a><a href="#"><i>⏱</i> Historia</a></nav></aside>
+      <div class="main"><div class="content">
+        <div class="h"><div><h3>Ruhusa za wafanyakazi</h3><p>Role 5 · zinatekelezwa kwenye callables na rules</p></div><a class="btn" href="#">Hifadhi</a></div>
+        <div class="panel">
+          <table style="font-size:10.4px">
+            <tr><th>Uwezo</th><th>Owner</th><th>Manager</th><th>Cashier</th><th>Storekeeper</th><th>Accountant</th></tr>
+            <tr><td>Kuuza (POS)</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+            <tr><td>Kuona faida</td><td>✓</td><td>✓</td><td><span class="pill p-warn">kwa ruhusa</span></td><td>—</td><td>✓</td></tr>
+            <tr><td>Kuhariri stoo</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
+            <tr><td>Return / void</td><td>✓</td><td>✓</td><td><span class="pill p-warn">kwa ruhusa</span></td><td>—</td><td>—</td></tr>
+            <tr><td>Manunuzi</td><td>✓</td><td>✓</td><td>—</td><td><span class="pill p-warn">kupokea</span></td><td>—</td></tr>
+            <tr><td>Ripoti za fedha</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>✓</td></tr>
+            <tr><td>Wafanyakazi</td><td>✓</td><td><span class="pill p-warn">kwa ruhusa</span></td><td>—</td><td>—</td><td>—</td></tr>
+          </table>
+          <div class="note" style="margin-top:8px"><b>Leo:</b> flags <code>cashierCanViewProfit</code>/<code>cashierCanEditStock</code> zipo lakini hazisomwi — hivyo cashier huona faida na anaweza kuhariri stoo. Matrix hii inarekebisha hilo.</div>
+        </div>
+        <div class="cols c2e">
+          <div class="panel"><div class="t"><b>Risiti &amp; kodi</b></div>
+            <div class="field"><label>Jina la risiti</label><div class="input">Ramadhan Fashion · Kariakoo</div></div>
+            <div class="field"><label>VAT / TRA</label><div class="input ph">Haijawashwa</div></div>
+          </div>
+          <div class="panel"><div class="t"><b>Historia ya matukio</b><a href="#">Zote</a></div>
+            <div class="note" style="line-height:1.9">
+              08:12 · Amina S. afungua zamu<br>
+              08:40 · Mauzo SALE-10482 (TSh 85,500)<br>
+              09:15 · Yusuf A. amepokea PO-2041 (sehemu)<br>
+              10:02 · Grace P. amebadilisha bei ya T-shirt<br>
+              10:31 · Level imebadilishwa PARTIAL → FULL
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 14 MOBILE ============ -->
+<section class="shot">
+  <div class="shot-hd">
+    <div class="shot-n">14</div>
+    <div><h2>Mobile responsive</h2>
+      <p>Dashboard, POS na “Zaidi” kwenye simu 390px. Sidebar inakuwa drawer; tables zinakuwa kadi; FAB moja tu ya kuuza.</p></div>
+  </div>
+  <div class="shot-body">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+
+      <!-- phone 1: dashboard -->
+      <div class="phone">
+        <div class="pbar"><span>9:41</span><span>▮▮▮ ⌁</span></div>
+        <div class="phead">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:8.4px;opacity:.8;letter-spacing:.08em;text-transform:uppercase;font-weight:800">Business OS</div>
+              <b style="font-size:12.6px">Ramadhan Fashion</b></div>
+            <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:12px">☰</div>
+          </div>
+          <div style="margin-top:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 8px;font-size:9px;color:#D6EDE5"> Tafuta bidhaa, oda, mteja…</div>
+        </div>
+        <div class="pbody">
+          <div class="m-kpi">
+            <div class="m-card"><small>Mauzo leo</small><b>TSh 486K</b></div>
+            <div class="m-card"><small>Faida</small><b>TSh 118K</b></div>
+            <div class="m-card"><small>Zinaisha</small><b style="color:#8A6B0B">7</b></div>
+            <div class="m-card"><small>Oda</small><b style="color:#205F91">5</b></div>
+          </div>
+          <div class="m-item" style="border-color:#F3D5CC;background:#FDF5F3"><div class="ic" style="background:#FCEEEA;color:#B4442F">!</div>
+            <div><b>Sukari 2kg imeisha</b><small>POS itazuia kuuza</small></div></div>
+          <div class="m-item"><div class="ic">⊞</div><div><b>Uza kwa POS</b><small>Zamu ya Amina · 08:12</small></div><span style="margin-left:auto;color:#18A982;font-weight:900">›</span></div>
+          <div class="m-item"><div class="ic">⇩</div><div><b>Pokea stoo</b><small>PO-2041 inasubiri</small></div><span style="margin-left:auto;color:#18A982;font-weight:900">›</span></div>
+          <div class="m-item"><div class="ic">¤</div><div><b>Madeni</b><small>2 wateja · TSh 120,000</small></div><span style="margin-left:auto;color:#18A982;font-weight:900">›</span></div>
+          <div class="fab">＋</div>
+        </div>
+        <div class="pnav"><div class="on">▣<span>Nyumbani</span></div><div>⊞<span>POS</span></div><div>☰<span>Zaidi</span></div></div>
+      </div>
+
+      <!-- phone 2: POS -->
+      <div class="phone">
+        <div class="pbar"><span>9:41</span><span>▮▮▮ ⌁</span></div>
+        <div class="phead" style="background:#14523F">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:8.4px;opacity:.8;font-weight:800;text-transform:uppercase;letter-spacing:.08em">POS · L2</div>
+              <b style="font-size:12.6px">Kariakoo</b></div>
+            <div style="font-size:9px;background:rgba(255,255,255,.15);padding:3px 7px;border-radius:999px">Zamu 08:12</div>
+          </div>
+          <div style="margin-top:8px;background:#fff;border-radius:8px;padding:6px 8px;color:#93A6A0;font-size:9px"> Tafuta / scan…</div>
+        </div>
+        <div class="pbody">
+          <div class="m-item"><div class="ic">▤</div><div><b>T-shirt · Nyeusi / M</b><small>stoo 12</small></div><b style="margin-left:auto;font-size:10px">25,000</b></div>
+          <div class="m-item"><div class="ic">▤</div><div><b>Jeans · 32</b><small>stoo 4</small></div><b style="margin-left:auto;font-size:10px">45,000</b></div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:2px">
+            <div style="display:flex;justify-content:space-between;font-size:10px"><span>T-shirt ×2</span><b>50,000</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px"><span>Jeans ×1</span><b>45,000</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#B4442F"><span>Punguzo 10%</span><b>−9,500</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;border-top:1px dashed var(--line);padding-top:5px;margin-top:5px"><b>Jumla</b><b style="color:var(--gd)">85,500</b></div>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap"><span class="pill p-ok" style="background:#E6F7F0">M-Pesa</span><span class="pill p-mut">Cash</span><span class="pill p-mut">Deni</span></div>
+          <a class="btn" href="#" style="width:100%;justify-content:center;padding:9px;font-size:11px">Kamilisha · Piga risiti</a>
+          <div class="note" style="font-size:9px;text-align:center">Offline? inaingia queue na kusawazishwa</div>
+        </div>
+        <div class="pnav"><div>▣<span>Nyumbani</span></div><div class="on">⊞<span>POS</span></div><div>☰<span>Zaidi</span></div></div>
+      </div>
+
+      <!-- phone 3: drawer -->
+      <div class="phone">
+        <div class="pbar"><span>9:41</span><span>▮▮▮ ⌁</span></div>
+        <div style="padding:12px;background:#fff;min-height:470px">
+          <div class="brand" style="border:0;padding:0 0 10px"><div class="logo">S</div><div><b>Ramadhan Fashion</b><small>PARTIAL · Hybrid</small></div></div>
+          <div class="grp">Nyumbani</div>
+          <nav class="nav"><a class="on" href="#"><i>▣</i> Dashibodi</a><a href="#"><i>▷</i> Uendeshaji</a></nav>
+          <div class="grp">Bidhaa &amp; stoo</div>
+          <nav class="nav"><a href="#"><i>▤</i> Bidhaa</a><a href="#"><i>▥</i> Stoo</a><a href="#"><i>⇄</i> Manunuzi</a></nav>
+          <div class="grp">Mauzo &amp; wateja</div>
+          <nav class="nav"><a href="#"><i>≡</i> Mauzo</a><a href="#"><i>☺</i> Wateja</a><a href="#" style="opacity:.42"><i>◉</i> Wafanyakazi <span class="pill p-mut" style="margin-left:auto">imezimwa</span></a></nav>
+          <div class="grp">Fedha</div>
+          <nav class="nav"><a href="#"><i>¤</i> Mapato &amp; matumizi</a><a href="#"><i>▤</i> Ripoti</a><a href="#"><i>⚙</i> Mipangilio</a></nav>
+          <div style="margin-top:10px;background:var(--gll);border:1px solid #CFEBDD;border-radius:10px;padding:8px;font-size:9.4px;color:#3E8F6E">
+            Capabilities zinaficha menyu, hazifuti data.
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="legend">
+      <span>◉ 390 × 844</span><span>◉ FAB moja tu</span><span>◉ Hakuna sidebar iliyofichwa bila njia ya kuirudisha</span><span>◉ Text ≥ 9px kwenye mockup (app halisi ≥ 12px)</span>
+    </div>
+  </div>
+</section>
+
+<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:8px 0 26px">
+  <b style="font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--gd)">Mipaka</b>
+  <p class="note" style="margin:6px 0 0;font-size:11.5px">Haya ni mockups za design (HTML pekee kwenye <code>docs/</code>).
+    Hakuna CSS au JS ya app iliyobadilishwa, hakuna route mpya, hakuna commit. Utekelezaji unaanza tu baada ya idhini yako,
+    kwa awamu zilizoainishwa kwenye <code>docs/business-os-audit.html</code> (§12.3).</p>
+</div>
+
+</div>
+</body>
+</html>

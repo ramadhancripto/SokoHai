@@ -133,8 +133,12 @@ import { skh } from './00-bootstrap.js';
     /* [P3 §12] quote kwenye jibu */
     function gsgQuoteHtml(rt, my) {
         if (!rt) return '';
-        return '<div style="border-left:3px solid ' + (my ? '#18A982' : '#1268A8') + ';background:' + (my ? '#c8ecd9' : '#eef6fc') + ';border-radius:7px;padding:4px 8px;margin-bottom:5px;font-size:11px;color:#334155;">'
-            + '<b style="color:' + (my ? '#0f7a5d' : '#0B4F7A') + ';">' + esc(rt.by || '') + '</b> '
+        /* [REPLY JUMP 2026-11] Bofya kilichojibiwa → rukia ujumbe husika.
+           Rangi zimeunganishwa kwenye palette ya mfumo (kijani), sio buluu. */
+        var rid = rt.id || rt.msgId || '';
+        var clickable = rid ? ' data-quote-id="' + esc(rid) + '" role="button" tabindex="0" onclick="event.stopPropagation();window.skhChatJumpToMessage && window.skhChatJumpToMessage(\'' + esc(rid) + '\')"' : '';
+        return '<div class="gsg-quote"' + clickable + ' style="border-left:3px solid ' + (my ? '#0F7E67' : '#18A982') + ';background:' + (my ? '#c8ecd9' : '#E7F4EE') + ';border-radius:7px;padding:4px 8px;margin-bottom:5px;font-size:11px;color:#334155;cursor:pointer;">'
+            + '<b style="color:#0F6E55;">' + esc(rt.by || '') + '</b> '
             + '<span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(rt.preview || '') + '</span></div>';
     }
 
@@ -291,7 +295,7 @@ import { skh } from './00-bootstrap.js';
                 + '<div style="margin-top:5px;font-size:12.5px;color:#0B4F7A;line-height:1.5;">' + renderMsgText(m.text || '') + '</div></div>';
         }
         var nm = String(m.senderName || 'MJ');
-        var avBg = my ? 'linear-gradient(135deg,#18A982,#0e7a5f)' : 'linear-gradient(135deg,#1268A8,#2B82BD)';
+        var avBg = my ? 'linear-gradient(135deg,#18A982,#0e7a5f)' : 'linear-gradient(135deg,#2FB894,#0F7E67)';
         var tCount = (tc && m.__id && tc[m.__id]) || 0;
         return '<div class="gsg-msg-row" data-mid="' + esc(m.__id || '') + '" style="display:flex;gap:7px;flex-direction:' + (my ? 'row-reverse' : 'row') + ';margin-bottom:9px;">'
             + '<span style="width:30px;height:30px;flex:none;border-radius:11px;background:' + avBg + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;margin-top:2px;">' + esc(nm.trim().charAt(0).toUpperCase() || '?') + '</span>'   // [§11] avatar
@@ -339,15 +343,22 @@ import { skh } from './00-bootstrap.js';
         CUR.__annOpen = false;
 
         var m = buildModal();
+        try { document.body.classList.add('gsg-open'); } catch (eBO) {}
         if (m) {
             // [ABRUPT FAST UI] Fungua dirisha kamili la kikundi MARA MOJA bila kusubiri queries
             m.innerHTML = '<div class="skh-sheet" style="max-height:92vh;display:flex;flex-direction:column;">'
-                + '<div class="skh-sheet-head">'
-                + '<button type="button" class="skh-sheet-back" data-act="gsg-close" aria-label="' + tk('back', 'Rudi') + '">' + (window.skhNavIcon ? window.skhNavIcon('back', 18) : '‹') + '</button>'
-                + '<div id="gsgAvatarTile" style="width:38px;height:38px;border-radius:11px;background:#EAF3FA;border:1px solid #CFDFEB;color:#39779B;display:flex;align-items:center;justify-content:center;font-weight:800;">#</div>'
-                + '<div style="flex:1;min-width:0;"><b id="gsgTitleEl" class="skh-sheet-title" style="font-size:15px;">' + tk('group', 'Kikundi') + '</b><br>'
-                + '<small id="gsgSubEl" class="skh-sheet-sub">' + tk('loading', 'Inapakia...') + '</small></div>'
-                + '<button type="button" class="skh-sheet-back" data-act="gsg-info" title="' + tk('gsg_info', 'Taarifa za kikundi') + '" style="margin-left:6px;">' + (window.skhNavIcon ? window.skhNavIcon('menu', 18) : '☰') + '</button>'
+                + '<div class="skh-sheet-head gsg-head">'
+                +   '<button type="button" class="skh-sheet-back" data-act="gsg-close" aria-label="' + tk('back', 'Rudi') + '">'
+                +     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>'
+                +   '</button>'
+                +   '<div id="gsgAvatarTile" class="gsg-avatar" aria-hidden="true">#</div>'
+                +   '<div class="gsg-head-txt">'
+                +     '<b id="gsgTitleEl" class="skh-sheet-title">' + tk('group', 'Kikundi') + '</b>'
+                +     '<small id="gsgSubEl" class="skh-sheet-sub">' + tk('loading', 'Inapakia...') + '</small>'
+                +   '</div>'
+                +   '<button type="button" class="skh-sheet-back" data-act="gsg-info" aria-label="' + tk('gsg_info', 'Taarifa za kikundi') + '">'
+                +     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>'
+                +   '</button>'
                 + '</div>'
                 + '<div id="gsgInfo" style="display:none;"></div>'
                 + '<div id="gsgDesc" style="display:none;margin:7px 12px 0;padding:9px 12px;border-radius:12px;background:#fff;border:1px solid #e2e8f0;color:#475569;font-size:12px;line-height:1.45;"></div>'
@@ -358,11 +369,18 @@ import { skh } from './00-bootstrap.js';
                 + '<div id="gsgTyping" style="padding:0 14px;font-size:11px;color:#64748b;min-height:2px;font-style:italic;"></div>'
                 + '<div id="gsgMsgs" style="flex:1;min-height:220px;overflow-y:auto;padding:12px;background:#efe7dd;">'
                 + '<small style="color:#64748b;display:block;text-align:center;padding:16px;">' + tk('loading', 'Inapakia meseji...') + '</small></div>'
-                + '<div id="gsgReplyBar" style="display:none;padding:7px 12px 0;"></div>'
-                + '<div id="gsgComposerRow" style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e2e8f0;align-items:stretch;">'
-                + '<button type="button" data-act="gsg-attach" title="' + tk('gsg_attach', 'Ambatisha') + '" aria-label="' + tk('gsg_attach', 'Ambatisha') + '" style="border:1.5px solid #CCEBDD;background:#fff;color:#178864;font-weight:900;font-size:17px;width:42px;border-radius:12px;cursor:pointer;line-height:1;">+</button>'
-                + '<input id="gsgInput" type="text" autocomplete="off" placeholder="' + tk('ch_msg_ph', 'Andika ujumbe...') + '" style="flex:1;padding:11px 13px;border:1.5px solid #cbd5e1;border-radius:12px;font-size:14px;">'
-                + '<button type="button" data-act="gsg-send" style="border:none;background:#18A982;color:#fff;font-weight:800;font-size:13px;padding:0 18px;border-radius:12px;cursor:pointer;">' + tk('ch_send', 'Tuma') + '</button>'
+                + '<div id="gsgReplyBar" style="display:none;padding:6px 12px 0;"></div>'
+                + '<div id="gsgComposerRow" class="gsg-comp-row">'
+                + '<button type="button" class="gsg-cbtn" data-act="gsg-attach" title="' + tk('gsg_attach', 'Ambatisha') + '" aria-label="' + tk('gsg_attach', 'Ambatisha') + '">'
+                +   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>'
+                + '</button>'
+                + '<button type="button" class="gsg-cbtn" data-act="gsg-emoji" id="gsgEmojiBtn" title="Emoji" aria-label="Emoji">'
+                +   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><circle cx="9" cy="10" r=".8" fill="currentColor"/><circle cx="15" cy="10" r=".8" fill="currentColor"/></svg>'
+                + '</button>'
+                + '<input id="gsgInput" type="text" autocomplete="off" placeholder="' + tk('ch_msg_ph', 'Andika ujumbe...') + '">'
+                + '<button type="button" class="gsg-send" data-act="gsg-send" title="' + tk('ch_send', 'Tuma') + '" aria-label="' + tk('ch_send', 'Tuma') + '">'
+                +   '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 20 4l-7 16-3-7z"/></svg>'
+                + '</button>'
                 + '</div></div>'
                 + '<div id="gsgTabOrders" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fff;"></div>'
                 + '<div id="gsgTabMembers" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fff;"></div>'
@@ -406,12 +424,23 @@ import { skh } from './00-bootstrap.js';
 
                 // Sasisha header ya kikundi
                 var titleEl = document.getElementById('gsgTitleEl');
-                if (titleEl && g.name) titleEl.textContent = g.name;
+                if (titleEl) {
+                    var nm = g.name || (CUR.__convName || '') || '';
+                    if (nm && nm !== 'Kikundi') titleEl.textContent = nm;
+                }
                 var avEl = document.getElementById('gsgAvatarTile');
-                if (avEl && g.avatar) avEl.textContent = g.avatar;
+                if (avEl) {
+                    // [GROUP UI 2026-11] Tile ya kikundi: herufi ya jina lake (sio '#').
+                    var gName = String(g.name || 'Kikundi').trim();
+                    avEl.textContent = String(g.avatar || gName.charAt(0) || 'K').toUpperCase().slice(0, 2);
+                }
                 var subEl = document.getElementById('gsgSubEl');
                 if (subEl) {
-                    subEl.textContent = (g.memberCount || '?') + ' ' + tk('grp_members', 'wanachama') + ' · ' + (g.groupType === 'PERMANENT_COMMUNITY' ? tk('grp_type_perm', 'Community') : tk('grp_type_temp', 'Commerce'));
+                    var memN = Number(g.memberCount || (Array.isArray(g.members) ? g.members.length : 0) || 0);
+                    var typeLbl = (g.groupType === 'PERMANENT_COMMUNITY') ? tk('grp_type_perm', 'Community') : tk('grp_type_temp', 'Commerce');
+                    subEl.innerHTML = '<span class="gsg-chip gsg-chip--members">'
+                        + (memN > 0 ? memN + ' ' : '') + esc(tk('grp_members', 'wanachama'))
+                        + '</span><span class="gsg-chip">' + esc(typeLbl) + '</span>';
                 }
                 var dEl = document.getElementById('gsgDesc');
                 if (dEl && g.description) {
@@ -528,6 +557,9 @@ import { skh } from './00-bootstrap.js';
                 }
             }
         } catch (ePD) {}
+        /* [GROUP UI 2026-11] Miondoko sawa na chat ya kawaida:
+           swipe KULIA = jibu, swipe KUSHOTO = vitendo, long-press = vitendo. */
+        try { gsgBindGestures(); } catch (eBG) {}
         var inp = m.querySelector('#gsgInput');
         if (inp) {
             inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendText(); });
@@ -545,6 +577,7 @@ import { skh } from './00-bootstrap.js';
     };
 
     window.skhCloseGroupSoga = function () {
+        try { document.body.classList.remove('gsg-open'); } catch (e0) {}
         var gid0 = CUR.gid;
         CUR.gid = null;
         CUR.__showInfo = false;
@@ -1561,6 +1594,7 @@ import { skh } from './00-bootstrap.js';
             snap.forEach(function (d) { var dd = d.data() || {}; dd.__id = d.id; rows.push(dd); });
             rows.sort(function (a, b) { return String(a.at || '').localeCompare(String(a.at || '')); });
             rows = rows.slice(-60);
+            CUR.__rows = rows;   // [GROUP UI 2026-11] kwa action sheet ya ujumbe
             
             var convD = {}, othersActive = [];
             try {
@@ -1572,6 +1606,13 @@ import { skh } from './00-bootstrap.js';
                 othersActive = (mems || []).filter(function (mm) { return mm && mm.status === 'active' && mm.userId !== uid(); }).map(function (mm) { return mm.userId; });
             } catch (eM) {}
             if (!CUR.__names) { try { CUR.__names = await fetchNames(othersActive.concat([uid()])); } catch (eN) { CUR.__names = {}; } }
+            try {
+                if (convD && (convD.name || convD.title)) {
+                    CUR.__convName = convD.name || convD.title;
+                    var tEl0 = document.getElementById('gsgTitleEl');
+                    if (tEl0 && (!tEl0.textContent || tEl0.textContent === 'Kikundi')) tEl0.textContent = CUR.__convName;
+                }
+            } catch (eCN) {}
             var lra = convD.lastReadAt || {};
             
             var tc = {};
@@ -1606,6 +1647,87 @@ import { skh } from './00-bootstrap.js';
                 + '</div>';
         }
     }
+
+    /* [GROUP UI 2026-11] Emoji ya haraka — typing bar ya kikundi sasa ni sawa
+       na chat ya kawaida (attach · emoji · input · tuma). */
+    function gsgEmojiPop() {
+        var btn = document.getElementById('gsgEmojiBtn');
+        var old = document.getElementById('gsgEmojiPop');
+        if (old) { old.remove(); return; }
+        var EM = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '✅', '📦', '💰'];
+        var pop = document.createElement('div');
+        pop.id = 'gsgEmojiPop';
+        pop.className = 'gsg-emoji-pop';
+        pop.innerHTML = EM.map(function (e) { return '<button type="button" data-em="' + e + '">' + e + '</button>'; }).join('');
+        pop.addEventListener('click', function (ev) {
+            var b = ev.target.closest('button[data-em]');
+            if (!b) return;
+            var inp = document.getElementById('gsgInput');
+            if (inp) { inp.value = (inp.value || '') + b.getAttribute('data-em'); inp.focus(); }
+            pop.remove();
+        });
+        document.getElementById('gsgComposerRow').appendChild(pop);
+        setTimeout(function () {
+            document.addEventListener('click', function h(e2) {
+                if (!pop.contains(e2.target) && e2.target !== btn) { pop.remove(); document.removeEventListener('click', h); }
+            });
+        }, 0);
+    }
+
+    function gsgRowById(mid) {
+        var rows = CUR.__rows || [];
+        for (var i = 0; i < rows.length; i++) if (String(rows[i].__id) === String(mid)) return rows[i];
+        return null;
+    }
+    function gsgCopyText(txt) {
+        try {
+            if (navigator.clipboard) navigator.clipboard.writeText(txt);
+            else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+            if (window.skhToast) window.skhToast('Imenakiliwa', 'success', 1800);
+        } catch (e) { if (window.skhToast) window.skhToast('Imeshindwa kunakili', 'error', 2000); }
+    }
+    function gsgShareText(txt) {
+        try {
+            if (navigator.share) { navigator.share({ title: 'SokoHai', text: txt }).catch(function () {}); return; }
+        } catch (e) {}
+        gsgCopyText(txt);
+    }
+    function gsgOpenActions(mid) {
+        if (typeof window.skhSheetOpen !== 'function') return;
+        var m = gsgRowById(mid) || {};
+        var mine = m.senderUid === uid();
+        var text = String(m.text || '');
+        var acts = [];
+        acts.push({ id: 'reply', label: tk('ch_reply', 'Jibu'), icon: 'reply', run: function () {
+            var row = document.querySelector('.gsg-msg-row[data-mid="' + mid + '"]');
+            var b = row && row.querySelector('[data-act="gsg-reply"]');
+            if (b) b.click();
+        } });
+        if (text.trim()) acts.push({ id: 'copy', label: tk('ch_copy', 'Nakili'), icon: 'copy', run: function () { gsgCopyText(text); } });
+        if (text.trim()) acts.push({ id: 'share', label: tk('ch_share', 'Shiriki'), icon: 'share', run: function () { gsgShareText(text); } });
+        window.skhSheetOpen({
+            msgId: mid,
+            title: (m.senderName || (mine ? 'Wewe' : 'Mwanachama')),
+            preview: text ? text.slice(0, 110) : 'Ujumbe wa kikundi',
+            typeTag: 'Kikundi',
+            reactions: [],
+            actions: acts
+        });
+    }
+    function gsgBindGestures() {
+        if (typeof window.skhBindRowGestures !== 'function') return;
+        window.skhBindRowGestures({
+            container: 'gsgMsgs',
+            rowSel: '.gsg-msg-row[data-mid]',
+            idAttr: 'data-mid',
+            onReply: function (mid, rowEl) {
+                var b = rowEl && rowEl.querySelector('[data-act="gsg-reply"]');
+                if (b) b.click();
+            },
+            onActions: function (mid) { gsgOpenActions(mid); }
+        });
+    }
+    window.skhGroupMsgActions = gsgOpenActions;
 
     async function sendText() {
         var inp = document.getElementById('gsgInput');
@@ -1721,6 +1843,7 @@ import { skh } from './00-bootstrap.js';
                 return;
             }
             else if (act === 'gsg-attach') { if (document.getElementById('gsgAttachPop')) closeAttachPop(); else openAttachPop(); return; }
+            else if (act === 'gsg-emoji') { gsgEmojiPop(); return; }
             else if (act === 'gsg-attach-close') { closeAttachPop(); return; }
             else if (act === 'gsg-form-cancel') { closeTypedForm(); return; }
             else if (act === 'gsg-form-save') {

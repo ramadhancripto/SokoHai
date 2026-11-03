@@ -269,16 +269,51 @@
         <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px;">MAELEZO YA BIDHAA (DESCRIPTION) *</label>
         <textarea id="prodDesc" placeholder="Eleza bidhaa yako kwa kina: faida zake, matumizi, ukubwa, rangi n.k..." style="width:100%; height:70px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:5px; outline:none; resize:none;"></textarea>
         
-        <!-- PRODUCT FOUNDATION: primary + additional images kupitia uploader uliopo. -->
-        <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:10px; margin-bottom:5px;"> PICHA ZA BIDHAA (ANGALAU 1) * <span id="prodImageCount" style="color:#16a34a;"></span></label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <button type="button" onclick="document.getElementById('prodImageCam').click()" style="padding:12px; background:#526962; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> PIGA PICHA</button>
-            <button type="button" onclick="document.getElementById('prodImage').click()" style="padding:12px; background:#18A982; color:white; border:none; border-radius:10px; font-weight:900; cursor:pointer; font-size:12px;"> KUTOKA GALARI</button>
+        <!-- PRODUCT FOUNDATION: primary + up to 5 additional images.
+             [REPAIR 2026-11-01] The picker is now DECLARED here (data-skh-photo-picker)
+             and bound by js/11-uploads.js, instead of being initialised by an inline
+             script that ran before the uploader module existed. -->
+        <!-- [PICHA STUDIO 2026-11-02] Sehemu ya picha imeumbwa upya:
+             dropzone (buruta), hero preview 1:1 contain (picha haikatwi),
+             strip ya thumbnails (weka kuu / ondoa / panga), taarifa halisi
+             za picha, na live preview ya kadi itakavyoonekana sokoni.
+             API ya JS haijabadilika: skhPhotoPickerFiles('prodImage') n.k. -->
+        <div class="skh-field skh-ps-field" data-skh-photo-picker='{"galleryInput":"prodImage","cameraInput":"prodImageCam","previewId":"prodImagePreviews","max":6,"min":1,"hintId":"prodImageCount"}'>
+
+            <div class="skh-ps-head">
+                <label class="skh-field-label" for="prodImage">Picha za bidhaa <span class="skh-req">*</span></label>
+                <span class="skh-ps-count" id="prodImageCount" aria-live="polite">Picha 0/6</span>
+            </div>
+            <p class="skh-field-help">Picha ya kwanza ni <b>picha kuu</b> itakayoonekana sokoni. Picha haikatwi — bidhaa inaonekana yote.</p>
+
+            <div class="skh-ps-drop" id="skhPsDrop" tabindex="0" role="button"
+                 aria-label="Ongeza picha za bidhaa: buruta picha hapa au bonyeza kuchagua">
+                <span class="ps-ico" aria-hidden="true">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+                </span>
+                <b>Buruta picha hapa</b>
+                <span>au bonyeza kuchagua · JPG, PNG au WEBP · hadi 12MB</span>
+            </div>
+
+            <div class="skh-ps-actions">
+                <button type="button" class="skh-ps-btn skh-ps-btn--cam" id="skhPsCam"
+                        onclick="document.getElementById('prodImageCam').click()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-4Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                    Piga picha
+                </button>
+                <button type="button" class="skh-ps-btn skh-ps-btn--gal" id="skhPsGal"
+                        onclick="document.getElementById('prodImage').click()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Chagua kutoka galari
+                </button>
+            </div>
+
+            <input type="file" id="prodImage" accept="image/*" multiple style="display:none;">
+            <input type="file" id="prodImageCam" accept="image/*" capture="environment" style="display:none;">
+
+            <div id="prodImagePreviews" class="skh-ps-gallery"></div>
+            <div id="skhPsLive" class="skh-ps-live"></div>
         </div>
-        <input type="file" id="prodImage" accept="image/*" multiple style="display:none;">
-        <input type="file" id="prodImageCam" accept="image/*" capture="environment" style="display:none;">
-        <div id="prodImagePreviews" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
-        <script>/* Product media: primary + up to 5 additional images. */ if (window.skhInitPhotoPicker) { try { window.skhProdPicker = window.skhInitPhotoPicker({ galleryInput: 'prodImage', cameraInput: 'prodImageCam', previewId: 'prodImagePreviews', max: 6, min: 1, hintId: 'prodImageCount' }); } catch (e) { console.warn('picker:', e && e.message); } }</script>
     </div>
 
     </div>
@@ -303,6 +338,7 @@
       <div id="spbNotice" role="status" aria-live="polite"></div>
       <details open><summary>Mapendekezo kutoka kategoria · hiari</summary><p>Tumia / Hariri / Ruka. Hakuna kinachohifadhiwa bila wewe kuthibitisha.</p><div id="spbSuggestions"></div></details>
       <p id="spbVariantChoice"><button type="button" id="spbSkipVariants">Haina variants · bidhaa rahisi</button></p><section><h4>Chaguo za mnunuzi (selectors) · hiari</h4><div id="spbSelectorDetails" hidden><p>Mnunuzi anachagua values kupata variant. Kila value (mf. rangi Nyeusi) inaweza kuwa na picha zake.</p><div id="spbOptions"></div></div><button type="button" id="spbAddOption">＋ Ongeza chaguo (mf. Rangi, Saizi)</button></section>
+      <div id="spbBuyerPreview" class="skh-vp" hidden aria-live="polite"></div>
       <section id="spbCombinationSection" hidden><h4>Variants (mchanganyiko)</h4><div class="spb-actions"><button type="button" id="spbGenerate">Tengeneza variants (Generate variants)</button><button type="button" id="spbManualVariant">＋ Ongeza variant mwenyewe (Add Variant Manually)</button></div><p>Variants mpya zinaanza zimezimwa. Kagua bei, SKU na stock kisha washa zilizopo; zima zisizokuwepo (mf. Nyeupe + Ndogo). Kutengeneza tena hakufuti variants zako.</p><div id="spbBulkApply" class="spb-actions" hidden><label>Bei kwa zote <input id="spbBulkPrice" type="number" min="0" inputmode="numeric"></label><label>Stock kwa zote <input id="spbBulkStock" type="number" min="0" step="1" inputmode="numeric"></label><button type="button" id="spbBulkApplyBtn">Weka kwa variants zilizowashwa</button></div><div id="spbVariants"></div></section>
       <section><h4>Sifa za bidhaa (attributes)</h4><p>Maelezo ya bidhaa (mf. Brand, Material). Hayabadilishi bei wala stock.</p><div id="spbAttributes"></div><button type="button" id="spbAddAttribute">＋ Ongeza sifa</button></section>
       <details id="spbMoreDetails" class="spb-more"><summary>Maelezo ya ziada · hiari (filters, features, taarifa nyingine)</summary>

@@ -1,0 +1,493 @@
+/* ============================================================================
+ * SOKOHAI — VARIANT STUDIO
+ * ----------------------------------------------------------------------------
+ * (a) Mpangilio wa Product Builder (.spb-*) — awali haukuwa na CSS yoyote,
+ *     ndiyo maana picha za variant zilionekana bila preview.
+ * (b) "Mtazamo wa mnunuzi" (#spbBuyerPreview) — inaonyesha EXACTLY jinsi
+ *     mnunuzi atakavyoona chaguo (chips), picha za kila chaguo, bei na stock.
+ *
+ * Kila kitu kimefungwa chini ya .spb na .skh-vp — hakuna mgongano.
+ * ========================================================================== */
+
+/* ------------------------------------------------ (a) BUILDER STRUCTURE --- */
+/* [2026-11-02] Product Builder haikuwa na CSS yoyote: sehemu zake zilijipanga
+   kwa default ya browser (ndogo, zisizo na mpangilio) na picha za variant
+   zilionekana bila vizuizi. Hapa tunapanga fremu, nafasi na typography. */
+#productBuilder {
+    display: block;
+    width: 100%;
+    font-family: 'Inter','Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    color: #16232B;
+    -webkit-font-smoothing: antialiased;
+}
+#productBuilder > header {
+    margin: 0 0 10px;
+    padding: 12px 13px;
+    border: 1px solid #E7EDEA;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #FBFEFC 0%, #FFFFFF 70%);
+}
+#productBuilder > header h3 { margin: 2px 0 4px; font: 800 15px/1.25 'Inter','Segoe UI',sans-serif; letter-spacing: -.02em; }
+#productBuilder > header p { margin: 0; font: 600 11.5px/1.5 'Inter','Segoe UI',sans-serif; color: #6B7A82; }
+#productBuilder .spb-kicker { font: 800 10px/1 'Inter','Segoe UI',sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #0E6B52; }
+#productBuilder > section {
+    margin: 0 0 10px;
+    padding: 11px 12px;
+    border: 1px solid #E7EDEA;
+    border-radius: 14px;
+    background: #fff;
+}
+#productBuilder > section > h4 {
+    margin: 0 0 4px;
+    font: 800 12.5px/1.3 'Inter','Segoe UI',sans-serif;
+    letter-spacing: -.01em;
+    color: #16232B;
+}
+#productBuilder > section > p { margin: 0 0 8px; font: 600 11.5px/1.5 'Inter','Segoe UI',sans-serif; color: #6B7A82; }
+#productBuilder > section > button,
+#productBuilder > p > button {
+    min-height: 34px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px dashed #BFD4CC;
+    background: #F2FAF6;
+    color: #0E6B52;
+    font: 800 11.5px/1 'Inter','Segoe UI',sans-serif;
+    cursor: pointer;
+}
+#productBuilder > section > button:hover { background: #E8F3EF; }
+#productBuilder details { margin: 0 0 10px; padding: 10px 12px; border: 1px solid #E7EDEA; border-radius: 12px; background: #FCFEFD; }
+#productBuilder summary { font: 800 12px/1.4 'Inter','Segoe UI',sans-serif; color: #0E6B52; cursor: pointer; }
+#productBuilder label { display: block; font: 700 11.5px/1.5 'Inter','Segoe UI',sans-serif; color: #3D4C55; }
+#productBuilder input[type="text"], #productBuilder input[type="number"], #productBuilder select, #productBuilder textarea {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid #DDE7E3;
+    border-radius: 9px;
+    font: 600 12.5px/1.2 'Inter','Segoe UI',sans-serif;
+    color: #16232B;
+    background: #fff;
+    box-sizing: border-box;
+    margin-top: 3px;
+}
+#productBuilder input:focus, #productBuilder select:focus, #productBuilder textarea:focus {
+    outline: 2px solid #0E6B52 !important;
+    outline-offset: 1px;
+}
+#productBuilder #spbEditor .spb-editor { border: 1px solid #CDE6DD; border-radius: 12px; padding: 12px; background: #F7FDFA; }
+#productBuilder #spbEditor h4 { margin: 0 0 8px; font: 800 12.5px/1.3 'Inter','Segoe UI',sans-serif; }
+#productBuilder #spbEditor label { margin-bottom: 8px; }
+#productBuilder #spbNotice { font: 700 11.5px/1.4 'Inter','Segoe UI',sans-serif; }
+
+#productBuilder .spb-card {
+    background: #fff;
+    border: 1px solid #E7EDEA;
+    border-radius: 12px;
+    padding: 10px 11px;
+    margin: 0 0 8px;
+    font-family: 'Inter','Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+#productBuilder .spb-card:last-child { margin-bottom: 0; }
+#productBuilder .spb-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+#productBuilder .spb-row > b { font: 800 13px/1.3 'Inter','Segoe UI',sans-serif; color: #16232B; letter-spacing: -.01em; }
+#productBuilder .spb-row > small { font: 700 10px/1 'Inter','Segoe UI',sans-serif; color: #7D8B94; text-transform: uppercase; letter-spacing: .06em; }
+#productBuilder .spb-row > div { min-width: 0; }
+#productBuilder .spb-row > div > b { display: block; font: 800 12.5px/1.3 'Inter','Segoe UI',sans-serif; color: #16232B; }
+#productBuilder .spb-row > div > small { font: 600 11px/1.4 'Inter','Segoe UI',sans-serif; color: #6B7A82; }
+
+#productBuilder .spb-values { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+#productBuilder .spb-value {
+    border: 1px solid #EDF3F0;
+    border-radius: 10px;
+    background: #FCFEFD;
+    padding: 8px 9px;
+}
+#productBuilder .spb-value > b {
+    display: block;
+    font: 800 12px/1.3 'Inter','Segoe UI',sans-serif;
+    color: #16232B;
+    margin-bottom: 6px;
+}
+
+/* Picha za variant / value — thumbnails 1:1, contain (kamwe hazikatwi) */
+#productBuilder .spb-media {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0 2px;
+}
+#productBuilder .spb-media > span {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    border: 1px solid #E7EDEA;
+    background: #F7FAF9;
+    overflow: hidden;
+    display: block;
+    flex: 0 0 auto;
+}
+#productBuilder .spb-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+    display: block;
+}
+#productBuilder .spb-media > span > button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(22,35,43,.82);
+    color: #fff;
+    font: 700 11px/1 'Inter',sans-serif;
+    cursor: pointer;
+    line-height: 1;
+}
+#productBuilder .spb-media > span > button:hover { background: #B4442F; }
+#productBuilder .spb-media > button {          /* "＋ Image" */
+    align-self: center;
+    min-height: 32px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    border: 1px dashed #BFD4CC;
+    background: #F2FAF6;
+    color: #0E6B52;
+    font: 800 11px/1 'Inter','Segoe UI',sans-serif;
+    cursor: pointer;
+}
+#productBuilder .spb-media > button:hover { background: #E8F3EF; }
+#productBuilder .spb-general { position: relative; display: inline-block; margin: 0 6px 6px 0; }
+#productBuilder .spb-general img { width: 64px; height: 64px; object-fit: contain; background: #F7FAF9; border: 1px solid #E7EDEA; border-radius: 10px; padding: 4px; }
+
+#productBuilder .spb-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+#productBuilder .spb-actions label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font: 700 11px/1 'Inter','Segoe UI',sans-serif;
+    color: #3D4C55;
+}
+#productBuilder .spb-actions input { max-width: 110px; }
+#productBuilder button[data-spb] {
+    min-height: 30px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #DDE7E3;
+    background: #fff;
+    color: #3D4C55;
+    font: 800 11px/1 'Inter','Segoe UI',sans-serif;
+    cursor: pointer;
+}
+#productBuilder button[data-spb]:hover { background: #F7FAF9; border-color: #C6D8D1; color: #16232B; }
+#productBuilder .spb-empty { font: 600 12px/1.5 'Inter','Segoe UI',sans-serif; color: #7D8B94; margin: 6px 0; }
+#productBuilder .spb-variant .spb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 8px;
+    margin: 8px 0 4px;
+}
+#productBuilder .spb-variant .spb-grid label {
+    display: block;
+    font: 700 10.5px/1.5 'Inter','Segoe UI',sans-serif;
+    color: #7D8B94;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+#productBuilder .spb-variant .spb-grid input { margin-top: 3px; }
+#productBuilder .spb-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: 700 12px/1.4 'Inter','Segoe UI',sans-serif;
+    color: #3D4C55;
+}
+
+/* ------------------------------------------------ (b) BUYER PREVIEW ------ */
+.skh-vp {
+    width: 100%;
+    flex: 1 1 100%;
+    align-self: stretch;
+    box-sizing: border-box;
+    margin: 14px 0 0;
+    padding: 12px;
+    border: 1px solid #E7EDEA;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #FBFEFC 0%, #FFFFFF 70%);
+}
+.skh-vp[hidden] { display: none !important; }
+.skh-vp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.skh-vp-head b {
+    font: 800 11px/1 'Inter','Segoe UI',sans-serif;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #7D8B94;
+}
+.skh-vp-head span {
+    font: 800 9.5px/1 'Inter','Segoe UI',sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #0E6B52;
+    background: #E8F3EF;
+    border: 1px solid #CDE6DD;
+    border-radius: 999px;
+    padding: 4px 8px;
+}
+.skh-vp-card {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+.skh-vp-imgbox {
+    position: relative;
+    width: 132px;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    border: 1px solid #E7EDEA;
+    background: #F7FAF9;
+    overflow: hidden;
+}
+.skh-vp-imgbox img {
+    position: absolute;
+    inset: 8px;
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
+    object-fit: contain;
+    border-radius: 6px;
+    display: block;
+}
+.skh-vp-imgbox .skh-vp-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    font: 700 10px/1.35 'Inter','Segoe UI',sans-serif;
+    color: #A9B7BE;
+}
+.skh-vp-imgbox .skh-vp-flag {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: rgba(14,107,82,.94);
+    color: #fff;
+    font: 800 8.5px/1.2 'Inter','Segoe UI',sans-serif;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+.skh-vp-imgbox .skh-vp-flag--off { background: rgba(122,136,144,.95); }
+
+.skh-vp-side { min-width: 0; }
+.skh-vp-name {
+    font: 800 13.5px/1.32 'Inter','Segoe UI',sans-serif;
+    letter-spacing: -.012em;
+    color: #16232B;
+    margin: 0 0 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.skh-vp-group { margin-bottom: 8px; }
+.skh-vp-group:last-of-type { margin-bottom: 6px; }
+.skh-vp-label {
+    font: 800 10px/1 'Inter','Segoe UI',sans-serif;
+    color: #7D8B94;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 5px;
+}
+.skh-vp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.skh-vp-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border: 1.5px solid #DDE7E3;
+    border-radius: 9px;
+    background: #fff;
+    color: #3D4C55;
+    font: 700 11.5px/1.2 'Inter','Segoe UI',sans-serif;
+    cursor: pointer;
+    transition: border-color .14s ease, background .14s ease, color .14s ease;
+}
+.skh-vp-chip:hover { border-color: #BFD4CC; }
+.skh-vp-chip[aria-pressed="true"] {
+    border-color: #0E6B52;
+    background: #E8F3EF;
+    color: #0B5741;
+    font-weight: 800;
+}
+.skh-vp-chip[aria-disabled="true"] {
+    opacity: .42;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+.skh-vp-chip img {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    object-fit: contain;
+    background: #F7FAF9;
+    border: 1px solid #E7EDEA;
+    flex: 0 0 auto;
+}
+.skh-vp-price {
+    font: 800 16px/1.15 'Inter','Segoe UI',sans-serif;
+    letter-spacing: -.03em;
+    color: #0E6B52;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+.skh-vp-price .cur { font-size: 9px; letter-spacing: .08em; color: #7D8B94; margin-right: 4px; }
+.skh-vp-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+}
+.skh-vp-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    border: 1px solid #E7EDEA;
+    background: #FBFDFC;
+    color: #3D4C55;
+    font: 700 10px/1.2 'Inter','Segoe UI',sans-serif;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.skh-vp-tag[data-tone="ok"] { color: #0E6B52; border-color: #CDE6DD; background: #E8F3EF; font-weight: 800; }
+.skh-vp-tag[data-tone="off"] { color: #B4442F; border-color: #F0D3CB; background: #FDEDEA; font-weight: 800; }
+.skh-vp-note {
+    margin: 8px 0 0;
+    font: 600 10.5px/1.45 'Inter','Segoe UI',sans-serif;
+    color: #7D8B94;
+}
+
+@media (max-width: 560px) {
+    .skh-vp-card { grid-template-columns: 104px minmax(0, 1fr); gap: 10px; }
+    .skh-vp-imgbox { width: 104px; }
+    .skh-vp-chip { font-size: 11px; padding: 5px 8px; }
+}
+
+/* --------- preview ya variants: nafasi pana itumike (kadi ya soko) ---------- */
+.skh-vp-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    gap: 14px;
+    align-items: start;
+}
+.skh-vp-main { min-width: 0; }
+.skh-vp-market { min-width: 0; }
+/* nafasi iliyobaki itumike: vitufe vya hatua chini ya chips */
+.skh-vp-main .skh-vp-actions {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+}
+.skh-vp-main .skh-vp-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    min-height: 38px; padding: 9px 14px;
+    border-radius: 11px; border: 1px solid #0E6B52; background: #0E6B52; color: #fff;
+    font: 800 12px/1 'Inter','Segoe UI',sans-serif; cursor: default;
+}
+.skh-vp-main .skh-vp-cta--ghost { background: #fff; color: #0E6B52; border-color: #CDE6DD; }
+.skh-vp-main .skh-vp-cta--ghost:hover { background: #F2FAF6; }
+.skh-vp-main .skh-vp-summary {
+    margin-top: 10px; padding: 9px 10px;
+    border: 1px dashed #DDE7E3; border-radius: 10px; background: #FBFDFC;
+    font: 600 10.5px/1.5 'Inter','Segoe UI',sans-serif; color: #6B7A82;
+}
+.skh-vp-market-head {
+    font: 800 10px/1 'Inter','Segoe UI',sans-serif;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #7D8B94;
+    margin-bottom: 6px;
+}
+.skh-vp-mcard {
+    border: 1px solid #E7EDEA;
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+}
+.skh-vp-mimg {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: #F7FAF9;
+}
+.skh-vp-mimg img {
+    position: absolute;
+    inset: 9px;
+    width: calc(100% - 18px);
+    height: calc(100% - 18px);
+    object-fit: contain;
+    border-radius: 7px;
+}
+.skh-vp-mempty {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font: 700 10px/1 'Inter','Segoe UI',sans-serif; color: #A9B7BE;
+}
+.skh-vp-mflag {
+    position: absolute; top: 6px; right: 6px;
+    background: #F2F4F5; color: #7A8890; border: 1px solid #E2E7E9;
+    font: 800 8px/1.3 'Inter','Segoe UI',sans-serif;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: 2px 5px; border-radius: 4px;
+}
+.skh-vp-mbody { padding: 8px 9px 10px; display: flex; flex-direction: column; gap: 3px; }
+.skh-vp-mbody h4 {
+    margin: 0;
+    font: 700 12px/1.34 'Inter','Segoe UI',sans-serif;
+    letter-spacing: -.01em;
+    color: #16232B;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    min-height: 2.68em;
+}
+.skh-vp-mprice {
+    font: 800 15px/1.15 'Inter','Segoe UI',sans-serif;
+    letter-spacing: -.03em;
+    color: #0E6B52;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.skh-vp-mprice .cur { font-size: 8.5px; letter-spacing: .08em; color: #7D8B94; margin-right: 3px; }
+.skh-vp-munit { font: 600 10px/1.35 'Inter','Segoe UI',sans-serif; color: #7D8B94; min-height: 1.35em; }
+.skh-vp-mmeta {
+    display: flex; align-items: center; gap: 4px;
+    margin-top: 2px; padding-top: 6px; border-top: 1px solid #F0F5F3;
+    font: 600 9.5px/1.3 'Inter','Segoe UI',sans-serif; color: #6B7A82;
+    overflow: hidden; white-space: nowrap;
+}
+.skh-vp-mmeta svg { flex: 0 0 auto; color: #9AA8AF; }
+.skh-vp-mnote { margin: 6px 0 0; font: 600 9.5px/1.4 'Inter','Segoe UI',sans-serif; color: #7D8B94; }
+
+@media (max-width: 700px) {
+    .skh-vp-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .skh-vp-market { max-width: 190px; }
+}

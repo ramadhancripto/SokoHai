@@ -1,0 +1,336 @@
+/* =====================================================================
+   SokoHai — [CHAT CARD BALANCE 2026-11]  css/47-chat-nego-balance.css
+   Kadi za majadiliano (Ofa / Counter / Makubaliano / Oda) ndani ya chat.
+
+   Tatizo lililoripotiwa: kadi zinaonekana KUBWA na zinabana UI kwa pande
+   zote mbili (anayetoa ofa na anayejibu). Sababu halisi:
+     1) kadi ilikuwa ndani ya bubble yenye rangi + border → fremu mbili;
+     2) upana ulitofautiana (374px kushoto, 430px kulia) → hali si sawa;
+     3) masharti yalikuwa mstari mmoja mrefu ("Idadi: 3 · Bei unayopendekeza
+        (TSh): TSh 38,000 (ilikuwa TSh 45,000)") → maandishi mengi, urefu mkubwa;
+     4) vitufe vilikuwa na padding kubwa, vilishindwa kukaa mstari mmoja.
+
+   Suluhisho: kadi MOJA yenye upana sawa pande zote (max 420px), ukubwa wa
+   maandishi uliopunguzwa, masharti kama VIGAE viwili kwa mstari (label juu,
+   thamani chini) na "Jumla" ikichukua mstari wake, vitufe vidogo vinavyokaa
+   mstari mmoja. Kilichobaki ni cha CSS pekee — hakuna mantiki ya biashara
+   iliyoguzwa.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 1. BUBBLE */
+/* Ujumbe wenye kadi: bubble isiwe fremu ya pili (kadi yenyewe ni fremu). */
+html body #chatMessages .ch-msg .chat-bubble:has(.ch-nego-event),
+html body #chatMessages .ch-msg[data-mine="0"] .chat-bubble:has(.ch-nego-event),
+html body #chatMessages .ch-msg[data-mine="1"] .chat-bubble:has(.ch-nego-event),
+html body #chatMessages .ch-msg .chat-bubble:has(.ch-offer-msg),
+html body #chatMessages .ch-msg[data-mine="0"] .chat-bubble:has(.ch-offer-msg),
+html body #chatMessages .ch-msg[data-mine="1"] .chat-bubble:has(.ch-offer-msg) {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    /* Bubble yenye kadi: upana FIXED ili kadi zote ziwe sawa pande zote. */
+    width: 420px !important;
+    max-width: 100% !important;
+}
+
+/* ------------------------------------------------------- 2. UPANA WA PAMOJA */
+/* Pande zote mbili: upana sawa, hakuna kubana pembezoni. */
+html body .ch-msg .ch-nego-event,
+html body .ch-msg .ch-offer-msg {
+    width: 100% !important;
+    max-width: 420px !important;
+    box-sizing: border-box !important;
+}
+
+html body .ch-msg[data-mine="0"] .ch-nego-event,
+html body .ch-msg[data-mine="0"] .ch-offer-msg { margin-right: auto !important; }
+html body .ch-msg[data-mine="1"] .ch-nego-event,
+html body .ch-msg[data-mine="1"] .ch-offer-msg { margin-left: auto !important; }
+
+/* --------------------------------------------------------------- 3. KADI */
+html body .ch-nego-event {
+    border-radius: 14px !important;
+    border-left-width: 3px !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 6px 14px rgba(15, 23, 42, .05) !important;
+}
+
+/* Kichwa: kikombe kidogo, kimoja kwa mstari, beji ndogo. */
+html body .ch-nego-event .ch-nego-head {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    padding: 9px 11px 8px !important;
+}
+html body .ch-nego-event .ch-nego-ico {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 9px !important;
+}
+html body .ch-nego-event .ch-nego-ico svg { width: 15px !important; height: 15px !important; }
+html body .ch-nego-event .ch-nego-head-t { display: flex; flex-direction: column; gap: 3px; }
+html body .ch-nego-event .ch-nego-state {
+    align-self: flex-start;
+    font-size: 10px !important;
+    letter-spacing: .05em !important;
+    padding: 2px 7px !important;
+    margin-bottom: 0 !important;
+    line-height: 1.5 !important;
+}
+html body .ch-nego-event .ch-nego-title {
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ------------------------------------------------ 4. MASHARTI KAMA VIGAE */
+/* Gridi ya vigae: kiasi | bei kwa mstari; jumla inachukua mstari wake. */
+html body .ch-nego-event .ch-nego-terms {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin: 8px 11px 2px !important;
+    padding: 0 !important;
+    flex-direction: unset !important;
+}
+html body .ch-nego-event .ch-nego-term {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+    padding: 6px 9px !important;
+    background: #F7FAF9 !important;
+    border: 1px solid #E8EEF2 !important;
+    border-radius: 10px !important;
+    font-size: 11.5px !important;
+    color: #64748B !important;
+}
+html body .ch-nego-event .ch-nego-term-l {
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: .04em !important;
+    text-transform: uppercase !important;
+    color: #7A8B99 !important;
+    gap: 4px !important;
+    line-height: 1.4 !important;
+}
+html body .ch-nego-event .ch-nego-term-l svg { width: 11px !important; height: 11px !important; }
+html body .ch-nego-event .ch-nego-term b {
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #0F172A !important;
+    text-align: left !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    line-height: 1.25 !important;
+}
+html body .ch-nego-event .ch-nego-term.is-total {
+    grid-column: 1 / -1 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-top: 0 !important;
+    padding: 7px 10px !important;
+    background: linear-gradient(135deg, #EFF6FF, #F0F9FF) !important;
+    border: 1px solid #C7E0F5 !important;
+    border-radius: 10px !important;
+}
+html body .ch-nego-event .ch-nego-term.is-total .ch-nego-term-l { color: #1D4ED8 !important; }
+html body .ch-nego-event .ch-nego-term.is-total b {
+    color: #0B4F7A !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+}
+
+/* ------------------------------------------------- 5. BANGO LA ZAMU / ODA */
+html body .ch-nego-event .ch-nego-turnbanner {
+    margin: 7px 11px 0 !important;
+    padding: 6px 9px !important;
+    font-size: 12px !important;
+    border-radius: 9px !important;
+    line-height: 1.3 !important;
+}
+html body .ch-nego-event .ch-nego-order {
+    margin: 7px 11px 0 !important;
+    padding: 6px 9px !important;
+    border-radius: 10px !important;
+}
+html body .ch-nego-event .ch-nego-order-ico { width: 26px !important; height: 26px !important; border-radius: 8px !important; }
+html body .ch-nego-event .ch-nego-order-t b { font-size: 12px !important; }
+html body .ch-nego-event .ch-nego-order-t span { font-size: 11.5px !important; }
+html body .ch-nego-event .ch-nego-pending {
+    margin: 6px 11px 0 !important;
+    padding: 6px 8px !important;
+    font-size: 11.5px !important;
+    border-radius: 9px !important;
+    line-height: 1.35 !important;
+}
+html body .ch-nego-event .ch-nego-event-row { padding: 0 11px !important; font-size: 11.5px !important; }
+html body .ch-nego-event .ch-nego-track { margin: 8px 11px 2px !important; }
+
+/* ---------------------------------------------------------- 6. VITUFE */
+/* Vitufe vidogo, sare, vinavyokaa mstari mmoja kwenye kompyuta na
+   mistari miwili yenye usawa kwenye simu. */
+html body .ch-nego-event .ch-nego-actions,
+html body .ch-nego-event .ch-nego-actions {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)) !important;
+    gap: 5px !important;
+    padding: 0 11px 10px !important;
+    margin-top: 8px !important;
+    flex-wrap: unset !important;
+}
+html body .ch-nego-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 5px !important;
+    min-width: 0 !important;
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.1px;
+    border-radius: 9px !important;
+    white-space: normal !important;
+    text-align: center;
+}
+html body .ch-nego-btn svg { width: 13px !important; height: 13px !important; flex: 0 0 auto; }
+
+/* Historia ndogo */
+html body .ch-nego-event .ch-nego-hist {
+    padding: 0 11px 9px !important;
+    margin-top: 6px !important;
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
+}
+
+/* --------------------------------------------------- 7. KADI YA OFA (amber) */
+html body .ch-offer-msg {
+    background: #FFFCF4 !important;
+    border: 1px solid #F6E2B4 !important;
+    border-radius: 14px !important;
+    padding: 9px 11px !important;
+    min-width: 0 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .05) !important;
+}
+html body .ch-offer-msg .ch-offer-msg-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 7px !important;
+    min-width: 0;
+    font-size: 11.5px !important;
+    color: #92400E !important;
+}
+html body .ch-offer-msg .ch-offer-msg-top svg { width: 13px; height: 13px; flex: 0 0 auto; }
+html body .ch-offer-msg .ch-offer-msg-kicker {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: #B45309;
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: 99px;
+    padding: 1px 7px;
+    flex: 0 0 auto;
+    line-height: 1.6;
+}
+html body .ch-offer-msg .ch-offer-msg-top b {
+    font-size: 12.5px !important;
+    color: #0F172A !important;
+    font-weight: 800 !important;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+html body .ch-offer-msg .ch-offer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+html body .ch-offer-msg .ch-offer-term {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: 6px 9px;
+    background: #FFFFFF;
+    border: 1px solid #F1E6CE;
+    border-radius: 10px;
+}
+html body .ch-offer-msg .ch-offer-term-l {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #A16207;
+    line-height: 1.4;
+}
+html body .ch-offer-msg .ch-offer-term-l svg { width: 11px; height: 11px; }
+html body .ch-offer-msg .ch-offer-term b {
+    font-size: 13px;
+    font-weight: 900;
+    color: #0F172A;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+html body .ch-offer-msg .ch-offer-was {
+    font-size: 10.5px !important;
+    color: #A16207 !important;
+    text-decoration: line-through;
+    line-height: 1.3;
+}
+html body .ch-offer-msg .ch-offer-term.is-total {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: #FEF9EC;
+    border-color: #F6E2B4;
+}
+html body .ch-offer-msg .ch-offer-term.is-total b { font-size: 14px; color: #92400E; white-space: nowrap; }
+html body .ch-offer-msg .ch-offer-msg-status {
+    margin-top: 7px !important;
+    font-size: 10.5px !important;
+    padding: 2px 8px !important;
+    line-height: 1.6 !important;
+}
+html body .ch-offer-msg .ch-offer-msg-actions {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)) !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+}
+html body .ch-offer-msg .ch-offer-msg-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 7px 8px !important;
+    font-size: 11.5px !important;
+    border-radius: 9px !important;
+}
+html body .ch-offer-msg .ch-offer-msg-actions button svg { width: 13px; height: 13px; }
+
+/* ----------------------------------------------------------- 8. SIMU */
+@media (max-width: 640px) {
+    html body .ch-msg .ch-nego-event,
+    html body .ch-msg .ch-offer-msg { max-width: 100% !important; }
+    html body .ch-nego-event .ch-nego-terms { gap: 5px !important; }
+    /* Simu: vitufe viwe 2 kwa mstari (maandishi yote yasikatikwe) */
+    html body .ch-nego-event .ch-nego-actions { grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)) !important; gap: 5px !important; }
+    html body .ch-nego-btn,
+    html body .ch-offer-msg .ch-offer-msg-actions button { font-size: 11.5px !important; padding: 8px 6px !important; }
+}
