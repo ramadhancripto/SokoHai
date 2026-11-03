@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai Business OS — Full System Audit &amp; Design Proposal</title>
+<style>
+  :root{
+    --ink:#12211C; --ink-2:#33474; --muted:#6C7C77; --line:#E4EBE8; --line-2:#EFF4F2;
+    --green:#18A982; --green-d:#17604E; --green-l:#EAF7F2; --gold:#D4AF37; --gold-l:#FBF5E2;
+    --blue:#2F7BB8; --blue-l:#EBF3FA; --red:#B4442F; --red-l:#FCEEEA; --paper:#F6F9F8;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:15px; line-height:1.62; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px 90px}
+  header.hero{
+    background:linear-gradient(160deg,#0E3B2F 0%,#17604E 58%,#1E7A5F 100%);
+    color:#fff; padding:46px 0 40px; margin-bottom:34px;
+    border-bottom:4px solid var(--gold);
+  }
+  header.hero .wrap{padding-bottom:0}
+  .kicker{font-size:11px; letter-spacing:.19em; text-transform:uppercase; color:#9FE3C9; font-weight:800}
+  h1{font-size:34px; line-height:1.16; margin:10px 0 10px; letter-spacing:-.025em; font-weight:800}
+  h1 span{color:#FFD97A}
+  .sub{font-size:15px; color:#D6EDE5; max-width:820px; margin:0}
+  .hero-meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px}
+  .chip{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); color:#EAF7F2;
+    font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:999px}
+  .chip.warn{background:rgba(212,175,55,.18); border-color:rgba(212,175,55,.5); color:#FFE9AE}
+
+  h2{font-size:23px; letter-spacing:-.02em; margin:44px 0 6px; font-weight:800; scroll-margin-top:20px}
+  h2 .n{color:var(--green); font-variant-numeric:tabular-nums; margin-right:8px; font-weight:800}
+  h3{font-size:16.5px; margin:26px 0 8px; font-weight:800; letter-spacing:-.01em}
+  h4{font-size:13.5px; margin:18px 0 6px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--green-d)}
+  p{margin:9px 0}
+  .lead{font-size:15.5px; color:#3A4E48}
+  hr{border:0; border-top:1px solid var(--line); margin:26px 0}
+  a{color:var(--green-d)}
+
+  .card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; margin:14px 0}
+  .card.tight{padding:13px 15px}
+  .grid{display:grid; gap:14px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media(max-width:860px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
+
+  .stat{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px}
+  .stat b{display:block; font-size:26px; line-height:1.15; letter-spacing:-.03em; color:var(--green-d); font-variant-numeric:tabular-nums}
+  .stat small{display:block; color:var(--muted); font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-top:3px}
+  .stat p{margin:6px 0 0; font-size:12.5px; color:#4A5C56}
+
+  table{width:100%; border-collapse:collapse; background:#fff; font-size:13px;
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+  .tbl-scroll{overflow-x:auto; border-radius:var(--radius); border:1px solid var(--line); background:#fff}
+  .tbl-scroll table{border:0; border-radius:0; min-width:720px}
+  th,td{text-align:left; padding:9px 11px; border-bottom:1px solid var(--line-2); vertical-align:top}
+  th{background:#F3F8F6; font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--green-d); font-weight:800;
+     position:sticky; top:0}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#FBFDFC}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace; font-size:11.5px;
+    background:#F1F6F4; border:1px solid #E3EDE9; border-radius:5px; padding:1px 5px; color:#16544A; white-space:nowrap}
+  td code{white-space:normal; word-break:break-word; display:inline}
+
+  .badge{display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+    padding:3px 8px; border-radius:999px; white-space:nowrap; border:1px solid transparent}
+  .b-done{background:#E6F7F0; color:#0F7A5B; border-color:#C7EBDD}
+  .b-part{background:var(--gold-l); color:#8A6B0B; border-color:#EFDFAE}
+  .b-name{background:#F2F4F5; color:#5E6E74; border-color:#E2E8EA}
+  .b-miss{background:var(--red-l); color:#9A3A26; border-color:#F3D5CC}
+  .b-dup{background:var(--blue-l); color:#205F91; border-color:#CFE3F3}
+
+  .callout{border-left:4px solid var(--green); background:var(--green-l); border-radius:0 12px 12px 0; padding:12px 16px; margin:14px 0}
+  .callout.warn{border-color:var(--gold); background:var(--gold-l)}
+  .callout.risk{border-color:var(--red); background:var(--red-l)}
+  .callout.info{border-color:var(--blue); background:var(--blue-l)}
+  .callout b{display:block; margin-bottom:3px; font-size:12.5px; text-transform:uppercase; letter-spacing:.06em}
+
+  ul,ol{margin:8px 0 8px 20px; padding:0}
+  li{margin:4px 0}
+  .plain{list-style:none; margin-left:0}
+
+  .tree{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.4px; line-height:1.72;
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; overflow-x:auto; white-space:pre}
+  .tree b{color:var(--green-d)}
+  .tree .new{color:#8A6B0B; font-weight:700}
+  .tree .gone{color:#9A3A26; text-decoration:line-through}
+
+  .diagram{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:10px; overflow-x:auto}
+  .diagram svg{display:block; min-width:900px; width:100%; height:auto}
+
+  .legend{display:flex; flex-wrap:wrap; gap:12px; font-size:11.5px; color:#4A5C56; margin:8px 0 0}
+  .legend i{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+
+  nav.toc{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; margin:26px 0}
+  nav.toc b{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--green-d)}
+  nav.toc ol{columns:2; column-gap:28px; margin:10px 0 0 18px; font-size:13px}
+  @media(max-width:700px){nav.toc ol{columns:1}}
+  nav.toc a{color:#2A4038; text-decoration:none; border-bottom:1px dotted #BFD8CE}
+  nav.toc a:hover{color:var(--green)}
+
+  footer{margin-top:50px; padding-top:18px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  .nowrap{white-space:nowrap}
+  .small{font-size:12.5px; color:#4A5C56}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">SokoHai · Business OS · Read-only Audit</div>
+    <h1>Business OS: <span>kilichopo, kilichokamilika, kilichokosekana</span></h1>
+    <p class="sub">Uchunguzi wa mfumo mzima kwa kufungua source code — sio kuangalia menu. Kila tamko lina
+      uthibitisho wa faili, mstari, Firestore rule au test suite iliyotekelezwa. Hakuna code iliyobadilishwa.</p>
+    <div class="hero-meta">
+      <span class="chip">Tarehe: 2026-11-03</span>
+      <span class="chip">Branch: improve/phase1-audit-upload-fix</span>
+      <span class="chip">Mode: READ-ONLY</span>
+      <span class="chip warn">Hakuna commit · push · deploy</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+  <b>Yaliyomo</b>
+  <ol>
+    <li><a href="#m">Namna nilivyochunguza</a></li>
+    <li><a href="#verdict">Hukumu kwa ufupi</a></li>
+    <li><a href="#a">A · Current System Audit (modules 30)</a></li>
+    <li><a href="#frag">Ugawanyaji na urudufu (fragmentation)</a></li>
+    <li><a href="#b">B · Full System Sitemap (ilivyo / inavyopaswa)</a></li>
+    <li><a href="#c">C · Module Matrix</a></li>
+    <li><a href="#d">D · Architecture Diagram</a></li>
+    <li><a href="#data">Source of truth ya kila data</a></li>
+    <li><a href="#e">E · Role &amp; Permission Matrix</a></li>
+    <li><a href="#levels">POS Control Levels × Selling Mode</a></li>
+    <li><a href="#wf">Workflows A–F + zilizogundulika</a></li>
+    <li><a href="#design">Design proposal: shell, capability model, navigation</a></li>
+    <li><a href="#road">Roadmap na hatari</a></li>
+    <li><a href="#mockups">F · Mockups</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<h2 id="m"><span class="n">01</span>Namna nilivyochunguza (ushahidi)</h2>
+<p class="lead">Sikutegemea majina ya menu. Nilifungua kila faili, nikafuata kila collection hadi
+  <code>firestore.rules</code> na Cloud Function inayoandika, kisha nikalinganisha na test suites zilizopo.</p>
+
+<div class="grid g4">
+  <div class="stat"><b>74,702</b><small>mistari js/app</small><p>105 moduli za app (1–105)</p></div>
+  <div class="stat"><b>14,505</b><small>mistari functions/</small><p>~150 callable + triggers + schedulers</p></div>
+  <div class="stat"><b>101</b><small>collections zenye rules</small><p>kati yake 6 hazitumiki kabisa</p></div>
+  <div class="stat"><b>112</b><small>test suites</small><p><code>tools/test_*.mjs</code></p></div>
+</div>
+
+<div class="card">
+<h4>Vyanzo vya msingi vilivyosomwa</h4>
+<div class="grid g2">
+<div>
+<ul class="small">
+  <li><code>firestore.rules</code> (1,476 mistari) — haki halisi za kila collection</li>
+  <li><code>functions/inventory-authority.js</code> (1,734) — POS, returns, voids, refunds, variants</li>
+  <li><code>functions/inventory-reservation.js</code> — stock ya oda za mtandao</li>
+  <li><code>functions/reporting-authority.js</code> — <code>posReports</code> (Business/Store scoped)</li>
+  <li><code>functions/business.js</code> + <code>shared/business-context-core.js</code></li>
+  <li><code>functions/business-store-authority.js</code></li>
+</ul>
+</div>
+<div>
+<ul class="small">
+  <li><code>js/app/03-dashboard.js</code>, <code>10-dashboard-tabs.js</code>, <code>18-cockpit.js</code></li>
+  <li><code>js/app/15-pos-sales.js</code>, <code>16-pos-admin-jobs.js</code>, <code>17-hub.js</code></li>
+  <li><code>js/app/14-map-onboarding.js</code> (wizard), <code>19-roles.js</code>, <code>50-lifecycle-core.js</code></li>
+  <li><code>shared/pos-level-core.mjs</code> + <code>shared/business-context-core.js</code></li>
+  <li><code>html/09-admin-sell.html</code> (POS + builder), <code>html/21-scripts.html</code> (wizard)</li>
+  <li>Grep ya kimfumo: collection → writer → rule → UI caller</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="verdict"><span class="n">02</span>Hukumu kwa ufupi</h2>
+<p class="lead">SokoHai <b>ina Business OS ya kweli nyuma ya pazia</b> — inventory authority, POS ya server-side,
+  escrow, reservations, ripoti — lakini <b>haijasomeshwa kama mfumo mmoja</b>. Kuna injini nzuri nyingi
+  zinazoendesha dashboards sita tofauti, na sehemu muhimu za Business OS hazipo kabisa.</p>
+
+<div class="grid g4">
+  <div class="stat"><b>11</b><small>zinafanya kazi</small><p>Injini halisi + rules + tests</p></div>
+  <div class="stat"><b>12</b><small>partial</small><p>Zipo, zinatumika, hazijakamilika</p></div>
+  <div class="stat"><b>4</b><small>jina tu</small><p>Collection/field/tab tupu au iliyokufa</p></div>
+  <div class="stat"><b>3 + 6</b><small>hazipo / zimegawanyika</small><p>3 hazipo kabisa, 6 zimegawika</p></div>
+</div>
+
+<div class="callout">
+  <b>Sentensi moja</b>
+  Injini za nyuma (inventory, POS, escrow, reservations, reports) ni <b>za kiwango cha juu</b>;
+  shell ya mbele (dashboard, navigation, capabilities, roles) ndiyo <b>kiungo dhaifu</b> — na ndiyo hasa
+  kitu unachoomba kujengwa.
+</div>
+
+<div class="callout risk">
+  <b>Hatari tatu za haraka</b>
+  <ol class="small" style="margin-bottom:0">
+    <li><b>POS level ni mapambo:</b> <code>sokohai_pos_level</code> inaishi kwenye <code>localStorage</code>;
+       hakuna UI, hakuna server enforcement. Mtu yeyote anaweza kuweka <code>full</code> kwa console.</li>
+    <li><b>Ledger mbili za mauzo:</b> <code>sales</code> (server-only, authoritative) na <code>shop_ledger</code>
+       (client-writable) zinaandikwa kwa muamala mmoja; dashboards zinasoma <code>shop_ledger</code>.</li>
+    <li><b>Staff = owner:</b> <code>ownsShopRecord()</code> inampa kila staff aliyelink <i>haki zote</i>
+       za mmiliki — hakuna role granularity server-side.</li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="a"><span class="n">03</span>A · Current System Audit</h2>
+<p class="lead">Modules 30 kama zilivyoorodheshwa. Hali imetolewa kutoka source, sio menu.</p>
+
+<div class="legend">
+  <span><i style="background:#C7EBDD"></i>Inafanya kazi (DONE)</span>
+  <span><i style="background:#EFDFAE"></i>Partial</span>
+  <span><i style="background:#E2E8EA"></i>Jina tu</span>
+  <span><i style="background:#F3D5CC"></i>Haipo</span>
+  <span><i style="background:#CFE3F3"></i>Imejirudia / imegawika</span>
+</div>
+
+<div class="tbl-scroll" style="margin-top:12px">
+<table>
+<thead><tr><th style="width:30px">#</th><th style="width:190px">Module</th><th style="width:88px">Hali</th><th>Ushahidi / kilichogundulika</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><b>Business Dashboard / Overview</b></td><td><span class="badge b-part">Partial</span></td>
+  <td><code>03-dashboard.js:17</code> <code>loadAndRenderDashboard()</code> inasoma <code>products</code> + <code>shop_ledger</code> kwa kweli;
+  <code>10-dashboard-tabs.js:209</code> overview ipo. <b>Lakini:</b> insights zimeandikwa kwa mkono
+  (“<i>Sugar stock will finish in 4 days</i>”), staff tab ina KPI za kubuni (<code>:405</code> TOTAL STAFF <b>25</b>, PRESENT <b>20</b>),
+  na mstari wa matumizi ya kubuni <code>TSh 50,000</code> (<code>:368</code>). Muonekano ni ERP ya giza (<code>#0F172A</code>) — kinzani na identity nyeupe ya SokoHai.</td></tr>
+
+<tr><td>2</td><td><b>Business Profile &amp; Setup</b></td><td><span class="badge b-done">Done</span></td>
+  <td>Wizard halisi wa hatua 5 (<code>html/21-scripts.html:564-720</code>): aina ya duka → mtindo wa mauzo → taarifa → profaili/wafanyakazi → setup mode.
+  Inaandika <code>users/{uid}</code> kisha <code>businessEnsureContext</code> (<code>functions/business.js:54</code>) kutengeneza
+  <code>businesses/business_&lt;uid&gt;</code> + <code>stores/store_&lt;uid&gt;</code> kwa transaction moja. <b>Kasoro:</b> Management Level imeandikwa
+  <code>{level:'BASIC'}</code> kwa mkono (<code>14-map-onboarding.js:903</code>) — “until the capability editor is introduced”.</td></tr>
+
+<tr><td>3</td><td><b>Stores / Outlets / Branches</b></td><td><span class="badge b-miss">Haipo (multi)</span></td>
+  <td>Canonical: <b>duka moja tu</b> kwa akaunti — <code>storeId = 'store_' + uid</code>; <code>firestore.rules:422</code> inaruhusu
+  <code>read</code> pekee, <code>write:false</code> (server only). Hakuna store list, hakuna store switcher, hakuna stock per store.
+  Kuna mabaki: button “Multi-Branch Transfers” (<code>03-dashboard.js</code>) + collection <code>stock_transfers</code>,
+  na field <code>branchMode</code> inayoandikwa (<code>14-map-onboarding.js:910</code>) <b>lakini haisomwi popote</b>.</td></tr>
+
+<tr><td>4</td><td><b>Products &amp; Catalog</b></td><td><span class="badge b-done">Done</span></td>
+  <td>Collection <code>products</code> (public read, rules:131). Builder (<code>06-product-builder.js</code>), taxonomy bridge,
+  publish outbox (<code>102-publish-outbox.js</code>), showcase, marketplace, POS — <b>chanzo kimoja</b>. Rula inazuia kuandika
+  <code>stock</code>, <code>reservedStock</code>, <code>variantCombinations</code> kutoka browser.</td></tr>
+
+<tr><td>5</td><td><b>Product Variants / SKU / Barcode</b></td><td><span class="badge b-done">Done</span></td>
+  <td><code>variantCombinations</code> (≤200) + <code>productVariantsSave</code> (<code>inventory-authority.js:1089</code>) inaunganisha
+  stock/reserved za server. SKU, unitId, barcode: POS inatafuta kwa <code>title+category+barcode+sku</code> (<code>17-hub.js:571</code>).
+  <b>Kasoro ya UX:</b> kuchagua variant kwenye POS hutumia <code>window.prompt()</code> (<code>17-hub.js:600</code>).</td></tr>
+
+<tr><td>6</td><td><b>Services Management</b></td><td><span class="badge b-part">Partial</span></td>
+  <td>Collection <code>services</code> + rules (create/update owner-only, rules:212) + service taxonomy (<code>shared/service-taxonomy-core.js</code>)
+  + <b>Huduma Hub</b> dashboard (<code>19-roles.js:22</code>) yenye maombi/kazi/wateja/mikataba/escrow. <b>Kasoro:</b> huduma
+  haziingii kwenye POS wala <code>posReports</code> — mzunguko wa huduma na wa bidhaa ni mifumo miwili tofauti.</td></tr>
+
+<tr><td>7</td><td><b>Transport Management</b></td><td><span class="badge b-done">Done (silo)</span></td>
+  <td><code>drivers</code>, <code>transport_profiles</code>, <code>logistics_companies</code>, <code>ride_requests</code>,
+  <code>shipments</code>, <code>delivery_tokens</code>, routing functions (<code>routing.js</code>, <code>routing-core.js</code> 541 ln).
+  Inafanya kazi lakini ni dashboard tofauti kabisa (<code>loadDriverDashboard</code>) — haiunganishwi na biashara yenye bidhaa.</td></tr>
+
+<tr><td>8</td><td><b>POS / Point of Sale</b></td><td><span class="badge b-done">Done</span> <span class="badge b-part">Level: hakuna</span></td>
+  <td>Injini kamili: <code>posSale</code>(:502) <code>posReturn</code>(:767) <code>posVoid</code>(:1169) <code>posRefund</code>(:1528)
+  <code>posCreditAdjustment</code>(:1611) + <code>posReceipt</code>(:1468) <code>posReconcile</code>(:1506) za server.
+  Action center: sale / debt / receive payment / return / expense / supplier payment / reports (<code>09-admin-sell.html:376</code>).
+  Offline queue yenye lease + price-conflict detection (<code>18-cockpit.js:216-424</code>).
+  <b>Kasoro:</b> mfumo wa level (<code>shared/pos-level-core.mjs</code>) hauna UI — <code>#posLevelSelect</code> haipo kwenye HTML
+  yoyote; hakuna element yenye <code>data-pos-level-required</code>; <code>posReceipt</code>/<code>posReconcile</code> hazina UI caller.</td></tr>
+
+<tr><td>9</td><td><b>Sales &amp; Orders</b></td><td><span class="badge b-part">Partial</span></td>
+  <td><code>sales</code> (server-write only, rules:184) na <code>orders</code> (escrow, rules:497). <b>Hakuna screen moja ya “Mauzo &amp; Oda”</b>:
+  UI <b>haisomi collection <code>sales</code> hata mara moja</b> — inasoma <code>shop_ledger</code> badala yake. Oda za mtandao zina
+  ukurasa wake (buyer orders / seller order inbox) tofauti.</td></tr>
+
+<tr><td>10</td><td><b>Inventory / Stock</b></td><td><span class="badge b-done">Done</span></td>
+  <td>Nguvu kubwa ya mfumo: <code>inventoryAdjust</code>(:969) yenye idempotency, <code>inventory_movements</code>,
+  <code>inventory_reservations</code> (T1–T5: reserve → commit → release → expire → reconcile), decimal quantity
+  (<code>quantity-core</code>), opening balance, low-stock alerts, <code>stockMode</code> strict/flexible, valuation.
+  <b>POS na Marketplace zinatumia stock moja</b> (<code>products.stock</code> + <code>reservedStock</code>) — hakuna duplicate inventory.</td></tr>
+
+<tr><td>11</td><td><b>Purchases / Procurement</b></td><td><span class="badge b-part">Partial</span></td>
+  <td><code>purchase_orders</code> + <code>createPurchaseOrder</code> (<code>18-cockpit.js:540</code>, PO ya bidhaa <b>moja</b> kwa wakati),
+  <code>receivePurchaseOrder</code> (:586) inaingiza stock kupitia <code>inventoryAdjust</code> (movementType <code>PURCHASE</code>) — sahihi.
+  Landed cost calculator (:971), scrap (:994). <b>Kasoro:</b> hakuna PO ya mistari mingi, hakuna partial receiving/GRN,
+  hakuna approval flow (<code>approvalFlow</code> dead field), hakuna supplier invoice.</td></tr>
+
+<tr><td>12</td><td><b>Suppliers</b></td><td><span class="badge b-part">Partial</span></td>
+  <td><code>suppliers</code> (rules:1244) + <code>saveSupplierProfile</code> (<code>18-cockpit.js:463</code>) + dropdown kwenye PO,
+  na “Supplier Payment” kwenye POS. <b>Kasoro:</b> hakuna salio la supplier (supplier ledger), hakuna historia ya malipo
+  kwa supplier mmoja, hakuna rating/terms.</td></tr>
+
+<tr><td>13</td><td><b>Customers / CRM</b></td><td><span class="badge b-miss">Haipo</span></td>
+  <td>Rules zina <code>match /customers/{id}</code> (rules:1250) <b>lakini code haina rejeo hata moja</b> (grep = 0 writers, 0 readers).
+  Wateja wanajulikana tu kwa <code>buyerName</code> ndani ya oda na madeni (<code>shop_ledger.type='debt'</code>). Hakuna profaili,
+  historia ya manunuzi, credit limit, wala orodha ya wateja.</td></tr>
+
+<tr><td>14</td><td><b>Staff / Employees / Cashiers</b></td><td><span class="badge b-part">Partial</span></td>
+  <td><code>shop_staff</code> (rules:1218) + <code>submitAddNewStaff</code> (<code>15-pos-sales.js:650</code>), mishahara
+  (<code>payStaffSalary</code>:685), kazi (<code>assignStaffTaskPrompt</code>:724), mahudhurio (<code>staff_attendance</code>),
+  <code>autoGenerateStaffAndRules</code> (<code>14-map-onboarding.js:1008</code>). Role ni <b>string tu</b> — haisimamii ruhusa yoyote.</td></tr>
+
+<tr><td>15</td><td><b>Roles &amp; Permissions</b></td><td><span class="badge b-part">Partial (dhaifu)</span></td>
+  <td><code>19-roles.js</code> jina linadanganya: ina <code>loadDriverDashboard</code>/<code>loadProviderDashboard</code>, si roles.
+  Mfumo halisi: owner + <code>users.shopOwnerUid</code> link (<code>rules:54,60</code>) → <b>kila staff aliyelink ana haki zote za owner</b>.
+  Admin claim + agent pekee ndio tofauti. <code>cashierCanViewProfit</code>/<code>cashierCanEditStock</code> zinahifadhiwa
+  (<code>17-hub.js:2226</code>) <b>lakini hazisomwi popote</b> — flags zilizokufa.</td></tr>
+
+<tr><td>16</td><td><b>Expenses</b></td><td><span class="badge b-part">Partial</span></td>
+  <td><code>shop_ledger</code> type <code>expense</code> + <code>submitPredefinedExpense</code> (<code>15-pos-sales.js:620</code>),
+  POS action “Record Expense”, <code>driver_expenses</code>, spoilage (<code>18-cockpit.js:709</code>). <b>Kasoro:</b> hakuna
+  kategoria za matumizi, bajeti, risiti/attachment, wala approval.</td></tr>
+
+<tr><td>17</td><td><b>Cash Management</b></td><td><span class="badge b-part">Partial</span></td>
+  <td>Shift: <code>openStartShiftPrompt</code> / <code>closeCashierShiftPrompt</code> (<code>18-cockpit.js:652,670</code>) → <code>shift_logs</code>.
+  POS ina cash received / change (<code>15-pos-sales.js:563</code>). <b>Kasoro:</b> hakuna cash reconciliation ya drawer
+  (denominations, expected vs counted), <code>posReconcile</code> ipo server-side bila UI.</td></tr>
+
+<tr><td>18</td><td><b>Payments &amp; Transactions</b></td><td><span class="badge b-done">Done</span></td>
+  <td>PesaPal kupitia server (<code>PAYMENTS_VIA_SERVER:true</code>), <code>pesapalCheckout</code>/<code>pesapalTransactionStatus</code>,
+  <code>payment_reviews</code>, <code>refunds</code>, <code>wallet_ledger</code>, payment accounts (<code>67-payment-accounts.js</code>).
+  Njia 7 za POS: Cash/Mpesa/TigoPesa/AirtelMoney/Bank/Deni/Awamu.</td></tr>
+
+<tr><td>19</td><td><b>SokoPay / Wallet / Escrow</b></td><td><span class="badge b-done">Done</span></td>
+  <td><code>sokopay_links</code>, <code>sokopay_core_transactions</code>, <code>sokopay_tokens</code>, <code>escrow_holds</code>,
+  <code>escrowRelease</code> (atomic, idempotent, server), <code>sokopayAutoRelease</code> (Cloud Scheduler 5 min),
+  <code>walletAdjust</code>. Rules zinazuia browser kuandika <code>walletBalance</code>. Mfumo mmoja — hakuna duplicate.</td></tr>
+
+<tr><td>20</td><td><b>Delivery &amp; Fulfillment</b></td><td><span class="badge b-done">Done (silo)</span></td>
+  <td><code>43-delivery-choice.js</code> (812 ln), <code>delivery_offers</code>, <code>delivery_tokens</code> (PK/TR/DL),
+  <code>delivery_handovers</code>, custody (<code>33-custody.js</code>), <code>orderConfirmDelivery</code>, disputes.
+  Haijaunganishwa na Business OS UI (ni sehemu ya checkout ya mnunuzi).</td></tr>
+
+<tr><td>21</td><td><b>Promotions &amp; Discounts</b></td><td><span class="badge b-part">Partial</span></td>
+  <td>POS: punguzo la 10% pekee; “weekend TSh 2,000” na “Nunua 2 Pata 1” zimewashwa <code>disabled</code>
+  (<code>09-admin-sell.html:424-427</code>). Bidhaa: <code>saleMode</code> discount / wholesale tiers / group buy / auction
+  (<code>commerce-modes.js</code>). <b>Hakuna</b> promo code/coupon engine (grep = 0) wala kampeni zenye tarehe.</td></tr>
+
+<tr><td>22</td><td><b>Marketplace Listings</b></td><td><span class="badge b-done">Done</span></td>
+  <td><code>products</code> public read; <code>30-seller-products.js</code>, <code>39-product-showcase.js</code>,
+  ranking, discover, moderation (admin). Inatumia bidhaa zilezile za POS.</td></tr>
+
+<tr><td>23</td><td><b>Ads Studio</b></td><td><span class="badge b-done">Done</span></td>
+  <td><code>95-creative-studio.js</code>, <code>99/100/101</code>, <code>functions/creative.js</code>, <code>ads-delivery*.js</code>,
+  delivery leases/sessions/metrics (server-only). Subsystem kamili — nje ya wigo wa Business OS core.</td></tr>
+
+<tr><td>24</td><td><b>Reports &amp; Analytics</b></td><td><span class="badge b-part">Partial (nzuri)</span></td>
+  <td><code>posReports</code> → <code>reporting-authority.js</code>: gross/pending/credit/returns/refunds/voids/net,
+  cash zilizokusanywa, per-cashier, per-product, inventory deltas, transactions — scoped kwa <code>businessId</code>+<code>storeId</code>.
+  <b>Kasoro:</b> hakuna export (CSV/PDF), hakuna huduma/usafiri kwenye ripoti, na tabs za analytics zina insights za kubuni.</td></tr>
+
+<tr><td>25</td><td><b>Accounting / Financial Records</b></td><td><span class="badge b-part">Partial</span></td>
+  <td><code>shop_ledger</code> (single-entry, client-writable), <code>sales</code>, <code>receipts</code>, <code>reconciliations</code>,
+  <code>sale_adjustments</code>, <code>credit_adjustments</code>. <b>Hakuna</b> chart of accounts, double-entry, P&amp;L, balance sheet,
+  VAT/tax. Kimsingi ni “ledger ya duka”, sio accounting.</td></tr>
+
+<tr><td>26</td><td><b>Notifications</b></td><td><span class="badge b-done">Done</span></td>
+  <td><code>notifications</code> (rules:596) + <code>notificationPreferences</code>; server inaandika (commerce-modes, delivery, escrow);
+  client toast/dialog system (<code>07-toasts.js</code>, <code>05-dialogs.js</code>).</td></tr>
+
+<tr><td>27</td><td><b>Business Settings</b></td><td><span class="badge b-part">Partial</span></td>
+  <td>Tab “System Settings” (<code>10-dashboard-tabs.js:457</code>): <code>stockMode</code>, cashier flags (dead), targets.
+  Settings zinaishi kwenye <code>users.shopSettings</code> — <b>sio</b> kwenye <code>businesses/{id}</code> (ambayo ni server-only).
+  Hakuna settings za store-level, tax, invoice, receipt template.</td></tr>
+
+<tr><td>28</td><td><b>Audit Logs / Activity</b></td><td><span class="badge b-part">Partial (server nzuri)</span></td>
+  <td>Server: <code>admin_audit_log</code>, <code>security_events</code>, <code>inventory_movements</code>, <code>activity_logs</code>,
+  <code>seller_lifecycle_log</code>, na audits za kila domain (<code>productsAdminAudit</code>, <code>usersAdminAudit</code>,
+  <code>ordersAdminAudit</code>, <code>announcementsAudit</code>, <code>systemConfigAudit</code>).
+  <b>Kasoro:</b> hakuna screen ya “Historia ya Matukio” kwa mmiliki wa biashara.</td></tr>
+
+<tr><td>29</td><td><b>Offline POS / Sync</b></td><td><span class="badge b-done">Done</span></td>
+  <td><code>skh_pos_sync_queue</code> + lease kwa tab (<code>POS_SYNC_OWNER</code>), transient vs conflict errors, price-conflict check,
+  cache ya bidhaa (<code>sokohai_pos_products_&lt;uid&gt;</code>). Inafanya kazi.</td></tr>
+
+<tr><td>30</td><td><b>Integrations / Advanced</b></td><td><span class="badge b-part">Partial</span></td>
+  <td>Zilizopo: PesaPal (malipo), Leaflet (ramani), Firebase App Check (imezimwa — <code>APP_CHECK_SITE_KEY:''</code>).
+  Hazipo: accounting exports, SMS, WhatsApp API, bank feeds, e-invoice/EFD (TRA), webhooks kwa wafanyabiashara.</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="frag"><span class="n">04</span>Ugawanyaji na urudufu (fragmentation)</h2>
+<p class="lead">Hii ni sehemu muhimu zaidi ya audit: mfumo una injini nyingi nzuri, lakini <b>shell moja</b> haipo.</p>
+
+<div class="grid g2">
+  <div class="card">
+    <h4>Shells sita tofauti</h4>
+    <p class="small"><code>00-bootstrap.js:1085-1093</code> — kila mode ina dashboard yake, sidebar yake, muonekano wake:</p>
+    <table class="small">
+      <tr><th>Mode</th><th>Loader</th><th>Sidebar</th></tr>
+      <tr><td>seller</td><td><code>loadAndRenderDashboard</code></td><td>giza <code>#0F172A</code> “ERP COCKPIT”, 8 groups</td></tr>
+      <tr><td>driver</td><td><code>loadDriverDashboard</code></td><td>nyeupe “Logistics Hub”, 11 items</td></tr>
+      <tr><td>provider</td><td><code>loadProviderDashboard</code></td><td>“Huduma Hub”, 13 items</td></tr>
+      <tr><td>agent</td><td><code>loadAgentDashboard</code></td><td>tofauti</td></tr>
+      <tr><td>admin</td><td><code>loadAdminDashboard</code></td><td><code>98-admin-control-center.js</code></td></tr>
+      <tr><td>buyer</td><td><code>18-buyer-view.html</code></td><td>bottom nav</td></tr>
+    </table>
+    <p class="small">Matokeo: mfanyabiashara mwenye bidhaa + huduma + usafiri analazimika kubadili dashboard tatu ili kusimamia biashara moja.</p>
+  </div>
+
+  <div class="card">
+    <h4>Urudufu wa kimuundo</h4>
+    <ul class="small">
+      <li><b>Wahariri wawili wa bidhaa:</b> <code>06-product-builder.js</code> (mpya) na <code>06-product-edit-builder.js</code> (legacy), pamoja na <code>sellerForm</code> monolith (<code>09-admin-sell.html</code>) na edit map (<code>12-sys-modes.js:340-545</code>).</li>
+      <li><b>Ledger mbili za muamala mmoja:</b> <code>sales</code> (server) na <code>shop_ledger</code> (client) — <code>posSale</code> inaandika zote mbili; dashboard inasoma ya pili.</li>
+      <li><b>Dhana tatu za “level” zisizoungana:</b> <code>pos-level-core</code> (localStorage), <code>business-context-core</code> (MODES/LEVELS/CAPABILITIES — server), <code>50-lifecycle-core</code> (TIER za data).</li>
+      <li><b>Click handlers za inline</b> kwenye HTML ya JS templates — ndio sababu ya kufanya refactor kuwa gumu.</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Fields, flags na collections zilizokufa</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th>Kitu</th><th>Kilipoandikwa</th><th>Kinasomwa wapi</th><th>Athari</th></tr></thead>
+<tbody>
+<tr><td><code>branchMode</code></td><td><code>14-map-onboarding.js:910</code></td><td>—</td><td>Hakuna multi-branch</td></tr>
+<tr><td><code>approvalFlow</code></td><td><code>14-map-onboarding.js:911</code></td><td>—</td><td>Hakuna approvals (PO, matumizi)</td></tr>
+<tr><td><code>cashierCanViewProfit</code></td><td><code>17-hub.js:2226</code></td><td>—</td><td>Cashier anaona faida kila wakati</td></tr>
+<tr><td><code>cashierCanEditStock</code></td><td><code>17-hub.js:2227</code></td><td>—</td><td>Cashier anaweza kuhariri stock</td></tr>
+<tr><td><code>sokohai_pos_level</code></td><td><code>pos-level-core.mjs</code></td><td><code>15-pos-sales.js</code> (UI haipo)</td><td>Level ni mapambo</td></tr>
+<tr><td>collection <code>customers</code></td><td>rules:1250</td><td>—</td><td>CRM haipo</td></tr>
+<tr><td>collection <code>events</code>, <code>invitations</code>, <code>groupOrders</code></td><td>rules</td><td>—</td><td>Hazitumiki</td></tr>
+<tr><td><code>posReceipt</code>, <code>posReconcile</code></td><td>functions</td><td>—</td><td>Risiti/reconciliation hazipatikani kwa mtumiaji</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <b>Muhimu</b>
+  Hizi si “code chakavu” tu — zina athari ya moja kwa moja: muuzaji anadhani amezima cashier kuona faida, kumbe hajazuia;
+  na anadhani amechagua POS level, kumbe hakuna level inayotekelezwa.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="b"><span class="n">05</span>B · Full System Sitemap</h2>
+<p class="lead">Kushoto: <b>ilivyo sasa</b> (shells zilizogawika). Kulia: <b>inavyopaswa</b> (shell moja inayobadilika).</p>
+
+<div class="grid g2">
+<div>
+<h4>Ilivyo sasa</h4>
+<div class="tree"><b>SokoHai (buyer shell)</b>
+├── Soko / Discover / Chat / Cart / Orders
+└── Mode menu (openModeMenu)
+    ├── <b>Seller · ERP Cockpit</b>   (dark)
+    │   ├── Overview
+    │   ├── My Products
+    │   ├── Products Intel (5 tabs)
+    │   ├── Stock &amp; Logistics
+    │   │   ├── Inventory &amp; Stock
+    │   │   └── Multi-Branch Transfers ⚠
+    │   ├── Finance &amp; Accounting → General Ledger
+    │   ├── Human Resources → Staff &amp; Payroll
+    │   └── System Control → Settings
+    │   <i>(+ POS modal, Procurement modal, POS Reports)</i>
+    ├── <b>Driver · Logistics Hub</b>  (light)
+    │   └── 11 items (bookings, trips, cargo, fleet, finance…)
+    ├── <b>Provider · Huduma Hub</b>
+    │   └── 13 items (requests, tasks, clients, contracts, escrow…)
+    ├── <b>Agent</b> dashboard
+    └── <b>Admin</b> control centre (separate module set)</div>
+<p class="small">Kila shell ina sidebar, styling na tab system yake. Hakuna mahali pa kuona “biashara” kwa ujumla.</p>
+</div>
+
+<div>
+<h4>Inavyopaswa (proposal)</h4>
+<div class="tree"><b>Business OS — shell moja</b>
+├── 🏠 <b>Nyumbani</b> (dashboard inayobadilika)
+├── ⚡ <b>Uendeshaji wa Kila Siku</b>
+│   ├── POS (level-gated)
+│   ├── Mauzo &amp; Risiti
+│   ├── Zamu &amp; Fedha Taslimu
+│   └── Oda za Mtandao
+├── 📦 <b>Bidhaa &amp; Stoo</b>
+│   ├── Bidhaa (umoja: bidhaa/huduma/usafiri)
+│   ├── Variants &amp; SKU
+│   ├── Stoo &amp; Uhamisho
+│   └── Manunuzi &amp; Wauzaji
+├── 🧾 <b>Mauzo &amp; Wateja</b>
+│   ├── Wateja (CRM)
+│   ├── Madeni &amp; Mikopo
+│   └── Ofa, Punguzo &amp; Promo
+├── 🚚 <b>Usafirishaji &amp; Uwasilishaji</b>  <span class="new">(capability)</span>
+├── 💰 <b>Fedha</b>
+│   ├── Mapato &amp; Matumizi
+│   ├── Malipo &amp; SokoPay
+│   └── Ripoti za Fedha
+├── 👥 <b>Watu &amp; Utawala</b>
+│   ├── Wafanyakazi
+│   ├── Ruhusa (roles)
+│   └── Matawi / Maduka  <span class="new">(new)</span>
+├── 📊 <b>Ripoti</b>
+└── ⚙️ <b>Mipangilio</b>
+    ├── Profaili ya Biashara
+    ├── Maduka
+    ├── Uwezo (Selling Mode / Level / Capabilities)
+    ├── Nyaraka &amp; Risiti
+    └── Historia ya Matukio</div>
+<p class="small"><span class="new">Njano</span> = mpya au inayohitaji kujengwa. Kila item inaonekana tu ikiwa capability yake imewashwa.</p>
+</div>
+</div>
+
+<div class="callout info">
+  <b>Kanuni ya navigation</b>
+  Mfanyabiashara wa <b>BASIC + OFFLINE</b> anaona vitu 12–14 pekee. Wa <b>FULL + HYBRID</b> anaona vitu ~40.
+  Sidebar moja, modules zinafichwa (hidden, sio kufutwa) — hakuna data inayohamishwa wala kufutwa level ikibadilika.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="c"><span class="n">06</span>C · Module Matrix</h2>
+<p class="lead">Kwa kila module: madhumuni, hali, faili, data, integrations, dependencies na kinachokosekana.</p>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr>
+<th style="width:150px">Module</th><th style="width:210px">Madhumuni</th><th style="width:80px">Hali</th>
+<th style="width:210px">Faili / components</th><th style="width:170px">Data sources</th>
+<th style="width:150px">Integrations</th><th>Kinachokosekana (gap)</th>
+</tr></thead>
+<tbody>
+<tr><td><b>Dashboard</b></td><td>Muhtasari wa biashara</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>03-dashboard.js</code>, <code>10-dashboard-tabs.js</code>, <code>18-cockpit.js</code></td>
+  <td><code>products</code>, <code>shop_ledger</code>, <code>shop_staff</code></td>
+  <td>POS, Inventory, Staff</td><td>KPIs za kubuni; hakuna dashboard inayobadilika kwa capability</td></tr>
+
+<tr><td><b>Business Setup</b></td><td>Kuanzisha biashara</td><td><span class="badge b-done">Done</span></td>
+  <td><code>14-map-onboarding.js</code>, <code>html/21-scripts.html</code>, <code>business.js</code></td>
+  <td><code>users</code>, <code>businesses</code>, <code>stores</code></td>
+  <td><code>businessEnsureContext</code>, <code>sellerLifecycleChange</code></td>
+  <td>Hatua ya Management Level/Capabilities haipo</td></tr>
+
+<tr><td><b>Stores / Branches</b></td><td>Maduka/matawi mengi</td><td><span class="badge b-miss">Haipo</span></td>
+  <td><code>business-store-authority.js</code> (1 store tu)</td>
+  <td><code>stores</code> (1/owner)</td><td>—</td>
+  <td>Store list, switcher, per-store inventory, store-scoped staff</td></tr>
+
+<tr><td><b>Products</b></td><td>Catalog</td><td><span class="badge b-done">Done</span></td>
+  <td><code>06-product-builder.js</code>, <code>07-product.js</code>, <code>08-app-state.js</code>, taxonomy bridge</td>
+  <td><code>products</code></td><td>Marketplace, POS, Ads</td><td>Bulk import/export</td></tr>
+
+<tr><td><b>Variants / SKU</b></td><td>Mchanganyiko &amp; bei</td><td><span class="badge b-done">Done</span></td>
+  <td><code>06-product-builder.js</code>, <code>productVariantsSave</code></td>
+  <td><code>products.variantCombinations</code></td><td>POS, reservations</td>
+  <td>Barcode generation/printing; POS variant picker ni <code>prompt()</code></td></tr>
+
+<tr><td><b>Services</b></td><td>Huduma</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>17-hub.js</code>, <code>19-roles.js</code>, <code>service-taxonomy-core.js</code></td>
+  <td><code>services</code>, <code>requests</code></td><td>Escrow, Chat</td>
+  <td>Haiingii POS/ripoti; dashboard tofauti</td></tr>
+
+<tr><td><b>Transport</b></td><td>Usafiri/mizigo</td><td><span class="badge b-done">Done</span></td>
+  <td><code>20-logistics.js</code>, <code>52-transport-inbox.js</code>, <code>routing*.js</code></td>
+  <td><code>drivers</code>, <code>ride_requests</code>, <code>shipments</code></td><td>Delivery tokens</td>
+  <td>Haiunganishwi na biashara yenye bidhaa</td></tr>
+
+<tr><td><b>POS</b></td><td>Uuzaji wa dukani</td><td><span class="badge b-done">Done</span></td>
+  <td><code>15-pos-sales.js</code>, <code>16-pos-admin-jobs.js</code>, <code>17-hub.js</code>, <code>inventory-authority.js</code></td>
+  <td><code>sales</code>, <code>shop_ledger</code>, <code>inventory_movements</code>, <code>receipts</code></td>
+  <td>SokoPay, PesaPal, Delivery</td><td>Level gating; receipts UI; reconciliation UI</td></tr>
+
+<tr><td><b>Sales &amp; Orders</b></td><td>Mauzo yote</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>17-hub.js</code>, <code>04-orders-escrow.js</code></td>
+  <td><code>sales</code>, <code>orders</code>, <code>shop_ledger</code></td><td>Escrow, Delivery</td>
+  <td>Hakuna screen moja ya mauzo; <code>sales</code> haisomwi na UI</td></tr>
+
+<tr><td><b>Inventory</b></td><td>Stoo</td><td><span class="badge b-done">Done</span></td>
+  <td><code>inventory-authority.js</code>, <code>inventory-reservation.js</code>, <code>quantity-core.js</code></td>
+  <td><code>products.stock/reservedStock</code>, <code>inventory_movements</code>, <code>inventory_reservations</code></td>
+  <td>POS + Marketplace (moja)</td><td>Stock count/stocktake session</td></tr>
+
+<tr><td><b>Procurement</b></td><td>Manunuzi</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>18-cockpit.js:540-625</code></td>
+  <td><code>purchase_orders</code></td><td><code>inventoryAdjust</code></td>
+  <td>PO yenye mistari, GRN, partial receive, approvals</td></tr>
+
+<tr><td><b>Suppliers</b></td><td>Wauzaji</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>18-cockpit.js:463-510</code></td>
+  <td><code>suppliers</code></td><td>POS supplier payment</td>
+  <td>Salio la supplier, historia ya malipo</td></tr>
+
+<tr><td><b>Customers / CRM</b></td><td>Wateja</td><td><span class="badge b-miss">Haipo</span></td>
+  <td>—</td><td><code>customers</code> (rules only)</td><td>—</td>
+  <td>Kila kitu: profaili, historia, credit limit, orodha</td></tr>
+
+<tr><td><b>Staff</b></td><td>Wafanyakazi</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>15-pos-sales.js:650-750</code>, <code>10-dashboard-tabs.js:405</code></td>
+  <td><code>shop_staff</code>, <code>staff_attendance</code></td><td>Payroll</td>
+  <td>KPI za kubuni; roles halisi; shift↔staff link</td></tr>
+
+<tr><td><b>Roles &amp; Permissions</b></td><td>Ruhusa</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>firestore.rules:54-72</code></td><td><code>users.shopOwnerUid</code></td><td>—</td>
+  <td>Role matrix, permission checks server-side, UI ya ruhusa</td></tr>
+
+<tr><td><b>Expenses</b></td><td>Matumizi</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>15-pos-sales.js:620</code>, <code>18-cockpit.js:709</code></td>
+  <td><code>shop_ledger</code>, <code>driver_expenses</code></td><td>POS</td>
+  <td>Kategoria, bajeti, attachment</td></tr>
+
+<tr><td><b>Cash Management</b></td><td>Fedha taslimu</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>18-cockpit.js:652-706</code></td><td><code>shift_logs</code></td><td>POS</td>
+  <td>Drawer reconciliation, denominations, variance</td></tr>
+
+<tr><td><b>Payments</b></td><td>Malipo</td><td><span class="badge b-done">Done</span></td>
+  <td><code>12-payments.js</code>, <code>17-pesapal-return.js</code>, <code>functions/index.js</code></td>
+  <td><code>payment_reviews</code>, <code>refunds</code>, <code>wallet_ledger</code></td><td>PesaPal, SokoPay</td>
+  <td>Mobile money API halisi (M-Pesa/Tigo kwa API)</td></tr>
+
+<tr><td><b>SokoPay / Escrow</b></td><td>Malipo salama</td><td><span class="badge b-done">Done</span></td>
+  <td><code>21-sokopay.js</code>, <code>escrowRelease</code>, <code>sokopayAutoRelease</code></td>
+  <td><code>sokopay_*</code>, <code>escrow_holds</code></td><td>Orders, Disputes</td>
+  <td>Business-facing payout schedule view</td></tr>
+
+<tr><td><b>Delivery</b></td><td>Uwasilishaji</td><td><span class="badge b-done">Done</span></td>
+  <td><code>43-delivery-choice.js</code>, <code>33-custody.js</code></td>
+  <td><code>delivery_offers/tokens/handovers</code></td><td>Transport, Escrow</td>
+  <td>Business OS fulfilment queue</td></tr>
+
+<tr><td><b>Promotions</b></td><td>Punguzo</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>09-admin-sell.html:424</code>, <code>commerce-modes.js</code>, <code>posPromoType</code></td>
+  <td>hakuna collection ya promo</td><td>POS, products</td>
+  <td>Promo code engine, kampeni, tarehe, ukomo</td></tr>
+
+<tr><td><b>Marketplace</b></td><td>Kuuza mtandaoni</td><td><span class="badge b-done">Done</span></td>
+  <td><code>30-seller-products.js</code>, <code>39-product-showcase.js</code>, <code>01-market.js</code></td>
+  <td><code>products</code></td><td>Ads, Escrow</td><td>Business-level listing analytics</td></tr>
+
+<tr><td><b>Ads Studio</b></td><td>Matangazo</td><td><span class="badge b-done">Done</span></td>
+  <td><code>95/99/100/101</code>, <code>functions/ads-*</code></td>
+  <td><code>creatives</code>, <code>adDelivery*</code></td><td>Marketplace</td><td>Billing imezimwa (coming soon)</td></tr>
+
+<tr><td><b>Reports</b></td><td>Ripoti</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>reporting-authority.js</code>, <code>11-analytics.js</code>, <code>18-cockpit.js:1177</code></td>
+  <td><code>sales</code>, <code>sale_adjustments</code>, <code>refunds</code>, <code>inventory_movements</code></td>
+  <td>POS, Inventory</td><td>Export, services/transport reports, dashboards za capability</td></tr>
+
+<tr><td><b>Accounting</b></td><td>Hesabu</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>10-dashboard-tabs.js:341</code> (General Ledger)</td>
+  <td><code>shop_ledger</code>, <code>reconciliations</code></td><td>POS</td>
+  <td>Chart of accounts, double entry, P&amp;L, tax</td></tr>
+
+<tr><td><b>Notifications</b></td><td>Taarifa</td><td><span class="badge b-done">Done</span></td>
+  <td><code>07-toasts.js</code>, <code>notifications</code> rules</td><td><code>notifications</code></td><td>Push (PWA)</td>
+  <td>Business-scoped notification centre</td></tr>
+
+<tr><td><b>Settings</b></td><td>Mipangilio</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>10-dashboard-tabs.js:457</code>, <code>12-sys-modes.js</code></td>
+  <td><code>users.shopSettings</code></td><td>Payment accounts</td>
+  <td>Settings za business/store, risiti, tax</td></tr>
+
+<tr><td><b>Audit Logs</b></td><td>Historia</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>system-audit.js</code>, <code>admin_audit_log</code>, <code>activity_logs</code></td>
+  <td><code>admin_audit_log</code>, <code>activity_logs</code>, <code>inventory_movements</code></td><td>—</td>
+  <td>UI ya mmiliki kuona matukio ya biashara yake</td></tr>
+
+<tr><td><b>Offline POS</b></td><td>Kazi bila internet</td><td><span class="badge b-done">Done</span></td>
+  <td><code>18-cockpit.js:216-424</code></td><td><code>localStorage</code> queue + <code>sales</code></td><td>POS</td>
+  <td>Conflict resolution UI, sync status page</td></tr>
+
+<tr><td><b>Integrations</b></td><td>Muunganisho wa nje</td><td><span class="badge b-part">Partial</span></td>
+  <td><code>functions/index.js</code>, <code>upload-signing.js</code></td><td>—</td><td>PesaPal, Leaflet</td>
+  <td>TRA/EFD, SMS, accounting export, API keys</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="d"><span class="n">07</span>D · Architecture Diagram</h2>
+<p class="lead">Mchoro wa kiufundi: User → Business → Store → Product/Service/Transport, pamoja na POS, Marketplace,
+  Inventory, Orders, Payments na Delivery. Mistari iliyokolezwa ni mtiririko wa pesa; iliyopigwa dots ni uhusiano wa data pekee.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 1000 772" role="img" aria-label="Business OS architecture">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9DB5AC"/>
+    </marker>
+    <marker id="arM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#18A982"/>
+    </marker>
+    <style>
+      .bx{fill:#fff; stroke:#D7E4DF; stroke-width:1.4}
+      .bx-c{fill:#EAF7F2; stroke:#18A982; stroke-width:1.5}
+      .bx-g{fill:#FBF5E2; stroke:#D4AF37; stroke-width:1.5}
+      .bx-b{fill:#EBF3FA; stroke:#2F7BB8; stroke-width:1.5}
+      .lb{font:600 11px Inter,sans-serif; fill:#12211C}
+      .lb-s{font:500 9px Inter,sans-serif; fill:#6C7C77}
+      .ttl{font:800 9.4px Inter,sans-serif; fill:#17604E; letter-spacing:.08em}
+      .ln{stroke:#9DB5AC; stroke-width:1.3; fill:none; marker-end:url(#ar)}
+      .lnd{stroke:#BFCEC8; stroke-width:1.2; fill:none; stroke-dasharray:4 4; marker-end:url(#ar)}
+      .lnm{stroke:#18A982; stroke-width:2; fill:none; marker-end:url(#arM)}
+    </style>
+  </defs>
+
+  <!-- USER -->
+  <rect class="bx-c" x="400" y="12" width="200" height="44" rx="10"/>
+  <text class="lb" x="500" y="31" text-anchor="middle">USER</text>
+  <text class="lb-s" x="500" y="45" text-anchor="middle">owner · staff · buyer</text>
+
+  <!-- BUSINESS -->
+  <rect class="bx-c" x="270" y="88" width="460" height="58" rx="12"/>
+  <text class="ttl" x="286" y="107">BUSINESS</text>
+  <text class="lb" x="286" y="122">businesses/{businessId}</text>
+  <text class="lb-s" x="286" y="137">ownerUid · sellerMode · management{level, capabilities}</text>
+  <path class="ln" d="M500 56 L500 88"/>
+
+  <!-- STORE -->
+  <rect class="bx-c" x="250" y="178" width="500" height="58" rx="12"/>
+  <text class="ttl" x="266" y="197">STORE / BRANCH</text>
+  <text class="lb" x="266" y="212">stores/{storeId}</text>
+  <text class="lb-s" x="266" y="227">locationRef · openingHours · pickup/delivery · (1 per owner today)</text>
+  <path class="ln" d="M500 146 L500 178"/>
+
+  <!-- source-of-truth band -->
+  <rect x="50" y="270" width="900" height="26" rx="7" style="fill:#F1F7F5; stroke:#E1ECE8"/>
+  <text class="ttl" x="64" y="287">CHANZO KIMOJA CHA DATA (source of truth)</text>
+
+  <!-- sources -->
+  <rect class="bx" x="50" y="312" width="210" height="54" rx="10"/>
+  <text class="lb" x="64" y="331">PRODUCT</text>
+  <text class="lb-s" x="64" y="345">products/{id}</text>
+  <text class="lb-s" x="64" y="357">price · stock · variants</text>
+
+  <rect class="bx" x="280" y="312" width="210" height="54" rx="10"/>
+  <text class="lb" x="294" y="331">SERVICE</text>
+  <text class="lb-s" x="294" y="345">services/{id}</text>
+  <text class="lb-s" x="294" y="357">provider · availability</text>
+
+  <rect class="bx" x="510" y="312" width="210" height="54" rx="10"/>
+  <text class="lb" x="524" y="331">TRANSPORT</text>
+  <text class="lb-s" x="524" y="345">drivers · transport_profiles</text>
+  <text class="lb-s" x="524" y="357">logistics_companies</text>
+
+  <rect class="bx" x="740" y="312" width="210" height="54" rx="10"/>
+  <text class="lb" x="754" y="331">INVENTORY (authority)</text>
+  <text class="lb-s" x="754" y="345">stock · reservedStock</text>
+  <text class="lb-s" x="754" y="357">inventory_movements</text>
+
+  <path class="lnd" d="M430 296 L155 312"/>
+  <path class="lnd" d="M470 296 L385 312"/>
+  <path class="lnd" d="M530 296 L615 312"/>
+  <path class="ln" d="M720 339 L740 339"/>
+
+  <!-- channels -->
+  <rect class="bx-g" x="50" y="412" width="250" height="62" rx="10"/>
+  <text class="ttl" x="66" y="431">POS (CHANNEL A)</text>
+  <text class="lb" x="66" y="447">posSale · posReturn · posVoid</text>
+  <text class="lb-s" x="66" y="461">offline queue → sync · sales/{saleId}</text>
+
+  <rect class="bx-g" x="700" y="412" width="250" height="62" rx="10"/>
+  <text class="ttl" x="716" y="431">MARKETPLACE (B)</text>
+  <text class="lb" x="716" y="447">listing → orders/{orderId}</text>
+  <text class="lb-s" x="716" y="461">reservation → commit on payment</text>
+
+  <path class="ln" d="M155 366 L155 412"/>
+  <path class="lnm" d="M825 366 L825 412"/>
+
+  <!-- payments -->
+  <rect class="bx-b" x="320" y="412" width="360" height="62" rx="10"/>
+  <text class="ttl" x="336" y="431">PAYMENTS &amp; SOKOPAY</text>
+  <text class="lb" x="336" y="447">PesaPal (server) · escrow_holds</text>
+  <text class="lb-s" x="336" y="461">escrowRelease (atomic) · autoRelease (cron 5m)</text>
+
+  <path class="lnm" d="M300 443 L320 443"/>
+  <path class="lnm" d="M700 443 L680 443"/>
+
+  <!-- delivery -->
+  <rect class="bx-b" x="320" y="512" width="360" height="58" rx="10"/>
+  <text class="ttl" x="336" y="531">DELIVERY / FULFILMENT</text>
+  <text class="lb" x="336" y="547">delivery_offers → tokens (PK · TR · DL)</text>
+  <text class="lb-s" x="336" y="561">custody → handover → confirm delivery</text>
+  <path class="ln" d="M500 474 L500 512"/>
+
+  <!-- records -->
+  <rect x="50" y="618" width="900" height="70" rx="10" style="fill:#F1F7F5; stroke:#E1ECE8"/>
+  <text class="ttl" x="66" y="638">REKODI ZISIZOBADILIKA (immutable) + AUDIT</text>
+  <text class="lb" x="66" y="655">sales · receipts · sale_adjustments · refunds · credit_adjustments · inventory_movements · inventory_reservations</text>
+  <text class="lb-s" x="66" y="671">admin_audit_log · activity_logs · security_events · seller_lifecycle_log  →  posReports (business + store scoped)</text>
+  <path class="lnd" d="M155 474 L155 618"/>
+  <path class="lnd" d="M500 570 L500 618"/>
+  <path class="lnd" d="M825 474 L825 618"/>
+
+  <text class="lb-s" x="50" y="400">▲ mauzo ya dukani</text>
+  <text class="lb-s" x="700" y="400">▲ mauzo ya mtandaoni</text>
+</svg>
+</div>
+<div class="legend">
+  <span><i style="background:#EAF7F2"></i>Core identity (server-authoritative)</span>
+  <span><i style="background:#FBF5E2"></i>Sales channels</span>
+  <span><i style="background:#EBF3FA"></i>Money &amp; fulfilment</span>
+  <span><i style="background:#18A982"></i>Mtiririko wa pesa</span>
+</div>
+
+<div class="callout">
+  <b>Kwa nini hii ni architecture moja</b>
+  POS na Marketplace zote zinaandika kwenye <code>products.stock</code> kupitia authority moja
+  (<code>inventoryAdjust</code> / reservation commit). Hakuna inventory ya pili. Hii ni <b>tayari sahihi</b> —
+  kazi iliyobaki ni kufungua data hizi kwenye shell moja.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="data">08 · Source of truth ya kila data</h2>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:130px">Entity</th><th style="width:230px">Collection / doc</th><th style="width:230px">Nani anaandika</th><th>Kanuni ya sasa</th></tr></thead>
+<tbody>
+<tr><td>Business</td><td><code>businesses/{business_&lt;uid&gt;}</code></td><td><code>businessEnsureContext</code></td><td>Client <code>write:false</code>; owner+admin read</td></tr>
+<tr><td>Store</td><td><code>stores/{store_&lt;uid&gt;}</code></td><td><code>businessEnsureContext</code></td><td>Store moja kwa owner</td></tr>
+<tr><td>Product</td><td><code>products/{id}</code></td><td>Owner (client) + server kwa stock</td><td>Public read; stock/reserved/variants server-only</td></tr>
+<tr><td>Variant</td><td><code>products.variantCombinations[]</code></td><td><code>productVariantsSave</code></td><td>Browser haiwezi kuandika</td></tr>
+<tr><td>Inventory</td><td><code>products.stock</code>, <code>reservedStock</code>, <code>inventory_movements</code></td><td><code>inventoryAdjust</code>, reservations</td><td>Movements <code>write:false</code> (immutable)</td></tr>
+<tr><td>POS sale</td><td><code>sales/{saleId}</code></td><td><code>posSale</code></td><td>Read: seller/cashier/admin; write:false</td></tr>
+<tr><td>Receipt</td><td><code>receipts/{id}</code></td><td><code>posReceipt</code></td><td>Server only (UI haijaunganishwa)</td></tr>
+<tr><td>Online order</td><td><code>orders/{id}</code></td><td>Client create (restricted) + server</td><td>Money keys server-only</td></tr>
+<tr><td>Reservation</td><td><code>inventory_reservations/{id}</code></td><td>Server triggers + callables</td><td><code>write:false</code></td></tr>
+<tr><td>Payment</td><td><code>sokopay_links</code>, <code>sokopay_core_transactions</code>, <code>payment_reviews</code></td><td>Server</td><td>Immutable</td></tr>
+<tr><td>Escrow</td><td><code>escrow_holds</code>, <code>wallet_ledger</code></td><td><code>escrowRelease</code>, <code>walletAdjust</code></td><td>Admin read pekee</td></tr>
+<tr><td>Delivery</td><td><code>delivery_offers/tokens/handovers</code></td><td>Server + parties</td><td>Tokens immutable</td></tr>
+<tr><td>Supplier</td><td><code>suppliers/{id}</code></td><td>Client (owner/staff)</td><td><code>ownsShopRecord</code></td></tr>
+<tr><td>Customer</td><td><b>hakuna</b> (<code>customers</code> rules-only)</td><td>—</td><td>Hakuna source of truth</td></tr>
+<tr><td>Staff</td><td><code>shop_staff/{id}</code></td><td>Client (owner)</td><td>Role ni string</td></tr>
+<tr><td>Branch</td><td><b>hakuna</b></td><td>—</td><td>—</td></tr>
+<tr><td>Ledger (duka)</td><td><code>shop_ledger/{id}</code></td><td><b>Client</b> + <code>posSale</code> mirror</td><td>Owner scope; sio immutable</td></tr>
+<tr><td>Reports</td><td>computed</td><td><code>posReports</code></td><td>Read-only aggregation</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout risk">
+  <b>Pendekezo la lazima (bila kuvunja chochote)</b>
+  <code>shop_ledger</code> ibaki kama <i>daftari la duka</i> lakini dashboards zisome <code>sales</code> + <code>posReports</code>
+  kama ukweli wa kifedha. Hii inaondoa hatari ya drift bila kufuta collection wala kuhamisha data.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="e"><span class="n">09</span>E · Role &amp; Permission Matrix</h2>
+<p class="lead"><b>Ilivyo sasa:</b> kuna majukumu 4 tu yanayotekelezwa server-side — Owner, linked staff (wote sawa),
+  Agent, Admin. Majukumu mengine hapa chini ni <b>mapendekezo</b> yanayohitaji kujengwa.</p>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr>
+<th style="width:150px">Uwezo</th>
+<th style="width:96px">Owner</th><th style="width:96px">Manager*</th><th style="width:96px">Cashier</th>
+<th style="width:100px">Storekeeper*</th><th style="width:96px">Salesperson*</th>
+<th style="width:96px">Accountant*</th><th style="width:96px">Driver/Provider</th><th style="width:80px">Admin</th>
+</tr></thead>
+<tbody>
+<tr><td>Mipangilio ya biashara</td><td>✅</td><td>◐</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+<tr><td>Capabilities / level</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+<tr><td>Bidhaa: kuunda/hariri</td><td>✅</td><td>✅</td><td>—</td><td>◐</td><td>◐</td><td>—</td><td>—</td><td>◐</td></tr>
+<tr><td>Bei &amp; punguzo</td><td>✅</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>◐</td></tr>
+<tr><td>Kuuza (POS)</td><td>✅</td><td>✅</td><td>✅</td><td>—</td><td>✅</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Kurudisha / kufuta mauzo</td><td>✅</td><td>✅</td><td>◐</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+<tr><td>Kufungua/kufunga zamu</td><td>✅</td><td>✅</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Kuona faida</td><td>✅</td><td>✅</td><td>◐</td><td>—</td><td>—</td><td>✅</td><td>—</td><td>✅</td></tr>
+<tr><td>Stoo: kupokea/kuhariri</td><td>✅</td><td>✅</td><td>—</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>◐</td></tr>
+<tr><td>Uhamisho wa matawi</td><td>✅</td><td>✅</td><td>—</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Manunuzi &amp; wauzaji</td><td>✅</td><td>✅</td><td>—</td><td>◐</td><td>—</td><td>◐</td><td>—</td><td>—</td></tr>
+<tr><td>Wateja / madeni</td><td>✅</td><td>✅</td><td>✅</td><td>—</td><td>✅</td><td>✅</td><td>—</td><td>—</td></tr>
+<tr><td>Matumizi</td><td>✅</td><td>✅</td><td>◐</td><td>—</td><td>—</td><td>✅</td><td>—</td><td>—</td></tr>
+<tr><td>Ripoti</td><td>✅</td><td>✅</td><td>—</td><td>◐</td><td>—</td><td>✅</td><td>—</td><td>✅</td></tr>
+<tr><td>Wafanyakazi &amp; mishahara</td><td>✅</td><td>◐</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Ruhusa (roles)</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+<tr><td>Historia ya matukio</td><td>✅</td><td>✅</td><td>—</td><td>—</td><td>—</td><td>✅</td><td>—</td><td>✅</td></tr>
+<tr><td>Kazi zake (safari/huduma)</td><td>—</td><td>◐</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✅</td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small"><b>✅</b> anaruhusiwa · <b>◐</b> kwa masharti (capability au approval) · <b>—</b> hairuhusiwi ·
+  <b>*</b> = role mpya inayopendekezwa (haipo kwenye code).</p>
+
+<h3>Hali halisi ya ruhusa (ushahidi)</h3>
+<div class="grid g3">
+  <div class="card tight"><h4>Server-side</h4><p class="small"><code>ownsShopRecord()</code> (rules:60) = owner <b>au</b> yeyote mwenye <code>users.shopOwnerUid</code>.
+    Kwa hivyo cashier/storekeeper/manager wote wana haki sawa kwenye <code>shop_ledger</code>, <code>suppliers</code>,
+    <code>purchase_orders</code>, <code>shop_staff</code>.</p></div>
+  <div class="card tight"><h4>Client-side</h4><p class="small"><code>cashierCanViewProfit</code> na <code>cashierCanEditStock</code>
+    zinahifadhiwa tu. Hakuna <code>if</code> yoyote inayozisoma — kwa hivyo hazizuii kitu.</p></div>
+  <div class="card tight"><h4>Kinachohitajika</h4><p class="small">Custom claims au <code>staffRoles/{uid}</code> yenye
+    role + permissions, inayotumika kwenye callables na rules (<code>can(role,'pos.sale')</code>), na UI ya kusimamia.</p></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="levels"><span class="n">10</span>POS Control Levels × Selling Mode</h2>
+<p class="lead">Muundo uliopendekezwa na uliopo. <b>Zote zinafanana kwa dhana</b> — tatizo ni kwamba zilizopo
+  hazitekelezwi, na Selling Mode na Management Level hazijaunganishwa.</p>
+
+<div class="grid g3">
+  <div class="card">
+    <h4 style="color:#8A6B0B">BASIC</h4>
+    <ul class="small plain">
+      <li>✔ sales · products · receipts · transactions · settings (ipo kwenye core)</li>
+      <li>✘ inventory · purchases · customers · suppliers · expenses · reports · staff · outlets</li>
+    </ul>
+    <p class="small"><b>Ilivyo:</b> ndio default ya <code>getPosLevel()</code>. Lakini UI ya kuichagua haipo,
+      na hakuna kizuizi cha server — mtu anaweza kuuza bidhaa asiwe na stoo (POS inasoma stock lakini <code>posSale</code> haizuii kwa level).</p>
+  </div>
+  <div class="card">
+    <h4 style="color:#8A6B0B">PARTIAL</h4>
+    <ul class="small plain">
+      <li>✔ BASIC + inventory · purchases · customers · suppliers · expenses · reports</li>
+    </ul>
+    <p class="small"><b>Ilivyo:</b> modules zote zipo kama UI (procurement modal, suppliers, expenses, reports)
+      lakini <b>hazifichwi</b> kwa level — kila mtu anaona kila kitu.</p>
+  </div>
+  <div class="card">
+    <h4 style="color:#8A6B0B">FULL</h4>
+    <ul class="small plain">
+      <li>✔ PARTIAL + staff · outlets · barcode/SKU · advanced inventory · offline POS · accounting links</li>
+    </ul>
+    <p class="small"><b>Ilivyo:</b> staff, barcode, offline POS zote zinafanya kazi. <b>Outlets haipo kabisa.</b></p>
+  </div>
+</div>
+
+<h3>Selling Mode</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:130px">Mode</th><th style="width:150px">Kwenye code</th><th>Hali halisi</th></tr></thead>
+<tbody>
+<tr><td><b>ONLINE</b></td><td><code>MODES.ONLINE</code></td><td>Inachaguliwa kwenye wizard; inahifadhiwa <code>users.sellerMode</code> + <code>businesses.sellerMode</code>. Haiondoa POS wala kuweka listing private automatically.</td></tr>
+<tr><td><b>OFFLINE</b></td><td><code>MODES.OFFLINE</code></td><td>POS inapatikana; listing bado inaweza kuchapishwa (hakuna kizuizi).</td></tr>
+<tr><td><b>HYBRID</b></td><td><code>MODES.HYBRID</code></td><td>Ndio hali ya kawaida kwa vitendo — inafanya kazi.</td></tr>
+<tr><td><b>MANAGE_ONLY</b></td><td><code>MODES.MANAGE</code></td><td>Imeongezwa 2026-10-31; haiathiri UI yoyote bado.</td></tr>
+<tr><td><b>Retail / Wholesale / Mixed</b></td><td>haipo kama mode</td><td>Zipo kama <b>bei</b>: <code>wholesalePrice</code>, <code>wsTiersText</code> (10:9000; 50:8000), <code>productType: retail|wholesale</code>. Hakuna mfumo wa “biashara hii ni jumla” unaobadilisha POS/catalog.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <b>Uamuzi unaopendekezwa</b>
+  Selling Mode iwe <b>channel switch</b> (POS on/off, marketplace on/off) na Management Level iwe <b>depth switch</b>
+  (modules ngapi). Retail/Wholesale/Mixed iwe <b>pricing profile</b> ya tatu inayobadilisha catalog + POS, si level.
+  Vitu vitatu tofauti, visichanganywe.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="wf"><span class="n">11</span>Workflows</h2>
+<p class="lead">A–F kama ulivyoomba, kila hatua ikiwekwa alama ya <b>ipo</b> / <b>haipo</b>, pamoja na workflows nyingine
+  nilizozikuta kwenye source.</p>
+
+<div class="card">
+<h4>Workflow A — Business setup</h4>
+<p class="small">User → Create Business → Configure Store → Select Selling Mode → Select Management Level → Enable Capabilities</p>
+<pre class="tree" style="font-size:11.8px; line-height:1.6">1. Wizard (html/21-scripts.html:564)            ✅ ipo
+2. Chagua aina ya duka (temporary / permanent)  ✅
+3. Chagua Selling Mode (online/offline/hybrid/manage) ✅
+4. Jaza jina, anwani, pickup, profaili, wafanyakazi ✅
+5. Setup mode (auto / custom)                   ✅
+6. users/{uid} update + businessEnsureContext() ✅
+7. Management Level                             ⚠ imeandikwa 'BASIC' kwa mkono
+8. Enable / disable capabilities                ❌ haipo
+9. Store ya pili / tawi                         ❌ haipo</pre>
+</div>
+
+<div class="card">
+<h4>Workflow B — Product (mfumo mmoja wa data)</h4>
+<pre class="tree" style="font-size:11.8px; line-height:1.6">Create product → products/{id} (stock 0, openingStockPending)   ✅ rules:131
+Add variants    → productVariantsSave (server merges stock)     ✅
+Set price       → owner write (barcode, sku, units)             ✅
+Add stock       → inventoryAdjust {movementType: OPENING_BALANCE} ✅
+Publish         → visibility + marketplace listing              ✅
+Sell POS        → posSale → sales + inventory_movements         ✅
+Sell online     → order → reservation → escrow → commit         ✅
+Shared stock    → products.stock / reservedStock (chanzo kimoja) ✅  ← hii ni sahihi kabisa</pre>
+</div>
+
+<div class="grid g2">
+<div class="card">
+<h4>Workflow C — POS sale</h4>
+<pre class="tree" style="font-size:11.6px; line-height:1.6">Search / scan → cart → qty → total
+→ payment method → posSale (server)
+→ sales/{id} + receipt ID + ledger mirror
+→ inventory_movements (-qty)
+⚠ risiti (posReceipt) haijaunganishwa UI
+✅ offline queue ikiwa hakuna internet</pre>
+</div>
+<div class="card">
+<h4>Workflow D — Online order</h4>
+<pre class="tree" style="font-size:11.6px; line-height:1.6">Listing → Order (client create, restricted)
+→ inventoryReserve (reserved += q)     ✅ trigger
+→ PesaPal verified on server            ✅
+→ escrow held + reservation COMMIT      ✅
+→ fulfilment (delivery tokens)          ✅
+→ confirm delivery → escrowRelease      ✅
+→ auto-release baada ya 24h (cron)      ✅</pre>
+</div>
+<div class="card">
+<h4>Workflow E — Procurement</h4>
+<pre class="tree" style="font-size:11.6px; line-height:1.6">Supplier profile (suppliers/)            ✅
+→ PO ya bidhaa MOJA (PO-XXXX)            ⚠ hakuna mistari
+→ Receive goods → inventoryAdjust(PURCHASE) ✅
+→ Supplier payment (POS action)          ◐ hakuna salio
+❌ hakuna approval, GRN, partial receive</pre>
+</div>
+<div class="card">
+<h4>Workflow F — Financial management</h4>
+<pre class="tree" style="font-size:11.6px; line-height:1.6">Sales (sales/) → Payments (sokopay/pesapal)
+→ Expenses (shop_ledger expense) → Cash (shift_logs)
+→ Reconciliation (posReconcile — server only ⚠)
+→ Reports (posReports ✅ scoped business+store)
+❌ hakuna chart of accounts / P&amp;L / balance sheet</pre>
+</div>
+</div>
+
+<h3>Workflows nyingine nilizozikuta</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:180px">Workflow</th><th style="width:120px">Hali</th><th>Maelezo</th></tr></thead>
+<tbody>
+<tr><td><b>G · Offline sale sync</b></td><td><span class="badge b-done">Done</span></td><td>Queue ya localStorage → lease ya tab moja → retry kwa transient errors → price-conflict detection → manual SYNC.</td></tr>
+<tr><td><b>H · Return / Void / Refund / Credit</b></td><td><span class="badge b-done">Done</span></td><td>4 njia tofauti zenye idempotency key, stock re-entry (SELLABLE vs DAMAGED), credit adjustment.</td></tr>
+<tr><td><b>I · Escrow dispute</b></td><td><span class="badge b-done">Done</span></td><td><code>disputeOpen</code> → <code>adminResolveDispute</code> → split refund/release.</td></tr>
+<tr><td><b>J · Transport custody (PK/TR/DL tokens)</b></td><td><span class="badge b-done">Done</span></td><td>Token za pickup/transit/delivery; <code>deliveryConfirmCustody</code>; handovers immutable.</td></tr>
+<tr><td><b>K · Shift open/close</b></td><td><span class="badge b-part">Partial</span></td><td><code>shift_logs</code> inaandikwa; hakuna hesabu ya drawer.</td></tr>
+<tr><td><b>L · Stock transfer (branch)</b></td><td><span class="badge b-part">Partial</span></td><td><code>stock_transfers</code> + driver link kwenye rules; lakini hakuna branch destination halisi.</td></tr>
+<tr><td><b>M · Staff lifecycle</b></td><td><span class="badge b-part">Partial</span></td><td>Kuajiri → kazi → mshahara → mahudhurio; hakuna ruhusa.</td></tr>
+<tr><td><b>N · Auction / Group buy / Wholesale tiers</b></td><td><span class="badge b-done">Done</span></td><td><code>commerce-modes.js</code> (bids, joins, sweep) — server-authoritative.</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="design"><span class="n">12</span>Design proposal — shell moja inayobadilika</h2>
+
+<h3>12.1 Mfano wa capability (unified)</h3>
+<div class="grid g2">
+<div class="card">
+<h4>Hali tatu tofauti</h4>
+<table class="small">
+<tr><th>Kipimo</th><th>Thamani</th><th>Kinachoathiri</th></tr>
+<tr><td><b>Selling Mode</b></td><td>ONLINE / OFFLINE / HYBRID / MANAGE</td><td>Channels: POS, marketplace</td></tr>
+<tr><td><b>Management Level</b></td><td>BASIC / PARTIAL / FULL</td><td>Idadi ya modules</td></tr>
+<tr><td><b>Pricing Profile</b> <span class="badge b-dup">mpya</span></td><td>RETAIL / WHOLESALE / MIXED</td><td>Catalog + POS pricing</td></tr>
+<tr><td><b>Capabilities</b></td><td>21 switches</td><td>Fine control juu ya level</td></tr>
+</table>
+<p class="small">Zote zinaishi kwenye <code>businesses/{id}.management</code> — schema ipo tayari
+(<code>business-context-core.js:11-21</code>), inahitaji tu UI + server enforcement.</p>
+</div>
+<div class="card">
+<h4>Utekelezaji usioharibu data</h4>
+<ol class="small">
+<li><b>Kwanza</b> andika <code>capabilities</code> kwenye business doc (server callable mpya, sio kubadilisha rules).</li>
+<li>UI ifiche modules kwa <code>data-capability="inventory"</code> — <b>hide, not delete</b>.</li>
+<li>Callables zikague capability kwa vitendo hatarishi (mf. <code>posSale</code> ikikataa ikiwa <code>pos:false</code>).</li>
+<li>Hakuna collection inayohamishwa; level ikibadilika, data inabaki; inaonekana tena ikirudishwa.</li>
+</ol>
+</div>
+</div>
+
+<h3>12.2 Dashboard shell</h3>
+<div class="card">
+<ul class="small">
+<li><b>Topbar:</b> Business switcher (jina + logo) · Store switcher (ikiwa &gt;1) · search · POS button · arifa · profaili.</li>
+<li><b>Sidebar:</b> groups 8 (Nyumbani, Uendeshaji, Bidhaa &amp; Stoo, Mauzo &amp; Wateja, Usafirishaji, Fedha, Watu, Ripoti, Mipangilio) — items zinafichwa kwa capability.</li>
+<li><b>Nyumbani:</b> KPI 4 (Mauzo leo · Faida · Stoo inayoisha · Oda zinazosubiri) → “Fanya haraka” 4 → chati ya mauzo siku 7 → orodha ya tahadhari (alerts engine ipo: <code>18-cockpit.js:156</code>).</li>
+<li><b>Mobile:</b> sidebar inakuwa drawer; POS na “Fanya haraka” pekee kwenye bottom sheet; tables zinakuwa kadi.</li>
+<li><b>Rangi:</b> nyeupe + <code>#18A982</code> brand; giza linatumika kwa sidebar ya desktop tu (haiwezi kuwa block kubwa kwenye simu) — au sidebar nyeupe kwa uthabiti wa identity.</li>
+</ul>
+</div>
+
+<h3>12.3 Hatua za utekelezaji (baada ya idhini)</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:60px">Awamu</th><th style="width:250px">Kazi</th><th>Sababu / acceptance</th></tr></thead>
+<tbody>
+<tr><td><b>P0</b></td><td>Capability model + UI ya level (server-persisted)</td><td>Hakuna module mpya; POS level inakuwa halisi; hakuna data inayohamishwa.</td></tr>
+<tr><td><b>P0</b></td><td>Ondoa namba za kubuni kwenye staff/expenses/insights</td><td>Kuaminika: dashboard isionyeshe 25 staff wasiokuwepo.</td></tr>
+<tr><td><b>P1</b></td><td>Shell moja ya Business OS (sidebar + dashboard)</td><td>Seller/driver/provider wanarudi kwenye shell moja; hakuna kupoteza tabs.</td></tr>
+<tr><td><b>P1</b></td><td>Customers (CRM) juu ya collection <code>customers</code> iliyopo</td><td>Inatumia rules zilizopo; hakuna migration.</td></tr>
+<tr><td><b>P2</b></td><td>Roles halisi (<code>staffRoles</code> + capability checks)</td><td>Cashier asiwe owner; flags zilizokufa zinafanya kazi.</td></tr>
+<tr><td><b>P2</b></td><td>Mauzo &amp; Risiti screen (inatumia <code>sales</code> + <code>posReceipt</code>)</td><td>Inaunganisha injini iliyopo; inaondoa utegemezi wa <code>shop_ledger</code>.</td></tr>
+<tr><td><b>P3</b></td><td>Multi-store/branch (schema ya <code>stores</code> + storeId kwenye sales)</td><td>Ni kazi kubwa — inahitaji idhini tofauti.</td></tr>
+<tr><td><b>P3</b></td><td>Promotions engine, PO yenye mistari, accounting reports</td><td>Baada ya shell kukaa.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="road">13 · Hatari na mipaka</h2>
+<div class="grid g2">
+<div class="card">
+<h4>Hatari za kiufundi</h4>
+<ul class="small">
+<li><b>Rules ni kubwa (1,476 ln)</b> — kila mabadiliko yanahitaji test ya emulator; <code>tools/test_inventory_rules.mjs</code> ipo.</li>
+<li><b>Callables 150</b> — capability checks zikiongezwa zinaweza kuvunja POS ikiwa zitawekwa kwenye njia ya pesa bila default-positive.</li>
+<li><b>Inline handlers</b> — refactor ya shell lazima ifanye kwa hatua, sio kwa kuandika upya.</li>
+</ul>
+</div>
+<div class="card">
+<h4>Mipaka niliyoiheshimu</h4>
+<ul class="small">
+<li>Hakuna code, rules, schema au data iliyobadilishwa.</li>
+<li>Hakuna commit / push / deploy.</li>
+<li>Hakuna module mpya iliyoandikwa — mockups ni HTML ya design pekee (<code>docs/</code>).</li>
+<li>ChatHai, SokoPay, Ads Studio hazijaguswa kimuundo.</li>
+</ul>
+</div>
+</div>
+
+<div class="callout" id="mockups">
+  <b>F · Mockups</b>
+  Ziko kwenye faili tofauti: <code>docs/business-os-mockups.html</code> — skrini 14 (dashboard, sidebar, wizard,
+  capability control, profaili/stores, bidhaa &amp; stoo, POS, mauzo &amp; oda, manunuzi, wateja &amp; wafanyakazi,
+  fedha, ripoti, mipangilio &amp; ruhusa, mobile responsive).
+</div>
+
+<footer>
+  SokoHai Business OS — Audit &amp; Design Proposal · 2026-11-03 · Read-only, hakuna mabadiliko ya code ·
+  Ushahidi: <code>firestore.rules</code>, <code>functions/</code> (30 faili), <code>js/app/</code> (105 moduli),
+  <code>html/</code> (23 sehemu), <code>tools/</code> (112 test suites).
+</footer>
+
+</div>
+</body>
+</html>

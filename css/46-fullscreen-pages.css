@@ -1,0 +1,313 @@
+/* ============================================================================
+   SOKOHAI — FULL-SCREEN PAGES · 2026-11-02
+   ----------------------------------------------------------------------------
+   Ombi: "kila page au ukurasa unaojitegemea unatakiwa uchukue screen yote na
+   sio kuchukua part … pages inacover UI yake yote, sio kubakisha part ambazo
+   hazina thamani."
+
+   KABLA (vipimo halisi, desktop 1280×900):
+     chat inbox      480 × 484   (dirisha dogo katikati)
+     chat mazungumzo 980 × 828
+     bidhaa          1248 × 868  (16px ya backdrop kila upande)
+     MySokoHai       1180 × 900
+     oda / taarifa / kikapu / huduma nyingine   420–480 × ≤828  (kadi ndogo
+                     yenye nafasi kubwa ya ukurasa nyuma — sehemu zisizo na
+                     thamani zinazoleta mkanganyiko)
+
+   BAADA: kila ukurasa unaojitegemea = skrini YOTE (100dvh), pembe 0, hakuna
+   kivuli, hakuna nafasi ya nyuma. Maudhui yanabaki kwenye safu inayosomeka
+   (max 780–900px) ili mistari isiwe mirefu kupita kiasi kwenye kompyuta.
+
+   DIALOG NDOGO (hazibadiliki kuwa kurasa — ni chaguo/uthibitisho la haraka):
+     #categoryModal  #modeMenuModal  #plusMenu  #sidebarMenuModal
+     #authModal      #welcomeModal   #mapModal  #checkoutModal
+     #boostModal     #subModal       #ratingModal  #actionRequestModal
+     #deliveryChoiceModal  #chatForwardModal  #chatAttachProductModal
+     #chatAttachOrderModal  #advertiserBillingSoonModal  #companyAdsSoonModal
+   ========================================================================= */
+
+/* ------------------------------------------------ 1. KANUNI YA JUMLA --- */
+html body #chatListModal, html body #chatModal, html body #productModal, html body #sellerProfileModal, html body #mySokoHaiModal, html body #buyerOrdersModal, html body #notifModal, html body #savedItemsModal, html body #cartModal, html body #escrowModal, html body #requestInboxModal, html body #routeMatchModal, html body #rideRequestModal, html body #directHireModal, html body #deliveriesModal, html body #tripsModal, html body #logisticsTokenModal, html body #tokenBoxModal, html body #unifiedTokenCenterModal, html body #procurementModal, html body #repairModal, html body #industrialProjectModal, html body #printingServiceModal, html body #scrapYardModal, html body #offlineStockModal, html body #stockTransferModal, html body #shopLedgerModal, html body #shopSetupModal, html body #sellerTypeModal, html body #adminSettingsModal, html body #advertiserDashboardModal, html body #userPaymentModal, html body #sokopayDepositModal {
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    overflow: hidden !important;
+}
+
+/* Kila ukurasa: sheet = skrini nzima, hakuna fremu inayoelea */
+html body #chatListModal > *, html body #chatModal > *, html body #productModal > *, html body #sellerProfileModal > *, html body #mySokoHaiModal > *, html body #buyerOrdersModal > *, html body #notifModal > *, html body #savedItemsModal > *, html body #cartModal > *, html body #escrowModal > *, html body #requestInboxModal > *, html body #routeMatchModal > *, html body #rideRequestModal > *, html body #directHireModal > *, html body #deliveriesModal > *, html body #tripsModal > *, html body #logisticsTokenModal > *, html body #tokenBoxModal > *, html body #unifiedTokenCenterModal > *, html body #procurementModal > *, html body #repairModal > *, html body #industrialProjectModal > *, html body #printingServiceModal > *, html body #scrapYardModal > *, html body #offlineStockModal > *, html body #stockTransferModal > *, html body #shopLedgerModal > *, html body #shopSetupModal > *, html body #sellerTypeModal > *, html body #adminSettingsModal > *, html body #advertiserDashboardModal > *, html body #userPaymentModal > *, html body #sokopayDepositModal > * {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    animation: none !important;
+}
+
+/* Nguvu ya ziada kwa kurasa zilizoandikwa kama kadi (inline style):
+selector ya `id > div/section` inashinda sheria za awali zenye !important. */
+ html body #chatListModal > .ch-inbox-shell, html body #chatModal > .chat-card, html body #productModal > .pm-sheet, html body #mySokoHaiModal > .byd-shell, html body #requestInboxModal > .ri-sheet, html body #routeMatchModal > .rm-sheet, html body #tokenBoxModal > .tb-sheet, html body #unifiedTokenCenterModal > .tok-shell, html body #buyerOrdersModal > div, html body #notifModal > div, html body #cartModal > div, html body #escrowModal > div, html body #savedItemsModal > div, html body #rideRequestModal > div, html body #deliveriesModal > div, html body #tripsModal > div, html body #logisticsTokenModal > div, html body #procurementModal > div, html body #userPaymentModal > div, html body #sokopayDepositModal > div, html body #adminSettingsModal > div, html body #advertiserDashboardModal > div, html body #offlineStockModal > div, html body #stockTransferModal > div, html body #shopLedgerModal > div, html body #shopSetupModal > div,
+html body #shopSetupModal > .form-box,
+html body #sellerTypeModal > .form-box, html body #sellerTypeModal > div, html body #sellerProfileModal > div, html body #directHireModal > .form-box, html body #repairModal > .form-box, html body #industrialProjectModal > .form-box, html body #printingServiceModal > .form-box, html body #scrapYardModal > .form-box {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+
+/* ------------------------------------------------------- 2. CHAT --- */
+/* Inbox: skrini yote. Vichwa vya juu (head + search + chips) na orodha
+   vinafuata safu MOJA iliyowekwa katikati (900px) — mpangilio mmoja, hakuna
+   sehemu inayosimama peke yake. */
+html body #chatListModal .ch-inbox-shell {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background: #fff !important;
+    overflow: hidden !important;
+    --ch-col: max(14px, calc((100vw - 900px) / 2));
+}
+html body #chatListModal .ch-inbox-head {
+    flex: 0 0 auto !important;
+    padding: 12px var(--ch-col) !important;
+    background: #F1FBF7 !important;
+    border-bottom: 1px solid #DCEEE7 !important;
+    box-shadow: none !important;
+}
+html body #chatListModal .ch-inbox-search { flex: 0 0 auto !important; margin: 10px var(--ch-col) 0 !important; }
+html body #chatListModal .ch-inbox-chips {
+    flex: 0 0 auto !important;
+    padding: 9px var(--ch-col) !important;
+    border-bottom: 1px solid #EEF2F6 !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+}
+html body #chatListModal [data-skh-ad-slot="chat"] { flex: 0 0 auto !important; margin: 10px var(--ch-col) !important; }
+html body #chatListModal #inboxList {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    padding: 0 var(--ch-col) 28px !important;
+    background: #fff !important;
+}
+html body #chatListModal #inboxList > * { max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }
+
+/* Mazungumzo: skrini yote; ujumbe unabaki kwenye safu ya 780px katikati. */
+html body #chatModal .chat-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+}
+html body #chatModal .chat-card > .chat-head-bar { flex: 0 0 auto !important; }
+/* Mizigo ya ndani (mazungumzo) inajaa urefu unaobaki — composer inabaki chini. */
+html body #chatModal #chatBody { flex: 1 1 auto !important; min-height: 0 !important; }
+html body #chatModal #chatMainSurface {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+html body #chatModal #chatMessages {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+}
+html body #chatModal #chatMainSurface > *:last-child { flex: 0 0 auto !important; }
+
+/* ------------------------------------------- 3. UKURASA WA BIDHAA --- */
+#productModal.pm-overlay {
+ padding: 0 !important; }
+html body #productModal > .pm-sheet {
+    width: 100vw !important;
+    max-width: none !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+}
+@media (min-width: 901px) {
+#productModal.pm-overlay {
+ padding: 0 !important; }
+html body #productModal > .pm-sheet {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        border-radius: 0 !important;
+        flex-direction: row !important;
+    }
+html body #productModal .pm-hero {
+ flex: 1 1 46% !important; max-width: none !important; }
+html body #productModal .pm-scroll {
+ flex: 1 1 54% !important; }
+}
+
+/* Kikapu (SokoCart): shell inajaza skrini; safu mbili zinabaki kwenye
+   upana unaosomeka (1200px) katikati. */
+html body #cartModal .scart-shell {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+html body #cartModal .scart-body { grid-template-columns: minmax(0, 1.7fr) minmax(320px, .9fr) !important; }
+@media (min-width: 1100px) {
+    html body #cartModal .scart-head,
+    html body #cartModal .scart-body { padding-left: max(14px, calc((100vw - 1200px) / 2)) !important; padding-right: max(14px, calc((100vw - 1200px) / 2)) !important; }
+}
+@media (max-width: 900px) {
+    html body #cartModal .scart-body { grid-template-columns: 1fr !important; }
+}
+
+/* Picha ya bidhaa kwenye ukurasa kamili: mandhari nyepesi (sio shimo jeusi)
+   na picha inaonekana yote (contain), ikijaa urefu wote wa safu. */
+html body #productModal .pm-hero { background: #EEF3F1 !important; }
+html body #productModal .pm-image-slider > div { height: 100% !important; }
+html body #productModal .pm-image-slider img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;   /* picha ijaze safu — hakuna mabaka matupu */
+    background: #EEF3F1 !important;
+}
+@media (min-width: 901px) {
+    html body #productModal .pm-hero { min-height: 0 !important; }
+}
+
+/* ------------------------- 4. KURASA ZA MAUDHUI (sheet ya ndani) --- */
+/* MySokoHai / maombi / njia / tokeni / sarafu: shell ifikie kingo. */
+html body #mySokoHaiModal .byd-shell {
+ max-width: none !important; width: 100% !important; height: 100% !important; border-radius: 0 !important; }
+html body #requestInboxModal .ri-sheet, html body #routeMatchModal .rm-sheet, html body #tokenBoxModal .tb-sheet, html body #unifiedTokenCenterModal .tok-shell, html body #sellerProfileModal > div {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+}
+
+/* Kurasa zenye kichwa + tabs + orodha: kila sehemu ibaki kwenye safu moja
+   inayosomeka (960px) ili kichwa kisitawanyike upana wote wa skrini. */
+html body #requestInboxModal .ri-sheet,
+html body #routeMatchModal .rm-sheet,
+html body #tokenBoxModal .tb-sheet,
+html body #unifiedTokenCenterModal .tok-shell,
+html body #mySokoHaiModal .byd-shell {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+}
+html body #requestInboxModal .ri-sheet > *,
+html body #routeMatchModal .rm-sheet > *,
+html body #tokenBoxModal .tb-sheet > *,
+html body #unifiedTokenCenterModal .tok-shell > * {
+    width: 100% !important;
+    max-width: 960px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+/* Dashibodi ya mnunuzi: vichwa vikae, tabs ziteleze (zisikatike), maudhui yajae. */
+html body #mySokoHaiModal .byd-shell > .byd-head { flex: 0 0 auto !important; }
+html body #mySokoHaiModal .byd-shell > .byd-tabs {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-mask-image: linear-gradient(90deg, #000 94%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 94%, transparent 100%);
+}
+html body #mySokoHaiModal .byd-shell > .byd-tabs::-webkit-scrollbar { display: none; }
+html body #mySokoHaiModal .byd-shell > .byd-tabs > * { flex: 0 0 auto !important; }
+html body #mySokoHaiModal .byd-shell > .byd-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding-bottom: 24px !important;
+}
+html body #mySokoHaiModal .byd-shell > * {
+    width: 100% !important;
+    max-width: 1180px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* ------------------- 5. KURASA ZILIZOANDIKWA KAMA DIALOGI NDANI --- */
+/* Hizi zilikuwa `width:95%; max-width:420–480px; border-radius:24px` kwa
+   inline style. Sasa ni kurasa: skrini yote, maudhui kwenye safu ya 780px. */
+html body #notifModal > div, html body #buyerOrdersModal > div, html body #cartModal > div, html body #escrowModal > div, html body #savedItemsModal > div, html body #rideRequestModal > div, html body #deliveriesModal > div, html body #tripsModal > div, html body #logisticsTokenModal > div, html body #procurementModal > div, html body #userPaymentModal > div, html body #sokopayDepositModal > div, html body #adminSettingsModal > div, html body #advertiserDashboardModal > div, html body #offlineStockModal > div, html body #stockTransferModal > div, html body #shopLedgerModal > div, html body #shopSetupModal > div,
+html body #shopSetupModal > .form-box,
+html body #sellerTypeModal > .form-box, html body #sellerTypeModal > div, html body #directHireModal > .form-box, html body #repairModal > .form-box, html body #industrialProjectModal > .form-box, html body #printingServiceModal > .form-box, html body #scrapYardModal > .form-box {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding: 16px max(16px, calc((100vw - 780px) / 2)) 26px !important;
+    background: #fff !important;
+}
+/* Vichwa vya kurasa hizi: vikae juu vinaposogeza */
+html body #notifModal > div > h3, html body #buyerOrdersModal > div > h3, html body #cartModal > div > h3, html body #escrowModal > div > h3, html body #savedItemsModal > div > h3, html body #rideRequestModal > div > h3, html body #deliveriesModal > div > h3, html body #tripsModal > div > h3, html body #logisticsTokenModal > div > h3, html body #procurementModal > div > h3, html body #userPaymentModal > div > h3, html body #sokopayDepositModal > div > h3, html body #adminSettingsModal > div > h3, html body #advertiserDashboardModal > div > h3, html body #directHireModal > .form-box > h3, html body #repairModal > .form-box > h3, html body #industrialProjectModal > .form-box > h3, html body #printingServiceModal > .form-box > h3, html body #scrapYardModal > .form-box > h3 {
+    position: sticky !important;
+    top: -16px !important;
+    z-index: 4 !important;
+    margin: 0 0 12px !important;
+    padding: 14px 0 12px !important;
+    background: #fff !important;
+    text-align: left !important;
+    font-size: 17px !important;
+    letter-spacing: -.01em !important;
+    border-bottom: 1px solid #E9EFF2 !important;
+}
+/* Orodha ndani ya kurasa hizi: zifikie urefu unaobaki (bila scroll ndani ya
+   scroll) kwa kurasa zenye flex:1; kurasa za fomu zinasogeza ukurasa mzima. */
+html body #notifModal #notifList, html body #buyerOrdersModal #buyerOrdersModalList, html body #cartModal #cartItemsList {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding-right: 2px !important;
+    margin: 0 0 12px !important;
+}
+
+/* Kitufe cha mwisho cha ukurasa (mf. FUNGA): kipimo cha kitufe, sio ukuta */
+@media (min-width: 641px) {
+    html body #notifModal > div > button,
+    html body #buyerOrdersModal > div > button,
+    html body #cartModal > div > button,
+    html body #savedItemsModal > div > button,
+    html body #tripsModal > div > button,
+    html body #deliveriesModal > div > button,
+    html body #logisticsTokenModal > div > button {
+        max-width: 320px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+/* ------------------------------- 6. SIMU / SKRINI NDOGO --- */
+@media (max-width: 640px) {
+html body #chatListModal .ch-inbox-head, html body #chatListModal .ch-inbox-chips, html body #chatListModal .ch-inbox-search, html body #chatListModal [data-skh-ad-slot="chat"] {
+ padding-left: 12px !important; padding-right: 12px !important; margin-left: 0 !important; margin-right: 0 !important; }
+html body #notifModal > div, html body #buyerOrdersModal > div, html body #cartModal > div, html body #escrowModal > div, html body #savedItemsModal > div, html body #rideRequestModal > div, html body #deliveriesModal > div, html body #tripsModal > div, html body #logisticsTokenModal > div, html body #procurementModal > div, html body #userPaymentModal > div, html body #sokopayDepositModal > div, html body #adminSettingsModal > div, html body #advertiserDashboardModal > div, html body #offlineStockModal > div, html body #stockTransferModal > div, html body #shopLedgerModal > div, html body #shopSetupModal > div,
+html body #shopSetupModal > .form-box,
+html body #sellerTypeModal > .form-box, html body #sellerTypeModal > div, html body #directHireModal > .form-box, html body #repairModal > .form-box, html body #industrialProjectModal > .form-box, html body #printingServiceModal > .form-box, html body #scrapYardModal > .form-box {
+        padding: 12px 14px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+html body #notifModal > div > h3, html body #buyerOrdersModal > div > h3, html body #cartModal > div > h3, html body #escrowModal > div > h3, html body #savedItemsModal > div > h3, html body #rideRequestModal > div > h3, html body #deliveriesModal > div > h3, html body #tripsModal > div > h3, html body #logisticsTokenModal > div > h3, html body #procurementModal > div > h3, html body #userPaymentModal > div > h3, html body #adminSettingsModal > div > h3, html body #advertiserDashboardModal > div > h3 {
+ top: -12px !important; font-size: 15.5px !important; }
+}

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai Ads — Muundo wa jukwaa (prototype ya muundo)</title>
+<style>
+  :root{
+    --green:#18A982; --green-dark:#12866A; --green-soft:#EAF8F3;
+    --blue:#3B82F6; --blue-soft:#EFF6FF; --gold:#D4A72C; --gold-soft:#FFF8E6;
+    --ink:#0F172A; --ink2:#41564F; --ink3:#64748B; --line:#E2E8F0; --line2:#EEF2F6; --bg:#F7FAF9;
+    --red:#B42318; --red-soft:#FEF4F4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- prototype banner ---------- */
+  .proto{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:9px 16px;background:#0F172A;color:#fff;font-size:12px;
+  }
+  .proto b{font-size:12.5px}
+  .proto span{color:#9FE3CC}
+  .proto .pill{
+    margin-left:auto;padding:3px 9px;border-radius:999px;background:rgba(24,169,130,.18);
+    border:1px solid rgba(24,169,130,.5);color:#9FE3CC;font-weight:700;font-size:11px
+  }
+  /* ---------- top bar ---------- */
+  .top{
+    display:flex;align-items:center;gap:12px;padding:11px 16px;background:#fff;
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:6
+  }
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .brand-mark{
+    width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--green),var(--green-dark));
+    color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;flex:0 0 auto
+  }
+  .brand b{display:block;font-size:13.5px;letter-spacing:-.01em;line-height:1.15}
+  .brand small{display:block;font-size:11px;color:var(--ink3)}
+  .top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 13px;border-radius:9px;
+    border:1px solid var(--line);background:#fff;color:var(--ink2);font:inherit;font-size:12px;font-weight:800;cursor:pointer
+  }
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.primary:hover{background:var(--green-dark)}
+  .menu-btn{display:none}
+  /* ---------- layout ---------- */
+  .body{display:flex;align-items:flex-start;gap:0;min-height:calc(100vh - 96px)}
+  .rail{
+    flex:0 0 236px;background:#fff;border-right:1px solid var(--line);
+    padding:12px 10px;position:sticky;top:57px;max-height:calc(100vh - 57px);overflow:auto
+  }
+  .rail h4{
+    margin:12px 8px 6px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:800
+  }
+  .rail h4:first-child{margin-top:2px}
+  .rail button{
+    display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;margin-bottom:2px;
+    border:1px solid transparent;border-radius:9px;background:transparent;color:var(--ink2);
+    font:inherit;font-size:12.5px;font-weight:700;text-align:left;cursor:pointer
+  }
+  .rail button .ico{
+    width:16px;height:16px;flex:0 0 auto;border-radius:4px;border:1.6px solid currentColor;opacity:.65
+  }
+  .rail button:hover{background:#F6FCF9;color:var(--green-dark)}
+  .rail button.active{background:var(--green-soft);border-color:#B9E3D4;color:var(--green-dark)}
+  .rail button .dot{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--gold);flex:0 0 auto}
+  .main{flex:1 1 auto;min-width:0;padding:18px 18px 56px}
+  /* ---------- section ---------- */
+  .head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .head h1{margin:0;font-size:19px;letter-spacing:-.02em}
+  .head p{margin:5px 0 0;font-size:12.5px;color:var(--ink3);max-width:70ch;line-height:1.55}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .chip{
+    padding:3px 9px;border-radius:999px;font-size:10.5px;font-weight:800;border:1px solid var(--line);
+    background:#F8FAF9;color:var(--ink3)
+  }
+  .chip.ready{background:var(--green-soft);border-color:#B9E3D4;color:var(--green-dark)}
+  .chip.back{background:var(--gold-soft);border-color:#F3E2B4;color:#8A6510}
+  .chip.decide{background:var(--blue-soft);border-color:#C7DFF7;color:#1D4ED8}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+  .card h3{margin:0;font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .card h3 .tag{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:999px;background:#F1F5F4;color:var(--ink3);border:1px solid var(--line)}
+  .card h3 .tag.back{background:var(--gold-soft);border-color:#F3E2B4;color:#8A6510}
+  .card h3 .tag.decide{background:var(--blue-soft);border-color:#C7DFF7;color:#1D4ED8}
+  .card ul{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:5px}
+  .card li{font-size:11.5px;color:var(--ink2);line-height:1.5;padding-left:14px;position:relative}
+  .card li::before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;border-radius:50%;background:#C9D6D1}
+  .card li b{color:var(--ink)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:9px}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+  .stat small{display:block;font-size:10.5px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.03em}
+  .stat .v{margin-top:5px;font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+  .stat .v.dash{color:#94A3B8;font-weight:700;font-size:13px}
+  .stat .src{margin-top:4px;font-size:10px;color:var(--ink3)}
+  .stat.na{border-style:dashed;background:#FCFDFC}
+  .bar{
+    margin-top:9px;height:8px;border-radius:999px;background:repeating-linear-gradient(90deg,#E6EDEA 0 10px,#F3F7F5 10px 20px);
+  }
+  .ph{
+    margin-top:9px;border:1.5px dashed #D7E1DE;border-radius:11px;background:
+      repeating-linear-gradient(135deg,#FBFDFC 0 10px,#F6FAF8 10px 20px);
+    padding:14px;text-align:center;font-size:11px;font-weight:700;color:#8296A0
+  }
+  .row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line2);font-size:11.5px}
+  .row:last-child{border-bottom:0}
+  .row .nm{flex:1 1 auto;min-width:0;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .st{padding:2px 7px;border-radius:999px;font-size:9.5px;font-weight:800;border:1px solid var(--line);background:#F8FAF9;color:var(--ink3)}
+  .st.on{background:var(--green-soft);border-color:#B9E3D4;color:var(--green-dark)}
+  .st.wait{background:var(--gold-soft);border-color:#F3E2B4;color:#8A6510}
+  .st.off{background:var(--blue-soft);border-color:#C7DFF7;color:#1D4ED8}
+  .flow{display:grid;gap:6px;margin-top:8px}
+  .step{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--line2);border-radius:9px;background:#FCFEFD;font-size:11.5px;font-weight:700;color:var(--ink2)}
+  .step i{width:18px;height:18px;border-radius:999px;display:grid;place-items:center;background:var(--green-soft);color:var(--green-dark);font-size:10px;font-style:normal;font-weight:800;flex:0 0 auto}
+  .note{
+    display:flex;gap:9px;padding:10px 12px;border:1px solid #C7DFF7;background:var(--blue-soft);
+    border-radius:11px;color:#1D4ED8;font-size:11.5px;line-height:1.55;margin-top:12px
+  }
+  .note.gold{border-color:#F3E2B4;background:var(--gold-soft);color:#8A6510}
+  .note b{font-weight:800}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10.5px;color:var(--ink3);font-weight:700}
+  .legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;font-style:normal}
+  /* ---------- responsive ---------- */
+  @media (max-width:1023px){
+    .rail{
+      position:static;flex:0 0 auto;width:100%;max-height:none;border-right:0;border-bottom:1px solid var(--line);
+      display:flex;gap:4px;overflow-x:auto;padding:8px 10px;scrollbar-width:none
+    }
+    .rail::-webkit-scrollbar{display:none}
+    .rail h4{display:none}
+    .rail button{width:auto;flex:0 0 auto;white-space:nowrap;margin-bottom:0}
+    .body{flex-direction:column}
+    .main{padding:14px}
+  }
+  @media (max-width:620px){
+    .brand small{display:none}
+    .top-actions .btn span{display:none}
+    .top-actions .btn{padding:0 11px}
+    .head h1{font-size:17px}
+    .grid{grid-template-columns:minmax(0,1fr)}
+    .menu-btn{display:inline-flex}
+    .rail.sheet-mode{display:none}
+    .rail.sheet-mode.open{display:flex;flex-wrap:wrap;overflow:visible}
+  }
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <b>Prototype ya muundo</b>
+  <span>— mwongozo wa sehemu 11. Hii SI UI ya mwisho; data halisi haijaunganishwa hapa.</span>
+  <span class="pill">Okt 2026 · rasimu ya mapitio</span>
+</div>
+
+<div class="top">
+  <div class="brand">
+    <div class="brand-mark">S</div>
+    <div><b>SokoHai Ads</b><small>Tangazo la bidhaa · huduma · usafiri</small></div>
+  </div>
+  <div class="top-actions">
+    <button class="btn menu-btn" id="menuBtn" type="button">Sehemu</button>
+    <button class="btn primary" type="button">+ <span>Tengeneza</span></button>
+  </div>
+</div>
+
+<div class="body">
+  <nav class="rail" id="rail" aria-label="Sehemu za jukwaa la matangazo"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="legend" style="padding:0 18px 26px">
+  <span><i style="background:#18A982"></i>Iko tayari (backend ipo)</span>
+  <span><i style="background:#D4A72C"></i>Inahitaji backend mpya</span>
+  <span><i style="background:#3B82F6"></i>Inahitaji uamuzi wa mmiliki</span>
+  <span><i style="background:#94A3B8"></i>Data haipo — haitaonyeshwa kama 0</span>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ helpers */
+const chip = (t, k) => `<span class="chip ${k || ''}">${t}</span>`;
+const tag = (t, k) => `<span class="tag ${k || ''}">${t}</span>`;
+const card = (title, tagHtml, items) => `
+  <section class="card">
+    <h3>${title}${tagHtml || ''}</h3>
+    <ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>
+  </section>`;
+const stat = (label, value, src, opts = {}) => `
+  <div class="stat ${opts.na ? 'na' : ''}">
+    <small>${label}</small>
+    <div class="v ${opts.na ? 'dash' : ''}">${value}</div>
+    ${src ? `<div class="src">${src}</div>` : ''}
+  </div>`;
+const ph = t => `<div class="ph">${t}</div>`;
+const row = (name, state, cls) => `<div class="row"><span class="nm">${name}</span><span class="st ${cls}">${state}</span></div>`;
+
+/* ------------------------------------------------------------------ sections */
+const SECTIONS = [
+  {
+    key: 'overview', group: '', label: 'Muhtasari', title: 'Muhtasari',
+    lead: 'Picha moja ya jinsi matangazo yako yanavyoenda. Kila namba inaonyesha chanzo chake; kipimo kisichopo hakionyeshwi kama 0.',
+    chips: [chip('Iko tayari: impressions, clicks, CTR, hali za kampeni', 'ready'), chip('Inahitaji backend: reach, viewability, matumizi', 'back'), chip('Inahitaji uamuzi: ROAS, mapato', 'decide')],
+    body: () => `
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
+        ${card('Vichujio vya muda', tag('Iko tayari', 'ready'), ['Siku 7 · 30 · 90 (uwezo wa engine: siku 90)', 'Zaidi ya siku 90: “historia haipatikani” — sio sifuri'])}
+        <section class="card" style="grid-column:1/-1">
+          <h3>Kadi za utendaji ${tag('chanzo: announcements.viewCount / clickCount', 'ready')}</h3>
+          <div class="stats" style="margin-top:9px">
+            ${stat('Impressions', '—', 'kutoka kaunta halisi', { na: true })}
+            ${stat('Clicks', '—', 'kutoka kaunta halisi', { na: true })}
+            ${stat('CTR', '—', 'clicks ÷ impressions', { na: true })}
+            ${stat('Reach', 'Haipatikani', 'inahitaji rollup (WP3)', { na: true })}
+            ${stat('Viewable', 'Haipatikani', 'adDeliveryMetrics imefungwa kwa rules', { na: true })}
+            ${stat('Conversions', 'Haipatikani', 'hakuna data ya conversion', { na: true })}
+            ${stat('Matumizi (spend)', 'Haipatikani', 'hakuna mfumo wa fedha', { na: true })}
+            ${stat('ROAS', 'Haipatikani', 'inahitaji mapato yaliyothibitishwa', { na: true })}
+          </div>
+          <div class="note"><div><b>Kanuni —</b> namba halisi zinaingizwa tu pale chanzo kilichothibitishwa kipo. Kipimo kisichopo kinaandikwa “Haipatikani” pamoja na sababu.</div></div>
+        </section>
+        ${card('Chati', tag('Inahitaji backend', 'back'), ['Impressions & clicks kwa siku', 'Ulinganisho wa kampeni 3–5', 'Chanzo: adDeliveryMetrics kupitia callable ya mmiliki (WP3)'])}
+        ${card('Kampeni za hivi karibuni', tag('Iko tayari', 'ready'), [row('Kampeni ya mfano', 'Inaendelea', 'on'), row('Nyingine', 'Inasubiri idhini', 'wait'), row('Rasimu', 'Rasimu', 'off')])}
+        ${card('Tahadhari', tag('Inahitaji backend', 'back'), ['Bajeti ya siku imekaribia (goal pacing)', 'Tangazo limekataliwa — sababu', 'Ubunifu haujakaguliwa'])}
+      </div>`
+  },
+  {
+    key: 'create', group: 'Unda', label: 'Tengeneza', title: 'Tengeneza tangazo',
+    lead: 'Hatua 10 zenye muktadha: hakuna kuandika upya taarifa zilizopo kwenye listing.',
+    chips: [chip('Hatua 1–4, 8–10 ziko tayari', 'ready'), chip('Hatua 6–7 zinahitaji backend', 'back'), chip('Hatua 5: mahali ni read-only', 'decide')],
+    body: () => `
+      <div class="grid">
+        <section class="card">
+          <h3>Mtiririko ${tag('hatua 10', 'ready')}</h3>
+          <div class="flow">
+            ${['Aina (bidhaa / huduma / usafiri)', 'Chagua listing iliyo halali', 'Kagua taarifa na media ya listing', 'Maudhui ya tangazo', 'Lengo na mahali', 'Hadhira na walengwa', 'Bajeti / lengo la uwasilishaji', 'Muda', 'Preview halisi', 'Kagua na tuma']
+              .map((s2, i) => `<div class="step"><i>${i + 1}</i>${s2}</div>`).join('')}
+          </div>
+        </section>
+        ${card('Kinachotoka kwenye listing', tag('Iko tayari', 'ready'), ['Picha, jina na bei ya bidhaa', 'Mtoa huduma, eneo na bei ya huduma', 'Njia, chombo na bei ya usafiri', 'Listing isiyofaa inaonyeshwa na sababu'])}
+        ${card('Hadhira (hatua 6)', tag('Inahitaji backend', 'back'), ['Mkoa / wilaya', 'Kategoria ya bidhaa / huduma / usafiri', 'Maneno muhimu', 'Aina ya entity (bidhaa|huduma|usafiri)', '<b>Hakuna</b> device / interests / new-vs-returning — engine haiziunga mkono'])}
+        ${card('Bajeti (hatua 7)', tag('Inahitaji uamuzi', 'decide'), ['Hadi uamuzi: <b>lengo la impressions</b> (siku/jumla) — engine inapima na kukamilisha', 'Fedha (CPC/CPM/CPA) hazitajengwa bila idhini'])}
+        ${card('Rasimu', tag('Iko tayari', 'ready'), ['Progress inahifadhiwa kwenye wizard', 'Rasimu inahifadhiwa kwa creativeSaveDraft'])}
+      </div>`
+  },
+  {
+    key: 'campaigns', group: 'Simamia', label: 'Kampeni Zangu', title: 'Kampeni zangu',
+    lead: 'Orodha, vichujio, maelezo na vitendo kwa kila hali — vitendo vinavyoonyeshwa ni vile tu vinavyoruhusiwa.',
+    chips: [chip('Orodha, hali, vichujio: ziko tayari', 'ready'), chip('Pause / resume / archive: inahitaji backend', 'back')],
+    body: () => `
+      <div class="grid">
+        ${card('Vichujio na utafutaji', tag('Iko tayari', 'ready'), ['Hali: inasubiri · inaendelea · imesimama · rasimu · imekamilika · imekataliwa', 'Utafutaji kwa jina', 'Kichujio cha tarehe'])}
+        ${card('Kila kampeni', tag('Iko tayari', 'ready'), ['Jina, aina, hali, muda', 'Impressions · clicks · CTR', 'Vitendo kwa hali husika'])}
+        ${card('Vitendo vinavyokosekana', tag('Inahitaji backend', 'back'), ['Pause / Resume / Archive → callable ya mmiliki (WP2)', 'Duplicate → creative mpya kupitia njia ile ile ya publish', 'Extend → kubadilisha endAt kwa mipaka'])}
+        ${card('Maelezo ya kampeni', tag('Iko tayari', 'ready'), ['Chanzo: listing halisi iliyounganishwa', 'Mahali (read-only kwa sasa, admin pekee anabadilisha)', 'Sababu ya kukataliwa (baada ya WP4)'])}
+      </div>`
+  },
+  {
+    key: 'library', group: 'Simamia', label: 'Maktaba', title: 'Maktaba ya ubunifu',
+    lead: 'Kumbukumbu moja ya ubunifu wako: vichwa, maelezo, CTA na media ya listing — hakuna katalogi ya pili.',
+    chips: [chip('Data ipo (creatives)', 'ready'), chip('UI inahitaji kujengwa', 'back')],
+    body: () => `
+      <div class="grid">
+        ${card('Maudhui', tag('Inahitaji backend kidogo', 'back'), ['Ubunifu wote wa mmiliki, kwa aina', 'Vichwa / maelezo / CTA vilivyotumika', 'Media ya listing (marejeo, sio nakala)'])}
+        ${card('Uhakiki', tag('Iko tayari', 'ready'), ['validateCreative inatoa makosa kwa layer', 'Ubunifu usiohalali hauwezi kuchapishwa'])}
+        ${card('Tumia tena', tag('Inahitaji backend kidogo', 'back'), ['“Tumia kwenye kampeni mpya” inajaza wizard', 'Hakuna kunakili listing'])}
+      </div>`
+  },
+  {
+    key: 'audience', group: 'Sanidi', label: 'Hadhira & Walengwa', title: 'Hadhira na walengwa',
+    lead: 'Lengo linategemea data iliyopo tu. Kila chaguo linaonyesha ikiwa engine inaliheshimu kweli.',
+    chips: [chip('Region / kategoria / keyword: engine inaheshimu', 'ready'), chip('Kadirio la hadhira: hakuna data', 'back')],
+    body: () => `
+      <div class="grid">
+        ${card('Linaungwa mkono (server)', tag('Iko tayari', 'ready'), ['Mkoa (targetRegions)', 'Kategoria (targetCategories)', 'Maneno muhimu (targetKeywords)', 'Aina ya entity (targetEntityTypes)'])}
+        ${card('Halina msingi', tag('Haipo', ''), ['Device type', 'Interests za mteja', 'New vs returning', 'Search intent ya wazi', '→ Hakiwezi kuonyeshwa kama chaguo la kweli'])}
+        ${card('Kadirio la hadhira', tag('Inahitaji backend', 'back'), ['Inahitaji hesabu ya listings/watumiaji kwa kila kategoria', 'Bila hesabu: “hakuna kadirio” — sio namba ya kubuni'])}
+      </div>`
+  },
+  {
+    key: 'placements', group: 'Sanidi', label: 'Mahali', title: 'Mahali pa kuonekana',
+    lead: 'Mahali halisi panapotumika leo, na panapopaswa kuongezwa ili usafiri na huduma viwe na sehemu zake.',
+    chips: [chip('12 mahali server-side', 'ready'), chip('Usafiri/huduma: inahitaji backend', 'back')],
+    body: () => `
+      <div class="grid">
+        ${card('Yaliyopo (server)', tag('Iko tayari', 'ready'), ['home · discover · search', 'product_detail · service_detail', 'chat · groups · live · auction', 'group_buy · price_drop · dashboard'])}
+        ${card('Yanayopendekezwa', tag('Inahitaji backend', 'back'), ['transport_detail', 'service_discovery', 'category_listing', 'related_listing', '→ PLACEMENTS + slot mapping, hakuna engine mpya'])}
+        ${card('Kanuni za muonekano', tag('Iko tayari', 'ready'), ['Upana sawa na kadi ya kawaida', 'Chip ndogo “Sponsored”', 'Hakuna featured ad kubwa', 'Bei na CTA zinasomeka'])}
+        ${card('Nani anachagua', tag('Inahitaji uamuzi', 'decide'), ['Sasa: admin pekee (adsUpdateCampaignDelivery)', 'Pendekezo: mfanyabiashara achague kati ya yaliyoruhusiwa; admin adhibiti']) }
+      </div>`
+  },
+  {
+    key: 'analytics', group: 'Uchanganuzi', label: 'Uchanganuzi', title: 'Uchanganuzi na ripoti',
+    lead: 'Uchanganuzi unaonyesha kile kinachopimwa kweli. Hakuna conversions, mapato au ROAS hadi zithibitishwe.',
+    chips: [chip('Metrics za engine zipo (server-only)', 'ready'), chip('Ufikiaji wa mmiliki: inahitaji backend', 'back'), chip('Conversion: inahitaji uamuzi', 'decide')],
+    body: () => `
+      <div class="grid">
+        ${card('Delivery', tag('Inahitaji backend', 'back'), ['Impressions · Reach · Frequency', 'Viewable impressions (≥50% kwa ≥1s)', 'Dismissals · Rendered'])}
+        ${card('Engagement', tag('Iko tayari', 'ready'), ['Clicks · CTR (kaunta halisi)', 'CPC — inahitaji fedha (haipo)'])}
+        ${card('Conversion', tag('Haipo', ''), ['Product views · Add to cart · Purchases', 'Service inquiries · Bookings', 'Transport requests', '→ Hakuna event ya conversion; haitabuniwa'])}
+        ${card('Financial', tag('Haipo', ''), ['Spend · Cost per conversion', 'Attributed revenue · ROAS', '→ Zinahitaji WP6 + WP7'])}
+        ${card('Migawanyo', tag('Inahitaji backend', 'back'), ['Kwa kampeni · tangazo · aina ya listing', 'Kwa mahali · tarehe · mkoa', 'Device: haipo kwenye engine'])}
+        ${card('Ripoti', tag('Inahitaji backend', 'back'), ['CSV ya kile callable inarudisha', 'Attribution: dirisha 7-siku click / 1-siku view (pendekezo)'])}
+      </div>`
+  },
+  {
+    key: 'budget', group: 'Uchanganuzi', label: 'Bajeti & Malipo', title: 'Bajeti na malipo',
+    lead: 'Hapa ndipo tunapotenganisha kwa makusudi “lengo la uwasilishaji” na “fedha halisi”.',
+    chips: [chip('Lengo la impressions: linapendekezwa sasa', 'ready'), chip('Fedha halisi: inahitaji uamuzi', 'decide')],
+    body: () => `
+      <div class="grid">
+        ${card('A · Lengo la uwasilishaji', tag('Pendekezo', 'ready'), ['Lengo la siku / jumla (impressions)', 'Engine inapima kasi na kukamilisha', 'Maonyo: 80% ya lengo, lengo limekwisha', 'Hakuna fedha, hakuna hatari ya malipo'])}
+        ${card('B · Fedha halisi', tag('Inahitaji uamuzi', 'decide'), ['Daily / lifetime budget ya fedha', 'Spending limit · reserved funds', 'CPC / CPM / CPA — mfumo wa bei', 'Salio la matangazo <b>tofauti</b> na wallet ya mnunuzi', 'Ankara, risiti, refunds, adjustments'])}
+        ${card('Sharti la usalama', tag('Lazima', 'decide'), ['Hakuna kutoa fedha bila idhini ya mmiliki', 'Server pekee inaandika ledger', 'Idempotency kama escrow_holds', 'Mapitio ya fedha kabla ya kuwasha'])}
+        ${card('Hali ya sasa', tag('Coming Soon', ''), ['UI ya billing imefungwa kwa makusudi', 'Contract test inalinda hilo (20 checks)'])}
+      </div>
+      <div class="note gold"><div><b>Uamuzi unaohitajika —</b> fedha halisi ni kazi ya muda mrefu ya kiufundi na ya fedha. Mapendekezo: toa <b>A</b> sasa, sanduku la <b>B</b> baadaye.</div></div>`
+  },
+  {
+    key: 'money', group: 'Uchanganuzi', label: 'Fedha & Ankara', title: 'Fedha na ankara',
+    lead: 'Kumbukumbu za malipo ya matangazo — hazipo bado, na hazitengenezwi kwa mwonekano tu.',
+    chips: [chip('Haipo: inahitaji WP6-B', 'back')],
+    body: () => `
+      <div class="grid">
+        ${card('Kutakuwa na', tag('Baada ya uamuzi', 'decide'), ['Payment history · deposits · refunds', 'Adjustments · transactions status', 'Ankara na risiti (server-side, zisizobadilika)'])}
+        ${card('Kizingiti cha usalama', tag('Lazima', 'decide'), ['Server-side invoice numbering', 'Hakuna ankara ya mfano', 'Wallet ya mnunuzi haiguswi'])}
+        ${card('Sasa', tag('Haipo', ''), ['Hakuna ankara ya tangazo', 'Hakuna malipo ya tangazo', 'Kila kitu kinaonyesha “haipatikani”']) }
+      </div>`
+  },
+  {
+    key: 'notifications', group: 'Mawasiliano', label: 'Arifa', title: 'Arifa',
+    lead: 'Arifa zote za matangazo zitatumwa server-side na kuunganishwa moja kwa moja na kampeni husika.',
+    chips: [chip('Collection ipo (notifications)', 'ready'), chip('Waandishi wa matangazo: inahitaji backend', 'back')],
+    body: () => `
+      <div class="grid">
+        ${card('Tukio → arifa', tag('Inahitaji backend', 'back'), ['Imetumwa · imeidhinishwa · imekataliwa (na sababu)', 'Imeanza · imesimama · imekamilika', 'Lengo limekaribia · lengo limekwisha', 'Malipo (baada ya WP6-B)'])}
+        ${card('Kiungo', tag('Inahitaji backend', 'back'), ['Kila arifa inafungua kampeni husika', 'Hakuna arifa isiyo na hatua'])}
+      </div>`
+  },
+  {
+    key: 'settings', group: 'Mawasiliano', label: 'Mipangilio & Msaada', title: 'Mipangilio na msaada',
+    lead: 'Utambulisho, uhalali wa listings na maelezo ya jinsi matangazo yanavyofanya kazi.',
+    chips: [chip('Iko tayari', 'ready')],
+    body: () => `
+      <div class="grid">
+        ${card('Utambulisho', tag('Iko tayari', 'ready'), ['Jina la mfanyabiashara', 'Aina za listings zilizohalali (bidhaa / huduma / usafiri)', 'Idadi ya listings tayari kutangazwa'])}
+        ${card('Msaada', tag('Iko tayari', 'ready'), ['Jinsi ya kuchagua listing', 'Kwa nini tangazo halijachapishwa', 'Nani anaidhinisha na kwa muda gani'])}
+        ${card('Malipo', tag('Coming Soon', ''), ['Kiungo cha billing — hakifanyi malipo yoyote'])}
+      </div>`
+  }
+];
+
+/* ------------------------------------------------------------------ render */
+const rail = document.getElementById('rail');
+const main = document.getElementById('main');
+let current = 'overview';
+
+function renderRail() {
+  let html = '';
+  let group = '';
+  SECTIONS.forEach(s => {
+    if (s.group !== group) { group = s.group; html += `<h4>${group}</h4>`; }
+    const pending = s.chips.some(c => c.includes('Inahitaji'));
+    html += `<button type="button" data-key="${s.key}" class="${s.key === current ? 'active' : ''}">
+      <span class="ico"></span>${s.label}${pending ? '<span class="dot"></span>' : ''}
+    </button>`;
+  });
+  rail.innerHTML = html;
+}
+function renderMain() {
+  const s = SECTIONS.find(x => x.key === current);
+  main.innerHTML = `
+    <div class="head">
+      <div>
+        <h1>${s.title}</h1>
+        <p>${s.lead}</p>
+        <div class="chips">${s.chips.join('')}</div>
+      </div>
+    </div>
+    ${s.body()}
+    <div class="note"><div><b>Kumbuka —</b> prototype hii inaonyesha <b>muundo</b> pekee. Namba zote ni “—” kwa makusudi: hakuna data ya kubuni, na vipimo visivyopo vinaandikwa “Haipatikani”.</div></div>`;
+}
+function go(key) {
+  current = key;
+  renderRail();
+  renderMain();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+rail.addEventListener('click', e => {
+  const b = e.target.closest('button[data-key]');
+  if (b) { go(b.dataset.key); rail.classList.remove('open'); }
+});
+document.getElementById('menuBtn').addEventListener('click', () => rail.classList.toggle('open'));
+renderRail();
+renderMain();
+</script>
+</body>
+</html>

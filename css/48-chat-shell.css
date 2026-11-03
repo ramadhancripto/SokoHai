@@ -1,0 +1,1001 @@
+/* =====================================================================
+   SokoHai — [CHAT SHELL 2026-11]  css/48-chat-shell.css
+   Kichwa cha mazungumzo (rudi · mtu · simu/video · tafuta · menyu) na
+   upau wa kuandika (attach · emoji · maandishi · sauti · biashara · tuma).
+
+   Sababu: (1) kitufe cha kurudi kilikuwa kidogo na hakikuwa na maandishi,
+   (2) jina + hali ya mwenzako zilikuwa zimebanana na avata ya "bubble",
+   (3) upau wa kuandika ulikuwa na ikoni ya SIMU badala ya kipaza sauti,
+   hakuna emoji/picha za hisia, na hakuna njia ya biashara ndani yake.
+   ===================================================================== */
+
+/* ============================================================ 1. KICHWA */
+html body #chatModal .chat-head-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 7px 10px !important;
+    background: #F1FBF7 !important;
+    border-bottom: 1px solid #D9EEE5 !important;
+    min-height: 58px;
+}
+
+/* --- Rudi: kitufe cha wazi chenye neno --- */
+html body #chatModal .ch-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 0 auto;
+    height: 38px;
+    padding: 0 12px 0 7px;
+    border-radius: 99px;
+    border: 1px solid #CBE7DA;
+    background: #FFFFFF;
+    color: #17604E;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+}
+html body #chatModal .ch-back-btn:hover { background: #E7F6EF; border-color: #A9DCC9; }
+html body #chatModal .ch-back-btn svg { flex: 0 0 auto; }
+html body #chatModal .ch-back-btn .ch-back-lbl { line-height: 1; }
+
+/* --- Avata --- */
+html body #chatModal .chat-head-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    flex: 0 0 auto;
+    border-radius: 50% !important;
+    overflow: hidden;
+    background: #E1F5EC;
+    border: 1px solid #C6E8D9;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+}
+html body #chatModal .chat-head-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+html body #chatModal .chat-head-avatar svg { width: 20px; height: 20px; }
+
+/* --- Jina + hali --- */
+html body #chatModal .ch-head-id {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    padding: 2px 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+html body #chatModal .ch-head-id b {
+    display: block;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    line-height: 1.25 !important;
+    color: #14342B !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+html body #chatModal .ch-head-sub {
+    display: flex !important;
+    align-items: center;
+    gap: 5px;
+    height: auto !important;
+    min-height: 15px;
+    font-size: 11.5px !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+    color: #2E7D64 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html body #chatModal .ch-head-sub::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #18A982;
+    flex: 0 0 auto;
+}
+html body #chatModal .ch-head-sub:empty { display: none !important; }
+
+/* --- Vitendo vya kulia: simu, video, tafuta, menyu --- */
+html body #chatModal .ch-head-right {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+html body #chatModal .ch-hbtn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    border-radius: 50% !important;
+    border: 1px solid #CFE9DD !important;
+    background: #FFFFFF !important;
+    color: #17604E !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+html body #chatModal .ch-hbtn:hover { background: #E7F6EF !important; }
+html body #chatModal .ch-hbtn svg { width: 19px; height: 19px; }
+/* Simu/video: rangi ya msisitizo ili zionekane kama vitendo vikuu */
+html body #chatModal #chatAudioCallBtn { color: #0E7A63 !important; border-color: #B7E3D2 !important; }
+html body #chatModal #chatVideoCallBtn { color: #0B6FA4 !important; border-color: #BFE0F0 !important; }
+
+/* =========================================================== 2. COMPOSER */
+html body #chatModal #chatComposer {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0 !important;
+    align-items: stretch !important;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    background: #FFFFFF !important;
+    border-top: 1px solid #E4EDE9 !important;
+    box-shadow: 0 -2px 10px rgba(15, 23, 42, .04) !important;
+}
+
+/* Mstari MMOJA: attach · emoji · [maandishi] · sauti · biashara · tuma */
+html body #chatModal .ch-comp-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+
+html body #chatModal .ch-cbtn {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid #E1EBE7;
+    background: #F4F8F6;
+    color: #4B6A60;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease, transform .06s ease;
+}
+html body #chatModal .ch-cbtn:hover { background: #E7F4EE; color: #0E7A63; border-color: #C9E6DA; }
+html body #chatModal .ch-cbtn:active { transform: scale(.95); }
+html body #chatModal .ch-cbtn svg { width: 20px; height: 20px; }
+html body #chatModal .ch-cbtn.is-open { background: #E1F5EC; color: #0E7A63; border-color: #A9DCC9; }
+html body #chatModal .ch-cbtn-trade { color: #0B6FA4; background: #F1F8FD; border-color: #D7E9F6; }
+html body #chatModal .ch-cbtn-trade:hover { background: #E4F2FB; color: #0B6FA4; border-color: #BEDCF0; }
+
+/* Rekodi sauti: kijani kikubwa wakati wa kurekodi */
+html body #chatModal #voiceBtn.is-recording {
+    background: #FEECEC;
+    border-color: #F7C5C5;
+    color: #D92D20;
+    animation: chMicPulse 1.4s ease-in-out infinite;
+}
+@keyframes chMicPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217, 45, 32, .28); }
+    50% { box-shadow: 0 0 0 6px rgba(217, 45, 32, 0); }
+}
+
+html body #chatModal .ch-comp-field {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    background: #F7FAF9;
+    border: 1px solid #DCE8E3;
+    border-radius: 22px;
+    padding: 0 4px;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+html body #chatModal .ch-comp-field:focus-within {
+    background: #FFFFFF;
+    border-color: #18A982;
+    box-shadow: 0 0 0 3px rgba(24, 169, 130, .12);
+}
+html body #chatModal #chatInput {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 0 !important;
+    outline: none !important;
+    background: transparent !important;
+    padding: 10px 14px !important;
+    font-size: 14.5px !important;
+    line-height: 1.35 !important;
+    color: #14342B !important;
+    caret-color: #18A982;
+    border-radius: 22px;
+}
+html body #chatModal #chatInput::placeholder { color: #90A79E; }
+
+html body #chatModal #chatSendBtn {
+    flex: 0 0 auto;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: #18A982 !important;
+    color: #fff !important;
+    border: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(24, 169, 130, .32) !important;
+    transition: transform .06s ease, box-shadow .15s ease;
+}
+html body #chatModal #chatSendBtn:active { transform: scale(.95); }
+html body #chatModal #chatSendBtn svg { width: 21px; height: 21px; }
+
+/* Chip ya kurekodi */
+html body #chatModal .ch-rec-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 7px;
+    padding: 7px 10px;
+    border-radius: 12px;
+    background: #FEF3F2;
+    border: 1px solid #FBD5D2;
+    color: #B42318;
+    font-size: 12px;
+    font-weight: 700;
+}
+html body #chatModal .ch-rec-chip[hidden] { display: none !important; }
+html body #chatModal .ch-rec-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #D92D20;
+    animation: chRecBlink 1s steps(2, start) infinite;
+}
+@keyframes chRecBlink { to { visibility: hidden; } }
+html body #chatModal .ch-rec-chip b { font-variant-numeric: tabular-nums; font-size: 12.5px; }
+html body #chatModal .ch-rec-lbl { flex: 1 1 auto; min-width: 0; font-weight: 600; color: #B42318; opacity: .85; }
+html body #chatModal .ch-rec-stop {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 99px;
+    background: #D92D20;
+    color: #fff;
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 800;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+/* ======================================================= 3. POPOVERS */
+html body #chatModal .ch-pop {
+    position: absolute;
+    bottom: calc(100% - 4px);
+    left: 10px;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #FFFFFF;
+    border: 1px solid #DFEAE6;
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .18);
+    padding: 8px;
+    min-width: 240px;
+    max-width: min(320px, calc(100vw - 24px));
+    animation: chPopIn .14s ease;
+}
+html body #chatModal .ch-pop[hidden] { display: none !important; }
+html body #chatModal #chTradePop { left: auto; right: 10px; min-width: 230px; }
+@keyframes chPopIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+html body #chatModal .ch-pop-title {
+    font-size: 10.5px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #7A8B99;
+    padding: 2px 4px 7px;
+}
+html body #chatModal .ch-pop-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    border-radius: 10px;
+    padding: 9px 10px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: #14342B;
+    text-align: left;
+    cursor: pointer;
+}
+html body #chatModal .ch-pop-item:hover { background: #F1F8F5; }
+html body #chatModal .ch-pop-item svg { flex: 0 0 auto; color: #0E7A63; }
+html body #chatModal .ch-pop-item span {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Gridi ya emoji */
+html body #chatModal .ch-emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2px;
+    max-height: 190px;
+    overflow-y: auto;
+}
+html body #chatModal .ch-emoji-grid button {
+    border: 0;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 20px;
+    line-height: 1;
+    padding: 6px 0;
+    cursor: pointer;
+}
+html body #chatModal .ch-emoji-grid button:hover { background: #F1F8F5; }
+
+/* ========================================================= 4. SIMU */
+@media (max-width: 640px) {
+    html body #chatModal .chat-head-bar { padding: 6px 8px !important; gap: 6px !important; min-height: 54px; }
+    html body #chatModal .ch-back-btn { height: 36px; padding: 0 8px; }
+    html body #chatModal .ch-back-btn .ch-back-lbl { display: none; }
+    html body #chatModal .chat-head-avatar { width: 36px !important; height: 36px !important; }
+    html body #chatModal .ch-head-id b { font-size: 14px !important; }
+    html body #chatModal .ch-hbtn { width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; max-width: 32px !important; max-height: 32px !important; }
+    html body #chatModal .ch-hbtn svg { width: 17px; height: 17px; }
+    html body #chatModal .ch-head-right { gap: 4px; }
+    /* Tafuta inahamia kwenye menyu ya ⋮ ili jina lipate nafasi */
+    html body #chatModal #chatSearchBtn { display: none !important; }
+    html body #chatModal .ch-cbtn { width: 34px; height: 34px; }
+    html body #chatModal .ch-cbtn svg { width: 18px; height: 18px; }
+    html body #chatModal #chatSendBtn { width: 40px !important; height: 40px !important; }
+    html body #chatModal .ch-comp-row { gap: 5px; }
+    html body #chatModal #chatInput { padding: 9px 12px !important; font-size: 14px !important; }
+    html body #chatModal .ch-emoji-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* Skrini nyembamba sana: acha vitufe vitatu tu vya muhimu vya biashara */
+@media (max-width: 380px) {
+    html body #chatModal .ch-head-right #chatSearchBtn { display: none !important; }
+    html body #chatModal .ch-cbtn { width: 32px; height: 32px; }
+    html body #chatModal #chatSendBtn { width: 38px !important; height: 38px !important; }
+}
+
+/* ============================================================================
+   [TASK K 2026-11] REPLY INABOFYEKA · STRIP YA BIDHAA INAONDOLEWA · RANGI
+   ============================================================================
+   1. `.ch-quote` = kile kilichojibiwa. Sasa ni kitufe: bofya → unarukia
+      ujumbe halisi (`window.skhChatJumpToMessage`) nao unakolezwa.
+   2. Strip ya "Bidhaa imeambatishwa": kitufe cha ✕ kikubwa, chekundu
+      kinachoonekana wazi (awali kilikuwa kidogo sana kugusa).
+   3. Rangi: buluu (#0B6FA4 / #03509d / #1268A8) imeondolewa kwenye uso wa
+      chat — palette ya mfumo ni kijani (#18A982 / #0F6E55 / #0F7E67).
+   ========================================================================== */
+
+/* ------------------------------------------------ 1. KILE KILICHOJIBIWA --- */
+html body #chatModal #chatMessages .ch-quote {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    border: 0 !important;
+    border-left: 3px solid #18A982 !important;
+    background: rgba(24, 169, 130, .09) !important;
+    border-radius: 0 8px 8px 0 !important;
+    padding: 5px 9px !important;
+    margin: 0 0 6px !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
+    color: #3F4A47 !important;
+    box-shadow: none !important;
+    transition: background .14s ease !important;
+}
+html body #chatModal #chatMessages .ch-quote .ch-quote-by {
+    display: block !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    color: #0F6E55 !important;
+    margin-bottom: 1px !important;
+}
+html body #chatModal #chatMessages .ch-quote .ch-quote-tx {
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+html body #chatModal #chatMessages .ch-quote:hover { background: rgba(24, 169, 130, .16) !important; }
+html body #chatModal #chatMessages .ch-quote:active { transform: scale(.995); }
+html body #chatModal #chatMessages .ch-quote:focus-visible {
+    outline: 2px solid #18A982 !important;
+    outline-offset: 1px !important;
+}
+/* Ndani ya bubble YANGU (kijani) — mandhari nyeupe hafifu ili isichanganye */
+html body #chatModal #chatMessages .ch-msg[data-mine="1"] .ch-quote {
+    background: rgba(255, 255, 255, .78) !important;
+    border-left-color: #0F7E67 !important;
+}
+html body #chatModal #chatMessages .ch-msg[data-mine="1"] .ch-quote:hover {
+    background: rgba(255, 255, 255, .96) !important;
+}
+html body #chatModal #chatMessages .ch-quote.ch-quote--gone {
+    cursor: default !important;
+    font-style: italic !important;
+    opacity: .72 !important;
+}
+
+/* Kikolezo (flash) cha ujumbe uliorukiwa */
+@keyframes skhMsgFlash {
+    0%   { background-color: rgba(24, 169, 130, .00); }
+    18%  { background-color: rgba(24, 169, 130, .22); }
+    55%  { background-color: rgba(24, 169, 130, .13); }
+    100% { background-color: rgba(24, 169, 130, .00); }
+}
+html body #chatModal #chatMessages .ch-msg--flash,
+html body #chatModal #chatMessages .ch-msg-event.ch-msg--flash,
+html body #chatModal #chatMessages .gsg-msg-row.ch-msg--flash {
+    animation: skhMsgFlash 1.5s ease-out !important;
+    border-radius: 12px !important;
+}
+
+/* Vitufe vya kujibu/tazama chini ya ujumbe: rangi ya mfumo, sio buluu */
+html body #chatModal #chatMessages .ch-actions button:hover {
+    background: #E1F5EC !important;
+    color: #0F6E55 !important;
+}
+html body #chatModal #chatMessages .ch-card-link { color: #0F6E55 !important; }
+html body #chatModal #chatMessages .ch-card-order { border-left-color: #0F6E55 !important; }
+
+/* ------------------------- 2. STRIP YA BIDHAA ILIYOAMBATISHWA (inaondolewa) - */
+html body #chatModal #chatAttachedProduct { padding: 0 10px !important; }
+html body #chatModal .chat-attached {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    background: #FFF9EC !important;
+    border: 1px solid #F0DEAF !important;
+    border-radius: 14px !important;
+    padding: 7px 8px !important;
+    margin: 0 0 8px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .05) !important;
+}
+html body #chatModal .chat-attached .ca-remove {
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E7D6A8 !important;
+    color: #8A5A0B !important;
+    border-radius: 50% !important;
+    font-size: 17px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+}
+html body #chatModal .chat-attached .ca-remove:hover,
+html body #chatModal .chat-attached .ca-remove:focus-visible {
+    background: #FDECEC !important;
+    border-color: #F3B7B7 !important;
+    color: #B42318 !important;
+    outline: none !important;
+}
+@media (max-width: 420px) {
+    html body #chatModal .chat-attached .ca-remove { width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; }
+}
+
+/* ----------------------------------------- 3. RANGI YA MFUMO KWENYE KICHWA */
+/* Video call: ilikuwa buluu (#0B6FA4) — sasa kijani kama simu */
+html body #chatModal #chatVideoCallBtn {
+    color: #0F7E67 !important;
+    border-color: #B7E3D2 !important;
+}
+html body #chatModal #chatVideoCallBtn:hover { background: #E7F6EF !important; }
+/* Kitufe cha biashara (🛒) kwenye composer: teal ya mfumo badala ya buluu */
+html body #chatModal .ch-cbtn-trade {
+    color: #0F7E67 !important;
+    background: #EFF9F4 !important;
+    border-color: #C9E6DA !important;
+}
+html body #chatModal .ch-cbtn-trade:hover {
+    background: #E1F5EC !important;
+    color: #0F6E55 !important;
+    border-color: #A9DCC9 !important;
+}
+
+/* Kitufe cha kuondoa kadi ya muktadha ("Bidhaa … Toa Ofa") */
+html body #chatModal .ch-startnego .ch-sn-x {
+    margin-left: 6px;
+    flex: 0 0 auto;
+    width: 24px; height: 24px; min-width: 24px; min-height: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #FFFFFF; border: 1px solid #D9E6E0; color: #64748B;
+    border-radius: 50%; font-size: 15px; font-weight: 900; line-height: 1;
+    padding: 0; cursor: pointer;
+}
+html body #chatModal .ch-startnego .ch-sn-x:hover {
+    background: #FDECEC; border-color: #F3B7B7; color: #B42318;
+}
+html body #chatModal .ch-startnego .ch-sn-tag { margin-left: auto; }
+
+/* ============================================================================
+   [INSIDE-CHAT NAV 2026-11] Kusogeza · swipe · action sheet · pills
+   ========================================================================== */
+
+/* ---------- 1. Viashiria vya swipe (kulia = jibu, kushoto = vitendo) ------- */
+html body #chatModal #chatMessages .ch-msg,
+html body #chatModal #chatMessages .ch-msg-event { touch-action: pan-y; }
+html body #chatModal #chatMessages .ch-msg .chat-bubble,
+html body #chatModal #chatMessages .ch-msg-event .ch-event-card {
+    will-change: transform;
+    backface-visibility: hidden;
+}
+/* Kivuli/msingi unaoonyesha nia wakati wa kuvuta */
+html body #chatModal #chatMessages .ch-msg.ch-swiping-right,
+html body #chatModal #chatMessages .ch-msg.ch-swiping-left { position: relative; }
+html body #chatModal #chatMessages .ch-msg.ch-swiping-right::before,
+html body #chatModal #chatMessages .ch-msg.ch-swiping-left::before {
+    content: "";
+    position: absolute;
+    top: 6px; bottom: 6px;
+    width: 34px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: #E7F4EE;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 17px 17px;
+    z-index: 0;
+}
+html body #chatModal #chatMessages .ch-msg.ch-swiping-right::before {
+    left: 4px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F6E55' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M9 14 4 9l5-5'/><path d='M4 9h10a6 6 0 0 1 0 12H9'/></svg>");
+}
+html body #chatModal #chatMessages .ch-msg.ch-swiping-left::before {
+    right: 4px;
+    background-color: #F3F6F5;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F6E55' stroke-width='2.6' stroke-linecap='round'><circle cx='5' cy='12' r='1.4'/><circle cx='12' cy='12' r='1.4'/><circle cx='19' cy='12' r='1.4'/></svg>");
+}
+html body #chatModal #chatMessages .ch-msg.ch-swipe-release .chat-bubble { animation: chSwipeSnap .2s ease-out; }
+@keyframes chSwipeSnap { 0% { transform: scale(.99); } 100% { transform: scale(1); } }
+
+/* ---------- 2. Pills: "Ujumbe mpya" + "Rudi chini" ---------------------- */
+#skhChatPills {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: none;
+}
+#skhChatPills .skh-pill {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid #CFE9DD;
+    background: #FFFFFF;
+    color: #0F6E55;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 13px;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px -6px rgba(15, 23, 42, .28);
+    cursor: pointer;
+    animation: skhPillIn .18s ease-out;
+}
+#skhChatPills .skh-pill[hidden] { display: none !important; }
+#skhChatPills .skh-pill--down { padding: 8px; width: 34px; height: 34px; justify-content: center; }
+#skhChatPills .skh-pill--new { background: #18A982; color: #fff; border-color: #18A982; }
+#skhChatPills .skh-pill-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.35); }
+@keyframes skhPillIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 3. Reply chip ya composer (mwandishi + preview) -------------- */
+#chatReplyChip { padding: 0 10px; }
+.ch-replychip {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: #F2F8F5;
+    border: 1px solid #D8EBE2;
+    border-radius: 12px;
+    padding: 7px 8px 7px 0;
+    margin: 6px 0;
+}
+.ch-replychip .ch-rc-bar {
+    flex: 0 0 3px; align-self: stretch; border-radius: 3px; background: #18A982; margin-left: 0;
+}
+.ch-replychip .ch-rc-body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.ch-replychip .ch-rc-by { font-size: 11.5px; font-weight: 800; color: #0F6E55; }
+.ch-replychip .ch-rc-tx {
+    font-size: 12px; color: #5A6B78;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.ch-replychip .ch-rc-x {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid #DCE9E3; background: #fff; color: #64748B;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+}
+.ch-replychip .ch-rc-x:hover { background: #FDECEC; color: #B42318; border-color: #F3B7B7; }
+
+/* ---------- 4. ACTION SHEET (swipe kushoto · long-press · right-click) --- */
+.skh-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+.skh-sheet[hidden] { display: none !important; }
+.skh-sheet-bg { position: absolute; inset: 0; background: rgba(9, 20, 26, .45); opacity: 0; transition: opacity .16s ease; }
+.skh-sheet.is-open .skh-sheet-bg { opacity: 1; }
+.skh-sheet-card {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    max-height: 82vh;
+    overflow-y: auto;
+    background: #FFFFFF;
+    border-radius: 20px 20px 0 0;
+    padding: 8px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -10px 40px rgba(9, 20, 26, .28);
+    transform: translateY(14px);
+    opacity: 0;
+    transition: transform .18s cubic-bezier(.2,.9,.3,1), opacity .16s ease;
+}
+.skh-sheet.is-open .skh-sheet-card { transform: none; opacity: 1; }
+.skh-sheet-grip { width: 42px; height: 4px; border-radius: 99px; background: #DFE7E4; margin: 4px auto 8px; }
+.skh-sheet-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.skh-sheet-head b { font-size: 13.5px; color: #0f172a; flex: 1; letter-spacing: -.01em; }
+.skh-sheet-x {
+    width: 28px; height: 28px; border-radius: 50%; border: 1px solid #E4EDE9;
+    background: #fff; color: #64748B; font-size: 17px; line-height: 1; cursor: pointer; padding: 0;
+}
+.skh-sheet-x:hover { background: #FDECEC; color: #B42318; border-color: #F3B7B7; }
+.skh-sheet-prev {
+    display: flex; align-items: center; gap: 7px;
+    background: #F5F8F7;
+    border-left: 3px solid #18A982;
+    border-radius: 0 10px 10px 0;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    color: #475569;
+    margin-bottom: 10px;
+}
+.skh-sheet-prev > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skh-sheet-tag {
+    flex: 0 0 auto; font-size: 10.5px; font-weight: 800; color: #0F6E55;
+    background: #E1F5EC; border-radius: 99px; padding: 3px 8px;
+}
+.skh-sheet-react { display: flex; gap: 6px; margin-bottom: 10px; }
+.skh-sheet-react button {
+    flex: 1; min-width: 0; height: 40px; font-size: 19px; line-height: 1;
+    background: #F5F8F7; border: 1px solid #E4EDE9; border-radius: 12px; cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+}
+.skh-sheet-react button:hover { background: #E7F4EE; transform: translateY(-1px); }
+.skh-sheet-list { display: flex; flex-direction: column; }
+.skh-sheet-item {
+    display: flex; align-items: center; gap: 11px;
+    width: 100%; text-align: left;
+    padding: 11px 8px; border: 0; background: transparent;
+    font-size: 13.5px; font-weight: 600; color: #16232B;
+    border-radius: 10px; cursor: pointer;
+}
+.skh-sheet-item + .skh-sheet-item { border-top: 1px solid #F1F5F3; }
+.skh-sheet-item:hover, .skh-sheet-item:focus-visible { background: #F2F8F5; outline: none; }
+.skh-sheet-item.is-danger { color: #B42318; }
+.skh-sheet-item.is-danger:hover { background: #FDECEC; }
+.skh-sheet-ic { display: inline-flex; width: 20px; justify-content: center; color: #0F6E55; }
+.skh-sheet-item.is-danger .skh-sheet-ic { color: #B42318; }
+.skh-sheet-empty { padding: 14px 6px; font-size: 12.5px; color: #64748B; text-align: center; }
+@media (min-width: 720px) {
+    .skh-sheet { align-items: center; }
+    .skh-sheet-card { border-radius: 18px; max-width: 400px; padding-bottom: 12px; }
+    .skh-sheet-grip { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .skh-sheet-card, .skh-sheet-bg, #skhChatPills .skh-pill, .ch-msg .chat-bubble { transition: none !important; animation: none !important; }
+}
+
+/* [VERTICAL NAV 2026-11] Zima "scroll anchoring" ya kivinjari kwenye stream —
+   sisi wenyewe tunadumisha nafasi (renderIntoStream) ili kusiwe na kuruka
+   mara mbili wakati ujumbe mpya unafika. */
+html body #chatModal #chatMessages { overflow-anchor: none; }
+
+/* ============================================================================
+   [GROUP CHAT 2026-11] Vikundi & Group Order — typing bar ile ile ya chat ya
+   kawaida, mandhari ile ile, na utambulisho wake (chip za wanachama, role,
+   kichwa cha kikundi) — sio \"kujitengea\" tena.
+   ========================================================================== */
+
+/* ---------- 1. Mandhari ya ujumbe ---------- */
+#gsgMsgs {
+    background-color: #EFE7DD !important;
+    background-image:
+        radial-gradient(circle at 25% 12%, rgba(18, 104, 168, .06) 0, transparent 42%),
+        radial-gradient(circle at 82% 78%, rgba(24, 169, 130, .07) 0, transparent 46%),
+        linear-gradient(180deg, #F0E9DF 0%, #E9E0D6 100%) !important;
+    overflow-anchor: none !important;
+    padding: 12px 10px 14px !important;
+    scroll-behavior: smooth;
+}
+#gsgMsgs .gsg-msg-row { animation: gsgRowIn .18s ease-out; touch-action: pan-y; }
+@keyframes gsgRowIn { from { opacity: .6; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 2. Bubbles: mfumo huo wa kijani/nyeupe ---------------------- */
+#gsgMsgs .gsg-msg-row > div { max-width: 84% !important; }
+#gsgMsgs .gsg-msg-row small { letter-spacing: .01em; }
+
+/* ---------- 3. Typing line ---------- */
+#gsgTyping {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 18px;
+    padding: 2px 14px 0 !important;
+    font-size: 11.5px !important;
+    font-style: normal !important;
+    color: #0F6E55 !important;
+    background: #FFFFFF;
+}
+#gsgTyping:empty { display: none; }
+
+/* ---------- 4. Reply bar (kama ch-replychip) ---------------------------- */
+#gsgReplyBar { padding: 6px 10px 0 !important; background: #FFFFFF; }
+
+/* ---------- 5. TYPING BAR (composer) — mstari mmoja kama direct chat --- */
+#gsgComposerRow.gsg-comp-row {
+    position: relative;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    background: #FFFFFF !important;
+    border-top: 1px solid #E4EDE9 !important;
+    box-shadow: 0 -2px 10px rgba(15, 23, 42, .04);
+}
+#gsgComposerRow .gsg-cbtn {
+    flex: 0 0 auto;
+    width: 36px; height: 36px; min-width: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #CFE9DD;
+    background: #FFFFFF;
+    color: #0F6E55;
+    cursor: pointer;
+    padding: 0;
+    transition: background .15s ease, border-color .15s ease;
+}
+#gsgComposerRow .gsg-cbtn:hover { background: #E7F6EF; border-color: #A9DCC9; }
+#gsgComposerRow #gsgInput {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 38px;
+    padding: 0 14px !important;
+    border: 1px solid #DCE9E3 !important;
+    border-radius: 999px !important;
+    background: #F7FAF9 !important;
+    font-size: 14px !important;
+    color: #16232B;
+    outline: none;
+}
+#gsgComposerRow #gsgInput:focus { border-color: #A9DCC9 !important; background: #FFFFFF !important; box-shadow: 0 0 0 3px rgba(24,169,130,.12); }
+#gsgComposerRow .gsg-send {
+    flex: 0 0 auto;
+    width: 38px; height: 38px; min-width: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #18A982;
+    color: #fff;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 4px 12px -4px rgba(24, 169, 130, .6);
+    transition: transform .1s ease, background .15s ease;
+}
+#gsgComposerRow .gsg-send:hover { background: #0F7E67; }
+#gsgComposerRow .gsg-send:active { transform: scale(.94); }
+
+/* Emoji popover ya kikundi */
+.gsg-emoji-pop {
+    position: absolute;
+    left: 8px;
+    bottom: calc(100% + 6px);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    background: #fff;
+    border: 1px solid #E4EDE9;
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: 0 10px 28px -10px rgba(15, 23, 42, .35);
+    z-index: 40;
+}
+.gsg-emoji-pop button {
+    width: 34px; height: 34px;
+    font-size: 18px; line-height: 1;
+    border: 0; background: transparent; border-radius: 9px; cursor: pointer;
+}
+.gsg-emoji-pop button:hover { background: #E7F6EF; }
+
+/* ---------- 6. Kichwa cha kikundi: utambulisho wake -------------------- */
+#gsgHeader, #gsgHead, .gsg-head { background: #FFFFFF; }
+#gsgMsgs .gsg-msg-row > div > div {
+    box-shadow: 0 1px 1px rgba(11, 20, 26, .10);
+}
+
+/* ---------- 7. Tabs za kikundi (Chat · Oda · Wanachama · Media) --------- */
+#gsgTabs { gap: 4px !important; padding: 8px 10px 0 !important; }
+#gsgTabs button { border-radius: 999px 999px 0 0 !important; }
+
+@media (max-width: 420px) {
+    #gsgComposerRow.GSG-comp-row, #gsgComposerRow.gsg-comp-row { gap: 6px !important; padding: 7px 8px calc(7px + env(safe-area-inset-bottom, 0px)) !important; }
+    #gsgComposerRow .gsg-cbtn { width: 32px; height: 32px; min-width: 32px; }
+    #gsgComposerRow .gsg-send { width: 36px; height: 36px; min-width: 36px; }
+    #gsgComposerRow #gsgInput { height: 36px; font-size: 13.5px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #gsgMsgs .gsg-msg-row { animation: none !important; }
+}
+
+/* ============================================================================
+   [GROUP UI 2026-11] Kichwa, tabs na fremu ya kikundi — kamili kwenye skrini
+   ========================================================================== */
+#skhGroupSogaModal { z-index: 2147482500 !important; }
+#skhGroupSogaModal.open, #skhGroupSogaModal.is-open { opacity: 1; pointer-events: auto; }
+
+/* Kichwa */
+html body #skhGroupSogaModal .skh-sheet-head.gsg-head {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 12px 10px !important;
+    background: #FFFFFF !important;
+    border-bottom: 1px solid #E4EDE9 !important;
+}
+html body #skhGroupSogaModal .gsg-head-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+html body #skhGroupSogaModal .skh-sheet-title { font-size: 15px !important; font-weight: 800 !important; color: #16232B !important; }
+html body #skhGroupSogaModal .skh-sheet-sub { display: flex !important; align-items: center; gap: 5px; opacity: 1 !important; }
+html body #skhGroupSogaModal .gsg-chip {
+    display: inline-flex; align-items: center; height: 18px;
+    padding: 0 8px; border-radius: 999px;
+    background: #F1F5F3; color: #5A6B78;
+    font-size: 10.5px; font-weight: 700; white-space: nowrap;
+}
+html body #skhGroupSogaModal .gsg-chip--members { background: #E7F4EE; color: #0F6E55; }
+html body #skhGroupSogaModal .gsg-avatar {
+    width: 38px; height: 38px; min-width: 38px;
+    border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(140deg, #2FB894, #0F7E67);
+    color: #fff; font-weight: 900; font-size: 15px; letter-spacing: .02em;
+    box-shadow: 0 4px 12px -5px rgba(15, 126, 103, .7);
+}
+
+/* Tabs za kikundi: pill inayoonekana */
+html body #skhGroupSogaModal #gsgTabs { gap: 6px !important; padding: 8px 10px 0 !important; background: #FFFFFF !important; }
+html body #skhGroupSogaModal #gsgTabs button {
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 7px 12px !important;
+    color: #5A6B78 !important;
+    background: #F5F8F7 !important;
+    white-space: nowrap;
+}
+html body #skhGroupSogaModal #gsgTabs button.is-active,
+html body #skhGroupSogaModal #gsgTabs button[aria-selected="true"] {
+    background: #18A982 !important;
+    border-color: #18A982 !important;
+    color: #fff !important;
+}
+
+/* Fremu: simu → kamili; kompyuta → kadi kubwa katikati */
+@media (max-width: 900px) {
+    html body #skhGroupSogaModal { align-items: flex-end !important; }
+    html body #skhGroupSogaModal .skh-sheet {
+        height: 96vh !important;
+        max-height: 96vh !important;
+        border-radius: 20px 20px 0 0 !important;
+    }
+    /* Nav ya chini isionekane nyuma ya composer */
+    body.gsg-open #bottomNav, body.gsg-open .bottom-nav, body.gsg-open #skhBottomNav { display: none !important; }
+    body.gsg-open { overflow: hidden !important; }
+}
+
+/* Tabs: zisikatwe; zisogeze kando kama hazitoshi */
+html body #skhGroupSogaModal #gsgTabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+html body #skhGroupSogaModal #gsgTabs::-webkit-scrollbar { display: none; }
+html body #skhGroupSogaModal #gsgTabs > button {
+    flex: 0 0 auto !important;
+    border-bottom: none !important;
+}
+
+/* Nav ya chini ifichwe kikundi kikifunguliwa (composer ipate nafasi yake) */
+body.gsg-open .bottom-nav-main,
+body.gsg-open #bottomNav,
+body.gsg-open .bottom-nav { display: none !important; }
+
+/* Safisha: hakuna margins hasi kwenye tabs; nav ya chini (wrapper nzima) ifichwe */
+html body #skhGroupSogaModal #gsgTabs > button { margin: 0 !important; }
+html body #skhGroupSogaModal #gsgTabs > button:first-child { margin-left: 0 !important; }
+body.gsg-open .bottom-area-wrapper { display: none !important; }
+
+/* Sheet ya kikundi isifurike kando kwa sababu ya tabs za nowrap (simu pekee) */
+html body #skhGroupSogaModal .skh-sheet { overflow-x: hidden !important; }
+html body #skhGroupSogaModal #gsgTabs { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+@media (max-width: 900px) {
+    html body #skhGroupSogaModal .skh-sheet { max-width: 100vw !important; }
+}
+html body #skhGroupSogaModal #gsgTabChat,
+html body #skhGroupSogaModal #gsgTabOrders,
+html body #skhGroupSogaModal #gsgTabMembers,
+html body #skhGroupSogaModal #gsgTabMedia { min-width: 0 !important; max-width: 100% !important; }
+
+/* Kikundi: fremu kamili (hakuna mwanya chini wala juu) kwenye simu */
+@media (max-width: 900px) {
+    html body #skhGroupSogaModal { align-items: flex-end !important; }
+    html body #skhGroupSogaModal .skh-sheet {
+        margin-top: auto !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 16px 16px 0 0 !important;
+    }
+    @supports (height: 100dvh) {
+        html body #skhGroupSogaModal .skh-sheet { height: 100dvh !important; max-height: 100dvh !important; }
+    }
+}
+
+/* Panga ndani ya sheet kushoto→kulia (isichanganywe na align-items ya jumla) */
+html body #skhGroupSogaModal .skh-sheet { align-items: stretch !important; }
+html body #skhGroupSogaModal .skh-sheet-head.gsg-head { justify-content: flex-start !important; }
+html body #skhGroupSogaModal #gsgTabs { justify-content: flex-start !important; align-items: center; }
+html body #skhGroupSogaModal #gsgMsgs { width: 100% !important; max-width: 100% !important; }
+html body #skhGroupSogaModal #gsgComposerRow { width: 100% !important; }
+@media (min-width: 901px) {
+    html body #skhGroupSogaModal { justify-content: center !important; align-items: center !important; }
+    html body #skhGroupSogaModal .skh-sheet { max-width: 720px !important; height: 84vh !important; max-height: 84vh !important; border-radius: 22px !important; }
+}
+/* Emoji zionekane kwa font sahihi kwenye vifaa vyote */
+.skh-sheet-react button, .gsg-emoji-pop button, .ch-emoji-grid button {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
+}

@@ -153,6 +153,60 @@
     }
 
     /* ---------------- RENDER (classes .ch-* za CSS ileile) ---------------- */
+    /* [NAME FIX 2026-11] Majina halisi kwenye orodha ya inbox.
+       `participantMeta` huwa tupu kwenye data za zamani (kadi za umma
+       hazijajazwa), hivyo kila safu ilionyesha "Mawasiliano". Sasa jina
+       linasulubiwa kupitia window.skhChatPersonName (kadi -> users ->
+       tangazo la mtu) na safu husasishwa. */
+    var GENERIC93 = /^(mawasiliano|mwanachama( sokohai)?|mtu|mteja|mgeni|user|unknown|muuzaji|mnunuzi|seller|buyer)$/i;
+    function isGeneric93(name, uid) {
+        var s = String(name == null ? '' : name).trim();
+        if (!s) return true;
+        if (uid && s.toLowerCase() === String(uid).toLowerCase()) return true;
+        return GENERIC93.test(s);
+    }
+    var refresh93Timer = null;
+    function refresh93() {
+        if (refresh93Timer) return;
+        refresh93Timer = setTimeout(function () {
+            refresh93Timer = null;
+            try { renderInbox93(); } catch (e) {}
+        }, 200);
+    }
+    window.__skhInbox93Role = function (uid) {
+        var it = items93.filter(function (x) { return x && x.otherUid === uid; })[0];
+        return (it && it.role) || '';
+    };
+    window.__skhInbox93ApplyName = function (uid, name, photo) {
+        if (!uid || !name) return;
+        var touched = false;
+        items93.forEach(function (it) {
+            if (it && it.otherUid === uid && isGeneric93(it.name, uid)) {
+                it.name = name;
+                if (photo) it.photo = photo;
+                touched = true;
+            }
+        });
+        if (touched) refresh93();
+    };
+    function fillNames93() {
+        if (typeof window.skhChatPersonName !== 'function') return;
+        var todo = items93.filter(function (it) {
+            return it && it.otherUid && it.type !== 'group' && isGeneric93(it.name, it.otherUid);
+        }).slice(0, 25);
+        if (!todo.length) return;
+        var i = 0;
+        function next() {
+            if (i >= todo.length) return;
+            var it = todo[i++];
+            window.skhChatPersonName(it.otherUid).then(function (name) {
+                if (name) window.__skhInbox93ApplyName(it.otherUid, name, '');
+                setTimeout(next, 60);
+            }).catch(function () { setTimeout(next, 60); });
+        }
+        for (var k = 0; k < 3; k++) next();
+    }
+
     function roleBadge(it) {
         var r = String((it && it.role) || '').toLowerCase();
         var label = '';
@@ -351,6 +405,7 @@
             clearTimeout(to);
             if (myLoadSeq !== loadSeq93) return;
             items93 = loaded || [];
+            try { fillNames93(); } catch (eFN93) {}
             loading93 = false;
             renderInbox93();
         } catch (e) {

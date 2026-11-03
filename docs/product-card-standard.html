@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai — Product Card Standard v1 (mockup)</title>
+<style>
+  :root{
+    --green:#0E6B52; --green-soft:#E8F3EF; --ink:#16232B; --muted:#6B7A82;
+    --line:#E7EDEA; --imgbg:#F7FAF9; --page:#F4F7F6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--page); color:var(--ink);
+    font-family:'Inter','Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    line-height:1.5; padding:0 0 80px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+  header.top{
+    background:#fff; border-bottom:1px solid var(--line); padding:26px 0 22px; margin-bottom:26px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
+  .brand i{width:26px;height:26px;border-radius:8px;background:var(--green);display:inline-block;position:relative}
+  .brand i::after{content:"";position:absolute;inset:7px 7px auto 7px;height:5px;border-radius:3px;background:#fff;opacity:.85}
+  h1{font-size:26px;line-height:1.25;letter-spacing:-.03em;font-weight:800;margin:14px 0 6px}
+  .sub{color:var(--muted);font-size:14px;margin:0}
+  .pill{display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);color:var(--green);
+    font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px}
+  section{margin:0 0 38px}
+  h2{font-size:17px;letter-spacing:-.02em;font-weight:800;margin:0 0 4px}
+  .lead{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px}
+  .note{font-size:12.5px;color:var(--muted);background:#fff;border:1px solid var(--line);
+        border-left:3px solid var(--green);border-radius:12px;padding:10px 12px;margin:14px 0 0}
+
+  /* ============ KADI (Product Card Standard v1) ============ */
+  .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    display:flex;flex-direction:column;position:relative;
+    box-shadow:0 1px 2px rgba(16,40,34,.04);
+  }
+  /* 1 · 5 · 6 — chombo cha picha: mraba 1:1, ukubwa mmoja, background nyepesi */
+  .imgbox{
+    aspect-ratio:1/1; flex:0 0 auto; width:100%;
+    background:var(--imgbg); position:relative; overflow:hidden;
+  }
+  /* 3 · 4 — picha haikatwi kamwe (absolute -> haipotoshi uwiano wa chombo) */
+  .imgbox img{
+    position:absolute; top:10px; left:10px;
+    width:calc(100% - 20px); height:calc(100% - 20px);
+    object-fit:contain;object-position:center;
+    border-radius:8px;display:block;
+  }
+  .card:hover .imgbox img{transform:scale(1.02)}
+  .imgbox img{transition:transform .22s ease}
+  /* 7 — upatikanaji: chip ndogo kwenye mstari wa bei (HAIGONGI picha) */
+  .avail{
+    flex:0 0 auto;margin-left:auto;
+    font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 5px;border-radius:5px;line-height:1.4;white-space:nowrap;
+  }
+  .avail--in{background:#E8F3EF;color:#0E6B52;border:1px solid #CDE6DD}
+  .avail--out{background:#F2F4F5;color:#7A8890;border:1px solid #E2E7E9}
+
+  .body{display:flex;flex-direction:column;gap:4px;padding:10px 11px 11px;flex:1 1 auto;min-width:0}
+  /* 7 — jina */
+  .name{
+    font-size:13.5px;font-weight:700;line-height:1.36;letter-spacing:-.012em;color:var(--ink);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    min-height:2.72em;text-wrap:pretty;margin:0;
+  }
+  /* 7 — bei + unit kwenye mstari mmoja */
+  .priceline{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+  /* mstari wa pili: unit kushoto, upatikanaji kulia */
+  .unitrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:15px;margin-top:-1px}
+  .price{
+    flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
+    font-size:16.5px;font-weight:800;letter-spacing:-.03em;color:var(--green);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .price .cur{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:#7D8B94;margin-right:5px;text-transform:uppercase}
+  /* unit: mstari wake chini ya bei — nafasi imehifadhiwa ili kadi zilingane */
+  .unit{
+    flex:0 1 auto;min-width:0;
+    font-size:11px;font-weight:600;color:#7D8B94;letter-spacing:-.005em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    line-height:1.38;
+  }
+  .price--muted{color:#6B7A82;font-size:12.5px;font-weight:700;letter-spacing:-.01em;
+    white-space:normal;overflow:visible;text-overflow:clip;line-height:1.24}
+  /* 7 — muuzaji */
+  .seller{display:flex;align-items:center;gap:5px;font-size:11px;color:#6B7A82;min-width:0}
+  .seller b{flex:1 1 auto;font-weight:700;color:#3D4C55;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .seller > svg{flex:0 0 auto}
+  .seller .ok-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;color:#0E6B52;font-weight:700;font-size:10px}
+  .seller .ok-chip i{font-style:normal}
+  .seller .ok-chip svg{flex:0 0 auto}
+  /* njia ya usafiri: mstari wake kamili, hauvunjiki */
+  .route-line{display:flex;align-items:flex-start;gap:5px;font-size:11px;font-weight:700;color:#3D4C55;
+    min-width:0;margin-top:1px;line-height:1.3}
+  .route-line > svg{margin-top:1.5px}
+  .route-line span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .route-line em{font-style:normal;color:#9AA8AF;font-weight:800}
+  .dot{width:3px;height:3px;border-radius:50%;background:#C3CDD2;flex:0 0 auto}
+  /* 8 — mstari wa eneo umefungwa CHINI kwa nguvu (kadi zilingane) */
+  .meta{
+    margin-top:auto;padding-top:8px;border-top:1px solid #F0F5F3;
+    display:flex;align-items:center;gap:5px;font-size:10.5px;color:#6B7A82;line-height:1.3;min-width:0;
+  }
+  .meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .meta svg{flex:0 0 auto;color:#9AA8AF}
+
+  /* list (search results) */
+  .row{
+    display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;
+    background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;
+  }
+  .row .imgbox{width:96px;aspect-ratio:1/1;border-radius:10px}
+  .row .imgbox img{top:6px;left:6px;width:calc(100% - 12px);height:calc(100% - 12px)}
+  .row .body{padding:0;gap:3px}
+  .row .name{min-height:0;-webkit-line-clamp:2;font-size:13px}
+  .row .price{font-size:15px}
+  .row .priceline{margin-top:1px}
+  .row .unitrow{min-height:0;margin-top:1px;justify-content:flex-start}
+  .row .avail{margin-left:6px}
+  .row .meta{border-top:0;padding-top:2px;margin-top:2px}
+  .row .go{
+    background:var(--green-soft);color:var(--green);border:1px solid #CDE6DD;border-radius:10px;
+    font-size:11px;font-weight:800;padding:7px 10px;white-space:nowrap;
+  }
+
+  /* rail */
+  .rail{display:flex;gap:14px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x mandatory}
+  .rail .card{flex:0 0 168px;scroll-snap-align:start}
+  .rail .unit{font-size:10.5px}
+  .rail .avail{font-size:8px;padding:2px 4px}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#8A979E;font-weight:800;background:#FBFDFC}
+  td code{background:#F3F7F5;border:1px solid #E4EBE8;border-radius:5px;padding:1px 5px;font-size:11.5px;color:#0B5741}
+  .ok{color:var(--green);font-weight:800}
+
+  .banner{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 14px}
+  .banner b{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--green)}
+  .banner p{margin:0;font-size:12.5px;color:var(--muted)}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .cmp > div{display:flex;flex-direction:column;align-items:stretch}
+  .cmp .card{max-width:300px}
+  .cmp .tag{align-self:flex-start}
+  .badcard{max-width:300px}
+  .tag{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;display:inline-block;margin-bottom:8px}
+  .tag.bad{background:#FDEDEA;color:#B4442F}
+  .tag.good{background:#E8F3EF;color:#0E6B52}
+  .badcard .imgbox img{object-fit:cover;border-radius:0}
+  .badcard .imgbox{padding:0;background:#E9EEEC}
+  .badcard .name{font-size:12px;min-height:0;line-height:1.3}
+  .badcard .price{font-size:13px;color:#2B3A42}
+  .badcard .meta{margin-top:4px;border-top:0;padding-top:0}
+  .strike{text-decoration:line-through;opacity:.6}
+
+  @media (max-width:720px){
+    .grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+    /* kadi nyembamba: “Imethibitishwa” inakuwa ✓ pekee (jina la muuzaji lipate nafasi) */
+    .ok-chip i{display:none}
+    .ok-chip{color:#0E6B52}
+    .cmp{grid-template-columns:1fr}
+    h1{font-size:21px}
+    .row{grid-template-columns:82px minmax(0,1fr) auto}
+    .row .imgbox{width:82px}
+  }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><i></i> SokoHai</div>
+  <span class="pill" style="margin-top:14px">Design decision · approved</span>
+  <h1>Product Card Standard v1</h1>
+  <p class="sub">Picha mraba 1:1 · <code>object-fit:contain</code> · picha haikatwi kamwe · chombo kimoja cha picha kwa kadi zote · background nyepesi · hierarkia: jina → bei (+ unit) → upatikanaji → muuzaji/eneo.</p>
+</div></header>
+
+<div class="wrap">
+
+<!-- ============================================================ 1 -->
+<section>
+  <h2>1 · Kabla vs Baada — tatizo lilikuwa <code>cover</code></h2>
+  <p class="lead">Kushoto: picha inakatwa (chupa haionekani, bidhaa imeanza katikati). Kulia: picha yote inaonekana ndani ya chombo kimoja cha mraba.</p>
+  <div class="cmp" id="cmp"></div>
+  <div class="note"><b>Kanuni #3 na #4:</b> <code>object-fit:contain</code> — picha ndefu (1:2.6) na pana (2.3:1) zote zinaonekana <b>kamili</b>. Hakuna sehemu ya bidhaa inayokatwa, hakuna kubonyeza.</div>
+</section>
+
+<!-- ============================================================ 2 -->
+<section>
+  <h2>2 · Mobile — grid ya bidhaa (2 kwa safu)</h2>
+  <p class="lead">Chombo cha picha kila kadi ni mraba mmoja (1:1). Jina mistari 2, bei + unit, kisha mstari wa eneo umefungwa chini ili kadi zote za safu ziishie sawa.</p>
+  <div class="panel"><div class="grid-2" id="mob" style="max-width:420px"></div></div>
+</section>
+
+<!-- ============================================================ 3 -->
+<section>
+  <h2>3 · Desktop / tablet — grid ya 4</h2>
+  <p class="lead">Chombo kilekile cha 1:1; picha kubwa zaidi lakini uwiano ule ule. Bei inabaki kwenye mstari mmoja badala ya kuvunjika.</p>
+  <div class="panel"><div class="grid-4" id="desk"></div></div>
+</section>
+
+<!-- ============================================================ 4 -->
+<section>
+  <h2>4 · Search results — mstari (list)</h2>
+  <p class="lead">Standard ile ile kwenye mstari: chombo 96×96, <code>contain</code>, jina → bei/unit → upatikanaji → eneo.</p>
+  <div class="panel" style="display:grid;gap:10px" id="search"></div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section>
+  <h2>5 · Recommendations — rail ya kusogeza</h2>
+  <p class="lead">Kadi nyembamba (168px) lakini chombo cha picha bado ni 1:1 na picha haikatwi.</p>
+  <div class="panel"><div class="rail" id="rail"></div></div>
+</section>
+
+<!-- ============================================================ 6 -->
+<section>
+  <h2>6 · Huduma na Usafiri — maudhui yao, utambulisho ule ule</h2>
+  <p class="lead">Chombo cha picha 1:1, hierarkia ile ile na fremu ile ile. Huduma zinaonyesha muuzaji na aina ya bei (“Kuanzia”, “Kadirio linahitajika”); usafiri unaonyesha njia na aina ya chombo.</p>
+  <div class="panel"><div class="grid-4" id="svc"></div></div>
+</section>
+
+<!-- ============================================================ 7 -->
+<section>
+  <h2>7 · Spec kamili</h2>
+  <p class="lead">Nambari halisi zitakazotumika kwenye <code>css/45-post-cards.css</code> na familia za kadi nyingine.</p>
+  <div class="panel" style="padding:0;overflow:auto">
+  <table>
+    <thead><tr><th>#</th><th>Kanuni</th><th>Thamani</th><th>Kipimo</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Uwiano wa picha</td><td><code>aspect-ratio: 1 / 1</code></td><td>Sawa kwenye kila kadi</td></tr>
+      <tr><td>2</td><td>Mpangilio wa kadi</td><td><code>display:flex; flex-direction:column</code> · picha juu, mwili chini</td><td>Balanced — hakuna bloku inayotawala</td></tr>
+      <tr><td>3</td><td>Uwasilishaji wa picha</td><td><code>object-fit: contain; object-position:center</code></td><td><span class="ok">Haikatwi</span></td></tr>
+      <tr><td>4</td><td>Bidhaa isikatwe</td><td><code>max-width:100%; max-height:100%</code> + <code>contain</code></td><td>Hakuna <code>cover</code> kwenye bidhaa</td></tr>
+      <tr><td>5</td><td>Chombo kimoja</td><td><code>width:100%</code> + <code>aspect-ratio:1/1</code> · <code>flex:0 0 auto</code></td><td>Urefu sawa kwa kadi zote</td></tr>
+      <tr><td>6</td><td>Background ya picha</td><td><code>#F7FAF9</code> · <code>padding:10px</code> · picha <code>border-radius:8px</code></td><td>Nyepesi, safi, hakuna scrim nyeusi</td></tr>
+      <tr><td>7a</td><td>Jina</td><td>Inter <code>13.5px / 700</code> · <code>letter-spacing:-.012em</code> · <code>#16232B</code> · clamp mistari 2</td><td><code>min-height:2.72em</code> — kadi zilingane</td></tr>
+      <tr><td>7b</td><td>Bei</td><td>Inter <code>16.5px / 800</code> · <code>#0E6B52</code> · <code>letter-spacing:-.03em</code></td><td><code>tabular-nums</code> — tarakimu zinalingana</td></tr>
+      <tr><td>7c</td><td>Unit</td><td><code>11px / 600</code> · <code>#7D8B94</code> · mstari mmoja na bei</td><td>“kwa kilo”, “kwa pakiti”, “kwa seti”</td></tr>
+      <tr><td>7d</td><td>Upatikanaji</td><td>Chip <code>9.5px/800</code> · Ipo <code>#E8F3EF/#0E6B52</code> · Imeisha <code>#F2F4F5/#7A8890</code></td><td>Juu-kulia, haigongani na picha</td></tr>
+      <tr><td>7e</td><td>Muuzaji</td><td><code>11px</code> · <code>#6B7A82</code> · jina <code>#3D4C55</code></td><td>Nafasi ≥ 12 herufi</td></tr>
+      <tr><td>8a</td><td>Nafasi ndani</td><td><code>gap:4px</code> · <code>padding:10px 11px 11px</code></td><td>Rhythm moja kwa kadi zote</td></tr>
+      <tr><td>8b</td><td>Eneo chini</td><td><code>margin-top:auto</code> · <code>padding-top:8px</code> · <code>border-top:1px solid #F0F5F3</code></td><td>≤14px kutoka mwisho wa kadi</td></tr>
+      <tr><td>8c</td><td>Fremu</td><td><code>border:1px solid #E7EDEA</code> · <code>border-radius:16px</code> · <code>overflow:hidden</code></td><td>Fremu moja kwa aina zote</td></tr>
+      <tr><td>9</td><td>Maeneo</td><td>Marketplace browse · category feeds · search results · recommendations</td><td>Vitendo vinne, muundo mmoja</td></tr>
+      <tr><td>10</td><td>Huduma / usafiri</td><td>Maudhui yao (njia, chombo, aina ya bei) + fremu/picha/hierarkia ile ile</td><td>Utambulisho wa SokoHai</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note"><b>Mabadiliko ya typography:</b> familia ya font ni <b>Inter</b> (self-hosted, tayari iko kwenye app) kwa jina, bei, unit — font-smoothing imewashwa, <code>text-wrap:pretty</code> kwa majina marefu ili maneno yasifubae, na <code>tabular-nums</code> ili bei zisicheze upana kutoka kadi hadi kadi.</div>
+</section>
+
+</div>
+
+<script>
+/* ---------- picha za majaribio: uwiano tofauti sana, SVG data-URI ---------- */
+const svg = (w,h,inner) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${inner}</svg>`);
+
+const P = {
+  bottle: svg(120,312, `
+    <rect x="46" y="8" width="28" height="18" rx="4" fill="#BFD9D0"/>
+    <path d="M40 26h40v34H40z" fill="#0E6B52"/>
+    <rect x="36" y="60" width="48" height="200" rx="16" fill="#0E6B52"/>
+    <rect x="36" y="120" width="48" height="86" fill="#F2F7F5"/>
+    <text x="60" y="168" font-family="Inter,Arial" font-size="13" font-weight="800" fill="#0E6B52" text-anchor="middle">SOKO</text>
+    <rect x="36" y="214" width="48" height="46" rx="14" fill="#0E6B52"/>`),
+  sofa: svg(360,156, `
+    <rect x="18" y="26" width="324" height="58" rx="16" fill="#3B7EA8"/>
+    <rect x="46" y="74" width="128" height="50" rx="12" fill="#2F6A90"/>
+    <rect x="186" y="74" width="128" height="50" rx="12" fill="#2F6A90"/>
+    <rect x="18" y="60" width="324" height="20" fill="#3B7EA8"/>
+    <rect x="14" y="18" width="34" height="76" rx="14" fill="#4A90BE"/>
+    <rect x="312" y="18" width="34" height="76" rx="14" fill="#4A90BE"/>`),
+  shirt: svg(240,240, `
+    <path d="M78 34 L120 58 L162 34 L206 66 L188 104 L170 96 L170 208 L70 208 L70 96 L52 104 L34 66 Z" fill="#2E7D63"/>
+    <path d="M104 34 L120 58 L136 34 Z" fill="#245F4C"/>`),
+  phone: svg(140,300, `
+    <rect x="6" y="6" width="128" height="288" rx="24" fill="#16232B"/>
+    <rect x="14" y="14" width="112" height="272" rx="18" fill="#DFEDE7"/>
+    <rect x="48" y="20" width="44" height="8" rx="4" fill="#16232B"/>`),
+  shoe: svg(300,188, `
+    <path d="M16 128 C50 60 120 44 168 74 C206 98 246 104 284 112 C296 116 292 142 274 146 L30 150 C14 150 8 140 16 128 Z" fill="#D4502C"/>
+    <path d="M16 150 L286 146 C288 158 280 164 266 164 L40 166 C24 166 14 160 16 150 Z" fill="#F2F7F5"/>`),
+  flour: svg(200,268, `
+    <path d="M40 40 h120 v198 a14 14 0 0 1 -14 14 H54 a14 14 0 0 1 -14 -14 Z" fill="#F5F8F6" stroke="#CBD8D2" stroke-width="4"/>
+    <path d="M40 40 L60 16 h80 L160 40 Z" fill="#E3EBE7"/>
+    <rect x="56" y="94" width="88" height="72" rx="10" fill="#0E6B52"/>
+    <text x="100" y="126" font-family="Inter,Arial" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">UNGA</text>
+    <text x="100" y="148" font-family="Inter,Arial" font-size="11" font-weight="700" fill="#BFE0D4" text-anchor="middle">SEMBE 25KG</text>`)
+};
+
+const PIN = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg>`;
+const VENDOR = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1.4 10.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8Z"/><path d="M8.5 9V6.5a3.5 3.5 0 0 1 7 0V9"/></svg>`;
+const ROUTE = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8h-4a3 3 0 0 0 0 6h5.6"/></svg>`;
+
+function card(o){
+  const avail = o.avail === 'out' ? `<span class="avail avail--out">Imeisha</span>`
+    : o.avail === 'low' ? `<span class="avail avail--in">2 zimebaki</span>`
+    : o.avail === 'in'  ? `<span class="avail avail--in">Ipo</span>`
+    : '';   /* huduma/usafiri hazina stock -> hakuna chip */
+  const price = o.quote
+    ? `<div class="priceline"><span class="price price--muted">Kadirio linahitajika</span></div>
+       <div class="unitrow"><span class="unit"></span>${avail}</div>`
+    : `<div class="priceline"><span class="price"><span class="cur">TSh</span>${o.price}</span></div>
+       <div class="unitrow"><span class="unit">${o.unit || ''}</span>${avail}</div>`;
+  const CHECK = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const sub = o.seller
+    ? `<div class="seller">${VENDOR}<b>${o.seller}</b>${o.verified ? `<span class="ok-chip" title="Imethibitishwa">${CHECK}<i>Imethibitishwa</i></span>` : ''}</div>`
+    : '';
+  const route = o.route
+    ? `<div class="route-line">${ROUTE}<span>${o.route}</span></div><div class="seller" style="font-size:10.5px;margin-top:0">${o.vehicle}</div>`
+    : '';
+  return `<article class="card">
+    <div class="imgbox"><img src="${o.img}" alt="${o.name}"></div>
+    <div class="body">
+      <h3 class="name">${o.name}</h3>
+      ${o.sub ? `<div class="seller" style="color:#7D8B94">${o.sub}</div>` : ''}
+      ${price}
+      ${sub}${route}
+      <div class="meta">${PIN}<span>${o.loc}</span></div>
+    </div>
+  </article>`;
+}
+
+const ITEMS = [
+  {img:P.bottle, name:'Coca-Cola 1.5L', sub:'Kinywaji baridi', price:'3,000', unit:'kwa chupa', avail:'in',  loc:'Kinondoni, Dar es Salaam'},
+  {img:P.sofa,   name:'Sofa ya viti vitatu, kitambaa cha bluu', price:'850,000', avail:'in',  loc:'Ilala, Dar es Salaam'},
+  {img:P.shirt,  name:'Shati la kitambaa cha pamba', price:'28,000', unit:'kwa shati', avail:'in', loc:'Arusha Mjini'},
+  {img:P.phone,  name:'Simu janja 128GB, rangi nyeusi', price:'420,000', avail:'low', loc:'Mwanza'},
+  {img:P.shoe,   name:'Viatu vya michezo vya wanaume', price:'65,000', unit:'kwa jozi', avail:'in', loc:'Temeke, Dar es Salaam'},
+  {img:P.flour,  name:'Unga wa sembe kilo 25', price:'32,500', unit:'kwa pakiti', avail:'out', loc:'Dodoma'}
+];
+
+const SERVICES = [
+  {img:P.shirt, name:'Ushonaji wa suti maalum (kwa kipimo)', price:'45,000', sub:'Kuanzia', seller:'Asha Fashion Tailoring', verified:true, loc:'Dar es Salaam — Kinondoni'},
+  {img:P.phone, name:'Ukaguzi na ukarabati wa simu', quote:true, seller:'Fundi Said Electronics', loc:'Kariakoo, Dar es Salaam'},
+  {img:P.shoe,  name:'Usafishaji wa viatu (jozi 1)', price:'8,000', unit:'kwa jozi', seller:'Sparkle Shoe Care', loc:'Mikocheni, Dar es Salaam'},
+  {img:P.sofa,  name:'Transport ya mizigo Dar → Mbeya', price:'320,000', route:'Dar es Salaam → Mbeya', vehicle:'Lori la Tani 10', loc:'Dar es Salaam'}
+];
+
+/* 1 — before / after */
+document.getElementById('cmp').innerHTML = `
+  <div>
+    <span class="tag bad">Kabla · object-fit:cover</span>
+    <div class="badcard">
+      <article class="card">
+        <div class="imgbox" style="background:#E9EEEC"><img src="${ITEMS[0].img}" alt="Coca-Cola 1.5L" style="object-fit:cover;border-radius:0;top:0;left:0;width:100%;height:100%"></div>
+        <div class="body">
+          <h3 class="name" style="font-size:12px;min-height:0;line-height:1.3">Coca-Cola 1.5L</h3>
+          <div class="priceline"><span class="price" style="font-size:13px;color:#2B3A42">TSh 3,000</span></div>
+          <div class="unitrow"><span class="unit"></span></div>
+          <div class="meta" style="border-top:0;padding-top:2px;margin-top:2px">${PIN}<span>Kinondoni</span></div>
+        </div>
+      </article>
+    </div>
+    <p class="lead" style="margin:10px 0 0;font-size:12px">Chupa imekatwa juu na chini — bidhaa haionekani yote. Jina dogo, bei haina unit wala upatikanaji.</p>
+  </div>
+  <div>
+    <span class="tag good">Baada · object-fit:contain</span>
+    ${card(ITEMS[0])}
+    <p class="lead" style="margin:10px 0 0;font-size:12px">Picha yote ndani ya chombo 1:1 cha <code>#F7FAF9</code>; jina → bei + unit → upatikanaji → eneo kwa mpangilio wazi.</p>
+  </div>`;
+
+/* grid */
+const six = [...ITEMS.slice(0,5), ITEMS[5]];
+document.getElementById('mob').innerHTML  = six.map(card).join('');
+document.getElementById('desk').innerHTML = six.map(card).join('');
+document.getElementById('rail').innerHTML = six.slice(0,5).map(card).join('');
+document.getElementById('svc').innerHTML  = SERVICES.map(card).join('');
+
+/* search list */
+document.getElementById('search').innerHTML = ITEMS.slice(0,3).map(o => `
+  <div class="row">
+    <div class="imgbox"><img src="${o.img}" alt="${o.name}"></div>
+    <div class="body">
+      <h3 class="name">${o.name}</h3>
+      <div class="priceline"><span class="price"><span class="cur">TSh</span>${o.price}</span></div>
+      <div class="unitrow"><span class="unit">${o.unit || ''}</span><span class="avail avail--in">Ipo</span></div>
+      <div class="meta" style="border-top:0;padding-top:2px;margin-top:2px">${PIN}<span>${o.loc}</span></div>
+    </div>
+    <div class="go">Fungua</div>
+  </div>`).join('');
+
+
+</script>
+</body>
+</html>

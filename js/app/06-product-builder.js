@@ -43,6 +43,192 @@ function seedBlock(kind) {
   if (!rows.length) return '';
   return `<div class="spb-seed"><small class="spb-seed-head">Mapendekezo ya category · thibitisha</small>${rows.map(([r, i]) => `<div class="spb-row spb-seed-row"><span><small>${r.kind === 'option' ? 'Selector' : esc(r.kind)}</small><b>${esc(r.name)}</b>${r.value ? `<small>${esc(String(r.value))}</small>` : ''}${r.guidance ? `<small>Suggested values (choose or customize): ${esc(r.guidance)}</small>` : ''}</span>${btn('suggest-use', 'Use', i)}${btn('suggest-edit', 'Edit', i)}${btn('suggest-skip', 'Skip', i)}</div>`).join('')}</div>`;
 }
+/* ============================================================================
+ * MTAZAMO WA MNUNUZI (buyer preview) — variants
+ * Inaonyesha chips + picha za kila chaguo + bei/stock kama kwenye ukurasa wa
+ * bidhaa. Hii ni PREVIEW tu: haibadilishi data ya bidhaa wala haihifadhiwi.
+ * ========================================================================== */
+let vpSelection = {};   // { optionName: valueLabel }
+
+function vpBasePrice() {
+  const raw = value(mode === 'edit' ? 'editPrice' : 'prodPrice');
+  return Number(String(raw).replace(/[^\d.]/g, '')) || 0;
+}
+
+function vpBaseStock() {
+  const raw = value(mode === 'edit' ? 'editStock' : 'prodStock');
+  return raw === '' ? null : Number(String(raw).replace(/[^\d.-]/g, ''));
+}
+
+function vpMainImage() {
+  // picha kuu ya bidhaa: hero ya Picha Studio, kisha state.images
+  const hero = document.querySelector('#prodImagePreviews .skh-ps-hero img');
+  if (hero && hero.getAttribute('src')) return hero.getAttribute('src');
+  if (mode === 'edit') {
+    const el = document.querySelector('#spbEditImages img');
+    if (el && el.getAttribute('src')) return el.getAttribute('src');
+  }
+  return imageList(state.images)[0] || '';
+}
+
+function vpProductName() {
+  return value(mode === 'edit' ? 'editName' : 'prodName') || 'Jina la bidhaa';
+}
+
+function vpUnitLabel() {
+  const map = { Piece: 'kwa kipande', Kg: 'kwa kilo', Gram: 'kwa gramu', Litre: 'kwa lita', Ml: 'kwa ml', Meter: 'kwa mita', Pair: 'kwa jozi', Tablet: 'kwa kidonge', Bottle: 'kwa chupa' };
+  return map[baseUnit()] || '';
+}
+
+function vpMoney(n) {
+  return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// pata variant inayolingana na chaguo zilizochaguliwa
+function vpMatchVariant(sel) {
+  const active = state.variants.filter(v => !v.removed);
+  if (!active.length) return null;
+  const entries = Object.entries(sel);
+  if (!entries.length) return null;
+  return active.find(v => {
+    const opts = v.options || {};
+    const keys = Object.keys(opts);
+    if (keys.length !== entries.length) return false;
+    return entries.every(([k, val]) => String(opts[k]).trim().toLowerCase() === String(val).trim().toLowerCase());
+  }) || null;
+}
+
+function vpImageFor(sel, groups) {
+  // 1) picha ya value iliyochaguliwa (selector ya picha)
+  let firstValueImg = '';
+  groups.forEach(g => {
+    const chosen = sel[g.name];
+    const v = (g.values || []).find(x => String(x.value || x.label) === String(chosen));
+    if (v && Array.isArray(v.images) && v.images.length) {
+      if (!firstValueImg) firstValueImg = v.images[0];
+    }
+  });
+  if (firstValueImg) return firstValueImg;
+  // 2) picha ya variant iliyolingana
+  const mv = vpMatchVariant(sel);
+  if (mv && Array.isArray(mv.images) && mv.images.length) return mv.images[0];
+  // 3) picha kuu ya bidhaa
+  return vpMainImage();
+}
+
+function renderBuyerPreview() {
+  const host = $('spbBuyerPreview');
+  if (!host) return;
+
+  const groups = state.options
+    .filter(o => o && o.display !== false && Array.isArray(o.values) && o.values.length)
+    .map(o => ({ name: o.name || 'Chaguo', values: o.values.filter(v => v && String(v.value || v.label || '').trim()) }))
+    .filter(g => g.values.length);
+  const hasVariants = state.variants.some(v => !v.removed);
+
+  if (!groups.length && !hasVariants) {
+    host.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+  host.hidden = false;
+
+  // safisha chaguo zisizopo tena
+  const sel = {};
+  groups.forEach(g => {
+    const prev = vpSelection[g.name];
+    const stillThere = g.values.some(v => String(v.value || v.label) === String(prev));
+    sel[g.name] = stillThere ? prev : String(g.values[0].value || g.values[0].label);
+  });
+  vpSelection = sel;
+
+  const matched = vpMatchVariant(sel);
+  const price = matched && matched.price !== undefined && matched.price !== '' ? Number(matched.price) : vpBasePrice();
+  const stock = matched && matched.stock !== undefined && matched.stock !== '' ? Number(matched.stock) : vpBaseStock();
+  const off = !!(matched && (matched.status === 'INACTIVE' || matched.available === false));
+  const imgUrl = vpImageFor(sel, groups);
+
+  const groupsHtml = groups.map(g => {
+    const chips = g.values.map(v => {
+      const label = String(v.value || v.label);
+      const on = String(sel[g.name]) === label;
+      const im = Array.isArray(v.images) && v.images.length ? `<img src="${esc(v.images[0])}" alt="">` : '';
+      return `<button type="button" class="skh-vp-chip" aria-pressed="${on}" aria-disabled="false"
+                data-vp-group="${esc(g.name)}" data-vp-value="${esc(label)}">${im}${esc(label)}</button>`;
+    }).join('');
+    return `<div class="skh-vp-group"><div class="skh-vp-label">${esc(g.name)}</div><div class="skh-vp-chips">${chips}</div></div>`;
+  }).join('');
+
+  const stockTag = (stock === null || isNaN(stock))
+    ? ''
+    : (stock > 0
+      ? `<span class="skh-vp-tag" data-tone="ok">Ipo · ${stock}</span>`
+      : `<span class="skh-vp-tag" data-tone="off">Imeisha</span>`);
+  const skuTag = matched && matched.sku ? `<span class="skh-vp-tag">SKU ${esc(matched.sku)}</span>` : '';
+  const offTag = off ? `<span class="skh-vp-tag" data-tone="off">Haipatikani</span>` : '';
+  const comboTxt = Object.keys(sel).length ? Object.entries(sel).map(([k, v]) => `${k}: ${v}`).join(' · ') : '';
+
+  // kadi ya soko (Standard v1) — inatumia nafasi pana badala ya kuiacha tupu
+  const marketCard =
+    `<div class="skh-vp-market">` +
+      `<div class="skh-vp-market-head">Kadi sokoni</div>` +
+      `<article class="skh-vp-mcard">` +
+        `<div class="skh-vp-mimg">` +
+          (imgUrl ? `<img src="${esc(imgUrl)}" alt="Kadi ya bidhaa sokoni">` : `<span class="skh-vp-mempty">Picha</span>`) +
+          (off ? `<span class="skh-vp-mflag">Imeisha</span>` : '') +
+        `</div>` +
+        `<div class="skh-vp-mbody">` +
+          `<h4>${esc(vpProductName())}</h4>` +
+          `<div class="skh-vp-mprice"><span class="cur">TSh</span>${vpMoney(price)}</div>` +
+          `<div class="skh-vp-munit">${esc(vpUnitLabel() || '&nbsp;')}</div>` +
+          `<div class="skh-vp-mmeta"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg> ${esc(value('prodLocation') || 'Eneo la bidhaa')}</div>` +
+        `</div>` +
+      `</article>` +
+      `<p class="skh-vp-mnote">Hivi ndivyo kadi yako itakavyoonekana kwenye soko (Picha 1:1, haikatwi).</p>` +
+    `</div>`;
+
+  host.innerHTML =
+    `<div class="skh-vp-head"><b>Mtazamo wa mnunuzi</b><span>PREVIEW</span></div>` +
+    `<div class="skh-vp-grid">` +
+    `<div class="skh-vp-main">` +
+    `<div class="skh-vp-card">` +
+      `<div class="skh-vp-imgbox">` +
+        (imgUrl ? `<img src="${esc(imgUrl)}" alt="Picha ya chaguo lililochaguliwa">` : `<div class="skh-vp-empty">Ongeza picha ya chaguo<br>ili ionekane hapa</div>`) +
+        (off ? `<span class="skh-vp-flag skh-vp-flag--off">Haipatikani</span>` : '') +
+      `</div>` +
+      `<div class="skh-vp-side">` +
+        `<div class="skh-vp-name">${esc(vpProductName())}</div>` +
+        groupsHtml +
+        `<div class="skh-vp-price"><span class="cur">TSh</span>${vpMoney(price)}</div>` +
+        `<div class="skh-vp-meta">${stockTag}${offTag}${skuTag}` +
+          `<span class="skh-vp-tag">${esc(vpUnitLabel() || 'kipimo')}</span></div>` +
+        `<div class="skh-vp-actions">` +
+          `<span class="skh-vp-cta">Ongeza kwenye kikapu</span>` +
+          `<span class="skh-vp-cta skh-vp-cta--ghost">Uza / Nego</span>` +
+        `</div>` +
+        `<div class="skh-vp-summary">` +
+          (Object.keys(sel).length
+            ? `<b>Umechagua:</b> ${esc(Object.entries(sel).map(([k, v]) => k + ': ' + v).join(' · '))}` +
+              (stock !== null && !isNaN(stock) ? ` — ${stock > 0 ? 'zipo ' + stock : 'hazipo'} ${esc(vpUnitLabel()).replace('kwa ', '')}` : '')
+            : 'Chagua sifa ili kuona bei na upatikanaji.') +
+          (off ? ' · <b style="color:#B4442F">Haipatikani</b>' : '') +
+        `</div>` +
+      `</div>` +
+    `</div>` +
+    `</div>` + marketCard + `</div>` +
+    `<p class="skh-vp-note">Hivi ndivyo mnunuzi atakavyoona bidhaa: akibonyeza chaguo lolote, picha na bei hubadilika.` +
+      (comboTxt ? ` Umechagua <b>${esc(comboTxt)}</b>.` : '') +
+      (groups.length && !hasVariants ? ' Ongeza variants (mchanganyiko) ili bei na stock ya kila chaguo vionekane.' : '') +
+    `</p>`;
+
+  host.querySelectorAll('.skh-vp-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      vpSelection[chip.getAttribute('data-vp-group')] = chip.getAttribute('data-vp-value');
+      renderBuyerPreview();
+    });
+  });
+}
+
 function render() {
   if($('spbProductSku')){$('spbProductSku').value=state.productSku || state.original.sku || '';$('spbProductSku').readOnly=!!state.original.sku;}
   if (!$('productBuilder')) return;
@@ -65,6 +251,7 @@ function render() {
   });
   $('spbFilters').innerHTML = state.attributes.map((a,i)=>`<label class="spb-check"><input type="checkbox" data-filter-attr="${i}" ${a.filterable?'checked':''}> ${esc(a.name)} · ${esc(Array.isArray(a.value)?a.value.join(', '):a.value)}</label>`).join('') + Object.entries(state.filters).map(([name,val],i)=>`<div class="spb-row"><span>${esc(name)}: ${esc(val)}</span>${btn('edit-filter','Edit',i)}${btn('remove-filter','Remove',i)}</div>`).join('') + seedBlock('filter');
   if (mode === 'edit' && $('spbEditImages')) $('spbEditImages').innerHTML = state.images.map((u,i)=>`<span class="spb-general">${img(u)}${btn('up-general','←',i,i===0)}${btn('remove-general','Remove',i)}</span>`).join('');
+  try { renderBuyerPreview(); } catch (e) { console.warn('buyer preview:', e && e.message); }
   exportState();
 }
 function closeEditor() { $('spbEditor').hidden = true; $('spbEditor').innerHTML = ''; }

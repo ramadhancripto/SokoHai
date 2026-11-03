@@ -1381,11 +1381,13 @@ button.is-loading { opacity: .75; cursor: progress; }
    Kabla: ukichati na mtoa huduma/msafirishaji ulipata ujumbe wa kawaida tu.
    Sasa: kadi ya muktadha + kitufe cha kuanzisha ofa rasmi.
    ========================================================================== */
+/* [TASK K 2026-11] Rangi za mfumo: kadi ya kuanzisha majadiliano ilikuwa
+   buluu (#4D91AA) — sasa kijani cha SokoHai (#18A982 / #17604E). */
 .ch-startnego {
     margin: var(--sh-2) var(--sh-3);
     background: var(--sh-surface);
     border: 1px solid var(--sh-border);
-    border-left: 3px solid var(--sh-blue);
+    border-left: 3px solid var(--sh-green);
     border-radius: var(--sh-r-md);
     padding: var(--sh-3);
     box-shadow: var(--sh-sh-1);
@@ -1417,12 +1419,12 @@ button.is-loading { opacity: .75; cursor: progress; }
 .ch-sn-btn {
     width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     min-height: 44px; padding: 11px var(--sh-4);
-    background: var(--sh-blue); color: #fff; border: none;
+    background: var(--sh-green); color: #fff; border: none;
     border-radius: var(--sh-r-md); cursor: pointer;
     font-size: var(--sh-fs-sm); font-weight: var(--sh-fw-med);
     transition: background var(--sh-t-fast), transform var(--sh-t-fast);
 }
-.ch-sn-btn:hover { background: var(--sh-blue-soft); }
+.ch-sn-btn:hover { background: var(--sh-green-deep); }
 .ch-sn-btn:active { transform: scale(.98); }
 
 /* ==========================================================================

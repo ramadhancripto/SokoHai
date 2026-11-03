@@ -1146,6 +1146,10 @@ window.skhRenderAttachedProduct = function() {
     var attachLabel = skh.activeChatService ? 'Huduma imeambatishwa' : (skh.activeChatTransport ? 'Usafiri umeambatishwa' : (window.skhTF?window.skhTF('attach_product','Bidhaa imeambatishwa'):'Bidhaa imeambatishwa'));
     const title = (window.skhLocField ? window.skhLocField(p, 'title') : null) || p.title || p.itemTitle || p.cargoName || defTitle;
     wrap.style.display = 'block';
+    // [TASK K 2026-11] Ukimbatanisha bidhaa tena, kadi yake ya ofa irudi.
+    if (typeof window.skhChatRestoreNegoCard === 'function' && p.id) {
+        try { window.skhChatRestoreNegoCard('product', String(p.id)); } catch (eR) {}
+    }
     wrap.innerHTML = '<div class="chat-attached">'
         + (img ? '<img src="' + skh.skhEscape(skh.getOptimizedImageUrl(img)) + '" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:cover;background:#f1f5f9;flex-shrink:0;" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">' : '')
         + '<div style="min-width:0;flex:1;"><b style="font-size:12px;color:#0f172a;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + skh.skhEscape(title) + '</b>'
@@ -1154,11 +1158,31 @@ window.skhRenderAttachedProduct = function() {
         + '</div>';
 };
 
-window.skhClearAttachedProduct = function() {
+/* [TASK K 2026-11] Kuondoa bidhaa iliyoambatanishwa — kitufe cha ✕ kiko wazi
+   (30px) na kinaonyesha uthibitisho. Kabla ya hapa ilikuwa ✕ ndogo sana na
+   hakuna majibu, hivyo mtumiaji alidhani haiwezekani. */
+window.skhClearAttachedProduct = function () {
+    var had = !!(skh.activeChatProduct || skh.activeChatService || skh.activeChatTransport);
+    window.__skhClearedAttachId = skh.activeChatProduct && skh.activeChatProduct.id ? String(skh.activeChatProduct.id) : '';
     skh.activeChatProduct = null;
     skh.activeChatService = null;
     skh.activeChatTransport = null;
     window.skhRenderAttachedProduct();
+    try {
+        // Kadi ya muktadha (kama ipo) pia isionyeshe bidhaa iliyoondolewa.
+        if (typeof window.skhChatRenderSidePane === 'function') window.skhChatRenderSidePane();
+    } catch (e) {}
+    if (had && typeof window.skhChatDismissNegoCard === 'function') {
+        // Kadi kubwa ya muktadha ("Bidhaa ... Toa Ofa") na yenyewe iondolewe.
+        try {
+            var pid = (window.__skhClearedAttachId || '');
+            if (pid) window.skhChatDismissNegoCard('product', pid);
+        } catch (e3) {}
+    }
+    if (had && typeof window.skhToast === 'function') {
+        try { window.skhToast(window.skhTF ? window.skhTF('attach_removed', 'Bidhaa imeondolewa kwenye kiambatisho') : 'Bidhaa imeondolewa kwenye kiambatisho', 'success'); } catch (e2) {}
+    }
+    return true;
 };
 
 // Fungua bidhaa kutoka kadi ya chat — muuzaji (mmiliki) aione kwenye duka lake.

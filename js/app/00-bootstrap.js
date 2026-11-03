@@ -1501,14 +1501,20 @@ skh.getOptimizedImageUrl = function getOptimizedImageUrl(url) {
 // Picha halisi ikiwepo; la sivyo tile ya herufi ya kwanza (SVG,
 // haihitaji mtandao — haivunji kwenye mitandao ya kawaida ya TZ).
 // ============================================================
-window.skhInitialAvatar = function(name) {
-    const ch = ((name && String(name).trim().charAt(0)) || 'S').toUpperCase();
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">'
-        + '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
-        + '<stop offset="0" stop-color="#00509d"/><stop offset="1" stop-color="#0ea5e9"/>'
-        + '</linearGradient></defs>'
-        + '<rect width="100" height="100" fill="url(#g)"/>'
-        + '<text x="50" y="50" dy="0.36em" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="46" font-weight="bold" fill="#ffffff">' + ch + '</text>'
+/* [DP FIX 2026-11] DP safi: hakuna picha → aikoni ya Mtu/akaunti kwenye
+   rangi za mfumo (#E7F4EE mandhari, #18A982 mtu) — ile buluu (#00509d→#0ea5e9)
+   ilikuwa haiko kwenye palette ya SokoHai. Herufi ya kwanza imeachwa kama
+   chaguo la akiba tu kwa majina ya vikundi (skhInitialAvatar(name, true)). */
+window.skhInitialAvatar = function(name, asLetter) {
+    var ch = ((name && String(name).trim().charAt(0)) || 'S').toUpperCase();
+    var personIcon = '<circle cx="50" cy="38" r="16.5" fill="#18A982"/>'
+        + '<path d="M19 86c0-17.1 13.9-31 31-31s31 13.9 31 31z" fill="#18A982"/>';
+    var glyph = asLetter
+        ? '<text x="50" y="50" dy="0.36em" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="44" font-weight="bold" fill="#0F6E55">' + ch + '</text>'
+        : personIcon;
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">'
+        + '<rect width="100" height="100" fill="#E7F4EE"/>'
+        + glyph
         + '</svg>';
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 };
@@ -1519,7 +1525,7 @@ window.skhUserAvatar = function(url, name, size) {
     const src = clean ? skh.getOptimizedImageUrl(clean) : window.skhInitialAvatar(name);
     const fb = window.skhInitialAvatar(name);
     return '<img src="' + skh.skhEscape(src) + '" alt="" loading="lazy" referrerpolicy="no-referrer" '
-        + 'style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;background:#e2e8f0;flex-shrink:0;display:inline-block;" '
+        + 'style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;background:#E7F4EE;flex-shrink:0;display:inline-block;border:1px solid #D5EBE1;" '
         + 'onerror="this.onerror=null;this.src=\'' + fb + '\';"/>';
 };
 

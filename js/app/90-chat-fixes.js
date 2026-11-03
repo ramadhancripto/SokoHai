@@ -16,7 +16,9 @@
         s.textContent = [
             '@keyframes skhSpin{to{transform:rotate(360deg)}}',
             '#chatMessages{position:relative!important;min-width:0;max-width:100%;overflow-x:hidden}',
-            '#chatMessages.ch-loading::before,#chatMessages.ch-empty::before,#chatMessages.ch-error::before{content:"";position:absolute;inset:0;background-color:#efe7dd;background-image:radial-gradient(circle at 25% 15%,rgba(18,104,168,.06) 0,transparent 40%),radial-gradient(circle at 80% 75%,rgba(24,169,130,.07) 0,transparent 45%);z-index:0;pointer-events:none}',
+            /* [MANDHARI FIX 2026-11] Ile ile mandhari ya joto kwenye hali ZOTE (loading/empty/error/ready) — hakuna mpito kwenda nyeupe. */
+            '#chatMessages,#chatMessages.ch-loading::before,#chatMessages.ch-empty::before,#chatMessages.ch-error::before,#chatMessages.ch-ready::before{background-color:#EFE7DD!important;background-image:radial-gradient(circle at 25% 12%,rgba(18,104,168,.06) 0,transparent 42%),radial-gradient(circle at 82% 78%,rgba(24,169,130,.07) 0,transparent 46%),linear-gradient(180deg,#F0E9DF 0%,#E9E0D6 100%)!important;background-repeat:no-repeat!important;background-size:100% 100%!important}',
+            '#chatMessages.ch-loading::before,#chatMessages.ch-empty::before,#chatMessages.ch-error::before,#chatMessages.ch-ready::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none}',
             '#chatMessages.ch-loading>*,#chatMessages.ch-empty>*,#chatMessages.ch-error>*{position:relative;z-index:1}',
             '.skh-chat-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:32px 20px;min-height:220px;color:#667781;text-align:center;width:100%;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}',
             '.skh-chat-state b{color:#0f172a;font-size:15px}',

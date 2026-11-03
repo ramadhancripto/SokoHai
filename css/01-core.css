@@ -1087,16 +1087,23 @@ mask-composite: exclude;
 
     .feed-img-box {
         width: 100%;
-        aspect-ratio: 1 /1 ;
+        aspect-ratio: 1 / 1;                /* [STANDARD v1] square 1:1 */
         position: relative;
-        background: #eef2f5;
+        background: #F7FAF9;                /* neutral-light */
+        padding: 10px;                      /* picha isigonge kingo */
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         overflow: hidden;
     }
 
     .feed-img-box img {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* picha inajaa kadi vizuri bila mipaka nyeupe — inakaa kama soko la kisasa */
+        /* [PRODUCT CARD STANDARD v1] contain — bidhaa HAICROP/HAIKATWI.
+           Mandhari neutral-light; picha yote inaonekana (maamuzi 3,4,6). */
+        object-fit: contain;
         object-position: center;
         background: #f4f7fa;
         display: block;
