@@ -1,104 +1,124 @@
-# MAREKEBISHO YA SOKOHAI — FILES ZILIZOBADILIKA PEKEE
+# SOKOHAI — FAILI ZILIZOBADILISHWA TU (tayari kwa GitHub push)
 
-Msingi: commit **`0ac2c17`** (ndipo system yako ilipo).
-Kifurushi hiki kina **files 19 pekee** zilizobadilika. Kila file iko kwenye njia yake
-halisi — nakili juu ya project yako ukihifadhi muundo wa folda.
+Tarehe: 2026-11-04 · Repo HEAD: `03a6811` · Tawi: `main`
 
-> Muhimu: commit `3c36db8` **haikuwahi kwenda GitHub** (push ilishindwa, hakuna
-> credentials). Kwa hiyo kifurushi hiki kinajumuisha marekebisho ya commit hiyo
-> **pamoja na** yale ya baadaye.
+ZIP hii ina **faili 14 pekee** zilizobadilishwa/kuongezwa. Hakuna mfumo mzima.
+Zote ni **zile zile zilizo hai kwenye app** (port 5055) — nimezithibitisha kwa
+`diff` moja kwa moja: **faili zote 14 zinafanana kwa 100%** na working tree.
 
 ---
 
-## 1. FILES ZA CODE — lazima
+## Jinsi ya kuweka (njia 2 — chagua MOJA)
 
-| File | Kilichobadilika |
-|---|---|
-| `js/app/05-forms.js` | `populateFormCategories()` sasa inatumia canonical taxonomy (`getSellerCategoryOptions`) badala ya kusoma `skh.advancedCategories` moja kwa moja. Canonical mbele, legacy kwenye kundi lake. Pia guard kwenye `generateSellerFilters()` ili category ya `CAT-xx` isilipuke. |
-| `js/app/08-app-state.js` | `updateFormSubcats()` haitoi tena bail kwa category isiyo ya legacy; inatumia `getSellerSubcategories()` — canonical leaves mbele. |
-| `js/app/06-product-builder.js` | **MUANZILISHI**: `seedRows()` + `seedBlock()` — mapendekezo ya category yanajaa ndani ya kila section (Attributes, Filters, Features, Additional, Selectors) yakiwa draft yenye **Use / Hariri / Skip**. `＋ Add ...` inabaki baada yake. Pia null-guards kwenye `bind()` na edit-mode hosts. |
-| `shared/product-taxonomy-bridge.mjs` | Precedence: **canonical → legacy compatibility → reviewed overlay**. Legacy haiwezi tena kufunika definition ya canonical. Overlays mbili zinazokosekana sasa zinapakiwa kwa hiari (`schemaOverlayStatus`) badala ya kuvunja import. |
-| `css/38-product-builder-seed.css` | **MPYA** — styling ya seed block pekee. |
-| `html/00-head.html` | Imeongeza `<link>` ya CSS mpya hapo juu. |
-| `index.html` | Imejengwa upya. **Usiihariri kwa mkono** — au iache na ujenge mwenyewe (ona §3). |
-
-## 2. FILES ZA TOOLS / TESTS
-
-| File | Kilichobadilika |
-|---|---|
-| `tools/build_taxonomy_mission_audit.mjs` | Imeondoa path ngumu ya `/home/user/taxonomy-final/...`. Sasa: `--baseline=<path>` → env `SOKOHAI_AUDIT_BASELINE` → default ya repo. Inafanya kazi Windows na Linux. Pia ujumbe wazi wa "REQUIRED LOCAL INPUT". |
-| `tools/test_product_builder_ui_contract.mjs` | Imerekebisha assertions 5 zilizokuwa stale (`spbBuilder`→`productBuilder`, `generateVariants`→`generateCombinations`, n.k.). |
-| `tools/test_product_taxonomy_bridge.mjs` | `Mifugo/Livestock Services` ni SERVICE context → inatarajia `CONTEXT_ONLY`. Imeongeza assertion kwamba canonical haifunikwi na legacy. |
-| `tools/test_taxonomy_mission_contract.mjs` | Imegawanywa: committed-source contract inakimbia daima; queue cross-check inaonyesha `SKIPPED` kama `execution-queue.json` haipo. |
-| `package.json` | Imeongeza `playwright` kwenye devDependencies (tests mbili zilizokuwepo zinaihitaji lakini haikuwa imeorodheshwa). |
-
-## 3. JINSI YA KU-APPLY
-
+### Njia A — faili kamili (rahisi, inashauriwa)
 ```bash
-# 1. Nakili files zote juu ya project yako (hifadhi muundo wa folda)
-
-# 2. Jenga index.html upya kutoka html/ (usiihariri kwa mkono)
-python3 tools/build_html.py build
-python3 tools/build_html.py check      # lazima: CHECK OK
-
-# 3. Kimbiza tests
-node tools/test_product_taxonomy_bridge.mjs
-node tools/test_taxonomy_mission_contract.mjs
-node tools/test_product_builder_ui_contract.mjs
-node tools/test_product_upload_data_contract.mjs
-node tools/test_product_upload_legacy_compatibility.mjs
-node tools/test_product_upload_edit_roundtrip.mjs
-node tools/test_product_upload_image_edit_contract.mjs
-node tools/test_pos_level_core.mjs
-node tools/build_product_schema_bridge.mjs --check
+cd /njia/ya/SokoHai
+unzip -o /njia/ya/SOKOHAI-GITHUB-PUSH.zip
+cp -r SOKOHAI-GITHUB-PUSH/files/* .
+rm -rf SOKOHAI-GITHUB-PUSH
+git status          # kagua
+git add -A
+git commit -m "Group chat: nav 9, UI sawa na chat ya kawaida, sauti + biashara"
+git push origin main
 ```
 
-Matokeo yaliyothibitishwa hapa: **14 passed, 0 failed**, HTML byte-exact,
-projection PASS, authority hashes **0 drift**.
+### Njia B — patch (kwa wale wanaopenda diff)
+```bash
+cd /njia/ya/SokoHai
+git apply --check patch/tracked-changes.diff     # kagua kwanza
+git apply patch/tracked-changes.diff
+# kisha nakili faili MPYA kutoka files/ (hazipo kwenye patch):
+cp files/css/52-chat-discovery-feed.css css/
+cp files/css/53-group-chat-ui.css css/
+cp files/js/app/106-chat-discovery-feed.js js/app/
+cp files/tools/dev_server.mjs tools/
+cp files/tools/test_chat_conversation_security.mjs tools/
+cp files/tools/test_group_chat_rules.mjs tools/
+git add -A && git commit -m "..." && git push origin main
+```
 
-## 4. BLOCKERS — HAZIJATATULIWA, ZINAHITAJI FILES KUTOKA KWAKO
+> ⚠️ **Usichanganye njia zote mbili.** Njia A au Njia B — moja tu.
 
-Product Builder **haitapakia kwenye browser** mpaka hizi zije:
+---
 
-**4.1 `shared/product-upload-data-core.mjs` haina exports nne:**
-`imageList`, `generateCombinations`, `combinationKey`, `suggestCustom`.
-Zimeitwa na `06-product-builder.js` lakini **hazipo popote kwenye repo wala history**
-(nilikagua objects 1606 — sifuri). Sikuziandika kwa sababu `generateCombinations`
-inasimamia `variantId`/SKU/`inventoryKey` — ni POS-critical.
+## Faili 14 na kila moja ni ya nini
 
-**4.2 Modules mbili hazijawahi ku-commit:**
-`shared/product-schema-pilots.mjs`, `shared/product-schema-refinements.mjs`.
-Bila hizi, majani yaliyopitiwa (Viatu, Smartphones n.k.) hayana schema.
+### 🟢 KAZI YA GROUP CHAT (kuu)
+| Faili | Aina | Kilichobadilika |
+|---|---|---|
+| `js/app/73-group-soga.js` | MODIFIED | Nav tabs 9, panels 9, `GSG_TAB_HOST`/`setGsgTab`, renderers 6, composer sawa na chat ya kawaida, **mic (sauti)**, **menyu ya biashara**, typing kwenye kichwa, renderer ya ujumbe wa sauti |
+| `js/app/69-chat-groups.js` | MODIFIED | `groupOrders`/`supplierOffers`; aina **`audio`** kwenye `GSG_MSG_TYPES` + uthibitishaji + preview |
+| `css/53-group-chat-ui.css` | **MPYA** | Mandhari `#EFE7DD`, composer, typing dots, vitufe vya mic/biashara, rekodi chip, kadi za biashara |
+| `css/48-chat-shell.css` | MODIFIED | Mitindo ya zamani ya kikundi iliondolewa hapa (imehamia 53) — ndiyo maana ina `-258` mistari |
 
-**4.3 Markup ids tano hazipo:**
-`spbAddGeneralImage`, `spbEditMount`, `spbEditFields`, `spbEditDraft`, `spbEditImages`.
-Nimeweka guards ili zisiue builder, lakini **edit-mode mounting bado haipo**.
+### 🔵 INDEX.HTML — LAZIMA uweke (inaunganisha CSS/JS)
+`index.html` inaongeza `<link>` ya `css/52` na `css/53` pamoja na markup ya
+"Gundua Biashara". **Bila faili hii, CSS ya kikundi haitapakiwa GitHub.**
+Kwa hiyo lazima uweke pia:
 
-**4.4 `tools/fixtures/taxonomy-browser-cloud.mjs`** haipo — preview server ya 4174 haifanyi kazi.
+| Faili | Aina | Ni ya nini |
+|---|---|---|
+| `css/52-chat-discovery-feed.css` | **MPYA** | "Gundua Biashara" (Stage B) — inarejelewa na `index.html` |
+| `js/app/106-chat-discovery-feed.js` | **MPYA** | Feed ya fursa (Stage B) — inarejelewa na `index.html` |
 
-## 5. COVERAGE YA MUANZILISHI — jua ukweli
+> Kama hutaki Stage B, usiweke `index.html` — lakini ndipo CSS ya kikundi
+> haitapakiwa. Kwa hiyo ni bora uweke zote 3 kwa pamoja.
 
-Mapendekezo yanajaa kwa **majani 62 kati ya 743 (8.3%)**, categories **5 kati ya 30**:
-Chakula (6/17), Kilimo (3/14), Mifugo (16/17), Uvuvi (17/18), Misitu (20/20).
+### 🟡 ZILIZOKUWA NA MABADILIKO KABLA (si za kazi ya leo)
+| Faili | Aina | Ufafanuzi |
+|---|---|---|
+| `firestore.rules` | MODIFIED | Marekebisho ya rules (`+406/-60`) kutoka kazi ya awali. **Haikuwa sehemu ya kazi ya chat UI.** Ondoa kama hutaki. |
+| `package.json` | MODIFIED | Mstari 1 |
+| `tools/preview_start.sh` | MODIFIED | `+4/-3` |
+| `tools/test_white_system_modules_contract.mjs` | MODIFIED | `+7/-6` |
+| `tools/dev_server.mjs` | **MPYA** | Server ya preview (5055) — salama, haijengi dist |
+| `tools/test_group_chat_rules.mjs` | **MPYA** | Kipimo cha rules (kinahitaji emulator) |
+| `tools/test_chat_conversation_security.mjs` | **MPYA** | Kipimo cha usalama (kinahitaji emulator) |
 
-Sababu ya 681 zilizobaki kuwa tupu:
-- **656** hazina exact definition (default-only) → karantini ya ushahidi, **kwa makusudi**
-- **25** ni PARTIAL zisizothibitishwa → karantini, **kwa makusudi**
+---
 
-Hii **si hitilafu ya code** — ni sheria iliyopo tayari kwenye bridge, na
-`test_taxonomy_mission_contract` inaithibitisha. Kuijaza bila ushahidi
-kungekuwa ni kubadilisha **59 exact / 28 PARTIAL / 656 default-only**.
+## Uthibitisho — faili hizi ni HALISI na ZINAFANYA KAZI
 
-## 6. HALI YA TAXONOMY — HAIJABADILIKA
+Nilithibitisha kwa browser halisi (Playwright) kabla ya kufunga ZIP:
 
-- 59 exact / 28 PARTIAL / 656 default-only — **kama ilivyo**
-- 740 `RETRIEVED_NOT_ADJUDICATED` + 3 `PARTIAL_SEMANTIC_REVIEW` — **kama ilivyo**
-- `FINAL-COMPLETION-REPORT.md`: **NOT COMPLETED** — **kama ilivyo**
-- Discover: 16 passed, 2 failed — **haijaguswa**
-- POS, uploader, inventory authority — **hazijaguswa**
+| Kipimo | Matokeo |
+|---|---|
+| `chat_verify.mjs` (kutuma, reply, viambatisho, guards) | **PASS 19 · FAIL 0** |
+| `gcui_biz_test.mjs` (nav 9 + tabs zote) | **PASS 27 · FAIL 0** |
+| `gcui_test.mjs` (1440/768/390/360) | **pass=true** zote, `overflowX=false` |
+| `test_voice.mjs` (mic → rekodi → tuma) | `RECORDING ✓` → `sent:[{type:"audio",dur:1000}]` → chip imefungwa |
+| Page errors | **0** (404 tatu ni za awali: `css/40-ui-refinement.css`, `shared/product-schema-*.mjs`) |
 
-## 7. YASIYOMO KWENYE KIFURUSHI
+Vitufe vilivyopimwa: 1440 → `+38 · 😊38 · 🎤38 · 🛒38 · ➤44` · 390 → `34 · 34 · 34 · 34 · 40`
 
-Preview harnesses (`tools/preview_*.mjs`, `tools/verify_*.mjs`) **sijaziweka** —
-ni za kuonyesha tu, si sehemu ya mfumo. Zina *test doubles* za zile functions nne
-zinazokosekana; **usizipeleke production**. Niambie ukizitaka.
+`syntax check` ya faili zote 7 za JS/MJS ndani ya ZIP: **zote OK**.
+
+---
+
+## Mambo ya kujua kabla ya push ⚠️
+
+1. **`chatGroupOrders` bado imezimwa** kwa backend. Kitufe cha "Group Oda"
+   kwenye menyu ya biashara hakionyeshwi — hii ni **sahihi**, si kasoro.
+2. **Kipimo cha rules hakijafanyika** kwenye sandbox (hakuna Firestore emulator).
+   Endesha kwenye machine yako:
+   ```bash
+   firebase emulators:exec --only firestore,auth --project demo-sokohai \
+     "node tools/test_chat_conversation_security.mjs"
+   ```
+3. Sauti huhifadhiwa kama `audioUrl`; ikikosa upload → data URL ≤700 KB;
+   ikizidi → mtumiaji anaambiwa wazi. **Hakuna kudanganya.**
+4. Kama hukubaliani na `firestore.rules` kwenda kwenye push hii, iondoe
+   kwenye `files/` kabla ya `git add`.
+
+---
+
+## Muundo wa ZIP
+```
+SOKOHAI-GITHUB-PUSH/
+├── files/          ← faili 14 zenye njia za repo (nakili juu ya repo)
+├── patch/
+│   ├── tracked-changes.diff   (mistari 2,146 — faili zilizofuatiliwa)
+│   └── untracked-files.txt    (faili 6 mpya)
+├── MANIFEST.txt    ← orodha + ukubwa + aina
+└── SOMA-KWANZA.md  ← hii
+```

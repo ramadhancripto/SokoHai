@@ -20,13 +20,15 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
 
     function isAdmin() {
+      // [GROUP STAGE 1] token.get(): token isiyo na custom claims haitoi
+      // evaluation error (ilikuwa inasababisha deny kwa makosa badala ya false).
       return request.auth != null && (
-        request.auth.token.admin == true ||
-        request.auth.token.role == 'admin' ||
-        request.auth.token.superAdmin == true ||
-        (request.auth.token.email_verified == true &&
-         request.auth.token.email != null &&
-         request.auth.token.email.lower() == 'rshabansaid@gmail.com')
+        request.auth.token.get('admin', false) == true ||
+        request.auth.token.get('role', '') == 'admin' ||
+        request.auth.token.get('superAdmin', false) == true ||
+        (request.auth.token.get('email_verified', false) == true &&
+         request.auth.token.get('email', '') != '' &&
+         request.auth.token.get('email', '').lower() == 'rshabansaid@gmail.com')
       );
     }
     function isSuperAdmin() {
@@ -627,19 +629,278 @@ service cloud.firestore {
     function convParticipants(convId) {
       return get(/databases/$(database)/documents/conversations/$(convId)).data.participants;
     }
+
+    // ================================================================
+    // [GROUP STAGE 1-3 2026-11] UTAMBULISHO NA UANACHAMA WA KIKUNDI
+    // ----------------------------------------------------------------
+    // Kanuni: uanachama HALALI unatoka chatGroups/{gid}/members/{uid}
+    // yenye status == 'active'. participants array YA CONVERSATION ni
+    // MIRROR ya UI pekee — HAITUMIKI kama ushahidi wa ufikiaji.
+    // ================================================================
+    function isGroupConvId(convId) { return convId.matches('^conv_group_.+$'); }
+    function gidFromConv(convId) { return convId.split('conv_group_')[1]; }
+    function memberPath(gid, u) {
+      return /databases/$(database)/documents/chatGroups/$(gid)/members/$(u);
+    }
+    function invPath(gid, u) {
+      return /databases/$(database)/documents/chatGroups/$(gid)/invitations/$(u);
+    }
+    function isGroupMemberDoc(gid, u) {
+      return signedIn() && exists(memberPath(gid, u))
+        && get(memberPath(gid, u)).data.get('status', 'active') == 'active';
+    }
+    function isGroupMember(gid) { return isGroupMemberDoc(gid, request.auth.uid); }
+    function myGroupRole(gid) {
+      return isGroupMember(gid) ? get(memberPath(gid, request.auth.uid)).data.get('role', 'member') : null;
+    }
+    function isGroupAdminOrOwner(gid) {
+      return isGroupMember(gid) && myGroupRole(gid) in ['owner', 'admin'];
+    }
+    function groupPath(gid) { return /databases/$(database)/documents/chatGroups/$(gid); }
+    function groupExists(gid) { return signedIn() && exists(groupPath(gid)); }
+    function groupRec(gid) { return get(groupPath(gid)).data; }
+    function hasPendingInvite(gid, u) {
+      return exists(invPath(gid, u))
+        && get(invPath(gid, u)).data.get('status', 'pending') == 'pending'
+        && (get(invPath(gid, u)).data.get('inviteeId', '') == u
+            || get(invPath(gid, u)).data.get('invitedUid', '') == u);
+    }
+    // Kujiunga MWENYEWE kama mwanachama ACTIVE: kikundi wazi, au nina mwaliko.
+    function selfActivateOk(gid) {
+      return groupExists(gid) && (
+        (groupRec(gid).get('visibility', 'public') == 'public'
+         && groupRec(gid).get('joinPolicy', 'open') == 'open')
+        || hasPendingInvite(gid, request.auth.uid));
+    }
     match /conversations/{convId} {
-      allow read: if signedIn()
-        && (resource == null || resource.data.participants.hasAny([request.auth.uid]));
-      allow create: if signedIn()
-        && request.resource.data.participants is list
-        && request.resource.data.participants.hasAll([request.auth.uid])
-        && request.resource.data.participants.size() == 2
-        && request.resource.data.participants[0] is string
-        && request.resource.data.participants[1] is string
-        && request.resource.data.participants[0] != request.resource.data.participants[1];
-      allow update: if signedIn()
-        && resource.data.participants.hasAny([request.auth.uid])
-        && unchanged(['participants','createdAt','createdBy']);
+      // [GROUP STAGE 1] Read: kikundi → uanachama HALALI (active); 1:1 → kama zamani.
+      allow read: if signedIn() && (
+        (isGroupConvId(convId) && isGroupMember(gidFromConv(convId)))
+        || (!isGroupConvId(convId)
+            && (resource == null || resource.data.participants.hasAny([request.auth.uid])))
+      );
+      allow create: if signedIn() && (
+        // ---- (1) 1:1 — kanuni zilezile, hazijabadilika ----
+        (!isGroupConvId(convId)
+          && request.resource.data.get('type', '') != 'group'
+          && request.resource.data.participants is list
+          && request.resource.data.participants.hasAll([request.auth.uid])
+          && request.resource.data.participants.size() == 2
+          && request.resource.data.participants[0] is string
+          && request.resource.data.participants[1] is string
+          && request.resource.data.participants[0] != request.resource.data.participants[1])
+        // ---- (2) GROUP — kikundi cha wanachama 1..200 wenye uanachama active ----
+        || (isGroupConvId(convId)
+          && request.resource.data.get('type', '') == 'group'
+          && request.resource.data.get('groupId', '') is string
+          && convId == 'conv_group_' + request.resource.data.get('groupId', '')
+          && request.resource.data.participants is list
+          && request.resource.data.participants.size() >= 1
+          && request.resource.data.participants.size() <= 200
+          && request.resource.data.participants[0] is string
+          && request.resource.data.participants.hasAll([request.auth.uid])
+          && isGroupMember(request.resource.data.get('groupId', '')))
+      );
+      // ============================================================
+      // [STAGE 1 HARDENING 2026-11] FIELD-LEVEL UPDATE ALLOWLIST
+      // ------------------------------------------------------------
+      // KABLA: participant yeyote aliweza kuandika field YOYOTE kwenye doc
+      // (isipokuwa participants/createdAt/createdBy) — ikiwemo unread ya
+      // MWENZANGU, lastMessage, related (bidhaa), typing, archived.
+      // SASA:  (a) orodha nyeupe ya fields zinazoweza kubadilika,
+      //        (b) kila map ya "kila mtumiaji" inabadilika kwa uid YANGU pekee,
+      //        (c) lastMessage lazima iwe ya mwandishi wake,
+      //        (d) related ina key allowlist + umiliki thabiti,
+      //        (e) utambulisho (participants/createdAt/createdBy/meta/type) haubadiliki.
+      // NOTE: imegawanywa kwenye functions ndogo kwa sababu Firestore ina
+      // kikomo cha vigeu 10 kwa kila function na kikomo cha function calls
+      // kwa kila request.
+      // ============================================================
+      // (3) Map za kila-mtumiaji: uid YANGU pekee.
+      function convSelfMapsOk(d, old, me) {
+        return d.get('lastReadAt', {}).diff(old.get('lastReadAt', {})).affectedKeys().hasOnly([me])
+          && d.get('deliveredAt', {}).diff(old.get('deliveredAt', {})).affectedKeys().hasOnly([me])
+          && d.get('pinned', {}).diff(old.get('pinned', {})).affectedKeys().hasOnly([me])
+          && d.get('muted', {}).diff(old.get('muted', {})).affectedKeys().hasOnly([me])
+          && d.get('archived', {}).diff(old.get('archived', {})).affectedKeys().hasOnly([me])
+          && d.get('drafts', {}).diff(old.get('drafts', {})).affectedKeys().hasOnly([me]);
+      }
+      // (4) deletedForUser: yangu ni bool yoyote; ya mwenzangu false TU.
+      function convDeletedForUserOk(d, old, parts, other) {
+        let ndf = d.get('deletedForUser', null) == null ? {} : d.get('deletedForUser', {});
+        let odf = old.get('deletedForUser', null) == null ? {} : old.get('deletedForUser', {});
+        let dfDiff = ndf.diff(odf).affectedKeys();
+        return dfDiff.hasOnly(parts)
+          && (!dfDiff.hasAny([other]) || ndf.get(other, true) == false);
+      }
+      // (5) unread: yangu → 0 TU; ya mwenzangu +1 TU, na tu na lastMessage yangu.
+      function convUnreadOk(d, old, me, other, isGroup) {
+        let nu = d.get('unread', null) == null ? {} : d.get('unread', {});
+        let ou = old.get('unread', null) == null ? {} : old.get('unread', {});
+        let unreadDiff = nu.diff(ou).affectedKeys();
+        let lm = d.get('lastMessage', null);
+        return nu is map
+          && unreadDiff.hasOnly(resource.data.participants)
+          && (!unreadDiff.hasAny([me]) || (nu.keys().hasAll([me]) && nu[me] == 0))
+          && (!unreadDiff.hasAny([other])
+              || (nu.keys().hasAll([other]) && ou.keys().hasAll([other])
+                  && nu[other] == ou[other] + 1
+                  && (isGroup || (lm != null && lm.get('senderId', '') == me))));
+      }
+      // (6) lastMessage: ya mwandishi wake, keys zilizoorodheshwa, text ≤ 200.
+      function convLastMessageOk(d, diff, me, isGroup) {
+        let lm = d.get('lastMessage', null);
+        // [GROUP STAGE 1] Hukaguliwa TU lastMessage inapobadilika; vinginevyo
+        // msomaji asingeweza kuandika lastReadAt yake (bug ya awali kwenye 1:1).
+        return !diff.hasAny(['lastMessage'])
+          || (lm != null
+              && lm.keys().hasOnly(['text','senderId','at','type','mentions'])
+              && lm.get('text', '') is string
+              && lm.get('text', '').size() <= 200
+              && (lm.get('senderId', '') == me || isGroup));
+      }
+      // (7) typing: ya mtu mwenyewe tu ({uid, at}) au kufutwa (null).
+      function convTypingOk(d, me) {
+        return d.get('typing', null) == null
+          || (d.get('typing', {}) is map
+              && d.get('typing', {}).keys().hasOnly(['uid','at'])
+              && d.get('typing', {}).get('uid', '') == me);
+      }
+      // (8) related (bidhaa/huduma/usafiri): keys zilizoorodheshwa; sellerId/
+      //     buyerId ni washiriki na hazibadilishi umiliki uliokwishawekwa.
+      function convRelatedOk(d, old, parts) {
+        let rel = d.get('related', null);
+        let orel = old.get('related', null);
+        let nh = rel == null ? {} : rel;
+        let oh = orel == null ? {} : orel;
+        return rel == null
+          ? orel == null
+          : (nh.keys().hasOnly([
+               'productId','productTitle','productPrice','productImage',
+               'productCollection','productSaleMode',
+               'serviceId','serviceTitle','servicePrice','serviceImage',
+               'serviceCollection','serviceScope',
+               'transportId','transportTitle','transportFare','transportFrom',
+               'transportTo','transportRoute','transportPackage','transportCollection',
+               'sellerId','buyerId','commerce'
+             ])
+             && (nh.get('sellerId', null) == null
+                 || (parts.hasAny([nh.get('sellerId', '')])
+                     && (oh.get('sellerId', null) == null
+                         || oh.get('sellerId', '') == nh.get('sellerId', '')
+                         || !parts.hasAny([oh.get('sellerId', '')]))))
+             && (nh.get('buyerId', null) == null
+                 || (parts.hasAny([nh.get('buyerId', '')])
+                     && (oh.get('buyerId', null) == null
+                         || oh.get('buyerId', '') == nh.get('buyerId', '')
+                         || !parts.hasAny([oh.get('buyerId', '')])))));
+      }
+      // (1)(2)(9)(10) + mwamuzi mkuu.
+      function convUpdateOk() {
+        let me = request.auth.uid;
+        let d = request.resource.data;
+        let old = resource.data;
+        let parts = old.participants;
+        let other = parts[0] == me ? parts[1] : parts[0];
+        let diff = d.diff(old).affectedKeys();
+        let isGroup = parts.size() > 2;
+        return
+          diff.hasOnly([
+            'lastMessage','lastMessageAt','updatedAt',
+            'unread','lastReadAt','deliveredAt',
+            'typing','pinned','muted','archived','deletedForUser','drafts',
+            'deletedAt','related','mergedInto','migratedLegacy',
+            'status','name','avatar','announcement'
+          ])
+          && !diff.hasAny(['participants','createdAt','createdBy','participantMeta','type','groupId'])
+          && convSelfMapsOk(d, old, me)
+          && convDeletedForUserOk(d, old, parts, other)
+          && convUnreadOk(d, old, me, other, isGroup)
+          && convLastMessageOk(d, diff, me, isGroup)
+          && convTypingOk(d, me)
+          && convRelatedOk(d, old, parts)
+          && (!diff.hasAny(['status'])
+              || (d.get('status', '') in ['active','archived','closed']
+                  && old.get('status', '') in ['active','archived','closed']))
+          && (d.get('lastMessageAt', null) == null || d.get('lastMessageAt', null) is string)
+          && (d.get('updatedAt', null) == null || d.get('updatedAt', null) is string)
+          && (d.get('mergedInto', null) == null || d.get('mergedInto', null) is string)
+          && (d.get('deletedAt', null) == null || d.get('deletedAt', null) is string)
+          && (d.get('migratedLegacy', false) is bool);
+      }
+      // ============================================================
+      // [GROUP STAGE 1] UPDATE YA CONVERSATION YA KIKUNDI
+      // ------------------------------------------------------------
+      // (a) mwandishi lazima awe mwanachama ACTIVE (sio participants array),
+      // (b) fields zinazobadilika ni allowlist,
+      // (c) participants ni MIRROR: inaweza kubadilika lakini ukubwa 1..200 na
+      //     mimi niye/ndiye niliyekuwemo (kuruhusu kujiondoa) — haitoi ufikiaji,
+      // (d) name/avatar/announcement → owner/admin pekee,
+      // (e) unread yangu → 0 pekee; others → int (badge pekee, sio ufikiaji),
+      // (f) lastMessage ya mwandishi wake (senderId == mimi).
+      // ============================================================
+      function gconvParticipantsOk(d, old, me) {
+        return d.participants is list
+          && d.participants.size() >= 1
+          && d.participants.size() <= 200
+          && d.participants[0] is string
+          && (d.participants.hasAny([me]) || old.participants.hasAny([me]));
+      }
+      function gconvUnreadOk(d, old, me) {
+        let nu = d.get('unread', null) == null ? {} : d.get('unread', {});
+        let ou = old.get('unread', null) == null ? {} : old.get('unread', {});
+        let diff = nu.diff(ou).affectedKeys();
+        return nu is map
+          && diff.hasOnly(old.participants)
+          && (!diff.hasAny([me]) || (nu.keys().hasAll([me]) && nu[me] == 0));
+      }
+      function gconvLastMessageOk(d, diff, me) {
+        let lm = d.get('lastMessage', null);
+        // Ukaguzi TU lastMessage inapobadilika (mwandishi pekee anayeandika).
+        return !diff.hasAny(['lastMessage'])
+          || (lm != null
+              && lm.keys().hasOnly(['text','senderId','at','type','mentions'])
+              && lm.get('text', '') is string
+              && lm.get('text', '').size() <= 200
+              && lm.get('senderId', '') == me);
+      }
+      function groupConvUpdateOk(gid) {
+        let me = request.auth.uid;
+        let d = request.resource.data;
+        let old = resource.data;
+        let diff = d.diff(old).affectedKeys();
+        return isGroupMember(gid)
+          && diff.hasOnly([
+            'lastMessage','lastMessageAt','updatedAt',
+            'unread','lastReadAt','deliveredAt',
+            'typing','pinned','muted','archived','deletedForUser','drafts',
+            'deletedAt','related','migratedLegacy','status',
+            'participants','name','avatar','announcement'
+          ])
+          && !diff.hasAny(['createdAt','createdBy','type','participantMeta'])
+          && d.get('type', 'group') == 'group'
+          && d.get('groupId', '') == old.get('groupId', '')
+          && convSelfMapsOk(d, old, me)
+          && gconvUnreadOk(d, old, me)
+          && gconvLastMessageOk(d, diff, me)
+          && convTypingOk(d, me)
+          && convRelatedOk(d, old, old.participants)
+          && (!diff.hasAny(['participants']) || gconvParticipantsOk(d, old, me))
+          && (!diff.hasAny(['name','avatar','announcement']) || isGroupAdminOrOwner(gid))
+          && (!diff.hasAny(['status'])
+              || (d.get('status', '') in ['active','archived','closed']
+                  && old.get('status', '') in ['active','archived','closed']))
+          && (d.get('lastMessageAt', null) == null || d.get('lastMessageAt', null) is string)
+          && (d.get('updatedAt', null) == null || d.get('updatedAt', null) is string)
+          && (d.get('deletedAt', null) == null || d.get('deletedAt', null) is string)
+          && (d.get('migratedLegacy', false) is bool);
+      }
+      allow update: if signedIn() && (
+        (isGroupConvId(convId) && groupConvUpdateOk(gidFromConv(convId)))
+        || (!isGroupConvId(convId)
+            && resource.data.participants.hasAny([request.auth.uid])
+            && convUpdateOk())
+      );
       allow delete: if false;
     }
     // A client message may never pose as a server "payment protected" event.
@@ -651,23 +912,39 @@ service cloud.firestore {
         && d.get('order', {}).get('snapshot', {}).get('protected', false) != true;
     }
     match /conversations/{convId}/messages/{msgId} {
-      allow read: if signedIn() && convParticipants(convId).hasAny([request.auth.uid]);
-      allow create: if signedIn()
-        && request.resource.data.senderId == request.auth.uid
-        && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
-        && clientMessageOk(msgId, request.resource.data)
-        && !isBlockedPair(convParticipants(convId)[0], convParticipants(convId)[1]);
-      allow update: if signedIn()
-        && convParticipants(convId).hasAny([request.auth.uid])
-        && (
-          (resource.data.senderId == request.auth.uid
-            && changed().hasOnly(['text', 'editedAt', 'deletedAt', 'readBy']))
-          || (changed().hasOnly(['readBy'])
-            && request.resource.data.readBy.toSet().difference(resource.data.get('readBy', []).toSet()).hasOnly([request.auth.uid]))
-          || (changed().hasOnly(['reactions'])
-            && request.resource.data.get('reactions', {}).diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([request.auth.uid]))
-        );
-      allow delete: if signedIn() && resource.data.senderId == request.auth.uid;
+      // [GROUP STAGE 1] Njia ya kawaida ya ujumbe haibadiliki:
+      // conversations/conv_group_{gid}/messages/{msgId}. Ufikiaji wa kikundi
+      // hutegemea UANACHAMA HALALI (active), sio participants array.
+      allow read: if signedIn() && (
+        (isGroupConvId(convId) && isGroupMember(gidFromConv(convId)))
+        || (!isGroupConvId(convId) && convParticipants(convId).hasAny([request.auth.uid]))
+      );
+      allow create: if signedIn() && (
+        (isGroupConvId(convId)
+          && isGroupMember(gidFromConv(convId))
+          && request.resource.data.senderId == request.auth.uid
+          && clientMessageOk(msgId, request.resource.data))
+        || (!isGroupConvId(convId)
+          && request.resource.data.senderId == request.auth.uid
+          && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
+          && clientMessageOk(msgId, request.resource.data)
+          && !isBlockedPair(convParticipants(convId)[0], convParticipants(convId)[1]))
+      );
+      allow update: if signedIn() && (
+        (isGroupConvId(convId) && isGroupMember(gidFromConv(convId)))
+        || (!isGroupConvId(convId) && convParticipants(convId).hasAny([request.auth.uid]))
+      ) && (
+        (resource.data.senderId == request.auth.uid
+          && changed().hasOnly(['text', 'editedAt', 'deletedAt', 'readBy']))
+        || (changed().hasOnly(['readBy'])
+          && request.resource.data.readBy.toSet().difference(resource.data.get('readBy', []).toSet()).hasOnly([request.auth.uid]))
+        || (changed().hasOnly(['reactions'])
+          && (isGroupConvId(convId)
+              || request.resource.data.get('reactions', {}).diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([request.auth.uid])))
+      );
+      allow delete: if signedIn()
+        && resource.data.senderId == request.auth.uid
+        && (!isGroupConvId(convId) || isGroupMember(gidFromConv(convId)));
     }
 
     // ---------------------------------------------------------------
@@ -1397,34 +1674,82 @@ service cloud.firestore {
     // ---------------------------------------------------------------
     // GROUPS (chat groups, Group Buy)
     // ---------------------------------------------------------------
-    function groupOf(gid) { return get(/databases/$(database)/documents/chatGroups/$(gid)).data; }
-    function isGroupMember(gid) {
-      return signedIn() && exists(/databases/$(database)/documents/chatGroups/$(gid)/members/$(request.auth.uid));
-    }
+    // [GROUP STAGE 1-3] groupRec()/isGroupMember()/isGroupAdminOrOwner() zipo
+    // juu (sehemu ya CHAT) — chanzo kimoja. Hapa: mmiliki wa kikundi.
     function isGroupOwner(gid) {
       return signedIn() && exists(/databases/$(database)/documents/chatGroups/$(gid))
-        && (groupOf(gid).get('createdBy', '') == request.auth.uid
-            || groupOf(gid).get('ownerId', '') == request.auth.uid
-            || (groupOf(gid).get('admins', []) is list && groupOf(gid).get('admins', []).hasAny([request.auth.uid])));
+        && (groupRec(gid).get('createdBy', '') == request.auth.uid
+            || groupRec(gid).get('ownerId', '') == request.auth.uid
+            || (groupRec(gid).get('admins', []) is list && groupRec(gid).get('admins', []).hasAny([request.auth.uid])));
     }
     match /chatGroups/{id} {
+      // [GROUP STAGE 1-3] Mwalikwa anaweza kuona kikundi kabla ya kukubali.
       allow read: if (('visibility' in resource.data) && resource.data.visibility == 'public' && resource.data.get('discoverable', true) != false)
-        || isAdmin() || isGroupMember(id) || (signedIn() && resource.data.get('createdBy', '') == request.auth.uid);
+        || isAdmin() || isGroupMember(id) || isGroupOwner(id)
+        || hasPendingInvite(id, request.auth.uid)
+        || (signedIn() && resource.data.get('createdBy', '') == request.auth.uid);
       allow create: if signedIn() && request.resource.data.createdBy == request.auth.uid;
-      allow update: if signedIn() && (isAdmin() || isGroupOwner(id))
-        && request.resource.data.createdBy == resource.data.createdBy;
+      allow update: if signedIn() && (isAdmin() || isGroupOwner(id) || isGroupAdminOrOwner(id))
+        && request.resource.data.createdBy == resource.data.createdBy
+        // Umiliki unaweza kuhamia kwa mwanachama active pekee.
+        && (request.resource.data.get('ownerId', null) == null
+            || request.resource.data.get('ownerId', '') == resource.data.get('ownerId', '')
+            || isGroupMemberDoc(id, request.resource.data.get('ownerId', '')));
       allow delete: if false;
 
+      // ============================================================
+      // [GROUP STAGE 2-3] WANACHAMA — haki ya kuandika ni ya owner/admin;
+      // mtu mwenyewe anaweza: (a) kuomba kujiunga (pending), (b) kujiunga
+      // active ikiwa kikundi wazi au ana mwaliko, (c) kurejoin baada ya left.
+      // HAWEZI kubadilisha role/status/approvedBy/verifiedBusiness yake.
+      // ============================================================
       match /members/{memberUid} {
-        allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);
-        // Join a public group yourself, or the owner adds/approves members.
-        allow create: if signedIn() && (isGroupOwner(id)
+        allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id)
+          || isGroupAdminOrOwner(id) || memberUid == request.auth.uid;
+        allow create: if signedIn() && (
+          isGroupOwner(id) || isGroupAdminOrOwner(id)
           || (memberUid == request.auth.uid
-              && groupOf(id).get('visibility', 'public') == 'public'
-              && request.resource.data.get('role', 'member') == 'member'));
-        allow update: if signedIn() && (isGroupOwner(id)
-          || (memberUid == request.auth.uid && unchanged(['role','status','approvedBy'])));
-        allow delete: if signedIn() && (isGroupOwner(id) || memberUid == request.auth.uid);
+              && request.resource.data.get('userId', memberUid) == request.auth.uid
+              && request.resource.data.get('role', 'member') in ['member', 'moderator', 'organizer']
+              && request.resource.data.get('approvedBy', null) == null
+              && request.resource.data.get('verifiedBusiness', false) != true
+              && request.resource.data.get('removedBy', null) == null
+              && (
+                   request.resource.data.get('status', 'pending') == 'pending'
+                   || (request.resource.data.get('status', '') == 'active' && selfActivateOk(id))
+                 ))
+        );
+        allow update: if signedIn() && (
+          // ---- owner/admin: usimamizi kamili, ila role 'owner' inahitaji mmiliki ----
+          (isGroupOwner(id) || isGroupAdminOrOwner(id))
+          // ---- mtu mwenyewe: hana ruhusa ya role/status/uidhinishaji/verified ----
+          || (memberUid == request.auth.uid
+              // joinedAt inaruhusiwa TU kwenye branch ya kurejoin (hasOnly chini)
+              && !changed().hasAny(['role','approvedBy','approvedAt','userId','verifiedBusiness'])
+              && (
+                   // (a) KUJIONDOA MWENYEWE: active → left (mine, sio ya admin)
+                   (resource.data.get('status', '') == 'active'
+                    && request.resource.data.get('status', '') == 'left'
+                    && request.resource.data.get('removedBy', null) == null
+                    && changed().hasOnly(['status','leftAt','removedBy']))
+                   // (b) KUREJOIN / KUDUMISHA OMBI: left|pending → left|pending|active
+                   || (resource.data.get('status', '') in ['left', 'pending']
+                       && request.resource.data.get('status', '') in ['left', 'pending', 'active']
+                       && (request.resource.data.get('status', '') != 'active'
+                           || (selfActivateOk(id)
+                               // Aliyetolewa na admin: lazima mwaliko mpya.
+                               && (resource.data.get('removedBy', null) == null
+                                   || hasPendingInvite(id, request.auth.uid))))
+                       && changed().hasOnly(['status','leftAt','joinedAt','invitedBy','removedBy']))
+                 ))
+        )
+        // ============================================================
+        // [GROUP STAGE 3] Kinga ya ngazi: hakuna anayeweza kujipa/kutoa
+        // role 'owner' isipokuwa mmiliki mwenyewe (kuhamisha umiliki).
+        // ============================================================
+        && (request.resource.data.get('role', 'member') != 'owner' || isGroupOwner(id))
+        && (resource.data.get('role', 'member') != 'owner' || isGroupOwner(id));
+        allow delete: if signedIn() && (isGroupOwner(id) || isGroupAdminOrOwner(id));
       }
       match /events/{eventId} {
         allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);
@@ -1440,15 +1765,36 @@ service cloud.firestore {
           && changed().hasOnly(['text','editedAt','deletedAt']);
         allow delete: if signedIn() && (resource.data.get('senderId', '') == request.auth.uid || isGroupOwner(id));
       }
+      // ============================================================
+      // [GROUP STAGE 2] MWALIKO — mwandishi: mwanachama ACTIVE; mpokeaji:
+      // inviteeId == doc id == targetUid (mtu mmoja tu). Msomaji: yeye au
+      // owner/admin. Mwalikwa hawezi kujipa uanachama kwa kubadilisha
+      // invitation pekee — uanachama hupitia members (selfActivateOk).
+      // ============================================================
       match /invitations/{invId} {
-        allow read: if signedIn() && (isGroupOwner(id)
+        allow read: if signedIn() && (
+          isGroupOwner(id) || isGroupAdminOrOwner(id)
           || resource.data.get('inviteeId', '') == request.auth.uid
-          || resource.data.get('invitedUid', '') == request.auth.uid);
-        allow create: if isGroupOwner(id) || isGroupMember(id);
-        allow update: if signedIn() && (isGroupOwner(id)
-          || ((resource.data.get('inviteeId', '') == request.auth.uid || resource.data.get('invitedUid', '') == request.auth.uid)
-              && changed().hasOnly(['status','respondedAt'])));
-        allow delete: if isGroupOwner(id);
+          || resource.data.get('invitedUid', '') == request.auth.uid
+          || (request.auth.uid == invId
+              && (resource.data.get('targetUid', '') == request.auth.uid
+                  || resource.data.get('inviteeId', '') == request.auth.uid))
+        );
+        allow create: if signedIn()
+          && isGroupMember(id)
+          && (isGroupAdminOrOwner(id) || groupRec(id).get('invitePolicy', 'everyone') == 'everyone')
+          && request.resource.data.get('inviteeId', '') == invId
+          && request.resource.data.get('invitedBy', '') == request.auth.uid
+          && request.resource.data.get('status', 'pending') == 'pending'
+          && invId != request.auth.uid;
+        allow update: if signedIn() && (
+          isGroupOwner(id) || isGroupAdminOrOwner(id)
+          || ((resource.data.get('inviteeId', '') == request.auth.uid
+               || resource.data.get('invitedUid', '') == request.auth.uid)
+              && changed().hasOnly(['status','respondedAt'])
+              && request.resource.data.get('status', '') in ['accepted','declined'])
+        );
+        allow delete: if signedIn() && (isGroupOwner(id) || isGroupAdminOrOwner(id));
       }
       // Group Buy: the order header and pledges are written by the server
       // (groupBuyJoin / groupBuyFinalize). Members read; nobody edits money.

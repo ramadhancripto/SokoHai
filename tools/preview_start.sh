@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# SokoHai preview — huirudisha kwenye port 8080 baada ya sandbox mpya.
-#   bash tools/preview_start.sh
+# SokoHai preview — huirudisha baada ya sandbox mpya.
+#   bash tools/preview_start.sh [port]      (default 5055)
+# Port inaweza kubadilishwa kwa PORT=... pia.
 set -e
 cd "$(dirname "$0")/.."
 # 1) dist/ na node_modules/ HAZIHIFADHIWI kwenye snapshot -> jenga upya
@@ -21,4 +22,4 @@ if os.path.isdir(d):
                 except OSError: pass
 PY
 # 3) server
-exec node tools/dev_server.mjs 8080
+exec node tools/dev_server.mjs "${1:-${PORT:-5055}}"

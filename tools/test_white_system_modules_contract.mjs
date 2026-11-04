@@ -7,6 +7,7 @@ const r = p => fs.readFileSync(path.join(root, p), 'utf8');
 
 const nav = r('css/29-nav-dict.css');
 const group = r('js/app/73-group-soga.js');
+const groupCss = r('css/53-group-chat-ui.css');   // [GROUP UI 2026-11] chanzo cha muonekano
 const groups = r('js/app/69-chat-groups.js');
 const go = r('js/app/74-group-order-system.js');
 
@@ -46,16 +47,16 @@ c(
 );
 
 c(
-  'group message area keeps WhatsApp light surface',
+  'group message area keeps a light surface',
   group.includes('id="gsgMsgs"') &&
-  group.includes('background:#efe7dd')
+  groupCss.includes('#gsgMsgs') &&
+  groupCss.includes('background: #F5FAF8 !important')
 );
 
 c(
-  'group header avatar uses soft blue identity',
-  group.includes(
-    'background:#EAF3FA;border:1px solid #CFDFEB;color:#39779B'
-  )
+  'group header avatar uses the green group identity',
+  groupCss.includes('#skhGroupSogaModal .gsg-avatar') &&
+  groupCss.includes('linear-gradient(140deg, #2FC49A, #0E7A5F)')
 );
 
 c(
