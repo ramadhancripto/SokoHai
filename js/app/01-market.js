@@ -649,8 +649,13 @@ window.switchMode = async function(mode) {
     // Ulinzi wa Admin
     // [PHASE 2 - USALAMA] Custom claims (role: admin) ndiyo njia kuu; email fallback
     // inasimamiwa na SOKOHAI_CONFIG.ADMIN_EMAIL_FALLBACK (itafutwa Phase 5).
+    // [REPAIR 2026-11-04] Ulinzi wa null: awali `skh.currentUser.email` ilisomwa
+    // moja kwa moja — mtumiaji asiye na kikao (au wakati wa kuhidrati) alisababisha
+    // TypeError KABLA ya `skh.currentMode = mode`, hivyo kubadili mode kushindikana
+    // kimya (mf. "Rudi Soko Kuu" kwenye Business OS haikufanya kitu).
+    const _curEmail = (skh.currentUser && skh.currentUser.email) || '';
     const sokohaiIsAdmin = (window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin === true) ||
-                           (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.ADMIN_EMAIL_FALLBACK === true && skh.currentUser.email === skh.MY_ADMIN_EMAIL);
+                           (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.ADMIN_EMAIL_FALLBACK === true && _curEmail === skh.MY_ADMIN_EMAIL);
     if(mode === 'admin' && !sokohaiIsAdmin) {
         alert(" Hauna ruhusa ya Admin."); return;
     }

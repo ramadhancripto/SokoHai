@@ -1,0 +1,10 @@
+taxonomy-draft/out/attribute-audit.draft.json
+taxonomy-draft/out/attribute-audit.draft.md
+taxonomy-draft/out/business-coverage.draft.json
+taxonomy-draft/out/coverage-matrix.draft.csv
+taxonomy-draft/out/hierarchy.draft.md
+taxonomy-draft/out/legacy-mapping.draft.csv
+taxonomy-draft/out/legacy-mapping.draft.json
+taxonomy-draft/out/reports.draft.json
+taxonomy-draft/out/sokohai-taxonomy-v1.draft.json
+taxonomy-draft/out/types.draft.csv

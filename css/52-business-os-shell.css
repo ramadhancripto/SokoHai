@@ -1,0 +1,2013 @@
+/* ============================================================================
+   css/52-business-os-shell.css — SokoHai Business OS · Stage 1A
+   Sidebar + dashboard shell/overview (Stage 1A).
+   Misingi: white/light surfaces, SokoHai green #18A982, blue/gold kwa vipimo,
+   Inter typography, hakuna background nyeusi isiyo ya lazima.
+   Breakpoints za mfumo: simu <=480px, tablet 481–900px, desktop >=901px.
+   ========================================================================== */
+
+:root {
+    --bos-green: var(--green, #18A982);
+    --bos-green-dark: var(--primary-dark, #17604E);
+    --bos-green-soft: var(--light-green, #EAF8F2);
+    --bos-blue: var(--blue, #4D91AA);
+    --bos-gold: var(--gold, #D8B83A);
+    --bos-red: var(--red, #D9534F);
+    --bos-ink: var(--ink, #18352D);
+    --bos-page: var(--page-bg, #F8FBFA);
+    --bos-line: #E3EDEA;
+    --bos-muted: #65757A;
+    --bos-radius: 14px;
+    --bos-shadow: 0 2px 10px rgba(24, 53, 45, .06);
+    --bos-shadow-lg: 0 12px 30px rgba(24, 53, 45, .12);
+}
+
+/* ---------- shell layout ---------- */
+.bos-shell.control-tower-wrapper {
+    display: flex;
+    align-items: stretch;
+    min-height: 100vh;
+    background: var(--bos-page);
+    text-align: left;
+}
+
+.bos-main.ct-main-content {
+    background: var(--bos-page);
+    min-width: 0;
+}
+
+.bos-workspace.ct-workspace {
+    padding: 22px 24px 40px;
+    background: var(--bos-page);
+    overflow-y: auto;
+}
+
+/* ---------- sidebar ---------- */
+.bos-nav.ct-sidebar {
+    width: 268px;
+    background: #ffffff;
+    color: var(--bos-ink);
+    border-right: 1px solid var(--bos-line);
+    padding: 16px 12px 14px;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.bos-nav-brand.ct-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 14px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--bos-line);
+}
+
+.bos-brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--bos-green-soft);
+    color: var(--bos-green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 17px;
+    border: 1px solid #CFE9DF;
+    flex: 0 0 auto;
+}
+
+.bos-nav-brand .ct-sidebar-brand-text h3 {
+    font-size: 15px;
+    letter-spacing: .6px;
+    color: var(--bos-green-dark);
+    font-weight: 900;
+    margin: 0;
+}
+
+.bos-nav-brand .ct-sidebar-brand-text span {
+    font-size: 11.5px;
+    color: var(--bos-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+}
+
+.bos-nav-close {
+    display: none;
+    margin-left: auto;
+    background: #F2F7F5;
+    border: 1px solid var(--bos-line);
+    border-radius: 9px;
+    color: var(--bos-ink);
+    padding: 6px;
+    cursor: pointer;
+    line-height: 0;
+}
+
+@media (min-width: 901px) {
+    .bos-nav.ct-sidebar {
+        position: sticky;
+        top: 0;
+        align-self: flex-start;
+        height: 100vh;
+    }
+}
+
+/* ---------- eneo la skroli ----------
+   `.bos-nav-scroll-wrap` hushikilia urefu unaobaki; `.bos-nav-scroll` NDIPO
+   scroller halisi. `min-height: 0` ni lazima ili flex item ikubali kusinyaa
+   ndani ya sidebar ya 100vh — bila hiyo maudhui hukatwa badala ya kuskroli. */
+.bos-nav-scroll-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.bos-nav-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    /* Gurudumu/drag viskroli papo hapo; kitufe cha ishara kinatumia smooth pekee. */
+    scroll-behavior: auto;
+    scrollbar-gutter: stable;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    /* nafasi ya chini: ishara ya "Zaidi" isifunike kichwa cha kikundi */
+    padding: 2px 4px 14px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #B9D4CB #F1F7F4;
+}
+
+/* Scrollbar inayoonekana (Chromium/Safari) — ishara ya wazi kwamba kuna zaidi */
+.bos-nav-scroll::-webkit-scrollbar {
+    width: 9px;
+}
+
+.bos-nav-scroll::-webkit-scrollbar-track {
+    background: #F1F7F4;
+    border-radius: 9px;
+}
+
+.bos-nav-scroll::-webkit-scrollbar-thumb {
+    background: #B9D4CB;
+    border-radius: 9px;
+    border: 2px solid #F1F7F4;
+}
+
+.bos-nav-scroll::-webkit-scrollbar-thumb:hover {
+    background: #96BCB0;
+}
+
+/* ---------- ishara ndogo ya scroll (inapohitajika tu) ----------
+   Mstari mwembamba chini ya orodha: unaonekana TU pale kuna moduli zaidi
+   chini. Rangi moja (hakuna gradient), unachukua nafasi yake mwenyewe. */
+.bos-nav-scroll-hint {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background: #ffffff;
+    border: none;
+    border-top: 1px solid var(--bos-line);
+    border-radius: 0;
+    padding: 6px 0 4px;
+    color: var(--bos-green-dark);
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.bos-nav-scroll-hint span {
+    line-height: 1;
+}
+
+.bos-nav-scroll-hint .skh-ico,
+.bos-nav-scroll-hint svg {
+    transform: rotate(90deg);
+}
+
+.bos-nav-scroll-hint:hover {
+    background: var(--bos-green-soft);
+}
+
+.bos-nav-scroll-hint:focus-visible {
+    outline: 2px solid var(--bos-green);
+    outline-offset: -2px;
+}
+
+.bos-nav.ct-sidebar.has-more-below .bos-nav-scroll-hint {
+    display: flex;
+}
+
+.bos-nav.ct-sidebar.has-more-below .bos-nav-scroll {
+    padding-bottom: 28px;
+}
+
+/* ---------- group ---------- */
+.bos-nav-group {
+    border-radius: 11px;
+    padding: 2px;
+}
+
+.bos-nav-group + .bos-nav-group {
+    margin-top: 2px;
+}
+
+.bos-nav-group-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 8px;
+    border-radius: 9px;
+    color: #526962;
+    font-weight: 800;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    text-align: left;
+    font-family: inherit;
+}
+
+.bos-nav-group-btn:hover {
+    background: #F4F9F7;
+    color: var(--bos-green-dark);
+}
+
+.bos-nav-group-ico {
+    line-height: 0;
+    color: #8AA39B;
+    flex: 0 0 auto;
+}
+
+.bos-nav-group-title-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.2;
+}
+
+.bos-nav-chevron {
+    line-height: 0;
+    color: #9DB4AD;
+    transition: transform .18s ease;
+    transform: rotate(90deg);
+}
+
+.bos-nav-group.is-collapsed .bos-nav-chevron {
+    transform: rotate(0deg);
+}
+
+.bos-nav-group.is-collapsed .bos-nav-group-items {
+    display: none;
+}
+
+.bos-nav-group.has-active > .bos-nav-group-btn {
+    color: var(--bos-green-dark);
+    background: #F4F9F7;
+}
+
+.bos-nav-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 0 4px 4px;
+}
+
+/* ---------- items ---------- */
+.bos-nav .bos-nav-item.ct-sidebar-menu-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    border-left-width: 3px;
+    background: transparent;
+    color: #3F5850;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    line-height: 1.25;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.bos-nav .bos-nav-item.ct-sidebar-menu-btn:hover {
+    background: #F4F9F7;
+    color: var(--bos-green-dark);
+}
+
+.bos-nav .bos-nav-item.ct-sidebar-menu-btn:focus-visible,
+.bos-nav-group-btn:focus-visible,
+.bos-icon-btn:focus-visible,
+.bos-btn:focus-visible,
+.bos-range-btn:focus-visible,
+.bos-nav-close:focus-visible {
+    outline: 2px solid var(--bos-green);
+    outline-offset: 2px;
+}
+
+.bos-nav .bos-nav-item.is-active {
+    background: var(--bos-green-soft);
+    border-color: #CFE9DF;
+    border-left-color: var(--bos-green);
+    color: var(--bos-green-dark);
+}
+
+.bos-nav .bos-nav-item.is-active .bos-nav-ico {
+    color: var(--bos-green-dark);
+}
+
+/* `.side-menu-link.active` hutumika na switchDashTab ileile — tuimarishe */
+.bos-nav .bos-nav-item.side-menu-link.active {
+    background: var(--bos-green-soft);
+    border-left: 3px solid var(--bos-green);
+    color: var(--bos-green-dark);
+}
+
+.bos-nav-ico {
+    line-height: 0;
+    color: #8AA39B;
+    margin-top: 1px;
+    flex: 0 0 auto;
+}
+
+.bos-nav-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.bos-nav-text b {
+    font-weight: 800;
+    font-size: 13px;
+    color: inherit;
+    /* Lebo ndefu zikunjwe — kamwe zisikatwe (maelekezo: never clip content) */
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+}
+
+.bos-nav-sub {
+    font-size: 10.5px;
+    color: #93A8A1;
+    font-weight: 700;
+    letter-spacing: .2px;
+    text-transform: none;
+}
+
+.bos-nav-item.is-primary,
+.bos-nav .bos-nav-item.is-primary:hover {
+    background: var(--bos-green);
+    color: #ffffff;
+    border-color: var(--bos-green);
+}
+
+.bos-nav-item.is-primary .bos-nav-ico {
+    color: #ffffff;
+}
+
+.bos-nav-footer {
+    border-top: 1px solid var(--bos-line);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bos-nav-exit {
+    color: #B4443F !important;
+}
+
+.bos-nav-exit:hover {
+    background: #FDF2F1 !important;
+    color: #97302B !important;
+}
+
+.bos-nav.is-searching .bos-nav-group.is-filtered-out,
+.bos-nav .bos-nav-item.is-filtered-out {
+    display: none;
+}
+
+/* ---------- header ---------- */
+.bos-header.ct-header-bar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--bos-line);
+    padding: 10px 20px;
+    min-height: 62px;
+    gap: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+}
+
+.bos-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.bos-header-title {
+    min-width: 0;
+}
+
+.bos-header-title b {
+    display: block;
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--bos-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bos-header-title small {
+    display: block;
+    font-size: 11.5px;
+    color: var(--bos-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bos-menu-btn.ct-menu-toggle-btn {
+    display: none;
+    line-height: 0;
+    background: #F2F7F5;
+    border: 1px solid var(--bos-line);
+    border-radius: 10px;
+    padding: 7px;
+    color: var(--bos-ink);
+    cursor: pointer;
+}
+
+.bos-header-search.ct-header-search {
+    background: #F4F7F6;
+    border: 1px solid var(--bos-line);
+    border-radius: 999px;
+    padding: 6px 12px;
+    width: 240px;
+    color: #8AA39B;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bos-header-search input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 12.5px;
+    width: 100%;
+    color: var(--bos-ink);
+    font-family: inherit;
+}
+
+.bos-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.bos-pos-btn.ct-pos-btn {
+    background: var(--bos-green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-weight: 900;
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.bos-pos-btn.ct-pos-btn:hover {
+    background: #149272;
+}
+
+.bos-icon-btn {
+    position: relative;
+    background: #F4F7F6;
+    border: 1px solid var(--bos-line);
+    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #526962;
+    cursor: pointer;
+    line-height: 0;
+}
+
+.bos-icon-btn:hover {
+    background: #EAF3EF;
+    color: var(--bos-green-dark);
+}
+
+/* Badge ya taarifa: haionyeshwi ikiwa haina namba (hakuna chanzo cha kikao hiki,
+   kwa hiyo tunazuia "0" ya kubuni kuonekana kama hali halisi). */
+.bos-notif-badge:empty {
+    display: none;
+}
+
+.bos-notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    background: var(--bos-red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.bos-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 10px;
+    border-left: 1px solid var(--bos-line);
+    min-width: 0;
+}
+
+.bos-user-meta {
+    text-align: right;
+    min-width: 0;
+}
+
+.bos-user-meta b {
+    display: block;
+    font-size: 12.5px;
+    color: var(--bos-ink);
+    font-weight: 900;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bos-user-meta small {
+    display: block;
+    font-size: 11px;
+    color: var(--bos-muted);
+    font-weight: 700;
+}
+
+.bos-user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #CFE9DF;
+}
+
+.bos-user-avatar--text {
+    background: var(--bos-green-soft);
+    color: var(--bos-green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.bos-chips {
+    display: flex;
+    gap: 5px;
+}
+
+.bos-chip {
+    background: var(--bos-green-soft);
+    color: var(--bos-green-dark);
+    border: 1px solid #CFE9DF;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 4px 9px;
+    white-space: nowrap;
+}
+
+/* ---------- overview ---------- */
+.bos-overview {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeIn .25s ease;
+}
+
+.bos-ov-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.bos-ov-head h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--bos-ink);
+}
+
+.bos-ov-head p {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    color: var(--bos-muted);
+}
+
+.bos-ov-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bos-range {
+    display: inline-flex;
+    background: #ffffff;
+    border: 1px solid var(--bos-line);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.bos-range-btn {
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #526962;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.bos-range-btn.is-active {
+    background: var(--bos-green);
+    color: #fff;
+}
+
+.bos-btn {
+    background: var(--bos-green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-weight: 800;
+    font-size: 12.5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+.bos-btn.is-ghost {
+    background: #ffffff;
+    color: #526962;
+    border: 1px solid var(--bos-line);
+}
+
+.bos-btn:hover {
+    opacity: .92;
+}
+
+.bos-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.bos-kpi {
+    background: #ffffff;
+    border: 1px solid var(--bos-line);
+    border-radius: var(--bos-radius);
+    padding: 14px 15px;
+    box-shadow: var(--bos-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.bos-kpi.is-primary {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F4FBF8 100%);
+    border-color: #CFE9DF;
+}
+
+.bos-kpi.is-danger .bos-kpi-value {
+    color: var(--bos-red);
+}
+
+.bos-kpi-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--bos-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.bos-kpi-value {
+    font-size: 19px;
+    font-weight: 900;
+    color: var(--bos-ink);
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+
+.bos-kpi-sub {
+    font-size: 11px;
+    color: #8AA39B;
+    font-weight: 700;
+}
+
+.bos-profit {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: #FFFDF5;
+    border: 1px dashed #E4D9A8;
+    border-radius: var(--bos-radius);
+    padding: 15px 16px;
+}
+
+.bos-profit-ico {
+    line-height: 0;
+    color: var(--bos-gold);
+    flex: 0 0 auto;
+}
+
+.bos-profit b {
+    font-size: 13.5px;
+    color: #6B5618;
+    display: block;
+}
+
+.bos-profit p {
+    margin: 3px 0 4px;
+    font-size: 12.5px;
+    color: #7A6524;
+    font-weight: 700;
+}
+
+.bos-profit small {
+    font-size: 11.5px;
+    color: #8B7B49;
+    line-height: 1.5;
+    display: block;
+}
+
+.bos-grid-2 {
+    display: grid;
+    /* C8: 3 kolamu kwenye skrini pana, 2 kwa kati, 1 kwa simu */
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+.bos-panel {
+    background: #ffffff;
+    border: 1px solid var(--bos-line);
+    border-radius: var(--bos-radius);
+    box-shadow: var(--bos-shadow);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.bos-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 10px;
+    flex-wrap: wrap;
+    padding: 13px 15px;
+    border-bottom: 1px solid #F0F5F3;
+}
+
+.bos-panel-head b {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--bos-ink);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bos-source {
+    font-size: 10px;
+    font-weight: 800;
+    color: #7E9A91;
+    background: #F4F9F7;
+    border: 1px solid #E6F1EC;
+    border-radius: 999px;
+    padding: 3px 8px;
+    white-space: nowrap;
+}
+
+.bos-panel-body {
+    padding: 12px 15px 15px;
+    min-height: 70px;
+    /* Majedwali mapana huskroli ndani ya panel badala ya kukatwa. */
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.bos-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.bos-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #38504A;
+    border-bottom: 1px dashed #EFF4F2;
+    padding-bottom: 7px;
+}
+
+.bos-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.bos-list-main {
+    font-weight: 700;
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1.35;
+    /* Lebo ndefu zinavunjika mistari badala ya kukatwa. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.bos-tag {
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 3px 9px;
+    background: #F4F9F7;
+    color: #3F6B5C;
+    border: 1px solid #E6F1EC;
+    white-space: nowrap;
+}
+
+.bos-tag.is-warn {
+    background: #FFF8E8;
+    color: #8A6B16;
+    border-color: #F0E3BC;
+}
+
+.bos-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+
+.bos-table th {
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--bos-muted);
+    font-weight: 800;
+    padding: 6px 4px;
+    border-bottom: 1px solid #F0F5F3;
+}
+
+.bos-table td {
+    padding: 7px 4px;
+    border-bottom: 1px dashed #F1F6F4;
+    color: #38504A;
+    vertical-align: top;
+}
+
+.bos-table tr:last-child td {
+    border-bottom: none;
+}
+
+.bos-num {
+    text-align: right;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.bos-trends {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bos-trend-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+}
+
+.bos-trend-label {
+    color: #38504A;
+    font-weight: 700;
+}
+
+.bos-trend-value {
+    color: var(--bos-ink);
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.bos-trend-delta {
+    font-size: 11px;
+    font-weight: 900;
+    border-radius: 999px;
+    padding: 2px 8px;
+    background: #F4F9F7;
+    color: #65757A;
+    white-space: nowrap;
+}
+
+.bos-trend-delta.is-up {
+    background: var(--bos-green-soft);
+    color: #146B52;
+}
+
+.bos-trend-delta.is-down {
+    background: #FDF2F1;
+    color: #A63C37;
+}
+
+.bos-trends-note {
+    margin: 8px 0 0;
+}
+
+.bos-muted {
+    color: var(--bos-muted);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.bos-mini-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px dashed #EFF4F2;
+    font-size: 11.5px;
+    color: var(--bos-muted);
+    font-weight: 700;
+}
+
+.bos-ok {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: #146B52;
+    font-weight: 700;
+    background: #F4FBF8;
+    border: 1px solid #DFF1E8;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.bos-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+    padding: 18px 12px;
+    color: #8AA39B;
+}
+
+.bos-empty b {
+    font-size: 12.5px;
+    color: #46615A;
+}
+
+.bos-empty p {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--bos-muted);
+    max-width: 340px;
+    line-height: 1.5;
+}
+
+.bos-error {
+    background: #FDF2F1;
+    border: 1px solid #F3D6D4;
+    border-radius: var(--bos-radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    color: #97302B;
+}
+
+.bos-error b {
+    font-size: 13.5px;
+}
+
+.bos-error p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.bos-error .bos-btn {
+    margin-top: 6px;
+    background: #97302B;
+}
+
+.bos-followers {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bos-footnote {
+    font-size: 11px;
+    color: #93A8A1;
+    margin: 2px 0 0;
+    line-height: 1.5;
+}
+
+/* ---------- skeleton / loading ---------- */
+.bos-loading {
+    padding: 40px;
+    text-align: center;
+    color: var(--bos-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.bos-skel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.bos-skel-card,
+.bos-skel-panel {
+    background: linear-gradient(90deg, #F2F7F5 25%, #F8FBFA 50%, #F2F7F5 75%);
+    background-size: 200% 100%;
+    animation: bosShimmer 1.3s infinite linear;
+    border-radius: var(--bos-radius);
+    border: 1px solid #EDF4F1;
+}
+
+.bos-skel-card {
+    height: 88px;
+}
+
+.bos-skel-panel {
+    height: 180px;
+}
+
+@keyframes bosShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================================================================
+   COCKPIT KUU — C1 kubwa/chart, C2 marejesho, C3 zisizouza, C4 tahadhari,
+   C5 quick actions, C6 filter ya mauzo (nyongeza — hakuna style iliyoondolewa)
+   ========================================================================== */
+.bos-panel-tools {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    min-width: 0;
+    margin-left: auto;
+    max-width: 100%;
+}
+
+.bos-panel.is-wide {
+    grid-column: 1 / -1;
+}
+
+/* ---------- C1: chart ya siku (bars za CSS, rangi moja, hakuna gradient) ---------- */
+.bos-chart {
+    width: 100%;
+}
+
+.bos-chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 168px;
+    padding: 6px 2px 0;
+    border-bottom: 1px solid #EAF1EE;
+    background: #F7FBFA;
+    border-radius: 10px 10px 0 0;
+}
+
+.bos-chart-col {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    cursor: default;
+}
+
+.bos-chart-bar {
+    display: block;
+    width: 100%;
+    min-height: 1px;
+    background: #18A982;
+    border-radius: 3px 3px 0 0;
+    transition: background .15s ease;
+}
+
+.bos-chart-col:hover .bos-chart-bar {
+    background: #17604E;
+}
+
+.bos-chart.is-dense .bos-chart-bars {
+    gap: 1px;
+}
+
+.bos-chart-bar.is-zero {
+    background: #E3EDE9;
+    min-height: 2px;
+}
+
+.bos-chart-axis {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #7E9A91;
+    letter-spacing: .2px;
+}
+
+.bos-chart-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-top: 11px;
+    font-size: 11.5px;
+    color: #5B7168;
+}
+
+.bos-chart-meta b {
+    color: #18352D;
+}
+
+.bos-chart-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    color: #7E9A91;
+    font-weight: 700;
+}
+
+.bos-chart-key i {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    background: #18A982;
+    display: inline-block;
+}
+
+/* ---------- C4: tahadhari za kipaumbele ---------- */
+.bos-alerts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bos-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #FBFDFC;
+    border: 1px solid #EAF1EE;
+}
+
+.bos-alert.is-danger {
+    background: #FEF5F4;
+    border-color: #F6D9D5;
+}
+
+.bos-alert.is-warn {
+    background: #FFFBF0;
+    border-color: #F2E8C9;
+}
+
+.bos-alert.is-info {
+    background: #F4F9FC;
+    border-color: #DCE9F0;
+}
+
+.bos-alert-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    background: #9DB3AB;
+}
+
+.bos-alert.is-danger .bos-alert-dot {
+    background: #D9534F;
+}
+
+.bos-alert.is-warn .bos-alert-dot {
+    background: #D8B83A;
+}
+
+.bos-alert.is-info .bos-alert-dot {
+    background: #4D91AA;
+}
+
+.bos-alert-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.bos-alert-text b {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #18352D;
+    line-height: 1.35;
+}
+
+.bos-alert-text small {
+    font-size: 11.5px;
+    color: #6B837A;
+    font-weight: 700;
+}
+
+.bos-btn.is-mini {
+    padding: 5px 10px;
+    font-size: 11.5px;
+    border-radius: 9px;
+    flex: 0 0 auto;
+}
+
+/* ---------- C5: vitendo vya haraka ---------- */
+.bos-qa {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.bos-qa-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 12px;
+    min-height: 48px;
+    background: #ffffff;
+    border: 1px solid var(--bos-line);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #18352D;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.bos-qa-btn:hover {
+    border-color: #BFE3D6;
+    box-shadow: 0 3px 10px rgba(24, 169, 130, .10);
+}
+
+.bos-qa-ico {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 9px;
+    background: #EAF8F2;
+    color: #17604E;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bos-qa-btn:focus-visible,
+.bos-alert .bos-btn:focus-visible,
+.bos-filter select:focus-visible,
+.bos-chart-col:focus-visible {
+    outline: 2px solid #18A982;
+    outline-offset: 2px;
+}
+
+/* ---------- C6: filter ya njia ya malipo ---------- */
+.bos-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #6B837A;
+}
+
+.bos-filter select {
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #18352D;
+    background: #F7FBFA;
+    border: 1px solid var(--bos-line);
+    border-radius: 9px;
+    padding: 4px 7px;
+    max-width: 120px;
+    cursor: pointer;
+}
+
+/* ---------- C2: rangi za kiasi kwenye tables ---------- */
+.bos-num.is-warn {
+    color: #8A6B16;
+    font-weight: 800;
+}
+
+.bos-num.is-danger {
+    color: #B33B37;
+    font-weight: 800;
+}
+
+/* ============================================================================
+   RESPONSIVE — tablet 481–900px · simu <=480px
+   ========================================================================== */
+@media (max-width: 1100px) {
+    .bos-header-search.ct-header-search {
+        width: 170px;
+    }
+    .bos-user-meta {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .bos-kpi-value {
+        font-size: 16px;
+        white-space: nowrap;
+    }
+    .bos-kpi-grid {
+        grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+    }
+    .bos-nav.ct-sidebar {
+        position: fixed;
+        top: 0;
+        left: -290px;
+        width: 280px;
+        height: 100vh;
+        z-index: 999999 !important;
+        box-shadow: var(--bos-shadow-lg);
+        transition: left .25s ease-in-out;
+        padding-top: 14px;
+        /* Nb: scroller halisi ni #bosNavScroll — sidebar yenyewe haiskroli ili
+           kusiwe na scrollbar mbili zinazoshindana kwenye simu. */
+        overflow: hidden;
+        max-height: 100vh;
+    }
+    .bos-nav.ct-sidebar.active {
+        left: 0 !important;
+    }
+    .bos-nav-close {
+        display: inline-flex;
+    }
+    /* Simu/tablet: kichwa cha kikundi ni kitufe cha kugusa — kikubwa cha kutosha
+       (>=44px) ili kifungue sub-buttons kwa urahisi, kama vitufe vingine vya menyu. */
+    .bos-nav-group-btn {
+        min-height: 44px;
+        padding: 10px 10px;
+        font-size: 12px;
+    }
+    .bos-nav-group + .bos-nav-group {
+        margin-top: 0;
+    }
+    .bos-menu-btn.ct-menu-toggle-btn {
+        display: inline-flex;
+    }
+    .bos-header.ct-header-bar {
+        padding: 9px 12px;
+    }
+    .bos-workspace.ct-workspace {
+        padding: 14px 14px 34px;
+    }
+    .bos-grid-2 {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .bos-header-search.ct-header-search {
+        display: none;
+    }
+    .bos-chips {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .bos-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    .bos-qa {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .bos-qa-btn {
+        min-height: 46px;
+        padding: 9px 10px;
+        font-size: 11.5px;
+    }
+    .bos-chart-bars {
+        height: 132px;
+        gap: 2px;
+    }
+    .bos-chart-meta {
+        gap: 6px 12px;
+        font-size: 11px;
+    }
+    .bos-chart-key {
+        margin-left: 0;
+    }
+    .bos-alert {
+        flex-wrap: wrap;
+    }
+    .bos-alert .bos-btn.is-mini {
+        margin-left: auto;
+    }
+    .bos-ov-head h2 {
+        font-size: 17px;
+    }
+    .bos-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+    }
+    .bos-kpi-value {
+        font-size: 16px;
+    }
+    .bos-workspace.ct-workspace {
+        padding: 12px 10px 30px;
+    }
+    .bos-range-btn {
+        padding: 6px 10px;
+        font-size: 11.5px;
+    }
+    .bos-header-title small {
+        display: none;
+    }
+    .bos-user {
+        padding-left: 0;
+        border-left: none;
+    }
+    .bos-pos-btn.ct-pos-btn span {
+        display: none;
+    }
+    .bos-pos-btn.ct-pos-btn {
+        padding: 9px 11px;
+    }
+    .bos-trend-row {
+        grid-template-columns: 1fr auto;
+    }
+    .bos-trend-delta {
+        display: none;
+    }
+}
+
+/* ---------- vifaa vya urefu mdogo (landscape ya simu, dirisha dogo) ----------
+   Sidebar haipotezi kitu: brand na footer hupungua ili eneo la menyu lipate
+   nafasi zaidi, na vikundi vyote vinabaki vinafikiwa kwa skroli. */
+@media (max-height: 620px) {
+    .bos-nav.ct-sidebar {
+        padding-top: 10px;
+        padding-bottom: 8px;
+        gap: 4px;
+    }
+    .bos-nav-brand.ct-sidebar-brand {
+        padding: 2px 6px 8px;
+        margin-bottom: 2px;
+    }
+    .bos-brand-mark {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+    .bos-nav-brand .ct-sidebar-brand-text h3 {
+        font-size: 13px;
+    }
+    .bos-nav-brand .ct-sidebar-brand-text span {
+        font-size: 10px;
+    }
+    .bos-nav-footer {
+        padding-top: 6px;
+        gap: 0;
+    }
+    .bos-nav .bos-nav-item.ct-sidebar-menu-btn {
+        padding: 6px 9px;
+        font-size: 12px;
+    }
+    .bos-nav-group-btn {
+        min-height: 36px;
+        padding: 6px 8px;
+    }
+    .bos-nav-scroll-hint {
+        padding: 4px 0 2px;
+        font-size: 10px;
+    }
+    .bos-nav.ct-sidebar.has-more-below .bos-nav-scroll {
+        padding-bottom: 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bos-skel-card,
+    .bos-skel-panel {
+        animation: none;
+    }
+    .bos-nav.ct-sidebar,
+    .bos-nav-chevron {
+        transition: none;
+    }
+}
+
+/* ============================================================================
+   Stage 3 — MUUNDO WA MODULI 9: namba ya moduli + lebo za sub-moduli (A/B/C)
+   ----------------------------------------------------------------------------
+   Moduli kuu (9) zinaonekana kama vichwa vyenye namba; sub-moduli zake
+   zina lebo ndogo (A · Stoo, B · Logistics, C · Usafirishaji wa Oda).
+   Rangi zinatoka kwenye tokens zilizopo (#18A982, #17604E, #EAF8F2) —
+   hakuna lugha mpya ya muundo.
+   ========================================================================== */
+
+.bos-nav-group-num {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    background: #EAF8F2;
+    color: var(--bos-green-dark, #17604E);
+    font-size: 9.5px;
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1;
+}
+
+.bos-nav-group.has-active > .bos-nav-group-btn .bos-nav-group-num,
+.bos-nav-group:not(.is-collapsed) > .bos-nav-group-btn .bos-nav-group-num {
+    background: #18A982;
+    color: #FFFFFF;
+}
+
+/* ---------- lebo ya sub-moduli ---------- */
+.bos-nav-subgroup {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bos-nav-subgroup + .bos-nav-subgroup {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #E4EFEA;
+}
+
+.bos-nav-sub-title {
+    padding: 2px 8px 3px 10px;
+    font-size: 9.5px;
+    font-weight: 900;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: #7E9A91;
+    line-height: 1.25;
+}
+
+/* ---------- simu / tablet: vitufe vikubwa kidogo kwa vidole ---------- */
+@media (max-width: 900px) {
+    .bos-nav-group-num {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+    }
+    .bos-nav-sub-title {
+        font-size: 10px;
+    }
+}
+
+/* ============================================================================
+   Stage 5 — POS kama UKURASA (Moduli 8)
+   ----------------------------------------------------------------------------
+   Terminal ile ile (`#businessOSForm`) inaingizwa kwenye workspace. Hapa
+   tunabadilisha tu mpangilio wa kuonyesha (`.form-box` ilikuwa modal
+   iliyokaa katikati ya kioo) — hakuna kubadilisha muundo wa POS yenyewe.
+   ========================================================================== */
+
+.bos-pos-page {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 4px 2px 24px;
+    text-align: left;
+}
+
+.bos-pos-page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: #FFFFFF;
+    border: 1px solid #E1EDE8;
+    border-radius: 14px;
+    padding: 12px 16px;
+}
+
+.bos-pos-page-title b {
+    display: block;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--bos-green-dark, #17604E);
+    letter-spacing: .2px;
+}
+
+.bos-pos-page-title small {
+    display: block;
+    font-size: 12px;
+    color: #7E9A91;
+    margin-top: 2px;
+}
+
+.bos-pos-page-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bos-pos-page-body {
+    background: #FFFFFF;
+    border: 1px solid #E1EDE8;
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Fomu ya POS iliyoingizwa: ondoa mkao wa modal (fixed/centered) */
+.bos-pos-page-body #businessOSForm,
+#businessOSForm.bos-pos-embedded {
+    position: static !important;
+    transform: none !important;
+    top: auto !important;
+    left: auto !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    z-index: auto !important;
+    display: block !important;
+}
+
+.bos-pos-empty {
+    background: #FFFFFF;
+    border: 1px solid #F0DFAE;
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+    color: #5C4A12;
+}
+
+.bos-pos-empty b {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.bos-pos-empty p {
+    font-size: 12.5px;
+    margin: 0;
+    color: #7E9A91;
+}
+
+@media (max-width: 900px) {
+    .bos-pos-page-head {
+        padding: 10px 12px;
+    }
+    .bos-pos-page-title b {
+        font-size: 15px;
+    }
+}
+
+/* ============================================================================
+   PHASE 4 — ULINGANIFU WA TAIPOGRAFIA / NAFASI KWENYE WORKSPACE
+   ----------------------------------------------------------------------------
+   Sehemu za zamani (Stoo, Matumizi, Wafanyakazi, Mipangilio) zinatumia mitindo
+   ya ndani (inline). Sheria hizi zinarekebisha vichwa, majedwali na sehemu za
+   kuingiza pale ambapo hakuna mtindo wa ndani, ili kila moduli isomeke kama
+   sehemu moja ya mfumo mmoja. HAZIBADILISHI mpangilio wala data.
+   ========================================================================== */
+
+/* ---------- 4.1 Kichwa cha ukurasa ---------- */
+#dashWorkspace h2 {
+    font-size: 20px;
+    line-height: 1.25;
+    font-weight: 900;
+    letter-spacing: -.2px;
+    color: var(--bos-ink);
+}
+
+#dashWorkspace h3 {
+    font-size: 15px;
+    line-height: 1.3;
+    font-weight: 800;
+    letter-spacing: -.1px;
+    color: var(--bos-ink);
+}
+
+#dashWorkspace h4 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--bos-ink);
+}
+
+/* ---------- 4.2 Majedwali ---------- */
+#dashWorkspace table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+#dashWorkspace table th {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--bos-muted);
+    background: var(--bos-green-soft);
+    padding: 10px 12px;
+    text-align: left;
+    /* Vichwa vinaruhusiwa kuvunjika mistari: `nowrap` ilifanya majedwali
+       mapana (mf. Utendaji wa Bidhaa) kusukumwa nje ya panel. */
+    white-space: normal;
+    border-bottom: 1px solid var(--bos-line);
+}
+
+#dashWorkspace table td {
+    font-size: 13px;
+    color: var(--bos-ink);
+    padding: 10px 12px;
+    border-bottom: 1px solid #EFF5F3;
+    vertical-align: middle;
+}
+
+#dashWorkspace table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#dashWorkspace table tbody tr:hover td {
+    background: #FAFDFC;
+}
+
+/* ---------- 4.3 Sehemu za kuingiza (bila mtindo wa ndani) ---------- */
+#dashWorkspace input[type="text"],
+#dashWorkspace input[type="number"],
+#dashWorkspace input[type="search"],
+#dashWorkspace input[type="date"],
+#dashWorkspace select,
+#dashWorkspace textarea {
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--bos-ink);
+    min-height: 40px;
+    padding: 9px 12px;
+    border: 1px solid var(--bos-line);
+    border-radius: 10px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+#dashWorkspace input:focus-visible,
+#dashWorkspace select:focus-visible,
+#dashWorkspace textarea:focus-visible {
+    outline: 2px solid var(--bos-green);
+    outline-offset: 1px;
+    border-color: var(--bos-green);
+}
+
+/* ---------- 4.4 Namba / fedha ---------- */
+#dashWorkspace .bos-kpi-value,
+#dashWorkspace .bos-num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+}
+
+/* ============================================================================
+   4.5 DARAJA LA USAFIRISHAJI (repair 2026-11-04)
+   Sehemu hii inaonekana pale mtumiaji wa biashara anafungua moduli ya
+   usafirishaji ambayo data yake iko kwenye mfumo huru.
+   ========================================================================== */
+.bos-transport-bridge {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 780px;
+}
+
+.bos-transport-bridge .bos-panel-body {
+    padding: 18px;
+}
+
+.bos-tr-lead {
+    margin: 0 0 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--bos-ink);
+}
+
+.bos-tr-note {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--bos-muted);
+}
+
+.bos-tr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+@media (max-width: 480px) {
+    #dashWorkspace h2 { font-size: 18px; }
+    .bos-tr-actions .bos-btn { flex: 1 1 100%; justify-content: center; }
+}
+
+/* 4.6 Taarifa ya utegemezi kwenye Token Center (seller mode) */
+.bos-token-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: #FFFDF5;
+    border: 1px solid #F0DFAE;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 0 0 16px;
+}
+
+.bos-token-notice-ico {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 10px;
+    background: #FDF3D6;
+    color: #8A6A12;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bos-token-notice-txt {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.bos-token-notice-txt b {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 900;
+    color: #5C4A12;
+    margin-bottom: 3px;
+}
+
+.bos-token-notice-txt span {
+    display: block;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #6B5A25;
+}
+
+@media (max-width: 480px) {
+    .bos-token-notice .bos-btn { flex: 1 1 100%; justify-content: center; }
+}
+
+/* 4.7 Majedwali kwenye simu: nafasi ndogo ya seli ili jedwali lizidi kutoshea */
+@media (max-width: 480px) {
+    #dashWorkspace table th,
+    #dashWorkspace table td {
+        padding: 8px 8px;
+        font-size: 12.5px;
+    }
+    #dashWorkspace table th {
+        font-size: 10.5px;
+    }
+}
+
+/* ============================================================================
+   4.8 DRAWER YA SIDE-BAR KWENYE SIMU (repair 2026-11-04)
+   ----------------------------------------------------------------------------
+   `css/12-mobile-responsive.css` inaweka kivuli cha giza `body::after` kwa
+   z-index 999997 kila sidebar inapofunguliwa. Sidebar ya Business OS ilikuwa
+   chini yake, hivyo menyu yote ilionekana imefifia (haikusomeka). Hapa
+   tunapandisha sidebar juu ya kivuli — kivuli kinabaki juu ya maudhui.
+   ========================================================================== */
+@media (max-width: 900px) {
+    .bos-nav.ct-sidebar {
+        position: fixed;
+        z-index: 999998 !important;
+    }
+
+    body:has(.bos-nav.ct-sidebar.active)::after {
+        z-index: 999990;
+    }
+}
+
+/* ============================================================================
+   4.9 CHROME YA SOKO KUU ISIINGILIANE NA BUSINESS OS
+   Upau wa chini wa mnunuzi unafichwa kwa JS (110-business-os-shell.js →
+   syncBuyerChrome) kwa sababu uamuzi unahitaji hali HALISI ya kuonekana kwa
+   dashboardViews; `body.skh-mode-dashboard` pekee haitoshi (61-full-system-repair
+   ina latch kwenye class hiyo). Hakuna sheria ya CSS hapa kwa makusudi.
+   ========================================================================== */
+
+/* ---------- 4.9 Upau wa chini wa mnunuzi (na FAB "+") kwenye Business OS ----------
+   `css/01-core.css` na `css/12-mobile-responsive.css` zina
+   `.bottom-area-wrapper { display: flex !important }` (upau "unaonekana muda
+   wote"), hivyo kuficha kwa inline style hakuwezekani. Alama
+   `body[data-bos-chrome="hide"]` inawekwa na `syncBuyerChrome()` kwenye
+   110-business-os-shell.js pale dashboardViews INAONEKANA — hivyo Soko Kuu
+   (buyer) hauathiriki hata kama `body.skh-mode-dashboard` imebaki (latch ya
+   61-full-system-repair). */
+body[data-bos-chrome="hide"] .bottom-area-wrapper {
+    display: none !important;
+}

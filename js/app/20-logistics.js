@@ -707,8 +707,15 @@ window.setupDriverActiveJobsQuery = function() {
 })();
 
 window.verifyTokenCenterDL = async function() {
-    const code = document.getElementById('tokenCenterInputDL').value.trim().toUpperCase();
+    const _inp = document.getElementById('tokenCenterInputDL');
+    const code = (_inp && _inp.value ? _inp.value : '').trim().toUpperCase();
     if(!code) return alert(T('lg_enter_token_c', "Enter Token C to confirm delivery!"));
+    // [REPAIR 2026-11-04] Ulinzi wa kikao: awali `skh.currentUser.uid` ilisomwa
+    // moja kwa moja; bila kikao mtumiaji alipata "Hitilafu: Cannot read properties
+    // of null". Sasa anaelekezwa kuingia kwanza.
+    if (!skh.currentUser || !skh.currentUser.uid) {
+        return alert(T('lg_login_required', 'Please sign in to your account first.'));
+    }
 
     try {
         // [CUSTODY PHASE B 2026-09] Token C inathibitishwa na SERVER (deliveryComplete).
@@ -716,10 +723,15 @@ window.verifyTokenCenterDL = async function() {
         const q = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("driverId", "==", skh.currentUser.uid));
         const snap = await skh.getDocs(q);
         let completed = false;
+        // [REPAIR 2026-11-04] Tofautisha "hakuna safari inayosubiri" na
+        // "token si sahihi" — awali zote zilipewa ujumbe wa token isiyo sahihi,
+        // ambao si kweli kwa akaunti isiyo na safari (mf. akaunti ya biashara).
+        let eligible = 0;
         if (snap && snap.docs && snap.docs.length) {
             for (const d of snap.docs) {
                 const rd2 = d.data();
                 if (['picked_up', 'in_transit', 'delivered'].indexOf(rd2.status) === -1) continue;
+                eligible++;
                 if (typeof window.skhCustodyCompleteDelivery !== 'function') break;
                 const res = await window.skhCustodyCompleteDelivery(d.id, code, undefined);
                 if (res.ok) { completed = true; break; }
@@ -727,6 +739,10 @@ window.verifyTokenCenterDL = async function() {
             }
         }
         if (!completed) {
+            if (!eligible) {
+                alert(T('lg_no_trip_for_token', "No trip on this account is waiting for delivery confirmation. Token C is verified on the trip it belongs to."));
+                return;
+            }
             alert(T('lg_token_c_wrong', "The Token C you entered is wrong! Verify with the recipient."));
             return;
         }

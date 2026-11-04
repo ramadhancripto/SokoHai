@@ -1,0 +1,45 @@
+/* ============================================================================
+   SOKOHAI — 56) LAZY FEED (muonekano)   2026-11-04
+   Sentinel ya "inapakia zaidi" inayoonekana kama spinner mdogo — HAINA kitufe.
+   Vipimo vinatoka kwenye mfumo (css/55): nafasi 4/8/12/16, pembe 14/999.
+   ============================================================================ */
+.skh-lazy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 10px 22px;
+    grid-column: 1 / -1;
+    opacity: 0;
+    transition: opacity .2s ease;
+    min-height: 44px;
+}
+.skh-lazy.is-loading { opacity: 1; }
+.skh-lazy small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #94A3B8;
+    letter-spacing: .1px;
+}
+.skh-lazy-spin {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    border: 2px solid #E9EEF5;
+    border-top-color: #18A982;
+    display: inline-block;
+}
+.skh-lazy.is-loading .skh-lazy-spin {
+    animation: skhLazySpin .7s linear infinite;
+}
+@keyframes skhLazySpin { to { transform: rotate(360deg); } }
+
+/* Sentinel isionekane kama kizuizi tupu mwisho wa gridi */
+.skh-lazy:not(.is-loading) { min-height: 8px; padding: 4px 0 10px; }
+.skh-lazy:not(.is-loading) small,
+.skh-lazy:not(.is-loading) .skh-lazy-spin { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+    .skh-lazy.is-loading .skh-lazy-spin { animation-duration: 1.6s; }
+}

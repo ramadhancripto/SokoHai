@@ -1,0 +1,464 @@
+/* ============================================================================
+   SOKOHAI — 55) ENGAGEMENT SYSTEM  (2026-11-04)
+   ----------------------------------------------------------------------------
+   OMBI LA MTUMIAJI:
+     "Design ikae SYSTEMIC kwa vipimo zaidi, isiwe randomly; reaction ziwe
+      zote (baadhi common, hasa zinazohusiana na marketplace) zimoja; reply
+      nzuri kwenye comments section; kisha Penda · Maoni · Shiriki · Hifadhi
+      utumie icon na zionekane KUBWA, BALANCED."
+
+   KANUNI YA MFUMO (vipimo vimoja — hakuna namba za bahati nasibu):
+     nafasi : 4 · 8 · 12 · 16 · 20 · 24      (--e-sp-1 … --e-sp-6)
+     pembe  : 10 · 14 · 18 · 999             (--e-r-sm/md/lg/pill)
+     herufi : 11.5 · 12.5 · 13.5 · 15 · 17   (--e-fs-xs/sm/md/lg/xl)
+     udhibiti: 44 (kitufe), 56 (row ya engagements), 24 (ikoni kubwa)
+     rangi  : --e-ink, --e-ink-2, --e-ink-3, --e-line, --e-brand(#18A982),
+              --e-brand-2(#0E6B51), --e-brand-soft(#E8F7F2), --e-gold(#B8860B),
+              --e-like(#E11D48)
+   Kila sehemu ya engagements/reactions/comments inatumia TOKENS hizi pekee.
+   ============================================================================ */
+
+#productModal,
+#maoniLayer {
+    --e-sp-1: 4px;
+    --e-sp-2: 8px;
+    --e-sp-3: 12px;
+    --e-sp-4: 16px;
+    --e-sp-5: 20px;
+    --e-sp-6: 24px;
+
+    --e-r-sm: 10px;
+    --e-r-md: 14px;
+    --e-r-lg: 18px;
+    --e-r-pill: 999px;
+
+    --e-fs-xs: 11.5px;
+    --e-fs-sm: 12.5px;
+    --e-fs-md: 13.5px;
+    --e-fs-lg: 15px;
+    --e-fs-xl: 17px;
+
+    --e-ctl: 44px;
+    --e-row: 56px;
+    --e-ico: 24px;
+
+    --e-ink: #0F172A;
+    --e-ink-2: #475569;
+    --e-ink-3: #94A3B8;
+    --e-line: #E9EEF5;
+    --e-line-2: #F1F5F9;
+    --e-brand: #18A982;
+    --e-brand-2: #0E6B51;
+    --e-brand-soft: #E8F7F2;
+    --e-gold: #B8860B;
+    --e-gold-soft: #FDF6E3;
+    --e-like: #E11D48;
+    --e-like-soft: #FEF2F4;
+}
+
+/* ===========================================================================
+   1) ROW YA ENGAGEMENTS — Penda · Maoni · Shiriki · Hifadhi
+   Grid 4 za upana sawa = BALANCED. Ikoni 24px, lebo 12.5px, urefu 56px.
+   =========================================================================== */
+html body #productModal #pmEngageRow {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: var(--e-sp-1) !important;
+    padding: var(--e-sp-2) var(--e-sp-3) !important;
+    margin: 0 0 var(--e-sp-2) !important;
+    border-top: 1px solid var(--e-line) !important;
+    border-bottom: 1px solid var(--e-line) !important;
+    background: #fff !important;
+}
+html body #productModal .pm-eng-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    min-height: var(--e-row) !important;
+    padding: var(--e-sp-1) var(--e-sp-1) !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--e-r-md) !important;
+    background: transparent !important;
+    color: var(--e-ink-2) !important;
+    font: 700 var(--e-fs-sm)/1.1 Inter, system-ui, sans-serif !important;
+    cursor: pointer !important;
+    transition: background-color .16s ease, color .16s ease, border-color .16s ease, transform .12s ease !important;
+}
+html body #productModal .pm-eng-btn:hover {
+    background: var(--e-line-2) !important;
+    color: var(--e-ink) !important;
+}
+html body #productModal .pm-eng-btn:active { transform: scale(.97) !important; }
+html body #productModal .pm-eng-btn:focus-visible {
+    outline: 2px solid var(--e-brand) !important;
+    outline-offset: 2px !important;
+}
+
+/* Ikoni kubwa, sawa kwa wote */
+html body #productModal #pmEngageRow .pm-eng-ico {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: var(--e-ico) !important;
+    height: var(--e-ico) !important;
+    color: inherit !important;
+}
+html body #productModal #pmEngageRow .pm-eng-ico svg {
+    width: var(--e-ico) !important;
+    height: var(--e-ico) !important;
+    stroke: currentColor !important;
+    stroke-width: 1.9 !important;
+    fill: none !important;
+}
+html body #productModal .pm-eng-txt {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: var(--e-sp-1) !important;
+    line-height: 1 !important;
+}
+html body #productModal .pm-eng-lbl { white-space: nowrap !important; letter-spacing: .1px !important; }
+html body #productModal .pm-eng-n {
+    font-variant-numeric: tabular-nums !important;
+    font-weight: 800 !important;
+    font-size: var(--e-fs-xs) !important;
+    color: var(--e-ink) !important;
+    background: var(--e-line-2) !important;
+    border-radius: var(--e-r-pill) !important;
+    padding: 2px 7px !important;
+    line-height: 1 !important;
+}
+html body #productModal .pm-eng-n[hidden] { display: none !important; }
+
+/* Hali zilizowashwa */
+html body #productModal #pmEngLikeBtn.skh-eng-active {
+    color: var(--e-like) !important;
+    background: var(--e-like-soft) !important;
+}
+html body #productModal #pmEngLikeBtn.skh-eng-active .pm-eng-ico svg {
+    fill: var(--e-like) !important;
+    stroke: var(--e-like) !important;
+}
+html body #productModal #pmEngSaveBtn.skh-eng-active {
+    color: var(--e-brand-2) !important;
+    background: var(--e-brand-soft) !important;
+}
+html body #productModal #pmEngSaveBtn.skh-eng-active .pm-eng-ico svg {
+    fill: rgba(24, 169, 130, .16) !important;
+    stroke: var(--e-brand-2) !important;
+}
+html body #productModal .pm-eng-btn.skh-eng-active .pm-eng-n {
+    background: rgba(255, 255, 255, .72) !important;
+    color: inherit !important;
+}
+
+/* ===========================================================================
+   2) REAKSINI ZA MAONI — set MOJA ya soko lote
+   ❤️ Penda · 👍 Nzuri · 🔥 Moto · 🤝 Deal · 💯 Bora · 😮 Shangaa
+   =========================================================================== */
+.maoni-body .skh-cm-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: var(--e-sp-1) !important;
+    flex-wrap: wrap !important;
+    margin-top: var(--e-sp-2) !important;
+    padding-top: var(--e-sp-2) !important;
+    border-top: 1px solid var(--e-line-2) !important;
+}
+.maoni-body .cm-rx-set { display: inline-flex; gap: var(--e-sp-1); flex-wrap: wrap; }
+.maoni-body .cm-rx-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 30px;
+    padding: 0 9px;
+    border-radius: var(--e-r-pill);
+    border: 1px solid var(--e-line);
+    background: #fff;
+    font-size: var(--e-fs-xs);
+    font-weight: 800;
+    color: var(--e-ink-2);
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .12s ease;
+}
+.maoni-body .cm-rx-chip:hover { border-color: #cfe9e0; background: #f8fbfa; }
+.maoni-body .cm-rx-chip:active { transform: scale(.96); }
+.maoni-body .cm-rx-chip.on {
+    border-color: var(--e-brand);
+    background: var(--e-brand-soft);
+    color: var(--e-brand-2);
+}
+.maoni-body .cm-rx-e { font-size: 15px; line-height: 1; }
+.maoni-body .cm-rx-chip b { font-variant-numeric: tabular-nums; }
+
+.maoni-body .skh-cm-actions > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--e-r-pill);
+    background: transparent;
+    color: var(--e-ink-2);
+    font-size: var(--e-fs-xs);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+.maoni-body .skh-cm-actions > button:hover { background: var(--e-line-2); color: var(--e-ink); }
+.maoni-body .cm-act-ic { display: inline-flex; }
+.maoni-body .cm-act-ic svg { width: 14px; height: 14px; }
+
+/* Kitufe cha kufungua picker */
+.maoni-body .cm-rx-open {
+    width: 30px;
+    height: 30px;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid var(--e-line) !important;
+    border-radius: var(--e-r-pill) !important;
+    background: #fff !important;
+    color: var(--e-ink-3) !important;
+}
+.maoni-body .cm-rx-open.on {
+    border-color: var(--e-brand) !important;
+    background: var(--e-brand-soft) !important;
+}
+.maoni-body .cm-rx-open .cm-rx-e { font-size: 15px; }
+
+/* Baa ya picker (juu ya composer ndani ya sheet) */
+.cm-react-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 84px;
+    transform: translateX(-50%);
+    z-index: 30;
+    background: #fff;
+    border: 1px solid var(--e-line);
+    border-radius: var(--e-r-pill);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .18);
+    padding: 6px;
+    animation: cmRxIn .16s ease-out;
+}
+@keyframes cmRxIn { from { opacity: 0; transform: translate(-50%, 6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.cm-react-bar[hidden] { display: none !important; }
+.cm-react-list { display: flex; gap: 2px; }
+.cm-react-list button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 50px;
+    padding: 6px 2px;
+    border: 0;
+    border-radius: var(--e-r-sm);
+    background: transparent;
+    cursor: pointer;
+    transition: background .14s ease, transform .14s ease;
+}
+.cm-react-list button:hover { background: var(--e-brand-soft); transform: translateY(-2px); }
+.cm-react-list button span { font-size: 21px; line-height: 1; }
+.cm-react-list button small {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--e-ink-3);
+    letter-spacing: .1px;
+}
+@media (max-width: 430px) {
+    .cm-react-list button { width: 44px; }
+    .cm-react-list button span { font-size: 19px; }
+    .cm-react-list button small { font-size: 9px; }
+}
+
+/* ===========================================================================
+   3) REPLY — fomu nzuri, thread yenye mstari, jibu la haraka
+   =========================================================================== */
+.maoni-body .skh-cm-thread {
+    margin: var(--e-sp-2) 0 0 var(--e-sp-5);
+    padding-left: var(--e-sp-3);
+    border-left: 2px solid var(--e-line);
+    display: flex;
+    flex-direction: column;
+    gap: var(--e-sp-2);
+}
+.maoni-body .skh-cm-thread .skh-cm-item {
+    background: #FBFDFF;
+    border-color: var(--e-line-2);
+    box-shadow: none;
+    padding: var(--e-sp-3);
+}
+.maoni-body .skh-cm-replyform {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--e-sp-2);
+    margin: var(--e-sp-2) 0 0;
+    padding: var(--e-sp-2);
+    border: 1px solid var(--e-line);
+    border-radius: var(--e-r-lg);
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .06);
+}
+.maoni-body .cm-rep-av { flex: 0 0 auto; display: inline-flex; }
+.maoni-body .cm-rep-field { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.maoni-body .cm-rep-to {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--e-ink-3);
+    padding-left: 2px;
+}
+.maoni-body .cm-rep-to b { color: var(--e-brand-2); }
+.maoni-body .skh-cm-replyform input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: var(--e-fs-md);
+    color: var(--e-ink);
+    padding: 4px 2px;
+}
+.maoni-body .cm-rep-send {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--e-brand);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(24, 169, 130, .3);
+}
+.maoni-body .cm-rep-send svg { width: 16px; height: 16px; stroke: currentColor; }
+.maoni-body .skh-cm-cancel {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    margin-bottom: 3px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--e-line-2);
+    color: var(--e-ink-2);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+.maoni-body .skh-cm-more {
+    align-self: flex-start;
+    margin: var(--e-sp-1) 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--e-brand-2);
+    font-size: var(--e-fs-xs);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* ===========================================================================
+   4) KADI YA MAONI — vipimo vya mfumo (nafasi, pembe, herufi)
+   =========================================================================== */
+.maoni-body .skh-cm-item {
+    padding: var(--e-sp-3) !important;
+    border-radius: var(--e-r-lg) !important;
+    border: 1px solid var(--e-line) !important;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .04) !important;
+}
+.maoni-body .skh-cm-who b { font-size: var(--e-fs-md) !important; }
+.maoni-body .skh-cm-time { font-size: var(--e-fs-xs) !important; color: var(--e-ink-3) !important; }
+.maoni-body .skh-cm-text { font-size: var(--e-fs-md) !important; line-height: 1.62 !important; color: var(--e-ink-2) !important; }
+
+@media (max-width: 640px) {
+    html body #productModal { --e-row: 52px; --e-ico: 22px; }
+    html body #productModal .pm-eng-btn { font-size: 11.5px !important; gap: 2px !important; }
+    .maoni-body .skh-cm-thread { margin-left: var(--e-sp-3); padding-left: var(--e-sp-2); }
+    .cm-react-bar { bottom: 92px; }
+}
+
+/* ===========================================================================
+   5) SIMU (≤520px) — lebo ZINAONEKANA (css/52 zilizificha); vipimo vya mfumo
+   =========================================================================== */
+@media (max-width: 520px) {
+    html body #productModal #pmEngageRow .pm-eng-lbl { display: inline !important; }
+    html body #productModal #pmEngageRow {
+        padding: var(--e-sp-2) !important;
+        gap: 2px !important;
+        margin: 0 0 var(--e-sp-2) !important;
+    }
+    html body #productModal #pmEngageRow .pm-eng-btn {
+        min-height: 58px !important;
+        padding: 6px 2px !important;
+        gap: 3px !important;
+        font-size: 11.5px !important;
+    }
+    html body #productModal #pmEngageRow .pm-eng-n { display: inline-flex !important; }
+}
+
+/* ===========================================================================
+   6) PICKER YA REAKSINI — vipimo vya mfumo (hakuna mwingiliano wa lebo)
+   =========================================================================== */
+.cm-react-bar { bottom: 108px; max-width: calc(100% - 24px); }
+.cm-react-list { align-items: stretch; }
+.cm-react-list button {
+    width: auto !important;
+    min-width: 58px;
+    padding: 6px 8px !important;
+}
+.cm-react-list button small {
+    font-size: 10px;
+    white-space: nowrap;
+    letter-spacing: 0;
+}
+@media (max-width: 430px) {
+    .cm-react-bar { bottom: 116px; max-width: calc(100% - 16px); padding: 5px; }
+    .cm-react-list button { min-width: 52px; padding: 5px 4px !important; }
+    .cm-react-list button span { font-size: 18px !important; }
+    .cm-react-list button small { font-size: 9px !important; }
+}
+
+/* ===========================================================================
+   7) SCROLL WA SHEET — KOSA LA KWELI (2026-11-04)
+   Kipimo: `.maoni-body` (flex column) ilikuwa NA `scrollHeight == clientHeight`
+   na `.skh-cm-list` ilikuwa scroller ya ndani yenye urefu usiojulikana →
+   maoni zaidi ya mawili yalikatika na HAKUNA njia ya kuyafikia.
+   Suluhisho: mwili mmoja tu unascroll (maoni + tathmini pamoja), composer
+   inabaki chini kwa `position: sticky`.
+   =========================================================================== */
+html body #maoniLayer .maoni-body {
+    display: block !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    min-height: 0 !important;
+}
+html body #maoniLayer .maoni-body #skhCommentsRoot,
+html body #maoniLayer .maoni-body .skh-comments {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: none !important;
+}
+html body #maoniLayer .maoni-body .skh-cm-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--e-sp-2) !important;
+    flex: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+}
+html body #maoniLayer .maoni-body .skh-cm-headbar { flex: none !important; }
+html body #maoniLayer .maoni-body .skh-cm-composer {
+    position: sticky !important;
+    bottom: -12px !important;
+    z-index: 5;
+    flex: none !important;
+}

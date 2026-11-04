@@ -62,6 +62,7 @@
 <link rel="stylesheet" href="css/18-product-showcase.css">
 <link rel="stylesheet" href="css/19-token-box.css">
 <link rel="stylesheet" href="css/20-request-inbox.css">
+<link rel="stylesheet" href="css/21-discovery-maoni.css"><!-- [FIX 2026-11-04] sheet ya MAONI + kadi za maoni (haikuwa imepakiwa) -->
 <link rel="stylesheet" href="css/22-delivery-choice.css">
 <link rel="stylesheet" href="css/23-logistics-market.css">
 <link rel="stylesheet" href="css/24-chat-ui-v2.css">
@@ -74,6 +75,7 @@
 <link rel="stylesheet" href="css/38-product-builder-seed.css"><!-- Product Builder canonical category seeding --><!-- Advertiser Billing UI-only Coming Soon state -->
 <link rel="stylesheet" href="css/37-product-card-visual.css"><!-- Large visual marketplace cards -->
 <link rel="stylesheet" href="css/38-home-ad-manager.css"><!-- Admin Home Advertisement Manager -->
+<link rel="stylesheet" href="css/39-creative-studio.css"><!-- Creative studio -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
 <link rel="stylesheet" href="css/25-typography.css">
@@ -84,6 +86,7 @@
     <link rel="stylesheet" href="css/28-my-profile.css">
     <!-- [R19] responsive top-nav + role badges + Kamusi -->
     <link rel="stylesheet" href="css/29-nav-dict.css">
+    <link rel="stylesheet" href="css/30-discover-engine.css"><!-- Discover engine -->
     <!-- [2026-11-01] Refinement layer — loaded last, additive only (see file header) -->
     <link rel="stylesheet" href="css/40-ui-refinement.css">
     <!-- [TASK 01] Compact, integrated advertising presentation (presentation only) -->
@@ -104,6 +107,12 @@
     <link rel="stylesheet" href="css/50-sell-studio.css">
     <!-- [VARIANT STUDIO] Product builder cards + buyer-facing variant preview -->
     <link rel="stylesheet" href="css/51-variant-studio.css">
+    <!-- [UI REFINEMENT 2026-11-03] Product Card + Product Details (in-flow actions) -->
+    <link rel="stylesheet" href="css/52-product-card-details.css">
+    <link rel="stylesheet" href="css/53-product-inquiry.css">
+<link rel="stylesheet" href="css/54-maoni-polish.css"><!-- [2026-11-04] Maoni + Tathmini polish -->
+<link rel="stylesheet" href="css/55-engagement-system.css"><!-- [2026-11-04] Engagement + reactions system -->
+<link rel="stylesheet" href="css/56-lazy-feed.css"><!-- [2026-11-04] Lazy load ya bidhaa -->
 <style id="skhBootCloakCss">
  html.skh-booting body{visibility:hidden!important}
  /* [LOGO-SPLASH 2026-09-17] Splash inabeba LOGO halisi ya SokoHai — funika
@@ -236,7 +245,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <span>Dashbodi ya miamala na kamisheni yako ya ukweli.</span>
         </div>
         <div class="menu-item" onclick="window.skhOpenAdvertiserDashboard && window.skhOpenAdvertiserDashboard()" id="mode-advertiser" style="border-left-color:#4D91AA; background:#f8fafc;">
-            <b> Advertiser</b>
+            <b>Tangaza</b>
             <span>Campaign workspace ya kampuni na matangazo.</span>
         </div>
         <div class="menu-item" onclick="switchMode('admin')" id="mode-admin" style="border-left-color:#333; background:#f1f5f9;">
@@ -528,50 +537,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="m9 18 6-6-6-6"/></svg>
             </button>
 
-            <!-- Rundo la vitendo vya haraka (ICONS + idadi + jina dogo) -->
-            <div class="pm-hero-stack">
-                <button type="button" class="pm-act" id="btnLike" onclick="window.skhModalLike ? window.skhModalLike() : handleLike()" aria-label="Like pendelea bidhaa" title="Penda" aria-pressed="false">
-                    <span class="pm-act-ico">
-                        <span class="eng-ico" id="engIcoLike"></span>
-                        <span class="pm-act-n" id="pmLikesCount">0</span>
-                    </span>
-                    <span class="eng-lbl pm-act-lbl">Like</span>
-                </button>
-                <button type="button" class="pm-act" id="btnSave" onclick="window.skhModalSave()" aria-label="Hifadhi bidhaa" title="Hifadhi" aria-pressed="false">
-                    <span class="pm-act-ico"><span class="eng-ico" id="engIcoSave"></span></span>
-                    <span class="eng-lbl pm-act-lbl">Save</span>
-                </button>
-                <button type="button" class="pm-act" id="pmShareBtn" onclick="handleShare()" aria-label="Gawa (share) bidhaa">
-                    <span class="pm-act-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg><span class="pm-act-n" id="pmSharesCount">0</span></span>
-                    <span class="pm-act-lbl">Share</span>
-                </button>
-                <button type="button" class="pm-act" id="pmBtnComments" onclick="window.skhOpenMaoni()" aria-label="Fungua Maoni">
-                    <span class="pm-act-ico">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
-                        <span class="pm-act-n" id="pmCommentsCount">0</span>
-                    </span>
-                    <span class="pm-act-lbl">Maoni</span>
-                </button>
-            </div>
+            
 
-            <!-- Chini kushoto: UTAMBULISHO WA MUUZAJI/MTUA HUDUMA (karibu na bidhaa) -->
-            <div class="pm-hero-seller">
-                <div class="pm-seller" id="sellerMiniDash">
-                    <span class="pm-seller-avatar" id="pmSellerAvatar"></span>
-                    <div class="pm-seller-info">
-                        <span class="pm-seller-role" id="pmSellerRole">Muuzaji</span>
-                        <div class="pm-seller-name-row">
-                            <b id="pmSellerName">Muuzaji</b>
-                            <span id="pmSellerVerified"></span>
-                        </div>
-                        <div class="pm-seller-meta" id="pmSellerMeta"></div>
-                    </div>
-                    <button type="button" class="follow-btn btn-not-following pm-follow" id="btnFollow" onclick="event.stopPropagation(); window.skhModalFollow();" aria-pressed="false" aria-label="Mfuate muuzaji" title="Mfuate">
-                        <span class="eng-ico" id="engIcoFollow"></span>
-                        <span class="eng-lbl">Follow</span>
-                    </button>
-                </div>
-            </div>
+            
 
             <!-- Chini: mara zilizotazamwa, counter, dots -->
             <div class="pm-hero-bottom">
@@ -603,15 +571,82 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     </button>
                 </div>
                 <div class="pm-wholesale-note" id="pmWholesaleNote" hidden></div>
-                <button type="button" class="pm-creative-launch" id="pmCreativeLaunch" onclick="window.skhAdvertiseOpenEntity()">
-                    Advertise / Create Creative
+            </section>
+
+            <!-- 2.1b MUUZAJI — avatar · jina · uthibitisho · FUATA (post-style) -->
+            <section class="pm-sec pm-seller-card" id="pmSellerCard" aria-label="Muuzaji">
+                <div class="pm-seller" id="sellerMiniDash">
+                    <span class="pm-seller-avatar" id="pmSellerAvatar"></span>
+                    <div class="pm-seller-info">
+                        <div class="pm-seller-name-row">
+                            <b id="pmSellerName">Muuzaji</b>
+                            <span id="pmSellerVerified"></span>
+                            <span class="pm-seller-role" id="pmSellerRole">Muuzaji</span>
+                        </div>
+                        <div class="pm-seller-meta" id="pmSellerMeta"></div>
+                    </div>
+                    <button type="button" class="follow-btn btn-not-following pm-follow" id="btnFollow" onclick="event.stopPropagation(); window.skhModalFollow();" aria-pressed="false" aria-label="Mfuate muuzaji" title="Mfuate">
+                        <span class="eng-ico" id="engIcoFollow"></span>
+                        <span class="eng-lbl">Fuata</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2.1c ENGAGEMENTS — safu moja chini ya bidhaa (post-style).
+                 Handlers zilizopo: skhToggleLike · skhOpenMaoni ·
+                 skhShareProduct · skhToggleSave. Counters: pmLikesCount ·
+                 pmCommentsCount · pmSharesCount (zilezile za zamani). -->
+            <div class="pm-eng-row" id="pmEngageRow">
+                <button type="button" class="pm-eng-btn" id="pmEngLikeBtn" onclick="window.skhToggleLike(null, this)" aria-label="Pendwa" aria-pressed="false" title="Pendwa">
+                    <span class="skh-ico pm-eng-ico" data-ico="heart" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Pendwa</span><b class="pm-eng-n" id="pmLikesCount" hidden></b></span>
+                </button>
+                <button type="button" class="pm-eng-btn" id="pmEngCommentBtn" onclick="window.skhOpenMaoni()" aria-label="Maoni" title="Maoni">
+                    <span class="skh-ico pm-eng-ico" data-ico="chat" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Maoni</span><b class="pm-eng-n" id="pmCommentsCount" hidden></b></span>
+                </button>
+                <button type="button" class="pm-eng-btn" id="pmEngShareBtn" onclick="window.skhShareProduct()" aria-label="Shiriki" title="Shiriki">
+                    <span class="skh-ico pm-eng-ico" data-ico="send" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Shiriki</span><b class="pm-eng-n" id="pmSharesCount" hidden></b></span>
+                </button>
+                <button type="button" class="pm-eng-btn" id="pmEngSaveBtn" onclick="window.skhToggleSave(null, this)" aria-label="Hifadhi" aria-pressed="false" title="Hifadhi">
+                    <span class="skh-ico pm-eng-ico" data-ico="archive" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Hifadhi</span></span>
+                </button>
+            </div>
+
+            <!-- 2.2 BLOCK YA VITENDO — Idadi · jumla · Chat · Weka Oda ·
+                 Patana Bei · Lipia Sasa. HAISHIKAMANI (no sticky): kadi
+                 yote inascroll pamoja na maelezo ili mteja aone kila kitu
+                 kwa upana (ombi la 2026-11-04). Vitufe hujengwa na
+                 39-product-showcase.js (§F) na css/52 §I. -->
+            
+            <div class="pm-sticky-stack" id="pmStickyStack">
+            <div class="pm-bar" id="pmActionBlock">
+                <div class="pm-qty-row" id="pmQtyArea">
+                    <span class="pm-qty-lbl" id="pmQtyLabel">Idadi</span>
+                    <div class="pm-qty">
+                        <button type="button" class="pm-qty-btn" id="pmQtyMinus" aria-label="Punguza idadi" onclick="changeQty(-1)">−</button>
+                        <input type="number" id="pmQty" value="1" min="1" inputmode="numeric" aria-label="Idadi">
+                        <button type="button" class="pm-qty-btn" id="pmQtyPlus" aria-label="Ongeza idadi" onclick="changeQty(1)">+</button>
+                    </div>
+                    <span class="pm-stock" id="pmStockInfo"></span>
+                    <span class="pm-total-row"><span>Jumla</span><b id="pmTotalPriceCalc">TSh 0</b></span>
+                </div>
+                <div class="pm-bar-actions" id="pmActionArea"></div>
+            </div>
+            </div><!-- /#pmStickyStack -->
+
+            <section class="pm-sec" id="pmInquireCard">
+                <button type="button" class="pm-inquire-btn" onclick="window.skhOpenInquiryBuilder()" aria-label="Uliza Zaidi kuhusu Bidhaa">
+                    <span class="pm-inquire-txt">
+                        <b>Uliza Zaidi kuhusu Bidhaa</b>
+                        <small>Jenga maswali yako · chagua aina ya jibu · tuma kwa muuzaji</small>
+                    </span>
+                    <span class="pm-inquire-side">
+                        <span class="pm-inquire-count" id="pmInquireCount"></span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </span>
                 </button>
             </section>
 
-            <!-- 2.2 VARIANTS (size/rangi/variants za data) — hujazwa na JS -->
-            <section class="pm-sec pm-var-sec" id="pmVariantSelectionArea" hidden></section>
-
-            <!-- 2.3 PANEL MAALUM (mnada) — hujazwa na JS -->
+            <!-- 2.4 PANEL MAALUM (mnada) — hujazwa na JS -->
             <section class="pm-sec" id="pmSpecialModeArea" hidden></section>
 
             <!-- 2.4 MAELEZO + SIFA (zilizopo tu) -->
@@ -620,6 +655,10 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <p class="pm-desc" id="pmDesc"></p>
                 <div class="pm-spec-grid" id="pmCustomDetails"></div>
             </section>
+
+
+            <!-- 2.5b VARIANTS (rangi/ukubwa/model/storage) — chini ya maelezo & sifa -->
+            <section class="pm-sec pm-var-sec" id="pmVariantSelectionArea" hidden></section>
 
             <!-- 2.5 USAMBAZAJI NA ULINZI (mfumo uliopo) -->
             <section class="pm-sec" id="pmDeliverySec">
@@ -630,32 +669,10 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <!-- 2.6 TATHMINI (reviews) — hujazwa na JS -->
             <section class="pm-sec" id="pmReviewsSec"></section>
 
-            <!-- ============================================================
-                 2.8 ACTION AREA — IN-FLOW (2026-09): vitendo vingia baada ya
-                     DETAILS zote na KABLA ya RECOMMENDATIONS. Haiko sticky/
-                     fixed tena juu ya maudhui (kanuni ya mtumiaji: DETAILS
-                     → ACTION AREA → RECOMMENDED — single natural scroll).
-                 ============================================================ -->
-        <!-- ============================================================
-             3) KIFIMBO CHINI (sticky) — Cart / Nunua / Chat / Dau / Agiza
-                hujengwa na JS kulingana na aina na hali ya bidhaa.
-             ============================================================ -->
-        <div class="pm-bar">
-            <!-- Mstari wa IDADI (bidhaa zenye idadi tu) -->
-            <div class="pm-qty-row" id="pmQtyArea">
-                <span class="pm-qty-lbl" id="pmQtyLabel">Idadi</span>
-                <div class="pm-qty">
-                    <button type="button" class="pm-qty-btn" id="pmQtyMinus" aria-label="Punguza idadi" onclick="changeQty(-1)">−</button>
-                    <input type="number" id="pmQty" value="1" min="1" inputmode="numeric" aria-label="Idadi">
-                    <button type="button" class="pm-qty-btn" id="pmQtyPlus" aria-label="Ongeza idadi" onclick="changeQty(1)">+</button>
-                </div>
-                <span class="pm-stock" id="pmStockInfo"></span>
-            </div>
-            <!-- Mstari wa VITENDO (chini ya idadi) -->
-            <div class="pm-bar-actions" id="pmActionArea"></div>
-        </div>
+            
 
-            <!-- 2.9 BIDHAA ZINAZOHUSIANA (rails — maduka mbalimbali) -->
+            
+
             <section class="pm-sec pm-related-sec" id="pmRelatedWrap" hidden></section>
 
             <!-- Campaign placement is below all commerce actions; mode-specific keys are set by the shared adapter. -->
@@ -683,6 +700,17 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 </div>
                 <div class="maoni-body" id="maoniSheetBody"><!-- skhCommentsRoot huambatishwa hapa na 35-comments.js --></div>
             </aside>
+        </div>
+
+        <!-- ============================================================
+             ULIZA ZAIDI KUHUSU BIDHAA — builder ya maswali (dynamic).
+             Kadi hujengwa na js/app/53-product-inquiry.js; data huenda
+             kwenye collection `productInquiries` + ujumbe wa Chat.
+             Maoni ya umma (skhOpenMaoni / `comments`) HAYAGUSWI.
+             ============================================================ -->
+        <div class="inq-layer" id="inquiryLayer" hidden>
+            <div class="inq-scrim"></div>
+            <aside class="inq-sheet" role="dialog" aria-modal="true" aria-labelledby="inqCount"></aside>
         </div>
 
     </div>
@@ -824,6 +852,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 </div>
             </div>
         </div>
+
         <div id="chatSearchBar" class="ch-conversation-search" hidden>
             <span aria-hidden="true"><span class="skh-ico" data-ico="search"></span></span>
             <input id="chatSearchInput" type="search" autocomplete="off" placeholder="Tafuta ujumbe..." oninput="window.skhChatSearchMessages(this.value)">
@@ -3496,6 +3525,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/36-seller-chat-comments.js"></script>
 <!-- [SHOWCASE MODULE 02] Product Detail UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
 <script type="module" src="js/app/39-product-showcase.js"></script>
+<!-- [INQUIRY BUILDER 2026-11] Uliza Zaidi kuhusu Bidhaa — maswali yenye muundo (productInquiries) -->
+<script type="module" src="js/app/53-product-inquiry.js"></script>
 <!-- [TOKEN BOX 2026-09] Sanduku la mikode ya makabidhiano (PK/TR/DL) linalojitegemea -->
 <script type="module" src="js/app/40-token-box.js"></script>
 <!-- [REQUEST ROUTING 2026-09] Agent Request Inbox (NEW REQUEST / Accept / Decline) -->
@@ -3529,6 +3560,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/57-checkout-bridge.js"></script>
 <script type="module" src="js/app/58-request-visibility.js"></script>
 <script type="module" src="js/app/59-agent-monitor.js"></script>
+<script type="module" src="js/app/60-lazy-feed.js"></script><!-- [2026-11-04] Lazy load ya bidhaa (infinite scroll) -->
 <!-- [CREATIVE STUDIO] One shared, lazy-asset editor. CSS/templates/media load only when opened. -->
 <script type="module" src="js/app/95-creative-studio.js"></script>
 <!-- One server-authoritative delivery/rotation controller for all campaign slots. -->

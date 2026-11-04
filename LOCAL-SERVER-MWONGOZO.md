@@ -45,6 +45,29 @@ npm run local
 Kisha fungua **http://localhost:5055** kwenye browser. Site itatumia server hii yenyewe:
 Publish, Save draft, ads delivery, comments na zingine zitafanya kazi.
 
+## Frontend pekee — bila credentials, bila functions (static preview)
+
+Kama huna credentials bado (hakuna key, hakuna `gcloud auth application-default login`)
+na unataka **kuona UI halisi** tu, tumia mode ya static preview:
+
+```bash
+npm run local:static          # = node functions/local-server.js --static
+```
+
+- Inaserve **frontend ileile** (`index.html`) kwenye **http://localhost:5055**, kama hosting.
+- **Haihitaji credentials** na **haipaki `functions/index.js`** — hakuna Admin SDK, hakuna
+  uwezekano wa kuandika data, na schedules hazijarunzwi.
+- Ukurasa unaserved **bila `/__fn` injection**: app inatumia backend iliyosanidiwa kwenye
+  `js/00-config.js` (Cloud Functions / Firebase ya project halisi, kama Netlify).
+  Kwa hiyo **callables hazifanyi kazi hapa** — Publish, ads delivery n.k. zitashindikana;
+  kuona pages, CSS, chat shell, modals na navigation ndio kusudi la mode hii.
+- Kubadilisha folda inayoserved: `SKH_STATIC_ROOT=dist npm run local:static` (build ya Netlify).
+- Kufungua kwa LAN / preview: `SKH_HOST=0.0.0.0 npm run local:static` (bila functions hakuna
+  hatari ya Admin SDK; hata hivyo usiutumie kwenye mtandao usioaminika).
+
+Mabadiliko ni **ya nyongeza**: `npm run local` (functions + frontend, na credentials) bado ni
+mode ya default na haijabadilika.
+
 ## Kutumia site ya Netlify pamoja na server (kwenye kompyuta ileile)
 
 1. Fungua https://sokohaiworld.netlify.app.

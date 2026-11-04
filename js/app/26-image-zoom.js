@@ -82,8 +82,18 @@
     // ---------- pointer handlers ----------
     function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
+    // [FIX 2026-11-04] VITUFE VYA ZOOM (✕ / − / +) VILIKUWA HAVIFANYI KAZI:
+    // onDown hufanya e.preventDefault() + setPointerCapture kwenye overlay
+    // YOTE — hivyo browser haifikishi 'click' kwenye kitufe. Sasa pointer
+    // events zinazorukwa kwa vitufe/mishale, hivyo kufunga na kukuza kazi.
+    function isControl(e) {
+        var t = e && e.target;
+        return !!(t && t.closest && t.closest('button'));
+    }
+
     function onDown(e) {
         if (!overlay) return;
+        if (isControl(e)) return;
         e.preventDefault();
         try { overlay.setPointerCapture(e.pointerId); } catch (err) {}
         pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
@@ -150,6 +160,7 @@
 
     function onUp(e) {
         if (!overlay) return;
+        if (isControl(e)) return;
         delete pointers[e.pointerId];
         var pc = Object.keys(pointers).length;
 
@@ -264,6 +275,11 @@
         load(index);
         if (initialScale && initialScale > 1) setScale(clamp(initialScale, MIN, MAX));
     };
+
+    // [2026-11-04] Escape nayo hufunga viewer (kitufe cha "kurudi" cha kibodi).
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay) { window.closeImageZoom(); }
+    });
 
     window.closeImageZoom = function () {
         if (overlay) overlay.remove();

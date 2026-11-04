@@ -1,0 +1,1064 @@
+/* ================================================================
+   53-group-chat-ui.css — SOKOHAI GROUP CHAT INTERIOR (2026-11)
+   ----------------------------------------------------------------
+   Inabadilisha MUONEKANO wa ndani ya kikundi pekee:
+     · Dirisha kamili la skrini (sio sheet inayoelea)
+     · Header compact + mini nav cards zinazosogea
+     · Tangazo lililobandikwa kama kadi
+     · Bubbles zenye makundi, date separators, unread divider
+     · Composer safi
+     · Sheet ya viambatisho na menyu zilizo ndani ya dirisha
+   HAIgusi handlers: kila data-act="gsg-*" inabaki kama ilivyo.
+   ================================================================ */
+
+/* ---------------- 1. DIRISHA KAMILI LA SKRINI ---------------- */
+#skhGroupSogaModal.skh-sheet-overlay {
+    align-items: stretch !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+#skhGroupSogaModal > .skh-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: #F5FAF8 !important;
+}
+
+/* Safu ya maudhui katikati kwenye skrini kubwa (kama chat page) */
+#skhGroupSogaModal > .skh-sheet > .gsg-fs {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    background: #F5FAF8;
+    position: relative;
+}
+
+/* ---------------- 2. HEADER ---------------- */
+#skhGroupSogaModal .gsg-head {
+    flex: 0 0 auto;
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    padding: 9px 10px !important;
+    background: #FFFFFF !important;
+    border-bottom: 1px solid #E6EFEA !important;
+    box-shadow: 0 1px 2px rgba(15, 42, 34, .04) !important;
+    position: relative;
+    z-index: 6;
+}
+
+#skhGroupSogaModal .gsg-head .skh-sheet-back {
+    width: 34px !important;
+    height: 34px !important;
+    flex: 0 0 auto;
+    border-radius: 11px !important;
+    background: #F4F9F7 !important;
+    color: #4A635C !important;
+    border: 1px solid transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background .14s, color .14s;
+}
+#skhGroupSogaModal .gsg-head .skh-sheet-back:hover { background: #E9F8F1 !important; color: #0F7E67 !important; }
+#skhGroupSogaModal .gsg-head .skh-sheet-back:active { transform: scale(.96); }
+
+#skhGroupSogaModal .gsg-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    flex: 0 0 auto;
+    border-radius: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(140deg, #2FC49A, #0E7A5F) !important;
+    color: #fff !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
+    box-shadow: 0 2px 6px rgba(15, 126, 103, .25);
+    position: relative;
+    overflow: visible !important;
+}
+
+#skhGroupSogaModal .gsg-head-txt {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: block !important;
+}
+#skhGroupSogaModal .gsg-head-txt .skh-sheet-title {
+    display: block;
+    font-size: 14.5px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.01em;
+    color: #0F2A22 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+    margin: 0 !important;
+}
+#skhGroupSogaModal .gsg-head-txt .skh-sheet-sub {
+    display: flex !important;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #7C918A !important;
+    margin-top: 1px !important;
+    white-space: nowrap;
+}
+
+/* chips za header (wanachama / aina) */
+#skhGroupSogaModal .gsg-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: #4A635C;
+    background: #F1F7F4;
+    border: 1px solid #E6EFEA;
+    border-radius: 99px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+#skhGroupSogaModal .gsg-chip--members {
+    background: #E9F8F1;
+    border-color: #C9EBDD;
+    color: #0F7E67;
+}
+
+/* ---------------- 3. MINI NAV CARDS ---------------- */
+#skhGroupSogaModal #gsgTabs {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    gap: 8px !important;
+    padding: 10px 10px 9px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    background: #FFFFFF !important;
+    border-bottom: 1px solid #E6EFEA !important;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+#skhGroupSogaModal #gsgTabs::-webkit-scrollbar { height: 3px; }
+#skhGroupSogaModal #gsgTabs::-webkit-scrollbar-thumb { background: #D8E5DF; border-radius: 99px; }
+#skhGroupSogaModal #gsgTabs::-webkit-scrollbar-track { background: transparent; }
+
+#skhGroupSogaModal .gsg-card {
+    flex: 0 0 auto !important;
+    width: 80px !important;
+    height: 70px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    border: 1.5px solid transparent !important;
+    background: #E9F8F1 !important;
+    color: #0F7E67 !important;
+    cursor: pointer;
+    scroll-snap-align: start;
+    position: relative;
+    padding: 0 !important;
+    transition: transform .12s, box-shadow .15s, background .15s, border-color .15s;
+    font-family: inherit;
+}
+#skhGroupSogaModal .gsg-card:hover { transform: translateY(-1px); box-shadow: 0 1px 2px rgba(15,42,34,.04); }
+#skhGroupSogaModal .gsg-card:active { transform: scale(.97); }
+#skhGroupSogaModal .gsg-card .gsg-ic { width: 21px; height: 21px; display: flex; align-items: center; justify-content: center; }
+#skhGroupSogaModal .gsg-card .gsg-lb {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .01em;
+    line-height: 1.15;
+    text-align: center;
+    padding: 0 3px;
+    white-space: nowrap;
+}
+/* rangi laini kwa kila kadi */
+#skhGroupSogaModal .gsg-card[data-tone="green"]  { background: #E9F8F1; color: #0F7E67; }
+#skhGroupSogaModal .gsg-card[data-tone="blue"]   { background: #EEF5FC; color: #2E6E96; }
+#skhGroupSogaModal .gsg-card[data-tone="violet"] { background: #F3F1FB; color: #6A5BA6; }
+#skhGroupSogaModal .gsg-card[data-tone="gold"]   { background: #FFF8E8; color: #9A7615; }
+#skhGroupSogaModal .gsg-card[data-tone="teal"]   { background: #EAF6F4; color: #12796B; }
+/* active */
+#skhGroupSogaModal .gsg-card.is-active {
+    background: #FFFFFF !important;
+    border-color: #18A982 !important;
+    box-shadow: 0 3px 10px rgba(24, 169, 130, .14);
+    color: #0F7E67 !important;
+}
+#skhGroupSogaModal .gsg-card.is-active::after {
+    content: "";
+    position: absolute;
+    bottom: 5px; left: 50%; transform: translateX(-50%);
+    width: 14px; height: 2.5px; border-radius: 99px;
+    background: #18A982;
+}
+/* imezimwa (Group Orders) */
+#skhGroupSogaModal .gsg-card.is-off {
+    background: #F4F7F6 !important;
+    color: #A9BAB4 !important;
+}
+#skhGroupSogaModal .gsg-card.is-off::before {
+    content: "";
+    position: absolute; top: 6px; right: 6px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #D9C68A;
+}
+
+/* ---------------- 4. TANGAZO LILILOBANDIKWA ---------------- */
+#skhGroupSogaModal #gsgAnnounce {
+    flex: 0 0 auto;
+    background: #FFFFFF;
+}
+#skhGroupSogaModal .gsg-pin {
+    margin: 8px 10px 0;
+    background: #FFF9E6;
+    border: 1px solid #EFE3B8;
+    border-radius: 12px;
+    overflow: hidden;
+}
+#skhGroupSogaModal .gsg-pin-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+#skhGroupSogaModal .gsg-pin-ic {
+    width: 20px; height: 20px; flex: 0 0 auto;
+    color: #9A7615;
+    display: flex; align-items: center; justify-content: center;
+}
+#skhGroupSogaModal .gsg-pin-txt { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+#skhGroupSogaModal .gsg-pin-lab {
+    display: block;
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #9A7615;
+    line-height: 1.4;
+}
+#skhGroupSogaModal .gsg-pin-msg {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6E5A12;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+}
+#skhGroupSogaModal .gsg-pin-more {
+    height: 22px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 9px;
+    border-radius: 99px;
+    background: #FFFFFF;
+    border: 1px solid #EFE3B8;
+    color: #9A7615;
+    font-size: 10px;
+    font-weight: 900;
+    white-space: nowrap;
+    transition: background .14s;
+}
+#skhGroupSogaModal .gsg-pin-row:hover .gsg-pin-more { background: #FFF3CE; }
+#skhGroupSogaModal .gsg-pin-full {
+    display: none;
+    padding: 0 10px 9px 38px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #6E5A12;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+#skhGroupSogaModal .gsg-pin.is-open .gsg-pin-full { display: block; }
+
+/* ---------------- 5. ENEO LA MAZUNGUMZO ---------------- */
+#skhGroupSogaModal #gsgTabChat,
+#skhGroupSogaModal #gsgTabMembers,
+#skhGroupSogaModal #gsgTabMedia,
+#skhGroupSogaModal #gsgTabOrders {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+#skhGroupSogaModal #gsgMsgWrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #F5FAF8;
+}
+
+#skhGroupSogaModal #gsgMsgs {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 12px 6px !important;
+    background: #F5FAF8 !important;
+}
+#skhGroupSogaModal #gsgMsgs::-webkit-scrollbar { width: 6px; }
+#skhGroupSogaModal #gsgMsgs::-webkit-scrollbar-thumb { background: #DCE8E2; border-radius: 99px; }
+
+/* date separator + unread divider */
+#skhGroupSogaModal .gsg-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 6px 0 12px;
+}
+#skhGroupSogaModal .gsg-sep span {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    color: #7C918A;
+    background: #FFFFFF;
+    border: 1px solid #E6EFEA;
+    border-radius: 99px;
+    padding: 4px 11px;
+}
+#skhGroupSogaModal .gsg-unread {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 12px;
+}
+#skhGroupSogaModal .gsg-unread::before,
+#skhGroupSogaModal .gsg-unread::after {
+    content: ""; height: 1px; flex: 1; background: #C9EBDD;
+}
+#skhGroupSogaModal .gsg-unread span {
+    font-size: 9.5px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #0F7E67;
+    background: #E9F8F1;
+    border-radius: 99px;
+    padding: 4px 10px;
+}
+
+/* message rows */
+#skhGroupSogaModal .gsg-msg-row {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 3px;
+    animation: gsgRowIn .18s ease-out;
+    touch-action: pan-y;
+}
+@keyframes gsgRowIn { from { opacity: .6; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+#skhGroupSogaModal .gsg-msg-row.is-own { flex-direction: row-reverse; }
+#skhGroupSogaModal .gsg-msg-row.is-grouped { margin-bottom: 1px; }
+#skhGroupSogaModal .gsg-msg-row.is-start { margin-top: 9px; }
+
+#skhGroupSogaModal .gsg-mav {
+    width: 28px; height: 28px;
+    flex: 0 0 auto;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; color: #fff;
+    margin-top: 1px;
+    background: linear-gradient(140deg, #34C2A0, #0F7E67);
+}
+#skhGroupSogaModal .gsg-mav.ghost { visibility: hidden; }
+
+#skhGroupSogaModal .gsg-mwrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    min-width: 0;
+    align-items: flex-start;
+}
+#skhGroupSogaModal .gsg-msg-row.is-own .gsg-mwrap { align-items: flex-end; }
+
+#skhGroupSogaModal .gsg-mmeta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 3px 3px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #9DB0A9;
+}
+#skhGroupSogaModal .gsg-mmeta .who {
+    font-size: 10.5px;
+    font-weight: 900;
+    color: #4A635C;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+}
+#skhGroupSogaModal .gsg-role {
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 1.5px 5px;
+    border-radius: 5px;
+    background: #E9F8F1;
+    color: #0F7E67;
+    border: 1px solid #C9EBDD;
+}
+
+/* bubble */
+#skhGroupSogaModal .gsg-bubble {
+    position: relative;
+    padding: 8px 11px;
+    border-radius: 14px 14px 14px 4px;
+    background: #FFFFFF;
+    border: 1px solid #E6EFEA;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #0F2A22;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    box-shadow: 0 1px 2px rgba(15, 42, 34, .04);
+    cursor: pointer;
+    transition: box-shadow .14s;
+}
+#skhGroupSogaModal .gsg-msg-row.is-own .gsg-bubble {
+    border-radius: 14px 14px 4px 14px;
+    background: #E9F8F1;
+    border-color: #C9EBDD;
+}
+#skhGroupSogaModal .gsg-bubble:hover { box-shadow: 0 2px 10px rgba(24, 169, 130, .13); }
+
+/* quote / reply preview */
+#skhGroupSogaModal .gsg-quote {
+    display: block;
+    margin: 0 0 6px;
+    padding: 5px 8px;
+    border-left: 2.5px solid #18A982;
+    background: #F6FBF8;
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+}
+#skhGroupSogaModal .gsg-msg-row.is-own .gsg-quote { background: #F2FBF6; border-left-color: #0F7E67; }
+#skhGroupSogaModal .gsg-quote b { display: block; font-size: 10px; font-weight: 900; color: #0F7E67; margin-bottom: 1px; }
+#skhGroupSogaModal .gsg-quote i { display: block; font-style: normal; font-size: 11px; color: #7C918A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* reactions */
+#skhGroupSogaModal .gsg-rx { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+#skhGroupSogaModal .gsg-rx button {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #4A635C;
+    background: #FFFFFF;
+    border: 1px solid #E6EFEA;
+    border-radius: 99px;
+    padding: 2px 7px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15,42,34,.04);
+}
+#skhGroupSogaModal .gsg-rx button.is-mine { background: #EFF6FB; border-color: #D5E7F4; color: #1268A8; }
+
+/* attachment cards ndani ya ujumbe */
+#skhGroupSogaModal .gsg-att-img {
+    width: 216px; max-width: 100%;
+    border-radius: 11px; overflow: hidden;
+    border: 1px solid rgba(15,126,103,.18);
+    background: #EAF6F1;
+}
+#skhGroupSogaModal .gsg-att-img img { display: block; width: 100%; height: auto; max-height: 260px; object-fit: cover; }
+#skhGroupSogaModal .gsg-att-file {
+    display: flex; align-items: center; gap: 9px;
+    width: 216px; max-width: 100%;
+    padding: 8px 9px;
+    background: #FFFFFF;
+    border: 1px solid #E6EFEA;
+    border-radius: 11px;
+}
+#skhGroupSogaModal .gsg-att-file .fic {
+    width: 30px; height: 30px; flex: 0 0 auto;
+    border-radius: 9px;
+    background: #FDF1EE; color: #B0664E;
+    display: flex; align-items: center; justify-content: center;
+}
+#skhGroupSogaModal .gsg-att-file .ftx { min-width: 0; flex: 1 1 auto; }
+#skhGroupSogaModal .gsg-att-file .fn {
+    font-size: 11.5px; font-weight: 800; color: #0F2A22;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhGroupSogaModal .gsg-att-file .fs { font-size: 9.5px; font-weight: 700; color: #9DB0A9; margin-top: 1px; }
+
+/* typing */
+#skhGroupSogaModal #gsgTyping {
+    padding: 2px 14px 6px !important;
+    font-size: 10.5px !important;
+    font-weight: 700;
+    color: #7C918A !important;
+    font-style: normal !important;
+    min-height: 0 !important;
+}
+
+/* reply bar */
+#skhGroupSogaModal #gsgReplyBar {
+    flex: 0 0 auto;
+    background: #FFFFFF;
+    border-top: 1px solid #E6EFEA;
+}
+
+/* empty state */
+#skhGroupSogaModal .gsg-empty {
+    text-align: center;
+    padding: 34px 20px;
+    color: #7C918A;
+}
+#skhGroupSogaModal .gsg-empty b { display: block; font-size: 13.5px; color: #0F2A22; margin-bottom: 4px; }
+#skhGroupSogaModal .gsg-empty small { font-size: 11.5px; }
+
+/* ---------------- 6. COMPOSER ---------------- */
+#skhGroupSogaModal #gsgComposerRow.gsg-comp-row {
+    flex: 0 0 auto !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    gap: 7px !important;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    background: #FFFFFF !important;
+    border-top: 1px solid #E6EFEA !important;
+    box-shadow: none !important;
+    z-index: 5;
+}
+#skhGroupSogaModal #gsgComposerRow .gsg-cbtn {
+    flex: 0 0 auto;
+    width: 36px; height: 36px; min-width: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #E6EFEA;
+    background: #F4F9F7;
+    color: #4A635C;
+    cursor: pointer;
+    transition: background .14s, color .14s;
+}
+#skhGroupSogaModal #gsgComposerRow .gsg-cbtn:hover { background: #E9F8F1; color: #0F7E67; border-color: #C9EBDD; }
+#skhGroupSogaModal #gsgComposerRow .gsg-cbtn:active { transform: scale(.95); }
+
+#skhGroupSogaModal #gsgComposerRow .gsg-field {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    background: #F6FAF8;
+    border: 1px solid #E6EFEA;
+    border-radius: 20px;
+    padding: 0 4px 0 12px;
+    transition: border-color .14s, background .14s;
+}
+#skhGroupSogaModal #gsgComposerRow .gsg-field:focus-within {
+    border-color: #C9EBDD;
+    background: #FFFFFF;
+}
+#skhGroupSogaModal #gsgComposerRow #gsgInput {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 36px !important;
+    padding: 0 !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    font-size: 13px !important;
+    color: #0F2A22 !important;
+    box-shadow: none !important;
+}
+#skhGroupSogaModal #gsgComposerRow #gsgInput::placeholder { color: #9DB0A9; }
+
+#skhGroupSogaModal #gsgComposerRow .gsg-send {
+    flex: 0 0 auto;
+    width: 38px; height: 38px; min-width: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #18A982;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(24, 169, 130, .3);
+    transition: transform .12s, background .14s;
+}
+#skhGroupSogaModal #gsgComposerRow .gsg-send:hover { background: #0F7E67; }
+#skhGroupSogaModal #gsgComposerRow .gsg-send:active { transform: scale(.94); }
+
+/* emoji popover */
+#skhGroupSogaModal .gsg-emoji-pop {
+    position: absolute !important;
+    left: 8px !important;
+    bottom: 56px !important;
+    background: #FFFFFF;
+    border: 1px solid #E6EFEA;
+    border-radius: 13px;
+    box-shadow: 0 12px 30px rgba(15, 42, 34, .16);
+    padding: 5px;
+    display: flex;
+    gap: 1px;
+    flex-wrap: wrap;
+    max-width: 250px;
+    z-index: 60;
+}
+#skhGroupSogaModal .gsg-emoji-pop button {
+    width: 32px; height: 32px;
+    border: none; background: none;
+    border-radius: 9px;
+    font-size: 17px; line-height: 1;
+    cursor: pointer;
+}
+#skhGroupSogaModal .gsg-emoji-pop button:hover { background: #F4F9F7; }
+
+/* ---------------- 7. SHEETS NDANI YA DIRISHA ---------------- */
+#skhGroupSogaModal .gsg-sheet-pop {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 80;
+    background: rgba(9, 32, 26, .42);
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center;
+}
+#skhGroupSogaModal .gsg-sheet-panel {
+    width: 100%;
+    max-width: 560px;
+    background: #FFFFFF;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -10px 36px rgba(11, 22, 40, .2);
+    padding: 0 0 calc(10px + env(safe-area-inset-bottom, 0px));
+    max-height: 82%;
+    display: flex;
+    flex-direction: column;
+}
+#skhGroupSogaModal .gsg-sheet-grab {
+    width: 38px; height: 4px; border-radius: 99px;
+    background: #E2ECE8; margin: 8px auto 2px; flex: 0 0 auto;
+}
+#skhGroupSogaModal .gsg-sheet-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 14px 8px;
+    flex: 0 0 auto;
+}
+#skhGroupSogaModal .gsg-sheet-head b { font-size: 13.5px; font-weight: 900; color: #0F2A22; }
+#skhGroupSogaModal .gsg-sheet-x {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: none; background: #F1F5F4; color: #4A635C;
+    font-size: 15px; font-weight: 900; cursor: pointer; line-height: 1;
+}
+#skhGroupSogaModal .gsg-sheet-body { overflow-y: auto; padding: 0 14px 10px; }
+
+#skhGroupSogaModal .gsg-at-lab {
+    font-size: 8.5px; font-weight: 900; letter-spacing: .09em;
+    text-transform: uppercase; color: #9DB0A9;
+    margin: 10px 2px 7px;
+}
+#skhGroupSogaModal .gsg-at-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+#skhGroupSogaModal .gsg-at-item {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 10px 4px;
+    border-radius: 12px;
+    background: #F6FAF8;
+    border: 1px solid #E6EFEA;
+    color: #0F7E67;
+    cursor: pointer;
+    transition: background .14s, border-color .14s;
+    position: relative;
+    font-family: inherit;
+}
+#skhGroupSogaModal .gsg-at-item:hover { background: #E9F8F1; border-color: #C9EBDD; }
+#skhGroupSogaModal .gsg-at-item .aic {
+    width: 30px; height: 30px; border-radius: 10px;
+    background: #FFFFFF; border: 1px solid #E6EFEA;
+    display: flex; align-items: center; justify-content: center;
+}
+#skhGroupSogaModal .gsg-at-item .alab {
+    font-size: 9.5px; font-weight: 800; color: #4A635C;
+    text-align: center; line-height: 1.2;
+}
+#skhGroupSogaModal .gsg-at-item.is-biz { background: #FFFBF0; border-color: #EFE3B8; color: #9A7615; }
+#skhGroupSogaModal .gsg-at-item.is-biz:hover { background: #FFF9E6; }
+#skhGroupSogaModal .gsg-at-item.is-off { opacity: .62; }
+#skhGroupSogaModal .gsg-at-item.is-off::after {
+    content: "imezimwa";
+    position: absolute; top: 4px; right: 4px;
+    font-size: 7px; font-weight: 900; letter-spacing: .04em;
+    text-transform: uppercase; color: #8A7418;
+    background: #FFF3CE; border-radius: 4px; padding: 1px 4px;
+}
+
+/* ---------------- 8. MENYU YA KIKUNDI (info drawer) ---------------- */
+#skhGroupSogaModal #gsgInfo {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    background: #FFFFFF;
+}
+#skhGroupSogaModal .gsg-menu-grp {
+    font-size: 8.5px; font-weight: 900; letter-spacing: .09em;
+    text-transform: uppercase; color: #9DB0A9;
+    padding: 14px 16px 6px;
+}
+#skhGroupSogaModal .gsg-menu-row {
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 9px;
+    border-radius: 11px;
+    width: 100%;
+    text-align: left;
+    background: none; border: none;
+    font-family: inherit;
+    cursor: pointer;
+}
+#skhGroupSogaModal .gsg-menu-row:hover { background: #F5FAF8; }
+#skhGroupSogaModal .gsg-menu-row .mic2 {
+    width: 30px; height: 30px; flex: 0 0 auto;
+    border-radius: 9px;
+    background: #F1F7F4; color: #0F7E67;
+    display: flex; align-items: center; justify-content: center;
+}
+#skhGroupSogaModal .gsg-menu-row .mtx2 { flex: 1 1 auto; min-width: 0; }
+#skhGroupSogaModal .gsg-menu-row .mt2 { font-size: 12.5px; font-weight: 800; color: #0F2A22; display: block; }
+#skhGroupSogaModal .gsg-menu-row .ms2 { font-size: 10px; font-weight: 600; color: #7C918A; display: block; margin-top: 1px; }
+#skhGroupSogaModal .gsg-menu-row.is-danger .mic2 { background: #FDF1EE; color: #B0664E; }
+#skhGroupSogaModal .gsg-menu-row.is-danger .mt2 { color: #A4513A; }
+#skhGroupSogaModal .gsg-off-pill {
+    font-size: 8px; font-weight: 900; letter-spacing: .05em;
+    text-transform: uppercase; color: #8A7418;
+    background: #FFF9E6; border: 1px solid #EFE3B8;
+    border-radius: 5px; padding: 2px 5px; flex: 0 0 auto;
+}
+
+/* ---------------- 10. MAMBO YA NDANI (layout bindings) ----------------
+   Sehemu hii inafunga markup halisi ya js/app/73-group-soga.js:
+   chat tab = safu ya flex inayoficha overflow (composer haiondoki),
+   tabs nyingine zinascroll, na panel ya taarifa inachukua nafasi ya chat. */
+
+/* Chat tab: msgs ndio inascroll, composer inakaa chini */
+#skhGroupSogaModal #gsgTabChat {
+    /* display inaachwa kwa JS (setGsgTab) ili inline display:none ifanye kazi */
+    display: flex;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: #F5FAF8;
+}
+/* Tabs zingine (orders/members/media): scroll ya kawaida */
+#skhGroupSogaModal #gsgTabOrders,
+#skhGroupSogaModal #gsgTabMembers,
+#skhGroupSogaModal #gsgTabMedia {
+    display: block;
+    padding: 10px 10px calc(14px + env(safe-area-inset-bottom, 0px));
+    background: #F7FBF9;
+}
+
+/* maelezo mafupi ya kikundi chini ya kadi */
+#skhGroupSogaModal .gsg-desc {
+    display: none;
+    flex: 0 0 auto;
+    padding: 0 12px 8px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E6EFEA;
+    font-size: 11px;
+    font-weight: 600;
+    color: #7C918A;
+    line-height: 1.45;
+}
+#skhGroupSogaModal .gsg-desc:not(:empty) { display: block; }
+
+/* hali ya kupakia ndani ya eneo la meseji */
+#skhGroupSogaModal .gsg-loading {
+    display: block;
+    text-align: center;
+    padding: 22px 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #9DB0A9;
+}
+
+/* maudhui yasiyo maandishi (picha/kadi/nyaraka) — hayapati padding ya bubble */
+#skhGroupSogaModal .gsg-rich {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* safu ya vitendo (jibu / reaction / majibu) */
+#skhGroupSogaModal .gsg-acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    max-width: 100%;
+}
+#skhGroupSogaModal .gsg-msg-row.is-own .gsg-acts { justify-content: flex-end; }
+#skhGroupSogaModal .gsg-acts > button {
+    border: 1px solid #E6EFEA;
+    background: #FFFFFF;
+    color: #7C918A;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.5;
+}
+#skhGroupSogaModal .gsg-acts > button:hover { border-color: #18A982; color: #0F7E67; }
+#skhGroupSogaModal .gsg-acts .gsg-rx { margin-top: 0; }
+
+/* Panel ya taarifa: inachukua nafasi ya tabs + chat (hakuna overlay ya pili) */
+#skhGroupSogaModal .gsg-fs.gsg-info-open > #gsgTabs,
+#skhGroupSogaModal .gsg-fs.gsg-info-open > #gsgDesc,
+#skhGroupSogaModal .gsg-fs.gsg-info-open > #gsgAnnounce,
+#skhGroupSogaModal .gsg-fs.gsg-info-open > #gsgAdSlot { display: none !important; }
+#skhGroupSogaModal .gsg-fs.gsg-info-open #gsgTabChat,
+#skhGroupSogaModal .gsg-fs.gsg-info-open #gsgTabOrders,
+#skhGroupSogaModal .gsg-fs.gsg-info-open #gsgTabMembers,
+#skhGroupSogaModal .gsg-fs.gsg-info-open #gsgTabMedia { display: none !important; }
+#skhGroupSogaModal .gsg-fs.gsg-info-open #gsgInfo {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#skhGroupSogaModal .gsg-info-head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E6EFEA;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+#skhGroupSogaModal .gsg-info-head b { font-size: 13.5px; font-weight: 900; color: #0F2A22; }
+#skhGroupSogaModal .gsg-info-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ---------------- 11. MWILI WA DIRISHA + NAV YA CHINI ----------------
+   (zilihamishwa kutoka css/48-chat-shell.css ili muonekano uwe na chanzo kimoja) */
+#skhGroupSogaModal { z-index: 2147482500 !important; }
+
+/* .gsg-body = chombo cha panel; hii inafanya chat ipate urefu kamili */
+#skhGroupSogaModal .gsg-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Nav ya chini ifichwe kikundi kifunguliwe — composer ipate nafasi yake */
+body.gsg-open #bottomNav,
+body.gsg-open .bottom-nav,
+body.gsg-open #skhBottomNav,
+body.gsg-open .bottom-nav-main,
+body.gsg-open .bottom-area-wrapper { display: none !important; }
+body.gsg-open { overflow: hidden !important; }
+
+/* ---------------- 12. RESET YA VITUFE VIDOGO ----------------
+   css/26-design-system.css inaweka `button { min-height: 40px }` kwa touch
+   targets za ukurasa mzima. Ndani ya kikundi vitendo vya pili (jibu, reaction,
+   chips, kadi) ni vidogo kwa makusudi — nav cards na composer zinabaki 36-70px. */
+#skhGroupSogaModal .gsg-acts > button,
+#skhGroupSogaModal .gsg-acts .gsg-rx button,
+#skhGroupSogaModal .gsg-rx button,
+#skhGroupSogaModal .gsg-pin-row,
+#skhGroupSogaModal .gsg-menu-row,
+#skhGroupSogaModal .gsg-at-item,
+#skhGroupSogaModal .gsg-sheet-x,
+#skhGroupSogaModal .gsg-cbtn,
+#skhGroupSogaModal .gsg-send,
+#skhGroupSogaModal .gsg-head .skh-sheet-back,
+#skhGroupSogaModal #gsgTabs .gsg-card {
+    min-height: 0 !important;
+    max-height: none !important;
+}
+#skhGroupSogaModal .gsg-acts > button { font-size: 11px !important; line-height: 1.5 !important; }
+#skhGroupSogaModal .gsg-rx button { font-size: 10.5px !important; line-height: 1.4 !important; }
+#skhGroupSogaModal .gsg-sheet-x { font-size: 15px !important; }
+
+/* Lebo za kadi: zisitoke kwenye kadi */
+#skhGroupSogaModal .gsg-card .gsg-lb {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 3px;
+    font-size: 9.5px;
+    letter-spacing: 0;
+}
+
+/* "Tazama/Funga" ya tangazo lisibadilike mstari */
+#skhGroupSogaModal .gsg-pin-more {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 900;
+    color: #9A7615;
+}
+
+/* ---------------- 9. RESPONSIVE ---------------- */
+@media (max-width: 440px) {
+    #skhGroupSogaModal #gsgTabs { padding: 9px 8px 8px !important; gap: 7px !important; }
+    /* kadi zinabaki 76px ili "Mazungumzo" isikatwe; 4 zinaingia kwenye 360px */
+    #skhGroupSogaModal .gsg-card { width: 80px !important; height: 68px !important; border-radius: 13px !important; }
+    #skhGroupSogaModal .gsg-card .gsg-ic { width: 19px; height: 19px; }
+    #skhGroupSogaModal .gsg-card .gsg-lb { font-size: 9.5px; letter-spacing: 0; }
+    #skhGroupSogaModal .gsg-head { padding: 8px !important; gap: 6px !important; }
+    #skhGroupSogaModal .gsg-head .skh-sheet-back { width: 30px !important; height: 30px !important; border-radius: 10px !important; }
+    #skhGroupSogaModal .gsg-avatar { width: 34px !important; height: 34px !important; border-radius: 11px !important; font-size: 13.5px !important; }
+    #skhGroupSogaModal .gsg-head-txt .skh-sheet-title { font-size: 13px !important; }
+    #skhGroupSogaModal .gsg-bubble { font-size: 12.5px; }
+    #skhGroupSogaModal .gsg-mwrap { max-width: 84%; }
+    #skhGroupSogaModal .gsg-att-img, #skhGroupSogaModal .gsg-att-file { width: 190px; }
+    #skhGroupSogaModal #gsgMsgs { padding: 10px 8px 4px !important; }
+    #skhGroupSogaModal #gsgComposerRow.gsg-comp-row { padding: 7px 8px calc(7px + env(safe-area-inset-bottom, 0px)) !important; gap: 6px !important; }
+    #skhGroupSogaModal #gsgComposerRow .gsg-cbtn { width: 34px; height: 34px; min-width: 34px; }
+    #skhGroupSogaModal #gsgComposerRow .gsg-send { width: 36px; height: 36px; min-width: 36px; }
+    #skhGroupSogaModal .gsg-at-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+}
+@media (max-width: 370px) {
+    #skhGroupSogaModal .gsg-card { width: auto !important; min-width: 74px !important; height: 66px !important; padding: 0 8px !important; }
+    #skhGroupSogaModal .gsg-card .gsg-lb { font-size: 9px; letter-spacing: 0; padding: 0 2px; }
+    #skhGroupSogaModal .gsg-mwrap { max-width: 86%; }
+    #skhGroupSogaModal .gsg-at-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #skhGroupSogaModal *,
+    #skhGroupSogaModal *::before,
+    #skhGroupSogaModal *::after { animation: none !important; transition: none !important; }
+}
+
+/* ============================================================================
+   [GROUP BIZ 2026-11] NAV 9 · MSTARI MMOJA + KADI ZA MODULE MPYA
+   Wanachama haipo kwenye nav (ipo Taarifa ⓘ / More). Group Oda ≠ Oda za Kawaida.
+   ========================================================================== */
+#skhGroupSogaModal #gsgTabs {
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+}
+#skhGroupSogaModal .gsg-card { width: auto !important; min-width: 78px !important; height: 68px !important; gap: 4px !important; padding: 0 9px !important; }
+#skhGroupSogaModal .gsg-card .gsg-lb { font-size: 9.5px !important; line-height: 1.1 !important; }
+#skhGroupSogaModal .gsg-card[data-tone="teal"]  { background: #E9F6F3; color: #12796B; }
+
+/* ---------- kadi za biashara (Bidhaa / Soko / Ofa / Oda / Usafiri) ---------- */
+#skhGroupSogaModal .gsg-biz-wrap { padding: 10px 12px 16px; }
+#skhGroupSogaModal .gsg-biz-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 10px;
+}
+#skhGroupSogaModal .gsg-biz-head b { display: block; font-size: 13px; font-weight: 900; color: #0F2A22; }
+#skhGroupSogaModal .gsg-biz-head small { display: block; font-size: 10.5px; color: #7A8F89; font-weight: 650; margin-top: 1px; }
+#skhGroupSogaModal .gsg-biz-pill {
+    font-size: 9.5px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase;
+    background: #EFF6FB; color: #0B4F7A; border: 1px solid #D6E7F3; border-radius: 99px; padding: 3px 9px; white-space: nowrap;
+}
+#skhGroupSogaModal .gsg-biz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 9px; }
+#skhGroupSogaModal .gsg-biz-card {
+    background: #fff; border: 1px solid #E6EFEA; border-radius: 13px; overflow: hidden;
+    display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(15,42,34,.04);
+}
+#skhGroupSogaModal .gsg-biz-th {
+    height: 74px; background: linear-gradient(135deg,#E9F8F2,#D6EDE3);
+    display: flex; align-items: center; justify-content: center; color: #4E7A6E; border-bottom: 1px solid #E6EFEA;
+}
+#skhGroupSogaModal .gsg-biz-th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#skhGroupSogaModal .gsg-biz-bd { padding: 8px 9px 9px; display: flex; flex-direction: column; gap: 3px; }
+#skhGroupSogaModal .gsg-biz-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 16px; }
+#skhGroupSogaModal .gsg-biz-badge {
+    font-size: 8.5px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase;
+    border-radius: 5px; padding: 2px 6px; background: #F4F6F5; color: #7A8F89; border: 1px solid #E6EFEA; white-space: nowrap;
+}
+#skhGroupSogaModal .gsg-biz-badge.green { background: #E9F8F2; color: #0B5F4E; border-color: #C6EBDD; }
+#skhGroupSogaModal .gsg-biz-badge.blue  { background: #EFF6FB; color: #0B4F7A; border-color: #D6E7F3; }
+#skhGroupSogaModal .gsg-biz-badge.gold  { background: #FFF9E8; color: #7C6112; border-color: #EFE4BC; }
+#skhGroupSogaModal .gsg-biz-badge.teal  { background: #E9F6F3; color: #12796B; border-color: #CBE9DF; }
+#skhGroupSogaModal .gsg-biz-right { font-size: 9.5px; color: #9FB2AC; font-weight: 700; }
+#skhGroupSogaModal .gsg-biz-tt {
+    font-size: 12px; font-weight: 850; color: #0F2A22; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#skhGroupSogaModal .gsg-biz-sub {
+    font-size: 10px; color: #7A8F89; font-weight: 650;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhGroupSogaModal .gsg-biz-pr { font-size: 12.5px; font-weight: 900; color: #0F7E67; letter-spacing: -.2px; }
+#skhGroupSogaModal .gsg-biz-pr small { font-size: 9.5px; font-weight: 700; color: #9FB2AC; }
+#skhGroupSogaModal .gsg-biz-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 1px; }
+#skhGroupSogaModal .gsg-biz-mi { font-size: 9.5px; color: #94A8A2; font-weight: 700; }
+#skhGroupSogaModal .gsg-biz-act {
+    margin-top: 6px; border: 1px solid #C6EBDD; background: #E9F8F2; color: #0B5F4E;
+    font-weight: 850; font-size: 10.5px; padding: 6px 9px; border-radius: 9px; cursor: pointer; font-family: inherit;
+}
+#skhGroupSogaModal .gsg-biz-act:hover { background: #DCF3E9; }
+#skhGroupSogaModal .gsg-biz-note {
+    display: block; margin-top: 10px; font-size: 10px; color: #9FB2AC; font-weight: 650; line-height: 1.5;
+}
+
+/* ---------- panel ya "haijaunganishwa" ---------- */
+#skhGroupSogaModal .gsg-nc {
+    text-align: center; background: #FFFCF3; border: 1px dashed #EFE4BC; border-radius: 14px;
+    padding: 20px 16px 16px; margin-top: 4px;
+}
+#skhGroupSogaModal .gsg-nc-inline { margin-top: 10px; padding: 14px 14px 12px; text-align: left; }
+#skhGroupSogaModal .gsg-nc-ic {
+    width: 42px; height: 42px; border-radius: 13px; background: #fff; border: 1px solid #EFE4BC;
+    color: #9A7A18; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px;
+}
+#skhGroupSogaModal .gsg-nc b { display: block; font-size: 12.5px; color: #6B5510; font-weight: 900; }
+#skhGroupSogaModal .gsg-nc small { display: block; margin-top: 5px; font-size: 11px; line-height: 1.6; color: #8A7128; font-weight: 650; }
+#skhGroupSogaModal .gsg-nc ul { margin: 9px 0 0; padding-left: 16px; text-align: left; }
+#skhGroupSogaModal .gsg-nc li { font-size: 10.5px; color: #8A7128; font-weight: 650; line-height: 1.7; }
+#skhGroupSogaModal .gsg-nc-tag {
+    display: inline-block; margin-top: 11px; font-size: 8.5px; font-weight: 900; letter-spacing: .08em;
+    text-transform: uppercase; background: #fff; color: #9A7A18; border: 1px solid #EFE4BC; border-radius: 99px; padding: 3px 9px;
+}
+
+/* kadi za module mpya zisivunje upana kwenye simu */
+@media (max-width: 380px) {
+    #skhGroupSogaModal .gsg-card { width: 72px !important; }
+    #skhGroupSogaModal .gsg-biz-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}

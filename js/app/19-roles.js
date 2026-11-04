@@ -491,151 +491,80 @@ window.initExecutiveControlTowerCharts = function(data) {
     });
 };
 
-window.initProductAnalyticsCharts = function(data) {
-    // 1. Product Revenue (Horizontal Bar Chart)
-    window.safeCreateChart('chart_pRevenue', {
-        type: 'bar',
-        data: {
-            labels: ['Samsung A55', 'Tecno Camon', 'iPhone 14'],
-            datasets: [{
-                label: 'Revenue Value (TSh)',
-                data: [4500000, 3100000, 2400000],
-                backgroundColor: '#3b82f6'
-            }]
-        },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
-    });
+/* [DATA INTEGRITY 2026-11-03] Charts za Product Analytics sasa zinatokana na data
+   halisi (`products`). Chart isiyo na chanzo HAICHORWI kwa namba za kubuni —
+   canvas yake inabadilishwa na maelezo "Hakuna data" + sababu. */
+window.skhChartNoData = window.skhChartNoData || function (canvasId, msg) {
+    try {
+        const cv = document.getElementById(canvasId);
+        if (!cv || cv.dataset.skhNoData === '1') return;
+        const note = document.createElement('div');
+        note.setAttribute('data-skh-nodata-for', canvasId);
+        note.textContent = msg || 'Hakuna data iliyopakiwa kwa chart hii.';
+        note.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:90px;height:100%;'
+            + 'color:#7E9A91;font-size:12px;text-align:center;padding:10px;line-height:1.4;';
+        cv.dataset.skhNoData = '1';
+        cv.replaceWith(note);
+    } catch (e) { }
+};
 
-    // 2. Product Profit (Horizontal Bar Chart)
-    window.safeCreateChart('chart_pProfit', {
-        type: 'bar',
-        data: {
-            labels: ['Samsung A55', 'Tecno Camon', 'iPhone 14'],
-            datasets: [{
-                label: 'Profit Value (TSh)',
-                data: [1200000, 850000, 700000],
-                backgroundColor: '#10b981'
-            }]
-        },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
-    });
+window.initProductAnalyticsCharts = function (data) {
+    const snap = (data && data.prodSnap) || (window.dashboardCachedData && window.dashboardCachedData.prodSnap) || null;
+    const rows = [];
+    try { if (snap && typeof snap.forEach === 'function') snap.forEach(d => rows.push(Object.assign({ id: d.id }, d.data() || {}))); } catch (e) { }
+    if (!rows.length) return;   // empty state inaonyeshwa na ukurasa wenyewe
 
-    // 3. Product Categories (Pie Chart)
-    window.safeCreateChart('chart_pCategories', {
-        type: 'pie',
-        data: {
-            labels: ['Electronics 40%', 'Fashion 25%', 'Food 20%', 'Others 15%'],
-            datasets: [{
-                data: [40, 25, 20, 15],
-                backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#cbd5e1']
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
+    const num = (v) => parseFloat(v) || 0;
+    const chart = (id, cfg) => { try { window.safeCreateChart(id, cfg); } catch (e) { } };
 
-    // 4. Product Demand Trend (Line Chart)
-    window.safeCreateChart('chart_pDemand', {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{
-                label: 'Demand Demand Vol',
-                data: [120, 150, 140, 210, 290, 310],
-                borderColor: '#8b5cf6',
-                fill: false
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
+    /* 1. Mgawanyo wa kategoria — data halisi */
+    const cats = {};
+    rows.forEach(p => { const c = String(p.category || '').trim(); if (c) cats[c] = (cats[c] || 0) + 1; });
+    const catKeys = Object.keys(cats);
+    if (catKeys.length) {
+        chart('chart_pCategories', {
+            type: 'pie',
+            data: {
+                labels: catKeys.map(c => c + ' (' + cats[c] + ')'),
+                datasets: [{ data: catKeys.map(c => cats[c]), backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#4D91AA', '#cbd5e1'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
 
-    // 5. Product Views (Bar Chart)
-    window.safeCreateChart('chart_pViews', {
-        type: 'bar',
-        data: {
-            labels: ['Samsung', 'Tecno', 'iPhone'],
-            datasets: [{
-                label: 'View Count',
-                data: [4500, 3100, 2800],
-                backgroundColor: '#3b82f6'
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
+    /* 2. Afya ya stoo — data halisi */
+    let healthy = 0, low = 0, out = 0;
+    rows.forEach(p => {
+        const stock = num(p.stock);
+        const limit = parseInt(p.lowStockAlert, 10) || 5;
+        if (stock <= 0) out++;
+        else if (stock <= limit) low++;
+        else healthy++;
     });
-
-    // 6. Product Conversion (Funnel Chart Simulation)
-    window.safeCreateChart('chart_pConversion', {
-        type: 'bar',
-        data: {
-            labels: ['Views (10k)', 'Clicks (3k)', 'Cart (700)', 'Orders (150)'],
-            datasets: [{
-                label: 'Conversion Funnel Steps',
-                data: [10000, 3000, 700, 150],
-                backgroundColor: ['#3b82f6', '#a855f7', '#f59e0b', '#10b981']
-            }]
-        },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
-    });
-
-    // 7. Product Ratings (Donut Chart)
-    window.safeCreateChart('chart_pRatings', {
+    chart('chart_pHealth', {
         type: 'doughnut',
         data: {
-            labels: ['5 Star 60%', '4 Star 20%', '3 Star 10%', '2 Star 5%', '1 Star 5%'],
-            datasets: [{
-                data: [60, 20, 10, 5, 5],
-                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ea580c', '#dc2626']
-            }]
+            /* [STAGE B] lebo za legend kwa Kiswahili (hesabu hazijabadilishwa) */
+            labels: ['Nzuri ' + healthy, 'Stoo chini ' + low, 'Stoo imeisha ' + out],
+            datasets: [{ data: [healthy, low, out], backgroundColor: ['#10b981', '#f59e0b', '#dc2626'] }]
         },
         options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
     });
 
-    // 8. Product Returns (Bar Chart)
-    window.safeCreateChart('chart_pReturns', {
-        type: 'bar',
-        data: {
-            labels: ['Wrong Item', 'Damaged', 'Late Delivery'],
-            datasets: [{
-                label: 'Returns Reason Volume',
-                data: [15, 8, 4],
-                backgroundColor: '#ef4444'
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-
-    // 9. Product Lifecycle (Stacked Bar Chart)
-    window.safeCreateChart('chart_pLifecycle', {
-        type: 'bar',
-        data: {
-            labels: ['Lifecycle Stage Status %'],
-            datasets: [
-                { label: 'New', data: [15], backgroundColor: '#60a5fa' },
-                { label: 'Growing', data: [35], backgroundColor: '#34d399' },
-                { label: 'Peak', data: [30], backgroundColor: '#a78bfa' },
-                { label: 'Declining', data: [15], backgroundColor: '#fbbf24' },
-                { label: 'Dead', data: [5], backgroundColor: '#f87171' }
-            ]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { x: { stacked: true }, y: { stacked: true } }
-        }
-    });
-
-    // 10. Inventory Health (Donut Chart)
-    window.safeCreateChart('chart_pHealth', {
-        type: 'doughnut',
-        data: {
-            labels: ['Healthy 70%', 'Low Stock 20%', 'Out Stock 10%'],
-            datasets: [{
-                data: [70, 20, 10],
-                backgroundColor: ['#10b981', '#f59e0b', '#dc2626']
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
-    });
+    /* 3. Charts zinazohitaji vyanzo VISIVYOPAKIWA hapa: hazichorwi kwa namba za kubuni */
+    const needsSales = 'Inahitaji ripoti za mauzo (posReports) — hazipakiwi kwenye ukurasa huu.';
+    const needsVisitors = 'Inahitaji data ya wageni/wanaoangalia — haipo kwenye mfumo wa ukurasa huu.';
+    [
+        ['chart_pRevenue', needsSales],
+        ['chart_pProfit', needsSales],
+        ['chart_pDemand', 'Inahitaji historia ya mauzo kwa kipindi — haipo.'],
+        ['chart_pViews', needsVisitors],
+        ['chart_pConversion', needsVisitors],
+        ['chart_pRatings', 'Inahitaji data ya tathmini za wateja — haipo kwenye ukurasa huu.'],
+        ['chart_pReturns', 'Inahitaji rekodi za kurudisha bidhaa — hazipakiwi hapa.'],
+        ['chart_pReturnsDonut', 'Inahitaji rekodi za kurudisha bidhaa — hazipakiwi hapa.'],
+        ['chart_pLifecycle', 'Inahitaji historia ya maisha ya bidhaa kwa kipindi — haipo.']
+    ].forEach(([id, msg]) => { if (typeof window.skhChartNoData === 'function') window.skhChartNoData(id, msg); });
 };
 
 // ---------------------------------------------------------------------------

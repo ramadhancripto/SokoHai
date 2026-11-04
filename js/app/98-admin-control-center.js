@@ -376,13 +376,16 @@ import { skh } from './00-bootstrap.js';
         render(html);
     };
 
-    window.skhOpenAdminControlCenter = async function () {
+    /* `tab` ni hiari (ADDITIVE): wito wa zamani `skhOpenAdminControlCenter()`
+       unaendelea kufungua 'overview' kama awali; Business OS sidebar inaweza
+       kufungua sub-view mahususi (accounts | verify | audit | policy ...). */
+    window.skhOpenAdminControlCenter = async function (tab) {
         var m = modal(); m.style.display = 'flex';
         loading();
         try { var w = await run('adminWhoAmI', {}); ME = { admin: !!w.admin, superAdmin: !!w.superAdmin }; }
         catch (e) { ME = { admin: false, superAdmin: false }; }
         if (!ME.admin) { render(box('Hakuna ruhusa', empty('Server haikutambui kama admin. Hakikisha umeingia kwa akaunti ya admin yenye barua pepe iliyothibitishwa, kisha ujaribu tena.'))); return; }
-        window.skhAdminCCTab('overview');
+        window.skhAdminCCTab(tab && VIEWS[tab] ? tab : 'overview');
     };
 
     // Kitufe ndani ya dashibodi ya admin iliyopo (bila kubadilisha muundo wake).

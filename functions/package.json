@@ -9,7 +9,8 @@
   "main": "index.js",
   "scripts": {
     "build:shared": "node build-shared.js",
-    "local": "node local-server.js"
+    "local": "node local-server.js",
+    "local:static": "node local-server.js --static"
   },
   "dependencies": {
     "dotenv": "^18.0.4",

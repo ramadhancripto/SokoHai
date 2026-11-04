@@ -49,12 +49,43 @@ const http = require('http');
 /* ---------- 0. Load local environment ---------- */
 // `functions/.env` inasomwa kabla ya process.env kutumiwa
 // na kabla ya functions/index.js kupakiwa.
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+try {
+  require('dotenv').config({
+    path: path.join(__dirname, '.env')
+  });
+} catch (e) {
+  // [2026-11-03] dotenv haipo (static preview bila `npm install`) — tunaendelea
+  // bila functions/.env. Mode ya functions BADO inahitaji `npm --prefix functions install`.
+  if (
+    process.env.SKH_STATIC_ONLY !== '1' &&
+    !process.argv.includes('--static')
+  ) {
+    throw e;
+  }
+}
 
 const ROOT = path.resolve(__dirname, '..');
 const PORT = Number(process.env.PORT || 5055);
 const PROJECT_ID = process.env.GCLOUD_PROJECT || 'sokonet-3b847';
 const FN_PREFIX = '/__fn';
+
+/* ---------- 0b. STATIC PREVIEW MODE [2026-11-03] ----------
+   SKH_STATIC_ONLY=1 inaserve FRONTEND PEKEE:
+     • haisomi credentials zozote (hakuna key, hakuna ADC, hakuna emulator)
+     • haipaki functions/index.js wala Admin SDK — hakuna uwezo wa kuandika data
+     • hairunzi schedules
+     • ukurasa unaserved KAMA hosting inavyoserve (hakuna /__fn injection),
+       kwa hiyo app inatumia backend iliyosanidiwa kwenye js/00-config.js
+   Default = 0 → tabia ya awali ya LOCAL FUNCTIONS SERVER haijabadilika.
+
+   SKH_STATIC_ROOT=<njia> huchagua folda inayoserved (default: mzizi wa repo;
+   "dist" = build ya Netlify allow-list). */
+const STATIC_ONLY =
+  process.env.SKH_STATIC_ONLY === '1' ||
+  process.argv.includes('--static');
+const STATIC_ROOT = process.env.SKH_STATIC_ROOT
+  ? path.resolve(ROOT, process.env.SKH_STATIC_ROOT)
+  : ROOT;
 
 /* ---------- 1. Credentials ---------- */
 // [PHASE 1 SECURITY 2026-09] Emulator → faili la service account → Google ADC.
@@ -78,7 +109,10 @@ const found = EMULATOR ? null : credCandidates.find(c => fs.existsSync(c[1]));
 const keyPath = found ? found[1] : null;
 let credType = EMULATOR ? 'emulator' : '';
 
-if (!EMULATOR) {
+if (STATIC_ONLY) {
+  // [2026-11-03] Static preview: hakuna functions, hakuna credentials zinazohitajika.
+  process.env.GCLOUD_PROJECT = PROJECT_ID;
+} else if (!EMULATOR) {
   if (!keyPath) {
     console.error('\n✗ Hakuna credentials zilizopatikana.\n' +
       '  Chaguo salama (hakuna private key inayohitajika):\n' +
@@ -86,7 +120,9 @@ if (!EMULATOR) {
       '    2) Google ADC:         gcloud auth application-default login\n' +
       '                           gcloud auth application-default set-quota-project ' + PROJECT_ID + '\n' +
       '  (Njia ya zamani bado inakubalika: SKH_SERVICE_ACCOUNT=/njia/key.json au ' + SAFE_KEY_PATH + ')\n' +
-      '  Usiweke credentials kwenye git/Netlify.\n');
+      '  Usiweke credentials kwenye git/Netlify.\n' +
+      '  Au endesha frontend pekee (bila credentials, bila functions):\n' +
+      '    npm run local:static      (au: node functions/local-server.js --static)\n');
     process.exit(1);
   }
 
@@ -135,15 +171,28 @@ process.env.FIREBASE_CONFIG =
 const PROD_DATA = !EMULATOR; // bila emulator → Firestore/Auth HALISI
 
 /* ---------- 2. Shared rules packaging (same as firebase predeploy) ---------- */
-try {
-  require('./build-shared.js');
-} catch (e) {
-  console.warn('⚠ build:shared:', e.message);
+if (!STATIC_ONLY) {
+  try {
+    require('./build-shared.js');
+  } catch (e) {
+    console.warn('⚠ build:shared:', e.message);
+  }
 }
 
 /* ---------- 3. Load the REAL functions ---------- */
-const functionsModule = require('./index.js');
-const admin = require('firebase-admin');
+// [2026-11-03] Static preview haipaki functions/index.js (hakuna Admin SDK,
+// hakuna uwezekano wa kuandika data).
+const functionsModule = STATIC_ONLY ? {} : require('./index.js');
+// [2026-11-03] Static preview haihitaji Admin SDK; mode ya functions inahitaji.
+const admin = STATIC_ONLY
+  ? (() => {
+      try {
+        return require('firebase-admin');
+      } catch (e) {
+        return null;
+      }
+    })()
+  : require('firebase-admin');
 
 const callables = {};
 const httpsFns = {};
@@ -659,9 +708,19 @@ function emulatorClientConfig() {
 
 function serveIndex(res) {
   let html = fs.readFileSync(
-    path.join(ROOT, 'index.html'),
+    path.join(STATIC_ROOT, 'index.html'),
     'utf8'
   );
+
+  // [2026-11-03] Static preview: serve the page EXACTLY as hosting serves it.
+  // No /__fn injection — the app uses the backend configured in js/00-config.js.
+  if (STATIC_ONLY) {
+    res.writeHead(200, {
+      'Content-Type': MIME['.html'],
+      'Cache-Control': 'no-store'
+    });
+    return res.end(html);
+  }
 
   const emu = emulatorClientConfig();
 
@@ -722,10 +781,10 @@ function serveStatic(req, res, urlObj) {
   }
 
   const file = path.normalize(
-    path.join(ROOT, pathname)
+    path.join(STATIC_ROOT, pathname)
   );
 
-  if (!file.startsWith(ROOT + path.sep)) {
+  if (!file.startsWith(STATIC_ROOT + path.sep)) {
     res.writeHead(403);
     return res.end();
   }
@@ -1053,7 +1112,9 @@ server.listen(
     console.log(
       ' Credentials : ' +
       (
-        EMULATOR
+        STATIC_ONLY
+          ? 'hakuna (static preview — backend halisi inatumika)'
+          : EMULATOR
           ? 'emulator (hazihitajiki)'
           : found[0] +
             ' [' +
@@ -1091,36 +1152,51 @@ server.listen(
       '/<jina>'
     );
 
-    console.log(
-      ' Callables   : ' +
-      Object.keys(callables).length +
-      '   HTTPS: ' +
-      Object.keys(httpsFns).length +
-      '   Schedules: ' +
-      Object.keys(schedules).length +
-      (
-        SCHEDULES_ENABLED
-          ? ' (ZIMEWASHWA)'
-          : ' (zimezimwa — SKH_RUN_SCHEDULES=1 kuwasha)'
-      )
-    );
+    if (STATIC_ONLY) {
+      // [2026-11-03] Static preview: hakuna callables/schedules zinazopakiwa.
+      console.log(
+        ' Hali        : STATIC PREVIEW — frontend pekee, bila functions'
+      );
 
-    console.log(
-      ' Netlify site kwenye kompyuta HII: fungua console na uendeshe'
-    );
+      console.log(
+        ' Root        : ' + STATIC_ROOT
+      );
 
-    console.log(
-      "   skhUseLocalFunctions('http://localhost:" +
-      PORT +
-      FN_PREFIX +
-      "')"
-    );
+      console.log(
+        ' Data        : app inatumia backend iliyosanidiwa (js/00-config.js)'
+      );
+    } else {
+      console.log(
+        ' Callables   : ' +
+        Object.keys(callables).length +
+        '   HTTPS: ' +
+        Object.keys(httpsFns).length +
+        '   Schedules: ' +
+        Object.keys(schedules).length +
+        (
+          SCHEDULES_ENABLED
+            ? ' (ZIMEWASHWA)'
+            : ' (zimezimwa — SKH_RUN_SCHEDULES=1 kuwasha)'
+        )
+      );
+
+      console.log(
+        ' Netlify site kwenye kompyuta HII: fungua console na uendeshe'
+      );
+
+      console.log(
+        "   skhUseLocalFunctions('http://localhost:" +
+        PORT +
+        FN_PREFIX +
+        "')"
+      );
+    }
 
     console.log(
       ' ─────────────────────────────────────────────\n'
     );
 
-    if (LAN_EXPOSED) {
+    if (LAN_EXPOSED && !STATIC_ONLY) {
       console.warn(
         '⚠ SKH_HOST=' +
         HOST +
@@ -1135,7 +1211,7 @@ server.listen(
       );
     }
 
-    startSchedules();
+    if (!STATIC_ONLY) startSchedules();
   }
 );
 

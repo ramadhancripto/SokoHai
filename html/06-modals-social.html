@@ -2,8 +2,9 @@
 <div id="chatModal" class="overlay-menu" style="z-index: 7800; padding:0;">
     <div class="chat-card" style="background:#ffffff; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.45); animation: popIn 0.3s ease-out;">
         <div class="chat-head-bar">
-            <button id="chatBackBtn" class="ch-hbtn" onclick="document.getElementById('nfShell') ? window.skhNegoFormClose() : window.skhChatBackToList()" title="Rudi kwenye orodha" aria-label="Rudi">
-                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <button id="chatBackBtn" class="ch-back-btn" onclick="document.getElementById('nfShell') ? window.skhNegoFormClose() : window.skhChatBackToList()" title="Rudi kwenye orodha ya mazungumzo" aria-label="Rudi kwenye orodha">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <span class="ch-back-lbl">Rudi</span>
             </button>
             <button id="chatHeaderAvatar" type="button" class="chat-head-avatar" onclick="window.skhChatOpenPartnerProfile()" aria-label="Fungua wasifu"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#0B4F7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg></button>
             <button type="button" class="ch-head-id" onclick="window.skhChatOpenPartnerProfile()" aria-label="Fungua wasifu">
@@ -11,6 +12,12 @@
                 <small id="chatSub" class="ch-head-sub"></small>
             </button>
             <div class="ch-head-right">
+                <button id="chatAudioCallBtn" class="ch-hbtn" type="button" onclick="window.skhChatCall('audio')" title="Simu ya sauti" aria-label="Simu ya sauti">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2.1z"/></svg>
+                </button>
+                <button id="chatVideoCallBtn" class="ch-hbtn" type="button" onclick="window.skhChatCall('video')" title="Simu ya video" aria-label="Simu ya video">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                </button>
                 <button id="chatSearchBtn" class="ch-hbtn" type="button" onclick="window.skhChatToggleSearch()" title="Tafuta kwenye mazungumzo" aria-label="Tafuta">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
                 </button>
@@ -18,6 +25,7 @@
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                 </button>
                 <div id="chatHeadMenu" class="ch-head-menu" hidden style="display:none;">
+                    <button type="button" onclick="window.skhChatToggleHeadMenu();window.skhChatToggleSearch(true)"><span class="ch-hm-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span><span>Tafuta kwenye mazungumzo</span></button>
                     <button type="button" id="chatMenuViewProfile"><span class="ch-hm-ic" id="chatMenuViewProfileIc"></span><span id="chatMenuViewProfileLbl">Tazama Wasifu / Duka</span></button>
                     <button type="button" id="chatMenuMute"><span class="ch-hm-ic" id="chatMenuMuteIc"></span><span id="chatMenuMuteLbl">Nyamazisha</span></button>
                     <button type="button" id="chatMenuArchive"><span class="ch-hm-ic" id="chatMenuArchiveIc"></span><span id="chatMenuArchiveLbl">Hifadhi (Archive)</span></button>
@@ -43,7 +51,13 @@
         <!-- Bidhaa iliyoambatishwa kwenye chat (inaonekana hadi ujumbe wa kwanza utumwe) -->
         <div id="chatAttachedProduct" style="display:none;"></div>
         <div id="chatComposer" style="position:relative; padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); background:#ffffff; display:flex; gap:8px; align-items:center; border-top:1px solid #e2e8f0; flex-shrink:0; box-shadow:0 -1px 6px rgba(15,23,42,.05);">
-            <span title="Ambatisha (Picha, Faili, Mahali, Bidhaa, Oda...)" id="chatPlusBtn" onclick="window.skhChatTogglePlusMenu(event)" style="font-size:26px; line-height:1; cursor:pointer; color:#1268A8; font-weight:900; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#eef6fb; flex-shrink:0;">+</span>
+            <div class="ch-comp-row">
+            <button type="button" id="chatPlusBtn" class="ch-cbtn" title="Ambatisha faili, picha au mahali" aria-label="Ambatisha" onclick="window.skhChatTogglePlusMenu(event)">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button type="button" id="chatEmojiBtn" class="ch-cbtn" title="Emoji na hisia" aria-label="Emoji na hisia" aria-haspopup="true" aria-expanded="false" onclick="window.skhChatToggleEmoji(event)">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
             <div id="chPlusMenu" style="display:none; position:absolute; bottom:64px; left:10px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 12px 30px rgba(15,23,42,.18); padding:6px; z-index:60; flex-direction:column; gap:2px; min-width:220px;">
                 <button type="button" class="ch-plus-item" onclick="window.skhChatPickMedia('camera')"><span><span class="skh-ico" data-ico="camera"></span></span> Kamera</button>
                 <button type="button" class="ch-plus-item" onclick="window.skhChatPickMedia('gallery')"><span><span class="skh-ico" data-ico="image"></span></span> Picha &amp; Video</button>
@@ -52,12 +66,49 @@
                 <button type="button" class="ch-plus-item" onclick="window.skhChatAttachProduct()"><span><span class="skh-ico" data-ico="cart"></span></span> Bidhaa (Product)</button>
                 <button type="button" class="ch-plus-item" onclick="window.skhChatAttachOrder()"><span><span class="skh-ico" data-ico="cart"></span></span> Oda (Order)</button>
             </div>
-            <input type="text" id="chatInput" placeholder="Andika ujumbe..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" style="flex:1; min-width:0; padding:11px 16px; border-radius:24px; border:1px solid #cbd5e1; outline:none; font-size:15px; background:#f8fafc; color:#173B56; caret-color:#1268A8;">
-            <span title="Rekodi Sauti" aria-label="Rekodi Sauti" onclick="toggleVoiceRecord()" id="voiceBtn" style="cursor:pointer; color:#54656F; display:inline-flex; align-items:center;"><span class="skh-ico" data-ico="phone"></span></span>
-            <button id="chatSendBtn" type="button" onclick="sendMessage()" aria-label="Tuma ujumbe" style="background:#18A982; color:white; border:none; border-radius:50%; width:46px; height:46px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 8px rgba(18,104,168,.35);">
+            <div class="ch-comp-field">
+                <input type="text" id="chatInput" placeholder="Andika ujumbe..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}">
+            </div>
+            <button type="button" id="voiceBtn" class="ch-cbtn" title="Rekodi ujumbe wa sauti" aria-label="Rekodi ujumbe wa sauti" onclick="toggleVoiceRecord()">
+                <svg class="ch-mic-ic" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+            <button type="button" id="chatTradeBtn" class="ch-cbtn ch-cbtn-trade" title="Biashara: bidhaa, oda, ofa" aria-label="Biashara" aria-haspopup="true" aria-expanded="false" onclick="window.skhChatToggleTrade(event)">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+            </button>
+            <button id="chatSendBtn" type="button" onclick="sendMessage()" aria-label="Tuma ujumbe">
                 <svg class="ch-send-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 <svg class="ch-save-icon" hidden width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
+            </div>
+            <div id="chRecChip" class="ch-rec-chip" hidden>
+                <span class="ch-rec-dot" aria-hidden="true"></span>
+                <b id="chRecTime">0:00</b>
+                <span class="ch-rec-lbl">Inarekodi… gonga kipaza sauti kutuma</span>
+                <button type="button" class="ch-rec-stop" onclick="toggleVoiceRecord()" aria-label="Acha na tuma">Acha na tuma</button>
+            </div>
+            <div id="chEmojiPop" class="ch-pop" hidden role="dialog" aria-label="Emoji na hisia">
+                <div class="ch-pop-title">Emoji &amp; hisia</div>
+                <div class="ch-emoji-grid" id="chEmojiGrid"></div>
+            </div>
+            <div id="chTradePop" class="ch-pop" hidden role="dialog" aria-label="Biashara">
+                <div class="ch-pop-title">Biashara</div>
+                <button type="button" class="ch-pop-item" onclick="window.skhChatPopClose();window.skhChatAttachProduct()">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+                    <span>Tuma Bidhaa</span>
+                </button>
+                <button type="button" class="ch-pop-item" onclick="window.skhChatPopClose();window.skhChatAttachOrder()">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+                    <span>Tuma Oda</span>
+                </button>
+                <button type="button" class="ch-pop-item" onclick="window.skhChatPopClose();window.skhChatMakeOffer()">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    <span>Toa Ofa / Pendekeza Bei</span>
+                </button>
+                <button type="button" class="ch-pop-item" onclick="window.skhChatPopClose();window.skhChatAttachLocation()">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4z"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                    <span>Tuma Mahali (Pickup)</span>
+                </button>
+            </div>
         </div>
             </div>
         </div>

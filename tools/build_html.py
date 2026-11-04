@@ -13,9 +13,22 @@ Matumizi:
 
 Kanuni: mkutano wa vipande NI byte-exact — index.html inayotokana na `build`
 inalingana 100% na faili ya asili (hakuna mabadiliko ya runtime).
+
+[STAGE 0 — ULINZI WA MAREKEBISHO, 2026-11-03]
+Tatizo lililogundulika: vipande vya html/ vilikuwa vimechelewa nyuma ya
+index.html. `build` ilifyonza index.html kimya kimya na kupoteza moduli 4 za
+JS na stylesheet 8 (chat shell, calls, publish outbox, ad badges, sell studio,
+variant studio, n.k.).
+Suluhisho: `build` sasa inalinganisha marejeo ya asset (src=/href= za .js/.css)
+kati ya index.html iliyopo na matokeo mapya. Kama matokeo mapya yangekosa
+asset yoyote iliyopo, `build` INATAKA KUKATAA kuandika na kuorodhesha
+zilizopotea. `--force` inaruhusu kuandika hata hivyo (uamuzi wa mtu).
+Hii ni nyongeza pekee: hakuna tabia iliyopo iliyobadilishwa wakati hakuna
+asset inayopotea.
 """
 import io
 import os
+import re
 import sys
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -57,6 +70,19 @@ def read(path):
 def write(path, s):
     with io.open(path, 'w', encoding='utf-8') as f:
         f.write(s)
+
+
+# ---------------------------------------------------------------
+# [STAGE 0] Marejeo ya asset: src="..." / href="..." za .js na .css.
+# Hutumika kuhakikisha `build` haipotezi moduli wala stylesheet.
+# ---------------------------------------------------------------
+# [CACHE-BUST 2026-11-03] `?v=...` ya cache-busting haipaswi kuhesabiwa kama
+# "asset imepotea": tunakamata njia pekee (bila query/fragment).
+ASSET_RE = re.compile(r'(?:src|href)\s*=\s*"([^"?#]+\.(?:js|css))(?:\?[^"#]*)?"', re.IGNORECASE)
+
+
+def asset_refs(text):
+    return set(ASSET_RE.findall(text or ''))
 
 
 def fragment_ranges(text):
@@ -111,8 +137,35 @@ def do_build():
         if not os.path.exists(p):
             raise SystemExit('Kipande kinakosekana: %s' % p)
         parts.append(read(p))
-    write(INDEX, ''.join(parts))
-    print('BUILD OK: %d vipande -> index.html (%d chars)' % (len(parts), sum(len(x) for x in parts)))
+    built = ''.join(parts)
+
+    # [STAGE 0] Lindi la usalama: usiandike ikiwa moduli/stylesheet itapotea.
+    current = read(INDEX) if os.path.exists(INDEX) else None
+    if current is not None:
+        before, after = asset_refs(current), asset_refs(built)
+        lost, gained = sorted(before - after), sorted(after - before)
+        if gained:
+            print('  + asset mpya: %d' % len(gained))
+            for a in gained:
+                print('      + %s' % a)
+        if lost:
+            if '--force' in sys.argv:
+                print('  ! asset zinazopotea (--force imetumika):')
+                for a in lost:
+                    print('      - %s' % a)
+            else:
+                print('')
+                print('BUILD IMEKATAA: index.html ingepoteza asset %d:' % len(lost))
+                for a in lost:
+                    print('   - %s' % a)
+                print('')
+                print('index.html HAIJABADILISHWA. Vipande vya html/ vimechelewa nyuma;')
+                print('sahihisha vipande kwanza (au tumia --force ukiwa na uhakika).')
+                return 1
+
+    write(INDEX, built)
+    print('BUILD OK: %d vipande -> index.html (%d chars)' % (len(parts), len(built)))
+    return 0
 
 
 def do_check():
@@ -139,7 +192,7 @@ if __name__ == '__main__':
     if cmd == 'split':
         do_split()
     elif cmd == 'build':
-        do_build()
+        sys.exit(do_build())
     elif cmd == 'check':
         sys.exit(do_check())
     else:

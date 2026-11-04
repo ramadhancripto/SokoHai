@@ -1,0 +1,449 @@
+/* ============================================================================
+   SOKOHAI — 54) MAONI + TATHMINI POLISH  (2026-11-04)
+   ----------------------------------------------------------------------------
+   OMBI LA MTUMIAJI:
+     "Sehemu ya Maoni iweke vizuri, ifunguke na ioneshe vizuri maoni ya watu
+      na tathmini nzuri."
+
+   TATIZO LA KWELI (lililopimwa):
+     1) `css/21-discovery-maoni.css` HAIKUWA imepakiwa kwenye index.html —
+        kwa hiyo `.maoni-layer` ilikuwa `position:static` (sheet haikufunguka
+        juu ya bidhaa, ilijitupa chini ya ukurasa), hakuna scrim, hakuna
+        paneli, na kadi za maoni zilikuwa hazina mtindo wowote.
+        (Link imeongezwa kwenye index.html + html/00-head.html.)
+     2) Bloki ya tathmini ilikuwa mstari mmoja mfupi: "–" + "Bado hakuna
+        tathmini" — haikuonyeshi mgawanyo wa nyota wala kadi za wateja.
+
+   FAILI HILI: safu ya kuweka mwonekano (presentation only). Haliingilii
+   mantiki ya 35-comments.js wala 39-product-showcase.js; linaongeza tu
+   madarasa mapya (`pm-rv-*`) na kupamba yaliyopo (`pm-rev-*`, `skh-cm-*`).
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1) SHEET YA MAONI — kichwa, grip, kitufe cha kufunga
+   --------------------------------------------------------------------------- */
+html body #maoniLayer {
+    position: absolute;
+    inset: 0;
+    z-index: 120;                 /* juu ya vitendo vya kadi, chini ya modal nyingine */
+}
+.maoni-sheet {
+    background: #f7f9fc;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -18px 50px rgba(2, 18, 38, .34);
+}
+.maoni-head {
+    background: #fff;
+    padding-top: 10px;
+    border-bottom: 1px solid #eef2f7;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
+}
+.maoni-grip { background: #cbd5e1; width: 44px; height: 4px; }
+.maoni-head-row { padding: 0 16px 12px; gap: 10px; }
+.maoni-head h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -.2px;
+    color: #0f172a;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.maoni-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #e8f7f2;
+    color: #0E7A5F;
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1;
+}
+.maoni-count:empty { display: none; }
+.maoni-x {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e6ecf3;
+    background: #fff;
+    color: #334155;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+.maoni-x:hover { background: #f1f5f9; color: #0f172a; }
+
+/* Mwili: unascroll, composer inabaki chini */
+.maoni-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 12px 14px 12px;
+    scrollbar-width: thin;
+}
+.maoni-body::-webkit-scrollbar { width: 8px; }
+.maoni-body::-webkit-scrollbar-thumb { background: #dbe3ee; border-radius: 999px; }
+
+/* ---------------------------------------------------------------------------
+   2) KADI YA TATHMINI (markup mpya: pm-rv-*)
+   --------------------------------------------------------------------------- */
+.pm-rv-card {
+    background: #fff;
+    border: 1px solid #e9eef5;
+    border-radius: 18px;
+    padding: 14px;
+    margin: 0 0 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+}
+.pm-rv-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.pm-rv-scorebox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.pm-rv-avg {
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1;
+    color: #0f172a;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+}
+.pm-rv-card.is-empty .pm-rv-avg { color: #cbd5e1; }
+.pm-rv-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pm-rv-count { font-size: 12px; font-weight: 700; color: #64748b; }
+
+/* Nyota */
+.pm-rv-card .pm-stars, .pm-rev-item .pm-stars { display: inline-flex; gap: 2px; }
+.pm-rv-card .pm-star svg, .pm-rev-item .pm-star svg { width: 14px; height: 14px; }
+.pm-star { color: #dfe6ee; display: inline-flex; }
+.pm-star--on, .pm-star.pm-star--on { color: #f5a623; }
+
+/* Kitufe cha "Toa Tathmini" */
+.pm-rv-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 0;
+    background: #18A982;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(24, 169, 130, .28);
+    transition: transform .12s ease, background .15s ease;
+}
+.pm-rv-cta:hover { background: #149375; transform: translateY(-1px); }
+.pm-rv-cta svg { width: 14px; height: 14px; }
+
+/* Mgawanyo wa nyota 5 → 1 */
+.pm-rv-bars { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.pm-rv-bar-row {
+    display: grid;
+    grid-template-columns: 34px 1fr 26px;
+    align-items: center;
+    gap: 9px;
+}
+.pm-rv-bar-lbl {
+    display: inline-flex; align-items: center; gap: 2px;
+    font-size: 11.5px; font-weight: 700; color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+.pm-rv-bar-star { display: inline-flex; color: #f5a623; }
+.pm-rv-bar-star svg { width: 11px; height: 11px; }
+.pm-rv-bar {
+    height: 7px;
+    border-radius: 999px;
+    background: #eef2f7;
+    overflow: hidden;
+    display: block;
+}
+.pm-rv-bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #18A982, #46d3a9);
+    transition: width .35s ease;
+}
+.pm-rv-bar-n {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Hali tupu — tathmini hakuna bado */
+.pm-rv-empty-state {
+    margin-top: 12px;
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    padding: 11px 12px;
+    border-radius: 14px;
+    background: #f8fbfa;
+    border: 1px dashed #cfe9e0;
+}
+.pm-rv-empty-ic {
+    flex: 0 0 auto;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: #e8f7f2;
+    color: #18A982;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.pm-rv-empty-state b { display: block; font-size: 13px; color: #0f172a; }
+.pm-rv-empty-state p {
+    margin: 3px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+/* ---------------------------------------------------------------------------
+   3) KADI ZA TATHMINI ZA WATEJA (pm-rev-item)
+   --------------------------------------------------------------------------- */
+.maoni-body .pm-rev-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
+.maoni-body .pm-rev-item {
+    background: #fff;
+    border: 1px solid #e9eef5;
+    border-radius: 16px;
+    padding: 12px 13px;
+    border-bottom: 1px solid #e9eef5;   /* inashinda css/21 `.pm-rev-item{border-bottom:...}` */
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .04);
+}
+.maoni-body .pm-rev-item:last-child { border-bottom: 1px solid #e9eef5; }
+.maoni-body .pm-rev-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.maoni-body .pm-rev-top b { font-size: 13px; color: #0f172a; }
+.maoni-body .pm-rev-date { margin-left: auto; font-size: 11px; color: #94a3b8; font-weight: 600; }
+.maoni-body .pm-rev-text { margin: 4px 0 0; font-size: 13.5px; line-height: 1.6; color: #334155; }
+.maoni-body .pm-rev-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 800;
+    padding: 3px 8px; border-radius: 999px;
+    background: #eef6ff; color: #1d4ed8; border: 1px solid #dbeafe;
+    margin-top: 6px;
+}
+.maoni-body .pm-rev-badge.vd { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.maoni-body .pm-rev-media { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.maoni-body .pm-rev-thumb { padding: 0; border: 0; background: none; cursor: zoom-in; }
+.maoni-body .pm-rev-thumb img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; }
+.maoni-body .pm-rev-more {
+    width: 100%;
+    margin: 4px 0 12px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+    background: #fff;
+    color: #0E7A5F;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+   4) MAONI YA WATU (skh-cm-*) — orodha, kadi, hali tupu
+   --------------------------------------------------------------------------- */
+.maoni-body .skh-cm-headbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 4px 0 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+.maoni-body .skh-cm-headbar h5 {
+    display: inline-flex;           /* css/21 ilificha; tunairudisha kwa mtindo mdogo */
+    margin: 0;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: #64748b;
+}
+.maoni-body .skh-cm-sort { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.maoni-body .skh-cm-sort button {
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.maoni-body .skh-cm-sort button:hover { border-color: #cbd5e1; color: #0f172a; }
+.maoni-body .skh-cm-sort button.active {
+    background: #18A982;
+    border-color: #18A982;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(24, 169, 130, .25);
+}
+
+.maoni-body .skh-cm-list { display: flex; flex-direction: column; gap: 9px; }
+.maoni-body .skh-cm-item {
+    background: #fff;
+    border: 1px solid #e9eef5;
+    border-radius: 16px;
+    padding: 11px 12px;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .04);
+}
+.maoni-body .skh-cm-item.reply {
+    background: #fbfdff;
+    border-color: #eef2f7;
+    margin-left: 16px;
+}
+.maoni-body .skh-cm-head { display: flex; align-items: center; gap: 9px; }
+.maoni-body .skh-cm-who { display: flex; flex-direction: column; min-width: 0; }
+.maoni-body .skh-cm-who b { font-size: 13px; color: #0f172a; }
+.maoni-body .skh-cm-time { font-size: 11px; color: #94a3b8; font-weight: 600; }
+.maoni-body .skh-cm-text { display: block; margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: #334155; }
+.maoni-body .skh-cm-actions { display: flex; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
+.maoni-body .skh-cm-actions button {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 9px;
+    border-radius: 9px;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.maoni-body .skh-cm-actions button:hover { background: #f1f5f9; color: #0f172a; }
+.maoni-body .skh-cm-actions button.on { color: #e11d48; }
+
+/* Hali tupu ya maoni — si maandishi yaliyotelekezwa */
+.maoni-body .skh-cm-empty {
+    margin: 2px 0 12px;
+    padding: 22px 16px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px dashed #dbe3ee;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #64748b;
+}
+.maoni-body .skh-cm-empty::before {
+    content: "";
+    display: block;
+    width: 40px; height: 40px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: #e8f7f2 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2318A982' stroke-width='2' stroke-linecap='round'><path d='M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.7 8.7 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z'/></svg>") center/21px no-repeat;
+}
+
+/* ---------------------------------------------------------------------------
+   5) COMPOSER — inabaki chini, inaonekana kama sanduku la kuandika
+   --------------------------------------------------------------------------- */
+.maoni-body .skh-cm-composer {
+    position: sticky;
+    bottom: -12px;
+    margin: 12px -14px -12px;
+    padding: 10px 14px 14px;
+    background: linear-gradient(180deg, rgba(247, 249, 252, 0), #f7f9fc 22%);
+    border-top: 1px solid #eef2f7;
+    backdrop-filter: blur(6px);
+}
+.maoni-body .skh-cm-inputrow {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    padding: 5px 5px 5px 6px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+}
+.maoni-body .skh-cm-inputrow:focus-within {
+    border-color: #18A982;
+    box-shadow: 0 0 0 3px rgba(24, 169, 130, .14);
+}
+.maoni-body #skhCommentInput {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: 13.5px;
+    color: #0f172a;
+    padding: 8px 2px;
+}
+.maoni-body .skh-cm-send {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 999px;
+    padding: 9px 16px;
+    background: #18A982;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.maoni-body .skh-cm-send:hover { background: #149375; }
+.maoni-body .skh-cm-tools { margin-top: 7px; }
+.maoni-body .skh-cm-elig.none,
+.maoni-body .skh-cm-elig-note {
+    font-size: 11.5px;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+/* ---------------------------------------------------------------------------
+   6) KARATASI / SIMU
+   --------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+    .maoni-sheet {
+        height: 92dvh;
+        max-height: 92dvh;
+        border-radius: 22px 22px 0 0;
+    }
+    .maoni-head h3 { font-size: 16px; }
+    .pm-rv-avg { font-size: 30px; }
+    .pm-rv-top { gap: 10px; }
+    .pm-rv-cta { padding: 8px 12px; font-size: 12px; }
+    .maoni-body { padding: 10px 12px 12px; }
+    .maoni-body .skh-cm-composer { margin: 12px -12px -12px; padding: 10px 12px 14px; }
+    .maoni-body .skh-cm-sort { width: 100%; margin-left: 0; }
+    .maoni-body .skh-cm-sort button { flex: 1 1 0; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pm-rv-bar > i { transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   7) MAREKEBISHO MADOGO (2026-11-04)
+   --------------------------------------------------------------------------- */
+.pm-rv-title { font-size: 13.5px; font-weight: 800; color: #0f172a; display: block; }
+.pm-rv-card.is-empty .pm-rv-count { color: #94a3b8; font-weight: 600; }
+.maoni-body .skh-cm-headbar h5 { gap: 5px; }
+.maoni-body .skh-cm-headbar h5 span { font-weight: 700; color: #94a3b8; letter-spacing: 0; }
+@media (max-width: 640px) {
+    .maoni-body .skh-cm-headbar h5 { font-size: 11.5px; }
+    .maoni-body .skh-cm-sort button { font-size: 11px; padding: 7px 8px; }
+}

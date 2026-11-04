@@ -1,0 +1,53 @@
+warning: in the working copy of 'LOCAL-SERVER-MWONGOZO.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'css/26-design-system.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'firestore.rules', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/local-server.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'functions/reporting-authority.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'html/00-head.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'html/03-modals-core.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'html/05-modals-market.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'html/06-modals-social.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'html/21-scripts.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/00-bootstrap.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/01-market.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/03-dashboard.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/10-dashboard-tabs.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/15-pos-sales.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/17-hub.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/19-roles.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/20-logistics.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/26-image-zoom.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/30-seller-products.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/32-i18n.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/35-comments.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/39-product-showcase.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/56-nav-back.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/69-chat-groups.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/73-group-soga.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'js/app/98-admin-control-center.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/build_html.py', LF will be replaced by CRLF the next time Git touches it
+html/05-modals-market.html:29: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:31: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:108: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:161: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:163: trailing whitespace.
+[32m+[m[41m            [m
+index.html:540: trailing whitespace.
+[32m+[m[41m            [m
+index.html:542: trailing whitespace.
+[32m+[m[41m            [m
+index.html:619: trailing whitespace.
+[32m+[m[41m            [m
+index.html:672: trailing whitespace.
+[32m+[m[41m            [m
+index.html:674: trailing whitespace.
+[32m+[m[41m            [m

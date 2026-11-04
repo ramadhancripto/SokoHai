@@ -647,16 +647,50 @@ window.submitPredefinedExpense = async function() {
     } catch(e) { alert("Kosa: " + e.message); }
 };
 
-window.submitAddNewStaff = async function() {
-    const sName = document.getElementById('staffNewName').value.trim();
-    const sSalary = parseFloat(document.getElementById('staffSalary').value) || 0;
-    const sRole = document.getElementById('staffNewRole').value;
-    const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
+/* [PHASE3-DEEP 2026-11-04] Nafasi za kazi zinazotumika tayari kwenye mfumo
+   (chanzo: 14-map-onboarding.js seeder + 21-sokopay.js role checks). Hakuna orodha ya pili. */
+window.SKH_STAFF_ROLES = window.SKH_STAFF_ROLES || ["Manager", "Cashier", "Storekeeper", "Pharmacist"];
 
-    if(!sName || sSalary <= 0) { 
-        alert(T('pos_staff_name_salary', "Enter the staff name and salary.")); 
-        return; 
+window.submitAddNewStaff = async function() {
+    /* [PHASE3-DEEP 2026-11-04] Uthibitisho kamili + kinga ya double-click.
+       Collection (`shop_staff`) na fields hazijabadilishwa. */
+    const nameEl = document.getElementById('staffNewName');
+    const salaryEl = document.getElementById('staffSalary');
+    const roleEl = document.getElementById('staffNewRole');
+    const btn = document.getElementById('staffSaveBtn');
+    const msg = document.getElementById('staffFormMsg');
+    const setMsg = (text, kind) => {
+        if (!msg) return;
+        msg.textContent = text || '';
+        msg.style.color = kind === 'error' ? '#b91c1c' : (kind === 'success' ? '#15803d' : '#526962');
+    };
+    const fail = (text) => { setMsg(text, 'error'); alert(text); return false; };
+
+    if (!nameEl || !salaryEl || !roleEl) {
+        return fail(T('pos_staff_form_missing', "Fomu ya mfanyakazi haijapakiwa. Fungua ukurasa wa Wafanyakazi & Mishahara."));
     }
+    if (window.__skhStaffSaving) return false;              /* double-click guard */
+
+    const sName = String(nameEl.value || '').trim();
+    const rawSalary = String(salaryEl.value || '').trim();
+    const sSalary = Number(rawSalary);
+    const sRole = String(roleEl.value || '').trim();
+    const ownerUid = skh.currentUserData?.shopOwnerUid || skh.currentUser?.uid;
+    const allowedRoles = Array.isArray(window.SKH_STAFF_ROLES) ? window.SKH_STAFF_ROLES : [];
+
+    if (!sName) return fail(T('pos_staff_name_required', "Weka jina la mfanyakazi."));
+    if (rawSalary === '') return fail(T('pos_staff_salary_required', "Weka mshahara wa mfanyakazi."));
+    if (!isFinite(sSalary) || isNaN(sSalary)) return fail(T('pos_staff_salary_number', "Mshahara lazima uwe namba."));
+    if (sSalary <= 0) return fail(T('pos_staff_salary_positive', "Mshahara lazima uwe zaidi ya sifuri."));
+    if (!allowedRoles.length || allowedRoles.indexOf(sRole) === -1) {
+        return fail(T('pos_staff_role_invalid', "Chagua nafasi halali ya mfanyakazi."));
+    }
+    if (!ownerUid) return fail(T('pos_staff_no_owner', "Hakuna akaunti ya duka iliyothibitishwa."));
+
+    window.__skhStaffSaving = true;
+    const prevLabel = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Inahifadhi…'; }
+    setMsg('Inahifadhi…', 'info');
 
     try {
         await skh.addDoc(skh.collection(skh.db, "shop_staff"), {
@@ -664,21 +698,34 @@ window.submitAddNewStaff = async function() {
             name: sName,
             salary: sSalary,
             role: sRole,
-            paidSalary: 0,           
-            pendingSalary: sSalary,  
-            performanceScore: 100,    
-            performanceLevel: "Bronze", 
-            tasks: [],               
+            paidSalary: 0,
+            pendingSalary: sSalary,
+            performanceScore: 100,
+            performanceLevel: "Bronze",
+            tasks: [],
             status: "active",
             createdAt: new Date().toISOString()
         });
 
-        alert(T('pos_staff_registered', 'Staff "{n}" registered and added to Payroll.', { n: sName }));
-        document.getElementById('staffNewName').value = '';
-        document.getElementById('staffSalary').value = '';
-        loadAndRenderDashboard();
-    } catch(e) { 
-        alert("Kosa: " + e.message); 
+        const okText = T('pos_staff_registered', 'Staff "{n}" registered and added to Payroll.', { n: sName });
+        setMsg(okText, 'success');
+        nameEl.value = '';
+        salaryEl.value = '';
+        if (typeof loadAndRenderDashboard === 'function') loadAndRenderDashboard();
+        /* Business OS: sasisha orodha papo hapo bila kuacha ukurasa */
+        if (window.activeDashboardTab === 'staff' && typeof window.switchDashTab === 'function') {
+            setTimeout(() => { try { window.switchDashTab('staff'); } catch (e) {} }, 60);
+        }
+        alert(okText);
+        return true;
+    } catch(e) {
+        const errText = "Kosa: " + (e && e.message ? e.message : e);
+        setMsg(errText, 'error');
+        alert(errText);
+        return false;
+    } finally {
+        window.__skhStaffSaving = false;
+        if (btn) { btn.disabled = false; btn.textContent = prevLabel || 'Hifadhi Mfanyakazi'; }
     }
 };
 

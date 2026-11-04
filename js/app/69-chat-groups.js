@@ -1593,29 +1593,68 @@ import { skh as _skh } from './00-bootstrap.js';
     }
 
     /* ================= [R22 §11] SOGA "+" MENU: Contact / Chagua Contacts / Create Group ================= */
+    /* [STAGE B REFINEMENT 2026-11-04] Menyu ya `+` — vikundi viwili:
+         A · MAWASILIANO  : Mazungumzo mapya, Kikundi kipya (+ chagua wanachama)
+         B · SHUGHULI ZA BIASHARA : Shiriki Bidhaa, Tangaza Biashara, Omba Bei
+       TABIA YA ZAMANI IMEHIFADHIWA KIKAMILIFU: dispatch ya `data-spm`
+       (contact / contacts / creategrp) iko pale pale chini na inafanya kazi
+       kama ilivyokuwa. Vitu vipya vinatumia handlers zilizopo:
+         shareproduct → skhContactPicker → openChatWithUser → skhChatAttachProduct
+         advertise    → skhOpenMarketplaceAdsStudio (Ads Studio iliyopo)
+         makeoffer    → imezimwa: skhChatMakeOffer inahitaji bidhaa ndani ya
+                        mazungumzo (productCtx), hakuna workflow ya inbox-level.
+       Hakuna "Ongeza mteja" / "Tangaza ofa (broadcast)": hakuna backend. */
     window.skhSogaPlusMenu = function (e) {
         try { if (e && e.stopPropagation) e.stopPropagation(); } catch (eS) {}
         var old = document.getElementById('skhSogaPlusMenu');
         if (old) { old.remove(); return; }
+
+        var IC = {
+            chat: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg>',
+            group: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+            people: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+            share: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="16 3 21 3 21 8"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+            megaphone: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-7 18-2.5-7.5z"/></svg>',
+            tag: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1-.6-1.4V4a1 1 0 0 1 1-1h8a2 2 0 0 1 1.4.6l7.4 7.4a2 2 0 0 1 0 2.4z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>'
+        };
+
+        function item(spm, tone, icon, title, sub, extra) {
+            return '<button type="button" class="skh-spm-item" ' + (spm ? 'data-spm="' + spm + '"' : 'disabled aria-disabled="true"') + '>'
+                + '<span class="skh-spm-ic ' + tone + '">' + icon + '</span>'
+                + '<span class="skh-spm-txt"><b>' + title + '</b><small>' + sub + '</small></span>'
+                + (extra || '') + '</button>';
+        }
+
         var m = document.createElement('div');
         m.id = 'skhSogaPlusMenu';
-        m.style.cssText = 'position:fixed;top:64px;right:12px;background:#fff;border:1px solid #dbe4ed;border-radius:16px;box-shadow:0 18px 40px rgba(9,32,63,.28);padding:8px;z-index:100050;min-width:230px;';
+        m.className = 'skh-spm';
+        m.setAttribute('role', 'menu');
         m.innerHTML =
-            '<button type="button" data-spm="contact"   style="width:100%;display:flex;gap:12px;align-items:center;border:none;background:transparent;padding:11px 12px;border-radius:12px;cursor:pointer;font-family:inherit;">'
-                + '<span style="width:36px;height:36px;border-radius:11px;background:#eef6fc;display:flex;align-items:center;justify-content:center;font-size:17px;">👤</span>'
-                + '<span style="text-align:left;"><b style="display:block;font-size:13.5px;color:#0f172a;">' + tk('spm_contact', 'Contact') + '</b><small style="color:#64748b;font-size:11px;">' + tk('spm_contact_sub', 'Anza soga na mtu mmoja') + '</small></span></button>'
-            + '<button type="button" data-spm="contacts"  style="width:100%;display:flex;gap:12px;align-items:center;border:none;background:transparent;padding:11px 12px;border-radius:12px;cursor:pointer;font-family:inherit;">'
-                + '<span style="width:36px;height:36px;border-radius:11px;background:#eaf8f1;display:flex;align-items:center;justify-content:center;font-size:17px;">👥</span>'
-                + '<span style="text-align:left;"><b style="display:block;font-size:13.5px;color:#0f172a;">' + tk('spm_contacts', 'Chagua Contacts') + '</b><small style="color:#64748b;font-size:11px;">' + tk('spm_contacts_sub', 'Watu wengi — kisha unde kikundi') + '</small></span></button>'
-            + '<button type="button" data-spm="creategrp" style="width:100%;display:flex;gap:12px;align-items:center;border:none;background:transparent;padding:11px 12px;border-radius:12px;cursor:pointer;font-family:inherit;">'
-                + '<span style="width:36px;height:36px;border-radius:11px;background:#fdf6e3;display:flex;align-items:center;justify-content:center;font-size:17px;">#</span>'
-                + '<span style="text-align:left;"><b style="display:block;font-size:13.5px;color:#0f172a;">' + tk('spm_creategrp', 'Create Group') + '</b><small style="color:#64748b;font-size:11px;">' + tk('spm_creategrp_sub', 'Unda kikundi kipya cha soga') + '</small></span></button>';
+              '<div class="skh-spm-group">A · Mawasiliano</div>'
+            + item('contact', 'green', IC.chat, tk('spm_contact', 'Mazungumzo mapya'), tk('spm_contact_sub', 'Anza soga na mtu mmoja'))
+            + item('creategrp', 'green', IC.group, tk('spm_creategrp', 'Kikundi kipya'), tk('spm_creategrp_sub', 'Unda kikundi cha biashara'))
+            + item('contacts', 'green', IC.people, tk('spm_contacts', 'Chagua wanachama'), tk('spm_contacts_sub', 'Watu wengi — kisha unda kikundi'))
+            + '<div class="skh-spm-sep"></div>'
+            + '<div class="skh-spm-group">B · Shughuli za biashara</div>'
+            + item('shareproduct', 'blue', IC.share, 'Shiriki Bidhaa', 'Chagua mtu, kisha tuma bidhaa yako')
+            + item('advertise', 'gold', IC.megaphone, 'Tangaza Biashara', 'Fungua Ads Studio ya SokoHai')
+            + item(null, 'gold', IC.tag, 'Omba Bei', 'Fanywa ndani ya mazungumzo yenye bidhaa');
+
         document.body.appendChild(m);
+
+        // Tabia ya zamani: kufunga kwa kubonyeza nje. Sasa pia Escape + focus.
         setTimeout(function () {
             document.addEventListener('click', function off(ev) {
                 if (!m.contains(ev.target)) { m.remove(); document.removeEventListener('click', off); }
             });
+            try { var f = m.querySelector('.skh-spm-item'); if (f) f.focus(); } catch (eF) {}
         }, 0);
+        // Escape inafunga menyu tu (haigusi inbox).
+        document.addEventListener('keydown', function onEsc(ev) {
+            if (ev.key === 'Escape' && document.getElementById('skhSogaPlusMenu') === m) {
+                ev.stopPropagation(); m.remove(); document.removeEventListener('keydown', onEsc);
+            }
+        }, true);
     };
 
     /* ================= CONTACTS (account ya sasa: partners wa DIRECT conversations) ================= */
@@ -1847,6 +1886,22 @@ import { skh as _skh } from './00-bootstrap.js';
                 } else if (spm === 'contacts') {
                     window.skhContactPicker({ multi: true, onDone: function (uids) { if (uids && uids.length) openCreateModal(uids); else openCreateModal(); } });
                 } else if (spm === 'creategrp') openCreateModal();
+                else if (spm === 'shareproduct') {
+                    /* Shiriki Bidhaa: chagua mtu -> fungua mazungumzo -> picker ya
+                       bidhaa ZILIZOPO (skhChatAttachProduct, 34-chat-core.js:4133). */
+                    window.skhContactPicker({ multi: false, onDone: function (u) {
+                        if (!u) return;
+                        var c = (PKR.data || []).find(function (x) { return x.uid === u; });
+                        try { window.openChatWithUser(u, (c && c.name) || ''); } catch (eC) {}
+                        setTimeout(function () {
+                            if (typeof window.skhChatAttachProduct === 'function') window.skhChatAttachProduct();
+                        }, 1400);
+                    } });
+                } else if (spm === 'advertise') {
+                    /* Tangaza Biashara: Ads Studio iliyopo (101-marketplace-ads-studio.js). */
+                    if (typeof window.skhOpenMarketplaceAdsStudio === 'function') window.skhOpenMarketplaceAdsStudio();
+                    else if (typeof window.showToast === 'function') window.showToast('Ads Studio haipatikani kwa sasa.', 'error');
+                }
                 return;
             }
             var act = b.getAttribute('data-act');

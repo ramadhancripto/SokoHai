@@ -183,7 +183,7 @@ window.renderPosCart = function() {
                         <label style="display:flex; align-items:center; gap:4px; font-size:12.5px; color:var(--primary-blue); font-weight:bold; margin-top:4px; cursor:pointer;"> <input type="checkbox" ${item.isWholesale ? 'checked':''} onchange="window.toggleCartItemPriceMode(${index}, this.checked)" style="width:14px; height:14px;">
                             Uza kwa bei ya Jumla (TSh ${item.wholesalePrice.toLocaleString()})
                         </label> ` : ''}
-                </div> <div style="display:flex; align-items:center; gap:8px;"> <button type="button" onclick="window.updatePosCartQty(${index}, -1)" style="width:28px; height:28px; border-radius:5px; border:1px solid #cbd5e1; background:white; font-weight:bold; cursor:pointer;">-</button> <b>${item.qty}</b> <button type="button" onclick="window.updatePosCartQty(${index}, 1)" style="width:28px; height:28px; border-radius:5px; border:none; background:var(--primary-blue); color:white; font-weight:bold; cursor:pointer;">+</button> <button type="button" onclick="window.removePosCartItem(${index})" style="padding:6px 10px; border:none; background:#fee2e2; color:#ef4444; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px;"></button> </div> </div>`;
+                </div> <div style="display:flex; align-items:center; gap:8px;"> <button type="button" onclick="window.updatePosCartQty(${index}, -1)" style="width:28px; height:28px; border-radius:5px; border:1px solid #cbd5e1; background:white; font-weight:bold; cursor:pointer;">-</button> <b>${item.qty}</b> <button type="button" onclick="window.updatePosCartQty(${index}, 1)" style="width:28px; height:28px; border-radius:5px; border:none; background:var(--primary-blue); color:white; font-weight:bold; cursor:pointer;">+</button> <button type="button" onclick="window.removePosCartItem(${index})" style="padding:6px 10px; border:none; background:#fee2e2; color:#ef4444; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px;" aria-label="Ondoa bidhaa hii kwenye kikapu" title="Ondoa bidhaa hii">&#10005;</button> </div> </div>`;
     });
 
     container.innerHTML = html;
@@ -2214,18 +2214,33 @@ window.saveShopSettings = async function() {
     if(!skh.currentUser) return;
 
     const btn = document.getElementById('btnSaveShopSettings');
-    btn.disabled = true;
-    btn.innerHTML = " Inahifadhi sheria...";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = " Inahifadhi sheria...";
+    }
 
-    const settingsObj = {
-        stockMode: document.getElementById('setStockMode').value,
-        showSales: document.getElementById('setRepSales').checked,
-        showProfit: document.getElementById('setRepProfit').checked,
-        showLowStock: document.getElementById('setRepLowStock').checked,
-        showDebts: document.getElementById('setRepDebts').checked,
-        cashierCanViewProfit: document.getElementById('setCashierViewProfit').checked,
-        cashierCanEditStock: document.getElementById('setCashierEditStock').checked
+    // [SETTINGS SAVE FIX 2026-11-03] Kinga ya null: sehemu isiyokuwepo kwenye fomu
+    // isitupishe TypeError; thamani ya awali (au default) inabaki. Hakuna key inayoondolewa
+    // na hakuna sheria ya biashara inayobadilishwa — tunaunganisha tu kile kilichopo.
+    const prev = (skh.currentUserData && skh.currentUserData.shopSettings) || {};
+    const readCheck = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el ? !!el.checked : (typeof fallback === 'boolean' ? fallback : false);
     };
+    const readValue = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el ? el.value : fallback;
+    };
+
+    const settingsObj = Object.assign({}, prev, {
+        stockMode: readValue('setStockMode', prev.stockMode || 'strict'),
+        showSales: readCheck('setRepSales', prev.showSales !== false),
+        showProfit: readCheck('setRepProfit', prev.showProfit !== false),
+        showLowStock: readCheck('setRepLowStock', prev.showLowStock !== false),
+        showDebts: readCheck('setRepDebts', prev.showDebts !== false),
+        cashierCanViewProfit: readCheck('setCashierViewProfit', prev.cashierCanViewProfit === true),
+        cashierCanEditStock: readCheck('setCashierEditStock', prev.cashierCanEditStock === true)
+    });
 
     try {
         await skh.updateDoc(skh.doc(skh.db, "users", skh.currentUser.uid), {
@@ -2242,8 +2257,10 @@ window.saveShopSettings = async function() {
     } catch(e) {
         alert("Hitilafu: " + e.message);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = " HIFADHI USANIDI WA BIASHARA";
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = " HIFADHI USANIDI WA BIASHARA";
+        }
     }
 };
 

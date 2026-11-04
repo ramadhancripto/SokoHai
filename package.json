@@ -5,7 +5,7 @@
   "type": "module",
   "devDependencies": {
     "jsdom": "^29.1.1",
-    "playwright": "^1.47.2"
+    "playwright": "^1.64.1"
   },
   "scripts": {
     "test:nego": "node tools/test_nego_form.mjs",
@@ -48,6 +48,10 @@
     "pesapal:sandbox": "node tools/pesapal_sandbox_check.mjs",
     "test:e2e:emulator": "bash tools/e2e-emulator/run.sh",
     "test:inventory:emulator": "firebase emulators:exec --only firestore,auth --project demo-sokohai \"node tools/test_inventory_rules.mjs && node tools/test_inventory_reservation_emulator.mjs\"",
-    "test:browser:seller-ux": "node tools/product_preview_server.mjs & sleep 2 && node tools/test_seller_form_ux.mjs && node tools/measure_seller_form.mjs; kill %1"
+    "test:browser:seller-ux": "node tools/product_preview_server.mjs & sleep 2 && node tools/test_seller_form_ux.mjs && node tools/measure_seller_form.mjs; kill %1",
+    "local:static": "node functions/local-server.js --static",
+    "test:local:static": "node tools/test_local_server_static_mode.mjs",
+    "test:business-os": "node tools/test_business_os_stage1a.mjs",
+    "test:business-os:browser": "node tools/test_business_os_browser.mjs"
   }
 }

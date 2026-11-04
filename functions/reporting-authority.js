@@ -34,10 +34,49 @@ function periodBounds(input = {}) {
 function inPeriod(value, period) { const date = dateValue(value); return !!date && date.toISOString() >= period.start && date.toISOString() < period.end; }
 function scoped(record, request) { return record && record.businessId === request.businessId && record.storeId === request.storeId; }
 function identity(item) { return { productId: item.productId || null, variantId: item.variantId || null, sku: item.sku || null, unitId: item.unitId || null, inventoryKey: item.inventoryKey || null }; }
+
+/* [BOS COCKPIT 2026-11-03] Mfululizo wa kila siku (daily[]) kwa charts.
+   Ni hesabu PEKEE kutoka rekodi zilezile zilizosomwa (sales/adjustments/voids/ledger):
+   hakuna collection mpya, hakuna chanzo kipya cha ukweli, hakuna mabadiliko ya semantics. */
+const DAY_MS = 86400000;
+const DAILY_MAX_DAYS = 370;
+
+function dayKey(value) {
+  const date = dateValue(value);
+  return date ? date.toISOString().slice(0, 10) : null;
+}
+
+function dailyRow(map, key) {
+  if (!key) return null;
+  if (!map[key]) map[key] = { date: key, grossSales: 0, completedSales: 0, returnedAmount: 0, voidValue: 0, expenses: 0, netSales: 0 };
+  return map[key];
+}
+
+function buildDailySeries(map, period) {
+  const startMs = dateValue(period.start).getTime();
+  const endMs = dateValue(period.end).getTime();
+  const totalDays = Math.ceil((endMs - startMs) / DAY_MS);
+  const rows = [];
+  if (totalDays > 0 && totalDays <= DAILY_MAX_DAYS) {
+    // Kila siku ya kipindi inaonekana (sifuri ikiwa hakuna shughuli) — charts zisipotee.
+    for (let i = 0; i < totalDays; i++) {
+      const key = new Date(startMs + i * DAY_MS).toISOString().slice(0, 10);
+      const row = map[key] || { date: key, grossSales: 0, completedSales: 0, returnedAmount: 0, voidValue: 0, expenses: 0, netSales: 0 };
+      rows.push(row);
+    }
+  } else {
+    // Kipindi kirefu sana: siku zenye shughuli pekee (payload ndogo).
+    Object.keys(map).sort().forEach(key => rows.push(map[key]));
+  }
+  return rows.map(row => {
+    const netSales = Math.round((row.grossSales - row.returnedAmount - row.voidValue) * 100) / 100;
+    return { date: row.date, grossSales: Math.round(row.grossSales * 100) / 100, completedSales: row.completedSales, returnedAmount: Math.round(row.returnedAmount * 100) / 100, voidValue: Math.round(row.voidValue * 100) / 100, expenses: Math.round(row.expenses * 100) / 100, netSales };
+  });
+}
 function add(map, key, value) { map[key] = (map[key] || 0) + value; }
 
 function emptyReport(period, request) {
-  return { period: { ...period, endSemantics: 'exclusive' }, scope: { businessId: request.businessId, storeId: request.storeId }, statusSemantics: { grossSales: 'COMPLETED sale totals', returns: 'RETURNED adjustments only', refunds: 'REFUNDED only; pending remains pending', credits: 'CREDIT_ADJUSTED only; pending remains pending', voids: 'VOIDED sale value, financial reversal remains pending' }, summary: { grossSales: 0, completedSales: 0, pendingPaymentSales: 0, creditSales: 0, returnedAmount: 0, refundedAmount: 0, refundsPending: 0, creditAdjusted: 0, creditOutstanding: 0, voidValue: 0, netSales: 0, cashCollected: 0, digitalPending: 0, expenses: 0, supplierPayments: 0 }, payments: {}, cashiers: {}, products: {}, inventory: { SALE: 0, RETURN: 0, VOID: 0, ADJUSTMENT: 0 }, transactions: [] };
+  return { period: { ...period, endSemantics: 'exclusive' }, scope: { businessId: request.businessId, storeId: request.storeId }, statusSemantics: { grossSales: 'COMPLETED sale totals', returns: 'RETURNED adjustments only', refunds: 'REFUNDED only; pending remains pending', credits: 'CREDIT_ADJUSTED only; pending remains pending', voids: 'VOIDED sale value, financial reversal remains pending', daily: 'UTC day buckets derived from the same records (sales.completedAt, adjustments.updatedAt, voids.updatedAt, ledger.date)' }, summary: { grossSales: 0, completedSales: 0, pendingPaymentSales: 0, creditSales: 0, returnedAmount: 0, refundedAmount: 0, refundsPending: 0, creditAdjusted: 0, creditOutstanding: 0, voidValue: 0, netSales: 0, cashCollected: 0, digitalPending: 0, expenses: 0, supplierPayments: 0 }, payments: {}, cashiers: {}, products: {}, inventory: { SALE: 0, RETURN: 0, VOID: 0, ADJUSTMENT: 0 }, transactions: [], daily: [] };
 }
 
 function aggregateReport(input = {}) {
@@ -53,6 +92,7 @@ function aggregateReport(input = {}) {
   const movements = Array.isArray(input.movements) ? input.movements : [];
   const ledger = Array.isArray(input.ledger) ? input.ledger : [];
   const saleById = {};
+  const dailyMap = {};
 
   for (const sale of sales) {
     if (!scoped(sale, request) || !inPeriod(sale.completedAt || sale.createdAt, period)) continue;
@@ -63,6 +103,8 @@ function aggregateReport(input = {}) {
     report.summary.completedSales += sale.status === 'COMPLETED' ? 1 : 0;
     if (sale.status !== 'COMPLETED') continue;
     report.summary.grossSales += total;
+    const saleDay = dailyRow(dailyMap, dayKey(sale.completedAt || sale.createdAt));
+    if (saleDay) { saleDay.grossSales += total; saleDay.completedSales += 1; }
     if (payment.status && PENDING_PAYMENT.has(payment.status)) report.summary.pendingPaymentSales += 1;
     if (payment.method === 'Deni' || payment.method === 'Awamu') { report.summary.creditSales += total; report.summary.creditOutstanding += number(payment.outstanding); }
     if (payment.method === 'Cash') report.summary.cashCollected += number(payment.cashReceived) - number(payment.change);
@@ -84,19 +126,27 @@ function aggregateReport(input = {}) {
   for (const adjustment of adjustments) {
     if (!scoped(adjustment, request) || !inPeriod(adjustment.updatedAt || adjustment.createdAt, period)) continue;
     const amount = number(adjustment.amount);
-    if (adjustment.status === 'RETURNED') { report.summary.returnedAmount += amount; report.summary.netSales -= amount; if (adjustment.paymentStatus === 'REFUNDED') report.summary.refundedAmount += amount; else if (adjustment.paymentStatus === 'REFUND_PENDING') report.summary.refundsPending += amount; if (adjustment.paymentStatus === 'CREDIT_ADJUSTED') report.summary.creditAdjusted += amount; }
+    if (adjustment.status === 'RETURNED') {
+      const retDay = dailyRow(dailyMap, dayKey(adjustment.updatedAt || adjustment.createdAt));
+      if (retDay) retDay.returnedAmount += amount;
+      report.summary.returnedAmount += amount; report.summary.netSales -= amount; if (adjustment.paymentStatus === 'REFUNDED') report.summary.refundedAmount += amount; else if (adjustment.paymentStatus === 'REFUND_PENDING') report.summary.refundsPending += amount; if (adjustment.paymentStatus === 'CREDIT_ADJUSTED') report.summary.creditAdjusted += amount; }
     for (const item of Array.isArray(adjustment.items) ? adjustment.items : []) { const key = item.inventoryKey || [item.productId, item.variantId || 'product', item.unitId || 'default'].join(':'); if (!report.products[key]) report.products[key] = { ...identity(item), quantitySold: 0, quantityReturned: 0, quantityVoided: 0, grossSales: 0, returnsValue: 0, netSales: 0 }; report.products[key].quantityReturned += number(item.quantity); report.products[key].returnsValue += number(item.amount); report.products[key].netSales -= number(item.amount); }
   }
   for (const refund of refunds) if (scoped(refund, request) && inPeriod(refund.updatedAt || refund.createdAt, period)) { const amount = number(refund.amount); if (refund.status === 'REFUNDED') report.summary.refundedAmount += amount; else if (['REFUND_PENDING', 'REFUND_REQUESTED'].includes(refund.status)) report.summary.refundsPending += amount; }
   const seenCredits = new Set();
   for (const credit of credits) if (scoped(credit, request) && inPeriod(credit.updatedAt || credit.createdAt, period) && !seenCredits.has(credit.creditAdjustmentId || credit.idempotencyKey)) { seenCredits.add(credit.creditAdjustmentId || credit.idempotencyKey); if (credit.status === 'CREDIT_ADJUSTED') report.summary.creditAdjusted += number(credit.amount); else if (credit.status === 'CREDIT_ADJUSTMENT_PENDING') report.summary.digitalPending += number(credit.amount); }
-  for (const voidRecord of voids) if (scoped(voidRecord, request) && inPeriod(voidRecord.updatedAt || voidRecord.createdAt, period) && voidRecord.status === 'VOIDED') { report.summary.voidValue += number(voidRecord.originalSaleTotal); for (const item of Array.isArray(voidRecord.items) ? voidRecord.items : []) { const key = item.inventoryKey || [item.productId, item.variantId || 'product', item.unitId || 'default'].join(':'); if (!report.products[key]) report.products[key] = { ...identity(item), quantitySold: 0, quantityReturned: 0, quantityVoided: 0, grossSales: 0, returnsValue: 0, netSales: 0 }; report.products[key].quantityVoided += number(item.quantity); } }
+  for (const voidRecord of voids) if (scoped(voidRecord, request) && inPeriod(voidRecord.updatedAt || voidRecord.createdAt, period) && voidRecord.status === 'VOIDED') { report.summary.voidValue += number(voidRecord.originalSaleTotal);
+    const voidDay = dailyRow(dailyMap, dayKey(voidRecord.updatedAt || voidRecord.createdAt));
+    if (voidDay) voidDay.voidValue += number(voidRecord.originalSaleTotal); for (const item of Array.isArray(voidRecord.items) ? voidRecord.items : []) { const key = item.inventoryKey || [item.productId, item.variantId || 'product', item.unitId || 'default'].join(':'); if (!report.products[key]) report.products[key] = { ...identity(item), quantitySold: 0, quantityReturned: 0, quantityVoided: 0, grossSales: 0, returnsValue: 0, netSales: 0 }; report.products[key].quantityVoided += number(item.quantity); } }
   for (const movement of movements) if (scoped(movement, request) && inPeriod(movement.createdAt, period)) { const type = movement.movementType || movement.type || 'ADJUSTMENT'; if (report.inventory[type] === undefined) report.inventory[type] = 0; report.inventory[type] += Math.abs(number(movement.quantity)); }
-  for (const entry of ledger) if (scoped(entry, request) && inPeriod(entry.date || entry.createdAt, period)) { const supplier = entry.type === 'supplier_payment' || !!entry.supplierId || /supplier|ununuzi|purchase order/i.test(`${entry.title || ''} ${entry.notes || ''}`); if (entry.type === 'expense' && supplier) report.summary.supplierPayments += number(entry.amount); else if (entry.type === 'expense') report.summary.expenses += number(entry.amount); else if (entry.type === 'supplier_payment') report.summary.supplierPayments += number(entry.amount); }
+  for (const entry of ledger) if (scoped(entry, request) && inPeriod(entry.date || entry.createdAt, period)) { const supplier = entry.type === 'supplier_payment' || !!entry.supplierId || /supplier|ununuzi|purchase order/i.test(`${entry.title || ''} ${entry.notes || ''}`); const ledgerDay = dailyRow(dailyMap, dayKey(entry.date || entry.createdAt));
+    if (ledgerDay && entry.type === 'expense') ledgerDay.expenses += number(entry.amount);
+    if (entry.type === 'expense' && supplier) report.summary.supplierPayments += number(entry.amount); else if (entry.type === 'expense') report.summary.expenses += number(entry.amount); else if (entry.type === 'supplier_payment') report.summary.supplierPayments += number(entry.amount); }
   report.summary.netSales = report.summary.grossSales - report.summary.returnedAmount - report.summary.voidValue;
   for (const row of Object.values(report.products)) row.netSales = row.grossSales - row.returnsValue;
   report.summary.netSales = Math.round(report.summary.netSales * 100) / 100;
   for (const row of Object.values(report.products)) ['quantitySold', 'quantityReturned', 'quantityVoided'].forEach(k => { if (typeof row[k] === 'number') row[k] = Q.sumQuantities([row[k]]); });
+  report.daily = buildDailySeries(dailyMap, period);
   if (report.inventory && typeof report.inventory === 'object') Object.keys(report.inventory).forEach(k => { if (typeof report.inventory[k] === 'number') report.inventory[k] = Q.sumQuantities([report.inventory[k]]); });
   return report;
 }
@@ -119,4 +169,4 @@ exports.posReports = onCall({ region: REGION }, async req => {
   return aggregateReport({ period, ...request, sales, adjustments, refunds, credits, voids, movements, ledger });
 });
 
-exports._testing = { periodBounds, aggregateReport, inPeriod };
+exports._testing = { periodBounds, aggregateReport, inPeriod, buildDailySeries, dayKey };

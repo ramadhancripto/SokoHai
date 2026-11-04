@@ -1,0 +1,1034 @@
+/* ============================================================================
+   SOKOHAI — 52 · PRODUCT CARD & PRODUCT DETAILS REFINEMENT
+   ----------------------------------------------------------------------------
+   UI REFINEMENT PEKEE. Hakuna handler, business logic, quantity engine, cart,
+   checkout, variants, comments au data iliyobadilishwa.
+
+   Inashughulikia:
+     A. Product Card (feed)        — jina kushoto / bei kulia, unit, stock, chevron
+     B. Product Details hero       — background nyepesi
+     C. Action block (in-flow)     — qty + jumla + Nunua sasa + vitufe 2 + Patana Bei
+     D. Inquire card               — "Uliza kuhusu bidhaa" (comments iliyopo)
+   ----------------------------------------------------------------------------
+   Mzigo: hii ni stylesheet ya MWISHO kabisa kwenye <head>, hivyo inashinda
+   css/18-product-showcase.css, css/21-discovery-maoni.css, css/26-design-system.css
+   na css/31-product-actions.css kwa sehemu zilizoainishwa hapa (bila kufuta
+   sheria zao nyingine).
+   ============================================================================ */
+
+/* ==========================================================================
+   A. PRODUCT CARD
+   DOM haijabadilishwa (contract test inalinda mpangilio huu):
+     .skh-body > .skh-title · .skh-price (+ .skh-unit) · .skh-meta-row
+   Mpangilio mpya unafanywa kwa CSS grid pekee:
+     row 1:  jina (kushoto)  |  bei + unit (kulia)
+     row 2:  stock chip · eneo · "Fungua ›"
+   ========================================================================== */
+
+.feed-card-box.skh-card--product .skh-body {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    column-gap: 8px !important;
+    row-gap: 6px !important;
+    padding: 9px 11px 10px !important;
+}
+
+/* Jina — kushoto, mistari 2 */
+.feed-card-box.skh-card--product .skh-body > .skh-title {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    order: 0 !important;
+    min-height: 0 !important;            /* kadi iwe compact */
+    margin: 0 !important;
+    font-size: 12.8px !important;
+    line-height: 1.34 !important;
+    font-weight: 700 !important;
+    -webkit-line-clamp: 2 !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+}
+
+/* Bei — kulia, namba juu na unit ndogo chini */
+.feed-card-box.skh-card--product .skh-body > .skh-price {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    order: 1 !important;
+    justify-self: end !important;
+    align-self: start !important;
+    text-align: right !important;
+    font-size: 13.8px !important;
+    line-height: 1.22 !important;
+    letter-spacing: -.03em !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+.feed-card-box.skh-card--product .skh-unit {
+    display: block !important;
+    margin-top: 1px !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    letter-spacing: .01em !important;
+    color: #7D8B94 !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+}
+
+/* Mstari wa chini — unafungwa chini ya kadi */
+.feed-card-box.skh-card--product .skh-body > .skh-meta-row {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    order: 9 !important;
+    margin-top: 0 !important;
+    padding-top: 7px !important;
+    gap: 6px !important;
+}
+
+.feed-card-box.skh-card--product .skh-stock-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    height: 18px !important;
+    padding: 0 7px !important;
+    border-radius: 6px !important;
+    font-size: 9.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: .01em !important;
+    line-height: 18px !important;
+    white-space: nowrap !important;
+    border: 1px solid transparent !important;
+    flex: 0 0 auto !important;
+}
+.feed-card-box.skh-card--product .skh-stock-chip::before {
+    content: '' !important;
+    width: 5px !important;
+    height: 5px !important;
+    border-radius: 50% !important;
+    background: currentColor !important;
+    flex: 0 0 auto !important;
+}
+.feed-card-box.skh-card--product .skh-stock-chip--in  { color: #12775A !important; background: #E9F7F1 !important; border-color: #D3EDE2 !important; }
+.feed-card-box.skh-card--product .skh-stock-chip--low { color: #96650B !important; background: #FDF4E4 !important; border-color: #F2E3C4 !important; }
+.feed-card-box.skh-card--product .skh-stock-chip--out { color: #B42318 !important; background: #FDEDEC !important; border-color: #F6D7D3 !important; }
+
+.feed-card-box.skh-card--product .skh-pinloc {
+    color: #6B7A82 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Affordance: ishara nyepesi kwamba kadi inafunguka */
+.feed-card-box.skh-card--product .skh-open-chevron {
+    margin-left: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    flex: 0 0 auto !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    color: #0F6E55 !important;
+    white-space: nowrap !important;
+}
+.feed-card-box.skh-card--product .skh-open-chevron svg {
+    width: 11px !important;
+    height: 11px !important;
+    transition: transform .18s ease !important;
+}
+.feed-card-box.skh-card--product:hover .skh-open-chevron svg { transform: translateX(2px) !important; }
+
+/* Kadi nyembamba (rails za simu, < 190px): rudi kwenye mpangilio wa safu
+   ili jina lisikatike katikati ya neno. Container query inatumia
+   `container-type: inline-size` iliyopo tayari kwenye css/45. */
+@container postcard (max-width: 199px) {
+    .feed-card-box.skh-card--product .skh-body {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+    }
+    .feed-card-box.skh-card--product .skh-body > .skh-title {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        overflow-wrap: normal !important;
+    }
+    .feed-card-box.skh-card--product .skh-body > .skh-price {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        justify-self: start !important;
+        text-align: left !important;
+        font-size: 13.5px !important;
+    }
+    .feed-card-box.skh-card--product .skh-unit { text-align: left !important; }
+    .feed-card-box.skh-card--product .skh-body > .skh-meta-row {
+        grid-row: 3 !important;
+        flex-wrap: nowrap !important;          /* chip · eneo · chevron: mstari mmoja */
+    }
+    .feed-card-box.skh-card--product .skh-pinloc { flex: 1 1 auto !important; min-width: 0 !important; }
+}
+
+/* Skrini ndogo */
+@media (max-width: 420px) {
+    .feed-card-box.skh-card--product .skh-body { column-gap: 6px !important; }
+    .feed-card-box.skh-card--product .skh-body > .skh-price { font-size: 13.4px !important; }
+    .feed-card-box.skh-card--product .skh-open-chevron span { display: none !important; }
+}
+
+/* ==========================================================================
+   B. PRODUCT DETAILS — HERO
+   Background nyepesi: picha ndiyo shujaa, hakuna bendi nyeusi.
+   ========================================================================== */
+#productModal .pm-hero,
+#productModal .pm-hero .pm-image-slider,
+#productModal .pm-hero .pm-image-slider > div {
+    background: #F7F9F8 !important;
+}
+#productModal .pm-hero video { background: #F7F9F8 !important; }
+
+/* ==========================================================================
+   C. ACTION BLOCK — sehemu ya KAWAIDA ya layout (si sticky, si fixed,
+   haina floating, haina shadow nzito). Iko ndani ya .pm-scroll, mara
+   baada ya kichwa cha bidhaa.
+   ========================================================================== */
+#productModal .pm-scroll > .pm-bar,
+#productModal .pm-bar {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    margin: 12px 14px 4px !important;
+    padding: 12px !important;
+    padding-bottom: 12px !important;
+    border: 1px solid #E6EEEC !important;
+    border-top: 1px solid #E6EEEC !important;
+    border-radius: 16px !important;
+    background: #F7F9F8 !important;
+    box-shadow: none !important;
+}
+
+/* --- C1. Mstari wa idadi + jumla ------------------------------------------ */
+#productModal .pm-qty-row,
+#pmQtyArea {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* JS huficha mstari huu kwa stock 0 / mnada / huduma (style="display:none").
+   `!important` ya hapa chini isivuke uamuzi huo wa business logic. */
+#pmQtyArea[style*="none"] { display: none !important; }
+
+#pmQtyLabel,
+.pm-qty-lbl {
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+    color: #42544E !important;
+    white-space: nowrap !important;
+}
+
+#productModal .pm-qty {
+    height: 42px !important;
+    border: 1.5px solid #D6E4DF !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    overflow: hidden !important;
+    flex: 0 0 auto !important;
+}
+#productModal .pm-qty-btn {
+    width: 36px !important;
+    height: 100% !important;
+    background: #fff !important;
+    color: #0F6E55 !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    border: none !important;
+}
+#productModal .pm-qty-btn:active { background: #EDF5F1 !important; }
+#productModal .pm-qty-btn:disabled { color: #B9C8C3 !important; cursor: not-allowed !important; }
+#productModal #pmQty {
+    width: 44px !important;
+    height: 100% !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #16232B !important;
+    background: #fff !important;
+}
+
+#pmStockInfo {
+    margin-left: 6px !important;
+    margin-right: auto !important;   /* stock ibaki karibu na stepper */
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #5A6B72 !important;
+    white-space: nowrap !important;
+}
+#pmStockInfo.is-low { color: #96650B !important; }
+#pmStockInfo.is-out { color: #B42318 !important; }
+
+/* Jumla — upande wa pili */
+#productModal .pm-total-row {
+    margin-left: 0 !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #5A6B72 !important;
+    white-space: nowrap !important;
+}
+#productModal .pm-total-row b,
+#productModal #pmTotalPriceCalc {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.02em !important;
+    color: #12775A !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+/* "Nunua sasa" — text link (buy-now ya awali, handler ileile: addToCart(true)) */
+#productModal .pm-buynow {
+    margin-left: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    height: 22px !important;
+    padding: 0 2px !important;
+    background: none !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    font: 800 12px/22px Inter, system-ui, sans-serif !important;
+    color: #26734D !important;
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important;
+    text-decoration-thickness: 1.5px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+}
+#productModal .pm-buynow:hover { color: #0E6E54 !important; }
+#productModal .pm-buynow:focus-visible { outline: 2px solid #18A982 !important; outline-offset: 2px !important; }
+
+/* --- C2. Vitufe ----------------------------------------------------------- */
+#pmActionArea.pm-bar-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+}
+#pmActionArea .pm-actions-row {
+    flex: 1 1 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+}
+#pmActionArea .pm-actions-wide { flex: 1 1 100% !important; }
+
+#pmActionArea .pm-bar-btn {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 14px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 1.5px solid currentColor !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    transition: background-color .16s ease, border-color .16s ease,
+                color .16s ease, transform .1s ease !important;
+}
+#pmActionArea .pm-bar-btn .pm-bar-ic { display: inline-flex !important; flex: 0 0 auto !important; }
+#pmActionArea .pm-bar-btn .pm-bar-ic svg { width: 17px !important; height: 17px !important; }
+#pmActionArea .pm-bar-btn .pm-bar-lbl { font-weight: 600 !important; }
+
+/* Rangi za mfumo (maamuzi yaliyoidhinishwa) */
+#pmActionArea .pm-bar-chat  { color: #18A982 !important; }
+#pmActionArea .pm-bar-order { color: #B8860B !important; }
+#pmActionArea .pm-bar-nego  { color: #26734D !important; }
+
+/* Hover / active / focus */
+#pmActionArea .pm-bar-chat:hover  { background: rgba(24, 169, 130, .09) !important; }
+#pmActionArea .pm-bar-order:hover { background: rgba(184, 134, 11, .10) !important; }
+#pmActionArea .pm-bar-nego:hover  { background: rgba(38, 115, 77, .09) !important; }
+#pmActionArea .pm-bar-btn:active  { transform: scale(.992) !important; }
+#pmActionArea .pm-bar-chat:active  { background: rgba(24, 169, 130, .16) !important; }
+#pmActionArea .pm-bar-order:active { background: rgba(184, 134, 11, .17) !important; }
+#pmActionArea .pm-bar-nego:active  { background: rgba(38, 115, 77, .16) !important; }
+#pmActionArea .pm-bar-btn:focus-visible {
+    outline: 2px solid currentColor !important;
+    outline-offset: 2px !important;
+}
+#pmActionArea .pm-bar-btn:disabled {
+    color: #94A3A0 !important;
+    background: #F1F5F3 !important;
+    border-color: #DCE7E3 !important;
+    cursor: not-allowed !important;
+}
+
+/* ==========================================================================
+   D. INQUIRE CARD — "Uliza kuhusu bidhaa"
+   Launcher pekee: inafungua panel ya MASWALI & MAJIBU iliyopo (35-comments.js)
+   kupitia window.skhOpenMaoni(). Hakuna mfumo mpya.
+   ========================================================================== */
+#pmInquireCard {
+    margin: 10px 14px 4px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+}
+#pmInquireCard .pm-inquire-btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 13px !important;
+    text-align: left !important;
+    border: 1px solid #E6EEEC !important;
+    border-radius: 14px !important;
+    background: #F7F9F8 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transition: background-color .16s ease, border-color .16s ease !important;
+}
+#pmInquireCard .pm-inquire-btn:hover {
+    background: #F1F7F4 !important;
+    border-color: #D3E5DF !important;
+}
+#pmInquireCard .pm-inquire-btn:focus-visible {
+    outline: 2px solid #18A982 !important;
+    outline-offset: 2px !important;
+}
+#pmInquireCard .pm-inquire-txt {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+#pmInquireCard .pm-inquire-txt b {
+    font-size: 13.5px !important;
+    font-weight: 800 !important;
+    color: #16232B !important;
+    letter-spacing: -.01em !important;
+}
+#pmInquireCard .pm-inquire-txt small {
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #6B7A82 !important;
+    line-height: 1.35 !important;
+}
+#pmInquireCard .pm-inquire-side {
+    margin-left: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    flex: 0 0 auto !important;
+    color: #0F6E55 !important;
+}
+#pmInquireCard .pm-inquire-count {
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    color: #12775A !important;
+    background: #E9F7F1 !important;
+    border: 1px solid #D3EDE2 !important;
+    padding: 2px 8px !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+}
+#pmInquireCard .pm-inquire-side svg { width: 16px !important; height: 16px !important; }
+/* Idadi ya maswali: isionekane ikiwa tupu (bidhaa isiyo na maswali) */
+#pmInquireCard .pm-inquire-count:empty { display: none !important; }
+
+/* ==========================================================================
+   E. RESPONSIVE — touch targets, hakuna kukatika, hakuna overflow
+   ========================================================================== */
+@media (max-width: 520px) {
+    #productModal .pm-bar {
+        margin: 10px 12px 2px !important;
+        padding: 11px !important;
+        gap: 9px !important;
+    }
+    #productModal .pm-qty-row { gap: 7px 8px !important; }
+    #productModal .pm-qty { height: 44px !important; }         /* touch target */
+    #productModal .pm-qty-btn { width: 40px !important; }
+    #productModal #pmQty { width: 46px !important; }
+    #pmActionArea .pm-bar-btn {
+        height: 46px !important;
+        min-height: 46px !important;
+        font-size: 13px !important;
+        padding: 0 10px !important;
+        gap: 6px !important;
+    }
+    #pmInquireCard { margin-left: 12px !important; margin-right: 12px !important; }
+    #productModal .pm-total-row b { font-size: 15px !important; }
+}
+
+@media (max-width: 360px) {
+    #pmActionArea .pm-bar-btn { font-size: 12.5px !important; gap: 5px !important; }
+    #pmActionArea .pm-bar-btn .pm-bar-ic svg { width: 15px !important; height: 15px !important; }
+    #productModal .pm-qty-lbl,
+    #pmQtyLabel { font-size: 11.5px !important; }
+}
+
+/* Tablet: usipanuke kupita kiasi — maudhui yabaki na upana unaosomeka */
+@media (min-width: 900px) and (max-width: 1180px) {
+    #productModal .pm-bar,
+    #pmInquireCard { max-width: 720px !important; }
+}
+
+/* ==========================================================================
+   F. STICKY STACK (2026-11-04) — block MBILI zinazokaa juu ya Product Details
+   ---------------------------------------------------------------------------
+   MUHIMU: huu ni uamuzi mpya wa mtumiaji (2026-11-04) unaobadilisha kanuni ya
+   awali ya "si sticky". Block mbili zinazoshikamana juu:
+     (1) #pmActionBlock — idadi + jumla + Chat · Weka Oda · Patana Bei · Lipia Sasa
+     (2) #pmInquireCard + #pmEngageRow — Uliza kuhusu bidhaa + icons
+   Zinabaki zikionekana wakati sehemu za maelezo (details, variants, usafirishaji)
+   zinascroll chini yake; zinabadilika tu bidhaa nyingine ikifunguliwa.
+   Hakuna handler, business logic wala muundo wa data uliobadilishwa.
+   ========================================================================== */
+#productModal .pm-sticky-stack {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 6 !important;
+    background: #FFFFFF !important;
+    padding: 8px 0 8px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid #E6EEEC !important;
+    box-shadow: 0 12px 20px -22px rgba(11, 31, 25, .85) !important;
+}
+
+/* ndani ya stack: bar haina margin ya nje tena (stack = block ya vitendo pekee) */
+#productModal .pm-sticky-stack > .pm-bar {
+    margin: 0 14px 2px !important;
+}
+
+/* --- F0. ENGAGEMENTS (post-style) + ULIZA ---------------------------------
+   2026-11-04 (mabadiliko ya mwisho ya mtumiaji):
+   • Engagements (Pendwa · Maoni · Shiriki · Hifadhi) ziko MARA BAADA ya
+     kichwa cha bidhaa — kama post ya Instagram/Facebook (bidhaa → row ya
+     engagements), SIO ndani ya sticky block, SIO chini ya ukurasa.
+   • Kisha zinafuata block za malipo/kupatana (sticky actions) na kadi ya
+     "Uliza kuhusu bidhaa" nje ya sticky. */
+#productModal #pmEngageRow {
+    margin: 0 8px 8px !important;
+    padding: 7px 8px 8px !important;
+    border-top: 1px solid #EFF4F2 !important;
+    border-bottom: 1px solid #EFF4F2 !important;
+}
+#productModal #pmInquireCard {
+    padding: 0 16px !important;
+    margin: 8px 0 2px !important;
+}
+
+/* --- F1. Lipia Sasa (kitufe cha msingi cha malipo) ------------------------ */
+#pmActionArea .pm-bar-pay,
+#productModal .pm-bar-pay {
+    background: #18A982 !important;
+    border-color: #18A982 !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    box-shadow: 0 10px 20px -16px rgba(24, 169, 130, .95) !important;
+}
+#pmActionArea .pm-bar-pay:hover,
+#productModal .pm-bar-pay:hover {
+    background: #15A07B !important;
+    border-color: #15A07B !important;
+    color: #FFFFFF !important;
+}
+#pmActionArea .pm-bar-pay:focus-visible,
+#productModal .pm-bar-pay:focus-visible {
+    outline: 2px solid #0E6B51 !important;
+    outline-offset: 2px !important;
+}
+#pmActionArea .pm-bar-pay .pm-bar-lbl { color: #FFFFFF !important; }
+#pmActionArea .pm-bar-pay .pm-bar-ic svg { stroke: #FFFFFF !important; }
+
+/* --- F2. Engagement row (Pendwa · Maoni · Shiriki · Hifadhi) -------------- */
+#productModal .pm-eng-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    flex-wrap: wrap !important;
+    padding: 0 10px 0 12px !important;
+    margin: 0 !important;
+}
+#productModal .pm-eng-btn {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    color: #5F7178 !important;
+    font: 700 12.2px/1 Inter, system-ui, sans-serif !important;
+    cursor: pointer !important;
+    transition: background-color .16s ease, color .16s ease, border-color .16s ease !important;
+}
+#productModal .pm-eng-btn:hover {
+    background: #F1F7F4 !important;
+    color: #0E6B51 !important;
+}
+#productModal .pm-eng-btn:focus-visible {
+    outline: 2px solid #18A982 !important;
+    outline-offset: 2px !important;
+}
+#productModal .pm-eng-ico {
+    display: inline-flex !important;
+    width: 16px !important;
+    height: 16px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+#productModal .pm-eng-ico svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke: currentColor !important;
+}
+#productModal .pm-eng-lbl { white-space: nowrap !important; }
+#productModal .pm-eng-n {
+    font-variant-numeric: tabular-nums !important;
+    font-weight: 800 !important;
+    color: #22333B !important;
+}
+#productModal .pm-eng-btn.skh-eng-active .pm-eng-lbl,
+#productModal .pm-eng-btn.skh-eng-active .pm-eng-n { color: inherit !important; }
+
+/* --- F3. Responsive ------------------------------------------------------- */
+@media (max-width: 520px) {
+    #productModal .pm-sticky-stack { padding: 6px 0 6px !important; }
+    #productModal .pm-sticky-stack > .pm-bar { margin: 0 10px 2px !important; padding: 10px !important; gap: 8px !important; }
+    #productModal #pmInquireCard { padding: 0 12px !important; margin-top: 7px !important; }
+    #productModal .pm-eng-row { padding: 7px 4px 8px !important; gap: 0 !important; margin: 0 6px 7px !important; }
+    #productModal .pm-eng-btn { padding: 8px 8px !important; font-size: 11.6px !important; min-height: 40px !important; }
+    #productModal .pm-eng-btn .pm-eng-lbl { display: none !important; }
+    #productModal .pm-eng-row .pm-eng-n { display: inline !important; }
+}
+
+/* --- F4. MAREKEBISHO: vitufe vya safu kamili (Patana Bei · Lipia Sasa) -----
+   #pmActionArea .pm-bar-btn { flex: 1 1 auto } inakuja baada ya .pm-actions-wide,
+   hivyo vitufe viwili vikikaa pamoja viligawana nafasi. Kanuni hii (specificity
+   kubwa) inahakikisha kila kitufe cha safu kamili kinachukua mstari wake. */
+#pmActionArea .pm-bar-btn.pm-actions-wide {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-column: 1 / -1 !important;
+}
+
+/* ==========================================================================
+   G. MUUZAJI + ENGAGEMENTS (2026-11-04, ombi la mtumiaji)
+   • Engagements zilizorudufu JUU YA PICHA (.pm-hero-stack) zimeondolewa;
+     safu MOJA ya engagements iko chini ya bidhaa (post-style).
+   • Kadi ya MUUZAJI (avatar · jina · uthibitisho · FUATA) imeingia kwenye
+     mtiririko wa maudhui — awali ilikuwa absolute ndani ya hero na
+     haikuonekana (css/21 haijapakiwa).
+   ========================================================================== */
+
+/* --- G1. Kadi ya muuzaji ------------------------------------------------- */
+#productModal #pmSellerCard {
+    padding: 2px 16px 12px !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+}
+#productModal #pmSellerCard .pm-seller {
+    display: flex !important;
+    align-items: center !important;
+    gap: 11px !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E6EFEA !important;
+    border-radius: 16px !important;
+    padding: 9px 11px !important;
+    cursor: pointer !important;
+    transition: border-color .16s ease, box-shadow .16s ease !important;
+}
+#productModal #pmSellerCard .pm-seller:hover {
+    border-color: #CDE6DC !important;
+    box-shadow: 0 2px 10px rgba(11, 79, 122, .06) !important;
+}
+#productModal #pmSellerCard .pm-seller:focus-visible {
+    outline: 2px solid #0E6B51 !important;
+    outline-offset: 2px !important;
+}
+#productModal #pmSellerCard .pm-seller-avatar {
+    flex: 0 0 auto !important;
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    background: #E7F6F1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+#productModal #pmSellerCard .pm-seller-avatar img,
+#productModal #pmSellerCard .pm-seller-avatar span {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+#productModal #pmSellerCard .pm-seller-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+#productModal #pmSellerCard .pm-seller-name-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+}
+#productModal #pmSellerCard .pm-seller-name-row b {
+    font: 800 15px/1.25 Inter, system-ui, sans-serif !important;
+    color: #0F172A !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
+#productModal #pmSellerCard .pm-seller-role {
+    flex: 0 0 auto !important;
+    font: 800 10.5px/1 Inter, system-ui, sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: .04em !important;
+    color: #0E7A5F !important;
+    background: #E7F6F1 !important;
+    border-radius: 999px !important;
+    padding: 4px 8px !important;
+}
+#productModal #pmSellerCard .pm-seller-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font: 600 12.5px/1.3 Inter, system-ui, sans-serif !important;
+    color: #64748B !important;
+    min-height: 0 !important;
+}
+#productModal #pmSellerCard .pm-seller-meta:empty { display: none !important; }
+#productModal #pmSellerCard .pm-seller-meta svg { width: 12px !important; height: 12px !important; flex: 0 0 auto !important; }
+#productModal #pmSellerCard .pm-seller-loc {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* --- G2. Kitufe cha FUATA ----------------------------------------------- */
+#productModal #btnFollow {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    height: 38px !important;
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 0 14px 0 12px !important;
+    border-radius: 999px !important;
+    border: 1.5px solid #18A982 !important;
+    background: #18A982 !important;
+    color: #FFFFFF !important;
+    font: 800 13px/1 Inter, system-ui, sans-serif !important;
+    cursor: pointer !important;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease !important;
+}
+#productModal #btnFollow .eng-ico {
+    display: inline-flex !important;
+    width: 15px !important;
+    height: 15px !important;
+}
+#productModal #btnFollow .eng-ico svg { width: 15px !important; height: 15px !important; display: block !important; }
+#productModal #btnFollow .eng-lbl { font: 800 13px/1 Inter, system-ui, sans-serif !important; }
+#productModal #btnFollow:hover { background: #15A07B !important; border-color: #15A07B !important; }
+#productModal #btnFollow:active { transform: scale(.95) !important; }
+#productModal #btnFollow:focus-visible { outline: 2px solid #0E6B51 !important; outline-offset: 2px !important; }
+#productModal #btnFollow.is-following,
+#productModal #btnFollow.btn-following,
+#productModal #btnFollow.skh-eng-active {
+    background: #E7F6F1 !important;
+    border-color: #B9E3D5 !important;
+    color: #0E7A5F !important;
+}
+#productModal #btnFollow.is-following:hover,
+#productModal #btnFollow.btn-following:hover {
+    background: #DCF1EA !important;
+    border-color: #A7DAC8 !important;
+}
+
+/* --- G3. Safu ya engagements: sawa, moja kwa moja, yenye mwitikio ------ */
+#productModal #pmEngageRow {
+    display: flex !important;
+    align-items: stretch !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    padding: 4px 8px !important;
+    margin: 0 !important;
+    border-top: 1px solid #F1F5F9 !important;
+    border-bottom: 1px solid #F1F5F9 !important;
+    background: #FFFFFF !important;
+}
+#productModal #pmEngageRow .pm-eng-btn {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    min-height: 42px !important;
+    padding: 8px 6px !important;
+    color: #5F7178 !important;
+    transition: background-color .15s ease, color .15s ease, transform .1s ease !important;
+}
+#productModal #pmEngageRow .pm-eng-btn:hover { background: #F4F8F6 !important; color: #0E6B51 !important; }
+#productModal #pmEngageRow .pm-eng-btn:active { transform: scale(.94) !important; }
+#productModal #pmEngageRow .pm-eng-btn:focus-visible {
+    outline: 2px solid #18A982 !important;
+    outline-offset: -2px !important;
+}
+#productModal #pmEngageRow .pm-eng-ico { width: 19px !important; height: 19px !important; }
+#productModal #pmEngageRow .pm-eng-lbl { font: 700 12.4px/1 Inter, system-ui, sans-serif !important; }
+#productModal #pmEngageRow .pm-eng-n {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 5px !important;
+    border-radius: 999px !important;
+    background: #EEF3F1 !important;
+    color: #475569 !important;
+    font: 800 11px/1 Inter, system-ui, sans-serif !important;
+}
+/* Hali iliyochaguliwa (alipenda / amehifadhi) */
+#productModal #pmEngageRow .pm-eng-btn.skh-eng-active {
+    background: #FFF1F4 !important;
+    color: #E11D48 !important;
+}
+#productModal #pmEngageRow #pmEngSaveBtn.skh-eng-active {
+    background: #FFF7E8 !important;
+    color: #B45309 !important;
+}
+#productModal #pmEngageRow .pm-eng-btn.skh-eng-active .pm-eng-n {
+    background: #FFFFFF !important;
+    color: inherit !important;
+}
+
+/* --- G4. Vitufe vya vitendo: mwitikio wa kugusa/bonyeza ----------------- */
+#productModal #pmActionArea .pm-bar-btn {
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .09s ease, box-shadow .15s ease !important;
+}
+#productModal #pmActionArea .pm-bar-btn:active { transform: scale(.985) !important; }
+#productModal #pmActionArea .pm-bar-btn.pm-bar-pay:hover { background: #15A07B !important; }
+#productModal #pmActionArea .pm-bar-btn.pm-bar-pay:active { background: #0F8A6A !important; transform: scale(.985) !important; }
+#productModal .pm-qty-btn { transition: background-color .15s ease, transform .09s ease !important; }
+#productModal .pm-qty-btn:active { transform: scale(.92) !important; }
+
+/* --- G5. Simu (<=520px): kadi nyembamba, icons bila labels -------------- */
+@media (max-width: 520px) {
+    #productModal #pmSellerCard { padding: 2px 12px 10px !important; }
+    #productModal #pmSellerCard .pm-seller { gap: 9px !important; padding: 8px 10px !important; }
+    #productModal #pmSellerCard .pm-seller-avatar { width: 42px !important; height: 42px !important; }
+    #productModal #pmSellerCard .pm-seller-name-row b { font-size: 14px !important; }
+    /* Simu: chip ya "MUUZAJI" inachukua nafasi ya jina — ifichwe. */
+    #productModal #pmSellerCard .pm-seller-role { display: none !important; }
+    #productModal #btnFollow { height: 36px !important; padding: 0 12px 0 10px !important; font-size: 12.4px !important; }
+    #productModal #btnFollow .eng-lbl { font-size: 12.4px !important; }
+    #productModal #pmEngageRow { padding: 3px 6px !important; }
+    #productModal #pmEngageRow .pm-eng-btn { min-height: 44px !important; }
+}
+
+/* --- G6. Namba za engagements: ficha 0/tupu ----------------------------- */
+#productModal #pmEngageRow .pm-eng-n[hidden] { display: none !important; }
+#productModal #pmEngageRow .pm-eng-n:empty { display: none !important; }
+
+/* ==========================================================================
+   H. SCROLL LAYOUT (2026-11-04, ombi la mtumiaji)
+   Kanuni: BIDHAA (picha) inabaki mahali pake — KILA KITU KINGINE
+   kinasogea. Mteja aone maelezo kwa upana na achague vizuri.
+   ========================================================================== */
+
+/* --- H1. DESKTOP: safu ya maudhui ipate upana zaidi ---------------------- */
+@media (min-width: 901px) {
+    html body #productModal > .pm-sheet { flex-direction: row !important; }
+    html body #productModal .pm-hero {
+        flex: 0 0 38% !important;
+        max-width: 540px !important;
+        height: auto !important;
+        align-self: stretch !important;
+    }
+    html body #productModal .pm-scroll {
+        flex: 1 1 62% !important;
+        min-width: 0 !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* --- H2. SIMU/TABLETI: picha ibaki, maudhui yasogee kwa nafasi kubwa ----- */
+@media (max-width: 900px) {
+    html body #productModal > .pm-sheet {
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+    html body #productModal .pm-hero {
+        flex: 0 0 auto !important;
+        height: 34vh !important;
+        height: 34dvh !important;
+        max-height: 300px !important;
+        min-height: 0 !important;
+    }
+    html body #productModal .pm-scroll {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* --- H3. BLOCK YA VITENDO: nyembamba (nafasi ya maelezo iongezeke) ------- */
+@media (max-width: 900px) {
+    #productModal .pm-sticky-stack { padding: 5px 0 4px !important; }
+    #productModal .pm-sticky-stack > .pm-bar { padding: 8px 10px !important; gap: 6px !important; margin: 0 8px 2px !important; }
+    #productModal #pmActionArea { gap: 6px !important; }
+    #productModal #pmActionArea .pm-bar-btn { min-height: 44px !important; height: 44px !important; }
+    #productModal #pmQtyArea { padding: 0 !important; }
+    #productModal .pm-qty-btn { min-height: 34px !important; }
+    #productModal #pmQty { height: 34px !important; }
+    #productModal #pmSellerCard { padding-bottom: 8px !important; }
+}
+
+/* --- H4. Mwitikio wa kubonyeza (onekane mara moja) ----------------------- */
+#productModal #pmEngageRow .pm-eng-btn.is-pressed,
+#productModal #pmActionArea .pm-bar-btn.is-pressed,
+#productModal #btnFollow.is-pressed,
+#productModal .pm-qty-btn.is-pressed {
+    transform: scale(.95) !important;
+    filter: brightness(.97) !important;
+}
+
+/* --- H5. SIMU: safu ya idadi iwe MSTARI MMOJA (block ipungue urefu) ------
+   "Zipo 10" inarudiwa tayari kwenye chips za juu (#pmChips), hivyo
+   haihitajiki humu ndani — block inapungua ~35px, maelezo yanaonekana. */
+@media (max-width: 520px) {
+    #productModal #pmStockInfo { display: none !important; }
+    #productModal #pmQtyArea { flex-wrap: nowrap !important; gap: 8px !important; }
+    #productModal #pmQtyLabel { font-size: 12.5px !important; }
+    #productModal .pm-total-row { margin-left: auto !important; white-space: nowrap !important; }
+}
+
+/* --- H6. DESKTOP: picha ijaze safu yake (hakuna mabaka meusi) ------------ */
+@media (min-width: 901px) {
+    html body #productModal .pm-image-slider img,
+    html body #productModal .pm-image-slider video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+}
+
+/* ==========================================================================
+   I. SCROLL KAMILI (2026-11-04, ombi la mtumiaji)
+   Kadi yote ya ndani inascroll — pamoja na block ya VITENDO. Hakuna
+   kitu kinachoshikamana (no sticky/fixed), ili mteja aone maelezo
+   kwa upana na kwa utulivu.
+   ========================================================================== */
+#productModal .pm-sticky-stack,
+#productModal #pmStickyStack {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+#productModal #pmStickyStack > .pm-bar {
+    margin: 0 10px 10px !important;
+}
+
+/* ==========================================================================
+   J. SCROLL WA KILA KITU (2026-11-04, ombi la mwisho la mtumiaji)
+   Hakuna kitu kinachoshikamana — hata picha ya bidhaa. Kadi zote,
+   engagements, vitendo na maelezo ZINASCROLL PAMOJA kwenda juu, ili
+   mteja apate nafasi kubwa ya kuona maelezo na kuchagua kwa uhuru.
+   ========================================================================== */
+html body #productModal > .pm-sheet {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+}
+html body #productModal .pm-hero {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: min(46vh, 420px) !important;
+    max-height: 420px !important;
+    align-self: stretch !important;
+}
+html body #productModal .pm-scroll {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overscroll-behavior: auto !important;
+}
+@media (max-width: 900px) {
+    html body #productModal .pm-hero {
+        height: 36vh !important;
+        height: 36dvh !important;
+        max-height: 330px !important;
+    }
+}
+/* Skrini kubwa: maudhui yasienea kupita kiasi — safu moja iliyokaa katikati */
+@media (min-width: 901px) {
+    html body #productModal .pm-scroll > * {
+        width: 100% !important;
+        max-width: 920px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+/* J2. Center blocks zilizokuwa na margin:0 !important (engagements + vitendo) */
+@media (min-width: 901px) {
+    html body #productModal #pmStickyStack,
+    html body #productModal #pmEngageRow {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        max-width: 920px !important;
+        width: 100% !important;
+    }
+}

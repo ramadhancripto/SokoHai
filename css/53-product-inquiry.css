@@ -1,0 +1,522 @@
+/* ==== css/53-product-inquiry.css ====
+   ============================================================================
+   SOKOHAI — ULIZA ZAIDI KUHUSU BIDHAA (Product Inquiry Builder)
+   ----------------------------------------------------------------------------
+   Mteja hujenga swali lenye maswali mengi (dynamic, si poll iliyowekwa):
+   swali + aina ya jibu + machaguo, kisha hupanga/hariri/kagua na kutuma.
+   Muundo ni wa FARAGHA (Chat + seller dashboard), tofauti na Maoni ya umma
+   (`comments` / skhOpenMaoni) — hilo HALIGUSWI.
+   Rangi: SokoHai green #18A982 · nyuso nyeupe · Inter.
+   ============================================================================ */
+
+#inquiryLayer {
+    position: fixed;
+    inset: 0;
+    z-index: 7900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+}
+#inquiryLayer[hidden] { display: none !important; }
+#inquiryLayer .inq-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 26, 22, .46);
+    opacity: 0;
+    transition: opacity .22s ease;
+}
+#inquiryLayer.is-open .inq-scrim { opacity: 1; }
+
+#inquiryLayer .inq-sheet {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(720px, calc(100vw - 32px));
+    max-height: min(88vh, 900px);
+    background: #F4F8F6;
+    border-radius: 22px;
+    box-shadow: 0 24px 70px rgba(4, 30, 24, .34);
+    overflow: hidden;
+    transform: translateY(12px) scale(.99);
+    opacity: 0;
+    transition: transform .24s ease, opacity .2s ease;
+}
+#inquiryLayer.is-open .inq-sheet { transform: none; opacity: 1; }
+
+/* ---------------- Kichwa ---------------- */
+#inquiryLayer .inq-head {
+    position: relative;
+    z-index: 3;
+    background: #fff;
+    border-bottom: 1px solid #E6EFEA;
+    padding: 12px 14px 11px;
+    flex: 0 0 auto;
+}
+#inquiryLayer .inq-head-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#inquiryLayer .inq-back {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    border: 1px solid #DCE7E2;
+    background: #fff;
+    color: #334155;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    cursor: pointer;
+    transition: background .14s ease, border-color .14s ease;
+}
+#inquiryLayer .inq-back:hover { background: #F7FAF9; border-color: #BFDCCF; }
+#inquiryLayer .inq-back[disabled] { opacity: .38; cursor: default; }
+#inquiryLayer .inq-titles { min-width: 0; flex: 1 1 auto; }
+#inquiryLayer .inq-titles h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: #0F172A;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#inquiryLayer .inq-titles p {
+    margin: 1px 0 0;
+    font-size: 11.8px;
+    font-weight: 700;
+    color: #64748B;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#inquiryLayer .inq-count {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #E7F6F1;
+    color: #0E7A5F;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+#inquiryLayer .inq-x {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    border: 1px solid #DCE7E2;
+    background: #fff;
+    color: #334155;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    cursor: pointer;
+}
+#inquiryLayer .inq-x:hover { background: #FFF1F4; color: #E11D48; border-color: #F3C6CF; }
+#inquiryLayer .inq-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: #E3EEE9;
+    overflow: hidden;
+    margin-top: 10px;
+}
+#inquiryLayer .inq-progress i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #18A982, #38D3AB);
+    transition: width .28s ease;
+}
+
+/* ---------------- Mwili ---------------- */
+#inquiryLayer .inq-body {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px;
+}
+#inquiryLayer .inq-empty {
+    background: #fff;
+    border: 1px solid #E6EFEA;
+    border-radius: 18px;
+    padding: 26px 16px;
+    text-align: center;
+}
+#inquiryLayer .inq-empty h4 { margin: 6px 0 4px; font-size: 15px; font-weight: 800; color: #0F172A; }
+#inquiryLayer .inq-empty p { margin: 0; font-size: 12.8px; font-weight: 600; color: #64748B; }
+
+/* ---------------- Kadi ya swali ---------------- */
+#inquiryLayer .inq-card {
+    background: #fff;
+    border: 1px solid #E6EFEA;
+    border-radius: 18px;
+    padding: 13px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 22px rgba(15, 23, 42, .05);
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+#inquiryLayer .inq-card + .inq-card { margin-top: 11px; }
+#inquiryLayer .inq-card:focus-within { border-color: #B9E3D5; box-shadow: 0 0 0 3px rgba(24, 169, 130, .1); }
+#inquiryLayer .inq-card.is-bad { border-color: #F3C6CF; }
+#inquiryLayer .inq-card-top { display: flex; align-items: flex-start; gap: 9px; }
+#inquiryLayer .inq-num {
+    width: 27px; height: 27px;
+    border-radius: 9px;
+    background: #18A982;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    margin-top: 5px;
+}
+#inquiryLayer .inq-qtext {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 1px solid #DCE7E2;
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 14.4px;
+    font-weight: 700;
+    color: #0F172A;
+    background: #fff;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+#inquiryLayer .inq-qtext::placeholder { color: #9AAEB5; font-weight: 600; }
+#inquiryLayer .inq-qtext:focus { border-color: #18A982; box-shadow: 0 0 0 3px rgba(24, 169, 130, .14); }
+#inquiryLayer .inq-tools { display: flex; gap: 4px; flex: 0 0 auto; }
+#inquiryLayer .inq-mini {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    border: 1px solid #DCE7E2;
+    background: #fff;
+    color: #5F7178;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .14s ease, color .14s ease, border-color .14s ease, transform .1s ease;
+}
+#inquiryLayer .inq-mini:hover { background: #F7FAF9; color: #0F172A; }
+#inquiryLayer .inq-mini:active { transform: scale(.94); }
+#inquiryLayer .inq-mini.danger:hover { background: #FFF1F4; color: #E11D48; border-color: #F3C6CF; }
+#inquiryLayer .inq-mini[disabled] { opacity: .3; cursor: not-allowed; }
+
+#inquiryLayer .inq-types { display: flex; flex-wrap: wrap; gap: 6px; margin: 11px 0 0 36px; }
+#inquiryLayer .inq-type {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid #DCE7E2;
+    background: #fff;
+    color: #5F7178;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12.2px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+#inquiryLayer .inq-type:hover { border-color: #BFDCCF; color: #0E7A5F; }
+#inquiryLayer .inq-type .dot {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: .75;
+    flex: 0 0 auto;
+}
+#inquiryLayer .inq-type.on {
+    background: #E7F6F1;
+    border-color: #9ADCC8;
+    color: #0E7A5F;
+    box-shadow: 0 0 0 2px rgba(24, 169, 130, .08);
+}
+#inquiryLayer .inq-type.on .dot { background: #18A982; border-color: #18A982; }
+
+#inquiryLayer .inq-opts { margin: 11px 0 0 36px; }
+#inquiryLayer .inq-opt { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+#inquiryLayer .inq-opt-mark {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid #C9D8D2;
+    color: #94A3B8;
+    font-size: 10.5px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+}
+#inquiryLayer .inq-opt input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 1px solid #DCE7E2;
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 13.4px;
+    font-weight: 600;
+    color: #0F172A;
+    background: #fff;
+    outline: none;
+}
+#inquiryLayer .inq-opt input:focus { border-color: #18A982; box-shadow: 0 0 0 3px rgba(24, 169, 130, .12); }
+#inquiryLayer .inq-addopt {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #F2FBF8;
+    border: 1px dashed #A9DECD;
+    color: #0E7A5F;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12.4px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 2px;
+}
+#inquiryLayer .inq-addopt:hover { background: #E9F8F3; }
+
+#inquiryLayer .inq-numrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 11px 0 0 36px; }
+#inquiryLayer .inq-numrow input,
+#inquiryLayer .inq-numrow select {
+    border: 1px solid #DCE7E2;
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 13.4px;
+    font-weight: 600;
+    color: #0F172A;
+    background: #fff;
+    outline: none;
+}
+#inquiryLayer .inq-numrow input:focus,
+#inquiryLayer .inq-numrow select:focus { border-color: #18A982; box-shadow: 0 0 0 3px rgba(24, 169, 130, .12); }
+#inquiryLayer .inq-hint { font-size: 11.8px; font-weight: 600; color: #64748B; }
+
+#inquiryLayer .inq-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 11px 0 0 36px; }
+#inquiryLayer .inq-state { font-size: 11.5px; font-weight: 800; color: #94A3B8; }
+#inquiryLayer .inq-state.ok { color: #0E7A5F; }
+#inquiryLayer .inq-state.bad { color: #BE123C; }
+#inquiryLayer .inq-badge {
+    margin-left: auto;
+    background: #F1F5F9;
+    color: #475569;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+#inquiryLayer .inq-addq {
+    width: 100%;
+    margin-top: 11px;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    background: #fff;
+    border: 1.5px dashed #A9DECD;
+    color: #0E7A5F;
+    border-radius: 16px;
+    padding: 14px;
+    font-size: 13.8px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+}
+#inquiryLayer .inq-addq:hover { background: #F2FBF8; border-color: #18A982; }
+#inquiryLayer .inq-addq:active { transform: scale(.995); }
+
+#inquiryLayer .inq-suggest { margin-top: 14px; }
+#inquiryLayer .inq-suggest h5 {
+    margin: 0 0 7px;
+    font-size: 10.8px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #64748B;
+    font-weight: 800;
+}
+#inquiryLayer .inq-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+#inquiryLayer .inq-chip {
+    background: #fff;
+    border: 1px solid #DCE7E2;
+    color: #334155;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12.3px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#inquiryLayer .inq-chip:hover { border-color: #BFDCCF; background: #F2FBF8; }
+
+/* ---------------- Review ---------------- */
+#inquiryLayer .inq-rev {
+    display: flex; align-items: flex-start; gap: 11px;
+    background: #fff;
+    border: 1px solid #E6EFEA;
+    border-radius: 16px;
+    padding: 12px 13px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 22px rgba(15, 23, 42, .05);
+}
+#inquiryLayer .inq-rev + .inq-rev { margin-top: 10px; }
+#inquiryLayer .inq-rev-n {
+    width: 25px; height: 25px;
+    border-radius: 8px;
+    background: #E7F6F1;
+    color: #0E7A5F;
+    font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+}
+#inquiryLayer .inq-rev-b { flex: 1 1 auto; min-width: 0; }
+#inquiryLayer .inq-rev-b h4 { margin: 0 0 6px; font-size: 13.8px; font-weight: 800; color: #0F172A; }
+#inquiryLayer .inq-optchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+#inquiryLayer .inq-optchip {
+    background: #F2FBF8;
+    border: 1px solid #CDEEE3;
+    color: #0B5B49;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+#inquiryLayer .inq-rev-tools { display: flex; gap: 4px; flex: 0 0 auto; margin-left: auto; }
+
+#inquiryLayer .inq-summary {
+    background: #fff;
+    border: 1px solid #E6EFEA;
+    border-radius: 16px;
+    padding: 13px;
+    margin-top: 12px;
+}
+#inquiryLayer .inq-summary h4 { margin: 0 0 3px; font-size: 13.5px; font-weight: 800; color: #0F172A; }
+#inquiryLayer .inq-summary p { margin: 0 0 9px; font-size: 12.2px; font-weight: 600; color: #64748B; }
+#inquiryLayer .inq-pre {
+    background: #0F172A;
+    color: #C7F9E9;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 11.4px;
+    line-height: 1.5;
+    overflow: auto;
+    max-height: 220px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+}
+
+/* ---------------- Mafanikio ---------------- */
+#inquiryLayer .inq-done { text-align: center; padding: 26px 14px 6px; }
+#inquiryLayer .inq-tick {
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    background: #E7F6F1;
+    color: #18A982;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+}
+#inquiryLayer .inq-done h3 { margin: 0 0 6px; font-size: 18.5px; font-weight: 800; letter-spacing: -.02em; color: #0F172A; }
+#inquiryLayer .inq-done p { margin: 0; font-size: 13px; font-weight: 600; color: #64748B; }
+#inquiryLayer .inq-done-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+
+/* ---------------- Footer CTA ---------------- */
+#inquiryLayer .inq-footbar {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, .96);
+    border-top: 1px solid #E6EFEA;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+}
+#inquiryLayer .inq-footbar-in { display: flex; align-items: center; gap: 12px; }
+#inquiryLayer .inq-meta { font-size: 11.8px; font-weight: 700; color: #64748B; line-height: 1.25; }
+#inquiryLayer .inq-meta b { display: block; color: #0F172A; font-size: 12.4px; }
+#inquiryLayer .inq-primary {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #18A982;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-size: 13.6px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(24, 169, 130, .26);
+    transition: transform .12s ease, background .15s ease;
+}
+#inquiryLayer .inq-primary:hover { background: #159C7A; }
+#inquiryLayer .inq-primary:active { transform: scale(.98); }
+#inquiryLayer .inq-primary[disabled] { background: #C7DAD3; box-shadow: none; cursor: not-allowed; }
+#inquiryLayer .inq-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff;
+    border: 1px solid #DCE7E2;
+    color: #334155;
+    border-radius: 14px;
+    padding: 11px 15px;
+    font-size: 13.2px;
+    font-weight: 800;
+    cursor: pointer;
+}
+#inquiryLayer .inq-secondary:hover { background: #F7FAF9; border-color: #BFDCCF; }
+
+/* ---------------- Toast ndani ya layer ---------------- */
+#inquiryLayer .inq-toast {
+    position: absolute;
+    z-index: 40;
+    left: 50%;
+    bottom: 92px;
+    transform: translateX(-50%) translateY(16px);
+    background: #0F172A;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 15px;
+    font-size: 12.6px;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    max-width: calc(100% - 32px);
+}
+#inquiryLayer .inq-toast.show { opacity: 1; transform: translateX(-50%); pointer-events: auto; }
+#inquiryLayer .inq-toast button {
+    background: none; border: none; color: #5EEAD4;
+    font-weight: 800; font-size: 12.6px; padding: 0; cursor: pointer;
+}
+
+/* ---------------- Simu ---------------- */
+@media (max-width: 640px) {
+    #inquiryLayer { align-items: flex-end; }
+    #inquiryLayer .inq-sheet {
+        width: 100%;
+        max-height: 94vh;
+        max-height: 94dvh;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(18px);
+    }
+    #inquiryLayer .inq-body { padding: 12px 12px 16px; }
+    #inquiryLayer .inq-types,
+    #inquiryLayer .inq-opts,
+    #inquiryLayer .inq-numrow,
+    #inquiryLayer .inq-foot { margin-left: 0; }
+    #inquiryLayer .inq-qtext { font-size: 14px; }
+    #inquiryLayer .inq-primary { padding: 12px 16px; font-size: 13.2px; }
+    #inquiryLayer .inq-count { padding: 6px 10px; font-size: 11.4px; }
+    #inquiryLayer .inq-titles h3 { font-size: 15px; }
+    #inquiryLayer .inq-rev { flex-wrap: wrap; }
+}
+
+/* ---------------- Vitufe vya bidhaa (badge ya maswali) ---------------- */
+#productModal #pmInquireCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-right: 6px;
+    border-radius: 999px;
+    background: #E7F6F1;
+    color: #0E7A5F;
+    font: 800 11px/1 Inter, system-ui, sans-serif;
+}
+#productModal #pmInquireCount:empty { display: none; }
+
+/* Simu ndogo sana: kaunta iko kwenye footer — chip ya juu ifichwe ili
+   kichwa "Uliza Zaidi kuhusu Bidhaa" kionekane kamili. */
+@media (max-width: 430px) {
+    #inquiryLayer .inq-count { display: none; }
+}

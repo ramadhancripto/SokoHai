@@ -12,6 +12,84 @@ function T(key, en, vars) {
 }
 
 
+/* ============================================================================
+   [DATA INTEGRITY 2026-11-03] Wasaidizi wa uadilifu wa data
+   ----------------------------------------------------------------------------
+   Kanuni: kila namba inayoonyeshwa LAZIMA itokane na data halisi
+   (`dashboardCachedData`: products, shop_ledger, shop_staff, purchase_orders).
+   Data isipokuwa ipo → `—` au empty state yenye maelezo. Hakuna namba za kubuni.
+
+   Hali tatu zinatenganishwa waziwazi:
+     • LOADING → "Inapakia…" (skeleton ya shell)
+     • EMPTY   → "Hakuna data" + sababu + kinachofuata
+     • ERROR   → "Imeshindikana kupakia" + sababu
+   ========================================================================== */
+const SKH_NA = '—';
+const skhIsNum = (v) => typeof v === 'number' && isFinite(v);
+
+/* Snapshot (Firestore) AU array → array ya data safi. */
+function skhDocs(snap) {
+    const out = [];
+    try {
+        if (snap && typeof snap.forEach === 'function' && typeof snap.size === 'number') {
+            snap.forEach(d => out.push(Object.assign({ id: d.id }, d.data() || {})));
+        } else if (Array.isArray(snap)) {
+            snap.forEach(x => out.push(x && x.data ? Object.assign({ id: x.id }, x.data() || {}) : x));
+        }
+    } catch (e) { }
+    return out;
+}
+function skhHasDocs(snap) { return skhDocs(snap).length > 0; }
+
+function skhMoney(v) { return skhIsNum(v) ? 'TZS ' + Math.round(v).toLocaleString('en-US') : SKH_NA; }
+function skhCount(v) { return skhIsNum(v) ? Math.round(v).toLocaleString('en-US') : SKH_NA; }
+
+/* Kadi ya KPI. `hint` huonekana chini ya thamani (mf. "Hakuna data"). */
+function skhKpi(label, value, hint, tone) {
+    const isNa = String(value) === SKH_NA;
+    return '<div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;">'
+        + '<small style="color:gray; font-size:12px; font-weight:bold;"> ' + label + '</small>'
+        + '<b style="font-size:16px; color:' + (isNa ? '#94A3B8' : (tone || '#0f172a')) + '; display:block; margin-top:4px;">' + value + '</b>'
+        + (hint ? '<span style="display:block; margin-top:3px; font-size:11px; color:#94A3B8; line-height:1.3;">' + hint + '</span>' : '')
+        + '</div>';
+}
+function skhKpiGrid(cards) {
+    return '<div class="bos-kpi-grid">' + cards.join('') + '</div>';
+}
+
+/* Sanduku la hali (empty / error / loading). */
+function skhStateBox(kind, title, msg, action) {
+    const palette = {
+        empty: ['#F8FBFA', '#D5E2DE', '#18352D'],
+        error: ['#FFF5F5', '#F2D7D5', '#8A2C27'],
+        loading: ['#F8FBFA', '#D5E2DE', '#526962'],
+        warn: ['#FFF8E6', '#F0DFAE', '#5C4A12']
+    }[kind] || ['#F8FBFA', '#D5E2DE', '#18352D'];
+    return '<div style="background:' + palette[0] + '; border:1px solid ' + palette[1] + '; border-radius:14px; padding:18px; color:' + palette[2] + '; text-align:center;">'
+        + '<b style="display:block; font-size:13.5px; margin-bottom:4px;">' + title + '</b>'
+        + '<span style="font-size:12.5px; line-height:1.45; opacity:.9;">' + msg + '</span>'
+        + (action || '') + '</div>';
+}
+
+/* Sanduku la chart: data ikiwepo → canvas; isipo → maelezo (hakuna namba za kubuni). */
+function skhChartCard(title, canvasId, hasData, noDataMsg, height) {
+    return '<div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">'
+        + '<b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> ' + title + '</b>'
+        + (hasData
+            ? '<div style="height:' + (height || 150) + 'px;"><canvas id="' + canvasId + '"></canvas></div>'
+            : skhStateBox('empty', 'Hakuna data', noDataMsg || 'Hakuna rekodi zilizopakiwa kwa chart hii.'))
+        + '</div>';
+}
+
+/* Ramani ya rafu/sanduku la jedwali tupu. */
+function skhTableEmpty(cols, msg) {
+    return '<tr><td colspan="' + cols + '" style="padding:14px 0; color:#7E9A91; font-size:12.5px; text-align:center;">' + msg + '</td></tr>';
+}
+
+try {
+    window.skhDataStates = { NA: SKH_NA, docs: skhDocs, hasDocs: skhHasDocs, money: skhMoney, count: skhCount };
+} catch (e) { }
+
 window.switchDashTab = function(tabName) {
     window.activeDashboardTab = tabName;
     document.querySelectorAll('.side-menu-link').forEach(btn => btn.classList.remove('active'));
@@ -30,6 +108,14 @@ window.switchDashTab = function(tabName) {
     } else {
         window.renderActiveTabContent();
     }
+};
+
+/* [REPAIR 2026-11-04] Token Center markup umoja: unatumika na dashibodi ya
+   Usafirishaji (dereva) NA Business OS (mmiliki wa biashara). Markup ni ule
+   ule uliokuwepo — hakuna UI iliyoongezwa au kuondolewa. */
+window.skhTokenCenterHtml = function () {
+    return `
+            <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> SOKOPAY LOGISTICS TOKEN CENTER</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Dhibiti, hakiki na uwasilishe tokens za uokoaji na upelekaji mizigo [1].</p> <!-- PICKUP VERIFICATION BOX (TOKEN A) --> <div style="background:#fffbeb; border:1.5px dashed var(--gold); padding:20px; border-radius:16px; margin-bottom:20px;"> <b style="color:#d97706; font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> 1. PICKUP VERIFICATION (TOKEN A)</b> <p style="font-size:13px; color:#475569; margin-bottom:15px;">Weka Token A (Pickup Token) uliyopewa na Muuzaji au kagua hali yake hapa:</p> <div id="pickupVerificationStatus" style="background:white; padding:15px; border-radius:12px; border:1px solid #cbd5e1;"> <span style="font-size:12px; display:block; color:gray;">Status: <b style="color:orange;">${T('dt_waiting_pickup', 'Waiting For Pickup')}</b></span> <span style="font-size:13px; color:gray; display:block; margin-top:5px;">Token Code: <b style="color:var(--primary-blue);">${T('dt_auto_token', 'Auto Generated When Driver Arrives at Store')}</b></span> </div> </div> <!-- DELIVERY VERIFICATION BOX (TOKEN C) --> <div style="background:#f0fdf4; border:1.5px dashed var(--green); padding:20px; border-radius:16px; margin-bottom:20px;"> <b style="color:var(--green); font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> 2. DELIVERY VERIFICATION (TOKEN C)</b> <p style="font-size:13px; color:#475569; margin-bottom:15px;">Mpokeaji/Mnunuzi akikabidhi Token C, iingize hapa chini ili kumaliza safari na kuachia malipo:</p> <div style="display:flex; gap:10px;"> <input type="text" id="tokenCenterInputDL" placeholder="${T('dt_token_c_ph', 'Enter Token C (e.g. DL-XXXX)...')}" style="flex:2; padding:15px; border-radius:12px; border:1px solid #cbd5e1; outline:none; text-align:center; font-weight:900; font-size:18px; text-transform:uppercase;"> <button onclick="window.verifyTokenCenterDL()" style="flex:1; padding:15px; background:var(--green); color:white; border:none; border-radius:12px; font-weight:900; cursor:pointer;">${T('dt_verify_release', 'VERIFY & RELEASE')} </button> </div> </div> </div>`;
 };
 
 window.renderDriverActiveTabContent = async function() {
@@ -89,8 +175,8 @@ window.renderDriverActiveTabContent = async function() {
     // 4.  SOKOPAY LOGISTICS TOKEN CENTER
     // ==========================================
     else if (tab === 'cargo') {
-        ws.innerHTML = `
-            <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> SOKOPAY LOGISTICS TOKEN CENTER</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Dhibiti, hakiki na uwasilishe tokens za uokoaji na upelekaji mizigo [1].</p> <!-- PICKUP VERIFICATION BOX (TOKEN A) --> <div style="background:#fffbeb; border:1.5px dashed var(--gold); padding:20px; border-radius:16px; margin-bottom:20px;"> <b style="color:#d97706; font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> 1. PICKUP VERIFICATION (TOKEN A)</b> <p style="font-size:13px; color:#475569; margin-bottom:15px;">Weka Token A (Pickup Token) uliyopewa na Muuzaji au kagua hali yake hapa:</p> <div id="pickupVerificationStatus" style="background:white; padding:15px; border-radius:12px; border:1px solid #cbd5e1;"> <span style="font-size:12px; display:block; color:gray;">Status: <b style="color:orange;">${T('dt_waiting_pickup', 'Waiting For Pickup')}</b></span> <span style="font-size:13px; color:gray; display:block; margin-top:5px;">Token Code: <b style="color:var(--primary-blue);">${T('dt_auto_token', 'Auto Generated When Driver Arrives at Store')}</b></span> </div> </div> <!-- DELIVERY VERIFICATION BOX (TOKEN C) --> <div style="background:#f0fdf4; border:1.5px dashed var(--green); padding:20px; border-radius:16px; margin-bottom:20px;"> <b style="color:var(--green); font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> 2. DELIVERY VERIFICATION (TOKEN C)</b> <p style="font-size:13px; color:#475569; margin-bottom:15px;">Mpokeaji/Mnunuzi akikabidhi Token C, iingize hapa chini ili kumaliza safari na kuachia malipo:</p> <div style="display:flex; gap:10px;"> <input type="text" id="tokenCenterInputDL" placeholder="${T('dt_token_c_ph', 'Enter Token C (e.g. DL-XXXX)...')}" style="flex:2; padding:15px; border-radius:12px; border:1px solid #cbd5e1; outline:none; text-align:center; font-weight:900; font-size:18px; text-transform:uppercase;"> <button onclick="window.verifyTokenCenterDL()" style="flex:1; padding:15px; background:var(--green); color:white; border:none; border-radius:12px; font-weight:900; cursor:pointer;">${T('dt_verify_release', 'VERIFY & RELEASE')} </button> </div> </div> </div>`;
+        /* Markup ileile, sasa inatumika pia na Business OS (seller). */
+        ws.innerHTML = window.skhTokenCenterHtml();
         return;
     }
 
@@ -196,17 +282,139 @@ window.loadDriverDirectoryList = function() {
     }
 };
 
+function skhEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+
+/* ============================================================================
+   [REPAIR 2026-11-04] TRANSPORT-LINKED TABS kwenye Business OS (seller)
+   ----------------------------------------------------------------------------
+   TABS hizi zilikuwa kwenye sidebar lakini `renderActiveTabContent` hakuwa na
+   branch yao: iliruka kimya, workspace ikabaki na maudhui ya tab ILIYOPITA.
+   Hivyo "Kituo cha Tokeni" ilionyesha Stoo, "Maombi ya Usafirishaji" ilionyesha
+   Stoo, n.k. (maudhui ya zamani chini ya jina jipya).
+
+   Sasa:
+     • `cargo`  → Token Center HALISI (window.skhTokenCenterHtml — markup uleule
+                  unaotumika kwenye dashibodi ya Usafirishaji).
+     • nyingine → daraja la ukweli: jina la moduli, maelezo, na njia ya kweli ya
+                  kufungua mfumo wa Usafirishaji. HAKUNA data ya kubuni.
+   ========================================================================== */
+/* Jina la kichwa = jina HALISI la kipengele kwenye sidebar (chanzo kimoja:
+   shared/business-os-nav-model.mjs), ili kichwa kilingane na alichokibonyeza
+   mtumiaji. Fallback: funguo ya i18n. */
+function skhNavLabel(tab, fallback) {
+    try {
+        var model = (window.skhBOS && window.skhBOS.navModel) || [];
+        for (var i = 0; i < model.length; i++) {
+            var g = model[i] || {};
+            var lists = [g.items || []];
+            (g.subgroups || []).forEach(function (sg) { lists.push(sg.items || []); });
+            for (var l = 0; l < lists.length; l++) {
+                for (var j = 0; j < lists[l].length; j++) {
+                    var it = lists[l][j];
+                    if (it && it.tab === tab && it.label) return it.label;
+                }
+            }
+        }
+    } catch (e) { }
+    return fallback;
+}
+
+/* Taarifa ya utegemezi kwa Token Center inayoonekana kwenye Business OS.
+   HAIZUII kitufe chochote — inaeleza tokeni zinahusiana na safari zipi. */
+window.skhTokenCenterNoticeHtml = function () {
+    return ''
+        + '<div class="bos-token-notice">'
+        + '  <div class="bos-token-notice-ico">' + (window.skhNavIcon ? window.skhNavIcon('key', 18) : '') + '</div>'
+        + '  <div class="bos-token-notice-txt">'
+        + '    <b>' + T('bos_tc_notice_t', 'Logistics tokens belong to transport trips') + '</b>'
+        + '    <span>' + T('bos_tc_notice_d', 'Token A (pickup) is generated when the driver arrives at your store and Token C (delivery) is verified on the specific trip. On a business account, verification applies only to trips linked to your transport account — no code or balance is invented here.') + '</span>'
+        + '  </div>'
+        + '  <button type="button" class="bos-btn is-ghost" onclick="if(window.openModeMenu) window.openModeMenu();">'
+        + T('bos_tr_open', 'Open Transport System') + '</button>'
+        + '</div>';
+};
+
+window.skhTransportBridgeHtml = function (tab) {
+    /* MAP: [jina, maelezo] — funguo za i18n (32-i18n.js), default ni Kiingereza
+       kama kanuni ya faili hii; Kiswahili kinatoka kwenye kamusi. */
+    var MAP = {
+        bookings:  { t: T('bos_tr_bookings', 'Transport Requests'), d: T('bos_tr_bookings_d', 'New transport requests offered on the market to drivers and agents.') },
+        trips:     { t: T('bos_tr_trips', 'Active Trips'), d: T('bos_tr_trips_d', 'Accepted trips: pickup, in transit, delivered and verified.') },
+        tracking:  { t: T('bos_tr_tracking', 'Live Tracking'), d: T('bos_tr_tracking_d', 'Live map tracking of the vehicle or cargo while a trip is running.') },
+        drivers:   { t: T('bos_tr_drivers', 'Drivers & Agents'), d: T('bos_tr_drivers_d', 'List of drivers, agents and their transport vehicles.') },
+        fleet:     { t: T('bos_tr_fleet', 'Fleet Status'), d: T('bos_tr_fleet_d', 'Vehicles that are ready, working or under repair.') },
+        finance:   { t: T('bos_tr_finance', 'Trip Costs'), d: T('bos_tr_finance_d', 'Fuel, repairs and other trip costs.') },
+        analytics: { t: T('bos_tr_analytics', 'Transport Analytics'), d: T('bos_tr_analytics_d', 'Transport performance: trips, revenue and efficiency.') }
+    };
+    var m = MAP[tab] || { t: tab, d: '' };
+    m.t = skhNavLabel(tab, m.t);
+    return ''
+        + '<div class="bos-transport-bridge">'
+        + '  <div class="bos-ov-head">'
+        + '    <div>'
+        + '      <h2>' + skhEsc(m.t) + '</h2>'
+        + '      <p>' + T('bos_tr_subsys', 'Transport System module') + '</p>'
+        + '    </div>'
+        + '    <span class="bos-tag">' + T('bos_tr_tag', 'Separate system') + '</span>'
+        + '  </div>'
+        + '  <div class="bos-panel">'
+        + '    <div class="bos-panel-body">'
+        + '      <p class="bos-tr-lead">' + skhEsc(m.d) + '</p>'
+        + '      <p class="bos-tr-note">' + T('bos_tr_dep',
+            'Trips, cargo, drivers and tokens are stored in the <b>Transport System</b>, which is separate from a business account. A business account has no linked transport records, so no figures are invented here.') + '</p>'
+        + '      <div class="bos-tr-actions">'
+        + '        <button type="button" class="bos-btn" onclick="if(window.openModeMenu) window.openModeMenu();">'
+                   + T('bos_tr_open', 'Open Transport System') + '</button>'
+        + '        <button type="button" class="bos-btn is-ghost" onclick="window.switchDashTab(\'overview\')">'
+                   + T('bos_back_home', 'Back to Main Dashboard') + '</button>'
+        + '      </div>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>';
+};
+
+/* Fallback: tab isiyo na renderer — USIONYESHE maudhui ya tab iliyopita. */
+window.skhTabNotFoundHtml = function (tab) {
+    return skhStateBox(
+        'empty',
+        T('bos_tab_missing_t', 'This section is not built yet'),
+        T('bos_tab_missing_d', 'The "{t}" module has no renderer yet. No previous content is shown to avoid confusion.', { t: String(tab || '') }),
+        '<div style="margin-top:10px;"><button type="button" class="bos-btn" onclick="window.switchDashTab(\'overview\')">'
+        + T('bos_back_home', 'Back to Main Dashboard') + '</button></div>'
+    );
+};
+
 window.renderActiveTabContent = function() {
     const ws = document.getElementById('dashWorkspace');
-    if(!ws || !window.dashboardCachedData) return;
+    if (!ws) return;
 
-    const data = window.dashboardCachedData;
+    /* [DATA INTEGRITY 2026-11-03] Hali tatu zinatenganishwa:
+       loading (skeleton ya shell) · empty (kila ukurasa) · error (hapa). */
+    const skhTabNeedsCache = ['product_analytics', 'inventory', 'expenses', 'staff'].indexOf(window.activeDashboardTab) !== -1;
+    if (!window.dashboardCachedData && skhTabNeedsCache) {
+        ws.innerHTML = skhStateBox(
+            'error',
+            'Data ya dashibodi haijapakiwa',
+            'Dashibodi bado haijapakia data kutoka Firestore. Hii si “hakuna data” — ni hitilafu au kupakia kusijakamilika.',
+            '<div style="margin-top:10px;"><button type="button" onclick="window.loadAndRenderDashboard()" '
+            + 'style="background:#18A982; color:#fff; border:none; border-radius:10px; padding:9px 16px; font-weight:800; cursor:pointer;">Jaribu tena</button></div>'
+        );
+        return;
+    }
+
+    const data = window.dashboardCachedData || {};
     const tab = window.activeDashboardTab;
 
     // ==========================================
     // 1.  OVERVIEW - EXECUTIVE TOWER (Renders Real Dashboard Indicators)
     // ==========================================
     if (tab === 'overview') {
+        // [BUSINESS OS 1A] Dashboard overview kutoka vyanzo rasmi (posReports/sales).
+        // Renderer ya awali IMEHIFADHIWA chini kama fallback — hakuna kitu kilichoondolewa.
+        if (window.skhBusinessOverview && typeof window.skhBusinessOverview.render === 'function') {
+            try { window.skhBusinessOverview.render(ws); return; }
+            catch (e) { console.warn('[BOS] overview imeshindikana, tunatumia ya awali:', e && e.message); }
+        }
         ws.innerHTML = `
         <div style="text-align: left; animation: fadeIn 0.3s ease-out;"> <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;"> <div> <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0F172A;">Welcome, Executive Command Room! </h2> <p style="margin: 4px 0 0; color: #64748B; font-size: 13px;">Real-time back-office sales, accounting, and logistics overview.</p> </div> <div style="background: white; padding: 8px 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size:13px; font-weight: 800; color: #475569;">
                      ${new Date().toLocaleDateString('sw-TZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -215,6 +423,7 @@ window.renderActiveTabContent = function() {
                         Wanunuzi wanaorudia: <b id="kpiFollowersRepeat">0</b> </div> </div> </div> <!-- ROW 2: MAIN CHARTS ROW (Overview, Category & Summary) --> <div style="display: grid; grid-template-columns: 2.2fr 1.3fr; gap: 15px; margin-bottom: 25px;"> <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px; box-sizing: border-box;"> <b style="font-size: 13px; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px;">Sales Overview</b> <div style="height: 180px; position: relative; margin-top: 15px;"><canvas id="adaptiveShopChart"></canvas></div> </div> <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;"> <b style="font-size: 13px; color: #0F172A; text-transform: uppercase; margin-bottom: 10px; display: block;">Sales by Category</b> <div style="height: 140px; position: relative;"><canvas id="salesCategoryChart"></canvas></div> </div> </div> <!-- TABLES & METRICS --> <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;"> <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px;"> <b style="font-size: 12px; color: #0F172A; text-transform: uppercase; margin-bottom: 12px; display: block;"> Top Selling Products</b> <table class="ct-table"> <thead> <tr><th>Product</th><th>Sold</th><th>Revenue</th></tr> </thead> <tbody id="topSellingProductsTableBody"></tbody> </table> </div> <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px;"> <b style="font-size: 12px; color: #0F172A; text-transform: uppercase; margin-bottom: 12px; display: block;"> Top Customers</b> <table class="ct-table"> <thead> <tr><th>Customer</th><th>Orders</th><th>Total Spent</th></tr> </thead> <tbody id="topCustomersTableBody"></tbody> </table> </div> <div style="background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 20px;"> <b style="font-size: 12px; color: #0F172A; text-transform: uppercase; margin-bottom: 12px; display: block;"> Outstanding Debts</b> <table class="ct-table"> <thead> <tr><th>Customer Name</th><th>Amount</th><th>Action</th></tr> </thead> <tbody id="outstandingDebtsTableBody"></tbody> </table> </div> </div> </div>`;
         
         setTimeout(() => {
+            if (!window.dashboardCachedData) return;   /* fallback isiyo na data: usichore charts za kubuni */
             window.initControlTowerCharts(data);
             window.populateControlTowerTables(data.prodSnap, data.ledgerSnap);
             if (typeof window.skhPopulateSellerFollowerKpi === 'function') window.skhPopulateSellerFollowerKpi();
@@ -226,15 +435,71 @@ window.renderActiveTabContent = function() {
     // 2.  DETAILED PRODUCT ANALYTICS MODULE (15 Rows)
     // ==========================================
     if (tab === 'product_analytics') {
+        /* [DATA INTEGRITY 2026-11-03] Namba zote kutoka `products` halisi.
+           KPI zote zimehifadhiwa; zisizo na chanzo zinaonyesha `—` + sababu. */
+        const prods = skhDocs(data.prodSnap);
+        const hasAny = prods.length > 0;
+        const num = (v) => parseFloat(v) || 0;
+        const outStock = prods.filter(p => num(p.stock) <= 0);
+        const lowStock = prods.filter(p => { const s = num(p.stock); const l = parseInt(p.lowStockAlert, 10) || 5; return s > 0 && s <= l; });
+        const hasPubField = prods.some(p => p.status != null || p.publicationStatus != null);
+        const isDraft = p => String(p.status || p.publicationStatus || '').toLowerCase() === 'draft';
+        const isActive = p => { const s = String(p.status || p.publicationStatus || '').toLowerCase(); return s === 'active' || s === 'published'; };
+        const invValue = hasAny ? prods.reduce((t, p) => t + num(p.stock) * num(p.price), 0) : null;
+        const noImage = prods.filter(p => !p.imageUrl && !p.image && !(Array.isArray(p.images) && p.images.length));
+        const noDesc = prods.filter(p => !String(p.description || '').trim());
+        const label = p => String(p.title || p.name || 'Bidhaa').slice(0, 60);
+
+        const insights = [];
+        if (outStock.length) insights.push(['#ef4444', 'Bidhaa zimeisha stoo (' + outStock.length + '): ' + outStock.slice(0, 4).map(label).join(', ') + (outStock.length > 4 ? ' +' + (outStock.length - 4) : '')]);
+        if (lowStock.length) insights.push(['#f59e0b', 'Bidhaa zinakaribia kuisha (' + lowStock.length + '): ' + lowStock.slice(0, 4).map(label).join(', ') + (lowStock.length > 4 ? ' +' + (lowStock.length - 4) : '')]);
+        if (noImage.length) insights.push(['#4D91AA', 'Bidhaa hazina picha (' + noImage.length + '): ' + noImage.slice(0, 4).map(label).join(', ') + (noImage.length > 4 ? ' +' + (noImage.length - 4) : '')]);
+        if (noDesc.length) insights.push(['#4D91AA', 'Bidhaa hazina maelezo (' + noDesc.length + '): ' + noDesc.slice(0, 4).map(label).join(', ') + (noDesc.length > 4 ? ' +' + (noDesc.length - 4) : '')]);
+
+        const kpiCards = [
+            skhKpi(T('an_total_products', 'BIDHAA ZOTE'), hasAny ? skhCount(prods.length) : SKH_NA),
+            /* [STAGE B] Lebo = hali ya UCHAPISHAJI pekee; haisemi upatikanaji wa stoo.
+               Hesabu haijabadilishwa (bado `isActive`), stoo inaonekana kwenye kadi zake. */
+            skhKpi(T('an_active_products', 'BIDHAA ZILIZOCHAPISHWA'), hasPubField ? skhCount(prods.filter(isActive).length) : SKH_NA, hasPubField ? 'Hali ya uchapishaji · haihakikishi stoo (stoo inaonekana kwenye kadi za Stoo)' : 'Sehemu ya hali haijawekwa kwenye bidhaa'),
+            skhKpi(T('an_draft_products', 'BIDHAA ZA RASIMU'), hasPubField ? skhCount(prods.filter(isDraft).length) : SKH_NA, hasPubField ? '' : 'Sehemu ya hali haijawekwa kwenye bidhaa'),
+            skhKpi(T('an_out_of_stock', 'IMESHA STOO'), hasAny ? skhCount(outStock.length) : SKH_NA, '', '#ef4444'),
+            skhKpi(T('an_low_stock', 'STOO CHINI'), hasAny ? skhCount(lowStock.length) : SKH_NA, '', '#f59e0b'),
+            skhKpi(T('an_top_selling', 'BIDHAA INAYOONGOZA KWA MAUZO'), SKH_NA, 'Chanzo: ripoti za mauzo (posReports) — hazipakiwi kwenye ukurasa huu'),
+            skhKpi(T('an_inventory_value', 'THAMANI YA STOO'), invValue != null ? skhMoney(invValue) : SKH_NA, 'Stoo × bei ya mauzo', '#0284c7'),
+            skhKpi(T('an_product_growth', 'UKUAJI WA BIDHAA'), SKH_NA, 'Inahitaji historia ya vipindi (haipo)')
+        ];
+
         ws.innerHTML = `
-        <div style="animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 20px; text-align:left;"> <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> Product Analytics Tower</h2> <p style="margin:0; color:#64748b; font-size:12px; margin-top:-15px;">Control Tower dashboard ya bidhaa zote za duka.</p> <!-- ROW 1: 8 KPI CARDS --> <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;"> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> TOTAL PRODUCTS</small> <b style="font-size:16px; color:#0f172a; display:block; margin-top:4px;">1,250</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> ACTIVE PRODUCTS</small> <b style="font-size:16px; color:#10b981; display:block; margin-top:4px;">1,100</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> DRAFT PRODUCTS</small> <b style="font-size:16px; color:#64748b; display:block; margin-top:4px;">100</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> OUT OF STOCK</small> <b style="font-size:16px; color:#ef4444; display:block; margin-top:4px;">50</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> LOW STOCK</small> <b style="font-size:16px; color:#f59e0b; display:block; margin-top:4px;">120</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> TOP SELLING PRODUCT</small> <b style="font-size:16px; color:#0284c7; display:block; margin-top:4px;">Rice 25kg</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> INVENTORY VALUE</small> <b style="font-size:16px; color:#0f172a; display:block; margin-top:4px;">TZS 45,000,000</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> PRODUCT GROWTH</small> <b style="font-size:16px; color:#22c55e; display:block; margin-top:4px;">+12%</b> </div> </div> <!-- ROW 2: PRODUCT SALES PERFORMANCE (Line Chart) --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:15px;"> Sales Trend by Product (Rice vs Sugar vs Oil)</b> <div style="height:200px;"><canvas id="chart_pDemand"></canvas></div> </div> <!-- ROW 3: TOP & WORST SELLING PRODUCTS --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"> <!-- Top Selling --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px; color:green;"> Top Selling Products</b> <table style="width:100%; font-size:13px; border-collapse:collapse;"> <thead> <tr style="border-bottom:1px solid #eee; text-align:left; color:gray;"><th style="padding:6px 0;">Product</th><th>Units Sold</th><th>Revenue</th><th>Profit</th></tr> </thead> <tbody> <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 0; font-weight:bold;">Rice 25kg</td><td>520</td><td>10M</td><td style="color:green; font-weight:bold;">2.4M</td></tr> <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 0; font-weight:bold;">Sugar</td><td>430</td><td>8M</td><td style="color:green; font-weight:bold;">1.8M</td></tr> <tr><td style="padding:8px 0; font-weight:bold;">Cooking Oil</td><td>380</td><td>6M</td><td style="color:green; font-weight:bold;">1.1M</td></tr> </tbody> </table> </div> <!-- Worst Selling --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px; color:red;"> Worst Selling Products</b> <table style="width:100%; font-size:13px; border-collapse:collapse;"> <thead> <tr style="border-bottom:1px solid #eee; text-align:left; color:gray;"><th style="padding:6px 0;">Product</th><th>Days Unsold</th><th>Stock</th><th>Value</th></tr> </thead> <tbody> <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 0; font-weight:bold;">Printer</td><td>90 Days</td><td>10</td><td>2M</td></tr> <tr><td style="padding:8px 0; font-weight:bold;">TV</td><td>60 Days</td><td>4</td><td>1.5M</td></tr> </tbody> </table> </div> </div> <!-- ROW 4 & 5: CATEGORY PERFORMANCE & INVENTORY HEALTH --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"> <!-- Category Performance --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px; display:flex; gap:15px; align-items:center;"> <div style="flex:1; height:150px; position:relative;"><canvas id="chart_pCategories"></canvas></div> <div style="flex:1; font-size:13px; display:flex; flex-direction:column; gap:8px;"> <b style="color:#0f172a; text-transform:uppercase;">Category Performance</b> <span> Electronics (40%)</span> <span> Groceries (30%)</span> <span> Fashion (20%)</span> <span> Others (10%)</span> </div> </div> <!-- Inventory Health --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px; display:flex; gap:15px; align-items:center;"> <div style="flex:1; height:150px; position:relative;"><canvas id="chart_pHealth"></canvas></div> <div style="flex:1; font-size:13px; display:flex; flex-direction:column; gap:8px;"> <b style="color:#0f172a; text-transform:uppercase;">Inventory Health</b> <span> Healthy Stock</span> <span> Low Stock</span> <span> Out of Stock</span> <span> Overstock</span> </div> </div> </div> <!-- ROW 6 & 7: STOCK MOVEMENT & PROFITABILITY ANALYSIS --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"> <!-- Stock Movement --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Stock Movement</b> <div style="height:150px;"><canvas id="chart_pReturns"></canvas></div> </div> <!-- Profitability Analysis --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Profitability by Product</b> <div style="height:150px;"><canvas id="chart_pProfit"></canvas></div> </div> </div> <!-- ROW 8 & 9: PRODUCT VIEWS VS SALES & DEMAND HEATMAP --> <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:15px;"> <!-- Funnel --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Product Conversion (Views -> Sales)</b> <div style="height:180px;"><canvas id="chart_pConversion"></canvas></div> </div> <!-- Demand Heatmap --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px; display:flex; flex-direction:column; text-align:left;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Customer Demand Matrix (Time vs Day)</b> <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; font-size:13px; text-align:center;"> <div style="background:#f1f5f9; padding:6px; font-weight:bold;">Day / Time</div> <div style="background:#f1f5f9; padding:6px; font-weight:bold;">Morning</div> <div style="background:#f1f5f9; padding:6px; font-weight:bold;">Afternoon</div> <div style="background:#f1f5f9; padding:6px; font-weight:bold;">Evening</div> <div style="font-weight:bold; padding:6px;">Mon</div> <div style="background:#bbf7d0; padding:6px;">High</div> <div style="background:#fef08a; padding:6px;">Med</div> <div style="background:#bbf7d0; padding:6px;">High</div> <div style="font-weight:bold; padding:6px;">Tue</div> <div style="background:#fef08a; padding:6px;">Med</div> <div style="background:#fecaca; padding:6px;">Low</div> <div style="background:#bbf7d0; padding:6px;">High</div> <div style="font-weight:bold; padding:6px;">Wed</div> <div style="background:#bbf7d0; padding:6px;">High</div> <div style="background:#bbf7d0; padding:6px;">High</div> <div style="background:#bbf7d0; padding:6px;">High</div> </div> </div> </div> <!-- ROW 10 & 11: RETURNS & RATINGS --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"> <!-- Returns --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px; color:red;"> Returns & Refunds</b> <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px;"> <div style="width:40%; height:110px; position:relative;"><canvas id="chart_pReturnsDonut"></canvas></div> <div style="width:60%; font-size:12.5px; text-align:left;"> <div> Returned (40%)</div> <div> Damaged (30%)</div> <div> Wrong Item (20%)</div> <div> Refunded (10%)</div> </div> </div> </div> <!-- Ratings --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:20px; text-align:left;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:8px; color:var(--gold);"> Product Ratings & Reviews</b> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"> <div> <h1 style="margin:0; font-size:36px; color:#0f172a;">4.8</h1> <span style="color:var(--gold); font-size:14px;"></span> </div> <div style="font-size:12.5px; flex-grow:1; margin-left:25px; display:flex; flex-direction:column; gap:3px;"> <div>5 Star: <b>70%</b></div> <div>4 Star: <b>20%</b></div> <div>3 Star: <b>5%</b></div> <div>2 Star: <b>3%</b></div> <div>1 Star: <b>2%</b></div> </div> </div> </div> </div> <!-- ROW 12, 13 & 14: LOCATION, UNIT CONVERSIONS & EXPIRY --> <div style="display:grid; grid-template-columns: 1fr 1.2fr 1fr; gap:15px; text-align:left;"> <!-- Location --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:15px;"> <b style="font-size:13px; text-transform:uppercase; display:block; margin-bottom:8px;"> Top Sales Regions</b> <div style="font-size:12px; display:flex; flex-direction:column; gap:6px;"> <div> Dar es Salaam - <b style="color:green;">60%</b></div> <div> Mwanza - <b style="color:green;">20%</b></div> <div> Arusha - <b style="color:green;">12%</b></div> <div> Mbeya - <b style="color:green;">8%</b></div> </div> </div> <!-- Unit conversions --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:15px;"> <b style="font-size:13px; text-transform:uppercase; display:block; margin-bottom:8px;"> Multi-Unit Conversion Engine</b> <table style="width:100%; font-size:13px; text-align:left; border-collapse:collapse;"> <thead> <tr style="border-bottom:1px solid #eee; color:gray;"><th>Product</th><th>Parent Unit</th><th>Base Unit</th><th>Total Pieces</th></tr> </thead> <tbody> <tr style="border-bottom:1px solid #f1f5f9;"><td>Soda</td><td>10 Crates</td><td>240 Bottles</td><td style="font-weight:bold;">240</td></tr> <tr style="border-bottom:1px solid #f1f5f9;"><td>Soap</td><td>5 Boxes</td><td>120 Pieces</td><td style="font-weight:bold;">120</td></tr> </tbody> </table> </div> <!-- Expiry --> <div style="background:white; border:1px solid #CBD5E1; border-radius:18px; padding:15px;"> <b style="font-size:13px; text-transform:uppercase; display:block; margin-bottom:8px; color:#ea580c;"> Product Expiry Analytics</b> <div style="font-size:12px; display:flex; flex-direction:column; gap:6px;"> <div style="color:red; font-weight:bold;"> Expired: 5 Items</div> <div style="color:orange; font-weight:bold;"> Expiring in 7 Days: 12 Items</div> <div style="color:green; font-weight:bold;"> Safe: 1,233 Items</div> </div> </div> </div> <!-- ROW 15: AI INSIGHTS PANEL --> <div style="background:#f0f9ff; border:1.5px dashed var(--primary-blue); border-radius:16px; padding:20px; text-align:left;"> <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; border-bottom:1px solid #bfdbfe; padding-bottom:6px;"> <span style="font-size:24px;"></span> <b style="color:var(--primary-blue); font-size:14px; text-transform:uppercase;">Sokohai AI Product Insights Panel</b> </div> <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:12px;"> <div style="background:white; padding:10px; border-radius:10px; border-left:4px solid #10b981;"> <b>Rice sales increased 25%</b>: Kuza matangazo yake ya ofa wiki hii.
-                    </div> <div style="background:white; padding:10px; border-radius:10px; border-left:4px solid #10b981;"> <b>Sugar stock will finish in 4 days</b>: Agiza mzigo mpya sasa.
-                    </div> <div style="background:white; padding:10px; border-radius:10px; border-left:4px solid #10b981;"> <b>Cooking Oil demand is rising</b>: Ongeza bei kidogo au dhibiti stoo.
-                    </div> <div style="background:white; padding:10px; border-radius:10px; border-left:4px solid #10b981;"> <b>TV stock inactive for 60 days</b>: Weka discount ili kupunguza bidhaa.
-                    </div> </div> </div> </div>`;
+        <div style="animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 20px; text-align:left;">
+            <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> ${T('pa_title', 'Uchambuzi wa Bidhaa')}</h2>
+            <p style="margin:0; color:#64748b; font-size:12px; margin-top:-15px;">Uchambuzi wa bidhaa zako kutoka data halisi (products). Sehemu zisizo na chanzo zinaonyesha ${SKH_NA}.</p>
+            ${skhKpiGrid(kpiCards)}
+
+            <div class="bos-grid-2">
+                ${skhChartCard(T('an_chart_categories', 'Kategoria za Bidhaa'), 'chart_pCategories', hasAny && prods.some(p => p.category), 'Hakuna bidhaa zenye kategoria zilizopakiwa.')}
+                ${skhChartCard(T('an_chart_health', 'Hali ya Stoo'), 'chart_pHealth', hasAny, 'Hakuna bidhaa zilizopakiwa.')}
+            </div>
+            <div class="bos-grid-2">
+                ${skhChartCard(T('an_chart_revenue', 'Mapato kwa Bidhaa'), 'chart_pProfit', false, 'Inahitaji ripoti za mauzo (posReports) — hazipakiwi hapa.')}
+                ${skhChartCard(T('an_chart_demand', 'Mwenendo wa Mahitaji'), 'chart_pDemand', false, 'Inahitaji historia ya mauzo kwa kipindi (haipo kwenye ukurasa huu).')}
+            </div>
+            <div class="bos-grid-2">
+                ${skhChartCard(T('an_chart_returns', 'Marejesho'), 'chart_pReturns', false, 'Inahitaji rekodi za marejesho ya bidhaa — hazipakiwi hapa.')}
+                ${skhChartCard(T('an_chart_conversion', 'Kiwango cha Ubadilishaji'), 'chart_pConversion', false, 'Inahitaji data ya wageni/wanaoangalia — haipo.')}
+            </div>
+
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">
+                <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Maoni ya Bidhaa (kutoka data halisi)</b>
+                ${insights.length
+                    ? insights.map(([tone, text]) => '<div style="background:#F8FBFA; padding:10px; border-radius:10px; border-left:4px solid ' + tone + '; margin-bottom:8px; font-size:12.5px; color:#18352D;">' + text + '</div>').join('')
+                    : skhStateBox('empty', 'Hakuna maoni', hasAny ? 'Bidhaa zote zina stoo ya kutosha, picha na maelezo.' : 'Hakuna bidhaa zilizopakiwa, kwa hiyo hakuna maoni.')}
+            </div>
+        </div>`;
 
         setTimeout(() => {
-            window.initProductAnalyticsCharts(data);
+            if (typeof window.initProductAnalyticsCharts === 'function') {
+                try { window.initProductAnalyticsCharts(data); } catch (e) { console.warn('[BOS] product analytics charts:', e && e.message); }
+            }
         }, 100);
         return;
     }
@@ -243,94 +508,154 @@ window.renderActiveTabContent = function() {
     // 3.  INVENTORY & STOCK - THE COMPLETE LIFE-CYCLE (With conversion & warehouse valuation)
     // ==========================================
     if (tab === 'inventory') {
+        /* [DATA INTEGRITY 2026-11-03] Stoo: namba zote kutoka `products` halisi
+           (+ `purchase_orders` kwa risiti zinazosubiri). Charts zisizo na chanzo
+           zinaonyesha "Hakuna data" — hakuna mfululizo wa kubuni. */
+        const prods = skhDocs(data.prodSnap);
+        const hasAny = prods.length > 0;
+        const num = (v) => parseFloat(v) || 0;
+
         let totalCostValue = 0;
         let totalSellingValue = 0;
-        let reorderList = [];
-        let stockItemsRows = '';
+        let totalUnits = 0;
+        const reorderList = [];
+        const stockItemsRows = [];
+        const warehouseMap = {};
+        let damagedQty = 0, expiredQty = 0, lostQty = 0;
+        let hasDamageData = false;
 
-        // Jaza bidhaa zilizopo stoo
-        data.prodSnap.forEach(docSnap => {
-            const p = docSnap.data();
-            const stock = parseFloat(p.stock) || 0;
-            const buyPrice = parseFloat(p.buyPrice) || 0;
-            const sellPrice = parseFloat(p.price) || 0;
-            const reorderLevel = parseInt(p.lowStockAlert) || 5;
+        prods.forEach(p => {
+            const stock = num(p.stock);
+            const buyPrice = num(p.buyPrice);
+            const sellPrice = num(p.price);
+            const reorderLevel = parseInt(p.lowStockAlert, 10) || 5;
 
-            totalCostValue += (stock * buyPrice);
-            totalSellingValue += (stock * sellPrice);
+            totalUnits += stock;
+            totalCostValue += stock * buyPrice;
+            totalSellingValue += stock * sellPrice;
 
             if (stock <= reorderLevel) {
-                const suggestedQty = (reorderLevel * 4) - stock;
-                reorderList.push({ ...p, currentStock: stock, reorderLevel, suggestedQty });
+                reorderList.push({ title: p.title || p.name || 'Bidhaa', currentStock: stock, reorderLevel, suggestedQty: Math.max(0, (reorderLevel * 4) - stock) });
             }
 
-            // Base Unit Conversion Display (e.g. Crates to Bottles)
-            let multiUnitText = `${stock} Pcs`;
-            if (p.hasBulkPackaging && p.conversionRatio > 1) {
-                const bulkCount = Math.floor(stock / p.conversionRatio);
-                const remainingUnits = stock % p.conversionRatio;
+            let multiUnitText = `${skhCount(stock)} ${p.baseUnit || 'Pcs'}`;
+            if (p.hasBulkPackaging && num(p.conversionRatio) > 1) {
+                const bulkCount = Math.floor(stock / num(p.conversionRatio));
+                const remainingUnits = stock % num(p.conversionRatio);
                 multiUnitText = `<b>${bulkCount} ${p.bulkUnit || 'Boxes'}</b> (${remainingUnits} ${p.baseUnit || 'Pcs'})`;
             }
-
             const isLow = stock <= reorderLevel;
+            stockItemsRows.push(`
+                <tr style="border-bottom:1px solid #f1f5f9; font-size:12px; text-align:left;">
+                    <td style="padding:10px 0; font-weight:bold;"> ${p.title || p.name || 'Bidhaa'}</td>
+                    <td style="color:#475569;">${p.barcode || SKH_NA}</td>
+                    <td>${multiUnitText}</td>
+                    <td>${p.baseUnit || 'Pcs'}</td>
+                    <td><span style="background:${stock <= 0 ? '#fee2e2' : (isLow ? '#fef3c7' : '#dcfce7')}; color:${stock <= 0 ? '#ef4444' : (isLow ? '#b45309' : '#16a34a')}; padding:2px 8px; border-radius:6px; font-size:12.5px; font-weight:bold;">
+                        ${stock <= 0 ? 'OUT OF STOCK' : (isLow ? 'LOW STOCK' : 'HEALTHY')}
+                    </span></td>
+                </tr>`);
 
-            stockItemsRows += `
-                <tr style="border-bottom:1px solid #f1f5f9; font-size:12px; text-align:left;"> <td style="padding:10px 0; font-weight:bold;"> ${p.title}</td> <td style="color:#475569;">${p.barcode || 'N/A'}</td> <td>${multiUnitText}</td> <td>Piece</td> <td> <span style="background:${isLow ? '#fee2e2':'#dcfce7'}; color:${isLow ? '#ef4444':'#16a34a'}; padding:2px 8px; border-radius:6px; font-size:12.5px; font-weight:bold;">
-                            ${isLow ? 'LOW STOCK':'HEALTHY'}
-                        </span> </td> </tr>`;
+            const wh = String(p.warehouse || p.branchName || p.branch || p.location || '').trim();
+            if (wh) warehouseMap[wh] = (warehouseMap[wh] || 0) + (stock * sellPrice);
+
+            const dq = num(p.damagedQty), eq = num(p.expiredQty), lq = num(p.lostQty);
+            if (dq || eq || lq) { hasDamageData = true; damagedQty += dq; expiredQty += eq; lostQty += lq; }
         });
 
-        const expectedProfit = totalSellingValue - totalCostValue;
+        const outCount = prods.filter(p => num(p.stock) <= 0).length;
+        const lowCount = reorderList.filter(r => r.currentStock > 0).length;
+        const warehouseNames = Object.keys(warehouseMap);
+
+        /* Risiti zinazosubiri: kutoka `purchase_orders` (status pending) */
+        const pos = skhDocs(data.poSnap);
+        const pendingReceipts = pos.length ? pos.filter(po => String(po.status || 'pending') === 'pending').length : null;
+
+        const kpiCards = [
+            skhKpi('TOTAL SKUs', hasAny ? skhCount(prods.length) : SKH_NA, hasAny ? '' : 'Hakuna bidhaa zilizopakiwa'),
+            skhKpi('TOTAL STOCK UNITS', hasAny ? skhCount(totalUnits) : SKH_NA, '', '#10b981'),
+            skhKpi('INVENTORY VALUE (COST)', hasAny ? skhMoney(totalCostValue) : SKH_NA, 'Stoo × bei ya kununua', '#0284c7'),
+            skhKpi('LOW STOCK', hasAny ? skhCount(lowCount) : SKH_NA, '', '#f59e0b'),
+            skhKpi('OUT OF STOCK', hasAny ? skhCount(outCount) : SKH_NA, '', '#ef4444'),
+            skhKpi('PENDING RECEIPTS', pendingReceipts == null ? SKH_NA : skhCount(pendingReceipts), pendingReceipts == null ? 'Hakuna oda za manunuzi zilizopakiwa' : '', '#6366f1'),
+            skhKpi('WAREHOUSES', warehouseNames.length ? skhCount(warehouseNames.length) : SKH_NA, warehouseNames.length ? '' : 'Hakuna sehemu ya ghala kwenye bidhaa'),
+            skhKpi('STOCK TURNOVER', SKH_NA, 'Inahitaji historia ya mauzo (haipo kwenye ukurasa huu)'),
+            skhKpi('EXPECTED SALES VALUE', hasAny ? skhMoney(totalSellingValue) : SKH_NA, 'Stoo × bei ya mauzo', '#22c55e'),
+            skhKpi('EXPECTED PROFIT (STOCK)', hasAny ? skhMoney(totalSellingValue - totalCostValue) : SKH_NA, 'Mauzo − gharama ya stoo')
+        ];
 
         ws.innerHTML = `
-        <div style="animation: fadeIn 0.3s ease; display:flex; flex-direction:column; gap:20px; text-align:left;"> <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> Inventory & Stock Control Room</h2> <!-- ROW 1: 8 INVENTORY KPI CARDS --> <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;"> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> TOTAL SKUs</small> <b style="font-size:16px; color:#0f172a; display:block; margin-top:4px;">1,250</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> TOTAL STOCK UNITS</small> <b style="font-size:16px; color:#10b981; display:block; margin-top:4px;">52,000 Pcs</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> INVENTORY VALUE</small> <b style="font-size:16px; color:#0284c7; display:block; margin-top:4px;">TZS 85,000,000</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> LOW STOCK</small> <b style="font-size:16px; color:#f59e0b; display:block; margin-top:4px;">25</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> OUT OF STOCK</small> <b style="font-size:16px; color:#ef4444; display:block; margin-top:4px;">10</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> PENDING RECEIPTS</small> <b style="font-size:16px; color:#6366f1; display:block; margin-top:4px;">5</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> WAREHOUSES</small> <b style="font-size:16px; color:#06b6d4; display:block; margin-top:4px;">3</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> STOCK TURNOVER</small> <b style="font-size:16px; color:#22c55e; display:block; margin-top:4px;">8.5x</b> </div> </div> <!-- ROW 2: MOVEMENT & VALUATION CHARTS --> <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:20px;"> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Stock Movement Trend (In vs Out)</b> <div style="height:150px;"><canvas id="invMovementLine"></canvas></div> </div> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Valuation by Warehouse</b> <div style="height:150px;"><canvas id="invWarehouseValuationBar"></canvas></div> </div> </div> <!-- ROW 3: DETAILED STOCK TABLE (Base Unit Conversion Aware) --> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;"> STOCK OVERVIEW (MULTI-UNIT CONVERSIONS)</b> <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;"> <thead> <tr style="border-bottom:1px solid #e2e8f0; color:gray;"><th style="padding:6px 0;">Product</th><th>Barcode</th><th>Current Stock</th><th>Base Unit</th><th>Status</th></tr> </thead> <tbody>
-                        ${stockItemsRows || `
-                            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 0; font-weight:bold;"> Sugar Bag</td><td>N/A</td><td><b>5 Boxes</b> (60 Pcs)</td><td>Piece</td><td><span style="background:#dcfce7; color:#16a34a; padding:2px 8px; border-radius:6px; font-size:12.5px; font-weight:bold;">HEALTHY</span></td></tr> `}
-                    </tbody> </table> </div> <!-- ROW 4: REORDERS & DAMAGES --> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;"> <!-- Reorders --> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px; color:#d97706;"> Reorder Alerts</b> <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
-                        ${reorderList.length > 0 ? reorderList.map(p => `
-                            <div style="background:#fffbeb; padding:10px; border-radius:8px; border-left:4px solid #d97706; margin-bottom:6px;"> <b>${p.title}</b> is running low. Current Stock: <b>${p.currentStock} Pcs</b>. Suggested Order: <b style="color:green;">+${p.suggestedQty} Pcs</b> [1].
-                            </div> `).join('') : '<p style="color:gray; font-style:italic;">Stoo ipo salama! Hakuna bidhaa inayokaribia kuisha stoo.</p>'}
-                    </div> </div> <!-- Damage Analysis --> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px; display:flex; gap:15px; align-items:center;"> <div style="flex:1; height:120px; position:relative;"><canvas id="invDamagesChart"></canvas></div> <div style="flex:1; font-size:13px; display:flex; flex-direction:column; gap:6px;"> <b style="color:#0f172a; text-transform:uppercase;">Damages & Expiry</b> <span> Damaged (40%)</span> <span> Expired (30%)</span> <span> Lost (20%)</span> <span> Other (10%)</span> </div> </div> </div> </div>`;
+        <div style="animation: fadeIn 0.3s ease; display:flex; flex-direction:column; gap:20px; text-align:left;">
+            <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> Inventory & Stock Control Room</h2>
+            <p style="margin:0; color:#64748b; font-size:12px; margin-top:-15px;">Namba zote zinatoka kwenye bidhaa zako halisi. Sehemu zisizo na chanzo zinaonyesha ${SKH_NA}.</p>
+            ${skhKpiGrid(kpiCards)}
+
+            <div class="bos-grid-2">
+                ${skhChartCard('Stock Movement Trend (In vs Out)', 'invMovementLine', false, 'Hakuna rekodi za mwendo wa stoo (stock movements) zilizopakiwa kwenye ukurasa huu.')}
+                ${skhChartCard('Valuation by Warehouse', 'invWarehouseValuationBar', warehouseNames.length > 0, 'Bidhaa hazina sehemu ya ghala/tawi, kwa hiyo thamani kwa ghala haiwezi kuhesabiwa.')}
+            </div>
+
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">
+                <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;"> STOCK OVERVIEW (MULTI-UNIT CONVERSIONS)</b>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #e2e8f0; color:gray;"><th style="padding:6px 0;">Product</th><th>Barcode</th><th>Current Stock</th><th>Base Unit</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        ${stockItemsRows.length
+                            ? stockItemsRows.join('')
+                            : skhTableEmpty(5, 'Hakuna bidhaa zilizopakiwa. Bidhaa zitaonekana hapa mara tu zitakapoongezwa kwenye Bidhaa Zangu.')}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bos-grid-2">
+                <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">
+                    <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px; color:#d97706;"> Reorder Alerts</b>
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+                        ${reorderList.length > 0
+                            ? reorderList.map(p => `
+                                <div style="background:#fffbeb; padding:10px; border-radius:8px; border-left:4px solid #d97706; margin-bottom:6px;">
+                                    <b>${p.title}</b> — Stoo: <b>${skhCount(p.currentStock)} Pcs</b> (kiwango cha chini ${skhCount(p.reorderLevel)}). Pendekezo la kuagiza: <b style="color:green;">+${skhCount(p.suggestedQty)} Pcs</b>
+                                </div>`).join('')
+                            : (hasAny
+                                ? '<p style="color:gray; font-style:italic;">Stoo ipo salama! Hakuna bidhaa inayokaribia kuisha stoo.</p>'
+                                : skhStateBox('empty', 'Hakuna data ya stoo', 'Hakuna bidhaa zilizopakiwa, kwa hiyo hakuna tahadhari za kuagiza.'))}
+                    </div>
+                </div>
+                <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">
+                    <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Damages & Expiry</b>
+                    ${hasDamageData
+                        ? '<div style="display:flex; gap:15px; align-items:center;"><div style="flex:1; height:120px; position:relative;"><canvas id="invDamagesChart"></canvas></div>'
+                          + '<div style="flex:1; font-size:13px; display:flex; flex-direction:column; gap:6px;"><span>Damaged: <b>' + skhCount(damagedQty) + '</b></span><span>Expired: <b>' + skhCount(expiredQty) + '</b></span><span>Lost: <b>' + skhCount(lostQty) + '</b></span></div></div>'
+                        : skhStateBox('empty', 'Hakuna data', 'Rekodi za uharibifu/expiry (damagedQty / expiredQty / lostQty) hazipo kwenye bidhaa zilizopakiwa.')}
+                </div>
+            </div>
+        </div>`;
 
         setTimeout(() => {
-            // Sasa tunatumia chombo kipya 'safeCreateChart' kuzuia canvas crashes
-            window.safeCreateChart('invMovementLine', {
-                type: 'line',
-                data: {
-                    labels: ['01 Jun', '05 Jun', '09 Jun', '13 Jun', '17 Jun', '19 Jun'],
-                    datasets: [
-                        { label: 'Stock In', data: [100, 150, 80, 220, 190, 310], borderColor: '#10b981', fill: false },
-                        { label: 'Stock Out', data: [40, 80, 50, 120, 110, 180], borderColor: '#ef4444', fill: false }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            window.safeCreateChart('invWarehouseValuationBar', {
-                type: 'bar',
-                data: {
-                    labels: ['Main Warehouse', 'Kariakoo Branch', 'Mbezi Branch'],
-                    datasets: [{
-                        label: 'Stock Value (TSh)',
-                        data: [45000000, 25000000, 15000000],
-                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            window.safeCreateChart('invDamagesChart', {
-                type: 'doughnut',
-                data: {
-                    labels: ['Damaged', 'Expired', 'Lost', 'Other'],
-                    datasets: [{
-                        data: [40, 30, 20, 10],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#cbd5e1'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
-            });
+            try {
+                if (warehouseNames.length > 0) {
+                    window.safeCreateChart('invWarehouseValuationBar', {
+                        type: 'bar',
+                        data: {
+                            labels: warehouseNames,
+                            datasets: [{ label: 'Stock Value (TSh)', data: warehouseNames.map(w => Math.round(warehouseMap[w])), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#4D91AA'] }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+                if (hasDamageData) {
+                    window.safeCreateChart('invDamagesChart', {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Damaged', 'Expired', 'Lost'],
+                            datasets: [{ data: [damagedQty, expiredQty, lostQty], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'], borderWidth: 0 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+                    });
+                }
+            } catch (e) { console.warn('[BOS] inventory charts:', e && e.message); }
         }, 100);
         return;
     }
@@ -339,62 +664,126 @@ window.renderActiveTabContent = function() {
     // 4.  GENERAL LEDGER (DAFTARI KUU LA HASIBU)
     // ==========================================
     if (tab === 'expenses') {
-        let expHtml = '';
-        let debtHtml = '';
-        let journalRows = '';
-        
-        data.ledgerSnap.forEach(docSnap => {
-            const l = docSnap.data();
-            const dateStr = new Date(l.date).toLocaleDateString();
-            
-            if (l.type === 'expense') {
-                expHtml += `
-                    <div style="padding:10px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; font-size:13px; text-align:left;"> <span><b>${l.title}</b><br><small>${dateStr}</small></span> <b style="color:red;">- TSh ${l.amount.toLocaleString()}</b> </div>`;
-                    
-                journalRows += `
-                    <tr style="border-bottom:1px solid #f1f5f9;"> <td>${dateStr}</td> <td>${l.title}</td> <td style="color:red;">-</td> <td style="color:red; font-weight:bold;">TSh ${l.amount.toLocaleString()}</td> </tr>`;
-            } else if (l.type === 'income_offline' || l.type === 'income_online') {
-                journalRows += `
-                    <tr style="border-bottom:1px solid #f1f5f9;"> <td>${dateStr}</td> <td>${l.title}</td> <td style="color:green; font-weight:bold;">TSh ${l.amount.toLocaleString()}</td> <td style="color:green;">-</td> </tr>`;
-            } else if (l.type === 'debt' && l.status === 'pending') {
-                debtHtml += `
-                    <div style="padding:12px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; font-size:13px; text-align:left; background:#fff5f5; border-radius:10px; margin-bottom:8px;"> <div> <b> ${l.title}</b><br> <small>${skh.skhEscape(l.notes || '')}</small><br> <small style="color:gray;">Muda: ${dateStr}</small> </div> <div style="text-align:right;"> <b style="color:red; display:block; margin-bottom:5px;">TSh ${l.amount.toLocaleString()}</b> <button onclick="window.markDebtPaid('${docSnap.id}', ${l.amount})" style="padding:4px 8px; background:var(--green); color:white; border:none; border-radius:5px; font-weight:bold; font-size:12.5px; cursor:pointer;">LIPWA </button> </div> </div>`;
-            }
-        });
+        /* [DATA INTEGRITY 2026-11-03] Ukurasa huu ni MATUMIZI & GHARAMA, si General
+           Ledger. Namba zote kutoka `shop_ledger` halisi. Salio la fedha taslimu/benki,
+           AP na reconciliation hazipo kwenye data inayopakiwa → `—` + sababu. */
+        const rows = skhDocs(data.ledgerSnap);
+        const hasAny = rows.length > 0;
+        const amt = (l) => parseFloat(l.amount) || 0;
+
+        const incomeRows = rows.filter(l => l && (l.type === 'income_offline' || l.type === 'income_online'));
+        const expenseRows = rows.filter(l => l && l.type === 'expense');
+        const debtRows = rows.filter(l => l && l.type === 'debt' && String(l.status || 'pending') === 'pending');
+
+        const revenue = hasAny ? incomeRows.reduce((t, l) => t + amt(l), 0) : null;
+        const expenses = hasAny ? expenseRows.reduce((t, l) => t + amt(l), 0) : null;
+        const profit = (revenue != null && expenses != null) ? revenue - expenses : null;
+        const receivables = hasAny ? debtRows.reduce((t, l) => t + amt(l), 0) : null;
+        const realDebts = skhIsNum(parseFloat(data.activeDebts)) ? parseFloat(data.activeDebts) : null;
+
+        const dateOf = (l) => { const d = l.date ? new Date(l.date) : null; return d && !isNaN(d) ? d.toLocaleDateString('sw-TZ') : SKH_NA; };
+        const journalRows = rows
+            .filter(l => l && (l.type === 'expense' || l.type === 'income_offline' || l.type === 'income_online'))
+            .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+            .map(l => {
+                const isIncome = l.type !== 'expense';
+                return `<tr style="border-bottom:1px solid #f1f5f9; font-size:12px; text-align:left;">
+                    <td style="padding:9px 0;">${dateOf(l)}</td>
+                    <td>${l.title || l.category || SKH_NA}</td>
+                    <td style="font-weight:bold; color:${isIncome ? '#178864' : '#94A3B8'};">${isIncome ? skhMoney(amt(l)) : SKH_NA}</td>
+                    <td style="font-weight:bold; color:${isIncome ? '#94A3B8' : '#ef4444'};">${isIncome ? SKH_NA : skhMoney(amt(l))}</td>
+                </tr>`;
+            });
+
+        const kpiCards = [
+            skhKpi('CASH BALANCE', SKH_NA, 'Hakuna rekodi ya fedha taslimu iliyopakiwa'),
+            skhKpi('BANK BALANCE', SKH_NA, 'Hakuna rekodi ya benki iliyopakiwa'),
+            skhKpi('RECEIVABLES (MATEJA)', revenue == null ? SKH_NA : skhMoney(realDebts != null ? realDebts : receivables), 'Madeni yanayodaiwa (shop_ledger)', '#f59e0b'),
+            skhKpi('PAYABLES (SUPPLIERS)', SKH_NA, 'Hakuna rekodi za AP (Accounts Payable)'),
+            skhKpi('REVENUE', revenue == null ? SKH_NA : skhMoney(revenue), incomeRows.length ? incomeRows.length + ' miamala' : '', '#0284c7'),
+            skhKpi('EXPENSES', expenses == null ? SKH_NA : skhMoney(expenses), expenseRows.length ? expenseRows.length + ' matumizi' : '', '#f97316'),
+            skhKpi('NET PROFIT', profit == null ? SKH_NA : skhMoney(profit), 'Mapato − matumizi', '#178864'),
+            skhKpi('UNRECONCILED', SKH_NA, 'Ulinganisho wa benki haujajengwa (reconciliation)')
+        ];
 
         ws.innerHTML = `
-        <div style="animation: fadeIn 0.3s ease; display:flex; flex-direction:column; gap:20px; text-align:left;"> <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> General Ledger (Daftari Kuu)</h2> <!-- ROW 1: 8 FINANCIAL KPI CARDS --> <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;"> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> CASH BALANCE</small> <b style="font-size:16px; color:#10b981; display:block; margin-top:4px;">TZS 5,000,000</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> BANK BALANCE</small> <b style="font-size:16px; color:#0284c7; display:block; margin-top:4px;">TZS 15,000,000</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> RECEIVABLES (MATEJA)</small> <b style="font-size:16px; color:#f59e0b; display:block; margin-top:4px;">TZS ${(data.activeDebts || 3000000).toLocaleString()}</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> PAYABLES (SUPPLIERS)</small> <b style="font-size:16px; color:#ef4444; display:block; margin-top:4px;">TZS 2,000,000</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> REVENUE</small> <b style="font-size:16px; color:#06b6d4; display:block; margin-top:4px;">TZS ${(data.totalSales || 20000000).toLocaleString()}</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> EXPENSES</small> <b style="font-size:16px; color:#ea580c; display:block; margin-top:4px;">TZS ${(data.totalExpenses || 8000000).toLocaleString()}</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> NET PROFIT</small> <b style="font-size:16px; color:#10b981; display:block; margin-top:4px;">TZS ${(data.totalProfit || 12000000).toLocaleString()}</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold; text-transform:uppercase;"> UNRECONCILED</small> <b style="font-size:16px; color:#64748b; display:block; margin-top:4px;">5 Entries</b> </div> </div> <!-- ROW 2: GENERAL LEDGER CHARTS --> <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:20px;"> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Revenue Trend & Escrow Dynamics</b> <div style="height:150px;"><canvas id="ledgerRevenueLine"></canvas></div> </div> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px; display:flex; gap:15px; align-items:center;"> <div style="flex:1; height:120px; position:relative;"><canvas id="ledgerExpenseDonut"></canvas></div> <div style="flex:1; font-size:13px; display:flex; flex-direction:column; gap:6px;"> <b style="color:#0f172a; text-transform:uppercase;">Gharama (Expenses)</b> <span> Rent (40%)</span> <span> Salary (35%)</span> <span> Transport (15%)</span> <span> Utilities (10%)</span> </div> </div> </div> <!-- ROW 3: REAL JOURNAL ENTRIES --> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;"> JOURNAL ENTRIES (KITABU CHA MIAMALA)</b> <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;"> <thead> <tr style="border-bottom:1px solid #e2e8f0; color:gray;"><th style="padding:6px 0;">Tarehe</th><th>Maelezo / Miamala</th><th style="color:green;">Debit (Ingia)</th><th style="color:red;">Credit (Toka)</th></tr> </thead> <tbody>
-                        ${journalRows || `
-                            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 0;">${new Date().toLocaleDateString('sw-TZ', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td><td>Mauzo ya POS (Cash)</td><td style="color:green; font-weight:bold;">TSh 50,000</td><td style="color:red;">-</td></tr> `}
-                    </tbody> </table> </div> </div>`;
+        <div style="animation: fadeIn 0.3s ease; display:flex; flex-direction:column; gap:20px; text-align:left;">
+            <div style="background:#FFF8E6; border:1px solid #F0DFAE; border-radius:12px; padding:12px 14px; color:#5C4A12; font-size:12.5px; line-height:1.45;">
+                <b style="display:block; font-size:13px; margin-bottom:2px;">General Ledger haijajengwa bado</b>
+                Ukurasa huu unaonyesha matumizi, mapato na madeni yaliyorekodiwa (shop_ledger). Uwezo kamili wa uhasibu
+                (Chart of Accounts, debit/credit kwa akaunti, trial balance, AR/AP, Cash &amp; Bank, Reconciliation)
+                haupo kwenye mfumo — umo kwenye orodha ya vipengele vinavyohitaji idhini.
+            </div>
+
+            <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> Matumizi &amp; Gharama (Expenses &amp; Costs)</h2>
+            <p style="margin:0; color:#64748b; font-size:12px; margin-top:-15px;">Namba zote zinatoka kwenye rekodi zako halisi. Sehemu zisizo na chanzo zinaonyesha ${SKH_NA}.</p>
+            ${skhKpiGrid(kpiCards)}
+
+            <div class="bos-grid-2">
+                ${skhChartCard('Revenue Trend', 'ledgerRevenueLine', hasAny && incomeRows.length > 0, 'Hakuna rekodi za mapato zilizopakiwa, kwa hiyo mwenendo hauwezi kuonyeshwa.')}
+                ${skhChartCard('Expenses by Category', 'ledgerExpenseDonut', hasAny && expenseRows.some(l => l.category), 'Matumizi hayana kategoria (category) kwenye rekodi, kwa hiyo mgawanyo hauwezi kuhesabiwa.')}
+            </div>
+
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">
+                <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;"> JOURNAL ENTRIES (KITABU CHA MIAMALA)</b>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #e2e8f0; color:gray;"><th style="padding:6px 0;">Tarehe</th><th>Maelezo / Miamala</th><th>Debit (Ingia)</th><th>Credit (Toka)</th></tr>
+                    </thead>
+                    <tbody>
+                        ${journalRows.length ? journalRows.join('') : skhTableEmpty(4, 'Hakuna miamala ya mapato/matumizi iliyorekodiwa bado. Rekodi zitaonekana hapa mara tu zitakapoongezwa.')}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">
+                <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Madeni Yanayodaiwa (MATEJA)</b>
+                ${debtRows.length
+                    ? debtRows.map(l => `<div style="padding:10px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; font-size:12.5px;"><span><b>${l.title || 'Deni'}</b> · ${dateOf(l)}</span><b>${skhMoney(amt(l))}</b></div>`).join('')
+                    : skhStateBox('empty', 'Hakuna madeni', 'Hakuna rekodi za madeni yanayosubiri malipo kwenye shop_ledger.')}
+            </div>
+        </div>`;
 
         setTimeout(() => {
-            window.safeCreateChart('ledgerRevenueLine', {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Escrow Released TZS',
-                        data: [3000000, 5000000, 4500000, 7000000, 8500000, data.totalSales],
-                        borderColor: '#10b981',
-                        fill: false
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            window.safeCreateChart('ledgerExpenseDonut', {
-                type: 'doughnut',
-                data: {
-                    labels: ['Rent', 'Salary', 'Transport', 'Utilities'],
-                    datasets: [{
-                        data: [40, 35, 15, 10],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#cbd5e1'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
-            });
+            try {
+                if (incomeRows.length > 0) {
+                    /* Mwenendo halisi: jumla ya mapato kwa mwezi kutoka shop_ledger */
+                    const byMonth = {};
+                    incomeRows.forEach(l => {
+                        const d = l.date ? new Date(l.date) : null;
+                        if (!d || isNaN(d)) return;
+                        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                        byMonth[key] = (byMonth[key] || 0) + amt(l);
+                    });
+                    const labels = Object.keys(byMonth).sort();
+                    if (labels.length) {
+                        window.safeCreateChart('ledgerRevenueLine', {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{ label: 'Mapato (TZS)', data: labels.map(k => Math.round(byMonth[k])), borderColor: '#10b981', fill: false }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                }
+                const cats = {};
+                expenseRows.forEach(l => {
+                    const c = String(l.category || '').trim();
+                    if (c) cats[c] = (cats[c] || 0) + amt(l);
+                });
+                const catKeys = Object.keys(cats);
+                if (catKeys.length) {
+                    window.safeCreateChart('ledgerExpenseDonut', {
+                        type: 'doughnut',
+                        data: {
+                            labels: catKeys,
+                            datasets: [{ data: catKeys.map(k => Math.round(cats[k])), backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#18A982', '#cbd5e1'], borderWidth: 0 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                    });
+                }
+            } catch (e) { console.warn('[BOS] ledger charts:', e && e.message); }
         }, 100);
         return;
     }
@@ -403,51 +792,129 @@ window.renderActiveTabContent = function() {
     // 5.  STAFF & PAYROLL MODULE (Kazi, Mahudhurio na Mipangilio Maalum ya Mhudumu)
     // ==========================================
     if (tab === 'staff') {
-        let staffRows = '';
-        data.staffSnap.forEach(docSnap => {
-            const s = docSnap.data();
-            const salary = parseFloat(s.salary) || 300000;
-            const paid = parseFloat(s.paidSalary) || 0;
-            const pending = salary - paid;
+        /* [DATA INTEGRITY 2026-11-03] Wafanyakazi/mishahara kutoka `shop_staff` halisi.
+           Mahudhurio na "top performer" hazina chanzo kwenye ukurasa huu → `—`. */
+        const staff = skhDocs(data.staffSnap);
+        const hasAny = staff.length > 0;
+        const num = (v) => parseFloat(v) || 0;
 
-            staffRows += `
-                <tr style="border-bottom:1px solid #f1f5f9; font-size:12px; text-align:left;"> <td style="padding:10px 0; font-weight:bold;"> ${s.name}</td> <td>${s.role || 'Cashier'}</td> <td>${s.status || 'Active'}</td> <td>TSh ${salary.toLocaleString()}</td> <td style="color:green; font-weight:bold;">TSh ${paid.toLocaleString()}</td> <td style="color:red; font-weight:bold;">TSh ${pending.toLocaleString()}</td> </tr>`;
+        const payrollTotal = hasAny ? staff.reduce((t, s) => t + num(s.salary), 0) : null;
+        const paidTotal = hasAny ? staff.reduce((t, s) => t + num(s.paidSalary), 0) : null;
+        const withSalary = staff.filter(s => s.salary != null && s.salary !== '');
+
+        const roleMap = {};
+        staff.forEach(s => { const r = String(s.role || '').trim(); if (r) roleMap[r] = (roleMap[r] || 0) + 1; });
+        const roleKeys = Object.keys(roleMap);
+        const hasRoleData = roleKeys.length > 0;
+
+        const staffRows = staff.map(s => {
+            const salary = (s.salary != null && s.salary !== '') ? num(s.salary) : null;
+            const paid = (s.paidSalary != null && s.paidSalary !== '') ? num(s.paidSalary) : 0;
+            const pending = salary == null ? null : salary - paid;
+            return `<tr style="border-bottom:1px solid #f1f5f9; font-size:12px; text-align:left;">
+                <td style="padding:9px 0; font-weight:bold;"> ${s.name || s.fullName || s.staffName || SKH_NA}</td>
+                <td>${s.role || SKH_NA}</td>
+                <td>${s.status || SKH_NA}</td>
+                <td>${salary == null ? SKH_NA : skhMoney(salary)}</td>
+                <td style="color:green; font-weight:bold;">${skhMoney(paid)}</td>
+                <td style="color:red; font-weight:bold;">${pending == null ? SKH_NA : skhMoney(pending)}</td>
+            </tr>`;
         });
 
+        /* [PHASE3-DEEP 2026-11-04] Fomu ya kusajili mfanyakazi (ADD-ONLY).
+           Markup pekee — handler ni ile ile iliyopo: window.submitAddNewStaff (15-pos-sales.js).
+           Nafasi (roles) zinatoka kwenye orodha moja: window.SKH_STAFF_ROLES. */
+        const staffRoleList = (Array.isArray(window.SKH_STAFF_ROLES) && window.SKH_STAFF_ROLES.length)
+            ? window.SKH_STAFF_ROLES
+            : ['Manager', 'Cashier', 'Storekeeper', 'Pharmacist'];
+        const staffRoleOptions = staffRoleList.map((r, i) =>
+            `<option value="${skh.skhEscape(r)}">${skh.skhEscape(r)}</option>`).join('');
+
+        const kpiCards = [
+            skhKpi('TOTAL STAFF', hasAny ? skhCount(staff.length) : SKH_NA, hasAny ? '' : 'Hakuna wafanyakazi waliosajiliwa'),
+            skhKpi('PRESENT TODAY', SKH_NA, 'Mahudhurio (attendance) hayapakiwi kwenye ukurasa huu'),
+            skhKpi('MONTHLY PAYROLL', payrollTotal == null ? SKH_NA : skhMoney(payrollTotal), withSalary.length ? withSalary.length + ' wenye mshahara' : 'Hakuna mishahara iliyowekwa', '#178864'),
+            skhKpi('TOP PERFORMER', SKH_NA, 'Inahitaji data ya mauzo kwa mfanyakazi (haipo)')
+        ];
+
         ws.innerHTML = `
-        <div style="animation: fadeIn 0.3s ease; display:flex; flex-direction:column; gap:20px; text-align:left;"> <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> Staff & Payroll Management</h2> <!-- ROW 1: KPI CARDS --> <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;"> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> TOTAL STAFF</small> <b style="font-size:16px; color:#0f172a; display:block; margin-top:4px;">25</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> PRESENT TODAY</small> <b style="font-size:16px; color:#10b981; display:block; margin-top:4px;">20</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> MONTHLY PAYROLL</small> <b style="font-size:16px; color:var(--primary-blue); display:block; margin-top:4px;">TZS 8,000,000</b> </div> <div style="background:white; border:1px solid #E2E8F0; padding:15px; border-radius:14px;"> <small style="color:gray; font-size:12px; font-weight:bold;"> TOP PERFORMER</small> <b style="font-size:16px; color:#06b6d4; display:block; margin-top:4px;">John (Cashier)</b> </div> </div> <!-- ROW 2: STAFF PERFORMANCE CHARTS --> <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:20px;"> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px;"> Attendance Trend (Weekly)</b> <div style="height:150px;"><canvas id="chart_pAttendanceLine"></canvas></div> </div> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px; display:flex; gap:15px; align-items:center;"> <div style="flex:1; height:120px; position:relative;"><canvas id="chart_pStaffDistributionDonut"></canvas></div> <div style="flex:1; font-size:13px; display:flex; flex-direction:column; gap:6px;"> <b style="color:#0f172a; text-transform:uppercase;">Staff Distribution</b> <span> Sales (40%)</span> <span> Operations (30%)</span> <span> Finance (20%)</span> </div> </div> </div> <!-- ROW 3: DETAILED EMPLOYEES TABLE --> <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;"> <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;"> EMPLOYEES DIRECTORY & PAYROLL DETAILS</b> <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;"> <thead> <tr style="border-bottom:1px solid #e2e8f0; color:gray;"><th style="padding:6px 0;">Name</th><th>Role</th><th>Status</th><th>Salary</th><th>Paid</th><th>Pending</th></tr> </thead> <tbody>
-                        ${staffRows || `
-                            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 0; font-weight:bold;"> Ali Hassan</td><td>Cashier</td><td>Active</td><td>TSh 300,000</td><td style="color:green; font-weight:bold;">TSh 300,000</td><td style="color:red; font-weight:bold;">TSh 0</td></tr> `}
-                    </tbody> </table> </div> </div>`;
+        <div style="animation: fadeIn 0.3s ease; display:flex; flex-direction:column; gap:20px; text-align:left;">
+            <h2 style="margin:0; font-size:20px; color:#0f172a; font-weight:800;"> Staff & Payroll Management</h2>
+            <p style="margin:0; color:#64748b; font-size:12px; margin-top:-15px;">Wafanyakazi na mishahara kutoka rekodi zako halisi. Sehemu zisizo na chanzo zinaonyesha ${SKH_NA}.</p>
+            ${skhKpiGrid(kpiCards)}
+
+            <div class="bos-grid-2">
+                ${skhChartCard('Attendance Trend (Weekly)', 'chart_pAttendanceLine', false, 'Hakuna rekodi za mahudhurio (attendance) zilizopakiwa kwenye ukurasa huu.')}
+                ${skhChartCard('Staff Distribution', 'chart_pStaffDistributionDonut', hasRoleData, 'Wafanyakazi hawana sehemu ya nafasi (role) kwenye rekodi.')}
+            </div>
+
+            <!-- [PHASE3-DEEP 2026-11-04] SAJILI MFANYAKAZI — markup mpya inayounganisha handler iliyopo -->
+            <div id="staffRegisterCard" style="background:white; border:1px solid #E1EDE8; border-radius:16px; padding:20px;">
+                <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:12px; border-bottom:2px solid #f1f5f9; padding-bottom:8px; color:#18352D;"> SAJILI MFANYAKAZI MPYA</b>
+                <form id="staffRegisterForm" onsubmit="event.preventDefault(); if (window.submitAddNewStaff) window.submitAddNewStaff();" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:end;">
+                    <label style="display:flex; flex-direction:column; gap:4px; font-size:11.5px; font-weight:800; color:#526962;">Jina la mfanyakazi
+                        <input id="staffNewName" name="staffNewName" type="text" maxlength="80" autocomplete="off" placeholder="mf. Asha Juma" required aria-label="Jina la mfanyakazi" style="padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-weight:600; color:#0f172a; background:#fff;">
+                    </label>
+                    <label style="display:flex; flex-direction:column; gap:4px; font-size:11.5px; font-weight:800; color:#526962;">Mshahara (TSh)
+                        <input id="staffSalary" name="staffSalary" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" placeholder="mf. 350000" required aria-label="Mshahara kwa TSh" style="padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-weight:600; color:#0f172a; background:#fff;">
+                    </label>
+                    <label style="display:flex; flex-direction:column; gap:4px; font-size:11.5px; font-weight:800; color:#526962;">Nafasi / Role
+                        <select id="staffNewRole" name="staffNewRole" aria-label="Nafasi ya mfanyakazi" style="padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-weight:600; color:#0f172a; background:#fff;">${staffRoleOptions}</select>
+                    </label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button id="staffSaveBtn" type="submit" style="flex:1; padding:10px 14px; background:#18A982; color:#fff; border:none; border-radius:9px; font-weight:800; font-size:13px; cursor:pointer;">Hifadhi Mfanyakazi</button>
+                        <button id="staffCancelBtn" type="button" onclick="var f=document.getElementById('staffRegisterForm'); if(f){f.reset();} var m=document.getElementById('staffFormMsg'); if(m){m.textContent='';}" style="padding:10px 14px; background:#fff; color:#526962; border:1px solid #D5E2DE; border-radius:9px; font-weight:800; font-size:13px; cursor:pointer;">Ghairi</button>
+                    </div>
+                    <div id="staffFormMsg" role="status" aria-live="polite" style="grid-column:1 / -1; min-height:16px; font-size:12px; font-weight:700; color:#526962;"></div>
+                </form>
+            </div>
+
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px;">
+                <b style="font-size:12px; text-transform:uppercase; display:block; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;"> EMPLOYEES DIRECTORY &amp; PAYROLL DETAILS</b>
+                <div class="bos-grid-2" style="margin-bottom:14px;">
+                    <div style="background:#F8FBFA; border:1px solid #E1EDE8; border-radius:10px; padding:10px;"><small style="color:#7E9A91; font-weight:800; font-size:11px;">JUMLA ILIYOLIPWA</small><b style="display:block; color:#178864; font-size:14px;">${paidTotal == null ? SKH_NA : skhMoney(paidTotal)}</b></div>
+                    <div style="background:#F8FBFA; border:1px solid #E1EDE8; border-radius:10px; padding:10px;"><small style="color:#7E9A91; font-weight:800; font-size:11px;">INASUBIRI KULIPWA</small><b style="display:block; color:#D9534F; font-size:14px;">${(payrollTotal != null && paidTotal != null) ? skhMoney(payrollTotal - paidTotal) : SKH_NA}</b></div>
+                    <div style="background:#F8FBFA; border:1px solid #E1EDE8; border-radius:10px; padding:10px;"><small style="color:#7E9A91; font-weight:800; font-size:11px;">WENYE NAFASI</small><b style="display:block; color:#18352D; font-size:14px;">${hasRoleData ? skhCount(staff.filter(s => String(s.role || '').trim()).length) : SKH_NA}</b></div>
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #e2e8f0; color:gray;"><th style="padding:6px 0;">Name</th><th>Role</th><th>Status</th><th>Salary</th><th>Paid</th><th>Pending</th></tr>
+                    </thead>
+                    <tbody>
+                        ${staffRows.length ? staffRows.join('') : skhTableEmpty(6, 'Hakuna wafanyakazi waliosajiliwa bado. Ongeza mfanyakazi kwenye mipangilio ya duka ili aanze kuonekana hapa.')}
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
 
         setTimeout(() => {
-            window.safeCreateChart('chart_pAttendanceLine', {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Present Count',
-                        data: [18, 20, 19, 21, 20, 15, 12],
-                        borderColor: '#3b82f6',
-                        fill: false
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            window.safeCreateChart('chart_pStaffDistributionDonut', {
-                type: 'doughnut',
-                data: {
-                    labels: ['Sales', 'Operations', 'Finance'],
-                    datasets: [{
-                        data: [40, 30, 20],
-                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
-            });
+            try {
+                if (hasRoleData) {
+                    window.safeCreateChart('chart_pStaffDistributionDonut', {
+                        type: 'doughnut',
+                        data: {
+                            labels: roleKeys,
+                            datasets: [{ data: roleKeys.map(r => roleMap[r]), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#4D91AA', '#cbd5e1'], borderWidth: 0 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
+                    });
+                }
+            } catch (e) { console.warn('[BOS] staff charts:', e && e.message); }
         }, 100);
+        return;
+    }
+
+    // ==========================================
+    // 5b. TRANSPORT-LINKED MODULES (repair 2026-11-04)
+    // ==========================================
+    if (tab === 'cargo') {
+        /* Token Center HALISI (markup uleule wa mfumo wa Usafirishaji) + taarifa
+           ya utegemezi. Vitufe vyote vinabaki kama vilivyo. */
+        ws.innerHTML = window.skhTokenCenterNoticeHtml() + window.skhTokenCenterHtml();
+        return;
+    }
+    if (['bookings', 'trips', 'tracking', 'drivers', 'fleet', 'finance', 'analytics'].indexOf(tab) !== -1) {
+        ws.innerHTML = window.skhTransportBridgeHtml(tab);
         return;
     }
 
@@ -470,7 +937,20 @@ window.renderActiveTabContent = function() {
                         Mpe Cashier uwezo wa kuona ripoti ya Faida (Profit)
                     </label> <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:12px;"> <input type="checkbox" id="setCashierEditStock" ${s.cashierCanEditStock ? 'checked':''} style="width:18px; height:18px;">
                         Mpe Cashier uwezo wa kuhariri au kuongeza Stock stoo
+                    </label> </div> <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:20px; border-radius:15px; margin-bottom:20px;"> <b style="font-size:12px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;"> RIPOTI ZINAZOONEKANA KWENYE DASHIBODI</b> <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:12px; margin-bottom:10px;"> <input type="checkbox" id="setRepSales" ${s.showSales !== false ? 'checked' : ''} style="width:18px; height:18px;">
+                        Onyesha mauzo (Sales)
+                    </label> <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:12px; margin-bottom:10px;"> <input type="checkbox" id="setRepProfit" ${s.showProfit !== false ? 'checked' : ''} style="width:18px; height:18px;">
+                        Onyesha faida (Profit)
+                    </label> <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:12px; margin-bottom:10px;"> <input type="checkbox" id="setRepLowStock" ${s.showLowStock !== false ? 'checked' : ''} style="width:18px; height:18px;">
+                        Onyesha tahadhari ya stoo ndogo (Low stock)
+                    </label> <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:12px;"> <input type="checkbox" id="setRepDebts" ${s.showDebts !== false ? 'checked' : ''} style="width:18px; height:18px;">
+                        Onyesha madeni ya wateja (Debts)
                     </label> </div> <button onclick="window.saveShopSettings()" id="btnSaveShopSettings" style="width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;"> HIFADHI USANIDI </button> </div>`;
         return;
     }
+
+    /* Fallback: tab isiyojulikana — hii ndiyo ilikuwa sababu ya "maudhui ya
+       zamani chini ya jina jipya". Sasa inaonyesha hali ya ukweli. */
+    ws.innerHTML = window.skhTabNotFoundHtml(tab);
+
 };
