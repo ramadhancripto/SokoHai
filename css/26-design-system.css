@@ -1190,38 +1190,6 @@ button.is-loading { opacity: .75; cursor: progress; }
     backdrop-filter: saturate(180%) blur(6px);
 }
 .skh-backbar--inline { position: relative; border-radius: var(--sh-r-md); margin-bottom: var(--sh-3); }
-
-/* [FIX 2026-11-04] KITUFE CHA "RUDI" KILIKUWA KINAVUNJA SKRINI NZIMA.
-   Kipimo: `css/46-fullscreen-pages.css` ina `#sellerProfileModal > * { height:100% !important }`
-   — hivyo bar iliyoingizwa kiotomatiki ikawa PANEL NYEUPE ya skrini nzima (1440x900)
-   na DUKA LA MUUZAJI Likaonekana tupu (vitufe viwili pekee: "Rudi" na "✕").
-   Sasa bar INAELEA juu ya maudhui: haina height, haina background, haichukui nafasi. */
-html body .overlay-menu > .skh-backbar,
-html body [id$="Modal"] > .skh-backbar {
-    position: absolute !important;
-    top: 10px !important; left: 10px !important; right: auto !important;
-    width: auto !important; height: auto !important;
-    max-height: none !important; min-height: 0 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 8px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    z-index: 60 !important;
-}
-html body .skh-backbar > .skh-backbtn,
-html body .skh-backbar > .skh-closebtn {
-    background: #fff !important;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, .18) !important;
-}
-/* Skrini iliyo na kitufe chake cha kufunga: cha kiotomatiki kinaondolewa */
-html body .skh-backbar.skh-backbar--auto-hidden { display: none !important; }
 .skh-backbtn, .skh-closebtn {
     display: inline-flex; align-items: center; gap: 6px;
     border: 1px solid var(--sh-border-2); background: var(--sh-surface);

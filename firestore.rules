@@ -707,55 +707,6 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------
-    // PRODUCT INQUIRIES (Uliza Zaidi kuhusu Bidhaa)
-    // Swali la FARAGHA kwa muuzaji lenye maswali mengi (aina ya jibu,
-    // machaguo, kipimo). Hii si `comments` — maoni ya umma hayaguswi.
-    //   create : mteja aliyeingia, ni yeye buyerId, status 'sent',
-    //            maswali 1..20, keys zilizoruhusiwa tu.
-    //   update : MUUZAJI pekee (kujaza majibu + status).
-    //   delete : mteja, kabla ya jibu (status 'sent').
-    // ---------------------------------------------------------------
-    function inquiryQuestionValid(q) {
-      return q is map
-        && q.keys().hasOnly(['n','text','type','answerModel','options','unit','exampleValue','required','answer'])
-        && q.n is int && q.n >= 1 && q.n <= 20
-        && q.text is string && q.text.size() >= 1 && q.text.size() <= 160
-        && q.type in ['single','multi','yesno','text','number','measure']
-        && q.answerModel in ['single_select','multi_select','boolean','short_text','number','quantity']
-        && q.required is bool
-        && (!('options' in q) || (q.options is list && q.options.size() <= 12))
-        && (!('unit' in q) || (q.unit is string && q.unit.size() <= 12))
-        && (!('exampleValue' in q) || q.exampleValue is number);
-    }
-    match /productInquiries/{id} {
-      allow read: if signedIn()
-        && (resource.data.buyerId == request.auth.uid
-            || resource.data.sellerId == request.auth.uid
-            || isAdmin());
-      allow create: if signedIn()
-        && request.resource.data.buyerId == request.auth.uid
-        && request.resource.data.status == 'sent'
-        && request.resource.data.version == 1
-        && request.resource.data.questions is list
-        && request.resource.data.questions.size() >= 1
-        && request.resource.data.questions.size() <= 20
-        && request.resource.data.keys().hasOnly([
-             'productId','productCollection','productTitle','productImage',
-             'productPrice','productUnit','sellerId','sellerName',
-             'buyerId','buyerName','buyerPhoto','status','version',
-             'questions','counts','createdAt','updatedAt'
-           ])
-        && request.resource.data.counts.questions == request.resource.data.questions.size();
-      allow update: if signedIn()
-        && resource.data.sellerId == request.auth.uid
-        && changed().hasOnly(['questions','status','counts','updatedAt'])
-        && request.resource.data.status in ['sent','answered','declined','expired','cancelled'];
-      allow delete: if signedIn()
-        && resource.data.buyerId == request.auth.uid
-        && resource.data.status == 'sent';
-    }
-
-    // ---------------------------------------------------------------
     // NEGOTIATION
     // ---------------------------------------------------------------
     function isNegoState(s) {

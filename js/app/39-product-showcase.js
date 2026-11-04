@@ -433,61 +433,16 @@ import {
         var key = col + '__' + p.id;
         var type = col === PS_SERVICE ? 'service' : (col === PS_DRIVER ? 'transport' : 'product');
 
-        /* [MAONI POLISH 2026-11-04] Kadi kamili ya TATHMINI: wastani mkubwa,
-           nyota, idadi, na mgawanyo wa nyota 5→1 (bars). Ombi la mtumiaji:
-           "maoni yafunguke vizuri, yaonekane maoni ya watu na tathmini nzuri". */
-        var revCount = Number(s.count) || 0;
-        var dist = [0, 0, 0, 0, 0];                    // index 0 = nyota 5
-        (s.latest || []).forEach(function (c) {
-            var r = Math.round(Number(c.rating) || 0);
-            if (r >= 1 && r <= 5) dist[5 - r]++;
-        });
-        var barsHtml = '';
-        for (var bi = 0; bi < 5; bi++) {
-            var starN = 5 - bi, cnt = dist[bi];
-            var pct = revCount ? Math.round(cnt * 100 / revCount) : 0;
-            barsHtml += '<div class="pm-rv-bar-row">'
-                + '<span class="pm-rv-bar-lbl">' + starN + '<span class="pm-rv-bar-star" aria-hidden="true">' + pico('star', 11) + '</span></span>'
-                + '<span class="pm-rv-bar"><i style="width:' + pct + '%"></i></span>'
-                + '<span class="pm-rv-bar-n">' + cnt + '</span></div>';
-        }
-        var cta = '<button type="button" class="pm-rv-cta" onclick="window.openRatingModal(\'' + jsEsc(p.id) + '\',\'' + type + '\',\'' + jsEsc(psTitle(p, col)) + '\')">'
-            + pico('star', 14) + ' ' + T('rate_it', 'Toa Tathmini') + '</button>';
-
-        var head = '<div class="pm-rv-card' + (revCount ? '' : ' is-empty') + '">'
-            + '<div class="pm-rv-top">'
-            +   (revCount
-                ? '<div class="pm-rv-scorebox">'
-                  + '<div class="pm-rv-avg">' + s.avg.toFixed(1) + '</div>'
-                  + '<div class="pm-rv-meta">' + starsHtml(s.avg)
-                  +   '<span class="pm-rv-count">' + revCount + ' tathmini</span></div>'
-                  + '</div>'
-                : '<div class="pm-rv-scorebox"><div class="pm-rv-meta">'
-                  + '<b class="pm-rv-title">Tathmini za Wateja</b>'
-                  + '<span class="pm-rv-count">Hakuna tathmini bado</span></div></div>')
-            +   cta
+        var head = '<div class="pm-rev-head"><div class="pm-rev-score">'
+            + '<div class="pm-rev-avg">' + (s.count ? s.avg.toFixed(1) : '–') + '</div>'
+            + '<div>' + starsHtml(s.avg) + '<div class="pm-muted">' + (s.count ? s.count + ' tathmini' : 'Bado hakuna tathmini') + '</div></div>'
             + '</div>'
-            + (revCount
-                ? '<div class="pm-rv-bars">' + barsHtml + '</div>'
-                : '<div class="pm-rv-empty-state">'
-                    + '<span class="pm-rv-empty-ic" aria-hidden="true">' + pico('star', 20) + '</span>'
-                    + '<div><b>Bado hakuna tathmini</b>'
-                    + '<p>Kuwa wa kwanza kumtathmini muuzaji baada ya kupokea bidhaa — maoni yako husaidia wateja wengine.</p></div>'
-                    + '</div>')
+            + '<button type="button" class="pm-btn-outline" onclick="window.openRatingModal(\'' + jsEsc(p.id) + '\',\'' + type + '\',\'' + jsEsc(psTitle(p, col)) + '\')">' + pico('star', 14) + ' ' + T('rate_it', 'Toa Tathmini') + '</button>'
             + '</div>';
 
-        /* Chip ya kichwa cha sheet: ikiwa hakuna maoni ya umma lakini kuna
-           tathmini, chip ionyeshe idadi ya tathmini (si tupu). */
-        window.__skhReviewsCount = revCount;
-        try {
-            var chip = document.getElementById('skhCmPanelCount');
-            if (chip && !String(chip.textContent || '').replace(/[^0-9]/g, '')) {
-                chip.textContent = revCount ? String(revCount) : '';
-            }
-        } catch (e) {}
-
-        if (!revCount) {
-            sec.innerHTML = head;
+        if (!s.count) {
+            sec.innerHTML = head + '<p class="pm-muted pm-rev-empty">'
+                + T('ps_no_reviews', 'Bado hakuna tathmini.') + '</p>';
             return;
         }
         reviewMediaRegistry = {};
@@ -559,9 +514,6 @@ import {
         var wrap = $('sellerMiniDash');
         wrap.onclick = function () {
             if (p.userId && typeof window.openSellerProfile === 'function') {
-                // [FIX 2026-11-04] Kumbuka tulikotoka: sellerProfileModal hufunga
-                // productModal; "Rudi nyuma"/X sasa inairudisha bidhaa.
-                window.__skhProductReturn = { id: p.id, col: p.collectionName || PS_PRODUCT };
                 window.openSellerProfile(p.userId, name);
             }
         };
@@ -587,54 +539,6 @@ import {
     }
 
     /* ================================================================
-     * RUDI KWENYE BIDHAA (2026-11-04)
-     * Tatizo lililopimwa: ukifungua profaili ya muuzaji kutoka ndani ya
-     * bidhaa, "Rudi nyuma"/X ilifunga profaili TU — productModal ilikuwa
-     * imefungwa na one-UI-at-a-time, hivyo ukabaki na skrini tupu.
-     * Sasa: tukifunga profaili tumerudi kwenye bidhaa ile ile.
-     * ================================================================ */
-    function restoreProductModal() {
-        var ret = window.__skhProductReturn;
-        if (!ret) return;
-        var pm = document.getElementById('productModal');
-        if (!pm) { window.__skhProductReturn = null; return; }
-        /* [2026-11-04] Njia za kufunga ni tatu: "Rudi"/skhBack, X ya duka, na Escape.
-           Escape huita closeModals() inayofunga VITU VYOTE kwa mzunguko huo huo —
-           mara moja inaweza kuficha bidhaa tena baada ya kuiona. Kwa hiyo tunadai
-           kwa muda mfupi (~1s) kwamba bidhaa ibaki wazi. */
-        var n = 0;
-        (function enforce() {
-            var seller = document.getElementById('sellerProfileModal');
-            if (seller && getComputedStyle(seller).display !== 'none') {   // duka bado wazi
-                if (++n < 8) setTimeout(enforce, 160); else window.__skhProductReturn = null;
-                return;
-            }
-            if (getComputedStyle(pm).display === 'none') {
-                pm.style.display = 'flex';
-                try { document.body.style.overflow = 'hidden'; } catch (e) {}
-            }
-            if (++n < 6) setTimeout(enforce, 160);
-            else window.__skhProductReturn = null;
-        })();
-    }
-    window.skhRestoreProductModal = restoreProductModal;
-
-    function watchSellerReturn() {
-        var seller = document.getElementById('sellerProfileModal');
-        if (!seller || seller.__skhReturnWatched) return;
-        seller.__skhReturnWatched = true;
-        var wasOpen = getComputedStyle(seller).display !== 'none';
-        new MutationObserver(function () {
-            var open = getComputedStyle(seller).display !== 'none';
-            if (wasOpen && !open) { try { restoreProductModal(); } catch (e) {} }
-            wasOpen = open;
-        }).observe(seller, { attributes: true, attributeFilter: ['style', 'class'] });
-    }
-    watchSellerReturn();
-    setTimeout(watchSellerReturn, 1500);
-    setTimeout(watchSellerReturn, 4000);
-
-    /* ================================================================
      * KIFIMBO CHA KUNUNUA (sticky) — states validi tu, handlers zilizopo
      * ================================================================ */
     // [CARD 2026-09] Idadi ya stock kutoka sehemu zinazotumika katalogini.
@@ -657,12 +561,6 @@ import {
         var stockEl = $('pmStockInfo');
         if (!qtyArea || !qtyEl) return;
         var stock = psStockOf(p);
-        // [UI REFINEMENT] Label ya idadi inaonyesha KIPIMO halisi cha muuzaji (Kg/Lita/Kipande)
-        var lblEl = $('pmQtyLabel');
-        if (lblEl) {
-            var unitTxt = (p && p.baseUnit) ? String(p.baseUnit).trim() : '';
-            lblEl.textContent = unitTxt ? ('Idadi (' + unitTxt + ')') : 'Idadi';
-        }
         var minRaw = psNum(p.minOrderQuantity || p.minOrder || p.minQuantity);
         var minQty = (minRaw !== null && minRaw > 0) ? minRaw : 1;
         var maxQty = (stock !== null) ? Math.max(0, stock) : null;
@@ -703,7 +601,7 @@ import {
         var qtyArea = $('pmQtyArea');
         var av = psAvailability(p, col);
 
-        var chatBtn = '<button type="button" class="pm-bar-btn pm-bar-chat" onclick="startChat()" aria-label="Muumbe muuzaji kwa chat" title="Mwasiliane kwa Chat"><span class="pm-bar-ic" aria-hidden="true">' + pico('chat', 16) + '</span><span class="pm-bar-lbl" data-no-i18n>Chat</span></button>';
+        var chatBtn = '<button type="button" class="pm-bar-btn pm-bar-chat" onclick="startChat()" aria-label="Muumbe muuzaji kwa chat" title="Mwasiliane kwa Chat"><span class="pm-bar-ic" aria-hidden="true">' + pico('chat', 16) + '</span><span class="pm-bar-lbl">Chat</span></button>';
 
         if (col === PS_PRODUCT && p.saleMode === 'auction') {
             qtyArea.style.display = 'none';
@@ -754,7 +652,8 @@ import {
             setupQty(p);
             actionArea.innerHTML = chatBtn
                 + '<button type="button" class="pm-bar-btn pm-bar-nego" onclick="window.skhPsNegotiate(\'product\')" aria-label="Pendekeza Bei" title="Pendekeza Bei kwa jumla"><span class="pm-bar-ic">' + pico('tag', 16) + '</span><span class="pm-bar-lbl">Pendekeza Bei</span></button>'
-                + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhWholesaleCheckout()"><span class="pm-bar-ic">' + pico('package', 16) + '</span><span class="pm-bar-lbl">Nunua kwa Jumla</span></button>';
+                + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="window.skhWholesaleCheckout()"><span class="pm-bar-ic">' + pico('package', 16) + '</span><span class="pm-bar-lbl">Nunua kwa Jumla</span>'
+                + '<span class="pm-bar-total" id="pmTotalPriceCalc">' + psMoney(psNum(p.price) || 0) + '</span></button>';
             refreshTotals(p);
             return;
         }
@@ -787,29 +686,18 @@ import {
         if (av.kind === 'out' || av.kind === 'offline') {
             qtyArea.style.display = 'none';
             var label = av.kind === 'offline' ? 'Dukani pekee' : 'Zimeisha';
-            // [UI REFINEMENT] Vitufe viwili kwenye safu moja (Chat + hali ya stock)
-            actionArea.innerHTML = '<div class="pm-actions-row">' + chatBtn
-                + '<button type="button" class="pm-bar-btn pm-bar-btn-dis" disabled aria-disabled="true">' + label + '</button></div>';
+            actionArea.innerHTML = chatBtn
+                + '<button type="button" class="pm-bar-btn pm-bar-btn-dis" disabled aria-disabled="true">' + label + '</button>';
             return;
         }
 
         qtyArea.style.display = 'flex';
         setupQty(p);
-        /* [UI REFINEMENT 2026-11-04] Mpangilio uliokubaliwa:
-             Safu 1: Chat + Weka Oda (upana sawa)
-             Safu 2: Patana Bei (full width)
-             Safu 3: Lipia Sasa (full width, kitufe cha msingi)
-           HANDLERS ZILEZILE za awali — hakuna handler mpya:
-             startChat() · addToCart(false) · skhPsNegotiate('product') ·
-             addToCart(true) = buy-now: bidhaa inaingia kikapuni moja kwa moja
-             na mtumiaji anapelekwa kwenye checkout/escrow, akichagua
-             usafirishaji (delivery) au la — mchakato uleule uliopo. */
-        actionArea.innerHTML = '<div class="pm-actions-row">'
-            + '<button type="button" class="pm-bar-btn pm-bar-chat" onclick="startChat()" aria-label="Chat na muuzaji" title="Mwasiliane kwa Chat"><span class="pm-bar-ic" aria-hidden="true">' + pico('chat', 17) + '</span><span class="pm-bar-lbl" data-no-i18n>Chat</span></button>'
-            + '<button type="button" class="pm-bar-btn pm-bar-order" onclick="addToCart(false)" aria-label="Weka oda" title="Weka Oda"><span class="pm-bar-ic" aria-hidden="true">' + pico('cart', 17) + '</span><span class="pm-bar-lbl">Weka Oda</span></button>'
-            + '</div>'
-            + '<button type="button" class="pm-bar-btn pm-bar-nego pm-actions-wide" onclick="window.skhPsNegotiate(\'product\')" aria-label="Patana bei" title="Patana Bei (Jadili)"><span class="pm-bar-ic" aria-hidden="true">' + pico('tag', 17) + '</span><span class="pm-bar-lbl">Patana Bei</span></button>'
-            + '<button type="button" class="pm-bar-btn pm-bar-pay pm-actions-wide" onclick="addToCart(true)" aria-label="Lipia Sasa" title="Lipia Sasa — unaenda moja kwa moja kwenye malipo (escrow); utachagua usafirishaji"><span class="pm-bar-ic" aria-hidden="true">' + pico('wallet', 17) + '</span><span class="pm-bar-lbl">Lipia Sasa</span></button>';
+        actionArea.innerHTML = chatBtn
+            + '<button type="button" class="pm-bar-btn pm-bar-nego" onclick="window.skhPsNegotiate(\'product\')" aria-label="Pendekeza Bei" title="Pendekeza Bei (Jadili)"><span class="pm-bar-ic">' + pico('tag', 16) + '</span><span class="pm-bar-lbl">Pendekeza Bei</span></button>'
+            + '<button type="button" class="pm-bar-btn pm-bar-cart" onclick="addToCart(false)" aria-label="Weka Kikapuni" title="Weka Kikapuni"><span class="pm-bar-ic">' + pico('cart', 16) + '</span><span class="pm-bar-lbl">Weka Kikapuni</span></button>'
+            + '<button type="button" class="pm-bar-btn pm-bar-buy" onclick="addToCart(true)"><span class="pm-bar-ic">' + pico('bolt', 16) + '</span><span class="pm-bar-lbl">Lipa Sasa</span>'
+            + '<span class="pm-bar-total" id="pmTotalPriceCalc">' + psMoney(psNum(p.price) || 0) + '</span></button>';
         refreshTotals(p);
     }
 
@@ -1154,88 +1042,7 @@ import {
         set('btnSave', !!(st.saved && st.saved[key]));
         set('btnWatch', !!(st.watched && st.watched[key]));
         set('btnFollow', !!(st.following && st.following[p.userId]));
-
-        // [2026-11-04] Safu mpya ya engagements chini ya bidhaa (post-style):
-        // hali ya "nilipenda/nimehifadhi" ionekane mara moja, na namba
-        // zisizo na thamani (0) zisilete kelele.
-        var paintOn = function (id, active) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            el.setAttribute('aria-pressed', active ? 'true' : 'false');
-            el.classList.toggle('skh-eng-active', !!active);
-        };
-        paintOn('pmEngLikeBtn', !!(st.liked && st.liked[key]));
-        paintOn('pmEngSaveBtn', !!(st.saved && st.saved[key]));
-        syncEngagementCounts();
     }
-
-    // Namba za engagements: onyesha ikizidi 0, ficha ikiwa 0/tupu.
-    function syncEngagementCounts() {
-        ['pmLikesCount', 'pmCommentsCount', 'pmSharesCount'].forEach(function (id) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            var n = parseInt(String(el.textContent || '0').replace(/[^0-9]/g, ''), 10);
-            if (isFinite(n) && n > 0) el.removeAttribute('hidden');
-            else el.setAttribute('hidden', '');
-        });
-    }
-    window.skhSyncEngagementCounts = syncEngagementCounts;
-
-    /* ================================================================
-     * MWITIKIO WA VITUFE (2026-11-04)
-     * 1) Kila kitufe kikionekana kubonyea mara moja (.is-pressed) —
-     *    mteja asihisi kitufe kimeganda.
-     * 2) Namba za engagements zinasogea pale hali inabadilika kweli
-     *    (baada ya server) — si kwa kubonyeza tu.
-     * ================================================================ */
-    function bindPressFeedback() {
-        ['pmSellerCard', 'pmEngageRow', 'pmStickyStack', 'pmInquireCard'].forEach(function (id) {
-            var host = document.getElementById(id);
-            if (!host || host.__pressBound) return;
-            host.__pressBound = true;
-            host.addEventListener('pointerdown', function (e) {
-                var btn = e.target && e.target.closest ? e.target.closest('button') : null;
-                if (!btn || btn.disabled) return;
-                btn.classList.add('is-pressed');
-                setTimeout(function () { btn.classList.remove('is-pressed'); }, 180);
-            }, { passive: true });
-        });
-    }
-
-    function bindEngagementCounters() {
-        var pairs = [
-            ['pmEngLikeBtn', 'pmLikesCount'],
-            ['pmEngSaveBtn', null]
-        ];
-        pairs.forEach(function (pr) {
-            var btn = document.getElementById(pr[0]);
-            if (!btn || btn.__cntBound) return;
-            btn.__cntBound = true;
-            btn.addEventListener('click', function () {
-                var was = btn.classList.contains('skh-eng-active');
-                setTimeout(function () {
-                    var is = btn.classList.contains('skh-eng-active');
-                    if (is === was) { syncEngagementCounts(); return; }
-                    var el = pr[1] ? document.getElementById(pr[1]) : null;
-                    if (el) {
-                        var n = parseInt(String(el.textContent || '0').replace(/[^0-9]/g, ''), 10) || 0;
-                        el.textContent = String(Math.max(0, n + (is ? 1 : -1)));
-                    }
-                    syncEngagementCounts();
-                }, 650);
-            });
-        });
-    }
-
-    function bindProductActions() {
-        bindPressFeedback();
-        bindEngagementCounters();
-    }
-    window.skhBindProductActions = bindProductActions;
-    setTimeout(bindProductActions, 0);
-    setTimeout(bindProductActions, 1500);
-    setTimeout(syncEngagementCounts, 900);
-    setTimeout(syncEngagementCounts, 2500);
     if (typeof window.skhRefreshEngagementButtons === 'function') {
         var _origRefresh = window.skhRefreshEngagementButtons;
         window.skhRefreshEngagementButtons = function () {
@@ -1245,52 +1052,16 @@ import {
         };
     }
 
-    /* ================================================================
-     * INQUIRE — "Uliza kuhusu bidhaa" (kadi ndani ya details).
-     * Launcher PEKEE: kitufe kinaita window.skhOpenMaoni() (panel ya
-     * MASWALI & MAJIBU iliyopo — 35-comments.js). Hapa tunaongeza idadi
-     * halisi ya maswali kwa bidhaa hii kutoka collection `comments`
-     * (read: public) — hakuna collection, callable au handler mpya.
-     * ================================================================ */
-    function renderInquire(p) {
-        // [INQUIRY 2026-11] Beji ya "Uliza Zaidi kuhusu Bidhaa" sasa inaonyesha
-        // maswali YAKE (collection `productInquiries`) — sio idadi ya maoni ya
-        // umma. Maoni yana kaunta yake kwenye kitufe cha Maoni.
-        var el = document.getElementById('pmInquireCount');
-        if (!el) return;
-        el.textContent = '';
-        try {
-            if (!p || !p.id) return;
-            if (typeof window.skhRefreshInquireBadge === 'function') {
-                window.skhRefreshInquireBadge();
-            }
-        } catch (e) {}
-    }
-
     window.skhRenderShowcase = function (found, col) {
         if (!found) return;
         col = col || found.collectionName || PS_PRODUCT;
         ensureEngagementIcons();
         try { refreshProductAdSlot(found, col); } catch (_) {}
-        // [2026-11-04] Namba za engagements husasishwa baada ya render
-        // (likes/comments/shares huja kwa async) — ficha 0, onyesha > 0.
-        try {
-            syncEngagementCounts();
-            setTimeout(syncEngagementCounts, 400);
-            setTimeout(syncEngagementCounts, 1500);
-            if (typeof bindProductActions === 'function') {
-                bindProductActions();
-                setTimeout(bindProductActions, 500);
-            }
-        } catch (_) {}
         var key = col + '__' + found.id;
         if (key !== lastShowcaseKey) {
             // Bidhaa mpya: rudi juu, qty ya 1, futa expand ya tathmini/related
             var sc = document.querySelector('#productModal .pm-scroll');
             if (sc) sc.scrollTop = 0;
-            // [2026-11-04] Scroller sasa ni sheet yote (picha inascroll pia)
-            var sheetEl = document.querySelector('#productModal > .pm-sheet');
-            if (sheetEl) sheetEl.scrollTop = 0;
             var qty = $('pmQty');
             if (qty) qty.value = 1;
             var wrap = $('pmRelatedWrap');
@@ -1303,7 +1074,7 @@ import {
         // ulinzi wake, na vitufe vina fallback ya uhakika.
         [['identity', renderIdentity], ['variants', renderVariants], ['special', renderSpecial],
          ['details', renderDetails], ['delivery', renderDelivery], ['reviews', renderReviews],
-         ['seller', renderSeller], ['inquire', renderInquire]].forEach(function (s) {
+         ['seller', renderSeller]].forEach(function (s) {
             try { s[1](found, col); }
             catch (e) { console.warn('[showcase] ' + s[0] + ' error:', e && (e.stack || e.message)); }
         });

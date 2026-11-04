@@ -62,30 +62,11 @@ import { skh } from './00-bootstrap.js';
     }
 
     // ---------- Hali ya maoni ----------
-    /* ============================================================
-       REAKSINI (2026-11-04) — set MOJA ya soko zima (marketplace).
-       Huhifadhiwa kwenye `commentLikes` (doc: commentId__uid) kwa uga
-       `reaction`; `penda` ni ile ya kawaida (❤️) na ni default.
-       Rules za commentLikes zinaruhusu uga huu (hakuna hasOnly).
-       ============================================================ */
-    var REACTIONS = [
-        { k: 'penda',   e: '\u2764\uFE0F', l: 'Penda' },
-        { k: 'nzuri',   e: '\uD83D\uDC4D', l: 'Nzuri' },
-        { k: 'moto',    e: '\uD83D\uDD25', l: 'Moto' },
-        { k: 'deal',    e: '\uD83E\uDD1D', l: 'Deal' },
-        { k: 'bora',    e: '\uD83D\uDCAF', l: 'Bora' },
-        { k: 'shangaa', e: '\uD83D\uDE2E', l: 'Shangaa' }
-    ];
-    var REACTION_BY_KEY = {};
-    REACTIONS.forEach(function (r) { REACTION_BY_KEY[r.k] = r; });
-    window.skhReactionSet = REACTIONS;
-
     var C = {
         targetType: 'product', targetId: null, product: null,
         sellerId: null, sellerName: '', sort: 'relevant',
         items: [], liked: {}, limit: 20, total: 0,
-        replyingTo: null, attachProduct: false, loaded: false,
-        reactions: {}, mine: {}, reactionsLoaded: false
+        replyingTo: null, attachProduct: false, loaded: false
     };
 
     function avatar(photo, name, size) {
@@ -149,7 +130,6 @@ import { skh } from './00-bootstrap.js';
         C.sellerName = p.ownerName || p.sellerName || '';
         C.sort = 'relevant';
         C.items = []; C.liked = {}; C.limit = 20; C.total = 0;
-        C.reactions = {}; C.mine = {}; C.reactionsLoaded = false;
         C.replyingTo = null; C.attachProduct = false; C.loaded = false;
         // [MAONI 2026-09] Ushahidi wa oda/usafirishaji + midia inayosubiri.
         C.pendingMedia = [];
@@ -386,27 +366,9 @@ import { skh } from './00-bootstrap.js';
                 + (badges ? '<div class="skh-cm-badges">' + badges + '</div>' : '')
                 + evidenceMediaHtml(c.media) + productCardHtml(c.productRef));
         var liked = !!C.liked[c.id];
-        var rx = (C.reactions && C.reactions[c.id]) || {};
-        var mineRx = (C.mine && C.mine[c.id]) || '';
-        var rxChips = Object.keys(rx).filter(function (k) { return rx[k] > 0 && REACTION_BY_KEY[k]; })
-            .sort(function (a, b) { return rx[b] - rx[a]; })
-            .map(function (k) {
-                var R = REACTION_BY_KEY[k];
-                return '<button type="button" class="cm-rx-chip' + (mineRx === k ? ' on' : '') + '"'
-                    + ' title="' + esc(R.l) + '" aria-label="' + esc(R.l) + '"'
-                    + ' onclick="window.skhCommentsReact(\'' + jsEsc(c.id) + '\',\'' + k + '\')">'
-                    + '<span class="cm-rx-e">' + R.e + '</span><b>' + rx[k] + '</b></button>';
-            }).join('');
         var actions = deleted ? '' : '<div class="skh-cm-actions">'
-            + '<div class="cm-rx-set">' + rxChips + '</div>'
-            + '<button type="button" class="cm-rx-open' + (mineRx ? ' on' : '') + '"'
-            +   ' title="' + T('cm_react', 'Reaksi') + '" aria-label="' + T('cm_react', 'Reaksi') + '"'
-            +   ' onclick="window.skhCmPickReaction(\'' + jsEsc(c.id) + '\')">'
-            +   (mineRx && REACTION_BY_KEY[mineRx] ? '<span class="cm-rx-e">' + REACTION_BY_KEY[mineRx].e + '</span>'
-                    : '<span class="cm-act-ic">' + (window.skhNavIcon ? window.skhNavIcon('heart', 15) : '') + '</span>')
-            + '</button>'
-            + '<button type="button" onclick="window.skhCommentsReply(\'' + jsEsc(c.id) + '\')"><span class="cm-act-ic">'
-            +   (window.skhNavIcon ? window.skhNavIcon('chat', 14) : '') + '</span> ' + T('cm_reply', 'Jibu') + '</button>'
+            + '<button type="button" class="' + (liked ? 'on' : '') + '" onclick="window.skhCommentsLike(\'' + jsEsc(c.id) + '\')"><span class="skh-cm-like-ic">' + (window.skhNavIcon ? window.skhNavIcon('heart', 13) : '') + '</span> ' + (c.likeCount || 0) + '</button>'
+            + '<button type="button" onclick="window.skhCommentsReply(\'' + jsEsc(c.id) + '\')">' + T('cm_reply', 'Jibu') + '</button>'
             + (own ? '<button type="button" onclick="window.skhCommentsEdit(\'' + jsEsc(c.id) + '\')">' + T('cm_edit', 'Hariri') + '</button>' : '')
             + (own ? '<button type="button" onclick="window.skhCommentsDelete(\'' + jsEsc(c.id) + '\')">' + T('cm_delete', 'Futa') + '</button>' : '')
             + (!own ? '<button type="button" onclick="window.skhCommentsReport(\'' + jsEsc(c.id) + '\')">' + T('cm_report', 'Ripoti') + '</button>' : '')
@@ -425,13 +387,7 @@ import { skh } from './00-bootstrap.js';
         syncCommentCounts();
         // [MAONI 2026-09] Kichwa cha sheet hupatikana pia nje ya root.
         var headCount = document.getElementById('skhCmPanelCount');
-        if (headCount) {
-            // [2026-11-04] Maoni ya umma yakiwa 0, onyesha idadi ya TATHMINI
-            // (zilizo kwenye hati ya bidhaa) ili chip isibaki tupu.
-            headCount.textContent = C.total
-                ? '(' + C.total + ')'
-                : (window.__skhReviewsCount ? String(window.__skhReviewsCount) : '');
-        }
+        if (headCount) headCount.textContent = C.total ? '(' + C.total + ')' : '';
         var elig = C.eligibility || {};
         var canEvidence = !!(elig.order || elig.delivery);
         var playSvg = '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>';
@@ -450,7 +406,7 @@ import { skh } from './00-bootstrap.js';
                     ? '<span class="skh-cm-elig order">&#10003; ' + T('cm_you_can_order', 'Una oda iliyothibitishwa — ongeza picha/video ya bidhaa.') + '</span>'
                     : (elig.checked ? '<span class="skh-cm-elig none">' + T('cm_elig_none', 'Picha/video huruhusiwa baada ya oda/usafirishaji kuthibitishwa.') + '</span>' : '')));
         var html = '<div class="skh-cm-headbar">'
-            + '<h5>' + T('cm_title_sheet', 'Maoni & Maswali') + ' <span id="skhCmCount">(' + C.total + ')</span></h5>'
+            + '<h5>' + T('cm_title', 'Maoni') + ' <span id="skhCmCount">(' + C.total + ')</span></h5>'
             + '<div class="skh-cm-sort">'
             + sortBtn('relevant', 'cm_sort_relevant', 'Muhimu Zaidi')
             + sortBtn('newest', 'cm_sort_newest', 'Mpya Zaidi')
@@ -501,25 +457,14 @@ import { skh } from './00-bootstrap.js';
             if (rinp) { try { rinp.focus(); } catch (e) {} }
         }
         bindCommentsSwipe();
-        // Reaksini za maoni (set moja ya soko) — hupakiwa mara moja kwa kila orodha.
-        if (!C.reactionsLoaded && (C.items || []).length) {
-            try { loadReactions(); } catch (e) {}
-        }
     }
 
     // [GESTURE REPLY 2026-09] Fomu ndogo ya kujibu inayoonekana chini ya swali.
     function replyFormHtml(parent) {
-        var meName = (skh.currentUser && (skh.currentUser.displayName || skh.currentUser.fullName)) || 'Mimi';
-        var mePhoto = (skh.currentUser && (skh.currentUser.photoURL || skh.currentUser.profileImage)) || null;
         return '<div class="skh-cm-replyform" id="skhCmReplyForm">'
-            + '<span class="cm-rep-av">' + avatar(mePhoto, meName, 28) + '</span>'
-            + '<div class="cm-rep-field">'
-            +   '<span class="cm-rep-to">' + T('cm_reply_to', 'Jibu') + ' <b>@' + esc((parent && parent.authorName) || '') + '</b></span>'
-            +   '<input type="text" id="skhCmReplyInput" maxlength="2000" placeholder="' + T('cm_reply_ph', 'Andika jibu lako...') + '">'
-            + '</div>'
-            + '<button type="button" class="cm-rep-send" aria-label="' + T('cm_send', 'Tuma') + '" onclick="window.skhCommentsSubmit()">'
-            +   (window.skhNavIcon ? window.skhNavIcon('send', 16) : T('cm_send', 'Tuma')) + '</button>'
-            + '<button type="button" class="skh-cm-cancel" aria-label="Ghairi" onclick="window.skhCommentsCancelReply()">&times;</button>'
+            + '<input type="text" id="skhCmReplyInput" maxlength="2000" placeholder="' + T('cm_reply_ph', 'Andika jibu lako...') + '">'
+            + '<button type="button" onclick="window.skhCommentsSubmit()">' + T('cm_send', 'Tuma') + '</button>'
+            + '<button type="button" class="skh-cm-cancel" onclick="window.skhCommentsCancelReply()"></button>'
             + '</div>';
     }
 
@@ -589,110 +534,6 @@ import { skh } from './00-bootstrap.js';
     window.skhCommentsToggleProduct = function (on) {
         C.attachProduct = !!on; render();
     };
-    /* ============================================================
-       REAKSINI — set MOJA (Penda · Nzuri · Moto · Deal · Bora · Shangaa)
-       Data: commentLikes/{commentId__uid}.reaction (rules zinaruhusu).
-       Hesabu: hupakiwa kwa query ya commentId `in [...]` (vipande 10).
-       ============================================================ */
-    async function loadReactions() {
-        var ids = [];
-        (C.items || []).forEach(function (t) {
-            ids.push(t.id);
-            (C.byParent[t.id] || []).forEach(function (r) { ids.push(r.id); });
-        });
-        ids = ids.slice(0, 40);
-        if (!ids.length) { C.reactionsLoaded = true; return; }
-        var me = myUid();
-        var chunks = [];
-        for (var i = 0; i < ids.length; i += 10) chunks.push(ids.slice(i, i + 10));
-        var agg = {}, mine = {};
-        try {
-            for (var ci = 0; ci < chunks.length; ci++) {
-                var q = skh.query(
-                    skh.collection(skh.db, 'commentLikes'),
-                    skh.where('commentId', 'in', chunks[ci]),
-                    skh.limit(400)
-                );
-                var snap = await skh.getDocs(q);
-                snap.forEach(function (d) {
-                    var v = d.data() || {};
-                    var cid = v.commentId;
-                    if (!cid) return;
-                    var k = (v.reaction && REACTION_BY_KEY[v.reaction]) ? v.reaction : 'penda';
-                    agg[cid] = agg[cid] || {};
-                    agg[cid][k] = (agg[cid][k] || 0) + 1;
-                    if (me && v.userId === me) { mine[cid] = k; C.liked[cid] = true; }
-                });
-            }
-            C.reactions = agg;
-            C.mine = mine;
-            C.reactionsLoaded = true;
-            render();
-        } catch (e) {
-            C.reactionsLoaded = true;   // usirudie kwa kila render ikiwa imeshindikana
-        }
-    }
-
-    window.skhCommentsReact = async function (id, key) {
-        if (!skh.requireAuth()) return;
-        var me = myUid();
-        if (!me || !id) return;
-        key = REACTION_BY_KEY[key] ? key : 'penda';
-        var likeRef = skh.doc(skh.db, 'commentLikes', id + '__' + me);
-        var cRef = skh.doc(skh.db, 'comments', id);
-        var cur = (C.mine && C.mine[id]) || '';
-        try {
-            if (cur === key) {                                  // ondoa reaksini
-                await skh.deleteDoc(likeRef);
-                await skh.updateDoc(cRef, { likeCount: skh.increment(-1) });
-                C.liked[id] = false;
-            } else if (cur) {                                   // badilisha reaksini
-                await skh.deleteDoc(likeRef);
-                await skh.setDoc(likeRef, { userId: me, commentId: id, reaction: key, createdAt: nowIso() });
-                C.liked[id] = true;
-            } else {                                            // ongeza reaksini
-                await skh.setDoc(likeRef, { userId: me, commentId: id, reaction: key, createdAt: nowIso() });
-                await skh.updateDoc(cRef, { likeCount: skh.increment(1) });
-                C.liked[id] = true;
-            }
-            C.reactionsLoaded = false;
-            loadReactions();
-        } catch (e) {
-            console.warn('[maoni] reaksini', e);
-        }
-    };
-
-    /* Baa ya kuchagua reaksini — moja kwa njia moja (soko lote) */
-    function reactionBar() {
-        var bar = document.getElementById('cmReactBar');
-        if (bar) return bar;
-        var host = document.querySelector('#maoniLayer .maoni-sheet') || document.querySelector('#maoniLayer') || document.body;
-        bar = document.createElement('div');
-        bar.id = 'cmReactBar';
-        bar.className = 'cm-react-bar';
-        bar.hidden = true;
-        bar.innerHTML = '<div class="cm-react-list">' + REACTIONS.map(function (r) {
-            return '<button type="button" data-k="' + r.k + '" title="' + esc(r.l) + '">'
-                + '<span>' + r.e + '</span><small>' + esc(r.l) + '</small></button>';
-        }).join('') + '</div>';
-        bar.addEventListener('click', function (e) {
-            var b = e.target && e.target.closest ? e.target.closest('button[data-k]') : null;
-            var cid = bar.__cid;
-            bar.hidden = true;
-            if (!b || !cid) return;
-            window.skhCommentsReact(cid, b.getAttribute('data-k'));
-        });
-        host.appendChild(bar);
-        return bar;
-    }
-    window.skhCmPickReaction = function (id) {
-        var bar = reactionBar();
-        if (!bar.hidden && bar.__cid === id) { bar.hidden = true; return; }
-        if (!skh.requireAuth()) return;
-        bar.__cid = id;
-        bar.hidden = false;
-    };
-
     window.skhCommentsReply = function (id) {
         var all = [];
         (C.items || []).forEach(function (t) { all.push(t); (C.byParent[t.id] || []).forEach(function (r) { all.push(r); }); });

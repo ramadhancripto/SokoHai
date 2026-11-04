@@ -2246,10 +2246,7 @@ skh.cardPriceHtml = function cardPriceHtml(data, colName) {
         return '<span class="price skh-price">' + (labels[model] ? '<span class="skh-price-prefix">' + labels[model] + ' </span>' : '') + amount + '</span>';
     }
     if (colName === 'drivers') return '<span class="price skh-price"><span class="skh-price-prefix">' + skhTF('card_from', 'Kuanzia') + ' </span>' + amount + '</span>';
-    // [UI REFINEMENT 2026-11-03] Kipimo halisi (Kg/Lita/Kipande) chini ya bei.
-    const unitRaw = (data && data.baseUnit ? String(data.baseUnit).trim() : '');
-    const unitHtml = unitRaw ? '<small class="skh-unit">' + skhTF('card_per', 'kwa') + ' ' + skh.skhEscape(unitRaw) + '</small>' : '';
-    return '<span class="price skh-price">' + amount + unitHtml + '</span>';
+    return '<span class="price skh-price">' + amount + '</span>';
 };
 
 // [ImageOverlays] Mkusanyiko wa overlays za picha (bila Like/Save)
@@ -2356,43 +2353,20 @@ skh.activeBoostBadge = function activeBoostBadge(data) {
 
 // [ProductPostCard] TEASER: picha -> jina -> bei -> duka  -> eneo.
 // Taarifa kamili (stock, ulinzi, maoni) zipo kwenye ukurasa wa bidhaa.
-// [STOCK CHIP 2026-11-03] Hali halisi ya stock kwa kadi (data.stock pekee).
-skh.cardStockChip = function cardStockChip(data) {
-    const raw = data && data.stock;
-    if (raw === null || raw === undefined || raw === '') return '';
-    const stock = Number(raw);
-    if (!Number.isFinite(stock)) return '';
-    if (stock <= 0) return '<span class="skh-stock-chip skh-stock-chip--out">' + skhTF('card_out', 'Zimeisha') + '</span>';
-    if (stock <= 5) return '<span class="skh-stock-chip skh-stock-chip--low">' + skhTF('card_left', 'Zimebaki') + ' ' + stock + '</span>';
-    return '<span class="skh-stock-chip skh-stock-chip--in">' + skhTF('card_in_stock', 'Zipo') + ' ' + stock + '</span>';
-};
-
-// [OPEN CHEVRON 2026-11-03] Affordance ndogo: kadi inafunguka
-skh.cardOpenChevron = function cardOpenChevron() {
-    return '<span class="skh-open-chevron" aria-hidden="true"><span>' + skhTF('card_open', 'Fungua') + '</span>'
-        + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="m9 18 6-6-6-6"/></svg></span>';
-};
-
 skh.ProductPostCard = function ProductPostCard(data, colName) {
     // [CARD POLICY 2026-09] Kadi ni TEASER: Like/Save havionekani mbele —
     // vitendo vya engagement vipo ndani ya ukurasa wa maelezo (detail) tu.
-    // [UI REFINEMENT 2026-11-03] Muundo: jina KUSHOTO | bei (+ unit) KULIA;
-    // mstari wa chini: stock chip · eneo · "Fungua ›". Hakuna vitufe vya
-    // Chat/Weka Oda/Patana Bei kwenye kadi — viko ndani ya Product Details.
     const overlays = [
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
         skh.cardVerifiedPill(data),
         skh.cardOutPill(data, 'products')
     ].join('');
-    const stockChip = skh.cardStockChip(data);
-    // DOM: jina -> bei (+unit) -> meta. Mpangilio (jina kushoto / bei kulia)
-    // hufanywa na CSS grid kwenye css/52 — hakuna kubadilisha muundo wa data.
     return `<div class="feed-card-box skh-card skh-card--product" ${skh.cardOpenAttrs(data.id, 'products', data.title)}>
         ${skh.cardImage(data, overlays, skh.cardImageClass(data, 'products'))}
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_product_def', 'Bidhaa'))}</h3>
             ${skh.cardPriceHtml(data, 'products')}
-            <div class="skh-meta-row">${stockChip}${skh.cardPinLocation(data, 'products')}${skh.cardOpenChevron()}</div> </div> </div>`;
+            <div class="skh-meta-row">${skh.cardPinLocation(data, 'products')}</div> </div> </div>`;
 };
 
 // [ServicePostCard] TEASER: picha -> jina -> bei (Kuanzia) -> mtoa   -> eneo.
@@ -2656,14 +2630,9 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
         }
     });
     if (__total > __visible.length) {
-        /* [LAZY 2026-11-04] Kitufe cha "Onyesha zaidi" KIMEONDOLEWA.
-           Badala yake sentinel isiyoonekana: js/app/60-lazy-feed.js huipima kwa
-           IntersectionObserver (900px kabla ya mwisho) na kuongeza bidhaa
-           kiotomatiki mteja anapokaribia kuscroll. */
         const __left = __total - __visible.length;
-        html += `<div class="skh-lazy" data-skh-lazy="1" data-left="${__left}" style="grid-column:1/-1;">`
-            + `<span class="skh-lazy-spin" aria-hidden="true"></span>`
-            + `<small>Inapakia bidhaa zaidi…</small></div>`;
+        html += `<div style="grid-column:1/-1;text-align:center;padding:10px 0 18px;">`
+            + `<button type="button" class="skh-empty-btn" onclick="window.skhFeedShowMore()">Onyesha zaidi (${__left} zimebaki)</button></div>`;
     }
     feedGrid.innerHTML = html;
 

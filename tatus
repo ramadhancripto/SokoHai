@@ -1,0 +1,228 @@
+html/05-modals-market.html:29: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:31: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:108: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:161: trailing whitespace.
+[32m+[m[41m            [m
+html/05-modals-market.html:163: trailing whitespace.
+[32m+[m[41m            [m
+index.html:540: trailing whitespace.
+[32m+[m[41m            [m
+index.html:542: trailing whitespace.
+[32m+[m[41m            [m
+index.html:619: trailing whitespace.
+[32m+[m[41m            [m
+index.html:672: trailing whitespace.
+[32m+[m[41m            [m
+index.html:674: trailing whitespace.
+[32m+[m[41m            [m
+patches/tracked-changes.patch:8: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:33: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:58: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:63: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:88: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:107: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:110: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:123: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:140: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:144: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:151: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:163: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:167: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:172: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:192: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:211: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:218: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:254: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:258: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:267: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:272: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:335: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:340: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:347: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:393: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:551: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:552: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:602: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:616: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:629: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:630: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:715: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:737: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:741: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:862: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:866: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:882: trailing whitespace.
+[32m+[m[41m         [m
+patches/tracked-changes.patch:957: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1008: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1014: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1050: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1072: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1129: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1201: trailing whitespace.
+[32m+[m[32m-[m[41m        [m
+patches/tracked-changes.patch:1205: trailing whitespace.
+[32m+[m[32m-[m[41m            [m
+patches/tracked-changes.patch:1209: trailing whitespace.
+[32m+[m[32m-[m[41m                    [m
+patches/tracked-changes.patch:1261: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1303: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1414: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1484: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1527: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1573: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1582: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1583: trailing whitespace.
+[32m+[m[32m-    if(!sName || sSalary <= 0) {[m[41m [m
+patches/tracked-changes.patch:1584: trailing whitespace.
+[32m+[m[32m-        alert(T('pos_staff_name_salary', "Enter the staff name and salary."));[m[41m [m
+patches/tracked-changes.patch:1585: trailing whitespace.
+[32m+[m[32m-        return;[m[41m [m
+patches/tracked-changes.patch:1626: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1633: trailing whitespace.
+[32m+[m[32m-            paidSalary: 0,[m[41m           [m
+patches/tracked-changes.patch:1634: trailing whitespace.
+[32m+[m[32m-            pendingSalary: sSalary,[m[41m  [m
+patches/tracked-changes.patch:1635: trailing whitespace.
+[32m+[m[32m-            performanceScore: 100,[m[41m    [m
+patches/tracked-changes.patch:1636: trailing whitespace.
+[32m+[m[32m-            performanceLevel: "Bronze",[m[41m [m
+patches/tracked-changes.patch:1637: trailing whitespace.
+[32m+[m[32m-            tasks: [],[m[41m               [m
+patches/tracked-changes.patch:1646: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1651: trailing whitespace.
+[32m+[m[32m-    } catch(e) {[m[41m [m
+patches/tracked-changes.patch:1652: trailing whitespace.
+[32m+[m[32m-        alert("Kosa: " + e.message);[m[41m [m
+patches/tracked-changes.patch:1674: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1686: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1690: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1730: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1745: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1753: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1826: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1863: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1902: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1965: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1973: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:1985: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2024: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2026: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2039: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2081: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2095: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2150: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2175: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2592: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2678: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2761: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2767: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:2793: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:3508: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:4058: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:4402: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:4689: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:5290: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:5311: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:5377: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:5412: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:5426: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:161651: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:161671: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:161675: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:161676: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:161728: trailing whitespace.
+[32m+[m[41m [m
+patches/tracked-changes.patch:161729: trailing whitespace.
+[32m+[m[41m [m

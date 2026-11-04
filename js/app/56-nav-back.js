@@ -111,43 +111,7 @@ import { skh } from './00-bootstrap.js';
         bar.querySelector('.skh-closebtn').addEventListener('click', function (e) {
             e.stopPropagation(); window.skhCloseTop();
         });
-        /* [FIX 2026-11-04] BAR ILIKUWA INAVUNJA SKRINI NZIMA.
-           Kipimo halisi: `css/46-fullscreen-pages.css` ina
-           `html body #sellerProfileModal > * { height:100% !important }`
-           — bar (mtoto wa kwanza) ikawa panel nyeupe 1440x900 na DUKA LA MUUZAJI
-           likaonekana tupu, kitufe cha "Rudi" na "✕" pekee.
-           Suluhisho: jiometri inawekwa INLINE kwa `!important` — inashinda sheria
-           yoyote ya CSS (hata ile yenye ID) na bar inaelea juu ya maudhui. */
-        var FS = {
-            position: 'absolute', top: '10px', left: '10px', right: 'auto',
-            width: 'auto', height: 'auto', 'max-height': 'none', 'min-height': '0',
-            display: 'inline-flex', 'align-items': 'center', 'justify-content': 'flex-start',
-            gap: '8px', padding: '0', margin: '0',
-            background: 'transparent', border: '0', 'box-shadow': 'none',
-            'backdrop-filter': 'none', '-webkit-backdrop-filter': 'none', 'z-index': '60'
-        };
-        Object.keys(FS).forEach(function (k) { bar.style.setProperty(k, FS[k], 'important'); });
-        Array.prototype.forEach.call(bar.querySelectorAll('button'), function (btn) {
-            btn.style.setProperty('background', '#fff', 'important');
-            btn.style.setProperty('box-shadow', '0 2px 10px rgba(15,23,42,.18)', 'important');
-        });
         el.insertBefore(bar, el.firstChild);
-
-        /* Skrini nyingine (mf. Duka la muuzaji) huunda kitufe chao cha kufunga kwa
-           kuchelewa — kikionekana, bar ya kiotomatiki inaondolewa kabisa. */
-        [900, 2000, 4000, 6000].forEach(function (ms) {
-            setTimeout(function () {
-                try {
-                    /* [FIX 2026-11-04] Ondoa KABISA (si kuficha kwa class): jiometri
-                       ya bar imewekwa inline kwa !important, hivyo `display:none`
-                       ya CSS isingeshinda. */
-                    if (bar.parentNode && hasCloseControl(el)) {
-                        if (window.__skhDebugBack) console.log('[nav-back] naondoa bar ya kiotomatiki:', el.id);
-                        bar.remove();
-                    }
-                } catch (e) {}
-            }, ms);
-        });
     }
 
     /* ========================================================================
