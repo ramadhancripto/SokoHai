@@ -1,0 +1,38 @@
+<div id="modeMenuModal" class="overlay-menu" style="z-index: 8500;" onclick="if(event.target===this){closeModals();}">
+    <div style="width:100%; max-width:400px; display:flex; flex-direction:column; align-items:center; animation: popIn 0.3s ease-out; background: white; padding: 30px; border-radius: 24px; max-height: 90vh; overflow-y:auto;">
+        <h2 style="color:var(--primary-dark); margin-top:0; margin-bottom:20px; text-align:center; text-transform:uppercase; font-size:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; width: 100%;"> Usimamizi</h2>
+        
+        <div class="menu-item" onclick="window.skhOpenMySokoHai && window.skhOpenMySokoHai('overview')" id="mode-buyer" style="border-left-color:var(--green); background:#f8fafc;">
+            <b data-skh-icon="cart">Buyer Dashboard</b>
+            <span>Shughuli, oda, requests, negotiations na vitu vyako.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('seller')" id="mode-seller" style="border-left-color:var(--gold); background:#f8fafc;">
+            <b data-skh-icon="shop">Muuzaji wa Bidhaa</b>
+            <span>Dashbodi ya kusimamia bidhaa, oda na mauzo.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('provider')" id="mode-provider" style="border-left-color:var(--primary-blue); background:#f8fafc;">
+            <b data-skh-icon="wrench">Mtoa Huduma / Fundi</b>
+            <span>Simamia matangazo yako ya ufundi na mapato.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('driver')" id="mode-driver" style="border-left-color:var(--terracotta); background:#f8fafc;">
+            <b data-skh-icon="truck">Msafirishaji</b>
+            <span>Dashbodi ya Boda, Bajaji, au Lori lako na safari.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('agent')" id="mode-agent" style="border-left-color:#f97316; background:#f8fafc;">
+            <b> Wakala Sokohai</b>
+            <span>Dashbodi ya miamala na kamisheni yako ya ukweli.</span>
+        </div>
+        <div class="menu-item" onclick="window.skhOpenAdvertiserDashboard && window.skhOpenAdvertiserDashboard()" id="mode-advertiser" style="border-left-color:#4D91AA; background:#f8fafc;">
+            <b> Advertiser</b>
+            <span>Campaign workspace ya kampuni na matangazo.</span>
+        </div>
+        <div class="menu-item" onclick="switchMode('admin')" id="mode-admin" style="border-left-color:#333; background:#f1f5f9;">
+            <b> Admin (Msimamizi)</b>
+            <span>Dashbodi ya Kufuatilia Mfumo mzima na Mapato.</span>
+        </div>
+        
+        <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:15px; background:#e2e8f0; color:#334155; border:none; border-radius:14px; cursor:pointer; font-weight:900; text-transform:uppercase;">Funga X</button>
+    </div>
+</div>
+
+<!-- 

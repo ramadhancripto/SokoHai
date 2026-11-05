@@ -35,7 +35,11 @@
     // The marketplace feed is the 'home' delivery surface, and today that is the
     // only placement with live inventory. The discover/search slots inside the
     // Discover engine keep their own placements and are left untouched.
-    feedPlacement: 'home'
+    feedPlacement: 'home',
+    /* [2026-11-04 — Job 13] Mtumiaji: "ondoa sponsored ads kwenye top, zinapaswa
+       kuanzia categories". Tangazo haliwezi kamwe kuwekwa juu ya mpaka wa
+       kategoria/huduma/usafiri; linashuka chini ya strip ya picha za kategoria. */
+    requireCategoriesFirst: true
   };
 
   function log() {
@@ -51,6 +55,52 @@
       el = el.parentElement;
     }
     return false;
+  }
+
+  /* Mpaka wa kategoria: sehemu ya picha za kategoria ndiyo "mlango" wa soko.
+     Tangazo lolote lililo juu yake linazuiwa kabisa. */
+  function categoriesBoundary() {
+    var nodes = document.querySelectorAll('#categoryPhotoStrip, #categoryStrip, .cps-section');
+    for (var i = 0; i < nodes.length; i++) {
+      var r = nodes[i].getBoundingClientRect();
+      if (r.height > 0) return r;
+    }
+    return null;
+  }
+
+  function isAboveCategories(grid) {
+    if (!CFG.requireCategoriesFirst) return false;
+    var b = categoriesBoundary();
+    if (!b) return false;                       // no marketplace categories on this view
+    var r = grid.getBoundingClientRect();
+    if (r.height === 0) return false;           // hidden grid: not layout-significant
+    return r.top < b.bottom - 1;
+  }
+
+  /* [JOB 13 R5b] Eneo la juu kabisa la ukurasa si eneo la matangazo tena.
+     Kipengele chochote kilicho juu ya mpaka wa kategoria hakisafishwi wala
+     hakipewi tangazo — hata kama markup ya zamani ina `data-skh-ad-slot`. */
+  function isAboveTopBoundary(el) {
+    if (!el || !el.getBoundingClientRect) return false;
+    var b = categoriesBoundary();
+    if (!b) return false;
+    var r = el.getBoundingClientRect();
+    if (r.height === 0 && !el.querySelector('.skh-ann-card')) return false;
+    return r.top < b.top - 1;
+  }
+
+  function clearTopSlots() {
+    var hosts = document.querySelectorAll('#topAnnouncement[data-skh-ad-slot], .big-announcement[data-skh-ad-slot]');
+    Array.prototype.forEach.call(hosts, function (host) {
+      host.removeAttribute('data-skh-ad-slot');
+      host.removeAttribute('data-skh-ad-surface');
+      host.removeAttribute('data-skh-ad-context');
+      if (host.querySelector('.skh-ann-card') || host.querySelector('.skh-ad-adcell')) {
+        host.innerHTML = '';
+        host.hidden = true;
+      }
+      host.classList.remove('skh-ad-slot-inline', 'skh-home-ad', 'skh-ann-post');
+    });
   }
 
   function gridProducts(grid) {
@@ -104,6 +154,8 @@
   function injectInto(grid, placement, surface, position) {
     if (!grid || !grid.children) return false;
     if (isProtectedContext(grid)) return false;
+    if (isAboveCategories(grid)) return false;   // Job 13: ads huanzia kategoria
+    if (isAboveTopBoundary(grid)) return false;  // Job 13 R5b: hakuna tangazo juu
     if (noFill[surface]) return false;   // engine had nothing here this session
     if (grid.querySelector(':scope > .skh-ad-cell')) return true;   // already has one
     var products = gridProducts(grid);
@@ -247,6 +299,7 @@
     scanQueued = true;
     window.requestAnimationFrame(function () {
       scanQueued = false;
+      clearTopSlots();
       markSlotHosts();
       installPreviewToggle();
       grids().forEach(function (g) {

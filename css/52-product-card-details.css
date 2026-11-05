@@ -1032,3 +1032,135 @@ html body #productModal .pm-scroll {
         width: 100% !important;
     }
 }
+
+/* ============================================================================
+   [CARD FIX 2026-11-04] MAREKEBISHO YA KADI — CSS PEKEE
+   ----------------------------------------------------------------------------
+   DOM haijabadilishwa (contract: .skh-body > .skh-title · .skh-price · .skh-meta-row).
+   Kilichopimwa kabla ya marekebisho (kadi 148px kwa 238px, simu 390px):
+       picha  148px  = 62% ya kadi   ← ilitawala, hasa kwa picha-mahali-tupu
+       maandishi 90px = 38%
+   Kasoro zilizoonekana:
+     1. Picha ilichukua karibu 2/3 ya kadi; picha-mahali (placeholder) ilikuwa
+        na fremu 3 zilizojirudia → nafasi tupu kubwa.
+     2. Chevron (›) ilielea mbali upande wa kulia, ikitenganishwa na chip.
+     3. Kadi za mstari mmoja zilikuwa na urefu tofauti (jina la mstari 1 vs 2).
+     4. Bei ilikuwa ndogo kuliko jina — hali ya biashara inahitaji bei ionekane.
+   ============================================================================ */
+
+/* ---------- 1. PICHA: uwiano wa kawaida wa bidhaa (4:3), si mraba mrefu ---------- */
+.feed-card-box.skh-card--product .feed-img-box.skh-img {
+    aspect-ratio: 4 / 3 !important;
+    max-height: 152px !important;
+    min-height: 96px !important;
+    overflow: hidden !important;
+    background: #F7FCF9 !important;
+}
+.feed-card-box.skh-card--product .feed-img-box.skh-img > img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+/* ---------- 2. MWILI: urefu unaofanana + bei inaonekana ---------- */
+.feed-card-box.skh-card--product .feed-info-box.skh-body {
+    min-height: 92px !important;
+    padding: 10px 11px 10px !important;
+    row-gap: 5px !important;
+}
+.feed-card-box.skh-card--product .skh-body > .skh-title {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    line-height: 1.28 !important;
+    min-height: 34px !important;            /* mistari 2 hata jina liwe fupi */
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+.feed-card-box.skh-card--product .skh-body > .skh-price {
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    letter-spacing: -.2px !important;
+    color: #0F7E67 !important;
+    line-height: 1.2 !important;
+}
+.feed-card-box.skh-card--product .skh-unit {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #8A9C95 !important;
+}
+
+/* ---------- 3. MSTARI WA CHINI: chip kushoto · chevron kulia, imeshikamana ---------- */
+.feed-card-box.skh-card--product .skh-body > .skh-meta-row {
+    margin-top: auto !important;             /* fimbo chini ya kadi */
+    padding-top: 7px !important;
+    border-top: 1px solid #EEF4F1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    min-height: 28px !important;
+}
+.feed-card-box.skh-card--product .skh-stock-chip {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.feed-card-box.skh-card--product .skh-open-chevron {
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    padding: 3px 7px !important;
+    border-radius: 99px !important;
+    background: #F1F8F5 !important;
+    color: #0F6E55 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    transition: background .15s ease, color .15s ease !important;
+}
+.feed-card-box.skh-card--product:hover .skh-open-chevron {
+    background: #E1F5EC !important;
+    color: #0B5F4E !important;
+}
+.feed-card-box.skh-card--product .skh-open-chevron svg {
+    width: 11px !important;
+    height: 11px !important;
+}
+
+/* ---------- 4. SIMU: picha isiwe ndefu kupita kiasi ---------- */
+@media (max-width: 420px) {
+    .feed-card-box.skh-card--product .feed-img-box.skh-img {
+        aspect-ratio: 4 / 3 !important;
+        max-height: 132px !important;
+    }
+    .feed-card-box.skh-card--product .feed-info-box.skh-body {
+        min-height: 88px !important;
+        padding: 9px 10px !important;
+    }
+    .feed-card-box.skh-card--product .skh-body > .skh-title { font-size: 12.5px !important; min-height: 32px !important; }
+    .feed-card-box.skh-card--product .skh-body > .skh-price { font-size: 14.5px !important; }
+    .feed-card-box.skh-card--product .skh-open-chevron { padding: 3px 6px !important; }
+}
+
+/* ---------- 5. [FIX 2] Nafasi tupu kati ya jina na bei imeondolewa ----------
+   Badala ya kuhifadhi mistari 2 ya jina (iliyoacha mwanya kwa majina mafupi),
+   bei inashikamana NA CHINI (margin-top:auto) na meta-row inafuata pemoja.
+   Matokeo: kadi zote zina kimo kimoja, bei iko mahali pamoja, hakuna mwanya. */
+.feed-card-box.skh-card--product .skh-body > .skh-title {
+    min-height: 0 !important;
+    margin-bottom: 2px !important;
+}
+.feed-card-box.skh-card--product .skh-body > .skh-price {
+    margin-top: auto !important;
+    padding-top: 2px !important;
+}
+.feed-card-box.skh-card--product .skh-body > .skh-meta-row {
+    margin-top: 6px !important;
+}

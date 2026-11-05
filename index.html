@@ -37,7 +37,7 @@
 
 <noscript></noscript>
 <script src="js/05-dialogs.js"></script>
-<script src="js/00-pwa.js" defer></script>
+<script src="js/00-pwa.js?v=20261105r5d" defer></script>
 <script src="js/00-config.js" defer></script>
 <!-- [PERF 2026-09] Kipakiaji cha maktaba za nje: Leaflet/Chart hazipakwi
      kwenye startup tena — huingizwa kwa uvivu ramani/grafu zinapofunguliwa. -->
@@ -62,6 +62,7 @@
 <link rel="stylesheet" href="css/18-product-showcase.css">
 <link rel="stylesheet" href="css/19-token-box.css">
 <link rel="stylesheet" href="css/20-request-inbox.css">
+<link rel="stylesheet" href="css/21-discovery-maoni.css"><!-- [FIX 2026-11-04] sheet ya MAONI + kadi za maoni (haikuwa imepakiwa) -->
 <link rel="stylesheet" href="css/22-delivery-choice.css">
 <link rel="stylesheet" href="css/23-logistics-market.css">
 <link rel="stylesheet" href="css/24-chat-ui-v2.css">
@@ -74,6 +75,7 @@
 <link rel="stylesheet" href="css/38-product-builder-seed.css"><!-- Product Builder canonical category seeding --><!-- Advertiser Billing UI-only Coming Soon state -->
 <link rel="stylesheet" href="css/37-product-card-visual.css"><!-- Large visual marketplace cards -->
 <link rel="stylesheet" href="css/38-home-ad-manager.css"><!-- Admin Home Advertisement Manager -->
+<link rel="stylesheet" href="css/39-creative-studio.css"><!-- Creative studio -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
 <link rel="stylesheet" href="css/25-typography.css">
@@ -84,6 +86,7 @@
     <link rel="stylesheet" href="css/28-my-profile.css">
     <!-- [R19] responsive top-nav + role badges + Kamusi -->
     <link rel="stylesheet" href="css/29-nav-dict.css">
+    <link rel="stylesheet" href="css/30-discover-engine.css"><!-- Discover engine -->
     <!-- [2026-11-01] Refinement layer — loaded last, additive only (see file header) -->
     <link rel="stylesheet" href="css/40-ui-refinement.css">
     <!-- [TASK 01] Compact, integrated advertising presentation (presentation only) -->
@@ -104,10 +107,16 @@
     <link rel="stylesheet" href="css/50-sell-studio.css">
     <!-- [VARIANT STUDIO] Product builder cards + buyer-facing variant preview -->
     <link rel="stylesheet" href="css/51-variant-studio.css">
-    <!-- [STAGE B 2026-11-04] GUNDUA BIASHARA — Business Discovery Feed ndani ya Chat inbox -->
-    <link rel="stylesheet" href="css/52-chat-discovery-feed.css">
-    <!-- [GROUP CHAT UI 2026-11] Muonekano wa ndani ya kikundi: dirisha kamili, kadi za urambazaji, composer -->
-    <link rel="stylesheet" href="css/53-group-chat-ui.css">
+    <!-- [UI REFINEMENT 2026-11-03] Product Card + Product Details (in-flow actions) -->
+    <link rel="stylesheet" href="css/52-product-card-details.css">
+    <link rel="stylesheet" href="css/53-product-inquiry.css">
+<link rel="stylesheet" href="css/54-maoni-polish.css"><!-- [2026-11-04] Maoni + Tathmini polish -->
+<link rel="stylesheet" href="css/55-engagement-system.css"><!-- [2026-11-04] Engagement + reactions system -->
+<link rel="stylesheet" href="css/56-lazy-feed.css">
+<link rel="stylesheet" href="css/57-home-brand-header.css?v=20261105r5d">
+<link rel="stylesheet" href="css/58-category-photo-strip.css?v=20261105r5d">
+    <!-- [GROUP CHAT UI 2026-11] Muonekano wa ndani ya kikundi -->
+    <link rel="stylesheet" href="css/53-group-chat-ui.css"><!-- [2026-11-04] Lazy load ya bidhaa -->
 <style id="skhBootCloakCss">
  html.skh-booting body{visibility:hidden!important}
  /* [LOGO-SPLASH 2026-09-17] Splash inabeba LOGO halisi ya SokoHai — funika
@@ -161,6 +170,8 @@ window.skhMountWordmarks = function(root){
 };
 </script>
 <link rel="stylesheet" href="fonts/inter.css">
+<meta name="skh-build" content="HEADER-R5d-2026-11-05">
+<script>try{console.log("[SokoHai] build HEADER-R5d-2026-11-05");}catch(e){}</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="skhWordGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f6faf"/><stop offset=".55" stop-color="#23917b"/><stop offset="1" stop-color="#79bc41"/></linearGradient></defs></svg>
@@ -215,6 +226,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <div id="sidebarMenuModal" class="overlay-menu" style="z-index: 100005; justify-content: flex-start; align-items: stretch;"></div>
 
 <!-- MODE SWITCHER MODAL -->
+<!-- USIMAMIZI (dashboards) — IMEARUDISHWA KAMILI kama ilivyo kwenye GitHub
+     (commit 03a6811, index.html). Mtumiaji: "naomba unakshi kama ilivyokua mwanzo".
+     Markup, madarasa (.menu-item), rangi za border-left, maandishi na kitufe cha
+     "Funga X" ni zile zile za mwanzo. Marekebisho pekee ni CSS ndogo (§12 kwenye
+     css/57) inayohakikisha dashboards zote 7 zinaonekana bila kukatwa. -->
 <div id="modeMenuModal" class="overlay-menu" style="z-index: 8500;" onclick="if(event.target===this){closeModals();}">
     <div style="width:100%; max-width:400px; display:flex; flex-direction:column; align-items:center; animation: popIn 0.3s ease-out; background: white; padding: 30px; border-radius: 24px; max-height: 90vh; overflow-y:auto;">
         <h2 style="color:var(--primary-dark); margin-top:0; margin-bottom:20px; text-align:center; text-transform:uppercase; font-size:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; width: 100%;"> Usimamizi</h2>
@@ -251,6 +267,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:15px; background:#e2e8f0; color:#334155; border:none; border-radius:14px; cursor:pointer; font-weight:900; text-transform:uppercase;">Funga X</button>
     </div>
 </div>
+
 
 <!-- ADVERTISER DASHBOARD — Billing entry is intentionally locked/UI-only -->
 <div id="advertiserDashboardModal" class="overlay-menu" style="z-index:8550;">
@@ -532,50 +549,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="m9 18 6-6-6-6"/></svg>
             </button>
 
-            <!-- Rundo la vitendo vya haraka (ICONS + idadi + jina dogo) -->
-            <div class="pm-hero-stack">
-                <button type="button" class="pm-act" id="btnLike" onclick="window.skhModalLike ? window.skhModalLike() : handleLike()" aria-label="Like pendelea bidhaa" title="Penda" aria-pressed="false">
-                    <span class="pm-act-ico">
-                        <span class="eng-ico" id="engIcoLike"></span>
-                        <span class="pm-act-n" id="pmLikesCount">0</span>
-                    </span>
-                    <span class="eng-lbl pm-act-lbl">Like</span>
-                </button>
-                <button type="button" class="pm-act" id="btnSave" onclick="window.skhModalSave()" aria-label="Hifadhi bidhaa" title="Hifadhi" aria-pressed="false">
-                    <span class="pm-act-ico"><span class="eng-ico" id="engIcoSave"></span></span>
-                    <span class="eng-lbl pm-act-lbl">Save</span>
-                </button>
-                <button type="button" class="pm-act" id="pmShareBtn" onclick="handleShare()" aria-label="Gawa (share) bidhaa">
-                    <span class="pm-act-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg><span class="pm-act-n" id="pmSharesCount">0</span></span>
-                    <span class="pm-act-lbl">Share</span>
-                </button>
-                <button type="button" class="pm-act" id="pmBtnComments" onclick="window.skhOpenMaoni()" aria-label="Fungua Maoni">
-                    <span class="pm-act-ico">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
-                        <span class="pm-act-n" id="pmCommentsCount">0</span>
-                    </span>
-                    <span class="pm-act-lbl">Maoni</span>
-                </button>
-            </div>
+            
 
-            <!-- Chini kushoto: UTAMBULISHO WA MUUZAJI/MTUA HUDUMA (karibu na bidhaa) -->
-            <div class="pm-hero-seller">
-                <div class="pm-seller" id="sellerMiniDash">
-                    <span class="pm-seller-avatar" id="pmSellerAvatar"></span>
-                    <div class="pm-seller-info">
-                        <span class="pm-seller-role" id="pmSellerRole">Muuzaji</span>
-                        <div class="pm-seller-name-row">
-                            <b id="pmSellerName">Muuzaji</b>
-                            <span id="pmSellerVerified"></span>
-                        </div>
-                        <div class="pm-seller-meta" id="pmSellerMeta"></div>
-                    </div>
-                    <button type="button" class="follow-btn btn-not-following pm-follow" id="btnFollow" onclick="event.stopPropagation(); window.skhModalFollow();" aria-pressed="false" aria-label="Mfuate muuzaji" title="Mfuate">
-                        <span class="eng-ico" id="engIcoFollow"></span>
-                        <span class="eng-lbl">Follow</span>
-                    </button>
-                </div>
-            </div>
+            
 
             <!-- Chini: mara zilizotazamwa, counter, dots -->
             <div class="pm-hero-bottom">
@@ -607,15 +583,82 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     </button>
                 </div>
                 <div class="pm-wholesale-note" id="pmWholesaleNote" hidden></div>
-                <button type="button" class="pm-creative-launch" id="pmCreativeLaunch" onclick="window.skhAdvertiseOpenEntity()">
-                    Advertise / Create Creative
+            </section>
+
+            <!-- 2.1b MUUZAJI — avatar · jina · uthibitisho · FUATA (post-style) -->
+            <section class="pm-sec pm-seller-card" id="pmSellerCard" aria-label="Muuzaji">
+                <div class="pm-seller" id="sellerMiniDash">
+                    <span class="pm-seller-avatar" id="pmSellerAvatar"></span>
+                    <div class="pm-seller-info">
+                        <div class="pm-seller-name-row">
+                            <b id="pmSellerName">Muuzaji</b>
+                            <span id="pmSellerVerified"></span>
+                            <span class="pm-seller-role" id="pmSellerRole">Muuzaji</span>
+                        </div>
+                        <div class="pm-seller-meta" id="pmSellerMeta"></div>
+                    </div>
+                    <button type="button" class="follow-btn btn-not-following pm-follow" id="btnFollow" onclick="event.stopPropagation(); window.skhModalFollow();" aria-pressed="false" aria-label="Mfuate muuzaji" title="Mfuate">
+                        <span class="eng-ico" id="engIcoFollow"></span>
+                        <span class="eng-lbl">Fuata</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2.1c ENGAGEMENTS — safu moja chini ya bidhaa (post-style).
+                 Handlers zilizopo: skhToggleLike · skhOpenMaoni ·
+                 skhShareProduct · skhToggleSave. Counters: pmLikesCount ·
+                 pmCommentsCount · pmSharesCount (zilezile za zamani). -->
+            <div class="pm-eng-row" id="pmEngageRow">
+                <button type="button" class="pm-eng-btn" id="pmEngLikeBtn" onclick="window.skhToggleLike(null, this)" aria-label="Pendwa" aria-pressed="false" title="Pendwa">
+                    <span class="skh-ico pm-eng-ico" data-ico="heart" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Pendwa</span><b class="pm-eng-n" id="pmLikesCount" hidden></b></span>
+                </button>
+                <button type="button" class="pm-eng-btn" id="pmEngCommentBtn" onclick="window.skhOpenMaoni()" aria-label="Maoni" title="Maoni">
+                    <span class="skh-ico pm-eng-ico" data-ico="chat" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Maoni</span><b class="pm-eng-n" id="pmCommentsCount" hidden></b></span>
+                </button>
+                <button type="button" class="pm-eng-btn" id="pmEngShareBtn" onclick="window.skhShareProduct()" aria-label="Shiriki" title="Shiriki">
+                    <span class="skh-ico pm-eng-ico" data-ico="send" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Shiriki</span><b class="pm-eng-n" id="pmSharesCount" hidden></b></span>
+                </button>
+                <button type="button" class="pm-eng-btn" id="pmEngSaveBtn" onclick="window.skhToggleSave(null, this)" aria-label="Hifadhi" aria-pressed="false" title="Hifadhi">
+                    <span class="skh-ico pm-eng-ico" data-ico="archive" aria-hidden="true"></span><span class="pm-eng-txt"><span class="pm-eng-lbl">Hifadhi</span></span>
+                </button>
+            </div>
+
+            <!-- 2.2 BLOCK YA VITENDO — Idadi · jumla · Chat · Weka Oda ·
+                 Patana Bei · Lipia Sasa. HAISHIKAMANI (no sticky): kadi
+                 yote inascroll pamoja na maelezo ili mteja aone kila kitu
+                 kwa upana (ombi la 2026-11-04). Vitufe hujengwa na
+                 39-product-showcase.js (§F) na css/52 §I. -->
+            
+            <div class="pm-sticky-stack" id="pmStickyStack">
+            <div class="pm-bar" id="pmActionBlock">
+                <div class="pm-qty-row" id="pmQtyArea">
+                    <span class="pm-qty-lbl" id="pmQtyLabel">Idadi</span>
+                    <div class="pm-qty">
+                        <button type="button" class="pm-qty-btn" id="pmQtyMinus" aria-label="Punguza idadi" onclick="changeQty(-1)">−</button>
+                        <input type="number" id="pmQty" value="1" min="1" inputmode="numeric" aria-label="Idadi">
+                        <button type="button" class="pm-qty-btn" id="pmQtyPlus" aria-label="Ongeza idadi" onclick="changeQty(1)">+</button>
+                    </div>
+                    <span class="pm-stock" id="pmStockInfo"></span>
+                    <span class="pm-total-row"><span>Jumla</span><b id="pmTotalPriceCalc">TSh 0</b></span>
+                </div>
+                <div class="pm-bar-actions" id="pmActionArea"></div>
+            </div>
+            </div><!-- /#pmStickyStack -->
+
+            <section class="pm-sec" id="pmInquireCard">
+                <button type="button" class="pm-inquire-btn" onclick="window.skhOpenInquiryBuilder()" aria-label="Uliza Zaidi kuhusu Bidhaa">
+                    <span class="pm-inquire-txt">
+                        <b>Uliza Zaidi kuhusu Bidhaa</b>
+                        <small>Jenga maswali yako · chagua aina ya jibu · tuma kwa muuzaji</small>
+                    </span>
+                    <span class="pm-inquire-side">
+                        <span class="pm-inquire-count" id="pmInquireCount"></span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </span>
                 </button>
             </section>
 
-            <!-- 2.2 VARIANTS (size/rangi/variants za data) — hujazwa na JS -->
-            <section class="pm-sec pm-var-sec" id="pmVariantSelectionArea" hidden></section>
-
-            <!-- 2.3 PANEL MAALUM (mnada) — hujazwa na JS -->
+            <!-- 2.4 PANEL MAALUM (mnada) — hujazwa na JS -->
             <section class="pm-sec" id="pmSpecialModeArea" hidden></section>
 
             <!-- 2.4 MAELEZO + SIFA (zilizopo tu) -->
@@ -624,6 +667,10 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <p class="pm-desc" id="pmDesc"></p>
                 <div class="pm-spec-grid" id="pmCustomDetails"></div>
             </section>
+
+
+            <!-- 2.5b VARIANTS (rangi/ukubwa/model/storage) — chini ya maelezo & sifa -->
+            <section class="pm-sec pm-var-sec" id="pmVariantSelectionArea" hidden></section>
 
             <!-- 2.5 USAMBAZAJI NA ULINZI (mfumo uliopo) -->
             <section class="pm-sec" id="pmDeliverySec">
@@ -634,32 +681,10 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <!-- 2.6 TATHMINI (reviews) — hujazwa na JS -->
             <section class="pm-sec" id="pmReviewsSec"></section>
 
-            <!-- ============================================================
-                 2.8 ACTION AREA — IN-FLOW (2026-09): vitendo vingia baada ya
-                     DETAILS zote na KABLA ya RECOMMENDATIONS. Haiko sticky/
-                     fixed tena juu ya maudhui (kanuni ya mtumiaji: DETAILS
-                     → ACTION AREA → RECOMMENDED — single natural scroll).
-                 ============================================================ -->
-        <!-- ============================================================
-             3) KIFIMBO CHINI (sticky) — Cart / Nunua / Chat / Dau / Agiza
-                hujengwa na JS kulingana na aina na hali ya bidhaa.
-             ============================================================ -->
-        <div class="pm-bar">
-            <!-- Mstari wa IDADI (bidhaa zenye idadi tu) -->
-            <div class="pm-qty-row" id="pmQtyArea">
-                <span class="pm-qty-lbl" id="pmQtyLabel">Idadi</span>
-                <div class="pm-qty">
-                    <button type="button" class="pm-qty-btn" id="pmQtyMinus" aria-label="Punguza idadi" onclick="changeQty(-1)">−</button>
-                    <input type="number" id="pmQty" value="1" min="1" inputmode="numeric" aria-label="Idadi">
-                    <button type="button" class="pm-qty-btn" id="pmQtyPlus" aria-label="Ongeza idadi" onclick="changeQty(1)">+</button>
-                </div>
-                <span class="pm-stock" id="pmStockInfo"></span>
-            </div>
-            <!-- Mstari wa VITENDO (chini ya idadi) -->
-            <div class="pm-bar-actions" id="pmActionArea"></div>
-        </div>
+            
 
-            <!-- 2.9 BIDHAA ZINAZOHUSIANA (rails — maduka mbalimbali) -->
+            
+
             <section class="pm-sec pm-related-sec" id="pmRelatedWrap" hidden></section>
 
             <!-- Campaign placement is below all commerce actions; mode-specific keys are set by the shared adapter. -->
@@ -687,6 +712,17 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 </div>
                 <div class="maoni-body" id="maoniSheetBody"><!-- skhCommentsRoot huambatishwa hapa na 35-comments.js --></div>
             </aside>
+        </div>
+
+        <!-- ============================================================
+             ULIZA ZAIDI KUHUSU BIDHAA — builder ya maswali (dynamic).
+             Kadi hujengwa na js/app/53-product-inquiry.js; data huenda
+             kwenye collection `productInquiries` + ujumbe wa Chat.
+             Maoni ya umma (skhOpenMaoni / `comments`) HAYAGUSWI.
+             ============================================================ -->
+        <div class="inq-layer" id="inquiryLayer" hidden>
+            <div class="inq-scrim"></div>
+            <aside class="inq-sheet" role="dialog" aria-modal="true" aria-labelledby="inqCount"></aside>
         </div>
 
     </div>
@@ -828,6 +864,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 </div>
             </div>
         </div>
+
         <div id="chatSearchBar" class="ch-conversation-search" hidden>
             <span aria-hidden="true"><span class="skh-ico" data-ico="search"></span></span>
             <input id="chatSearchInput" type="search" autocomplete="off" placeholder="Tafuta ujumbe..." oninput="window.skhChatSearchMessages(this.value)">
@@ -926,7 +963,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             </div>
             <div class="ch-inbox-head-actions">
                 <!-- [R22 §11] + → Contact / Chagua Contacts / Create Group (69-chat-groups.js) -->
-                <button type="button" id="sogaPlusBtn" onclick="window.skhSogaPlusMenu && window.skhSogaPlusMenu(event)" title="Mazungumzo mapya" aria-label="Mazungumzo mapya" class="ch-inbox-iconbtn ch-inbox-plus"><span style="font-size:20px;font-weight:900;line-height:1;">+</span></button>
+                <button type="button" id="sogaPlusBtn" onclick="window.skhSogaPlusMenu && window.skhSogaPlusMenu(event)" title="Anza: Contact / Contacts / Kikundi" class="ch-inbox-iconbtn ch-inbox-plus"><span style="font-size:20px;font-weight:900;line-height:1;">+</span></button>
                 <button onclick="window.skhChatOpenBlockedUsers()" title="Waliozuiwa" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="lock"></span></button>
                 <button onclick="closeModals()" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="x"></span></button>
             </div>
@@ -937,39 +974,6 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <button id="inboxSearchClear" class="ch-inbox-clear" style="display:none;" onclick="window.skhChatClearInboxSearch()" aria-label="Futa"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="inboxChips" class="ch-inbox-chips"></div>
-        <!-- [STAGE B 2026-11-04] GUNDUA BIASHARA — matangazo na biashara zinazoendelea.
-             Ipo kati ya Chat/Search bar (+ vichujio) na #inboxList.
-             HAIGUSI inbox: search, unread count na sorting zinabaki kama zilivyo.
-             Data: products / services / drivers zilizopo (hakuna koleksheni mpya). -->
-        <section id="skhDiscoverFeed" class="skh-df" aria-label="Gundua Biashara">
-            <div class="skh-df-head">
-                <div class="skh-df-titles">
-                    <span class="skh-df-title">Gundua Biashara</span>
-                    <span class="skh-df-sub">Matangazo na biashara zinazoendelea</span>
-                </div>
-                <div class="skh-df-actions">
-                    <button type="button" class="skh-df-btn" data-df-all>Tazama zote</button>
-                    <button type="button" class="skh-df-btn skh-df-btn--ghost" data-df-hide>Ficha</button>
-                </div>
-            </div>
-            <div class="skh-df-rail">
-                <button type="button" class="skh-df-nav skh-df-nav--prev" data-df-scroll="-1" aria-label="Rudi nyuma">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <div class="skh-df-track" id="skhDfTrack"></div>
-                <button type="button" class="skh-df-nav skh-df-nav--next" data-df-scroll="1" aria-label="Endelea mbele">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-            </div>
-        </section>
-        <!-- Kitufe cha kurudisha feed baada ya "Ficha" -->
-        <button type="button" id="skhDfPill" style="display:none;" aria-label="Onyesha Gundua Biashara">
-            <span class="skh-df-pill-txt">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10,9 15,12 10,15" fill="currentColor" stroke="none"/></svg>
-                Gundua Biashara
-            </span>
-            <span class="skh-df-pill-hint">Onyesha</span>
-        </button>
         <div id="chatBlockedUsersWrap" style="display:none;">
             <div class="ch-blocked-head">
                 <span><span class="skh-ico" data-ico="lock"></span> Waliozuiwa (Blocked Users)</span>
@@ -2998,57 +3002,47 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <div class="top-nav-left">
             <span class="menu-btn" onclick="openSidebarMenu()" data-skh-icon="menu" data-skh-size="18"></span>
             <!-- [BRAND TEXT 2026-09-17] Wordmark kubwa ya TEXT (kama Amazon/noon) — si logo finyu -->
-            <span class="brand-text skh-wordmark-host" aria-label="SokoHai" style="display:inline-flex;align-items:center;"><span data-skh-wm="132"></span></span>
+            <!-- [BRAND 2026-11-04] Logo halisi ya repo (fonts/assets/sokohai-s-mark.png) + jina
+                 lenye "Soko" blue ya mfumo (#1268A8) na "Hai" green (#18A982). -->
+            <a class="skh-brand" href="#" onclick="updateApp('home');return false;" aria-label="SokoHai — Nyumbani">
+                <img class="skh-brand-logo" src="assets/img/sokohai-logo.png" alt="SokoHai" width="56" height="62" decoding="async">
+                <span class="skh-brand-div" aria-hidden="true"></span>
+                <span class="skh-brand-lockup">
+                    <span class="skh-brand-word" aria-hidden="true"><b class="skh-brand-soko">Soko</b><b class="skh-brand-hai">Hai</b></span>
+                    <span class="skh-brand-arc" aria-hidden="true"></span>
+                </span>
+            </a>
         </div>
         
         <div class="top-nav-icons">
-            <!-- USIMAMIZI (badala ya "Badili Mode") -->
-            <span title="Usimamizi" onclick="openModeMenu()" class="usimamizi-btn" style="display:inline-flex; align-items:center; gap:3px; background:#EAF8F2; color:#17604E; border:1px solid #CCEBDD; padding:4px 7px; border-radius:999px; font-size: 10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.2px; cursor:pointer; box-shadow:0 2px 6px rgba(3,80,157,0.25);">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                <b>Kazi</b>
-            </span>
+            <!-- [HEADER 2026-11-04 R5] Kazi = ICON pekee (hakuna maandishi).
+                 Kikigusa: Usimamizi · SokoPay · Cart · Taarifa (sheet ya mfumo).
+                 Kisha vitufe vya kazi maalum: SokoPay, Cart, Taarifa.
+                 Account ipo kwenye sidebar menu (hamburger). -->
+            <button type="button" class="skh-icon-btn skh-kazi-btn" id="skhKaziBtn" onclick="window.skhKaziMenu(event)"
+                    aria-haspopup="dialog" aria-expanded="false" aria-label="Kazi" title="Kazi">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            </button>
 
-            <span title="Kikapu" onclick="openCart()" style="font-size: 20px; position: relative; display:inline-flex;" data-skh-icon="cart" data-skh-size="20"><div class="badge" id="cartBadge" style="display:none; background: var(--gold); color: var(--primary-dark); font-weight: 900;">0</div></span>
+            <!-- SOKOPAY -->
+            <button type="button" class="skh-icon-btn" id="skhSokoPayBtn" onclick="window.openSokoPay && window.openSokoPay()"
+                    aria-label="SokoPay" title="SokoPay (Escrow na malipo)">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.4"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10.5" y2="15"/></svg>
+            </button>
 
-            <!-- SOKOPAY (icon ya payment) -->
-            <span title="SokoPay (Escrow & Malipo)" onclick="window.openSokoPay()" style="font-size: 18px; display:inline-flex; color:#b8860b;">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
-            </span>
+            <!-- CART -->
+            <button type="button" class="skh-icon-btn skh-has-badge" id="skhCartBtn" onclick="window.openCart && window.openCart()"
+                    aria-label="Kikapu" title="Kikapu">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+                <span class="skh-count" id="skhCartCount" hidden>0</span>
+            </button>
 
-            <span title="Taarifa" onclick="openNotifications()" style="font-size: 20px; position: relative; display:inline-flex;" data-skh-icon="bell" data-skh-size="20"><div class="badge" id="notifBadge" style="display:none;">0</div></span>
-
-            <!-- SWITCHI YA LUGHA (button moja &rarr; options) -->
-            <div class="lang-switch" id="langSwitchWrap">
-                <button type="button" class="lang-toggle" id="langToggleBtn" onclick="window.skhToggleLangDropdown(event)" aria-haspopup="listbox" aria-expanded="false">
-                    <svg class="lang-globe" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9s-1.4 6.4-3.9 9c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg><span id="langToggleLabel">SW</span>
-                    <svg class="lang-caret" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </button>
-                <div class="lang-dropdown" id="langDropdown" role="listbox" style="display:none;">
-                    <div id="langMenuMain">
-                        <div class="menu-title-row" data-i18n="lm_menu">Menu ya Lugha</div>
-                        <button type="button" id="langMenuLugha" class="lang-menu-opt" role="option">
-                            <span class="lang-menu-ico">🌍</span>
-                            <span class="lang-menu-txt">
-                                <span class="lang-menu-title" data-i18n="lm_lugha">Lugha</span>
-                                <span class="lang-menu-sub" data-i18n="lm_lugha_sub">Chagua lugha ya programu</span>
-                            </span>
-                        </button>
-                        <button type="button" id="langMenuKamusi" class="lang-menu-opt" role="option">
-                            <span class="lang-menu-ico">📖</span>
-                            <span class="lang-menu-txt">
-                                <span class="lang-menu-title" data-i18n="lm_kamusi">Kamusi ya SokoHai</span>
-                                <span class="lang-menu-sub" data-i18n="lm_kamusi_sub">Icons, alama na maana zake</span>
-                            </span>
-                        </button>
-                    </div>
-                    <div id="langMenuLughaView" style="display:none;">
-                        <button type="button" id="langMenuBack" class="lang-menu-back">‹ <span data-i18n="lm_back">Menyu</span></button>
-                        <div class="menu-title-row" data-i18n="lm_pick">Chagua Lugha</div>
-                        <button type="button" class="lang-dropdown-opt" data-lang="sw" onclick="window.skhSetLang('sw')"><span class="lang-check"><span class="skh-ico" data-ico="check"></span></span><span class="lang-opt-text">Kiswahili</span></button>
-                        <button type="button" class="lang-dropdown-opt" data-lang="en" onclick="window.skhSetLang('en')"><span class="lang-check"><span class="skh-ico" data-ico="check"></span></span><span class="lang-opt-text">English</span></button>
-                    </div>
-                </div>
-            </div>
+            <!-- NOTIFICATIONS -->
+            <button type="button" class="skh-icon-btn skh-has-badge" id="skhNotifBtn" onclick="window.openNotifications && window.openNotifications()"
+                    aria-label="Taarifa" title="Taarifa">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                <span class="skh-count" id="skhNotifCount" hidden>0</span>
+            </button>
         </div>
     </div> 
 
@@ -3058,8 +3052,10 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <img src="img/avatar-gray.png" class="user-dp" id="searchProfilePic" alt="Profile">
         </div>
         <div class="search-wrap">
-            <input type="text" id="searchInput" oninput="window.handleSearch()" data-i18n-placeholder="search_placeholder" placeholder="Tafuta Bidhaa, Huduma au Usafirishaji...">
-            <span class="camera-icon" title="Tafuta kwa picha" aria-label="Tafuta kwa picha" data-skh-icon="camera" data-skh-size="18" onclick="document.getElementById('imageSearchInput').click()"></span>
+            <span class="skh-search-ico" data-skh-icon="search" data-skh-size="20" aria-hidden="true"></span>
+            <input type="text" id="searchInput" oninput="window.handleSearch()" data-i18n-placeholder="search_placeholder" placeholder="Tafuta bidhaa, huduma au usafiri...">
+            <span class="skh-search-div" aria-hidden="true"></span>
+            <button type="button" class="skh-search-go" onclick="window.handleSearch()" aria-label="Tafuta"><span data-skh-icon="search" data-skh-size="19" aria-hidden="true"></span></button>
         </div>
     </div>
 
@@ -3111,10 +3107,13 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         </div>
     </div>
 
-    <!-- Home campaign placement. Shared Delivery Controller leases/rotates ads; system alerts remain separate. -->
-    <div class="big-announcement" id="topAnnouncement" data-skh-ad-slot="home" aria-live="polite">
-        <div class="marquee-text" id="sokohaiAnnouncementText" data-i18n="welcome_banner"> Karibu SokoHai — Nunua, Uza na Lipa kwa Usalama</div>
-    </div>
+    <!-- [JOB 13 R5b — 2026-11-05] ENEO LA MATANGAZO LA JUU KABISA LIMEONDOLEWA.
+         Mtumiaji: "ondoa ile location ya ads pale top kabisa, zisiwe zinatokea hapo."
+         #topAnnouncement (data-skh-ad-slot="home") ilikuwa inakaa hapa juu kabla ya
+         kategoria: ilikuwa mahali pa tangazo la Home + banner ya "Karibu SokoHai"
+         (yenye urefu wa ~50-59px bila maudhui). Sasa ukurasa unaanza moja kwa moja
+         na kategoria (#categoryStrip). Tangazo la Home linamout tu ndani ya feed,
+         chini ya mpaka wa kategoria (js/app/99-ads-marketplace.js). -->
 
     <!-- SEHEMU YA TABS ZA KUUZA BIDHAA (zilizofichwa kwa default ili kuzuia clutter) -->
     <div class="market-modes-nav" id="marketModesNav" style="display:none;">
@@ -3154,10 +3153,21 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <!-- [FIX 2026-09-24] Inline display:none ILIFANICHA KATEGORIA MILELE —
              scroll-handler na CSS (.cat-trigger-btn display:flex) zilishatakiwa
              ionekane. Sasa inaonekana moja kwa moja chini ya ad card. -->
-        <div class="cat-trigger-btn" id="topFilterToggles" onclick="openCategoryModal()">
-            <span id="activeCategoryText" data-i18n="cat_all">Kategoria: Bidhaa Zote Sokoni</span>
-            <span style="background: var(--gold); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">+</span>
-        </div>
+        <!-- [CATEGORY PHOTO STRIP 2026-11-04] Kategoria zenye picha (6 + Zaidi).
+             Inachukua nafasi ya "Kategoria: Bidhaa Zote" + "Gundua Soko" ili
+             sponsored ads zisionekane kabla ya kategoria. Kila kadi inaita
+             selectAdvancedCategory() ile ile; kadi iliyochaguliwa inaonekana
+             na zingine zinachujwa. Hujengwa na js/app/83-category-photos.js. -->
+        <section class="cps-section" id="categoryStrip" aria-labelledby="cpsTitle">
+            <div class="cps-head">
+                <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span>Gundua Soko</h2>
+                <span class="cps-head-rule" aria-hidden="true"></span>
+                <button type="button" class="cps-more" onclick="openCategoryModal()">Kategoria zote
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+                </button>
+            </div>
+            <div class="cps-strip" id="categoryPhotoStrip"></div>
+        </section>
 
         <div class="dynamic-sliders-container" id="dynamicSliders" style="display:none;">
             <b data-i18n="filter_type" style="font-size: 13px; color: #94a3b8; text-transform: uppercase; margin-bottom: -5px;">Aina ya Bidhaa (Telezesha &harr;)</b>
@@ -3533,6 +3543,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/36-seller-chat-comments.js"></script>
 <!-- [SHOWCASE MODULE 02] Product Detail UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
 <script type="module" src="js/app/39-product-showcase.js"></script>
+<!-- [INQUIRY BUILDER 2026-11] Uliza Zaidi kuhusu Bidhaa — maswali yenye muundo (productInquiries) -->
+<script type="module" src="js/app/53-product-inquiry.js"></script>
 <!-- [TOKEN BOX 2026-09] Sanduku la mikode ya makabidhiano (PK/TR/DL) linalojitegemea -->
 <script type="module" src="js/app/40-token-box.js"></script>
 <!-- [REQUEST ROUTING 2026-09] Agent Request Inbox (NEW REQUEST / Accept / Decline) -->
@@ -3547,6 +3559,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/65-content-l10n.js"></script>
 <script type="module" src="js/app/66-wordmark.js"></script>
 <script type="module" src="js/app/67-payment-accounts.js"></script>
+<script type="module" src="js/app/68-gundua-soko.js?v=20261105r5d"></script><!-- [2026-11-04] Gundua Soko -->
+<script type="module" src="js/app/82-home-header-actions.js?v=20261105r5d"></script>
+<script type="module" src="js/app/83-category-photos.js?v=20261105r5d"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->
 <script type="module" src="js/app/69-chat-groups.js"></script>
 <script type="module" src="js/app/70-role-identity.js"></script>
 <script type="module" src="js/app/71-visual-dictionary.js"></script>
@@ -3566,21 +3581,19 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/57-checkout-bridge.js"></script>
 <script type="module" src="js/app/58-request-visibility.js"></script>
 <script type="module" src="js/app/59-agent-monitor.js"></script>
+<script type="module" src="js/app/60-lazy-feed.js"></script><!-- [2026-11-04] Lazy load ya bidhaa (infinite scroll) -->
 <!-- [CREATIVE STUDIO] One shared, lazy-asset editor. CSS/templates/media load only when opened. -->
 <script type="module" src="js/app/95-creative-studio.js"></script>
 <!-- One server-authoritative delivery/rotation controller for all campaign slots. -->
 <script type="module" src="js/app/96-ad-delivery-controller.js"></script>
 <script type="module" src="js/app/97-escrow-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Escrow (server-only actions) -->
 <script type="module" src="js/app/98-admin-control-center.js"></script>
-<script type="module" src="js/app/99-ads-marketplace.js"></script>
+<script type="module" src="js/app/99-ads-marketplace.js?v=20261105r5d"></script>
 <script type="module" src="js/app/100-ads-studio-ui.js"></script><!-- [TASK 01] in-feed ads + true-size studio preview -->
 <!-- [ADS STUDIO REBUILD 2026-11-01] SokoHai Marketplace Ads Studio (product / service / transport only) -->
 <script type="module" src="js/app/101-marketplace-ads-studio.js"></script>
 <script type="module" src="js/app/102-publish-outbox.js"></script>
 <script type="module" src="js/app/103-ad-badges.js"></script><!-- [ADS 2026-11-01] badges ndogo: dashboard, chat --><!-- [BIDHAA/HUDUMA/USAFIRI] hifadhi kwa kifaa, sambaza baadaye -->
-<!-- [STAGE B 2026-11-04] GUNDUA BIASHARA — feed ya fursa ndani ya Chat inbox.
-     Inatumia data na handlers zilizopo pekee (products/services/drivers). -->
-<script type="module" src="js/app/106-chat-discovery-feed.js"></script>
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->

@@ -97,12 +97,21 @@ const server = http.createServer((req, res) => {
       return notFound(res, urlPath);
     }
     const type = MIME[path.extname(abs).toLowerCase()] || 'application/octet-stream';
-    res.writeHead(200, {
+    const isHtml = type.startsWith('text/html');
+    const headers = {
       'Content-Type': type,
       'Content-Length': st.size,
-      'Cache-Control': 'no-store',
+      /* [2026-11-05] Bila hivi, browser/proxy ya preview ilikuwa inaonyesha
+         toleo la kale la CSS/JS (local server ilionekana tofauti na screen shot). */
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-SokoHai-Build': 'HEADER-R5d-2026-11-05',
       'Access-Control-Allow-Origin': '*'
-    });
+    };
+    /* kwa HTML: futa HTTP cache ya kivinjari kila ukurasa unapopakiwa */
+    if (isHtml) headers['Clear-Site-Data'] = '"cache"';
+    res.writeHead(200, headers);
     if (req.method === 'HEAD') return res.end();
     fs.createReadStream(abs)
       .on('error', () => res.destroy())
