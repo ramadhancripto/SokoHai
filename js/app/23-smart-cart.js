@@ -202,7 +202,7 @@ window.hydrateSmartCartProducts = async function(){
             const snap=await skh.getDoc(skh.doc(skh.db,'products',id));
             if(snap.exists()){
                 const p=snap.data();
-                items[i]={...items[i], productId:id, title:p.title||p.name||items[i].title, price:p.price ?? items[i].price, image:p.image||p.images?.[0]||items[i].image, stock:p.stock ?? p.quantity ?? items[i].stock, sellerId:p.userId||p.sellerId||items[i].sellerId, sellerName:p.ownerName||p.sellerName||items[i].sellerName, sellerLocation:p.location||items[i].sellerLocation, productLiveLinked:true, productUpdatedAt:p.updatedAt||''};
+                items[i]={...items[i], productId:id, title:p.title||p.name||items[i].title, price:p.price ?? items[i].price, saleMode:p.saleMode, commerceMode:p.commerceMode, modeData:p.modeData||null, wholesalePrice:p.wholesalePrice ?? null, wholesaleMinQty:p.wholesaleMinQty ?? null, image:p.image||p.images?.[0]||items[i].image, stock:p.stock ?? p.quantity ?? items[i].stock, sellerId:p.userId||p.sellerId||items[i].sellerId, sellerName:p.ownerName||p.sellerName||items[i].sellerName, sellerLocation:p.location||items[i].sellerLocation, productLiveLinked:true, productUpdatedAt:p.updatedAt||''};
                 changed=true;
             }
         }catch(e){ console.log('hydrate product skipped', id, e.message); }
@@ -696,8 +696,18 @@ window.openSellerLogisticsTools = async function(){
   const money = n => 'TSh ' + (Number(n||0)).toLocaleString();
   const readCart = () => { try { skh.myCart = JSON.parse(skh.localStorage.getItem('sokohai_cart') || '[]') || []; } catch(e) { skh.myCart = skh.myCart || []; } return skh.myCart || []; };
   const writeCart = () => { try { skh.localStorage.setItem('sokohai_cart', JSON.stringify(skh.myCart || [])); } catch(e) {} try { if(skh.currentUserData?.docId) skh.updateDoc(skh.doc(skh.db,'users',skh.currentUserData.docId), { cart: skh.myCart || [] }); } catch(e) {} };
-  const itemPrice = x => parseFloat(String(x.price ?? x.unitPrice ?? x.cartMeta?.unitPrice ?? 0).replace(/,/g,'')) || 0;
   const itemQty = x => Math.max(1, parseInt(x.qty || x.quantity || 1));
+  /* [2026-11-06] Unit price = server rules (variant price, commerce mode, wholesale
+     tiers by quantity) via skh.buyerUnitPrice; before, the cart charged the retail
+     price even when the quantity qualified for the seller's wholesale tier and
+     ignored the chosen variant's price. Fallback keeps the old behaviour. */
+  const legacyItemPrice = x => parseFloat(String(x.price ?? x.unitPrice ?? x.cartMeta?.unitPrice ?? 0).replace(/,/g,'')) || 0;
+  const itemPrice = x => {
+    if (typeof skh.buyerUnitPrice === 'function' && (x.productId || x.id) && x.price != null) {
+      try { const u = skh.buyerUnitPrice(x, itemQty(x)); if (u > 0) return u; } catch (e) {}
+    }
+    return legacyItemPrice(x);
+  };
   const itemSellerId = x => x.sellerId || x.userId || x.ownerId || x.cartMeta?.sellerId || 'unknown_seller';
   const itemSellerName = x => x.sellerName || x.ownerName || x.seller || x.cartMeta?.sellerName || 'Seller';
   const itemImg = x => { try { return skh.getOptimizedImageUrl(x.image || x.images?.[0] || x.cartMeta?.productImages?.[0] || ''); } catch(e) { return x.image || x.images?.[0] || ''; } };

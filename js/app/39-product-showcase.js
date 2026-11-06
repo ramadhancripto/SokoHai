@@ -102,17 +102,46 @@ import {
             watchBtn.style.display = (col === PS_PRODUCT && p.saleMode !== 'auction' && price !== null && price > 0) ? 'inline-flex' : 'none';
         }
 
-        // Bei ya jumla (wholesale) kama ipo
+        // [2026-11-06] Bei kwa idadi (rejareja + jumla) — jedwali moja kutoka
+        // shared/wholesale-price-core.js (formula ileile ya server). Bei ya jumla
+        // isiyo na idadi ya chini (wholesaleMinQty) ni ya POS/dukani pekee na
+        // HAIONYESHWI sokoni (awali ilionyeshwa "Jumla: X" ingawa mnunuzi
+        // hakuweza kuipata).
         var wn = $('pmWholesaleNote');
-        var wp = psNum(p.wholesalePrice);
-        if (col === PS_PRODUCT && p.hasBulkPackaging && wp !== null && wp > 0) {
-            wn.hidden = false;
-            wn.textContent = T('pm_wholesale_price', 'Jumla') + ': ' + psMoney(wp) + (p.bulkUnit ? ' / ' + p.bulkUnit : '');
-        } else if (wn) {
-            wn.hidden = true;
-            wn.textContent = '';
+        if (wn) {
+            var core = window.SKHWholesalePriceCore;
+            var rows = (col === PS_PRODUCT && p.saleMode !== 'auction' && core) ? core.priceTable(p, psNum(p.tempVariantPrice)) : [];
+            if (rows.length) {
+                var unitLbl = p.baseUnit ? ' / ' + esc(p.baseUnit) : '';
+                wn.hidden = false;
+                wn.innerHTML = '<div class="pm-tier-title">' + esc(T('pm_tiers_title', 'Bei kwa idadi')) + '</div>'
+                    + '<div class="pm-tier-table" role="table">' + rows.map(function (r) {
+                        var range = r.to ? (r.from + '–' + r.to) : (r.from + '+');
+                        return '<div class="pm-tier-row" role="row" data-from="' + r.from + '" data-to="' + (r.to || '') + '">'
+                            + '<span role="cell">' + esc(range) + ' ' + esc(T('pm_tiers_units', 'vipande')) + '</span>'
+                            + '<b role="cell">' + psMoney(r.price) + unitLbl + '</b>'
+                            + '<small role="cell">' + esc(r.retail ? T('pm_tiers_retail', 'rejareja') : T('pm_tiers_wholesale', 'jumla')) + '</small></div>';
+                    }).join('') + '</div>';
+                window.skhPsPaintTierRows(p, parseInt(($('pmQty') || {}).value) || 1);
+            } else {
+                wn.hidden = true;
+                wn.innerHTML = '';
+            }
         }
     }
+
+    /** Onyesha safu ya bei inayotumika kwa idadi iliyochaguliwa. */
+    window.skhPsPaintTierRows = function (p, qty) {
+        var wn = $('pmWholesaleNote');
+        if (!wn || wn.hidden) return;
+        wn.querySelectorAll('.pm-tier-row').forEach(function (r) {
+            var from = parseInt(r.getAttribute('data-from')) || 1;
+            var to = parseInt(r.getAttribute('data-to')) || Infinity;
+            var on = qty >= from && qty <= to;
+            r.classList.toggle('is-active', on);
+            if (on) r.setAttribute('aria-current', 'true'); else r.removeAttribute('aria-current');
+        });
+    };
 
     /* ================================================================
      * VARIANTS (data-driven; fallback ya kihafidhina kwa mavazi)
@@ -166,8 +195,10 @@ import {
         // jumla na panel-hint. Hesabu hutoka skhModesCompute (backend doc).
         if (p.saleMode === 'wholesale' && typeof window.skhModesCompute === 'function') {
             var w = window.skhModesCompute(p).wholesale;
-            var unitP = w.applicable(qty);
+            // [2026-11-06] bei ya kipande = sheria ileile ya server (shared core).
+            var unitP = typeof skh.buyerUnitPrice === 'function' ? skh.buyerUnitPrice(p, qty) : w.applicable(qty);
             totalEl.textContent = psMoney(unitP * qty);
+            window.skhPsPaintTierRows(p, qty);
             var hint = document.getElementById('wsApplyHint');
             if (hint) {
                 var baseP = psNum(p.price) || 0;
@@ -180,8 +211,10 @@ import {
         if (typeof skh.calculateDynamicPrice === 'function') {
             try { skh.calculateDynamicPrice(); return; } catch (e) {}
         }
-        var base = psNum(p.tempVariantPrice) !== null ? psNum(p.tempVariantPrice) : (psNum(p.price) || 0);
+        var base = typeof skh.buyerUnitPrice === 'function' ? skh.buyerUnitPrice(p, qty)
+            : (psNum(p.tempVariantPrice) !== null ? psNum(p.tempVariantPrice) : (psNum(p.price) || 0));
         totalEl.textContent = psMoney(base * qty);
+        window.skhPsPaintTierRows(p, qty);
     }
     window.skhPsRefreshTotal = refreshTotals; // [§20] qty-change engines wanaweza kusitisha hapa (07 changeQty).
 
@@ -197,7 +230,7 @@ import {
         }
         var qty = parseInt((document.getElementById('pmQty') || {}).value) || 1;
         var w = window.skhModesCompute(p).wholesale;
-        var unit = w.applicable(qty);
+        var unit = typeof skh.buyerUnitPrice === 'function' ? skh.buyerUnitPrice(p, qty) : w.applicable(qty);
         if (!isFinite(unit) || unit <= 0) { alert('Bei haijapatikana kwa kiasi hiki.'); return { ok: false, error: 'bei_haitapatikana' }; }
         // Malipo: bawana kiasi cha halisi (unit * qty) — sera iliyopo ya escrow.
         window.checkoutSeriousMode(Math.round(unit * qty));
@@ -1053,12 +1086,41 @@ import {
         ['recommended', 'Pia unaweza kupenda']
     ];
 
+    /* [2026-11-06 SOKO HURU] Linganisha ofa za bidhaa hii kutoka kwa wauzaji wengine:
+       bei kwa kipimo, bei ya jumla (kama ipo, kutoka core ileile ya server), stock,
+       mahali na hali. Mnunuzi anachagua muuzaji kabla ya oda au majadiliano. */
+    function offersHtml(cur, offers) {
+        var core = window.SKHWholesalePriceCore;
+        function row(d, mine) {
+            var unit = d.baseUnit ? ' / ' + esc(d.baseUnit) : '';
+            var tiers = core ? core.tiersOf(d) : [];
+            var ws = tiers.length ? esc('Jumla: ' + psMoney(tiers[0].price) + ' kuanzia ' + tiers[0].minQty) : '';
+            var stock = psNum(d.stock);
+            var cond = d.condition || d.itemCondition || '';
+            return '<div class="pm-offer' + (mine ? ' is-current' : '') + '" role="row">'
+                + '<div class="pm-offer-who" role="cell"><b>' + esc(psSellerName(d)) + '</b>'
+                + '<small>' + esc([d.location || d.region || '', cond].filter(Boolean).join(' · ')) + '</small></div>'
+                + '<div class="pm-offer-price" role="cell"><b>' + esc(psMoney(d.price)) + unit + '</b>' + (ws ? '<small>' + ws + '</small>' : '') + '</div>'
+                + '<div class="pm-offer-stock" role="cell">' + (stock !== null ? esc((stock > 0 ? 'Zipo ' : 'Zimeisha ') + (stock > 0 ? stock : '')) : '') + '</div>'
+                + '<div class="pm-offer-act" role="cell">' + (mine ? '<span class="pm-offer-tag">Unaiangalia</span>'
+                    : '<button type="button" class="pm-offer-btn" onclick="openProduct(\'' + esc(d.id) + '\', \'products\')">Angalia ofa</button>') + '</div>'
+                + '</div>';
+        }
+        return '<div class="pm-offers" role="table" aria-label="Linganisha wauzaji">'
+            + '<div class="pm-rail-head"><h3>Linganisha wauzaji wa bidhaa hii <small>(' + (offers.length + 1) + ')</small></h3></div>'
+            + row(cur, true) + offers.map(function (d) { return row(d, false); }).join('')
+            + '<p class="pm-offers-note">Bei, stock na masharti ni ya kila muuzaji. Chagua muuzaji kabla ya kuweka oda au kupatana bei.</p>'
+            + '</div>';
+    }
+
     function renderRails(wrap, rails, col, key) {
         if (!rails) { wrap.hidden = true; return; }
-        var any = RAIL_DEFS.some(function (r) { return rails[r[0]] && rails[r[0]].length; });
+        var hasOffers = !!(rails.offers && rails.offers.length);
+        var any = hasOffers || RAIL_DEFS.some(function (r) { return rails[r[0]] && rails[r[0]].length; });
         if (!any) { wrap.hidden = true; return; }
         wrap.hidden = false;
-        var html = '<h2 class="pm-sec-title pm-related-title">Watu pia wanaangalia</h2>';
+        var html = hasOffers ? offersHtml(skh.currentOpenProduct || {}, rails.offers) : '';
+        html += '<h2 class="pm-sec-title pm-related-title">Watu pia wanaangalia</h2>';
         RAIL_DEFS.forEach(function (def, i) {
             var items = rails[def[0]];
             if (!items || !items.length) return;

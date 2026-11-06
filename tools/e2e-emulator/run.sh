@@ -12,7 +12,7 @@ curl -sf http://127.0.0.1:8085/ >/dev/null || { echo "Firestore emulator not run
 curl -sf http://localhost:5055/ >/dev/null || { echo "functions/local-server.js not running on :5055"; exit 2; }
 mkdir -p out/e2e
 node push-rules.cjs ../../firestore.rules
-for s in ${SKH_E2E_ONLY:-s1 s2 s3 s4 s5 s6 s7 s8}; do node "$s.cjs"; done 2>&1 | grep -v MetadataLookupWarning | tee out/e2e-results.txt
+for s in ${SKH_E2E_ONLY:-s1 s2 s3 s4 s5 s6 s7 s8 s9}; do node "$s.cjs"; done 2>&1 | grep -v MetadataLookupWarning | tee out/e2e-results.txt
 # [2026-11-06] A crashed scenario prints no FAIL line; also require PASS lines and no uncaught errors.
 ! grep -q '^FAIL' out/e2e-results.txt
 grep -q '^PASS' out/e2e-results.txt

@@ -950,7 +950,8 @@
     html body #productModal .pm-image-slider video {
         width: 100% !important;
         height: 100% !important;
-        object-fit: cover !important;
+        object-fit: contain !important; /* [2026-11-06] picha haikatwi (§5.1) */
+        background: #EEF3F1 !important;
     }
 }
 

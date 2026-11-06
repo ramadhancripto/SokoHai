@@ -1127,47 +1127,52 @@ skh.setImgTransform = function setImgTransform() {
 
 skh.activeProductUnsubscribe = null;
 
+/* [2026-11-06] Buyer unit price = the SAME rules the server uses to check an order
+   (functions/pricing-core.js modeUnitPrice): variant price as the base, then the
+   commerce mode (price drop, group buy for members, won auction) and finally the
+   wholesale tiers / wholesalePrice+wholesaleMinQty from shared/wholesale-price-core.js.
+   Before: group buy and wholesale used a per-extra-item discount the server never
+   applied, so the page and the cart showed a different total from the order check. */
+skh.buyerUnitPrice = function buyerUnitPrice(p, qty) {
+    if (!p) return 0;
+    const q = Math.max(1, parseInt(qty, 10) || 1);
+    const base = parseFloat(p.tempVariantPrice) > 0 ? parseFloat(p.tempVariantPrice) : (parseFloat(p.price) || 0);
+    const priced = Object.assign({}, p, { price: base });
+    const md = p.modeData || {};
+    const mode = String(md.mode || p.commerceMode || p.saleMode || '');
+    let unit = base;
+    try {
+        const c = typeof window.skhModesCompute === 'function' ? window.skhModesCompute(priced) : null;
+        if (c && mode === 'price_drop' && c.drop) unit = c.drop.currentPrice;
+        else if (c && mode === 'group_buy' && c.group) {
+            const me = skh.currentUser && skh.currentUser.uid;
+            const member = !Array.isArray(md.participants) || (me && md.participants.indexOf(me) !== -1);
+            unit = member ? c.group.price : base;
+        } else if (c && mode === 'auction' && c.auction && c.auction.ended && me_is(md)) unit = c.auction.currentBid;
+    } catch (e) { unit = base; }
+    function me_is(m) { const me = skh.currentUser && skh.currentUser.uid; return !!(me && m.maxBidder && String(m.maxBidder) === String(me)); }
+    const core = window.SKHWholesalePriceCore;
+    if (core) unit = core.unitPriceForQty(priced, q, unit);
+    return Math.max(0, Math.round(unit));
+};
+window.skhBuyerUnitPrice = skh.buyerUnitPrice;
+
 skh.calculateDynamicPrice = function calculateDynamicPrice() {
     if(!skh.currentOpenProduct) return;
-    
     const qtyInput = document.getElementById('pmQty');
     const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
-    
-    //  Angalia kama kuna bei ya saizi ya XXL iliyoshikiliwa
-    let basePrice = skh.currentOpenProduct.tempVariantPrice || parseFloat(skh.currentOpenProduct.price) || 0;
-    let finalPricePerItem = basePrice;
-
-    const mode = skh.currentOpenProduct.saleMode || 'free_market';
-    const mData = skh.currentOpenProduct.modeData || {};
-
-    if (mode === 'wholesale' || mode === 'group_buy') {
-        const discountVal = parseFloat(mData.discountValue) || 0;
-        const discountType = mData.discountType || 'amount'; 
-        const extraItems = qty - 1; 
-
-        if (extraItems > 0) {
-            if(discountType === 'percent') {
-                let totalDiscountPercent = discountVal * extraItems;
-                if(totalDiscountPercent > 90) totalDiscountPercent = 90; 
-                finalPricePerItem = basePrice - (basePrice * (totalDiscountPercent / 100));
-            } else {
-                let totalDiscountAmount = discountVal * extraItems;
-                finalPricePerItem = basePrice - totalDiscountAmount;
-                if(finalPricePerItem < (basePrice * 0.1)) finalPricePerItem = basePrice * 0.1; 
-            }
-        }
-    }
-
+    const finalPricePerItem = skh.buyerUnitPrice(skh.currentOpenProduct, qty);
     const totalCost = finalPricePerItem * qty;
-    
+
     const pmPriceEl = document.getElementById('pmPrice');
     // [SHOWCASE 39] Tumia kipimo halisi (kg, lita, pisi, …) cha muuzaji
     const _unit = (skh.currentOpenProduct && skh.currentOpenProduct.baseUnit) ? String(skh.currentOpenProduct.baseUnit) : 'Pc';
     if(pmPriceEl) pmPriceEl.innerText = `TSh ${finalPricePerItem.toLocaleString()} / ${_unit}`;
-    
+
     const pmTotalEl = document.getElementById('pmTotalPriceCalc');
     if(pmTotalEl) pmTotalEl.innerText = `TSh ${totalCost.toLocaleString()}`;
-    
+    if (typeof window.skhPsPaintTierRows === 'function') { try { window.skhPsPaintTierRows(skh.currentOpenProduct, qty); } catch (e) {} }
+
     skh.currentOpenProduct.calculatedTotalCost = totalCost;
     skh.currentOpenProduct.selectedQty = qty;
 }

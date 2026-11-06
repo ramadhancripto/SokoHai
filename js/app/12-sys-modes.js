@@ -532,7 +532,11 @@ window.submitEditForm = async function(event) {
                     });
                     t2.sort(function (a, b) { return a.minQty - b.minQty; });
                 } catch (e) { t2 = []; }
-                updateMap['modeData.tiers'] = t2;
+                // [2026-11-06] ngazi halali tu ndizo zinahifadhiwa (sheria sawa na fomu ya kuunda).
+                const ep = document.getElementById('editPrice');
+                const tierMsg2 = window.skhWsTierIssues ? window.skhWsTierIssues(parseFloat(ep && ep.value) || 0, t2) : '';
+                if (tierMsg2) { alert(tierMsg2 + '\n\nTiers hazijabadilishwa.'); }
+                else updateMap['modeData.tiers'] = t2;
             }
         }
 

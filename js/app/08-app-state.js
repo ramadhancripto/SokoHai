@@ -465,7 +465,9 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         else if (saleMode === 'wholesale') {
             const discVal = parseFloat(document.getElementById('wsDiscount').value);
             const discType = document.getElementById('wsDiscountType').value;
-            if(!discVal) { alert("Weka kiasi cha punguzo kwa Wholesale."); return; }
+            // [2026-11-06] Punguzo linahitajika tu kama hakuna tiers (tiers ndizo bei halisi).
+            const hasTierText = !!(document.getElementById('wsTiersText') && document.getElementById('wsTiersText').value.trim());
+            if(!discVal && !hasTierText) { alert("Weka kiasi cha punguzo kwa Wholesale, au tiers za bei (mf. 5:22000; 20:19000)."); return; }
             const minQtyEl = document.getElementById('wsMinQty');
             const minQty = minQtyEl ? (parseInt(minQtyEl.value) || 0) : 0;
             if(!minQty || minQty <= 0) { alert("Weka IDADI YA CHINI ya jumla (minQty) — mfano: 10."); return; }
@@ -485,7 +487,10 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
                     tiers.sort(function (a, b) { return a.minQty - b.minQty; });
                 } catch (e) { tiers = []; }
             }
-            modeData = { discountValue: discVal, discountType: discType, minQty: minQty, tiers: tiers }; 
+            // [2026-11-06] Tiers lazima ziwe ngazi halali (idadi inapanda, bei haipandi, chini ya rejareja).
+            const tierMsg = window.skhWsTierIssues ? window.skhWsTierIssues(parseFloat(document.getElementById('prodPrice').value) || 0, tiers) : '';
+            if (tierMsg) { alert(tierMsg); return; }
+            modeData = { discountValue: discVal || 0, discountType: discType, minQty: minQty, tiers: tiers }; 
         }
         else if (saleMode === 'group_buy') {
             const discVal = parseFloat(document.getElementById('gbDiscount').value);
@@ -602,6 +607,8 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
         bulkUnit: bulkUnit,
         conversionRatio: conversionRatio,
         wholesalePrice: wholesalePrice,
+        // [2026-11-06] MOQ ya bei ya jumla sokoni (null = POS/dukani pekee).
+        wholesaleMinQty: (wholesalePrice > 0 && (parseInt((document.getElementById('prodWholesaleMinQty') || {}).value, 10) || 0) >= 2) ? parseInt(document.getElementById('prodWholesaleMinQty').value, 10) : null,
         rawUnitsQtyEntered: rawQtyEntered,
         
         // Expiry, Batch, na Serial / IMEI Data ya kiakili
@@ -1400,3 +1407,35 @@ window.addEventListener('scroll', () => {
         isHidden: function () { return hidden; }
     };
 })();
+
+
+/* [2026-11-06] Tiers za jumla: uchakataji + ukaguzi + hakiki (fomu ya kuunda na kuhariri).
+   Sheria za bei zenyewe ziko shared/wholesale-price-core.js (sawa na server). */
+window.skhParseWsTiers = function (text) {
+    return String(text || '').split(';').map(function (pair) {
+        var kv = pair.split(':');
+        return { minQty: parseInt(kv[0], 10), price: parseFloat(String(kv[1] || '').replace(/[,\s]/g, '')) };
+    }).filter(function (t) { return Number.isFinite(t.minQty) && t.minQty > 0 && Number.isFinite(t.price) && t.price > 0; })
+      .sort(function (a, b) { return a.minQty - b.minQty; });
+};
+window.skhWsTierIssues = function (retail, tiers) {
+    var core = window.SKHWholesalePriceCore;
+    if (!core || !tiers || !tiers.length) return '';
+    var msgs = { MIN_QTY_BELOW_2: 'idadi ya chini iwe 2 au zaidi', PRICE_REQUIRED: 'weka bei', NOT_BELOW_RETAIL: 'bei ya jumla iwe chini ya bei ya rejareja', MIN_QTY_NOT_INCREASING: 'idadi zisijirudie (kila ngazi iwe kubwa kuliko iliyotangulia)', PRICE_RISES: 'bei isipande kadri idadi inavyoongezeka' };
+    var issues = core.validateTiers(retail, tiers);
+    if (!issues.length) return '';
+    return 'Tiers za jumla zina tatizo:\n' + issues.map(function (i) { return '• Ngazi ' + (i.index + 1) + ' (' + tiers[i.index].minQty + ':' + tiers[i.index].price + '): ' + (msgs[i.code] || i.code); }).join('\n');
+};
+window.skhWsTierPreview = function (textId, priceId, previewId) {
+    var box = document.getElementById(previewId); if (!box) return;
+    var core = window.SKHWholesalePriceCore;
+    var retail = parseFloat((document.getElementById(priceId) || {}).value) || 0;
+    var tiers = window.skhParseWsTiers((document.getElementById(textId) || {}).value);
+    if (!core || !tiers.length) { box.innerHTML = ''; return; }
+    var issue = window.skhWsTierIssues(retail, tiers);
+    var rows = core.priceTable({ price: retail, saleMode: 'wholesale', modeData: { tiers: tiers } });
+    var esc = function (v) { return skh.skhEscape(String(v)); };
+    box.innerHTML = (issue ? '<div class="ws-tier-issue">' + esc(issue).replace(/\n/g, '<br>') + '</div>' : '')
+        + '<div class="ws-tier-head">Mnunuzi ataona:</div>'
+        + rows.map(function (r) { return '<div class="ws-tier-row"><span>' + (r.to ? r.from + '–' + r.to : r.from + '+') + ' vipande</span><b>TSh ' + Number(r.price).toLocaleString() + '</b><small>' + (r.retail ? 'rejareja' : 'jumla') + '</small></div>'; }).join('');
+};

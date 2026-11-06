@@ -4,6 +4,7 @@
  * in js/app/07-product.js (commerce modes) and js/app/01-market.js (boost).
  */
 'use strict';
+const wholesaleCore = require('./shared/wholesale-price-core');
 
 function modeUnitPrice(p, qty, buyerUid, nowMs) {
     const base = Number(p.price || 0);
@@ -24,19 +25,13 @@ function modeUnitPrice(p, qty, buyerUid, nowMs) {
         const discVal = Number(md.discountValue) || 0;
         const extra = Math.max(0, joined - 1);
         unit = md.discountType === 'percent' ? base - (base * Math.min(90, discVal * extra) / 100) : Math.max(base * 0.1, base - discVal * extra);
-    } else if (mode === 'wholesale') {
-        const tiers = (Array.isArray(md.tiers) ? md.tiers : [])
-            .map(t => ({ minQty: parseInt(t.minQty, 10) || 0, price: Number(t.price) || 0 }))
-            .filter(t => t.minQty > 0 && t.price > 0 && qty >= t.minQty);
-        if (tiers.length) unit = Math.min.apply(null, tiers.map(t => t.price));
-        else if ((parseInt(md.minQty, 10) || 0) > 0 && qty >= parseInt(md.minQty, 10) && Number(md.discountValue) > 0) {
-            unit = md.discountType === 'percent' ? base - base * Number(md.discountValue) / 100 : Math.max(0, base - Number(md.discountValue));
-        }
     } else if (mode === 'auction') {
         const ended = Number(md.endTime) > 0 && nowMs >= Number(md.endTime);
         if (ended && md.maxBidder && String(md.maxBidder) === String(buyerUid) && Number(md.currentBid) > 0) unit = Number(md.currentBid);
     }
-    if (Number(p.wholesalePrice) > 0 && qty >= (parseInt(p.wholesaleMinQty, 10) || Infinity)) unit = Math.min(unit, Number(p.wholesalePrice));
+    // [2026-11-06] Wholesale tiers + wholesalePrice/wholesaleMinQty: one shared
+    // formula with the browser (product page, Smart Cart). Same rules as before.
+    unit = wholesaleCore.applyWholesale(p, qty, unit);
     return Math.max(0, Math.round(unit));
 }
 /* [REPAIR 2026-10 Phase 5] Who may BUY a mode product at all.
