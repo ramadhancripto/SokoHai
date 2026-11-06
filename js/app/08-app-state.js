@@ -55,6 +55,7 @@ window.updateApp = function(mode, el = null) {
     // 3. Badili aina ya vitu vinavyoonekana (Collection)
     const mappedData = skh.navMap[mode];
     skh.currentFeedCollection = mappedData ? mappedData.dbCollection : 'products';
+    if (typeof window.skhCategoryStripSync === 'function') window.skhCategoryStripSync(); // [R5] immediate, not on the next poll
     
     // 4. Washa/Zima Menu za juu (Sub-navs)
     document.getElementById('marketModesNav').style.display = (mode === 'bidhaa') ? 'flex' : 'none';

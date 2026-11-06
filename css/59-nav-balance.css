@@ -925,3 +925,7 @@ body .pm-rel-img { background: #F4F6F5; }
 body .feed-card-box.skh-card--product .feed-img-box.skh-img > img,
 body .feed-card-box.skh-card--product .skh-img img,
 body .pm-rel-img img { object-fit: contain !important; object-position: center; }
+
+/* [REMEDIATION 2026-11 R5] product category strip hidden on Services / Transport */
+#categoryPhotoStrip[hidden] { display: none !important; }
+

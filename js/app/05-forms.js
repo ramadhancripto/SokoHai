@@ -11,6 +11,7 @@ import { visibilityForBusinessMode, sellerFormRules, duplicateTemplate, DRAFT_FI
 window.skhCategoryLabel = function (v) {
     try {
         const s = String(v == null ? '' : v); if (!/^CAT-\d+$/.test(s)) return s;
+        if (typeof skh.categoryLabel === 'function') return skh.categoryLabel(s) || s; // [R4/R5] small identity module
         const o = getSellerCategoryOptions(skh.advancedCategories || {}).find(x => x && x.value === s);
         return (o && o.label) || s;
     } catch (e) { return String(v == null ? '' : v); }
@@ -516,6 +517,8 @@ document.querySelectorAll('form').forEach(form => form.reset());
         if (t.category) { setField('prodCategory', t.category); if (window.updateFormSubcats) window.updateFormSubcats(); setField('prodSubCategory', t.subCategory || t.subcategory); }
         if (t.offlineCategory) setField('prodOfflineCategory', t.offlineCategory);
         setField('prodProductType', t.productType); setField('prodCondition', t.condition);
+        // [REMEDIATION R5] keep the canonical product type (save re-checks it against the branch)
+        setField('prodTaxonomyProductTypeId', t.productTypeId || ''); setField('prodTaxonomyProductTypeLabel', t.productTypeLabel || '');
         setField('prodBaseUnit', t.baseUnit); setField('prodHasBulk', t.hasBulkPackaging === true);
         setField('prodBulkUnit', t.bulkUnit); setField('prodConversionRatio', t.conversionRatio);
         setField('prodPrice', t.price); setField('prodBuyPrice', t.buyPrice); setField('prodWholesalePrice', t.wholesalePrice);

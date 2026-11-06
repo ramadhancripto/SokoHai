@@ -165,6 +165,12 @@ t('local draft: plain fields only (no files, stock moves or variant ids), restor
   const html = read('html/09-admin-sell.html');
   for (const id of L.DRAFT_FIELDS) assert.match(html, new RegExp('id="' + id + '"'), 'draft field exists in the form: ' + id);
 });
+t('R5: canonical product type survives copy and draft', () => {
+  const t3 = L.duplicateTemplate({ id: 'p9', title: 'Mchele', category: 'CAT-01', subCategory: 'Nafaka', productTypeId: 'PT-CAT-01-NAFAKA_MCHELE', productTypeLabel: 'Mchele' });
+  assert.equal(t3.productTypeId, 'PT-CAT-01-NAFAKA_MCHELE'); assert.equal(t3.productTypeLabel, 'Mchele');
+  assert.ok(L.DRAFT_FIELDS.includes('prodTaxonomyProductTypeId') && L.DRAFT_FIELDS.includes('prodTaxonomyProductTypeLabel'));
+  assert.match(read('js/app/05-forms.js'), /setField\('prodTaxonomyProductTypeId', t\.productTypeId/);
+});
 t('one seller form: grouped, Swahili labels, no duplicate ids, builder kept (no second builder)', () => {
   const html = read('html/09-admin-sell.html');
   const form = html.slice(html.indexOf('<form id="sellerForm"'), html.indexOf('</form>', html.indexOf('<form id="sellerForm"')));

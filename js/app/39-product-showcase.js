@@ -1096,7 +1096,8 @@ import {
         function row(d, mine) {
             var unit = d.baseUnit ? ' / ' + esc(d.baseUnit) : '';
             var tiers = core ? core.tiersOf(d) : [];
-            var ws = tiers.length ? esc('Jumla: ' + psMoney(tiers[0].price) + ' kuanzia ' + tiers[0].minQty) : '';
+            // [R3] wholesale minimum stated with its unit (e.g. "kuanzia 5 Kg")
+            var ws = tiers.length ? esc('Bei ya jumla: ' + psMoney(tiers[0].price) + (d.baseUnit ? ' / ' + d.baseUnit : '') + ' ukinunua kuanzia ' + tiers[0].minQty + (d.baseUnit ? ' ' + d.baseUnit : '')) : '';
             var stock = psNum(d.stock);
             var cond = d.condition || d.itemCondition || '';
             return '<div class="pm-offer' + (mine ? ' is-current' : '') + '" role="row">'

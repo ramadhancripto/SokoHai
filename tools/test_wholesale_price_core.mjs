@@ -43,5 +43,20 @@ for (let i = 0; i < 3000; i++) {
 ok('server modeUnitPrice identical to legacy implementation (3,000 random cases)', diffs.length === 0, JSON.stringify(diffs.slice(0, 2)));
 ok('server uses the shared core (no second formula)', fs.readFileSync(new URL('../functions/pricing-core.js', import.meta.url), 'utf8').includes("require('./shared/wholesale-price-core')"));
 ok('functions/shared copy is in sync', fs.readFileSync(new URL('../functions/shared/wholesale-price-core.js', import.meta.url), 'utf8') === fs.readFileSync(new URL('../shared/wholesale-price-core.js', import.meta.url), 'utf8'));
+// [REMEDIATION R5] charge == display: a tier can only lower the price; decimals count.
+{
+  const bad = { price: 10000, saleMode: 'wholesale', modeData: { mode: 'wholesale', tiers: [{ minQty: 5, price: 12000 }] } };
+  ok('R5 tier above retail never overcharges (server charge = retail)', core.unitPriceForQty(bad, 10) === 10000 && server.modeUnitPrice(bad, 10, 'u1', 1e12) === 10000);
+  ok('R5 buyer table shows the same price that is charged', core.priceTable(bad).find(r => !r.retail).price === core.unitPriceForQty(bad, 10));
+  const kg = { price: 4000, saleMode: 'wholesale', modeData: { mode: 'wholesale', tiers: [{ minQty: 2, price: 3500 }] } };
+  ok('R5 decimal 2.5 kg reaches the 2 kg tier', core.unitPriceForQty(kg, 2.5) === 3500);
+  ok('R5 decimal 1.9 kg stays retail', core.unitPriceForQty(kg, 1.9) === 4000);
+  const qsrc = fs.readFileSync(new URL('../functions/index.js', import.meta.url), 'utf8');
+  ok('R5 server order quantity is validated, not parseInt-truncated', qsrc.includes('function orderQuantity(item, product)') && !/const qty = Math\.max\(1, parseInt\(item\.quantity/.test(qsrc));
+  const Q = require('../functions/shared/quantity-core.js');
+  ok('R5 whole-unit product rejects 2.5', !Q.isValidQuantity(2.5, Q.precisionOf({})));
+  ok('R5 kg product (precision 3) accepts 2.5', Q.isValidQuantity(2.5, Q.precisionOf({ quantityPrecision: 3 })));
+  ok('R5 decimal line total exact', Q.lineTotal(4000, 1.25) === 5000);
+}
 console.log(`\nWHOLESALE PRICE CORE: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

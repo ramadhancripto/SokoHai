@@ -48,7 +48,8 @@
 
   /** Wholesale-adjusted unit price for qty, starting from `unit` (retail / variant / mode price). */
   function applyWholesale(p, qty, unit) {
-    var q = Math.max(1, int(qty) || 1);
+    // [REMEDIATION R5] decimal quantities (kg/L) count as-is for tier thresholds.
+    var q = num(qty) > 0 ? num(qty) : 1;
     var u = num(unit);
     var md = (p && p.modeData) || {};
     var base = num(p && p.price);
@@ -56,9 +57,11 @@
       var hits = (Array.isArray(md.tiers) ? md.tiers : [])
         .map(function (t) { return { minQty: int(t && t.minQty), price: num(t && t.price) }; })
         .filter(function (t) { return t.minQty > 0 && t.price > 0 && q >= t.minQty; });
-      if (hits.length) u = Math.min.apply(null, hits.map(function (t) { return t.price; }));
+      // [REMEDIATION R5] a tier can only LOWER the price (same rule the buyer price
+      // table shows: min(retail, tier)); a mis-entered tier above retail never overcharges.
+      if (hits.length) u = Math.min(u, Math.min.apply(null, hits.map(function (t) { return t.price; })));
       else if (int(md.minQty) > 0 && q >= int(md.minQty) && num(md.discountValue) > 0) {
-        u = md.discountType === 'percent' ? base - base * num(md.discountValue) / 100 : Math.max(0, base - num(md.discountValue));
+        u = Math.min(u, md.discountType === 'percent' ? base - base * num(md.discountValue) / 100 : Math.max(0, base - num(md.discountValue)));
       }
     }
     if (num(p && p.wholesalePrice) > 0 && q >= (int(p && p.wholesaleMinQty) || Infinity)) u = Math.min(u, num(p.wholesalePrice));

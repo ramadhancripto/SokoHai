@@ -276,25 +276,39 @@ const { modeUnitPrice, modeEligibility, variantPrice, boostPrice, SUBSCRIPTION_P
 // [PHASE 3 2026-10-31] Online reservation / stock commit (OFF unless system_config/inventory.mode says otherwise).
 const inventoryReservation = require('./inventory-reservation');
 const stockCore = require('./shared/inventory-reservation-core');
+// [REMEDIATION 2026-11 R5] quantity is validated, never silently truncated:
+// whole-unit products need a whole number; decimal (kg/L/m) products opt in with
+// product.quantityPrecision and are checked by the shared quantity core.
+const quantityCore = require('./shared/quantity-core');
+function orderQuantity(item, product) {
+    const raw = (item.quantity != null && item.quantity !== '') ? item.quantity : ((item.qty != null && item.qty !== '') ? item.qty : 1);
+    const prec = product ? quantityCore.precisionOf(product) : 0;
+    if (!quantityCore.isValidQuantity(raw, prec)) return null;
+    return Number(raw);
+}
+exports._orderQuantity = orderQuantity;
 async function expectedItemAmount(item, buyerUid, nowMs) {
-    const qty = Math.max(1, parseInt(item.quantity || item.qty || 1, 10) || 1);
+    let qty = orderQuantity(item, null);
     const pid = String(item.productId || item.itemId || item.id || '');
     if (pid && pid.indexOf('/') === -1) {
         const ps = await db.doc('products/' + pid).get();
         if (ps.exists) {
             const p = ps.data() || {};
+            qty = orderQuantity(item, p);
+            if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             if (item.sellerId && String(p.userId || '') !== String(item.sellerId)) return { ok: false, reason: 'seller_mismatch' };
             const elig = modeEligibility(p, buyerUid, nowMs);
             if (elig) return { ok: false, reason: elig };
             const vp = variantPrice(p, item.selectedVariant || item.variant || item.variantId);
             const unit = modeUnitPrice(vp ? Object.assign({}, p, { price: vp }) : p, qty, buyerUid, nowMs);
-            return { ok: unit > 0, amount: unit * qty, source: 'products', reason: unit > 0 ? '' : 'no_price' };
+            return { ok: unit > 0, amount: quantityCore.lineTotal(unit, qty), source: 'products', reason: unit > 0 ? '' : 'no_price' };
         }
         const ss = await db.doc('services/' + pid).get();
         if (ss.exists) {
             const sv = ss.data() || {};
             if (['negotiable', 'quotation_required', 'range', 'starting'].indexOf(String(sv.pricingModel || 'fixed')) !== -1) return { ok: false, reason: 'service_requires_negotiation' };
             const unit = Number(sv.price || 0);
+            if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             return { ok: unit > 0, amount: unit * qty, source: 'services', reason: unit > 0 ? '' : 'no_price' };
         }
     }

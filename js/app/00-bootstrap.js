@@ -2561,10 +2561,15 @@ skh.renderMarketplaceSections = function renderMarketplaceSections(items) {
             allEmptyNote = document.createElement('div');
             allEmptyNote.id = 'skhRailsAllEmpty';
             allEmptyNote.className = 'skh-state';
-            allEmptyNote.innerHTML = '<b>Bado hakuna bidhaa za kuonyesha hapa</b><span>Bidhaa mpya zitaonekana mara tu wauzaji watakapozichapisha.</span>';
             const first = railsHost[0];
             if (first && first.parentNode) first.parentNode.insertBefore(allEmptyNote, first);
         }
+        // [REMEDIATION R5] wording follows the open section; block layout (no "hapaBidhaa").
+        const _svc = skh.currentFeedCollection === 'services', _tr = skh.currentFeedCollection === 'drivers';
+        const _what = _svc ? 'huduma' : (_tr ? 'huduma za usafiri' : 'bidhaa');
+        const _who = _svc ? 'Huduma mpya zitaonekana mara tu watoa huduma watakapozichapisha.'
+            : (_tr ? 'Matangazo ya usafiri yataonekana mara tu wasafirishaji watakapoyachapisha.' : 'Bidhaa mpya zitaonekana mara tu wauzaji watakapozichapisha.');
+        allEmptyNote.innerHTML = '<b style="display:block">Bado hakuna ' + _what + ' za kuonyesha hapa.</b> <span style="display:block">' + _who + '</span>';
         allEmptyNote.hidden = false;
     } else if (allEmptyNote) {
         allEmptyNote.hidden = true;

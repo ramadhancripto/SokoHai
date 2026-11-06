@@ -388,7 +388,19 @@
 
     /* ---------------- 3. SUB-CATEGORY CHIPS (+ picha ndogo) ---------------- */
     var lastCat = '';
+    /* [REMEDIATION R5] the product category strip belongs to products/home only;
+       Services and Transport keep their own category lists. */
+    function syncStripVisibility() {
+        var host = document.getElementById(MOUNT);
+        if (!host) return;
+        var col = window.skh && window.skh.currentFeedCollection;
+        var hide = col === 'services' || col === 'drivers';
+        if (host.hidden !== hide) host.hidden = hide;
+    }
+    window.skhCategoryStripSync = syncStripVisibility;
+
     function decorateSubchips() {
+        syncStripVisibility();
         var row = document.getElementById('subcatRow');
         if (!row) return;
         var cur = currentCategory();

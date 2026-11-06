@@ -443,7 +443,9 @@ window.setupDriverRealtimeQuery = function() {
             if (rd.driverId === skh.currentUser.uid && rd.status !== "completed" && rd.status !== "cancelled") {
                 activeCount++;
                 const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
-                const pToken = rd.pickupToken || "Bado";
+                // [REMEDIATION R5] plaintext token is never on the ride: show the masked ref, then the real
+                // token from delivery_tokens (party-only) fills #pktok_<rid> after render.
+                const pToken = `<span id="pktok_${rid}">${skh.skhEscape(rd.pickupTokenRef || (rd.pickupTokenStatus === 'pending' ? 'Inapakia…' : 'Bado haijatolewa'))}</span>`;
                 const cPhone = skh.rideContactSpan(rid, "customerPhone", rd.customerPhone, "N/A"); // [R1] private/contact
 
                 let tokenInstructions = '';
@@ -494,6 +496,12 @@ window.setupDriverRealtimeQuery = function() {
             <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; padding:25px; border-radius:18px; text-align:center; width:100%;"> <div style="font-size:36px; margin-bottom:5px;"></div> <b style="color:gray; font-size:12px;">Huna safari inayofanya kazi hivi sasa.</b> </div>`;
 
         if (skh.fillRideContacts) skh.fillRideContacts(activeContainer); // [R1]
+        if (typeof window.skhCustodyReadToken === 'function') { // [R5] same source as 20-logistics
+            activeContainer.querySelectorAll('[id^="pktok_"]').forEach(function (el) {
+                const rid0 = el.id.slice(6);
+                window.skhCustodyReadToken(rid0, 'pickup').then(function (t) { if (t) el.textContent = t; }).catch(function () {});
+            });
+        }
         availableContainer.innerHTML = availableJobsHtml || `
             <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; padding:25px; border-radius:18px; text-align:center; width:100%;"> <div style="font-size:36px; margin-bottom:5px;"></div> <b style="color:gray; font-size:12px;">Hakuna kazi mpya zinazofaa gari lako kwa sasa.</b> </div>`;
      };
