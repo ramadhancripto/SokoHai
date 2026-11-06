@@ -162,6 +162,42 @@ function rideFromProductOrder(order, orderId) {
     };
 }
 
+// [REMEDIATION 2026-11 R1] Customer contact never sits on the ride document
+// that open-board transporters can read; it goes to ride_requests/{id}/private/contact
+// (rules: customer, assigned driver/custodian/next transporter, admin).
+const RIDE_PRIVATE_KEYS = ['customerName', 'customerPhone', 'customerEmail', 'receiverName', 'receiverPhone'];
+function splitRidePrivate(ride) {
+    const pub = {}, priv = {};
+    Object.keys(ride || {}).forEach(function (k) {
+        if (RIDE_PRIVATE_KEYS.indexOf(k) >= 0) { if (ride[k] != null && ride[k] !== '') priv[k] = String(ride[k]); }
+        else pub[k] = ride[k];
+    });
+    return { pub: pub, priv: priv };
+}
+async function writeRideSplit(myDb, ref, ride) {
+    const parts = splitRidePrivate(ride);
+    const privRef = myDb.doc('ride_requests/' + ref.id + '/private/contact');
+    const hasPriv = Object.keys(parts.priv).length > 0;
+    const privData = Object.assign({ customerId: parts.pub.customerId || '' }, parts.priv);
+    if (typeof myDb.batch === 'function') {
+        const b = myDb.batch();
+        b.set(ref, parts.pub);
+        if (hasPriv) b.set(privRef, privData);
+        await b.commit();
+    } else {
+        await ref.set(parts.pub);
+        if (hasPriv) await privRef.set(privData);
+    }
+    return parts.pub;
+}
+/* Server-side reader: ride data merged with its private contact. */
+async function rideWithContact(myDb, rideId, rd) {
+    try {
+        const s = await myDb.doc('ride_requests/' + rideId + '/private/contact').get();
+        return Object.assign({}, rd || {}, s.exists ? (s.data() || {}) : {});
+    } catch (_) { return Object.assign({}, rd || {}); }
+}
+
 async function ensureRideForOrder(myDb, order, orderId, opts) {
     opts = opts || {};
     const existingId = order.rideRequestId || order.deliveryId || null;
@@ -178,8 +214,8 @@ async function ensureRideForOrder(myDb, order, orderId, opts) {
         if (!d.required) throw new Error('not_a_booking');
         const ride = rideFromProductOrder(order, orderId);
         if (opts.preferredDriverId) ride.preferredDriverId = String(opts.preferredDriverId);
-        await ref.set(ride);
-        return { ref: ref, data: ride, created: true, id: ref.id };
+        const pub1 = await writeRideSplit(myDb, ref, ride);
+        return { ref: ref, data: pub1, created: true, id: ref.id };
     }
 
     const route = order.route || {};
@@ -223,8 +259,8 @@ async function ensureRideForOrder(myDb, order, orderId, opts) {
         transferTokenStatus: 'unissued',
         createdAt: nowIso()
     };
-    await ref.set(ride);
-    return { ref: ref, data: ride, created: true, id: ref.id };
+    const pub2 = await writeRideSplit(myDb, ref, ride);
+    return { ref: ref, data: pub2, created: true, id: ref.id };
 }
 
 /* [DELIVERY OPTION] Mteja akichagua tangazo halisi la usafiri, thibitisha
@@ -533,6 +569,10 @@ module.exports = {
     notify: notify,
     collectCandidates: collectCandidates,
     ensureRideForOrder: ensureRideForOrder,
+    splitRidePrivate: splitRidePrivate,
+    writeRideSplit: writeRideSplit,
+    rideWithContact: rideWithContact,
+    RIDE_PRIVATE_KEYS: RIDE_PRIVATE_KEYS,
     routeBookingFromOrder: routeBookingFromOrder,
     rideOffers: rideOffers,
     applyTransition: applyTransition,

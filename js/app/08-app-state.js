@@ -1156,7 +1156,8 @@ window.broadcastRideRequest = async function() {
     } catch(e) {}
 
     try {
-        const rideDocRef = await skh.addDoc(skh.collection(skh.db, "ride_requests"), {
+        // [REMEDIATION R1] contact fields go to ride_requests/{id}/private/contact.
+        const rideDocRef = await skh.createRideRequest({
             customerId: skh.currentUser.uid,
             customerName: skh.currentUser.displayName || "Mteja",
             customerPhone: skh.currentUserData?.phone || "",

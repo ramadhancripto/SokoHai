@@ -1669,7 +1669,8 @@ window.submitDirectHire = async function() {
     try {
         // [CUSTODY PHASE B 2026-09] Token C (DL) inatolewa na SERVER — hakuna
         // plaintext transferCode inayoandikwa kwenye ride doc.
-        const rideDocRef = await skh.addDoc(skh.collection(skh.db, "ride_requests"), {
+        // [REMEDIATION R1] contact fields go to the private subdocument.
+        const rideDocRef = await skh.createRideRequest({
             customerId: skh.currentUser.uid,
             customerName: skh.currentUser.displayName,
             driverId: driverId,

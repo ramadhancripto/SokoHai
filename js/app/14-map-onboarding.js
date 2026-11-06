@@ -444,7 +444,7 @@ window.setupDriverRealtimeQuery = function() {
                 activeCount++;
                 const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
                 const pToken = rd.pickupToken || "Bado";
-                const cPhone = rd.customerPhone || "N/A";
+                const cPhone = skh.rideContactSpan(rid, "customerPhone", rd.customerPhone, "N/A"); // [R1] private/contact
 
                 let tokenInstructions = '';
                 if (rd.status === 'accepted' || rd.status === 'awaiting_pickup' || rd.status === 'pickup_pending' || rd.status === 'seller_confirmed_handover') {
@@ -468,8 +468,8 @@ window.setupDriverRealtimeQuery = function() {
                 }
 
                 activeJobsHtml += `
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; border-left:6px solid var(--primary-blue); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span> <small style="color:gray;">${rd.createdAt ? new Date(rd.createdAt).toLocaleDateString() : 'N/A'}</small> </div> <div style="display:flex; gap:10px; align-items:center;"> <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:13px; color:#0f172a; display:block;">${rd.cargoName}</b> <small style="color:gray;">Mteja: ${skh.skhEscape(rd.customerName)} | Simu: ${cPhone}</small> </div> </div> <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
-                             Kutoka: <b>${rd.fromLocation}</b> -> Kwenda: <b>${rd.toLocation}</b> </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; border-left:6px solid var(--primary-blue); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span> <small style="color:gray;">${rd.createdAt ? new Date(rd.createdAt).toLocaleDateString() : 'N/A'}</small> </div> <div style="display:flex; gap:10px; align-items:center;"> <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:13px; color:#0f172a; display:block;">${skh.skhEscape(rd.cargoName || "")}</b> <small style="color:gray;">Mteja: ${skh.rideContactSpan(rid, "customerName", rd.customerName, "Mteja")} | Simu: ${cPhone}</small> </div> </div> <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
+                             Kutoka: <b>${skh.skhEscape(rd.fromLocation || '')}</b> -> Kwenda: <b>${skh.skhEscape(rd.toLocation || '')}</b> </div>
                         ${tokenInstructions}
                         <button onclick="window.triggerVehicleBreakdown('${rid}', '${rd.cargoName.replace(/'/g, "\\'")}')" style="width:100%; padding:10px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px; margin-top:10px;"> CHOMBO KIMEHARIBIKA (BREAKDOWN)</button> </div>`;
             }
@@ -481,8 +481,8 @@ window.setupDriverRealtimeQuery = function() {
                     availableCount++;
                     const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Usafiri&background=cccccc&color=fff";
                     availableJobsHtml += `
-                        <div style="background:white; border:1px solid #cbd5e1; border-radius:14px; padding:15px; border-left:6px solid var(--gold); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">MPYA</span> <small style="color:gray;">Kategoria: ${rd.reqCategory}</small> </div> <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:var(--primary-dark);">${rd.cargoName}</b> <small style="display:block; color:gray;">Mteja: ${skh.skhEscape(rd.customerName || 'Mteja')}</small> </div> </div> <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px;">
-                                 Kutoka: <b>${rd.fromLocation}</b> -> Kwenda: <b>${rd.toLocation}</b> </div> <button onclick="window.acceptTransportMission('${rid}')" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">KUBALI KAZI HII -></button> </div>`;
+                        <div style="background:white; border:1px solid #cbd5e1; border-radius:14px; padding:15px; border-left:6px solid var(--gold); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">MPYA</span> <small style="color:gray;">Kategoria: ${rd.reqCategory}</small> </div> <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:var(--primary-dark);">${skh.skhEscape(rd.cargoName || "")}</b> <small style="display:block; color:gray;">Mteja</small> </div> </div> <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px;">
+                                 Kutoka: <b>${skh.skhEscape(rd.fromLocation || '')}</b> -> Kwenda: <b>${skh.skhEscape(rd.toLocation || '')}</b> </div> <button onclick="window.acceptTransportMission('${rid}')" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">KUBALI KAZI HII -></button> </div>`;
                 }
             }
         });
@@ -493,6 +493,7 @@ window.setupDriverRealtimeQuery = function() {
         activeContainer.innerHTML = activeJobsHtml || `
             <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; padding:25px; border-radius:18px; text-align:center; width:100%;"> <div style="font-size:36px; margin-bottom:5px;"></div> <b style="color:gray; font-size:12px;">Huna safari inayofanya kazi hivi sasa.</b> </div>`;
 
+        if (skh.fillRideContacts) skh.fillRideContacts(activeContainer); // [R1]
         availableContainer.innerHTML = availableJobsHtml || `
             <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; padding:25px; border-radius:18px; text-align:center; width:100%;"> <div style="font-size:36px; margin-bottom:5px;"></div> <b style="color:gray; font-size:12px;">Hakuna kazi mpya zinazofaa gari lako kwa sasa.</b> </div>`;
      };
@@ -667,7 +668,7 @@ window.loadHeldCargoList = async function() {
                 const badgeColor = status === 'completed' ? 'green' : (status === 'in_transit' ? 'orange' : 'gray');
 
                 html += `
-                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:16px; margin-bottom:10px; font-size:12px; text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:6px; font-weight:bold;">${status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;"> <img src="${cargoImgUrl}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div style="flex:1; min-width:0;"> <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--primary-dark);">${rd.cargoName}</b> <small style="color:gray; font-size:12.5px; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} (Simu: ${rd.customerPhone})</small> </div> </div> <div style="background:white; padding:6px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px;"> <span> Njia: ${rd.fromLocation}  ${rd.toLocation}</span>
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:16px; margin-bottom:10px; font-size:12px; text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:6px; font-weight:bold;">${status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;"> <img src="${cargoImgUrl}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div style="flex:1; min-width:0;"> <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--primary-dark);">${skh.skhEscape(rd.cargoName || "")}</b> <small style="color:gray; font-size:12.5px; display:block;">Mteja: ${skh.rideContactSpan(docSnap.id, "customerName", rd.customerName, "Mteja")} (Simu: ${skh.rideContactSpan(docSnap.id, "customerPhone", rd.customerPhone, "—")})</small> </div> </div> <div style="background:white; padding:6px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px;"> <span> Njia: ${rd.fromLocation}  ${rd.toLocation}</span>
                             ${rd.transitToken && status === 'in_transit' ? `<span style="display:block; color:orange; font-weight:bold; margin-top:4px;"> Transit Token: ${rd.transitToken}</span>` : ''}
                         </div> <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;"> <button onclick="window.shareMyLocation('${docSnap.id}')" style="flex:1; min-width:120px; padding:9px; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">SHIRIKISHA LOCATION LIVE</button> <button onclick="window.stopSharingMyLocation()" style="flex:1; min-width:120px; padding:9px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">ACHA KUSHIRIKISHA</button> <button onclick="window.openChatWithUser('${skh.skhJsEsc(rd.customerId || '')}', '${skh.skhJsEsc(rd.customerName || 'Mteja')}')" style="flex:1; min-width:120px; padding:9px; background:#25D366; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">CHAT NA MTEJA</button> </div> </div>`;
             }
@@ -703,6 +704,7 @@ window.openMyDeliveries = async function() {
                 <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:14px; margin-bottom:12px;"> <div style="display:flex; justify-content:space-between; margin-bottom:8px;"> <b> ${skh.skhEscape(d.itemTitle)}</b> <span style="font-size:12.5px; font-weight:bold; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px;">${d.status.toUpperCase()}</span> </div> <small style="display:block; color:#64748b;">Mteja: ${skh.skhEscape(d.buyerName || 'Mteja')}</small> <small style="display:block; color:#64748b;">Malipo: TSh ${d.amount.toLocaleString()}</small> </div> `;
         });
         list.innerHTML = html;
+        if (skh.fillRideContacts) skh.fillRideContacts(list); // [R1]
     } catch(e) {
         list.innerHTML = `<p style="color:red; text-align:center;">Hitilafu: ${skh.skhEscape(e.message)}</p>`;
     }
@@ -731,6 +733,7 @@ window.openMyTrips = async function() {
                 <div style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:14px; margin-bottom:12px;"> <div style="display:flex; justify-content:space-between; margin-bottom:8px;"> <b> Mzigo: ${d.cargoName}</b> <span style="font-size:12.5px; font-weight:bold; background:orange; color:white; padding:2px 8px; border-radius:10px;">${d.status.toUpperCase()}</span> </div> <p style="font-size:12px; color:#475569; margin:4px 0;"> ${d.fromLocation}  ${d.toLocation}</p> <small style="display:block; color:#64748b;">Mteja: ${skh.skhEscape(d.customerName)}</small> </div> `;
         });
         list.innerHTML = html;
+        if (skh.fillRideContacts) skh.fillRideContacts(list); // [R1]
     } catch(e) {
         list.innerHTML = `<p style="color:red; text-align:center;">Hitilafu: ${skh.skhEscape(e.message)}</p>`;
     }
@@ -761,6 +764,7 @@ window.openSavedItems = async function() {
                 <div class="list-item" style="cursor:pointer;" onclick="openProduct('${docSnap.id}', 'products')"> <img src="${skh.skhEscape(d.image)}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;"> <div class="list-info"> <b>${skh.skhEscape(d.title)}</b> <span>TSh ${(d.price || 0).toLocaleString()}</span> </div> </div> `;
         });
         list.innerHTML = html;
+        if (skh.fillRideContacts) skh.fillRideContacts(list); // [R1]
     } catch(e) {
         list.innerHTML = `<p style="color:red; text-align:center;">Hitilafu: ${skh.skhEscape(e.message)}</p>`;
     }

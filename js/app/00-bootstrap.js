@@ -6,7 +6,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
@@ -65,6 +65,65 @@ skh.deleteField = deleteField;  // [FIX TOGGLE 2026-09-14] kusafisha fields bapa
 skh.getFunctions = getFunctions;
 skh.httpsCallable = httpsCallable;
 skh.httpsCallableFromURL = httpsCallableFromURL;
+skh.writeBatch = writeBatch;
+
+/* [REMEDIATION 2026-11 R1] ride_requests privacy.
+   Customer contact (name, phone, receiver, email) never sits on the ride
+   document that open-board transporters can read. It lives in
+   ride_requests/{id}/private/contact, readable only by the customer, the
+   assigned driver / custodian / next transporter and admins (firestore.rules).
+   createRideRequest writes both documents in ONE batch (offline-safe). */
+skh.RIDE_PRIVATE_KEYS = ['customerName', 'customerPhone', 'customerEmail', 'receiverName', 'receiverPhone'];
+skh.splitRidePrivate = function splitRidePrivate(data) {
+    const pub = {}, priv = {};
+    Object.keys(data || {}).forEach(function (k) {
+        if (skh.RIDE_PRIVATE_KEYS.indexOf(k) >= 0) { if (data[k] != null && data[k] !== '') priv[k] = String(data[k]); }
+        else pub[k] = data[k];
+    });
+    return { pub: pub, priv: priv };
+};
+skh.createRideRequest = async function createRideRequest(data, rideId) {
+    const parts = skh.splitRidePrivate(data);
+    const ref = rideId ? doc(skh.db, 'ride_requests', String(rideId)) : doc(collection(skh.db, 'ride_requests'));
+    const batch = writeBatch(skh.db);
+    batch.set(ref, parts.pub);
+    if (Object.keys(parts.priv).length) {
+        batch.set(doc(skh.db, 'ride_requests', ref.id, 'private', 'contact'),
+            Object.assign({ customerId: parts.pub.customerId || '' }, parts.priv));
+    }
+    await batch.commit();
+    return ref;
+};
+/* Contact for a ride the caller is a party to; {} when not permitted/missing. */
+skh.rideContact = async function rideContact(rideId) {
+    try {
+        const s = await getDoc(doc(skh.db, 'ride_requests', String(rideId || '_'), 'private', 'contact'));
+        return s.exists() ? (s.data() || {}) : {};
+    } catch (_) { return {}; }
+};
+/* Render-time placeholder for a contact field; filled by fillRideContacts()
+   with textContent (no HTML injection). Legacy rides may still carry the
+   field on the main doc, so that value (escaped) is the initial text. */
+skh._rideContactCache = {};
+skh.rideContactSpan = function rideContactSpan(rideId, field, legacyVal, fallback) {
+    const esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
+    return '<span data-ride-contact="' + esc(rideId) + '" data-field="' + esc(field) + '">' + esc(legacyVal || fallback || '') + '</span>';
+};
+skh.fillRideContacts = function fillRideContacts(root) {
+    const scope = root || document;
+    if (!scope || typeof scope.querySelectorAll !== 'function') return Promise.resolve();
+    const els = Array.prototype.slice.call(scope.querySelectorAll('[data-ride-contact]'));
+    return Promise.all(els.map(function (el) {
+        const id = el.getAttribute('data-ride-contact');
+        const p = skh._rideContactCache[id] || (skh._rideContactCache[id] = skh.rideContact(id));
+        return p.then(function (c) { const v = c && c[el.getAttribute('data-field')]; if (v) el.textContent = String(v); });
+    }));
+};
+/* Returns a copy of ride data merged with its private contact (party only). */
+skh.withRideContact = async function withRideContact(rideId, rd) {
+    const c = await skh.rideContact(rideId);
+    return Object.assign({}, rd || {}, c);
+};
 
 /* [REPAIR 2026-10 C4] Public profile of ANOTHER person (name, photo, shop,
    region, rating, business phone). Reads the server-maintained `userCards`

@@ -2169,6 +2169,12 @@ async function custodyGetRide(rideId) {
     return { ref, data: snap.data() };
 }
 
+// [REMEDIATION 2026-11 R1] Customer contact lives in ride_requests/{id}/private/contact.
+async function custodyContact(rideId) {
+    try { const s = await db.doc('ride_requests/' + rideId + '/private/contact').get(); return s.exists ? (s.data() || {}) : {}; }
+    catch (_) { return {}; }
+}
+
 function custodyExpired(rd) {
     const exp = rd && (rd.pickupTokenExpiresAt || rd.handoverTokenExpiresAt);
     if (!exp) return false;
@@ -2694,6 +2700,7 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
         throw new HttpsError('invalid-argument', 'token inahitajika.');
     }
     const { ref, data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const now = new Date().toISOString();
 
     if (custodyExpired(rd)) {
@@ -2839,7 +2846,7 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
             custodyLegs: FieldValue.arrayUnion({
                 leg: 1,
                 fromId: rd.customerId || null,
-                from: rd.customerName || 'Muuzaji',
+                from: rd.customerName || rc.customerName || 'Muuzaji',
                 toId: auth.uid,
                 to: rd.driverName || 'Dereva',
                 status: 'completed',
@@ -2962,6 +2969,7 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
     const rideId = String(data.rideId || '');
     if (!rideId) throw new HttpsError('invalid-argument', 'rideId inahitajika.');
     const { ref, data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const now = new Date().toISOString();
 
     const isCustodian = ((rd.currentCustodian || rd.driverId) === auth.uid);
@@ -3031,7 +3039,7 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
         status: 'completed',
         completedAt: now,
         currentCustodian: rd.customerId || null,
-        currentCustodianName: rd.customerName || 'Mnunuzi',
+        currentCustodianName: rd.customerName || rc.customerName || 'Mnunuzi',
         finalPayout: 0,
         payoutStatus: 'pending',
         verifiedArrivalCount: arrivalCount,
@@ -3161,6 +3169,7 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
         rideId = tk.rideId;
     }
     const { data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const isParty = (rd.customerId === auth.uid) || (rd.driverId === auth.uid) || (rd.currentCustodian === auth.uid) || (rd.nextTransporterId === auth.uid);
     if (!isParty) throw new HttpsError('permission-denied', 'Safari hii haihusiani nawe.');
     // Rudisha taarifa za kukabidhi BILA token yenyewe.
@@ -3169,7 +3178,7 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
         rideId: rideId,
         kind: kind,
         cargoName: rd.cargoName || '',
-        customerName: rd.customerName || '',
+        customerName: rd.customerName || rc.customerName || '',
         driverName: rd.driverName || '',
         vehicleType: rd.vehicleType || '',
         fromLocation: rd.fromLocation || '',
