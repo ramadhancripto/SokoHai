@@ -159,7 +159,11 @@ await test('R13 seller cannot ship / escrow cannot be released for an order unde
   eq((await get('escrow_holds/order_o5')).released, false, 'hold not released');
 });
 await test('R14 review window passes -> REFUND_PENDING (no automatic money move)', async () => {
-  const s = await R.runSweep({ nowIso: plus(60 * 24) });
+  // [2026-11-06] settlePesaPalPayment stamps reviewDeadlineAt from the real clock, so a
+  // fixed T0-based sweep time stops working once the calendar passes T0. Sweep just
+  // after the stored deadline instead (still proves the window, independent of today).
+  const deadline = (await get('orders/o5')).reviewDeadlineAt;
+  const s = await R.runSweep({ nowIso: new Date(Date.parse(deadline) + 60000).toISOString() });
   assert(s.refundPending >= 1, JSON.stringify(s));
   eq((await get('orders/o5')).inventoryReviewState, 'REFUND_PENDING', 'state');
   eq((await get('users/buyer1')).walletBalance, 0, 'no money moved yet');

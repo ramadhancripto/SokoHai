@@ -674,11 +674,19 @@ service cloud.firestore {
     }
     match /conversations/{convId} {
       // [GROUP STAGE 1] Read: kikundi → uanachama HALALI (active); 1:1 → kama zamani.
-      allow read: if signedIn() && (
+      // [2026-11-06] read = get + list. A LIST query cannot be proven against
+      // conditions on the document id (isGroupConvId(convId)), so the single
+      // `read` rule denied the inbox query `participants array-contains me` for
+      // everyone ([INBOX93] conversations query failed). `get` keeps the exact
+      // group-membership rule; `list` only returns docs whose participants contain
+      // the caller (leaving a group removes the uid: syncConvParticipants).
+      allow get: if signedIn() && (
         (isGroupConvId(convId) && isGroupMember(gidFromConv(convId)))
         || (!isGroupConvId(convId)
             && (resource == null || resource.data.participants.hasAny([request.auth.uid])))
       );
+      allow list: if signedIn()
+        && resource.data.participants.hasAny([request.auth.uid]);
       allow create: if signedIn() && (
         // ---- (1) 1:1 — kanuni zilezile, hazijabadilika ----
         (!isGroupConvId(convId)

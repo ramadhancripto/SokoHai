@@ -13,4 +13,7 @@ curl -sf http://localhost:5055/ >/dev/null || { echo "functions/local-server.js 
 mkdir -p out/e2e
 node push-rules.cjs ../../firestore.rules
 for s in s1 s2 s3 s4 s5 s6 s7; do node "$s.cjs"; done 2>&1 | grep -v MetadataLookupWarning | tee out/e2e-results.txt
+# [2026-11-06] A crashed scenario prints no FAIL line; also require PASS lines and no uncaught errors.
 ! grep -q '^FAIL' out/e2e-results.txt
+grep -q '^PASS' out/e2e-results.txt
+! grep -qE '^(TypeError|ReferenceError|Error):|ECONNREFUSED' out/e2e-results.txt

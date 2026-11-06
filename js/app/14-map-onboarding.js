@@ -106,7 +106,11 @@ window.toggleProductFormFields = function() {
     if (onlineFields) onlineFields.style.display = online ? 'block' : 'none';
     const setReq = (el, on) => { if (!el) return; if (on) el.setAttribute('required', 'true'); else el.removeAttribute('required'); };
     setReq($('prodDesc'), online);
-    setReq($('prodImage'), online);
+    // [2026-11-06] The photo picker (js/11-uploads.js) keeps files in its own store and
+    // clears the hidden <input>, so native `required` on it blocked every online publish
+    // ("invalid form control is not focusable"). The photo rule is enforced in
+    // submitSeller (08-app-state.js, photoRequired) with a clear Swahili message.
+    setReq($('prodImage'), false);
     setReq($('prodCategory'), online);
     setReq($('prodPrice'), rules.priceRequired);
     // Taxonomy stays visible for every mode (POS + reports use it); required only for the marketplace.
