@@ -1080,6 +1080,8 @@ import {
     }
 
     var RAIL_DEFS = [
+        // [REMEDIATION R3] other sellers, close but NOT the same specification
+        ['relatedOffers', 'Wauzaji wengine — bidhaa inayokaribiana (vipimo tofauti au havijathibitishwa)'],
         ['similar', 'Zinazofanana'],
         ['moreCategory', 'Zaidi za aina hii'],
         ['otherSellers', 'Kutoka maduka mengine'],

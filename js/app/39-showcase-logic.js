@@ -19,6 +19,7 @@
      moja tu (deduupe).
    - "Maduka mengine" lazima iwe na wauzaji TOFAUTI.
    ================================================================ */
+import { offerEquivalence } from './39-offer-equivalence.js';
 'use strict';
 
 export const PS_PRODUCT = 'products';
@@ -520,27 +521,23 @@ export function psBuildRails(items, cur, opts) {
     const curCat = (cur.category || '').trim().toLowerCase();
     const curTokens = psTokens(psTitle(cur, col));
 
-    /* [2026-11-06 SOKO HURU] Ofa za bidhaa HII kutoka kwa wauzaji wengine:
-       muuzaji tofauti, aina ileile (subCategory/productType), jina linalofanana
-       (≥60% ya maneno muhimu), na hali (condition) ileile pale zote zina hali.
-       Hazichanganyi bidhaa tofauti au hali tofauti (mpya vs iliyotumika). */
+    /* [REMEDIATION 2026-11 R3] "Linganisha wauzaji": the SAME product from other
+       sellers only. offerEquivalence (39-offer-equivalence.js) requires the same
+       kind, the same core name and identical specifications (brand, model, size,
+       capacity, weight/volume, pack, condition, variants); a specification stated
+       by only one listing is never assumed to match. Close-but-not-equal listings
+       go to relatedOffers, shown separately. */
     const offers = [];
-    const condOf = x => String((x && (x.condition || x.itemCondition)) || '').trim().toLowerCase();
-    const curType = String(cur.productType || cur.productTypeId || '').trim().toLowerCase();
+    const relatedOffers = [];
     if (col === PS_PRODUCT && curTokens.length) {
-        const need = curTokens.length <= 2 ? curTokens.length : Math.ceil(curTokens.length * 0.6);
         pool.forEach(function (it) {
             const seller = psSellerId(it);
             if (!curSeller || !seller || seller === curSeller) return;
-            const itType = String(it.productType || it.productTypeId || '').trim().toLowerCase();
-            const sameKind = (curSub && (it.subCategory || '').trim() === curSub) || (curType && itType && curType === itType);
-            if (!sameKind) return;
-            const tk = psTokens(psTitle(it, col));
-            let ov = 0; curTokens.forEach(function (t) { if (tk.indexOf(t) !== -1) ov++; });
-            if (ov < need) return;
-            const a = condOf(cur), b = condOf(it);
-            if (a && b && a !== b) return;
-            if (offers.length < 12) { used[it.id] = 1; offers.push(it); }
+            const eq = offerEquivalence(cur, it);
+            if (eq.equivalent) { if (offers.length < 12) { used[it.id] = 1; offers.push(Object.assign({}, it, { __match: 'same' })); } }
+            else if (eq.related && eq.reasons.indexOf('different_kind') === -1 && eq.reasons.indexOf('different_name') === -1) {
+                if (relatedOffers.length < 12) { used[it.id] = 1; relatedOffers.push(Object.assign({}, it, { __match: 'related', __reasons: eq.reasons })); }
+            }
         });
         offers.sort(function (x, y) { return (Number(x.price) || Infinity) - (Number(y.price) || Infinity); });
     }
@@ -589,6 +586,7 @@ export function psBuildRails(items, cur, opts) {
 
     return {
         offers: offers,
+        relatedOffers: relatedOffers,
         similar: similar,
         moreCategory: more,
         otherSellers: other,
