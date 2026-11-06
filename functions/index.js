@@ -2343,6 +2343,30 @@ async function custodyAttemptClear(rideId, role) {
 // waliopo: routing/43-delivery-choice/08-app-state = 'searching';
 // 57-checkout-bridge/16-pos = 'pending_acceptance' yenye driverId aliyechaguliwa).
 const RIDE_OPEN_STATES = ['searching', 'pending_acceptance'];
+
+/* [REMEDIATION 2026-11 R2] Who may take a delivery job.
+ *  - The account must exist and must not be suspended.
+ *  - Open marketplace jobs: only an APPROVED agent (users.isApprovedAgent with
+ *    the admin stamp agentApprovedBy written by adminApproveAgent).
+ *  - Direct bookings (customer already named this driver in driverId /
+ *    preferredDriverId): the named driver may accept without agent approval,
+ *    but still must be an active (not suspended) account.
+ * Pure function so it is unit-tested without Firebase. */
+function transporterAccountProblem(u, opts) {
+    opts = opts || {};
+    if (!u) return 'not_registered';
+    if (u.suspended === true || u.isSuspended === true || u.accountStatus === 'suspended'
+        || u.accountStatus === 'banned' || u.agentStatus === 'suspended') return 'suspended';
+    if (opts.directBooking) return null;
+    if (u.isApprovedAgent !== true || !String(u.agentApprovedBy || '')) return 'not_approved_agent';
+    return null;
+}
+const TRANSPORTER_PROBLEM_MSG = {
+    not_registered: 'Akaunti yako haijasajiliwa kikamilifu. Kamilisha usajili kwanza.',
+    suspended: 'Akaunti yako imesimamishwa; huwezi kukubali kazi za usafiri.',
+    not_approved_agent: 'Ni wakala/msafirishaji aliyeidhinishwa na SokoHai pekee anayeweza kukubali kazi hii.'
+};
+exports._transporterAccountProblem = transporterAccountProblem;
 // Hali baada ya kukubali lakini kabla ya pickup (kukubali tena = idempotent).
 const RIDE_ACCEPTED_PREPICKUP = ['accepted', 'pickup_pending', 'awaiting_pickup'];
 
@@ -2365,6 +2389,12 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         if (!snap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
         rd = snap.data() || {};
         const st = String(rd.status || '');
+        // [R2] caller authorisation is read INSIDE the transaction (users/{uid}).
+        const uSnap = await t.get(db.doc('users/' + auth.uid));
+        const me = uSnap.exists ? (uSnap.data() || {}) : null;
+        const direct = (rd.driverId === auth.uid) || (rd.preferredDriverId === auth.uid);
+        const problem = transporterAccountProblem(me, { directBooking: direct });
+        if (problem) throw new HttpsError('permission-denied', TRANSPORTER_PROBLEM_MSG[problem]);
         if (rd.customerId && rd.customerId === auth.uid) {
             throw new HttpsError('permission-denied', 'Mteja hawezi kukubali safari yake mwenyewe kama dereva.');
         }
@@ -2390,9 +2420,10 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         t.update(ref, {
             status: 'accepted',
             driverId: auth.uid,
-            driverName: String(data.driverName || rd.driverName || auth.uid),
-            driverPhone: String(data.driverPhone || ''),
-            driverVehicleReg: String(data.driverVehicleReg || ''),
+            // [R2] identity comes from the caller's own account, not the request body.
+            driverName: String(me.displayName || me.name || me.fullName || rd.driverName || 'Dereva').slice(0, 80),
+            driverPhone: String(me.phone || me.phoneNumber || '').slice(0, 30),
+            driverVehicleReg: String(me.vehicleReg || me.plateNumber || data.driverVehicleReg || '').slice(0, 20),
             acceptedAt: now,
             agreedFare: Math.max(0, Number(rd.fare || 0) || Number(rd.price || 0) || 0),
             pickupTokenHash: custodyHash(pk),
@@ -2444,6 +2475,10 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
         if (!ofSnap.exists) throw new HttpsError('not-found', 'Ofa haipatikani.');
         const offer = ofSnap.data();
         if (offer.agentId !== auth.uid) throw new HttpsError('permission-denied', 'Si ofa yako.');
+        // [R2] a server-routed offer still requires an active (not suspended) account.
+        const uSnapO = await t.get(db.doc('users/' + auth.uid));
+        const problemO = transporterAccountProblem(uSnapO.exists ? (uSnapO.data() || {}) : null, { directBooking: true });
+        if (problemO) throw new HttpsError('permission-denied', TRANSPORTER_PROBLEM_MSG[problemO]);
         if (offer.status !== 'offered') throw new HttpsError('failed-precondition', 'Ofa hii si hai tena.');
         if (offer.expiresAt && Date.parse(offer.expiresAt) <= Date.now()) {
             throw new HttpsError('failed-precondition', 'Muda wa ofa umeisha; ombi limehamishiwa kwa mwingine.');
@@ -3157,15 +3192,22 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
     const kind = data.kind === 'handover' ? 'handover' : 'pickup';
     let rideId = String(data.rideId || '');
     if (!rideId) {
+        // [REMEDIATION R5] per-caller attempt limit (same 6 / 15 min window as custody).
+        if (await custodyAttemptsExceeded('verify', auth.uid)) {
+            throw new HttpsError('resource-exhausted', 'Majaribio mengi mno. Subiri dakika 15 kisha ujaribu tena.');
+        }
         // [FIX 2026-09] Field MOJA (token) + uchujaji kind kwenye memory —
         // haiitaji composite index (query ya token+kind ilirusha "internal").
         const hit = await db.collection('delivery_tokens').where('token', '==', token).limit(10).get();
         let tk = null;
         hit.forEach(function (d) { if (!tk && d.data().kind === kind) tk = d.data(); });
-        if (!tk) throw new HttpsError('not-found', 'Invalid pickup confirmation. Please verify the token and try again.');
-        if (!(tk.participants || []).includes(auth.uid)) {
-            throw new HttpsError('permission-denied', 'Safari hii haihusiani nawe.');
+        // [REMEDIATION R5] a valid token that is not yours answers exactly like an
+        // invalid one, so the endpoint cannot be used to discover live tokens.
+        if (!tk || !(tk.participants || []).includes(auth.uid)) {
+            await custodyAttemptFail('verify', auth.uid);
+            throw new HttpsError('not-found', 'Token si sahihi au haihusiani na safari yako. Hakiki token na ujaribu tena.');
         }
+        await custodyAttemptClear('verify', auth.uid);
         rideId = tk.rideId;
     }
     const { data: rd } = await custodyGetRide(rideId);
