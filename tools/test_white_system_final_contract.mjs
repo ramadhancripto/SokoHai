@@ -9,7 +9,9 @@ function check(name, ok) {
 function has(file, needle) { return read(file).includes(needle); }
 function lacks(file, needle) { return !has(file, needle); }
 
-check('top navigation management identity is soft green', has('html/16-topnav.html', 'background:#EAF8F2; color:#17604E;'));
+// [2026-11-05 owner, da75218] The separate "Usimamizi" pill was folded into the
+// header "More / Dashibodi — Usimamizi" sheet; it must stay reachable from the top nav.
+check('top navigation still offers Usimamizi (management) entry', has('html/16-topnav.html', 'Dashibodi — Usimamizi'));
 check('runtime toast is a white semantic surface', has('js/07-toasts.js', 'background:#fff;color:#18352D;border:1px solid #CCEBDD;border-left:4px solid #18A982'));
 check('legacy chat inbox header is light', has('css/15-chat-comments.css', 'background: #F1FBF7; color: #18352D;'));
 check('chat v2 active and unread states use green identity', has('css/24-chat-ui-v2.css', 'background: #18A982;'));
