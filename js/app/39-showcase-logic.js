@@ -50,6 +50,36 @@ export function psMoney(v) {
     return 'TSh ' + Math.round(n).toLocaleString('en-US');
 }
 
+/* [2026-11-06] Bei ya huduma kulingana na mfumo wa bei (pricingModel) ulioteuliwa
+ * na mtoa huduma — sawa na skh.cardPriceHtml (00-bootstrap) ili kadi na ukurasa
+ * wa huduma visitofautiane. Huduma si bidhaa: "kwa saa/siku/kazi" au "kadirio". */
+export const PS_SERVICE_PRICE_LABELS = {
+    starting: 'Kuanzia', hourly: 'Kwa saa', per_job: 'Kwa kazi',
+    per_day: 'Kwa siku', per_unit: 'Kwa kipimo', negotiable: 'Inajadiliwa'
+};
+export function psServicePriceLabel(p) {
+    p = p || {};
+    const model = String(p.pricingModel || p.priceType || '').toLowerCase();
+    if (model === 'quotation_required') return 'Kadirio linahitajika';
+    const lo = psNum(p.minPrice), hi = psNum(p.maxPrice);
+    if (model === 'range' && lo > 0 && hi >= lo) {
+        return 'TSh ' + Math.round(lo).toLocaleString('en-US') + '–' + Math.round(hi).toLocaleString('en-US');
+    }
+    const n = psNum(p.price);
+    if (n === null || n <= 0) return 'Maelewano';
+    const amount = 'TSh ' + Math.round(n).toLocaleString('en-US');
+    if (model === 'fixed') return amount;
+    // Data ya zamani bila pricingModel ilionyeshwa "Kuanzia" — tunahifadhi tabia hiyo.
+    const label = PS_SERVICE_PRICE_LABELS[model] || (model ? '' : 'Kuanzia');
+    return label ? label + ' ' + amount : amount;
+}
+
+/* Bei inahitajika kwenye fomu ya huduma isipokuwa kwa "kadirio" au "inajadiliwa". */
+export function psServicePriceRequired(model) {
+    const m = String(model || '').toLowerCase();
+    return m !== 'quotation_required' && m !== 'negotiable';
+}
+
 export function psPresent(v) {
     if (v === null || v === undefined) return false;
     if (typeof v === 'number') return Number.isFinite(v);

@@ -18,7 +18,7 @@ import {
     psAvailability, psCanBid, psSpecRows, psHasDetails,
     psSummarizeReviews, psRatingDisplay, psVariantGroups, psVariantDelta,
     psBuildRails, psMoney, psNum, psTitle, psSellerName, psResolveStructuredVariant, psOptionValueAvailable, psImagesForSelection,
-    psIsVideo, PS_PRODUCT, PS_SERVICE, PS_DRIVER, PS_FETCH_CAP, PS_LOW_STOCK
+    psIsVideo, psServicePriceLabel, PS_PRODUCT, PS_SERVICE, PS_DRIVER, PS_FETCH_CAP, PS_LOW_STOCK
 } from './39-showcase-logic.js';
 
 (function () { 'use strict';
@@ -83,7 +83,7 @@ import {
         var price = psNum(p.price);
         var priceText = psMoney(p.price);
         if (col === PS_SERVICE) {
-            priceText = price !== null && price > 0 ? T('card_from', 'Kuanzia') + ' ' + priceText : T('ps_price_negotiable', 'Maelewano');
+            priceText = psServicePriceLabel(p);
         } else if (col === PS_DRIVER) {
             priceText = price !== null && price > 0 ? T('card_from', 'Kuanzia') + ' ' + priceText : T('ps_price_negotiable', 'Maelewano');
         } else if (p.saleMode === 'auction') {

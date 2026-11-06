@@ -348,14 +348,34 @@ window.verifyLogisticsToken = async function() {
         // [CUSTODY 2026-09] Tunaangalia token yenyewe (sio status maalum) kisha
         // tunahakiki status/hatua CHINI, ili kusaidia mtiririko mpya wa pandembili:
         //   pickup -> pickup_pending/seller_confirmed_handover; handover -> awaiting_handover.
-        let qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("pickupToken", "==", token), skh.limit(1));
-        let snapNormal = await skh.getDocs(qNormal);
+        // [2026-11-06] Token za safari zinahifadhiwa kama HASH kwenye ride_requests
+        // (pickupTokenHash) — query ya `pickupToken == token` haiwezi kupata kitu tena.
+        // Tunahakiki kupitia server (deliveryTokenVerify) kama 20-logistics; fallback
+        // ya legacy inaruhusiwa tu pale skhCustodyFallbackAllowed() (demo/emulator).
+        let snapNormal = { empty: true, docs: [] };
         let tokenType = "pickup";
-
-        if (snapNormal.empty) {
-            qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("handoverToken", "==", token), skh.limit(1));
+        if (typeof window.skhCustodyServerTokenVerify === 'function') {
+            for (const kind of ['pickup', 'handover']) {
+                try {
+                    const v = await window.skhCustodyServerTokenVerify({ token: token, kind: kind });
+                    if (v && v.data && v.data.ok && v.data.rideId) {
+                        const vd = v.data;
+                        snapNormal = { empty: false, docs: [{ id: vd.rideId, data: function () { return vd; } }] };
+                        tokenType = kind;
+                        break;
+                    }
+                } catch (e) { /* not-found/permission -> jaribu aina nyingine */ }
+            }
+        }
+        if (snapNormal.empty && typeof window.skhCustodyFallbackAllowed === 'function' && window.skhCustodyFallbackAllowed()) {
+            let qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("pickupToken", "==", token), skh.limit(1));
             snapNormal = await skh.getDocs(qNormal);
-            tokenType = "handover";
+            tokenType = "pickup";
+            if (snapNormal.empty) {
+                qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("handoverToken", "==", token), skh.limit(1));
+                snapNormal = await skh.getDocs(qNormal);
+                tokenType = "handover";
+            }
         }
 
         if (!snapNormal.empty) {
@@ -374,7 +394,7 @@ window.verifyLogisticsToken = async function() {
             sessionStorage.setItem('active_verified_token_type', tokenType);
 
             resultBox.innerHTML = `
-                <div style="font-size:13px; color:#1e293b; line-height:1.5; text-align:left;"> <b style="color:var(--green); display:block; margin-bottom:10px; font-size:14px; text-transform:uppercase;"> Uhakiki wa Mzigo Umefanikiwa!</b> <b> Mzigo: ${rd.cargoName}</b><br> <span>Kutoka: ${rd.fromLocation}  Kwenda: ${rd.toLocation}</span> </div> `;
+                <div style="font-size:13px; color:#1e293b; line-height:1.5; text-align:left;"> <b style="color:var(--green); display:block; margin-bottom:10px; font-size:14px; text-transform:uppercase;"> Uhakiki wa Mzigo Umefanikiwa!</b> <b> Mzigo: ${skh.skhEscape(rd.cargoName || "")}</b><br> <span>Kutoka: ${skh.skhEscape(rd.fromLocation || "")}  Kwenda: ${skh.skhEscape(rd.toLocation || "")}</span> </div> `;
             resultBox.style.display = 'block';
             btnVerify.style.display = 'none';
             btnRelease.style.display = 'block';
