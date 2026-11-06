@@ -69,6 +69,8 @@ function buildPeriods(range) {
 
 /* ------------------------------ data ------------------------------ */
 async function callReport(period) {
+    // [2026-11-06] legacy sellers: create the canonical Business/Store once (server).
+    if (typeof window.skhEnsureBusinessScope === 'function') { try { await window.skhEnsureBusinessScope(); } catch (e) { } }
     const payload = {
         businessId: (skh.currentUserData && skh.currentUserData.businessId) || null,
         storeId: (skh.currentUserData && skh.currentUserData.storeId) || null,
