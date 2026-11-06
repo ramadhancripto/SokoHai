@@ -76,9 +76,13 @@ let images = null;
 try {
     const imgSrc = fs.readFileSync(path.join(ROOT, 'js/app/83-category-photos.js'), 'utf8');
     const files = fs.readdirSync(path.join(ROOT, 'assets/img/categories')).filter(f => /\.(webp|jpe?g|png)$/i.test(f));
-    const idKeys = [...imgSrc.matchAll(/'(CAT-\d{2})'\s*:/g)].map(m => m[1]);
-    images = { files: files.length, canonicalIdsMapped: [...new Set(idKeys)].length,
-        sellerCategoriesWithImage: sellerVals.filter(v => idKeys.includes(canonicalCategoryId(v) || v)).length, sellerCategories: sellerVals.length };
+    const idKeys = [...imgSrc.matchAll(/'(CAT-\d{2})'\s*:\s*'[a-z0-9-]+'/g)].map(m => m[1]);
+    const legacyKeys = [...imgSrc.matchAll(/^\s*'([^']+)'\s*:\s*'[a-z0-9-]+'/gm)].map(m => m[1]);
+    const used = new Set([...imgSrc.replace(/\/\/.*$/gm, '').matchAll(/:\s*'([a-z0-9-]+)'/g)].map(m => m[1]));
+    images = { files: files.length, canonicalIdsWithImage: [...new Set(idKeys)].length,
+        sellerCategoriesWithImage: sellerVals.filter(v => { const id = canonicalCategoryId(v); return id ? idKeys.includes(id) : legacyKeys.includes(v); }).length,
+        sellerCategories: sellerVals.length,
+        unusedFiles: files.map(f => f.replace(/\.\w+$/, '')).filter(f => !used.has(f)) };
 } catch (e) { images = { error: String(e.message || e) }; }
 
 const report = {
@@ -125,7 +129,7 @@ const md = [
     '## Services (separate module)',
     `- Legacy service categories: ${svcCats}, sub-categories: ${svcSubs}; canonical service domains: ${(data.SERVICE_DOMAINS || []).length}. Services are not merged into the product taxonomy.`, '',
     '## Category images',
-    images && !images.error ? `- Image files: ${images.files} · canonical ids with an image: ${images.canonicalIdsMapped} · seller categories with an image: ${images.sellerCategoriesWithImage}/${images.sellerCategories}` : '- ' + JSON.stringify(images), '',
+    images && !images.error ? `- Image files: ${images.files} · canonical ids with an image: ${images.canonicalIdsWithImage} · seller/buyer categories with an image: ${images.sellerCategoriesWithImage}/${images.sellerCategories} (others: neutral fallback tile)\n- Files not used (kept, not deleted): ${images.unusedFiles.join(', ') || 'none'}` : '- ' + JSON.stringify(images), '',
     '## Structural checks', errors.length ? errors.map(e => '- FAIL ' + e).join('\n') : '- PASS no structural errors', ''
 ].filter(x => x !== '').join('\n') + '\n';
 fs.writeFileSync(path.join(outDir, 'TAXONOMY-QUALITY-REPORT-2026-11.json'), JSON.stringify(report, null, 1) + '\n');

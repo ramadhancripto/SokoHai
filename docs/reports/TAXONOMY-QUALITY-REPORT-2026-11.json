@@ -235,8 +235,13 @@
  },
  "images": {
   "files": 49,
-  "canonicalIdsMapped": 0,
-  "sellerCategoriesWithImage": 0,
-  "sellerCategories": 44
+  "canonicalIdsWithImage": 25,
+  "sellerCategoriesWithImage": 35,
+  "sellerCategories": 44,
+  "unusedFiles": [
+   "huduma",
+   "svc-construction",
+   "svc-rental"
+  ]
  }
 }

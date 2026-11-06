@@ -50,7 +50,8 @@
         'Asili na Utamaduni (Traditional)': 'asili',
         /* huduma (serviceDataMap) */
         'Home & Personal': 'svc-home-personal',
-        'Construction & Handyman': 'svc-construction',
+        // [R6] svc-construction.webp carries a third-party watermark/phone number → same-subject ujenzi image
+        'Construction & Handyman': 'ujenzi',
         'Cleaning & Maintenance': 'svc-cleaning',
         'Event & Entertainment': 'svc-event',
         'Tech & Repair': 'svc-tech',
@@ -67,7 +68,8 @@
         'Website Services': 'svc-website',
         'Remote Support': 'svc-support',
         'Food Services': 'svc-food',
-        'Rental Services': 'svc-rental',
+        // [R6] svc-rental.webp does not show renting → clean fallback tile until the owner supplies an image
+        'Rental Services': null,
         /* usafiri (deliveryTaxonomy) */
         'Passenger': 'tr-passenger',
         'Watu (Ride)': 'tr-passenger',
@@ -77,6 +79,44 @@
         'Mizigo Mikubwa': 'tr-cargo',
         'Emergency': 'tr-emergency',
         'Dharura (Express)': 'tr-emergency'
+    };
+
+    /* [REMEDIATION 2026-11 R6] ONE image map keyed by the CANONICAL category id.
+       Legacy names reach it through the reviewed legacy→canonical mapping
+       (skh.canonicalCategoryId). Only existing files whose subject matches the
+       category are used; null = no suitable image yet → fallback tile (no 404s).
+       Strategy below category level: product type → sub-category → category →
+       fallback. Sub-category/product-type images are not supplied yet, so they
+       resolve to the category image (SUB_PHOTO is the hook for owner images). */
+    var PHOTO_BY_ID = {
+        'CAT-01': 'vyakula', 'CAT-02': 'kilimo', 'CAT-03': 'kilimo', 'CAT-04': 'mifugo',
+        'CAT-05': null, 'CAT-06': null, 'CAT-07': 'mavazi', 'CAT-08': null,
+        'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': 'elektroniki',
+        'CAT-13': 'elektroniki', 'CAT-14': 'magari', 'CAT-15': null, 'CAT-16': 'tr-cargo',
+        'CAT-19': 'afya', 'CAT-27': 'sanaa', 'CAT-28': 'asili', 'CAT-29': 'zawadi',
+        'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': 'vitabu', 'CAT-33': null,
+        'CAT-34': null, 'CAT-35': null, 'CAT-36': 'ulinzi', 'CAT-37': 'svc-marketing',
+        'CAT-38': 'svc-website', 'CAT-40': 'jumla', 'CAT-41': 'maagizo', 'CAT-42': null,
+        'CAT-43': null, 'CAT-44': 'mchanganyiko'
+    };
+    var SUB_PHOTO = {};   /* '<CAT-xx>|<sub-category>' -> slug (owner-supplied; empty today) */
+    window.SKH_CATEGORY_PHOTO_BY_ID = PHOTO_BY_ID;
+
+    function canonId(name) {
+        try { return (window.skh && typeof window.skh.canonicalCategoryId === 'function') ? window.skh.canonicalCategoryId(name) : null; } catch (e) { return null; }
+    }
+    /* name | legacy label | CAT-xx  →  file slug | null */
+    function slugFor(name) {
+        var id = canonId(name);
+        if (id && Object.prototype.hasOwnProperty.call(PHOTO_BY_ID, id)) return PHOTO_BY_ID[id];
+        return Object.prototype.hasOwnProperty.call(PHOTO, name) ? PHOTO[name] : null;
+    }
+    window.skhCategoryImage = function (ref) {
+        ref = ref || {};
+        var id = canonId(ref.categoryId || ref.category);
+        var sub = id && ref.subcategory ? SUB_PHOTO[id + '|' + ref.subcategory] : null;
+        var slug = sub || slugFor(ref.categoryId || ref.category);
+        return slug ? 'assets/img/categories/' + slug + '.webp' : null;
     };
 
     var LABEL = {
@@ -128,14 +168,7 @@
     };
 
     /* strip ya Home: kategoria 6 (zile zile za design) */
-    var HOME_STRIP = [
-        'Vyakula na Vinywaji (Food)',
-        'Electronics & Teknoloji (Tech)',
-        'Ufugaji (Livestock)',
-        'Kilimo (Agriculture)',
-        'Mavazi na Fashoni (Fashion)',
-        'Ujenzi na Hardware (Hardware)'
-    ];
+    var HOME_STRIP = ['CAT-01', 'CAT-11', 'CAT-04', 'CAT-02', 'CAT-07', 'CAT-10']; // [R6] canonical ids
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -144,7 +177,7 @@
     }
 
     function photoUrl(name) {
-        var f = PHOTO[name];
+        var f = slugFor(name);
         return f ? 'assets/img/categories/' + f + '.webp' : null;
     }
 
@@ -152,7 +185,7 @@
        /SokoHai/) au route iliyopachikwa — hivyo tunajaribu njia kadhaa kabla ya
        kuachana na picha. */
     function photoCandidates(name) {
-        var f = PHOTO[name];
+        var f = slugFor(name);
         if (!f) return [];
         return [
             'assets/img/categories/' + f + '.webp',
@@ -164,7 +197,7 @@
 
     function imgMarkup(name, cls, alt) {
         var list = photoCandidates(name);
-        if (!list.length) return '';
+        if (!list.length) return fallbackMarkup(name);
         var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
         return '<img class="' + cls + '" src="' + list[0] + '" alt="' + esc(alt || labelOf(name)) + '"'
              + ' data-i="0" data-cands="' + esc(JSON.stringify(list)) + '" data-initial="' + initial + '"'
@@ -200,8 +233,17 @@
         try { (window.__skhMissingCatImgs = window.__skhMissingCatImgs || new Set()).add(img.getAttribute('src')); } catch (e) {}
     };
 
+    /* [R6] no suitable image: a neutral tile with the initial, no network request */
+    function fallbackMarkup(name) {
+        var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
+        return '<span class="skh-img-fallback skh-img-fallback--tile" role="img" aria-label="' + esc(labelOf(name)) + '">'
+             + '<span class="skh-img-fallback-letter" aria-hidden="true">' + initial + '</span></span>';
+    }
+
     function labelOf(name) {
-        return LABEL[name] || String(name).replace(/\s*\([^)]*\)\s*$/, '');
+        if (LABEL[name]) return LABEL[name];
+        try { if (/^CAT-\d{2}$/i.test(String(name)) && window.skh && window.skh.categoryLabel) return window.skh.categoryLabel(name); } catch (e) {}
+        return String(name).replace(/\s*\([^)]*\)\s*$/, '');
     }
 
     /* ---------------- 1. HOME STRIP ---------------- */
@@ -212,8 +254,9 @@
         var cats = (window.skh && window.skh.advancedCategories) || null;
         if (!cats) return;                      /* taxonomy bado */
 
-        var names = HOME_STRIP.filter(function (n) { return !!cats[n]; });
-        if (names.length < 6) names = Object.keys(cats).filter(function (n) { return !!photoUrl(n); }).slice(0, 6);
+        var list = (window.skh && typeof window.skh.buyerProductCategories === 'function') ? window.skh.buyerProductCategories().map(function (c) { return c.value; }) : Object.keys(cats);
+        var names = HOME_STRIP.filter(function (n) { return list.indexOf(n) !== -1; });
+        if (names.length < 6) names = list.filter(function (n) { return !!photoUrl(n); }).slice(0, 6);
         if (!names.length) return;
 
         var html = '';
@@ -254,8 +297,9 @@
     function markActive(catName) {
         var host = document.getElementById(MOUNT);
         if (!host) return;
+        var want = canonId(catName) || catName;
         Array.prototype.forEach.call(host.querySelectorAll('.cps-card[data-cat]'), function (c) {
-            var on = !!catName && c.dataset.cat === catName;
+            var on = !!catName && (c.dataset.cat === catName || (canonId(c.dataset.cat) || c.dataset.cat) === want);
             c.classList.toggle('is-active', on);
             c.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
@@ -305,6 +349,17 @@
             var raw = nameEl ? nameEl.textContent.trim() : '';
             /* majina kwenye explorer ni UPPERCASE — tunalinganisha kwa case-insensitive */
             var url = null, matched = null;
+            /* [R6] product tiles carry data-cat (canonical id or legacy label) */
+            if (box.dataset.cat) {
+                var icon0 = box.querySelector('.cat-icon');
+                if (icon0) {
+                    icon0.classList.add('skh-cat-photo');
+                    icon0.innerHTML = imgMarkup(box.dataset.cat, 'skh-cat-img', labelOf(box.dataset.cat));
+                }
+                if (nameEl) nameEl.textContent = labelOf(box.dataset.cat);
+                box.dataset.cpsDone = '1';
+                continue;
+            }
             for (var k in PHOTO) {
                 if (raw.toLowerCase() === k.toLowerCase()) { url = photoUrl(k); matched = k; break; }
             }
@@ -323,9 +378,11 @@
         }
         /* onyesha tile iliyochaguliwa */
         var cur = currentCategory();
+        var curId = canonId(cur);
         Array.prototype.forEach.call(boxes, function (b) {
             var n = (b.querySelector('.cat-name') || {}).textContent || '';
-            b.classList.toggle('is-active', !!cur && n.trim().toLowerCase() === labelOf(cur).toLowerCase());
+            var on = !!cur && ((curId && b.dataset.cat && canonId(b.dataset.cat) === curId) || n.trim().toLowerCase() === labelOf(cur).toLowerCase());
+            b.classList.toggle('is-active', on);
         });
     }
 
@@ -336,8 +393,7 @@
         if (!row) return;
         var cur = currentCategory();
         if (cur) lastCat = cur;
-        var parentPhoto = photoUrl(lastCat) || photoUrl('Vyakula na Vinywaji (Food)');
-        if (!parentPhoto) return;
+        // [R6] chips use the parent category image or the neutral tile — never another category's photo
         Array.prototype.forEach.call(row.children, function (chip) {
             if (!chip || chip.dataset.cpsChip === '1') return;
             var txt = (chip.textContent || '').trim();
@@ -356,7 +412,8 @@
        kamili kwenye console ili ijulikane papo hapo. */
     window.skhCategoryAssetCheck = function () {
         var slugs = [];
-        for (var k in PHOTO) slugs.push(PHOTO[k]);
+        for (var k in PHOTO) if (PHOTO[k] && slugs.indexOf(PHOTO[k]) === -1) slugs.push(PHOTO[k]);
+        for (var k3 in PHOTO_BY_ID) if (PHOTO_BY_ID[k3] && slugs.indexOf(PHOTO_BY_ID[k3]) === -1) slugs.push(PHOTO_BY_ID[k3]);
         var base = 'assets/img/categories/';
         var results = [];
         return Promise.all(slugs.map(function (f) {
