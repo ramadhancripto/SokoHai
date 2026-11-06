@@ -12,7 +12,13 @@ async function seed() {
   const s2 = await L.authUser('seller2@sokohai.test', PW, 'Asha Muuzaji');
   await L.db.doc('userCards/' + s2).set({ uid: s2, fullName: 'Asha Muuzaji' }, { merge: true });
   await L.db.doc('products/e2e_offer_other').set({ ...base, userId: s2, ownerName: 'Asha Muuzaji', sellerName: 'Asha Muuzaji', title: 'Pasi E2E Tiers', price: 24000, stock: 30, subCategory: 'Pasi', location: 'Arusha' });
-  await L.db.doc('products/e2e_ws_tiers').set({ subCategory: 'Pasi' }, { merge: true });
+  // [REMEDIATION R3] comparison is specification-aware: both listings state the same
+  // condition and wattage; a 1000W listing from a third seller must NOT be an offer.
+  await L.db.doc('products/e2e_offer_other').set({ condition: 'Mpya', attributes: { power: '1200W' } }, { merge: true });
+  await L.db.doc('products/e2e_ws_tiers').set({ subCategory: 'Pasi', condition: 'Mpya', attributes: { power: '1200W' } }, { merge: true });
+  const s3 = await L.authUser('seller3@sokohai.test', PW, 'Neema Muuzaji');
+  await L.db.doc('userCards/' + s3).set({ uid: s3, fullName: 'Neema Muuzaji' }, { merge: true });
+  await L.db.doc('products/e2e_offer_diffspec').set({ ...base, userId: s3, ownerName: 'Neema Muuzaji', sellerName: 'Neema Muuzaji', title: 'Pasi E2E Tiers', price: 15000, stock: 9, subCategory: 'Pasi', condition: 'Mpya', attributes: { power: '1000W' }, location: 'Mwanza' });
   await L.db.doc('products/e2e_ws_pos').set({ ...base, title: 'Unga E2E POS Jumla', price: 3000, stock: 50, wholesalePrice: 2600, hasBulkPackaging: true, bulkUnit: 'Box' });
 }
 const money = s => parseInt(String(s || '').replace(/[^0-9]/g, ''), 10) || 0;
@@ -66,6 +72,7 @@ async function setQty(p, q) {
       await B.p.evaluate(() => { window.closeModals && window.closeModals(true); window.openProduct('e2e_ws_tiers', 'products'); }); await B.p.waitForTimeout(3500);
       const rows = await B.p.evaluate(() => [...document.querySelectorAll('#pmRelatedWrap .pm-offer')].map(r => r.innerText.replace(/\s+/g, ' ').slice(0, 160)));
       assert(rows.length >= 2 && rows.some(r => /Asha/.test(r)) && /Unaiangalia/.test(rows[0]), JSON.stringify(rows));
+      assert(!rows.some(r => /Neema/.test(r)), '1000W listing must not be compared as the same product ' + JSON.stringify(rows));
       return rows.join(' | ');
     });
     if (vn === 'phone') await step('30 Smart Cart: wholesale tier applied by quantity in the cart total', async () => {
