@@ -28,12 +28,12 @@
         'Ufugaji (Livestock)': 'mifugo',
         'Afya na Pharmacy (Health)': 'afya',
         'Mavazi na Fashoni (Fashion)': 'mavazi',
-        'Vito na Saa (Luxury)': 'vito',
+        'Vito na Saa (Luxury)': null, /* [R6] vito.webp: stock-photo watermark */
         'Electronics & Teknoloji (Tech)': 'elektroniki',
         'Samani na Nyumbani (Home)': 'samani',
         'Ujenzi na Hardware (Hardware)': 'ujenzi',
         'Magari na Vyombo (Automotive)': 'magari',
-        'Vitabu na Elimu (Education)': 'vitabu',
+        'Vitabu na Elimu (Education)': null, /* [R6] vitabu.webp: stock-photo watermark */
         'Michezo na Mazoezi (Sports)': 'michezo',
         'Vichezeo na Michezo (Toys)': 'vichezeo',
         'Sauti na Muziki (Music)': 'muziki',
@@ -44,8 +44,8 @@
         'Vifungashio na Printi (Packaging)': 'vifungashio',
         'Ulinzi na Usalama (Safety)': 'ulinzi',
         'Biashara ya Jumla (Wholesale)': 'jumla',
-        'Maagizo ya Nje (Import/Export)': 'maagizo',
-        'Vitu vya Kale na Thamani (Antiques)': 'kale',
+        'Maagizo ya Nje (Import/Export)': null, /* [R6] maagizo.webp: stock-photo watermark */
+        'Vitu vya Kale na Thamani (Antiques)': null, /* [R6] kale.webp: stock-photo watermark */
         'Mchanganyiko (General Merchandise)': 'mchanganyiko',
         'Asili na Utamaduni (Traditional)': 'asili',
         /* huduma (serviceDataMap) */
@@ -60,12 +60,12 @@
         'Creative Freelancing': 'svc-creative',
         'Software & IT': 'svc-software',
         'Digital Marketing': 'svc-marketing',
-        'Writing & Translation': 'svc-writing',
+        'Writing & Translation': null, /* [R6] svc-writing.webp: stock-photo watermark */
         'Media Production': 'svc-media',
         'AI Services': 'svc-ai',
         'Virtual Business': 'svc-virtual',
-        'Online Coaching': 'svc-coaching',
-        'Website Services': 'svc-website',
+        'Online Coaching': null, /* [R6] svc-coaching.webp: stock-photo watermark */
+        'Website Services': null, /* [R6] svc-website.webp: stock-photo watermark */
         'Remote Support': 'svc-support',
         'Food Services': 'svc-food',
         // [R6] svc-rental.webp does not show renting → clean fallback tile until the owner supplies an image
@@ -94,11 +94,16 @@
         'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': 'elektroniki',
         'CAT-13': 'elektroniki', 'CAT-14': 'magari', 'CAT-15': null, 'CAT-16': 'tr-cargo',
         'CAT-19': 'afya', 'CAT-27': 'sanaa', 'CAT-28': 'asili', 'CAT-29': 'zawadi',
-        'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': 'vitabu', 'CAT-33': null,
+        'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': null, /* [R6] vitabu.webp: stock-photo watermark */ 'CAT-33': null,
         'CAT-34': null, 'CAT-35': null, 'CAT-36': 'ulinzi', 'CAT-37': 'svc-marketing',
-        'CAT-38': 'svc-website', 'CAT-40': 'jumla', 'CAT-41': 'maagizo', 'CAT-42': null,
+        'CAT-38': null, /* [R6] svc-website.webp: stock-photo watermark */ 'CAT-40': 'jumla', 'CAT-41': null, /* [R6] maagizo.webp: stock-photo watermark */ 'CAT-42': null,
         'CAT-43': null, 'CAT-44': 'mchanganyiko'
     };
+    /* [R6 review 2026-11] Files carrying a stock-photo watermark (Dreamstime) or a
+       third-party name/phone are never shown; they stay on disk until the owner
+       replaces them with licensed images. */
+    var REJECTED_IMAGES = ['svc-construction', 'svc-rental', 'huduma', 'vitabu', 'vito', 'kale', 'maagizo', 'svc-coaching', 'svc-writing', 'svc-website'];
+    window.SKH_CATEGORY_REJECTED_IMAGES = REJECTED_IMAGES;
     var SUB_PHOTO = {};   /* '<CAT-xx>|<sub-category>' -> slug (owner-supplied; empty today) */
     window.SKH_CATEGORY_PHOTO_BY_ID = PHOTO_BY_ID;
 
@@ -363,13 +368,13 @@
             for (var k in PHOTO) {
                 if (raw.toLowerCase() === k.toLowerCase()) { url = photoUrl(k); matched = k; break; }
             }
-            if (!url) {
+            if (!url && !matched) {
                 for (var k2 in PHOTO) {
                     if (raw && k2.toUpperCase().indexOf(raw) !== -1) { url = photoUrl(k2); matched = k2; break; }
                 }
             }
             var icon = box.querySelector('.cat-icon');
-            if (url && icon) {
+            if ((url || matched) && icon) { // [R6] known category without a usable image → neutral tile
                 icon.classList.add('skh-cat-photo');
                 icon.innerHTML = imgMarkup(matched, 'skh-cat-img', raw);
                 if (nameEl) nameEl.textContent = labelOf(matched);

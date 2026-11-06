@@ -235,13 +235,20 @@
  },
  "images": {
   "files": 49,
-  "canonicalIdsWithImage": 25,
-  "sellerCategoriesWithImage": 35,
+  "canonicalIdsWithImage": 22,
+  "sellerCategoriesWithImage": 29,
   "sellerCategories": 44,
   "unusedFiles": [
    "huduma",
+   "kale",
+   "maagizo",
+   "svc-coaching",
    "svc-construction",
-   "svc-rental"
+   "svc-rental",
+   "svc-website",
+   "svc-writing",
+   "vitabu",
+   "vito"
   ]
  }
 }

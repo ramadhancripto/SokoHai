@@ -32,7 +32,7 @@
         { name: 'Ufugaji (Livestock)',            photo: 'mifugo',      label: 'Mifugo' },
         { name: 'Kilimo (Agriculture)',           photo: 'kilimo',      label: 'Kilimo' },
         { name: 'Mavazi na Fashoni (Fashion)',    photo: 'mavazi',      label: 'Mavazi' },
-        { name: 'Ujenzi na Hardware (Hardware)',  photo: 'huduma',      label: 'Huduma' }
+        { name: 'Ujenzi na Hardware (Hardware)',  photo: 'ujenzi',      label: 'Ujenzi' } // [R6] was "huduma"/"Huduma" (duplicate image, wrong label)
     ];
 
     var PHOTOS = {};
@@ -63,7 +63,15 @@
         return m ? m[1].trim() : name;
     }
 
+    /* [R6] one image map: 83-category-photos.js (canonical id). The local table is
+       only a fallback when that module has not loaded. Returns a file slug. */
     function photoFor(name) {
+        try {
+            if (typeof window.skhCategoryImage === 'function') {
+                var u = window.skhCategoryImage({ category: name });
+                return u ? u.replace(/^.*\/([^\/]+)\.webp$/, '$1') : null;
+            }
+        } catch (e) {}
         return PHOTOS[name] || null;
     }
 
