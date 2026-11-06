@@ -405,6 +405,8 @@
         var col = window.skh && window.skh.currentFeedCollection;
         var hide = col === 'services' || col === 'drivers';
         if (host.hidden !== hide) host.hidden = hide;
+        var sec = host.closest ? host.closest('section') : null;   // the "Gundua Soko" heading goes with it
+        if (sec && sec.hidden !== hide) sec.hidden = hide;
     }
     window.skhCategoryStripSync = syncStripVisibility;
 

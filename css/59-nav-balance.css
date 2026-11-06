@@ -927,5 +927,5 @@ body .feed-card-box.skh-card--product .skh-img img,
 body .pm-rel-img img { object-fit: contain !important; object-position: center; }
 
 /* [REMEDIATION 2026-11 R5] product category strip hidden on Services / Transport */
-#categoryPhotoStrip[hidden] { display: none !important; }
+#categoryPhotoStrip[hidden], #categoryStrip[hidden] { display: none !important; }
 
