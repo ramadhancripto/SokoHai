@@ -83,6 +83,9 @@
      * KIPITIO CHA DOM — hutumia zote tatu kwa pamoja
      * ======================================================== */
     var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, CODE: 1, PRE: 1, SVG: 1 };
+    var DATA_TEXT = ['.subcat-chip', '.cat-name', '.cps-card-name', '.gds-tile-name', '.skh-title', '#pmTitle', '.pm-rel-title',
+        '.pm-offer-who', '#prodCategory', '#prodSubCategory', '#prodOfflineCategory', '#editCategory', '#editSubCategory',
+        '#activeCategoryText', '#prodTaxonomyResults', '.spb-suggest'].join(',');
 
     function currentLang() {
         try {
@@ -99,7 +102,9 @@
                 if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
                 var p = n.parentNode;
                 if (!p || SKIP_TAGS[p.nodeName]) return NodeFilter.FILTER_REJECT;
-                if (p.closest && p.closest('[data-no-i18n],.ch-react,.ch-reaction,input,textarea')) {
+                // [REMEDIATION R5] taxonomy names and seller-written listing text are DATA,
+                // never UI phrases ("Home Appliances" must not become "Nyumbani Appliances").
+                if (p.closest && p.closest('[data-no-i18n],.ch-react,.ch-reaction,input,textarea,' + DATA_TEXT)) {
                     return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;

@@ -39,7 +39,7 @@
         car: '<path d="M5 11 6.5 6.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="7" rx="2"/><circle cx="7.5" cy="18" r="1.8"/><circle cx="16.5" cy="18" r="1.8"/>',
         book: '<path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/>',
         trophy: '<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 5M17 6h3a3 3 0 0 1-3 5"/>',
-        gift: '<rect x="3" y="8" width="18" height="4 rx=1"/><path d="M12 8v13"/><path d="M5 12v9h14v-9"/><path d="M12 8a3 3 0 1 0-3-3c0 1.5 1 2.6 3 3zM12 8a3 3 0 1 1 3-3c0 1.5-1 2.6-3 3z"/>',
+        gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M5 12v9h14v-9"/><path d="M12 8a3 3 0 1 0-3-3c0 1.5 1 2.6 3 3zM12 8a3 3 0 1 1 3-3c0 1.5-1 2.6-3 3z"/>',
         music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
         palette: '<circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="10" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/><circle cx="12" cy="15" r="1.2"/><path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a5 5 0 0 0 5-5 10.4 10.4 0 0 0-10-10z"/>',
         bank: '<line x1="3" y1="10" x2="21" y2="10"/><path d="M5 10v9M9.5 10v9M14.5 10v9M19 10v9"/><path d="M3 22h18"/><path d="M12 2 3 7h18z"/>',

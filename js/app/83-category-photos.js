@@ -287,7 +287,11 @@
     var selectedCat = '';
 
     function currentCategory() {
-        /* 1) kichwa cha feed (chanzo halisi)  2) kitufe cha kategoria  3) kadi iliyoguswa */
+        /* 0) [R6] the app state itself  1) kichwa cha feed  2) kitufe cha kategoria  3) kadi iliyoguswa */
+        try {
+            var a = window.skh && window.skh.activeCategory;
+            if (a && a !== 'Zote' && (!window.skh.currentFeedCollection || window.skh.currentFeedCollection === 'products' || window.skh.currentFeedCollection === 'all')) return a;
+        } catch (e0) {}
         try {
             var t = (document.getElementById('feedTitleText') || {}).textContent || '';
             var m = /Kategoria:\s*(.+)$/i.exec(t);
@@ -410,7 +414,9 @@
         if (!row) return;
         var cur = currentCategory();
         if (cur) lastCat = cur;
-        // [R6] chips use the parent category image or the neutral tile — never another category's photo
+        // [R6] chips use the parent category's own image; without one they stay plain
+        // (no "?" tile, never another category's photo)
+        if (!lastCat || !photoUrl(lastCat)) return;
         Array.prototype.forEach.call(row.children, function (chip) {
             if (!chip || chip.dataset.cpsChip === '1') return;
             var txt = (chip.textContent || '').trim();
