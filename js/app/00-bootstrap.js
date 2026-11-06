@@ -9,10 +9,20 @@ import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPas
 import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
+import { categoryFilterValues, categoryMatches, canonicalCategoryId, categoryInfo, buyerSubcategories, buyerProductCategories, legacySubcategoriesFor, categoryLabel } from '../../shared/category-filter-core.mjs';
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, normalizeConcreteVariantCombinations, normalizeTaxonomyMetadata, normalizeProductUploadData, resolveVariantImages, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
 
 const skh = {};
+// [REMEDIATION R4] one canonical category identity for feed, filters and images.
+skh.categoryFilterValues = categoryFilterValues;
+skh.categoryMatches = categoryMatches;
+skh.canonicalCategoryId = canonicalCategoryId;
+skh.categoryInfo = categoryInfo;
+skh.buyerSubcategories = buyerSubcategories;
+skh.buyerProductCategories = function () { return buyerProductCategories(Object.keys(skh.advancedCategories || {})); };
+skh.legacySubcategoriesFor = function (cat) { return legacySubcategoriesFor(cat, skh.advancedCategories); };
+skh.categoryLabel = categoryLabel;
 // Canonical Product Foundation service; existing screens reuse this one interface.
 skh.buildProductWrite = buildProductWrite;
 skh.normalizeTaxonomyMetadata = normalizeTaxonomyMetadata;
@@ -2056,8 +2066,10 @@ let qNormal;
         // 2. Kama yupo kwenye "Vyote" lakini amechagua Category (mf: Simu).
         // [LIVE-FIX 2026-09] orderBy+limit — index tayari ipo
         // (products category+createdAt DESC).
+        // [REMEDIATION R4] canonical id + its reviewed legacy labels (one identity).
+        const _cv = (collectionToFetch === 'products') ? categoryFilterValues(skh.activeCategory).values : [skh.activeCategory];
         qNormal = skh.query(skh.collection(skh.db, collectionToFetch), 
-                  skh.where("category", "==", skh.activeCategory),
+                  _cv.length > 1 ? skh.where("category", "in", _cv) : skh.where("category", "==", skh.activeCategory),
                   skh.orderBy("createdAt", "desc"),
                   skh.limit(skh.currentLimit));
     } 
@@ -2595,7 +2607,8 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
                 return ss.some(s => String(s).toLowerCase() === skh.activeCategory.toLowerCase());
             }
             const itemCat = data.category || '';
-            return itemCat.toLowerCase() === skh.activeCategory.toLowerCase();
+            // [R4] canonical id ↔ reviewed legacy labels; unmapped values match only themselves
+            return categoryMatches(itemCat, skh.activeCategory);
         });
     }
 
