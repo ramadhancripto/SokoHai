@@ -68,7 +68,7 @@ import { skh } from './00-bootstrap.js';
 
     var TABS = [
         ['overview', 'Muhtasari'], ['accounts', 'Akaunti'], ['agents', 'Mawakala'], ['prices', 'Ukaguzi wa Bei'],
-        ['disputes', 'Migogoro'], ['verify', 'Uthibitisho'], ['listings', 'Matangazo'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
+        ['disputes', 'Migogoro'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
     ];
     function frame(inner) {
         var tabs = TABS.map(function (t) {
@@ -295,6 +295,27 @@ import { skh } from './00-bootstrap.js';
         var reason = await needReason(3); if (!reason) return;
         try { await run('adminSetVerification', { kind: kind, id: id, verified: verified === true, reason: reason }); toast(verified ? 'Imethibitishwa.' : 'Uthibitisho umeondolewa.', 'success'); }
         catch (e) { toast(errText(e), 'error'); }
+    };
+
+    /* [R9] Four distinct trust badges — server callable adminSetTrustBadge. */
+    VIEWS.trust = async function () {
+        var sel = function (id, opts) { return '<select id="' + id + '" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin:4px 0 8px;">' + opts.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select>'; };
+        return box('Beji za uaminifu (zinatolewa na server tu)',
+            '<p style="font-size:12.5px;color:#475569;margin:0 0 8px;">Beji hazichanganywi: akaunti, supplier, bidhaa iliyokaguliwa, muamala. Kutoa au kurudisha kunahitaji kumbukumbu ya ushahidi.</p>'
+            + '<label style="font-size:13px;">Beji</label>' + sel('ccTBadge', [['account', 'Akaunti / Biashara imethibitishwa'], ['supplier', 'Supplier aliyethibitishwa'], ['product_inspection', 'Bidhaa imekaguliwa'], ['transaction', 'Muamala umethibitishwa']])
+            + '<label style="font-size:13px;">Aina ya rekodi</label>' + sel('ccTType', [['user', 'Mtumiaji (UID)'], ['business', 'Biashara (businesses ID)'], ['product', 'Bidhaa (products ID)'], ['order', 'Oda (orders ID)']])
+            + input('ccTId', 'ID ya rekodi') + input('ccTEvidence', 'Kumbukumbu ya ushahidi (mf. ripoti ya ukaguzi, namba ya leseni)')
+            + '<label style="font-size:13px;">Hatua</label>' + sel('ccTAction', [['grant', 'Toa'], ['suspend', 'Simamisha'], ['reinstate', 'Rudisha'], ['revoke', 'Ondoa kabisa']])
+            + btn('Tekeleza', "window.skhAdminCCTrust()"));
+    };
+    window.skhAdminCCTrust = async function () {
+        var v = function (id) { var e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; };
+        if (!v('ccTId')) { toast('Weka ID.', 'error'); return; }
+        var reason = await needReason(5); if (!reason) return;
+        try {
+            var r = await run('adminSetTrustBadge', { badge: v('ccTBadge'), targetType: v('ccTType'), targetId: v('ccTId'), action: v('ccTAction'), evidenceRef: v('ccTEvidence'), reason: reason });
+            toast('Beji: ' + ((r && r.status) || 'imesasishwa'), 'success');
+        } catch (e) { toast(errText(e), 'error'); }
     };
 
     VIEWS.listings = async function () {

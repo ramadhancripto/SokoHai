@@ -3730,6 +3730,7 @@ exports.adminSetAgentStatus = adminAuthority.adminSetAgentStatus;
 exports.adminSetAccountStatus = adminAuthority.adminSetAccountStatus;
 exports.adminSetRole = adminAuthority.adminSetRole;
 exports.adminSetVerification = adminAuthority.adminSetVerification;
+exports.adminSetTrustBadge = adminAuthority.adminSetTrustBadge; // [R9] four distinct trust badges
 exports.adminModerateListing = adminAuthority.adminModerateListing;
 exports.adminAuditQuery = adminAuthority.adminAuditQuery;
 exports.adminWhoAmI = adminAuthority.adminWhoAmI;

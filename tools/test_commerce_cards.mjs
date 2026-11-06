@@ -48,8 +48,8 @@ const ok = (n, c) => { if (c) { pass++; console.log('  ✅ ' + n); } else { fail
 function render(html) { const d = document.createElement('div'); d.innerHTML = html; return d; }
 
 const RICE = 'https://example.com/rice.jpg';
-const product = { id: 'p1', title: 'Mchele Mbeya 25kg', price: 75000, image: RICE, ownerName: 'Mlimani Rice Store', verified: true, location: 'Tabora', stock: 40, imagesArray: [RICE, RICE] };
-const service = { id: 's1', title: 'Ushonaji Suti', price: 100000, pricingModel: 'starting', image: 'https://example.com/suit.jpg', ownerName: 'Asha Fashion', verified: true, location: 'Tabora', rating: 4.8, reviewCount: 34 };
+const product = { id: 'p1', title: 'Mchele Mbeya 25kg', price: 75000, image: RICE, ownerName: 'Mlimani Rice Store', trust: { product_inspection: { status: 'active' } }, location: 'Tabora', stock: 40, imagesArray: [RICE, RICE] };
+const service = { id: 's1', title: 'Ushonaji Suti', price: 100000, pricingModel: 'starting', image: 'https://example.com/suit.jpg', ownerName: 'Asha Fashion', providerVerified: true, location: 'Tabora', rating: 4.8, reviewCount: 34 };
 const driver = { id: 'd1', title: 'Cargo Transport', price: 20000, image: 'https://example.com/truck.jpg', ownerName: 'Juma Transport', verified: true, pickupRegion: 'Tabora', destinationRegion: 'Pangale', vehicleType: 'Lori la Tani 10', rating: 4.7, reviewCount: 21 };
 
 console.log('\n[1] BIDHAA — muundo wa teaser');
@@ -114,8 +114,15 @@ console.log('\n[4] HALI MAALUMU');
     ok('mnada: beji ya mnada juu ya picha', !!auc.querySelector('.skh-img .skh-badge--auction'));
     const noPrice = render(skh.CommercePostCard(Object.assign({}, service, { id: 's2', price: 0, pricingModel: 'negotiable' }), 'services'));
     ok('bila bei: "Maelewano"', noPrice.textContent.includes('Maelewano'));
-    const unverified = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p4', verified: false }), 'products'));
+    const unverified = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p4', trust: undefined }), 'products'));
     ok('bila uthibitisho: hakuna verified pill', !unverified.querySelector('.skh-verified-pill'));
+    // [R9] legacy self-set flags are not a badge: only the server-issued product inspection is.
+    const selfSet = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p6', trust: undefined, verified: true, ownerVerified: true, verificationStatus: 'verified' }), 'products'));
+    ok('R9: verified/ownerVerified ya zamani haionyeshi beji', !selfSet.querySelector('.skh-verified-pill'));
+    const suspended = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p7', trust: { product_inspection: { status: 'suspended' } } }), 'products'));
+    ok('R9: ukaguzi uliosimamishwa hauonyeshi beji', !suspended.querySelector('.skh-verified-pill'));
+    const selfSvc = render(skh.CommercePostCard(Object.assign({}, service, { id: 's7', providerVerified: undefined, verified: true }), 'services'));
+    ok('R9: huduma yenye verified ya zamani tu haina tiki', !selfSvc.querySelector('.skh-verified'));
     const noLoc = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p5', location: '' }), 'products'));
     ok('bila eneo: mstari wa eneo haujengwi', !noLoc.querySelector('.skh-pinloc'));
     const noRate = render(skh.CommercePostCard(Object.assign({}, service, { id: 's3', rating: 0, reviewCount: 0 }), 'services'));

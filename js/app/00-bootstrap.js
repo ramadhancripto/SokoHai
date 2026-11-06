@@ -2142,11 +2142,38 @@ skh.cardImage = function cardImage(data, overlayHTML, extraClass) {
 };
 
 // [VerificationBadge] Tiki ya kijani — IKIWA imethibitishwa KWELI tu
-skh.cardVerified = function cardVerified(data) {
-    // [R7] all of these are admin/server-set (firestore.rules listingTrustKeys / providerVerified)
-    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified' || data.providerVerified === true;
-    if (!v) return '';
-    return '<span class="skh-verified" title="Imethibitishwa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>';
+/* [REMEDIATION 2026-11 R9] Four distinct trust badges; each comes only from the
+   server (adminSetTrustBadge / adminSetVerification) and they are never mixed:
+     account            → seller/business account verified (userCards.trust.account)
+     supplier           → verified supplier (userCards.trust.supplier)
+     product_inspection → this listing was inspected (products.trust.product_inspection)
+     transaction        → this order completed and was verified (orders.trust.transaction)
+   Legacy product flags (verified / ownerVerified / verificationStatus) were
+   self-settable before the rules fix and are NOT shown as trust any more. */
+skh.TRUST_LABELS = { account: 'Akaunti imethibitishwa', supplier: 'Supplier aliyethibitishwa',
+    product_inspection: 'Bidhaa imekaguliwa', transaction: 'Muamala umethibitishwa', provider: 'Mtoa huduma amethibitishwa', carrier: 'Msafirishaji amethibitishwa' };
+skh.trustActive = function trustActive(data, key) {
+    const b = data && data.trust && data.trust[key];
+    return !!(b && b.status === 'active');
+};
+skh.listingTrust = function listingTrust(data, colName) {
+    const col = colName || (data && data.collectionName) || 'products';
+    if (col === 'services') return data && data.providerVerified === true ? 'provider' : (skh.trustActive(data, 'account') ? 'account' : '');
+    if (col === 'drivers' || col === 'transport_profiles' || col === 'logistics_companies') return data && data.verified === true ? 'carrier' : '';
+    return skh.trustActive(data, 'product_inspection') ? 'product_inspection' : '';
+};
+skh.cardVerified = function cardVerified(data, colName) {
+    const k = skh.listingTrust(data, colName);
+    if (!k) return '';
+    return '<span class="skh-verified" title="' + skh.TRUST_LABELS[k] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>';
+};
+/* Seller-level badges from the public card (account / supplier), as chips. */
+skh.sellerTrustChips = function sellerTrustChips(card) {
+    const out = [];
+    ['account', 'supplier'].forEach(function (k) {
+        if (skh.trustActive(card, k)) out.push('<span class="skh-trust-chip skh-trust-' + k + '">' + skh.TRUST_LABELS[k] + '</span>');
+    });
+    return out.join('');
 };
 
 // [RatingDisplay] Nyota + wastani (+ idadi ya mapokezi) + mauzo — ikiwa ipo tu
@@ -2187,7 +2214,7 @@ skh.cardSeller = function cardSeller(data) {
         ? window.skhUserAvatar(data.ownerPhotoURL || data.ownerAvatar || data.ownerLogo || null, name, 22) : '';
     const onClick = uid ? `onclick="event.stopPropagation(); if(window.openSellerProfile){window.openSellerProfile('${skh.skhJsEsc(uid)}','${skh.skhJsEsc(name)}');}"` : '';
     const a11y = uid ? 'role="link" tabindex="0" title="Tazama duka la muuzaji"' : '';
-    return `<div class="skh-seller" ${onClick} ${a11y}>${avatar}<span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data)}</div>`;
+    return `<div class="skh-seller" ${onClick} ${a11y}>${avatar}<span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data, colName)}</div>`;
 };
 
 // [ProtectionBadge] Ulinzi wa miamala (escrow) — kwa usiri
@@ -2284,12 +2311,12 @@ skh.cardTypeBadge = function cardTypeBadge(colName) {
 // mwili wa kadi unabaki: jina -> bei -> muuzaji  -> eneo.
 // ============================================================
 
-// [VerifiedPill] Kibandiko cha kijani chini-kushoto mwa picha
-skh.cardVerifiedPill = function cardVerifiedPill(data) {
-    // [R7] all of these are admin/server-set (firestore.rules listingTrustKeys / providerVerified)
-    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified' || data.providerVerified === true;
-    if (!v) return '';
-    return '<span class="skh-verified-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Verified</span>';
+// [VerifiedPill] Kibandiko cha kijani chini-kushoto mwa picha — [R9] badge ya tangazo husika tu
+skh.cardVerifiedPill = function cardVerifiedPill(data, colName) {
+    const k = skh.listingTrust(data, colName);
+    if (!k) return '';
+    const short = { product_inspection: 'Imekaguliwa', provider: 'Imethibitishwa', carrier: 'Imethibitishwa', account: 'Imethibitishwa' }[k];
+    return '<span class="skh-verified-pill" title="' + skh.TRUST_LABELS[k] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' + short + '</span>';
 };
 
 // [OutPill] Bidhaa zikiwa zimeisha — kibandiko wazi juu ya picha
@@ -2337,7 +2364,7 @@ skh.cardImageOverlays = function cardImageOverlays(data, colName, extra) {
     if (colName === 'drivers') {
         bottom = skh.cardRouteOverlay(data);
     } else {
-        bottom = skh.cardVerifiedPill(data);
+        bottom = skh.cardVerifiedPill(data, colName);
     }
     const out = skh.cardOutPill(data, colName);
     return (extra || '') + topLeft + bottom + out;
@@ -2362,7 +2389,7 @@ skh.cardOpenAttrs = function cardOpenAttrs(id, colName, label) {
 // [SellerMini] Mstari MWEMBE wa muuzaji/mtoa/dereva: ikoni ya duka +
 // jina + tiki (hufungua duka lililopo). Reference: kadi ni teaser, hivyo
 // habari ya muuzaji inabana (bila avatar kubwa wala footer).
-skh.cardSellerMini = function cardSellerMini(data, iconName) {
+skh.cardSellerMini = function cardSellerMini(data, iconName, colName) {
     const name = data.ownerName || data.driverName || data.fullName || data.storeName || '';
     if (!name) return '';
     const uid = data.userId || data.sellerId || '';
@@ -2377,7 +2404,7 @@ skh.cardSellerMini = function cardSellerMini(data, iconName) {
     const fAttr = uid ? ` data-fowner="${skh.skhJsEsc(uid)}"` : '';
     const followersHtml = uid
         ? ` <small class="skh-followers" data-fowner-count="${skh.skhJsEsc(uid)}" title="${skhTF('tt_followers', 'Wafuasi wa muuzaji')}" style="opacity:0;"></small>` : '';
-    return `<div class="skh-seller-mini"${fAttr} ${onClick} ${a11y}> <span class="skh-seller-ic">${skh.cardIcon(iconName || 'shop', 11)}</span> <span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data)}${followersHtml}
+    return `<div class="skh-seller-mini"${fAttr} ${onClick} ${a11y}> <span class="skh-seller-ic">${skh.cardIcon(iconName || 'shop', 11)}</span> <span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data, colName)}${followersHtml}
     </div>`;
 };
 
@@ -2460,7 +2487,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
     const overlays = [
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
-        skh.cardVerifiedPill(data),
+        skh.cardVerifiedPill(data, 'products'),
         skh.cardOutPill(data, 'products')
     ].join('');
     const stockChip = skh.cardStockChip(data);
@@ -2479,13 +2506,13 @@ skh.ServicePostCard = function ServicePostCard(data, colName) {
         skh.activeBoostBadge(data),
         skh.cardTypeBadge('services') ? '<div class="skh-overlay-chip skh-overlay-chip--service">' + skh.cardTypeBadge('services') + '</div>' : '',
         skh.cardModeBadge(data),
-        skh.cardVerifiedPill(data)
+        skh.cardVerifiedPill(data, 'services')
     ].join('');
     return `<div class="feed-card-box skh-card skh-card--service" ${skh.cardOpenAttrs(data.id, 'services', data.title)}>
         ${skh.cardImage(data, overlays)}
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_service_def', 'Huduma'))}</h3>
             ${skh.cardPriceHtml(data, 'services')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'wrench')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'services')}</div> </div> </div>`;
+            <div class="skh-seller-row">${skh.cardSellerMini(data, 'wrench', 'services')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'services')}</div> </div> </div>`;
 };
 
 // [TransportPostCard] TEASER: picha (njia juu yake) -> jina/aina -> bei
@@ -2494,7 +2521,7 @@ skh.TransportPostCard = function TransportPostCard(data, colName) {
     const hasRoute = !!(data.pickupRegion || data.destinationRegion);
     const overlays = [
         skh.activeBoostBadge(data),
-        hasRoute ? skh.cardRouteOverlay(data) : skh.cardVerifiedPill(data),
+        hasRoute ? skh.cardRouteOverlay(data) : skh.cardVerifiedPill(data, 'drivers'),
         skh.cardOutPill(data, colName)
     ].join('');
     const arrowIco = skh.cardIcon('arrow-right', 12);
@@ -2506,7 +2533,7 @@ skh.TransportPostCard = function TransportPostCard(data, colName) {
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${hasRoute && !data.title ? skh.skhEscape(data.pickupRegion || '') + '<span class="skh-title-arrow" aria-label="hadi">' + arrowIco + '</span>' + skh.skhEscape(data.destinationRegion || '') : title}</h3>
             ${vehicle}
             ${skh.cardPriceHtml(data, 'drivers')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'truck')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'drivers')}</div> </div> </div>`;
+            <div class="skh-seller-row">${skh.cardSellerMini(data, 'truck', 'drivers')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'drivers')}</div> </div> </div>`;
 };
 
 // [CommercePostCard] Kichaguzi cha aina ya kadi

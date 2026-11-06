@@ -605,7 +605,17 @@ import {
         };
 
         if ($('pmSellerVerified') && typeof skh.cardVerified === 'function') {
-            $('pmSellerVerified').innerHTML = skh.cardVerified(p);
+            // [R9] listing-level badge now; seller account/supplier badges from the public card below
+            $('pmSellerVerified').innerHTML = skh.cardVerified(p, col);
+            if (p.userId && typeof skh.getUserCard === 'function' && typeof skh.sellerTrustChips === 'function') {
+                var vEl = $('pmSellerVerified'), forId = p.id;
+                skh.getUserCard(p.userId).then(function (snap) {
+                    var c = snap && snap.exists && snap.exists() ? snap.data() : null;
+                    if (!c || !vEl || (skh.currentOpenProduct && skh.currentOpenProduct.id !== forId)) return;
+                    var chips = skh.sellerTrustChips(c);
+                    if (chips) vEl.innerHTML = skh.cardVerified(p, col) + chips;
+                }).catch(function () {});
+            }
         }
         var meta = $('pmSellerMeta');
         var rating = (typeof skh.cardRating === 'function') ? skh.cardRating(p) : '';

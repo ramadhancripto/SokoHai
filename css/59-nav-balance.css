@@ -929,3 +929,8 @@ body .pm-rel-img img { object-fit: contain !important; object-position: center; 
 /* [REMEDIATION 2026-11 R5] product category strip hidden on Services / Transport */
 #categoryPhotoStrip[hidden], #categoryStrip[hidden] { display: none !important; }
 
+
+/* [REMEDIATION 2026-11 R9] seller-level trust chips (account / supplier) — distinct from the listing badge */
+.skh-trust-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; line-height: 1.5; white-space: nowrap; background: #EAF8F2; color: #17604E; border: 1px solid #BFE8D6; }
+.skh-trust-chip.skh-trust-supplier { background: #FBF7E7; color: #7A5B00; border-color: #EBDDA6; }

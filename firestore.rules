@@ -79,7 +79,7 @@ service cloud.firestore {
     // [REMEDIATION 2026-11 R7] trust badges on listings are admin/server-set only
     // (the card shows "Imethibitishwa" when any of these is set).
     function listingTrustKeys() {
-      return ['verified','ownerVerified','verificationStatus','sellerVerified','isVerified','verifiedAt','verifiedBy'];
+      return ['verified','ownerVerified','verificationStatus','sellerVerified','isVerified','verifiedAt','verifiedBy','trust','inspected','inspectionStatus'];
     }
     function smallQuery(n) {
       return request.query.limit != null && request.query.limit <= n;
@@ -145,6 +145,7 @@ service cloud.firestore {
         && canonicalProductScopeValid(request.resource.data)
         && !request.resource.data.keys().hasAny(['moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
         && (isAdmin() || !request.resource.data.keys().hasAny(listingTrustKeys()))
+        && !('trust' in request.resource.data)
         // [REPAIR 2026-10 Phase 5] no pre-filled auction winner / bids / group members
         && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
         && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
@@ -165,6 +166,7 @@ service cloud.firestore {
         // [POS 2026-11-01] decimal precision is fixed once stock exists in that precision (server/admin only after create).
         && (isAdmin() || unchanged(['quantityPrecision']))
         && (isAdmin() || unchanged(listingTrustKeys()))
+        && unchanged(['trust'])
         && (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments','stock','businessId','storeId','ownerUid','shopOwnerUid','shopOwnerId','sellerId','userId','openingStockPending','openingStockInitialized','moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
         // [REPAIR 2026-10 Phase 5] Once buyers took part (a bid, or a Group Buy join)
         // the mode runtime belongs to the server (auctionPlaceBid / groupBuyJoin);
@@ -223,13 +225,15 @@ service cloud.firestore {
       allow create: if signedIn() && validService(request.resource.data)
         && !request.resource.data.keys().hasAny(['providerVerified','moderationStatus','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
         && (isAdmin() || !request.resource.data.keys().hasAny(listingTrustKeys()))
+        && !('trust' in request.resource.data)
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsService(resource.data) && validService(request.resource.data)
         && request.resource.data.userId == resource.data.userId
         && (isAdmin() || unchanged(['providerVerified','moderationStatus','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
-        && (isAdmin() || unchanged(listingTrustKeys()));
+        && (isAdmin() || unchanged(listingTrustKeys()))
+        && unchanged(['trust']);
       allow delete: if false;
     }
 
@@ -315,7 +319,9 @@ service cloud.firestore {
               'createdByAgentId','managedByAgentUid','isOfflineUser','memberId',
               'isSubscribed','subscriptionType','subscriptionValidUntil','subStatus','subscriptionPaidRef',
               // [2026-11-01] verification evidence is written by admin/server only
-              'verificationChecks'];
+              'verificationChecks',
+              // [R9] trust badge projection (adminSetTrustBadge)
+              'trust','supplierVerified'];
     }
     // Self-registration: no privileged keys, zero balance, shop owner = self.
     // [REPAIR 2026-10 B-09] walletBalance is checked separately (must be 0 on
@@ -364,6 +370,7 @@ service cloud.firestore {
       allow list: if signedIn() && userDocReader(resource.data);
       allow create: if signedIn()
         && (!('walletBalance' in request.resource.data) || request.resource.data.walletBalance == 0)
+        && !('trust' in request.resource.data)
         && (
           isAdmin()
           || ((userDocId == request.auth.uid || request.resource.data.get('uid', '') == request.auth.uid)
@@ -374,6 +381,7 @@ service cloud.firestore {
       allow update: if signedIn()
         && (!('uid' in resource.data) || request.resource.data.get('uid', '') == resource.data.uid)
         && unchanged(['walletBalance'])
+        && unchanged(['trust'])   // [R9] trust badges: adminSetTrustBadge (server) only
         && (
           // [PHASE 9 B-18] An admin editing SOMEONE ELSE's profile from the browser
           // must sign the change (lastChangedBy/lastChangedAt); usersAdminAudit
@@ -519,10 +527,12 @@ service cloud.firestore {
         && !request.resource.data.keys().hasAny(orderServerOnlyCreateKeys())
         && request.resource.data.get('status', 'payment_pending') in ['payment_pending','pending','pending_choice','new_order','awaiting_payment']
         && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
-        && request.resource.data.get('paymentVerified', false) == false;
+        && request.resource.data.get('paymentVerified', false) == false
+        && !('trust' in request.resource.data);   // [R9] Verified Transaction is server-only
       allow update: if signedIn()
         // [PHASE 9 B-18] Admin browser edits: signed, never money fields (money
         // moves only through audited callables); ordersAdminAudit logs them.
+        && unchanged(['trust'])
         && ((isAdmin() && adminStampOk() && unchanged(orderMoneyKeys())) || (
             unchanged(['lastChangedBy','lastChangedAt'])
             && (resource.data.buyerId == request.auth.uid
@@ -535,6 +545,7 @@ service cloud.firestore {
             && orderLinkOnce('driverId') && orderLinkOnce('transportRequestId')
             && orderPaymentInfoOk()
             && orderStatusOk()
+            && unchanged(['trust'])
           ));
       allow delete: if false;
     }
@@ -592,6 +603,18 @@ service cloud.firestore {
     }
     // Permanent admin audit trail and security events: server-only writes.
     match /admin_audit_log/{id}   { allow read: if isAdmin(); allow write: if false; }
+    // [R9] Trust badge records: evidence and verifier are visible to admins and to
+    // the badge owner only; written by adminSetTrustBadge (server) only.
+    match /trust_badges/{badgeId} {
+      allow get: if signedIn() && (isAdmin() || resource.data.get('ownerUid', '') == request.auth.uid);
+      allow list: if signedIn() && (isAdmin() || (resource.data.get('ownerUid', '') == request.auth.uid && smallQuery(50)));
+      allow write: if false;
+      match /history/{hid} {
+        allow read: if signedIn() && (isAdmin()
+          || get(/databases/$(database)/documents/trust_badges/$(badgeId)).data.get('ownerUid', '') == request.auth.uid);
+        allow write: if false;
+      }
+    }
     match /security_events/{id}   { allow read: if isAdmin(); allow write: if false; }
 
     // ---------------------------------------------------------------
