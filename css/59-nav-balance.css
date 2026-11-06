@@ -1,0 +1,914 @@
+/* ==== css/59-nav-balance.css ==== */
+/* ============================================================
+   SOKOHAI — URAWI WA NAVIGESHENI (Job 13 / R6 — 2026-11-05)
+   1) Bottom nav: nafasi zilizo sawa, ikoni zenye usawa, hali ya kuchaguliwa
+   2) Upau wa eneo: kifupi, kirefu, jina la eneo linaonekana vizuri
+   3) Sidebar (drawer): upana/ukubwa unaobalance na top nav
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. BOTTOM NAV
+   ------------------------------------------------------------ */
+.bottom-nav-main {
+    background: #ffffff;
+    border-top: 1px solid var(--sokohai-border);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -10px 26px rgba(15, 44, 70, .10);
+}
+
+.main-nav-icons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    height: 66px;
+    min-height: 0 !important;
+    padding: 0 6px !important;
+}
+
+.nav-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 2px;
+    border-radius: 14px;
+    color: #7E8F8A;
+    cursor: pointer;
+    transition: color .18s ease, background .18s ease, transform .14s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ikoni: boksi moja la mraba linalojaza nafasi ile ile kwa kila tab.
+   (!important: css/12-mobile-responsive.css ina width:16px !important ya zamani) */
+.bottom-nav-main .main-nav-icons .nav-tab svg {
+    width: 26px !important;
+    height: 26px !important;
+    padding: 4px;
+    box-sizing: border-box;
+    margin: 0 !important;
+    border-radius: 9px;
+    background: transparent;
+    stroke-width: 1.95;
+    transition: background .18s ease, color .18s ease, stroke-width .18s ease;
+}
+
+.bottom-nav-main .main-nav-icons .nav-tab span {
+    font-size: clamp(10px, 2.75vw, 11.5px) !important;
+    font-weight: 800 !important;
+    letter-spacing: .1px;
+    text-transform: none;
+    line-height: 1.12;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-align: center;
+}
+
+.nav-tab:active { transform: scale(.965); }
+
+.nav-tab.active {
+    color: var(--sokohai-green-dark);
+    transform: none;
+}
+
+.bottom-nav-main .main-nav-icons .nav-tab.active svg {
+    background: var(--sokohai-green-soft);
+    color: var(--sokohai-green);
+    stroke-width: 2.1;
+}
+
+.nav-tab.active span { font-weight: 900; }
+
+.nav-tab:focus-visible {
+    outline: 2px solid var(--sokohai-gold);
+    outline-offset: 2px;
+}
+
+/* Desktop: nav inakuwa "dock" iliyo katikati, si upau mzima wa 1440px */
+@media (min-width: 900px) {
+    .bottom-area-wrapper { padding-bottom: 12px; }
+
+    .bottom-nav-main {
+        width: min(620px, 92vw);
+        border: 1px solid var(--sokohai-border);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(15, 44, 70, .14), 0 2px 6px rgba(15, 44, 70, .06);
+    }
+
+    .main-nav-icons { height: 62px; padding: 0 14px; gap: 6px; }
+    .nav-tab { flex: 0 1 112px; height: 54px; }
+    .bottom-nav-main .main-nav-icons .nav-tab span { font-size: 11.5px !important; letter-spacing: .15px; font-weight: 800 !important; }
+    .bottom-nav-main .main-nav-icons .nav-tab svg { width: 30px !important; height: 30px !important; padding: 5px; }
+    .main-nav-icons { min-height: 0 !important; padding: 0 14px !important; }
+    .sell-action-fab { margin-bottom: -6px; }
+}
+
+/* ------------------------------------------------------------
+   2. UPAU WA ENEO ("Inatafuta eneo…")
+   ------------------------------------------------------------ */
+#locationFilterBar {
+    background: #fff;
+    border-bottom: 1px solid var(--sokohai-border);
+    padding: 8px 12px;
+    gap: 8px;
+    min-height: 50px;
+    align-items: center;
+}
+
+#userLocationStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 60%;
+    padding: 7px 12px 7px 10px;
+    border-radius: 999px;
+    border: 1px solid #CCEBDD;
+    background: var(--sokohai-green-soft);
+    color: var(--sokohai-green-dark);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: .1px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease;
+}
+
+/* pini ya eneo (SVG ndani ya CSS — haiharibiwi na textContent) */
+#userLocationStatus::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 14px 14px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317604E' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+}
+
+#userLocationStatus:active { background: #DFF3EB; }
+#userLocationStatus:hover { border-color: #A9DFC9; }
+
+#userLocationStatus.skh-loc-loading::before {
+    background-image: none;
+    border: 2px solid rgba(23, 96, 78, .25);
+    border-top-color: var(--sokohai-green-dark);
+    border-radius: 50%;
+    animation: skhLocSpin .7s linear infinite;
+}
+
+@keyframes skhLocSpin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    #userLocationStatus.skh-loc-loading::before { animation: none; }
+}
+
+#locationFilterBar select#regionFilterSelect {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1.5px solid #D5E2DE;
+    background: #fff;
+    color: var(--sokohai-text);
+    font-size: 12.5px;
+    font-weight: 800;
+    max-width: 44%;
+    min-width: 0;
+    outline: none;
+    cursor: pointer;
+    text-overflow: ellipsis;
+}
+
+#locationFilterBar select#regionFilterSelect:focus-visible {
+    border-color: var(--sokohai-green);
+    box-shadow: 0 0 0 3px rgba(24, 169, 130, .16);
+}
+
+@media (max-width: 380px) {
+    #userLocationStatus { font-size: 12px; padding: 7px 10px 7px 9px; }
+    #locationFilterBar select#regionFilterSelect { font-size: 12px; padding: 7px 9px; }
+}
+
+/* ------------------------------------------------------------
+   3. SIDEBAR (drawer) — upana na ukubwa unaobalance na top nav
+   ------------------------------------------------------------ */
+#sidebarMenuModal .skh-menu-drawer {
+    width: min(432px, 100vw) !important;
+    max-width: min(432px, 100vw) !important;
+}
+
+@media (max-width: 620px) {
+    #sidebarMenuModal .skh-menu-drawer {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        border-radius: 0 !important;
+    }
+}
+
+#sidebarMenuModal .skh-menu-top b { font-size: 17px; letter-spacing: .4px; }
+
+#sidebarMenuModal .skh-user-card b { font-size: 16px; line-height: 1.2; }
+#sidebarMenuModal .skh-user-card small { font-size: 12.5px; }
+
+#sidebarMenuModal .skh-menu-scroll { padding: 12px 12px 22px; }
+
+#sidebarMenuModal .skh-menu-item {
+    min-height: 58px;
+    padding: 11px 12px;
+    gap: 12px;
+    margin-bottom: 8px;
+    border-radius: 14px;
+}
+
+#sidebarMenuModal .skh-menu-item .ico {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #F1F8F5;
+    color: var(--sokohai-green);
+}
+
+#sidebarMenuModal .skh-menu-item .ico svg { width: 18px; height: 18px; stroke-width: 2; }
+
+#sidebarMenuModal .skh-menu-item .txt b {
+    font-size: 14.5px;
+    font-weight: 850;
+    line-height: 1.25;
+}
+
+#sidebarMenuModal .skh-menu-item .txt small {
+    font-size: 12.5px;
+    line-height: 1.3;
+    margin-top: 2px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#sidebarMenuModal .skh-menu-item .chev { font-size: 17px; }
+
+/* vichwa vya sehemu: vinakaa kama vichwa halisi vya sehemu */
+#sidebarMenuModal .skh-menu-sec-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 14px 0 8px;
+    padding: 11px 12px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    font-weight: 900;
+    letter-spacing: .5px;
+}
+
+#sidebarMenuModal .skh-menu-sec-h .skh-sec-chev {
+    font-size: 13px;
+    transition: transform .18s ease;
+}
+
+@media (max-width: 620px) {
+    #sidebarMenuModal .skh-menu-item { min-height: 60px; }
+    #sidebarMenuModal .skh-menu-item .txt b { font-size: 14.5px; }
+}
+
+/* ------------------------------------------------------------
+   1b. Marekebisho ya mwisho ya bottom nav
+   ------------------------------------------------------------ */
+
+/* kistari cha zamani cha green juu ya tab kilionekana kama mstari usio sawa
+   (kiko katikati ya tab, si juu ya ikoni) — tumetoa; hali ya kuchaguliwa
+   sasa inaonyeshwa na "pill" ya ikoni. */
+.bottom-nav-main .main-nav-icons .nav-tab.active::before { display: none !important; content: none !important; }
+
+/* kitufe cha "Uza" (+) kisiFunike ikoni ya tab ya kati (Huduma) */
+.sell-action-fab {
+    margin-bottom: 10px !important;
+    transform: translateY(-4px);
+}
+
+.sell-action-fab .sell-circle-glow {
+    box-shadow: 0 4px 12px rgba(24, 169, 130, .26) !important;
+}
+/* Watoto (SVG ya "+") WASIPEWE ring/kivuli — ndiyo iliyokuwa ikiifanya
+   icon ionekane "imejazwa hovyo" kama mraba mweupe ndani ya duara. */
+.sell-action-fab .sell-circle-glow > * { box-shadow: none !important; }
+
+@media (min-width: 900px) {
+    .sell-action-fab { margin-bottom: 12px !important; transform: translateY(-6px); }
+}
+
+/* ------------------------------------------------------------
+   1c. Chini ya ukurasa: nafasi ya kutosha ili nav isifunike maudhui
+   ------------------------------------------------------------ */
+.scroll-content { scroll-padding-bottom: 96px; }
+
+/* ------------------------------------------------------------
+   2b. Upau wa eneo: jina lionekane kikamilifu, dropdown isikatike
+   ------------------------------------------------------------ */
+#locationFilterBar { gap: 8px; }
+
+#userLocationStatus {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+}
+
+#locationFilterBar select#regionFilterSelect {
+    flex: 0 1 auto;
+    width: auto;
+    max-width: 190px !important; min-width: 118px;
+    padding: 8px 8px;
+    font-size: 12px !important;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    background-image: none;
+}
+
+@media (max-width: 420px) {
+    #userLocationStatus { font-size: 12px !important; padding: 7px 10px 7px 9px; }
+    #locationFilterBar select#regionFilterSelect { font-size: 11.5px !important; padding: 7px 8px; max-width: 150px !important; min-width: 110px; }
+}
+
+/* css/12 ina `#locationFilterBar #userLocationStatus { max-width:120px }`
+   — jina lilikatwa ("Ubungo, Dar e"). Tunapanua hadi nafasi iliyopo. */
+#locationFilterBar #userLocationStatus {
+    max-width: none !important;
+    flex: 1 1 auto !important;
+    min-width: 0;
+}
+
+/* ------------------------------------------------------------
+   4. PICHA ZA KATEGORIA — tile mbadala ikikosekana faili
+   (haionekani tupu kamwe; inaonekana kama kadi halali)
+   ------------------------------------------------------------ */
+.skh-img-fallback {
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(120% 120% at 15% 10%, rgba(24, 169, 130, .22), rgba(24, 169, 130, 0) 55%),
+        linear-gradient(135deg, #EAF8F2 0%, #F3FAF7 45%, #FBF7E7 100%);
+    overflow: hidden;
+}
+
+.skh-img-fallback::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(135deg, rgba(24, 169, 130, .07) 0 6px, rgba(24, 169, 130, 0) 6px 12px);
+}
+
+.skh-img-fallback .skh-img-fallback-letter {
+    position: relative;
+    z-index: 1;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: clamp(22px, 7vw, 34px);
+    line-height: 1;
+    color: var(--sokohai-green-dark);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
+
+.cps-chip-ico.skh-img-fallback .skh-img-fallback-letter,
+.skh-img-fallback.skh-cat-photo .skh-img-fallback-letter { font-size: 15px; }
+
+/* explorer: ikoni za kategoria zisizokuwa na picha zibaki zenye sura moja */
+#categoryModal .cat-box .cat-icon.skh-cat-photo {
+    width: 100%;
+    height: 118px !important;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#categoryModal .cat-box .cat-icon.skh-cat-photo img,
+#categoryModal .cat-box .cat-icon.skh-cat-photo .skh-cat-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* sub-category chips */
+.cps-chip-ico .cps-chip-img,
+.cps-chip-ico img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ------------------------------------------------------------
+   4. Kitufe cha "Weka tangazo" (+) — SIMPLE
+   Kimoja tu: duara safi la kijani + alama nyepesi ya "+".
+   Tumeondoa glow/ring zilizokuwa zimejaa (R6j).
+   ------------------------------------------------------------ */
+.sell-action-fab .sell-circle-glow {
+    width: 54px !important;
+    height: 54px !important;
+    border: 3px solid #fff !important;
+    box-shadow: 0 4px 12px rgba(24, 169, 130, .26) !important;
+    background: var(--sokohai-green, #18A982) !important;
+}
+.sell-action-fab .sell-circle-glow svg { display: block; }
+.sell-action-fab .sell-text-btn { display: none !important; }
+
+/* Icon ya Home kwenye kichwa cha dashboards isionekane tupu (mobile) */
+@media (max-width: 760px) {
+    #mySokoHaiModal .byd-home-btn { width: 42px; padding: 0 !important; }
+    #mySokoHaiModal .byd-home-btn .skh-ico { width: 18px; height: 18px; color: #17604E; }
+}
+#mySokoHaiModal .byd-head-id b { font-size: 17px; }
+
+/* .skh-ico ya Home kwenye dashboards ilikuwa display:none (mobile) → ikoni tupu */
+@media (max-width: 760px) {
+    #mySokoHaiModal .byd-home-btn .skh-ico { display: inline-block !important; }
+}
+#mySokoHaiModal .byd-home-btn .skh-ico { display: inline-flex; }
+
+/* ============================================================
+   [R6q · JOB 22 · 2026-11-05] KITUFE CHA "UZA" (+) KIMEKAA KWENYE NAV
+   ------------------------------------------------------------
+   Tatizo lililokuwa: `.sell-action-fab` ilikuwa na margin-bottom:10px +
+   translateY(-4px), kwa hiyo duara lilielea 14px JUU ya nav na kufunika
+   kadi za bidhaa (picha: kadi ya "cocacola / Tsh 30,000" iligubikwa).
+
+   Sasa: duara limekaa chini kabisa ndani ya eneo la nav —
+     · bottom ya duara = juu ya `.bottom-nav-main` (pengo 0),
+     · nusu ya chini iko ndani ya nav (kama "seat" ya notchi),
+     · nafasi ya nav haiongezwi (height 67px haibadiliki),
+     · nav inapoteleza (nav-slide-hidden) duara linapotelea nayo,
+     · kwenye dashboards (fab-hidden) linabaki kufichwa kama zamani.
+
+   Mabadiliko ni ya CSS pekee: hakuna JS, hakuna kubadilisha onclick,
+   hakuna kuondoa kitufe, hakuna tab iliyohamishwa.
+   ============================================================ */
+
+/* 1. Nafasi ya duara: imekaa juu ya nav, hakuna pengo */
+.sell-action-fab {
+    margin-bottom: 0 !important;
+    transform: none !important;
+}
+
+/* 2. Duara: saizi safi + kivuli cha "kimekaa" (seat) */
+.sell-action-fab .sell-circle-glow {
+    width: 52px !important;
+    height: 52px !important;
+    border: 3px solid #fff !important;
+    box-shadow:
+        0 -1px 0 rgba(229, 236, 236, .9),          /* mstari mwepesi juu ya nav */
+        0 -4px 10px rgba(16, 44, 70, .08),          /* kivuli laini kinachopanda */
+        0 6px 14px rgba(16, 44, 70, .16) !important;/* kivuli chini: kimekaa */
+}
+
+/* 3. "Seat": HAKUNA duara jeupe la ziada — lilikuwa linafuta maandishi ya
+      "Huduma". Duara linaegemea mstari wa juu wa nav; nav yenyewe (nyeupe +
+      kivuli chake) ndiyo "seat". Kivuli cha chini (juu) kinatosha kuonyesha
+      limekaa, hakuna kinachofutwa. */
+.sell-action-fab > .sell-circle-glow { position: relative; z-index: 1; }
+
+/* 4. Desktop (dock ya nav): duara linakaa moja kwa moja juu ya dock
+      (pengo 0) — si juu ya maudhui */
+@media (min-width: 900px) {
+    .sell-action-fab { margin-bottom: 0 !important; transform: none !important; }
+}
+
+/* 5. Simu ndogo sana (≤360px): duara dogo kidogo ili lisiwe kubwa kupita kiasi */
+@media (max-width: 360px) {
+    .sell-action-fab .sell-circle-glow { width: 48px !important; height: 48px !important; }
+}
+
+/* 6. Nav inapoteleza chini (scroll) — duara linapotelea pamoja na nav */
+
+/* 7. Wakati menyu ya "+" (Chagua Kitendo) imefunguliwa, duara lenyewe
+      linafichwa kwa upole — vinginevyo overlay inalikata katikati.
+      (Hali ya kitufe kilichobonyezwa; linarudi mara menyu inafungwa.) */
+body:has(#plusMenu[style*="display: flex"]) .bottom-area-wrapper .sell-action-fab,
+body:has(#plusMenu[style*="display:flex"]) .bottom-area-wrapper .sell-action-fab {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 160ms ease;
+}
+
+/* ============================================================
+   [R6r · JOB 23 · 2026-11-05] SIDEBAR: MAANDISHI YA MENU YAMEONGEZWA UZITO (BOLD)
+   ------------------------------------------------------------
+   Lebo kuu: 14.5/850 → **15.5px / 900**, rangi nzito #0F1F1A, herufi zimebanwa
+   kidogo (-.1px) — "Akaunti Yangu", "Bidhaa Sokoni" zinasomeka kwa nguvu.
+   Maelezo madogo yanapunguzwa uzito (700 → 600, kijivu) ili lebo kuu ionekane
+   BOLD zaidi (hierarchy, si kelele yote).
+   Vichwa vya sehemu: 12.5/900 → **13px / 900** + letterspacing .6px.
+   Block hii iko MWISHO wa css/59 ili ishinde kanuni za css/57 (zilizopita).
+   ============================================================ */
+#sidebarMenuModal .skh-menu-item .txt b {
+    font-size: 15.5px !important;
+    font-weight: 900 !important;
+    color: #0F1F1A !important;
+    letter-spacing: -.1px;
+    line-height: 1.22;
+}
+#sidebarMenuModal .skh-menu-item .txt small {
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    color: #6B7B76 !important;
+    line-height: 1.35;
+    margin-top: 3px;
+}
+#sidebarMenuModal .skh-menu-sec-h {
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    letter-spacing: .6px;
+    color: #17604E !important;
+}
+#sidebarMenuModal .skh-menu-head b { font-weight: 900 !important; letter-spacing: .3px; }
+#sidebarMenuModal .skh-menu-user b,
+#sidebarMenuModal .skh-menu-wallet b { font-weight: 900 !important; }
+
+@media (max-width: 620px) {
+    #sidebarMenuModal .skh-menu-item { min-height: 62px; }
+    #sidebarMenuModal .skh-menu-item .txt b { font-size: 15px !important; font-weight: 900 !important; }
+    #sidebarMenuModal .skh-menu-item .txt small { font-size: 12px !important; }
+}
+
+/* ============================================================
+   [R6s · JOB 24 · 2026-11-05] TOP & BOTTOM NAVIGATION FINAL REFINEMENT
+   ------------------------------------------------------------
+   Mpangilio mpya wa header (kushoto → kulia):
+     SIDEBAR | SOKOHAI | POST | MORE | SOKOPAY | CART | NOTIFICATIONS
+
+   · POST ni kitufe cha kudumu cha header (green pill + square-plus + "Post").
+     Kinatumia window.togglePlusMenu() — flow ILE ILE ya zamani.
+   · Floating "+" ya bottom nav IMEDONDOSHWA (display:none) — DOM, onclick na
+     ID zake zote zinabaki (hakuna JS iliyogusa; setSellFab inaendelea kufanya
+     kazi bila kosa).
+   · Bottom nav inarudi kwenye destinations 5 pekee: Home, Bidhaa, Huduma,
+     Usafiri, Chat (hakuna tab ya sita, hakuna kubadilisha route).
+   · Kila kitu kingine (More/Dashboard, SokoPay, Cart, Notifications, sidebar,
+     badges) kimehifadhiwa — ni CSS + kipengele kimoja cha HTML.
+   ============================================================ */
+
+/* ---------- 1. Mstari MMOJA kila ukubwa (hakuna kuvunjika mistari) ---------- */
+.top-nav-row {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    column-gap: 8px;
+    row-gap: 0 !important;
+}
+.top-nav-row .top-nav-left {
+    flex: 0 1 auto;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+}
+.top-nav-row .top-nav-icons {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+/* ---------- 2. POST = ICON PEKEE (kijani) — haibani kitu ---------- */
+.top-nav-row .skh-post-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;                 /* squircle: tofauti wazi na miduara ya ikoni */
+    background: linear-gradient(135deg, #22C79A 0%, #18A982 52%, #149B76 100%);
+    color: #fff;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+    flex: 0 0 auto;
+    box-shadow: 0 3px 10px rgba(24, 169, 130, .30), inset 0 1px 0 rgba(255, 255, 255, .25);
+    transition: transform .14s cubic-bezier(.22,.61,.36,1), box-shadow .16s ease, filter .16s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.top-nav-row .skh-post-btn svg { width: 19px; height: 19px; display: block; flex: 0 0 auto; }
+.top-nav-row .skh-post-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(24, 169, 130, .34), 0 0 0 2px rgba(216, 184, 58, .30), inset 0 1px 0 rgba(255, 255, 255, .3);
+    filter: brightness(1.03);
+}
+.top-nav-row .skh-post-btn:active {
+    transform: translateY(0) scale(.95);
+    box-shadow: 0 2px 6px rgba(24, 169, 130, .30), inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+.top-nav-row .skh-post-btn:focus-visible {
+    outline: 2px solid var(--sokohai-gold, #D8B83A);
+    outline-offset: 2px;
+}
+
+/* ---------- 3. FLOATING "+" IMEDONDOSHWA (bottom nav = tabs 5 pekee) ---------- */
+.bottom-area-wrapper .sell-action-fab { display: none !important; }
+
+/* ---------- 4. BALANCE: kila kitufe kimoja, nafasi sawa, hakuna kubana ---------- */
+
+/* Tablet / simu kubwa (431–860): vitufe 38px, nafasi 6px */
+@media (max-width: 860px) {
+    .top-nav-row { column-gap: 6px; }
+    .top-nav-row .top-nav-left { gap: 6px; }
+    .top-nav-row .top-nav-icons { gap: 6px !important; }
+    .top-nav-row .skh-post-btn { width: 38px; height: 38px; border-radius: 12px; }
+    .top-nav-row .skh-post-btn svg { width: 19px; height: 19px; }
+}
+
+/* Simu (≤430): vitufe VYOTE 34px, nafasi 5px — hakuna kubana, hakuna kufichwa */
+@media (max-width: 430px) {
+    .top-nav-row { column-gap: 5px; padding: 7px 10px; }
+    .top-nav-row .top-nav-left { gap: 5px; }
+    .top-nav-row .skh-brand { gap: 4px; margin-left: 0; }
+    .top-nav-row .skh-brand-div { display: none; }          /* mstari wa dhahabu: mapambo pekee */
+    .top-nav-row .skh-brand-logo { height: 28px; }
+    .top-nav-row .skh-brand-word { font-size: 18.5px; letter-spacing: -.45px; }
+    .top-nav-row .skh-brand-arc { height: 3px; border-bottom-width: 2px; margin-top: 1px; }
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 34px; height: 34px; }
+    .top-nav-row .top-nav-left .menu-btn { border-radius: 50%; }
+    .top-nav-row .skh-post-btn { border-radius: 11px; }
+    .top-nav-row .top-nav-left .menu-btn svg,
+    .top-nav-row .skh-icon-btn svg { width: 17px; height: 17px; }
+    .top-nav-row .skh-post-btn svg { width: 17px; height: 17px; }
+    .top-nav-row .top-nav-icons { gap: 5px !important; padding-left: 0; }
+    .top-nav-row .skh-count { min-width: 16px; height: 16px; line-height: 16px; font-size: 9.5px; top: -4px; right: -4px; }
+}
+
+/* Simu ndogo sana (≤375 / 320): vitufe 32px, nafasi 4px — bado vinaonekana VYOTE */
+@media (max-width: 375px) {
+    .top-nav-row { column-gap: 4px; padding: 6px 8px; }
+    .top-nav-row .top-nav-left { gap: 4px; }
+    .top-nav-row .skh-brand { gap: 3px; }
+    .top-nav-row .skh-brand-logo { height: 25px; }
+    .top-nav-row .skh-brand-word { font-size: 17px; letter-spacing: -.4px; }
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 32px; height: 32px; }
+    .top-nav-row .skh-post-btn { border-radius: 10px; }
+    .top-nav-row .top-nav-left .menu-btn svg,
+    .top-nav-row .skh-icon-btn svg { width: 16px; height: 16px; }
+    .top-nav-row .skh-post-btn svg { width: 16px; height: 16px; }
+    .top-nav-row .top-nav-icons { gap: 4px !important; }
+}
+
+/* Desktop: vitufe 42px, nafasi 10px — kila kitu kina nafasi ya kupumua */
+@media (min-width: 900px) {
+    .top-nav-row .skh-post-btn { width: 42px; height: 42px; border-radius: 13px; }
+    .top-nav-row .skh-post-btn svg { width: 20px; height: 20px; }
+}
+
+/* ============================================================
+   [R6t · JOB 25] KINGA YA KUBANA — hakuna kitufe kinachokazwa
+   ------------------------------------------------------------
+   `.top-nav-left` ilikuwa na flex:0 1 auto, hivyo kwenye simu ndogo sana
+   hamburger ilibanjwa hadi 18px. Sasa kila kitufe ni flex:0 0 auto na
+   brand pekee inayoweza kupungua — kwa vipimo vilivyowekwa (hakuna squeeze).
+   ============================================================ */
+.top-nav-row .top-nav-left .menu-btn,
+.top-nav-row .skh-post-btn,
+.top-nav-row .skh-icon-btn { flex: 0 0 auto; }
+.top-nav-row .skh-brand { flex: 0 1 auto; min-width: 0; }
+.top-nav-row .top-nav-left { margin-right: 8px; }
+.top-nav-row .top-nav-icons { flex: 0 0 auto; margin-left: auto; }
+
+/* Simu ndogo sana (≤340px: 320px n.k.) — kila kitu kinabaki, nafasi inatosha */
+@media (max-width: 340px) {
+    .top-nav-row { column-gap: 3px; padding: 6px 7px; }
+    .top-nav-row .top-nav-left { gap: 3px; margin-right: 6px; }
+    .top-nav-row .skh-brand { gap: 3px; }
+    .top-nav-row .skh-brand-logo { height: 22px; }
+    .top-nav-row .skh-brand-word { font-size: 15.5px; letter-spacing: -.3px; }
+    .top-nav-row .skh-brand-arc { height: 3px; border-bottom-width: 2px; }
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 30px; height: 30px; }
+    .top-nav-row .skh-post-btn { border-radius: 9px; }
+    .top-nav-row .top-nav-left .menu-btn svg,
+    .top-nav-row .skh-icon-btn svg,
+    .top-nav-row .skh-post-btn svg { width: 15px; height: 15px; }
+    .top-nav-row .top-nav-icons { gap: 3px !important; }
+}
+
+/* ============================================================
+   [R6t · JOB 25] VITUFE VYA HEADER VIWE MRA`BA SAWA (si mviringo mrefu)
+   ------------------------------------------------------------
+   css/26-design-system.css:601 inaweka `button { min-height: 40px }` — hiyo
+   ilikuwa inavuta kila kitufe cha header hadi 40px kimo, kikionekana kama
+   "lozenge" (34×40). Hapa tunadhibiti min-height pamoja na upana ili vitufe
+   vyote viwe MRA`BA (square) na vilingane kimo na upana.
+   ============================================================ */
+.top-nav-row .top-nav-left .menu-btn,
+.top-nav-row .skh-icon-btn,
+.top-nav-row .skh-post-btn { min-height: 0; }
+
+/* Base (tablet 431–860): 38×38 */
+@media (max-width: 860px) {
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 38px; height: 38px; min-height: 38px; }
+}
+/* Simu ≤430: 36×36 */
+@media (max-width: 430px) {
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 36px; height: 36px; min-height: 36px; }
+}
+/* Simu ≤375: 33×33 */
+@media (max-width: 375px) {
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 33px; height: 33px; min-height: 33px; }
+}
+/* Simu ≤340: 30×30 */
+@media (max-width: 340px) {
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 30px; height: 30px; min-height: 30px; }
+}
+/* Desktop: 42×42 */
+@media (min-width: 900px) {
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 42px; height: 42px; min-height: 42px; }
+    .top-nav-row .top-nav-left .menu-btn { border-radius: 50%; }
+}
+
+/* ============================================================
+   [R6t · JOB 25] KAMUSI YA SOKOHAI — kichwa hakikatiki kushoto
+   ------------------------------------------------------------
+   Kasoro iliyokuwepo: `.skh-sheet-head` ilikuwa na upana wa "max-content"
+   (471px) ndani ya sheet ya 390px kwa sababu `align-items:flex-end` ya sheet,
+   hivyo kichwa kilisogea kushoto na kitufe cha "Rudi" kikatokea nje ya kioo.
+   Sasa: kila kitu kinakaa ndani ya upana wa kioo; maelezo madogo yanajipanga
+   mistari miwili badala ya kukatwa.
+   ============================================================ */
+#skhKamusiPage .skh-k-sheet { align-items: stretch !important; }
+#skhKamusiPage .skh-sheet-head,
+#skhKamusiPage .skh-sheet-search,
+#skhKamusiPage .skh-k-results,
+#skhKamusiPage .skh-k-tabs { width: 100% !important; max-width: 100% !important; box-sizing: border-box; }
+#skhKamusiPage .skh-sheet-head { align-items: flex-start !important; }
+#skhKamusiPage .skh-sheet-head > div { min-width: 0 !important; flex: 1 1 auto !important; }
+#skhKamusiPage .skh-sheet-title { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2; }
+#skhKamusiPage .skh-sheet-sub { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.3; }
+#skhKamusiPage .skh-k-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ============================================================
+   [R6u · JOB 26] POST IWE KATIKATI — isionekane kama sehemu ya LOGO
+   ------------------------------------------------------------
+   Tatizo: Post ilikuwa ndani ya kundi la logo (`.top-nav-left`), imegusa jina
+   "SokoHai" na kuonekana kama sehemu ya brand.
+   Sasa: Post ni mtoto wa moja kwa moja wa `.top-nav-row`, na row inatumia
+   `justify-content: space-between` → nafasi KUSHOTO ya Post = nafasi KULIA
+   yake (balanced sawa). Kundi la logo linabaki kushoto, ikoni kulia.
+   Jina limepunguzwa kwa upole ili Post ipate nafasi ya kupumua;
+   LOGO haijabadilishwa ukubwa.
+   ============================================================ */
+
+.top-nav-row { justify-content: space-between !important; column-gap: 0; }
+.top-nav-row .top-nav-left { margin-right: 0 !important; }
+.top-nav-row .top-nav-icons { margin-left: 0 !important; padding-left: 0 !important; }
+.top-nav-row .skh-post-btn { flex: 0 0 auto; margin: 0; }
+
+/* nafasi ya chini ya kupumua kati ya makundi (isibanane kabisa) */
+.top-nav-row > .top-nav-left { min-width: 0; }
+
+/* Simu kubwa / tablet ndogo: jina linapungua kwa upole */
+@media (max-width: 860px) {
+    .top-nav-row .skh-brand-word { font-size: 22px; letter-spacing: -.7px; }
+}
+/* Simu: jina limepunguzwa kidogo ili Post ipate nafasi ya kati */
+@media (max-width: 430px) {
+    .top-nav-row { padding: 7px 10px; }
+    .top-nav-row .skh-brand-word { font-size: 17px; letter-spacing: -.45px; }
+    /* [R6u · fix 5] LOGO HAIGUSWI — hakuna height override hapa (asili: css/57). */
+}
+@media (max-width: 375px) {
+    .top-nav-row .skh-brand-word { font-size: 15.5px; letter-spacing: -.35px; }
+}
+@media (max-width: 340px) {
+    .top-nav-row .skh-brand-word { font-size: 14.5px; letter-spacing: -.3px; }
+}
+/* Desktop: nafasi kubwa zaidi kati ya makundi matatu */
+@media (min-width: 900px) {
+    .top-nav-row { padding-left: 18px; padding-right: 18px; }
+    /* [R6u · fix 6] Desktop: jina linarudi kwenye saizi asili 38px (nafasi ipo
+       kwa wingi: ≥380px kila upande), hakuna haja ya kulipunguza hapa. */
+    .top-nav-row .skh-brand-word { font-size: 38px; letter-spacing: -1.1px; }
+}
+
+/* ============================================================
+   [R6u · JOB 26 · fix] MPANGILIO: left → POST → icons (order wazi)
+   ------------------------------------------------------------
+   css/57 (max-width:860) ina `order:1` kwa left na `order:2` kwa icons —
+   Post (order 0) iliruka mbele ya logo. Hapa tunaweka order rasmi kwa
+   kila ukubwa: 1 = kundi la logo, 2 = POST, 3 = ikoni za kulia.
+   ============================================================ */
+.top-nav-row > .top-nav-left  { order: 1 !important; }
+.top-nav-row > .skh-post-btn  { order: 2 !important; }
+.top-nav-row > .top-nav-icons { order: 3 !important; }
+
+/* Desktop: makundi mawili ya pembeni yana upana SAWA → Post iko KATIKATI
+   halisi ya mstari, na nafasi zote mbili ni sawa. */
+@media (min-width: 900px) {
+    .top-nav-row > .top-nav-left  { flex: 1 1 0; justify-content: flex-start; }
+    .top-nav-row > .top-nav-icons { flex: 1 1 0; justify-content: flex-end; }
+}
+
+/* Simu: jina limepunguzwa kwa upole (logo HAIBADILIKI) ili Post ipate nafasi */
+@media (max-width: 430px) {
+    .top-nav-row .skh-brand-word { font-size: 15px !important; letter-spacing: -.35px; }
+    .top-nav-row .skh-brand-gap, .top-nav-row .skh-brand { gap: 4px; }
+}
+@media (max-width: 375px) {
+    .top-nav-row .skh-brand-word { font-size: 14px !important; letter-spacing: -.3px; }
+}
+@media (max-width: 340px) {
+    .top-nav-row .skh-brand-word { font-size: 13.5px !important; letter-spacing: -.25px; }
+}
+
+/* [R6u · JOB 26 · fix 2] KATIKATI HALISI kila ukubwa:
+   makundi mawili ya pembeni yanapewa upana SAWA (flex:1 1 0). Post inakuwa
+   katikati kamili ya mstari; jina linapungua kwa upole kama nafasi ni finyu
+   (logo haibadilishwi). */
+.top-nav-row > .top-nav-left  { flex: 1 1 0; min-width: 0; justify-content: flex-start; }
+.top-nav-row > .top-nav-icons { flex: 1 1 0; min-width: 0; justify-content: flex-end; }
+.top-nav-row .skh-brand { max-width: 100%; }
+
+/* [R6u · JOB 26 · fix 3] Nafasi ya kupumua: punguza padding ya pembeni
+   (sio saizi ya vitufe) ili Post ibaki KATIKATI HALISI na pengo ≥10px
+   kati yake na jina/ikoni. Hakuna kitufe kinachobanwa. */
+@media (max-width: 430px) {
+    .top-nav-row { padding: 7px 6px; column-gap: 8px; }
+}
+@media (max-width: 340px) {
+    .top-nav-row { padding: 6px 5px; column-gap: 6px; }
+    .top-nav-row .skh-brand-word { font-size: 13px !important; }
+}
+
+/* [R6u · JOB 26 · fix 4] Pengo la Post → ikoni liongezeke (vitufe 2px dogo
+   zaidi kwenye simu, nafasi kati yao 4px) — Post ibaki katikati halisi na
+   isikaribiane na ikoni. Hakuna kitufe kinachofichwa. */
+@media (max-width: 430px) {
+    .top-nav-row .top-nav-icons { gap: 4px !important; }
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 34px; height: 34px; min-height: 34px; }
+    .top-nav-row .top-nav-left .menu-btn svg,
+    .top-nav-row .skh-icon-btn svg,
+    .top-nav-row .skh-post-btn svg { width: 17px; height: 17px; }
+}
+@media (max-width: 375px) {
+    .top-nav-row .top-nav-icons { gap: 4px !important; }
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 32px; height: 32px; min-height: 32px; }
+}
+@media (max-width: 340px) {
+    .top-nav-row .top-nav-icons { gap: 3px !important; }
+    .top-nav-row .top-nav-left .menu-btn,
+    .top-nav-row .skh-icon-btn,
+    .top-nav-row .skh-post-btn { width: 29px; height: 29px; min-height: 29px; }
+}
+
+/* ============================================================
+   [R6w · JOB 27] IKONI KWENYE TABS ZA MODES (Soko / Huduma / Usafiri)
+   ------------------------------------------------------------
+   Ombi: "wek tu icon" kwenye Mnada, Soko Huru, Bei Kushuka, Jumla,
+   Group Buy, Mahali/Physical, Mtandaoni, Chakula, Kukodisha, Watu,
+   Vifurushi, Mizigo, Dharura.
+   Ikoni zinatoka js/18-icons.js (SVG halisi, currentColor, hakuna emoji)
+   kupitia `data-skh-icon` + `data-skh-size`. Hapa tunadhibiti saizi,
+   mpangilio na mwonekano pekee — hakuna kubadilisha rangi za tab.
+   ============================================================ */
+.market-modes-nav .mode-tab-btn { gap: 6px; }
+.market-modes-nav .mode-tab-btn > svg {
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+    opacity: .92;
+    transition: opacity .2s ease, transform .2s ease;
+}
+.market-modes-nav .mode-tab-btn.active > svg { opacity: 1; }
+.market-modes-nav .mode-tab-btn:hover > svg { transform: translateY(-.5px); }
+.market-modes-nav .mode-tab-btn:focus-visible > svg { opacity: 1; }
+
+/* Simu: ikoni ndogo kwa 1px ili chips zisibane (hazifichwi, zinaslide) */
+@media (max-width: 430px) {
+    .market-modes-nav .mode-tab-btn { gap: 5px; }
+    .market-modes-nav .mode-tab-btn > svg { width: 14px; height: 14px; }
+}

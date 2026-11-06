@@ -1,0 +1,520 @@
+/* ================================================================
+   css/60-chat-premium.css — SokoHai CHAT PREMIUM (Job 20)
+   ----------------------------------------------------------------
+   Tabaka la mwisho (limepakiwa baada ya css/59) lenye maboresho ya
+   MUONEKANO tu kwa Chat: conversation list, headers, spacing.
+
+   SHERIA: PRESERVE + IMPROVE + ADD
+   - Hakuna markup, ID, route, listener au logic iliyobadilishwa.
+   - Kila selector iko chini ya #chatListModal ili kuepuka kuathiri
+     sehemu nyingine za mfumo.
+   - Rangi: white/light, blue #4D91AA (primary), green #18A982
+     (secondary), gold #D8B83A (decorative kidogo).
+   ================================================================ */
+
+/* ---------------------------------------------------------- 1. SHELL */
+#chatListModal .ch-inbox-shell {
+    background: #FFFFFF;
+}
+#chatListModal .ch-inbox-head {
+    border-bottom: 1px solid #EEF3F1;
+    padding: 12px 14px;
+}
+#chatListModal .ch-inbox-title b { font-size: 15px; letter-spacing: -.1px; }
+#chatListModal .ch-inbox-title small { font-size: 11.5px; color: #6A8580; font-weight: 500; }
+
+/* ---------------------------------------------------------- 2. SEARCH */
+#chatListModal .ch-inbox-search {
+    margin: 10px 12px 8px;
+    border: 1px solid #E4ECEA;
+    border-radius: 12px;
+    background: #FAFCFB;
+    height: 42px;
+    transition: border-color .15s ease, background .15s ease;
+}
+#chatListModal .ch-inbox-search:focus-within {
+    border-color: #B9D3DC;        /* blue-soft */
+    background: #FFFFFF;
+}
+#chatListModal .ch-inbox-search input { font-size: 13px; color: #18352D; }
+#chatListModal .ch-inbox-search input::placeholder { color: #93A8A3; }
+
+/* ---------------------------------------------------------- 3. CHIPS */
+#chatListModal .ch-inbox-chips {
+    padding: 2px 12px 8px;
+    gap: 7px;
+    scrollbar-width: none;
+}
+#chatListModal .ch-inbox-chips::-webkit-scrollbar { display: none; }
+#chatListModal .ch-tab {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    border-radius: 999px;
+    border: 1px solid #E4ECEA;
+    background: #FFFFFF;
+    color: #4A6660;
+    transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+#chatListModal .ch-tab:hover { border-color: #CFE0DA; background: #F7FAF9; }
+#chatListModal .ch-tab.active {
+    background: #4D91AA;                /* primary blue */
+    border-color: #4D91AA;
+    color: #FFFFFF;
+}
+
+/* ---------------------------------------------------------- 4. LIST */
+#chatListModal #inboxList.ch-inbox-scroll {
+    padding: 2px 0 18px;
+    background: #FFFFFF;
+}
+
+/* Vichwa vya sehemu (Watu / Groups / Iliyobandikwa) */
+#chatListModal .ch-inbox-sec {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 4px 0 2px;
+    padding: 8px 14px 6px;
+    background: #FFFFFF;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #8AA29C;
+    border-bottom: 1px solid #F3F7F6;
+}
+
+/* ---------------------------------------------------------- 5. ROW */
+#chatListModal #inboxList .ch-contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 68px;
+    padding: 10px 14px;
+    background: #FFFFFF;
+    border: 0;
+    border-bottom: 1px solid #F2F6F5;
+    border-radius: 0;
+    cursor: pointer;
+    transition: background .13s ease;
+}
+#chatListModal #inboxList .ch-contact:last-child { border-bottom: 0; }
+@media (hover: hover) {
+    #chatListModal #inboxList .ch-contact:hover { background: #FAFCFB; }
+    #chatListModal #inboxList .ch-contact:hover .ch-cc-side { opacity: 1; }
+}
+#chatListModal #inboxList .ch-contact:active { background: #F5F9F8; }
+
+/* A. AVATAR */
+#chatListModal #inboxList .ch-cc-avatar,
+#chatListModal #inboxList .ch-identity-avatar {
+    flex: 0 0 auto;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px;
+    border-radius: 50% !important;
+    overflow: hidden;
+    position: relative;
+    display: grid;
+    place-items: center;
+    background: #F1F6F4;
+}
+#chatListModal #inboxList .ch-cc-avatar img,
+#chatListModal #inboxList .ch-identity-avatar img {
+    width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;
+}
+#chatListModal #inboxList .ch-cc-avatar > span,
+#chatListModal #inboxList .ch-identity-avatar > span {
+    font-size: 15px;
+    font-weight: 800;
+    color: #17604E;
+}
+#chatListModal .ch-cc-avatar.ch-identity-avatar.is-group > span,
+#chatListModal .ch-cc-avatar.is-group { background: #EAF8F2; }
+#chatListModal .ch-cc-avatar.is-order { background: #EAF3FA; }
+
+/* B. IDENTITY + C. PREVIEW */
+#chatListModal #inboxList .ch-cc-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+#chatListModal #inboxList .ch-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+#chatListModal #inboxList .ch-name-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 14px;
+    font-weight: 700;
+    color: #18352D;
+    line-height: 1.25;
+}
+#chatListModal #inboxList .ch-name-block > span:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+#chatListModal .ch-verified {
+    flex: 0 0 auto;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: #4D91AA;
+    position: relative;
+    display: inline-block;
+}
+#chatListModal .ch-verified::after {
+    content: '';
+    position: absolute;
+    left: 3.5px; top: 3px;
+    width: 4px; height: 6.5px;
+    border-right: 1.6px solid #fff;
+    border-bottom: 1.6px solid #fff;
+    transform: rotate(40deg);
+}
+
+/* Preview: mstari 1–2 kisha ellipsis */
+#chatListModal #inboxList .ch-cc-msg {
+    font-size: 12.5px !important;
+    line-height: 1.35;
+    color: #7A918B;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+#chatListModal .ch-cc-msg.has-draft { color: #B4802A; }
+#chatListModal .ch-draft-badge { color: #B4802A; font-weight: 700; }
+#chatListModal #inboxList .ch-cc-meta {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #9DB3AD;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Badge za aina (GROUP / ORDER GROUP) — ndogo, isichukue nafasi */
+#chatListModal #inboxList .ch-type-badge {
+    flex: 0 0 auto;
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: .3px;
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: #EAF8F2;
+    color: #0F7A5E;
+}
+#chatListModal #inboxList .ch-type-badge.is-order { background: #EAF3FA; color: #2F6F8F; }
+
+/* D. TIME + UNREAD */
+#chatListModal #inboxList .ch-cc-side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 46px;
+}
+#chatListModal #inboxList .ch-cc-time {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #9DB3AD;
+    white-space: nowrap;
+}
+#chatListModal #inboxList .ch-unread {
+    min-width: 19px;
+    height: 19px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #18A982;
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+#chatListModal #inboxList .ch-unread.is-group { background: #4D91AA; }
+#chatListModal #inboxList .ch-unread.is-order { background: #2F6F8F; }
+#chatListModal #inboxList .ch-state-badge {
+    font-size: 9px;
+    font-weight: 800;
+    color: #8AA29C;
+    background: #F2F6F5;
+    border-radius: 5px;
+    padding: 1.5px 5px;
+    letter-spacing: .2px;
+}
+
+/* Conversation isiyosomwa: jina zito + preview nyeusi zaidi */
+#chatListModal #inboxList .ch-unread-row .ch-name-block { font-weight: 800; color: #10261F; }
+#chatListModal #inboxList .ch-unread-row .ch-cc-msg { color: #3D5A53 !important; font-weight: 600; }
+#chatListModal #inboxList .ch-unread-row .ch-cc-time { color: #17604E; font-weight: 800; }
+
+/* Pin: icon ndogo + accent ya kijani (haichukui nafasi) */
+#chatListModal #inboxList .ch-contact.ch-pinned {
+    background: #FBFEFC;
+    box-shadow: inset 3px 0 0 #18A982;
+}
+#chatListModal #inboxList .ch-contact.ch-pinned .ch-name-block::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 10px; height: 10px;
+    background: #18A982;
+    -webkit-mask: no-repeat center/10px 10px url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M12 17v5'/><path d='M9 10.8V4h6v6.8l2.4 2.6a1 1 0 0 1-.7 1.6H7.3a1 1 0 0 1-.7-1.6z'/></svg>") center/10px 10px;
+    mask: no-repeat center/10px 10px url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M12 17v5'/><path d='M9 10.8V4h6v6.8l2.4 2.6a1 1 0 0 1-.7 1.6H7.3a1 1 0 0 1-.7-1.6z'/></svg>") center/10px 10px;
+}
+
+/* Business account: avatar yenye pete nyepesi ya blue (identity ya biashara) */
+#chatListModal #inboxList .ch-business-row .ch-cc-avatar { box-shadow: 0 0 0 2px #EAF3FA inset; }
+
+/* Order group progress ndogo */
+#chatListModal #inboxList .ch-order-progress { font-size: 10px; color: #2F6F8F; font-weight: 700; }
+
+/* ---------------------------------------------------------- 6. EMPTY */
+#chatListModal #inboxList > div { color: #6A8580; }
+
+/* ---------------------------------------------------------- 7. DESKTOP */
+@media (min-width: 900px) {
+    #chatListModal .ch-inbox-shell { max-width: 760px; margin: 0 auto; }
+    #chatListModal #inboxList .ch-contact { padding: 11px 16px; min-height: 70px; }
+    #chatListModal #inboxList .ch-cc-avatar,
+    #chatListModal #inboxList .ch-identity-avatar { width: 48px !important; height: 48px !important; }
+    #chatListModal #inboxList .ch-name-block { font-size: 14.5px; }
+    #chatListModal #inboxList .ch-cc-msg { font-size: 13px; }
+}
+
+/* ---------------------------------------------------------- 8. OVERRIDES
+   css/34-chat-inbox-identity.css inatumia !important na kuifanya kila row
+   iwe "kadi" yenye kivuli. Job 20 inataka list safi: dividers nyepesi,
+   hakuna kivuli, avatar 46px, jina 14px. Tabaka hili ni la mwisho. */
+#chatListModal #inboxList .ch-contact,
+#chatListModal #inboxList .ch-contact.ch-tint-group,
+#chatListModal #inboxList .ch-contact.ch-tint-group-order,
+#chatListModal #inboxList .ch-contact.ch-pinned {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    padding: 11px 14px !important;
+    min-height: 68px !important;
+    background: #fff !important;
+    border: 0 !important;
+    border-bottom: 1px solid #F2F6F5 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    overflow: hidden !important;
+}
+#chatListModal #inboxList .ch-contact:last-child { border-bottom: 0 !important; }
+#chatListModal #inboxList .ch-contact:hover {
+    background: #FAFCFB !important;
+    box-shadow: none !important;
+    transform: none !important;
+    border-bottom-color: #EDF3F1 !important;
+}
+#chatListModal #inboxList .ch-contact.ch-pinned { background: #FBFEFC !important; }
+#chatListModal #inboxList .ch-contact.ch-pinned:hover { background: #F7FCF9 !important; }
+/* Kistari cha pembeni ni kiashiria KIMOJA tu: blue = haijasomwa, green = pinned */
+#chatListModal #inboxList .ch-contact::before {
+    top: 14px !important; bottom: 14px !important; left: 0 !important;
+    width: 3px !important; border-radius: 0 3px 3px 0 !important;
+    background: transparent !important;
+}
+#chatListModal #inboxList .ch-contact.ch-unread-row::before { background: #4D91AA !important; }
+#chatListModal #inboxList .ch-contact.ch-pinned::before { background: #18A982 !important; }
+
+/* Avatar */
+#chatListModal #inboxList .ch-cc-avatar,
+#chatListModal #inboxList .ch-identity-avatar {
+    width: 46px !important; height: 46px !important; min-width: 46px !important;
+    border-radius: 50% !important;
+    box-shadow: none !important;
+    border: 0 !important;
+}
+#chatListModal #inboxList .ch-business-row .ch-cc-avatar { box-shadow: 0 0 0 2px #EAF3FA inset !important; }
+
+/* Jina: hakuna "chip" yenye border/padding */
+#chatListModal #inboxList .ch-name-block {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    max-width: 100% !important;
+    gap: 4px !important;
+}
+#chatListModal #inboxList .ch-unread-row .ch-name-block { font-weight: 800 !important; }
+#chatListModal #inboxList .ch-cc-msg { font-size: 12.5px !important; }
+#chatListModal #inboxList .ch-cc-time { font-size: 10.5px !important; }
+
+@media (min-width: 900px) {
+    #chatListModal #inboxList .ch-contact { padding: 12px 18px !important; min-height: 70px !important; }
+    #chatListModal #inboxList .ch-cc-avatar,
+    #chatListModal #inboxList .ch-identity-avatar { width: 48px !important; height: 48px !important; }
+    #chatListModal #inboxList .ch-name-block { font-size: 14.5px !important; }
+    #chatListModal #inboxList .ch-cc-msg { font-size: 13px !important; }
+}
+
+/* ---------------------------------------------------------- 9. POLISH
+   Avatar ya herufi iwe na duara laini (isianze hewani) na jina la
+   kikundi lionekane kikamilifu zaidi kabla ya kukatwa. */
+#chatListModal #inboxList .ch-cc-avatar,
+#chatListModal #inboxList .ch-identity-avatar {
+    background: #F1F6F4 !important;
+    display: grid !important;
+    place-items: center !important;
+}
+#chatListModal #inboxList .ch-cc-avatar.is-group,
+#chatListModal #inboxList .ch-identity-avatar.is-group { background: #EAF8F2 !important; }
+#chatListModal #inboxList .ch-cc-avatar.is-order { background: #EAF3FA !important; }
+#chatListModal #inboxList .ch-cc-avatar > span,
+#chatListModal #inboxList .ch-identity-avatar > span {
+    font-size: 15px !important; font-weight: 800 !important; color: #17604E !important;
+    display: grid !important; place-items: center !important;
+}
+#chatListModal #inboxList .ch-name-row { gap: 5px !important; }
+#chatListModal #inboxList .ch-name-block {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+#chatListModal #inboxList .ch-name-block > span:first-child {
+    max-width: 100% !important;
+}
+#chatListModal #inboxList .ch-type-badge {
+    flex: 0 0 auto !important;
+    font-size: 8px !important;
+    padding: 2px 4px !important;
+    letter-spacing: .2px !important;
+}
+
+/* Jina la kikundi lionekane kikamilifu: badge ndogo, jina lichukue nafasi */
+#chatListModal #inboxList .ch-type-badge {
+    font-size: 7.5px !important;
+    padding: 1.5px 4px !important;
+    max-width: 62px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (max-width: 420px) {
+    #chatListModal #inboxList .ch-type-badge { max-width: 52px; }
+}
+
+/* ================================================================
+   [R6n] CHAT LIST — SAFI, NYEUPE PEE, TYPOGRAPHY BORA
+   (WhatsApp / Facebook feel: white surface, hairline dividers,
+    hakuna kadi/kivuli, maandishi yaliyopangwa vizuri)
+   ================================================================ */
+#chatListModal,
+#chatListModal .ch-inbox-shell,
+#chatListModal #inboxList.ch-inbox-scroll,
+#chatListModal .ch-inbox-head,
+#chatListModal .ch-inbox-chips,
+#chatListModal #inboxChips,
+#chatListModal .ch-inbox-search {
+    background: #FFFFFF !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+#chatListModal .ch-inbox-head { border-bottom: 1px solid #EFF3F2 !important; }
+#chatListModal .ch-inbox-search {
+    border: 1px solid #E9EEED !important;
+    background: #FFFFFF !important;
+}
+#chatListModal .ch-inbox-search:focus-within { border-color: #C9DCE3 !important; }
+#chatListModal .ch-inbox-title b { font-size: 15.5px !important; font-weight: 800 !important; letter-spacing: -.2px; }
+#chatListModal .ch-inbox-title small { font-size: 11.5px !important; color: #7C8F8A !important; }
+
+/* Section headers: ndogo, tulivu */
+#chatListModal .ch-inbox-sec {
+    background: #FFFFFF !important;
+    border-bottom: 0 !important;
+    padding: 12px 16px 5px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: .7px !important;
+    color: #97A8A3 !important;
+}
+
+/* Rows: nyeupe pee, hairline divider */
+#chatListModal #inboxList .ch-contact,
+#chatListModal #inboxList .ch-contact.ch-tint-group,
+#chatListModal #inboxList .ch-contact.ch-tint-group-order,
+#chatListModal #inboxList .ch-contact.ch-pinned {
+    background: #FFFFFF !important;
+    border: 0 !important;
+    border-bottom: 1px solid #F1F4F3 !important;
+    padding: 12px 16px !important;
+    min-height: 70px !important;
+    gap: 13px !important;
+}
+#chatListModal #inboxList .ch-contact:hover,
+#chatListModal #inboxList .ch-contact.ch-pinned:hover { background: #F8FAF9 !important; }
+#chatListModal #inboxList .ch-contact.ch-pinned { background: #FFFFFF !important; }
+
+/* Typography ya row */
+#chatListModal #inboxList .ch-cc-avatar,
+#chatListModal #inboxList .ch-identity-avatar { width: 48px !important; height: 48px !important; min-width: 48px !important; }
+#chatListModal #inboxList .ch-cc-avatar > span,
+#chatListModal #inboxList .ch-identity-avatar > span { font-size: 16px !important; font-weight: 700 !important; }
+
+#chatListModal #inboxList .ch-name-block {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    letter-spacing: -.1px !important;
+    color: #0F1F1A !important;
+}
+#chatListModal #inboxList .ch-unread-row .ch-name-block { font-weight: 700 !important; }
+
+#chatListModal #inboxList .ch-cc-msg {
+    font-size: 13.5px !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+    color: #6B7B76 !important;
+    -webkit-line-clamp: 1 !important;    /* mstari mmoja — safi kama WhatsApp */
+}
+#chatListModal #inboxList .ch-unread-row .ch-cc-msg {
+    color: #4A5B55 !important;
+    font-weight: 500 !important;
+}
+#chatListModal #inboxList .ch-cc-time {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #9AA9A4 !important;
+    letter-spacing: .1px;
+}
+#chatListModal #inboxList .ch-unread-row .ch-cc-time { color: #18A982 !important; font-weight: 700 !important; }
+#chatListModal #inboxList .ch-cc-side { gap: 5px !important; min-width: 42px !important; }
+#chatListModal #inboxList .ch-cc-info { gap: 3px !important; }
+#chatListModal #inboxList .ch-name-row { gap: 5px !important; }
+
+/* Badge unread ndogo, safi */
+#chatListModal #inboxList .ch-unread {
+    min-width: 20px !important; height: 20px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important; font-weight: 700 !important;
+    background: #18A982 !important;
+}
+#chatListModal #inboxList .ch-unread.is-group { background: #4D91AA !important; }
+#chatListModal #inboxList .ch-type-badge {
+    background: #F1F5F4 !important; color: #6B7B76 !important;
+    font-weight: 700 !important; letter-spacing: .2px !important;
+}
+#chatListModal #inboxList .ch-state-badge { background: #F4F7F6 !important; color: #8FA09B !important; }
+#chatListModal #inboxList .ch-contact::before { top: 16px !important; bottom: 16px !important; width: 3px !important; }

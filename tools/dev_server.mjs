@@ -23,6 +23,15 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.argv[2] || process.env.PORT || 5055);
 const HOST = '0.0.0.0';
 
+function readBuild() {
+  try {
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const m = html.match(/name="skh-build"\s+content="([^"]+)"/);
+    return m ? m[1] : 'unknown';
+  } catch (e) { return 'unknown'; }
+}
+const BUILD = readBuild();
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -106,7 +115,7 @@ const server = http.createServer((req, res) => {
       'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma': 'no-cache',
       'Expires': '0',
-      'X-SokoHai-Build': 'HEADER-R5d-2026-11-05',
+      'X-SokoHai-Build': BUILD,
       'Access-Control-Allow-Origin': '*'
     };
     /* kwa HTML: futa HTTP cache ya kivinjari kila ukurasa unapopakiwa */

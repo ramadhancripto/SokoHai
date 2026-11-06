@@ -148,6 +148,58 @@
         return f ? 'assets/img/categories/' + f + '.webp' : null;
     }
 
+    /* Njia mbadala: app inaweza kuhudumiwa kutoka folda ndogo (mf. GitHub Pages
+       /SokoHai/) au route iliyopachikwa — hivyo tunajaribu njia kadhaa kabla ya
+       kuachana na picha. */
+    function photoCandidates(name) {
+        var f = PHOTO[name];
+        if (!f) return [];
+        return [
+            'assets/img/categories/' + f + '.webp',
+            './assets/img/categories/' + f + '.webp',
+            '../assets/img/categories/' + f + '.webp',
+            '/assets/img/categories/' + f + '.webp'
+        ];
+    }
+
+    function imgMarkup(name, cls, alt) {
+        var list = photoCandidates(name);
+        if (!list.length) return '';
+        var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
+        return '<img class="' + cls + '" src="' + list[0] + '" alt="' + esc(alt || labelOf(name)) + '"'
+             + ' data-i="0" data-cands="' + esc(JSON.stringify(list)) + '" data-initial="' + initial + '"'
+             + ' loading="lazy" decoding="async" onerror="window.skhCatImgError&&window.skhCatImgError(this)">';
+    }
+
+    /* Picha ikikosekana kabisa: weka "tile" nzuri badala ya picha tupu.
+       Hivyo kategoria haionekani tupu hata faili likikosekana. */
+    window.skhCatImgError = function (img) {
+        if (!img) return;
+        var list = [];
+        try { list = JSON.parse(img.getAttribute('data-cands') || '[]'); } catch (e) {}
+        var i = (+img.getAttribute('data-i') || 0) + 1;
+        if (i < list.length) {
+            img.setAttribute('data-i', String(i));
+            img.src = list[i];
+            return;
+        }
+        var initial = img.getAttribute('data-initial') || '?';
+        var host = img.parentElement;
+        if (host) {
+            host.classList.add('skh-img-fallback');
+            host.dataset.initial = initial;
+            if (!host.querySelector('.skh-img-fallback-letter')) {
+                var sp = document.createElement('span');
+                sp.className = 'skh-img-fallback-letter';
+                sp.setAttribute('aria-hidden', 'true');
+                sp.textContent = initial;
+                host.appendChild(sp);
+            }
+        }
+        img.style.display = 'none';
+        try { (window.__skhMissingCatImgs = window.__skhMissingCatImgs || new Set()).add(img.getAttribute('src')); } catch (e) {}
+    };
+
     function labelOf(name) {
         return LABEL[name] || String(name).replace(/\s*\([^)]*\)\s*$/, '');
     }
@@ -168,7 +220,7 @@
         names.forEach(function (n) {
             html += '<button type="button" class="cps-card" data-cat="' + esc(n) + '" title="' + esc(n) + '"'
                  + ' aria-pressed="false">'
-                 + '<span class="cps-card-img"><img src="' + photoUrl(n) + '" alt="' + esc(labelOf(n)) + '" loading="lazy" decoding="async"></span>'
+                 + '<span class="cps-card-img">' + imgMarkup(n, 'cps-photo') + '</span>'
                  + '<span class="cps-card-name">' + esc(labelOf(n)) + '</span></button>';
         });
         /* kadi ya mwisho: Category Explorer */
@@ -264,7 +316,7 @@
             var icon = box.querySelector('.cat-icon');
             if (url && icon) {
                 icon.classList.add('skh-cat-photo');
-                icon.innerHTML = '<img src="' + url + '" alt="' + esc(raw) + '" loading="lazy" decoding="async">';
+                icon.innerHTML = imgMarkup(matched, 'skh-cat-img', raw);
                 if (nameEl) nameEl.textContent = labelOf(matched);
             }
             box.dataset.cpsDone = '1';
@@ -292,12 +344,38 @@
             if (!txt) return;
             var sp = document.createElement('span');
             sp.className = 'cps-chip-ico';
-            sp.innerHTML = '<img src="' + parentPhoto + '" alt="" aria-hidden="true" loading="lazy">';
+            sp.innerHTML = imgMarkup(lastCat, 'cps-chip-img', '');
             chip.insertBefore(sp, chip.firstChild);
             chip.dataset.cpsChip = '1';
             chip.classList.add('cps-chip');
         });
     }
+
+    /* ---------------- 5. UKAGUZI WA PICHA (diagnostics) ----------------
+       Kama faili za picha hazipo kwenye kompyuta/server, tunatoa orodha
+       kamili kwenye console ili ijulikane papo hapo. */
+    window.skhCategoryAssetCheck = function () {
+        var slugs = [];
+        for (var k in PHOTO) slugs.push(PHOTO[k]);
+        var base = 'assets/img/categories/';
+        var results = [];
+        return Promise.all(slugs.map(function (f) {
+            var url = base + f + '.webp';
+            return fetch(url, { method: 'HEAD' })
+                .then(function (r) { results.push({ file: url, ok: r.ok, status: r.status }); })
+                .catch(function () { results.push({ file: url, ok: false, status: 0 }); });
+        })).then(function () {
+            var missing = results.filter(function (r) { return !r.ok; });
+            if (missing.length) {
+                console.warn('[SokoHai] Picha ' + missing.length + '/' + results.length +
+                    ' za kategoria hazipo. Weka folda "assets/img/categories/" kwenye mzizi wa app. Orodha:',
+                    missing.map(function (m) { return m.file; }));
+            } else {
+                console.log('[SokoHai] Picha zote ' + results.length + ' za kategoria zipo ✓');
+            }
+            return { total: results.length, missing: missing.map(function (m) { return m.file; }) };
+        });
+    };
 
     function watchExplorer() {
         var modal = document.getElementById('categoryModal');
@@ -324,6 +402,8 @@
         watchExplorer();
         decorateSubchips();
         setInterval(decorateSubchips, 1500);
+        /* ukaguzi wa picha mara moja (console pekee) */
+        setTimeout(function () { try { window.skhCategoryAssetCheck(); } catch (e) {} }, 4000);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

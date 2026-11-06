@@ -334,7 +334,7 @@
 
     /* ---------------------------------------------------------- 3. RENDER */
     function labelsHTML(card) {
-        return card.labels.slice(0, 2).map(function (l) {
+        return card.labels.slice(0, 1).map(function (l) {
             return '<span class="skh-df-tag skh-df-tag--' + esc(l.tone) + '">' + esc(l.k) + '</span>';
         }).join('');
     }
@@ -356,6 +356,195 @@
         return 'Muuzaji';
     }
 
+    /* ---------------------------------------------------------- 3b. HALI / LIVE
+       Mstari wa "status" (ulikuwepo kwenye mfumo): vichwa vya post za bidhaa
+       (status za wauzaji) + LIVE activities zinazoendelea SASA. Data yote ni
+       record HALISI zile zile zilizopakiwa — hakuna kuunda bidhaa wala hali. */
+    function liveInfo(card) {
+        var o = card.raw || {};
+        var c = null;
+        try { c = (typeof window.skhModesCompute === 'function') ? window.skhModesCompute(o) : null; } catch (e) { c = null; }
+        if (card.kind === 'group_buy' && c && c.group) {
+            if (c.group.status === 'active') {
+                return { live: true, label: 'Wamejiunga ' + c.group.joined + '/' + c.group.target, kind: 'Nunua pamoja' };
+            }
+            return { live: false, label: '', kind: 'Nunua pamoja' };
+        }
+        if (card.kind === 'auction' && c && c.auction) {
+            if (!c.auction.ended) {
+                return { live: true, label: 'Zabuni ' + c.auction.totalBids, kind: 'Mnada' };
+            }
+            return { live: false, label: '', kind: 'Mnada' };
+        }
+        if (card.kind === 'price_drop' && c && c.drop) {
+            if (!c.drop.ended) {
+                return { live: true, label: 'Bei inashuka', kind: 'Bei kushuka' };
+            }
+            return { live: false, label: '', kind: 'Bei kushuka' };
+        }
+        return { live: false, label: '', kind: (KINDS[card.kind] || KINDS.product).label };
+    }
+
+    function kind3(kind) {
+        var m = { product: 'Bidhaa', service: 'Huduma', transport: 'Usafiri', group_buy: 'Pamoja', auction: 'Mnada', price_drop: 'Bei' };
+        return m[kind] || 'Bidhaa';
+    }
+
+    /* Rail ya status (Job 19c): mtu akisogeza (slide) ndio anaona zaidi —
+       live activities halisi mbele (Nunua pamoja, Mnada, Bei kushuka),
+       kisha post za bidhaa. Hakuna maneno ya kichwa; kila kadi ni
+       thumbnail + maneno mafupi mawili. */
+    function shortLabel(card, info) {
+        var nums = String(info.label || '').replace(/[^0-9\/]/g, '');
+        if (info.live) {
+            if (card.kind === 'group_buy' && nums) return 'Pamoja ' + nums;
+            if (card.kind === 'auction') return 'Mnada' + (nums ? ' ' + nums : '');
+            if (card.kind === 'price_drop') return 'Bei \u2193';
+            return 'Live';
+        }
+        /* Bila live: jina fupi la bidhaa — kila tile ionekane tofauti */
+        return String(card.title || kind3(card.kind)).slice(0, 12);
+    }
+
+    /* Status style (Facebook / WhatsApp): duara + pete, LIVE pill,
+       na idadi ya MIONEKANO (views) chini. Namba ni za record halisi. */
+    function viewsOf(card) {
+        var v = 0;
+        try { v = parseInt((card.raw && (card.raw.views || card.raw.viewCount || card.raw.viewsCount)) || 0, 10) || 0; } catch (e) { v = 0; }
+        if (!v && card.meta) {
+            card.meta.forEach(function (m) { if (m.t === 'wameona') v = Math.max(v, parseFloat(String(m.b).replace(/[^0-9.]/g, '')) || 0); });
+        }
+        return v;
+    }
+
+    function compactNum(n) {
+        n = parseInt(n, 10) || 0;
+        if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'K';
+        return String(n);
+    }
+
+    /* Lebo za KISWAHILI moja kwa moja (i18n haitafsiri maneno yasiyokuwa
+       keys za kamusi, kwa hiyo hapa tunatumia maneno yetu wenyewe). */
+    function typeLabel(card, info) {
+        if (card.sponsored && card.kind === 'group_buy') return 'Sponsored · Nunua Pamoja';
+        if (card.sponsored) return 'Sponsored';
+        if (card.video) return 'Video';
+        if (info.live) {
+            if (card.kind === 'group_buy') return 'Nunua Pamoja · Live';
+            if (card.kind === 'auction') return 'Mnada · Live';
+            if (card.kind === 'price_drop') return 'Bei Kushuka · Live';
+            return 'Live';
+        }
+        if (card.kind === 'group_buy') return 'Nunua Pamoja';
+        if (card.kind === 'auction') return 'Mnada';
+        if (card.kind === 'price_drop') return 'Bei Kushuka';
+        if (card.kind === 'service') return 'Huduma';
+        if (card.kind === 'transport') return 'Usafiri';
+        return 'Bidhaa Mpya';
+    }
+
+    /* CTA halisi kwa kila aina — inafungua module ile ile iliyopo. */
+    function ctaOf(card, info) {
+        if (card.kind === 'auction') return 'Toa Zabuni';
+        if (card.kind === 'group_buy') return 'Jiunge na Group';
+        if (card.kind === 'price_drop') return 'Nunua kwa Bei';
+        if (card.kind === 'service') return 'Uliza Huduma';
+        if (card.kind === 'transport') return 'Angalia Usafiri';
+        return 'Nunua Sasa';
+    }
+
+    /* Punguzo HALISI (%) kutoka modeData — hakuna kutunga. */
+    function discountOf(card) {
+        var c = null;
+        try { c = (typeof window.skhModesCompute === 'function') ? window.skhModesCompute(card.raw || {}) : null; } catch (e) { c = null; }
+        if (!c || !c.base) return 0;
+        var now = 0;
+        if (c.group && c.group.status === 'active') now = c.group.price;
+        else if (c.drop && !c.drop.ended) now = c.drop.currentPrice;
+        else if (c.auction && !c.auction.ended) now = c.auction.currentBid;
+        if (!now || now >= c.base) return 0;
+        return Math.round((1 - now / c.base) * 100);
+    }
+
+    function publisherRow(card) {
+        var ph = card.sellerPhoto || '';
+        var av = ph
+            ? '<img src="' + esc(ph) + '" alt="" loading="lazy" onerror="this.onerror=null;this.style.display=\'none\';">'
+            : '<span class="skh-df-uc-avini">' + esc(initials(card.seller || card.title)) + '</span>';
+        return '<span class="skh-df-uc-pubrow">' +
+            '<span class="skh-df-uc-av">' + av + '</span>' +
+            '<span class="skh-df-uc-pub">' + esc(String(card.seller || 'SokoHai').slice(0, 24)) + '</span>' +
+            '</span>';
+    }
+
+    /* Kadi ya update — muundo wa mock: media 128px, publisher, title,
+       maelezo mafupi, CTA. Kila kitu ni data/skills za mfumo. */
+    function updateCard(card, info) {
+        var img = card.image || placeholderImg();
+        var media = img
+            ? '<img src="' + esc(img) + '" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';">'
+            : '<span class="skh-df-uc-ph">' + esc(initials(card.seller || card.title)) + '</span>';
+        var off = discountOf(card);
+        var desc = String(card.promo || '').trim();
+        if (!desc || /^[-\s]+$/.test(desc)) desc = card.priceLabel || '';
+        if (!desc && card.meta && card.meta[0]) desc = (card.meta[0].b || '') + (card.meta[0].t ? ' ' + card.meta[0].t : '');
+        if (!desc) desc = card.title;
+
+        return '<article class="skh-df-uc' + (info.live ? ' is-live' : '') + (card.sponsored ? ' is-sponsored' : '') + '" ' +
+            'role="button" tabindex="0" data-df-id="' + esc(card.id) + '" data-df-col="' + esc(card.collection) + '" ' +
+            'data-df-kind="' + esc(card.kind) + '" aria-label="' + esc(card.title) + '">' +
+            '<span class="skh-df-uc-media">' + media +
+                '<span class="skh-df-uc-type">' + esc(typeLabel(card, info)) + '</span>' +
+                (off > 0 ? '<span class="skh-df-uc-off">-' + off + '%</span>' : '') +
+                (card.video
+                    ? '<span class="skh-df-uc-overlay" aria-hidden="true"><span class="skh-df-uc-playbtn">' +
+                      '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9,6 19,12 9,18"/></svg></span></span>'
+                    : '') +
+            '</span>' +
+            '<span class="skh-df-uc-body">' +
+                publisherRow(card) +
+                '<span class="skh-df-uc-title">' + esc(String(card.title || '').slice(0, 60)) + '</span>' +
+                '<span class="skh-df-uc-desc">' + esc(String(desc).slice(0, 90)) + '</span>' +
+            '</span>' +
+            '<span class="skh-df-uc-cta">' + esc(ctaOf(card, info)) + '</span>' +
+            '</article>';
+    }
+
+    function statusStripHTML() {
+        if (state.status !== 'ready' || !state.items.length) return '';
+        var live = [], rest = [];
+        state.items.forEach(function (c) {
+            var info = liveInfo(c);
+            c._live = info;
+            if (info.live) live.push(c);
+            else if (rest.length < 12) rest.push(c);
+        });
+        var rail = live.concat(rest);
+        if (!rail.length) return '';
+        return '<div class="skh-df-strip">' +
+            '<div class="skh-df-uhead">' +
+                '<span class="skh-df-uhead-l"><i class="skh-df-uhead-dot" aria-hidden="true"></i>' +
+                    '<span class="skh-df-uhead-t">Discover New Updates</span></span>' +
+                '<span class="skh-df-uhead-r">' +
+                    '<button type="button" class="skh-df-arrow" data-df-scroll="-1" aria-label="Nyuma">' +
+                        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>' +
+                    '<button type="button" class="skh-df-arrow" data-df-scroll="1" aria-label="Mbele">' +
+                        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>' +
+                '</span>' +
+            '</div>' +
+            '<div class="skh-df-updates" id="skhDfTiles">' +
+                rail.map(function (c) { return updateCard(c, c._live || liveInfo(c)); }).join('') +
+                '<button type="button" class="skh-df-uc skh-df-uc--all" data-df-all aria-label="Zote">' +
+                    '<span class="skh-df-uc-media skh-df-uc-media--all">' +
+                        '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>' +
+                    '<span class="skh-df-uc-body"><span class="skh-df-uc-title">Zote</span>' +
+                    '<span class="skh-df-uc-desc">Discover, vichujio na search</span></span>' +
+                '</button>' +
+            '</div>' +
+        '</div>';
+    }
+
     function cardHTML(card) {
         var k = KINDS[card.kind] || KINDS.product;
         var img = card.image || placeholderImg();
@@ -367,19 +556,18 @@
             ? '<span class="skh-df-play" aria-hidden="true"><span><svg viewBox="0 0 24 24" width="15" height="15" fill="#14453A"><polygon points="8,5 19,12 8,19"/></svg></span></span>'
             : '';
 
-        var priceHTML = card.priceLabel
-            ? '<span class="skh-df-price">' + esc(card.priceLabel) +
+        /* Maandishi MACHACHE: bei tupu + mstari mmoja mfupi wa maelezo. */
+        var priceTxt = card.priceLabel ? String(card.priceLabel).split(' / ')[0] : '';
+        var priceHTML = priceTxt
+            ? '<span class="skh-df-price">' + esc(priceTxt) +
               (card.oldPrice ? '<del>' + esc(tzs(card.oldPrice)) + '</del>' : '') + '</span>'
             : '';
 
-        var metaHTML = (card.status || (card.meta && card.meta.length))
-            ? '<span class="skh-df-meta">' +
-                (card.status ? '<b>' + esc(card.status) + '</b>' : '') +
-                (card.status && card.meta.length ? '<span class="skh-df-dot">·</span>' : '') +
-                (card.meta.slice(0, 1).map(function (m) {
-                    return (m.b ? '<b>' + esc(m.b) + '</b>' : '') + (m.b && m.t ? ' ' : '') + esc(m.t || '');
-                }).join('')) +
-              '</span>'
+        var metaTxt = '';
+        if (card.meta && card.meta[0]) metaTxt = String(card.meta[0].b || '') + (card.meta[0].t ? ' ' + card.meta[0].t : '');
+        else if (card.status) metaTxt = String(card.status);
+        var metaHTML = metaTxt.trim()
+            ? '<span class="skh-df-meta">' + esc(metaTxt.trim()) + '</span>'
             : '';
 
         return '<button type="button" class="skh-df-card' + (card.sponsored ? ' is-sponsored' : '') + '" ' +
@@ -393,8 +581,6 @@
             '</span>' +
             '<span class="skh-df-body">' +
                 '<span class="skh-df-name">' + esc(card.title) + '</span>' +
-                (card.promo ? '<span class="skh-df-promo">' + esc(String(card.promo).slice(0, 88)) + '</span>' : '') +
-                identityHTML(card, 20) +
                 '<span class="skh-df-cta" aria-hidden="true">' + esc(k.cta) + '</span>' +
             '</span></button>';
     }
@@ -413,18 +599,21 @@
     }
 
     function render() {
-        var track = $id('skhDfTrack');
-        if (!track) return;
-        track.innerHTML = (state.status === 'ready' && state.items.length)
-            ? state.items.map(cardHTML).join('')
-            : stateHTML();
-        if (track.parentNode) track.parentNode.style.display = '';
+        var track = $id('skhDfTrack');           /* sehemu ya kadi imeondolewa */
+        if (track) track.innerHTML = '';
+        syncGuestHint();
+        var hali = $id('skhDfHali');
+        if (hali) {
+            var html = statusStripHTML();
+            hali.innerHTML = html;
+            hali.style.display = html ? '' : 'none';
+        }
         updateNav();
     }
 
     function updateNav() {
         var track = $id('skhDfTrack');
-        if (!track) return;
+        if (!track) return;                                  /* hakuna rail ya kadi */
         var prev = document.querySelector('#skhDiscoverFeed .skh-df-nav--prev');
         var next = document.querySelector('#skhDiscoverFeed .skh-df-nav--next');
         if (!prev || !next) return;
@@ -438,30 +627,42 @@
         if ($id('skhDiscoverFeed')) return true;
         var inbox = $id('inboxList');
         if (!inbox || !inbox.parentNode) return false;
+        /* Mahali: mara moja baada ya SEARCH (kabla ya chips/ads/inbox) —
+           mpangilio: Header → Search → Discover → Conversation list. */
+        var anchorEl = $id('inboxChips') || inbox;
         var sec = document.createElement('section');
         sec.id = 'skhDiscoverFeed';
         sec.className = 'skh-df';
-        sec.setAttribute('aria-label', 'Gundua Biashara');
+        sec.setAttribute('aria-label', 'Discover New Updates');
         sec.innerHTML =
-            '<div class="skh-df-head"><div class="skh-df-titles">' +
-                '<span class="skh-df-title">Gundua Biashara</span>' +
-                '<span class="skh-df-sub">Matangazo na biashara zinazoendelea</span>' +
-            '</div><div class="skh-df-actions">' +
-                '<button type="button" class="skh-df-btn" data-df-all>Tazama zote</button>' +
-                '<button type="button" class="skh-df-btn skh-df-btn--ghost" data-df-hide>Ficha</button>' +
-            '</div></div>' +
-            '<div class="skh-df-rail">' +
-                '<button type="button" class="skh-df-nav skh-df-nav--prev" data-df-scroll="-1" aria-label="Rudi nyuma">' +
-                    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>' +
-                '<div class="skh-df-track" id="skhDfTrack"></div>' +
-                '<button type="button" class="skh-df-nav skh-df-nav--next" data-df-scroll="1" aria-label="Endelea mbele">' +
-                    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>' +
-            '</div>';
-        inbox.parentNode.insertBefore(sec, inbox);
+            '<div class="skh-df-hali-slot" id="skhDfHali"></div>' +
+            '';
+        if (anchorEl && anchorEl.parentNode) anchorEl.parentNode.insertBefore(sec, anchorEl);
+        else inbox.parentNode.insertBefore(sec, inbox);
         return true;
     }
 
     /* ---------------------------------------------------------- 5. FICHA */
+    /* Guest: inbox haina auth → module 93 haipaint. Tuweke maelekezo mafupi
+       (haitokei kwa mtumiaji aliyeingia — wakati huo module 93 inajaza list). */
+    function syncGuestHint() {
+        var inbox = $id('inboxList');
+        if (!inbox) return;
+        var hint = $id('skhDfGuestHint');
+        var authed = !!(window.skh && window.skh.currentUser);
+        if (authed || inbox.children.length) { if (hint) hint.remove(); return; }
+        if (hint) return;
+        hint = document.createElement('div');
+        hint.id = 'skhDfGuestHint';
+        hint.className = 'skh-df-guest';
+        hint.innerHTML = '<span class="skh-df-guest-ico" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg></span>' +
+            '<b>Ingia kuona mazungumzo</b>' +
+            '<span>Mazungumzo yako na wauzaji yataonekana hapa.</span>';
+        inbox.parentNode.insertBefore(hint, inbox.nextSibling);
+    }
+
     function isHidden() { try { return window.localStorage.getItem(LS_HIDDEN) === '1'; } catch (e) { return false; } }
     function setHidden(v) {
         try { if (v) window.localStorage.setItem(LS_HIDDEN, '1'); else window.localStorage.removeItem(LS_HIDDEN); } catch (e) {}
@@ -700,12 +901,25 @@
             '<div class="skh-df-all-head">' +
                 '<button type="button" class="skh-df-vclose" data-df-allback aria-label="Rudi">' +
                     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>' +
-                '<div class="skh-df-all-title"><b>Gundua Biashara</b><small>Matangazo na biashara zinazoendelea</small></div>' +
+                '<div class="skh-df-all-title"><b>Zote</b></div>' +
+                '<button type="button" class="skh-df-btn skh-df-btn--ghost" data-df-hide>Ficha</button>' +
+            '</div>' +
+            '<div class="skh-df-all-search">' +
+                '<span class="skh-df-all-search-ico" aria-hidden="true">' +
+                    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>' +
+                '<input type="search" id="skhDfAllSearch" placeholder="Tafuta matangazo, bidhaa, muuzaji..." autocomplete="off" data-df-allsearch>' +
             '</div>' +
             '<div class="skh-df-chips" data-df-chips></div>' +
             '<div class="skh-df-grid" data-df-grid></div>';
         document.body.appendChild(s);
         s.addEventListener('click', function (e) { if (e.target === s) { e.stopPropagation(); closeAll(); } });
+        /* Search ya Discover — listener MMOJA tu (sheet inatengenezwa mara moja). */
+        s.addEventListener('input', function (e) {
+            if (e.target && e.target.hasAttribute && e.target.hasAttribute('data-df-allsearch')) {
+                var on = s.querySelector('.skh-df-chip[aria-pressed="true"]');
+                renderAll(on ? on.getAttribute('data-df-filter') : 'all');
+            }
+        });
         bindLayer(s);
     }
 
@@ -726,9 +940,13 @@
                 esc(label) + '<span class="skh-df-chip-n">' + n + '</span></button>';
         }).join('');
 
-        var list = !filter || filter === 'all' ? state.items
+        var q = String((document.getElementById('skhDfAllSearch') || {}).value || '').trim().toLowerCase();
+        var base = !filter || filter === 'all' ? state.items
             : filter === 'sponsored' ? state.items.filter(function (c) { return c.sponsored; })
             : state.items.filter(function (c) { return c.kind === filter; });
+        var list = q ? base.filter(function (c) {
+            return (String(c.title || '') + ' ' + String(c.seller || '') + ' ' + String(c.promo || '')).toLowerCase().indexOf(q) !== -1;
+        }) : base;
 
         if (!list.length) {
             grid.innerHTML = '<div class="skh-df-empty"><b>' +
@@ -783,7 +1001,8 @@
             var track = $id('skhDfTrack');
             if (track) {
                 var dir = parseInt(nav.getAttribute('data-df-scroll'), 10) || 1;
-                track.scrollBy({ left: dir * Math.max(220, track.clientWidth * 0.8), behavior: 'smooth' });
+                var railEl = $id('skhDfTiles') || track;
+                railEl.scrollBy({ left: dir * 280, behavior: 'smooth' });
             }
             return;
         }

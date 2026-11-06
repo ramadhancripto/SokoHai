@@ -75,7 +75,7 @@ import { skh } from './00-bootstrap.js';
         sec_nearby_sub:   ['Fresh from sellers near you', 'Kutoka kwa wauzaji wa karibu yako'],
         sec_searched_sub: ['What buyers are searching now', 'Wanunuzi wanatafuta nini sasa'],
         see_all:      ['SEE ALL', 'ONA ZOTE'],
-        feed_title:   ['Marketplace', 'Soko la Mtandaoni'],
+        feed_title:   ['Marketplace', 'Uwanja wa Mchanganyiko'],
         loading_more: ['Loading more results...', 'Inatafuta matokeo zaidi...'],
 
         // --- Maelezo ya modes (setMarketMode modal) ---
@@ -203,11 +203,11 @@ import { skh } from './00-bootstrap.js';
         smp_view_btn:          ['View', 'Tazama'],
         smp_edit_btn:          ['Edit', 'Hariri'],
         smp_stock_btn:         ['Stock', 'Stoo'],
-        smp_perf_btn:          ['Performance', 'Utendaji'],
+        smp_perf_btn:          ['Performance', 'Performance'],
         smp_units_sold:        ['Units sold', 'Vitengo vilivyouzwa'],
-        smp_conversion:        ['Conversion', 'Kiwango cha Ubadilishaji'],
+        smp_conversion:        ['Conversion', 'Conversion'],
         smp_explanation:       ['Explanation', 'Ufafanuzi'],
-        smp_conv_line:         ['Conversion (views -> purchases):', 'Kiwango cha ubadilishaji (views -> ununuzi):'],
+        smp_conv_line:         ['Conversion (views -> purchases):', 'Conversion (views -> kununua):'],
         smp_like_sale_line:    ['Likes to sales rate (likes -> sold):', 'Kiwango cha likes kwenda mauzo (likes -> sold):'],
         smp_interest_note:     ['Interest (likes/saves) and purchases (orders/sold) are different — many likes do not mean more sales.', 'Interest (likes/saves) na ununuzi (orders/sold) ni vitu tofauti — likes nyingi haimaanishi mauzo makubwa.'],
         smp_sales_perf:        ['Sales Performance', 'Mauzo'],
@@ -605,34 +605,6 @@ import { skh } from './00-bootstrap.js';
         dt_auto_token:     ['Auto Generated When Driver Arrives at Store', 'Inazalishwa Kiotomatiki Dereva Akifika Dukani'],
         dt_token_c_ph:     ['Enter Token C (e.g. DL-XXXX)...', 'Ingiza Token C (Mf: DL-XXXX)...'],
         dt_verify_release: ['VERIFY & RELEASE', 'HAKIKI & RELEASE'],
-
-        // --- Business OS: moduli za usafirishaji (repair 2026-11-04) ---
-        bos_tr_subsys:      ['Transport System module', 'Moduli ya Mfumo wa Usafirishaji'],
-        bos_tr_tag:         ['Separate system', 'Mfumo huru'],
-        bos_tr_open:        ['Open Transport System', 'Fungua Mfumo wa Usafirishaji'],
-        bos_tr_bookings:    ['Transport Requests', 'Maombi ya Usafirishaji'],
-        bos_tr_bookings_d:  ['New transport requests offered on the market to drivers and agents.', 'Maombi mapya ya usafirishaji yanayotolewa sokoni kwa madereva na mawakala.'],
-        bos_tr_trips:       ['Active Trips', 'Safari Zinazoendelea'],
-        bos_tr_trips_d:     ['Accepted trips: pickup, in transit, delivered and verified.', 'Safari zilizokubaliwa: kuchukua mzigo, njiani, kufikishwa na kuthibitishwa.'],
-        bos_tr_tracking:    ['Live Tracking', 'Ufuatiliaji wa Moja kwa Moja'],
-        bos_tr_tracking_d:  ['Live map tracking of the vehicle or cargo while a trip is running.', 'Ufuatiliaji wa chombo au mzigo kwenye ramani wakati safari inaendelea.'],
-        bos_tr_drivers:     ['Drivers & Agents', 'Madereva na Mawakala'],
-        bos_tr_drivers_d:   ['List of drivers, agents and their transport vehicles.', 'Orodha ya madereva, mawakala na vyombo vyao vya usafirishaji.'],
-        bos_tr_fleet:       ['Fleet Status', 'Hali ya Vyombo (Fleet)'],
-        bos_tr_fleet_d:     ['Vehicles that are ready, working or under repair.', 'Vyombo vilivyo tayari, vinavyofanya kazi na vinavyotengenezwa.'],
-        bos_tr_finance:     ['Trip Costs', 'Matumizi ya Safari'],
-        bos_tr_finance_d:   ['Fuel, repairs and other trip costs.', 'Mafuta, ukarabati na gharama nyingine za safari.'],
-        bos_tr_analytics:   ['Transport Analytics', 'Takwimu za Usafirishaji'],
-        bos_tr_analytics_d: ['Transport performance: trips, revenue and efficiency.', 'Utendaji wa usafirishaji: safari, mapato na ufanisi.'],
-        bos_tr_dep:         ['Trips, cargo, drivers and tokens are stored in the <b>Transport System</b>, which is separate from a business account. A business account has no linked transport records, so no figures are invented here.', 'Safari, mizigo, madereva na tokeni huhifadhiwa kwenye <b>Mfumo wa Usafirishaji</b>, ambao ni huru na akaunti ya biashara. Kwenye akaunti ya biashara hakuna rekodi za usafirishaji zilizounganishwa, kwa hiyo hakuna namba inayobuniwa hapa.'],
-        bos_tc_notice_t:    ['Logistics tokens belong to transport trips', 'Tokeni za usafirishaji zinahusiana na safari'],
-        bos_tc_notice_d:    ['Token A (pickup) is generated when the driver arrives at your store and Token C (delivery) is verified on the specific trip. On a business account, verification applies only to trips linked to your transport account — no code or balance is invented here.', 'Token A (Pickup) hutengenezwa dereva anapofika dukani, na Token C (Delivery) huthibitishwa kwenye safari husika. Kwenye akaunti ya biashara, uthibitisho unafanyika kwa safari zilizounganishwa na akaunti yako ya usafirishaji — hakuna msimbo wala salio linalobuniwa hapa.'],
-        bos_action_failed:  ['This action could not be completed', 'Kitendo hiki hakikufanikiwa'],
-        lg_login_required:  ['Please sign in to your account first.', 'Tafadhali ingia kwenye akaunti yako kwanza.'],
-        lg_no_trip_for_token:['No trip on this account is waiting for delivery confirmation. Token C is verified on the trip it belongs to.', 'Hakuna safari kwenye akaunti hii inayosubiri uthibitisho wa uwasilishaji. Token C huthibitishwa kwenye safari inayomhusu.'],
-        bos_back_home:      ['Back to Main Dashboard', 'Rudi Dashibodi Kuu'],
-        bos_tab_missing_t:  ['This section is not built yet', 'Sehemu hii haijatengenezwa bado'],
-        bos_tab_missing_d:  ['The "{t}" module has no renderer yet. No previous content is shown to avoid confusion.', 'Moduli "{t}" haina kionyeshi bado. Hakuna maudhui ya awali yaliyoonyeshwa ili kuepusha mkanganyiko.'],
         dt_expense_ph:     ['Expense amount (TSh)...', 'Kiasi cha matumizi (TSh)...'],
         dt_receipt_saved:  ['Receipt saved!', 'Ushuhuda umesajiliwa!'],
         dt_repairs_soon:   ['Repair information will be available here soon.', 'Taarifa za ukarabati zitapatikana hapa hivi karibuni.'],
@@ -643,8 +615,8 @@ import { skh } from './00-bootstrap.js';
         an_total_products: ['TOTAL PRODUCTS', 'BIDHAA ZOTE'],
         an_active_stock:   ['ACTIVE STOCK', 'STOO HAI'],
         an_out_of_stock:   ['OUT OF STOCK', 'IMESHA STOO'],
-        an_low_stock:      ['LOW STOCK', 'STOO CHINI'],
-        an_inventory_value:['INVENTORY VALUE', 'THAMANI YA STOO'],
+        an_low_stock:      ['LOW STOCK', 'STOO NDOGO'],
+        an_inventory_value:['INVENTORY VALUE', 'THAMANI YA INVENTORY'],
         an_units_sold:     ['UNITS SOLD TODAY', 'VITENGA VILIVYOUZWA LEO'],
         an_product:        ['Product', 'Bidhaa'],
         an_units_sold_col: ['Units Sold', 'Vilivyouzwa'],
@@ -665,30 +637,6 @@ import { skh } from './00-bootstrap.js';
         an_ai_panel:       ['Sokohai AI Insights Panel', 'Paneli ya Maarifa ya Sokohai AI'],
         an_zoom_day:       ['Zooming into {l}: opening the daily chart.', 'Zooming into {l}: Inafungua grafu ya kila siku!'],
         an_zoom_hour:      ['Zooming into {l}: opening the hourly chart.', 'Zooming into {l}: Inafungua grafu ya kila saa!'],
-
-        /* --- [STAGE B 2026-11-04] Istilahi za MODULI ZA BIDHAA (jina↔kazi) ---
-           Keys hizi zinatumiwa na 10-dashboard-tabs.js (Uchambuzi wa Bidhaa),
-           30-seller-products.js (Bidhaa Zangu / Utendaji / Linganisha) na
-           kichwa cha soko. Hakuna hesabu iliyoguswa. */
-        pa_title:            ['Product Analytics Tower', 'Uchambuzi wa Bidhaa'],
-        an_active_products:  ['ACTIVE PRODUCTS', 'BIDHAA ZILIZOCHAPISHWA'],
-        an_draft_products:   ['DRAFT PRODUCTS', 'BIDHAA ZA RASIMU'],
-        an_top_selling:      ['TOP SELLING PRODUCT', 'BIDHAA INAYOONGOZA KWA MAUZO'],
-        an_product_growth:   ['PRODUCT GROWTH', 'UKUAJI WA BIDHAA'],
-        an_chart_categories: ['Product Categories', 'Kategoria za Bidhaa'],
-        an_chart_health:     ['Inventory Health', 'Hali ya Stoo'],
-        an_chart_revenue:    ['Revenue per Product', 'Mapato kwa Bidhaa'],
-        an_chart_demand:     ['Demand Trend', 'Mwenendo wa Mahitaji'],
-        an_chart_returns:    ['Returns', 'Marejesho'],
-        an_chart_conversion: ['Conversion', 'Kiwango cha Ubadilishaji'],
-        mpk_st_draft:        ['Draft', 'Rasimu'],
-        mpk_stock_low:       ['Low stock', 'Stoo chini'],
-        mpk_sort_oldest:     ['Oldest', 'Ya zamani zaidi'],
-        mpk_sort_name:       ['Name (A–Z)', 'Jina (A–Z)'],
-        mpk_sort_stock:      ['Stock quantity', 'Kiasi cha Stoo'],
-        mpk_publish:         ['Publish', 'Chapisha'],
-        mpk_suspend:         ['Suspend', 'Simamisha'],
-        si_src_mp:           ['Marketplace', 'Soko la Mtandaoni'],
 
         // --- SokoPay (21-sokopay.js) ---
         sp_cashier_role:     ['Cashier Privileges: Your dashboard is limited to Sales/POS only.', 'Cashier Privileges: Dashbodi yako imefungwa kwenye Mauzo/POS tu.'],
@@ -1037,6 +985,11 @@ import { skh } from './00-bootstrap.js';
             var key = el.getAttribute('data-i18n-title');
             if (key && window.t) el.setAttribute('title', window.t(key));
         });
+        // [JOB 25 · R6t] aria-label (vitufe vya ikoni-pekee kama Post)
+        document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+            var key = el.getAttribute('data-i18n-aria');
+            if (key && window.t) el.setAttribute('aria-label', window.t(key));
+        });
     }
 
     // [LUGHA 2026-09] Inafafanuliwa mara moja (sio ndani ya boot) ili swichi
@@ -1067,6 +1020,8 @@ import { skh } from './00-bootstrap.js';
         nav_language:      ['Language', 'Lugha'],
         nav_notifications: ['Notifications', 'Arifa'],
         nav_work:          ['Work', 'Kazi'],
+        // [JOB 25 · R6t] Maelezo ya kitufe cha Post (aria-label + title)
+        nav_post_desc:     ['Post \u2014 create a listing', 'Chapisha \u2014 tengeneza tangazo'],
         mode_buyer:        ['Buyer (Market)', 'Mnunuzi (Soko)'],
 
         // --- §10 COMMON ---

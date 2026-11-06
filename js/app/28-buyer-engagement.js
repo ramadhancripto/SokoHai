@@ -860,7 +860,8 @@ import { skh } from './00-bootstrap.js';
     }
 
     window.skhRenderEngagementTab = async function (tab) {
-        var box=document.getElementById('mySokoHaiContent'); if(!box||!buyerUid())return;
+        var box=document.getElementById('mySokoHaiContent'); if(!box)return;
+        if(!buyerUid())return;
         box.innerHTML='<div class="byd-wrap"><div class="byd-loading">Inapakia data zako...</div></div>';
         if(tab==='overview')return renderOverview(box);
         if(tab==='orders')return renderOrders(box);

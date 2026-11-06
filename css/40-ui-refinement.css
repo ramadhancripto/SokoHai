@@ -1,0 +1,23 @@
+/* ==========================================================================
+   40-ui-refinement.css — "Refinement layer" (additive only, loaded last)
+   --------------------------------------------------------------------------
+   [REKEDISHO 2026-11-05 · JOB 26 · R6u]
+
+   HALI: faili hii ilikuwa imepotea kwenye workspace (haipo kwenye git, haipo
+   kwenye GitHub `ramadhancripto/SokoHai`, haipo kwenye ZIP yoyote ya
+   mabadiliko). Kwa kuwa `<link>` yake ipo kwenye `index.html` (mstari 91) na
+   ilikuwa inarudisha 404 kwenye kila ukurasa, faili imeundwa upya kama
+   "shell" safi: hakuna rules za kubuni zilizoongezwa kwa mkono.
+
+   KANUNI ZA FAILI HII (zisibadilike):
+   1. Ni ADDITIVE pekee — usibadilishe rangi, ukubwa au layout ya sehemu
+      zilizopo; ongeza tu marekebisho madogo yanayohitajika.
+   2. Inapakiwa MWISHO (baada ya css/29..42) — hivyo inaweza kurekebisha
+      mambo madogo bila kuvunja design system ya msingi.
+   3. Kila block mpya iwekewe lebo ya tarehe/job, mfano: [JOB nn · Rxx].
+
+   TODO (inahitaji uamuzi wa mtumiaji): kama kuna refinement rules za
+   2026-11-01 zilizopotea, zirejeshwe hapa chini ya lebo yao ya awali.
+   ========================================================================== */
+
+/* (hakuna rules bado) */

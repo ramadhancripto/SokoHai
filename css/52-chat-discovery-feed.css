@@ -19,9 +19,9 @@
 /* ---------------------------------------------- 1. SHELL --- */
 #skhDiscoverFeed {
     flex: 0 0 auto;
-    background: #F4FBF8;
-    border-top: 1px solid #DFF0E9;
-    border-bottom: 1px solid #DFF0E9;
+    background: #FFFFFF;
+    border-top: 1px solid #EDF2F1;
+    border-bottom: 1px solid #EDF2F1;
     padding: 10px 0 12px;
     font-family: var(--font-ui, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
     color: var(--sokohai-text, #18352D);
@@ -842,4 +842,743 @@ html body #chatListModal #inboxList {
     #skhDiscoverFeed .skh-df-media { aspect-ratio: 1 / 1; }
     #skhDiscoverFeed .skh-df-promo { display: none; }
     html body #chatListModal .ch-inbox-head { padding-top: 10px !important; padding-bottom: 10px !important; }
+}
+
+/* ================================================================
+   §HALI — mstari wa status (post za bidhaa) + LIVE activities
+   [R6j 2026-11-05] simple, white-first, brand green #18A982
+   ================================================================ */
+#skhDiscoverFeed .skh-df-hali-slot { display: block; }
+#skhDiscoverFeed .skh-df-hali {
+    padding: 2px 0 6px;
+}
+#skhDiscoverFeed .skh-df-hali-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 12px 6px;
+}
+#skhDiscoverFeed .skh-df-hali-title {
+    font-size: 12.5px; font-weight: 800; letter-spacing: .2px;
+    color: var(--sokohai-text, #18352D); text-transform: none;
+}
+#skhDiscoverFeed .skh-df-hali-sub {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11.5px; font-weight: 600; color: #5D7A72;
+}
+#skhDiscoverFeed .skh-df-live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--sokohai-green, #18A982);
+    box-shadow: 0 0 0 3px rgba(24,169,130,.16);
+    animation: skhDfBlink 1.8s ease-in-out infinite;
+}
+@keyframes skhDfBlink { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+
+#skhDiscoverFeed .skh-df-hali-rail {
+    display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden;
+    padding: 2px 12px 4px; scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+#skhDiscoverFeed .skh-df-hali-rail::-webkit-scrollbar { display: none; }
+
+#skhDiscoverFeed .skh-df-st {
+    flex: 0 0 auto; width: 62px; background: none; border: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    cursor: pointer; scroll-snap-align: start; font: inherit;
+}
+#skhDiscoverFeed .skh-df-st-ring {
+    width: 58px; height: 58px; border-radius: 50%;
+    padding: 2.5px; display: grid; place-items: center;
+    background: #E1E9E7;
+    transition: transform .16s ease;
+}
+#skhDiscoverFeed .skh-df-st.is-live .skh-df-st-ring {
+    background: conic-gradient(from 210deg, #18A982, #4D91AA 55%, #18A982);
+}
+#skhDiscoverFeed .skh-df-st:active .skh-df-st-ring { transform: scale(.95); }
+#skhDiscoverFeed .skh-df-st-face {
+    width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+    background: #fff; border: 2px solid #fff;
+    display: grid; place-items: center;
+}
+#skhDiscoverFeed .skh-df-st-face img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+}
+#skhDiscoverFeed .skh-df-st-ini {
+    font-size: 15px; font-weight: 800; color: #17604E;
+    background: var(--green-soft, #EAF8F2);
+    width: 100%; height: 100%; display: grid; place-items: center;
+}
+#skhDiscoverFeed .skh-df-st-cap {
+    font-size: 10.5px; line-height: 1.25; font-weight: 600;
+    color: #4A6660; text-align: center; max-width: 62px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#skhDiscoverFeed .skh-df-st.is-live .skh-df-st-cap {
+    color: #0F7A5E; font-weight: 700;
+}
+@media (max-width: 420px) {
+    #skhDiscoverFeed .skh-df-st { width: 58px; }
+    #skhDiscoverFeed .skh-df-st-ring { width: 54px; height: 54px; }
+}
+
+/* nafasi ya kutosha kwa caption ya status (isikatwe na rail ya kadi) */
+#skhDiscoverFeed .skh-df-hali { overflow: visible; padding-bottom: 10px; }
+#skhDiscoverFeed .skh-df-hali-rail { padding-bottom: 10px; }
+#skhDiscoverFeed .skh-df-hali-slot { margin-bottom: 2px; }
+#skhDiscoverFeed .skh-df-st-cap { max-width: 66px; }
+
+#skhDiscoverFeed .skh-df-st-cap { line-height: 1.35; padding-bottom: 2px; }
+#skhDiscoverFeed .skh-df-hali-rail { padding-bottom: 12px; align-items: flex-start; }
+
+/* Hali tupu ya inbox — maelekezo, si ukuta mweupe */
+#skhDfInboxHint {
+    margin: 14px 12px 24px; padding: 18px 16px;
+    background: #fff; border: 1px dashed var(--sokohai-border, #E5ECEC);
+    border-radius: 16px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+#skhDfInboxHint .skh-df-ih-ico {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--green-soft, #EAF8F2); color: var(--sokohai-green, #18A982);
+    display: grid; place-items: center; margin-bottom: 2px;
+}
+#skhDfInboxHint b { font-size: 13.5px; color: var(--sokohai-text, #18352D); }
+#skhDfInboxHint span:last-child { font-size: 12px; line-height: 1.45; color: #5D7A72; max-width: 260px; }
+
+/* ================================================================
+   [R6j-b] SIMPLE + WHITE — Job 19b
+   Miduara ya status imeondolewa; mstari MMOJA wa hali pekee.
+   Kadi zimepunguzwa maandishi; mandhari ni nyeupe safi.
+   ================================================================ */
+
+/* --- 1. Mstari mmoja wa hali (status view) --- */
+#skhDiscoverFeed .skh-df-hali-slot { display: block; padding: 0 12px; }
+#skhDiscoverFeed .skh-df-line {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #FFFFFF;
+    border: 1px solid #E8EFED;
+    border-radius: 14px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    transition: border-color .15s ease, background .15s ease;
+    margin: 2px 0 10px;
+}
+#skhDiscoverFeed .skh-df-line:hover { border-color: #CFE5DC; background: #FBFEFC; }
+#skhDiscoverFeed .skh-df-line:active { transform: scale(.995); }
+#skhDiscoverFeed .skh-df-line-thumb {
+    flex: 0 0 auto;
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    overflow: hidden;
+    background: #F1F6F4;
+    display: grid; place-items: center;
+    position: relative;
+}
+#skhDiscoverFeed .skh-df-line-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#skhDiscoverFeed .skh-df-line.is-live .skh-df-line-thumb { box-shadow: 0 0 0 2px #18A982 inset; }
+#skhDiscoverFeed .skh-df-ln-ini { font-size: 13px; font-weight: 800; color: #17604E; }
+#skhDiscoverFeed .skh-df-line-txt { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; }
+#skhDiscoverFeed .skh-df-line-k {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .15px;
+    text-transform: uppercase; color: #6A8580;
+}
+#skhDiscoverFeed .skh-df-line.is-live .skh-df-line-k { color: #0F7A5E; }
+#skhDiscoverFeed .skh-df-line-v {
+    font-size: 13px; font-weight: 700; color: #18352D;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhDiscoverFeed .skh-df-line-go { flex: 0 0 auto; color: #9DB3AD; display: grid; place-items: center; }
+
+/* --- 2. Kichwa kifupi, chenye nafasi --- */
+#skhDiscoverFeed .skh-df-head { margin-bottom: 6px; align-items: baseline; }
+#skhDiscoverFeed .skh-df-title { font-size: 15px; letter-spacing: -.2px; }
+#skhDiscoverFeed .skh-df-sub { font-size: 11px; font-weight: 500; color: #7A918B; }
+#skhDiscoverFeed .skh-df-btn { padding: 6px 10px; font-size: 11.5px; border-radius: 999px; }
+#skhDiscoverFeed .skh-df-btn--ghost { width: 28px; height: 28px; padding: 0; justify-content: center; border-radius: 50%; }
+
+/* --- 3. Kadi: maandishi kidogo, picha kubwa --- */
+#skhDiscoverFeed .skh-df-body { padding: 9px 10px 10px; gap: 4px; display: flex; flex-direction: column; }
+#skhDiscoverFeed .skh-df-name {
+    font-size: 13px; font-weight: 700; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+#skhDiscoverFeed .skh-df-promo,
+#skhDiscoverFeed .skh-df-id { display: none !important; }
+#skhDiscoverFeed .skh-df-cta {
+    font-size: 11.5px; font-weight: 800; letter-spacing: .2px;
+    color: #0F7A5E; background: #EAF8F2;
+    border-radius: 9px; padding: 6px 8px; text-align: center;
+    margin-top: 2px;
+}
+#skhDiscoverFeed .skh-df-price { font-size: 13.5px; font-weight: 800; }
+#skhDiscoverFeed .skh-df-meta { font-size: 10.5px; }
+#skhDiscoverFeed .skh-df-tag { font-size: 9px; padding: 3px 6px; }
+#skhDiscoverFeed .skh-df-card { border-color: #EDF2F1; }
+
+/* --- 4. Punguza maandishi kwenye picha ya kadi --- */
+#skhDiscoverFeed .skh-df-price,
+#skhDiscoverFeed .skh-df-price del,
+#skhDiscoverFeed .skh-df-meta {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+#skhDiscoverFeed .skh-df-price { font-size: 13.5px; font-weight: 800; line-height: 1.25; }
+#skhDiscoverFeed .skh-df-meta { font-size: 10.5px; font-weight: 600; opacity: .92; margin-top: 1px; }
+#skhDiscoverFeed .skh-df-meta b { font-weight: 800; }
+#skhDiscoverFeed .skh-df-onmedia {
+    left: 10px; right: 10px; bottom: 9px;
+    display: flex; flex-direction: column; gap: 0;
+}
+#skhDiscoverFeed .skh-df-cta { font-size: 11px; padding: 6px 10px; letter-spacing: .1px; }
+
+/* CTA sawa kwa upana (usawa wa kadi) */
+#skhDiscoverFeed .skh-df-cta { width: 100%; box-sizing: border-box; }
+
+/* Mstari wa hali ufuate inset ile ile ya kichwa/kadi (desktop haujaanza pembeni) */
+#skhDiscoverFeed .skh-df-hali-slot { padding: 0 var(--ch-col, 12px); }
+@media (min-width: 800px) {
+    #skhDiscoverFeed .skh-df-line { max-width: 620px; }
+}
+
+/* ================================================================
+   [R6j-c] STATUS RAIL (Job 19c) — slide unaona zaidi
+   Hakuna maneno ya kichwa ("Gundua"/"Matangazo"): ni rail ya
+   thumbnails pekee; × ndogo ya kuficha iko pembeni.
+   ================================================================ */
+#skhDiscoverFeed { position: relative; padding: 12px 0 10px; }
+#skhDiscoverFeed .skh-df-head { display: none !important; }
+
+#skhDiscoverFeed .skh-df-hide {
+    position: absolute; top: 6px; right: 8px; z-index: 4;
+    width: 22px; height: 22px; border: 0; border-radius: 50%;
+    background: #F4F7F6; color: #8AA29C;
+    display: grid; place-items: center; cursor: pointer;
+    padding: 0; opacity: .85;
+}
+#skhDiscoverFeed .skh-df-hide:hover { background: #E9F1EE; color: #17604E; opacity: 1; }
+#skhDiscoverFeed .skh-df-hali-slot { padding: 0; }
+#skhDiscoverFeed .skh-df-hide { display: none !important; }
+
+/* rail */
+#skhDiscoverFeed .skh-df-strip { position: relative; }
+#skhDiscoverFeed .skh-df-tiles {
+    display: flex; gap: 12px;
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px var(--ch-col, 14px) 6px;
+    scroll-padding-left: var(--ch-col, 14px);
+}
+#skhDiscoverFeed .skh-df-tiles::-webkit-scrollbar { display: none; height: 0; }
+
+#skhDiscoverFeed .skh-df-tile {
+    flex: 0 0 auto; width: 62px;
+    background: none; border: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    cursor: pointer; font: inherit; scroll-snap-align: start;
+}
+#skhDiscoverFeed .skh-df-tile-face {
+    position: relative;
+    width: 58px; height: 58px; border-radius: 18px;
+    overflow: hidden; background: #F1F6F4;
+    display: grid; place-items: center;
+    border: 1px solid #E8EFED;
+    transition: transform .16s ease, border-color .16s ease;
+}
+#skhDiscoverFeed .skh-df-tile:active .skh-df-tile-face { transform: scale(.95); }
+#skhDiscoverFeed .skh-df-tile-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#skhDiscoverFeed .skh-df-tile.is-live .skh-df-tile-face { border: 2px solid var(--sokohai-green, #18A982); }
+#skhDiscoverFeed .skh-df-tile-live {
+    position: absolute; left: 3px; bottom: 3px;
+    font-size: 7.5px; font-weight: 900; letter-spacing: .3px;
+    font-style: normal; color: #fff; background: #18A982;
+    padding: 1.5px 4px; border-radius: 5px; line-height: 1.2;
+}
+#skhDiscoverFeed .skh-df-st-ini { font-size: 15px; font-weight: 800; color: #17604E; }
+#skhDiscoverFeed .skh-df-tile-cap {
+    font-size: 10.5px; font-weight: 700; color: #4A6660;
+    max-width: 66px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.25;
+}
+#skhDiscoverFeed .skh-df-tile.is-live .skh-df-tile-cap { color: #0F7A5E; }
+#skhDiscoverFeed .skh-df-tile--all .skh-df-tile-face {
+    background: #fff; border: 1px dashed #CFE0DA; color: #6F8A84;
+    border-radius: 18px;
+}
+#skhDiscoverFeed .skh-df-tile--all .skh-df-tile-cap { color: #6F8A84; font-weight: 800; }
+
+/* kadi zianze chini ya rail kwa utulivu */
+#skhDiscoverFeed .skh-df-rail { margin-top: 2px; }
+
+/* Sehemu MOJA tu (Job 19d): rail ya status pekee — hakuna kadi kubwa */
+#skhDiscoverFeed .skh-df-rail { display: none !important; }
+#skhDiscoverFeed .skh-df-tiles { padding-bottom: 4px; }
+#skhDiscoverFeed .skh-df-hali-slot { margin: 0; }
+#skhDiscoverFeed { padding: 10px 0 8px; }
+
+/* Papendeze: tiles kubwa kidogo + fade ya kulia kuonyesha kuna zaidi */
+#skhDiscoverFeed .skh-df-tile { width: 66px; }
+#skhDiscoverFeed .skh-df-tile-face { width: 62px; height: 62px; }
+#skhDiscoverFeed .skh-df-tile-cap { max-width: 70px; font-size: 10.5px; }
+#skhDiscoverFeed .skh-df-strip { position: relative; }
+#skhDiscoverFeed .skh-df-strip::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 26px;
+    background: linear-gradient(to right, rgba(255,255,255,0), #fff 65%);
+    pointer-events: none;
+}
+
+
+/* ================================================================
+   [R6j-d] STATUS STYLE (Facebook / WhatsApp) — Job 19e
+   Duara + pete + LIVE pill + mionekano (views). Background nyeupe.
+   ================================================================ */
+#skhDiscoverFeed .skh-df-tiles { display: none !important; }   /* tiles za mraba zimeondolewa */
+#skhDiscoverFeed .skh-df-status {
+    display: flex; gap: 14px;
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px var(--ch-col, 14px) 8px;
+    scroll-padding-left: var(--ch-col, 14px);
+}
+#skhDiscoverFeed .skh-df-status::-webkit-scrollbar { display: none; height: 0; }
+
+#skhDiscoverFeed .skh-df-sc {
+    flex: 0 0 auto; width: 66px;
+    background: none; border: 0; padding: 0; font: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; scroll-snap-align: start;
+}
+#skhDiscoverFeed .skh-df-sc-ring {
+    position: relative;
+    width: 64px; height: 64px; border-radius: 50%;
+    padding: 2.5px;
+    background: #E6EDEB;
+    display: grid; place-items: center;
+    transition: transform .16s ease;
+}
+#skhDiscoverFeed .skh-df-sc.is-live .skh-df-sc-ring {
+    background: conic-gradient(from 200deg, #18A982 0deg, #4D91AA 210deg, #18A982 360deg);
+}
+#skhDiscoverFeed .skh-df-sc:active .skh-df-sc-ring { transform: scale(.95); }
+#skhDiscoverFeed .skh-df-sc-face {
+    width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+    background: #fff; border: 2.5px solid #fff;
+    display: grid; place-items: center;
+}
+#skhDiscoverFeed .skh-df-sc-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#skhDiscoverFeed .skh-df-sc-ini { font-size: 16px; font-weight: 800; color: #17604E; }
+#skhDiscoverFeed .skh-df-sc-live {
+    position: absolute; left: 50%; bottom: -3px; transform: translateX(-50%);
+    font-style: normal; font-size: 7px; font-weight: 900; letter-spacing: .4px;
+    color: #fff; background: #18A982; border: 1.5px solid #fff;
+    padding: 1px 5px; border-radius: 999px; line-height: 1.3;
+}
+#skhDiscoverFeed .skh-df-sc-cap {
+    font-size: 10.5px; font-weight: 700; color: #33504A;
+    max-width: 66px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.2;
+}
+#skhDiscoverFeed .skh-df-sc.is-live .skh-df-sc-cap { color: #0F7A5E; }
+#skhDiscoverFeed .skh-df-sc-views {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 9.5px; font-weight: 600; color: #93A8A3; line-height: 1.1;
+    margin-top: -1px;
+}
+#skhDiscoverFeed .skh-df-sc-views svg { opacity: .85; }
+#skhDiscoverFeed .skh-df-sc--all .skh-df-sc-ring { background: #EDF3F1; }
+#skhDiscoverFeed .skh-df-sc--all .skh-df-sc-face { background: #fff; color: #6F8A84; border-style: dashed; border-color: #CFE0DA; }
+#skhDiscoverFeed .skh-df-sc--all .skh-df-sc-cap { color: #6F8A84; font-weight: 800; }
+#skhDiscoverFeed .skh-df-strip::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 28px;
+    background: linear-gradient(to right, rgba(255,255,255,0), #fff 70%);
+    pointer-events: none;
+}
+
+/* ================================================================
+   [R6m] DISCOVER NEW UPDATES — ROW MOJA (Job 20)
+   Kadi za MSTATAILI (rectangle) zenye picha/video halisi.
+   Compact: haisukumi mazungumzo chini.
+   ================================================================ */
+#skhDiscoverFeed { padding: 8px 0 6px; }
+#skhDiscoverFeed .skh-df-status,
+#skhDiscoverFeed .skh-df-tiles { display: none !important; }   /* miduara/tiles za zamani */
+
+#skhDiscoverFeed .skh-df-updates {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px var(--ch-col, 14px) 6px;
+    scroll-padding-left: var(--ch-col, 14px);
+}
+#skhDiscoverFeed .skh-df-updates::-webkit-scrollbar { display: none; height: 0; }
+
+#skhDiscoverFeed .skh-df-uc {
+    flex: 0 0 auto;
+    width: 148px;                 /* sehemu ya kadi inaonekana (peek) */
+    background: #fff;
+    border: 1px solid #E8EFED;
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    scroll-snap-align: start;
+    display: flex; flex-direction: column;
+    transition: border-color .15s ease, transform .12s ease;
+}
+#skhDiscoverFeed .skh-df-uc:hover { border-color: #CFE5DC; }
+#skhDiscoverFeed .skh-df-uc:active { transform: scale(.985); }
+#skhDiscoverFeed .skh-df-uc.is-live { border-color: #BFE6D8; }
+
+#skhDiscoverFeed .skh-df-uc-media {
+    position: relative;
+    width: 100%; height: 92px;      /* thumbnail ya mstatili (landscape) */
+    background: #F1F6F4; display: block; overflow: hidden;
+}
+#skhDiscoverFeed .skh-df-uc-media img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+}
+#skhDiscoverFeed .skh-df-uc-ph {
+    width: 100%; height: 100%; display: grid; place-items: center;
+    font-size: 20px; font-weight: 800; color: #17604E;
+    background: linear-gradient(135deg, #EAF8F2, #E7F0F4);
+}
+#skhDiscoverFeed .skh-df-uc-type {
+    position: absolute; top: 6px; left: 6px;
+    font-size: 8px; font-weight: 900; letter-spacing: .35px;
+    color: #17604E; background: rgba(255,255,255,.94);
+    padding: 2.5px 5px; border-radius: 5px; line-height: 1.2;
+    text-transform: uppercase;
+}
+#skhDiscoverFeed .skh-df-uc.is-live .skh-df-uc-type { background: #18A982; color: #fff; }
+#skhDiscoverFeed .skh-df-uc-spon {
+    position: absolute; top: 6px; right: 6px;
+    font-size: 8px; font-weight: 800; letter-spacing: .2px;
+    color: #6B5A18; background: rgba(255,248,224,.95);
+    padding: 2.5px 5px; border-radius: 5px; line-height: 1.2;
+}
+#skhDiscoverFeed .skh-df-uc-play {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(22,69,58,.62);
+    display: grid; place-items: center;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.55);
+}
+#skhDiscoverFeed .skh-df-uc-play svg { margin-left: 2px; }
+#skhDiscoverFeed .skh-df-uc-vid {
+    position: absolute; right: 6px; bottom: 6px;
+    font-size: 7.5px; font-weight: 900; letter-spacing: .3px;
+    color: #fff; background: rgba(22,69,58,.72);
+    padding: 1.5px 4px; border-radius: 4px;
+}
+#skhDiscoverFeed .skh-df-uc-body {
+    padding: 7px 8px 8px; display: flex; flex-direction: column; gap: 1px;
+    min-width: 0;
+}
+#skhDiscoverFeed .skh-df-uc-pub {
+    font-size: 11.5px; font-weight: 800; color: #18352D; line-height: 1.25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhDiscoverFeed .skh-df-uc-desc {
+    font-size: 10.5px; font-weight: 500; color: #6A8580; line-height: 1.3;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhDiscoverFeed .skh-df-uc--all .skh-df-uc-media--all {
+    display: grid; place-items: center; color: #6F8A84;
+    background: #F7FAF9; border-bottom: 1px dashed #DDE8E4;
+}
+#skhDiscoverFeed .skh-df-strip { position: relative; }
+#skhDiscoverFeed .skh-df-strip::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 26px;
+    background: linear-gradient(to right, rgba(255,255,255,0), #fff 72%);
+    pointer-events: none;
+}
+@media (max-width: 420px) {
+    #skhDiscoverFeed .skh-df-uc { width: 138px; }
+    #skhDiscoverFeed .skh-df-uc-media { height: 86px; }
+}
+
+/* Search ndani ya Discover (sheet ya "Zote") */
+#skhDfAll .skh-df-all-search {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 14px 8px; padding: 0 10px;
+    background: #F7FAF9; border: 1px solid #E5ECEC; border-radius: 10px;
+    height: 38px;
+}
+#skhDfAll .skh-df-all-search-ico { color: #8AA29C; display: grid; place-items: center; }
+#skhDfAll .skh-df-all-search input {
+    flex: 1 1 auto; border: 0; background: transparent; outline: none;
+    font: inherit; font-size: 12.5px; color: #18352D; min-width: 0;
+}
+
+/* Guest hint (inbox) — haitokei kwa mtumiaji aliyeingia */
+#skhDfGuestHint {
+    margin: 18px 14px 24px; padding: 18px 16px;
+    background: #fff; border: 1px dashed #E1EAE7; border-radius: 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    text-align: center;
+}
+#skhDfGuestHint .skh-df-guest-ico {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: #EAF8F2; color: #18A982; display: grid; place-items: center;
+}
+#skhDfGuestHint b { font-size: 13px; color: #18352D; }
+#skhDfGuestHint span:last-child { font-size: 11.5px; color: #7A918B; line-height: 1.4; }
+
+/* ---------------------------------------------------------------
+   Discover "Zote" sheet — PREMIUM (Job 20): white, blue chips,
+   search safi, grid yenye nafasi.
+   --------------------------------------------------------------- */
+#skhDfAll { background: #FFFFFF !important; }
+#skhDfAll .skh-df-all-head {
+    border-bottom: 1px solid #EEF3F1 !important;
+    padding: 12px 14px !important;
+    background: #fff;
+}
+#skhDfAll .skh-df-all-title b { font-size: 15px; letter-spacing: -.1px; }
+#skhDfAll .skh-df-vclose {
+    width: 34px; height: 34px; border-radius: 10px;
+    border: 1px solid #E4ECEA !important; background: #fff !important;
+    color: #33504A !important; display: grid; place-items: center;
+}
+#skhDfAll .skh-df-chips { padding: 4px 14px 10px !important; gap: 7px !important; }
+#skhDfAll .skh-df-chip {
+    height: 30px !important; padding: 0 12px !important;
+    border-radius: 999px !important;
+    border: 1px solid #E4ECEA !important;
+    background: #fff !important;
+    color: #4A6660 !important;
+    font-size: 11.5px !important; font-weight: 700 !important;
+    display: inline-flex; align-items: center; gap: 5px;
+}
+#skhDfAll .skh-df-chip[aria-pressed="true"] {
+    background: #4D91AA !important; border-color: #4D91AA !important; color: #fff !important;
+}
+#skhDfAll .skh-df-chip-n {
+    font-size: 10px; font-weight: 800; opacity: .75;
+}
+#skhDfAll .skh-df-grid { padding: 2px 14px 24px !important; gap: 10px !important; }
+#skhDfAll .skh-df-card {
+    border-radius: 12px !important;
+    border-color: #E8EFED !important;
+    box-shadow: none !important;
+}
+
+/* ================================================================
+   [R6n] UPDATES — picha KUBWA, maandishi MACHACHE, heading moja
+   ================================================================ */
+#skhDiscoverFeed { background: #FFFFFF !important; padding: 6px 0 4px; }
+
+/* Heading: neno moja tu + "Zote" */
+#skhDiscoverFeed .skh-df-uhead {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 var(--ch-col, 14px) 6px;
+}
+#skhDiscoverFeed .skh-df-uhead-t {
+    font-size: 13px; font-weight: 800; color: #18352D; letter-spacing: -.1px;
+}
+#skhDiscoverFeed .skh-df-uhead-all {
+    border: 0; background: transparent; padding: 2px 0;
+    font: inherit; font-size: 12px; font-weight: 700;
+    color: #4D91AA; cursor: pointer;
+}
+#skhDiscoverFeed .skh-df-uhead-all:hover { text-decoration: underline; }
+
+/* Kadi kubwa zaidi: media ndefu (mstatili mkubwa) */
+#skhDiscoverFeed .skh-df-uc { width: 168px; border-radius: 14px; }
+#skhDiscoverFeed .skh-df-uc-media { height: 128px; }
+#skhDiscoverFeed .skh-df-uc-body { padding: 8px 9px 9px; gap: 1px; }
+#skhDiscoverFeed .skh-df-uc-pub { font-size: 12px; font-weight: 700; color: #18352D; }
+#skhDiscoverFeed .skh-df-uc-desc { font-size: 11px; color: #7A918B; font-weight: 500; }
+#skhDiscoverFeed .skh-df-uc-type { font-size: 8.5px; padding: 3px 6px; border-radius: 6px; }
+#skhDiscoverFeed .skh-df-uc-play { width: 34px; height: 34px; }
+#skhDiscoverFeed .skh-df-uc--all .skh-df-uc-media--all { height: 128px; }
+@media (max-width: 420px) {
+    #skhDiscoverFeed .skh-df-uc { width: 156px; }
+    #skhDiscoverFeed .skh-df-uc-media { height: 118px; }
+    #skhDiscoverFeed .skh-df-uc--all .skh-df-uc-media--all { height: 118px; }
+}
+
+/* Kadi: publisher mdogo juu, kichwa cha bidhaa kikubwa chini */
+#skhDiscoverFeed .skh-df-uc-pub {
+    font-size: 9.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: .35px;
+    text-transform: uppercase;
+    color: #8FA09B !important;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhDiscoverFeed .skh-df-uc-desc {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #18352D !important;
+    line-height: 1.3 !important;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhDiscoverFeed .skh-df-uc--all .skh-df-uc-pub { color: #97A8A3 !important; }
+#skhDiscoverFeed .skh-df-uc--all .skh-df-uc-desc { color: #4A6660 !important; font-weight: 700 !important; }
+
+/* ================================================================
+   [R6p] DISCOVER NEW UPDATES — muundo wa mock (Job 21)
+   Kadi 260px: media 128px + publisher avatar + title + maelezo + CTA
+   ================================================================ */
+#skhDiscoverFeed {
+    background: linear-gradient(to bottom, #F4F8FD 0%, #FAFCFC 55%, #FFFFFF 100%) !important;
+    border-bottom: 1px solid #EDF2F1 !important;
+    padding: 10px 0 10px;
+}
+/* Heading: dot inayowaka + jina + mishale */
+#skhDiscoverFeed .skh-df-uhead {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 var(--ch-col, 14px) 8px;
+}
+#skhDiscoverFeed .skh-df-uhead-l { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+#skhDiscoverFeed .skh-df-uhead-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--sokohai-green, #18A982);
+    box-shadow: 0 0 0 3px rgba(24,169,130,.15);
+    animation: skhDfPulse 1.9s ease-in-out infinite;
+    flex: 0 0 auto;
+}
+@keyframes skhDfPulse { 0%,100% { opacity: 1; transform: scale(1) } 50% { opacity: .45; transform: scale(.85) } }
+#skhDiscoverFeed .skh-df-uhead-t {
+    font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase;
+    color: #33474F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhDiscoverFeed .skh-df-uhead-r { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+#skhDiscoverFeed .skh-df-arrow {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1px solid #E2EAE8; background: #fff; color: #5D7A72;
+    display: grid; place-items: center; padding: 0; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(16,38,31,.04);
+    transition: background .14s ease, color .14s ease, border-color .14s ease;
+}
+#skhDiscoverFeed .skh-df-arrow:hover { background: #F5F9F8; color: #18A982; border-color: #CFE5DC; }
+
+/* Rail */
+#skhDiscoverFeed .skh-df-updates { gap: 12px; padding: 2px var(--ch-col, 14px) 8px; }
+
+/* Kadi */
+#skhDiscoverFeed .skh-df-uc {
+    width: 260px;
+    border-radius: 16px;
+    border: 1px solid #E8EFED;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(16, 38, 31, .05);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+    padding: 0;
+}
+@media (hover: hover) {
+    #skhDiscoverFeed .skh-df-uc:hover {
+        box-shadow: 0 6px 18px rgba(16, 38, 31, .10);
+        border-color: #D7E5DF;
+    }
+    #skhDiscoverFeed .skh-df-uc:hover .skh-df-uc-media img { transform: scale(1.04); }
+}
+#skhDiscoverFeed .skh-df-uc:active { transform: scale(.99); }
+#skhDiscoverFeed .skh-df-uc.is-sponsored { border-color: #F0E3BD; }
+
+/* Media 128px */
+#skhDiscoverFeed .skh-df-uc-media { height: 128px; width: 100%; }
+#skhDiscoverFeed .skh-df-uc-media img { transition: transform .3s ease; }
+#skhDiscoverFeed .skh-df-uc-type {
+    top: 8px; left: 8px;
+    font-size: 9.5px; font-weight: 800; letter-spacing: .1px;
+    padding: 3px 8px; border-radius: 999px;
+    background: rgba(255,255,255,.94);
+    color: #0F7A5E;
+    box-shadow: 0 1px 3px rgba(16,38,31,.12);
+    text-transform: none;
+}
+#skhDiscoverFeed .skh-df-uc.is-sponsored .skh-df-uc-type {
+    background: var(--sokohai-gold, #D8B83A); color: #fff;
+}
+#skhDiscoverFeed .skh-df-uc.is-live .skh-df-uc-type { background: var(--sokohai-green, #18A982); color: #fff; }
+#skhDiscoverFeed .skh-df-uc-off {
+    position: absolute; right: 8px; bottom: 8px;
+    font-size: 9.5px; font-weight: 900; letter-spacing: .2px;
+    color: #fff; background: #E11D48;
+    padding: 2px 7px; border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(16,38,31,.18);
+}
+#skhDiscoverFeed .skh-df-uc-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,.18);
+    display: grid; place-items: center;
+}
+#skhDiscoverFeed .skh-df-uc-playbtn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,.94); color: #4D91AA;
+    display: grid; place-items: center;
+    box-shadow: 0 4px 12px rgba(16,38,31,.22);
+    padding-left: 2px;
+}
+
+/* Body */
+#skhDiscoverFeed .skh-df-uc-body { padding: 10px 12px 4px; display: flex; flex-direction: column; gap: 5px; }
+#skhDiscoverFeed .skh-df-uc-pubrow { display: flex; align-items: center; gap: 6px; min-width: 0; }
+#skhDiscoverFeed .skh-df-uc-av {
+    width: 20px; height: 20px; border-radius: 50%; overflow: hidden;
+    background: #EAF8F2; display: grid; place-items: center; flex: 0 0 auto;
+}
+#skhDiscoverFeed .skh-df-uc-av img { width: 100%; height: 100%; object-fit: cover; }
+#skhDiscoverFeed .skh-df-uc-avini { font-size: 9px; font-weight: 800; color: #17604E; }
+#skhDiscoverFeed .skh-df-uc-pub {
+    font-size: 11.5px !important; font-weight: 600 !important;
+    color: #4A5B55 !important; text-transform: none !important; letter-spacing: 0 !important;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#skhDiscoverFeed .skh-df-uc-title {
+    font-size: 13px; font-weight: 700; color: #10261F; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#skhDiscoverFeed .skh-df-uc-desc {
+    font-size: 11.5px !important; font-weight: 400 !important; color: #7A8B86 !important;
+    line-height: 1.4 !important;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    white-space: normal !important;
+}
+/* CTA */
+#skhDiscoverFeed .skh-df-uc-cta {
+    margin: 6px 12px 12px;
+    padding: 7px 10px; border-radius: 10px;
+    background: #F1F5F4; color: #4D91AA;
+    font-size: 11.5px; font-weight: 700; text-align: center;
+    transition: background .15s ease, color .15s ease;
+}
+@media (hover: hover) {
+    #skhDiscoverFeed .skh-df-uc:hover .skh-df-uc-cta { background: #4D91AA; color: #fff; }
+}
+#skhDiscoverFeed .skh-df-uc.is-sponsored .skh-df-uc-cta { background: #4D91AA; color: #fff; }
+#skhDiscoverFeed .skh-df-uc--all { justify-content: center; }
+#skhDiscoverFeed .skh-df-uc--all .skh-df-uc-media--all { height: 128px !important; }
+#skhDiscoverFeed .skh-df-uc--all .skh-df-uc-body { align-items: center; text-align: center; }
+#skhDiscoverFeed .skh-df-uc--all .skh-df-uc-title { justify-content: center; }
+
+/* Mobile: kadi zibaki muundo ule ule lakini ziwe fupi zaidi */
+@media (max-width: 420px) {
+    #skhDiscoverFeed .skh-df-uc { width: 246px; }
+    #skhDiscoverFeed .skh-df-uc-media,
+    #skhDiscoverFeed .skh-df-uc--all .skh-df-uc-media--all { height: 112px !important; }
+    #skhDiscoverFeed .skh-df-uc-title { -webkit-line-clamp: 1; font-size: 12.5px; }
+    #skhDiscoverFeed .skh-df-uc-desc { -webkit-line-clamp: 1; font-size: 11px !important; }
+    #skhDiscoverFeed .skh-df-uc-cta { margin: 5px 10px 10px; padding: 6px 8px; font-size: 11px; }
 }

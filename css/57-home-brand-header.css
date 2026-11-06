@@ -968,3 +968,45 @@ body.dark-mode .top-nav-row .skh-brand-word { filter: brightness(1.35); }
     margin-top: 10px !important;
     padding: 12px !important;
 }
+
+/* ============================================================
+   [R6r · JOB 23 · 2026-11-05] HAMBURGER YA HEADER = KITUFE KAMA ICON ZINGINE
+   ------------------------------------------------------------
+   Kabla: `.menu-btn` ilikuwa ikoni pekee (18px, hakuna chip) — ilionekana
+   ndogo na nyepesi ukilinganisha na Usimamizi / SokoPay / Kikapu / Taarifa
+   (kila kimoja ni kitufe cha duara 38×40 chenye mstari).
+   Sasa: hamburger ina chip ile ile (38×40, duara, mstari, hover sawa) na
+   ikoni 19px — inaonekana kama icon zingine, sio ndogo.
+   HAITUMIWI kubadilisha `onclick="openSidebarMenu()"` — ni CSS pekee.
+   ============================================================ */
+.top-nav-row .top-nav-left .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 40px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid var(--sokohai-border);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--skh-ink);
+    line-height: 0;
+    cursor: pointer;
+    transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.top-nav-row .top-nav-left .menu-btn:hover {
+    background: var(--sokohai-green-soft);
+    border-color: rgba(24, 169, 130, .45);
+    color: var(--sokohai-green-dark);
+    box-shadow: 0 3px 10px rgba(24, 169, 130, .14);
+}
+.top-nav-row .top-nav-left .menu-btn:focus-visible { outline: 2px solid var(--sokohai-gold); outline-offset: 2px; }
+.top-nav-row .top-nav-left .menu-btn svg { width: 19px; height: 19px; display: block; }
+
+/* Desktop: vitufe vya header ni 42×42 (css/57 §2) — hamburger sawa */
+@media (min-width: 900px) {
+    .top-nav-row .top-nav-left .menu-btn { width: 42px; height: 42px; }
+    .top-nav-row .top-nav-left .menu-btn svg { width: 20px; height: 20px; }
+}

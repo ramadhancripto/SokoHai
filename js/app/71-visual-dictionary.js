@@ -64,6 +64,12 @@ import { skh } from './00-bootstrap.js';
         E('nav_products', '📦', 'ICONS', 'Bidhaa', 'Products', 'Bidhaa zote sokoni (Feed).', 'All market products (Feed).', ['bottom-nav'], 'Hufungua orodha ya bidhaa', '📦 Bidhaa', '📦 Products'),
         E('nav_services', '🔧', 'ICONS', 'Huduma', 'Services', 'Watoa huduma na matangazo yao.', 'Service providers and their listings.', ['bottom-nav'], 'Hufungua huduma', '🔧 Huduma', '🔧 Services'),
         E('nav_transport', '🚚', 'ICONS', 'Usafiri', 'Transport', 'Dereva na safari za mizigo na abiria (gari, teksi, moto).', 'Transporters, trips and cargo services.', ['bottom-nav'], 'Hufungua usafiri', '🚚 Usafiri', '🚚 Transport'),
+        /* [JOB 25 · R6t] Post (kitufe kijani cha kati kwenye top nav) — maelezo yote hapa,
+           kitufe chenyewe hakina maandishi (icon-only). */
+        E('nav_post', '\u229e', 'NAVIGATION', 'Chapisha (Post)', 'Post',
+          'Kitufe cha Post kiko katikati ya top nav. Hufungua dirisha la "Chagua Kitendo" ili kuchagua kuweka tangazo, bidhaa, huduma au usafiri.',
+          'The Post button sits in the centre of the top nav. It opens the "Choose an action" sheet so you can create an ad, product, service or transport listing.',
+          ['top nav', 'posts', 'products', 'services'], 'Hufungua \u201cChagua Kitendo\u201d', '\u229e (kati ya header)', '\u229e (centre of header)'),
 
         /* ---------- ROLES (Commerce Identity — §5 R19) ---------- */
         E('role_seller', '🏪', 'ROLES', 'Muuzaji', 'Seller', 'Mtu anayeweza kuuza bidhaa kwenye soko (muuzaji / wauzaji). Ni ROLE, si verification.', 'A person selling products. This is a ROLE, not verification.', ['discover', 'profile', 'chat', 'groups'], 'Haichagui — ni utambulisho', '[Muuzaji] Asha', '[Seller] Asha'),
