@@ -34,12 +34,28 @@ for (const definitions of Object.values(data.PRODUCT_TYPE_DEFINITIONS)) for (con
 // [REPAIR 2026-10] Snapshot updated to the canonical data changed intentionally in
 // commit 0ac2c17 (see docs/taxonomy/mission/authority-drift-justification.md, class A).
 // Previous snapshot (42c20a5): 705 / 1116 / 387 / 676 / 207 / 111.
-assert.equal(typeOccurrences, 720);
-assert.equal(attrOccurrences, 1122);
+// [2026-11-06] Owner taxonomy source (Categories 01–44) merged ADDITIVELY via
+// shared/canonical-taxonomy-owner-branches.js (tools/build_owner_taxonomy_branches.mjs).
+// The pre-merge snapshot below is still pinned exactly (computed in a child process with
+// the merge disabled) so the hand-curated base cannot drift silently.
+{
+  const { execFileSync } = await import('node:child_process');
+  const base = JSON.parse(execFileSync(process.execPath, ['-e', `
+    const d=require('./shared/canonical-taxonomy-data.js'); let t=0,a=0,o=0,f=0,fe=0,r=0; const c=new Set();
+    for (const ds of Object.values(d.PRODUCT_TYPE_DEFINITIONS)) for (const x of Object.values(ds)) {
+      t+=(x.productTypes||[]).length; a+=(x.attributes||[]).length; for (const v of Object.values(x.options||{})) o+=v.length;
+      f+=(x.filters||[]).length; fe+=(x.features||[]).length; if (x.variantRule) r++; if (x.complianceProfile) c.add(x.complianceProfile); }
+    process.stdout.write(JSON.stringify([t,a,o,f,fe,r,c.size]));`], { cwd: new URL('..', import.meta.url), env: { ...process.env, SKH_TAXONOMY_SKIP_OWNER_BRANCHES: '1' } }).toString());
+  assert.deepEqual(base, [720, 1122, 387, 681, 209, 112, 19]);
+}
+// Post-merge snapshot (owner source 2026-11-06): only product types, attributes and
+// (empty-variant) branches grow; options, filters, features and compliance are unchanged.
+assert.equal(typeOccurrences, 5418);
+assert.equal(attrOccurrences, 2917);
 assert.equal(optionValueOccurrences, 387);
 assert.equal(filterOccurrences, 681);
 assert.equal(featureOccurrences, 209);
-assert.equal(ruleCount, 112);
+assert.equal(ruleCount, 576);
 assert.equal(compliance.size, 19);
 assert.equal(data.PROFILE_LIBRARY.commerce.includes('Unit'), true);
 assert.ok(taxonomy.getUnitDefinitions().groups.weight);
@@ -73,7 +89,10 @@ assert.ok(specificationArtifact.includes('CAT-16 Product branch specification = 
 assert.ok(specificationArtifact.includes('CAT-19 = Product + Service'));
 const reconciliation = taxonomy.reconcileProductSpecification();
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-16' && row.classification === 'GENUINELY_UNSPECIFIED'));
-assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Samaki & Seafood' && row.classification === 'SPECIFIED_BUT_INCOMPLETE'));
+// [2026-11-06] Filled from the owner source (01.6 Samaki & Seafood) — previously SPECIFIED_BUT_INCOMPLETE.
+assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Samaki & Seafood' && row.classification === 'SPECIFIED_AND_IMPLEMENTED'));
+assert.equal(data.PRODUCT_TYPE_DEFINITIONS['CAT-01']['Samaki & Seafood'].definitionState, 'OWNER_SOURCE_BRANCH');
+assert.ok(data.PRODUCT_TYPE_DEFINITIONS['CAT-01']['Samaki & Seafood'].productTypes.includes('Dagaa'));
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Mizizi & Viazi' && row.classification === 'SPECIFIED_AND_IMPLEMENTED')); // [REPAIR 2026-10] completed in 0ac2c17
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-01' && row.branch === 'Mboga & Fresh Produce' && row.classification === 'SPECIFIED_AND_IMPLEMENTED'));
 assert.ok(reconciliation.rows.some(row => row.categoryId === 'CAT-17' && row.classification === 'SERVICE'));

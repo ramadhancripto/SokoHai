@@ -357,6 +357,17 @@ window.submitSeller = async function(event) {
     
     const title = document.getElementById('prodName').value.trim();
    
+// [2026-11-06] Only keep the picked product type if the seller did not change the
+// category/branch afterwards (ids are branch-scoped: PT-<cat>-<BRANCH_LABEL>).
+function skhTaxonomyProductType(category, subCategory) {
+    const idEl = document.getElementById('prodTaxonomyProductTypeId');
+    const lbEl = document.getElementById('prodTaxonomyProductTypeLabel');
+    const id = idEl ? idEl.value : '', label = lbEl ? lbEl.value : '';
+    if (!id || !label || !subCategory || subCategory === 'N/A') return {};
+    const slug = String(subCategory + '-' + label).normalize('NFKD').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase();
+    if (!id.endsWith('-' + slug)) return {};
+    return { productTypeId: id, productTypeLabel: label };
+}
 // Baini kategoria sahihi kulingana na offline au online
 let category = "";
 let subCategory = "";
@@ -568,6 +579,8 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         buyPrice: buyPrice,
         category: category,
         subCategory: subCategory,
+        // [2026-11-06] Canonical product type chosen via the taxonomy search (owner 01–44).
+        ...skhTaxonomyProductType(category, subCategory),
         filters: itemFilters,
         ...structuredFields,
         description: (visibility !== 'offline_only') ? document.getElementById('prodDesc').value : "In-store Product",

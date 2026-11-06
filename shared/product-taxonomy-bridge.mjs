@@ -171,7 +171,16 @@ function getSellerSubcategories(category,live={}){
  const id=categoryIdFor(category), existing=Object.keys(live[category]?.subcategories||{});
  return unique([...(projection.productLeaves?.[id]||[]),...existing]);
 }
-export {categoryIdFor,getProductSuggestions,getSellerSubcategories,getSellerCategoryOptions};
+// [2026-11-06] Canonical product types of one branch (owner taxonomy 01–44 merged).
+// Ids use the same formula as canonical-taxonomy-data.js PRODUCT_TYPE_REGISTRY:
+// `PT-<categoryId>-<SLUG(branch-label)>`.
+const ptSlug=v=>String(v||'').normalize('NFKD').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'').toUpperCase()||'UNNAMED';
+function getProductTypeOptions(category,subcategory){
+ const id=categoryIdFor(category);if(!id||!subcategory)return [];
+ const c=(projection.categories||[]).find(x=>x.id===id);const d=c&&c.definitions&&c.definitions[subcategory];
+ return ((d&&d.productTypes)||[]).map(label=>({id:`PT-${id}-${ptSlug(subcategory+'-'+label)}`,label}));
+}
+export {categoryIdFor,getProductSuggestions,getSellerSubcategories,getSellerCategoryOptions,getProductTypeOptions};
 
 // Evidence classification only: never infer variant capability from enums,
 // measurements, a live parent label, or a category-wide default.
