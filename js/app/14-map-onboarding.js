@@ -46,30 +46,20 @@ window.enableEditPaymentInfo = function() {
 
 window.l = loadAndRenderDashboard;
 
-window.triggerFomo = function() {
-    const names = ["Juma", "Asha", "Said", "Haji", "Kelvin", "Fatma", "Neema", "Brayan"];
-    const cities = ["Dar es Salaam", "Mwanza", "Arusha", "Mbeya", "Dodoma", "Zanzibar"];
-    const actions = ["amenunua bidhaa", "ameweka oda", "ameagiza usafiri", "amepata fundi"];
-
-    const name = names[Math.floor(Math.random() * names.length)];
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    const action = actions[Math.floor(Math.random() * actions.length)];
-
+/* [REMEDIATION 2026-11 R8] Social-proof toast shows REAL events only.
+   It used to invent buyers ("Said wa Zanzibar amenunua bidhaa hivi punde!")
+   from random names every ~25 s — fabricated activity shown to buyers.
+   The toast and its interface stay; it now renders only an event passed in by
+   a caller that has a real record, and nothing fires on a timer. */
+window.triggerFomo = function(evt) {
+    if (!evt || !evt.name || !evt.action) return;      // no real event → no toast
     const toast = document.getElementById('fomoToast');
     if(!toast) return;
-
-    toast.innerHTML = ` <b>${name}</b> wa ${city} <br> ${action} hivi punde!`;
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    toast.innerHTML = ` <b>${esc(evt.name)}</b>${evt.city ? ' wa ' + esc(evt.city) : ''} <br> ${esc(evt.action)}`;
     toast.style.display = 'block';
-
-    // Ficha baada ya sekunde 5
-    setTimeout(() => {
-        toast.style.display = 'none';
-    }, 5000);
+    setTimeout(() => { toast.style.display = 'none'; }, 5000);
 };
-
-setInterval(() => {
-    if(Math.random() > 0.6) window.triggerFomo();
-}, 25000);
 
 // [FIX 2026-09] Lebo ya kitufe cha kutuma bidhaa inabadilika kulingana na Visibility:
 //   - offline_only -> "HIFADHI KWENYE INVENTORY" (duka la ndani tu)
