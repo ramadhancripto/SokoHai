@@ -2,10 +2,21 @@
         <!-- [FIX 2026-09-24] Inline display:none ILIFANICHA KATEGORIA MILELE —
              scroll-handler na CSS (.cat-trigger-btn display:flex) zilishatakiwa
              ionekane. Sasa inaonekana moja kwa moja chini ya ad card. -->
-        <div class="cat-trigger-btn" id="topFilterToggles" onclick="openCategoryModal()">
-            <span id="activeCategoryText" data-i18n="cat_all">Kategoria: Bidhaa Zote Sokoni</span>
-            <span style="background: var(--gold); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">+</span>
-        </div>
+        <!-- [CATEGORY PHOTO STRIP 2026-11-04] Kategoria zenye picha (6 + Zaidi).
+             Inachukua nafasi ya "Kategoria: Bidhaa Zote" + "Gundua Soko" ili
+             sponsored ads zisionekane kabla ya kategoria. Kila kadi inaita
+             selectAdvancedCategory() ile ile; kadi iliyochaguliwa inaonekana
+             na zingine zinachujwa. Hujengwa na js/app/83-category-photos.js. -->
+        <section class="cps-section" id="categoryStrip" aria-labelledby="cpsTitle">
+            <div class="cps-head">
+                <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span>Gundua Soko</h2>
+                <span class="cps-head-rule" aria-hidden="true"></span>
+                <button type="button" class="cps-more" onclick="openCategoryModal()">Kategoria zote
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+                </button>
+            </div>
+            <div class="cps-strip" id="categoryPhotoStrip"></div>
+        </section>
 
         <div class="dynamic-sliders-container" id="dynamicSliders" style="display:none;">
             <b data-i18n="filter_type" style="font-size: 13px; color: #94a3b8; text-transform: uppercase; margin-bottom: -5px;">Aina ya Bidhaa (Telezesha &harr;)</b>

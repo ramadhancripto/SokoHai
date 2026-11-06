@@ -622,10 +622,12 @@ import {
     function watchSellerReturn() {
         var seller = document.getElementById('sellerProfileModal');
         if (!seller || seller.__skhReturnWatched) return;
+        // [2026-11-06] window.* so the module also loads in non-browser harnesses.
+        if (typeof window.getComputedStyle !== 'function' || typeof window.MutationObserver !== 'function') return;
         seller.__skhReturnWatched = true;
-        var wasOpen = getComputedStyle(seller).display !== 'none';
-        new MutationObserver(function () {
-            var open = getComputedStyle(seller).display !== 'none';
+        var wasOpen = window.getComputedStyle(seller).display !== 'none';
+        new window.MutationObserver(function () {
+            var open = window.getComputedStyle(seller).display !== 'none';
             if (wasOpen && !open) { try { restoreProductModal(); } catch (e) {} }
             wasOpen = open;
         }).observe(seller, { attributes: true, attributeFilter: ['style', 'class'] });

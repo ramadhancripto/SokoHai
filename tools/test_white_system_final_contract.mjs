@@ -25,8 +25,11 @@ check('account save action is primary green', has('js/app/67-payment-accounts.js
 check('legacy announcement source no longer has dark navy strip', lacks('css/05-announcement.css', 'background:linear-gradient(90deg,#002244,#00509d,#10b981)'));
 check('old core announcement source no longer has dark navy strip', lacks('css/01-core.css', 'background: linear-gradient(90deg, #002244, #00509d)'));
 check('dialogs do not use legacy blue primary background', lacks('js/05-dialogs.js', 'background:#1268A8'));
-check('current Discover engine is removed', !fs.existsSync(new URL('../js/app/75-discover-engine.js', import.meta.url)));
-check('current Discover completion UI is removed', !fs.existsSync(new URL('../js/app/88-discover-complete.js', import.meta.url)));
+// [2026-11-06] The retired Discover files are kept in the repo (owner: do not delete);
+// the contract is that the app shell never loads them.
+const appShell = read('index.html') + read('html/21-scripts.html');
+check('current Discover engine is not loaded', !appShell.includes('75-discover-engine.js'));
+check('current Discover completion UI is not loaded', !appShell.includes('88-discover-complete.js'));
 
 console.log(`\nFinal white-system contract: ${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
