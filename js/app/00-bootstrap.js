@@ -2143,7 +2143,8 @@ skh.cardImage = function cardImage(data, overlayHTML, extraClass) {
 
 // [VerificationBadge] Tiki ya kijani — IKIWA imethibitishwa KWELI tu
 skh.cardVerified = function cardVerified(data) {
-    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified';
+    // [R7] all of these are admin/server-set (firestore.rules listingTrustKeys / providerVerified)
+    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified' || data.providerVerified === true;
     if (!v) return '';
     return '<span class="skh-verified" title="Imethibitishwa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>';
 };
@@ -2285,7 +2286,8 @@ skh.cardTypeBadge = function cardTypeBadge(colName) {
 
 // [VerifiedPill] Kibandiko cha kijani chini-kushoto mwa picha
 skh.cardVerifiedPill = function cardVerifiedPill(data) {
-    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified';
+    // [R7] all of these are admin/server-set (firestore.rules listingTrustKeys / providerVerified)
+    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified' || data.providerVerified === true;
     if (!v) return '';
     return '<span class="skh-verified-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Verified</span>';
 };

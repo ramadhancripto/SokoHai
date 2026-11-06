@@ -76,6 +76,11 @@ service cloud.firestore {
     function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
     function unchanged(keys) { return !changed().hasAny(keys); }
     // List queries must carry a small limit so collections cannot be dumped.
+    // [REMEDIATION 2026-11 R7] trust badges on listings are admin/server-set only
+    // (the card shows "Imethibitishwa" when any of these is set).
+    function listingTrustKeys() {
+      return ['verified','ownerVerified','verificationStatus','sellerVerified','isVerified','verifiedAt','verifiedBy'];
+    }
     function smallQuery(n) {
       return request.query.limit != null && request.query.limit <= n;
     }
@@ -139,6 +144,7 @@ service cloud.firestore {
         && !('variantCombinations' in request.resource.data)
         && canonicalProductScopeValid(request.resource.data)
         && !request.resource.data.keys().hasAny(['moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
+        && (isAdmin() || !request.resource.data.keys().hasAny(listingTrustKeys()))
         // [REPAIR 2026-10 Phase 5] no pre-filled auction winner / bids / group members
         && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
         && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
@@ -158,6 +164,7 @@ service cloud.firestore {
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reservedStock','variantCombinations'])
         // [POS 2026-11-01] decimal precision is fixed once stock exists in that precision (server/admin only after create).
         && (isAdmin() || unchanged(['quantityPrecision']))
+        && (isAdmin() || unchanged(listingTrustKeys()))
         && (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments','stock','businessId','storeId','ownerUid','shopOwnerUid','shopOwnerId','sellerId','userId','openingStockPending','openingStockInitialized','moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
         // [REPAIR 2026-10 Phase 5] Once buyers took part (a bid, or a Group Buy join)
         // the mode runtime belongs to the server (auctionPlaceBid / groupBuyJoin);
@@ -215,12 +222,14 @@ service cloud.firestore {
       allow read: if true;
       allow create: if signedIn() && validService(request.resource.data)
         && !request.resource.data.keys().hasAny(['providerVerified','moderationStatus','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
+        && (isAdmin() || !request.resource.data.keys().hasAny(listingTrustKeys()))
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsService(resource.data) && validService(request.resource.data)
         && request.resource.data.userId == resource.data.userId
-        && (isAdmin() || unchanged(['providerVerified','moderationStatus','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']));
+        && (isAdmin() || unchanged(['providerVerified','moderationStatus','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
+        && (isAdmin() || unchanged(listingTrustKeys()));
       allow delete: if false;
     }
 
