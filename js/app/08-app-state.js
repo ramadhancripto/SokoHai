@@ -460,6 +460,13 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
             const endStr = document.getElementById('aucEndTime').value;
             if(!endStr) { alert("Weka tarehe na muda wa mnada kuisha."); return; }
             modeData = { endTime: new Date(endStr).getTime(), currentBid: price, maxBidder: null, totalBids: 0 };
+            // [R13-B] hiari: muda wa kuanza + nyongeza ya chini (auctionPlaceBid inazitekeleza server-side)
+            const aucStartStr = (document.getElementById('aucStartTime') || {}).value || '';
+            const aucStartMs = aucStartStr ? new Date(aucStartStr).getTime() : 0;
+            if (aucStartMs && aucStartMs >= modeData.endTime) { alert("Muda wa mnada kuanza lazima uwe kabla ya muda wa kuisha."); return; }
+            if (aucStartMs > nowMs) modeData.startTime = aucStartMs;
+            const aucInc = Math.round(parseFloat((document.getElementById('aucMinIncrement') || {}).value) || 0);
+            if (aucInc > 0) modeData.minIncrement = aucInc;
         } 
         else if (saleMode === 'price_drop') {
             const minPrice = parseFloat(document.getElementById('pdMinPrice').value);
@@ -468,11 +475,18 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
             if(!minPrice || !endStr) { alert("Weka Bei ya Mwisho na Muda wa Deal kuisha."); return; }
             
             const endMs = new Date(endStr).getTime();
-            const totalDurationMs = endMs - nowMs;
+            // [R13-B] hiari: ofa ianze baadaye; kikomo kwa mnunuzi (modeQuantityLimit server-side)
+            const pdStartStr = (document.getElementById('pdStartTime') || {}).value || '';
+            const pdStartMs = pdStartStr ? new Date(pdStartStr).getTime() : 0;
+            if (pdStartMs && pdStartMs >= endMs) { alert("Ofa lazima ianze kabla ya muda wa kuisha."); return; }
+            const startMs = pdStartMs > nowMs ? pdStartMs : nowMs;
+            const totalDurationMs = endMs - startMs;
             const totalIntervals = Math.floor(totalDurationMs / intervalMs);
             const dropAmt = totalIntervals > 0 ? ((price - minPrice) / totalIntervals) : 0;
 
-            modeData = { minPrice: minPrice, intervalMs: intervalMs, dropAmount: dropAmt, endTime: endMs, startTime: nowMs };
+            modeData = { minPrice: minPrice, intervalMs: intervalMs, dropAmount: dropAmt, endTime: endMs, startTime: startMs };
+            const pdMax = parseInt((document.getElementById('pdMaxPerBuyer') || {}).value, 10);
+            if (pdMax > 0) modeData.maxPerBuyer = pdMax;
         } 
         else if (saleMode === 'wholesale') {
             const discVal = parseFloat(document.getElementById('wsDiscount').value);

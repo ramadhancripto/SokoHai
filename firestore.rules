@@ -1924,7 +1924,11 @@ service cloud.firestore {
     }
     // [R13-B] Stories: active + not expired; public, or followers-only for real followers.
     match /stories/{storyId} {
-      allow read: if signedIn() && (isAdmin() || resource.data.authorUid == request.auth.uid
+      // list: the rail queries public + active stories (it filters expiry itself; a query can not
+      // prove "now"); get: a single story also has to be unexpired.
+      allow list: if signedIn() && (isAdmin() || resource.data.authorUid == request.auth.uid
+        || (resource.data.visibility == 'public' && resource.data.status == 'active'));
+      allow get: if signedIn() && (isAdmin() || resource.data.authorUid == request.auth.uid
         || (resource.data.status == 'active' && resource.data.expiresAtMs > request.time.toMillis()
             && (resource.data.visibility == 'public'
                 || (exists(/databases/$(database)/documents/sellerFollowers/$(request.auth.uid + '__' + resource.data.authorUid))
@@ -1942,7 +1946,8 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/group_soko/$(g)/members/$(request.auth.uid)).data.status in ['active', 'invited'];
     }
     match /group_soko/{g} {
-      allow read: if signedIn() && (isAdmin() || isGroupSokoMember(g));
+      allow get: if signedIn() && (isAdmin() || isGroupSokoMember(g));
+      allow list: if signedIn() && (isAdmin() || request.auth.uid in resource.data.memberUids);
       allow write: if false;
       match /{sub}/{doc} {
         allow read: if signedIn() && (isAdmin() || isGroupSokoMember(g));

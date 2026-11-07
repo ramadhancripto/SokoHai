@@ -220,6 +220,11 @@
             <div id="mode_auction_fields" style="display:none;">
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:4px;"> MUDA WA MNADA KUISHA *</label>
                 <input type="datetime-local" id="aucEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: muda wa kuanza na nyongeza ya chini ya zabuni (server inazitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> MNADA UANZE LINI (hiari)</label>
+                <input type="datetime-local" id="aucStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> NYONGEZA YA CHINI YA ZABUNI (TSH, hiari)</label>
+                <input type="number" id="aucMinIncrement" min="0" placeholder="Mfano: 5,000 (vinginevyo 5% ya dau la juu)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  BEI KUSHUKA KIOTOMATIKI (PRICE DROP) -->
@@ -235,6 +240,11 @@
                 </select>
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> DEAL INAISHIA LINI *</label>
                 <input type="datetime-local" id="pdEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: ofa ianze baadaye na kikomo kwa kila mnunuzi (server inakitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> OFA IANZE LINI (hiari, vinginevyo sasa hivi)</label>
+                <input type="datetime-local" id="pdStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> KIKOMO KWA KILA MNUNUZI (hiari)</label>
+                <input type="number" id="pdMaxPerBuyer" min="1" placeholder="Mfano: 2" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  WHOLESALE + GROUP BUY -->

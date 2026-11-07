@@ -12,13 +12,17 @@ ok('hero shows on Nyumbani only', /\.shh \{ display: none;/.test(css) && /body:h
 const hero = idx.slice(idx.indexOf('id="skhHomeHero"'), idx.indexOf('id="categoryStrip"'));
 const calls = [...hero.matchAll(/onclick="([^"]+)"/g)].map(m => m[1]);
 const fns = new Set(calls.flatMap(c => [...c.matchAll(/(?:window\.)?([A-Za-z]+)\(/g)].map(m => m[1])));
-const known = ['updateApp', 'setMarketMode', 'openChatList', 'togglePlusMenu', 'querySelector'];
-ok('every hero action calls an existing function: ' + [...fns].join(', '), [...fns].every(f => known.includes(f)) && ['updateApp', 'setMarketMode', 'openChatList', 'togglePlusMenu'].every(f => f === 'querySelector' || new RegExp('window\\.' + f + '\\s*=').test(js)));
+const known = ['updateApp', 'setMarketMode', 'openChatList', 'togglePlusMenu', 'querySelector', 'skhLiveHub']; // [R13-B] Mazungumzo → Live sasa (chat stays in the nav)
+ok('every hero action calls an existing function: ' + [...fns].join(', '), [...fns].every(f => known.includes(f)) && ['updateApp', 'setMarketMode', 'skhLiveHub', 'togglePlusMenu'].every(f => f === 'querySelector' || new RegExp('window\\.' + f + '\\s*=').test(js)));
 ok('hero image is the owner-supplied design asset, present', fs.existsSync(path.join(ROOT, 'assets/img/home/community.webp')));
 ok('desktop-only rail items hidden on phones', /\.nav-tab\.nav-desk-only \{ display: none !important; \}/.test(css) && (idx.match(/nav-desk-only/g) || []).length === 3);
 ok('SokoPay avatars reference real SVG files (the .png files contain SVG)', idx.includes('img/avatar-user.svg') && rd('img/avatar-user.svg').includes('<svg') && rd('img/avatar-sokohai.svg').includes('<svg'));
 ok('old avatar .png files kept (no asset deleted)', fs.existsSync(path.join(ROOT, 'img/avatar-user.png')) && fs.existsSync(path.join(ROOT, 'img/avatar-sokohai.png')));
 ok('chat inbox tabs in Swahili', js.includes("['groups', 'Makundi'], ['order_groups', 'Oda za Makundi']"));
+// [R13-B] seller form: optional auction start/min increment and price-drop start/per-buyer limit reach modeData
+const st = rd('js/app/08-app-state.js');
+ok('seller form has auction start + min increment and price-drop start + per-buyer limit', ['aucStartTime', 'aucMinIncrement', 'pdStartTime', 'pdMaxPerBuyer'].every(id => idx.includes('id="' + id + '"') && st.includes("'" + id + "'")) && /modeData\.minIncrement = aucInc/.test(st) && /modeData\.maxPerBuyer = pdMax/.test(st) && /startTime: startMs/.test(st));
+ok('R13-B modules wired: CSS + 3 module scripts + Live entry + Hali own slot', idx.includes('css/63-live-commerce.css') && ['120-live-commerce-ui', '121-stories-ui', '122-group-soko-ui'].every(f => idx.includes('js/app/' + f + '.js')) && idx.includes('data-skh-live-entry') && rd('js/app/121-stories-ui.js').includes("el.id = 'skhHxRail'"));
 const bd = rd('tools/build_dist.mjs');
 const refs = [...new Set([...idx.matchAll(/["'(]((?:assets\/)?img\/[^"')?]+\.(?:png|jpe?g|webp|svg))/g)].map(m => m[1]))];
 ok('deploy (dist) copies assets/img: ' + refs.length + ' image paths in index.html all covered', /'assets\/img'/.test(bd) && refs.every(r => (r.startsWith('assets/img/') || r.startsWith('img/')) && fs.existsSync(path.join(ROOT, r))));

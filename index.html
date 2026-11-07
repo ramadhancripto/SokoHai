@@ -177,6 +177,7 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="fonts/inter.css">
 <link rel="stylesheet" href="css/61-desktop-layout.css?v=20261107r10">
 <link rel="stylesheet" href="css/62-system-polish.css?v=20261107r12">
+<link rel="stylesheet" href="css/63-live-commerce.css?v=20261107r13b"><!-- [R13-B] live, hali, group soko -->
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>
@@ -1555,6 +1556,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <div id="mode_auction_fields" style="display:none;">
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:4px;"> MUDA WA MNADA KUISHA *</label>
                 <input type="datetime-local" id="aucEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: muda wa kuanza na nyongeza ya chini ya zabuni (server inazitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> MNADA UANZE LINI (hiari)</label>
+                <input type="datetime-local" id="aucStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> NYONGEZA YA CHINI YA ZABUNI (TSH, hiari)</label>
+                <input type="number" id="aucMinIncrement" min="0" placeholder="Mfano: 5,000 (vinginevyo 5% ya dau la juu)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  BEI KUSHUKA KIOTOMATIKI (PRICE DROP) -->
@@ -1570,6 +1576,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 </select>
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> DEAL INAISHIA LINI *</label>
                 <input type="datetime-local" id="pdEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: ofa ianze baadaye na kikomo kwa kila mnunuzi (server inakitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> OFA IANZE LINI (hiari, vinginevyo sasa hivi)</label>
+                <input type="datetime-local" id="pdStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> KIKOMO KWA KILA MNUNUZI (hiari)</label>
+                <input type="number" id="pdMaxPerBuyer" min="1" placeholder="Mfano: 2" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  WHOLESALE + GROUP BUY -->
@@ -3212,7 +3223,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <button type="button" onclick="updateApp('delivery')"><span class="shh-qi"><span class="skh-ico" data-ico="truck" aria-hidden="true"></span></span><b>Tafuta usafiri</b><small>Mizigo na abiria</small></button>
                 <button type="button" onclick="updateApp('bidhaa'); setMarketMode('auction', document.querySelector('[data-skh-mode=auction]'))"><span class="shh-qi"><span class="skh-ico" data-ico="gavel" aria-hidden="true"></span></span><b>Mnada</b><small>Shiriki mnada</small></button>
                 <button type="button" onclick="updateApp('bidhaa'); setMarketMode('price_drop', document.querySelector('[data-skh-mode=price_drop]'))"><span class="shh-qi"><span class="skh-ico" data-ico="trend_down" aria-hidden="true"></span></span><b>Bei kushuka</b><small>Ofa zinazoshuka</small></button>
-                <button type="button" onclick="openChatList()"><span class="shh-qi"><span class="skh-ico" data-ico="chat" aria-hidden="true"></span></span><b>Mazungumzo</b><small>Chat na wauzaji</small></button>
+                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub()" data-skh-live-entry="1"><span class="shh-qi"><span class="skh-ico" data-ico="video" aria-hidden="true"></span></span><b>Live sasa</b><small>Tazama na nunua moja kwa moja</small></button>
             </nav>
         </section>
 
@@ -3675,6 +3686,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/101-marketplace-ads-studio.js"></script>
 <script type="module" src="js/app/102-publish-outbox.js"></script>
 <script type="module" src="js/app/103-ad-badges.js"></script><!-- [ADS 2026-11-01] badges ndogo: dashboard, chat --><!-- [BIDHAA/HUDUMA/USAFIRI] hifadhi kwa kifaa, sambaza baadaye -->
+<script type="module" src="js/app/120-live-commerce-ui.js?v=20261107r13b"></script><!-- [R13-B] Live, Mnada Live, Bei Kushuka Live -->
+<script type="module" src="js/app/121-stories-ui.js?v=20261107r13b"></script><!-- [R13-B] Hali (stories) viewer -->
+<script type="module" src="js/app/122-group-soko-ui.js?v=20261107r13b"></script><!-- [R13-B] Group Soko -->
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->
