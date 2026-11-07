@@ -51,8 +51,8 @@
         /* huduma (serviceDataMap) */
         'Home & Personal': 'svc-home-personal',
         // [R6] svc-construction.webp carries a third-party watermark/phone number → same-subject ujenzi image
-        'Construction & Handyman': 'ujenzi',
-        'Cleaning & Maintenance': 'svc-cleaning',
+        'Construction & Handyman': null, /* [R13-C] no own clean photo yet (svc-construction is watermarked) */
+        'Cleaning & Maintenance': 'svc-cleaning', /* same subject as CAT-17 Huduma za Nyumbani */
         'Event & Entertainment': 'svc-event',
         'Tech & Repair': 'svc-tech',
         'Industrial Support': 'svc-industrial',
@@ -88,15 +88,20 @@
        Strategy below category level: product type → sub-category → category →
        fallback. Sub-category/product-type images are not supplied yet, so they
        resolve to the category image (SUB_PHOTO is the hook for owner images). */
+    /* [R13-C 2026-11] Owner decision: real photos (not 3D illustrations) represent categories.
+       One photo per subject: a category whose subject has no suitable photo yet shows the clean
+       placeholder tile until a licensed photo is supplied (never a neighbour's photo). */
     var PHOTO_BY_ID = {
-        'CAT-01': 'vyakula', 'CAT-02': 'kilimo', 'CAT-03': 'kilimo', 'CAT-04': 'mifugo',
+        'CAT-01': 'vyakula', 'CAT-02': 'kilimo', 'CAT-03': null, 'CAT-04': 'mifugo',
         'CAT-05': null, 'CAT-06': null, 'CAT-07': 'mavazi', 'CAT-08': null,
-        'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': 'elektroniki',
-        'CAT-13': 'elektroniki', 'CAT-14': 'magari', 'CAT-15': null, 'CAT-16': 'tr-cargo',
-        'CAT-19': 'afya', 'CAT-27': 'sanaa', 'CAT-28': 'asili', 'CAT-29': 'zawadi',
+        'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': null,
+        'CAT-13': null, 'CAT-14': 'magari', 'CAT-15': null, 'CAT-16': null,
+        'CAT-17': 'svc-cleaning', 'CAT-18': 'svc-tech', 'CAT-19': 'afya', 'CAT-20': null,
+        'CAT-21': 'svc-virtual', 'CAT-22': null, 'CAT-23': null, 'CAT-24': null,
+        'CAT-25': 'svc-food', 'CAT-26': 'svc-event', 'CAT-27': 'sanaa', 'CAT-28': 'asili', 'CAT-29': 'zawadi',
         'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': null, /* [R6] vitabu.webp: stock-photo watermark */ 'CAT-33': null,
         'CAT-34': null, 'CAT-35': null, 'CAT-36': 'ulinzi', 'CAT-37': 'svc-marketing',
-        'CAT-38': null, /* [R6] svc-website.webp: stock-photo watermark */ 'CAT-40': 'jumla', 'CAT-41': null, /* [R6] maagizo.webp: stock-photo watermark */ 'CAT-42': null,
+        'CAT-38': null, /* [R6] svc-website.webp: stock-photo watermark */ 'CAT-39': null, 'CAT-40': 'jumla', 'CAT-41': null, /* [R6] maagizo.webp: stock-photo watermark */ 'CAT-42': null,
         'CAT-43': null, 'CAT-44': 'mchanganyiko'
     };
     /* [R6 review 2026-11] Files carrying a stock-photo watermark (Dreamstime) or a
@@ -110,40 +115,28 @@
     function canonId(name) {
         try { return (window.skh && typeof window.skh.canonicalCategoryId === 'function') ? window.skh.canonicalCategoryId(name) : null; } catch (e) { return null; }
     }
-    /* [R13 2026-11] ONE illustration family (approved owner style, 3D clay icons) replaces the
-       mixed photo set for categories, services, transport and modes. Files + manifest come from
-       tools/build_category_illustrations.mjs (window.SKH_CATEGORY_ICONS). The old photos stay on
-       disk untouched; seller product photos are never replaced. */
-    var ICON_DIR = 'assets/img/category-icons/';
-    var ICON_ALIAS = { 'Watu (Ride)': 'Passenger', 'Kawaida (Parcels)': 'Product', 'Mizigo Mikubwa': 'Cargo', 'Dharura (Express)': 'Emergency' };
-    function icons() { return window.SKH_CATEGORY_ICONS || null; }
-    /* name | legacy label | CAT-xx  ->  file name (with extension) | null */
+    /* [R13-C 2026-11] Category, service and transport visuals are PHOTOS again (owner decision:
+       the 3D-style SVG family is not used as the main picture). Photos come from the cleaned,
+       consistent set assets/img/categories/clean/ (tools/clean_category_photos.py); originals and
+       the SVG family stay on disk untouched. No photo -> clean placeholder tile (no request). */
+    var PHOTO_DIR = 'assets/img/categories/clean/';
+    function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+    /* name | legacy label | CAT-xx  ->  file name | null */
     function slugFor(name) {
-        var M = icons();
-        if (!M) return null;
         var id = canonId(name) || (/^CAT-\d{2}$/.test(String(name || '')) ? String(name) : null);
-        if (id && M.categories[id]) return M.categories[id];
-        var n = ICON_ALIAS[name] || name;
-        return (M.legacy && M.legacy[n]) || M.services[n] || M.transport[n] || M.modes[n] || null;
+        if (id && has(PHOTO_BY_ID, id)) return PHOTO_BY_ID[id] ? PHOTO_BY_ID[id] + '.webp' : null;
+        return has(PHOTO, name) && PHOTO[name] && REJECTED_IMAGES.indexOf(PHOTO[name]) === -1 ? PHOTO[name] + '.webp' : null;
     }
-    /* sub-category subject (e.g. "Smartphones" -> sub-phones.svg) or null — never the parent's picture */
-    function subjectFor(sub) {
-        var M = icons();
-        if (!M || !sub || sub === 'Zote') return null;
-        var rules = M.subjectRules || [];
-        for (var i = 0; i < rules.length; i++) {
-            try { if (new RegExp(rules[i][1], rules[i][2]).test(sub)) return M.subjects[rules[i][0]] || null; } catch (e) {}
-        }
-        return null;
-    }
+    /* sub-category photos: owner-supplied only (SUB_PHOTO); never the parent's photo */
+    function subjectFor(sub) { return null; }
     window.skhCategoryImage = function (ref) {
         ref = ref || {};
-        var f = (ref.subcategory ? subjectFor(ref.subcategory) : null) || slugFor(ref.categoryId || ref.category);
-        if (!f && ref.fallback !== false && icons()) f = icons().fallback;
-        return f ? ICON_DIR + f : null;
+        var id = canonId(ref.categoryId || ref.category);
+        var sub = id && ref.subcategory ? SUB_PHOTO[id + '|' + ref.subcategory] : null;
+        var f = (sub ? sub + '.webp' : null) || slugFor(ref.categoryId || ref.category);
+        return f ? PHOTO_DIR + f : null;
     };
-    window.skhSubcategoryImage = function (sub) { var f = subjectFor(sub); return f ? ICON_DIR + f : null; };
-
+    window.skhSubcategoryImage = function (sub) { return null; };
     var LABEL = {
         'Vyakula na Vinywaji (Food)': 'Vyakula',
         'Kilimo (Agriculture)': 'Kilimo',
@@ -203,7 +196,7 @@
 
     function photoUrl(name) {
         var f = slugFor(name);
-        return f ? ICON_DIR + f : null;
+        return f ? PHOTO_DIR + f : null;
     }
 
     /* Njia mbadala: app inaweza kuhudumiwa kutoka folda ndogo (mf. GitHub Pages
@@ -212,16 +205,12 @@
     function photoCandidates(name) {
         var f = slugFor(name);
         if (!f) return [];
-        return [ICON_DIR + f, './' + ICON_DIR + f, '../' + ICON_DIR + f, '/' + ICON_DIR + f];
+        return [PHOTO_DIR + f, './' + PHOTO_DIR + f, '../' + PHOTO_DIR + f, '/' + PHOTO_DIR + f];
     }
 
     function imgMarkup(name, cls, alt) {
         var list = photoCandidates(name);
-        if (!list.length) {   /* [R13] unknown category -> the family's "other" illustration, not a letter tile */
-            var fb = icons() && icons().fallback;
-            if (!fb) return fallbackMarkup(name);
-            list = [ICON_DIR + fb];
-        }
+        if (!list.length) return fallbackMarkup(name);   /* [R13-C] no photo yet -> clean placeholder tile */
         var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
         return '<img class="' + cls + '" src="' + list[0] + '" alt="' + esc(alt || labelOf(name)) + '"'
              + ' data-i="0" data-cands="' + esc(JSON.stringify(list)) + '" data-initial="' + initial + '"'
@@ -260,8 +249,9 @@
     /* [R6] no suitable image: a neutral tile with the initial, no network request */
     function fallbackMarkup(name) {
         var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
-        return '<span class="skh-img-fallback skh-img-fallback--tile" role="img" aria-label="' + esc(labelOf(name)) + '">'
-             + '<span class="skh-img-fallback-letter" aria-hidden="true">' + initial + '</span></span>';
+        return '<span class="skh-img-fallback skh-img-fallback--tile skh-photo-pending" role="img" aria-label="' + esc(labelOf(name)) + '">'
+             + '<span class="skh-img-fallback-letter" aria-hidden="true">' + initial + '</span>'
+             + '<span class="skh-photo-pending-note" aria-hidden="true">Picha inakuja</span></span>';
     }
 
     function labelOf(name) {
@@ -452,7 +442,7 @@
             var sp = document.createElement('span');
             sp.className = 'cps-chip-ico';
             sp.innerHTML = subSlug
-                ? '<img class="cps-chip-img" src="' + ICON_DIR + subSlug + '" alt="" loading="lazy" decoding="async">'
+                ? '<img class="cps-chip-img" src="' + PHOTO_DIR + subSlug + '.webp" alt="" loading="lazy" decoding="async">'
                 : imgMarkup(lastCat, 'cps-chip-img', '');
             chip.insertBefore(sp, chip.firstChild);
             chip.dataset.cpsChip = '1';
@@ -465,9 +455,9 @@
        kamili kwenye console ili ijulikane papo hapo. */
     window.skhCategoryAssetCheck = function () {
         var slugs = [];
-        for (var k in PHOTO) if (PHOTO[k] && slugs.indexOf(PHOTO[k]) === -1) slugs.push(PHOTO[k]);
+        for (var k in PHOTO) if (PHOTO[k] && REJECTED_IMAGES.indexOf(PHOTO[k]) === -1 && slugs.indexOf(PHOTO[k]) === -1) slugs.push(PHOTO[k]);
         for (var k3 in PHOTO_BY_ID) if (PHOTO_BY_ID[k3] && slugs.indexOf(PHOTO_BY_ID[k3]) === -1) slugs.push(PHOTO_BY_ID[k3]);
-        var base = 'assets/img/categories/';
+        var base = PHOTO_DIR;
         var results = [];
         return Promise.all(slugs.map(function (f) {
             var url = base + f + '.webp';

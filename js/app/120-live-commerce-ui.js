@@ -65,9 +65,15 @@ async function loadHub(status) {
         const snap = await skh.getDocs(q);
         if (snap.empty) { grid.innerHTML = `<div class="lvx-empty">${ico('video', 28)}<b>${status === 'live' ? 'Hakuna live inayoendelea sasa' : status === 'scheduled' ? 'Hakuna live iliyopangwa' : 'Hakuna live zilizopita'}</b><span>Wauzaji wakianzisha live, zitaonekana hapa.</span></div>`; return; }
         grid.innerHTML = snap.docs.map(d => { const s = d.data(); return `<button class="lvx-card" onclick="skhLiveOpen('${esc(d.id)}')">
-            <span class="lvx-card-media">${s.video && s.video.kind === 'embed' ? ico('video', 34) : ico('shop', 34)}<i class="lvx-badge lvx-badge-${esc(s.status)}">${s.status === 'live' ? 'LIVE' : s.status === 'scheduled' ? 'INAKUJA' : 'IMEPITA'}</i></span>
+            <span class="lvx-card-media" data-lvx-pid="${esc(s.pinnedProductId || (s.productIds || [])[0] || '')}">${s.video && s.video.kind === 'embed' ? ico('video', 34) : ico('shop', 34)}<i class="lvx-badge lvx-badge-${esc(s.status)}">${s.status === 'live' ? 'LIVE' : s.status === 'scheduled' ? 'INAKUJA' : 'IMEPITA'}</i></span>
             <span class="lvx-card-body"><small>${esc(KIND_LABEL[s.kind] || 'Live')}</small><b>${esc(s.title)}</b><em>${esc(s.hostName)}</em>
             <span class="lvx-card-meta">${s.status === 'live' ? ico('eye', 13) + ' ' + (s.viewerCount || 0) + ' wanatazama' : (s.productIds || []).length + ' bidhaa'}</span></span></button>`; }).join('');
+        // [R13-C] real picture of the product being shown (seller's own photo); icon stays when there is none
+        grid.querySelectorAll('.lvx-card-media[data-lvx-pid]').forEach(async (m) => {
+            const pid = m.dataset.lvxPid; if (!pid) return;
+            try { const p = await skh.getDoc(skh.doc(skh.db, 'products', pid)); const d = p.exists() ? p.data() : null; const src = d && (d.image || (d.imagesArray || [])[0]);
+                if (src && /^(https:|assets\/|\/|http:\/\/localhost)/.test(src)) { const im = new Image(); im.alt = d.title || ''; im.loading = 'lazy'; im.onerror = () => { im.remove(); m.classList.remove('has-photo'); }; im.src = src; m.prepend(im); m.classList.add('has-photo'); } } catch (e) {}
+        });
     } catch (e) { grid.innerHTML = `<div class="lvx-empty"><b>Imeshindikana kupakia</b><span>${esc(errText(e))}</span></div>`; }
 }
 window.skhLiveClose = function (id) { if (id === 'lvxRoom') leaveRoom(); closeSheet(id); };
