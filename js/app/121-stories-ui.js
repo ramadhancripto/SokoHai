@@ -16,7 +16,7 @@ const ico = (n, s) => (window.skhNavIcon ? window.skhNavIcon(n, s || 16) : '');
 const toast = (m, k) => { try { if (window.sokohaiToast) return window.sokohaiToast(m, k || 'info', 3500); } catch (e) {} console.log(m); };
 const call = (n, d) => skh.callFunction(n, d).then(r => (r && r.data) || r);
 const IMAGE_MS = 5000;
-let groups = [], viewer = null, loading = false, lastLoad = 0;
+let groups = [], lives = [], viewer = null, loading = false, lastLoad = 0;
 
 async function load(force) {
     if (loading || (!force && Date.now() - lastLoad < 60000)) return paintRail();
@@ -30,6 +30,10 @@ async function load(force) {
         snap.docs.forEach(d => { const s = Object.assign({ id: d.id }, d.data()); (by[s.authorUid] = by[s.authorUid] || { uid: s.authorUid, name: s.authorName, items: [] }).items.push(s); });
         groups = Object.values(by).map(g => { g.items.sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt))); return g; })
             .sort((a, b) => String(b.items[b.items.length - 1].createdAt).localeCompare(String(a.items[a.items.length - 1].createdAt)));
+        try {   // [R13-D] ref 9 "Watch Live": live sessions lead the rail
+            const ls = await skh.getDocs(skh.query(skh.collection(skh.db, 'live_sessions'), skh.where('status', '==', 'live'), skh.orderBy('updatedAt', 'desc'), skh.limit(8)));
+            lives = ls.docs.map(d => Object.assign({ id: d.id }, d.data()));
+        } catch (e) { lives = []; }
         lastLoad = Date.now();
     } catch (e) { console.warn('[stories]', e && e.message); groups = []; }
     loading = false; paintRail();
@@ -40,9 +44,10 @@ function paintRail() {
     const seen = (() => { try { return JSON.parse(localStorage.getItem('skh_hali_seen') || '{}'); } catch (e) { return {}; } })();
     slot.innerHTML = `<div class="hx-rail" role="list" aria-label="Hali za wauzaji">
         ${me ? `<button class="hx-item hx-add" onclick="skhStoryCreate()" role="listitem"><span class="hx-ring">${ico('plus', 20)}</span><small>Hali yako</small></button>` : ''}
+        ${lives.map(l => `<button class="hx-item hx-live" onclick="skhLiveOpen('${esc(l.id)}')" role="listitem" aria-label="Tazama live ya ${esc(l.hostName)}"><span class="hx-ring is-live">${ico('video', 20)}<i>LIVE</i></span><small>${esc(l.hostName)}</small></button>`).join('')}
         ${groups.map((g, i) => { const last = g.items[g.items.length - 1]; const unseen = !seen[last.id];
             return `<button class="hx-item" onclick="skhStoryOpen(${i})" role="listitem" aria-label="Hali ya ${esc(g.name)}"><span class="hx-ring ${unseen ? 'is-new' : ''}">${last.kind === 'image' ? `<img src="${esc(last.mediaUrl)}" alt="" loading="lazy">` : ico('video', 20)}</span><small>${esc(g.name)}</small></button>`; }).join('')}
-        ${!groups.length ? '<span class="hx-empty">Hakuna hali mpya kwa sasa.</span>' : ''}</div>`;
+        ${!groups.length && !lives.length ? '<span class="hx-empty">Hakuna hali mpya kwa sasa.</span>' : ''}</div>`;
 }
 
 /* ---------------- viewer ---------------- */
@@ -67,8 +72,10 @@ function show() {
         <div class="hx-media" id="hxMedia">${s.kind === 'video' ? `<video src="${esc(s.mediaUrl)}" playsinline autoplay muted></video>` : `<img src="${esc(s.mediaUrl)}" alt="${esc(s.caption || 'Hali')}">`}</div>
         <button class="hx-tap hx-prev" aria-label="Iliyotangulia" onclick="skhStoryStep(-1)"></button><button class="hx-tap hx-next" aria-label="Inayofuata" onclick="skhStoryStep(1)"></button>
         <footer class="hx-foot">${s.caption ? `<p>${esc(s.caption)}</p>` : ''}
-          <div class="hx-actions">${s.listing ? `<button class="lvx-btn lvx-btn-primary" onclick="skhStoryListing()">${ico('package', 15)} Fungua tangazo${s.listing.price ? ' · TSh ' + Number(s.listing.price).toLocaleString('en-US') : ''}</button>` : ''}
-            ${s.listing ? `<button class="lvx-btn" onclick="skhStoryShare()">${ico('send', 15)} Tuma kwa chat</button>` : ''}
+          ${mine ? '' : `<div class="hx-react"><button onclick="skhStoryReact(this)" class="${viewer.reacted && viewer.reacted[s.id] ? 'on' : ''}">${ico('heart', 18)} <span>${s.reactCount || 0}</span> Penda</button><button onclick="skhStoryChat('comment')">${ico('chat', 18)} Maoni</button><button onclick="skhStoryShare()">${ico('send', 18)} Shiriki</button></div>`}
+          <div class="hx-actions">${s.listing ? `<button class="lvx-btn lvx-btn-primary hx-wide" onclick="skhStoryListing()">${ico('package', 15)} Tazama bidhaa${s.listing.price ? ' · TSh ' + Number(s.listing.price).toLocaleString('en-US') : ''}</button>` : ''}
+            ${mine ? '' : `<button class="lvx-btn hx-wide" onclick="skhStoryChat('seller')">${ico('chat', 15)} Chat na muuzaji</button>`}
+
             ${mine ? `<button class="lvx-btn" onclick="skhStoryRemove()">${ico('trash', 15)} Ondoa</button><span class="hx-views">${ico('eye', 13)} ${s.viewCount || 0}</span>`
                    : `<button class="lvx-btn" onclick="skhStoryReport()">${ico('alert', 15)} Ripoti</button>`}</div></footer></div>`;
     const stage = el.querySelector('.hx-stage');
@@ -98,6 +105,11 @@ window.skhStoryStep = function (d) {
 function onKey(e) { if (!viewer) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') window.skhStoryStep(1); if (e.key === 'ArrowLeft') window.skhStoryStep(-1); }
 function close() { if (viewer) cancelAnimationFrame(viewer.raf); viewer = null; const el = document.getElementById('hxViewer'); if (el) { el.hidden = true; el.innerHTML = ''; } document.removeEventListener('keydown', onKey); if (!document.querySelector('.lvx-overlay:not([hidden])')) document.body.classList.remove('lvx-open'); paintRail(); }
 window.skhStoryClose = close;
+window.skhStoryReact = async function (btn) { const s = story(); if (!s) return;
+    try { const r = await call('storyReact', { storyId: s.id }); viewer.reacted = viewer.reacted || {}; viewer.reacted[s.id] = r.on; s.reactCount = r.count; btn.classList.toggle('on', r.on); btn.querySelector('span').textContent = r.count; }
+    catch (e) { toast(window.skhFnErrText ? window.skhFnErrText(e) : e.message, 'warn'); } };
+/* comments and questions go to the author privately (the existing chat), never as public replies */
+window.skhStoryChat = function () { const s = story(); if (!s) return; close(); if (typeof window.openChatWithUser === 'function') window.openChatWithUser(s.authorUid, s.authorName); };
 window.skhStoryListing = function () { const s = story(); if (!s || !s.listing) return; close(); if (window.openProduct) window.openProduct(s.listing.id, s.listing.col || 'products'); };
 window.skhStoryShare = function () { const s = story(); if (!s || !s.listing) return; close();
     if (typeof window.skhShareProduct === 'function') window.skhShareProduct({ id: s.listing.id, collectionName: s.listing.col, title: s.listing.title, price: s.listing.price });

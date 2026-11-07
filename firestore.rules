@@ -1961,6 +1961,11 @@ service cloud.firestore {
                 || (exists(/databases/$(database)/documents/sellerFollowers/$(request.auth.uid + '__' + resource.data.authorUid))
                     && get(/databases/$(database)/documents/sellerFollowers/$(request.auth.uid + '__' + resource.data.authorUid)).data.followerId == request.auth.uid))));
       allow write: if false;
+      // [R13-D] reactions: server-written (storyReact); a viewer reads their own
+      match /reactions/{rid} {
+        allow read: if signedIn() && rid == request.auth.uid;
+        allow write: if false;
+      }
       match /views/{vid} {
         allow read: if signedIn() && (isAdmin() || vid == request.auth.uid
           || get(/databases/$(database)/documents/stories/$(storyId)).data.authorUid == request.auth.uid);

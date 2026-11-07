@@ -181,6 +181,7 @@ window.skhGsAct = async function (what, arg) {
 (function mountDrawerEntries() {
     const ITEMS = [
         ['skh-menu-live-row', 'video', 'Live sasa', 'Live za wauzaji, Mnada Live na Bei Kushuka Live', () => window.skhLiveHub && window.skhLiveHub()],
+        ['skh-menu-mybids-row', 'gavel', 'Zabuni zangu', 'Minada unayoshiriki, uliyoshinda na malipo', () => window.skhMyBids && window.skhMyBids()],
         ['skh-menu-groupsoko-row', 'users', 'Group Soko', 'Biashara ya pamoja: mitaji, manunuzi, stoo na hesabu', () => window.skhGroupSoko()]
     ];
     function inject() {

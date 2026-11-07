@@ -3729,7 +3729,7 @@ const liveCommerce = require('./live-commerce');
 const priceDropQueue = require('./price-drop-queue');
 ['priceDropSubmit','priceDropMyRank','priceDropSettle'].forEach(n => { exports[n] = priceDropQueue[n]; });
 const stories = require('./stories');
-['storyCreate','storyView','storyReport','storyRemove'].forEach(n => { exports[n] = stories[n]; });
+['storyCreate','storyView','storyReport','storyRemove','storyReact'].forEach(n => { exports[n] = stories[n]; });
 const groupSoko = require('./group-soko');
 ['groupSokoCreate','groupSokoInvite','groupSokoAccept','groupSokoCapitalRecord','groupSokoCapitalConfirm','groupSokoPropose','groupSokoVote','groupSokoExecute','groupSokoPurchaseStep','groupSokoAttachProduct','groupSokoReport'].forEach(n => { exports[n] = groupSoko[n]; });
 // Test hook (emulator only): run the auction sweep now. Not a deployed function (not an onCall/onSchedule).

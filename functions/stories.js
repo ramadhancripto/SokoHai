@@ -99,4 +99,21 @@ exports.storyRemove = onCall({ region: REGION }, async (req) => {
     return { ok: true };
 });
 
+/* [R13-D] React (ref 9): one reaction per viewer per story; tapping again removes it. */
+exports.storyReact = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const ref = db().doc('stories/' + sid((req.data || {}).storyId));
+    const rref = ref.collection('reactions').doc(req.auth.uid);
+    let on = false, count = 0;
+    await db().runTransaction(async (t) => {
+        const s = await t.get(ref); if (!s.exists) throw new HttpsError('not-found', 'story_haipo');
+        const st = s.data() || {};
+        if (st.status !== 'active' || Date.parse(st.expiresAt) <= Date.now()) throw new HttpsError('failed-precondition', 'story_imekwisha');
+        const r = await t.get(rref);
+        on = !r.exists; count = Math.max(0, (Number(st.reactCount) || 0) + (on ? 1 : -1));
+        if (on) t.set(rref, { at: new Date().toISOString() }); else t.delete(rref);
+        t.update(ref, { reactCount: count });
+    });
+    return { ok: true, on, count };
+});
 exports._testing = { ownMedia };
