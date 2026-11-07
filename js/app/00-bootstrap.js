@@ -2697,10 +2697,12 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             if (!query) return true; // msingi baada ya mode-only search
             const title = (data.title || data.driverName || data.company || '').toLowerCase();
             const desc = (data.description || '').toLowerCase();
-            const cat = (data.category || '').toLowerCase();
+            const cat = ((data.category || '') + ' ' + (skh.categoryLabel ? (skh.categoryLabel(data.category) || '') : '') + ' ' + (data.subCategory || '') + ' ' + (data.productTypeLabel || '') + ' ' + (data.brand || '')).toLowerCase();
             // [FIX 2026-09] USAFIRI: tafuta pia kwa chombo na huduma anazobeba
             const extra = (data.vehicleType || '') + ' ' + (Array.isArray(data.supportedServices) ? data.supportedServices.join(' ') : '');
-            return title.includes(query) || desc.includes(query) || cat.includes(query) || extra.toLowerCase().includes(query);
+            // [R10] every word must match (any order): "samsung tv" finds "Samsung Smart TV 55".
+            const hay = title + ' ' + desc + ' ' + cat + ' ' + extra.toLowerCase();
+            return hay.includes(query) || query.split(' ').every(w => hay.includes(w));
         });
     }
 

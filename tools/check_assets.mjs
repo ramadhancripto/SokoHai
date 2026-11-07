@@ -21,6 +21,7 @@ const files = SLUGS.map(s => 'assets/img/categories/' + s + '.webp')
            'css/57-home-brand-header.css',
            'css/58-category-photo-strip.css',
            'css/59-nav-balance.css',
+           'css/61-desktop-layout.css',
            'js/app/82-home-header-actions.js',
            'js/app/83-category-photos.js',
            'js/app/84-location-fast.js',
@@ -35,7 +36,7 @@ for (const rel of files) {
 
 const rel2 = 'index.html';
 const html = fs.existsSync(path.join(ROOT, rel2)) ? fs.readFileSync(path.join(ROOT, rel2), 'utf8') : '';
-const wired = ['59-nav-balance.css', '83-category-photos.js', '84-location-fast.js', 'categoryPhotoStrip']
+const wired = ['59-nav-balance.css', '61-desktop-layout.css', '83-category-photos.js', '84-location-fast.js', 'categoryPhotoStrip']
   .filter(k => !html.includes(k));
 
 console.log('');
