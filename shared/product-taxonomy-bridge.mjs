@@ -1,4 +1,25 @@
-import projection from './product-taxonomy-browser.mjs';
+// [REMEDIATION 2026-11 R11] Buyer pages load only the small identity projection
+// (categories, legacy mappings, product leaves ~22 KB). The seller-form definitions
+// (~280 KB: product types, options, attributes, branch contexts) are fetched on demand
+// with ensureTaxonomyDefinitions(). Node (tools/tests/functions) loads them eagerly, so
+// every synchronous API keeps its exact previous result there.
+import identity from './category-identity.mjs';
+const projection={categories:identity.categories.map(c=>({...c,definitions:undefined})),mappings:identity.mappings,productLeaves:identity.productLeaves,branchContexts:{}};
+let definitionsLoaded=false, definitionsPromise=null;
+function applyDefinitions(mod){
+ const d=(mod&&mod.default)||{};
+ projection.categories.forEach(c=>{c.definitions=(d.definitions||{})[c.id]||{};});
+ projection.branchContexts=d.branchContexts||{};
+ definitionsLoaded=true;
+}
+function ensureTaxonomyDefinitions(){
+ if(definitionsLoaded)return Promise.resolve(true);
+ if(!definitionsPromise)definitionsPromise=import('./product-taxonomy-definitions.mjs').then(m=>{applyDefinitions(m);return true;}).catch(e=>{definitionsPromise=null;throw e;});
+ return definitionsPromise;
+}
+const taxonomyDefinitionsLoaded=()=>definitionsLoaded;
+if(typeof window==='undefined')await ensureTaxonomyDefinitions();
+export {ensureTaxonomyDefinitions,taxonomyDefinitionsLoaded};
 // Reviewed schema overlays are OPTIONAL dependencies. They are authoritative when
 // present, but they are not reconstructed here when absent: the two source modules
 // (product-schema-pilots.mjs / product-schema-refinements.mjs) were never committed

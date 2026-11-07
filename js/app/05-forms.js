@@ -2,7 +2,7 @@
 import { skh } from './00-bootstrap.js';
 // Canonical taxonomy is the authority for the visible seller category list.
 // Existing skh.advancedCategories is still passed in, unchanged, for compatibility.
-import { getSellerCategoryOptions, getSellerSubcategories, getProductTypeOptions } from '../../shared/product-taxonomy-bridge.mjs';
+import { getSellerCategoryOptions, getSellerSubcategories, getProductTypeOptions, ensureTaxonomyDefinitions, taxonomyDefinitionsLoaded } from '../../shared/product-taxonomy-bridge.mjs';
 import { visibilityForBusinessMode, sellerFormRules, duplicateTemplate, DRAFT_FIELDS, draftKey, draftHasContent } from '../../shared/product-listing-core.mjs';
 
 /* [REPAIR 2026-10 B-15] Products now store the canonical category id (e.g.
@@ -482,11 +482,16 @@ document.querySelectorAll('form').forEach(form => form.reset());
         const box = $('prodTaxonomyResults'); if (!box) return [];
         const words = norm(q).split(/\s+/).filter(Boolean);
         if (!words.length) { box.innerHTML = ''; return []; }
-        index = index || taxonomyIndex();
+        // [R11] product types live in the lazily loaded definitions: search categories/leaves
+        // now, and refresh with product types as soon as they arrive (index cached only then).
+        if (!taxonomyDefinitionsLoaded()) ensureTaxonomyDefinitions().then(() => {
+            index = null; const i = $('prodTaxonomySearch'); if (i && i.value.trim()) window.skhSellerTaxonomySearch(i.value);
+        }).catch(() => {});
+        const idx = index || taxonomyIndex(); if (taxonomyDefinitionsLoaded()) index = idx;
         // Exact product-type name first, then product types, then branches, then categories.
         const qn = norm(q).trim();
         const rank = r => (r.typeLabel && norm(r.typeLabel) === qn ? 0 : r.typeLabel ? 1 : r.leaf ? 2 : 3);
-        const hits = index.filter(r => words.every(w => r.text.includes(w)))
+        const hits = idx.filter(r => words.every(w => r.text.includes(w)))
             .sort((a, b) => rank(a) - rank(b)).slice(0, 8);
         const esc = v => String(v).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
         box.innerHTML = hits.length ? hits.map((h, i) => `<button type="button" role="option" data-tx="${i}" style="text-align:left; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; background:white; cursor:pointer;">${esc(h.typeLabel || h.leaf || h.catLabel)}${h.typeLabel ? ` <small style="color:#64748b;">· ${esc(h.catLabel)} › ${esc(h.leaf)}</small>` : (h.leaf ? ` <small style="color:#64748b;">· ${esc(h.catLabel)}</small>` : '')}</button>`).join('')
