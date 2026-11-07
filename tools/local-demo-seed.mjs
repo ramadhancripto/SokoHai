@@ -71,6 +71,22 @@ await db.doc('ride_requests/demo_open_ride').set({ customerId: uid.asha, status:
   fromLocation: 'Kariakoo', toLocation: 'Mbezi', cargoName: 'Mzigo wa demo', fare: 5000, createdAt: new Date().toISOString() });
 await db.doc('ride_requests/demo_open_ride/private/contact').set({ customerId: uid.asha, customerName: 'Asha Mnunuzi', customerPhone: '0700000000' });
 
+// [R13-B] Mnada Live, Bei Kushuka Live, Live Commerce na Hali — data ya demo (emulator tu).
+await P('juma', { id: 'demo_auction_simu', title: 'Simu Samsung A54 (mnada) · demo', category: 'CAT-12', subCategory: 'Smartphones', price: 300000, stock: 1, condition: 'Iliyotumika', baseUnit: 'Piece', image: img('elektroniki'), imagesArray: [img('elektroniki')],
+  saleMode: 'auction', modeData: { mode: 'auction', startTime: now - 60000, endTime: now + 6 * 3600000, minIncrement: 5000, currentBid: 300000, totalBids: 0 } });
+await P('juma', { id: 'demo_pricedrop_spika', title: 'Spika JBL (bei kushuka) · demo', category: 'CAT-11', subCategory: 'Audio', price: 200000, stock: 5, condition: 'Mpya', baseUnit: 'Piece', image: img('elektroniki'), imagesArray: [img('elektroniki')],
+  saleMode: 'price_drop', modeData: { mode: 'price_drop', startTime: now - 10 * 60000, intervalMs: 300000, dropAmount: 2000, minPrice: 150000, endTime: now + 6 * 3600000, maxPerBuyer: 2 } });
+const iso = new Date().toISOString();
+await db.doc('live_sessions/demo_live_tv').set({ hostUid: uid.juma, hostName: 'Juma Electronics', title: 'Ofa za TV na spika leo · demo', description: 'Live ya demo (emulator).', kind: 'live', status: 'live',
+  scheduledAt: null, startedAt: iso, endedAt: null, productIds: ['demo_tv55_juma', 'demo_pricedrop_spika'].filter(Boolean), pinnedProductId: 'demo_pricedrop_spika', video: null,
+  viewerCount: 0, peakViewers: 0, commentCount: 0, mutedUids: [], recordingAllowed: false, recordingUrl: null, createdAt: iso, updatedAt: iso });
+await db.doc('live_sessions/demo_live_mnada').set({ hostUid: uid.juma, hostName: 'Juma Electronics', title: 'Mnada wa simu · demo', description: '', kind: 'auction', status: 'live',
+  scheduledAt: null, startedAt: iso, endedAt: null, productIds: ['demo_auction_simu'], pinnedProductId: 'demo_auction_simu', video: null,
+  viewerCount: 0, peakViewers: 0, commentCount: 0, mutedUids: [], recordingAllowed: false, recordingUrl: null, createdAt: iso, updatedAt: iso });
+await db.doc('stories/demo_hali_juma').set({ authorUid: uid.juma, authorName: 'Juma Electronics', kind: 'image', mediaUrl: img('elektroniki'), caption: 'Mzigo mpya umefika dukani · demo',
+  listing: { col: 'products', id: 'demo_pricedrop_spika', title: 'Spika JBL (bei kushuka) · demo', price: 200000 }, visibility: 'public', status: 'active', viewCount: 0,
+  createdAt: iso, expiresAt: new Date(now + 24 * 3600000).toISOString(), expiresAtMs: now + 24 * 3600000 });
+
 console.log('\nSokoHai LOCAL DEMO DATA tayari (emulator tu).');
 console.log('Nenosiri la akaunti zote:', PW);
 ACCOUNTS.forEach(a => console.log('  ' + a.email.padEnd(24) + ' — ' + a.name));

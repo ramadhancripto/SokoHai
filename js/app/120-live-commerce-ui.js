@@ -173,7 +173,7 @@ async function paintRoom(prev) {
     await Promise.all(ids.map(loadProduct));
     if (!room) return;
     document.getElementById('lvxProductList').innerHTML = ids.length ? `<div class="lvx-label">Bidhaa kwenye live (${ids.length})</div>` + ids.map(pid => { const p = room.products[pid]; if (!p) return '';
-        return `<div class="lvx-prod ${pid === s.pinnedProductId ? 'on' : ''}"><img src="${esc(p.image || (p.imagesArray || [])[0] || '')}" alt="" loading="lazy"><span><b>${esc(p.title)}</b><em>${esc(tsh(listPrice(p)))}</em></span>
+        return `<div class="lvx-prod ${pid === s.pinnedProductId ? 'on' : ''}"><img src="${esc(p.image || (p.imagesArray || [])[0] || '')}" alt="" loading="lazy"><span><b>${esc(p.title)}</b><em data-lvx-price="${esc(pid)}">${esc(tsh(listPrice(p)))}</em></span>
           <button class="lvx-btn" onclick="skhLiveOpenProduct('${esc(pid)}')">Fungua</button>${isHost() && pid !== s.pinnedProductId && s.status !== 'ended' ? `<button class="lvx-btn" onclick="skhLiveHost('pin','${esc(pid)}')">Onyesha</button>` : ''}</div>`; }).join('') : '';
     paintPinned();
 }
@@ -207,6 +207,7 @@ function tick() {
     if (!room || !room.session) return;
     const p = room.products[room.session.pinnedProductId]; if (!p) return;
     const mode = p.saleMode || (p.modeData || {}).mode, md = p.modeData || {}, now = Date.now();
+    document.querySelectorAll('#lvxProductList [data-lvx-price]').forEach(e => { if (e.dataset.lvxPrice === p.id) e.textContent = tsh(listPrice(p)); }); // list follows the live price / current bid
     if (mode === 'price_drop') {
         const el = document.getElementById('lvxDropMeta'); if (!el) return;
         const ended = Number(md.endTime) > 0 && now >= Number(md.endTime), notYet = Number(md.startTime) > now;
