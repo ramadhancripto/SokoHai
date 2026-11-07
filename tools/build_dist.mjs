@@ -18,7 +18,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'dist');
 
 // Whole directories copied recursively (with per-file filters below).
-const DIRS = ['css', 'js', 'img', 'vendor', 'shared'];
+// [R12] assets/img holds the category photos, the home banner and the logo used by index.html;
+// before this they were missing from dist (every category tile fell back on a deploy).
+const DIRS = ['css', 'js', 'img', 'vendor', 'shared', 'assets/img'];
 // Single files.
 const FILES = [
   'index.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js',

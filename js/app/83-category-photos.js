@@ -418,14 +418,23 @@
         if (cur) lastCat = cur;
         // [R6] chips use the parent category's own image; without one they stay plain
         // (no "?" tile, never another category's photo)
-        if (!lastCat || !photoUrl(lastCat)) return;
+        // [R12] the parent's photo repeated on every chip told the buyer nothing (every chip looked
+        // the same). Only "Zote" carries the category photo; a sub-category gets a photo only when
+        // it has its own (SUB_PHOTO), otherwise it is a clean text chip.
+        if (!lastCat) return;
+        var catId = canonId(lastCat) || lastCat;
         Array.prototype.forEach.call(row.children, function (chip) {
             if (!chip || chip.dataset.cpsChip === '1') return;
             var txt = (chip.textContent || '').trim();
             if (!txt) return;
+            var subSlug = SUB_PHOTO[catId + '|' + (chip.dataset.sub || txt)];
+            var isAll = (chip.dataset.sub || txt) === 'Zote';
+            if (!subSlug && !(isAll && photoUrl(lastCat))) { chip.dataset.cpsChip = '1'; return; }
             var sp = document.createElement('span');
             sp.className = 'cps-chip-ico';
-            sp.innerHTML = imgMarkup(lastCat, 'cps-chip-img', '');
+            sp.innerHTML = subSlug
+                ? '<img class="cps-chip-img" src="assets/img/categories/' + subSlug + '.webp" alt="" loading="lazy" decoding="async">'
+                : imgMarkup(lastCat, 'cps-chip-img', '');
             chip.insertBefore(sp, chip.firstChild);
             chip.dataset.cpsChip = '1';
             chip.classList.add('cps-chip');

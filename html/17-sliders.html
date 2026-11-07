@@ -7,6 +7,40 @@
              sponsored ads zisionekane kabla ya kategoria. Kila kadi inaita
              selectAdvancedCategory() ile ile; kadi iliyochaguliwa inaonekana
              na zingine zinachujwa. Hujengwa na js/app/83-category-photos.js. -->
+        <!-- [R12 2026-11] Nyumbani: banner ya jamii + njia za haraka (design refs 11, 13, 14, 15).
+             Inaonekana kwenye tab ya Nyumbani tu (CSS :has(#navTabHome.active)). Kila kitufe
+             kinaita kazi iliyopo (updateApp, setMarketMode, openChatList, togglePlusMenu);
+             hakuna mfumo mpya wala data ya kubuni. -->
+        <section class="shh" id="skhHomeHero" aria-label="Karibu SokoHai">
+            <div class="shh-banner">
+                <div class="shh-copy">
+                    <span class="shh-kicker">Jamii ya SokoHai</span>
+                    <h2 class="shh-title">Fursa za biashara zinaanza hapa.</h2>
+                    <p class="shh-sub">Gundua bidhaa, nunua kwa urahisi, uza na panua biashara yako kupitia SokoHai.</p>
+                    <div class="shh-ctas">
+                        <button type="button" class="shh-cta" onclick="window.togglePlusMenu()">Anza kuuza <span class="skh-ico" data-ico="plus" aria-hidden="true"></span></button>
+                        <button type="button" class="shh-cta2" onclick="updateApp('bidhaa')">Gundua bidhaa</button>
+                    </div>
+                </div>
+                <ol class="shh-steps" aria-label="Jinsi malipo salama yanavyofanya kazi">
+                    <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Weka oda</li>
+                    <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Lipa kwa Escrow</li>
+                    <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Muuzaji anatuma mzigo</li>
+                    <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Pokea na kagua</li>
+                    <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Muuzaji analipwa</li>
+                </ol>
+                <img class="shh-photo" src="assets/img/home/community.webp" alt="" width="520" height="558" loading="lazy" decoding="async">
+            </div>
+            <nav class="shh-quick" aria-label="Njia za haraka">
+                <button type="button" onclick="updateApp('bidhaa')"><span class="shh-qi"><span class="skh-ico" data-ico="package" aria-hidden="true"></span></span><b>Nunua bidhaa</b><small>Bidhaa za kila aina</small></button>
+                <button type="button" onclick="updateApp('services')"><span class="shh-qi"><span class="skh-ico" data-ico="wrench" aria-hidden="true"></span></span><b>Pata huduma</b><small>Mafundi na wataalamu</small></button>
+                <button type="button" onclick="updateApp('delivery')"><span class="shh-qi"><span class="skh-ico" data-ico="truck" aria-hidden="true"></span></span><b>Tafuta usafiri</b><small>Mizigo na abiria</small></button>
+                <button type="button" onclick="updateApp('bidhaa'); setMarketMode('auction', document.querySelector('[data-skh-mode=auction]'))"><span class="shh-qi"><span class="skh-ico" data-ico="gavel" aria-hidden="true"></span></span><b>Mnada</b><small>Shiriki mnada</small></button>
+                <button type="button" onclick="updateApp('bidhaa'); setMarketMode('price_drop', document.querySelector('[data-skh-mode=price_drop]'))"><span class="shh-qi"><span class="skh-ico" data-ico="trend_down" aria-hidden="true"></span></span><b>Bei kushuka</b><small>Ofa zinazoshuka</small></button>
+                <button type="button" onclick="openChatList()"><span class="shh-qi"><span class="skh-ico" data-ico="chat" aria-hidden="true"></span></span><b>Mazungumzo</b><small>Chat na wauzaji</small></button>
+            </nav>
+        </section>
+
         <section class="cps-section" id="categoryStrip" aria-labelledby="cpsTitle">
             <div class="cps-head">
                 <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span>Gundua Soko</h2>

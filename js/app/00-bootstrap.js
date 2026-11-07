@@ -2747,7 +2747,7 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
 
     if (filteredData.length === 0) {
         feedGrid.innerHTML = matcherBanner + `
-            <div class="skh-empty" style="grid-column: 1/-1;"> <span class="skh-empty-icon">${skh.cardIcon('search', 30)}</span> <b>Hatujapata matokeo</b> <p>Jaribu kutafuta kwa neno lingine au badilisha kategoria — au tafuta gari kwa njia yako.</p> <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Onyesha Vyote</button> </div>`;
+            <div class="skh-empty" style="grid-column: 1/-1;"> <span class="skh-empty-icon">${skh.cardIcon('search', 30)}</span> <b>Hatujapata matokeo</b> <p>${skh.currentFeedCollection === 'drivers' ? 'Jaribu neno lingine au badilisha kategoria — au tafuta gari kwa njia yako.' : (skh.currentFeedCollection === 'services' ? 'Jaribu neno lingine au chagua sehemu nyingine ya huduma.' : 'Jaribu neno lingine au badilisha kategoria.')}</p> <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Onyesha Vyote</button> </div>`;
         return;
     }
 
