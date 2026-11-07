@@ -110,19 +110,39 @@
     function canonId(name) {
         try { return (window.skh && typeof window.skh.canonicalCategoryId === 'function') ? window.skh.canonicalCategoryId(name) : null; } catch (e) { return null; }
     }
-    /* name | legacy label | CAT-xx  →  file slug | null */
+    /* [R13 2026-11] ONE illustration family (approved owner style, 3D clay icons) replaces the
+       mixed photo set for categories, services, transport and modes. Files + manifest come from
+       tools/build_category_illustrations.mjs (window.SKH_CATEGORY_ICONS). The old photos stay on
+       disk untouched; seller product photos are never replaced. */
+    var ICON_DIR = 'assets/img/category-icons/';
+    var ICON_ALIAS = { 'Watu (Ride)': 'Passenger', 'Kawaida (Parcels)': 'Product', 'Mizigo Mikubwa': 'Cargo', 'Dharura (Express)': 'Emergency' };
+    function icons() { return window.SKH_CATEGORY_ICONS || null; }
+    /* name | legacy label | CAT-xx  ->  file name (with extension) | null */
     function slugFor(name) {
-        var id = canonId(name);
-        if (id && Object.prototype.hasOwnProperty.call(PHOTO_BY_ID, id)) return PHOTO_BY_ID[id];
-        return Object.prototype.hasOwnProperty.call(PHOTO, name) ? PHOTO[name] : null;
+        var M = icons();
+        if (!M) return null;
+        var id = canonId(name) || (/^CAT-\d{2}$/.test(String(name || '')) ? String(name) : null);
+        if (id && M.categories[id]) return M.categories[id];
+        var n = ICON_ALIAS[name] || name;
+        return (M.legacy && M.legacy[n]) || M.services[n] || M.transport[n] || M.modes[n] || null;
+    }
+    /* sub-category subject (e.g. "Smartphones" -> sub-phones.svg) or null — never the parent's picture */
+    function subjectFor(sub) {
+        var M = icons();
+        if (!M || !sub || sub === 'Zote') return null;
+        var rules = M.subjectRules || [];
+        for (var i = 0; i < rules.length; i++) {
+            try { if (new RegExp(rules[i][1], rules[i][2]).test(sub)) return M.subjects[rules[i][0]] || null; } catch (e) {}
+        }
+        return null;
     }
     window.skhCategoryImage = function (ref) {
         ref = ref || {};
-        var id = canonId(ref.categoryId || ref.category);
-        var sub = id && ref.subcategory ? SUB_PHOTO[id + '|' + ref.subcategory] : null;
-        var slug = sub || slugFor(ref.categoryId || ref.category);
-        return slug ? 'assets/img/categories/' + slug + '.webp' : null;
+        var f = (ref.subcategory ? subjectFor(ref.subcategory) : null) || slugFor(ref.categoryId || ref.category);
+        if (!f && ref.fallback !== false && icons()) f = icons().fallback;
+        return f ? ICON_DIR + f : null;
     };
+    window.skhSubcategoryImage = function (sub) { var f = subjectFor(sub); return f ? ICON_DIR + f : null; };
 
     var LABEL = {
         'Vyakula na Vinywaji (Food)': 'Vyakula',
@@ -183,7 +203,7 @@
 
     function photoUrl(name) {
         var f = slugFor(name);
-        return f ? 'assets/img/categories/' + f + '.webp' : null;
+        return f ? ICON_DIR + f : null;
     }
 
     /* Njia mbadala: app inaweza kuhudumiwa kutoka folda ndogo (mf. GitHub Pages
@@ -192,17 +212,16 @@
     function photoCandidates(name) {
         var f = slugFor(name);
         if (!f) return [];
-        return [
-            'assets/img/categories/' + f + '.webp',
-            './assets/img/categories/' + f + '.webp',
-            '../assets/img/categories/' + f + '.webp',
-            '/assets/img/categories/' + f + '.webp'
-        ];
+        return [ICON_DIR + f, './' + ICON_DIR + f, '../' + ICON_DIR + f, '/' + ICON_DIR + f];
     }
 
     function imgMarkup(name, cls, alt) {
         var list = photoCandidates(name);
-        if (!list.length) return fallbackMarkup(name);
+        if (!list.length) {   /* [R13] unknown category -> the family's "other" illustration, not a letter tile */
+            var fb = icons() && icons().fallback;
+            if (!fb) return fallbackMarkup(name);
+            list = [ICON_DIR + fb];
+        }
         var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
         return '<img class="' + cls + '" src="' + list[0] + '" alt="' + esc(alt || labelOf(name)) + '"'
              + ' data-i="0" data-cands="' + esc(JSON.stringify(list)) + '" data-initial="' + initial + '"'
@@ -427,13 +446,13 @@
             if (!chip || chip.dataset.cpsChip === '1') return;
             var txt = (chip.textContent || '').trim();
             if (!txt) return;
-            var subSlug = SUB_PHOTO[catId + '|' + (chip.dataset.sub || txt)];
+            var subSlug = SUB_PHOTO[catId + '|' + (chip.dataset.sub || txt)] || subjectFor(chip.dataset.sub || txt);
             var isAll = (chip.dataset.sub || txt) === 'Zote';
             if (!subSlug && !(isAll && photoUrl(lastCat))) { chip.dataset.cpsChip = '1'; return; }
             var sp = document.createElement('span');
             sp.className = 'cps-chip-ico';
             sp.innerHTML = subSlug
-                ? '<img class="cps-chip-img" src="assets/img/categories/' + subSlug + '.webp" alt="" loading="lazy" decoding="async">'
+                ? '<img class="cps-chip-img" src="' + ICON_DIR + subSlug + '" alt="" loading="lazy" decoding="async">'
                 : imgMarkup(lastCat, 'cps-chip-img', '');
             chip.insertBefore(sp, chip.firstChild);
             chip.dataset.cpsChip = '1';

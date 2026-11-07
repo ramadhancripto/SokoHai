@@ -300,7 +300,7 @@ window.openCategoryModal = function() {
     let html = `<div class="cat-box" onclick="selectAdvancedCategory('Zote', 'all')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon('Zote') : ''}</div><div class="cat-name">ZOTE</div></div>`;
     // MPYA: KAMA UPO KWENYE TAB YA USAFIRI (DRIVERS)
     if (skh.currentFeedCollection === 'drivers') {
-        html += `<div style="grid-column: span 3; color: var(--terracotta); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">CHAGUA HUDUMA YA USAFIRI</div>`; // [PHASE 5.9] emoji imetolewa
+        html += `<div style="grid-column: 1 / -1; color: var(--terracotta); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">CHAGUA HUDUMA YA USAFIRI</div>`; // [PHASE 5.9] emoji imetolewa
         for (const catName in skh.deliveryTaxonomy) {
             html += `
                 <div class="cat-box" onclick="selectAdvancedCategory('${catName}')"> <div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div> <div class="cat-name">${catName.toUpperCase()}</div> </div>`;
@@ -334,12 +334,12 @@ window.openCategoryModal = function() {
     }
     // 3. KAMA UPO KWENYE HOME (MCHANGANYIKO ULIOPANGWA VIZURI)
     else if (skh.currentFeedCollection === 'all') {
-         html += `<div style="grid-column: span 3; color: var(--primary-dark); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA BIDHAA</div>`; // [PHASE 5.9]
+         html += `<div style="grid-column: 1 / -1; color: var(--primary-dark); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA BIDHAA</div>`; // [PHASE 5.9]
          skhBuyerCats().forEach(function (c) {
              html += `<div class="cat-box" data-cat="${_ce(c.value)}" onclick="switchToTabAndCategory('bidhaa', this.dataset.cat, null)"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(c.value) : ''}</div><div class="cat-name">${_ce(String(c.label).toUpperCase())}</div></div>`;
          });
          
-         html += `<div style="grid-column: span 3; color: var(--primary-blue); font-weight: 900; font-size: 13px; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA HUDUMA</div>`; // [PHASE 5.9]
+         html += `<div style="grid-column: 1 / -1; color: var(--primary-blue); font-weight: 900; font-size: 13px; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA HUDUMA</div>`; // [PHASE 5.9]
          for (const section in skh.serviceDataMap) {
              for (const catName in skh.serviceDataMap[section]) {
                  html += `<div class="cat-box" onclick="switchToTabAndCategory('services', '${catName}', '${section}')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div><div class="cat-name">${catName.toUpperCase()}</div></div>`;

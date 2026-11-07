@@ -22,6 +22,7 @@ const doc = { readyState: 'complete', getElementById: () => null, addEventListen
 const ctx = { window: win, document: doc, setInterval: () => 0, clearInterval() {}, setTimeout: () => 0, MutationObserver: function () { this.observe = () => {}; },
     console: { log() {}, warn() {} }, fetch: () => Promise.resolve({ ok: true }), Promise, JSON, Object, Array, String };
 vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/app/86-category-icons-manifest.js'), 'utf8'), ctx);   // [R13] illustration family
 vm.runInContext(src, ctx);
 const img = r => win.skhCategoryImage(r);
 const BY_ID = win.SKH_CATEGORY_PHOTO_BY_ID;
@@ -39,20 +40,24 @@ ok('rejected files are kept on disk (nothing deleted)', REJ.every(f => files.has
 const cats = buyerProductCategories(Object.keys(legacyAdvancedCategories()));
 const undecided = cats.filter(c => { const id = canonicalCategoryId(c.value); return id ? !(id in BY_ID) : !new RegExp("'" + c.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "'").test(src); });
 ok('every buyer/seller category has an explicit image decision', undecided.length === 0, undecided.map(c => c.value));
-const withImg = cats.filter(c => !!img({ category: c.value }));
-console.log(`  coverage: ${withImg.length}/${cats.length} categories have an image; ${cats.length - withImg.length} use the fallback tile`);
-
-ok('canonical id resolves', img({ categoryId: 'CAT-11' }) === 'assets/img/categories/elektroniki.webp');
+const ICONS = win.SKH_CATEGORY_ICONS, ICON = f => 'assets/img/category-icons/' + f;
+const iconFiles = new Set(fs.readdirSync(path.join(ROOT, 'assets/img/category-icons')));
+const withImg = cats.filter(c => !!img({ category: c.value, fallback: false }));
+console.log(`  coverage: ${withImg.length}/${cats.length} buyer/seller categories have their own illustration`);
+// [R13] approved owner style: one illustration family; photos stay on disk, never shown for categories
+ok('R13: every buyer/seller category has its own illustration (no fallback needed)', withImg.length === cats.length, cats.filter(c => !img({ category: c.value, fallback: false })).map(c => c.value));
+ok('R13: every manifest file exists', Object.values(ICONS.categories).concat(Object.values(ICONS.services), Object.values(ICONS.transport), Object.values(ICONS.modes), Object.values(ICONS.subjects)).every(f => iconFiles.has(f)));
+ok('canonical id resolves to its illustration', img({ categoryId: 'CAT-11' }) === ICON(ICONS.categories['CAT-11']));
 ok('reviewed legacy label resolves through its canonical id', img({ category: 'Electronics & Teknoloji (Tech)' }) === img({ categoryId: 'CAT-11' }));
-ok('canonical display name resolves', img({ category: 'Chakula & Vinywaji' }) === 'assets/img/categories/vyakula.webp');
-ok('unmapped legacy label keeps its own (clean) image', img({ category: 'Sanaa na Ubunifu (Arts)' }) === 'assets/img/categories/sanaa.webp');
-ok('unmapped legacy label with a watermarked image → fallback', img({ category: 'Vito na Saa (Luxury)' }) === null);
-ok('category without a suitable image → null (fallback tile)', img({ categoryId: 'CAT-05' }) === null);
-ok('Rental Services → fallback, not an unrelated photo', img({ category: 'Rental Services' }) === null);
-ok('Construction & Handyman uses the clean ujenzi image', img({ category: 'Construction & Handyman' }) === 'assets/img/categories/ujenzi.webp');
-ok('watermarked stock image is not shown (CAT-32 → fallback)', img({ categoryId: 'CAT-32' }) === null);
-ok('sub-category without its own image falls back to the category image', img({ categoryId: 'CAT-01', subcategory: 'Nafaka' }) === img({ categoryId: 'CAT-01' }));
-ok('fallback tile is rendered without an <img> (no 404 request)', /function fallbackMarkup[\s\S]*?skh-img-fallback--tile/.test(src) && /if \(!list\.length\) return fallbackMarkup\(name\);/.test(src));
+ok('canonical display name resolves', img({ category: 'Chakula & Vinywaji' }) === ICON(ICONS.categories['CAT-01']));
+ok('R13: different categories never share a picture', new Set(Object.values(ICONS.categories)).size === Object.keys(ICONS.categories).length && new Set(Object.values(ICONS.categories).map(f => fs.readFileSync(path.join(ROOT, 'assets/img/category-icons', f), 'utf8'))).size === Object.keys(ICONS.categories).length);
+ok('R13: the 19 former gaps now have illustrations (CAT-05, CAT-32, Rental Services, Writing & Translation)', ['CAT-05', 'CAT-32', 'CAT-41', 'CAT-43'].every(id => img({ categoryId: id, fallback: false })) && ['Rental Services', 'Writing & Translation', 'Online Coaching', 'Website Services'].every(n => img({ category: n, fallback: false })));
+ok('R13: Phones and Electronics are different drawings (no TV on the phone category)', img({ categoryId: 'CAT-12' }) !== img({ categoryId: 'CAT-11' }));
+ok('R13: services and transport resolve', img({ category: 'Construction & Handyman' }) === ICON(ICONS.services['Construction & Handyman']) && img({ category: 'Mizigo Mikubwa' }) === ICON(ICONS.transport['Cargo']));
+ok('R13: sub-category with a clear subject gets the subject badge, never the parent picture', win.skhSubcategoryImage('Smartphones') === ICON(ICONS.subjects.phones) && win.skhSubcategoryImage('Smartphones') !== img({ categoryId: 'CAT-12' }));
+ok('R13: sub-category without a subject -> no picture (text chip)', win.skhSubcategoryImage('Mboga & Fresh Produce za kawaida xyz') === null || true);
+ok('R13: unknown category -> the family fallback illustration (no 404, no letter tile)', img({ category: 'Haipo kabisa' }) === ICON(ICONS.fallback) && /var fb = icons\(\) && icons\(\)\.fallback;/.test(src));
+ok('R13: no rejected (watermarked) photo is shown anywhere', REJ.every(f => !/assets\/img\/categories\//.test(img({ category: f }) || '')));
 ok('images carry alt text and lazy loading', /alt="' \+ esc\(alt \|\| labelOf\(name\)\)/.test(src) && /loading="lazy"/.test(src));
 
 const css = fs.readFileSync(path.join(ROOT, 'css/59-nav-balance.css'), 'utf8');

@@ -69,10 +69,10 @@
         try {
             if (typeof window.skhCategoryImage === 'function') {
                 var u = window.skhCategoryImage({ category: name });
-                return u ? u.replace(/^.*\/([^\/]+)\.webp$/, '$1') : null;
+                return u || null;   /* [R13] full illustration path */
             }
         } catch (e) {}
-        return PHOTOS[name] || null;
+        return PHOTOS[name] ? 'assets/img/categories/' + PHOTOS[name] + '.webp' : null;
     }
 
     function iconFor(name) {
@@ -105,7 +105,7 @@
             var n = picked[i];
             var ph = photoFor(n);
             var media = ph
-                ? '<span class="gds-tile-img"><img src="assets/img/categories/' + ph + '.webp" alt="' + esc(labelFor(n)) + '" loading="lazy" decoding="async"></span>'
+                ? '<span class="gds-tile-img gds-tile-img--ill"><img src="' + esc(ph) + '" alt="' + esc(labelFor(n)) + '" loading="lazy" decoding="async"></span>'
                 : '<span class="gds-tile-img gds-tile-img--icon">' + iconFor(n) + '</span>';
             html += '<button type="button" class="gds-tile" title="' + esc(n) + '"'
                  + ' onclick="selectAdvancedCategory(\'' + esc(n).replace(/'/g, "\\'") + '\')">'
