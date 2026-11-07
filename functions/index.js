@@ -272,7 +272,7 @@ async function ppInitiatorUid(tx) {
  *   6. Smart Cart `items[]` -> sum of the above per item.
  * Anything else is held for admin review (status 'price_review'), never paid.
  * ========================================================== */
-const { modeUnitPrice, modeEligibility, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
+const { modeUnitPrice, modeEligibility, modeQuantityLimit, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
 // [PHASE 3 2026-10-31] Online reservation / stock commit (OFF unless system_config/inventory.mode says otherwise).
 const inventoryReservation = require('./inventory-reservation');
 const stockCore = require('./shared/inventory-reservation-core');
@@ -297,7 +297,7 @@ async function expectedItemAmount(item, buyerUid, nowMs) {
             qty = orderQuantity(item, p);
             if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             if (item.sellerId && String(p.userId || '') !== String(item.sellerId)) return { ok: false, reason: 'seller_mismatch' };
-            const elig = modeEligibility(p, buyerUid, nowMs);
+            const elig = modeEligibility(p, buyerUid, nowMs) || modeQuantityLimit(p, qty);
             if (elig) return { ok: false, reason: elig };
             const vp = variantPrice(p, item.selectedVariant || item.variant || item.variantId);
             const unit = modeUnitPrice(vp ? Object.assign({}, p, { price: vp }) : p, qty, buyerUid, nowMs);
@@ -3721,6 +3721,14 @@ const commerceModes = require('./commerce-modes');
 exports.auctionPlaceBid = commerceModes.auctionPlaceBid;
 exports.groupBuyJoin = commerceModes.groupBuyJoin;
 exports.commerceModesSweep = commerceModes.commerceModesSweep;
+exports.auctionFinalize = commerceModes.auctionFinalize;
+// [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
+const liveCommerce = require('./live-commerce');
+['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove'].forEach(n => { exports[n] = liveCommerce[n]; });
+const stories = require('./stories');
+['storyCreate','storyView','storyReport','storyRemove'].forEach(n => { exports[n] = stories[n]; });
+const groupSoko = require('./group-soko');
+['groupSokoCreate','groupSokoInvite','groupSokoAccept','groupSokoCapitalRecord','groupSokoCapitalConfirm','groupSokoPropose','groupSokoVote','groupSokoExecute','groupSokoPurchaseStep','groupSokoAttachProduct','groupSokoReport'].forEach(n => { exports[n] = groupSoko[n]; });
 // Test hook (emulator only): run the auction sweep now. Not a deployed function (not an onCall/onSchedule).
 Object.defineProperty(exports, '_commerceSweepForTest', { enumerable: false, value: () => commerceModes._testing.sweepAuctions() });
 const adminAuthority = require('./admin-authority');

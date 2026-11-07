@@ -79,7 +79,8 @@ service cloud.firestore {
     // [REMEDIATION 2026-11 R7] trust badges on listings are admin/server-set only
     // (the card shows "Imethibitishwa" when any of these is set).
     function listingTrustKeys() {
-      return ['verified','ownerVerified','verificationStatus','sellerVerified','isVerified','verifiedAt','verifiedBy','trust','inspected','inspectionStatus'];
+      return ['verified','ownerVerified','verificationStatus','sellerVerified','isVerified','verifiedAt','verifiedBy','trust','inspected','inspectionStatus',
+              'groupSokoId','groupSokoName','groupOwnership','consignmentSupplier'];   // [R13-B] Group Soko tags: server only
     }
     function smallQuery(n) {
       return request.query.limit != null && request.query.limit <= n;
@@ -135,6 +136,13 @@ service cloud.firestore {
     // live stock/reserved and starts new variants at 0.
     // Auction / price-drop / group state lives in modeData and is written by the
     // server (auctionPlaceBid etc.); sellers configure it only before any bid.
+    // [R13-B] auction result fields are written by the server only (closeAuction / second chance)
+    function noServerAuctionResult(d) {
+      return d.get('modeData', {}).get('winnerId', null) == null
+        && d.get('modeData', {}).get('winnerBid', null) == null
+        && d.get('modeData', {}).get('paymentDeadline', null) == null
+        && d.get('modeData', {}).get('pastWinners', []).size() == 0;
+    }
     match /products/{id} {
       allow read: if true;
       allow create: if signedIn() && validProduct(request.resource.data)
@@ -150,6 +158,7 @@ service cloud.firestore {
         && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
         && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
         && request.resource.data.get('modeData', {}).get('participants', []).size() == 0
+        && noServerAuctionResult(request.resource.data)
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
@@ -176,7 +185,8 @@ service cloud.firestore {
                 && resource.data.get('modeData', {}).get('participants', []).size() == 0
                 && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
                 && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
-                && request.resource.data.get('modeData', {}).get('participants', []).size() == 0))
+                && request.resource.data.get('modeData', {}).get('participants', []).size() == 0
+                && noServerAuctionResult(request.resource.data)))
         && (isAdmin() || unchanged(['saleMode']) || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
                 && resource.data.get('modeData', {}).get('participants', []).size() == 0));
       // [REPAIR 2026-10 B-12] Found by the browser E2E: buyers opening or sharing a
@@ -1891,6 +1901,57 @@ service cloud.firestore {
           allow write: if false;
         }
       }
+    }
+
+    // [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live — written only by the
+    // live-commerce callables. Viewers list: host, admin or the viewer themselves.
+    match /live_sessions/{sid} {
+      allow read: if signedIn() && (resource.data.status != 'removed' || isAdmin() || resource.data.hostUid == request.auth.uid);
+      allow write: if false;
+      match /comments/{cid} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
+      match /viewers/{vid} {
+        allow read: if signedIn() && (isAdmin() || vid == request.auth.uid
+          || get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid);
+        allow write: if false;
+      }
+    }
+    match /live_reports/{rid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    // [R13-B] Stories: active + not expired; public, or followers-only for real followers.
+    match /stories/{storyId} {
+      allow read: if signedIn() && (isAdmin() || resource.data.authorUid == request.auth.uid
+        || (resource.data.status == 'active' && resource.data.expiresAtMs > request.time.toMillis()
+            && (resource.data.visibility == 'public'
+                || (exists(/databases/$(database)/documents/sellerFollowers/$(request.auth.uid + '__' + resource.data.authorUid))
+                    && get(/databases/$(database)/documents/sellerFollowers/$(request.auth.uid + '__' + resource.data.authorUid)).data.followerId == request.auth.uid))));
+      allow write: if false;
+      match /views/{vid} {
+        allow read: if signedIn() && (isAdmin() || vid == request.auth.uid
+          || get(/databases/$(database)/documents/stories/$(storyId)).data.authorUid == request.auth.uid);
+        allow write: if false;
+      }
+    }
+    // [R13-B] Group Soko: members read; every write goes through the group-soko callables.
+    function isGroupSokoMember(g) {
+      return exists(/databases/$(database)/documents/group_soko/$(g)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/group_soko/$(g)/members/$(request.auth.uid)).data.status in ['active', 'invited'];
+    }
+    match /group_soko/{g} {
+      allow read: if signedIn() && (isAdmin() || isGroupSokoMember(g));
+      allow write: if false;
+      match /{sub}/{doc} {
+        allow read: if signedIn() && (isAdmin() || isGroupSokoMember(g));
+        allow write: if false;
+      }
+    }
+    match /story_reports/{rid} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // Auction bids: server-written (auctionPlaceBid), readable by everyone signed in.

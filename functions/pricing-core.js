@@ -26,8 +26,11 @@ function modeUnitPrice(p, qty, buyerUid, nowMs) {
         const extra = Math.max(0, joined - 1);
         unit = md.discountType === 'percent' ? base - (base * Math.min(90, discVal * extra) / 100) : Math.max(base * 0.1, base - discVal * extra);
     } else if (mode === 'auction') {
-        const ended = Number(md.endTime) > 0 && nowMs >= Number(md.endTime);
-        if (ended && md.maxBidder && String(md.maxBidder) === String(buyerUid) && Number(md.currentBid) > 0) unit = Number(md.currentBid);
+        const ended = !!md.ended || (Number(md.endTime) > 0 && nowMs >= Number(md.endTime));
+        // [R13-B] after a second chance the winner and their own bid come from winnerId/winnerBid
+        const winner = md.winnerId !== undefined ? md.winnerId : md.maxBidder;
+        const winBid = Number(md.winnerBid) > 0 ? Number(md.winnerBid) : Number(md.currentBid);
+        if (ended && winner && String(winner) === String(buyerUid) && winBid > 0) unit = winBid;
     }
     // [2026-11-06] Wholesale tiers + wholesalePrice/wholesaleMinQty: one shared
     // formula with the browser (product page, Smart Cart). Same rules as before.
@@ -44,9 +47,26 @@ function modeEligibility(p, buyerUid, nowMs) {
         const endsAt = Number(md.endTime) || 0;
         const ended = !!md.ended || (endsAt > 0 && nowMs >= endsAt);
         if (!ended) return 'auction_live';
-        if (!md.maxBidder) return 'auction_no_winner';
-        if (String(md.maxBidder) !== String(buyerUid)) return 'not_auction_winner';
+        const winner = md.winnerId !== undefined ? md.winnerId : md.maxBidder;
+        if (!winner) return 'auction_no_winner';
+        if (String(winner) !== String(buyerUid)) return 'not_auction_winner';
+        if (Number(md.paymentDeadline) > 0 && nowMs > Number(md.paymentDeadline)) return 'auction_payment_expired';
     }
+    // [R13-B] Bei Kushuka: only inside its window. Before it starts or after it ends the drop price
+    // can not reach checkout (the order goes to price review instead of using a stale price).
+    if (mode === 'price_drop') {
+        if (Number(md.startTime) > 0 && nowMs < Number(md.startTime)) return 'price_drop_not_started';
+        if (Number(md.endTime) > 0 && nowMs >= Number(md.endTime)) return 'price_drop_ended';
+        if (md.stopped) return 'price_drop_ended';
+    }
+    return '';
+}
+/* [R13-B] Per-order quantity limit of a Bei Kushuka offer (modeData.maxPerBuyer). Stock itself
+ * is enforced by the inventory reservation, so an offer can never sell more than exists. */
+function modeQuantityLimit(p, qty) {
+    const md = (p && p.modeData) || {};
+    const mode = String(md.mode || p.commerceMode || p.saleMode || '');
+    if (mode === 'price_drop' && Number(md.maxPerBuyer) > 0 && Number(qty) > Number(md.maxPerBuyer)) return 'over_buyer_limit';
     return '';
 }
 function variantPrice(p, variant) {
@@ -63,4 +83,4 @@ function boostPrice(collectionName, views, days) {
     return Math.max(1000, Math.round(1000 * Math.pow(((v / 1000) + (dd / 7)) / 2, 1.4)));
 }
 
-module.exports = { modeUnitPrice, modeEligibility, variantPrice, boostPrice, SUBSCRIPTION_PRICES };
+module.exports = { modeUnitPrice, modeEligibility, modeQuantityLimit, variantPrice, boostPrice, SUBSCRIPTION_PRICES };
