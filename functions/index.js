@@ -297,7 +297,7 @@ async function expectedItemAmount(item, buyerUid, nowMs) {
             qty = orderQuantity(item, p);
             if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             if (item.sellerId && String(p.userId || '') !== String(item.sellerId)) return { ok: false, reason: 'seller_mismatch' };
-            const elig = modeEligibility(p, buyerUid, nowMs) || modeQuantityLimit(p, qty);
+            const elig = modeEligibility(p, buyerUid, nowMs) || modeQuantityLimit(p, qty, buyerUid, nowMs);
             if (elig) return { ok: false, reason: elig };
             const vp = variantPrice(p, item.selectedVariant || item.variant || item.variantId);
             const unit = modeUnitPrice(vp ? Object.assign({}, p, { price: vp }) : p, qty, buyerUid, nowMs);
@@ -3724,7 +3724,10 @@ exports.commerceModesSweep = commerceModes.commerceModesSweep;
 exports.auctionFinalize = commerceModes.auctionFinalize;
 // [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
 const liveCommerce = require('./live-commerce');
-['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove'].forEach(n => { exports[n] = liveCommerce[n]; });
+['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind'].forEach(n => { exports[n] = liveCommerce[n]; });
+// [R13-D] Bei Kushuka buyer queue (refs 1 & 2)
+const priceDropQueue = require('./price-drop-queue');
+['priceDropSubmit','priceDropMyRank','priceDropSettle'].forEach(n => { exports[n] = priceDropQueue[n]; });
 const stories = require('./stories');
 ['storyCreate','storyView','storyReport','storyRemove'].forEach(n => { exports[n] = stories[n]; });
 const groupSoko = require('./group-soko');

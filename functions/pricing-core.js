@@ -11,7 +11,10 @@ function modeUnitPrice(p, qty, buyerUid, nowMs) {
     const md = p.modeData || {};
     const mode = String(md.mode || p.commerceMode || p.saleMode || '');
     let unit = base;
-    if (mode === 'price_drop') {
+    const opp = priceDropOffer(p, buyerUid, nowMs);
+    if (mode === 'price_drop' && opp) {
+        unit = opp.price;   // [R13-D] buyer's own price from the queue (ref 1/2 "fursa ya kununua")
+    } else if (mode === 'price_drop') {
         const start = Number(md.startTime) || nowMs;
         const min = Number(md.minPrice) || 0;
         const interval = Number(md.intervalMs) || 60000;
@@ -55,6 +58,9 @@ function modeEligibility(p, buyerUid, nowMs) {
     // [R13-B] Bei Kushuka: only inside its window. Before it starts or after it ends the drop price
     // can not reach checkout (the order goes to price review instead of using a stale price).
     if (mode === 'price_drop') {
+        if (priceDropOffer(p, buyerUid, nowMs)) return '';   // [R13-D] holder of a live purchase opportunity
+        const mine = md.opportunities && buyerUid ? md.opportunities[String(buyerUid)] : null;
+        if (mine && Number(mine.deadline) > 0 && nowMs > Number(mine.deadline)) return 'price_drop_offer_expired';
         if (Number(md.startTime) > 0 && nowMs < Number(md.startTime)) return 'price_drop_not_started';
         if (Number(md.endTime) > 0 && nowMs >= Number(md.endTime)) return 'price_drop_ended';
         if (md.stopped) return 'price_drop_ended';
@@ -63,11 +69,24 @@ function modeEligibility(p, buyerUid, nowMs) {
 }
 /* [R13-B] Per-order quantity limit of a Bei Kushuka offer (modeData.maxPerBuyer). Stock itself
  * is enforced by the inventory reservation, so an offer can never sell more than exists. */
-function modeQuantityLimit(p, qty) {
+function modeQuantityLimit(p, qty, buyerUid, nowMs) {
     const md = (p && p.modeData) || {};
     const mode = String(md.mode || p.commerceMode || p.saleMode || '');
+    const opp = priceDropOffer(p, buyerUid, nowMs || Date.now());
+    if (mode === 'price_drop' && opp) return Number(qty) > Number(opp.qty || 1) ? 'over_offer_qty' : '';
     if (mode === 'price_drop' && Number(md.maxPerBuyer) > 0 && Number(qty) > Number(md.maxPerBuyer)) return 'over_buyer_limit';
     return '';
+}
+/* [R13-D] Bei Kushuka buyer queue: after the campaign the server offers the item to the
+ * top-ranked buyers at THEIR submitted price (modeData.opportunities[uid] = {price, qty, deadline}).
+ * Written only by functions/price-drop-queue.js (rules forbid client writes). */
+function priceDropOffer(p, buyerUid, nowMs) {
+    const md = (p && p.modeData) || {};
+    if (!buyerUid || !md.opportunities) return null;
+    const o = md.opportunities[String(buyerUid)];
+    if (!o || !(Number(o.price) > 0)) return null;
+    if (Number(o.deadline) > 0 && nowMs > Number(o.deadline)) return null;
+    return { price: Math.round(Number(o.price)), qty: Math.max(1, parseInt(o.qty, 10) || 1), deadline: Number(o.deadline) || 0 };
 }
 function variantPrice(p, variant) {
     if (!variant || !Array.isArray(p.variants)) return null;
@@ -83,4 +102,4 @@ function boostPrice(collectionName, views, days) {
     return Math.max(1000, Math.round(1000 * Math.pow(((v / 1000) + (dd / 7)) / 2, 1.4)));
 }
 
-module.exports = { modeUnitPrice, modeEligibility, modeQuantityLimit, variantPrice, boostPrice, SUBSCRIPTION_PRICES };
+module.exports = { priceDropOffer, modeUnitPrice, modeEligibility, modeQuantityLimit, variantPrice, boostPrice, SUBSCRIPTION_PRICES };

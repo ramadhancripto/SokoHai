@@ -111,8 +111,12 @@ exports.liveStart = onCall({ region: REGION }, async (req) => {
     await ref.collection('comments').add({ kind: 'system', text: d.hostName + ' ameanza live', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
     // followers of the host get one notice (real followers only)
     const f = await db().collection('sellerFollowers').where('sellerId', '==', d.hostUid).limit(500).get();
-    for (const x of f.docs) await notify((x.data() || {}).followerId, d.hostName + ' yuko LIVE', d.title, { type: 'live_started', liveSessionId: ref.id });
-    return { ok: true, notified: f.size };
+    const sent = new Set();
+    for (const x of f.docs) { const u = (x.data() || {}).followerId; if (u && !sent.has(u)) { sent.add(u); await notify(u, d.hostName + ' yuko LIVE', d.title, { type: 'live_started', liveSessionId: ref.id }); } }
+    // [R13-D] "Ukumbusho" (ref 10): viewers who asked to be reminded of this live
+    const r = await ref.collection('reminders').limit(1000).get();
+    for (const x of r.docs) if (!sent.has(x.id)) { sent.add(x.id); await notify(x.id, 'Live imeanza: ' + d.title, d.hostName + ' ameanza live uliyoomba ukumbusho.', { type: 'live_reminder', liveSessionId: ref.id }); }
+    return { ok: true, notified: sent.size };
 });
 
 exports.liveEnd = onCall({ region: REGION }, async (req) => {
@@ -260,3 +264,32 @@ exports.adminLiveRemove = onCall({ region: REGION }, async (req) => {
 });
 
 exports._testing = { embedUrl };
+
+/* [R13-D 2026-11] Likes and reminders (refs 7 and 10).
+ * liveLike: one tap = +1 (at most one per user every 1.5 s), counted on the session.
+ * liveRemind: toggle a reminder for a scheduled live; liveStart notifies everyone who asked. */
+exports.liveLike = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const { ref, d } = await loadSession((req.data || {}).sessionId);
+    if (d.status !== 'live') throw new HttpsError('failed-precondition', 'live_haiendelei');
+    const lref = ref.collection('likes').doc(req.auth.uid);
+    let ok = false;
+    await db().runTransaction(async (t) => {
+        const l = await t.get(lref), nowMs = Date.now();
+        const last = l.exists ? Number((l.data() || {}).atMs) || 0 : 0;
+        if (nowMs - last < 1500) return;
+        t.set(lref, { atMs: nowMs, n: FV().increment(1) }, { merge: true });
+        t.update(ref, { likeCount: FV().increment(1) });
+        ok = true;
+    });
+    return { ok: true, counted: ok };
+});
+exports.liveRemind = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const { ref, d } = await loadSession((req.data || {}).sessionId);
+    if (d.status !== 'scheduled') throw new HttpsError('failed-precondition', 'hali_' + d.status);
+    const rref = ref.collection('reminders').doc(req.auth.uid);
+    const on = (req.data || {}).on !== false;
+    if (on) await rref.set({ at: new Date().toISOString() }); else await rref.delete();
+    return { ok: true, on };
+});

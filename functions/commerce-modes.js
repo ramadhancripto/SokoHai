@@ -134,6 +134,10 @@ exports.auctionPlaceBid = onCall({ region: REGION }, async (req) => {
         if (ext) { patch['modeData.endTime'] = ext.endTime; patch['modeData.extensions'] = ext.extensions; }
         t.update(ref, patch);
         t.set(bidRef, { uid, name: bidderName, amount: bid, prevBid: prev.bid, totalBids, createdAt: now, source: 'auctionPlaceBid' });
+        // [R13-D] "Zabuni zangu" (ref 5): one participation row per buyer per auction (read by its owner only)
+        t.set(db().doc('auction_participation/' + uid + '__' + productId), { uid, productId, title: String(p.title || '').slice(0, 120),
+            image: String(p.image || (Array.isArray(p.imagesArray) ? p.imagesArray[0] : '') || '').slice(0, 500), myBid: bid, lastBidAt: now,
+            bids: FieldValue().increment(1) }, { merge: true });
         const nextMin = minNextBid(Object.assign({}, p, { modeData: Object.assign({}, md, { currentBid: bid }) })).minNext;
         out = { ok: true, bid, totalBids, minNext: nextMin, endTime: ext ? ext.endTime : (Number(md.endTime) || null), extended: !!ext };
     });
@@ -314,6 +318,7 @@ exports.commerceModesSweep = onSchedule({ region: REGION, schedule: 'every 15 mi
         const emu = process.env.FIRESTORE_EMULATOR_HOST && evt && evt.scheduleTime ? Date.parse(evt.scheduleTime) : 0;
         await sweepAuctions(emu > 0 ? emu : Date.now());
         await sweepPriceDrops(emu > 0 ? emu : Date.now());
+        await require('./price-drop-queue')._testing.sweepQueues(emu > 0 ? emu : Date.now());   // [R13-D] queue -> opportunities
     });
 
 exports._testing = { validateBid, validateGroupJoin, saleModeOf, sweepAuctions, minNextBid, antiSnipeEnd, closeAuction, secondChance, sweepPriceDrops };

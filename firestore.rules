@@ -141,7 +141,11 @@ service cloud.firestore {
       return d.get('modeData', {}).get('winnerId', null) == null
         && d.get('modeData', {}).get('winnerBid', null) == null
         && d.get('modeData', {}).get('paymentDeadline', null) == null
-        && d.get('modeData', {}).get('pastWinners', []).size() == 0;
+        && d.get('modeData', {}).get('pastWinners', []).size() == 0
+        // [R13-D] Bei Kushuka queue results are server-only (price-drop-queue.js)
+        && d.get('modeData', {}).get('opportunities', null) == null
+        && d.get('modeData', {}).get('queueClosed', null) == null
+        && d.get('modeData', {}).get('queueEntries', 0) == 0;
     }
     match /products/{id} {
       allow read: if true;
@@ -182,6 +186,7 @@ service cloud.firestore {
         // the seller can no longer rewrite it (e.g. reset the winner or the group).
         && (isAdmin() || unchanged(['modeData'])
             || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
+                && resource.data.get('modeData', {}).get('queueEntries', 0) == 0
                 && resource.data.get('modeData', {}).get('participants', []).size() == 0
                 && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
                 && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
@@ -1917,6 +1922,28 @@ service cloud.firestore {
           || get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid);
         allow write: if false;
       }
+      // [R13-D] likes / reminders: server-written; a user may read their own row
+      match /likes/{uid} {
+        allow read: if signedIn() && uid == request.auth.uid;
+        allow write: if false;
+      }
+      match /reminders/{uid} {
+        allow read: if signedIn() && uid == request.auth.uid;
+        allow write: if false;
+      }
+    }
+    // [R13-D] Bei Kushuka queue: entries are private (server only); the board is public and masked
+    match /price_drop_entries/{eid} {
+      allow read, write: if false;
+    }
+    match /price_drop_board/{pid} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // [R13-D] "Zabuni zangu": each buyer reads only their own auction participation rows
+    match /auction_participation/{rid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
     }
     match /live_reports/{rid} {
       allow read: if isAdmin();
