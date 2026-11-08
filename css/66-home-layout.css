@@ -1,0 +1,166 @@
+/* ==== css/66-home-layout.css ==== */
+/* [R13-E 2026-11] Nyumbani in the owner's order.
+ *   simu (ref 11):    Gundua Soko · banner · njia 4 · Bidhaa Maarufu · Live na fursa · soko
+ *   desktop (ref 14 + 12): carousel · njia 6 · Discover New Updates · matangazo 3 · Live na fursa ·
+ *                     Gundua Soko · Bidhaa Maarufu · soko
+ * Sections keep their own ids/handlers; only their ORDER and look change here (Nyumbani tab only). */
+body:has(#navTabHome.active) #buyerView { display: flex !important; flex-direction: column; }
+body:has(#navTabHome.active) #buyerView > * { order: 20; min-width: 0; }
+body:has(#navTabHome.active) #categoryStrip { order: 1; }
+body:has(#navTabHome.active) #skhHomeHero { order: 2; }
+body:has(#navTabHome.active) #skhHomePopular { order: 3; }
+body:has(#navTabHome.active) #lvHome { order: 4; }
+body:has(#navTabHome.active) #skhHomeUpdates { order: 5; display: none; }
+body:has(#navTabHome.active) #skhHomePromos { order: 6; }
+body:not(:has(#navTabHome.active)) .shx { display: none !important; }
+@media (min-width: 900px) {
+    body:has(#navTabHome.active) #skhHomeHero { order: 1; }
+    body:has(#navTabHome.active) #skhHomeUpdates { order: 2; display: block; }
+    body:has(#navTabHome.active) #skhHomeUpdates[hidden] { display: none; }
+    body:has(#navTabHome.active) #skhHomePromos { order: 3; }
+    body:has(#navTabHome.active) #lvHome { order: 4; }
+    body:has(#navTabHome.active) #categoryStrip { order: 5; }
+    body:has(#navTabHome.active) #skhHomePopular { order: 6; }
+}
+.shx[hidden] { display: none !important; }
+
+/* ---------- carousel (refs 12/13/14/15) ---------- */
+.shc { position: relative; overflow: hidden; border-radius: 18px; box-shadow: 0 8px 22px rgba(15, 110, 85, .18); }
+.shc-track { display: flex; transition: transform .5s cubic-bezier(.22, .61, .36, 1); }
+.shc-slide { flex: 0 0 100%; min-width: 0; }
+.shc .shh-banner { box-shadow: none; border-radius: 0; }
+.shc-escrow { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 46%; min-height: 168px; overflow: hidden; color: #0E2B6B;
+    background: linear-gradient(115deg, #F2FBF4 0%, #E3F6E7 45%, #CDEFD6 100%); }
+.shc-copy { position: relative; z-index: 1; padding: 16px 8px 16px 16px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.shc-brand { font: 900 20px/1 Inter, system-ui, sans-serif; color: #1F5FD1; letter-spacing: -.02em; }
+.shc-title { margin: 0; font: 900 21px/1.12 Inter, system-ui, sans-serif; color: #12306E; }
+.shc-pill { background: #15A04D; color: #fff; font: 800 12.5px/1 Inter, system-ui, sans-serif; padding: 7px 12px; border-radius: 10px; }
+.shc-sub { margin: 0; font: 600 12px/1.45 Inter, system-ui, sans-serif; color: #1D2F4F; max-width: 40ch; }
+.shc-photo { width: 100%; height: 100%; object-fit: cover; object-position: 30% 40%; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14%); mask-image: linear-gradient(90deg, transparent 0, #000 14%); }
+.shc-escrow .shh-steps { display: none; }
+.shc-escrow .shh-cta { margin-top: 4px; }
+.shc-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .92); color: #0E2B23; display: none; place-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, .15); }
+.shc-prev { left: 10px; } .shc-next { right: 10px; }
+.shc-dots { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; justify-content: center; gap: 6px; z-index: 3; }
+.shc-dots button { width: 8px; height: 8px; border-radius: 99px; border: 0; background: rgba(255, 255, 255, .7); box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); padding: 0; cursor: pointer; transition: width .25s; }
+.shc-dots button.on { width: 22px; background: #15A04D; }
+.shh-title { font-style: normal; }
+.shc-info { list-style: none; margin: 4px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.shc-info li { border: 1px solid #E2ECE8; border-radius: 12px; padding: 8px 12px; } .shc-info b { display: block; font-size: 14px; } .shc-info span { font-size: 12.5px; color: #5F716B; }
+@media (min-width: 900px) {
+    .shc-arrow { display: grid; }
+    .shc-escrow { grid-template-columns: minmax(0, 1fr) 40% auto; min-height: 250px; }
+    .shc-copy { padding: 24px 12px 24px 64px; gap: 8px; }
+    .shc-brand { font-size: 30px; } .shc-title { font-size: 32px; } .shc-pill { font-size: 17px; padding: 9px 16px; } .shc-sub { font-size: 14px; }
+    .shc-escrow .shh-steps { display: flex; flex-direction: column; justify-content: center; gap: 7px; margin: 0; padding: 0 60px 0 8px; list-style: none; }
+    .shc-escrow .shh-steps li { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, .95); color: #0E2B23; font: 700 13px/1 Inter, system-ui, sans-serif; padding: 9px 14px 9px 10px; border-radius: 10px; white-space: nowrap; box-shadow: 0 2px 8px rgba(0, 0, 0, .08); }
+    .shc-escrow .shh-steps .skh-ico { width: 20px; height: 20px; border-radius: 50%; background: #15A04D; color: #fff; display: grid; place-items: center; }
+    .shc-escrow .shh-steps .skh-ico svg { width: 12px; height: 12px; }
+    .shc .shh-banner .shh-copy { padding-left: 64px; }
+    .shc .shh-banner .shh-steps { display: none !important; }
+}
+
+/* ---------- njia za haraka: desktop 6 (ref 14), simu 4 (ref 11) ---------- */
+.shh-quick { display: none !important; }
+.shh-quick4 { margin-top: 10px; display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border: 1px solid #E3ECE8; border-radius: 16px; box-shadow: 0 4px 14px rgba(15, 60, 45, .06); }
+.shh-quick4 button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; border: 0; background: none; cursor: pointer; color: #0F6E55; position: relative; }
+.shh-quick4 button + button::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 1px; background: #E3ECE8; }
+.shh-quick4 .skh-ico svg { width: 26px; height: 26px; }
+.shh-quick4 b { font: 700 13px/1.1 Inter, system-ui, sans-serif; color: #17302A; }
+@media (min-width: 900px) {
+    .shh-quick4 { display: none; }
+    .shh-quick { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .shh-quick button { display: grid !important; grid-template-columns: 40px 1fr 22px; grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left; padding: 12px; border-radius: 14px; background: #F4F7FB; border: 1px solid #E6ECF2; }
+    .shh-quick .shh-qi { grid-row: 1 / span 2; width: 40px; height: 40px; border-radius: 10px; background: #fff; }
+    .shh-quick b { display: block; font-size: 14px; color: #12306E; align-self: end; } .shh-quick small { display: block !important; align-self: start; font-size: 11.5px; }
+    .shh-go { grid-row: 1 / span 2; grid-column: 3; width: 22px; height: 22px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: #12306E; font-style: normal; }
+    .shh-go svg { width: 12px; height: 12px; }
+}
+@media (max-width: 899px) { .shh-go { display: none; } }
+
+/* ---------- sections ---------- */
+.shx { margin: 12px; }
+.shx-h { display: flex; justify-content: space-between; align-items: center; margin: 2px 2px 10px; }
+.shx-h h2 { display: flex; align-items: center; gap: 8px; margin: 0; font: 900 20px/1.1 Inter, system-ui, sans-serif; color: #0F6E55; }
+.shx-hi { color: #0F6E55; display: inline-grid; }
+.shx-h button { border: 0; background: none; color: #B98A1E; font: 800 14px/1 Inter, system-ui, sans-serif; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+/* Bidhaa Maarufu (ref 11) */
+.shp-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(150px, 1fr); gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+@media (min-width: 900px) { .shp-row { grid-auto-columns: minmax(190px, 1fr); } }
+.shp-card { position: relative; background: #fff; border: 1px solid #E6EEEA; border-radius: 16px; padding: 10px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; box-shadow: 0 4px 12px rgba(15, 60, 45, .05); }
+.shp-img { aspect-ratio: 1 / 1; display: grid; place-items: center; background: #fff; border-radius: 10px; overflow: hidden; }
+.shp-img img { width: 100%; height: 100%; object-fit: contain; }
+.shp-off { position: absolute; top: 8px; right: 8px; z-index: 1; background: #1F5FD1; color: #fff; font: 800 12px/1 Inter, system-ui, sans-serif; padding: 5px 8px; border-radius: 99px; }
+.shp-heart { position: absolute; top: 8px; right: 8px; z-index: 1; border: 0; background: rgba(255, 255, 255, .9); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #0F6E55; cursor: pointer; }
+.shp-t { font: 700 14px/1.25 Inter, system-ui, sans-serif; color: #12201C; min-height: 2.5em; }
+.shp-card strong { font: 900 16px/1.1 Inter, system-ui, sans-serif; color: #1F5FD1; }
+.shp-card s { font-size: 12.5px; color: #8A9A95; }
+.shp-stock { display: inline-flex; align-items: center; gap: 4px; font: 700 12.5px/1 Inter, system-ui, sans-serif; color: #15A04D; margin-top: 2px; }
+.shp-stock svg { background: #15A04D; color: #fff; border-radius: 4px; padding: 1px; }
+.shp-stock.out { color: #B4362C; } .shp-stock.out svg { background: #B4362C; }
+/* Discover New Updates (ref 12/14) */
+.shu-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.shu-card { background: #fff; border: 1px solid #E6ECF2; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; gap: 3px; padding-bottom: 10px; box-shadow: 0 4px 14px rgba(15, 40, 80, .06); }
+.shu-img { position: relative; height: 128px; background: #EEF3F1; }
+.shu-img img { width: 100%; height: 100%; object-fit: cover; }
+.shu-tag { position: absolute; top: 8px; left: 8px; color: #fff; font: 800 12px/1 Inter, system-ui, sans-serif; padding: 6px 10px; border-radius: 8px; }
+.shu-card > b { padding: 6px 12px 0; font: 800 15px/1.2 Inter, system-ui, sans-serif; color: #12201C; }
+.shu-card > small { padding: 0 12px; font-size: 12.5px; color: #55656F; min-height: 2.4em; }
+.shu-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 4px 10px 0 12px; font-size: 12px; color: #33463F; }
+.shu-foot span { display: inline-flex; gap: 4px; align-items: center; color: #15A04D; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.shu-cta { border: 0; border-radius: 999px; color: #fff; font: 800 12.5px/1 Inter, system-ui, sans-serif; padding: 9px 14px; cursor: pointer; white-space: nowrap; }
+.shu-g { background: #15A04D; } .shu-b { background: #1F5FD1; } .shu-y { background: #E8862B; } .shu-p { background: #7B3FD0; }
+/* promo trio (ref 12) */
+.shm-row { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 900px) { .shm-row { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+.shm { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 12px; padding: 16px; border-radius: 16px; border: 0; cursor: pointer; text-align: left; color: #fff; min-height: 76px; }
+.shm b { display: block; font: 900 17px/1.15 Inter, system-ui, sans-serif; } .shm small { font: 600 13px/1.3 Inter, system-ui, sans-serif; opacity: .95; }
+.shm em { font-style: normal; background: #fff; color: #12201C; font: 800 12.5px/1 Inter, system-ui, sans-serif; padding: 9px 12px; border-radius: 999px; display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; }
+.shm-ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .18); }
+.shm-g { background: linear-gradient(110deg, #138A4A, #1DAA5C); } .shm-b { background: linear-gradient(110deg, #1C4FB8, #2D7BEA); } .shm-y { background: linear-gradient(110deg, #E9B21E, #F5CF4A); color: #3A2A00; }
+.shm-y .shm-ic { background: rgba(0, 0, 0, .08); }
+
+/* ---------- Gundua Soko on simu: one row of small photo tiles (ref 11) ---------- */
+@media (max-width: 899px) {
+    body:has(#navTabHome.active) #categoryStrip { margin: 8px 12px 2px; padding: 12px 10px 8px; }
+    body:has(#navTabHome.active) #categoryPhotoStrip { display: grid !important; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; overflow: visible; }
+    body:has(#navTabHome.active) #categoryPhotoStrip .cps-card { min-width: 0 !important; width: auto !important; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; gap: 4px; }
+    body:has(#navTabHome.active) #categoryPhotoStrip .cps-card-img { width: 100% !important; height: auto !important; aspect-ratio: 1 / 1; border-radius: 12px !important; overflow: hidden; box-shadow: 0 2px 8px rgba(15, 60, 45, .1); }
+    body:has(#navTabHome.active) #categoryPhotoStrip .cps-card-name { font-size: 10.5px !important; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 !important; text-align: center; }
+    body:has(#navTabHome.active) #categoryPhotoStrip .cps-card--more { aspect-ratio: auto; }
+    body:has(#navTabHome.active) #categoryPhotoStrip .cps-card--more .cps-more-ico { width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; display: grid; place-items: center; background: #FFF6DC; color: #C9A13B; }
+    body:has(#navTabHome.active) #categoryStrip .cps-title { font-size: 19px; }
+}
+
+/* ---------- desktop header labels (refs 12/13/14: Post · More · SokoPay · Cart · Notifications) ---------- */
+.skh-hlabel { display: none; }
+@media (min-width: 1100px) {
+    .top-nav-icons .skh-icon-btn { width: auto !important; padding: 0 12px !important; gap: 7px; display: inline-flex !important; align-items: center; border-radius: 999px !important; }
+    .top-nav-icons .skh-hlabel, #skhPostBtn .skh-hlabel { display: inline; font: 700 14px/1 Inter, system-ui, sans-serif; color: #17302A; }
+    #skhPostBtn { width: auto !important; padding: 0 18px !important; gap: 8px; display: inline-flex !important; align-items: center; border-radius: 999px !important; }
+    #skhPostBtn .skh-hlabel { color: #fff; font-size: 15px; }
+}
+/* carousel fixes */
+.shc-dots button { min-height: 0 !important; min-width: 0 !important; height: 8px !important; padding: 0 !important; line-height: 0; }
+@media (min-width: 900px) { .shc .shh-banner { grid-template-columns: minmax(0, 1fr) 42% !important; min-height: 250px; } .shc .shh-banner::after { right: 41%; } }
+@media (max-width: 1099px) { .skh-hlabel { display: none !important; } }
+@media (max-width: 899px) {
+    body:has(#navTabHome.active) #categoryPhotoStrip { min-height: 0 !important; height: auto !important; padding: 2px 0 0 !important; }
+    body:has(#navTabHome.active) #categoryStrip .cps-head { margin-bottom: 10px; }
+}
+@media (max-width: 899px) { body:has(#navTabHome.active) #categoryPhotoStrip .cps-card { min-height: 0 !important; height: auto !important; } }
+@media (max-width: 899px) { body:has(#navTabHome.active) #categoryPhotoStrip .cps-card-name { white-space: normal !important; font-size: 10px !important; letter-spacing: -.01em; overflow-wrap: anywhere; } }
+
+/* ---------- POS cashier grid (refs 17/18) ---------- */
+.posg { margin-bottom: 12px; }
+.posg-cats { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 8px; }
+.posg-cats button { flex: 0 0 auto; border: 1px solid #DCE7E2; background: #fff; border-radius: 999px; padding: 6px 12px; font: 700 12.5px/1 Inter, system-ui, sans-serif; color: #33463F; cursor: pointer; }
+.posg-cats button.on { background: #0F7A5C; border-color: #0F7A5C; color: #fff; }
+.posg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 2px; }
+.posg-tile { display: flex; flex-direction: column; gap: 2px; text-align: left; border: 1px solid #E2ECE8; border-radius: 12px; background: #fff; padding: 6px; cursor: pointer; }
+.posg-tile img, .posg-noimg { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 8px; background: #F6F9F8; display: block; }
+.posg-tile b { font: 700 12px/1.2 Inter, system-ui, sans-serif; color: #12201C; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.posg-tile em { font-style: normal; font: 800 12.5px/1 Inter, system-ui, sans-serif; color: #0F7A5C; } .posg-tile small { font-size: 11px; color: #5F716B; }
+.posg-tile.out { opacity: .5; cursor: not-allowed; }
+.posg-tile.hit { animation: posghit .4s ease; } @keyframes posghit { 40% { transform: scale(.95); border-color: #0F7A5C; } }
+.posg-empty { font-size: 12.5px; color: #5F716B; margin: 0 0 8px; }

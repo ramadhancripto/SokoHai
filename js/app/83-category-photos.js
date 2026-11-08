@@ -186,7 +186,9 @@
     };
 
     /* strip ya Home: kategoria 6 (zile zile za design) */
-    var HOME_STRIP = ['CAT-01', 'CAT-11', 'CAT-04', 'CAT-02', 'CAT-07', 'CAT-10']; // [R6] canonical ids
+    // [R13-E] order and short names of ref 11: Elektroniki, Mavazi, Kilimo, Usafiri (magari), Nyumba, Vyakula, More
+    var HOME_STRIP = ['CAT-11', 'CAT-07', 'CAT-02', 'CAT-14', 'CAT-09', 'CAT-01'];
+    var HOME_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Mavazi', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Nyumba', 'CAT-01': 'Vyakula' };
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -278,7 +280,7 @@
             html += '<button type="button" class="cps-card" data-cat="' + esc(n) + '" title="' + esc(n) + '"'
                  + ' aria-pressed="false">'
                  + '<span class="cps-card-img">' + imgMarkup(n, 'cps-photo') + '</span>'
-                 + '<span class="cps-card-name">' + esc(labelOf(n)) + '</span></button>';
+                 + '<span class="cps-card-name">' + esc((window.matchMedia && window.matchMedia('(max-width: 899px)').matches && HOME_SHORT[canonId(n) || n]) || labelOf(n)) + '</span></button>';
         });
         /* kadi ya mwisho: Category Explorer */
         html += '<button type="button" class="cps-card cps-card--more" data-more="1"'
