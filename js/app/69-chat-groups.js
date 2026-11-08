@@ -306,7 +306,7 @@ import { skh } from './00-bootstrap.js';
         var convRef = skh.doc(skh.db, 'conversations', 'conv_group_' + gid);
         var mentions = await extractMentions(gid, txt);   // [R26] @jina/@wote → msg.mentions
         var rto = fmtReplyTo(opts && opts.replyTo);       // [P3 §12] jibu la ujumbe
-        var msgDoc = { senderUid: uid(), senderName: myNameG(), text: txt, at: nowIso(), mentions: mentions };
+        var msgDoc = { senderId: uid(), senderUid: uid(), senderName: myNameG(), text: txt, at: nowIso(), mentions: mentions };
         if (rto) { msgDoc.replyTo = rto; msgDoc.threadRootId = (opts && opts.threadRootId) || rto.id; }
         var rr = await skh.addDoc(skh.collection(skh.db, 'conversations/conv_group_' + gid + '/messages'), msgDoc);
         // syncs kwa unified list (34) — lastMessage + unread ya WANACHAMA WENGINE (§44-style RMW)
@@ -412,6 +412,7 @@ import { skh } from './00-bootstrap.js';
             if (pr.unit) fields.product.unit = cln(pr.unit, 20);
             if (pr.productId) fields.product.productId = cln(pr.productId, 64);
             if (pr.sellerName) fields.product.sellerName = cln(pr.sellerName, 60);
+            if (pr.location) fields.product.location = cln(pr.location, 60);   // [R13-G] from the real listing (picker)
             if (pr.imageUrl) fields.product.imageUrl = String(pr.imageUrl).slice(0, 2500000);
         } else if (type === 'service') {
             var sv = payload.service || {};
@@ -434,7 +435,7 @@ import { skh } from './00-bootstrap.js';
         var mentions = await extractMentions(gid, fields.caption || fields.text || fields.question || '');
         var rto = fmtReplyTo(payload.replyTo);
         if (!prev) prev = grpTypePreview(type, fields);
-        var doc = { senderUid: uid(), senderName: myNameG(), at: nowIso(), type: type };
+        var doc = { senderId: uid(), senderUid: uid(), senderName: myNameG(), at: nowIso(), type: type };
         Object.keys(fields).forEach(function (k) { doc[k] = fields[k]; });
         if (mentions && mentions.length) doc.mentions = mentions;
         if (rto) { doc.replyTo = rto; doc.threadRootId = payload.threadRootId || rto.id; }
@@ -627,7 +628,7 @@ import { skh } from './00-bootstrap.js';
         // ---- [§15] LIVE REFERENCE CARD ndani ya chat (msg type 'group_order') ----
         try {
             await skh.addDoc(skh.collection(skh.db, 'conversations/conv_group_' + gid + '/messages'), {
-                senderUid: uid(), senderName: myNameG(), at: nowIso(), type: 'group_order',
+                senderId: uid(), senderUid: uid(), senderName: myNameG(), at: nowIso(), type: 'group_order',
                 gorderId: goid,
                 snapshot: { productName: productName, targetQty: targetQty, totalQty: myQty, targetPrice: targetPrice, deadline: deadline, deliveryMethod: deliveryMethod, status: 'OPEN' }
             });
@@ -1200,7 +1201,7 @@ import { skh } from './00-bootstrap.js';
         await logEvent(gid, 'go_offers_requested', uid(), null, d.productName || null, goid);
         try {
             await skh.addDoc(skh.collection(skh.db, 'conversations/conv_group_' + gid + '/messages'), {
-                senderUid: uid(), senderName: myNameG(), at: nowIso(), type: 'supplier_request', gorderId: goid,
+                senderId: uid(), senderUid: uid(), senderName: myNameG(), at: nowIso(), type: 'supplier_request', gorderId: goid,
                 snapshot: { productName: d.productName, requiredQty: Math.max((+d.targetQty || 0) - (+d.totalQty || 0), 0), targetQty: d.targetQty,
                             unit: d.unit || null, deliveryArea: d.deliveryArea, deliveryMethod: d.deliveryMethod, deadline: d.deadline, offersCount: 0 }
             });

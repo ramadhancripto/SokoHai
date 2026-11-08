@@ -182,6 +182,8 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/65-live-design.css?v=20261108r13d"><!-- [R13-D] live screens kama design refs 1,2,5,6,7,10 -->
 <link rel="stylesheet" href="css/66-home-layout.css?v=20261108r13e"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
 <link rel="stylesheet" href="css/67-chat-discover.css?v=20261108r13f"><!-- [R13-F] Chat Discover + Hali viewer kama refs 8, 9 -->
+<link rel="stylesheet" href="css/68-group-chat-design.css?v=20261108r13g"><!-- [R13-G] Group Chat kama design refs (Wakulima &amp; Biashara) -->
+<link rel="stylesheet" href="css/69-category-tiles.css?v=20261108r13g"><!-- [R13-G] picha halisi za kategoria kwenye kadi safi -->
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>
@@ -3261,9 +3263,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
         <section class="cps-section" id="categoryStrip" aria-labelledby="cpsTitle">
             <div class="cps-head">
-                <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span>Gundua Soko</h2>
+                <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span><span class="cps-grid-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg></span><span class="cps-t-m" data-no-i18n>Gundua Soko</span><span class="cps-t-d" data-no-i18n>Kategoria za Bidhaa</span></h2>
                 <span class="cps-head-rule" aria-hidden="true"></span>
-                <button type="button" class="cps-more" onclick="openCategoryModal()">Kategoria zote
+                <button type="button" class="cps-more" onclick="openCategoryModal()" data-no-i18n><span class="cps-t-m">Kategoria zote</span><span class="cps-t-d">Tazama Zote</span>
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
                 </button>
             </div>
@@ -3683,13 +3685,13 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/68-gundua-soko.js?v=20261108r13c"></script><!-- [2026-11-04] Gundua Soko -->
 <script type="module" src="js/app/82-home-header-actions.js?v=20261105r6w"></script>
 <!-- [R13-C] 86-category-icons-manifest.js (SVG family) is no longer loaded: categories use photos; files kept on disk -->
-<script type="module" src="js/app/83-category-photos.js?v=20261108r13e"></script>
+<script type="module" src="js/app/83-category-photos.js?v=20261108r13g"></script>
 <script type="module" src="js/app/84-location-fast.js?v=20261105r6b"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->
-<script type="module" src="js/app/69-chat-groups.js"></script>
+<script type="module" src="js/app/69-chat-groups.js?v=20261108r13g"></script>
 <script type="module" src="js/app/70-role-identity.js"></script>
 <script type="module" src="js/app/71-visual-dictionary.js"></script>
-<script type="module" src="js/app/73-group-soga.js"></script>
-<script type="module" src="js/app/74-group-order-system.js"></script>
+<script type="module" src="js/app/73-group-soga.js?v=20261108r13g"></script>
+<script type="module" src="js/app/74-group-order-system.js?v=20261108r13g"></script>
 <script type="module" src="js/app/76-group-order-production-enhancement.js"></script>
 <script type="module" src="js/app/64-my-profile.js"></script>
 <script type="module" src="js/app/50-lifecycle-core.js"></script>

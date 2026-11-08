@@ -87,6 +87,35 @@ await db.doc('stories/demo_hali_juma').set({ authorUid: uid.juma, authorName: 'J
   listing: { col: 'products', id: 'demo_pricedrop_spika', title: 'Spika JBL (bei kushuka) · demo', price: 200000 }, visibility: 'public', status: 'active', viewCount: 0,
   createdAt: iso, expiresAt: new Date(now + 24 * 3600000).toISOString(), expiresAtMs: now + 24 * 3600000 });
 
+// [R13-G] Group Chat preview (emulator ONLY): chat group orders feature on for the local preview;
+// production stays off (setPlatformPolicy refuses it there until the server engine exists).
+await db.doc('system/config').set({ features: { chatGroupOrders: true } }, { merge: true });
+await P('juma', { id: 'demo_gb_mahindi', title: 'Mahindi Bora gunia 100kg (group buy) · demo', category: 'CAT-02', subCategory: 'Nafaka', price: 75000, stock: 200, unit: 'Gunia', condition: 'Mpya', baseUnit: 'Gunia',
+  image: BASE + '/assets/img/categories/clean/kilimo.webp', imagesArray: [BASE + '/assets/img/categories/clean/kilimo.webp'],
+  saleMode: 'group_buy', modeData: { mode: 'group_buy', groupPrice: 68000, targetUsers: 10, joinedUsers: 0, participants: [], endTime: now + 3 * 864e5 } });
+{
+  const gid = 'demo_grp_wakulima', conv = 'conv_group_' + gid, members = Object.keys(uid).filter(k => k !== 'admin');
+  const t0 = Date.now() - 40 * 60000, at = (m) => new Date(t0 + m * 60000).toISOString();
+  await db.doc('chatGroups/' + gid).set({ name: 'Wakulima & Biashara · demo', description: 'Biashara ya pamoja (emulator)', groupType: 'PERMANENT_COMMUNITY', category: 'kilimo',
+    contextType: 'GENERAL', contextId: null, visibility: 'public', joinPolicy: 'open', invitePolicy: 'everyone', sendPolicy: 'everyone', status: 'ACTIVE',
+    createdBy: uid.juma, ownerId: uid.juma, createdAt: at(0), updatedAt: at(0), archivedAt: null, memberCount: members.length, conversationId: conv,
+    announcement: { text: 'Ununuzi wa pamoja wa mahindi kuanza wiki hii. Jitokeze mapema.', by: uid.juma, at: at(1) },
+    sharedContext: { type: 'GENERAL', contextId: null, contextName: null, createdBy: uid.juma, participants: [uid.juma] } }, { merge: true });
+  await db.doc('conversations/' + conv).set({ type: 'group', groupId: gid, name: 'Wakulima & Biashara · demo', participants: members.map(k => uid[k]), createdAt: at(0), updatedAt: at(30), lastMessageAt: at(30) }, { merge: true });
+  for (const [i, k] of members.entries()) {
+    const jt = k === 'wakala' ? at(16) : at(i);   // one member joins during the conversation (system pill)
+    await db.doc('chatGroups/' + gid + '/members/' + uid[k]).set({ userId: uid[k], role: k === 'juma' ? 'owner' : 'member', status: 'active', joinedAt: jt, invitedBy: null, leftAt: null });
+    await db.doc('chatGroups/' + gid + '/events/demo_join_' + k).set({ type: k === 'juma' ? 'group_created' : 'member_joined', actorUid: uid[k], targetUid: null, note: null, at: jt });
+  }
+  const NM = Object.fromEntries(ACCOUNTS.map(a => [a.key, a.name]));
+  const msg = (id, k, m, extra) => db.doc('conversations/' + conv + '/messages/' + id).set(Object.assign({ senderId: uid[k], senderUid: uid[k], senderName: NM[k] || k, at: at(m) }, extra));
+  const firstBuyer = uid.asha ? 'asha' : 'neema';
+  await msg('demo_m1', firstBuyer, 10, { text: 'Habari za asubuhi, kuna mtu ana mahindi ya kuuza kwa jumla?', reactions: { '\u{1F44D}': [uid.juma, uid.neema].filter(Boolean) } });
+  await msg('demo_m2', 'juma', 12, { text: 'Nipo nayo. Gunia 200 kwa sasa, tunaweza kujadiliana bei.' });
+  await msg('demo_m3', 'juma', 14, { type: 'product', product: { name: 'Mahindi Bora gunia 100kg', price: '75000', unit: 'Gunia', qty: '200', productId: 'demo_gb_mahindi', sellerName: 'Juma Electronics', location: 'Dar es Salaam', imageUrl: BASE + '/assets/img/categories/clean/kilimo.webp' } });
+  await msg('demo_m4', 'neema', 18, { text: 'Mimi nahitaji gunia 50 kwa TSh 72,000 kila moja.' });
+}
+
 console.log('\nSokoHai LOCAL DEMO DATA tayari (emulator tu).');
 console.log('Nenosiri la akaunti zote:', PW);
 ACCOUNTS.forEach(a => console.log('  ' + a.email.padEnd(24) + ' — ' + a.name));

@@ -189,6 +189,9 @@
     // [R13-E] order and short names of ref 11: Elektroniki, Mavazi, Kilimo, Usafiri (magari), Nyumba, Vyakula, More
     var HOME_STRIP = ['CAT-11', 'CAT-07', 'CAT-02', 'CAT-14', 'CAT-09', 'CAT-01'];
     var HOME_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Mavazi', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Nyumba', 'CAT-01': 'Vyakula' };
+    /* [R13-G] majina mafupi ya grid ya desktop (kama picha ya "Kategoria za Bidhaa") — IDs hazibadiliki */
+    var GRID_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Mavazi', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Samani', 'CAT-01': 'Vyakula',
+        'CAT-04': 'Mifugo', 'CAT-10': 'Ujenzi', 'CAT-19': 'Afya', 'CAT-27': 'Sanaa', 'CAT-28': 'Bidhaa za Jadi', 'CAT-29': 'Zawadi', 'CAT-31': 'Wanyama', 'CAT-36': 'Ulinzi', 'CAT-40': 'Jumla' };
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -273,6 +276,11 @@
         var list = (window.skh && typeof window.skh.buyerProductCategories === 'function') ? window.skh.buyerProductCategories().map(function (c) { return c.value; }) : Object.keys(cats);
         var names = HOME_STRIP.filter(function (n) { return list.indexOf(n) !== -1; });
         if (names.length < 6) names = list.filter(function (n) { return !!photoUrl(n); }).slice(0, 6);
+        /* [R13-G] desktop: grid ya "Kategoria za Bidhaa" (safu 2 × 6) — kategoria zenye picha HALISI tu,
+           ya mwisho ni "Zaidi". Simu inabaki na mstari mmoja wa ref 11. */
+        if (window.matchMedia && window.matchMedia('(min-width: 900px)').matches) {
+            list.forEach(function (n) { if (names.length < 11 && names.indexOf(n) === -1 && photoUrl(n)) names.push(n); });
+        }
         if (!names.length) return;
 
         var html = '';
@@ -280,7 +288,7 @@
             html += '<button type="button" class="cps-card" data-cat="' + esc(n) + '" title="' + esc(n) + '"'
                  + ' aria-pressed="false">'
                  + '<span class="cps-card-img">' + imgMarkup(n, 'cps-photo') + '</span>'
-                 + '<span class="cps-card-name">' + esc((window.matchMedia && window.matchMedia('(max-width: 899px)').matches && HOME_SHORT[canonId(n) || n]) || labelOf(n)) + '</span></button>';
+                 + '<span class="cps-card-name">' + esc((window.matchMedia && (window.matchMedia('(max-width: 899px)').matches ? HOME_SHORT[canonId(n) || n] : GRID_SHORT[canonId(n) || n])) || labelOf(n)) + '</span></button>';
         });
         /* kadi ya mwisho: Category Explorer */
         html += '<button type="button" class="cps-card cps-card--more" data-more="1"'
