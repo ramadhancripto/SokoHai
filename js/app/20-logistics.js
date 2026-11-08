@@ -113,6 +113,8 @@ window.renderSellerLogisticsTab = async function() {
     const shopOwnerId = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
     const qPending = skh.query(
         skh.collection(skh.db, "ride_requests"),
+        // [REMEDIATION R1] sellerId filter: the seller sees only their own shop's jobs
+        skh.where("sellerId", "==", shopOwnerId),
         skh.where("status", "in", ["accepted", "awaiting_pickup", "pickup_pending", "seller_confirmed_handover"]),
         skh.limit(30)
     );
@@ -132,7 +134,7 @@ window.renderSellerLogisticsTab = async function() {
             count++;
             const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
             html += `
-                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;"> ${rd.cargoName}</b> <span style="font-size:13px; color:gray; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} | Njia: ${rd.fromLocation} -> ${rd.toLocation}</span> <span style="font-size:13px; color:orange; font-weight:bold; display:block; margin-top:2px;">Dereva: ${skh.skhEscape(rd.driverName || 'N/A')} (Chombo: ${rd.vehicleType})</span> </div> </div> <div style="text-align:right;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:4px 8px; border-radius:8px; font-weight:bold; display:block; margin-bottom:5px;">${rd.status.toUpperCase()}</span> <b style="font-size:12px; color:var(--primary-blue);">Token A: ${rd.pickupTokenRef || rd.pickupToken || 'Itaundwa baada ya dereva kukubali'}</b> </div> </div> `;
+                <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;"> ${skh.skhEscape(rd.cargoName || "")}</b> <span style="font-size:13px; color:gray; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} | Njia: ${rd.fromLocation} -> ${rd.toLocation}</span> <span style="font-size:13px; color:orange; font-weight:bold; display:block; margin-top:2px;">Dereva: ${skh.skhEscape(rd.driverName || 'N/A')} (Chombo: ${rd.vehicleType})</span> </div> </div> <div style="text-align:right;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:4px 8px; border-radius:8px; font-weight:bold; display:block; margin-bottom:5px;">${rd.status.toUpperCase()}</span> <b style="font-size:12px; color:var(--primary-blue);">Token A: ${rd.pickupTokenRef || rd.pickupToken || 'Itaundwa baada ya dereva kukubali'}</b> </div> </div> `;
         });
 
         listDiv.innerHTML = count === 0 
@@ -174,7 +176,7 @@ window.verifySellerDispatchToken = async function() {
         if (!foundId) {
             // Demo fallback (server haipatikani) — utafute kama awali (legacy).
             const q = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("pickupToken", "==", token), skh.limit(1));
-            const snap = await skh.getDocs(q);
+            const snap = await skh.getDocs(q).catch(() => ({ empty: true, docs: [] })); // [R1] legacy query may be denied
             if (snap.empty) {
                 alert(T('lg_token_wrong', "This token is wrong or the cargo has already been released!"));
                 btnVerify.innerHTML = "HAKIKI ";
@@ -405,11 +407,11 @@ window.setupDriverActiveJobsQuery = function() {
                 count++;
                 const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
                 const pToken = rd.pickupTokenRef || rd.pickupToken || "Bado";
-                const cPhone = rd.customerPhone || "Haikujazwa";
+                const cPhone = skh.rideContactSpan(rid, "customerPhone", rd.customerPhone, "Haikujazwa"); // [R1] private/contact
 
                 html += `
-                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:18px; padding:15px; margin-bottom:12px; border-left:6px solid var(--primary-blue); text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center;"> <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;">${rd.cargoName}</b> <small style="color:gray;">Mteja: ${skh.skhEscape(rd.customerName)} | Simu: ${cPhone}</small> </div> </div> <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
-                             Kutoka: <b>${rd.fromLocation}</b> -> Kwenda: <b>${rd.toLocation}</b> </div> <div style="background:#fffbeb; padding:10px; border-radius:10px; margin-top:10px; border:1.5px dashed #d97706; font-size:12px;"> <b style="color:#d97706; display:block; margin-bottom:4px;"> Token A (Pickup Verification): <span id="pktok_${rid}">${pToken === 'Bado' ? 'Itaundwa baada ya kukubali' : pToken}</span></b>
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:18px; padding:15px; margin-bottom:12px; border-left:6px solid var(--primary-blue); text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center;"> <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;">${skh.skhEscape(rd.cargoName || "")}</b> <small style="color:gray;">Mteja: ${skh.skhEscape(rd.customerName)} | Simu: ${cPhone}</small> </div> </div> <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
+                             Kutoka: <b>${skh.skhEscape(rd.fromLocation || '')}</b> -> Kwenda: <b>${skh.skhEscape(rd.toLocation || '')}</b> </div> <div style="background:#fffbeb; padding:10px; border-radius:10px; margin-top:10px; border:1.5px dashed #d97706; font-size:12px;"> <b style="color:#d97706; display:block; margin-bottom:4px;"> Token A (Pickup Verification): <span id="pktok_${rid}">${pToken === 'Bado' ? 'Itaundwa baada ya kukubali' : skh.skhEscape(pToken)}</span></b>
                             ${rd.status === 'in_transit' ? T('lg_in_transit', 'Cargo is on the way! Ask the customer for Token C when you hand it over.') : ''}
                             ${rd.status === 'seller_confirmed_handover'
                                 ? `<p style="margin:8px 0; color:#92400e;">Muuzaji amethibitisha makabidhiano. Ingiza Token A kuthibitisha upokeaji:</p> <div style="display:flex; gap:8px;"> <input type="text" id="pickupTokenInp_${rid}" placeholder="Token A (PK-XXXXXXXX)" style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1; text-transform:uppercase; font-weight:bold; text-align:center;"> <button onclick="window.verifyHandoverToken('${rid}', 'pickup')" style="padding:10px 14px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; font-size:13px; cursor:pointer;">THIBITISHA UPOKEAJI</button> </div>`
@@ -427,6 +429,7 @@ window.setupDriverActiveJobsQuery = function() {
         container.innerHTML = count === 0 
             ? `<p style="text-align:center; color:gray; font-size:12px; padding:20px;">Huna safari inayofanya kazi hivi sasa.</p>` 
             : html;
+        if (skh.fillRideContacts) skh.fillRideContacts(container); // [R1] contact from private/contact
 
         // [CUSTODY PHASE B 2026-09] Token halisi inasomwa kutoka delivery_tokens
         // (mhusika pekee) na kujaza span za PK hapa.
@@ -523,7 +526,7 @@ window.setupDriverActiveJobsQuery = function() {
             + '<div class="lm-cargo-ico">' + img + '</div>'
             + '<div class="lm-cargo-txt">'
             + '<b>' + esc(rd.cargoName || 'Mzigo') + '</b>'
-            + '<small>' + lmIco('users', 11) + ' ' + esc(rd.customerName || 'Mteja') + '</small>'
+            + '<small>' + lmIco('users', 11) + ' Mteja</small>' // [R1] identity hidden on the open board
             + '</div>'
             + '</div>'
             + '<div class="lm-route">'
@@ -777,7 +780,9 @@ window.skhLiveDriverStats = async function () {
             skh.where("status", "==", "searching"),
             skh.limit(100)
         );
-        const [mineSnap, openSnap] = await Promise.all([skh.getDocs(qMine), skh.getDocs(qOpen)]);
+        // [R1] open board is limited to active approved agents; others get an empty board.
+        const _empty = { forEach() {}, size: 0, empty: true, docs: [] };
+        const [mineSnap, openSnap] = await Promise.all([skh.getDocs(qMine), skh.getDocs(qOpen).catch(() => _empty)]);
 
         let active = 0;
         mineSnap.forEach(d => {

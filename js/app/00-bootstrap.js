@@ -6,13 +6,23 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
+import { categoryFilterValues, categoryMatches, canonicalCategoryId, categoryInfo, buyerSubcategories, buyerProductCategories, legacySubcategoriesFor, categoryLabel } from '../../shared/category-filter-core.mjs';
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, normalizeConcreteVariantCombinations, normalizeTaxonomyMetadata, normalizeProductUploadData, resolveVariantImages, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
 
 const skh = {};
+// [REMEDIATION R4] one canonical category identity for feed, filters and images.
+skh.categoryFilterValues = categoryFilterValues;
+skh.categoryMatches = categoryMatches;
+skh.canonicalCategoryId = canonicalCategoryId;
+skh.categoryInfo = categoryInfo;
+skh.buyerSubcategories = buyerSubcategories;
+skh.buyerProductCategories = function () { return buyerProductCategories(Object.keys(skh.advancedCategories || {})); };
+skh.legacySubcategoriesFor = function (cat) { return legacySubcategoriesFor(cat, skh.advancedCategories); };
+skh.categoryLabel = categoryLabel;
 // Canonical Product Foundation service; existing screens reuse this one interface.
 skh.buildProductWrite = buildProductWrite;
 skh.normalizeTaxonomyMetadata = normalizeTaxonomyMetadata;
@@ -65,6 +75,65 @@ skh.deleteField = deleteField;  // [FIX TOGGLE 2026-09-14] kusafisha fields bapa
 skh.getFunctions = getFunctions;
 skh.httpsCallable = httpsCallable;
 skh.httpsCallableFromURL = httpsCallableFromURL;
+skh.writeBatch = writeBatch;
+
+/* [REMEDIATION 2026-11 R1] ride_requests privacy.
+   Customer contact (name, phone, receiver, email) never sits on the ride
+   document that open-board transporters can read. It lives in
+   ride_requests/{id}/private/contact, readable only by the customer, the
+   assigned driver / custodian / next transporter and admins (firestore.rules).
+   createRideRequest writes both documents in ONE batch (offline-safe). */
+skh.RIDE_PRIVATE_KEYS = ['customerName', 'customerPhone', 'customerEmail', 'receiverName', 'receiverPhone'];
+skh.splitRidePrivate = function splitRidePrivate(data) {
+    const pub = {}, priv = {};
+    Object.keys(data || {}).forEach(function (k) {
+        if (skh.RIDE_PRIVATE_KEYS.indexOf(k) >= 0) { if (data[k] != null && data[k] !== '') priv[k] = String(data[k]); }
+        else pub[k] = data[k];
+    });
+    return { pub: pub, priv: priv };
+};
+skh.createRideRequest = async function createRideRequest(data, rideId) {
+    const parts = skh.splitRidePrivate(data);
+    const ref = rideId ? doc(skh.db, 'ride_requests', String(rideId)) : doc(collection(skh.db, 'ride_requests'));
+    const batch = writeBatch(skh.db);
+    batch.set(ref, parts.pub);
+    if (Object.keys(parts.priv).length) {
+        batch.set(doc(skh.db, 'ride_requests', ref.id, 'private', 'contact'),
+            Object.assign({ customerId: parts.pub.customerId || '' }, parts.priv));
+    }
+    await batch.commit();
+    return ref;
+};
+/* Contact for a ride the caller is a party to; {} when not permitted/missing. */
+skh.rideContact = async function rideContact(rideId) {
+    try {
+        const s = await getDoc(doc(skh.db, 'ride_requests', String(rideId || '_'), 'private', 'contact'));
+        return s.exists() ? (s.data() || {}) : {};
+    } catch (_) { return {}; }
+};
+/* Render-time placeholder for a contact field; filled by fillRideContacts()
+   with textContent (no HTML injection). Legacy rides may still carry the
+   field on the main doc, so that value (escaped) is the initial text. */
+skh._rideContactCache = {};
+skh.rideContactSpan = function rideContactSpan(rideId, field, legacyVal, fallback) {
+    const esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
+    return '<span data-ride-contact="' + esc(rideId) + '" data-field="' + esc(field) + '">' + esc(legacyVal || fallback || '') + '</span>';
+};
+skh.fillRideContacts = function fillRideContacts(root) {
+    const scope = root || document;
+    if (!scope || typeof scope.querySelectorAll !== 'function') return Promise.resolve();
+    const els = Array.prototype.slice.call(scope.querySelectorAll('[data-ride-contact]'));
+    return Promise.all(els.map(function (el) {
+        const id = el.getAttribute('data-ride-contact');
+        const p = skh._rideContactCache[id] || (skh._rideContactCache[id] = skh.rideContact(id));
+        return p.then(function (c) { const v = c && c[el.getAttribute('data-field')]; if (v) el.textContent = String(v); });
+    }));
+};
+/* Returns a copy of ride data merged with its private contact (party only). */
+skh.withRideContact = async function withRideContact(rideId, rd) {
+    const c = await skh.rideContact(rideId);
+    return Object.assign({}, rd || {}, c);
+};
 
 /* [REPAIR 2026-10 C4] Public profile of ANOTHER person (name, photo, shop,
    region, rating, business phone). Reads the server-maintained `userCards`
@@ -1127,47 +1196,52 @@ skh.setImgTransform = function setImgTransform() {
 
 skh.activeProductUnsubscribe = null;
 
+/* [2026-11-06] Buyer unit price = the SAME rules the server uses to check an order
+   (functions/pricing-core.js modeUnitPrice): variant price as the base, then the
+   commerce mode (price drop, group buy for members, won auction) and finally the
+   wholesale tiers / wholesalePrice+wholesaleMinQty from shared/wholesale-price-core.js.
+   Before: group buy and wholesale used a per-extra-item discount the server never
+   applied, so the page and the cart showed a different total from the order check. */
+skh.buyerUnitPrice = function buyerUnitPrice(p, qty) {
+    if (!p) return 0;
+    const q = Math.max(1, parseInt(qty, 10) || 1);
+    const base = parseFloat(p.tempVariantPrice) > 0 ? parseFloat(p.tempVariantPrice) : (parseFloat(p.price) || 0);
+    const priced = Object.assign({}, p, { price: base });
+    const md = p.modeData || {};
+    const mode = String(md.mode || p.commerceMode || p.saleMode || '');
+    let unit = base;
+    try {
+        const c = typeof window.skhModesCompute === 'function' ? window.skhModesCompute(priced) : null;
+        if (c && mode === 'price_drop' && c.drop) unit = c.drop.currentPrice;
+        else if (c && mode === 'group_buy' && c.group) {
+            const me = skh.currentUser && skh.currentUser.uid;
+            const member = !Array.isArray(md.participants) || (me && md.participants.indexOf(me) !== -1);
+            unit = member ? c.group.price : base;
+        } else if (c && mode === 'auction' && c.auction && c.auction.ended && me_is(md)) unit = c.auction.currentBid;
+    } catch (e) { unit = base; }
+    function me_is(m) { const me = skh.currentUser && skh.currentUser.uid; return !!(me && m.maxBidder && String(m.maxBidder) === String(me)); }
+    const core = window.SKHWholesalePriceCore;
+    if (core) unit = core.unitPriceForQty(priced, q, unit);
+    return Math.max(0, Math.round(unit));
+};
+window.skhBuyerUnitPrice = skh.buyerUnitPrice;
+
 skh.calculateDynamicPrice = function calculateDynamicPrice() {
     if(!skh.currentOpenProduct) return;
-    
     const qtyInput = document.getElementById('pmQty');
     const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
-    
-    //  Angalia kama kuna bei ya saizi ya XXL iliyoshikiliwa
-    let basePrice = skh.currentOpenProduct.tempVariantPrice || parseFloat(skh.currentOpenProduct.price) || 0;
-    let finalPricePerItem = basePrice;
-
-    const mode = skh.currentOpenProduct.saleMode || 'free_market';
-    const mData = skh.currentOpenProduct.modeData || {};
-
-    if (mode === 'wholesale' || mode === 'group_buy') {
-        const discountVal = parseFloat(mData.discountValue) || 0;
-        const discountType = mData.discountType || 'amount'; 
-        const extraItems = qty - 1; 
-
-        if (extraItems > 0) {
-            if(discountType === 'percent') {
-                let totalDiscountPercent = discountVal * extraItems;
-                if(totalDiscountPercent > 90) totalDiscountPercent = 90; 
-                finalPricePerItem = basePrice - (basePrice * (totalDiscountPercent / 100));
-            } else {
-                let totalDiscountAmount = discountVal * extraItems;
-                finalPricePerItem = basePrice - totalDiscountAmount;
-                if(finalPricePerItem < (basePrice * 0.1)) finalPricePerItem = basePrice * 0.1; 
-            }
-        }
-    }
-
+    const finalPricePerItem = skh.buyerUnitPrice(skh.currentOpenProduct, qty);
     const totalCost = finalPricePerItem * qty;
-    
+
     const pmPriceEl = document.getElementById('pmPrice');
     // [SHOWCASE 39] Tumia kipimo halisi (kg, lita, pisi, …) cha muuzaji
     const _unit = (skh.currentOpenProduct && skh.currentOpenProduct.baseUnit) ? String(skh.currentOpenProduct.baseUnit) : 'Pc';
     if(pmPriceEl) pmPriceEl.innerText = `TSh ${finalPricePerItem.toLocaleString()} / ${_unit}`;
-    
+
     const pmTotalEl = document.getElementById('pmTotalPriceCalc');
     if(pmTotalEl) pmTotalEl.innerText = `TSh ${totalCost.toLocaleString()}`;
-    
+    if (typeof window.skhPsPaintTierRows === 'function') { try { window.skhPsPaintTierRows(skh.currentOpenProduct, qty); } catch (e) {} }
+
     skh.currentOpenProduct.calculatedTotalCost = totalCost;
     skh.currentOpenProduct.selectedQty = qty;
 }
@@ -1992,8 +2066,10 @@ let qNormal;
         // 2. Kama yupo kwenye "Vyote" lakini amechagua Category (mf: Simu).
         // [LIVE-FIX 2026-09] orderBy+limit — index tayari ipo
         // (products category+createdAt DESC).
+        // [REMEDIATION R4] canonical id + its reviewed legacy labels (one identity).
+        const _cv = (collectionToFetch === 'products') ? categoryFilterValues(skh.activeCategory).values : [skh.activeCategory];
         qNormal = skh.query(skh.collection(skh.db, collectionToFetch), 
-                  skh.where("category", "==", skh.activeCategory),
+                  _cv.length > 1 ? skh.where("category", "in", _cv) : skh.where("category", "==", skh.activeCategory),
                   skh.orderBy("createdAt", "desc"),
                   skh.limit(skh.currentLimit));
     } 
@@ -2066,10 +2142,38 @@ skh.cardImage = function cardImage(data, overlayHTML, extraClass) {
 };
 
 // [VerificationBadge] Tiki ya kijani — IKIWA imethibitishwa KWELI tu
-skh.cardVerified = function cardVerified(data) {
-    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified';
-    if (!v) return '';
-    return '<span class="skh-verified" title="Imethibitishwa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>';
+/* [REMEDIATION 2026-11 R9] Four distinct trust badges; each comes only from the
+   server (adminSetTrustBadge / adminSetVerification) and they are never mixed:
+     account            → seller/business account verified (userCards.trust.account)
+     supplier           → verified supplier (userCards.trust.supplier)
+     product_inspection → this listing was inspected (products.trust.product_inspection)
+     transaction        → this order completed and was verified (orders.trust.transaction)
+   Legacy product flags (verified / ownerVerified / verificationStatus) were
+   self-settable before the rules fix and are NOT shown as trust any more. */
+skh.TRUST_LABELS = { account: 'Akaunti imethibitishwa', supplier: 'Supplier aliyethibitishwa',
+    product_inspection: 'Bidhaa imekaguliwa', transaction: 'Muamala umethibitishwa', provider: 'Mtoa huduma amethibitishwa', carrier: 'Msafirishaji amethibitishwa' };
+skh.trustActive = function trustActive(data, key) {
+    const b = data && data.trust && data.trust[key];
+    return !!(b && b.status === 'active');
+};
+skh.listingTrust = function listingTrust(data, colName) {
+    const col = colName || (data && data.collectionName) || 'products';
+    if (col === 'services') return data && data.providerVerified === true ? 'provider' : (skh.trustActive(data, 'account') ? 'account' : '');
+    if (col === 'drivers' || col === 'transport_profiles' || col === 'logistics_companies') return data && data.verified === true ? 'carrier' : '';
+    return skh.trustActive(data, 'product_inspection') ? 'product_inspection' : '';
+};
+skh.cardVerified = function cardVerified(data, colName) {
+    const k = skh.listingTrust(data, colName);
+    if (!k) return '';
+    return '<span class="skh-verified" title="' + skh.TRUST_LABELS[k] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>';
+};
+/* Seller-level badges from the public card (account / supplier), as chips. */
+skh.sellerTrustChips = function sellerTrustChips(card) {
+    const out = [];
+    ['account', 'supplier'].forEach(function (k) {
+        if (skh.trustActive(card, k)) out.push('<span class="skh-trust-chip skh-trust-' + k + '">' + skh.TRUST_LABELS[k] + '</span>');
+    });
+    return out.join('');
 };
 
 // [RatingDisplay] Nyota + wastani (+ idadi ya mapokezi) + mauzo — ikiwa ipo tu
@@ -2110,7 +2214,7 @@ skh.cardSeller = function cardSeller(data) {
         ? window.skhUserAvatar(data.ownerPhotoURL || data.ownerAvatar || data.ownerLogo || null, name, 22) : '';
     const onClick = uid ? `onclick="event.stopPropagation(); if(window.openSellerProfile){window.openSellerProfile('${skh.skhJsEsc(uid)}','${skh.skhJsEsc(name)}');}"` : '';
     const a11y = uid ? 'role="link" tabindex="0" title="Tazama duka la muuzaji"' : '';
-    return `<div class="skh-seller" ${onClick} ${a11y}>${avatar}<span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data)}</div>`;
+    return `<div class="skh-seller" ${onClick} ${a11y}>${avatar}<span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data, colName)}</div>`;
 };
 
 // [ProtectionBadge] Ulinzi wa miamala (escrow) — kwa usiri
@@ -2207,11 +2311,12 @@ skh.cardTypeBadge = function cardTypeBadge(colName) {
 // mwili wa kadi unabaki: jina -> bei -> muuzaji  -> eneo.
 // ============================================================
 
-// [VerifiedPill] Kibandiko cha kijani chini-kushoto mwa picha
-skh.cardVerifiedPill = function cardVerifiedPill(data) {
-    const v = data.verified === true || data.ownerVerified === true || data.verificationStatus === 'verified';
-    if (!v) return '';
-    return '<span class="skh-verified-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Verified</span>';
+// [VerifiedPill] Kibandiko cha kijani chini-kushoto mwa picha — [R9] badge ya tangazo husika tu
+skh.cardVerifiedPill = function cardVerifiedPill(data, colName) {
+    const k = skh.listingTrust(data, colName);
+    if (!k) return '';
+    const short = { product_inspection: 'Imekaguliwa', provider: 'Imethibitishwa', carrier: 'Imethibitishwa', account: 'Imethibitishwa' }[k];
+    return '<span class="skh-verified-pill" title="' + skh.TRUST_LABELS[k] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' + short + '</span>';
 };
 
 // [OutPill] Bidhaa zikiwa zimeisha — kibandiko wazi juu ya picha
@@ -2259,7 +2364,7 @@ skh.cardImageOverlays = function cardImageOverlays(data, colName, extra) {
     if (colName === 'drivers') {
         bottom = skh.cardRouteOverlay(data);
     } else {
-        bottom = skh.cardVerifiedPill(data);
+        bottom = skh.cardVerifiedPill(data, colName);
     }
     const out = skh.cardOutPill(data, colName);
     return (extra || '') + topLeft + bottom + out;
@@ -2284,7 +2389,7 @@ skh.cardOpenAttrs = function cardOpenAttrs(id, colName, label) {
 // [SellerMini] Mstari MWEMBE wa muuzaji/mtoa/dereva: ikoni ya duka +
 // jina + tiki (hufungua duka lililopo). Reference: kadi ni teaser, hivyo
 // habari ya muuzaji inabana (bila avatar kubwa wala footer).
-skh.cardSellerMini = function cardSellerMini(data, iconName) {
+skh.cardSellerMini = function cardSellerMini(data, iconName, colName) {
     const name = data.ownerName || data.driverName || data.fullName || data.storeName || '';
     if (!name) return '';
     const uid = data.userId || data.sellerId || '';
@@ -2299,7 +2404,7 @@ skh.cardSellerMini = function cardSellerMini(data, iconName) {
     const fAttr = uid ? ` data-fowner="${skh.skhJsEsc(uid)}"` : '';
     const followersHtml = uid
         ? ` <small class="skh-followers" data-fowner-count="${skh.skhJsEsc(uid)}" title="${skhTF('tt_followers', 'Wafuasi wa muuzaji')}" style="opacity:0;"></small>` : '';
-    return `<div class="skh-seller-mini"${fAttr} ${onClick} ${a11y}> <span class="skh-seller-ic">${skh.cardIcon(iconName || 'shop', 11)}</span> <span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data)}${followersHtml}
+    return `<div class="skh-seller-mini"${fAttr} ${onClick} ${a11y}> <span class="skh-seller-ic">${skh.cardIcon(iconName || 'shop', 11)}</span> <span class="skh-seller-name">${skh.skhEscape(name)}</span>${skh.cardVerified(data, colName)}${followersHtml}
     </div>`;
 };
 
@@ -2382,7 +2487,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
     const overlays = [
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
-        skh.cardVerifiedPill(data),
+        skh.cardVerifiedPill(data, 'products'),
         skh.cardOutPill(data, 'products')
     ].join('');
     const stockChip = skh.cardStockChip(data);
@@ -2401,13 +2506,13 @@ skh.ServicePostCard = function ServicePostCard(data, colName) {
         skh.activeBoostBadge(data),
         skh.cardTypeBadge('services') ? '<div class="skh-overlay-chip skh-overlay-chip--service">' + skh.cardTypeBadge('services') + '</div>' : '',
         skh.cardModeBadge(data),
-        skh.cardVerifiedPill(data)
+        skh.cardVerifiedPill(data, 'services')
     ].join('');
     return `<div class="feed-card-box skh-card skh-card--service" ${skh.cardOpenAttrs(data.id, 'services', data.title)}>
         ${skh.cardImage(data, overlays)}
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_service_def', 'Huduma'))}</h3>
             ${skh.cardPriceHtml(data, 'services')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'wrench')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'services')}</div> </div> </div>`;
+            <div class="skh-seller-row">${skh.cardSellerMini(data, 'wrench', 'services')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'services')}</div> </div> </div>`;
 };
 
 // [TransportPostCard] TEASER: picha (njia juu yake) -> jina/aina -> bei
@@ -2416,7 +2521,7 @@ skh.TransportPostCard = function TransportPostCard(data, colName) {
     const hasRoute = !!(data.pickupRegion || data.destinationRegion);
     const overlays = [
         skh.activeBoostBadge(data),
-        hasRoute ? skh.cardRouteOverlay(data) : skh.cardVerifiedPill(data),
+        hasRoute ? skh.cardRouteOverlay(data) : skh.cardVerifiedPill(data, 'drivers'),
         skh.cardOutPill(data, colName)
     ].join('');
     const arrowIco = skh.cardIcon('arrow-right', 12);
@@ -2428,7 +2533,7 @@ skh.TransportPostCard = function TransportPostCard(data, colName) {
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${hasRoute && !data.title ? skh.skhEscape(data.pickupRegion || '') + '<span class="skh-title-arrow" aria-label="hadi">' + arrowIco + '</span>' + skh.skhEscape(data.destinationRegion || '') : title}</h3>
             ${vehicle}
             ${skh.cardPriceHtml(data, 'drivers')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'truck')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'drivers')}</div> </div> </div>`;
+            <div class="skh-seller-row">${skh.cardSellerMini(data, 'truck', 'drivers')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'drivers')}</div> </div> </div>`;
 };
 
 // [CommercePostCard] Kichaguzi cha aina ya kadi
@@ -2485,10 +2590,15 @@ skh.renderMarketplaceSections = function renderMarketplaceSections(items) {
             allEmptyNote = document.createElement('div');
             allEmptyNote.id = 'skhRailsAllEmpty';
             allEmptyNote.className = 'skh-state';
-            allEmptyNote.innerHTML = '<b>Bado hakuna bidhaa za kuonyesha hapa</b><span>Bidhaa mpya zitaonekana mara tu wauzaji watakapozichapisha.</span>';
             const first = railsHost[0];
             if (first && first.parentNode) first.parentNode.insertBefore(allEmptyNote, first);
         }
+        // [REMEDIATION R5] wording follows the open section; block layout (no "hapaBidhaa").
+        const _svc = skh.currentFeedCollection === 'services', _tr = skh.currentFeedCollection === 'drivers';
+        const _what = _svc ? 'huduma' : (_tr ? 'huduma za usafiri' : 'bidhaa');
+        const _who = _svc ? 'Huduma mpya zitaonekana mara tu watoa huduma watakapozichapisha.'
+            : (_tr ? 'Matangazo ya usafiri yataonekana mara tu wasafirishaji watakapoyachapisha.' : 'Bidhaa mpya zitaonekana mara tu wauzaji watakapozichapisha.');
+        allEmptyNote.innerHTML = '<b style="display:block">Bado hakuna ' + _what + ' za kuonyesha hapa.</b> <span style="display:block">' + _who + '</span>';
         allEmptyNote.hidden = false;
     } else if (allEmptyNote) {
         allEmptyNote.hidden = true;
@@ -2531,7 +2641,8 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
                 return ss.some(s => String(s).toLowerCase() === skh.activeCategory.toLowerCase());
             }
             const itemCat = data.category || '';
-            return itemCat.toLowerCase() === skh.activeCategory.toLowerCase();
+            // [R4] canonical id ↔ reviewed legacy labels; unmapped values match only themselves
+            return categoryMatches(itemCat, skh.activeCategory);
         });
     }
 
@@ -2586,10 +2697,12 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             if (!query) return true; // msingi baada ya mode-only search
             const title = (data.title || data.driverName || data.company || '').toLowerCase();
             const desc = (data.description || '').toLowerCase();
-            const cat = (data.category || '').toLowerCase();
+            const cat = ((data.category || '') + ' ' + (skh.categoryLabel ? (skh.categoryLabel(data.category) || '') : '') + ' ' + (data.subCategory || '') + ' ' + (data.productTypeLabel || '') + ' ' + (data.brand || '')).toLowerCase();
             // [FIX 2026-09] USAFIRI: tafuta pia kwa chombo na huduma anazobeba
             const extra = (data.vehicleType || '') + ' ' + (Array.isArray(data.supportedServices) ? data.supportedServices.join(' ') : '');
-            return title.includes(query) || desc.includes(query) || cat.includes(query) || extra.toLowerCase().includes(query);
+            // [R10] every word must match (any order): "samsung tv" finds "Samsung Smart TV 55".
+            const hay = title + ' ' + desc + ' ' + cat + ' ' + extra.toLowerCase();
+            return hay.includes(query) || query.split(' ').every(w => hay.includes(w));
         });
     }
 
@@ -2634,7 +2747,7 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
 
     if (filteredData.length === 0) {
         feedGrid.innerHTML = matcherBanner + `
-            <div class="skh-empty" style="grid-column: 1/-1;"> <span class="skh-empty-icon">${skh.cardIcon('search', 30)}</span> <b>Hatujapata matokeo</b> <p>Jaribu kutafuta kwa neno lingine au badilisha kategoria — au tafuta gari kwa njia yako.</p> <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Onyesha Vyote</button> </div>`;
+            <div class="skh-empty" style="grid-column: 1/-1;"> <span class="skh-empty-icon">${skh.cardIcon('search', 30)}</span> <b>Hatujapata matokeo</b> <p>${skh.currentFeedCollection === 'drivers' ? 'Jaribu neno lingine au badilisha kategoria — au tafuta gari kwa njia yako.' : (skh.currentFeedCollection === 'services' ? 'Jaribu neno lingine au chagua sehemu nyingine ya huduma.' : 'Jaribu neno lingine au badilisha kategoria.')}</p> <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Onyesha Vyote</button> </div>`;
         return;
     }
 

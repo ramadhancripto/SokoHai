@@ -9,7 +9,7 @@
 <script type="module" src="js/app/05-forms.js"></script>
 <script type="module" src="js/app/06-product-builder.js"></script>
 <script type="module" src="js/app/06-navigation.js"></script>
-<script type="module" src="js/app/07-product.js"></script>
+<script type="module" src="js/app/07-product.js?v=20261108r13d"></script>
 <script type="module" src="js/app/08-app-state.js"></script>
 <script type="module" src="js/app/09-feed-announcements.js"></script>
 <script type="module" src="js/app/10-dashboard-tabs.js"></script>
@@ -20,10 +20,11 @@
 <script type="module" src="js/app/14-map-onboarding.js"></script>
 <script type="module" src="js/app/15-pos-sales.js"></script>
 <script type="module" src="js/app/16-pos-admin-jobs.js"></script>
-<script type="module" src="js/app/17-hub.js"></script>
+<script type="module" src="js/app/17-hub.js?v=20261108r13e"></script>
 <script type="module" src="js/app/18-cockpit.js"></script>
 <script type="module" src="js/app/19-roles.js"></script>
 <script src="shared/business-context-core.js"></script>
+<script src="shared/wholesale-price-core.js"></script> <!-- [2026-11-06] bei ya jumla/idadi — formula moja na server -->
 <script type="module" src="js/app/20-business-context.js"></script>
 <script type="module" src="js/app/20-logistics.js"></script>
 <script type="module" src="js/app/21-sokopay.js"></script>
@@ -48,13 +49,17 @@
 <!-- [CALLS 2026-11] Simu za mtandao (sauti + video) — WebRTC -->
 <script type="module" src="js/app/105-calls.js"></script>
 <!-- [BUSINESS OS 1A] shell + overview ya dashibodi (zinatumia modules zilizopo) -->
-<script type="module" src="js/app/110-business-os-shell.js?v=20261103b"></script>
+<!-- [2026-11-06] restored: dropped by a direct index.html edit (61a3d88); without them
+     the seller dashboard silently fell back to the legacy dark "ERP COCKPIT". -->
+<script type="module" src="js/app/110-business-os-shell.js?v=20261106a"></script>
 <script type="module" src="js/app/111-business-os-overview.js?v=20261103b"></script>
 <script type="module" src="js/app/112-business-os-pos-page.js?v=20261103b"></script>
 <script type="module" src="js/app/35-comments.js"></script>
 <script type="module" src="js/app/36-seller-chat-comments.js"></script>
 <!-- [SHOWCASE MODULE 02] Product Detail UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
 <script type="module" src="js/app/39-product-showcase.js"></script>
+<!-- [INQUIRY BUILDER 2026-11] Uliza Zaidi kuhusu Bidhaa — maswali yenye muundo (productInquiries) -->
+<script type="module" src="js/app/53-product-inquiry.js"></script>
 <!-- [TOKEN BOX 2026-09] Sanduku la mikode ya makabidhiano (PK/TR/DL) linalojitegemea -->
 <script type="module" src="js/app/40-token-box.js"></script>
 <!-- [REQUEST ROUTING 2026-09] Agent Request Inbox (NEW REQUEST / Accept / Decline) -->
@@ -69,11 +74,16 @@
 <script type="module" src="js/app/65-content-l10n.js"></script>
 <script type="module" src="js/app/66-wordmark.js"></script>
 <script type="module" src="js/app/67-payment-accounts.js"></script>
-<script type="module" src="js/app/69-chat-groups.js"></script>
+<script type="module" src="js/app/68-gundua-soko.js?v=20261108r13c"></script><!-- [2026-11-04] Gundua Soko -->
+<script type="module" src="js/app/82-home-header-actions.js?v=20261105r6w"></script>
+<!-- [R13-C] 86-category-icons-manifest.js (SVG family) is no longer loaded: categories use photos; files kept on disk -->
+<script type="module" src="js/app/83-category-photos.js?v=20261108r13g"></script>
+<script type="module" src="js/app/84-location-fast.js?v=20261105r6b"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->
+<script type="module" src="js/app/69-chat-groups.js?v=20261108r13g"></script>
 <script type="module" src="js/app/70-role-identity.js"></script>
 <script type="module" src="js/app/71-visual-dictionary.js"></script>
-<script type="module" src="js/app/73-group-soga.js"></script>
-<script type="module" src="js/app/74-group-order-system.js"></script>
+<script type="module" src="js/app/73-group-soga.js?v=20261108r13g"></script>
+<script type="module" src="js/app/74-group-order-system.js?v=20261108r13g"></script>
 <script type="module" src="js/app/76-group-order-production-enhancement.js"></script>
 <script type="module" src="js/app/64-my-profile.js"></script>
 <script type="module" src="js/app/50-lifecycle-core.js"></script>
@@ -88,18 +98,25 @@
 <script type="module" src="js/app/57-checkout-bridge.js"></script>
 <script type="module" src="js/app/58-request-visibility.js"></script>
 <script type="module" src="js/app/59-agent-monitor.js"></script>
+<script type="module" src="js/app/60-lazy-feed.js"></script><!-- [2026-11-04] Lazy load ya bidhaa (infinite scroll) -->
 <!-- [CREATIVE STUDIO] One shared, lazy-asset editor. CSS/templates/media load only when opened. -->
 <script type="module" src="js/app/95-creative-studio.js"></script>
 <!-- One server-authoritative delivery/rotation controller for all campaign slots. -->
 <script type="module" src="js/app/96-ad-delivery-controller.js"></script>
 <script type="module" src="js/app/97-escrow-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Escrow (server-only actions) -->
 <script type="module" src="js/app/98-admin-control-center.js"></script>
-<script type="module" src="js/app/99-ads-marketplace.js"></script>
+<script type="module" src="js/app/106-chat-discovery-feed.js?v=20261108r13f"></script><!-- [R6i] GUNDUA BIASHARA (chat inbox: post za bidhaa + live) -->
+<script type="module" src="js/app/99-ads-marketplace.js?v=20261105r6w"></script>
 <script type="module" src="js/app/100-ads-studio-ui.js"></script><!-- [TASK 01] in-feed ads + true-size studio preview -->
 <!-- [ADS STUDIO REBUILD 2026-11-01] SokoHai Marketplace Ads Studio (product / service / transport only) -->
 <script type="module" src="js/app/101-marketplace-ads-studio.js"></script>
 <script type="module" src="js/app/102-publish-outbox.js"></script>
 <script type="module" src="js/app/103-ad-badges.js"></script><!-- [ADS 2026-11-01] badges ndogo: dashboard, chat --><!-- [BIDHAA/HUDUMA/USAFIRI] hifadhi kwa kifaa, sambaza baadaye -->
+<script type="module" src="js/app/120-live-commerce-ui.js?v=20261108r13d"></script><!-- [R13-B] Live, Mnada Live, Bei Kushuka Live -->
+<script type="module" src="js/app/121-stories-ui.js?v=20261108r13f"></script><!-- [R13-B] Hali (stories) viewer -->
+<script type="module" src="js/app/122-group-soko-ui.js?v=20261108r13d"></script><!-- [R13-B] Group Soko -->
+<script type="module" src="js/app/123-home-layout.js?v=20261108r13e"></script><!-- [R13-E] Nyumbani: refs 11-15 -->
+<script type="module" src="js/app/124-pos-grid.js?v=20261108r13e"></script><!-- [R13-E] POS cashier grid: refs 17/18 -->
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->

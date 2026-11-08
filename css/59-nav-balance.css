@@ -912,3 +912,34 @@ body:has(#plusMenu[style*="display:flex"]) .bottom-area-wrapper .sell-action-fab
     .market-modes-nav .mode-tab-btn { gap: 5px; }
     .market-modes-nav .mode-tab-btn > svg { width: 14px; height: 14px; }
 }
+
+/* [REMEDIATION 2026-11 R6] neutral tile for categories without a suitable image
+   (rendered directly, no failed network request) */
+.skh-img-fallback--tile { width: 100%; height: 100%; min-height: 40px; border-radius: inherit; }
+
+/* [REMEDIATION 2026-11 R6] product photos are shown whole (never cropped) on a
+   neutral backdrop — cards, related rails and offer rails. Category/banner
+   imagery keeps object-fit: cover. */
+body .feed-card-box.skh-card--product .feed-img-box.skh-img,
+body .pm-rel-img { background: #F4F6F5; }
+body .feed-card-box.skh-card--product .feed-img-box.skh-img > img,
+body .feed-card-box.skh-card--product .skh-img img,
+body .pm-rel-img img { object-fit: contain !important; object-position: center; }
+
+/* [REMEDIATION 2026-11 R5] product category strip hidden on Services / Transport */
+#categoryPhotoStrip[hidden], #categoryStrip[hidden] { display: none !important; }
+
+
+/* [REMEDIATION 2026-11 R9] seller-level trust chips (account / supplier) — distinct from the listing badge */
+.skh-trust-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; line-height: 1.5; white-space: nowrap; background: #EAF8F2; color: #17604E; border: 1px solid #BFE8D6; }
+.skh-trust-chip.skh-trust-supplier { background: #FBF7E7; color: #7A5B00; border-color: #EBDDA6; }
+
+/* [R10] "rails zote tupu" note: one calm card, never next to the feed's own
+   result/empty state (the feed already explains search results and empties). */
+#skhRailsAllEmpty.skh-state {
+    margin: 12px 12px 4px; padding: 14px 16px; border-radius: 14px;
+    background: #F6FBF9; border: 1px solid #E1EFEA; color: #33464F; font-size: 13px; line-height: 1.5;
+}
+#skhRailsAllEmpty.skh-state b { color: #0F3D33; font-size: 14px; margin-bottom: 2px; }
+body:has(#mainFeed .skh-card, #mainFeed .skh-empty) #skhRailsAllEmpty { display: none !important; }

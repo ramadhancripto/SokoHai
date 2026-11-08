@@ -1,7 +1,7 @@
 /* Product Builder: UI adapter for the existing seller/edit writers and uploader.
  * No collection, product writer or stock authority lives in this module. */
 import { skh } from './00-bootstrap.js';
-import { getProductSuggestions, getSellerSubcategories, getSellerCategoryOptions } from '../../shared/product-taxonomy-bridge.mjs';
+import { getProductSuggestions, getSellerSubcategories, getSellerCategoryOptions, ensureTaxonomyDefinitions, taxonomyDefinitionsLoaded } from '../../shared/product-taxonomy-bridge.mjs';
 import { channelsFromVisibility, legacyFlagsFor } from '../../shared/product-listing-core.mjs';
 import { canonicalKey } from '../../shared/attribute-alias-core.mjs';
 import { normalizeAttributes, normalizeOptions, normalizeFeatures, normalizeAdditionalInfo, normalizeFilters, imageList, generateCombinations, combinationKey, suggestCustom } from '../../shared/product-upload-data-core.mjs';
@@ -335,6 +335,8 @@ function filterEditor(index=-1) {
 }
 function categorySuggestions() {
   const cat=value(mode==='edit'?'editCategory':'prodCategory'), sub=value(mode==='edit'?'editSubCategory':'prodSubCategory');
+  // [R11] definitions are fetched on first use (seller form only); re-run once they arrive.
+  if(!taxonomyDefinitionsLoaded()){if(cat||sub)ensureTaxonomyDefinitions().then(()=>categorySuggestions()).catch(()=>notice('Mapendekezo ya taxonomy hayakupakia. Angalia mtandao kisha chagua kategoria tena.'));return;}
   const bridge=getProductSuggestions(cat,sub,skh.advancedCategories?.[cat]);
   suggestionRows=[];
   const add=(kind,name,values)=>{ if (typeof name==='string' && name && !/^(others?|nyingine)$/i.test(name) && !suggestionRows.some(x=>x.kind===kind&&nameKey(x.name)===nameKey(name))) suggestionRows.push({kind,name,value:Array.isArray(values)?values.join(', '):values || '',selectorType:/colou?r|rangi/i.test(name)?'color':'button'}); };
@@ -484,6 +486,7 @@ function fillEdit(p) {
 function integer(n,label) { if(!Number.isSafeInteger(Number(n)) || Number(n)<0)throw Error(label+' lazima iwe namba kamili ≥ 0.');return Number(n); }
 function collect(productId, fresh=state.original) {
   if(pending)throw Error('Picha bado zinapakiwa. Subiri.');
+  if(!taxonomyDefinitionsLoaded()){ensureTaxonomyDefinitions().catch(()=>{});throw Error('Taxonomy ya bidhaa bado inapakia. Subiri sekunde moja kisha hifadhi tena.');}
   if(!$('spbEditor').hidden)throw Error('Use / Save au Cancel field unayohariri kwanza.');
   if(mode==='edit' && Number(fresh.builderRevision || 0)!==state.metadataVersion)throw Error('Bidhaa imehaririwa sehemu nyingine. Fungua Edit tena kabla ya save.');
   state.options.forEach((o,i)=>{requireName(o.name,state.options,i);if(!o.values.length)throw Error('Selector '+o.name+' haina values. Ongeza values au Remove.');});
@@ -579,7 +582,7 @@ function bind() {
   }));
   // Bubble after existing target/inline category handlers finish rebuilding options.
   document.addEventListener('change',event=>{if(event.target.id==='prodCategory'){const el=$('prodSubCategory'),cat=value('prodCategory');if(!skh.advancedCategories?.[cat]){el.innerHTML='';el.add(new Option('— Select —',''));}const leaves=getSellerSubcategories(cat,skh.advancedCategories);for(const leaf of leaves)if(![...el.options].some(o=>o.value===leaf))el.add(new Option(leaf,leaf));if(leaves.length)$('subCategoryContainer').style.display='block';el.disabled=false;categorySuggestions();}});
-  new MutationObserver(()=>{if($('sellerForm').style.display && $('sellerForm').style.display!=='none')resumeCreate();}).observe($('sellerForm'),{attributes:true,attributeFilter:['style']});
+  new MutationObserver(()=>{if($('sellerForm').style.display && $('sellerForm').style.display!=='none'){ensureTaxonomyDefinitions().catch(()=>{});resumeCreate();}}).observe($('sellerForm'),{attributes:true,attributeFilter:['style']});
   $('sellerForm').addEventListener('reset',()=>{if(mode==='create'){state=empty();session++;closeEditor();render();notice('');}});
   $('spbSaveDraft')?.addEventListener('click',()=>{const el=$('prodPublicationStatus');if(el)el.value='draft';});
   $('btnSeller')?.addEventListener('click',()=>{if($('prodPublicationStatus')?.value==='draft')notice('Saving draft. Chagua Published ili kuchapisha.');});

@@ -51,6 +51,7 @@
         <label for="prodTaxonomySearch" style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">TAFUTA KATEGORIA <span id="prodTaxonomyNeed" style="font-weight:normal;"></span></label>
         <input type="search" id="prodTaxonomySearch" autocomplete="off" placeholder="Andika: simu, mchele, viatu, saruji..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
         <div id="prodTaxonomyResults" role="listbox" aria-label="Kategoria zinazolingana" style="display:flex; flex-direction:column; gap:6px; margin:8px 0 10px 0;"></div>
+        <input type="hidden" id="prodTaxonomyProductTypeId"><input type="hidden" id="prodTaxonomyProductTypeLabel">
         <input type="hidden" id="prodVariants">
 <!-- Kategoria (taxonomy): inaonekana kwa kila njia ya mauzo; ni lazima kwa soko tu -->
 <div id="onlineCategorySection" style="display:block; margin-bottom:12px;">
@@ -184,6 +185,11 @@
         <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue);">BEI YA KUUZA JUMLA / WHOLESALE (TSH) *</label>
         <div style="font-size:11px;color:#64748b;margin:2px 0 6px;">Bei ya jumla ni punguzo kwa idadi kubwa (wholesale). Si bei ya katoni/pakiti: hiyo inawekwa kwenye sehemu ya pakiti.</div>
         <input type="number" id="prodWholesalePrice" placeholder="Mfano: 30,000" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--primary-blue); outline:none; font-weight:bold; color:var(--primary-blue);">
+        <!-- [2026-11-06] Idadi ya chini (MOQ) ya bei ya jumla sokoni. Bila MOQ bei hii
+             ni ya POS/dukani tu (server haiitumii mtandaoni) — sasa muuzaji anaambiwa. -->
+        <label for="prodWholesaleMinQty" style="font-size:12.5px; font-weight:bold; color:#31504A; display:block; margin-top:8px;">Idadi ya chini ili bei ya jumla itumike sokoni (hiari)</label>
+        <input type="number" id="prodWholesaleMinQty" min="2" step="1" inputmode="numeric" placeholder="Mfano: 5" style="width:100%; padding:11px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:4px;">
+        <small style="display:block; color:#64748b; margin-top:4px;">Ukiiacha wazi, bei ya jumla inatumika dukani (POS) pekee. Ukiijaza, mnunuzi wa mtandaoni anayechukua idadi hii au zaidi analipa bei ya jumla.</small>
     </div>
 
     </div>
@@ -214,6 +220,11 @@
             <div id="mode_auction_fields" style="display:none;">
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:4px;"> MUDA WA MNADA KUISHA *</label>
                 <input type="datetime-local" id="aucEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: muda wa kuanza na nyongeza ya chini ya zabuni (server inazitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> MNADA UANZE LINI (hiari)</label>
+                <input type="datetime-local" id="aucStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> NYONGEZA YA CHINI YA ZABUNI (TSH, hiari)</label>
+                <input type="number" id="aucMinIncrement" min="0" placeholder="Mfano: 5,000 (vinginevyo 5% ya dau la juu)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  BEI KUSHUKA KIOTOMATIKI (PRICE DROP) -->
@@ -229,6 +240,11 @@
                 </select>
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> DEAL INAISHIA LINI *</label>
                 <input type="datetime-local" id="pdEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: ofa ianze baadaye na kikomo kwa kila mnunuzi (server inakitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> OFA IANZE LINI (hiari, vinginevyo sasa hivi)</label>
+                <input type="datetime-local" id="pdStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> KIKOMO KWA KILA MNUNUZI (hiari)</label>
+                <input type="number" id="pdMaxPerBuyer" min="1" placeholder="Mfano: 2" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  WHOLESALE + GROUP BUY -->
@@ -246,7 +262,8 @@
                     <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue); display:block; margin-top:8px;"> IDADI YACHINI YA JUMLA (minQty) *</label>
                     <input type="number" id="wsMinQty" placeholder="Mfano: 10" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
                     <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue); display:block; margin-top:8px;"> TIERS ZA JUMLA (hiari — "minQty:bei" zimegawaywa na "; ") </label>
-                    <input type="text" id="wsTiersText" placeholder="Mfano: 10:9000; 50:8000; 100:7000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                    <input type="text" id="wsTiersText" placeholder="Mfano: 10:9000; 50:8000; 100:7000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;" oninput="window.skhWsTierPreview && window.skhWsTierPreview('wsTiersText', 'prodPrice', 'wsTiersPreview')">
+                    <div id="wsTiersPreview" class="ws-tiers-preview" aria-live="polite"></div>
                     <small style="display:block; color:#64748b; margin-top:4px;">Kama hautaweka tiers, punguzo la juu (TSh/%) litatumika kwa minQty pekee — ukizijaza, tiers ndizo halisi unazowaonyesha wanunuzi.</small>
                 </div>
                 <div id="mode_groupbuy_fields" style="display:none;">

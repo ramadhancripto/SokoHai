@@ -37,7 +37,7 @@
 
 <noscript></noscript>
 <script src="js/05-dialogs.js"></script>
-<script src="js/00-pwa.js" defer></script>
+<script src="js/00-pwa.js?v=20261105r6w" defer></script>
 <script src="js/00-config.js" defer></script>
 <!-- [PERF 2026-09] Kipakiaji cha maktaba za nje: Leaflet/Chart hazipakwi
      kwenye startup tena — huingizwa kwa uvivu ramani/grafu zinapofunguliwa. -->
@@ -62,6 +62,7 @@
 <link rel="stylesheet" href="css/18-product-showcase.css">
 <link rel="stylesheet" href="css/19-token-box.css">
 <link rel="stylesheet" href="css/20-request-inbox.css">
+<link rel="stylesheet" href="css/21-discovery-maoni.css"><!-- [FIX 2026-11-04] sheet ya MAONI + kadi za maoni (haikuwa imepakiwa) -->
 <link rel="stylesheet" href="css/22-delivery-choice.css">
 <link rel="stylesheet" href="css/23-logistics-market.css">
 <link rel="stylesheet" href="css/24-chat-ui-v2.css">
@@ -74,6 +75,7 @@
 <link rel="stylesheet" href="css/38-product-builder-seed.css"><!-- Product Builder canonical category seeding --><!-- Advertiser Billing UI-only Coming Soon state -->
 <link rel="stylesheet" href="css/37-product-card-visual.css"><!-- Large visual marketplace cards -->
 <link rel="stylesheet" href="css/38-home-ad-manager.css"><!-- Admin Home Advertisement Manager -->
+<link rel="stylesheet" href="css/39-creative-studio.css"><!-- Creative studio -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
 <link rel="stylesheet" href="css/25-typography.css">
@@ -84,6 +86,7 @@
     <link rel="stylesheet" href="css/28-my-profile.css">
     <!-- [R19] responsive top-nav + role badges + Kamusi -->
     <link rel="stylesheet" href="css/29-nav-dict.css">
+    <link rel="stylesheet" href="css/30-discover-engine.css"><!-- Discover engine -->
     <!-- [2026-11-01] Refinement layer — loaded last, additive only (see file header) -->
     <link rel="stylesheet" href="css/40-ui-refinement.css">
     <!-- [TASK 01] Compact, integrated advertising presentation (presentation only) -->
@@ -104,7 +107,20 @@
     <link rel="stylesheet" href="css/50-sell-studio.css">
     <!-- [VARIANT STUDIO] Product builder cards + buyer-facing variant preview -->
     <link rel="stylesheet" href="css/51-variant-studio.css">
-    <link rel="stylesheet" href="css/52-business-os-shell.css?v=20261103b"><!-- [BUSINESS OS 1A] sidebar + dashboard shell (light) -->
+    <link rel="stylesheet" href="css/52-business-os-shell.css?v=20261106a"><!-- [BUSINESS OS 1A] sidebar + dashboard shell (light) -->
+    <!-- [2026-11-06] restored: dropped by a direct index.html edit (61a3d88) -->
+    <!-- [UI REFINEMENT 2026-11-03] Product Card + Product Details (in-flow actions) -->
+    <link rel="stylesheet" href="css/52-product-card-details.css">
+    <link rel="stylesheet" href="css/53-product-inquiry.css">
+<link rel="stylesheet" href="css/54-maoni-polish.css"><!-- [2026-11-04] Maoni + Tathmini polish -->
+<link rel="stylesheet" href="css/55-engagement-system.css"><!-- [2026-11-04] Engagement + reactions system -->
+<link rel="stylesheet" href="css/56-lazy-feed.css">
+<link rel="stylesheet" href="css/57-home-brand-header.css?v=20261105r6w">
+<link rel="stylesheet" href="css/58-category-photo-strip.css?v=20261105r6w">
+<link rel="stylesheet" href="css/52-chat-discovery-feed.css?v=20261105r6w">
+<link rel="stylesheet" href="css/59-nav-balance.css?v=20261105r6w">
+    <!-- [GROUP CHAT UI 2026-11] Muonekano wa ndani ya kikundi -->
+    <link rel="stylesheet" href="css/53-group-chat-ui.css"><!-- [2026-11-04] Lazy load ya bidhaa -->
 <style id="skhBootCloakCss">
  html.skh-booting body{visibility:hidden!important}
  /* [LOGO-SPLASH 2026-09-17] Splash inabeba LOGO halisi ya SokoHai — funika
@@ -157,5 +173,17 @@ window.skhMountWordmarks = function(root){
     });
 };
 </script>
+<link rel="stylesheet" href="css/60-chat-premium.css?v=20261105r6w">
 <link rel="stylesheet" href="fonts/inter.css">
+<link rel="stylesheet" href="css/61-desktop-layout.css?v=20261107r10">
+<link rel="stylesheet" href="css/62-system-polish.css?v=20261107r12">
+<link rel="stylesheet" href="css/63-live-commerce.css?v=20261107r13b"><!-- [R13-B] live, hali, group soko -->
+<link rel="stylesheet" href="css/64-image-quality.css?v=20261108r13c"><!-- [R13-C] picha halisi, product cards 1:1 -->
+<link rel="stylesheet" href="css/65-live-design.css?v=20261108r13d"><!-- [R13-D] live screens kama design refs 1,2,5,6,7,10 -->
+<link rel="stylesheet" href="css/66-home-layout.css?v=20261108r13e"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
+<link rel="stylesheet" href="css/67-chat-discover.css?v=20261108r13f"><!-- [R13-F] Chat Discover + Hali viewer kama refs 8, 9 -->
+<link rel="stylesheet" href="css/68-group-chat-design.css?v=20261108r13g"><!-- [R13-G] Group Chat kama design refs (Wakulima &amp; Biashara) -->
+<link rel="stylesheet" href="css/69-category-tiles.css?v=20261108r13g"><!-- [R13-G] picha halisi za kategoria kwenye kadi safi -->
+<meta name="skh-build" content="HEADER-R6w-2026-11-05">
+<script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>

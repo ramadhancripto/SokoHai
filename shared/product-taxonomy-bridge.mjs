@@ -1,4 +1,25 @@
-import projection from './product-taxonomy-browser.mjs';
+// [REMEDIATION 2026-11 R11] Buyer pages load only the small identity projection
+// (categories, legacy mappings, product leaves ~22 KB). The seller-form definitions
+// (~280 KB: product types, options, attributes, branch contexts) are fetched on demand
+// with ensureTaxonomyDefinitions(). Node (tools/tests/functions) loads them eagerly, so
+// every synchronous API keeps its exact previous result there.
+import identity from './category-identity.mjs';
+const projection={categories:identity.categories.map(c=>({...c,definitions:undefined})),mappings:identity.mappings,productLeaves:identity.productLeaves,branchContexts:{}};
+let definitionsLoaded=false, definitionsPromise=null;
+function applyDefinitions(mod){
+ const d=(mod&&mod.default)||{};
+ projection.categories.forEach(c=>{c.definitions=(d.definitions||{})[c.id]||{};});
+ projection.branchContexts=d.branchContexts||{};
+ definitionsLoaded=true;
+}
+function ensureTaxonomyDefinitions(){
+ if(definitionsLoaded)return Promise.resolve(true);
+ if(!definitionsPromise)definitionsPromise=import('./product-taxonomy-definitions.mjs').then(m=>{applyDefinitions(m);return true;}).catch(e=>{definitionsPromise=null;throw e;});
+ return definitionsPromise;
+}
+const taxonomyDefinitionsLoaded=()=>definitionsLoaded;
+if(typeof window==='undefined')await ensureTaxonomyDefinitions();
+export {ensureTaxonomyDefinitions,taxonomyDefinitionsLoaded};
 // Reviewed schema overlays are OPTIONAL dependencies. They are authoritative when
 // present, but they are not reconstructed here when absent: the two source modules
 // (product-schema-pilots.mjs / product-schema-refinements.mjs) were never committed
@@ -171,7 +192,16 @@ function getSellerSubcategories(category,live={}){
  const id=categoryIdFor(category), existing=Object.keys(live[category]?.subcategories||{});
  return unique([...(projection.productLeaves?.[id]||[]),...existing]);
 }
-export {categoryIdFor,getProductSuggestions,getSellerSubcategories,getSellerCategoryOptions};
+// [2026-11-06] Canonical product types of one branch (owner taxonomy 01–44 merged).
+// Ids use the same formula as canonical-taxonomy-data.js PRODUCT_TYPE_REGISTRY:
+// `PT-<categoryId>-<SLUG(branch-label)>`.
+const ptSlug=v=>String(v||'').normalize('NFKD').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'').toUpperCase()||'UNNAMED';
+function getProductTypeOptions(category,subcategory){
+ const id=categoryIdFor(category);if(!id||!subcategory)return [];
+ const c=(projection.categories||[]).find(x=>x.id===id);const d=c&&c.definitions&&c.definitions[subcategory];
+ return ((d&&d.productTypes)||[]).map(label=>({id:`PT-${id}-${ptSlug(subcategory+'-'+label)}`,label}));
+}
+export {categoryIdFor,getProductSuggestions,getSellerSubcategories,getSellerCategoryOptions,getProductTypeOptions};
 
 // Evidence classification only: never infer variant capability from enums,
 // measurements, a live parent label, or a category-wide default.

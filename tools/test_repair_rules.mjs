@@ -240,12 +240,15 @@ async function main() {
 
   console.log('\n-- B-02 ride_requests creation (real client payloads)');
   // Payload ya js/app/43-delivery-choice.js skhDeliveryBuildRide (bila sehemu za UI)
-  const ride = { customerId: 'alice', customerName: 'A', reqCategory: 'Cargo', fromLocation: 'Kariakoo', toLocation: 'Mbezi',
+  // [REMEDIATION R1] skh.createRideRequest moves customerName/phone to private/contact,
+  // so the ride document itself carries no contact fields.
+  const ride = { customerId: 'alice', reqCategory: 'Cargo', fromLocation: 'Kariakoo', toLocation: 'Mbezi',
     cargoName: 'Mzigo', cargoPrice: 20000, fare: 3000, orderId: 'o1', source: 'product_checkout', productOrder: true, sellerId: 'bob',
     status: 'searching', routingStatus: 'routing', assignmentStatus: 'seeking', routingRound: 1, offersCount: 0, activeOfferId: null,
     pickupToken: null, pickupTokenStatus: 'unissued', handoverToken: null, handoverTokenStatus: 'unissued', transferTokenStatus: 'unissued',
     createdAt: new Date().toISOString() };
   await expect('buyer creates ride (43-delivery-choice payload)', 'ALLOW', setDoc(U.alice, 'ride_requests/rc1', ride));
+  await expect('R1: ride doc still carrying customerName is rejected', 'DENY', setDoc(U.alice, 'ride_requests/rc1b', Object.assign({ customerName: 'A' }, ride)));
   await expect('buyer creates ride (08-app-state payload)', 'ALLOW', setDoc(U.alice, 'ride_requests/rc2', { customerId: 'alice', status: 'searching', fare: 2000,
     pickupToken: null, pickupTokenStatus: 'unissued', handoverToken: null, handoverTokenStatus: 'unissued', transferTokenStatus: 'unissued' }));
   await expect('ride for another customer', 'DENY', setDoc(U.alice, 'ride_requests/rc3', Object.assign({}, ride, { customerId: 'bob' })));

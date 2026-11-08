@@ -261,7 +261,9 @@ export function sellerFormRules(visibility) {
  */
 const COPY_FIELDS = ['title', 'name', 'category', 'subCategory', 'subcategory', 'productType', 'condition', 'baseUnit',
   'hasBulkPackaging', 'bulkUnit', 'conversionRatio', 'buyPrice', 'price', 'wholesalePrice', 'lowStockAlert', 'lowStockThreshold',
-  'saleMode', 'description', 'location', 'warehouseZone', 'salesChannels', 'isOnline', 'isOffline', 'offlineCategory'];
+  'saleMode', 'description', 'location', 'warehouseZone', 'salesChannels', 'isOnline', 'isOffline', 'offlineCategory',
+  // [REMEDIATION R5] the canonical product type travels with category/sub-category
+  'productTypeId', 'productTypeLabel'];
 export function duplicateTemplate(product) {
   const p = product || {};
   const t = {};
@@ -289,7 +291,9 @@ export function duplicateTemplate(product) {
 export const DRAFT_FIELDS = Object.freeze(['prodVisibility', 'prodName', 'prodProductType', 'prodCondition', 'prodPublicationStatus',
   'prodAvailabilityStatus', 'prodCategory', 'prodSubCategory', 'prodOfflineCategory', 'prodBaseUnit', 'prodBarcode', 'prodHasBulk',
   'prodBulkUnit', 'prodConversionRatio', 'prodBuyPrice', 'prodPrice', 'prodWholesalePrice', 'prodStock', 'prodLowStockAlert',
-  'prodSaleMode', 'prodDesc', 'prodLocation', 'prodWarehouseZone', 'spbProductSku']);
+  'prodSaleMode', 'prodDesc', 'prodLocation', 'prodWarehouseZone', 'spbProductSku',
+  // [REMEDIATION R5] drafts keep the chosen canonical product type
+  'prodTaxonomyProductTypeId', 'prodTaxonomyProductTypeLabel']);
 export function draftKey(uid) { return 'skh_seller_draft_v1_' + (txt(uid) || 'anon'); }
 export function draftHasContent(draft) {
   const f = (draft && draft.fields) || {};

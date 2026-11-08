@@ -2,6 +2,7 @@
    It reconciles legacy field names without creating a second product database or UI. */
 import { normalizeProductUploadData, resolveVariantImages } from '../../shared/product-upload-data-core.mjs';
 import { listingProjection, normalizeChannels, legacyFlagsFor } from '../../shared/product-listing-core.mjs';
+import { categoryInfo } from '../../shared/category-filter-core.mjs';
 export { normalizeProductUploadData, resolveVariantImages };
 const PUB = new Set(['draft','published','archived']);
 const AVAIL = new Set(['available','low_stock','out_of_stock','pre_order','made_to_order','hidden']);
@@ -48,7 +49,10 @@ export function buildSearchMetadata(p){
   const attrs=p&&p.filters&&typeof p.filters==='object'?Object.entries(p.filters).flat():[];
   const taxonomy=p&&p.taxonomy&&typeof p.taxonomy==='object'?Object.values(p.taxonomy).flatMap(v=>typeof v==='object'?Object.values(v):[v]):[];
   const variants=normalizeVariants(p&&p.variants).flatMap(v=>[v.name,...v.options]);
-  const source=[p&&p.title,p&&p.brand,p&&p.model,p&&p.category,p&&p.subCategory,p&&p.description,p&&p.condition,...attrs,...taxonomy,...variants,...(Array.isArray(p&&p.tags)?p.tags:[])].filter(Boolean).join(' ');
+  // [REMEDIATION R4] search finds a product by its category NAME (canonical + reviewed legacy labels), not only the raw id.
+  const ci=p&&p.category?categoryInfo(p.category):null;
+  const catNames=ci&&ci.id?[ci.displayName,...ci.legacyLabels]:[];
+  const source=[p&&p.title,p&&p.brand,p&&p.model,p&&p.category,...catNames,p&&p.subCategory,p&&p.description,p&&p.condition,...attrs,...taxonomy,...variants,...(Array.isArray(p&&p.tags)?p.tags:[])].filter(Boolean).join(' ');
   return {version:1,text:low(source).slice(0,4000),tokens:words(source)};
 }
 export function validateProduct(p){

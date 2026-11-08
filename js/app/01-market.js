@@ -1,5 +1,11 @@
 /* ==== js/app/01-market.js ==== */
 import { skh } from './00-bootstrap.js';
+// [REMEDIATION R4] escaping + the shared buyer category list (canonical identity).
+const _ce = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+function skhBuyerCats() {
+    if (typeof skh.buyerProductCategories === 'function') return skh.buyerProductCategories();
+    return Object.keys(skh.advancedCategories || {}).map(n => ({ value: n, label: n }));
+}
 
 // [FIX 2026-09] `deliveryTaxonomy` ilikuwa ikitumika bila kufafanuliwa (ReferenceError)
 // -> ilivunja modal ya kategoria za Usafirishaji kabisa. Sasa imefafanuliwa hapa,
@@ -294,7 +300,7 @@ window.openCategoryModal = function() {
     let html = `<div class="cat-box" onclick="selectAdvancedCategory('Zote', 'all')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon('Zote') : ''}</div><div class="cat-name">ZOTE</div></div>`;
     // MPYA: KAMA UPO KWENYE TAB YA USAFIRI (DRIVERS)
     if (skh.currentFeedCollection === 'drivers') {
-        html += `<div style="grid-column: span 3; color: var(--terracotta); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">CHAGUA HUDUMA YA USAFIRI</div>`; // [PHASE 5.9] emoji imetolewa
+        html += `<div style="grid-column: 1 / -1; color: var(--terracotta); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">CHAGUA HUDUMA YA USAFIRI</div>`; // [PHASE 5.9] emoji imetolewa
         for (const catName in skh.deliveryTaxonomy) {
             html += `
                 <div class="cat-box" onclick="selectAdvancedCategory('${catName}')"> <div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div> <div class="cat-name">${catName.toUpperCase()}</div> </div>`;
@@ -321,18 +327,19 @@ window.openCategoryModal = function() {
     } 
     // 2. KAMA UPO KWENYE TAB YA BIDHAA
     else if (skh.currentFeedCollection === 'products') {
-        for (const [catName, data] of Object.entries(skh.advancedCategories)) {
-            html += `<div class="cat-box" onclick="selectAdvancedCategory('${catName}')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div><div class="cat-name">${catName.toUpperCase()}</div></div>`;
-        }
+        // [REMEDIATION R4] same list as the seller form: canonical ids first, legacy-only after
+        skhBuyerCats().forEach(function (c) {
+            html += `<div class="cat-box" data-cat="${_ce(c.value)}" onclick="selectAdvancedCategory(this.dataset.cat)"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(c.value) : ''}</div><div class="cat-name">${_ce(String(c.label).toUpperCase())}</div></div>`;
+        });
     }
     // 3. KAMA UPO KWENYE HOME (MCHANGANYIKO ULIOPANGWA VIZURI)
     else if (skh.currentFeedCollection === 'all') {
-         html += `<div style="grid-column: span 3; color: var(--primary-dark); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA BIDHAA</div>`; // [PHASE 5.9]
-         for (const [catName, data] of Object.entries(skh.advancedCategories)) {
-             html += `<div class="cat-box" onclick="switchToTabAndCategory('bidhaa', '${catName}', null)"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div><div class="cat-name">${catName.toUpperCase()}</div></div>`;
-         }
+         html += `<div style="grid-column: 1 / -1; color: var(--primary-dark); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA BIDHAA</div>`; // [PHASE 5.9]
+         skhBuyerCats().forEach(function (c) {
+             html += `<div class="cat-box" data-cat="${_ce(c.value)}" onclick="switchToTabAndCategory('bidhaa', this.dataset.cat, null)"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(c.value) : ''}</div><div class="cat-name">${_ce(String(c.label).toUpperCase())}</div></div>`;
+         });
          
-         html += `<div style="grid-column: span 3; color: var(--primary-blue); font-weight: 900; font-size: 13px; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA HUDUMA</div>`; // [PHASE 5.9]
+         html += `<div style="grid-column: 1 / -1; color: var(--primary-blue); font-weight: 900; font-size: 13px; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA HUDUMA</div>`; // [PHASE 5.9]
          for (const section in skh.serviceDataMap) {
              for (const catName in skh.serviceDataMap[section]) {
                  html += `<div class="cat-box" onclick="switchToTabAndCategory('services', '${catName}', '${section}')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div><div class="cat-name">${catName.toUpperCase()}</div></div>`;
@@ -379,7 +386,7 @@ window.selectAdvancedCategory = function(catName, sectionName = null) {
     }
     
     const actText = document.getElementById('activeCategoryText');
-    if(actText) actText.innerHTML = (window.skhNavIcon ? skhNavIcon('folder', 15) + ' ' : '') + `Kategoria: ${catName}`; // [PHASE 5.9]
+    if(actText) actText.innerHTML = (window.skhNavIcon ? skhNavIcon('folder', 15) + ' ' : '') + `Kategoria: ${_ce(skh.categoryLabel ? skh.categoryLabel(catName) : catName)}`; // [PHASE 5.9] [R4] label, not raw id
     closeModals();
 
     const slidersDiv = document.getElementById('dynamicSliders');
@@ -417,14 +424,17 @@ window.selectAdvancedCategory = function(catName, sectionName = null) {
         }
         // KAMA NI BIDHAA
         else if (skh.currentFeedCollection !== 'services') {
-            if (skh.advancedCategories[catName] && skh.advancedCategories[catName].subcategories) {
-                subcatNames = Object.keys(skh.advancedCategories[catName].subcategories);
-            }
+            const legacySubs = (typeof skh.legacySubcategoriesFor === 'function') ? skh.legacySubcategoriesFor(catName)
+                : ((skh.advancedCategories[catName] && skh.advancedCategories[catName].subcategories) ? Object.keys(skh.advancedCategories[catName].subcategories) : []);
+            // [REMEDIATION R4] canonical leaves of the SAME category id + legacy names (no guesses)
+            subcatNames = (typeof skh.buyerSubcategories === 'function') ? skh.buyerSubcategories(catName, legacySubs) : legacySubs;
         }
         
         if(subRow && subcatNames.length > 0) {
             subcatNames.unshift('Zote'); 
-            subRow.innerHTML = subcatNames.map(sub => `<div class="subcat-chip ${sub === 'Zote' ? 'active' : ''}" onclick="selectSubCategory('${sub}', this, '${sectionName}')">${sub}</div>`
+            // [R4] names such as "Men's Wear" are passed via data-* (no quote breakage / injection)
+            const _e = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+            subRow.innerHTML = subcatNames.map(sub => `<div class="subcat-chip ${sub === 'Zote' ? 'active' : ''}" data-sub="${_e(sub)}" data-sec="${_e(sectionName)}" onclick="selectSubCategory(this.dataset.sub, this, this.dataset.sec)">${_e(sub)}</div>`
             ).join('');
         } else if (subRow) {
             subRow.innerHTML = '';
@@ -477,10 +487,13 @@ window.selectSubCategory = function(subName, element, sectionName = 'null') {
             }
             // KAMA NI BIDHAA VUTA FILTERS ZA BIDHAA
             else {
-                const catData = skh.advancedCategories[skh.activeCategory];
-                if(catData && catData.subcategories && catData.subcategories[subName]) {
-                    filters = catData.subcategories[subName].filters || [];
-                }
+                // [R4] canonical id → look in every legacy label that maps to it
+                const info = (typeof skh.categoryInfo === 'function') ? skh.categoryInfo(skh.activeCategory) : { legacyLabels: [] };
+                [skh.activeCategory].concat(info.legacyLabels || []).some(function (label) {
+                    const catData = skh.advancedCategories[label];
+                    if (catData && catData.subcategories && catData.subcategories[subName]) { filters = catData.subcategories[subName].filters || []; return true; }
+                    return false;
+                });
             }
 
             if(filters.length > 0) {

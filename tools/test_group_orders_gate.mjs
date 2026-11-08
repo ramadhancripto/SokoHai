@@ -11,8 +11,8 @@ ok('flag defaults OFF (only system/config.features.chatGroupOrders === true enab
 ok('74: helper missing => disabled (no default-on)', /function goEnabled\(\) \{ return typeof window\.skhGroupOrdersEnabled === 'function' &&/.test(o));
 ok('74: wizard CTA replaced by a coming-soon notice when off', /if \(!goEnabled\(\)\) \{\s*cta\.innerHTML = '<div data-go-disabled/.test(o));
 ok('74: CTA click re-checks the flag', /if \(!goEnabled\(\)\) \{ goOff\(\); return; \}\s*openWizardModal\(gid\)/.test(o));
-ok('73: "+ unda" button becomes "Inakuja hivi karibuni" when off', /!goOn\(\) \? goSoonBadge\(\)/.test(g));
-ok('73: composer chip hidden when off', /\(goOn\(\) \? atChip\('gsg-at-gorder'/.test(g));
+ok('73: Group Orders tab shows "Inakuja hivi karibuni" when off (and no create button at all — [R13-G] rules refuse client writes)', /g_sendPolicy_blocked\(\) \|\| goOn\(\) \? '' : goSoonBadge\(\)/.test(g));
+ok('73: (+) menu has no create chip; "Anzisha Group Order" only opens the Group Orders section [R13-G]', !/atChip\('gsg-at-gorder'/.test(g) && /act === 'gsg-at-gotab'\) \{ closeAttachPop\(\); setGsgTab\('groupOrders'\)/.test(g));
 ok('73: create action blocked when off', /act === 'gsg-at-gorder'\) \{\s*if \(!goOn\(\)\)/.test(g));
 ok('73: empty state explains the feature is not open yet', /Oda za Pamoja hazijafunguliwa bado/.test(g));
 ok('rules: browser cannot write groupOrders', !/match \/groupOrders\/\{goid\}[^}]*allow (create|update|write): if (signedIn|isGroup)/.test(r));

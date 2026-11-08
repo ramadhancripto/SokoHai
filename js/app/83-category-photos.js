@@ -28,12 +28,12 @@
         'Ufugaji (Livestock)': 'mifugo',
         'Afya na Pharmacy (Health)': 'afya',
         'Mavazi na Fashoni (Fashion)': 'mavazi',
-        'Vito na Saa (Luxury)': 'vito',
+        'Vito na Saa (Luxury)': null, /* [R6] vito.webp: stock-photo watermark */
         'Electronics & Teknoloji (Tech)': 'elektroniki',
         'Samani na Nyumbani (Home)': 'samani',
         'Ujenzi na Hardware (Hardware)': 'ujenzi',
         'Magari na Vyombo (Automotive)': 'magari',
-        'Vitabu na Elimu (Education)': 'vitabu',
+        'Vitabu na Elimu (Education)': null, /* [R6] vitabu.webp: stock-photo watermark */
         'Michezo na Mazoezi (Sports)': 'michezo',
         'Vichezeo na Michezo (Toys)': 'vichezeo',
         'Sauti na Muziki (Music)': 'muziki',
@@ -44,14 +44,15 @@
         'Vifungashio na Printi (Packaging)': 'vifungashio',
         'Ulinzi na Usalama (Safety)': 'ulinzi',
         'Biashara ya Jumla (Wholesale)': 'jumla',
-        'Maagizo ya Nje (Import/Export)': 'maagizo',
-        'Vitu vya Kale na Thamani (Antiques)': 'kale',
+        'Maagizo ya Nje (Import/Export)': null, /* [R6] maagizo.webp: stock-photo watermark */
+        'Vitu vya Kale na Thamani (Antiques)': null, /* [R6] kale.webp: stock-photo watermark */
         'Mchanganyiko (General Merchandise)': 'mchanganyiko',
         'Asili na Utamaduni (Traditional)': 'asili',
         /* huduma (serviceDataMap) */
         'Home & Personal': 'svc-home-personal',
-        'Construction & Handyman': 'svc-construction',
-        'Cleaning & Maintenance': 'svc-cleaning',
+        // [R6] svc-construction.webp carries a third-party watermark/phone number → same-subject ujenzi image
+        'Construction & Handyman': null, /* [R13-C] no own clean photo yet (svc-construction is watermarked) */
+        'Cleaning & Maintenance': 'svc-cleaning', /* same subject as CAT-17 Huduma za Nyumbani */
         'Event & Entertainment': 'svc-event',
         'Tech & Repair': 'svc-tech',
         'Industrial Support': 'svc-industrial',
@@ -59,15 +60,16 @@
         'Creative Freelancing': 'svc-creative',
         'Software & IT': 'svc-software',
         'Digital Marketing': 'svc-marketing',
-        'Writing & Translation': 'svc-writing',
+        'Writing & Translation': null, /* [R6] svc-writing.webp: stock-photo watermark */
         'Media Production': 'svc-media',
         'AI Services': 'svc-ai',
         'Virtual Business': 'svc-virtual',
-        'Online Coaching': 'svc-coaching',
-        'Website Services': 'svc-website',
+        'Online Coaching': null, /* [R6] svc-coaching.webp: stock-photo watermark */
+        'Website Services': null, /* [R6] svc-website.webp: stock-photo watermark */
         'Remote Support': 'svc-support',
         'Food Services': 'svc-food',
-        'Rental Services': 'svc-rental',
+        // [R6] svc-rental.webp does not show renting → clean fallback tile until the owner supplies an image
+        'Rental Services': null,
         /* usafiri (deliveryTaxonomy) */
         'Passenger': 'tr-passenger',
         'Watu (Ride)': 'tr-passenger',
@@ -79,6 +81,62 @@
         'Dharura (Express)': 'tr-emergency'
     };
 
+    /* [REMEDIATION 2026-11 R6] ONE image map keyed by the CANONICAL category id.
+       Legacy names reach it through the reviewed legacy→canonical mapping
+       (skh.canonicalCategoryId). Only existing files whose subject matches the
+       category are used; null = no suitable image yet → fallback tile (no 404s).
+       Strategy below category level: product type → sub-category → category →
+       fallback. Sub-category/product-type images are not supplied yet, so they
+       resolve to the category image (SUB_PHOTO is the hook for owner images). */
+    /* [R13-C 2026-11] Owner decision: real photos (not 3D illustrations) represent categories.
+       One photo per subject: a category whose subject has no suitable photo yet shows the clean
+       placeholder tile until a licensed photo is supplied (never a neighbour's photo). */
+    var PHOTO_BY_ID = {
+        'CAT-01': 'vyakula', 'CAT-02': 'kilimo', 'CAT-03': null, 'CAT-04': 'mifugo',
+        'CAT-05': null, 'CAT-06': null, 'CAT-07': 'mavazi', 'CAT-08': null,
+        'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': null,
+        'CAT-13': null, 'CAT-14': 'magari', 'CAT-15': null, 'CAT-16': null,
+        'CAT-17': 'svc-cleaning', 'CAT-18': 'svc-tech', 'CAT-19': 'afya', 'CAT-20': null,
+        'CAT-21': 'svc-virtual', 'CAT-22': null, 'CAT-23': null, 'CAT-24': null,
+        'CAT-25': 'svc-food', 'CAT-26': 'svc-event', 'CAT-27': 'sanaa', 'CAT-28': 'asili', 'CAT-29': 'zawadi',
+        'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': null, /* [R6] vitabu.webp: stock-photo watermark */ 'CAT-33': null,
+        'CAT-34': null, 'CAT-35': null, 'CAT-36': 'ulinzi', 'CAT-37': 'svc-marketing',
+        'CAT-38': null, /* [R6] svc-website.webp: stock-photo watermark */ 'CAT-39': null, 'CAT-40': 'jumla', 'CAT-41': null, /* [R6] maagizo.webp: stock-photo watermark */ 'CAT-42': null,
+        'CAT-43': null, 'CAT-44': 'mchanganyiko'
+    };
+    /* [R6 review 2026-11] Files carrying a stock-photo watermark (Dreamstime) or a
+       third-party name/phone are never shown; they stay on disk until the owner
+       replaces them with licensed images. */
+    var REJECTED_IMAGES = ['svc-construction', 'svc-rental', 'huduma', 'vitabu', 'vito', 'kale', 'maagizo', 'svc-coaching', 'svc-writing', 'svc-website'];
+    window.SKH_CATEGORY_REJECTED_IMAGES = REJECTED_IMAGES;
+    var SUB_PHOTO = {};   /* '<CAT-xx>|<sub-category>' -> slug (owner-supplied; empty today) */
+    window.SKH_CATEGORY_PHOTO_BY_ID = PHOTO_BY_ID;
+
+    function canonId(name) {
+        try { return (window.skh && typeof window.skh.canonicalCategoryId === 'function') ? window.skh.canonicalCategoryId(name) : null; } catch (e) { return null; }
+    }
+    /* [R13-C 2026-11] Category, service and transport visuals are PHOTOS again (owner decision:
+       the 3D-style SVG family is not used as the main picture). Photos come from the cleaned,
+       consistent set assets/img/categories/clean/ (tools/clean_category_photos.py); originals and
+       the SVG family stay on disk untouched. No photo -> clean placeholder tile (no request). */
+    var PHOTO_DIR = 'assets/img/categories/clean/';
+    function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+    /* name | legacy label | CAT-xx  ->  file name | null */
+    function slugFor(name) {
+        var id = canonId(name) || (/^CAT-\d{2}$/.test(String(name || '')) ? String(name) : null);
+        if (id && has(PHOTO_BY_ID, id)) return PHOTO_BY_ID[id] ? PHOTO_BY_ID[id] + '.webp' : null;
+        return has(PHOTO, name) && PHOTO[name] && REJECTED_IMAGES.indexOf(PHOTO[name]) === -1 ? PHOTO[name] + '.webp' : null;
+    }
+    /* sub-category photos: owner-supplied only (SUB_PHOTO); never the parent's photo */
+    function subjectFor(sub) { return null; }
+    window.skhCategoryImage = function (ref) {
+        ref = ref || {};
+        var id = canonId(ref.categoryId || ref.category);
+        var sub = id && ref.subcategory ? SUB_PHOTO[id + '|' + ref.subcategory] : null;
+        var f = (sub ? sub + '.webp' : null) || slugFor(ref.categoryId || ref.category);
+        return f ? PHOTO_DIR + f : null;
+    };
+    window.skhSubcategoryImage = function (sub) { return null; };
     var LABEL = {
         'Vyakula na Vinywaji (Food)': 'Vyakula',
         'Kilimo (Agriculture)': 'Kilimo',
@@ -128,14 +186,12 @@
     };
 
     /* strip ya Home: kategoria 6 (zile zile za design) */
-    var HOME_STRIP = [
-        'Vyakula na Vinywaji (Food)',
-        'Electronics & Teknoloji (Tech)',
-        'Ufugaji (Livestock)',
-        'Kilimo (Agriculture)',
-        'Mavazi na Fashoni (Fashion)',
-        'Ujenzi na Hardware (Hardware)'
-    ];
+    // [R13-E] order and short names of ref 11: Elektroniki, Mavazi, Kilimo, Usafiri (magari), Nyumba, Vyakula, More
+    var HOME_STRIP = ['CAT-11', 'CAT-07', 'CAT-02', 'CAT-14', 'CAT-09', 'CAT-01'];
+    var HOME_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Mavazi', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Nyumba', 'CAT-01': 'Vyakula' };
+    /* [R13-G] majina mafupi ya grid ya desktop (kama picha ya "Kategoria za Bidhaa") — IDs hazibadiliki */
+    var GRID_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Mavazi', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Samani', 'CAT-01': 'Vyakula',
+        'CAT-04': 'Mifugo', 'CAT-10': 'Ujenzi', 'CAT-19': 'Afya', 'CAT-27': 'Sanaa', 'CAT-28': 'Bidhaa za Jadi', 'CAT-29': 'Zawadi', 'CAT-31': 'Wanyama', 'CAT-36': 'Ulinzi', 'CAT-40': 'Jumla' };
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -144,27 +200,22 @@
     }
 
     function photoUrl(name) {
-        var f = PHOTO[name];
-        return f ? 'assets/img/categories/' + f + '.webp' : null;
+        var f = slugFor(name);
+        return f ? PHOTO_DIR + f : null;
     }
 
     /* Njia mbadala: app inaweza kuhudumiwa kutoka folda ndogo (mf. GitHub Pages
        /SokoHai/) au route iliyopachikwa — hivyo tunajaribu njia kadhaa kabla ya
        kuachana na picha. */
     function photoCandidates(name) {
-        var f = PHOTO[name];
+        var f = slugFor(name);
         if (!f) return [];
-        return [
-            'assets/img/categories/' + f + '.webp',
-            './assets/img/categories/' + f + '.webp',
-            '../assets/img/categories/' + f + '.webp',
-            '/assets/img/categories/' + f + '.webp'
-        ];
+        return [PHOTO_DIR + f, './' + PHOTO_DIR + f, '../' + PHOTO_DIR + f, '/' + PHOTO_DIR + f];
     }
 
     function imgMarkup(name, cls, alt) {
         var list = photoCandidates(name);
-        if (!list.length) return '';
+        if (!list.length) return fallbackMarkup(name);   /* [R13-C] no photo yet -> clean placeholder tile */
         var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
         return '<img class="' + cls + '" src="' + list[0] + '" alt="' + esc(alt || labelOf(name)) + '"'
              + ' data-i="0" data-cands="' + esc(JSON.stringify(list)) + '" data-initial="' + initial + '"'
@@ -200,8 +251,18 @@
         try { (window.__skhMissingCatImgs = window.__skhMissingCatImgs || new Set()).add(img.getAttribute('src')); } catch (e) {}
     };
 
+    /* [R6] no suitable image: a neutral tile with the initial, no network request */
+    function fallbackMarkup(name) {
+        var initial = esc((labelOf(name) || '?').trim().charAt(0).toUpperCase());
+        return '<span class="skh-img-fallback skh-img-fallback--tile skh-photo-pending" role="img" aria-label="' + esc(labelOf(name)) + '">'
+             + '<span class="skh-img-fallback-letter" aria-hidden="true">' + initial + '</span>'
+             + '<span class="skh-photo-pending-note" aria-hidden="true">Picha inakuja</span></span>';
+    }
+
     function labelOf(name) {
-        return LABEL[name] || String(name).replace(/\s*\([^)]*\)\s*$/, '');
+        if (LABEL[name]) return LABEL[name];
+        try { if (/^CAT-\d{2}$/i.test(String(name)) && window.skh && window.skh.categoryLabel) return window.skh.categoryLabel(name); } catch (e) {}
+        return String(name).replace(/\s*\([^)]*\)\s*$/, '');
     }
 
     /* ---------------- 1. HOME STRIP ---------------- */
@@ -212,8 +273,14 @@
         var cats = (window.skh && window.skh.advancedCategories) || null;
         if (!cats) return;                      /* taxonomy bado */
 
-        var names = HOME_STRIP.filter(function (n) { return !!cats[n]; });
-        if (names.length < 6) names = Object.keys(cats).filter(function (n) { return !!photoUrl(n); }).slice(0, 6);
+        var list = (window.skh && typeof window.skh.buyerProductCategories === 'function') ? window.skh.buyerProductCategories().map(function (c) { return c.value; }) : Object.keys(cats);
+        var names = HOME_STRIP.filter(function (n) { return list.indexOf(n) !== -1; });
+        if (names.length < 6) names = list.filter(function (n) { return !!photoUrl(n); }).slice(0, 6);
+        /* [R13-G] desktop: grid ya "Kategoria za Bidhaa" (safu 2 × 6) — kategoria zenye picha HALISI tu,
+           ya mwisho ni "Zaidi". Simu inabaki na mstari mmoja wa ref 11. */
+        if (window.matchMedia && window.matchMedia('(min-width: 900px)').matches) {
+            list.forEach(function (n) { if (names.length < 11 && names.indexOf(n) === -1 && photoUrl(n)) names.push(n); });
+        }
         if (!names.length) return;
 
         var html = '';
@@ -221,7 +288,7 @@
             html += '<button type="button" class="cps-card" data-cat="' + esc(n) + '" title="' + esc(n) + '"'
                  + ' aria-pressed="false">'
                  + '<span class="cps-card-img">' + imgMarkup(n, 'cps-photo') + '</span>'
-                 + '<span class="cps-card-name">' + esc(labelOf(n)) + '</span></button>';
+                 + '<span class="cps-card-name">' + esc((window.matchMedia && (window.matchMedia('(max-width: 899px)').matches ? HOME_SHORT[canonId(n) || n] : GRID_SHORT[canonId(n) || n])) || labelOf(n)) + '</span></button>';
         });
         /* kadi ya mwisho: Category Explorer */
         html += '<button type="button" class="cps-card cps-card--more" data-more="1"'
@@ -239,7 +306,11 @@
     var selectedCat = '';
 
     function currentCategory() {
-        /* 1) kichwa cha feed (chanzo halisi)  2) kitufe cha kategoria  3) kadi iliyoguswa */
+        /* 0) [R6] the app state itself  1) kichwa cha feed  2) kitufe cha kategoria  3) kadi iliyoguswa */
+        try {
+            var a = window.skh && window.skh.activeCategory;
+            if (a && a !== 'Zote' && (!window.skh.currentFeedCollection || window.skh.currentFeedCollection === 'products' || window.skh.currentFeedCollection === 'all')) return a;
+        } catch (e0) {}
         try {
             var t = (document.getElementById('feedTitleText') || {}).textContent || '';
             var m = /Kategoria:\s*(.+)$/i.exec(t);
@@ -254,8 +325,9 @@
     function markActive(catName) {
         var host = document.getElementById(MOUNT);
         if (!host) return;
+        var want = canonId(catName) || catName;
         Array.prototype.forEach.call(host.querySelectorAll('.cps-card[data-cat]'), function (c) {
-            var on = !!catName && c.dataset.cat === catName;
+            var on = !!catName && (c.dataset.cat === catName || (canonId(c.dataset.cat) || c.dataset.cat) === want);
             c.classList.toggle('is-active', on);
             c.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
@@ -305,16 +377,27 @@
             var raw = nameEl ? nameEl.textContent.trim() : '';
             /* majina kwenye explorer ni UPPERCASE — tunalinganisha kwa case-insensitive */
             var url = null, matched = null;
+            /* [R6] product tiles carry data-cat (canonical id or legacy label) */
+            if (box.dataset.cat) {
+                var icon0 = box.querySelector('.cat-icon');
+                if (icon0) {
+                    icon0.classList.add('skh-cat-photo');
+                    icon0.innerHTML = imgMarkup(box.dataset.cat, 'skh-cat-img', labelOf(box.dataset.cat));
+                }
+                if (nameEl) nameEl.textContent = labelOf(box.dataset.cat);
+                box.dataset.cpsDone = '1';
+                continue;
+            }
             for (var k in PHOTO) {
                 if (raw.toLowerCase() === k.toLowerCase()) { url = photoUrl(k); matched = k; break; }
             }
-            if (!url) {
+            if (!url && !matched) {
                 for (var k2 in PHOTO) {
                     if (raw && k2.toUpperCase().indexOf(raw) !== -1) { url = photoUrl(k2); matched = k2; break; }
                 }
             }
             var icon = box.querySelector('.cat-icon');
-            if (url && icon) {
+            if ((url || matched) && icon) { // [R6] known category without a usable image → neutral tile
                 icon.classList.add('skh-cat-photo');
                 icon.innerHTML = imgMarkup(matched, 'skh-cat-img', raw);
                 if (nameEl) nameEl.textContent = labelOf(matched);
@@ -323,28 +406,54 @@
         }
         /* onyesha tile iliyochaguliwa */
         var cur = currentCategory();
+        var curId = canonId(cur);
         Array.prototype.forEach.call(boxes, function (b) {
             var n = (b.querySelector('.cat-name') || {}).textContent || '';
-            b.classList.toggle('is-active', !!cur && n.trim().toLowerCase() === labelOf(cur).toLowerCase());
+            var on = !!cur && ((curId && b.dataset.cat && canonId(b.dataset.cat) === curId) || n.trim().toLowerCase() === labelOf(cur).toLowerCase());
+            b.classList.toggle('is-active', on);
         });
     }
 
     /* ---------------- 3. SUB-CATEGORY CHIPS (+ picha ndogo) ---------------- */
     var lastCat = '';
+    /* [REMEDIATION R5] the product category strip belongs to products/home only;
+       Services and Transport keep their own category lists. */
+    function syncStripVisibility() {
+        var host = document.getElementById(MOUNT);
+        if (!host) return;
+        var col = window.skh && window.skh.currentFeedCollection;
+        var hide = col === 'services' || col === 'drivers';
+        if (host.hidden !== hide) host.hidden = hide;
+        var sec = host.closest ? host.closest('section') : null;   // the "Gundua Soko" heading goes with it
+        if (sec && sec.hidden !== hide) sec.hidden = hide;
+    }
+    window.skhCategoryStripSync = syncStripVisibility;
+
     function decorateSubchips() {
+        syncStripVisibility();
         var row = document.getElementById('subcatRow');
         if (!row) return;
         var cur = currentCategory();
         if (cur) lastCat = cur;
-        var parentPhoto = photoUrl(lastCat) || photoUrl('Vyakula na Vinywaji (Food)');
-        if (!parentPhoto) return;
+        // [R6] chips use the parent category's own image; without one they stay plain
+        // (no "?" tile, never another category's photo)
+        // [R12] the parent's photo repeated on every chip told the buyer nothing (every chip looked
+        // the same). Only "Zote" carries the category photo; a sub-category gets a photo only when
+        // it has its own (SUB_PHOTO), otherwise it is a clean text chip.
+        if (!lastCat) return;
+        var catId = canonId(lastCat) || lastCat;
         Array.prototype.forEach.call(row.children, function (chip) {
             if (!chip || chip.dataset.cpsChip === '1') return;
             var txt = (chip.textContent || '').trim();
             if (!txt) return;
+            var subSlug = SUB_PHOTO[catId + '|' + (chip.dataset.sub || txt)] || subjectFor(chip.dataset.sub || txt);
+            var isAll = (chip.dataset.sub || txt) === 'Zote';
+            if (!subSlug && !(isAll && photoUrl(lastCat))) { chip.dataset.cpsChip = '1'; return; }
             var sp = document.createElement('span');
             sp.className = 'cps-chip-ico';
-            sp.innerHTML = imgMarkup(lastCat, 'cps-chip-img', '');
+            sp.innerHTML = subSlug
+                ? '<img class="cps-chip-img" src="' + PHOTO_DIR + subSlug + '.webp" alt="" loading="lazy" decoding="async">'
+                : imgMarkup(lastCat, 'cps-chip-img', '');
             chip.insertBefore(sp, chip.firstChild);
             chip.dataset.cpsChip = '1';
             chip.classList.add('cps-chip');
@@ -356,8 +465,9 @@
        kamili kwenye console ili ijulikane papo hapo. */
     window.skhCategoryAssetCheck = function () {
         var slugs = [];
-        for (var k in PHOTO) slugs.push(PHOTO[k]);
-        var base = 'assets/img/categories/';
+        for (var k in PHOTO) if (PHOTO[k] && REJECTED_IMAGES.indexOf(PHOTO[k]) === -1 && slugs.indexOf(PHOTO[k]) === -1) slugs.push(PHOTO[k]);
+        for (var k3 in PHOTO_BY_ID) if (PHOTO_BY_ID[k3] && slugs.indexOf(PHOTO_BY_ID[k3]) === -1) slugs.push(PHOTO_BY_ID[k3]);
+        var base = PHOTO_DIR;
         var results = [];
         return Promise.all(slugs.map(function (f) {
             var url = base + f + '.webp';

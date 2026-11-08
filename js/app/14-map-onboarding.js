@@ -46,30 +46,20 @@ window.enableEditPaymentInfo = function() {
 
 window.l = loadAndRenderDashboard;
 
-window.triggerFomo = function() {
-    const names = ["Juma", "Asha", "Said", "Haji", "Kelvin", "Fatma", "Neema", "Brayan"];
-    const cities = ["Dar es Salaam", "Mwanza", "Arusha", "Mbeya", "Dodoma", "Zanzibar"];
-    const actions = ["amenunua bidhaa", "ameweka oda", "ameagiza usafiri", "amepata fundi"];
-
-    const name = names[Math.floor(Math.random() * names.length)];
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    const action = actions[Math.floor(Math.random() * actions.length)];
-
+/* [REMEDIATION 2026-11 R8] Social-proof toast shows REAL events only.
+   It used to invent buyers ("Said wa Zanzibar amenunua bidhaa hivi punde!")
+   from random names every ~25 s — fabricated activity shown to buyers.
+   The toast and its interface stay; it now renders only an event passed in by
+   a caller that has a real record, and nothing fires on a timer. */
+window.triggerFomo = function(evt) {
+    if (!evt || !evt.name || !evt.action) return;      // no real event → no toast
     const toast = document.getElementById('fomoToast');
     if(!toast) return;
-
-    toast.innerHTML = ` <b>${name}</b> wa ${city} <br> ${action} hivi punde!`;
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    toast.innerHTML = ` <b>${esc(evt.name)}</b>${evt.city ? ' wa ' + esc(evt.city) : ''} <br> ${esc(evt.action)}`;
     toast.style.display = 'block';
-
-    // Ficha baada ya sekunde 5
-    setTimeout(() => {
-        toast.style.display = 'none';
-    }, 5000);
+    setTimeout(() => { toast.style.display = 'none'; }, 5000);
 };
-
-setInterval(() => {
-    if(Math.random() > 0.6) window.triggerFomo();
-}, 25000);
 
 // [FIX 2026-09] Lebo ya kitufe cha kutuma bidhaa inabadilika kulingana na Visibility:
 //   - offline_only -> "HIFADHI KWENYE INVENTORY" (duka la ndani tu)
@@ -106,7 +96,11 @@ window.toggleProductFormFields = function() {
     if (onlineFields) onlineFields.style.display = online ? 'block' : 'none';
     const setReq = (el, on) => { if (!el) return; if (on) el.setAttribute('required', 'true'); else el.removeAttribute('required'); };
     setReq($('prodDesc'), online);
-    setReq($('prodImage'), online);
+    // [2026-11-06] The photo picker (js/11-uploads.js) keeps files in its own store and
+    // clears the hidden <input>, so native `required` on it blocked every online publish
+    // ("invalid form control is not focusable"). The photo rule is enforced in
+    // submitSeller (08-app-state.js, photoRequired) with a clear Swahili message.
+    setReq($('prodImage'), false);
     setReq($('prodCategory'), online);
     setReq($('prodPrice'), rules.priceRequired);
     // Taxonomy stays visible for every mode (POS + reports use it); required only for the marketplace.
@@ -344,14 +338,34 @@ window.verifyLogisticsToken = async function() {
         // [CUSTODY 2026-09] Tunaangalia token yenyewe (sio status maalum) kisha
         // tunahakiki status/hatua CHINI, ili kusaidia mtiririko mpya wa pandembili:
         //   pickup -> pickup_pending/seller_confirmed_handover; handover -> awaiting_handover.
-        let qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("pickupToken", "==", token), skh.limit(1));
-        let snapNormal = await skh.getDocs(qNormal);
+        // [2026-11-06] Token za safari zinahifadhiwa kama HASH kwenye ride_requests
+        // (pickupTokenHash) — query ya `pickupToken == token` haiwezi kupata kitu tena.
+        // Tunahakiki kupitia server (deliveryTokenVerify) kama 20-logistics; fallback
+        // ya legacy inaruhusiwa tu pale skhCustodyFallbackAllowed() (demo/emulator).
+        let snapNormal = { empty: true, docs: [] };
         let tokenType = "pickup";
-
-        if (snapNormal.empty) {
-            qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("handoverToken", "==", token), skh.limit(1));
+        if (typeof window.skhCustodyServerTokenVerify === 'function') {
+            for (const kind of ['pickup', 'handover']) {
+                try {
+                    const v = await window.skhCustodyServerTokenVerify({ token: token, kind: kind });
+                    if (v && v.data && v.data.ok && v.data.rideId) {
+                        const vd = v.data;
+                        snapNormal = { empty: false, docs: [{ id: vd.rideId, data: function () { return vd; } }] };
+                        tokenType = kind;
+                        break;
+                    }
+                } catch (e) { /* not-found/permission -> jaribu aina nyingine */ }
+            }
+        }
+        if (snapNormal.empty && typeof window.skhCustodyFallbackAllowed === 'function' && window.skhCustodyFallbackAllowed()) {
+            let qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("pickupToken", "==", token), skh.limit(1));
             snapNormal = await skh.getDocs(qNormal);
-            tokenType = "handover";
+            tokenType = "pickup";
+            if (snapNormal.empty) {
+                qNormal = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("handoverToken", "==", token), skh.limit(1));
+                snapNormal = await skh.getDocs(qNormal);
+                tokenType = "handover";
+            }
         }
 
         if (!snapNormal.empty) {
@@ -370,7 +384,7 @@ window.verifyLogisticsToken = async function() {
             sessionStorage.setItem('active_verified_token_type', tokenType);
 
             resultBox.innerHTML = `
-                <div style="font-size:13px; color:#1e293b; line-height:1.5; text-align:left;"> <b style="color:var(--green); display:block; margin-bottom:10px; font-size:14px; text-transform:uppercase;"> Uhakiki wa Mzigo Umefanikiwa!</b> <b> Mzigo: ${rd.cargoName}</b><br> <span>Kutoka: ${rd.fromLocation}  Kwenda: ${rd.toLocation}</span> </div> `;
+                <div style="font-size:13px; color:#1e293b; line-height:1.5; text-align:left;"> <b style="color:var(--green); display:block; margin-bottom:10px; font-size:14px; text-transform:uppercase;"> Uhakiki wa Mzigo Umefanikiwa!</b> <b> Mzigo: ${skh.skhEscape(rd.cargoName || "")}</b><br> <span>Kutoka: ${skh.skhEscape(rd.fromLocation || "")}  Kwenda: ${skh.skhEscape(rd.toLocation || "")}</span> </div> `;
             resultBox.style.display = 'block';
             btnVerify.style.display = 'none';
             btnRelease.style.display = 'block';
@@ -419,8 +433,10 @@ window.setupDriverRealtimeQuery = function() {
             if (rd.driverId === skh.currentUser.uid && rd.status !== "completed" && rd.status !== "cancelled") {
                 activeCount++;
                 const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
-                const pToken = rd.pickupToken || "Bado";
-                const cPhone = rd.customerPhone || "N/A";
+                // [REMEDIATION R5] plaintext token is never on the ride: show the masked ref, then the real
+                // token from delivery_tokens (party-only) fills #pktok_<rid> after render.
+                const pToken = `<span id="pktok_${rid}">${skh.skhEscape(rd.pickupTokenRef || (rd.pickupTokenStatus === 'pending' ? 'Inapakia…' : 'Bado haijatolewa'))}</span>`;
+                const cPhone = skh.rideContactSpan(rid, "customerPhone", rd.customerPhone, "N/A"); // [R1] private/contact
 
                 let tokenInstructions = '';
                 if (rd.status === 'accepted' || rd.status === 'awaiting_pickup' || rd.status === 'pickup_pending' || rd.status === 'seller_confirmed_handover') {
@@ -444,8 +460,8 @@ window.setupDriverRealtimeQuery = function() {
                 }
 
                 activeJobsHtml += `
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; border-left:6px solid var(--primary-blue); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span> <small style="color:gray;">${rd.createdAt ? new Date(rd.createdAt).toLocaleDateString() : 'N/A'}</small> </div> <div style="display:flex; gap:10px; align-items:center;"> <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:13px; color:#0f172a; display:block;">${rd.cargoName}</b> <small style="color:gray;">Mteja: ${skh.skhEscape(rd.customerName)} | Simu: ${cPhone}</small> </div> </div> <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
-                             Kutoka: <b>${rd.fromLocation}</b> -> Kwenda: <b>${rd.toLocation}</b> </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:15px; border-left:6px solid var(--primary-blue); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">${rd.status.toUpperCase()}</span> <small style="color:gray;">${rd.createdAt ? new Date(rd.createdAt).toLocaleDateString() : 'N/A'}</small> </div> <div style="display:flex; gap:10px; align-items:center;"> <img src="${cargoImg}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:13px; color:#0f172a; display:block;">${skh.skhEscape(rd.cargoName || "")}</b> <small style="color:gray;">Mteja: ${skh.rideContactSpan(rid, "customerName", rd.customerName, "Mteja")} | Simu: ${cPhone}</small> </div> </div> <div style="background:white; padding:8px; border-radius:8px; margin-top:8px; font-size:12px; border:1px solid #eee;">
+                             Kutoka: <b>${skh.skhEscape(rd.fromLocation || '')}</b> -> Kwenda: <b>${skh.skhEscape(rd.toLocation || '')}</b> </div>
                         ${tokenInstructions}
                         <button onclick="window.triggerVehicleBreakdown('${rid}', '${rd.cargoName.replace(/'/g, "\\'")}')" style="width:100%; padding:10px; background:#fee2e2; color:#ef4444; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px; margin-top:10px;"> CHOMBO KIMEHARIBIKA (BREAKDOWN)</button> </div>`;
             }
@@ -457,8 +473,8 @@ window.setupDriverRealtimeQuery = function() {
                     availableCount++;
                     const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Usafiri&background=cccccc&color=fff";
                     availableJobsHtml += `
-                        <div style="background:white; border:1px solid #cbd5e1; border-radius:14px; padding:15px; border-left:6px solid var(--gold); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">MPYA</span> <small style="color:gray;">Kategoria: ${rd.reqCategory}</small> </div> <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:var(--primary-dark);">${rd.cargoName}</b> <small style="display:block; color:gray;">Mteja: ${skh.skhEscape(rd.customerName || 'Mteja')}</small> </div> </div> <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px;">
-                                 Kutoka: <b>${rd.fromLocation}</b> -> Kwenda: <b>${rd.toLocation}</b> </div> <button onclick="window.acceptTransportMission('${rid}')" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">KUBALI KAZI HII -></button> </div>`;
+                        <div style="background:white; border:1px solid #cbd5e1; border-radius:14px; padding:15px; border-left:6px solid var(--gold); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">MPYA</span> <small style="color:gray;">Kategoria: ${rd.reqCategory}</small> </div> <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:var(--primary-dark);">${skh.skhEscape(rd.cargoName || "")}</b> <small style="display:block; color:gray;">Mteja</small> </div> </div> <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px;">
+                                 Kutoka: <b>${skh.skhEscape(rd.fromLocation || '')}</b> -> Kwenda: <b>${skh.skhEscape(rd.toLocation || '')}</b> </div> <button onclick="window.acceptTransportMission('${rid}')" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">KUBALI KAZI HII -></button> </div>`;
                 }
             }
         });
@@ -469,6 +485,13 @@ window.setupDriverRealtimeQuery = function() {
         activeContainer.innerHTML = activeJobsHtml || `
             <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; padding:25px; border-radius:18px; text-align:center; width:100%;"> <div style="font-size:36px; margin-bottom:5px;"></div> <b style="color:gray; font-size:12px;">Huna safari inayofanya kazi hivi sasa.</b> </div>`;
 
+        if (skh.fillRideContacts) skh.fillRideContacts(activeContainer); // [R1]
+        if (typeof window.skhCustodyReadToken === 'function') { // [R5] same source as 20-logistics
+            activeContainer.querySelectorAll('[id^="pktok_"]').forEach(function (el) {
+                const rid0 = el.id.slice(6);
+                window.skhCustodyReadToken(rid0, 'pickup').then(function (t) { if (t) el.textContent = t; }).catch(function () {});
+            });
+        }
         availableContainer.innerHTML = availableJobsHtml || `
             <div style="background:#f8fafc; border:1.5px dashed #cbd5e1; padding:25px; border-radius:18px; text-align:center; width:100%;"> <div style="font-size:36px; margin-bottom:5px;"></div> <b style="color:gray; font-size:12px;">Hakuna kazi mpya zinazofaa gari lako kwa sasa.</b> </div>`;
      };
@@ -643,7 +666,7 @@ window.loadHeldCargoList = async function() {
                 const badgeColor = status === 'completed' ? 'green' : (status === 'in_transit' ? 'orange' : 'gray');
 
                 html += `
-                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:16px; margin-bottom:10px; font-size:12px; text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:6px; font-weight:bold;">${status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;"> <img src="${cargoImgUrl}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div style="flex:1; min-width:0;"> <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--primary-dark);">${rd.cargoName}</b> <small style="color:gray; font-size:12.5px; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} (Simu: ${rd.customerPhone})</small> </div> </div> <div style="background:white; padding:6px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px;"> <span> Njia: ${rd.fromLocation}  ${rd.toLocation}</span>
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:16px; margin-bottom:10px; font-size:12px; text-align:left;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:6px; font-weight:bold;">${status.toUpperCase()}</span> <small style="color:gray;">${new Date(rd.createdAt).toLocaleDateString()}</small> </div> <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;"> <img src="${cargoImgUrl}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div style="flex:1; min-width:0;"> <b style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--primary-dark);">${skh.skhEscape(rd.cargoName || "")}</b> <small style="color:gray; font-size:12.5px; display:block;">Mteja: ${skh.rideContactSpan(docSnap.id, "customerName", rd.customerName, "Mteja")} (Simu: ${skh.rideContactSpan(docSnap.id, "customerPhone", rd.customerPhone, "—")})</small> </div> </div> <div style="background:white; padding:6px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px;"> <span> Njia: ${rd.fromLocation}  ${rd.toLocation}</span>
                             ${rd.transitToken && status === 'in_transit' ? `<span style="display:block; color:orange; font-weight:bold; margin-top:4px;"> Transit Token: ${rd.transitToken}</span>` : ''}
                         </div> <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;"> <button onclick="window.shareMyLocation('${docSnap.id}')" style="flex:1; min-width:120px; padding:9px; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">SHIRIKISHA LOCATION LIVE</button> <button onclick="window.stopSharingMyLocation()" style="flex:1; min-width:120px; padding:9px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">ACHA KUSHIRIKISHA</button> <button onclick="window.openChatWithUser('${skh.skhJsEsc(rd.customerId || '')}', '${skh.skhJsEsc(rd.customerName || 'Mteja')}')" style="flex:1; min-width:120px; padding:9px; background:#25D366; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px;">CHAT NA MTEJA</button> </div> </div>`;
             }
@@ -679,6 +702,7 @@ window.openMyDeliveries = async function() {
                 <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:15px; border-radius:14px; margin-bottom:12px;"> <div style="display:flex; justify-content:space-between; margin-bottom:8px;"> <b> ${skh.skhEscape(d.itemTitle)}</b> <span style="font-size:12.5px; font-weight:bold; background:#e0f2fe; color:#03509d; padding:2px 8px; border-radius:10px;">${d.status.toUpperCase()}</span> </div> <small style="display:block; color:#64748b;">Mteja: ${skh.skhEscape(d.buyerName || 'Mteja')}</small> <small style="display:block; color:#64748b;">Malipo: TSh ${d.amount.toLocaleString()}</small> </div> `;
         });
         list.innerHTML = html;
+        if (skh.fillRideContacts) skh.fillRideContacts(list); // [R1]
     } catch(e) {
         list.innerHTML = `<p style="color:red; text-align:center;">Hitilafu: ${skh.skhEscape(e.message)}</p>`;
     }
@@ -707,6 +731,7 @@ window.openMyTrips = async function() {
                 <div style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:14px; margin-bottom:12px;"> <div style="display:flex; justify-content:space-between; margin-bottom:8px;"> <b> Mzigo: ${d.cargoName}</b> <span style="font-size:12.5px; font-weight:bold; background:orange; color:white; padding:2px 8px; border-radius:10px;">${d.status.toUpperCase()}</span> </div> <p style="font-size:12px; color:#475569; margin:4px 0;"> ${d.fromLocation}  ${d.toLocation}</p> <small style="display:block; color:#64748b;">Mteja: ${skh.skhEscape(d.customerName)}</small> </div> `;
         });
         list.innerHTML = html;
+        if (skh.fillRideContacts) skh.fillRideContacts(list); // [R1]
     } catch(e) {
         list.innerHTML = `<p style="color:red; text-align:center;">Hitilafu: ${skh.skhEscape(e.message)}</p>`;
     }
@@ -737,6 +762,7 @@ window.openSavedItems = async function() {
                 <div class="list-item" style="cursor:pointer;" onclick="openProduct('${docSnap.id}', 'products')"> <img src="${skh.skhEscape(d.image)}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;"> <div class="list-info"> <b>${skh.skhEscape(d.title)}</b> <span>TSh ${(d.price || 0).toLocaleString()}</span> </div> </div> `;
         });
         list.innerHTML = html;
+        if (skh.fillRideContacts) skh.fillRideContacts(list); // [R1]
     } catch(e) {
         list.innerHTML = `<p style="color:red; text-align:center;">Hitilafu: ${skh.skhEscape(e.message)}</p>`;
     }

@@ -45,7 +45,10 @@ ok('deleteAd archive carries skhAdminStamp()', /archivedAt: new Date\(\)\.toISOS
 
 console.log('[Discover files not loaded]');
 const shell = rd('index.html') + rd('html/21-scripts.html');
-for (const n of ['42-discovery-feed', '68-chat-discover', '75-discover-engine', '76-discover-foundation', '88-discover-complete', '91-discover-fixes', '21-discovery-maoni', '30-discover-engine'])
+// [2026-11-06] The owner deliberately re-loads the two Discover/Maoni stylesheets
+// (index.html, commit 61a3d88/235d0f6: "sheet ya MAONI ... haikuwa imepakiwa").
+// The retired Discover *scripts* must still not be loaded.
+for (const n of ['42-discovery-feed', '68-chat-discover', '75-discover-engine', '76-discover-foundation', '88-discover-complete', '91-discover-fixes'])
   ok('not referenced by the app shell: ' + n, !shell.includes(n));
 console.log(`\nPHASE 9 CONTRACTS: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

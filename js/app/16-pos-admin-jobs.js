@@ -1669,7 +1669,8 @@ window.submitDirectHire = async function() {
     try {
         // [CUSTODY PHASE B 2026-09] Token C (DL) inatolewa na SERVER — hakuna
         // plaintext transferCode inayoandikwa kwenye ride doc.
-        const rideDocRef = await skh.addDoc(skh.collection(skh.db, "ride_requests"), {
+        // [REMEDIATION R1] contact fields go to the private subdocument.
+        const rideDocRef = await skh.createRideRequest({
             customerId: skh.currentUser.uid,
             customerName: skh.currentUser.displayName,
             driverId: driverId,
@@ -1916,7 +1917,16 @@ window.directRequestTransporter = async function(rideId) {
                     driverVehicleReg: (skh.currentUserData && skh.currentUserData.vehicleReg) || "N/A"
                 });
                 if (acc && acc.data && acc.data.ok) serverDone = true;
-            } catch (e) { console.warn("[custody] deliveryAccept imeshindwa:", e && e.message); }
+            } catch (e) {
+                console.warn("[custody] deliveryAccept imeshindwa:", e && e.message);
+                // [REMEDIATION R2] a real server decision (not approved / suspended /
+                // already taken) is final: show it, never fall back to a client write.
+                var code = String((e && e.code) || '').replace(/^functions\//, '');
+                if (['permission-denied', 'failed-precondition', 'unauthenticated', 'invalid-argument', 'resource-exhausted'].indexOf(code) !== -1) {
+                    skhToast((e && e.message) || 'Huwezi kukubali kazi hii.', 'error', 5000);
+                    return;
+                }
+            }
         }
 
         if (!serverDone) {

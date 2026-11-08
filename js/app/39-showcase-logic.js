@@ -19,6 +19,7 @@
      moja tu (deduupe).
    - "Maduka mengine" lazima iwe na wauzaji TOFAUTI.
    ================================================================ */
+import { offerEquivalence } from './39-offer-equivalence.js';
 'use strict';
 
 export const PS_PRODUCT = 'products';
@@ -48,6 +49,36 @@ export function psMoney(v) {
     const n = psNum(v);
     if (n === null || n <= 0) return 'Maelewano';
     return 'TSh ' + Math.round(n).toLocaleString('en-US');
+}
+
+/* [2026-11-06] Bei ya huduma kulingana na mfumo wa bei (pricingModel) ulioteuliwa
+ * na mtoa huduma — sawa na skh.cardPriceHtml (00-bootstrap) ili kadi na ukurasa
+ * wa huduma visitofautiane. Huduma si bidhaa: "kwa saa/siku/kazi" au "kadirio". */
+export const PS_SERVICE_PRICE_LABELS = {
+    starting: 'Kuanzia', hourly: 'Kwa saa', per_job: 'Kwa kazi',
+    per_day: 'Kwa siku', per_unit: 'Kwa kipimo', negotiable: 'Inajadiliwa'
+};
+export function psServicePriceLabel(p) {
+    p = p || {};
+    const model = String(p.pricingModel || p.priceType || '').toLowerCase();
+    if (model === 'quotation_required') return 'Kadirio linahitajika';
+    const lo = psNum(p.minPrice), hi = psNum(p.maxPrice);
+    if (model === 'range' && lo > 0 && hi >= lo) {
+        return 'TSh ' + Math.round(lo).toLocaleString('en-US') + '–' + Math.round(hi).toLocaleString('en-US');
+    }
+    const n = psNum(p.price);
+    if (n === null || n <= 0) return 'Maelewano';
+    const amount = 'TSh ' + Math.round(n).toLocaleString('en-US');
+    if (model === 'fixed') return amount;
+    // Data ya zamani bila pricingModel ilionyeshwa "Kuanzia" — tunahifadhi tabia hiyo.
+    const label = PS_SERVICE_PRICE_LABELS[model] || (model ? '' : 'Kuanzia');
+    return label ? label + ' ' + amount : amount;
+}
+
+/* Bei inahitajika kwenye fomu ya huduma isipokuwa kwa "kadirio" au "inajadiliwa". */
+export function psServicePriceRequired(model) {
+    const m = String(model || '').toLowerCase();
+    return m !== 'quotation_required' && m !== 'negotiable';
 }
 
 export function psPresent(v) {
@@ -490,6 +521,27 @@ export function psBuildRails(items, cur, opts) {
     const curCat = (cur.category || '').trim().toLowerCase();
     const curTokens = psTokens(psTitle(cur, col));
 
+    /* [REMEDIATION 2026-11 R3] "Linganisha wauzaji": the SAME product from other
+       sellers only. offerEquivalence (39-offer-equivalence.js) requires the same
+       kind, the same core name and identical specifications (brand, model, size,
+       capacity, weight/volume, pack, condition, variants); a specification stated
+       by only one listing is never assumed to match. Close-but-not-equal listings
+       go to relatedOffers, shown separately. */
+    const offers = [];
+    const relatedOffers = [];
+    if (col === PS_PRODUCT && curTokens.length) {
+        pool.forEach(function (it) {
+            const seller = psSellerId(it);
+            if (!curSeller || !seller || seller === curSeller) return;
+            const eq = offerEquivalence(cur, it);
+            if (eq.equivalent) { if (offers.length < 12) { used[it.id] = 1; offers.push(Object.assign({}, it, { __match: 'same' })); } }
+            else if (eq.related && eq.reasons.indexOf('different_kind') === -1 && eq.reasons.indexOf('different_name') === -1) {
+                if (relatedOffers.length < 12) { used[it.id] = 1; relatedOffers.push(Object.assign({}, it, { __match: 'related', __reasons: eq.reasons })); }
+            }
+        });
+        offers.sort(function (x, y) { return (Number(x.price) || Infinity) - (Number(y.price) || Infinity); });
+    }
+
     pool.forEach(function (it) {
         const itSub = (it.subCategory || '').trim();
         const itCat = (it.category || '').trim().toLowerCase();
@@ -533,6 +585,8 @@ export function psBuildRails(items, cur, opts) {
     }
 
     return {
+        offers: offers,
+        relatedOffers: relatedOffers,
         similar: similar,
         moreCategory: more,
         otherSellers: other,

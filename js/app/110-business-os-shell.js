@@ -608,8 +608,13 @@ function initShell() {
     if (typeof window.switchDashTab === 'function' && !window.__bosSwitchWrapped) {
         const previous = window.switchDashTab;
         window.switchDashTab = function (tabName) {
+            const from = window.activeDashboardTab;
             const out = previous.apply(this, arguments);
             try { syncActive(tabName); } catch (e) { }
+            // [2026-11-06] Kitufe cha nyuma (simu/kivinjari) kirudi tab iliyotangulia
+            // ndani ya Business OS, badala ya kutoka kwenye app. Tunatumia rundo
+            // lililopo la 56-nav-back (skhNavPush) — hakuna mfumo mpya wa historia.
+            try { pushTabHistory(from, tabName); } catch (e) { }
             return out;
         };
         window.__bosSwitchWrapped = true;
@@ -622,6 +627,22 @@ function initShell() {
         });
         window.__bosEscBound = true;
     }
+}
+
+/* ---------- historia ya tabs (kitufe cha nyuma) ---------- */
+let __bosRestoringTab = false;
+let __bosTabSeq = 0;
+function pushTabHistory(from, to) {
+    if (__bosRestoringTab || !from || from === to) return;
+    if (!document.getElementById('bosSidebar') || typeof window.skhNavPush !== 'function') return;
+    window.skhNavPush({
+        type: 'bostab', id: 'bostab:' + (++__bosTabSeq), raise: true,
+        restore: function () {
+            if (!document.getElementById('bosSidebar') || typeof window.switchDashTab !== 'function') return;
+            __bosRestoringTab = true;
+            try { window.switchDashTab(from); } finally { __bosRestoringTab = false; }
+        }
+    });
 }
 
 /* ---------- public API ---------- */

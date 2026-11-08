@@ -32,7 +32,7 @@
         { name: 'Ufugaji (Livestock)',            photo: 'mifugo',      label: 'Mifugo' },
         { name: 'Kilimo (Agriculture)',           photo: 'kilimo',      label: 'Kilimo' },
         { name: 'Mavazi na Fashoni (Fashion)',    photo: 'mavazi',      label: 'Mavazi' },
-        { name: 'Ujenzi na Hardware (Hardware)',  photo: 'huduma',      label: 'Huduma' }
+        { name: 'Ujenzi na Hardware (Hardware)',  photo: 'ujenzi',      label: 'Ujenzi' } // [R6] was "huduma"/"Huduma" (duplicate image, wrong label)
     ];
 
     var PHOTOS = {};
@@ -63,8 +63,16 @@
         return m ? m[1].trim() : name;
     }
 
+    /* [R6] one image map: 83-category-photos.js (canonical id). The local table is
+       only a fallback when that module has not loaded. Returns a file slug. */
     function photoFor(name) {
-        return PHOTOS[name] || null;
+        try {
+            if (typeof window.skhCategoryImage === 'function') {
+                var u = window.skhCategoryImage({ category: name });
+                return u || null;   /* [R13-C] category photo path (or null -> UI icon tile) */
+            }
+        } catch (e) {}
+        return PHOTOS[name] ? 'assets/img/categories/' + PHOTOS[name] + '.webp' : null;
     }
 
     function iconFor(name) {
@@ -97,7 +105,7 @@
             var n = picked[i];
             var ph = photoFor(n);
             var media = ph
-                ? '<span class="gds-tile-img"><img src="assets/img/categories/' + ph + '.webp" alt="' + esc(labelFor(n)) + '" loading="lazy" decoding="async"></span>'
+                ? '<span class="gds-tile-img"><img src="' + esc(ph) + '" alt="' + esc(labelFor(n)) + '" loading="lazy" decoding="async"></span>'
                 : '<span class="gds-tile-img gds-tile-img--icon">' + iconFor(n) + '</span>';
             html += '<button type="button" class="gds-tile" title="' + esc(n) + '"'
                  + ' onclick="selectAdvancedCategory(\'' + esc(n).replace(/'/g, "\\'") + '\')">'

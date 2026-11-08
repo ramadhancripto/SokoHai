@@ -584,6 +584,12 @@ window.searchPosProductsLive = function() {
     }
 };
 
+/* [R13-E] the cashier product grid (js/app/124-pos-grid.js, refs 17/18) hands its tiles to the SAME
+   cache + add-to-cart path as the search results (no second POS). */
+window.skhPosRemember = function (d) {
+    if (!d || !d.id) return;
+    __posResultsCache[d.id] = Object.assign({}, d, { id: d.id, title: d.title || 'Bidhaa', price: Number(d.price || 0), stock: Number(d.stock || 0), wholesalePrice: Number(d.wholesalePrice || 0) });
+};
 window.addPosCartItemById = async function(id) {
     const it = __posResultsCache && __posResultsCache[id];
     if (!it) return;

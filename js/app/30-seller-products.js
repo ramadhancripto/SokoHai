@@ -385,6 +385,8 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
     }
 
     async function callPosReport(win) {
+        // [2026-11-06] legacy sellers get their canonical Business/Store once (server).
+        if (typeof window.skhEnsureBusinessScope === 'function') { try { await window.skhEnsureBusinessScope(); } catch (e) { } }
         var data = skh.currentUserData || {};
         var businessId = data.businessId, storeId = data.storeId;
         if (!businessId || !storeId) return { ok: false, reason: 'Hakuna business/store kwenye akaunti hii' };

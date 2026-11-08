@@ -1,0 +1,108 @@
+/* ==========================================================================
+   [REMEDIATION 2026-11 R10] DESKTOP LAYOUT (>= 1100px) — CSS pekee
+   --------------------------------------------------------------------------
+   Tatizo (ukaguzi wa visual, High): kwenye desktop nav ilikuwa "dock" inayoelea
+   juu ya maudhui ya chini, maudhui yalitanuka 1440px bila mpaka, na kwenye kadi
+   jina la bidhaa lilibanwa hadi ~80px na bei iliyokaa kulia.
+   Suluhisho:
+     1. Nav ileile (vitufe vilevile, onclick zilezile) inakuwa "rail" ya kushoto.
+     2. Maudhui yanakaa ndani ya upana unaosomeka (max 1360px) katikati.
+     3. Kadi: jina upana mzima, bei chini yake (desktop tu; simu haijaguswa).
+   Hakuna DOM, handler wala data iliyobadilishwa. Simu/tablet (< 1100px) haziguswi.
+   ========================================================================== */
+@media (min-width: 1100px) {
+    :root { --skh-rail-w: 92px; --skh-desk-max: 1360px; }
+
+    /* ---------- 1. NAV RAIL (kushoto) ---------- */
+    .bottom-area-wrapper,
+    .bottom-area-wrapper.nav-slide-hidden {
+        top: 0 !important; bottom: 0 !important; left: 0 !important; right: auto !important;
+        width: var(--skh-rail-w) !important;
+        transform: none !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        background: #FFFFFF;
+        border-right: 1px solid var(--sokohai-border, #E3ECE9);
+        pointer-events: auto !important;
+        z-index: 4000;
+    }
+    .bottom-area-wrapper .sell-action-fab { display: none !important; } /* "+" ipo kwenye header (#skhPostBtn) */
+    .bottom-area-wrapper .bottom-nav-main,
+    .bottom-area-wrapper.nav-slide-hidden .bottom-nav-main {
+        width: 100% !important; max-width: none !important;
+        border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+        background: transparent !important;
+        pointer-events: auto !important;
+    }
+    .bottom-nav-main .main-nav-icons {
+        flex-direction: column !important;
+        height: auto !important; min-height: 0 !important;
+        padding: 0 8px !important; gap: 10px !important;
+        justify-content: center !important;
+    }
+    .bottom-nav-main .main-nav-icons .nav-tab {
+        flex: 0 0 auto !important;
+        width: 100% !important; height: 66px !important;
+        border-radius: 14px;
+    }
+    .bottom-nav-main .main-nav-icons .nav-tab:hover { background: #F2FAF7; }
+
+    /* maudhui yasogee kulia ya rail */
+    .app-layout-wrapper { padding-left: var(--skh-rail-w); }
+
+    /* ---------- 2. UPANA UNAOSOMEKA ---------- */
+    .sticky-top-section > .top-nav-row,
+    .sticky-top-section > .search-nav-row,
+    .sticky-top-section > #locationFilterBar,
+    .sticky-top-section > .market-modes-nav,
+    .scroll-content > #buyerView,
+    .scroll-content > .buyer-view,
+    .scroll-content > section,
+    .scroll-content > .page-view {
+        width: 100% !important;
+        max-width: var(--skh-desk-max) !important;
+        margin-left: auto !important; margin-right: auto !important;
+        box-sizing: border-box;
+    }
+    /* upau wa eneo: hali ya eneo isitanuke upana wote */
+    #locationFilterBar { justify-content: space-between; }
+    #locationFilterBar #userLocationStatus { flex: 0 1 auto !important; width: auto !important; max-width: 460px !important; }
+
+    /* ---------- Product details: safu zote zilingane (upana mmoja katikati) ---------- */
+    html body #productModal .pm-scroll > #pmEngageRow,
+    html body #productModal .pm-scroll > #pmInquireCard {
+        width: 100% !important; max-width: 888px !important;
+        margin-left: auto !important; margin-right: auto !important; box-sizing: border-box;
+    }
+
+    /* ---------- 3. KADI ZA BIDHAA (gridi + mpangilio wa mwili) ---------- */
+    #mainFeed.feed-grid,
+    .feed-grid {
+        grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)) !important;
+        gap: 16px !important;
+    }
+    .feed-card-box.skh-card--product .skh-body {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto !important;
+        row-gap: 4px !important;
+    }
+    .feed-card-box.skh-card--product .skh-body > .skh-title {
+        grid-column: 1 !important; grid-row: 1 !important;
+        font-size: 14px !important; min-height: 2.68em !important;
+    }
+    .feed-card-box.skh-card--product .skh-body > .skh-price {
+        grid-column: 1 !important; grid-row: 2 !important;
+        justify-self: start !important; text-align: left !important;
+        font-size: 16px !important;
+    }
+    .feed-card-box.skh-card--product .skh-unit { text-align: left !important; display: inline !important; margin-left: 6px !important; }
+    .feed-card-box.skh-card--product .skh-body > .skh-meta-row { grid-row: 3 !important; }
+
+    /* safu za "Karibu nawe" n.k.: kadi pana kidogo */
+    .item-slider .skh-market-slide-card { width: 212px !important; flex: 0 0 212px !important; }
+
+    /* Gundua Soko: tiles zijaze mstari badala ya kuacha nafasi tupu kulia */
+    #categoryPhotoStrip.cps-strip { justify-content: flex-start; }
+    #categoryPhotoStrip .cps-card { flex: 1 1 152px !important; max-width: 200px; }
+
+}

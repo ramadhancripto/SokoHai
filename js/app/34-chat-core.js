@@ -304,10 +304,11 @@ import { skh } from './00-bootstrap.js';
                     name = pickPersonName(d); photo = pickPersonPhoto(d);
                 }
             } catch (e2) {}
-            // 3) hati ya mtumiaji
-            if (!name) {
+            // 3) hati ya mtumiaji — [2026-11-06 privacy] ni hati YAKO tu; ya mtu
+            //    mwingine ni ya faragha (users/{id}) na hutumii kadi ya umma badala yake.
+            if (!name && uid === myUid()) {
                 try {
-                    var us = await skh.getDoc(skh.doc(skh.db, 'users', uid));
+                    var us = await skh.getDoc(skh.doc(skh.db, 'users', uid)); // own profile only
                     if (us && us.exists && us.exists()) {
                         var ud = us.data() || {};
                         name = pickPersonName(ud); photo = photo || pickPersonPhoto(ud);

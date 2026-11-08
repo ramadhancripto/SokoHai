@@ -303,7 +303,7 @@
         var chipsHost = document.getElementById('inboxChips');
         var clearBtn = document.getElementById('inboxSearchClear');
         if (chipsHost) {
-            var tabs = [['all', 'Zote'], ['people', 'Watu'], ['groups', 'Groups'], ['order_groups', 'Order Groups'], ['unread', 'Zisizosomwa'], ['buyers', 'Wanunuzi'], ['sellers', 'Wauzaji'], ['transport', 'Wasafirishaji'], ['agents', 'Mawakala'], ['archive', 'Kumbukumbu']];
+            var tabs = [['all', 'Zote'], ['people', 'Watu'], ['groups', 'Makundi'], ['order_groups', 'Oda za Makundi'], ['unread', 'Zisizosomwa'], ['buyers', 'Wanunuzi'], ['sellers', 'Wauzaji'], ['transport', 'Wasafirishaji'], ['agents', 'Mawakala'], ['archive', 'Kumbukumbu']];
             chipsHost.innerHTML = tabs.map(function (t) {
                 return '<button type="button" class="ch-tab' + (tab93 === t[0] ? ' active' : '') + '" onclick="window.__skhInboxTab93(\'' + t[0] + '\')">' + t[1] + '</button>';
             }).join('');
@@ -341,7 +341,7 @@
             var groups = recent.filter(function (r) { return r.type === 'group' && !isOrderGroup93(r); });
             var orders = recent.filter(isOrderGroup93);
             if (people.length) html += '<div class="ch-inbox-sec">Watu</div>' + people.map(rowHtml93).join('');
-            if (groups.length) html += '<div class="ch-inbox-sec is-group">Groups</div>' + groups.map(rowHtml93).join('');
+            if (groups.length) html += '<div class="ch-inbox-sec is-group">Makundi</div>' + groups.map(rowHtml93).join('');
             if (orders.length) html += '<div class="ch-inbox-sec is-order">Order Groups</div>' + orders.map(rowHtml93).join('');
         } else if (recent.length) {
             if (pinned.length) html += '<div class="ch-inbox-sec">Hivi Karibuni</div>';

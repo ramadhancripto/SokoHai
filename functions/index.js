@@ -272,29 +272,43 @@ async function ppInitiatorUid(tx) {
  *   6. Smart Cart `items[]` -> sum of the above per item.
  * Anything else is held for admin review (status 'price_review'), never paid.
  * ========================================================== */
-const { modeUnitPrice, modeEligibility, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
+const { modeUnitPrice, modeEligibility, modeQuantityLimit, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
 // [PHASE 3 2026-10-31] Online reservation / stock commit (OFF unless system_config/inventory.mode says otherwise).
 const inventoryReservation = require('./inventory-reservation');
 const stockCore = require('./shared/inventory-reservation-core');
+// [REMEDIATION 2026-11 R5] quantity is validated, never silently truncated:
+// whole-unit products need a whole number; decimal (kg/L/m) products opt in with
+// product.quantityPrecision and are checked by the shared quantity core.
+const quantityCore = require('./shared/quantity-core');
+function orderQuantity(item, product) {
+    const raw = (item.quantity != null && item.quantity !== '') ? item.quantity : ((item.qty != null && item.qty !== '') ? item.qty : 1);
+    const prec = product ? quantityCore.precisionOf(product) : 0;
+    if (!quantityCore.isValidQuantity(raw, prec)) return null;
+    return Number(raw);
+}
+exports._orderQuantity = orderQuantity;
 async function expectedItemAmount(item, buyerUid, nowMs) {
-    const qty = Math.max(1, parseInt(item.quantity || item.qty || 1, 10) || 1);
+    let qty = orderQuantity(item, null);
     const pid = String(item.productId || item.itemId || item.id || '');
     if (pid && pid.indexOf('/') === -1) {
         const ps = await db.doc('products/' + pid).get();
         if (ps.exists) {
             const p = ps.data() || {};
+            qty = orderQuantity(item, p);
+            if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             if (item.sellerId && String(p.userId || '') !== String(item.sellerId)) return { ok: false, reason: 'seller_mismatch' };
-            const elig = modeEligibility(p, buyerUid, nowMs);
+            const elig = modeEligibility(p, buyerUid, nowMs) || modeQuantityLimit(p, qty, buyerUid, nowMs);
             if (elig) return { ok: false, reason: elig };
             const vp = variantPrice(p, item.selectedVariant || item.variant || item.variantId);
             const unit = modeUnitPrice(vp ? Object.assign({}, p, { price: vp }) : p, qty, buyerUid, nowMs);
-            return { ok: unit > 0, amount: unit * qty, source: 'products', reason: unit > 0 ? '' : 'no_price' };
+            return { ok: unit > 0, amount: quantityCore.lineTotal(unit, qty), source: 'products', reason: unit > 0 ? '' : 'no_price' };
         }
         const ss = await db.doc('services/' + pid).get();
         if (ss.exists) {
             const sv = ss.data() || {};
             if (['negotiable', 'quotation_required', 'range', 'starting'].indexOf(String(sv.pricingModel || 'fixed')) !== -1) return { ok: false, reason: 'service_requires_negotiation' };
             const unit = Number(sv.price || 0);
+            if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             return { ok: unit > 0, amount: unit * qty, source: 'services', reason: unit > 0 ? '' : 'no_price' };
         }
     }
@@ -2169,6 +2183,12 @@ async function custodyGetRide(rideId) {
     return { ref, data: snap.data() };
 }
 
+// [REMEDIATION 2026-11 R1] Customer contact lives in ride_requests/{id}/private/contact.
+async function custodyContact(rideId) {
+    try { const s = await db.doc('ride_requests/' + rideId + '/private/contact').get(); return s.exists ? (s.data() || {}) : {}; }
+    catch (_) { return {}; }
+}
+
 function custodyExpired(rd) {
     const exp = rd && (rd.pickupTokenExpiresAt || rd.handoverTokenExpiresAt);
     if (!exp) return false;
@@ -2337,6 +2357,30 @@ async function custodyAttemptClear(rideId, role) {
 // waliopo: routing/43-delivery-choice/08-app-state = 'searching';
 // 57-checkout-bridge/16-pos = 'pending_acceptance' yenye driverId aliyechaguliwa).
 const RIDE_OPEN_STATES = ['searching', 'pending_acceptance'];
+
+/* [REMEDIATION 2026-11 R2] Who may take a delivery job.
+ *  - The account must exist and must not be suspended.
+ *  - Open marketplace jobs: only an APPROVED agent (users.isApprovedAgent with
+ *    the admin stamp agentApprovedBy written by adminApproveAgent).
+ *  - Direct bookings (customer already named this driver in driverId /
+ *    preferredDriverId): the named driver may accept without agent approval,
+ *    but still must be an active (not suspended) account.
+ * Pure function so it is unit-tested without Firebase. */
+function transporterAccountProblem(u, opts) {
+    opts = opts || {};
+    if (!u) return 'not_registered';
+    if (u.suspended === true || u.isSuspended === true || u.accountStatus === 'suspended'
+        || u.accountStatus === 'banned' || u.agentStatus === 'suspended') return 'suspended';
+    if (opts.directBooking) return null;
+    if (u.isApprovedAgent !== true || !String(u.agentApprovedBy || '')) return 'not_approved_agent';
+    return null;
+}
+const TRANSPORTER_PROBLEM_MSG = {
+    not_registered: 'Akaunti yako haijasajiliwa kikamilifu. Kamilisha usajili kwanza.',
+    suspended: 'Akaunti yako imesimamishwa; huwezi kukubali kazi za usafiri.',
+    not_approved_agent: 'Ni wakala/msafirishaji aliyeidhinishwa na SokoHai pekee anayeweza kukubali kazi hii.'
+};
+exports._transporterAccountProblem = transporterAccountProblem;
 // Hali baada ya kukubali lakini kabla ya pickup (kukubali tena = idempotent).
 const RIDE_ACCEPTED_PREPICKUP = ['accepted', 'pickup_pending', 'awaiting_pickup'];
 
@@ -2359,6 +2403,12 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         if (!snap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
         rd = snap.data() || {};
         const st = String(rd.status || '');
+        // [R2] caller authorisation is read INSIDE the transaction (users/{uid}).
+        const uSnap = await t.get(db.doc('users/' + auth.uid));
+        const me = uSnap.exists ? (uSnap.data() || {}) : null;
+        const direct = (rd.driverId === auth.uid) || (rd.preferredDriverId === auth.uid);
+        const problem = transporterAccountProblem(me, { directBooking: direct });
+        if (problem) throw new HttpsError('permission-denied', TRANSPORTER_PROBLEM_MSG[problem]);
         if (rd.customerId && rd.customerId === auth.uid) {
             throw new HttpsError('permission-denied', 'Mteja hawezi kukubali safari yake mwenyewe kama dereva.');
         }
@@ -2384,9 +2434,10 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         t.update(ref, {
             status: 'accepted',
             driverId: auth.uid,
-            driverName: String(data.driverName || rd.driverName || auth.uid),
-            driverPhone: String(data.driverPhone || ''),
-            driverVehicleReg: String(data.driverVehicleReg || ''),
+            // [R2] identity comes from the caller's own account, not the request body.
+            driverName: String(me.displayName || me.name || me.fullName || rd.driverName || 'Dereva').slice(0, 80),
+            driverPhone: String(me.phone || me.phoneNumber || '').slice(0, 30),
+            driverVehicleReg: String(me.vehicleReg || me.plateNumber || data.driverVehicleReg || '').slice(0, 20),
             acceptedAt: now,
             agreedFare: Math.max(0, Number(rd.fare || 0) || Number(rd.price || 0) || 0),
             pickupTokenHash: custodyHash(pk),
@@ -2438,6 +2489,10 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
         if (!ofSnap.exists) throw new HttpsError('not-found', 'Ofa haipatikani.');
         const offer = ofSnap.data();
         if (offer.agentId !== auth.uid) throw new HttpsError('permission-denied', 'Si ofa yako.');
+        // [R2] a server-routed offer still requires an active (not suspended) account.
+        const uSnapO = await t.get(db.doc('users/' + auth.uid));
+        const problemO = transporterAccountProblem(uSnapO.exists ? (uSnapO.data() || {}) : null, { directBooking: true });
+        if (problemO) throw new HttpsError('permission-denied', TRANSPORTER_PROBLEM_MSG[problemO]);
         if (offer.status !== 'offered') throw new HttpsError('failed-precondition', 'Ofa hii si hai tena.');
         if (offer.expiresAt && Date.parse(offer.expiresAt) <= Date.now()) {
             throw new HttpsError('failed-precondition', 'Muda wa ofa umeisha; ombi limehamishiwa kwa mwingine.');
@@ -2694,6 +2749,7 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
         throw new HttpsError('invalid-argument', 'token inahitajika.');
     }
     const { ref, data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const now = new Date().toISOString();
 
     if (custodyExpired(rd)) {
@@ -2839,7 +2895,7 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
             custodyLegs: FieldValue.arrayUnion({
                 leg: 1,
                 fromId: rd.customerId || null,
-                from: rd.customerName || 'Muuzaji',
+                from: rd.customerName || rc.customerName || 'Muuzaji',
                 toId: auth.uid,
                 to: rd.driverName || 'Dereva',
                 status: 'completed',
@@ -2962,6 +3018,7 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
     const rideId = String(data.rideId || '');
     if (!rideId) throw new HttpsError('invalid-argument', 'rideId inahitajika.');
     const { ref, data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const now = new Date().toISOString();
 
     const isCustodian = ((rd.currentCustodian || rd.driverId) === auth.uid);
@@ -3031,7 +3088,7 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
         status: 'completed',
         completedAt: now,
         currentCustodian: rd.customerId || null,
-        currentCustodianName: rd.customerName || 'Mnunuzi',
+        currentCustodianName: rd.customerName || rc.customerName || 'Mnunuzi',
         finalPayout: 0,
         payoutStatus: 'pending',
         verifiedArrivalCount: arrivalCount,
@@ -3149,18 +3206,26 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
     const kind = data.kind === 'handover' ? 'handover' : 'pickup';
     let rideId = String(data.rideId || '');
     if (!rideId) {
+        // [REMEDIATION R5] per-caller attempt limit (same 6 / 15 min window as custody).
+        if (await custodyAttemptsExceeded('verify', auth.uid)) {
+            throw new HttpsError('resource-exhausted', 'Majaribio mengi mno. Subiri dakika 15 kisha ujaribu tena.');
+        }
         // [FIX 2026-09] Field MOJA (token) + uchujaji kind kwenye memory —
         // haiitaji composite index (query ya token+kind ilirusha "internal").
         const hit = await db.collection('delivery_tokens').where('token', '==', token).limit(10).get();
         let tk = null;
         hit.forEach(function (d) { if (!tk && d.data().kind === kind) tk = d.data(); });
-        if (!tk) throw new HttpsError('not-found', 'Invalid pickup confirmation. Please verify the token and try again.');
-        if (!(tk.participants || []).includes(auth.uid)) {
-            throw new HttpsError('permission-denied', 'Safari hii haihusiani nawe.');
+        // [REMEDIATION R5] a valid token that is not yours answers exactly like an
+        // invalid one, so the endpoint cannot be used to discover live tokens.
+        if (!tk || !(tk.participants || []).includes(auth.uid)) {
+            await custodyAttemptFail('verify', auth.uid);
+            throw new HttpsError('not-found', 'Token si sahihi au haihusiani na safari yako. Hakiki token na ujaribu tena.');
         }
+        await custodyAttemptClear('verify', auth.uid);
         rideId = tk.rideId;
     }
     const { data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const isParty = (rd.customerId === auth.uid) || (rd.driverId === auth.uid) || (rd.currentCustodian === auth.uid) || (rd.nextTransporterId === auth.uid);
     if (!isParty) throw new HttpsError('permission-denied', 'Safari hii haihusiani nawe.');
     // Rudisha taarifa za kukabidhi BILA token yenyewe.
@@ -3169,7 +3234,7 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
         rideId: rideId,
         kind: kind,
         cargoName: rd.cargoName || '',
-        customerName: rd.customerName || '',
+        customerName: rd.customerName || rc.customerName || '',
         driverName: rd.driverName || '',
         vehicleType: rd.vehicleType || '',
         fromLocation: rd.fromLocation || '',
@@ -3656,6 +3721,17 @@ const commerceModes = require('./commerce-modes');
 exports.auctionPlaceBid = commerceModes.auctionPlaceBid;
 exports.groupBuyJoin = commerceModes.groupBuyJoin;
 exports.commerceModesSweep = commerceModes.commerceModesSweep;
+exports.auctionFinalize = commerceModes.auctionFinalize;
+// [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
+const liveCommerce = require('./live-commerce');
+['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind'].forEach(n => { exports[n] = liveCommerce[n]; });
+// [R13-D] Bei Kushuka buyer queue (refs 1 & 2)
+const priceDropQueue = require('./price-drop-queue');
+['priceDropSubmit','priceDropMyRank','priceDropSettle'].forEach(n => { exports[n] = priceDropQueue[n]; });
+const stories = require('./stories');
+['storyCreate','storyView','storyReport','storyRemove','storyReact'].forEach(n => { exports[n] = stories[n]; });
+const groupSoko = require('./group-soko');
+['groupSokoCreate','groupSokoInvite','groupSokoAccept','groupSokoCapitalRecord','groupSokoCapitalConfirm','groupSokoPropose','groupSokoVote','groupSokoExecute','groupSokoPurchaseStep','groupSokoAttachProduct','groupSokoReport'].forEach(n => { exports[n] = groupSoko[n]; });
 // Test hook (emulator only): run the auction sweep now. Not a deployed function (not an onCall/onSchedule).
 Object.defineProperty(exports, '_commerceSweepForTest', { enumerable: false, value: () => commerceModes._testing.sweepAuctions() });
 const adminAuthority = require('./admin-authority');
@@ -3665,6 +3741,7 @@ exports.adminSetAgentStatus = adminAuthority.adminSetAgentStatus;
 exports.adminSetAccountStatus = adminAuthority.adminSetAccountStatus;
 exports.adminSetRole = adminAuthority.adminSetRole;
 exports.adminSetVerification = adminAuthority.adminSetVerification;
+exports.adminSetTrustBadge = adminAuthority.adminSetTrustBadge; // [R9] four distinct trust badges
 exports.adminModerateListing = adminAuthority.adminModerateListing;
 exports.adminAuditQuery = adminAuthority.adminAuditQuery;
 exports.adminWhoAmI = adminAuthority.adminWhoAmI;

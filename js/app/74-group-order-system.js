@@ -1424,6 +1424,7 @@ import { skh } from './00-bootstrap.js';
     // commerce reference card in chat
     try {
       await skh.addDoc(msgsCol(gid), {
+        senderId: uid(),
         senderUid: uid(),
         senderName: myName(),
         at: nowIso(),

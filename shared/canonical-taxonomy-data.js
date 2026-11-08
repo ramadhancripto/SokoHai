@@ -238,7 +238,7 @@ const CATEGORY_CLASSIFICATIONS = Object.freeze({
 const branchDefinition = (productTypes, attributes, options = {}, filters = [], features = [], variantRule = { mode: 'UNSPECIFIED', candidates: [] }, complianceProfile) => ({ definitionState: 'EXPLICIT_BRANCH_DEFINITION', productTypes, attributes, options, filters, features, variantRule, ...(complianceProfile ? { complianceProfile } : {}) });
 const partialBranchDefinition = () => Object.freeze({ definitionState: 'SPECIFIED_BUT_INCOMPLETE', status: 'PARTIAL', productTypes: [], attributes: [], options: {}, filters: [], features: [], variantRule: { mode: 'UNSPECIFIED', candidates: [] }, allowedUnits: {}, sellingUnit: 'UNSPECIFIED', stockUnit: 'UNSPECIFIED', displayUnit: 'UNSPECIFIED', measurementUnit: 'UNSPECIFIED', complianceProfile: null });
 const partialBranches = names => Object.freeze(Object.fromEntries(names.map(name => [name, partialBranchDefinition()])));
-const PRODUCT_TYPE_DEFINITIONS = Object.freeze({
+const BASE_PRODUCT_TYPE_DEFINITIONS = Object.freeze({
   'CAT-04': Object.freeze({
     "Ng'ombe": branchDefinition(['Ng\'ombe wa nyama','Ng\'ombe wa maziwa','Ng\'ombe wa mchanganyiko','Ng\'ombe wa kazi','Ng\'ombe wa kuzalisha','Ng\'ombe wa kunenepesha','Ndama','Ng\'ombe wazima','Ng\'ombe wa asili','Ng\'ombe improved/exotic','Breeding bulls','Heifers'], ['Breed','Sex','Age','Life Stage','Purpose','Weight','Body Condition','Health Status','Vaccination Status','Pregnancy Status','Lactation Status','Milk Yield','Origin','Identification','Ear Tag','Registration','Breeding Status'], { Sex: ['Male','Female'], 'Life Stage': ['Calf','Young','Heifer','Adult','Bull','Cow'], Purpose: ['Beef','Dairy','Dual purpose','Breeding','Draft/work'] }, ['Species','Breed','Purpose','Age','Sex','Weight','Location','Price','Health','Vaccination'], ['Breeding stock','Meat production','Dairy','Draft/work']),
     'Mbuzi': branchDefinition(['Mbuzi wa nyama','Mbuzi wa maziwa','Mbuzi wa kuzalisha','Mbuzi wa asili','Improved goats','Breeding buck','Doe','Kids','Fattening goats'], ['Breed','Sex','Age','Weight','Purpose','Health','Vaccination','Pregnancy','Lactation','Origin','Identification'], {}, ['Breed','Sex','Age','Purpose','Weight','Location','Price'], ['Breeding stock','Meat production','Dairy']),
@@ -341,6 +341,35 @@ const PRODUCT_TYPE_DEFINITIONS = Object.freeze({
   'CAT-42': { default: { productTypes: ['Land','Plot','House','Apartment','Room','Villa','Office','Shop','Warehouse','Farm','Ranch','Hotel'], attributes: ['Property Type','Land Type','Land Use','Transaction Type','Location','Area','Dimensions','Bedrooms','Bathrooms','Utilities','Condition','Availability','Price','Rental Terms','Lease Terms','Documentation','Verification','Development Stage'], options: { 'Transaction Type': ['For Sale','For Rent','For Lease','Joint Venture','Auction'], 'Verification': ['Not Verified','Documents Submitted','Under Review','Verified','Needs Review'] }, filters: ['Property Type','Transaction','Location','Price','Size','Land Use','Bedrooms','Bathrooms','Furnished','Utilities','Availability','Verification'], features: ['Electricity','Water','Internet','Parking','Security','Fence','Garden','Solar','Borehole','Lift'], variantRule: { mode: 'NONE', propertyIsIndividualAsset: true }, complianceProfile: 'PROPERTY_DOCUMENT_CONDITIONAL' } },
   'CAT-43': { default: { productTypes: ['Gold','Silver','Tanzanite','Diamond','Ruby','Graphite','Gypsum','Granite','Sand','Ore','Mineral Concentrate','Refined Metal'], attributes: ['Mineral Type','Mineral Group','Variety','Processing State','Grade','Purity','Assay','Weight','Dimensions','Color','Origin','Mine/Source','Provenance','Certification','Licence/Trade Context','Compliance'], options: { 'Processing State': ['Rough','Raw','Cut','Polished','Faceted','Cabochon','Concentrated','Refined'], 'Origin Type': ['Natural','Synthetic','Lab-grown','Simulant','Unknown'] }, filters: ['Mineral Type','Mineral Group','Processing State','Grade','Purity','Weight','Origin','Region','Certification','Trade Status','Seller Type','Price'], features: ['Certified','Natural','Cut','Polished','Exportable'], variantRule: { mode: 'OPTIONAL', candidates: ['Weight','Form','Grade'], lotOrIndividualIdentity: true }, complianceProfile: 'MINERAL_TRADE_CONDITIONAL' } }
 });
+/* [2026-11-06] Owner taxonomy source (Categories 01–44, products) — additive merge.
+ * shared/canonical-taxonomy-owner-branches.js is generated from the owner's text by
+ * tools/build_owner_taxonomy_branches.mjs and only contains sections whose name equals
+ * an existing sub-category. Existing labels (and therefore existing ids) are kept first;
+ * owner labels not yet present are appended; empty PARTIAL branches become filled. */
+const ownerNorm = v => String(v || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const OWNER_BRANCHES = (typeof process !== 'undefined' && process.env && process.env.SKH_TAXONOMY_SKIP_OWNER_BRANCHES) ? {} : require('./canonical-taxonomy-owner-branches.js');
+const mergeLabels = (base, extra) => { const seen = new Set((base || []).map(ownerNorm)); return [...(base || []), ...(extra || []).filter(x => { const k = ownerNorm(x); if (!k || seen.has(k)) return false; seen.add(k); return true; })]; };
+const PRODUCT_TYPE_DEFINITIONS = Object.freeze(Object.fromEntries([...new Set([...Object.keys(BASE_PRODUCT_TYPE_DEFINITIONS), ...Object.keys(OWNER_BRANCHES)])].map(cid => {
+  const base = BASE_PRODUCT_TYPE_DEFINITIONS[cid] || {};
+  const owner = OWNER_BRANCHES[cid] || {};
+  const branches = { ...base };
+  for (const [name, o] of Object.entries(owner)) {
+    const b = base[name];
+    if (b) {
+      const productTypes = mergeLabels(b.productTypes, o.productTypes);
+      const attributes = mergeLabels(b.attributes, o.attributes);
+      const filled = !(b.productTypes || []).length && productTypes.length;
+      branches[name] = Object.freeze({ ...b, productTypes, attributes,
+        ...(filled ? { status: 'ACTIVE', definitionState: 'OWNER_SOURCE_BRANCH' } : {}),
+        ownerSource: '2026-11-06' });
+    } else {
+      branches[name] = Object.freeze({ definitionState: 'OWNER_SOURCE_BRANCH', status: 'ACTIVE', ownerSource: '2026-11-06',
+        productTypes: o.productTypes, attributes: o.attributes, options: {}, filters: [], features: [],
+        variantRule: { mode: 'UNSPECIFIED', candidates: [] } });
+    }
+  }
+  return [cid, Object.freeze(branches)];
+})));
 /* Deterministic additive registries. These are projections of the canonical
  * definitions above, not a second taxonomy or search/variant engine. */
 const canonicalSlug = value => String(value || '').normalize('NFKD').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() || 'UNNAMED';

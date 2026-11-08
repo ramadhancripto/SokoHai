@@ -1180,6 +1180,7 @@ window.loadPosReports = async function() {
     const summary = document.getElementById('posReportSummary');
     const detail = document.getElementById('posReportDetail');
     if (!summary || !detail) return;
+    if (typeof window.skhEnsureBusinessScope === 'function') { try { await window.skhEnsureBusinessScope(); } catch (e) { } }
     const now = new Date();
     const start = startInput && startInput.value ? new Date(startInput.value).toISOString() : new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const end = endInput && endInput.value ? new Date(endInput.value).toISOString() : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
