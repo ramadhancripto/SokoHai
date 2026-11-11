@@ -76,6 +76,12 @@ service cloud.firestore {
     function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
     function unchanged(keys) { return !changed().hasAny(keys); }
     // List queries must carry a small limit so collections cannot be dumped.
+    // [REMEDIATION 2026-11 R7] trust badges on listings are admin/server-set only
+    // (the card shows "Imethibitishwa" when any of these is set).
+    function listingTrustKeys() {
+      return ['verified','ownerVerified','verificationStatus','sellerVerified','isVerified','verifiedAt','verifiedBy','trust','inspected','inspectionStatus',
+              'groupSokoId','groupSokoName','groupOwnership','consignmentSupplier'];   // [R13-B] Group Soko tags: server only
+    }
     function smallQuery(n) {
       return request.query.limit != null && request.query.limit <= n;
     }
@@ -130,6 +136,17 @@ service cloud.firestore {
     // live stock/reserved and starts new variants at 0.
     // Auction / price-drop / group state lives in modeData and is written by the
     // server (auctionPlaceBid etc.); sellers configure it only before any bid.
+    // [R13-B] auction result fields are written by the server only (closeAuction / second chance)
+    function noServerAuctionResult(d) {
+      return d.get('modeData', {}).get('winnerId', null) == null
+        && d.get('modeData', {}).get('winnerBid', null) == null
+        && d.get('modeData', {}).get('paymentDeadline', null) == null
+        && d.get('modeData', {}).get('pastWinners', []).size() == 0
+        // [R13-D] Bei Kushuka queue results are server-only (price-drop-queue.js)
+        && d.get('modeData', {}).get('opportunities', null) == null
+        && d.get('modeData', {}).get('queueClosed', null) == null
+        && d.get('modeData', {}).get('queueEntries', 0) == 0;
+    }
     match /products/{id} {
       allow read: if true;
       allow create: if signedIn() && validProduct(request.resource.data)
@@ -139,10 +156,17 @@ service cloud.firestore {
         && !('variantCombinations' in request.resource.data)
         && canonicalProductScopeValid(request.resource.data)
         && !request.resource.data.keys().hasAny(['moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
+        && (isAdmin() || !request.resource.data.keys().hasAny(listingTrustKeys()))
+        && !('trust' in request.resource.data)
         // [REPAIR 2026-10 Phase 5] no pre-filled auction winner / bids / group members
         && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
         && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
         && request.resource.data.get('modeData', {}).get('participants', []).size() == 0
+        // [AUCTION-LIVE] server-owned runtime: pause flag + distinct bidders start empty
+        && request.resource.data.get('modeData', {}).get('livePaused', false) == false
+        && request.resource.data.get('modeData', {}).get('bidderCount', 0) == 0
+        && request.resource.data.get('modeData', {}).get('bidders', []).size() == 0
+        && noServerAuctionResult(request.resource.data)
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
@@ -158,16 +182,26 @@ service cloud.firestore {
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reservedStock','variantCombinations'])
         // [POS 2026-11-01] decimal precision is fixed once stock exists in that precision (server/admin only after create).
         && (isAdmin() || unchanged(['quantityPrecision']))
+        && (isAdmin() || unchanged(listingTrustKeys()))
+        && unchanged(['trust'])
         && (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['comments','stock','businessId','storeId','ownerUid','shopOwnerUid','shopOwnerId','sellerId','userId','openingStockPending','openingStockInitialized','moderationStatus','moderatedBy','moderatedAt','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
         // [REPAIR 2026-10 Phase 5] Once buyers took part (a bid, or a Group Buy join)
         // the mode runtime belongs to the server (auctionPlaceBid / groupBuyJoin);
         // the seller can no longer rewrite it (e.g. reset the winner or the group).
         && (isAdmin() || unchanged(['modeData'])
             || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
+                && resource.data.get('modeData', {}).get('queueEntries', 0) == 0
                 && resource.data.get('modeData', {}).get('participants', []).size() == 0
                 && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
                 && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
-                && request.resource.data.get('modeData', {}).get('participants', []).size() == 0))
+                && request.resource.data.get('modeData', {}).get('participants', []).size() == 0
+                && request.resource.data.get('modeData', {}).get('bidderCount', 0) == 0
+                && request.resource.data.get('modeData', {}).get('bidders', []).size() == 0
+                && noServerAuctionResult(request.resource.data)))
+        // [AUCTION-LIVE] only the server (livePause/liveResume/liveEnd) flips livePaused —
+        // even pre-bid, when the seller may still edit the rest of modeData.
+        && (isAdmin() || request.resource.data.get('modeData', {}).get('livePaused', false)
+            == resource.data.get('modeData', {}).get('livePaused', false))
         && (isAdmin() || unchanged(['saleMode']) || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
                 && resource.data.get('modeData', {}).get('participants', []).size() == 0));
       // [REPAIR 2026-10 B-12] Found by the browser E2E: buyers opening or sharing a
@@ -215,12 +249,16 @@ service cloud.firestore {
       allow read: if true;
       allow create: if signedIn() && validService(request.resource.data)
         && !request.resource.data.keys().hasAny(['providerVerified','moderationStatus','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
+        && (isAdmin() || !request.resource.data.keys().hasAny(listingTrustKeys()))
+        && !('trust' in request.resource.data)
         && (request.resource.data.userId == request.auth.uid
           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
           || isAdmin());
       allow update: if ownsService(resource.data) && validService(request.resource.data)
         && request.resource.data.userId == resource.data.userId
-        && (isAdmin() || unchanged(['providerVerified','moderationStatus','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']));
+        && (isAdmin() || unchanged(['providerVerified','moderationStatus','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
+        && (isAdmin() || unchanged(listingTrustKeys()))
+        && unchanged(['trust']);
       allow delete: if false;
     }
 
@@ -306,7 +344,12 @@ service cloud.firestore {
               'createdByAgentId','managedByAgentUid','isOfflineUser','memberId',
               'isSubscribed','subscriptionType','subscriptionValidUntil','subStatus','subscriptionPaidRef',
               // [2026-11-01] verification evidence is written by admin/server only
-              'verificationChecks'];
+              'verificationChecks',
+              // [R9] trust badge projection (adminSetTrustBadge)
+              'trust','supplierVerified',
+              // [PHASE B 2026-11-10] staffRole/staffSince/staffRemovedAt zinaandikwa na
+              // SERVER tu (staffInviteAccept/staffRemove); mtumiaji asijipe cheo mwenyewe.
+              'staffRole','staffSince','staffRemovedAt'];
     }
     // Self-registration: no privileged keys, zero balance, shop owner = self.
     // [REPAIR 2026-10 B-09] walletBalance is checked separately (must be 0 on
@@ -355,6 +398,7 @@ service cloud.firestore {
       allow list: if signedIn() && userDocReader(resource.data);
       allow create: if signedIn()
         && (!('walletBalance' in request.resource.data) || request.resource.data.walletBalance == 0)
+        && !('trust' in request.resource.data)
         && (
           isAdmin()
           || ((userDocId == request.auth.uid || request.resource.data.get('uid', '') == request.auth.uid)
@@ -365,6 +409,7 @@ service cloud.firestore {
       allow update: if signedIn()
         && (!('uid' in resource.data) || request.resource.data.get('uid', '') == resource.data.uid)
         && unchanged(['walletBalance'])
+        && unchanged(['trust'])   // [R9] trust badges: adminSetTrustBadge (server) only
         && (
           // [PHASE 9 B-18] An admin editing SOMEONE ELSE's profile from the browser
           // must sign the change (lastChangedBy/lastChangedAt); usersAdminAudit
@@ -402,7 +447,10 @@ service cloud.firestore {
     // Public projection of users written only by the userCardSync function.
     match /userCards/{uid} {
       allow get: if true;
-      allow list: if smallQuery(30);
+      // [LAUNCH-FIX 2026-11-09] list ilikuwa guest-readable (kadi 30 bila
+      // auth = uvunaji wa data). get inabaki public (kadi za wauzaji kwenye
+      // matangazo); list inahitaji sign-in.
+      allow list: if signedIn() && smallQuery(30);
       allow write: if false;
     }
 
@@ -494,7 +542,9 @@ service cloud.firestore {
               'priceReviewReason','priceExpected','priceReviewAt','pesapalTrackingId','disputeId','priceApprovalAuditId',
               'reservationId','reservationStatus','reservationExpiresAt','reservationAttempt','reservationFailReason',
               'reservationCheckedAt','reservationEndedAt','stockCommitted','stockCommittedAt','inventoryReviewState',
-              'inventoryReviewReason','reviewDeadlineAt','refundPendingAt','refundId','reviewResolvedAt','reviewResolvedBy'];
+              'inventoryReviewReason','reviewDeadlineAt','refundPendingAt','refundId','reviewResolvedAt','reviewResolvedBy',
+              // [PHASE B 2026-11-10] escrowStatus ni display ya server; client asii-inject kwenye create.
+              'escrowStatus'];
     }
     match /orders/{id} {
       allow read: if signedIn() && (isAdmin()
@@ -510,10 +560,39 @@ service cloud.firestore {
         && !request.resource.data.keys().hasAny(orderServerOnlyCreateKeys())
         && request.resource.data.get('status', 'payment_pending') in ['payment_pending','pending','pending_choice','new_order','awaiting_payment']
         && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
-        && request.resource.data.get('paymentVerified', false) == false;
+        && request.resource.data.get('paymentVerified', false) == false
+        && !('trust' in request.resource.data);   // [R9] Verified Transaction is server-only
+      // [LAUNCH-FIX 2026-11-09] Oda ya huduma inayoundwa na FUNDI anapokubali
+      // ombi la mteja (16-pos-admin-jobs.js acceptHubServiceRequest). Bila hii,
+      // flow nzima ya kukubali-kazi ingekataliwa na rules. Salama kwa sababu:
+      // (a) lazima iungwe na ombi HALISI lililokubaliwa (sender=mteja huyu,
+      // receiver=fundi huyu, status=accepted); (b) kiasi > 0; (c) haina pesa
+      // iliyothibitishwa (paymentVerified=false, paymentStatus unpaid);
+      // (d) hakuna ufunguo wa server-only wala 'trust'.
+      // [I-I1 2026-11-10] Hali ya mwanzo ni 'awaiting_payment' (SI 'held'):
+      // 'held' inadai pesa iko escrow — uongo kabla ya malipo. Server
+      // (serviceOrderWalletPay / settlePesaPalPayment) ndiyo inayohamishia 'held'.
+      allow create: if signedIn()
+        && request.resource.data.get('collectionName', '') == 'services'
+        && request.resource.data.get('sellerId', '') == request.auth.uid
+        && request.resource.data.get('buyerId', '') is string
+        && request.resource.data.get('buyerId', '') != ''
+        && request.resource.data.get('buyerId', '') != request.auth.uid
+        && request.resource.data.get('amount', 0) is number
+        && request.resource.data.get('amount', 0) > 0
+        && request.resource.data.get('status', '') == 'awaiting_payment'
+        && request.resource.data.get('itemId', '') is string
+        && request.resource.data.get('itemId', '') != ''
+        && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
+        && request.resource.data.get('paymentVerified', false) == false
+        && !('trust' in request.resource.data)
+        && !request.resource.data.keys().hasAny(orderServerOnlyCreateKeys())
+        && request.resource.data.get('itemId', '').matches('.*mock_.*') == false
+        && serviceOrderBackedByAcceptedRequest();
       allow update: if signedIn()
         // [PHASE 9 B-18] Admin browser edits: signed, never money fields (money
         // moves only through audited callables); ordersAdminAudit logs them.
+        && unchanged(['trust'])
         && ((isAdmin() && adminStampOk() && unchanged(orderMoneyKeys())) || (
             unchanged(['lastChangedBy','lastChangedAt'])
             && (resource.data.buyerId == request.auth.uid
@@ -526,8 +605,17 @@ service cloud.firestore {
             && orderLinkOnce('driverId') && orderLinkOnce('transportRequestId')
             && orderPaymentInfoOk()
             && orderStatusOk()
+            && unchanged(['trust'])
           ));
       allow delete: if false;
+    }
+    // Ombi la huduma linalounga mkono oda ya seller-side: lazima liwepo,
+    // limetumwa na huyu mnunuzi kwa huyu fundi, na limekubaliwa.
+    function serviceOrderBackedByAcceptedRequest() {
+      let req = get(/databases/$(database)/documents/requests/$(request.resource.data.get('itemId', ''))).data;
+      return req.get('senderId', '') == request.resource.data.get('buyerId', '')
+        && req.get('receiverId', '') == request.auth.uid
+        && req.get('status', '') == 'accepted';
     }
     function orderLinkOnce(k) {
       return !changed().hasAny([k]) || resource.data.get(k, null) == null;
@@ -583,6 +671,18 @@ service cloud.firestore {
     }
     // Permanent admin audit trail and security events: server-only writes.
     match /admin_audit_log/{id}   { allow read: if isAdmin(); allow write: if false; }
+    // [R9] Trust badge records: evidence and verifier are visible to admins and to
+    // the badge owner only; written by adminSetTrustBadge (server) only.
+    match /trust_badges/{badgeId} {
+      allow get: if signedIn() && (isAdmin() || resource.data.get('ownerUid', '') == request.auth.uid);
+      allow list: if signedIn() && (isAdmin() || (resource.data.get('ownerUid', '') == request.auth.uid && smallQuery(50)));
+      allow write: if false;
+      match /history/{hid} {
+        allow read: if signedIn() && (isAdmin()
+          || get(/databases/$(database)/documents/trust_badges/$(badgeId)).data.get('ownerUid', '') == request.auth.uid);
+        allow write: if false;
+      }
+    }
     match /security_events/{id}   { allow read: if isAdmin(); allow write: if false; }
 
     // ---------------------------------------------------------------
@@ -674,11 +774,19 @@ service cloud.firestore {
     }
     match /conversations/{convId} {
       // [GROUP STAGE 1] Read: kikundi → uanachama HALALI (active); 1:1 → kama zamani.
-      allow read: if signedIn() && (
+      // [2026-11-06] read = get + list. A LIST query cannot be proven against
+      // conditions on the document id (isGroupConvId(convId)), so the single
+      // `read` rule denied the inbox query `participants array-contains me` for
+      // everyone ([INBOX93] conversations query failed). `get` keeps the exact
+      // group-membership rule; `list` only returns docs whose participants contain
+      // the caller (leaving a group removes the uid: syncConvParticipants).
+      allow get: if signedIn() && (
         (isGroupConvId(convId) && isGroupMember(gidFromConv(convId)))
         || (!isGroupConvId(convId)
             && (resource == null || resource.data.participants.hasAny([request.auth.uid])))
       );
+      allow list: if signedIn()
+        && resource.data.participants.hasAny([request.auth.uid]);
       allow create: if signedIn() && (
         // ---- (1) 1:1 — kanuni zilezile, hazijabadilika ----
         (!isGroupConvId(convId)
@@ -1039,6 +1147,13 @@ service cloud.firestore {
         && request.resource.data.sellerId != request.auth.uid
         && request.resource.data.version == 1
         && request.resource.data.currentState == 'OFFER_SENT'
+        // [PHASE 6 P6-1 2026-11-10] Zamani ya kwanza ni ya MUUZAJI (seller) —
+        // bila hii, mnunuzi angeweka waitingForUserId = mwenyewe, kisha
+        // "akakubali" ofa yake mwenyewe (AGREEMENT) kwa bei yake mwenyewe
+        // (TSh 1), na server price-check ingeamini makubaliano hayo:
+        // forced-sale ya bidhaa ya muuzaji bila ridhaa yake. Native client
+        // (34) + server engine tayari huweka seller — hakuna kinachovunjika.
+        && request.resource.data.get('waitingForUserId', '') == request.resource.data.sellerId
         && request.resource.data.currentUnitPrice is number
         && request.resource.data.currentUnitPrice > 0
         && request.resource.data.quantity is number
@@ -1157,16 +1272,58 @@ service cloud.firestore {
         || resource.data.get('currentCustodian', '') == request.auth.uid
         || resource.data.get('sellerId', '') == request.auth.uid;
     }
+    // [REMEDIATION 2026-11 R1] Least-privilege ride access.
+    //  - Customer contact (name/phone/receiver/email) lives in
+    //    ride_requests/{id}/private/contact, never on this document.
+    //  - Open jobs are visible only to ACTIVE approved agents (admin-stamped
+    //    approval, not suspended); assigned parties see their own rides.
+    function isActiveAgent() {
+      return isApprovedAgent()
+        && myUser().get('suspended', false) != true
+        && myUser().get('isSuspended', false) != true
+        && myUser().get('accountStatus', 'active') != 'suspended'
+        && myUser().get('agentStatus', 'active') != 'suspended';
+    }
+    function rideOpenStates() { return ['searching','pending_acceptance','open','pending']; }
+    function ridePrivateKeys() {
+      return ['customerName','customerPhone','customerEmail','receiverName','receiverPhone'];
+    }
+    function rideAssigned() {
+      return rideParty()
+        || resource.data.get('nextTransporterId', '') == request.auth.uid
+        || resource.data.get('assignedAgentId', '') == request.auth.uid;
+    }
     match /ride_requests/{id} {
-      // Open rides are visible to transporters (marketplace); parties see theirs.
-      allow get: if signedIn();
+      allow get: if signedIn() && (isAdmin() || rideAssigned()
+        || (resource.data.get('status', '') in rideOpenStates() && isActiveAgent()));
+      // Every branch is provable from the query's own filters.
       allow list: if signedIn() && (isAdmin()
         || resource.data.get('customerId', '') == request.auth.uid
         || resource.data.get('driverId', '') == request.auth.uid
         || resource.data.get('currentCustodian', '') == request.auth.uid
-        || (resource.data.get('status', '') in ['searching','pending_acceptance','open','pending'] && smallQuery(100))
-        // Approved agents run pickup points and see accepted jobs awaiting handover.
-        || (isApprovedAgent() && smallQuery(100)));
+        || resource.data.get('sellerId', '') == request.auth.uid
+        || resource.data.get('assignedAgentId', '') == request.auth.uid
+        || resource.data.get('nextTransporterId', '') == request.auth.uid
+        || (resource.data.get('status', '') in rideOpenStates() && isActiveAgent() && smallQuery(100)));
+      match /private/{pid} {
+        function rideDoc() { return get(/databases/$(database)/documents/ride_requests/$(id)).data; }
+        function rideAfter() { return getAfter(/databases/$(database)/documents/ride_requests/$(id)).data; }
+        allow get: if signedIn() && pid == 'contact' && (isAdmin()
+          || rideDoc().get('customerId', '') == request.auth.uid
+          || rideDoc().get('driverId', '') == request.auth.uid
+          || rideDoc().get('currentCustodian', '') == request.auth.uid
+          || rideDoc().get('nextTransporterId', '') == request.auth.uid);
+        allow list: if false;
+        allow create: if signedIn() && pid == 'contact'
+          && request.resource.data.get('customerId', '') == request.auth.uid
+          && rideAfter().get('customerId', '') == request.auth.uid
+          && request.resource.data.keys().hasOnly(['customerId'].concat(ridePrivateKeys()));
+        allow update: if signedIn() && pid == 'contact'
+          && resource.data.get('customerId', '') == request.auth.uid
+          && request.resource.data.get('customerId', '') == request.auth.uid
+          && request.resource.data.keys().hasOnly(['customerId'].concat(ridePrivateKeys()));
+        allow delete: if isAdmin() || (signedIn() && resource.data.get('customerId', '') == request.auth.uid);
+      }
       allow create: if signedIn()
         && request.resource.data.customerId == request.auth.uid
         && !(request.resource.data.get('status', 'searching') in ['accepted', 'pickup_pending', 'seller_confirmed_handover',
@@ -1175,6 +1332,7 @@ service cloud.firestore {
         // 57-checkout-bridge) create rides with initial placeholders. Those exact
         // initial values are allowed; every other custody/payout key stays server-only.
         && !request.resource.data.keys().hasAny(rideCreateForbiddenKeys())
+        && !request.resource.data.keys().hasAny(ridePrivateKeys())
         && request.resource.data.get('pickupToken', null) == null
         && request.resource.data.get('handoverToken', null) == null
         && request.resource.data.get('routingStatus', 'routing') == 'routing'
@@ -1188,6 +1346,8 @@ service cloud.firestore {
       allow update: if signedIn() && (isAdmin() || (
         rideParty()
         && unchanged(['customerId','orderId','sellerId','productOrder','source'])
+        // contact may be removed from legacy docs but never added/changed here
+        && (unchanged(ridePrivateKeys()) || !request.resource.data.keys().hasAny(ridePrivateKeys()))
         && unchanged(rideCustodyKeys())
         && (unchanged(['fare','price','cargoPrice'])
             || (resource.data.get('customerId', '') == request.auth.uid
@@ -1404,6 +1564,14 @@ service cloud.firestore {
         || resource.data.get('uid', '') == request.auth.uid);
       allow write: if false;
     }
+    // [PHASE 5 P5-1 2026-11-10] Maombi ya kutoa pesa: yanaandikwa na SERVER
+    // tu (withdrawalRequest/withdrawalResolve callables, Admin SDK).
+    // Kivinjari kinasoma yake tu; admin anasoma yote.
+    match /withdrawal_requests/{id} {
+      allow read: if signedIn() && (isAdmin()
+        || resource.data.get('userId', '') == request.auth.uid);
+      allow write: if false;
+    }
     match /platform_stats/{id}    { allow read: if isAdmin(); allow write: if false; }
     match /escrow_holds/{id}      { allow read: if isAdmin(); allow write: if false; }
     // [PHASE 3 2026-10-31] Online reservations, payment reviews and refunds are
@@ -1505,6 +1673,13 @@ service cloud.firestore {
       allow update: if (ownsShopRecord(resource.data) || (signedIn() && resource.data.get('driverId', '') == request.auth.uid))
         && unchanged(['shopOwnerId','productId','quantity','pickupToken','deliveryToken']);
       allow delete: if false;
+    }
+    // [J-J1 2026-11-10] Mialiko ya wafanyakazi: yanaandikwa na SERVER tu
+    // (staffInvite* callables); mmiliki anasoma yake (kodi anaipa mfanyakazi
+    // nje ya mfumo). Mfanyakazi hakubali kwa kusoma — anakubali kwa kodi.
+    match /staff_invites/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('shopOwnerId', '') == request.auth.uid);
+      allow write: if false;
     }
     match /staff_attendance/{id} {
       allow read: if ownsShopRecord(resource.data) || (signedIn() && resource.data.get('staffId', '') == request.auth.uid);
@@ -1808,10 +1983,144 @@ service cloud.firestore {
       }
     }
 
+    // [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live — written only by the
+    // live-commerce callables. Viewers list: host, admin or the viewer themselves.
+    match /live_sessions/{sid} {
+      allow read: if signedIn() && (resource.data.status != 'removed' || isAdmin() || resource.data.hostUid == request.auth.uid);
+      allow write: if false;
+      match /comments/{cid} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
+      match /viewers/{vid} {
+        allow read: if signedIn() && (isAdmin() || vid == request.auth.uid
+          || get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid);
+        allow write: if false;
+      }
+      // [R13-D] likes / reminders: server-written; a user may read their own row
+      match /likes/{uid} {
+        allow read: if signedIn() && uid == request.auth.uid;
+        allow write: if false;
+      }
+      match /reminders/{uid} {
+        allow read: if signedIn() && uid == request.auth.uid;
+        allow write: if false;
+      }
+    }
+    // [R13-D] Bei Kushuka queue: entries are private (server only); the board is public and masked
+    match /price_drop_entries/{eid} {
+      allow read, write: if false;
+    }
+    match /price_drop_board/{pid} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // [R13-D] "Zabuni zangu": each buyer reads only their own auction participation rows
+    match /auction_participation/{rid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /live_reports/{rid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    // [R13-B] Stories: active + not expired; public, or followers-only for real followers.
+    match /stories/{storyId} {
+      // list: the rail queries public + active stories (it filters expiry itself; a query can not
+      // prove "now"); get: a single story also has to be unexpired.
+      allow list: if signedIn() && (isAdmin() || resource.data.authorUid == request.auth.uid
+        || (resource.data.visibility == 'public' && resource.data.status == 'active'));
+      allow get: if signedIn() && (isAdmin() || resource.data.authorUid == request.auth.uid
+        || (resource.data.status == 'active' && resource.data.expiresAtMs > request.time.toMillis()
+            && (resource.data.visibility == 'public'
+                || (exists(/databases/$(database)/documents/sellerFollowers/$(request.auth.uid + '__' + resource.data.authorUid))
+                    && get(/databases/$(database)/documents/sellerFollowers/$(request.auth.uid + '__' + resource.data.authorUid)).data.followerId == request.auth.uid))));
+      allow write: if false;
+      // [R13-D] reactions: server-written (storyReact); a viewer reads their own
+      match /reactions/{rid} {
+        allow read: if signedIn() && rid == request.auth.uid;
+        allow write: if false;
+      }
+      match /views/{vid} {
+        allow read: if signedIn() && (isAdmin() || vid == request.auth.uid
+          || get(/databases/$(database)/documents/stories/$(storyId)).data.authorUid == request.auth.uid);
+        allow write: if false;
+      }
+    }
+    // [R13-B] Group Soko: members read; every write goes through the group-soko callables.
+    function isGroupSokoMember(g) {
+      return exists(/databases/$(database)/documents/group_soko/$(g)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/group_soko/$(g)/members/$(request.auth.uid)).data.status in ['active', 'invited'];
+    }
+    match /group_soko/{g} {
+      allow get: if signedIn() && (isAdmin() || isGroupSokoMember(g));
+      allow list: if signedIn() && (isAdmin() || request.auth.uid in resource.data.memberUids);
+      allow write: if false;
+      match /{sub}/{doc} {
+        allow read: if signedIn() && (isAdmin() || isGroupSokoMember(g));
+        allow write: if false;
+      }
+    }
+    match /story_reports/{rid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // Auction bids: server-written (auctionPlaceBid), readable by everyone signed in.
     match /products/{pid}/bids/{bidId} {
       allow read: if signedIn();
       allow write: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // [LAUNCH-FIX 2026-11-09] Collections zinazotumiwa na live browser
+    // clients lakini zilikosekana kwenye rules (default-DENY). Party-scoped
+    // ndogo; guest (signed-out) amekataliwa popote hapa chini.
+    // Evidence: calls (105-calls.js), discoverRequests (75-discover-engine.js),
+    // productInquiries (53-product-inquiry.js), sharedContexts (69-chat-groups.js).
+    // Zilijaribiwa kwenye staging (tools/g1, G1 82/82) kabla ya kupandishwa.
+    // ---------------------------------------------------------------
+    match /calls/{id} {
+      allow create: if signedIn() && request.resource.data.get('from', '') == request.auth.uid
+        && request.resource.data.get('to', '') is string && request.resource.data.get('to', '') != ''
+        && request.resource.data.get('to', '') != request.auth.uid;
+      allow get: if signedIn() && (resource.data.get('from', '') == request.auth.uid
+        || resource.data.get('to', '') == request.auth.uid);
+      allow list: if signedIn() && (resource.data.get('from', '') == request.auth.uid
+        || resource.data.get('to', '') == request.auth.uid);
+      allow update: if signedIn() && (resource.data.get('from', '') == request.auth.uid
+        || resource.data.get('to', '') == request.auth.uid)
+        && unchanged(['from', 'to']);
+      allow delete: if false;
+    }
+    match /discoverRequests/{id} {
+      // Owner-only: clients only create + read own; seller surfacing is future
+      // server work (no client read path exists today).
+      allow create: if signedIn() && request.resource.data.get('userId', '') == request.auth.uid;
+      allow get: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid);
+      allow list: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid);
+      allow update: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid)
+        && unchanged(['userId']);
+      allow delete: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid);
+    }
+    match /productInquiries/{id} {
+      // Buyer creates + reads own; seller read-only (answers travel via Chat);
+      // no client update path exists today, owner-only update kept minimal.
+      allow create: if signedIn() && request.resource.data.get('buyerId', '') == request.auth.uid;
+      allow get: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid
+        || resource.data.get('sellerId', '') == request.auth.uid);
+      allow list: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid
+        || resource.data.get('sellerId', '') == request.auth.uid);
+      allow update: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid)
+        && unchanged(['buyerId', 'sellerId', 'productId']);
+      allow delete: if false;
+    }
+    match /sharedContexts/{gid} {
+      allow read: if signedIn() && (isAdmin() || request.auth.uid in resource.data.get('participants', []));
+      allow create: if signedIn() && request.auth.uid in request.resource.data.get('participants', []);
+      allow update: if signedIn() && (isAdmin() || request.auth.uid in resource.data.get('participants', []))
+        && request.auth.uid in request.resource.data.get('participants', []);
+      allow delete: if false;
     }
 
     // ---------------------------------------------------------------

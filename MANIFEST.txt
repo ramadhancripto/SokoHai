@@ -1,19 +1,80 @@
-# MANIFEST — faili 14 zilizobadilishwa (SokoHai)
-# Tarehe: 2026-11-04 · HEAD ya repo: 03a6811
-
-AINA   UKUBWA       FAILI
---------------------------------------------------------------------
-MODIFIED   28529        css/48-chat-shell.css
-MPYA       27358        css/52-chat-discovery-feed.css
-MPYA       50915        css/53-group-chat-ui.css
-MODIFIED   107329       firestore.rules
-MODIFIED   385231       index.html
-MPYA       46695        js/app/106-chat-discovery-feed.js
-MODIFIED   132631       js/app/69-chat-groups.js
-MODIFIED   238080       js/app/73-group-soga.js
-MODIFIED   8098         package.json
-MPYA       4670         tools/dev_server.mjs
-MODIFIED   904          tools/preview_start.sh
-MPYA       24710        tools/test_chat_conversation_security.mjs
-MPYA       22177        tools/test_group_chat_rules.mjs
-MODIFIED   3647         tools/test_white_system_modules_contract.mjs
+41faff9baf6b971303960d4a6c232d97f5e039c948798b271dc42beecdd260e1  ./DIFF-vs-2e8d049.diff
+b209f6d8d4bdb05a68082d55f60e52386f85a0c1e1cad16699bb5e25c2e2b05e  ./css/65-live-design.css
+1cc1b60dbede5eaa6bfc6bf9334831f9de980a1bf1108f44cf5fc37dc97e2f25  ./firestore.rules
+bc39b742ef0a90e7e37a76db8434aa6c9489bf4c92888d40813241dee6727fc1  ./functions/commerce-modes.js
+d58b7c3eefbb17e885967ae9d3710799074268484464cda123c8bc8ddb4ae665  ./functions/index.js
+5145d7ee3848f6fb4c9b19974f2430f77a85ba88d7d6f9b334fe2a7f0962096e  ./functions/live-commerce.js
+f9780a9fffa055e9ef2ee6d4f8c3604bbfe9cc809d50ba1bb45ce6ef30ab3632  ./functions/local-server.js
+fb9c41173b33e4566d5fe0547c3dada093fb586f23e32f453315c8880377a84a  ./git-diffstat-snapshot.txt
+d60d6a2724363b2809bb3d31e0d5babab49045b931b84ed96d8268281e25e245  ./git-status-snapshot.txt
+2ef9ea7ea300611630b14ed5181d16b0846071b0abe1ad6cd96ce4dea7ab8e03  ./js/18-icons.js
+c3e542938bf19b338038cbe933d63c0390c72f90341eb608a5fb9d67f990e0c1  ./js/app/120-live-commerce-ui.js
+02362aa4ac9aeac8b9c3503677860a562d4012b963cf3f5c13b7c32e8559f235  ./tools/restore120.py
+4d5b55c14a8e6151a60f0dabf0b34d683a7ee4407cf87ca2ba750d0f1a455669  ./verification-auction-live/00-REPORT.md
+c1c6730f38b6d3e91371217637b270e7ae790ef096d4930668eabcc8e9cd567b  ./verification-auction-live/01-git-status.txt
+0da0e8cfb779e9563d629c2374ad5e815a42ac33a8d85eb72a0b625d6717f0c2  ./verification-auction-live/02-git-diffstat.txt
+31435f736a4fef6b05d030a184ad45a19467c9dd19afa222959fdc122509d884  ./verification-auction-live/03-my-files-full.diff
+a13e6be7243334e1a53da48327a688449b7c31038f7bcf46aad02456a634c603  ./verification-auction-live/10-emulator-16-16.log
+df3a5a1e1cca0336a8d0a11d52bb5c2c3fa5b4105f2e97621f52834729f18e98  ./verification-auction-live/11-e2e-10-10.log
+6a6f90473448cd4695f1c4508bd01485e038955a2cc15f03a4006ae4b707e0c4  ./verification-auction-live/12-regression-emulator.log
+c3e542938bf19b338038cbe933d63c0390c72f90341eb608a5fb9d67f990e0c1  ./verification-auction-live/120-live-commerce-ui.RESTORED.js
+cd9f5d255aa4922bcd464b370ab046faf176d7ed664c9595b2de5eb4a5c45de0  ./verification-auction-live/13-static-checks.log
+db71eeb053649469762a6b2bdfcdda58b3ab2f5e30af8549e6e1b76cf2a90cb9  ./verification-auction-live/14-r13d-regression.log
+4fd7b2ae55464417bf9ae9bb61d8ece0186f37ce2ca7e216a2f4be18fd401c14  ./verification-auction-live/20-emulator-16-16.log
+088150bb3a062f11aee2a1b25333c3358393bd23f64ffb3f622e1febba10397f  ./verification-auction-live/21-e2e-10-10.log
+a13e6be7243334e1a53da48327a688449b7c31038f7bcf46aad02456a634c603  ./verification-auction-live/30-emulator-16-16.log
+4325a8df9182929e9ae370c73765c0e172d1bc7ffa243c6cc3d16a533a3228f8  ./verification-auction-live/31-e2e-10-10.log
+a13e6be7243334e1a53da48327a688449b7c31038f7bcf46aad02456a634c603  ./verification-auction-live/32-emulator-16-16.log
+f8ddeaa6fa63c3809839ea82a0a9ef90b136362ce696ecf38af9c2eab6f85e99  ./verification-auction-live/33-e2e-10-10.log
+38ea594404e3fda40c66185a62a1bc9b5818705f5617be3fb5ef3d684c8860de  ./verification-auction-live/34-r13d-20-20.log
+38ea594404e3fda40c66185a62a1bc9b5818705f5617be3fb5ef3d684c8860de  ./verification-auction-live/35-r13d-rerun.log
+db71eeb053649469762a6b2bdfcdda58b3ab2f5e30af8549e6e1b76cf2a90cb9  ./verification-auction-live/36-r13d-20-20.log
+3e234bcc10b9f0cb5efc3697ffdd33b5ab133a1f81a361fccbe7d4dffc51a7c3  ./verification-auction-live/37-ROUND4-SUMMARY.md
+481620cf56c8e4b9f495195afd42575a9be950ff280e5cff7aa238692f3c64b1  ./verification-auction-live/shots/auction-live-impl-01-room.png
+6f710487a92dd7ef149ab43e8b773ffcd2f1eaecb6960ef5a5d65f578c03cb9e  ./verification-auction-live/shots/auction-live-impl-15-winner.png
+f5ba385e3baa41f80fd400de8f91552bed880dc6bc7e6fa4b16616049f83677e  ./verification-auction-live/shots/auction-live-impl-FAIL-1.png
+c8ba9e73b776b1fddb8819c427bd2054ea455f57af2396d3cc754b8ab01ba420  ./verification-auction-live/shots/auction-live-impl-FAIL-2.png
+518c303ce45a3b8662b37b3bed2417650887954654b40d98f47ba72a4072344c  ./verification-auction-live/shots/auction-live-impl-FAIL-3.png
+9940ea32160e72b3d93dbb383d6299534adccd1296920b1c0839d9161cc88d1a  ./verification-auction-live/shots/r13d-phone-00-home-live.png
+a6a3f611c11353515cbaf7f575b608455c0924b6a8136fa80b04fa3feec5c4f5  ./verification-auction-live/shots/r13d-phone-02-auction-room.png
+42c86fcfb7cfb0532fc625b0d9d3cc0f9bf7f8aab8134810412dac5da4582263  ./verification-auction-live/shots/r13d-phone-03-bid-confirm.png
+6621071cc19225d904ae1468e9822b788b480bb9ea79064db22f109487358fb2  ./verification-auction-live/shots/r13d-phone-04-outbid.png
+82d5d968ddc72f1a6b1f01cb947e5a2680fb3e86838243e3b6a7358ff658dc89  ./verification-auction-live/shots/r13d-phone-06-winner.png
+7110b700968d6e94eaf4fed43e435257a419c609a285d6b19792a6ab2565ad33  ./verification-auction-live/shots/round4-auction-live-impl-01-room.png
+570f08a0f2c223982afc86f9f8ef3ce5e808e6a876eefea7528849210cd5b139  ./verification-auction-live/shots/round4-auction-live-impl-02-chips.png
+2c16583047abfc7fb59f63b7bde533756aa62ddc589e448df9646a6513b63779  ./verification-auction-live/shots/round4-auction-live-impl-03-leading.png
+9acc766c1ae9411cdee1f1134f8c32dd97afde9a57ac5f29d2594f055d4ca19e  ./verification-auction-live/shots/round4-auction-live-impl-04-outbid.png
+b9031c9eb90aca7928d36c13abab8387b326059cb4c8237ced0c510ceef82618  ./verification-auction-live/shots/round4-auction-live-impl-05-history.png
+b696bbcf388d813ea8e29a1f133af011607b46afe92d3900d4ec31ddacd93aea  ./verification-auction-live/shots/round4-auction-live-impl-06-chat.png
+fad9abae5afb9c6358b1630540748bb87e051d1428c4682d70ba2a7a9e9e1bff  ./verification-auction-live/shots/round4-auction-live-impl-07-mini.png
+182d266ec416468083972ce25cce2e9c06da01f61558ee2c8e6bd5f47f094119  ./verification-auction-live/shots/round4-auction-live-impl-08-restored.png
+231c1facf20ffb59d5864675458888e85423d3c05ae4bb366979ab7a39a4d422  ./verification-auction-live/shots/round4-auction-live-impl-09-closed.png
+81a49a8d23020f1709a970222761ea568558df828af82346b6d39de090be646c  ./verification-auction-live/shots/round4-auction-live-impl-10-paused-host.png
+ab32b8b34d574fcbc88ee7b9b9cd4c2bf4d8c897003e625ce6d806dd4858c916  ./verification-auction-live/shots/round4-auction-live-impl-11-paused-buyer.png
+879d13094cfc96047b090b0f0121abccc0df343bba56c8ec5f4997970caae1d3  ./verification-auction-live/shots/round4-auction-live-impl-12-ending.png
+1b7997d402765ec745ef944802aef5c6e61a979eb18baf06ef61b7a9bdaabc0f  ./verification-auction-live/shots/round4-auction-live-impl-13-extended.png
+f55575e46109d03d54ad810c2673af55a5c4e8297cbf8428f443d2b3f696132d  ./verification-auction-live/shots/round4-auction-live-impl-14-hub-paused.png
+b61ba576ec1555d6075e5cdd5946d3e11dc2982e039bb30fc1fed70b260a8471  ./verification-auction-live/shots/round4-auction-live-impl-15-winner.png
+87b7fd30e5e18b61d0504fa8b7b7631b786d970ffb043788755b6a6a437efdab  ./verification-auction-live/shots/round4-r13d-phone-00-home-live.png
+5e264598e4c640c2241d1693c035183d8d5957d22e5d229a92ce4e2bc5cb7d89  ./verification-auction-live/shots/round4-r13d-phone-01-hub-live.png
+48e54c4bdb5d33ac693a50f03647a63fa58ff67444a79379b0657a1a22802646  ./verification-auction-live/shots/round4-r13d-phone-01b-hub-yanayokuja.png
+ec15520c385b32ca58999c6d576f290491e79ef891bbce5b22c2e9d8d04241ae  ./verification-auction-live/shots/round4-r13d-phone-01c-hub-deals.png
+badb75d804c121c1f9009bde2f921b5265e35dec923f86e0ee1704cc1aea843d  ./verification-auction-live/shots/round4-r13d-phone-02-auction-room.png
+f13aa9788c4acd0b484c53a2edb83463bdc37326f7ca75621f800122340be264  ./verification-auction-live/shots/round4-r13d-phone-03-bid-confirm.png
+716f4059740783f624247bef8c148c71bcbd0d874487113fa8d63066e4ae37d3  ./verification-auction-live/shots/round4-r13d-phone-03b-leading.png
+71765b044b8c6585c77a6d4ffde11b83f7cf89b0ea03d5397d7853eb04d2eb3d  ./verification-auction-live/shots/round4-r13d-phone-04-outbid.png
+ec9be105639828aeb26235fe1eda73e16ad9343e3f12dba2ff27da39aa0343f3  ./verification-auction-live/shots/round4-r13d-phone-05-bid-history.png
+ef6f4168ace1a1fe3e85b5ca4b753286a1fcb5191134ce2c135d8d08ea855cd0  ./verification-auction-live/shots/round4-r13d-phone-06-winner.png
+a8382bd1926fc3e8dc60bd6afe16c66179b505663db42aac047a9c58ce660e83  ./verification-auction-live/shots/round4-r13d-phone-07-pricedrop-room.png
+26d9a2c8e711eddd87d75ab5247db10fbe65aff82f2dc0c3e48faf5be9d9139c  ./verification-auction-live/shots/round4-r13d-phone-08-weka-bei.png
+7735091613dc4d50a73f1a2ed2e2113b5c373d7e89b2cb9b183470fdca378be3  ./verification-auction-live/shots/round4-r13d-phone-09-ranking.png
+ee8a639a9b9f950b5c18b1fe1ff1d129229e0f440f0139de70bfb4330828eae6  ./verification-auction-live/shots/round4-r13d-phone-10-campaign-end.png
+16975ca3ca2221d0fbbb7b5d6b625737932859722f62465502631052119a1005  ./verification-auction-live/shots/round4-r13d-phone-11-opportunity.png
+f9525879910e6004bb59fd087cbb96d714b60a20d43222a69233ee90634d74c5  ./verification-auction-live/shots/round4-r13d-phone-12-my-bids.png
+4b632d1c5bb9a8a244fa716b722cc80260f99f1f26a6547c895a1deb14f56b4d  ./verification-auction-live/shots/round4-r13d-phone-13-product-auction.png
+54e9f9aeab87c4ab546e22817f90b8eb52c14fb89be970015e31296c808667e0  ./verification-auction-live/shots/round4-r13d-phone-14-product-pricedrop.png
+16a3264d5f89a0d26e82aaa4aa9642f0d74f8211db2c0bb7df36ec3ed1e1e197  ./verification-auction-live/shots/round4-r13d-phone-15-product-over-live.png
+5ce424f8826b139026c42d59df9070a44485053661d956114d0ac137d3567b5c  ./verification-auction-live/shots/round4-r13d-phone-16-chat-rail.png
+e0a6ba33e7d2f2075d0fcc3085128797cbaff22502e946350af7c3ff304130b1  ./verification-auction-live/shots/round4-r13d-phone-17-hali-viewer.png
+51771832c750e73afa5172bb2cc7e67ebf032ae6ae580be4a75dfa06c9e8adc9  ./verification-auction-live/shots/round4-r13d-phone-18-host-room.png
+dc6573404abf29be583706099c9d589d2fe1d385c5f02a47f42e0f61a44948a0  ./verification-auction-live/shots/round4-r13d-phone-19-host-menu.png

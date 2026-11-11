@@ -272,29 +272,43 @@ async function ppInitiatorUid(tx) {
  *   6. Smart Cart `items[]` -> sum of the above per item.
  * Anything else is held for admin review (status 'price_review'), never paid.
  * ========================================================== */
-const { modeUnitPrice, modeEligibility, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
+const { modeUnitPrice, modeEligibility, modeQuantityLimit, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
 // [PHASE 3 2026-10-31] Online reservation / stock commit (OFF unless system_config/inventory.mode says otherwise).
 const inventoryReservation = require('./inventory-reservation');
 const stockCore = require('./shared/inventory-reservation-core');
+// [REMEDIATION 2026-11 R5] quantity is validated, never silently truncated:
+// whole-unit products need a whole number; decimal (kg/L/m) products opt in with
+// product.quantityPrecision and are checked by the shared quantity core.
+const quantityCore = require('./shared/quantity-core');
+function orderQuantity(item, product) {
+    const raw = (item.quantity != null && item.quantity !== '') ? item.quantity : ((item.qty != null && item.qty !== '') ? item.qty : 1);
+    const prec = product ? quantityCore.precisionOf(product) : 0;
+    if (!quantityCore.isValidQuantity(raw, prec)) return null;
+    return Number(raw);
+}
+exports._orderQuantity = orderQuantity;
 async function expectedItemAmount(item, buyerUid, nowMs) {
-    const qty = Math.max(1, parseInt(item.quantity || item.qty || 1, 10) || 1);
+    let qty = orderQuantity(item, null);
     const pid = String(item.productId || item.itemId || item.id || '');
     if (pid && pid.indexOf('/') === -1) {
         const ps = await db.doc('products/' + pid).get();
         if (ps.exists) {
             const p = ps.data() || {};
+            qty = orderQuantity(item, p);
+            if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             if (item.sellerId && String(p.userId || '') !== String(item.sellerId)) return { ok: false, reason: 'seller_mismatch' };
-            const elig = modeEligibility(p, buyerUid, nowMs);
+            const elig = modeEligibility(p, buyerUid, nowMs) || modeQuantityLimit(p, qty, buyerUid, nowMs);
             if (elig) return { ok: false, reason: elig };
             const vp = variantPrice(p, item.selectedVariant || item.variant || item.variantId);
             const unit = modeUnitPrice(vp ? Object.assign({}, p, { price: vp }) : p, qty, buyerUid, nowMs);
-            return { ok: unit > 0, amount: unit * qty, source: 'products', reason: unit > 0 ? '' : 'no_price' };
+            return { ok: unit > 0, amount: quantityCore.lineTotal(unit, qty), source: 'products', reason: unit > 0 ? '' : 'no_price' };
         }
         const ss = await db.doc('services/' + pid).get();
         if (ss.exists) {
             const sv = ss.data() || {};
             if (['negotiable', 'quotation_required', 'range', 'starting'].indexOf(String(sv.pricingModel || 'fixed')) !== -1) return { ok: false, reason: 'service_requires_negotiation' };
             const unit = Number(sv.price || 0);
+            if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             return { ok: unit > 0, amount: unit * qty, source: 'services', reason: unit > 0 ? '' : 'no_price' };
         }
     }
@@ -347,6 +361,25 @@ async function expectedOrderAmount(o, docId) {
         }
         return { ok: true, amount: sum, source: 'cart_items' };
     }
+    // [I-I1 2026-11-10] Oda ya huduma: chanzo cha bei ni ombi lililokubaliwa
+    // (itemId = requestId). Kiasi cha oda lazima kiwe ≤ bajeti ya mteja;
+    // vinginevyo settle inaenda price_review (kulinda mteja dhidi ya fundi
+    // anayepandisha bei). Hii pia inafungua njia ya PesaPal kwa huduma.
+    if (String(o.collectionName || '') === 'services' || String(o.commerceType || '') === 'service') {
+        const reqId = String(o.itemId || '');
+        if (!reqId || reqId.indexOf('/') !== -1) return { ok: false, reason: 'service_request_missing' };
+        const rs = await db.doc('requests/' + reqId).get();
+        if (!rs.exists) return { ok: false, reason: 'service_request_missing' };
+        const rq = rs.data() || {};
+        if (String(rq.senderId || '') !== String(o.buyerId || '') || String(rq.receiverId || '') !== String(o.sellerId || '')) {
+            return { ok: false, reason: 'service_parties_mismatch' };
+        }
+        if (String(rq.status || '') !== 'accepted') return { ok: false, reason: 'service_not_accepted' };
+        const budget = Math.round(Number(rq.detail2));
+        if (!(budget > 0)) return { ok: false, reason: 'service_budget_invalid' };
+        if (moneyOf(o.amount) > budget + MONEY_EPS) return { ok: false, reason: 'service_over_budget' };
+        return { ok: true, amount: moneyOf(o.amount), source: 'service_request' };
+    }
     if (o.productId || o.itemId || o.serviceId) {
         return expectedItemAmount({ productId: o.productId || o.serviceId || o.itemId, quantity: o.quantity, selectedVariant: o.selectedVariant, sellerId: o.sellerId }, o.buyerId, nowMs);
     }
@@ -366,7 +399,21 @@ async function settlePesaPalPayment(tx, source) {
     const now = new Date().toISOString();
     const events = [];
     const linkEvents = [];
+    const depositEvents = [];
     const initiatorUid = await ppInitiatorUid(tx);
+    // [PHASE 7 F7-1 2026-11-10] Kusudi la malipo kutoka ppinit (checkout) —
+    // deposit huwekwa wallet hata mtumiaji asiporudi kutoka PesaPal.
+    const WALLET_CAP = Number(process.env.WALLET_MAX_ABS || 50000000);
+    let initPurpose = '', initAmount = 0;
+    if (initiatorUid && tx.merchantReference) {
+        try {
+            const inits = await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(String(tx.merchantReference))).get();
+            if (inits.exists && String((inits.data() || {}).uid || '') === initiatorUid) {
+                initPurpose = String((inits.data() || {}).purpose || '');
+                initAmount = moneyOf((inits.data() || {}).amount);
+            }
+        } catch (e) { /* best-effort */ }
+    }
     // [REPAIR H2] Server price check for every candidate order (outside the
     // transaction: product/negotiation prices are only a lower bound).
     const priceOf = {};
@@ -488,8 +535,37 @@ async function settlePesaPalPayment(tx, source) {
             out.settled.push(key);
         });
         inventoryReservation._internal.settlementFlush(t, stockState, now);
+        // [PHASE 7 F7-1 2026-11-10] Deposit ya wallet (top-up): malipo
+        // yaliyothibitishwa yasiyofungamana na oda/link — lakini ppinit
+        // inasema purpose=deposit — yanawekwa wallet ya mwanzilishi.
+        // Idempotency ni SAWA na njia ya kivinjari (walletAdjust deposit):
+        // ledgerKey 'pesapal_deposit_<tid>' + usage 'pptx_<tid>' — njia
+        // zote haziwezi kulipa mara mbili (yoyote inayotangulia hushinda).
+        let depositCredited = false;
+        if (!list.length && initPurpose === 'deposit' && initiatorUid) {
+            const depAmt = moneyOf(initAmount);
+            const depLedgerRef = db.doc('wallet_ledger/pesapal_deposit_' + safeKey(tx.trackingId));
+            const depLedgerSnap = await t.get(depLedgerRef);
+            const depUserSnap = await t.get(db.doc('users/' + initiatorUid));
+            const depKey = 'deposit_' + initiatorUid;
+            if (depLedgerSnap.exists) {
+                out.skipped.push({ target: depKey, reason: 'already_verified' });
+            } else if (!depUserSnap.exists || !(depAmt > 0) || !sameMoney(depAmt, moneyOf(tx.amount))) {
+                out.skipped.push({ target: depKey, reason: 'deposit_mismatch' });
+            } else if (depAmt > WALLET_CAP || used + depAmt > tx.amount + MONEY_EPS) {
+                out.skipped.push({ target: depKey, reason: 'deposit_overuse' });
+            } else {
+                t.set(depLedgerRef, { userId: initiatorUid, callerUid: 'system', amountTSh: depAmt, type: 'deposit',
+                    note: 'Deposit ya wallet (PesaPal, server)', pesapalTrackingId: tx.trackingId, verifiedBy: 'pesapal',
+                    merchantReference: tx.merchantReference || null, createdAt: now });
+                t.update(db.doc('users/' + initiatorUid), { walletBalance: FieldValue.increment(depAmt) });
+                used += depAmt; targets.push(depKey);
+                out.settled.push(depKey); depositCredited = true;
+                depositEvents.push({ uid: initiatorUid, amount: depAmt });
+            }
+        }
         // [PHASE 3] A verified payment that matches no order/link is kept for review (never applied).
-        if (!list.length && unmatchedSnap && !unmatchedSnap.exists) {
+        if (!list.length && !depositCredited && unmatchedSnap && !unmatchedSnap.exists) {
             t.set(unmatchedRef, { kind: 'unmatched_payment', state: 'UNAPPLIED', pesapalTrackingId: tx.trackingId,
                 merchantReference: tx.merchantReference || null, paidAmount: tx.amount, initiatorUid: initiatorUid || null,
                 source: String(source || 'pesapal'), createdAt: now, updatedAt: now });
@@ -504,6 +580,11 @@ async function settlePesaPalPayment(tx, source) {
     }
     for (const le of linkEvents) {
         if (le.sellerId) await notifyLinkEscrowFunded(db, le.id, le.sellerId, le.title, le.amount, 'pesapal');
+    }
+    for (const de of depositEvents) {
+        try { await db.collection('notifications').add({ userId: de.uid, title: 'Deposit Imepokelewa',
+            body: 'TSh ' + Number(de.amount).toLocaleString() + ' imewekwa kwenye wallet yako (PesaPal).',
+            createdAt: now, read: false, type: 'deposit' }); } catch (e) { /* hiari */ }
     }
     out.ok = true;
     return out;
@@ -877,6 +958,129 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
 });
 
 /* ============================================================
+ * 2b) withdrawalRequest — ombi la kutoa pesa (wallet -> mobile/bank)
+ * [PHASE 5 P5-1 2026-11-10] Kuchukua nafasi ya alert bandia ya
+ * 04-orders-escrow.js (iliahidi "admin atakutumia" bila kuandika chochote).
+ * Atomiki: salio linatengwa (debit + withdrawal_hold ledger) NA ombi
+ * linaundwa kwenye withdrawal_requests katika transaction MOJA — mtumiaji
+ * hawezi kutumia salio hilo tena, admin anaona ombi halisi.
+ * Idempotent: requestKey ya client (namespaced wdr_<uid>_<key>).
+ * Malipo ya nje (M-Pesa/bank) ni MWONGOZO wa admin; withdrawalResolve
+ * ndiyo inayofunga ombi (paid) au kurudisha salio (rejected).
+ * ========================================================== */
+exports.withdrawalRequest = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const data = req.data || {};
+    const amountTSh = moneyOf(data.amountTSh);
+    const channel = String(data.channel || 'mobile');
+    const account = String(data.account || '').trim();
+    const rawKey = String(data.requestKey || '');
+    if (!Number.isFinite(amountTSh) || amountTSh < 5000 || Math.round(amountTSh) !== amountTSh) {
+        throw new HttpsError('invalid-argument', 'Kiasi lazima kiwe TSh 5,000 au zaidi (namba kamili).');
+    }
+    if (channel !== 'mobile' && channel !== 'bank') {
+        throw new HttpsError('invalid-argument', 'channel lazima iwe mobile au bank.');
+    }
+    const digits = account.replace(/[^0-9]/g, '');
+    if (digits.length < 9 || digits.length > 20 || account.length > 40) {
+        throw new HttpsError('invalid-argument', 'Namba ya kupokelea si sahihi.');
+    }
+    if (!rawKey || rawKey.length > 64) {
+        throw new HttpsError('invalid-argument', 'requestKey inahitajika (idempotency).');
+    }
+    const ledgerKey = 'wdr_' + safeKey(auth.uid) + '_' + safeKey(rawKey);
+    const userRef = db.doc('users/' + auth.uid);
+    const ledgerRef = db.doc('wallet_ledger/' + ledgerKey);
+    const reqRef = db.doc('withdrawal_requests/' + ledgerKey);
+    let applied = false, balanceBefore = 0;
+    await db.runTransaction(async (t) => {
+        applied = false;
+        const ls = await t.get(ledgerRef);
+        if (ls.exists) return; // tayari — idempotent
+        const us = await t.get(userRef);
+        if (!us.exists) throw new Error('USER_MISSING');
+        const cur = Number(us.data().walletBalance || 0);
+        balanceBefore = cur;
+        if (cur + MONEY_EPS < amountTSh) {
+            throw new HttpsError('failed-precondition', 'INSUFFICIENT_BALANCE: Salio halitoshi.');
+        }
+        const nowIso = new Date().toISOString();
+        t.set(ledgerRef, {
+            userId: auth.uid, callerUid: auth.uid, amountTSh: -amountTSh,
+            type: 'withdrawal_hold', note: 'Ombi la kutoa ' + channel + ' ' + digits,
+            byAdmin: false, withdrawalRequestId: ledgerKey, createdAt: nowIso
+        });
+        t.update(userRef, { walletBalance: FieldValue.increment(-amountTSh) });
+        t.set(reqRef, {
+            userId: auth.uid, amount: amountTSh, channel, account: digits,
+            status: 'pending', ledgerKey, balanceBefore: cur, createdAt: nowIso
+        });
+        applied = true;
+    });
+    if (!applied) {
+        const existing = await reqRef.get();
+        const ed = existing.exists ? (existing.data() || {}) : {};
+        return { ok: true, already: true, requestId: ledgerKey, amount: Number(ed.amount || 0), status: ed.status || 'pending' };
+    }
+    return { ok: true, requestId: ledgerKey, amount: amountTSh, status: 'pending', balanceBefore };
+});
+
+/* ============================================================
+ * 2c) withdrawalResolve — admin hufunga ombi la kutoa pesa.
+ * 'paid': admin ameshatuma pesa NJE (M-Pesa/bank mwongozo) — ombi linafungwa
+ *         tu (salio lilishakatwa wakati wa request; hakuna debit ya pili).
+ * 'rejected': salio linarudishwa kwa mtumiaji (withdrawal_refund ledger).
+ * Idempotent: ombi lisilo-pending linarudisha {already:true} bila kugusa pesa.
+ * ========================================================== */
+exports.withdrawalResolve = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Ni admin tu anayeweza kufunga maombi ya kutoa pesa.');
+    const data = req.data || {};
+    const requestId = String(data.requestId || '');
+    const decision = String(data.decision || '');
+    const note = String(data.note || '').slice(0, 300);
+    if (!requestId || requestId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'requestId inahitajika.');
+    if (decision !== 'paid' && decision !== 'rejected') {
+        throw new HttpsError('invalid-argument', 'decision lazima iwe paid au rejected.');
+    }
+    if (note.trim().length < 5) {
+        throw new HttpsError('invalid-argument', 'Admin: andika sababu (note, angalau herufi 5).');
+    }
+    const reqRef = db.doc('withdrawal_requests/' + requestId);
+    let outcome = null;
+    await db.runTransaction(async (t) => {
+        const rs = await t.get(reqRef);
+        if (!rs.exists) throw new HttpsError('not-found', 'Ombi halikupatikana.');
+        const rd = rs.data() || {};
+        if (rd.status !== 'pending') { outcome = { already: true, status: rd.status }; return; }
+        const amt = moneyOf(rd.amount);
+        if (!(amt > 0)) throw new HttpsError('failed-precondition', 'Ombi halina kiasi sahihi.');
+        const nowIso = new Date().toISOString();
+        if (decision === 'rejected') {
+            const refundKey = 'wdr_refund_' + safeKey(requestId);
+            const rl = await t.get(db.doc('wallet_ledger/' + refundKey));
+            if (!rl.exists) {
+                t.set(db.doc('wallet_ledger/' + refundKey), {
+                    userId: rd.userId, callerUid: auth.uid, amountTSh: amt,
+                    type: 'withdrawal_refund', note: 'Kurudisha: ' + note,
+                    byAdmin: true, withdrawalRequestId: requestId, createdAt: nowIso
+                });
+                t.update(db.doc('users/' + rd.userId), { walletBalance: FieldValue.increment(amt) });
+            }
+        }
+        t.update(reqRef, { status: decision, resolvedAt: nowIso, resolvedBy: auth.uid, resolutionNote: note });
+        t.set(db.collection('admin_audit_log').doc(), {
+            action: decision === 'paid' ? 'WITHDRAWAL_PAID' : 'WITHDRAWAL_REJECTED',
+            actorUid: auth.uid, actorEmail: (auth.token && auth.token.email) || null, actorRole: 'admin',
+            target: { kind: 'withdrawal_request', requestId },
+            details: { amount: amt, userId: rd.userId, note }, createdAt: nowIso
+        });
+        outcome = { already: false, status: decision };
+    });
+    return { ok: true, requestId, status: outcome.status, already: outcome.already };
+});
+
+/* ============================================================
  * 3) escrowRelease — kutoa escrow ya marketplace ODA
  *    (smart-split atomic: muuzaji + carrier + wakala + platform)
  * ========================================================== */
@@ -1203,7 +1407,11 @@ async function releaseLinkEscrow(linkId, ctx) {
 
     // [ADMIN PAYMENTS SWITCH] Global OFF = FREE → kamisheni 0.
     const platformFee = (await paymentGate('commission')) ? Math.round(totalAmount * 0.05) : 0;
-    const carrierShare = Math.min(Math.max(0, Number(L.carrierShare || 0)), Math.max(0, totalAmount - platformFee));
+    // [PHASE 7 F7-2 2026-11-10] Link haina carrier (hakuna dereva wala delivery
+    // kwenye mkataba): L.carrierShare ya kivinjari (estimate ya 17-hub, default
+    // 15%) ILIPOTEZA pesa — ilikatwa kwa muuzaji bila kulipwa kwa mtu yeyote.
+    // carrierShare = 0; uwasilishaji hulipwa kupitia ODA (releaseOrderEscrow).
+    const carrierShare = 0;
     const sellerEarned = Math.max(0, totalAmount - platformFee - carrierShare);
 
     let sellerDocId = null;
@@ -1362,6 +1570,93 @@ exports.sokopayLinkWalletPay = onCall({ region: REGION }, async (req) => {
     return result;
 });
 
+/* [I-I1 2026-11-10] serviceOrderWalletPay — mteja analipa oda ya HUDUMA kutoka
+ * wallet moja kwa moja kwenye escrow (atomic: debit + hold + held/paid).
+ * Kabla ya hii, oda za huduma ziliundwa 'held' BILA malipo — fundi aliambiwa
+ * "pesa iko escrow" (uongo), na flow ilikufa (shipError/code-issue zinakataa
+ * unpaid). Chanzo cha bei: ombi lililokubaliwa — oda haiwezi kuzidi bajeti
+ * ya mteja (detail2). Idempotent kwa ledger+hold (malipo mara mbili hayawezi). */
+exports.serviceOrderWalletPay = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const data = req.data || {};
+    const orderId = String(data.orderId || '');
+    if (!orderId || orderId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId inahitajika.');
+    const buyer = await userDocFor(auth.uid);
+    if (!buyer) throw new HttpsError('not-found', 'Akaunti yako haipatikani.');
+    const orderRef = db.doc('orders/' + orderId);
+    const buyerRef = db.doc('users/' + buyer.id);
+    const holdRef = db.collection(ESCROW_HOLDS).doc('order_' + orderId);
+    const ledgerRef = db.doc('wallet_ledger/svcbuy_' + safeKey(orderId));
+    const CAP = Number(process.env.WALLET_MAX_ABS || 50000000);
+    const now = new Date().toISOString();
+    let result = null;
+    await db.runTransaction(async (t) => {
+        const os = await t.get(orderRef);
+        if (!os.exists) throw new HttpsError('not-found', 'Oda haipatikani.');
+        const o = os.data() || {};
+        if (String(o.collectionName || '') !== 'services') throw new HttpsError('failed-precondition', 'Hii si oda ya huduma.');
+        if (String(o.buyerId || '') !== auth.uid) throw new HttpsError('permission-denied', 'Mnunuzi wa oda hii pekee ndiye anayelipa.');
+        const sellerId = String(o.sellerId || '');
+        if (!sellerId || sellerId === auth.uid) throw new HttpsError('failed-precondition', 'Muuzaji si sahihi.');
+        const hs = await t.get(holdRef);
+        if (hs.exists) {
+            if (String(hs.data().payerUid || '') === auth.uid) { result = { ok: true, already: true, orderId }; return; }
+            throw new HttpsError('failed-precondition', 'Oda hii tayari imelipiwa.');
+        }
+        const led = await t.get(ledgerRef);
+        if (led.exists) throw new HttpsError('failed-precondition', 'Oda hii tayari imelipiwa.');
+        const st = String(o.status || '');
+        const paid = o.paymentVerified === true || String(o.paymentStatus || '') === 'paid';
+        if (paid) throw new HttpsError('failed-precondition', 'Oda hii tayari imelipiwa.');
+        // Hali ya uaminifu: 'awaiting_payment' (mpya) au 'held' isiyolipwa (legacy).
+        if (st !== 'awaiting_payment' && !(st === 'held' && !paid)) {
+            throw new HttpsError('failed-precondition', 'Oda haiko kwenye hali ya kulipiwa (status: ' + st + ').');
+        }
+        const amount = moneyOf(o.amount);
+        if (!(amount > 0) || amount > CAP) throw new HttpsError('failed-precondition', 'Kiasi cha oda si sahihi.');
+        if (data.expectedAmount != null && !sameMoney(moneyOf(data.expectedAmount), amount)) {
+            throw new HttpsError('failed-precondition', 'Kiasi cha oda kimebadilika. Hakiki tena kabla ya kulipa.');
+        }
+        // Chanzo cha bei cha server: ombi lililokubaliwa (kiasi kisizidi bajeti).
+        const reqId = String(o.itemId || '');
+        if (!reqId || reqId.indexOf('/') !== -1) throw new HttpsError('failed-precondition', 'Oda haina ombi la kazi.');
+        const rs = await t.get(db.doc('requests/' + reqId));
+        if (!rs.exists) throw new HttpsError('failed-precondition', 'Ombi la kazi halipo.');
+        const rq = rs.data() || {};
+        if (String(rq.senderId || '') !== auth.uid || String(rq.receiverId || '') !== sellerId || String(rq.status || '') !== 'accepted') {
+            throw new HttpsError('failed-precondition', 'Ombi la kazi halikukubaliwa na fundi huyu.');
+        }
+        const budget = Math.round(Number(rq.detail2));
+        if (!(budget > 0)) throw new HttpsError('failed-precondition', 'Bajeti ya ombi si sahihi.');
+        if (amount > budget + MONEY_EPS) throw new HttpsError('failed-precondition', 'Kiasi kinazidi bajeti ya ombi lako (TSh ' + budget.toLocaleString() + ').');
+        const bs = await t.get(buyerRef);
+        const bal = Number((bs.data() || {}).walletBalance || 0);
+        if (bal < amount) throw new HttpsError('failed-precondition', 'INSUFFICIENT_BALANCE: Salio halitoshi.');
+        t.set(ledgerRef, { userId: buyer.id, callerUid: auth.uid, amountTSh: -amount, type: 'purchase',
+            note: 'Malipo ya huduma kutoka wallet (escrow)', orderId, createdAt: now });
+        t.update(buyerRef, { walletBalance: FieldValue.increment(-amount) });
+        t.set(holdRef, { kind: 'escrow_hold', target: 'order', targetId: orderId, amount,
+            payerUid: auth.uid, payeeUid: sellerId, method: 'wallet', source: 'serviceOrderWalletPay',
+            verifiedAt: now, released: false });
+        t.update(orderRef, { status: 'held', heldAt: now, paymentStatus: 'paid', paymentVerified: true,
+            paymentVerifiedBy: 'wallet', verifiedAmount: amount, paymentProtectedAt: now, paidAt: now,
+            pricedByServer: true, priceSource: 'service_request', commerceType: 'service', serviceStatus: 'held', updatedAt: now });
+        result = { ok: true, orderId, amount, sellerId };
+    });
+    if (result && result.ok && !result.already && result.sellerId) {
+        try {
+            await db.collection('notifications').doc('escrow_svc_' + safeKey(orderId)).set({
+                userId: String(result.sellerId), type: 'escrow', system: true,
+                event: 'wallet.escrowFunded', params: { amount: result.amount.toLocaleString() },
+                title: 'SokoPay: Mteja Amelipa Huduma!',
+                body: 'Mteja amelipa TSh ' + result.amount.toLocaleString() + ' kwa wallet. Pesa imethibitishwa na server na iko salama kwenye Escrow. Anza kazi sasa.',
+                orderId, createdAt: now, read: false
+            }, { merge: true });
+        } catch (e) { /* taarifa si kikwazo cha malipo */ }
+    }
+    return result;
+});
+
 /* [PHASE 9 B-16] Idempotent "escrow funded" notice for a SokoPay link
  * (server-only id prefix "escrow_", which the rules refuse to clients). */
 async function notifyLinkEscrowFunded(db, linkId, sellerId, title, amount, method) {
@@ -1391,6 +1686,12 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
     const orderTrackingId = String(d.orderTrackingId || ('SKH_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)));
     const description = String(d.description || 'SokoHai Purchase').slice(0, 180);
     const merchantReference = String(d.merchantReference || d.externalId || orderTrackingId);
+    // [PHASE 7 F7-1 2026-11-10] Kusudi la malipo (settlePesaPalPayment hulitumia
+    // kuweka deposit kwenye wallet hata mtumiaji asiporudi kutoka PesaPal).
+    const _pur = String(d.purpose || '').toLowerCase().trim();
+    const payPurpose = ['deposit', 'order', 'link'].indexOf(_pur) !== -1 ? _pur : 'other';
+    const payKind = String(d.kind || payPurpose || 'generic').slice(0, 32);
+    const payTargetId = String(d.targetId || '').replace(/[^A-Za-z0-9_\-]/g, '').slice(0, 128);
     // [REPAIR 2026-10 M5] Only return to SokoHai's own origins (no open redirect).
     const allowedOrigins = String(process.env.PESAPAL_ALLOWED_RETURN_ORIGINS
         || 'https://sokohaimarket.netlify.app,https://sokohaicom.netlify.app' + (process.env.FUNCTIONS_EMULATOR === 'true' ? ',http://localhost:5000,http://127.0.0.1:5000' : ''))
@@ -1446,7 +1747,8 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
     try {
         await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(orderTrackingId)).create({
             kind: 'pesapal_init', uid: req.auth.uid, amount: body.amount, merchantReference: orderTrackingId,
-            pesapalTrackingId: String(data.order_tracking_id || ''), createdAt: new Date().toISOString()
+            pesapalTrackingId: String(data.order_tracking_id || ''), createdAt: new Date().toISOString(),
+            purpose: payPurpose, payKind: payKind, targetId: payTargetId || null
         });
     } catch (e) {
         const ex = await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(orderTrackingId)).get().catch(() => null);
@@ -2169,6 +2471,12 @@ async function custodyGetRide(rideId) {
     return { ref, data: snap.data() };
 }
 
+// [REMEDIATION 2026-11 R1] Customer contact lives in ride_requests/{id}/private/contact.
+async function custodyContact(rideId) {
+    try { const s = await db.doc('ride_requests/' + rideId + '/private/contact').get(); return s.exists ? (s.data() || {}) : {}; }
+    catch (_) { return {}; }
+}
+
 function custodyExpired(rd) {
     const exp = rd && (rd.pickupTokenExpiresAt || rd.handoverTokenExpiresAt);
     if (!exp) return false;
@@ -2337,6 +2645,30 @@ async function custodyAttemptClear(rideId, role) {
 // waliopo: routing/43-delivery-choice/08-app-state = 'searching';
 // 57-checkout-bridge/16-pos = 'pending_acceptance' yenye driverId aliyechaguliwa).
 const RIDE_OPEN_STATES = ['searching', 'pending_acceptance'];
+
+/* [REMEDIATION 2026-11 R2] Who may take a delivery job.
+ *  - The account must exist and must not be suspended.
+ *  - Open marketplace jobs: only an APPROVED agent (users.isApprovedAgent with
+ *    the admin stamp agentApprovedBy written by adminApproveAgent).
+ *  - Direct bookings (customer already named this driver in driverId /
+ *    preferredDriverId): the named driver may accept without agent approval,
+ *    but still must be an active (not suspended) account.
+ * Pure function so it is unit-tested without Firebase. */
+function transporterAccountProblem(u, opts) {
+    opts = opts || {};
+    if (!u) return 'not_registered';
+    if (u.suspended === true || u.isSuspended === true || u.accountStatus === 'suspended'
+        || u.accountStatus === 'banned' || u.agentStatus === 'suspended') return 'suspended';
+    if (opts.directBooking) return null;
+    if (u.isApprovedAgent !== true || !String(u.agentApprovedBy || '')) return 'not_approved_agent';
+    return null;
+}
+const TRANSPORTER_PROBLEM_MSG = {
+    not_registered: 'Akaunti yako haijasajiliwa kikamilifu. Kamilisha usajili kwanza.',
+    suspended: 'Akaunti yako imesimamishwa; huwezi kukubali kazi za usafiri.',
+    not_approved_agent: 'Ni wakala/msafirishaji aliyeidhinishwa na SokoHai pekee anayeweza kukubali kazi hii.'
+};
+exports._transporterAccountProblem = transporterAccountProblem;
 // Hali baada ya kukubali lakini kabla ya pickup (kukubali tena = idempotent).
 const RIDE_ACCEPTED_PREPICKUP = ['accepted', 'pickup_pending', 'awaiting_pickup'];
 
@@ -2359,6 +2691,12 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         if (!snap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
         rd = snap.data() || {};
         const st = String(rd.status || '');
+        // [R2] caller authorisation is read INSIDE the transaction (users/{uid}).
+        const uSnap = await t.get(db.doc('users/' + auth.uid));
+        const me = uSnap.exists ? (uSnap.data() || {}) : null;
+        const direct = (rd.driverId === auth.uid) || (rd.preferredDriverId === auth.uid);
+        const problem = transporterAccountProblem(me, { directBooking: direct });
+        if (problem) throw new HttpsError('permission-denied', TRANSPORTER_PROBLEM_MSG[problem]);
         if (rd.customerId && rd.customerId === auth.uid) {
             throw new HttpsError('permission-denied', 'Mteja hawezi kukubali safari yake mwenyewe kama dereva.');
         }
@@ -2384,9 +2722,10 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         t.update(ref, {
             status: 'accepted',
             driverId: auth.uid,
-            driverName: String(data.driverName || rd.driverName || auth.uid),
-            driverPhone: String(data.driverPhone || ''),
-            driverVehicleReg: String(data.driverVehicleReg || ''),
+            // [R2] identity comes from the caller's own account, not the request body.
+            driverName: String(me.displayName || me.name || me.fullName || rd.driverName || 'Dereva').slice(0, 80),
+            driverPhone: String(me.phone || me.phoneNumber || '').slice(0, 30),
+            driverVehicleReg: String(me.vehicleReg || me.plateNumber || data.driverVehicleReg || '').slice(0, 20),
             acceptedAt: now,
             agreedFare: Math.max(0, Number(rd.fare || 0) || Number(rd.price || 0) || 0),
             pickupTokenHash: custodyHash(pk),
@@ -2438,6 +2777,10 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
         if (!ofSnap.exists) throw new HttpsError('not-found', 'Ofa haipatikani.');
         const offer = ofSnap.data();
         if (offer.agentId !== auth.uid) throw new HttpsError('permission-denied', 'Si ofa yako.');
+        // [R2] a server-routed offer still requires an active (not suspended) account.
+        const uSnapO = await t.get(db.doc('users/' + auth.uid));
+        const problemO = transporterAccountProblem(uSnapO.exists ? (uSnapO.data() || {}) : null, { directBooking: true });
+        if (problemO) throw new HttpsError('permission-denied', TRANSPORTER_PROBLEM_MSG[problemO]);
         if (offer.status !== 'offered') throw new HttpsError('failed-precondition', 'Ofa hii si hai tena.');
         if (offer.expiresAt && Date.parse(offer.expiresAt) <= Date.now()) {
             throw new HttpsError('failed-precondition', 'Muda wa ofa umeisha; ombi limehamishiwa kwa mwingine.');
@@ -2694,6 +3037,7 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
         throw new HttpsError('invalid-argument', 'token inahitajika.');
     }
     const { ref, data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const now = new Date().toISOString();
 
     if (custodyExpired(rd)) {
@@ -2730,6 +3074,12 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
             throw new HttpsError('failed-precondition', 'Hali ya safari hairuhusu uthibitisho wa muuzaji.');
         }
         // OPTION A: kwa token | OPTION B: direct (bila token) — zote bado zinahakikiwa hapa.
+        // [DL-FIX2 2026-11-10] Token iliyotumika/kuisha muda wake/kubatilishwa
+        // haikubaliki (tawi la transporter lilikuwa na ukaguzi huu; la muuzaji
+        // halikuwa nalo — revoked PK ingekubaliwa).
+        if (!direct && String(rd.pickupTokenStatus || '') !== 'pending') {
+            throw new HttpsError('failed-precondition', 'Token ya kuchukua mzigo tayari imetumika au imebatilishwa.');
+        }
         if (!direct && !custodyTokenOk(rd, 'pickup', token)) {
             await custodyAttemptFail(rideId, role);
             throw new HttpsError('failed-precondition', 'Token ya kuchukua mzigo si sahihi.');
@@ -2839,7 +3189,7 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
             custodyLegs: FieldValue.arrayUnion({
                 leg: 1,
                 fromId: rd.customerId || null,
-                from: rd.customerName || 'Muuzaji',
+                from: rd.customerName || rc.customerName || 'Muuzaji',
                 toId: auth.uid,
                 to: rd.driverName || 'Dereva',
                 status: 'completed',
@@ -2962,14 +3312,24 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
     const rideId = String(data.rideId || '');
     if (!rideId) throw new HttpsError('invalid-argument', 'rideId inahitajika.');
     const { ref, data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const now = new Date().toISOString();
 
     const isCustodian = ((rd.currentCustodian || rd.driverId) === auth.uid);
     const isReceiver = (rd.customerId === auth.uid);
+    // [DL-FIX 2026-11-10] Baada ya kukamilika, custody huhamia kwa mpokeaji —
+    // dereva aliyekamilisha (driverId) hukataliwa (permission-denied) akijaribu
+    // tena, badala ya already:true. Ruhusu dereva/chama kwa already-check TU
+    // (watu wa nje bado wamezuiwa; njia ya malipo haijafunguliwa).
+    if (rd.status === 'completed') {
+        if (!isCustodian && !isReceiver && rd.driverId !== auth.uid) {
+            throw new HttpsError('permission-denied', 'Ni mshika mzigo au mpokeaji pekee anayeweza kukamilisha uwasilishaji.');
+        }
+        return { ok: true, already: true, status: 'completed', finalPayout: Number(rd.finalPayout || 0) };
+    }
     if (!isCustodian && !isReceiver) {
         throw new HttpsError('permission-denied', 'Ni mshika mzigo au mpokeaji pekee anayeweza kukamilisha uwasilishaji.');
     }
-    if (rd.status === 'completed') return { ok: true, already: true, status: 'completed', finalPayout: Number(rd.finalPayout || 0) };
     if (['picked_up', 'in_transit', 'delivered'].indexOf(rd.status) === -1) {
         throw new HttpsError('failed-precondition', 'Safari haiko kwenye hatua ya uwasilishaji (status: ' + rd.status + ').');
     }
@@ -3031,7 +3391,7 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
         status: 'completed',
         completedAt: now,
         currentCustodian: rd.customerId || null,
-        currentCustodianName: rd.customerName || 'Mnunuzi',
+        currentCustodianName: rd.customerName || rc.customerName || 'Mnunuzi',
         finalPayout: 0,
         payoutStatus: 'pending',
         verifiedArrivalCount: arrivalCount,
@@ -3149,18 +3509,26 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
     const kind = data.kind === 'handover' ? 'handover' : 'pickup';
     let rideId = String(data.rideId || '');
     if (!rideId) {
+        // [REMEDIATION R5] per-caller attempt limit (same 6 / 15 min window as custody).
+        if (await custodyAttemptsExceeded('verify', auth.uid)) {
+            throw new HttpsError('resource-exhausted', 'Majaribio mengi mno. Subiri dakika 15 kisha ujaribu tena.');
+        }
         // [FIX 2026-09] Field MOJA (token) + uchujaji kind kwenye memory —
         // haiitaji composite index (query ya token+kind ilirusha "internal").
         const hit = await db.collection('delivery_tokens').where('token', '==', token).limit(10).get();
         let tk = null;
         hit.forEach(function (d) { if (!tk && d.data().kind === kind) tk = d.data(); });
-        if (!tk) throw new HttpsError('not-found', 'Invalid pickup confirmation. Please verify the token and try again.');
-        if (!(tk.participants || []).includes(auth.uid)) {
-            throw new HttpsError('permission-denied', 'Safari hii haihusiani nawe.');
+        // [REMEDIATION R5] a valid token that is not yours answers exactly like an
+        // invalid one, so the endpoint cannot be used to discover live tokens.
+        if (!tk || !(tk.participants || []).includes(auth.uid)) {
+            await custodyAttemptFail('verify', auth.uid);
+            throw new HttpsError('not-found', 'Token si sahihi au haihusiani na safari yako. Hakiki token na ujaribu tena.');
         }
+        await custodyAttemptClear('verify', auth.uid);
         rideId = tk.rideId;
     }
     const { data: rd } = await custodyGetRide(rideId);
+    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const isParty = (rd.customerId === auth.uid) || (rd.driverId === auth.uid) || (rd.currentCustodian === auth.uid) || (rd.nextTransporterId === auth.uid);
     if (!isParty) throw new HttpsError('permission-denied', 'Safari hii haihusiani nawe.');
     // Rudisha taarifa za kukabidhi BILA token yenyewe.
@@ -3169,7 +3537,7 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
         rideId: rideId,
         kind: kind,
         cargoName: rd.cargoName || '',
-        customerName: rd.customerName || '',
+        customerName: rd.customerName || rc.customerName || '',
         driverName: rd.driverName || '',
         vehicleType: rd.vehicleType || '',
         fromLocation: rd.fromLocation || '',
@@ -3584,6 +3952,11 @@ exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
 // only the authenticated owner's Business/Store pair and preserves legacy fields.
 const businessEngine = require('./business');
 exports.businessEnsureContext = businessEngine.businessEnsureContext;
+// [J-J1 2026-11-10] Mialiko ya wafanyakazi (owner self-service).
+exports.staffInviteCreate = businessEngine.staffInviteCreate;
+exports.staffInviteAccept = businessEngine.staffInviteAccept;
+exports.staffInviteRevoke = businessEngine.staffInviteRevoke;
+exports.staffRemove = businessEngine.staffRemove;
 
 // [STEP 3A-0] One server-authoritative POS sale and inventory adjustment path.
 // Product.stock is mutated here only, inside Firestore transactions; the client
@@ -3656,6 +4029,17 @@ const commerceModes = require('./commerce-modes');
 exports.auctionPlaceBid = commerceModes.auctionPlaceBid;
 exports.groupBuyJoin = commerceModes.groupBuyJoin;
 exports.commerceModesSweep = commerceModes.commerceModesSweep;
+exports.auctionFinalize = commerceModes.auctionFinalize;
+// [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
+const liveCommerce = require('./live-commerce');
+['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind','livePause','liveResume'].forEach(n => { exports[n] = liveCommerce[n]; });
+// [R13-D] Bei Kushuka buyer queue (refs 1 & 2)
+const priceDropQueue = require('./price-drop-queue');
+['priceDropSubmit','priceDropMyRank','priceDropSettle'].forEach(n => { exports[n] = priceDropQueue[n]; });
+const stories = require('./stories');
+['storyCreate','storyView','storyReport','storyRemove','storyReact'].forEach(n => { exports[n] = stories[n]; });
+const groupSoko = require('./group-soko');
+['groupSokoCreate','groupSokoInvite','groupSokoAccept','groupSokoCapitalRecord','groupSokoCapitalConfirm','groupSokoPropose','groupSokoVote','groupSokoExecute','groupSokoPurchaseStep','groupSokoAttachProduct','groupSokoReport'].forEach(n => { exports[n] = groupSoko[n]; });
 // Test hook (emulator only): run the auction sweep now. Not a deployed function (not an onCall/onSchedule).
 Object.defineProperty(exports, '_commerceSweepForTest', { enumerable: false, value: () => commerceModes._testing.sweepAuctions() });
 const adminAuthority = require('./admin-authority');
@@ -3665,6 +4049,7 @@ exports.adminSetAgentStatus = adminAuthority.adminSetAgentStatus;
 exports.adminSetAccountStatus = adminAuthority.adminSetAccountStatus;
 exports.adminSetRole = adminAuthority.adminSetRole;
 exports.adminSetVerification = adminAuthority.adminSetVerification;
+exports.adminSetTrustBadge = adminAuthority.adminSetTrustBadge; // [R9] four distinct trust badges
 exports.adminModerateListing = adminAuthority.adminModerateListing;
 exports.adminAuditQuery = adminAuthority.adminAuditQuery;
 exports.adminWhoAmI = adminAuthority.adminWhoAmI;
