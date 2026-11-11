@@ -87,6 +87,24 @@ const STATIC_ROOT = process.env.SKH_STATIC_ROOT
   ? path.resolve(ROOT, process.env.SKH_STATIC_ROOT)
   : ROOT;
 
+/* ---------- 0c. REMOTE PREVIEW PROXY [2026-11-11] ----------
+   SKH_PREVIEW_PROXY=1 (kwenye preview server PEKEE, sio server ya tests):
+   Huwezesha kuona app + emulators kupitia HTTPS public preview (e2b/Arena)
+   ambapo browser ya mtumiaji haifikii 127.0.0.1 ya sandbox, na Firebase SDK
+   ina-force http:// kwa emulator (mixed-content block kutoka https page).
+   Suluhisho: kila kitu same-origin kupitia server hii:
+     • /__fs/*     → proxy kwenye Firestore emulator (FIRESTORE_EMULATOR_HOST)
+     • /__auth/*   → proxy kwenye Auth emulator (FIREBASE_AUTH_EMULATOR_HOST)
+     • /__vendor/  → Firebase SDK zilizopatchwa (https + path prefix kwa emulator)
+     • serveIndex ina-inject import map + SKH_EMULATOR yenye dynamic host
+     • 00-bootstrap.js inahudumiwa na isLocalEnv patch (e2b.app = local)
+   FAILI ZA REPO HAZIGUSWI — patches zote ni serve-time (runtime) tu.
+   Default = 0 → tabia ya awali haijabadilika kabisa. */
+const PREVIEW_PROXY = process.env.SKH_PREVIEW_PROXY === '1';
+const PREVIEW_VENDOR_DIR = process.env.SKH_PREVIEW_VENDOR_DIR ||
+  path.join(process.env.HOME || '/home/user', 'sokohai-preview-vendor');
+const PREVIEW_SCHEME_DEFAULT = process.env.SKH_PREVIEW_SCHEME || 'https';
+
 /* ---------- 1. Credentials ---------- */
 // [PHASE 1 SECURITY 2026-09] Emulator → faili la service account → Google ADC.
 // Tunasoma `type` na project TU kutoka kwenye faili — maudhui hayachapishwi.
@@ -706,7 +724,92 @@ function emulatorClientConfig() {
   };
 }
 
-function serveIndex(res) {
+/* [PREVIEW PROXY 2026-11-11] Same-origin proxy kwenda kwenye emulator ya
+   ndani. Inatumia streaming (pipe) — inasaidia WebChannel listen ya Firestore
+   (chunked responses) na POST bodies kubwa. */
+function proxyToLocalhost(req, res, targetPort, stripRe) {
+  let fwdPath = '/';
+  try {
+    const u = new URL(req.url, 'http://localhost');
+    fwdPath = (u.pathname.replace(stripRe, '') || '/') + (u.search || '');
+    if (!fwdPath.startsWith('/')) fwdPath = '/' + fwdPath;
+  } catch (_) { /* tumia '/' */ }
+
+  const headers = Object.assign({}, req.headers);
+  delete headers.connection;
+  delete headers['content-length']; // Node itaweka upya kwa pipe
+  headers.host = '127.0.0.1:' + targetPort;
+
+  const preq = http.request(
+    {
+      host: '127.0.0.1',
+      port: targetPort,
+      method: req.method,
+      path: fwdPath,
+      headers
+    },
+    pres => {
+      const rh = Object.assign({}, pres.headers);
+      delete rh.connection;
+      delete rh['transfer-encoding']; // Node ita-chunk yenyewe kwa pipe
+      try {
+        res.writeHead(pres.statusCode || 500, rh);
+      } catch (_) { /* headers tayari zimetumwa */ }
+      pres.pipe(res);
+    }
+  );
+
+  preq.on('error', err => {
+    if (!res.headersSent) {
+      sendJson(res, 502, {
+        error: {
+          status: 'UNAVAILABLE',
+          message: 'Preview proxy: emulator :' + targetPort + ' haipatikani (' +
+            (err && err.message) + ')'
+        }
+      });
+    } else {
+      try { res.end(); } catch (_) {}
+    }
+  });
+
+  req.pipe(preq);
+}
+
+/* [PREVIEW PROXY 2026-11-11] SKH_EMULATOR yenye dynamic host kwa remote preview.
+   Browser inatumia hostname ILEILE ya ukurasa (same-origin) + path prefix:
+   Firestore → https://HOST/__fs/… , Auth → https://HOST/__auth/… */
+function previewEmulatorConfig(req) {
+  if (!EMULATOR) return null;
+  const fsHp = emulatorHostPort(process.env.FIRESTORE_EMULATOR_HOST);
+  if (!fsHp) return null;
+
+  const hostHeader = String(
+    (req && req.headers && req.headers.host) || ''
+  ).trim() || 'localhost:' + PORT;
+  const hostOnly = hostHeader.split(':')[0] || 'localhost';
+  const pm = /:(\d+)$/.exec(hostHeader);
+  const portNum = pm ? Number(pm[1]) : 443;
+  const fwdProto = String(
+    (req && req.headers && req.headers['x-forwarded-proto']) || ''
+  ).split(',')[0].trim();
+  const scheme = (fwdProto || PREVIEW_SCHEME_DEFAULT || 'https').toLowerCase();
+
+  return {
+    projectId: String(process.env.GCLOUD_PROJECT || ''),
+    firestore: { host: hostHeader + '/__fs', port: portNum },
+    authUrl: scheme + '://' + hostHeader + '/__auth/',
+    _previewHost: hostOnly
+  };
+}
+
+function serveIndex(req, res) {
+  // [PREVIEW PROXY] wito wa zamani serveIndex(res) bado unafanya kazi.
+  if (res === undefined && req && typeof req.writeHead === 'function') {
+    res = req;
+    req = null;
+  }
+
   let html = fs.readFileSync(
     path.join(STATIC_ROOT, 'index.html'),
     'utf8'
@@ -722,9 +825,21 @@ function serveIndex(res) {
     return res.end(html);
   }
 
-  const emu = emulatorClientConfig();
+  const emu = PREVIEW_PROXY ? previewEmulatorConfig(req) : emulatorClientConfig();
+
+  // [PREVIEW PROXY] import map: elekeza Firebase SDKs kwenye nakala
+  // zilizopatchwa (https + path prefix kwa emulator). Lazima iwe KABLA ya
+  // module script yoyote — inawekwa pamoja na inject nyingine kwenye <head>.
+  const importMap = PREVIEW_PROXY
+    ? '<script type="importmap">{"imports":{' +
+      '"https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js":' +
+      '"/__vendor/firebase-firestore.js",' +
+      '"https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js":' +
+      '"/__vendor/firebase-auth.js"}}<\/script>'
+    : '';
 
   const inject =
+    importMap +
     '<script>window.SKH_FUNCTIONS_URL=' +
     JSON.stringify(FN_PREFIX) +
     ';window.SKH_LOCAL_FUNCTIONS_SERVER=true;' +
@@ -777,7 +892,7 @@ function serveStatic(req, res, urlObj) {
     pathname === '/' ||
     pathname === '/index.html'
   ) {
-    return serveIndex(res);
+    return serveIndex(req, res);
   }
 
   const file = path.normalize(
@@ -803,7 +918,29 @@ function serveStatic(req, res, urlObj) {
     fs.statSync(target).isFile()
   ) {
     if (path.basename(target) === 'index.html') {
-      return serveIndex(res);
+      return serveIndex(req, res);
+    }
+
+    /* [PREVIEW PROXY 2026-11-11] Serve-time patch ya 00-bootstrap.js (repo file
+       haiguswi): tambua *.e2b.app kama mazingira ya ndani ili SKH_EMULATOR
+       na SKH_FUNCTIONS_URL zitumike kwenye remote preview. */
+    if (
+      PREVIEW_PROXY &&
+      /\/js\/app\/00-bootstrap\.js$/.test(target)
+    ) {
+      let js = fs.readFileSync(target, 'utf8');
+      const anchor = '|| /\\.localhost$/.test(h);';
+      if (js.includes(anchor)) {
+        js = js.replace(
+          anchor,
+          '|| /\\.localhost$/.test(h) || /\\.e2b\\.app$/.test(h);'
+        );
+      }
+      res.writeHead(200, {
+        'Content-Type': 'text/javascript; charset=utf-8',
+        'Cache-Control': 'no-cache'
+      });
+      return res.end(js);
     }
 
     res.writeHead(200, {
@@ -828,7 +965,7 @@ function serveStatic(req, res, urlObj) {
     return res.end('Not found');
   }
 
-  return serveIndex(res);
+  return serveIndex(req, res);
 }
 
 /* ---------- 9. Server ---------- */
@@ -913,6 +1050,72 @@ const server = http.createServer(
               '" haipo kwenye functions/index.js'
           }
         });
+      }
+
+      /* [PREVIEW PROXY 2026-11-11] Same-origin proxy kwa emulators + vendor.
+         Inafanya kazi tu SKH_PREVIEW_PROXY=1 (preview server pekee). */
+      if (PREVIEW_PROXY) {
+        if (
+          urlObj.pathname === '/__fs' ||
+          urlObj.pathname.startsWith('/__fs/') ||
+          /^\/__fs:\d+\//.test(urlObj.pathname)
+        ) {
+          const fsHp = emulatorHostPort(process.env.FIRESTORE_EMULATOR_HOST);
+          if (!fsHp) {
+            return sendJson(res, 503, {
+              error: {
+                status: 'UNAVAILABLE',
+                message: 'Firestore emulator haikuuwashwa'
+              }
+            });
+          }
+          return proxyToLocalhost(
+            req, res, fsHp.port, /^\/__fs(:\d+)?/
+          );
+        }
+
+        if (
+          urlObj.pathname === '/__auth' ||
+          urlObj.pathname.startsWith('/__auth/')
+        ) {
+          const authHp = emulatorHostPort(
+            process.env.FIREBASE_AUTH_EMULATOR_HOST
+          );
+          if (!authHp) {
+            return sendJson(res, 503, {
+              error: {
+                status: 'UNAVAILABLE',
+                message: 'Auth emulator haikuuwashwa'
+              }
+            });
+          }
+          return proxyToLocalhost(req, res, authHp.port, /^\/__auth/);
+        }
+
+        if (urlObj.pathname.startsWith('/__vendor/')) {
+          const vname = urlObj.pathname.slice('/__vendor/'.length);
+          if (
+            vname !== 'firebase-firestore.js' &&
+            vname !== 'firebase-auth.js'
+          ) {
+            res.writeHead(404);
+            return res.end('Not found');
+          }
+          const vfile = path.join(PREVIEW_VENDOR_DIR, vname);
+          if (!fs.existsSync(vfile)) {
+            return sendJson(res, 503, {
+              error: {
+                status: 'UNAVAILABLE',
+                message: 'Preview vendor haipo: ' + vfile
+              }
+            });
+          }
+          res.writeHead(200, {
+            'Content-Type': 'text/javascript; charset=utf-8',
+            'Cache-Control': 'no-cache'
+          });
+          return fs.createReadStream(vfile).pipe(res);
+        }
       }
 
       if (!STATIC_ENABLED) {

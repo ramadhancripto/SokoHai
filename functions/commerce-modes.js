@@ -70,6 +70,8 @@ function antiSnipeEnd(md, nowMs) {
 function validateBid(p, bid, uid, nowMs) {
     const md = (p && p.modeData) || {};
     if (saleModeOf(p) !== 'auction') return { ok: false, code: 'si_mnada' };
+    // [AUCTION-LIVE] the host paused the live room: bidding freezes everywhere (room + product page)
+    if (md.livePaused === true) return { ok: false, code: 'mnada_umesitishwa' };
     const endsAt = Number(md.endTime) || 0;
     if (md.ended || (endsAt > 0 && nowMs >= endsAt)) return { ok: false, code: 'mnada_umefungwa' };
     if (Number(md.startTime) > 0 && nowMs < Number(md.startTime)) return { ok: false, code: 'mnada_haujaanza' };
@@ -130,6 +132,18 @@ exports.auctionPlaceBid = onCall({ region: REGION }, async (req) => {
             'modeData.currentBid': bid, 'modeData.maxBidder': uid, 'modeData.maxBidderName': bidderName,
             'modeData.totalBids': totalBids, 'modeData.lastBidAt': now
         };
+        // [AUCTION-LIVE] distinct bidder count (server-authoritative; shown as "Wazabuni").
+        // The bidders array is capped so the product doc stays small; the count stays exact.
+        let bidders = Array.isArray(md.bidders) ? md.bidders : null;
+        if (!bidders && totalBids > 1 && !(parseInt(md.bidderCount, 10) > 0)) {
+            const bq = await t.get(ref.collection('bids').limit(200));   // one-time seed for legacy auctions
+            bidders = [...new Set(bq.docs.map(d => String((d.data() || {}).uid || '')).filter(Boolean))];
+        }
+        bidders = bidders || [];
+        if (bidders.indexOf(uid) === -1) {
+            patch['modeData.bidderCount'] = Math.max(parseInt(md.bidderCount, 10) || 0, bidders.length) + 1;
+            if (bidders.length < 500) patch['modeData.bidders'] = FieldValue().arrayUnion(uid);
+        }
         const ext = antiSnipeEnd(md, nowMs);
         if (ext) { patch['modeData.endTime'] = ext.endTime; patch['modeData.extensions'] = ext.extensions; }
         t.update(ref, patch);

@@ -119,6 +119,55 @@ exports.liveStart = onCall({ region: REGION }, async (req) => {
     return { ok: true, notified: sent.size };
 });
 
+/* [AUCTION-LIVE] Pause / resume (host only). Business rule: an auction live may only be
+ * paused BEFORE the first bid (buyers who already bid must never see a frozen room).
+ * While paused, bidding is blocked server-side (modeData.livePaused, enforced by
+ * auctionPlaceBid) and comments/likes are refused; on resume the auction endTime moves
+ * forward by the paused duration so the server timer stays fair. */
+exports.livePause = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const { ref, d } = await loadSession((req.data || {}).sessionId);
+    mustHost(req, d);
+    if (d.status !== 'live') throw new HttpsError('failed-precondition', 'hali_' + d.status);
+    const pids = d.productIds || [];
+    if (d.kind === 'auction') {
+        for (const pid of pids) {
+            const p = ((await db().doc('products/' + id(pid)).get()).data()) || {};
+            if ((parseInt(((p.modeData) || {}).totalBids, 10) || 0) > 0) throw new HttpsError('failed-precondition', 'mnada_una_zabuni');
+        }
+    }
+    const now = new Date().toISOString(), nowMs = Date.now();
+    await ref.update({ status: 'paused', pausedAt: now, pausedAtMs: nowMs, updatedAt: now });
+    for (const pid of pids) {
+        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': true }); } catch (e) { /* product may be gone */ }
+    }
+    await ref.collection('comments').add({ kind: 'system', text: 'Live imesitishwa na mwenyeji kwa muda', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
+    return { ok: true };
+});
+exports.liveResume = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const { ref, d } = await loadSession((req.data || {}).sessionId);
+    mustHost(req, d);
+    if (d.status !== 'paused') throw new HttpsError('failed-precondition', 'hali_' + d.status);
+    const now = new Date().toISOString(), nowMs = Date.now();
+    const pausedMs = Math.max(0, nowMs - (Number(d.pausedAtMs) || nowMs));
+    await ref.update({ status: 'live', pausedAt: null, pausedAtMs: null, updatedAt: now });
+    for (const pid of pidsSafe(d)) {
+        const pref = db().doc('products/' + id(pid));
+        await db().runTransaction(async (t) => {
+            const s = await t.get(pref);
+            if (!s.exists) return;
+            const p = s.data() || {}, md = p.modeData || {};
+            const patch = { 'modeData.livePaused': false };
+            if (saleMode(p) === 'auction' && Number(md.endTime) > 0 && !md.ended) patch['modeData.endTime'] = Number(md.endTime) + pausedMs;
+            t.update(pref, patch);
+        });
+    }
+    await ref.collection('comments').add({ kind: 'system', text: 'Live imeendelea', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
+    return { ok: true, pausedMs };
+});
+function pidsSafe(d) { return d.productIds || []; }
+
 exports.liveEnd = onCall({ region: REGION }, async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'login');
     const data = req.data || {};
@@ -128,7 +177,11 @@ exports.liveEnd = onCall({ region: REGION }, async (req) => {
     let rec = null;
     if (data.recordingUrl) { if (!d.recordingAllowed) throw new HttpsError('failed-precondition', 'rekodi_hairuhusiwi'); rec = embedUrl(data.recordingUrl); if (!rec) throw new HttpsError('invalid-argument', 'rekodi_haikubaliki'); }
     const now = new Date().toISOString();
-    await ref.update({ status: 'ended', endedAt: now, updatedAt: now, endedBy: req.auth.uid, endReason: clean(data.reason, 200) || null, recordingUrl: rec, viewerCount: 0 });
+    await ref.update({ status: 'ended', endedAt: now, updatedAt: now, endedBy: req.auth.uid, endReason: clean(data.reason, 200) || null, recordingUrl: rec, viewerCount: 0, pausedAt: null, pausedAtMs: null });
+    // [AUCTION-LIVE] unfreeze the products (a paused session may be ended while frozen)
+    for (const pid of (d.productIds || [])) {
+        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false }); } catch (e) { /* gone */ }
+    }
     await ref.collection('comments').add({ kind: 'system', text: 'Live imekwisha', uid: req.auth.uid, name: 'SokoHai', createdAt: now, status: 'visible' });
     if (req.auth.uid !== d.hostUid) await audit(req, 'LIVE_ENDED_BY_ADMIN', { kind: 'live_session', id: ref.id }, { reason: clean(data.reason, 200) });
     return { ok: true };
@@ -171,9 +224,10 @@ exports.liveJoin = onCall({ region: REGION }, async (req) => {
         const s = await t.get(ref), v = await t.get(vref);
         const cur = s.data() || {};
         const active = v.exists && (v.data() || {}).active === true;
+        const countable = cur.status === 'live' || cur.status === 'paused';   // [AUCTION-LIVE] paused viewers still watch
         const now = new Date().toISOString();
-        t.set(vref, { uid, active: cur.status === 'live', joinedAt: (v.exists && (v.data() || {}).joinedAt) || now, lastSeenAt: now }, { merge: true });
-        if (!active && cur.status === 'live') { count = (cur.viewerCount || 0) + 1; t.update(ref, { viewerCount: count, peakViewers: Math.max(cur.peakViewers || 0, count) }); }
+        t.set(vref, { uid, active: countable, joinedAt: (v.exists && (v.data() || {}).joinedAt) || now, lastSeenAt: now }, { merge: true });
+        if (!active && countable) { count = (cur.viewerCount || 0) + 1; t.update(ref, { viewerCount: count, peakViewers: Math.max(cur.peakViewers || 0, count) }); }
         else count = cur.viewerCount || 0;
     });
     return { ok: true, status: d.status, viewerCount: count };
@@ -197,6 +251,7 @@ exports.liveComment = onCall({ region: REGION }, async (req) => {
     const text = clean(data.text, MAX_TEXT);
     if (!text) throw new HttpsError('invalid-argument', 'andika_ujumbe');
     const { ref, d } = await loadSession(data.sessionId);
+    if (d.status === 'paused') throw new HttpsError('failed-precondition', 'live_imesitishwa');
     if (d.status !== 'live') throw new HttpsError('failed-precondition', 'live_haiendelei');
     if ((d.mutedUids || []).indexOf(uid) !== -1) throw new HttpsError('permission-denied', 'umezuiwa_kwenye_live');
     const u = await userDoc(uid);
@@ -257,7 +312,10 @@ exports.adminLiveRemove = onCall({ region: REGION }, async (req) => {
     if (reason.length < 5) throw new HttpsError('invalid-argument', 'sababu_inahitajika');
     const { ref, d } = await loadSession(data.sessionId);
     const now = new Date().toISOString();
-    await ref.update({ status: 'removed', endedAt: d.endedAt || now, updatedAt: now, endedBy: req.auth.uid, endReason: reason, viewerCount: 0 });
+    await ref.update({ status: 'removed', endedAt: d.endedAt || now, updatedAt: now, endedBy: req.auth.uid, endReason: reason, viewerCount: 0, pausedAt: null, pausedAtMs: null });
+    for (const pid of (d.productIds || [])) {
+        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false }); } catch (e) { /* gone */ }
+    }
     await audit(req, 'LIVE_REMOVED', { kind: 'live_session', id: ref.id }, { reason });
     await notify(d.hostUid, 'Live yako imeondolewa', reason, { type: 'live_removed', liveSessionId: ref.id });
     return { ok: true };
@@ -271,6 +329,7 @@ exports._testing = { embedUrl };
 exports.liveLike = onCall({ region: REGION }, async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'login');
     const { ref, d } = await loadSession((req.data || {}).sessionId);
+    if (d.status === 'paused') throw new HttpsError('failed-precondition', 'live_imesitishwa');
     if (d.status !== 'live') throw new HttpsError('failed-precondition', 'live_haiendelei');
     const lref = ref.collection('likes').doc(req.auth.uid);
     let ok = false;
