@@ -6,7 +6,7 @@
   "devDependencies": {
     "acorn": "^8.19.0",
     "jsdom": "^29.1.1",
-    "playwright": "^1.47.2"
+    "playwright": "^1.65.0"
   },
   "scripts": {
     "test:nego": "node tools/test_nego_form.mjs",
