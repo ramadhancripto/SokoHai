@@ -28,6 +28,7 @@ const CLASSIFIED = [
   ['js/app/67-payment-accounts.js', /'users', uid\(\)\)/, 'own payment accounts'],
   ['js/app/69-chat-groups.js', /'users', (me|uid\(\))\)/, 'own wallet/account type'],
   ['js/app/73-group-soga.js', /'users', uid\(\)\)/, 'own wallet'],
+  ['js/app/34-chat-core.js', /'users', uid\)\); \/\/ own profile only/, 'own name fallback (guarded: uid === myUid())'],
   ['js/17-pesapal-return.js', /where\('uid', '==', window\.currentUser\.uid\)/, 'own cart reset'],
   // Agent reading members it manages (rules: managedByAgentUid/createdByAgentId)
   ['js/app/31-agent-assist.js', /where\('memberId', '==', (candidate|code)\)/, 'agent: own members / uniqueness probe (denied -> fallback id)'],

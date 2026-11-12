@@ -16,7 +16,7 @@ kama ilivyofanyika kwa `css/` na `js/app/`.
 | Kipande | Kazi yake |
 |---|---|
 | `00-head.html` | `<head>`: meta, title, CSS links, Chart.js + Leaflet |
-| `01-shell.html` | `<body>` + Sidebar ya desktop (Soko Huru, HaiPay...) + mwanzilishi wa app-content-main |
+| `01-shell.html` | `<body>` + Sidebar ya desktop (Soko Huru, SokoPay...) + mwanzilishi wa app-content-main |
 | `02-inputs.html` | File inputs fiche (dp upload, receipt, image search, chat file) |
 | `03-modals-core.html` | Modals: category grid, buyer orders, sidebar menu, mode switcher, seller type, boost, subscription, escrow dispute, welcome, map, direct hire |
 | `04-modal-auth.html` | Login / Signup modal |
@@ -29,9 +29,9 @@ kama ilivyofanyika kwa `css/` na `js/app/`.
 | `11-form-driver.html` | Fomu ya dereva + transporter (vehicles, routes) |
 | `12-form-offline.html` | Fomu ya wakala kusajili mwanachama offline |
 | `13-form-edit.html` | Fomu ya kuhariri tangazo |
-| `14-haipay.html` | **HaiPay modal nzima** (sidebar + Home/Pay/Create Link/Track/Transactions/Help/Disputes/Settings) — kipande kikubwa zaidi (74 KB) |
+| `14-sokopay.html` | **SokoPay modal nzima** (sidebar + Home/Pay/Create Link/Track/Transactions/Help/Disputes/Settings) — kipande kikubwa zaidi (74 KB) |
 | `15-main-menu.html` | Main menu (kitufe cha "+") + mwanzo wa header ya nje |
-| `16-topnav.html` | Top nav (Usimamizi, HaiPay icon, cart, notification) + search + location + announcement + tab za bidhaa/huduma/usafiri |
+| `16-topnav.html` | Top nav (Usimamizi, SokoPay icon, cart, notification) + search + location + announcement + tab za bidhaa/huduma/usafiri |
 | `17-sliders.html` | Kitufe cha kategoria + subcategory/filter sliders |
 | `18-buyer-view.html` | Buyer view: KPI cards + main feed grid |
 | `19-bottomnav.html` | Bottom nav: Home, Bidhaa, Huduma, Usafirishaji, Chat |

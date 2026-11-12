@@ -163,6 +163,9 @@ exports.posReports = onCall({ region: REGION }, async req => {
   const period = periodBounds(data.period || data);
   const scope = await resolveBusinessStoreContext({ auth: req.auth, product: { businessId: data.businessId, storeId: data.storeId, userId: data.sellerId || req.auth.uid }, requestedBusinessId: data.businessId, requestedStoreId: data.storeId });
   const request = { businessId: scope.businessId, storeId: scope.storeId };
+  // [2026-11-06] clear, typed error instead of a generic INTERNAL for accounts
+  // without a canonical Business/Store (the client calls businessEnsureContext).
+  if (!request.businessId || !request.storeId) throw new HttpsError('failed-precondition', 'BUSINESS_STORE_REQUIRED: akaunti hii bado haina Business/Store rasmi.');
   const [sales, adjustments, refunds, credits, voids, movements, ledger] = await Promise.all([
     readCollection('sales', request, period, 'completedAt'), readCollection('sale_adjustments', request, period, 'updatedAt'), readCollection('refunds', request, period, 'updatedAt'), readCollection('credit_adjustments', request, period, 'updatedAt'), readCollection('sale_voids', request, period, 'updatedAt'), readCollection('inventory_movements', request, period, 'createdAt'), readCollection('shop_ledger', request, period, 'date')
   ]);

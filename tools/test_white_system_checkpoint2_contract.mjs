@@ -6,8 +6,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const r = p => fs.readFileSync(path.join(root, p), 'utf8');
 
 const pay = r('js/app/21-sokopay.js');
-const payhtml = r('html/14-haipay.html');
-const paymob = r('css/11-haipay-mobile.css');
+const payhtml = r('html/14-sokopay.html');
+const paymob = r('css/11-sokopay-mobile.css');
 
 const token = r('css/19-token-box.css');
 const req = r('css/20-request-inbox.css');

@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SokoHai — Bidhaa Sokoni (aina 4) + Live full-screen & mini player — PREVIEW</title>
+<style>
+:root{
+  --g:#18A982; --gd:#0F7A5C; --gsoft:#E6F5EE; --gold:#C9A227; --goldsoft:#FFF6E0;
+  --ink:#0E1F1A; --mut:#6B7D77; --line:#E5ECE9; --soft:#F4F8F6; --bg:#EDF3F0;
+  --warn:#B4690E; --danger:#B3261E; --blue:#1268A8;
+  --shadow:0 6px 24px rgba(15,60,48,.08); --shadow-lg:0 18px 44px rgba(15,60,48,.14);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:400 14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1560px;margin:0 auto;padding:0 20px 90px}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:80;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
+.top .in{max-width:1560px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:14px;letter-spacing:-.2px}
+.brand b{color:var(--gd)}
+.tag{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.tag.prop{background:var(--goldsoft);color:#8A5A00;border:1px solid #F0DFB4}
+.tag.exist{background:var(--gsoft);color:var(--gd);border:1px solid #CDEDE0}
+.tag.warn{background:#FDF2E4;color:var(--warn);border:1px solid #F3E0C2}
+.tag.stop{background:#FDECEC;color:var(--danger);border:1px solid #F5D5D3}
+.top .spacer{margin-left:auto}
+
+/* ---------- headings ---------- */
+h1{font-size:27px;line-height:1.22;letter-spacing:-.6px;margin:28px 0 8px;font-weight:800}
+h1 small{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin-top:8px;letter-spacing:0}
+.lede{color:#3B4F48;max-width:1020px;font-size:13.5px;margin:0}
+h2.sec{display:flex;align-items:center;gap:10px;font-size:19px;margin:44px 0 6px;letter-spacing:-.3px}
+h2.sec .n{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 8px;border-radius:8px;background:var(--gd);color:#fff;font-size:12.5px;font-weight:800}
+h2.sec .badge{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.sub{margin:4px 0 14px;color:#4A5F58;font-size:13px;max-width:1040px}
+h3.mini{font-size:13.5px;margin:26px 0 8px;color:#223A33;font-weight:800;letter-spacing:.1px}
+h3.mini .tag{vertical-align:2px;margin-left:6px}
+
+/* ---------- generic blocks ---------- */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow)}
+.card h4{margin:0 0 8px;font-size:13.5px}
+.card p{margin:0;color:#43564F;font-size:12.8px}
+ul.tight{margin:6px 0 0;padding-left:18px;font-size:12.8px;line-height:1.72;color:#3B4F48}
+ul.tight li{margin-bottom:2px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;background:#F1F6F4;padding:1px 5px;border-radius:5px;color:#125E4C}
+.hr{height:1px;background:var(--line);margin:18px 0}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:12.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid #EFF4F2;vertical-align:top}
+th{background:#FAFCFB;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:800}
+tr:last-child td{border-bottom:0}
+td.ok{color:var(--gd);font-weight:700}
+td.no{color:var(--danger);font-weight:700}
+td.mid{color:var(--warn);font-weight:700}
+
+/* ---------- phone frame ---------- */
+.stage{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:390px;max-width:100%;background:#fff;border:1px solid #DCE6E2;border-radius:30px;padding:9px;box-shadow:var(--shadow-lg);flex:0 0 auto}
+.phone .scr{background:var(--soft);border-radius:23px;overflow:hidden;height:720px;display:flex;flex-direction:column;position:relative}
+.phone.sm .scr{height:600px}
+.plabel{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 6px 8px;font-size:9.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.notch{height:22px;display:grid;place-items:center}
+.notch i{display:block;width:86px;height:5px;border-radius:99px;background:#D6E0DC}
+
+/* app header */
+.apph{display:flex;align-items:center;gap:10px;padding:11px 13px;background:#fff;border-bottom:1px solid var(--line);flex:0 0 auto}
+.apph .bk{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:#fff;flex:none}
+.apph b{font-size:14.5px;letter-spacing:-.2px}
+.apph small{display:block;font-size:10.5px;color:var(--mut);font-weight:600}
+.svg{display:block}
+
+/* scroll body */
+.body{flex:1;min-height:0;overflow:auto;padding:14px 13px 18px}
+.body.tight{padding:12px 12px 14px}
+
+/* choice cards */
+.choice{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 13px;margin-bottom:10px;box-shadow:0 2px 8px rgba(15,60,48,.04);position:relative}
+.choice .ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none;background:var(--gsoft);color:var(--gd)}
+.choice.v2 .ic{background:#EAF3FB;color:var(--blue)}
+.choice.v3 .ic{background:var(--goldsoft);color:#8A5A00}
+.choice.v4 .ic{background:#F3EEFB;color:#6B46C1}
+.choice .tx{flex:1;min-width:0}
+.choice b{display:block;font-size:14px;letter-spacing:-.1px}
+.choice span{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
+.choice .go{color:#A9BAB4;flex:none}
+.choice .pill{position:absolute;top:9px;right:36px;font-size:8.5px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:99px;background:var(--gsoft);color:var(--gd)}
+.choice.v3 .pill{background:var(--goldsoft);color:#8A5A00}
+
+.helper{margin-top:6px;display:flex;align-items:center;gap:8px;background:#fff;border:1px dashed #CFE0D9;border-radius:13px;padding:10px 12px;font-size:11.5px;color:#3F544D}
+.helper b{color:var(--gd)}
+
+/* mini form rows */
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5C736B;margin-bottom:5px}
+.fld .inp{background:#fff;border:1px solid #D8E4DF;border-radius:11px;padding:9px 11px;font-size:12.5px;color:#2B3F38;min-height:37px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fld .inp.ph{color:#94A8A1}
+.fld .inp.sel:after{content:"▾";color:#8FA5A0;font-size:11px}
+.fld .inp.req{border-color:#F0C9C5;background:#FFF9F8}
+.fld small{display:block;margin-top:4px;font-size:10.5px;color:var(--mut)}
+.req-star{color:var(--danger);font-weight:900}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:13px;padding:12px;font-size:13.5px;font-weight:800;background:var(--g);color:#fff;box-shadow:0 6px 16px rgba(24,169,130,.22)}
+.btn.ghost{background:#fff;color:#3B4F48;border:1px solid var(--line);box-shadow:none}
+.btn.gold{background:linear-gradient(180deg,#D8B23C,#C9A227);color:#231A00;box-shadow:0 6px 16px rgba(201,162,39,.28)}
+.btn.sm{padding:9px;font-size:12px;border-radius:11px}
+
+.note{display:flex;gap:9px;padding:10px 11px;border-radius:12px;font-size:11.5px;line-height:1.5}
+.note.i{background:#EFF7FB;color:#164F73;border:1px solid #D3E7F3}
+.note.w{background:#FFF8EC;color:#7A4E0A;border:1px solid #F3E2C4}
+.note.g{background:var(--gsoft);color:#0B5C46;border:1px solid #CDEDE0}
+.note.r{background:#FDF0EF;color:#8A211A;border:1px solid #F6D8D5}
+.note b{font-weight:800}
+
+/* product rows */
+.prow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 10px;margin-bottom:9px}
+.prow .thumb{width:46px;height:46px;border-radius:10px;flex:none;background:linear-gradient(135deg,#DCEFE7,#C7E6DA);display:grid;place-items:center;color:#5E8F7F}
+.prow .tx{flex:1;min-width:0}
+.prow b{display:block;font-size:12.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow small{display:block;font-size:11px;color:var(--mut)}
+.prow .pick{width:22px;height:22px;border-radius:50%;border:1.6px solid #CFDDD7;flex:none;display:grid;place-items:center;color:#fff}
+.prow.on{border-color:var(--g);box-shadow:0 0 0 3px rgba(24,169,130,.12)}
+.prow.on .pick{background:var(--g);border-color:var(--g)}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:10px;color:#8CA29B;font-size:12px}
+
+/* conditions panels */
+.cond{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.cond .hd{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.cond .hd .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--gsoft);color:var(--gd);flex:none}
+.cond .hd b{font-size:13px}
+.cond .hd small{display:block;font-size:10.5px;color:var(--mut)}
+.cond .kv{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px dashed #E7EFEC;font-size:11.5px}
+.cond .kv:first-of-type{border-top:0}
+.cond .kv span{color:#5C736B}
+.cond .kv b{font-weight:700;color:#22352F;text-align:right}
+.cond .head{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8AA098;margin:0 0 7px}
+
+/* ---------- live room mock ---------- */
+.stagebox{position:relative;border-radius:18px;overflow:hidden;background:#0B1714;color:#fff}
+.stagebox.ph{width:100%;aspect-ratio:9/16;max-height:600px}
+.stagebox.desk{width:100%;aspect-ratio:16/9}
+.stagebox .vid{position:absolute;inset:0;background:
+  radial-gradient(120% 90% at 20% 10%, rgba(24,169,130,.35), transparent 60%),
+  radial-gradient(90% 70% at 85% 90%, rgba(201,162,39,.22), transparent 62%),
+  linear-gradient(160deg,#122A24,#0B1714 60%)}
+.stagebox .vid:after{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 2px, transparent 2px 9px)}
+.stagebox .glow{position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(24,169,130,.25);filter:blur(40px);left:50%;top:42%;transform:translate(-50%,-50%)}
+.stagebox .vlabel{position:absolute;inset:auto 0 40% 0;text-align:center;font-size:11px;color:rgba(255,255,255,.55);letter-spacing:.14em;text-transform:uppercase}
+
+.lv-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:8px;padding:11px 12px;background:linear-gradient(180deg,rgba(4,12,10,.55),transparent)}
+.lv-pill{display:inline-flex;align-items:center;gap:5px;background:#E5342A;color:#fff;font-size:9.5px;font-weight:900;letter-spacing:.06em;padding:3px 8px;border-radius:99px}
+.lv-pill i{width:6px;height:6px;border-radius:50%;background:#fff;display:block}
+.lv-view{display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.42);color:#EAF6F1;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;backdrop-filter:blur(6px)}
+.lv-x{width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.42);display:grid;place-items:center;color:#fff;margin-left:auto;flex:none}
+
+.lv-host{position:absolute;left:12px;top:56px;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.38);padding:4px 10px 4px 4px;border-radius:99px;backdrop-filter:blur(8px)}
+.lv-host .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#2A9D7C,#146B57);display:grid;place-items:center;font-size:11px;font-weight:800}
+.lv-host b{font-size:11.5px}
+.lv-host .fol{font-size:9.5px;font-weight:800;color:#0B1714;background:#fff;padding:2px 7px;border-radius:99px;margin-left:2px}
+
+.lv-rail{position:absolute;right:10px;bottom:150px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.lv-rail .rb{display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff;font-size:9px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.lv-rail .rb i{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.38);display:grid;place-items:center;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12)}
+
+.lv-prod{position:absolute;left:10px;right:52px;bottom:96px;display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.97);color:#12261F;border-radius:14px;padding:8px 9px;box-shadow:0 8px 22px rgba(0,0,0,.25)}
+.lv-prod .th{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#E6D9A8,#D9C169);display:grid;place-items:center;flex:none;color:#6B5312}
+.lv-prod .tx{flex:1;min-width:0}
+.lv-prod b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lv-prod small{display:block;font-size:11px;color:#0F7A5C;font-weight:800}
+.lv-prod .mini{font-size:10px;font-weight:800;background:var(--g);color:#fff;padding:6px 10px;border-radius:9px;white-space:nowrap}
+.lv-prod .mtype{position:absolute;top:-8px;left:9px;font-size:8px;font-weight:900;letter-spacing:.06em;background:var(--gold);color:#231A00;padding:2px 6px;border-radius:99px}
+
+.lv-mouth{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:9px 10px 14px;background:linear-gradient(0deg,rgba(4,12,10,.72),transparent)}
+.lv-mouth .inp{flex:1;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:8px 12px;font-size:11.5px;color:rgba(255,255,255,.8);backdrop-filter:blur(6px)}
+.lv-mouth .cir{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.4);display:grid;place-items:center;color:#fff;flex:none;border:1px solid rgba(255,255,255,.14)}
+.lv-mouth .cir.g{background:var(--g);border-color:transparent}
+
+.chatov{position:absolute;left:0;right:0;bottom:0;background:rgba(9,22,18,.92);backdrop-filter:blur(12px);border-radius:18px 18px 0 0;padding:9px 12px 12px;border-top:1px solid rgba(255,255,255,.1)}
+.chatov .grab{width:36px;height:4px;border-radius:99px;background:rgba(255,255,255,.28);margin:0 auto 8px}
+.chatov .cm{display:flex;gap:8px;margin-bottom:8px;font-size:11px;color:#D9E7E2}
+.chatov .cm b{color:#8FE3C6;font-weight:800;flex:none}
+.chatov .cm.own{justify-content:flex-end}
+.chatov .cm.own span{background:rgba(24,169,130,.28);padding:5px 9px;border-radius:11px}
+
+/* ---------- mini player ---------- */
+.browse{position:relative;background:var(--soft);border-radius:23px;overflow:hidden;height:720px;display:flex;flex-direction:column}
+.browse .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pcard .ph{height:86px;background:linear-gradient(135deg,#DCEFE7,#C9E7DB);display:grid;place-items:center;color:#6D9C8C}
+.pcard .tx{padding:7px 8px}
+.pcard b{display:block;font-size:11px;line-height:1.3;height:2.6em;overflow:hidden}
+.pcard small{font-size:10.5px;color:var(--gd);font-weight:800}
+.bnav{position:absolute;left:0;right:0;bottom:0;height:58px;background:#fff;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.bnav div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8.5px;color:#94A8A1;font-weight:700}
+.bnav div.on{color:var(--gd)}
+
+.mini{position:absolute;right:10px;bottom:68px;width:186px;background:#0C1A16;border-radius:14px;box-shadow:0 12px 30px rgba(6,30,24,.34);overflow:hidden;border:1px solid rgba(255,255,255,.1)}
+.mini .sgrip{width:34px;height:4px;border-radius:99px;background:rgba(255,255,255,.32);margin:5px auto 3px}
+.mini .v{position:relative;height:104px;background:
+  radial-gradient(120% 100% at 25% 10%, rgba(24,169,130,.42), transparent 62%),
+  linear-gradient(160deg,#14332C,#0B1714)}
+.mini .v .live{position:absolute;left:6px;top:6px;display:inline-flex;align-items:center;gap:4px;background:#E5342A;color:#fff;font-size:7.5px;font-weight:900;letter-spacing:.06em;padding:2px 5px;border-radius:99px}
+.mini .v .live i{width:4px;height:4px;border-radius:50%;background:#fff}
+.mini .v .x{position:absolute;right:5px;top:5px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.5);display:grid;place-items:center;color:#fff}
+.mini .v .ex{position:absolute;right:29px;top:5px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.5);display:grid;place-items:center;color:#fff}
+.mini .v .nm{position:absolute;left:6px;right:6px;bottom:5px;font-size:9.5px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini .bar{display:flex;align-items:center;gap:6px;padding:6px 7px;background:#0C1A16}
+.mini .bar .pillx{font-size:7.5px;font-weight:900;letter-spacing:.05em;color:#0B1714;background:var(--gold);padding:2px 5px;border-radius:5px;white-space:nowrap}
+.mini .bar .sp{flex:1}
+.mini .bar .ib{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;color:#fff}
+.mini.recon .v:after{content:"";position:absolute;inset:0;background:rgba(8,20,16,.62)}
+.mini .rebadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);color:#7A4E0A;font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:99px;white-space:nowrap;z-index:2}
+
+.xmenu{position:absolute;right:10px;bottom:190px;width:216px;background:#fff;border-radius:14px;box-shadow:0 16px 40px rgba(10,40,32,.24);border:1px solid var(--line);overflow:hidden;z-index:3}
+.xmenu .ih{padding:9px 12px;border-bottom:1px solid var(--line);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+.xmenu button{display:flex;width:100%;gap:9px;align-items:center;padding:11px 12px;background:#fff;border:0;border-bottom:1px solid #F1F6F4;text-align:left;font:inherit;font-size:12px;color:#22352F}
+.xmenu button:last-child{border-bottom:0}
+.xmenu button b{display:block;font-size:12px}
+.xmenu button small{display:block;font-size:10.5px;color:var(--mut)}
+.xmenu button.danger b{color:var(--danger)}
+
+/* desktop floating */
+.deskframe{background:#fff;border:1px solid #DCE6E2;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-lg);position:relative;height:470px;display:flex;flex-direction:column}
+.deskframe .dbar{height:30px;background:#F7FAF9;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:5px;padding:0 10px}
+.deskframe .dbar i{width:8px;height:8px;border-radius:50%;background:#DCE6E2}
+.deskframe .body2{flex:1;background:var(--soft);padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-content:start;overflow:hidden}
+.float{position:absolute;right:18px;bottom:18px;width:300px;background:#0C1A16;border-radius:16px;box-shadow:0 22px 50px rgba(6,30,24,.4);overflow:hidden;border:1px solid rgba(255,255,255,.1);cursor:grab}
+.float .v{position:relative;height:158px;background:
+  radial-gradient(120% 100% at 25% 10%, rgba(24,169,130,.42), transparent 62%),
+  linear-gradient(160deg,#14332C,#0B1714)}
+.float .v .live{position:absolute;left:8px;top:8px;display:inline-flex;align-items:center;gap:4px;background:#E5342A;color:#fff;font-size:8px;font-weight:900;letter-spacing:.06em;padding:2px 6px;border-radius:99px}
+.float .v .live i{width:5px;height:5px;border-radius:50%;background:#fff}
+.float .v .view{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.45);color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:99px}
+.float .v .nm{position:absolute;left:8px;right:8px;bottom:8px;color:#fff;font-size:11.5px;font-weight:800;text-shadow:0 1px 5px rgba(0,0,0,.7)}
+.float .v .typ{position:absolute;left:8px;bottom:28px;font-size:8px;font-weight:900;letter-spacing:.05em;background:var(--gold);color:#231A00;padding:2px 6px;border-radius:5px}
+.float .bar{display:flex;align-items:center;gap:7px;padding:7px 9px;background:#0C1A16}
+.float .bar .t{flex:1;font-size:9.5px;color:#B9CFC8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.float .bar .ib{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;color:#fff;flex:none}
+
+/* host panel bits */
+.hostbar{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:6px;color:#fff;position:absolute;left:50%;bottom:14px;transform:translateX(-50%)}
+.hostbar .hb{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:none}
+.hostbar .hb.rec{background:#E5342A}
+.hostbar .hb.end{background:#fff;color:#8A211A}
+.hostbar .tt{font-size:10px;font-weight:800;padding:0 8px;letter-spacing:.03em;white-space:nowrap}
+
+.kpi{display:flex;gap:10px;flex-wrap:wrap}
+.kpi div{flex:1;min-width:96px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+.kpi b{display:block;font-size:16px;letter-spacing:-.4px}
+.kpi small{font-size:10px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+
+.q{background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.q b{font-size:13px}
+.q p{margin:4px 0 0;font-size:12.5px;color:#43564F}
+.q .opts{margin-top:7px;display:flex;gap:7px;flex-wrap:wrap}
+.q .opts span{font-size:11px;background:#F4F8F6;border:1px solid var(--line);border-radius:99px;padding:3px 9px;color:#3B4F48}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#4A5F58;margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:block}
+
+/* ---------- maamuzi ---------- */
+.decnote{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gd);background:var(--gsoft);border:1px solid #CDEDE0;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.more{margin-top:12px;text-align:center;font-size:11.5px;color:var(--mut);background:#fff;border:1px dashed #D5E3DD;border-radius:12px;padding:9px 11px}
+.more b{color:var(--gd)}
+.picktwo{display:grid;gap:8px}
+.pt{display:flex;gap:9px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-size:12px;color:#2B3F38}
+.pt .rd{width:16px;height:16px;border-radius:50%;border:1.8px solid #C6D6D0;flex:none;margin-top:1px}
+.pt b{display:block;font-size:12px}
+.pt small{display:block;font-size:10.5px;color:var(--mut);margin-top:1px}
+.pt.on{border-color:var(--g);box-shadow:0 0 0 3px rgba(24,169,130,.12)}
+.pt.on .rd{border-color:var(--g);background:var(--g);box-shadow:inset 0 0 0 3px #fff}
+.draghint{position:absolute;left:50%;transform:translateX(-50%);top:-19px;font-size:8px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#5C736B;background:#fff;border:1px solid var(--line);border-radius:99px;padding:2px 7px;white-space:nowrap}
+.mini .v .grip{position:absolute;top:0;bottom:0;left:0;width:13px;background:linear-gradient(90deg,rgba(255,255,255,.18),transparent)}
+.restore{position:absolute;right:10px;bottom:68px;display:inline-flex;align-items:center;gap:6px;background:#0C1A16;color:#fff;font-size:9.5px;font-weight:800;padding:7px 11px;border-radius:99px;box-shadow:0 10px 24px rgba(6,30,24,.3)}
+.restore i{width:6px;height:6px;border-radius:50%;background:#E5342A}
+.restore .ar{color:#7FE3C0;font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="in">
+  <span class="brand">Soko<b>Hai</b></span>
+  <span class="tag prop">Preview pekee — app haijabadilishwa</span>
+  <span class="tag exist">Existing = kinachopo sasa</span>
+  <span class="spacer"></span>
+  <span class="tag stop">Hakuna deploy · hakuna merge</span>
+</div></div>
+
+<div class="wrap">
+
+<h1>Bidhaa Sokoni (aina 4) + Live full-screen &amp; mini player
+  <small>Toleo la 2 · baada ya maamuzi yako Q1–Q5 · branch <code>feature/product-card-visual-refinement</code> · HEAD <code>2e8d049</code> · hakuna mstari wa code ya app uliobadilishwa</small>
+</h1>
+<p class="lede"><b>Toleo hili</b> linaingiza maamuzi yako (Q1–Q5) kwenye UI na kuongeza <b>ramani ya modules 5 (§E)</b> + vitendo vitatu vya mini player (§B3d).
+Kila kitu hapa ni <b>pendekezo</b> isipokuwa pale kinapowekwa alama <span class="tag exist">Existing</span>.
+Sehemu zote za (+) zinaachwa kama zilivyo: Huduma/Fundi, Usafirishaji, Sajili Mwanachama — <b>haziguswi</b>.
+Live Settings na flow yake zinaachwa; tunaongeza tu <b>uhusiano wa bidhaa + mini player</b>.</p>
+
+<div class="legend">
+  <span><i style="background:#18A982"></i> Pendekezo jipya</span>
+  <span><i style="background:#C9A227"></i> Kinachopo, tunaunganisha</span>
+  <span><i style="background:#B3261E"></i> Hatari / kikomo</span>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec"><span class="n">✓</span> Maamuzi yaliyokubaliwa <span class="badge"><span class="tag exist">Imekubaliwa 2026-11-08</span></span></h2>
+<p class="sub">Q1–Q5 zimejibiwa na wewe. Preview hii na ramani ya modules 5 (§E) zinafuata majibu hayo. <b>Code haijaanza</b> — tunaomba go-ahead ya M1.</p>
+
+<table>
+  <tr><th style="width:52px">#</th><th style="width:250px">Uamuzi</th><th>Athari kwenye utekelezaji</th></tr>
+  <tr><td><b>Q1</b></td><td>Wholesale <b>chini ya kiungo “Zaidi”</b></td><td>Orodha kuu inabaki aina 4. Wholesale/POS haiondolewa — inahamishwa chini ya “Zaidi ›”. Hakuna mabadiliko kwenye <code>prodSaleMode</code> wala POS.</td></tr>
+  <tr><td><b>Q2</b></td><td>Muuzaji <b>achague</b>: kubadilisha iliyopo <b>au</b> kutengeneza nakala</td><td>Hatua 2 ina chaguo 2 wazi. “Nakala” inatumia <code>skhDuplicateProduct</code>/<code>duplicateTemplate</code> iliyopo — hakuna logic mpya ya kunakili. Bidhaa asili haiguswi.</td></tr>
+  <tr><td><b>Q3</b></td><td>Mini player = <b>YouTube/Vimeo iframe pekee</b></td><td>“Live bila video” inabaki kama ilivyo (haipati mini player). Hakuna kuvunja kikomo cha <code>120:336</code>.</td></tr>
+  <tr><td><b>Q4</b></td><td><b>Screen recording haijaongezwa</b></td><td>Hakuna <code>getDisplayMedia</code>, hakuna <code>recordingAllowed</code> mpya. <code>recordingUrl</code> inabaki kuwekwa kwa mkono kama leo.</td></tr>
+  <tr><td><b>Q5</b></td><td>Mini player <b>chini-kulia</b> kwa default, <b>draggable</b></td><td>Nafasi ya awali ni chini-kulia juu ya bottom nav; mtumiaji anaweza kuivuta. Nafasi inahifadhiwa kwenye kifaa (localStorage) — si kwenye DB.</td></tr>
+</table>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card dec" style="border-left:4px solid var(--g)">
+    <h4>Nguzo 6 za utekelezaji (maelekezo yako)</h4>
+    <ul class="tight">
+      <li><b>1.</b> Live Settings, Live session logic na navigation nyingine — <b>haziguswi</b></li>
+      <li><b>2.</b> Iframe <b>haiondolewi wala kuundwa upya</b> wakati wa full-screen ↔ mini</li>
+      <li><b>3.</b> Vitendo 3 tofauti: <b>ficha</b> · <b>rejesha</b> · <b>funga kabisa</b></li>
+      <li><b>4.</b> <code>getUserMedia</code> haipo kwa Live — <b>hakuna kuahidi camera ya background</b></li>
+      <li><b>5.</b> <b>Bidhaa Sokoni pekee</b> inabadilika; menu nyingine za (+) zinabaki</li>
+      <li><b>6.</b> Preview + ramani ya modules kwanza, kisha implementation kwa hatua + tests</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Kanuni ya kiufundi inayolinda nguzo #2</h4>
+    <p><b>Kitu kimoja cha kudumu.</b> Chumba kimoja (<code>.skh-live-host</code>) chenye iframe <b>moja</b> ndani yake. Kubadilisha ukubwa = kubadilisha darasa la CSS
+    (<code>is-full</code> ↔ <code>is-mini</code>), <b>si</b> kuhamisha/kuunda upya iframe. Ndio njia pekee ya kuhakikisha:</p>
+    <ul class="tight">
+      <li>hakuna <code>&lt;iframe&gt;</code> ya pili ⇒ hakuna sauti mara mbili</li>
+      <li>hakuna kupakia upya ⇒ hali (sekunde, buffer) inaendelea</li>
+      <li>hakuna stream/camera session ya pili ⇒ hakuna mzigo wa data</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec"><span class="n">0</span> Kile kinachobadilika na kile kisichoguswa</h2>
+<p class="sub">Blast radius ni ndogo kwa makusudi. Kila kitu kingine kinaachwa.</p>
+
+<div class="grid g2">
+  <div class="card">
+    <h4>✅ Kinachobadilika (pendekezo)</h4>
+    <ul class="tight">
+      <li><b>Bidhaa Sokoni</b> inaanza na uchaguzi wa aina 4 (Wholesale → “Zaidi ›”)</li>
+      <li>Hatua ya <b>bidhaa iliyopo / mpya</b></li>
+      <li>Masharti ya aina yanajazwa <b>mara moja</b> (panel ile ile)</li>
+      <li>Bidhaa Zangu: kubadili aina <b>bila kupoteza</b> taarifa</li>
+      <li>Live: <b>mini player</b> + hali inayodumu</li>
+      <li>Live ↔ bidhaa/aina: uhusiano bila kurudia taarifa</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>🚫 Kisichoguswa</h4>
+    <ul class="tight">
+      <li>Menu ya (+) na vitu vyake 4</li>
+      <li>Huduma/Fundi · Usafirishaji · Sajili Mwanachama</li>
+      <li>Live Settings zote · screen recording <i>(haipo — ona §B5)</i></li>
+      <li><code>liveCreate</code>, <code>liveEnd</code>, <code>auctionPlaceBid</code>, rules, functions</li>
+      <li>Handlers zote zilizopo · hakuna kufuta feature</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec"><span class="n">A</span> BIDHAA SOKONI — aina 4 za mauzo
+  <span class="badge"><span class="tag prop">Pendekezo</span></span></h2>
+<p class="sub"><b>Sasa:</b> (+) → Bidhaa Sokoni → fomu moja ya sehemu 5 (fields 53), mnada umefichwa sehemu 4/5.
+<b>Pendekezo:</b> aina ya biashara kwanza, kisha bidhaa, kisha masharti — mnada unaonekana tangu mwanzo.</p>
+
+<h3 class="mini">A1 · Hatua 1 — “Uza nini leo?” (chaguo 4)</h3>
+<div class="stage">
+
+  <div class="phone">
+    <div class="plabel"><span>A1 · Simu 390 — chaguo</span><span class="tag prop">Pendekezo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="apph">
+        <span class="bk"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+        <div><b>Bidhaa Sokoni</b><small>Chagua aina ya mauzo</small></div>
+      </div>
+      <div class="body">
+
+        <button class="choice">
+          <span class="ic"><svg class="svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.4 11.2A2 2 0 0 1 17.6 22H6.4a2 2 0 0 1-2-1.8L3 9Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg></span>
+          <span class="tx"><b>SokoHuru</b><span>Bei moja · mnunuzi analipa papo</span></span>
+          <span class="go"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </button>
+
+        <button class="choice v3">
+          <span class="pill">Mpya</span>
+          <span class="ic"><svg class="svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 3-2 5h5l-2 5h4l-8 8 2-7H9l2-6H7l4-5Z"/></svg></span>
+          <span class="tx"><b>Mnada</b><span>Wanunuzi wanashindana kwa zabuni</span></span>
+          <span class="go"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </button>
+
+        <button class="choice v2">
+          <span class="ic"><svg class="svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></span>
+          <span class="tx"><b>Group Buy</b><span>Bei inapungua watu wakiongezeka</span></span>
+          <span class="go"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </button>
+
+        <button class="choice v4">
+          <span class="ic"><svg class="svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></span>
+          <span class="tx"><b>Price Drop</b><span>Bei inashuka hadi muda unaisha</span></span>
+          <span class="go"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </button>
+
+        <div class="more">Zaidi › <b>Kuuza kwa Jumla (Wholesale)</b> · POS · Mazungumzo ya bei</div>
+
+        <div class="helper" style="margin-top:9px">
+          <svg class="svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A5A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+          <span><b>Q1 imekubaliwa:</b> Wholesale haipotei — inabaki chini ya kiungo <b>“Zaidi”</b>. Aina 4 kuu zinabaki juu; POS na handlers zake haziguswi.</span>
+        </div>
+
+        <div style="margin-top:12px" class="note g">
+          <svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><b>Hakuna kinachoondolewa.</b> Chaguo hizi ni zile zile zilizopo kwenye <code>prodSaleMode</code>, zimewekwa mbele tu.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="plabel"><span>Sasa (kwa kulinganisha)</span><span class="tag exist">Existing</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="apph">
+        <span class="bk"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+        <div><b>Weka Bidhaa / Stoo</b><small>Fomu moja · sehemu 5</small></div>
+      </div>
+      <div class="body">
+
+        <div class="note i" style="margin-bottom:12px">
+          <span><b>Sehemu 1 · Inauzwa wapi</b><br>Duka / Mtandaoni / Zote</span></div>
+        <div class="fld"><label>Jina la bidhaa <span class="req-star">*</span></label><div class="inp ph">Mf. Mahindi Bora</div></div>
+        <div class="fld"><label>Aina ya bidhaa (taxonomy)</label><div class="inp ph sel">Tafuta…</div></div>
+        <div class="fld"><label>Bei <span class="req-star">*</span></label><div class="inp ph">TSh 75,000</div></div>
+        <div class="fld"><label>Picha <span class="req-star">*</span></label><div class="inp ph">Picha 0/6</div></div>
+        <div class="fld"><label>Mahali <span class="req-star">*</span></label><div class="inp ph">Dar es Salaam</div></div>
+
+        <div class="note w" style="margin:14px 0 10px">
+          <svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 9v4M12 17v.5"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+          <span><b>Hapa ndipo mnada unajificha.</b> Sehemu 4 kati ya 5, chini ya “Soko la mtandaoni”. Muuzaji hajui kuna mnada hadi afike hapa.</span>
+        </div>
+
+        <div class="fld"><label>Mtindo wa kuuza mtandaoni</label><div class="inp sel">Mnada (Live Auction)</div>
+          <small>Chaguo 5 zote zipo hapa: SokoHuru · Mnada · Bei Kushuka · Jumla · Group Buy</small>
+        </div>
+        <div class="fld"><label>Muda wa mnada kuisha <span class="req-star">*</span></label><div class="inp ph">dd/mm/yyyy --:--</div></div>
+
+        <div style="margin-top:10px" class="note r">
+          <span><b>Hatari iliyopo:</b> muda wa kuisha <b>haukaguliwi</b> kuwa uko mbeleni — mnada unaweza kuchapishwa ukiwa “umeisha” tayari.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h3 class="mini">A2 · Hatua 2 — bidhaa iliyopo au mpya</h3>
+<div class="stage">
+
+  <div class="phone">
+    <div class="plabel"><span>A2a · chagua iliyopo</span><span class="tag prop">Pendekezo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="apph">
+        <span class="bk"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+        <div><b>Mnada · Bidhaa ipi?</b><small>Hatua 2 ya 4</small></div>
+      </div>
+      <div class="body">
+        <div class="search">
+          <svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+          Tafuta bidhaa yako…
+        </div>
+
+        <div class="prow on">
+          <span class="thumb"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.4 11.2A2 2 0 0 1 17.6 22H6.4a2 2 0 0 1-2-1.8L3 9Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg></span>
+          <span class="tx"><b>Mahindi Bora</b><small>Stock 200 Gunia · TSh 75,000</small></span>
+          <span class="pick"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        </div>
+
+        <div class="prow">
+          <span class="thumb"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8"/></svg></span>
+          <span class="tx"><b>Komputer</b><small>Stock 3 · TSh 2,000,000</small></span>
+          <span class="pick"></span>
+        </div>
+
+        <div class="prow">
+          <span class="thumb"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17h16l-1.5-6H5.5L4 17Z"/><path d="M6 11V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/></svg></span>
+          <span class="tx"><b>Viatu vya Ngozi</b><small>Stock 12 · TSh 35,000 / Pair</small></span>
+          <span class="pick"></span>
+        </div>
+
+        <div class="fld" style="margin-top:13px"><label>Bidhaa hii itakuwaje? <span class="decnote">Q2 · imekubaliwa</span></label>
+          <div class="picktwo">
+            <div class="pt on"><span class="rd"></span><span><b>Ibadilishe kuwa Mnada</b><small>Bidhaa hii hii inakuwa mnada. Taarifa zote zinabaki.</small></span></div>
+            <div class="pt"><span class="rd"></span><span><b>Tengeneza nakala mpya</b><small>Nakala inakuwa mnada; bidhaa asili inabaki SokoHuru.</small></span></div>
+          </div>
+        </div>
+
+        <div class="note i" style="margin:12px 0">
+          <span><b>Hakuna kurudia taarifa.</b> Jina, picha, maelezo, mahali na kategoria zinachukuliwa kutoka bidhaa uliyochagua — chaguo lolote kati ya haya mawili.</span>
+        </div>
+
+        <button class="btn">Endelea na Mahindi Bora</button>
+        <div style="height:9px"></div>
+        <button class="btn ghost">+ Ongeza bidhaa mpya badala yake</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="plabel"><span>A2b · ongeza mpya (kwa ufupi)</span><span class="tag prop">Pendekezo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="apph">
+        <span class="bk"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+        <div><b>Mnada · Bidhaa mpya</b><small>Hatua 2 ya 4</small></div>
+      </div>
+      <div class="body">
+        <div class="note g" style="margin-bottom:12px">
+          <svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Fomu ile ile ya <code>#sellerForm</code> inatumika — tumeongeza hatua moja mbele, si fomu mpya.</span>
+        </div>
+
+        <div class="fld"><label>Picha <span class="req-star">*</span></label><div class="inp ph">+ Piga picha / chagua (0/6)</div></div>
+        <div class="fld"><label>Jina <span class="req-star">*</span></label><div class="inp ph">Mf. Mahindi Bora</div></div>
+        <div class="fld"><label>Kategoria <span class="req-star">*</span></label><div class="inp ph sel">Chagua…</div></div>
+        <div class="fld"><label>Bei ya kuanzia <span class="req-star">*</span></label><div class="inp ph">TSh 75,000</div>
+          <small>Lebo inabadilika: “Bei ya kuuza” → “Bei ya kuanzia” mnada ukichaguliwa.</small></div>
+        <div class="fld"><label>Stock</label><div class="inp">1</div></div>
+        <div class="fld"><label>Mahali <span class="req-star">*</span></label><div class="inp ph">Dar es Salaam</div></div>
+
+        <div class="note i">
+          <span>Maelezo, variants na sifa nyingine zinabaki kwenye fomu ile ile — <b>haziondolewa</b>.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h3 class="mini">A3 · Hatua 3 — masharti ya kila aina (yote yanaonekana, hakuna kufichwa)</h3>
+<div class="grid g4">
+
+  <div class="cond">
+    <div class="hd">
+      <span class="ic"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.4 11.2A2 2 0 0 1 17.6 22H6.4a2 2 0 0 1-2-1.8L3 9Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg></span>
+      <div><b>SokoHuru</b><small>bei moja</small></div>
+    </div>
+    <p class="head">Masharti</p>
+    <div class="kv"><span>Bei ya kuuza</span><b>lazima</b></div>
+    <div class="kv"><span>Stock</span><b>tayari ipo</b></div>
+    <div class="kv"><span>Muda</span><b>hakuna</b></div>
+    <div class="note g" style="margin-top:10px"><span>Hakuna masharti ya ziada — kama ilivyo leo.</span></div>
+  </div>
+
+  <div class="cond">
+    <div class="hd">
+      <span class="ic" style="background:var(--goldsoft);color:#8A5A00"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 3-2 5h5l-2 5h4l-8 8 2-7H9l2-6H7l4-5Z"/></svg></span>
+      <div><b>Mnada</b><small>zabuni</small></div>
+    </div>
+    <p class="head">Masharti</p>
+    <div class="kv"><span>Bei ya kuanzia</span><b>lazima</b></div>
+    <div class="kv"><span>Muda wa kuisha</span><b class="no">lazima · ya mbeleni</b></div>
+    <div class="kv"><span>Muda wa kuanza</span><b>hiari</b></div>
+    <div class="kv"><span>Nyongeza ya chini</span><b>hiari · 5%</b></div>
+    <div class="note w" style="margin-top:10px"><span><b>Mpya:</b> kukagua kuwa muda uko mbeleni (leo hapana).</span></div>
+  </div>
+
+  <div class="cond">
+    <div class="hd">
+      <span class="ic" style="background:#EAF3FB;color:var(--blue)"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></span>
+      <div><b>Group Buy</b><small>kundi</small></div>
+    </div>
+    <p class="head">Masharti</p>
+    <div class="kv"><span>Bei ya rejareja</span><b>lazima</b></div>
+    <div class="kv"><span>Punguzo la kundi</span><b>lazima</b></div>
+    <div class="kv"><span>Idadi ya watu</span><b>lazima</b></div>
+    <div class="kv"><span>Muda wa kuisha</span><b>hiari</b></div>
+    <div class="note i" style="margin-top:10px"><span>Hali zote zilizopo zinaendelea.</span></div>
+  </div>
+
+  <div class="cond">
+    <div class="hd">
+      <span class="ic" style="background:#F3EEFB;color:#6B46C1"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></span>
+      <div><b>Price Drop</b><small>bei kushuka</small></div>
+    </div>
+    <p class="head">Masharti</p>
+    <div class="kv"><span>Bei ya kuanzia</span><b>lazima</b></div>
+    <div class="kv"><span>Bei ya chini</span><b>lazima</b></div>
+    <div class="kv"><span>Kila muda gani</span><b>lazima</b></div>
+    <div class="kv"><span>Mwisho</span><b>lazima</b></div>
+    <div class="note i" style="margin-top:10px"><span>Kikomo kwa mnunuzi (hiari) kinabaki.</span></div>
+  </div>
+
+</div>
+
+<h3 class="mini">A4 · Bidhaa Zangu — kubadili aina ya mauzo <span class="tag exist">Existing</span> + <span class="tag prop">marekebisho</span></h3>
+
+<div class="stage">
+  <div class="phone">
+    <div class="plabel"><span>A4 · Hariri bidhaa</span><span class="tag prop">Pendekezo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="apph">
+        <span class="bk"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+        <div><b>Hariri · Mahindi Bora</b><small>TSh 75,000 · Stock 200</small></div>
+      </div>
+      <div class="body">
+
+        <div class="fld"><label>Aina ya mauzo</label><div class="inp sel">SokoHuru</div></div>
+
+        <p class="head" style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8AA098;margin:14px 0 7px">Itakayohifadhiwa (haitabadilika)</p>
+
+        <div style="background:#fff;border:1px solid var(--line);border-radius:13px;padding:4px 11px">
+          <div class="kv"><span>Picha</span><b>4 zipo</b></div>
+          <div class="kv"><span>Maelezo</span><b>yapo</b></div>
+          <div class="kv"><span>Mahali</span><b>Dar es Salaam</b></div>
+          <div class="kv"><span>Kategoria</span><b>Mazao</b></div>
+          <div class="kv"><span>Stock</span><b>200 Gunia</b></div>
+          <div class="kv"><span>Variants / sifa</span><b>zinabaki</b></div>
+        </div>
+
+        <div class="note g" style="margin-top:12px">
+          <svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+          <span><b>Hakuna kupoteza taarifa.</b> Tunabadili <code>saleMode</code> pekee; kila taarifa iliyopo inabaki mahali pake.</span>
+        </div>
+
+        <div class="note w" style="margin-top:10px">
+          <span><b>Ukichagua Mnada:</b> muda wa kuisha <b>unakuwa lazima</b> (mpya) — hapa hapa, bila kufungua fomu nyingine.</span>
+        </div>
+
+        <div class="note r" style="margin-top:10px">
+          <span><b>Ulinzi uliopo:</b> bidhaa yenye zabuni <b>haiwezi</b> kubadili aina, na bei haiwezi kubadilishwa. Sheria za server zinalinda hilo.</span>
+        </div>
+
+        <div style="height:12px"></div>
+        <button class="btn">Hifadhi mabadiliko</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="flex:1;min-width:280px">
+    <h4>Kinachobadilika kwenye Hariri (nafasi 3 tu)</h4>
+    <ul class="tight">
+      <li><b>Muda wa kuisha</b> — sasa <b>lazima</b> ikiwa Mnada (leo ni hiari)</li>
+      <li><b>Muda wa kuanza</b> — kuongezwa (leo haupo kwenye Hariri)</li>
+      <li><b>Nyongeza ya chini</b> — kuongezwa (leo haupo kwenye Hariri)</li>
+      <li>Taarifa zote zilizopo — <b>haziguswi</b>, hakuna <code>reset()</code></li>
+    </ul>
+    <div class="hr"></div>
+    <h4>Sababu</h4>
+    <p>Leo: bidhaa inaweza kubadilishwa kuwa Mnada <b>bila</b> muda — mnada unaonekana “umefungwa” papo hapo.
+    Hii ni risk ya data, sio ya muonekano. Marekebisho ni ya mstari mmoja kwenye <code>12-sys-modes.js:481</code>.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec"><span class="n">B</span> LIVE — full-screen &amp; floating mini player
+  <span class="badge"><span class="tag prop">Pendekezo</span><span class="tag exist">room = existing</span></span></h2>
+<p class="sub"><b>Sasa:</b> chumba ni overlay moja inayofunika kila kitu; kufunga = <code>leaveRoom()</code> inafuta state yote.
+<b>Pendekezo:</b> chumba kile kile (hakuna injini mpya) kinaweza <b>kupungua</b> kuwa dirisha dogo na kurudi — state ile ile, iframe ile ile.
+<br><b>Q3 imekubaliwa:</b> mini player ni ya <b>YouTube/Vimeo iframe pekee</b>; “Live bila video” (<code>120:336</code>) inabaki kama ilivyo na haipati mini player.</p>
+
+<h3 class="mini">B1 · Full-screen — simu (mtazamaji)</h3>
+<div class="stage">
+
+  <div class="phone">
+    <div class="plabel"><span>B1a · video + maoni kwa chini</span><span class="tag exist">Muundo wa chumba</span></div>
+    <div class="scr" style="background:#0B1714">
+      <div class="stagebox ph" style="border-radius:23px;aspect-ratio:auto;max-height:none;flex:1;min-height:0">
+        <div class="vid"></div><div class="glow"></div>
+        <div class="vlabel">video / embed</div>
+
+        <div class="lv-top">
+          <span class="lv-pill"><i></i> LIVE</span>
+          <span class="lv-view"><svg class="svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="2.6"/></svg> 248</span>
+          <span class="lv-x"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+        </div>
+
+        <div class="lv-host">
+          <span class="av">J</span><b>Juma Mnyika</b><span class="fol">Fuata</span>
+        </div>
+
+        <div class="lv-rail">
+          <span class="rb"><i><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-9.4-9A5.2 5.2 0 0 1 12 6.6 5.2 5.2 0 0 1 21.4 12c-1.9 4.3-9.4 9-9.4 9Z"/></svg></i>128</span>
+          <span class="rb"><i><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></i>Shiriki</span>
+          <span class="rb"><i><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.4 11.2A2 2 0 0 1 17.6 22H6.4a2 2 0 0 1-2-1.8L3 9Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg></i>Bidhaa</span>
+          <span class="rb"><i><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></i>Zaidi</span>
+        </div>
+
+        <div class="lv-prod">
+          <span class="mtype">MNADA</span>
+          <span class="th"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 7c0-2 3-3 7-3s7 1 7 3-3 3-7 3-7 1-7 3 3 3 7 3 7 1 7 3-3 3-7 3-7-1-7-3"/></svg></span>
+          <span class="tx"><b>Mahindi Bora</b><small>TSh 75,000 / Gunia</small></span>
+          <span class="mini">Weka Oda</span>
+        </div>
+
+        <div class="lv-mouth">
+          <span class="inp">Andika maoni…</span>
+          <span class="cir"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></span>
+          <span class="cir g"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="plabel"><span>B1b · maoni yamefunguliwa</span><span class="tag prop">Video haifichwi</span></div>
+    <div class="scr" style="background:#0B1714">
+      <div class="stagebox ph" style="border-radius:23px;aspect-ratio:auto;max-height:none;flex:1;min-height:0">
+        <div class="vid"></div><div class="glow"></div>
+        <div class="vlabel" style="bottom:52%">video inaendelea kuonekana</div>
+
+        <div class="lv-top">
+          <span class="lv-pill"><i></i> LIVE</span>
+          <span class="lv-view">248 watazamaji</span>
+          <span class="lv-x"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+        </div>
+
+        <div class="lv-host"><span class="av">J</span><b>Juma Mnyika</b><span class="fol">Fuata</span></div>
+
+        <div class="chatov" style="bottom:0;height:56%">
+          <div class="grab"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <b style="font-size:12px;color:#fff">Maoni · 248</b>
+            <span style="font-size:10px;color:#8FB3A8">Funga ▾</span>
+          </div>
+          <div class="cm"><b>Asha</b><span>Bei ya gunia 10?</span></div>
+          <div class="cm"><b>Petro</b><span>Naomba kujua usafiri</span></div>
+          <div class="cm own"><span>Nipo tayari kununua</span></div>
+          <div class="cm"><b>Neema</b><span>Hongera mkulima</span></div>
+          <div class="cm"><b>Juma</b><span>Gunia 10 = TSh 720,000</span></div>
+          <div style="display:flex;gap:7px;align-items:center;margin-top:9px">
+            <span class="inp" style="flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,.65)">Andika maoni…</span>
+            <span class="cir g" style="width:32px;height:32px"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h3 class="mini">B2 · Full-screen — desktop</h3>
+<div class="deskframe">
+  <div class="dbar"><i></i><i></i><i></i></div>
+  <div style="flex:1;display:flex;background:#0B1714;min-height:0">
+    <div style="flex:1.55;position:relative;min-width:0">
+      <div class="stagebox desk" style="border-radius:0;height:100%;aspect-ratio:auto">
+        <div class="vid"></div><div class="glow"></div>
+        <div class="vlabel" style="top:44%">video / embed · 16:9</div>
+        <div class="lv-top">
+          <span class="lv-pill"><i></i> LIVE</span>
+          <span class="lv-view">248 watazamaji</span>
+          <span class="lv-view" style="margin-left:6px"><svg class="svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg> Sauti</span>
+          <span class="lv-x"><svg class="svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+        </div>
+        <div class="lv-host"><span class="av">J</span><b>Juma Mnyika</b><span class="fol">Fuata</span></div>
+        <div class="lv-prod" style="right:auto;width:300px;bottom:14px;left:14px">
+          <span class="mtype">MNADA</span>
+          <span class="th"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 7c0-2 3-3 7-3s7 1 7 3-3 3-7 3-7 1-7 3 3 3 7 3 7 1 7 3-3 3-7 3-7-1-7-3"/></svg></span>
+          <span class="tx"><b>Mahindi Bora</b><small>TSh 75,000 / Gunia</small></span>
+          <span class="mini">Weka Oda</span>
+        </div>
+        <div class="lv-mouth" style="padding-bottom:12px">
+          <span class="inp">Andika maoni…</span>
+          <span class="cir"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></span>
+          <span class="cir g"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></span>
+        </div>
+      </div>
+    </div>
+
+    <aside style="width:300px;background:#fff;border-left:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;flex:none">
+      <div style="display:flex;border-bottom:1px solid var(--line)">
+        <div style="flex:1;text-align:center;padding:10px;font-size:11.5px;font-weight:800;color:var(--gd);border-bottom:2px solid var(--g)">Maoni</div>
+        <div style="flex:1;text-align:center;padding:10px;font-size:11.5px;font-weight:700;color:var(--mut)">Bidhaa</div>
+        <div style="flex:1;text-align:center;padding:10px;font-size:11.5px;font-weight:700;color:var(--mut)">Zabuni</div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:11px 12px">
+        <div style="font-size:11.5px;color:#3B4F48;margin-bottom:9px"><b style="color:var(--gd)">Asha</b> · Bei ya gunia 10?</div>
+        <div style="font-size:11.5px;color:#3B4F48;margin-bottom:9px"><b style="color:var(--gd)">Petro</b> · Naomba kujua usafiri</div>
+        <div style="font-size:11.5px;color:#3B4F48;margin-bottom:9px"><b style="color:var(--gd)">Neema</b> · Hongera mkulima</div>
+        <div style="font-size:11.5px;color:#3B4F48;margin-bottom:9px"><b style="color:var(--gd)">Juma</b> · Gunia 10 = TSh 720,000</div>
+        <div style="font-size:11.5px;color:#3B4F48"><b style="color:var(--gd)">Hassan</b> · Naomba delivery Kariakoo</div>
+      </div>
+      <div style="padding:9px 11px;border-top:1px solid var(--line);display:flex;gap:7px;align-items:center">
+        <span style="flex:1;background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:8px 12px;font-size:11.5px;color:#94A8A1">Andika maoni…</span>
+        <span style="width:30px;height:30px;border-radius:50%;background:var(--g);color:#fff;display:grid;place-items:center"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></span>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="legend"><span><span class="tag exist">Existing</span> muundo wa chumba, tabs za upande, product card, rail — vinaendelea kama vilivyo. Pendekezo ni <b>hali ya mini</b> tu.</span></div>
+
+<h3 class="mini">B3 · Floating mini player — kinachotokea ukibonyeza Back</h3>
+<div class="stage">
+
+  <div class="phone">
+    <div class="plabel"><span>B3a · simu — unaendelea kuvinjari</span><span class="tag prop">Pendekezo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="browse">
+        <div style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:#fff;border-bottom:1px solid var(--line)">
+          <span class="bk" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+          <b style="font-size:14px">Bidhaa Sokoni</b>
+        </div>
+
+        <div class="grid2">
+          <div class="pcard"><div class="ph"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/></svg></div><div class="tx"><b>Komputer</b><small>TSh 2,000,000</small></div></div>
+          <div class="pcard"><div class="ph"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17h16l-1.5-6H5.5L4 17Z"/><path d="M6 11V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/></svg></div><div class="tx"><b>Viatu vya Ngozi</b><small>TSh 35,000</small></div></div>
+          <div class="pcard"><div class="ph"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18l-1.4 11.2A2 2 0 0 1 17.6 22H6.4a2 2 0 0 1-2-1.8L3 9Z"/></svg></div><div class="tx"><b>Pikipiki</b><small>TSh 1,500,000</small></div></div>
+          <div class="pcard"><div class="ph"><svg class="svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M6 21V8l6-4 6 4v13"/></svg></div><div class="tx"><b>Kiwanja</b><small>TSh 50,000</small></div></div>
+        </div>
+
+        <div class="mini">
+          <div class="draghint">◈ kuburuta kuvuta</div>
+          <div class="v">
+            <span class="grip"></span>
+            <span class="live"><i></i> LIVE</span>
+            <span class="ex"><svg class="svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></span>
+            <span class="x"><svg class="svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+            <span class="nm">Juma Mnyika</span>
+          </div>
+          <div class="bar">
+            <span class="pillx">MNADA</span>
+            <span class="sp"></span>
+            <span class="ib"><svg class="svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></span>
+            <span class="ib"><svg class="svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+          </div>
+        </div>
+
+        <div class="bnav">
+          <div class="on"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>Nyumbani</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>Tafuta</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.4Z"/></svg>Chat</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="8" r="4.2"/></svg>Mimi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="plabel"><span>B3b · “X” inatoa chaguo 2</span><span class="tag prop">Pendekezo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="browse">
+        <div style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:#fff;border-bottom:1px solid var(--line)">
+          <span class="bk" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+          <b style="font-size:14px">Chat</b>
+        </div>
+        <div class="grid2" style="grid-template-columns:1fr">
+          <div class="pcard" style="display:flex;align-items:center;gap:9px;padding:9px"><div class="ph" style="width:40px;height:40px;border-radius:50%">A</div><div class="tx"><b style="height:auto">Asha Mkulu</b><small>Habari za asubuhi…</small></div></div>
+          <div class="pcard" style="display:flex;align-items:center;gap:9px;padding:9px"><div class="ph" style="width:40px;height:40px;border-radius:50%">P</div><div class="tx"><b style="height:auto">Petro Agric</b><small>Mpango mzuri…</small></div></div>
+          <div class="pcard" style="display:flex;align-items:center;gap:9px;padding:9px"><div class="ph" style="width:40px;height:40px;border-radius:50%">N</div><div class="tx"><b style="height:auto">Neema K.</b><small>Sawa, nitakuja…</small></div></div>
+        </div>
+
+        <div class="mini" style="bottom:68px;opacity:.95">
+          <div class="sgrip"></div>
+          <div class="v"><span class="live"><i></i> LIVE</span><span class="nm">Juma Mnyika</span></div>
+          <div class="bar"><span class="pillx">MNADA</span><span class="sp"></span><span class="ib"><svg class="svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/></svg></span></div>
+        </div>
+
+        <div class="xmenu">
+          <div class="ih">Ufunge Live?</div>
+          <button>
+            <svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10 21 3M3 21l7-7"/></svg>
+            <span><b>1 · Ficha mini player</b><small>Inapotea; sauti inaendelea. Rejesha kwa kitufe cha “Live inaendelea”.</small></span>
+          </button>
+          <button class="danger">
+            <svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B3261E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <span><b>2 · Ondoka kwenye Live (funga kabisa)</b><small>Chumba kinafungwa; unaweza kuingia tena baadaye.</small></span>
+          </button>
+        </div>
+
+        <div class="bnav">
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>Nyumbani</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>Tafuta</div>
+          <div class="on"><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.4Z"/></svg>Chat</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="8" r="4.2"/></svg>Mimi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="plabel"><span>B3c · mtandao umepotea</span><span class="tag prop">Reconnecting</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="browse">
+        <div style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:#fff;border-bottom:1px solid var(--line)">
+          <span class="bk" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+          <b style="font-size:14px">Discover</b>
+        </div>
+        <div class="grid2">
+          <div class="pcard"><div class="ph">1</div><div class="tx"><b>Soko lako</b><small>Leo</small></div></div>
+          <div class="pcard"><div class="ph">2</div><div class="tx"><b>Ofa mpya</b><small>Wiki hii</small></div></div>
+          <div class="pcard"><div class="ph">3</div><div class="tx"><b>Wanachama</b><small>Kundi</small></div></div>
+          <div class="pcard"><div class="ph">4</div><div class="tx"><b>Usafiri</b><small>Boda</small></div></div>
+        </div>
+
+        <div class="mini recon" style="bottom:68px">
+          <div class="sgrip"></div>
+          <div class="v">
+            <div class="rebadge"><svg class="svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg> Inaunganisha tena…</div>
+            <span class="nm">Juma Mnyika</span>
+          </div>
+          <div class="bar"><span class="pillx" style="background:#F3E2C4;color:#7A4E0A">MNADA</span><span class="sp"></span>
+            <span class="ib"><svg class="svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span></div>
+        </div>
+
+        <div class="bnav">
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>Nyumbani</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>Tafuta</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.4Z"/></svg>Chat</div>
+          <div><svg class="svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="8" r="4.2"/></svg>Mimi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h3 class="mini">B3d · Vitendo vitatu tofauti — ficha · rejesha · funga kabisa <span class="decnote">Nguzo #3</span></h3>
+<div class="stage">
+
+  <div class="phone sm">
+    <div class="plabel"><span>B3d-1 · imefichwa (mini haipo)</span><span class="tag prop">Pendekezo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="browse">
+        <div style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:#fff;border-bottom:1px solid var(--line)">
+          <span class="bk" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+          <b style="font-size:14px">Bidhaa Sokoni</b>
+        </div>
+        <div class="grid2">
+          <div class="pcard"><div class="ph">1</div><div class="tx"><b>Mahindi Bora</b><small>TSh 75,000</small></div></div>
+          <div class="pcard"><div class="ph">2</div><div class="tx"><b>Komputer</b><small>TSh 2,000,000</small></div></div>
+          <div class="pcard"><div class="ph">3</div><div class="tx"><b>Viatu</b><small>TSh 35,000</small></div></div>
+          <div class="pcard"><div class="ph">4</div><div class="tx"><b>Mchele</b><small>TSh 90,000</small></div></div>
+        </div>
+
+        <div class="note i" style="margin:11px;background:#fff">
+          <span>Skrini ni <b>safi</b> — mini player haionekani. Hakuna kitu kinachozuia bidhaa wala bottom nav.</span>
+        </div>
+
+        <div class="restore"><i></i> Live inaendelea · <span class="ar">▲</span> rejesha</div>
+
+        <div class="bnav">
+          <div class="on"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg></div>
+          <div><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></div>
+          <div><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 8.7 8.7 0 0 1-3.9-.9L3 21l1.9-5.1A8.4 8.4 0 0 1 4 11.5a8.4 8.4 0 0 1 8.5-8.5A8.4 8.4 0 0 1 21 11.5Z"/></svg></div>
+          <div><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone sm">
+    <div class="plabel"><span>B3d-2 · imefungwa kabisa</span><span class="tag exist">Hali ya leo</span></div>
+    <div class="scr">
+      <div class="notch"><i></i></div>
+      <div class="browse">
+        <div style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:#fff;border-bottom:1px solid var(--line)">
+          <span class="bk" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center"><svg class="svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41534C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
+          <b style="font-size:14px">Live Hub</b>
+        </div>
+        <div class="grid2" style="grid-template-columns:1fr">
+          <div class="pcard" style="display:flex;align-items:center;gap:9px;padding:9px"><div class="ph" style="width:44px;height:44px;border-radius:50%">J</div><div class="tx"><b>Juma Mnyika</b><small>Mnada · Mahindi Bora</small></div></div>
+          <div class="pcard" style="display:flex;align-items:center;gap:9px;padding:9px;opacity:.55"><div class="ph" style="width:44px;height:44px;border-radius:50%">A</div><div class="tx"><b>Asha M.</b><small>Imeisha</small></div></div>
+        </div>
+        <div class="note w" style="margin:11px">
+          <span><b>Hakuna mini player tena.</b> Chumba kimefungwa (<code>skhLiveLeaveFinally()</code> → <code>skhLiveClose</code> → <code>leaveRoom()</code>) — hii ni tabia ya leo, haibadilishwi.</span>
+        </div>
+        <div class="note i" style="margin:11px">
+          <span>Kuingia tena: bonyeza live kwenye Live Hub — <code>liveJoin</code> ile ile.</span>
+        </div>
+        <div class="bnav">
+          <div class="on"><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg></div>
+          <div><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></div>
+          <div><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 8.7 8.7 0 0 1-3.9-.9L3 21l1.9-5.1A8.4 8.4 0 0 1 4 11.5a8.4 8.4 0 0 1 8.5-8.5A8.4 8.4 0 0 1 21 11.5Z"/></svg></div>
+          <div><svg class="svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="flex:1;min-width:300px">
+    <h4>Vitendo vitatu — havitachanganyiki</h4>
+    <table style="margin-top:6px">
+      <tr><th>Kitufe</th><th>Kinachotokea</th><th>Room state</th></tr>
+      <tr><td><b>▾ Punguza</b> (kwenye full-screen)</td><td>Inakuwa mini player</td><td class="ok">Inaendelea</td></tr>
+      <tr><td><b>▲ Rejesha</b> (kwenye mini)</td><td>Inarudi full-screen mahali ilipoachwa</td><td class="ok">Inaendelea</td></tr>
+      <tr><td><b>✕ → 1 Ficha</b></td><td>Mini inatoweka; kitufe kidogo “Live inaendelea ▲” kinabaki</td><td class="ok">Inaendelea</td></tr>
+      <tr><td><b>✕ → 2 Ondoka</b></td><td>Kila kitu kinafungwa</td><td class="no">Inafungwa</td></tr>
+    </table>
+    <div class="note i" style="margin-top:10px">
+      <span><b>Ficha ≠ Funga.</b> Ficha inaondoa tu UI; iframe na <code>room</code> zinaendelea. Funga ndio <code>leaveRoom()</code> ya leo.</span>
+    </div>
+  </div>
+
+</div>
+
+<h3 class="mini">B4 · Desktop — dirisha linaloelea (draggable)</h3>
+<div class="deskframe">
+  <div class="dbar"><i></i><i></i><i></i></div>
+  <div class="body2">
+    <div class="pcard"><div class="ph">1</div><div class="tx"><b>Komputer</b><small>TSh 2,000,000</small></div></div>
+    <div class="pcard"><div class="ph">2</div><div class="tx"><b>Viatu</b><small>TSh 35,000</small></div></div>
+    <div class="pcard"><div class="ph">3</div><div class="tx"><b>Pikipiki</b><small>TSh 1,500,000</small></div></div>
+    <div class="pcard"><div class="ph">4</div><div class="tx"><b>Kiwanja</b><small>TSh 50,000</small></div></div>
+    <div class="pcard"><div class="ph">5</div><div class="tx"><b>Mahindi</b><small>TSh 75,000</small></div></div>
+    <div class="pcard"><div class="ph">6</div><div class="tx"><b>Pesa</b><small>TSh 3,000</small></div></div>
+    <div class="pcard"><div class="ph">7</div><div class="tx"><b>Nyumba</b><small>TSh 3,500,000</small></div></div>
+    <div class="pcard"><div class="ph">8</div><div class="tx"><b>Sofa</b><small>TSh 1,450,000</small></div></div>
+  </div>
+
+  <div class="float" id="floatDemo">
+    <div class="v">
+      <span class="live"><i></i> LIVE</span>
+      <span class="view">248</span>
+      <span class="typ">MNADA</span>
+      <span class="nm">Juma Mnyika · Mahindi Bora</span>
+    </div>
+    <div class="bar">
+      <span class="t">TSh 75,000 / Gunia · zabuni 12</span>
+      <span class="ib" title="Sauti"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></span>
+      <span class="ib" title="Panua"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></span>
+      <span class="ib" title="Funga"><svg class="svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+    </div>
+  </div>
+</div>
+<div class="legend"><span>Jaribu kuuburuta dirisha — ni onyesho la mwingiliano pekee (hakuna code ya app).</span></div>
+
+<h3 class="mini">B5 · Mtangazaji akitoka kwenye ukurasa <span class="tag warn">Kwa uwazi</span></h3>
+<div class="grid g2">
+  <div class="card" style="border-left:4px solid var(--gold)">
+    <h4>Kinachotokea kwa kweli (sasa)</h4>
+    <ul class="tight">
+      <li>SokoHai <b>hairushi</b> kamera/mic kwenye Live. Hakuna <code>getUserMedia</code> kwa Live.</li>
+      <li>Video ni <b>embed ya YouTube/Vimeo</b> (au “live bila video”).</li>
+      <li>Kwa hivyo “tangazo liendelee” = <b>stream yako ya YouTube</b> inaendelea upande wao.</li>
+      <li>Chumba (bidhaa, maoni, zabuni) kinaendelea hapa kama state haijafutwa.</li>
+    </ul>
+    <div class="note r" style="margin-top:10px"><span><b>Hatuwezi kuahidi</b> camera ya background — haipo, na browser nyingi za simu zinaizuia.</span></div>
+  </div>
+  <div class="card">
+    <h4>Hali ya mtangazaji (pendekezo)</h4>
+    <div class="note w" style="margin-bottom:10px"><span><b>Live yako inaendelea.</b> Kamera haitumwi na SokoHai; matangazo yanaendelea kwenye YouTube. Chumba, maoni na zabuni vinaendelea hapa.</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sm" style="flex:1;min-width:150px">Rudi Studio</button>
+      <button class="btn sm ghost" style="flex:1;min-width:150px">Funga Live kwa usalama</button>
+    </div>
+    <p style="margin-top:10px">Hakuna kuahidi kinachoshindikana; mtangazaji anapewa chaguo safi.</p>
+  </div>
+</div>
+
+<h3 class="mini">B6 · Uwezo halisi kwa kila jukwaa</h3>
+<table>
+  <tr><th>Kipengele</th><th>Simu — mtazamaji</th><th>Simu — mtangazaji</th><th>Desktop</th></tr>
+  <tr><td>Iframe/embed iendelee kwenye mini</td><td class="ok">Ndiyo (DOM haibadilishwi)</td><td class="ok">Ndiyo</td><td class="ok">Ndiyo</td></tr>
+  <tr><td>Chumba (maoni, zabuni, bidhaa) kiendelee</td><td class="ok">Ndiyo</td><td class="ok">Ndiyo</td><td class="ok">Ndiyo</td></tr>
+  <tr><td>Sauti iendelee</td><td class="mid">Ndiyo — tab ikiwa hai</td><td class="mid">Ndiyo</td><td class="ok">Ndiyo</td></tr>
+  <tr><td>Kamera ya app ikiendelea background</td><td>—</td><td class="no">Hapana — haipo</td><td class="no">Hapana — haipo</td></tr>
+  <tr><td>Screen recording</td><td class="no">Haipo kwenye code</td><td class="no">Haipo kwenye code</td><td class="no">Haipo kwenye code</td></tr>
+  <tr><td>Mute ya embed (iframe ya nje)</td><td class="mid">Ndiyo — <code>enablejsapi=1</code> + postMessage, bila reload</td><td class="mid">Ndiyo</td><td class="ok">Ndiyo</td></tr>
+  <tr><td>Kuepuka sauti mara mbili</td><td class="ok">Kwa kubadili darasa la CSS, sio kuhamisha iframe</td><td class="ok">hio hio</td><td class="ok">hio hio</td></tr>
+</table>
+
+<div class="note i" style="margin-top:12px">
+  <svg class="svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+  <span><b>Ufunguo wa kiufundi:</b> chumba kimoja cha kudumu; tunabadili darasa <code>is-full</code> ↔ <code>is-mini</code> badala ya kuhamisha iframe kwenye DOM. Hii inazuia kupakia upya, sauti mara mbili, na stream ya pili — mahitaji §9.5–9.7 ya brief yako.</span>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec"><span class="n">C</span> Live ↔ aina za mauzo — bila kurudia taarifa</h2>
+<div class="grid g3">
+  <div class="card">
+    <h4>1 · Kutoka bidhaa</h4>
+    <p>Kwenye bidhaa (au Bidhaa Zangu): <b>“Anzisha Live”</b> → <code>skhLiveCreateForm()</code> ile ile, imejazwa:
+    kichwa, bidhaa, na aina ya mauzo (<b>SokoHuru / Mnada / Group Buy / Price Drop</b>).</p>
+  </div>
+  <div class="card">
+    <h4>2 · Mini player inahifadhi muktadha</h4>
+    <p>Mini player inabeba: jina la mtangazaji, <b>aina ya mauzo</b>, bidhaa, bei na idadi ya zabuni.
+    Ukirudi full-screen, unakuta <b>tab ile ile</b> (Maoni/Bidhaa/Zabuni) na chumba kile kile.</p>
+  </div>
+  <div class="card">
+    <h4>3 · Hakuna mfumo mpya wa Live</h4>
+    <p><code>liveCreate</code>, <code>liveJoin</code>, <code>liveLeave</code>, <code>liveComment</code>, <code>liveEnd</code> — zote zinabaki.
+    Tunaongeza tu <b>prefill</b> na <b>hali ya mini</b>.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec"><span class="n">D</span> Maswali mawili madogo yaliyobaki <span class="badge"><span class="tag warn">Yanahitaji jibu</span></span></h2>
+<p class="sub">Q1–Q5 zimefungwa. Haya mawili yalijitokeza <b>wakati wa kuandaa modules</b> — ni madogo, lakini yanaathiri uzoefu, kwa hiyo siyaamui mwenyewe.</p>
+
+<div class="q"><b>Q6 · “Nakala mpya” inakili kiasi gani?</b>
+  <p>Uchunguzi: <code>skhDuplicateProduct</code> + <code>duplicateTemplate</code> kwa makusudi <b>hazinakili picha, stock, variants wala <code>modeData</code></b> (ni “mipangilio”, sio bidhaa) — <code>shared/product-listing-core.mjs:259–262</code>.</p>
+  <p>Kwa hiyo “nakala” ya leo ingelazimu muuzaji <b>kupiga picha upya</b> — kinyume na lengo la “bila kurudia taarifa”.</p>
+  <div class="opts">
+    <span><b>(a)</b> tumia <code>skhDuplicateProduct</code> kama ilivyo — <i>hakuna code mpya, lakini picha zinarudiwa</i></span>
+    <span><b>(b)</b> ongeza <code>saleCopyTemplate()</code> kwenye shared core: <b>picha + maelezo + specs zinakiliwa; stock = 0; variants bila stock</b> — <i>pendekezo langu</i></span>
+  </div>
+  <p style="margin-top:6px"><b>Kwa nini (b) iko salama:</b> stock haihamishwi (hakuna hatari ya kuuza kitu kimoja mara mbili), picha zinabaki, na sheria mpya inapimwa kwa test ya kitengo kabla ya kugusa UI.</p>
+</div>
+
+<div class="q"><b>Q7 · Mini player ionekane kwenye skrini zipi?</b>
+  <div class="opts">
+    <span><b>(a)</b> kila mahali isipokuwa malipo/checkout na full-screen modals — <i>pendekezo</i></span>
+    <span><b>(b)</b> mahali pote bila kujali</span>
+    <span><b>(c)</b> ukurasa wa nyumbani na soko pekee</span>
+  </div>
+  <p style="margin-top:6px">Haigusi bottom nav, search, kadi za bidhaa wala sehemu ya kuandika kwenye chat — nafasi inarekebishwa kwa nafasi ya mini player (padding ya mwisho wa ukurasa), sio kuifunika.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec"><span class="n">E</span> Ramani ya modules 5 — utekelezaji hatua kwa hatua <span class="badge"><span class="tag prop">Mpango</span></span></h2>
+<p class="sub">Kila module ni ndogo, inaweza kupimwa peke yake, na inaweza kuachwa bila kuathiri inayofuata. <b>Hakuna rewrite</b>, hakuna kufuta feature, hakuna deploy.</p>
+
+<table>
+  <tr><th style="width:46px">#</th><th style="width:230px">Module</th><th style="width:300px">Faili</th><th>Kigezo cha kufaulu</th></tr>
+  <tr>
+    <td><b>M1</b></td>
+    <td><b>Chooser ya aina 4</b><br><small>+ kiungo “Zaidi ›” (Q1)</small></td>
+    <td>mpya: <code>css/71-sale-type-flow.css</code>, <code>js/app/113-sale-type-flow.js</code><br>mstari 1: <code>html/15-main-menu.html:9</code></td>
+    <td>Bidhaa Sokoni inafungua chooser; Huduma/Usafirishaji/Sajili <b>hazibadiliki</b>; kuchagua aina kunafungua <code>#sellerForm</code> ile ile.</td>
+  </tr>
+  <tr>
+    <td><b>M2</b></td>
+    <td><b>Bidhaa iliyopo / mpya</b><br><small>+ ibadilishe au nakala (Q2)</small></td>
+    <td><code>js/app/113-sale-type-flow.js</code><br>reuse: <code>skhDuplicateProduct</code> (05-forms.js:512)<br>ikiwa Q6=(b): <code>shared/product-listing-core.mjs</code></td>
+    <td>Kuchagua bidhaa iliyopo kunajaza fomu bila kuandika upya; nakala inaunda bidhaa mpya; bidhaa asili <b>haiguswi</b>.</td>
+  </tr>
+  <tr>
+    <td><b>M3</b></td>
+    <td><b>Masharti ya aina + Hariri</b><br><small>Bidhaa Zangu</small></td>
+    <td><code>js/app/113-sale-type-flow.js</code><br><code>html/13-form-edit.html</code>, <code>js/app/12-sys-modes.js:374–389, 481</code></td>
+    <td>Mnada hauwezi kuhifadhiwa bila muda wa kuisha; kubadili aina <b>hakuna</b> taarifa inayopotea; ulinzi wa “zabuni zipo” unabaki.</td>
+  </tr>
+  <tr>
+    <td><b>M4</b></td>
+    <td><b>Live → bidhaa (prefill)</b><br><small>bila kurudia taarifa</small></td>
+    <td><code>js/app/120-live-commerce-ui.js:189</code> <code>skhLiveCreateForm(opts)</code> — <b>nyongeza ya parameter tu</b></td>
+    <td>Kuanzisha Live kutoka bidhaa kunajaza bidhaa + aina; Live Settings zote zinaachwa; <code>liveCreate</code> haibadilishwi.</td>
+  </tr>
+  <tr>
+    <td><b>M5</b></td>
+    <td><b>Full-screen ↔ mini player</b><br><small>ficha · rejesha · funga (Q5)</small></td>
+    <td>mpya: <code>css/72-live-mini-player.css</code>, <code>js/app/127-live-mini-player.js</code><br>hook mmoja kwenye <code>120</code> (darasa la CSS)</td>
+    <td>Iframe <b>moja</b> tu kwenye DOM wakati wote; hakuna <code>src</code> mpya; hali inarudi mahali ilipoachwa; nafasi draggable + chini-kulia default.</td>
+  </tr>
+</table>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card">
+    <h4>Uthibitisho kwa kila module (hakitapunguzwa)</h4>
+    <ul class="tight">
+      <li><code>npm test</code> — vifungu vyote, ikiwemo <code>build_html.py check</code></li>
+      <li>Test mpya za kitengo: <code>tools/test_sale_type_flow.mjs</code> (M1–M3)</li>
+      <li>Test ya mini player: <code>tools/test_live_mini_player.mjs</code> — inahesabu <code>&lt;iframe&gt;</code> kwenye DOM kabla/baada ya kubadili hali</li>
+      <li>Ripoti: faili zilizoguswa, test zilizopita, <code>git diff --stat</code>, nini hakijagusa</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Mipaka migumu ya M5 (nguzo #2)</h4>
+    <ul class="tight">
+      <li>Iframe <b>haihamishwi</b> kwenye DOM — inabaki kwenye mzazi yule yule</li>
+      <li>Hakuna <code>iframe.src =</code>, hakuna <code>.remove()</code>, hakuna <i>re-mount</i></li>
+      <li>Hakuna stream/camera session ya pili; hakuna autoplay mpya</li>
+      <li>Test inashindwa ikiwa idadi ya iframe ≠ 1 au <code>src</code> imebadilika</li>
+    </ul>
+  </div>
+</div>
+
+<div class="note i" style="margin-top:16px">
+  <svg class="svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8.5V8"/></svg>
+  <span><b>Mpangilio wa utekelezaji:</b> M1 → M2 → M3 (Bidhaa Sokoni), kisha M4 → M5 (Live).
+  Kila hatua inaisha kwa <b>preview + ripoti ndogo</b> ili uone kabla ya kuendelea. M4–M5 haziwezi kuanza kabla M1–M3 haijakamilika &amp; kuhakikiwa.</span>
+</div>
+
+<div class="note r" style="margin-top:14px">
+  <svg class="svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 9v4M12 17v.5"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+  <span><b>Bado hakuna mstari wa code ya app uliobadilishwa.</b> Faili hii ni onyesho pekee. Ninasubiri <b>go-ahead ya M1</b> (+ majibu ya Q6 na Q7) kabla ya kuandika module ya kwanza.</span>
+</div>
+
+<p style="margin-top:22px;font-size:11.5px;color:var(--mut)">
+  Faili hii inajitegemea: hakuna CSS/JS/font ya nje. Toleo la 2: 2026-11-08 (maamuzi Q1–Q5 + ramani ya modules).
+</p>
+
+</div>
+
+<script>
+/* onyesho la kuburuta dirisha la desktop — hali ya UI pekee, haigusi app */
+(function(){
+  var el = document.getElementById('floatDemo');
+  if (!el || !window.PointerEvent) return;
+  var drag = null;
+  el.addEventListener('pointerdown', function(e){
+    if (e.target.closest('.ib')) return;           /* vitufe vifanye kazi */
+    var r = el.getBoundingClientRect(), p = el.parentElement.getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, pw: p.width, ph: p.height, w: r.width, h: r.height };
+    el.style.right = 'auto'; el.style.bottom = 'auto';
+    el.style.left = (r.left - p.left) + 'px'; el.style.top = (r.top - p.top) + 'px';
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove', function(e){
+    if (!drag) return;
+    var p = el.parentElement.getBoundingClientRect();
+    var x = e.clientX - p.left - drag.dx, y = e.clientY - p.top - drag.dy;
+    x = Math.max(6, Math.min(p.width - drag.w - 6, x));
+    y = Math.max(6, Math.min(p.height - drag.h - 6, y));
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+  });
+  el.addEventListener('pointerup', function(){ drag = null; });
+  el.addEventListener('pointercancel', function(){ drag = null; });
+})();
+</script>
+</body>
+</html>

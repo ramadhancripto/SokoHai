@@ -508,7 +508,7 @@ service cloud.firestore {
       );
       allow delete: if false;
     }
-    match /haipay_saved/{id} {
+    match /sokopay_saved/{id} {
       allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if signedIn() && resource.data.userId == request.auth.uid
@@ -2005,6 +2005,45 @@ service cloud.firestore {
       match /reminders/{uid} {
         allow read: if signedIn() && uid == request.auth.uid;
         allow write: if false;
+      }
+      // [FULL-AUCTION 2026-11] server exactly-once claim markers (liveStart): host/admin read.
+      match /_claims/{cid} {
+        allow read: if signedIn() && (isAdmin()
+          || get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid);
+        allow write: if false;
+      }
+      // [FULL-AUCTION 2026-11] WebRTC signalling (125-live-video.js): one doc per
+      // viewer (id = viewer uid). FIELD-OWNERSHIP enforced (2026-11-11 hardening):
+      // the viewer writes ONLY answer/viewerCandidates on their own doc; the host
+      // writes ONLY offer/hostCandidates on docs of their own session; only the host
+      // lists them. Cross-field writes, unknown fields and mistyped values are denied
+      // (B7 R15-R25). Reads stay whole-doc: Firestore has no field-level read, so the
+      // client additionally sanitizes signalling payloads (125 cleanSdp/cleanCands).
+      match /rtc/{vid} {
+        allow get: if signedIn() && (isAdmin() || vid == request.auth.uid
+          || get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid);
+        allow list: if signedIn() && (isAdmin()
+          || get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid);
+        allow create: if signedIn() && (isAdmin()
+          || (vid == request.auth.uid
+            && request.resource.data.keys().hasOnly(['answer', 'viewerCandidates'])
+            && (!('answer' in request.resource.data) || request.resource.data.answer == null || (request.resource.data.answer is map && request.resource.data.answer.type is string && request.resource.data.answer.sdp is string && request.resource.data.answer.sdp.size() < 200000))
+            && (!('viewerCandidates' in request.resource.data) || (request.resource.data.viewerCandidates is list && request.resource.data.viewerCandidates.size() <= 100)))
+          || (get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid
+            && request.resource.data.keys().hasOnly(['offer', 'hostCandidates'])
+            && (!('offer' in request.resource.data) || request.resource.data.offer == null || (request.resource.data.offer is map && request.resource.data.offer.type is string && request.resource.data.offer.sdp is string && request.resource.data.offer.sdp.size() < 200000))
+            && (!('hostCandidates' in request.resource.data) || (request.resource.data.hostCandidates is list && request.resource.data.hostCandidates.size() <= 100))));
+        allow update: if signedIn() && (isAdmin()
+          || (vid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer', 'viewerCandidates'])
+            && (!('answer' in request.resource.data) || request.resource.data.answer == null || (request.resource.data.answer is map && request.resource.data.answer.type is string && request.resource.data.answer.sdp is string && request.resource.data.answer.sdp.size() < 200000))
+            && (!('viewerCandidates' in request.resource.data) || (request.resource.data.viewerCandidates is list && request.resource.data.viewerCandidates.size() <= 100)))
+          || (get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['offer', 'hostCandidates'])
+            && (!('offer' in request.resource.data) || request.resource.data.offer == null || (request.resource.data.offer is map && request.resource.data.offer.type is string && request.resource.data.offer.sdp is string && request.resource.data.offer.sdp.size() < 200000))
+            && (!('hostCandidates' in request.resource.data) || (request.resource.data.hostCandidates is list && request.resource.data.hostCandidates.size() <= 100))));
+        allow delete: if signedIn() && (vid == request.auth.uid || isAdmin()
+          || get(/databases/$(database)/documents/live_sessions/$(sid)).data.hostUid == request.auth.uid);
       }
     }
     // [R13-D] Bei Kushuka queue: entries are private (server only); the board is public and masked

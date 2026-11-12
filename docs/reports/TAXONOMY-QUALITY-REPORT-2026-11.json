@@ -1,0 +1,236 @@
+{
+ "generatedBy": "tools/taxonomy_quality_report.mjs",
+ "schema": 1,
+ "canonical": {
+  "categories": 44,
+  "byKind": {
+   "PRODUCT_DOMAIN": 28,
+   "SERVICE_DOMAIN": 10,
+   "OVERLAY": 3,
+   "PROPERTY_DOMAIN": 1,
+   "MINERAL_RESOURCE_DOMAIN": 1,
+   "FALLBACK": 1
+  },
+  "productCategoriesWithLeaves": 29,
+  "leaves": 733,
+  "productTypes": 5418,
+  "duplicateTypeIds": [],
+  "duplicateTypeLabelsInBranch": 0,
+  "categoryLevelDefaultTypes": 225,
+  "orphanProductTypes": 0,
+  "orphanProductTypeSamples": [],
+  "duplicateLeavesWithinCategory": [],
+  "leavesSharedAcrossCategories": 4,
+  "leavesSharedSamples": [
+   {
+    "leaf": "mizizi viazi",
+    "categories": [
+     "CAT-01",
+     "CAT-03"
+    ]
+   },
+   {
+    "leaf": "nyama",
+    "categories": [
+     "CAT-01",
+     "CAT-04"
+    ]
+   },
+   {
+    "leaf": "mayai",
+    "categories": [
+     "CAT-01",
+     "CAT-04"
+    ]
+   },
+   {
+    "leaf": "vehicle accessories",
+    "categories": [
+     "CAT-14",
+     "CAT-15"
+    ]
+   }
+  ]
+ },
+ "sellerVsBuyer": {
+  "sellerCategories": 34,
+  "buyerCategories": 34,
+  "identical": true,
+  "subcategoryGaps": []
+ },
+ "legacy": {
+  "categories": 25,
+  "mapped": 25,
+  "unmapped": [],
+  "staleMappings": [],
+  "canonicalWithoutLegacyLabel": [
+   "CAT-03",
+   "CAT-05",
+   "CAT-06",
+   "CAT-08",
+   "CAT-12",
+   "CAT-13",
+   "CAT-15",
+   "CAT-30",
+   "CAT-33",
+   "CAT-34",
+   "CAT-35",
+   "CAT-38",
+   "CAT-42",
+   "CAT-43"
+  ],
+  "subcategories": 120,
+  "subcategoriesExactlyMatchingCanonicalLeaf": 2,
+  "subcategoriesUnmatched": 118,
+  "subcategoriesUnmatchedSamples": [
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Grains & Cereals",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Cooking Oils",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Dairy Products",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Snacks & Confectionery",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Sugar & Sweeteners",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Salt Products",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Spices & Seasonings",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Bakery Products",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Beverages",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Meat Products",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Vyakula na Vinywaji (Food)",
+    "sub": "Fish & Seafood",
+    "canonicalId": "CAT-01"
+   },
+   {
+    "legacyCategory": "Kilimo (Agriculture)",
+    "sub": "Crop Production",
+    "canonicalId": "CAT-02"
+   },
+   {
+    "legacyCategory": "Kilimo (Agriculture)",
+    "sub": "Seeds & Planting",
+    "canonicalId": "CAT-02"
+   },
+   {
+    "legacyCategory": "Kilimo (Agriculture)",
+    "sub": "Fertilizers",
+    "canonicalId": "CAT-02"
+   },
+   {
+    "legacyCategory": "Kilimo (Agriculture)",
+    "sub": "Pesticides & Herbicides",
+    "canonicalId": "CAT-02"
+   },
+   {
+    "legacyCategory": "Kilimo (Agriculture)",
+    "sub": "Farm Tools",
+    "canonicalId": "CAT-02"
+   },
+   {
+    "legacyCategory": "Kilimo (Agriculture)",
+    "sub": "Irrigation Supplies",
+    "canonicalId": "CAT-02"
+   },
+   {
+    "legacyCategory": "Ufugaji (Livestock)",
+    "sub": "Live Animals",
+    "canonicalId": "CAT-04"
+   },
+   {
+    "legacyCategory": "Ufugaji (Livestock)",
+    "sub": "Meat & Protein",
+    "canonicalId": "CAT-04"
+   },
+   {
+    "legacyCategory": "Ufugaji (Livestock)",
+    "sub": "Dairy & Animal Products",
+    "canonicalId": "CAT-04"
+   },
+   {
+    "legacyCategory": "Ufugaji (Livestock)",
+    "sub": "Animal Feed & Nutrition",
+    "canonicalId": "CAT-04"
+   },
+   {
+    "legacyCategory": "Ufugaji (Livestock)",
+    "sub": "Poultry Products",
+    "canonicalId": "CAT-04"
+   },
+   {
+    "legacyCategory": "Ufugaji (Livestock)",
+    "sub": "Fish & Aquaculture",
+    "canonicalId": "CAT-04"
+   },
+   {
+    "legacyCategory": "Afya na Pharmacy (Health)",
+    "sub": "Medicines",
+    "canonicalId": "CAT-19"
+   },
+   {
+    "legacyCategory": "Afya na Pharmacy (Health)",
+    "sub": "Medical Supplies",
+    "canonicalId": "CAT-19"
+   }
+  ]
+ },
+ "services": {
+  "legacyCategories": 19,
+  "legacySubcategories": 72,
+  "canonicalServiceDomains": 10
+ },
+ "images": {
+  "files": 49,
+  "canonicalIdsWithImage": 23,
+  "sellerCategoriesWithImage": 19,
+  "sellerCategories": 34,
+  "unusedFiles": [
+   "huduma",
+   "kale",
+   "maagizo",
+   "svc-coaching",
+   "svc-construction",
+   "svc-rental",
+   "svc-website",
+   "svc-writing",
+   "vitabu",
+   "vito"
+  ]
+ }
+}

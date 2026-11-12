@@ -155,6 +155,13 @@ window.togglePlusMenu = skh.togglePlusMenu;
 
 window.markShipped = async function(orderId, buyerId, itemTitle) {
     if(!await skhConfirm(`Je, unathibitisha kuwa mzigo wa '${skh.skhEscape(itemTitle)}' upo tayari? \n\nLazima upandishe picha ya risti ya usafiri au kifurushi kama ushahidi.`)) return;
+    // [LAUNCH-FIX 2026-11-09] Thibitisha haki + hali KABLA ya risti (mirror ya rules).
+    if(!skh.requireAuth()) return;
+    try {
+        const _os = await skh.getDoc(skh.doc(skh.db, "orders", orderId));
+        const _oe = window.skhOrderChecks ? window.skhOrderChecks.shipError(_os && _os.exists() ? _os.data() : null, skh.currentUser.uid) : null;
+        if(_oe) { alert(_oe); return; }
+    } catch(e) { alert('Imeshindwa kuthibitisha oda: ' + (e && e.message)); return; }
 
     // 1. Fungua kamera/galari ya muuzaji kuchagua picha ya risti
     const fileInput = document.getElementById('receiptUploadInput');

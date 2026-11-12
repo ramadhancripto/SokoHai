@@ -35,6 +35,7 @@
                 </div>
             </div>
         </div>
+
         <div id="chatSearchBar" class="ch-conversation-search" hidden>
             <span aria-hidden="true"><span class="skh-ico" data-ico="search"></span></span>
             <input id="chatSearchInput" type="search" autocomplete="off" placeholder="Tafuta ujumbe..." oninput="window.skhChatSearchMessages(this.value)">
@@ -135,7 +136,7 @@
                 <!-- [R22 §11] + → Contact / Chagua Contacts / Create Group (69-chat-groups.js) -->
                 <button type="button" id="sogaPlusBtn" onclick="window.skhSogaPlusMenu && window.skhSogaPlusMenu(event)" title="Anza: Contact / Contacts / Kikundi" class="ch-inbox-iconbtn ch-inbox-plus"><span style="font-size:20px;font-weight:900;line-height:1;">+</span></button>
                 <button onclick="window.skhChatOpenBlockedUsers()" title="Waliozuiwa" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="lock"></span></button>
-                <button onclick="closeModals()" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="x"></span></button>
+                <button aria-label="Funga" onclick="closeModals()" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="x"></span></button>
             </div>
         </div>
         <div class="ch-inbox-search">
@@ -147,7 +148,7 @@
         <div id="chatBlockedUsersWrap" style="display:none;">
             <div class="ch-blocked-head">
                 <span><span class="skh-ico" data-ico="lock"></span> Waliozuiwa (Blocked Users)</span>
-                <button onclick="window.skhChatOpenBlockedUsers()"><span class="skh-ico" data-ico="x"></span></button>
+                <button aria-label="Funga" onclick="window.skhChatOpenBlockedUsers()"><span class="skh-ico" data-ico="x"></span></button>
             </div>
             <div id="chatBlockedUsersList" class="ch-blocked-list"></div>
         </div>
@@ -183,7 +184,7 @@
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;">Sambaza ujumbe kwa...</b>
-            <button onclick="document.getElementById('chatForwardModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="document.getElementById('chatForwardModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="chatForwardList" style="flex:1; overflow-y:auto; padding:8px;"></div>
     </div>
@@ -194,7 +195,7 @@
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;"><span class="skh-ico" data-ico="cart"></span> Chagua bidhaa kushiriki</b>
-            <button onclick="document.getElementById('chatAttachProductModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="document.getElementById('chatAttachProductModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="chatAttachProductList" style="flex:1; overflow-y:auto; padding:8px;"></div>
     </div>
@@ -205,7 +206,7 @@
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;"><span class="skh-ico" data-ico="cart"></span> Chagua oda kushiriki</b>
-            <button onclick="document.getElementById('chatAttachOrderModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="document.getElementById('chatAttachOrderModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="chatAttachOrderList" style="flex:1; overflow-y:auto; padding:8px;"></div>
     </div>

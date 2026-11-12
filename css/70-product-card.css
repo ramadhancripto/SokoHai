@@ -1,0 +1,980 @@
+/* ==== css/70-product-card.css ==== */
+/* ============================================================================
+   SOKOHAI — 70 · PRODUCT CARD VISUAL SYSTEM  (Phase 0 · 2026-11-08)
+   ----------------------------------------------------------------------------
+   KANUNI: LET THE PRODUCT IMAGE SELL THE PRODUCT.
+   Picha ni kipengele kikubwa zaidi cha kadi; maandishi yanaunga mkono tu.
+
+   FAILI HILI NI SAFU YA MWISHO (imeunganishwa baada ya 69) na linafanya
+   kazi kwa KADI YA BIDHAA PEKEE (`.skh-card--product`). Kadi za Huduma
+   (`.skh-card--service`) na Usafiri (`.skh-card--transport`) HAZIGUSWI
+   na sheria zozote hapa — kasoro zao zinasuluhishwa kwenye hatua zao.
+
+   Kwa nini safu mpya badala ya kuhariri za zamani?
+   `css/16`, `33`, `37`, `45`, `52`, `59`, `61`, `64` zote zinaandika juu ya
+   kadi hii kwa `!important`, na `52` iligeuza picha kuwa 4:3/`cover` na
+   `64` ikairudisha 1:1/`contain`. Badala ya kuhariri faili nane (hatari ya
+   kuvunja moduli nyingine), safu hii inatangaza mwonekano MMOJA ulioidhinishwa
+   na inaacha mitindo ya zamani kama historia. Kila sheria hapa inaweza
+   kutolewa kwa kuondoa faili hili kwenye `html/00-head.html`.
+
+   HAKUNA DOM mpya isipokuwa: `.skh-card-foot` (muuzaji + tathmini) na
+   `.skh-card-actions` (Weka Oda · Patana Bei · Chat), zote zikijengwa na
+   js/app/00-bootstrap.js → skh.ProductPostCard / skh.cardActions.
+   Hakuna handler, bei, stock, cart, order au data iliyobadilishwa.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   0. TOKENS — taarifa moja ya mwonekano kwa kadi ya bidhaa
+   (hutumia brand tokens zilizopo kwenye css/00-tokens.css)
+   --------------------------------------------------------------------------- */
+.feed-card-box.skh-card--product {
+  --pc-radius:      14px;
+  --pc-frame:       #F7FAF9;   /* mandhari ya picha: nyepesi, isiyoshindana */
+  --pc-line:        var(--sokohai-border, #E5ECEC);
+  --pc-line-soft:   #EFF4F2;
+  --pc-ink:         var(--sokohai-text, #18352D);
+  --pc-ink-2:       var(--sokohai-text-2, #65757A);
+  --pc-green:       var(--sokohai-green, #18A982);
+  --pc-green-dark:  var(--sokohai-green-dark, #17604E);
+  --pc-gold-dark:   #8F6A0D;   /* "dark gold" — 4.96:1 juu ya nyeupe */
+  --pc-gold-soft:   #FBF7E7;
+  --pc-gap:         6px;
+}
+
+/* ---------------------------------------------------------------------------
+   1. GRID — 2 kwa safu kwenye simu, 3–4 kwenye tablet, 5 kwenye desktop.
+   (`.feed-grid` inatumika pia na huduma/usafiri: mabadiliko ni ya upana tu,
+   hakuna mpangilio wa kadi unaobadilika.)
+   --------------------------------------------------------------------------- */
+.feed-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+}
+@media (max-width: 600px) {
+  .feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+}
+/* Skrini nyembamba sana (≤ 340px): nafasi inapunguzwa, si kadi kubwa bandia */
+@media (max-width: 340px) {
+  .feed-grid { gap: 8px !important; }
+}
+@media (min-width: 601px) and (max-width: 1099px) {
+  .feed-grid { grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)) !important; gap: 14px !important; }
+}
+@media (min-width: 1100px) {
+  .feed-grid {
+    /* 244px ni kikomo cha chini kilichopimwa kwa mpangilio wa vitendo vitatu */
+    grid-template-columns: repeat(auto-fill, minmax(244px, 1fr)) !important;
+    gap: 18px !important;
+    max-width: var(--skh-desk-max, 1360px);
+    margin-left: auto; margin-right: auto;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   2. KADI — uso mmoja safi: mpaka laini, kivuli hafifu, pembe thabiti
+   --------------------------------------------------------------------------- */
+.feed-card-box.skh-card--product {
+  background: #fff !important;
+  border: 1px solid var(--pc-line) !important;
+  border-radius: var(--pc-radius) !important;
+  box-shadow: 0 1px 2px rgba(16, 40, 34, .045) !important;
+  transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease !important;
+}
+@media (hover: hover) {
+  .feed-card-box.skh-card--product:hover {
+    border-color: #D8E5E0 !important;
+    box-shadow: 0 10px 24px -14px rgba(16, 40, 34, .38), 0 1px 2px rgba(16, 40, 34, .05) !important;
+    transform: translateY(-2px) !important;
+  }
+}
+.feed-card-box.skh-card--product:active { transform: translateY(0) !important; }
+.feed-card-box.skh-card--product:focus-visible {
+  outline: 2px solid var(--pc-green) !important;
+  outline-offset: 2px !important;
+}
+@media (min-width: 1100px) {
+  .feed-card-box.skh-card--product { --pc-radius: 16px; }
+}
+
+/* ---------------------------------------------------------------------------
+   3. PICHA — kipaumbele cha kwanza
+   1:1 · object-fit: contain · haikatwi · hakuna kuvuta/kunenea.
+   [DECISION] Hover-zoom ya picha IMEZIMWA kwa kadi ya bidhaa: `scale()`
+   ndani ya fremu yenye `overflow:hidden` hukata bidhaa kwa macho, kinyume
+   cha kanuni ya "never crop the product".
+   --------------------------------------------------------------------------- */
+.feed-card-box.skh-card--product .feed-img-box.skh-img {
+  position: relative !important;
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 10px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  background: var(--pc-frame) !important;
+  border-bottom: 1px solid var(--pc-line-soft) !important;
+}
+.feed-card-box.skh-card--product .feed-img-box.skh-img > img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  display: block !important;
+  transform: none !important;         /* hakuna zoom inayokata bidhaa */
+  transition: none !important;
+}
+.feed-card-box.skh-card--product:hover .feed-img-box.skh-img > img { transform: none !important; }
+
+/* Imeisha: picha ififie KIDOGO (bidhaa ionekane bado), si kufichwa */
+.feed-card-box.skh-card--product .skh-img--out img,
+.feed-card-box.skh-card--product .feed-img-box.skh-img.skh-img--out > img {
+  filter: grayscale(.35) brightness(.99) !important;
+  opacity: .82 !important;
+}
+
+/* --- Vibandiko (overlays): vidogo, vinne — picha iendelee kuuza --- */
+.feed-card-box.skh-card--product .skh-overlay-stack { top: 8px !important; left: 8px !important; display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+.feed-card-box.skh-card--product .skh-badge {
+  height: 20px !important; padding: 0 7px !important; border-radius: 6px !important;
+  font-size: 9.5px !important; font-weight: 800 !important; letter-spacing: .01em !important;
+  display: inline-flex; align-items: center; gap: 3px; line-height: 1 !important;
+  box-shadow: 0 1px 3px rgba(16, 40, 34, .10) !important;
+}
+.feed-card-box.skh-card--product .skh-badge svg { width: 10px !important; height: 10px !important; }
+.feed-card-box.skh-card--product .boost-badge {
+  top: 8px !important; left: 8px !important;
+  height: 20px !important; padding: 0 7px !important; border-radius: 6px !important;
+  background: #FFFDF5 !important; color: #8A6A12 !important; border: 1px solid #EFE2B8 !important;
+  font-size: 9.5px !important; font-weight: 800 !important; text-transform: none !important;
+  box-shadow: 0 1px 3px rgba(16, 40, 34, .10) !important;
+}
+/* "Imeisha" — HAITUMII bloku nyeusi; pill nyeupe yenye doti nyekundu */
+.feed-card-box.skh-card--product .skh-out-pill {
+  top: 8px !important; right: 8px !important; left: auto !important; bottom: auto !important;
+  height: 21px !important; padding: 0 8px !important; border-radius: 999px !important;
+  background: rgba(255, 255, 255, .97) !important; color: #B42318 !important;
+  border: 1px solid #F3D9D5 !important;
+  font-size: 9.5px !important; font-weight: 800 !important; letter-spacing: .02em !important;
+  display: inline-flex !important; align-items: center !important; gap: 4px !important;
+  line-height: 1 !important; box-shadow: 0 1px 4px rgba(16, 40, 34, .12) !important;
+}
+.feed-card-box.skh-card--product .skh-out-pill::before {
+  content: '' !important; width: 5px !important; height: 5px !important; border-radius: 50%;
+  background: currentColor !important; flex: 0 0 auto;
+}
+/* "Imekaguliwa" — uthibitisho HALISI wa bidhaa; chini-kushoto, kisichoshindana */
+.feed-card-box.skh-card--product .skh-verified-pill {
+  left: 8px !important; bottom: 8px !important; top: auto !important; right: auto !important;
+  height: 20px !important; padding: 0 7px !important; border-radius: 999px !important;
+  background: rgba(255, 255, 255, .97) !important; color: #0F6E55 !important;
+  border: 1px solid #D6EBE2 !important;
+  font-size: 9.5px !important; font-weight: 800 !important; line-height: 1 !important;
+  display: inline-flex !important; align-items: center !important; gap: 3px !important;
+  box-shadow: 0 1px 4px rgba(16, 40, 34, .10) !important;
+}
+.feed-card-box.skh-card--product .skh-verified-pill svg { width: 9px !important; height: 9px !important; }
+/* Beji ya punguzo (-16%) — gold yenye nguvu lakini ndogo */
+.feed-card-box.skh-card--product .skh-disc-badge {
+  position: absolute !important;
+  top: 8px !important; left: 8px !important;
+  height: 20px !important;
+  padding: 0 7px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  background: var(--pc-gold-soft) !important;
+  color: #8A6A12 !important;
+  border: 1px solid #EFE2B8 !important;
+  font-size: 9.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.01em !important;
+  line-height: 1 !important;
+  z-index: 10 !important;
+  box-shadow: 0 1px 3px rgba(16, 40, 34, .10) !important;
+}
+/* ikiwa kuna Boost/mode badge pia, punguzo linashuka chini yake */
+.feed-card-box.skh-card--product .skh-overlay-stack ~ .skh-disc-badge,
+.feed-card-box.skh-card--product .skh-disc-badge:not(:first-child) { top: 33px !important; }
+.feed-card-box.skh-card--product .skh-overlay-stack .skh-disc-badge { position: static !important; }
+
+.feed-card-box.skh-card--product .skh-photo-count {
+  right: 8px !important; bottom: 8px !important;
+  height: 19px !important; padding: 0 6px !important; border-radius: 999px !important;
+  background: rgba(255, 255, 255, .97) !important; color: #4A5A63 !important;
+  border: 1px solid var(--pc-line) !important;
+  font-size: 9.5px !important; font-weight: 800 !important; line-height: 1 !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   4. MWILI — jina -> bei -> muuzaji/tathmini -> stock·eneo -> vitendo
+   --------------------------------------------------------------------------- */
+.feed-card-box.skh-card--product .feed-info-box.skh-body {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: var(--pc-gap) !important;
+  padding: 10px 11px 11px !important;
+  min-height: 0 !important;
+  font-family: var(--skh-font, 'Inter', system-ui, sans-serif) !important;
+}
+
+/* Jina — mistari 2 KAMILI (kadi zilingane), uzito mdogo kuliko bei */
+.feed-card-box.skh-card--product .skh-body > .skh-title {
+  order: 0 !important;
+  grid-column: auto !important; grid-row: auto !important;
+  margin: 0 !important;
+  min-height: calc(1.33em * 2) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.33 !important;
+  letter-spacing: -.011em !important;
+  color: var(--pc-ink) !important;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 2 !important;
+  overflow: hidden !important;
+  overflow-wrap: break-word !important;
+  text-wrap: pretty;
+}
+
+/* Bei — kipengele cha pili kwa uzito.
+   [LAYOUT] Grid ya safu 2: bei (mstari 1) · kipimo (mstari 2) · bei ya
+   awali (kulia, mistari yote). Kila kadi inapata urefu sawa wa sehemu hii,
+   na hakuna bei inayovunjika mistari kwa bahati. */
+.feed-card-box.skh-card--product .skh-body > .skh-price {
+  order: 1 !important;
+  grid-column: auto !important; grid-row: auto !important;
+  justify-self: stretch !important; align-self: auto !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+  row-gap: 1px !important;
+  text-align: left !important;
+  color: var(--pc-green-dark) !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  /* urefu thabiti wa mistari 2 (bei + kipimo) — kadi zote zilingane
+     hata ile yenye bei ya awali */
+  min-height: 33px !important;
+}
+.feed-card-box.skh-card--product .skh-amt {
+  grid-column: 1 !important; grid-row: 1 !important;
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.028em !important;
+  color: var(--pc-green-dark) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-width: 0 !important;
+}
+.feed-card-box.skh-card--product .skh-unit {
+  grid-column: 1 !important; grid-row: 2 !important;
+  display: block !important;
+  margin: 0 !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .005em !important;
+  color: var(--pc-ink-2) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-align: left !important;
+}
+/* Bei ya awali — inaonekana TU ikiwa punguzo ni HALISI (originalPrice /
+   oldPrice / compareAtPrice kubwa kuliko bei). Kwenye kadi nyembamba nafasi
+   haitoshi kwa bei mbili + kipimo; punguzo huonyeshwa kwenye picha kama
+   beji ("-16%") na bei kamili ya awali inabaki Product Details.
+   [INFO HAIPOTEI] bei ya awali inaonyeshwa kamili kuanzia kontena 240px. */
+.feed-card-box.skh-card--product .skh-was {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  align-self: center !important;
+  justify-self: end !important;
+  display: none !important;
+  align-items: center !important;
+  gap: 3px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  color: #8A969C !important;
+  white-space: nowrap !important;
+}
+@container postcard (min-width: 240px) {
+  .feed-card-box.skh-card--product .skh-was { display: inline-flex !important; }
+  .feed-card-box.skh-card--product .skh-unit { grid-column: 1 / -1 !important; }
+}
+.feed-card-box.skh-card--product .skh-was del { text-decoration-thickness: 1px !important; }
+.feed-card-box.skh-card--product .skh-off {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 13px !important;
+  padding: 0 4px !important;
+  border-radius: 3px !important;
+  background: var(--pc-gold-soft) !important;
+  color: #8A6A12 !important;
+  border: 1px solid #EFE2B8 !important;
+  font-size: 8.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.01em !important;
+  line-height: 1 !important;
+}
+
+/* Muuzaji + tathmini — mstari mmoja, kimya */
+.feed-card-box.skh-card--product .skh-card-foot {
+  order: 2 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  min-height: 16px !important;
+  margin-top: 1px !important;
+}
+.feed-card-box.skh-card--product .skh-card-seller {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  flex: 0 1 auto !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #526962 !important;
+  line-height: 1.2 !important;
+  cursor: pointer;
+}
+.feed-card-box.skh-card--product .skh-card-seller .skh-cs-name {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  min-width: 0 !important;
+}
+.feed-card-box.skh-card--product .skh-card-seller:hover .skh-cs-name { color: var(--pc-green-dark) !important; text-decoration: underline !important; }
+.feed-card-box.skh-card--product .skh-card-seller:focus-visible { outline: 2px solid var(--pc-green) !important; outline-offset: 1px; border-radius: 3px; }
+.feed-card-box.skh-card--product .skh-card-seller .skh-verified {
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  width: 12px !important; height: 12px !important; border-radius: 50% !important;
+  background: #E9F7F1 !important; color: #0F7E67 !important; flex: 0 0 auto;
+}
+.feed-card-box.skh-card--product .skh-card-foot .skh-rating {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  flex: 0 0 auto !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  color: #8A6A12 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+.feed-card-box.skh-card--product .skh-card-foot .skh-rating svg { width: 10px !important; height: 10px !important; }
+.feed-card-box.skh-card--product .skh-card-foot .skh-rating b { font-weight: 800 !important; }
+.feed-card-box.skh-card--product .skh-card-foot .skh-rating small { display: none !important; }  /* hesabu ya maoni: detail pekee */
+
+/* Stock · eneo — mstari wa mwisho wa taarifa */
+.feed-card-box.skh-card--product .skh-body > .skh-meta-row {
+  order: 3 !important;
+  grid-column: auto !important; grid-row: auto !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;          /* eneo refu halivunji mstari — linakatwa kwa … */
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  min-height: 19px !important;
+  margin: 1px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+  color: var(--pc-ink-2) !important;
+}
+/* [FIT 390px] Kadi ya simu = 165px; lebo "Inapatikana" + eneo lazima
+   visishindane. Chip imebana (9px / padding 5px) ili eneo lipate nafasi. */
+.feed-card-box.skh-card--product .skh-stock-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  flex: 0 0 auto !important;
+  height: 19px !important;
+  padding: 0 5px !important;
+  border-radius: 5px !important;
+  font-size: 8.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  border: 1px solid transparent !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+.feed-card-box.skh-card--product .skh-stock-chip::before {
+  content: '' !important; width: 4px !important; height: 4px !important; border-radius: 50%;
+  background: currentColor !important; flex: 0 0 auto;
+}
+.feed-card-box.skh-card--product .skh-stock-chip--in  { color: #12775A !important; background: #E9F7F1 !important; border-color: #D3EDE2 !important; }
+.feed-card-box.skh-card--product .skh-stock-chip--low { color: #96650B !important; background: #FDF4E4 !important; border-color: #F2E3C4 !important; }
+.feed-card-box.skh-card--product .skh-stock-chip--out { color: #B42318 !important; background: #FDEDEC !important; border-color: #F6D7D3 !important; }
+
+.feed-card-box.skh-card--product .skh-pinloc {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+  flex: 1 1 0% !important;               /* hupungua badala ya kuvunja mstari */
+  font-size: 10px !important;
+  font-weight: 650 !important;
+  color: var(--pc-ink-2) !important;
+  overflow: hidden !important;
+}
+.feed-card-box.skh-card--product .skh-pinloc > span {
+  overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
+  min-width: 0 !important;
+}
+.feed-card-box.skh-card--product .skh-pinloc svg { width: 10px !important; height: 10px !important; flex: 0 0 auto; }
+
+/* Chevron ya "Fungua" — imezimwa kwenye kadi ya bidhaa: vitendo vitatu
+   vinaonyesha wazi kadi inafanya nini; nafasi inabaki kwa stock + eneo.
+   (Kipengele kinabaki kwenye DOM; sheria hii ndiyo pekee inayoificha.) */
+.feed-card-box.skh-card--product .skh-open-chevron { display: none !important; }
+
+/* ---------------------------------------------------------------------------
+   5. VITENDO — Weka Oda (gold) · Patana Bei (green) · Chat (neutral)
+   Mpangilio: < 210px kontena = safu mbili (Weka Oda peke yake; kisha
+   Patana Bei + Chat). >= 210px = mstari mmoja. Vitufe ni vidogo, vyenye
+   nafasi ya kugusa ya kutosha (>= 32px), na HAVITAWALI kadi.
+   --------------------------------------------------------------------------- */
+.feed-card-box.skh-card--product .skh-card-actions {
+  order: 4 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 5px !important;
+  margin-top: 3px !important;
+  padding-top: 9px !important;
+  border-top: 1px solid var(--pc-line-soft) !important;
+}
+.feed-card-box.skh-card--product .skh-act {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  height: 34px !important;
+  padding: 0 6px !important;
+  border-radius: 9px !important;
+  border: 1px solid transparent !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: -.005em !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease !important;
+}
+.feed-card-box.skh-card--product .skh-act-ic { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.feed-card-box.skh-card--product .skh-act-ic svg { width: 11px !important; height: 11px !important; }
+.feed-card-box.skh-card--product .skh-act-lbl {
+  overflow: hidden !important; text-overflow: ellipsis !important;
+}
+.feed-card-box.skh-card--product .skh-act:focus-visible {
+  outline: 2px solid var(--pc-green) !important; outline-offset: 2px !important;
+}
+.feed-card-box.skh-card--product .skh-act:active { transform: scale(.975); }
+
+/* Weka Oda — kitendo kikuu cha biashara: dark gold */
+.feed-card-box.skh-card--product .skh-act--order {
+  grid-column: 1 / -1 !important;
+  background: var(--pc-gold-dark) !important;
+  border-color: var(--pc-gold-dark) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 2px rgba(143, 106, 13, .22) !important;
+}
+@media (hover: hover) {
+  .feed-card-box.skh-card--product .skh-act--order:hover { background: #7E5D0B !important; border-color: #7E5D0B !important; }
+}
+/* Patana Bei — dark green */
+.feed-card-box.skh-card--product .skh-act--nego {
+  grid-column: 1 !important;
+  background: var(--pc-green-dark) !important;
+  border-color: var(--pc-green-dark) !important;
+  color: #fff !important;
+}
+@media (hover: hover) {
+  .feed-card-box.skh-card--product .skh-act--nego:hover { background: #124C3E !important; border-color: #124C3E !important; }
+}
+/* Chat — kimya: nyeupe, mpaka wa kijani hafifu.
+   [FIT] Kadi ya 165px haiwezi kubeba lebo tatu kamili (Weka Oda + Patana
+   Bei + Chat = ~255px). Chat inakuwa kitufe cha aikoni cha mraba (34px);
+   lebo "Chat" inabaki kwenye aria-label/title kwa visomaji vya skrini. */
+.feed-card-box.skh-card--product .skh-act--chat {
+  grid-column: 2 !important;
+  background: #fff !important;
+  border-color: #CFE3DB !important;
+  color: #0F6E55 !important;
+  width: 30px !important;
+  padding: 0 !important;
+  flex: 0 0 auto !important;
+}
+.feed-card-box.skh-card--product .skh-act--chat .skh-act-lbl { display: none !important; }
+@media (hover: hover) {
+  .feed-card-box.skh-card--product .skh-act--chat:hover { background: #F2FAF7 !important; border-color: #B9D9CE !important; }
+}
+/* Imeisha: Weka Oda/Patana Bei hazibonyezeki (Chat inabaki — unaweza kuuliza) */
+.feed-card-box.skh-card--product .skh-act.is-off {
+  background: #F4F6F5 !important;
+  border-color: #E6ECEA !important;
+  color: #9AA7A1 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+.feed-card-box.skh-card--product .skh-act.is-off:active { transform: none; }
+
+/* Kontena pana (desktop/tablet): vitendo vitatu kwenye mstari mmoja */
+/* [FIT] Kadi NYEMBAMBA SANA (kontena < 150px — simu za 320px): lebo mbili
+   haziwezi kukaa mstari mmoja bila kukatwa. Vitendo vyote hupangwa safu
+   moja kwa upana kamili. Mpangilio unabadilika, vitendo havipotei. */
+@container postcard (max-width: 149px) {
+  .feed-card-box.skh-card--product .skh-card-actions { grid-template-columns: minmax(0, 1fr) !important; }
+  .feed-card-box.skh-card--product .skh-act--order,
+  .feed-card-box.skh-card--product .skh-act--nego,
+  .feed-card-box.skh-card--product .skh-act--chat { grid-column: 1 / -1 !important; width: auto !important; }
+  .feed-card-box.skh-card--product .skh-act--chat .skh-act-lbl { display: inline !important; }
+}
+
+/* [FIT] Kadi pana (>= 240px): vitendo vitatu kwenye mstari mmoja. Lebo
+   "Weka Oda" (62px) na "Patana Bei" (66px); vipimo vya chini vimepimwa
+   kwa Chrome kwenye 240/253/272px — hakuna lebo inayokatwa. Kati ya
+   150–239px mpangilio wa safu mbili unatumika (nafasi haitoshi). */
+/* [FIT · imepimwa kwenye app HALISI, si fixtures] Kadi 251px (desktop 1440)
+   ilikata "Patana Bei" kwa 2px. Vipimo hapa vinahakikisha lebo KAMILI kuanzia
+   kadi ya 240px: lebo "Patana Bei" = 66px @11px, aikoni 11px, pengo 3px,
+   padding 4px → kitufe 88px; viwili + Chat 30px + mapengo 8px = 214px,
+   ndani ya safu ya 218px ya kadi ya 240px. */
+@container postcard (min-width: 240px) {
+  .feed-card-box.skh-card--product .skh-card-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px !important;
+    gap: 4px !important;
+  }
+  .feed-card-box.skh-card--product .skh-act--order { grid-column: auto !important; }
+  .feed-card-box.skh-card--product .skh-act--nego { grid-column: auto !important; }
+  .feed-card-box.skh-card--product .skh-act--chat { grid-column: auto !important; width: 30px !important; }
+  .feed-card-box.skh-card--product .skh-act {
+    font-size: 11px !important; padding: 0 4px !important; gap: 3px !important;
+  }
+  .feed-card-box.skh-card--product .skh-act-ic svg { width: 11px !important; height: 11px !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   6. MAHALI VITENDO HAVITUMIKI
+   Reli za mlalo (`.item-slider` — Zinazovuma / Karibu Nawe / Zinazotafutwa)
+   ni "teaser" za kadi nyembamba zenye mwendo; vitufe vitatu vingeifanya
+   reli isomeke kama orodha ya fomu. Kadi inafungua bidhaa kama kawaida.
+   Vichupo vya dashibodi/duka zinazotumia `.skh-card--product` pia ni
+   maeneo ya muhtasari — vitendo vinabaki kwenye feed kuu + Product Details.
+   --------------------------------------------------------------------------- */
+.item-slider .skh-card--product .skh-card-actions,
+.skh-market-slide-card .skh-card--product .skh-card-actions { display: none !important; }
+
+/* ---------------------------------------------------------------------------
+   7. SIMU NDOGO (<= 400px): mwili mwembamba, bei ndogo kiasi — si kadi ndefu
+   --------------------------------------------------------------------------- */
+@media (max-width: 400px) {
+  .feed-card-box.skh-card--product .feed-info-box.skh-body { padding: 9px 10px 10px !important; gap: 5px !important; }
+  .feed-card-box.skh-card--product .skh-body > .skh-title { font-size: 12.5px !important; }
+  .feed-card-box.skh-card--product .skh-body > .skh-price { min-height: 31px !important; column-gap: 6px !important; }
+  .feed-card-box.skh-card--product .skh-amt { font-size: 14.5px !important; }
+  .feed-card-box.skh-card--product .skh-unit { font-size: 9.5px !important; }
+  .feed-card-box.skh-card--product .skh-was { font-size: 9.5px !important; }
+  .feed-card-box.skh-card--product .feed-img-box.skh-img { padding: 8px !important; }
+  .feed-card-box.skh-card--product .skh-act { height: 32px !important; font-size: 11px !important; }
+}
+@media (max-width: 340px) {
+  .feed-card-box.skh-card--product .skh-body > .skh-title { font-size: 12px !important; }
+  .feed-card-box.skh-card--product .skh-amt { font-size: 14px !important; }
+  .feed-card-box.skh-card--product .skh-act { font-size: 10.5px !important; padding: 0 6px !important; }
+  .feed-card-box.skh-card--product .skh-act-ic svg { width: 12px !important; height: 12px !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   8. Ufikivu: heshima kwa watumiaji wanaopunguza mwendo
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .feed-card-box.skh-card--product,
+  .feed-card-box.skh-card--product .skh-act { transition: none !important; }
+  .feed-card-box.skh-card--product:hover { transform: none !important; }
+}
+
+/* ===========================================================================
+   99. [MMILIKI 2026-11-08 · v2] UWIANO WA KADI — picha 65–70% ·
+       details 20% · vitendo 10%
+   ---------------------------------------------------------------------------
+   Ombi: "picha ichukue 65 hadi 70%, details 20%, kumi iwe kwa button ...
+   kati ya details kusiwe na nafasi kubwa sana, iwe balanced space between
+   line ... hii ni kwa bidhaa, huduma na usafiri."
+
+   Jinsi uwiano unavyohakikishwa:
+     picha  = 1:1  -> 100cqw ya upana wa kadi
+     mwili  = 44.5cqw (pana) / 50cqw (nyembamba)  ->  details + vitendo
+     jumla  = 144.5cqw / 150cqw
+     picha  = 100/144.5 = 69.2%  ·  100/150 = 66.7%   (ndani ya 65–70%)
+     details 20% ≈ 30cqw, vitendo 10% ≈ 15cqw
+
+   Nafasi: `align-content: space-between` husambaza nafasi iliyobaki KWA
+   USAWA kati ya mistari (hakuna mrundikano chini wala pengo kubwa).
+   =========================================================================== */
+
+/* ---- 99.1 SKELETON: kadi zote tatu (bidhaa · huduma · usafiri) ---- */
+@container postcard (min-width: 120px) {
+  .feed-card-box.skh-card .feed-info-box.skh-body {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-content: space-between !important;   /* nafasi sawa kati ya mistari */
+    align-items: start !important;
+    column-gap: 7px !important;
+    row-gap: 2px !important;
+    height: 44.5cqw !important;                /* details 20% + vitendo 10% */
+    min-height: 0 !important;
+    padding: 7px 9px 9px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  /* Picha: ipate nafasi yote ya fremu (pengo dogo = hakuna nafasi tupu) */
+  .feed-card-box.skh-card .feed-img-box.skh-img { padding: 4px !important; }
+}
+
+/* Kadi nyembamba (simu 136–199px): mwili 50cqw -> picha 66.7% */
+@container postcard (min-width: 120px) and (max-width: 199px) {
+  .feed-card-box.skh-card .feed-info-box.skh-body { height: 50cqw !important; }
+}
+
+/* ---- 99.2 MISTARI: jina | bei  ·  muuzaji | hali  ·  eneo | chevron ---- */
+@container postcard (min-width: 120px) {
+  .feed-card-box.skh-card .skh-body > .skh-title {
+    grid-column: 1 !important; grid-row: 1 !important;
+    margin: 0 !important; min-height: 0 !important;
+    font-size: clamp(11px, 5.1cqw, 13.5px) !important;
+    font-weight: 700 !important; line-height: 1.22 !important;
+    letter-spacing: -.012em !important;
+    display: -webkit-box !important; -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important; overflow: hidden !important;
+    overflow-wrap: normal !important; word-break: normal !important;
+    hyphens: none !important; text-overflow: ellipsis !important;
+    align-self: start !important;
+  }
+
+  .feed-card-box.skh-card .skh-body > .skh-price {
+    grid-column: 2 !important; grid-row: 1 !important;
+    display: flex !important; flex-direction: column !important;
+    align-items: flex-end !important; justify-self: end !important;
+    margin: 0 !important; padding: 0 !important; min-height: 0 !important;
+    row-gap: 0 !important; line-height: 1.15 !important;
+    white-space: nowrap !important; text-align: right !important;
+  }
+  .feed-card-box.skh-card .skh-price .skh-amt {
+    font-size: clamp(10px, 4.6cqw, 13.5px) !important;
+    font-weight: 800 !important; letter-spacing: -.025em !important;
+    color: var(--pc-green-dark) !important; white-space: nowrap !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+  .feed-card-box.skh-card .skh-price .skh-unit,
+  .feed-card-box.skh-card .skh-price .skh-was {
+    font-size: clamp(8px, 3.2cqw, 10px) !important;
+    font-weight: 600 !important; white-space: nowrap !important;
+    margin: 1px 0 0 !important; color: #7A8A84 !important;
+  }
+  .feed-card-box.skh-card .skh-price .skh-was { text-decoration: line-through !important; color: #9AAAA4 !important; }
+
+  /* Muuzaji (kushoto) · hali ya stock (kulia) */
+  .feed-card-box.skh-card .skh-body > .skh-card-foot,
+  .feed-card-box.skh-card .skh-body > .skh-seller-row {
+    grid-column: 1 !important; grid-row: 2 !important;
+    margin: 0 !important; padding: 0 !important; min-width: 0 !important;
+    display: flex !important; align-items: center !important; gap: 5px !important;
+    overflow: hidden !important; white-space: nowrap !important;
+  }
+  .feed-card-box.skh-card .skh-cs-name,
+  .feed-card-box.skh-card .skh-seller-row .skh-card-seller {
+    overflow: hidden !important; text-overflow: ellipsis !important;
+    white-space: nowrap !important; max-width: 100% !important;
+  }
+  /* `.skh-meta-row` inakuwa "contents" ili chip/eneo/chevron ziingie grid
+     ya mwili. Selector ni ule ule wenye specificity ya juu kama base rule. */
+  .feed-card-box.skh-card .skh-body > .skh-meta-row { display: contents !important; }
+
+  .feed-card-box.skh-card .skh-meta-row > .skh-stock-chip {
+    grid-column: 2 !important; grid-row: 2 !important;
+    justify-self: end !important; align-self: center !important;
+    margin: 0 !important; padding: 2px 6px !important;
+    font-size: clamp(8px, 3.1cqw, 10px) !important; line-height: 1.1 !important;
+  }
+
+  .feed-card-box.skh-card .skh-meta-row > .skh-pinloc {
+    grid-column: 1 !important; grid-row: 3 !important;
+    margin: 0 !important; min-width: 0 !important;
+    font-size: clamp(8px, 3.1cqw, 10.5px) !important; color: #7A8A84 !important;
+    overflow: hidden !important; text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .feed-card-box.skh-card .skh-meta-row > .skh-open-chevron {
+    grid-column: 2 !important; grid-row: 3 !important;
+    justify-self: end !important; margin: 0 !important;
+    font-size: 10px !important;
+  }
+
+  /* Usafiri: aina ya gari/robo ya juu ya bei */
+  .feed-card-box.skh-card .skh-body > .skh-card-sub {
+    grid-column: 1 / -1 !important; grid-row: 2 !important;
+    margin: 0 !important; font-size: clamp(8px, 3.2cqw, 10.5px) !important;
+    color: var(--pc-ink-2) !important;
+    overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
+  }
+
+  /* ---- 99.3 VITENDO: 10% ya kadi, mstari mmoja, maandishi pekee ---- */
+  .feed-card-box.skh-card .skh-card-actions {
+    grid-column: 1 / -1 !important; grid-row: 4 !important;
+    display: grid !important;
+    grid-template-columns: auto auto auto !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 !important; padding: 5px 0 0 !important;
+    border-top: 1px solid var(--pc-line-soft) !important;
+  }
+  .feed-card-box.skh-card .skh-act,
+  .feed-card-box.skh-card .skh-act--order,
+  .feed-card-box.skh-card .skh-act--nego,
+  .feed-card-box.skh-card .skh-act--chat {
+    grid-column: auto !important; width: auto !important;
+    /* [FIT] `button { min-height: 40px }` ya design-system ilizuia kimo
+       chochote — hivyo min-height/max-height zinapaswa kufutwa kwanza. */
+    min-height: 0 !important; max-height: none !important;
+    height: clamp(26px, 12.4cqw, 34px) !important;
+    padding: 0 clamp(6px, 3.4cqw, 11px) !important;
+    gap: 0 !important; border-radius: 8px !important;
+    font-size: clamp(9.5px, 4.1cqw, 12px) !important;
+    font-weight: 700 !important; letter-spacing: -.01em !important;
+    white-space: nowrap !important;
+  }
+  /* Aikoni hazitoshi kwenye mstari mmoja wa vitatu — maandishi pekee kama
+     rejea. Handler/aria-label/disabled hazijabadilika; aikoni zinabaki
+     kwenye ukurasa wa bidhaa. */
+  .feed-card-box.skh-card .skh-act-ic { display: none !important; }
+  .feed-card-box.skh-card .skh-act--chat .skh-act-lbl { display: inline !important; }
+  .feed-card-box.skh-card .skh-act-lbl { overflow: visible !important; text-overflow: clip !important; }
+}
+
+/* Kadi ndogo sana (<= 149px — simu ya 320px): vitatu haviingii mstari mmoja.
+   Vitendo hupangwa safu mbili (Weka Oda | Patana Bei, kisha Chat) na mistari
+   ya muuzaji/eneo hufichwa ili uwiano wa picha ubaki karibu na 65%.
+   Hakuna kipengele kinachopotea: muuzaji, eneo na hali vipo kwenye ukurasa
+   wa bidhaa na kwenye kadi pana. */
+@container postcard (min-width: 120px) and (max-width: 149px) {
+  .feed-card-box.skh-card .skh-body > .skh-card-foot,
+  .feed-card-box.skh-card .skh-body > .skh-seller-row,
+  .feed-card-box.skh-card .skh-meta-row > .skh-pinloc,
+  .feed-card-box.skh-card .skh-meta-row > .skh-stock-chip,
+  .feed-card-box.skh-card .skh-meta-row > .skh-open-chevron { display: none !important; }
+  .feed-card-box.skh-card .skh-card-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    justify-content: stretch !important;
+    gap: 4px !important;
+  }
+  .feed-card-box.skh-card .skh-act--order { grid-column: 1 !important; grid-row: 1 !important; }
+  .feed-card-box.skh-card .skh-act--nego  { grid-column: 2 !important; grid-row: 1 !important; }
+  .feed-card-box.skh-card .skh-act--chat  { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  .feed-card-box.skh-card .skh-act { width: auto !important; height: 24px !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   100. SIMU NDOGO SANA (<= 344px): safu MOJA
+   Kadi ya 136px haiwezi kubeba jina + bei + vitendo vitatu kwa uwiano wa
+   65/20/10 bila kukata maandishi. Badala ya kubana, feed inatoa safu moja:
+   kadi inakuwa ~288px, uwiano unarudi 67% na hakuna kinachokatwa.
+   Hii ni grid pekee — muundo wa kadi haubadiliki.
+   --------------------------------------------------------------------------- */
+@media (max-width: 344px) {
+  /* [FIT] `js/app/24-ui-final.js` huingiza <style> yenye
+     `.feed-grid{repeat(2,...)!important}` wakati wa kukimbia — hiyo ni ya
+     mwisho kwenye cascade. Selector ya ID hapa inashinda kwa specificity
+     (1,1,0 > 0,1,0) bila kuondoa kanuni ya JS. */
+  #mainFeed.feed-grid,
+  .feed-grid.feed-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   101. [FIT 2026-11-08] SAHIHI: safu zilizogongana
+   `display: contents` kwenye `.skh-meta-row` iliweka chip/eneo/chevron kwenye
+   grid ya mwili, LAKINI mistari ya awali (jina, muuzaji) na vitendo vilikuwa
+   vikipanga kwa mpangilio tofauti — matokeo: maandishi yaligongana (picha ya
+   390px). Suluhisho: safu ZOTE NNE zinapewa nafasi zake kwa uwazi.
+   --------------------------------------------------------------------------- */
+@container postcard (min-width: 120px) {
+  .feed-card-box.skh-card .feed-info-box.skh-body {
+    grid-template-rows: auto auto auto auto !important;
+    align-content: space-between !important;
+    row-gap: 0 !important;
+  }
+  /* mistari: 1 jina/bei · 2 muuzaji/hali · 3 eneo/chevron · 4 vitendo */
+  .feed-card-box.skh-card .skh-card-actions { align-self: end !important; }
+  /* kadi yoyote isiyo na safu ya 2 au 3: vitendo vinashuka chini kwa utulivu */
+  .feed-card-box.skh-card .skh-body > .skh-card-sub { grid-row: 2 !important; }
+}
+
+/* Kadi nyembamba sana (<= 149px): hakuna safu 2/3, kwa hiyo vitendo
+   vinachukua nafasi iliyobaki na kupangwa safu mbili. */
+@container postcard (min-width: 120px) and (max-width: 149px) {
+  .feed-card-box.skh-card .skh-card-actions {
+    grid-row: 4 !important;
+    align-self: end !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   102. [FIT] Kadi NYEMBAMBA (simu, 120–199px): maandishi mafupi
+   Ombi: "usiweke maneno marefu". Mwili wa 20% (≈85px) hauna nafasi ya mistari
+   4 + jina la mistari 2 (≈104px) — ndiyo sababu mistari iligongana.
+   Suluhisho: jina mstari MMOJA, hakuna mstari wa eneo (eneo lipo kwenye kadi
+   pana na kwenye ukurasa wa bidhaa), vitendo mstari mmoja mfupi.
+   Mistari: jina/bei · muuzaji/hali · vitendo
+   --------------------------------------------------------------------------- */
+@container postcard (min-width: 120px) and (max-width: 199px) {
+  .feed-card-box.skh-card .feed-info-box.skh-body {
+    grid-template-rows: auto auto auto !important;
+    padding: 6px 8px 7px !important;
+    column-gap: 6px !important;
+  }
+  .feed-card-box.skh-card .skh-body > .skh-title {
+    -webkit-line-clamp: 1 !important;
+    font-size: clamp(10.5px, 6.4cqw, 12px) !important;
+    line-height: 1.2 !important;
+  }
+  .feed-card-box.skh-card .skh-price .skh-amt { font-size: clamp(10px, 6cqw, 12.5px) !important; }
+  .feed-card-box.skh-card .skh-price .skh-unit { font-size: 8.5px !important; }
+  .feed-card-box.skh-card .skh-body > .skh-card-foot,
+  .feed-card-box.skh-card .skh-body > .skh-seller-row { font-size: 10px !important; }
+  /* mstari wa eneo hauna nafasi kwenye kadi ya 20% — unaonekana kwenye kadi
+     pana (>= 200px) na kwenye ukurasa wa bidhaa */
+  .feed-card-box.skh-card .skh-meta-row > .skh-pinloc,
+  .feed-card-box.skh-card .skh-meta-row > .skh-open-chevron { display: none !important; }
+  .feed-card-box.skh-card .skh-card-actions {
+    grid-row: 3 !important;
+    padding: 4px 0 0 !important;
+    gap: 3px !important;
+  }
+  .feed-card-box.skh-card .skh-act,
+  .feed-card-box.skh-card .skh-act--order,
+  .feed-card-box.skh-card .skh-act--nego,
+  .feed-card-box.skh-card .skh-act--chat {
+    height: clamp(20px, 10.5cqw, 26px) !important;
+    font-size: clamp(9px, 5.3cqw, 11px) !important;
+    padding: 0 clamp(4px, 2.6cqw, 8px) !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   103. [FIT] HUDUMA na USAFIRI: safu zao wenyewe
+   Kadi hizi zina `.skh-card-sub` (aina ya gari / aina ya huduma) NA
+   `.skh-seller-row` — zote zilipewa grid-row 2, hivyo ziligongana.
+   Sasa kila kipengele kina safu yake; hakuna kinachogongana.
+     row1 jina | bei · row2 aina (sub) | hali · row3 mtoa huduma | chevron
+     row4 eneo · (vitendo havipo kwa huduma/usafiri — mpango wa sasa wa app)
+   --------------------------------------------------------------------------- */
+@container postcard (min-width: 120px) {
+  .feed-card-box.skh-card--transport .skh-body > .skh-title,
+  .feed-card-box.skh-card--service .skh-body > .skh-title { grid-column: 1 !important; grid-row: 1 !important; }
+
+  .feed-card-box.skh-card--transport .skh-body > .skh-card-sub,
+  .feed-card-box.skh-card--service .skh-body > .skh-card-sub {
+    grid-column: 1 !important; grid-row: 2 !important;
+    margin: 0 !important; min-width: 0 !important;
+    overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
+  }
+  .feed-card-box.skh-card--transport .skh-body > .skh-seller-row,
+  .feed-card-box.skh-card--service .skh-body > .skh-seller-row {
+    grid-column: 1 !important; grid-row: 3 !important;
+  }
+  /* kadi zisizo na sub: mtoa huduma anarudi safu ya 2 */
+  .feed-card-box.skh-card--service:not(:has(.skh-card-sub)) .skh-body > .skh-seller-row {
+    grid-row: 2 !important;
+  }
+  .feed-card-box.skh-card--transport .skh-meta-row > .skh-pinloc,
+  .feed-card-box.skh-card--service .skh-meta-row > .skh-pinloc {
+    grid-column: 1 !important; grid-row: 4 !important;
+  }
+  .feed-card-box.skh-card--transport .skh-meta-row > .skh-stock-chip,
+  .feed-card-box.skh-card--service .skh-meta-row > .skh-stock-chip {
+    grid-column: 2 !important; grid-row: 2 !important;
+  }
+}
+
+/* Kadi nyembamba: maandishi mafupi — hakuna eneo/chevron (kama bidhaa) */
+@container postcard (min-width: 120px) and (max-width: 199px) {
+  .feed-card-box.skh-card--transport .skh-body > .skh-card-sub,
+  .feed-card-box.skh-card--service .skh-body > .skh-card-sub { font-size: 10px !important; }
+  .feed-card-box.skh-card--transport .skh-meta-row > .skh-pinloc,
+  .feed-card-box.skh-card--service .skh-meta-row > .skh-pinloc { display: none !important; }
+}
+
+/* [CART-ICON 2026-11] kitufe cha kikapu ni ICON TU — mraba, icon katikati */
+.feed-card-box.skh-card--product .skh-act.skh-act--icon { flex: 0 0 auto !important; width: 38px !important; padding: 0 !important; }
+.feed-card-box.skh-card--product .skh-act.skh-act--icon .skh-act-ic svg { width: 16px !important; height: 16px !important; }
+
+/* ============================================================
+ * [SOKOHURU REDESIGN 2026-11 — CARD #1] 80% picha / 20% details
+ * Kadi za bidhaa sokoni. Inter (tayari imeshapakiwa app-wide).
+ * ============================================================ */
+.skh-huru { display: flex; flex-direction: column; background: #fff; border: 1px solid #E4ECE9;
+  border-radius: 16px; overflow: hidden; aspect-ratio: 1/1.78; cursor: pointer;
+  font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 1px 1px rgba(10,40,32,.04), 0 10px 22px -12px rgba(10,40,32,.14); }
+.skh-huru .skh-img { flex: 0 0 80%; min-height: 0; position: relative;
+  background: linear-gradient(180deg, #FFFFFF, #F5FAF8); }
+.skh-huru .skh-img img { width: 100% !important; height: 100% !important; object-fit: contain !important; padding: 7%; }
+.skh-huru-body { flex: 0 0 20%; min-height: 0; border-top: 1px solid #EDF4F1;
+  padding: 2px 10px 3px; display: flex; flex-direction: column; justify-content: center; gap: 0; }
+.skh-huru-r1 { display: flex; line-height: 1.3; align-items: baseline; justify-content: space-between; gap: 8px; flex: none; }
+.skh-huru-name { font-size: 12.5px; font-weight: 650; color: #161F1C; margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; }
+.skh-huru-price .skh-price { font-size: 13px !important; font-weight: 700 !important; color: #18A982 !important; white-space: nowrap; }
+.skh-huru-price .skh-unit, .skh-huru-price .skh-was { display: none !important; }
+.skh-huru-r2 { font-size: 10.5px; font-weight: 450; color: #6B7C76; white-space: nowrap; line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; flex: none; }
+.skh-huru-r2 i { font-style: normal; margin: 0 4px; }
+.skh-huru-stock { color: #0F6E57; font-weight: 600; }
+.skh-huru-stock.skh-huru-out { color: #B3261E; }
+.skh-huru-r3 { display: flex; align-items: center; gap: 11px; margin-top: 0; flex: none; line-height: 0; }
+.skh-huru-r3 .skh-actions { position: static !important; display: flex !important; gap: 12px !important; }
+.skh-huru-r3 .skh-eng-btn, .skh-huru-share { display: inline-flex !important; align-items: center;
+  color: #3E514B !important; cursor: pointer; background: none !important; border: 0 !important;
+  width: auto !important; height: auto !important; padding: 0 !important;
+  position: static !important; opacity: 1 !important; visibility: visible !important;
+  transform: none !important; box-shadow: none !important; line-height: 0 !important; }
+.skh-huru-r3 .skh-eng-btn svg, .skh-huru-share svg { width: 15px !important; height: 15px !important; }
+.skh-huru-r3 .skh-eng-btn.skh-eng-on { color: #E5332A !important; }
+.skh-huru-cart { margin-left: auto; width: 24px !important; height: 24px !important;
+  min-width: 0 !important; min-height: 0 !important; padding: 0 !important; border-radius: 50%; border: 0;
+  background: #9C7A12; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; flex: none; color: #fff; box-shadow: 0 3px 8px -2px rgba(140,110,20,.5); }
+.skh-huru-cart:disabled { opacity: .45; cursor: default; box-shadow: none; }
+@media (min-width: 760px) { .skh-huru { aspect-ratio: 1/1.5; } }

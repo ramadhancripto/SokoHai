@@ -1,4 +1,4 @@
-# HaiPay / SokoHai — KUPANDA LIVE (Firebase)
+# SokoPay / SokoHai — KUPANDA LIVE (Firebase)
 
 Hii ni hatua ya mwisho: kupeleka mfumo **live** kwenye Firebase yako halisi
 (`sokonet-3b847`) — kwa Cloud Functions, Security Rules na Indexes.
@@ -127,7 +127,7 @@ done
 ```
 
 Functions zinazosafirishwa (41): wallet/escrow (`walletAdjust`, `escrowRelease`,
-`haipayReleaseLink`), PesaPal (`pesapalCheckout`, `pesapalTransactionStatus`,
+`sokopayReleaseLink`), PesaPal (`pesapalCheckout`, `pesapalTransactionStatus`,
 `pesapalIpn`, `pesapalRegisterIpn`), takwimu (`platformStatsRefresh`,
 `platformStatsHourly`, `sokopayAutoRelease`), wanachama/wakala
 (`memberRegister`, `memberAuthenticate`, `memberSetPin`,
@@ -144,12 +144,12 @@ maoni (`commentsPublish`, `commentsEvidence`, `commentsLike`,
 
 ## 5. Hakiki kila kitu
 
-1. **Login** → fungua HaiPay → salio linaonekana (inapita Firestore read, auth-required). ✔️
+1. **Login** → fungua SokoPay → salio linaonekana (inapita Firestore read, auth-required). ✔️
 2. **Create Link** → token (SP-XXXXXX) inazalishwa. ✔️
 3. **Lipa** → ukilipa kwa wallet, `walletAdjust` (server) inaenda; ukilipa kwa
    simu/kadi, `pesapalCheckout` (server) inakuelekeza kwenye PesaPal; baada ya
    kurudi, `pesapalTransactionStatus` inathibitisha. ✔️
-4. **Confirm delivery / Release** → `escrowRelease` au `haipayReleaseLink`
+4. **Confirm delivery / Release** → `escrowRelease` au `sokopayReleaseLink`
    (server) ndiyo inatoa pesa. ✔️
 5. **Admin dashboard** → bofya "Sasisha" stats → `platformStatsRefresh`. ✔️
 

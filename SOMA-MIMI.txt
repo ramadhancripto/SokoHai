@@ -1,0 +1,105 @@
+================================================================
+SOKOHAI — AUCTION LIVE: MAREKEBISHO + USHAHIDI (ZIP 1 ya 2)
+Tarehe: 2026-11-11 (ROUND 4, fresh battery) | Commit ya msingi: 2e8d049
+================================================================
+
+ZIP hii ina faili zote za code za kazi ya Auction Live (full
+implementation) + ushahidi wa verification. Mwenzake ni ZIP 2
+(sokohai-preview-ujenzi.zip) yenye miundombinu ya live preview.
+
+HALI YA MWISHO (round 4, fresh 2026-11-11):
+  • Emulator impl:        16/16 PASS (log 32)
+  • Browser E2E:          10/10 PASS, JS errors 0 (log 33)
+  • r13d regression:      20/20 PASS, JS errors 0 (log 36;
+                          log 34/35 = 19/20 click-flake iliyorekebishwa
+                          na harness evalclick — assertions hazikuguswa)
+  • Live preview:         INAFANYA KAZI (5056 + demo data seeded)
+
+----------------------------------------------------------------
+1. YALIYOMO
+----------------------------------------------------------------
+  js/app/120-live-commerce-ui.js      UI ya Auction Live (restored, +214/-34)
+  functions/live-commerce.js          pause/resume/unfreeze, guards (server)
+  functions/commerce-modes.js         mnada_umesitishwa, bidderCount/bidders
+  functions/index.js                  exports za live callables (+ sehemu za
+                                      awali za phases nyingine — tazama §4)
+  functions/local-server.js           + PREVIEW PROXY (same-origin /__fs,
+                                      /__auth, /__vendor) — ime-gate na
+                                      SKH_PREVIEW_PROXY=1, default IMEZIMWA
+  firestore.rules                     guards za live_sessions n.k.
+  css/65-live-design.css              mitindo ya live (+85, nyongeza tu)
+  js/18-icons.js                      ikoni ya cart (mabadiliko madogo)
+
+  verification-auction-live/          ushahidi kamili:
+    00-REPORT.md                      ripoti ya verification (round 2)
+    37-ROUND4-SUMMARY.md              muhtasari wa round 4 (fresh battery)
+    01/02                             snapshot ya git status/diffstat
+    03-my-files-full.diff             diff ya attribution
+    10,20,30,32-*.log                 emulator 16/16 PASS (mizunguko 4)
+    11,21,31-*.log                    E2E logs za awali (historia)
+    33-e2e-10-10.log                  E2E 10/10 PASS fresh, JS0
+    34,35-*.log                       r13d 19/20 (click-flake doc)
+    36-r13d-20-20.log                 r13d 20/20 PASS fresh, JS0
+    12,13,14-*.log                    regression + static + r13d za awali
+    120-live-commerce-ui.RESTORED.js  byte-backup ya 120 iliyo-restore
+    shots/                            screenshots (za awali + round4-* 38 fresh)
+
+  tools/restore120.py                 HISTORIA TU: script iliyotumika
+                                      ku-re-apply edits 28 za 120.
+                                      !! USIIENDESHE TENA (anchors zake
+                                      zimepitwa na wakati) !!
+
+  DIFF-vs-2e8d049.diff                diff kamili ya faili 8 hapo juu
+                                      dhidi ya commit 2e8d049
+  git-status-snapshot.txt             hali ya repo wakati wa kufunga ZIP
+  git-diffstat-snapshot.txt           diffstat ya repo nzima (faili 67 —
+                                      nyingi ni za phases nyingine)
+
+----------------------------------------------------------------
+2. JINSI YA KUTUMIA (kuweka kwenye repo nyingine)
+----------------------------------------------------------------
+  1. Hakikisha repo yako iko kwenye commit 2e8d049:
+       git rev-parse --short HEAD     (lazima itoe 2e8d049)
+  2. Nakili faili 8 juu ya repo (hifadhi muundo wa folders):
+       unzip sokohai-auctionlive-code.zip -d /tmp/az1
+       cd /path/to/sokoHai
+       cp /tmp/az1/js/app/120-live-commerce-ui.js js/app/
+       cp /tmp/az1/functions/*.js functions/
+       ... (n.k. kwa kila faili)
+     AU tumia diff:  git apply /tmp/az1/DIFF-vs-2e8d049.diff
+     (git apply hushindwa kama repo yako ina mabadiliko
+     tofauti kwenye faili zilezile — hapo tumia cp.)
+  3. Thibitisha syntax:
+       node --check js/app/120-live-commerce-ui.js
+       node --check functions/live-commerce.js
+       node --check functions/commerce-modes.js
+       node --check functions/local-server.js
+
+----------------------------------------------------------------
+3. MUHIMU: YASIYOMO / MIPAKA
+----------------------------------------------------------------
+  • Hakuna Price Drop / Group Buy (zimekatazwa hadi ruhusa nyingine).
+  • Hakuna commit/deploy/prod writes — kazi hii ni ya local/emulator tu.
+  • package-lock.json haikuguswa (usafishaji haukuidhinishwa).
+  • Repo nzima ina faili 67 zilizobadilika; ZIP hii ina faili 8
+    za Auction Live + preview TU. Faili nyingine 59 ni za kazi za
+    phases nyingine na HAZIKUWEKWA hapa kwa makusudi (attribution).
+
+----------------------------------------------------------------
+4. ATTRIBUTION (sehemu za awali ndani ya faili hizi)
+----------------------------------------------------------------
+  • functions/index.js: sehemu kubwa ya diff (mf. I-I1 service
+    orders) ni kazi za awali za phases nyingine; sehemu ya
+    Auction Live ni exports za live callables.
+  • functions/local-server.js: sehemu ya Auction Live/preview ni
+    PREVIEW PROXY pekee (tafuta "PREVIEW PROXY 2026-11-11").
+    Sehemu nyingine za diff ni za awali.
+  • firestore.rules: guards za live_sessions/auction ni za Auction
+    Live; sehemu nyingine za diff ni za awali.
+  • 120-live-commerce-ui.js, live-commerce.js, commerce-modes.js,
+    65-live-design.css: mabadiliko yake ni ya Auction Live
+    (pamoja na uchafu mdogo wa awali uliohifadhiwa: groupState,
+    LIVE-UX, price_drop refs — hazikuguswa).
+  • Mistari 5 ya 120 inayogusa price_drop ni shared-path additive
+    (hub ptag, side panel, create-form) — kuthibitishwa round 4.
+================================================================

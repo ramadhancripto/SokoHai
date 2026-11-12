@@ -1,6 +1,6 @@
 {
   "name": "sokohai-functions",
-  "description": "SokoHai / HaiPay server-authoritative Cloud Functions (wallet, escrow, PesaPal).",
+  "description": "SokoHai / SokoPay server-authoritative Cloud Functions (wallet, escrow, PesaPal).",
   "version": "1.0.0",
   "private": true,
   "engines": {

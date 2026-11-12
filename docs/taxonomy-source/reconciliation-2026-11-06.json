@@ -1,0 +1,3445 @@
+{
+ "categories": [
+  {
+   "id": "01",
+   "runtimeName": "Chakula & Vinywaji",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "CHAKULA & VINYWAJI",
+   "inSource": true,
+   "runtimeSubcategories": 18,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 204,
+   "runtimeProductTypes": 208,
+   "matched": 194,
+   "missingInRuntime": [
+    {
+     "section": "Catering & Food Services",
+     "label": "Food Services"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Catering"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Event Catering"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Corporate Catering"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Private Chef"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Meal Preparation"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Food Delivery"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Bakery Services"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Cake Decoration"
+    },
+    {
+     "section": "Catering & Food Services",
+     "label": "Food Preparation Services"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Potatoes",
+     "branch": "Mizizi & Viazi"
+    },
+    {
+     "label": "Cassava",
+     "branch": "Mizizi & Viazi"
+    },
+    {
+     "label": "Sweet potatoes",
+     "branch": "Mizizi & Viazi"
+    },
+    {
+     "label": "Yams",
+     "branch": "Mizizi & Viazi"
+    },
+    {
+     "label": "Taro",
+     "branch": "Mizizi & Viazi"
+    },
+    {
+     "label": "Beef",
+     "branch": "Nyama"
+    },
+    {
+     "label": "Goat meat",
+     "branch": "Nyama"
+    },
+    {
+     "label": "Mutton",
+     "branch": "Nyama"
+    },
+    {
+     "label": "Pork",
+     "branch": "Nyama"
+    },
+    {
+     "label": "Chicken meat",
+     "branch": "Nyama"
+    },
+    {
+     "label": "Duck meat",
+     "branch": "Nyama"
+    },
+    {
+     "label": "Turkey meat",
+     "branch": "Nyama"
+    },
+    {
+     "label": "Hen eggs",
+     "branch": "Mayai"
+    },
+    {
+     "label": "Other bird eggs",
+     "branch": "Mayai"
+    }
+   ],
+   "partialBranchesFillable": [
+    {
+     "branch": "Nyama",
+     "productTypes": [
+      "Ng'ombe",
+      "Mbuzi",
+      "Kondoo",
+      "Nguruwe",
+      "Kuku",
+      "Bata",
+      "Uturuki",
+      "Sungura",
+      "Nyama nyingine"
+     ],
+     "attributes": [
+      "Animal type",
+      "Cut",
+      "Fresh/Frozen"
+     ]
+    },
+    {
+     "branch": "Mayai",
+     "productTypes": [
+      "Kuku",
+      "Bata",
+      "Kanga",
+      "Quail",
+      "Mayai mengine"
+     ],
+     "attributes": [
+      "Bird type"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "02",
+   "runtimeName": "Kilimo & Inputs za Kilimo",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "KILIMO & INPUTS ZA KILIMO",
+   "inSource": true,
+   "runtimeSubcategories": 14,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 204,
+   "runtimeProductTypes": 204,
+   "matched": 204,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "03",
+   "runtimeName": "Mazao & Biashara ya Kilimo",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "MAZAO & BIASHARA YA KILIMO",
+   "inSource": true,
+   "runtimeSubcategories": 22,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 169,
+   "runtimeProductTypes": 172,
+   "matched": 169,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Korosho",
+     "branch": "default"
+    },
+    {
+     "label": "Kahawa",
+     "branch": "default"
+    },
+    {
+     "label": "Chai",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "04",
+   "runtimeName": "Mifugo",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "MIFUGO",
+   "inSource": true,
+   "runtimeSubcategories": 20,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 155,
+   "runtimeProductTypes": 175,
+   "matched": 155,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Hay",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Silage",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Maize bran",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Wheat bran",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Dairy feed",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Broiler feed",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Layer feed",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Pig feed",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Goat feed",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Mineral supplements",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Premixes",
+     "branch": "Livestock Feed"
+    },
+    {
+     "label": "Veterinary medicines",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Vaccination-related products",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Veterinary consumables",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Animal diagnostic kits",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Syringes/needles",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Animal health equipment",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Deworming products",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Animal wound-care products",
+     "branch": "Animal Health Products"
+    },
+    {
+     "label": "Veterinary supplements",
+     "branch": "Animal Health Products"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "05",
+   "runtimeName": "Uvuvi & Baharini",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "UVUVI & BAHARINI",
+   "inSource": true,
+   "runtimeSubcategories": 20,
+   "sourceDeclaredSubcategories": 15,
+   "subcategoriesMissingInRuntime": [
+    "Crustaceans",
+    "Molluscs & Shellfish",
+    "Samaki Waliogandishwa",
+    "Samaki Waliochakatwa",
+    "Fish Fingerlings & Breeding",
+    "Fish Processing & Storage"
+   ],
+   "sourceProductTypes": 156,
+   "runtimeProductTypes": 156,
+   "matched": 156,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "06",
+   "runtimeName": "Misitu, Mbao & Bidhaa Asilia",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "MISITU, MBAO & BIDHAA ASILIA",
+   "inSource": true,
+   "runtimeSubcategories": 21,
+   "sourceDeclaredSubcategories": 20,
+   "subcategoriesMissingInRuntime": [
+    "Charcoal & Biomass",
+    "Fibres & Natural Materials",
+    "Thatch & Roofing Materials",
+    "Forest Nursery & Tree Planting Materials",
+    "Forest/Timber Equipment"
+   ],
+   "sourceProductTypes": 149,
+   "runtimeProductTypes": 149,
+   "matched": 149,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "07",
+   "runtimeName": "Nguo & Mavazi",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "NGUO & MAVAZI",
+   "inSource": true,
+   "runtimeSubcategories": 22,
+   "sourceDeclaredSubcategories": 18,
+   "subcategoriesMissingInRuntime": [
+    "Nguo za Sherehe",
+    "Vifaa vya Kushonea",
+    "Textile Accessories",
+    "Apparel Trade / Custom Made"
+   ],
+   "sourceProductTypes": 197,
+   "runtimeProductTypes": 201,
+   "matched": 197,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Golf Shoe",
+     "branch": "Viatu"
+    },
+    {
+     "label": "T-Shirt",
+     "branch": "default"
+    },
+    {
+     "label": "Shirt",
+     "branch": "default"
+    },
+    {
+     "label": "Dress",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": [
+    {
+     "branch": "Viatu",
+     "productTypes": [
+      "Sneakers",
+      "Sandals",
+      "Slippers",
+      "Formal shoes",
+      "Boots",
+      "Safety shoes",
+      "School shoes",
+      "Sports shoes",
+      "Heels",
+      "Flats",
+      "Traditional footwear",
+      "Handmade footwear"
+     ],
+     "attributes": [
+      "Shoe Type",
+      "Gender",
+      "Age Group"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "08",
+   "runtimeName": "Urembo & Personal Care",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "UREMBO & PERSONAL CARE",
+   "inSource": true,
+   "runtimeSubcategories": 21,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 216,
+   "runtimeProductTypes": 217,
+   "matched": 216,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Hair Dryer",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "09",
+   "runtimeName": "Nyumba & Samani",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "NYUMBA & SAMANI",
+   "inSource": true,
+   "runtimeSubcategories": 22,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 199,
+   "runtimeProductTypes": 202,
+   "matched": 199,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Mattress",
+     "branch": "default"
+    },
+    {
+     "label": "Rug",
+     "branch": "default"
+    },
+    {
+     "label": "Kitchenware",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "10",
+   "runtimeName": "Ujenzi & Hardware",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "UJENZI & HARDWARE",
+   "inSource": true,
+   "runtimeSubcategories": 28,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 296,
+   "runtimeProductTypes": 302,
+   "matched": 296,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Cement",
+     "branch": "default"
+    },
+    {
+     "label": "Roofing Sheet",
+     "branch": "default"
+    },
+    {
+     "label": "PVC Pipe",
+     "branch": "default"
+    },
+    {
+     "label": "Tiles",
+     "branch": "default"
+    },
+    {
+     "label": "Door",
+     "branch": "default"
+    },
+    {
+     "label": "Paint",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "11",
+   "runtimeName": "Electronics & Appliances",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "ELECTRONICS & APPLIANCES",
+   "inSource": true,
+   "runtimeSubcategories": 19,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 210,
+   "runtimeProductTypes": 204,
+   "matched": 204,
+   "missingInRuntime": [
+    {
+     "section": "REFRIGERATORS & FREEZERS",
+     "label": "Single Door"
+    },
+    {
+     "section": "REFRIGERATORS & FREEZERS",
+     "label": "Double Door"
+    },
+    {
+     "section": "REFRIGERATORS & FREEZERS",
+     "label": "Side-by-Side"
+    },
+    {
+     "section": "REFRIGERATORS & FREEZERS",
+     "label": "French Door"
+    },
+    {
+     "section": "REFRIGERATORS & FREEZERS",
+     "label": "Mini Fridge"
+    },
+    {
+     "section": "REFRIGERATORS & FREEZERS",
+     "label": "Upright Freezer"
+    }
+   ],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "12",
+   "runtimeName": "Simu & Mawasiliano",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "SIMU & MAWASILIANO",
+   "inSource": true,
+   "runtimeSubcategories": 20,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 77,
+   "runtimeProductTypes": 81,
+   "matched": 77,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Tablet",
+     "branch": "default"
+    },
+    {
+     "label": "Router",
+     "branch": "default"
+    },
+    {
+     "label": "Modem",
+     "branch": "default"
+    },
+    {
+     "label": "GPS Tracker",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "13",
+   "runtimeName": "Computers & IT",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "COMPUTERS & IT",
+   "inSource": true,
+   "runtimeSubcategories": 31,
+   "sourceDeclaredSubcategories": 31,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 60,
+   "runtimeProductTypes": 54,
+   "matched": 45,
+   "missingInRuntime": [
+    {
+     "section": "POWER SUPPLY",
+     "label": "ATX PSU"
+    },
+    {
+     "section": "POWER SUPPLY",
+     "label": "SFX PSU"
+    },
+    {
+     "section": "POWER SUPPLY",
+     "label": "Server PSU"
+    },
+    {
+     "section": "POWER SUPPLY",
+     "label": "Modular PSU"
+    },
+    {
+     "section": "POWER SUPPLY",
+     "label": "UPS Power Supply"
+    },
+    {
+     "section": "POWER SUPPLY",
+     "label": "Laptop Adapter"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "Rack"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "NAS"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "Storage Array"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "KVM"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "PDU"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "Rack UPS"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "Network Rack Accessories"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "Server Rail"
+    },
+    {
+     "section": "DATA CENTER EQUIPMENT",
+     "label": "Cable Management"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Laptop",
+     "branch": "default"
+    },
+    {
+     "label": "Desktop Computer",
+     "branch": "default"
+    },
+    {
+     "label": "Workstation",
+     "branch": "default"
+    },
+    {
+     "label": "RAM",
+     "branch": "default"
+    },
+    {
+     "label": "SSD",
+     "branch": "default"
+    },
+    {
+     "label": "Graphics Card",
+     "branch": "default"
+    },
+    {
+     "label": "Monitor",
+     "branch": "default"
+    },
+    {
+     "label": "Keyboard",
+     "branch": "default"
+    },
+    {
+     "label": "Printer",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "14",
+   "runtimeName": "Magari & Vyombo",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "MAGARI & VYOMBO",
+   "inSource": true,
+   "runtimeSubcategories": 22,
+   "sourceDeclaredSubcategories": 22,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 56,
+   "runtimeProductTypes": 12,
+   "matched": 8,
+   "missingInRuntime": [
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Passenger vehicles"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Hatchback"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Wagon"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Coupe"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Convertible"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "MPV"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Minivan"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Crossover"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Commercial"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Panel Van"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Cargo Van"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Minibus"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Tractor Truck"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Special"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Ambulance"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Fire Truck"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Police/Security Vehicle"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Recovery Vehicle"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Construction Vehicle"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Mining Vehicle"
+    },
+    {
+     "section": "PRODUCT TYPE",
+     "label": "Agricultural Vehicle"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Flatbed"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Box Trailer"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Tanker"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Refrigerated"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Car Carrier"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Dump Trailer"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Low Loader"
+    },
+    {
+     "section": "TRAILER",
+     "label": "Special Purpose"
+    },
+    {
+     "section": "BUS",
+     "label": "City Bus"
+    },
+    {
+     "section": "BUS",
+     "label": "Coach"
+    },
+    {
+     "section": "BUS",
+     "label": "School Bus"
+    },
+    {
+     "section": "BUS",
+     "label": "Shuttle"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Fishing Boat"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Speed Boat"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Passenger Boat"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Cargo Boat"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Ferry"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Yacht"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Canoe"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Dhow"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Inflatable Boat"
+    },
+    {
+     "section": "WATERCRAFT",
+     "label": "Personal Watercraft"
+    },
+    {
+     "section": "VIN / CHASSIS",
+     "label": "VIN"
+    },
+    {
+     "section": "VIN / CHASSIS",
+     "label": "Chassis Number"
+    },
+    {
+     "section": "VIN / CHASSIS",
+     "label": "Engine Number"
+    },
+    {
+     "section": "VIN / CHASSIS",
+     "label": "Registration Number"
+    },
+    {
+     "section": "VIN / CHASSIS",
+     "label": "Other identifiers"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Motorcycle",
+     "branch": "default"
+    },
+    {
+     "label": "Trailer",
+     "branch": "default"
+    },
+    {
+     "label": "Boat",
+     "branch": "default"
+    },
+    {
+     "label": "Electric Vehicle",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "15",
+   "runtimeName": "Vipuri & Accessories",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "VIPURI & ACCESSORIES",
+   "inSource": true,
+   "runtimeSubcategories": 33,
+   "sourceDeclaredSubcategories": 33,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 244,
+   "runtimeProductTypes": 161,
+   "matched": 157,
+   "missingInRuntime": [
+    {
+     "section": "DRIVETRAIN",
+     "label": "Driveshaft"
+    },
+    {
+     "section": "DRIVETRAIN",
+     "label": "CV Joint"
+    },
+    {
+     "section": "DRIVETRAIN",
+     "label": "Axle Shaft"
+    },
+    {
+     "section": "DRIVETRAIN",
+     "label": "Differential"
+    },
+    {
+     "section": "DRIVETRAIN",
+     "label": "Transfer Case"
+    },
+    {
+     "section": "DRIVETRAIN",
+     "label": "Propeller Shaft"
+    },
+    {
+     "section": "DRIVETRAIN",
+     "label": "U-Joint"
+    },
+    {
+     "section": "DRIVETRAIN",
+     "label": "Wheel Hub"
+    },
+    {
+     "section": "IGNITION",
+     "label": "Spark Plug"
+    },
+    {
+     "section": "IGNITION",
+     "label": "Glow Plug"
+    },
+    {
+     "section": "IGNITION",
+     "label": "Ignition Coil"
+    },
+    {
+     "section": "IGNITION",
+     "label": "Distributor"
+    },
+    {
+     "section": "IGNITION",
+     "label": "Ignition Module"
+    },
+    {
+     "section": "IGNITION",
+     "label": "Ignition Cable"
+    },
+    {
+     "section": "HVAC",
+     "label": "AC Compressor"
+    },
+    {
+     "section": "HVAC",
+     "label": "Condenser"
+    },
+    {
+     "section": "HVAC",
+     "label": "Evaporator"
+    },
+    {
+     "section": "HVAC",
+     "label": "Expansion Valve"
+    },
+    {
+     "section": "HVAC",
+     "label": "Blower Motor"
+    },
+    {
+     "section": "HVAC",
+     "label": "AC Filter"
+    },
+    {
+     "section": "HVAC",
+     "label": "AC Hose"
+    },
+    {
+     "section": "HVAC",
+     "label": "Receiver Drier"
+    },
+    {
+     "section": "HVAC",
+     "label": "AC Control"
+    },
+    {
+     "section": "TYRES",
+     "label": "Brand"
+    },
+    {
+     "section": "TYRES",
+     "label": "Model"
+    },
+    {
+     "section": "TYRES",
+     "label": "Size"
+    },
+    {
+     "section": "TYRES",
+     "label": "Width"
+    },
+    {
+     "section": "TYRES",
+     "label": "Aspect Ratio"
+    },
+    {
+     "section": "TYRES",
+     "label": "Construction"
+    },
+    {
+     "section": "TYRES",
+     "label": "Rim Diameter"
+    },
+    {
+     "section": "TYRES",
+     "label": "Load Index"
+    },
+    {
+     "section": "TYRES",
+     "label": "Speed Rating"
+    },
+    {
+     "section": "TYRES",
+     "label": "Season"
+    },
+    {
+     "section": "TYRES",
+     "label": "Tread"
+    },
+    {
+     "section": "TYRES",
+     "label": "Tube/Tubeless"
+    },
+    {
+     "section": "TYRES",
+     "label": "Condition"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "Voltage"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "Capacity Ah"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "CCA"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "Terminal Layout"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "Battery Type"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "Dimensions"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "Polarity"
+    },
+    {
+     "section": "BATTERIES",
+     "label": "Vehicle Compatibility"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Traction Battery"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Battery Module"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "BMS"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Inverter"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Electric Motor"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "On-board Charger"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "DC-DC Converter"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Charging Port"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Charging Cable"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Cooling System"
+    },
+    {
+     "section": "EV / HYBRID PARTS",
+     "label": "Hybrid Components"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Marine Engine"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Propeller"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Pump"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Fuel System"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Steering"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Navigation"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Safety"
+    },
+    {
+     "section": "MARINE PARTS",
+     "label": "Hull Components"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Floor Mats"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Seat Covers"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Roof Rack"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Roof Box"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Bull Bar"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Winch"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Tow Bar"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Dash Camera"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "GPS Tracker"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Car Audio"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Phone Mount"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Sun Shade"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Car Cover"
+    },
+    {
+     "section": "ACCESSORIES",
+     "label": "Interior/Exterior Accessories"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Diagnostic Scanner"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Jack"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Jack Stand"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Torque Wrench"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Engine Hoist"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Battery Tester"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Tyre Equipment"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Wheel Balancer"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Compressor"
+    },
+    {
+     "section": "WORKSHOP TOOLS",
+     "label": "Workshop Equipment"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Oil Filter",
+     "branch": "default"
+    },
+    {
+     "label": "Tyre",
+     "branch": "default"
+    },
+    {
+     "label": "Clutch Kit",
+     "branch": "default"
+    },
+    {
+     "label": "Engine Part",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "16",
+   "runtimeName": "Usafiri & Logistics",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "17",
+   "runtimeName": "Huduma za Nyumbani",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "18",
+   "runtimeName": "Ufundi & Repair",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "19",
+   "runtimeName": "Afya & Bidhaa za Afya",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": "AFYA & BIDHAA ZA AFYA",
+   "inSource": true,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 169,
+   "runtimeProductTypes": 8,
+   "matched": 4,
+   "missingInRuntime": [
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Suspensions"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Solutions"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Creams"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Ointments"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Gels"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Drops"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Injections"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Suppositories"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Powders"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Granules"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Medicated patches"
+    },
+    {
+     "section": "Dawa na Medicinal Products",
+     "label": "Other dosage forms"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Blood Pressure Monitor"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Glucometer"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Pulse Oximeter"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Thermometer"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Nebulizer"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Oxygen Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "ECG Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Patient Monitor"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Weighing Scale"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Medical Suction Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Infusion Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Diagnostic Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Examination Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Rehabilitation Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Mobility Equipment"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Hospital Furniture"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Medical Electronics"
+    },
+    {
+     "section": "Medical Devices",
+     "label": "Other Medical Devices"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Gloves"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Surgical Masks"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Face Masks"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Syringes"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Needles"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "IV Sets"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Catheters"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Gauze"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Cotton Wool"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Bandages"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Adhesive Tape"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Dressing Materials"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Specimen Containers"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Medical Swabs"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Examination Sheets"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Disposable Gowns"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Shoe Covers"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Caps"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Medical Waste Bags"
+    },
+    {
+     "section": "Medical Consumables",
+     "label": "Other Consumables"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "First Aid Kits"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Plasters"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Antiseptic products"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Burn-care products"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Emergency blankets"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Cold packs"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Hot packs"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Splints"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "First aid scissors"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "First aid boxes"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "CPR-related equipment"
+    },
+    {
+     "section": "First Aid & Emergency Products",
+     "label": "Emergency medical accessories"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Heating pads"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Hot water bottles"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Massage devices"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Sleep-support products"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Posture supports"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Braces"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Compression products"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Orthopedic supports"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Walking aids"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Crutches"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Canes"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Wheelchairs"
+    },
+    {
+     "section": "Personal Health & Wellness Products",
+     "label": "Walking frames"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Toothbrushes"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Electric toothbrushes"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Toothpaste"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Dental floss"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Mouthwash"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Denture products"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Dental cleaning tools"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Oral-care accessories"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Dental consumables"
+    },
+    {
+     "section": "Dental Products",
+     "label": "Dental equipment"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Reading glasses"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Prescription frames"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Sunglasses"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Contact lenses"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Lens-care products"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Eye-care accessories"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Vision-testing devices"
+    },
+    {
+     "section": "Vision & Eye-care Products",
+     "label": "Optical equipment"
+    },
+    {
+     "section": "Hearing & Assistive Devices",
+     "label": "Hearing aids"
+    },
+    {
+     "section": "Hearing & Assistive Devices",
+     "label": "Hearing accessories"
+    },
+    {
+     "section": "Hearing & Assistive Devices",
+     "label": "Ear protection"
+    },
+    {
+     "section": "Hearing & Assistive Devices",
+     "label": "Assistive listening devices"
+    },
+    {
+     "section": "Hearing & Assistive Devices",
+     "label": "Communication aids"
+    },
+    {
+     "section": "Hearing & Assistive Devices",
+     "label": "Mobility aids"
+    },
+    {
+     "section": "Hearing & Assistive Devices",
+     "label": "Accessibility equipment"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Pregnancy tests"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Ovulation tests"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Breast pumps"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Breastfeeding accessories"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Maternity support products"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Menstrual products"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Personal hygiene products"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Reproductive health test kits"
+    },
+    {
+     "section": "Maternal & Reproductive Health Products",
+     "label": "Related accessories"
+    },
+    {
+     "section": "Baby Health Products",
+     "label": "Baby thermometers"
+    },
+    {
+     "section": "Baby Health Products",
+     "label": "Nasal aspirators"
+    },
+    {
+     "section": "Baby Health Products",
+     "label": "Baby health kits"
+    },
+    {
+     "section": "Baby Health Products",
+     "label": "Feeding-related health accessories"
+    },
+    {
+     "section": "Baby Health Products",
+     "label": "Baby care medical consumables"
+    },
+    {
+     "section": "Baby Health Products",
+     "label": "Baby monitors"
+    },
+    {
+     "section": "Baby Health Products",
+     "label": "Other health-related baby products"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Veterinary medicines"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Vaccination-related products"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Veterinary consumables"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Animal diagnostic kits"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Syringes/needles"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Animal health equipment"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Deworming products"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Animal wound-care products"
+    },
+    {
+     "section": "Veterinary Health Products",
+     "label": "Veterinary supplements"
+    },
+    {
+     "section": "Health Supplements & Nutrition Products",
+     "label": "Vitamins"
+    },
+    {
+     "section": "Health Supplements & Nutrition Products",
+     "label": "Minerals"
+    },
+    {
+     "section": "Health Supplements & Nutrition Products",
+     "label": "Nutritional products"
+    },
+    {
+     "section": "Health Supplements & Nutrition Products",
+     "label": "Oral nutritional products"
+    },
+    {
+     "section": "Health Supplements & Nutrition Products",
+     "label": "Electrolyte products"
+    },
+    {
+     "section": "Health Supplements & Nutrition Products",
+     "label": "Sports nutrition products"
+    },
+    {
+     "section": "Health Supplements & Nutrition Products",
+     "label": "Other health nutrition products"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Hospital beds"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Examination tables"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Medical cabinets"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Trolleys"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Surgical equipment"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Sterilization equipment"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Medical refrigerators"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Medical storage equipment"
+    },
+    {
+     "section": "Hospital & Clinical Equipment",
+     "label": "Patient-care equipment"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Microscopes"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Centrifuges"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Pipettes"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Test tubes"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Laboratory glassware"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Laboratory plastics"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Reagents"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Test kits"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Laboratory instruments"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Sample containers"
+    },
+    {
+     "section": "Laboratory Products & Equipment",
+     "label": "Laboratory consumables"
+    },
+    {
+     "section": "Health Storage & Cold-chain Products",
+     "label": "Vaccine coolers"
+    },
+    {
+     "section": "Health Storage & Cold-chain Products",
+     "label": "Insulated medical boxes"
+    },
+    {
+     "section": "Health Storage & Cold-chain Products",
+     "label": "Temperature monitors"
+    },
+    {
+     "section": "Health Storage & Cold-chain Products",
+     "label": "Temperature data loggers"
+    },
+    {
+     "section": "Health Storage & Cold-chain Products",
+     "label": "Medical storage containers"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Medicine bottles"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Dropper bottles"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Medical containers"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Pill containers"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Sterile packaging"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Medical bags"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Labels"
+    },
+    {
+     "section": "Health Packaging",
+     "label": "Tamper-evident packaging"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Medical Device",
+     "branch": "default"
+    },
+    {
+     "label": "Medical Consumable",
+     "branch": "default"
+    },
+    {
+     "label": "First Aid Kit",
+     "branch": "default"
+    },
+    {
+     "label": "Health Supplement",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "20",
+   "runtimeName": "Elimu & Mafunzo",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "21",
+   "runtimeName": "Biashara & Professional Services",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "22",
+   "runtimeName": "Fedha & Insurance",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "23",
+   "runtimeName": "Ajira & Kazi",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "24",
+   "runtimeName": "Hotel, Malazi & Utalii",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "25",
+   "runtimeName": "Migahawa, Restaurants & Catering",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "26",
+   "runtimeName": "Burudani, Michezo & Events",
+   "domain": "SERVICE_DOMAIN",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "27",
+   "runtimeName": "Sanaa & Ubunifu",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "SANAA & UBUNIFU",
+   "inSource": true,
+   "runtimeSubcategories": 20,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 164,
+   "runtimeProductTypes": 173,
+   "matched": 164,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Painting",
+     "branch": "default"
+    },
+    {
+     "label": "Sculpture",
+     "branch": "default"
+    },
+    {
+     "label": "Photo Print",
+     "branch": "default"
+    },
+    {
+     "label": "Poster",
+     "branch": "default"
+    },
+    {
+     "label": "Handmade Creative Product",
+     "branch": "default"
+    },
+    {
+     "label": "Jewellery",
+     "branch": "default"
+    },
+    {
+     "label": "Pottery",
+     "branch": "default"
+    },
+    {
+     "label": "Wood Carving",
+     "branch": "default"
+    },
+    {
+     "label": "Art Material",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "28",
+   "runtimeName": "Bidhaa za Jadi & Utamaduni",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "BIDHAA ZA JADI & UTAMADUNI",
+   "inSource": true,
+   "runtimeSubcategories": 22,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 150,
+   "runtimeProductTypes": 159,
+   "matched": 150,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Basket",
+     "branch": "default"
+    },
+    {
+     "label": "Traditional Pottery",
+     "branch": "default"
+    },
+    {
+     "label": "Traditional Woodcraft",
+     "branch": "default"
+    },
+    {
+     "label": "Mask",
+     "branch": "default"
+    },
+    {
+     "label": "Traditional Jewellery",
+     "branch": "default"
+    },
+    {
+     "label": "Traditional Musical Instrument",
+     "branch": "default"
+    },
+    {
+     "label": "Traditional Household Product",
+     "branch": "default"
+    },
+    {
+     "label": "Traditional Footwear",
+     "branch": "default"
+    },
+    {
+     "label": "Cultural Souvenir",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "29",
+   "runtimeName": "Harusi & Sherehe",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "HARUSI & SHEREHE",
+   "inSource": true,
+   "runtimeSubcategories": 28,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 242,
+   "runtimeProductTypes": 250,
+   "matched": 242,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Wedding Dress",
+     "branch": "default"
+    },
+    {
+     "label": "Invitation",
+     "branch": "default"
+    },
+    {
+     "label": "Balloon",
+     "branch": "default"
+    },
+    {
+     "label": "Party Decoration",
+     "branch": "default"
+    },
+    {
+     "label": "Cake Topper",
+     "branch": "default"
+    },
+    {
+     "label": "Gift Product",
+     "branch": "default"
+    },
+    {
+     "label": "Event Sign",
+     "branch": "default"
+    },
+    {
+     "label": "Party Tableware",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "30",
+   "runtimeName": "Mama, Mtoto & Familia",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "MAMA, MTOTO & FAMILIA",
+   "inSource": true,
+   "runtimeSubcategories": 27,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 221,
+   "runtimeProductTypes": 229,
+   "matched": 221,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Maternity Wear",
+     "branch": "default"
+    },
+    {
+     "label": "Baby Clothing",
+     "branch": "default"
+    },
+    {
+     "label": "Baby Diaper",
+     "branch": "default"
+    },
+    {
+     "label": "Baby Feeding Product",
+     "branch": "default"
+    },
+    {
+     "label": "Stroller",
+     "branch": "default"
+    },
+    {
+     "label": "Baby Car Seat",
+     "branch": "default"
+    },
+    {
+     "label": "Baby Toy",
+     "branch": "default"
+    },
+    {
+     "label": "Nursery Product",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "31",
+   "runtimeName": "Wanyama & Pets",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "WANYAMA & PETS",
+   "inSource": true,
+   "runtimeSubcategories": 32,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 218,
+   "runtimeProductTypes": 227,
+   "matched": 218,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Dog",
+     "branch": "default"
+    },
+    {
+     "label": "Cat",
+     "branch": "default"
+    },
+    {
+     "label": "Pet Food",
+     "branch": "default"
+    },
+    {
+     "label": "Pet Bed",
+     "branch": "default"
+    },
+    {
+     "label": "Kennel",
+     "branch": "default"
+    },
+    {
+     "label": "Collar",
+     "branch": "default"
+    },
+    {
+     "label": "Pet Toy",
+     "branch": "default"
+    },
+    {
+     "label": "Aquarium",
+     "branch": "default"
+    },
+    {
+     "label": "Pet Grooming Product",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "32",
+   "runtimeName": "Ofisi, Shule & Stationery",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "OFISI, SHULE & STATIONERY",
+   "inSource": true,
+   "runtimeSubcategories": 29,
+   "sourceDeclaredSubcategories": 28,
+   "subcategoriesMissingInRuntime": [
+    "School Stationery",
+    "Office Stationery",
+    "Files & Document Storage",
+    "Books & Notebooks",
+    "Printing & Copying Consumables",
+    "Office Desk Accessories",
+    "School Accessories",
+    "Calculators",
+    "Office Forms & Business Books",
+    "Presentation Products",
+    "Office Organization",
+    "Office/School Consumables",
+    "ID & Card Products",
+    "Stamps & Stamp Supplies",
+    "Seals & Embossing Products",
+    "Calendars & Planners",
+    "Diaries & Journals",
+    "Custom Printed Stationery Products"
+   ],
+   "sourceProductTypes": 249,
+   "runtimeProductTypes": 258,
+   "matched": 249,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Ballpoint Pen",
+     "branch": "default"
+    },
+    {
+     "label": "Notebook",
+     "branch": "default"
+    },
+    {
+     "label": "Register",
+     "branch": "default"
+    },
+    {
+     "label": "File",
+     "branch": "default"
+    },
+    {
+     "label": "School Bag",
+     "branch": "default"
+    },
+    {
+     "label": "Whiteboard",
+     "branch": "default"
+    },
+    {
+     "label": "Textbook",
+     "branch": "default"
+    },
+    {
+     "label": "Printer Toner",
+     "branch": "default"
+    },
+    {
+     "label": "Custom Printed Stationery",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "33",
+   "runtimeName": "Viwanda & Mashine",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "VIWANDA & MASHINE",
+   "inSource": true,
+   "runtimeSubcategories": 31,
+   "sourceDeclaredSubcategories": 38,
+   "subcategoriesMissingInRuntime": [
+    "Processing Machinery",
+    "Manufacturing Equipment",
+    "Agricultural Processing Machinery",
+    "Packaging Machinery",
+    "Pumps & Pumping Equipment",
+    "Compressors",
+    "Air & Gas Equipment",
+    "Industrial Cooling Equipment",
+    "Construction/Industrial Equipment",
+    "Chemical Processing Equipment",
+    "Industrial Safety Equipment",
+    "Attachments & Accessories",
+    "Industrial Spare Components"
+   ],
+   "sourceProductTypes": 257,
+   "runtimeProductTypes": 265,
+   "matched": 257,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Industrial Machine",
+     "branch": "default"
+    },
+    {
+     "label": "Food Processing Machine",
+     "branch": "default"
+    },
+    {
+     "label": "Pump",
+     "branch": "default"
+    },
+    {
+     "label": "Compressor",
+     "branch": "default"
+    },
+    {
+     "label": "Welding Machine",
+     "branch": "default"
+    },
+    {
+     "label": "Conveyor",
+     "branch": "default"
+    },
+    {
+     "label": "Machine Component",
+     "branch": "default"
+    },
+    {
+     "label": "Industrial Consumable",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "34",
+   "runtimeName": "Nishati & Umeme",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "NISHATI & UMEME",
+   "inSource": true,
+   "runtimeSubcategories": 37,
+   "sourceDeclaredSubcategories": 49,
+   "subcategoriesMissingInRuntime": [
+    "Solar Panels & PV Modules",
+    "Solar Kits & Systems",
+    "Solar Water Pumping Systems",
+    "Generator Accessories",
+    "Fuel-Based Power Systems",
+    "Energy Storage Systems",
+    "Batteries",
+    "Battery Accessories",
+    "Switchgear",
+    "Electrical Panels",
+    "Distribution Boards",
+    "Connectors & Terminals",
+    "Lamps & Bulbs",
+    "LED Systems",
+    "Street & Outdoor Lighting",
+    "Industrial Lighting",
+    "Emergency Lighting",
+    "Motor Controllers",
+    "Drives & VFDs",
+    "Electrical Control Equipment",
+    "Smart Energy Equipment",
+    "Electrical Installation Products",
+    "Renewable Energy Components"
+   ],
+   "sourceProductTypes": 198,
+   "runtimeProductTypes": 205,
+   "matched": 198,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Solar Panel",
+     "branch": "default"
+    },
+    {
+     "label": "Solar Inverter",
+     "branch": "default"
+    },
+    {
+     "label": "Generator",
+     "branch": "default"
+    },
+    {
+     "label": "UPS",
+     "branch": "default"
+    },
+    {
+     "label": "LED Bulb",
+     "branch": "default"
+    },
+    {
+     "label": "Electrical Cable",
+     "branch": "default"
+    },
+    {
+     "label": "EV Charger",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "35",
+   "runtimeName": "Maji, Usafi & Mazingira",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "MAJI, USAFI & MAZINGIRA",
+   "inSource": true,
+   "runtimeSubcategories": 34,
+   "sourceDeclaredSubcategories": 36,
+   "subcategoriesMissingInRuntime": [
+    "Pipe Fittings & Connectors",
+    "Valves & Controls",
+    "Water Treatment",
+    "Drinking Water Containers",
+    "Household Water Products",
+    "Bathroom Sanitation Products",
+    "Waste Sorting Products",
+    "Recycling Products",
+    "Environmental Monitoring Equipment",
+    "Pollution Control Products",
+    "Septic & Wastewater Products",
+    "Rainwater Harvesting Products",
+    "Biodegradable/Compostable Products"
+   ],
+   "sourceProductTypes": 207,
+   "runtimeProductTypes": 215,
+   "matched": 207,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Water Tank",
+     "branch": "default"
+    },
+    {
+     "label": "Water Filter",
+     "branch": "default"
+    },
+    {
+     "label": "Purification System",
+     "branch": "default"
+    },
+    {
+     "label": "Water Testing Kit",
+     "branch": "default"
+    },
+    {
+     "label": "Water Pump",
+     "branch": "default"
+    },
+    {
+     "label": "Cleaning Product",
+     "branch": "default"
+    },
+    {
+     "label": "Waste Bin",
+     "branch": "default"
+    },
+    {
+     "label": "Compost Bin",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "36",
+   "runtimeName": "Usalama",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "USALAMA",
+   "inSource": true,
+   "runtimeSubcategories": 27,
+   "sourceDeclaredSubcategories": 40,
+   "subcategoriesMissingInRuntime": [
+    "Locks & Physical Access",
+    "Padlocks",
+    "Access Control Products",
+    "Key Management Products",
+    "Security Gates & Barriers",
+    "Security Cameras",
+    "Intrusion Detection",
+    "Motion Detection",
+    "Door/Window Sensors",
+    "Access Readers",
+    "RFID / NFC Access Products",
+    "Emergency Security Lighting",
+    "Protective Security Equipment",
+    "Identification & Access Badges",
+    "Perimeter Security Products",
+    "Fencing & Security Barriers",
+    "Anti-Climb Products",
+    "Vehicle Security Products",
+    "Anti-Theft Devices",
+    "GPS Tracking Devices",
+    "Fire & Emergency Safety Products",
+    "Emergency Equipment",
+    "Security Storage & Document Protection",
+    "Evidence/Asset Protection Products"
+   ],
+   "sourceProductTypes": 198,
+   "runtimeProductTypes": 201,
+   "matched": 192,
+   "missingInRuntime": [
+    {
+     "section": "COMPLIANCE",
+     "label": "Standard"
+    },
+    {
+     "section": "COMPLIANCE",
+     "label": "Certification"
+    },
+    {
+     "section": "COMPLIANCE",
+     "label": "Test"
+    },
+    {
+     "section": "COMPLIANCE",
+     "label": "Approval"
+    },
+    {
+     "section": "COMPLIANCE",
+     "label": "Documentation"
+    },
+    {
+     "section": "COMPLIANCE",
+     "label": "Verification"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Padlock",
+     "branch": "default"
+    },
+    {
+     "label": "Door Lock",
+     "branch": "default"
+    },
+    {
+     "label": "Smart Lock",
+     "branch": "default"
+    },
+    {
+     "label": "Safe",
+     "branch": "default"
+    },
+    {
+     "label": "Security Camera",
+     "branch": "default"
+    },
+    {
+     "label": "DVR/NVR",
+     "branch": "default"
+    },
+    {
+     "label": "Alarm System",
+     "branch": "default"
+    },
+    {
+     "label": "Access Controller",
+     "branch": "default"
+    },
+    {
+     "label": "GPS Tracker",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "37",
+   "runtimeName": "Marketing, Media & Branding",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "MARKETING, MEDIA & BRANDING",
+   "inSource": true,
+   "runtimeSubcategories": 33,
+   "sourceDeclaredSubcategories": 62,
+   "subcategoriesMissingInRuntime": [
+    "Calendars",
+    "Promotional Cards",
+    "Banners & Large Format",
+    "Outdoor Banners",
+    "Backdrops",
+    "Directional Signs",
+    "Business Signage",
+    "Safety/Informational Signs",
+    "Wayfinding Signs",
+    "Name Plates",
+    "Door Signs",
+    "Branded Mugs & Bottles",
+    "Pens & Stationery",
+    "Keyholders & Accessories",
+    "Branding & Display Products",
+    "Product Displays",
+    "Counter Displays",
+    "Shelves & Promotional Displays",
+    "Pop-up Displays",
+    "Product Labels",
+    "Barcode Labels",
+    "QR Labels",
+    "Promotional Stickers",
+    "Window Graphics",
+    "Branded Wrappers",
+    "Branded Tapes",
+    "Branded Seals",
+    "Lighting Equipment",
+    "Broadcasting Equipment",
+    "Presentation & Event Media Products",
+    "Projectors",
+    "Screens",
+    "Display Boards",
+    "Presentation Accessories",
+    "Sign Frames",
+    "Banner Frames",
+    "Mounting Systems",
+    "Flag Poles",
+    "Marketing/Branding Consumables"
+   ],
+   "sourceProductTypes": 155,
+   "runtimeProductTypes": 163,
+   "matched": 155,
+   "missingInRuntime": [],
+   "runtimeOnly": [
+    {
+     "label": "Business Card",
+     "branch": "default"
+    },
+    {
+     "label": "Flyer",
+     "branch": "default"
+    },
+    {
+     "label": "Poster",
+     "branch": "default"
+    },
+    {
+     "label": "Banner",
+     "branch": "default"
+    },
+    {
+     "label": "Shop Sign",
+     "branch": "default"
+    },
+    {
+     "label": "Label",
+     "branch": "default"
+    },
+    {
+     "label": "Display Stand",
+     "branch": "default"
+    },
+    {
+     "label": "Promotional Gift",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "38",
+   "runtimeName": "Digital Products & Online Services",
+   "domain": "PRODUCT_DOMAIN",
+   "sourceName": "DIGITAL PRODUCTS & ONLINE SERVICES",
+   "inSource": true,
+   "runtimeSubcategories": 29,
+   "sourceDeclaredSubcategories": 85,
+   "subcategoriesMissingInRuntime": [
+    "Digital Licenses",
+    "Software Licenses",
+    "Subscription Licenses",
+    "Activation Keys",
+    "Digital Access Codes",
+    "Digital Documents",
+    "Digital Guides",
+    "Digital Magazines",
+    "Digital Publications",
+    "Music",
+    "Audio",
+    "Video",
+    "Movies",
+    "Podcasts",
+    "Stock Media",
+    "Graphics",
+    "Templates",
+    "Logos",
+    "UI Kits",
+    "Presentation Templates",
+    "Photography & Creative Assets",
+    "Stock Photos",
+    "Illustrations",
+    "Videos",
+    "Audio Assets",
+    "3D Assets",
+    "Digital Education Products",
+    "Courses",
+    "Tutorials",
+    "Study Materials",
+    "Question Banks",
+    "Digital Notes",
+    "Educational Templates",
+    "Digital Business Products",
+    "Business Templates",
+    "Spreadsheet Templates",
+    "Accounting Templates",
+    "Invoice Templates",
+    "POS Templates",
+    "Business Documents",
+    "Digital Productivity Products",
+    "Notion/Templates or Equivalent",
+    "Calendar Templates",
+    "Planner Templates",
+    "Task Templates",
+    "Automation Templates",
+    "Game Software",
+    "Game Content",
+    "Game Codes",
+    "Digital Game Assets",
+    "Gift Codes",
+    "Vouchers",
+    "Digital Coupons",
+    "E-Gift Cards",
+    "Digital Communities",
+    "Premium Access",
+    "Digital Clubs",
+    "SDKs",
+    "Developer Tools",
+    "Plugins",
+    "Extensions",
+    "Datasets",
+    "Digital Research",
+    "Digital Directories",
+    "Digital Maps/Data",
+    "Online/Digital Service Products"
+   ],
+   "sourceProductTypes": 159,
+   "runtimeProductTypes": 163,
+   "matched": 152,
+   "missingInRuntime": [
+    {
+     "section": "COPYRIGHT / USAGE RIGHTS",
+     "label": "Personal Use"
+    },
+    {
+     "section": "COPYRIGHT / USAGE RIGHTS",
+     "label": "Editorial Use"
+    },
+    {
+     "section": "COPYRIGHT / USAGE RIGHTS",
+     "label": "Resale Allowed"
+    },
+    {
+     "section": "COPYRIGHT / USAGE RIGHTS",
+     "label": "Modification Allowed"
+    },
+    {
+     "section": "COPYRIGHT / USAGE RIGHTS",
+     "label": "Redistribution Allowed"
+    },
+    {
+     "section": "COPYRIGHT / USAGE RIGHTS",
+     "label": "Client Work Allowed"
+    },
+    {
+     "section": "COPYRIGHT / USAGE RIGHTS",
+     "label": "Attribution Required"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Software",
+     "branch": "default"
+    },
+    {
+     "label": "Mobile App",
+     "branch": "default"
+    },
+    {
+     "label": "SaaS Product",
+     "branch": "default"
+    },
+    {
+     "label": "E-book",
+     "branch": "default"
+    },
+    {
+     "label": "Digital Course",
+     "branch": "default"
+    },
+    {
+     "label": "Template",
+     "branch": "default"
+    },
+    {
+     "label": "Stock Photo",
+     "branch": "default"
+    },
+    {
+     "label": "Digital Media",
+     "branch": "default"
+    },
+    {
+     "label": "Game Code",
+     "branch": "default"
+    },
+    {
+     "label": "Gift Code",
+     "branch": "default"
+    },
+    {
+     "label": "Digital Membership",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "39",
+   "runtimeName": "Used / Second-hand / Refurbished",
+   "domain": "OVERLAY",
+   "sourceName": "USED, SECOND-HAND & REFURBISHED",
+   "inSource": true,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "40",
+   "runtimeName": "Wholesale / Bulk",
+   "domain": "OVERLAY",
+   "sourceName": "WHOLESALE & BULK TRADE",
+   "inSource": true,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 13,
+   "subcategoriesMissingInRuntime": [
+    "1. Wholesale Products",
+    "2. Bulk Products",
+    "3. Wholesale Lots",
+    "4. Bulk Commodities",
+    "5. Case / Carton Trade",
+    "6. Box / Pack Trade",
+    "7. Bundle / Bale Trade",
+    "8. Pallet Trade",
+    "9. Sack / Bag Trade",
+    "10. Drum / Container Trade",
+    "11. Minimum Order Quantity (MOQ)",
+    "12. Tiered / Volume Pricing",
+    "13. Trade / Business Supply"
+   ],
+   "sourceProductTypes": 9,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [
+    {
+     "section": "WHOLESALE LOT",
+     "label": "Product"
+    },
+    {
+     "section": "WHOLESALE LOT",
+     "label": "Quantity"
+    },
+    {
+     "section": "WHOLESALE LOT",
+     "label": "Unit"
+    },
+    {
+     "section": "WHOLESALE LOT",
+     "label": "MOQ"
+    },
+    {
+     "section": "WHOLESALE LOT",
+     "label": "Price"
+    },
+    {
+     "section": "WHOLESALE LOT",
+     "label": "Pricing Method"
+    },
+    {
+     "section": "WHOLESALE + RETAIL",
+     "label": "Retail"
+    },
+    {
+     "section": "WHOLESALE + RETAIL",
+     "label": "Wholesale"
+    },
+    {
+     "section": "WHOLESALE + RETAIL",
+     "label": "Both"
+    }
+   ],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "41",
+   "runtimeName": "Import / Export / Cross-border",
+   "domain": "OVERLAY",
+   "sourceName": "IMPORT, EXPORT & CROSS-BORDER",
+   "inSource": true,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 14,
+   "subcategoriesMissingInRuntime": [
+    "1. Imported Products",
+    "2. Export Products",
+    "3. Cross-Border Products",
+    "4. Transit Trade",
+    "5. Local-to-International Trade",
+    "6. International-to-Local Trade",
+    "7. Regional Trade",
+    "8. Country of Origin",
+    "9. Trade Destination",
+    "10. Trade Documentation",
+    "11. Certificate of Origin",
+    "12. Customs / HS Classification",
+    "13. Trade Compliance",
+    "14. Restricted / Controlled Trade"
+   ],
+   "sourceProductTypes": 4,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [
+    {
+     "section": "HS CODE",
+     "label": "HS Version"
+    },
+    {
+     "section": "HS CODE",
+     "label": "Product Classification"
+    },
+    {
+     "section": "HS CODE",
+     "label": "Classification Source"
+    },
+    {
+     "section": "HS CODE",
+     "label": "Verification Status"
+    }
+   ],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "42",
+   "runtimeName": "Ardhi & Property",
+   "domain": "PROPERTY_DOMAIN",
+   "sourceName": "ARDHI & PROPERTY",
+   "inSource": true,
+   "runtimeSubcategories": 30,
+   "sourceDeclaredSubcategories": 30,
+   "subcategoriesMissingInRuntime": [
+    "1. Viwanja",
+    "2. Ardhi ya Kilimo",
+    "3. Ardhi ya Makazi",
+    "4. Ardhi ya Biashara",
+    "5. Ardhi ya Viwanda",
+    "6. Ardhi ya Ufugaji",
+    "7. Ardhi ya Misitu / Asili",
+    "8. Ardhi ya Taasisi / Community",
+    "9. Nyumba",
+    "10. Apartments",
+    "11. Vyumba / Rooms",
+    "12. Villas",
+    "13. Townhouses",
+    "14. Commercial Buildings",
+    "15. Offices",
+    "16. Shops / Retail Spaces",
+    "17. Warehouses",
+    "18. Workshops",
+    "19. Industrial Properties",
+    "20. Farms",
+    "21. Ranches",
+    "22. Hotels / Lodges",
+    "23. Guest Houses",
+    "24. Rental Properties",
+    "25. Property for Sale",
+    "26. Property for Lease",
+    "27. Property for Rent",
+    "28. Property Development",
+    "29. Property Projects",
+    "30. Property Investment Opportunities"
+   ],
+   "sourceProductTypes": 44,
+   "runtimeProductTypes": 20,
+   "matched": 20,
+   "missingInRuntime": [
+    {
+     "section": "PROPERTY TYPE",
+     "label": "Townhouse"
+    },
+    {
+     "section": "PROPERTY TYPE",
+     "label": "Commercial Building"
+    },
+    {
+     "section": "PROPERTY TYPE",
+     "label": "Workshop"
+    },
+    {
+     "section": "PROPERTY TYPE",
+     "label": "Factory"
+    },
+    {
+     "section": "PROPERTY TYPE",
+     "label": "Lodge"
+    },
+    {
+     "section": "PROPERTY TYPE",
+     "label": "Other Property"
+    },
+    {
+     "section": "LAND SIZE",
+     "label": "m²"
+    },
+    {
+     "section": "LAND SIZE",
+     "label": "hectare"
+    },
+    {
+     "section": "LAND SIZE",
+     "label": "acre"
+    },
+    {
+     "section": "LAND SIZE",
+     "label": "other supported unit"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Bedrooms"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Bathrooms"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Floor"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Unit Number"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Building Floors"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Lift"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Parking"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Balcony"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Furnished"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Service Charge"
+    },
+    {
+     "section": "APARTMENT",
+     "label": "Building Amenities"
+    },
+    {
+     "section": "COMMERCIAL PROPERTY",
+     "label": "Business Centre"
+    },
+    {
+     "section": "COMMERCIAL PROPERTY",
+     "label": "Retail Space"
+    },
+    {
+     "section": "COMMERCIAL PROPERTY",
+     "label": "Mixed Commercial"
+    }
+   ],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "43",
+   "runtimeName": "Madini, Mawe & Resources",
+   "domain": "MINERAL_RESOURCE_DOMAIN",
+   "sourceName": "MADINI, MAWE & RESOURCES",
+   "inSource": true,
+   "runtimeSubcategories": 21,
+   "sourceDeclaredSubcategories": 21,
+   "subcategoriesMissingInRuntime": [
+    "1. Metallic Minerals",
+    "2. Precious Metals",
+    "3. Gemstones",
+    "4. Industrial Minerals",
+    "5. Construction Minerals",
+    "6. Energy Minerals",
+    "7. Strategic / Critical Minerals",
+    "8. Rare Earth Elements & Minerals",
+    "9. Ores",
+    "10. Mineral Concentrates",
+    "11. Processed Minerals",
+    "12. Refined Minerals & Metals",
+    "13. Mineral Salts",
+    "14. Dimension Stone",
+    "15. Aggregates & Stone Materials",
+    "16. Sand, Gravel & Clay",
+    "17. Mineral By-products",
+    "18. Mineral Samples & Specimens",
+    "19. Gem Rough",
+    "20. Cut & Polished Gemstones",
+    "21. Mineral Trade Products"
+   ],
+   "sourceProductTypes": 101,
+   "runtimeProductTypes": 85,
+   "matched": 82,
+   "missingInRuntime": [
+    {
+     "section": "ORE",
+     "label": "Gold Ore"
+    },
+    {
+     "section": "ORE",
+     "label": "Copper Ore"
+    },
+    {
+     "section": "ORE",
+     "label": "Iron Ore"
+    },
+    {
+     "section": "ORE",
+     "label": "Nickel Ore"
+    },
+    {
+     "section": "ORE",
+     "label": "Other Ore"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Mineral"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Concentrate Type"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Grade"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Recovery"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Moisture"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Weight"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Processing Method"
+    },
+    {
+     "section": "MINERAL CONCENTRATE",
+     "label": "Origin"
+    },
+    {
+     "section": "REFINED METALS",
+     "label": "Other Refined Metals"
+    },
+    {
+     "section": "MINERAL AUCTION",
+     "label": "Fixed Price"
+    },
+    {
+     "section": "MINERAL AUCTION",
+     "label": "Negotiated"
+    },
+    {
+     "section": "MINERAL AUCTION",
+     "label": "Auction"
+    },
+    {
+     "section": "MINERAL AUCTION",
+     "label": "Tender"
+    },
+    {
+     "section": "MINERAL AUCTION",
+     "label": "Quote"
+    }
+   ],
+   "runtimeOnly": [
+    {
+     "label": "Ore",
+     "branch": "default"
+    },
+    {
+     "label": "Mineral Concentrate",
+     "branch": "default"
+    },
+    {
+     "label": "Refined Metal",
+     "branch": "default"
+    }
+   ],
+   "partialBranchesFillable": []
+  },
+  {
+   "id": "44",
+   "runtimeName": "OTHER / HAIPO HAPA",
+   "domain": "FALLBACK",
+   "sourceName": null,
+   "inSource": false,
+   "runtimeSubcategories": 0,
+   "sourceDeclaredSubcategories": 0,
+   "subcategoriesMissingInRuntime": [],
+   "sourceProductTypes": 0,
+   "runtimeProductTypes": 0,
+   "matched": 0,
+   "missingInRuntime": [],
+   "runtimeOnly": [],
+   "partialBranchesFillable": []
+  }
+ ],
+ "totals": {
+  "sourceCategories": 33,
+  "runtimeCategories": 44,
+  "sourceSections": 1046,
+  "sourceProductTypes": 5337,
+  "runtimeProductTypes": 5119,
+  "matchedProductTypes": 4937,
+  "missingInRuntime": 400,
+  "runtimeOnly": 182,
+  "partialBranches": 5,
+  "partialBranchesWithSourceTypes": 3
+ },
+ "source": "docs/taxonomy-source/SOKOHAI-TAXONOMY-01-44-OWNER-SOURCE-2026-11-06.txt"
+}

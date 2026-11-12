@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai — Live Full Buyer Previews (mobile + desktop)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif; background: #EEF4F1; color: #161F1C; padding: 26px 16px 60px; }
+  .wrap { max-width: 1560px; margin: 0 auto; }
+  h1 { font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+  .sub { color: #5B6E67; font-size: 13px; margin: 6px 0 4px; max-width: 920px; line-height: 1.55; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 9.5px; font-weight: 800; }
+  .t-old { background: #E6F4EF; color: #0F6E57; border: 1px solid #BFE5D8; }
+  .t-new { background: #FFF4D6; color: #8A6D00; border: 1px solid #EBD98A; }
+  .sec { margin: 26px 0 30px; } .sec h2 { font-size: 16px; font-weight: 800; }
+  .sec p { font-size: 12.5px; color: #5B6E67; margin: 4px 0 12px; max-width: 920px; line-height: 1.55; }
+  .row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  .cap { font-size: 12px; font-weight: 800; margin-bottom: 8px; color: #33433E; }
+  .phone { width: 300px; flex: none; background: #fff; color: #161F1C; border-radius: 30px; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(10,40,32,.35); border: 1px solid #DDE7E3; }
+  .status { display: flex; justify-content: space-between; padding: 10px 18px 4px; font-size: 11px; font-weight: 700; }
+  .d-head { background: #0E5C46; color: #fff; padding: 10px 14px; font-size: 15px; font-weight: 900; }
+  .d-search { margin: 10px 12px 0; background: #F1F5F4; border-radius: 999px; padding: 9px 14px; font-size: 12px; color: #5B6E67; }
+  .d-filt { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; }
+  .d-filt span { flex: none; }
+  .d-filt span { font-size: 10.5px; font-weight: 800; padding: 6px 11px; border-radius: 999px; background: #F1F5F4; color: #3E514B; white-space: nowrap; }
+  .d-filt .on { background: #10261F; color: #fff; }
+  .d-sec { font-size: 12.5px; font-weight: 900; padding: 8px 12px 0; display: flex; align-items: center; gap: 6px; }
+  .d-card { display: flex; gap: 10px; margin: 8px 12px; border: 1px solid #E4ECE9; border-radius: 14px; padding: 9px; align-items: center; }
+  .d-card .im { width: 56px; height: 56px; border-radius: 11px; background: linear-gradient(135deg, #EAF6F1, #D9EEE7); display: flex; align-items: center; justify-content: center; font-size: 30px; flex: none; position: relative; }
+  .d-live { position: absolute; top: -7px; left: -4px; background: #E5332A; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 6px; }
+  .d-soon { position: absolute; top: -7px; left: -4px; background: #9C7A12; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 6px; }
+  .d-card b { font-size: 12px; display: block; } .d-card small { font-size: 10.5px; color: #5B6E67; display: block; }
+  .d-card .jb { margin-left: auto; flex: none; border: 0; background: #18A982; color: #fff; font-weight: 800; font-size: 10.5px; border-radius: 9px; padding: 8px 11px; }
+  .d-card .jb.gold { background: #9C7A12; }
+  /* ===== LIGHT live room (SokoHai identity) — kila kitu ndani ya Live ===== */
+  .live-stage { position: relative; background: linear-gradient(165deg, #CFE9DD 0%, #F2FAF6 55%, #DDEFE6 100%); padding-bottom: 64px; }
+  .ov-top { display: flex; align-items: center; gap: 6px; padding: 8px 12px; }
+  .ov-live { background: #E5332A; color: #fff; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(229,51,42,.4); }
+  .ov-view { background: rgba(255,255,255,.92); border: 1px solid #D5E4DC; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 8px; color: #10261F; }
+  .ov-timer { background: #10261F; color: #fff; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; }
+  .ov-x { margin-left: auto; background: rgba(255,255,255,.92); border: 1px solid #D5E4DC; color: #10261F; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; font-weight: 900; }
+  .ov-host { display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+  .ov-av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #F2C94C, #B07C1A); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #3A2A00; flex: none; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+  .ov-host b { font-size: 12.5px; color: #10261F; } .ov-host small { color: #3E514B; font-size: 10px; display: block; font-weight: 600; }
+  .ov-state { margin-left: auto; flex: none; background: #E6F4EF; border: 1px solid #18A982; color: #0F6E57; font-size: 9.5px; font-weight: 900; padding: 4px 9px; border-radius: 999px; }
+  .stage-emoji { text-align: center; font-size: 76px; line-height: 1.25; filter: drop-shadow(0 10px 14px rgba(10,40,32,.25)); }
+  .ov-bub { margin: 3px 12px; display: flex; }
+  .ov-bub span { background: rgba(255,255,255,.93); border: 1px solid #E0EAE6; font-size: 10px; font-weight: 600; color: #33433E; padding: 5px 11px; border-radius: 4px 12px 12px 12px; box-shadow: 0 3px 8px rgba(10,40,32,.08); }
+  .ov-bub b { color: #0F6E57; }
+  .ov-srv { position: absolute; top: 118px; right: 12px; font-size: 8.5px; font-weight: 800; background: rgba(16,38,31,.75); color: #8FE3C8; padding: 3px 8px; border-radius: 7px; }
+  .ov-prod { position: absolute; left: 12px; right: 12px; bottom: 10px; background: rgba(255,255,255,.97); border: 1px solid #D5E4DC; border-radius: 16px; box-shadow: 0 12px 26px -12px rgba(10,40,32,.4); padding: 9px 10px; display: flex; gap: 10px; align-items: center; }
+  .ov-prod .im { width: 46px; height: 46px; border-radius: 11px; background: linear-gradient(135deg, #EAF6F1, #D9EEE7); display: flex; align-items: center; justify-content: center; font-size: 26px; flex: none; }
+  .ov-prod b { font-size: 12px; color: #10261F; display: block; } .ov-prod small { font-size: 10px; color: #5B6E67; font-weight: 600; }
+  .ov-prod .pr { color: #0F6E57; font-weight: 900; font-size: 12px; display: block; margin-top: 2px; }
+  .live-sheet { position: relative; margin-top: -26px; background: #fff; border-radius: 24px 24px 0 0; padding: 12px 12px 0; box-shadow: 0 -10px 22px -12px rgba(10,40,32,.3); border-top: 1px solid #E8F0ED; }
+  .sh-head { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .sh-head h4 { font-size: 13px; font-weight: 900; color: #10261F; }
+  .c-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2.5px 0; color: #10261F; }
+  .c-row small { color: #5B6E67; font-weight: 600; } .gold { color: #9C7A12; } .grn { color: #0F6E57; }
+  .bar { height: 7px; background: #E7EFEB; border-radius: 99px; overflow: hidden; margin: 6px 0 2px; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #18A982, #0E5C46); }
+  .cta { display: block; width: 100%; border: 0; border-radius: 12px; padding: 10px; font-weight: 900; font-size: 12.5px; margin-top: 8px; }
+  .cta small { display: block; font-size: 10px; font-weight: 600; opacity: .85; }
+  .cta-green { background: #18A982; color: #fff; } .cta-gold { background: linear-gradient(180deg, #D9AE2E, #9C7A12); color: #fff; }
+  .srv-note { font-size: 9.5px; color: #5B6E67; text-align: center; font-weight: 600; margin-top: 6px; }
+  .cbar { display: flex; gap: 8px; padding: 10px 0 16px; align-items: center; font-size: 11px; color: #10261F; font-weight: 700; }
+  .cbar .in { flex: 1; background: #F1F5F4; border: 1px solid #E0EAE6; border-radius: 999px; padding: 9px 14px; color: #5B6E67; font-weight: 600; }
+  /* desktop */
+  .desk { flex: 1 1 620px; max-width: 860px; background: #fff; border: 1px solid #DDE7E3; border-radius: 20px; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(10,40,32,.3); }
+  .desk-h { padding: 14px 18px; border-bottom: 1px solid #EDF4F1; font-weight: 900; font-size: 15px; display: flex; gap: 10px; align-items: center; }
+  .dgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px 18px 18px; }
+  .gcard { border: 1px solid #E4ECE9; border-radius: 14px; overflow: hidden; }
+  .gcard .gi { height: 110px; background: linear-gradient(160deg, #D9EEE7, #F2FAF6); display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; }
+  .gcard .gb { padding: 10px 12px 12px; } .gcard b { font-size: 12.5px; } .gcard small { font-size: 11px; color: #5B6E67; display: block; margin-top: 2px; }
+  .gcard .jb { display: block; width: 100%; margin-top: 8px; border: 0; background: #18A982; color: #fff; font-weight: 800; font-size: 11.5px; border-radius: 9px; padding: 8px; }
+  .rdesk { display: grid; grid-template-columns: 1.25fr 1fr; gap: 0; }
+  .rdesk .left { padding: 14px 0 18px 18px; } .rdesk .right { border-left: 1px solid #E4ECE9; padding: 14px 18px 18px; background: #F8FBFA; }
+  .dstage { position: relative; background: linear-gradient(165deg, #CFE9DD, #F2FAF6 60%, #DDEFE6); border-radius: 16px; padding-bottom: 12px; margin-right: 18px; }
+  .dstage .stage-emoji { font-size: 96px; }
+  .dprod { display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,.96); border: 1px solid #D5E4DC; border-radius: 14px; margin: 0 12px; padding: 9px 12px; box-shadow: 0 10px 22px -12px rgba(10,40,32,.35); }
+  .dprod .im { width: 46px; height: 46px; border-radius: 11px; background: linear-gradient(135deg, #EAF6F1, #D9EEE7); display: flex; align-items: center; justify-content: center; font-size: 26px; flex: none; }
+  .dprod b { font-size: 12.5px; } .dprod small { font-size: 10.5px; color: #5B6E67; font-weight: 600; display: block; }
+  .dprod .pr { color: #0F6E57; font-weight: 900; font-size: 12.5px; }
+  .dmsg { background: #fff; border: 1px solid #E4ECE9; border-radius: 4px 12px 12px 12px; padding: 7px 10px; font-size: 11.5px; margin-bottom: 7px; }
+  .dmsg b { color: #0F6E57; } .dmsg.reply { margin-left: 22px; }
+  .note { font-size: 11px; color: #5B6E67; background: #F6FAF8; border: 1px dashed #C6D6D1; border-radius: 12px; padding: 9px 12px; margin-top: 12px; line-height: 1.55; max-width: 900px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Live Full — Buyer Previews (mobile + desktop) · v2 light</h1>
+  <p class="sub">PREVIEW TU — hakuna app code iliyobadilishwa. <b>Kila kitu = SokoHai light/white identity</b> (marekebisho yaliyoidhinishwa). Details zote ziko <b>ndani ya Live</b> kama overlays/panels — hakuna details card tofauti chini. Lebo: <span class="tag t-old">IPO</span> <span class="tag t-new">MPYA</span></p>
+
+  <div class="sec"><h2>1 · Discovery (mobile)</h2>
+    <p>Live Now + Upcoming + Featured <span class="tag t-new">MPYA</span> + search/filters <span class="tag t-new">MPYA</span> + status chips (Live / Starting Soon <span class="tag t-new">MPYA</span>).</p>
+    <div class="row"><div><div class="cap">Mobile · Ugunduzi</div>
+      <div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="d-head">📡 Live na Fursa za Soko</div>
+        <div class="d-search">🔍 Tafuta live… <span class="tag t-new">MPYA</span></div>
+        <div class="d-filt"><span class="on">Zote</span><span>🔨 Mnada</span><span>📉 Price Drop</span><span>👥 Group Buy</span></div>
+        <div class="d-sec">🔴 Live Sasa <span class="tag t-old">IPO</span></div>
+        <div class="d-card"><span class="im">📱<span class="d-live">● LIVE</span></span><div><b>Galaxy A55 — Mnada</b><small>👁 248 · zabuni TSh 412,000 · 14:32</small></div><button class="jb">Jiunge</button></div>
+        <div class="d-card"><span class="im">💻<span class="d-live">● LIVE</span></span><div><b>Laptop Pro — Price Drop</b><small>👁 512 · TSh 999,000 (−17%)</small></div><button class="jb">Jiunge</button></div>
+        <div class="d-sec">⭐ Featured <span class="tag t-new">MPYA</span></div>
+        <div class="d-card"><span class="im">🍚<span class="d-live">● LIVE</span></span><div><b>Mchele Group Buy — 18/25</b><small>👁 189 · TSh 64,000 badala ya 78,000</small></div><button class="jb gold">Jiunge</button></div>
+        <div class="d-sec">🗓 Yanayokuja <span class="tag t-old">IPO</span></div>
+        <div class="d-card"><span class="im">👟<span class="d-soon">SOON</span></span><div><b>Nike Pegasus — Drop 18:00</b><small>⏰ huanza saa 12 · weka ukumbusho</small></div><button class="jb gold">🔔</button></div>
+        <div style="height:14px"></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec"><h2>2 · Discovery (desktop)</h2><p>Grid ya matukio — sehemu zile zile, mipangilio ya desktop.</p>
+    <div class="row"><div class="desk"><div class="desk-h">📡 Live na Fursa za Soko <span class="tag t-old">IPO</span><span class="tag t-new">MPYA: featured/filter/search</span></div>
+      <div class="dgrid">
+        <div class="gcard"><div class="gi">📱<span class="d-live" style="position:absolute;top:8px;left:8px">● LIVE</span></div><div class="gb"><b>Galaxy A55 — Mnada</b><small>👁 248 · TSh 412,000 · 14:32</small><button class="jb">Jiunge na Mnada</button></div></div>
+        <div class="gcard"><div class="gi">💻<span class="d-live" style="position:absolute;top:8px;left:8px">● LIVE</span></div><div class="gb"><b>Laptop Pro — Price Drop</b><small>👁 512 · TSh 999,000 (−17%)</small><button class="jb">Jiunge na Ofa</button></div></div>
+        <div class="gcard"><div class="gi">🍚<span class="d-live" style="position:absolute;top:8px;left:8px">● LIVE</span></div><div class="gb"><b>Mchele — Group Buy 18/25</b><small>👁 189 · TSh 64,000</small><button class="jb">Jiunge na Kikundi</button></div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="sec"><h2>3 · Buyer rooms (mobile, light — SokoHai identity)</h2><p>Stage + overlays (LIVE/watazamaji/timer/host/hali) + product panel inayoelea + comments zinazoelea + commerce sheet iliyounganishwa — vyote ndani ya Live moja.</p>
+    <div class="row">
+      <div><div class="cap">Mnada · hali inaonekana wazi</div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="live-stage">
+          <div class="ov-top"><span class="ov-live">● LIVE</span><span class="ov-view">👁 248</span><span class="ov-timer">⏱ 14:32</span><button class="ov-x">✕</button></div>
+          <div class="ov-host"><span class="ov-av">N</span><div><b>Namana Kamama</b><small>Seller · ★ 4.8</small></div><span class="ov-state">🟢 Mnada wazi</span></div>
+          <div class="stage-emoji">📱</div>
+          <div class="ov-bub"><span><b>Asha M:</b> Simu ni mpya kabisa?</span></div>
+          <div class="ov-bub"><span><b>Duka 🏅:</b> Ndiyo, sealed + warranty!</span></div>
+          <span class="ov-srv">◷ muda wa server</span>
+          <div class="ov-prod"><span class="im">📱</span><div><b>Galaxy A55 5G</b><small>8GB/128GB · Mpya · Kariakoo</small><span class="pr">TSh 412,000 · zabuni ya sasa</span></div></div>
+        </div>
+        <div class="live-sheet">
+          <div class="sh-head"><h4>🔨 Mnada Sasa</h4><span class="ov-state">🟢 Wazi — zabuni zinaendelea</span></div>
+          <div class="c-row"><small>Anaongoza</small><b>J*** K*** (zabuni 12)</b></div>
+          <div class="c-row"><small>Inayokubalika</small><b class="gold">TSh 432,600</b></div>
+          <div class="c-row"><small>Zabuni / Muda</small><b>37 · <span class="grn">14:32</span></b></div>
+          <button class="cta cta-gold">WEKA ZABUNI<small>historia ya zabuni ipo chini · salio linathibitishwa</small></button>
+          <div class="srv-note">◷ Timer na zabuni zinasimamiwa na server · ⏸ pause: kabla ya zabuni ya 1 tu</div>
+          <div class="cbar"><span class="in">💬 Andika comment…</span><span>❤️</span><span>↗️</span></div>
+        </div>
+      </div></div>
+      <div><div class="cap">Price Drop</div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="live-stage">
+          <div class="ov-top"><span class="ov-live">● LIVE</span><span class="ov-view">👁 512</span><span class="ov-timer">⏱ 05:00</span><button class="ov-x">✕</button></div>
+          <div class="ov-host"><span class="ov-av">S</span><div><b>Sports Hub</b><small>Seller · ★ 4.9</small></div><span class="ov-state">🟢 Drop inaendelea</span></div>
+          <div class="stage-emoji">💻</div>
+          <div class="ov-bub"><span><b>Bra IT:</b> Hii bei itashuka hadi? 👀</span></div>
+          <div class="ov-bub"><span><b>Duka 🏅:</b> Kiwango cha chini TSh 850,000</span></div>
+          <span class="ov-srv">◷ muda wa server</span>
+          <div class="ov-prod"><span class="im">💻</span><div><b>Laptop Pro 14"</b><small>16GB/512GB · Mpya</small><span class="pr">TSh 999,000 · −17%</span></div></div>
+        </div>
+        <div class="live-sheet">
+          <div class="sh-head"><h4>📉 Bei Kushuka</h4><span class="ov-state">🟢 Wazi</span></div>
+          <div class="c-row"><small>Awali → Sasa</small><b><s style="color:#8AA098">1,208,060</s> <span class="gold">999,000</span></b></div>
+          <div class="c-row"><small>Stock · Nafasi yako</small><b>15 · #3/41</b></div>
+          <div class="c-row"><small>Kiwango cha chini</small><b>TSh 850,000</b></div>
+          <button class="cta cta-green">NUNUA OFA<small>Weka bei yako pia inapatikana</small></button>
+          <div class="srv-note">◷ Bei na muda vinasimamiwa na server · ofa yako: 3h</div>
+          <div class="cbar"><span class="in">💬 Andika comment…</span><span>❤️</span><span>↗️</span></div>
+        </div>
+      </div></div>
+      <div><div class="cap">Group Buy <span class="tag t-new">MPYA: kind+badge</span></div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="live-stage">
+          <div class="ov-top"><span class="ov-live">● LIVE</span><span class="ov-view">👁 189</span><span class="ov-timer">⏱ 05:48</span><button class="ov-x">✕</button></div>
+          <div class="ov-host"><span class="ov-av">A</span><div><b>Agro Fresh</b><small>Seller · ★ 4.7</small></div><span class="ov-state">🟢 Kikundi wazi</span></div>
+          <div class="stage-emoji">🍚</div>
+          <div class="ov-bub"><span><b>Zawadi:</b> Wabaki 7 tu, alikeni wenzetu! 🙏</span></div>
+          <div class="ov-bub"><span><b>Duka 🏅:</b> Mkifika 25 bei ni TSh 64,000 ✅</span></div>
+          <span class="ov-srv">◷ muda wa server</span>
+          <div class="ov-prod"><span class="im">🍚</span><div><b>Mchele 25kg</b><small>Msimu mpya · Morogoro</small><span class="pr">TSh 64,000 · badala ya 78,000</span></div></div>
+        </div>
+        <div class="live-sheet">
+          <div class="sh-head"><h4>👥 Group Buy · 18/25</h4></div>
+          <div class="bar"><i style="width:72%"></i></div>
+          <div class="c-row"><small>Maendeleo</small><b class="gold">72% · wabaki 7</b></div>
+          <div class="c-row"><small>Hali yako / Muda</small><b>✅ umejiunga · <span class="grn">05:48</span></b></div>
+          <button class="cta cta-green">ALIKA RAFIKI<small>malipo baada ya lengo — pesa zinalindwa</small></button>
+          <div class="srv-note">◷ Kikundi na muda vinasimamiwa na server</div>
+          <div class="cbar"><span class="in">💬 Andika comment…</span><span>❤️</span><span>↗️</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec"><h2>4 · Buyer room (desktop, light)</h2><p>Stage + product + commerce kushoto, Majadiliano (replies/threading) kulia — store moja, light.</p>
+    <div class="row"><div class="desk"><div class="desk-h"><span class="ov-live">● LIVE</span><span class="ov-view">👁 1.2K</span><span class="ov-timer">⏱ 14:32</span> Galaxy A55 — Mnada <span class="tag t-old">IPO</span> <span class="ov-state">🟢 Wazi — zabuni zinaendelea</span></div>
+      <div class="rdesk"><div class="left">
+        <div class="dstage">
+          <div class="ov-top"><div class="ov-host" style="padding:0"><span class="ov-av">N</span><div><b>Namana Kamama</b><small>Seller · ★ 4.8 · Kariakoo</small></div></div><span class="ov-srv" style="position:static;margin-left:auto">◷ muda wa server</span></div>
+          <div class="stage-emoji">📱</div>
+          <div class="dprod"><span class="im">📱</span><div><b>Samsung Galaxy A55 5G · 8GB/128GB</b><small>Mpya · sealed · warranty mwaka 1</small><span class="pr">TSh 412,000 · zabuni ya sasa · 37 zabuni</span></div></div>
+        </div>
+        <div style="margin:10px 18px 0 0">
+          <div class="sh-head"><h4>🔨 Mnada Sasa</h4></div>
+          <div class="c-row"><small>Anaongoza / Inayokubalika</small><b>J*** K*** / <span class="gold">TSh 432,600</span></b></div>
+          <button class="cta cta-gold">WEKA ZABUNI</button>
+          <div class="srv-note">◷ Timer na zabuni zinasimamiwa na server · ⏸ pause: kabla ya zabuni ya 1 tu</div>
+        </div>
+      </div><div class="right">
+        <div class="cap">💬 Majadiliano (84) <span class="tag t-new">MPYA</span></div>
+        <div class="dmsg"><b>Asha M:</b> Simu ni mpya kabisa? <span style="color:#8AA098">· ❤️14 · ↩ Jibu</span></div>
+        <div class="dmsg reply"><b>Duka 🏅:</b> Ndiyo, sealed + warranty! <span style="color:#8AA098">· ❤️22</span></div>
+        <div class="dmsg"><b>Bra IT:</b> Hii bei itapanda sana 🔥 <span style="color:#8AA098">· ↩ Jibu</span></div>
+        <div class="dmsg" style="text-align:center;color:#8AA098">Pakia ujumbe zaidi (79) ↓</div>
+        <div class="cbar" style="padding:6px 0 0"><span class="in">💬 Andika…</span><span>➤</span></div>
+      </div></div>
+    </div></div>
+  </div>
+  <div class="note"><b>Marekebisho v2 (light):</b> vyumba sasa ni SokoHai light/white — hakuna dark theme, hakuna details card tofauti chini ya Live. Bidhaa, comments, timer na vitendo vya kibiashara vyote ni overlays/panels ndani ya Live moja. Video haijaonyeshwa popote — stage ni bidhaa (Phase 2).</div>
+</div>
+</body>
+</html>

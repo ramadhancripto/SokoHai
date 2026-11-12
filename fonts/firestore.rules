@@ -80,15 +80,15 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // BIASHARA (login inahitajika) — HaiPay, oda, notifications, n.k.
+    // BIASHARA (login inahitajika) — SokoPay, oda, notifications, n.k.
     // ============================================================
     match /sokopay_links/{id}     { allow read, write: if signedIn(); allow delete: if false; }
 
     // ============================================================
-    // HAIPAY: vitu vilivyohifadhiwa (token/linki/QR) vya mtumiaji.
+    // SOKOPAY: vitu vilivyohifadhiwa (token/linki/QR) vya mtumiaji.
     // Kila mtumiaji anaweza kuona vyake tu; kuandika/futa kwa umiliki.
     // ============================================================
-    match /haipay_saved/{id} {
+    match /sokopay_saved/{id} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if signedIn() && resource.data.userId == request.auth.uid;

@@ -1,0 +1,9 @@
+{
+  "firestore": {
+    "rules": "/home/user/sokoHai/tools/g1/firestore.g1-staging.rules"
+  },
+  "emulators": {
+    "firestore": { "port": 8085 },
+    "auth": { "port": 9099 }
+  }
+}

@@ -54,4 +54,27 @@ import { skh } from './00-bootstrap.js';
         }
         return data;
     };
+
+    /* [2026-11-06] Legacy sellers (shop setup completed before the canonical
+       Business/Store bridge) have no users.businessId/storeId, so every
+       server report (posReports) failed with BUSINESS_STORE_REQUIRED and the
+       dashboard wrongly said "Cloud Functions hazipatikani". This creates the
+       owner's canonical pair ONCE through the existing server callable, keeping
+       the seller's current mode/management (never resetting them to defaults). */
+    var scopePromise = null;
+    window.skhEnsureBusinessScope = function () {
+        var u = skh.currentUserData || {};
+        if (u.businessId && u.storeId) return Promise.resolve({ businessId: u.businessId, storeId: u.storeId });
+        if (!u.businessSetupComplete) return Promise.resolve({ businessId: null, storeId: null });
+        if (!scopePromise) {
+            var input = { shopName: u.shopName || u.businessName || u.storeName || '' };
+            if (u.sellerMode || u.sellMode) input.sellerMode = u.sellerMode || u.sellMode;
+            if (u.management && typeof u.management === 'object') input.management = u.management;
+            scopePromise = window.skhEnsureBusinessContext(input).then(function () {
+                var v = skh.currentUserData || {};
+                return { businessId: v.businessId || null, storeId: v.storeId || null };
+            }).catch(function (e) { scopePromise = null; throw e; });
+        }
+        return scopePromise;
+    };
 })();

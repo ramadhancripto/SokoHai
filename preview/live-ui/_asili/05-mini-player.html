@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview 5 — Mini Player</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{background:#0f172a;display:flex;gap:24px;justify-content:center;padding:24px;flex-wrap:wrap;color:#e2e8f0}
+.demo{width:390px;max-width:94vw;height:640px;background:#f8fafc;border-radius:28px;border:3px solid #334155;position:relative;overflow:hidden;color:#0f172a}
+.banner{background:#7c3aed;color:#fff;font-size:11px;font-weight:800;text-align:center;padding:6px}
+.fake{padding:14px;font-size:12px;color:#64748b;line-height:2}
+.mini{position:absolute;width:170px;background:#0f172a;border-radius:14px;overflow:hidden;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.5);border:1px solid #334155;left:190px;top:180px;touch-action:none;cursor:grab}
+.mini .v{height:96px;background:linear-gradient(135deg,#0ea5e9,#6366f1);position:relative;display:flex;align-items:center;justify-content:center}
+.mini .v .pl{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px}
+.mini .lv{position:absolute;top:5px;left:5px;background:#ef4444;font-size:9px;font-weight:900;padding:1px 7px;border-radius:12px}
+.mini .t{padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini .s{padding:0 9px 4px;font-size:10px;color:#94a3b8}
+.mini .ops{display:flex;border-top:1px solid #334155}
+.mini .ops button{flex:1;background:none;border:none;color:#fff;font-size:11px;font-weight:800;padding:9px 0}
+.mini .ops button+button{border-left:1px solid #334155}
+.mini .ops .ex{background:#16a34a}.mini .ops .cl{color:#f87171}
+.bind{background:#fffbeb;color:#92400e;border-radius:12px;margin:10px 14px;padding:10px;font-size:10.5px;line-height:1.7;border:1px dashed #d97706}
+.note{width:390px;max-width:94vw;font-size:12px;line-height:1.8}.note h3{color:#fff;margin-bottom:6px}.note code{background:#1e293b;padding:1px 6px;border-radius:6px;font-size:11px}
+.hint{text-align:center;font-size:11px;color:#94a3b8;margin-top:4px}
+</style></head><body>
+<div class="demo" id="demo">
+<div class="banner">DESIGN PREVIEW — mock data · mini player INAWEZA KUBURUZWA (jaribu!)</div>
+<div class="fake">🏠 Ukurasa wa nyumbani (mtumiaji anaendelea kuvinjari huku live ikiendelea)...<br><br>🛍 Bidhaa · 🔍 Tafuta · 🧺 Kikapu<br><br>Mini Player inabaki juu (floating) — buruta popote.</div>
+<div class="mini" id="mini">
+<div class="v"><span class="lv">● LIVE</span><div class="pl">▶</div></div>
+<div class="t">Mnada: Kuku wa Kienyeji</div>
+<div class="s">👁 1.2k · dau 45,000</div>
+<div class="ops"><button class="ex">⤢ Rudi</button><button class="cl">✕ Funga</button></div>
+</div>
+<div class="bind" style="position:absolute;bottom:8px;left:0;right:0"><b>Implementation (bila kuvunja session):</b> Punguza = hamisha node ya <b>#lv7Stage</b> (DOM move, sio innerHTML) kwenye mini container — iframe ile ile, video hai-reload. Listeners/timers za <b>room</b> zinaendelea. Rudi = hamisha node kurudi. Funga = <b>skhLiveClose('lvxRoom')</b> (leave iliyopo + liveLeave).</div>
+</div>
+<div class="note"><h3>5. Mini Player</h3>
+<p><b>Jaribu kuiburuta</b> — ni draggable halisi (pointer events). Compact 170px, inabaki juu ya kurasa zote.</p>
+<p>Session continuity: hakuna iframe mpya, hakuna reload, hakuna re-join. Test ya continuity: fungua live → punguza → tembea kurasa 3 → rudi → video inaendelea + viewerCount haikupanda mara 2 (bila liveJoin mpya).</p>
+<p>Mobile: mini 150px kwenye simu ndogo; haifuniki bottom-nav (imekaza juu yake); landscape: kona ya kulia.</p>
+<p>Files: <code>120-live-commerce-ui.js</code> (skhLiveMinimize/restore mpya — DOM move tu), CSS mpya ndogo. Backend: hakuna mabadiliko.</p></div>
+<script>
+(function(){var m=document.getElementById('mini'),d=document.getElementById('demo'),x=0,y=0,dx=0,dy=0,drag=false;
+m.addEventListener('pointerdown',function(e){drag=true;dx=e.clientX-m.offsetLeft;dy=e.clientY-m.offsetTop;m.setPointerCapture(e.pointerId);m.style.cursor='grabbing';});
+m.addEventListener('pointermove',function(e){if(!drag)return;var r=d.getBoundingClientRect();var nx=e.clientX-r.left-dx,ny=e.clientY-r.top-dy;nx=Math.max(4,Math.min(r.width-m.offsetWidth-4,nx));ny=Math.max(30,Math.min(r.height-m.offsetHeight-90,ny));m.style.left=nx+'px';m.style.top=ny+'px';});
+m.addEventListener('pointerup',function(){drag=false;m.style.cursor='grab';});})();
+</script>
+</body></html>

@@ -22,7 +22,7 @@ Jumla ya faili: **151+ files**
 - `css/08-dashboard-pos-polish.css` - Dashibodi ya mfanyabiashara na mashine ya POS.
 - `css/09-sokopay-polish.css` - Muonekano wa pochi ya SokoPay.
 - `css/10-admin-dash-polish.css` - Dashibodi ya msimamizi mkuu (Admin dashboard).
-- `css/11-haipay-mobile.css` - Muonekano wa simu kwa malipo ya HaiPay.
+- `css/11-sokopay-mobile.css` - Muonekano wa simu kwa malipo ya SokoPay.
 - `css/12-mobile-responsive.css` - Usanidi wa simu za mkononi (Mobile responsiveness).
 - `css/13-ui-polish.css` - Maboresho ya viwango vya interface (UI polish).
 - `css/14-chat-admin-polish.css` - Dirisha la gumzo na dhibiti za admin.

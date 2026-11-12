@@ -55,6 +55,7 @@ window.updateApp = function(mode, el = null) {
     // 3. Badili aina ya vitu vinavyoonekana (Collection)
     const mappedData = skh.navMap[mode];
     skh.currentFeedCollection = mappedData ? mappedData.dbCollection : 'products';
+    if (typeof window.skhCategoryStripSync === 'function') window.skhCategoryStripSync(); // [R5] immediate, not on the next poll
     
     // 4. Washa/Zima Menu za juu (Sub-navs)
     document.getElementById('marketModesNav').style.display = (mode === 'bidhaa') ? 'flex' : 'none';
@@ -357,6 +358,17 @@ window.submitSeller = async function(event) {
     
     const title = document.getElementById('prodName').value.trim();
    
+// [2026-11-06] Only keep the picked product type if the seller did not change the
+// category/branch afterwards (ids are branch-scoped: PT-<cat>-<BRANCH_LABEL>).
+function skhTaxonomyProductType(category, subCategory) {
+    const idEl = document.getElementById('prodTaxonomyProductTypeId');
+    const lbEl = document.getElementById('prodTaxonomyProductTypeLabel');
+    const id = idEl ? idEl.value : '', label = lbEl ? lbEl.value : '';
+    if (!id || !label || !subCategory || subCategory === 'N/A') return {};
+    const slug = String(subCategory + '-' + label).normalize('NFKD').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase();
+    if (!id.endsWith('-' + slug)) return {};
+    return { productTypeId: id, productTypeLabel: label };
+}
 // Baini kategoria sahihi kulingana na offline au online
 let category = "";
 let subCategory = "";
@@ -448,6 +460,13 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
             const endStr = document.getElementById('aucEndTime').value;
             if(!endStr) { alert("Weka tarehe na muda wa mnada kuisha."); return; }
             modeData = { endTime: new Date(endStr).getTime(), currentBid: price, maxBidder: null, totalBids: 0 };
+            // [R13-B] hiari: muda wa kuanza + nyongeza ya chini (auctionPlaceBid inazitekeleza server-side)
+            const aucStartStr = (document.getElementById('aucStartTime') || {}).value || '';
+            const aucStartMs = aucStartStr ? new Date(aucStartStr).getTime() : 0;
+            if (aucStartMs && aucStartMs >= modeData.endTime) { alert("Muda wa mnada kuanza lazima uwe kabla ya muda wa kuisha."); return; }
+            if (aucStartMs > nowMs) modeData.startTime = aucStartMs;
+            const aucInc = Math.round(parseFloat((document.getElementById('aucMinIncrement') || {}).value) || 0);
+            if (aucInc > 0) modeData.minIncrement = aucInc;
         } 
         else if (saleMode === 'price_drop') {
             const minPrice = parseFloat(document.getElementById('pdMinPrice').value);
@@ -456,16 +475,25 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
             if(!minPrice || !endStr) { alert("Weka Bei ya Mwisho na Muda wa Deal kuisha."); return; }
             
             const endMs = new Date(endStr).getTime();
-            const totalDurationMs = endMs - nowMs;
+            // [R13-B] hiari: ofa ianze baadaye; kikomo kwa mnunuzi (modeQuantityLimit server-side)
+            const pdStartStr = (document.getElementById('pdStartTime') || {}).value || '';
+            const pdStartMs = pdStartStr ? new Date(pdStartStr).getTime() : 0;
+            if (pdStartMs && pdStartMs >= endMs) { alert("Ofa lazima ianze kabla ya muda wa kuisha."); return; }
+            const startMs = pdStartMs > nowMs ? pdStartMs : nowMs;
+            const totalDurationMs = endMs - startMs;
             const totalIntervals = Math.floor(totalDurationMs / intervalMs);
             const dropAmt = totalIntervals > 0 ? ((price - minPrice) / totalIntervals) : 0;
 
-            modeData = { minPrice: minPrice, intervalMs: intervalMs, dropAmount: dropAmt, endTime: endMs, startTime: nowMs };
+            modeData = { minPrice: minPrice, intervalMs: intervalMs, dropAmount: dropAmt, endTime: endMs, startTime: startMs };
+            const pdMax = parseInt((document.getElementById('pdMaxPerBuyer') || {}).value, 10);
+            if (pdMax > 0) modeData.maxPerBuyer = pdMax;
         } 
         else if (saleMode === 'wholesale') {
             const discVal = parseFloat(document.getElementById('wsDiscount').value);
             const discType = document.getElementById('wsDiscountType').value;
-            if(!discVal) { alert("Weka kiasi cha punguzo kwa Wholesale."); return; }
+            // [2026-11-06] Punguzo linahitajika tu kama hakuna tiers (tiers ndizo bei halisi).
+            const hasTierText = !!(document.getElementById('wsTiersText') && document.getElementById('wsTiersText').value.trim());
+            if(!discVal && !hasTierText) { alert("Weka kiasi cha punguzo kwa Wholesale, au tiers za bei (mf. 5:22000; 20:19000)."); return; }
             const minQtyEl = document.getElementById('wsMinQty');
             const minQty = minQtyEl ? (parseInt(minQtyEl.value) || 0) : 0;
             if(!minQty || minQty <= 0) { alert("Weka IDADI YA CHINI ya jumla (minQty) — mfano: 10."); return; }
@@ -485,7 +513,10 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
                     tiers.sort(function (a, b) { return a.minQty - b.minQty; });
                 } catch (e) { tiers = []; }
             }
-            modeData = { discountValue: discVal, discountType: discType, minQty: minQty, tiers: tiers }; 
+            // [2026-11-06] Tiers lazima ziwe ngazi halali (idadi inapanda, bei haipandi, chini ya rejareja).
+            const tierMsg = window.skhWsTierIssues ? window.skhWsTierIssues(parseFloat(document.getElementById('prodPrice').value) || 0, tiers) : '';
+            if (tierMsg) { alert(tierMsg); return; }
+            modeData = { discountValue: discVal || 0, discountType: discType, minQty: minQty, tiers: tiers }; 
         }
         else if (saleMode === 'group_buy') {
             const discVal = parseFloat(document.getElementById('gbDiscount').value);
@@ -563,6 +594,8 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         buyPrice: buyPrice,
         category: category,
         subCategory: subCategory,
+        // [2026-11-06] Canonical product type chosen via the taxonomy search (owner 01–44).
+        ...skhTaxonomyProductType(category, subCategory),
         filters: itemFilters,
         ...structuredFields,
         description: (visibility !== 'offline_only') ? document.getElementById('prodDesc').value : "In-store Product",
@@ -602,6 +635,8 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
         bulkUnit: bulkUnit,
         conversionRatio: conversionRatio,
         wholesalePrice: wholesalePrice,
+        // [2026-11-06] MOQ ya bei ya jumla sokoni (null = POS/dukani pekee).
+        wholesaleMinQty: (wholesalePrice > 0 && (parseInt((document.getElementById('prodWholesaleMinQty') || {}).value, 10) || 0) >= 2) ? parseInt(document.getElementById('prodWholesaleMinQty').value, 10) : null,
         rawUnitsQtyEntered: rawQtyEntered,
         
         // Expiry, Batch, na Serial / IMEI Data ya kiakili
@@ -1136,7 +1171,8 @@ window.broadcastRideRequest = async function() {
     } catch(e) {}
 
     try {
-        const rideDocRef = await skh.addDoc(skh.collection(skh.db, "ride_requests"), {
+        // [REMEDIATION R1] contact fields go to ride_requests/{id}/private/contact.
+        const rideDocRef = await skh.createRideRequest({
             customerId: skh.currentUser.uid,
             customerName: skh.currentUser.displayName || "Mteja",
             customerPhone: skh.currentUserData?.phone || "",
@@ -1400,3 +1436,35 @@ window.addEventListener('scroll', () => {
         isHidden: function () { return hidden; }
     };
 })();
+
+
+/* [2026-11-06] Tiers za jumla: uchakataji + ukaguzi + hakiki (fomu ya kuunda na kuhariri).
+   Sheria za bei zenyewe ziko shared/wholesale-price-core.js (sawa na server). */
+window.skhParseWsTiers = function (text) {
+    return String(text || '').split(';').map(function (pair) {
+        var kv = pair.split(':');
+        return { minQty: parseInt(kv[0], 10), price: parseFloat(String(kv[1] || '').replace(/[,\s]/g, '')) };
+    }).filter(function (t) { return Number.isFinite(t.minQty) && t.minQty > 0 && Number.isFinite(t.price) && t.price > 0; })
+      .sort(function (a, b) { return a.minQty - b.minQty; });
+};
+window.skhWsTierIssues = function (retail, tiers) {
+    var core = window.SKHWholesalePriceCore;
+    if (!core || !tiers || !tiers.length) return '';
+    var msgs = { MIN_QTY_BELOW_2: 'idadi ya chini iwe 2 au zaidi', PRICE_REQUIRED: 'weka bei', NOT_BELOW_RETAIL: 'bei ya jumla iwe chini ya bei ya rejareja', MIN_QTY_NOT_INCREASING: 'idadi zisijirudie (kila ngazi iwe kubwa kuliko iliyotangulia)', PRICE_RISES: 'bei isipande kadri idadi inavyoongezeka' };
+    var issues = core.validateTiers(retail, tiers);
+    if (!issues.length) return '';
+    return 'Tiers za jumla zina tatizo:\n' + issues.map(function (i) { return '• Ngazi ' + (i.index + 1) + ' (' + tiers[i.index].minQty + ':' + tiers[i.index].price + '): ' + (msgs[i.code] || i.code); }).join('\n');
+};
+window.skhWsTierPreview = function (textId, priceId, previewId) {
+    var box = document.getElementById(previewId); if (!box) return;
+    var core = window.SKHWholesalePriceCore;
+    var retail = parseFloat((document.getElementById(priceId) || {}).value) || 0;
+    var tiers = window.skhParseWsTiers((document.getElementById(textId) || {}).value);
+    if (!core || !tiers.length) { box.innerHTML = ''; return; }
+    var issue = window.skhWsTierIssues(retail, tiers);
+    var rows = core.priceTable({ price: retail, saleMode: 'wholesale', modeData: { tiers: tiers } });
+    var esc = function (v) { return skh.skhEscape(String(v)); };
+    box.innerHTML = (issue ? '<div class="ws-tier-issue">' + esc(issue).replace(/\n/g, '<br>') + '</div>' : '')
+        + '<div class="ws-tier-head">Mnunuzi ataona:</div>'
+        + rows.map(function (r) { return '<div class="ws-tier-row"><span>' + (r.to ? r.from + '–' + r.to : r.from + '+') + ' vipande</span><b>TSh ' + Number(r.price).toLocaleString() + '</b><small>' + (r.retail ? 'rejareja' : 'jumla') + '</small></div>'; }).join('');
+};

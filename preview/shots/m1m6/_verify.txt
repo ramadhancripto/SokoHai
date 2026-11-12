@@ -1,0 +1,18 @@
+
+[desktop-1440] viewport 1440x900
+  scrollWidth=1440 clientWidth=1440 → HAKUNA horizontal scroll ✓
+  urefu wa ukurasa: 16302px | simu: 11 | zilizokatika: 0
+  backtick zilizobaki: 0 | elements zinazovuka: 0
+  console errors: 0 ✓
+  sehemu zinazoonekana: 13/13 ✓
+  tab → Group Buy: PASS ✓
+  chooser kadi → Price Drop: PASS ✓
+
+[mobile-390] viewport 390x844
+  scrollWidth=390 clientWidth=390 → HAKUNA horizontal scroll ✓
+  urefu wa ukurasa: 23516px | simu: 11 | zilizokatika: 0
+  backtick zilizobaki: 0 | elements zinazovuka: 402
+  console errors: 0 ✓
+  sehemu zinazoonekana: 13/13 ✓
+  tab → Group Buy: PASS ✓
+  chooser kadi → Price Drop: PASS ✓

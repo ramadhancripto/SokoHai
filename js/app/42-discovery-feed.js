@@ -93,10 +93,11 @@ import { resolveDiscoveryContext, createDiscoverySession, productAttributeMap, c
             if (query) {
                 var title = norm(it.title || it.driverName || it.company || '');
                 var desc = norm(it.description || '');
-                var icat = norm(it.category || '');
+                var sk = window.skh || {};
+                var icat = norm((it.category || '') + ' ' + (typeof sk.categoryLabel === 'function' ? (sk.categoryLabel(it.category) || '') : '') + ' ' + (it.subCategory || '') + ' ' + (it.brand || ''));
                 var extra = norm((it.vehicleType || '') + ' ' + (Array.isArray(it.supportedServices) ? it.supportedServices.join(' ') : ''));
-                if (title.indexOf(query) === -1 && desc.indexOf(query) === -1
-                    && icat.indexOf(query) === -1 && extra.indexOf(query) === -1) return;
+                var hay = title + ' ' + desc + ' ' + icat + ' ' + extra;   // [R10] all words, any order
+                if (hay.indexOf(query) === -1 && !query.split(/\s+/).every(function (w) { return hay.indexOf(w) !== -1; })) return;
             }
             out.push(it.id);
         });

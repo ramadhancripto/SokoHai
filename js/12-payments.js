@@ -88,9 +88,18 @@
         var txRef = String(opts.txRef || ('SKH_' + Date.now()));
         var phone = String(opts.phone || '').replace(/^0/, '255');
 
+        // [PHASE 7 F7-1] Kusudi la malipo kwa server (settle huweka 'deposit'
+        // kwenye wallet hata bila kurudi kutoka PesaPal). 'deposit_item' (serious
+        // action) SI wallet top-up — inabaki 'other' (17 inamalizia kama leo).
+        var payPurpose = 'other', payKind = String(opts.kind || 'generic');
+        if (payKind === 'deposit') payPurpose = 'deposit';
+        else if (payKind === 'negotiation_order') payPurpose = 'order';
+        else if (payKind === 'link' || payKind === 'sokopay_link') payPurpose = 'link';
         try {
             var res = await window.skhServerPaymentsCheckout({
                 amount: opts.amount,
+                purpose: payPurpose,
+                kind: payKind,
                 orderTrackingId: txRef,
                 externalId: txRef,
                 phone: phone,

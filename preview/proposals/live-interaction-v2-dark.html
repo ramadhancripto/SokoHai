@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai — Live Interaction V2 (TikTok-style, bila video)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif; background: #EEF4F1; color: #161F1C; padding: 26px 16px 60px; }
+  .wrap { max-width: 1560px; margin: 0 auto; }
+  h1 { font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+  .sub { color: #5B6E67; font-size: 13px; margin: 6px 0 4px; max-width: 900px; line-height: 1.55; }
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 22px; }
+  .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; }
+  .t-old { background: #E6F4EF; color: #0F6E57; border: 1px solid #BFE5D8; }
+  .t-new { background: #FFF4D6; color: #8A6D00; border: 1px solid #EBD98A; }
+  .sec { margin-bottom: 30px; }
+  .sec-h h2 { font-size: 16px; font-weight: 800; }
+  .sec-h span { font-size: 12px; color: #5B6E67; margin-left: 8px; }
+  .sec-d { font-size: 12.5px; color: #5B6E67; margin: 4px 0 12px; max-width: 900px; line-height: 1.55; }
+  .row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  .cap { font-size: 12px; font-weight: 800; margin-bottom: 8px; color: #33433E; }
+  /* ---------- phone ---------- */
+  .phone { width: 300px; flex: none; background: #0B1512; color: #fff; border-radius: 30px; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(10,40,32,.45); border: 1px solid #22332D; position: relative; }
+  .phone.light { background: #fff; color: #161F1C; }
+  .status { display: flex; justify-content: space-between; padding: 10px 18px 4px; font-size: 11px; font-weight: 700; }
+  /* home */
+  .h-head { background: #0E5C46; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .h-head b { font-size: 17px; } .h-head b i { font-style: normal; color: #F2C94C; }
+  .h-head .ic { margin-left: auto; display: flex; gap: 12px; font-size: 15px; }
+  .h-sec { padding: 12px 14px 4px; font-size: 14px; font-weight: 800; }
+  .h-cards { display: flex; gap: 10px; padding: 10px 14px; overflow: hidden; }
+  .h-card { min-width: 196px; background: #0E3B2E; border-radius: 16px; overflow: hidden; color: #fff; }
+  .h-live { position: relative; height: 150px; background: linear-gradient(160deg, #1B6B52, #0B2E23); display: flex; align-items: center; justify-content: center; font-size: 56px; }
+  .pill-live { position: absolute; top: 8px; left: 8px; background: #E5332A; font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 7px; letter-spacing: .05em; }
+  .pill-view { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.55); font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 7px; }
+  .h-prod { display: flex; gap: 8px; padding: 10px 10px 4px; align-items: center; }
+  .h-prod .im { width: 44px; height: 44px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; }
+  .h-prod b { font-size: 12px; display: block; } .h-prod small { font-size: 10px; color: #F2C94C; font-weight: 700; }
+  .h-card .jb { display: block; width: calc(100% - 20px); margin: 8px 10px 12px; border: 0; background: #fff; color: #0B2E23; font-weight: 900; font-size: 12px; border-radius: 10px; padding: 9px; }
+  .h-nav { display: flex; border-top: 1px solid #EDF4F1; padding: 8px 6px 14px; margin-top: 6px; }
+  .h-nav div { flex: 1; text-align: center; font-size: 8.5px; font-weight: 700; color: #5B6E67; }
+  .h-nav div i { display: block; font-style: normal; font-size: 17px; }
+  .h-nav .on { color: #0F6E57; }
+  .h-plus { width: 44px; height: 44px; border-radius: 50%; background: #18A982; color: #fff !important; font-size: 24px !important; line-height: 44px; margin: -18px auto 0; box-shadow: 0 6px 14px -4px rgba(24,169,130,.7); }
+  /* room */
+  .r-top { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+  .r-live { background: #E5332A; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; letter-spacing: .05em; }
+  .r-view { background: rgba(255,255,255,.16); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 8px; }
+  .r-x { margin-left: auto; background: rgba(255,255,255,.16); border: 0; color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; }
+  .r-host { display: flex; align-items: center; gap: 8px; padding: 2px 12px 8px; }
+  .r-av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #F2C94C, #B07C1A); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: #3A2A00; border: 2px solid rgba(255,255,255,.5); flex: none; }
+  .r-host b { font-size: 12.5px; display: block; } .r-host small { font-size: 10px; opacity: .7; }
+  .r-follow { margin-left: auto; border: 1px solid #F2C94C; color: #F2C94C; background: transparent; border-radius: 999px; font-size: 10px; font-weight: 800; padding: 5px 12px; }
+  .stage { margin: 0 12px; height: 190px; border-radius: 16px; background: linear-gradient(160deg, #14543F, #0A2A20); display: flex; align-items: center; justify-content: center; font-size: 84px; position: relative; overflow: hidden; }
+  .stage .srv { position: absolute; bottom: 8px; left: 8px; font-size: 9px; font-weight: 800; background: rgba(0,0,0,.55); color: #8FE3C8; padding: 3px 8px; border-radius: 7px; }
+  .stage .ph2 { position: absolute; bottom: 8px; right: 8px; font-size: 9px; font-weight: 700; background: rgba(0,0,0,.55); color: #F2C94C; padding: 3px 8px; border-radius: 7px; }
+  .p-card { margin: 10px 12px 0; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 9px 10px; display: flex; gap: 10px; }
+  .p-card .im { width: 52px; height: 52px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; flex: none; }
+  .p-card b { font-size: 12px; display: block; } .p-card small { font-size: 10px; opacity: .7; display: block; line-height: 1.4; }
+  .p-card .pr { color: #F2C94C; font-weight: 900; font-size: 12px; margin-top: 2px; display: block; }
+  .c-panel { margin: 10px 12px 0; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 11px 12px; }
+  .c-panel h4 { font-size: 13px; font-weight: 900; text-align: center; margin-bottom: 8px; }
+  .c-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2.5px 0; }
+  .c-row small { opacity: .65; font-weight: 600; } .c-row b { font-variant-numeric: tabular-nums; }
+  .gold { color: #F2C94C; } .grn { color: #5EE0B8; }
+  .bignum { font-size: 15px !important; }
+  .bar { height: 7px; background: rgba(255,255,255,.15); border-radius: 99px; overflow: hidden; margin: 6px 0 2px; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #F2C94C, #B07C1A); border-radius: 99px; }
+  .cta { display: block; width: 100%; border: 0; border-radius: 12px; padding: 11px; font-weight: 900; font-size: 13px; margin-top: 9px; }
+  .cta small { display: block; font-size: 10px; font-weight: 600; opacity: .85; margin-top: 1px; }
+  .cta-green { background: #18A982; color: #fff; }
+  .cta-gold { background: linear-gradient(180deg, #D9AE2E, #9C7A12); color: #fff; }
+  .amt-row { display: flex; gap: 8px; margin-top: 9px; }
+  .amt-row input { flex: 1; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 12px; color: #fff; padding: 10px; font-size: 12px; font-family: inherit; min-width: 0; }
+  .amt-row .cta { margin-top: 0; width: auto; flex: 1; }
+  .rail { display: flex; gap: 14px; justify-content: center; padding: 10px 12px 4px; font-size: 9px; font-weight: 700; opacity: .9; }
+  .rail div { text-align: center; } .rail i { display: block; font-style: normal; font-size: 18px; }
+  .cbar { display: flex; gap: 8px; padding: 8px 12px 16px; align-items: center; }
+  .cbar .in { flex: 1; background: rgba(255,255,255,.12); border-radius: 999px; padding: 9px 14px; font-size: 11.5px; opacity: .85; }
+  .cbar .ic { font-size: 17px; }
+  /* discussion sheet */
+  .sheet { margin: 10px 12px 0; background: #fff; color: #161F1C; border-radius: 18px 18px 0 0; padding: 10px 12px 0; }
+  .grab { width: 38px; height: 4px; border-radius: 99px; background: #D8E2DE; margin: 0 auto 8px; }
+  .sheet h4 { font-size: 13px; font-weight: 900; text-align: center; }
+  .resume { font-size: 10px; font-weight: 800; color: #8A6D00; background: #FFF8DC; border: 1px solid #EBD98A; border-radius: 9px; padding: 6px 8px; text-align: center; margin: 8px 0; }
+  .cmt { display: flex; gap: 7px; padding: 6px 0; border-bottom: 1px dashed #EDF4F1; font-size: 11.5px; line-height: 1.45; }
+  .av { width: 26px; height: 26px; border-radius: 50%; background: #18A982; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+  .av.host { background: #9C7A12; }
+  .who { font-weight: 800; font-size: 10.5px; } .who em { font-style: normal; font-size: 8px; background: #9C7A12; color: #fff; border-radius: 4px; padding: 1px 4px; margin-left: 4px; }
+  time { font-size: 9px; color: #8AA098; margin-left: 5px; font-weight: 700; }
+  .acts { display: flex; gap: 9px; margin-top: 2px; font-size: 10px; font-weight: 700; color: #5B6E67; }
+  .reply { margin-left: 33px; background: #F6FAF8; border-radius: 0 11px 11px 11px; }
+  .more { display: block; width: 100%; margin: 8px 0 4px; border: 1.5px dashed #BFE5D8; background: #fff; color: #0F6E57; font-weight: 800; font-size: 11px; border-radius: 10px; padding: 8px; }
+  .note { font-size: 11px; color: #5B6E67; background: #F6FAF8; border: 1px dashed #C6D6D1; border-radius: 12px; padding: 9px 12px; margin: 12px 0 4px; line-height: 1.55; max-width: 640px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Live Interaction V2 — TikTok-style (kama reference yako)</h1>
+  <p class="sub">PREVIEW TU — hakuna code ya app iliyobadilishwa. Full-screen nyeusi kama picha yako: <b>Home LIVE SASA</b> + vyumba vya <b>Mnada / Group Buy / Price Drop</b> + <b>Majadiliano</b>. Stage inaonyesha <b>bidhaa kubwa</b> (video halisi ni Phase 2 — haijadaiwa hapa). CTA zinabaki kijani <b>#18A982</b> + dhahabu za SokoHai.</p>
+  <div class="legend"><span class="tag t-old">IPO — inatumika tena</span><span class="tag t-new">MPYA — baada ya idhini</span></div>
+
+  <div class="sec">
+    <div class="sec-h"><h2>Home + Vyumba Live (full-screen)</h2><span>muundo kama reference: LIVE · viewers · presenter · product card · commerce panel · comments</span></div>
+    <div class="row">
+
+      <!-- HOME -->
+      <div><div class="cap">Home · LIVE SASA</div>
+      <div class="phone light">
+        <div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="h-head"><b>Soko<i>Hai</i></b><span class="ic"><span>🔍</span><span>🔔</span></span></div>
+        <div class="h-sec">LIVE SASA <span class="tag t-old">IPO</span></div>
+        <div class="h-cards">
+          <div class="h-card"><div class="h-live">🧑🏾‍💼<span class="pill-live">● LIVE</span><span class="pill-view">👁 1.2K</span></div>
+            <div class="h-prod"><span class="im">👟</span><div><b>Nike Air Max Auction</b><small>🔨 Mnada · TSh 165,000</small></div></div>
+            <button class="jb">Jiunge na Mnada</button></div>
+          <div class="h-card"><div class="h-live">👩🏾‍💼<span class="pill-live">● LIVE</span><span class="pill-view">👁 860</span></div>
+            <div class="h-prod"><span class="im">💻</span><div><b>Laptop Offer Live</b><small>📉 Price Drop · −17%</small></div></div>
+            <button class="jb">Jiunge na Ofa</button></div>
+        </div>
+        <div class="h-cards" style="padding-top:0">
+          <div class="h-card"><div class="h-live">🧑🏾‍🌾<span class="pill-live">● LIVE</span><span class="pill-view">👁 430</span></div>
+            <div class="h-prod"><span class="im">🍚</span><div><b>Mchele Group Buy</b><small>👥 18/25 · TSh 64,000</small></div></div>
+            <button class="jb">Jiunge na Kikundi</button></div>
+        </div>
+        <div class="h-nav"><div class="on"><i>🏠</i>Home</div><div><i>🧭</i>Explore</div><div><i class="h-plus">+</i></div><div><i>💬</i>Comments</div><div><i>👤</i>Account</div></div>
+      </div></div>
+
+      <!-- AUCTION -->
+      <div><div class="cap">Live Mode: AUCTION (full-screen)</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="r-top"><span class="r-live">● LIVE</span><span class="r-view">👁 1.2K</span><button class="r-x">✕</button></div>
+        <div class="r-host"><span class="r-av">N</span><div><b>Namana Kamama</b><small>Seller presenter · ★ 4.8</small></div><button class="r-follow">+ Fuata</button></div>
+        <div class="stage">📱<span class="srv">◷ muda wa server <span class="tag t-new">MPYA</span></span><span class="ph2">🎥 video: Phase 2</span></div>
+        <div class="p-card"><span class="im">📱</span><div><b>Samsung Galaxy A55 5G</b><small>8GB/128GB · Mpya · Kariakoo</small><span class="pr">TSh 412,000 <small style="display:inline;opacity:.7">· zabuni ya sasa</small></span></div></div>
+        <div class="c-panel"><h4>🔨 Mnada Sasa</h4>
+          <div class="c-row"><small>Current Bid</small><b class="gold bignum">165,000 TZS</b></div>
+          <div class="c-row"><small>Zabuni ya mwisho</small><b>Ali_K</b></div>
+          <div class="c-row"><small>Idadi ya Zabuni</small><b>45</b></div>
+          <div class="c-row"><small>Time Left</small><b class="grn">02:30</b></div>
+          <div class="amt-row"><input placeholder="Amount · min 172,500"><button class="cta cta-green" style="padding:10px">Toa Zabuni</button></div>
+        </div>
+        <div class="rail"><div><i>❤️</i>1.2k</div><div><i>💬</i>84</div><div><i>↗️</i>Shiriki</div><div><i>🚩</i>Ripoti</div></div>
+        <div class="cbar"><span class="in">💬 Comments…</span><span class="ic">🎙</span><span class="ic">➤</span></div>
+      </div></div>
+
+      <!-- GROUP BUY -->
+      <div><div class="cap">Live Mode: GROUP BUY (full-screen)</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="r-top"><span class="r-live">● LIVE</span><span class="r-view">👁 1.2K</span><button class="r-x">✕</button></div>
+        <div class="r-host"><span class="r-av">N</span><div><b>Namana Kamama</b><small>Seller presenter · ★ 4.8</small></div><button class="r-follow">+ Fuata</button></div>
+        <div class="stage">🍚<span class="srv">◷ muda wa server <span class="tag t-new">MPYA</span></span><span class="ph2">🎥 video: Phase 2</span></div>
+        <div class="p-card"><span class="im">🍚</span><div><b>Mchele Mbeya 25kg</b><small>Msimu mpya · Agro Fresh</small><span class="pr">TSh 64,000 <small style="display:inline;opacity:.7">· badala ya 78,000</small></span></div></div>
+        <div class="c-panel"><h4>👥 Group Buy Sasa <span class="tag t-new">MPYA: kind+badge</span></h4>
+          <div class="c-row"><small>Target / Joiners</small><b>50 / 38</b></div>
+          <div class="bar"><i style="width:76%"></i></div>
+          <div class="c-row"><small>Progress</small><b class="gold">76%</b></div>
+          <div class="c-row"><small>Time Left</small><b class="grn">15 mins</b></div>
+          <button class="cta cta-gold">Jiunge na Group Buy<small>TSh 64,000 · wabaki 12</small></button>
+        </div>
+        <div class="rail"><div><i>❤️</i>980</div><div><i>💬</i>57</div><div><i>↗️</i>Shiriki</div><div><i>🚩</i>Ripoti</div></div>
+        <div class="cbar"><span class="in">💬 Comments…</span><span class="ic">🎙</span><span class="ic">➤</span></div>
+      </div></div>
+
+      <!-- PRICE DROP -->
+      <div><div class="cap">Live Mode: PRICE DROP (full-screen)</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="r-top"><span class="r-live">● LIVE</span><span class="r-view">👁 1.2K</span><button class="r-x">✕</button></div>
+        <div class="r-host"><span class="r-av">N</span><div><b>Namana Kamama</b><small>Seller presenter · ★ 4.8</small></div><button class="r-follow">+ Fuata</button></div>
+        <div class="stage">💻<span class="srv">◷ muda wa server <span class="tag t-new">MPYA</span></span><span class="ph2">🎥 video: Phase 2</span></div>
+        <div class="p-card"><span class="im">💻</span><div><b>Laptop Pro 14" M3</b><small>16GB/512GB · Duka la Tech</small><span class="pr">TSh 999,000 <small style="display:inline;opacity:.7">· −17%</small></span></div></div>
+        <div class="c-panel"><h4>📉 Bei Kushuka Sasa</h4>
+          <div class="c-row"><small>Old Price</small><b style="text-decoration:line-through;opacity:.6">1,208,060 TZS</b></div>
+          <div class="c-row"><small>New Price</small><b class="gold bignum">999,000 TZS</b></div>
+          <div class="c-row"><small>Discount</small><b class="grn">17% Punguzo</b></div>
+          <div class="c-row"><small>Stock Left</small><b>15</b></div>
+          <div class="c-row"><small>Offer Ends</small><b class="grn">05:00</b></div>
+          <button class="cta cta-green">Nunua Ofa<small>TSh 999,000 · Nafasi yako #3/41</small></button>
+        </div>
+        <div class="rail"><div><i>❤️</i>3.4k</div><div><i>💬</i>132</div><div><i>↗️</i>Shiriki</div><div><i>🚩</i>Ripoti</div></div>
+        <div class="cbar"><span class="in">💬 Comments…</span><span class="ic">🎙</span><span class="ic">➤</span></div>
+      </div></div>
+
+      <!-- DISCUSSION -->
+      <div><div class="cap">Comments: Majadiliano (sheet)</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="r-top"><span class="r-live">● LIVE</span><span class="r-view">👁 1.2K</span><button class="r-x">✕</button></div>
+        <div class="sheet"><div class="grab"></div><h4>💬 Majadiliano (84)</h4>
+          <div class="resume">↩ Uliacha hapa — ujumbe 12 mipya <span class="tag t-new">MPYA</span></div>
+          <div class="cmt"><span class="av">AM</span><div><span class="who">Asha M.<time>14:02</time></span><div>Simu ni mpya kabisa? Warranty iko?</div><div class="acts"><span>↩ Jibu (2)</span><span>❤️ 14</span><span>⋯</span></div></div></div>
+          <div class="cmt reply"><span class="av host">NK</span><div><span class="who">Namana<em>MUZAJI</em><time>14:03</time></span><div>Ndiyo, sealed na warranty mwaka 1! 📦</div><div class="acts"><span>❤️ 22</span><span>↩ Jibu</span></div></div></div>
+          <div class="cmt"><span class="av">BI</span><div><span class="who">Bra IT<time>14:05</time></span><div>Hii bei itapanda sana… 🔥🔥</div><div class="acts"><span>↩ Jibu</span><span>❤️ 8</span><span>⋯</span></div></div></div>
+          <button class="more">Pakia ujumbe zaidi (79) ↓</button>
+          <div class="note" style="margin:8px 0 10px">Collection moja · rate-limit 2s <span class="tag t-old">IPO</span> · replies/reactions/pagination/resume <span class="tag t-new">MPYA</span></div>
+        </div>
+        <div class="cbar"><span class="in">💬 Jibu Asha M…</span><span class="ic">➤</span></div>
+      </div></div>
+
+    </div>
+    <div class="note"><b>Tofauti na brief §7 (light UI):</b> reference yako ni <b>dark TikTok-style</b> — V2 inafuata reference (vyumba vyeusi + kijani/dhahabu za SokoHai). Kama unataka light badala yake, V1 (`live-interaction-v1.html`) ndiyo light. <b>Video:</b> stage inaonyesha bidhaa; camera streaming ni Phase 2 kama brief inavyosema.</div>
+  </div>
+</div>
+</body>
+</html>

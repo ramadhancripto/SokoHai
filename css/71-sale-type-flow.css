@@ -1,0 +1,245 @@
+/* ==========================================================================
+   SokoHai — CSS/71-sale-type-flow.css
+   [M1 2026-11-08] Kichaguzi cha aina ya mauzo kwa (+) → Bidhaa Sokoni.
+
+   KANUNI:
+   - Kila class ina kiambishi `skst-` (SokoHai Sale Type) ili kutogusa CSS nyingine.
+   - Hakuna kubadilisha `.overlay-menu`, `.form-box` wala `.menu-item`.
+   - Rangi: nyeupe/light, emerald #18A982, dhahabu #C9A227 kwa vitendo muhimu.
+   ========================================================================== */
+
+.skst-panel {
+    outline: none;              /* dialog inapokea focus, si kitufe cha kwanza */
+    width: 95%;
+    max-width: 460px;
+    max-height: 92vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #FFFFFF;
+    border-radius: 22px;
+    padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 18px 44px rgba(9, 44, 34, 0.20);
+    text-align: left;
+    animation: skstIn .18s ease-out;
+}
+
+@keyframes skstIn {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.skst-panel:focus,
+.skst-panel:focus-visible { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .skst-panel { animation: none; }
+}
+
+/* --- kichwa --- */
+.skst-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.skst-back {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 50%;
+    border: 1px solid #E5ECE9;
+    background: #FFFFFF;
+    color: #41534C;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.skst-back:hover { background: #F4F8F6; }
+.skst-back:focus-visible { outline: 2px solid #18A982; outline-offset: 2px; }
+
+.skst-title {
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: -0.2px;
+    color: #0E1F1A;
+    margin: 0;
+    line-height: 1.25;
+}
+
+.skst-step {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #6B7D77;
+    margin-top: 2px;
+}
+
+.skst-sub {
+    font-size: 12.5px;
+    color: #4A5F58;
+    margin: 8px 0 12px;
+    line-height: 1.5;
+}
+
+/* --- kadi za aina --- */
+.skst-list { display: flex; flex-direction: column; gap: 9px; }
+
+.skst-type {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: #FFFFFF;
+    border: 1px solid #E5ECE9;
+    border-radius: 16px;
+    padding: 12px;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    box-shadow: 0 2px 8px rgba(15, 60, 48, 0.05);
+    transition: border-color .15s, box-shadow .15s, transform .06s;
+}
+
+.skst-type:hover { border-color: #CDE5DC; }
+.skst-type:active { transform: scale(.995); }
+.skst-type:focus-visible { outline: 2px solid #18A982; outline-offset: 2px; }
+
+.skst-ic {
+    width: 42px;
+    height: 42px;
+    flex: none;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    background: #E6F5EE;
+    color: #0F7A5C;
+}
+
+.skst-type[data-type="auction"] .skst-ic   { background: #FFF6E0; color: #8A5A00; }
+.skst-type[data-type="group_buy"] .skst-ic { background: #EAF3FB; color: #1268A8; }
+.skst-type[data-type="price_drop"] .skst-ic { background: #F3EEFB; color: #6B46C1; }
+
+.skst-tx { flex: 1; min-width: 0; }
+
+.skst-name {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #0E1F1A;
+    letter-spacing: -0.1px;
+}
+
+.skst-desc {
+    display: block;
+    font-size: 11.8px;
+    color: #6B7D77;
+    margin-top: 2px;
+    line-height: 1.45;
+}
+
+.skst-go { flex: none; color: #A9BAB4; }
+
+/* --- "Zaidi ›" --- */
+.skst-more {
+    margin-top: 12px;
+    border: 1px dashed #D5E3DD;
+    border-radius: 13px;
+    overflow: hidden;
+    background: #FBFDFC;
+}
+
+.skst-more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 11px 12px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    color: #41534C;
+    cursor: pointer;
+}
+
+.skst-more-btn:focus-visible { outline: 2px solid #18A982; outline-offset: -3px; }
+
+.skst-more[data-open="1"] .skst-caret { transform: rotate(180deg); }
+.skst-caret { transition: transform .16s; color: #18A982; }
+
+.skst-more-body { display: none; padding: 0 10px 10px; }
+.skst-more[data-open="1"] .skst-more-body { display: block; }
+
+.skst-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    text-align: left;
+    background: #FFFFFF;
+    border: 1px solid #E5ECE9;
+    border-radius: 11px;
+    padding: 10px 11px;
+    margin-top: 7px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #22352F;
+    cursor: pointer;
+}
+
+.skst-link:hover { border-color: #CDE5DC; background: #F7FBFA; }
+.skst-link:focus-visible { outline: 2px solid #18A982; outline-offset: 2px; }
+.skst-link small { display: block; font-size: 10.8px; font-weight: 600; color: #6B7D77; margin-top: 1px; }
+.skst-link .skst-ic { width: 32px; height: 32px; border-radius: 10px; }
+
+/* --- taarifa ya chini --- */
+.skst-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-top: 12px;
+    background: #E6F5EE;
+    border: 1px solid #CDEDE0;
+    border-radius: 12px;
+    padding: 10px 11px;
+    font-size: 11.6px;
+    line-height: 1.5;
+    color: #0B5B45;
+}
+
+.skst-note svg { flex: none; margin-top: 1px; }
+.skst-note b { font-weight: 800; }
+
+/* --- simu ndogo --- */
+@media (max-width: 380px) {
+    /* [M1 · owner condition 2, 2026-11-08] Ubanaji wa kichaguzi kwa simu 320/360 pekee.
+       Kipimo cha awali: 320×568 → panel 484px lakini maudhui 645px (scroll 161px, kadi ya 4 inakatwa);
+       360×640 → scroll 63px. Sasa tunapunguza NAFASI pekee (padding/gap/margins/line-height) —
+       ukubwa wa herufi haubadiliki hata kidogo (title 16px, name 13.6px, desc 11.2px, note 11.6px)
+       na urefu wa kadi unabaki >44px kwa mguso. 390px na desktop haziguswi (media query hii ni ≤380px). */
+    .skst-panel { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); border-radius: 18px; }
+    .skst-title { font-size: 16px; }
+    .skst-head { margin-bottom: 0; }
+    .skst-sub { margin: 4px 0 8px; line-height: 1.45; }
+    .skst-list { gap: 6px; }
+    .skst-type { padding: 9px 10px; gap: 10px; }
+    .skst-ic { width: 34px; height: 34px; border-radius: 11px; }
+    .skst-name { font-size: 13.6px; }
+    .skst-desc { font-size: 11.2px; line-height: 1.38; }
+    .skst-more { margin-top: 6px; }
+    .skst-more-btn { padding: 8px 12px; }
+    .skst-note { margin-top: 8px; padding: 8px 10px; line-height: 1.42; }
+}
+
+/* --- desktop: kitufe cha kufunga juu-kulia --- */
+@media (min-width: 720px) {
+    .skst-panel { max-width: 480px; padding: 20px 20px 18px; }
+    .skst-type { padding: 13px 14px; }
+}

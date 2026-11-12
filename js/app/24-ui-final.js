@@ -324,7 +324,9 @@ document.addEventListener('keydown', e => {
         await saveDeliveryPermissionTokens(coreRef.id, core, shipRef.id, stages);
         await skh.addDoc(skh.collection(skh.db,'logistics_assignments'), { ...shipment, shipmentDocId:shipRef.id, assignmentStatus:'new_assignment', logisticsDashboardStatus:'pending_acceptance' });
         await skh.addDoc(skh.collection(skh.db,'seller_order_inbox'), { sellerId:sid, orderId, transactionToken, trackingToken:core.trackingToken, sokopayCoreId:coreRef.id, shipmentDocId:shipRef.id, buyerDetails:{buyerId:core.buyerId,buyerName:core.buyerName}, paymentStatus:core.paymentStatus, escrowStatus:core.escrowStatus, selectedShippingCompany:carrier.company||carrier.name, vehicle:shipment.vehicleType, shippingInstructions:shipment.specialInstructions, pickupAddress:shipment.pickupLocation, deliveryAddress:shipment.deliveryAddress, shipmentStatus:shipment.status, items:sellerItems, createdAt:now(), status:'new_order' });
-        await skh.addDoc(skh.collection(skh.db,'orders'), { ...core, sokopayCoreId:coreRef.id, shipmentDocId:shipRef.id, status:'payment_pending', itemTitle:`Smart Cart Order (${sellerItems.length} items)`, shipping:{method:carrier.service, carrier, shipment}, orderNotes:shipment.specialInstructions, paymentMethod:window.smartCartState?.paymentMethod||'sokopay_wallet' });
+        // [PHASE B 2026-11-10] escrowStatus ni server-only kwenye orders create — iondolewe kwenye spread.
+        const { escrowStatus: _skhDropEsc, ...coreForOrder } = core;
+        await skh.addDoc(skh.collection(skh.db,'orders'), { ...coreForOrder, sokopayCoreId:coreRef.id, shipmentDocId:shipRef.id, status:'payment_pending', itemTitle:`Smart Cart Order (${sellerItems.length} items)`, shipping:{method:carrier.service, carrier, shipment}, orderNotes:shipment.specialInstructions, paymentMethod:window.smartCartState?.paymentMethod||'sokopay_wallet' });
       }
       await skh.addDoc(skh.collection(skh.db,'smart_cart_checkouts'), { orderId, transactionToken, buyerId:skh.currentUser.uid, sokopayCoreIds:coreIds, items, totals:calc, selectedCarrier:carrier, paymentMethod:window.smartCartState?.paymentMethod||'sokopay_wallet', createdAt:now() });
       sessionStorage.setItem('pending_sokopay_core_ids', JSON.stringify(coreIds));
@@ -411,6 +413,31 @@ document.addEventListener('keydown', e => {
         max-height:92vh !important;
         overflow-y:auto !important;
         -webkit-overflow-scrolling:touch !important;
+    }
+
+    /* [FIX 2026-11-08 · owner condition 1] FOMU YA MUUZAJI (#sellerForm) LAZIMA IKAE JUU YA BOTTOM NAV.
+       Chanzo kilichopatikana kwa audit (si kubuni): kanuni iliyo juu inalazimisha max-height:92vh kwa
+       .form-box YOTE, wakati #sellerForm ni position:fixed + translate(-50%,-50%) na chombo chake cha
+       nyuma #plusMenu kina urefu wa 88vh pekee. Kadi iliyowekwa katikati (centered) iliyo ndefu kuliko
+       chombo chake hutoka pande ZOTE MBILI: kipimo halisi → top:-11px @320, -13px @360, -17px @390
+       (kona ya juu + padding hukatwa, <h3> hukaa kona-kona na ukingo) na iligusa nav kwa 10px @320 / 3px @360.
+       Suluhisho (simu pekee, #sellerForm pekee — fomu/modals zingine haziguswi): fomu inakuwa kipengele
+       cha kawaida cha mtiririko ndani ya #plusMenu, ambacho urefu wake tayari unaishia JUU ya bottom nav;
+       hivyo max-height:100% hupimwa dhidi ya boksi sahihi — hakuna namba ya kubuni ya urefu wa nav.
+       Kitufe cha kufunga ("Rudi") kinabaki mahali pake palipokuwa — hakihamishwi, ili kisifunike maudhui. */
+    @media (max-width: 768px) {
+        #plusMenu > #sellerForm {
+            position: relative !important;
+            inset: auto !important;
+            transform: none !important;
+            margin: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: 100% !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
     }
 
     /* Prevent cart/logistics panels leaking into normal home/search area */

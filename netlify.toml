@@ -2,7 +2,10 @@
 # The repository root holds server code, tests, reports and seed scripts that
 # must never be served. `--check` fails the deploy if a forbidden file appears.
 [build]
-  command = "node tools/build_dist.mjs --check"
+  # [AWAMU D2 2026-11-08] Minification imeunganishwa hapa: build + check + uthibitisho
+  # wa usawa wa token. Kama uthibitisho unashindwa, deploy inakatishwa.
+  # Kurudi nyuma ni mstari mmoja: node tools/build_dist.mjs --check
+  command = "node tools/build_dist.mjs --minify --check"
   publish = "dist"
 
 [build.environment]
@@ -15,6 +18,12 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "SAMEORIGIN"
     Permissions-Policy = "camera=(self), microphone=(), geolocation=(self), payment=(self)"
+    # [SECURITY 2026-11-08] HSTS ilikuwa haipo. Netlify inatoa HTTPS; header hii
+    # inailazimisha kwa miaka 2 na inajumuisha subdomains.
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    # [SECURITY 2026-11-08] CSP haijawekwa kwa makusudi: index.html ina 400+
+    # inline handler (onclick="..."). script-src 'self' ingevunja mfumo mzima.
+    # CSPReportOnly inaweza kuwekwa baadaye baada ya kuhamisha handlers.
 
 [[headers]]
   for = "/index.html"

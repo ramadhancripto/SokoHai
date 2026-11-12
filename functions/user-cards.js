@@ -60,6 +60,15 @@ function buildUserCard(u, docId) {
     BOOL_FIELDS.forEach(k => { if (typeof u[k] === 'boolean') card[k] = u[k]; });
     NUM_FIELDS.forEach(k => { if (Number.isFinite(Number(u[k])) && u[k] !== null && u[k] !== '') card[k] = Number(u[k]); });
     if (Array.isArray(u.followers)) card.followersCount = u.followers.length;
+    // [R9] public trust projection (status only; evidence stays in trust_badges, admin-readable).
+    if (u.trust && typeof u.trust === 'object') {
+        const tr = {};
+        ['account', 'supplier'].forEach(k => {
+            const b = u.trust[k];
+            if (b && typeof b === 'object' && ['active', 'suspended', 'revoked'].indexOf(b.status) !== -1) tr[k] = { status: b.status, since: String(b.since || '').slice(0, 40) };
+        });
+        if (Object.keys(tr).length) card.trust = tr;
+    }
     // Approved-agent badge only when the server stamped the approval (B-03).
     if (u.isApprovedAgent === true && (u.agentApprovedBy || u.approvedBy)) card.isApprovedAgent = true;
     // Business contact number: only for business accounts that chose to sell.

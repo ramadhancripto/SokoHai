@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview 2 — Auction Live Mode</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{background:#0f172a;display:flex;gap:24px;justify-content:center;padding:24px;flex-wrap:wrap}
+.phone{width:390px;max-width:94vw;background:#0f172a;border-radius:28px;overflow:hidden;border:3px solid #334155;color:#fff}
+.banner{background:#7c3aed;color:#fff;font-size:11px;font-weight:800;text-align:center;padding:6px}
+.stage{height:230px;background:linear-gradient(180deg,#1e293b,#0f172a);position:relative;display:flex;align-items:center;justify-content:center}
+.stage .play{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.pills{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center}
+.live{background:#ef4444;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px}
+.view{background:rgba(0,0,0,.55);font-size:11px;padding:3px 10px;border-radius:20px}
+.x{background:rgba(0,0,0,.55);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px}
+.min{background:rgba(0,0,0,.55);border:none;color:#fff;height:32px;border-radius:16px;font-size:12px;padding:0 12px;font-weight:700}
+.panel{background:#fff;color:#0f172a;border-radius:18px 18px 0 0;padding:14px;margin-top:-14px;position:relative}
+.tag{font-size:10px;font-weight:900;color:#b45309;background:#fef3c7;display:inline-block;padding:2px 8px;border-radius:6px}
+.panel h2{font-size:15px;margin:4px 0}
+.bidrow{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin:8px 0}
+.bidrow small{color:#64748b;display:block;font-size:10px}
+.bidrow b{font-size:16px}.timer{color:#dc2626;font-weight:900}
+.leader{font-size:11px;color:#64748b;margin-bottom:6px}
+.amounts{display:flex;gap:6px;margin:8px 0}
+.amounts button{flex:1;border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 0;font-weight:800;font-size:12px}
+.bidbtn{width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900}
+.comments{padding:10px 14px 4px;font-size:12px}
+.c{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 10px;margin-bottom:6px}
+.c b{color:#93c5fd}
+.cinput{display:flex;gap:6px;padding:8px 14px 14px}
+.cinput input{flex:1;border-radius:20px;border:1px solid #334155;background:#1e293b;color:#fff;padding:10px 14px;font-size:13px}
+.cinput button{background:#6366f1;border:none;color:#fff;border-radius:20px;padding:0 16px;font-weight:800}
+.bind{background:#fffbeb;color:#92400e;border-radius:12px;margin:0 14px 14px;padding:10px;font-size:10.5px;line-height:1.7;border:1px dashed #d97706}
+.note{width:390px;max-width:94vw;color:#e2e8f0;font-size:12px;line-height:1.8}.note h3{color:#fff;margin-bottom:6px}.note code{background:#1e293b;padding:1px 6px;border-radius:6px;font-size:11px}
+</style></head><body>
+<div class="phone">
+<div class="banner">DESIGN PREVIEW — mock data (layout tu)</div>
+<div class="stage"><div class="pills"><div><span class="live">● LIVE</span> <span class="view">👁 1.2k</span></div><div><button class="min">⤢ Punguza</button> <button class="x">✕</button></div></div><div class="play">▶</div></div>
+<div class="panel"><span class="tag">MNADA</span><h2>Kuku wa Kienyeji (5)</h2>
+<div class="bidrow"><div><small>DAU LA JUU</small><b>TZS 45,000</b></div><div style="text-align:right"><small>INAISHA</small><b class="timer">04:32</b></div></div>
+<div class="leader">Anaongoza: <b>Juma M.</b> · Dau linalofuata (min): <b>TZS 47,500</b></div>
+<div class="amounts"><button>47,500</button><button>50,000</button><button>55,000</button><button>+</button></div>
+<button class="bidbtn">Weka Dau — TZS 47,500</button></div>
+<div class="comments"><div class="c"><b>Asha:</b> Kuku wanoneshana vizuri sana!</div><div class="c"><b>Juma M.:</b> Naongeza dau langu 🔥</div></div>
+<div class="cinput"><input placeholder="Andika maoni..."><button>Tuma</button></div>
+<div class="bind"><b>Bindings halisi:</b> dau/leader ← <b>modeData.currentBid/maxBidder</b> (bids halisi) · timer ← <b>modeData.endTime</b> (server; anti-snipe) · min ← <b>minNextBid</b> · Weka Dau ← <b>auctionPlaceBid</b> (clientBidId) · maoni ← <b>liveComment</b> · Fungua ← <b>skhLiveClose</b> (leave iliyopo).</div>
+</div>
+<div class="note"><h3>2. Auction Live Mode</h3>
+<p>Chumba cha mnada: video + panel ya zabuni + maoni. Kitufe <b>Punguza</b> → Mini Player (bila ku-leave).</p>
+<p>Mobile: keyboard ikifunguka (comment input), panel ya zabuni inabaki juu ya keyboard; video hupungua (haijifichi). Landscape: video kushoto, zabuni kulia.</p>
+<p>Files: <code>120-live-commerce-ui.js</code> (skhLiveOpen/renderRoomShell/auctionRows — tayari), <code>commerce-modes.js</code> (tayari). Hakuna logic mpya ya bei.</p></div>
+</body></html>

@@ -17,7 +17,7 @@
  html/00-head.html                                 |  153 +-
  html/03-modals-core.html                          |   13 +-
  html/06-modals-social.html                        |   10 +-
- html/14-haipay.html                               |    6 +-
+ html/14-sokopay.html                               |    6 +-
  html/15-main-menu.html                            |    2 +-
  html/16-topnav.html                               |    4 +-
  html/18-buyer-view.html                           |    4 +-

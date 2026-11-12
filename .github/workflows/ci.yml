@@ -1,0 +1,97 @@
+name: SokoHai CI
+
+# [OPERATIONS 2026-11-08] Langoya kwanza la CI kwa mradi huu.
+#
+# Kwa nini hii ni muhimu: hadi sasa hakuna kitu kinachozuia mtu kusambaza
+# build iliyovunjika, au kusambaza dist/ bila kuipima. Faida zote za
+# minification (Awamu D2) zinapotea kimya kimya ikiwa hakuna lango.
+#
+# Hii ni hatua ya kusoma pekee: hai-deploy, hai-commit, haiandiki kwenye
+# Firestore. Inakimbia tu majaribio na uthibitisho.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+# Kama kuna push mpya kwenye tawi lile lile, kimbiza ya zamani inakatishwa.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1. Majaribio yote + uthibitisho wa build ya HTML
+  # ------------------------------------------------------------------
+  test:
+    name: Majaribio (npm test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Sakinisha dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Sakinisha dependencies za functions/
+        # functions/ ina package-lock.json yake; `npm ci` ni strict kwa makusudi.
+        run: npm --prefix functions ci --no-audit --no-fund
+
+      - name: Endesha majaribio yote
+        run: npm test
+
+  # ------------------------------------------------------------------
+  # 2. Build ya HTML: html/ -> index.html lazima iwe byte-exact
+  # ------------------------------------------------------------------
+  build-html:
+    name: Build ya HTML (byte-exact)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+
+      - name: 'build_html.py check'
+        run: python3 tools/build_html.py check
+
+  # ------------------------------------------------------------------
+  # 3. Build ya dist + minification + uthibitisho wa usawa wa token
+  #    Hii ndiyo inayolinda Awamu D2 dhidi ya kurudi nyuma.
+  # ------------------------------------------------------------------
+  dist:
+    name: dist + minify + usawa wa token
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Sakinisha dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build ya kawaida (bila flag) — lazima ifanye kazi
+        run: node tools/build_dist.mjs --check
+
+      - name: Build + minify + uthibitisho wa usawa
+        run: node tools/build_dist.mjs --minify --check
+
+      - name: Ripoti ukubwa
+        if: always()
+        run: |
+          echo "### Ukubwa wa dist/js" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          du -sh dist/js 2>/dev/null || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

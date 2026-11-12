@@ -38,7 +38,7 @@ FRAGMENTS = [
     ('11-form-driver.html',         '<!-- FOMU YA WAKALA KUSAJILI MWANACHAMA (OFFLINE)'),
     ('12-form-offline.html',        '<!-- FOMU YA KUHARIRI TANGAZO (EDIT MODAL)'),
     ('13-form-edit.html',           '<!-- 1. LEFT SIDEBAR OF SOKOPAY'),
-    ('14-haipay.html',              '<!-- MAIN MENU (PLUS BUTTON)'),
+    ('14-sokopay.html',              '<!-- MAIN MENU (PLUS BUTTON)'),
     ('15-main-menu.html',           '<!-- 1. Top Row -->'),
     ('16-topnav.html',              '<!-- 4. Kitufe Kipya cha Kategoria & Sliders -->'),
     ('17-sliders.html',             '<!-- 5 KPI CARDS ROW -->'),

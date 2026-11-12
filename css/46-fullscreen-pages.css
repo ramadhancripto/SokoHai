@@ -181,7 +181,9 @@ html body #productModal .pm-image-slider > div { height: 100% !important; }
 html body #productModal .pm-image-slider img {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;   /* picha ijaze safu — hakuna mabaka matupu */
+    /* [2026-11-06] Agizo la mwenye mfumo (Master audit §5.1): picha ya bidhaa
+       ISIKATWE — contain juu ya mandhari nyepesi (bidhaa inaonekana yote). */
+    object-fit: contain !important;
     background: #EEF3F1 !important;
 }
 @media (min-width: 901px) {

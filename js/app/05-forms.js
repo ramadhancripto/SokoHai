@@ -2,7 +2,7 @@
 import { skh } from './00-bootstrap.js';
 // Canonical taxonomy is the authority for the visible seller category list.
 // Existing skh.advancedCategories is still passed in, unchanged, for compatibility.
-import { getSellerCategoryOptions, getSellerSubcategories } from '../../shared/product-taxonomy-bridge.mjs';
+import { getSellerCategoryOptions, getSellerSubcategories, getProductTypeOptions, ensureTaxonomyDefinitions, taxonomyDefinitionsLoaded } from '../../shared/product-taxonomy-bridge.mjs';
 import { visibilityForBusinessMode, sellerFormRules, duplicateTemplate, DRAFT_FIELDS, draftKey, draftHasContent } from '../../shared/product-listing-core.mjs';
 
 /* [REPAIR 2026-10 B-15] Products now store the canonical category id (e.g.
@@ -11,6 +11,7 @@ import { visibilityForBusinessMode, sellerFormRules, duplicateTemplate, DRAFT_FI
 window.skhCategoryLabel = function (v) {
     try {
         const s = String(v == null ? '' : v); if (!/^CAT-\d+$/.test(s)) return s;
+        if (typeof skh.categoryLabel === 'function') return skh.categoryLabel(s) || s; // [R4/R5] small identity module
         const o = getSellerCategoryOptions(skh.advancedCategories || {}).find(x => x && x.value === s);
         return (o && o.label) || s;
     } catch (e) { return String(v == null ? '' : v); }
@@ -468,7 +469,11 @@ document.querySelectorAll('form').forEach(form => form.reset());
         const cats = getSellerCategoryOptions(skh.advancedCategories || {});
         cats.forEach(c => {
             out.push({ cat: c.value, catLabel: c.label, leaf: '', text: norm(c.label + ' ' + c.value) });
-            getSellerSubcategories(c.value, skh.advancedCategories || {}).forEach(leaf => out.push({ cat: c.value, catLabel: c.label, leaf, text: norm(leaf + ' ' + c.label) }));
+            getSellerSubcategories(c.value, skh.advancedCategories || {}).forEach(leaf => {
+                out.push({ cat: c.value, catLabel: c.label, leaf, text: norm(leaf + ' ' + c.label) });
+                // [2026-11-06] Owner taxonomy: "Jembe", "QLED TV", "Tanzanite" find their exact branch.
+                getProductTypeOptions(c.value, leaf).forEach(pt => out.push({ cat: c.value, catLabel: c.label, leaf, typeId: pt.id, typeLabel: pt.label, text: norm(pt.label + ' ' + leaf + ' ' + c.label) }));
+            });
         });
         return out;
     }
@@ -477,17 +482,26 @@ document.querySelectorAll('form').forEach(form => form.reset());
         const box = $('prodTaxonomyResults'); if (!box) return [];
         const words = norm(q).split(/\s+/).filter(Boolean);
         if (!words.length) { box.innerHTML = ''; return []; }
-        index = index || taxonomyIndex();
-        const hits = index.filter(r => words.every(w => r.text.includes(w)))
-            .sort((a, b) => (a.leaf ? 0 : 1) - (b.leaf ? 0 : 1)).slice(0, 8);
+        // [R11] product types live in the lazily loaded definitions: search categories/leaves
+        // now, and refresh with product types as soon as they arrive (index cached only then).
+        if (!taxonomyDefinitionsLoaded()) ensureTaxonomyDefinitions().then(() => {
+            index = null; const i = $('prodTaxonomySearch'); if (i && i.value.trim()) window.skhSellerTaxonomySearch(i.value);
+        }).catch(() => {});
+        const idx = index || taxonomyIndex(); if (taxonomyDefinitionsLoaded()) index = idx;
+        // Exact product-type name first, then product types, then branches, then categories.
+        const qn = norm(q).trim();
+        const rank = r => (r.typeLabel && norm(r.typeLabel) === qn ? 0 : r.typeLabel ? 1 : r.leaf ? 2 : 3);
+        const hits = idx.filter(r => words.every(w => r.text.includes(w)))
+            .sort((a, b) => rank(a) - rank(b)).slice(0, 8);
         const esc = v => String(v).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
-        box.innerHTML = hits.length ? hits.map((h, i) => `<button type="button" role="option" data-tx="${i}" style="text-align:left; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; background:white; cursor:pointer;">${esc(h.leaf || h.catLabel)}${h.leaf ? ` <small style="color:#64748b;">· ${esc(h.catLabel)}</small>` : ''}</button>`).join('')
+        box.innerHTML = hits.length ? hits.map((h, i) => `<button type="button" role="option" data-tx="${i}" style="text-align:left; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; background:white; cursor:pointer;">${esc(h.typeLabel || h.leaf || h.catLabel)}${h.typeLabel ? ` <small style="color:#64748b;">· ${esc(h.catLabel)} › ${esc(h.leaf)}</small>` : (h.leaf ? ` <small style="color:#64748b;">· ${esc(h.catLabel)}</small>` : '')}</button>`).join('')
             : '<small style="color:#64748b;">Hakuna kinacholingana. Chagua kwenye orodha hapa chini au tumia "Nyingine".</small>';
         box.querySelectorAll('[data-tx]').forEach(btn => btn.addEventListener('click', () => {
             const h = hits[Number(btn.dataset.tx)];
             setField('prodCategory', h.cat); if (window.updateFormSubcats) window.updateFormSubcats();
             if (h.leaf) setField('prodSubCategory', h.leaf);
-            box.innerHTML = `<small style="color:#0f6e55;">Umechagua: ${esc(h.catLabel)}${h.leaf ? ' › ' + esc(h.leaf) : ''}</small>`;
+            setField('prodTaxonomyProductTypeId', h.typeId || ''); setField('prodTaxonomyProductTypeLabel', h.typeLabel || '');
+            box.innerHTML = `<small style="color:#0f6e55;">Umechagua: ${esc(h.catLabel)}${h.leaf ? ' › ' + esc(h.leaf) : ''}${h.typeLabel ? ' › ' + esc(h.typeLabel) : ''}</small>`;
             $('prodTaxonomySearch').value = '';
             window.skhSellerFormProgress(); scheduleSave();
         }));
@@ -508,6 +522,8 @@ document.querySelectorAll('form').forEach(form => form.reset());
         if (t.category) { setField('prodCategory', t.category); if (window.updateFormSubcats) window.updateFormSubcats(); setField('prodSubCategory', t.subCategory || t.subcategory); }
         if (t.offlineCategory) setField('prodOfflineCategory', t.offlineCategory);
         setField('prodProductType', t.productType); setField('prodCondition', t.condition);
+        // [REMEDIATION R5] keep the canonical product type (save re-checks it against the branch)
+        setField('prodTaxonomyProductTypeId', t.productTypeId || ''); setField('prodTaxonomyProductTypeLabel', t.productTypeLabel || '');
         setField('prodBaseUnit', t.baseUnit); setField('prodHasBulk', t.hasBulkPackaging === true);
         setField('prodBulkUnit', t.bulkUnit); setField('prodConversionRatio', t.conversionRatio);
         setField('prodPrice', t.price); setField('prodBuyPrice', t.buyPrice); setField('prodWholesalePrice', t.wholesalePrice);

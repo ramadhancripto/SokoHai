@@ -321,7 +321,7 @@ import { skh } from './00-bootstrap.js';
         }, payload || {}, (window.skhEnvStamp ? window.skhEnvStamp() : {}));
 
         try {
-            var ref = await skh.addDoc(skh.collection(skh.db, 'ride_requests'), body);
+            var ref = await skh.createRideRequest(body); // [REMEDIATION R1] PII split
             // Unganisha na oda (§27 — traceable)
             if (c.orderId) {
                 try {

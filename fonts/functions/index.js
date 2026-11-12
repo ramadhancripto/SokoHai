@@ -7,7 +7,7 @@
  *
  *   walletAdjust            — mabadiliko YOTE ya salio la wallet (atomic + ledger)
  *   escrowRelease           — kutoa escrow ya marketplace (smart-split kamili)
- *   haipayReleaseLink       — kutoa escrow ya SokoPay payment link
+ *   sokopayReleaseLink       — kutoa escrow ya SokoPay payment link
  *   pesapalCheckout         — kuanzisha malipo ya PesaPal (secret iko server pekee)
  *   pesapalTransactionStatus— kuangalia hali ya muamala wa PesaPal
  *   pesapalIpn              — (HTTP) PesaPal anaripoti malipo yalipokamilika (IPN)
@@ -380,9 +380,9 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
 });
 
 /* ============================================================
- * 4) haipayReleaseLink — kutoa escrow ya SokoPay payment link
+ * 4) sokopayReleaseLink — kutoa escrow ya SokoPay payment link
  * ========================================================== */
-exports.haipayReleaseLink = onCall({ region: REGION }, async (req) => {
+exports.sokopayReleaseLink = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);
     const linkId = String((req.data || {}).linkId || '');
     if (!linkId) throw new HttpsError('invalid-argument', 'linkId inahitajika.');
@@ -419,7 +419,7 @@ exports.haipayReleaseLink = onCall({ region: REGION }, async (req) => {
         if (rel.exists) return;
 
         t.set(db.doc('wallet_ledger/' + releaseKey), {
-            linkId, type: 'haipay_release', callerUid: auth.uid, createdAt: now
+            linkId, type: 'sokopay_release', callerUid: auth.uid, createdAt: now
         });
         t.update(linkRef, { status: 'completed', sellerEarned, platformFee, completedAt: now });
 

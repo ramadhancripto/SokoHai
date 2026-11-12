@@ -654,7 +654,10 @@ html body #chatModal #chatMessages .ch-msg.ch-swipe-release .chat-bubble { anima
 .skh-sheet {
     position: fixed;
     inset: 0;
-    z-index: 2147483000;
+    /* [FIX 2026-11-11] ilikuwa 2147483000 (max) — ilifunika live UI (room 7400,
+       modal 100030, mini 100020). Sasa 9000: juu ya live room (7400) lakini chini
+       ya live modal/mini, ili chat actions zifanye kazi juu ya live bila kuifunika. */
+    z-index: 9000;
     display: flex;
     align-items: flex-end;
     justify-content: center;

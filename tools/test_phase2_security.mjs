@@ -33,7 +33,8 @@ if (!FS_HOST || !AUTH_HOST) {
     '  Endesha: firebase emulators:exec --only firestore,auth --project demo-sokohai "node tools/test_phase2_security.mjs"');
   process.exit(2);
 }
-const PROJECT = 'demo-sokohai';
+/* [PHASE K 2026-11-10 T14] Heshimu project ya emulator (battery: demo-sokohai-g1); fallback ni ya awali. */
+const PROJECT = process.env.GCLOUD_PROJECT || 'demo-sokohai';
 process.env.GCLOUD_PROJECT = PROJECT;
 process.env.GOOGLE_CLOUD_PROJECT = PROJECT;
 process.env.FIREBASE_CONFIG = JSON.stringify({ projectId: PROJECT, storageBucket: PROJECT + '.appspot.com' });
@@ -96,6 +97,11 @@ async function wipe() {
 }
 const bal = async (uid) => Number(((await db.doc('users/' + uid).get()).data() || {}).walletBalance || 0);
 const user = (uid, extra) => db.doc('users/' + uid).set(Object.assign({ uid, fullName: uid, walletBalance: 0 }, extra || {}));
+// [REMEDIATION R2] transporters in these fixtures are admin-approved agents
+// (deliveryAccept now requires users.isApprovedAgent + agentApprovedBy).
+const AGENT = { isApprovedAgent: true, agentApprovedBy: 'admin_test' };
+const isTransporterFixture = (u) => /^driver/.test(u) || u === 'eve';
+const seedUsers = async (list) => { for (const u of list) await user(u, isTransporterFixture(u) ? AGENT : null); };
 const hoursAgo = (h) => new Date(Date.now() - h * 3600e3).toISOString();
 const exists = async (p) => (await db.doc(p).get()).exists;
 // Malipo ya PesaPal yaliyoanzishwa na `uid` kupitia pesapalCheckout (rekodi ya server)
@@ -202,7 +208,7 @@ async function main() {
   /* ================= P1 — nauli iliyogandishwa / carrier ================= */
   group = 'P1 fare/carrier'; console.log('\n[' + group + ']');
   await wipe();
-  for (const u of ['buyer', 'seller', 'driver', 'driver2', 'eve']) await user(u);
+  await seedUsers(['buyer', 'seller', 'driver', 'driver2', 'eve']);
   const B = await idToken('p1buyer'), S = await idToken('p1seller'), X = await idToken('p1stranger'), D = await idToken('p1driver');
 
   await test('T1 mgeni hawezi kubadilisha fare/price/status/driverId ya safari (REST)', async () => {
@@ -366,7 +372,7 @@ async function main() {
   /* ================= P3 — auto-release / stuck completed ================= */
   group = 'P3 auto-release'; console.log('\n[' + group + ']');
   await wipe();
-  for (const u of ['buyer', 'seller', 'driver']) await user(u);
+  await seedUsers(['buyer', 'seller', 'driver']);
 
   await test('T15 oda "completed" ya kivinjari yenye hold isiyotolewa — escrow inatolewa mara moja (si "already")', async () => {
     await paidOrder('o15', 10000);
@@ -523,7 +529,7 @@ async function main() {
   /* ================= P6 — deliveryAccept / token / rules za safari ================= */
   group = 'P6 ride acceptance'; console.log('\n[' + group + ']');
   await wipe();
-  for (const u of ['buyer', 'seller', 'driver', 'driver2', 'eve']) await user(u);
+  await seedUsers(['buyer', 'seller', 'driver', 'driver2', 'eve']);
 
   await test('T24 madereva wawili kwa wakati mmoja → mmoja tu anafanikiwa', async () => {
     for (let i = 0; i < 3; i++) {
@@ -604,6 +610,90 @@ async function main() {
     await db.doc('orders/o28b').update({ status: 'shipped', shippedAt: hoursAgo(72) });
     await autoRelease(30);
     eq(await bal('seller'), 17000, '"shipped" bila ushahidi haitoi pesa');
+  });
+
+  /* ================= R2 — deliveryAccept caller authorisation ================= */
+  group = 'R2 deliveryAccept authorisation'; console.log('\n[' + group + ']');
+  await wipe();
+  await seedUsers(['buyer', 'seller', 'driver', 'driver2']);
+  await user('notagent', { phone: '0700' });                                     // registered, not an agent
+  await user('legacyagent', { isApprovedAgent: true });                          // approval without admin stamp
+  await user('suspagent', Object.assign({ suspended: true }, AGENT));
+  await user('acctsusp', Object.assign({ accountStatus: 'suspended' }, AGENT));
+  await user('directdrv', { phone: '0755' });                                   // named by the customer
+  await test('R2-1 unauthenticated caller is rejected', async () => {
+    await newRide('a1');
+    denied(await call('deliveryAccept', null, { rideId: 'a1' }), ['unauthenticated'], 'no auth');
+  });
+  await test('R2-2 unregistered account (no users doc) is rejected', async () => {
+    denied(await call('deliveryAccept', 'ghost', { rideId: 'a1' }), ['permission-denied'], 'ghost');
+  });
+  await test('R2-3 registered but not an approved agent is rejected', async () => {
+    denied(await call('deliveryAccept', 'notagent', { rideId: 'a1' }), ['permission-denied'], 'not agent');
+    denied(await call('deliveryAccept', 'legacyagent', { rideId: 'a1' }), ['permission-denied'], 'unstamped legacy');
+  });
+  await test('R2-4 suspended agents are rejected', async () => {
+    denied(await call('deliveryAccept', 'suspagent', { rideId: 'a1' }), ['permission-denied'], 'suspended');
+    denied(await call('deliveryAccept', 'acctsusp', { rideId: 'a1' }), ['permission-denied'], 'accountStatus suspended');
+    const rd = await get('ride_requests/a1');
+    eq(rd.status, 'searching', 'ride untouched'); eq(rd.driverId, undefined, 'no driver assigned');
+  });
+  await test('R2-5 invalid / missing / path-like ride id', async () => {
+    denied(await call('deliveryAccept', 'driver', {}), ['invalid-argument'], 'missing');
+    denied(await call('deliveryAccept', 'driver', { rideId: 'a/../x' }), ['invalid-argument'], 'path');
+    denied(await call('deliveryAccept', 'driver', { rideId: 'nope' }), ['not-found'], 'unknown');
+  });
+  await test('R2-6 authorised agent accepts; identity comes from the account, not the request', async () => {
+    await user('driver', Object.assign({ phone: '0711111111', displayName: 'Juma' }, AGENT));
+    const a = await call('deliveryAccept', 'driver', { rideId: 'a1', driverPhone: '0999-SPOOF', driverName: 'Fake' });
+    assert(a.ok, a.message);
+    eq(Object.keys(a.data).sort().join(','), 'driverId,ok,status,token', 'minimal response');
+    const rd = await get('ride_requests/a1');
+    eq(rd.driverId, 'driver', 'assigned'); eq(rd.driverPhone, '0711111111', 'phone from users doc'); eq(rd.driverName, 'Juma', 'name from users doc');
+  });
+  await test('R2-7 already accepted by another agent → rejected; retry by winner is idempotent', async () => {
+    denied(await call('deliveryAccept', 'driver2', { rideId: 'a1' }), ['failed-precondition'], 'other agent');
+    const b = await call('deliveryAccept', 'driver', { rideId: 'a1' });
+    assert(b.ok && b.data.already, 'idempotent retry');
+  });
+  await test('R2-8 concurrent accepts by two authorised agents → exactly one wins', async () => {
+    await newRide('a8');
+    const rs = await Promise.all([call('deliveryAccept', 'driver', { rideId: 'a8' }), call('deliveryAccept', 'driver2', { rideId: 'a8' }), call('deliveryAccept', 'notagent', { rideId: 'a8' })]);
+    eq(rs.filter(x => x.ok).length, 1, 'one winner');
+    assert(!rs[2].ok, 'unauthorised caller never wins');
+  });
+  await test('R2-9 direct booking: the driver the customer named may accept; suspended named driver may not', async () => {
+    await newRide('a9', { status: 'pending_acceptance', driverId: 'directdrv' });
+    denied(await call('deliveryAccept', 'notagent', { rideId: 'a9' }), ['permission-denied', 'failed-precondition'], 'someone else');
+    const ok = await call('deliveryAccept', 'directdrv', { rideId: 'a9' }); assert(ok.ok, ok.message);
+    await user('directsusp', { suspended: true });
+    await newRide('a9b', { status: 'pending_acceptance', driverId: 'directsusp' });
+    denied(await call('deliveryAccept', 'directsusp', { rideId: 'a9b' }), ['permission-denied'], 'suspended named driver');
+  });
+  await test('R2-10 customer still cannot accept own ride even as approved agent', async () => {
+    await user('buyer', AGENT);
+    await newRide('a10');
+    denied(await call('deliveryAccept', 'buyer', { rideId: 'a10' }), ['permission-denied'], 'self');
+  });
+  await test('R2-11 routed offer: suspended agent cannot accept own offer', async () => {
+    await newRide('a11');
+    await db.doc('delivery_offers/a11_suspagent').set({ rideId: 'a11', agentId: 'suspagent', customerId: 'buyer', status: 'offered', expiresAt: new Date(Date.now() + 3600e3).toISOString() });
+    denied(await call('deliveryOfferAccept', 'suspagent', { offerId: 'a11_suspagent' }), ['permission-denied'], 'suspended offer');
+    eq((await get('ride_requests/a11')).driverId, undefined, 'ride not assigned');
+  });
+
+  await test('R5 deliveryTokenVerify: foreign token looks invalid; attempts are limited; party succeeds', async () => {
+    await newRide('v1');
+    const a = await call('deliveryAccept', 'driver', { rideId: 'v1' }); assert(a.ok, a.message);
+    const bad = await call('deliveryTokenVerify', 'driver2', { token: 'PK-00000000' });
+    const foreign = await call('deliveryTokenVerify', 'driver2', { token: a.data.token });
+    denied(bad, ['not-found'], 'invalid token'); denied(foreign, ['not-found'], 'foreign token');
+    eq(foreign.message, bad.message, 'same answer for invalid and foreign tokens');
+    for (let i = 0; i < 4; i++) await call('deliveryTokenVerify', 'driver2', { token: 'PK-0000000' + i });
+    denied(await call('deliveryTokenVerify', 'driver2', { token: a.data.token }), ['resource-exhausted'], 'limit reached');
+    const mine = await call('deliveryTokenVerify', 'driver', { token: a.data.token });
+    assert(mine.ok && mine.data.rideId === 'v1', 'participant verifies: ' + mine.message);
+    assert(!('token' in mine.data), 'token itself never returned');
   });
 
   /* ---------------- muhtasari ---------------- */

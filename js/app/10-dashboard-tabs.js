@@ -361,7 +361,7 @@ window.skhTransportBridgeHtml = function (tab) {
         + '    <div class="bos-panel-body">'
         + '      <p class="bos-tr-lead">' + skhEsc(m.d) + '</p>'
         + '      <p class="bos-tr-note">' + T('bos_tr_dep',
-            'Trips, cargo, drivers and tokens are stored in the <b>Transport System</b>, which is separate from a business account. A business account has no linked transport records, so no figures are invented here.') + '</p>'
+            'Safari, mizigo, madereva na tokens zinahifadhiwa kwenye <b>Mfumo wa Usafiri</b>, ambao ni tofauti na akaunti ya biashara. Akaunti hii ya biashara haina rekodi za usafiri zilizounganishwa, kwa hiyo hakuna takwimu zinazobuniwa hapa.') + '</p>'
         + '      <div class="bos-tr-actions">'
         + '        <button type="button" class="bos-btn" onclick="if(window.openModeMenu) window.openModeMenu();">'
                    + T('bos_tr_open', 'Open Transport System') + '</button>'

@@ -68,7 +68,7 @@ import { skh } from './00-bootstrap.js';
 
     var TABS = [
         ['overview', 'Muhtasari'], ['accounts', 'Akaunti'], ['agents', 'Mawakala'], ['prices', 'Ukaguzi wa Bei'],
-        ['disputes', 'Migogoro'], ['verify', 'Uthibitisho'], ['listings', 'Matangazo'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
+        ['disputes', 'Migogoro'], ['withdrawals', 'Kutoa Pesa'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
     ];
     function frame(inner) {
         var tabs = TABS.map(function (t) {
@@ -103,9 +103,10 @@ import { skh } from './00-bootstrap.js';
     var VIEWS = {};
 
     VIEWS.overview = async function () {
-        var counts = { price: '—', disputes: '—', legacy: '—', agentsPending: '—' };
+        var counts = { price: '—', disputes: '—', legacy: '—', agentsPending: '—', withdrawals: '—' };
         try { counts.price = (await skh.getDocs(skh.query(skh.collection(skh.db, 'orders'), skh.where('paymentStatus', '==', 'price_review'), skh.limit(200)))).size; } catch (e) {}
         try { counts.disputes = (await skh.getDocs(skh.query(skh.collection(skh.db, 'disputes'), skh.where('status', '==', 'open'), skh.limit(200)))).size; } catch (e) {}
+        try { counts.withdrawals = (await skh.getDocs(skh.query(skh.collection(skh.db, 'withdrawal_requests'), skh.where('status', '==', 'pending'), skh.limit(200)))).size; } catch (e) {}
         try {
             var s = await skh.getDocs(skh.query(skh.collection(skh.db, 'users'), skh.where('isApprovedAgent', '==', true), skh.limit(300)));
             var n = 0; s.forEach(function (d) { if (!(d.data() || {}).agentApprovedBy) n++; }); counts.legacy = n;
@@ -118,6 +119,7 @@ import { skh } from './00-bootstrap.js';
         return box('Kazi zinazosubiri', '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">'
             + tile('Oda kwenye ukaguzi wa bei', counts.price, 'prices')
             + tile('Migogoro iliyo wazi', counts.disputes, 'disputes')
+            + tile('Maombi ya kutoa pesa', counts.withdrawals, 'withdrawals')
             + tile('Mawakala wa zamani wa kuhakikiwa upya', counts.legacy, 'agents')
             + tile('Maombi mapya ya uwakala', counts.agentsPending, 'agents') + '</div>')
             + box('Kumbuka', '<ul style="margin:0;padding-left:18px;color:#334155;font-size:13px;line-height:1.6;">'
@@ -281,6 +283,42 @@ import { skh } from './00-bootstrap.js';
         catch (e) { toast(errText(e), 'error'); }
     };
 
+    /* [P5-C2 2026-11-10] Foleni ya maombi ya kutoa pesa. 'paid' = admin
+     * AMESHATUMA pesa nje (M-Pesa/benki mwongozo) — server hufunga ombi tu
+     * (salio lilishakatwa wakati wa request). 'rejected' = server hurudisha
+     * salio + ledger. Kila uamuzi una sababu + audit entry. */
+    VIEWS.withdrawals = async function () {
+        var rows = [];
+        try {
+            var s = await skh.getDocs(skh.query(skh.collection(skh.db, 'withdrawal_requests'), skh.where('status', '==', 'pending'), skh.limit(100)));
+            s.forEach(function (d) { rows.push({ id: d.id, data: d.data() || {} }); });
+        } catch (e) { return box('Kutoa Pesa', empty('Hitilafu: ' + esc(errText(e)))); }
+        return box('Maombi yanayosubiri (' + rows.length + ')',
+            empty('Bonyeza "Nimelipa" TU BAADA ya kutuma pesa kwa mkono (M-Pesa/benki). "Kataa" hurudisha salio kwa mtumiaji moja kwa moja.')
+            + (rows.length ? rows.map(function (r) {
+                var d = r.data;
+                return '<div style="padding:10px;border:1px solid #fde68a;background:#fffbeb;border-radius:10px;margin-bottom:8px;font-size:13px;">'
+                    + '<b>' + money(d.amount) + '</b> · ' + esc(d.channel || '') + ' → ' + esc(d.account || '') + '<br>'
+                    + 'Mtumiaji: ' + esc(d.userId || '') + ' · ' + esc(String(d.createdAt || '').slice(0, 16).replace('T', ' ')) + '<br>'
+                    + 'Kumb: ' + esc(r.id) + '<br>'
+                    + btn('Nimelipa (funga)', "window.skhAdminCCWithdrawal('" + esc(r.id) + "','paid')")
+                    + btn('Kataa (rudisha salio)', "window.skhAdminCCWithdrawal('" + esc(r.id) + "','rejected')", 'danger') + '</div>';
+            }).join('') : empty('Hakuna maombi yanayosubiri.')));
+    };
+    window.skhAdminCCWithdrawal = async function (requestId, decision) {
+        var q = decision === 'paid'
+            ? 'Umetuma TSh kwa mkono (M-Pesa/benki)? "Nimelipa" hufunga ombi na HAIWEZI kubadilishwa. Endelea?'
+            : 'Kukataa kunarudisha salio kwa mtumiaji moja kwa moja. Endelea?';
+        if (!(await confirmIt(q))) return;
+        var note = await needReason(5); if (!note) return;
+        try {
+            var res = await run('withdrawalResolve', { requestId: requestId, decision: decision, note: note });
+            if (res && res.already) toast('Ombi hili lilishafungwa na mtu mwingine (' + (res.status || '') + ').', 'info');
+            else toast(decision === 'paid' ? 'Ombi limefungwa (paid).' : 'Ombi limekataliwa; salio limerudishwa.', 'success');
+            window.skhAdminCCTab('withdrawals');
+        } catch (e) { toast(errText(e), 'error'); }
+    };
+
     VIEWS.verify = async function () {
         return box('Thibitisha au ondoa uthibitisho',
             '<label style="font-size:13px;">Aina</label><select id="ccVKind" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin:4px 0 8px;">'
@@ -295,6 +333,27 @@ import { skh } from './00-bootstrap.js';
         var reason = await needReason(3); if (!reason) return;
         try { await run('adminSetVerification', { kind: kind, id: id, verified: verified === true, reason: reason }); toast(verified ? 'Imethibitishwa.' : 'Uthibitisho umeondolewa.', 'success'); }
         catch (e) { toast(errText(e), 'error'); }
+    };
+
+    /* [R9] Four distinct trust badges — server callable adminSetTrustBadge. */
+    VIEWS.trust = async function () {
+        var sel = function (id, opts) { return '<select id="' + id + '" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin:4px 0 8px;">' + opts.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select>'; };
+        return box('Beji za uaminifu (zinatolewa na server tu)',
+            '<p style="font-size:12.5px;color:#475569;margin:0 0 8px;">Beji hazichanganywi: akaunti, supplier, bidhaa iliyokaguliwa, muamala. Kutoa au kurudisha kunahitaji kumbukumbu ya ushahidi.</p>'
+            + '<label style="font-size:13px;">Beji</label>' + sel('ccTBadge', [['account', 'Akaunti / Biashara imethibitishwa'], ['supplier', 'Supplier aliyethibitishwa'], ['product_inspection', 'Bidhaa imekaguliwa'], ['transaction', 'Muamala umethibitishwa']])
+            + '<label style="font-size:13px;">Aina ya rekodi</label>' + sel('ccTType', [['user', 'Mtumiaji (UID)'], ['business', 'Biashara (businesses ID)'], ['product', 'Bidhaa (products ID)'], ['order', 'Oda (orders ID)']])
+            + input('ccTId', 'ID ya rekodi') + input('ccTEvidence', 'Kumbukumbu ya ushahidi (mf. ripoti ya ukaguzi, namba ya leseni)')
+            + '<label style="font-size:13px;">Hatua</label>' + sel('ccTAction', [['grant', 'Toa'], ['suspend', 'Simamisha'], ['reinstate', 'Rudisha'], ['revoke', 'Ondoa kabisa']])
+            + btn('Tekeleza', "window.skhAdminCCTrust()"));
+    };
+    window.skhAdminCCTrust = async function () {
+        var v = function (id) { var e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; };
+        if (!v('ccTId')) { toast('Weka ID.', 'error'); return; }
+        var reason = await needReason(5); if (!reason) return;
+        try {
+            var r = await run('adminSetTrustBadge', { badge: v('ccTBadge'), targetType: v('ccTType'), targetId: v('ccTId'), action: v('ccTAction'), evidenceRef: v('ccTEvidence'), reason: reason });
+            toast('Beji: ' + ((r && r.status) || 'imesasishwa'), 'success');
+        } catch (e) { toast(errText(e), 'error'); }
     };
 
     VIEWS.listings = async function () {

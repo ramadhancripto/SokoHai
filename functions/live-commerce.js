@@ -107,6 +107,10 @@ exports.liveStart = onCall({ region: REGION }, async (req) => {
     if (d.status !== 'scheduled') throw new HttpsError('failed-precondition', 'hali_' + d.status);
     if (suspended(await userDoc(d.hostUid))) throw new HttpsError('permission-denied', 'akaunti_imesimamishwa');
     const now = new Date().toISOString();
+    /* [FULL-AUCTION] exactly-once start: claim first, so parallel calls can not each
+     * fire the follower/reminder notifications. */
+    const { claimOnce } = require('./commerce-modes');
+    if (!(await claimOnce(ref.collection('_claims').doc('start'), '__start_marker'))) return { ok: true, already: true, notified: 0 };
     await ref.update({ status: 'live', startedAt: now, updatedAt: now });
     await ref.collection('comments').add({ kind: 'system', text: d.hostName + ' ameanza live', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
     // followers of the host get one notice (real followers only)
@@ -124,10 +128,67 @@ exports.liveStart = onCall({ region: REGION }, async (req) => {
  * While paused, bidding is blocked server-side (modeData.livePaused, enforced by
  * auctionPlaceBid) and comments/likes are refused; on resume the auction endTime moves
  * forward by the paused duration so the server timer stays fair. */
+/* [STAGE2 2026-11-12] Apply the freeze flag to every product of a session.
+ * wantPaused=true  -> livePaused + the server freeze stamp (livePausedAtMs)
+ * wantPaused=false -> unfreeze and, for a still-open auction, shift endTime forward by THAT
+ *                      product's own frozen duration (per-product, so a product that was never
+ *                      frozen gets no shift and a repair pass can not double-shift).
+ * Runs after the session transition and is idempotent: two racing pause/resume calls converge. */
+async function applyLiveFreeze(pids, wantPaused, stamp, shiftMs) {
+    for (const pid of pids) {
+        const pref = db().doc('products/' + id(pid));
+        try {
+            await db().runTransaction(async (t) => {
+                const s = await t.get(pref);
+                if (!s.exists) return;
+                const p = s.data() || {}, md = p.modeData || {};
+                if (wantPaused) {
+                    /* only the session's own stamp counts: a parallel pause that wrote a
+                     * different millisecond is corrected here, so all surfaces read one value */
+                    if (md.livePaused === true && Number(md.livePausedAtMs) === Number(stamp)) return;
+                    t.update(pref, { 'modeData.livePaused': true, 'modeData.livePausedAtMs': stamp });
+                    return;
+                }
+                if (md.livePaused !== true) return;                                        // already free
+                /* one shift value for the whole resume (so every product and the response agree);
+                 * the repair pass falls back to the product's own stamp. */
+                const pausedMs = Number(shiftMs) > 0 ? Number(shiftMs) : Math.max(0, Date.now() - (Number(md.livePausedAtMs) || Date.now()));
+                const patch = { 'modeData.livePaused': false, 'modeData.livePausedAtMs': null };
+                if (saleMode(p) === 'auction' && Number(md.endTime) > 0 && !md.ended && pausedMs > 0) patch['modeData.endTime'] = Number(md.endTime) + pausedMs;
+                t.update(pref, patch);
+            });
+        } catch (e) { /* the product may be gone; the session transition still stands */ }
+    }
+}
+/* [STAGE2] convergence repair: the session document is the single source of truth, the product
+ * flags follow it. After a racing call we re-read the session and re-apply the matching state so
+ * "session paused + product frozen" (or the opposite) can not survive a pause/resume race. */
+async function reconcileFreeze(ref, pids) {
+    for (let pass = 0; pass < 3; pass++) {
+        const cur = (await ref.get()).data() || {};
+        if (cur.status === 'paused') await applyLiveFreeze(pids, true, Number(cur.pausedAtMs) || Date.now());
+        else if (cur.status === 'live') await applyLiveFreeze(pids, false, 0);
+        else return true;                       // ended / removed: liveEnd already unfroze products
+        let ok = true;
+        for (const pid of pids) {
+            const p = (await db().doc('products/' + id(pid)).get()).data();
+            if (!p) continue;
+            const md = p.modeData || {};
+            if (cur.status === 'paused') {
+                if (md.livePaused !== true || Number(md.livePausedAtMs) !== Number(cur.pausedAtMs)) { ok = false; break; }
+            } else if (md.livePaused === true) { ok = false; break; }
+        }
+        if (ok) return true;
+    }
+    return false;
+}
+
 exports.livePause = onCall({ region: REGION }, async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'login');
     const { ref, d } = await loadSession((req.data || {}).sessionId);
     mustHost(req, d);
+    /* [STAGE2 2026-11-12] duplicate submission = no-op, never an error the UI has to explain. */
+    if (d.status === 'paused') return { ok: true, already: true };
     if (d.status !== 'live') throw new HttpsError('failed-precondition', 'hali_' + d.status);
     const pids = d.productIds || [];
     if (d.kind === 'auction') {
@@ -137,34 +198,54 @@ exports.livePause = onCall({ region: REGION }, async (req) => {
         }
     }
     const now = new Date().toISOString(), nowMs = Date.now();
-    await ref.update({ status: 'paused', pausedAt: now, pausedAtMs: nowMs, updatedAt: now });
-    for (const pid of pids) {
-        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': true }); } catch (e) { /* product may be gone */ }
+    /* [STAGE2] the transition itself is transactional and IDEMPOTENT: a parallel tap either
+     * loses (status already paused) or writes exactly the same stamp, so a duplicate can never
+     * produce a second pause time. An already-ended session is rejected, never resurrected. */
+    let stamp = 0, already = false;
+    await db().runTransaction(async (t) => {
+        const s = await t.get(ref);
+        const cur = s.data() || {};
+        if (cur.status === 'paused') { already = true; stamp = Number(cur.pausedAtMs) || nowMs; return; }
+        if (cur.status !== 'live') throw new HttpsError('failed-precondition', 'hali_' + (cur.status || ''));
+        stamp = Number(cur.pausedAtMs) || nowMs;
+        t.update(ref, { status: 'paused', pausedAt: cur.pausedAt || now, pausedAtMs: stamp, updatedAt: now });
+    });
+    if (already) { await reconcileFreeze(ref, pids); return { ok: true, already: true, pausedAtMs: stamp }; }
+    await applyLiveFreeze(pids, true, stamp);
+    await reconcileFreeze(ref, pids);   // a racing resume may have won; follow the session doc
+    const after = (await ref.get()).data() || {};
+    if (after.status === 'paused') {
+        await ref.collection('comments').add({ kind: 'system', text: 'Live imesitishwa na mwenyeji kwa muda', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
     }
-    await ref.collection('comments').add({ kind: 'system', text: 'Live imesitishwa na mwenyeji kwa muda', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
-    return { ok: true };
+    return { ok: true, pausedAtMs: stamp, superseded: after.status !== 'paused' };
 });
 exports.liveResume = onCall({ region: REGION }, async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'login');
     const { ref, d } = await loadSession((req.data || {}).sessionId);
     mustHost(req, d);
+    if (d.status === 'live') return { ok: true, already: true, pausedMs: 0 };   // duplicate submission
+    /* ended / removed sessions can never be resumed — only a paused one */
     if (d.status !== 'paused') throw new HttpsError('failed-precondition', 'hali_' + d.status);
-    const now = new Date().toISOString(), nowMs = Date.now();
-    const pausedMs = Math.max(0, nowMs - (Number(d.pausedAtMs) || nowMs));
-    await ref.update({ status: 'live', pausedAt: null, pausedAtMs: null, updatedAt: now });
-    for (const pid of pidsSafe(d)) {
-        const pref = db().doc('products/' + id(pid));
-        await db().runTransaction(async (t) => {
-            const s = await t.get(pref);
-            if (!s.exists) return;
-            const p = s.data() || {}, md = p.modeData || {};
-            const patch = { 'modeData.livePaused': false };
-            if (saleMode(p) === 'auction' && Number(md.endTime) > 0 && !md.ended) patch['modeData.endTime'] = Number(md.endTime) + pausedMs;
-            t.update(pref, patch);
-        });
+    const now = new Date().toISOString();
+    let pausedMs = 0, resumed = false, stampMs = 0;
+    await db().runTransaction(async (t) => {
+        const s = await t.get(ref);
+        const cur = s.data() || {};
+        if (cur.status !== 'paused') return;
+        stampMs = Number(cur.pausedAtMs) || 0;
+        t.update(ref, { status: 'live', pausedAt: null, pausedAtMs: null, updatedAt: now });
+        resumed = true;
+    });
+    if (!resumed) return { ok: true, already: true, pausedMs: 0 };
+    /* the frozen duration, measured once: the auction clocks move by exactly this much */
+    pausedMs = Math.max(0, Date.now() - (stampMs || Date.now()));
+    await applyLiveFreeze(pidsSafe(d), false, 0, pausedMs);
+    await reconcileFreeze(ref, pidsSafe(d));
+    const after = (await ref.get()).data() || {};
+    if (after.status === 'live') {
+        await ref.collection('comments').add({ kind: 'system', text: 'Live imeendelea', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
     }
-    await ref.collection('comments').add({ kind: 'system', text: 'Live imeendelea', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
-    return { ok: true, pausedMs };
+    return { ok: true, pausedMs, superseded: after.status !== 'live' };
 });
 function pidsSafe(d) { return d.productIds || []; }
 
@@ -180,7 +261,7 @@ exports.liveEnd = onCall({ region: REGION }, async (req) => {
     await ref.update({ status: 'ended', endedAt: now, updatedAt: now, endedBy: req.auth.uid, endReason: clean(data.reason, 200) || null, recordingUrl: rec, viewerCount: 0, pausedAt: null, pausedAtMs: null });
     // [AUCTION-LIVE] unfreeze the products (a paused session may be ended while frozen)
     for (const pid of (d.productIds || [])) {
-        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false }); } catch (e) { /* gone */ }
+        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false, 'modeData.livePausedAtMs': null }); } catch (e) { /* gone */ }
     }
     await ref.collection('comments').add({ kind: 'system', text: 'Live imekwisha', uid: req.auth.uid, name: 'SokoHai', createdAt: now, status: 'visible' });
     if (req.auth.uid !== d.hostUid) await audit(req, 'LIVE_ENDED_BY_ADMIN', { kind: 'live_session', id: ref.id }, { reason: clean(data.reason, 200) });
@@ -314,14 +395,104 @@ exports.adminLiveRemove = onCall({ region: REGION }, async (req) => {
     const now = new Date().toISOString();
     await ref.update({ status: 'removed', endedAt: d.endedAt || now, updatedAt: now, endedBy: req.auth.uid, endReason: reason, viewerCount: 0, pausedAt: null, pausedAtMs: null });
     for (const pid of (d.productIds || [])) {
-        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false }); } catch (e) { /* gone */ }
+        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false, 'modeData.livePausedAtMs': null }); } catch (e) { /* gone */ }
     }
     await audit(req, 'LIVE_REMOVED', { kind: 'live_session', id: ref.id }, { reason });
     await notify(d.hostUid, 'Live yako imeondolewa', reason, { type: 'live_removed', liveSessionId: ref.id });
     return { ok: true };
 });
 
-exports._testing = { embedUrl };
+/* [FULL-AUCTION 2026-11] Host video source: the host chooses how the room shows video.
+ *   none   — products + chat in real time, no camera (Product live)
+ *   embed  — an allow-listed external player (YouTube/Vimeo)
+ *   webrtc — the host's own camera, streamed peer-to-peer to viewers (js/app/121-live-video.js,
+ *            Firestore-signalled; no streaming server, no extra cost; mesh = small audiences)
+ * The auction never depends on video: bids/close/winner work in every mode. */
+exports.liveSetVideo = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const data = req.data || {};
+    const { ref, d } = await loadSession(data.sessionId);
+    mustHost(req, d);
+    if (d.status === 'ended' || d.status === 'removed') throw new HttpsError('failed-precondition', 'live_imekwisha');
+    const kind = String(data.kind || 'none');
+    if (['none', 'embed', 'webrtc'].indexOf(kind) === -1) throw new HttpsError('invalid-argument', 'aina_si_sahihi');
+    let video;
+    if (kind === 'embed') {
+        const e = embedUrl(data.videoUrl || (d.video && d.video.url));
+        if (!e) throw new HttpsError('invalid-argument', 'video_haikubaliki');
+        video = { kind: 'embed', url: e };
+    } else if (kind === 'webrtc') {
+        video = { kind: 'webrtc', url: null };
+    } else video = { kind: 'none', url: null };
+    await ref.update({ video, updatedAt: new Date().toISOString() });
+    return { ok: true, video };
+});
+
+/* [FULL-AUCTION 2026-11] Host presence heartbeat: the host app calls this every ~15 s
+ * while publishing. Viewers treat a stale hostSeenAtMs (>25 s) as "host offline".
+ * Also returns the server clock so room timers can correct client drift. */
+exports.livePing = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const { ref, d } = await loadSession((req.data || {}).sessionId);
+    mustHost(req, d);
+    if (d.status !== 'live' && d.status !== 'paused') return { ok: true, serverNow: Date.now(), idle: true };
+    await ref.update({ hostSeenAtMs: Date.now() });
+    return { ok: true, serverNow: Date.now() };
+});
+
+/* [FULL-AUCTION 2026-11] Live sweep (runs inside commerceModesSweep, every 15 min):
+ *  - scheduled sessions starting within 30 min: remind everyone who asked (once);
+ *  - scheduled sessions long past their time: mark 'expired' so the hub stays clean;
+ *  - stale viewers (no heartbeat for 5 min): deactivate so the count stays honest. */
+const STARTING_SOON_MS = 30 * 60 * 1000, SCHED_EXPIRE_MS = 24 * 60 * 60 * 1000, VIEWER_STALE_MS = 5 * 60 * 1000;
+async function sweepLive(nowMs) {
+    nowMs = nowMs || Date.now();
+    const out = { checked: 0, startingSoon: 0, expired: 0, staleViewers: 0 };
+    const q = await db().collection('live_sessions').where('status', '==', 'scheduled').limit(200).get();
+    for (const doc of q.docs) {
+        out.checked++;
+        const d = doc.data() || {};
+        const at = Number(d.scheduledAt) || 0;
+        if (at > 0 && at - nowMs <= STARTING_SOON_MS && at > nowMs - 3600000 && !d.startingSoonNotified) {
+            let fire = false;
+            await db().runTransaction(async (t) => {
+                const cur = (await t.get(doc.ref)).data() || {};
+                if (cur.status !== 'scheduled' || cur.startingSoonNotified) return;
+                t.update(doc.ref, { startingSoonNotified: true });
+                fire = true;
+            });
+            if (fire) {
+                const r = await doc.ref.collection('reminders').limit(1000).get();
+                for (const x of r.docs) await notify(x.id, 'Live inaanza muda si mrefu: ' + (d.title || ''), (d.hostName || 'Muuzaji') + ' anaanza live uliyoomba ukumbusho.', { type: 'live_starting_soon', liveSessionId: doc.id });
+                out.startingSoon++;
+            }
+        }
+        const base = at > 0 ? at : Date.parse(d.createdAt || 0) || 0;
+        if (base > 0 && nowMs - base > SCHED_EXPIRE_MS) {
+            await doc.ref.update({ status: 'expired', updatedAt: new Date(nowMs).toISOString() });
+            out.expired++;
+        }
+    }
+    const lv = await db().collection('live_sessions').where('status', 'in', ['live', 'paused']).limit(200).get();
+    for (const doc of lv.docs) {
+        const stale = await doc.ref.collection('viewers').where('active', '==', true).limit(500).get();
+        for (const v of stale.docs) {
+            const last = Date.parse((v.data() || {}).lastSeenAt || 0) || 0;
+            if (nowMs - last <= VIEWER_STALE_MS) continue;
+            await db().runTransaction(async (t) => {
+                const vv = await t.get(v.ref);
+                if (!vv.exists || (vv.data() || {}).active !== true) return;
+                const ss = await t.get(doc.ref);
+                t.update(v.ref, { active: false, leftAt: new Date(nowMs).toISOString() });
+                t.update(doc.ref, { viewerCount: Math.max(0, (((ss.data() || {}).viewerCount) || 0) - 1) });
+            });
+            out.staleViewers++;
+        }
+    }
+    return out;
+}
+
+exports._testing = { embedUrl, sweepLive };
 
 /* [R13-D 2026-11] Likes and reminders (refs 7 and 10).
  * liveLike: one tap = +1 (at most one per user every 1.5 s), counted on the session.

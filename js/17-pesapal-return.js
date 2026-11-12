@@ -349,7 +349,7 @@
             var it = items[i];
             var meta = await sellerMeta(it.userId);
             var delivery = deliveryForItem(it);
-            var orderRef = await fb.addDoc(fb.collection(fb.db, 'orders'), {
+            var _od17 = { // [PHASE 1 G4] shadow-mode: same object, validated below
                 buyerId: buyerUid, buyerName: buyerName,
                 sellerId: it.userId, sellerName: it.ownerName,
                 itemId: it.id, productId: it.id, itemTitle: it.title,
@@ -376,7 +376,9 @@
                 commerceMode: it.commerceMode || (pending.commerceContext && (pending.commerceContext.commerceMode || pending.commerceContext.mode || pending.commerceContext.type)) || null,
                 commerceModeSnapshot: it.commerceModeSnapshot || null,
                 isOfflineUser: meta.isOffline, managedByAgentUid: meta.agentUid, agentCode: meta.agentCode
-            });
+            };
+            try { if (window.skh && window.skh.shadowOrder) window.skh.shadowOrder(_od17, '17'); } catch (_se) {}
+            var orderRef = await fb.addDoc(fb.collection(fb.db, 'orders'), _od17);
             created++;
             createdRows.push({ orderDocId: orderRef.id, delivery: delivery, item: it });
             if (delivery.required) deliveryOrders.push({ orderDocId: orderRef.id, delivery: delivery, item: it });

@@ -1,0 +1,148 @@
+ M css/15-chat-comments.css
+ M css/26-design-system.css
+ M css/58-category-photo-strip.css
+ M css/65-live-design.css
+ M css/66-home-layout.css
+ M css/70-product-card.css
+ M docs/reports/TAXONOMY-QUALITY-REPORT-2026-11.json
+ M docs/reports/TAXONOMY-QUALITY-REPORT-2026-11.md
+ M firebase.json
+ M firestore.indexes.json
+ M firestore.rules
+ M fonts/inter.css
+ M functions/business.js
+ M functions/commerce-modes.js
+ M functions/index.js
+ M functions/live-commerce.js
+ M functions/local-server.js
+ M html/00-head.html
+ M html/03-modals-core.html
+ M html/06-modals-social.html
+ M html/14-haipay.html
+ M html/15-main-menu.html
+ M html/16-topnav.html
+ M html/18-buyer-view.html
+ M html/21-scripts.html
+ M index.html
+ M js/12-payments.js
+ M js/17-pesapal-return.js
+ M js/18-icons.js
+ M js/app/00-bootstrap.js
+ M js/app/03-dashboard.js
+ M js/app/04-orders-escrow.js
+ M js/app/07-product.js
+ M js/app/12-sys-modes.js
+ M js/app/120-live-commerce-ui.js
+ M js/app/123-home-layout.js
+ M js/app/14-map-onboarding.js
+ M js/app/16-pos-admin-jobs.js
+ M js/app/21-sokopay.js
+ M js/app/23-smart-cart.js
+ M js/app/24-ui-final.js
+ M js/app/33-custody.js
+ M js/app/34-chat-core.js
+ M js/app/39-product-showcase.js
+ M js/app/39-showcase-logic.js
+ M js/app/40-token-box.js
+ M js/app/52-transport-inbox.js
+ M js/app/55-escrow-guard.js
+ M js/app/71-visual-dictionary.js
+ M js/app/75-discover-engine.js
+ M js/app/83-category-photos.js
+ M js/app/88-discover-complete.js
+ M js/app/98-admin-control-center.js
+ M netlify.toml
+ M package-lock.json
+ M package.json
+ M preview/shots/live-feed-390.png
+ M robots.txt
+ M shared/category-identity.mjs
+ M shared/product-taxonomy-bridge.mjs
+ M shared/product-taxonomy-browser.mjs
+ M shared/taxonomy-legacy-mapping.js
+ M tools/build_dist.mjs
+ M tools/dev_server.mjs
+ M tools/test_category_identity.mjs
+ M tools/test_commerce_cards.mjs
+ M tools/test_phase2_security.mjs
+?? .github/
+?? .well-known/
+?? ARCHITECTURE-M1-M6-2026-11-08.md
+?? AUDIT-BIDHAA-SOKONI-AND-LIVE-2026-11-08.md
+?? AUDIT-MNADA-CREATION-2026-11-08.md
+?? _g1a.mjs
+?? _g1keys.mjs
+?? audit-shots/
+?? css/71-sale-type-flow.css
+?? docs/LIVE-COMMERCE-AUDIT-2026-11.md
+?? docs/LIVE-COMPONENT-MAP-2026-11.md
+?? docs/LIVE-FULL-AUDIT-2026-11.md
+?? docs/reports/AUDIT-LIVE-MNADA-STEP1-2026-11-10.md
+?? docs/reports/FINAL-LAUNCH-READINESS-2026-11-10.md
+?? docs/reports/OWNER-LAUNCH-CHECKLIST-2026-11-10.md
+?? fonts/inter-400.woff2
+?? fonts/inter-500.woff2
+?? fonts/inter-600.woff2
+?? fonts/inter-700.woff2
+?? fonts/inter-800.woff2
+?? fonts/inter-900.woff2
+?? js/app/113-sale-type-flow.js
+?? preview/_build/cards.json
+?? preview/_build/chat_demo_A.html
+?? preview/_build/chat_demo_P.html
+?? preview/_build/chat_harness.html
+?? preview/_build/chatprobe.mjs
+?? preview/_build/gsgprobe.mjs
+?? preview/_build/img2/
+?? preview/live-ui/
+?? preview/proposals/assessment-2-2026-11-08.html
+?? preview/proposals/audit-system-2026-11-08.html
+?? preview/proposals/card1-clean-proof.png
+?? preview/proposals/card1-final-proof.png
+?? preview/proposals/card1-live-proof-desktop.png
+?? preview/proposals/card1-live-proof.png
+?? preview/proposals/conditions-1-3-2026-11-08.html
+?? preview/proposals/d2-build-integration-2026-11-08.html
+?? preview/proposals/launch-readiness-2026-11-09.html
+?? preview/proposals/live-and-sale-type.html
+?? preview/proposals/live-full-buyer.html
+?? preview/proposals/live-full-seller.html
+?? preview/proposals/live-hub-proof.png
+?? preview/proposals/live-interaction-v1.html
+?? preview/proposals/live-interaction-v2-dark.html
+?? preview/proposals/minify-pilot-2026-11-08.html
+?? preview/proposals/name-fallback-2026-11-09.html
+?? preview/proposals/name-followup-2026-11-09.html
+?? preview/proposals/performance-phase-2026-11-08.html
+?? preview/proposals/phase0-baseline-2026-11-10.html
+?? preview/proposals/phase1-data-integrity-2026-11-09.html
+?? preview/proposals/sales-flow-m1-m6.html
+?? preview/proposals/sokohuru-card-preview-v2.html
+?? preview/proposals/sokohuru-redesign-v2-80-20.html
+?? preview/proposals/sukuma-85-2026-11-09.html
+?? preview/proposals/ukaguzi-81-2026-11-09.html
+?? preview/shots/audit-2026-11-08/
+?? preview/shots/conditions-2026-11-08/
+?? preview/shots/d2-minify-2026-11-08/
+?? preview/shots/fallback-2026-11-09/
+?? preview/shots/followup-2026-11-09/
+?? preview/shots/m1m6/
+?? preview/shots/minify-pilot-2026-11-08/
+?? preview/shots/perf-2026-11-08/
+?? preview/shots/push81-2026-11-08/
+?? preview/shots/ratio-67-20-10.png
+?? shared/order-write-core.mjs
+?? tools/e2e-emulator/shot_auction_live_impl.cjs
+?? tools/e2e-emulator/test_auction_live_impl.cjs
+?? tools/g1/
+?? tools/minify_css.mjs
+?? tools/minify_js.mjs
+?? tools/test_auction_live_impl_emulator.mjs
+?? tools/test_preview_sales_flow_m1_m6.mjs
+?? tools/test_product_name_fallback.mjs
+?? tools/test_sale_type_flow.mjs
+?? tools/test_static_quality.mjs
+?? tools/verify_minify.mjs
+?? tools/verify_minify_css.mjs
+?? tools/verify_seller_form_mobile_layout.mjs
+?? verification-auction-live/

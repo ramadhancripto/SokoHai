@@ -252,7 +252,7 @@ import { skh } from './00-bootstrap.js';
             + '</div>'
             + '<div class="skh-sheet-search">'
             + '<span class="skh-sheet-svg">' + (window.skhNavIcon ? window.skhNavIcon('search', 15) : '⌕') + '</span>'
-            + '<input id="skhKQ" type="text" autocomplete="off" placeholder="' + tk('kamus_ph', 'Tafuta alama, icon au neno...') + '">'
+            + '<input id="skhKQ" type="text" autocomplete="off" aria-label="' + tk('kamus_ph', 'Tafuta alama, icon au neno...') + '" placeholder="' + tk('kamus_ph', 'Tafuta alama, icon au neno...') + '">'
             + '</div>'
             + '<div id="skhKCats" class="skh-sheet-tabs skh-k-tabs">' + catChipsHtml() + '</div>'
             + '<div id="skhKResults" class="skh-sheet-results skh-k-results"></div>'

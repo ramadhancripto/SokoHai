@@ -141,6 +141,22 @@ import { skh } from './00-bootstrap.js';
     /* ========================================================================
        3) FUNIKA `confirmSokoPayDelivery` — kila release ipite hapa (§30)
        ======================================================================== */
+    /* [P2 RESTORE 2026-11-10] Backlink: oda inayounganishwa na muamala huu.
+     * orderDocId ndiyo kiungo (sio orderId/transactionToken — hizo si doc ids).
+     * Fallback: tafuta orders kwa sokopayCoreId. Hakuna oda = hakuna release. */
+    async function findLinkedOrder(tx, coreId) {
+        tx = tx || {};
+        if (tx.orderDocId) return String(tx.orderDocId);
+        try {
+            if (!skh.db || typeof skh.query !== 'function') return null;
+            var s = await skh.getDocs(skh.query(skh.collection(skh.db, 'orders'),
+                skh.where('sokopayCoreId', '==', coreId), skh.limit(1)));
+            if (s && !s.empty && s.docs && s.docs.length) return s.docs[0].id;
+        } catch (e) {}
+        return null;
+    }
+    window.skhFindLinkedOrderId = findLinkedOrder;
+
     function install() {
         if (window.__skhEscrowGuard) return;
         var orig = window.confirmSokoPayDelivery;
@@ -217,8 +233,61 @@ import { skh } from './00-bootstrap.js';
             });
             if (!ok) return;
 
-            /* ---- (c) Andika — server kwanza, kisha Firestore ---- */
+            /* ---- (c0) Muuzaji wa nje: display-only — SERVER haihusiki,
+             * hakuna escrow ya kuachia, hakuna money fields za uongo. ---- */
+            if (tx.outsideSeller) {
+                skhBusy(true, 'Inakamilisha…');
+                try {
+                    await skh.updateDoc(skh.doc(skh.db, 'sokopay_core_transactions', id), {
+                        orderStatus: 'Completed',
+                        recipientConfirmedAt: now(),
+                        recipientConfirmedBy: (skh.currentUser && skh.currentUser.uid) || null,
+                        updatedAt: now(),
+                        timeline: skh.arrayUnion({
+                            title: 'Buyer Confirmed Receipt',
+                            description: 'Muuzaji wa nje — mapokezi yamethibitishwa bila escrow.',
+                            at: now(), done: true
+                        })
+                    });
+                    skhBusy(false);
+                    skhToast('Asante! Mapokezi yamethibitishwa (muuzaji wa nje — hakuna escrow).', 'success', 3600);
+                    if (typeof window.openSokoPayOrderDetail === 'function') window.openSokoPayOrderDetail(id);
+                } catch (e) {
+                    skhBusy(false);
+                    skhToast('Imeshindikana kuhifadhi uthibitisho. Jaribu tena.', 'error');
+                }
+                return;
+            }
+
+            /* ---- (c1) Tafuta oda iliyounganishwa — hakuna oda, hakuna release ---- */
+            var orderId = await findLinkedOrder(tx, id);
+            if (!orderId) {
+                skhToast('Oda iliyounganishwa haikupatikana. Haiwezekani kuachia escrow bila oda.', 'error');
+                return;
+            }
+
+            /* ---- (c2) SERVER KWANZA — patch + toast TU baada ya server kukubali ---- */
             skhBusy(true, 'Inakamilisha…');
+            var rel = null;
+            try {
+                var relFn = skh.wrapCallable('escrowRelease');
+                var relRes = await relFn({ orderId: orderId });
+                rel = (relRes && relRes.data) ? relRes.data : relRes;
+            } catch (e) {
+                skhBusy(false);
+                skhToast('Server ya escrow haipatikani kwa sasa. Hakuna kilichoandikwa — jaribu tena baadaye.', 'error');
+                return;
+            }
+            if (!rel || !rel.ok) {
+                skhBusy(false);
+                var relErr = String((rel && (rel.error || rel.message)) || '');
+                if (/disput/i.test(relErr)) {
+                    skhToast('Kuna mgogoro kwenye oda hii — escrow haiwezi kuachiwa hadi mgogoro utatuliwe.', 'error');
+                } else {
+                    skhToast('Server imekataa kuachia escrow' + (relErr ? ' (' + relErr + ')' : '') + '. Hakuna kilichoandikwa.', 'error');
+                }
+                return;
+            }
             try {
                 var patch = {
                     shipmentStatus: 'Delivered',
@@ -231,7 +300,7 @@ import { skh } from './00-bootstrap.js';
                     updatedAt: now(),
                     timeline: skh.arrayUnion({
                         title: 'Buyer Confirmed Delivery',
-                        description: 'Masharti yote yamekaguliwa; escrow imeachiwa.',
+                        description: 'Server imeachia escrow; masharti yote yamekaguliwa.',
                         at: now(), done: true
                     })
                 };
@@ -249,13 +318,20 @@ import { skh } from './00-bootstrap.js';
                 // do not append a client-forged settlement audit record here.
 
                 skhBusy(false);
-                skhToast('Asante! Fedha zimeachiwa muuzaji.', 'success', 3600);
+                var earned = rel.split ? rel.split.sellerEarned : null;
+                if (rel.already) {
+                    skhToast('Tayari ilishakamilika awali — hakuna kilichorudiwa.', 'success', 3600);
+                } else if (earned) {
+                    skhToast('Asante! Fedha zimeachiwa muuzaji: ' + money(earned) + '.', 'success', 3600);
+                } else {
+                    skhToast('Asante! Fedha zimeachiwa muuzaji.', 'success', 3600);
+                }
                 if (typeof window.openSokoPayOrderDetail === 'function') window.openSokoPayOrderDetail(id);
             } catch (e) {
                 skhBusy(false);
-                if (window.skhShowErr) window.skhShowErr(e, { fn: 'escrowRelease', entityId: id,
-                                                             collection: 'sokopay_core_transactions', operation: 'update' });
-                else skhToast('Imeshindikana kuachia fedha. Jaribu tena.', 'error');
+                // Server ilishakubali (pesa zimehamishwa) lakini display patch
+                // imeshindwa — sema ukweli, usidanganye.
+                skhToast('Server imemaliza malipo lakini rekodi ya kuonyesha imeshindwa. Fungua upya ukurasa.', 'error');
             }
         }
     }
@@ -268,7 +344,28 @@ import { skh } from './00-bootstrap.js';
         var reason = await skhPrompt('Eleza tatizo ulilokutana nalo:', '',
             { title: 'Ripoti tatizo', placeholder: 'Mf. Mzigo umeharibika / haujafika kamili' });
         if (!reason) return;
+        // [P2 RESTORE 2026-11-10] Mgogoro wa KWELI kupitia server (disputeOpen)
+        // — kuzuia escrow ni kwa server, sio maandishi ya kivinjari.
+        var orderId = null;
+        try {
+            var snap = await skh.getDoc(skh.doc(skh.db, 'sokopay_core_transactions', id));
+            var txr = (snap && snap.exists && snap.exists()) ? (snap.data() || {}) : {};
+            orderId = await findLinkedOrder(txr, id);
+        } catch (e) { orderId = null; }
+        if (!orderId) {
+            skhToast('Oda iliyounganishwa haikupatikana — tatizo haliwezi kufunguliwa kwa server.', 'error');
+            return;
+        }
         skhBusy(true, 'Inawasilisha…');
+        var opened = false;
+        try {
+            var dspFn = skh.wrapCallable('disputeOpen');
+            var dspRes = await dspFn({ orderId: orderId, reason: String(reason) });
+            var dsp = (dspRes && dspRes.data) ? dspRes.data : dspRes;
+            opened = !!(dsp && dsp.ok);
+        } catch (e) { opened = false; }
+        // Rekodi ya kuonyesha huandikwa hata server ikishindwa (ukweli wa
+        // pande mbili: toast inasema wazi kilichotokea).
         try {
             await skh.updateDoc(skh.doc(skh.db, 'sokopay_core_transactions', id), {
                 orderStatus: 'Disputed', contractStatus: 'Dispute Active',
@@ -276,15 +373,18 @@ import { skh } from './00-bootstrap.js';
                            by: (skh.currentUser && skh.currentUser.uid) || null, resolvedAt: null },
                 updatedAt: now(),
                 timeline: skh.arrayUnion({ title: 'Dispute Opened',
-                    description: 'Mnunuzi ameripoti tatizo; escrow imezuiliwa.', at: now(), done: true })
+                    description: opened ? 'Mnunuzi ameripoti tatizo; escrow imezuiliwa.'
+                                        : 'Mnunuzi ameripoti tatizo; server haijathibitisha — wasiliana na support.',
+                    at: now(), done: true })
             });
-            skhBusy(false);
-            skhToast('Tatizo limewasilishwa. Fedha zimezuiliwa hadi utatuzi.', 'info', 4200);
-            if (typeof window.openSokoPayOrderDetail === 'function') window.openSokoPayOrderDetail(id);
-        } catch (e) {
-            skhBusy(false);
-            if (window.skhShowErr) window.skhShowErr(e, { fn: 'reportProblem', entityId: id, operation: 'update' });
+        } catch (e) {}
+        skhBusy(false);
+        if (opened) {
+            skhToast('Tatizo limewasilishwa. Fedha zimezuiliwa na server hadi utatuzi.', 'info', 4200);
+        } else {
+            skhToast('Server haikupokea mgogoro — rekodi imehifadhiwa; wasiliana na support ukihitaji msaada wa haraka.', 'error');
         }
+        if (typeof window.openSokoPayOrderDetail === 'function') window.openSokoPayOrderDetail(id);
     };
 
     /* ========================================================================

@@ -410,8 +410,12 @@ import { skh } from './00-bootstrap.js';
         var rideId = currentRide(); if (!rideId) return;
         skhBusy(true, 'Inaanza safari…');
         try {
-            if (typeof window.skhCustodyStartTransit === 'function') await window.skhCustodyStartTransit(rideId);
-            else await skh.updateDoc(skh.doc(skh.db, 'ride_requests', rideId), { status: 'in_transit' });
+            // [P3 RESTORE 2026-11-10] Heshimu {ok:false} ya server — success
+            // toast/sysMsg TU baada ya server kukubali (sio fake success).
+            if (typeof window.skhCustodyStartTransit === 'function') {
+                var rs = await window.skhCustodyStartTransit(rideId);
+                if (!rs || rs.ok === false) throw new Error((rs && rs.error) || 'server_rejected');
+            } else await skh.updateDoc(skh.doc(skh.db, 'ride_requests', rideId), { status: 'in_transit' });
             await sysMsg('Safari imeanza.');
             skhBusy(false); skhToast('Safari imeanza.', 'success');
             bust(); window.skhTxRender();
@@ -424,8 +428,11 @@ import { skh } from './00-bootstrap.js';
             { title: 'Thibitisha kufikisha', placeholder: 'Hiari' });
         skhBusy(true, 'Inathibitisha…');
         try {
+            // [P3 RESTORE 2026-11-10] Heshimu {ok:false} ya server — success
+            // toast/sysMsg TU baada ya server kukubali (sio fake success).
             if (typeof window.skhCustodyCompleteDelivery === 'function') {
-                await window.skhCustodyCompleteDelivery(rideId, code ? String(code).trim() : null, null, {});
+                var rd = await window.skhCustodyCompleteDelivery(rideId, code ? String(code).trim() : null, null, {});
+                if (!rd || rd.ok === false) throw new Error((rd && rd.error) || 'server_rejected');
             } else {
                 await skh.updateDoc(skh.doc(skh.db, 'ride_requests', rideId), { status: 'delivered' });
             }

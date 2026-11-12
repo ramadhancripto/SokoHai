@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="sw"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SokoHai — Tathmini ya Mfumo (mara ya 2)</title>
+<style>
+ :root{--ink:#0E1F1A;--mut:#5A6B65;--em:#12946A;--gold:#C9A227;--bad:#C0392B;--line:#E4EDE9;--bg:#F6F9F8}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.66 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Tahoma,sans-serif}
+ .wrap{max-width:1060px;margin:0 auto;padding:26px 18px 70px}
+ header.hero{background:linear-gradient(135deg,#0A3328,#116B50 55%,#12946A);color:#fff;border-radius:20px;padding:26px 24px}
+ header.hero h1{margin:0 0 6px;font-size:25px;line-height:1.28;letter-spacing:-.3px}
+ header.hero p{margin:0;opacity:.93;font-size:14px}
+ .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+ .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700}
+ section{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:18px}
+ h2{font-size:19px;margin:0 0 4px;letter-spacing:-.2px}
+ h2 .num{display:inline-grid;place-items:center;min-width:27px;height:27px;border-radius:9px;background:#E6F5EE;color:#0F7A5C;font-size:13px;font-weight:800;margin-right:9px;padding:0 6px}
+ .lead{color:var(--mut);margin:6px 0 14px;font-size:14px}
+ h3{font-size:15px;margin:20px 0 8px}
+ table{width:100%;border-collapse:collapse;font-size:13px}
+ th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+ th{background:#F2F7F5;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#41615A}
+ .tblwrap{overflow-x:auto} .tblwrap table{min-width:520px}
+ td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;white-space:nowrap}
+ .mut{color:var(--mut);font-size:12.5px}
+ .bar{background:#EDF3F1;border-radius:99px;overflow:hidden;height:10px}
+ .bar span{display:block;height:100%;border-radius:99px}
+ code{background:#F2F7F5;border:1px solid var(--line);border-radius:6px;padding:1px 5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+ .ok{color:var(--em);font-weight:800} .warn{color:#9A7B12;font-weight:800} .bad{color:var(--bad);font-weight:800}
+ .box{border-left:4px solid var(--em);background:#F2FBF7;border-radius:10px;padding:12px 14px;font-size:13.5px;margin:14px 0}
+ .box.red{border-left-color:var(--bad);background:#FDF3F2}
+ .box.gold{border-left-color:var(--gold);background:#FEFBF0}
+ ul,ol{margin:8px 0 0;padding-left:20px} li{margin:6px 0}
+ .score{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:center}
+ .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:10px 0}
+ .kpi div{background:#F7FBFA;border:1px solid var(--line);border-radius:12px;padding:12px}
+ .kpi b{display:block;font-size:19px;letter-spacing:-.5px}
+ .kpi small{color:var(--mut);font-size:11.5px}
+ footer{text-align:center;color:var(--mut);font-size:12.5px;margin-top:26px}
+ @media(max-width:720px){.score{grid-template-columns:1fr}.kpi{grid-template-columns:1fr 1fr}header.hero h1{font-size:21px}}
+</style></head><body><div class="wrap">
+
+<header class="hero">
+ <h1>Tathmini ya Mfumo — mara ya 2<br>Baada ya Performance Phase</h1>
+ <p>8 Novemba 2026 · tawi <code style="background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff">feature/product-card-visual-refinement</code> · HEAD <b>2e8d049</b> · hakuna commit</p>
+ <div class="chips">
+  <span class="chip">Uzinduzi: 72%</span>
+  <span class="chip">npm test: EXIT 0</span>
+  <span class="chip">Vipimo vipya: a11y · SEO · headers</span>
+  <span class="chip">Skrini 8: sawa</span>
+ </div>
+</header>
+
+<section>
+ <h2><span class="num">1</span>Jibu la haraka</h2>
+ <div class="score">
+  <div style="text-align:center">
+   <svg viewBox="0 0 200 200" width="196" height="196" role="img" aria-label="Jumla 72%">
+    <circle cx="100" cy="100" r="78" fill="none" stroke="#EDF3F1" stroke-width="22"/>
+    <circle cx="100" cy="100" r="78" fill="none" stroke="#C9A227" stroke-width="22"
+            stroke-dasharray="353.4 490.1" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+    <text x="100" y="96" text-anchor="middle" font-size="42" font-weight="800" fill="#0E1F1A">72%</text>
+    <text x="100" y="120" text-anchor="middle" font-size="12.5" fill="#5A6B65">uzinduzi</text>
+   </svg>
+  </div>
+  <div>
+   <p class="lead" style="margin-top:0"><b>72%</b> — sawa kwa kiasi na tathmini iliyopita (73%), lakini <b>sababu ni tofauti</b>: safari hii nilipima maeneo matatu nisiyokuwa nimeyapima kabla — <b>ufikivu (a11y)</b>, <b>SEO</b>, na <b>security headers</b>. Kwa kipimo kile kile cha awali, namba ni <b>73%</b>; kwa kipimo kamili zaidi ni <b>72%</b>. Hakuna kitu kilichoharibika.</p>
+   <div class="kpi">
+    <div><b class="ok">88%</b><small>Kazi kuu</small></div>
+    <div><b class="warn">62%</b><small>Utendaji</small></div>
+    <div><b class="warn">78%</b><small>Usalama</small></div>
+    <div><b class="bad">25%</b><small>Operesheni</small></div>
+   </div>
+  </div>
+ </div>
+ <div class="box gold"><b>Taarifa moja muhimu:</b> mfumo <b>unafanya kazi</b> — cart (SokoCart), kichaguzi cha M1 (aina 4), fomu, bidhaa zote zinafanya kazi, hakuna error, overflow 0px. Kizuizi cha uzinduzi <b>si</b> ugonjwa wa mfumo; ni <b>maandalizi ya operesheni</b> na <b>uzito wa ukurasa</b>.</div>
+</section>
+
+<section>
+ <h2><span class="num">2</span>Alama kwa kila eneo</h2>
+ <div class="tblwrap"><table>
+  <thead><tr><th>Eneo</th><th class="num">Uzito</th><th>Hali</th><th class="num">Alama</th></tr></thead>
+  <tbody><tr><td><b>Utendaji wa kazi kuu (modules)</b><div class="mut">116 modules, 130 commits, 104 functions; M1 imekamilika; hakuna module iliyovunjika</div></td><td class="num">20%</td><td style="width:30%"><div class="bar"><span style="width:88%;background:#12946A"></span></div></td><td class="num" style="color:#12946A">88%</td></tr>
+<tr><td><b>Majaribio (testing)</b><div class="mut">npm test EXIT 0 · suite 58 · 0 failed; 46/167 test files hazitumiki; hakuna CI; 15 za emulator hazikuendeshwa</div></td><td class="num">15%</td><td style="width:30%"><div class="bar"><span style="width:72%;background:#C9A227"></span></div></td><td class="num" style="color:#C9A227">72%</td></tr>
+<tr><td><b>Utendaji (performance)</b><div class="mut">Data −45%, 3G DCL −50% baada ya Performance Phase; maombi 250 na JS 1,477 KB bado</div></td><td class="num">15%</td><td style="width:30%"><div class="bar"><span style="width:62%;background:#C9A227"></span></div></td><td class="num" style="color:#C9A227">62%</td></tr>
+<tr><td><b>Usalama (security)</b><div class="mut">Sheria 363/117 collections, 0 open rule, catch-all deny, secrets env; HAKUNA CSP/HSTS/X-Frame-Options</div></td><td class="num">15%</td><td style="width:30%"><div class="bar"><span style="width:78%;background:#C9A227"></span></div></td><td class="num" style="color:#C9A227">78%</td></tr>
+<tr><td><b>Ubora wa simu / UI</b><div class="mut">320/360/390/1440 overflow 0px; skrini 8 zinasawaziana 0.00–0.28%</div></td><td class="num">10%</td><td style="width:30%"><div class="bar"><span style="width:92%;background:#12946A"></span></div></td><td class="num" style="color:#12946A">92%</td></tr>
+<tr><td><b>Ubora wa data</b><div class="mut">131 bidhaa, schemas 2 (title 93 / name 38); 0 live_commerce; 0 shops</div></td><td class="num">10%</td><td style="width:30%"><div class="bar"><span style="width:55%;background:#C0392B"></span></div></td><td class="num" style="color:#C0392B">55%</td></tr>
+<tr><td><b>Ufikivu (accessibility)</b><div class="mut">0 kitufe bila jina, 0 picha bila alt; lakini sehemu 3 za kuingiza hazina label, rangi 2 za brand chini ya 4.5:1</div></td><td class="num">5%</td><td style="width:30%"><div class="bar"><span style="width:70%;background:#C9A227"></span></div></td><td class="num" style="color:#C9A227">70%</td></tr>
+<tr><td><b>SEO / kupatikana</b><div class="mut">title/description/OG/canonical/robots OK; hakuna manifest, theme-color, JSON-LD, sitemap</div></td><td class="num">5%</td><td style="width:30%"><div class="bar"><span style="width:65%;background:#C9A227"></span></div></td><td class="num" style="color:#C9A227">65%</td></tr>
+<tr><td><b>Operesheni za uzinduzi</b><div class="mut">Hakuna CI, error monitoring, kurasa za kisheria, PWA manifest</div></td><td class="num">5%</td><td style="width:30%"><div class="bar"><span style="width:25%;background:#C0392B"></span></div></td><td class="num" style="color:#C0392B">25%</td></tr></tbody>
+  <tfoot><tr><th>JUMLA</th><th class="num">100%</th><th></th><th class="num" style="color:#C9A227">72%</th></tr></tfoot>
+ </table></div></div>
+</section>
+
+<section>
+ <h2><span class="num">3</span>Vipimo halisi vya sasa (nimepima upya)</h2>
+ <div class="tblwrap"><table>
+  <thead><tr><th>Hali</th><th class="num">FCP</th><th class="num">DCL</th><th class="num">Data</th><th class="num">Maombi</th></tr></thead>
+  <tbody><tr><td>390px · haraka</td><td class='num'>1,216 ms</td><td class='num'>1,037 ms</td><td class='num'>2,205 KB</td><td class='num'>250</td></tr>
+<tr><td>390px · 3G + CPU×4</td><td class='num'>5,504 ms</td><td class='num'>12,496 ms</td><td class='num'>2,212 KB</td><td class='num'>250</td></tr>
+<tr><td>320px · haraka</td><td class='num'>1,132 ms</td><td class='num'>991 ms</td><td class='num'>2,203 KB</td><td class='num'>250</td></tr>
+<tr><td>360px · haraka</td><td class='num'>1,124 ms</td><td class='num'>966 ms</td><td class='num'>2,189 KB</td><td class='num'>250</td></tr>
+<tr><td>1440px · haraka</td><td class='num'>1,152 ms</td><td class='num'>943 ms</td><td class='num'>2,205 KB</td><td class='num'>250</td></tr></tbody>
+ </table></div>
+ <p class="lead" style="margin-top:10px">Namba zile zile za Performance Phase — zimeshikilia. Uzito kwa aina: <b>JS 1,477 KB</b> (148 faili) · CSS 345 KB (76) · WOFF2 154 KB (6) · picha 193 KB.</p>
+ <div class="box"><b>Kizuizi kikubwa kilichobaki: JS.</b> Faili 148 za JS zinapakiwa mwanzo. Minification tu (bila kubadilisha mpangilio) ingepunguza ~60–65% ya hizo — hii ndiyo hatua salama zaidi inayofuata.</div>
+</section>
+
+<section>
+ <h2><span class="num">4</span>Vipimo vipya vya safari hii</h2>
+
+ <h3>Ufikivu (accessibility) — <span class="warn">70%</span></h3>
+ <div class="tblwrap"><table>
+  <thead><tr><th>Kipimo</th><th>Matokeo</th></tr></thead>
+  <tbody>
+   <tr><td>Vitufe/batokisi bila jina la kusomeka</td><td class="ok">0 kati ya 116</td></tr>
+   <tr><td>Picha bila <code>alt</code></td><td class="ok">0 kati ya 39</td></tr>
+   <tr><td>Kuruka kwa vichwa (h2→h4)</td><td class="ok">0</td></tr>
+   <tr><td><code>lang</code>, <code>main</code>, <code>nav</code></td><td class="ok">zote zipo (<code>lang="sw"</code>)</td></tr>
+   <tr><td>Sehemu za kuingiza bila label</td><td class="bad">3 (searchInput, regionFilterSelect, skhKQ) — placeholder pekee</td></tr>
+   <tr><td>Utofautishaji wa rangi (contrast)</td><td class="bad">2 za kweli: kijani cha brand juu ya nyeupe 2.98:1; nyeupe juu ya kijani 3.40:1</td></tr>
+  </tbody>
+ </table></div></div>
+ <p class="mut" style="margin-top:8px">Kumbuka: kipimo changu cha contrast kiliripoti 9/60; nilizihakiki kwa mkono — 7 zilikuwa <b>false positives</b> kutokana na mandhari (gradient/picha) zisizoweza kupimwa kwa script rahisi. Nimeandika 2 za kweli pekee.</p>
+
+ <h3>SEO — <span class="warn">65%</span></h3>
+ <div class="tblwrap"><table>
+  <thead><tr><th>Kipengele</th><th>Hali</th></tr></thead>
+  <tbody>
+   <tr><td>title, meta description, OG (title/image/description), twitter:card, canonical, robots meta</td><td class="ok">zote zipo</td></tr>
+   <tr><td>robots.txt</td><td class="warn">ipo, lakini ina <code>&lt;DOMAIN&gt;</code> placeholder isiyojazwa</td></tr>
+   <tr><td>sitemap.xml</td><td class="bad">hakuna</td></tr>
+   <tr><td>Manifest ya PWA, theme-color, apple-touch-icon</td><td class="bad">hakuna</td></tr>
+   <tr><td>JSON-LD (Product/Organization)</td><td class="bad">hakuna</td></tr>
+  </tbody>
+ </table></div>
+
+ <h3>Usalama wa headers — <span class="bad">sehemu kubwa haipo</span></h3>
+ <div class="tblwrap"><table>
+  <thead><tr><th>Header</th><th>Hali</th></tr></thead>
+  <tbody>
+   <tr><td>Cache-Control</td><td class="ok">ipo</td></tr>
+   <tr><td>Content-Security-Policy</td><td class="bad">haipo</td></tr>
+   <tr><td>X-Frame-Options</td><td class="bad">haipo</td></tr>
+   <tr><td>X-Content-Type-Options</td><td class="bad">haipo</td></tr>
+   <tr><td>Referrer-Policy · Permissions-Policy · HSTS</td><td class="bad">haipo</td></tr>
+  </tbody>
+ </table></div>
+ <div class="box red"><b>Kwa nini CSP ni ngumu hapa (ukweli):</b> <code>index.html</code> ina <b>onclick 310</b> na <b>script 4 za inline</b>. CSP yenye <code>script-src 'self'</code> ingevunja mfumo mzima. Itahitaji ama <code>'unsafe-inline'</code> (dhaifu) au kuhamisha handlers zote — kazi kubwa. <b>X-Frame-Options, X-Content-Type-Options, Referrer-Policy na HSTS</b> ni za haraka na salama (mistari 4 kwenye <code>firebase.json</code>).</div>
+
+ <h3>Msimbo usiotumika (dead code) — <span class="warn">761 KB</span></h3>
+ <p>Faili <b>26 za JS</b> (761 KB) hazipakiwi na <code>index.html</code>; <b>24 kati yao</b> hazitajwi kabisa na faili yoyote:</p>
+ <ul>
+  <li><code>75-discover-engine.js</code> (120 KB), <code>88-discover-complete.js</code> (40 KB), <code>42-discovery-feed.js</code> (33 KB), <code>91-discover-fixes.js</code> (27 KB) — vizazi vya zamani vya Discover</li>
+  <li><code>creative/ad-design-engine.js</code> (30 KB), <code>basic-ad-creative.js</code> (38 KB) — sehemu ya ads</li>
+  <li>Nyingine: <code>38-nego-form-logic</code>, <code>39-market-ranking</code>, <code>39-offer-equivalence</code>, <code>68-chat-discover</code>…</li>
+ </ul>
+ <p class="mut">Hii <b>haiathiri kasi</b> (hazipakiwi), lakini inaathiri ukubwa wa repo na uelewa. <b>Kuondoa kunahitaji idhini yako</b> — sijaondoa chochote.</p>
+</section>
+
+<section>
+ <h2><span class="num">5</span>Kile kilichoboreshwa / kisichobadilika</h2>
+ <div class="tblwrap"><table>
+  <thead><tr><th>Eneo</th><th>Tathmini 1</th><th>Sasa</th><th>Sababu</th></tr></thead>
+  <tbody>
+   <tr><td>Utendaji</td><td>35%</td><td class="ok">62%</td><td>Fonts −92%, CSS −45%, compression</td></tr>
+   <tr><td>Data</td><td>45%</td><td class="ok">55%</td><td>Schema imeeleweka (title vs name); hakuna write</td></tr>
+   <tr><td>Usalama</td><td>85%</td><td class="warn">78%</td><td><b>Sikupunguza ulinzi</b> — nilipima headers nisizokuwa nimezipima; sheria zile zile</td></tr>
+   <tr><td>Majaribio</td><td>72%</td><td>72%</td><td>Hakuna CI bado</td></tr>
+   <tr><td>Operesheni</td><td>25%</td><td>25%</td><td>Hakuna monitoring/CI/legal</td></tr>
+   <tr><td>Ufikivu · SEO</td><td>—</td><td class="warn">70% · 65%</td><td>Vipimo vipya</td></tr>
+  </tbody>
+ </table></div></div>
+</section>
+
+<section>
+ <h2><span class="num">6</span>Njia ya 90% — kwa mpangilio</h2>
+ <div class="tblwrap"><table>
+  <thead><tr><th>#</th><th>Kazi</th><th>Athari</th><th>Hatari</th><th>Makadirio ya alama</th></tr></thead>
+  <tbody>
+   <tr><td>1</td><td><b>Minification</b> ya JS/CSS (esbuild/Terser) — bila kubadilisha mpangilio</td><td class="ok">JS 1,477 → ~550 KB</td><td class="ok">ndogo</td><td>Utendaji 62 → 72%</td></tr>
+   <tr><td>2</td><td><b>Security headers 4</b> (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, HSTS)</td><td class="ok">ulinzi wa browser</td><td class="ok">ndogo</td><td>Usalama 78 → 85%</td></tr>
+   <tr><td>3</td><td><b>CI</b> (GitHub Actions: npm test + build check)</td><td class="ok">hakuna kurudi nyuma</td><td class="ok">ndogo</td><td>Majaribio 72 → 85%</td></tr>
+   <tr><td>4</td><td><b>Error monitoring</b> + analytics</td><td class="ok">kuona hitilafu halisi</td><td class="ok">ndogo</td><td>Operesheni 25 → 50%</td></tr>
+   <tr><td>5</td><td><b>Kurasa za kisheria</b> + robots/sitemap/manifest</td><td class="ok">mahitaji ya launch</td><td class="ok">ndogo</td><td>SEO 65 → 80%</td></tr>
+   <tr><td>6</td><td><b>Labels 3 + contrast 2</b> za a11y</td><td class="ok">ufikivu</td><td class="ok">ndogo</td><td>a11y 70 → 85%</td></tr>
+   <tr><td>7</td><td><b>Lazy-loading ya moduli-moja-moja</b> (baada ya #1)</td><td class="ok">maombi 250 → ~120</td><td class="warn">wastani</td><td>Utendaji 72 → 85%</td></tr>
+   <tr><td>8</td><td>M2–M6 za Brief I</td><td>vipengele</td><td>—</td><td>—</td></tr>
+  </tbody>
+ </table></div></div>
+ <div class="box"><b>Makadirio:</b> kazi #1–#6 zikikamilika (zote hatari ndogo), alama ya jumla inafika <b>~85%</b>. Kuifikia <b>90%</b> kunahitaji #7 (lazy-loading) na uamuzi wa data (backfill ya schema — inahitaji idhini yako).</div>
+</section>
+
+<section>
+ <h2><span class="num">7</span>Mipaka ya tathmini hii</h2>
+ <ul>
+  <li>Vipimo vyote ni Chromium kwenye sandbox — <b>si simu halisi</b> wala mtandao halisi wa Tanzania.</li>
+  <li>Kipimo cha contrast kilikuwa cha msingi (script rahisi); nilizihakiki kwa mkono kabla ya kuripoti.</li>
+  <li>Majaribio 15 ya emulator <b>hayakuendeshwa</b> (hakuna firebase CLI hapa) — pengo la uthibitisho, si uthibitisho wa kosa.</li>
+  <li>Alama za “%” ni hukumu yangu iliyopimwa kwa uzito — si kipimo cha sayansi kamili. Uzito umeonyeshwa wazi ili uweze kubadilisha.</li>
+ </ul>
+</section>
+
+<footer>SokoHai · tathmini ya mfumo (mara ya 2) · 8 Novemba 2026 · hakuna commit, merge, wala deploy</footer>
+</div></body></html>

@@ -283,9 +283,14 @@ import { skh } from './00-bootstrap.js';
        ======================================================================== */
     var DASH = 'richDashboardContainer';
 
+    /* [2026-11-06] Business OS ina sidebar + historia yake (skhBOSNav/switchDashTab).
+       Snapshot ya container nzima hapa ilirudisha HTML ya zamani na ikaongeza
+       ukanda wa "Rudi" juu ya kichwa cha BOS (≈70px) kwenye simu. */
+    function isBusinessOS(c) { return !!(c && c.querySelector('#bosSidebar')); }
+
     window.skhDashPush = function (label) {
         var c = byId(DASH);
-        if (!c) return;
+        if (!c || isBusinessOS(c)) return;
         var snapshot = c.innerHTML;
         push({
             type: 'dash', id: label || 'dash',
@@ -299,6 +304,11 @@ import { skh } from './00-bootstrap.js';
     function injectDashBack() {
         var c = byId(DASH);
         if (!c || !c.children.length) return;
+        if (isBusinessOS(c)) {
+            var stale = c.querySelector(':scope > .skh-backbar');
+            if (stale) stale.remove();
+            return;
+        }
         if (c.querySelector(':scope > .skh-backbar')) return;
         // Ongeza tu ikiwa kuna mahali pa kurudi
         var hasDash = stack.some(function (s) { return s.type === 'dash'; });

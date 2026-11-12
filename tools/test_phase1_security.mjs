@@ -327,7 +327,7 @@ async function main() {
 
   await test('link ya uongo "held" (paidAt ya zamani, hakuna malipo) — release na auto-release zinakataliwa', async () => {
     await link('fake1', { status: 'held', buyerId: 'buyer', paidAt: hoursAgo(72), transactionId: 'TX-FAKE' });
-    denied(await call('haipayReleaseLink', 'buyer', { linkId: 'fake1' }), ['failed-precondition'], 'manual');
+    denied(await call('sokopayReleaseLink', 'buyer', { linkId: 'fake1' }), ['failed-precondition'], 'manual');
     await fns.sokopayAutoRelease.run({ scheduleTime: new Date().toISOString() });
     eq(await bal('seller'), 0, 'muuzaji hakulipwa');
     eq((await db.doc('sokopay_links/fake1').get()).data().status, 'held', 'haikukamilishwa');
@@ -348,12 +348,12 @@ async function main() {
     // [PHASE 9 B-16] muuzaji anapata taarifa ya "escrow imefungwa" kutoka SERVER
     const nL = await db.doc('notifications/escrow_link_l1').get();
     assert(nL.exists && nL.data().userId === 'seller' && nL.data().system === true, 'taarifa ya server kwa muuzaji (PesaPal)');
-    denied(await call('haipayReleaseLink', 'seller', { linkId: 'l1' }), ['permission-denied'], 'muuzaji hawezi kujitolea');
-    denied(await call('haipayReleaseLink', 'eve', { linkId: 'l1' }), ['permission-denied'], 'mtu wa tatu');
-    const r = await call('haipayReleaseLink', 'buyer', { linkId: 'l1' });
+    denied(await call('sokopayReleaseLink', 'seller', { linkId: 'l1' }), ['permission-denied'], 'muuzaji hawezi kujitolea');
+    denied(await call('sokopayReleaseLink', 'eve', { linkId: 'l1' }), ['permission-denied'], 'mtu wa tatu');
+    const r = await call('sokopayReleaseLink', 'buyer', { linkId: 'l1' });
     assert(r.ok, r.message);
     const got = await bal('seller'); assert(got > 0 && got <= 5000, 'muuzaji amelipwa ndani ya kiasi (' + got + ')');
-    const r2 = await call('haipayReleaseLink', 'buyer', { linkId: 'l1' });
+    const r2 = await call('sokopayReleaseLink', 'buyer', { linkId: 'l1' });
     assert(r2.ok, 'idempotent'); eq(await bal('seller'), got, 'mara moja tu');
   });
   await test('link: kiasi kilichobadilishwa baada ya malipo inakataliwa', async () => {
@@ -362,7 +362,7 @@ async function main() {
     await call('pesapalTransactionStatus', 'buyer', { orderTrackingId: 'TX-L2' });
     await db.doc('sokopay_links/l2').update({ price: 500000 });
     const before = await bal('seller');
-    denied(await call('haipayReleaseLink', 'buyer', { linkId: 'l2' }), ['failed-precondition'], 'amount');
+    denied(await call('sokopayReleaseLink', 'buyer', { linkId: 'l2' }), ['failed-precondition'], 'amount');
     eq(await bal('seller'), before, 'hakuna malipo');
   });
   await test('link: mnunuzi/muuzaji waliobadilishwa inakataliwa', async () => {
@@ -370,9 +370,9 @@ async function main() {
     await link('l3', { buyerId: 'buyer', transactionId: 'TX-L3' });
     await call('pesapalTransactionStatus', 'buyer', { orderTrackingId: 'TX-L3' });
     await db.doc('sokopay_links/l3').update({ buyerId: 'eve' });
-    denied(await call('haipayReleaseLink', 'eve', { linkId: 'l3' }), ['failed-precondition'], 'buyer mismatch');
+    denied(await call('sokopayReleaseLink', 'eve', { linkId: 'l3' }), ['failed-precondition'], 'buyer mismatch');
     await db.doc('sokopay_links/l3').update({ buyerId: 'buyer', userId: 'eve' });
-    denied(await call('haipayReleaseLink', 'buyer', { linkId: 'l3' }), ['failed-precondition'], 'seller mismatch');
+    denied(await call('sokopayReleaseLink', 'buyer', { linkId: 'l3' }), ['failed-precondition'], 'seller mismatch');
     eq(await bal('eve'), 0, 'eve hakulipwa');
   });
   await test('link: muamala mdogo kuliko bei haufungi link', async () => {
@@ -732,7 +732,7 @@ async function main() {
     assert((await call('walletAdjust', ADMIN, { note: 'Uamuzi wa admin (test)',  docId: 'seller', amountTSh: 4000, type: 'escrow_release', ledgerKey: 'splitref_seller_dl1' })).ok, 'seller part');
     await db.doc('sokopay_links/dl1').update({ status: 'held', paidAt: hoursAgo(72) });
     await db.doc('escrow_holds/link_dl1').update({ verifiedAt: hoursAgo(72) });
-    await call('haipayReleaseLink', 'buyer', { linkId: 'dl1' });
+    await call('sokopayReleaseLink', 'buyer', { linkId: 'dl1' });
     await fns.sokopayAutoRelease.run({ scheduleTime: new Date().toISOString() });
     eq(await bal('seller'), 4000, 'muuzaji: sehemu ya split tu');
   });
@@ -756,8 +756,8 @@ async function main() {
   for (const u of ['buyer', 'seller', 'eve']) await user(u);
   await test('fake paid/paymentVerified/verifiedAmount/paidAt/held — hakuna malipo', async () => {
     await db.doc('sokopay_links/f1').set({ userId: 'seller', price: 9000, status: 'held', buyerId: 'buyer', paid: true, paymentVerified: true, verifiedAmount: 9000, paidAt: hoursAgo(96), paymentType: 'Wallet Payout' });
-    denied(await call('haipayReleaseLink', 'buyer', { linkId: 'f1' }), ['failed-precondition'], 'manual');
-    denied(await call('haipayReleaseLink', ADMIN, { reason: 'Uthibitisho wa admin (test fixture)',  linkId: 'f1' }), ['failed-precondition'], 'hata admin bila ushahidi');
+    denied(await call('sokopayReleaseLink', 'buyer', { linkId: 'f1' }), ['failed-precondition'], 'manual');
+    denied(await call('sokopayReleaseLink', ADMIN, { reason: 'Uthibitisho wa admin (test fixture)',  linkId: 'f1' }), ['failed-precondition'], 'hata admin bila ushahidi');
     await fns.sokopayAutoRelease.run({ scheduleTime: new Date().toISOString() });
     eq(await bal('seller'), 0, 'hakuna malipo');
   });
@@ -766,7 +766,7 @@ async function main() {
     await db.doc('sokopay_links/s2').set({ userId: 'seller', price: 9000, status: 'pending', buyerId: 'buyer', transactionId: 'TX-OTHER' });
     await call('pesapalTransactionStatus', 'eve', { orderTrackingId: 'TX-OTHER' });
     assert(!(await exists('escrow_holds/link_s2')), 'haikufungwa');
-    denied(await call('haipayReleaseLink', 'buyer', { linkId: 's2' }), ['failed-precondition'], 'release');
+    denied(await call('sokopayReleaseLink', 'buyer', { linkId: 's2' }), ['failed-precondition'], 'release');
   });
   await test('replay ya muamala mmoja kwa links mbili: moja tu inafungwa', async () => {
     await ppPaid('TX-TWO', 5000, 'buyer');

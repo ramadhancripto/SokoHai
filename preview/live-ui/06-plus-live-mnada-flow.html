@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hatua 2 — Plus (+) → Live Mnada Flow</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{background:#0f172a;padding:24px;color:#e2e8f0}
+h1{color:#fff;text-align:center;font-size:20px}h1 small{display:block;font-size:12px;color:#94a3b8;font-weight:400;margin-top:4px}
+.flow{display:flex;gap:18px;justify-content:flex-start;padding:24px 8px;overflow-x:auto;align-items:flex-start}
+.step{display:flex;gap:18px;align-items:flex-start;flex-shrink:0}
+.phone{width:300px;background:#f8fafc;border-radius:26px;overflow:hidden;border:3px solid #334155;color:#0f172a}
+.banner{background:#7c3aed;color:#fff;font-size:10px;font-weight:800;text-align:center;padding:5px}
+.shead{background:#1e3a8a;color:#fff;padding:12px 14px;font-size:13px;font-weight:800}
+.sbody{padding:12px;min-height:380px;font-size:12px}
+.opt{background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:8px;display:flex;gap:10px;align-items:center}
+.opt.sel{border-color:#16a34a;background:#f0fdf4}
+.opt .ic{width:34px;height:34px;border-radius:10px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.opt b{font-size:12px;display:block}.opt small{color:#64748b;font-size:10.5px}
+.opt .go{margin-left:auto;color:#16a34a;font-weight:900}
+label.f{display:block;font-size:10.5px;font-weight:800;color:#475569;margin:8px 0 3px}
+input.f,select.f,textarea.f{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:#fff}
+.pick{display:flex;gap:8px;align-items:center;background:#fff;border:1.5px solid #16a34a;border-radius:12px;padding:8px;margin-bottom:8px}
+.pick.dim{border-color:#e2e8f0}
+.pick .th{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#6366f1);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.pick b{font-size:11.5px;display:block}.pick small{color:#64748b;font-size:10px}
+.btn{width:100%;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:900;margin-top:8px}
+.green{background:#16a34a;color:#fff}.gold{background:#b45309;color:#fff}.grey{background:#e2e8f0;color:#475569}
+.pv{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-top:8px}
+.pv .row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px dashed #f1f5f9}
+.pv .row span{color:#64748b}.pv .row b{text-align:right}
+.warn{background:#fef3c7;border:1px dashed #d97706;border-radius:10px;padding:8px;font-size:10.5px;color:#92400e;margin-top:8px;line-height:1.6}
+.note{background:#1e293b;border-radius:12px;padding:10px;font-size:10.5px;line-height:1.7;margin-top:8px;color:#cbd5e1}
+.note b{color:#fff}.note code{background:#0f172a;padding:0 5px;border-radius:5px;font-size:10px;color:#93c5fd}
+.arrow{font-size:26px;color:#6366f1;align-self:center;flex-shrink:0}
+.cap{text-align:center;font-size:11px;color:#94a3b8;margin-top:6px;max-width:300px}
+.bindbox{max-width:1100px;margin:0 auto;background:#fffbeb;border:1px dashed #d97706;border-radius:14px;padding:14px;color:#92400e;font-size:12px;line-height:2}
+.bindbox b{color:#78350f}
+</style></head><body>
+<h1>Hatua ya 2 — Plus (+) → Live Mnada <small>DESIGN PREVIEW · mock data · hakuna code iliyounganishwa · views halisi zimeandikwa chini ya kila hatua</small></h1>
+<div class="flow">
+
+<!-- STEP 1 -->
+<div class="step"><div><div class="phone"><div class="banner">MOCK</div>
+<div class="shead">＋ Plus — Unataka kufanya nini?</div><div class="sbody">
+<div class="opt"><div class="ic">📦</div><div><b>Weka Bidhaa / Tangazo</b><small>Fomu ya muuzaji (iliyopo)</small></div></div>
+<div class="opt sel"><div class="ic">🔴</div><div><b>Anzisha Live</b><small>Live ya muuzaji / Mnada / Price Drop</small></div><span class="go">›</span></div>
+<div class="opt"><div class="ic">🛒</div><div><b>POS · Duka</b><small>Uza dukani (iliyopo)</small></div></div>
+<div class="note"><b>View halisi:</b> <code>plusMenu</code> + <code>skhSaleFlow</code> chooser (<code>113-sale-type-flow.js</code>). Kitufe cha Plus: FAB (<code>18-buyer-view.html:126</code>) + topnav. Hatua hii inaongeza chaguo "Anzisha Live" — chooser iliyopo ndiyo mtindo.</div>
+</div></div><div class="cap"><b>Hatua 1.</b> Plus (+) inavyofanya kazi leo + chaguo la Live</div></div></div>
+<div class="arrow">→</div>
+
+<!-- STEP 2 -->
+<div class="step"><div><div class="phone"><div class="banner">MOCK</div>
+<div class="shead">← Chagua Live Activity</div><div class="sbody">
+<div class="opt"><div class="ic">🛍</div><div><b>Live ya Muuzaji</b><small>Wanunuzi wanaagiza wakati wa live</small></div></div>
+<div class="opt sel"><div class="ic">🔨</div><div><b>Mnada Live</b><small>Bidhaa za mnada + zabuni live</small></div><span class="go">›</span></div>
+<div class="opt"><div class="ic">📉</div><div><b>Live Price Drop</b><small>(haigusiwi — tofauti)</small></div></div>
+<div class="opt"><div class="ic">📹</div><div><b>Live ya Kawaida</b><small>Bila kuuza</small></div></div>
+<div class="note"><b>View halisi:</b> <code>lvxKind</code> select ndani ya <code>skhLiveCreateForm</code> (<code>120-live-commerce-ui.js:196</code>) — chaguo zile zile 4, hapa zinaonyeshwa kama kadi.</div>
+</div></div><div class="cap"><b>Hatua 2–3.</b> Chagua Live Activity → Mnada/Auction</div></div></div>
+<div class="arrow">→</div>
+
+<!-- STEP 3 -->
+<div class="step"><div><div class="phone"><div class="banner">MOCK</div>
+<div class="shead">← Bidhaa ya Mnada</div><div class="sbody">
+<div class="pick"><div class="th">🐔</div><div><b>Kuku wa Kienyeji (5) · Mnada</b><small>Dau la kuanzia 30,000 · inaisha Jum 18:00</small></div><div style="margin-left:auto">✅</div></div>
+<div class="pick dim"><div class="th">👗</div><div><b>Vitenge 3 · SokoHuru</b><small>45,000 · inaweza kubadilishwa → Mnada</small></div><div style="margin-left:auto;color:#16a34a;font-weight:800;font-size:11px">Badilisha</div></div>
+<button class="btn gold">＋ Bidhaa Mpya ya Mnada</button>
+<div class="warn"><b>Badilisha SokoHuru → Mnada:</b> mfumo UNARUHUSU (rules: saleMode inaweza kubadilika kama hakuna zabuni — <code>firestore.rules</code>). Taarifa (jina, picha, maelezo) hazipotei — modeData mpya safi huongezwa. Baada ya dau la 1: IMEFUNGWA.</div>
+<div class="note"><b>View halisi:</b> <code>lvxProducts</code> picker (<code>120:203</code>, zako tu ≤20, tayari inaonyesha "· Mnada") + <code>sellerForm</code> kwa mpya (<code>toggleModeFields</code>).</div>
+</div></div><div class="cap"><b>Hatua 4.</b> Chagua iliyopo / mpya / badilisha SokoHuru</div></div></div>
+<div class="arrow">→</div>
+
+<!-- STEP 4 -->
+<div class="step"><div><div class="phone"><div class="banner">MOCK</div>
+<div class="shead">← Taarifa za Live Mnada</div><div class="sbody">
+<label class="f">Kichwa cha live</label><input class="f" value="Mnada wa Kuku — Ijumaa">
+<label class="f">Itaanza lini</label><input class="f" type="text" value="Ijumaa 18:00 (ukumbusho kwa wanunuzi)">
+<label class="f">Link ya video (hiari)</label><input class="f" value="youtube.com/live/…">
+<div class="pv"><div class="row"><span>Bidhaa</span><b>Kuku wa Kienyeji</b></div><div class="row"><span>Dau la kuanzia</span><b>TZS 30,000</b></div><div class="row"><span>Ongezeko</span><b>5% (min 47,500)</b></div><div class="row"><span>Mwisho wa mnada</span><b>Jum 20:00</b></div></div>
+<div class="warn">Mipangilio ya mnada (bei/ongezeko/muda) inatoka kwenye <b>bidhaa</b> — haibadilishwi hapa. Auction Engine haigusiwi.</div>
+<div class="note"><b>View halisi:</b> <code>lvxCreate</code> sheet (<code>120:189-216</code>) — title/when/video/productIds zipo tayari; preview ni muhtasari wa kusoma tu.</div>
+</div></div><div class="cap"><b>Hatua 5.</b> Fomu + preview kabla ya kuanza</div></div></div>
+<div class="arrow">→</div>
+
+<!-- STEP 5 -->
+<div class="step"><div><div class="phone"><div class="banner">MOCK</div>
+<div class="shead">← Tayari — Hakiki</div><div class="sbody">
+<div class="pv"><div class="row"><span>Aina</span><b>🔴 Mnada Live</b></div><div class="row"><span>Kichwa</span><b>Mnada wa Kuku</b></div><div class="row"><span>Bidhaa</span><b>Kuku (Mnada)</b></div><div class="row"><span>Kuanza</span><b>Ijumaa 18:00</b></div><div class="row"><span>Video</span><b>YouTube ✓</b></div><div class="row"><span>Mnada unaisha</span><b>Jum 20:00</b></div></div>
+<button class="btn green">🔴 Tengeneza Live Mnada</button>
+<button class="btn grey">← Rudi kuhariri</button>
+<div class="note"><b>Baada ya kubonyeza:</b> <code>liveCreate(kind=auction)</code> → <code>skhLiveOpen(session)</code> → muuzaji anabonyeza <b>"Anza live"</b> akiwa tayari. Zabuni zinaendeshwa na <code>auctionPlaceBid</code> iliyopo — hakuna engine mpya.</div>
+</div></div><div class="cap"><b>Hatua 6.</b> Uthibitisho → Tengeneza → Anza live</div></div></div>
+
+</div>
+<div class="bindbox"><b>Muhtasari wa utekelezaji (baadaye, kwa idhini tofauti):</b> ① Chaguo "Anzisha Live" ndani ya chooser iliyopo (<code>113-sale-type-flow.js</code>) ② Kadi za Live Activity (badala ya select, data ile ile) ③ Picker ya bidhaa = <code>lvxProducts</code> iliyopo + njia ya "mpya" (<code>sellerForm</code>) na "badilisha" (edit + saleMode, rules zinaruhusu pre-bid) ④ Fomu = <code>lvxCreate</code> iliyopo + preview read-only ⑤ <code>liveCreate → skhLiveOpen</code> zilizopo. <b>Auction Engine, bidding, finalization, payment, second-chance: HAZIGUSWI. Group Buy / Price Drop: HAZIGUSWI. DB/Firebase/prod: HAZIGUSWI.</b></div>
+</body></html>

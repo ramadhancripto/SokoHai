@@ -10,7 +10,9 @@ t('product image has stable wide aspect ratio',cardCss.includes('aspect-ratio:4/
 t('product title uses readable two-line clamp',cardCss.includes('-webkit-line-clamp:2')&&cardCss.includes('font-size:15px!important'));
 t('desktop card grid uses wide minimum',cardCss.includes('minmax(min(100%,220px),1fr)'));
 t('small phone uses balanced compact grid',cardCss.includes('@media(max-width:360px)')&&(cardCss.includes('grid-template-columns:repeat(2,minmax(0,1fr))!important')||cardCss.includes('grid-template-columns:1fr!important')));
-t('Home advertisement is under Search',top.indexOf('id="topAnnouncement"')>top.indexOf('id="topSearchRow"'));
+/* [2026-11-05 owner, JOB 13 R5b] The top-most ad slot was removed on request; the Home
+   ad now mounts inside the feed (99-ads-marketplace feedPlacement 'home'). */
+t('Home advertisement is not shown above categories (owner request)',!top.includes('id="topAnnouncement"')&&r('js/app/99-ads-marketplace.js').includes("feedPlacement: 'home'"));
 t('Home showcase hides when no active ad',ad.includes("host.hidden=true")||ad.includes('h.hidden=true'));
 t('showcase derives active/scheduled/expired/archive state',ad.includes("return 'scheduled'")&&ad.includes("return 'expired'")&&ad.includes("return 'archived'"));
 /* [2026-09-24] Rotation moved to the shared Delivery Controller (96) in 0538616; priority ordering lives in 06 local selector. */

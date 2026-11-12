@@ -1479,3 +1479,6 @@ html body .skh-backbar.skh-backbar--auto-hidden { display: none !important; }
 }
 .mb-exit:hover { background: rgba(255,255,255,.28); }
 body.mb-on { padding-top: 46px; }
+
+/* [CART-ICON 2026-11] kitufe cha kikapu ni ICON TU — mraba, icon katikati */
+.pm-bar-btn.pm-bar-icon { flex: 0 0 auto !important; min-width: 0 !important; width: 52px !important; padding: 0 !important; justify-content: center !important; }

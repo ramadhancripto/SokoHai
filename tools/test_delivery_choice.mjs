@@ -153,6 +153,15 @@ section('A) Chujio la matangazo halisi ya usafiri');
             (added.byCollection[name] = added.byCollection[name] || []).push(d);
             return { id };
         },
+        // [REMEDIATION R1] mirrors skh.createRideRequest: contact goes to private/contact.
+        createRideRequest: async (d) => {
+            const KEYS = ['customerName', 'customerPhone', 'customerEmail', 'receiverName', 'receiverPhone'];
+            const pub = {}, priv = {};
+            Object.keys(d).forEach(k => { if (KEYS.includes(k)) priv[k] = d[k]; else pub[k] = d[k]; });
+            (added.byCollection.ride_requests = added.byCollection.ride_requests || []).push(pub);
+            (added.byCollection.ride_private = added.byCollection.ride_private || []).push(priv);
+            return { id: 'ride_' + Math.random().toString(36).slice(2, 7) };
+        },
         updateDoc: async () => {},
         collection: (db, name) => ({ _c: name }),
         doc: (db, name, id) => ({ path: name + '/' + id }),
@@ -268,6 +277,8 @@ section('A) Chujio la matangazo halisi ya usafiri');
     const rideDoc = added.byCollection.ride_requests[0];
     eq('ride ina orderId', rideDoc.orderId, 'ORD-REAL-2');
     eq('ride ina dereva aliyechaguliwa', rideDoc.preferredDriverId, 'd1');
+    ok('R1: ride doc haina namba ya mteja', !('customerPhone' in rideDoc) && !('customerName' in rideDoc));
+    ok('R1: mawasiliano yapo kwenye private/contact', 'customerName' in ((added.byCollection.ride_private || [])[0] || {}));
     ok('dispatch notifications imefanyika', dispatchedFallback);
     const notifs = added.byCollection.notifications || [];
     ok('mtoa usafiri aliyechaguliwa amepata taarifa', notifs.some(n => n.userId === 'd1'));

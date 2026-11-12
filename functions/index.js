@@ -7,7 +7,7 @@
  *
  *   walletAdjust            — mabadiliko YOTE ya salio la wallet (atomic + ledger)
  *   escrowRelease           — kutoa escrow ya marketplace (smart-split kamili)
- *   haipayReleaseLink       — kutoa escrow ya SokoPay payment link
+ *   sokopayReleaseLink       — kutoa escrow ya SokoPay payment link
  *   pesapalCheckout         — kuanzisha malipo ya PesaPal (secret iko server pekee)
  *   pesapalTransactionStatus— kuangalia hali ya muamala wa PesaPal
  *   pesapalIpn              — (HTTP) PesaPal anaripoti malipo yalipokamilika (IPN)
@@ -1358,9 +1358,9 @@ async function releaseOrderEscrow(orderId, ctx) {
 }
 
 /* ============================================================
- * 4) haipayReleaseLink — kutoa escrow ya SokoPay payment link
+ * 4) sokopayReleaseLink — kutoa escrow ya SokoPay payment link
  * ========================================================== */
-exports.haipayReleaseLink = onCall({ region: REGION }, async (req) => {
+exports.sokopayReleaseLink = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);
     const linkId = String((req.data || {}).linkId || '');
     if (!linkId || linkId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'linkId inahitajika.');
@@ -1440,7 +1440,7 @@ async function releaseLinkEscrow(linkId, ctx) {
             payerUid: buyerId, payeeUid: sellerId, method: (ev.hold && ev.hold.method) || 'wallet_legacy', verifiedAt: now
         }, { released: true, releasedAt: now, releasedFor: 'link_' + linkId, releaseTrigger: ctx.trigger || 'buyer' }), { merge: true });
         t.set(db.doc('wallet_ledger/' + releaseKey), {
-            linkId, type: ctx.trigger === 'auto_release' ? 'haipay_auto_release' : 'haipay_release',
+            linkId, type: ctx.trigger === 'auto_release' ? 'sokopay_auto_release' : 'sokopay_release',
             callerUid, holdId: ev.holdId, amount: totalAmount, createdAt: now
         });
         const patch = { status: 'completed', sellerEarned, platformFee, completedAt: now };
@@ -1982,7 +1982,7 @@ async function runSokoPayAutoRelease(evt) {
      * shippedAt) pekee HAZITOSHI. Muda wa saa 24 unahesabiwa pia kuanzia
      * wakati SERVER ilipothibitisha malipo — tarehe ya client (shippedAt /
      * paidAt) haiwezi kurudishwa nyuma ili kuharakisha malipo. Utoaji
-     * unatumia njia ZILEZILE za escrowRelease/haipayReleaseLink (atomic +
+     * unatumia njia ZILEZILE za escrowRelease/sokopayReleaseLink (atomic +
      * idempotent + hold moja = release moja). */
     function heldLongEnough(clientIso, ev) {
         const clientMs = clientIso ? Date.parse(clientIso) : 0;
@@ -4030,9 +4030,12 @@ exports.auctionPlaceBid = commerceModes.auctionPlaceBid;
 exports.groupBuyJoin = commerceModes.groupBuyJoin;
 exports.commerceModesSweep = commerceModes.commerceModesSweep;
 exports.auctionFinalize = commerceModes.auctionFinalize;
+// [FULL-AUCTION 2026-11] cancel + winner payment confirmation
+exports.auctionCancel = commerceModes.auctionCancel;
+exports.auctionConfirmPayment = commerceModes.auctionConfirmPayment;
 // [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
 const liveCommerce = require('./live-commerce');
-['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind','livePause','liveResume'].forEach(n => { exports[n] = liveCommerce[n]; });
+['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind','livePause','liveResume','liveSetVideo','livePing'].forEach(n => { exports[n] = liveCommerce[n]; });
 // [R13-D] Bei Kushuka buyer queue (refs 1 & 2)
 const priceDropQueue = require('./price-drop-queue');
 ['priceDropSubmit','priceDropMyRank','priceDropSettle'].forEach(n => { exports[n] = priceDropQueue[n]; });

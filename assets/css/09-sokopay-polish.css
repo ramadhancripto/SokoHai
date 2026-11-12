@@ -125,7 +125,7 @@
 .scart-input:focus { border-color: var(--skh-primary, #03509d) !important; box-shadow: 0 0 0 4px rgba(3,80,157,.12); outline: none; }
 
 /* ---------- GLOBAL WHITE-FIRST SOKOPAY SHELL (2026-09-22) ----------
-   Scoped here because the authoritative HaiPay fragment carries legacy inline colors. */
+   Scoped here because the authoritative SokoPay fragment carries legacy inline colors. */
 #sokopayForm,
 #sokopayWorkspace { background: #fff !important; color: #18352D !important; }
 #sokopayLeftSidebar.sp-sidebar {

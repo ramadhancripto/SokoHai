@@ -264,8 +264,13 @@ window.submitSokohaiService = async function(event) {
     const desc = document.getElementById('servHubDesc').value.trim();
     const loc = document.getElementById('servHubLocation').value.trim();
 
-    if (!title || !grp || !cat || !sub || !desc || !loc || price <= 0) {
-        alert(" jaza sehemu zote zenye alama ya nyota (*).");
+    // [2026-11-06] Bei inahitajika isipokuwa mfumo wa bei ni "kadirio" au "inajadiliwa".
+    const pricingModelSel = ((document.getElementById('servPricingModel') || {}).value || 'fixed').toLowerCase();
+    const priceRequired = pricingModelSel !== 'quotation_required' && pricingModelSel !== 'negotiable';
+    if (!title || !grp || !cat || !sub || !desc || !loc || (priceRequired && price <= 0)) {
+        alert(priceRequired && price <= 0 && title && desc && loc
+            ? " Weka bei (au chagua 'Kadirio linahitajika' / 'Inajadiliwa' kwenye mfumo wa bei)."
+            : " jaza sehemu zote zenye alama ya nyota (*).");
         return;
     }
 

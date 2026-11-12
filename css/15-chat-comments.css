@@ -1415,3 +1415,6 @@
     #chatMessages .ch-card { align-items: flex-start; }
     .ch-inbox-head-actions { gap: 2px; }
 }
+
+/* [CART-ICON 2026-11] kitufe cha kikapu ni ICON TU — mraba, icon katikati */
+.ch-nego-btn.ch-nego-icon { padding: 6px 9px !important; }

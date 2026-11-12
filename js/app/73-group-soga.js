@@ -103,6 +103,10 @@ import { skh } from './00-bootstrap.js';
         trade: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>'
     };
 
+    var GI = {   // [R13-G]
+        eye: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+        chat: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5a3 3 0 0 1-3 3H9l-4.5 3V6.5a3 3 0 0 1 3-3h9.5a3 3 0 0 1 3 3z"/></svg>'
+    };
     function buildModal() {
         var m = document.getElementById('skhGroupSogaModal');
         if (m) return m;
@@ -263,18 +267,25 @@ import { skh } from './00-bootstrap.js';
                 + '</div>';
         }
         if (t === 'product') {
+            /* [R13-G] kadi ya bidhaa kama design ref: picha · jina · bei/kipimo · stock · mahali ·
+               [Tazama] (ukurasa halisi wa bidhaa) + [Jadili] (chat binafsi na muuzaji). */
             var pr = m.product || {};
-            return '<div style="min-width:210px;max-width:270px;background:#FFFBE8;border:1px solid #ead98a;border-left:4px solid #D8B83A;border-radius:13px;padding:10px 12px;">'
-                + '<div style="display:flex;gap:9px;align-items:center;">'
-                + (pr.imageUrl ? '<img src="' + esc(String(pr.imageUrl)) + '" alt="" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;background:#fff;">' : '')
-                + '<div style="min-width:0;"><small style="display:block;font-size:9px;font-weight:800;letter-spacing:.5px;color:#8a6d00;text-transform:uppercase;">' + tk('gsg_p_prod', 'Bidhaa') + '</small>'
-                + '<b style="display:block;font-size:13px;color:#0f172a;">' + esc(pr.name || '') + '</b>'
-                + (pr.price ? '<span style="font-size:12.5px;font-weight:800;color:#8a6d00;">TZS ' + esc(String(pr.price)) + '</span>' : '')
-                + (pr.qty ? '<small style="color:#64748b;"> · ' + esc(String(pr.qty)) + (pr.unit ? ' ' + esc(pr.unit) : '') + '</small>' : '')
-                + (pr.sellerName ? '<small style="display:block;color:#64748b;">' + esc(pr.sellerName) + '</small>' : '')
-                + '</div></div>'
-                + (pr.productId ? '<button type="button" data-act="gsg-view-product" data-pid="' + esc(pr.productId) + '" style="margin-top:8px;border:1px solid #D8B83A;background:#fff;color:#8a6d00;font-weight:800;font-size:10.5px;padding:6px 11px;border-radius:99px;cursor:pointer;">' + tk('disc_opp_view', 'Tazama') + ' ›</button>' : '')
-                + '</div>';
+            var prN = String(pr.price == null ? '' : pr.price).replace(/[^0-9.]/g, '');
+            var prTxt = prN ? 'TSh ' + Number(prN).toLocaleString('en-US') : (pr.price ? esc(String(pr.price)) : '');
+            var stockBits = [];
+            if (pr.qty) stockBits.push('Stock: ' + esc(String(pr.qty)) + (pr.unit ? ' ' + esc(pr.unit) : ''));
+            if (pr.location) stockBits.push(esc(pr.location));
+            return '<div class="gsg-pcard">'
+                + '<span class="gsg-pc-img">' + (pr.imageUrl ? '<img src="' + esc(String(pr.imageUrl)) + '" alt="" loading="lazy">' : (ATC && ATC.prod ? ATC.prod : '')) + '</span>'
+                + '<div class="gsg-pc-b">'
+                +   '<b class="gsg-pc-t">' + esc(pr.name || '') + '</b>'
+                +   (prTxt ? '<span class="gsg-pc-pr">' + prTxt + (pr.unit ? ' <small>/ ' + esc(pr.unit) + '</small>' : '') + '</span>' : '')
+                +   (stockBits.length ? '<small class="gsg-pc-m">' + stockBits.join(' · ') + '</small>' : (pr.sellerName ? '<small class="gsg-pc-m">' + esc(pr.sellerName) + '</small>' : ''))
+                +   '<span class="gsg-pc-acts">'
+                +     (pr.productId ? '<button type="button" class="gsg-pc-btn" data-act="gsg-view-product" data-pid="' + esc(pr.productId) + '">' + GI.eye + ' Tazama</button>' : '')
+                +     (pr.productId && !my ? '<button type="button" class="gsg-pc-btn is-pri" data-act="gsg-jadili" data-pid="' + esc(pr.productId) + '" data-uid="' + esc(m.senderUid || '') + '" data-name="' + esc(m.senderName || '') + '">' + GI.chat + ' Jadili</button>' : '')
+                +   '</span>'
+                + '</div></div>';
         }
         if (t === 'service') {
             var sv = m.service || {};
@@ -301,6 +312,18 @@ import { skh } from './00-bootstrap.js';
             tick = ri && ri.allRead
                 ? ' <span title="' + tk('gsg_read_all', 'Wamesoma wote') + ': ' + esc((ri.names || []).join(', ')) + '" style="color:#1268A8;font-weight:800;">\u2713\u2713</span>'
                 : ' <span title="' + tk('gsg_read_some', 'Bado wengine hawajasoma') + '" style="color:#94a3b8;font-weight:800;">\u2713\u2713</span>';
+        }
+        // [R13-G] ujumbe wa mfumo (tukio halisi la kikundi) — kidonge katikati
+        if (m.type === '_sys') {
+            var nmS = (CUR.__names || {})[m.actorUid] || tk('grp_member', 'Mwanachama');
+            var nmT = (CUR.__names || {})[m.targetUid] || '';
+            var sysTxt = m.evType === 'member_joined' ? nmS + ' amejiunga kwenye kundi'
+                : m.evType === 'member_left' ? nmS + ' ameondoka kwenye kundi'
+                : m.evType === 'member_removed' ? (nmT || 'Mwanachama') + ' ameondolewa kwenye kundi'
+                : nmS + ' ameunda kundi' + (m.note ? ' \u201c' + m.note + '\u201d' : '');
+            return '<div class="gsg-sys" role="note"><span class="gsg-sys-ic" aria-hidden="true">'
+                + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.2 6-5.2s6 1.9 6 5.2"/><path d="M16.4 5.2a3.1 3.1 0 0 1 0 5.9"/><path d="M18 14.6c2 .6 3.3 2.2 3.3 4.4"/></svg></span>'
+                + '<span class="gsg-sys-t">' + esc(sysTxt) + '</span><small>' + t + '</small></div>';
         }
         // [§33/§28] ORDER SPAWN — kadi ya mafanikio (aggregates tu)
         if (m.type === 'order_spawn') {
@@ -388,7 +411,7 @@ import { skh } from './00-bootstrap.js';
 
         CUR.gid = gid;
         CUR.__tab = 'chat';
-        CUR.__annOpen = false;
+        CUR.__annOpen = false; CUR.__annHidden = null;
 
         var m = buildModal();
         try { document.body.classList.add('gsg-open'); } catch (eBO) {}
@@ -578,6 +601,16 @@ import { skh } from './00-bootstrap.js';
                     CUR.__names = await fetchNames((mems0 || []).filter(function (mm) { return mm && mm.status === 'active'; }).map(function (mm) { return mm.userId; }));
                     CUR.__roles = {};
                     (mems0 || []).forEach(function (mm) { if (mm && mm.userId && mm.status === 'active') CUR.__roles[mm.userId] = mm.role || 'member'; });
+                    /* [R13-G] idadi HALISI ya wanachama active (memberCount ya doc haisasishwi mtu
+                       akijiunga — rules zinaruhusu admin/owner tu kuandika group doc). */
+                    var actN = Object.keys(CUR.__roles).length;
+                    var subEl2 = document.getElementById('gsgSubEl');
+                    if (subEl2 && actN) {
+                        var typeLbl2 = (g.groupType === 'PERMANENT_COMMUNITY') ? tk('gsg_type_comm', 'Community') : tk('gsg_type_commr', 'Commerce');
+                        subEl2.innerHTML = '<span class="gsg-chip gsg-chip--members"><i class="gsg-dot" aria-hidden="true"></i>' + actN + ' ' + esc(tk('grp_members', 'wanachama'))
+                            + '</span><span class="gsg-chip">' + esc(typeLbl2) + '</span>';
+                        CUR.__subHtml = subEl2.innerHTML;
+                    }
                 } catch (eN0) {}
 
                 try { startGoTick(); } catch (eTK) {}
@@ -817,7 +850,7 @@ import { skh } from './00-bootstrap.js';
      * halisi (collections halisi); tupu → empty state ya uaminifu. */
     /* [GROUP BIZ 2026-11] Nav 9 ya mstari mmoja. Wanachama HAWAPO kwenye nav —
      * usimamizi upo Taarifa (ⓘ) / More. Group Oda ≠ Oda za Kawaida. */
-    var GSG_TABS = ['chat', 'media', 'products', 'groupOrders', 'orders', 'soko', 'buyers', 'transport', 'offers'];   // [§45] explicit enum
+    var GSG_TABS = ['chat', 'media', 'products', 'groupOrders', 'orders', 'transport', 'offers', 'members', 'soko', 'buyers'];   // [R13-G] order of the design ref (Wanachama added)   // [§45] explicit enum
     var gsgTabMeta = {
         chat:    { key: 'gsg_tab_chat',    fb: 'Mazungumzo' },
         products: { key: 'gsg_tab_products', fb: 'Bidhaa' },
@@ -847,13 +880,13 @@ import { skh } from './00-bootstrap.js';
         offers: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l4-4 4 3 2-2 4 4"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/><path d="M12 11l-3 3 2 2 3-3z"/></svg>',
     };
     var GSG_TAB_TONE = { chat: 'green', media: 'violet', products: 'blue', groupOrders: 'gold',
-        orders: 'teal', soko: 'blue', buyers: 'gold', transport: 'teal', offers: 'green' };
+        orders: 'teal', soko: 'blue', buyers: 'gold', transport: 'teal', offers: 'green', members: 'violet' };
     // [GROUP UI 2026-11] Lebo FUPI kwa kadi (76px) — jina kamili linabaki kwenye title/aria.
     var GSG_TAB_SHORT = {
-        chat:    function () { return 'Chat'; },   // [GROUP BIZ] lebo fupi iliyowekwa kwa nav 9
+        chat:    function () { return 'Mazungumzo'; },   // [R13-G] lebo kamili (design ref)
         products: function () { return tk('gsg_tab_products', 'Bidhaa'); },
-        groupOrders: function () { return tk('gsg_tab_gorders', 'Group Oda'); },
-        orders:  function () { return tk('gsg_short_orders2', 'Oda Kawaida'); },
+        groupOrders: function () { return 'Group Orders'; },
+        orders:  function () { return 'Oda za Kawaida'; },
         soko:    function () { return tk('gsg_tab_soko', 'Soko'); },
         buyers:  function () { return tk('gsg_tab_buyers', 'Ununuzi'); },
         transport: function () { return tk('gsg_tab_transport', 'Usafiri'); },
@@ -879,7 +912,10 @@ import { skh } from './00-bootstrap.js';
                 + '<span class="gsg-ic">' + (GSG_TAB_ICON[t] || '') + '</span>'
                 + '<span class="gsg-lb" data-no-i18n>' + esc(GSG_TAB_SHORT[t] ? GSG_TAB_SHORT[t]() : tk(gsgTabMeta[t].key, gsgTabMeta[t].fb)) + '</span>'
                 + '</button>';
-        }).join('');
+        }).join('')
+            /* [R13-G] kadi ya chini ya upande wa kushoto (desktop, design ref) */
+            + '<div class="gsg-rail-card" aria-hidden="true"><span class="gsg-rail-shield"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>'
+            + '<b data-no-i18n>SokoHai</b><small data-no-i18n>Biashara Salama na Inayoaminika</small></div>';
     }
 
     /* [GROUP BIZ 2026-11] Ramani ya tab → container. Wanachama hakuna kwenye nav;
@@ -888,7 +924,7 @@ import { skh } from './00-bootstrap.js';
     var GSG_TAB_HOST = {
         chat: 'gsgTabChat', media: 'gsgTabMedia', products: 'gsgTabProducts',
         groupOrders: 'gsgTabOrders', orders: 'gsgTabIndiv',
-        soko: 'gsgTabSoko', buyers: 'gsgTabBuyers', transport: 'gsgTabTransport', offers: 'gsgTabOffers'
+        soko: 'gsgTabSoko', buyers: 'gsgTabBuyers', transport: 'gsgTabTransport', offers: 'gsgTabOffers', members: 'gsgTabMembers'
     };
 
     function setGsgTab(tab) {
@@ -898,8 +934,6 @@ import { skh } from './00-bootstrap.js';
             var el = document.getElementById(GSG_TAB_HOST[t]);
             if (el) el.style.display = (t === tab) ? (t === 'chat' ? 'flex' : 'block') : 'none';
         });
-        var legacyMem = document.getElementById('gsgTabMembers');
-        if (legacyMem) legacyMem.style.display = 'none';
         renderTabsBar();
         if (tab === 'groupOrders') renderOrdersTab(CUR.gid);
         else if (tab === 'orders') renderIndivOrdersTab(CUR.gid);
@@ -909,6 +943,7 @@ import { skh } from './00-bootstrap.js';
         else if (tab === 'buyers') renderBuyersTab(CUR.gid);
         else if (tab === 'transport') renderTransportTab(CUR.gid);
         else if (tab === 'offers') renderOffersTab(CUR.gid);
+        else if (tab === 'members') renderMembersTab(CUR.gid);
     }
 
     function gsgEmptyTabHtml(title, sub) {
@@ -952,9 +987,15 @@ import { skh } from './00-bootstrap.js';
         var rowsAll = rows; rows = rows.filter(fMatch);
         var head = filterBar + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
             + '<b style="flex:1;font-size:13px;color:#0f172a;">' + tk('gsg_tab_orders', 'Group Orders') + ' (' + rows.length + ')</b>'
-            + (g_sendPolicy_blocked() ? '' : !goOn() ? goSoonBadge() : '<button type="button" data-act="gsg-at-gorder" style="border:1px solid #D8B83A;background:#FFFBE8;color:#8a6d00;font-weight:800;font-size:11px;padding:7px 12px;border-radius:99px;cursor:pointer;">+ ' + tk('gsg_go_new', 'unda') + '</button>')
+            + (g_sendPolicy_blocked() || goOn() ? '' : goSoonBadge())
             + '</div>';
-        if (!rows.length) { host.innerHTML = head + (goOn() ? gsgEmptyTabHtml(tk('gsg_no_orders', 'Bado hakuna Group Order'), tk('gsg_no_orders_sub2', 'Tumia [+ unda] juu au kwenye composer — zimetimunya PHASE 4.')) : gsgEmptyTabHtml('Oda za Pamoja hazijafunguliwa bado', 'Huduma hii inakuja hivi karibuni. Kwa sasa tumia Group Buy kwenye ukurasa wa bidhaa.')); return; }
+        /* [R13-G] Feature ikiwashwa (emulator preview): kuunda Group Order ya kikundi bado kunahitaji
+           injini ya server (rules: groupOrders write:false) — hatuonyeshi kitufe kitakachoshindwa.
+           Tunaonyesha Group Buy HALISI za bidhaa za wanachama; [Jiunge] → ukurasa wa bidhaa (groupBuyJoin). */
+        var gbHtml = '';
+        if (goOn()) { try { gbHtml = await gsgMemberGroupBuys(gid); } catch (eGB) { gbHtml = ''; } }
+        if (CUR.gid !== gid || (CUR.__tab || 'chat') !== 'groupOrders') return;
+        if (!rows.length) { host.innerHTML = head + (goOn() ? gsgEmptyTabHtml(tk('gsg_no_orders', 'Bado hakuna Group Order ya kikundi'), 'Kuanzisha Group Order ndani ya kikundi kunahitaji injini ya server (Grp Oda 2.0) — inajengwa awamu ijayo.') + gbHtml : gsgEmptyTabHtml('Oda za Pamoja hazijafunguliwa bado', 'Huduma hii inakuja hivi karibuni. Kwa sasa tumia Group Buy kwenye ukurasa wa bidhaa.')); return; }
         rows.sort(function (a, b) { return String(b.createdAt || b.updatedAt || '').localeCompare(String(a.createdAt || a.updatedAt || '')); });
         host.innerHTML = head + rows.map(function (o) {
             var st = String(o.status || 'OPEN').replace(/_/g, ' ');
@@ -968,7 +1009,26 @@ import { skh } from './00-bootstrap.js';
                 + '<div style="margin-top:6px;font-size:11px;color:#64748b;">TZS ' + (+o.targetPrice || 0) + (o.unit ? ' / ' + esc(o.unit) : '') + ' · ' + tk('gsg_go_dl', 'Mwisho') + ' ' + esc(String(o.deadline || '').slice(0, 10)) + ' · ' + (+o.participantCount || 0) + ' ' + tk('gsg_go_ppl', 'watoa ahadi') + '</div>'
                 + '<button type="button" data-act="gsg-go-view" data-goid="' + esc(o.__id) + '" style="margin-top:8px;border:1px solid #D8B83A;background:#fff;color:#8a6d00;font-weight:800;font-size:10.5px;padding:6px 12px;border-radius:99px;cursor:pointer;">' + tk('disc_opp_view', 'Tazama') + ' ›</button>'
                 + '</div>';
-        }).join('');
+        }).join('') + gbHtml;
+    }
+
+    async function gsgMemberGroupBuys(gid) {
+        var ids = Object.keys(CUR.__roles || {}).slice(0, 10);
+        if (!ids.length) return '';
+        var list = [];
+        var snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'products'), skh.where('userId', 'in', ids), skh.limit(80)));
+        snap.forEach(function (d) { var p = d.data() || {}; if (p.saleMode !== 'group_buy' || (p.publicationStatus && p.publicationStatus !== 'published')) return; p.__id = d.id; list.push(p); });
+        if (!list.length) return '';
+        return '<div class="gsg-gb"><b class="gsg-msec-t">Group Buy za wanachama</b>' + list.map(function (p) {
+            var md = p.modeData || {}, tgt = +md.targetUsers || +md.targetQty || 0, jn = +md.joinedUsers || 0;
+            var pct = tgt ? Math.min(100, Math.round(jn / tgt * 100)) : 0;
+            var img = p.image || (Array.isArray(p.imagesArray) ? p.imagesArray[0] : '');
+            return '<div class="gsg-gb-card"><span class="gsg-pc-img">' + (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '') + '</span>'
+                + '<div class="gsg-pc-b"><b class="gsg-pc-t">' + esc(p.title || '') + '</b>'
+                + '<span class="gsg-pc-pr">TSh ' + Number(md.groupPrice || p.price || 0).toLocaleString('en-US') + (p.unit ? ' <small>/ ' + esc(p.unit) + '</small>' : '') + '</span>'
+                + (tgt ? '<small class="gsg-pc-m">Wamejiunga ' + jn + ' / ' + tgt + '</small><span class="gsg-gb-bar"><i style="width:' + pct + '%"></i></span>' : '')
+                + '<span class="gsg-pc-acts"><button type="button" class="gsg-pc-btn is-pri" data-act="gsg-view-product" data-pid="' + esc(p.__id) + '">Jiunge</button></span></div></div>';
+        }).join('') + '</div>';
     }
 
     async function renderMembersTab(gid) {
@@ -1393,25 +1453,47 @@ import { skh } from './00-bootstrap.js';
         if (b) { b.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
     }
 
+    /* [R13-G] Media ya kikundi (design ref "Media Group"): vichujio Zote/Picha/Sauti/Nyaraka,
+       gridi ya picha yenye jina la aliyeshiriki, sauti na nyaraka — kutoka meseji HALISI tu. */
     async function renderMediaTab(gid) {
         var host = document.getElementById('gsgTabMedia');
         if (!host || CUR.gid !== gid) return;
         host.innerHTML = '<small style="color:#94a3b8;display:block;text-align:center;padding:18px;">' + tk('loading', 'Inapakia...') + '</small>';
-        var imgs = [];
+        var imgs = [], auds = [], docs = [];
         try {
             var snap = await skh.getDocs(msgsCol(gid));
             if (snap && snap.forEach) snap.forEach(function (d) {
-                var m = d.data() || {};
+                var m = d.data() || {}; m.__id = d.id;
                 var url = m.imageUrl || m.mediaUrl || (Array.isArray(m.attachments) && m.attachments.length ? (m.attachments[0].url || m.attachments[0].imageUrl) : null);
                 if (url && (m.type === 'image' || m.type === 'photo' || /\.(png|jpe?g|webp|gif)(\?|$)/i.test(String(url)))) imgs.push({ url: String(url), at: m.at || '', sender: m.senderName || '' });
+                else if ((m.type === 'audio' || m.type === 'voice') && m.audioUrl) auds.push({ url: String(m.audioUrl), at: m.at || '', sender: m.senderName || '', ms: +m.durationMs || 0 });
+                else if (m.type === 'document') docs.push({ name: m.fileName || 'Nyaraka', size: +m.fileSize || 0, at: m.at || '', sender: m.senderName || '', data: m.fileData || '', mime: m.fileType || '' });
             });
         } catch (eMD) {}
         if (CUR.gid !== gid || (CUR.__tab || 'chat') !== 'media') return;
-        if (!imgs.length) { host.innerHTML = gsgEmptyTabHtml(tk('gsg_no_media', 'Bado hakuna media'), tk('gsg_no_media_sub', 'Picha/video/docs zinazoshirikiwa humu zitajaza sehemu hii — message types zinakuja kwenye phase ijayo.')); return; }
-        host.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">'
-            + imgs.map(function (im) {
-                return '<div title="' + esc(im.sender) + (im.at ? ' · ' + esc(String(im.at).slice(0, 10)) : '') + '" style="aspect-ratio:1;border-radius:9px;overflow:hidden;background:#e2e8f0 url(' + esc(im.url) + ') center/cover;"></div>';
-            }).join('') + '</div>';
+        var byAt = function (a, b) { return String(b.at).localeCompare(String(a.at)); };
+        imgs.sort(byAt); auds.sort(byAt); docs.sort(byAt);
+        var f = CUR.__mediaF || 'all';
+        var chips = [['all', 'Zote', imgs.length + auds.length + docs.length], ['img', 'Picha', imgs.length], ['aud', 'Sauti', auds.length], ['doc', 'Nyaraka', docs.length]];
+        var head = '<div class="gsg-media-chips" data-no-i18n>' + chips.map(function (c) {
+            return '<button type="button" class="gsg-mchip' + (c[0] === f ? ' is-on' : '') + '" data-act="gsg-media-f" data-f="' + c[0] + '">' + c[1] + ' <small>' + c[2] + '</small></button>'; }).join('') + '</div>';
+        var dd = function (at) { return at ? String(at).slice(0, 10) : ''; };
+        var sec = function (t, body) { return '<div class="gsg-msec"><b class="gsg-msec-t">' + t + '</b>' + body + '</div>'; };
+        var out = '';
+        if ((f === 'all' || f === 'img') && imgs.length) out += sec('Picha', '<div class="gsg-mgrid">' + imgs.map(function (im) {
+            return '<a class="gsg-mtile" href="' + esc(im.url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(im.sender) + ' · ' + esc(dd(im.at)) + '"><img src="' + esc(im.url) + '" alt="" loading="lazy">'
+                + '<span class="gsg-mwho"><i>' + esc(String(im.sender || '?').charAt(0).toUpperCase()) + '</i>' + esc(im.sender) + '</span></a>'; }).join('') + '</div>');
+        if ((f === 'all' || f === 'aud') && auds.length) out += sec('Sauti', auds.map(function (a) {
+            var sc = Math.round(a.ms / 1000);
+            return '<div class="gsg-maud"><span class="gsg-maud-who">' + esc(a.sender) + ' · ' + esc(dd(a.at)) + (sc ? ' · ' + Math.floor(sc / 60) + ':' + String(sc % 60).padStart(2, '0') : '') + '</span>'
+                + '<audio controls preload="none" src="' + esc(a.url) + '"></audio></div>'; }).join(''));
+        if ((f === 'all' || f === 'doc') && docs.length) out += sec('Nyaraka', '<div class="gsg-mdocs">' + docs.map(function (d2) {
+            var ext = (String(d2.name).split('.').pop() || 'DOC').slice(0, 4).toUpperCase();
+            var size = d2.size ? (d2.size > 1048576 ? (d2.size / 1048576).toFixed(1) + ' MB' : Math.round(d2.size / 1024) + ' KB') : '';
+            var inner = '<span class="gsg-mdoc-ic' + (ext === 'PDF' ? ' is-pdf' : '') + '">' + esc(ext) + '</span><b>' + esc(d2.name) + '</b><small>' + esc(d2.sender) + (size ? ' · ' + size : '') + '</small>';
+            return /^data:/.test(d2.data) ? '<a class="gsg-mdoc" href="' + esc(d2.data) + '" download="' + esc(d2.name) + '">' + inner + '</a>' : '<div class="gsg-mdoc">' + inner + '</div>'; }).join('') + '</div>');
+        if (!out) out = gsgEmptyTabHtml(tk('gsg_no_media', 'Bado hakuna media'), 'Picha, sauti na nyaraka zinazoshirikiwa kwenye kikundi zitaonekana hapa.');
+        host.innerHTML = '<div class="gsg-media">' + head + out + '</div>';
     }
 
     /* [§9] Pinned announcement card — subtle-blue, HAIWEEKANI ujumbe wa kawaida (pembeni, si bubble ya sender). */
@@ -1420,7 +1502,8 @@ import { skh } from './00-bootstrap.js';
         if (!host) return;
         // [GROUP UI 2026-11] Tangazo = kadi iliyobandikwa (pin). Kikundi kisicho na
         // tangazo hakiachi nafasi tupu (host inafichwa kabisa).
-        if (!ann || !ann.text) { host.innerHTML = ''; host.style.display = 'none'; CUR.__annOpen = false; return; }
+        if (!ann || !ann.text || CUR.__annHidden === String(ann.text)) { host.innerHTML = ''; host.style.display = 'none'; CUR.__annOpen = false; return; }
+        CUR.__ann = ann;
         var txt = String(ann.text);
         var full = !!CUR.__annOpen;
         var short = txt.length > 120 ? txt.slice(0, 120) + '\u2026' : txt;
@@ -1429,11 +1512,12 @@ import { skh } from './00-bootstrap.js';
             + '<button type="button" class="gsg-pin-row" data-act="gsg-ann-view" aria-expanded="' + (full ? 'true' : 'false') + '">'
             +   '<span class="gsg-pin-ic"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v6l-2 4h10l-2-4V4"/><path d="M12 14v6"/><path d="M7 4h10"/></svg></span>'
             +   '<span class="gsg-pin-txt">'
-            +     '<span class="gsg-pin-lab">' + tk('gsg_ann_', 'Tangazo la kikundi') + '</span>'
+            +     '<span class="gsg-pin-lab" data-no-i18n>Tangazo:</span>'
             +     '<span class="gsg-pin-msg">' + esc(full ? txt : short) + '</span>'
             +   '</span>'
-            +   '<span class="gsg-pin-more">' + (full ? tk('gsg_ann_less', 'Funga') : tk('disc_opp_view', 'Tazama')) + '</span>'
+            +   '<span class="gsg-pin-more" data-no-i18n>' + (full ? 'Funga' : 'Soma zaidi') + '</span>'
             + '</button>'
+            + '<button type="button" class="gsg-pin-x" data-act="gsg-ann-hide" aria-label="Ficha tangazo">\u00d7</button>'
             + (full ? '<div class="gsg-pin-full">' + renderMsgText(txt) + '</div>' : '')
             + '</div>';
     }
@@ -2017,6 +2101,9 @@ import { skh } from './00-bootstrap.js';
         serv: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5a4 4 0 0 1 5 5L9 22l-5-5z"/><path d="m13 8-1.5 1.5"/></svg>',
         poll: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11"/><path d="M12 20V5"/><path d="M19 20v-6"/></svg>',
         ann: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4a1 1 0 0 0 1 1h2l4 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>',
+        truck: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/></svg>',
+        offer: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>',
+        ord: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4"/></svg>',
         go: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4"/><path d="M12 11.5v9"/></svg>'
     };
 
@@ -2037,31 +2124,63 @@ import { skh } from './00-bootstrap.js';
         pop.className = 'gsg-sheet-pop';
         pop.setAttribute('role', 'dialog');
         pop.setAttribute('aria-modal', 'true');
-        pop.innerHTML = '<div class="gsg-sheet-panel">'
+        /* [R13-G] menyu ya (+) kama design ref: vitendo vya biashara + viambatisho. Kila kipengele
+           kinaita kazi halisi iliyopo (typed message / tab ya module husika) — hakuna kipya cha uongo. */
+        pop.innerHTML = '<div class="gsg-sheet-panel gsg-plus">'
             + '<div class="gsg-sheet-grab"></div>'
             + '<div class="gsg-sheet-head"><b>' + tk('gsg_attach', 'Ambatisha') + '</b>'
             +   '<button type="button" class="gsg-sheet-x" data-act="gsg-attach-close" aria-label="' + tk('close', 'Funga') + '">\u00d7</button></div>'
-            + '<div class="gsg-sheet-body">'
-            +   '<div class="gsg-at-lab">' + tk('gsg_at_files', 'Viambatisho') + '</div>'
-            +   '<div class="gsg-at-grid">'
-            +     atChip('gsg-at-image', ATC.img, tk('gsg_at_img', 'Picha'))
-            +     atChip('gsg-at-doc', ATC.doc, tk('gsg_at_doc', 'Nyaraka'))
-            +     atChip('gsg-at-loc', ATC.loc, tk('gsg_at_loc', 'Mahali'))
-            +     atChip('gsg-at-contact', ATC.ctc, tk('gsg_at_ctc', 'Mawasiliano'))
-            +   '</div>'
-            +   '<div class="gsg-at-lab" style="color:#9A7615;">' + tk('gsg_at_biz', 'BIASHARA') + '</div>'
-            +   '<div class="gsg-at-grid">'
-            +     atChip('gsg-at-product', ATC.prod, tk('gsg_p_prod', 'Bidhaa'))
-            +     atChip('gsg-at-service', ATC.serv, tk('gsg_p_serv', 'Huduma'))
-            +     atChip('gsg-at-poll', ATC.poll, tk('gsg_p_poll', 'Kura'))
-            +     (canManage ? atChip('gsg-at-announce', ATC.ann, tk('gsg_p_ann', 'Tangazo')) : '')   // [§46] UI hides invalid
-            +     (goOn() ? atChip('gsg-at-gorder', ATC.go, 'Group Order') : '')
+            + '<div class="gsg-sheet-body" data-no-i18n>'
+            +   '<div class="gsg-at-grid gsg-plus-grid">'
+            +     atChip('gsg-at-image', ATC.img, 'Tuma Media')
+            +     atChip('gsg-at-pick', ATC.prod, 'Shiriki Bidhaa')
+            +     atChip('gsg-at-service', ATC.serv, 'Shiriki Huduma')
+            +     atChip('gsg-at-gotab', ATC.go, 'Anzisha Group Order')
+            +     atChip('gsg-at-ordtab', ATC.ord, 'Shiriki Oda ya Kawaida')
+            +     atChip('gsg-at-trtab', ATC.truck, 'Panga Usafiri')
+            +     atChip('gsg-at-oftab', ATC.offer, 'Shiriki Ofa')
+            +     atChip('gsg-at-doc', ATC.doc, 'Tuma Nyaraka/PDF')
+            +     atChip('gsg-at-loc', ATC.loc, 'Shiriki Mahali')
+            +     atChip('gsg-at-poll', ATC.poll, 'Kura')
+            +     atChip('gsg-at-contact', ATC.ctc, 'Mawasiliano')
+            +     (canManage ? atChip('gsg-at-announce', ATC.ann, 'Tangazo') : '')   // [§46] UI hides invalid
             +   '</div>'
             + '</div></div>';
         pop.addEventListener('click', function (ev) { if (ev.target === pop) closeAttachPop(); });
         // [GROUP UI 2026-11] Sheet inaishi NDANI ya dirisha la kikundi, juu ya composer.
         var hostEl = document.querySelector('#skhGroupSogaModal .gsg-fs') || document.getElementById('skhGroupSogaModal');
         (hostEl || document.body).appendChild(pop);
+    }
+
+    /* [R13-G] Shiriki Bidhaa: chagua kutoka listings HALISI zako (products, userId == wewe).
+       Kadi inabeba productId → [Tazama]/[Jadili] zinaenda kwenye rekodi ile ile (source of truth). */
+    function closePicker() { var x = document.getElementById('gsgPickPop'); if (x) x.remove(); }
+    async function openProductPicker() {
+        closePicker();
+        var pop = document.createElement('div');
+        pop.id = 'gsgPickPop'; pop.className = 'gsg-sheet-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true');
+        pop.innerHTML = '<div class="gsg-sheet-panel"><div class="gsg-sheet-grab"></div><div class="gsg-sheet-head"><b>Shiriki Bidhaa</b>'
+            + '<button type="button" class="gsg-sheet-x" data-act="gsg-pick-close" aria-label="Funga">\u00d7</button></div>'
+            + '<div class="gsg-sheet-body" id="gsgPickBody"><small class="gsg-loading">Inapakia bidhaa zako\u2026</small></div></div>';
+        pop.addEventListener('click', function (ev) { if (ev.target === pop) closePicker(); });
+        var hostEl = document.querySelector('#skhGroupSogaModal .gsg-fs') || document.body; hostEl.appendChild(pop);
+        var list = [];
+        try {
+            var snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'products'), skh.where('userId', '==', uid()), skh.limit(40)));
+            snap.forEach(function (d) { var p = d.data() || {}; if (p.publicationStatus && p.publicationStatus !== 'published') return;
+                list.push({ id: d.id, title: p.title || p.name || 'Bidhaa', price: p.price || '', unit: p.unit || p.priceUnit || '', stock: p.stock != null ? String(p.stock) : '',
+                    seller: p.sellerName || p.ownerName || myName(), image: p.image || (Array.isArray(p.imagesArray) ? p.imagesArray[0] : '') || '', location: p.location || p.region || '' }); });
+        } catch (eP) {}
+        CUR.__pick = list;
+        var body = document.getElementById('gsgPickBody'); if (!body) return;
+        body.innerHTML = (list.length ? '<div class="gsg-pick-list">' + list.map(function (p) {
+                return '<button type="button" class="gsg-pick" data-act="gsg-pick-send" data-pid="' + esc(p.id) + '">'
+                    + '<span class="gsg-pick-img">' + (p.image ? '<img src="' + esc(p.image) + '" alt="" loading="lazy">' : ATC.prod) + '</span>'
+                    + '<span class="gsg-pick-tx"><b>' + esc(p.title) + '</b><small>' + (p.price ? 'TSh ' + Number(p.price).toLocaleString('en-US') : '') + (p.stock ? ' · Stock ' + esc(p.stock) : '') + '</small></span>'
+                    + '<span class="gsg-pick-go">Shiriki</span></button>';
+            }).join('') + '</div>'
+            : '<div class="gsg-empty"><b>Huna bidhaa zilizochapishwa bado</b><small>Weka bidhaa sokoni kwanza, kisha uishiriki hapa.</small></div>')
+            + '<button type="button" class="gsg-pick-manual" data-act="gsg-at-product">Andika maelezo ya bidhaa mwenyewe</button>';
     }
 
     /* generic mini-form (typed msg creation) — fields: [{id,label,ph,opt,num}] */
@@ -2178,8 +2297,18 @@ import { skh } from './00-bootstrap.js';
             clearTimeout(loadTimer);
             var rows = [];
             snap.forEach(function (d) { var dd = d.data() || {}; dd.__id = d.id; rows.push(dd); });
-            rows.sort(function (a, b) { return String(a.at || '').localeCompare(String(a.at || '')); });
+            rows.sort(function (a, b) { return String(a.at || '').localeCompare(String(b.at || '')); });   // [R13-G] was a.at vs a.at (no-op) → timeline out of order
             rows = rows.slice(-60);
+            /* [R13-G] design ref: matukio halisi ya kikundi (kujiunga/kuondoka) ndani ya timeline
+               kama ujumbe wa mfumo — kutoka chatGroups/{gid}/events (members wanasoma). */
+            try {
+                var evs = (typeof window.skhGroupEvents === 'function') ? await window.skhGroupEvents(gid, 500) : [];
+                var firstAt = rows.length ? String(rows[0].at || '') : '';
+                var SYS_T = { member_joined: 1, member_left: 1, member_removed: 1, group_created: 1 };
+                (evs || []).filter(function (e) { return e && SYS_T[e.type] && (!firstAt || String(e.at || '') >= firstAt); }).slice(-30)
+                    .forEach(function (e) { rows.push({ type: '_sys', at: e.at, evType: e.type, actorUid: e.actorUid || '', targetUid: e.targetUid || '', note: e.note || '' }); });
+                rows.sort(function (a, b) { return String(a.at || '').localeCompare(String(b.at || '')); });
+            } catch (eEv) {}
             CUR.__rows = rows;   // [GROUP UI 2026-11] kwa action sheet ya ujumbe
             
             var convD = {}, othersActive = [];
@@ -2550,7 +2679,23 @@ import { skh } from './00-bootstrap.js';
                 }
                 return;
             }
+            else if (act === 'gsg-media-f') { CUR.__mediaF = b.getAttribute('data-f') || 'all'; renderMediaTab(CUR.gid); return; }
+            else if (act === 'gsg-ann-hide') { CUR.__annHidden = CUR.__ann ? String(CUR.__ann.text) : '1'; renderAnnounce(CUR.__ann); return; }
+            else if (act === 'gsg-at-gotab') { closeAttachPop(); setGsgTab('groupOrders'); return; }
+            else if (act === 'gsg-at-ordtab') { closeAttachPop(); setGsgTab('orders'); return; }
+            else if (act === 'gsg-at-trtab') { closeAttachPop(); setGsgTab('transport'); return; }
+            else if (act === 'gsg-at-oftab') { closeAttachPop(); setGsgTab('offers'); return; }
+            else if (act === 'gsg-at-pick') { closeAttachPop(); openProductPicker(); return; }
+            else if (act === 'gsg-pick-close') { closePicker(); return; }
+            else if (act === 'gsg-pick-send') {
+                var pk = (CUR.__pick || []).filter(function (x) { return x.id === b.getAttribute('data-pid'); })[0];
+                closePicker();
+                if (pk) window.skhGroupSendTyped(CUR.gid, { type: 'product', product: { name: pk.title, price: pk.price, unit: pk.unit, qty: pk.stock, productId: pk.id,
+                    sellerName: pk.seller, imageUrl: pk.image, location: pk.location } }).then(function (rp) { if (!rp || !rp.ok) alert('Bidhaa haijashirikiwa (' + ((rp && rp.reason) || 'hitilafu') + ').'); });
+                return;
+            }
             else if (act === 'gsg-at-product') {
+                closePicker();
                 openTypedForm(tk('gsg_p_prod', 'Bidhaa'), [
                     { id: 'name', ph: tk('gsg_prod_name_ph', 'Jina la bidhaa (mf: Mahindi jumla gunia)') },
                     { id: 'price', ph: tk('gsg_prod_price_ph', 'Bei (TZS, hiari)'), num: true, opt: true },
@@ -2811,9 +2956,23 @@ import { skh } from './00-bootstrap.js';
                 if (tg && window.skhChatOpen) window.skhChatOpen(tg);
                 return;
             }
+            else if (act === 'gsg-jadili') {
+                /* [R13-G] Jadili = mazungumzo binafsi na MUUZAJI halisi wa bidhaa (products/{pid}.userId) */
+                var jp = b.getAttribute('data-pid');
+                (async function () {
+                    var sellerUid = b.getAttribute('data-uid') || '', sellerNm = b.getAttribute('data-name') || '';
+                    try { var ps = await skh.getDoc(skh.doc(skh.db, 'products', jp)); if (ps && ps.exists && ps.exists()) { var pd = ps.data() || {}; sellerUid = pd.userId || sellerUid; sellerNm = pd.sellerName || pd.ownerName || sellerNm; } } catch (eJP) {}
+                    if (!sellerUid || sellerUid === uid()) { try { window.skhToast && window.skhToast('Hii ni bidhaa yako.', 'info'); } catch (eT) {} return; }
+                    window.skhCloseGroupSoga();
+                    if (typeof window.openChatWithUser === 'function') window.openChatWithUser(sellerUid, sellerNm);
+                })();
+                return;
+            }
             else if (act === 'gsg-view-product') {
                 var pid = b.getAttribute('data-pid');
-                if (pid && window.showProductDetail) window.showProductDetail(pid);
+                // [R13-G] showProductDetail haipo kwenye mfumo — ukurasa halisi ni openProduct
+                if (pid && typeof window.openProduct === 'function') { window.skhCloseGroupSoga(); window.openProduct(pid, 'products'); }
+                else if (pid && window.showProductDetail) window.showProductDetail(pid);
                 else if (pid) { try { window.showToast && window.showToast(tk('gsg_prod_open', 'Kufungua bidhaa...'), 'info'); } catch (eP2) {} }
                 return;
             }

@@ -201,12 +201,12 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // BIASHARA (login inahitajika) Ã¢â‚¬â€ HaiPay, oda, notifications, n.k.
+    // BIASHARA (login inahitajika) Ã¢â‚¬â€ SokoPay, oda, notifications, n.k.
     // ============================================================
     // [PHASE 1 SECURITY 2026-09] sokopay_links: hali ya malipo ni ya SERVER.
     //  Ã¢â‚¬Â¢ status 'held'/'completed', paidAt, paymentVerified, verifiedAmount,
     //    sellerEarned, autoReleased* Ã¢â€ â€™ huandikwa na Cloud Functions PEKEE
-    //    (settlePesaPalPayment / sokopayLinkWalletPay / haipayReleaseLink /
+    //    (settlePesaPalPayment / sokopayLinkWalletPay / sokopayReleaseLink /
     //    sokopayAutoRelease). Kivinjari hakiwezi tena "kujilipa" kwa kuandika
     //    status:'held' + paidAt ya zamani.
     //  Ã¢â‚¬Â¢ Muuzaji (userId) anaunda link 'pending' na kuhariri maelezo akiwa pending.
@@ -240,10 +240,10 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // HAIPAY: vitu vilivyohifadhiwa (token/linki/QR) vya mtumiaji.
+    // SOKOPAY: vitu vilivyohifadhiwa (token/linki/QR) vya mtumiaji.
     // Kila mtumiaji anaweza kuona vyake tu; kuandika/futa kwa umiliki.
     // ============================================================
-    match /haipay_saved/{id} {
+    match /sokopay_saved/{id} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if signedIn() && resource.data.userId == request.auth.uid;

@@ -1,9 +1,64 @@
 /* ==== js/app/04-orders-escrow.js ==== */
 import { skh } from './00-bootstrap.js';
 
+/* [LAUNCH-FIX 2026-11-09] Server escrow release wrapper. confirmEscrowOrder
+   hutumia njia hii PEKEE — client fallback (status=completed + wallet adjusts
+   za kivinjari) imeondolewa: iliandika 'completed' bila kulipa mtu. */
+window.skhEscrowRelease = async function (orderId) {
+    try {
+        if (typeof skh.wrapCallable !== 'function') return { ok: false, message: 'Server haipatikani.' };
+        const fn = skh.wrapCallable('escrowRelease');
+        const r = await fn({ orderId: String(orderId || '') });
+        const d = (r && r.data) ? r.data : r;
+        if (d && d.ok) return { ok: true, split: d.split || {}, ledgerId: d.ledgerId || '', already: !!d.already };
+        return { ok: false, message: (d && (d.message || d.error)) || 'Server imekataa.' };
+    } catch (e) {
+        return { ok: false, message: (e && e.message) || 'Hitilafu ya server.' };
+    }
+};
+
+/* [LAUNCH-FIX 2026-11-09] Kithibiti kimoja cha oda (client-side mirror ya
+   firestore.rules orders). Waandishi WOTE wa oda lazima wakitumie KABLA ya
+   kuandika — rules ndiyo mamlaka ya mwisho, hiki ni kinga + UX. */
+window.skhOrderChecks = {
+    CREATE_STATUSES: ['payment_pending', 'pending', 'pending_choice', 'new_order', 'awaiting_payment'],
+    newOrderError: function (o, meUid) {
+        o = o || {};
+        if (!meUid) return 'Ingia kwanza ili kuunda oda.';
+        if (!o.buyerId || o.buyerId !== meUid) return 'Oda lazima iundwe na mnunuzi mwenyewe.';
+        if (!o.sellerId || typeof o.sellerId !== 'string' || o.sellerId === meUid) return 'Muuzaji si sahihi.';
+        const amt = Number(o.amount);
+        if (!isFinite(amt) || amt <= 0) return 'Kiasi cha oda lazima kiwe namba zaidi ya 0.';
+        const st = o.status || 'payment_pending';
+        if (this.CREATE_STATUSES.indexOf(st) < 0) return 'Hali ya mwanzo ya oda si sahihi.';
+        return null;
+    },
+    serviceOrderError: function (o, meUid) {
+        o = o || {};
+        if (!meUid) return 'Ingia kwanza.';
+        if (!o.sellerId || o.sellerId !== meUid) return 'Ni mtoa-huduma tu ndiye anayeweza kukubali.';
+        if (!o.buyerId || o.buyerId === meUid) return 'Mteja si sahihi.';
+        const amt = Number(o.amount);
+        if (!isFinite(amt) || amt <= 0) return 'Bei ya kazi lazima iwe namba zaidi ya 0.';
+        if (!o.itemId) return 'Ombi la kazi halikupatikana.';
+        return null;
+    },
+    shipError: function (order, meUid) {
+        if (!meUid) return 'Ingia kwanza.';
+        if (!order) return 'Oda haijapatikana.';
+        const party = (order.sellerId === meUid) || ((order.providerId || '') === meUid);
+        if (!party) return 'Ni muuzaji wa oda hii tu ndiye anayeweza kusafirisha.';
+        if (order.status !== 'held') return 'Oda hii haisafirishwi sasa (hali: ' + String(order.status || '?') + ').';
+        if (order.paymentVerified !== true) return 'Oda haijalipiwa bado — haiwezi kusafirishwa.';
+        return null;
+    }
+};
+
 window.loadBuyerOrdersWithTracking = async function() {
     const list = document.getElementById('buyerOrdersModalList');
     if(!list) return;
+    // [LAUNCH-FIX 2026-11-09] Oda ni za mteja aliyeingia pekee — guest asisome.
+    if(!skh.requireAuth()) { list.innerHTML = '<p style="text-align:center; color:#64748b; padding:20px;">Ingia ili kuona oda zako.</p>'; return; }
 
     list.innerHTML = '<p style="text-align:center; color:#64748b; padding:20px;"> Inapakia oda na safari zako...</p>';
 
@@ -94,16 +149,57 @@ window.openOfflineRegister = function() {
     }
 };
 
+/* [P5-C1 2026-11-10] REPAIR: awali ilionyesha "Ombi limepokelewa" BILA
+ * kuwasiliana na server (fake success — pesa hazikuhama, admin hakuona
+ * chochote). Sasa: server 'withdrawalRequest' ndiyo mamlaka (reservation
+ * atomiki + idempotency); ujumbe unaonyeshwa TU baada ya server kukubali. */
+window.skhWithdrawalRequest = async function (amountTSh, account) {
+    try {
+        if (typeof skh.wrapCallable !== 'function') return { ok: false, message: 'Server haipatikani.' };
+        const key = (window.crypto && window.crypto.randomUUID)
+            ? window.crypto.randomUUID() : ('wdr-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+        const fn = skh.wrapCallable('withdrawalRequest');
+        const r = await fn({ amountTSh: amountTSh, channel: 'mobile', account: String(account || ''), requestKey: key });
+        const d = (r && r.data) ? r.data : r;
+        if (d && d.ok) return { ok: true, requestId: d.requestId || '', amount: d.amount || amountTSh, status: d.status || 'pending', already: !!d.already };
+        return { ok: false, message: (d && (d.message || d.error)) || 'Server imekataa.' };
+    } catch (e) {
+        return { ok: false, message: (e && e.message) || 'Hitilafu ya server.' };
+    }
+};
+
 window.requestWithdrawal = async function() {
-    const kiasi = skh.currentUserData.walletBalance || 0;
+    if (!skh.requireAuth || !skh.requireAuth()) { if (skh.requireAuth) return; }
+    if (window.__skhWdrBusy) return;
+    const kiasi = (skh.currentUserData && skh.currentUserData.walletBalance) || 0;
     if(kiasi < 5000) {
-        alert(" Huwezi kutoa chini ya TSh 5,000. Wallet yako ina TSh " + kiasi.toLocaleString());
+        alert(" Huwezi kutoa chini ya TSh 5,000. Wallet yako ina TSh " + Number(kiasi).toLocaleString());
         return;
     }
-    const namba = await skhPrompt("Andika namba ya simu au namba ya benki ya kupokelea pesa:");
-    if(namba) {
-        alert(" Ombi lako la kutoa TSh " + kiasi.toLocaleString() + " limepokelewa. Admin atakutumia muamala kwenye namba " + namba);
-        // Hapa unaweza kuongeza kodi ya kutuma notification kwa Admin Firebase
+    const amtRaw = (typeof skhPrompt === 'function')
+        ? await skhPrompt("Kiasi cha kutoa (TSh 5,000 - " + Number(kiasi).toLocaleString() + "):", String(Math.floor(Number(kiasi))))
+        : window.prompt("Kiasi cha kutoa (TSh 5,000 - " + Number(kiasi).toLocaleString() + "):", String(Math.floor(Number(kiasi))));
+    if (amtRaw == null || String(amtRaw).trim() === '') return;
+    const amountTSh = Math.floor(Number(String(amtRaw).replace(/[^0-9]/g, '')) || 0);
+    if (!(amountTSh >= 5000) || amountTSh > kiasi) {
+        alert("Kiasi si sahihi. Weka kati ya TSh 5,000 na salio lako (TSh " + Number(kiasi).toLocaleString() + ").");
+        return;
+    }
+    const namba = (typeof skhPrompt === 'function')
+        ? await skhPrompt("Andika namba ya simu au namba ya benki ya kupokelea pesa:")
+        : window.prompt("Andika namba ya simu au namba ya benki ya kupokelea pesa:");
+    if(!namba || !String(namba).trim()) return;
+    window.__skhWdrBusy = true;
+    try {
+        const res = await window.skhWithdrawalRequest(amountTSh, String(namba).trim());
+        if (res && res.ok) {
+            alert(" Ombi la kutoa TSh " + Number(res.amount).toLocaleString() + " limetumwa (pending). Salio limehifadhiwa; admin atalishughulikia. Kumb. " + String(res.requestId || '').slice(0, 24));
+            try { if (typeof window.loadAndRenderDashboard === 'function') window.loadAndRenderDashboard(); } catch (e) {}
+        } else {
+            alert(" Ombi halikutumwa: " + ((res && res.message) || 'Hitilafu.'));
+        }
+    } finally {
+        window.__skhWdrBusy = false;
     }
 };
 
@@ -123,7 +219,9 @@ window.openEscrowModal = function(orderId, sellerId, amount) {
 window.confirmEscrowOrder = async function() {
     const aoi = document.getElementById('activeOrderId');
     if(!aoi) return;
+    if(!skh.requireAuth()) return;
     const oid = aoi.value;
+    if(!oid) { alert('Oda haijachaguliwa.'); return; }
     
     if(await skhConfirm("Je, unathibitisha kukamilisha oda hii? SokoPay itagawanya malipo kwa Muuzaji na Msafirishaji (Smart Split) sasa hivi.")) {
         const btn = event.target || document.querySelector('#escrowModal button');
@@ -141,161 +239,21 @@ window.confirmEscrowOrder = async function() {
             
             const orderData = docSnap.data();
 
-            // [PHASE 5.2a] NJIA YA SERVER (WALLET_VIA_SERVER=true): escrow release
-            // NZIMA inafanyika Cloud Function 'escrowRelease' — smart-split atomic,
-            // wallet_ledger (idempotent), adminRevenue, na uhamisho wa hali zote.
-            // Geti likiwa false / server ikikosekana -> njia ya client (hapa chini)
-            // inabaki KAMA ILIVYO (tabia ya sasa).
-            if (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.WALLET_VIA_SERVER && typeof window.skhEscrowRelease === 'function') {
-                const srv = await window.skhEscrowRelease(oid);
-                if (srv && srv.ok) {
-                    const s = srv.split || {};
-                    alert(`\U0001F389 SMART SPLIT PAYOUT (SERVER \u2014 salama & atomic)!\n\n\u2022 Muuzaji: TSh ${(s.sellerEarned || 0).toLocaleString()}\n\u2022 Carrier: TSh ${(s.carrierShare || 0).toLocaleString()}\n\u2022 Platform: TSh ${(s.platformFee || 0).toLocaleString()}\n\u2022 Ledger: ${srv.ledgerId}`);
-                    window.closeModals();
-                    if (window.loadBuyerOrdersWithTracking) window.loadBuyerOrdersWithTracking();
-                    return;
-                }
-                throw new Error((srv && srv.message) || 'Server ya escrow imekataa muamala huu. Muamala HAUJAFANYIKA.');
+            // [LAUNCH-FIX 2026-11-09] Server-authoritative PEKEE: callable
+            // 'escrowRelease' (smart-split atomic + wallet_ledger idempotent).
+            // Client fallback IMEFUTWA — iliandika status='completed' KWANZA
+            // kisha ika-crash kwenye window.skhWalletAdjust (haipo): oda
+            // 'completed' bila mtu kulipwa. Fail-closed: server ikikataa,
+            // hakuna kinachoandikwa.
+            const srv = await window.skhEscrowRelease(oid);
+            if (srv && srv.ok) {
+                const s = srv.split || {};
+                alert("\U0001F389 SMART SPLIT PAYOUT (SERVER \u2014 salama & atomic)!\n\n\u2022 Muuzaji: TSh " + ((s.sellerEarned || 0).toLocaleString()) + "\n\u2022 Carrier: TSh " + ((s.carrierShare || 0).toLocaleString()) + "\n\u2022 Platform: TSh " + ((s.platformFee || 0).toLocaleString()) + "\n\u2022 Ledger: " + srv.ledgerId);
+                window.closeModals();
+                if (window.loadBuyerOrdersWithTracking) window.loadBuyerOrdersWithTracking();
+                return;
             }
-            const totalAmount = parseFloat(orderData.amount);
-            const sellerId = orderData.sellerId;
-            const itemId = orderData.itemId;
-
-            // 2. Kagua kama kulikuwa na usafirishaji wa Sokohai uliounganishwa (Logistics check)
-            let carrierShare = 0;
-            let driverId = null;
-            let rideDocId = null;
-
-            const qRide = skh.query(skh.collection(skh.db, "ride_requests"), skh.where("customerId", "==", skh.currentUser.uid), skh.where("status", "==", "in_transit"));
-            const rideSnap = await skh.getDocs(qRide);
-            
-            if(!rideSnap.empty) {
-                // Ipo: Lipe gari nauli yake (Smart Split: 15% au kulingana na muamala)
-                const rideDoc = rideSnap.docs[0];
-                const rideData = rideDoc.data();
-                rideDocId = rideDoc.id;
-                driverId = rideData.driverId;
-                carrierShare = parseFloat(rideData.price) || (totalAmount * 0.15); // 15% as default
-            }
-
-            // 3. PIGA HESABU YA KAMISHENI YA SOKOHAI (5% Platform Fee)
-            // [ADMIN PAYMENTS SWITCH] Ada ya kamisheni imezimwa = FREE -> kamisheni 0.
-            const platformFee = skh.paymentGate('commission') ? (totalAmount * 0.05) : 0;
-            const sellerEarned = totalAmount - (platformFee + carrierShare);
-
-            // 4. Badili status ya oda na usafiri kuwa COMPLETED
-            await skh.updateDoc(orderRef, { 
-                status: "completed", 
-                commission: platformFee, 
-                carrierEarned: carrierShare,
-                sellerEarned: sellerEarned,
-                completedAt: new Date().toISOString()
-            });
-
-            if (rideDocId) {
-                // [CUSTODY PHASE B 2026-09] Safari inakamilishwa na SERVER
-                // (deliveryComplete), si kwa uandishi wa moja kwa moja wa status.
-                // skipPayout=true — malipo ya dereva yanashughulikiwa na Smart Split
-                // hapo chini (carrierShare), ili kuepuka malipo mara mbili.
-                try {
-                    const dlTok = (typeof window.skhCustodyReadToken === 'function')
-                        ? await window.skhCustodyReadToken(rideDocId, 'transfer') : null;
-                    if (typeof window.skhCustodyCompleteDelivery === 'function') {
-                        await window.skhCustodyCompleteDelivery(rideDocId, dlTok || '', undefined, { skipPayout: true });
-                    }
-                } catch (custErr) {
-                    console.warn('[escrow] kukamilisha safari kumeshindikana:', custErr && custErr.message);
-                }
-            }
-            
-            // Ikiwa ni SokoPay direct link, thibitisha pia
-            try {
-                const spLinkRef = skh.doc(skh.db, "sokopay_links", itemId);
-                const spSnap = await skh.getDoc(spLinkRef);
-                if(spSnap.exists()) {
-                    await skh.updateDoc(spLinkRef, { status: "completed" });
-                }
-            } catch(spErr) { console.log("Sio SokoPay link"); }
-            
-            // 5. Mpe Muuzaji pesa yake kwenye Wallet
-            const sellerQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId), skh.limit(1)));
-            let sellerAgentCode = null;
-
-            if(!sellerQuery.empty) {
-                const sellerDocId = sellerQuery.docs[0].id;
-                const sData = sellerQuery.docs[0].data();
-                sellerAgentCode = sData.agentCode; 
-
-                // [PHASE 5.2a] kituo kimoja (legacy 1:1 geti likiwa off; server ikiwa on)
-                await window.skhWalletAdjust(skh.doc(skh.db, "users", sellerDocId), sellerEarned, { type: 'escrow_release', ledgerKey: 'order_' + oid + '_seller', note: 'Escrow release — muuzaji' });
-                
-                await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                    userId: sellerId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.saleCompleted',
-                params: { amount: sellerEarned.toLocaleString() },
-                    title: " SokoPay: Mauzo Yamekamilika!",
-                    body: `Mnunuzi amethibitisha mapokezi. TSh ${sellerEarned.toLocaleString()} imeingizwa kwenye wallet yako salama.`,
-                    createdAt: new Date().toISOString(),
-                    read: false,
-                    type: 'wallet'
-                });
-            }
-
-            // 6. LIPA DEREVA / CARRIER (Kama alikuwepo kwenye mzunguko)
-            if(driverId && carrierShare > 0) {
-                const driverQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", driverId), skh.limit(1)));
-                if(!driverQuery.empty) {
-                    const driverDocId = driverQuery.docs[0].id;
-                    // [PHASE 5.2a] kituo kimoja
-                    await window.skhWalletAdjust(skh.doc(skh.db, "users", driverDocId), carrierShare, { type: 'escrow_release', ledgerKey: 'order_' + oid + '_carrier', note: 'Escrow release — carrier' });
-
-                    await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                        userId: driverId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.transportPaid',
-                params: { amount: carrierShare.toLocaleString() },
-                        title: " SokoPay: Malipo ya Usafiri Yamepokelewa!",
-                        body: `Mteja amethibitisha kupokea mzigo. TSh ${carrierShare.toLocaleString()} imeingizwa kwenye wallet yako kama nauli.`,
-                        createdAt: new Date().toISOString(),
-                        read: false,
-                        type: 'wallet'
-                    });
-                }
-            }
-
-            // 7. MGAWANYO WA KAMISHENI YA WAKALA (60% kwa Wakala aliyeandikisha muuzaji, 40% kwa System)
-            let adminShare = platformFee;
-            if(sellerAgentCode) {
-                const agentQ = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("myAgentCode", "==", sellerAgentCode), skh.limit(1)));
-                if(!agentQ.empty) {
-                    const agentDocId = agentQ.docs[0].id;
-                    const agentShare = platformFee * 0.60;
-                    adminShare = platformFee * 0.40;
-
-                    // [PHASE 5.2a] kituo kimoja
-                    await window.skhWalletAdjust(skh.doc(skh.db, "users", agentDocId), agentShare, { type: 'escrow_release', ledgerKey: 'order_' + oid + '_agent', note: 'Escrow release — kamisheni ya wakala' });
-                    
-                    await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                        userId: agentQ.docs[0].data().uid,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.commissionEarned',
-                params: { amount: agentShare.toLocaleString() },
-                        title: " SokoPay: Kamisheni Mpya ya Uwakala!",
-                        body: `Mteja wako amefanya mauzo. Umepata kiasi cha TSh ${agentShare.toLocaleString()} kwenye wallet yako.`,
-                        createdAt: new Date().toISOString(),
-                        read: false,
-                        type: 'wallet'
-                    });
-                }
-            }
-
-            // Rekodi mapato ya msimamizi (Platform Revenue)
-            // Accounting is server-authoritative; no client adminRevenue write.
-
-            alert(` SMART SPLIT PAYOUT SUCCESS!\n\n• Muuzaji amelipwa: TSh ${sellerEarned.toLocaleString()}\n• Dereva/Carrier amelipwa: TSh ${carrierShare.toLocaleString()}\n• Platform Fee (System): TSh ${platformFee.toLocaleString()}`);
-            window.closeModals(); 
-            if(window.loadBuyerOrdersWithTracking) window.loadBuyerOrdersWithTracking();
+            throw new Error((srv && srv.message) || 'Server ya escrow imekataa muamala huu. Muamala HAUJAFANYIKA.');
         } catch(e) {
             // [FUNCTIONS RESILIENCE] escrowRelease haijapelekwa/haipatikani ->
             // usionyeshe "INTERNAL"; hakuna pesa iliyotoka.

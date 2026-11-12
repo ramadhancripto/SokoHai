@@ -98,7 +98,7 @@ Kisha fungua tovuti upya kwa `Ctrl+Shift+R` (futa kache).
 
 ## Orodha ya functions zitakazotumwa (41)
 
-Fedha: walletAdjust, escrowRelease, haipayReleaseLink, pesapalCheckout,
+Fedha: walletAdjust, escrowRelease, sokopayReleaseLink, pesapalCheckout,
 pesapalTransactionStatus, pesapalIpn, pesapalRegisterIpn.
 Mfumo: platformStatsRefresh, platformStatsHourly, sokopayAutoRelease,
 sitemapXml.

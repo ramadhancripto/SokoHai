@@ -310,13 +310,15 @@ import { skh } from './00-bootstrap.js';
                 + ico('refresh', 15) + ' Rudia kutafuta msafirishaji</button>' : '';
         var trackBtn = '<button type="button" class="tb-btn tb-btn-light" onclick="window.skhTokenBoxTrack(\'' + esc(rd.id) + '\')">'
             + ico('truck', 14) + ' Tazama ufuatiliaji</button>';
+        var cancelBtn = '<button type="button" class="tb-btn tb-btn-light" onclick="window.skhTokenBoxCancelRide(\'' + esc(rd.id) + '\')">'
+            + ico('x', 14) + ' Ghairi ombi</button>';
         return '<div class="tb-card tb-card--booking">'
             + '<div class="tb-card-top"><span class="tb-kind tb-kind--booking">' + ico('send', 13) + ' Ombi la Usafiri</span>' + badge + '</div>'
             + '<b class="tb-cargo">' + esc(rideLabel(rd)) + '</b>'
             + routeHtml
             + '<div class="tb-meta">' + meta.join('') + '</div>'
             + hint
-            + retryBtn + trackBtn
+            + retryBtn + trackBtn + cancelBtn
             + '</div>';
     }
 
@@ -439,6 +441,25 @@ import { skh } from './00-bootstrap.js';
             }
         } catch (e) {
             if (window.sokohaiToast) window.sokohaiToast('Imeshindikana: ' + ((e && e.message) || 'jaribu tena'), 'error', 3000);
+        }
+    };
+
+    /* [C-C1 2026-11-10] Kughairi ombi la usafiri (mteja + kabla ya pickup).
+     * Tokeni pending zinabatilishwa na server; rules zinakataa kunakohitajika. */
+    window.skhTokenBoxCancelRide = async function (rideId) {
+        if (!rideId || !window.skhCustodyCancelRide) return;
+        var cf;
+        if (typeof window.skhConfirm === 'function') {
+            cf = await window.skhConfirm('Ghairi ombi hili la usafiri? Tokeni zozote zilizotolewa zitabatilishwa.',
+                { title: 'Ghairi safari', okText: 'Ndiyo, ghairi', cancelText: 'Rudi' });
+        } else { cf = window.confirm('Ghairi ombi hili la usafiri?'); }
+        if (!cf) return;
+        var res = await window.skhCustodyCancelRide(rideId);
+        if (res && res.ok) {
+            if (window.sokohaiToast) window.sokohaiToast('Ombi la usafiri limeghairiwa.', 'success', 3000);
+            load();
+        } else {
+            if (window.sokohaiToast) window.sokohaiToast('Imeshindikana kughairi — labda safari ilishaanza kuchukuliwa au huna ruhusa.', 'error', 3400);
         }
     };
 

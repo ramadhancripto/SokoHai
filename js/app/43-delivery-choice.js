@@ -731,7 +731,7 @@ import { skh } from './00-bootstrap.js';
         // 2) FALLBACK: tengeneza ride_request wazi (soko la kazi za madereva).
         try {
             var ride = window.skhDeliveryBuildRide(orderId, orderData || {}, delivery);
-            var rideRef = await skh.addDoc(skh.collection(skh.db, 'ride_requests'), ride);
+            var rideRef = await skh.createRideRequest(ride); // [REMEDIATION R1] PII split
             await skh.updateDoc(skh.doc(skh.db, 'orders', orderId), {
                 rideRequestId: rideRef.id, deliveryId: rideRef.id, 'delivery.deliveryRequestId': rideRef.id, 'delivery.status': 'searching',
                 deliveryRequired: true

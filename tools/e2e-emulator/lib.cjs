@@ -13,7 +13,9 @@ if (!admin.apps.length) admin.initializeApp({ projectId: 'demo-sokohai' });
 const db = admin.firestore();
 const IMG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 async function open(viewport) {
-  const b = await chromium.launch(); const ctx = await b.newContext({ viewport: viewport || { width: 390, height: 844 } });
+  const b = await chromium.launch(); // [R10] E2E_VIEWPORT=1440x900 reruns the whole suite at desktop size (default: phone).
+  const envVp = (process.env.E2E_VIEWPORT || '').match(/^(\d+)x(\d+)$/);
+  const ctx = await b.newContext({ viewport: viewport || (envVp ? { width: +envVp[1], height: +envVp[2] } : { width: 390, height: 844 }) });
   const p = await ctx.newPage(); const log = { errs: [], alerts: [], hosts: new Set(), uploads: 0 };
   if (SDK) await p.route(/gstatic\.com\/firebasejs\/10\.8\.1\/(.+\.js)/, r => { const f = r.request().url().split('/').pop(); r.fulfill({ status: 200, contentType: 'application/javascript', body: fs.readFileSync(SDK + f) }); });
   await p.route(/api\.cloudinary\.com/, r => { log.uploads++; r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ secure_url: BASE + '/favicon.ico?e2e=' + log.uploads, public_id: 'e2e' + log.uploads, resource_type: 'image' }) }); });

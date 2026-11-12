@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview 3 — Group Buy Live Mode</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{background:#0f172a;display:flex;gap:24px;justify-content:center;padding:24px;flex-wrap:wrap}
+.phone{width:390px;max-width:94vw;background:#0f172a;border-radius:28px;overflow:hidden;border:3px solid #334155;color:#fff}
+.banner{background:#7c3aed;color:#fff;font-size:11px;font-weight:800;text-align:center;padding:6px}
+.stage{height:200px;background:linear-gradient(180deg,#065f46,#0f172a);position:relative;display:flex;align-items:center;justify-content:center}
+.play{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.pills{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between}
+.live{background:#ef4444;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px}
+.view{background:rgba(0,0,0,.55);font-size:11px;padding:3px 10px;border-radius:20px}
+.x{background:rgba(0,0,0,.55);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px}
+.panel{background:#fff;color:#0f172a;border-radius:18px 18px 0 0;padding:14px;margin-top:-14px;position:relative}
+.tag{font-size:10px;font-weight:900;color:#047857;background:#d1fae5;display:inline-block;padding:2px 8px;border-radius:6px}
+.panel h2{font-size:15px;margin:4px 0}
+.price{display:flex;gap:10px;align-items:baseline;margin:6px 0}
+.price b{font-size:20px;color:#047857}.price s{color:#94a3b8;font-size:13px}.price small{background:#fef3c7;color:#b45309;font-weight:800;padding:2px 8px;border-radius:6px;font-size:11px}
+.bar{height:12px;background:#e2e8f0;border-radius:8px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;width:70%;background:linear-gradient(90deg,#10b981,#059669)}
+.prow{display:flex;justify-content:space-between;font-size:12px;color:#475569;margin-bottom:4px}
+.prow b{color:#0f172a}
+.members{display:flex;margin:8px 0}.members span{width:30px;height:30px;border-radius:50%;background:#6366f1;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;margin-left:-8px}.members span:first-child{margin-left:0}
+.join{width:100%;background:#059669;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900}
+.dead{font-size:11px;color:#64748b;text-align:center;margin-top:6px}
+.bind{background:#fffbeb;color:#92400e;border-radius:12px;margin:10px 14px 14px;padding:10px;font-size:10.5px;line-height:1.7;border:1px dashed #d97706}
+.note{width:390px;max-width:94vw;color:#e2e8f0;font-size:12px;line-height:1.8}.note h3{color:#fff;margin-bottom:6px}.note code{background:#1e293b;padding:1px 6px;border-radius:6px;font-size:11px}
+</style></head><body>
+<div class="phone">
+<div class="banner">DESIGN PREVIEW — mock data (layout tu)</div>
+<div class="stage"><div class="pills"><div><span class="live">● LIVE</span> <span class="view">👁 89</span></div><button class="x">✕</button></div><div class="play">▶</div></div>
+<div class="panel"><span class="tag">GROUP BUY</span><h2>Mafuta ya Kupikia 20L</h2>
+<div class="price"><b>TZS 68,000</b><s>TZS 85,000</s><small>-20%</small></div>
+<div class="bar"><i></i></div>
+<div class="prow"><span><b>14</b> / 20 wamejiunga</span><span>Inafungwa: <b>2s 15d</b></span></div>
+<div class="members"><span>AM</span><span style="background:#0ea5e9">JK</span><span style="background:#f59e0b">ZN</span><span style="background:#ef4444">RS</span><span style="background:#64748b">+10</span></div>
+<button class="join">Jiunge na Kundi — TZS 68,000</button>
+<div class="dead">Ukishajiunga umefungwa (hakuna kujiondoa) · Malipo yakikamilika kikundi kinafungwa</div></div>
+<div class="bind"><b>Bindings halisi:</b> 14/20 ← <b>modeData.participants.length / targetQty</b> (server) · bei ← <b>groupPrice</b> ya server · deadline ← <b>modeData.endTime</b> · Jiunge ← <b>groupBuyJoin</b> · progress bar = hesabu ya display tu (data ya server).</div>
+</div>
+<div class="note"><h3>3. Group Buy Live Mode</h3>
+<p>Progress ya kundi ni ya server pekee — frontend inaonyesha tu. Hakuna "watu 97 wanatazama" za kubuni.</p>
+<p>Mobile: avatars zinaonyesha 5 + counter; kitufe cha Jiunge kina sticky chini kwenye scroll ndefu.</p>
+<p>Files: <code>120-live-commerce-ui.js</code> (room shell — tayari), <code>commerce-modes.js groupBuyJoin</code> (tayari).</p></div>
+</body></html>

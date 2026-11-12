@@ -46,7 +46,8 @@ window.confirmSokoPayLinkDirect = async function(docId, sellerId, totalAmount, c
 
     // [SOKOPAY LIVE] Server-authoritative release — Cloud Function 'haipayReleaseLink'.
     // Browser haitoi pesa wala haibadilishi status ya 'completed' — server ndiyo mamlaka.
-    const viaServer = !!(window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.WALLET_VIA_SERVER);
+    // [LAUNCH-FIX 2026-11-09] Server path daima (geti WALLET_VIA_SERVER halikuwahi kuwashwa popote).
+    const viaServer = (typeof skh.wrapCallable === 'function');
     if (viaServer) {
         try {
             const call = (typeof skh.wrapCallable === "function" ? skh.wrapCallable("haipayReleaseLink") : skh.httpsCallable(skh.getFunctions(skh.fApp, "europe-west1"), "haipayReleaseLink"));
@@ -68,40 +69,10 @@ window.confirmSokoPayLinkDirect = async function(docId, sellerId, totalAmount, c
     }
 
     try {
-        const linkRef = skh.doc(skh.db, "sokopay_links", docId);
-        
-        // 1. Badili hali ya mkataba kuwa completed
-        await skh.updateDoc(linkRef, { status: "completed" });
-
-        // 2. Toa pesa kwa muuzaji (itakayobaki baada ya kutoa carrier share na platform fee)
-        // [ADMIN PAYMENTS SWITCH] Ada ya kamisheni imezimwa = FREE -> kamisheni 0.
-        const platformFee = skh.paymentGate('commission') ? totalAmount * 0.05 : 0; // 5% Platform Fee
-        const sellerEarned = totalAmount - (platformFee + carrierShare);
-
-        const sellerQuery = await skh.getDocs(skh.query(skh.collection(skh.db, "users"), skh.where("uid", "==", sellerId), skh.limit(1)));
-        if (!sellerQuery.empty) {
-            const sellerDocId = sellerQuery.docs[0].id;
-            // [PHASE 5.2b] kituo kimoja — skhWalletAdjust (legacy 1:1 geti likiwa off; server+ledger ikiwa on)
-            await window.skhWalletAdjust(skh.doc(skh.db, "users", sellerDocId), sellerEarned, { type: 'escrow_release', ledgerKey: 'spman_link_' + linkRef.id, note: 'Kukamilisha mkataba wa SokoPay kwa mkono' });
-
-            // Mtumie muuzaji taarifa
-            await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                userId: sellerId,
-                // [SYSTEM EVENTS 2026-09] structured event — lugha ya msomaji.
-                event: 'wallet.contractCompleted',
-                params: { amount: sellerEarned.toLocaleString() },
-                title: " SokoPay: Mkataba Umekamilika!",
-                body: `Mteja amethibitisha kukamilika kwa mkataba wako. TSh ${sellerEarned.toLocaleString()} imewekwa kwenye wallet yako.`,
-                createdAt: new Date().toISOString(),
-                read: false
-            });
-        }
-
-        // 3. Rekodi makusanyo ya platform revenue
-            // Accounting is server-authoritative; no client adminRevenue write.
-
-        alert(T('sp_contract_done', "Congratulations! Contract completed safely and money sent to the seller."));
-        window.trackSokoPayTransaction(); // Refresh taarifa
+        // [LAUNCH-FIX 2026-11-09] Client fallback IMEONDOLEWA: iliandika
+        // status='completed' kisha ika-crash kwenye window.skhWalletAdjust
+        // (haipo) — mkataba 'completed' bila malipo. Fail-closed sasa.
+        throw new Error('Huduma ya SokoPay haipatikani kwa sasa. Mkataba haujabadilika — jaribu tena baadaye.');
     } catch(err) {
         alert(T('sp_complete_fail', "Could not complete: ") + err.message);
     }

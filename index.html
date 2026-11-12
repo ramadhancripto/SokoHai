@@ -16,6 +16,11 @@
 <meta name="hosting-provider" content="Netlify">
 <meta name="netlify-deploy" content="https://netlify.new/?utm_campaign=ai-legible&amp;utm_source=meta&amp;utm_medium=referral&amp;utm_id=7e5de4c3-e06f-4212-ac59-ecaa90b5f5d3">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- [PERF 2026-11-08] Firebase SDK inapakiwa kutoka www.gstatic.com na data
+         kutoka firestore.googleapis.com (ona js/app/00-bootstrap.js). Preconnect
+         hufungua DNS+TLS mapema — hint pekee, haibadilishi tabia yoyote. -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
     <title>SokoHai — Soko la Mtandaoni la Tanzania</title>
     <!-- [SEO / PUBLIC LINKS] Meta za Google + viungo vya umma vya bidhaa.
          IDs hizi zinasasishwa na JS (window.skhUpdateSeoMeta) kila bidhaa ikifunguliwa. -->
@@ -28,8 +33,46 @@
     <meta property="og:url" id="skhOgUrl" content="https://sokohaicom.netlify.app/">
     <meta property="og:image" id="skhOgImage" content="https://sokohaicom.netlify.app/assets/sokohai-s-mark.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="canonical" id="skhCanonical" href="index.html">
-<link rel="icon" href="data:,">
+    <link rel="canonical" id="skhCanonical" href="https://sokohaicom.netlify.app/">
+<link rel="icon" type="image/png" href="assets/sokohai-s-mark.png">
+    <!-- [SEO/PWA 2026-11-08] Manifest ilikuwa ipo (sokohai-manifest.json) lakini
+         HAIKUWA imeunganishwa kwenye <head> — kwa hiyo browser haikuiona kamwe. -->
+    <link rel="manifest" href="sokohai-manifest.json">
+    <meta name="theme-color" content="#0F7A5C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SokoHai">
+    <link rel="apple-touch-icon" href="assets/sokohai-s-mark.png">
+    <!-- [SEO 2026-11-08] Structured data: Organization + WebSite (SearchAction).
+         Hii inasaidia Google kuonyesha jina, logo na kisanduku cha utafutaji. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://sokohaicom.netlify.app/#organization",
+          "name": "SokoHai",
+          "url": "https://sokohaicom.netlify.app/",
+          "logo": "https://sokohaicom.netlify.app/assets/sokohai-s-mark.png",
+          "description": "Soko la mtandaoni la Tanzania: bidhaa, huduma na usafiri kwa ulinzi wa escrow.",
+          "areaServed": { "@type": "Country", "name": "Tanzania" }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://sokohaicom.netlify.app/#website",
+          "url": "https://sokohaicom.netlify.app/",
+          "name": "SokoHai",
+          "inLanguage": "sw",
+          "publisher": { "@id": "https://sokohaicom.netlify.app/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": { "@type": "EntryPoint", "urlTemplate": "https://sokohaicom.netlify.app/?q={search_term_string}" },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
 <!-- [COMMERCE CARDS 2026-09] Inter font (brand typography) — PAKUA BILA KUZUIA
      uchoraji wa ukurasa (non-blocking); maandishi ya mfumo huonekana mara moja. -->
 
@@ -44,38 +87,38 @@
 <script src="js/01-lib-loader.js" defer></script>
 <link rel="stylesheet" href="css/00-tokens.css">
 <link rel="stylesheet" href="css/01-core.css">
-<link rel="stylesheet" href="css/02-menu.css">
-<link rel="stylesheet" href="css/02b-menu-extra.css">
-<link rel="stylesheet" href="css/05-announcement.css">
+<link rel="stylesheet" href="css/02-menu.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/02b-menu-extra.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/05-announcement.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/06-auth-polish.css">
 <link rel="stylesheet" href="css/07-market-polish.css">
-<link rel="stylesheet" href="css/08-dashboard-pos-polish.css">
+<link rel="stylesheet" href="css/08-dashboard-pos-polish.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/09-sokopay-polish.css">
-<link rel="stylesheet" href="css/10-admin-dash-polish.css">
-<link rel="stylesheet" href="css/11-haipay-mobile.css">
+<link rel="stylesheet" href="css/10-admin-dash-polish.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/11-sokopay-mobile.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/12-mobile-responsive.css">
 <link rel="stylesheet" href="css/13-ui-polish.css">
-<link rel="stylesheet" href="css/14-chat-admin-polish.css">
-<link rel="stylesheet" href="css/15-chat-comments.css">
+<link rel="stylesheet" href="css/14-chat-admin-polish.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/15-chat-comments.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/16-commerce-card.css">
-<link rel="stylesheet" href="css/17-negotiation-form.css">
-<link rel="stylesheet" href="css/18-product-showcase.css">
-<link rel="stylesheet" href="css/19-token-box.css">
-<link rel="stylesheet" href="css/20-request-inbox.css">
-<link rel="stylesheet" href="css/21-discovery-maoni.css"><!-- [FIX 2026-11-04] sheet ya MAONI + kadi za maoni (haikuwa imepakiwa) -->
-<link rel="stylesheet" href="css/22-delivery-choice.css">
-<link rel="stylesheet" href="css/23-logistics-market.css">
-<link rel="stylesheet" href="css/24-chat-ui-v2.css">
-<link rel="stylesheet" href="css/31-product-actions.css"><!-- [FIX 2026-09-20] vitufe vya kadi sticky -->
-<link rel="stylesheet" href="css/32-chat-master-ui.css"><!-- Chat edit/selection/master interaction states -->
+<link rel="stylesheet" href="css/17-negotiation-form.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/18-product-showcase.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/19-token-box.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/20-request-inbox.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/21-discovery-maoni.css" media="print" onload="this.media='all'"><!-- [FIX 2026-11-04] sheet ya MAONI + kadi za maoni (haikuwa imepakiwa) -->
+<link rel="stylesheet" href="css/22-delivery-choice.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/23-logistics-market.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/24-chat-ui-v2.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/31-product-actions.css" media="print" onload="this.media='all'"><!-- [FIX 2026-09-20] vitufe vya kadi sticky -->
+<link rel="stylesheet" href="css/32-chat-master-ui.css" media="print" onload="this.media='all'"><!-- Chat edit/selection/master interaction states -->
 <link rel="stylesheet" href="css/33-white-marketplace.css"><!-- White-first marketplace + real marketplace sections -->
-<link rel="stylesheet" href="css/34-chat-inbox-identity.css"><!-- Chat Home person/group/order-group identity hierarchy -->
-<link rel="stylesheet" href="css/35-buyer-dashboard.css"><!-- Buyer personal activity & commerce center -->
-<link rel="stylesheet" href="css/36-advertiser-coming-soon.css">
-<link rel="stylesheet" href="css/38-product-builder-seed.css"><!-- Product Builder canonical category seeding --><!-- Advertiser Billing UI-only Coming Soon state -->
-<link rel="stylesheet" href="css/37-product-card-visual.css"><!-- Large visual marketplace cards -->
-<link rel="stylesheet" href="css/38-home-ad-manager.css"><!-- Admin Home Advertisement Manager -->
-<link rel="stylesheet" href="css/39-creative-studio.css"><!-- Creative studio -->
+<link rel="stylesheet" href="css/34-chat-inbox-identity.css" media="print" onload="this.media='all'"><!-- Chat Home person/group/order-group identity hierarchy -->
+<link rel="stylesheet" href="css/35-buyer-dashboard.css" media="print" onload="this.media='all'"><!-- Buyer personal activity & commerce center -->
+<link rel="stylesheet" href="css/36-advertiser-coming-soon.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/38-product-builder-seed.css" media="print" onload="this.media='all'"><!-- Product Builder canonical category seeding --><!-- Advertiser Billing UI-only Coming Soon state -->
+<link rel="stylesheet" href="css/37-product-card-visual.css" media="print" onload="this.media='all'"><!-- Large visual marketplace cards -->
+<link rel="stylesheet" href="css/38-home-ad-manager.css" media="print" onload="this.media='all'"><!-- Admin Home Advertisement Manager -->
+<link rel="stylesheet" href="css/39-creative-studio.css" media="print" onload="this.media='all'"><!-- Creative studio -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
 <link rel="stylesheet" href="css/25-typography.css">
@@ -83,42 +126,44 @@
     <!-- [VISUAL-AUDIT 2026-09-16] 27) Hero/touch/consolidation fixes — herufi la mwisho kwenye load order -->
     <link rel="stylesheet" href="css/27-visual-audit-fixes.css">
     <!-- [MY-PROFILE 2026-09-16] 28) My Profile (DP + Business Cover) — professional identity -->
-    <link rel="stylesheet" href="css/28-my-profile.css">
+    <link rel="stylesheet" href="css/28-my-profile.css" media="print" onload="this.media='all'">
     <!-- [R19] responsive top-nav + role badges + Kamusi -->
     <link rel="stylesheet" href="css/29-nav-dict.css">
-    <link rel="stylesheet" href="css/30-discover-engine.css"><!-- Discover engine -->
+    <link rel="stylesheet" href="css/30-discover-engine.css" media="print" onload="this.media='all'"><!-- Discover engine -->
     <!-- [2026-11-01] Refinement layer — loaded last, additive only (see file header) -->
-    <link rel="stylesheet" href="css/40-ui-refinement.css">
+    <link rel="stylesheet" href="css/40-ui-refinement.css" media="print" onload="this.media='all'">
     <!-- [TASK 01] Compact, integrated advertising presentation (presentation only) -->
-    <link rel="stylesheet" href="css/41-ads-marketplace.css">
-    <link rel="stylesheet" href="css/42-ads-studio.css">
+    <link rel="stylesheet" href="css/41-ads-marketplace.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/42-ads-studio.css" media="print" onload="this.media='all'">
     <!-- [ADS STUDIO REBUILD] SokoHai Marketplace Ads Studio presentation (scoped to #masRoot) -->
-    <link rel="stylesheet" href="css/43-marketplace-ads-studio.css">
+    <link rel="stylesheet" href="css/43-marketplace-ads-studio.css" media="print" onload="this.media='all'">
     <!-- [CHAT COMPACT] Compact chat inbox + readable (not oversized) message/negotiation cards -->
-    <link rel="stylesheet" href="css/44-chat-compact.css">
+    <link rel="stylesheet" href="css/44-chat-compact.css" media="print" onload="this.media='all'">
     <!-- [POST CARDS] Better-built post card interior: products, services, transport -->
-    <link rel="stylesheet" href="css/45-post-cards.css">
+    <link rel="stylesheet" href="css/45-post-cards.css" media="print" onload="this.media='all'">
     <!-- [FULLSCREEN PAGES] Standalone screens cover the whole viewport -->
     <link rel="stylesheet" href="css/46-fullscreen-pages.css">
-    <link rel="stylesheet" href="css/47-chat-nego-balance.css">
-    <link rel="stylesheet" href="css/48-chat-shell.css">
+    <link rel="stylesheet" href="css/47-chat-nego-balance.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/48-chat-shell.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/49-call-ui.css">
     <!-- [PICHA STUDIO] Sehemu ya kupakia picha za bidhaa: dropzone, hero 1:1 contain, live preview -->
-    <link rel="stylesheet" href="css/50-sell-studio.css">
+    <link rel="stylesheet" href="css/50-sell-studio.css" media="print" onload="this.media='all'">
     <!-- [VARIANT STUDIO] Product builder cards + buyer-facing variant preview -->
-    <link rel="stylesheet" href="css/51-variant-studio.css">
+    <link rel="stylesheet" href="css/51-variant-studio.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/52-business-os-shell.css?v=20261106a" media="print" onload="this.media='all'"><!-- [BUSINESS OS 1A] sidebar + dashboard shell (light) -->
+    <!-- [2026-11-06] restored: dropped by a direct index.html edit (61a3d88) -->
     <!-- [UI REFINEMENT 2026-11-03] Product Card + Product Details (in-flow actions) -->
-    <link rel="stylesheet" href="css/52-product-card-details.css">
-    <link rel="stylesheet" href="css/53-product-inquiry.css">
-<link rel="stylesheet" href="css/54-maoni-polish.css"><!-- [2026-11-04] Maoni + Tathmini polish -->
+    <link rel="stylesheet" href="css/52-product-card-details.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/53-product-inquiry.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/54-maoni-polish.css" media="print" onload="this.media='all'"><!-- [2026-11-04] Maoni + Tathmini polish -->
 <link rel="stylesheet" href="css/55-engagement-system.css"><!-- [2026-11-04] Engagement + reactions system -->
-<link rel="stylesheet" href="css/56-lazy-feed.css">
+<link rel="stylesheet" href="css/56-lazy-feed.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/57-home-brand-header.css?v=20261105r6w">
 <link rel="stylesheet" href="css/58-category-photo-strip.css?v=20261105r6w">
-<link rel="stylesheet" href="css/52-chat-discovery-feed.css?v=20261105r6w">
+<link rel="stylesheet" href="css/52-chat-discovery-feed.css?v=20261105r6w" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/59-nav-balance.css?v=20261105r6w">
     <!-- [GROUP CHAT UI 2026-11] Muonekano wa ndani ya kikundi -->
-    <link rel="stylesheet" href="css/53-group-chat-ui.css"><!-- [2026-11-04] Lazy load ya bidhaa -->
+    <link rel="stylesheet" href="css/53-group-chat-ui.css" media="print" onload="this.media='all'"><!-- [2026-11-04] Lazy load ya bidhaa -->
 <style id="skhBootCloakCss">
  html.skh-booting body{visibility:hidden!important}
  /* [LOGO-SPLASH 2026-09-17] Splash inabeba LOGO halisi ya SokoHai — funika
@@ -171,8 +216,24 @@ window.skhMountWordmarks = function(root){
     });
 };
 </script>
-<link rel="stylesheet" href="css/60-chat-premium.css?v=20261105r6w">
+<!-- [PERF 2026-11-08 · Awamu B3] CSS ya hatua mbili.
+     Vipeperushi 24 vinavyotumiwa na Nyumbani vinabaki blocking (pamoja na 70-product-card.css,
+     ambayo LAZIMA ibaki ya mwisho — test_product_card_visual.mjs inahakiki hilo).
+     Vingine vinatumia media="print" + onload="this.media='all'": kivinjari hakiisubiri ku-paint,
+     kisha inawekwa hai mara moja. Mpangilio wa <link> haubadiliki hata kidogo. -->
+<link rel="stylesheet" href="css/60-chat-premium.css?v=20261105r6w" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="fonts/inter.css">
+<link rel="stylesheet" href="css/61-desktop-layout.css?v=20261107r10" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/62-system-polish.css?v=20261107r12">
+<link rel="stylesheet" href="css/63-live-commerce.css?v=20261107r13b" media="print" onload="this.media='all'"><!-- [R13-B] live, hali, group soko -->
+<link rel="stylesheet" href="css/64-image-quality.css?v=20261108r13c"><!-- [R13-C] picha halisi, product cards 1:1 -->
+<link rel="stylesheet" href="css/65-live-design.css?v=20261108r13d" media="print" onload="this.media='all'"><!-- [R13-D] live screens kama design refs 1,2,5,6,7,10 -->
+<link rel="stylesheet" href="css/66-home-layout.css?v=20261108r13e"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
+<link rel="stylesheet" href="css/67-chat-discover.css?v=20261108r13f" media="print" onload="this.media='all'"><!-- [R13-F] Chat Discover + Hali viewer kama refs 8, 9 -->
+<link rel="stylesheet" href="css/68-group-chat-design.css?v=20261108r13g" media="print" onload="this.media='all'"><!-- [R13-G] Group Chat kama design refs (Wakulima &amp; Biashara) -->
+<link rel="stylesheet" href="css/69-category-tiles.css?v=20261108r13g"><!-- [R13-G] picha halisi za kategoria kwenye kadi safi -->
+<link rel="stylesheet" href="css/71-sale-type-flow.css?v=20261108m1" media="print" onload="this.media='all'"><!-- [M1 2026-11-08] kichaguzi cha aina ya mauzo (Bidhaa Sokoni) -->
+<link rel="stylesheet" href="css/70-product-card.css?v=20261108pc0"><!-- [PHASE 0 2026-11-08] product card visual system (safu ya mwisho; bidhaa pekee) -->
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>
@@ -202,7 +263,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div style="background:white; border-radius:24px; padding:25px; width:95%; max-width:450px; max-height:85vh; display:flex; flex-direction:column; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">
             <h3 style="color:var(--primary-dark); margin:0; font-size:18px; text-transform:uppercase;"><span id="skhCatModalHdr" data-skh-icon="folder" data-skh-size="18">Chagua Kategoria</span></h3>
-            <button onclick="closeModals()" style="background:none; border:none; font-size:22px; font-weight:bold; color:#ef4444; cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="closeModals()" style="background:none; border:none; font-size:22px; font-weight:bold; color:#ef4444; cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div class="cat-grid" id="catGridContainer" style="overflow-y:auto; flex:1;">
             <!-- Grid itachorwa na Javascript hapa -->
@@ -261,6 +322,15 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <div class="menu-item" onclick="window.skhOpenAdvertiserDashboard && window.skhOpenAdvertiserDashboard()" id="mode-advertiser" style="border-left-color:#4D91AA; background:#f8fafc;">
             <b> Advertiser</b>
             <span>Campaign workspace ya kampuni na matangazo.</span>
+        </div>
+        <!-- [J-J1 2026-11-10 RESTORED] Kiingilio cha Mfanyakazi wa Duka (kujiunga kwa kodi).
+             KILIKUWEPO kwenye index.html (hand-edit) — kilifutika kwenye rebuild;
+             sasa kipo kwenye kipande sahihi ili build ibaki byte-exact.
+             NOTE: skhJoinShopWithCode bado HAIJATEKELEZWA (V-C5/B4.3) — item ni dead
+             mpaka UI ya join-by-code itekelezwe; guard inazuia error. -->
+        <div class="menu-item" onclick="window.skhJoinShopWithCode && window.skhJoinShopWithCode()" id="mode-staffjoin" style="border-left-color:#8B5CF6; background:#f8fafc;">
+            <b> Mfanyakazi wa Duka</b>
+            <span>Jiunge na duka kwa kodi ya mwaliko kutoka kwa mmiliki.</span>
         </div>
         <div class="menu-item" onclick="switchMode('admin')" id="mode-admin" style="border-left-color:#333; background:#f1f5f9;">
             <b> Admin (Msimamizi)</b>
@@ -442,7 +512,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <div id="mapStatus" style="padding:15px; background:#f8fafc; font-size:12px; border-top:1px solid #eee;">
             <b> GPS:</b> <span id="gpsText">Inatafuta mawasiliano...</span>
         </div>
-        <button onclick="closeModals()" style="position:absolute; top:10px; right:10px; z-index:1000; background:white; border:none; width:40px; height:40px; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,0.2); font-weight:bold;"><span class="skh-ico" data-ico="x"></span></button>
+        <button aria-label="Funga" onclick="closeModals()" style="position:absolute; top:10px; right:10px; z-index:1000; background:white; border:none; width:40px; height:40px; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,0.2); font-weight:bold;"><span class="skh-ico" data-ico="x"></span></button>
     </div>
 </div>
 <!-- DIRECT HIRE MODAL (Imesafishwa 100%) -->
@@ -968,7 +1038,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <!-- [R22 §11] + → Contact / Chagua Contacts / Create Group (69-chat-groups.js) -->
                 <button type="button" id="sogaPlusBtn" onclick="window.skhSogaPlusMenu && window.skhSogaPlusMenu(event)" title="Anza: Contact / Contacts / Kikundi" class="ch-inbox-iconbtn ch-inbox-plus"><span style="font-size:20px;font-weight:900;line-height:1;">+</span></button>
                 <button onclick="window.skhChatOpenBlockedUsers()" title="Waliozuiwa" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="lock"></span></button>
-                <button onclick="closeModals()" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="x"></span></button>
+                <button aria-label="Funga" onclick="closeModals()" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="x"></span></button>
             </div>
         </div>
         <div class="ch-inbox-search">
@@ -980,7 +1050,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <div id="chatBlockedUsersWrap" style="display:none;">
             <div class="ch-blocked-head">
                 <span><span class="skh-ico" data-ico="lock"></span> Waliozuiwa (Blocked Users)</span>
-                <button onclick="window.skhChatOpenBlockedUsers()"><span class="skh-ico" data-ico="x"></span></button>
+                <button aria-label="Funga" onclick="window.skhChatOpenBlockedUsers()"><span class="skh-ico" data-ico="x"></span></button>
             </div>
             <div id="chatBlockedUsersList" class="ch-blocked-list"></div>
         </div>
@@ -1016,7 +1086,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;">Sambaza ujumbe kwa...</b>
-            <button onclick="document.getElementById('chatForwardModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="document.getElementById('chatForwardModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="chatForwardList" style="flex:1; overflow-y:auto; padding:8px;"></div>
     </div>
@@ -1027,7 +1097,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;"><span class="skh-ico" data-ico="cart"></span> Chagua bidhaa kushiriki</b>
-            <button onclick="document.getElementById('chatAttachProductModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="document.getElementById('chatAttachProductModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="chatAttachProductList" style="flex:1; overflow-y:auto; padding:8px;"></div>
     </div>
@@ -1038,7 +1108,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;"><span class="skh-ico" data-ico="cart"></span> Chagua oda kushiriki</b>
-            <button onclick="document.getElementById('chatAttachOrderModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="document.getElementById('chatAttachOrderModal').style.display='none'" style="background:transparent;border:none;font-size:18px;cursor:pointer;color:#64748b;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="chatAttachOrderList" style="flex:1; overflow-y:auto; padding:8px;"></div>
     </div>
@@ -1382,6 +1452,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <label for="prodTaxonomySearch" style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-bottom:4px;">TAFUTA KATEGORIA <span id="prodTaxonomyNeed" style="font-weight:normal;"></span></label>
         <input type="search" id="prodTaxonomySearch" autocomplete="off" placeholder="Andika: simu, mchele, viatu, saruji..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none;">
         <div id="prodTaxonomyResults" role="listbox" aria-label="Kategoria zinazolingana" style="display:flex; flex-direction:column; gap:6px; margin:8px 0 10px 0;"></div>
+        <input type="hidden" id="prodTaxonomyProductTypeId"><input type="hidden" id="prodTaxonomyProductTypeLabel">
         <input type="hidden" id="prodVariants">
 <!-- Kategoria (taxonomy): inaonekana kwa kila njia ya mauzo; ni lazima kwa soko tu -->
 <div id="onlineCategorySection" style="display:block; margin-bottom:12px;">
@@ -1515,6 +1586,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue);">BEI YA KUUZA JUMLA / WHOLESALE (TSH) *</label>
         <div style="font-size:11px;color:#64748b;margin:2px 0 6px;">Bei ya jumla ni punguzo kwa idadi kubwa (wholesale). Si bei ya katoni/pakiti: hiyo inawekwa kwenye sehemu ya pakiti.</div>
         <input type="number" id="prodWholesalePrice" placeholder="Mfano: 30,000" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--primary-blue); outline:none; font-weight:bold; color:var(--primary-blue);">
+        <!-- [2026-11-06] Idadi ya chini (MOQ) ya bei ya jumla sokoni. Bila MOQ bei hii
+             ni ya POS/dukani tu (server haiitumii mtandaoni) — sasa muuzaji anaambiwa. -->
+        <label for="prodWholesaleMinQty" style="font-size:12.5px; font-weight:bold; color:#31504A; display:block; margin-top:8px;">Idadi ya chini ili bei ya jumla itumike sokoni (hiari)</label>
+        <input type="number" id="prodWholesaleMinQty" min="2" step="1" inputmode="numeric" placeholder="Mfano: 5" style="width:100%; padding:11px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:4px;">
+        <small style="display:block; color:#64748b; margin-top:4px;">Ukiiacha wazi, bei ya jumla inatumika dukani (POS) pekee. Ukiijaza, mnunuzi wa mtandaoni anayechukua idadi hii au zaidi analipa bei ya jumla.</small>
     </div>
 
     </div>
@@ -1545,6 +1621,15 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <div id="mode_auction_fields" style="display:none;">
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:4px;"> MUDA WA MNADA KUISHA *</label>
                 <input type="datetime-local" id="aucEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: muda wa kuanza na nyongeza ya chini ya zabuni (server inazitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> MNADA UANZE LINI (hiari)</label>
+                <input type="datetime-local" id="aucStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> NYONGEZA YA CHINI YA ZABUNI (TSH, hiari)</label>
+                <input type="number" id="aucMinIncrement" min="0" placeholder="Mfano: 5,000 (vinginevyo 5% ya dau la juu)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [FULL-AUCTION 2026-11] hiari: kiwango cha chini cha muuzaji (reserve). Zabuni ya juu
+                     isipofikia kiwango hiki, bidhaa haiuzwi (server inatekeleza wakati wa kufunga). -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> KIWANGO CHA CHINI CHA MUUZAJI / RESERVE (TSH, hiari)</label>
+                <input type="number" id="aucReservePrice" min="0" placeholder="Mfano: 50,000 (ukiachwa wazi, mnada unauzwa kwa zabuni yoyote ya juu)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  BEI KUSHUKA KIOTOMATIKI (PRICE DROP) -->
@@ -1560,6 +1645,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 </select>
                 <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> DEAL INAISHIA LINI *</label>
                 <input type="datetime-local" id="pdEndTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <!-- [R13-B] hiari: ofa ianze baadaye na kikomo kwa kila mnunuzi (server inakitekeleza) -->
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> OFA IANZE LINI (hiari, vinginevyo sasa hivi)</label>
+                <input type="datetime-local" id="pdStartTime" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                <label style="font-size: 13px; font-weight:bold; color:gray; display:block; margin-top:8px;"> KIKOMO KWA KILA MNUNUZI (hiari)</label>
+                <input type="number" id="pdMaxPerBuyer" min="1" placeholder="Mfano: 2" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
             </div>
 
             <!--  WHOLESALE + GROUP BUY -->
@@ -1577,7 +1667,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue); display:block; margin-top:8px;"> IDADI YACHINI YA JUMLA (minQty) *</label>
                     <input type="number" id="wsMinQty" placeholder="Mfano: 10" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
                     <label style="font-size: 13px; font-weight:bold; color:var(--primary-blue); display:block; margin-top:8px;"> TIERS ZA JUMLA (hiari — "minQty:bei" zimegawaywa na "; ") </label>
-                    <input type="text" id="wsTiersText" placeholder="Mfano: 10:9000; 50:8000; 100:7000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;">
+                    <input type="text" id="wsTiersText" placeholder="Mfano: 10:9000; 50:8000; 100:7000" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin-top:5px; background:white;" oninput="window.skhWsTierPreview && window.skhWsTierPreview('wsTiersText', 'prodPrice', 'wsTiersPreview')">
+                    <div id="wsTiersPreview" class="ws-tiers-preview" aria-live="polite"></div>
                     <small style="display:block; color:#64748b; margin-top:4px;">Kama hautaweka tiers, punguzo la juu (TSh/%) litatumika kwa minQty pekee — ukizijaza, tiers ndizo halisi unazowaonyesha wanunuzi.</small>
                 </div>
                 <div id="mode_groupbuy_fields" style="display:none;">
@@ -1969,7 +2060,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <input type="text" id="servHubTitle" placeholder="Mfano: House Wiring / Kioo cha iPhone Repair" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
 
     <label style="font-size:12px; font-weight:bold;">Gharama ya Huduma / Bajeti (TSh) *</label>
-    <input type="number" id="servHubPrice" placeholder="Mfano: 80,000" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
+    <input type="number" id="servHubPrice" placeholder="Mfano: 80,000 (acha wazi kwa kadirio)" min="0" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:12px;">
 
     <label style="font-size:12px; font-weight:bold;">Mfumo wa Bei</label>
     <select id="servPricingModel" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:white; margin-bottom:12px;">
@@ -2294,7 +2385,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <!-- User Profile Card -->
                 <div class="sp-profile-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px; margin-bottom: 12px; text-align: left;">
                     <div class="sp-profile-info" style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                        <img src="img/avatar-user.png" class="sp-profile-img" id="spSidebarUserPic" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.2);" alt="User">
+                        <img src="img/avatar-user.svg" class="sp-profile-img" id="spSidebarUserPic" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.2);" alt="User">
                         <div class="sp-profile-details" style="min-width: 0;">
                             <span class="sp-profile-name" id="spSidebarUserName" style="font-size: 12px; font-weight: 700; color: white; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mtumiaji</span>
                             <span class="sp-profile-verified" style="font-size: 12px; color: #10b981; display: flex; align-items: center; gap: 3px; font-weight: bold;"> Verified Node</span>
@@ -2333,24 +2424,24 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <!-- Universal Search Bar (Contract, Token, Payment, Shipment, Invoice) -->
                     <div class="sp-search-box" style="width: 320px;">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#64748B;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" class="sp-search-input" placeholder="Search contracts, tokens, tracking, invoices...">
+                        <input type="text" class="sp-search-input" placeholder="Tafuta mikataba, tokens, ufuatiliaji, ankara...">
                         <span class="sp-search-shortcut">Ctrl + K</span>
                     </div>
 
                     <!-- Alerts Bell & Messages zimeondolewa — SokoPay ina UI yake, si mfumo wa kijamii -->
 
                     <!-- Scan QR Code -->
-                    <button class="sp-header-btn sp-hide-mobile" onclick="window.spScanQr()">
+                    <button class="sp-header-btn sp-hide-mobile" aria-label="Skani QR" onclick="window.spScanQr()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
                     </button>
 
                     <!-- Fullscreen Toggle -->
-                    <button class="sp-header-btn sp-hide-mobile" onclick="if(!document.fullscreenElement){document.documentElement.requestFullscreen();}else{document.exitFullscreen();}">
+                    <button class="sp-header-btn sp-hide-mobile" aria-label="Skrini nzima" onclick="if(!document.fullscreenElement){document.documentElement.requestFullscreen();}else{document.exitFullscreen();}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                     </button>
 
                     <!-- Profile Avatar / Exit Escrow Trigger -->
-                    <img id="spHeaderAvatar" src="img/avatar-sokohai.png" class="sp-header-avatar" onclick="window.closeModals()" title="Funga SokoPay">
+                    <img id="spHeaderAvatar" src="img/avatar-sokohai.svg" class="sp-header-avatar" alt="Funga SokoPay" onclick="window.closeModals()" title="Funga SokoPay">
                 </div>
             </div>
 
@@ -2566,7 +2657,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <p style="font-size: 13px; color: #64748B; margin-top: 0; margin-bottom: 12px; line-height: 1.5;">Token, linki na QR zinazozalishwa hapo juu zimehifadhiwa kiotomatiki. Unaweza pia kubandika token au linki uliyopokea (kwa WhatsApp/SMS) ili kuirejesha na kuihifadhi hapa.</p>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="spImportInput" placeholder="Bandika Token (SP-XXXXXX) au Linki hapa..." style="flex: 1; min-width: 0; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 12px; box-sizing: border-box;">
-                        <button type="button" onclick="window.importHaiPayItem()" style="padding: 12px 16px; background: #18A982; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;">REJESHA / HIFADHI</button>
+                        <button type="button" onclick="window.importSokoPayItem()" style="padding: 12px 16px; background: #18A982; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;">REJESHA / HIFADHI</button>
                     </div>
                     <div id="spSavedItems" style="margin-top: 16px; text-align: left;"></div>
                 </div>
@@ -2961,7 +3052,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
  
   
     <!-- 1. Bidhaa Sokoni -->
-    <div class="menu-item" onclick="showForm('sellerForm')" style="background:#f8fafc; border-left-color:var(--gold);">
+    <div class="menu-item" onclick="window.skhOpenSaleTypeChooser ? skhOpenSaleTypeChooser() : showForm('sellerForm')" style="background:#f8fafc; border-left-color:var(--gold);">
         <b data-skh-icon="shop" data-i18n="menu_products">BIDHAA SOKONI</b>
         <span data-i18n="menu_products_desc">Piga picha na uuze bidhaa zako</span>
     </div>
@@ -3024,7 +3115,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 onclick="window.togglePlusMenu()"
                 data-i18n-aria="nav_post_desc" data-i18n-title="nav_post_desc"
                 aria-label="Chapisha — tengeneza tangazo" title="Chapisha — tengeneza tangazo">
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><line x1="12" y1="8.2" x2="12" y2="15.8"/><line x1="8.2" y1="12" x2="15.8" y2="12"/></svg>
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><line x1="12" y1="8.2" x2="12" y2="15.8"/><line x1="8.2" y1="12" x2="15.8" y2="12"/></svg><span class="skh-hlabel">Chapisha</span>
         </button>
 
         <div class="top-nav-icons">
@@ -3034,26 +3125,26 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                  Account ipo kwenye sidebar menu (hamburger). -->
             <button type="button" class="skh-icon-btn skh-kazi-btn" id="skhKaziBtn" onclick="window.skhKaziGo('mode')"
                     aria-haspopup="dialog" aria-expanded="false" data-i18n-aria="nav_more_desc" data-i18n-title="nav_more_desc" aria-label="Dashibodi — Usimamizi" title="Dashibodi — Usimamizi">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span class="skh-hlabel">Zaidi</span>
             </button>
 
             <!-- SOKOPAY -->
             <button type="button" class="skh-icon-btn" id="skhSokoPayBtn" onclick="window.openSokoPay && window.openSokoPay()"
                     data-i18n-aria="nav_sokopay_desc" data-i18n-title="nav_sokopay_desc" aria-label="SokoPay — pochi na escrow" title="SokoPay — pochi na escrow">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.4"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10.5" y2="15"/></svg>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.4"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10.5" y2="15"/></svg><span class="skh-hlabel">SokoPay</span>
             </button>
 
             <!-- CART -->
             <button type="button" class="skh-icon-btn skh-has-badge" id="skhCartBtn" onclick="window.openCart && window.openCart()"
                     data-i18n-aria="nav_cart_desc" data-i18n-title="nav_cart_desc" aria-label="Kikapu" title="Kikapu">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg><span class="skh-hlabel">Kikapu</span>
                 <span class="skh-count" id="skhCartCount" hidden>0</span>
             </button>
 
             <!-- NOTIFICATIONS -->
             <button type="button" class="skh-icon-btn skh-has-badge" id="skhNotifBtn" onclick="window.openNotifications && window.openNotifications()"
                     data-i18n-aria="nav_notif_desc" data-i18n-title="nav_notif_desc" aria-label="Taarifa" title="Taarifa">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="skh-hlabel">Taarifa</span>
                 <span class="skh-count" id="skhNotifCount" hidden>0</span>
             </button>
         </div>
@@ -3066,7 +3157,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         </div>
         <div class="search-wrap">
             <span class="skh-search-ico" data-skh-icon="search" data-skh-size="20" aria-hidden="true"></span>
-            <input type="text" id="searchInput" oninput="window.handleSearch()" data-i18n-placeholder="search_placeholder" placeholder="Tafuta bidhaa, huduma au usafiri...">
+            <input type="text" id="searchInput" aria-label="Tafuta bidhaa, huduma au usafiri" oninput="window.handleSearch()" data-i18n-placeholder="search_placeholder" placeholder="Tafuta bidhaa, huduma au usafiri...">
             <span class="skh-search-div" aria-hidden="true"></span>
             <button type="button" class="skh-search-go" onclick="window.handleSearch()" aria-label="Tafuta"><span data-skh-icon="search" data-skh-size="19" aria-hidden="true"></span></button>
         </div>
@@ -3078,7 +3169,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
              Inatafuta eneo...
         </span>
         <div style="display:flex; align-items:center; gap:6px; flex:0 0 auto; justify-content:flex-end;">
-            <select id="regionFilterSelect" onchange="window.filterByRegion(this.value)" style="padding:7px 8px; border-radius:999px; border:1.5px solid #cbd5e1; background:white; font-weight:800; font-size:12px; color:var(--primary-dark); outline:none; cursor:pointer;">
+            <select id="regionFilterSelect" aria-label="Chagua mkoa" onchange="window.filterByRegion(this.value)" style="padding:7px 8px; border-radius:999px; border:1.5px solid #cbd5e1; background:white; font-weight:800; font-size:12px; color:var(--primary-dark); outline:none; cursor:pointer;">
                 <option value="" data-i18n="region_all">Tanzania Nzima</option>
                 <option value="nearme" data-i18n="region_near">Karibu Nawe (GPS)</option>
                 <optgroup label=" Mikoa ya Tanzania Bara" data-i18n-label="region_mainland">
@@ -3171,11 +3262,73 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
              sponsored ads zisionekane kabla ya kategoria. Kila kadi inaita
              selectAdvancedCategory() ile ile; kadi iliyochaguliwa inaonekana
              na zingine zinachujwa. Hujengwa na js/app/83-category-photos.js. -->
+        <!-- [R12 2026-11] Nyumbani: banner ya jamii + njia za haraka (design refs 11, 13, 14, 15).
+             Inaonekana kwenye tab ya Nyumbani tu (CSS :has(#navTabHome.active)). Kila kitufe
+             kinaita kazi iliyopo (updateApp, setMarketMode, openChatList, togglePlusMenu);
+             hakuna mfumo mpya wala data ya kubuni. -->
+        <!-- [R13-E 2026-11] Nyumbani kwa mpangilio wa design refs 11 (simu), 12/13/14 (desktop), 15:
+             carousel (Escrow + Jamii), njia za haraka (6 desktop / 4 simu). Sehemu za "Discover New
+             Updates", "Bidhaa Maarufu" na matangazo matatu hujengwa na js/app/123-home-layout.js
+             kutoka data halisi. Kila kitufe kinaita kazi iliyopo. -->
+        <section class="shh" id="skhHomeHero" aria-label="Karibu SokoHai">
+            <div class="shc" id="shcCarousel" aria-roledescription="carousel">
+                <div class="shc-track" id="shcTrack">
+                    <article class="shc-slide shc-escrow" aria-label="Malipo kwa Escrow">
+                        <div class="shc-copy">
+                            <b class="shc-brand">SokoHai</b>
+                            <h2 class="shc-title">Nunua kwa Ujasiri.</h2>
+                            <span class="shc-pill">Malipo Yako Yanalindwa</span>
+                            <p class="shc-sub">Malipo yanawekwa kwenye Escrow hadi upokee na kukagua mzigo wako.</p>
+                            <button type="button" class="shh-cta" onclick="window.skhEscrowInfo &amp;&amp; skhEscrowInfo()">Jifunze Zaidi <span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></button>
+                        </div>
+                        <img class="shc-photo" src="assets/img/home/escrow.webp" alt="" width="537" height="268" decoding="async">
+                        <ol class="shh-steps" aria-label="Jinsi malipo salama yanavyofanya kazi">
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Weka Oda</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Malipo Salama</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Tuma Mzigo</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Pokea na Kagua</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Malipo kwa Muuzaji</li>
+                        </ol>
+                    </article>
+                    <article class="shc-slide shh-banner" aria-label="Jamii ya SokoHai">
+                        <div class="shh-copy">
+                            <span class="shh-kicker">Jamii ya SokoHai</span>
+                            <h2 class="shh-title">“Fursa za biashara zinaanza hapa.”</h2>
+                            <p class="shh-sub">Gundua bidhaa, nunua kwa urahisi, uza na panua biashara yako kupitia SokoHai.</p>
+                            <div class="shh-ctas">
+                                <button type="button" class="shh-cta" onclick="window.togglePlusMenu()">Anza Sasa <span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></button>
+                            </div>
+                        </div>
+                        <img class="shh-photo" src="assets/img/home/community.webp" alt="" width="520" height="558" loading="lazy" decoding="async">
+                    </article>
+                </div>
+                <button type="button" class="shc-arrow shc-prev" aria-label="Iliyotangulia" onclick="window.skhHeroGo &amp;&amp; skhHeroGo(-1)"><span class="skh-ico" data-ico="arrow-left" aria-hidden="true"></span></button>
+                <button type="button" class="shc-arrow shc-next" aria-label="Inayofuata" onclick="window.skhHeroGo &amp;&amp; skhHeroGo(1)"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></button>
+                <div class="shc-dots" id="shcDots"><button type="button" class="on" aria-label="Slide 1"></button><button type="button" aria-label="Slide 2"></button></div>
+            </div>
+            <!-- desktop (ref 14): njia sita -->
+            <nav class="shh-quick" aria-label="Njia za haraka">
+                <button type="button" onclick="updateApp('bidhaa')"><span class="shh-qi"><span class="skh-ico" data-ico="cart" aria-hidden="true"></span></span><b>Nunua Bidhaa</b><small>Pata bidhaa bora</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('services')"><span class="shh-qi"><span class="skh-ico" data-ico="wrench" aria-hidden="true"></span></span><b>Pata Huduma</b><small>Mtaalamu karibu yako</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('delivery')"><span class="shh-qi"><span class="skh-ico" data-ico="car" aria-hidden="true"></span></span><b>Tafuta Usafiri</b><small>Safari kwa urahisi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub()" data-skh-live-entry="1"><span class="shh-qi"><span class="skh-ico" data-ico="video" aria-hidden="true"></span></span><b>Live sasa</b><small>Tazama na nunua</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub('deals')"><span class="shh-qi"><span class="skh-ico" data-ico="tag" aria-hidden="true"></span></span><b>Ofa &amp; Punguzo</b><small>Bei bora zaidi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('bidhaa'); setMarketMode('auction', document.querySelector('[data-skh-mode=auction]'))"><span class="shh-qi"><span class="skh-ico" data-ico="trophy" aria-hidden="true"></span></span><b>Mnada</b><small>Shiriki mnada</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+            </nav>
+            <!-- simu (ref 11): njia nne -->
+            <nav class="shh-quick4" aria-label="Njia za haraka" data-no-i18n>
+                <button type="button" onclick="openChatList()"><span class="skh-ico" data-ico="chat" aria-hidden="true"></span><b>Chat</b></button>
+                <button type="button" onclick="updateApp('bidhaa')"><span class="skh-ico" data-ico="clipboard" aria-hidden="true"></span><b>Weka Oda</b></button>
+                <button type="button" onclick="window.skhOpenRequestInbox ? skhOpenRequestInbox() : updateApp('bidhaa')"><span class="skh-ico" data-ico="scales" aria-hidden="true"></span><b>Patana Bei</b></button>
+                <button type="button" onclick="updateApp('delivery')"><span class="skh-ico" data-ico="truck" aria-hidden="true"></span><b>Usafirishaji</b></button>
+            </nav>
+        </section>
+
         <section class="cps-section" id="categoryStrip" aria-labelledby="cpsTitle">
             <div class="cps-head">
-                <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span>Gundua Soko</h2>
+                <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span><span class="cps-grid-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg></span><span class="cps-t-m" data-no-i18n>Gundua Soko</span><span class="cps-t-d" data-no-i18n>Kategoria za Bidhaa</span></h2>
                 <span class="cps-head-rule" aria-hidden="true"></span>
-                <button type="button" class="cps-more" onclick="openCategoryModal()">Kategoria zote
+                <button type="button" class="cps-more" onclick="openCategoryModal()" data-no-i18n><span class="cps-t-m">Kategoria zote</span><span class="cps-t-d">Tazama Zote</span>
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
                 </button>
             </div>
@@ -3340,9 +3493,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     <span class="sp-widget-title">Construction Project Monitoring</span>
                     <small style="color: gray; display:block; margin-bottom: 8px;">Project: <b>New Office Building</b></small>
                     <div style="height: 140px; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;">
-                        <img src="img/hero-product.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
+                        <img src="img/hero-product.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
                         <span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 3px 8px; border-radius: 12px; font-size: 12.5px;"> Live Camera 1</span>
-                        <button style="position: absolute; width: 45px; height: 45px; border-radius: 50%; border: none; background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;"></button>
+                        <button aria-label="Cheza video" style="position: absolute; width: 45px; height: 45px; border-radius: 50%; border: none; background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;"></button>
                     </div>
                     <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 13px;">
                         <span>Progress: <b>65% Complete</b></span>
@@ -3421,6 +3574,19 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <div class="nav-tab" onclick="openChatList()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                 <span data-i18n="nav_chat">Chat</span>
+            </div>
+            <!-- [R12] Desktop pekee (ref 12): njia za kazi zilizopo, zinaonekana kwenye rail ya kushoto. -->
+            <div class="nav-tab nav-desk-only" role="button" tabindex="0" onclick="window.switchMode && window.switchMode('seller')">
+                <span class="skh-ico" data-ico="shop" aria-hidden="true"></span>
+                <span>Duka langu</span>
+            </div>
+            <div class="nav-tab nav-desk-only" role="button" tabindex="0" onclick="window.openNotifications && window.openNotifications()">
+                <span class="skh-ico" data-ico="bell" aria-hidden="true"></span>
+                <span>Taarifa</span>
+            </div>
+            <div class="nav-tab nav-desk-only" role="button" tabindex="0" onclick="window.openSidebarMenu && window.openSidebarMenu()">
+                <span class="skh-ico" data-ico="menu" aria-hidden="true"></span>
+                <span>Zaidi</span>
             </div>
         </div>
     </div>
@@ -3514,7 +3680,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/05-forms.js"></script>
 <script type="module" src="js/app/06-product-builder.js"></script>
 <script type="module" src="js/app/06-navigation.js"></script>
-<script type="module" src="js/app/07-product.js"></script>
+<script type="module" src="js/app/07-product.js?v=20261108r13d"></script>
 <script type="module" src="js/app/08-app-state.js"></script>
 <script type="module" src="js/app/09-feed-announcements.js"></script>
 <script type="module" src="js/app/10-dashboard-tabs.js"></script>
@@ -3525,10 +3691,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/14-map-onboarding.js"></script>
 <script type="module" src="js/app/15-pos-sales.js"></script>
 <script type="module" src="js/app/16-pos-admin-jobs.js"></script>
-<script type="module" src="js/app/17-hub.js"></script>
+<script type="module" src="js/app/17-hub.js?v=20261108r13e"></script>
 <script type="module" src="js/app/18-cockpit.js"></script>
 <script type="module" src="js/app/19-roles.js"></script>
 <script src="shared/business-context-core.js"></script>
+<script src="shared/wholesale-price-core.js"></script> <!-- [2026-11-06] bei ya jumla/idadi — formula moja na server -->
 <script type="module" src="js/app/20-business-context.js"></script>
 <script type="module" src="js/app/20-logistics.js"></script>
 <script type="module" src="js/app/21-sokopay.js"></script>
@@ -3552,6 +3719,12 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/104-chat-shell.js"></script>
 <!-- [CALLS 2026-11] Simu za mtandao (sauti + video) — WebRTC -->
 <script type="module" src="js/app/105-calls.js"></script>
+<!-- [BUSINESS OS 1A] shell + overview ya dashibodi (zinatumia modules zilizopo) -->
+<!-- [2026-11-06] restored: dropped by a direct index.html edit (61a3d88); without them
+     the seller dashboard silently fell back to the legacy dark "ERP COCKPIT". -->
+<script type="module" src="js/app/110-business-os-shell.js?v=20261106a"></script>
+<script type="module" src="js/app/111-business-os-overview.js?v=20261103b"></script>
+<script type="module" src="js/app/112-business-os-pos-page.js?v=20261103b"></script>
 <script type="module" src="js/app/35-comments.js"></script>
 <script type="module" src="js/app/36-seller-chat-comments.js"></script>
 <!-- [SHOWCASE MODULE 02] Product Detail UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
@@ -3572,15 +3745,16 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/65-content-l10n.js"></script>
 <script type="module" src="js/app/66-wordmark.js"></script>
 <script type="module" src="js/app/67-payment-accounts.js"></script>
-<script type="module" src="js/app/68-gundua-soko.js?v=20261105r6w"></script><!-- [2026-11-04] Gundua Soko -->
+<script type="module" src="js/app/68-gundua-soko.js?v=20261108r13c"></script><!-- [2026-11-04] Gundua Soko -->
 <script type="module" src="js/app/82-home-header-actions.js?v=20261105r6w"></script>
-<script type="module" src="js/app/83-category-photos.js?v=20261105r6w"></script>
+<!-- [R13-C] 86-category-icons-manifest.js (SVG family) is no longer loaded: categories use photos; files kept on disk -->
+<script type="module" src="js/app/83-category-photos.js?v=20261108r13g"></script>
 <script type="module" src="js/app/84-location-fast.js?v=20261105r6b"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->
-<script type="module" src="js/app/69-chat-groups.js"></script>
+<script type="module" src="js/app/69-chat-groups.js?v=20261108r13g"></script>
 <script type="module" src="js/app/70-role-identity.js"></script>
 <script type="module" src="js/app/71-visual-dictionary.js"></script>
-<script type="module" src="js/app/73-group-soga.js"></script>
-<script type="module" src="js/app/74-group-order-system.js"></script>
+<script type="module" src="js/app/73-group-soga.js?v=20261108r13g"></script>
+<script type="module" src="js/app/74-group-order-system.js?v=20261108r13g"></script>
 <script type="module" src="js/app/76-group-order-production-enhancement.js"></script>
 <script type="module" src="js/app/64-my-profile.js"></script>
 <script type="module" src="js/app/50-lifecycle-core.js"></script>
@@ -3602,13 +3776,20 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/96-ad-delivery-controller.js"></script>
 <script type="module" src="js/app/97-escrow-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Escrow (server-only actions) -->
 <script type="module" src="js/app/98-admin-control-center.js"></script>
-<script type="module" src="js/app/106-chat-discovery-feed.js?v=20261105r6w"></script><!-- [R6i] GUNDUA BIASHARA (chat inbox: post za bidhaa + live) -->
+<script type="module" src="js/app/106-chat-discovery-feed.js?v=20261108r13f"></script><!-- [R6i] GUNDUA BIASHARA (chat inbox: post za bidhaa + live) -->
 <script type="module" src="js/app/99-ads-marketplace.js?v=20261105r6w"></script>
 <script type="module" src="js/app/100-ads-studio-ui.js"></script><!-- [TASK 01] in-feed ads + true-size studio preview -->
 <!-- [ADS STUDIO REBUILD 2026-11-01] SokoHai Marketplace Ads Studio (product / service / transport only) -->
 <script type="module" src="js/app/101-marketplace-ads-studio.js"></script>
 <script type="module" src="js/app/102-publish-outbox.js"></script>
 <script type="module" src="js/app/103-ad-badges.js"></script><!-- [ADS 2026-11-01] badges ndogo: dashboard, chat --><!-- [BIDHAA/HUDUMA/USAFIRI] hifadhi kwa kifaa, sambaza baadaye -->
+<script type="module" src="js/app/113-sale-type-flow.js?v=20261108m1"></script><!-- [M1 2026-11-08] aina 4 za mauzo: (+) → Bidhaa Sokoni -->
+<script type="module" src="js/app/120-live-commerce-ui.js?v=20261108r13d"></script><!-- [R13-B] Live, Mnada Live, Bei Kushuka Live -->
+<script type="module" src="js/app/125-live-video.js?v=20261111full"></script><!-- [FULL-AUCTION 2026-11-11] WebRTC live camera broadcast -->
+<script type="module" src="js/app/121-stories-ui.js?v=20261108r13f"></script><!-- [R13-B] Hali (stories) viewer -->
+<script type="module" src="js/app/122-group-soko-ui.js?v=20261108r13d"></script><!-- [R13-B] Group Soko -->
+<script type="module" src="js/app/123-home-layout.js?v=20261108r13e"></script><!-- [R13-E] Nyumbani: refs 11-15 -->
+<script type="module" src="js/app/124-pos-grid.js?v=20261108r13e"></script><!-- [R13-E] POS cashier grid: refs 17/18 -->
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->

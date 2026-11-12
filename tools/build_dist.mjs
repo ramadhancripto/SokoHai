@@ -7,8 +7,23 @@
  * copies of the app. Only the files the browser actually needs are copied
  * here; everything else stays private. No dependencies, Node >= 18.
  *
- *   node tools/build_dist.mjs          -> builds dist/
- *   node tools/build_dist.mjs --check  -> builds, then fails if a forbidden file slipped in
+ *   node tools/build_dist.mjs            -> builds dist/ (faili kama zilivyo)
+ *   node tools/build_dist.mjs --check    -> builds, then fails if a forbidden file slipped in
+ *   node tools/build_dist.mjs --minify   -> builds, then minifies the JS+CSS that index.html loads
+ *
+ * [AWAMU D2 2026-11-08] --minify
+ * [85%-PUSH 2026-11-08] CSS imeongezwa kwenye --minify (falsafa ile ile).
+ *   Whitespace-only minification ya faili za JS na CSS zinazopakiwa na index.html,
+ *   kwa tools/minify_js.mjs (token-preserving — tokeni zote zinabaki zile zile)
+ *   na tools/minify_css.mjs (skeleton-preserving — calc(), @media, strings
+ *   zinalindwa; `;` zote zinabaki).
+ *   - Chanzo (js/, shared/) HAKIGUSWI. Kuandika kunafanyika ndani ya dist/ pekee.
+ *   - Mpangilio wa scripts, <script> tags na loading strategy HAVIBADILIKI:
+ *     majina ya faili yanabaki yale yale, index.html haibadiliki hata kidogo.
+ *   - HAKUNA identifier mangling, HAKUNA syntax transformation, HAKUNA
+ *     kupanga upya — kwa sababu token stream inahifadhiwa kwa ujenzi.
+ *   - Bila --minify, build ni ile ile ya awali kwa byte.
+ *   - acorn hupakiwa kwa lazy import: build ya kawaida haihitaji dependency.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,13 +32,19 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'dist');
 
+const ARGS = process.argv.slice(2);
+const WANT_MINIFY = ARGS.includes('--minify');
+
 // Whole directories copied recursively (with per-file filters below).
-const DIRS = ['css', 'js', 'img', 'vendor', 'shared'];
+// [R12] assets/img holds the category photos, the home banner and the logo used by index.html;
+// before this they were missing from dist (every category tile fell back on a deploy).
+const DIRS = ['css', 'js', 'img', 'vendor', 'shared', 'assets/img'];
 // Single files.
 const FILES = [
   'index.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js',
   'icon-192.png', 'icon-512.png', 'assets/sokohai-s-mark.png',
-  'fonts/inter.css', 'fonts/sokohai-sw.js'
+  'fonts/inter.css', 'fonts/sokohai-sw.js',
+  '.well-known/security.txt' // [85%-PUSH 2026-11-08] RFC 9116 — ukurasa wa kuripoti dosari.
 ];
 // fonts/*.ttf only (fonts/ also holds a retired copy of the whole app).
 const FONT_EXT = new Set(['.ttf', '.woff', '.woff2']);
@@ -70,6 +91,93 @@ for (const f of fs.readdirSync(path.join(ROOT, 'fonts'))) {
 }
 console.log(`[dist] ${count} files -> ${path.relative(ROOT, OUT)}/`);
 
+/* ------------------------------------------------------------------ *
+ * [AWAMU D2] Minification — HATUA YA HIARI (--minify) PEKEE
+ *
+ * Inatumia tools/minify_js.mjs: whitespace-only, token-preserving.
+ * Hakuna identifier mangling, hakuna syntax transformation, hakuna
+ * mabadiliko ya mpangilio. index.html haibadiliki hata kidogo.
+ * ------------------------------------------------------------------ */
+if (WANT_MINIFY) {
+  let minifier;
+  try {
+    minifier = await import('./minify_js.mjs');
+    await minifier.loadAcorn();
+  } catch (e) {
+    console.error('[dist] --minify: ' + e.message);
+    console.error('[dist] Build ya kawaida (bila --minify) haihitaji dependency hii.');
+    process.exit(1);
+  }
+
+  const indexBefore = fs.readFileSync(path.join(OUT, 'index.html'));
+  const targets = minifier.loadedJs(ROOT).filter((rel) => fs.existsSync(path.join(OUT, rel)));
+
+  let rawBefore = 0, rawAfter = 0, done = 0, tokens = 0;
+  const failed = [];
+
+  for (const rel of targets) {
+    const abs = path.join(OUT, rel);
+    const src = fs.readFileSync(abs, 'utf8');
+    try {
+      const r = minifier.minifyWhitespace(src, rel);
+      fs.writeFileSync(abs, r.code);
+      rawBefore += Buffer.byteLength(src);
+      rawAfter += Buffer.byteLength(r.code);
+      tokens += r.tokens;
+      done++;
+    } catch (e) {
+      failed.push(`${rel}: ${e.message.split('\n')[0]}`);
+    }
+  }
+
+  const indexAfter = fs.readFileSync(path.join(OUT, 'index.html'));
+  if (!indexBefore.equals(indexAfter)) {
+    console.error('[dist] HATARI: index.html imebadilika wakati wa minify. Hii haipaswi kutokea.');
+    process.exit(1);
+  }
+  if (failed.length) {
+    console.error('[dist] minify imeshindikana kwenye faili:');
+    failed.forEach((f) => console.error('   ' + f));
+    process.exit(1);
+  }
+
+  console.log(`[dist] minify: faili ${done} | token ${tokens.toLocaleString()} | raw ${(rawBefore / 1024).toFixed(0)} KB -> ${(rawAfter / 1024).toFixed(0)} KB ` +
+    `(${((1 - rawAfter / rawBefore) * 100).toFixed(1)}% ndogo) | index.html haijabadilika`);
+
+  // [85%-PUSH 2026-11-08] CSS: falsafa ile ile — whitespace/comments pekee.
+  // Chanzo (css/, fonts/) HAKIGUSWI; index.html haibadiliki.
+  const cssMin = await import('./minify_css.mjs');
+  const cssTargets = cssMin.loadedCss(ROOT).filter((rel) => fs.existsSync(path.join(OUT, rel)));
+  let cssBefore = 0, cssAfter = 0, cssDone = 0, cssRules = 0;
+  const cssFailed = [];
+  for (const rel of cssTargets) {
+    const abs = path.join(OUT, rel);
+    const src = fs.readFileSync(abs, 'utf8');
+    try {
+      const r = cssMin.minifyCss(src, rel);
+      fs.writeFileSync(abs, r.code);
+      cssBefore += Buffer.byteLength(src);
+      cssAfter += Buffer.byteLength(r.code);
+      cssRules += r.rules;
+      cssDone++;
+    } catch (e) {
+      cssFailed.push(`${rel}: ${e.message.split('\n')[0]}`);
+    }
+  }
+  const indexAfterCss = fs.readFileSync(path.join(OUT, 'index.html'));
+  if (!indexBefore.equals(indexAfterCss)) {
+    console.error('[dist] HATARI: index.html imebadilika wakati wa minify ya CSS. Hii haipaswi kutokea.');
+    process.exit(1);
+  }
+  if (cssFailed.length) {
+    console.error('[dist] minify ya CSS imeshindikana kwenye faili:');
+    cssFailed.forEach((f) => console.error('   ' + f));
+    process.exit(1);
+  }
+  console.log(`[dist] minify-css: faili ${cssDone} | rules ${cssRules.toLocaleString()} | raw ${(cssBefore / 1024).toFixed(0)} KB -> ${(cssAfter / 1024).toFixed(0)} KB ` +
+    `(${((1 - cssAfter / cssBefore) * 100).toFixed(1)}% ndogo) | index.html haijabadilika`);
+}
+
 if (process.argv.includes('--check')) {
   const bad = [];
   const forbiddenTop = ['functions', 'tools', 'docs', '_originals', '_old_fonts_project', 'reviews', 'scripts', '_recovery', 'node_modules'];
@@ -87,4 +195,18 @@ if (process.argv.includes('--check')) {
   if (!fs.existsSync(path.join(OUT, 'index.html'))) bad.push('index.html missing');
   if (bad.length) { console.error('[dist] FORBIDDEN or missing:', bad); process.exit(1); }
   console.log('[dist] check OK: only public files are present.');
+
+  // [AWAMU D2] Kama --minify ilitumika, --check pia huthibitisha usawa wa token.
+  // Hii inafanya `node tools/build_dist.mjs --minify --check` kuwa lango moja
+  // linalozuia build yoyote iliyoharibika kusambazwa.
+  if (WANT_MINIFY) {
+    const { spawnSync } = await import('node:child_process');
+    console.log('[dist] uthibitisho wa usawa wa token...');
+    const r = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'verify_minify.mjs')], { stdio: 'inherit' });
+    if (r.status !== 0) { console.error('[dist] USAWA UMESHINDWA — usisambaze dist/ hii.'); process.exit(1); }
+    // [85%-PUSH 2026-11-08] Uthibitisho wa usawa wa CSS (skeleton kwa skeleton).
+    console.log('[dist] uthibitisho wa usawa wa CSS...');
+    const rc = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'verify_minify_css.mjs')], { stdio: 'inherit' });
+    if (rc.status !== 0) { console.error('[dist] USAWA WA CSS UMESHINDWA — usisambaze dist/ hii.'); process.exit(1); }
+  }
 }

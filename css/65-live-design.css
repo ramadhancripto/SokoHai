@@ -319,6 +319,25 @@
 
 .lvh-pausedtag { display: inline-block; background: #64748b; color: #fff; font-size: 11.5px; font-weight: 900; padding: 5px 12px; border-radius: 999px; margin-bottom: 6px; }
 
+/* [FULL-AUCTION 2026-11-11] live camera stage (WebRTC broadcast) */
+video.lv7-video { object-fit: cover; background: #000; }
+.lv7-rtcstate { position: absolute; top: 58px; left: 12px; right: 12px; z-index: 5; text-align: center;
+  background: rgba(6, 32, 26, .82); border: 1px solid rgba(212, 175, 55, .45); color: #FFE9A8;
+  font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 12px; }
+.lv7-rtcstate:not([hidden]) { cursor: pointer; }
+.lv7-camctl { position: absolute; left: 0; right: 0; bottom: 78px; z-index: 5; display: flex; gap: 8px;
+  justify-content: center; align-items: center; pointer-events: none; }
+.lv7-cambtn { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,.25);
+  background: rgba(6, 32, 26, .85); color: #fff; font-weight: 900; font-size: 12.5px; padding: 10px 14px; border-radius: 999px; cursor: pointer; }
+.lv7-cambtn.gold { background: #D4AF37; border-color: #D4AF37; color: #06201A; }
+.lv7-cambtn.danger { background: rgba(220, 38, 38, .9); border-color: rgba(220, 38, 38, .9); }
+.lv7-cambtn.is-off { opacity: .45; }
+/* tablet portrait: room keeps the single-column stage; side tabs stay reachable via sheets */
+@media (min-width: 641px) and (max-width: 1099px) {
+  .lv7-stage { flex-basis: 100%; }
+  .lv7-camctl { bottom: 86px; }
+}
+
 /* [AUCTION-LIVE] short-landscape compact room (phones turned sideways): everything must fit ~390px height */
 @media (orientation: landscape) and (max-height: 500px) {
   .lv7-top { top: 8px; left: 10px; right: 10px; }
@@ -340,3 +359,7 @@
   .lv7-paused, .lv7-conn { top: 44px; padding: 12px; } .lv7-paused b, .lv7-conn b { font-size: 14px; }
   .lv7-sheet-card { max-height: 92%; }
 }
+/* [FULL-AUCTION] webrtc stage wrapper (video is absolute inset-0 via .lv7-video) */
+.lv7-webrtc { position: absolute; inset: 0; }
+.lv-btn.danger { background: #b91c1c; }
+.lvp-btn.danger { background: rgba(185, 28, 28, .12); border: 1px solid #b91c1c; color: #b91c1c; }

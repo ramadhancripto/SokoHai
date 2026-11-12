@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai — Deep Readiness Phase 1 + Tathmini ya Mwisho</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,'Segoe UI',Roboto,sans-serif;margin:0;background:#f4f6f8;color:#1c2733;line-height:1.55}
+.wrap{max-width:1020px;margin:0 auto;padding:20px 14px 60px}
+.hd{background:#12263a;color:#fff;border-radius:12px;padding:22px 20px;margin-bottom:16px}
+.hd h1{margin:0 0 6px;font-size:22px}.hd p{margin:2px 0;font-size:14px;opacity:.92}
+.score{display:inline-block;background:#f59e0b;color:#12263a;font-weight:900;font-size:20px;border-radius:12px;padding:6px 16px;margin:6px 0}
+.card{background:#fff;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card h2{margin:0 0 10px;font-size:18px;color:#12263a}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px;margin-right:6px;white-space:nowrap}
+.ok{background:#d9f2e4;color:#0d4d2b}.ex{background:#e3ecff;color:#1a3a8f}.warn{background:#fff3d6;color:#8a5a00}
+.crit{background:#ffe0e0;color:#a00}.high{background:#ffedd5;color:#9a3412}.med{background:#fef9c3;color:#854d0e}.low{background:#e2e8f0;color:#334155}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid #dde3e8;padding:7px 9px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+th{background:#eef3f6}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#f1f5f9;padding:1px 5px;border-radius:4px}
+pre{background:#10231a;color:#d7f0e0;padding:12px;border-radius:8px;overflow-x:auto;white-space:pre;font-size:12.5px}
+.small{font-size:13px;color:#54616e}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;margin:8px 0}
+.flow b{background:#e3ecff;border-radius:8px;padding:4px 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<div class="hd"><h1>Deep Readiness — Phase 1: Data Integrity &amp; Product Lifecycle</h1>
+<p><span class="badge ex">EXISTS</span> Ripoti ya ukaguzi (read-only) + tathmini ya mwisho ya asilimia.</p>
+<div class="score">SokoHai: 54%</div>
+<p>Tarehe: 2026-11-09 · Tawi: feature/product-card-visual-refinement · HEAD: 2e8d049 · Commits: 0<br>
+Njia: code reads (js/app, shared, functions, firestore.rules) + live reads ~900 docs · <b>Writes: 0</b> · Faili zilizoguswa: <b>0</b></p></div>
+
+<div class="card"><h2>0. Tathmini ya mwisho — kwa nini 54% (was 81%)?</h2>
+<p>81% ya awali ilipima <b>code + UI + build</b>. Phase 1 imepima <b>data halisi ya production + rules zilizodeploy</b> — na hapo ndipo mapungufu makubwa yalipo. Code nyingi ni nzuri (70–88), lakini <b>data + access control ya production</b> vinaivuta chini. Kila namba ina ushahidi hapa chini.</p>
+<table><tr><th>#</th><th>Eneo</th><th>Uzito</th><th>Alama</th><th>Ushahidi</th></tr>
+<tr><td>1</td><td>Product creation (code)</td><td>12%</td><td><b>88</b></td><td>saveData + buildProductWrite + validateProduct + rules kali; −timestamps za client, edit haivalidate</td></tr>
+<tr><td>2</td><td>Product data (live, 131)</td><td>12%</td><td><b>55</b></td><td>38 hazina createdAt/userId; 55 hazina saleMode; 102 hazina stock; 16 bei-string; 7 bei missing; 2 stock hasi</td></tr>
+<tr><td>3</td><td>Listing/search queries</td><td>10%</td><td><b>70</b></td><td>Sawa kwa docs zinazofuata schema; lakini docs 38+55 zinatengwa kimya kimya (§C)</td></tr>
+<tr><td>4</td><td>Order lifecycle (code)</td><td>12%</td><td><b>68</b></td><td>Server settle/escrow/dispute imara; lakini waandishi 5+ wa browser, hakuna canonical order builder</td></tr>
+<tr><td>5</td><td>Order data (live, 161)</td><td>12%</td><td><b>35</b></td><td>~Schemas 20; 91 hazina seller; 98 hazina amount; 111 hazina paymentStatus; 0 verified; mocks ndani</td></tr>
+<tr><td>6</td><td>Payments/escrow/delivery (code)</td><td>10%</td><td><b>85</b></td><td>Settle idempotent + price check + custody chain + auto-release guarded; −hakuna live proof (IPN 404)</td></tr>
+<tr><td>7</td><td>Access control (live!)</td><td>12%</td><td><b>25</b></td><td><b>Guest (AUTH=null) anasoma orders 161/161, users, sokopay tx</b> — deployed rules ≠ repo rules</td></tr>
+<tr><td>8</td><td>Yaliyopimwa awali (build/perf/a11y/SEO/headers/CI)</td><td>12%</td><td><b>81</b></td><td>Imepitishwa kutoka ukaguzi uliotangulia (hakuna regression iliyopimwa)</td></tr>
+<tr><td>9</td><td>Mobile UX conditions</td><td>4%</td><td><b>90</b></td><td>Overflow 0 (1440/390), screenshots, chooser 320/360</td></tr>
+<tr><td>10</td><td>Tests za data paths</td><td>4%</td><td><b>55</b></td><td>Unit suites pass; hakuna order-schema tests, hakuna rules-vs-prod tests</td></tr></table>
+<p class="small">Hesabu: (12×88 + 12×55 + 10×70 + 12×68 + 12×35 + 10×85 + 12×25 + 12×81 + 4×90 + 4×55) / 100 = 5354/100 = <b>53.5 → 54%</b>. Njia ya kupanda: makundi G1–G5 (§7); kila kundi likiidhinishwa na kutekelezwa, alama hupimwa upya.</p></div>
+
+<div class="card"><h2>A. Product creation audit (njia 7)</h2>
+<table><tr><th>Njia</th><th>Collection</th><th>Fields muhimu</th><th>Timestamps</th><th>Pengu</th></tr>
+<tr><td><b>1. Seller form</b> <code>submitSeller</code> (08-app-state:352) — zote: free/auction/GB/PD/wholesale</td><td>products (via <code>saveData</code>)</td><td>title✓ price✓ category✓(online) location✓(non-digital) desc✓(online) photo✓(online) saleMode+modeData✓ currency=TZS stock=0→server</td><td><code>createdAt</code> ISO string ya <b>client</b>; <code>updatedAt</code> ISO (buildProductWrite)</td><td>Hakuna — njia salama zaidi</td></tr>
+<tr><td><b>2. POS quick-add</b> <code>saveOfflineInventoryItem</code> (15-pos-sales:205)</td><td>products (via saveData)</td><td>title/price/category; isOnline=false, channels=[pos]; stock=0→server</td><td>Client ISO</td><td>Hakuna (validation ya saveData inatumika)</td></tr>
+<tr><td><b>3. Edit</b> <code>submitEditForm</code> (12-sys-modes)</td><td>products (updateDoc)</td><td>title/price/location/desc/saleMode + publication/availability/type/condition/variants + searchMetadata+S.V.</td><td><code>updatedAt</code> client ISO; createdAt haiguswi ✓</td><td><span class="badge low">LOW</span> Haipitii <code>validateProduct</code> — lakini rules zinakataa title&lt;2 / price≤0 (seller anaona "Imeshindikana")</td></tr>
+<tr><td><b>4. Duplicate</b> <code>skhDuplicateProduct</code> (05-forms:512)</td><td>— (prefill fomu → njia 1)</td><td>Settings tu; SKU/barcode/stock/picha/variants HAZInakiliwi ✓</td><td>—</td><td>Hakuna (haiandiki moja kwa moja)</td></tr>
+<tr><td><b>5. Publication toggle + Archive</b> (30-seller:810, 09:13)</td><td>products (updateDoc)</td><td>publicationStatus/status(+archivedAt)/updatedAt</td><td>Client ISO</td><td>Hakuna check ya umiliki client-side — inategemea rules (ownsProduct) ✓</td></tr>
+<tr><td><b>6. Stock/variants/review/buyPrice</b> (inventoryAdjust callable; 08:790 fallback; 15:192)</td><td>products</td><td>stock/reserved = server-only (rules) ✓</td><td>Server (ISO)</td><td>Review fallback (arrayUnion comments) ni legacy ikiwa callable haipo</td></tr>
+<tr><td><b>7. Imports/CSV</b></td><td>—</td><td colspan="2">Hakuna njia ya kuingiza bidhaa kwa CSV/import kwenye codebase (CSV iliyopo ni export ya ads pekee).</td><td>N/A</td></tr></table>
+<p><b>Safu ya canonical (products):</b> <code>saveData</code> (00-bootstrap:1630) → <code>buildProductWrite</code> (39-product-core:90, schemaVersion=2, searchMetadata, pricing projection) → <code>validateProduct</code> (title≥2, price&gt;0, category/location) → rules <code>validProduct</code> (title 2–140, price&gt;0, stock≥0, userId). <b>Hakuna server trigger inayovalidate products</b> — rules pekee.</p>
+<p class="small"><b>Hitimisho A:</b> njia zote mpya zinajaza title/price/userId/createdAt/status — lakini <b>createdAt/updatedAt zote ni client ISO strings</b> (serverTimestamp haitumiki kwenye product path), na rules hazidai createdAt/category/saleMode/currency.</p></div>
+
+<div class="card"><h2>B. Product data audit — LIVE (131 docs, read-only)</h2>
+<div class="grid2"><div>
+<p><b>Idadi mbili tofauti:</b></p>
+<table><tr><th></th><th>Title set (93)</th><th>Name-only (38)</th></tr>
+<tr><td>createdAt</td><td>93 string</td><td><b>0 — zote missing</b></td></tr>
+<tr><td>userId</td><td>93 ✓</td><td><b>0 — zote missing</b></td></tr>
+<tr><td>saleMode</td><td>38 (18 FM/8 auc/6 GB/2 WS/4 PD), <b>55 missing</b></td><td><b>38 missing</b></td></tr>
+<tr><td>price</td><td>92 number, 1 missing</td><td>16 number, <b>16 string</b>, 6 missing</td></tr>
+<tr><td>stock</td><td>29 number (2 hasi!), 64 missing</td><td><b>38 missing</b></td></tr>
+<tr><td>location / category / image</td><td>83 / 86 / 87</td><td><b>0</b> / 22 / 38</td></tr>
+<tr><td>isOnline</td><td>8 true / 9 false / 76 undefined</td><td>38 undefined</td></tr></table></div><div>
+<p><b>Uchanganuzi wa jumla (131):</b></p>
+<table><tr><th>Kipimo</th><th>Matokeo</th></tr>
+<tr><td>updatedAt</td><td>6 tu (125 missing)</td></tr>
+<tr><td>currency / availability / pub / schemaV2 / searchMeta</td><td><b>5</b> kila moja — 126 legacy!</td></tr>
+<tr><td>status</td><td>93 active / 38 missing</td></tr>
+<tr><td>salesChannels</td><td>4 pos / 127 missing</td></tr>
+<tr><td>views</td><td>76 zina (max 206), 55 missing</td></tr>
+<tr><td>variants / variantCombinations</td><td>0 / 0 — hazijatumika live</td></tr>
+<tr><td>productEligible</td><td><b>122 eligible / 9 ineligible</b> (9 = isOnline false)</td></tr></table></div></div>
+<p><b>Uainishaji (B1–B5):</b></p>
+<table><tr><th>Kundi</th><th>Idadi</th><th>Mifano</th></tr>
+<tr><td>1. Data sahihi</td><td>~5 (canonical kamili) + ~30 title+createdAt+price+stock</td><td>Docs 5 za schemaV2</td></tr>
+<tr><td>2. Fields missing</td><td>saleMode 93 · stock 102 · location 48 · category 23 · image 6 · price 7 · userId 38</td><td>55 title bila saleMode; 38 bila chochote cha umiliki</td></tr>
+<tr><td>3. Aina zisizolingana</td><td>price-string 16 · stock-hasi 2 · price-missing 7</td><td><code>CWk34rXM… price:"50000"</code>; <code>QO8GDN1a… stock&lt;0</code></td></tr>
+<tr><td>4. Inaathiri buyer</td><td>38 hazionekani kamwe (feeds/search); 55 hazipo kwenye mode tabs; 48 hazichujwi kwa mkoa; bei-string zinaweza kuvunja hesabu</td><td>Pikipiki (2aPzz…) n.k.</td></tr>
+<tr><td>5. Inaathiri oda/malipo</td><td>Orders zinarejelea name-only docs (bei-string!) — ona §B-oda; stock missing → availability default "available" (oversell risk)</td><td>escrow_held → <code>NOxsMAuIyEst</code> (price "28000")</td></tr></table>
+<p class="small">Kumbuka: field missing ≠ kosa kila mara — mf. stock missing + availability default ni design (availabilityStatus()); lakini kwa bidhaa zinazouzwa live ni hatari ya oversell.</p>
+<h3>B-oda. Orders — LIVE (161/161 zimesomwa kama GUEST)</h3>
+<table><tr><th>Kipimo</th><th>Matokeo</th></tr>
+<tr><td>status</td><td>processing 80 · payment_pending 49 · shipped 7 · escrow_held 7 · held 6 · pending 5 · pending_escrow 4 · completed 3</td></tr>
+<tr><td>paymentStatus / paymentVerified</td><td>missing 111 · pending 34 · "Payment Pending" 15 · paid 1 · <b>verified 0</b></td></tr>
+<tr><td>Bila sellerId / bila amount / bila buyerId</td><td><b>91 / 98 / 0</b></td></tr>
+<tr><td>Timestamps</td><td>createdAt 134 · date 14 · <b>NONE 13</b> (majina 4: createdAt/date/time/orderedAt)</td></tr>
+<tr><td>Key-shapes (writers)</td><td><b>~20 schemas</b>: 8-key legacy 85x · 39-key core 17x · 49-key core 13x · nego 9+5+1+1+1 · 9-key link 6x · n.k.</td></tr>
+<tr><td>Refs zilizovunjika</td><td><b>5</b> (wKk505cMbZ, 3ENrZr5vks, R8V3qzFrMQ, opGnhZaBSy, kqGV9NV3qu) + <b>mock_req_1, mock_req_3</b> (MOCK data production!)</td></tr>
+<tr><td>Hatari kubwa</td><td>"completed" 3 <b>bila paymentVerified</b> (anti-pattern ambayo server yenyewe inaikataa); "processing" 80 hazina sellerId+amount → <b>hazikamiliki kamwe</b> (settle inahitaji payee+amount)</td></tr></table></div>
+
+<div class="card"><h2>C. Query audit — nani anaachwa nje?</h2>
+<table><tr><th>Surface</th><th>Query (file:line)</th><th>Wanaotengwa + sababu</th></tr>
+<tr><td>Home 'all'</td><td>products orderBy createdAt desc limit 100 (00-bootstrap:1995)</td><td>38 (hazina createdAt) + walio chini ya 100 (zamani) + 9 ineligible</td></tr>
+<tr><td>Bidhaa tab</td><td>orderBy createdAt desc limit currentLimit=20 (00-bootstrap:2080)</td><td>38 + walio chini ya 20 + ineligible; "Onyesha zaidi" +20</td></tr>
+<tr><td>Mode tabs (SokoHuru/Mnada/GB/PD/WS)</td><td>where saleMode==mode + orderBy + limit 20 (00-bootstrap:2046)</td><td><b>93 bila saleMode</b> (55 title + 38 name) + 38 bila createdAt + ineligible</td></tr>
+<tr><td>Category filter</td><td>where category==X + orderBy + limit (00-bootstrap:2073)</td><td>23 bila category + 38 bila createdAt</td></tr>
+<tr><td>Search</td><td>Client-side juu ya fetched set (00-bootstrap:2843 haystack)</td><td>Cho chote kisichofetchwa (38 + overflow ya limit) hakipatikani</td></tr>
+<tr><td>Region filter</td><td>Client-side location/region (00-bootstrap:2859)</td><td>48 bila location</td></tr>
+<tr><td>Home sections</td><td>products limit 20 (123-home-layout:87)</td><td>Kama Bidhaa (20 mpya tu)</td></tr>
+<tr><td>Discover feed</td><td>products limit 100 (106-chat-discovery:292)</td><td>Kama home</td></tr></table>
+<p class="small">Ushahidi: <code>orderedProducts=93</code> (limit 200) vs jumla 131 — 38 hazirudi kamwe. Eligibility: <code>productEligible</code> = published + !archivedAt + isOnline≠false + availability≠hidden (39-product-core:34).</p></div>
+
+<div class="card"><h2>D. Commerce lifecycle — Product → … → Refund</h2>
+<div class="flow"><b>Product</b>→<b>Cart</b>→<b>Order</b>→<b>Payment</b>→<b>Escrow</b>→<b>Delivery</b>→<b>Complete/Refund</b></div>
+<table><tr><th>Hatua</th><th>Ilivyojengwa</th><th>Pengu lililoonekana</th></tr>
+<tr><td>Cart</td><td>localStorage <code>sokohai_cart</code> + sync users.cart (00-bootstrap:3290, 07:1043); qty=qty||quantity||1</td><td>Bei ya cart ni snapshot ya client — server price check (settle) ndiyo ukweli ✓ (design sahihi)</td></tr>
+<tr><td>Order create</td><td>Waandishi 5+: 43-delivery (sokopay core+order+inbox, payment_pending) · 23-smart-cart ×2 · 24-ui-final · 34-chat ×2 · 16-service · 69/74-group · server negotiation.js:340. Rules: lazima uanze unpaid, buyerId=uid ✓</td><td><span class="badge high">HIGH</span> Hakuna canonical order builder/validator (tofauti na products!) → ~20 schemas live</td></tr>
+<tr><td>Stock reserve</td><td>Trigger <code>inventoryOrderCreated</code> + <code>orderStockLines</code> (productId||id||itemId; skip outsideSeller/non-stock/GROUP_CHILD)</td><td>Orders bila refs halali → skip kimya (no_product_items); orders 38 hazina items</td></tr>
+<tr><td>Payment</td><td><code>settlePesaPalPayment</code> (index.js:375): idempotent holds, payer≠payee, amount cap, <b>server price check</b>, stock commit in-txn, unmatched→review. Wallet: sokopayLinkWalletPay.</td><td>Imara. Lakini live IPN haijathibitishwa (404 control ya awali) — inahitaji controlled test</td></tr>
+<tr><td>Escrow</td><td>HOLD <code>order_&lt;id&gt;</code>; release = buyer <code>escrowRelease</code> (au admin sababu≥10); dispute huzuia; auto-release (sokopayAutoRelease) kwa delivered+hold halisi tu</td><td>Imara. <code>pending_escrow/escrow_held</code> (11 orders) hazilingani na flow yoyote — funds state haijulikani</td></tr>
+<tr><td>Delivery</td><td>Custody chain: deliveryAccept→tokens→pickup→transit→deliveryComplete (token C ya mpokeaji, rate-limit, server-handover required)</td><td>Imara (docs). Status za ride zinaweza kuandikwa na browser lakini hazitoshi peke yake ✓</td></tr>
+<tr><td>Dispute/Refund</td><td><code>disputeOpen</code> → <code>adminResolveDispute</code> (release/refund/split → wallet, deterministic ledger ids, audit). Refund = wallet pekee (hakuna provider refund API — documented).</td><td>Imara. Buyer anaweza dispute akiwa held/shipped/…(rules) ✓</td></tr>
+<tr><td>Completion</td><td>Server-only (rules: completion+payout server-only)</td><td><span class="badge crit">CRITICAL</span> Live: "completed" 3 bila paymentVerified — ziliandikwa na njia ya zamani/unknown</td></tr></table></div>
+
+<div class="card"><h2>E. Matatizo (14) — severity, chanzo, athari, suluhisho, tests, hatari</h2>
+<table><tr><th>#</th><th>Tatizo + chanzo</th><th>Faili/function</th><th>Athari</th><th>Suluhu + Tests + Hatari</th></tr>
+<tr><td><span class="badge crit">CRIT</span><b>F1</b></td><td><b>Guest anasoma orders/users/sokopay production.</b> AUTH=null → orders 161/161, users, sokopay_core_transactions. Deployed rules ≠ repo rules (repo inadai signedIn).</td><td>Deployed firestore rules (repo: firestore.rules orders/users)</td><td>Mnunuzi: PII (majina, addresses, amounts) wazi. Mfumo: uvujaji wa data, fraud.</td><td>Suluhu: deploy rules za repo (au equivalent) + verify kama guest. Tests: rules-vs-prod probe per collection. Hatari: inaweza kuvunja reads halali kama clients wanategemea laxity — angalia kwanza.</td></tr>
+<tr><td><span class="badge crit">CRIT</span><b>F2</b></td><td><b>Oda 80 'processing' hazikamiliki; 'completed' 3 bila malipo.</b> Legacy writer (8-key, haupo kwenye codebase) — bila sellerId/amount/paymentStatus.</td><td>Unknown writer; settle: index.js:375 (inazikataa correctly)</td><td>Muuzaji haazioni (hakuna sellerId); buyer anaona "processing" milele; completed feki.</td><td>Suluhu: quarantine + seller attribution ya manual (admin) au cancel; completed → review. Tests: order-shape census automated. Hatari: kugusa pesa — admin-only, audit, hatua kwa hatua.</td></tr>
+<tr><td><span class="badge high">HIGH</span><b>F3</b></td><td><b>Bidhaa 38 hazionekani kamwe.</b> Hazina createdAt/userId (+16 bei-string, 6 bei missing).</td><td>Legacy data; queries §C</td><td>Muuzaji: bidhaa zake hazipo sokoni. Buyer: chaguo pungufu.</td><td>Suluhu: backfill createdAt+userId (+price→number) kwa uthibitisho wa muuzaji, AU archive. Tests: census re-run (38→0). Hatari: migration — ilikataa awali; inahitaji idhini mpya.</td></tr>
+<tr><td><span class="badge high">HIGH</span><b>F4</b></td><td><b>Bidhaa 93 hazina saleMode (55 title + 38).</b> Mode tabs zote zinazihitaji.</td><td>Legacy data (validation mpya inaiweka default free_market? — angalia: submitSeller default 'free_market' ✓ kwa mpya)</td><td>Mnada/GB/PD/WS/SokoHuru hazioneshi bidhaa hizi.</td><td>Suluhu: backfill saleMode=free_market kwa 55 title (done isipokuwa modeData ya mode!), 38 zifuate F3. Tests: per-tab counts. Hatari: ndogo kwa free_market default; usiweke mode yenye modeData.</td></tr>
+<tr><td><span class="badge high">HIGH</span><b>F5</b></td><td><b>~Schemas 20 za orders, waandishi 5+ wa browser.</b> Hakuna buildOrderWrite/validateOrder.</td><td>43/23/24/34/16/69/74 + negotiation.js</td><td>Settle/reserve hushindwa kimya kwa shapes zisizotarajiwa; analytics ngumu.</td><td>Suluhu: canonical order builder + validator (mfano wa products) + consolidate writers. Tests: schema-conformance per writer. Hatari: kubadilisha checkout = hatari kubwa — nyuma kwa nyuma (shadow), kisha cutover.</td></tr>
+<tr><td><span class="badge high">HIGH</span><b>F6</b></td><td><b>Timestamps zote za client; orders 13 hazina kabisa.</b> Majina 4 (createdAt/date/time/orderedAt).</td><td>all writers; serverTimestamp haitumiki</td><td>Ordering inaweza kuchezewa (saa ya simu); sorting/vipimo vinavunjika kwa 13.</td><td>Suluhu: server timestamps kwa writes mpya (au server stamp on settle); canonical field. Tests: type+presence census. Hatari: kubadilisha ordering kunaweza kubadilisha feed — controlled.</td></tr>
+<tr><td><span class="badge med">MED</span><b>F7</b></td><td><b>Stock: 102 missing, 2 hasi.</b> Default availability="available" bila stock.</td><td>Legacy data; availabilityStatus()</td><td>Oversell: buyer anaagiza kisichopo.</td><td>Suluhu: backfill stock=0 + availability=out_of_stock (au pre_order) kwa zinazouzwa; rekebisha 2 hasi. Tests: oversell simulation. Hatari: ndogo — lakini thibitisha na muuzaji kwanza.</td></tr>
+<tr><td><span class="badge med">MED</span><b>F8</b></td><td><b>Refs 5 zilizovunjika + mocks production.</b> mock_req_* kwenye orders.</td><td>Legacy/test data</td><td>Buyer/seller wanaona broken links; analytics chafu.</td><td>Suluhu: re-link au tombstone; futa/identify mocks (admin). Tests: ref-integrity scan. Hatari: usifute bila audit (orders ni durable).</td></tr>
+<tr><td><span class="badge med">MED</span><b>F9</b></td><td><b>Status 11 zisizojulikana (escrow_held 7, pending_escrow 4).</b> Hazilingani na flow.</td><td>Unknown writers</td><td>Funds state haijulikani — escrow kweli au la?</td><td>Suluhu: forensics per order (holds? ledger?) → reclassify. Tests: status-vocab conformance. Hatari: kugusa pesa — admin + audit.</td></tr>
+<tr><td><span class="badge med">MED</span><b>F10</b></td><td><b>Discovery gaps:</b> 48 bila location, 23 bila category, 6 bila image.</td><td>Legacy data</td><td>Region/category filters zinazitupa; CTR chini.</td><td>Suluhu: seller self-service backfill (Edit prompts) — si migration ya wingi. Tests: filter coverage. Hatari: ndogo.</td></tr>
+<tr><td><span class="badge low">LOW</span><b>F11</b></td><td>Edit haivalidate (title ''/price 0 → rules hukataa, seller anachanganyikiwa).</td><td>12-sys-modes submitEditForm</td><td>UX: "Imeshindikana" isiyoeleweka.</td><td>Suluhu: tumia validateProduct kabla ya update + ujumbe wazi. Tests: edit-validation unit. Hatari: ndogo.</td></tr>
+<tr><td><span class="badge low">LOW</span><b>F12</b></td><td>paymentStatus spellings 3 ("-"/pending/"Payment Pending").</td><td>Writers tofauti</td><td>Filters/analytics zinakosa.</td><td>Suluhu: canonical enum (F5). Tests: vocab test. Hatari: ndogo.</td></tr>
+<tr><td><span class="badge low">LOW</span><b>F13</b></td><td>filterProducts/scoreProduct hazina callers (dead code).</td><td>39-product-core</td><td>Maintenance burden.</td><td>Suluhu: tumia au ondoa — baada ya F5. Tests: —. Hatari: usiondoe kabla ya confirm.</td></tr>
+<tr><td><span class="badge low">LOW</span><b>F14</b></td><td>views missing 55; price-string inaweza kuvunja hesabu za cart.</td><td>Legacy data; smartCartPrice (parseFloat — "50000" inafanya kazi, lakini aina ni hatari)</td><td>Analytics gaps; edge-case bugs.</td><td>Suluhu: backfill views=0; price→number (F3). Tests: type census. Hatari: ndogo.</td></tr></table></div>
+
+<div class="card"><h2>7. Makundi ya marekebisho (kila moja IASIDHISHWE tofauti)</h2>
+<table><tr><th>Kundi</th><th>Yaliyomo</th><th>Matokeo ya alama</th></tr>
+<tr><td><b>G1 — Access control (wiki 1)</b></td><td>F1: deploy + verify rules; guest probes zote ziwe denied (orders/users/sokopay/wallet/movements)</td><td>Eneo 7: 25 → ~85 (+7.2 pts)</td></tr>
+<tr><td><b>G2 — Order triage (wiki 2)</b></td><td>F2+F8+F9: quarantine legacy 80, forensics 11, reclassify completed 3, tombstone mocks</td><td>Eneo 5: 35 → ~60 (+3.0 pts)</td></tr>
+<tr><td><b>G3 — Product backfill (wiki 2)</b></td><td>F3+F4+F7+F10+F14: createdAt/userId/saleMode/stock/location backfill kwa uthibitisho</td><td>Eneo 2: 55 → ~80 (+3.0 pts); Eneo 3: 70 → ~85</td></tr>
+<tr><td><b>G4 — Canonical order path (wiki 3–4)</b></td><td>F5+F6+F12+F11: buildOrderWrite + validator + server timestamps + consolidate writers (shadow→cutover)</td><td>Eneo 4: 68 → ~85; Eneo 10: 55 → ~75</td></tr>
+<tr><td><b>G5 — Controlled testing (baada ya G1–G4)</b></td><td>Live IPN proof, end-to-end order→refund kwa test accounts, load/limit check (100/20 kwa scale)</td><td>Eneo 6: 85 → ~92 (kwa ushahidi)</td></tr></table>
+<p class="small">Makadirio: G1–G3 pekee zinaweza kupeleka <b>54% → ~68%</b>; G1–G5 → <b>~80%+</b> na ushahidi kamili. Controlled testing (Phase 2) ISIANZE kabla ya G1 (data ya wateja iko wazi sasa).</p>
+<p><b>Hatari kuu za marekebisho:</b> (1) Deploy ya rules inaweza kuvunja clients wanaotegemea laxity — verify kwanza staging. (2) Kugusa orders/money kunahitaji admin + audit + hatua moja moja. (3) Migration ya products ilikataliwa awali — F3/F4/G3 zinahitaji idhini mpya ya owner. (4) Kubadilisha checkout (G4) ni hatari kubwa — shadow mode kwanza.</p></div>
+
+<div class="card"><h2>8. Mipaka — imetimizwa</h2>
+<p class="small">Read-only ✓ (live reads ~900, writes 0) · Hakuna Firestore writes/migration ✓ · Hakuna UI changes ✓ · Hakuna fetch-architecture change ✓ · Hakuna deploy/commit/merge/push/PR ✓ (HEAD 2e8d049, 0 commits) · <code>views</code> haijaguswa ✓ · Hakuna module iliyoondolewa ✓ · Hakuna faili ya repo iliyohaririwa (scratch zimefutwa) ✓ · <b>Usaanzishaji wa fix: Nimesimama hapa — kila kundi (G1–G5) liidhinishwe tofauti.</b></p></div>
+</div></body></html>

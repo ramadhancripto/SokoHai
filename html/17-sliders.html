@@ -2,10 +2,83 @@
         <!-- [FIX 2026-09-24] Inline display:none ILIFANICHA KATEGORIA MILELE —
              scroll-handler na CSS (.cat-trigger-btn display:flex) zilishatakiwa
              ionekane. Sasa inaonekana moja kwa moja chini ya ad card. -->
-        <div class="cat-trigger-btn" id="topFilterToggles" onclick="openCategoryModal()">
-            <span id="activeCategoryText" data-i18n="cat_all">Kategoria: Bidhaa Zote Sokoni</span>
-            <span style="background: var(--gold); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">+</span>
-        </div>
+        <!-- [CATEGORY PHOTO STRIP 2026-11-04] Kategoria zenye picha (6 + Zaidi).
+             Inachukua nafasi ya "Kategoria: Bidhaa Zote" + "Gundua Soko" ili
+             sponsored ads zisionekane kabla ya kategoria. Kila kadi inaita
+             selectAdvancedCategory() ile ile; kadi iliyochaguliwa inaonekana
+             na zingine zinachujwa. Hujengwa na js/app/83-category-photos.js. -->
+        <!-- [R12 2026-11] Nyumbani: banner ya jamii + njia za haraka (design refs 11, 13, 14, 15).
+             Inaonekana kwenye tab ya Nyumbani tu (CSS :has(#navTabHome.active)). Kila kitufe
+             kinaita kazi iliyopo (updateApp, setMarketMode, openChatList, togglePlusMenu);
+             hakuna mfumo mpya wala data ya kubuni. -->
+        <!-- [R13-E 2026-11] Nyumbani kwa mpangilio wa design refs 11 (simu), 12/13/14 (desktop), 15:
+             carousel (Escrow + Jamii), njia za haraka (6 desktop / 4 simu). Sehemu za "Discover New
+             Updates", "Bidhaa Maarufu" na matangazo matatu hujengwa na js/app/123-home-layout.js
+             kutoka data halisi. Kila kitufe kinaita kazi iliyopo. -->
+        <section class="shh" id="skhHomeHero" aria-label="Karibu SokoHai">
+            <div class="shc" id="shcCarousel" aria-roledescription="carousel">
+                <div class="shc-track" id="shcTrack">
+                    <article class="shc-slide shc-escrow" aria-label="Malipo kwa Escrow">
+                        <div class="shc-copy">
+                            <b class="shc-brand">SokoHai</b>
+                            <h2 class="shc-title">Nunua kwa Ujasiri.</h2>
+                            <span class="shc-pill">Malipo Yako Yanalindwa</span>
+                            <p class="shc-sub">Malipo yanawekwa kwenye Escrow hadi upokee na kukagua mzigo wako.</p>
+                            <button type="button" class="shh-cta" onclick="window.skhEscrowInfo &amp;&amp; skhEscrowInfo()">Jifunze Zaidi <span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></button>
+                        </div>
+                        <img class="shc-photo" src="assets/img/home/escrow.webp" alt="" width="537" height="268" decoding="async">
+                        <ol class="shh-steps" aria-label="Jinsi malipo salama yanavyofanya kazi">
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Weka Oda</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Malipo Salama</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Tuma Mzigo</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Pokea na Kagua</li>
+                            <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Malipo kwa Muuzaji</li>
+                        </ol>
+                    </article>
+                    <article class="shc-slide shh-banner" aria-label="Jamii ya SokoHai">
+                        <div class="shh-copy">
+                            <span class="shh-kicker">Jamii ya SokoHai</span>
+                            <h2 class="shh-title">“Fursa za biashara zinaanza hapa.”</h2>
+                            <p class="shh-sub">Gundua bidhaa, nunua kwa urahisi, uza na panua biashara yako kupitia SokoHai.</p>
+                            <div class="shh-ctas">
+                                <button type="button" class="shh-cta" onclick="window.togglePlusMenu()">Anza Sasa <span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></button>
+                            </div>
+                        </div>
+                        <img class="shh-photo" src="assets/img/home/community.webp" alt="" width="520" height="558" loading="lazy" decoding="async">
+                    </article>
+                </div>
+                <button type="button" class="shc-arrow shc-prev" aria-label="Iliyotangulia" onclick="window.skhHeroGo &amp;&amp; skhHeroGo(-1)"><span class="skh-ico" data-ico="arrow-left" aria-hidden="true"></span></button>
+                <button type="button" class="shc-arrow shc-next" aria-label="Inayofuata" onclick="window.skhHeroGo &amp;&amp; skhHeroGo(1)"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></button>
+                <div class="shc-dots" id="shcDots"><button type="button" class="on" aria-label="Slide 1"></button><button type="button" aria-label="Slide 2"></button></div>
+            </div>
+            <!-- desktop (ref 14): njia sita -->
+            <nav class="shh-quick" aria-label="Njia za haraka">
+                <button type="button" onclick="updateApp('bidhaa')"><span class="shh-qi"><span class="skh-ico" data-ico="cart" aria-hidden="true"></span></span><b>Nunua Bidhaa</b><small>Pata bidhaa bora</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('services')"><span class="shh-qi"><span class="skh-ico" data-ico="wrench" aria-hidden="true"></span></span><b>Pata Huduma</b><small>Mtaalamu karibu yako</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('delivery')"><span class="shh-qi"><span class="skh-ico" data-ico="car" aria-hidden="true"></span></span><b>Tafuta Usafiri</b><small>Safari kwa urahisi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub()" data-skh-live-entry="1"><span class="shh-qi"><span class="skh-ico" data-ico="video" aria-hidden="true"></span></span><b>Live sasa</b><small>Tazama na nunua</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub('deals')"><span class="shh-qi"><span class="skh-ico" data-ico="tag" aria-hidden="true"></span></span><b>Ofa &amp; Punguzo</b><small>Bei bora zaidi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('bidhaa'); setMarketMode('auction', document.querySelector('[data-skh-mode=auction]'))"><span class="shh-qi"><span class="skh-ico" data-ico="trophy" aria-hidden="true"></span></span><b>Mnada</b><small>Shiriki mnada</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+            </nav>
+            <!-- simu (ref 11): njia nne -->
+            <nav class="shh-quick4" aria-label="Njia za haraka" data-no-i18n>
+                <button type="button" onclick="openChatList()"><span class="skh-ico" data-ico="chat" aria-hidden="true"></span><b>Chat</b></button>
+                <button type="button" onclick="updateApp('bidhaa')"><span class="skh-ico" data-ico="clipboard" aria-hidden="true"></span><b>Weka Oda</b></button>
+                <button type="button" onclick="window.skhOpenRequestInbox ? skhOpenRequestInbox() : updateApp('bidhaa')"><span class="skh-ico" data-ico="scales" aria-hidden="true"></span><b>Patana Bei</b></button>
+                <button type="button" onclick="updateApp('delivery')"><span class="skh-ico" data-ico="truck" aria-hidden="true"></span><b>Usafirishaji</b></button>
+            </nav>
+        </section>
+
+        <section class="cps-section" id="categoryStrip" aria-labelledby="cpsTitle">
+            <div class="cps-head">
+                <h2 class="cps-title" id="cpsTitle"><span class="cps-title-bar" aria-hidden="true"></span><span class="cps-grid-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg></span><span class="cps-t-m" data-no-i18n>Gundua Soko</span><span class="cps-t-d" data-no-i18n>Kategoria za Bidhaa</span></h2>
+                <span class="cps-head-rule" aria-hidden="true"></span>
+                <button type="button" class="cps-more" onclick="openCategoryModal()" data-no-i18n><span class="cps-t-m">Kategoria zote</span><span class="cps-t-d">Tazama Zote</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+                </button>
+            </div>
+            <div class="cps-strip" id="categoryPhotoStrip"></div>
+        </section>
 
         <div class="dynamic-sliders-container" id="dynamicSliders" style="display:none;">
             <b data-i18n="filter_type" style="font-size: 13px; color: #94a3b8; text-transform: uppercase; margin-bottom: -5px;">Aina ya Bidhaa (Telezesha &harr;)</b>

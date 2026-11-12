@@ -18,8 +18,13 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* SKH_ROOT: hiari. Inaruhusu seva kuhudumia folda nyingine (mfano dist/)
+ * bila kubadilisha tabia ya kawaida. Bila SKH_ROOT, hubakia repo root. */
+const ROOT = process.env.SKH_ROOT
+  ? path.resolve(process.env.SKH_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.argv[2] || process.env.PORT || 5055);
 const HOST = '0.0.0.0';
 
@@ -68,9 +73,11 @@ function notFound(res, rel) {
 }
 
 const server = http.createServer((req, res) => {
-  let urlPath;
+  let urlPath, urlQuery;
   try {
-    urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    const u = new URL(req.url, 'http://localhost');
+    urlPath = decodeURIComponent(u.pathname);
+    urlQuery = u.search || '';
   } catch (e) {
     return send(res, 400, 'Bad request', { 'Content-Type': 'text/plain' });
   }
@@ -107,22 +114,52 @@ const server = http.createServer((req, res) => {
     }
     const type = MIME[path.extname(abs).toLowerCase()] || 'application/octet-stream';
     const isHtml = type.startsWith('text/html');
+    /* [PERF 2026-11-08] Compression kama Firebase Hosting.
+       Bila hii, kipimo cha ndani kilionyesha ukubwa mbichi (9.4 MB) wakati production
+       inatumikia toleo lililokandamizwa — hivyo vipimo havikuwa vya ukweli. */
+    const compressible = /^(text\/|application\/(json|javascript|xml)|image\/svg)/i.test(type);
+    const accept = String(req.headers['accept-encoding'] || '');
+    let encoding = null;
+    if (compressible && st.size > 512) {
+      if (/\bbr\b/.test(accept)) encoding = 'br';
+      else if (/\bgzip\b/.test(accept)) encoding = 'gzip';
+    }
+    /* [PERF 2026-11-10] ETag + 304: awali kila boot ilipakua upya mafaili yote 250
+       (~2.3MB) kwa sababu ya no-store + Clear-Site-Data — ndiyo "unaload sana".
+       Sasa: no-cache (lazima revalidate) + ETag — browser huuliza If-None-Match na
+       tunajibu 304 bila body faili likiwa sawa. Freshness imehakikishwa (revalidate
+       kila mara), kwa hiyo Clear-Site-Data imeondolewa. URL zenye ?v= ni immutable. */
+    const etag = '"' + st.size.toString(16) + '-' + Math.floor(st.mtimeMs).toString(16) + '"';
+    if (req.headers['if-none-match'] === etag) {
+      res.writeHead(304, { 'ETag': etag, 'X-SokoHai-Build': BUILD, 'Access-Control-Allow-Origin': '*' });
+      return res.end();
+    }
+    const versioned = /[?&](v|ver|version|hash|h)=[^&]+/.test(urlQuery);
     const headers = {
       'Content-Type': type,
-      'Content-Length': st.size,
-      /* [2026-11-05] Bila hivi, browser/proxy ya preview ilikuwa inaonyesha
-         toleo la kale la CSS/JS (local server ilionekana tofauti na screen shot). */
-      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-      'Pragma': 'no-cache',
-      'Expires': '0',
+      'Vary': 'Accept-Encoding',
+      'ETag': etag,
+      'Cache-Control': versioned ? 'public, max-age=31536000, immutable' : 'no-cache',
       'X-SokoHai-Build': BUILD,
       'Access-Control-Allow-Origin': '*'
     };
-    /* kwa HTML: futa HTTP cache ya kivinjari kila ukurasa unapopakiwa */
-    if (isHtml) headers['Clear-Site-Data'] = '"cache"';
+    if (!encoding) {
+      headers['Content-Length'] = st.size;
+      res.writeHead(200, headers);
+      if (req.method === 'HEAD') return res.end();
+      return fs.createReadStream(abs)
+        .on('error', () => res.destroy())
+        .pipe(res);
+    }
+    headers['Content-Encoding'] = encoding;
     res.writeHead(200, headers);
     if (req.method === 'HEAD') return res.end();
+    const engine = encoding === 'br'
+      ? zlib.createBrotliCompress({ params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } })
+      : zlib.createGzip({ level: 6 });
     fs.createReadStream(abs)
+      .on('error', () => res.destroy())
+      .pipe(engine)
       .on('error', () => res.destroy())
       .pipe(res);
   });

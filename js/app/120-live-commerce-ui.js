@@ -42,10 +42,7 @@ const ERR = { si_bidhaa_yako: 'Unaweza kuonyesha bidhaa zako tu.', si_mnada: 'Mn
     umezuiwa_kwenye_live: 'Mwenyeji amekuzuia kutoa maoni kwenye live hii.', live_haiendelei: 'Live haiendelei sasa.', akaunti_imesimamishwa: 'Akaunti yako imesimamishwa.',
     waliokuzidi: 'Zabuni iko chini ya kiwango kinachokubalika.', mnada_umefungwa: 'Mnada umefungwa.', mnada_haujaanza: 'Mnada haujaanza bado.', tangazo_lako: 'Huwezi kushiriki ofa ya bidhaa yako.',
     tayari_unaongoza: 'Tayari unaongoza mnada.', juu_ya_bei_ya_sasa: 'Bei yako iko juu ya bei ya sasa.', chini_ya_bei_ya_mwisho: 'Bei yako iko chini ya bei ya mwisho.',
-    kampeni_imeisha: 'Kampeni imeisha.', kampeni_haijaanza: 'Kampeni haijaanza bado.', stock_haitoshi: 'Idadi uliyoomba haipo kwenye stock.',
-    /* [AUCTION-LIVE] pause / bid states */
-    mnada_umesitishwa: 'Mnada umesitishwa na mwenyeji kwa muda. Subiri uendelee.', live_imesitishwa: 'Live imesitishwa kwa muda na mwenyeji.',
-    mnada_una_zabuni: 'Mnada una zabuni tayari \u2014 hauwezi kusitishwa.' };
+    kampeni_imeisha: 'Kampeni imeisha.', kampeni_haijaanza: 'Kampeni haijaanza bado.', stock_haitoshi: 'Idadi uliyoomba haipo kwenye stock.' };
 const friendly = (e) => { const m = errText(e);
     /* [LIVE-UX 2026-11-10] Missing-index: ujumbe safi kwa mtumiaji; URL ndefu
        ya console inaenda console pekee (mmiliki). */
@@ -54,6 +51,21 @@ const friendly = (e) => { const m = errText(e);
         return 'Huduma ya Live bado haijaamilishwa kikamilifu. Tafadhali rudi baadaye.';
     }
     const k = Object.keys(ERR).find(x => m.indexOf(x) !== -1); if (!k) return m; const n = (m.match(/:(\d+)/) || [])[1]; return ERR[k] + (n ? ' (' + tsh(n) + ')' : ''); };
+/* [PHASE2 2026-11-11] N1 — user-safe message for the live-room stage only.
+ * Raw engine text (emulator internals, evaluation errors, paths, line numbers,
+ * stack traces) must never reach the UI; it stays in console for developers.
+ * Classification is substring-based on the engine text and ordered by severity. */
+const lvLiveErr = (e) => {
+    const m = String(errText(e) || '');
+    if (/requires an index|needs an index/i.test(m)) return 'Huduma ya Live bado haijaamilishwa kikamilifu. Tafadhali rudi baadaye.';
+    if (/permission-denied|permission_denied|insufficient permissions|insufficient_permissions|not authorized|si_mwenye/i.test(m)) return 'Huna ruhusa ya kufungua Live hii.';
+    if (/not-found|not.found|si_mnada|bidhaa_haipo/i.test(m)) return 'Live hii haipatikani kwa sasa.';
+    if (/failed-precondition|live_imekwisha|mnada_umeisha/i.test(m)) return 'Live hii imemalizada.';
+    if (typeof navigator !== 'undefined' && navigator && navigator.onLine === false) return 'Hakuna intaneti. Angalia muunganisho wako.';
+    if (/unavailable|could not reach|connection.*lost/i.test(m)) return 'Tumeshindwa kuunganisha na huduma. Jaribu tena.';
+    if (/unauthenticated|auth\/|au_idha/i.test(m)) return 'Tafadhali ingia kwanza.';
+    return 'Live hii haipatikani kwa sasa.';
+};
 
 /* same formula as functions/pricing-core.js (checkout re-prices on the server anyway) */
 function dropPrice(p, now) {
@@ -64,19 +76,27 @@ function dropPrice(p, now) {
     return { price, base, min, nextIn: interval - ((now - start) % interval), atFloor: base - steps * drop <= min,
         pct: base > min ? Math.max(0, Math.min(100, Math.round((base - price) / (base - min) * 100))) : 100 };
 }
+// [STAGE2 2026-11-12] ONE clock model for every auction countdown.
+// Authoritative end: products/{id}.modeData.endTime (server moves it on anti-sniping and on
+// liveResume by the paused duration). While the host has the room frozen the remaining time is
+// measured against the server's freeze stamp (livePausedAtMs), never against a local clock, so
+// all displays agree and a frozen auction can not reach 00:00 on screen.
+const lvFrozenAt = (md) => (md && md.livePaused === true && Number(md.livePausedAtMs) > 0) ? Number(md.livePausedAtMs) : 0;
 function auctionState(p, now) {
     const md = p.modeData || {};
     const cur = Number(md.currentBid) > 0 ? Number(md.currentBid) : Number(p.price) || 0;
     const pct = Number(md.minIncrementPct) > 0 ? Number(md.minIncrementPct) : 5, abs = Number(md.minIncrement) || 0;
-    const left = (Number(md.endTime) || 0) - now;
+    const frozenAt = lvFrozenAt(md), ref = frozenAt || now;
+    const left = (Number(md.endTime) || 0) - ref;
     const winner = md.winnerId !== undefined ? md.winnerId : (md.ended ? md.maxBidder : null);
-    /* [AUCTION-LIVE] paused / distinct bidders / anti-sniping extensions / ending-soon (server values) */
-    const paused = md.livePaused === true, bidders = parseInt(md.bidderCount, 10) || 0, extensions = parseInt(md.extensions, 10) || 0;
-    const ended = !!md.ended || left <= 0;
-    return { cur, minNext: Math.round(cur + Math.max(abs, Math.ceil(cur * pct / 100))), left, ended, notStarted: Number(md.startTime) > now,
-        leader: md.maxBidder || null, winner, winBid: Number(md.winnerBid) > 0 ? Number(md.winnerBid) : cur, bids: Number(md.totalBids) || 0, deadline: Number(md.paymentDeadline) || 0,
-        paused, bidders, extensions, endingSoon: !ended && left > 0 && left <= 60000, md };
+    return { cur, minNext: Math.round(cur + Math.max(abs, Math.ceil(cur * pct / 100))), left, ended: !!md.ended || left <= 0, notStarted: Number(md.startTime) > now,
+        frozen: frozenAt > 0, frozenAt, leader: md.maxBidder || null, winner, winBid: Number(md.winnerBid) > 0 ? Number(md.winnerBid) : cur, bids: Number(md.totalBids) || 0, deadline: Number(md.paymentDeadline) || 0, md };
 }
+/* attributes for any countdown element; the shared clock (below) is the only writer */
+const lvEndAttrs = (md, pid) => {
+    const end = Number((md || {}).endTime) || 0, frozen = lvFrozenAt(md);
+    return `data-lvh-end="${end}"${frozen ? ` data-lvh-paused="${frozen}"` : ''}${pid ? ` data-lvh-pid="${esc(pid)}"` : ''}`;
+};
 const dropEnded = (p, now) => { const md = p.modeData || {}; return !!md.stopped || (Number(md.endTime) > 0 && now >= Number(md.endTime)); };
 /* group-buy display state (mirror of pricing-core; checkout re-prices on the server) */
 function groupState(p, now) {
@@ -90,6 +110,58 @@ function groupState(p, now) {
         status: joined >= target ? 'successful' : (timedOut ? 'failed' : 'active'), parts, md };
 }
 const fmtLeft = (ms) => { if (!(ms > 0)) return '00:00'; const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0'); };
+/* [STAGE2 2026-11-12] SINGLE countdown ticker for the whole app.
+ * Any element that shows "time left" carries data-lvh-end (server endTime) and, while the
+ * host has frozen the room, data-lvh-paused (server freeze stamp). One interval updates all
+ * of them: hub grid, home hero, live room, product panel, mini-player. Before this there were
+ * four tickers (hub, room, home mount, product panel) and a per-mount stray interval. */
+let lvClockTimer = 0;
+function lvClockTick() {
+    const now = Date.now();
+    const els = document.querySelectorAll('[data-lvh-end]');
+    for (let i = 0; i < els.length; i++) {
+        const e = els[i], end = Number(e.dataset.lvhEnd) || 0;
+        if (!end) { if (e.dataset.lvhFallback != null) e.textContent = e.dataset.lvhFallback; continue; }
+        const freeze = Number(e.dataset.lvhPaused) || 0;
+        const left = end - (freeze > 0 ? freeze : now);
+        e.textContent = left > 0 ? fmtLeft(left) : '00:00';
+        if (freeze > 0) e.classList.add('is-frozen'); else e.classList.remove('is-frozen');
+    }
+}
+/* [STAGE2] Re-read the authoritative end time for every countdown element that names its
+ * product (data-lvh-pid) and write it back before repainting. This is what makes an
+ * anti-sniping extension (or a resume shift) reach cards that are already on screen — the
+ * hub grid, the home hero, a product panel behind the room — without adding a listener or an
+ * interval per card. Throttled, single-flight. */
+let lvSyncBusy = false, lvSyncAt = 0, lvSyncTimer = 0;
+async function lvClockSync(force) {
+    if (lvSyncBusy) return;
+    const t = Date.now();
+    if (!force && t - lvSyncAt < 4000) return;
+    const seen = {}, pids = [];
+    document.querySelectorAll('[data-lvh-pid]').forEach(e => { const id = e.dataset.lvhPid; if (id && !seen[id]) { seen[id] = 1; pids.push(id); } });
+    if (!pids.length) return;
+    lvSyncBusy = true; lvSyncAt = t;
+    try {
+        await Promise.all(pids.map(async (pid) => {
+            const p = await getProduct(pid); if (!p) return;
+            const md = p.modeData || {}, end = Number(md.endTime) || 0, frozen = lvFrozenAt(md);
+            document.querySelectorAll('[data-lvh-pid="' + pid + '"]').forEach(e => {
+                e.dataset.lvhEnd = String(end);
+                if (frozen) e.dataset.lvhPaused = String(frozen); else delete e.dataset.lvhPaused;
+            });
+        }));
+        lvClockTick();
+    } catch (e) { try { console.warn('[SokoHai Live] clock sync imeshindikana', (e && e.message) || e); } catch (_) {} }
+    lvSyncBusy = false;
+}
+function lvClockStart() {
+    if (!lvClockTimer) lvClockTimer = setInterval(lvClockTick, 1000);
+    if (!lvSyncTimer) lvSyncTimer = setInterval(() => { lvClockSync(false); }, 20000);
+    lvClockTick();
+}
+window.skhLiveClockTick = lvClockTick;
+window.skhLiveClockSync = () => lvClockSync(true);
 function listPrice(p) { const m = modeOf(p); if (m === 'price_drop') return dropPrice(p, Date.now()).price; if (m === 'auction') return auctionState(p, Date.now()).cur; return Number(p.price) || 0; }
 
 function sheet(id, html, cls) {
@@ -123,7 +195,6 @@ const TYPE = {
     live: { badge: 'LIVE YA MUUZAJI', cls: 'y', cta: 'INGIA LIVE' }
 };
 const kindOf = (s) => (s.kind === 'auction' ? 'auction' : s.kind === 'price_drop' ? 'price_drop' : 'live');
-let hubTimer = 0;
 window.skhLiveHub = function (tab) {
     const el = sheet('lvxHub', `<div class="lvh" role="dialog" aria-label="Live na Fursa za Soko">
         <header class="lvh-head"><button class="lvh-back" onclick="skhLiveClose('lvxHub')" aria-label="Rudi">${ico('back', 18)}</button>
@@ -135,13 +206,10 @@ window.skhLiveHub = function (tab) {
     const go = (t) => { tabs.forEach(x => x.classList.toggle('on', x.dataset.t === t)); loadHub(t); };
     tabs.forEach(b => b.onclick = () => go(b.dataset.t));
     go(tab || 'live');
-    clearInterval(hubTimer); hubTimer = setInterval(tickHub, 1000);
+    lvClockStart();   // [STAGE2] shared ticker — no per-view interval any more
 };
-function tickHub() {
-    const g = document.getElementById('lvxHubGrid'); if (!g) { clearInterval(hubTimer); return; }
-    const now = Date.now();
-    g.querySelectorAll('[data-lvh-end]').forEach(e => { const end = Number(e.dataset.lvhEnd); e.textContent = end ? fmtLeft(end - now) : '—'; });
-}
+/* kept as a name for older callers: the shared clock does the work now */
+function tickHub() { lvClockTick(); }
 function cardHtml(o) {   // o: {kind, title, img, sub, rows, cta, onclick, extra}
     const T = TYPE[o.kind];
     return `<article class="lvh-card">
@@ -153,13 +221,13 @@ function cardHtml(o) {   // o: {kind, title, img, sub, rows, cta, onclick, extra
 function auctionRows(p, viewers) {
     const a = auctionState(p, Date.now());
     return `<small class="lvh-k">Zabuni ya sasa</small><strong class="lvh-big">${esc(tsh(a.cur))}</strong>
-        <div class="lvh-row"><span>Muda: <b data-lvh-end="${Number(a.md.endTime) || 0}">${fmtLeft(a.left)}</b></span><span>Watazamaji: <b>${kshort(viewers)}</b></span></div>`;
+        <div class="lvh-row"><span>Muda: <b ${lvEndAttrs(a.md, p.id)}>${a.frozen ? fmtLeft(a.left) : fmtLeft(a.left)}</b>${a.frozen ? ' <i class="lvh-frozen">IMESITISHWA</i>' : ''}</span><span>Watazamaji: <b>${kshort(viewers)}</b></span></div>`;
 }
 function dropRows(p) {
     const d = dropPrice(p, Date.now()), md = p.modeData || {};
     return `<div class="lvh-two"><div><small>Sasa</small><b>${esc(tsh(d.price))}</b></div><div><small>Lengo</small><b>${esc(tsh(d.min))}</b></div></div>
         <div class="lvh-prog"><i style="width:${d.pct}%"></i></div><div class="lvh-pct">${d.pct}%</div>
-        <div class="lvh-row"><span>Muda: <b data-lvh-end="${Number(md.endTime) || 0}">${fmtLeft(Number(md.endTime) - Date.now())}</b></span><span>Hali: <b>${d.atFloor ? 'Bei ya mwisho' : 'Kushuka'}</b></span></div>`;
+        <div class="lvh-row"><span>Muda: <b ${lvEndAttrs(md, p.id)}>${fmtLeft(Number(md.endTime) - Date.now())}</b></span><span>Hali: <b>${d.atFloor ? 'Bei ya mwisho' : 'Kushuka'}</b></span></div>`;
 }
 async function loadHub(t) {
     const grid = document.getElementById('lvxHubGrid'); if (!grid) return;
@@ -167,11 +235,9 @@ async function loadHub(t) {
     grid.innerHTML = `<div class="lvh-empty">Inapakia…</div>`;
     try {
         if (t === 'deals') return await loadDeals(grid);
-        /* [AUCTION-LIVE] paused lives stay visible under LIVE SASA with a tag. */
-        const sts = t === 'live' ? ['live', 'paused'] : [t];
-        const snaps = await Promise.all(sts.map(st => skh.getDocs(skh.query(skh.collection(skh.db, 'live_sessions'), skh.where('status', '==', st), skh.orderBy('updatedAt', 'desc'), skh.limit(30)))));
-        const sessions = snaps.reduce((acc, x) => acc.concat(x.docs.map(d => Object.assign({ id: d.id }, d.data()))), []);
-        if (!sessions.length) { grid.innerHTML = `<div class="lvh-empty">${ico('video', 30)}<b>${t === 'live' ? 'Hakuna live inayoendelea sasa' : 'Hakuna live zilizopangwa'}</b><span>Wauzaji wakianzisha live, zitaonekana hapa. ${t === 'live' ? 'Angalia "Deals" kwa ofa za Bei Kushuka na minada.' : ''}</span></div>`; return; }
+        const snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'live_sessions'), skh.where('status', '==', t), skh.orderBy('updatedAt', 'desc'), skh.limit(30)));
+        if (snap.empty) { grid.innerHTML = `<div class="lvh-empty">${ico('video', 30)}<b>${t === 'live' ? 'Hakuna live inayoendelea sasa' : 'Hakuna live zilizopangwa'}</b><span>Wauzaji wakianzisha live, zitaonekana hapa. ${t === 'live' ? 'Angalia "Deals" kwa ofa za Bei Kushuka na minada.' : ''}</span></div>`; return; }
+        const sessions = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
         const prods = await Promise.all(sessions.map(s => (s.pinnedProductId || (s.productIds || [])[0]) ? getProduct(s.pinnedProductId || s.productIds[0]) : null));
         if (t === 'scheduled') {
             const mine = me();
@@ -184,11 +250,10 @@ async function loadHub(t) {
         }
         grid.innerHTML = sessions.map((s, i) => {
             const p = prods[i], k = kindOf(s);
-            const ptag = s.status === 'paused' ? `<span class="lvh-pausedtag">\u23f8 IMESITISHWA</span>` : '';
-            if (k === 'auction' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: ptag + auctionRows(p, s.viewerCount), onclick: `skhLiveOpen('${esc(s.id)}')` });
-            if (k === 'price_drop' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: ptag + dropRows(p), onclick: `skhLiveOpen('${esc(s.id)}')` });
+            if (k === 'auction' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: auctionRows(p, s.viewerCount), onclick: `skhLiveOpen('${esc(s.id)}')` });
+            if (k === 'price_drop' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: dropRows(p), onclick: `skhLiveOpen('${esc(s.id)}')` });
             return cardHtml({ kind: 'live', title: s.title, img: photo(p), sub: s.description || (p ? 'Inaonyesha: ' + p.title : s.hostName),
-                rows: ptag + `<div class="lvh-three"><div><small>Watazamaji</small><b>${kshort(s.viewerCount)}</b></div><div><small>Muuzaji</small><b>${esc(s.hostName)}</b></div><span class="lvh-livetag">${ico('radio', 14)} LIVE</span></div>`,
+                rows: `<div class="lvh-three"><div><small>Watazamaji</small><b>${kshort(s.viewerCount)}</b></div><div><small>Muuzaji</small><b>${esc(s.hostName)}</b></div><span class="lvh-livetag">${ico('radio', 14)} LIVE</span></div>`,
                 onclick: `skhLiveOpen('${esc(s.id)}')` });
         }).join('');
     } catch (e) { grid.innerHTML = `<div class="lvh-empty"><b>Imeshindikana kupakia</b><span>${esc(friendly(e))}</span></div>`; }
@@ -250,61 +315,24 @@ window.skhLiveCreateForm = async function () {
  * ROOM — ref 7 (auction), ref 2 (price drop), ref 6/10 (seller live)
  * ==================================================================== */
 let room = null;   // { id, unsub:[], timer, session, products:{}, pid, lastLeader, wonShown, rank, comments:[] }
-/* [AUCTION-LIVE] leave-once: the room object is dropped first so parallel close paths
- * (X button, mini close, re-open) can only send liveLeave a single time. keepJoin tears
- * the UI/listeners down without leaving (re-opening the same session, e.g. conn retry). */
-function leaveRoom(keepJoin) {
+function leaveRoom() {
     if (!room) return;
-    const r = room; room = null;
-    r.unsub.forEach(u => { try { u(); } catch (e) {} });
-    clearInterval(r.timer); clearInterval(r.rankTimer);
-    try { window.removeEventListener('online', onNetBack); window.removeEventListener('offline', onNetGone); } catch (e) {}
-    if (!keepJoin && r.id && r.joined && !r.left) { r.left = true; call('liveLeave', { sessionId: r.id }).catch(() => {}); }
+    try { if (document.getElementById('lvxMini') && typeof window.skhLiveMiniRestore === 'function') window.skhLiveMiniRestore(); } catch (e) {}
+    try { if (window.skhLiveVideo && typeof window.skhLiveVideo.close === 'function') window.skhLiveVideo.close(); } catch (e) {}
+    room.unsub.forEach(u => { try { u(); } catch (e) {} });
+    clearInterval(room.timer); clearInterval(room.rankTimer);
+    if (room.id && room.joined) call('liveLeave', { sessionId: room.id }).catch(() => {});
+    room = null;
 }
-/* [AUCTION-LIVE] connection overlay: listener errors / offline show #lv7Conn with retry. */
-function showConn(msg, retry) {
-    const box = document.getElementById('lv7Conn'); if (!box) { toast(msg, 'warn'); return; }
-    const m = document.getElementById('lv7ConnMsg'); if (m) m.textContent = msg;
-    const btn = document.getElementById('lv7ConnRetry');
-    if (btn) btn.onclick = () => { hideConn(); try { retry && retry(); } catch (e) { toast(friendly(e), 'warn'); } };
-    box.hidden = false;
-}
-function hideConn() { const box = document.getElementById('lv7Conn'); if (box) box.hidden = true; }
-function onNetGone() { showConn('Hakuna muunganisho wa intaneti. Ukirejea online, bonyeza Jaribu tena.', () => { try { tick(); } catch (e) {} }); }
-function onNetBack() { hideConn(); toast('Umerrejea online \u2014 live inaendelea.', 'success'); try { tick(); } catch (e) {} }
-/* [AUCTION-LIVE] real mini player: the stage node itself moves into the floating box,
- * so video/listeners/session continue untouched (no leave on minimize, no leaks).
- * Restore moves it back; only MiniClose leaves (once, via leaveRoom). */
-function closeMiniBox() { const m = document.getElementById('lvxMini'); if (m) m.remove(); }
-window.skhLiveMinimize = function () {
-    if (!room || document.getElementById('lvxMini')) return;
-    const stage = document.getElementById('lv7Stage'); if (!stage) return;
-    const s = room.session || {};
-    const box = document.createElement('div'); box.id = 'lvxMini'; box.className = 'lvx-mini';
-    box.innerHTML = `<div class="lvx-mini-head"><b>${esc(s.title || 'Live')}</b><span><button onclick="skhLiveMiniRestore()">\u2197 Rudi</button><button onclick="skhLiveMiniClose()" aria-label="Funga">\u00d7</button></span></div><div class="lvx-mini-slot" id="lvxMiniSlot"></div>`;
-    document.body.appendChild(box);
-    box.querySelector('#lvxMiniSlot').appendChild(stage);
-    const ov = document.getElementById('lvxRoom'); if (ov) ov.hidden = true;
-};
-window.skhLiveMiniRestore = function () {
-    const box = document.getElementById('lvxMini'); if (!box || !room) { closeMiniBox(); return; }
-    const stage = box.querySelector('#lv7Stage');
-    let ov = document.getElementById('lvxRoom');
-    if (!ov) { renderRoomShell(); ov = document.getElementById('lvxRoom'); }
-    const host = ov && ov.querySelector('.lv7');
-    if (stage && host) host.insertBefore(stage, host.firstChild);
-    closeMiniBox();
-    if (ov) ov.hidden = false;
-    try { paintRoom(room.session); tick(); } catch (e) {}
-};
-window.skhLiveMiniClose = function () {
-    closeMiniBox();
-    const ov = document.getElementById('lvxRoom');
-    leaveRoom();
-    if (ov) { ov.hidden = true; ov.innerHTML = ''; }
-    if (!document.querySelector('.lvx-overlay:not([hidden])')) document.body.classList.remove('lvx-open');
-};
 function isHost() { return !!(room && room.session && me() && me() === room.session.hostUid); }
+/* [STAGE2] the backend refuses to pause a session whose auction already has bids
+ * (functions/live-commerce.js: mnada_una_zabuni). The UI must not offer an action that the
+ * server will always reject — it explains the rule instead. */
+function auctionHasBids() {
+    if (!room) return false;
+    const ids = (room.session && room.session.productIds) || [];
+    return ids.some(pid => { const p = room.products[pid]; return p && modeOf(p) === 'auction' && Number((p.modeData || {}).totalBids) > 0; });
+}
 function pinned() { return room && room.session ? room.products[room.session.pinnedProductId] : null; }
 
 function renderRoomShell() {
@@ -314,10 +342,11 @@ function renderRoomShell() {
         <header class="lv7-top">
           <div class="lv7-pills"><span class="lv7-live" id="lv7Status">${ico('radio', 15)} LIVE</span><span class="lv7-viewers" id="lv7Viewers">0 WATAZAMAJI</span></div>
           <div class="lv7-brand"><img src="${LOGO}" alt="SokoHai"><div><b>SokoHai</b><small id="lv7Sub">Live</small></div></div>
-          <button class="lv7-x" onclick="skhLiveMinimize()" aria-label="Punguza" title="Punguza">${ico('minus', 18)}</button>
           <button class="lv7-x" onclick="skhLiveCloseAsk('lvxRoom')" aria-label="Funga">${ico('x', 18)}</button>
         </header>
         <div class="lv7-host" id="lv7Host"></div>
+        <div class="lv7-frozen" id="lv7Frozen" hidden>${ico('radio', 14)}<span>Live imesitishwa na mwenyeji — muda wa mnada umesimama.</span></div>
+        <div class="lv7-hostmedia" id="lv7HostMedia" hidden></div>
         <div class="lv7-frame">
           <div class="lv7-prod" id="lvxPinned"></div>
           <div class="lv7-feed" id="lvxComments" aria-live="polite"></div>
@@ -330,9 +359,6 @@ function renderRoomShell() {
           <div class="lv7-bottom" id="lv7Bottom"></div>
         </div>
         <form class="lv7-chat lvx-chat-form" id="lvxChatForm"><input id="lvxChatInput" maxlength="300" placeholder="Andika maoni au swali…" autocomplete="off"><button aria-label="Tuma">${ico('send', 18)}</button></form>
-        <div class="lvx-emoji" id="lvxEmoji"><button type="button" data-e="\u{1F525}">\u{1F525}</button><button type="button" data-e="\u2764\ufe0f">\u2764\ufe0f</button><button type="button" data-e="\u{1F602}">\u{1F602}</button><button type="button" data-e="\u{1F44F}">\u{1F44F}</button><button type="button" data-e="\u{1F4AF}">\u{1F4AF}</button></div>
-        <div class="lv7-paused" id="lv7Paused" hidden><div><b>\u23f8 Live imesitishwa</b><span>Mwenyeji amesimamisha live kwa muda. Zabuni na maoni vimesimama \u2014 endelea kutazama.</span></div></div>
-        <div class="lv7-conn" id="lv7Conn" hidden><div><b>Muunganisho umekatika</b><span id="lv7ConnMsg"></span><button class="lv-btn" id="lv7ConnRetry" type="button">JARIBU TENA</button></div></div>
         <div class="lv7-sheet" id="lv7Sheet" hidden></div>
       </section>
       <aside class="lv7-side" aria-label="Maelezo ya live">
@@ -346,31 +372,28 @@ function renderRoomShell() {
         try { await call('liveComment', { sessionId: room.id, text, clientId: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }); }
         catch (er) { i.value = text; toast(friendly(er), 'warn'); }
     };
-    document.getElementById('lvxEmoji').onclick = (e) => { const b = e.target.closest('button[data-e]'); if (!b || !room) return; const i = document.getElementById('lvxChatInput'); if (i && !i.disabled) { i.value += b.dataset.e; try { i.focus(); } catch (_) {} } };
     document.querySelectorAll('.lv7-side-tabs button').forEach(b => b.onclick = () => { document.querySelectorAll('.lv7-side-tabs button').forEach(x => x.classList.toggle('on', x === b)); room && (room.side = b.dataset.s); paintSide(); });
 }
-window.skhLiveOpen = async function (sessionId, opts) {
+window.skhLiveOpen = async function (sessionId) {
     if (!skh.requireAuth || !skh.requireAuth()) return;
-    opts = opts || {};
-    leaveRoom(!!opts.keepJoin); closeMiniBox();
+    leaveRoom();
     room = { id: sessionId, unsub: [], products: {}, session: null, joined: false, side: 'chat', comments: [] };
     renderRoomShell();
-    try { window.removeEventListener('online', onNetBack); window.removeEventListener('offline', onNetGone); window.addEventListener('online', onNetBack); window.addEventListener('offline', onNetGone); } catch (e) {}
     room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'live_sessions', sessionId), (s) => {
         if (!room || room.id !== sessionId) return;
         if (!s.exists()) { document.getElementById('lvxStage').innerHTML = '<div class="lv7-gone"><b>Live haipatikani</b></div>'; return; }
         const prev = room.session; room.session = Object.assign({ id: s.id }, s.data());
         paintRoom(prev);
-    }, (e) => { showConn('Imeshindikana kupakia live: ' + friendly(e), () => window.skhLiveOpen(sessionId, { keepJoin: true })); }));
+    }, (e) => { try { console.warn('[SokoHai Live] session listener error', (e && e.code) || e); } catch (_) {} const st = document.getElementById('lvxStage'); if (st) st.innerHTML = `<div class="lv7-gone"><b>Live haipatikani</b><span>${esc(lvLiveErr(e))}</span></div>`; /* [PHASE2 2026-11-11] N2: live-gone state must not leave a stale LIVE pill */ const pill = document.getElementById('lv7Status'); if (pill) { pill.className = 'lv7-live is-off'; pill.textContent = 'HAIPATIKANI'; } }));
     const cq = skh.query(skh.collection(skh.db, 'live_sessions', sessionId, 'comments'), skh.orderBy('createdAt', 'desc'), skh.limit(60));
     room.unsub.push(skh.onSnapshot(cq, (snap) => { if (!room) return; room.comments = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).reverse(); paintComments(); }, () => {}));
-    try { const r = await call('liveJoin', { sessionId }); if (room) room.joined = !!(r && (r.status === 'live' || r.status === 'paused')); } catch (e) {}
+    try { const r = await call('liveJoin', { sessionId }); if (room) room.joined = r && r.status === 'live'; } catch (e) {}
     room.timer = setInterval(tick, 1000);
 };
 /* one product, no session: Mnada (ref 5/7) or Bei Kushuka campaign (ref 2) */
 async function productRoom(productId, kind) {
     if (!skh.requireAuth || !skh.requireAuth()) return;
-    leaveRoom(); closeMiniBox();
+    leaveRoom();
     room = { id: null, unsub: [], products: {}, session: null, joined: false, side: kind === 'auction' ? 'board' : 'board', comments: [] };
     renderRoomShell();
     const p = await getProduct(productId);
@@ -390,13 +413,20 @@ function paintRoom(prev) {
     document.getElementById('lv7Sub').textContent = mode === 'auction' ? 'Live Auction Room' : mode === 'price_drop' ? 'Price Drop Live' : 'Live ya Muuzaji';
     const st = document.getElementById('lv7Status');
     st.className = 'lv7-live' + (s.status === 'live' ? '' : ' is-off');
-    st.innerHTML = s.status === 'live' ? ico('radio', 15) + ' LIVE' : s.status === 'paused' ? '\u23f8 IMESITISHWA' : s.status === 'scheduled' ? 'INAKUJA' : s.status === 'ended' ? 'IMEKWISHA' : 'IMEONDOLEWA';
-    const pz = document.getElementById('lv7Paused'); if (pz) pz.hidden = s.status !== 'paused';
+    /* [PHASE2 2026-11-11] B-session 'paused' exists in the data model (live-commerce.js:144)
+       and must show IMESITISHWA — falling through to IMEONDOLEWA lied to the user. */
+    st.innerHTML = s.status === 'live' ? ico('radio', 15) + ' LIVE' : s.status === 'scheduled' ? 'INAKUJA' : s.status === 'paused' ? 'IMESITISHWA' : s.status === 'ended' ? 'IMEKWISHA' : 'IMEONDOLEWA';
     const v = document.getElementById('lv7Viewers'); v.hidden = s.viewerCount == null; v.textContent = kshort(s.viewerCount) + ' WATAZAMAJI';
     document.getElementById('lv7Likes').textContent = kshort(s.likeCount || 0);
     document.getElementById('lv7Like').hidden = !room.id;
-    paintHost();
-    if (!prev || (prev.video && prev.video.url) !== (s.video && s.video.url) || prev.status !== s.status || prev.pinnedProductId !== s.pinnedProductId) paintStage();
+    /* [STAGE2 2026-11-12] paused room: the banner comes from the session status only
+       (server truth) — a client timer can never make a paused room look live. */
+    const frz = document.getElementById('lv7Frozen');
+    if (frz) frz.hidden = s.status !== 'paused';
+    const stageEl = document.getElementById('lv7Stage');
+    if (stageEl) stageEl.parentNode.classList.toggle('is-paused', s.status === 'paused');
+    paintHost(); paintHostMedia();
+    if (!prev || (prev.video && prev.video.url) !== (s.video && s.video.url) || (prev.video && prev.video.kind) !== (s.video && s.video.kind) || prev.status !== s.status || prev.pinnedProductId !== s.pinnedProductId) paintStage();
     document.getElementById('lv7BoardTab').textContent = mode === 'price_drop' ? 'Nafasi' : mode === 'auction' ? 'Zabuni' : 'Muuzaji';
     const ids = s.productIds || [];
     Promise.all(ids.filter(pid => !room.products[pid]).map(pid => getProduct(pid).then(p => { if (room) room.products[pid] = p; }))).then(() => {
@@ -408,6 +438,14 @@ function paintRoom(prev) {
 }
 function paintStage() {
     const s = room.session, p = pinned(), stage = document.getElementById('lvxStage'); if (!stage) return;
+    const live = window.skhLiveVideo;
+    if (s.video && s.video.kind === 'webrtc' && room.id && s.status !== 'removed' && s.status !== 'ended' && live && typeof live.mount === 'function') {
+        room.stageKind = 'webrtc';
+        live.mount(stage, room.id, isHost() ? 'host' : 'viewer');
+        return;
+    }
+    if (room.stageKind === 'webrtc' && live && typeof live.unmount === 'function') { try { live.unmount(true); } catch (e) {} }
+    room.stageKind = 'other';
     const url = s.status === 'ended' && s.recordingUrl ? s.recordingUrl : (s.video && s.video.kind === 'embed' ? s.video.url : null);
     if (url && s.status !== 'removed') {
         if (!stage.querySelector('iframe') || stage.querySelector('iframe').getAttribute('src') !== url)
@@ -420,9 +458,18 @@ function paintStage() {
 }
 async function paintHost() {
     const s = room.session, box = document.getElementById('lv7Host'); if (!box) return;
-    const host = isHost();
-    box.innerHTML = `<span class="lv7-av">${esc(initials(s.hostName))}</span><b>${esc(s.hostName)}</b>${host || !s.hostUid ? '' : `<button class="lv7-follow" id="lv7Follow" onclick="skhLiveFollow()">Fuata</button>`}
-        ${host && s.status === 'scheduled' ? `<button class="lv7-follow lv7-start" onclick="skhLiveHost('start')">Anza live</button>` : ''}`;
+    const host = isHost(), busy = !!(room && room.hostBusy);
+    /* [STAGE2 2026-11-12] Host-only pause/resume. The backend had livePause/liveResume but
+       no control existed anywhere in the UI. Visibility follows the authoritative status and
+       ownership; the buttons are disabled while a request is in flight so a double tap can
+       not send two calls. Security never depends on hiding them (server checks mustHost). */
+    let ctl = '';
+    if (host) {
+        if (s.status === 'scheduled') ctl = `<button class="lv7-follow lv7-start" onclick="skhLiveHost('start')"${busy ? ' disabled' : ''}>Anza live</button>`;
+        else if (s.status === 'live') ctl = `<button class="lv7-follow lv7-pause" id="lv7HostPause" onclick="skhLiveHost('pause')"${busy ? ' disabled' : ''}>${busy === 'pause' ? 'Inasitisha…' : 'Sitisha Live'}</button>`;
+        else if (s.status === 'paused') ctl = `<button class="lv7-follow lv7-resume" id="lv7HostResume" onclick="skhLiveHost('resume')"${busy ? ' disabled' : ''}>${busy === 'resume' ? 'Inaendelea…' : 'Endelea na Live'}</button>`;
+    }
+    box.innerHTML = `<span class="lv7-av">${esc(initials(s.hostName))}</span><b>${esc(s.hostName)}</b>${host || !s.hostUid ? '' : `<button class="lv7-follow" id="lv7Follow" onclick="skhLiveFollow()">Fuata</button>`}${ctl}`;
     if (!host && s.hostUid && me() && room.followKnown === undefined) {
         room.followKnown = false;
         try { const f = await skh.getDoc(skh.doc(skh.db, 'sellerFollowers', me() + '__' + s.hostUid)); room.following = f.exists(); } catch (e) { room.following = false; }
@@ -430,6 +477,66 @@ async function paintHost() {
     }
     const b = document.getElementById('lv7Follow'); if (b && room.following) { b.textContent = 'Unafuata'; b.classList.add('on'); }
 }
+/* [STAGE3 2026-11-12] Host media bar — the camera/microphone/source controls had no UI at all:
+ * the RTC layer exposed skhLiveVideo.setCam/setMic/switchCamera/retry and the backend had
+ * liveSetVideo, but a host could not choose a source or mute without the console. Host-only,
+ * hidden for viewers, disabled while a request is in flight. */
+function paintHostMedia() {
+    const box = document.getElementById('lv7HostMedia'); if (!box || !room || !room.session) return;
+    const s = room.session, host = isHost();
+    const liveish = s.status === 'live' || s.status === 'paused';
+    if (!host || !liveish || !room.id) { box.hidden = true; box.innerHTML = ''; return; }
+    const v = s.video || {}, kind = v.kind || 'none';
+    let st = { cam: false, mic: false, status: 'idle' };
+    try { st = (window.skhLiveVideo && window.skhLiveVideo.state()) || st; } catch (e) {}
+    const busy = !!room.mediaBusy;
+    const dis = busy ? ' disabled' : '';
+    box.hidden = false;
+    /* the source chooser is inline (segmented control), not a modal: a host must never have to
+       hunt through a dialog while on air, and inline controls can not be closed by surprise. */
+    box.innerHTML = `<span class="lv7-msrc" role="group" aria-label="Chanzo cha video">
+          <button class="lv7-mbtn ${kind === 'webrtc' ? 'on' : ''}" id="lv7SrcCam" onclick="skhLiveMedia('src:webrtc')"${dis}>${ico('video', 14)} Kamera</button>
+          <button class="lv7-mbtn ${kind === 'embed' ? 'on' : ''}" id="lv7SrcEmbed" onclick="skhLiveMedia('src:embed')"${dis}>Kiungo</button>
+          <button class="lv7-mbtn ${kind === 'none' ? 'on' : ''}" id="lv7SrcNone" onclick="skhLiveMedia('src:none')"${dis}>Bila video</button>
+        </span>
+        ${kind === 'webrtc' ? `<button class="lv7-mbtn ${st.cam ? 'on' : ''}" id="lv7CamBtn" onclick="skhLiveMedia('cam')"${dis}>${st.cam ? 'Zima kamera' : 'Washa kamera'}</button>
+          <button class="lv7-mbtn ${st.mic ? 'on' : ''}" id="lv7MicBtn" onclick="skhLiveMedia('mic')"${dis}>${st.mic ? 'Nyamazisha' : 'Washa sauti'}</button>
+          <button class="lv7-mbtn" id="lv7SwitchCam" onclick="skhLiveMedia('switch')"${dis}>Badilisha</button>` : ''}`;
+}
+window.skhLiveMedia = async function (what) {
+    if (!room || !room.id || !isHost() || room.mediaBusy) return;
+    const v = (room.session && room.session.video) || {};
+    try {
+        if (what.indexOf('src:') === 0) {
+            const kind = what.slice(4);
+            let url = null;
+            if (kind === 'embed') {
+                url = window.prompt('Weka kiungo cha video (YouTube/Vimeo):', (v.url || ''));
+                if (!url) return;
+            }
+            room.mediaBusy = true; paintHostMedia();
+            await call('liveSetVideo', { sessionId: room.id, kind, videoUrl: url });
+            if (kind === 'webrtc' && window.skhLiveVideo && window.skhLiveVideo.setCam) { try { await window.skhLiveVideo.setCam(true); } catch (e) {} }
+            room.mediaBusy = false; paintHostMedia();
+            toast(kind === 'webrtc' ? 'Kamera imewashwa. Watazamaji wataanza kuona picha.'
+                : kind === 'embed' ? 'Kiungo cha video kimewekwa.'
+                    : 'Live itaendelea bila video.', 'success');
+            return;
+        }
+        if (v.kind !== 'webrtc') { toast('Chagua chanzo "Kamera" kwanza.', 'warn'); return; }
+        room.mediaBusy = true; paintHostMedia();
+        const st = (window.skhLiveVideo && window.skhLiveVideo.state()) || {};
+        if (what === 'cam') await window.skhLiveVideo.setCam(!st.cam);
+        else if (what === 'mic') await window.skhLiveVideo.setMic(!st.mic);
+        else if (what === 'switch') await window.skhLiveVideo.switchCamera();
+        room.mediaBusy = false; paintHostMedia();
+    } catch (e) {
+        if (room) room.mediaBusy = false;
+        try { console.warn('[SokoHai Live] media control imeshindikana', (e && (e.code || e.message)) || e); } catch (_) {}
+        toast(friendly(e), 'warn');
+        paintHostMedia();
+    }
+};
 window.skhLiveFollow = async function () {
     if (!room || !room.session || !skh.requireAuth || !skh.requireAuth()) return;
     const s = room.session, ref = skh.doc(skh.db, 'sellerFollowers', me() + '__' + s.hostUid);
@@ -452,12 +559,12 @@ window.skhLiveShare = async function () {
 
 function watchProduct(pid) {
     room.watching = pid;
-    room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'products', pid), (s) => { if (room && s.exists()) { room.products[pid] = Object.assign({ id: s.id, collectionName: 'products' }, s.data()); paintPinned(); tick(); outcomeCheck(); } }, (e) => showConn('Imeshindikana kupakia bidhaa: ' + friendly(e), () => { if (room && room.watching === pid) { room.watching = null; watchProduct(pid); } })));
+    room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'products', pid), (s) => { if (room && s.exists()) { room.products[pid] = Object.assign({ id: s.id, collectionName: 'products' }, s.data()); paintPinned(); tick(); outcomeCheck(); } }, () => {}));
     const p = room.products[pid];
     if (modeOf(p) === 'auction') {
         room.unsub.push(skh.onSnapshot(skh.query(skh.collection(skh.db, 'products', pid, 'bids'), skh.orderBy('amount', 'desc'), skh.limit(15)), (snap) => {
             if (!room) return; room.bids = snap.docs.map(d => d.data()); paintSide(); if (!room.id) paintComments();
-        }, (e) => showConn('Imeshindikana kupakia zabuni: ' + friendly(e), () => { try { tick(); } catch (_) {} })));
+        }, () => {}));
     }
     if (modeOf(p) === 'price_drop') {
         room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'price_drop_board', pid), (s) => { if (!room) return; room.board = s.exists() ? s.data() : null; paintSide(); refreshRank(); }, () => {}));
@@ -479,7 +586,13 @@ function paintPinned() {
     if (!p) { box.innerHTML = ''; return; }
     const mode = modeOf(p), now = Date.now();
     let extra = '';
-    if (mode === 'auction') { const a = auctionState(p, now); extra = `<i>Dau la juu: <b class="lvx-price">${esc(tsh(a.cur))}</b></i><i>Muda: <b>${a.paused ? '\u23f8 Imesitishwa' : a.ended ? 'Imefungwa' : fmtLeft(a.left)}</b></i><i>Wazabuni: <b>${a.bidders}</b></i>${a.extensions > 0 && !a.ended ? `<i>\u23f1 <b>+2:00 \u00d7${a.extensions}</b></i>` : ''}`; }
+    if (mode === 'auction') {
+        const a = auctionState(p, now);
+        /* [STAGE2 2026-11-12] same authoritative end time + freeze stamp as every other surface;
+           after finalisation the winner is visible to late joiners too. */
+        extra = `<i>Dau la juu: <b class="lvx-price">${esc(tsh(a.cur))}</b></i><i>Muda: <b ${lvEndAttrs(a.md, p.id)}>${a.ended ? 'Imefungwa' : fmtLeft(a.left)}</b>${a.frozen ? ' <em class="lv-frozen">imesimama</em>' : ''}</i>`
+            + (a.ended && a.md.maxBidderName ? `<i>Mshindi: <b class="lvx-winner">${esc(maskName(a.md.maxBidderName))}</b></i>` : '');
+    }
     else if (mode === 'group_buy') { const g = groupState(p, now); extra = `<i>Kikundi: <b>${g.joined}/${g.target}</b></i><i>Bei: <b class="lvx-price">${esc(tsh(g.price))}</b></i>`; }
     else if (mode === 'price_drop') { const d = dropPrice(p, now); extra = `<i>Bei sasa: <b class="lvx-price">${esc(tsh(d.price))}</b></i><i>Mwisho: <b>${esc(tsh(d.min))}</b></i>`; }
     box.innerHTML = `<button class="lv7-pcard" onclick="skhLiveOpenProduct('${esc(p.id)}')">${photo(p) ? `<img src="${esc(photo(p))}" alt="">` : ''}
@@ -517,20 +630,43 @@ function tick() {
     try { paintPinned(); } catch (e) {}   // keep the floating overlay timer/counts fresh (1s tick)
     if (mode === 'auction') {
         const a = auctionState(p, now), mine = me() && a.leader === me(), won = a.ended && me() && a.winner === me();
-        /* [AUCTION-LIVE] frozen display while paused: the server clock stopped, so the client holds the last shown time. */
-        if (a.paused && !a.ended) { if (room.pausedLeft == null) room.pausedLeft = a.left; a.left = room.pausedLeft; } else room.pausedLeft = null;
+        const frozenRoom = s.status === 'paused';
         let cta;
-        if (a.notStarted) cta = `<button class="lv7-cta is-off" disabled><b>MNADA HAUJAANZA</b><small>Unaanza baada ya ${fmtLeft(Number(a.md.startTime) - now)}</small></button>`;
+        /* [STAGE2 2026-11-12] paused / frozen states are visually distinct from live, from
+           ended and from "finalisation in progress" (active + time over but not closed yet). */
+        if (frozenRoom) cta = isHost()
+            ? `<button class="lv7-cta lv7-lead" onclick="skhLiveHost('resume')"${room && room.hostBusy ? ' disabled' : ''}><b>ENDELEA NA LIVE</b><small>Live imesitishwa · muda wa mnada umesimama</small></button>`
+            : `<button class="lv7-cta is-off" disabled><b>LIVE IMESITISHWA</b><small>Mwenyeji amesitisha kwa muda · muda wa mnada umesimama</small></button>`;
+        else if (a.frozen) cta = `<button class="lv7-cta is-off" disabled><b>MNADA UMESITISHWA</b><small>Live imesitishwa · muda wa mnada umesimama</small></button>`;
+        else if (a.notStarted) cta = `<button class="lv7-cta is-off" disabled><b>MNADA HAUJAANZA</b><small>Unaanza baada ya ${fmtLeft(Number(a.md.startTime) - now)}</small></button>`;
         else if (won) cta = `<button class="lv7-cta lv7-gold" onclick="skhLiveWinner('${esc(p.id)}')"><b>LIPA SASA</b><small>Umeshinda kwa ${esc(tsh(a.winBid))}</small></button>`;
+        else if (a.md.cancelled) cta = `<button class="lv7-cta is-off" disabled><b>MNADA UMEGHAIRIWA</b><small>Muuzaji ameughairi mnada huu</small></button>`;
         else if (a.ended) cta = `<button class="lv7-cta is-off" disabled><b>MNADA UMEFUNGWA</b><small>${a.winner ? 'Mshindi amepatikana' : 'Hakuna zabuni'}</small></button>`;
-        else if (a.paused) cta = `<button class="lv7-cta is-off" disabled><b>\u23f8 IMESITISHWA</b><small>Live imesimamishwa kwa muda na mwenyeji</small></button>`;
         else if (mine) cta = `<button class="lv7-cta lv7-lead" onclick="skhBidConfirm('${esc(p.id)}')"><b>UNAONGOZA MNADA</b><small>Zabuni yako: ${esc(tsh(a.cur))} · Ongeza zabuni</small></button>`;
         else if (isHost() || p.userId === me()) cta = `<button class="lv7-cta is-off" disabled><b>MNADA WAKO</b><small>Inayokubalika: ${esc(tsh(a.minNext))}</small></button>`;
+        else if (a.ended && !a.md.endNotified) cta = `<button class="lv7-cta is-off" disabled><b>MNADA UNAFUNGWA…</b><small>Matokeo yanathibitishwa na seva</small></button>`;
         else cta = `<button class="lv7-cta" id="lv7BidCta" onclick="skhBidConfirm('${esc(p.id)}')"><b>WEKA ZABUNI</b><small>Inayokubalika: ${esc(tsh(a.minNext))}</small></button>`;
-        const soon = a.endingSoon && !a.paused ? `<div class="lv7-endsoon">\u23f3 INAKARIBIA KUISHA \u2014 chini ya dakika 1!</div>` : '';
-        const ext = a.extensions > 0 && !a.ended ? ` <em class="lv7-ext">\u23f1 +2:00 \u00d7${a.extensions}</em>` : '';
-        bottom.innerHTML = soon + cta + `<div class="lv7-foot"><button onclick="skhLiveSheet('board')">Zabuni ya Juu: <b id="lvxBidNow">${esc(tsh(a.cur))}</b></button><span>Muda: <b>${a.ended ? '00:00' : fmtLeft(a.left)}</b></span><span>Zabuni: <b>${a.bids}</b> \u00b7 Wazabuni: <b>${a.bidders}</b>${ext}</span></div>`;
-        if (a.ended && !a.md.endNotified && !room.finalizing) { room.finalizing = true; call('auctionFinalize', { productId: p.id }).catch(() => {}); }
+        const winRow = a.ended && a.md.maxBidderName ? ` · Mshindi: <b class="lvx-winner">${esc(maskName(a.md.maxBidderName))}</b>` : '';
+        bottom.innerHTML = cta + `<div class="lv7-foot"><button onclick="skhLiveSheet('board')">Zabuni ya Juu: <b id="lvxBidNow">${esc(tsh(a.cur))}</b></button><span>Muda: <b ${lvEndAttrs(a.md, p.id)}>${a.ended ? '00:00' : fmtLeft(a.left)}</b>${a.frozen ? ' <i class="lv-frozen">imesimama</i>' : ''}</span>${Number(a.md.extensions) > 0 ? '<span class="lv7-ext">Muda umeongezwa +2:00</span>' : ''}${winRow}</div>`;
+        /* [STAGE2 2026-11-12] the authoritative end time moved (anti-sniping extension or a
+           host resume): push it to every other countdown on screen right away. */
+        const endNow = Number(a.md.endTime) || 0;
+        if (room.lastEnd !== undefined && room.lastEnd !== endNow) { try { window.skhLiveClockSync(); } catch (_) {} }
+        room.lastEnd = endNow;
+        /* [STAGE2 2026-11-12] winner finalisation used to fail silently (`catch(() => {})`),
+           which could hide a valid winner until the 15-minute sweep. Now: one in-flight
+           request, a logged diagnostic, and a bounded retry (2s,4s,8s… max 30s) driven by
+           the existing 1s room tick. The server stays authoritative and exactly-once. */
+        if (a.ended && !a.md.endNotified && !room.finalizing && !(room.finalizeAfter > now)) {
+            room.finalizing = true;
+            call('auctionFinalize', { productId: p.id }).then(() => {
+                if (room) { room.finalizing = false; room.finalizeTries = 0; room.finalizeAfter = 0; }
+            }).catch((e) => {
+                const tries = ((room && room.finalizeTries) || 0) + 1;
+                if (room) { room.finalizing = false; room.finalizeTries = tries; room.finalizeAfter = Date.now() + Math.min(30000, 1000 * Math.pow(2, Math.min(tries, 5))); }
+                try { console.warn('[SokoHai Live] auctionFinalize imeshindikana (jaribio ' + tries + ')', (e && (e.code || e.message)) || e); } catch (_) {}
+            });
+        }
         return;
     }
     if (mode === 'price_drop') {
@@ -599,7 +735,11 @@ function outcomeCheck() {
                 <button class="lv-btn" onclick="skhLvModalClose();skhBidConfirm('${esc(p.id)}')">Ongeza zabuni</button>`, 'lv-outbid');
         }
         room.lastLeader = a.leader;
-        if (a.ended && a.winner === me() && !room.wonShown) { room.wonShown = true; window.skhLiveWinner(p.id); }
+        /* [STAGE2 2026-11-12] winner announcement fires only AFTER the server closed the auction
+           (a.md.endNotified / ended) and only once per product, however many snapshots arrive.
+           A late joiner or a refresh still gets it because the state is re-derived from data. */
+        const serverClosed = !!(a.md.ended && a.md.endNotified);
+        if (serverClosed && a.winner === me() && room.wonShownPid !== p.id) { room.wonShownPid = p.id; window.skhLiveWinner(p.id); }
     }
     if (modeOf(p) === 'price_drop' && dropEnded(p, now) && room.rank && !room.endShown && (room.rank.rank || room.rank.offer)) { room.endShown = true; window.skhPriceDropEnd(p.id); }
 }
@@ -609,16 +749,12 @@ window.skhBidConfirm = async function (pid) {
     if (!skh.requireAuth || !skh.requireAuth()) return;
     const p = (room && room.products[pid]) || await getProduct(pid); if (!p) return;
     const a = auctionState(p, Date.now());
-    /* [AUCTION-LIVE] quick-bid chips: minimum + one/two increments up */
-    const chipStep = Math.max(1, a.minNext - a.cur), chipAmts = [a.minNext, a.minNext + chipStep, a.minNext + chipStep * 2];
     modal(`<p class="lv-kicker">THIBITISHA ZABUNI</p>${photo(p) ? `<img class="lv-mimg" src="${esc(photo(p))}" alt="">` : ''}
         <div class="lv-kv"><small>Zabuni ya juu sasa</small><b>${esc(tsh(a.cur))}</b></div>
         <label class="lv-lab">Zabuni yako (angalau ${esc(tsh(a.minNext))})<input id="lvBidAmt" inputmode="numeric" value="${a.minNext}"></label>
-        <div class="lv-chips" id="lvBidChips">${chipAmts.map(x => `<button type="button" data-amt="${x}">${esc(tsh(x))}</button>`).join('')}</div>
         <div class="lv-info">${ico('check', 14)} Zabuni yako ni ahadi ya kununua. Ukishinda, unalipa ndani ya saa 24 kupitia SokoPay (escrow); usipolipa, nafasi inapewa mzabuni anayefuata.</div>
         <button class="lv-btn" id="lvBidGo">THIBITISHA ZABUNI</button>`, 'lv-bid');
     const go = document.getElementById('lvBidGo');
-    document.querySelectorAll('#lvBidChips button').forEach(b => b.onclick = () => { const i = document.getElementById('lvBidAmt'); if (i) i.value = b.dataset.amt; });
     go.onclick = async () => {
         const amount = Math.round(Number(String(document.getElementById('lvBidAmt').value).replace(/[^\d]/g, '')));
         if (!(amount > 0)) return toast('Andika kiasi cha zabuni.', 'warn');
@@ -628,6 +764,28 @@ window.skhBidConfirm = async function (pid) {
             if (room) room.lastLeader = me();
             window.skhLvModalClose(); toast(r.extended ? 'Zabuni imepokelewa. Muda umeongezwa dakika 2.' : 'Zabuni imepokelewa. Unaongoza!', 'success');
         } catch (e) { toast(friendly(e), 'warn'); go.disabled = false; go.textContent = 'THIBITISHA ZABUNI'; }
+    };
+};
+/* ---- owner cancels a bid-less auction (server: auctionCancel) ---- */
+window.skhAuctionCancel = async function (pid, btn) {
+    if (!skh.requireAuth || !skh.requireAuth()) return;
+    const p = (room && room.products[pid]) || await getProduct(pid); if (!p) return;
+    modal(`<p class="lv-kicker">GHAIRI MNADA</p>
+        <div class="lv-kv"><small>Bidhaa</small><b>${esc(p.title || '')}</b></div>
+        <div class="lv-info">${ico('alert', 14)} Ughairi unawezekana tu kabla ya zabuni ya kwanza. Ukiendelea, mnada utafungwa kabisa.</div>
+        <button class="lv-btn danger" id="lvCancelGo">NDIYO, GHAIRI MNADA</button>`, 'lv-cancel');
+    const go = document.getElementById('lvCancelGo');
+    go.onclick = async () => {
+        go.disabled = true; go.textContent = 'Inaghairi…';
+        try {
+            await call('auctionCancel', { productId: pid });
+            window.skhLvModalClose(); toast('Mnada umeghairiwa.', 'success');
+            try {
+                const fresh = await getProduct(pid);
+                const area = btn && btn.closest ? (btn.closest('.lvp') ? btn.closest('.lvp').parentNode : null) : null;
+                if (fresh && area) window.skhLiveProductPanel('auction', fresh, area);
+            } catch (e) {}
+        } catch (e) { toast(friendly(e), 'warn'); go.disabled = false; go.textContent = 'NDIYO, GHAIRI MNADA'; }
     };
 };
 /* ---- ref 5: winner announcement ---- */
@@ -751,10 +909,12 @@ function sideHtml(what) {
         const rows = [];
         if (host) {
             if (s.status === 'scheduled') rows.push(`<button class="lv7-mrow" onclick="skhLiveHost('start')">${ico('video', 16)} Anza live</button>`);
-            /* [AUCTION-LIVE] pause is offered for auction lives; the server enforces pre-1st-bid-only. */
-            if (s.status === 'live' && kindOf(s) === 'auction') rows.push(`<button class="lv7-mrow" onclick="skhLiveHost('pause')">${ico('pause', 16)} Sitisha live kwa muda</button>`);
-            if (s.status === 'paused') rows.push(`<button class="lv7-mrow" onclick="skhLiveHost('resume')">${ico('play', 16)} Endelea na live</button>`);
-            if (s.status === 'live' || s.status === 'scheduled') rows.push(`<button class="lv7-mrow danger" onclick="skhLiveHost('end')">${ico('x', 16)} Maliza live</button>`);
+            /* [STAGE2 2026-11-12] host controls: pause while live, resume while paused */
+            if (s.status === 'live') rows.push(auctionHasBids()
+                ? `<button class="lv7-mrow" id="lv7MorePauseLocked" disabled>${ico('radio', 16)} Sitisha Live<small>Haiwezi: mnada una zabuni tayari</small></button>`
+                : `<button class="lv7-mrow" id="lv7MorePause" onclick="skhLiveHost('pause')">${ico('radio', 16)} Sitisha Live</button>`);
+            if (s.status === 'paused') rows.push(`<button class="lv7-mrow" id="lv7MoreResume" onclick="skhLiveHost('resume')">${ico('radio', 16)} Endelea na Live</button>`);
+            if (s.status === 'live' || s.status === 'scheduled' || s.status === 'paused') rows.push(`<button class="lv7-mrow danger" onclick="skhLiveHost('end')">${ico('x', 16)} Maliza live</button>`);
             rows.push(`<div class="lv7-mhead">Simamia maoni</div>` + ((room.comments || []).filter(c => c.kind === 'comment' && c.uid !== me()).slice(-15).map(c => `<div class="lv7-mod"><span><b>${esc(c.name)}</b> ${esc(c.text)}</span>${c.status === 'removed' ? '<small>imeondolewa</small>' : `<button onclick="skhLiveMod('remove_comment','${esc(c.id)}')">Ondoa</button><button onclick="skhLiveMod('mute','${esc(c.uid)}')">Zuia</button>`}</div>`).join('') || '<p class="lvx-muted">Hakuna maoni ya kusimamia.</p>'));
         } else if (room.id) rows.push(`<button class="lv7-mrow" onclick="skhLiveReport()">${ico('alert', 16)} Ripoti live hii</button>`);
         if (p) rows.push(`<button class="lv7-mrow" onclick="skhLiveOpenProduct('${esc(p.id)}')">${ico('package', 16)} Maelezo ya bidhaa</button>`);
@@ -771,13 +931,46 @@ window.skhLiveMod = async function (action, target) {
     try { await call('liveModerate', Object.assign({ sessionId: room.id, action }, action === 'remove_comment' ? { commentId: target } : { uid: target })); toast(action === 'mute' ? 'Mtumiaji amezuiwa kwenye live hii.' : 'Ujumbe umeondolewa.', 'success'); }
     catch (e) { toast(friendly(e), 'warn'); }
 };
+/* [STAGE2 2026-11-12] Host pause / resume — one entry point, guarded against duplicate
+ * submission (room.hostBusy), with an explicit confirmation and Swahili outcomes.
+ * Authorisation is the server's job (livePause/liveResume call mustHost); hiding the button
+ * is only the UI half of the rule. */
+async function lvHostPauseResume(what) {
+    if (!room || !room.id || !isHost() || room.hostBusy) return;
+    const s = room.session || {};
+    if (what === 'pause' && s.status !== 'live') return toast('Live hii si hai kwa sasa.', 'warn');
+    if (what === 'resume' && s.status !== 'paused') return toast('Live hii haijasitishwa.', 'warn');
+    if (what === 'pause' && auctionHasBids()) return toast('Hauwezi kusitisha: mnada una zabuni tayari. Subiri mnada ufunge.', 'warn');
+    const ask = what === 'pause'
+        ? 'Sitisha live kwa muda? Watazamaji wataona IMESITISHWA na muda wa mnada utasimama.'
+        : 'Endelea na live sasa? Muda wa mnada utaongezwa kwa muda uliositisha.';
+    if (!window.confirm(ask)) return;
+    room.hostBusy = what; paintHost();
+    const sh0 = document.getElementById('lv7Sheet');
+    try {
+        const r = await call(what === 'pause' ? 'livePause' : 'liveResume', { sessionId: room.id });
+        if (room) room.hostBusy = false;
+        try { if (window.skhLiveVideo && typeof window.skhLiveVideo.setPaused === 'function') window.skhLiveVideo.setPaused(what === 'pause'); } catch (e) {}
+        if (sh0) sh0.hidden = true;
+        toast(what === 'pause' ? 'Live imesitishwa. Bonyeza «Endelea na Live» ukiwa tayari.' : 'Live imeendelea.', 'success');
+        if (what === 'resume' && r && r.pausedMs > 0) toast('Muda wa mnada umeongezwa kwa muda uliositisha.', 'info');
+    } catch (e) {
+        if (room) room.hostBusy = false;
+        try { console.warn('[SokoHai Live] ' + what + ' imeshindikana', (e && (e.code || e.message)) || e); } catch (_) {}
+        const m = String(errText(e) || '');
+        toast(m.indexOf('mnada_una_zabuni') !== -1 ? 'Hauwezi kusitisha: mnada una zabuni tayari.'
+            : m.indexOf('hali_') !== -1 ? 'Hali ya live imebadilika. Fungua live upya.'
+                : friendly(e), 'warn');
+        try { if (room) paintRoom(null); } catch (_) {}
+    }
+    paintHost(); tick();
+}
 window.skhLiveHost = async function (what, pid) {
     if (!room || !room.id) return;
+    if (what === 'pause' || what === 'resume') return lvHostPauseResume(what);
     try {
         if (what === 'start') { await call('liveStart', { sessionId: room.id }); await call('liveJoin', { sessionId: room.id }).then(() => { if (room) room.joined = true; }).catch(() => {}); }
-        if (what === 'end') { if (!window.confirm('Maliza live sasa?')) return; const rec = room.session.recordingAllowed ? window.prompt('Link ya rekodi (YouTube/Vimeo), hiari:', '') : ''; await call('liveEnd', { sessionId: room.id, recordingUrl: rec || null }); }
-        if (what === 'pause') { await call('livePause', { sessionId: room.id }); toast('Live imesitishwa kwa muda. Zabuni zimesimama.', 'success'); }
-        if (what === 'resume') { await call('liveResume', { sessionId: room.id }); toast('Live imeendelea.', 'success'); }
+        if (what === 'end') { if (!window.confirm('Maliza live sasa?')) return; const rec = room.session.recordingAllowed ? window.prompt('Link ya rekodi (YouTube/Vimeo), hiari:', '') : ''; await call('liveEnd', { sessionId: room.id, recordingUrl: rec || null }); try { if (window.skhLiveVideo && typeof window.skhLiveVideo.stopSession === 'function') await window.skhLiveVideo.stopSession(); } catch (e) {} }
         if (what === 'pin') { await call('livePin', { sessionId: room.id, productId: pid }); room.watching = null; }
         const sh = document.getElementById('lv7Sheet'); if (sh) sh.hidden = true;
     } catch (e) { toast(friendly(e), 'warn'); }
@@ -871,11 +1064,11 @@ async function mountHomeLive() {
           <div class="lvhome-grid"><article class="lvhome-feat" onclick="${feat.open}"><span class="lvhome-pill">${ico('radio', 12)} ${fa ? 'MNADA LIVE' : TYPE[kindOf(feat.s)].badge}</span>
             <div class="lvhome-img">${photo(feat.p) ? `<img src="${esc(photo(feat.p))}" alt="${esc(feat.p.title)}" loading="lazy">` : ''}</div>
             <div class="lvhome-body"><h3>${esc(feat.p.title)}</h3><p>Bei ya sasa: <b>${esc(tsh(listPrice(feat.p)))}</b></p>
-            ${fa ? `<p>Muda uliobaki: <b data-lvh-end="${Number(fa.md.endTime) || 0}">${fmtLeft(fa.left)}</b></p>` : ''}${feat.s.viewerCount != null ? `<p>Watazamaji: <b>${kshort(feat.s.viewerCount)}</b></p>` : `<p>Zabuni: <b>${fa ? fa.bids : 0}</b></p>`}
+            ${fa ? `<p>Muda uliobaki: <b ${lvEndAttrs(fa.md, feat.p.id)}>${fmtLeft(fa.left)}</b>${fa.frozen ? ' <i class="lvh-frozen">IMESITISHWA</i>' : ''}</p>` : ''}${feat.s.viewerCount != null ? `<p>Watazamaji: <b>${kshort(feat.s.viewerCount)}</b></p>` : `<p>Zabuni: <b>${fa ? fa.bids : 0}</b></p>`}
             <button class="lvhome-cta">${fa ? 'ANGALIA MNADA' : 'INGIA LIVE'}</button></div></article>
           <div class="lvhome-small">${rest.map(x => `<article class="lvhome-mini" onclick="${x.open}"><div class="lvhome-img">${photo(x.p) ? `<img src="${esc(photo(x.p))}" alt="" loading="lazy">` : ''}</div><small>${esc(modeOf(x.p) === 'auction' ? 'Mnada' : modeOf(x.p) === 'price_drop' ? 'Bei kushuka' : 'Live')}</small><b>${esc(x.p.title)}</b><span>Bei ya sasa: <b>${esc(tsh(listPrice(x.p)))}</b></span></article>`).join('')}</div></div>`;
         box.hidden = false;
-        setInterval(() => { const n = Date.now(); box.querySelectorAll('[data-lvh-end]').forEach(e => { e.textContent = fmtLeft(Number(e.dataset.lvhEnd) - n); }); }, 1000);
+        lvClockStart();   // [STAGE2] was a per-mount setInterval; one app-wide clock now
     } catch (e) { /* the home page stays as it is */ }
 }
 let homeTries = 0;
@@ -890,13 +1083,12 @@ window.skhLiveProductPanel = function (mode, p, area) {
     const now = Date.now();
     if (mode === 'auction') {
         const a = auctionState(p, now), md = a.md, won = a.ended && me() && a.winner === me();
-        const pillTxt = a.ended ? 'MNADA UMEFUNGWA' : a.paused ? '\u23f8 IMESITISHWA' : a.endingSoon ? 'MNADA LIVE \u00b7 \u23f3 INAKARIBIA KUISHA' : 'MNADA LIVE';
         area.innerHTML = `<div class="lvp">
-            <div class="lvp-top"><span class="lvp-pill">${ico('radio', 12)} ${pillTxt}</span><span class="lvp-timer" data-lvh-end="${Number(md.endTime) || 0}">${a.ended ? '00:00' : fmtLeft(a.left)}</span></div>
-            <div class="lvp-kv"><small>${a.ended ? 'Zabuni iliyoshinda' : 'Bei ya sasa'}</small><b>${esc(tsh(a.ended ? a.winBid : a.cur))}</b><em>${a.bids} zabuni \u00b7 ${a.bidders} wazabuni${a.extensions > 0 && !a.ended ? ` \u00b7 \u23f1 +2:00 \u00d7${a.extensions}` : ''}</em></div>
+            <div class="lvp-top"><span class="lvp-pill">${ico('radio', 12)} ${md.cancelled ? 'MNADA UMEGHAIRIWA' : a.ended ? 'MNADA UMEFUNGWA' : 'MNADA LIVE'}</span><span class="lvp-timer" ${lvEndAttrs(md, p.id)}>${a.ended ? '00:00' : fmtLeft(a.left)}</span></div>
+            <div class="lvp-kv"><small>${a.ended ? 'Zabuni iliyoshinda' : 'Bei ya sasa'}</small><b>${esc(tsh(a.ended ? a.winBid : a.cur))}</b><em>${a.bids} zabuni</em></div>
             <div class="lvp-rules"><b>SHERIA ZA MNADA</b><span>Bei ya kuanzia: ${esc(tsh(p.price))}</span><span>Nyongeza ya chini: ${md.minIncrement ? esc(tsh(md.minIncrement)) : (md.minIncrementPct || 5) + '% ya zabuni ya juu'}</span>
               <span>Inaisha: ${md.endTime ? new Date(Number(md.endTime)).toLocaleString('sw-TZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</span><span>Malipo: ndani ya saa 24 kupitia SokoPay (escrow)</span></div>
-            <div class="lvp-acts">${won ? `<button class="lvp-btn gold" onclick="skhLiveWinner('${esc(p.id)}')">LIPA SASA</button>` : a.ended ? '' : a.paused ? `<button class="lvp-btn" disabled>\u23f8 IMESITISHWA</button>` : `<button class="lvp-btn" onclick="skhBidConfirm('${esc(p.id)}')">WEKA ZABUNI</button>`}
+            <div class="lvp-acts">${won ? `<button class="lvp-btn gold" onclick="skhLiveWinner('${esc(p.id)}')">LIPA SASA</button>` : md.cancelled ? '' : a.ended ? '' : (p.userId === me() ? `<button class="lvp-btn danger" onclick="skhAuctionCancel('${esc(p.id)}', this)">GHAIRI MNADA</button>` : `<button class="lvp-btn" onclick="skhBidConfirm('${esc(p.id)}')">WEKA ZABUNI</button>`)}
               <button class="lvp-btn ghost skh-auction-room-btn" onclick="skhAuctionRoom('${esc(p.id)}')">INGIA KWENYE MNADA ${ico('arrow-right', 14)}</button></div></div>`;
         return true;
     }
@@ -904,7 +1096,7 @@ window.skhLiveProductPanel = function (mode, p, area) {
         const d = dropPrice(p, now), md = p.modeData || {}, ended = dropEnded(p, now);
         const per = Number(md.intervalMs) >= 3600000 ? 'saa' : 'dakika ' + Math.round((Number(md.intervalMs) || 60000) / 60000);
         area.innerHTML = `<div class="lvp lvp-pd" data-mode-panel="price_drop" data-live-price="${d.price}">
-            <div class="lvp-top"><span class="lvp-pill blue">${ico('zap', 12)} PRICE DROP</span><span class="lvp-timer" data-lvh-end="${Number(md.endTime) || 0}">${ended ? '00:00' : fmtLeft(Number(md.endTime) - now)}</span></div>
+            <div class="lvp-top"><span class="lvp-pill blue">${ico('zap', 12)} PRICE DROP</span><span class="lvp-timer" ${lvEndAttrs(md, p.id)}>${ended ? '00:00' : fmtLeft(Number(md.endTime) - now)}</span></div>
             <div class="lvp-drop"><div><small>Bei ya Kuanzia</small><b>${esc(tsh(d.base))}</b></div><div><small>Bei ya Sasa (Inayoshuka)</small><b class="green">${esc(tsh(ended ? d.min : d.price))}</b></div><div><small>Bei ya Mwisho</small><b>${esc(tsh(d.min))}</b></div>
               <div><small>Punguzo la kila ${per}</small><b>${esc(tsh(md.dropAmount))}</b></div></div>
             <div class="lvp-prog"><i style="width:${d.pct}%"></i></div>
@@ -917,4 +1109,4 @@ window.skhLiveProductPanel = function (mode, p, area) {
     }
     return false;
 };
-setInterval(() => { const n = Date.now(); document.querySelectorAll('.lvp [data-lvh-end]').forEach(e => { const end = Number(e.dataset.lvhEnd); e.textContent = end > n ? fmtLeft(end - n) : '00:00'; }); }, 1000);
+lvClockStart();   // [STAGE2] product panels are ticked by the shared clock (was a third interval)

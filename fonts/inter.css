@@ -1,42 +1,56 @@
+/* ==========================================================================
+   SokoHai — Inter (fonts/inter.css)
+   [PERF 2026-11-08] Kila uzito sasa unatumikia WOFF2 kwanza (subset ya Kilatini +
+   alama za Kiswahili + sarafu), na TTF ndiyo fallback ya zamani.
+     TTF: 1,911 KB  →  WOFF2: 153 KB   (−92%, sawa kabisa kwa macho)
+   Faili za TTF hazikuondolewa — zipo kama fallback kwa kivinjari cha kale sana.
+   Subset: U+0000-00FF, U+0100-017F, U+2000-206F, U+20A0-20BF, U+2122, U+2190-21FF, U+2600-26FF
+   ========================================================================== */
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf) format('truetype');
+  src: url(inter-400.woff2) format('woff2'),
+       url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf) format('truetype');
+  src: url(inter-500.woff2) format('woff2'),
+       url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf) format('truetype');
+  src: url(inter-600.woff2) format('woff2'),
+       url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf) format('truetype');
+  src: url(inter-700.woff2) format('woff2'),
+       url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 800;
   font-display: swap;
-  src: url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuDyYMZg.ttf) format('truetype');
+  src: url(inter-800.woff2) format('woff2'),
+       url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuDyYMZg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 900;
   font-display: swap;
-  src: url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuBWYMZg.ttf) format('truetype');
+  src: url(inter-900.woff2) format('woff2'),
+       url(UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuBWYMZg.ttf) format('truetype');
 }

@@ -299,7 +299,7 @@ The requested `originals/` directory is represented locally as `_originals/`; th
 
 **Files:** `functions/index.js`, `js/12-payments.js`, `js/16-wallet.js`, `js/17-pesapal-return.js`, `js/app/02-checkout.js`, `js/app/21-sokopay.js`, `js/app/55-escrow-guard.js`.
 
-**Functions:** `walletAdjust`, `escrowRelease`, `haipayReleaseLink`, `sokopayLinkWalletPay`, `pesapalCheckout`, `pesapalTransactionStatus`, `pesapalIpn`, `pesapalRegisterIpn`, scheduled auto-release/stat functions.
+**Functions:** `walletAdjust`, `escrowRelease`, `sokopayReleaseLink`, `sokopayLinkWalletPay`, `pesapalCheckout`, `pesapalTransactionStatus`, `pesapalIpn`, `pesapalRegisterIpn`, scheduled auto-release/stat functions.
 
 **External API:** PesaPal base URL defaults to `https://pay.pesapal.com/v3`; consumer credentials are read from Functions environment only.
 

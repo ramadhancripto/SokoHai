@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SokoHai — Live Full Seller Previews (mobile + desktop)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif; background: #EEF4F1; color: #161F1C; padding: 26px 16px 60px; }
+  .wrap { max-width: 1560px; margin: 0 auto; }
+  h1 { font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+  .sub { color: #5B6E67; font-size: 13px; margin: 6px 0 4px; max-width: 920px; line-height: 1.55; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 9.5px; font-weight: 800; }
+  .t-old { background: #E6F4EF; color: #0F6E57; border: 1px solid #BFE5D8; }
+  .t-new { background: #FFF4D6; color: #8A6D00; border: 1px solid #EBD98A; }
+  .sec { margin: 26px 0 30px; } .sec h2 { font-size: 16px; font-weight: 800; }
+  .sec p { font-size: 12.5px; color: #5B6E67; margin: 4px 0 12px; max-width: 920px; line-height: 1.55; }
+  .row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  .cap { font-size: 12px; font-weight: 800; margin-bottom: 8px; color: #33433E; }
+  .phone { width: 300px; flex: none; background: #fff; border-radius: 30px; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(10,40,32,.35); border: 1px solid #DDE7E3; }
+  .status { display: flex; justify-content: space-between; padding: 10px 18px 4px; font-size: 11px; font-weight: 700; }
+  .s-head { background: #0E5C46; color: #fff; padding: 12px 14px; font-size: 15px; font-weight: 900; }
+  .s-head small { display: block; font-size: 11px; font-weight: 600; opacity: .8; }
+  .steps { display: flex; gap: 4px; padding: 10px 14px 0; }
+  .steps i { flex: 1; height: 4px; border-radius: 99px; background: #E4ECE9; font-style: normal; }
+  .steps i.on { background: #18A982; }
+  label.fl { display: block; font-size: 11px; font-weight: 800; color: #3E514B; margin: 10px 14px 0; }
+  label.fl span { display: block; font-weight: 600; color: #8AA098; font-size: 10px; }
+  .inp, select.inp { display: block; width: calc(100% - 28px); margin: 5px 14px 0; border: 1.5px solid #DDE7E3; border-radius: 11px; padding: 9px 11px; font-size: 12.5px; font-family: inherit; background: #fff; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 14px 0; }
+  .opts button { border: 1.5px solid #DDE7E3; background: #F6FAF8; border-radius: 12px; padding: 10px 6px; font-size: 11px; font-weight: 800; color: #33433E; }
+  .opts button.on { border-color: #18A982; background: #E6F4EF; color: #0F6E57; }
+  .opts button i { display: block; font-style: normal; font-size: 20px; }
+  .pick { display: flex; gap: 8px; margin: 8px 14px 0; align-items: center; border: 1.5px solid #DDE7E3; border-radius: 12px; padding: 8px; }
+  .pick.on { border-color: #18A982; background: #E6F4EF; }
+  .pick .im { width: 44px; height: 44px; border-radius: 9px; background: linear-gradient(135deg, #EAF6F1, #D9EEE7); display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; }
+  .pick b { font-size: 12px; display: block; } .pick small { font-size: 10.5px; color: #5B6E67; }
+  .pick .ck { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; background: #18A982; color: #fff; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex: none; }
+  .cta { display: block; width: calc(100% - 28px); margin: 12px 14px 16px; border: 0; border-radius: 13px; padding: 12px; font-weight: 900; font-size: 13.5px; }
+  .cta small { display: block; font-size: 10.5px; font-weight: 600; opacity: .85; }
+  .cta-green { background: #18A982; color: #fff; } .cta-gold { background: linear-gradient(180deg, #D9AE2E, #9C7A12); color: #fff; }
+  .cta-red { background: #fff; color: #B3261E; border: 1.5px solid #F3C1BE; }
+  .cta-row { display: flex; gap: 8px; margin: 12px 14px 16px; } .cta-row .cta { margin: 0; width: 100%; }
+  .prev-box { margin: 8px 14px 0; border: 1.5px dashed #BFE5D8; border-radius: 14px; padding: 10px 12px; background: #F6FAF8; font-size: 12px; }
+  .prev-box .pr { display: flex; justify-content: space-between; padding: 2px 0; } .prev-box small { color: #5B6E67; font-weight: 600; }
+  .dash-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 14px 0; }
+  .stat { background: #F6FAF8; border: 1px solid #E4ECE9; border-radius: 12px; padding: 8px 4px; text-align: center; }
+  .stat b { font-size: 16px; display: block; } .stat small { font-size: 9px; font-weight: 800; color: #5B6E67; }
+  .hctl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 14px 0; }
+  .hctl button { border: 1.5px solid #DDE7E3; background: #fff; border-radius: 12px; padding: 9px 4px; font-size: 11px; font-weight: 800; color: #33433E; }
+  .hctl button.danger { border-color: #F3C1BE; color: #B3261E; }
+  .cmt { display: flex; gap: 7px; margin: 8px 14px 0; font-size: 11.5px; align-items: flex-start; }
+  .cmt .av { width: 26px; height: 26px; border-radius: 50%; background: #18A982; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+  .cmt .ops { margin-left: auto; display: flex; gap: 5px; flex: none; }
+  .cmt .ops button { border: 1px solid #DDE7E3; background: #fff; border-radius: 7px; font-size: 9.5px; font-weight: 800; padding: 4px 7px; color: #3E514B; }
+  .cmt .ops button.hide { color: #B3261E; border-color: #F3C1BE; }
+  /* desktop */
+  .desk { flex: 1 1 640px; max-width: 900px; background: #fff; border: 1px solid #DDE7E3; border-radius: 20px; overflow: hidden; box-shadow: 0 18px 40px -18px rgba(10,40,32,.3); }
+  .desk-h { padding: 14px 18px; background: #0E5C46; color: #fff; font-weight: 900; font-size: 15px; }
+  .dcols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 14px 18px 18px; }
+  .dcard { border: 1px solid #E4ECE9; border-radius: 14px; padding: 12px; }
+  .dcard h5 { font-size: 12px; font-weight: 900; margin-bottom: 6px; }
+  .dcard .pr { display: flex; justify-content: space-between; font-size: 11.5px; padding: 2px 0; }
+  .dcard small { color: #5B6E67; font-weight: 600; }
+  .dcard .btn { display: block; width: 100%; margin-top: 8px; border: 0; border-radius: 9px; padding: 8px; font-weight: 800; font-size: 11.5px; background: #18A982; color: #fff; }
+  .dcard .btn.gold { background: #9C7A12; } .dcard .btn.red { background: #fff; color: #B3261E; border: 1.5px solid #F3C1BE; }
+  .note { font-size: 11px; color: #5B6E67; background: #F6FAF8; border: 1px dashed #C6D6D1; border-radius: 12px; padding: 9px 12px; margin-top: 12px; line-height: 1.55; max-width: 900px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Live Full — Seller Previews (mobile + desktop)</h1>
+  <p class="sub">PREVIEW TU — hakuna app code iliyobadilishwa. Studio ni <b>light</b> (mtindo wa app + spec A2/A5). Lebo: <span class="tag t-old">IPO</span> <span class="tag t-new">MPYA</span></p>
+
+  <div class="sec"><h2>1 · Studio: anzisha Live (mobile)</h2>
+    <p>Hatua: aina → bidhaa → maelezo/pangilio → <b>preview</b> <span class="tag t-new">MPYA</span> → confirm. Bidhaa ni zako tu (server inathibitisha).</p>
+    <div class="row">
+      <div><div class="cap">Step 1–2 · Aina + Bidhaa</div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="s-head">🎬 Anzisha Live<small>Onyesha bidhaa zako moja kwa moja</small></div>
+        <div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+        <label class="fl">Aina ya Live</label>
+        <div class="opts"><button class="on"><i>🔨</i>Mnada Live</button><button><i>📉</i>Price Drop</button><button><i>👥</i>Group Buy</button><button><i>🛍</i>Live ya kawaida</button></div>
+        <label class="fl">Chagua bidhaa (zako tu) <span>hadi 20 · mnada unahitaji bidhaa za mnada</span></label>
+        <div class="pick on"><span class="im">📱</span><div><b>Galaxy A55 5G</b><small>TSh 350,000 · Mnada · stock 3</small></div><span class="ck">✓</span></div>
+        <div class="pick"><span class="im">⌚</span><div><b>Smart Watch X2</b><small>TSh 89,000 · Mnada · stock 5</small></div></div>
+        <button class="cta cta-green">Endelea<small>Hatua 3: maelezo na muda</small></button>
+      </div></div>
+      <div><div class="cap">Step 3–4 · Maelezo + Preview <span class="tag t-new">MPYA</span></div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="s-head">🎬 Anzisha Live<small>Kagua kisha anzisha</small></div>
+        <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <label class="fl">Kichwa</label><div class="inp">Mnada wa Simu Kali — Leo 18:00</div>
+        <label class="fl">Itaanza lini (hiari)</label><div class="inp">📅 Leo 18:00 → "Yanayokuja"</div>
+        <label class="fl">Preview ya Live <span class="tag t-new">MPYA</span></label>
+        <div class="prev-box">
+          <div class="pr"><small>Aina</small><b>🔨 Mnada Live</b></div>
+          <div class="pr"><small>Bidhaa</small><b>📱 Galaxy A55 + 1</b></div>
+          <div class="pr"><small>Bei ya kuanzia</small><b>TSh 350,000</b></div>
+          <div class="pr"><small>Inayokubalika</small><b>TSh 367,500</b></div>
+          <div class="pr"><small>Muda</small><b>18:00 – 18:30</b></div>
+        </div>
+        <div class="cta-row"><button class="cta cta-red">Ghairi</button><button class="cta cta-gold">Tengeneza Live<small>kisha "Anza live" ukiwa tayari</small></button></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec"><h2>2 · Setup za kibiashara (mobile)</h2><p>Mipangilio ya awali kwa kila aina — zote zinaingia kwenye <b>modeData iliyopo</b> (hakuna schema mpya).</p>
+    <div class="row">
+      <div><div class="cap">Mnada setup <span class="tag t-old">IPO sehemu</span></div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="s-head">🔨 Setup ya Mnada</div>
+        <label class="fl">Bei ya kuanzia</label><div class="inp">TSh 350,000</div>
+        <label class="fl">Nyongeza ya chini (%)</label><div class="inp">5% (min TSh 5,000)</div>
+        <label class="fl">Muda (dakika)</label><div class="inp">30 · anti-snipe +2min <span class="tag t-old">IPO</span></div>
+        <label class="fl">Masharti</label><div class="inp">Mshindi analipa ndani ya 24h</div>
+        <button class="cta cta-green">Hifadhi mipangilio</button>
+      </div></div>
+      <div><div class="cap">Price Drop setup <span class="tag t-old">IPO sehemu</span></div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="s-head">📉 Setup ya Price Drop</div>
+        <label class="fl">Bei ya awali → ya mwisho</label><div class="inp">185,000 → 120,000</div>
+        <label class="fl">Kushuka (kila / kiasi)</label><div class="inp">1 min / TSh 2,500</div>
+        <label class="fl">Stock · Max/buyer</label><div class="inp">9 · 1</div>
+        <label class="fl">Muda wa kampeni</label><div class="inp">2h 12min · ofa 3h <span class="tag t-old">IPO</span></div>
+        <button class="cta cta-green">Hifadhi mipangilio</button>
+      </div></div>
+      <div><div class="cap">Group Buy setup <span class="tag t-new">MPYA sehemu</span></div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="s-head">👥 Setup ya Group Buy</div>
+        <label class="fl">Bei kawaida → kikundi</label><div class="inp">78,000 → 64,000</div>
+        <label class="fl">Lengo (min / max)</label><div class="inp">25 / — <span class="tag t-new">max MPYA</span></div>
+        <label class="fl">Deadline</label><div class="inp">6h · failure wazi <span class="tag t-new">MPYA</span></div>
+        <label class="fl">Malipo</small></label><div class="inp">Baada ya lengo — escrow</div>
+        <button class="cta cta-green">Hifadhi mipangilio</button>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec"><h2>3 · Live dashboard ya muuzaji (mobile)</h2><p>Wakati live inaendelea: takwimu + comments + vitendo vya host (pin/badilisha/sitisha <span class="tag t-new">MPYA</span>/maliza).</p>
+    <div class="row"><div><div class="cap">Host dashboard</div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+      <div class="s-head">🔴 LIVE · Galaxy A55 Mnada<small>⏱ 12:44 · ◷ muda wa server</small></div>
+      <div class="dash-stats"><div class="stat"><b>248</b><small>WATAZAMAJI</small></div><div class="stat"><b>84</b><small>MAONI</small></div><div class="stat"><b>37</b><small>ZABUNI</small></div></div>
+      <div class="dash-stats" style="grid-template-columns:1fr 1fr"><div class="stat"><b style="color:#0F6E57">TSh 412,000</b><small>ZABUNI YA SASA</small></div><div class="stat"><b>1.2k</b><small>LIKES</small></div></div>
+      <label class="fl">Maoni ya hivi punde <span>jibu · bandika · ficha · zuia</span></label>
+      <div class="cmt"><span class="av">AM</span><div><b style="font-size:11px">Asha M.</b> <span style="font-size:11px">Simu ni mpya?</span></div><span class="ops"><button>📌</button><button>Jibu</button><button class="hide">Ficha</button></span></div>
+      <div class="cmt"><span class="av">BI</span><div><b style="font-size:11px">Bra IT</b> <span style="font-size:11px">Hii bei itapanda 🔥</span></div><span class="ops"><button>📌</button><button>Jibu</button><button class="hide">Ficha</button></span></div>
+      <div class="hctl"><button>📌 Bandika tangazo</button><button>🔄 Badilisha bidhaa</button><button disabled style="opacity:.5">⏸ Sitisha — kimezuiwa (zabuni 37)</button><button class="danger">⏹ Maliza Live</button></div>
+      <div style="font-size:9.5px;color:#5B6E67;font-weight:600;text-align:center;margin:6px 14px 0">⏸ Pause: kabla ya zabuni ya 1 tu · baada yake kimezuiwa · ◷ timer na zabuni zinasimamiwa na server</div>
+      <div style="height:16px"></div>
+    </div></div>
+    <div><div class="cap">Muhtasari baada ya Live <span class="tag t-new">MPYA</span></div><div class="phone"><div class="status"><span>9:41</span><span>📶 📡 🔋</span></div>
+      <div class="s-head">📊 Muhtasari wa Live<small>Galaxy A55 — Mnada · 32 min</small></div>
+      <div class="dash-stats"><div class="stat"><b>412</b><small>WALIOJIUNGA</small></div><div class="stat"><b>301</b><small>PEAK</small></div><div class="stat"><b>156</b><small>MAONI</small></div></div>
+      <div class="prev-box">
+        <div class="pr"><small>Zabuni</small><b>45 · wazabuni 23</b></div>
+        <div class="pr"><small>Mshindi</small><b>J*** K*** · TSh 428,000</b></div>
+        <div class="pr"><small>Malipo</small><b>⏳ inasubiri (23h)</b></div>
+        <div class="pr"><small>Wafuasi wapya</small><b>+18</b></div>
+        <div class="pr"><small>Mapato</small><b>— (bado haijaunganishwa na liveSessionId)</b></div>
+      </div>
+      <div class="note" style="margin:10px 14px 16px">Hesabu kutoka records halisi pekee. Hatuonyeshi <b>0</b> — 0 ingemaanisha hakuna mauzo, jambo lisiloweza kuthibitishwa bila liveSessionId.</div>
+    </div></div></div>
+  </div>
+
+  <div class="sec"><h2>4 · Studio + Admin (desktop)</h2><p>Dashboard ya host + foleni ya moderation ya admin + analytics — kwa ukubwa wa desktop.</p>
+    <div class="row"><div class="desk"><div class="desk-h">🖥 Studio &amp; Usimamizi <span class="tag t-old">IPO sehemu</span> <span class="tag t-new">MPYA sehemu</span></div>
+      <div class="dcols">
+        <div class="dcard"><h5>🔴 Live yangu</h5>
+          <div class="pr"><small>Watazamaji</small><b>248 (peak 301)</b></div>
+          <div class="pr"><small>Maoni / Likes</small><b>156 / 2.1k</b></div>
+          <div class="pr"><small>Zabuni ya sasa</small><b>TSh 412,000</b></div>
+          <button class="btn">📌 Bandika tangazo</button><button class="btn gold" disabled style="opacity:.5">⏸ Sitisha — kimezuiwa (zabuni zimeanza)</button><button class="btn red">⏹ Maliza Live</button>
+        </div>
+        <div class="dcard"><h5>🛡 Moderation (admin) <span class="tag t-new">MPYA UI</span></h5>
+          <div class="pr"><small>Ripoti wazi</small><b>3</b></div>
+          <div class="pr"><small>"spam link…" — Bra IT</small><b>live #A-1024</b></div>
+          <div class="pr"><small>"matusi…" — Mgeni09</small><b>live #P-220</b></div>
+          <button class="btn">Ficha + Zuia (audit)</button><button class="btn red">Zima Live (orsevere)</button>
+        </div>
+        <div class="dcard"><h5>📊 Analytics <span class="tag t-new">MPYA</span></h5>
+          <div class="pr"><small>Waliojiunga / peak</small><b>412 / 301</b></div>
+          <div class="pr"><small>Conversion (join→bid)</small><b>5.6%</b></div>
+          <div class="pr"><small>Oda / units</small><b>— / —</b></div>
+          <div class="pr"><small>Mapato</small><b>—</b></div>
+          <div class="pr"><small>Maelezo</small><b style="font-size:10px">bado haijaunganishwa na liveSessionId · 0 haionyeshwi</b></div>
+          <button class="btn gold">Pakua ripoti</button>
+        </div>
+      </div>
+    </div></div>
+  </div>
+  <div class="note"><b>Sera iliidhinishwa:</b> ⏸ pause ya mnada — kabla ya zabuni ya 1 tu; baada ya zabuni ya 1 pause imezuiwa; timer na zabuni zinasimamiwa na backend; hali inaonekana kwa muuzaji na wanunuzi. Analytics: mapato ni "—" yenye maelezo ya liveSessionId; 0 haionyeshwi; hakuna order schema/accounting change bila audit na approval tofauti.</div>
+</div>
+</body>
+</html>

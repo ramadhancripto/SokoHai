@@ -3,7 +3,7 @@
     <div style="background:white; border-radius:24px; padding:25px; width:95%; max-width:450px; max-height:85vh; display:flex; flex-direction:column; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">
             <h3 style="color:var(--primary-dark); margin:0; font-size:18px; text-transform:uppercase;"><span id="skhCatModalHdr" data-skh-icon="folder" data-skh-size="18">Chagua Kategoria</span></h3>
-            <button onclick="closeModals()" style="background:none; border:none; font-size:22px; font-weight:bold; color:#ef4444; cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
+            <button aria-label="Funga" onclick="closeModals()" style="background:none; border:none; font-size:22px; font-weight:bold; color:#ef4444; cursor:pointer;"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div class="cat-grid" id="catGridContainer" style="overflow-y:auto; flex:1;">
             <!-- Grid itachorwa na Javascript hapa -->
@@ -30,6 +30,11 @@
 <div id="sidebarMenuModal" class="overlay-menu" style="z-index: 100005; justify-content: flex-start; align-items: stretch;"></div>
 
 <!-- MODE SWITCHER MODAL -->
+<!-- USIMAMIZI (dashboards) — IMEARUDISHWA KAMILI kama ilivyo kwenye GitHub
+     (commit 03a6811, index.html). Mtumiaji: "naomba unakshi kama ilivyokua mwanzo".
+     Markup, madarasa (.menu-item), rangi za border-left, maandishi na kitufe cha
+     "Funga X" ni zile zile za mwanzo. Marekebisho pekee ni CSS ndogo (§12 kwenye
+     css/57) inayohakikisha dashboards zote 7 zinaonekana bila kukatwa. -->
 <div id="modeMenuModal" class="overlay-menu" style="z-index: 8500;" onclick="if(event.target===this){closeModals();}">
     <div style="width:100%; max-width:400px; display:flex; flex-direction:column; align-items:center; animation: popIn 0.3s ease-out; background: white; padding: 30px; border-radius: 24px; max-height: 90vh; overflow-y:auto;">
         <h2 style="color:var(--primary-dark); margin-top:0; margin-bottom:20px; text-align:center; text-transform:uppercase; font-size:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; width: 100%;"> Usimamizi</h2>
@@ -58,6 +63,15 @@
             <b> Advertiser</b>
             <span>Campaign workspace ya kampuni na matangazo.</span>
         </div>
+        <!-- [J-J1 2026-11-10 RESTORED] Kiingilio cha Mfanyakazi wa Duka (kujiunga kwa kodi).
+             KILIKUWEPO kwenye index.html (hand-edit) — kilifutika kwenye rebuild;
+             sasa kipo kwenye kipande sahihi ili build ibaki byte-exact.
+             NOTE: skhJoinShopWithCode bado HAIJATEKELEZWA (V-C5/B4.3) — item ni dead
+             mpaka UI ya join-by-code itekelezwe; guard inazuia error. -->
+        <div class="menu-item" onclick="window.skhJoinShopWithCode && window.skhJoinShopWithCode()" id="mode-staffjoin" style="border-left-color:#8B5CF6; background:#f8fafc;">
+            <b> Mfanyakazi wa Duka</b>
+            <span>Jiunge na duka kwa kodi ya mwaliko kutoka kwa mmiliki.</span>
+        </div>
         <div class="menu-item" onclick="switchMode('admin')" id="mode-admin" style="border-left-color:#333; background:#f1f5f9;">
             <b> Admin (Msimamizi)</b>
             <span>Dashbodi ya Kufuatilia Mfumo mzima na Mapato.</span>
@@ -66,6 +80,7 @@
         <button onclick="closeModals()" style="width:100%; margin-top:15px; padding:15px; background:#e2e8f0; color:#334155; border:none; border-radius:14px; cursor:pointer; font-weight:900; text-transform:uppercase;">Funga X</button>
     </div>
 </div>
+
 
 <!-- ADVERTISER DASHBOARD — Billing entry is intentionally locked/UI-only -->
 <div id="advertiserDashboardModal" class="overlay-menu" style="z-index:8550;">
@@ -237,7 +252,7 @@
         <div id="mapStatus" style="padding:15px; background:#f8fafc; font-size:12px; border-top:1px solid #eee;">
             <b> GPS:</b> <span id="gpsText">Inatafuta mawasiliano...</span>
         </div>
-        <button onclick="closeModals()" style="position:absolute; top:10px; right:10px; z-index:1000; background:white; border:none; width:40px; height:40px; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,0.2); font-weight:bold;"><span class="skh-ico" data-ico="x"></span></button>
+        <button aria-label="Funga" onclick="closeModals()" style="position:absolute; top:10px; right:10px; z-index:1000; background:white; border:none; width:40px; height:40px; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,0.2); font-weight:bold;"><span class="skh-ico" data-ico="x"></span></button>
     </div>
 </div>
 <!-- DIRECT HIRE MODAL (Imesafishwa 100%) -->

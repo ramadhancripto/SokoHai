@@ -80,7 +80,10 @@
     font-family: inherit;
     font-size: 13.5px;
     font-weight: 800;
-    color: var(--sokohai-green);
+    /* [A11Y 2026-11-08] --sokohai-green (#18A982) = 2.98:1 juu ya nyeupe, haitoshelezi.
+       --sokohai-green-dark (#17604E) = 7.45:1. Rangi ya brand inabaki kwenye vipengele
+       vingine; hapa ni maandishi pekee yanayohitaji usomeka. */
+    color: var(--sokohai-green-dark);
     cursor: pointer;
     white-space: nowrap;
 }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview 1 — Home Live</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{background:#0f172a;display:flex;gap:24px;justify-content:center;padding:24px;flex-wrap:wrap}
+.phone{width:390px;max-width:94vw;background:#f8fafc;border-radius:28px;overflow:hidden;border:3px solid #334155}
+.banner{background:#7c3aed;color:#fff;font-size:11px;font-weight:800;text-align:center;padding:6px;letter-spacing:.4px}
+.head{padding:12px 14px 6px;display:flex;justify-content:space-between;align-items:center}
+.head b{font-size:16px}.head small{color:#6366f1;font-weight:700}
+.row{display:flex;gap:10px;overflow-x:auto;padding:8px 14px}
+.card{min-width:170px;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;position:relative}
+.thumb{height:96px;background:linear-gradient(135deg,#0ea5e9,#6366f1);position:relative}
+.live{position:absolute;top:6px;left:6px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:20px}
+.view{position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 8px;border-radius:20px}
+.info{padding:8px 10px}.info b{font-size:12px;display:block}.info small{color:#64748b;font-size:11px}
+.sec{padding:6px 14px;font-size:13px;font-weight:800}
+.up{background:#fff;margin:0 14px 10px;border-radius:12px;padding:10px 12px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
+.up small{color:#64748b;display:block;font-size:11px}
+.btn{background:#6366f1;color:#fff;border:none;font-size:11px;font-weight:800;padding:8px 12px;border-radius:10px}
+.bind{background:#fffbeb;border:1px dashed #d97706;border-radius:12px;margin:0 14px 14px;padding:10px;font-size:10.5px;color:#92400e;line-height:1.7}
+.bind b{color:#78350f}
+.note{width:390px;max-width:94vw;color:#e2e8f0;font-size:12px;line-height:1.8}
+.note h3{color:#fff;margin-bottom:6px}.note code{background:#1e293b;padding:1px 6px;border-radius:6px;font-size:11px}
+</style></head><body>
+<div class="phone">
+<div class="banner">DESIGN PREVIEW — mock data (layout tu, sio data halisi)</div>
+<div class="head"><b>Live Sasa</b><small>Angalia zote ›</small></div>
+<div class="row">
+<div class="card"><div class="thumb"><span class="live">● LIVE</span><span class="view">👁 1.2k</span></div><div class="info"><b>Mnada: Kuku wa Kienyeji</b><small>Biashara ya Amina · Mnada</small></div></div>
+<div class="card"><div class="thumb" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><span class="live">● LIVE</span><span class="view">👁 348</span></div><div class="info"><b>Bei Kushuka: Mchele 5kg</b><small>Duka la Juma · Bei Kushuka</small></div></div>
+<div class="card"><div class="thumb" style="background:linear-gradient(135deg,#10b981,#0ea5e9)"><span class="live">● LIVE</span><span class="view">👁 89</span></div><div class="info"><b>Group Buy: Mafuta 20L</b><small>Kikundi Mbeya · Group</small></div></div>
+</div>
+<div class="sec">Zinakuja</div>
+<div class="up"><div><b style="font-size:12px">Show ya Vitenge — Ijumaa 19:00</b><small>Muuzaji: Mama Ntilie · watu 45 wameweka ukumbusho</small></div><button class="btn">Kumbusha</button></div>
+<div class="bind"><b>Data bindings (halisi, implementation):</b><br>• Kadi ← <b>live_sessions</b> (status=live) + bidhaa pinned<br>• Watazamaji ← <b>viewerCount</b> ya session (server, liveJoin/Leave)<br>• Kumbusha ← <b>liveRemind</b>(sessionId) · Fungua ← <b>skhLiveOpen</b>(id)<br>• Hakuna namba za kubuni — tupu = "Hakuna live sasa"</div>
+</div>
+<div class="note"><h3>1. Home Live Preview</h3>
+<p>Sehemu ya Live kwenye ukurasa wa nyumbani: kadi zinazosogezwa + zinakuja.</p>
+<p>Mobile: kadi 1.2 kwa upana wa simu ndogo (360px); kubwa (430px) kadi 2. Landscape: safu 2.</p>
+<p>Files zitakazotumika: <code>js/app/120-live-commerce-ui.js</code> (skhLiveHub/skhLiveOpen), <code>js/app/123-home-layout.js</code> (slot ya home), <code>functions/live-commerce.js</code> (tayari).</p></div>
+</body></html>

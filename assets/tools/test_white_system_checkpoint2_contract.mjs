@@ -1,6 +1,6 @@
 import fs from 'node:fs';import path from 'node:path';
 const root=path.resolve(path.dirname(new URL(import.meta.url).pathname),'..');const r=p=>fs.readFileSync(path.join(root,p),'utf8');
-const pay=r('js/app/21-sokopay.js'),payhtml=r('html/14-haipay.html'),paymob=r('css/11-haipay-mobile.css');
+const pay=r('js/app/21-sokopay.js'),payhtml=r('html/14-sokopay.html'),paymob=r('css/11-sokopay-mobile.css');
 const token=r('css/19-token-box.css'),req=r('css/20-request-inbox.css'),cart=r('js/app/23-smart-cart.js');
 const roles=r('js/app/19-roles.js'),agent=r('js/app/31-agent-assist.js'),hub=r('js/app/17-hub.js');
 const notif=r('js/app/07-product.js'),notifcss=r('css/13-ui-polish.css'),buyer=r('html/18-buyer-view.html'),orders=r('html/03-modals-core.html'),market=r('html/05-modals-market.html');

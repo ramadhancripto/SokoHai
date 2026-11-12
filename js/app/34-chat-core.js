@@ -304,10 +304,11 @@ import { skh } from './00-bootstrap.js';
                     name = pickPersonName(d); photo = pickPersonPhoto(d);
                 }
             } catch (e2) {}
-            // 3) hati ya mtumiaji
-            if (!name) {
+            // 3) hati ya mtumiaji — [2026-11-06 privacy] ni hati YAKO tu; ya mtu
+            //    mwingine ni ya faragha (users/{id}) na hutumii kadi ya umma badala yake.
+            if (!name && uid === myUid()) {
                 try {
-                    var us = await skh.getDoc(skh.doc(skh.db, 'users', uid));
+                    var us = await skh.getDoc(skh.doc(skh.db, 'users', uid)); // own profile only
                     if (us && us.exists && us.exists()) {
                         var ud = us.data() || {};
                         name = pickPersonName(ud); photo = photo || pickPersonPhoto(ud);
@@ -857,7 +858,7 @@ import { skh } from './00-bootstrap.js';
             ? '<div class="ch-nego-actions" style="margin-top:6px;">'
                 + '<button type="button" class="ch-nego-btn accept" onclick="event.stopPropagation();window.skhChatBuy()">' + (window.skhNavIcon ? window.skhNavIcon('cart', 14) : '') + '<span>' + T('ch_buy', 'Oda') + '</span></button>'
                 + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatMakeOffer()">' + (window.skhNavIcon ? window.skhNavIcon('tag', 14) : '') + '<span>' + T('ch_make_offer', 'Pendekeza Bei') + '</span></button>'
-                + '<button type="button" class="ch-nego-btn" onclick="event.stopPropagation();window.skhChatAddToCart(\'' + pid + '\')">' + (window.skhNavIcon ? window.skhNavIcon('cart', 14) : '') + '<span>' + T('ch_add_cart', 'Weka Kikapu') + '</span></button>'
+                + '<button type="button" class="ch-nego-btn ch-nego-icon" aria-label="' + T('ch_add_cart', 'Weka Kikapu') + '" title="' + T('ch_add_cart', 'Weka Kikapu') + '" onclick="event.stopPropagation();window.skhChatAddToCart(\'' + pid + '\')">' + (window.skhNavIcon ? window.skhNavIcon('cart_plus', 16) : '') + '</button>'
                 + '</div>'
             : '<div class="ch-nego-actions" style="margin-top:6px;">'
                 + '<button type="button" class="ch-nego-btn outline" onclick="event.stopPropagation();window.skhChatMakeOffer()">' + (window.skhNavIcon ? window.skhNavIcon('tag', 14) : '') + '<span>' + T('ch_send_offer', 'Tuma Ofa') + '</span></button>'

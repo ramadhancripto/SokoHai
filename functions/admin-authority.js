@@ -314,6 +314,89 @@ const adminSetVerification = onCall({ region: REGION }, async (req) => {
     return { ok: true };
 });
 
+/* [REMEDIATION 2026-11 R9] Trust badges — four DISTINCT badges, never mixed.
+ *   account            Verified Account / Business   users/{uid} | businesses/{id}
+ *   supplier           Verified Supplier             users/{uid}
+ *   product_inspection Inspected Product             products/{id}
+ *   transaction        Verified Transaction          orders/{id} (completed orders only)
+ * Every change is server-only, needs a written reason, and grant/reinstate need an
+ * evidence reference. The badge record (trust_badges/{id}) keeps status, evidence,
+ * verifier and timestamps; trust_badges/{id}/history is append-only; admin_audit_log
+ * records the action. The target only carries a public projection
+ * trust.<badge> = { status, since, badgeId } — no evidence in public. An account or
+ * supplier badge says nothing about every product of that seller being genuine.
+ */
+const TRUST_BADGES = Object.freeze({
+    account: { label: 'Akaunti / Biashara imethibitishwa', targets: { user: 'users', business: 'businesses' } },
+    supplier: { label: 'Supplier aliyethibitishwa', targets: { user: 'users' } },
+    product_inspection: { label: 'Bidhaa imekaguliwa', targets: { product: 'products' } },
+    transaction: { label: 'Muamala umethibitishwa', targets: { order: 'orders' } }
+});
+const TRUST_STATUS_AFTER = Object.freeze({ grant: 'active', suspend: 'suspended', reinstate: 'active', revoke: 'revoked' });
+/* Pure: allowed transitions. null = nothing yet. */
+function trustTransition(current, action) {
+    const cur = current || null;
+    if (action === 'grant') return (cur === null || cur === 'revoked') ? 'active' : null;
+    if (action === 'suspend') return cur === 'active' ? 'suspended' : null;
+    if (action === 'reinstate') return cur === 'suspended' ? 'active' : null;
+    if (action === 'revoke') return (cur === 'active' || cur === 'suspended') ? 'revoked' : null;
+    return null;
+}
+const adminSetTrustBadge = onCall({ region: REGION }, async (req) => {
+    requireAdmin(req);
+    const d = req.data || {};
+    const badge = String(d.badge || '');
+    const spec = TRUST_BADGES[badge];
+    if (!spec) throw new HttpsError('invalid-argument', 'badge: ' + Object.keys(TRUST_BADGES).join(' | '));
+    const targetType = String(d.targetType || Object.keys(spec.targets)[0]);
+    const col = spec.targets[targetType];
+    if (!col) throw new HttpsError('invalid-argument', 'targetType kwa ' + badge + ': ' + Object.keys(spec.targets).join(' | '));
+    const action = String(d.action || '');
+    if (!TRUST_STATUS_AFTER[action]) throw new HttpsError('invalid-argument', 'action: grant | suspend | reinstate | revoke');
+    const reason = requireReason(d.reason, 5);
+    const evidenceRef = String(d.evidenceRef || '').trim().slice(0, 300);
+    if ((action === 'grant' || action === 'reinstate') && evidenceRef.length < 3) {
+        throw new HttpsError('invalid-argument', 'Weka evidenceRef (kumbukumbu ya ushahidi: namba ya ukaguzi, faili, ripoti).');
+    }
+    let ref, data, targetId = cleanId(d.targetId, 'targetId');
+    if (col === 'users') {
+        const u = await userDocFor(targetId);
+        if (!u) throw new HttpsError('not-found', 'Mtumiaji hapatikani.');
+        ref = u.ref; data = u.data; targetId = String(u.data.uid || u.id);
+    } else {
+        ref = db().doc(col + '/' + targetId);
+        const snap = await ref.get();
+        if (!snap.exists) throw new HttpsError('not-found', 'Rekodi haipatikani.');
+        data = snap.data() || {};
+    }
+    if (badge === 'transaction' && action === 'grant' && String(data.status || '').toLowerCase() !== 'completed') {
+        throw new HttpsError('failed-precondition', 'Muamala unathibitishwa tu baada ya oda kukamilika.');
+    }
+    const ownerUid = col === 'users' ? targetId : String(data.userId || data.ownerUid || data.sellerId || '');
+    const badgeId = badge + '__' + targetType + '__' + targetId;
+    const badgeRef = db().doc('trust_badges/' + badgeId);
+    const now = new Date().toISOString();
+    let next = null;
+    await db().runTransaction(async (t) => {
+        const bs = await t.get(badgeRef);
+        const cur = bs.exists ? (bs.data() || {}).status : null;
+        next = trustTransition(cur, action);
+        if (!next) throw new HttpsError('failed-precondition', 'Hatua "' + action + '" hairuhusiwi kutoka hali "' + (cur || 'hakuna') + '".');
+        const rec = {
+            badge, label: spec.label, targetCollection: col, targetType, targetId, ownerUid,
+            status: next, updatedAt: now, updatedBy: req.auth.uid, lastReason: reason
+        };
+        if (action === 'grant' || action === 'reinstate') Object.assign(rec, { evidenceRef, verifiedBy: req.auth.uid, verifiedAt: now });
+        if (!bs.exists) rec.createdAt = now;
+        t.set(badgeRef, rec, { merge: true });
+        t.set(badgeRef.collection('history').doc(), { action, status: next, from: cur, evidenceRef: evidenceRef || null, reason, by: req.auth.uid, at: now });
+        t.update(ref, { ['trust.' + badge]: { status: next, since: now, badgeId } });
+        await writeAudit(req, 'TRUST_BADGE_' + action.toUpperCase(), { kind: badge, collection: col, id: targetId }, { reason, evidenceRef: evidenceRef || null, status: next }, t);
+    });
+    if (ownerUid) await notify(ownerUid, spec.label + ': ' + next, reason, 'verification').catch(() => {});
+    return { ok: true, badgeId, status: next };
+});
+
 /* Hide or restore a listing (product/service) — moderation. */
 const adminModerateListing = onCall({ region: REGION }, async (req) => {
     requireAdmin(req);
@@ -413,6 +496,6 @@ async function feeRequiredFor(feature) {
 module.exports = {
     adminApproveAgent, adminRejectAgent, adminSetAgentStatus, adminSetEscrowPolicy,
     adminSetAccountStatus, adminSetRole, adminSetVerification, adminModerateListing,
-    adminAuditQuery, adminWhoAmI,
-    _internal: { isAdmin, isSuperAdmin, writeAudit, auditEntry, securityEvent, userDocFor, requireReason, feeRequiredFor }
+    adminAuditQuery, adminWhoAmI, adminSetTrustBadge,
+    _internal: { trustTransition, TRUST_BADGES, isAdmin, isSuperAdmin, writeAudit, auditEntry, securityEvent, userDocFor, requireReason, feeRequiredFor }
 };

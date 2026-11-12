@@ -1041,6 +1041,22 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
     return '<span class="skh-de-avail skh-de-avail--' + info.cls + '"><span class="skh-de-avail-dot"></span>' + esc(info.label) + (freshLabel ? ' • ' + esc(freshLabel) : '') + '</span>';
   }
 
+  /* [G-G1 2026-11-10] Bei inayoonyeshwa kwenye kadi lazima iheshimu saleMode:
+   * mnada = dau la juu la sasa, bei kushuka = bei live, group = bei ya kundi.
+   * Hesabu ni window.skhModesCompute (07) — chanzo kimoja kama UI nyingine. */
+  function modePrice(l) {
+    var base = l.price != null ? 'TSh ' + Number(l.price).toLocaleString() : T2('Bei ya Maelewano', 'Negotiable');
+    try {
+      if (typeof window.skhModesCompute !== 'function' || !l || !l.saleMode) return { text: base, tag: '' };
+      if (l.saleMode === 'free_market' || l.saleMode === 'discover_only' || l.saleMode === 'wholesale') return { text: base, tag: '' };
+      var mc = window.skhModesCompute(l);
+      if (l.saleMode === 'auction' && mc.auction) return { text: 'TSh ' + Number(mc.auction.currentBid).toLocaleString(), tag: ' · Zabuni ya juu' + (mc.auction.totalBids ? ' (' + mc.auction.totalBids + ')' : '') };
+      if (l.saleMode === 'price_drop' && mc.drop) return mc.drop.ended ? { text: base, tag: ' · Deal imekwisha' } : { text: 'TSh ' + Number(mc.drop.currentPrice).toLocaleString(), tag: ' · Bei ya sasa' };
+      if (l.saleMode === 'group_buy' && mc.group) return { text: 'TSh ' + Number(mc.group.price).toLocaleString(), tag: ' · Kundi ' + mc.group.joined + '/' + mc.group.target };
+    } catch (e) {}
+    return { text: base, tag: '' };
+  }
+
   function renderProductCard(listing, isOffline) {
     var l = listing.listing || listing;
     var score = listing.score != null ? listing.score : null;
@@ -1061,7 +1077,8 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
       }
     }
     var img = imgUrl ? '<img src="' + esc(imgUrl) + '" loading="lazy" decoding="async" width="320" height="240" style="width:100%;height:100%;object-fit:cover;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||\'\'">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#18A982,#2B82BD);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px;">' + esc((l.title||'P').charAt(0).toUpperCase()) + '</div>';
-    var price = l.price != null ? 'TSh ' + Number(l.price).toLocaleString() : T2('Bei ya Maelewano', 'Negotiable');
+    var mp = modePrice(l);
+    var price = mp.text + mp.tag;
     var distance = l.distance != null ? '<span class="skh-de-card-distance">📍 ' + esc(formatDistance(l.distance)) + ' away</span>' : '';
     var avail = l.availabilityStatus ? renderAvailabilityBadge(l.availabilityStatus, l.freshness) : '';
     var business = l.businessName ? '<div class="skh-de-card-business">🏪 ' + esc(l.businessName) + '</div>' : (l.sellerName ? '<div class="skh-de-card-business">👤 ' + esc(l.sellerName) + '</div>' : '');
@@ -1275,7 +1292,8 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
   function renderProductDetail(listing) {
     var l = listing.listing || listing;
     var isOff = l.sellerMode === SELLER_MODE.DISCOVER_ONLY || l.sellerMode === SELLER_MODE.POS_DISCOVER;
-    var price = l.price != null ? 'TSh ' + Number(l.price).toLocaleString() : T2('Bei ya Maelewano', 'Negotiable');
+    var mpd = modePrice(l);
+    var price = mpd.text + mpd.tag;
     var distance = l.distance != null ? formatDistance(l.distance) + ' away' : '';
     var avail = l.availabilityStatus ? renderAvailabilityBadge(l.availabilityStatus, l.freshness) : '';
     var img = l.image ? '<img src="' + esc(l.image) + '" style="width:100%;height:100%;object-fit:cover;">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#18A982,#2B82BD);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:48px;">' + esc((l.title||'P').charAt(0)) + '</div>';

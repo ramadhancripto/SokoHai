@@ -318,6 +318,9 @@ window.renderSpecialModesUI = function(mode, actionArea) {
     try { window.skhModesLifecycle(skh.currentOpenProduct); } catch (e) {}
     const C = window.skhModesCompute(skh.currentOpenProduct);
 
+    // [R13-D] owner design refs 5/6 (auction) and 2 (price drop): panel from js/app/120-live-commerce-ui.js
+    if ((mode === 'auction' || mode === 'price_drop') && typeof window.skhLiveProductPanel === 'function'
+        && window.skhLiveProductPanel(mode, skh.currentOpenProduct, actionArea)) return;
     if (mode === 'auction') {
         const currentBid = C.auction.currentBid;
         const totalBids = C.auction.totalBids;
@@ -337,6 +340,7 @@ window.renderSpecialModesUI = function(mode, actionArea) {
             actionArea.innerHTML = `
                 <div style="background:#fef2f2; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #ef4444;"> <b style="color:#ef4444;"> MNADA LIVE</b><br> <span class="live-timer" data-endtime="${mData.endTime}" style="color:#ef4444; font-weight:900; font-size:20px;"> ...</span> <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; display:flex; justify-content:space-around;"> <div><small>Dau la Juu</small><br><b>${currentBid.toLocaleString()}</b></div> <div><small>Bids</small><br><b>${totalBids}</b></div> </div> <div style="background:white; padding:10px; border-radius:12px; margin-bottom:12px; border:1px solid #ddd;"> <input type="number" id="userBidInput" placeholder="Angalau TSh ${C.auction.minNextBid.toLocaleString()}" style="width:100%; border:none; outline:none; text-align:center; font-weight:900; font-size:18px;"> <small style="color:#64748b;">Dau lako lazima liwe angalau <b>TSh ${C.auction.minNextBid.toLocaleString()}</b> (dau la juu + 5%)</small> </div> <button onclick="window.placeBid()" style="width:100%; padding:16px; background:#ef4444; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;">WEKA DAU LAKO </button> </div>`;
         }
+        // [R13-D] the auction room button now lives in skhLiveProductPanel (above)
     }
     else if (mode === 'price_drop') {
         // [§16-§18 PRICE DROP] Hesabu ya bei ya sasa kutoka modeData halisi
@@ -481,8 +485,8 @@ window.skhAuctionWinnerCheckout = async function (productId) {
         return { ok: false, error: 'si_mshindi' };
     }
     skh.currentOpenProduct = p;
-    window.checkoutSeriousMode(c.auction.currentBid);
-    return { ok: true, amount: c.auction.currentBid };
+    window.checkoutSeriousMode(c.auction.winnerBid);
+    return { ok: true, amount: c.auction.winnerBid };
 };
 
 /* ================================================================
@@ -506,8 +510,10 @@ window.skhModesCompute = function (p) {
         out.auction = {
             currentBid: currentBid, totalBids: totalBids, endsAt: endsAt,
             endsIn: Math.max(0, endsAt - now), ended: ended,
-            minNextBid: Math.round(currentBid * 1.05),
-            winnerId: md.maxBidder || null, winnerName: md.maxBidderName || 'Bado hakuna',
+            minNextBid: Math.round(currentBid + Math.max(Number(md.minIncrement) || 0, Math.ceil(currentBid * ((Number(md.minIncrementPct) > 0 ? Number(md.minIncrementPct) : 5) / 100)))),
+            // [R13-D] after a second chance the winner is modeData.winnerId (server), with THEIR bid
+            winnerId: (md.winnerId !== undefined ? md.winnerId : md.maxBidder) || null, winnerName: md.winnerName || md.maxBidderName || 'Bado hakuna',
+            winnerBid: Number(md.winnerBid) > 0 ? Number(md.winnerBid) : currentBid,
             notified: !!md.endNotified
         };
     } else if (out.mode === 'group_buy') {
@@ -1063,7 +1069,7 @@ window.skhProductPublicUrl = function(id) {
 // [SEO] Sasisha <title> + meta tags za bidhaa kwa Google na viungo vya umma.
 window.skhUpdateSeoMeta = function(p) {
     try {
-        const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def','Bidhaa') : 'Bidhaa');
+        const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.name || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def','Bidhaa') : 'Bidhaa');
         const t = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', 'SokoHai — Soko la Mtandaoni la Tanzania') : 'SokoHai — Soko la Mtandaoni la Tanzania');
         document.title = t;
         const desc = p
@@ -1144,7 +1150,7 @@ window.skhRenderAttachedProduct = function() {
     const img = p.image || (p.images && p.images[0]) || p.photo || (window.SKH_PLACEHOLDER_IMG || '');
     var defTitle = skh.activeChatService ? 'Huduma' : (skh.activeChatTransport ? 'Usafiri' : (window.skhTF?window.skhTF('card_product_def','Bidhaa'):'Bidhaa'));
     var attachLabel = skh.activeChatService ? 'Huduma imeambatishwa' : (skh.activeChatTransport ? 'Usafiri umeambatishwa' : (window.skhTF?window.skhTF('attach_product','Bidhaa imeambatishwa'):'Bidhaa imeambatishwa'));
-    const title = (window.skhLocField ? window.skhLocField(p, 'title') : null) || p.title || p.itemTitle || p.cargoName || defTitle;
+    const title = (window.skhLocField ? window.skhLocField(p, 'title') : null) || p.title || p.name || p.itemTitle || p.cargoName || defTitle;
     wrap.style.display = 'block';
     // [TASK K 2026-11] Ukimbatanisha bidhaa tena, kadi yake ya ofa irudi.
     if (typeof window.skhChatRestoreNegoCard === 'function' && p.id) {

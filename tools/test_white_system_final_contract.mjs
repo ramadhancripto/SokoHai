@@ -9,7 +9,9 @@ function check(name, ok) {
 function has(file, needle) { return read(file).includes(needle); }
 function lacks(file, needle) { return !has(file, needle); }
 
-check('top navigation management identity is soft green', has('html/16-topnav.html', 'background:#EAF8F2; color:#17604E;'));
+// [2026-11-05 owner, da75218] The separate "Usimamizi" pill was folded into the
+// header "More / Dashibodi — Usimamizi" sheet; it must stay reachable from the top nav.
+check('top navigation still offers Usimamizi (management) entry', has('html/16-topnav.html', 'Dashibodi — Usimamizi'));
 check('runtime toast is a white semantic surface', has('js/07-toasts.js', 'background:#fff;color:#18352D;border:1px solid #CCEBDD;border-left:4px solid #18A982'));
 check('legacy chat inbox header is light', has('css/15-chat-comments.css', 'background: #F1FBF7; color: #18352D;'));
 check('chat v2 active and unread states use green identity', has('css/24-chat-ui-v2.css', 'background: #18A982;'));
@@ -25,8 +27,11 @@ check('account save action is primary green', has('js/app/67-payment-accounts.js
 check('legacy announcement source no longer has dark navy strip', lacks('css/05-announcement.css', 'background:linear-gradient(90deg,#002244,#00509d,#10b981)'));
 check('old core announcement source no longer has dark navy strip', lacks('css/01-core.css', 'background: linear-gradient(90deg, #002244, #00509d)'));
 check('dialogs do not use legacy blue primary background', lacks('js/05-dialogs.js', 'background:#1268A8'));
-check('current Discover engine is removed', !fs.existsSync(new URL('../js/app/75-discover-engine.js', import.meta.url)));
-check('current Discover completion UI is removed', !fs.existsSync(new URL('../js/app/88-discover-complete.js', import.meta.url)));
+// [2026-11-06] The retired Discover files are kept in the repo (owner: do not delete);
+// the contract is that the app shell never loads them.
+const appShell = read('index.html') + read('html/21-scripts.html');
+check('current Discover engine is not loaded', !appShell.includes('75-discover-engine.js'));
+check('current Discover completion UI is not loaded', !appShell.includes('88-discover-complete.js'));
 
 console.log(`\nFinal white-system contract: ${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

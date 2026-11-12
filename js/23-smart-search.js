@@ -28,6 +28,11 @@
     var MAX_RECENT = 8;
 
     function $(id) { return document.getElementById(id); }
+    /* [R10] canonical ids (CAT-11) are shown and searched by their buyer label */
+    function catLbl(c) {
+        var skh = window.skh || {};
+        try { return (c && typeof skh.categoryLabel === 'function' && skh.categoryLabel(c)) || c || ''; } catch (e) { return c || ''; }
+    }
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
             return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -132,7 +137,7 @@
     function searchableText(it) {
         if (it.__sx) return it.__sx;
         var parts = [it.title, it.name, it.productName, it.serviceTitle, it.description,
-                     it.category, it.subCategory, it.brand, it.model, it.condition,
+                     it.category, catLbl(it.category), it.subCategory, it.productTypeLabel, it.brand, it.model, it.condition,
                      it.location, it.region, it.ownerName, it.sellerName, it.storeName,
                      it.driverName, it.companyName, it.vehicleType,
                      it.pickupRegion, it.destinationRegion, it.baseUnit];
@@ -243,7 +248,7 @@
         }
         // kategoria zinazofanana
         var cats = {};
-        pool.forEach(function (p) { if (p.category) cats[p.category] = 1; });
+        pool.forEach(function (p) { if (p.category) cats[catLbl(p.category)] = 1; });
         Object.keys(cats).forEach(function (c) {
             if (out.length >= 8) return;
             if (c.toLowerCase().indexOf(q) !== -1 && !seen[c.toLowerCase()]) out.push(c);
@@ -284,7 +289,8 @@
         var cats = {};
         pool.forEach(function (p) {
             if (!p.category) return;
-            cats[p.category] = (cats[p.category] || 0) + 1 + Number(p.views || 0) / 100;
+            var cl = catLbl(p.category);
+            cats[cl] = (cats[cl] || 0) + 1 + Number(p.views || 0) / 100;
         });
         return Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; }).slice(0, 6);
     }
@@ -326,7 +332,7 @@
         var img = it.image || it.photo || (it.imagesArray && it.imagesArray[0]) || '';
         var sub = col === 'drivers'
             ? (esc(it.pickupRegion || '') + ' &rarr; ' + esc(it.destinationRegion || ''))
-            : esc(it.category || it.location || '');
+            : esc(catLbl(it.category) || it.location || '');
         var price = (col === 'products') ? money(it.price)
                   : (Number(it.price) > 0 ? 'Kuanzia ' + money(it.price) : 'Maelewano');
         return '<button type="button" class="skh-ss-row" onclick="window.skhSearchOpen(\'' +

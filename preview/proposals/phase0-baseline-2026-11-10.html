@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SokoHai — PHASE 0 Baseline &amp; Safety (2026-11-10)</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f172a;margin:0;padding:24px;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(2,6,23,.08)}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:26px 0 10px;border-bottom:2px solid #e2e8f0;padding-bottom:6px}
+.verdict{background:#ecfdf5;border:2px solid #10b981;border-radius:12px;padding:14px 16px;font-weight:800;color:#065f46;margin:14px 0}
+.warn{background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:12px 14px;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+th,td{border:1px solid #e2e8f0;padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#0f172a;color:#fff}tr:nth-child(even) td{background:#f8fafc}
+code{background:#f1f5f9;padding:1px 6px;border-radius:6px;font-size:12px}
+pre{background:#0f172a;color:#e2e8f0;padding:12px;border-radius:10px;font-size:12px;overflow-x:auto;white-space:pre-wrap}
+.pass{color:#059669;font-weight:800}.fail{color:#b91c1c;font-weight:800}.small{font-size:12px;color:#64748b}
+.badge{display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:800;border-radius:20px;padding:2px 10px;margin-left:8px}
+.badgeY{background:#f59e0b}.badgeR{background:#ef4444}
+</style></head><body><div class="wrap">
+<h1>🧭 SokoHai — PHASE 0: Baseline, Usalama &amp; Inventory</h1>
+<div class="small">Tarehe: 2026-11-10 · Tawi: <code>feature/product-card-visual-refinement</code> · HEAD: <code>2e8d049</code> · Mradi: <code>sokonet-3b847</code> · 0 production writes</div>
+<div class="verdict">PHASE 0 IMEKAMILIKA ✅ — Baseline imethibitishwa, kazi za awali zimehifadhiwa (8/8), architecture imechorwa, vipimo vya baseline vyote GREEN. Hakuna mabadiliko ya code yaliyofanywa katika Phase 0 (audit pekee).</div>
+
+<h2>1. Hali ya repository</h2>
+<table><tr><th>Kipengele</th><th>Hali</th></tr>
+<tr><td>Repo / branch / HEAD</td><td><code>/home/user/sokoHai</code> · <code>feature/product-card-visual-refinement</code> · <code>2e8d049</code></td></tr>
+<tr><td>Tracked modified</td><td><strong>33 files</strong> (721+, 353−): launch fixes 8 + branch work 25 (css/html/index/netlify/package/tools/shots)</td></tr>
+<tr><td>Untracked</td><td><strong>57 files</strong> (g1 scratch, proposals, woff2, workflows, 113-sale-type-flow, n.k.)</td></tr>
+<tr><td>Kazi za awali (G1 + launch)</td><td class="pass">ZIMEHIFADHIWA — LAUNCH-FIX 8/8, tools/g1 (6 files), ripoti ya launch. Snapshot 108.5MB &lt; 128MB.</td></tr>
+<tr><td>Production writes / deploy</td><td class="pass">0 — audit ni reads + emulator pekee</td></tr>
+</table>
+
+<h2>2. Architecture (ilivyothibitishwa)</h2>
+<table><tr><th>Tabaka</th><th>Muundo</th></tr>
+<tr><td>Frontend boot</td><td><code>index.html</code> hujengwa byte-exact kutoka <code>html/</code> (22 parts) kupitia <code>tools/build_html.py</code>; script 127 (<strong>101 ES modules</strong> <code>js/app/*</code> + <strong>23 classic</strong> <code>js/*</code> + 3 shared UMD). Classic zinaendesha kwanza, modules baadaye (deferred).</td></tr>
+<tr><td>Client code</td><td><strong>116 files, 86,769 lines</strong>, 1,704 <code>window.*</code> defs. Kubwa: 34-chat-core (6,924), 00-bootstrap (3,521), 30-seller-products (3,416).</td></tr>
+<tr><td>Shared cores</td><td><code>shared/*.js</code> (UMD: browser <code>root.X</code> + node exports) — business-context, wholesale-price, ads-design-rules, inventory-reservation, quantity, taxonomy. Zinasawazishwa na <code>functions/shared</code> kupitia <code>build-shared.js</code> (predeploy).</td></tr>
+<tr><td>Backend</td><td><code>functions/</code> (25 files, <strong>104 exports</strong> kwenye index.js ya lines 4,233), nodejs22, region <code>europe-west1</code>. Local callable server: <code>functions/local-server.js</code> (POST /__fn/&lt;jina&gt;).</td></tr>
+<tr><td>Rules / data</td><td><code>firestore.rules</code> (<strong>127 matches</strong>, incl. Fix 8), indexes, emulator 8085/9099 (singleProjectMode).</td></tr>
+<tr><td>Storage</td><td>Bucket imewekwa (<code>sokonet-3b847.appspot.com</code>) lakini <strong>HAKUNA matumizi</strong> (0 getStorage/uploadBytes); picha kupitia <strong>Cloudinary</strong> (nje). Hakuna storage.rules — sahihi.</td></tr>
+<tr><td>Hosting</td><td>Firebase hosting (dist/) + Netlify (live). Security headers + HSTS zipo kwenye firebase.json.</td></tr>
+</table>
+
+<h2>3. Matokeo ya ukaguzi (audit findings)</h2>
+<table><tr><th>#</th><th>Tatizo / Hali</th><th>Ushahidi</th><th>Ukali</th><th>Hatua</th></tr>
+<tr><td>F0-1</td><td><strong>Wallet bridge haujawahi kusajiliwa:</strong> <code>WALLET_VIA_SERVER=true</code> (js/00-config.js:46) lakini hakuna anayeita <code>skhWalletRegisterCallables/Firestore</code> popote → <code>skhWalletAdjust</code> <strong>kutupa kila wakati</strong> (server: callable null; legacy: null).</td><td>grep 0 callers; js/16-wallet.js:35-40</td><td><span class="badge badgeR">P0</span></td><td>Phase 7: trace deposit/commission (js/17) + sajili/kataa bridge</td></tr>
+<tr><td>F0-2</td><td><strong>G1 mechanism correction (uaminifu):</strong> <code>skhWalletAdjust</code> <strong>IPO</strong> (js/16-wallet.js:33) — si "haipo". Njia ya legacy ilikuwa direct <code>updateDoc(walletBalance)</code> ambayo <strong>rules inaikataa</strong> (unchanged walletBalance) → completed-bila-malipo. Matokeo sawa, mechanism tofauti. Fix 1 bado sahihi.</td><td>js/16-wallet.js:33-38; rules users update</td><td>Info</td><td>Rekebisha ripoti ya launch (footnote)</td></tr>
+<tr><td>F0-3</td><td><strong>Duplicate:</strong> <code>window.skhEscrowRelease</code> yangu (04, module) ina-overwrite ya js/16 (classic). Mpigaji pekee ni code yangu ya 04.</td><td>grep callers: 04:207 tu</td><td><span class="badge badgeY">P1</span></td><td>Phase 7: hamisha yangu kwenye module-local fn</td></tr>
+<tr><td>F0-4</td><td><strong>5 window-fns undefined lakini zote GUARDED</strong> (matawi yaliyokufa, hakuna crash): showProductDetail, skhDiscoverJoinGroup, skhRoleBadgesFor/Match/SetVisibility.</td><td>call-site contexts (ternary/&&/if)</td><td>Low</td><td>Phases husika: amua kufuta/kuwezesha</td></tr>
+<tr><td>F0-5</td><td><strong>Dead callable 1:</strong> <code>translateContent</code> inaitwa (65-content-l10n.js) lakini haipo server (48/49 zina server). Imedegrade kwa neema (try/catch + original).</td><td>callable diff; 65:113-114</td><td>External</td><td>Phase 8/12: inahitaji server fn + provider</td></tr>
+<tr><td>F0-6</td><td>SKH_* constants zote zinatatuliwa (UMD <code>root.X</code>) au guarded (<code>|| DEFAULT</code>, <code>&&</code>, <code>if(!core)</code>).</td><td>UMD heads; read sites</td><td class="pass">OK</td><td>Hakuna</td></tr>
+<tr><td>F0-7</td><td><code>window.T</code> reads (64-my-profile) zinachukua fallback kila wakati (window.T haijawahi kuwekwa; T ni module-local). Hakuna crash.</td><td>grep window.T= 0</td><td>Cosmetic</td><td>Phase 12</td></tr>
+<tr><td>F0-8</td><td><code>62-missing-features.js</code> (430 lines) + <code>53-test-sandbox.js</code> — majina yanaashiria mapengo/sandbox; hayajakaguliwa ndani.</td><td>inventory</td><td>TBD</td><td>Phase 11 (sandbox exposure) + phases husika</td></tr>
+</table>
+<div class="small">Orodha kamili ya read-as-value (device-claim, acceptNegotiation, searchProducts, delete*, skhIdentity/Notify, mySmartChart, __state vars) imehifadhiwa: <code>tools/g1/phase0_undefined_refined.txt</code> — triage ndani ya phases husika.</div>
+
+<h2>4. Vipimo vya baseline (vyote GREEN)</h2>
+<table><tr><th>Kipimo</th><th>Matokeo</th></tr>
+<tr><td>Rules battery (8 suites, emulator)</td><td class="pass">455/455 — G1 86, Fix8 19, conv 8, group-chat 90, inventory 44, listing-trust 17, repair 139, ride-privacy 52</td></tr>
+<tr><td><code>npm test</code> (chain nzima)</td><td class="pass">EXIT 0</td></tr>
+<tr><td>Browser regression (playwright)</td><td class="pass">20/20, pageerrors 0</td></tr>
+</table>
+
+<h2>5. Domains &amp; user journeys (inventory)</h2>
+<table><tr><th>Domain</th><th>Files (js/app)</th><th>Journey</th></tr>
+<tr><td>Core/Boot</td><td class="small">00, 08, 10, 18, 19, 50, 51, 54, 60-identity, 61, 63, 70</td><td>Boot, auth, roles, state, errors</td></tr>
+<tr><td>Market/Discovery</td><td class="small">01, 06-nav, 09, 39-core/ranking/offer, 42, 56, 60-lazy, 68-gundua, 75, 76-foundation, 82, 83, 86, 88, 91, 106, 123, 71</td><td>Browse → search → filter → discover</td></tr>
+<tr><td>Product</td><td class="small">06-builder, 06-edit-builder, 07, 26, 39-showcase/logic, 53-inquiry, 113</td><td>Create → detail → inquire → order</td></tr>
+<tr><td>Cart/Checkout/Orders</td><td class="small">02, 03, 04, 05, 23, 25, 28, 55, 57, 97</td><td>Cart → checkout → order → tracking → confirm</td></tr>
+<tr><td>Sales modes</td><td class="small">12, 73, 74, 76-enhancement, 122</td><td>Auction/group/price-drop lifecycles</td></tr>
+<tr><td>Negotiation</td><td class="small">37, 38-form, 38-logic</td><td>Offer → counter → order</td></tr>
+<tr><td>Logistics/Delivery</td><td class="small">14, 20, 27, 33, 40, 41, 43, 52, 58</td><td>Request → quote → assign → custody/tokens → POD</td></tr>
+<tr><td>Chat/Comms</td><td class="small">13, 34, 35, 36, 69, 78, 90, 92, 93, 104, 105, 68-discover</td><td>1:1/group chat, comments, calls</td></tr>
+<tr><td>SokoPay/Wallet</td><td class="small">21, 67 (+ js/12,16,17)</td><td>Top-up → pay → escrow → release/dispute</td></tr>
+<tr><td>POS/Admin/Jobs</td><td class="small">15, 16, 22, 112, 124</td><td>POS sale/return/void, receipts</td></tr>
+<tr><td>Seller/BusinessOS</td><td class="small">11, 29, 30, 31, 59, 64-profile, 110, 111</td><td>Dashboard, products, analytics, staff</td></tr>
+<tr><td>Services/Fundi + Transport</td><td class="small">17-hub (+16/05 flows); hakuna service-*.js ya kujitegemea</td><td>Request → accept → job → complete → pay</td></tr>
+<tr><td>Ads/Creative</td><td class="small">95, 96, 99, 100, 101, 103</td><td>Create → deliver → track</td></tr>
+<tr><td>Live/Stories</td><td class="small">81, 120, 121</td><td>Go live → watch → buy</td></tr>
+<tr><td>i18n/Admin/Misc</td><td class="small">32, 64-core, 65, 98, 102, 24, 53-sandbox, 62, 66, 79, 84</td><td>Lugha, admin, outbox, misc</td></tr>
+</table>
+
+<h2>6. Faili, tests, hatari, next</h2>
+<ul>
+<li><strong>Files zilizokaguliwa:</strong> js/app (116), js/ (23), shared/ (12), functions/index + shared, firestore.rules, firebase.json, html/21-scripts, package.json — pamoja na ushahidi <code>tools/g1/phase0_*.txt</code> (inventory, undefined-refs, refined, callable-diff).</li>
+<li><strong>Files zilizobadilishwa:</strong> <strong>0</strong> (Phase 0 = audit pekee).</li>
+<li><strong>Tests zilizoongezwa:</strong> 0. <strong>Zilizopita:</strong> 455 rules + npm chain + 20 browser = <span class="pass">zote green</span>. <strong>Zilizoshindwa:</strong> 0.</li>
+<li><strong>Bugs zilizobaki:</strong> F0-1 (P0, Phase 7), F0-3 (P1, Phase 7), F0-4 (low), F0-8 (TBD).</li>
+<li><strong>Dependencies za nje:</strong> Cloudinary (picha), PesaPal (malipo), TURN relay (calls — <code>SKH_CALL_ICE</code> tupu), translation provider (translateContent), Netlify/Firebase hosting.</li>
+<li><strong>Hatari kwa Production:</strong> (a) deploy ya rules bado haijafanyika (guest bado wazi); (b) wallet bridge isiyosajiliwa — end-to-end ya deposit/commission lazima ithibitishwe Phase 7 kabla ya launch.</li>
+<li><strong>Next:</strong> <strong>PHASE 7 (SokoPay/Wallet/Escrow)</strong> + <strong>PHASE 11 sehemu ya security</strong> kwanza (kipaumbele: order/payment integrity), kisha Phase 1 (commerce core).</li>
+</ul>
+</div></body></html>

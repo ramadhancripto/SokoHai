@@ -404,6 +404,14 @@ window.submitEditForm = async function(event) {
     const desc = document.getElementById('editDesc').value.trim();
     const saleMode = document.getElementById('editSaleMode').value;
 
+    // [LAUNCH-FIX 2026-11-09] Uthibitishaji wa fomu ya kuhariri (client-side;
+    // server/rules ndiyo mamlaka ya mwisho, huu ni ukuta wa kwanza + UX).
+    const _editFail = (msg) => { alert(msg); btn.innerHTML = originalText; btn.disabled = false; };
+    if (!['products', 'services', 'drivers'].includes(collectionName)) { _editFail('Aina ya tangazo si sahihi.'); return; }
+    if (!id) { _editFail('Tangazo halikupatikana (id tupu).'); return; }
+    if (!title) { _editFail('Jina la tangazo linahitajika.'); return; }
+    if (!isFinite(price) || price < 0) { _editFail('Bei si sahihi (lazima iwe namba \u2265 0).'); return; }
+
     try {
         // [§23 PROTECTION] Soma doc kwanza — baadhi ya fields ni LAZIRA
         // zikishapitia transactions (bids/participants/deals). Kubadili mode
@@ -414,6 +422,15 @@ window.submitEditForm = async function(event) {
         const curMode = (fresh && fresh.exists && fresh.exists()) ? (fresh.data().saleMode || 'free_market') : null;
         const totalBids = parseInt(fm.totalBids) || 0;
         const joinedUsers = parseInt(fm.joinedUsers) || 0;
+
+        // [LAUNCH-FIX 2026-11-09] Umiliki: ni mmiliki/wakala/admin tu.
+        // (openEditModal ilikuwa na ukaguzi kwa 'products' pekee.)
+        if (!fresh || !fresh.exists || !fresh.exists()) { _editFail('Tangazo halikupatikana.'); return; }
+        const _fd = fresh.data() || {};
+        const _me = skh.currentUser && skh.currentUser.uid;
+        const _owns = _me && (_fd.userId === _me || _fd.ownerUid === _me || _fd.managedByAgentUid === _me);
+        const _isAdm = !!(window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin);
+        if (!_owns && !_isAdm) { _editFail('Huna ruhusa ya kuhariri tangazo hili.'); return; }
 
         // Protection A: kubadili mode kutoka/enye transactions haiiliruhusu.
         if (totalBids > 0 && curMode === 'auction' && saleMode !== 'auction') {
@@ -494,6 +511,11 @@ window.submitEditForm = async function(event) {
                 const total = Math.max(0, endE - (fm.startTime || Date.now()));
                 const steps = Math.max(1, Math.floor(total / itv));
                 const startP = parseFloat(price) || 0;
+                // [LAUNCH-FIX 2026-11-09] Price-drop lazima iwe na maana:
+                // min < bei ya sasa, muda wa mwisho uko mbele, hatua >= sek 1.
+                if (!(minP > 0) || !(minP < startP)) { _editFail('Bei ya chini lazima iwe > 0 na CHINI ya bei ya sasa (' + startP.toLocaleString() + ').'); return; }
+                if (!(endE > Date.now())) { _editFail('Muda wa mwisho wa price-drop lazima uwe mbele (sio uliopita).'); return; }
+                if (!(itv >= 1000)) { _editFail('Kipindi cha kushuka lazima kiwe angalau sekunde 1.'); return; }
                 updateMap['modeData.minPrice'] = minP;
                 updateMap['modeData.intervalMs'] = itv;
                 updateMap['modeData.endTime'] = endE;
@@ -532,7 +554,11 @@ window.submitEditForm = async function(event) {
                     });
                     t2.sort(function (a, b) { return a.minQty - b.minQty; });
                 } catch (e) { t2 = []; }
-                updateMap['modeData.tiers'] = t2;
+                // [2026-11-06] ngazi halali tu ndizo zinahifadhiwa (sheria sawa na fomu ya kuunda).
+                const ep = document.getElementById('editPrice');
+                const tierMsg2 = window.skhWsTierIssues ? window.skhWsTierIssues(parseFloat(ep && ep.value) || 0, t2) : '';
+                if (tierMsg2) { alert(tierMsg2 + '\n\nTiers hazijabadilishwa.'); }
+                else updateMap['modeData.tiers'] = t2;
             }
         }
 

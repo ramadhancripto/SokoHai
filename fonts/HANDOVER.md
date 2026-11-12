@@ -24,7 +24,7 @@ Mradi **kamili kwa upande wa code** umepatikana — jumla ya **mafaili 112, ~4.6
 | `firebase.json`, `.firebaserc` (imeundwa upya kutoka project ID) | 2 | ✅ |
 | PWA: `sokohai-manifest.json`, `sokohai-sw.js`, `icon-192/512.png` | 4 | ✅ |
 | `_originals/app.module.js` (monolith ya asili, mistari 21,548) | 1 | ✅ Kumbukumbu |
-| Docs: `README.md`, `html/README.md`, `docs/HAIPAY-DEPLOY.md`, `docs/HAIPAY-MVP-DESIGN.md`, `docs/SEO-PRODUCT-LINKS.md` | 5 | ✅ |
+| Docs: `README.md`, `html/README.md`, `docs/SOKOPAY-DEPLOY.md`, `docs/SOKOPAY-MVP-DESIGN.md`, `docs/SEO-PRODUCT-LINKS.md` | 5 | ✅ |
 | `tools/build_html.py` (zana ya kujenga index.html) | 1 | ✅ |
 | `robots.txt` | 1 | ✅ |
 
@@ -34,7 +34,7 @@ Mradi **kamili kwa upande wa code** umepatikana — jumla ya **mafaili 112, ~4.6
   hii si siri; siri za malipo zipo server pekee.
 
 ### Cloud Functions zilizopo (`functions/index.js`)
-- **Fedha:** `walletAdjust`, `escrowRelease`, `haipayReleaseLink`
+- **Fedha:** `walletAdjust`, `escrowRelease`, `sokopayReleaseLink`
 - **PesaPal:** `pesapalCheckout`, `pesapalTransactionStatus`, `pesapalIpn` (HTTP),
   `pesapalRegisterIpn`
 - **Cron:** `platformStatsHourly` (kila saa), `sokopayAutoRelease` (kila dakika 5),

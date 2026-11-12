@@ -1,0 +1,1619 @@
+diff --git a/css/65-live-design.css b/css/65-live-design.css
+index cc1de78..f3d4a07 100644
+--- a/css/65-live-design.css
++++ b/css/65-live-design.css
+@@ -85,6 +85,8 @@
+ .lv7-brand b { display: block; font-size: 20px; font-weight: 900; line-height: 1; } .lv7-brand small { font-size: 13px; opacity: .92; }
+ .lv7-x { width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .45); color: #fff; display: grid; place-items: center; cursor: pointer; margin-left: 4px; }
+ @media (max-width: 420px) { .lv7-brand b { font-size: 16px; } .lv7-brand small { font-size: 11px; } .lv7-brand img { width: 32px; height: 32px; } .lv7-live, .lv7-viewers { height: 30px; font-size: 12px; padding: 0 9px; } }
++/* [AUCTION-LIVE] the brand mark overlaps the pills + close/minimize buttons on phones — hide it there (decorative) */
++@media (max-width: 640px) { .lv7-brand { display: none; } .lv7-top { align-items: center; } .lv7-pills { flex: 1; min-width: 0; } }
+ .lv7-host { position: absolute; top: 60px; left: 14px; z-index: 4; display: inline-flex; align-items: center; gap: 10px; padding: 5px 6px 5px 5px; border-radius: 999px; background: rgba(40, 40, 40, .62); backdrop-filter: blur(4px); max-width: calc(100% - 28px); }
+ .lv7-host b { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .lv7-av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #E8F5EF; color: var(--lv-g2); font-weight: 900; border: 2px solid var(--lv-g); flex: 0 0 40px; }
+@@ -255,3 +257,86 @@
+ /* phone: compact brand so LIVE + WATAZAMAJI stay on one line (ref 7) */
+ @media (max-width: 480px) { .lv7-brand small { display: none; } .lv7-brand b { font-size: 15px; } .lv7-hero { max-height: 38%; margin-top: -28%; } .lv7-cta b { font-size: 21px; } .lv7-cta { min-height: 58px; } .lv7-engine strong { font-size: 22px; } }
+ .lv7-engine { max-width: calc(100% - 74px); }
++
++/* ---------------- LIVE ROOM UPGRADE 2026-11-10 (owner design) ---------------- */
++/* floating overlay: mode label */
++.lv7-pmode { display: inline-block !important; font-size: 10.5px !important; font-weight: 900; letter-spacing: .06em; color: #FFE9A8 !important; margin-bottom: 2px; }
++/* group-buy progress (room bottom + join modal) */
++.lv7-gprog { display: flex; align-items: center; gap: 10px; background: rgba(20, 40, 35, .55); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, .22); border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; color: #fff; font-size: 13px; }
++.lv7-gprog span { white-space: nowrap; } .lv7-gprog b { font-weight: 900; }
++.lv7-gbar { flex: 1; height: 10px; background: rgba(255, 255, 255, .25); border-radius: 99px; overflow: hidden; }
++.lv7-gbar i { display: block; height: 100%; background: linear-gradient(90deg, #2DD4A7, #179B73); border-radius: 99px; }
++.lv-gprog { margin: 10px 0; }
++.lv-gprog .lv7-gbar { background: #E4ECEF; }
++/* ghost button inside modals (leave dialog) */
++.lv-btn.lv-ghost { background: #fff; color: var(--lv-g2); border: 2px solid var(--lv-g); margin-top: 8px; }
++/* full-screen viewer: stage fills the viewport on phones */
++@media (max-width: 640px) {
++  .lvx-overlay.lv7-ov { padding: 0; align-items: stretch; }
++  .lv7 { border-radius: 0; height: 100dvh; max-height: 100dvh; }
++  .lv7-stage { border-radius: 0; }
++  .lv7-pcard { max-width: calc(100% - 90px); }
++  .lv7-pcard img { width: 52px; height: 52px; flex-basis: 52px; }
++  .lv7-pcard i { font-size: 12.5px; }
++}
++/* desktop: comments sidebar beside full-height stage (owner design) */
++@media (min-width: 1100px) {
++  .lv7 { flex-direction: row; max-width: 1280px; }
++  .lv7-stage { flex: 1 1 auto; min-height: 640px; }
++  .lv7-side { flex-basis: 380px; }
++}
++
++/* ---------------- [AUCTION-LIVE] mini player, paused/conn overlays, bid states ---------------- */
++.lvx-mini { position: fixed; right: 12px; bottom: 76px; z-index: 100020; width: 240px; background: #0B1F19; border: 1px solid rgba(242, 201, 76, .45); border-radius: 16px; overflow: hidden; box-shadow: 0 18px 50px rgba(0, 0, 0, .5); }
++.lvx-mini-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 8px; background: rgba(7, 17, 13, .95); }
++.lvx-mini-head b { font-size: 11.5px; color: #F2C94C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
++.lvx-mini-head span { display: flex; gap: 6px; flex: none; }
++.lvx-mini-head button { border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .1); color: #fff; border-radius: 8px; font-size: 11px; font-weight: 800; padding: 5px 9px; cursor: pointer; min-height: 30px; }
++.lvx-mini-slot { height: 300px; position: relative; }
++.lvx-mini-slot .lv7-stage { height: 300px; border-radius: 0; }
++.lvx-mini-slot .lv7-frame, .lvx-mini-slot .lv7-chat, .lvx-mini-slot .lvx-emoji, .lvx-mini-slot .lv7-sheet, .lvx-mini-slot .lv7-host { display: none !important; }
++.lvx-mini-slot .lv7-brand, .lvx-mini-slot .lv7-x { display: none !important; }
++.lvx-mini-slot .lv7-top { top: 8px; left: 8px; right: 8px; }
++@media (min-width: 1100px) { .lvx-mini { width: 300px; bottom: 24px; } .lvx-mini-slot, .lvx-mini-slot .lv7-stage { height: 340px; } }
++
++.lv7-paused, .lv7-conn { position: absolute; top: 56px; left: 0; right: 0; bottom: 0; z-index: 7; display: grid; place-items: center; background: rgba(4, 10, 8, .62); backdrop-filter: blur(2px); text-align: center; padding: 18px; }
++.lv7-paused[hidden], .lv7-conn[hidden] { display: none; }
++.lv7-paused b, .lv7-conn b { display: block; font-size: 17px; margin-bottom: 6px; color: #fff; }
++.lv7-paused span, .lv7-conn span { display: block; font-size: 12.5px; color: #C9DCD5; line-height: 1.5; margin-bottom: 10px; }
++.lv7-conn .lv-btn { max-width: 240px; margin: 0 auto; }
++
++.lv7-endsoon { background: rgba(229, 51, 42, .92); color: #fff; font-size: 12px; font-weight: 900; text-align: center; padding: 7px 10px; border-radius: 10px; margin-bottom: 6px; animation: lv7pulse 1s ease-in-out infinite; }
++@keyframes lv7pulse { 50% { opacity: .75; } }
++.lv7-ext { font-style: normal; font-size: 10.5px; color: #F2C94C; font-weight: 800; white-space: nowrap; }
++
++.lv-chips { display: flex; gap: 8px; }
++.lv-chips button { flex: 1; border: 1px solid #C9A13B; background: #FBF3DF; color: #7A5E14; border-radius: 10px; font-weight: 900; font-size: 12px; padding: 9px 4px; cursor: pointer; min-height: 40px; }
++.lv-chips button:active { background: #F2C94C; color: #3A2A00; }
++
++.lvx-emoji { position: absolute; left: 12px; right: 12px; bottom: 58px; z-index: 5; display: flex; gap: 6px; justify-content: center; pointer-events: none; }
++.lvx-emoji button { pointer-events: auto; border: 1px solid rgba(255, 255, 255, .25); background: rgba(0, 0, 0, .5); border-radius: 999px; font-size: 15px; width: 34px; height: 34px; cursor: pointer; }
++.lv7-stage:not(:has(.lv7-chat:not([hidden]))) .lvx-emoji { display: none; }
++
++.lvh-pausedtag { display: inline-block; background: #64748b; color: #fff; font-size: 11.5px; font-weight: 900; padding: 5px 12px; border-radius: 999px; margin-bottom: 6px; }
++
++/* [AUCTION-LIVE] short-landscape compact room (phones turned sideways): everything must fit ~390px height */
++@media (orientation: landscape) and (max-height: 500px) {
++  .lv7-top { top: 8px; left: 10px; right: 10px; }
++  .lv7-live, .lv7-viewers { height: 28px; font-size: 11.5px; }
++  .lv7-x { width: 30px; height: 30px; }
++  .lv7-brand img { width: 28px; height: 28px; } .lv7-brand b { font-size: 15px; } .lv7-brand small { font-size: 10.5px; }
++  .lv7-host { top: 46px; left: 10px; gap: 7px; } .lv7-host b { font-size: 13px; }
++  .lv7-av { width: 30px; height: 30px; font-size: 11px; } .lv7-follow { height: 28px; padding: 0 12px; font-size: 12px; }
++  .lv7-frame { top: 88px; bottom: 54px; left: 10px; right: 10px; gap: 6px; padding: 8px; }
++  .lv7-pcard img { width: 36px; height: 36px; flex-basis: 36px; } .lv7-pcard i { font-size: 11.5px; }
++  .lv7-feed { max-height: 42px; gap: 3px; margin-right: 52px; } .lv7-c p { font-size: 12px; } .lv7-cav { width: 22px; height: 22px; flex-basis: 22px; font-size: 9px; }
++  .lv7-rail { top: 12%; gap: 6px; } .lv7-rc { width: 36px; height: 36px; } .lv7-rb small, .lv7-rb em { display: none; }
++  .lv7-cta { min-height: 46px; } .lv7-cta b { font-size: 17px; } .lv7-cta small { font-size: 11.5px; }
++  .lv7-foot { font-size: 12px; }
++  .lv7-endsoon { font-size: 11px; padding: 5px 8px; margin-bottom: 4px; }
++  .lvx-emoji { display: none !important; }
++  .lv7-chat input { height: 36px; font-size: 13px; } .lv7-chat button { width: 36px; height: 36px; }
++  .lv7-stage:has(.lv7-chat:not([hidden])) .lv7-frame { bottom: 54px; }
++  .lv7-paused, .lv7-conn { top: 44px; padding: 12px; } .lv7-paused b, .lv7-conn b { font-size: 14px; }
++  .lv7-sheet-card { max-height: 92%; }
++}
+diff --git a/firestore.rules b/firestore.rules
+index e50c8be..9cc3101 100644
+--- a/firestore.rules
++++ b/firestore.rules
+@@ -162,6 +162,10 @@ service cloud.firestore {
+         && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
+         && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
+         && request.resource.data.get('modeData', {}).get('participants', []).size() == 0
++        // [AUCTION-LIVE] server-owned runtime: pause flag + distinct bidders start empty
++        && request.resource.data.get('modeData', {}).get('livePaused', false) == false
++        && request.resource.data.get('modeData', {}).get('bidderCount', 0) == 0
++        && request.resource.data.get('modeData', {}).get('bidders', []).size() == 0
+         && noServerAuctionResult(request.resource.data)
+         && (request.resource.data.userId == request.auth.uid
+           || (('managedByAgentUid' in request.resource.data) && request.resource.data.managedByAgentUid == request.auth.uid && isApprovedAgent())
+@@ -191,7 +195,13 @@ service cloud.firestore {
+                 && request.resource.data.get('modeData', {}).get('totalBids', 0) == 0
+                 && request.resource.data.get('modeData', {}).get('maxBidder', null) == null
+                 && request.resource.data.get('modeData', {}).get('participants', []).size() == 0
++                && request.resource.data.get('modeData', {}).get('bidderCount', 0) == 0
++                && request.resource.data.get('modeData', {}).get('bidders', []).size() == 0
+                 && noServerAuctionResult(request.resource.data)))
++        // [AUCTION-LIVE] only the server (livePause/liveResume/liveEnd) flips livePaused —
++        // even pre-bid, when the seller may still edit the rest of modeData.
++        && (isAdmin() || request.resource.data.get('modeData', {}).get('livePaused', false)
++            == resource.data.get('modeData', {}).get('livePaused', false))
+         && (isAdmin() || unchanged(['saleMode']) || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
+                 && resource.data.get('modeData', {}).get('participants', []).size() == 0));
+       // [REPAIR 2026-10 B-12] Found by the browser E2E: buyers opening or sharing a
+@@ -336,7 +346,10 @@ service cloud.firestore {
+               // [2026-11-01] verification evidence is written by admin/server only
+               'verificationChecks',
+               // [R9] trust badge projection (adminSetTrustBadge)
+-              'trust','supplierVerified'];
++              'trust','supplierVerified',
++              // [PHASE B 2026-11-10] staffRole/staffSince/staffRemovedAt zinaandikwa na
++              // SERVER tu (staffInviteAccept/staffRemove); mtumiaji asijipe cheo mwenyewe.
++              'staffRole','staffSince','staffRemovedAt'];
+     }
+     // Self-registration: no privileged keys, zero balance, shop owner = self.
+     // [REPAIR 2026-10 B-09] walletBalance is checked separately (must be 0 on
+@@ -434,7 +447,10 @@ service cloud.firestore {
+     // Public projection of users written only by the userCardSync function.
+     match /userCards/{uid} {
+       allow get: if true;
+-      allow list: if smallQuery(30);
++      // [LAUNCH-FIX 2026-11-09] list ilikuwa guest-readable (kadi 30 bila
++      // auth = uvunaji wa data). get inabaki public (kadi za wauzaji kwenye
++      // matangazo); list inahitaji sign-in.
++      allow list: if signedIn() && smallQuery(30);
+       allow write: if false;
+     }
+ 
+@@ -526,7 +542,9 @@ service cloud.firestore {
+               'priceReviewReason','priceExpected','priceReviewAt','pesapalTrackingId','disputeId','priceApprovalAuditId',
+               'reservationId','reservationStatus','reservationExpiresAt','reservationAttempt','reservationFailReason',
+               'reservationCheckedAt','reservationEndedAt','stockCommitted','stockCommittedAt','inventoryReviewState',
+-              'inventoryReviewReason','reviewDeadlineAt','refundPendingAt','refundId','reviewResolvedAt','reviewResolvedBy'];
++              'inventoryReviewReason','reviewDeadlineAt','refundPendingAt','refundId','reviewResolvedAt','reviewResolvedBy',
++              // [PHASE B 2026-11-10] escrowStatus ni display ya server; client asii-inject kwenye create.
++              'escrowStatus'];
+     }
+     match /orders/{id} {
+       allow read: if signedIn() && (isAdmin()
+@@ -544,6 +562,33 @@ service cloud.firestore {
+         && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
+         && request.resource.data.get('paymentVerified', false) == false
+         && !('trust' in request.resource.data);   // [R9] Verified Transaction is server-only
++      // [LAUNCH-FIX 2026-11-09] Oda ya huduma inayoundwa na FUNDI anapokubali
++      // ombi la mteja (16-pos-admin-jobs.js acceptHubServiceRequest). Bila hii,
++      // flow nzima ya kukubali-kazi ingekataliwa na rules. Salama kwa sababu:
++      // (a) lazima iungwe na ombi HALISI lililokubaliwa (sender=mteja huyu,
++      // receiver=fundi huyu, status=accepted); (b) kiasi > 0; (c) haina pesa
++      // iliyothibitishwa (paymentVerified=false, paymentStatus unpaid);
++      // (d) hakuna ufunguo wa server-only wala 'trust'.
++      // [I-I1 2026-11-10] Hali ya mwanzo ni 'awaiting_payment' (SI 'held'):
++      // 'held' inadai pesa iko escrow — uongo kabla ya malipo. Server
++      // (serviceOrderWalletPay / settlePesaPalPayment) ndiyo inayohamishia 'held'.
++      allow create: if signedIn()
++        && request.resource.data.get('collectionName', '') == 'services'
++        && request.resource.data.get('sellerId', '') == request.auth.uid
++        && request.resource.data.get('buyerId', '') is string
++        && request.resource.data.get('buyerId', '') != ''
++        && request.resource.data.get('buyerId', '') != request.auth.uid
++        && request.resource.data.get('amount', 0) is number
++        && request.resource.data.get('amount', 0) > 0
++        && request.resource.data.get('status', '') == 'awaiting_payment'
++        && request.resource.data.get('itemId', '') is string
++        && request.resource.data.get('itemId', '') != ''
++        && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
++        && request.resource.data.get('paymentVerified', false) == false
++        && !('trust' in request.resource.data)
++        && !request.resource.data.keys().hasAny(orderServerOnlyCreateKeys())
++        && request.resource.data.get('itemId', '').matches('.*mock_.*') == false
++        && serviceOrderBackedByAcceptedRequest();
+       allow update: if signedIn()
+         // [PHASE 9 B-18] Admin browser edits: signed, never money fields (money
+         // moves only through audited callables); ordersAdminAudit logs them.
+@@ -564,6 +609,14 @@ service cloud.firestore {
+           ));
+       allow delete: if false;
+     }
++    // Ombi la huduma linalounga mkono oda ya seller-side: lazima liwepo,
++    // limetumwa na huyu mnunuzi kwa huyu fundi, na limekubaliwa.
++    function serviceOrderBackedByAcceptedRequest() {
++      let req = get(/databases/$(database)/documents/requests/$(request.resource.data.get('itemId', ''))).data;
++      return req.get('senderId', '') == request.resource.data.get('buyerId', '')
++        && req.get('receiverId', '') == request.auth.uid
++        && req.get('status', '') == 'accepted';
++    }
+     function orderLinkOnce(k) {
+       return !changed().hasAny([k]) || resource.data.get(k, null) == null;
+     }
+@@ -1094,6 +1147,13 @@ service cloud.firestore {
+         && request.resource.data.sellerId != request.auth.uid
+         && request.resource.data.version == 1
+         && request.resource.data.currentState == 'OFFER_SENT'
++        // [PHASE 6 P6-1 2026-11-10] Zamani ya kwanza ni ya MUUZAJI (seller) —
++        // bila hii, mnunuzi angeweka waitingForUserId = mwenyewe, kisha
++        // "akakubali" ofa yake mwenyewe (AGREEMENT) kwa bei yake mwenyewe
++        // (TSh 1), na server price-check ingeamini makubaliano hayo:
++        // forced-sale ya bidhaa ya muuzaji bila ridhaa yake. Native client
++        // (34) + server engine tayari huweka seller — hakuna kinachovunjika.
++        && request.resource.data.get('waitingForUserId', '') == request.resource.data.sellerId
+         && request.resource.data.currentUnitPrice is number
+         && request.resource.data.currentUnitPrice > 0
+         && request.resource.data.quantity is number
+@@ -1504,6 +1564,14 @@ service cloud.firestore {
+         || resource.data.get('uid', '') == request.auth.uid);
+       allow write: if false;
+     }
++    // [PHASE 5 P5-1 2026-11-10] Maombi ya kutoa pesa: yanaandikwa na SERVER
++    // tu (withdrawalRequest/withdrawalResolve callables, Admin SDK).
++    // Kivinjari kinasoma yake tu; admin anasoma yote.
++    match /withdrawal_requests/{id} {
++      allow read: if signedIn() && (isAdmin()
++        || resource.data.get('userId', '') == request.auth.uid);
++      allow write: if false;
++    }
+     match /platform_stats/{id}    { allow read: if isAdmin(); allow write: if false; }
+     match /escrow_holds/{id}      { allow read: if isAdmin(); allow write: if false; }
+     // [PHASE 3 2026-10-31] Online reservations, payment reviews and refunds are
+@@ -1606,6 +1674,13 @@ service cloud.firestore {
+         && unchanged(['shopOwnerId','productId','quantity','pickupToken','deliveryToken']);
+       allow delete: if false;
+     }
++    // [J-J1 2026-11-10] Mialiko ya wafanyakazi: yanaandikwa na SERVER tu
++    // (staffInvite* callables); mmiliki anasoma yake (kodi anaipa mfanyakazi
++    // nje ya mfumo). Mfanyakazi hakubali kwa kusoma — anakubali kwa kodi.
++    match /staff_invites/{id} {
++      allow read: if signedIn() && (isAdmin() || resource.data.get('shopOwnerId', '') == request.auth.uid);
++      allow write: if false;
++    }
+     match /staff_attendance/{id} {
+       allow read: if ownsShopRecord(resource.data) || (signedIn() && resource.data.get('staffId', '') == request.auth.uid);
+       allow create: if ownsShopRecord(request.resource.data);
+@@ -1997,6 +2072,57 @@ service cloud.firestore {
+       allow write: if false;
+     }
+ 
++    // ---------------------------------------------------------------
++    // [LAUNCH-FIX 2026-11-09] Collections zinazotumiwa na live browser
++    // clients lakini zilikosekana kwenye rules (default-DENY). Party-scoped
++    // ndogo; guest (signed-out) amekataliwa popote hapa chini.
++    // Evidence: calls (105-calls.js), discoverRequests (75-discover-engine.js),
++    // productInquiries (53-product-inquiry.js), sharedContexts (69-chat-groups.js).
++    // Zilijaribiwa kwenye staging (tools/g1, G1 82/82) kabla ya kupandishwa.
++    // ---------------------------------------------------------------
++    match /calls/{id} {
++      allow create: if signedIn() && request.resource.data.get('from', '') == request.auth.uid
++        && request.resource.data.get('to', '') is string && request.resource.data.get('to', '') != ''
++        && request.resource.data.get('to', '') != request.auth.uid;
++      allow get: if signedIn() && (resource.data.get('from', '') == request.auth.uid
++        || resource.data.get('to', '') == request.auth.uid);
++      allow list: if signedIn() && (resource.data.get('from', '') == request.auth.uid
++        || resource.data.get('to', '') == request.auth.uid);
++      allow update: if signedIn() && (resource.data.get('from', '') == request.auth.uid
++        || resource.data.get('to', '') == request.auth.uid)
++        && unchanged(['from', 'to']);
++      allow delete: if false;
++    }
++    match /discoverRequests/{id} {
++      // Owner-only: clients only create + read own; seller surfacing is future
++      // server work (no client read path exists today).
++      allow create: if signedIn() && request.resource.data.get('userId', '') == request.auth.uid;
++      allow get: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid);
++      allow list: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid);
++      allow update: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid)
++        && unchanged(['userId']);
++      allow delete: if signedIn() && (isAdmin() || resource.data.get('userId', '') == request.auth.uid);
++    }
++    match /productInquiries/{id} {
++      // Buyer creates + reads own; seller read-only (answers travel via Chat);
++      // no client update path exists today, owner-only update kept minimal.
++      allow create: if signedIn() && request.resource.data.get('buyerId', '') == request.auth.uid;
++      allow get: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid
++        || resource.data.get('sellerId', '') == request.auth.uid);
++      allow list: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid
++        || resource.data.get('sellerId', '') == request.auth.uid);
++      allow update: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid)
++        && unchanged(['buyerId', 'sellerId', 'productId']);
++      allow delete: if false;
++    }
++    match /sharedContexts/{gid} {
++      allow read: if signedIn() && (isAdmin() || request.auth.uid in resource.data.get('participants', []));
++      allow create: if signedIn() && request.auth.uid in request.resource.data.get('participants', []);
++      allow update: if signedIn() && (isAdmin() || request.auth.uid in resource.data.get('participants', []))
++        && request.auth.uid in request.resource.data.get('participants', []);
++      allow delete: if false;
++    }
++
+     // ---------------------------------------------------------------
+     // DEFAULT: deny everything else.
+     // ---------------------------------------------------------------
+diff --git a/functions/commerce-modes.js b/functions/commerce-modes.js
+index 59e3143..a271a39 100644
+--- a/functions/commerce-modes.js
++++ b/functions/commerce-modes.js
+@@ -70,6 +70,8 @@ function antiSnipeEnd(md, nowMs) {
+ function validateBid(p, bid, uid, nowMs) {
+     const md = (p && p.modeData) || {};
+     if (saleModeOf(p) !== 'auction') return { ok: false, code: 'si_mnada' };
++    // [AUCTION-LIVE] the host paused the live room: bidding freezes everywhere (room + product page)
++    if (md.livePaused === true) return { ok: false, code: 'mnada_umesitishwa' };
+     const endsAt = Number(md.endTime) || 0;
+     if (md.ended || (endsAt > 0 && nowMs >= endsAt)) return { ok: false, code: 'mnada_umefungwa' };
+     if (Number(md.startTime) > 0 && nowMs < Number(md.startTime)) return { ok: false, code: 'mnada_haujaanza' };
+@@ -130,6 +132,18 @@ exports.auctionPlaceBid = onCall({ region: REGION }, async (req) => {
+             'modeData.currentBid': bid, 'modeData.maxBidder': uid, 'modeData.maxBidderName': bidderName,
+             'modeData.totalBids': totalBids, 'modeData.lastBidAt': now
+         };
++        // [AUCTION-LIVE] distinct bidder count (server-authoritative; shown as "Wazabuni").
++        // The bidders array is capped so the product doc stays small; the count stays exact.
++        let bidders = Array.isArray(md.bidders) ? md.bidders : null;
++        if (!bidders && totalBids > 1 && !(parseInt(md.bidderCount, 10) > 0)) {
++            const bq = await t.get(ref.collection('bids').limit(200));   // one-time seed for legacy auctions
++            bidders = [...new Set(bq.docs.map(d => String((d.data() || {}).uid || '')).filter(Boolean))];
++        }
++        bidders = bidders || [];
++        if (bidders.indexOf(uid) === -1) {
++            patch['modeData.bidderCount'] = Math.max(parseInt(md.bidderCount, 10) || 0, bidders.length) + 1;
++            if (bidders.length < 500) patch['modeData.bidders'] = FieldValue().arrayUnion(uid);
++        }
+         const ext = antiSnipeEnd(md, nowMs);
+         if (ext) { patch['modeData.endTime'] = ext.endTime; patch['modeData.extensions'] = ext.extensions; }
+         t.update(ref, patch);
+diff --git a/functions/index.js b/functions/index.js
+index e57487c..fe61cb8 100644
+--- a/functions/index.js
++++ b/functions/index.js
+@@ -361,6 +361,25 @@ async function expectedOrderAmount(o, docId) {
+         }
+         return { ok: true, amount: sum, source: 'cart_items' };
+     }
++    // [I-I1 2026-11-10] Oda ya huduma: chanzo cha bei ni ombi lililokubaliwa
++    // (itemId = requestId). Kiasi cha oda lazima kiwe ≤ bajeti ya mteja;
++    // vinginevyo settle inaenda price_review (kulinda mteja dhidi ya fundi
++    // anayepandisha bei). Hii pia inafungua njia ya PesaPal kwa huduma.
++    if (String(o.collectionName || '') === 'services' || String(o.commerceType || '') === 'service') {
++        const reqId = String(o.itemId || '');
++        if (!reqId || reqId.indexOf('/') !== -1) return { ok: false, reason: 'service_request_missing' };
++        const rs = await db.doc('requests/' + reqId).get();
++        if (!rs.exists) return { ok: false, reason: 'service_request_missing' };
++        const rq = rs.data() || {};
++        if (String(rq.senderId || '') !== String(o.buyerId || '') || String(rq.receiverId || '') !== String(o.sellerId || '')) {
++            return { ok: false, reason: 'service_parties_mismatch' };
++        }
++        if (String(rq.status || '') !== 'accepted') return { ok: false, reason: 'service_not_accepted' };
++        const budget = Math.round(Number(rq.detail2));
++        if (!(budget > 0)) return { ok: false, reason: 'service_budget_invalid' };
++        if (moneyOf(o.amount) > budget + MONEY_EPS) return { ok: false, reason: 'service_over_budget' };
++        return { ok: true, amount: moneyOf(o.amount), source: 'service_request' };
++    }
+     if (o.productId || o.itemId || o.serviceId) {
+         return expectedItemAmount({ productId: o.productId || o.serviceId || o.itemId, quantity: o.quantity, selectedVariant: o.selectedVariant, sellerId: o.sellerId }, o.buyerId, nowMs);
+     }
+@@ -380,7 +399,21 @@ async function settlePesaPalPayment(tx, source) {
+     const now = new Date().toISOString();
+     const events = [];
+     const linkEvents = [];
++    const depositEvents = [];
+     const initiatorUid = await ppInitiatorUid(tx);
++    // [PHASE 7 F7-1 2026-11-10] Kusudi la malipo kutoka ppinit (checkout) —
++    // deposit huwekwa wallet hata mtumiaji asiporudi kutoka PesaPal.
++    const WALLET_CAP = Number(process.env.WALLET_MAX_ABS || 50000000);
++    let initPurpose = '', initAmount = 0;
++    if (initiatorUid && tx.merchantReference) {
++        try {
++            const inits = await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(String(tx.merchantReference))).get();
++            if (inits.exists && String((inits.data() || {}).uid || '') === initiatorUid) {
++                initPurpose = String((inits.data() || {}).purpose || '');
++                initAmount = moneyOf((inits.data() || {}).amount);
++            }
++        } catch (e) { /* best-effort */ }
++    }
+     // [REPAIR H2] Server price check for every candidate order (outside the
+     // transaction: product/negotiation prices are only a lower bound).
+     const priceOf = {};
+@@ -502,8 +535,37 @@ async function settlePesaPalPayment(tx, source) {
+             out.settled.push(key);
+         });
+         inventoryReservation._internal.settlementFlush(t, stockState, now);
++        // [PHASE 7 F7-1 2026-11-10] Deposit ya wallet (top-up): malipo
++        // yaliyothibitishwa yasiyofungamana na oda/link — lakini ppinit
++        // inasema purpose=deposit — yanawekwa wallet ya mwanzilishi.
++        // Idempotency ni SAWA na njia ya kivinjari (walletAdjust deposit):
++        // ledgerKey 'pesapal_deposit_<tid>' + usage 'pptx_<tid>' — njia
++        // zote haziwezi kulipa mara mbili (yoyote inayotangulia hushinda).
++        let depositCredited = false;
++        if (!list.length && initPurpose === 'deposit' && initiatorUid) {
++            const depAmt = moneyOf(initAmount);
++            const depLedgerRef = db.doc('wallet_ledger/pesapal_deposit_' + safeKey(tx.trackingId));
++            const depLedgerSnap = await t.get(depLedgerRef);
++            const depUserSnap = await t.get(db.doc('users/' + initiatorUid));
++            const depKey = 'deposit_' + initiatorUid;
++            if (depLedgerSnap.exists) {
++                out.skipped.push({ target: depKey, reason: 'already_verified' });
++            } else if (!depUserSnap.exists || !(depAmt > 0) || !sameMoney(depAmt, moneyOf(tx.amount))) {
++                out.skipped.push({ target: depKey, reason: 'deposit_mismatch' });
++            } else if (depAmt > WALLET_CAP || used + depAmt > tx.amount + MONEY_EPS) {
++                out.skipped.push({ target: depKey, reason: 'deposit_overuse' });
++            } else {
++                t.set(depLedgerRef, { userId: initiatorUid, callerUid: 'system', amountTSh: depAmt, type: 'deposit',
++                    note: 'Deposit ya wallet (PesaPal, server)', pesapalTrackingId: tx.trackingId, verifiedBy: 'pesapal',
++                    merchantReference: tx.merchantReference || null, createdAt: now });
++                t.update(db.doc('users/' + initiatorUid), { walletBalance: FieldValue.increment(depAmt) });
++                used += depAmt; targets.push(depKey);
++                out.settled.push(depKey); depositCredited = true;
++                depositEvents.push({ uid: initiatorUid, amount: depAmt });
++            }
++        }
+         // [PHASE 3] A verified payment that matches no order/link is kept for review (never applied).
+-        if (!list.length && unmatchedSnap && !unmatchedSnap.exists) {
++        if (!list.length && !depositCredited && unmatchedSnap && !unmatchedSnap.exists) {
+             t.set(unmatchedRef, { kind: 'unmatched_payment', state: 'UNAPPLIED', pesapalTrackingId: tx.trackingId,
+                 merchantReference: tx.merchantReference || null, paidAmount: tx.amount, initiatorUid: initiatorUid || null,
+                 source: String(source || 'pesapal'), createdAt: now, updatedAt: now });
+@@ -519,6 +581,11 @@ async function settlePesaPalPayment(tx, source) {
+     for (const le of linkEvents) {
+         if (le.sellerId) await notifyLinkEscrowFunded(db, le.id, le.sellerId, le.title, le.amount, 'pesapal');
+     }
++    for (const de of depositEvents) {
++        try { await db.collection('notifications').add({ userId: de.uid, title: 'Deposit Imepokelewa',
++            body: 'TSh ' + Number(de.amount).toLocaleString() + ' imewekwa kwenye wallet yako (PesaPal).',
++            createdAt: now, read: false, type: 'deposit' }); } catch (e) { /* hiari */ }
++    }
+     out.ok = true;
+     return out;
+ }
+@@ -890,6 +957,129 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
+     return { ok: true, docId, amountTSh, type, ledgerId: ledgerKey };
+ });
+ 
++/* ============================================================
++ * 2b) withdrawalRequest — ombi la kutoa pesa (wallet -> mobile/bank)
++ * [PHASE 5 P5-1 2026-11-10] Kuchukua nafasi ya alert bandia ya
++ * 04-orders-escrow.js (iliahidi "admin atakutumia" bila kuandika chochote).
++ * Atomiki: salio linatengwa (debit + withdrawal_hold ledger) NA ombi
++ * linaundwa kwenye withdrawal_requests katika transaction MOJA — mtumiaji
++ * hawezi kutumia salio hilo tena, admin anaona ombi halisi.
++ * Idempotent: requestKey ya client (namespaced wdr_<uid>_<key>).
++ * Malipo ya nje (M-Pesa/bank) ni MWONGOZO wa admin; withdrawalResolve
++ * ndiyo inayofunga ombi (paid) au kurudisha salio (rejected).
++ * ========================================================== */
++exports.withdrawalRequest = onCall({ region: REGION }, async (req) => {
++    const auth = requireAuth(req);
++    const data = req.data || {};
++    const amountTSh = moneyOf(data.amountTSh);
++    const channel = String(data.channel || 'mobile');
++    const account = String(data.account || '').trim();
++    const rawKey = String(data.requestKey || '');
++    if (!Number.isFinite(amountTSh) || amountTSh < 5000 || Math.round(amountTSh) !== amountTSh) {
++        throw new HttpsError('invalid-argument', 'Kiasi lazima kiwe TSh 5,000 au zaidi (namba kamili).');
++    }
++    if (channel !== 'mobile' && channel !== 'bank') {
++        throw new HttpsError('invalid-argument', 'channel lazima iwe mobile au bank.');
++    }
++    const digits = account.replace(/[^0-9]/g, '');
++    if (digits.length < 9 || digits.length > 20 || account.length > 40) {
++        throw new HttpsError('invalid-argument', 'Namba ya kupokelea si sahihi.');
++    }
++    if (!rawKey || rawKey.length > 64) {
++        throw new HttpsError('invalid-argument', 'requestKey inahitajika (idempotency).');
++    }
++    const ledgerKey = 'wdr_' + safeKey(auth.uid) + '_' + safeKey(rawKey);
++    const userRef = db.doc('users/' + auth.uid);
++    const ledgerRef = db.doc('wallet_ledger/' + ledgerKey);
++    const reqRef = db.doc('withdrawal_requests/' + ledgerKey);
++    let applied = false, balanceBefore = 0;
++    await db.runTransaction(async (t) => {
++        applied = false;
++        const ls = await t.get(ledgerRef);
++        if (ls.exists) return; // tayari — idempotent
++        const us = await t.get(userRef);
++        if (!us.exists) throw new Error('USER_MISSING');
++        const cur = Number(us.data().walletBalance || 0);
++        balanceBefore = cur;
++        if (cur + MONEY_EPS < amountTSh) {
++            throw new HttpsError('failed-precondition', 'INSUFFICIENT_BALANCE: Salio halitoshi.');
++        }
++        const nowIso = new Date().toISOString();
++        t.set(ledgerRef, {
++            userId: auth.uid, callerUid: auth.uid, amountTSh: -amountTSh,
++            type: 'withdrawal_hold', note: 'Ombi la kutoa ' + channel + ' ' + digits,
++            byAdmin: false, withdrawalRequestId: ledgerKey, createdAt: nowIso
++        });
++        t.update(userRef, { walletBalance: FieldValue.increment(-amountTSh) });
++        t.set(reqRef, {
++            userId: auth.uid, amount: amountTSh, channel, account: digits,
++            status: 'pending', ledgerKey, balanceBefore: cur, createdAt: nowIso
++        });
++        applied = true;
++    });
++    if (!applied) {
++        const existing = await reqRef.get();
++        const ed = existing.exists ? (existing.data() || {}) : {};
++        return { ok: true, already: true, requestId: ledgerKey, amount: Number(ed.amount || 0), status: ed.status || 'pending' };
++    }
++    return { ok: true, requestId: ledgerKey, amount: amountTSh, status: 'pending', balanceBefore };
++});
++
++/* ============================================================
++ * 2c) withdrawalResolve — admin hufunga ombi la kutoa pesa.
++ * 'paid': admin ameshatuma pesa NJE (M-Pesa/bank mwongozo) — ombi linafungwa
++ *         tu (salio lilishakatwa wakati wa request; hakuna debit ya pili).
++ * 'rejected': salio linarudishwa kwa mtumiaji (withdrawal_refund ledger).
++ * Idempotent: ombi lisilo-pending linarudisha {already:true} bila kugusa pesa.
++ * ========================================================== */
++exports.withdrawalResolve = onCall({ region: REGION }, async (req) => {
++    const auth = requireAuth(req);
++    if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Ni admin tu anayeweza kufunga maombi ya kutoa pesa.');
++    const data = req.data || {};
++    const requestId = String(data.requestId || '');
++    const decision = String(data.decision || '');
++    const note = String(data.note || '').slice(0, 300);
++    if (!requestId || requestId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'requestId inahitajika.');
++    if (decision !== 'paid' && decision !== 'rejected') {
++        throw new HttpsError('invalid-argument', 'decision lazima iwe paid au rejected.');
++    }
++    if (note.trim().length < 5) {
++        throw new HttpsError('invalid-argument', 'Admin: andika sababu (note, angalau herufi 5).');
++    }
++    const reqRef = db.doc('withdrawal_requests/' + requestId);
++    let outcome = null;
++    await db.runTransaction(async (t) => {
++        const rs = await t.get(reqRef);
++        if (!rs.exists) throw new HttpsError('not-found', 'Ombi halikupatikana.');
++        const rd = rs.data() || {};
++        if (rd.status !== 'pending') { outcome = { already: true, status: rd.status }; return; }
++        const amt = moneyOf(rd.amount);
++        if (!(amt > 0)) throw new HttpsError('failed-precondition', 'Ombi halina kiasi sahihi.');
++        const nowIso = new Date().toISOString();
++        if (decision === 'rejected') {
++            const refundKey = 'wdr_refund_' + safeKey(requestId);
++            const rl = await t.get(db.doc('wallet_ledger/' + refundKey));
++            if (!rl.exists) {
++                t.set(db.doc('wallet_ledger/' + refundKey), {
++                    userId: rd.userId, callerUid: auth.uid, amountTSh: amt,
++                    type: 'withdrawal_refund', note: 'Kurudisha: ' + note,
++                    byAdmin: true, withdrawalRequestId: requestId, createdAt: nowIso
++                });
++                t.update(db.doc('users/' + rd.userId), { walletBalance: FieldValue.increment(amt) });
++            }
++        }
++        t.update(reqRef, { status: decision, resolvedAt: nowIso, resolvedBy: auth.uid, resolutionNote: note });
++        t.set(db.collection('admin_audit_log').doc(), {
++            action: decision === 'paid' ? 'WITHDRAWAL_PAID' : 'WITHDRAWAL_REJECTED',
++            actorUid: auth.uid, actorEmail: (auth.token && auth.token.email) || null, actorRole: 'admin',
++            target: { kind: 'withdrawal_request', requestId },
++            details: { amount: amt, userId: rd.userId, note }, createdAt: nowIso
++        });
++        outcome = { already: false, status: decision };
++    });
++    return { ok: true, requestId, status: outcome.status, already: outcome.already };
++});
++
+ /* ============================================================
+  * 3) escrowRelease — kutoa escrow ya marketplace ODA
+  *    (smart-split atomic: muuzaji + carrier + wakala + platform)
+@@ -1217,7 +1407,11 @@ async function releaseLinkEscrow(linkId, ctx) {
+ 
+     // [ADMIN PAYMENTS SWITCH] Global OFF = FREE → kamisheni 0.
+     const platformFee = (await paymentGate('commission')) ? Math.round(totalAmount * 0.05) : 0;
+-    const carrierShare = Math.min(Math.max(0, Number(L.carrierShare || 0)), Math.max(0, totalAmount - platformFee));
++    // [PHASE 7 F7-2 2026-11-10] Link haina carrier (hakuna dereva wala delivery
++    // kwenye mkataba): L.carrierShare ya kivinjari (estimate ya 17-hub, default
++    // 15%) ILIPOTEZA pesa — ilikatwa kwa muuzaji bila kulipwa kwa mtu yeyote.
++    // carrierShare = 0; uwasilishaji hulipwa kupitia ODA (releaseOrderEscrow).
++    const carrierShare = 0;
+     const sellerEarned = Math.max(0, totalAmount - platformFee - carrierShare);
+ 
+     let sellerDocId = null;
+@@ -1376,6 +1570,93 @@ exports.sokopayLinkWalletPay = onCall({ region: REGION }, async (req) => {
+     return result;
+ });
+ 
++/* [I-I1 2026-11-10] serviceOrderWalletPay — mteja analipa oda ya HUDUMA kutoka
++ * wallet moja kwa moja kwenye escrow (atomic: debit + hold + held/paid).
++ * Kabla ya hii, oda za huduma ziliundwa 'held' BILA malipo — fundi aliambiwa
++ * "pesa iko escrow" (uongo), na flow ilikufa (shipError/code-issue zinakataa
++ * unpaid). Chanzo cha bei: ombi lililokubaliwa — oda haiwezi kuzidi bajeti
++ * ya mteja (detail2). Idempotent kwa ledger+hold (malipo mara mbili hayawezi). */
++exports.serviceOrderWalletPay = onCall({ region: REGION }, async (req) => {
++    const auth = requireAuth(req);
++    const data = req.data || {};
++    const orderId = String(data.orderId || '');
++    if (!orderId || orderId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'orderId inahitajika.');
++    const buyer = await userDocFor(auth.uid);
++    if (!buyer) throw new HttpsError('not-found', 'Akaunti yako haipatikani.');
++    const orderRef = db.doc('orders/' + orderId);
++    const buyerRef = db.doc('users/' + buyer.id);
++    const holdRef = db.collection(ESCROW_HOLDS).doc('order_' + orderId);
++    const ledgerRef = db.doc('wallet_ledger/svcbuy_' + safeKey(orderId));
++    const CAP = Number(process.env.WALLET_MAX_ABS || 50000000);
++    const now = new Date().toISOString();
++    let result = null;
++    await db.runTransaction(async (t) => {
++        const os = await t.get(orderRef);
++        if (!os.exists) throw new HttpsError('not-found', 'Oda haipatikani.');
++        const o = os.data() || {};
++        if (String(o.collectionName || '') !== 'services') throw new HttpsError('failed-precondition', 'Hii si oda ya huduma.');
++        if (String(o.buyerId || '') !== auth.uid) throw new HttpsError('permission-denied', 'Mnunuzi wa oda hii pekee ndiye anayelipa.');
++        const sellerId = String(o.sellerId || '');
++        if (!sellerId || sellerId === auth.uid) throw new HttpsError('failed-precondition', 'Muuzaji si sahihi.');
++        const hs = await t.get(holdRef);
++        if (hs.exists) {
++            if (String(hs.data().payerUid || '') === auth.uid) { result = { ok: true, already: true, orderId }; return; }
++            throw new HttpsError('failed-precondition', 'Oda hii tayari imelipiwa.');
++        }
++        const led = await t.get(ledgerRef);
++        if (led.exists) throw new HttpsError('failed-precondition', 'Oda hii tayari imelipiwa.');
++        const st = String(o.status || '');
++        const paid = o.paymentVerified === true || String(o.paymentStatus || '') === 'paid';
++        if (paid) throw new HttpsError('failed-precondition', 'Oda hii tayari imelipiwa.');
++        // Hali ya uaminifu: 'awaiting_payment' (mpya) au 'held' isiyolipwa (legacy).
++        if (st !== 'awaiting_payment' && !(st === 'held' && !paid)) {
++            throw new HttpsError('failed-precondition', 'Oda haiko kwenye hali ya kulipiwa (status: ' + st + ').');
++        }
++        const amount = moneyOf(o.amount);
++        if (!(amount > 0) || amount > CAP) throw new HttpsError('failed-precondition', 'Kiasi cha oda si sahihi.');
++        if (data.expectedAmount != null && !sameMoney(moneyOf(data.expectedAmount), amount)) {
++            throw new HttpsError('failed-precondition', 'Kiasi cha oda kimebadilika. Hakiki tena kabla ya kulipa.');
++        }
++        // Chanzo cha bei cha server: ombi lililokubaliwa (kiasi kisizidi bajeti).
++        const reqId = String(o.itemId || '');
++        if (!reqId || reqId.indexOf('/') !== -1) throw new HttpsError('failed-precondition', 'Oda haina ombi la kazi.');
++        const rs = await t.get(db.doc('requests/' + reqId));
++        if (!rs.exists) throw new HttpsError('failed-precondition', 'Ombi la kazi halipo.');
++        const rq = rs.data() || {};
++        if (String(rq.senderId || '') !== auth.uid || String(rq.receiverId || '') !== sellerId || String(rq.status || '') !== 'accepted') {
++            throw new HttpsError('failed-precondition', 'Ombi la kazi halikukubaliwa na fundi huyu.');
++        }
++        const budget = Math.round(Number(rq.detail2));
++        if (!(budget > 0)) throw new HttpsError('failed-precondition', 'Bajeti ya ombi si sahihi.');
++        if (amount > budget + MONEY_EPS) throw new HttpsError('failed-precondition', 'Kiasi kinazidi bajeti ya ombi lako (TSh ' + budget.toLocaleString() + ').');
++        const bs = await t.get(buyerRef);
++        const bal = Number((bs.data() || {}).walletBalance || 0);
++        if (bal < amount) throw new HttpsError('failed-precondition', 'INSUFFICIENT_BALANCE: Salio halitoshi.');
++        t.set(ledgerRef, { userId: buyer.id, callerUid: auth.uid, amountTSh: -amount, type: 'purchase',
++            note: 'Malipo ya huduma kutoka wallet (escrow)', orderId, createdAt: now });
++        t.update(buyerRef, { walletBalance: FieldValue.increment(-amount) });
++        t.set(holdRef, { kind: 'escrow_hold', target: 'order', targetId: orderId, amount,
++            payerUid: auth.uid, payeeUid: sellerId, method: 'wallet', source: 'serviceOrderWalletPay',
++            verifiedAt: now, released: false });
++        t.update(orderRef, { status: 'held', heldAt: now, paymentStatus: 'paid', paymentVerified: true,
++            paymentVerifiedBy: 'wallet', verifiedAmount: amount, paymentProtectedAt: now, paidAt: now,
++            pricedByServer: true, priceSource: 'service_request', commerceType: 'service', serviceStatus: 'held', updatedAt: now });
++        result = { ok: true, orderId, amount, sellerId };
++    });
++    if (result && result.ok && !result.already && result.sellerId) {
++        try {
++            await db.collection('notifications').doc('escrow_svc_' + safeKey(orderId)).set({
++                userId: String(result.sellerId), type: 'escrow', system: true,
++                event: 'wallet.escrowFunded', params: { amount: result.amount.toLocaleString() },
++                title: 'SokoPay: Mteja Amelipa Huduma!',
++                body: 'Mteja amelipa TSh ' + result.amount.toLocaleString() + ' kwa wallet. Pesa imethibitishwa na server na iko salama kwenye Escrow. Anza kazi sasa.',
++                orderId, createdAt: now, read: false
++            }, { merge: true });
++        } catch (e) { /* taarifa si kikwazo cha malipo */ }
++    }
++    return result;
++});
++
+ /* [PHASE 9 B-16] Idempotent "escrow funded" notice for a SokoPay link
+  * (server-only id prefix "escrow_", which the rules refuse to clients). */
+ async function notifyLinkEscrowFunded(db, linkId, sellerId, title, amount, method) {
+@@ -1405,6 +1686,12 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
+     const orderTrackingId = String(d.orderTrackingId || ('SKH_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)));
+     const description = String(d.description || 'SokoHai Purchase').slice(0, 180);
+     const merchantReference = String(d.merchantReference || d.externalId || orderTrackingId);
++    // [PHASE 7 F7-1 2026-11-10] Kusudi la malipo (settlePesaPalPayment hulitumia
++    // kuweka deposit kwenye wallet hata mtumiaji asiporudi kutoka PesaPal).
++    const _pur = String(d.purpose || '').toLowerCase().trim();
++    const payPurpose = ['deposit', 'order', 'link'].indexOf(_pur) !== -1 ? _pur : 'other';
++    const payKind = String(d.kind || payPurpose || 'generic').slice(0, 32);
++    const payTargetId = String(d.targetId || '').replace(/[^A-Za-z0-9_\-]/g, '').slice(0, 128);
+     // [REPAIR 2026-10 M5] Only return to SokoHai's own origins (no open redirect).
+     const allowedOrigins = String(process.env.PESAPAL_ALLOWED_RETURN_ORIGINS
+         || 'https://sokohaimarket.netlify.app,https://sokohaicom.netlify.app' + (process.env.FUNCTIONS_EMULATOR === 'true' ? ',http://localhost:5000,http://127.0.0.1:5000' : ''))
+@@ -1460,7 +1747,8 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
+     try {
+         await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(orderTrackingId)).create({
+             kind: 'pesapal_init', uid: req.auth.uid, amount: body.amount, merchantReference: orderTrackingId,
+-            pesapalTrackingId: String(data.order_tracking_id || ''), createdAt: new Date().toISOString()
++            pesapalTrackingId: String(data.order_tracking_id || ''), createdAt: new Date().toISOString(),
++            purpose: payPurpose, payKind: payKind, targetId: payTargetId || null
+         });
+     } catch (e) {
+         const ex = await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(orderTrackingId)).get().catch(() => null);
+@@ -2786,6 +3074,12 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
+             throw new HttpsError('failed-precondition', 'Hali ya safari hairuhusu uthibitisho wa muuzaji.');
+         }
+         // OPTION A: kwa token | OPTION B: direct (bila token) — zote bado zinahakikiwa hapa.
++        // [DL-FIX2 2026-11-10] Token iliyotumika/kuisha muda wake/kubatilishwa
++        // haikubaliki (tawi la transporter lilikuwa na ukaguzi huu; la muuzaji
++        // halikuwa nalo — revoked PK ingekubaliwa).
++        if (!direct && String(rd.pickupTokenStatus || '') !== 'pending') {
++            throw new HttpsError('failed-precondition', 'Token ya kuchukua mzigo tayari imetumika au imebatilishwa.');
++        }
+         if (!direct && !custodyTokenOk(rd, 'pickup', token)) {
+             await custodyAttemptFail(rideId, role);
+             throw new HttpsError('failed-precondition', 'Token ya kuchukua mzigo si sahihi.');
+@@ -3023,10 +3317,19 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
+ 
+     const isCustodian = ((rd.currentCustodian || rd.driverId) === auth.uid);
+     const isReceiver = (rd.customerId === auth.uid);
++    // [DL-FIX 2026-11-10] Baada ya kukamilika, custody huhamia kwa mpokeaji —
++    // dereva aliyekamilisha (driverId) hukataliwa (permission-denied) akijaribu
++    // tena, badala ya already:true. Ruhusu dereva/chama kwa already-check TU
++    // (watu wa nje bado wamezuiwa; njia ya malipo haijafunguliwa).
++    if (rd.status === 'completed') {
++        if (!isCustodian && !isReceiver && rd.driverId !== auth.uid) {
++            throw new HttpsError('permission-denied', 'Ni mshika mzigo au mpokeaji pekee anayeweza kukamilisha uwasilishaji.');
++        }
++        return { ok: true, already: true, status: 'completed', finalPayout: Number(rd.finalPayout || 0) };
++    }
+     if (!isCustodian && !isReceiver) {
+         throw new HttpsError('permission-denied', 'Ni mshika mzigo au mpokeaji pekee anayeweza kukamilisha uwasilishaji.');
+     }
+-    if (rd.status === 'completed') return { ok: true, already: true, status: 'completed', finalPayout: Number(rd.finalPayout || 0) };
+     if (['picked_up', 'in_transit', 'delivered'].indexOf(rd.status) === -1) {
+         throw new HttpsError('failed-precondition', 'Safari haiko kwenye hatua ya uwasilishaji (status: ' + rd.status + ').');
+     }
+@@ -3649,6 +3952,11 @@ exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
+ // only the authenticated owner's Business/Store pair and preserves legacy fields.
+ const businessEngine = require('./business');
+ exports.businessEnsureContext = businessEngine.businessEnsureContext;
++// [J-J1 2026-11-10] Mialiko ya wafanyakazi (owner self-service).
++exports.staffInviteCreate = businessEngine.staffInviteCreate;
++exports.staffInviteAccept = businessEngine.staffInviteAccept;
++exports.staffInviteRevoke = businessEngine.staffInviteRevoke;
++exports.staffRemove = businessEngine.staffRemove;
+ 
+ // [STEP 3A-0] One server-authoritative POS sale and inventory adjustment path.
+ // Product.stock is mutated here only, inside Firestore transactions; the client
+@@ -3724,7 +4032,7 @@ exports.commerceModesSweep = commerceModes.commerceModesSweep;
+ exports.auctionFinalize = commerceModes.auctionFinalize;
+ // [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
+ const liveCommerce = require('./live-commerce');
+-['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind'].forEach(n => { exports[n] = liveCommerce[n]; });
++['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind','livePause','liveResume'].forEach(n => { exports[n] = liveCommerce[n]; });
+ // [R13-D] Bei Kushuka buyer queue (refs 1 & 2)
+ const priceDropQueue = require('./price-drop-queue');
+ ['priceDropSubmit','priceDropMyRank','priceDropSettle'].forEach(n => { exports[n] = priceDropQueue[n]; });
+diff --git a/functions/live-commerce.js b/functions/live-commerce.js
+index 8926a71..daeffc9 100644
+--- a/functions/live-commerce.js
++++ b/functions/live-commerce.js
+@@ -119,6 +119,55 @@ exports.liveStart = onCall({ region: REGION }, async (req) => {
+     return { ok: true, notified: sent.size };
+ });
+ 
++/* [AUCTION-LIVE] Pause / resume (host only). Business rule: an auction live may only be
++ * paused BEFORE the first bid (buyers who already bid must never see a frozen room).
++ * While paused, bidding is blocked server-side (modeData.livePaused, enforced by
++ * auctionPlaceBid) and comments/likes are refused; on resume the auction endTime moves
++ * forward by the paused duration so the server timer stays fair. */
++exports.livePause = onCall({ region: REGION }, async (req) => {
++    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
++    const { ref, d } = await loadSession((req.data || {}).sessionId);
++    mustHost(req, d);
++    if (d.status !== 'live') throw new HttpsError('failed-precondition', 'hali_' + d.status);
++    const pids = d.productIds || [];
++    if (d.kind === 'auction') {
++        for (const pid of pids) {
++            const p = ((await db().doc('products/' + id(pid)).get()).data()) || {};
++            if ((parseInt(((p.modeData) || {}).totalBids, 10) || 0) > 0) throw new HttpsError('failed-precondition', 'mnada_una_zabuni');
++        }
++    }
++    const now = new Date().toISOString(), nowMs = Date.now();
++    await ref.update({ status: 'paused', pausedAt: now, pausedAtMs: nowMs, updatedAt: now });
++    for (const pid of pids) {
++        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': true }); } catch (e) { /* product may be gone */ }
++    }
++    await ref.collection('comments').add({ kind: 'system', text: 'Live imesitishwa na mwenyeji kwa muda', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
++    return { ok: true };
++});
++exports.liveResume = onCall({ region: REGION }, async (req) => {
++    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
++    const { ref, d } = await loadSession((req.data || {}).sessionId);
++    mustHost(req, d);
++    if (d.status !== 'paused') throw new HttpsError('failed-precondition', 'hali_' + d.status);
++    const now = new Date().toISOString(), nowMs = Date.now();
++    const pausedMs = Math.max(0, nowMs - (Number(d.pausedAtMs) || nowMs));
++    await ref.update({ status: 'live', pausedAt: null, pausedAtMs: null, updatedAt: now });
++    for (const pid of pidsSafe(d)) {
++        const pref = db().doc('products/' + id(pid));
++        await db().runTransaction(async (t) => {
++            const s = await t.get(pref);
++            if (!s.exists) return;
++            const p = s.data() || {}, md = p.modeData || {};
++            const patch = { 'modeData.livePaused': false };
++            if (saleMode(p) === 'auction' && Number(md.endTime) > 0 && !md.ended) patch['modeData.endTime'] = Number(md.endTime) + pausedMs;
++            t.update(pref, patch);
++        });
++    }
++    await ref.collection('comments').add({ kind: 'system', text: 'Live imeendelea', uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
++    return { ok: true, pausedMs };
++});
++function pidsSafe(d) { return d.productIds || []; }
++
+ exports.liveEnd = onCall({ region: REGION }, async (req) => {
+     if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+     const data = req.data || {};
+@@ -128,7 +177,11 @@ exports.liveEnd = onCall({ region: REGION }, async (req) => {
+     let rec = null;
+     if (data.recordingUrl) { if (!d.recordingAllowed) throw new HttpsError('failed-precondition', 'rekodi_hairuhusiwi'); rec = embedUrl(data.recordingUrl); if (!rec) throw new HttpsError('invalid-argument', 'rekodi_haikubaliki'); }
+     const now = new Date().toISOString();
+-    await ref.update({ status: 'ended', endedAt: now, updatedAt: now, endedBy: req.auth.uid, endReason: clean(data.reason, 200) || null, recordingUrl: rec, viewerCount: 0 });
++    await ref.update({ status: 'ended', endedAt: now, updatedAt: now, endedBy: req.auth.uid, endReason: clean(data.reason, 200) || null, recordingUrl: rec, viewerCount: 0, pausedAt: null, pausedAtMs: null });
++    // [AUCTION-LIVE] unfreeze the products (a paused session may be ended while frozen)
++    for (const pid of (d.productIds || [])) {
++        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false }); } catch (e) { /* gone */ }
++    }
+     await ref.collection('comments').add({ kind: 'system', text: 'Live imekwisha', uid: req.auth.uid, name: 'SokoHai', createdAt: now, status: 'visible' });
+     if (req.auth.uid !== d.hostUid) await audit(req, 'LIVE_ENDED_BY_ADMIN', { kind: 'live_session', id: ref.id }, { reason: clean(data.reason, 200) });
+     return { ok: true };
+@@ -171,9 +224,10 @@ exports.liveJoin = onCall({ region: REGION }, async (req) => {
+         const s = await t.get(ref), v = await t.get(vref);
+         const cur = s.data() || {};
+         const active = v.exists && (v.data() || {}).active === true;
++        const countable = cur.status === 'live' || cur.status === 'paused';   // [AUCTION-LIVE] paused viewers still watch
+         const now = new Date().toISOString();
+-        t.set(vref, { uid, active: cur.status === 'live', joinedAt: (v.exists && (v.data() || {}).joinedAt) || now, lastSeenAt: now }, { merge: true });
+-        if (!active && cur.status === 'live') { count = (cur.viewerCount || 0) + 1; t.update(ref, { viewerCount: count, peakViewers: Math.max(cur.peakViewers || 0, count) }); }
++        t.set(vref, { uid, active: countable, joinedAt: (v.exists && (v.data() || {}).joinedAt) || now, lastSeenAt: now }, { merge: true });
++        if (!active && countable) { count = (cur.viewerCount || 0) + 1; t.update(ref, { viewerCount: count, peakViewers: Math.max(cur.peakViewers || 0, count) }); }
+         else count = cur.viewerCount || 0;
+     });
+     return { ok: true, status: d.status, viewerCount: count };
+@@ -197,6 +251,7 @@ exports.liveComment = onCall({ region: REGION }, async (req) => {
+     const text = clean(data.text, MAX_TEXT);
+     if (!text) throw new HttpsError('invalid-argument', 'andika_ujumbe');
+     const { ref, d } = await loadSession(data.sessionId);
++    if (d.status === 'paused') throw new HttpsError('failed-precondition', 'live_imesitishwa');
+     if (d.status !== 'live') throw new HttpsError('failed-precondition', 'live_haiendelei');
+     if ((d.mutedUids || []).indexOf(uid) !== -1) throw new HttpsError('permission-denied', 'umezuiwa_kwenye_live');
+     const u = await userDoc(uid);
+@@ -257,7 +312,10 @@ exports.adminLiveRemove = onCall({ region: REGION }, async (req) => {
+     if (reason.length < 5) throw new HttpsError('invalid-argument', 'sababu_inahitajika');
+     const { ref, d } = await loadSession(data.sessionId);
+     const now = new Date().toISOString();
+-    await ref.update({ status: 'removed', endedAt: d.endedAt || now, updatedAt: now, endedBy: req.auth.uid, endReason: reason, viewerCount: 0 });
++    await ref.update({ status: 'removed', endedAt: d.endedAt || now, updatedAt: now, endedBy: req.auth.uid, endReason: reason, viewerCount: 0, pausedAt: null, pausedAtMs: null });
++    for (const pid of (d.productIds || [])) {
++        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false }); } catch (e) { /* gone */ }
++    }
+     await audit(req, 'LIVE_REMOVED', { kind: 'live_session', id: ref.id }, { reason });
+     await notify(d.hostUid, 'Live yako imeondolewa', reason, { type: 'live_removed', liveSessionId: ref.id });
+     return { ok: true };
+@@ -271,6 +329,7 @@ exports._testing = { embedUrl };
+ exports.liveLike = onCall({ region: REGION }, async (req) => {
+     if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+     const { ref, d } = await loadSession((req.data || {}).sessionId);
++    if (d.status === 'paused') throw new HttpsError('failed-precondition', 'live_imesitishwa');
+     if (d.status !== 'live') throw new HttpsError('failed-precondition', 'live_haiendelei');
+     const lref = ref.collection('likes').doc(req.auth.uid);
+     let ok = false;
+diff --git a/functions/local-server.js b/functions/local-server.js
+index 7526f1d..ecb092b 100644
+--- a/functions/local-server.js
++++ b/functions/local-server.js
+@@ -87,6 +87,24 @@ const STATIC_ROOT = process.env.SKH_STATIC_ROOT
+   ? path.resolve(ROOT, process.env.SKH_STATIC_ROOT)
+   : ROOT;
+ 
++/* ---------- 0c. REMOTE PREVIEW PROXY [2026-11-11] ----------
++   SKH_PREVIEW_PROXY=1 (kwenye preview server PEKEE, sio server ya tests):
++   Huwezesha kuona app + emulators kupitia HTTPS public preview (e2b/Arena)
++   ambapo browser ya mtumiaji haifikii 127.0.0.1 ya sandbox, na Firebase SDK
++   ina-force http:// kwa emulator (mixed-content block kutoka https page).
++   Suluhisho: kila kitu same-origin kupitia server hii:
++     • /__fs/*     → proxy kwenye Firestore emulator (FIRESTORE_EMULATOR_HOST)
++     • /__auth/*   → proxy kwenye Auth emulator (FIREBASE_AUTH_EMULATOR_HOST)
++     • /__vendor/  → Firebase SDK zilizopatchwa (https + path prefix kwa emulator)
++     • serveIndex ina-inject import map + SKH_EMULATOR yenye dynamic host
++     • 00-bootstrap.js inahudumiwa na isLocalEnv patch (e2b.app = local)
++   FAILI ZA REPO HAZIGUSWI — patches zote ni serve-time (runtime) tu.
++   Default = 0 → tabia ya awali haijabadilika kabisa. */
++const PREVIEW_PROXY = process.env.SKH_PREVIEW_PROXY === '1';
++const PREVIEW_VENDOR_DIR = process.env.SKH_PREVIEW_VENDOR_DIR ||
++  path.join(process.env.HOME || '/home/user', 'sokohai-preview-vendor');
++const PREVIEW_SCHEME_DEFAULT = process.env.SKH_PREVIEW_SCHEME || 'https';
++
+ /* ---------- 1. Credentials ---------- */
+ // [PHASE 1 SECURITY 2026-09] Emulator → faili la service account → Google ADC.
+ // Tunasoma `type` na project TU kutoka kwenye faili — maudhui hayachapishwi.
+@@ -706,7 +724,92 @@ function emulatorClientConfig() {
+   };
+ }
+ 
+-function serveIndex(res) {
++/* [PREVIEW PROXY 2026-11-11] Same-origin proxy kwenda kwenye emulator ya
++   ndani. Inatumia streaming (pipe) — inasaidia WebChannel listen ya Firestore
++   (chunked responses) na POST bodies kubwa. */
++function proxyToLocalhost(req, res, targetPort, stripRe) {
++  let fwdPath = '/';
++  try {
++    const u = new URL(req.url, 'http://localhost');
++    fwdPath = (u.pathname.replace(stripRe, '') || '/') + (u.search || '');
++    if (!fwdPath.startsWith('/')) fwdPath = '/' + fwdPath;
++  } catch (_) { /* tumia '/' */ }
++
++  const headers = Object.assign({}, req.headers);
++  delete headers.connection;
++  delete headers['content-length']; // Node itaweka upya kwa pipe
++  headers.host = '127.0.0.1:' + targetPort;
++
++  const preq = http.request(
++    {
++      host: '127.0.0.1',
++      port: targetPort,
++      method: req.method,
++      path: fwdPath,
++      headers
++    },
++    pres => {
++      const rh = Object.assign({}, pres.headers);
++      delete rh.connection;
++      delete rh['transfer-encoding']; // Node ita-chunk yenyewe kwa pipe
++      try {
++        res.writeHead(pres.statusCode || 500, rh);
++      } catch (_) { /* headers tayari zimetumwa */ }
++      pres.pipe(res);
++    }
++  );
++
++  preq.on('error', err => {
++    if (!res.headersSent) {
++      sendJson(res, 502, {
++        error: {
++          status: 'UNAVAILABLE',
++          message: 'Preview proxy: emulator :' + targetPort + ' haipatikani (' +
++            (err && err.message) + ')'
++        }
++      });
++    } else {
++      try { res.end(); } catch (_) {}
++    }
++  });
++
++  req.pipe(preq);
++}
++
++/* [PREVIEW PROXY 2026-11-11] SKH_EMULATOR yenye dynamic host kwa remote preview.
++   Browser inatumia hostname ILEILE ya ukurasa (same-origin) + path prefix:
++   Firestore → https://HOST/__fs/… , Auth → https://HOST/__auth/… */
++function previewEmulatorConfig(req) {
++  if (!EMULATOR) return null;
++  const fsHp = emulatorHostPort(process.env.FIRESTORE_EMULATOR_HOST);
++  if (!fsHp) return null;
++
++  const hostHeader = String(
++    (req && req.headers && req.headers.host) || ''
++  ).trim() || 'localhost:' + PORT;
++  const hostOnly = hostHeader.split(':')[0] || 'localhost';
++  const pm = /:(\d+)$/.exec(hostHeader);
++  const portNum = pm ? Number(pm[1]) : 443;
++  const fwdProto = String(
++    (req && req.headers && req.headers['x-forwarded-proto']) || ''
++  ).split(',')[0].trim();
++  const scheme = (fwdProto || PREVIEW_SCHEME_DEFAULT || 'https').toLowerCase();
++
++  return {
++    projectId: String(process.env.GCLOUD_PROJECT || ''),
++    firestore: { host: hostHeader + '/__fs', port: portNum },
++    authUrl: scheme + '://' + hostHeader + '/__auth/',
++    _previewHost: hostOnly
++  };
++}
++
++function serveIndex(req, res) {
++  // [PREVIEW PROXY] wito wa zamani serveIndex(res) bado unafanya kazi.
++  if (res === undefined && req && typeof req.writeHead === 'function') {
++    res = req;
++    req = null;
++  }
++
+   let html = fs.readFileSync(
+     path.join(STATIC_ROOT, 'index.html'),
+     'utf8'
+@@ -722,9 +825,21 @@ function serveIndex(res) {
+     return res.end(html);
+   }
+ 
+-  const emu = emulatorClientConfig();
++  const emu = PREVIEW_PROXY ? previewEmulatorConfig(req) : emulatorClientConfig();
++
++  // [PREVIEW PROXY] import map: elekeza Firebase SDKs kwenye nakala
++  // zilizopatchwa (https + path prefix kwa emulator). Lazima iwe KABLA ya
++  // module script yoyote — inawekwa pamoja na inject nyingine kwenye <head>.
++  const importMap = PREVIEW_PROXY
++    ? '<script type="importmap">{"imports":{' +
++      '"https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js":' +
++      '"/__vendor/firebase-firestore.js",' +
++      '"https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js":' +
++      '"/__vendor/firebase-auth.js"}}<\/script>'
++    : '';
+ 
+   const inject =
++    importMap +
+     '<script>window.SKH_FUNCTIONS_URL=' +
+     JSON.stringify(FN_PREFIX) +
+     ';window.SKH_LOCAL_FUNCTIONS_SERVER=true;' +
+@@ -777,7 +892,7 @@ function serveStatic(req, res, urlObj) {
+     pathname === '/' ||
+     pathname === '/index.html'
+   ) {
+-    return serveIndex(res);
++    return serveIndex(req, res);
+   }
+ 
+   const file = path.normalize(
+@@ -803,7 +918,29 @@ function serveStatic(req, res, urlObj) {
+     fs.statSync(target).isFile()
+   ) {
+     if (path.basename(target) === 'index.html') {
+-      return serveIndex(res);
++      return serveIndex(req, res);
++    }
++
++    /* [PREVIEW PROXY 2026-11-11] Serve-time patch ya 00-bootstrap.js (repo file
++       haiguswi): tambua *.e2b.app kama mazingira ya ndani ili SKH_EMULATOR
++       na SKH_FUNCTIONS_URL zitumike kwenye remote preview. */
++    if (
++      PREVIEW_PROXY &&
++      /\/js\/app\/00-bootstrap\.js$/.test(target)
++    ) {
++      let js = fs.readFileSync(target, 'utf8');
++      const anchor = '|| /\\.localhost$/.test(h);';
++      if (js.includes(anchor)) {
++        js = js.replace(
++          anchor,
++          '|| /\\.localhost$/.test(h) || /\\.e2b\\.app$/.test(h);'
++        );
++      }
++      res.writeHead(200, {
++        'Content-Type': 'text/javascript; charset=utf-8',
++        'Cache-Control': 'no-cache'
++      });
++      return res.end(js);
+     }
+ 
+     res.writeHead(200, {
+@@ -828,7 +965,7 @@ function serveStatic(req, res, urlObj) {
+     return res.end('Not found');
+   }
+ 
+-  return serveIndex(res);
++  return serveIndex(req, res);
+ }
+ 
+ /* ---------- 9. Server ---------- */
+@@ -915,6 +1052,72 @@ const server = http.createServer(
+         });
+       }
+ 
++      /* [PREVIEW PROXY 2026-11-11] Same-origin proxy kwa emulators + vendor.
++         Inafanya kazi tu SKH_PREVIEW_PROXY=1 (preview server pekee). */
++      if (PREVIEW_PROXY) {
++        if (
++          urlObj.pathname === '/__fs' ||
++          urlObj.pathname.startsWith('/__fs/') ||
++          /^\/__fs:\d+\//.test(urlObj.pathname)
++        ) {
++          const fsHp = emulatorHostPort(process.env.FIRESTORE_EMULATOR_HOST);
++          if (!fsHp) {
++            return sendJson(res, 503, {
++              error: {
++                status: 'UNAVAILABLE',
++                message: 'Firestore emulator haikuuwashwa'
++              }
++            });
++          }
++          return proxyToLocalhost(
++            req, res, fsHp.port, /^\/__fs(:\d+)?/
++          );
++        }
++
++        if (
++          urlObj.pathname === '/__auth' ||
++          urlObj.pathname.startsWith('/__auth/')
++        ) {
++          const authHp = emulatorHostPort(
++            process.env.FIREBASE_AUTH_EMULATOR_HOST
++          );
++          if (!authHp) {
++            return sendJson(res, 503, {
++              error: {
++                status: 'UNAVAILABLE',
++                message: 'Auth emulator haikuuwashwa'
++              }
++            });
++          }
++          return proxyToLocalhost(req, res, authHp.port, /^\/__auth/);
++        }
++
++        if (urlObj.pathname.startsWith('/__vendor/')) {
++          const vname = urlObj.pathname.slice('/__vendor/'.length);
++          if (
++            vname !== 'firebase-firestore.js' &&
++            vname !== 'firebase-auth.js'
++          ) {
++            res.writeHead(404);
++            return res.end('Not found');
++          }
++          const vfile = path.join(PREVIEW_VENDOR_DIR, vname);
++          if (!fs.existsSync(vfile)) {
++            return sendJson(res, 503, {
++              error: {
++                status: 'UNAVAILABLE',
++                message: 'Preview vendor haipo: ' + vfile
++              }
++            });
++          }
++          res.writeHead(200, {
++            'Content-Type': 'text/javascript; charset=utf-8',
++            'Cache-Control': 'no-cache'
++          });
++          return fs.createReadStream(vfile).pipe(res);
++        }
++      }
++
+       if (!STATIC_ENABLED) {
+         res.writeHead(404);
+         return res.end('Not found');
+diff --git a/js/18-icons.js b/js/18-icons.js
+index 891b30e..d262130 100644
+--- a/js/18-icons.js
++++ b/js/18-icons.js
+@@ -15,6 +15,8 @@
+     var P = {
+         menu: '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+         cart: '<circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',
++        cart_plus: '<circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/><line x1="18.5" y1="1.5" x2="18.5" y2="6.5"/><line x1="16" y1="4" x2="21" y2="4"/>',
++        share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>',
+         chat: '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/>',
+         bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+         refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/>',
+@@ -101,7 +103,10 @@
+         all: '<rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/>',
+         gavel: '<path d="m14.5 12.5-8 8a2.12 2.12 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/>',
+         trend_down: '<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>',
+-        'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>'
++        'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
++        // [AUCTION-LIVE] minimize + pause glyphs for the live room
++        minus: '<line x1="5" y1="12" x2="19" y2="12"/>',
++        pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>'
+     };
+ 
+     function svg(name, size, extra) {
+diff --git a/js/app/120-live-commerce-ui.js b/js/app/120-live-commerce-ui.js
+index ebe1555..cedc6f8 100644
+--- a/js/app/120-live-commerce-ui.js
++++ b/js/app/120-live-commerce-ui.js
+@@ -42,8 +42,18 @@ const ERR = { si_bidhaa_yako: 'Unaweza kuonyesha bidhaa zako tu.', si_mnada: 'Mn
+     umezuiwa_kwenye_live: 'Mwenyeji amekuzuia kutoa maoni kwenye live hii.', live_haiendelei: 'Live haiendelei sasa.', akaunti_imesimamishwa: 'Akaunti yako imesimamishwa.',
+     waliokuzidi: 'Zabuni iko chini ya kiwango kinachokubalika.', mnada_umefungwa: 'Mnada umefungwa.', mnada_haujaanza: 'Mnada haujaanza bado.', tangazo_lako: 'Huwezi kushiriki ofa ya bidhaa yako.',
+     tayari_unaongoza: 'Tayari unaongoza mnada.', juu_ya_bei_ya_sasa: 'Bei yako iko juu ya bei ya sasa.', chini_ya_bei_ya_mwisho: 'Bei yako iko chini ya bei ya mwisho.',
+-    kampeni_imeisha: 'Kampeni imeisha.', kampeni_haijaanza: 'Kampeni haijaanza bado.', stock_haitoshi: 'Idadi uliyoomba haipo kwenye stock.' };
+-const friendly = (e) => { const m = errText(e); const k = Object.keys(ERR).find(x => m.indexOf(x) !== -1); if (!k) return m; const n = (m.match(/:(\d+)/) || [])[1]; return ERR[k] + (n ? ' (' + tsh(n) + ')' : ''); };
++    kampeni_imeisha: 'Kampeni imeisha.', kampeni_haijaanza: 'Kampeni haijaanza bado.', stock_haitoshi: 'Idadi uliyoomba haipo kwenye stock.',
++    /* [AUCTION-LIVE] pause / bid states */
++    mnada_umesitishwa: 'Mnada umesitishwa na mwenyeji kwa muda. Subiri uendelee.', live_imesitishwa: 'Live imesitishwa kwa muda na mwenyeji.',
++    mnada_una_zabuni: 'Mnada una zabuni tayari \u2014 hauwezi kusitishwa.' };
++const friendly = (e) => { const m = errText(e);
++    /* [LIVE-UX 2026-11-10] Missing-index: ujumbe safi kwa mtumiaji; URL ndefu
++       ya console inaenda console pekee (mmiliki). */
++    if (/requires an index|failed-precondition|needs an index/i.test(m)) {
++        try { const u = (m.match(/https?:\/\/[^\s)]+/) || [])[0]; if (u) console.info('[SokoHai Live] index inayohitajika:', u); } catch (_) {}
++        return 'Huduma ya Live bado haijaamilishwa kikamilifu. Tafadhali rudi baadaye.';
++    }
++    const k = Object.keys(ERR).find(x => m.indexOf(x) !== -1); if (!k) return m; const n = (m.match(/:(\d+)/) || [])[1]; return ERR[k] + (n ? ' (' + tsh(n) + ')' : ''); };
+ 
+ /* same formula as functions/pricing-core.js (checkout re-prices on the server anyway) */
+ function dropPrice(p, now) {
+@@ -60,10 +70,25 @@ function auctionState(p, now) {
+     const pct = Number(md.minIncrementPct) > 0 ? Number(md.minIncrementPct) : 5, abs = Number(md.minIncrement) || 0;
+     const left = (Number(md.endTime) || 0) - now;
+     const winner = md.winnerId !== undefined ? md.winnerId : (md.ended ? md.maxBidder : null);
+-    return { cur, minNext: Math.round(cur + Math.max(abs, Math.ceil(cur * pct / 100))), left, ended: !!md.ended || left <= 0, notStarted: Number(md.startTime) > now,
+-        leader: md.maxBidder || null, winner, winBid: Number(md.winnerBid) > 0 ? Number(md.winnerBid) : cur, bids: Number(md.totalBids) || 0, deadline: Number(md.paymentDeadline) || 0, md };
++    /* [AUCTION-LIVE] paused / distinct bidders / anti-sniping extensions / ending-soon (server values) */
++    const paused = md.livePaused === true, bidders = parseInt(md.bidderCount, 10) || 0, extensions = parseInt(md.extensions, 10) || 0;
++    const ended = !!md.ended || left <= 0;
++    return { cur, minNext: Math.round(cur + Math.max(abs, Math.ceil(cur * pct / 100))), left, ended, notStarted: Number(md.startTime) > now,
++        leader: md.maxBidder || null, winner, winBid: Number(md.winnerBid) > 0 ? Number(md.winnerBid) : cur, bids: Number(md.totalBids) || 0, deadline: Number(md.paymentDeadline) || 0,
++        paused, bidders, extensions, endingSoon: !ended && left > 0 && left <= 60000, md };
+ }
+ const dropEnded = (p, now) => { const md = p.modeData || {}; return !!md.stopped || (Number(md.endTime) > 0 && now >= Number(md.endTime)); };
++/* group-buy display state (mirror of pricing-core; checkout re-prices on the server) */
++function groupState(p, now) {
++    const md = p.modeData || {}, base = Number(p.price) || 0;
++    const joined = parseInt(md.joinedUsers, 10) || 1, target = parseInt(md.targetPeople, 10) || 10;
++    const discVal = parseFloat(md.discountValue) || 0, extra = Math.max(0, joined - 1);
++    const price = (md.discountType === 'percent') ? base - (base * Math.min(90, discVal * extra) / 100) : Math.max(base * 0.1, base - (discVal * extra));
++    const endsAt = Number(md.endTime) || 0, timedOut = endsAt > 0 && now >= endsAt;
++    const parts = Array.isArray(md.participants) ? md.participants : [];
++    return { joined, target, price: Math.max(0, Math.round(price)), base, endsAt, left: Math.max(0, endsAt - now),
++        status: joined >= target ? 'successful' : (timedOut ? 'failed' : 'active'), parts, md };
++}
+ const fmtLeft = (ms) => { if (!(ms > 0)) return '00:00'; const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0'); };
+ function listPrice(p) { const m = modeOf(p); if (m === 'price_drop') return dropPrice(p, Date.now()).price; if (m === 'auction') return auctionState(p, Date.now()).cur; return Number(p.price) || 0; }
+ 
+@@ -142,9 +167,11 @@ async function loadHub(t) {
+     grid.innerHTML = `<div class="lvh-empty">Inapakia…</div>`;
+     try {
+         if (t === 'deals') return await loadDeals(grid);
+-        const snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'live_sessions'), skh.where('status', '==', t), skh.orderBy('updatedAt', 'desc'), skh.limit(30)));
+-        if (snap.empty) { grid.innerHTML = `<div class="lvh-empty">${ico('video', 30)}<b>${t === 'live' ? 'Hakuna live inayoendelea sasa' : 'Hakuna live zilizopangwa'}</b><span>Wauzaji wakianzisha live, zitaonekana hapa. ${t === 'live' ? 'Angalia "Deals" kwa ofa za Bei Kushuka na minada.' : ''}</span></div>`; return; }
+-        const sessions = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
++        /* [AUCTION-LIVE] paused lives stay visible under LIVE SASA with a tag. */
++        const sts = t === 'live' ? ['live', 'paused'] : [t];
++        const snaps = await Promise.all(sts.map(st => skh.getDocs(skh.query(skh.collection(skh.db, 'live_sessions'), skh.where('status', '==', st), skh.orderBy('updatedAt', 'desc'), skh.limit(30)))));
++        const sessions = snaps.reduce((acc, x) => acc.concat(x.docs.map(d => Object.assign({ id: d.id }, d.data()))), []);
++        if (!sessions.length) { grid.innerHTML = `<div class="lvh-empty">${ico('video', 30)}<b>${t === 'live' ? 'Hakuna live inayoendelea sasa' : 'Hakuna live zilizopangwa'}</b><span>Wauzaji wakianzisha live, zitaonekana hapa. ${t === 'live' ? 'Angalia "Deals" kwa ofa za Bei Kushuka na minada.' : ''}</span></div>`; return; }
+         const prods = await Promise.all(sessions.map(s => (s.pinnedProductId || (s.productIds || [])[0]) ? getProduct(s.pinnedProductId || s.productIds[0]) : null));
+         if (t === 'scheduled') {
+             const mine = me();
+@@ -157,13 +184,14 @@ async function loadHub(t) {
+         }
+         grid.innerHTML = sessions.map((s, i) => {
+             const p = prods[i], k = kindOf(s);
+-            if (k === 'auction' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: auctionRows(p, s.viewerCount), onclick: `skhLiveOpen('${esc(s.id)}')` });
+-            if (k === 'price_drop' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: dropRows(p), onclick: `skhLiveOpen('${esc(s.id)}')` });
++            const ptag = s.status === 'paused' ? `<span class="lvh-pausedtag">\u23f8 IMESITISHWA</span>` : '';
++            if (k === 'auction' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: ptag + auctionRows(p, s.viewerCount), onclick: `skhLiveOpen('${esc(s.id)}')` });
++            if (k === 'price_drop' && p) return cardHtml({ kind: k, title: p.title, img: photo(p), rows: ptag + dropRows(p), onclick: `skhLiveOpen('${esc(s.id)}')` });
+             return cardHtml({ kind: 'live', title: s.title, img: photo(p), sub: s.description || (p ? 'Inaonyesha: ' + p.title : s.hostName),
+-                rows: `<div class="lvh-three"><div><small>Watazamaji</small><b>${kshort(s.viewerCount)}</b></div><div><small>Muuzaji</small><b>${esc(s.hostName)}</b></div><span class="lvh-livetag">${ico('radio', 14)} LIVE</span></div>`,
++                rows: ptag + `<div class="lvh-three"><div><small>Watazamaji</small><b>${kshort(s.viewerCount)}</b></div><div><small>Muuzaji</small><b>${esc(s.hostName)}</b></div><span class="lvh-livetag">${ico('radio', 14)} LIVE</span></div>`,
+                 onclick: `skhLiveOpen('${esc(s.id)}')` });
+         }).join('');
+-    } catch (e) { grid.innerHTML = `<div class="lvh-empty"><b>Imeshindikana kupakia</b><span>${esc(errText(e))}</span></div>`; }
++    } catch (e) { grid.innerHTML = `<div class="lvh-empty"><b>Imeshindikana kupakia</b><span>${esc(friendly(e))}</span></div>`; }
+ }
+ async function loadDeals(grid) {
+     const now = Date.now();
+@@ -222,13 +250,60 @@ window.skhLiveCreateForm = async function () {
+  * ROOM — ref 7 (auction), ref 2 (price drop), ref 6/10 (seller live)
+  * ==================================================================== */
+ let room = null;   // { id, unsub:[], timer, session, products:{}, pid, lastLeader, wonShown, rank, comments:[] }
+-function leaveRoom() {
++/* [AUCTION-LIVE] leave-once: the room object is dropped first so parallel close paths
++ * (X button, mini close, re-open) can only send liveLeave a single time. keepJoin tears
++ * the UI/listeners down without leaving (re-opening the same session, e.g. conn retry). */
++function leaveRoom(keepJoin) {
+     if (!room) return;
+-    room.unsub.forEach(u => { try { u(); } catch (e) {} });
+-    clearInterval(room.timer); clearInterval(room.rankTimer);
+-    if (room.id && room.joined) call('liveLeave', { sessionId: room.id }).catch(() => {});
+-    room = null;
++    const r = room; room = null;
++    r.unsub.forEach(u => { try { u(); } catch (e) {} });
++    clearInterval(r.timer); clearInterval(r.rankTimer);
++    try { window.removeEventListener('online', onNetBack); window.removeEventListener('offline', onNetGone); } catch (e) {}
++    if (!keepJoin && r.id && r.joined && !r.left) { r.left = true; call('liveLeave', { sessionId: r.id }).catch(() => {}); }
++}
++/* [AUCTION-LIVE] connection overlay: listener errors / offline show #lv7Conn with retry. */
++function showConn(msg, retry) {
++    const box = document.getElementById('lv7Conn'); if (!box) { toast(msg, 'warn'); return; }
++    const m = document.getElementById('lv7ConnMsg'); if (m) m.textContent = msg;
++    const btn = document.getElementById('lv7ConnRetry');
++    if (btn) btn.onclick = () => { hideConn(); try { retry && retry(); } catch (e) { toast(friendly(e), 'warn'); } };
++    box.hidden = false;
+ }
++function hideConn() { const box = document.getElementById('lv7Conn'); if (box) box.hidden = true; }
++function onNetGone() { showConn('Hakuna muunganisho wa intaneti. Ukirejea online, bonyeza Jaribu tena.', () => { try { tick(); } catch (e) {} }); }
++function onNetBack() { hideConn(); toast('Umerrejea online \u2014 live inaendelea.', 'success'); try { tick(); } catch (e) {} }
++/* [AUCTION-LIVE] real mini player: the stage node itself moves into the floating box,
++ * so video/listeners/session continue untouched (no leave on minimize, no leaks).
++ * Restore moves it back; only MiniClose leaves (once, via leaveRoom). */
++function closeMiniBox() { const m = document.getElementById('lvxMini'); if (m) m.remove(); }
++window.skhLiveMinimize = function () {
++    if (!room || document.getElementById('lvxMini')) return;
++    const stage = document.getElementById('lv7Stage'); if (!stage) return;
++    const s = room.session || {};
++    const box = document.createElement('div'); box.id = 'lvxMini'; box.className = 'lvx-mini';
++    box.innerHTML = `<div class="lvx-mini-head"><b>${esc(s.title || 'Live')}</b><span><button onclick="skhLiveMiniRestore()">\u2197 Rudi</button><button onclick="skhLiveMiniClose()" aria-label="Funga">\u00d7</button></span></div><div class="lvx-mini-slot" id="lvxMiniSlot"></div>`;
++    document.body.appendChild(box);
++    box.querySelector('#lvxMiniSlot').appendChild(stage);
++    const ov = document.getElementById('lvxRoom'); if (ov) ov.hidden = true;
++};
++window.skhLiveMiniRestore = function () {
++    const box = document.getElementById('lvxMini'); if (!box || !room) { closeMiniBox(); return; }
++    const stage = box.querySelector('#lv7Stage');
++    let ov = document.getElementById('lvxRoom');
++    if (!ov) { renderRoomShell(); ov = document.getElementById('lvxRoom'); }
++    const host = ov && ov.querySelector('.lv7');
++    if (stage && host) host.insertBefore(stage, host.firstChild);
++    closeMiniBox();
++    if (ov) ov.hidden = false;
++    try { paintRoom(room.session); tick(); } catch (e) {}
++};
++window.skhLiveMiniClose = function () {
++    closeMiniBox();
++    const ov = document.getElementById('lvxRoom');
++    leaveRoom();
++    if (ov) { ov.hidden = true; ov.innerHTML = ''; }
++    if (!document.querySelector('.lvx-overlay:not([hidden])')) document.body.classList.remove('lvx-open');
++};
+ function isHost() { return !!(room && room.session && me() && me() === room.session.hostUid); }
+ function pinned() { return room && room.session ? room.products[room.session.pinnedProductId] : null; }
+ 
+@@ -239,7 +314,8 @@ function renderRoomShell() {
+         <header class="lv7-top">
+           <div class="lv7-pills"><span class="lv7-live" id="lv7Status">${ico('radio', 15)} LIVE</span><span class="lv7-viewers" id="lv7Viewers">0 WATAZAMAJI</span></div>
+           <div class="lv7-brand"><img src="${LOGO}" alt="SokoHai"><div><b>SokoHai</b><small id="lv7Sub">Live</small></div></div>
+-          <button class="lv7-x" onclick="skhLiveClose('lvxRoom')" aria-label="Funga">${ico('x', 18)}</button>
++          <button class="lv7-x" onclick="skhLiveMinimize()" aria-label="Punguza" title="Punguza">${ico('minus', 18)}</button>
++          <button class="lv7-x" onclick="skhLiveCloseAsk('lvxRoom')" aria-label="Funga">${ico('x', 18)}</button>
+         </header>
+         <div class="lv7-host" id="lv7Host"></div>
+         <div class="lv7-frame">
+@@ -254,6 +330,9 @@ function renderRoomShell() {
+           <div class="lv7-bottom" id="lv7Bottom"></div>
+         </div>
+         <form class="lv7-chat lvx-chat-form" id="lvxChatForm"><input id="lvxChatInput" maxlength="300" placeholder="Andika maoni au swali…" autocomplete="off"><button aria-label="Tuma">${ico('send', 18)}</button></form>
++        <div class="lvx-emoji" id="lvxEmoji"><button type="button" data-e="\u{1F525}">\u{1F525}</button><button type="button" data-e="\u2764\ufe0f">\u2764\ufe0f</button><button type="button" data-e="\u{1F602}">\u{1F602}</button><button type="button" data-e="\u{1F44F}">\u{1F44F}</button><button type="button" data-e="\u{1F4AF}">\u{1F4AF}</button></div>
++        <div class="lv7-paused" id="lv7Paused" hidden><div><b>\u23f8 Live imesitishwa</b><span>Mwenyeji amesimamisha live kwa muda. Zabuni na maoni vimesimama \u2014 endelea kutazama.</span></div></div>
++        <div class="lv7-conn" id="lv7Conn" hidden><div><b>Muunganisho umekatika</b><span id="lv7ConnMsg"></span><button class="lv-btn" id="lv7ConnRetry" type="button">JARIBU TENA</button></div></div>
+         <div class="lv7-sheet" id="lv7Sheet" hidden></div>
+       </section>
+       <aside class="lv7-side" aria-label="Maelezo ya live">
+@@ -267,28 +346,31 @@ function renderRoomShell() {
+         try { await call('liveComment', { sessionId: room.id, text, clientId: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }); }
+         catch (er) { i.value = text; toast(friendly(er), 'warn'); }
+     };
++    document.getElementById('lvxEmoji').onclick = (e) => { const b = e.target.closest('button[data-e]'); if (!b || !room) return; const i = document.getElementById('lvxChatInput'); if (i && !i.disabled) { i.value += b.dataset.e; try { i.focus(); } catch (_) {} } };
+     document.querySelectorAll('.lv7-side-tabs button').forEach(b => b.onclick = () => { document.querySelectorAll('.lv7-side-tabs button').forEach(x => x.classList.toggle('on', x === b)); room && (room.side = b.dataset.s); paintSide(); });
+ }
+-window.skhLiveOpen = async function (sessionId) {
++window.skhLiveOpen = async function (sessionId, opts) {
+     if (!skh.requireAuth || !skh.requireAuth()) return;
+-    leaveRoom();
++    opts = opts || {};
++    leaveRoom(!!opts.keepJoin); closeMiniBox();
+     room = { id: sessionId, unsub: [], products: {}, session: null, joined: false, side: 'chat', comments: [] };
+     renderRoomShell();
++    try { window.removeEventListener('online', onNetBack); window.removeEventListener('offline', onNetGone); window.addEventListener('online', onNetBack); window.addEventListener('offline', onNetGone); } catch (e) {}
+     room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'live_sessions', sessionId), (s) => {
+         if (!room || room.id !== sessionId) return;
+         if (!s.exists()) { document.getElementById('lvxStage').innerHTML = '<div class="lv7-gone"><b>Live haipatikani</b></div>'; return; }
+         const prev = room.session; room.session = Object.assign({ id: s.id }, s.data());
+         paintRoom(prev);
+-    }, (e) => { const st = document.getElementById('lvxStage'); if (st) st.innerHTML = `<div class="lv7-gone"><b>Live haipatikani</b><span>${esc(errText(e))}</span></div>`; }));
++    }, (e) => { showConn('Imeshindikana kupakia live: ' + friendly(e), () => window.skhLiveOpen(sessionId, { keepJoin: true })); }));
+     const cq = skh.query(skh.collection(skh.db, 'live_sessions', sessionId, 'comments'), skh.orderBy('createdAt', 'desc'), skh.limit(60));
+     room.unsub.push(skh.onSnapshot(cq, (snap) => { if (!room) return; room.comments = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).reverse(); paintComments(); }, () => {}));
+-    try { const r = await call('liveJoin', { sessionId }); if (room) room.joined = r && r.status === 'live'; } catch (e) {}
++    try { const r = await call('liveJoin', { sessionId }); if (room) room.joined = !!(r && (r.status === 'live' || r.status === 'paused')); } catch (e) {}
+     room.timer = setInterval(tick, 1000);
+ };
+ /* one product, no session: Mnada (ref 5/7) or Bei Kushuka campaign (ref 2) */
+ async function productRoom(productId, kind) {
+     if (!skh.requireAuth || !skh.requireAuth()) return;
+-    leaveRoom();
++    leaveRoom(); closeMiniBox();
+     room = { id: null, unsub: [], products: {}, session: null, joined: false, side: kind === 'auction' ? 'board' : 'board', comments: [] };
+     renderRoomShell();
+     const p = await getProduct(productId);
+@@ -308,7 +390,8 @@ function paintRoom(prev) {
+     document.getElementById('lv7Sub').textContent = mode === 'auction' ? 'Live Auction Room' : mode === 'price_drop' ? 'Price Drop Live' : 'Live ya Muuzaji';
+     const st = document.getElementById('lv7Status');
+     st.className = 'lv7-live' + (s.status === 'live' ? '' : ' is-off');
+-    st.innerHTML = s.status === 'live' ? ico('radio', 15) + ' LIVE' : s.status === 'scheduled' ? 'INAKUJA' : s.status === 'ended' ? 'IMEKWISHA' : 'IMEONDOLEWA';
++    st.innerHTML = s.status === 'live' ? ico('radio', 15) + ' LIVE' : s.status === 'paused' ? '\u23f8 IMESITISHWA' : s.status === 'scheduled' ? 'INAKUJA' : s.status === 'ended' ? 'IMEKWISHA' : 'IMEONDOLEWA';
++    const pz = document.getElementById('lv7Paused'); if (pz) pz.hidden = s.status !== 'paused';
+     const v = document.getElementById('lv7Viewers'); v.hidden = s.viewerCount == null; v.textContent = kshort(s.viewerCount) + ' WATAZAMAJI';
+     document.getElementById('lv7Likes').textContent = kshort(s.likeCount || 0);
+     document.getElementById('lv7Like').hidden = !room.id;
+@@ -369,12 +452,12 @@ window.skhLiveShare = async function () {
+ 
+ function watchProduct(pid) {
+     room.watching = pid;
+-    room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'products', pid), (s) => { if (room && s.exists()) { room.products[pid] = Object.assign({ id: s.id, collectionName: 'products' }, s.data()); paintPinned(); tick(); outcomeCheck(); } }, () => {}));
++    room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'products', pid), (s) => { if (room && s.exists()) { room.products[pid] = Object.assign({ id: s.id, collectionName: 'products' }, s.data()); paintPinned(); tick(); outcomeCheck(); } }, (e) => showConn('Imeshindikana kupakia bidhaa: ' + friendly(e), () => { if (room && room.watching === pid) { room.watching = null; watchProduct(pid); } })));
+     const p = room.products[pid];
+     if (modeOf(p) === 'auction') {
+         room.unsub.push(skh.onSnapshot(skh.query(skh.collection(skh.db, 'products', pid, 'bids'), skh.orderBy('amount', 'desc'), skh.limit(15)), (snap) => {
+             if (!room) return; room.bids = snap.docs.map(d => d.data()); paintSide(); if (!room.id) paintComments();
+-        }, () => {}));
++        }, (e) => showConn('Imeshindikana kupakia zabuni: ' + friendly(e), () => { try { tick(); } catch (_) {} })));
+     }
+     if (modeOf(p) === 'price_drop') {
+         room.unsub.push(skh.onSnapshot(skh.doc(skh.db, 'price_drop_board', pid), (s) => { if (!room) return; room.board = s.exists() ? s.data() : null; paintSide(); refreshRank(); }, () => {}));
+@@ -394,10 +477,21 @@ function paintPinned() {
+     const box = document.getElementById('lvxPinned'); if (!box || !room) return;
+     const p = pinned();
+     if (!p) { box.innerHTML = ''; return; }
+-    const mode = modeOf(p);
++    const mode = modeOf(p), now = Date.now();
++    let extra = '';
++    if (mode === 'auction') { const a = auctionState(p, now); extra = `<i>Dau la juu: <b class="lvx-price">${esc(tsh(a.cur))}</b></i><i>Muda: <b>${a.paused ? '\u23f8 Imesitishwa' : a.ended ? 'Imefungwa' : fmtLeft(a.left)}</b></i><i>Wazabuni: <b>${a.bidders}</b></i>${a.extensions > 0 && !a.ended ? `<i>\u23f1 <b>+2:00 \u00d7${a.extensions}</b></i>` : ''}`; }
++    else if (mode === 'group_buy') { const g = groupState(p, now); extra = `<i>Kikundi: <b>${g.joined}/${g.target}</b></i><i>Bei: <b class="lvx-price">${esc(tsh(g.price))}</b></i>`; }
++    else if (mode === 'price_drop') { const d = dropPrice(p, now); extra = `<i>Bei sasa: <b class="lvx-price">${esc(tsh(d.price))}</b></i><i>Mwisho: <b>${esc(tsh(d.min))}</b></i>`; }
+     box.innerHTML = `<button class="lv7-pcard" onclick="skhLiveOpenProduct('${esc(p.id)}')">${photo(p) ? `<img src="${esc(photo(p))}" alt="">` : ''}
+-        <span><i>Jina: <b>${esc(p.title)}</b></i><i>Hali: <b>${esc(String(p.condition || 'Mpya').toUpperCase())}</b></i><i>${mode === 'auction' ? 'Bei ya kuanzia' : 'Bei'}: <b class="lvx-price">${esc(tsh(mode === 'price_drop' ? dropPrice(p, Date.now()).price : p.price))}</b></i></span></button>`;
++        <span><i class="lv7-pmode">${mode === 'auction' ? 'MNADA LIVE' : mode === 'group_buy' ? 'GROUP BUY' : mode === 'price_drop' ? 'BEI KUSHUKA' : 'BIDHAA'}</i><i>Jina: <b>${esc(p.title)}</b></i><i>Hali: <b>${esc(String(p.condition || 'Mpya').toUpperCase())}</b></i>${extra}</span></button>`;
+ }
++/* ---- close / leave confirmation (design: Close/Leave dialog; leave logic unchanged) ---- */
++window.skhLiveCloseAsk = function (id) {
++    modal(`<div class="lv-mav">${ico('logout', 26)}</div><h3>Toka kwenye Live?</h3>
++        <p class="lv-muted">Ukifunga, utaondoka kwenye chumba na hesabu ya watazamaji itapungua.</p>
++        <button class="lv-btn" onclick="skhLvModalClose();skhLiveClose('${esc(id || 'lvxRoom')}')">FUNGA / TOKA</button>
++        <button class="lv-btn lv-ghost" onclick="skhLvModalClose()">ENDELEA KUTAZAMA</button>`, 'lv-leave');
++};
+ function paintComments() {
+     const el = document.getElementById('lvxComments'); if (!el || !room) return;
+     let list = room.comments || [];
+@@ -420,16 +514,22 @@ function tick() {
+         return;
+     }
+     const mode = modeOf(p);
++    try { paintPinned(); } catch (e) {}   // keep the floating overlay timer/counts fresh (1s tick)
+     if (mode === 'auction') {
+         const a = auctionState(p, now), mine = me() && a.leader === me(), won = a.ended && me() && a.winner === me();
++        /* [AUCTION-LIVE] frozen display while paused: the server clock stopped, so the client holds the last shown time. */
++        if (a.paused && !a.ended) { if (room.pausedLeft == null) room.pausedLeft = a.left; a.left = room.pausedLeft; } else room.pausedLeft = null;
+         let cta;
+         if (a.notStarted) cta = `<button class="lv7-cta is-off" disabled><b>MNADA HAUJAANZA</b><small>Unaanza baada ya ${fmtLeft(Number(a.md.startTime) - now)}</small></button>`;
+         else if (won) cta = `<button class="lv7-cta lv7-gold" onclick="skhLiveWinner('${esc(p.id)}')"><b>LIPA SASA</b><small>Umeshinda kwa ${esc(tsh(a.winBid))}</small></button>`;
+         else if (a.ended) cta = `<button class="lv7-cta is-off" disabled><b>MNADA UMEFUNGWA</b><small>${a.winner ? 'Mshindi amepatikana' : 'Hakuna zabuni'}</small></button>`;
++        else if (a.paused) cta = `<button class="lv7-cta is-off" disabled><b>\u23f8 IMESITISHWA</b><small>Live imesimamishwa kwa muda na mwenyeji</small></button>`;
+         else if (mine) cta = `<button class="lv7-cta lv7-lead" onclick="skhBidConfirm('${esc(p.id)}')"><b>UNAONGOZA MNADA</b><small>Zabuni yako: ${esc(tsh(a.cur))} · Ongeza zabuni</small></button>`;
+         else if (isHost() || p.userId === me()) cta = `<button class="lv7-cta is-off" disabled><b>MNADA WAKO</b><small>Inayokubalika: ${esc(tsh(a.minNext))}</small></button>`;
+         else cta = `<button class="lv7-cta" id="lv7BidCta" onclick="skhBidConfirm('${esc(p.id)}')"><b>WEKA ZABUNI</b><small>Inayokubalika: ${esc(tsh(a.minNext))}</small></button>`;
+-        bottom.innerHTML = cta + `<div class="lv7-foot"><button onclick="skhLiveSheet('board')">Zabuni ya Juu: <b id="lvxBidNow">${esc(tsh(a.cur))}</b></button><span>Muda: <b>${a.ended ? '00:00' : fmtLeft(a.left)}</b></span></div>`;
++        const soon = a.endingSoon && !a.paused ? `<div class="lv7-endsoon">\u23f3 INAKARIBIA KUISHA \u2014 chini ya dakika 1!</div>` : '';
++        const ext = a.extensions > 0 && !a.ended ? ` <em class="lv7-ext">\u23f1 +2:00 \u00d7${a.extensions}</em>` : '';
++        bottom.innerHTML = soon + cta + `<div class="lv7-foot"><button onclick="skhLiveSheet('board')">Zabuni ya Juu: <b id="lvxBidNow">${esc(tsh(a.cur))}</b></button><span>Muda: <b>${a.ended ? '00:00' : fmtLeft(a.left)}</b></span><span>Zabuni: <b>${a.bids}</b> \u00b7 Wazabuni: <b>${a.bidders}</b>${ext}</span></div>`;
+         if (a.ended && !a.md.endNotified && !room.finalizing) { room.finalizing = true; call('auctionFinalize', { productId: p.id }).catch(() => {}); }
+         return;
+     }
+@@ -449,9 +549,44 @@ function tick() {
+         bottom.innerHTML = engine + ctas + `<div class="lv7-foot"><button onclick="skhLiveSheet('board')">${rankTxt}</button><span>${md.maxPerBuyer ? 'Kikomo: ' + md.maxPerBuyer + ' · ' : ''}Zipo: <b>${Number(p.stock) || 0}</b></span></div>`;
+         return;
+     }
++    if (mode === 'group_buy') {
++        const g = groupState(p, now), mine = me() && g.parts.indexOf(me()) !== -1, pct = Math.min(100, Math.round(g.joined / Math.max(1, g.target) * 100));
++        const prog = `<div class="lv7-gprog"><div class="lv7-gbar"><i style="width:${pct}%"></i></div><span><b>${g.joined}</b>/${g.target} wamejiunga · ${pct}%</span></div>`;
++        let cta;
++        if (g.status === 'successful') cta = mine
++            ? `<button class="lv7-cta lv7-gold" onclick="skhLiveOpenProduct('${esc(p.id)}')"><b>LIPA BEI YA KIKUNDI</b><small>${esc(tsh(g.price))} · lengo limefikiwa</small></button>`
++            : `<button class="lv7-cta" onclick="skhGroupJoinConfirm('${esc(p.id)}')"><b>JIUNGE NA GROUP BUY</b><small>${esc(tsh(g.price))} · nafasi zimefunguka</small></button>`;
++        else if (g.status === 'failed') cta = `<button class="lv7-cta is-off" disabled><b>KIKUNDI HAKIKUFANIKIWA</b><small>Muda umeisha bila kufikia lengo</small></button>`;
++        else if (mine) cta = `<button class="lv7-cta lv7-lead" disabled><b>UMESHAJIUNGA</b><small>Subiri wengine: ${g.joined}/${g.target}</small></button>`;
++        else if (isHost() || p.userId === me()) cta = `<button class="lv7-cta is-off" disabled><b>KIKUNDI CHAKO</b><small>${g.joined}/${g.target} wamejiunga</small></button>`;
++        else cta = `<button class="lv7-cta" onclick="skhGroupJoinConfirm('${esc(p.id)}')"><b>JIUNGE NA GROUP BUY</b><small>${esc(tsh(g.price))} · badala ya ${esc(tsh(g.base))}</small></button>`;
++        bottom.innerHTML = prog + cta + `<div class="lv7-foot"><span>Bei ya kikundi: <b>${esc(tsh(g.price))}</b></span><span>${g.endsAt ? 'Muda: <b>' + fmtLeft(g.left) + '</b>' : ''}</span></div>`;
++        return;
++    }
+     bottom.innerHTML = `<div class="lv7-ctas"><button class="lv7-cta" onclick="skhLiveOpenProduct('${esc(p.id)}')"><b>AGIZA SASA</b><small>${esc(tsh(p.price))} · weka kwenye kikapu</small></button>
+         <button class="lv7-cta lv7-white" onclick="skhLiveOpenProduct('${esc(p.id)}')"><b>MAELEZO</b><small>ya bidhaa</small></button></div>`;
+ }
++/* ---- group-buy join (server: groupBuyJoin; counts are server-authoritative) ---- */
++window.skhGroupJoinConfirm = async function (pid) {
++    if (!skh.requireAuth || !skh.requireAuth()) return;
++    const p = (room && room.products[pid]) || await getProduct(pid); if (!p) return;
++    const g = groupState(p, Date.now());
++    modal(`<p class="lv-kicker">JIUNGE NA GROUP BUY</p>${photo(p) ? `<img class="lv-mimg" src="${esc(photo(p))}" alt="">` : ''}
++        <div class="lv-kv"><small>Bei ya kikundi</small><b>${esc(tsh(g.price))}</b></div>
++        <div class="lv-kv"><small>Wamejiunga</small><b>${g.joined} / ${g.target}</b></div>
++        <div class="lv-gprog"><div class="lv7-gbar"><i style="width:${Math.min(100, Math.round(g.joined / Math.max(1, g.target) * 100))}%"></i></div></div>
++        <div class="lv-info">${ico('check', 14)} Ukijiunga, bei yako ni ya kikundi. Kikundi kikifikia lengo, unalipia kwa bei hiyo; kisipofikia, hutalipishwa.</div>
++        <button class="lv-btn" id="lvGrpGo">THIBITISHA KUJIUNGA</button>`, 'lv-grp');
++    const go = document.getElementById('lvGrpGo');
++    go.onclick = async () => {
++        go.disabled = true; go.textContent = 'Inatuma…';
++        try {
++            const r = await call('groupBuyJoin', { productId: pid });
++            window.skhLvModalClose();
++            toast(r.already ? 'Tayari umeshajiunga kwenye kikundi hiki.' : 'Umejiunga! Kikundi: ' + r.joined + '/' + r.target + '.', 'success');
++        } catch (e) { toast(friendly(e), 'warn'); go.disabled = false; go.textContent = 'THIBITISHA KUJIUNGA'; }
++    };
++};
+ 
+ /* auction outcome pop-ups: outbid (ref 5) and winner (ref 5); price-drop end (ref 2) */
+ function outcomeCheck() {
+@@ -474,12 +609,16 @@ window.skhBidConfirm = async function (pid) {
+     if (!skh.requireAuth || !skh.requireAuth()) return;
+     const p = (room && room.products[pid]) || await getProduct(pid); if (!p) return;
+     const a = auctionState(p, Date.now());
++    /* [AUCTION-LIVE] quick-bid chips: minimum + one/two increments up */
++    const chipStep = Math.max(1, a.minNext - a.cur), chipAmts = [a.minNext, a.minNext + chipStep, a.minNext + chipStep * 2];
+     modal(`<p class="lv-kicker">THIBITISHA ZABUNI</p>${photo(p) ? `<img class="lv-mimg" src="${esc(photo(p))}" alt="">` : ''}
+         <div class="lv-kv"><small>Zabuni ya juu sasa</small><b>${esc(tsh(a.cur))}</b></div>
+         <label class="lv-lab">Zabuni yako (angalau ${esc(tsh(a.minNext))})<input id="lvBidAmt" inputmode="numeric" value="${a.minNext}"></label>
++        <div class="lv-chips" id="lvBidChips">${chipAmts.map(x => `<button type="button" data-amt="${x}">${esc(tsh(x))}</button>`).join('')}</div>
+         <div class="lv-info">${ico('check', 14)} Zabuni yako ni ahadi ya kununua. Ukishinda, unalipa ndani ya saa 24 kupitia SokoPay (escrow); usipolipa, nafasi inapewa mzabuni anayefuata.</div>
+         <button class="lv-btn" id="lvBidGo">THIBITISHA ZABUNI</button>`, 'lv-bid');
+     const go = document.getElementById('lvBidGo');
++    document.querySelectorAll('#lvBidChips button').forEach(b => b.onclick = () => { const i = document.getElementById('lvBidAmt'); if (i) i.value = b.dataset.amt; });
+     go.onclick = async () => {
+         const amount = Math.round(Number(String(document.getElementById('lvBidAmt').value).replace(/[^\d]/g, '')));
+         if (!(amount > 0)) return toast('Andika kiasi cha zabuni.', 'warn');
+@@ -582,10 +721,15 @@ function sideHtml(what) {
+     const s = room.session || {}, p = pinned(), host = isHost();
+     if (what === 'products') {
+         const ids = s.productIds || [];
+-        return ids.length ? ids.map(pid => { const x = room.products[pid]; if (!x) return '';
++        const rows = ids.length ? ids.map(pid => { const x = room.products[pid]; if (!x) return '';
+             return `<div class="lvx-prod ${pid === s.pinnedProductId ? 'on' : ''}">${photo(x) ? `<img src="${esc(photo(x))}" alt="" loading="lazy">` : ''}<span><b>${esc(x.title)}</b><em data-lvx-price="${esc(pid)}">${esc(tsh(listPrice(x)))}</em>${pid === s.pinnedProductId ? '<small class="lv7-now">Inaonyeshwa sasa</small>' : ''}</span>
+               <button class="lvx-btn" onclick="skhLiveOpenProduct('${esc(pid)}')">Fungua</button>${host && pid !== s.pinnedProductId && s.status !== 'ended' ? `<button class="lvx-btn lvx-btn-gold" onclick="skhLiveHost('pin','${esc(pid)}')">Onyesha</button>` : ''}</div>`; }).join('')
+             : '<p class="lvx-muted">Live hii haina bidhaa.</p>';
++        // [D-D1 2026-11-10] Mwenyeji anaweza kubadilisha orodha katikati ya live
++        // (liveSetProducts ilikuwepo server lakini haikuwa na UI).
++        const edit = (host && s.status !== 'ended' && s.status !== 'removed' && room.id)
++            ? `<div class="lvx-prod-edit"><button class="lvx-btn lvx-btn-gold" onclick="skhLiveEditProducts()">Badilisha orodha ya bidhaa</button></div>` : '';
++        return rows + edit;
+     }
+     if (what === 'board') {
+         if (p && modeOf(p) === 'price_drop') {
+@@ -607,6 +751,9 @@ function sideHtml(what) {
+         const rows = [];
+         if (host) {
+             if (s.status === 'scheduled') rows.push(`<button class="lv7-mrow" onclick="skhLiveHost('start')">${ico('video', 16)} Anza live</button>`);
++            /* [AUCTION-LIVE] pause is offered for auction lives; the server enforces pre-1st-bid-only. */
++            if (s.status === 'live' && kindOf(s) === 'auction') rows.push(`<button class="lv7-mrow" onclick="skhLiveHost('pause')">${ico('pause', 16)} Sitisha live kwa muda</button>`);
++            if (s.status === 'paused') rows.push(`<button class="lv7-mrow" onclick="skhLiveHost('resume')">${ico('play', 16)} Endelea na live</button>`);
+             if (s.status === 'live' || s.status === 'scheduled') rows.push(`<button class="lv7-mrow danger" onclick="skhLiveHost('end')">${ico('x', 16)} Maliza live</button>`);
+             rows.push(`<div class="lv7-mhead">Simamia maoni</div>` + ((room.comments || []).filter(c => c.kind === 'comment' && c.uid !== me()).slice(-15).map(c => `<div class="lv7-mod"><span><b>${esc(c.name)}</b> ${esc(c.text)}</span>${c.status === 'removed' ? '<small>imeondolewa</small>' : `<button onclick="skhLiveMod('remove_comment','${esc(c.id)}')">Ondoa</button><button onclick="skhLiveMod('mute','${esc(c.uid)}')">Zuia</button>`}</div>`).join('') || '<p class="lvx-muted">Hakuna maoni ya kusimamia.</p>'));
+         } else if (room.id) rows.push(`<button class="lv7-mrow" onclick="skhLiveReport()">${ico('alert', 16)} Ripoti live hii</button>`);
+@@ -629,10 +776,42 @@ window.skhLiveHost = async function (what, pid) {
+     try {
+         if (what === 'start') { await call('liveStart', { sessionId: room.id }); await call('liveJoin', { sessionId: room.id }).then(() => { if (room) room.joined = true; }).catch(() => {}); }
+         if (what === 'end') { if (!window.confirm('Maliza live sasa?')) return; const rec = room.session.recordingAllowed ? window.prompt('Link ya rekodi (YouTube/Vimeo), hiari:', '') : ''; await call('liveEnd', { sessionId: room.id, recordingUrl: rec || null }); }
++        if (what === 'pause') { await call('livePause', { sessionId: room.id }); toast('Live imesitishwa kwa muda. Zabuni zimesimama.', 'success'); }
++        if (what === 'resume') { await call('liveResume', { sessionId: room.id }); toast('Live imeendelea.', 'success'); }
+         if (what === 'pin') { await call('livePin', { sessionId: room.id, productId: pid }); room.watching = null; }
+         const sh = document.getElementById('lv7Sheet'); if (sh) sh.hidden = true;
+     } catch (e) { toast(friendly(e), 'warn'); }
+ };
++/* [D-D1 2026-11-10] Mwenyeji anabadilisha bidhaa zinazoonyeshwa katikati ya live.
++ * Orodha mpya inapohifadhiwa, snapshot ya session ina-refresh chumba chenyewe. */
++window.skhLiveEditProducts = async function () {
++    if (!room || !room.id || !isHost()) return;
++    const s = room.session || {};
++    if (s.status === 'ended' || s.status === 'removed') { toast('Live imekwisha.', 'warn'); return; }
++    const kind = s.kind || 'live';
++    const needMode = kind === 'auction' ? 'auction' : kind === 'price_drop' ? 'price_drop' : null;
++    const uid = me();
++    const el = sheet('lvxEditProducts', `<div class="lvx-panel lvx-form" role="dialog" aria-label="Badilisha bidhaa">
++        <header class="lvx-head"><button class="lvx-icon-btn" onclick="skhLiveClose('lvxEditProducts')" aria-label="Funga">${ico('back', 18)}</button><div><b>Bidhaa za live</b><small>Chagua zinazoonyeshwa (hadi 20)</small></div></header>
++        <div id="lvxEditPick" class="lvx-pick">Inapakia bidhaa zako…</div>
++        <div class="lvx-actions"><button class="lvx-btn" onclick="skhLiveClose('lvxEditProducts')">Ghairi</button><button class="lvx-btn lvx-btn-primary" id="lvxEditGo">Hifadhi orodha</button></div></div>`);
++    try {
++        const snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'products'), skh.where('userId', '==', uid), skh.limit(60)));
++        const cur = s.productIds || [];
++        const docs = snap.docs.filter(d => !needMode || modeOf(d.data()) === needMode);
++        document.getElementById('lvxEditPick').innerHTML = docs.length ? docs.map(d => { const p = d.data();
++            return `<label class="lvx-pick-item"><input type="checkbox" value="${esc(d.id)}"${cur.indexOf(d.id) !== -1 ? ' checked' : ''}>${photo(p) ? `<img src="${esc(photo(p))}" alt="">` : ''}<span>${esc(p.title || 'Bidhaa')}</span><em>${esc(tsh(p.price))}</em></label>`; }).join('')
++            : `<span class="lvx-muted">${needMode === 'auction' ? 'Huna bidhaa za mnada.' : needMode === 'price_drop' ? 'Huna bidhaa za Bei Kushuka.' : 'Huna bidhaa bado.'}</span>`;
++    } catch (e) { document.getElementById('lvxEditPick').textContent = errText(e); }
++    el.querySelector('#lvxEditGo').onclick = async (ev) => {
++        const btn = ev.currentTarget; btn.disabled = true;
++        const ids = [...el.querySelectorAll('#lvxEditPick input:checked')].map(i => i.value).slice(0, 20);
++        try {
++            await call('liveSetProducts', { sessionId: room.id, productIds: ids });
++            closeSheet('lvxEditProducts'); toast('Orodha ya bidhaa imehifadhiwa.', 'success');
++        } catch (e) { toast(friendly(e), 'warn'); btn.disabled = false; }
++    };
++};
+ window.skhLiveReport = async function () {
+     if (!room || !room.id) return;
+     const reason = window.prompt('Eleza tatizo la live hii (mf. bidhaa za uongo, lugha mbaya):', '');
+@@ -654,7 +833,7 @@ window.skhMyBids = async function (filter) {
+     try {
+         const snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'auction_participation'), skh.where('uid', '==', me()), skh.orderBy('lastBidAt', 'desc'), skh.limit(60)));
+         rows = await Promise.all(snap.docs.map(async d => { const r = d.data(); const p = await getProduct(r.productId); return { r, p }; }));
+-    } catch (e) { el.querySelector('#lvmbBody').innerHTML = `<div class="lvh-empty"><b>Imeshindikana kupakia</b><span>${esc(errText(e))}</span></div>`; return; }
++    } catch (e) { el.querySelector('#lvmbBody').innerHTML = `<div class="lvh-empty"><b>Imeshindikana kupakia</b><span>${esc(friendly(e))}</span></div>`; return; }
+     const now = Date.now();
+     const cls = ({ p }) => { if (!p) return 'lost'; const a = auctionState(p, now); if (!a.ended) return 'active'; if (a.winner === me()) return (p.modeData || {}).winnerPaid ? 'won' : 'pay'; return 'lost'; };
+     const groups = { active: [], won: [], lost: [], pay: [] }; rows.forEach(x => groups[cls(x)].push(x));
+@@ -711,12 +890,13 @@ window.skhLiveProductPanel = function (mode, p, area) {
+     const now = Date.now();
+     if (mode === 'auction') {
+         const a = auctionState(p, now), md = a.md, won = a.ended && me() && a.winner === me();
++        const pillTxt = a.ended ? 'MNADA UMEFUNGWA' : a.paused ? '\u23f8 IMESITISHWA' : a.endingSoon ? 'MNADA LIVE \u00b7 \u23f3 INAKARIBIA KUISHA' : 'MNADA LIVE';
+         area.innerHTML = `<div class="lvp">
+-            <div class="lvp-top"><span class="lvp-pill">${ico('radio', 12)} ${a.ended ? 'MNADA UMEFUNGWA' : 'MNADA LIVE'}</span><span class="lvp-timer" data-lvh-end="${Number(md.endTime) || 0}">${a.ended ? '00:00' : fmtLeft(a.left)}</span></div>
+-            <div class="lvp-kv"><small>${a.ended ? 'Zabuni iliyoshinda' : 'Bei ya sasa'}</small><b>${esc(tsh(a.ended ? a.winBid : a.cur))}</b><em>${a.bids} zabuni</em></div>
++            <div class="lvp-top"><span class="lvp-pill">${ico('radio', 12)} ${pillTxt}</span><span class="lvp-timer" data-lvh-end="${Number(md.endTime) || 0}">${a.ended ? '00:00' : fmtLeft(a.left)}</span></div>
++            <div class="lvp-kv"><small>${a.ended ? 'Zabuni iliyoshinda' : 'Bei ya sasa'}</small><b>${esc(tsh(a.ended ? a.winBid : a.cur))}</b><em>${a.bids} zabuni \u00b7 ${a.bidders} wazabuni${a.extensions > 0 && !a.ended ? ` \u00b7 \u23f1 +2:00 \u00d7${a.extensions}` : ''}</em></div>
+             <div class="lvp-rules"><b>SHERIA ZA MNADA</b><span>Bei ya kuanzia: ${esc(tsh(p.price))}</span><span>Nyongeza ya chini: ${md.minIncrement ? esc(tsh(md.minIncrement)) : (md.minIncrementPct || 5) + '% ya zabuni ya juu'}</span>
+               <span>Inaisha: ${md.endTime ? new Date(Number(md.endTime)).toLocaleString('sw-TZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</span><span>Malipo: ndani ya saa 24 kupitia SokoPay (escrow)</span></div>
+-            <div class="lvp-acts">${won ? `<button class="lvp-btn gold" onclick="skhLiveWinner('${esc(p.id)}')">LIPA SASA</button>` : a.ended ? '' : `<button class="lvp-btn" onclick="skhBidConfirm('${esc(p.id)}')">WEKA ZABUNI</button>`}
++            <div class="lvp-acts">${won ? `<button class="lvp-btn gold" onclick="skhLiveWinner('${esc(p.id)}')">LIPA SASA</button>` : a.ended ? '' : a.paused ? `<button class="lvp-btn" disabled>\u23f8 IMESITISHWA</button>` : `<button class="lvp-btn" onclick="skhBidConfirm('${esc(p.id)}')">WEKA ZABUNI</button>`}
+               <button class="lvp-btn ghost skh-auction-room-btn" onclick="skhAuctionRoom('${esc(p.id)}')">INGIA KWENYE MNADA ${ico('arrow-right', 14)}</button></div></div>`;
+         return true;
+     }
+@@ -737,4 +917,4 @@ window.skhLiveProductPanel = function (mode, p, area) {
+     }
+     return false;
+ };
+-setInterval(() => { const n = Date.now(); document.querySelectorAll('.lvp [data-lvh-end]').forEach(e => { const end = Number(e.dataset.lvhEnd); e.textContent = end > n ? fmtLeft(end - n) : '00:00'; }); }, 1000);
++setInterval(() => { const n = Date.now(); document.querySelectorAll('.lvp [data-lvh-end]').forEach(e => { const end = Number(e.dataset.lvhEnd); e.textContent = end > n ? fmtLeft(end - n) : '00:00'; }); }, 1000);
+\ No newline at end of file

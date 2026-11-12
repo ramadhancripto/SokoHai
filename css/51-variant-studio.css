@@ -491,3 +491,54 @@
     .skh-vp-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
     .skh-vp-market { max-width: 190px; }
 }
+
+/* ============================================================================
+ * [UBORESHAJI 2026-11-11] Sehemu ya variants/rangi/saizi/sifa — muonekano safi
+ * ----------------------------------------------------------------------------
+ * - Step numbers kwenye kila section (1,2,3...) — hatua zinaonekana wazi
+ * - Color swatches kwa chaguo za rangi, size chips kwa saizi
+ * - Variant cards zenye mpangilio safi unaolingana na form
+ * ========================================================================== */
+#productBuilder { counter-reset: spb-step; }
+#productBuilder > section { position: relative; padding-top: 16px; }
+#productBuilder > section > h4 { counter-increment: spb-step; display: flex; align-items: center; gap: 8px; }
+#productBuilder > section > h4::before {
+    content: counter(spb-step);
+    flex: 0 0 auto;
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0E6B52, #14957A);
+    color: #fff;
+    font: 800 11px/1 'Inter','Segoe UI',sans-serif;
+    box-shadow: 0 2px 6px rgba(14,107,82,.25);
+}
+/* Chaguo za rangi — swatches */
+#productBuilder .spb-value[data-color] { display: flex; align-items: center; gap: 8px; }
+#productBuilder .spb-swatch {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(22,35,43,.25), inset 0 0 0 1px rgba(22,35,43,.08);
+}
+/* Saizi — chips */
+#productBuilder .spb-size-chip {
+    display: inline-flex; align-items: center; padding: 5px 11px;
+    border-radius: 999px; border: 1px solid #DDE7E3; background: #FCFEFD;
+    font: 800 11.5px/1 'Inter','Segoe UI',sans-serif; color: #16232B;
+}
+/* Variant cards — mpangilio safi */
+#productBuilder .spb-variant {
+    border: 1px solid #E7EDEA; border-radius: 14px; padding: 12px;
+    background: linear-gradient(180deg, #FFFFFF, #FCFEFD);
+    box-shadow: 0 1px 3px rgba(22,35,43,.04);
+}
+#productBuilder .spb-variant > .spb-row { margin-bottom: 8px; }
+#productBuilder .spb-variant .spb-grid { gap: 10px; }
+#productBuilder .spb-variant .spb-grid label {
+    padding: 8px 9px; border: 1px solid #EDF3F0; border-radius: 10px; background: #FCFEFD;
+}
+/* Sifa/Features — orodha safi */
+#productBuilder .spb-card { transition: border-color .15s ease, box-shadow .15s ease; }
+#productBuilder .spb-card:hover { border-color: #CDE6DD; box-shadow: 0 2px 8px rgba(22,35,43,.05); }
+/* Buttons za kuongeza — thabiti */
+#productBuilder > section > button { transition: background .15s ease, border-color .15s ease; }
+#productBuilder > section > button:active { transform: translateY(1px); }

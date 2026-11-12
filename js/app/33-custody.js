@@ -662,6 +662,22 @@ window.skhCustodyRevokeTokens = async function(rideId) {
     return { ok: true };
 };
 
+/* [C-C1 2026-11-10] Kughairi safari (mteja). 1) Batilisha tokeni pending
+ * kupitia SERVER (hazitumiki tena). 2) Andika status cancelled — rules
+ * zinaruhusu mteja + kabla ya pickup pekee; zikikataa, honest error. */
+window.skhCustodyCancelRide = async function(rideId) {
+    if (!rideId) return { ok: false, error: 'ride_required' };
+    try { await window.skhCustodyRevokeTokens(rideId); } catch (e) { /* best-effort */ }
+    try {
+        await skh.updateDoc(skh.doc(skh.db, 'ride_requests', rideId), {
+            status: 'cancelled', cancelledAt: nowIso(), updatedAt: nowIso()
+        });
+        return { ok: true, status: 'cancelled' };
+    } catch (e) {
+        return { ok: false, error: (e && e.code) || 'cancel_denied' };
+    }
+};
+
 /* ============================================================
    6) MLOLONGO WA MAKABIDHIANO (chain of custody timeline)
    ============================================================ */

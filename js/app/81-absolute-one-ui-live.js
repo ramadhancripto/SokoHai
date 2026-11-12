@@ -373,6 +373,30 @@ import { skh } from './00-bootstrap.js';
 
         // If 56-nav-back has stack, use its closeTop which will restore via our restore that shows previous
         if(window.skhNavDepth && window.skhNavDepth()>0 && window.skhCloseTop){
+          /* [PHASE1-FIX 2026-11-11] B3-E11 root cause: generic closeModals() (e.g. winner
+             checkoutSeriousMode at 12-sys-modes.js) used to pop the live-room entry off
+             the nav stack, and its restore HARD-CLOSES the room (skhLiveClose → leaveRoom
+             → skhLiveVideo.close → #lv7Remote dies, .lv7-stage cleared). That killed
+             mini-player continuity in E11 and ruined the winner-checkout UX (the live
+             the user was watching vanished when checkout opened).
+             Fix: if an OPEN live room is the one about to be sacrificed by a generic
+             modal-open flow, MINIMIZE it to the existing mini-player instead (the stage
+             node is MOVED, not destroyed — WebRTC stream + Firestore listeners live on,
+             exactly what skhLiveMinimize was built for). The room's nav-stack entry is
+             pruned automatically later (prune() drops hidden elements), and explicit
+             back/close paths (skhBack / FUNGA-TOKA / X button) still hard-close via
+             skhLiveClose — those call skhCloseTop directly, bypassing this branch. */
+          try{
+            var lvRoom = byId('lvxRoom');
+            if(lvRoom && !lvRoom.hidden && !byId('lvxMini')
+               && lvRoom.querySelector('.lv7-stage')
+               && typeof window.skhLiveMinimize === 'function'){
+              window.skhLiveMinimize();
+              // body.lvx-open (overflow lock) is stale now that the room is hidden
+              if(!document.querySelector('.lvx-overlay:not([hidden])')) document.body.classList.remove('lvx-open');
+              return;
+            }
+          }catch(e){ /* fall through to the normal stack-pop behaviour */ }
           return window.skhCloseTop();
         }
 

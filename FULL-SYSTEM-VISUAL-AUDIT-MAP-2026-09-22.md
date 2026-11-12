@@ -29,7 +29,7 @@ No sample data, duplicate component, duplicate route, or replacement mini-applic
   - `js/app/73-group-soga.js` — 472.
   - `js/app/10-dashboard-tabs.js` — 435.
   - `html/21-scripts.html` — 359.
-  - `html/14-haipay.html` — 304.
+  - `html/14-sokopay.html` — 304.
   - `js/app/16-pos-admin-jobs.js` — 235.
   - `html/09-admin-sell.html` — 193.
   - `js/app/17-hub.js` — 173.
@@ -73,7 +73,7 @@ This directly contradicts the required white Bottom Nav. The fix belongs in the 
 | Cart/checkout/orders | `html/05-modals-market.html`, buyer order modal | `js/19-cart-checkout-canonical.js`, `js/app/02-checkout.js`, `js/app/04-orders-escrow.js`, `js/app/23-smart-cart.js` | Multiple flows, payment/order status accuracy |
 | SokoPay/wallet/payment | `html/07-modal-payment.html`, payment/deposit dynamic modals | `js/app/21-sokopay.js`, `js/app/67-payment-accounts.js`, `js/12-payments.js`, `js/16-wallet.js`, `css/09-sokopay-polish.css` | Largest inline-style hotspot; payment state must stay honest |
 | Profiles/community | profile and social modals | `js/app/13-community.js`, `28-buyer-engagement.js`, `29-seller-store.js`, `64-my-profile.js`, `css/21-discovery-maoni.css`, `css/28-my-profile.css` | Multiple role identities, follower/review/comment actions |
-| Dashboards/POS/admin | `html/09-admin-sell.html`, `html/14-haipay.html`, `html/17-sliders.html` | `js/app/03-dashboard.js`, `10-dashboard-tabs.js`, `15-pos-sales.js`, `16-pos-admin-jobs.js`, `18-cockpit.js`, `css/08-dashboard-pos-polish.css`, `css/10-admin-dash-polish.css` | Rainbow KPI cards, heavy inline styles, dense mobile forms |
+| Dashboards/POS/admin | `html/09-admin-sell.html`, `html/14-sokopay.html`, `html/17-sliders.html` | `js/app/03-dashboard.js`, `10-dashboard-tabs.js`, `15-pos-sales.js`, `16-pos-admin-jobs.js`, `18-cockpit.js`, `css/08-dashboard-pos-polish.css`, `css/10-admin-dash-polish.css` | Rainbow KPI cards, heavy inline styles, dense mobile forms |
 | Agent/offline/member tools | forms and dynamic operations in later HTML | `js/app/19-roles.js`, `31-agent-assist.js`, `58-request-visibility.js`, `59-agent-monitor.js` | Permission states and role actions must not become visual-only promises |
 | Notifications/saved/request inbox | notification and request modals | `js/app/40-token-box.js`, `41-request-inbox.js`, related listeners | Status colors and empty/loading/error consistency |
 | Modals/dialogs/menus | 53 modal IDs and 30 menu IDs | `js/05-dialogs.js`, `js/94-modal-stack.js`, `css/02-menu.css`, `css/26-design-system.css` | Inline shells, inconsistent radius/shadows, stacking cannot be solved with extreme z-index |

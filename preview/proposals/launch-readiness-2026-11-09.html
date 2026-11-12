@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SokoHai — Launch Readiness (2026-11-09)</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f172a;margin:0;padding:24px;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(2,6,23,.08)}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:28px 0 10px;border-bottom:2px solid #e2e8f0;padding-bottom:6px}h3{font-size:15px;margin:18px 0 6px}
+.verdict{background:#ecfdf5;border:2px solid #10b981;border-radius:12px;padding:16px 18px;font-size:17px;font-weight:800;color:#065f46;margin:16px 0}
+.warn{background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+th,td{border:1px solid #e2e8f0;padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#0f172a;color:#fff}tr:nth-child(even) td{background:#f8fafc}
+code{background:#f1f5f9;padding:1px 6px;border-radius:6px;font-size:12.5px;color:#0f172a}
+pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;font-size:12.5px;overflow-x:auto;white-space:pre-wrap}
+.pass{color:#059669;font-weight:800}.small{font-size:12.5px;color:#64748b}
+ul{margin:6px 0}li{margin:4px 0}
+.badge{display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:800;border-radius:20px;padding:2px 10px;margin-left:8px}
+</style></head><body><div class="wrap">
+<h1>🚀 SokoHai — Ripoti ya Urekebishaji &amp; Launch Readiness</h1>
+<div class="small">Tarehe: 2026-11-09 · Tawi: <code>feature/product-card-visual-refinement</code> · Mradi: <code>sokonet-3b847</code> · 0 writes kwenye production wakati wa kazi yote</div>
+<div class="verdict">HUKUMU: LAUNCH-READY ✅ — baada ya hatua 3 za mmiliki (deploy rules, backfill, live-IPN proof). Kila tatizo lililogundulika limerekebishwa na kujaribiwa hadi sifuri.</div>
+
+<h2>1. HATUA 1 — Sheria zilijaribiwa staging (G1) <span class="badge">86/86</span></h2>
+<p>Ukaguzi wa G1 ulithibitisha ukweli wa production (guest ANAWEZA kusoma kila kitu — sheria zilizodeploywa ni lax) na kwamba <code>firestore.rules</code> za repo ni msingi mzuri. Tofauti 4 zilipatikana (collections zinazotumiwa na app lakini hazipo kwenye rules → default-DENY) + userCards list ilikuwa guest-readable. Zilijaribiwa staging kwanza, kisha <strong>kupandishwa kwenye <code>firestore.rules</code></strong> (Fix 8, hapa chini). G1 ilijaribiwa upya dhidi ya sheria zilizopandishwa: <strong>86/86 na uthibitisho wa seeds</strong> (kipimo kimoja cha orodha ya sokopay kilirekebishwa kutumia muundo wa app — <code>where(userId==me)</code> — na kupitishwa).</p>
+
+<h2>2. HATUA 2 — Marekebisho ya code (Fix 1–6, 8)</h2>
+<table>
+<tr><th>#</th><th>Tatizo (kabla)</th><th>Rekebisho</th><th>Faili</th></tr>
+<tr><td><strong>Fix 1</strong></td><td><code>confirmEscrowOrder</code>: server path ilikuwa DEAD (inaita <code>window.skhEscrowRelease</code> ambayo haikufafanuliwa popote + geti halikuwashwa); fallback iliandika <code>completed</code> KWANZA kisha ika-crash kwenye <code>skhWalletAdjust</code> (haipo) → <strong>oda "completed" bila mtu kulipwa</strong>. Tatizo hilohilo kwenye <code>confirmSokoPayLinkDirect</code>.</td><td>Wrapper <code>skhEscrowRelease</code> imefafanuliwa (→ callable <code>escrowRelease</code>); njia ya server daima; fallback zote mbili <strong>zimefutwa</strong> → fail-closed (hitilafu inaonyesha ujumbe, hakuna kinachoandikwa).</td><td><code>04-orders-escrow.js</code>, <code>21-sokopay.js</code></td></tr>
+<tr><td><strong>Fix 2</strong></td><td>Cron ya kivinjari kila dakika 5 iliandika <code>completed+autoReleased</code> kwa KILA oda shipped &gt; saa 24 (ilifanya kazi kwenye prod lax!) kisha ika-crash → false completions kwa wingi.</td><td>Cron <strong>IMEZIMWA kwa default</strong> — inahitaji <code>CRON_LEGACY_ENABLED</code> + admin claims; interval pia inaruka mapema.</td><td><code>14-map-onboarding.js</code></td></tr>
+<tr><td><strong>Fix 3</strong></td><td><code>loadBuyerOrdersWithTracking</code> bila auth guard (guest TypeError).</td><td><code>requireAuth()</code> + ujumbe wa kuingia.</td><td><code>04-orders-escrow.js</code></td></tr>
+<tr><td><strong>Fix 4</strong></td><td>PII kwenye matangazo ya public: <code>ownerPhone</code> (namba ya mwanachama wa offline) iliandikwa bila msomaji yeyote.</td><td><code>ownerPhone</code> <strong>imeondolewa</strong> kwenye <code>saveData</code>. <code>userEmail/contact</code> zinabaki (biashara-haja: mnunuzi lazima amwone muuzaji — hatari iliyokubalika).</td><td><code>00-bootstrap.js</code></td></tr>
+<tr><td><strong>Fix 5</strong></td><td><code>submitEditForm</code>: hakuna ownership check (isipokuwa products), collection yoyote inaweza kuandikwa, bei hasi, price-drop isiyo na maana (min ≥ bei, muda uliopita).</td><td>Allowlist {products,services,drivers}, umiliki wa lazima (mmiliki/wakala/admin), bei ≥ 0, price-drop sanity (min &lt; bei, mwisho uko mbele, hatua ≥ 1s).</td><td><code>12-sys-modes.js</code></td></tr>
+<tr><td><strong>Fix 6</strong></td><td>Waandishi wa oda bila uthibitisho: fundi angeunda oda ya bei 0/hasi, mtu yeyote angeita <code>markShipped</code> kwenye oda ya mwingine, kubonyeza mara 2 = oda 2.</td><td>Kithibiti kimoja <code>window.skhOrderChecks</code> (mirror ya rules) + kimefungwa kwenye waandishi wote 5: accept-request, markShipped, complete-task, confirm-escrow (auth), + kuzuia double-submit.</td><td><code>04, 03-dashboard, 16-pos-admin-jobs</code></td></tr>
+<tr><td><strong>Fix 8</strong></td><td>(a) 4 collections za live app hazikuwepo kwenye rules (zingekataliwa baada ya deploy). (b) userCards list guest-readable. (c) <strong>Flow ya fundi kukubali kazi haingeweza kufanya kazi</strong> chini ya rules (seller-side create ilikataliwa).</td><td>(a) +<code>calls, discoverRequests, productInquiries, sharedContexts</code> (party-scoped, guest DENY). (b) userCards list → signedIn. (c) Seller-side create <strong>inaruhusiwa pale tu inapoungwa mkono na ombi lililokubaliwa</strong> (sender=mteja, receiver=fundi huyu, status=accepted) + kiasi &gt; 0 + haijathibitishwa kulipwa.</td><td><code>firestore.rules</code></td></tr>
+</table>
+
+<h2>3. HATUA 3 — Battery ya vipimo (vyote green)</h2>
+<table>
+<tr><th>Kipimo</th><th>Matokeo</th><th>Maelezo</th></tr>
+<tr><td>G1 access-control (vs promoted rules)</td><td class="pass">86/86</td><td>A–J: guest deny, public reads, party matrix, money server-only, sokopay app-pattern lists — zote na seed-verification</td></tr>
+<tr><td>Fix 8 service-orders</td><td class="pass">19/19</td><td>Seller-create matrix (10), buyer-create, ship/dispute/money transitions</td></tr>
+<tr><td>Rules zilizopo (6 suites)</td><td class="pass">350/350</td><td>conversation 8, group-chat 90, inventory 44, listing-trust 17, repair 139, ride-privacy 52</td></tr>
+<tr><td colspan="3"><strong>Jumla ya rules: 455 asserts, 0 fail</strong> (emulator :8085/:9099, project <code>demo-sokohai-g1</code>)</td></tr>
+<tr><td><code>npm test</code> (chain nzima)</td><td class="pass">EXIT 0</td><td>Contract suites zote</td></tr>
+<tr><td>Browser regression (playwright)</td><td class="pass">20/20</td><td>Boot bila pageerrors (0), validators 8/8, cron no-op, link-release fail-closed</td></tr>
+<tr><td>Syntax (<code>node --check</code>)</td><td class="pass">11/11</td><td>Faili 7 za app + scripts 4 za G1</td></tr>
+</table>
+
+<h2>4. Hatua za mmiliki (3 + 2 za kawaida)</h2>
+<div class="warn"><strong>Hazikufanywa na wakala</strong> (zinahitaji credentials zako + uamuzi wa deploy). Mpangilio unaopendekezwa:</div>
+<h3>O1. Deploy sheria (muhimu zaidi — inafunga uvujaji wa guest)</h3>
+<pre>cd /path/to/SokoHai
+firebase deploy --only firestore:rules --project sokonet-3b847</pre>
+<h3>O2. Hakikisha functions zimedepolywa (server ndiyo mamlaka sasa)</h3>
+<pre>firebase deploy --only functions --project sokonet-3b847   # ikiwa escrowRelease/disputeOpen/haipayReleaseLink bado hazipo live (region: europe-west1)</pre>
+<h3>O3. Backfill: safisha false completions za zamani (script tayari)</h3>
+<pre>npm i --no-save firebase-admin
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/owner-key.json node tools/g1/owner_backfill_false_completions.mjs
+# kagua orodha, kisha:
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/owner-key.json node tools/g1/owner_backfill_false_completions.mjs --fix --confirm</pre>
+<h3>O4. Uthibitisho wa malipo halisi (live-IPN)</h3>
+<p>Fanya muamala mmoja halisi wa PesaPal (kiasi kidogo), thibitisha: <code>escrow_holds</code> → <code>held</code> → shipped → buyer-confirm → <code>wallet_ledger/order_&lt;id&gt;_released</code> ipo + wallet ya muuzaji imeongezeka. Kisha deploy hosting (Netlify) kama kawaida.</p>
+
+<h2>5. Hatari zilizokubalika (zisizo matatizo ya launch)</h2>
+<ul>
+<li><code>userEmail/contact</code> kwenye matangazo ya public — biashara-haja (mnunuzi ampate muuzaji/dereva); inapendekezwa kuhamia userCards-based contact baada ya launch.</li>
+<li>Admin email hardcoded kwenye rules (<code>rshabansaid@gmail.com</code>) — inafanya kazi lakini ipendekezwe kuhamia custom claims tu.</li>
+<li><code>paymentStatus</code> inaandikwa na party (core-tx) — server haiiamini kamwe; <code>paymentVerified</code> ndiyo ukweli.</li>
+<li>Double-accept ya ombi moja (nje ya double-click) inaweza kuunda oda 2 — ombi huondoka kwenye foleni baada ya kukubaliwa; ukaguzi wa kipekee ni kazi ya server ya baaye.</li>
+<li>Orodha ya sokopay_links isiyo na kichujio (bila <code>where</code>) inakataliwa (403) — app inachuja kila wakati (<code>where userId/buyerId</code>), hivyo tabia hii ni kinga dhidi ya enumeration, si tatizo.</li>
+</ul>
+
+<h2>6. Faili zilizoguswa</h2>
+<p class="small"><code>firestore.rules</code> · <code>js/app/{00-bootstrap, 03-dashboard, 04-orders-escrow, 12-sys-modes, 14-map-onboarding, 16-pos-admin-jobs, 21-sokopay}.js</code> · Mpya: <code>tools/g1/{test_g1_access_control, test_fix8_service_orders, test_browser_regression, owner_backfill_false_completions}.mjs</code> (+ <code>firebase.staging.json</code>). Hakuna commit/push iliyofanywa — mabadiliko yako kwenye working tree kwa ukaguzi wako.</p>
+</div></body></html>

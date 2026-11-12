@@ -467,19 +467,34 @@
         return Math.round((1 - now / c.base) * 100);
     }
 
-    function publisherRow(card) {
+    function publisherRow(card, stat) {
         var ph = card.sellerPhoto || '';
         var av = ph
             ? '<img src="' + esc(ph) + '" alt="" loading="lazy" onerror="this.onerror=null;this.style.display=\'none\';">'
             : '<span class="skh-df-uc-avini">' + esc(initials(card.seller || card.title)) + '</span>';
         return '<span class="skh-df-uc-pubrow">' +
             '<span class="skh-df-uc-av">' + av + '</span>' +
-            '<span class="skh-df-uc-pub">' + esc(String(card.seller || 'SokoHai').slice(0, 24)) + '</span>' +
+            '<span class="skh-df-uc-pubtx"><span class="skh-df-uc-pub">' + esc(String(card.seller || 'SokoHai').slice(0, 24)) + '</span>' +
+            (stat ? '<small class="skh-df-uc-stat">' + esc(stat) + '</small>' : '') + '</span>' +
             '</span>';
     }
 
     /* Kadi ya update — muundo wa mock: media 128px, publisher, title,
        maelezo mafupi, CTA. Kila kitu ni data/skills za mfumo. */
+    /* [R13-F] Kadi kwa mtindo wa design ref 8 ("Discover New Updates"):
+       - post ya bidhaa/huduma: picha juu, chini jina + duka + bei (kijani)
+       - live/mnada/bei kushuka/video/sponsored: picha nzima, kivuli, beji
+         nyekundu "LIVE", kidonge "Live preview · Gusa kujiunga", jina juu ya
+         picha + duka + takwimu halisi (zabuni / waliojiunga / mionekano).
+       Data na handlers ni zile zile (data-df-id → viewer/CTA ya 106). */
+    function livePill(card, info) {
+        if (!info.live) return '';
+        var a = 'Live preview', b = 'Gusa kujiunga';
+        if (card.kind === 'auction') { a = 'Mnada unaendelea'; b = 'Gusa kutoa zabuni'; }
+        else if (card.kind === 'price_drop') { a = 'Bei inashuka sasa'; b = 'Gusa kuona bei'; }
+        else if (card.kind === 'group_buy') { a = info.label || 'Nunua pamoja'; b = 'Gusa kujiunga'; }
+        return '<span class="skh-df-uc-pill"><b>' + esc(a) + '</b><small>' + esc(b) + '</small></span>';
+    }
     function updateCard(card, info) {
         var img = card.image || placeholderImg();
         var media = img
@@ -490,38 +505,50 @@
         if (!desc || /^[-\s]+$/.test(desc)) desc = card.priceLabel || '';
         if (!desc && card.meta && card.meta[0]) desc = (card.meta[0].b || '') + (card.meta[0].t ? ' ' + card.meta[0].t : '');
         if (!desc) desc = card.title;
+        var overlay = !!(info.live || card.video || card.sponsored);
+        var stat = '';
+        if (info.live && info.label) stat = info.label;
+        else { var vv = viewsOf(card); if (vv) stat = compactNum(vv) + ' wameona'; }
+        var price = card.priceLabel ? String(card.priceLabel).split(' / ')[0] : '';
+        var tl = typeLabel(card, info);
+        var badge = info.live
+            ? '<span class="skh-df-uc-type skh-df-uc-live"><i aria-hidden="true"></i>LIVE' + (card.kind === 'auction' ? ' · Mnada' : card.kind === 'price_drop' ? ' · Bei' : card.kind === 'group_buy' ? ' · Pamoja' : '') + '</span>'
+            : (tl === 'Bidhaa Mpya' ? '' : '<span class="skh-df-uc-type">' + esc(tl) + '</span>');
 
-        return '<article class="skh-df-uc' + (info.live ? ' is-live' : '') + (card.sponsored ? ' is-sponsored' : '') + '" ' +
+        return '<article class="skh-df-uc ' + (overlay ? 'is-overlay' : 'is-post') + (info.live ? ' is-live' : '') + (card.sponsored ? ' is-sponsored' : '') + (card.video ? ' is-video' : '') + '" ' +
             'role="button" tabindex="0" data-df-id="' + esc(card.id) + '" data-df-col="' + esc(card.collection) + '" ' +
-            'data-df-kind="' + esc(card.kind) + '" aria-label="' + esc(card.title) + '">' +
+            'data-df-kind="' + esc(card.kind) + '" aria-label="' + esc(card.title) + '" data-no-i18n>' +
             '<span class="skh-df-uc-media">' + media +
-                '<span class="skh-df-uc-type">' + esc(typeLabel(card, info)) + '</span>' +
+                (overlay ? '<span class="skh-df-uc-shade" aria-hidden="true"></span>' : '') +
+                badge +
                 (off > 0 ? '<span class="skh-df-uc-off">-' + off + '%</span>' : '') +
                 (card.video
                     ? '<span class="skh-df-uc-overlay" aria-hidden="true"><span class="skh-df-uc-playbtn">' +
-                      '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="9,6 19,12 9,18"/></svg></span></span>'
-                    : '') +
+                      '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="9,6 19,12 9,18"/></svg></span></span>'
+                    : livePill(card, info)) +
             '</span>' +
             '<span class="skh-df-uc-body">' +
-                publisherRow(card) +
                 '<span class="skh-df-uc-title">' + esc(String(card.title || '').slice(0, 60)) + '</span>' +
-                '<span class="skh-df-uc-desc">' + esc(String(desc).slice(0, 90)) + '</span>' +
+                publisherRow(card, overlay ? stat : '') +
+                (overlay ? '' : (price ? '<span class="skh-df-uc-price">' + esc(price) + '</span>' : '<span class="skh-df-uc-desc">' + esc(String(desc).slice(0, 90)) + '</span>')) +
             '</span>' +
             '<span class="skh-df-uc-cta">' + esc(ctaOf(card, info)) + '</span>' +
             '</article>';
     }
 
     function statusStripHTML() {
-        if (state.status !== 'ready' || !state.items.length) return '';
+        var hxOnly = typeof window.skhHxHasCards === 'function' && window.skhHxHasCards();
+        if (state.status !== 'ready' && !hxOnly) return '';
         var live = [], rest = [];
-        state.items.forEach(function (c) {
+        (state.status === 'ready' ? (state.items || []) : []).forEach(function (c) {
             var info = liveInfo(c);
             c._live = info;
             if (info.live) live.push(c);
             else if (rest.length < 12) rest.push(c);
         });
         var rail = live.concat(rest);
-        if (!rail.length) return '';
+        var hx = typeof window.skhHxHasCards === 'function' && window.skhHxHasCards();
+        if (!rail.length && !hx) return '';
         return '<div class="skh-df-strip">' +
             '<div class="skh-df-uhead">' +
                 '<span class="skh-df-uhead-l"><i class="skh-df-uhead-dot" aria-hidden="true"></i>' +
@@ -534,6 +561,8 @@
                 '</span>' +
             '</div>' +
             '<div class="skh-df-updates" id="skhDfTiles">' +
+                /* [R13-F] Live sessions + Hali (module 121) zinakaa mstari huu huu, mbele */
+                '<span id="skhHxRail" class="hx-slot hx-inrow"></span>' +
                 rail.map(function (c) { return updateCard(c, c._live || liveInfo(c)); }).join('') +
                 '<button type="button" class="skh-df-uc skh-df-uc--all" data-df-all aria-label="Zote">' +
                     '<span class="skh-df-uc-media skh-df-uc-media--all">' +
@@ -607,6 +636,7 @@
             var html = statusStripHTML();
             hali.innerHTML = html;
             hali.style.display = html ? '' : 'none';
+            if (html && typeof window.skhHxPaint === 'function') { try { window.skhHxPaint(); } catch (e) {} }
         }
         updateNav();
     }
@@ -726,6 +756,21 @@
         }).catch(function () { /* read imekataliwa: tunaacha "Fuata" — hakuna kujifanya */ });
     }
 
+    var SVGI = {
+        heart: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+        chat: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-4.6a8.4 8.4 0 0 1-1.4-4.9 8.4 8.4 0 0 1 8.5-8.4 8.4 8.4 0 0 1 9 8.4z"/></svg>',
+        share: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>'
+    };
+    function likedNow(card) {
+        try { var st = window.skhEngagementState; return !!(st && st.liked && st.liked[(card.collection || 'products') + '__' + card.id]); } catch (e) { return false; }
+    }
+    function shareCard(card) {
+        var link = (typeof window.skhProductPublicUrl === 'function') ? window.skhProductPublicUrl(card.id) : location.href;
+        var data = { title: card.title, text: card.title + (card.priceLabel ? ' · ' + card.priceLabel : ''), url: link };
+        if (navigator.share) { navigator.share(data).catch(function () {}); return; }
+        try { navigator.clipboard.writeText(link).then(function () { toast('Kiungo kimenakiliwa', 'success'); }, function () { toast(link); }); } catch (e) { toast(link); }
+    }
+
     function openViewer(card) {
         var v = $id('skhDfViewer');
         if (!v) return;
@@ -788,7 +833,9 @@
 
         v.querySelector('[data-df-sheet]').innerHTML =
             '<div class="skh-df-vhead">' +
-                // Lebo za aina ziko kwenye media (zisirudiwe hapa).
+                /* [R13-F] ref 9: "Rudi kwenye Chat" + aina */
+                '<button type="button" class="skh-df-vback" data-df-close aria-label="Rudi kwenye Chat">' +
+                    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Rudi kwenye Chat</button>' +
                 '<span class="skh-df-vtitle">' + esc(k.label) + '</span>' +
                 '<button type="button" class="skh-df-vclose" data-df-close aria-label="Funga">' +
                     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
@@ -801,9 +848,17 @@
                 (facts ? '<div class="skh-df-vfacts">' + facts + '</div>' : '') +
                 desc +
             '</div>' +
+            /* [R13-F] ref 9: Penda / Maoni / Shiriki — mifumo iliyopo (skhToggleLike, chat ya muuzaji, kiungo cha umma) */
+            '<div class="skh-df-vreact" data-no-i18n>' +
+                '<button type="button" data-df-react class="' + (likedNow(card) ? 'on' : '') + '">' + SVGI.heart + '<span>Penda</span></button>' +
+                (card.sellerId && card.sellerId !== me ? '<button type="button" data-df-chat>' + SVGI.chat + '<span>Maoni</span></button>' : '') +
+                '<button type="button" data-df-share>' + SVGI.share + '<span>Shiriki</span></button>' +
+            '</div>' +
             '<div class="skh-df-vfoot">' +
                 '<button type="button" class="skh-df-cta-btn' + (ctaDisabled ? '' : '') + '" data-df-action' +
                 (ctaDisabled ? ' disabled' : '') + '>' + esc(ctaLabel) + '</button>' +
+                (card.sellerId && card.sellerId !== me && typeof window.openChatWithUser === 'function'
+                    ? '<button type="button" class="skh-df-chat-btn" data-df-chat data-no-i18n>' + SVGI.chat + ' Chat na muuzaji</button>' : '') +
             '</div>';
 
         v.classList.add('skh-df-viewer--open');
@@ -1039,6 +1094,27 @@
             return;
         }
 
+        var rx = t.closest ? t.closest('#skhDfViewer [data-df-react]') : null;
+        if (rx && state.viewerItem) {
+            e.preventDefault();
+            var ci = state.viewerItem;
+            if (typeof window.skhToggleLike === 'function') {
+                window.skhToggleLike({ id: ci.id, collectionName: ci.collection || 'products', userId: ci.sellerId, title: ci.title }, null);
+                rx.classList.toggle('on', likedNow(ci));
+            }
+            return;
+        }
+        var cx = t.closest ? t.closest('#skhDfViewer [data-df-chat]') : null;
+        if (cx && state.viewerItem) {
+            e.preventDefault();
+            var cc = state.viewerItem;
+            closeViewer();
+            if (typeof window.openChatWithUser === 'function') window.openChatWithUser(cc.sellerId, cc.seller);
+            return;
+        }
+        var sx = t.closest ? t.closest('#skhDfViewer [data-df-share]') : null;
+        if (sx && state.viewerItem) { e.preventDefault(); shareCard(state.viewerItem); return; }
+
         var actEl = t.closest ? t.closest('[data-df-action]') : null;
         if (actEl) {
             e.preventDefault();
@@ -1144,6 +1220,7 @@
         };
     };
     window.skhDfReload = function () { return load(true); };
+    window.skhDfRepaint = function () { try { ensureShell(); render(); } catch (e) {} };
 
     console.log('[106-chat-discovery-feed] Gundua Biashara (sponsored refinement) loaded.');
 })();

@@ -94,6 +94,22 @@ await test('U07 search-first taxonomy fills category + subcategory; an OFFLINE p
   const doc = await p.evaluate(() => [...window.testDocs.values()][0]);
   assert.equal(doc.category, cat); assert.deepEqual(doc.salesChannels, ['pos']); assert.equal(doc.isOnline, false);
 });
+await test('U07b owner taxonomy: typing a product name ("jembe") picks category › branch › product type and saves productTypeId', async p => {
+  await open(p); await p.evaluate(() => window.testDocs.clear()); await setMode(p, 'offline_only');
+  await p.fill('#prodTaxonomySearch', 'jembe');
+  await p.waitForSelector('#prodTaxonomyResults [data-tx]');
+  const first = await p.textContent('#prodTaxonomyResults [data-tx]');
+  assert.ok(/^\s*Jembe/.test(first) && /Zana za Kilimo/.test(first), 'first hit is the product type: ' + first);
+  await p.click('#prodTaxonomyResults [data-tx]');
+  assert.equal(await p.inputValue('#prodSubCategory'), 'Zana za Kilimo');
+  await p.fill('#prodName', 'Jembe la mkono'); await p.fill('#prodPrice', '15000'); await p.fill('#prodStock', '4'); await p.fill('#prodLocation', 'Dodoma');
+  await p.evaluate(() => window.submitSeller({ preventDefault() {} }));
+  await p.waitForFunction(() => window.testDocs.size === 1);
+  const doc = await p.evaluate(() => [...window.testDocs.values()][0]);
+  assert.equal(doc.subCategory, 'Zana za Kilimo');
+  assert.equal(doc.productTypeLabel, 'Jembe');
+  assert.equal(doc.productTypeId, 'PT-CAT-02-ZANA_ZA_KILIMO_JEMBE');
+});
 await test('U08 copy a previous product: settings copied, SKU / stock / photos / variants not copied', async p => {
   await open(p);
   await p.evaluate(() => window.testDocs.set('src1', { title: 'Shati ya Kitenge', sku: 'SKU-SRC', barcode: '9988', stock: 7, price: 18000, buyPrice: 9000, category: 'CAT-07',

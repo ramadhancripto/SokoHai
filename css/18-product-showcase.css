@@ -302,6 +302,14 @@
     font-weight: 700;
     margin-top: 6px;
 }
+/* [2026-11-06] Bei kwa idadi (rejareja + jumla) */
+.pm-wholesale-note .pm-tier-title { font-size: 11.5px; font-weight: 900; color: #18352D; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
+.pm-tier-table { display: grid; gap: 4px; }
+.pm-tier-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid #D9EEE5; border-radius: 10px; background: #fff; color: #31504A; font-weight: 700; }
+.pm-tier-row b { color: #18352D; font-weight: 900; white-space: nowrap; }
+.pm-tier-row small { color: #6B8580; font-weight: 700; font-size: 11px; }
+.pm-tier-row.is-active { border-color: #18A982; background: #EAF8F2; box-shadow: inset 3px 0 0 #18A982; }
+.pm-tier-row.is-active b { color: #0F7A5C; }
 
 /* ---------- VARIANTS ---------- */
 .pm-var-group { margin-bottom: 10px; }
@@ -876,3 +884,23 @@
 /* Creative Studio contextual launcher — entity data is loaded from canonical record. */
 .pm-creative-launch{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:10px 14px;border:1px solid #0E7A5F;border-radius:12px;background:#ecfdf5;color:#075f49;font:800 12px/1.2 Inter,system-ui,sans-serif;cursor:pointer}
 .pm-creative-launch:hover{background:#0E7A5F;color:#fff}
+/* [2026-11-06] Hakiki ya tiers kwenye fomu ya muuzaji */
+.ws-tiers-preview { margin-top: 8px; display: grid; gap: 4px; }
+.ws-tiers-preview .ws-tier-head { font-size: 11.5px; font-weight: 900; color: #31504A; }
+.ws-tiers-preview .ws-tier-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 10px; padding: 6px 10px; border: 1px solid #D9EEE5; border-radius: 9px; background: #fff; font-size: 12px; }
+.ws-tiers-preview .ws-tier-issue { background: #FFF7ED; border: 1px solid #FED7AA; color: #9A3412; border-radius: 9px; padding: 8px 10px; font-size: 12px; font-weight: 700; }
+/* [2026-11-06 SOKO HURU] Linganisha wauzaji wa bidhaa hii */
+.pm-offers { border: 1px solid #D9EEE5; border-radius: 14px; background: #fff; padding: 10px; margin-bottom: 14px; display: grid; gap: 6px; }
+.pm-offer { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid #EEF3F1; border-radius: 10px; }
+.pm-offer.is-current { background: #EAF8F2; border-color: #CCEBDD; }
+.pm-offer-who b, .pm-offer-price b { display: block; color: #18352D; font-size: 13px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-offer-who small, .pm-offer-price small { display: block; color: #6B8580; font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-offer-stock { font-size: 11.5px; font-weight: 800; color: #31504A; white-space: nowrap; }
+.pm-offer-btn { border: 1px solid #18A982; color: #0F7A5C; background: #fff; border-radius: 999px; padding: 6px 12px; font-weight: 900; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.pm-offer-tag { font-size: 11px; font-weight: 900; color: #0F7A5C; white-space: nowrap; }
+.pm-offers-note { margin: 2px 2px 0; font-size: 11px; color: #6B8580; }
+@media (max-width: 520px) {
+    .pm-offer { grid-template-columns: minmax(0, 1fr) auto; }
+    .pm-offer-stock { grid-column: 1; }
+    .pm-offer-act { grid-column: 2; grid-row: 1 / span 2; }
+}

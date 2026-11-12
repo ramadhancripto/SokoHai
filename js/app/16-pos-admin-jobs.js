@@ -1669,7 +1669,8 @@ window.submitDirectHire = async function() {
     try {
         // [CUSTODY PHASE B 2026-09] Token C (DL) inatolewa na SERVER — hakuna
         // plaintext transferCode inayoandikwa kwenye ride doc.
-        const rideDocRef = await skh.addDoc(skh.collection(skh.db, "ride_requests"), {
+        // [REMEDIATION R1] contact fields go to the private subdocument.
+        const rideDocRef = await skh.createRideRequest({
             customerId: skh.currentUser.uid,
             customerName: skh.currentUser.displayName,
             driverId: driverId,
@@ -1916,7 +1917,16 @@ window.directRequestTransporter = async function(rideId) {
                     driverVehicleReg: (skh.currentUserData && skh.currentUserData.vehicleReg) || "N/A"
                 });
                 if (acc && acc.data && acc.data.ok) serverDone = true;
-            } catch (e) { console.warn("[custody] deliveryAccept imeshindwa:", e && e.message); }
+            } catch (e) {
+                console.warn("[custody] deliveryAccept imeshindwa:", e && e.message);
+                // [REMEDIATION R2] a real server decision (not approved / suspended /
+                // already taken) is final: show it, never fall back to a client write.
+                var code = String((e && e.code) || '').replace(/^functions\//, '');
+                if (['permission-denied', 'failed-precondition', 'unauthenticated', 'invalid-argument', 'resource-exhausted'].indexOf(code) !== -1) {
+                    skhToast((e && e.message) || 'Huwezi kukubali kazi hii.', 'error', 5000);
+                    return;
+                }
+            }
         }
 
         if (!serverDone) {
@@ -2231,14 +2241,27 @@ window.loadHubDetailedRequests = async function() {
 
 window.acceptHubServiceRequest = async function(reqId, senderName, title, price, senderId) {
     if(!await skhConfirm(`Je, unathibitisha kukubali mkataba wa ufundi wa "${title}" kutoka kwa ${senderName} kwa TSh ${price.toLocaleString()}?`)) return;
+    // [LAUNCH-FIX 2026-11-09] Kinga: auth + bei/vitambulisho + kuzuia kubonyeza mara 2.
+    if(!skh.requireAuth()) return;
+    if(window.__skhAcceptingReq) return;
+    const _me = skh.currentUser.uid;
+    const _so = { buyerId: senderId, sellerId: _me, amount: price, itemId: reqId };
+    const _se = window.skhOrderChecks ? window.skhOrderChecks.serviceOrderError(_so, _me) : null;
+    if(_se) { alert(_se); return; }
+    window.__skhAcceptingReq = true;
 
+    // [PHASE B 2026-11-10] Order ikishindikana, request inarudishwa 'pending'.
+    let _reqAccepted = false;
     try {
-        // Badilisha status ya request kwanza
+        // Badilisha status ya request kwanza (rules zinataka accepted wakati wa create)
         if (!reqId.startsWith('mock_')) {
             await skh.updateDoc(skh.doc(skh.db, "requests", reqId), { status: "accepted" });
+            _reqAccepted = true;
         }
 
-        // Tengeneza order mpya kiofisi kwenye Escrow system
+        // [PHASE B 2026-11-10 I-I1] 'awaiting_payment' (SI 'held' — held inadai pesa
+        // iko escrow; rules zinaikataa). Server (serviceOrderWalletPay/settle) ndiyo
+        // inayohamishia 'held' baada ya malipo kuthibitishwa.
         await skh.addDoc(skh.collection(skh.db, "orders"), {
             buyerId: senderId,
             buyerName: senderName,
@@ -2247,21 +2270,30 @@ window.acceptHubServiceRequest = async function(reqId, senderName, title, price,
             itemId: reqId,
             itemTitle: `Huduma: ${title}`,
             amount: price,
-            status: "held", // Pesa ipo locked kwenye escrow sasa hivi
+            status: "awaiting_payment",
+            paymentStatus: "pending",
+            paymentVerified: false,
             collectionName: "services",
             date: new Date().toISOString(),
             ...(typeof window.skhAssistMeta === 'function' ? window.skhAssistMeta() : {})
         });
 
-        alert(` Mkataba umesajiliwa salama!\n\nPesa ya mteja (TZS ${price.toLocaleString()}) imeshikiliwa kwenye Escrow. Unaweza kuanza kazi sasa.`);
+        alert(`Kazi imekubaliwa.\n\nMteja atalipa TZS ${price.toLocaleString()} kupitia SokoHai \u2014 pesa itashikiliwa (held) na server baada ya malipo kuthibitishwa.`);
         window.switchProviderDashTab('active_tasks');
     } catch(e) {
+        if (_reqAccepted) {
+            try { await skh.updateDoc(skh.doc(skh.db, "requests", reqId), { status: "pending" }); }
+            catch(_re) { /* best-effort revert */ }
+        }
         alert("Hitilafu: " + e.message);
+    } finally {
+        window.__skhAcceptingReq = false;
     }
 };
 
 window.rejectHubServiceRequest = async function(reqId) {
     if(!await skhConfirm("Una uhakika unataka kukataa ombi hili la huduma?")) return;
+    if(!skh.requireAuth()) return;
     try {
         if (!reqId.startsWith('mock_')) {
             await skh.updateDoc(skh.doc(skh.db, "requests", reqId), { status: "rejected" });
@@ -2300,8 +2332,13 @@ window.loadHubDetailedActiveTasks = async function() {
 
 window.completeServiceTaskPro = async function(orderId, buyerId, title) {
     if(!await skhConfirm(`Je, unathibitisha kuwa umekamilisha kazi ya "${title}" na mteja ameridhika?`)) return;
+    // [LAUNCH-FIX 2026-11-09] Thibitisha haki + hali (mirror ya rules) kabla ya kuandika.
+    if(!skh.requireAuth()) return;
 
     try {
+        const _cs = await skh.getDoc(skh.doc(skh.db, "orders", orderId));
+        const _ce = window.skhOrderChecks ? window.skhOrderChecks.shipError(_cs && _cs.exists() ? _cs.data() : null, skh.currentUser.uid) : null;
+        if(_ce) { alert(_ce); return; }
         if (!orderId.startsWith('mock_')) {
             // Badilisha status kuwa shipped ili mteja aweke DL Code kukubali
             await skh.updateDoc(skh.doc(skh.db, "orders", orderId), { status: "shipped", shippedAt: new Date().toISOString() /* [PHASE 2 P2] completedAt ni ya server */ });

@@ -1,0 +1,15 @@
+SOKOHAI — PREVIEW YA UKAGUZI (6 Nov 2026)
+
+1. Bofya mara mbili ANZA-PREVIEW.cmd (iko kwenye folda hii).
+2. Itaunda folda mpya pembeni: "real sokohai\sokohai-audit-preview" (folda yako kuu haiguswi).
+3. Browser itafunguka: http://localhost:5057/
+
+Mara ya pili: bofya tena ANZA-PREVIEW.cmd (haitaunda upya, itaanzisha server tu).
+
+TAHADHARI: preview inatumia Firebase project yako ya kawaida (data halisi).
+Angalia tu; usifanye malipo halisi.
+Functions za ndani (POS reports, bei za jumla n.k.): endesha pia "npm run local"
+kwenye folda ya sokohai-audit-preview (port 5055) kama kawaida (LOCAL-SERVER-MWONGOZO.md).
+
+Kurudi: folda yako kuu bado iko kwenye main. Kufuta preview:
+  git worktree remove ..\sokohai-audit-preview

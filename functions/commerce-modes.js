@@ -70,6 +70,8 @@ function antiSnipeEnd(md, nowMs) {
 function validateBid(p, bid, uid, nowMs) {
     const md = (p && p.modeData) || {};
     if (saleModeOf(p) !== 'auction') return { ok: false, code: 'si_mnada' };
+    /* [FULL-AUCTION 2026-11] a cancelled auction never accepts bids again. */
+    if (md.cancelled === true) return { ok: false, code: 'mnada_umeghairiwa' };
     // [AUCTION-LIVE] the host paused the live room: bidding freezes everywhere (room + product page)
     if (md.livePaused === true) return { ok: false, code: 'mnada_umesitishwa' };
     const endsAt = Number(md.endTime) || 0;
@@ -207,14 +209,74 @@ exports.groupBuyJoin = onCall({ region: REGION }, async (req) => {
  * distinct bidder is offered the item at THEIR highest bid (up to MAX_ROUNDS times). */
 const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000, MAX_ROUNDS = 3;
 const UNPAID = ['pending', 'pending_payment', 'awaiting_payment', 'price_review', 'cancelled', 'cancelled_not_fulfilled', 'failed', 'expired'];
-async function winnerHasPaid(productId, uid) {
+/* [FULL-AUCTION 2026-11] Exactly-once claims, v3. PROVEN-WRONG approaches on this
+ * emulator: (a) in-transaction read+create — all 4 parallel txns commit; (b) bare
+ * single-doc create() — two parallel creates can BOTH succeed (X7: a second claim
+ * winner died later in tx contention with jaribu_tena). What DOES serialize exactly
+ * (probe-verified, 8 parallel -> 1 winner): a preconditioned update() carrying
+ * lastUpdateTime. So claimOnce = create-if-missing (races here are harmless) + ONE
+ * guarded update: exactly one claimant's precondition matches. Stale reads are safe:
+ * a stale updateTime only ever fails the precondition (taken), never grants a false
+ * win. Live claims (fresh at + holder) short-circuit to taken; crashed holders expire
+ * after CLAIM_TIMEOUT_MS and the marker is stolen by the same atomic update.
+ * Marker docs live in auction_events with type __*_marker; readers must ignore them. */
+const CLAIM_TIMEOUT_MS = 5 * 60 * 1000;
+async function claimOnce(markerRef, tag) {
+    const holder = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try { await markerRef.create({ type: tag, at: 0, holder: '' }); } catch (e) { /* exists or raced — the guarded update below decides */ }
+    let s = null;
+    try { s = await markerRef.get(); } catch (e) { return false; }
+    if (!s || !s.exists) return false;
+    const cur = s.data() || {};
+    if (cur.holder && cur.at && Date.now() - Number(cur.at) < CLAIM_TIMEOUT_MS) return false;
+    try { await markerRef.update({ at: Date.now(), holder }, { lastUpdateTime: s.updateTime }); return true; }
+    catch (e2) { return false; }
+}
+/* [FULL-AUCTION 2026-11] Audit trail: every material auction event is a record under
+ * products/{id}/auction_events (server-written, readable by signed-in users). */
+async function auctionEvent(ref, type, details) {
+    try {
+        await ref.collection('auction_events').add(Object.assign({ type, at: new Date().toISOString() }, details || {}));
+    } catch (e) { /* the audit trail never blocks the money path */ }
+}
+/* [FULL-AUCTION 2026-11] Tightened payment proof (was: any paid order containing the
+ * product). A qualifying order must ALL hold:
+ *   - buyer == the winner uid, and it contains this product,
+ *   - it carries the auction commerce context (order.commerceMode or an item commerceMode),
+ *   - its status is paid-side (not in UNPAID),
+ *   - its amount covers the winner bid of THIS round (delivery/fees may sit on top).
+ * Returns the qualifying order id, or null. */
+async function winnerHasPaid(productId, uid, m) {
+    const winBid = Number((m || {}).winnerBid) || 0;
     const q = await db().collection('orders').where('buyerId', '==', String(uid)).limit(50).get();
-    return q.docs.some(d => {
+    for (const d of q.docs) {
         const o = d.data() || {};
         const items = Array.isArray(o.items) ? o.items : [];
         const hit = String(o.productId || '') === productId || items.some(i => String((i && (i.productId || i.itemId || i.id)) || '') === productId);
-        return hit && UNPAID.indexOf(String(o.status || 'pending')) === -1;
+        if (!hit) continue;
+        const auctionCtx = String(o.commerceMode || '') === 'auction' || items.some(i => String((i && i.commerceMode) || '') === 'auction');
+        if (!auctionCtx) continue;
+        if (UNPAID.indexOf(String(o.status || 'pending')) !== -1) continue;
+        if (winBid > 0 && !(Number(o.amount) + 0.01 >= winBid)) continue;
+        return d.id;
+    }
+    return null;
+}
+/* [FULL-AUCTION] Mark the CURRENT winner paid — exactly once per auction (payment ends
+ * the whole winner flow). Shared by auctionConfirmPayment + both sweep paths, so a
+ * sweep and a user confirm racing each other still produce ONE event/notification. */
+async function markPaid(ref, uid, round, orderId, via) {
+    if (!(await claimOnce(ref.collection('auction_events').doc('__paid'), '__paid_marker'))) return false;
+    let marked = false;
+    await db().runTransaction(async (t) => {
+        const cur = ((await t.get(ref)).data() || {}).modeData || {};
+        if (String(cur.winnerId || '') !== String(uid) || cur.winnerPaid === true) return;
+        t.update(ref, { 'modeData.winnerPaid': true, 'modeData.paymentDeadline': null, 'modeData.paidOrderId': orderId });
+        marked = true;
     });
+    if (!marked) return false;
+    await auctionEvent(ref, 'winner_paid', { winnerId: uid, round, orderId, via });
+    return true;
 }
 async function nextBidder(ref, exclude) {
     const q = await ref.collection('bids').orderBy('amount', 'desc').limit(100).get();
@@ -223,38 +285,79 @@ async function nextBidder(ref, exclude) {
 }
 /* Close one auction (idempotent). Returns true when this call closed it. */
 async function closeAuction(ref, nowMs) {
+    const pre = await ref.get().catch(() => null);
+    if (!pre || !pre.exists) return false;
+    const pm0 = (pre.data() || {}).modeData || {};
+    const endsAt0 = Number(pm0.endTime) || 0;
+    if (pm0.endNotified || pm0.cancelled === true || !(endsAt0 > 0 && nowMs >= endsAt0)) return false;
+    /* [STAGE2 2026-11-12] A paused Live freezes its auctions: livePause/liveResume move
+     * endTime forward by the paused duration on resume, so the clock that expires while the
+     * room is frozen is NOT a real deadline. Finalizing here would silently close an auction
+     * the host intended to resume (and pre-empt the host's own rule allowing pause only
+     * before the first bid). The sweep and the client tick simply retry after resume. */
+    if (pm0.livePaused === true) return false;
+    /* [FULL-AUCTION] exactly-once: claim the close BEFORE the field transaction, so
+     * parallel finalizers can not each close the auction and spam notifications. */
+    if (!(await claimOnce(ref.collection('auction_events').doc('__closed'), '__closed_marker'))) return false;
     let closed = null;
     await db().runTransaction(async (t) => {
         const s = await t.get(ref);
         if (!s.exists) return;
         const p = s.data() || {}, m = p.modeData || {};
         const endsAt = Number(m.endTime) || 0;
-        if (m.endNotified || !(endsAt > 0 && nowMs >= endsAt)) return;
+        if (m.endNotified || m.cancelled === true || !(endsAt > 0 && nowMs >= endsAt)) return;
+        if (m.livePaused === true) return;   // [STAGE2] re-checked inside the transaction: frozen = not expired
+        /* [FULL-AUCTION 2026-11] reserve price: the seller's minimum. When the top bid
+         * is below it, the item is NOT sold (no winner, no payment window). */
+        const reserve = Number(m.reservePrice) || 0;
+        const topBid = Number(m.currentBid) || 0;
+        const reserveMet = !(reserve > 0) || (m.maxBidder && topBid >= reserve);
         t.update(ref, { 'modeData.ended': true, 'modeData.endedAt': new Date(nowMs).toISOString(),
-            'modeData.winnerId': m.maxBidder || null, 'modeData.winnerName': m.maxBidderName || null,
-            'modeData.winnerBid': Number(m.currentBid) || null, 'modeData.winnerRound': 1, 'modeData.pastWinners': [],
-            'modeData.paymentDeadline': m.maxBidder ? nowMs + PAYMENT_WINDOW_MS : null, 'modeData.endNotified': true });
-        closed = { p, m };
+            'modeData.winnerId': reserveMet ? (m.maxBidder || null) : null,
+            'modeData.winnerName': reserveMet ? (m.maxBidderName || null) : null,
+            'modeData.winnerBid': reserveMet ? (topBid || null) : null,
+            'modeData.winnerRound': 1, 'modeData.pastWinners': [],
+            'modeData.reserveMet': reserveMet,
+            'modeData.unsold': !reserveMet,
+            'modeData.paymentDeadline': (reserveMet && m.maxBidder) ? nowMs + PAYMENT_WINDOW_MS : null, 'modeData.endNotified': true,
+            /* [ACCEPTANCE 2026-11-11] unfreeze on close: a paused-then-finalized auction
+             * must not keep livePaused=true (side panel would read "Imesitishwa"). */
+            'modeData.livePaused': false, 'modeData.livePausedAtMs': null });
+        closed = { p, m, reserveMet, reserve };
     });
     if (!closed) return false;
-    const { p, m } = closed, t = p.title || 'bidhaa';
-    if (m.maxBidder) {
+    const { p, m, reserveMet, reserve } = closed, t = p.title || 'bidhaa';
+    await auctionEvent(ref, 'closed', { winnerId: reserveMet ? (m.maxBidder || null) : null, topBid: Number(m.currentBid) || 0,
+        totalBids: parseInt(m.totalBids, 10) || 0, reserve: reserve || 0, reserveMet });
+    if (reserveMet && m.maxBidder) {
         await notify(m.maxBidder, 'Umeshinda Mnada!', 'Umeshinda mnada wa ' + t + ' kwa TSh ' + Number(m.currentBid || 0).toLocaleString() + '. Lipia ndani ya saa 24 ili kumaliza oda yako.',
             { type: 'auction_won', productId: ref.id, commerceMode: 'AUCTION' });
+    } else if (!reserveMet && m.maxBidder) {
+        await notify(m.maxBidder, 'Mnada umefungwa bila muuzaji', 'Zabuni yako ya juu (' + 'TSh ' + Number(m.currentBid || 0).toLocaleString() + ') haikufikia kiwango cha chini cha muuzaji, kwa hiyo bidhaa haijauzwa.',
+            { type: 'auction_reserve_not_met', productId: ref.id, commerceMode: 'AUCTION' });
     }
-    await notify(p.userId, 'Mnada wako umekamilika', m.maxBidder
+    await notify(p.userId, 'Mnada wako umekamilika', (reserveMet && m.maxBidder)
         ? 'Mnada wa ' + t + ' umefungwa. Mshindi: ' + (m.maxBidderName || 'mteja') + ' kwa TSh ' + Number(m.currentBid || 0).toLocaleString() + '.'
-        : 'Mnada wa ' + t + ' umefungwa bila zabuni.', { type: 'auction_ended', productId: ref.id, commerceMode: 'AUCTION' });
+        : (!reserveMet ? 'Mnada wa ' + t + ' umefungwa bila kuuzwa: zabuni ya juu haikufikia kiwango chako cha chini.'
+            : 'Mnada wa ' + t + ' umefungwa bila zabuni.'), { type: 'auction_ended', productId: ref.id, commerceMode: 'AUCTION' });
     return true;
 }
 async function secondChance(ref, nowMs) {
     const s = await ref.get(); const p = s.data() || {}, m = p.modeData || {};
     if (!m.ended || !m.winnerId || !(Number(m.paymentDeadline) > 0) || nowMs < Number(m.paymentDeadline)) return false;
-    if (await winnerHasPaid(ref.id, m.winnerId)) { await ref.update({ 'modeData.winnerPaid': true, 'modeData.paymentDeadline': null }); return false; }
+    /* [FULL-AUCTION] tightened proof: a second chance NEVER starts when the current
+     * winner already paid for THIS auction round (order linked to auction+winner+bid). */
+    const paidOrder = await winnerHasPaid(ref.id, m.winnerId, m);
+    if (paidOrder) {
+        await markPaid(ref, m.winnerId, parseInt(m.winnerRound, 10) || 1, paidOrder, 'sweep');
+        return false;
+    }
     const past = (Array.isArray(m.pastWinners) ? m.pastWinners : []).concat([m.winnerId]);
     const round = (parseInt(m.winnerRound, 10) || 1) + 1;
     const nb = round <= MAX_ROUNDS ? await nextBidder(ref, past) : null;
-    let moved = null;
+    /* [FULL-AUCTION] exactly-once per round: claim the move before transacting. */
+    if (!(await claimOnce(ref.collection('auction_events').doc('__sc_round' + round), '__sc_marker'))) return false;
+    let moved = null, didMove = false;
     await db().runTransaction(async (t) => {
         const cur = ((await t.get(ref)).data() || {}).modeData || {};
         if (cur.winnerId !== m.winnerId || Number(cur.paymentDeadline) !== Number(m.paymentDeadline)) return;   // someone else moved it
@@ -262,8 +365,10 @@ async function secondChance(ref, nowMs) {
             ? { 'modeData.winnerId': nb.uid, 'modeData.winnerName': nb.name, 'modeData.winnerBid': nb.amount, 'modeData.winnerRound': round,
                 'modeData.pastWinners': past, 'modeData.paymentDeadline': nowMs + PAYMENT_WINDOW_MS }
             : { 'modeData.winnerId': null, 'modeData.winnerBid': null, 'modeData.pastWinners': past, 'modeData.paymentDeadline': null, 'modeData.unsold': true });
-        moved = nb;
+        moved = nb; didMove = true;
     });
+    if (!didMove) return false;   // lost the race: no events, no notifications
+    await auctionEvent(ref, 'second_chance', { fromWinner: m.winnerId, round, toWinner: moved ? moved.uid : null, toBid: moved ? moved.amount : null, exhausted: !moved });
     await notify(m.winnerId, 'Muda wa kulipia mnada umeisha', 'Hukulipia ' + (p.title || 'bidhaa') + ' ndani ya muda. Nafasi imepewa mshiriki anayefuata.', { type: 'auction_payment_expired', productId: ref.id, commerceMode: 'AUCTION' });
     if (moved) await notify(moved.uid, 'Nafasi ya kununua mnada', 'Mshindi wa awali hakulipa. Unaweza kununua ' + (p.title || 'bidhaa') + ' kwa zabuni yako ya TSh ' + moved.amount.toLocaleString() + ' ndani ya saa 24.', { type: 'auction_second_chance', productId: ref.id, commerceMode: 'AUCTION' });
     await notify(p.userId, 'Mnada: mshindi amebadilika', moved ? 'Nafasi imepewa ' + moved.name + ' (TSh ' + moved.amount.toLocaleString() + ').' : 'Hakuna mshiriki mwingine; bidhaa haijauzwa.', { type: 'auction_winner_changed', productId: ref.id, commerceMode: 'AUCTION' });
@@ -281,6 +386,90 @@ exports.auctionFinalize = onCall({ region: REGION }, async (req) => {
     const closed = await closeAuction(ref, Date.now());
     const m = (((await ref.get()).data() || {}).modeData) || {};
     return { ok: true, closed, ended: !!m.ended, winnerId: m.winnerId || null, winnerBid: m.winnerBid || null, endTime: m.endTime || null };
+});
+
+/* [FULL-AUCTION 2026-11] Cancel an auction.
+ * Policy: the owner may cancel only BEFORE the first bid (buyers who already bid hold a
+ * promise to buy — their auction must end, not vanish). Admins may cancel any live
+ * auction with a written reason (abuse/fraud), recorded in the audit trail.
+ * A cancelled auction is ended with NO winner; bids stay as history. */
+exports.auctionCancel = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const uid = req.auth.uid, d = req.data || {};
+    const productId = String(d.productId || '');
+    if (!productId || productId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'bidhaa_haipo');
+    const reason = String(d.reason || '').replace(/[<>]/g, '').slice(0, 300);
+    const ref = db().doc('products/' + productId);
+    const s = await ref.get();
+    if (!s.exists || saleModeOf(s.data()) !== 'auction') throw new HttpsError('not-found', 'si_mnada');
+    const p = s.data() || {}, m = p.modeData || {};
+    const isOwner = String(p.userId || '') === uid;
+    const tok = (req.auth.token) || {};
+    const isAdmin = tok.admin === true || tok.superAdmin === true;
+    if (!isOwner && !isAdmin) throw new HttpsError('permission-denied', 'si_mwenye_mnada');
+    if (m.ended || m.cancelled) throw new HttpsError('failed-precondition', 'mnada_umeisha');
+    const bids = parseInt(m.totalBids, 10) || 0;
+    if (bids > 0 && !isAdmin) throw new HttpsError('failed-precondition', 'mnada_una_zabuni');
+    if (isAdmin && !isOwner && reason.length < 5) throw new HttpsError('invalid-argument', 'sababu_inahitajika');
+    /* [FULL-AUCTION] atomic cancel (re-checks state; exactly-once via claim). */
+    if (!(await claimOnce(ref.collection('auction_events').doc('__cancelled'), '__cancelled_marker'))) throw new HttpsError('failed-precondition', 'mnada_umeisha');
+    let cancelled = false;
+    await db().runTransaction(async (t) => {
+        const cur = ((await t.get(ref)).data() || {}).modeData || {};
+        if (cur.ended || cur.cancelled) return;
+        if ((parseInt(cur.totalBids, 10) || 0) > 0 && !isAdmin) throw new HttpsError('failed-precondition', 'mnada_una_zabuni');
+        t.update(ref, { 'modeData.cancelled': true, 'modeData.cancelledAt': new Date().toISOString(), 'modeData.cancelledBy': uid,
+            'modeData.cancelReason': reason || null, 'modeData.ended': true, 'modeData.endedAt': new Date().toISOString(),
+            'modeData.winnerId': null, 'modeData.winnerBid': null, 'modeData.unsold': true,
+            'modeData.paymentDeadline': null, 'modeData.endNotified': true, 'modeData.livePaused': false, 'modeData.livePausedAtMs': null });
+        cancelled = true;
+    });
+    if (!cancelled) throw new HttpsError('failed-precondition', 'mnada_umeisha');
+    await auctionEvent(ref, 'cancelled', { by: uid, byAdmin: !!(isAdmin && !isOwner), reason: reason || null, bidsVoided: bids });
+    if (m.maxBidder) {
+        await notify(m.maxBidder, 'Mnada umeghairiwa', 'Mnada wa ' + (p.title || 'bidhaa') + ' umeghairiwa na muuzaji. Zabuni yako haikuhesabiwa kama ununuzi.',
+            { type: 'auction_cancelled', productId, commerceMode: 'AUCTION' });
+    }
+    await notify(p.userId, 'Mnada umeghairiwa', 'Mnada wa ' + (p.title || 'bidhaa') + ' umeghairiwa' + (reason ? ': ' + reason : '.'),
+        { type: 'auction_cancelled', productId, commerceMode: 'AUCTION' });
+    return { ok: true, bidsVoided: bids };
+});
+
+/* [FULL-AUCTION 2026-11] The winner (or the sweep) confirms payment for THIS auction.
+ * Verifies server-side: auction ended + caller is the current winner + a paid order
+ * exists that is linked to this auction, this winner and this round's bid.
+ * On success the payment window closes immediately (no second chance can start later). */
+exports.auctionConfirmPayment = onCall({ region: REGION }, async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'login');
+    const uid = req.auth.uid;
+    const productId = String((req.data || {}).productId || '');
+    if (!productId || productId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'bidhaa_haipo');
+    const ref = db().doc('products/' + productId);
+    const s = await ref.get();
+    if (!s.exists || saleModeOf(s.data()) !== 'auction') throw new HttpsError('not-found', 'si_mnada');
+    const p = s.data() || {}, m = p.modeData || {};
+    if (!m.ended || m.cancelled) throw new HttpsError('failed-precondition', 'mnada_haujaisha');
+    if (String(m.winnerId || '') !== uid) throw new HttpsError('permission-denied', 'si_mshindi');
+    if (m.winnerPaid === true) return { ok: true, already: true };
+    const orderId = await winnerHasPaid(productId, uid, m);
+    if (!orderId) throw new HttpsError('failed-precondition', 'malipo_hayajathibitishwa');
+    const marked = await markPaid(ref, uid, parseInt(m.winnerRound, 10) || 1, orderId, 'confirm');
+    if (!marked) {
+        /* [FULL-AUCTION] Claim lost (or winner moved under us): the claim-holder
+         * may still be committing its tx. Poll briefly so a parallel confirm
+         * converges to already:true instead of a spurious jaribu_tena (X7). Only
+         * when the paid state never lands (holder crashed; stealable after
+         * CLAIM_TIMEOUT_MS) do we ask the client to retry. */
+        for (let i = 0; i < 15; i++) {
+            const cur = (((await ref.get()).data() || {}).modeData) || {};
+            if (cur.winnerPaid === true && String(cur.winnerId || '') === uid) return { ok: true, already: true };
+            await new Promise(r => setTimeout(r, 200));
+        }
+        throw new HttpsError('unavailable', 'jaribu_tena');
+    }
+    await notify(p.userId, 'Mshindi amelipa', 'Mshindi wa mnada wa ' + (p.title || 'bidhaa') + ' amelipa TSh ' + Number(m.winnerBid || 0).toLocaleString() + '. Tayarisha usafirishaji.',
+        { type: 'auction_winner_paid', productId, commerceMode: 'AUCTION' });
+    return { ok: true, orderId };
 });
 
 /* [R13-B] Bei Kushuka: the current price is computed by the SAME formula as checkout
@@ -315,14 +504,69 @@ async function sweepPriceDrops(nowMs) {
     return out;
 }
 
+/* [FULL-AUCTION 2026-11] Ending-soon: one server notice per auction (leader + seller)
+ * when the end is within the sweep horizon. The client banner may miss it when the
+ * app is closed; this notice does not. */
+const ENDING_SOON_MS = 15 * 60 * 1000, REMIND_WITHIN_MS = 6 * 60 * 60 * 1000;
+async function endingSoon(ref, p, m, nowMs) {
+    if (m.ended || m.cancelled || m.endingSoonNotified) return false;
+    const endsAt = Number(m.endTime) || 0;
+    if (!(endsAt > nowMs) || endsAt - nowMs > ENDING_SOON_MS) return false;
+    let fire = false;
+    await db().runTransaction(async (t) => {
+        const cur = ((await t.get(ref)).data() || {}).modeData || {};
+        if (cur.ended || cur.cancelled || cur.endingSoonNotified) return;
+        t.update(ref, { 'modeData.endingSoonNotified': true });
+        fire = true;
+    });
+    if (!fire) return false;
+    const t = p.title || 'bidhaa';
+    if (m.maxBidder) await notify(m.maxBidder, 'Mnada unakaribia kuisha', 'Mnada wa ' + t + ' unaisha baada ya dakika chache. Zabuni ya juu: TSh ' + Number(m.currentBid || 0).toLocaleString() + '.', { type: 'auction_ending_soon', productId: ref.id, commerceMode: 'AUCTION' });
+    await notify(p.userId, 'Mnada wako unakaribia kuisha', 'Mnada wa ' + t + ' unaisha hivi karibuni.', { type: 'auction_ending_soon', productId: ref.id, commerceMode: 'AUCTION' });
+    await auctionEvent(ref, 'ending_soon', {});
+    return true;
+}
+/* [FULL-AUCTION 2026-11] Winner payment reminders + early paid-marking (the winner may
+ * pay without ever calling auctionConfirmPayment, e.g. IPN-only flows). */
+async function winnerWindow(ref, p, m, nowMs) {
+    const out = { reminded: false, markedPaid: false };
+    if (!m.ended || m.cancelled || !m.winnerId || !(Number(m.paymentDeadline) > 0)) return out;
+    if (m.winnerPaid === true) return out;
+    const orderId = await winnerHasPaid(ref.id, m.winnerId, m);
+    if (orderId) {
+        if (await markPaid(ref, m.winnerId, parseInt(m.winnerRound, 10) || 1, orderId, 'sweep')) out.markedPaid = true;
+        return out;
+    }
+    const round = parseInt(m.winnerRound, 10) || 1;
+    if (Number(m.paymentDeadline) - nowMs > REMIND_WITHIN_MS) return out;
+    if (Number(m.remindedRound) === round) return out;
+    let fire = false;
+    await db().runTransaction(async (t) => {
+        const cur = ((await t.get(ref)).data() || {}).modeData || {};
+        if (String(cur.winnerId || '') !== String(m.winnerId) || Number(cur.remindedRound) === round || cur.winnerPaid === true) return;
+        t.update(ref, { 'modeData.remindedRound': round });
+        fire = true;
+    });
+    if (!fire) return out;
+    await notify(m.winnerId, 'Kumbusho: lipia mnada ulioshinda', 'Bado saa chache kulipia ' + (p.title || 'bidhaa') + ' (TSh ' + Number(m.winnerBid || 0).toLocaleString() + '). Usipolipa, nafasi inapewa mzabuni anayefuata.', { type: 'auction_payment_reminder', productId: ref.id, commerceMode: 'AUCTION' });
+    await auctionEvent(ref, 'payment_reminder', { winnerId: m.winnerId, round });
+    out.reminded = true;
+    return out;
+}
+
 /* [R13-B] sweep = close finished auctions + run the winner payment window. */
 async function sweepAuctions(nowMs) {
     nowMs = nowMs || Date.now();
-    const out = { checked: 0, ended: 0, secondChance: 0 };
+    const out = { checked: 0, ended: 0, secondChance: 0, endingSoon: 0, reminded: 0, markedPaid: 0 };
     const q = await db().collection('products').where('saleMode', '==', 'auction').limit(500).get();
     for (const doc of q.docs) {
         out.checked++;
+        const p = doc.data() || {}, m = p.modeData || {};
+        if (await endingSoon(doc.ref, p, m, nowMs)) out.endingSoon++;
         if (await closeAuction(doc.ref, nowMs)) out.ended++;
+        const w = await winnerWindow(doc.ref, p, ((await doc.ref.get()).data() || {}).modeData || {});
+        if (w.reminded) out.reminded++;
+        if (w.markedPaid) out.markedPaid++;
         if (await secondChance(doc.ref, nowMs)) out.secondChance++;
     }
     return out;
@@ -330,9 +574,12 @@ async function sweepAuctions(nowMs) {
 exports.commerceModesSweep = onSchedule({ region: REGION, schedule: 'every 15 minutes', timeZone: 'Africa/Dar_es_Salaam' },
     async (evt) => {
         const emu = process.env.FIRESTORE_EMULATOR_HOST && evt && evt.scheduleTime ? Date.parse(evt.scheduleTime) : 0;
-        await sweepAuctions(emu > 0 ? emu : Date.now());
-        await sweepPriceDrops(emu > 0 ? emu : Date.now());
-        await require('./price-drop-queue')._testing.sweepQueues(emu > 0 ? emu : Date.now());   // [R13-D] queue -> opportunities
+        const now = emu > 0 ? emu : Date.now();
+        await sweepAuctions(now);
+        await sweepPriceDrops(now);
+        await require('./price-drop-queue')._testing.sweepQueues(now);   // [R13-D] queue -> opportunities
+        await require('./live-commerce')._testing.sweepLive(now);   // [FULL-AUCTION] live starting-soon/expiry/stale viewers
     });
 
-exports._testing = { validateBid, validateGroupJoin, saleModeOf, sweepAuctions, minNextBid, antiSnipeEnd, closeAuction, secondChance, sweepPriceDrops };
+exports.claimOnce = claimOnce;   // shared exactly-once primitive (used by live-commerce.js)
+exports._testing = { validateBid, validateGroupJoin, saleModeOf, sweepAuctions, minNextBid, antiSnipeEnd, closeAuction, secondChance, sweepPriceDrops, winnerHasPaid, endingSoon, winnerWindow, claimOnce };

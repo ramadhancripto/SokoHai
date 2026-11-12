@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview 4 — Price Drop Live Mode</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{background:#0f172a;display:flex;gap:24px;justify-content:center;padding:24px;flex-wrap:wrap}
+.phone{width:390px;max-width:94vw;background:#0f172a;border-radius:28px;overflow:hidden;border:3px solid #334155;color:#fff}
+.banner{background:#7c3aed;color:#fff;font-size:11px;font-weight:800;text-align:center;padding:6px}
+.stage{height:200px;background:linear-gradient(180deg,#7c2d12,#0f172a);position:relative;display:flex;align-items:center;justify-content:center}
+.play{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.pills{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between}
+.live{background:#ef4444;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px}
+.view{background:rgba(0,0,0,.55);font-size:11px;padding:3px 10px;border-radius:20px}
+.x{background:rgba(0,0,0,.55);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px}
+.panel{background:#fff;color:#0f172a;border-radius:18px 18px 0 0;padding:14px;margin-top:-14px;position:relative}
+.tag{font-size:10px;font-weight:900;color:#c2410c;background:#ffedd5;display:inline-block;padding:2px 8px;border-radius:6px}
+.panel h2{font-size:15px;margin:4px 0}
+.now{text-align:center;margin:8px 0}
+.now small{color:#64748b;font-size:11px;display:block}
+.now b{font-size:30px;color:#c2410c}
+.steps{display:flex;gap:4px;margin:8px 0}
+.step{flex:1;text-align:center;font-size:10px;color:#94a3b8}
+.step i{display:block;height:6px;border-radius:4px;background:#e2e8f0;margin-bottom:3px}
+.step.done{color:#059669}.step.done i{background:#10b981}
+.step.cur{color:#c2410c;font-weight:900}.step.cur i{background:#f97316}
+.next{background:#fff7ed;border:1px dashed #f97316;border-radius:12px;padding:8px;text-align:center;font-size:12px;margin:8px 0}
+.next b{color:#c2410c}
+.rank{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:8px;text-align:center;font-size:12px;color:#475569;margin-bottom:8px}
+.buy{width:100%;background:#ea580c;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900}
+.bind{background:#fffbeb;color:#92400e;border-radius:12px;margin:10px 14px 14px;padding:10px;font-size:10.5px;line-height:1.7;border:1px dashed #d97706}
+.note{width:390px;max-width:94vw;color:#e2e8f0;font-size:12px;line-height:1.8}.note h3{color:#fff;margin-bottom:6px}.note code{background:#1e293b;padding:1px 6px;border-radius:6px;font-size:11px}
+</style></head><body>
+<div class="phone">
+<div class="banner">DESIGN PREVIEW — mock data (layout tu)</div>
+<div class="stage"><div class="pills"><div><span class="live">● LIVE</span> <span class="view">👁 348</span></div><button class="x">✕</button></div><div class="play">▶</div></div>
+<div class="panel"><span class="tag">BEI KUSHUKA</span><h2>Mchele wa Mbeya 5kg</h2>
+<div class="now"><small>BEI YA SASA (hatua 3/5)</small><b>TZS 12,500</b></div>
+<div class="steps"><div class="step done"><i></i>15,000</div><div class="step done"><i></i>13,800</div><div class="step cur"><i></i>12,500</div><div class="step"><i></i>11,400</div><div class="step"><i></i>10,200</div></div>
+<div class="next">Bei inayofuata <b>TZS 11,400</b> baada ya <b>01:47</b></div>
+<div class="rank">Nafasi yako foleni: <b>#3</b> (watu 2 mbele yako)</div>
+<button class="buy">Nunua Sasa — TZS 12,500</button></div>
+<div class="bind"><b>Bindings halisi:</b> bei+hatua ← <b>campaignState</b> ya server (sweepQueues) · timer ← <b>stepEndsAt</b> ya server (hakuna fake countdown) · rank ← <b>priceDropMyRank</b> (masked) · Nunua ← <b>priceDropSubmit</b> → settle · stock ← server (0 = "Imeisha").</div>
+</div>
+<div class="note"><h3>4. Price Drop Live Mode</h3>
+<p>Timer na bei vinatokana na campaign ya server. Frontend haihesabu hatua — inaonyesha tu.</p>
+<p>Mobile: bei kubwa inasomeka hata simu ndogo; kitufe Nunua kinafikika na kidole (min 48px).</p>
+<p>Files: <code>120-live-commerce-ui.js</code> (room shell), <code>price-drop-queue.js</code> (tayari).</p></div>
+</body></html>

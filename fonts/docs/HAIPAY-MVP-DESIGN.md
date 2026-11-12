@@ -1,6 +1,6 @@
-# HaiPay (SokoPay) MVP — Design Specification
+# SokoPay (SokoPay) MVP — Design Specification
 
-> **Brand:** SokoPay → renamed **HaiPay** (user-facing). Internal code identifiers
+> **Brand:** SokoPay → renamed **SokoPay** (user-facing). Internal code identifiers
 > (`openSokoPay`, `toggleSokoPayTab`, `sokopay_links`, etc.) stay unchanged to avoid
 > breaking the app. Rename is cosmetic only.
 >
@@ -40,7 +40,7 @@
 `adminRevenue`, `shop_ledger`, `chats`, plus marketplace: `products`, `services`, `jobs`, `drivers`.
 
 ### Existing UI entry points
-Top-nav HaiPay icon (`openSokoPay`), desktop sidebar button, `sokopayForm` modal with
+Top-nav SokoPay icon (`openSokoPay`), desktop sidebar button, `sokopayForm` modal with
 left sidebar tabs: overview, lipa, products, services, **jobs**, logistics, companies,
 governance, events, token center, disputes, settings — plus tab areas `spOverviewArea`,
 `spLipaArea`, `spCreateArea`, `spPayArea`, `spTrackArea`, `spSettingsArea`,
@@ -49,14 +49,14 @@ governance, events, token center, disputes, settings — plus tab areas `spOverv
 
 ---
 
-## 1. HaiPay MVP architecture
+## 1. SokoPay MVP architecture
 
 **One modal (`sokopayForm`), one column, mobile-first.** Sidebar reduced to the MVP
 sections. Everything financial stays server-authoritative.
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  HaiPay MVP                                                │
+│  SokoPay MVP                                                │
 │                                                            │
 │  Sidebar (mobile: top chips)        Main area              │
 │  ├─ Home          (spOverviewArea)  → 3 big actions        │
@@ -69,14 +69,14 @@ sections. Everything financial stays server-authoritative.
 └───────────────────────────────────────────────────────────┘
 ```
 
-**Removed from HaiPay UI (MVP scope):** products/services/jobs/logistics/companies/
+**Removed from SokoPay UI (MVP scope):** products/services/jobs/logistics/companies/
 governance/events contract tabs and their "create contract" forms. Marketplace escrow
 for those categories is handled by the **generic escrow** (below), not per-category modules.
 
 **Two entry points (MVP):**
-1. **SokoHai checkout** — cart → checkout → HaiPay payment → token → escrow → track →
+1. **SokoHai checkout** — cart → checkout → SokoPay payment → token → escrow → track →
    seller fulfills → buyer confirms → release.
-2. **External** — seller opens HaiPay → **Create Link** → description + amount →
+2. **External** — seller opens SokoPay → **Create Link** → description + amount →
    token/link → share → buyer opens → reviews → pays → escrow → track → confirm → release.
 
 ---
@@ -137,7 +137,7 @@ wallet balance. Only Cloud Functions + Firestore security rules.
 
 ## 3. Firestore data model
 
-**Collection `haiPay_transactions`** (new, or evolve `sokopay_links`):
+**Collection `sokoPay_transactions`** (new, or evolve `sokopay_links`):
 ```
 {
   txId: "SP-82KF91",            // token = identifier, not money
@@ -169,12 +169,12 @@ wallet balance. Only Cloud Functions + Firestore security rules.
 
 ```
 js/app/21-sokopay.js        → keep (engine), slim the tab switch to MVP sections
-js/app/21b-haipay-home.js   → Home (3 actions + KPI summary)      [new]
-js/app/21c-haipay-link.js   → Create Link form (desc + amount)    [new]
-js/app/21d-haipay-track.js  → Track by token                      [new]
-js/app/21e-haipay-tx.js     → Transactions list + details         [new]
-js/app/21f-haipay-help.js   → Help (static)                       [new]
-js/app/17-hub.js            → keep openSokoPay(); rename label to HaiPay
+js/app/21b-sokopay-home.js   → Home (3 actions + KPI summary)      [new]
+js/app/21c-sokopay-link.js   → Create Link form (desc + amount)    [new]
+js/app/21d-sokopay-track.js  → Track by token                      [new]
+js/app/21e-sokopay-tx.js     → Transactions list + details         [new]
+js/app/21f-sokopay-help.js   → Help (static)                       [new]
+js/app/17-hub.js            → keep openSokoPay(); rename label to SokoPay
 js/app/24-ui-final.js       → keep token center (Track reuses it)
 ```
 
@@ -195,9 +195,9 @@ js/app/24-ui-final.js       → keep token center (Track reuses it)
 | `azampayTransactionStatus` | poll/verify status | idempotent confirm |
 | `escrowRelease` | buyer-confirmed release (atomic split to seller/platform) | `DELIVERED → RELEASED` |
 | `escrowRefund` | refund on dispute (admin/verification) | `DISPUTED → REFUNDED` |
-| `haipayCreateLink` *(optional)* | server-side link creation + token | `CREATED` |
-| `haipayDispute` | open dispute → admin queue | `→ DISPUTED` |
-| `haipayResolveDispute` | admin release/refund | `DISPUTED → RELEASED/REFUNDED` |
+| `sokopayCreateLink` *(optional)* | server-side link creation + token | `CREATED` |
+| `sokopayDispute` | open dispute → admin queue | `→ DISPUTED` |
+| `sokopayResolveDispute` | admin release/refund | `DISPUTED → RELEASED/REFUNDED` |
 | `walletAdjust` | ledgered balance change (exists) | balances only |
 
 All financial writes flow through these; Firestore rules deny direct client writes to
@@ -208,12 +208,12 @@ All financial writes flow through these; Firestore rules deny direct client writ
 ## 6. Integration points with SokoHai cart / orders
 
 1. **Checkout (02-checkout.js `processPayment`)** — after payment success, write/update
-   the HaiPay transaction: `state=PAID`, escrow `HELD`, attach `source.orderId`, generate
+   the SokoPay transaction: `state=PAID`, escrow `HELD`, attach `source.orderId`, generate
    token. (Currently `sokopay_links` + `orders` already hold most of this.)
 2. **Buyer confirms receipt (04-orders-escrow.js `confirmEscrowOrder`)** — calls
    `escrowRelease` (server) → `state=RELEASED`. Same as today.
 3. **Order tracking** — reuse `loadBuyerOrdersWithTracking` + token center lookup.
-4. **External links** — `Create Link` writes `sokopay_links` (or new `haiPay_transactions`)
+4. **External links** — `Create Link` writes `sokopay_links` (or new `sokoPay_transactions`)
    with `type=external`; buyer pays via shared URL (token lookup).
 5. **Notifications** — on every state change, `addDoc(notifications, ...)` (already used).
 
@@ -223,7 +223,7 @@ No changes to the marketplace feed/product engine are required.
 
 ## 7. Implementation order
 
-1. **Rename SokoPay → HaiPay** (visible labels only). ✅ (done this round)
+1. **Rename SokoPay → SokoPay** (visible labels only). ✅ (done this round)
 2. **Remove Payroll & Jobs module** (sidebar + area + demo rows + filter). ✅ (this round)
 3. **Slim sidebar** to MVP sections: remove products/services/logistics/companies/
    governance/events buttons + areas (dead renderers become unreachable — safe).
@@ -232,11 +232,11 @@ No changes to the marketplace feed/product engine are required.
    product/job/passenger metadata forms).
 6. **Track** — token lookup (reuse `openTrackingTokenLookup` / token center).
 7. **Transactions + Details** — list from `sokopay_links` + `orders`; detail modal.
-8. **Help** — static rules ("HaiPay protects your money…").
+8. **Help** — static rules ("SokoPay protects your money…").
 9. **State machine alignment** — normalize statuses to the 12 states; add expiry timer.
-10. **Server functions** — add `haipayCreateLink`, `haipayDispute`, `haipayResolveDispute`,
+10. **Server functions** — add `sokopayCreateLink`, `sokopayDispute`, `sokopayResolveDispute`,
     `escrowRefund`; wire status verification.
-11. **Security rules** — enforce the state machine on `sokopay_links`/`haiPay_transactions`.
+11. **Security rules** — enforce the state machine on `sokopay_links`/`sokoPay_transactions`.
 12. **Test** — checkout flow + external link flow end-to-end; dispute → refund path.
 
 ---
