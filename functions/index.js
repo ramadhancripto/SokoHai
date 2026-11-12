@@ -4036,6 +4036,9 @@ exports.auctionConfirmPayment = commerceModes.auctionConfirmPayment;
 // [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
 const liveCommerce = require('./live-commerce');
 ['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind','livePause','liveResume','liveSetVideo','livePing'].forEach(n => { exports[n] = liveCommerce[n]; });
+=======
+['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind','livePause','liveResume'].forEach(n => { exports[n] = liveCommerce[n]; });
+>>>>>>> origin/main
 // [R13-D] Bei Kushuka buyer queue (refs 1 & 2)
 const priceDropQueue = require('./price-drop-queue');
 ['priceDropSubmit','priceDropMyRank','priceDropSettle'].forEach(n => { exports[n] = priceDropQueue[n]; });
