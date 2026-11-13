@@ -41,7 +41,7 @@ const WANT_MINIFY = ARGS.includes('--minify');
 const DIRS = ['css', 'js', 'img', 'vendor', 'shared', 'assets/img'];
 // Single files.
 const FILES = [
-  'index.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js',
+  'index.html', 'offline.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js',
   'icon-192.png', 'icon-512.png', 'assets/sokohai-s-mark.png',
   'fonts/inter.css', 'fonts/sokohai-sw.js',
   '.well-known/security.txt' // [85%-PUSH 2026-11-08] RFC 9116 — ukurasa wa kuripoti dosari.

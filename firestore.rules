@@ -713,6 +713,10 @@ service cloud.firestore {
         && changed().hasOnly(['read','readAt','seen','seenAt','archived']);
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
+    // [R15] web push: device tokens are server-only (callables pushRegisterToken / pushUnregisterToken);
+    // a user may read their own push preferences, changes go through pushSetPrefs.
+    match /push_tokens/{id} { allow read, write: if false; }
+    match /push_prefs/{uid} { allow get: if signedIn() && uid == request.auth.uid; allow list, write: if false; }
     match /chats/{id} {
       allow read: if signedIn()
         && (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
@@ -755,6 +759,12 @@ service cloud.firestore {
     }
     function isGroupAdminOrOwner(gid) {
       return isGroupMember(gid) && myGroupRole(gid) in ['owner', 'admin'];
+    }
+    function sokoCategoryOk(gid, d) {
+      let sk = groupRec(gid).get('soko', {});
+      let allowed = sk.get('allowedCategories', []);
+      return (allowed.size() == 0 || d.get('kind', '') == 'ad' || d.get('category', '') in allowed)
+        && (sk.get('membersOnly', false) != true || isGroupMemberDoc(gid, d.get('sellerUid', '')));
     }
     function groupPath(gid) { return /databases/$(database)/documents/chatGroups/$(gid); }
     function groupExists(gid) { return signedIn() && exists(groupPath(gid)); }
@@ -1012,6 +1022,16 @@ service cloud.firestore {
       allow delete: if false;
     }
     // A client message may never pose as a server "payment protected" event.
+    // [R13-H] group posting permissions are enforced here, not only in the app:
+    // sendPolicy 'admins' -> only owner/admin post; sharePolicy 'admins' -> only owner/admin share
+    // product/service cards; announcements are always owner/admin.
+    function groupPostOk(gid, d) {
+      let g = groupRec(gid);
+      let t = d.get('type', 'text');
+      return (g.get('sendPolicy', 'everyone') != 'admins' || isGroupAdminOrOwner(gid))
+        && (!(t in ['product', 'service']) || g.get('sharePolicy', 'everyone') != 'admins' || isGroupAdminOrOwner(gid))
+        && (t != 'announcement' || isGroupAdminOrOwner(gid));
+    }
     function clientMessageOk(msgId, d) {
       return !msgId.matches('^payprot_.*')
         && d.get('eventKind', '') != 'payment_protected'
@@ -1031,7 +1051,8 @@ service cloud.firestore {
         (isGroupConvId(convId)
           && isGroupMember(gidFromConv(convId))
           && request.resource.data.senderId == request.auth.uid
-          && clientMessageOk(msgId, request.resource.data))
+          && clientMessageOk(msgId, request.resource.data)
+          && groupPostOk(gidFromConv(convId), request.resource.data))
         || (!isGroupConvId(convId)
           && request.resource.data.senderId == request.auth.uid
           && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
@@ -1925,6 +1946,33 @@ service cloud.firestore {
         && (request.resource.data.get('role', 'member') != 'owner' || isGroupOwner(id))
         && (resource.data.get('role', 'member') != 'owner' || isGroupOwner(id));
         allow delete: if signedIn() && (isGroupOwner(id) || isGroupAdminOrOwner(id));
+      }
+      // [R13-H] Soko la kundi: a member submits (always 'pending', never sponsored); only the
+      // group's owner/admin approves / rejects / suspends and sets the expiry; the submitter may
+      // only withdraw a pending entry. Allowed categories / members-only come from the group doc.
+      match /soko/{lid} {
+        allow read: if isAdmin() || isGroupMember(id);
+        allow create: if isGroupMember(id)
+          && request.resource.data.submittedBy == request.auth.uid
+          && request.resource.data.get('sponsored', false) == false
+          && request.resource.data.kind in ['product', 'service', 'ad', 'digital']
+          && request.resource.data.title is string && request.resource.data.title.size() >= 3 && request.resource.data.title.size() <= 120
+          && sokoCategoryOk(id, request.resource.data)
+          && ((request.resource.data.status == 'pending'
+                && !request.resource.data.keys().hasAny(['decidedBy', 'decidedAt', 'expiresAtMs']))
+              || (request.resource.data.status == 'approved' && isGroupAdminOrOwner(id)
+                && request.resource.data.decidedBy == request.auth.uid));
+        allow update: if isGroupMember(id)
+          && request.resource.data.get('sponsored', false) == resource.data.get('sponsored', false)
+          && ((isGroupAdminOrOwner(id)
+                && request.resource.data.status in ['approved', 'rejected', 'suspended']
+                && request.resource.data.decidedBy == request.auth.uid
+                && changed().hasOnly(['status', 'decidedBy', 'decidedAt', 'expiresAtMs', 'note', 'history', 'updatedAt']))
+              || (resource.data.submittedBy == request.auth.uid
+                && resource.data.status == 'pending'
+                && request.resource.data.status == 'withdrawn'
+                && changed().hasOnly(['status', 'history', 'updatedAt'])));
+        allow delete: if false;
       }
       match /events/{eventId} {
         allow read: if isAdmin() || isGroupMember(id) || isGroupOwner(id);

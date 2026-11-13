@@ -244,33 +244,84 @@ window.doGoogleLogin = async function() {
     }
 };
 
+/* [R15 2026-11-13] Kurejesha akaunti.
+ * - Ujumbe ni ULE ULE akaunti ikiwepo au isipokuwepo (hakuna kufichua nani ana akaunti).
+ * - Makosa ya Firebase yanatafsiriwa; hakuna maandishi ghafi ya mfumo.
+ * - Ombi moja kwa dakika kwa kifaa hiki (Firebase pia ina kikomo chake upande wa server).
+ * - Link ya barua pepe ikielekezwa kwenye app (mode=resetPassword&oobCode=...), mtumiaji
+ *   anaweka nenosiri jipya hapa hapa (verifyPasswordResetCode + confirmPasswordReset). */
 window.doResetPassword = async function() {
-    const email = document.getElementById('loginEmail').value.trim();
-    if(!email) {
-        alert(" andika email yako kwanza kwenye kisanduku cha 'Barua Pepe' kisha ubofye tena hapa.");
-        return;
-    }
-    
+    const email = (document.getElementById('loginEmail').value || '').trim().toLowerCase();
+    if (!email) { alert("Andika barua pepe yako kwanza kwenye kisanduku cha 'Barua Pepe', kisha ubofye tena hapa."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { alert("Barua pepe hii si sahihi. Iangalie tena."); return; }
+    let last = 0; try { last = Number(localStorage.getItem('skh_reset_at') || 0); } catch (e) {}
+    if (Date.now() - last < 60000) { alert("Subiri dakika moja kabla ya kuomba tena."); return; }
     const btn = document.getElementById('btnResetPass');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = " Inatuma...";
-    btn.disabled = true;
-    
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) { btn.innerHTML = " Inatuma..."; btn.disabled = true; }
+    const neutral = "Kama akaunti yenye barua pepe hii ipo, tumetuma link ya kubadili nenosiri.\n\nKagua Inbox na Spam. Link inaisha muda baada ya saa 1.";
     try {
         await skh.sendPasswordResetEmail(skh.auth, email);
-        alert(" Link ya kubadili nenosiri imetumwa kwenye email: " + email + "\n\nKagua Inbox au Spam folder.");
+        try { localStorage.setItem('skh_reset_at', String(Date.now())); } catch (e) {}
+        alert(neutral);
     } catch (error) {
-        // Badilisha ujumbe wa Kiingereza kuwa Kiswahili kwa makosa yanayojulikana
-        if (error.code === 'auth/user-not-found') {
-            alert(" Akaunti yenye email hii haipo. jisajili.");
-        } else {
-            alert(" Kosa: " + error.message);
-        }
+        const c = String((error && error.code) || '');
+        if (c === 'auth/user-not-found') { try { localStorage.setItem('skh_reset_at', String(Date.now())); } catch (e) {} alert(neutral); }
+        else if (c === 'auth/invalid-email') alert("Barua pepe hii si sahihi. Iangalie tena.");
+        else if (c === 'auth/too-many-requests') alert("Maombi mengi mno kwa sasa. Jaribu tena baadaye.");
+        else if (c === 'auth/network-request-failed') alert("Hakuna mtandao. Angalia intaneti kisha ujaribu tena.");
+        else { try { console.warn('[reset]', c, error && error.message); } catch (e) {} alert("Imeshindikana kutuma link kwa sasa. Jaribu tena baadaye."); }
     } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
     }
 };
+
+/* [R15] link ya kubadili nenosiri ndani ya app */
+function skhResetErr(e) {
+    const c = String((e && e.code) || '');
+    if (c === 'auth/expired-action-code') return 'Link hii imeisha muda. Omba link mpya.';
+    if (c === 'auth/invalid-action-code') return 'Link hii si sahihi au imeshatumika. Omba link mpya.';
+    if (c === 'auth/weak-password') return 'Nenosiri ni dhaifu: tumia angalau herufi 8.';
+    if (c === 'auth/network-request-failed') return 'Hakuna mtandao. Jaribu tena.';
+    return 'Imeshindikana. Jaribu tena au omba link mpya.';
+}
+window.skhOpenPasswordReset = async function (oobCode) {
+    let box = document.getElementById('skhResetPass');
+    if (!box) { box = document.createElement('div'); box.id = 'skhResetPass'; document.body.appendChild(box); }
+    box.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(9,32,26,.55);display:flex;align-items:center;justify-content:center;padding:16px;';
+    const card = (inner) => '<div role="dialog" aria-modal="true" aria-labelledby="skhRpT" style="background:#fff;border-radius:18px;padding:22px;width:min(400px,100%);font-family:Inter,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.25);">' + inner + '</div>';
+    box.innerHTML = card('<p style="margin:0;color:#475569;">Inakagua link…</p>');
+    let email = '';
+    try { email = await skh.verifyPasswordResetCode(skh.auth, oobCode); }
+    catch (e) { box.innerHTML = card('<h3 id="skhRpT" style="margin:0 0 8px;color:#13231e;">Badili nenosiri</h3><p id="skhRpMsg" style="color:#b91c1c;margin:0 0 14px;">' + skhResetErr(e) + '</p><button type="button" onclick="document.getElementById(\'skhResetPass\').remove()" style="border:0;border-radius:999px;background:#e2e8f0;padding:10px 18px;font-weight:700;cursor:pointer;">Funga</button>'); return; }
+    const masked = email.replace(/^(.)(.*)(@.*)$/, (m, a, b, c) => a + '*'.repeat(Math.min(6, b.length)) + c);
+    box.innerHTML = card('<h3 id="skhRpT" style="margin:0 0 6px;color:#13231e;">Weka nenosiri jipya</h3>'
+        + '<p style="margin:0 0 14px;color:#475569;font-size:14px;">Akaunti: <b>' + masked + '</b></p>'
+        + '<input id="skhRpP1" type="password" autocomplete="new-password" placeholder="Nenosiri jipya (herufi 8+)" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;border-radius:12px;margin-bottom:10px;font-size:15px;">'
+        + '<input id="skhRpP2" type="password" autocomplete="new-password" placeholder="Rudia nenosiri" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;border-radius:12px;margin-bottom:10px;font-size:15px;">'
+        + '<p id="skhRpMsg" role="alert" style="min-height:18px;margin:0 0 10px;color:#b91c1c;font-size:13px;"></p>'
+        + '<button type="button" id="skhRpGo" style="width:100%;border:0;border-radius:999px;background:#12946f;color:#fff;padding:13px;font-weight:800;font-size:15px;cursor:pointer;">Hifadhi nenosiri</button>');
+    document.getElementById('skhRpGo').onclick = async function () {
+        const p1 = document.getElementById('skhRpP1').value, p2 = document.getElementById('skhRpP2').value, msg = document.getElementById('skhRpMsg');
+        if (p1.length < 8) { msg.textContent = 'Nenosiri lazima liwe na angalau herufi 8.'; return; }
+        if (p1 !== p2) { msg.textContent = 'Manenosiri hayafanani.'; return; }
+        this.disabled = true; this.textContent = 'Inahifadhi…';
+        try {
+            await skh.confirmPasswordReset(skh.auth, oobCode, p1);
+            try { history.replaceState(null, '', location.pathname); } catch (e) {}
+            box.innerHTML = card('<h3 id="skhRpT" style="margin:0 0 8px;color:#12946f;">Nenosiri limebadilishwa</h3><p style="margin:0 0 14px;color:#475569;">Ingia sasa kwa nenosiri jipya.</p><button type="button" id="skhRpDone" onclick="document.getElementById(\'skhResetPass\').remove();window.openAuthModal&&openAuthModal()" style="border:0;border-radius:999px;background:#12946f;color:#fff;padding:11px 20px;font-weight:800;cursor:pointer;">Ingia</button>');
+        } catch (e) { this.disabled = false; this.textContent = 'Hifadhi nenosiri'; msg.textContent = skhResetErr(e); }
+    };
+};
+(function () {
+    try {
+        const q = new URLSearchParams(location.search);
+        if (q.get('mode') === 'resetPassword' && q.get('oobCode')) {
+            const go = () => window.skhOpenPasswordReset(q.get('oobCode'));
+            if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', () => setTimeout(go, 300));
+        }
+    } catch (e) {}
+})();
 
 window.toggleBulkPackagingFields = function() {
     const hasBulk = document.getElementById('prodHasBulk').checked;

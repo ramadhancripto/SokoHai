@@ -63,12 +63,13 @@ const prep = (p) => ev(p, () => { try { unlockSystem(); closeWelcome(); } catch 
     await L.db.doc('products/gb1').set({ userId: juma, title: 'Mahindi group buy', price: 75000, unit: 'Gunia', image: img, publicationStatus: 'published', saleMode: 'group_buy',
       modeData: { mode: 'group_buy', groupPrice: 68000, targetUsers: 10, joinedUsers: 2, endTime: Date.now() + 864e5 }, createdAt: new Date().toISOString() });
     await ev(B.p, () => { window.skh.sysConfig = Object.assign({}, window.skh.sysConfig, { features: { chatGroupOrders: true } }); });
-    await B.p.click('#gsgTabs [data-tab=groupOrders]'); await B.p.waitForSelector('.gsg-gb-card', { timeout: 15000 });
-    const t = await ev(B.p, () => ({ card: document.querySelector('.gsg-gb-card').textContent, create: !!document.querySelector('#gsgTabOrders [data-act=gsg-at-gorder]') }));
-    L.assert(/Wamejiunga 2 \/ 10/.test(t.card) && !t.create, JSON.stringify(t)); await shot(B.p, '05-group-orders'); });
+    await B.p.click('#gsgTabs [data-tab=groupOrders]'); await B.p.waitForSelector('#gsgTabOrders .gb-card', { timeout: 15000 });   // [R13-H] Group Buy section (125)
+    const t = await ev(B.p, () => ({ card: document.querySelector('#gsgTabOrders .gb-card').textContent, create: !!document.querySelector('#gsgTabOrders [data-act=gsg-at-gorder]') }));
+    L.assert(/2\s*\/\s*10 wamejiunga/.test(t.card) && !t.create, JSON.stringify(t)); await shot(B.p, '05-group-orders'); });
   await L.step('[Jadili] opens a private chat with the REAL seller of the listing', async () => {
     await B.p.click('#gsgTabs [data-tab=chat]'); await B.p.waitForTimeout(800);
     await B.p.click('#gsgMsgs .gsg-pcard [data-act=gsg-jadili]');
+    await B.p.waitForSelector('.gb-pick-o[data-k=chat]'); await B.p.click('.gb-pick-o[data-k=chat]');   // [R13-H] Jadili: chat or Mapatano
     await B.p.waitForFunction(() => { const m = document.getElementById('chatModal'); return m && getComputedStyle(m).display !== 'none'; }, null, { timeout: 20000 });
     await B.p.waitForTimeout(1500); await shot(B.p, '06-jadili'); });
   const errs = [...L.realErrs(S.log), ...L.realErrs(B.log), ...L.realErrs(N.log)]; console.log('JS errors:', errs.length, errs.slice(0, 6).join('\n'));

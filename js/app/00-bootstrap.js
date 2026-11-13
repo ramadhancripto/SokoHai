@@ -5,7 +5,7 @@
 // Mutable state & helpers zote za kiwango cha juu zimehamia kwenye `skh` object.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
@@ -50,6 +50,8 @@ skh.updateProfile = updateProfile;
 skh.signInWithPopup = signInWithPopup;
 skh.GoogleAuthProvider = GoogleAuthProvider;
 skh.sendPasswordResetEmail = sendPasswordResetEmail;
+skh.verifyPasswordResetCode = verifyPasswordResetCode;   // [R15] in-app password reset
+skh.confirmPasswordReset = confirmPasswordReset;
 skh.sendEmailVerification = sendEmailVerification;
 skh.getFirestore = getFirestore;
 skh.collection = collection;

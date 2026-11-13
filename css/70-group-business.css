@@ -1,0 +1,144 @@
+/* ==== css/70-group-business.css ==== */
+/* [R13-H 2026-11] Group Chat phase 2: right information panel (desktop), Soko glow on the rail,
+ * business sections (js/app/125-group-business.js: .gb-*), stickers, Mapatano card, previews. */
+#skhGroupSogaModal { --gb-g: #12946F; --gb-g2: #0F7A5C; --gb-soft: #E6F5EE; --gb-ink: #13231E; --gb-mut: #66796F; --gb-line: #E4ECE8; }
+
+/* ---------- right information panel (>= 1280px) ---------- */
+#skhGroupSogaModal .gsg-fs > #gsgSide { display: none; }
+@media (min-width: 1280px) {
+    #skhGroupSogaModal > .skh-sheet > .gsg-fs {
+        max-width: 1520px !important;
+        grid-template-columns: 236px minmax(0, 1fr) 320px !important;
+        grid-template-areas: "rail head side" "rail desc side" "rail ann side" "rail ad side" "rail body side" !important;
+    }
+    #skhGroupSogaModal .gsg-fs > #gsgSide { display: block; grid-area: side; overflow-y: auto; border-left: 1px solid var(--gb-line); background: #FBFDFC; min-height: 0; }
+}
+#skhGroupSogaModal .gsg-head-txt[data-act="gsg-panel"] { cursor: pointer; }
+
+/* ---------- Soko: soft green glow on the rail (agreed) ---------- */
+#skhGroupSogaModal #gsgTabs .gsg-card[data-tab="soko"] { color: #0E8A63 !important; background: linear-gradient(135deg, #E9FBF2, #F4FFF9) !important;
+    box-shadow: 0 0 0 1px #BFEBD6, 0 0 14px rgba(29, 185, 127, .28) !important; }
+#skhGroupSogaModal #gsgTabs .gsg-card[data-tab="soko"] .gsg-lb { color: #0E7A57 !important; font-weight: 800 !important; }
+#skhGroupSogaModal #gsgTabs .gsg-card[data-tab="soko"].is-active { box-shadow: 0 0 0 2px #7FD8B3, 0 0 20px rgba(29, 185, 127, .38) !important; }
+
+/* ---------- sections ---------- */
+#skhGroupSogaModal #gsgTabServices { background: #F1F5F3 !important; padding: 14px !important; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+#skhGroupSogaModal .gb { display: flex; flex-direction: column; gap: 12px; font-family: Inter, system-ui, sans-serif; color: var(--gb-ink); }
+#skhGroupSogaModal .gb-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+#skhGroupSogaModal .gb-head h3 { margin: 0; font: 800 19px/1.2 Inter, system-ui, sans-serif; }
+#skhGroupSogaModal .gb-head small { color: var(--gb-mut); font-size: 13px; }
+#skhGroupSogaModal .gb-h4 { margin: 8px 2px 0; font: 800 12.5px/1 Inter, system-ui, sans-serif; letter-spacing: .4px; text-transform: uppercase; color: #46594F; }
+#skhGroupSogaModal .gb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+#skhGroupSogaModal .gb-grid--1 { grid-template-columns: 1fr; }
+#skhGroupSogaModal .gb-card { display: flex; gap: 12px; background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 1px 2px rgba(16,35,29,.07); border: 1px solid #EEF3F1; }
+#skhGroupSogaModal .gb-img { position: relative; flex: 0 0 96px; width: 96px; height: 96px; border-radius: 12px; overflow: hidden; background: #EFF4F2; display: grid; place-items: center; }
+#skhGroupSogaModal .gb-img img { width: 100%; height: 100%; object-fit: cover; }
+#skhGroupSogaModal .gb-img i { font: 800 28px/1 Inter, system-ui, sans-serif; color: var(--gb-g); font-style: normal; }
+#skhGroupSogaModal .gb-off { position: absolute; top: 6px; left: 6px; background: #E5383B; color: #fff; font: 800 11px/1 Inter, system-ui, sans-serif; padding: 4px 6px; border-radius: 6px; font-style: normal; }
+#skhGroupSogaModal .gb-bd { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+#skhGroupSogaModal .gb-t { font: 800 15px/1.25 Inter, system-ui, sans-serif; }
+#skhGroupSogaModal .gb-s { color: #4A5C55; font-size: 12.5px; line-height: 1.4; }
+#skhGroupSogaModal .gb-s em { color: var(--gb-mut); font-style: normal; }
+#skhGroupSogaModal .gb-p { font: 800 15px/1.2 Inter, system-ui, sans-serif; color: var(--gb-g); }
+#skhGroupSogaModal .gb-p small { color: var(--gb-ink); font-weight: 500; }
+#skhGroupSogaModal .gb-p del { color: #8A9A94; font-weight: 600; font-size: 12.5px; margin-left: 4px; }
+#skhGroupSogaModal .gb-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+#skhGroupSogaModal .gb-btn { min-height: 36px !important; padding: 0 13px; border-radius: 10px; border: 1.5px solid var(--gb-g); background: #fff; color: var(--gb-g2);
+    font: 700 13px/1 Inter, system-ui, sans-serif; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+#skhGroupSogaModal .gb-btn.is-pri { background: var(--gb-g); color: #fff; }
+#skhGroupSogaModal .gb-btn:hover { filter: brightness(.96); }
+#skhGroupSogaModal .gb-chip { display: inline-block; margin: 0 4px 2px 0; padding: 3px 8px; border-radius: 999px; font: 700 11px/1.2 Inter, system-ui, sans-serif; background: #EEF3F1; color: #3E5048; }
+#skhGroupSogaModal .gb-chip.green { background: #E2F6EC; color: #0F7A5C; } #skhGroupSogaModal .gb-chip.blue { background: #E8F1FB; color: #245E93; }
+#skhGroupSogaModal .gb-chip.gold { background: #FFF4D9; color: #8A6400; } #skhGroupSogaModal .gb-chip.red { background: #FDE8E8; color: #B42318; }
+#skhGroupSogaModal .gb-chip.violet { background: #F0ECFB; color: #5B4B9A; } #skhGroupSogaModal .gb-chip.teal { background: #E3F4F1; color: #12796B; }
+#skhGroupSogaModal .gb-empty { text-align: center; padding: 34px 18px; background: #fff; border: 1px dashed #D5E2DC; border-radius: 16px; display: flex; flex-direction: column; gap: 6px; }
+#skhGroupSogaModal .gb-empty small, #skhGroupSogaModal .gb-muted { color: var(--gb-mut); font-size: 12.5px; }
+#skhGroupSogaModal .gb-blocked { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: #FFF8E6; border: 1px solid #F1DFAE; color: #6B4E00; }
+#skhGroupSogaModal .gb-blocked b { display: block; font-size: 13.5px; } #skhGroupSogaModal .gb-blocked small { font-size: 12.5px; line-height: 1.45; }
+#skhGroupSogaModal .gb-note { color: var(--gb-mut); font-size: 12px; }
+#skhGroupSogaModal .gb-loading { padding: 30px; text-align: center; color: var(--gb-mut); }
+#skhGroupSogaModal .gb-subtabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+#skhGroupSogaModal .gb-subtabs button { flex: 0 0 auto; min-height: 36px !important; padding: 0 14px; border-radius: 999px; border: 1px solid var(--gb-line); background: #fff; font: 700 13px/1 Inter, system-ui, sans-serif; color: #33463F; cursor: pointer; }
+#skhGroupSogaModal .gb-subtabs button.is-on { background: var(--gb-g); border-color: var(--gb-g); color: #fff; }
+#skhGroupSogaModal .gb-list { display: flex; flex-direction: column; gap: 8px; }
+#skhGroupSogaModal .gb-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff; border: 1px solid #EEF3F1; border-radius: 12px; padding: 10px 12px; }
+#skhGroupSogaModal .gb-row > div { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 2px; }
+#skhGroupSogaModal .gb-row small { color: var(--gb-mut); font-size: 12px; }
+#skhGroupSogaModal .gb-row-img { width: 42px; height: 42px; border-radius: 9px; overflow: hidden; background: #EFF4F2; flex: 0 0 42px; }
+#skhGroupSogaModal .gb-row-img img { width: 100%; height: 100%; object-fit: cover; }
+#skhGroupSogaModal .gb-hist { color: #7B8B85 !important; font-size: 11.5px !important; }
+#skhGroupSogaModal .gb-prog { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #3E5048; }
+#skhGroupSogaModal .gb-prog i { display: block; height: 7px; border-radius: 99px; background: linear-gradient(90deg, #1DB97F var(--p), #E3EEE9 var(--p)); }
+#skhGroupSogaModal .gb-terms { margin: 2px 0 0; padding-left: 18px; font-size: 12.5px; color: #4A5C55; line-height: 1.5; }
+#skhGroupSogaModal .gb-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; counter-reset: s; }
+#skhGroupSogaModal .gb-steps li { counter-increment: s; background: #fff; border: 1px solid #E3EFE9; border-radius: 12px; padding: 10px 12px 10px 40px; position: relative; font-size: 12.5px; color: #3E5048; }
+#skhGroupSogaModal .gb-steps li::before { content: counter(s); position: absolute; left: 10px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: var(--gb-g); color: #fff; font: 800 12px/22px Inter, system-ui, sans-serif; text-align: center; }
+#skhGroupSogaModal .gb-kv { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: #4A5C55; }
+#skhGroupSogaModal .gb-hist2 summary { cursor: pointer; font-size: 12.5px; color: var(--gb-g2); font-weight: 700; }
+#skhGroupSogaModal .gb-hist2 ol { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: #4A5C55; }
+#skhGroupSogaModal .gb-form { display: flex; flex-direction: column; gap: 10px; background: #fff; border: 1px solid #EEF3F1; border-radius: 14px; padding: 12px; }
+#skhGroupSogaModal .gb-form label { display: flex; flex-direction: column; gap: 5px; font: 700 12.5px/1.2 Inter, system-ui, sans-serif; color: #33463F; }
+#skhGroupSogaModal .gb-form input[type=number], #skhGroupSogaModal .gb-form textarea, #skhGroupSogaModal .gb-form select { border: 1px solid #D5E2DC; border-radius: 10px; padding: 9px 10px; font: 500 14px/1.3 Inter, system-ui, sans-serif; }
+#skhGroupSogaModal .gb-form .gb-check { flex-direction: row; align-items: center; }
+#skhGroupSogaModal .gb-form fieldset { border: 1px solid #E4ECE8; border-radius: 10px; padding: 8px 10px; }
+#skhGroupSogaModal .gb-form legend { font-size: 12px; color: var(--gb-mut); padding: 0 4px; }
+#skhGroupSogaModal .gb-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px 10px; max-height: 180px; overflow-y: auto; }
+#skhGroupSogaModal .gb-cats label { flex-direction: row; align-items: center; font-weight: 500; }
+
+/* ---------- information panel ---------- */
+#skhGroupSogaModal .gb-panel { padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 14px; font-family: Inter, system-ui, sans-serif; color: var(--gb-ink); }
+#skhGroupSogaModal .gb-p-top { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#skhGroupSogaModal .gb-p-av { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font: 800 26px/1 Inter, system-ui, sans-serif; color: #fff; background: linear-gradient(135deg, #1FB487, #0F7A5C); box-shadow: 0 0 0 4px var(--gb-soft); }
+#skhGroupSogaModal .gb-p-top h3 { margin: 6px 0 0; font: 800 18px/1.2 Inter, system-ui, sans-serif; }
+#skhGroupSogaModal .gb-p-top small { color: var(--gb-mut); }
+#skhGroupSogaModal .gb-panel section { background: #fff; border: 1px solid #EEF3F1; border-radius: 14px; padding: 12px; }
+#skhGroupSogaModal .gb-panel h4 { margin: 0 0 8px; font: 800 12px/1 Inter, system-ui, sans-serif; letter-spacing: .4px; text-transform: uppercase; color: #52655D; }
+#skhGroupSogaModal .gb-panel p { margin: 0; font-size: 13.5px; line-height: 1.5; color: #33463F; white-space: pre-wrap; }
+#skhGroupSogaModal .gb-pin { background: #F4FBF7; border-left: 3px solid var(--gb-g); padding: 8px 10px; border-radius: 8px; }
+#skhGroupSogaModal .gb-people, #skhGroupSogaModal .gb-pol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+#skhGroupSogaModal .gb-people li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+#skhGroupSogaModal .gb-av { width: 30px; height: 30px; border-radius: 50%; background: var(--gb-g); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+#skhGroupSogaModal .gb-pol li { display: flex; justify-content: space-between; font-size: 13px; color: #4A5C55; }
+#skhGroupSogaModal .gb-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+#skhGroupSogaModal .gb-stats span { background: #F5FAF7; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; }
+#skhGroupSogaModal .gb-stats b { font-size: 18px; color: var(--gb-g2); } #skhGroupSogaModal .gb-stats small { font-size: 11.5px; color: var(--gb-mut); }
+#skhGroupSogaModal .gsg-panel-sheet { max-height: 92% !important; }
+
+/* ---------- pick sheet ---------- */
+#skhGroupSogaModal .gb-pick-ov { position: absolute; inset: 0; z-index: 95; background: rgba(9, 32, 26, .42); display: flex; align-items: flex-end; justify-content: center; grid-area: 1 / 1 / -1 / -1; }
+@media (min-width: 900px) { #skhGroupSogaModal .gb-pick-ov { align-items: center; } }
+#skhGroupSogaModal .gb-pick { width: min(440px, 100%); max-height: 80%; overflow-y: auto; background: #fff; border-radius: 18px 18px 0 0; padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+@media (min-width: 900px) { #skhGroupSogaModal .gb-pick { border-radius: 18px; } }
+#skhGroupSogaModal .gb-pick-h { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; }
+#skhGroupSogaModal .gb-pick-h button { border: 0; background: #F1F5F4; width: 30px; height: 30px; min-height: 0 !important; border-radius: 50%; font-size: 18px; cursor: pointer; }
+#skhGroupSogaModal .gb-pick-o { text-align: left; border: 1px solid var(--gb-line); background: #fff; border-radius: 12px; padding: 12px; font: 600 14px/1.3 Inter, system-ui, sans-serif; cursor: pointer; }
+#skhGroupSogaModal .gb-pick-o:hover { background: #F2F9F5; border-color: #9BD8BF; }
+
+/* ---------- stickers, Mapatano card, service card, previews ---------- */
+#skhGroupSogaModal .gsg-sticker { font-size: 64px; line-height: 1.05; display: block; filter: drop-shadow(0 3px 6px rgba(0,0,0,.12)); }
+#skhGroupSogaModal .gsg-sticker-pop { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; padding: 8px 10px; background: #fff; border-top: 1px solid var(--gb-line); }
+#skhGroupSogaModal .gsg-sticker-pop button { font-size: 30px; border: 0; background: none; border-radius: 10px; min-height: 44px !important; cursor: pointer; }
+#skhGroupSogaModal .gsg-sticker-pop button:hover { background: #F1F7F4; }
+#skhGroupSogaModal .gsg-nego { background: #fff; border-radius: 16px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(16,35,29,.08); width: min(420px, 74vw); display: flex; flex-direction: column; gap: 6px; }
+#skhGroupSogaModal .gsg-nego-h { display: flex; align-items: center; gap: 8px; }
+#skhGroupSogaModal .gsg-nego-h b { font: 800 15px/1.2 Inter, system-ui, sans-serif; flex: 1; }
+#skhGroupSogaModal .gsg-nego-st { background: #E2F6EC; color: #0F7A5C; font: 700 12px/1 Inter, system-ui, sans-serif; padding: 5px 9px; border-radius: 8px; }
+#skhGroupSogaModal .gsg-nego-st[data-state="REJECTED"], #skhGroupSogaModal .gsg-nego-st[data-state="CANCELLED"] { background: #FDE8E8; color: #B42318; }
+#skhGroupSogaModal .gsg-nego-r { display: flex; gap: 6px; font-size: 14px; } #skhGroupSogaModal .gsg-nego-r span { color: #4A5C55; }
+#skhGroupSogaModal .gsg-pc-kind { color: #245E93; font: 800 10.5px/1 Inter, system-ui, sans-serif; letter-spacing: .4px; text-transform: uppercase; }
+#skhGroupSogaModal .gsg-pc-pr del { color: #8A9A94; font-weight: 600; font-size: 12.5px; }
+#skhGroupSogaModal .gb-viewer { position: fixed; inset: 0; z-index: 2147483000; background: rgba(6, 16, 13, .9); display: flex; flex-direction: column; }
+#skhGroupSogaModal .gb-viewer-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: #fff; background: #0B1512; }
+#skhGroupSogaModal .gb-viewer-bar b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#skhGroupSogaModal .gb-viewer-bar a { color: #7CF0C5; font-weight: 700; text-decoration: none; }
+#skhGroupSogaModal .gb-viewer-bar button { border: 0; background: rgba(255,255,255,.15); color: #fff; width: 36px; height: 36px; min-height: 0 !important; border-radius: 50%; font-size: 20px; cursor: pointer; }
+#skhGroupSogaModal .gb-viewer img { flex: 1; min-height: 0; object-fit: contain; width: 100%; }
+#skhGroupSogaModal .gb-viewer iframe { flex: 1; border: 0; background: #fff; }
+#skhGroupSogaModal .gb-viewer-none { flex: 1; display: grid; place-items: center; color: #fff; }
+@media (max-width: 899px) {
+    #skhGroupSogaModal .gb-img { flex-basis: 78px; width: 78px; height: 78px; }
+    #skhGroupSogaModal .gb-grid { grid-template-columns: 1fr; }
+    #skhGroupSogaModal .gsg-sticker-pop { grid-template-columns: repeat(6, 1fr); }
+    #skhGroupSogaModal #gsgComposerRow #gsgStickerBtn { display: none !important; }
+}
+@media (max-width: 899px) and (min-width: 421px) { #skhGroupSogaModal #gsgComposerRow #gsgStickerBtn { display: inline-flex !important; } }

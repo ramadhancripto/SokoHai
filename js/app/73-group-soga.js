@@ -100,6 +100,7 @@ import { skh } from './00-bootstrap.js';
         send:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12 20 4l-7 16-3-7z"/></svg>',
         // [COMPOSER 2026-11] sawa na chat ya kawaida (index.html #voiceBtn / #chatTradeBtn)
         mic:   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+        sticker: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h7l8-8V6a3 3 0 0 0-3-3z"/><path d="M13 21v-5a3 3 0 0 1 3-3h5"/><circle cx="9" cy="10" r=".9" fill="currentColor" stroke="none"/><circle cx="14" cy="10" r=".9" fill="currentColor" stroke="none"/></svg>',
         trade: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>'
     };
 
@@ -226,7 +227,7 @@ import { skh } from './00-bootstrap.js';
         if (t === 'poll') return gsgPollHtml(m, my);
         if (t === 'image') {
             return '<div style="max-width:250px;">'
-                + (m.imageUrl ? '<img src="' + esc(String(m.imageUrl)) + '" alt="" style="display:block;max-width:100%;border-radius:12px;border:1px solid #e2e8f0;padding:0;background:#fff;">' : '')
+                + (m.imageUrl ? '<img src="' + esc(String(m.imageUrl)) + '" alt="" data-act="gsg-img-view" data-src="' + esc(String(m.imageUrl)) + '" style="display:block;max-width:100%;border-radius:12px;border:1px solid #e2e8f0;padding:0;background:#fff;cursor:zoom-in;">' : '')
                 + (m.caption ? '<div style="margin-top:5px;background:' + (my ? '#d8f3e5' : '#fff') + ';border:1px solid ' + (my ? '#bde7d1' : '#e2e8f0') + ';border-radius:12px;padding:8px 11px;font-size:13px;color:#0f172a;">' + renderMsgText(m.caption) + '</div>' : '')
                 + '</div>';
         }
@@ -244,7 +245,7 @@ import { skh } from './00-bootstrap.js';
                 + '</div>';
         }
         if (t === 'document') {
-            return '<div style="min-width:200px;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #dbe4ed;border-radius:12px;padding:10px 12px;">'
+            return '<div class="gsg-doc"' + (m.fileData ? ' role="button" tabindex="0" data-act="gsg-doc-view" data-mid="' + esc(m.__id || '') + '"' : '') + ' style="min-width:200px;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #dbe4ed;border-radius:12px;padding:10px 12px;' + (m.fileData ? 'cursor:pointer;' : '') + '">'
                 + '<span style="width:34px;height:34px;flex:none;border-radius:10px;background:#eef6fc;display:flex;align-items:center;justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1268A8" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>'
                 + '<div style="min-width:0;"><b style="display:block;font-size:12.5px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(m.fileName || 'Nyaraka') + '</b>'
                 + (m.fileSize ? '<small style="color:#64748b;">' + (m.fileSize > 1048576 ? (m.fileSize / 1048576).toFixed(1) + ' MB' : Math.round(m.fileSize / 1024) + ' KB') + '</small>' : '')
@@ -279,7 +280,7 @@ import { skh } from './00-bootstrap.js';
                 + '<span class="gsg-pc-img">' + (pr.imageUrl ? '<img src="' + esc(String(pr.imageUrl)) + '" alt="" loading="lazy">' : (ATC && ATC.prod ? ATC.prod : '')) + '</span>'
                 + '<div class="gsg-pc-b">'
                 +   '<b class="gsg-pc-t">' + esc(pr.name || '') + '</b>'
-                +   (prTxt ? '<span class="gsg-pc-pr">' + prTxt + (pr.unit ? ' <small>/ ' + esc(pr.unit) + '</small>' : '') + '</span>' : '')
+                +   (prTxt ? '<span class="gsg-pc-pr">' + prTxt + (pr.unit ? ' <small>/ ' + esc(pr.unit) + '</small>' : '') + (pr.oldPrice ? ' <del>TSh ' + Number(String(pr.oldPrice).replace(/[^0-9.]/g, '')).toLocaleString('en-US') + '</del>' : '') + '</span>' : '')
                 +   (stockBits.length ? '<small class="gsg-pc-m">' + stockBits.join(' · ') + '</small>' : (pr.sellerName ? '<small class="gsg-pc-m">' + esc(pr.sellerName) + '</small>' : ''))
                 +   '<span class="gsg-pc-acts">'
                 +     (pr.productId ? '<button type="button" class="gsg-pc-btn" data-act="gsg-view-product" data-pid="' + esc(pr.productId) + '">' + GI.eye + ' Tazama</button>' : '')
@@ -288,14 +289,27 @@ import { skh } from './00-bootstrap.js';
                 + '</div></div>';
         }
         if (t === 'service') {
+            /* [R13-H] huduma: picha · jina · mtoa huduma · bei · [Tazama huduma][Jadili] (services/{id} halisi) */
             var sv = m.service || {};
-            return '<div style="min-width:200px;max-width:270px;background:#fff;border:1px solid #c8ddf0;border-left:4px solid #2B82BD;border-radius:13px;padding:10px 12px;">'
-                + '<small style="display:block;font-size:9px;font-weight:800;letter-spacing:.5px;color:#1268A8;text-transform:uppercase;">' + tk('gsg_p_serv', 'Huduma') + '</small>'
-                + '<b style="display:block;font-size:13px;color:#0f172a;">' + esc(sv.name || '') + '</b>'
-                + (sv.price ? '<span style="font-size:12.5px;font-weight:800;color:#1268A8;">TZS ' + esc(String(sv.price)) + '</span>' : '')
-                + (sv.pricingMode ? '<small style="color:#64748b;"> · ' + esc(sv.pricingMode) + '</small>' : '')
-                + (sv.note ? '<div style="margin-top:4px;font-size:11.5px;color:#475569;">' + esc(sv.note) + '</div>' : '')
-                + '</div>';
+            var svN = String(sv.price == null ? '' : sv.price).replace(/[^0-9.]/g, '');
+            return '<div class="gsg-pcard gsg-scard">'
+                + '<span class="gsg-pc-img">' + (sv.imageUrl ? '<img src="' + esc(String(sv.imageUrl)) + '" alt="" loading="lazy">' : ATC.serv) + '</span>'
+                + '<div class="gsg-pc-b"><small class="gsg-pc-kind">Huduma</small><b class="gsg-pc-t">' + esc(sv.name || '') + '</b>'
+                + (svN ? '<span class="gsg-pc-pr">TSh ' + Number(svN).toLocaleString('en-US') + (sv.pricingMode ? ' <small>/ ' + esc(sv.pricingMode) + '</small>' : '') + '</span>' : '')
+                + '<small class="gsg-pc-m">' + esc(sv.providerName || m.senderName || '') + (sv.note ? ' · ' + esc(sv.note) : '') + '</small>'
+                + (sv.serviceId ? '<span class="gsg-pc-acts"><button type="button" class="gsg-pc-btn" data-act="gsg-view-service" data-sid="' + esc(sv.serviceId) + '">' + GI.eye + ' Tazama</button>'
+                    + (!my ? '<button type="button" class="gsg-pc-btn is-pri" data-act="gsg-svc-chat" data-uid="' + esc(m.senderUid || '') + '" data-name="' + esc(sv.providerName || m.senderName || '') + '">' + GI.chat + ' Jadili</button>' : '') + '</span>' : '')
+                + '</div></div>';
+        }
+        if (t === 'sticker') return '<span class="gsg-sticker" role="img" aria-label="Sticker">' + esc(m.sticker || '') + '</span>';
+        if (t === 'negotiation') {
+            /* [R13-H] Mapatano ya Bei (design ref): snapshot ya ofa; maelezo kamili ni ya mnunuzi + muuzaji tu (rules za negotiations) */
+            var ng = m.negotiation || {};
+            return '<div class="gsg-nego"><div class="gsg-nego-h"><span class="gsg-nego-ic" aria-hidden="true">\u{1F91D}</span><b>Mapatano ya Bei</b><span class="gsg-nego-st" data-nego-st="' + esc(ng.negotiationId || '') + '">Inajadiliwa</span></div>'
+                + '<div class="gsg-nego-r"><span>' + esc(ng.productTitle || 'Bidhaa') + ':</span><b>' + esc(ng.quantity || 1) + (ng.unit ? ' ' + esc(ng.unit) : '') + '</b></div>'
+                + '<div class="gsg-nego-r"><span>Bei:</span><b>TSh ' + Number(ng.price || 0).toLocaleString('en-US') + (ng.unit ? ' / ' + esc(ng.unit) : '') + '</b></div>'
+                + '<div class="gsg-pc-acts"><button type="button" class="gsg-pc-btn" data-act="gsg-nego-open">Onyesha Maelezo</button>'
+                + (!my ? '<button type="button" class="gsg-pc-btn is-pri" data-act="gsg-nego-open">Jibu</button>' : '') + '</div></div>';
         }
         if (t === 'group_order') return gsgGOCardHtml(m, my);
         if (t === 'supplier_request') return gsgSRCardHtml(m, my);
@@ -423,7 +437,7 @@ import { skh } from './00-bootstrap.js';
                 + '<header class="gsg-head">'
                 +   '<button type="button" class="skh-sheet-back" data-act="gsg-close" aria-label="' + tk('back', 'Rudi') + '">' + I.back + '</button>'
                 +   '<div id="gsgAvatarTile" class="gsg-avatar" aria-hidden="true">#</div>'
-                +   '<div class="gsg-head-txt">'
+                +   '<div class="gsg-head-txt" data-act="gsg-panel" role="button" tabindex="0" title="Taarifa za kundi">'
                 +     '<b id="gsgTitleEl" class="skh-sheet-title">' + tk('group', 'Kikundi') + '</b>'
                 +     '<small id="gsgSubEl" class="skh-sheet-sub">' + tk('loading', 'Inapakia...') + '</small>'
                 +   '</div>'
@@ -445,6 +459,7 @@ import { skh } from './00-bootstrap.js';
                 +   '<div id="gsgComposerRow" class="gsg-comp-row">'
                 +     '<button type="button" class="gsg-cbtn" data-act="gsg-attach" title="' + tk('gsg_attach', 'Ambatisha') + '" aria-label="' + tk('gsg_attach', 'Ambatisha') + '">' + I.plus + '</button>'
                 +     '<button type="button" class="gsg-cbtn" data-act="gsg-emoji" id="gsgEmojiBtn" title="Emoji" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">' + I.emoji + '</button>'
+                +     '<button type="button" class="gsg-cbtn" data-act="gsg-sticker" id="gsgStickerBtn" title="Stickers" aria-label="Stickers" aria-haspopup="true">' + I.sticker + '</button>'
                 +     '<div class="gsg-field">'
                 +       '<input id="gsgInput" type="text" autocomplete="off" placeholder="' + tk('ch_msg_ph', 'Andika ujumbe...') + '">'
                 +     '</div>'
@@ -455,6 +470,7 @@ import { skh } from './00-bootstrap.js';
                 + '</div>'
                 + '<div id="gsgTabMedia" style="display:none;"></div>'
                 + '<div id="gsgTabProducts" style="display:none;"></div>'
+                + '<div id="gsgTabServices" style="display:none;"></div>'
                 + '<div id="gsgTabOrders" style="display:none;"></div>'
                 + '<div id="gsgTabIndiv" style="display:none;"></div>'
                 + '<div id="gsgTabSoko" style="display:none;"></div>'
@@ -464,6 +480,7 @@ import { skh } from './00-bootstrap.js';
                 + '<div id="gsgTabMembers" style="display:none;"></div>'
                 + '<div id="gsgInfo" style="display:none;"></div>'
                 + '</div>'
+                + '<aside id="gsgSide" class="gsg-side" aria-label="Taarifa za kundi"></aside>'
                 + '</div>';
             m.classList.add('open');
             m.style.display = 'block';
@@ -500,6 +517,7 @@ import { skh } from './00-bootstrap.js';
                 var gsnap = await skh.getDoc(gRef(gid));
                 var g = (gsnap && gsnap.exists && gsnap.exists()) ? gsnap.data() : { name: 'Kikundi' };
                 if (CUR.gid !== gid) return;
+                CUR.__g = g;   // [R13-H] for the business sections / info panel
 
                 // Sasisha header ya kikundi
                 var titleEl = document.getElementById('gsgTitleEl');
@@ -611,6 +629,7 @@ import { skh } from './00-bootstrap.js';
                             + '</span><span class="gsg-chip">' + esc(typeLbl2) + '</span>';
                         CUR.__subHtml = subEl2.innerHTML;
                     }
+                    try { renderSidePanel(); } catch (eSP) {}
                 } catch (eN0) {}
 
                 try { startGoTick(); } catch (eTK) {}
@@ -850,10 +869,11 @@ import { skh } from './00-bootstrap.js';
      * halisi (collections halisi); tupu → empty state ya uaminifu. */
     /* [GROUP BIZ 2026-11] Nav 9 ya mstari mmoja. Wanachama HAWAPO kwenye nav —
      * usimamizi upo Taarifa (ⓘ) / More. Group Oda ≠ Oda za Kawaida. */
-    var GSG_TABS = ['chat', 'media', 'products', 'groupOrders', 'orders', 'transport', 'offers', 'members', 'soko', 'buyers'];   // [R13-G] order of the design ref (Wanachama added)   // [§45] explicit enum
+    var GSG_TABS = ['chat', 'media', 'products', 'services', 'soko', 'groupOrders', 'orders', 'offers', 'transport', 'members'];   // [R13-H] agreed sidebar (Ununuzi: no backend — kept in code, off the rail)   // [§45] explicit enum
     var gsgTabMeta = {
         chat:    { key: 'gsg_tab_chat',    fb: 'Mazungumzo' },
         products: { key: 'gsg_tab_products', fb: 'Bidhaa' },
+        services: { key: 'gsg_tab_services', fb: 'Huduma' },
         groupOrders: { key: 'gsg_tab_gorders', fb: 'Group Oda' },
         orders:  { key: 'gsg_tab_orders',  fb: 'Oda za Kawaida' },
         soko:    { key: 'gsg_tab_soko',    fb: 'Soko' },
@@ -868,6 +888,7 @@ import { skh } from './00-bootstrap.js';
      * Kadi zinazotolewa ni zile TU zenye view halisi (GSG_TABS). Soko / Ununuzi /
      * Usafiri / Ofa hazina handler → hazionyeshwi (capability gate), sio teaser za uongo. */
     var GSG_TAB_ICON = {
+        services: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>',
         chat: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5a3 3 0 0 1-3 3H9l-4.5 3V6.5a3 3 0 0 1 3-3h9.5a3 3 0 0 1 3 3z"/></svg>',
         orders: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l1.4 12.1a1.8 1.8 0 0 1-1.8 1.9H6.4a1.8 1.8 0 0 1-1.8-1.9z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>',
         members: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.2 6-5.2s6 1.9 6 5.2"/><path d="M16.4 5.2a3.1 3.1 0 0 1 0 5.9"/><path d="M18 14.6c2 .6 3.3 2.2 3.3 4.4"/></svg>',
@@ -880,19 +901,20 @@ import { skh } from './00-bootstrap.js';
         offers: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l4-4 4 3 2-2 4 4"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/><path d="M12 11l-3 3 2 2 3-3z"/></svg>',
     };
     var GSG_TAB_TONE = { chat: 'green', media: 'violet', products: 'blue', groupOrders: 'gold',
-        orders: 'teal', soko: 'blue', buyers: 'gold', transport: 'teal', offers: 'green', members: 'violet' };
+        orders: 'teal', soko: 'soko', buyers: 'gold', transport: 'teal', offers: 'green', members: 'violet', services: 'blue' };
     // [GROUP UI 2026-11] Lebo FUPI kwa kadi (76px) — jina kamili linabaki kwenye title/aria.
     var GSG_TAB_SHORT = {
         chat:    function () { return 'Mazungumzo'; },   // [R13-G] lebo kamili (design ref)
-        products: function () { return tk('gsg_tab_products', 'Bidhaa'); },
-        groupOrders: function () { return 'Group Orders'; },
-        orders:  function () { return 'Oda za Kawaida'; },
-        soko:    function () { return tk('gsg_tab_soko', 'Soko'); },
+        products: function () { return 'Bidhaa'; },
+        groupOrders: function () { return 'Group Buy'; },
+        services: function () { return 'Huduma'; },
+        orders:  function () { return 'Oda'; },
+        soko:    function () { return 'Soko'; },
         buyers:  function () { return tk('gsg_tab_buyers', 'Ununuzi'); },
-        transport: function () { return tk('gsg_tab_transport', 'Usafiri'); },
-        offers:  function () { return tk('gsg_tab_offers', 'Ofa'); },
-        members: function () { return tk('gsg_short_members', 'Wanachama'); },
-        media:   function () { return tk('gsg_short_media', 'Media'); }
+        transport: function () { return 'Usafirishaji'; },
+        offers:  function () { return 'Mapatano na Ofa'; },
+        members: function () { return 'Wanachama'; },
+        media:   function () { return 'Media'; }
     };
 
     function renderTabsBar() {
@@ -902,13 +924,13 @@ import { skh } from './00-bootstrap.js';
         host.innerHTML = GSG_TABS.map(function (t) {
             var on = (t === cur);
             // Group Orders bado imezimwa (chatGroupOrders=false) → kadi inaonekana "is-off"
-            var off = ((t === 'groupOrders') && !goOn()) || (t === 'buyers');
+            var off = (t === 'buyers');   // [R13-H] Group Buy section shows real product group buys; only chat group-order creation is BLOCKED
             var cls = 'gsg-card' + (on ? ' is-active' : '') + (off ? ' is-off' : '');
             return '<button type="button" role="tab" aria-selected="' + (on ? 'true' : 'false') + '" '
                 + 'class="' + cls + '" data-tone="' + (GSG_TAB_TONE[t] || 'green') + '" '
                 + 'data-act="gsg-tab" data-tab="' + t + '"'
-                + ' title="' + esc(tk(gsgTabMeta[t].key, gsgTabMeta[t].fb)) + '"'
-                + ' aria-label="' + esc(tk(gsgTabMeta[t].key, gsgTabMeta[t].fb)) + '">'
+                + ' title="' + esc(GSG_TAB_SHORT[t] ? GSG_TAB_SHORT[t]() : gsgTabMeta[t].fb) + '"'
+                + ' aria-label="' + esc(GSG_TAB_SHORT[t] ? GSG_TAB_SHORT[t]() : gsgTabMeta[t].fb) + '" data-no-i18n>'
                 + '<span class="gsg-ic">' + (GSG_TAB_ICON[t] || '') + '</span>'
                 + '<span class="gsg-lb" data-no-i18n>' + esc(GSG_TAB_SHORT[t] ? GSG_TAB_SHORT[t]() : tk(gsgTabMeta[t].key, gsgTabMeta[t].fb)) + '</span>'
                 + '</button>';
@@ -924,7 +946,7 @@ import { skh } from './00-bootstrap.js';
     var GSG_TAB_HOST = {
         chat: 'gsgTabChat', media: 'gsgTabMedia', products: 'gsgTabProducts',
         groupOrders: 'gsgTabOrders', orders: 'gsgTabIndiv',
-        soko: 'gsgTabSoko', buyers: 'gsgTabBuyers', transport: 'gsgTabTransport', offers: 'gsgTabOffers', members: 'gsgTabMembers'
+        soko: 'gsgTabSoko', buyers: 'gsgTabBuyers', transport: 'gsgTabTransport', offers: 'gsgTabOffers', members: 'gsgTabMembers', services: 'gsgTabServices'
     };
 
     function setGsgTab(tab) {
@@ -935,6 +957,10 @@ import { skh } from './00-bootstrap.js';
             if (el) el.style.display = (t === tab) ? (t === 'chat' ? 'flex' : 'block') : 'none';
         });
         renderTabsBar();
+        /* [R13-H] phase-2 sections live in js/app/125-group-business.js (existing records only) */
+        var GBX = window.skhGB, gbHost = document.getElementById(GSG_TAB_HOST[tab]);
+        var GBMAP = { services: 'services', soko: 'soko', groupOrders: 'groupBuy', orders: 'orders', offers: 'deals', transport: 'delivery' };
+        if (GBX && GBMAP[tab] && gbHost) { GBX[GBMAP[tab]](gbHost, gbCtx()); return; }
         if (tab === 'groupOrders') renderOrdersTab(CUR.gid);
         else if (tab === 'orders') renderIndivOrdersTab(CUR.gid);
         else if (tab === 'products') renderProductsTab(CUR.gid);
@@ -944,6 +970,25 @@ import { skh } from './00-bootstrap.js';
         else if (tab === 'transport') renderTransportTab(CUR.gid);
         else if (tab === 'offers') renderOffersTab(CUR.gid);
         else if (tab === 'members') renderMembersTab(CUR.gid);
+    }
+
+    function gbCtx() {
+        return { gid: CUR.gid, myRole: CUR.__myRole || 'member', roles: CUR.__roles || {}, names: CUR.__names || {}, g: CUR.__g || {}, myName: myName() };
+    }
+    function renderSidePanel() {
+        var side = document.getElementById('gsgSide');
+        if (!side || !window.skhGB || !CUR.gid || window.innerWidth < 1280) return;
+        window.skhGB.panel(side, gbCtx());
+    }
+    function openPanelSheet() {
+        if (!window.skhGB) return;
+        var old = document.getElementById('gsgPanelPop'); if (old) old.remove();
+        var pop = document.createElement('div'); pop.id = 'gsgPanelPop'; pop.className = 'gsg-sheet-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true');
+        pop.innerHTML = '<div class="gsg-sheet-panel gsg-panel-sheet"><div class="gsg-sheet-grab"></div><div class="gsg-sheet-head"><b>Taarifa za kundi</b>'
+            + '<button type="button" class="gsg-sheet-x" data-act="gsg-panel-close" aria-label="Funga">\u00d7</button></div><div class="gsg-sheet-body" id="gsgPanelBody"></div></div>';
+        pop.addEventListener('click', function (ev) { if (ev.target === pop) pop.remove(); });
+        (document.querySelector('#skhGroupSogaModal .gsg-fs') || document.body).appendChild(pop);
+        window.skhGB.panel(document.getElementById('gsgPanelBody'), gbCtx());
     }
 
     function gsgEmptyTabHtml(title, sub) {
@@ -2101,6 +2146,7 @@ import { skh } from './00-bootstrap.js';
         serv: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5a4 4 0 0 1 5 5L9 22l-5-5z"/><path d="m13 8-1.5 1.5"/></svg>',
         poll: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11"/><path d="M12 20V5"/><path d="M19 20v-6"/></svg>',
         ann: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4a1 1 0 0 0 1 1h2l4 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>',
+        stk: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h7l8-8V6a3 3 0 0 0-3-3z"/><path d="M13 21v-5a3 3 0 0 1 3-3h5"/></svg>',
         truck: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/></svg>',
         offer: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>',
         ord: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4"/></svg>',
@@ -2143,6 +2189,7 @@ import { skh } from './00-bootstrap.js';
             +     atChip('gsg-at-loc', ATC.loc, 'Shiriki Mahali')
             +     atChip('gsg-at-poll', ATC.poll, 'Kura')
             +     atChip('gsg-at-contact', ATC.ctc, 'Mawasiliano')
+            +     atChip('gsg-sticker', ATC.stk, 'Stickers')
             +     (canManage ? atChip('gsg-at-announce', ATC.ann, 'Tangazo') : '')   // [§46] UI hides invalid
             +   '</div>'
             + '</div></div>';
@@ -2154,6 +2201,23 @@ import { skh } from './00-bootstrap.js';
 
     /* [R13-G] Shiriki Bidhaa: chagua kutoka listings HALISI zako (products, userId == wewe).
        Kadi inabeba productId → [Tazama]/[Jadili] zinaenda kwenye rekodi ile ile (source of truth). */
+    var NEGO_LBL = { OFFER_SENT: 'Ofa imetumwa', COUNTER_OFFER: 'Inajadiliwa', RE_NEGOTIATION: 'Inajadiliwa', AGREEMENT: 'Mmekubaliana', FINAL_AGREEMENT: 'Mmekubaliana', ORDER_CREATED: 'Oda imeundwa', REJECTED: 'Imekataliwa', CANCELLED: 'Imeghairiwa', EXPIRED: 'Muda umeisha' };
+    function hydrateNego() {   // [R13-H] hali halisi kwa wahusika (mnunuzi/muuzaji); wengine wanaona "Inajadiliwa"
+        Array.prototype.forEach.call(document.querySelectorAll('#gsgMsgs [data-nego-st]'), function (el) {
+            var id = el.getAttribute('data-nego-st'); if (!id) return;
+            Promise.resolve(skh.getDoc(skh.doc(skh.db, 'negotiations', id))).then(function (sn) {
+                if (sn && sn.exists && sn.exists()) { var st = (sn.data() || {}).currentState; el.textContent = NEGO_LBL[st] || st; el.setAttribute('data-state', st || ''); }
+            }).catch(function () {});
+        });
+    }
+    function closeStickerPop() { var x = document.getElementById('gsgStickerPop'); if (x) x.remove(); }
+    function openStickerPop() {
+        if (document.getElementById('gsgStickerPop')) return closeStickerPop();
+        var list = window.__GSG_STICKERS || [];
+        var pop = document.createElement('div'); pop.id = 'gsgStickerPop'; pop.className = 'gsg-sticker-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Stickers');
+        pop.innerHTML = list.map(function (x) { return '<button type="button" data-act="gsg-sticker-send" data-s="' + esc(x) + '" aria-label="Tuma sticker">' + esc(x) + '</button>'; }).join('');
+        var row = document.getElementById('gsgComposerRow'); (row && row.parentNode ? row.parentNode : document.body).insertBefore(pop, row);
+    }
     function closePicker() { var x = document.getElementById('gsgPickPop'); if (x) x.remove(); }
     async function openProductPicker() {
         closePicker();
@@ -2368,6 +2432,7 @@ import { skh } from './00-bootstrap.js';
             
             var maxAt = rows.length ? String(rows[rows.length - 1].at || '') : '';
             try { hydrateGOCards(gid); } catch (eHR) {}
+            try { hydrateNego(); } catch (eHN) {}
             if (maxAt && CUR.gid === gid && maxAt > String(lra[uid()] || '')) {
                 try { var lr = {}; lr['lastReadAt.' + uid()] = maxAt; await skh.updateDoc(cRef(gid), lr); } catch (eLR) {}
             }
@@ -2438,6 +2503,9 @@ import { skh } from './00-bootstrap.js';
         } });
         if (text.trim()) acts.push({ id: 'copy', label: tk('ch_copy', 'Nakili'), icon: 'copy', run: function () { gsgCopyText(text); } });
         if (text.trim()) acts.push({ id: 'share', label: tk('ch_share', 'Shiriki'), icon: 'share', run: function () { gsgShareText(text); } });
+        // [R13-H] peleka kwa kundi lingine (typed engine ile ile) + ripoti kwa wasimamizi (chatReports)
+        if (window.skhGB) acts.push({ id: 'forward', label: 'Peleka kwa kundi', icon: 'share', run: function () { window.skhGB.forward(CUR.gid, m); } });
+        if (window.skhGB && !mine) acts.push({ id: 'report', label: 'Ripoti', icon: 'flag', run: function () { window.skhGB.report(CUR.gid, m); } });
         window.skhSheetOpen({
             msgId: mid,
             title: (m.senderName || (mine ? 'Wewe' : 'Mwanachama')),
@@ -2679,6 +2747,19 @@ import { skh } from './00-bootstrap.js';
                 }
                 return;
             }
+            else if (act === 'gsg-panel') { if (window.innerWidth >= 1280 && document.getElementById('gsgSide') && document.getElementById('gsgSide').childElementCount) { renderSidePanel(); } else openPanelSheet(); return; }
+            else if (act === 'gsg-panel-close') { var pp0 = document.getElementById('gsgPanelPop'); if (pp0) pp0.remove(); return; }
+            else if (act === 'gsg-sticker') { closeAttachPop(); openStickerPop(); return; }
+            else if (act === 'gsg-sticker-send') {
+                var stk = b.getAttribute('data-s'); closeStickerPop();
+                window.skhGroupSendTyped(CUR.gid, { type: 'sticker', sticker: stk }).then(function (rs) { if (!rs || !rs.ok) alert('Sticker haijatumwa (' + ((rs && rs.reason) || 'hitilafu') + ').'); });
+                return;
+            }
+            else if (act === 'gsg-nego-open') { setGsgTab('offers'); return; }
+            else if (act === 'gsg-view-service') { var sidV = b.getAttribute('data-sid'); window.skhCloseGroupSoga(); if (window.openProduct) window.openProduct(sidV, 'services'); return; }
+            else if (act === 'gsg-svc-chat') { var su = b.getAttribute('data-uid'), sn = b.getAttribute('data-name'); if (!su || su === uid()) return; window.skhCloseGroupSoga(); if (window.openChatWithUser) window.openChatWithUser(su, sn); return; }
+            else if (act === 'gsg-img-view') { if (window.skhGB) window.skhGB.preview('image', b.getAttribute('data-src'), 'Picha'); return; }
+            else if (act === 'gsg-doc-view') { var dm = gsgRowById(b.getAttribute('data-mid')) || {}; if (window.skhGB && dm.fileData) window.skhGB.preview('doc', dm.fileData, dm.fileName); return; }
             else if (act === 'gsg-media-f') { CUR.__mediaF = b.getAttribute('data-f') || 'all'; renderMediaTab(CUR.gid); return; }
             else if (act === 'gsg-ann-hide') { CUR.__annHidden = CUR.__ann ? String(CUR.__ann.text) : '1'; renderAnnounce(CUR.__ann); return; }
             else if (act === 'gsg-at-gotab') { closeAttachPop(); setGsgTab('groupOrders'); return; }
@@ -2960,6 +3041,10 @@ import { skh } from './00-bootstrap.js';
                 /* [R13-G] Jadili = mazungumzo binafsi na MUUZAJI halisi wa bidhaa (products/{pid}.userId) */
                 var jp = b.getAttribute('data-pid');
                 (async function () {
+                    /* [R13-H] Jadili = chagua: chat binafsi na muuzaji AU Mapatano ya Bei (injini ya server) */
+                    var how = window.skhGB ? await window.skhGB.pickOne('Jadili bidhaa hii', [['chat', 'Chat na muuzaji'], ['nego', 'Pendekeza bei (Mapatano)']]) : 'chat';
+                    if (!how) return;
+                    if (how === 'nego') { await window.skhGB.proposePrice(gbCtx(), jp); return; }
                     var sellerUid = b.getAttribute('data-uid') || '', sellerNm = b.getAttribute('data-name') || '';
                     try { var ps = await skh.getDoc(skh.doc(skh.db, 'products', jp)); if (ps && ps.exists && ps.exists()) { var pd = ps.data() || {}; sellerUid = pd.userId || sellerUid; sellerNm = pd.sellerName || pd.ownerName || sellerNm; } } catch (eJP) {}
                     if (!sellerUid || sellerUid === uid()) { try { window.skhToast && window.skhToast('Hii ni bidhaa yako.', 'info'); } catch (eT) {} return; }

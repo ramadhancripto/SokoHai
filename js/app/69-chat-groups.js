@@ -325,7 +325,9 @@ import { skh } from './00-bootstrap.js';
      * hapa: image | document | location | contact | product | service | poll |
      * announcement(admins). Guards ZILEZILE za sendText (archived/member/
      * sendPolicy/rate) — zisipitwe kwenye njia nyingine. */
-    var GSG_MSG_TYPES = { image: 1, document: 1, location: 1, contact: 1, product: 1, service: 1, poll: 1, announcement: 1, audio: 1 };
+    var GSG_MSG_TYPES = { image: 1, document: 1, location: 1, contact: 1, product: 1, service: 1, poll: 1, announcement: 1, audio: 1, sticker: 1, negotiation: 1 };   // [R13-H] + sticker, negotiation
+    var GSG_STICKERS = ['\u{1F91D}', '\u{1F64F}', '\u2705', '\u{1F33D}', '\u{1F69A}', '\u{1F4B0}', '\u{1F389}', '\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F525}', '\u{1F44F}', '\u{1F4E6}', '\u{1F6D2}', '\u{1F33E}', '\u{1F4AF}'];
+    window.__GSG_STICKERS = GSG_STICKERS;
     window.__GSG_MSG_TYPES = GSG_MSG_TYPES;
 
     function cln(v, mx) { return String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, mx || 160); }
@@ -357,6 +359,8 @@ import { skh } from './00-bootstrap.js';
             case 'poll': return '\u{1F4CB} ' + tk('gsg_p_poll', 'Kura') + ': ' + (fields.question || '');
             case 'announcement': return '\u{1F4E2} ' + (fields.text || '');
             case 'audio': return '\u{1F3A4} ' + tk('gsg_voice_msg', 'Ujumbe wa sauti');
+            case 'sticker': return fields.sticker || 'Sticker';
+            case 'negotiation': return '\u{1F91D} Mapatano ya Bei: ' + ((fields.negotiation && fields.negotiation.productTitle) || '');
         }
         return '';
     }
@@ -413,6 +417,7 @@ import { skh } from './00-bootstrap.js';
             if (pr.productId) fields.product.productId = cln(pr.productId, 64);
             if (pr.sellerName) fields.product.sellerName = cln(pr.sellerName, 60);
             if (pr.location) fields.product.location = cln(pr.location, 60);   // [R13-G] from the real listing (picker)
+            if (pr.oldPrice && +pr.oldPrice > +pr.price) fields.product.oldPrice = cln(String(pr.oldPrice), 40);   // [R13-H] real discount (Shiriki Ofa)
             if (pr.imageUrl) fields.product.imageUrl = String(pr.imageUrl).slice(0, 2500000);
         } else if (type === 'service') {
             var sv = payload.service || {};
@@ -421,6 +426,17 @@ import { skh } from './00-bootstrap.js';
             if (sv.price) fields.service.price = cln(String(sv.price), 40);
             if (sv.pricingMode) fields.service.pricingMode = cln(sv.pricingMode, 24);
             if (sv.note) fields.service.note = cln(sv.note, 160);
+            if (sv.serviceId) fields.service.serviceId = cln(sv.serviceId, 64);          // [R13-H] real services/{id}
+            if (sv.imageUrl) fields.service.imageUrl = String(sv.imageUrl).slice(0, 2000);
+            if (sv.providerName) fields.service.providerName = cln(sv.providerName, 60);
+        } else if (type === 'sticker') {
+            if (GSG_STICKERS.indexOf(String(payload.sticker || '')) < 0) return { ok: false, reason: 'sticker' };
+            fields.sticker = String(payload.sticker);
+        } else if (type === 'negotiation') {
+            var ng = payload.negotiation || {};
+            if (!ng.productId || !(+ng.price > 0)) return { ok: false, reason: 'negotiation' };
+            fields.negotiation = { negotiationId: cln(ng.negotiationId, 64), productId: cln(ng.productId, 64), productTitle: cln(ng.productTitle, 80),
+                quantity: Math.max(1, Math.min(1e6, +ng.quantity || 1)), price: +ng.price, unit: cln(ng.unit, 20), sellerName: cln(ng.sellerName, 60) };
         } else if (type === 'poll') {
             var q2 = cln(payload.question, 200);
             var opts2 = (Array.isArray(payload.options) ? payload.options : []).map(function (o) { return cln(o, 60); }).filter(Boolean);

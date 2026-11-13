@@ -43,7 +43,9 @@ ok('command lifecycle ina loading/success/error UI', /actionState\('loading'/.te
 ok('late repair layer haifungi tena skhNegoFormOpen', !/window\.skhNegoFormOpen\s*=\s*function/.test(repair61));
 ok('stale duplicate app haipo tena ndani ya fonts/', !fs.existsSync('fonts/js') && !fs.existsSync('fonts/css') && !fs.existsSync('fonts/html'));
 ok('legacy Product delivery labels hazipo kwenye deploy tree', !negoLogic.includes("id: 'productDelivery'") && !negoLogic.includes('Mahali pa kupeleka (hiari)'));
-ok('service worker inafuta cache za build ya zamani', serviceWorker.includes('sokohai-negotiation-host-v3-20260922') && /caches\.delete/.test(serviceWorker));
+// [R15] the SW cache name changes with every SW release (was sokohai-negotiation-host-v3-20260922);
+// the contract is that activate deletes EVERY cache that is not the current build's cache.
+ok('service worker inafuta cache za build ya zamani', /const CACHE = VERSION \+ '-static'/.test(serviceWorker) && /keys\.filter\(\(k\) => k !== CACHE\)\.map\(\(k\) => caches\.delete\(k\)\)/.test(serviceWorker));
 ok('Firebase haitunzi HTML na app modules za zamani', firebaseConfig.includes('no-store, max-age=0') && firebaseConfig.includes('js/app/**'));
 
 ok('message create rule inahitaji sender awe participant', /allow create: if signedIn\(\)[\s\S]{0,700}participants\.hasAny\(\[request\.auth\.uid\]\)/.test(rules.slice(rules.indexOf('match /conversations/{convId}/messages'))));

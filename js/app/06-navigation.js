@@ -44,6 +44,7 @@ window.doLogout = async function() {
                 try { history.replaceState(null,'',location.pathname); } catch(e) {}
             } catch(e) { console.warn('[logout cleanup]', e); }
 
+            try { if (window.skhPushOnLogout) await window.skhPushOnLogout(); } catch(e) {} // [R15] kifaa hiki kiache kupokea push za akaunti hii
             await skh.signOut(skh.auth); // [PHASE 4.4] listeners zimefungwa kabla ya logout
             skhToast("Umetoka kikamilifu.", 'success', 1400);
             setTimeout(function(){ window.location.reload(); }, 500);
