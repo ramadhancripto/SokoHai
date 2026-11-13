@@ -68,7 +68,7 @@ import { skh } from './00-bootstrap.js';
 
     var TABS = [
         ['overview', 'Muhtasari'], ['accounts', 'Akaunti'], ['agents', 'Mawakala'], ['prices', 'Ukaguzi wa Bei'],
-        ['disputes', 'Migogoro'], ['withdrawals', 'Kutoa Pesa'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
+        ['disputes', 'Migogoro'], ['withdrawals', 'Kutoa Pesa'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['auctions', 'Minada'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
     ];
     function frame(inner) {
         var tabs = TABS.map(function (t) {
@@ -425,6 +425,85 @@ import { skh } from './00-bootstrap.js';
                         + '<td style="padding:6px;">' + esc((t.kind || '') + ' ' + (t.id || t.uid || t.userDocId || t.agentDocId || '')) + '</td>'
                         + '<td style="padding:6px;">' + esc(d.reason || d.note || '') + '</td></tr>';
                 }).join('') + '</tbody></table></div>' : empty('Bado hakuna kumbukumbu.'));
+    };
+
+    /* [R14 2026-11-13] MINADA — dashibodi ya admin ya minada. Data na vitendo vyote vinapitia
+       callables za server (adminAuctionsList / adminAuctionDetail / adminAuctionAction /
+       auctionCancel): server inathibitisha u-admin na kuandika admin_audit_log. Malipo
+       HAYAWEKWI kwa mkono — server pekee huthibitisha oda halisi ya mnada. */
+    var AUC_ST = { all: 'Zote', active: 'Zinaendelea', paused: 'Zimesitishwa', closing: 'Zinafungwa', scheduled: 'Zijazo',
+        awaiting_payment: 'Zinasubiri malipo', payment_expired: 'Malipo yamechelewa', paid: 'Zimelipwa', unsold: 'Hazikuuzwa', cancelled: 'Zimeghairiwa' };
+    var AUC_F = 'all';
+    function dt(ms) { return ms ? new Date(Number(ms)).toLocaleString('sw-TZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function stPill(st) {
+        var c = { active: '#dcfce7', paused: '#fef9c3', closing: '#e0f2fe', scheduled: '#f1f5f9', awaiting_payment: '#fef3c7', payment_expired: '#fee2e2', paid: '#d1fae5', unsold: '#f1f5f9', cancelled: '#fee2e2' }[st] || '#f1f5f9';
+        return '<span style="background:' + c + ';border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800;color:#18352D;">' + esc(AUC_ST[st] || st) + '</span>';
+    }
+    VIEWS.auctions = async function () {
+        var r = await run('adminAuctionsList', { status: AUC_F });
+        var chips = Object.keys(AUC_ST).map(function (k) {
+            var n = k === 'all' ? r.total : (r.counts[k] || 0), on = k === AUC_F;
+            return '<button type="button" onclick="window.skhAdminAucFilter(\'' + k + '\')" style="padding:6px 10px;border-radius:999px;border:1px solid ' + (on ? '#17604E' : '#D5E2DE') + ';background:' + (on ? '#17604E' : '#fff') + ';color:' + (on ? '#fff' : '#18352D') + ';font-size:12px;font-weight:700;cursor:pointer;">' + esc(AUC_ST[k]) + ' ' + n + '</button>';
+        }).join('');
+        var rows = (r.auctions || []).map(function (a) {
+            return '<tr style="border-top:1px solid #eef2f1;"><td style="padding:8px 6px;"><b>' + esc(a.title || a.id) + '</b><br><small style="color:#64748b;">' + esc(a.sellerName || a.sellerId || '') + '</small></td>'
+                + '<td style="padding:8px 6px;">' + stPill(a.status) + '</td>'
+                + '<td style="padding:8px 6px;white-space:nowrap;">' + money(a.currentBid || a.startPrice) + '<br><small style="color:#64748b;">' + a.totalBids + ' zabuni · ' + a.bidderCount + ' wazabuni</small></td>'
+                + '<td style="padding:8px 6px;white-space:nowrap;"><small>Mwisho: ' + esc(dt(a.endTime)) + (a.paymentDeadline ? '<br>Malipo: ' + esc(dt(a.paymentDeadline)) : '') + '</small></td>'
+                + '<td style="padding:8px 6px;">' + btn('Fungua', "window.skhAdminAucOpen('" + esc(a.id) + "')", 'plain') + '</td></tr>';
+        }).join('');
+        return box('Minada', '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' + chips + '</div>'
+            + (rows ? '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#64748b;font-size:11.5px;"><th style="padding:6px;">Mnada</th><th style="padding:6px;">Hali</th><th style="padding:6px;">Zabuni</th><th style="padding:6px;">Muda</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : empty('Hakuna mnada kwenye kundi hili.')))
+            + '<div id="ccAucDetail"></div>';
+    };
+    window.skhAdminAucFilter = function (k) { AUC_F = k; window.skhAdminCCTab('auctions'); };
+    window.skhAdminAucOpen = async function (pid) {
+        var out = document.getElementById('ccAucDetail'); if (!out) return;
+        out.innerHTML = empty('Inapakia mnada…');
+        try {
+            var r = await run('adminAuctionDetail', { productId: pid }), a = r.auction;
+            var acts = [];
+            if (a.status === 'closing') acts.push(btn('Funga mnada sasa', "window.skhAdminAucAct('" + esc(pid) + "','finalize')"));
+            if (a.status === 'payment_expired') acts.push(btn('Mpe anayefuata nafasi', "window.skhAdminAucAct('" + esc(pid) + "','second_chance')"));
+            if (a.status === 'awaiting_payment' || a.status === 'payment_expired') acts.push(btn('Ongeza muda wa malipo', "window.skhAdminAucAct('" + esc(pid) + "','extend_payment')", 'plain'));
+            if (['active', 'paused', 'scheduled', 'closing'].indexOf(a.status) !== -1) acts.push(btn('Ghairi mnada', "window.skhAdminAucCancel('" + esc(pid) + "')", 'danger'));
+            out.innerHTML = box('Mnada: ' + esc(a.title || pid) + ' ' + stPill(a.status),
+                '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-size:12.5px;margin-bottom:10px;">'
+                + '<div>Bei ya kuanzia<br><b>' + money(a.startPrice) + '</b></div><div>Zabuni ya juu<br><b>' + money(a.currentBid) + '</b></div>'
+                + '<div>Mshindi<br><b>' + esc(a.winnerName || a.winnerId || '—') + '</b>' + (a.winnerBid ? ' · ' + money(a.winnerBid) : '') + (a.winnerRound > 1 ? ' (raundi ' + a.winnerRound + ')' : '') + '</div>'
+                + '<div>Malipo<br><b>' + (a.winnerPaid ? 'Yamethibitishwa (' + esc(a.paidOrderId || '') + ')' : a.paymentDeadline ? 'Hadi ' + esc(dt(a.paymentDeadline)) : '—') + '</b></div>'
+                + '<div>Stock<br><b>' + (a.stock == null ? '—' : a.stock) + '</b></div><div>Nyongeza za muda<br><b>' + a.extensions + '</b></div></div>'
+                + (r.paidOrderFound && !a.winnerPaid ? '<p style="background:#ecfdf5;border-radius:10px;padding:8px;font-size:12.5px;">Server imepata oda ya malipo <b>' + esc(r.paidOrderFound) + '</b> — itathibitishwa na mshindi au sweep.</p>' : '')
+                + (a.cancelled ? '<p style="background:#fee2e2;border-radius:10px;padding:8px;font-size:12.5px;">Imeghairiwa: ' + esc(a.cancelReason || '') + '</p>' : '')
+                + (acts.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">' + acts.join('') + '</div>' : '')
+                + '<h4 style="margin:10px 0 6px;font-size:13px;">Zabuni (' + r.bids.length + ')</h4>'
+                + (r.bids.length ? '<ol style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.6;">' + r.bids.map(function (b) { return '<li>' + money(b.amount) + ' — ' + esc(b.name || b.uid || '') + ' <small style="color:#64748b;">' + esc(String(b.at || '').slice(0, 16).replace('T', ' ')) + '</small></li>'; }).join('') + '</ol>' : empty('Hakuna zabuni.'))
+                + '<h4 style="margin:10px 0 6px;font-size:13px;">Oda za mshindi kwa bidhaa hii</h4>'
+                + (r.winnerOrders.length ? r.winnerOrders.map(function (o) { return '<div style="font-size:12.5px;">' + esc(o.id) + ' · ' + esc(o.status || '') + ' · ' + money(o.amount) + (o.commerceMode ? ' · ' + esc(o.commerceMode) : '') + '</div>'; }).join('') : empty('Hakuna.'))
+                + '<h4 style="margin:10px 0 6px;font-size:13px;">Historia ya mnada</h4>'
+                + (r.events.length ? '<ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.6;">' + r.events.map(function (e) { return '<li><b>' + esc(e.type || '') + '</b> <small style="color:#64748b;">' + esc(String(e.at || '').slice(0, 16).replace('T', ' ')) + (e.reason ? ' · ' + esc(e.reason) : '') + '</small></li>'; }).join('') + '</ul>' : empty('Hakuna matukio.')));
+            out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) { out.innerHTML = empty('Hitilafu: ' + esc(errText(e))); }
+    };
+    window.skhAdminAucAct = async function (pid, action) {
+        var data = { productId: pid, action: action };
+        if (action === 'extend_payment') {
+            var h = Number(await ask('Ongeza saa ngapi? (1 hadi 72)'));
+            if (!(h >= 1 && h <= 72)) { toast('Weka saa kati ya 1 na 72.', 'error'); return; }
+            data.hours = h;
+        }
+        var reason = await needReason(5); if (!reason) return;
+        data.reason = reason;
+        try { await run('adminAuctionAction', data); toast('Kitendo kimefanyika na kuhifadhiwa kwenye kumbukumbu.', 'success'); }
+        catch (e) { toast('Hitilafu: ' + errText(e), 'error'); }
+        await window.skhAdminCCTab('auctions'); window.skhAdminAucOpen(pid);
+    };
+    window.skhAdminAucCancel = async function (pid) {
+        if (!(await confirmIt('Ghairi mnada huu? Zabuni zitabaki kama historia; hakuna mshindi.'))) return;
+        var reason = await needReason(5); if (!reason) return;
+        try { await run('auctionCancel', { productId: pid, reason: reason }); toast('Mnada umeghairiwa.', 'success'); }
+        catch (e) { toast('Hitilafu: ' + errText(e), 'error'); }
+        await window.skhAdminCCTab('auctions'); window.skhAdminAucOpen(pid);
     };
 
     window.skhAdminCCTab = async function (t) {

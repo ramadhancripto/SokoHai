@@ -426,6 +426,11 @@ exports.auctionCancel = onCall({ region: REGION }, async (req) => {
     });
     if (!cancelled) throw new HttpsError('failed-precondition', 'mnada_umeisha');
     await auctionEvent(ref, 'cancelled', { by: uid, byAdmin: !!(isAdmin && !isOwner), reason: reason || null, bidsVoided: bids });
+    /* [R14] an admin cancellation is also an admin action: append-only admin_audit_log record */
+    if (isAdmin && !isOwner) {
+        try { await require('./admin-authority')._internal.writeAudit(req, 'auction_cancel', { type: 'auction', productId }, { reason, bidsVoided: bids }); }
+        catch (e) { console.error('[auctionCancel] audit write failed', e && e.message); }
+    }
     if (m.maxBidder) {
         await notify(m.maxBidder, 'Mnada umeghairiwa', 'Mnada wa ' + (p.title || 'bidhaa') + ' umeghairiwa na muuzaji. Zabuni yako haikuhesabiwa kama ununuzi.',
             { type: 'auction_cancelled', productId, commerceMode: 'AUCTION' });
@@ -582,4 +587,6 @@ exports.commerceModesSweep = onSchedule({ region: REGION, schedule: 'every 15 mi
     });
 
 exports.claimOnce = claimOnce;   // shared exactly-once primitive (used by live-commerce.js)
+/* [R14] server-only helpers for the admin auction callables (functions/auction-admin.js) */
+exports._admin = { closeAuction, secondChance, winnerHasPaid };
 exports._testing = { validateBid, validateGroupJoin, saleModeOf, sweepAuctions, minNextBid, antiSnipeEnd, closeAuction, secondChance, sweepPriceDrops, winnerHasPaid, endingSoon, winnerWindow, claimOnce };

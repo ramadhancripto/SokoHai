@@ -4033,6 +4033,11 @@ exports.auctionFinalize = commerceModes.auctionFinalize;
 // [FULL-AUCTION 2026-11] cancel + winner payment confirmation
 exports.auctionCancel = commerceModes.auctionCancel;
 exports.auctionConfirmPayment = commerceModes.auctionConfirmPayment;
+// [R14] admin auction dashboard (admin-only callables, audited)
+const auctionAdmin = require('./auction-admin');
+exports.adminAuctionsList = auctionAdmin.adminAuctionsList;
+exports.adminAuctionDetail = auctionAdmin.adminAuctionDetail;
+exports.adminAuctionAction = auctionAdmin.adminAuctionAction;
 // [R13-B] Live / Live Commerce / Mnada Live / Bei Kushuka Live, Stories, Group Soko
 const liveCommerce = require('./live-commerce');
 ['liveCreate','liveStart','liveEnd','livePin','liveSetProducts','liveJoin','liveLeave','liveComment','liveModerate','liveReport','adminLiveRemove','liveLike','liveRemind','livePause','liveResume','liveSetVideo','livePing'].forEach(n => { exports[n] = liveCommerce[n]; });
