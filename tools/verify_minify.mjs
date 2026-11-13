@@ -60,9 +60,25 @@ function tokensOf(code, file) {
   throw new Error(`${file}: tokenize imeshindwa: ${lastErr && lastErr.message}`);
 }
 
+/* `window.X = ...` assignments in CODE only. Comments are blanked first: a comment that
+ * merely documents a global (e.g. "set window.SKH_ICE = [...]") is not an assignment, and the
+ * minifier removes comments, so counting them reported false differences. */
+function stripComments(code) {
+  for (const sourceType of ['module', 'script']) {
+    const ranges = [];
+    try {
+      const t = tokenizer(code, { ...TOKENIZER_BASE, sourceType, onComment: (block, text, start, end) => ranges.push([start, end]) });
+      for (;;) { if (t.getToken().type.label === 'eof') break; }
+    } catch (e) { continue; }
+    let out = '', at = 0;
+    for (const [a, b] of ranges) { out += code.slice(at, a) + ' '.repeat(b - a); at = b; }
+    return out + code.slice(at);
+  }
+  return code;
+}
 const globalsOf = (code) => {
   const s = new Set();
-  for (const m of code.matchAll(/window\.([A-Za-z_$][\w$]*)\s*=/g)) s.add(m[1]);
+  for (const m of stripComments(code).matchAll(/window\.([A-Za-z_$][\w$]*)\s*=/g)) s.add(m[1]);
   return [...s].sort();
 };
 

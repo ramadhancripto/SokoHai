@@ -48,7 +48,8 @@ check('93: timeout hufungua retry badala ya loading-lock', /loading93 = false; \
 const f79 = read('js/app/79-one-ui-at-a-time.js');
 check('79: defer kwa 81 (chat/inbox/group)', (f79.match(/__skh81Live\(\)\) return/g) || []).length >= 4);
 const f81 = read('js/app/81-absolute-one-ui-live.js');
-check('81: closeModals hurithi flags', /patchCloseModalsAbsolute[\s\S]{0,3000}__skhCopyChainFlags\(origCloseModals, wrapped\)/.test(f81));
+// window 3000 -> 6000: patchCloseModalsAbsolute grew; the call is ~3.7k chars in, same function
+check('81: closeModals hurithi flags', /patchCloseModalsAbsolute[\s\S]{0,6000}__skhCopyChainFlags\(origCloseModals, wrapped\)/.test(f81));
 
 console.log('==================================================');
 console.log(`CHAT/NAV AUTHORITY: ${pass} zimepita, ${fail} zimeshindwa`);

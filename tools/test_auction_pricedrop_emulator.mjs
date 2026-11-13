@@ -129,7 +129,9 @@ await test('unpaid winner after the deadline -> second chance to the next distin
 await test('expired payment window closes the winner too (no late purchase)', async () => {
   const p = await get('products/fin'); p.modeData.paymentDeadline = ago(1); eq(pc.modeEligibility(p, 'b2', Date.now()), 'auction_payment_expired', 'late');
 });
-await db.doc('orders/o_paid').set({ buyerId: 'b2', sellerId: 'seller', status: 'held', items: [{ productId: 'fin', qty: 1 }] });
+// [FULL-AUCTION] winnerHasPaid only counts an AUCTION order (commerceMode, as checkout writes it from
+// saleMode) whose amount covers the winning bid — the fixture is a real paid auction order.
+await db.doc('orders/o_paid').set({ buyerId: 'b2', sellerId: 'seller', status: 'held', commerceMode: 'auction', amount: 11100, items: [{ productId: 'fin', qty: 1, commerceMode: 'auction' }] });
 await db.doc('products/fin').update({ 'modeData.paymentDeadline': ago(1) });
 await test('a paid winner is kept (no second chance)', async () => {
   eq(await cm.secondChance(db.doc('products/fin'), Date.now()), false, 'no move'); const m = (await get('products/fin')).modeData; eq(m.winnerId, 'b2', 'kept'); eq(m.winnerPaid, true, 'marked paid');
