@@ -490,7 +490,7 @@ async function settlePesaPalPayment(tx, source) {
             t.set(db.collection(ESCROW_HOLDS).doc(key), Object.assign({
                 kind: 'escrow_hold', target: c.kind, targetId: c.id,
                 amount: amount, payerUid: payer, payeeUid: payee,
-                method: 'pesapal', source: String(source || 'pesapal'),
+                method: tx.method || 'pesapal', source: String(source || 'pesapal'), // [R16] 'wallet' for orderWalletPay
                 pesapalTrackingId: tx.trackingId, merchantReference: tx.merchantReference || null,
                 paidAmount: tx.amount, verifiedAt: now, released: false
             }, needsReview ? { blocked: true, blockedReason: 'INVENTORY_' + stockResult.reason } : {}));
@@ -499,7 +499,7 @@ async function settlePesaPalPayment(tx, source) {
                 const pcx = priceOf[c.id] || {};
                 const patch = {
                     pricedByServer: true, priceSource: pcx.source || 'server_check', priceExpected: moneyOf(pcx.amount),
-                    paymentStatus: 'paid', paymentVerified: true, paymentVerifiedBy: 'pesapal',
+                    paymentStatus: 'paid', paymentVerified: true, paymentVerifiedBy: tx.method || 'pesapal',
                     verifiedAmount: amount, paymentProtectedAt: now, paidAt: od.paidAt || now,
                     ipnAt: now, updatedAt: now
                 };
@@ -1655,6 +1655,103 @@ exports.serviceOrderWalletPay = onCall({ region: REGION }, async (req) => {
         } catch (e) { /* taarifa si kikwazo cha malipo */ }
     }
     return result;
+});
+
+/* ============================================================
+ * [R16] orderWalletPay — buyer pays cart / buy-now ORDERS from the SokoPay wallet.
+ * Same guarantees as a verified PesaPal payment, because the money is applied by the
+ * SAME audited settlement (settlePesaPalPayment with method 'wallet'):
+ *   server price check, stock reservation/commit, escrow hold, 'held', events.
+ * Flow: (1) checks: caller is the buyer of every order, unpaid, no hold, server price
+ *       <= order amount (refuses BEFORE debiting); (2) ONE transaction: balance >= total,
+ *       debit + ledger + wallet_payment record + orders.paymentRef = WLT_<id>;
+ *       (3) settle; (4) anything not settled is refunded to the wallet in a second
+ *       transaction (ledger 'refund'), so the wallet always reconciles.
+ * A crash between (2) and (3) is resumed by calling again with the same orders.
+ * ========================================================== */
+exports.orderWalletPay = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    const data = req.data || {};
+    const ids = Array.from(new Set((Array.isArray(data.orderIds) ? data.orderIds : [data.orderId]).map(x => String(x || '')).filter(Boolean)));
+    if (!ids.length || ids.length > 20 || ids.some(x => x.indexOf('/') !== -1)) throw new HttpsError('invalid-argument', 'orderIds 1-20 zinahitajika.');
+    const buyer = await userDocFor(auth.uid);
+    if (!buyer) throw new HttpsError('not-found', 'Akaunti yako haipatikani.');
+    const PAYABLE = ['payment_pending', 'pending', 'pending_choice', 'new_order'];
+    const snaps = await Promise.all(ids.map(id => db.doc('orders/' + id).get()));
+    let resumeRef = null;
+    for (let i = 0; i < ids.length; i++) {
+        const s = snaps[i];
+        if (!s.exists) throw new HttpsError('not-found', 'Oda haipatikani: ' + ids[i]);
+        const o = s.data() || {};
+        if (String(o.buyerId || '') !== auth.uid) throw new HttpsError('permission-denied', 'Mnunuzi wa oda pekee ndiye anayelipa.');
+        if (String(o.collectionName || '') === 'services') throw new HttpsError('failed-precondition', 'Oda ya huduma hulipwa kwa serviceOrderWalletPay.');
+        const pr = String(o.paymentRef || '');
+        if (pr.indexOf('WLT_') === 0) { resumeRef = resumeRef || pr; continue; }
+        if (o.paymentVerified === true || String(o.paymentStatus || '') === 'paid') throw new HttpsError('failed-precondition', 'Oda tayari imelipiwa.');
+        if (PAYABLE.indexOf(String(o.status || 'payment_pending')) === -1) throw new HttpsError('failed-precondition', 'Oda haiko kwenye hali ya kulipiwa (status: ' + o.status + ').');
+    }
+    let ref = resumeRef, total = 0;
+    if (!resumeRef) {
+        // (1) server price check BEFORE any money moves
+        for (let i = 0; i < ids.length; i++) {
+            const o = snaps[i].data() || {};
+            const amt = moneyOf(o.amount);
+            if (!(amt > 0)) throw new HttpsError('failed-precondition', 'Kiasi cha oda si sahihi.');
+            const pc = await expectedOrderAmount(o, ids[i]);
+            if (!pc.ok || !(amt + MONEY_EPS >= moneyOf(pc.amount))) throw new HttpsError('failed-precondition', 'PRICE_CHANGED: Bei ya bidhaa imebadilika (' + (pc.ok ? 'TSh ' + moneyOf(pc.amount).toLocaleString() : pc.reason) + '). Hakiki kikapu tena.');
+            total += amt;
+        }
+        total = moneyOf(total);
+        if (data.expectedTotal != null && !sameMoney(moneyOf(data.expectedTotal), total)) throw new HttpsError('failed-precondition', 'Jumla imebadilika. Hakiki tena kabla ya kulipa.');
+        const CAP = Number(process.env.WALLET_MAX_ABS || 50000000);
+        if (total > CAP) throw new HttpsError('failed-precondition', 'Kiasi kinazidi kikomo cha wallet.');
+        ref = 'WLT_' + crypto.randomBytes(9).toString('hex');
+        const now = new Date().toISOString();
+        const buyerRef = db.doc('users/' + buyer.id);
+        await db.runTransaction(async (t) => {
+            const os = await Promise.all(ids.map(id => t.get(db.doc('orders/' + id))));
+            const bs = await t.get(buyerRef);
+            os.forEach(s => {
+                const o = s.data() || {};
+                if (String(o.paymentRef || '').indexOf('WLT_') === 0 || o.paymentVerified === true) throw new HttpsError('failed-precondition', 'Oda tayari inalipiwa.');
+            });
+            const bal = Number((bs.data() || {}).walletBalance || 0);
+            if (bal + MONEY_EPS < total) throw new HttpsError('failed-precondition', 'INSUFFICIENT_BALANCE: Salio halitoshi.');
+            t.update(buyerRef, { walletBalance: FieldValue.increment(-total) });
+            t.set(db.doc('wallet_ledger/wltpay_' + ref), { userId: buyer.id, callerUid: auth.uid, amountTSh: -total, type: 'purchase',
+                note: 'Malipo ya oda kutoka wallet (escrow)', orderIds: ids, paymentRef: ref, createdAt: now });
+            t.set(db.collection(ESCROW_HOLDS).doc('wltpay_' + ref), { kind: 'wallet_payment', uid: auth.uid, amount: total, orderIds: ids, state: 'debited', createdAt: now, updatedAt: now });
+            ids.forEach(id => t.update(db.doc('orders/' + id), { paymentRef: ref, paymentMethod: 'sokopay_wallet', updatedAt: now }));
+        });
+    }
+    const wpRef = db.collection(ESCROW_HOLDS).doc('wltpay_' + ref);
+    const wp = (await wpRef.get()).data() || {};
+    if (String(wp.uid || '') !== auth.uid) throw new HttpsError('permission-denied', 'Malipo haya si yako.');
+    if (wp.state === 'settled' || wp.state === 'partially_refunded') return { ok: true, already: true, paymentRef: ref, settled: wp.settled || [], refunded: wp.refunded || 0 };
+    total = moneyOf(wp.amount);
+    // (3) the audited settlement path
+    const res = await settlePesaPalPayment({ paid: true, trackingId: ref, merchantReference: ref, amount: total, method: 'wallet' }, 'wallet');
+    // (4) refund whatever was not applied (e.g. a price changed between check and settle)
+    const holds = await Promise.all((wp.orderIds || []).map(id => db.collection(ESCROW_HOLDS).doc('order_' + id).get()));
+    const applied = moneyOf(holds.filter(h => h.exists && String((h.data() || {}).pesapalTrackingId || '') === ref).reduce((sum, h) => sum + Number((h.data() || {}).amount || 0), 0));
+    const refund = moneyOf(Math.max(0, total - applied));
+    const now2 = new Date().toISOString();
+    await db.runTransaction(async (t) => {
+        const cur = (await t.get(wpRef)).data() || {};
+        if (cur.state !== 'debited') return;
+        const unpaid = [];
+        for (let i = 0; i < holds.length; i++) if (!(holds[i].exists && String((holds[i].data() || {}).pesapalTrackingId || '') === ref)) unpaid.push(wp.orderIds[i]);
+        const us = await Promise.all(unpaid.map(id => t.get(db.doc('orders/' + id))));
+        // orders whose money came back are payable again (no stale WLT ref / price_review)
+        us.forEach((s, i) => { if (s.exists && String((s.data() || {}).paymentRef || '') === ref) t.update(s.ref, { paymentRef: null, paymentStatus: 'pending', walletPayRefunded: ref, updatedAt: now2 }); });
+        if (refund > 0) {
+            t.update(db.doc('users/' + buyer.id), { walletBalance: FieldValue.increment(refund) });
+            t.set(db.doc('wallet_ledger/wltrefund_' + ref), { userId: buyer.id, callerUid: 'system', amountTSh: refund, type: 'refund',
+                note: 'Sehemu ya malipo ya wallet haikutumika (bei/stock) — imerudishwa', paymentRef: ref, createdAt: now2 });
+        }
+        t.update(wpRef, { state: refund > 0 ? 'partially_refunded' : 'settled', applied, refunded: refund, settled: res.settled || [], skipped: res.skipped || [], updatedAt: now2 });
+    });
+    return { ok: true, paymentRef: ref, total, applied, refunded: refund, settled: res.settled || [], review: res.review || [] };
 });
 
 /* [PHASE 9 B-16] Idempotent "escrow funded" notice for a SokoPay link
@@ -3644,7 +3741,9 @@ async function resolveCommentEvidence(uid, targetType, targetId) {
     const matchesTarget = (od) => {
         if (targetType === 'service') return od.serviceId === targetId || (od.itemId === targetId && (od.commerceType === 'service' || od.kind === 'service_order'));
         if (targetType === 'transport') return od.transportId === targetId || (od.itemId === targetId && (od.commerceType === 'transport' || od.kind === 'booking'));
-        return od.productId === targetId || od.itemId === targetId;
+        // [R16] SokoCart orders carry their products in items[] (no top-level productId)
+        return od.productId === targetId || od.itemId === targetId
+            || (Array.isArray(od.items) && od.items.some((it) => it && String(it.productId || it.id || it.itemId || '') === targetId));
     };
     const list = [];
     ordersSnap.forEach((o) => { list.push({ id: o.id, d: o.data() }); });

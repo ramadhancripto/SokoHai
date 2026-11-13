@@ -561,6 +561,7 @@ service cloud.firestore {
         && request.resource.data.get('status', 'payment_pending') in ['payment_pending','pending','pending_choice','new_order','awaiting_payment']
         && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
         && request.resource.data.get('paymentVerified', false) == false
+        && !(request.resource.data.get('paymentRef', '') is string && request.resource.data.get('paymentRef', '').matches('^WLT_.*'))
         && !('trust' in request.resource.data);   // [R9] Verified Transaction is server-only
       // [LAUNCH-FIX 2026-11-09] Oda ya huduma inayoundwa na FUNDI anapokubali
       // ombi la mteja (16-pos-admin-jobs.js acceptHubServiceRequest). Bila hii,
@@ -604,6 +605,7 @@ service cloud.firestore {
             && orderLinkOnce('rideRequestId') && orderLinkOnce('deliveryId')
             && orderLinkOnce('driverId') && orderLinkOnce('transportRequestId')
             && orderPaymentInfoOk()
+            && orderWalletRefOk()
             && orderStatusOk()
             && unchanged(['trust'])
           ));
@@ -619,6 +621,11 @@ service cloud.firestore {
     }
     function orderLinkOnce(k) {
       return !changed().hasAny([k]) || resource.data.get(k, null) == null;
+    }
+    // [R16] WLT_ payment references belong to orderWalletPay (server) only.
+    function orderWalletRefOk() {
+      return !changed().hasAny(['paymentRef'])
+        || !(request.resource.data.get('paymentRef', '') is string && request.resource.data.get('paymentRef', '').matches('^WLT_.*'));
     }
     function orderPaymentInfoOk() {
       return !changed().hasAny(['paymentStatus','paymentVerified'])

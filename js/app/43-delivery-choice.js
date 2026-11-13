@@ -560,6 +560,9 @@ import { skh } from './00-bootstrap.js';
                     orderNotes: (DC.notes || ''),
                     paymentMethod: (window.smartCartState && window.smartCartState.paymentMethod) || 'sokopay_wallet'
                 });
+                // [R16] escrowStatus ni server-only kwenye orders (firestore.rules orderServerOnlyCreateKeys);
+                // ikibaki hapa, rules zinakataa oda nzima na checkout ya kikapu haifanyi kazi kabisa.
+                delete orderDoc.escrowStatus;
                 var orderRef = await skh.addDoc(skh.collection(skh.db, 'orders'), orderDoc);
                 postPay.push({ orderDocId: orderRef.id, coreId: coreRef.id, delivery: delivery });
 
@@ -617,9 +620,48 @@ import { skh } from './00-bootstrap.js';
             if (ca) ca.value = 'TSh ' + t.grandTotal.toLocaleString();
             var cm = document.getElementById('checkoutModal');
             if (cm) cm.style.display = 'flex';
+            if (window.skhCheckoutShowWalletBalance) window.skhCheckoutShowWalletBalance();
         } catch (e) {
             alert('Order preparation imeshindikana: ' + (e && e.message));
         }
+    };
+
+    /* [R16] Lipa oda za kikapu kutoka SokoPay wallet. Kivinjari hakiandiki hali ya malipo:
+       server (orderWalletPay) inakagua bei, inakata salio, inashikilia escrow (held). */
+    function cartOrderIds() {
+        try { return (JSON.parse(sessionStorage.getItem(SESSION_PAYLOAD) || '[]') || []).map(function (p) { return p.orderDocId; }).filter(Boolean); } catch (e) { return []; }
+    }
+    window.skhCheckoutShowWalletBalance = async function () {
+        var el = document.getElementById('walletPayBal'); if (!el || !skh.currentUser) return;
+        try {
+            var s = await skh.getDoc(skh.doc(skh.db, 'users', skh.currentUser.uid));
+            var b = Number((s.exists() && s.data().walletBalance) || 0);
+            el.textContent = 'Salio: TSh ' + b.toLocaleString();
+        } catch (e) { el.textContent = ''; }
+    };
+    window.skhPayCartFromWallet = async function () {
+        var ids = cartOrderIds();
+        if (!ids.length) { alert('Hakuna oda ya kikapu inayosubiri malipo. Rudi kwenye kikapu.'); return; }
+        var total = 0;
+        try { for (var oi = 0; oi < ids.length; oi++) { var os = await skh.getDoc(skh.doc(skh.db, 'orders', ids[oi])); total += Number((os.exists() && os.data().amount) || 0); } } catch (e) { total = Number(skh.activeCheckoutAmount || 0); }
+        var ok = window.skhConfirm ? await window.skhConfirm('Lipa TSh ' + total.toLocaleString() + ' kutoka SokoPay wallet? Pesa itashikiliwa kwenye escrow mpaka uthibitishe kupokea.') : confirm('Lipa?');
+        if (!ok) return;
+        var btn = document.getElementById('btnPayWallet'); if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
+        try {
+            var r = await skh.wrapCallable('orderWalletPay')({ orderIds: ids, expectedTotal: total });
+            var d = (r && r.data) || {};
+            var orders = ids.map(function (id) { return { orderId: id }; });
+            try { var pp = JSON.parse(sessionStorage.getItem(SESSION_PAYLOAD) || '[]') || []; for (var i = 0; i < pp.length; i++) { if (pp[i].delivery && pp[i].delivery.required) { try { await window.skhHandleOrderDelivery(pp[i].orderDocId, pp[i].delivery, {}); } catch (e) {} } } } catch (e) {}
+            var undecided = false; try { undecided = sessionStorage.getItem(BUY_NOW_KEY) === '1'; } catch (e) {}
+            try { sessionStorage.removeItem(SESSION_PAYLOAD); sessionStorage.removeItem(BUY_NOW_KEY); } catch (e) {}
+            if (typeof closeModals === 'function') closeModals();
+            alert(d.refunded > 0 ? ('Malipo yamepokelewa kwa sehemu. TSh ' + Number(d.refunded).toLocaleString() + ' zimerudishwa kwenye wallet (bei au stock imebadilika).') : 'Malipo yamepokelewa na kushikiliwa kwenye escrow ya SokoPay.');
+            if (undecided && window.skhDeliveryPostPayPrompt) { try { await window.skhDeliveryPostPayPrompt(orders); } catch (e) {} }
+            if (window.skhOpenEscrowCenter) window.skhOpenEscrowCenter();
+        } catch (e) {
+            var m = String((e && e.message) || e);
+            alert(/INSUFFICIENT/.test(m) ? 'Salio la wallet halitoshi. Ongeza salio kisha ujaribu tena.' : (/PRICE_CHANGED/.test(m) ? m.replace('PRICE_CHANGED: ', '') : 'Imeshindikana: ' + m));
+        } finally { if (btn) { btn.disabled = false; btn.style.opacity = ''; } }
     };
 
     /* ================================================================

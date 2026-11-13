@@ -55,7 +55,8 @@ import { skh } from './00-bootstrap.js';
             btns += B('Ghairi Oda', "window.skhOrderCancelUnpaid('" + id + "')", '#e2e8f0', '#334155');
         } else if (o.status === 'completed') {
             if (role === 'buyer') {
-                var tgt = isSvc ? (o.serviceId || '') : (o.productId || o.itemId || '');
+                var it0 = Array.isArray(o.items) && o.items[0] ? o.items[0] : {};
+                var tgt = isSvc ? (o.serviceId || '') : (o.productId || it0.productId || it0.id || o.itemId || '');
                 if (tgt) btns += B('Andika Tathmini', "window.skhEscrowReview('" + esc(tgt) + "','" + (isSvc ? 'service' : 'product') + "')", '#fef3c7', '#92400e');
             }
         } else if (role === 'buyer') {
@@ -67,6 +68,9 @@ import { skh } from './00-bootstrap.js';
                 btns += B('Fungua Mgogoro', "window.skhOrderOpenDispute('" + id + "')", '#fee2e2', '#b91c1c');
             }
         } else {
+            if (o.status === 'held' && o.paymentVerified === true && !o.rideRequestId) {
+                btns += B('Nimesafirisha', "window.skhOrderMarkShipped('" + id + "')", '#0f766e');
+            }
             if (['held', 'shipped', 'awaiting_pickup', 'in_transit'].indexOf(o.status) !== -1) {
                 btns += B('Thibitisha Makabidhiano', "window.skhOrderConfirmDeliveryPrompt('" + id + "')", '#00509d');
             }
@@ -142,6 +146,20 @@ import { skh } from './00-bootstrap.js';
         close();
         if (typeof window.openRatingModal === 'function') window.openRatingModal(targetId, type, '');
         else alert('Fomu ya tathmini haipatikani kwa sasa.');
+    };
+
+    /* [R16] Muuzaji: oda iliyolipwa (held, server-verified) -> 'shipped'. Hii haitoi pesa;
+       rules zinaruhusu muuzaji tu, kutoka held+paymentVerified. */
+    window.skhOrderMarkShipped = async function (orderId) {
+        var ok = window.skhConfirm ? await window.skhConfirm('Thibitisha umesafirisha / umeandaa mzigo kwa mnunuzi? Pesa bado inabaki escrow mpaka makabidhiano yathibitishwe.') : confirm('Thibitisha?');
+        if (!ok) return;
+        try {
+            var s = await skh.getDoc(skh.doc(skh.db, 'orders', orderId)); var o = s.exists() ? s.data() : {};
+            await skh.updateDoc(skh.doc(skh.db, 'orders', orderId), { status: 'shipped', shippedAt: new Date().toISOString() });
+            try { await skh.addDoc(skh.collection(skh.db, 'notifications'), { userId: o.buyerId, event: 'order.shipped', params: { title: String(o.itemTitle || '') },
+                title: 'Mzigo wako umesafirishwa', body: 'Muuzaji amesafirisha "' + String(o.itemTitle || 'oda yako') + '". Ukipokea, mpe Namba ya Kupokea.', type: 'order', orderId: orderId, read: false, createdAt: new Date().toISOString() }); } catch (e) {}
+            if (window.skhOpenEscrowCenter) window.skhOpenEscrowCenter();
+        } catch (e) { alert('Kosa: ' + errText(e)); }
     };
 
     window.skhOrderShowDeliveryCode = async function (orderId) {

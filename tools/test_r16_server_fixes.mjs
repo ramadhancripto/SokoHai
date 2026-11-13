@@ -34,6 +34,12 @@ await test('reviewsPublish: buyer with a COMPLETED product order gets verifiedPu
   const r = await call('reviewsPublish', B, { targetId: 'r16p_' + T, targetType: 'product', rating: 4, text: 'Nzuri' });
   ok(r.ok, JSON.stringify(r)); ok(r.data.verifiedPurchase && r.data.verifiedPurchase.orderId === 'r16o_' + T, JSON.stringify(r.data));
 });
+await test('reviewsPublish: SokoCart order (product only inside items[]) counts as verified', async () => {
+  await db.doc('products/r16c_' + T).set({ title: 'Kikapu', userId: S, comments: [] });
+  await db.doc('orders/r16co_' + T).set({ buyerId: 'r16C', sellerId: S, items: [{ id: 'r16c_' + T, productId: 'r16c_' + T, qty: 1 }], status: 'completed', amount: 1000 });
+  const r = await call('reviewsPublish', 'r16C', { targetId: 'r16c_' + T, rating: 5, text: 'Poa' });
+  ok(r.ok && r.data.verifiedPurchase, JSON.stringify(r));
+});
 await test('reviewsPublish: no order = no badge (still publishes, never fakes)', async () => {
   await db.doc('products/r16q_' + T).set({ title: 'Kingine', userId: S, comments: [] });
   const r = await call('reviewsPublish', 'r16nobody', { targetId: 'r16q_' + T, rating: 3, text: 'Sawa' });
