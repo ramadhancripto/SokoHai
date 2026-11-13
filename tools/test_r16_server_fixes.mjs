@@ -84,4 +84,12 @@ await test('transport booking (no order): the customer is still the sender', asy
   const a = await call('deliveryAccept', D, { rideId: id }); ok(a.ok, JSON.stringify(a));
   const p = await parts(id); ok(p.includes(B) && p.includes(D), JSON.stringify(p));
 });
+await test('adminSetupStatus: admin only; reports booleans, never a secret value', async () => {
+  process.env.PESAPAL_CONSUMER_SECRET = 'very-secret-test-value'; process.env.PESAPAL_CONSUMER_KEY = 'k'; process.env.PESAPAL_BASE_URL = 'https://cybqa.pesapal.com/pesapalv3';
+  const no = await call('adminSetupStatus', B, {}); ok(!no.ok && no.code === 'permission-denied', JSON.stringify(no));
+  const r = await fns.adminSetupStatus.run({ data: {}, auth: { uid: 'adm', token: { uid: 'adm', admin: true } }, rawRequest: { headers: {} }, acceptsStreaming: false });
+  ok(r.ok && r.items.find(i => i.key === 'pesapal_keys').ok === true && r.items.find(i => i.key === 'pesapal_env').value === 'sandbox', JSON.stringify(r).slice(0, 300));
+  ok(JSON.stringify(r).indexOf('very-secret') === -1, 'secret leaked');
+  delete process.env.PESAPAL_CONSUMER_SECRET; delete process.env.PESAPAL_CONSUMER_KEY; delete process.env.PESAPAL_BASE_URL;
+});
 console.log(`\nR16 SERVER FIXES: ${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

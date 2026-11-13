@@ -4167,6 +4167,8 @@ const stories = require('./stories');
 ['storyCreate','storyView','storyReport','storyRemove','storyReact'].forEach(n => { exports[n] = stories[n]; });
 const groupSoko = require('./group-soko');
 ['groupSokoCreate','groupSokoInvite','groupSokoAccept','groupSokoCapitalRecord','groupSokoCapitalConfirm','groupSokoPropose','groupSokoVote','groupSokoExecute','groupSokoPurchaseStep','groupSokoAttachProduct','groupSokoReport'].forEach(n => { exports[n] = groupSoko[n]; });
+// [R16] owner setup checklist (booleans only, never secrets)
+exports.adminSetupStatus = require('./setup-status').adminSetupStatus;
 // [R16] identity / business document verification (private documents, admin review, audit)
 const verificationEngine = require('./verification');
 ['verificationSubmit','adminVerificationQueue','adminVerificationDocUrls','adminVerificationDecide'].forEach(n => { exports[n] = verificationEngine[n]; });

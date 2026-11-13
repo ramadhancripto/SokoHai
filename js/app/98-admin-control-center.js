@@ -116,7 +116,11 @@ import { skh } from './00-bootstrap.js';
             return '<button type="button" onclick="window.skhAdminCCTab(\'' + tab + '\')" style="text-align:left;border:1px solid #D5E2DE;background:#f8fbfa;border-radius:14px;padding:12px;cursor:pointer;">'
                 + '<small style="color:#64748b;">' + label + '</small><div style="font-size:22px;font-weight:900;color:#17604E;">' + esc(v) + '</div></button>';
         }
-        return box('Kazi zinazosubiri', '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">'
+        /* [R16] usanidi wa nje uliobaki (server inaripoti ndiyo/hapana tu — hakuna siri) */
+        var setup = ''; try { var su = await run('adminSetupStatus', {}); setup = box('Usanidi wa nje (' + su.done + '/' + su.total + ')', '<ul data-setup-list style="margin:0;padding-left:0;list-style:none;font-size:13px;line-height:1.8;">' + (su.items || []).map(function (i) {
+            return '<li data-setup="' + esc(i.key) + '" data-ok="' + (i.ok ? '1' : '0') + '"><b style="color:' + (i.ok ? '#16a34a' : '#b45309') + ';">' + (i.ok ? 'Tayari' : (i.optional ? 'Hiari' : 'Bado')) + '</b> · ' + esc(i.label) + (i.value ? ' <small style="color:#64748b;">(' + esc(i.value) + ')</small>' : '') + '</li>';
+        }).join('') + '</ul><small style="color:#64748b;">Maelekezo: docs/SOKOHAI-USER-SETUP-CHECKLIST.md</small>'); } catch (e) {}
+        return setup + box('Kazi zinazosubiri', '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">'
             + tile('Oda kwenye ukaguzi wa bei', counts.price, 'prices')
             + tile('Migogoro iliyo wazi', counts.disputes, 'disputes')
             + tile('Maombi ya kutoa pesa', counts.withdrawals, 'withdrawals')
