@@ -467,6 +467,14 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
             if (aucStartMs > nowMs) modeData.startTime = aucStartMs;
             const aucInc = Math.round(parseFloat((document.getElementById('aucMinIncrement') || {}).value) || 0);
             if (aucInc > 0) modeData.minIncrement = aucInc;
+            /* [R14] campaign checks + preview before saving (server still enforces bids/locks) */
+            if (!(modeData.endTime > nowMs + 5 * 60000)) { alert("Muda wa mnada kuisha lazima uwe angalau dakika 5 kuanzia sasa."); return; }
+            if (!(price > 0)) { alert("Weka bei ya kuanzia ya mnada."); return; }
+            if (aucInc > 0 && aucInc >= price) { alert("Nyongeza ya chini ya zabuni lazima iwe ndogo kuliko bei ya kuanzia."); return; }
+            const fmt = (ms) => new Date(ms).toLocaleString('sw-TZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            if (!window.confirm('THIBITISHA MNADA\n\nBei ya kuanzia: TSh ' + Number(price).toLocaleString() + '\nNyongeza ya chini: ' + (aucInc > 0 ? 'TSh ' + aucInc.toLocaleString() : '5% ya zabuni ya juu')
+                + '\nUnaanza: ' + (modeData.startTime ? fmt(modeData.startTime) : 'sasa hivi') + '\nUnaisha: ' + fmt(modeData.endTime)
+                + '\n\nZabuni ya kwanza ikiwekwa, masharti haya hayawezi kubadilishwa; unaweza kughairi kabla ya zabuni ya kwanza tu.')) return;
         } 
         else if (saleMode === 'price_drop') {
             const minPrice = parseFloat(document.getElementById('pdMinPrice').value);
@@ -487,6 +495,14 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
             modeData = { minPrice: minPrice, intervalMs: intervalMs, dropAmount: dropAmt, endTime: endMs, startTime: startMs };
             const pdMax = parseInt((document.getElementById('pdMaxPerBuyer') || {}).value, 10);
             if (pdMax > 0) modeData.maxPerBuyer = pdMax;
+            /* [R14] campaign checks + preview before saving */
+            if (!(minPrice > 0 && minPrice < price)) { alert("Bei ya mwisho lazima iwe kubwa kuliko 0 na ndogo kuliko bei ya kuanzia."); return; }
+            if (!(endMs > nowMs + 5 * 60000) || totalIntervals < 1) { alert("Muda wa ofa ni mfupi mno: lazima upite angalau kipindi kimoja cha kushuka bei."); return; }
+            const fmtP = (ms) => new Date(ms).toLocaleString('sw-TZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            if (!window.confirm('THIBITISHA BEI KUSHUKA\n\nBei ya kuanzia: TSh ' + Number(price).toLocaleString() + '\nBei ya mwisho: TSh ' + Number(minPrice).toLocaleString()
+                + '\nInashuka: TSh ' + Math.round(dropAmt).toLocaleString() + ' kila dakika ' + Math.round(intervalMs / 60000)
+                + '\nInaanza: ' + fmtP(startMs) + '\nInaisha: ' + fmtP(endMs) + (pdMax > 0 ? '\nKikomo kwa mnunuzi: ' + pdMax : '')
+                + '\n\nWanunuzi wakiweka bei zao, masharti haya hayawezi kubadilishwa.')) return;
         } 
         else if (saleMode === 'wholesale') {
             const discVal = parseFloat(document.getElementById('wsDiscount').value);
