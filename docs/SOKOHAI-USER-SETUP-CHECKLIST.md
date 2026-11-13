@@ -10,17 +10,30 @@ Mpangilio unaopendekezwa: A → B → C → D → E.
 
 1. Fungua `_sokohai-local\WEKA-KWENYE-MAIN.bat`. Inaleta commits zote za R14–R16 kwa fast-forward tu,
    inaweka backup `backup/main-before-20261113`, inakuuliza **Y/N** kabla ya kusukuma, haitumii force.
-2. Netlify itajenga yenyewe baada ya push. Angalia **Deploys** kwenye Netlify (build ni
-   `node tools/build_dist.mjs --minify`; imethibitishwa kupita hapa).
+2. **Netlify imesimamishwa (paused):** tarehe 2026-11-13 `sokohai.com` na `www.sokohai.com` zote zinaonyesha
+   "Site not available — This site was paused as it reached its usage limits". Hili ni suala la **billing/plan
+   kwenye akaunti yako ya Netlify** — ni wewe tu unaweza kuliamua (kupandisha plan au kusubiri kipindi kipya).
+   Sijabadilisha DNS wala domain. Baada ya site kurudi, Netlify itajenga yenyewe kutoka main
+   (`node tools/build_dist.mjs --minify --check`, imethibitishwa kupita) — angalia Deploys kwamba commit ni ile
+   iliyochapishwa na bat.
 
 ## B. Firebase (inahitaji idhini yako ya deploy)
 
-Kwenye mradi wa **staging** kwanza (si production):
+**Tahadhari:** `.firebaserc` ina mradi mmoja tu — `default: sokonet-3b847`, ambao code inautambua kama
+**PRODUCTION** (`PRODUCTION_PROJECT_ID`). Hakuna mradi wa staging bado. `firebase deploy` bila `--project`
+ingeenda production. Hatua:
+
+1. Firebase Console → Add project → mf. `sokohai-staging` (Blaze plan inahitajika kwa Functions).
+2. `firebase use --add` → chagua `sokohai-staging` → alias `staging`.
+3. Thibitisha lengo kabla ya kila deploy: `firebase use staging` kisha `firebase projects:list` / `firebase use`.
+4. Staging pekee:
 
 ```
-firebase deploy --only firestore:rules --project <staging>
-firebase deploy --only functions --project <staging>
+firebase deploy --only firestore:rules --project staging
+firebase deploy --only functions --project staging
 ```
+
+5. Production (`sokonet-3b847`) **tu baada ya idhini yako ya maandishi**.
 
 Functions mpya za R15–R16: `pushRegisterToken, pushUnregisterToken, pushSetPrefs, pushOnNotification,
 orderWalletPay, groupBuyCommitJoin, groupBuyLeave, groupBuyCancel, groupBuySettleNow, groupBuySweep (kila dakika 15),
@@ -50,9 +63,9 @@ Weka anwani yako kwenye `SUPER_ADMIN_EMAILS` (functions env) ili uwe Super Admin
 | D3 | **Refund kurudi kwenye kadi/M-Pesa** (PesaPal refund API) | Refund zote zinarudi kwenye **SokoPay wallet** (imejaribiwa). | Ukitaka refund ya PesaPal, nitaiunganisha baada ya kupata API na sera (nani analipa ada). |
 | D4 | **Oda za kikundi ndani ya Group Chat** (pesa) | `adminSetEscrowPolicy` inakataa `chatGroupOrders: true`. | Uamuzi wa sera + idhini. |
 | D5 | **Matangazo ya kulipia + mgao wa mapato kwa admin wa kundi** | Matangazo ya wanachama yanapita kwenye idhini ya admin wa kundi (rules); malipo na mgao havijawashwa. | Bei, muda, asilimia ya mgao. |
-| D6 | **Kitufe cha "Weka Oda"** kwenye ukurasa wa bidhaa | Ni ikoni tu (ina `aria-label="Weka oda"`). E2E #29 inadai maandishi yanayoonekana, kwa hiyo inashindwa kwa makusudi. | (a) Rudisha neno "Weka Oda" kwenye kitufe, **au** (b) niidhinishe kubadili jaribio litumie jina la accessibility. Sikubadili jaribio bila idhini yako. |
-| D7 | **Muuzaji kwenye kadi ya bidhaa** | Kadi inaonyesha muuzaji + rating; contract test ya zamani inataka kadi bila muuzaji. | Chagua design moja, nitarekebisha upande mwingine. |
-| D8 | **Mapping ya kategoria 12 za zamani** (mf. Michezo → CAT-26) | Haijabadilishwa (kanuni yako: hakuna kubadili ID/mapping bila idhini). Category filter 5/8. | Nipe ramani au idhinisha pendekezo. |
+| D6 | Kitufe cha "Weka Oda" | **Imeamuliwa (R16):** ikoni inabaki; jaribio sasa linathibitisha `aria-label`, focus ya kibodi na kwamba Enter inaweka bidhaa kwenye kikapu. E2E #29 inapita. | — |
+| D7 | Muuzaji kwenye kadi ya bidhaa | **Imeamuliwa (R16):** hakuna jina la muuzaji/tathmini mbele ya kadi; taarifa za muuzaji ziko kwenye ukurasa wa bidhaa. | — |
+| D8 | Mapping ya kategoria 12 za zamani | Ramani inatumika kwenye code tangu `0767ee6`; jaribio la R4 linadai zisiunganishwe (5/8). Pendekezo: `docs/D8-LEGACY-CATEGORY-PROPOSAL.md`. | Chagua kwa kila mstari: Baki / Pendekezo / Isiunganishwe. |
 | D9 | Ofa/matangazo kwenye push | OFF kwa chaguo-msingi | ON/OFF |
 
 ## E. Majaribio ya mkono baada ya A–C

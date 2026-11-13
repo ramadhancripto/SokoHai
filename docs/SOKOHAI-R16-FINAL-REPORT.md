@@ -121,3 +121,44 @@ Commits juu ya `af9947f` (fast-forward tu): R14 ×6, R15 `2f6456f`, R16 `bf3a99a
 6. **Group Buy:** muuzaji anaweka bidhaa ya Group Buy → watu 2–3 wanajiunga → admin → Group Buy → "Sasisha hali" → wanachama wanalipa.
 7. **Utambulisho:** (inahitaji C3) wasifu → Thibitisha utambulisho → admin → Uthibitisho.
 8. Mnada, Bei Kushuka, Group Chat, Live (mtandao mmoja), PWA (Airplane mode).
+
+---
+
+## 10. Hatua ya mwisho ya R16 (D6–D8, uthibitisho, main)
+
+**D6 — IMEFUNGWA.** Ikoni ya "Weka oda" inabaki (`aria-label="Weka oda"`, ikoni `aria-hidden`). Jaribio #29 sasa
+linathibitisha: ni `<button>` halisi, linapokea focus ya kibodi, na **Enter inaweka bidhaa kwenye kikapu**
+(jaribio limeimarishwa, si kulegezwa). E2E kamili: 56/56 simu, 56/56 desktop.
+
+**D7 — IMEFUNGWA.** Hakuna jina la muuzaji wala tathmini mbele ya kadi (kadi ya zamani `ProductPostCard` nayo);
+muuzaji yupo kwenye ukurasa wa bidhaa. Data ya muuzaji haikuguswa.
+
+**D8 — PENDEKEZO TU.** `docs/D8-LEGACY-CATEGORY-PROPOSAL.md`. Ramani 12 tayari zinatumika tangu `0767ee6`;
+sijabadilisha chochote. Category filter emulator 5/8 inabaki mpaka uamue.
+
+**Hitilafu mpya iliyopatikana:** `netlify.toml` ilikuwa na `microphone=()` → kwenye sokohai.com, Live ilikuwa
+**bila sauti** na voice notes hazingerekodi (Playwright: video+audio inarudisha track 1 tu). Sasa `microphone=(self)`,
+na `tools/test_netlify_headers.mjs` inaliilinda.
+
+**`npm test` inapita kikamilifu (exit 0)** kwa mara ya kwanza: `tools/test_product_card_visual.mjs` ilikuwa
+inaitwa na package.json tangu kabla ya R14 lakini haikuwahi kuwekwa kwenye git. Sasa ipo (ukaguzi 14).
+
+### Jumla ya majaribio (mwisho)
+
+| Kundi | Imepita | Imeshindwa | Imerukwa |
+|---|---|---|---|
+| `npm test` (amri 107) | 107 | 0 | 0 |
+| `build_dist --minify --check` | 1 | 0 | 0 |
+| Suites za emulator (rules + functions) | 31 | 1 (category filter 5/8 — D8) | 0 |
+| g1 server battery | 16 | 2 (evidence: project ya harness; rules adversarial: harness) | 0 |
+| E2E kamili (s1–s9) simu / desktop | 56 / 56 | 0 / 0 | 0 |
+| E2E za mitiririko (13 × 2 viewport) | 194 hatua | 0 | 0 |
+
+### Hitilafu zilizobaki
+
+| Ukali | Hitilafu |
+|---|---|
+| Medium | D8: tabia ya kategoria za zamani haijaamuliwa (jaribio la R4 dhidi ya ramani iliyopo) |
+| Low | g1: harness mbili hazilingani na project ya emulator (si bidhaa) |
+| External | Netlify imesimamishwa kwa "usage limits" (billing yako) |
+| External | Hakuna mradi wa Firebase staging; `.firebaserc` ina production pekee |
