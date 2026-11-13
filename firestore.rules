@@ -723,6 +723,8 @@ service cloud.firestore {
     // [R15] web push: device tokens are server-only (callables pushRegisterToken / pushUnregisterToken);
     // a user may read their own push preferences, changes go through pushSetPrefs.
     match /push_tokens/{id} { allow read, write: if false; }
+    // [R16] Group Buy money commitments: written by functions/group-buy.js only; a member reads their own.
+    match /group_buy_commits/{id} { allow get: if signedIn() && resource.data.uid == request.auth.uid; allow list, write: if false; }
     match /push_prefs/{uid} { allow get: if signedIn() && uid == request.auth.uid; allow list, write: if false; }
     match /chats/{id} {
       allow read: if signedIn()

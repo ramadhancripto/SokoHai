@@ -93,7 +93,7 @@ function validateGroupJoin(p, uid, nowMs) {
     const joined = parseInt(md.joinedUsers, 10) || 1;
     const target = parseInt(md.targetPeople, 10) || 10;
     const endsAt = Number(md.endTime) || 0;
-    const status = joined >= target ? 'successful' : ((endsAt > 0 && nowMs >= endsAt) ? 'failed' : 'active');
+    const status = md.groupStatus === 'cancelled' ? 'cancelled' : (joined >= target ? 'successful' : ((endsAt > 0 && nowMs >= endsAt) || md.groupStatus === 'failed' ? 'failed' : 'active'));
     const participants = Array.isArray(md.participants) ? md.participants : [];
     if (participants.indexOf(uid) !== -1) return { ok: true, already: true, joined, target, status };
     if (status !== 'active') return { ok: false, code: 'group_' + status };
@@ -176,6 +176,9 @@ exports.groupBuyJoin = onCall({ region: REGION }, async (req) => {
     const productId = String((req.data || {}).productId || '');
     if (!productId || productId.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'bidhaa_haipo');
     if (!(await modeEnabled('group_buy'))) throw new HttpsError('failed-precondition', 'imezimwa_admin');
+    // [R16] policy engine: when the owner approved 'escrow_commit', joining must commit money
+    const gbPolicy = await require('./group-buy')._groupBuy.loadPolicy();
+    if (gbPolicy.effectiveMode === 'escrow_commit') throw new HttpsError('failed-precondition', 'tumia_ahadi_ya_malipo');
     const ref = db().doc('products/' + productId);
     let out = null, product = null, reached = false;
     await db().runTransaction(async (t) => {
@@ -186,6 +189,8 @@ exports.groupBuyJoin = onCall({ region: REGION }, async (req) => {
         const v = validateGroupJoin(p, uid, Date.now());
         if (!v.ok) throw new HttpsError('failed-precondition', v.code);
         if (v.already) { out = { ok: true, already: true, joined: v.joined }; return; }
+        const cap = Math.min(gbPolicy.maxParticipants, parseInt((p.modeData || {}).maxPeople, 10) || gbPolicy.maxParticipants);
+        if ((Array.isArray((p.modeData || {}).participants) ? p.modeData.participants.length : 0) + 1 > cap) throw new HttpsError('failed-precondition', 'group_imejaa');
         const joined = v.joined + 1;
         const patch = { 'modeData.joinedUsers': joined, 'modeData.participants': FieldValue().arrayUnion(uid) };
         if (joined >= v.target && !(p.modeData || {}).successNotified) { patch['modeData.successNotified'] = true; reached = true; }

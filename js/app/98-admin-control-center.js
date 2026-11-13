@@ -68,7 +68,7 @@ import { skh } from './00-bootstrap.js';
 
     var TABS = [
         ['overview', 'Muhtasari'], ['accounts', 'Akaunti'], ['agents', 'Mawakala'], ['prices', 'Ukaguzi wa Bei'],
-        ['disputes', 'Migogoro'], ['withdrawals', 'Kutoa Pesa'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['auctions', 'Minada'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
+        ['disputes', 'Migogoro'], ['withdrawals', 'Kutoa Pesa'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['auctions', 'Minada'], ['groupbuy', 'Group Buy'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
     ];
     function frame(inner) {
         var tabs = TABS.map(function (t) {
@@ -455,6 +455,50 @@ import { skh } from './00-bootstrap.js';
         return box('Minada', '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' + chips + '</div>'
             + (rows ? '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#64748b;font-size:11.5px;"><th style="padding:6px;">Mnada</th><th style="padding:6px;">Hali</th><th style="padding:6px;">Zabuni</th><th style="padding:6px;">Muda</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : empty('Hakuna mnada kwenye kundi hili.')))
             + '<div id="ccAucDetail"></div>';
+    };
+    /* [R16] GROUP BUY — kampeni zote + sera ya malipo (adminGroupBuyList / adminSetGroupBuyPolicy /
+       groupBuyCancel / groupBuySettleNow). Pesa halisi (escrow_commit) inawashwa na Super Admin pekee. */
+    var GB_ST = { active: 'Zinaendelea', successful: 'Zimefanikiwa', failed: 'Hazikufikia lengo', cancelled: 'Zimeghairiwa', closed: 'Zimefungwa' };
+    VIEWS.groupbuy = async function () {
+        var r = await run('adminGroupBuyList', {});
+        var pol = r.policy || {};
+        var rows = (r.campaigns || []).map(function (c) {
+            var acts = btn('Sasisha hali', "window.skhAdminGbSettle('" + esc(c.id) + "')", 'plain')
+                + (['active', 'successful'].indexOf(c.status) !== -1 && !c.ordersCreated ? btn('Ghairi', "window.skhAdminGbCancel('" + esc(c.id) + "')", 'danger') : '');
+            return '<tr style="border-top:1px solid #eef2f1;"><td style="padding:8px 6px;"><b>' + esc(c.title || c.id) + '</b><br><small style="color:#64748b;">' + money(c.price) + '</small></td>'
+                + '<td style="padding:8px 6px;">' + esc(GB_ST[c.status] || c.status) + '</td>'
+                + '<td style="padding:8px 6px;white-space:nowrap;">' + c.joined + '/' + c.target + '</td>'
+                + '<td style="padding:8px 6px;white-space:nowrap;"><small>Mwisho: ' + esc(dt(c.endTime)) + (c.paymentDeadline ? '<br>Malipo: ' + esc(dt(c.paymentDeadline)) : '') + '</small></td>'
+                + '<td style="padding:8px 6px;">' + acts + '</td></tr>';
+        }).join('');
+        var mode = pol.effectiveMode === 'escrow_commit' ? 'Ahadi ya malipo kwenye escrow (pesa halisi IMEIDHINISHWA)' : 'Lipa baada ya lengo kufikiwa (salama, hakuna pesa wakati wa kampeni)';
+        return box('Sera ya Group Buy', '<p style="margin:0 0 6px;font-size:13px;">Hali ya sasa: <b data-gb-mode="' + esc(pol.effectiveMode) + '">' + esc(mode) + '</b></p>'
+                + '<p style="margin:0 0 8px;font-size:12px;color:#64748b;">Dirisha la malipo: saa ' + esc(pol.paymentWindowHours) + ' · Kampeni ndefu zaidi: siku ' + esc(pol.maxCampaignDays) + ' · Wanachama wa juu: ' + esc(pol.maxParticipants)
+                + ' · Ombi la escrow: ' + esc(pol.paymentMode) + (pol.realMoneyApproved ? ' (imeidhinishwa)' : ' (haijaidhinishwa)') + '</p>'
+                + input('ccGbWindow', 'Saa za kulipia (1-168)', 'number') + input('ccGbReason', 'Sababu ya mabadiliko (herufi 10+)')
+                + btn('Hifadhi dirisha la malipo', 'window.skhAdminGbPolicy()')
+                + (ME.superAdmin ? btn(pol.realMoneyApproved ? 'Zima pesa halisi (escrow_commit)' : 'Idhinisha pesa halisi (escrow_commit)', 'window.skhAdminGbMoney(' + (pol.realMoneyApproved ? 'false' : 'true') + ')', pol.realMoneyApproved ? 'danger' : 'plain') : '<small style="display:block;color:#64748b;">Pesa halisi inaidhinishwa na Super Admin (mmiliki) pekee.</small>'))
+            + box('Kampeni (' + (r.campaigns || []).length + ')', rows ? '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="text-align:left;color:#64748b;font-size:11.5px;"><th>Bidhaa</th><th>Hali</th><th>Watu</th><th>Muda</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : empty('Hakuna kampeni za Group Buy.'));
+    };
+    window.skhAdminGbPolicy = async function () {
+        try { await run('adminSetGroupBuyPolicy', { paymentWindowHours: Number(val('ccGbWindow')), reason: val('ccGbReason') }); window.skhAdminCCTab('groupbuy'); }
+        catch (e) { alert('Imeshindikana: ' + (e && e.message)); }
+    };
+    window.skhAdminGbMoney = async function (on) {
+        var reason = window.skhPrompt ? await window.skhPrompt(on ? 'Unaidhinisha wanachama kuweka pesa halisi kwenye escrow wanapojiunga. Andika sababu (herufi 10+):' : 'Sababu ya kuzima (herufi 10+):') : prompt('Sababu');
+        if (!reason) return;
+        try { await run('adminSetGroupBuyPolicy', on ? { paymentMode: 'escrow_commit', realMoneyApproved: true, reason: reason } : { realMoneyApproved: false, reason: reason }); window.skhAdminCCTab('groupbuy'); }
+        catch (e) { alert('Imeshindikana: ' + (e && e.message)); }
+    };
+    window.skhAdminGbSettle = async function (pid) {
+        try { var r = await run('groupBuySettleNow', { productId: pid }); alert('Hali: ' + (r.status || 'haijabadilika')); window.skhAdminCCTab('groupbuy'); }
+        catch (e) { alert('Imeshindikana: ' + (e && e.message)); }
+    };
+    window.skhAdminGbCancel = async function (pid) {
+        var reason = window.skhPrompt ? await window.skhPrompt('Sababu ya kughairi kampeni (wanachama wataarifiwa, ahadi zote zinarudishwa):') : prompt('Sababu');
+        if (!reason) return;
+        try { await run('groupBuyCancel', { productId: pid, reason: reason }); window.skhAdminCCTab('groupbuy'); }
+        catch (e) { alert('Imeshindikana: ' + (e && e.message)); }
     };
     window.skhAdminAucFilter = function (k) { AUC_F = k; window.skhAdminCCTab('auctions'); };
     window.skhAdminAucOpen = async function (pid) {

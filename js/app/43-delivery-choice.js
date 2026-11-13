@@ -641,13 +641,27 @@ import { skh } from './00-bootstrap.js';
     };
     window.skhPayCartFromWallet = async function () {
         var ids = cartOrderIds();
-        if (!ids.length) { alert('Hakuna oda ya kikapu inayosubiri malipo. Rudi kwenye kikapu.'); return; }
-        var total = 0;
+        // Lipa Sasa / mnada / Group Buy / Bei Kushuka (checkoutSeriousMode): oda moja ya bidhaa iliyo wazi.
+        // Bei inakaguliwa upya na server (mshindi wa mnada, mwanachama wa kikundi, fursa ya bei kushuka).
+        var single = !ids.length && skh.currentOpenProduct && Number(skh.activeCheckoutAmount) > 0;
+        if (!ids.length && !single) { alert('Hakuna oda inayosubiri malipo. Rudi kwenye kikapu.'); return; }
+        var total = single ? Math.round(Number(skh.activeCheckoutAmount)) : 0;
         try { for (var oi = 0; oi < ids.length; oi++) { var os = await skh.getDoc(skh.doc(skh.db, 'orders', ids[oi])); total += Number((os.exists() && os.data().amount) || 0); } } catch (e) { total = Number(skh.activeCheckoutAmount || 0); }
         var ok = window.skhConfirm ? await window.skhConfirm('Lipa TSh ' + total.toLocaleString() + ' kutoka SokoPay wallet? Pesa itashikiliwa kwenye escrow mpaka uthibitishe kupokea.') : confirm('Lipa?');
         if (!ok) return;
         var btn = document.getElementById('btnPayWallet'); if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
         try {
+            if (single && !ids.length) {
+                var p = skh.currentOpenProduct, now = nowIso();
+                var oref = await skh.addDoc(skh.collection(skh.db, 'orders'), {
+                    buyerId: uid(), buyerName: (skh.currentUser && skh.currentUser.displayName) || '', sellerId: p.userId || p.sellerId,
+                    productId: p.id, itemId: p.id, quantity: 1, amount: Math.round(Number(skh.activeCheckoutAmount)),
+                    items: [{ productId: p.id, id: p.id, title: p.title || p.name || '', price: Math.round(Number(skh.activeCheckoutAmount)), qty: 1, quantity: 1, sellerId: p.userId || p.sellerId }],
+                    itemTitle: p.title || p.name || 'Bidhaa', status: 'payment_pending', paymentStatus: 'pending', paymentMethod: 'sokopay_wallet',
+                    commerceMode: p.saleMode || p.commerceMode || 'free_market', commerceType: 'product', date: now, createdAt: now, source: 'buy_now_wallet'
+                });
+                ids = [oref.id];
+            }
             var r = await skh.wrapCallable('orderWalletPay')({ orderIds: ids, expectedTotal: total });
             var d = (r && r.data) || {};
             var orders = ids.map(function (id) { return { orderId: id }; });

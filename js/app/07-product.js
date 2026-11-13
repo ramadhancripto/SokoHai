@@ -359,27 +359,39 @@ window.renderSpecialModesUI = function(mode, actionArea) {
         }
     }
     else if (mode === 'group_buy') {
-        const joined = C.group.joined;
-        const target = C.group.target;
-        const end = C.group.endsAt;
-        const currentPrice = C.group.price;
-        const status = C.group.status; // active | successful | failed
+        /* [R16] Group Buy lifecycle: join (or commit money when the owner approved escrow_commit),
+           leave before target, pay at the group price only inside the payment window. */
+        const md = (skh.currentOpenProduct && skh.currentOpenProduct.modeData) || {};
+        const joined = C.group.joined, target = C.group.target, end = C.group.endsAt, currentPrice = C.group.price;
         const meUid = skh.currentUser && skh.currentUser.uid;
         const alreadyIn = (C.group.participants || []).indexOf(meUid) !== -1;
-        const isExpired = status !== 'active';
-        const expiredTitle = status === 'successful'
-            ? ' GROUP BUY IMEFANIKIWA (' + joined + '/' + target + ')'
-            : ' GROUP BUY IMEKUTA MUDA (' + joined + '/' + target + ' wamejiunga)';
-
-        if (isExpired) {
-            actionArea.innerHTML = `
-                <div style="background:#fff; color:#18352D; border:1px solid #E5ECEC; padding:20px; text-align:center; border-radius:18px;" data-mode-panel="group_buy"> <h3 style="color:${status === 'successful' ? '#10b981' : '#f59e0b'}; margin:0;">${expiredTitle}</h3> ${status === 'failed' ? '<p style="opacity:0.85; font-size:12px;">Lengo halikufikiwa — hakuna oda inayotoezna kutoka deal hii.</p>' : '<p>Bei ya kundi ni TSh ' + Math.round(currentPrice).toLocaleString() + '</p>'} </div>`;
+        const dl = Number(md.paymentDeadline) || 0, nowMs = Date.now();
+        let status = C.group.status;
+        if (md.groupStatus === 'cancelled') status = 'cancelled';
+        else if (md.groupStatus === 'closed' || (status === 'successful' && dl && nowMs > dl)) status = 'closed';
+        const pct = Math.min(100, (joined / target) * 100);
+        const bar = '<div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;"><div style="width:' + pct + '%; height:100%; background:#10b981;"></div></div><small style="font-size:12.5px; color:gray; display:block; margin-top:5px;">Watu waliojiunga: <b>' + joined + '/' + target + '</b></small>';
+        const btn = (label, fn, bg, fg) => '<button type="button" onclick="' + fn + '" style="width:100%; padding:14px; margin-top:8px; background:' + bg + '; color:' + (fg || '#fff') + '; border:none; border-radius:14px; font-weight:900; cursor:pointer;">' + label + '</button>';
+        let inner = '';
+        if (status === 'active') {
+            inner = '<b style="color:#10b981;">GROUP BUY INAVUMA</b><br><span class="live-timer" data-endtime="' + end + '" style="color:#10b981; font-weight:900; font-size:20px;"> ...</span>'
+                + '<div style="background:white; padding:10px; border-radius:12px; margin:10px 0;"><span style="font-size:12px; color:gray;">Bei ya Kundi Sasa:</span><h2 style="color:#10b981; margin:5px 0;">TZS ' + Math.round(currentPrice).toLocaleString() + '</h2>' + bar + '</div>'
+                + (alreadyIn
+                    ? '<p data-gb-state="joined" style="margin:6px 0; color:#065f46; font-weight:700;">Umejiunga. Utaarifiwa lengo likifikiwa ili ulipie kwa bei ya kikundi.</p>' + btn('Toka kwenye kikundi', 'window.skhGroupBuyLeave()', '#e2e8f0', '#334155')
+                    : btn('JIUNGE NA KUNDI', 'window.skhGroupBuyJoinAndCheckout()', '#10b981'))
+                + '<small style="display:block; margin-top:8px; color:#64748b;">Hakuna malipo mpaka lengo lifikiwe (sera ya SokoHai). Lengo lisipofikiwa, hutozwi chochote.</small>';
+        } else if (status === 'successful') {
+            inner = '<b style="color:#10b981;">GROUP BUY IMEFANIKIWA (' + joined + '/' + target + ')</b><h2 style="color:#10b981; margin:8px 0;">TZS ' + Math.round(currentPrice).toLocaleString() + '</h2>'
+                + (md.ordersCreated === true
+                    ? (alreadyIn ? '<p data-gb-state="ordered">Oda yako imeundwa na pesa iko escrow.</p>' + btn('Fungua Kituo cha Escrow', 'window.skhOpenEscrowCenter && window.skhOpenEscrowCenter()', '#00509d') : '<p>Kampeni imefungwa kwa wanachama wake.</p>')
+                    : (alreadyIn
+                        ? '<p data-gb-state="pay">Lipia kabla ya <b>' + (dl ? new Date(dl).toLocaleString('sw-TZ') : '—') + '</b>.</p>' + btn('LIPIA KWA BEI YA KIKUNDI (ESCROW)', 'window.skhGroupBuyJoinAndCheckout()', '#10b981')
+                        : '<p>Bei ya kikundi ni kwa waliojiunga tu.</p>'));
         } else {
-            let progressPercent = Math.min(100, (joined / target) * 100);
-            const joinLabel = alreadyIn ? 'UMEJIUNGA — KAMILISHA MALIPO (ESCROW)' : 'JIUNGE NA KUNDI & HIFADHI NAFSI (ESCROW)';
-            actionArea.innerHTML = `
-                <div style="background:#dcfce7; padding:15px; border-radius:18px; text-align:center; border: 2px dashed #10b981;" data-mode-panel="group_buy" data-live-price="${currentPrice}" data-live-joined="${joined}" data-live-target="${target}"> <b style="color:#10b981;"> GROUP BUY INAVUMA</b><br> <span class="live-timer" data-endtime="${end}" style="color:#10b981; font-weight:900; font-size:20px;"> ...</span> <div style="background:white; padding:10px; border-radius:12px; margin:10px 0; text-align:center;"> <span style="font-size:12px; color:gray;">Bei ya Kundi Sasa:</span> <h2 style="color:#10b981; margin:5px 0;">TZS ${Math.round(currentPrice).toLocaleString()}</h2> <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;"> <div style="width:${progressPercent}%; height:100%; background:#10b981;"></div> </div> <small style="font-size:12.5px; color:gray; display:block; margin-top:5px;">Watu waliojiunga: <b>${joined}/${target}</b></small> </div> <button onclick="window.skhGroupBuyJoinAndCheckout()" style="width:100%; padding:16px; background:#10b981; color:white; border:none; border-radius:14px; font-weight:900; cursor:pointer;"> ${joinLabel}</button> <small style="display:block; margin-top:8px; color:#64748b;">Umejiunga unarekodiwa kwenye Firestore — oda na usafirishaji hutathminiwa kulingana na deal. </small></div>`;
+            const why = { failed: 'Lengo halikufikiwa — hakuna aliyetozwa.', cancelled: 'Kampeni imeghairiwa.' + (md.closeReason ? ' ' + skh.skhEscape(String(md.closeReason)) : ''), closed: 'Muda wa kulipia kwa bei ya kikundi umeisha.' }[status] || '';
+            inner = '<h3 style="color:#f59e0b; margin:0;">GROUP BUY ' + ({ failed: 'HAIKUFIKIA LENGO', cancelled: 'IMEGHAIRIWA', closed: 'IMEFUNGWA' }[status] || 'IMEISHA') + ' (' + joined + '/' + target + ')</h3><p style="font-size:13px;">' + why + '</p>';
         }
+        actionArea.innerHTML = '<div data-mode-panel="group_buy" data-gb-status="' + status + '" data-live-price="' + currentPrice + '" data-live-joined="' + joined + '" data-live-target="' + target + '" style="background:' + (status === 'active' || status === 'successful' ? '#dcfce7' : '#fff') + '; padding:15px; border-radius:18px; text-align:center; border:2px dashed #10b981;">' + inner + '</div>';
     }
 };
 
@@ -423,22 +435,33 @@ window.skhGroupBuyJoin = async function (productId) {
  * inacooka "Lipa" bila ku-rekodi group membership kwanza. Hii ndiyo full §14. */
 window.skhGroupBuyJoinAndCheckout = async function () {
     if (!skh.currentOpenProduct) return;
-    const id = skh.currentOpenProduct.id, mode = skh.currentOpenProduct.saleMode || 'group_buy';
-    if (typeof window.verifyAndProceedSeriousAction === 'function') {
-        await window.verifyAndProceedSeriousAction("Action", mode, id, async () => {
-            const r = await window.skhGroupBuyJoin(id);
-            if (!r.ok) { alert('Imeshindikana kujiunga: ' + r.error); return; }
-            // Bei halisi kutoka panel (inarender kutoka compute ya backend doc)
-            const panel = document.querySelector('#pmSpecialModeArea [data-live-price]');
-            const livePrice = panel ? parseFloat(panel.getAttribute('data-live-price')) : null;
-            const p = window.skhModesCompute(skh.currentOpenProduct).group.price;
-            window.checkoutSeriousMode(isFinite(livePrice) ? livePrice : p);
-        });
-    } else {
-        const r = await window.skhGroupBuyJoin(id);
-        if (!r.ok) { alert('Imeshindikana kujiunga: ' + r.error); return; }
-        try { window.checkoutSeriousMode(window.skhModesCompute(skh.currentOpenProduct).group.price); } catch (e) {}
-    }
+    const p = skh.currentOpenProduct, id = p.id, md = p.modeData || {};
+    const meUid = skh.currentUser && skh.currentUser.uid;
+    const c = window.skhModesCompute(p);
+    const member = (c.group.participants || []).indexOf(meUid) !== -1;
+    /* [R16] lengo limefikiwa + mwanachama: lipa kwa bei ya kikundi (njia ya kawaida ya escrow) */
+    if (member && c.group.status === 'successful' && md.ordersCreated !== true) { try { window.checkoutSeriousMode(c.group.price); } catch (e) {} return; }
+    const doJoin = async () => {
+    const r = await window.skhGroupBuyJoin(id);
+    if (!r.ok && /tumia_ahadi_ya_malipo/.test(String(r.error))) {
+        const ok = window.skhConfirm ? await window.skhConfirm('Kampeni hii inahitaji ahadi ya malipo: TSh ' + Number(p.price || 0).toLocaleString() + ' zitashikiliwa kwenye escrow ya SokoPay. Lengo likifikiwa utalipa bei ya kikundi na tofauti itarudishwa; lisipofikiwa, pesa yote inarudi. Endelea?') : false;
+        if (!ok) return;
+        try { await skh.wrapCallable('groupBuyCommitJoin')({ productId: id }); alert('Umejiunga na ahadi yako iko escrow.'); }
+        catch (e) { alert(/INSUFFICIENT/.test(String(e && e.message)) ? 'Salio la wallet halitoshi.' : 'Imeshindikana: ' + (e && e.message)); return; }
+    } else if (!r.ok) { alert('Imeshindikana kujiunga: ' + r.error); return; }
+    else alert(r.already ? 'Tayari umejiunga.' : 'Umejiunga! Utaarifiwa lengo likifikiwa.');
+    if (typeof window.openProduct === 'function') window.openProduct(id, p.collectionName || 'products');
+    };
+    // the existing serious-action gate (deposit check when the admin turned it on) still guards joining
+    if (typeof window.verifyAndProceedSeriousAction === 'function') await window.verifyAndProceedSeriousAction('Action', 'group_buy', id, doJoin);
+    else await doJoin();
+};
+window.skhGroupBuyLeave = async function () {
+    const p = skh.currentOpenProduct; if (!p) return;
+    const ok = window.skhConfirm ? await window.skhConfirm('Toka kwenye kikundi hiki? (Ahadi yoyote ya malipo inarudishwa kwenye wallet.)') : confirm('Toka?');
+    if (!ok) return;
+    try { await skh.wrapCallable('groupBuyLeave')({ productId: p.id }); if (typeof window.openProduct === 'function') window.openProduct(p.id, p.collectionName || 'products'); }
+    catch (e) { alert('Imeshindikana: ' + (e && e.message)); }
 };
 
 /* [§18 PRICE DROP CORE] Malipo kwa bei halisi ya SASA. Bei inasomwa kutoka

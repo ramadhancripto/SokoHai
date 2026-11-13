@@ -55,6 +55,16 @@ function modeEligibility(p, buyerUid, nowMs) {
         if (String(winner) !== String(buyerUid)) return 'not_auction_winner';
         if (Number(md.paymentDeadline) > 0 && nowMs > Number(md.paymentDeadline)) return 'auction_payment_expired';
     }
+    // [R16] Group Buy: a MEMBER gets the group price only after the target is reached and inside
+    // the payment window (pay_after_target policy); in escrow_commit campaigns the server already
+    // created the member's order, so a second purchase at the group price is refused.
+    if (mode === 'group_buy' && buyerUid && Array.isArray(md.participants) && md.participants.indexOf(String(buyerUid)) !== -1) {
+        const joined = parseInt(md.joinedUsers, 10) || 1, target = parseInt(md.targetPeople, 10) || 10;
+        if (md.groupStatus === 'cancelled') return 'group_buy_cancelled';
+        if (md.ordersCreated === true) return 'group_buy_already_ordered';
+        if (joined < target) return 'group_buy_target_not_reached';
+        if (Number(md.paymentDeadline) > 0 && nowMs > Number(md.paymentDeadline)) return 'group_buy_payment_expired';
+    }
     // [R13-B] Bei Kushuka: only inside its window. Before it starts or after it ends the drop price
     // can not reach checkout (the order goes to price review instead of using a stale price).
     if (mode === 'price_drop') {
