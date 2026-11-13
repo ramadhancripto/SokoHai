@@ -60,13 +60,29 @@ async function setQty(p, q) {
       await B.p.evaluate(() => { window.closeModals && window.closeModals(true); window.openProduct('e2e_ws_legacy', 'products'); }); await B.p.waitForTimeout(2000);
       const m = await B.p.evaluate(() => {
         const img = document.querySelector('#pmImageSlider img'); const cs = img ? getComputedStyle(img) : null;
-        const acts = [...document.querySelectorAll('#pmActionArea button')].filter(b => b.offsetParent).map(b => (b.innerText || '').trim().replace(/\s+/g, ' ').slice(0, 24));
+        // [R16 D6, owner-approved] the order button is a compact cart icon by design; its name is the
+        // accessible name (aria-label), so the action list uses visible text OR aria-label.
+        const acts = [...document.querySelectorAll('#pmActionArea button')].filter(b => b.offsetParent).map(b => ((b.innerText || '').trim() || b.getAttribute('aria-label') || '').replace(/\s+/g, ' ').slice(0, 24));
         return { fit: cs && cs.objectFit, acts, sw: document.documentElement.scrollWidth, iw: window.innerWidth, modalSw: (document.getElementById('productModal') || {}).scrollWidth, modalW: (document.getElementById('productModal') || {}).clientWidth };
       });
       assert(m.fit === 'contain', 'object-fit ' + m.fit);
       assert(m.acts.some(a => /Weka Oda/i.test(a)) && m.acts.some(a => /Patana/i.test(a)), 'actions ' + JSON.stringify(m.acts));
       assert(m.sw <= m.iw + 1 && m.modalSw <= m.modalW + 1, 'overflow ' + JSON.stringify(m));
-      return m.acts.join(' · ');
+      // [R16 D6] icon-only order button: real <button>, accessible name "Weka oda", keyboard-focusable,
+      // and pressing Enter on it really adds the product to the SokoCart.
+      const a11y = await B.p.evaluate(() => {
+        const b = [...document.querySelectorAll('#pmActionArea button')].find(x => x.offsetParent && /^weka oda$/i.test(x.getAttribute('aria-label') || ''));
+        if (!b) return { found: false };
+        b.focus();
+        const icon = b.querySelector('[aria-hidden="true"]');
+        return { found: true, tag: b.tagName, focused: document.activeElement === b, tabbable: b.tabIndex >= 0 && !b.disabled, iconHidden: !!icon, before: window.skh.smartCartItems().length };
+      });
+      assert(a11y.found && a11y.tag === 'BUTTON' && a11y.focused && a11y.tabbable && a11y.iconHidden, 'a11y ' + JSON.stringify(a11y));
+      await B.p.keyboard.press('Enter'); await B.p.waitForTimeout(1500);
+      const after = await B.p.evaluate(() => window.skh.smartCartItems().length);
+      assert(after === a11y.before + 1, 'Enter on "Weka oda" did not add to cart: ' + a11y.before + ' -> ' + after);
+      await B.p.evaluate(() => { window.skh.myCart = []; window.skh.smartCartSave && window.skh.smartCartSave(); });
+      return m.acts.join(' · ') + ' · keyboard Enter adds to cart';
     });
     await step(`32 Product page ${vn}: "Linganisha wauzaji" shows the same product from another seller`, async () => {
       await B.p.evaluate(() => { window.closeModals && window.closeModals(true); window.openProduct('e2e_ws_tiers', 'products'); }); await B.p.waitForTimeout(3500);

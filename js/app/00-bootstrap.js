@@ -2654,11 +2654,10 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
     // (cardOutPill). Chip ya meta haijirudii; nafasi yake inabaki kwa eneo.
     const isSoldOut = Number.isFinite(Number(data.stock)) && Number(data.stock) <= 0;
     const stockChip = isSoldOut ? '' : skh.cardStockChip(data);
-    const sellerLine = skh.cardSellerLine(data, 'products');
-    const rating = skh.cardRating(data);
-    const foot = (sellerLine || rating)
-        ? `<div class="skh-card-foot">${sellerLine}${rating}</div>` : '';
-    // DOM: jina -> bei -> muuzaji/tathmini -> meta -> vitendo.
+    // [R16 D7 — uamuzi wa mmiliki] Jina la muuzaji / tathmini HAVIONEKANI mbele ya kadi ya bidhaa
+    // (sawa na SokoHuruCard #1). Taarifa za muuzaji ziko kwenye ukurasa wa bidhaa (openProduct).
+    const foot = '';
+    // DOM: jina -> bei -> meta -> vitendo.
     // (Contract tools/test_commerce_cards.mjs inalinda mpangilio huu.)
     return `<div class="feed-card-box skh-card skh-card--product" ${skh.cardOpenAttrs(data.id, 'products', data.title)}>
         ${skh.cardImage(data, overlays, skh.cardImageClass(data, 'products'))}
