@@ -24,7 +24,7 @@ import { skh } from './00-bootstrap.js';
     }
     function errText(e) { return (e && (e.message || e.code)) || String(e); }
     function statusLabel(s) {
-        return ({ held: 'Imelipwa — iko Escrow', shipped: 'Imesafirishwa', awaiting_pickup: 'Inasubiri kuchukuliwa',
+        return ({ awaiting_payment: 'Inasubiri malipo ya mteja', completed: 'Imekamilika — malipo yametolewa', held: 'Imelipwa — iko Escrow', shipped: 'Imesafirishwa', awaiting_pickup: 'Inasubiri kuchukuliwa',
             in_transit: 'Njiani', delivered: 'Imekabidhiwa (uthibitisho wa server)', disputed: 'Mgogoro — fedha zimesimamishwa' })[s] || s;
     }
 
@@ -48,7 +48,17 @@ import { skh } from './00-bootstrap.js';
         var B = function (label, fn, bg, fg) {
             return '<button onclick="' + fn + '" style="flex:1;min-width:140px;padding:10px;border:none;border-radius:10px;font-weight:700;cursor:pointer;background:' + bg + ';color:' + (fg || '#fff') + ';">' + label + '</button>';
         };
-        if (role === 'buyer') {
+        var isSvc = String(o.collectionName || '') === 'services';
+        if (o.status === 'awaiting_payment') {
+            // [R16] oda ya huduma iliyokubaliwa na fundi: mteja analipa kwa SokoPay wallet (server inashikilia escrow)
+            if (role === 'buyer' && isSvc) btns += B('Lipa ' + money(o.amount) + ' kwa SokoPay', "window.skhServiceOrderPay('" + id + "'," + (Number(o.amount) || 0) + ")", '#12946f');
+            btns += B('Ghairi Oda', "window.skhOrderCancelUnpaid('" + id + "')", '#e2e8f0', '#334155');
+        } else if (o.status === 'completed') {
+            if (role === 'buyer') {
+                var tgt = isSvc ? (o.serviceId || '') : (o.productId || o.itemId || '');
+                if (tgt) btns += B('Andika Tathmini', "window.skhEscrowReview('" + esc(tgt) + "','" + (isSvc ? 'service' : 'product') + "')", '#fef3c7', '#92400e');
+            }
+        } else if (role === 'buyer') {
             if (['held', 'shipped', 'awaiting_pickup', 'in_transit'].indexOf(o.status) !== -1) {
                 btns += B('Namba ya Kupokea', "window.skhOrderShowDeliveryCode('" + id + "')", '#00509d');
             }
@@ -64,7 +74,7 @@ import { skh } from './00-bootstrap.js';
                 btns += B('Fungua Mgogoro', "window.skhOrderOpenDispute('" + id + "')", '#fee2e2', '#b91c1c');
             }
         }
-        return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;">'
+        return '<div class="skh-esc-card" data-order="' + id + '" data-status="' + esc(o.status) + '" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;">'
             + '<div style="display:flex;justify-content:space-between;gap:8px;"><b>' + esc(o.itemTitle || 'Oda') + '</b><b>' + money(o.amount) + '</b></div>'
             + '<div style="font-size:12px;color:#475569;margin:4px 0 8px;">' + (role === 'buyer' ? 'Unanunua' : 'Unauza') + ' · ' + esc(statusLabel(o.status))
             + (o.paymentVerified === true ? ' · <span style="color:#16a34a;font-weight:700;">Malipo yamethibitishwa na server</span>' : ' · <span style="color:#b45309;">Malipo bado hayajathibitishwa</span>')
@@ -85,19 +95,53 @@ import { skh } from './00-bootstrap.js';
             var qb = skh.query(skh.collection(skh.db, 'orders'), skh.where('buyerId', '==', me), skh.limit(100));
             var qs = skh.query(skh.collection(skh.db, 'orders'), skh.where('sellerId', '==', me), skh.limit(100));
             var res = await Promise.allSettled([skh.getDocs(qb), skh.getDocs(qs)]);
-            var html = '';
+            var html = '', done = [];
             ['buyer', 'seller'].forEach(function (role, i) {
                 var r = res[i];
                 if (r.status !== 'fulfilled') return;
                 r.value.forEach(function (d) {
                     var o = Object.assign({ id: d.id }, d.data());
-                    if (ESCROW_STATES.indexOf(o.status) !== -1) html += card(o, role);
+                    if (ESCROW_STATES.indexOf(o.status) !== -1 || o.status === 'awaiting_payment') html += card(o, role);
+                    else if (o.status === 'completed' && role === 'buyer') done.push(o);
                 });
             });
+            done.sort(function (a, b) { return String(b.completedAt || b.date || '').localeCompare(String(a.completedAt || a.date || '')); });
+            if (done.length) html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#13231e;">Zilizokamilika</h4>' + done.slice(0, 10).map(function (o) { return card(o, 'buyer'); }).join('');
             document.getElementById('skhEscrowCenterList').innerHTML = html || '<p style="color:#64748b;text-align:center;">Huna oda iliyo kwenye escrow kwa sasa.</p>';
         } catch (e) {
             document.getElementById('skhEscrowCenterList').innerHTML = '<p style="color:#b91c1c;">Imeshindwa kupakia: ' + esc(errText(e)) + '</p>';
         }
+    };
+
+    /* [R16] Mteja analipia oda ya huduma kwa wallet: server (serviceOrderWalletPay) inakata salio,
+       inashikilia escrow na kuweka 'held' — kivinjari hakiandiki hali ya malipo. */
+    var paying = {};
+    window.skhServiceOrderPay = async function (orderId, amount) {
+        if (paying[orderId]) return;
+        var ok = window.skhConfirm ? await window.skhConfirm('Lipa ' + money(amount) + ' kutoka SokoPay wallet yako? Pesa itashikiliwa (escrow) mpaka uthibitishe kazi imekamilika.') : confirm('Lipa?');
+        if (!ok) return;
+        paying[orderId] = true;
+        try {
+            var r = await call('serviceOrderWalletPay')({ orderId: orderId, expectedAmount: amount });
+            alert(r && r.data && r.data.already ? 'Oda hii tayari imelipiwa.' : 'Malipo yamepokelewa na kushikiliwa kwenye escrow. Fundi ameanza kazi.');
+            if (window.skhOpenEscrowCenter) window.skhOpenEscrowCenter();
+        } catch (e) {
+            var m = errText(e);
+            alert(/salio|balance|insufficient/i.test(m) ? 'Salio la wallet halitoshi. Ongeza salio kisha ujaribu tena.' : 'Kosa: ' + m);
+        } finally { delete paying[orderId]; }
+    };
+    window.skhOrderCancelUnpaid = async function (orderId) {
+        var ok = window.skhConfirm ? await window.skhConfirm('Ghairi oda hii ambayo bado haijalipiwa?') : confirm('Ghairi?');
+        if (!ok) return;
+        try {
+            await skh.updateDoc(skh.doc(skh.db, 'orders', orderId), { status: 'cancelled', cancelledAt: new Date().toISOString() });
+            if (window.skhOpenEscrowCenter) window.skhOpenEscrowCenter();
+        } catch (e) { alert('Kosa: ' + errText(e)); }
+    };
+    window.skhEscrowReview = function (targetId, type) {
+        close();
+        if (typeof window.openRatingModal === 'function') window.openRatingModal(targetId, type, '');
+        else alert('Fomu ya tathmini haipatikani kwa sasa.');
     };
 
     window.skhOrderShowDeliveryCode = async function (orderId) {

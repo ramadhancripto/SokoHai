@@ -2538,6 +2538,22 @@ function custodyMaskToken(t) {
     return t.slice(0, 3) + '••••••' + t.slice(-2);
 }
 
+/* [R16] Who hands the parcel to the transporter (and so may hold the Pickup Token):
+ * for a product/service ORDER ride it is the order's seller, never the buyer (the buyer
+ * knowing PK could have a third party collect the goods and then dispute non-delivery).
+ * Same rule as deliveryConfirmCustody role 'seller' (handoverOwner). `t` = transaction or DIRECT_READ. */
+const DIRECT_READ = { get: (ref) => ref.get() };
+async function pickupSenderUid(t, rd) {
+    let owner = String((rd && rd.customerId) || '');
+    if (rd && rd.orderId && String(rd.orderId).indexOf('/') === -1) {
+        const os = await t.get(db.doc('orders/' + rd.orderId));
+        if (os.exists) {
+            const od = os.data() || {};
+            if ((od.commerceType || 'product') !== 'transport' && od.sellerId) owner = String(od.sellerId);
+        }
+    }
+    return owner;
+}
 async function custodySetToken(rideId, kind, token, participants, opts) {
     opts = opts || {};
     const now = new Date().toISOString();
@@ -2713,10 +2729,11 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         if (rd.assignmentStatus === 'assigned' && rd.assignedAgentId && rd.assignedAgentId !== auth.uid) {
             throw new HttpsError('failed-precondition', 'Ombi tayari limegawiwa kwa msafirishaji mwingine.');
         }
+        const sender = await pickupSenderUid(t, rd); // [R16] read before any write
         const pk = custodyToken('PK-');
         t.set(db.collection('delivery_tokens').doc(rideId + '_pickup'), {
             rideId: rideId, kind: 'pickup', token: pk,
-            participants: [rd.customerId, auth.uid].filter(Boolean),
+            participants: [sender, auth.uid].filter(Boolean),
             createdAt: now, expiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(), status: 'pending'
         });
         t.update(ref, {
@@ -2771,6 +2788,7 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
     let customerId = null;
     let orderId = null;
     let agentName = '';
+    let pickupSender = null;
 
     await db.runTransaction(async (t) => {
         const ofSnap = await t.get(offerRef);
@@ -2793,6 +2811,7 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
         const rideSnap = await t.get(rideRef);
         if (!rideSnap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
         const rd = rideSnap.data();
+        pickupSender = await pickupSenderUid(t, rd); // [R16]
         if (rd.assignmentStatus === 'assigned' || (rd.driverId && rd.driverId !== auth.uid)) {
             throw new HttpsError('failed-precondition', 'Ombi tayari limegawiwa kwa msafirishaji mwingine.');
         }
@@ -2835,9 +2854,9 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
             orderId: orderId || null,
             shipmentId: rd.shipmentId || (rd.cargoManifest && rd.cargoManifest.shipmentId) || null,
             kind: 'pickup', tokenType: 'PICKUP_TOKEN', stage: 'pickup',
-            token: pk, participants: [customerId, auth.uid].filter(Boolean),
+            token: pk, participants: [pickupSender, auth.uid].filter(Boolean),
             issuerUid: auth.uid, issuerRole: 'transporter',
-            intendedActorUid: customerId || null, intendedActorRole: 'seller_or_sender',
+            intendedActorUid: pickupSender || null, intendedActorRole: 'seller_or_sender',
             createdAt: now, issuedAt: now, presentedAt: null, verifiedAt: null, consumedAt: null,
             expiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
             status: 'issued', attemptCount: 0
@@ -2864,7 +2883,7 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
     });
 
     // Token halali huishi kwenye delivery_tokens (PRIVATE), si ride doc.
-    await custodySetToken(rideId, 'pickup', pk, [customerId, auth.uid].filter(Boolean));
+    await custodySetToken(rideId, 'pickup', pk, [pickupSender, auth.uid].filter(Boolean));
     await custodyEvent(rideId, 'OFFER_ACCEPTED', auth, { offerId: offerId, actorRole: 'transporter', agentName: agentName });
     await custodyEvent(rideId, 'TRANSPORTER_ACCEPTED', auth, { actorRole: 'transporter', via: 'routing' });
     await custodyEvent(rideId, 'PICKUP_TOKEN_GENERATED', auth, {});
@@ -2984,7 +3003,8 @@ exports.deliveryGenerateToken = onCall({ region: REGION }, async (req) => {
 
     // pickup
     const isDriver = rd.driverId === auth.uid;
-    const isOwner = rd.customerId === auth.uid;
+    const pkSender = await pickupSenderUid(DIRECT_READ, rd); // [R16] seller of an order ride, not the buyer
+    const isOwner = pkSender === auth.uid;
     if (!isDriver && !isOwner) {
         throw new HttpsError('permission-denied', 'Huna haki ya kuzalisha token ya safari hii.');
     }
@@ -3003,7 +3023,7 @@ exports.deliveryGenerateToken = onCall({ region: REGION }, async (req) => {
         throw new HttpsError('failed-precondition', 'Muuzaji tayari amethibitisha makabidhiano — token mpya haiwezi kutolewa sasa.');
     }
     const pk = custodyToken('PK-');
-    await custodySetToken(rideId, 'pickup', pk, [rd.customerId, rd.driverId].filter(Boolean));
+    await custodySetToken(rideId, 'pickup', pk, [pkSender, rd.driverId].filter(Boolean));
     await ref.update({
         pickupTokenHash: custodyHash(pk),
         pickupTokenRef: custodyMaskToken(pk),
@@ -3628,7 +3648,7 @@ async function resolveCommentEvidence(uid, targetType, targetId) {
     };
     const list = [];
     ordersSnap.forEach((o) => { list.push({ id: o.id, d: o.data() }); });
-    list.forEach(({ id, od }) => {
+    list.forEach(({ id, d: od }) => { // [R16] was ({ id, od }): od was always undefined -> TypeError, no review ever got its badge
         if (!matchesTarget(od)) return;
         const status = String(od.status || '');
         const stageField = targetType === 'service' ? 'serviceStatus' : (targetType === 'transport' ? 'transportStatus' : 'deliveryStatus');

@@ -2259,6 +2259,9 @@ window.acceptHubServiceRequest = async function(reqId, senderName, title, price,
             _reqAccepted = true;
         }
 
+        // [R16] huduma halisi iliyoombwa (kwa tathmini yenye beji "Verified")
+        let _serviceId = null;
+        try { const _rq = await skh.getDoc(skh.doc(skh.db, "requests", reqId)); _serviceId = (_rq.exists() && _rq.data().itemId) || null; } catch (_e) {}
         // [PHASE B 2026-11-10 I-I1] 'awaiting_payment' (SI 'held' — held inadai pesa
         // iko escrow; rules zinaikataa). Server (serviceOrderWalletPay/settle) ndiyo
         // inayohamishia 'held' baada ya malipo kuthibitishwa.
@@ -2274,6 +2277,8 @@ window.acceptHubServiceRequest = async function(reqId, senderName, title, price,
             paymentStatus: "pending",
             paymentVerified: false,
             collectionName: "services",
+            commerceType: "service",
+            ...(_serviceId ? { serviceId: String(_serviceId) } : {}),
             date: new Date().toISOString(),
             ...(typeof window.skhAssistMeta === 'function' ? window.skhAssistMeta() : {})
         });
