@@ -1539,6 +1539,11 @@ try {
         skh.onAuthStateChanged(skh.auth, function (user) { 
             skh.currentUser = user;
             skh.__authResolved = true; 
+            // [NAV-AUTH] endelea na ulichokusudia kabla ya login (dakika 10 za juu)
+            if (user && skh.__authIntent && Date.now() - skh.__authIntent.at < 600000) {
+                var __intent = skh.__authIntent.fn; skh.__authIntent = null;
+                setTimeout(function () { try { __intent(); } catch (e) { console.warn('[auth-intent]', e); } }, 600);
+            }
             try {
                 document.dispatchEvent(new CustomEvent('skh:auth-ready', { detail: { user: user } }));
             } catch (e) {}
@@ -1550,7 +1555,26 @@ try {
     skh.__authResolved = true; 
 }
 
-skh.requireAuth = function requireAuth() { 
+/* [NAV-AUTH 2026-11-14] Mahali palipolindwa (chat, menyu ya akaunti, live…) panaweza kupitisha
+   `resume`: mtumiaji akiingia, anapelekwa moja kwa moja alipokusudia. Akighairi (anafunga
+   fomu ya login bila kuingia), nia inafutwa na anabaki kwenye ukurasa wa umma alipokuwa. */
+skh.__authIntent = null;
+skh.__rememberAuthIntent = function (resume) {
+    if (typeof resume !== 'function') return;
+    skh.__authIntent = { fn: resume, at: Date.now() };
+    try {
+        var am = document.getElementById('authModal');
+        if (!am || am.__skhIntentWatch) return;
+        am.__skhIntentWatch = true;
+        new MutationObserver(function () {
+            if (getComputedStyle(am).display !== 'none' || !skh.__authIntent) return;
+            var at = skh.__authIntent.at;
+            // login ikifaulu, onAuthStateChanged huja punde baada ya fomu kufungwa
+            setTimeout(function () { if (!skh.currentUser && skh.__authIntent && skh.__authIntent.at === at) skh.__authIntent = null; }, 4000);
+        }).observe(am, { attributes: true, attributeFilter: ['style', 'class'] });
+    } catch (e) {}
+};
+skh.requireAuth = function requireAuth(resume) { 
         if(!skh.currentUser) { 
             // [AUTO-LOGIN §16] Usizindue login modal bila mpango kabla Firebase
             // haijamaliza kuponya session iliyohifadhiwa. Subiri resolution;
@@ -1562,6 +1586,7 @@ skh.requireAuth = function requireAuth() {
                 return false; 
             }
             openAuthModal(); 
+            skh.__rememberAuthIntent(resume);
             alert(" Ingia (Login) au Jisajili kwanza!"); 
             return false; 
         } 

@@ -102,7 +102,8 @@ window.skhSidebarGo = function(key) {
 };
 
 window.openSidebarMenu = function(){
-    if(!skh.currentUser) { if(typeof window.openAuthModal==='function') window.openAuthModal(); return; }
+    // [NAV-AUTH] ingia kwanza, kisha menyu ya akaunti inafunguka yenyewe
+    if(!skh.currentUser) { if (skh.requireAuth) skh.requireAuth(function(){ window.openSidebarMenu(); }); else if(typeof window.openAuthModal==='function') window.openAuthModal(); return; }
     window.closeModals && window.closeModals();
     window.renderSokoHaiAccountMenu();
 };

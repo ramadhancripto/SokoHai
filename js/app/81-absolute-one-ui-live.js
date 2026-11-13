@@ -228,6 +228,9 @@ import { skh } from './00-bootstrap.js';
     var orig = window.skhChatOpenInbox;
     if(!orig || orig.__abs81) return;
     window.skhChatOpenInbox = async function(){
+      /* [NAV-AUTH 2026-11-14] Ingia KWANZA. Zamani inbox ilionyeshwa (showOnly) kabla ya
+         requireAuth ya orig — fomu ya login ikabaki NYUMA ya chat mpaka ubonyeze Back. */
+      if(window.skh && window.skh.requireAuth && !window.skh.requireAuth(function(){ window.skhChatOpenInbox(); })) return;
       try{
         if(!canOpen('chatListModal')) {
           var clExist = byId('chatListModal');
@@ -402,6 +405,9 @@ import { skh } from './00-bootstrap.js';
             var __top = __st && __st.ov && __st.ov.length ? __st.ov[__st.ov.length-1] : '';
             /* [NAV 2026-11-13] Punguza live TU ikiwa live ndiyo iko juu ya rundo. Kama juu kuna
                bidhaa/fomu iliyofunguliwa kutoka kwenye live, funga hiyo na ubaki kwenye live. */
+            if(__top === 'lvxRoom' && Date.now() - (window.__skhLiveKeepUnder || 0) < 1500){
+              return;   // [NAV-LIVE] kinachofunguliwa (bidhaa) kinakaa JUU ya live; live haiguswi
+            }
             if(__top === 'lvxRoom' && lvRoom && !lvRoom.hidden && !byId('lvxMini')
                && lvRoom.querySelector('.lv7-stage')
                && typeof window.skhLiveMinimize === 'function'){

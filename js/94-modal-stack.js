@@ -25,7 +25,9 @@
     if (window.__skhModalStack) return;
     window.__skhModalStack = true;
 
-    var SEL = '.overlay-menu,[id$="Modal"],[id$="Form"],.skh-sheet-overlay';
+    // [NAV-LIVE 2026-11-14] .lvx-overlay (Live hub/chumba/mnada) — zilikuwa z-index 7400 na hazikupandishwa,
+    // hivyo zilifunguka NYUMA ya ukurasa wa bidhaa/chat/kikapu.
+    var SEL = '.overlay-menu,[id$="Modal"],[id$="Form"],.skh-sheet-overlay,.lvx-overlay';
     var SKIP = { buyerView: 1, sellerView: 1, mainFeed: 1, homeView: 1, appRoot: 1 };
     var MAX_Z = 2000000000;
 
@@ -84,7 +86,8 @@
             try {
                 window.skhNavPush({
                     type: 'modal', id: el.id, raise: true,
-                    restore: function () { el.style.display = 'none'; }
+                    restore: (typeof window.skhNavRestoreFor === 'function') ? window.skhNavRestoreFor(el)
+                        : function () { el.style.display = 'none'; }
                 });
             } catch (e) { /* defensive */ }
         }

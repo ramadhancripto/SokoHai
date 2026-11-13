@@ -439,7 +439,8 @@ function renderRoomShell() {
     document.querySelectorAll('.lv7-side-tabs button').forEach(b => b.onclick = () => { document.querySelectorAll('.lv7-side-tabs button').forEach(x => x.classList.toggle('on', x === b)); room && (room.side = b.dataset.s); paintSide(); });
 }
 window.skhLiveOpen = async function (sessionId, opts) {
-    if (!skh.requireAuth || !skh.requireAuth()) return;
+    // [NAV-AUTH] baada ya kuingia, rudi kwenye live hii hii
+    if (!skh.requireAuth || !skh.requireAuth(() => window.skhLiveOpen(sessionId, opts))) return;
     opts = opts || {};
     leaveRoom(!!opts.keepJoin); closeMiniBox();
     room = { id: sessionId, unsub: [], products: {}, session: null, joined: false, side: 'chat', comments: [] };
@@ -460,17 +461,20 @@ window.skhLiveOpen = async function (sessionId, opts) {
     }));
     const cq = skh.query(skh.collection(skh.db, 'live_sessions', sessionId, 'comments'), skh.orderBy('createdAt', 'desc'), skh.limit(60));
     room.unsub.push(skh.onSnapshot(cq, (snap) => { if (!room) return; room.comments = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).reverse(); paintComments(); }, () => {}));
-    try { const r = await call('liveJoin', { sessionId }); if (room) room.joined = !!(r && (r.status === 'live' || r.status === 'paused')); } catch (e) {}
+    const mine = room;
+    try { const r = await call('liveJoin', { sessionId }); if (room === mine) room.joined = !!(r && (r.status === 'live' || r.status === 'paused')); } catch (e) {}
+    if (room !== mine) return;   // [NAV-LIVE 2026-11-14] mtumiaji ametoka (Back) kabla liveJoin haijajibu
     room.timer = setInterval(tick, 1000);
 };
 /* one product, no session: Mnada (ref 5/7) or Bei Kushuka campaign (ref 2) */
 async function productRoom(productId, kind) {
-    if (!skh.requireAuth || !skh.requireAuth()) return;
+    if (!skh.requireAuth || !skh.requireAuth(() => productRoom(productId, kind))) return;
     leaveRoom(); closeMiniBox();
     room = { id: null, unsub: [], products: {}, session: null, joined: false, side: kind === 'auction' ? 'board' : 'board', comments: [] };
     renderRoomShell();
+    const mine = room;
     const p = await getProduct(productId);
-    if (!room) return;
+    if (!room || room !== mine) return;   // [NAV-LIVE] chumba kimefungwa/kubadilishwa wakati wa kusubiri
     if (!p) { document.getElementById('lvxStage').innerHTML = '<div class="lv7-gone"><b>Bidhaa haipatikani</b></div>'; return; }
     room.products[productId] = p;
     room.session = { title: p.title, hostName: p.ownerName || p.sellerName || 'Muuzaji', hostUid: p.userId, kind, status: 'live', productIds: [productId], pinnedProductId: productId, video: null, viewerCount: null };
@@ -545,11 +549,14 @@ async function paintHost() {
     }
     box.innerHTML = `<span class="lv7-av">${esc(initials(s.hostName))}</span><b>${esc(s.hostName)}</b>${host || !s.hostUid ? '' : `<button class="lv7-follow" id="lv7Follow" onclick="skhLiveFollow()">Fuata</button>`}${ctl}`;
     if (!host && s.hostUid && me() && room.followKnown === undefined) {
-        room.followKnown = false;
-        try { const f = await skh.getDoc(skh.doc(skh.db, 'sellerFollowers', me() + '__' + s.hostUid)); room.following = f.exists(); } catch (e) { room.following = false; }
-        room.followKnown = true;
+        // [NAV-LIVE 2026-11-14] mtumiaji akitoka chumbani (Back) wakati hili linasubiri, `room`
+        // inakuwa null — usiandike kwenye chumba kilichofungwa (TypeError isiyoshikwa).
+        const r = room; r.followKnown = false;
+        try { const f = await skh.getDoc(skh.doc(skh.db, 'sellerFollowers', me() + '__' + s.hostUid)); r.following = f.exists(); } catch (e) { r.following = false; }
+        r.followKnown = true;
+        if (room !== r) return;
     }
-    const b = document.getElementById('lv7Follow'); if (b && room.following) { b.textContent = 'Unafuata'; b.classList.add('on'); }
+    const b = document.getElementById('lv7Follow'); if (b && room && room.following) { b.textContent = 'Unafuata'; b.classList.add('on'); }
 }
 /* [STAGE3 2026-11-12] Host media bar — the camera/microphone/source controls had no UI at all:
  * the RTC layer exposed skhLiveVideo.setCam/setMic/switchCamera/retry and the backend had
@@ -648,9 +655,10 @@ function watchProduct(pid) {
 const maskName = (n) => String(n || 'Mteja').replace(/^(.)(.*)$/, (m, a, rest) => a + '***' + (rest.length > 3 ? rest.slice(-1) : ''));
 async function refreshRank() {
     const p = pinned(); if (!room || !p || modeOf(p) !== 'price_drop' || !me()) return;
-    if (room.rankBusy) return; room.rankBusy = true;
-    try { room.rank = await call('priceDropMyRank', { productId: p.id }); } catch (e) { room.rank = null; }
-    room.rankBusy = false; tick(); paintSide(); outcomeCheck();
+    if (room.rankBusy) return; const r = room; r.rankBusy = true;
+    try { r.rank = await call('priceDropMyRank', { productId: p.id }); } catch (e) { r.rank = null; }
+    r.rankBusy = false; if (room !== r) return;   // [NAV-LIVE] chumba kimefungwa wakati wa kusubiri
+    tick(); paintSide(); outcomeCheck();
 }
 
 /* product card over the video (ref 7: "Jina / Hali / Bei") */
@@ -1093,7 +1101,11 @@ window.skhLiveReport = async function () {
     try { await call('liveReport', { sessionId: room.id, reason }); toast('Asante. Ripoti imetumwa kwa wasimamizi.', 'success'); } catch (e) { toast(friendly(e), 'warn'); }
 };
 /* Product sheet opens ABOVE the room (the live keeps running underneath). */
-window.skhLiveOpenProduct = function (pid) { if (typeof window.openProduct === 'function') window.openProduct(pid, 'products'); };
+window.skhLiveOpenProduct = function (pid) {
+    // [NAV-LIVE] bidhaa inafunguka JUU ya chumba; closeModals() ya openProduct isipunguze live
+    window.__skhLiveKeepUnder = Date.now();
+    if (typeof window.openProduct === 'function') window.openProduct(pid, 'products');
+};
 
 /* ======================================================================
  * ZABUNI ZANGU — ref 5 "My Bids (Buyer Dashboard)"

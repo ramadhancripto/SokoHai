@@ -396,6 +396,21 @@ import { skh } from './00-bootstrap.js';
     /* ========================================================================
        3) TAMBUA SCREEN INAPOFUNGUKA (bila kuhariri kila mahali)
        ======================================================================== */
+    /* [NAV-LIVE 2026-11-14] Skrini za Live (.lvx-overlay: Live hub, chumba cha live, mnada,
+       zabuni zangu…) hazikuwa kwenye rundo wala historia: zilifunguka NYUMA ya bidhaa/chat
+       (z-index 7400) na Back ilitoka nje ya app. Sasa ni overlays za kawaida za rundo hili;
+       kuzifunga kwa Back kunatumia njia yao halali (skhLiveClose -> inaondoka chumbani). */
+    var OV_SEL = '.overlay-menu,[id$="Modal"],[id$="Form"],.lvx-overlay';
+    function restoreFor(el) {
+        if (el.classList && el.classList.contains('lvx-overlay')) {
+            return function () {
+                if (typeof window.skhLiveClose === 'function') window.skhLiveClose(el.id);
+                else el.hidden = true;
+            };
+        }
+        return function () { el.style.display = 'none'; };
+    }
+    window.skhNavRestoreFor = restoreFor;
     function watchOpen(el) {
         if (!el || el.__skhBackWatched) return;
         el.__skhBackWatched = true;
@@ -406,9 +421,9 @@ import { skh } from './00-bootstrap.js';
                kujua ipi ifunge, na inarudi kufunga vyote (-> Home).
                Kitufe cha "Rudi" huongezwa TU kwa zisizo nacho. */
             injectBack(el);
-            push({ type: 'modal', id: el.id, restore: function () { el.style.display = 'none'; } });
+            push({ type: 'modal', id: el.id, restore: restoreFor(el) });
         });
-        obs.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+        obs.observe(el, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
     }
 
     /* [FIX 2026-09-15] Kitufe cha "Rudi" kilikuwa kinaingia hata kwenye
@@ -427,13 +442,12 @@ import { skh } from './00-bootstrap.js';
     }
 
     function scan() {
-        document.querySelectorAll('.overlay-menu,[id$="Modal"],[id$="Form"]').forEach(function (el) {
+        document.querySelectorAll(OV_SEL).forEach(function (el) {
             if (!el.id || SKIP_IDS[el.id]) return;
             watchOpen(el);                       // fuatilia ZOTE (kwa rundo)
             if (isOpen(el) && isRealOverlay(el)) {
                 injectBack(el);                  // kitufe kwa zisizo nacho pekee
-                push({ type: 'modal', id: el.id,
-                       restore: function () { el.style.display = 'none'; } });
+                push({ type: 'modal', id: el.id, restore: restoreFor(el) });
             }
         });
     }
@@ -539,11 +553,11 @@ import { skh } from './00-bootstrap.js';
                 if (stack.some(function (e) { return e.type === 'modal' && e.id === id; })) return;
                 var el = byId(id); if (!el) return;
                 if (!isOpen(el)) {
-                    if (under || !REOPEN[id]) return;
+                    if (under || !REOPEN[id] || el.classList.contains('lvx-overlay')) return;
                     el.style.display = H.disp[id] || 'flex';
                     try { window.skhBringToFront && window.skhBringToFront(el); } catch (e) {}
                 }
-                stack.push({ type: 'modal', id: id, under: false, restore: function () { el.style.display = 'none'; } });
+                stack.push({ type: 'modal', id: id, under: false, restore: restoreFor(el) });
                 changed = true;
             });
             settle();
