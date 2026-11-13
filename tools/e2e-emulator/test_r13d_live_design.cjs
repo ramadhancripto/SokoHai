@@ -84,6 +84,9 @@ const closeAll = (p) => ev(p, () => { try { window.skhLvModalClose && skhLvModal
     await B.p.waitForFunction(() => /nafasi ya 1/.test((document.querySelector('#lvPdRes b') || {}).textContent || ''), null, { timeout: 15000 }); await shot(B.p, '08-weka-bei'); await ev(B.p, () => skhLvModalClose()); });
   await L.step('Viongozi na nafasi (ref 1): masked ranking + my place', async () => {
     await L.call(N.p, 'priceDropSubmit', { productId: 'pd1', price: 190000, name: 'Neema Digital' });
+    // the 'Weka bei yako' result dialog stays open by design; a buyer closes it before opening the board
+    // (the emoji bar sits above the chat input, so on phones the foot button is under the open dialog)
+    await ev(B.p, () => window.skhLvModalClose && skhLvModalClose());
     await B.p.waitForTimeout(1500); await B.p.click('.lv7-foot button'); await B.p.waitForTimeout(1200);
     const n = await ev(B.p, () => document.querySelectorAll('.lv7-rrow').length); L.assert(n >= 2, 'rows ' + n); await shot(B.p, '09-ranking');
     await ev(B.p, () => { const s = document.getElementById('lv7Sheet'); if (s) s.hidden = true; }); return n + ' in queue'; });

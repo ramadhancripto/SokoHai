@@ -316,6 +316,9 @@
 .lvx-emoji { position: absolute; left: 12px; right: 12px; bottom: 58px; z-index: 5; display: flex; gap: 6px; justify-content: center; pointer-events: none; }
 .lvx-emoji button { pointer-events: auto; border: 1px solid rgba(255, 255, 255, .25); background: rgba(0, 0, 0, .5); border-radius: 999px; font-size: 15px; width: 34px; height: 34px; cursor: pointer; }
 .lv7-stage:not(:has(.lv7-chat:not([hidden]))) .lvx-emoji { display: none; }
+/* [MERGE 2026-11-13] the emoji row (bottom 58-92px) sat on top of the room's bottom block (price-drop
+   foot / CTA) and swallowed taps; lift the frame above it while the row is shown (short screens hide it below). */
+.lv7-stage:has(.lv7-chat:not([hidden])) .lv7-frame { bottom: 100px; }
 
 .lvh-pausedtag { display: inline-block; background: #64748b; color: #fff; font-size: 11.5px; font-weight: 900; padding: 5px 12px; border-radius: 999px; margin-bottom: 6px; }
 
