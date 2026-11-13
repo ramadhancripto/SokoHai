@@ -4167,6 +4167,9 @@ const stories = require('./stories');
 ['storyCreate','storyView','storyReport','storyRemove','storyReact'].forEach(n => { exports[n] = stories[n]; });
 const groupSoko = require('./group-soko');
 ['groupSokoCreate','groupSokoInvite','groupSokoAccept','groupSokoCapitalRecord','groupSokoCapitalConfirm','groupSokoPropose','groupSokoVote','groupSokoExecute','groupSokoPurchaseStep','groupSokoAttachProduct','groupSokoReport'].forEach(n => { exports[n] = groupSoko[n]; });
+// [R16] identity / business document verification (private documents, admin review, audit)
+const verificationEngine = require('./verification');
+['verificationSubmit','adminVerificationQueue','adminVerificationDocUrls','adminVerificationDecide'].forEach(n => { exports[n] = verificationEngine[n]; });
 // [R16] Group Buy lifecycle + owner-selectable money policy (escrow_commit needs realMoneyApproved)
 const groupBuyEngine = require('./group-buy');
 ['groupBuyCommitJoin','groupBuyLeave','groupBuyCancel','groupBuySettleNow','groupBuySweep','adminGroupBuyList','adminSetGroupBuyPolicy'].forEach(n => { exports[n] = groupBuyEngine[n]; });

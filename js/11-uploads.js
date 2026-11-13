@@ -117,6 +117,7 @@
                 fd.append('signature', sig.signature);
                 fd.append('folder', sig.folder);
                 fd.append('upload_preset', sig.uploadPreset);
+                if (sig.type) fd.append('type', sig.type); // [R16] 'authenticated' for private identity documents
             } else if (sig && sig.mode === 'unsigned') {
                 fd.append('upload_preset', window.SOKOHAI_UPLOADS.preset);
                 if (opts.folder) fd.append('folder', opts.folder);

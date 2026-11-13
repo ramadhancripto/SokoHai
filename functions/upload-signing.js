@@ -78,6 +78,9 @@ exports.uploadSignature = onCall({ region: REGION }, async (req) => {
     const d = req.data || {};
     const resourceType = RESOURCE_TYPES.indexOf(String(d.resourceType || 'image')) !== -1 ? String(d.resourceType || 'image') : 'image';
     const configured = !!(c.cloud && c.apiKey && c.secret && c.preset);
+    // [R16] identity documents are PRIVATE: signed + type 'authenticated' only, never the public unsigned preset
+    const isIdentity = areaOf(d.folder || d.purpose) === 'identity';
+    if (isIdentity && !configured) throw new HttpsError('failed-precondition', 'nyaraka_zinahitaji_upakiaji_salama');
     if (!configured) {
         if (c.mode === 'signed') throw new HttpsError('failed-precondition', 'Upload salama haijasanidiwa kwenye server (CLOUDINARY_*).');
         return { ok: true, mode: 'unsigned' }; // transition only: browser keeps the old preset
@@ -105,11 +108,12 @@ exports.uploadSignature = onCall({ region: REGION }, async (req) => {
     const timestamp = Math.floor(Date.now() / 1000);
     const area = areaOf(d.folder || d.purpose);
     const folder = 'sokohai/' + area + '/' + uid;
-    const formats = allowedFormats(resourceType, area);
+    const formats = isIdentity ? 'jpg,jpeg,png,webp,heic,heif' : allowedFormats(resourceType, area);
     const params = { allowed_formats: formats, folder, timestamp, upload_preset: c.preset };
+    if (isIdentity) params.type = 'authenticated';
     return {
-        ok: true, mode: 'signed', cloudName: c.cloud, apiKey: c.apiKey, resourceType,
-        folder, timestamp, uploadPreset: c.preset, allowedFormats: formats, signature: signParams(params, c.secret)
+        ok: true, mode: 'signed', cloudName: c.cloud, apiKey: c.apiKey, resourceType: isIdentity ? 'image' : resourceType,
+        folder, timestamp, uploadPreset: c.preset, allowedFormats: formats, type: params.type || undefined, signature: signParams(params, c.secret)
     };
 });
 

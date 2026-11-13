@@ -320,13 +320,38 @@ import { skh } from './00-bootstrap.js';
     };
 
     VIEWS.verify = async function () {
-        return box('Thibitisha au ondoa uthibitisho',
+        /* [R16] maombi ya utambulisho ya watumiaji (hati za siri; kiungo cha muda kwa admin tu) */
+        var q = { requests: [] }; try { q = await run('adminVerificationQueue', { status: 'pending' }); } catch (e) {}
+        var DT = { national_id: 'Kitambulisho (NIDA)', passport: 'Pasipoti', driving_license: 'Leseni ya udereva', business_license: 'Leseni ya biashara', tin_certificate: 'Cheti cha TIN' };
+        var rows = (q.requests || []).map(function (r) {
+            return '<div data-idv-uid="' + esc(r.uid) + '" style="border:1px solid #eef2f1;border-radius:12px;padding:10px;margin-bottom:8px;">'
+                + '<b>' + esc(DT[r.docType] || r.docType) + '</b> · ****' + esc(r.last4) + ' · picha ' + r.docs + '<br><small style="color:#64748b;">' + esc(r.uid) + ' · ' + esc(String(r.submittedAt || '').slice(0, 16).replace('T', ' ')) + (r.attempts > 1 ? ' · jaribio la ' + r.attempts : '') + '</small>'
+                + '<div id="ccIdvDocs_' + esc(r.uid) + '"></div>'
+                + btn('Tazama hati', "window.skhAdminIdvDocs('" + esc(r.uid) + "')", 'plain')
+                + btn('Idhinisha', "window.skhAdminIdvDecide('" + esc(r.uid) + "','approve')")
+                + btn('Kataa', "window.skhAdminIdvDecide('" + esc(r.uid) + "','reject')", 'danger') + '</div>';
+        }).join('');
+        return box('Maombi ya uthibitisho wa utambulisho (' + (q.requests || []).length + ')', rows || empty('Hakuna ombi linalosubiri.'))
+            + box('Thibitisha au ondoa uthibitisho',
             '<label style="font-size:13px;">Aina</label><select id="ccVKind" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin:4px 0 8px;">'
             + '<option value="seller">Muuzaji (UID)</option><option value="driver">Dereva (drivers ID)</option><option value="transport">Msafirishaji (transport_profiles ID)</option>'
             + '<option value="logistics">Kampuni ya usafirishaji (logistics_companies ID)</option><option value="service">Huduma (services ID)</option></select>'
             + input('ccVId', 'ID ya rekodi')
             + btn('Thibitisha', "window.skhAdminCCVerify(document.getElementById('ccVKind').value, document.getElementById('ccVId').value, true)")
             + btn('Ondoa uthibitisho', "window.skhAdminCCVerify(document.getElementById('ccVKind').value, document.getElementById('ccVId').value, false)", 'plain'));
+    };
+    window.skhAdminIdvDocs = async function (uid) {
+        var host = document.getElementById('ccIdvDocs_' + uid); if (!host) return;
+        try {
+            var r = await run('adminVerificationDocUrls', { uid: uid });
+            host.innerHTML = r.configured ? (r.urls || []).map(function (u) { return '<a href="' + esc(u.url) + '" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:6px 8px 0 0;font-size:12px;">' + esc(u.side) + '</a>'; }).join('')
+                : '<small style="color:#b45309;">Viungo salama havijatengenezwa: CLOUDINARY_* haijasanidiwa kwenye server.</small>';
+        } catch (e) { host.innerHTML = '<small style="color:#b91c1c;">' + esc(errText(e)) + '</small>'; }
+    };
+    window.skhAdminIdvDecide = async function (uid, decision) {
+        var reason = await needReason(5); if (!reason) return;
+        try { await run('adminVerificationDecide', { uid: uid, decision: decision, reason: reason }); toast(decision === 'approve' ? 'Imethibitishwa.' : 'Imekataliwa.', 'success'); window.skhAdminCCTab('verify'); }
+        catch (e) { toast(errText(e), 'error'); }
     };
     window.skhAdminCCVerify = async function (kind, id, verified) {
         id = String(id || '').trim(); if (!id) { toast('Weka ID.', 'error'); return; }
