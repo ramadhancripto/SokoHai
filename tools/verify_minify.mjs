@@ -60,9 +60,29 @@ function tokensOf(code, file) {
   throw new Error(`${file}: tokenize imeshindwa: ${lastErr && lastErr.message}`);
 }
 
+/**
+ * Ondoa comments kabla ya kutafuta `window.X =`. Minifier huondoa comments
+ * (isipokuwa /*! na @license), kwa hiyo mfano ndani ya comment — kama
+ * `window.SKH_ICE = [...]` kwenye maelezo — ungeonekana kama "global
+ * iliyopotea" ingawa code halisi haijabadilika (false positive).
+ */
+function stripComments(code) {
+  for (const sourceType of ['module', 'script']) {
+    try {
+      const ranges = [];
+      const t = tokenizer(code, { ...TOKENIZER_BASE, sourceType, onComment: (_b, _t, start, end) => ranges.push([start, end]) });
+      while (t.getToken().type.label !== 'eof');
+      let out = '', pos = 0;
+      for (const [a, b] of ranges) { out += code.slice(pos, a) + ' '; pos = b; }
+      return out + code.slice(pos);
+    } catch (e) { /* jaribu sourceType inayofuata */ }
+  }
+  return code;
+}
+
 const globalsOf = (code) => {
   const s = new Set();
-  for (const m of code.matchAll(/window\.([A-Za-z_$][\w$]*)\s*=/g)) s.add(m[1]);
+  for (const m of stripComments(code).matchAll(/window\.([A-Za-z_$][\w$]*)\s*=/g)) s.add(m[1]);
   return [...s].sort();
 };
 
