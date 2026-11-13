@@ -633,11 +633,9 @@ import { skh } from './00-bootstrap.js';
     }
     window.skhCheckoutShowWalletBalance = async function () {
         var el = document.getElementById('walletPayBal'); if (!el || !skh.currentUser) return;
-        try {
-            var s = await skh.getDoc(skh.doc(skh.db, 'users', skh.currentUser.uid));
-            var b = Number((s.exists() && s.data().walletBalance) || 0);
-            el.textContent = 'Salio: TSh ' + b.toLocaleString();
-        } catch (e) { el.textContent = ''; }
+        // own balance from the live own-profile listener (no extra read of users/{uid})
+        var d = skh.currentUserData || {};
+        el.textContent = (d.walletBalance != null) ? 'Salio: TSh ' + Number(d.walletBalance || 0).toLocaleString() : '';
     };
     window.skhPayCartFromWallet = async function () {
         var ids = cartOrderIds();
