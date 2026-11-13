@@ -366,3 +366,10 @@ video.lv7-video { object-fit: cover; background: #000; }
 .lv7-webrtc { position: absolute; inset: 0; }
 .lv-btn.danger { background: #b91c1c; }
 .lvp-btn.danger { background: rgba(185, 28, 28, .12); border: 1px solid #b91c1c; color: #b91c1c; }
+
+/* [R14 2026-11-13] host media bar (Kamera / Kiungo / Bila video, mic, cam) sat in normal flow at the
+   very top, UNDER the absolutely positioned header (LIVE pill) — on phones the host could not tap
+   "Kamera". It now sits under the host row, above the frame, which moves down while it is shown. */
+.lv7-hostmedia { position: absolute; top: 108px; left: 14px; right: 14px; z-index: 6; margin: 0; }
+.lv7-stage:has(.lv7-hostmedia:not([hidden])) .lv7-frame { top: 152px; }
+@media (max-width: 640px) { .lv7-stage:has(#lv7CamBtn) .lv7-frame { top: 190px; } }
