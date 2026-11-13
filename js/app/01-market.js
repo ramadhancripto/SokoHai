@@ -675,8 +675,13 @@ window.switchMode = async function(mode) {
 
     skh.currentMode = mode; 
     skh.localStorage.setItem('sokohai_mode', mode); 
-    closeModals(); 
+    /* [NAV 2026-11-13] Kubadili mode (Soko <-> Duka/Huduma Hub/Admin) ni ukurasa mpya:
+       funga KILA overlay (si hatua moja tu ya rundo) na weka hatua kwenye historia ili
+       Back irudishe ulipotoka. */
+    if (window.skhNavClosing) window.skhNavClosing(true);
+    try { closeModals(true); } finally { if (window.skhNavClosing) window.skhNavClosing(false); }
     skh.applyModeUI();
+    if (typeof window.skhNavTab === 'function') window.skhNavTab(mode === 'buyer' ? ((window.skhNavBuyerTab && window.skhNavBuyerTab()) || 'home') : 'mode:' + mode);
 };
 
 window.openBoostModal = function(id, collectionName) {

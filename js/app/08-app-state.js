@@ -43,13 +43,12 @@ window.updateApp = function(mode, el = null) {
     window.setSellFab(true);
 
     // 2. Weka Rangi ya Active kwenye Tab ya chini
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); 
-    if(el) {
-        el.classList.add('active'); 
-    } else {
+    document.querySelectorAll('.nav-tab').forEach(t => { t.classList.remove('active'); t.removeAttribute('aria-current'); });
+    {
+        // [NAV 2026-11-13] tab ya mode ndiyo active hata ikiitwa bila `el` (Back/Forward)
         const tabIdMap = { 'home': 'navTabHome', 'bidhaa': 'navTabBidhaa', 'services': 'navTabHuduma', 'delivery': 'navTabDelivery' };
-        const tabEl = tabIdMap[mode] ? document.getElementById(tabIdMap[mode]) : null;
-        if (tabEl) tabEl.classList.add('active');
+        const tabEl = (el && el.classList && el.classList.contains('nav-tab')) ? el : (tabIdMap[mode] ? document.getElementById(tabIdMap[mode]) : null);
+        if (tabEl) { tabEl.classList.add('active'); tabEl.setAttribute('aria-current', 'page'); }
     }
     
     // 3. Badili aina ya vitu vinavyoonekana (Collection)
@@ -79,8 +78,18 @@ window.updateApp = function(mode, el = null) {
     skh.loadMainFeed(skh.currentFeedCollection);
     
     // Funga fomu yoyote au modal iliyokuwa wazi
-    closeModals();
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    /* [NAV 2026-11-13] Tab ni ukurasa mpya: funga KILA overlay. Zamani `closeModals()`
+       (iliyofunikwa na 56-nav-back) ilifunga HATUA MOJA tu ya rundo — ukiwa na chat juu
+       ya bidhaa na ukabonyeza Huduma, chat/bidhaa ilibaki juu ya ukurasa wa Huduma
+       mpaka ubonyeze Back. Live inayoendelea inahamia mini-player (haifi). */
+    try {
+        const lvRoom = document.getElementById('lvxRoom');
+        if (lvRoom && !lvRoom.hidden && !document.getElementById('lvxMini') && typeof window.skhLiveMinimize === 'function') window.skhLiveMinimize();
+    } catch (e) {}
+    if (window.skhNavClosing) window.skhNavClosing(true);
+    try { closeModals(true); } finally { if (window.skhNavClosing) window.skhNavClosing(false); }
+    if (typeof window.skhNavTab === 'function') window.skhNavTab(mode);
+    if (!(window.skhNavRestoring && window.skhNavRestoring())) window.scrollTo({top: 0, behavior: 'auto'});
 };
 
 window.setServiceSection = function(section, btnElement) {

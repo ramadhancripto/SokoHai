@@ -1076,9 +1076,9 @@ window.removeFromCart = async function(index) {
 window.skhSetProductUrl = function(id) {
     try {
         if (id) {
-            history.replaceState(null, '', '#/product/' + encodeURIComponent(id));
+            history.replaceState(history.state, '', '#/product/' + encodeURIComponent(id)); // [NAV] hifadhi hali ya historia
         } else if (/^#\/?product\//.test(window.location.hash || '')) {
-            history.replaceState(null, '', window.location.pathname + window.location.search);
+            history.replaceState(history.state, '', window.location.pathname + window.location.search);
         }
     } catch (e) { /* hash pekee — si muhimu */ }
 };

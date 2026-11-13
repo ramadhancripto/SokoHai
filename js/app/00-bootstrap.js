@@ -1947,6 +1947,19 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     /* [PERF 2026-09-21] Cache KWANZA: tab-rudi / "Onyesha zaidi" isionyeshe
        skeleton flash wala kusogeza scroll — chora data iliyopo papo hapo.
        (currentFeedCollection tayari imewekwa na updateApp kabla ya hapa.) */
+    /* [NAV 2026-11-13] Mbio za tabs: ukibonyeza Home -> Bidhaa -> Huduma haraka,
+       majibu ya ombi la zamani (Promise ya 'all' au listener ya collection nyingine)
+       yalikuwa yanachora juu ya ukurasa mpya. Sasa ukurasa ulioonyeshwa ndio pekee
+       unaochorwa; listener ya collection nyingine inazimwa. */
+    var __feedGen = skh._feedGen = (skh._feedGen || 0) + 1;
+    try {
+        var __shownKey = skh._feedCacheKey(collectionToFetch);
+        skh._feedShownKey = __shownKey;
+        if (window.unsubscribeFeed && skh._feedKey && skh._feedKey !== __shownKey) {
+            try { window.unsubscribeFeed(); } catch (eU) {}
+            window.unsubscribeFeed = null; skh._feedKey = null;
+        }
+    } catch (eK) {}
     try {
         var __earlyKey = skh._feedCacheKey(collectionToFetch);
         var __early = skh._feedCacheGet(__earlyKey);
@@ -2011,9 +2024,10 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
                 });
             });
             combinedData = sortByCreated(combinedData);
+            skh._feedCacheSet(cacheKey, combinedData);
+            if (__feedGen !== skh._feedGen || skh._feedShownKey !== cacheKey) return; // [NAV] tab nyingine imeshafunguliwa
             // Hapa ndipo tunazihifadhi kwenye kumbukumbu ya App
             skh.cachedItems = combinedData;
-            skh._feedCacheSet(cacheKey, combinedData);
             skh.renderFeedUI(combinedData, feedGrid);
         }).catch((err) => {
             showFeedError((err && err.message) ? err.message : 'Angalia muunganisho wa mtandao.');
@@ -2087,6 +2101,7 @@ let qNormal;
                   skh.limit(skh.currentLimit));
     }
 
+    skh._feedKey = cacheKey;
     window.unsubscribeFeed = skh.onSnapshot(qNormal, (snapshot) => {
         let normalData = snapshot.docs.map(doc => ({ id: doc.id, collectionName: collectionToFetch, ...doc.data() }));
         // Panga mpya kwanza, kisha kata kwa currentLimit (kwa matawi ya `where`
@@ -2094,8 +2109,10 @@ let qNormal;
         if (collectionToFetch === 'products') normalData = normalData.filter(skh.productEligible);
         normalData = sortByCreated(normalData).slice(0, skh.currentLimit);
         skh._feedCacheSet(cacheKey, normalData);
+        if (skh._feedShownKey !== cacheKey) return; // [NAV] ukurasa mwingine unaonyeshwa sasa
         skh.renderFeedUI(normalData, feedGrid);
     }, (err) => {
+        if (skh._feedShownKey !== cacheKey) return;
         showFeedError((err && err.message) ? err.message : 'Angalia muunganisho wa mtandao.');
     });
 }

@@ -93,8 +93,11 @@ if(typeof window.updateApp === 'function' && !window.__skhUpdateAppWrapped){
     };
 }
 
+/* [NAV 2026-11-13] Esc ilikuwa na wasikilizaji WAWILI (hapa + 56-nav-back): kila Esc
+   ilifunga tabaka mbili, na Home ikifika `history.back()` ilitoka nje ya app.
+   Sasa 56-nav-back ndiyo inashughulikia Esc; hii ni akiba tu kama haijapakia. */
 document.addEventListener('keydown', e => {
-    if(e.key === 'Escape') window.skhGoBack();
+    if(e.key === 'Escape' && typeof window.skhNavTab !== 'function') window.skhGoBack();
 });
 
 (function(){

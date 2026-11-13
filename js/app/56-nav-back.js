@@ -153,62 +153,225 @@ import { skh } from './00-bootstrap.js';
     /* ========================================================================
        2) RUNDO LA KUVINJARI
        ======================================================================== */
+    /* [NAV 2026-11-13] MFUMO MMOJA WA HISTORIA (rundo hili + history ya browser).
+       Chanzo cha tatizo "nabonyeza, ukurasa hauonekani mpaka nirudi nyuma":
+         a) kila overlay ilisukuma `history.pushState` lakini kufunga kwa X/Esc/tab
+            hakukuigusa — historia ilijaa hatua zilizokufa, Back ya simu "haikufanya
+            kitu" mara kadhaa;
+         b) popstate ilisukuma tena hatua mpya (syncHistory) na kuharibu Forward;
+         c) tabs (Home/Bidhaa/Huduma/Usafiri) hazikuwa kwenye historia kabisa;
+         d) fomu ndani ya #plusMenu zilifungwa peke yake, backdrop tupu ikabaki juu;
+         e) overlay iliyofungwa ili kufungua nyingine (kikapu -> malipo, bidhaa -> chat)
+            ilipotea — kufunga ya juu hakukurudisha uliyotoka.
+       Sasa kila hatua ya historia ina hali yake: { tab, ov:[overlays zilizo wazi] }.
+       Back/Forward inalinganisha hali hiyo na kilicho kwenye skrini (reconcile);
+       hatua isiyobadilisha chochote inarukwa. Hakuna router mpya — ni rundo hili hili. */
+    var H = { i: 0, tab: 'home', restoring: 0, lastClosed: null, disp: {}, closedAt: {}, intent: 0 };
+    var REOPEN = { productModal: 1, cartModal: 1, chatListModal: 1, sellerProfileModal: 1,
+                   notifModal: 1, savedItemsModal: 1, buyerOrdersModal: 1, categoryModal: 1 };
+    try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+
+    function key(e) { return (e.type === 'modal' ? '' : e.type + ':') + e.id; }
+    function live(e) { return e.type !== 'modal' || e.under || isOpen(byId(e.id)); }
+    function snapshot() { return stack.filter(live).map(function (e) { return (e.under ? '~' : '') + key(e); }); }
+    function navState() { return { skhNav: 1, i: H.i, tab: H.tab, ov: snapshot(), sy: Math.round(window.scrollY || 0) }; }
+    function baseState() { var s = history.state; return (s && typeof s === 'object') ? s : {}; }
+    /* [NAV] URL ya hatua: `#/product/{id}` ibaki TU pale ukurasa wa bidhaa uko wazi. Zamani
+       hash hii ilirithiwa na kila hatua iliyofuata; Back/Forward ilipobadilisha URL,
+       `hashchange` (deep-link ya 07-product) ilifungua bidhaa tena juu ya Home/Huduma. */
+    function urlFor(st) {
+        var h = location.hash || '';
+        if (/^#\/?product\//.test(h) && (st.ov || []).indexOf('productModal') === -1) return location.pathname + location.search;
+        return undefined;
+    }
+    function writeState(push) {
+        try {
+            if (push && !H.restoring) {
+                // hifadhi scroll ya ukurasa uliopo kabla ya kusogea mbele
+                var href = location.href, cur = baseState();
+                if (cur.skhNav) {
+                    if (!(cur.ov || []).length) cur = Object.assign({}, cur, { sy: Math.round(window.scrollY || 0) });
+                    history.replaceState(cur, '', urlFor(cur));          // hatua ya chini isibebe #/product
+                }
+                H.i++; var ns = navState();
+                history.pushState(ns, '', urlFor(ns) || href);
+            } else {
+                var keep = baseState().sy, st = navState();
+                if (stack.length && keep != null) st.sy = keep;
+                history.replaceState(st, '', urlFor(st));
+            }
+        } catch (e) {}
+    }
+    function syncHistory() { writeState(false); }
+    function userIntent() { return Date.now() - (H.intent || 0) < 900; }
+
+    /* [NAV] Mbio za async: kufungua kwingi ni async (mf. chat inavuta mazungumzo kwanza) na
+       mwishoni huweka `display:flex` TENA. Mtumiaji akishabonyeza Back/tab/X kabla haijamaliza,
+       overlay ilirudi juu "yenyewe". Ikifunguka tena bila mtumiaji kugusa chochote baada ya
+       kuifunga (sekunde 1.5), inafichwa tena. */
+    function staleReopen(id) {
+        var t = H.closedAt[id];
+        return !!t && Date.now() - t < 1500 && (H.intent || 0) <= t;
+    }
+    // tu kufunga kwa Back/Forward, Esc au tab — si closeModals() ya ndani ya mtiririko wa
+    // kufungua (mf. chat: onyesha -> closeModals() -> onyesha tena), hiyo ni halali.
+    function markClosed(id) {
+        if (!id || !(H.restoring || H.navClosing)) return;
+        H.closedAt[id] = Date.now();
+        if (id === 'chatModal' && typeof window.skhChatCancelPendingOpen === 'function') { try { window.skhChatCancelPendingOpen(); } catch (e) {} }
+    }
+    window.skhNavClosing = function (on) { H.navClosing = !!on; };
     function push(entry) {
-        /* [FIX 2026-09-15] Rundo lilikuwa linajaa sehemu za uongo (8 kwa
-           modals 2) kwa sababu `scan()` husukuma kila inapopita, na
-           MutationObserver hupiga mara kadhaa kwa mabadiliko yale yale.
-           Sasa: kila kipengele kinakuwa kwenye rundo MARA MOJA tu. */
+        if (entry.type === 'modal' && staleReopen(entry.id)) {
+            var se = byId(entry.id);
+            if (se) { se.style.display = 'none'; if (se.classList) se.classList.remove('open'); }
+            settle();
+            return;
+        }
+        /* [FIX 2026-09-15] Kila kipengele kinakuwa kwenye rundo MARA MOJA tu. */
         for (var i = 0; i < stack.length; i++) {
             if (stack[i].type === entry.type && stack[i].id === entry.id) {
-                // [FIX 2026-09-20] Modal iliyofunguliwa TENA juu ya nyingine (mf. kadi ndani ya duka
-                // iliyokuwa tayari kwenye rundo) lazima ihamie JUU ya rundo — vinginevyo X/Back
-                // inafunga duka badala ya kadi. Hali ya kawaida (bila raise) haibadiliki.
-                if (entry.raise && i !== stack.length - 1) stack.push(stack.splice(i, 1)[0]);
+                // [FIX 2026-09-20] Modal iliyofunguliwa TENA juu ya nyingine ihamie JUU ya rundo.
+                if (entry.raise && i !== stack.length - 1) { stack.push(stack.splice(i, 1)[0]); writeState(false); }
+                if (stack[i] && stack[i].under && entry.type === 'modal') { stack[i].under = false; writeState(false); }
                 return;
             }
         }
+        /* [NAV] Overlay hii imefunguka mara tu baada ya kufunga nyingine kwa closeModals()
+           (mf. kikapu -> malipo, ukurasa wa huduma -> fomu ya ombi). Ile ya awali inabaki
+           CHINI yake (imefichwa), na kufunga hii kunairudisha. */
+        /* [NAV] Overlay iliyofichwa moja kwa moja ili hii ifunguke (mf. inbox -> mazungumzo
+           kupitia 81 showOnly) — nayo inabaki chini, haipotei. */
+        if (entry.type === 'modal' && userIntent()) {
+            var shownNow = baseState().ov || [];
+            stack.forEach(function (e) {
+                if (e.type === 'modal' && !e.under && e.id !== entry.id && REOPEN[e.id] && shownNow.indexOf(e.id) !== -1 && !isOpen(byId(e.id))) {
+                    e.under = true; e.display = H.disp[e.id] || 'flex';
+                }
+            });
+        }
+        var lc = H.lastClosed; H.lastClosed = null;
+        if (lc && entry.type === 'modal' && lc.entry.id !== entry.id && Date.now() - lc.at < 500 && lc.intent && REOPEN[lc.entry.id]) {
+            var el0 = byId(lc.entry.id);
+            if (el0 && !isOpen(el0)) {
+                lc.entry.under = true; lc.entry.display = lc.display;
+                stack.push(lc.entry);
+                writeState(false);        // hatua ya sasa inaonyesha tena overlay ya awali
+            }
+        }
+        if (entry.type === 'modal') { var el = byId(entry.id); if (el && el.style.display && el.style.display !== 'none') H.disp[entry.id] = el.style.display; }
         stack.push(entry);
         if (stack.length > MAX) stack.shift();
-        syncHistory();
+        writeState(true);
     }
 
     /** Ondoa kwenye rundo vilivyokwisha fungwa (usafi) */
     function prune() {
+        var before = stack.length;
         stack = stack.filter(function (e) {
-            if (e.type !== 'modal') return true;
+            if (e.type !== 'modal' || e.under) return true;
             var el = byId(e.id);
             return el && isOpen(el);
         });
+        // overlay iliyofunikwa ambayo ile iliyoifunika imeshafungwa — irudishe
+        reveal();
+        return before !== stack.length;
     }
-    function syncHistory() {
-        try {
-            if (stack.length) history.pushState({ skhDepth: stack.length }, '');
-        } catch (e) {}
+    /* [NAV] Host kama #plusMenu ambayo fomu yake imefungwa haina chochote kinachoonekana:
+       ni backdrop tupu inayozuia kugusa. Ifunge pamoja na fomu. */
+    var HOSTS = { plusMenu: 1 };          // overlays ambazo ni "fremu" ya fomu nyingine tu
+    function isEmptyHost(el) {
+        if (!el || !HOSTS[el.id] || !isOpen(el)) return false;
+        var kids = el.children, n = 0;
+        for (var i = 0; i < kids.length; i++) {
+            var k = kids[i];
+            if (k.classList && k.classList.contains('skh-backbar')) continue;
+            if (k.tagName === 'SCRIPT' || k.tagName === 'STYLE') continue;
+            if (isOpen(k)) n++;
+        }
+        return n === 0;
     }
+    function reveal() {
+        var top = stack[stack.length - 1];
+        if (top && top.under) {
+            var el = byId(top.id);
+            top.under = false;
+            if (el && !isOpen(el)) el.style.display = top.display || H.disp[top.id] || 'flex';
+            if (el) try { window.skhBringToFront && window.skhBringToFront(el); } catch (e) {}
+        }
+    }
+    function closeEmptyHosts() {
+        for (var guard = 0; guard < 5; guard++) {
+            var top = stack[stack.length - 1];
+            if (!top || top.type !== 'modal') break;
+            var el = byId(top.id);
+            if (!isEmptyHost(el)) break;
+            stack.pop();
+            try { el.style.display = 'none'; } catch (e) {}
+        }
+        // host isiyo juu ya rundo lakini tupu (mf. plusMenu baada ya fomu kufungwa nje ya rundo)
+        var pm = byId('plusMenu');
+        if (pm && isEmptyHost(pm) && !stack.some(function (e) { return e.id === 'plusMenu'; })) pm.style.display = 'none';
+    }
+    /* [NAV] Hakuna overlay iliyo wazi -> ondoa vizuizi vya scroll vilivyobaki. */
+    function settle() {
+        closeEmptyHosts();
+        var anyOpen = stack.some(function (e) { return e.type === 'modal' && !e.under && isOpen(byId(e.id)); });
+        if (!anyOpen) {
+            if (document.body.style.overflow === 'hidden') document.body.style.overflow = '';
+            ['lvx-open', 'gsg-open', 'mas-open'].forEach(function (c) {
+                if (!document.body.classList.contains(c)) return;
+                var still = c === 'lvx-open' ? document.querySelector('.lvx-overlay:not([hidden])') : null;
+                if (!still) document.body.classList.remove(c);
+            });
+        }
+    }
+    window.skhNavSettle = settle;
 
     window.skhNavPush = push;
     window.skhNavDepth = function () { return stack.length; };
+    window.skhNavRestoring = function () { return H.restoring > 0; };
+    window.skhNavState = function () { return { i: H.i, tab: H.tab, ov: snapshot() }; };
 
     /** Funga kilicho juu pekee */
     window.skhCloseTop = function () {
         prune();
         var top = stack.pop();
-        if (!top) { fallbackClose(); return; }
+        if (!top) { fallbackClose(); settle(); return; }
+        var el = top.type === 'modal' ? byId(top.id) : null;
+        if (top.type === 'modal') markClosed(top.id);
+        var disp = el && el.style.display && el.style.display !== 'none' ? el.style.display : (H.disp[top.id] || 'flex');
         try {
             if (typeof top.restore === 'function') top.restore();
             else if (top.type === 'modal') {
-                var el = byId(top.id);
                 if (el) el.style.display = 'none';
             }
         } catch (e) { console.warn('[nav-back]', e); }
+        if (!H.restoring && top.type === 'modal') H.lastClosed = { entry: { type: 'modal', id: top.id, restore: top.restore }, at: Date.now(), display: disp, intent: userIntent() };
+        reveal();
+        settle();
         if (!stack.length) document.body.style.overflow = 'auto';
+        if (!H.restoring) writeState(false);
     };
 
     /** Rudi nyuma: funga kilicho juu, kisha onyesha kilichokuwa chini */
     window.skhBack = function () {
         if (stack.length) { window.skhCloseTop(); return true; }
         fallbackClose();
+        settle();
         return false;
+    };
+
+    /** [NAV] Tab ya ukurasa mkuu imebadilika (updateApp) — hatua mpya ya historia. */
+    window.skhNavBuyerTab = function () { return H.buyerTab || 'home'; };
+    window.skhNavTab = function (mode) {
+        mode = mode || 'home';
+        if (mode.indexOf('mode:') !== 0) H.buyerTab = mode;
+        if (H.restoring) { H.tab = mode; return; }
+        var cur = baseState();
+        var same = (mode === H.tab) && !((cur.ov || []).length);
+        H.tab = mode;
+        writeState(!same);
     };
 
     function fallbackClose() {
@@ -341,13 +504,86 @@ import { skh } from './00-bootstrap.js';
 
     /* ========================================================================
        5) KITUFE CHA NYUMA CHA SIMU + ESC
+       ------------------------------------------------------------------------
+       [NAV 2026-11-13] popstate inalinganisha hali ya hatua (tab + overlays) na
+       skrini: inafunga zisizotakiwa, inarudisha tab, inafungua tena overlay
+       iliyokuwa wazi (Forward / Back kwenda ukurasa uliofunikwa). Hatua isiyobadilisha
+       chochote (iliyokufa) inarukwa kwa mwelekeo ule ule. Haisukumi hatua mpya.
        ======================================================================== */
-    window.addEventListener('popstate', function () {
-        if (stack.length) { window.skhCloseTop(); syncHistory(); }
+    function applyState(s) {
+        var want = (s.ov || []).slice(), changed = false;
+        H.restoring++;
+        // hashchange ya traversal hii isifungue bidhaa tena — reconcile hii ndiyo inaamua
+        window.skhProductHashGuard = true;
+        setTimeout(function () { window.skhProductHashGuard = false; }, 150);
+        try {
+            if (s.tab && s.tab !== H.tab) {
+                H.tab = s.tab;
+                if (s.tab.indexOf('mode:') === 0) {
+                    // dashboard (Duka / Huduma Hub / Admin…) — kupitia switchMode yenye ukaguzi wake
+                    if (typeof window.switchMode === 'function') window.switchMode(s.tab.slice(5));
+                } else if (typeof window.updateApp === 'function') {
+                    window.updateApp(s.tab);      // inafunga overlays zote + inarudisha Soko na tab
+                }
+                changed = true;
+            }
+            prune();
+            var wanted = function (e) { return want.indexOf((e.under ? '~' : '') + key(e)) !== -1 || (e.under && want.indexOf(key(e)) !== -1); };
+            for (var g = 0; g < 25 && stack.length && stack.some(function (e) { return !wanted(e); }); g++) {
+                window.skhCloseTop(); changed = true; prune();
+            }
+            // fungua tena overlay zilizotakiwa ambazo hazipo (Forward, au ukurasa uliofunikwa)
+            want.forEach(function (k) {
+                var under = k.charAt(0) === '~', id = under ? k.slice(1) : k;
+                if (id.indexOf(':') !== -1) return;                   // dashboards hazirudishwi
+                if (stack.some(function (e) { return e.type === 'modal' && e.id === id; })) return;
+                var el = byId(id); if (!el) return;
+                if (!isOpen(el)) {
+                    if (under || !REOPEN[id]) return;
+                    el.style.display = H.disp[id] || 'flex';
+                    try { window.skhBringToFront && window.skhBringToFront(el); } catch (e) {}
+                }
+                stack.push({ type: 'modal', id: id, under: false, restore: function () { el.style.display = 'none'; } });
+                changed = true;
+            });
+            settle();
+            if (!stack.some(function (e) { return e.type === 'modal'; }) && s.sy != null && changed) {
+                var y = s.sy; setTimeout(function () { try { window.scrollTo(0, y); } catch (e) {} }, 0);
+                try { window.scrollTo(0, y); } catch (e) {}
+            }
+        } finally {
+            setTimeout(function () { H.restoring--; }, 0);   // MutationObserver hupiga baada ya hapa
+        }
+        return changed;
+    }
+    window.addEventListener('popstate', function (ev) {
+        H.intent = Date.now();
+        var s = ev.state;
+        if (!s || !s.skhNav) {
+            // hatua ya nje (mf. #hash ya zamani): funga overlays tu, kama zamani
+            if (stack.length) window.skhCloseTop();
+            return;
+        }
+        var dir = (typeof s.i === 'number' && s.i < H.i) ? -1 : 1;
+        H.i = typeof s.i === 'number' ? s.i : H.i;
+        var changed = applyState(s);
+        try { history.replaceState(Object.assign(navState(), { i: H.i, sy: s.sy }), ''); } catch (e) {}
+        if (!changed) { try { history.go(dir); } catch (e) {} }
     });
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && stack.length) { e.preventDefault(); window.skhBack(); }
+        if (e.key !== 'Escape' || e.defaultPrevented) return;
+        // dialogs za app (skhConfirm/skhPrompt) zina Esc yao
+        if (document.querySelector('.skd-ov')) return;
+        H.intent = Date.now();
+        prune();
+        if (stack.length) { e.preventDefault(); H.navClosing = true; try { window.skhBack(); } finally { H.navClosing = false; } }
+        else if (document.querySelector('.overlay-menu[style*="flex"],.overlay-menu[style*="block"]')) { e.preventDefault(); fallbackClose(); settle(); }
     });
+    // kugusa kitufe chochote = nia ya mtumiaji (inatumika kurudisha overlay iliyofunikwa)
+    ['pointerdown', 'click', 'keydown'].forEach(function (t) {
+        document.addEventListener(t, function (e) { if (e.isTrusted) H.intent = Date.now(); }, true);
+    });
+    try { history.replaceState(Object.assign({}, baseState(), navState()), ''); } catch (e) {}
 
     /* ========================================================================
        6) OANISHA NA closeModals() ILIYOPO
@@ -375,13 +611,16 @@ import { skh } from './00-bootstrap.js';
         if (typeof orig !== 'function' || orig.__skhBack) return;
 
         window.skhCloseAll = function () {
-            stack = [];
-            return orig.apply(window, []);
+            stack.forEach(function (e) { if (e.type === 'modal' && isOpen(byId(e.id))) markClosed(e.id); });
+            stack = []; H.lastClosed = null;
+            var r = orig.apply(window, []);
+            settle();
+            return r;
         };
 
         var wrapped = function (closeEverything) {
             // Kufunga kwa makusudi (logout, baada ya kulipa, n.k.)
-            if (closeEverything === true) { stack = []; return orig.apply(this, []); }
+            if (closeEverything === true) { stack.forEach(function (e) { if (e.type === 'modal' && isOpen(byId(e.id))) markClosed(e.id); }); stack = []; H.lastClosed = null; var r0 = orig.apply(this, []); settle(); return r0; }
             prune();
 
             // Rundo lina zaidi ya moja -> funga HATUA MOJA (§22)

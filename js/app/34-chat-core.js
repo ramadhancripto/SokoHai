@@ -47,6 +47,10 @@ import { skh } from './00-bootstrap.js';
        loader/composer kwa timers zao. State hii ndiyo source of truth ya UI. */
     var CHAT_STATES = { IDLE: 'IDLE', CONNECTING: 'CONNECTING', READY: 'READY', EMPTY: 'EMPTY', ERROR: 'ERROR', RETRYING: 'RETRYING' };
     var chatOpenSeq = 0;
+    /* [NAV 2026-11-13] Back/Esc/tab ikifunga chat wakati mazungumzo bado yanafunguliwa (async),
+       sehemu ya mwisho ya kufungua ilikuwa inafunga ukurasa uliorudiwa (inbox/bidhaa) na kuonyesha
+       chat tena. 56-nav-back inaita hii ili ufunguaji huo wa zamani ujikatae wenyewe. */
+    window.skhChatCancelPendingOpen = function () { chatOpenSeq++; };
     function chatErrorCode(err, area) {
         var raw = String((err && (err.code || err.message)) || '').toLowerCase();
         if (raw.indexOf('permission-denied') !== -1 || raw.indexOf('insufficient permission') !== -1) return 'PERMISSION_DENIED';

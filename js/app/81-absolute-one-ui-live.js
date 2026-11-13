@@ -352,8 +352,18 @@ import { skh } from './00-bootstrap.js';
           return raw.apply(this, arguments);
         }
 
+        /* [NAV 2026-11-13] uiStack hii ni rundo la PILI. Zamani ilitumika KWANZA hata kama
+           kilicho juu ni kitu kingine (mf. bidhaa iliyofunguliwa kutoka chat): X ya bidhaa
+           ilificha chat na kuonyesha inbox, bidhaa ikabaki juu. Sasa rundo la 56-nav-back
+           (linalojua kilicho juu kweli) linaamua; uiStack inatumika tu ikiwa 56 halina kitu
+           na UI yake bado iko wazi — iliyochakaa inafutwa. */
+        var __navDepth = (window.skhNavDepth ? window.skhNavDepth() : 0);
+        var __curEl = currentUI ? byId(currentUI) : null;
+        if(uiStack.length>0 && (__navDepth>0 || !__curEl || __curEl.style.display==='none')){
+          if(!__curEl || __curEl.style.display==='none'){ uiStack=[]; currentUI=null; }
+        }
         // If we have our own stack with previous UI, show it directly — NO home flash
-        if(uiStack.length>0){
+        else if(uiStack.length>0){
           var prev = uiStack.pop();
           var prevEl = byId(prev.id);
           var curr = currentUI ? byId(currentUI) : null;
@@ -388,7 +398,11 @@ import { skh } from './00-bootstrap.js';
              skhLiveClose — those call skhCloseTop directly, bypassing this branch. */
           try{
             var lvRoom = byId('lvxRoom');
-            if(lvRoom && !lvRoom.hidden && !byId('lvxMini')
+            var __st = window.skhNavState ? window.skhNavState() : null;
+            var __top = __st && __st.ov && __st.ov.length ? __st.ov[__st.ov.length-1] : '';
+            /* [NAV 2026-11-13] Punguza live TU ikiwa live ndiyo iko juu ya rundo. Kama juu kuna
+               bidhaa/fomu iliyofunguliwa kutoka kwenye live, funga hiyo na ubaki kwenye live. */
+            if(__top === 'lvxRoom' && lvRoom && !lvRoom.hidden && !byId('lvxMini')
                && lvRoom.querySelector('.lv7-stage')
                && typeof window.skhLiveMinimize === 'function'){
               window.skhLiveMinimize();

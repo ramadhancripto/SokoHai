@@ -367,6 +367,12 @@
 #pmActionArea .pm-bar-chat  { color: #18A982 !important; }
 #pmActionArea .pm-bar-order { color: #B8860B !important; }
 #pmActionArea .pm-bar-nego  { color: #26734D !important; }
+/* [NAV 2026-11-13] Kitufe kikuu cha huduma/usafiri ("Kadirio / Agiza Huduma") kina darasa
+   .pm-bar-primary (rangi nyeupe). Sheria ya juu inaondoa background ya kila .pm-bar-btn,
+   hivyo kilikuwa NYEUPE JUU YA NYEUPE — hakionekani ingawa kinafanya kazi. */
+#pmActionArea .pm-bar-primary { background: #18A982 !important; border-color: #18A982 !important; color: #fff !important; }
+#pmActionArea .pm-bar-primary:hover { background: #15A07B !important; }
+#pmActionArea .pm-bar-primary:active { background: #0F8A6A !important; }
 
 /* Hover / active / focus */
 #pmActionArea .pm-bar-chat:hover  { background: rgba(24, 169, 130, .09) !important; }

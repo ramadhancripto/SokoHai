@@ -162,3 +162,10 @@ inaitwa na package.json tangu kabla ya R14 lakini haikuwahi kuwekwa kwenye git. 
 | Low | g1: harness mbili hazilingani na project ya emulator (si bidhaa) |
 | External | Netlify imesimamishwa kwa "usage limits" (billing yako) |
 | External | Hakuna mradi wa Firebase staging; `.firebaserc` ina production pekee |
+
+## 11. Nyongeza (2026-11-13): ukarabati wa navigation
+
+Tatizo la "ukurasa haufunguki mpaka ubonyeze Back" limechunguzwa na kukarabatiwa kwenye mfumo uliopo
+(`56-nav-back.js`, bila router mpya). Vyanzo 13 halisi, faili, majaribio (navigation 56/56 kwenye viewports 4,
+E2E 56/56 simu + desktop, npm test 107/107) na yaliyobaki: **`docs/SOKOHAI-NAVIGATION-REPAIR-REPORT.md`**.
+
