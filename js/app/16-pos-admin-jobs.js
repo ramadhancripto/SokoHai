@@ -2177,6 +2177,7 @@ window.simulateSellerHandover = async function(rideId) {
     const tokenPlain = (typeof window.skhCustodyReadToken === 'function')
         ? (await window.skhCustodyReadToken(rideId, 'pickup')) : rd.pickupToken;
     
+    if (typeof window.skhSellerFareNotice === 'function' && !(await window.skhSellerFareNotice(rideId))) return; // [PILOT 2026-11-14] uwazi wa nauli
     window.customPrompt(` SELLER HANDOVER VERIFICATION\nDereva amefika! Mmiliki wa mzigo (Seller), ingiza Token PK (${tokenPlain || 'PK-XXXXXXXX'}) aliyokupa Dereva ili kumthibitisha kabla ya kukabidhi mzigo:`, "PK-XXXXXXXX", async (inputToken) => {
         if (!inputToken) return;
 

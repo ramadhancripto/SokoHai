@@ -210,9 +210,33 @@ window.verifySellerDispatchToken = async function() {
     }
 };
 
+/* [PILOT 2026-11-14] Uwazi wa nauli kwa muuzaji. Nauli ya usafiri iliyokubaliwa (agreedFare)
+ * hulipwa kutoka kwenye escrow ya oda wakati wa kukamilisha — yaani hupunguza kiasi
+ * anachopokea muuzaji. Kabla ya hapo muuzaji hakuonyeshwa kiasi hicho popote kabla ya
+ * kukabidhi mzigo. Sasa anaonyeshwa na kuthibitisha. Kama taarifa haisomeki, hatua inaendelea
+ * kama awali (server bado ndiyo inayoamua kiasi). */
+window.skhSellerFareNotice = async function (rideId) {
+    try {
+        const rs = await skh.getDoc(skh.doc(skh.db, 'ride_requests', rideId));
+        if (!rs.exists()) return true;
+        const rd = rs.data() || {};
+        const fare = Number(rd.agreedFare || 0) || Number(rd.fare || 0) || 0;
+        if (!(fare > 0) || !rd.orderId) return true;
+        let total = 0;
+        try { const os = await skh.getDoc(skh.doc(skh.db, 'orders', String(rd.orderId))); if (os.exists()) total = Number((os.data() || {}).amount || (os.data() || {}).totalAmount || 0); } catch (e) {}
+        const tsh = (n) => 'TSh ' + Math.round(n).toLocaleString();
+        const msg = 'NAULI YA USAFIRI\n\nNauli iliyokubaliwa: ' + tsh(fare) + '.\nItalipwa kwa msafirishaji kutoka malipo ya oda hii'
+            + (total > 0 ? ' (' + tsh(total) + '), hivyo utapokea takriban ' + tsh(Math.max(0, total - fare)) + ' kabla ya ada ya jukwaa (kama ipo).' : '.')
+            + '\n\nUkikubali, endelea kukabidhi mzigo.';
+        if (typeof window.skhConfirm === 'function') return !!(await window.skhConfirm(msg));
+        return window.confirm(msg);
+    } catch (e) { return true; }
+};
+
 window.confirmSellerDispatch = async function() {
     const rideId = sessionStorage.getItem('active_seller_verified_ride_id');
     if(!rideId) return;
+    if (!(await window.skhSellerFareNotice(rideId))) return;
 
     const btnConfirm = document.getElementById('btnConfirmSellerDispatch');
     btnConfirm.innerHTML = " Inasave...";
@@ -270,6 +294,7 @@ window.confirmSellerDispatch = async function() {
 window.confirmSellerDispatchDirect = async function() {
     const rideId = sessionStorage.getItem('active_seller_verified_ride_id');
     if(!rideId) return;
+    if (!(await window.skhSellerFareNotice(rideId))) return;
 
     const btnConfirm = document.getElementById('btnConfirmSellerDispatchDirect');
     if(btnConfirm) { btnConfirm.innerHTML = " Inasave..."; btnConfirm.disabled = true; }

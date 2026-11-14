@@ -90,6 +90,16 @@ const ev = (p, fn, a) => p.evaluate(fn, a);
     await L.db.doc('system/config').set({ withdrawals: { dualApprovalMin: null } }, { merge: true });
     return 'pending, awaiting a second admin'; });
 
+  await L.step('seller sees the delivery fare (paid from this order) before handing over, and can stop', async () => {
+    await L.db.doc('orders/fareOrd1').set({ buyerId: buyer, sellerId: seller, amount: 120000, status: 'held', commerceType: 'product', createdAt: new Date().toISOString() });
+    await L.db.doc('ride_requests/fareRide1').set({ customerId: buyer, sellerId: seller, orderId: 'fareOrd1', driverId: 'agentZ', agreedFare: 15000, fare: 15000, status: 'accepted', acceptedAt: new Date().toISOString() });
+    const S = await L.open(VP); await L.login(S.p, 'juma.review@sokohai.test', PW);
+    const r = await ev(S.p, async () => { let msg = ''; window.skhConfirm = async (m) => { msg = m; return false; }; const go = await window.skhSellerFareNotice('fareRide1'); return { go, msg }; });
+    await S.b.close();
+    L.assert(r.go === false, 'seller declined but flow continued');
+    L.assert(/15,000/.test(r.msg) && /105,000/.test(r.msg), r.msg);
+    return 'fare 15,000 shown, seller keeps ~105,000'; });
+
   await L.step('an uncaught browser error reaches client_errors (scrubbed, path only) and is capped per page', async () => {
     const X = await L.open(VP);
     await X.ctx.addInitScript(() => { let v; Object.defineProperty(window, 'SOKOHAI_CONFIG', { configurable: true, get: () => v, set: (x) => { v = Object.assign({}, x, { ERROR_REPORTING: true }); } }); });
