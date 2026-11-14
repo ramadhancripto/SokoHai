@@ -144,5 +144,27 @@ await test('D3 clientErrorReport is rate limited (30 / hour / user)', async () =
   let dropped = 0; for (let i = 0; i < 33; i++) { const r = await call('clientErrorReport', 'errR' + T, { message: 'x' + i }); if (r.data && r.data.dropped) dropped++; }
   ok(dropped === 3, 'dropped ' + dropped);
 });
+await test('E1 adminSetupStatus lists App Check, two-person threshold and search backfill (values, no secrets)', async () => {
+  await db.doc('system/config').set({ withdrawals: { dualApprovalMin: 500000 } }, { merge: true });
+  await db.collection('admin_audit_log').add({ action: 'SEARCH_BACKFILL', actorUid: ADM1, createdAt: new Date().toISOString() });
+  const r = await call('adminSetupStatus', ADM1, {}, A1); ok(r.ok, JSON.stringify(r));
+  const it = (k) => r.data.items.find(i => i.key === k) || {};
+  ok(it('withdraw_dual').ok && /500,000/.test(it('withdraw_dual').value), JSON.stringify(it('withdraw_dual')));
+  ok(it('search_backfill').ok === true, 'backfill'); ok('app_check' in Object.fromEntries(r.data.items.map(i => [i.key, 1])), 'app_check missing');
+  await db.doc('system/config').set({ withdrawals: { dualApprovalMin: null } }, { merge: true });
+});
+await test('F1 pilot caps: unset = no cap; set = PesaPal payment and withdrawal above the cap refused, below allowed', async () => {
+  const u = 'capU' + T; await db.doc('users/' + u).set({ uid: u, walletBalance: 900000 });
+  ok((await call('pesapalCheckout', u, { amount: 400000, orderTrackingId: 'CAP0-' + T, purpose: 'deposit' })).ok, 'no cap should allow');
+  await db.doc('system/config').set({ pilotLimits: { maxPaymentTSh: 200000, maxWithdrawalTSh: 100000 } }, { merge: true });
+  try {
+    const big = await call('pesapalCheckout', u, { amount: 250000, orderTrackingId: 'CAP1-' + T, purpose: 'deposit' });
+    ok(!big.ok && big.code === 'failed-precondition' && !(await db.doc('escrow_holds/ppinit_CAP1-' + T).get()).exists, JSON.stringify(big));
+    ok((await call('pesapalCheckout', u, { amount: 150000, orderTrackingId: 'CAP2-' + T, purpose: 'deposit' })).ok, 'below cap refused');
+    const wb = await call('withdrawalRequest', u, { amountTSh: 150000, channel: 'mobile', account: '0712345678', requestKey: 'capw1' });
+    ok(!wb.ok && wb.code === 'failed-precondition' && await bal(u) === 900000, JSON.stringify(wb));
+    ok((await call('withdrawalRequest', u, { amountTSh: 90000, channel: 'mobile', account: '0712345678', requestKey: 'capw2' })).ok, 'small withdrawal refused');
+  } finally { await db.doc('system/config').set({ pilotLimits: { maxPaymentTSh: null, maxWithdrawalTSh: null } }, { merge: true }); }
+});
 console.log(`PILOT OPS (emulator): ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

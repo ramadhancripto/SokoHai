@@ -23,15 +23,27 @@ function status() {
         { key: 'pesapal_redirect', label: 'PesaPal: redirect URL', ok: has('PESAPAL_REDIRECT_URL') },
         { key: 'cloudinary_signed', label: 'Cloudinary: upakiaji salama (signed)', ok: cloud, value: String(process.env.CLOUDINARY_UPLOAD_MODE || 'transition') },
         { key: 'push', label: 'Push (FCM): SKH_PUSH_ENABLED=1', ok: String(process.env.SKH_PUSH_ENABLED || '') === '1' },
-        { key: 'admins', label: 'Super admin e-mail(s)', ok: has('SUPER_ADMIN_EMAILS') || has('ADMIN_EMAILS') }
+        { key: 'admins', label: 'Super admin e-mail(s)', ok: has('SUPER_ADMIN_EMAILS') || has('ADMIN_EMAILS') },
+        // [PILOT 2026-11-14] App Check: server enforcement (client site key is js/00-config.js APP_CHECK_SITE_KEY)
+        { key: 'app_check', label: 'App Check: APP_CHECK_ENFORCE=true', ok: String(process.env.APP_CHECK_ENFORCE || '').toLowerCase() === 'true' }
     ];
     return { items, done: items.filter(i => i.ok).length, total: items.length };
 }
 exports.adminSetupStatus = onCall({ region: 'europe-west1' }, async (req) => {
     if (!req.auth || !isAdmin(req)) throw new HttpsError('permission-denied', 'Admin pekee.');
-    let gb = {};
-    try { gb = ((await admin.firestore().doc('system/config').get()).data() || {}).groupBuy || {}; } catch (e) {}
+    let cfg = {};
+    try { cfg = (await admin.firestore().doc('system/config').get()).data() || {}; } catch (e) {}
+    const gb = cfg.groupBuy || {};
     const s = status();
+    // [PILOT 2026-11-14] two-person withdrawals + search index (run adminSearchBackfill once after deploy)
+    const dual = Number(((cfg.withdrawals || {}).dualApprovalMin)) || 0;
+    s.items.push({ key: 'withdraw_dual', label: 'Kutoa pesa: idhini ya admin wawili (kiwango)', ok: dual > 0, value: dual > 0 ? 'TSh ' + dual.toLocaleString() : 'haijawekwa' });
+    const pl = cfg.pilotLimits || {}, pay = Number(pl.maxPaymentTSh) || 0, wd = Number(pl.maxWithdrawalTSh) || 0;
+    s.items.push({ key: 'pilot_limits', label: 'Pilot: kikomo cha malipo / kutoa pesa kwa muamala', ok: pay > 0 && wd > 0, optional: true,
+        value: (pay > 0 ? 'malipo ≤ TSh ' + pay.toLocaleString() : 'malipo: hakuna kikomo') + ' · ' + (wd > 0 ? 'kutoa ≤ TSh ' + wd.toLocaleString() : 'kutoa: hakuna kikomo') });
+    let backfilled = false;
+    try { backfilled = !(await admin.firestore().collection('admin_audit_log').where('action', '==', 'SEARCH_BACKFILL').limit(1).get()).empty; } catch (e) {}
+    s.items.push({ key: 'search_backfill', label: 'Utafutaji: adminSearchBackfill imeendeshwa', ok: backfilled });
     s.items.push({ key: 'group_buy_money', label: 'Group Buy: pesa halisi (escrow_commit) imeidhinishwa', ok: gb.realMoneyApproved === true, optional: true });
     return Object.assign({ ok: true }, s);
 });

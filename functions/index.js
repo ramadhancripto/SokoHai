@@ -982,6 +982,10 @@ exports.withdrawalRequest = onCall({ region: REGION }, async (req) => {
     if (!Number.isFinite(amountTSh) || amountTSh < 5000 || Math.round(amountTSh) !== amountTSh) {
         throw new HttpsError('invalid-argument', 'Kiasi lazima kiwe TSh 5,000 au zaidi (namba kamili).');
     }
+    const wdCap = await pilotCap('maxWithdrawalTSh');
+    if (wdCap && amountTSh > wdCap) {
+        throw new HttpsError('failed-precondition', 'Kipindi cha majaribio: kutoa pesa mara moja kusizidi TSh ' + wdCap.toLocaleString() + '.');
+    }
     if (channel !== 'mobile' && channel !== 'bank') {
         throw new HttpsError('invalid-argument', 'channel lazima iwe mobile au bank.');
     }
@@ -1805,6 +1809,17 @@ async function notifyLinkEscrowFunded(db, linkId, sellerId, title, amount, metho
  *    PesaPal haina USSD/mno push kama AzamPay: kila malipo hutumia
  *    redirect/iframe ya PesaPal → SubmitOrderRequest.
  * ========================================================== */
+/* [PILOT 2026-11-14] Owner-set per-transaction caps for a monitored pilot.
+ * system/config.pilotLimits = { maxPaymentTSh, maxWithdrawalTSh } (admin-only doc).
+ * Unset / 0 = no cap (behaviour before this change). Read fresh on every call. */
+async function pilotCap(field) {
+    try {
+        const c = ((await admin.firestore().doc('system/config').get()).data() || {}).pilotLimits || {};
+        const v = Number(c[field]);
+        return Number.isFinite(v) && v > 0 ? v : 0;
+    } catch (e) { return 0; }
+}
+
 exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
     requireAuth(req);
     const d = req.data || {};
@@ -1836,6 +1851,10 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
 
     if (!Number.isFinite(amount) || amount <= 0) {
         throw new HttpsError('invalid-argument', 'Kiasi cha malipo si sahihi.');
+    }
+    const payCap = await pilotCap('maxPaymentTSh');
+    if (payCap && amount > payCap) {
+        throw new HttpsError('failed-precondition', 'Kipindi cha majaribio: malipo moja yasizidi TSh ' + payCap.toLocaleString() + '.');
     }
 
     const token = await pesapalToken().catch(e => {
