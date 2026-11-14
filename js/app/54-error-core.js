@@ -437,6 +437,43 @@ import { skh } from './00-bootstrap.js';
         }
     );
 
+    /* [PILOT OPS 2026-11-14] Ripoti makosa yasiyoshikwa kwa server (clientErrorReport) ili admin
+     * ayaone — kabla yalionekana kwenye console ya mtumiaji tu. Kiwango: makosa 5 kwa ukurasa,
+     * ujumbe mmoja mara moja tu; hakuna query string, token wala data ya fomu (server pia husafisha).
+     * Haiendeshwi localhost isipokuwa SOKOHAI_CONFIG.ERROR_REPORTING === true; false huizima popote. */
+    (function () {
+        var cfg = window.SOKOHAI_CONFIG || {};
+        var local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (cfg.ERROR_REPORTING === false || (local && cfg.ERROR_REPORTING !== true)) return;
+        var sent = 0, seen = {};
+        function report(kind, e, src, line) {
+            try {
+                if (sent >= 5) return;
+                var msg = String((e && (e.message || e.code)) || e || '').slice(0, 300);
+                if (!msg || seen[msg]) return;
+                seen[msg] = 1; sent++;
+                var skh = window.skh || {};
+                if (typeof skh.wrapCallable !== 'function') return;
+                skh.wrapCallable('clientErrorReport')({
+                    kind: kind, message: msg, source: String(src || (e && e.stack) || '').slice(0, 300),
+                    line: Number(line) || null, page: location.pathname,
+                    appVersion: String(cfg.APP_VERSION || ''), userAgent: String(navigator.userAgent || '').slice(0, 160)
+                }).catch(function () {});
+            } catch (er) {}
+        }
+        window.skhReportClientError = report;
+        window.addEventListener('error', function (ev) {
+            if (!ev || !ev.error) return;              // resource load errors have no .error
+            report('error', ev.error, ev.filename, ev.lineno);
+        });
+        window.addEventListener('unhandledrejection', function (ev) {
+            var e = ev && ev.reason; if (!e) return;
+            var c = String((e && e.code) || '').replace(/^functions\//, '');
+            if (/^(unavailable|deadline-exceeded|network|cancelled|unauthenticated|permission-denied|resource-exhausted)$/.test(c)) return; // si kasoro ya code
+            report('rejection', e);
+        });
+    })();
+
     /* ========================================================================
        6) UCHUNGUZI WA HALI YA BACKEND â€” kwa developer/admin
        ------------------------------------------------------------------------

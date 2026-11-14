@@ -120,7 +120,11 @@ import { skh } from './00-bootstrap.js';
         var setup = ''; try { var su = await run('adminSetupStatus', {}); setup = box('Usanidi wa nje (' + su.done + '/' + su.total + ')', '<ul data-setup-list style="margin:0;padding-left:0;list-style:none;font-size:13px;line-height:1.8;">' + (su.items || []).map(function (i) {
             return '<li data-setup="' + esc(i.key) + '" data-ok="' + (i.ok ? '1' : '0') + '"><b style="color:' + (i.ok ? '#16a34a' : '#b45309') + ';">' + (i.ok ? 'Tayari' : (i.optional ? 'Hiari' : 'Bado')) + '</b> · ' + esc(i.label) + (i.value ? ' <small style="color:#64748b;">(' + esc(i.value) + ')</small>' : '') + '</li>';
         }).join('') + '</ul><small style="color:#64748b;">Maelekezo: docs/SOKOHAI-USER-SETUP-CHECKLIST.md</small>'); } catch (e) {}
-        return setup + box('Kazi zinazosubiri', '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">'
+        /* [PILOT OPS 2026-11-14] pesa inayohitaji mtu sasa (server: adminMoneyWatch) */
+        var watch = ''; try { var mw = await run('adminMoneyWatch', {}); watch = box('Ulinzi wa pesa (' + (mw.attention || 0) + ' za kushughulikia)', '<ul data-money-watch style="margin:0;padding-left:0;list-style:none;font-size:13px;line-height:1.8;">' + (mw.items || []).map(function (i) {
+            return '<li data-watch="' + esc(i.key) + '" data-count="' + esc(i.count) + '"><b style="color:' + (i.count ? '#b45309' : '#16a34a') + ';">' + esc(i.count) + '</b> · ' + esc(i.label) + (i.count ? '<br><small style="color:#64748b;">' + esc(i.hint || '') + '</small>' : '') + '</li>';
+        }).join('') + '</ul><small style="color:#64748b;">Kazi za server: PesaPal ' + esc(((mw.jobs || {}).pesapalReconcile || {}).lastRunAt ? String(mw.jobs.pesapalReconcile.lastRunAt).slice(0, 16).replace('T', ' ') : 'haijaendeshwa bado') + ' · Ofa za usafiri ' + esc(((mw.jobs || {}).deliveryOfferExpiry || {}).lastRunAt ? String(mw.jobs.deliveryOfferExpiry.lastRunAt).slice(0, 16).replace('T', ' ') : 'haijaendeshwa bado') + '</small>'); } catch (e) {}
+        return setup + watch + box('Kazi zinazosubiri', '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">'
             + tile('Oda kwenye ukaguzi wa bei', counts.price, 'prices')
             + tile('Migogoro iliyo wazi', counts.disputes, 'disputes')
             + tile('Maombi ya kutoa pesa', counts.withdrawals, 'withdrawals')
@@ -305,7 +309,8 @@ import { skh } from './00-bootstrap.js';
                     + '<b>' + money(d.amount) + '</b> · ' + esc(d.channel || '') + ' → ' + esc(d.account || '') + '<br>'
                     + 'Mtumiaji: ' + esc(d.userId || '') + ' · ' + esc(String(d.createdAt || '').slice(0, 16).replace('T', ' ')) + '<br>'
                     + 'Kumb: ' + esc(r.id) + '<br>'
-                    + btn('Nimelipa (funga)', "window.skhAdminCCWithdrawal('" + esc(r.id) + "','paid')")
+                    + (d.awaitingSecondApproval ? '<div data-second-approval style="margin:6px 0;padding:6px 8px;border-radius:8px;background:#e0f2fe;color:#075985;"><b>Idhini ya kwanza:</b> ' + esc(d.firstApprovedBy || '') + ' · ' + esc(String(d.firstApprovedAt || '').slice(0, 16).replace('T', ' ')) + (d.firstExternalRef ? ' · Ref ' + esc(d.firstExternalRef) : '') + '<br>Inasubiri admin MWINGINE athibitishe.</div>' : '')
+                    + btn(d.awaitingSecondApproval ? 'Thibitisha (idhini ya pili)' : 'Nimelipa (funga)', "window.skhAdminCCWithdrawal('" + esc(r.id) + "','paid')")
                     + btn('Kataa (rudisha salio)', "window.skhAdminCCWithdrawal('" + esc(r.id) + "','rejected')", 'danger') + '</div>';
             }).join('') : empty('Hakuna maombi yanayosubiri.')));
     };
@@ -315,9 +320,12 @@ import { skh } from './00-bootstrap.js';
             : 'Kukataa kunarudisha salio kwa mtumiaji moja kwa moja. Endelea?';
         if (!(await confirmIt(q))) return;
         var note = await needReason(5); if (!note) return;
+        var payload = { requestId: requestId, decision: decision, note: note };
+        if (decision === 'paid') { var ref = String((await ask('Namba ya muamala (M-Pesa/benki) — hiari, acha wazi kama huna:')) || '').trim(); if (ref) payload.externalRef = ref.slice(0, 80); }
         try {
-            var res = await run('withdrawalResolve', { requestId: requestId, decision: decision, note: note });
-            if (res && res.already) toast('Ombi hili lilishafungwa na mtu mwingine (' + (res.status || '') + ').', 'info');
+            var res = await run('withdrawalResolve', payload);
+            if (res && res.needsSecondApproval) toast('Idhini ya kwanza imehifadhiwa. Admin MWINGINE athibitishe kabla pesa haijahesabiwa imelipwa.', 'info');
+            else if (res && res.already) toast('Ombi hili lilishafungwa na mtu mwingine (' + (res.status || '') + ').', 'info');
             else toast(decision === 'paid' ? 'Ombi limefungwa (paid).' : 'Ombi limekataliwa; salio limerudishwa.', 'success');
             window.skhAdminCCTab('withdrawals');
         } catch (e) { toast(errText(e), 'error'); }
