@@ -2234,6 +2234,9 @@ service cloud.firestore {
     // ---------------------------------------------------------------
     // DEFAULT: deny everything else.
     // ---------------------------------------------------------------
+    // [PILOT OPS 2026-11-14] written by Cloud Functions only; admins read
+    match /client_errors/{id} { allow read: if isAdmin(); allow write: if false; }
+    match /system_jobs/{id} { allow read: if isAdmin(); allow write: if false; }
     match /{document=**} { allow read, write: if false; }
   }
 }

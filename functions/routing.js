@@ -177,6 +177,23 @@ exports.deliveryRouteSweep = onCall({ region: REGION }, async (req) => {
     return { ok: true, swept: ids.size, results: results };
 });
 
+/* [SLA 2026-11-14] Ofa iliyoisha muda ilipitishwa kwa mgombea anayefuata TU mtu akifungua inbox
+ * (lazy). Usiku au wakala akiwa nje ya mtandao, safari ilikwama. Sasa server inapitia kila dk 5
+ * ofa 'offered' zilizopita expiresAt na kuziendesha kwa core.sweepRide ileile (iliyojaribiwa). */
+const { onSchedule } = require('firebase-functions/v2/scheduler');
+async function runOfferExpirySweep(nowMs) {
+    nowMs = nowMs || Date.now();
+    const snap = await db.collection('delivery_offers').where('status', '==', L.OFFER.OFFERED).limit(300).get();
+    const rides = new Set();
+    snap.forEach(d => { const o = d.data() || {}; const exp = Date.parse(o.expiresAt || ''); if (exp && exp <= nowMs && o.rideId) rides.add(String(o.rideId)); });
+    let swept = 0, errors = 0;
+    for (const rideId of rides) { try { await core.sweepRide(db, rideId); swept++; } catch (e) { errors++; } }
+    await db.doc('system_jobs/deliveryOfferExpiry').set({ lastRunAt: new Date(nowMs).toISOString(), expiredRides: rides.size, swept, errors }, { merge: true }).catch(() => {});
+    return { expiredRides: rides.size, swept, errors };
+}
+exports.deliveryOfferExpirySweep = onSchedule({ region: REGION, schedule: 'every 5 minutes', timeZone: 'Africa/Dar_es_Salaam' }, async () => { await runOfferExpirySweep(); });
+Object.defineProperty(exports, '_offerExpirySweepForTest', { enumerable: false, value: runOfferExpirySweep });
+
 // Rudia routing baada ya failed_assignment (mteja pekee).
 exports.deliveryRouteRetry = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);

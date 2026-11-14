@@ -1047,6 +1047,17 @@ exports.withdrawalResolve = onCall({ region: REGION }, async (req) => {
         throw new HttpsError('invalid-argument', 'Admin: andika sababu (note, angalau herufi 5).');
     }
     const reqRef = db.doc('withdrawal_requests/' + requestId);
+    // [DUAL-APPROVAL 2026-11-14] Kiwango kinawekwa na mmiliki: system/config.withdrawals.dualApprovalMin
+    // (TSh). Kisipowekwa, tabia ni ya zamani (admin mmoja). Kikiwekwa, "paid" ya kiasi >= kiwango
+    // inahitaji admin WAWILI tofauti; wa kwanza anaweka idhini ya kwanza tu, pesa haijaguswa.
+    let dualMin = null;
+    try {
+        const cfgSnap = await db.doc('system/config').get();
+        const w = ((cfgSnap.exists ? cfgSnap.data() : {}) || {}).withdrawals || {};
+        const n = Number(w.dualApprovalMin);
+        if (Number.isFinite(n) && n > 0) dualMin = n;
+    } catch (e) { /* config isiposomeka: tabia ya zamani */ }
+    const externalRef = String(data.externalRef || '').trim().slice(0, 80);
     let outcome = null;
     await db.runTransaction(async (t) => {
         const rs = await t.get(reqRef);
@@ -1056,6 +1067,20 @@ exports.withdrawalResolve = onCall({ region: REGION }, async (req) => {
         const amt = moneyOf(rd.amount);
         if (!(amt > 0)) throw new HttpsError('failed-precondition', 'Ombi halina kiasi sahihi.');
         const nowIso = new Date().toISOString();
+        if (decision === 'paid' && dualMin !== null && amt >= dualMin) {
+            if (!rd.firstApprovedBy) {
+                t.update(reqRef, { firstApprovedBy: auth.uid, firstApprovedAt: nowIso, firstApprovalNote: note, firstExternalRef: externalRef || null, awaitingSecondApproval: true });
+                t.set(db.collection('admin_audit_log').doc(), {
+                    action: 'WITHDRAWAL_FIRST_APPROVAL', actorUid: auth.uid, actorEmail: (auth.token && auth.token.email) || null, actorRole: 'admin',
+                    target: { kind: 'withdrawal_request', requestId }, details: { amount: amt, userId: rd.userId, note, dualApprovalMin: dualMin }, createdAt: nowIso
+                });
+                outcome = { already: false, status: 'pending', needsSecondApproval: true };
+                return;
+            }
+            if (rd.firstApprovedBy === auth.uid) {
+                throw new HttpsError('failed-precondition', 'Idhini ya pili lazima itoke kwa admin MWINGINE.');
+            }
+        }
         if (decision === 'rejected') {
             const refundKey = 'wdr_refund_' + safeKey(requestId);
             const rl = await t.get(db.doc('wallet_ledger/' + refundKey));
@@ -1068,7 +1093,8 @@ exports.withdrawalResolve = onCall({ region: REGION }, async (req) => {
                 t.update(db.doc('users/' + rd.userId), { walletBalance: FieldValue.increment(amt) });
             }
         }
-        t.update(reqRef, { status: decision, resolvedAt: nowIso, resolvedBy: auth.uid, resolutionNote: note });
+        t.update(reqRef, Object.assign({ status: decision, resolvedAt: nowIso, resolvedBy: auth.uid, resolutionNote: note, awaitingSecondApproval: false },
+            externalRef ? { externalRef } : {}));
         t.set(db.collection('admin_audit_log').doc(), {
             action: decision === 'paid' ? 'WITHDRAWAL_PAID' : 'WITHDRAWAL_REJECTED',
             actorUid: auth.uid, actorEmail: (auth.token && auth.token.email) || null, actorRole: 'admin',
@@ -1077,7 +1103,7 @@ exports.withdrawalResolve = onCall({ region: REGION }, async (req) => {
         });
         outcome = { already: false, status: decision };
     });
-    return { ok: true, requestId, status: outcome.status, already: outcome.already };
+    return { ok: true, requestId, status: outcome.status, already: outcome.already, needsSecondApproval: !!outcome.needsSecondApproval };
 });
 
 /* ============================================================
@@ -1845,6 +1871,7 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
         await db.collection(ESCROW_HOLDS).doc('ppinit_' + safeKey(orderTrackingId)).create({
             kind: 'pesapal_init', uid: req.auth.uid, amount: body.amount, merchantReference: orderTrackingId,
             pesapalTrackingId: String(data.order_tracking_id || ''), createdAt: new Date().toISOString(),
+            reconcileState: 'open', reconcileAttempts: 0,   // [RECONCILE 2026-11-14] pesapalReconcileSweep
             purpose: payPurpose, payKind: payKind, targetId: payTargetId || null
         });
     } catch (e) {
@@ -1997,6 +2024,58 @@ exports.pesapalIpn = onRequest({ region: REGION }, async (req, res) => {
 
     return res.status(200).type('application/json').send(JSON.stringify(ackBody));
 });
+
+/* ============================================================
+ * 7a) pesapalReconcileSweep — [RECONCILE 2026-11-14]
+ *     Mteja akilipa PesaPal kisha asirudi kwenye app NA IPN ikapotea, malipo yalibaki
+ *     bila kufungwa (oda 'payment_pending' ingawa pesa imekatwa). Kila dakika 10 server
+ *     inauliza PesaPal hali ya kila malipo yaliyoanzishwa (ppinit) yaliyo wazi zaidi ya
+ *     dakika 10, na yakithibitishwa inayafunga kwa njia ILEILE (settlePesaPalPayment —
+ *     idempotent, pptx_<id> moja tu). Baada ya saa 48 bila malipo: 'expired_unpaid'.
+ *     Hakuna pesa inayoundwa hapa; ushahidi ni GetTransactionStatus ya PesaPal pekee.
+ * ========================================================== */
+async function runPesapalReconcile(nowMs) {
+    nowMs = nowMs || Date.now();
+    const MIN_AGE = 10 * 60 * 1000, MAX_AGE = 48 * 60 * 60 * 1000;
+    const out = { checked: 0, settled: 0, alreadySettled: 0, expired: 0, unavailable: 0, stillOpen: 0 };
+    const snap = await db.collection(ESCROW_HOLDS).where('reconcileState', '==', 'open').limit(100).get();
+    for (const d of snap.docs) {
+        const h = d.data() || {};
+        const age = nowMs - (Date.parse(h.createdAt || '') || nowMs);
+        if (age < MIN_AGE) continue;
+        out.checked++;
+        const tid = String(h.pesapalTrackingId || '');
+        const nowIso = new Date(nowMs).toISOString();
+        const upd = { reconcileAttempts: FieldValue.increment(1), reconcileLastAt: nowIso };
+        try {
+            if (!tid) { upd.reconcileState = 'no_tracking_id'; await d.ref.update(upd); continue; }
+            const used = await db.collection(ESCROW_HOLDS).doc('pptx_' + safeKey(tid)).get();
+            if (used.exists) { upd.reconcileState = 'settled'; out.alreadySettled++; await d.ref.update(upd); continue; }
+            const tx = await ppVerifyTransaction(tid);
+            if (tx.paid) {
+                await settlePesaPalPayment(tx, 'reconcile');
+                const nowUsed = await db.collection(ESCROW_HOLDS).doc('pptx_' + safeKey(tid)).get();
+                upd.reconcileState = nowUsed.exists ? 'settled' : 'paid_unmatched';
+                if (nowUsed.exists) out.settled++;
+            } else if (tx.reason === 'pesapal_unavailable') {
+                out.unavailable++;
+            } else if (age > MAX_AGE) {
+                upd.reconcileState = 'expired_unpaid'; out.expired++;
+            } else { out.stillOpen++; }
+            await d.ref.update(upd);
+        } catch (e) {
+            console.warn('[pesapalReconcile]', d.id, e && e.message);
+            await d.ref.update({ reconcileLastAt: nowIso, reconcileLastError: String((e && e.message) || e).slice(0, 200) }).catch(() => {});
+        }
+    }
+    await db.doc('system_jobs/pesapalReconcile').set(Object.assign({ lastRunAt: new Date(nowMs).toISOString() }, out), { merge: true }).catch(() => {});
+    return out;
+}
+exports.pesapalReconcileSweep = onSchedule(
+    { region: REGION, schedule: 'every 10 minutes', timeZone: 'Africa/Dar_es_Salaam' },
+    async () => { await runPesapalReconcile(); }
+);
+Object.defineProperty(exports, '_pesapalReconcileForTest', { enumerable: false, value: runPesapalReconcile });
 
 /* ============================================================
  * 7b) pesapalRegisterIpn — kusajili URL ya IPN (admin pekee)
@@ -4132,6 +4211,8 @@ const routingEngine = require('./routing');
 exports.deliveryRouteBooking = routingEngine.deliveryRouteBooking;
 exports.deliveryOfferDecline = routingEngine.deliveryOfferDecline;
 exports.deliveryRouteSweep = routingEngine.deliveryRouteSweep;
+exports.deliveryOfferExpirySweep = routingEngine.deliveryOfferExpirySweep;
+Object.defineProperty(exports, '_offerExpirySweepForTest', { enumerable: false, value: routingEngine._offerExpirySweepForTest });
 exports.deliveryRouteRetry = routingEngine.deliveryRouteRetry;
 exports.deliveryReportTransportFault = routingEngine.deliveryReportTransportFault;
 exports.negotiationSendOffer = negotiationEngine.negotiationSendOffer;
@@ -4174,6 +4255,10 @@ const __searchIndex = require('./search-index');
 exports.catalogSearchIndexProducts = __searchIndex.catalogSearchIndexProducts;
 exports.catalogSearchIndexServices = __searchIndex.catalogSearchIndexServices;
 exports.adminSearchBackfill = __searchIndex.adminSearchBackfill;
+// [PILOT OPS 2026-11-14] money watch for admins + client error reports
+const __ops = require('./pilot-ops');
+exports.adminMoneyWatch = __ops.adminMoneyWatch;
+exports.clientErrorReport = __ops.clientErrorReport;
 // [R16] identity / business document verification (private documents, admin review, audit)
 const verificationEngine = require('./verification');
 ['verificationSubmit','adminVerificationQueue','adminVerificationDocUrls','adminVerificationDecide'].forEach(n => { exports[n] = verificationEngine[n]; });
