@@ -863,4 +863,21 @@ import { skh } from './00-bootstrap.js';
         });
     };
 
+    /* [PILOT OPS 2026-11-14] Kuzuia oda mbili kwa kubofya mara mbili: kila bofya liliunda
+     * ORD-<muda> mpya na token mpya, hivyo bofya la pili wakati la kwanza bado linaendelea
+     * lingeweza kuunda oda/malipo ya pili. Sasa bofya la pili hupuuzwa hadi la kwanza limalizike. */
+    (function () {
+        var inner = window.confirmSmartCartOrder;
+        if (typeof inner !== 'function' || inner.__skhLocked) return;
+        var busy = false;
+        var locked = async function () {
+            if (busy) { if (typeof window.skhToast === 'function') window.skhToast('Oda yako inashughulikiwa — subiri kidogo.', 'info', 3000); return; }
+            busy = true;
+            try { return await inner.apply(this, arguments); }
+            finally { busy = false; }
+        };
+        locked.__skhLocked = true;
+        window.confirmSmartCartOrder = locked;
+    })();
+
 })();
