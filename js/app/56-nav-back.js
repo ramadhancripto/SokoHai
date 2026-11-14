@@ -168,7 +168,9 @@ import { skh } from './00-bootstrap.js';
        hatua isiyobadilisha chochote inarukwa. Hakuna router mpya — ni rundo hili hili. */
     var H = { i: 0, tab: 'home', restoring: 0, lastClosed: null, disp: {}, closedAt: {}, intent: 0 };
     var REOPEN = { productModal: 1, cartModal: 1, chatListModal: 1, sellerProfileModal: 1,
-                   notifModal: 1, savedItemsModal: 1, buyerOrdersModal: 1, categoryModal: 1 };
+                   notifModal: 1, savedItemsModal: 1, buyerOrdersModal: 1, categoryModal: 1,
+                   // [NAV 2026-11-14] own profile / My SokoHai: Back from a screen opened there returns to it
+                   myProfileModal: 1, mySokoHaiModal: 1 };
     try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
 
     function key(e) { return (e.type === 'modal' ? '' : e.type + ':') + e.id; }
@@ -260,6 +262,18 @@ import { skh } from './00-bootstrap.js';
             }
         }
         if (entry.type === 'modal') { var el = byId(entry.id); if (el && el.style.display && el.style.display !== 'none') H.disp[entry.id] = el.style.display; }
+        /* [NAV 2026-11-14] The account menu (drawer) closes when you go somewhere from it, for EVERY
+           destination, and Back does not reopen it (mobile drawer pattern). Before, it depended on the
+           destination: product/Live/notifications stayed above an open drawer (Back -> drawer again),
+           cart/orders closed it (Back -> page). */
+        if (entry.type === 'modal' && entry.id !== 'sidebarMenuModal' && entry.id !== 'authModal') {
+            var di = -1; stack.forEach(function (e, i) { if (e.type === 'modal' && e.id === 'sidebarMenuModal') di = i; });
+            if (di !== -1) {
+                stack.splice(di, 1);
+                var dm = byId('sidebarMenuModal'); if (dm && isOpen(dm)) { dm.style.display = 'none'; if (dm.classList) dm.classList.remove('open'); }
+                try { var bs = baseState(); if (bs.skhNav) history.replaceState(Object.assign({}, bs, { ov: (bs.ov || []).filter(function (k) { return k !== 'sidebarMenuModal' && k !== '~sidebarMenuModal'; }) }), ''); } catch (e) {}
+            }
+        }
         stack.push(entry);
         if (stack.length > MAX) stack.shift();
         writeState(true);
@@ -269,6 +283,7 @@ import { skh } from './00-bootstrap.js';
     function prune() {
         var before = stack.length;
         stack = stack.filter(function (e) {
+            if (e.mini && e.under) return !!byId('lvxMini');          // mini player closed by the user -> forget the room
             if (e.type !== 'modal' || e.under) return true;
             var el = byId(e.id);
             return el && isOpen(el);
@@ -293,6 +308,12 @@ import { skh } from './00-bootstrap.js';
     }
     function reveal() {
         var top = stack[stack.length - 1];
+        if (top && top.under && top.mini) {
+            top.under = false; top.mini = false;
+            if (byId('lvxMini') && typeof window.skhLiveMiniRestore === 'function') { try { window.skhLiveMiniRestore(); } catch (e) {} }
+            else stack.pop();
+            return;
+        }
         if (top && top.under) {
             var el = byId(top.id);
             top.under = false;
@@ -327,6 +348,14 @@ import { skh } from './00-bootstrap.js';
         }
     }
     window.skhNavSettle = settle;
+    /* [NAV 2026-11-14] A screen opened from the Live room shrinks the room to the mini player (the
+       session keeps running; 81-absolute-one-ui-live). The room stays on the stack UNDER the new
+       screen, so Back brings the full room back instead of leaving the page with a floating mini
+       player. If the user closes the mini player, prune() forgets the room. */
+    window.skhNavMarkRoomUnder = function () {
+        stack.forEach(function (e) { if (e.type === 'modal' && e.id === 'lvxRoom' && !e.under) { e.under = true; e.mini = true; } });
+    };
+
 
     window.skhNavPush = push;
     window.skhNavDepth = function () { return stack.length; };
@@ -542,13 +571,18 @@ import { skh } from './00-bootstrap.js';
                 changed = true;
             }
             prune();
-            var wanted = function (e) { return want.indexOf((e.under ? '~' : '') + key(e)) !== -1 || (e.under && want.indexOf(key(e)) !== -1); };
+            /* [NAV 2026-11-14] '~X' = X was open UNDER another screen at that step. Once the screen on
+               top of it is closed (Back), X is revealed and is no longer "under" — it is still wanted.
+               Before, the revealed X was closed too, so Back from e.g. cart / seller page / orders
+               opened over product details went straight to the page instead of back to details. */
+            var wanted = function (e) { return want.indexOf(key(e)) !== -1 || want.indexOf('~' + key(e)) !== -1; };
             for (var g = 0; g < 25 && stack.length && stack.some(function (e) { return !wanted(e); }); g++) {
                 window.skhCloseTop(); changed = true; prune();
             }
             // fungua tena overlay zilizotakiwa ambazo hazipo (Forward, au ukurasa uliofunikwa)
-            want.forEach(function (k) {
-                var under = k.charAt(0) === '~', id = under ? k.slice(1) : k;
+            want.forEach(function (k, idx) {
+                // an "under" marker only matters when something is still meant to be above it
+                var id = k.charAt(0) === '~' ? k.slice(1) : k, under = k.charAt(0) === '~' && idx < want.length - 1;
                 if (id.indexOf(':') !== -1) return;                   // dashboards hazirudishwi
                 if (stack.some(function (e) { return e.type === 'modal' && e.id === id; })) return;
                 var el = byId(id); if (!el) return;

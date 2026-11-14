@@ -411,6 +411,7 @@ import { skh } from './00-bootstrap.js';
             if(__top === 'lvxRoom' && lvRoom && !lvRoom.hidden && !byId('lvxMini')
                && lvRoom.querySelector('.lv7-stage')
                && typeof window.skhLiveMinimize === 'function'){
+              if (typeof window.skhNavMarkRoomUnder === 'function') window.skhNavMarkRoomUnder();   // [NAV 2026-11-14] Back -> full room
               window.skhLiveMinimize();
               // body.lvx-open (overflow lock) is stale now that the room is hidden
               if(!document.querySelector('.lvx-overlay:not([hidden])')) document.body.classList.remove('lvx-open');
