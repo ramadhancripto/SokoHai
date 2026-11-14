@@ -12,6 +12,7 @@ const ev = (p, fn, arg) => p.evaluate(fn, arg);
   const asha = (await L.admin.auth().getUserByEmail('buyer.review@sokohai.test')).uid;
   await L.db.doc('users/' + juma).set({ businessSetupComplete: true, businessName: 'Juma Electronics', isSeller: true }, { merge: true });
   const now = Date.now(), img = L.BASE + '/assets/img/categories/elektroniki.webp';
+  const pdStart = now - 10 * 60000; // pd1.modeData.startTime below
   await L.db.doc('products/auc1').set({ userId: juma, ownerName: 'Juma Electronics', sellerName: 'Juma Electronics', title: 'Simu Samsung A54 · mnada demo', category: 'CAT-11', price: 300000, stock: 1, publicationStatus: 'published', availabilityStatus: 'available', image: img, imagesArray: [img], saleMode: 'auction', modeData: { mode: 'auction', startTime: now - 60000, endTime: now + 2 * 3600000, minIncrement: 5000 }, createdAt: new Date().toISOString() });
   await L.db.doc('products/pd1').set({ userId: juma, ownerName: 'Juma Electronics', sellerName: 'Juma Electronics', title: 'Spika JBL · bei kushuka demo', category: 'CAT-11', price: 200000, stock: 5, publicationStatus: 'published', availabilityStatus: 'available', image: img, imagesArray: [img], saleMode: 'price_drop', modeData: { mode: 'price_drop', startTime: now - 10 * 60000, intervalMs: 60000, dropAmount: 1000, minPrice: 150000, endTime: now + 3 * 3600000, maxPerBuyer: 2 }, createdAt: new Date().toISOString() });
   await L.db.doc('stories/st1').set({ authorUid: juma, authorName: 'Juma Electronics', kind: 'image', mediaUrl: img, caption: 'TV mpya zimefika dukani leo', listing: { col: 'products', id: 'tv55a', title: 'Samsung Smart TV 55 inch', price: 1250000 }, visibility: 'public', status: 'active', viewCount: 0, createdAt: new Date(now - 3600000).toISOString(), expiresAt: new Date(now + 20 * 3600000).toISOString(), expiresAtMs: now + 20 * 3600000 });
@@ -30,17 +31,23 @@ const ev = (p, fn, arg) => p.evaluate(fn, arg);
     L.assert((await L.call(S.p, 'liveStart', { sessionId: auc })).ok, 'start'); });
   await L.step('home quick action "Live sasa" opens the hub with the live listed', async () => {
     await ev(B.p, () => window.updateApp('home')); await B.p.waitForTimeout(1500);
-    await B.p.click('[data-skh-live-entry]'); await B.p.waitForSelector('#lvxHub .lvx-card', { timeout: 15000 });
-    const n = await B.p.$$eval('#lvxHub .lvx-card', e => e.length); await shot(B.p, '01-live-hub'); return n + ' live'; });
+    // [PILOT 2026-11-14] R13-D redesign: hub cards are .lvh-card; the home quick-action row is desktop-only
+    // (html/17-sliders "desktop: njia sita"), on a phone the same entry lives in the sidebar drawer.
+    const deskEntry = await ev(B.p, () => { const e = document.querySelector('[data-skh-live-entry]'); return !!(e && (e.offsetWidth || e.offsetHeight)); });
+    if (deskEntry) await B.p.click('[data-skh-live-entry]');
+    else { await ev(B.p, () => window.openSidebarMenu ? window.openSidebarMenu() : (window.toggleSidebar && window.toggleSidebar())); await B.p.waitForTimeout(800); await B.p.click('.skh-menu-live-row'); }
+    await B.p.waitForSelector('#lvxHub .lvh-card', { timeout: 15000 });
+    const n = await B.p.$$eval('#lvxHub .lvh-card', e => e.length); await shot(B.p, '01-live-hub'); return n + ' live'; });
   await L.step('buyer joins the room, sends a comment that the seller sees in real time', async () => {
-    await ev(B.p, id => window.skhLiveOpen(id), live); await B.p.waitForSelector('#lvxRoom .lvx-prod', { timeout: 15000 });
+    await ev(B.p, () => window.skhLiveClose && window.skhLiveClose('lvxHub'));
+    await ev(B.p, id => window.skhLiveOpen(id), live); await B.p.waitForSelector('#lvxRoom #lvxChatInput', { timeout: 15000 });
     await ev(S.p, id => window.skhLiveOpen(id), live); await S.p.waitForSelector('#lvxRoom', { timeout: 15000 });
-    await B.p.fill('#lvxRoom .lvx-chat-form input', 'Bei ya TV ni ngapi?'); await B.p.press('#lvxRoom .lvx-chat-form input', 'Enter');
+    await B.p.fill('#lvxChatInput', 'Bei ya TV ni ngapi?'); await B.p.press('#lvxChatInput', 'Enter');
     await S.p.waitForFunction(() => /Bei ya TV ni ngapi/.test((document.getElementById('lvxComments') || {}).textContent || ''), null, { timeout: 15000 });
     const v = (await L.db.doc('live_sessions/' + live).get()).data().viewerCount; await shot(B.p, '02-live-room'); await shot(S.p, '02b-live-room-host'); return 'viewers=' + v; });
   await L.step('host pins a product; buyer sees the pinned card', async () => {
     const r = await L.call(S.p, 'livePin', { sessionId: live, productId: 'tv55a' }); L.assert(r.ok, JSON.stringify(r));
-    await B.p.waitForSelector('#lvxPinned .lvx-pin-card', { timeout: 15000 }); });
+    await B.p.waitForFunction(() => { const c = document.querySelector('#lvxPinned .lv7-pcard'); return c && /Samsung/.test(c.textContent); }, null, { timeout: 15000 }); });
   await L.step('product opens ON TOP of the live (room stays)', async () => {
     await ev(B.p, () => window.skhLiveOpenProduct('tv55a')); await B.p.waitForFunction(() => { const m = document.getElementById('productModal'); return m && getComputedStyle(m).display !== 'none' && window.skh.currentOpenProduct && window.skh.currentOpenProduct.id === 'tv55a'; }, null, { timeout: 15000 });
     await B.p.waitForTimeout(1500); await shot(B.p, '03-product-over-live');
@@ -51,15 +58,19 @@ const ev = (p, fn, arg) => p.evaluate(fn, arg);
     const r = await L.call(S.p, 'livePin', { sessionId: live, productId: 'pd1' }); L.assert(r.ok, 'pin');
     await B.p.waitForFunction(() => /Spika/.test((document.getElementById('lvxPinned') || {}).textContent || ''), null, { timeout: 15000 }); await B.p.waitForTimeout(1500);
     const t = await ev(B.p, () => document.querySelector('#lvxPinned .lvx-price').textContent); await shot(B.p, '04-price-drop-live');
-    L.assert(/19[0-9],\d{3}/.test(t), 'price ' + t); return t.trim(); });
+    // exact server formula (base 200,000, -1,000 per minute since start, floor 150,000) at the moment of reading, +-1 step
+    const shown = Number(String(t).replace(/[^0-9]/g, '')), steps = Math.floor((Date.now() - pdStart) / 60000);
+    const ok = [steps - 1, steps, steps + 1].some(k => shown === Math.max(150000, 200000 - k * 1000));
+    L.assert(ok, 'price ' + t + ' expected ~' + Math.max(150000, 200000 - steps * 1000)); return t.trim(); });
   await L.step('host ends the live; buyer comment refused after end', async () => {
     L.assert((await L.call(S.p, 'liveEnd', { sessionId: live })).ok, 'end');
     const r = await L.call(B.p, 'liveComment', { sessionId: live, text: 'bado?', clientId: 'x1' }); L.assert(!r.ok, 'comment after end accepted'); return r.message; });
   await L.step('auction room: bid below minimum refused, valid bid shown in real time', async () => {
     await ev(B.p, () => window.skhLiveClose && window.skhLiveClose('lvxRoom')); await ev(B.p, () => window.skhAuctionRoom('auc1'));
-    await B.p.waitForSelector('#lvxRoom .lvx-bid input', { timeout: 15000 });
+    await B.p.waitForSelector('#lv7BidCta', { timeout: 15000 });
     const low = await L.call(B.p, 'auctionPlaceBid', { productId: 'auc1', amount: 301000, clientBidId: 'b0' }); L.assert(!low.ok, 'low bid accepted');
-    await B.p.fill('#lvxRoom .lvx-bid input', '320000'); await B.p.click('#lvxRoom .lvx-bid button');
+    await B.p.click('#lv7BidCta'); await B.p.waitForSelector('#lvBidAmt', { timeout: 15000 });
+    await B.p.fill('#lvBidAmt', '320000'); await B.p.click('#lvBidGo');
     await B.p.waitForFunction(() => /320,000/.test((document.getElementById('lvxBidNow') || {}).textContent || ''), null, { timeout: 15000 });
     await B.p.waitForTimeout(800); await shot(B.p, '05-auction-room'); return 'low refused: ' + low.message; });
   await L.step('product page has "Fungua chumba cha mnada"', async () => {
