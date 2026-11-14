@@ -21,4 +21,12 @@ ok('single word still mapped', $('f') === 'Rudi', $('f'));
 ok('listing title (data) untouched', $('g') === 'Home Theatre Settings Kit', $('g'));
 ok('Settings -> Mipangilio', $('h') === 'Mipangilio', $('h'));
 ok('Buyer Dashboard -> Dashibodi ya Mnunuzi', $('i') === 'Dashibodi ya Mnunuzi', $('i'));
+// [NAV SWEEP 2026-11-14] English sweep must be idempotent: "Bidhaa" used to grow "(Product)" every time.
+const dom2 = new JSDOM(`<!doctype html><body><span id="x">Bidhaa Sokoni</span><span id="y">Muuzaji wa Bidhaa</span></body>`, { runScripts: 'outside-only', url: 'http://localhost/' });
+const w2 = dom2.window; w2.localStorage.setItem('sokohai_lang', 'en');
+w2.eval(fs.readFileSync(path.join(ROOT, 'js/22-humanize.js'), 'utf8'));
+w2.skhLangSweep(w2.document.body); const once = w2.document.body.textContent;
+for (let i = 0; i < 4; i++) w2.skhLangSweep(w2.document.body);
+const many = w2.document.body.textContent;
+ok('English sweep is idempotent (5 sweeps = 1 sweep)', once === many && !/\(Product\)\s*\(Product\)/.test(many), once + ' || ' + many);
 console.log(`\nLANGUAGE SWEEP: ${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

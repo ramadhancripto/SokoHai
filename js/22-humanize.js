@@ -46,6 +46,10 @@
     // sw -> en (kinyume; hutumika lugha ikiwa EN)
     var SW2EN = {};
     Object.keys(EN2SW).forEach(function (k) { if (!SW2EN[EN2SW[k]]) SW2EN[EN2SW[k]] = k; });
+    // [NAV SWEEP 2026-11-14] A rule whose result still contains its own source text is applied again
+    // on every sweep ("Bidhaa" -> "Bidhaa (Product)" -> "Bidhaa (Product) (Product)" ...). The menu
+    // grew a new "(Product)" each time it was shown. Such rules are dropped so a sweep is idempotent.
+    [EN2SW, SW2EN].forEach(function (m) { Object.keys(m).forEach(function (k) { if (String(m[k]).indexOf(k) !== -1 && m[k] !== k) delete m[k]; }); });
     var byLen = function (a, b) { return b.length - a.length; };
     var EN2SW_KEYS = Object.keys(EN2SW).sort(byLen), SW2EN_KEYS = Object.keys(SW2EN).sort(byLen);
 
