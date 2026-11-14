@@ -9,6 +9,7 @@ import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPas
 import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
+import '../../shared/search-tokens.js'; // [SEARCH 2026-11-14] globalThis.SKHSearchTokens
 import { categoryFilterValues, categoryMatches, canonicalCategoryId, categoryInfo, buyerSubcategories, buyerProductCategories, legacySubcategoriesFor, categoryLabel } from '../../shared/category-filter-core.mjs';
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, normalizeConcreteVariantCombinations, normalizeTaxonomyMetadata, normalizeProductUploadData, resolveVariantImages, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
@@ -1946,6 +1947,33 @@ skh.loadMarketSearchSignals = function loadMarketSearchSignals() {
     }).catch(function () { return skh._marketSearchTerms; }).finally(function () { skh._marketSearchLoading = false; });
 };
 
+skh._catalogSearchAugment = async function (base, collectionToFetch, gen, feedGrid) {
+    const ST = globalThis.SKHSearchTokens;
+    const q = String(skh.searchQuery || '').trim();
+    if (!ST || !q) return;
+    const toks = ST.queryTokens(q);
+    if (!toks.length) return;
+    const cols = collectionToFetch === 'all' ? ['products', 'services'] : (['products', 'services'].indexOf(collectionToFetch) !== -1 ? [collectionToFetch] : []);
+    if (!cols.length) return;
+    const have = {}; (base || []).forEach(d => { have[(d.collectionName || '') + '/' + d.id] = 1; });
+    const extra = [];
+    for (const col of cols) {
+        try {
+            const snap = await skh.getDocs(skh.query(skh.collection(skh.db, col), skh.where('searchTokens', 'array-contains-any', toks), skh.limit(60)));
+            snap.forEach(d => {
+                const it = Object.assign({ id: d.id, collectionName: col }, d.data());
+                if (have[col + '/' + it.id]) return;
+                if (col === 'products' && typeof skh.productEligible === 'function' && !skh.productEligible(it)) return;
+                extra.push(it);
+            });
+        } catch (e) { console.warn('[search] catalogue query', (e && e.code) || e); }
+    }
+    // ukurasa mwingine / swali jingine limeshaanza — usichore juu yake
+    if (!extra.length || gen !== skh._feedGen || String(skh.searchQuery || '').trim() !== q) return;
+    skh._catalogSearchExtra = extra.length;
+    skh.renderFeedUI((base || []).concat(extra), feedGrid);
+};
+
 skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     const feedGrid = document.getElementById('mainFeed'); 
     if(!feedGrid) return;
@@ -1977,6 +2005,13 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
        yalikuwa yanachora juu ya ukurasa mpya. Sasa ukurasa ulioonyeshwa ndio pekee
        unaochorwa; listener ya collection nyingine inazimwa. */
     var __feedGen = skh._feedGen = (skh._feedGen || 0) + 1;
+    /* [SEARCH 2026-11-14] Utafutaji wa katalogi NZIMA: kuchora kwanza kilichopo (haraka), kisha
+       kuuliza Firestore kwa `searchTokens` (array-contains-any) na kuongeza matangazo ya zamani
+       yanayolingana — si 20–100 za karibuni pekee. */
+    const __paint = (arr) => {
+        skh.renderFeedUI(arr, feedGrid);
+        try { skh._catalogSearchAugment(arr, collectionToFetch, __feedGen, feedGrid); } catch (eS) {}
+    };
     try {
         var __shownKey = skh._feedCacheKey(collectionToFetch);
         skh._feedShownKey = __shownKey;
@@ -1990,7 +2025,7 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
         var __early = skh._feedCacheGet(__earlyKey);
         if (__early && __early.length) {
             skh.cachedItems = __early;
-            skh.renderFeedUI(__early, feedGrid);
+            __paint(__early);
             return;
         }
     } catch (eCache) {}
@@ -2031,7 +2066,7 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
         const cached = skh._feedCacheGet(cacheKey);
         if (cached) {
             skh.cachedItems = cached;
-            skh.renderFeedUI(cached, feedGrid);
+            __paint(cached);
             return;
         }
         const safeSnap = (q) => skh.getDocs(q).catch(() => ({ empty: true, forEach() {}, docs: [] }));
@@ -2053,7 +2088,7 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
             if (__feedGen !== skh._feedGen || skh._feedShownKey !== cacheKey) return; // [NAV] tab nyingine imeshafunguliwa
             // Hapa ndipo tunazihifadhi kwenye kumbukumbu ya App
             skh.cachedItems = combinedData;
-            skh.renderFeedUI(combinedData, feedGrid);
+            __paint(combinedData);
         }).catch((err) => {
             showFeedError((err && err.message) ? err.message : 'Angalia muunganisho wa mtandao.');
         });
@@ -2064,7 +2099,7 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     const cached = skh._feedCacheGet(cacheKey);
     if (cached) {
         skh.cachedItems = cached;
-        skh.renderFeedUI(cached, feedGrid);
+        __paint(cached);
         return;
     }
 
@@ -2135,7 +2170,7 @@ let qNormal;
         normalData = sortByCreated(normalData).slice(0, skh.currentLimit);
         skh._feedCacheSet(cacheKey, normalData);
         if (skh._feedShownKey !== cacheKey) return; // [NAV] ukurasa mwingine unaonyeshwa sasa
-        skh.renderFeedUI(normalData, feedGrid);
+        __paint(normalData);
     }, (err) => {
         if (skh._feedShownKey !== cacheKey) return;
         showFeedError((err && err.message) ? err.message : 'Angalia muunganisho wa mtandao.');
@@ -2952,7 +2987,9 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             const extra = (data.vehicleType || '') + ' ' + (Array.isArray(data.supportedServices) ? data.supportedServices.join(' ') : '');
             // [R10] every word must match (any order): "samsung tv" finds "Samsung Smart TV 55".
             const hay = title + ' ' + desc + ' ' + cat + ' ' + extra.toLowerCase();
-            return hay.includes(query) || query.split(' ').every(w => hay.includes(w));
+            if (hay.includes(query) || query.split(' ').every(w => hay.includes(w))) return true;
+            // [SEARCH 2026-11-14] maneno sawa (simu = phone) na mwanzo wa neno kupitia searchTokens
+            return !!(globalThis.SKHSearchTokens && globalThis.SKHSearchTokens.matches(data, query, hay));
         });
     }
 

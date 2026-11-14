@@ -147,9 +147,16 @@ service cloud.firestore {
         && d.get('modeData', {}).get('queueClosed', null) == null
         && d.get('modeData', {}).get('queueEntries', 0) == 0;
     }
+    // [SEARCH 2026-11-14] searchTokens are written by Cloud Functions only (catalogSearchIndex):
+    // a client may not create them and may only keep them unchanged or drop them on update.
+    function searchTokensUntouched() {
+      return !('searchTokens' in request.resource.data)
+        || (resource != null && request.resource.data.searchTokens == resource.data.get('searchTokens', null));
+    }
     match /products/{id} {
       allow read: if true;
       allow create: if signedIn() && validProduct(request.resource.data)
+        && !('searchTokens' in request.resource.data)
         && request.resource.data.stock == 0
         && request.resource.data.get('openingStockPending', false) == true
         && request.resource.data.get('reservedStock', 0) == 0
@@ -172,6 +179,7 @@ service cloud.firestore {
           || isAdmin());
       allow update: if ownsProduct(resource.data) && validProduct(request.resource.data)
         && request.resource.data.userId == resource.data.userId
+        && searchTokensUntouched()
         // [PHASE 9 B-18] admin changing another seller's listing must sign it
         // (productsAdminAudit logs it); nobody may sign as someone else.
         && (resource.data.userId == request.auth.uid
@@ -248,6 +256,7 @@ service cloud.firestore {
     match /services/{id} {
       allow read: if true;
       allow create: if signedIn() && validService(request.resource.data)
+        && !('searchTokens' in request.resource.data)
         && !request.resource.data.keys().hasAny(['providerVerified','moderationStatus','adminHidden','isBoosted','boostExpiresAt','boostPaidRef'])
         && (isAdmin() || !request.resource.data.keys().hasAny(listingTrustKeys()))
         && !('trust' in request.resource.data)
@@ -256,6 +265,7 @@ service cloud.firestore {
           || isAdmin());
       allow update: if ownsService(resource.data) && validService(request.resource.data)
         && request.resource.data.userId == resource.data.userId
+        && searchTokensUntouched()
         && (isAdmin() || unchanged(['providerVerified','moderationStatus','adminHidden','isBoosted','boostTargetViews','boostedViewsCount','boostDays','boostedAt','boostExpiresAt','boostPaidRef','boostPrice']))
         && (isAdmin() || unchanged(listingTrustKeys()))
         && unchanged(['trust']);

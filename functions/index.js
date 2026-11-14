@@ -4169,6 +4169,11 @@ const groupSoko = require('./group-soko');
 ['groupSokoCreate','groupSokoInvite','groupSokoAccept','groupSokoCapitalRecord','groupSokoCapitalConfirm','groupSokoPropose','groupSokoVote','groupSokoExecute','groupSokoPurchaseStep','groupSokoAttachProduct','groupSokoReport'].forEach(n => { exports[n] = groupSoko[n]; });
 // [R16] owner setup checklist (booleans only, never secrets)
 exports.adminSetupStatus = require('./setup-status').adminSetupStatus;
+// [SEARCH 2026-11-14] catalogue search index (triggers + admin backfill)
+const __searchIndex = require('./search-index');
+exports.catalogSearchIndexProducts = __searchIndex.catalogSearchIndexProducts;
+exports.catalogSearchIndexServices = __searchIndex.catalogSearchIndexServices;
+exports.adminSearchBackfill = __searchIndex.adminSearchBackfill;
 // [R16] identity / business document verification (private documents, admin review, audit)
 const verificationEngine = require('./verification');
 ['verificationSubmit','adminVerificationQueue','adminVerificationDocUrls','adminVerificationDecide'].forEach(n => { exports[n] = verificationEngine[n]; });
