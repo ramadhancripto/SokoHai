@@ -97,6 +97,16 @@ await test('B2 threshold set: first admin = first approval only; same admin refu
   ok(r3.ok && r3.data.status === 'paid', JSON.stringify(r3));
   const audit = await db.collection('admin_audit_log').where('action', '==', 'WITHDRAWAL_FIRST_APPROVAL').limit(5).get(); ok(!audit.empty, 'no first-approval audit');
 });
+await test('B0 a super admin known only by SUPER_ADMIN_EMAILS (verified e-mail, no claim) may resolve withdrawals', async () => {
+  const prev = process.env.SUPER_ADMIN_EMAILS; process.env.SUPER_ADMIN_EMAILS = 'owner.only@sokohai.test';
+  try {
+    const id = await newWithdrawal('wdS' + T, 9000);
+    const no = await call('withdrawalResolve', 'imp' + T, { requestId: id, decision: 'paid', note: 'si admin' }, { email: 'owner.only@sokohai.test', email_verified: false });
+    ok(!no.ok && no.code === 'permission-denied', 'unverified e-mail accepted ' + JSON.stringify(no));
+    const r = await call('withdrawalResolve', 'own' + T, { requestId: id, decision: 'paid', note: 'mmiliki amelipa' }, { email: 'owner.only@sokohai.test' });
+    ok(r.ok && r.data.status === 'paid', JSON.stringify(r));
+  } finally { if (prev === undefined) delete process.env.SUPER_ADMIN_EMAILS; else process.env.SUPER_ADMIN_EMAILS = prev; }
+});
 await test('B3 below threshold: one admin; reject never needs two (money goes back)', async () => {
   const small = await newWithdrawal('wdC' + T, 20000);
   ok((await call('withdrawalResolve', ADM1, { requestId: small, decision: 'paid', note: 'ndogo sawa' }, A1)).data.status === 'paid', 'small');

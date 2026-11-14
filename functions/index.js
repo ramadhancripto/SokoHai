@@ -167,7 +167,11 @@ function isAdmin(context) {
     // (email_verified) — vinginevyo mtu angesajili akaunti kwa email hiyo.
     if (em && context.auth.token.email_verified === true && ADMIN_EMAILS().includes(em)) return true;
     const tk = context.auth.token || {};
-    return tk.admin === true || tk.superAdmin === true || tk.role === 'admin';
+    if (tk.admin === true || tk.superAdmin === true || tk.role === 'admin') return true;
+    // [PILOT 2026-11-14] A super admin (SUPER_ADMIN_EMAILS, verified e-mail) is an admin everywhere.
+    // Before, admin-authority.js accepted the owner but these index.js callables (withdrawals,
+    // disputes, payment reviews...) refused them unless ADMIN_EMAILS or a custom claim was also set.
+    try { return require('./admin-authority')._internal.isSuperAdmin(context); } catch (e) { return false; }
 }
 
 /* ============================================================
