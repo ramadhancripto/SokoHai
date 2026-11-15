@@ -78,13 +78,57 @@
     window.skhUploadSignature = async function (resourceType, folder) {
         try {
             var s = window.skh;
-            if (!s || typeof s.wrapCallable !== 'function') return { error: 'functions_unavailable' };
+            if (!s || typeof s.wrapCallable !== 'function') return { error: 'functions_unavailable', code: 'unavailable' };
             var r = await s.wrapCallable('uploadSignature')({ resourceType: resourceType || 'image', folder: folder || '' });
-            return (r && r.data) || { error: 'empty' };
+            return (r && r.data) || { error: 'empty', code: 'internal' };
         } catch (e) {
-            return { error: String((e && (e.message || e.code)) || e) };
+            // [UPLOAD 2026-11-15] keep the server's CODE, not only its text: the caller must tell
+            // "you are not logged in" apart from "the signing service is not reachable".
+            var code = String((e && e.code) || '').replace(/^functions\//, '') || 'unknown';
+            return { error: String((e && (e.message || e.code)) || e), code: code };
         }
     };
+
+    /* [UPLOAD 2026-11-15] ROOT CAUSE (seen live on sokohaicom.netlify.app, 15 Nov):
+       every photo upload — product, service, post, profile, comment, ad — asks the server for a
+       signature first (uploadSignature). When that Cloud Function is NOT REACHABLE (not deployed:
+       europe-west1-<project>.cloudfunctions.net/uploadSignature answers 404; or the local emulator is
+       down), the uploader said "Seva imekataa… Hakikisha umeingia (login)" even for a logged-in
+       seller, and nothing could be published.
+       Now:
+        - signing service unreachable/missing + user logged in -> upload with the public preset (the
+          server's own "transition" mode does exactly this; Cloudinary still enforces the preset);
+          private identity documents never fall back;
+        - "unauthenticated" while the app shows a logged-in user -> refresh the login token once and
+          retry; only then ask to log in again;
+        - every other server refusal (suspended, quota, signed-only) is shown with its real reason. */
+    var SIGN_UNREACHABLE = { unavailable: 1, 'not-found': 1, internal: 1, 'deadline-exceeded': 1, unknown: 1, cancelled: 1 };
+    function signedInUser() { var s = window.skh; return (s && (s.currentUser || (s.auth && s.auth.currentUser))) || null; }
+    async function signatureFor(resource, folder) {
+        var sig = await window.skhUploadSignature(resource, folder);
+        if (sig && sig.error && sig.code === 'unauthenticated' && signedInUser()) {
+            try { await signedInUser().getIdToken(true); } catch (e) { /* token haikuweza kufanywa upya */ }
+            sig = await window.skhUploadSignature(resource, folder);
+        }
+        return sig;
+    }
+    function signFailure(sig, folder) {
+        var code = (sig && sig.code) || 'unknown';
+        var identity = /identity/i.test(String(folder || ''));
+        if (code === 'unauthenticated') {
+            return signedInUser()
+                ? { code: 'session_expired', message: 'Muda wa kuingia umeisha au huduma ya kuingia haipatikani. Toka (logout), ingia tena, kisha ujaribu tena.' }
+                : { code: 'not_logged_in', message: 'Ingia (login) kwanza ili kupandisha picha.' };
+        }
+        if (SIGN_UNREACHABLE[code] && signedInUser() && !identity) return null;        // -> unsigned fallback
+        if (SIGN_UNREACHABLE[code]) {
+            return identity
+                ? { code: 'server_unavailable', message: 'Huduma salama ya kupakia nyaraka haipatikani kwa sasa. Jaribu tena baadaye.' }
+                : { code: 'not_logged_in', message: 'Ingia (login) kwanza ili kupandisha picha.' };
+        }
+        return { code: code, message: 'Seva imekataa kupandisha picha: ' + String((sig && sig.error) || code).replace(/^FirebaseError:\s*/, '') };
+    }
+    window.skhUploadSignFailure = signFailure;
 
     // [REPAIR 2026-11-01] Upload failures are now REPORTED, never swallowed.
     // Callers can read window.skhUploadLastError to show a true message instead
@@ -107,7 +151,18 @@
             fd.append('file', file);
             let resource = opts.resourceType || 'auto';
             let cloud = window.SOKOHAI_UPLOADS.cloud;
-            const sig = await window.skhUploadSignature(resource, opts.folder);
+            const sig = await signatureFor(resource, opts.folder);
+            let fallback = false;
+            if (!(sig && (sig.mode === 'signed' || sig.mode === 'unsigned'))) {
+                const why = signFailure(sig, opts.folder);
+                if (why) {
+                    console.error('skhUploadFromFile: upload imekataliwa na server', sig && sig.code, sig && sig.error);
+                    return uploadFail(why.code, why.message);
+                }
+                fallback = true;
+                console.warn('skhUploadFromFile: huduma ya saini haipatikani (' + (sig && sig.code) + ') — preset ya umma inatumika');
+            }
+            window.skhUploadMode = fallback ? 'unsigned-fallback' : (sig && sig.mode);
             if (sig && sig.mode === 'signed') {
                 cloud = sig.cloudName || cloud;
                 if (sig.resourceType) resource = sig.resourceType;
@@ -118,13 +173,10 @@
                 fd.append('folder', sig.folder);
                 fd.append('upload_preset', sig.uploadPreset);
                 if (sig.type) fd.append('type', sig.type); // [R16] 'authenticated' for private identity documents
-            } else if (sig && sig.mode === 'unsigned') {
+            } else {
+                // server "transition" mode, or the signing service is not reachable (see above)
                 fd.append('upload_preset', window.SOKOHAI_UPLOADS.preset);
                 if (opts.folder) fd.append('folder', opts.folder);
-            } else {
-                console.error('skhUploadFromFile: upload imekataliwa na server', sig && sig.error);
-                return uploadFail('not_authorized',
-                    'Seva imekataa kupandisha picha. Hakikisha umeingia (login) kisha ujaribu tena.');
             }
 
             const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/${resource}/upload`, { method: 'POST', body: fd });

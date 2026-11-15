@@ -82,7 +82,8 @@ await test('[PHASE 9] formats per resource: video=audio/video only, auto=+docume
 console.log('\n[Browser]');
 await test('browser module has no Cloudinary secret and uses the signature', async () => {
   const src = fs.readFileSync(path.join(ROOT, 'js', '11-uploads.js'), 'utf8');
-  assert(/skhUploadSignature\(resource, opts\.folder\)/.test(src), 'calls signature');
+  // [UPLOAD 2026-11-15] the uploader asks via signatureFor() (refreshes a stale login once) -> skhUploadSignature
+  assert(/signatureFor\(resource, opts\.folder\)/.test(src) && /window\.skhUploadSignature\(resource, folder\)/.test(src), 'calls signature');
   assert(!/api_secret|API_SECRET/.test(src), 'no secret in browser');
   assert(/fd\.append\('signature', sig\.signature\)/.test(src), 'sends signature');
   assert(/fd\.append\('allowed_formats', sig\.allowedFormats\)/.test(src) && /resource = sig\.resourceType/.test(src), 'sends signed formats + server resource type');
