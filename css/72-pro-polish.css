@@ -1,0 +1,57 @@
+/* ==== css/72-pro-polish.css ====                                     [UI 2026-11-15]
+ * Final polish layer (loads last). Each rule fixes a defect found in the screen-by-screen audit
+ * (tools/e2e-emulator/audit_visual.cjs, phone 390x844 + desktop 1440x900). No colours or layouts
+ * are redesigned here — only things that were visibly broken or inconsistent.
+ */
+
+/* ---- Product page: the "Jumla TSh …" total was cut off at the right edge on phones ---------------- */
+#productModal #pmQtyArea.pm-qty-row { flex-wrap: wrap !important; row-gap: 6px !important; }
+#productModal #pmQtyArea .pm-total-row { margin-left: auto !important; max-width: 100% !important; }
+#productModal #pmQtyArea #pmQtyLabel { min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+/* ---- SokoCart -------------------------------------------------------------------------------------- */
+/* desktop: −/+/Remove were stretched into tall red blocks; now one compact row aligned to the top */
+#cartModal .fcart-item { align-items: start !important; }
+#cartModal .fcart-item-actions { display: flex; align-items: center; gap: 8px; align-self: start; flex-wrap: nowrap; }
+#cartModal .fcart-qty { display: inline-flex; align-items: center; gap: 2px; border: 1px solid #dbe6e2; border-radius: 12px; background: #fff; overflow: hidden; }
+#cartModal .fcart-qty .fcart-btn { min-height: 34px; width: 34px; padding: 0; border-radius: 0; background: #fff; color: #0f6e55; font-size: 16px; }
+#cartModal .fcart-qty b { min-width: 26px; text-align: center; font-size: 13.5px; color: #0f172a; }
+#cartModal .fcart-btn.ghost-red { background: #fff; color: #be123c; border: 1px solid #f3c6d1; min-height: 34px; padding: 6px 12px; }
+#cartModal .fcart-btn.ghost-red:hover { background: #fff1f4; }
+#cartModal .fcart-item small .fcart-sub { font-size: 12.5px; color: #0f6e55; }
+#cartModal .fcart-line-total { border-top: 1px dashed #dbe6e2; margin-top: 4px; padding-top: 8px; }
+#cartModal .fcart-line-total span, #cartModal .fcart-line-total b { font-weight: 900; color: #0f172a; }
+#cartModal .fcart-head small { color: #475569 !important; }
+@media (max-width: 700px) {
+  #cartModal .fcart-item-actions { grid-column: 1 / -1; justify-content: space-between; }
+}
+
+/* ---- My profile: identity button sits inside the card's action row (it floated outside) -------- */
+#myProfileModal .mp-actions { flex-wrap: wrap; }
+#myProfileModal .mp-btn-verify { border-radius: 999px !important; }
+
+/* ---- Avatars: local initials (js/05-local-avatars.js) keep their circle, never stretched -------- */
+img.user-dp, img.mp-dp, img[class*="avatar"], img[class*="-av"] { object-fit: cover; }
+
+/* ---- Notifications push card: quieter, consistent with the rest of the dialog ------------------- */
+#skhPushPanel { background: #f8fbfa; border-color: #e3ece9 !important; }
+#skhPushPanel #skhPushBtn:disabled { background: #e2e8f0 !important; color: #64748b !important; }
+
+/* ---- My profile: the "Picha ya Duka / Biashara Yako" placeholder sat under the avatar ------------ */
+#myProfileModal .mp-cover-ph { justify-content: flex-start !important; align-items: flex-start !important; text-align: left !important; padding: 12px 14px !important; gap: 6px !important; flex-direction: row !important; font-size: 12px !important; }
+
+/* ---- Seller page ----------------------------------------------------------------------------------- */
+#sellerProfileModal .follow-btn { justify-content: center !important; text-align: center !important; display: inline-flex !important; align-items: center !important; }
+@media (min-width: 1024px) {
+  /* desktop: the page used the full 1440px width (tabs 280px wide, two cards lost on the left) */
+  #sellerProfileBody { max-width: 1120px; margin: 0 auto; }
+}
+
+/* ---- Live hub card: viewers / seller / LIVE sat on different baselines; long names wrapped --------- */
+.lvh-three { align-items: center !important; }
+.lvh-three > div { min-width: 0; }
+.lvh-three b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- Buyer dashboard empty states: "Rudi Nyumbani" broke into two bold lines beside its icon ------ */
+.byd-empty .byd-home-btn { display: inline-flex !important; align-items: center; gap: 6px; white-space: nowrap; }
+.byd-empty .byd-home-btn b { display: inline !important; font-size: inherit !important; margin: 0 !important; color: inherit !important; }

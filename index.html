@@ -80,6 +80,7 @@
 
 <noscript></noscript>
 <script src="js/05-dialogs.js"></script>
+<script src="js/05-local-avatars.js"></script>
 <script src="js/00-pwa.js?v=20261113r15" defer></script>
 <script src="js/00-config.js" defer></script>
 <!-- [PERF 2026-09] Kipakiaji cha maktaba za nje: Leaflet/Chart hazipakwi
@@ -235,6 +236,7 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/70-group-business.css?v=20261113r15"><!-- [R13-H] Group Chat awamu ya 2: paneli, Soko, sehemu za biashara -->
 <link rel="stylesheet" href="css/71-sale-type-flow.css?v=20261108m1" media="print" onload="this.media='all'"><!-- [M1 2026-11-08] kichaguzi cha aina ya mauzo (Bidhaa Sokoni) -->
 <link rel="stylesheet" href="css/70-product-card.css?v=20261108pc0"><!-- [PHASE 0 2026-11-08] product card visual system (safu ya mwisho; bidhaa pekee) -->
+<link rel="stylesheet" href="css/72-pro-polish.css?v=20261115ui1"><!-- [UI 2026-11-15] safu ya mwisho: marekebisho ya ukaguzi wa skrini zote -->
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>
@@ -819,7 +821,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <!-- CHECKOUT MODAL (PESAPAL HOSTED CHECKOUT: MNO, BANK, CARDS & ESCROW) -->
 <div id="checkoutModal" class="overlay-menu" style="z-index: 7700;">
     <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:420px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
-        <div style="width:60px; height:60px; margin:0 auto 15px; background:#e0f2fe; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;"></div>
+        <div aria-hidden="true" style="width:60px; height:60px; margin:0 auto 15px; background:#e7f6f0; color:#0f6e55; border-radius:50%; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
         <h3 style="color:var(--primary-dark); margin-top:0; font-size:22px;" data-i18n="checkout_title">Lipa kwa Usalama (Escrow)</h3>
         <p style="font-size:13px; color:#64748b; margin-bottom:20px;" data-i18n="checkout_desc">Chagua njia ya malipo unayoipendelea. Pesa yako inalindwa 100%.</p>
         

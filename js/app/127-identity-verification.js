@@ -69,6 +69,23 @@ async function submit() {
     }
 }
 
+/* [UI 2026-11-15] The button goes INSIDE the profile card's action row. The profile body renders
+   asynchronously, so it was appended to the modal backdrop instead: it floated outside the card and,
+   being a flex sibling, squeezed the whole profile to ~60% of the phone width. Wait for the card. */
+function placeIdvButton(tries) {
+    const host = document.querySelector('#myProfileModal .mp-head-card .mp-actions');
+    let b = document.getElementById('skhIdvBtn');
+    if (!host) { if (tries < 30) setTimeout(() => placeIdvButton(tries + 1), 150); else if (b && !b.closest('.mp-head-card')) b.remove(); return; }
+    if (!b) {
+        b = document.createElement('button');
+        b.type = 'button'; b.id = 'skhIdvBtn';
+        b.className = 'mp-btn mp-btn-verify';
+        b.style.cssText = 'border:1px solid #12946f;background:#fff;color:#0f5132;font-weight:800;cursor:pointer;';
+        b.onclick = () => window.skhOpenIdentityVerification();
+    }
+    b.textContent = (skh.currentUserData && skh.currentUserData.isVerified) ? 'Umethibitishwa ✓' : 'Thibitisha utambulisho';
+    if (b.parentElement !== host) host.appendChild(b);
+}
 /* kitufe ndani ya wasifu wako mwenyewe */
 const origProfile = window.openProfile;
 if (typeof origProfile === 'function' && !origProfile.__idv) {
@@ -76,14 +93,7 @@ if (typeof origProfile === 'function' && !origProfile.__idv) {
         const r = await origProfile.apply(this, arguments);
         try {
             const mine = !uidOverride || (skh.currentUser && uidOverride === skh.currentUser.uid);
-            const host = document.querySelector('#myProfileModal .mp-header, #myProfileModal');
-            if (mine && host && !document.getElementById('skhIdvBtn')) {
-                const b = document.createElement('button');
-                b.type = 'button'; b.id = 'skhIdvBtn'; b.textContent = (skh.currentUserData && skh.currentUserData.isVerified) ? 'Umethibitishwa ✓' : 'Thibitisha utambulisho';
-                b.style.cssText = 'margin:10px auto;display:block;border:1px solid #12946f;background:#fff;color:#0f5132;border-radius:999px;padding:9px 16px;font-weight:800;cursor:pointer;';
-                b.onclick = () => window.skhOpenIdentityVerification();
-                host.appendChild(b);
-            }
+            if (mine) [0, 1200, 3000].forEach(ms => setTimeout(() => placeIdvButton(0), ms));   // the card may re-render once data arrives
         } catch (e) {}
         return r;
     };

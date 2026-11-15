@@ -17,7 +17,7 @@ function vapid() {
 }
 async function support() {
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return { ok: false, why: 'Kivinjari hiki hakitumi arifa za push.' };
-    if (!vapid()) return { ok: false, why: 'Arifa za push bado hazijawekwa kwenye SokoHai (zinasubiri usanidi wa Firebase).' };
+    if (!vapid()) return { ok: false, why: 'Arifa za simu bado hazijawekwa kwenye SokoHai. Taarifa zako zote zinaonekana hapa chini.' };
     const reg = window.__skhSwReg || await navigator.serviceWorker.getRegistration().catch(() => null);
     if (!reg) return { ok: false, why: 'Arifa za push zinapatikana kwenye toleo la mtandaoni la SokoHai.' };
     return { ok: true, reg };

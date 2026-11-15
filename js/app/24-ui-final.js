@@ -642,8 +642,11 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
         }
       });
       const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
-      nodes.forEach(n => { const tr=this.translatePhrase(n.nodeValue); if(tr!==n.nodeValue) n.nodeValue=n.nodeValue.replace(n.nodeValue.trim(), tr.trim()); });
-      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => { const tr=this.translatePhrase(el.getAttribute('placeholder')); if(tr!==el.getAttribute('placeholder')) el.setAttribute('placeholder', tr); });
+      // [UI 2026-11-15] A translation that still CONTAINS the text it replaces is not applied: it grew on
+      // every pass ("-- Chagua Kategoria --" -> "-- -- Chagua Kategoria --" -> "-- -- -- -- Chagua…").
+      const grows=(from,to)=>{ const a=String(from||'').trim(), b=String(to||'').trim(); return a && b!==a && b.indexOf(a)!==-1; };
+      nodes.forEach(n => { const tr=this.translatePhrase(n.nodeValue); if(tr!==n.nodeValue && !grows(n.nodeValue,tr)) n.nodeValue=n.nodeValue.replace(n.nodeValue.trim(), tr.trim()); });
+      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => { const tr=this.translatePhrase(el.getAttribute('placeholder')); if(tr!==el.getAttribute('placeholder') && !grows(el.getAttribute('placeholder'),tr)) el.setAttribute('placeholder', tr); });
       root.querySelectorAll('button, a, span, b, small, label, option, h1, h2, h3, h4').forEach(el => {
         if(el.children.length) return;
         // [FIX 2026-09-14] Usiguse vilivyo na data-i18n wala labels za nav.
@@ -651,7 +654,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
         const txt=el.textContent?.trim();
         if(!txt || txt.length>70) return;
         const tr=this.translatePhrase(txt);
-        if(tr!==txt) el.textContent=tr;
+        if(tr!==txt && !grows(txt,tr)) el.textContent=tr;
       });
     },
     audit(root=document.body){

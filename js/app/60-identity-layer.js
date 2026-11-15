@@ -305,6 +305,18 @@ import { skh } from './00-bootstrap.js';
         if (ph) ph.textContent = d.phone || d.phoneNumber || u.phoneNumber || '';
     };
 
+    /* [UI 2026-11-15] The top-bar picture stayed the grey "US" placeholder after a normal login: this
+       refresh ran only on assisted-identity changes. Now it also runs when the login is known and again
+       once the profile document has loaded (name / photo). Logged out -> the neutral placeholder. */
+    document.addEventListener('skh:auth-ready', function (ev) {
+        var user = ev && ev.detail && ev.detail.user;
+        if (!user) {
+            ['searchProfilePic', 'sidebarUserPic'].forEach(function (id) { var el = document.getElementById(id); if (el && el.tagName === 'IMG') el.src = 'img/avatar-gray.png'; });
+            return;
+        }
+        [400, 2000, 5000].forEach(function (ms) { setTimeout(function () { try { if (skh.currentUser) window.skhRefreshProfileUi(); } catch (e) {} }, ms); });
+    });
+
     /** Banner: "Umeingia kama <mwanachama>" (§20)
         [IDENTITY-FIX BUG-04 2026-09-16] Chanzo cha banner ni KIMOA:
         31-agent-assist ina banner yake kamili (#skhAssistBanner — PIN + TOKA).
