@@ -80,5 +80,13 @@ window.SOKOHAI_CONFIG = {
     // [REPAIR 2026-10 M3] Firebase App Check — reCAPTCHA Enterprise SITE key
     // (PUBLIC, si siri). Firebase Console -> App Check -> Apps -> Web app ->
     // reCAPTCHA Enterprise. Tupu = App Check imezimwa.
-    APP_CHECK_SITE_KEY: ''
+    APP_CHECK_SITE_KEY: '',
+
+    // [DEPLOY 2026-11-16] STAGING: mradi tofauti wa Firebase kwa majaribio kabla ya production.
+    // Ufunguo = jina la host ya site ya staging (mf. 'sokohai-staging.netlify.app'); thamani =
+    // "Firebase SDK config" ya mradi wa staging (Firebase Console -> Project settings -> Your apps).
+    // Si siri (ni config ya umma ya web app). Host isiyo kwenye orodha hii = production (kama awali).
+    FIREBASE_BY_HOST: {
+        // 'sokohai-staging.netlify.app': { apiKey: '…', authDomain: 'sokohai-staging.firebaseapp.com', projectId: 'sokohai-staging', storageBucket: 'sokohai-staging.appspot.com', appId: '…' }
+    }
 };

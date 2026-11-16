@@ -626,6 +626,16 @@ skh.firebaseConfig = {
         storageBucket: "sokonet-3b847.appspot.com",
         appId: "1:950677961118:web:4cd8177bae10dc9f743e8f"
     };
+/* [DEPLOY 2026-11-16] Staging site -> staging Firebase project (js/00-config.js FIREBASE_BY_HOST).
+   Only a complete config for THIS exact host is used; anything else keeps production. */
+try {
+    var __byHost = window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.FIREBASE_BY_HOST;
+    var __hostCfg = __byHost && __byHost[location.hostname];
+    if (__hostCfg && __hostCfg.apiKey && __hostCfg.projectId && __hostCfg.appId) {
+        skh.firebaseConfig = Object.assign({}, __hostCfg);
+        skh.firebaseEnv = 'staging:' + __hostCfg.projectId;
+    }
+} catch (eHost) {}
 
 /* [ADS-AUTH FIX 2026-09-25] LOCAL EMULATOR TU. local-server.js (emulator mode)
    huweka window.SKH_EMULATOR. Bila hii, browser ilitumia Auth/Firestore ya

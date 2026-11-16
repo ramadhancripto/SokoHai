@@ -118,7 +118,8 @@ import { skh } from './00-bootstrap.js';
         }
         /* [R16] usanidi wa nje uliobaki (server inaripoti ndiyo/hapana tu — hakuna siri) */
         var setup = ''; try { var su = await run('adminSetupStatus', {}); setup = box('Usanidi wa nje (' + su.done + '/' + su.total + ')', '<ul data-setup-list style="margin:0;padding-left:0;list-style:none;font-size:13px;line-height:1.8;">' + (su.items || []).map(function (i) {
-            return '<li data-setup="' + esc(i.key) + '" data-ok="' + (i.ok ? '1' : '0') + '"><b style="color:' + (i.ok ? '#16a34a' : '#b45309') + ';">' + (i.ok ? 'Tayari' : (i.optional ? 'Hiari' : 'Bado')) + '</b> · ' + esc(i.label) + (i.value ? ' <small style="color:#64748b;">(' + esc(i.value) + ')</small>' : '') + '</li>';
+            return '<li data-setup="' + esc(i.key) + '" data-ok="' + (i.ok ? '1' : '0') + '"><b style="color:' + (i.ok ? '#16a34a' : '#b45309') + ';">' + (i.ok ? 'Tayari' : (i.optional ? 'Hiari' : 'Bado')) + '</b> · ' + esc(i.label) + (i.value ? ' <small style="color:#64748b;">(' + esc(i.value) + ')</small>' : '')
+                + (i.key === 'search_backfill' && !i.ok ? ' ' + btn('Endesha sasa', 'window.skhAdminCCBackfill()') : '') + '</li>';
         }).join('') + '</ul><small style="color:#64748b;">Maelekezo: docs/SOKOHAI-USER-SETUP-CHECKLIST.md</small>'); } catch (e) {}
         /* [PILOT OPS 2026-11-14] pesa inayohitaji mtu sasa (server: adminMoneyWatch) */
         var watch = ''; try { var mw = await run('adminMoneyWatch', {}); watch = box('Ulinzi wa pesa (' + (mw.attention || 0) + ' za kushughulikia)', '<ul data-money-watch style="margin:0;padding-left:0;list-style:none;font-size:13px;line-height:1.8;">' + (mw.items || []).map(function (i) {
@@ -134,6 +135,25 @@ import { skh } from './00-bootstrap.js';
                 + '<li>Fedha za escrow hazitolewi bila uthibitisho wa server (mnunuzi, namba ya kupokea au Token C).</li>'
                 + '<li>Uamuzi wa mgogoro unalipa kutoka escrow iliyothibitishwa tu — hauwezi kulipa mara mbili.</li>'
                 + '<li>Maombi mapya ya uwakala yanaidhinishwa kwenye orodha ya "Maombi ya Wawakala" ya dashibodi kuu.</li></ul>');
+    };
+
+    /* [DEPLOY 2026-11-16] one-time search index after deploy: products, then services, page by page
+       (adminSearchBackfill is admin-only, idempotent and audited) */
+    window.skhAdminCCBackfill = async function () {
+        if (!(await confirmIt('Kuandaa utafutaji wa bidhaa na huduma zote zilizopo? (salama kurudia)'))) return;
+        var total = 0;
+        try {
+            for (var c of ['products', 'services']) {
+                var next = null, guard = 0;
+                do {
+                    var r = await run('adminSearchBackfill', { collection: c, startAfter: next, pageSize: 300 });
+                    total += (r.written || 0); next = r.next; guard++;
+                    toast('Utafutaji: ' + c + ' — ' + total + ' zimeandaliwa…', 'info');
+                } while (next && guard < 200);
+            }
+            toast('Utafutaji umeandaliwa: ' + total + ' zimesasishwa.', 'success');
+            window.skhAdminCCTab('overview');
+        } catch (e) { toast(errText(e), 'error'); }
     };
 
     VIEWS.accounts = async function () {
