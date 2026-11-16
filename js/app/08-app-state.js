@@ -1497,6 +1497,7 @@ window.addEventListener('scroll', () => {
     window.addEventListener('resize', function () { if (maxScroll() <= 80) apply(false); }, { passive: true });
     // kubadilisha ukurasa/chat/modal: upau urudi ili usikosekane
     window.addEventListener('hashchange', function () { apply(false); });
+    window.addEventListener('resize', function () { var el = hdr(); if (el && hidden) measure(el); }, { passive: true });
     document.addEventListener('click', function (e) {
         var t = e.target && e.target.closest ? e.target.closest('.nav-tab, .sell-action-fab') : null;
         if (t) apply(false);
@@ -1511,6 +1512,54 @@ window.addEventListener('scroll', () => {
         show: function () { apply(false); },
         isHidden: function () { return hidden; }
     };
+})();
+
+/* ============================================================================
+   [UI 2026-11-16] UPAU WA JUU (top nav) UNARUDI UKIVUTA JUU
+   Tatizo: .sticky-top-section ilikuwa position:relative (css/57) — ilitoka nje ya skrini
+   ukishuka chini na HAIKURUDI hadi urudi juu kabisa ("top nav inapotea"). Sasa ni sticky
+   (css/72) na, kama upau wa chini: inajificha unaposhuka (inaacha nafasi ya picha) na
+   inarudi MARA MOJA unapovuta juu kidogo. Juu ya ukurasa / ukurasa mfupi -> inaonekana daima.
+   Inabadilisha class pekee; hakuna layout shift.
+   ============================================================================ */
+(function skhTopNavAutoHide() {
+    if (window.__skhTopNavScroll) return;
+    window.__skhTopNavScroll = true;
+    var lastY = window.scrollY || 0, ticking = false, hidden = false;
+    function hdr() { return document.querySelector('.sticky-top-section'); }
+    // Ikifichwa: band ya mapambo (juu) na upau wa eneo (chini) vinaondoka; LOGO + vitufe + SEARCH vinabaki daima.
+    function measure(el) {
+        var nav = el.querySelector('.top-nav-row'); var srch = document.getElementById('topSearchRow');
+        if (!nav) return;
+        var top = nav.offsetTop; var keepEnd = (srch && srch.offsetParent === el ? srch.offsetTop + srch.offsetHeight : nav.offsetTop + nav.offsetHeight);
+        var bot = Math.max(0, el.offsetHeight - keepEnd);
+        el.style.setProperty('--skh-hdr-cut-top', top + 'px');
+        el.style.setProperty('--skh-hdr-cut-bot', bot + 'px');
+    }
+    function apply(hide) {
+        var el = hdr(); if (!el) return;
+        if (hide === hidden && el.classList.contains('skh-hdr-hide') === hide) return;
+        if (hide) measure(el);
+        hidden = hide; el.classList.toggle('skh-hdr-hide', hide);
+    }
+    function evaluate() {
+        ticking = false;
+        var y = Math.max(0, window.scrollY || 0);
+        var el = hdr(); var h = el ? el.offsetHeight : 180;
+        var limit = Math.max(0, (document.documentElement.scrollHeight || 0) - window.innerHeight);
+        if (limit <= 80 || y <= h) { lastY = y; apply(false); return; }
+        var d = y - lastY;
+        if (Math.abs(d) < 6) return;
+        // dropdown ya kategoria/chujio iko wazi -> usiifiche
+        var open = document.querySelector('#ctgDrop[style*="block"], #filterDrop[style*="block"]');
+        if (d > 0 && !open) apply(true); else if (d < 0) apply(false);
+        lastY = y;
+    }
+    window.addEventListener('scroll', function () { if (ticking) return; ticking = true; (window.requestAnimationFrame || function (f) { return setTimeout(f, 16); })(evaluate); }, { passive: true });
+    window.addEventListener('hashchange', function () { apply(false); });
+    window.addEventListener('resize', function () { var el = hdr(); if (el && hidden) measure(el); }, { passive: true });
+    document.addEventListener('focusin', function (e) { var el = hdr(); if (el && e.target && el.contains(e.target)) apply(false); });
+    window.skhTopNavShow = function () { apply(false); };
 })();
 
 

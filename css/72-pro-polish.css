@@ -55,3 +55,59 @@ img.user-dp, img.mp-dp, img[class*="avatar"], img[class*="-av"] { object-fit: co
 /* ---- Buyer dashboard empty states: "Rudi Nyumbani" broke into two bold lines beside its icon ------ */
 .byd-empty .byd-home-btn { display: inline-flex !important; align-items: center; gap: 6px; white-space: nowrap; }
 .byd-empty .byd-home-btn b { display: inline !important; font-size: inherit !important; margin: 0 !important; color: inherit !important; }
+
+/* ==== [UI 2026-11-16] UPAU WA JUU haupotei tena ===================================================
+ * Chanzo cha tatizo (viwili):
+ *  1) css/57 iliweka .sticky-top-section {position:relative} -> haikuwa sticky kamwe;
+ *  2) html, body {overflow-x:hidden} (css/01, css/12) iligeuza <body> kuwa "scroll container"
+ *     isiyosogea, kwa hiyo hata sticky ingekufa.
+ * Sasa: overflow-x:clip (inazuia scroll ya pembeni bila kuunda scroll container) + sticky.
+ * Unaposhuka: band ya mapambo na upau wa eneo vinajificha; LOGO + vitufe + SEARCH vinabaki.
+ * Unapovuta juu: upau mzima unarudi (js/app/08-app-state.js · skhTopNavAutoHide). */
+/* body.style.overflow='hidden' (scroll-lock ya modal) inaachwa kama ilivyo. html ndiyo inayobeba scroll
+   (viewport), kwa hiyo body haihitaji kuwa scroll container hata kidogo. */
+@supports (overflow: clip) {
+  html body:not([style*="overflow: hidden"]):not([style*="overflow:hidden"]) { overflow-x: clip !important; overflow-y: visible !important; }
+}
+.sticky-top-section {
+  position: -webkit-sticky !important; position: sticky !important; top: 0 !important; z-index: 2050;
+  transition: transform .22s ease, clip-path .22s ease, box-shadow .22s ease;
+  will-change: transform;
+}
+.sticky-top-section.skh-hdr-hide {
+  transform: translateY(calc(-1 * var(--skh-hdr-cut-top, 0px)));
+  clip-path: inset(var(--skh-hdr-cut-top, 0px) 0 var(--skh-hdr-cut-bot, 0px) 0);
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) { .sticky-top-section { transition: none; } }
+
+/* ==== [UI 2026-11-16] KADI ZA BIDHAA: picha ~82%, maelezo ~18%, picha kamili (haikatwi) ==========
+ * Kabla: picha ilikuwa na padding mara mbili (sanduku 10px + picha 7%) -> picha ndogo; jina na bei
+ * vilibanana kwenye mstari mmoja -> jina lilikatwa hadi herufi 1; kwenye Home picha ndefu (portrait)
+ * zilitoka nje ya kisanduku cha mraba na kukatwa. Sasa picha YOTE inaonekana (object-fit: contain)
+ * ndani ya kisanduku chenye ukubwa wa kudumu — haibani wala kupanua mfumo. */
+.skh-huru { aspect-ratio: 1 / 1.62 !important; }
+.skh-huru .skh-img, .skh-huru .feed-img-box { flex: 0 0 82% !important; padding: 0 !important; background: #f6f8f7; overflow: hidden !important; }
+.skh-huru .skh-img > img, .skh-huru .feed-img-box > img {
+  width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important;
+  object-fit: contain !important; object-position: center !important; padding: 4px !important; display: block;
+}
+.skh-huru-body { flex: 1 1 18% !important; padding: 5px 8px 6px !important; display: flex !important; flex-direction: column !important; justify-content: center !important; gap: 1px !important; overflow: hidden; }
+.skh-huru-r1 { flex-direction: column !important; align-items: stretch !important; gap: 1px !important; min-width: 0; }
+.skh-huru-name { width: 100%; min-width: 0; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; font-size: 12.5px !important; line-height: 1.25 !important; }
+.skh-huru-price { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+.skh-huru-r2 { display: none !important; }
+@media (min-width: 760px) { .skh-huru { aspect-ratio: 1 / 1.45 !important; } }
+
+/* Home · "Bidhaa Maarufu": kisanduku cha picha 4:5, picha kamili ndani yake */
+.shp-card { padding: 6px !important; gap: 2px !important; }
+.shp-img { position: relative; aspect-ratio: 2 / 3 !important; background: #f6f8f7 !important; display: block !important; }
+.shp-img > img { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; max-width: none !important; object-fit: contain !important; padding: 4px; }
+.shp-t { min-height: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px !important; padding: 0 2px; }
+.shp-card strong { font-size: 14px !important; padding: 0 2px; }
+.shp-card s { display: none; }
+.shp-stock:not(.out) { display: none !important; }
+
+/* Home · huduma: picha kamili (ilikuwa "cover" -> ilikatwa) */
+.shu-img { background: #f6f8f7 !important; }
+.shu-img > img { object-fit: contain !important; }
