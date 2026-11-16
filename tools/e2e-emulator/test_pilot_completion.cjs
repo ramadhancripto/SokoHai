@@ -38,7 +38,7 @@ const ev = (p, fn, a) => p.evaluate(fn, a);
 
   await L.step('admin runs the search backfill (paged, audited)', async () => {
     let next = null, written = 0, pages = 0;
-    do { const r = await L.call(O.p, 'adminSearchBackfill', { collection: 'products', startAfter: next, pageSize: 100 }); L.assert(r.ok, JSON.stringify(r)); next = r.data.next; written += r.data.written; pages++; } while (next && pages < 10);
+    let runId = null, r; await L.db.doc('system_locks/search_backfill').delete(); do { r = await L.call(O.p, 'adminSearchBackfill', runId ? { runId, pageSize: 100 } : { collections: ['products'], pageSize: 100 }); L.assert(r.ok, JSON.stringify(r)); runId = r.data.runId; written = r.data.totals.written; pages++; } while (!r.data.done && pages < 10);
     const d = (await L.db.doc('products/oldJokofu').get()).data();
     L.assert(Array.isArray(d.searchTokens) && d.searchTokens.includes('fridge') && d.searchTokens.includes('hisense'), 'tokens ' + JSON.stringify(d.searchTokens));
     return written + ' indexed in ' + pages + ' pages'; });

@@ -19,8 +19,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
 
-const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/', runScripts: 'dangerously' });
+// [HARDENING 2026-11-16] 00-bootstrap.js refuses to start Firebase on an unconfigured host, so this
+// unit test runs as the production host with the real js/00-config.js (Firebase itself is stubbed
+// below — nothing leaves the process).
+const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://sokohai.com/', runScripts: 'dangerously' });
 const { window } = dom;
+window.eval(fs.readFileSync(path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), 'js', '00-config.js'), 'utf8'));
 globalThis.window = window;
 globalThis.document = window.document;
 Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true, writable: true });

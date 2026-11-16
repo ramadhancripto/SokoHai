@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* [SEARCH 2026-11-14] Catalogue search on the emulator:
  *  - rules: a client can never create or change `searchTokens` (only keep or drop them);
- *  - adminSearchBackfill: admin only, idempotent, audited;
+ *  - adminSearchBackfill: admin only, idempotent, audited; ONE run at a time (server lease), one audit row per run;
  *  - a product OLDER than the newest 60 is found by array-contains-any (the old feed search could not).
  * Run: FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=demo-sokohai node tools/test_search_index_emulator.mjs */
 import { createRequire } from 'node:module';
@@ -67,9 +67,10 @@ await test('a product older than the newest 60 is found by its name (and by a sy
   await batch.commit();
   const newest = await db.collection('products').orderBy('createdAt', 'desc').limit(60).get();
   ok(!newest.docs.some(d => d.id === 'srOld' + T), 'precondition: old product must be outside the newest 60');
-  let next = null, rounds = 0, written = 0;
-  do { const r = await call('adminSearchBackfill', 'ops', { collection: 'products', startAfter: next, pageSize: 200 }, { admin: true }); ok(r.ok, JSON.stringify(r)); next = r.data.next; written += r.data.written; } while (next && ++rounds < 50);
-  ok(written >= 1, 'nothing indexed');
+  await db.doc('system_locks/search_backfill').delete();
+  let runId = null, rounds = 0, r;
+  do { r = await call('adminSearchBackfill', 'ops', runId ? { runId, pageSize: 200 } : { collections: ['products'], pageSize: 200 }, { admin: true }); ok(r.ok, JSON.stringify(r)); runId = r.data.runId; } while (!r.data.done && ++rounds < 50);
+  ok(r.data.done && r.data.totals.written >= 1, 'nothing indexed ' + JSON.stringify(r.data));
   const ST = require(path.join(ROOT, 'shared', 'search-tokens.js'));
   for (const q of [T.toLowerCase(), 'hisense', 'fridge hisense']) {
     const snap = await db.collection('products').where('searchTokens', 'array-contains-any', ST.queryTokens(q)).limit(60).get();
@@ -77,6 +78,67 @@ await test('a product older than the newest 60 is found by its name (and by a sy
     ok(hit && ST.matches(hit.data(), q), 'not found for "' + q + '"');
   }
   const audit = await db.collection('admin_audit_log').where('action', '==', 'SEARCH_BACKFILL').limit(1).get(); ok(!audit.empty, 'no audit row');
+});
+
+/* [HARDENING 2026-11-16] duplicate-run protection on the server */
+const LOCK = db.doc('system_locks/search_backfill');
+const auditCount = async (action, runId) => (await db.collection('admin_audit_log').where('action', '==', action).get()).docs.filter(d => !runId || (d.data().details || {}).runId === runId).length;
+await test('backfill lock: two simultaneous starts (double click / two tabs) -> exactly one run starts', async () => {
+  await LOCK.delete();
+  const rs = await Promise.all([1, 2, 3].map(() => call('adminSearchBackfill', 'ops', { pageSize: 5 }, { admin: true })));
+  const okRuns = rs.filter(r => r.ok), refused = rs.filter(r => !r.ok);
+  ok(okRuns.length === 1, 'started: ' + okRuns.length + ' ' + JSON.stringify(rs.map(r => r.ok ? r.data.runId : r.code)));
+  ok(refused.every(r => /already-exists|aborted/.test(r.code)), JSON.stringify(refused));
+  ok(new Set(okRuns.map(r => r.data.runId)).size === 1, 'one runId');
+});
+await test('backfill lock: a second admin cannot start while a run is live, nor hijack it', async () => {
+  const lock = (await LOCK.get()).data();
+  ok(lock.status === 'running' && !lock.pageInFlight, JSON.stringify(lock));
+  const r1 = await call('adminSearchBackfill', 'ops2', { pageSize: 5 }, { admin: true }); ok(!r1.ok && r1.code === 'already-exists', JSON.stringify(r1));
+  const r2 = await call('adminSearchBackfill', 'ops2', { runId: lock.runId, pageSize: 5 }, { admin: true }); ok(!r2.ok && r2.code === 'permission-denied', JSON.stringify(r2));
+  ok((await auditCount('SEARCH_BACKFILL_REFUSED')) >= 1, 'refusal audited');
+});
+await test('backfill lock: the same run cannot run two pages at once', async () => {
+  const lock = (await LOCK.get()).data();
+  // (a) while a page is in flight, a second page call is refused
+  await LOCK.update({ pageInFlight: true });
+  const busy = await call('adminSearchBackfill', 'ops', { runId: lock.runId, pageSize: 5 }, { admin: true });
+  ok(!busy.ok && busy.code === 'failed-precondition', JSON.stringify(busy));
+  await LOCK.update({ pageInFlight: false });
+  // (b) racing calls never process the same page twice: the server owns the cursor
+  const before = (await LOCK.get()).data();
+  const rs = await Promise.all([1, 2, 3].map(() => call('adminSearchBackfill', 'ops', { runId: lock.runId, pageSize: 5 }, { admin: true })));
+  const done = rs.filter(r => r.ok), after = (await LOCK.get()).data();
+  ok(done.length >= 1 && rs.every(r => r.ok || /failed-precondition|aborted/.test(r.code)), JSON.stringify(rs.map(r => r.ok || r.code)));
+  ok(after.pages === before.pages + done.length, 'pages ' + before.pages + ' -> ' + after.pages + ' for ' + done.length + ' ok calls');
+  ok(new Set(done.map(r => r.data.totals.pages)).size === done.length, 'two calls reported the same page');
+});
+await test('backfill lock: the owner finishes the run -> exactly ONE SEARCH_BACKFILL audit row with real totals, lock released', async () => {
+  const runId = (await LOCK.get()).data().runId;
+  let r, n = 0; do { r = await call('adminSearchBackfill', 'ops', { runId, pageSize: 200 }, { admin: true }); ok(r.ok, JSON.stringify(r)); } while (!r.data.done && ++n < 100);
+  ok(r.data.done, 'not done');
+  const lock = (await LOCK.get()).data(); ok(lock.status === 'completed' && lock.finishedAt, JSON.stringify(lock));
+  ok((await auditCount('SEARCH_BACKFILL', runId)) === 1, 'audit rows for run: ' + await auditCount('SEARCH_BACKFILL', runId));
+  ok((await auditCount('SEARCH_BACKFILL_STARTED', runId)) === 1, 'started rows');
+  const row = (await db.collection('admin_audit_log').where('action', '==', 'SEARCH_BACKFILL').get()).docs.map(d => d.data()).find(d => d.details.runId === runId);
+  const scannedP = (await db.collection('products').count().get()).data().count, scannedS = (await db.collection('services').count().get()).data().count;
+  ok(row.details.scanned === scannedP + scannedS, 'scanned ' + row.details.scanned + ' vs ' + (scannedP + scannedS));
+  ok(JSON.stringify(row.details.collections) === '["products","services"]', JSON.stringify(row.details.collections));
+  const again = await call('adminSearchBackfill', 'ops', { runId, pageSize: 5 }, { admin: true }); ok(!again.ok && again.code === 'failed-precondition', 'finished run cannot continue');
+});
+await test('backfill lock: an abandoned run expires and a new one may start (takeover recorded)', async () => {
+  const s = await call('adminSearchBackfill', 'ops', { pageSize: 5 }, { admin: true }); ok(s.ok && !s.data.done, JSON.stringify(s));
+  await LOCK.update({ leaseUntil: Date.now() - 1000 });
+  const s2 = await call('adminSearchBackfill', 'ops2', { pageSize: 5 }, { admin: true }); ok(s2.ok && s2.data.runId !== s.data.runId, JSON.stringify(s2));
+  ok(((await LOCK.get()).data().replaced || {}).runId === s.data.runId, 'replaced run recorded');
+  const old = await call('adminSearchBackfill', 'ops', { runId: s.data.runId, pageSize: 5 }, { admin: true }); ok(!old.ok && old.code === 'failed-precondition', JSON.stringify(old));
+  await LOCK.update({ leaseUntil: 0, status: 'abandoned_by_test' });
+});
+await test('backfill lock: non-admin refused; bad runId refused; clients cannot read or write the lock', async () => {
+  const r = await call('adminSearchBackfill', 'nobody', { pageSize: 5 }); ok(!r.ok && r.code === 'permission-denied', JSON.stringify(r));
+  const b = await call('adminSearchBackfill', 'ops', { runId: '../x', pageSize: 5 }, { admin: true }); ok(!b.ok && b.code === 'invalid-argument', JSON.stringify(b));
+  const g = await rest('GET', `${BASE}/system_locks/search_backfill`, SELL); ok(g.status === 403, 'client read ' + g.status);
+  const w = await patch('system_locks', 'search_backfill', SELL, { status: 'completed' }); ok(w.status === 403, 'client write ' + w.status);
 });
 console.log(`SEARCH INDEX (emulator): ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

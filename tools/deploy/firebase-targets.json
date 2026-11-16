@@ -1,0 +1,5 @@
+{
+  "_README": "Project IDs PEKEE zinazoruhusiwa kwa DEPLOY-FIREBASE.bat. Andika project ID halisi (si alias kama 'default'). staging: jaza baada ya kuunda mradi wa staging (docs/SOKOHAI-DEPLOY-FIREBASE-HATUA.md, Hatua 1).",
+  "production": { "projectId": "sokonet-3b847" },
+  "staging": { "projectId": "" }
+}
