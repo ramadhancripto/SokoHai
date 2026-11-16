@@ -626,17 +626,6 @@ skh.firebaseConfig = {
         storageBucket: "sokonet-3b847.appspot.com",
         appId: "1:950677961118:web:4cd8177bae10dc9f743e8f"
     };
-/* [DEPLOY 2026-11-16] Staging site -> staging Firebase project (js/00-config.js FIREBASE_BY_HOST).
-   Only a complete config for THIS exact host is used; anything else keeps production. */
-try {
-    var __byHost = window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.FIREBASE_BY_HOST;
-    var __hostCfg = __byHost && __byHost[location.hostname];
-    if (__hostCfg && __hostCfg.apiKey && __hostCfg.projectId && __hostCfg.appId) {
-        skh.firebaseConfig = Object.assign({}, __hostCfg);
-        skh.firebaseEnv = 'staging:' + __hostCfg.projectId;
-    }
-} catch (eHost) {}
-
 /* [ADS-AUTH FIX 2026-09-25] LOCAL EMULATOR TU. local-server.js (emulator mode)
    huweka window.SKH_EMULATOR. Bila hii, browser ilitumia Auth/Firestore ya
    PRODUCTION wakati functions za local zinatumia emulator → kila callable yenye
@@ -653,6 +642,45 @@ skh.emulator = (function () {
         return e;
     } catch (err) { return null; }
 })();
+/* [HARDENING 2026-11-16] ENVIRONMENT GATE (fail-closed). The host decides the Firebase project
+   (js/00-config.js FIREBASE_ENVIRONMENTS + skhResolveFirebaseEnv): production hosts -> production,
+   staging site (and its Netlify branch/preview deploys) -> the staging project, local emulator ->
+   emulator. ANY other host — a Netlify deploy preview of the production site, a copy of the site,
+   localhost without the emulator — gets a clear message and Firebase is NEVER initialised. */
+skh.firebaseEnv = null;
+(function () {
+    var cfg = window.SOKOHAI_CONFIG || {};
+    var res = (typeof window.skhResolveFirebaseEnv === 'function')
+        ? window.skhResolveFirebaseEnv({ hostname: window.location.hostname, emulator: !!skh.emulator, productionConfig: skh.firebaseConfig, environments: cfg.FIREBASE_ENVIRONMENTS })
+        : { env: null, reason: 'config-missing' };
+    if (res && res.env) {
+        skh.firebaseEnv = res.env;
+        skh.firebaseConfig = Object.assign({}, res.config);
+        skh.firebaseEnvAppCheckKey = res.appCheckSiteKey; // null = use APP_CHECK_SITE_KEY (production)
+        try { document.documentElement.setAttribute('data-skh-env', res.env); } catch (e) {}
+        return;
+    }
+    var reason = (res && res.reason) || 'unknown';
+    window.SKH_ENV_BLOCKED = { host: window.location.hostname, reason: reason };
+    try {
+        var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
+        document.documentElement.classList.remove('skh-booting');
+        var splash = document.getElementById('skhBootSplash'); if (splash) splash.style.display = 'none';
+        var box = document.createElement('div');
+        box.id = 'skhEnvBlocked'; box.setAttribute('role', 'alert');
+        box.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#f8fafc;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,sans-serif;';
+        box.innerHTML = '<div style="max-width:440px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.08);color:#0f172a;">'
+            + '<h1 style="margin:0 0 8px;font-size:20px;">Environment not configured</h1>'
+            + '<p style="margin:0 0 12px;color:#334155;font-size:14px;line-height:1.5;">Mazingira haya hayajasanidiwa. Ukurasa huu hauunganishwi na database yoyote, kwa usalama.</p>'
+            + '<p style="margin:0 0 4px;font-size:13px;color:#475569;">Host: <code>' + esc(window.location.hostname) + '</code></p>'
+            + '<p style="margin:0;font-size:13px;color:#475569;">Sababu: <code>' + esc(reason) + '</code></p>'
+            + '<p style="margin:14px 0 0;font-size:12.5px;color:#64748b;">Tumia <b>sokohai.com</b>. Msimamizi: ongeza host hii kwenye <code>js/00-config.js → FIREBASE_ENVIRONMENTS</code>.</p></div>';
+        (document.body || document.documentElement).appendChild(box);
+    } catch (e) {}
+    console.error('[SokoHai] Environment not configured for host "' + window.location.hostname + '" (' + reason + '). Firebase NOT initialised.');
+    throw new Error('SKH_ENV_NOT_CONFIGURED: ' + reason);
+})();
+
 if (skh.emulator) {
     skh.firebaseConfig = Object.assign({}, skh.firebaseConfig, {
         projectId: skh.emulator.projectId,
@@ -670,7 +698,7 @@ skh.fApp = skh.initializeApp(skh.firebaseConfig);
    Firebase Console, after the metrics show real traffic is verified. */
 skh.appCheck = null;
 try {
-    const acKey = (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.APP_CHECK_SITE_KEY) || '';
+    const acKey = (typeof skh.firebaseEnvAppCheckKey === 'string') ? skh.firebaseEnvAppCheckKey : ((window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.APP_CHECK_SITE_KEY) || ''); // [HARDENING 2026-11-16] per-environment key
     if (acKey && !skh.emulator) {
         skh.appCheck = initializeAppCheck(skh.fApp, { provider: new ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true });
     }

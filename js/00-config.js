@@ -82,11 +82,58 @@ window.SOKOHAI_CONFIG = {
     // reCAPTCHA Enterprise. Tupu = App Check imezimwa.
     APP_CHECK_SITE_KEY: '',
 
-    // [DEPLOY 2026-11-16] STAGING: mradi tofauti wa Firebase kwa majaribio kabla ya production.
-    // Ufunguo = jina la host ya site ya staging (mf. 'sokohai-staging.netlify.app'); thamani =
-    // "Firebase SDK config" ya mradi wa staging (Firebase Console -> Project settings -> Your apps).
-    // Si siri (ni config ya umma ya web app). Host isiyo kwenye orodha hii = production (kama awali).
-    FIREBASE_BY_HOST: {
-        // 'sokohai-staging.netlify.app': { apiKey: '…', authDomain: 'sokohai-staging.firebaseapp.com', projectId: 'sokohai-staging', storageBucket: 'sokohai-staging.appspot.com', appId: '…' }
+    // [HARDENING 2026-11-16] MAZINGIRA YA FIREBASE KWA HOST (fail-closed).
+    // Host inachagua mradi wa Firebase. Host ambayo HAIMO hapa haiwashi Firebase kabisa —
+    // inaonyesha "Mazingira hayajasanidiwa" (deploy previews za Netlify, nakala za site, n.k.).
+    //  * production: host hizi TU ndizo zinazotumia mradi wa production (sokonet-3b847).
+    //  * staging   : host za site ya staging + branch/preview deploys zake
+    //                ("<kitu>--<netlifySite>.netlify.app"). `firebase` = config ya web app ya
+    //                MRADI WA STAGING (Firebase Console -> Project settings -> Your apps). Si siri.
+    //                Ikiwa tupu, staging inaonyesha "haijasanidiwa" — HAIRUDI production kamwe.
+    //  * localhost  : emulator pekee (functions/local-server.js). Hakuna production kutoka localhost.
+    FIREBASE_ENVIRONMENTS: {
+        production: {
+            projectId: 'sokonet-3b847',
+            hosts: ['sokohai.com', 'www.sokohai.com', 'sokohaicom.netlify.app', 'sokohaimarket.netlify.app']
+        },
+        staging: {
+            hosts: ['sokohai-staging.netlify.app'],
+            netlifySite: 'sokohai-staging',
+            appCheckSiteKey: '',
+            firebase: null
+            // firebase: { apiKey: '…', authDomain: 'sokohai-staging.firebaseapp.com', projectId: 'sokohai-staging', storageBucket: 'sokohai-staging.appspot.com', appId: '…' }
+        }
     }
+};
+
+/* [HARDENING 2026-11-16] Which Firebase project may THIS page use?  Pure function (unit-tested in
+   tools/test_firebase_env.mjs); js/app/00-bootstrap.js calls it before initializeApp and refuses to
+   start Firebase when it returns env:null.
+   in : { hostname, emulator (bool: verified local emulator), productionConfig, environments }
+   out: { env: 'emulator'|'production'|'staging'|null, config, appCheckSiteKey, reason } */
+window.skhResolveFirebaseEnv = function (input) {
+    var inp = input || {};
+    var envs = inp.environments || {};
+    var prod = envs.production || {}, stg = envs.staging || {};
+    var host = String(inp.hostname || '').toLowerCase().replace(/\.$/, '');
+    var prodCfg = inp.productionConfig || {};
+    function full(c) { return !!(c && c.apiKey && c.authDomain && c.projectId && c.appId); }
+    if (inp.emulator === true) return { env: 'emulator', config: prodCfg, appCheckSiteKey: '', reason: 'local-emulator' };
+    if (!host) return { env: null, config: null, reason: 'no-host' };
+    var prodHosts = Array.isArray(prod.hosts) ? prod.hosts : [];
+    if (prodHosts.indexOf(host) !== -1) {
+        if (!full(prodCfg) || !prod.projectId || prodCfg.projectId !== prod.projectId) return { env: null, config: null, reason: 'production-config-mismatch' };
+        return { env: 'production', config: prodCfg, appCheckSiteKey: null, reason: 'production-host' };
+    }
+    var stgHosts = Array.isArray(stg.hosts) ? stg.hosts : [];
+    var site = String(stg.netlifySite || '').toLowerCase();
+    var suffix = '--' + site + '.netlify.app';
+    var isStg = stgHosts.indexOf(host) !== -1 || (!!site && /^[a-z0-9-]+$/.test(site) && host.length > suffix.length && host.slice(-suffix.length) === suffix && /^[a-z0-9-]+$/.test(host.slice(0, -suffix.length)));
+    if (isStg) {
+        var c = stg.firebase;
+        if (!full(c)) return { env: null, config: null, reason: 'staging-not-configured' };
+        if (c.projectId === prod.projectId || c.projectId === prodCfg.projectId || c.apiKey === prodCfg.apiKey || c.appId === prodCfg.appId) return { env: null, config: null, reason: 'staging-points-at-production' };
+        return { env: 'staging', config: Object.assign({}, c), appCheckSiteKey: stg.appCheckSiteKey || '', reason: 'staging-host' };
+    }
+    return { env: null, config: null, reason: 'unknown-host' };
 };

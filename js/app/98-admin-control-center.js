@@ -137,23 +137,35 @@ import { skh } from './00-bootstrap.js';
                 + '<li>Maombi mapya ya uwakala yanaidhinishwa kwenye orodha ya "Maombi ya Wawakala" ya dashibodi kuu.</li></ul>');
     };
 
-    /* [DEPLOY 2026-11-16] one-time search index after deploy: products, then services, page by page
-       (adminSearchBackfill is admin-only, idempotent and audited) */
+    /* [DEPLOY 2026-11-16] one-time search index after deploy: products, then services, page by page.
+       [HARDENING 2026-11-16] The SERVER allows one run at a time (functions/search-index.js lease);
+       this page also ignores repeat clicks while its own run is going and disables the button. */
+    var BACKFILL_BUSY = false;
+    function backfillButtons(disabled) {
+        document.querySelectorAll('#skhAdminCC button[onclick*="skhAdminCCBackfill()"]').forEach(function (b) {
+            b.disabled = disabled; b.style.opacity = disabled ? '.55' : ''; b.style.cursor = disabled ? 'progress' : 'pointer';
+            if (disabled) { b.dataset.label = b.dataset.label || b.textContent; b.textContent = 'Inaendelea…'; } else if (b.dataset.label) { b.textContent = b.dataset.label; }
+        });
+    }
     window.skhAdminCCBackfill = async function () {
-        if (!(await confirmIt('Kuandaa utafutaji wa bidhaa na huduma zote zilizopo? (salama kurudia)'))) return;
-        var total = 0;
+        if (BACKFILL_BUSY) { toast('Uandaaji wa utafutaji tayari unaendelea.', 'info'); return; }
+        BACKFILL_BUSY = true; backfillButtons(true);
         try {
-            for (var c of ['products', 'services']) {
-                var next = null, guard = 0;
-                do {
-                    var r = await run('adminSearchBackfill', { collection: c, startAfter: next, pageSize: 300 });
-                    total += (r.written || 0); next = r.next; guard++;
-                    toast('Utafutaji: ' + c + ' — ' + total + ' zimeandaliwa…', 'info');
-                } while (next && guard < 200);
-            }
-            toast('Utafutaji umeandaliwa: ' + total + ' zimesasishwa.', 'success');
-            window.skhAdminCCTab('overview');
-        } catch (e) { toast(errText(e), 'error'); }
+            if (!(await confirmIt('Kuandaa utafutaji wa bidhaa na huduma zote zilizopo? (salama kurudia)'))) return;
+            var runId = null, guard = 0, r = null;
+            do {
+                r = await run('adminSearchBackfill', runId ? { runId: runId, pageSize: 300 } : { pageSize: 300 });
+                runId = r.runId; guard++;
+                if (!r.done) toast('Utafutaji: ' + (r.totals ? r.totals.scanned : 0) + ' zimekaguliwa…', 'info');
+            } while (r && !r.done && guard < 400);
+            if (r && r.done) {
+                toast('Utafutaji umeandaliwa: ' + r.totals.written + ' zimesasishwa (' + r.totals.scanned + ' zimekaguliwa).', 'success');
+                window.skhAdminCCTab('overview');
+            } else toast('Uandaaji haukukamilika — bonyeza tena baada ya dakika 10.', 'error');
+        } catch (e) {
+            var code = String((e && e.code) || '');
+            toast(/already-exists/.test(code) ? 'Uandaaji wa utafutaji tayari unaendelea (labda kwenye tab au kifaa kingine). Subiri ukamilike.' : errText(e), 'error');
+        } finally { BACKFILL_BUSY = false; backfillButtons(false); }
     };
 
     VIEWS.accounts = async function () {
