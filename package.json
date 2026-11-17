@@ -58,6 +58,7 @@
     "test:ci:emulator": "firebase emulators:exec --only firestore,auth --project demo-sokohai \"node tools/test_phase1_security.mjs && node tools/test_phase2_security.mjs && node tools/test_phase3_security.mjs && node tools/test_repair_rules.mjs && node tools/test_commerce_modes.mjs && node tools/test_admin_agent_authority.mjs && node tools/test_user_cards.mjs && node tools/test_upload_signing.mjs && node tools/test_inventory_rules.mjs && node tools/test_conversation_rules.mjs && node tools/test_inventory_reservation_emulator.mjs && node tools/test_seller_lifecycle_emulator.mjs && node tools/test_decimal_quantity_emulator.mjs && node tools/test_ride_privacy_rules.mjs && node tools/test_ride_contact_migration_emulator.mjs && node tools/test_listing_trust_rules.mjs && node tools/test_trust_badges_emulator.mjs && node tools/test_auction_pricedrop_emulator.mjs && node tools/test_pricedrop_queue_emulator.mjs && node tools/test_live_stories_groupsoko_emulator.mjs && node tools/test_auction_live_impl_emulator.mjs && node tools/test_auction_admin_emulator.mjs && node tools/production_readonly_audit.mjs --self-test && node tools/test_group_chat_rules.mjs && node tools/test_group_business_rules.mjs && node tools/test_push_emulator.mjs && node tools/test_dispute_refund_lifecycle.mjs && node tools/test_order_wallet_pay.mjs && node tools/test_group_buy_lifecycle.mjs && node tools/test_identity_verification.mjs && node tools/test_r16_server_fixes.mjs && node tools/test_search_index_emulator.mjs && node tools/test_pilot_ops_emulator.mjs\""
   },
   "dependencies": {
-    "acorn": "^8.19.0"
+    "acorn": "^8.19.0",
+    "firebase-tools": "^15.36.0"
   }
 }

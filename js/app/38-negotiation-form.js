@@ -240,7 +240,7 @@ import {
         } else if (type === NF_TYPES.SERVICE && (entity.scope || entity.description)) {
             extra = '<div class="nf-ctx-sub">' + esc(String(entity.scope || entity.description).slice(0, 110)) + '</div>';
         }
-        return '<div class="nf-ctx">'
+        return '<div class="nf-ctx' + (type === NF_TYPES.TRANSPORT ? ' transport-context' : '') + '">'
             + '<div class="nf-ctx-img">' + imgHtml + '</div>'
             + '<div class="nf-ctx-info">'
             + '<span class="nf-badge">' + nfIco(meta.icon, 13) + ' ' + esc(meta.label) + '</span>'
@@ -350,8 +350,10 @@ import {
         html += '<div class="nf-rule-hint">' + nfIco('lock', 13) + ' ' + ruleLine + '</div>';
         html += '<div id="nfBanner" class="nf-banner" style="display:none;" role="alert"></div>';
 
+        var isTransport = type === NF_TYPES.TRANSPORT;
         sections.forEach(function (sec) {
-            html += '<section class="nf-section' + (sec.optional ? ' nf-section-opt' : '') + '">';
+            var secCls = 'nf-section' + (sec.optional ? ' nf-section-opt' : '') + (isTransport ? ' transport-section' : '');
+            html += '<section class="' + esc(secCls) + '">';
             html += '<h3>' + esc(sec.title) + (sec.optional ? ' <span class="nf-opt-tag">hiari</span>' : '') + '</h3>';
             // Paired fields: usirudie kizio (kimejumuishwa kwenye namba)
             var done = {};
@@ -359,7 +361,21 @@ import {
                 if (done[f.key]) return;
                 if (isPairedTarget(sec, f)) return; // kimeingizwa kupitia wenzi
                 if (f.pairedWith) done[f.pairedWith] = 1;
-                html += renderField(f, values);
+
+                // Transport: wrap section fields in styled containers
+                var fieldHtml = renderField(f, values);
+                if (isTransport) {
+                    if (sec.id === 'transportRoute' && (f.key === 'from' || f.key === 'to')) {
+                        fieldHtml = '<div class="nf-transport-route">' + fieldHtml + '</div>';
+                    } else if (sec.id === 'transportCargo') {
+                        fieldHtml = '<div class="nf-transport-cargo">' + fieldHtml + '</div>';
+                    } else if (sec.id === 'transportDates') {
+                        fieldHtml = '<div class="nf-transport-dates">' + fieldHtml + '</div>';
+                    } else if (sec.id === 'transportFee') {
+                        fieldHtml = '<div class="nf-transport-fee">' + fieldHtml + '</div>';
+                    }
+                }
+                html += fieldHtml;
             });
             html += '</section>';
         });

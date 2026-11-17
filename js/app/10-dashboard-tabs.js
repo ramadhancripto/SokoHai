@@ -97,16 +97,44 @@ window.switchDashTab = function(tabName) {
     const activeBtn = document.getElementById('btnTab_' + tabName);
     if(activeBtn) activeBtn.classList.add('active');
 
+    const ws = document.getElementById('dashWorkspace');
+    if (!ws) return;
+
     // [SELLER MANAGEMENT] Vitenzi vipya vya muuzaji (My Products, Insights, Compare)
-    if (typeof window.skhRenderSellerTab === 'function' && window.skhRenderSellerTab(tabName)) {
-        return;
+    if (typeof window.skhRenderSellerTab === 'function') {
+        try {
+            if (window.skhRenderSellerTab(tabName)) {
+                return;
+            }
+        } catch (e) {
+            console.warn('[switchDashTab] skhRenderSellerTab("' + tabName + '") imeshindikana:', e && e.message);
+            var safeTab = (window.skh && skh.skhEscape) ? skh.skhEscape(tabName) : String(tabName || '');
+            ws.innerHTML = skhStateBox(
+                'error',
+                T('bos_tab_err_t', 'Hitilafu ya sehemu'),
+                'Sehemu ya "' + safeTab + '" haijafunguka kwa sababu ya hitilafu ya mfumo. Jaribu tena.',
+                '<div style="margin-top:10px;"><button type="button" onclick="window.switchDashTab(\'overview\')" style="background:#18A982; color:#fff; border:none; border-radius:10px; padding:9px 16px; font-weight:800; cursor:pointer;">Rudi nyumbani</button></div>'
+            );
+            return;
+        }
     }
 
     // Kagua kama mtumiaji ni Dereva, mpe kurasa zake, la sivyo mpe za bosi
-    if (skh.currentMode === 'driver') {
-        window.renderDriverActiveTabContent();
-    } else {
-        window.renderActiveTabContent();
+    try {
+        if (skh.currentMode === 'driver') {
+            window.renderDriverActiveTabContent();
+        } else {
+            window.renderActiveTabContent();
+        }
+    } catch (e) {
+        console.warn('[switchDashTab] renderActiveTabContent for "' + tabName + '" imeshindikana:', e && e.message);
+        var safeTab2 = (window.skh && skh.skhEscape) ? skh.skhEscape(tabName) : String(tabName || '');
+        ws.innerHTML = skhStateBox(
+            'error',
+            T('bos_tab_err_t', 'Hitilafu ya sehemu'),
+            'Sehemu ya "' + safeTab2 + '" haijafunguka kwa sababu ya hitilafu ya mfumo. Jaribu tena.',
+            '<div style="margin-top:10px;"><button type="button" onclick="window.switchDashTab(\'overview\')" style="background:#18A982; color:#fff; border:none; border-radius:10px; padding:9px 16px; font-weight:800; cursor:pointer;">Rudi nyumbani</button></div>'
+        );
     }
 };
 

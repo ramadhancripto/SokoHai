@@ -24,20 +24,22 @@ window.updateApp = function(mode, el = null) {
     // 1. Hakikisha tupo kwenye Buyer View (Ukurasa mkuu)
     skh.currentMode = 'buyer'; 
     skh.localStorage.setItem('sokohai_mode', 'buyer'); 
-    
-    // Onyesha buyerView na ficha dashboard
-    document.getElementById('buyerView').style.display = 'block';
-    document.getElementById('dashboardViews').style.display = 'none';
 
-    // [FIX: top nav kupotea] Ukirudi kutoka Usimamizi/dashboard, rudisha
-    // upau wa juu (top nav), upau wa chini na upau wa eneo — applyModeUI
-    // ulikuwa unazificha (display:none) na updateApp hakuzirudisha.
+    // [FIX: top nav kupotea] Rudisha upau wa juu, upau wa chini na upau wa eneo
+    // KABLA ya kupa buyerView/dashboardViews — ili kama yoyote yaliondokea,
+    // upau haufichwi. Null-safe kila waypoint.
     const _hdr = document.querySelector('.sticky-top-section');
     const _ftr = document.querySelector('.bottom-area-wrapper');
     const _loc = document.getElementById('locationFilterBar');
     if (_hdr) _hdr.style.display = 'flex';
     if (_ftr) _ftr.style.display = 'flex';
     if (_loc) _loc.style.display = 'flex';
+
+    // Onyesha buyerView na ficha dashboard (null-safe)
+    const _bv = document.getElementById('buyerView');
+    const _dv = document.getElementById('dashboardViews');
+    if (_bv) _bv.style.display = 'block';
+    if (_dv) _dv.style.display = 'none';
 
     // Kitufe cha "+" kinaonekana kwenye kurasa za mbele (Home/Bidhaa/Huduma/Usafirishaji)
     window.setSellFab(true);
@@ -75,7 +77,9 @@ window.updateApp = function(mode, el = null) {
     
     // 5. Pakia data mpya
     skh.currentLimit = 20;
-    skh.loadMainFeed(skh.currentFeedCollection);
+    try { skh.loadMainFeed(skh.currentFeedCollection); } catch(e) {
+        console.warn('[updateApp] loadMainFeed imeshindikana:', e && e.message);
+    }
     
     // Funga fomu yoyote au modal iliyokuwa wazi
     /* [NAV 2026-11-13] Tab ni ukurasa mpya: funga KILA overlay. Zamani `closeModals()`
@@ -690,11 +694,15 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         currency: 'TZS',
         // Stock starts at zero; the server creates the audited opening movement.
         stock: 0,
+        reservedStock: 0,
         openingStockPending: true,
         openingStockInitialized: false,
         // Canonical Business/Store references; legacy userId remains for compatibility.
+        // [FIX] businessId and storeId must be consistent: if businessId is null,
+        // storeId must also be null, otherwise canonicalProductScopeValid rejects
+        // the write (store.businessId != null !== product.businessId == null).
         businessId: skh.currentUserData?.businessId || null,
-        storeId: skh.currentUserData?.storeId || null,
+        storeId: (skh.currentUserData?.businessId ? skh.currentUserData?.storeId || null : null),
         barcode: barcode,
 
         // Baini na hifadhi alama (flags) kwa usahihi kulingana na aina 3 za visibility
@@ -817,6 +825,10 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
         closeModals();
         loadAndRenderDashboard();
     }
+    // [FIX 2026-11-17] Kama saveData kurudisha null (haujakubalika na mahiri,
+    // mtandao umeanguka, n.k.), subiri hapa — usiifanye reset au close modals
+    // ili mtumiaji asiweze kuona fomu yalimwisha lakini bidhaa haijasukumwa.
+    if(!docId) return;
     skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
     window.skhUpdateSellerSubmitLabel();
 };

@@ -59,7 +59,9 @@ import { skh } from './00-bootstrap.js';
             var s = await skh.getDocs(q);
             s.forEach(function (d) { list.push(Object.assign({ id: d.id }, d.data())); });
             list.sort(function (a, b) { return (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0); });
-        } catch (e) {}
+        } catch (e) {
+            console.warn('[seller-store] getProducts kosa:', e && e.message ? e.message : e);
+        }
         return list;
     }
 

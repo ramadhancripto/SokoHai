@@ -92,17 +92,17 @@
        One photo per subject: a category whose subject has no suitable photo yet shows the clean
        placeholder tile until a licensed photo is supplied (never a neighbour's photo). */
     var PHOTO_BY_ID = {
-        'CAT-01': 'vyakula', 'CAT-02': 'kilimo', 'CAT-03': null, 'CAT-04': 'mifugo',
-        'CAT-05': null, 'CAT-06': null, 'CAT-07': 'mavazi', 'CAT-08': null,
-        'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': null,
-        'CAT-13': null, 'CAT-14': 'magari', 'CAT-15': null, 'CAT-16': null,
-        'CAT-17': 'svc-cleaning', 'CAT-18': 'svc-tech', 'CAT-19': 'afya', 'CAT-20': null,
-        'CAT-21': 'svc-virtual', 'CAT-22': null, 'CAT-23': null, 'CAT-24': null,
+        'CAT-01': 'vyakula', 'CAT-02': 'kilimo', 'CAT-03': 'mazao.svg', 'CAT-04': 'mifugo',
+        'CAT-05': 'uvuvi.svg', 'CAT-06': 'misitu.svg', 'CAT-07': 'mavazi', 'CAT-08': 'urembo.svg',
+        'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': 'simu.svg',
+        'CAT-13': 'kompyuta.svg', 'CAT-14': 'magari', 'CAT-15': 'vipuri.svg', 'CAT-16': 'usafiri.svg',
+        'CAT-17': 'svc-cleaning', 'CAT-18': 'svc-tech', 'CAT-19': 'afya', 'CAT-20': 'elimu.svg',
+        'CAT-21': 'svc-virtual', 'CAT-22': 'fedha.svg', 'CAT-23': 'ajira.svg', 'CAT-24': 'hoteli.svg',
         'CAT-25': 'svc-food', 'CAT-26': 'svc-event', 'CAT-27': 'sanaa', 'CAT-28': 'asili', 'CAT-29': 'zawadi',
-        'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': null, /* [R6] vitabu.webp: stock-photo watermark */ 'CAT-33': null,
-        'CAT-34': null, 'CAT-35': null, 'CAT-36': 'ulinzi', 'CAT-37': 'svc-marketing',
-        'CAT-38': null, /* [R6] svc-website.webp: stock-photo watermark */ 'CAT-39': null, 'CAT-40': 'jumla', 'CAT-41': null, /* [R6] maagizo.webp: stock-photo watermark */ 'CAT-42': null,
-        'CAT-43': null, 'CAT-44': 'mchanganyiko'
+        'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': 'ofisi.svg', 'CAT-33': 'viwanda.svg',
+        'CAT-34': 'nishati.svg', 'CAT-35': 'maji.svg', 'CAT-36': 'ulinzi', 'CAT-37': 'svc-marketing',
+        'CAT-38': 'digital.svg', 'CAT-39': 'secondhand.svg', 'CAT-40': 'jumla', 'CAT-41': 'import.svg',
+        'CAT-42': 'ardhi.svg', 'CAT-43': 'madini.svg', 'CAT-44': 'mchanganyiko'
     };
     /* [R6 review 2026-11] Files carrying a stock-photo watermark (Dreamstime) or a
        third-party name/phone are never shown; they stay on disk until the owner
@@ -121,11 +121,13 @@
        the SVG family stay on disk untouched. No photo -> clean placeholder tile (no request). */
     var PHOTO_DIR = 'assets/img/categories/clean/';
     function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
-    /* name | legacy label | CAT-xx  ->  file name | null */
+    /* name | legacy label | CAT-xx  ->  file name | null. .svg inategemea kama yameandaliwa kama SVG, .webp kwa asilia. */
+    function extOf(slug) { return /\.svg$/i.test(String(slug || '')) ? '.svg' : '.webp'; }
     function slugFor(name) {
         var id = canonId(name) || (/^CAT-\d{2}$/.test(String(name || '')) ? String(name) : null);
-        if (id && has(PHOTO_BY_ID, id)) return PHOTO_BY_ID[id] ? PHOTO_BY_ID[id] + '.webp' : null;
-        return has(PHOTO, name) && PHOTO[name] && REJECTED_IMAGES.indexOf(PHOTO[name]) === -1 ? PHOTO[name] + '.webp' : null;
+        var s = id && has(PHOTO_BY_ID, id) ? PHOTO_BY_ID[id] : null;
+        if (!s) s = has(PHOTO, name) && PHOTO[name] && REJECTED_IMAGES.indexOf(PHOTO[name]) === -1 ? PHOTO[name] : null;
+        return s ? s + extOf(s) : null;
     }
     /* sub-category photos: owner-supplied only (SUB_PHOTO); never the parent's photo */
     function subjectFor(sub) { return null; }
@@ -133,7 +135,7 @@
         ref = ref || {};
         var id = canonId(ref.categoryId || ref.category);
         var sub = id && ref.subcategory ? SUB_PHOTO[id + '|' + ref.subcategory] : null;
-        var f = (sub ? sub + '.webp' : null) || slugFor(ref.categoryId || ref.category);
+        var f = (sub ? sub + extOf(sub) : null) || slugFor(ref.categoryId || ref.category);
         return f ? PHOTO_DIR + f : null;
     };
     window.skhSubcategoryImage = function (sub) { return null; };

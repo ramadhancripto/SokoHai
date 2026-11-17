@@ -443,3 +443,162 @@
 @media (max-width: 330px) {
     .nf-foot .nf-btn, .nf-actions .nf-btn { flex-basis: 100%; width: 100%; }
 }
+
+/* ============================================================
+   TRANSPORT REQUEST FORM — Styling vizuri za sehemu ya usafiri
+   (Request Transport / Shipping form enhancements)
+   ============================================================ */
+
+/* ---------- Transport context card ---------- */
+.nf-ctx.transport-ctx .nf-ctx-img {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #d97706;
+}
+.nf-ctx.transport-ctx .nf-badge {
+    background: #fffbeb;
+    color: #92610a;
+}
+.nf-ctx.transport-ctx .nf-ctx-sub {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 6px;
+    background: #fefdf8;
+    border: 1px dashed #fde68a;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #785a14;
+}
+.nf-inline-arrow { color: #d97706; }
+.nf-inline-arrow svg { stroke: #d97706; }
+
+/* ---------- Transport route: pickup → destination ---------- */
+.nf-transport-route {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff;
+    border: 1px solid #fde68a;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 8px;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, .08);
+}
+.nf-transport-route .nf-route-point {
+    flex: 1; min-width: 0;
+}
+.nf-transport-route .nf-route-label {
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .3px; color: #92610a;
+    margin-bottom: 4px;
+}
+.nf-transport-route .nf-route-value {
+    font-size: 14px; font-weight: 800; color: #0f172a;
+    overflow-wrap: anywhere;
+}
+.nf-transport-route .nf-route-arrow {
+    flex-shrink: 0;
+    color: #d97706;
+    font-size: 16px;
+}
+.nf-transport-route .nf-route-arrow svg { stroke: #d97706; }
+
+/* ---------- Transport cargo/package ---------- */
+.nf-transport-cargo {
+    background: #fff;
+    border: 1px solid #fde68a;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 8px;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, .08);
+}
+.nf-transport-cargo .nf-cargo-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 10px;
+}
+.nf-transport-cargo .nf-cargo-row:last-child { margin-bottom: 0; }
+.nf-transport-cargo .nf-cargo-ico {
+    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #fffbeb; color: #d97706;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+}
+.nf-transport-cargo .nf-cargo-ico svg { stroke: #d97706; }
+.nf-transport-cargo .nf-cargo-info { flex: 1; min-width: 0; }
+.nf-transport-cargo .nf-cargo-info .nf-cargo-label {
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .3px; color: #92610a;
+}
+.nf-transport-cargo .nf-cargo-info .nf-cargo-value {
+    font-size: 13.5px; color: #0f172a; font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Transport dates ---------- */
+.nf-transport-dates {
+    background: #fff;
+    border: 1px solid #fde68a;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 8px;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, .08);
+}
+.nf-transport-dates .nf-date-row {
+    display: flex; gap: 10px;
+    margin-bottom: 8px;
+}
+.nf-transport-dates .nf-date-row > .nf-field {
+    flex: 1; margin-bottom: 0;
+}
+.nf-transport-dates .nf-date-row .nf-field label {
+    margin-bottom: 4px;
+}
+.nf-transport-dates .nf-dates-arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: #d97706;
+    margin-bottom: 4px;
+}
+.nf-transport-dates .nf-dates-arrow svg { stroke: #d97706; }
+
+/* ---------- Transport fee ---------- */
+.nf-transport-fee {
+    background: linear-gradient(135deg, #fffbeb 0%, #fefdf8 100%);
+    border: 1.5px solid #fde68a;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 8px;
+}
+.nf-transport-fee .nf-fee-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+}
+.nf-transport-fee .nf-fee-row:last-child { margin-bottom: 0; }
+.nf-transport-fee .nf-fee-label {
+    font-size: 13px; font-weight: 700; color: #785a14;
+}
+.nf-transport-fee .nf-fee-value {
+    font-size: 17px; font-weight: 900; color: #d97706;
+}
+.nf-transport-fee .nf-fee-currency {
+    font-size: 11.5px; color: #92610a;
+}
+
+/* ---------- Transport section headers ---------- */
+.nf-section.transport-section h3 {
+    color: #92610a;
+    border-left: 4px solid #fde68a;
+    padding-left: 8px;
+}
+.nf-section.transport-section h3 svg { stroke: #d97706; }
+
+/* ---------- Paired fields (from/to, dates) ---------- */
+.nf-pair-row.transport-pair { gap: 10px; }
+.nf-pair-row.transport-pair .nf-field { flex: 1; margin-bottom: 0; }
+
+/* ---------- Responsive: stack route on small screens ---------- */
+@media (max-width: 380px) {
+    .nf-transport-route { flex-direction: column; gap: 6px; align-items: flex-start; }
+    .nf-transport-route .nf-route-arrow { align-self: flex-start; margin-left: 2px; }
+    .nf-transport-dates .nf-date-row { flex-direction: column; }
+    .nf-transport-fee .nf-fee-row { flex-direction: column; gap: 4px; }
+    .nf-pair-row.transport-pair { flex-direction: column; }
+}

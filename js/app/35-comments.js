@@ -210,6 +210,8 @@ import { skh } from './00-bootstrap.js';
     function setupPanelToggle() { /* kazi imehamia skhOpenMaoni (sheet) */ }
 
     // Fungua sheet ya Maoni na uhakikishe data imepakia (mvivu — si kabla).
+    // [FIX 2026-11-17] Angalia hata kama C.loaded ni true — kama product ilibadilishwa,
+    // maoni yaliyopakia hapa hapasti iweze kuonekana kwenye bidhaa nyingine.
     window.skhOpenMaoni = async function () {
         var p = skh.currentOpenProduct;
         if (!p || !p.id) return;
@@ -219,16 +221,19 @@ import { skh } from './00-bootstrap.js';
         layer.hidden = false;
         // ruhusu onyesho kisha ongeza class ya uhuishaji
         requestAnimationFrame(function () { layer.classList.add('is-open'); });
-        if (!C.loaded || C.targetId !== p.id) {
+        // [FIX] Re-load maoni kila wakati product inabadilishwa, au kama state haiyo
+        if (!C.loaded || C.targetId !== p.id || !C.product || C.product.id !== p.id) {
             await window.skhCommentsOpen(p, { open: true });
         } else {
             render();
         }
-        checkEligibility();
+        // Safisha input baada ya kuangalia product mpya — usiweze kuona maoni
+        // ya bidhaa limeandaliwa yaliyotoka kwa bidhaa lililopita.
         setTimeout(function () {
             var inp = document.getElementById('skhCommentInput');
-            if (inp) { try { inp.focus(); } catch (e) {} }
+            if (inp) { try { inp.value = ''; inp.focus(); } catch (e) {} }
         }, 320);
+        checkEligibility();
     };
 
     window.skhCloseMaoni = function () {
@@ -774,6 +779,17 @@ import { skh } from './00-bootstrap.js';
                 return;
             }
         }
+        // [FIX 2026-11-17] Thibitisha kuwa maoni yatapanda kwenye bidhaa sahihi —
+        // usiweze kuandika maoni ya bidhaa A kwenye bidhaa B kwa sababu C.targetId
+        // ilibaki limeandaliwa yaliyopita.
+        var curP = skh.currentOpenProduct;
+        if (!curP || !curP.id || C.targetId !== curP.id) {
+            alert(T('cm_wrong_product', 'Tafadhali fungua maoni tena kwa bidhaa hii.') + ' ' +
+                  T('cm_reload', 'Ikiwa shida hupakia, fungua bidhaa tena.'));
+            if (inp) { inp.focus(); }
+            return;
+        }
+
         var payload = {
             targetType: C.targetType, targetId: C.targetId, text: text || '',
             authorName: myName(),
