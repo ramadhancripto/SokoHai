@@ -1,3 +1,4 @@
+
 // Real served HTML/CSS + real card builder, isolated sample data only (no Firebase writes).
 // Requires the local static preview on port 4173, or set NATURAL_GRID_URL.
 import assert from 'node:assert/strict';

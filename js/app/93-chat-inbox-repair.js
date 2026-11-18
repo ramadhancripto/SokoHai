@@ -241,7 +241,7 @@
             var pct = target > 0 ? Math.max(0, Math.min(100, Math.round(total * 100 / target))) : 0;
             var orderProgress = isOrderGroup ? '<span class="ch-order-progress"><i></i>'
                 + (target ? esc(total + '/' + target + ' · ' + pct + '% imefikiwa') : esc(String(it.goHead.status || 'Inaendelea').replace(/_/g, ' '))) + '</span>' : '';
-            return '<div class="' + gCls + '" data-gid="' + esc(it.gid) + '" data-conv="' + esc(it.convId || '') + '" onclick="window.__skhInboxOpenRow93(\'g:' + jsEsc(it.gid || '') + '\')">'
+            return '<div role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key===&quot;Enter&quot; || event.key===&quot; &quot;)){event.preventDefault();this.click()}" class="' + gCls + '" data-gid="' + esc(it.gid) + '" data-conv="' + esc(it.convId || '') + '" onclick="window.__skhInboxOpenRow93(\'g:' + jsEsc(it.gid || '') + '\')">'
                 + '<div class="ch-cc-avatar ch-identity-avatar ' + (isOrderGroup ? 'is-order' : 'is-group') + '"><span>'
                 + (storedAvatar && storedAvatar !== '#' ? esc(avatarText) : (isOrderGroup && window.skhNavIcon ? window.skhNavIcon('cart', 20) : esc(avatarText))) + '</span></div>'
                 + '<div class="ch-cc-info">'
@@ -267,7 +267,7 @@
         var muteIco = it.muted ? '<span class="ch-state-badge" title="Imewekwa kimya">Mute</span>' : '';
         var businessRole = ['seller', 'business', 'merchant', 'agent'].indexOf(String(it.role || '').toLowerCase()) >= 0;
         var cls = 'ch-contact ch-person-row' + (businessRole ? ' ch-business-row' : '') + (it.pinned ? ' ch-pinned' : '') + (it.unread > 0 ? ' ch-unread-row' : '');
-        return '<div class="' + cls + '" data-uid="' + esc(it.otherUid || '') + '" data-conv="' + esc(it.convId || '') + '" onclick="window.__skhInboxOpenRow93(\'' + jsEsc(it.otherUid || '') + '\')">'
+        return '<div role="button" tabindex="0" onkeydown="if(event.target===this &amp;&amp; (event.key===&quot;Enter&quot; || event.key===&quot; &quot;)){event.preventDefault();this.click()}" class="' + cls + '" data-uid="' + esc(it.otherUid || '') + '" data-conv="' + esc(it.convId || '') + '" onclick="window.__skhInboxOpenRow93(\'' + jsEsc(it.otherUid || '') + '\')">'
             + '<div class="ch-cc-avatar ch-identity-avatar is-person">' + dp + '</div>'
             + '<div class="ch-cc-info">'
             + '<span class="ch-name-row"><span class="ch-name-block is-person"><span>' + esc(it.name || 'Mawasiliano') + '</span>' + verified + '</span></span>'

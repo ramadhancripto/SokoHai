@@ -1,0 +1,60 @@
+/* One visual identity for existing SokoHai brand lockups. */
+.skh-brand-lockup { display:inline-flex; flex-direction:column; align-items:stretch; line-height:1; }
+.skh-brand-word { display:inline-flex; align-items:baseline; white-space:nowrap; font-family:var(--skh-font, 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif); font-weight:800; letter-spacing:-.03em; line-height:1; }
+.skh-brand-word b { font:inherit; }
+.skh-brand-word .skh-brand-soko { color:var(--skh-brand-blue, #1268a8); }
+.skh-brand-word .skh-brand-hai { color:var(--sokohai-green, #18a982); }
+.skh-brand-arc { display:block; height:.18em; margin-top:.08em; border-bottom:2px solid var(--skh-gold-a, #d8b83a); border-radius:0 0 50% 50% / 0 0 100% 100%; }
+.skh-brand-welcome { margin:0 0 6px; display:flex; justify-content:center; }
+.skh-brand-welcome .skh-brand-lockup { font-size:34px; }
+#skhBootSplash .skh-splash-content { display:flex; flex-direction:column; align-items:center; text-align:center; }
+#skhBootSplash .skh-bs-logo { width:auto; display:flex; align-items:center; justify-content:center; gap:12px; }
+#skhBootSplash .skh-bs-logo img { width:clamp(58px, 16vw, 80px); height:auto; object-fit:contain; }
+#skhBootSplash .skh-brand-lockup { font-size:clamp(38px, 9vw, 62px); }
+.shc-brand.skh-brand-lockup { align-items:stretch; width:max-content; }
+#maoniLayer .maoni-heading > .skh-brand-lockup { width:max-content; font-size:14px; }
+#maoniLayer .maoni-heading > .skh-brand-lockup .skh-brand-word { font-size:14px; }
+#rideRequestModal .ride-brand .skh-brand-lockup { font-size:18px; }
+#rideRequestModal .ride-brand .skh-brand-word b { font:inherit; }
+#rideRequestModal .ride-brand .skh-brand-word b::after { content:none; }
+#rideRequestModal .ride-brand .skh-brand-word .skh-brand-soko { color:var(--skh-brand-blue, #1268a8); }
+#rideRequestModal .ride-brand .skh-brand-word .skh-brand-hai { color:var(--sokohai-green, #18a982); }
+
+/* Equal side columns place Post at the actual midpoint, not merely between
+   two unequal groups. Controls and handlers remain the existing ones. */
+.sticky-top-section .top-nav-row { display:grid !important; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center !important; column-gap:0 !important; }
+.top-nav-row .top-nav-left { grid-column:1; grid-row:1; margin:0 !important; min-width:0; }
+.top-nav-row #skhPostBtn { grid-column:2; grid-row:1; justify-self:center; margin:0 !important; }
+.top-nav-row .top-nav-icons { grid-column:3; grid-row:1; justify-self:end; margin:0 !important; padding-left:0 !important; display:flex; align-items:center; gap:10px !important; }
+.top-nav-row .top-nav-icons::before { display:none !important; }
+@media (max-width: 430px) and (min-width: 361px) {
+  .sticky-top-section .top-nav-row { padding:7px 8px !important; }
+  .top-nav-row .top-nav-left { gap:4px !important; }
+  .top-nav-row .top-nav-icons { gap:2px !important; }
+  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-icon-btn, .top-nav-row .skh-post-btn { width:38px !important; height:40px !important; min-width:38px !important; min-height:40px !important; }
+  .top-nav-row .skh-icon-btn svg, .top-nav-row .skh-post-btn svg { width:18px !important; height:18px !important; }
+}
+/* Narrow phones get a spacious second action row rather than 27px targets. */
+@media (max-width:360px) {
+  .sticky-top-section .top-nav-row { padding:6px 9px 8px !important; row-gap:6px !important; }
+  .top-nav-row .top-nav-left { gap:5px !important; }
+  .top-nav-row .skh-brand-logo { width:29px !important; height:29px !important; }
+  .top-nav-row .skh-brand-word { font-size:18px !important; letter-spacing:-.5px !important; }
+  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-post-btn, .top-nav-row .skh-icon-btn { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; }
+  .top-nav-row .top-nav-left .menu-btn svg, .top-nav-row .skh-post-btn svg, .top-nav-row .skh-icon-btn svg { width:19px !important; height:19px !important; }
+  .top-nav-row .top-nav-icons { grid-column:1 / -1; grid-row:2; justify-self:stretch; justify-content:space-around; gap:0 !important; }
+}
+@media (min-width:1100px) {
+  .top-nav-row .top-nav-icons { width:min(100%, 490px); display:grid !important; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px !important; }
+  .top-nav-row .top-nav-icons .skh-icon-btn { width:100% !important; justify-content:center; padding:0 8px !important; }
+}
+@media (min-width:431px) and (max-width:1099px) {
+  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-post-btn, .top-nav-row .skh-icon-btn { width:42px !important; height:42px !important; min-width:42px !important; min-height:42px !important; }
+}
+@media (max-width:360px) {
+  .top-nav-row .top-nav-left { gap:3px !important; }
+  .top-nav-row .top-nav-left .menu-btn { width:40px !important; min-width:40px !important; }
+  .top-nav-row .skh-brand { gap:3px !important; }
+  .top-nav-row .skh-brand-logo { width:22px !important; height:22px !important; }
+  .top-nav-row .skh-brand-word { font-size:14px !important; letter-spacing:-.35px !important; }
+}

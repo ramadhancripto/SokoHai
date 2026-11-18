@@ -1,0 +1,143 @@
+/* Conversation surfaces only. No changes to message or group logic. */
+html body #chatListModal .ch-inbox-shell,
+html body #chatModal .chat-card {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #263442;
+    min-width: 0; min-height: 0;
+}
+html body #chatListModal .ch-inbox-shell { background: #fff !important; }
+html body #chatListModal .ch-inbox-head,
+html body #chatModal .chat-head-bar {
+    background: #fff !important;
+    border-bottom: 1px solid #e6edf0 !important;
+    box-shadow: none !important;
+}
+html body #chatListModal .ch-inbox-head {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+}
+html body #chatListModal .ch-inbox-title b,
+html body #chatModal .ch-head-id b { color: #263442 !important; letter-spacing: 0 !important; }
+html body #chatListModal .ch-inbox-search { background: #f3f6f8 !important; box-shadow: none !important; }
+html body #chatListModal #inboxList { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+html body #chatListModal #inboxList .ch-cc-info,
+html body #chatListModal #inboxList .ch-name-block { min-width: 0; }
+html body #chatListModal #inboxList .ch-cc-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html body #chatListModal #inboxList .ch-cc-time { white-space: nowrap; }
+html body #chatListModal .ch-tab.active { background: #18a982 !important; border-color: #18a982 !important; color: #fff !important; }
+html body #chatModal #chatBody,
+html body #chatModal #chatMainSurface { min-width: 0; min-height: 0; }
+html body #chatModal #chatMessages {
+    background: #f3f6f8 !important;
+    overflow-x: hidden; overscroll-behavior: contain;
+    padding: 16px clamp(10px, 2vw, 24px) !important;
+}
+html body #chatModal #chatMessages .ch-msg { min-width: 0; max-width: 100%; }
+html body #chatModal #chatMessages .ch-msg .chat-bubble {
+    max-width: min(85%, 620px); min-width: 0;
+    padding: 9px 12px !important;
+    color: #263442 !important; font-size: 14px; line-height: 1.45;
+    overflow-wrap: anywhere; box-shadow: 0 1px 2px rgba(38,52,66,.08) !important;
+}
+html body #chatModal #chatMessages .ch-msg[data-mine="0"] .chat-bubble {
+    background: #fff !important; border: 1px solid #e3eaf0 !important; border-radius: 4px 14px 14px 14px !important;
+}
+html body #chatModal #chatMessages .ch-msg[data-mine="1"] .chat-bubble {
+    background: #dcf5ed !important; border: 1px solid #c5ebdf !important; border-radius: 14px 4px 14px 14px !important;
+}
+html body #chatModal #chatMessages .ch-msg.ch-msg--failed[data-mine] .chat-bubble { background: #fef2f2 !important; border-color: #fca5a5 !important; }
+html body #chatModal #chatMessages .ch-card { min-width: 0; max-width: 100%; }
+html body #chatModal #chatComposer { background: #fff !important; border-top-color: #e6edf0 !important; }
+html body #chatModal .ch-comp-row, html body #chatModal .ch-comp-field { min-width: 0; }
+html body #chatModal #chatInput { min-width: 0; }
+html body #chatModal :focus-visible, html body #chatListModal :focus-visible { outline: 2px solid #1769aa; outline-offset: 2px; }
+@media (max-width: 640px) {
+    html body #chatModal .chat-head-bar { padding-top: calc(6px + env(safe-area-inset-top, 0px)) !important; }
+    /* 16px prevents iOS input focus from zooming the page. */
+    html body #chatModal #chatInput, html body #chatListModal #inboxSearchInput { font-size: 16px !important; }
+    html body #chatModal #chatMessages .ch-msg .chat-bubble { max-width: 90%; }
+}
+
+/* Existing Group Soga: one collapsible navigation rail, never a second chat. */
+#skhGroupSogaModal.skh-sheet-overlay {
+    top: var(--gsg-vtop, 0px) !important;
+    bottom: auto !important;
+    height: var(--gsg-vh, 100dvh) !important;
+}
+#skhGroupSogaModal > .skh-sheet {
+    height: var(--gsg-vh, 100dvh) !important;
+    max-height: var(--gsg-vh, 100dvh) !important;
+}
+#skhGroupSogaModal > .skh-sheet > .gsg-fs {
+    --gsg-rail-width: 0px;
+    max-width: none !important; width: 100%; min-width: 0; min-height: 0;
+    grid-template-columns: var(--gsg-rail-width) minmax(0, 1fr) !important;
+    grid-template-areas: "head head" "rail desc" "rail ann" "rail ad" "rail body" !important;
+    transition: grid-template-columns 160ms ease;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #263442;
+}
+#skhGroupSogaModal > .skh-sheet > .gsg-fs.gsg-nav-open { --gsg-rail-width: 220px; }
+#skhGroupSogaModal .gsg-fs > #gsgTabs {
+    min-width: 0; overflow: hidden auto !important; visibility: hidden; pointer-events: none;
+    opacity: 0; transition: opacity 120ms ease, visibility 120ms ease;
+    padding: 8px !important;
+}
+#skhGroupSogaModal .gsg-fs.gsg-nav-open > #gsgTabs { visibility: visible; pointer-events: auto; opacity: 1; }
+#skhGroupSogaModal #gsgTabs .gsg-card { justify-content: flex-start !important; padding: 0 10px !important; gap: 10px !important; }
+#skhGroupSogaModal #gsgTabs .gsg-card .gsg-lb {
+    display: block !important; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: #263442 !important; font: 600 13px/1.25 Inter, system-ui, sans-serif !important;
+}
+#skhGroupSogaModal #gsgTabs .gsg-card.is-active,
+#skhGroupSogaModal #gsgTabs .gsg-card[data-tab="soko"].is-active { background: #e3f6ef !important; box-shadow: none !important; }
+#skhGroupSogaModal #gsgTabs .gsg-card.is-active .gsg-lb { color: #0d7057 !important; }
+#skhGroupSogaModal #gsgTabs .gsg-card[data-tab="soko"] { background: transparent !important; box-shadow: none !important; }
+#skhGroupSogaModal .gsg-rail-card { display: none !important; }
+#skhGroupSogaModal .gsg-head {
+    min-width: 0; gap: 6px !important; background: #fff !important;
+    padding: calc(7px + env(safe-area-inset-top, 0px)) 10px 7px !important;
+}
+#skhGroupSogaModal .gsg-head .skh-sheet-back { flex: 0 0 40px; width: 40px !important; height: 40px !important; }
+#skhGroupSogaModal .gsg-avatar { flex: 0 0 38px; width: 38px !important; height: 38px !important; background: #18a982 !important; box-shadow: none !important; }
+#skhGroupSogaModal .gsg-head-txt { min-width: 0; }
+#skhGroupSogaModal .gsg-head-txt .skh-sheet-title { font-size: clamp(14px, 1.5vw, 17px) !important; color: #263442 !important; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#skhGroupSogaModal .gsg-body, #skhGroupSogaModal #gsgTabChat { min-width: 0; min-height: 0; }
+#skhGroupSogaModal #gsgMsgs { min-width: 0; min-height: 0; overflow-x: hidden !important; background: #f3f6f8 !important; }
+#skhGroupSogaModal .gsg-mwrap, #skhGroupSogaModal .gsg-bubble, #skhGroupSogaModal .gsg-rich { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+#skhGroupSogaModal #gsgComposerRow.gsg-comp-row { min-width: 0; flex: 0 0 auto; padding: 7px 8px calc(7px + env(safe-area-inset-bottom, 0px)) !important; gap: 4px !important; }
+#skhGroupSogaModal #gsgComposerRow .gsg-cbtn { display: inline-flex !important; flex: 0 0 36px !important; width: 36px !important; height: 40px !important; min-width: 36px !important; }
+#skhGroupSogaModal #gsgComposerRow .gsg-send { flex: 0 0 40px !important; width: 40px !important; height: 40px !important; min-width: 40px !important; }
+#skhGroupSogaModal #gsgComposerRow .gsg-field { flex: 1 1 auto; min-width: 0; min-height: 40px; padding: 2px 7px !important; border-radius: 18px !important; }
+#skhGroupSogaModal #gsgComposerRow #gsgInput {
+    display: block; width: 100%; min-width: 0; resize: none; overflow-y: auto;
+    box-sizing: border-box; height: var(--gsg-input-height, 34px) !important; min-height: 34px; max-height: 112px;
+    padding: 7px 2px !important; font: 400 16px/20px Inter, system-ui, sans-serif !important;
+    border: 0 !important; background: transparent !important; color: #263442 !important;
+}
+#skhGroupSogaModal :focus-visible { outline: 2px solid #1769aa !important; outline-offset: 2px; }
+#skhGroupSogaModal #gsgComposerRow .gsg-field:focus-within { box-shadow: 0 0 0 2px #1769aa !important; }
+@media (max-width: 719px) {
+    #skhGroupSogaModal > .skh-sheet > .gsg-fs,
+    #skhGroupSogaModal > .skh-sheet > .gsg-fs.gsg-nav-open { --gsg-rail-width: 0px; }
+    #skhGroupSogaModal .gsg-fs > #gsgTabs {
+        position: absolute !important; grid-area: 1 / 1 / -1 / -1 !important; z-index: 19; left: 0; top: var(--gsg-head-height, 60px);
+        bottom: var(--gsg-composer-height, 54px); width: min(224px, 75%); height: auto !important;
+        background: #fff !important; border-right: 1px solid #e6edf0 !important;
+        box-shadow: 8px 0 18px rgba(38,52,66,.12); transform: translateX(-102%);
+        transition: transform 160ms ease, opacity 120ms ease, visibility 160ms;
+    }
+    #skhGroupSogaModal .gsg-fs.gsg-nav-open > #gsgTabs { transform: translateX(0); }
+}
+@media (min-width: 1280px) {
+    #skhGroupSogaModal > .skh-sheet > .gsg-fs.gsg-nav-open {
+        grid-template-columns: var(--gsg-rail-width) minmax(0, 1fr) 320px !important;
+        grid-template-areas: "head head head" "rail desc side" "rail ann side" "rail ad side" "rail body side" !important;
+    }
+    #skhGroupSogaModal .gsg-fs:not(.gsg-nav-open) > #gsgSide { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #skhGroupSogaModal > .skh-sheet > .gsg-fs, #skhGroupSogaModal .gsg-fs > #gsgTabs { transition: none !important; }
+}
+/* Override legacy narrow-screen hides: keep existing emoji and sticker actions reachable. */
+#skhGroupSogaModal #gsgComposerRow #gsgEmojiBtn,
+#skhGroupSogaModal #gsgComposerRow #gsgStickerBtn { display: inline-flex !important; }

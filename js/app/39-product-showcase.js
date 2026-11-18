@@ -591,11 +591,12 @@ import {
 
         var wrap = $('sellerMiniDash');
         wrap.onclick = function () {
-            if (p.userId && typeof window.openSellerProfile === 'function') {
+            var profileUid = p.userId || p.sellerId || (col === PS_SERVICE ? p.providerId : null) || (col === PS_DRIVER ? p.driverId : null);
+            if (profileUid && typeof window.openSellerProfile === 'function') {
                 // [FIX 2026-11-04] Kumbuka tulikotoka: sellerProfileModal hufunga
                 // productModal; "Rudi nyuma"/X sasa inairudisha bidhaa.
                 window.__skhProductReturn = { id: p.id, col: p.collectionName || PS_PRODUCT };
-                window.openSellerProfile(p.userId, name);
+                window.openSellerProfile(profileUid, name);
             }
         };
         wrap.setAttribute('role', 'button');

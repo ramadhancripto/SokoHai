@@ -70,13 +70,19 @@ async function buildPopular() {
     const list = (await q('products', skh.limit(60))).filter(p => live(p) && pic(p) && !(p.saleMode && p.saleMode !== 'free_market' && p.saleMode !== 'wholesale'));
     list.sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     const top = list.slice(0, 8); if (!top.length) return;
-    s.querySelector('.shx-body').innerHTML = `<div class="shp-row">${top.map(p => {
+    s.querySelector('.shx-body').innerHTML = `<div class="shp-row" role="region" tabindex="0" aria-label="Bidhaa maarufu, telezesha kushoto au kulia">${top.map(p => {
         const old = Number(p.originalPrice || p.oldPrice || p.compareAtPrice || 0), price = Number(p.price) || 0;
-        const off = old > price && price > 0 ? Math.round((1 - price / old) * 100) : 0, stock = Number(p.stock) || 0;
-        return `<article class="shp-card" onclick="openProduct('${esc(p.id)}','products')">${off ? `<span class="shp-off">-${off}%</span>` : `<button class="shp-heart" aria-label="Hifadhi" onclick="event.stopPropagation(); window.skhToggleSave && skhToggleSave({id:'${esc(p.id)}',collectionName:'products',title:'${esc(String(ptitle(p)).replace(/'/g, ''))}'}, this)">${ico('heart', 18)}</button>`}
+        const off = old > price && price > 0 ? Math.round((1 - price / old) * 100) : 0;
+        const hasStock = p.stock !== undefined && p.stock !== null && String(p.stock).trim() !== '' && Number.isFinite(Number(p.stock));
+        const stock = hasStock ? Number(p.stock) : null;
+        const rating = typeof skh.cardRating === 'function' ? skh.cardRating(p) : '';
+        const location = typeof skh.cardPinLocation === 'function' ? skh.cardPinLocation(p, 'products') : '';
+        const unit = p.baseUnit ? `<span class="shp-unit">${esc(p.baseUnit)}</span>` : '';
+        const openAttrs = typeof skh.cardOpenAttrs === 'function' ? skh.cardOpenAttrs(p.id, 'products', ptitle(p)) : '';
+        return `<article class="shp-card" ${openAttrs}>${off ? `<span class="shp-off">-${off}%</span>` : `<button type="button" class="shp-heart" aria-label="Hifadhi" onclick="event.stopPropagation(); window.skhToggleSave && skhToggleSave({id:'${esc(p.id)}',collectionName:'products',title:'${esc(String(ptitle(p)).replace(/'/g, ''))}'}, this)">${ico('heart', 18)}</button>`}
             <div class="shp-img"><img src="${esc(pic(p))}" alt="${esc(ptitle(p))}" loading="lazy" onerror="this.closest('.shp-card').remove()"></div>
-            <b class="shp-t">${esc(short(ptitle(p), 40))}</b><strong>${esc(tsh(price))}</strong>${off ? `<s>${esc(tsh(old))}</s>` : ''}
-            <span class="shp-stock ${stock > 0 ? '' : 'out'}" data-no-i18n>${ico(stock > 0 ? 'check' : 'x', 13)} ${stock > 0 ? 'Inapatikana' : 'Imeisha'}</span></article>`; }).join('')}</div>`;
+            <div class="shp-details"><b class="shp-t">${esc(ptitle(p))}</b><div class="shp-price-row"><strong>${price > 0 ? esc(tsh(price)) : 'Bei haijaainishwa'}</strong>${rating}</div>${off ? `<s>${esc(tsh(old))}</s>` : ''}
+            <div class="shp-meta">${unit}${hasStock ? `<span class="shp-stock ${stock > 0 ? '' : 'out'}" data-no-i18n>${ico(stock > 0 ? 'check' : 'x', 13)} ${stock > 0 ? 'Inapatikana' : 'Imeisha'}</span>` : ''}</div>${location ? `<div class="shp-location">${location}</div>` : ''}</div></article>`; }).join('')}</div>`;
     s.hidden = false;
 }
 

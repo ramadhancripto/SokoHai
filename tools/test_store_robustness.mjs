@@ -1,0 +1,11 @@
+// Real store UI code with synthetic Firestore-shaped mocks.
+import {JSDOM} from 'jsdom';import fs from 'node:fs';import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../js/app/29-seller-store.js',import.meta.url),'utf8').replace(/^import .*?;\s*$/m,'');
+async function run(rows,fail=[],seller={storeName:'Sample shop'}){const dom=new JSDOM('<div id="sellerProfileModal"><div id="sellerProfileBody"></div></div>',{runScripts:'outside-only',url:'https://example.test'}),w=dom.window;const snap=xs=>({size:xs.length,forEach:cb=>xs.forEach(x=>cb({id:x.docId||x.id,data:()=>x.data||x}))});
+w.skh={db:{},skhEscape:s=>String(s),skhJsEsc:s=>String(s),getUserCard:async()=>({exists:()=>true,data:()=>seller}),collection:(db,col)=>col,where:(k,op,v)=>({k,op,v}),limit:n=>n,query:(col,...args)=>({col,args}),getDocs:async q=>{if(fail.includes(q.col))throw Object.assign(new Error('denied'),{code:'permission-denied'});return snap(q.col==='products'?rows:[])}};w.eval(source);await w.openSellerProfile('seller','');return w}
+let w=await run([{docId:'correct-id',data:{id:'bad-id',title:'Sample product',comments:{rating:5},category:'Food'}}],['orders','sellerFollowers'],{storeName:'Sample shop',location:{name:'Example location'}});
+assert.match(w.document.body.textContent,/Sample shop/);assert.match(w.document.body.textContent,/Example location/);assert.match(w.document.body.textContent,/Haipatikani/);assert.match(w.document.body.innerHTML,/correct-id/);assert.doesNotMatch(w.document.body.innerHTML,/bad-id/);
+w.skhSellerProfileTab('reviews',null);assert.match(w.document.body.textContent,/No reviews yet/);w.skhSellerProfileTab('products',null);w.skhProfileSearch('Sample');assert.match(w.document.body.textContent,/Sample product/);w.skhProfileSearch('not-here');assert.doesNotMatch(w.document.body.textContent,/Sample product/);
+w=await run([],['products']);assert.match(w.document.body.textContent,/Bidhaa hazijapakiwa/);assert.doesNotMatch(w.document.body.textContent,/No products in this section/);
+w=await run([]);assert.match(w.document.body.textContent,/No products in this section/);assert.equal(w.document.querySelector('#spFollowers').textContent,'0');
+console.log('STORE UI: non-array comments, authoritative IDs, unavailable stats, product errors, optional data and filter passed (mock Firestore)');

@@ -1,0 +1,35 @@
+// Demo emulator ONLY. Tests Netlify-shaped events directly, not Netlify hosting.
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {spawnSync} from 'node:child_process';
+const project=process.env.GCLOUD_PROJECT||'';
+if(!/^demo-[a-z0-9-]+$/.test(project)||process.env.FIRESTORE_EMULATOR_HOST!=='127.0.0.1:8085'||process.env.FIREBASE_AUTH_EMULATOR_HOST!=='127.0.0.1:9099') throw Error('BLOCKED: demo Auth and Firestore emulators required');
+const require=createRequire(new URL('../functions/index.js',import.meta.url));
+const {handler}=require('./staging-callable-adapter.cjs');
+async function signup(){const r=await fetch('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({returnSecureToken:true})});const j=await r.json();assert(j.idToken&&j.localId);return j}
+const u=await signup(), other=await signup();
+const call=async(name,data,token=u.idToken,options={})=>{const result=await handler({path:'/.netlify/functions/callable/'+name,httpMethod:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:JSON.stringify({data}),...options});return {status:result.statusCode,body:JSON.parse(result.body)}};
+assert.equal((await call('walletAdjust',{})).status,404);
+assert.equal((await call('commentsPublish',{},null)).status,401);
+assert.equal((await call('commentsPublish',{},'forged')).status,401);
+assert.equal((await call('commentsPublish',{},u.idToken,{httpMethod:'GET'})).status,405);
+assert.equal((await call('commentsPublish',{},u.idToken,{body:'{broken'})).status,400);
+assert.equal((await call('commentsPublish',{},u.idToken,{body:'x'.repeat(65537)})).status,400);
+assert.equal((await call('commentsPublish',{},u.idToken,{body:JSON.stringify({data:{},extra:1})})).status,400);
+const admin=require('firebase-admin'), db=admin.firestore();
+const b='b'+u.localId,s='s'+u.localId,p='p'+u.localId;
+await Promise.all([db.doc('users/'+u.localId).set({businessId:b,storeId:s}),db.doc('businesses/'+b).set({ownerUid:u.localId}),db.doc('stores/'+s).set({ownerUid:u.localId,businessId:b}),db.doc('products/'+p).set({title:'Sample'})]);
+let a=await call('commentsPublish',{targetId:p,text:'Demo comment',clientRequestId:'stagingdemorequest123456'});assert.equal(a.status,200);
+let retry=await call('commentsPublish',{targetId:p,text:'Demo comment',clientRequestId:'stagingdemorequest123456'});assert.equal(retry.status,200);assert.equal(retry.body.result.id,a.body.result.id);assert.equal(retry.body.result.already,true);
+assert.equal((await call('commentsPublish',{targetId:p,text:'Bad',parentId:'bad/path'})).status,400);
+const evidence=await call('commentsEvidence',{targetId:p});assert.equal(evidence.status,200);
+const liked=await call('commentsLike',{commentId:a.body.result.id});assert.equal(liked.status,200);assert.equal(liked.body.result.liked,true);
+const unliked=await call('commentsLike',{commentId:a.body.result.id});assert.equal(unliked.status,200);assert.equal(unliked.body.result.liked,false);
+const period={start:'2026-11-01T00:00:00.000Z',end:'2026-12-01T00:00:00.000Z'};
+let report=await call('posReports',{businessId:b,storeId:s,period});assert.equal(report.status,200);assert.equal(report.body.result.summary.grossSales,0);
+assert.equal((await call('posReports',{businessId:b,storeId:s,period},other.idToken)).status,403);
+let context=await call('businessEnsureContext',{},other.idToken);assert.equal(context.status,200);
+const env={...process.env,GCLOUD_PROJECT:'sokonet-3b847',GOOGLE_CLOUD_PROJECT:'sokonet-3b847'};
+const blocked=spawnSync(process.execPath,['-e',`require('./functions/staging-callable-adapter.cjs').handler({path:'/commentsPublish'}).then(x=>{if(x.statusCode!==400)process.exit(1); console.log('production blocked')})`],{env,encoding:'utf8'});assert.equal(blocked.status,0,blocked.stderr);assert.match(blocked.stdout,/production blocked/);
+console.log('PASS emulator-only adapter: valid/forged/missing auth, allowlist, invalid method/body, idempotent comment, report owner isolation, context and production guard. Netlify hosting, App Check and production are NOT tested.');
+process.exit(0);

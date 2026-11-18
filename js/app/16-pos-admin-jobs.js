@@ -1597,6 +1597,7 @@ window.chainNextLeg = function(oldRideId, lastStop, cargoName) {
     sessionStorage.setItem('chain_from', lastStop);
     sessionStorage.setItem('chain_cargo_name', cargoName);
     sessionStorage.setItem('chain_old_ride_id', oldRideId);
+    if (window.skhSyncRideChainLocation) window.skhSyncRideChainLocation();
     
     alert(T('pa_chain_next', 'Transport chain: cargo [{c}] reached stop [{s}]. Now choose the next driver or vehicle for the next leg.', { c: cargoName, s: lastStop }));
     document.getElementById('rideRequestModal').style.display = 'flex';
@@ -1822,7 +1823,10 @@ window.updateDeliverySubcats = function() {
     if(livestockDiv) livestockDiv.style.display = 'none';
     if(cargoDiv) cargoDiv.style.display = 'none';
 
-    if (!category) return;
+    if (!category) {
+        if (typeSelect) typeSelect.innerHTML = '<option value="">Chagua aina ya safari kwanza</option>';
+        return;
+    }
 
     let vehicles = [];
 
@@ -1902,156 +1906,31 @@ window.deleteOrderLog = async function(orderId) {
     });
 };
 
-window.directRequestTransporter = async function(rideId) {
-    if(!skh.requireAuth()) return;
-    if(!await skhConfirm("Je, unathibitisha kukubali usafiri huu na unataka kuanza sasa?")) return;
-
+// One server-authoritative acceptance path. No browser-created assignment/token.
+const skhAcceptingRides = new Set();
+window.directRequestTransporter = async function(rideId, button) {
+    if (!skh.requireAuth() || !rideId || skhAcceptingRides.has(rideId)) return;
+    skhAcceptingRides.add(rideId);
+    const original = button && button.innerHTML;
+    if (button) { button.disabled = true; button.setAttribute('aria-busy', 'true'); button.textContent = 'Inakubali…'; }
+    const notify = function(msg, kind) {
+        if (typeof window.sokohaiToast === 'function') window.sokohaiToast(msg, kind, 5000);
+        else if (typeof skhToast === 'function') skhToast(msg, kind, 5000);
+        else alert(msg);
+    };
     try {
-        const rideRef = skh.doc(skh.db, "ride_requests", rideId);
-        const demoOk = (typeof window.skhCustodyFallbackAllowed === 'function') && window.skhCustodyFallbackAllowed();
-
-        // [CUSTODY 2026-09] SERVER-AUTHORITATIVE: kukubali kazi kunapitia
-        // callable `deliveryAccept` (accepted + driverId + token PK + event +
-        // arifa kwa muuzaji). Browser HAJIPANGI yenyewe kama dereva.
-        let serverDone = false;
-        if (typeof window.skhCustodyServerAccept === 'function') {
-            try {
-                const acc = await window.skhCustodyServerAccept({
-                    rideId: rideId,
-                    driverName: skh.currentUser.displayName || "Dereva Sokohai",
-                    driverPhone: (skh.currentUserData && skh.currentUserData.phone) || "N/A",
-                    driverVehicleReg: (skh.currentUserData && skh.currentUserData.vehicleReg) || "N/A"
-                });
-                if (acc && acc.data && acc.data.ok) serverDone = true;
-            } catch (e) {
-                console.warn("[custody] deliveryAccept imeshindwa:", e && e.message);
-                // [REMEDIATION R2] a real server decision (not approved / suspended /
-                // already taken) is final: show it, never fall back to a client write.
-                var code = String((e && e.code) || '').replace(/^functions\//, '');
-                if (['permission-denied', 'failed-precondition', 'unauthenticated', 'invalid-argument', 'resource-exhausted'].indexOf(code) !== -1) {
-                    skhToast((e && e.message) || 'Huwezi kukubali kazi hii.', 'error', 5000);
-                    return;
-                }
-            }
-        }
-
-        if (!serverDone) {
-            /* [FIX 2026-09-15] Uchunguzi ulionyesha `deliveryAccept` inarudisha 404
-               kwenye REGION ZOTE — haijadeploy. Hapo awali hii ilikuwa inasimama
-               kabisa, hivyo dereva hakuweza KAMWE kukubali kazi.
-
-               Tofautisho muhimu (§2 — hakuna fake success):
-                 • KUKUBALI KAZI ni AHADI. Ni mabadiliko ya hali yanayolindwa na
-                   Security Rules (dereva mwenyewe, ombi liwe bado 'searching').
-                   Hii inaweza kuandikwa na client kwa usalama.
-                 • TOKEN YA KUCHUKUA (PK), escrow na kamisheni ni MAMLAKA YA
-                   SERVER. Hizi HAZIANDIKWI na browser — tunamwambia mtumiaji
-                   ukweli badala ya kudanganya.                                */
-            if (!demoOk) {
-                var st = (typeof window.skhErr === 'function')
-                    ? null : null;
-                // Andika hali ya 'accepted' pekee — Rules ndizo mlinzi.
-                try {
-                    var snapPre = await skh.getDoc(rideRef);
-                    if (!snapPre || !snapPre.exists || !snapPre.exists()) {
-                        skhToast('Ombi hili halipatikani tena — huenda limeondolewa.', 'error', 4000);
-                        return;
-                    }
-                    var cur = snapPre.data() || {};
-                    // Usiruhusu kukubali ombi ambalo tayari lina dereva (§15 stale state)
-                    if (cur.driverId && cur.driverId !== skh.currentUser.uid) {
-                        skhToast('Samahani, kazi hii tayari imechukuliwa na dereva mwingine.', 'info', 4000);
-                        if (typeof window.loadAvailableJobs === 'function') window.loadAvailableJobs();
-                        return;
-                    }
-                    if (['completed','cancelled','delivered'].indexOf(String(cur.status||'').toLowerCase()) !== -1) {
-                        skhToast('Kazi hii imeshafungwa.', 'info', 3500);
-                        return;
-                    }
-                    await skh.updateDoc(rideRef, {
-                        status: 'accepted',
-                        driverId: skh.currentUser.uid,
-                        driverName: skh.currentUser.displayName || 'Dereva Sokohai',
-                        driverPhone: (skh.currentUserData && skh.currentUserData.phone) || 'N/A',
-                        driverVehicleReg: (skh.currentUserData && skh.currentUserData.vehicleReg) || 'N/A',
-                        acceptedAt: new Date().toISOString(),
-                        tokenPending: true   // token itatolewa na server ikiwashwa
-                    });
-                    try {
-                        var sn2 = await skh.getDoc(rideRef);
-                        var d2 = (sn2 && sn2.data && sn2.data()) || {};
-                        if (d2.customerId) {
-                            await skh.addDoc(skh.collection(skh.db, 'notifications'), {
-                                userId: d2.customerId,
-                                title: 'Dereva amekubali kazi yako',
-                                body: 'Dereva amekubali kusafirisha mzigo wako. Fungua mazungumzo kuendelea.',
-                                createdAt: new Date().toISOString(), read: false, type: 'delivery'
-                            });
-                        }
-                    } catch (eN) { /* arifa si kikwazo */ }
-
-                    skhToast('Umekubali kazi hii. Namba ya kuchukua itatolewa server ikiwashwa.', 'success', 5000);
-                    if (typeof window.loadAvailableJobs === 'function') window.loadAvailableJobs();
-                    if (typeof window.loadAndRenderDashboard === 'function') window.loadAndRenderDashboard();
-                    return;
-                } catch (eAcc) {
-                    if (typeof window.skhShowErr === 'function') {
-                        window.skhShowErr(eAcc, { fn: 'acceptTransport', entityId: rideId,
-                                                  collection: 'ride_requests', operation: 'update' });
-                    } else {
-                        skhToast('Imeshindikana kukubali ombi kwa sasa. Jaribu tena.', 'error', 4000);
-                    }
-                    return;
-                }
-            }
-
-            // Demo/offline fallback (legacy) — kama ilivyokuwa awali.
-            // "ACCEPTED ≠ PICKED UP" — kukubali ni ahadi tu.
-            await skh.updateDoc(rideRef, {
-                status: "accepted",
-                driverId: skh.currentUser.uid,
-                driverName: skh.currentUser.displayName || "Dereva Sokohai",
-                driverPhone: skh.currentUserData?.phone || "N/A",
-                driverVehicleReg: skh.currentUserData?.vehicleReg || "N/A"
-            });
-
-            // Tukio la audit: TRANSPORTER_ACCEPTED (append-only).
-            if (typeof window.skhCustodyRecordEvent === 'function') {
-                window.skhCustodyRecordEvent(rideId, 'TRANSPORTER_ACCEPTED', { role: 'transporter' }).catch(() => {});
-            }
-
-            // Token SALAMA ya kuchukua mzigo (PK) + arifa kwa muuzaji.
-            if (typeof window.skhCustodyGenerateToken === 'function') {
-                const gen = await window.skhCustodyGenerateToken(rideId, 'pickup');
-                if (gen.ok) {
-                    try {
-                        const snap = await skh.getDoc(rideRef);
-                        if (snap && snap.exists && snap.exists()) {
-                            await skh.addDoc(skh.collection(skh.db, "notifications"), {
-                                userId: snap.data().customerId,
-                                // [SYSTEM EVENTS 2026-09] structured event — render hutafsiri kwa lugha ya msomaji.
-                                event: 'delivery.transporterAccepted',
-                                params: {},
-                                title: "Transporter Amekubali — Pickup Inasubiri",
-                                body: "Dereva amekubali kazi. Thibitisha makabidhiano ya mzigo kwenye Jopo la Mizigo & Dispatch.",
-                                createdAt: new Date().toISOString(),
-                                read: false,
-                                type: 'delivery'
-                            });
-                        }
-                    } catch (e) { /* si kikwazo */ }
-                }
-            }
-        }
-
-        alert(" Safari imefungwa kwako! Token ya kuchukua mzigo (PK) imeundwa na mmiliki wa mzigo amepewa taarifa.");
-            
-            // Umsukume Dereva kwenye Dashboard yetu Kuu ya kisasa
-            skh.currentMode = 'driver';
-            skh.localStorage.setItem('sokohai_mode', 'driver');
-            skh.applyModeUI();
-    } catch(e) {
-        alert("Hitilafu: " + e.message);
+        if (typeof window.skhCustodyServerAccept !== 'function') throw new Error('Huduma ya kukubali haipatikani kwa sasa. Jaribu tena.');
+        const response = await window.skhCustodyServerAccept({ rideId: rideId });
+        if (!response || !response.data || response.data.ok !== true || !response.data.token) throw new Error('Server haijathibitisha assignment na token. Jaribu tena.');
+        notify('Umekubali safari. Pickup Token imetengenezwa; ifungue kwenye Token Box.', 'success');
+        if (typeof window.loadAvailableJobs === 'function') window.loadAvailableJobs();
+        if (typeof window.renderDriverActiveTabContent === 'function') window.renderDriverActiveTabContent();
+        if (typeof window.skhOpenTokenBox === 'function') window.skhOpenTokenBox('active');
+    } catch (e) {
+        notify((e && e.message) || 'Imeshindikana kukubali. Jaribu tena.', 'error');
+    } finally {
+        skhAcceptingRides.delete(rideId);
+        if (button) { button.disabled = false; button.removeAttribute('aria-busy'); button.innerHTML = original; }
     }
 };
 
@@ -2215,8 +2094,8 @@ window.simulateSellerHandover = async function(rideId) {
     });
 };
 
-window.acceptTransportMission = function(rideId) {
-    window.directRequestTransporter(rideId);
+window.acceptTransportMission = function(rideId, button) {
+    return window.directRequestTransporter(rideId, button);
 };
 
 window.loadHubDetailedRequests = async function() {

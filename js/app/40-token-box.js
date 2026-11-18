@@ -142,7 +142,7 @@ import { skh } from './00-bootstrap.js';
                 rideId: rd.id, kind: kind, code: code, state: st,
                 expiresAt: rd[expField] || '', issuedAt: rd[issuedField] || '',
                 rideStatus: rd.status || '', role: roleOfMine(rd, uid()),
-                label: rideLabel(rd), route: rideRoute(rd), vehicleType: rd.vehicleType || '',
+                label: rideLabel(rd), route: rideRoute(rd), vehicleType: rd.vehicleType || '', driverName: rd.driverName || '',
                 canMintDL: false
             });
         }
@@ -250,6 +250,7 @@ import { skh } from './00-bootstrap.js';
             + stateBadge(it.state) + '</div>'
             + '<b class="tb-cargo">' + esc(it.label) + '</b>'
             + routeHtml
+            + (it.kind === 'pickup' && it.driverName ? '<p class="tb-hint">Msafirishaji: ' + esc(it.driverName) + '</p>' : '')
             + '<div class="tb-code-row"><span class="tb-code" id="tbCode_' + esc(it.rideId) + '_' + esc(it.kind) + '">' + esc(it.code) + '</span>'
             + '<button type="button" class="tb-icon-btn" title="Nakili" aria-label="Nakili kodi" onclick="window.skhTokenBoxCopy(\'' + esc(it.rideId) + '\',\'' + esc(it.kind) + '\')">' + ico('edit', 14) + '</button></div>'
             + '<div class="tb-meta">'

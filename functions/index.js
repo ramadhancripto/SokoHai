@@ -2652,7 +2652,7 @@ exports.agentListMembers = onCall({ region: REGION }, async (req) => {
  * iliyopo (walletAdjust/escrowRelease) — hakuna mechanism mpya.
  * ========================================================== */
 function custodyToken(prefix) {
-    return (prefix || 'PK-') + crypto.randomBytes(4).toString('hex').toUpperCase();
+    return (prefix || 'PK-') + crypto.randomBytes(prefix === 'PK-' || prefix === 'TR-' ? 12 : 4).toString('hex').toUpperCase();
 }
 
 // Rejea ya token isiyo ya siri (kamwe usihifadhi token kamili kwenye handover record).
@@ -2744,11 +2744,15 @@ function custodyMaskToken(t) {
 const DIRECT_READ = { get: (ref) => ref.get() };
 async function pickupSenderUid(t, rd) {
     let owner = String((rd && rd.customerId) || '');
-    if (rd && rd.orderId && String(rd.orderId).indexOf('/') === -1) {
+    if (rd && rd.orderId) {
+        if (String(rd.orderId).includes('/')) throw new HttpsError('failed-precondition', 'Kiungo cha oda si sahihi.');
         const os = await t.get(db.doc('orders/' + rd.orderId));
-        if (os.exists) {
-            const od = os.data() || {};
-            if ((od.commerceType || 'product') !== 'transport' && od.sellerId) owner = String(od.sellerId);
+        if (!os.exists) throw new HttpsError('failed-precondition', 'Oda iliyounganishwa haipatikani.');
+        const od = os.data() || {};
+        if (!rd.customerId || ![od.buyerId, od.sellerId].filter(Boolean).includes(rd.customerId)) throw new HttpsError('failed-precondition', 'Oda haihusiani na mwombaji wa safari.');
+        if ((od.commerceType || 'product') !== 'transport') {
+            if (!od.sellerId) throw new HttpsError('failed-precondition', 'Muuzaji wa oda hajulikani.');
+            owner = String(od.sellerId);
         }
     }
     return owner;
@@ -2899,7 +2903,7 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
      * safari iliyo kwenye custody/imekamilika/imeghairiwa haiwezi kutekwa wala
      * kurudishwa nyuma; mteja hawezi kujifanya dereva; nauli inagandishwa
      * (agreedFare) — malipo ya carrier yanatumia agreedFare PEKEE. */
-    let out = null, rd = null;
+    let out = null, rd = null, pickupSender = null;
     await db.runTransaction(async (t) => {
         out = null;
         const snap = await t.get(ref);
@@ -2915,9 +2919,11 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         if (rd.customerId && rd.customerId === auth.uid) {
             throw new HttpsError('permission-denied', 'Mteja hawezi kukubali safari yake mwenyewe kama dereva.');
         }
-        if (rd.driverId === auth.uid && rd.acceptedAt && RIDE_ACCEPTED_PREPICKUP.indexOf(st) !== -1) {
-            out = { already: true };   // kukubali tena na dereva yule yule — bila kubadilisha hali
-            return;
+        if (rd.driverId === auth.uid && rd.acceptedAt && RIDE_ACCEPTED_PREPICKUP.concat(['seller_confirmed_handover']).indexOf(st) !== -1) {
+            const tkSnap = await t.get(db.doc('delivery_tokens/' + rideId + '_pickup'));
+            const tk = tkSnap.exists ? tkSnap.data() : null;
+            if (!tk || tk.status !== 'pending' || !(tk.participants || []).includes(auth.uid) || rd.pickupTokenStatus !== 'pending' || custodyExpired(rd) || !custodyTokenOk(rd, 'pickup', tk.token)) throw new HttpsError('failed-precondition', 'Token hai ya assignment haipatikani; wasiliana na msaada.');
+            out = { already: true, token: tk.token }; return;
         }
         if (RIDE_OPEN_STATES.indexOf(st) === -1) {
             throw new HttpsError('failed-precondition', 'Safari hii haiko wazi kukubaliwa (status: ' + (st || 'haijulikani') + ').');
@@ -2929,6 +2935,8 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
             throw new HttpsError('failed-precondition', 'Ombi tayari limegawiwa kwa msafirishaji mwingine.');
         }
         const sender = await pickupSenderUid(t, rd); // [R16] read before any write
+        if (sender === auth.uid) throw new HttpsError('permission-denied', 'Mwenye mzigo hawezi kujikabidhi kama msafirishaji.');
+        pickupSender = sender;
         const pk = custodyToken('PK-');
         t.set(db.collection('delivery_tokens').doc(rideId + '_pickup'), {
             rideId: rideId, kind: 'pickup', token: pk,
@@ -2937,6 +2945,7 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         });
         t.update(ref, {
             status: 'accepted',
+            ...(sender && sender !== rd.customerId ? { sellerId: sender } : {}),
             driverId: auth.uid,
             // [R2] identity comes from the caller's own account, not the request body.
             driverName: String(me.displayName || me.name || me.fullName || rd.driverName || 'Dereva').slice(0, 80),
@@ -2954,15 +2963,15 @@ exports.deliveryAccept = onCall({ region: REGION }, async (req) => {
         out = { token: pk };
     });
     if (out && out.already) {
-        const existing = await custodyGetToken(rideId, 'pickup');
-        return { ok: true, already: true, token: existing || null, status: rd.status, driverId: auth.uid };
+        return { ok: true, already: true, token: out.token, status: rd.status, driverId: auth.uid };
     }
-    await custodyEvent(rideId, 'TRANSPORTER_ACCEPTED', auth, { actorRole: 'transporter' });
-    await custodyEvent(rideId, 'PICKUP_TOKEN_GENERATED', auth, {});
-    if (rd.customerId) {
-        await custodyNotify(rd.customerId, 'Transporter Amekubali — Pickup Inasubiri',
-            'Dereva amekubali kazi. Thibitisha makabidhiano ya mzigo kwenye Jopo la Mizigo & Dispatch.');
-    }
+    // Transaction has committed; a notification or audit outage must not report a false failed acceptance.
+    await Promise.allSettled([
+        custodyEvent(rideId, 'TRANSPORTER_ACCEPTED', auth, { actorRole: 'transporter' }),
+        custodyEvent(rideId, 'PICKUP_TOKEN_GENERATED', auth, {}),
+        custodyNotify(pickupSender, 'Usafiri umekubaliwa — Pickup Token',
+            'Msafirishaji amekubali. Fungua Token Box au maelezo ya usafiri kuona token ya kuchukua mzigo.')
+    ]);
     return { ok: true, token: out.token, status: 'accepted', driverId: auth.uid };
 });
 
@@ -2987,30 +2996,44 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
     let customerId = null;
     let orderId = null;
     let agentName = '';
-    let pickupSender = null;
+    let pickupSender = null, already = false;
 
     await db.runTransaction(async (t) => {
+        pk = null; already = false;
         const ofSnap = await t.get(offerRef);
         if (!ofSnap.exists) throw new HttpsError('not-found', 'Ofa haipatikani.');
         const offer = ofSnap.data();
         if (offer.agentId !== auth.uid) throw new HttpsError('permission-denied', 'Si ofa yako.');
         // [R2] a server-routed offer still requires an active (not suspended) account.
         const uSnapO = await t.get(db.doc('users/' + auth.uid));
-        const problemO = transporterAccountProblem(uSnapO.exists ? (uSnapO.data() || {}) : null, { directBooking: true });
+        const offerUser = uSnapO.exists ? (uSnapO.data() || {}) : null;
+        const problemO = transporterAccountProblem(offerUser, { directBooking: true });
         if (problemO) throw new HttpsError('permission-denied', TRANSPORTER_PROBLEM_MSG[problemO]);
-        if (offer.status !== 'offered') throw new HttpsError('failed-precondition', 'Ofa hii si hai tena.');
-        if (offer.expiresAt && Date.parse(offer.expiresAt) <= Date.now()) {
+        if (offer.status !== 'offered' && offer.status !== 'accepted') throw new HttpsError('failed-precondition', 'Ofa hii si hai tena.');
+        if (offer.status === 'offered' && offer.expiresAt && Date.parse(offer.expiresAt) <= Date.now()) {
             throw new HttpsError('failed-precondition', 'Muda wa ofa umeisha; ombi limehamishiwa kwa mwingine.');
         }
         rideId = offer.rideId;
         customerId = offer.customerId;
         orderId = offer.orderId;
-        agentName = offer.agentName || '';
+        agentName = String(offerUser.displayName || offerUser.name || offerUser.fullName || offer.agentName || auth.uid).slice(0, 80);
         const rideRef = db.doc('ride_requests/' + rideId);
         const rideSnap = await t.get(rideRef);
         if (!rideSnap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
         const rd = rideSnap.data();
         pickupSender = await pickupSenderUid(t, rd); // [R16]
+        if (pickupSender === auth.uid) throw new HttpsError('permission-denied', 'Mwenye mzigo hawezi kujikabidhi kama msafirishaji.');
+        if (offer.status === 'accepted') {
+            if (rd.driverId !== auth.uid || !rd.acceptedAt || !['accepted','awaiting_pickup','pickup_pending','seller_confirmed_handover'].includes(String(rd.status || '')) || rd.pickupTokenStatus !== 'pending' || custodyExpired(rd)) {
+                throw new HttpsError('failed-precondition', 'Assignment hii haipo hai tena.');
+            }
+            const tokenSnap = await t.get(db.doc('delivery_tokens/' + rideId + '_pickup'));
+            const td = tokenSnap.exists ? tokenSnap.data() : null;
+            if (!td || td.status !== 'pending' || !td.token || !(td.participants || []).includes(auth.uid) || !custodyTokenOk(rd, 'pickup', td.token)) {
+                throw new HttpsError('failed-precondition', 'Token ya assignment haipatikani; wasiliana na msaada.');
+            }
+            pk = td.token; already = true; return;
+        }
         if (rd.assignmentStatus === 'assigned' || (rd.driverId && rd.driverId !== auth.uid)) {
             throw new HttpsError('failed-precondition', 'Ombi tayari limegawiwa kwa msafirishaji mwingine.');
         }
@@ -3023,6 +3046,8 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
         }
 
         // Chota ofa zote za safari na utumie state machine ya routing.
+        const linkedOrderRef = orderId && orderId === rd.orderId && !String(orderId).includes('/') ? db.doc('orders/' + orderId) : null;
+        const linkedOrderSnap = linkedOrderRef ? await t.get(linkedOrderRef) : null;
         const qSnap = await t.get(db.collection('delivery_offers').where('rideId', '==', rideId));
         const offers = [];
         qSnap.forEach(d => offers.push(Object.assign({ id: d.id }, d.data())));
@@ -3058,14 +3083,15 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
             intendedActorUid: pickupSender || null, intendedActorRole: 'seller_or_sender',
             createdAt: now, issuedAt: now, presentedAt: null, verifiedAt: null, consumedAt: null,
             expiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
-            status: 'issued', attemptCount: 0
-        }, { merge: true });
+            status: 'pending', attemptCount: 0
+        });
         t.update(rideRef, {
             status: 'accepted',
+            ...(pickupSender && pickupSender !== rd.customerId ? { sellerId: pickupSender } : {}),
             driverId: auth.uid,
-            driverName: String(data.driverName || agentName || rd.driverName || auth.uid),
-            driverPhone: String(data.driverPhone || ''),
-            driverVehicleReg: String(data.driverVehicleReg || ''),
+            driverName: agentName,
+            driverPhone: String(offerUser.phone || offerUser.phoneNumber || '').slice(0, 30),
+            driverVehicleReg: String(offerUser.vehicleReg || offerUser.plateNumber || '').slice(0, 20),
             acceptedAt: now,
             agreedFare: Math.max(0, Number(rd.fare || 0) || Number(rd.price || 0) || 0), // [PHASE 2 P1]
             routingStatus: 'assigned',
@@ -3079,28 +3105,22 @@ exports.deliveryOfferAccept = onCall({ region: REGION }, async (req) => {
             pickupTokenExpiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
             custodyStage: 'pickup'
         });
+        if (linkedOrderSnap && linkedOrderSnap.exists) t.update(linkedOrderRef, {
+            rideRequestId: rideId, deliveryId: rideId, driverId: auth.uid,
+            assignedAgentId: auth.uid, assignedAgentName: agentName, routingStatus: 'assigned', updatedAt: now
+        });
     });
 
-    // Token halali huishi kwenye delivery_tokens (PRIVATE), si ride doc.
-    await custodySetToken(rideId, 'pickup', pk, [pickupSender, auth.uid].filter(Boolean));
-    await custodyEvent(rideId, 'OFFER_ACCEPTED', auth, { offerId: offerId, actorRole: 'transporter', agentName: agentName });
-    await custodyEvent(rideId, 'TRANSPORTER_ACCEPTED', auth, { actorRole: 'transporter', via: 'routing' });
-    await custodyEvent(rideId, 'PICKUP_TOKEN_GENERATED', auth, {});
-    // Unganisha order (bila kugusa malipo).
-    try {
-        if (orderId) {
-            await db.doc('orders/' + orderId).update({
-                rideRequestId: rideId, deliveryId: rideId,
-                driverId: auth.uid, assignedAgentId: auth.uid, assignedAgentName: agentName,
-                routingStatus: 'assigned', updatedAt: now
-            });
-        }
-    } catch (e) { /* order link ni ya ziada */ }
-    if (customerId) {
-        await custodyNotify(customerId, 'Ombi Limekubaliwa — Pickup Token Imepatikana',
-            'Msafirishaji amekubali ombi lako. Tokeni ya kuchukua mzigo (PK) imetengenezwa na ipo kwenye Token Box yako.');
-    }
-    return { ok: true, token: pk, status: 'accepted', rideId: rideId, driverId: auth.uid };
+    if (already) return { ok: true, already: true, token: pk, status: 'accepted', rideId, driverId: auth.uid };
+    // Never rewrite the private token after commit: a retry or reassignment could otherwise restore an old token.
+    await Promise.allSettled([
+        custodyEvent(rideId, 'OFFER_ACCEPTED', auth, { offerId, actorRole: 'transporter', agentName }),
+        custodyEvent(rideId, 'TRANSPORTER_ACCEPTED', auth, { actorRole: 'transporter', via: 'routing' }),
+        custodyEvent(rideId, 'PICKUP_TOKEN_GENERATED', auth, {}),
+        custodyNotify(pickupSender, 'Usafiri umekubaliwa — Pickup Token',
+            'Msafirishaji amekubali. Fungua Token Box au maelezo ya usafiri kuona token ya kuchukua mzigo.')
+    ]);
+    return { ok: true, token: pk, status: 'accepted', rideId, driverId: auth.uid };
 });
 
 exports.deliveryGenerateToken = onCall({ region: REGION }, async (req) => {
@@ -3139,101 +3159,75 @@ exports.deliveryGenerateToken = onCall({ region: REGION }, async (req) => {
     }
 
     if (kind === 'handover') {
-        const custodian = rd.currentCustodian || rd.driverId;
-        if (custodian !== auth.uid) {
-            throw new HttpsError('permission-denied', 'Ni mshika mzigo wa sasa pekee anayeweza kuanzisha handover.');
-        }
-        const nextId = String(data.nextTransporterId || rd.nextTransporterId || '');
-        const nextName = String(data.nextTransporterName || rd.nextTransporterName || nextId);
-        if (!nextId) throw new HttpsError('invalid-argument', 'nextTransporterId inahitajika kwa handover.');
-        if (rd.handoverTokenStatus === 'pending' && !custodyExpired(rd)) {
-            const existing = await custodyGetToken(rideId, 'handover') || rd.handoverToken || null;
-            if (existing) return { ok: true, token: existing, kind, status: rd.status, handoverId: rd.activeHandoverId || null };
-        }
-        const tr = custodyToken('TR-');
-        const legNumber = (Array.isArray(rd.custodyLegs) ? rd.custodyLegs.length : 1) + 1;
-        const leg = {
-            leg: legNumber,
-            fromId: custodian,
-            from: rd.currentCustodianName || rd.driverName || 'Transporter A',
-            toId: nextId,
-            to: nextName,
-            status: 'pending',
-            location: String(data.location || '')
-        };
-        const hoRef = await db.collection('delivery_handovers').add({
-            deliveryId: rideId,
-            deliveryLegId: 'leg_' + legNumber,
-            fromTransporterId: custodian,
-            fromTransporterName: rd.currentCustodianName || rd.driverName || 'Transporter A',
-            toTransporterId: nextId,
-            toTransporterName: nextName,
-            handoverLocation: String(data.location || ''),
-            initiatedAt: now,
-            completedAt: null,
-            verificationMethod: 'token',
-            pickupTokenReference: custodyMaskToken(tr),
-            fromPartyConfirmed: false,
-            toPartyConfirmed: false,
-            status: 'pending',
-            parcelCondition: null,
-            evidence: ''
+        // The next authenticated transporter and the current custodian share
+        // one stage-scoped secret, handover record and ride transition atomically.
+        let out, fromName, nextId, changed = false;
+        const handoverRef = db.collection('delivery_handovers').doc();
+        const tokenRef = db.doc('delivery_tokens/' + rideId + '_handover');
+        await db.runTransaction(async (t) => {
+            changed = false;
+            const rs = await t.get(ref);
+            if (!rs.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+            const r = rs.data() || {};
+            const custodian = r.currentCustodian || r.driverId;
+            if (custodian !== auth.uid) throw new HttpsError('permission-denied', 'Ni mshika mzigo wa sasa pekee anayeweza kuanzisha handover.');
+            nextId = String(data.nextTransporterId || r.nextTransporterId || '').trim();
+            if (!nextId || nextId.includes('/') || nextId === custodian) throw new HttpsError('invalid-argument', 'Msafirishaji anayepokea si sahihi.');
+            const nextSnap = await t.get(db.doc('users/' + nextId));
+            const nextUser = nextSnap.exists ? nextSnap.data() : null;
+            if (transporterAccountProblem(nextUser, { directBooking: true })) throw new HttpsError('failed-precondition', 'Akaunti ya msafirishaji anayepokea haipo au imesimamishwa.');
+            const ts = await t.get(tokenRef);
+            const old = ts.exists ? ts.data() : null;
+            const expiry = Date.parse(r.handoverTokenExpiresAt || '');
+            if (r.status === 'awaiting_handover') {
+                if (r.nextTransporterId !== nextId || r.handoverTokenStatus !== 'pending' || !Number.isFinite(expiry) || expiry <= Date.now() || !old || !['issued','pending'].includes(old.status) || !(old.participants || []).includes(custodian) || !(old.participants || []).includes(nextId) || !custodyTokenOk(r, 'handover', old.token)) throw new HttpsError('failed-precondition', 'Handover iliyopo si hai au ni ya msafirishaji mwingine.');
+                out = { ok: true, already: true, token: old.token, kind, status: r.status, handoverId: r.activeHandoverId || null }; return;
+            }
+            if (!['picked_up','in_transit'].includes(r.status)) throw new HttpsError('failed-precondition', 'Handover inaweza kuanza tu baada ya mzigo kuchukuliwa.');
+            const tr = custodyToken('TR-');
+            const nextName = String(nextUser.displayName || nextUser.fullName || nextUser.name || nextId).slice(0,80);
+            fromName = r.currentCustodianName || r.driverName || 'Transporter A';
+            const legNumber = (Array.isArray(r.custodyLegs) ? r.custodyLegs.length : 0) + 1;
+            const legId = 'leg_' + legNumber;
+            const exp = new Date(Date.now() + 72 * 3600 * 1000).toISOString();
+            const leg = { leg: legNumber, fromId: custodian, from: fromName, toId: nextId, to: nextName, status: 'pending', location: String(data.location || '').slice(0,200) };
+            t.set(handoverRef, { deliveryId: rideId, rideId, shipmentId: r.shipmentId || (r.cargoManifest && r.cargoManifest.shipmentId) || null, deliveryLegId: legId, fromTransporterId: custodian, fromTransporterName: fromName, toTransporterId: nextId, toTransporterName: nextName, handoverLocation: leg.location, initiatedAt: now, completedAt: null, verificationMethod: 'token', pickupTokenReference: custodyMaskToken(tr), fromPartyConfirmed: false, toPartyConfirmed: false, status: 'pending', parcelCondition: null, evidence: '' });
+            t.set(tokenRef, { tokenId: rideId + '_handover', rideId, shipmentId: r.shipmentId || (r.cargoManifest && r.cargoManifest.shipmentId) || null, kind: 'handover', tokenType: 'TRANSFER_TOKEN', stage: 'handover', legId, handoverId: handoverRef.id, token: tr, participants: [custodian,nextId], createdAt: now, expiresAt: exp, status: 'pending' });
+            t.update(ref, { handoverTokenHash: custodyHash(tr), handoverTokenRef: custodyMaskToken(tr), handoverTokenStatus: 'pending', handoverTokenCreatedAt: now, handoverTokenExpiresAt: exp, status: 'awaiting_handover', custodyStage: 'handover', nextTransporterId: nextId, nextTransporterName: nextName, handoverFromConfirmed: false, activeHandoverId: handoverRef.id, custodyLegs: FieldValue.arrayUnion(leg) });
+            changed = true; out = { ok: true, token: tr, kind, status: 'awaiting_handover', handoverId: handoverRef.id };
         });
-        await custodySetToken(rideId, 'handover', tr, [custodian, nextId].filter(Boolean));
-        await ref.update({
-            handoverTokenHash: custodyHash(tr),
-            handoverTokenRef: custodyMaskToken(tr),
-            handoverTokenStatus: 'pending',
-            handoverTokenCreatedAt: now,
-            handoverTokenExpiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
-            status: 'awaiting_handover',
-            custodyStage: 'handover',
-            nextTransporterId: nextId,
-            nextTransporterName: nextName,
-            handoverFromConfirmed: false,
-            activeHandoverId: hoRef.id,
-            custodyLegs: FieldValue.arrayUnion(leg)
-        });
-        await custodyEvent(rideId, 'HANDOVER_TOKEN_GENERATED', auth, {});
-        await custodyEvent(rideId, 'HANDOVER_INITIATED', auth, { actorRole: 'transporter', legId: 'leg_' + legNumber, handoverId: hoRef.id, location: String(data.location || '') });
-        await custodyNotify(nextId, 'Intermediate Pickup Required', 'Umepewa mkono wa usafirishaji. Thibitisha upokeaji kwa token ya TR.');
-        return { ok: true, token: tr, kind, status: 'awaiting_handover', handoverId: hoRef.id };
+        if (changed) await Promise.allSettled([
+            custodyEvent(rideId, 'HANDOVER_TOKEN_GENERATED', auth, {}),
+            custodyEvent(rideId, 'HANDOVER_INITIATED', auth, { actorRole: 'transporter', handoverId: out.handoverId, location: String(data.location || '') }),
+            custodyNotify(nextId, 'Intermediate Pickup Required', 'Umepewa mkono wa usafirishaji. Thibitisha upokeaji kwa token ya TR.')
+        ]);
+        return out;
     }
 
-    // pickup
-    const isDriver = rd.driverId === auth.uid;
-    const pkSender = await pickupSenderUid(DIRECT_READ, rd); // [R16] seller of an order ride, not the buyer
-    const isOwner = pkSender === auth.uid;
-    if (!isDriver && !isOwner) {
-        throw new HttpsError('permission-denied', 'Huna haki ya kuzalisha token ya safari hii.');
-    }
-    // [PHASE 2 P6] Token ya pickup ni ya hatua ya KABLA ya pickup tu — haiwezi
-    // kurudisha nyuma safari iliyo njiani/imekamilika/imeghairiwa.
-    const preStates = RIDE_ACCEPTED_PREPICKUP.concat(['seller_confirmed_handover']);
-    if (!rd.driverId || !rd.acceptedAt || preStates.indexOf(String(rd.status || '')) === -1) {
-        throw new HttpsError('failed-precondition', 'Token ya kuchukua mzigo haiwezi kutolewa katika hatua hii (status: ' + (rd.status || 'haijulikani') + ').');
-    }
-    // Token iliyopo (pending, haijaisha muda) → rudisha ile ile.
-    if (rd.pickupTokenStatus === 'pending' && !custodyExpired(rd)) {
-        const existing = await custodyGetToken(rideId, 'pickup') || rd.pickupToken || null;
-        if (existing) return { ok: true, token: existing, kind, status: rd.status };
-    }
-    if (RIDE_ACCEPTED_PREPICKUP.indexOf(String(rd.status || '')) === -1) {
-        throw new HttpsError('failed-precondition', 'Muuzaji tayari amethibitisha makabidhiano — token mpya haiwezi kutolewa sasa.');
-    }
-    const pk = custodyToken('PK-');
-    await custodySetToken(rideId, 'pickup', pk, [pkSender, rd.driverId].filter(Boolean));
-    await ref.update({
-        pickupTokenHash: custodyHash(pk),
-        pickupTokenRef: custodyMaskToken(pk),
-        pickupTokenStatus: 'pending',
-        pickupTokenCreatedAt: now,
-        pickupTokenExpiresAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
-        status: 'pickup_pending',
-        custodyStage: 'pickup'
+    // A legacy regeneration request must not race cancellation or reassignment.
+    let issued;
+    await db.runTransaction(async (t) => {
+        const rs = await t.get(ref);
+        if (!rs.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+        const r = rs.data() || {};
+        const sender = await pickupSenderUid(t, r);
+        const tokenRef = db.doc('delivery_tokens/' + rideId + '_pickup');
+        const ts = await t.get(tokenRef);
+        const old = ts.exists ? ts.data() : null;
+        if (auth.uid !== sender && auth.uid !== r.driverId) throw new HttpsError('permission-denied', 'Huna haki ya token ya safari hii.');
+        const allowed = RIDE_ACCEPTED_PREPICKUP.concat(['seller_confirmed_handover']);
+        if (!r.driverId || !r.acceptedAt || !allowed.includes(String(r.status || ''))) throw new HttpsError('failed-precondition', 'Token haiwezi kutolewa katika hatua hii.');
+        if (r.pickupTokenStatus === 'pending' && !custodyExpired(r) && old && old.status === 'pending' && custodyTokenOk(r, 'pickup', old.token)) {
+            issued = { ok: true, token: old.token, kind, status: r.status }; return;
+        }
+        if (r.pickupTokenStatus === 'revoked' || r.status === 'seller_confirmed_handover') throw new HttpsError('failed-precondition', 'Token imebatilishwa au makabidhiano yameanza.');
+        const pk = custodyToken('PK-');
+        const expiresAt = new Date(Date.now() + 72 * 3600 * 1000).toISOString();
+        t.set(tokenRef, { rideId, kind: 'pickup', token: pk, participants: [sender, r.driverId].filter(Boolean), createdAt: now, expiresAt, status: 'pending' });
+        t.update(ref, { pickupTokenHash: custodyHash(pk), pickupTokenRef: custodyMaskToken(pk), pickupTokenStatus: 'pending', pickupTokenCreatedAt: now, pickupTokenExpiresAt: expiresAt, status: 'pickup_pending', custodyStage: 'pickup' });
+        issued = { ok: true, token: pk, kind, status: 'pickup_pending' };
     });
-    await custodyEvent(rideId, 'PICKUP_TOKEN_GENERATED', auth, {});
-    return { ok: true, token: pk, kind, status: 'pickup_pending' };
+    return issued;
 });
 
 exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
@@ -3259,15 +3253,106 @@ exports.deliveryConfirmCustody = onCall({ region: REGION }, async (req) => {
     const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
     const now = new Date().toISOString();
 
-    if (custodyExpired(rd)) {
-        await ref.update(isHandover ? { handoverTokenStatus: 'expired' } : { pickupTokenStatus: 'expired' });
-        await custodyMarkTokenStatus(rideId, isHandover ? 'handover' : 'pickup', 'expired');
-        throw new HttpsError('failed-precondition', 'Token imeisha muda wake (expired).');
-    }
 
     // [PHASE B] Rate-limit ya majaribio mabaya (server-side).
     if (await custodyAttemptsExceeded(rideId, role + (isHandover ? '_handover' : ''))) {
         throw new HttpsError('resource-exhausted', 'Majaribio mengi sana. Subiri dakika 15 kisha ujaribu tena.');
+    }
+
+    if (role === 'handover_from' || (role === 'transporter' && isHandover)) {
+        let status, changed = false, peer = '', handoverId = '';
+        try {
+            await db.runTransaction(async (t) => {
+                changed = false;
+                const rs = await t.get(ref);
+                if (!rs.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+                const r = rs.data() || {};
+                handoverId = String(r.activeHandoverId || '');
+                if (!handoverId || handoverId.includes('/')) throw new HttpsError('failed-precondition', 'Rekodi ya handover haipatikani.');
+                const hRef = db.doc('delivery_handovers/' + handoverId);
+                const tokenRef = db.doc('delivery_tokens/' + rideId + '_handover');
+                const hs = await t.get(hRef), ts = await t.get(tokenRef);
+                const h = hs.exists ? hs.data() : null, tk = ts.exists ? ts.data() : null;
+                if (!h || h.deliveryId !== rideId) throw new HttpsError('failed-precondition', 'Handover haihusiani na safari hii.');
+                if (role === 'transporter' && r.status === 'in_transit' && r.currentCustodian === auth.uid && h.toTransporterId === auth.uid && h.status === 'completed' && custodyTokenOk(r, 'handover', token)) { status = r.status; return; }
+                const sender = r.currentCustodian || r.driverId;
+                if ((role === 'handover_from' ? sender : r.nextTransporterId) !== auth.uid) throw new HttpsError('permission-denied', 'Si mhusika sahihi wa handover.');
+                const expiry = Date.parse(r.handoverTokenExpiresAt || '');
+                if (r.status !== 'awaiting_handover' || r.handoverTokenStatus !== 'pending' || !Number.isFinite(expiry) || expiry <= Date.now() || !tk || !['issued','pending'].includes(tk.status) || !(tk.participants || []).includes(auth.uid) || h.fromTransporterId !== sender || h.toTransporterId !== r.nextTransporterId || h.status !== 'pending') throw new HttpsError('failed-precondition', 'Handover haipo hai au token imeisha muda.');
+                if (role === 'handover_from') {
+                    status = 'awaiting_handover'; peer = r.nextTransporterId;
+                    if (r.handoverFromConfirmed === true) return;
+                    t.update(ref, { handoverFromConfirmed: true, handoverFromConfirmedAt: now });
+                    t.update(hRef, { fromPartyConfirmed: true, fromConfirmedAt: now });
+                } else {
+                    if (!r.handoverFromConfirmed || !h.fromPartyConfirmed) throw new HttpsError('failed-precondition', 'Subiri dereva wa awali athibitishe makabidhiano.');
+                    if (tk.token !== token || !custodyTokenOk(r, 'handover', token)) throw new HttpsError('failed-precondition', 'Token ya handover si sahihi.');
+                    const legs = Array.isArray(r.custodyLegs) ? r.custodyLegs.slice() : [];
+                    if (legs.length && legs[legs.length-1].status === 'pending') legs[legs.length-1] = Object.assign({}, legs[legs.length-1], { status: 'completed', completedAt: now, parcelCondition, evidence: parcelConditionNote });
+                    status = 'in_transit'; peer = sender;
+                    t.update(ref, { status, handoverTokenStatus: 'used', currentCustodian: auth.uid, currentCustodianName: r.nextTransporterName || 'Dereva', driverId: auth.uid, driverName: r.nextTransporterName || 'Dereva', nextTransporterId: null, nextTransporterName: null, custodyStage: 'transit', custodyLegs: legs });
+                    t.update(tokenRef, { status: 'used', consumedAt: now });
+                    t.update(hRef, { toPartyConfirmed: true, completedAt: now, status: 'completed', parcelCondition, evidence: parcelConditionNote });
+                }
+                changed = true;
+            });
+        } catch(e) {
+            if (role === 'transporter' && e && e.code === 'failed-precondition') await custodyAttemptFail(rideId, role + '_handover');
+            throw e;
+        }
+        if (changed) await Promise.allSettled([
+            custodyAttemptClear(rideId, role + (role === 'transporter' ? '_handover' : '')),
+            custodyEvent(rideId, role === 'handover_from' ? 'HANDOVER_CONFIRMED' : 'NEXT_TRANSPORTER_PICKUP_CONFIRMED', auth, { actorRole: 'transporter', handoverId, location }),
+            custodyNotify(peer, role === 'handover_from' ? 'Handover Imethibitishwa' : 'Handover Imekamilika', role === 'handover_from' ? 'Dereva wa awali amethibitisha makabidhiano.' : 'Transporter mpya amepokea mzigo.')
+        ]);
+        return { ok: true, status };
+    }
+
+    // Pickup is a single transaction: cancellation/reassignment and either confirmation
+    // cannot race a stale read. Intermediate handovers keep their existing flow below.
+    if (!isHandover && (role === 'seller' || role === 'transporter')) {
+        let finalRide, finalStatus, changed = false;
+        try {
+            await db.runTransaction(async (t) => {
+                changed = false;
+                const rideSnap = await t.get(ref);
+                if (!rideSnap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+                const r = rideSnap.data() || {};
+                const tokenRef = db.doc('delivery_tokens/' + rideId + '_pickup');
+                const ts = await t.get(tokenRef);
+                const tk = ts.exists ? ts.data() : null;
+                const sender = await pickupSenderUid(t, r);
+                if ((role === 'seller' ? sender : r.driverId) !== auth.uid) throw new HttpsError('permission-denied', 'Si mhusika sahihi wa makabidhiano.');
+                // Idempotent retry for the same confirmed party, not an invitation to reuse a token.
+                if (role === 'seller' && r.status === 'seller_confirmed_handover' && r.sellerConfirmedBy === auth.uid) { finalRide = r; finalStatus = r.status; return; }
+                if (role === 'transporter' && ['picked_up', 'in_transit'].includes(r.status) && r.driverId === auth.uid && custodyTokenOk(r, 'pickup', token)) { finalRide = r; finalStatus = r.status; return; }
+                const exp = Date.parse(r.pickupTokenExpiresAt || '');
+                if (!r.driverId || !r.acceptedAt || !Number.isFinite(exp) || exp <= Date.now() || r.pickupTokenStatus !== 'pending' || !tk || tk.status !== 'pending' || !(tk.participants || []).includes(auth.uid) || tk.token !== token && !(role === 'seller' && direct)) throw new HttpsError('failed-precondition', 'Token haipo hai, imeisha muda au imebatilishwa.');
+                if (!(role === 'seller' && direct) && !custodyTokenOk(r, 'pickup', token)) throw new HttpsError('failed-precondition', 'Token ya kuchukua mzigo si sahihi.');
+                if (role === 'seller') {
+                    if (!['accepted', 'awaiting_pickup', 'pickup_pending'].includes(r.status)) throw new HttpsError('failed-precondition', 'Hali ya safari hairuhusu uthibitisho wa muuzaji.');
+                    finalStatus = 'seller_confirmed_handover';
+                    t.update(ref, { status: finalStatus, sellerConfirmedAt: now, sellerConfirmedBy: auth.uid, parcelCondition, parcelConditionNote, custodyStage: 'pickup' });
+                } else {
+                    if (r.status !== 'seller_confirmed_handover') throw new HttpsError('failed-precondition', 'Subiri muuzaji athibitishe makabidhiano kwanza.');
+                    finalStatus = 'picked_up';
+                    const patch = { status: finalStatus, pickupTokenStatus: 'used', currentCustodian: auth.uid, currentCustodianName: r.driverName || 'Dereva', transporterConfirmedAt: now, parcelCondition, parcelConditionNote, dispatchedAt: now, custodyStage: 'transit', custodyLegs: FieldValue.arrayUnion({ leg: 1, fromId: sender || null, from: r.customerName || rc.customerName || 'Muuzaji', toId: auth.uid, to: r.driverName || 'Dereva', status: 'completed', completedAt: now, location: String(r.fromLocation || ''), parcelCondition }) };
+                    if (pickupCount != null) patch.verifiedPickupCount = pickupCount;
+                    t.update(ref, patch);
+                    t.update(tokenRef, { status: 'used' });
+                }
+                changed = true; finalRide = r;
+            });
+        } catch (e) {
+            if (e && e.code === 'failed-precondition' && token) await custodyAttemptFail(rideId, role);
+            throw e;
+        }
+        if (changed) await Promise.allSettled([
+            custodyAttemptClear(rideId, role),
+            custodyEvent(rideId, role === 'seller' ? 'SELLER_HANDOVER_CONFIRMED' : 'TRANSPORTER_PICKUP_CONFIRMED', auth, { actorRole: role, parcelCondition, parcelConditionNote, location, verificationMethod: direct ? 'direct' : 'token' }),
+            custodyNotify(role === 'seller' ? finalRide.driverId : finalRide.customerId, role === 'seller' ? 'Pickup Confirmation Required' : 'Mzigo Umechukuliwa', role === 'seller' ? 'Muuzaji amethibitisha. Thibitisha upokeaji kwa token.' : 'Dereva amethibitisha kupokea mzigo.')
+        ]);
+        return { ok: true, status: finalStatus };
     }
 
     /* ---------- MUUZAJI (mmiliki wa mzigo) ---------- */
@@ -3440,21 +3525,135 @@ exports.deliveryRevokeTokens = onCall({ region: REGION }, async (req) => {
     const rideId = String(data.rideId || '');
     if (!rideId) throw new HttpsError('invalid-argument', 'rideId inahitajika.');
 
-    const { ref, data: rd } = await custodyGetRide(rideId);
-    const isCustodian = (rd.currentCustodian === auth.uid) || (rd.driverId === auth.uid);
-    const isOwner = rd.customerId === auth.uid;
-    if (!isCustodian && !isOwner) {
-        throw new HttpsError('permission-denied', 'Huna ruhusa ya kubatilisha tokeni za safari hii.');
-    }
+    const ref = db.doc('ride_requests/' + rideId);
+    let revoked = [], owner = false;
+    await db.runTransaction(async (t) => {
+        revoked = [];
+        const rs = await t.get(ref);
+        if (!rs.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+        const rd = rs.data() || {};
+        owner = rd.customerId === auth.uid;
+        if (!owner && rd.currentCustodian !== auth.uid && rd.driverId !== auth.uid) throw new HttpsError('permission-denied', 'Huna ruhusa ya kubatilisha tokeni za safari hii.');
+        const refs = ['pickup', 'handover'].map(k => db.doc('delivery_tokens/' + rideId + '_' + k));
+        const snaps = await Promise.all(refs.map(r => t.get(r)));
+        const patch = {};
+        ['pickup', 'handover'].forEach((k, i) => {
+            const field = k + 'TokenStatus';
+            if (rd[field] === 'pending') {
+                patch[field] = 'revoked'; revoked.push(field);
+                if (snaps[i].exists) t.update(refs[i], { status: 'revoked' });
+            }
+        });
+        if (revoked.length) t.update(ref, patch);
+    });
+    if (revoked.length) await Promise.allSettled([custodyEvent(rideId, 'TOKEN_REVOKED', auth, { actorRole: owner ? 'seller' : 'transporter' })]);
+    return { ok: true, revoked };
+});
 
-    const patch = {};
-    if (rd.pickupTokenStatus === 'pending') { patch.pickupTokenStatus = 'revoked'; await custodyMarkTokenStatus(rideId, 'pickup', 'revoked'); }
-    if (rd.handoverTokenStatus === 'pending') { patch.handoverTokenStatus = 'revoked'; await custodyMarkTokenStatus(rideId, 'handover', 'revoked'); }
-    if (Object.keys(patch).length) {
-        await ref.update(patch);
-        await custodyEvent(rideId, 'TOKEN_REVOKED', auth, { actorRole: isOwner ? 'seller' : 'transporter' });
-    }
-    return { ok: true, revoked: Object.keys(patch) };
+/* Cancellation is one server transaction, never revoke first and cancel later.
+ * Payment/order state is intentionally unchanged. */
+exports.deliveryCancel = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req), rideId = String((req.data || {}).rideId || '').trim();
+    if (!rideId || rideId.includes('/')) throw new HttpsError('invalid-argument', 'rideId si sahihi.');
+    const ref = db.doc('ride_requests/' + rideId), now = new Date().toISOString();
+    let previousDriver = null, already = false;
+    await db.runTransaction(async (t) => {
+        already = false;
+        const rs = await t.get(ref);
+        if (!rs.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+        const rd = rs.data() || {};
+        if (rd.customerId !== auth.uid) throw new HttpsError('permission-denied', 'Mteja aliyeomba safari pekee ndiye anaweza kughairi.');
+        if (rd.status === 'cancelled') { already = true; return; }
+        if (!['searching','pending_acceptance','open','pending','accepted','pickup_pending','awaiting_pickup'].includes(rd.status)) throw new HttpsError('failed-precondition', 'Safari haiwezi kughairiwa baada ya makabidhiano kuanza.');
+        const keys = ['pickup','handover','transfer'];
+        const tokenRefs = keys.map(k => db.doc('delivery_tokens/' + rideId + '_' + k));
+        const tokens = await Promise.all(tokenRefs.map(r => t.get(r)));
+        const offers = await t.get(db.collection('delivery_offers').where('rideId', '==', rideId));
+        if (offers.size > 400) throw new HttpsError('resource-exhausted', 'Ombi lina ofa nyingi; wasiliana na msaada.');
+        const patch = { status: 'cancelled', cancelledAt: now, updatedAt: now, activeOfferId: null, routingStatus: 'cancelled', assignmentStatus: 'cancelled' };
+        keys.forEach((key, i) => {
+            const field = key + 'TokenStatus';
+            if (rd[field] === 'pending') {
+                patch[field] = 'revoked';
+                if (tokens[i].exists) t.update(tokenRefs[i], { status: 'revoked', revokedAt: now });
+            }
+        });
+        offers.forEach(d => { if (['offered','waiting'].includes((d.data() || {}).status)) t.update(d.ref, { status: 'cancelled', cancelledAt: now, cancelReason: 'ride_cancelled' }); });
+        previousDriver = rd.driverId || null;
+        t.update(ref, patch);
+    });
+    if (!already) await Promise.allSettled([
+        custodyEvent(rideId, 'RIDE_CANCELLED', auth, { actorRole: 'customer' }),
+        custodyNotify(previousDriver, 'Ombi la usafiri limeghairiwa', 'Mteja ameghairi ombi kabla ya makabidhiano.')
+    ]);
+    return { ok: true, already, status: 'cancelled' };
+});
+
+/* Canonical administrative location directory. Data is published only after
+ * an authorised administrator supplies a source; it is not a provider coverage claim. */
+const LOCATION_PARENT_TYPES = {
+    country: [], region: ['country'], district: ['region'], council: ['district'],
+    ward: ['district','council'], shehia: ['district','council'],
+    village: ['ward','shehia'], mtaa: ['ward','shehia'], kitongoji: ['village']
+};
+function locationId(value) {
+    const id = String(value || '').trim();
+    if (!/^[A-Za-z0-9_-]{1,120}$/.test(id)) throw new HttpsError('invalid-argument', 'Kitambulisho cha eneo si sahihi.');
+    return id;
+}
+exports.locationAdminUpsert = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req);
+    if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Msimamizi pekee anaweza kuthibitisha eneo.');
+    const data = req.data || {}, id = locationId(data.id), type = String(data.type || ''), name = String(data.name || '').trim();
+    const parentId = type === 'country' ? null : locationId(data.parentId);
+    const sourceUrl = String(data.sourceUrl || '').trim(), sourceDate = String(data.sourceDate || '').trim(), reason = String(data.reason || '').trim();
+    if (!Object.hasOwn(LOCATION_PARENT_TYPES, type) || name.length < 2 || name.length > 120 || !/^https:\/\//i.test(sourceUrl) || sourceUrl.length > 500 || !/^\d{4}-\d{2}-\d{2}$/.test(sourceDate) || !Number.isFinite(Date.parse(sourceDate)) || reason.length < 5 || reason.length > 500 || (type === 'country' && id !== 'tz')) throw new HttpsError('invalid-argument', 'Jaza aina, jina, chanzo rasmi, tarehe na sababu sahihi.');
+    const ref = db.doc('location_directory/' + id), auditRef = db.collection('admin_audit_log').doc(), now = new Date().toISOString();
+    await db.runTransaction(async t => {
+        const existing = await t.get(ref);
+        const parentSnap = parentId ? await t.get(db.doc('location_directory/' + parentId)) : null;
+        if (parentId && (!parentSnap.exists || !LOCATION_PARENT_TYPES[type].includes((parentSnap.data() || {}).type) || (parentSnap.data() || {}).status !== 'verified')) throw new HttpsError('failed-precondition', 'Eneo kuu halipo au aina yake haifanani.');
+        if (existing.exists) {
+            const old = existing.data() || {};
+            if (old.type !== type || (old.parentId || null) !== parentId) throw new HttpsError('failed-precondition', 'Aina au eneo kuu haviwezi kubadilishwa; tumia rekodi mpya na migration.');
+        }
+        t.set(ref, { id, type, name, parentId, status: 'verified', sourceUrl, sourceDate, reviewedBy: auth.uid, reviewedAt: now }, { merge: true });
+        t.set(auditRef, { action: 'location_verify_or_correct', target: id, actorUid: auth.uid, reason, sourceUrl, sourceDate, createdAt: now });
+    });
+    return { ok: true, id, type, parentId };
+});
+exports.locationSuggest = onCall({ region: REGION }, async (req) => {
+    const auth = requireAuth(req), data = req.data || {};
+    const parentId = locationId(data.parentId), type = String(data.type || ''), name = String(data.name || '').trim();
+    if (!['village','mtaa','kitongoji','shehia','ward'].includes(type) || name.length < 2 || name.length > 120) throw new HttpsError('invalid-argument', 'Jaza jina na aina ya eneo.');
+    const id = crypto.createHash('sha256').update(auth.uid + '\0' + parentId + '\0' + type + '\0' + name.toLowerCase()).digest('hex');
+    const ref = db.doc('location_suggestions/' + id), now = new Date().toISOString();
+    let already = false;
+    await db.runTransaction(async t => {
+        const parent = await t.get(db.doc('location_directory/' + parentId));
+        const existing = await t.get(ref);
+        if (!parent.exists || (parent.data() || {}).status !== 'verified' || !LOCATION_PARENT_TYPES[type].includes((parent.data() || {}).type)) throw new HttpsError('failed-precondition', 'Chagua eneo kuu lililothibitishwa.');
+        if (existing.exists) { already = true; return; }
+        t.set(ref, { parentId, type, name, status: 'pending', submittedBy: auth.uid, submittedAt: now });
+    });
+    return { ok: true, already, status: 'pending' };
+});
+
+exports.locationSuggestionResolve = onCall({ region: REGION }, async req => {
+    const auth = requireAuth(req);
+    if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Msimamizi pekee.');
+    const data = req.data || {}, suggestionId = locationId(data.suggestionId), decision = String(data.decision || ''), reason = String(data.reason || '').trim();
+    if (!['approved','rejected'].includes(decision) || reason.length < 5 || reason.length > 500) throw new HttpsError('invalid-argument', 'Uamuzi au sababu si sahihi.');
+    const location = decision === 'approved' ? locationId(data.locationId) : null;
+    const ref = db.doc('location_suggestions/' + suggestionId), audit = db.collection('admin_audit_log').doc(), now = new Date().toISOString();
+    await db.runTransaction(async t => {
+        const sug = await t.get(ref), loc = location ? await t.get(db.doc('location_directory/' + location)) : null;
+        if (!sug.exists || sug.data().status !== 'pending') throw new HttpsError('failed-precondition', 'Pendekezo halipo au tayari limeshughulikiwa.');
+        if (location && (!loc.exists || loc.data().status !== 'verified' || loc.data().parentId !== sug.data().parentId || loc.data().type !== sug.data().type)) throw new HttpsError('failed-precondition', 'Eneo lililothibitishwa halilingani na eneo kuu/aina ya pendekezo.');
+        t.update(ref, { status: decision, locationId: location, reviewedBy: auth.uid, reviewedAt: now, reviewReason: reason });
+        t.set(audit, { action: 'location_suggestion_' + decision, target: suggestionId, actorUid: auth.uid, reason, createdAt: now });
+    });
+    return { ok: true, status: decision };
 });
 
 /* ============================================================
@@ -3466,22 +3665,27 @@ exports.deliveryStartTransit = onCall({ region: REGION }, async (req) => {
     const data = req.data || {};
     const rideId = String(data.rideId || '');
     if (!rideId) throw new HttpsError('invalid-argument', 'rideId inahitajika.');
-    const { ref, data: rd } = await custodyGetRide(rideId);
-    const custodian = rd.currentCustodian || rd.driverId;
-    if (custodian !== auth.uid) {
-        throw new HttpsError('permission-denied', 'Ni mshika mzigo wa sasa pekee anayeweza kuanza safari.');
-    }
-    if (rd.status !== 'picked_up') {
-        throw new HttpsError('failed-precondition', 'Mzigo lazima uwe umethibitishwa (picked_up) kabla ya kuanza safari.');
-    }
-    const patch = { status: 'in_transit', custodyStage: 'transit' };
-    if (data.pickupCount != null && !isNaN(Number(data.pickupCount))) patch.verifiedPickupCount = Number(data.pickupCount);
-    await ref.update(patch);
-    await custodyEvent(rideId, 'DELIVERY_STARTED', auth, { actorRole: 'transporter' });
-    if (rd.customerId) {
-        await custodyNotify(rd.customerId, 'Safari Imeanza', 'Dereva ameanza safari. Mzigo uko njiani.');
-    }
-    return { ok: true, status: 'in_transit' };
+    if (rideId.includes('/')) throw new HttpsError('invalid-argument', 'rideId si sahihi.');
+    const ref = db.doc('ride_requests/' + rideId);
+    let customerId = null, already = false;
+    await db.runTransaction(async t => {
+        already = false;
+        const snap = await t.get(ref);
+        if (!snap.exists) throw new HttpsError('not-found', 'Safari haipatikani.');
+        const rd = snap.data() || {}, custodian = rd.currentCustodian || rd.driverId;
+        if (custodian !== auth.uid) throw new HttpsError('permission-denied', 'Ni mshika mzigo wa sasa pekee anayeweza kuanza safari.');
+        if (rd.status === 'in_transit') { already = true; return; }
+        if (rd.status !== 'picked_up') throw new HttpsError('failed-precondition', 'Mzigo lazima uwe umethibitishwa (picked_up) kabla ya kuanza safari.');
+        const patch = { status: 'in_transit', custodyStage: 'transit' };
+        if (data.pickupCount != null && Number.isFinite(Number(data.pickupCount)) && Number(data.pickupCount) >= 0) patch.verifiedPickupCount = Number(data.pickupCount);
+        customerId = rd.customerId || null;
+        t.update(ref, patch);
+    });
+    if (!already) await Promise.allSettled([
+        custodyEvent(rideId, 'DELIVERY_STARTED', auth, { actorRole: 'transporter' }),
+        custodyNotify(customerId, 'Safari Imeanza', 'Dereva ameanza safari. Mzigo uko njiani.')
+    ]);
+    return { ok: true, already, status: 'in_transit' };
 });
 
 /* ============================================================
@@ -3724,45 +3928,37 @@ exports.deliveryTokenVerify = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);
     const data = req.data || {};
     const token = String(data.token || '').trim().toUpperCase();
-    if (!token) throw new HttpsError('invalid-argument', 'token inahitajika.');
     const kind = data.kind === 'handover' ? 'handover' : 'pickup';
     let rideId = String(data.rideId || '');
-    if (!rideId) {
-        // [REMEDIATION R5] per-caller attempt limit (same 6 / 15 min window as custody).
-        if (await custodyAttemptsExceeded('verify', auth.uid)) {
-            throw new HttpsError('resource-exhausted', 'Majaribio mengi mno. Subiri dakika 15 kisha ujaribu tena.');
-        }
-        // [FIX 2026-09] Field MOJA (token) + uchujaji kind kwenye memory —
-        // haiitaji composite index (query ya token+kind ilirusha "internal").
-        const hit = await db.collection('delivery_tokens').where('token', '==', token).limit(10).get();
-        let tk = null;
-        hit.forEach(function (d) { if (!tk && d.data().kind === kind) tk = d.data(); });
-        // [REMEDIATION R5] a valid token that is not yours answers exactly like an
-        // invalid one, so the endpoint cannot be used to discover live tokens.
-        if (!tk || !(tk.participants || []).includes(auth.uid)) {
-            await custodyAttemptFail('verify', auth.uid);
-            throw new HttpsError('not-found', 'Token si sahihi au haihusiani na safari yako. Hakiki token na ujaribu tena.');
-        }
-        await custodyAttemptClear('verify', auth.uid);
-        rideId = tk.rideId;
+    if (!token || rideId.includes('/')) throw new HttpsError('invalid-argument', 'Token au rideId si sahihi.');
+    if (await custodyAttemptsExceeded('verify', auth.uid)) throw new HttpsError('resource-exhausted', 'Majaribio mengi mno. Subiri dakika 15 kisha ujaribu tena.');
+    let tk = null;
+    if (rideId) {
+        const snap = await db.doc('delivery_tokens/' + rideId + '_' + kind).get();
+        tk = snap.exists ? snap.data() : null;
+    } else {
+        const hits = await db.collection('delivery_tokens').where('token', '==', token).limit(10).get();
+        hits.forEach(d => { const v = d.data(); if (!tk && v.kind === kind && (v.participants || []).includes(auth.uid)) tk = v; });
+        rideId = tk && tk.rideId || '';
     }
-    const { data: rd } = await custodyGetRide(rideId);
-    const rc = await custodyContact(rideId); // [R1] private contact (server-only read)
-    const isParty = (rd.customerId === auth.uid) || (rd.driverId === auth.uid) || (rd.currentCustodian === auth.uid) || (rd.nextTransporterId === auth.uid);
-    if (!isParty) throw new HttpsError('permission-denied', 'Safari hii haihusiani nawe.');
-    // Rudisha taarifa za kukabidhi BILA token yenyewe.
-    return {
-        ok: true,
-        rideId: rideId,
-        kind: kind,
-        cargoName: rd.cargoName || '',
-        customerName: rd.customerName || rc.customerName || '',
-        driverName: rd.driverName || '',
-        vehicleType: rd.vehicleType || '',
-        fromLocation: rd.fromLocation || '',
-        toLocation: rd.toLocation || '',
-        status: rd.status
+    const deny = async () => {
+        await custodyAttemptFail('verify', auth.uid);
+        throw new HttpsError('not-found', 'Token si sahihi au haihusiani na safari yako.');
     };
+    if (!tk || tk.token !== token || tk.kind !== kind || tk.rideId !== rideId || (kind === 'pickup' ? tk.status !== 'pending' : !['pending','issued'].includes(tk.status)) || !(tk.participants || []).includes(auth.uid)) return deny();
+    const snap = await db.doc('ride_requests/' + rideId).get();
+    if (!snap.exists) return deny();
+    const rd = snap.data() || {};
+    const expiry = kind === 'pickup' ? rd.pickupTokenExpiresAt : rd.handoverTokenExpiresAt;
+    const activeStates = kind === 'pickup' ? ['accepted', 'awaiting_pickup', 'pickup_pending', 'seller_confirmed_handover'] : ['awaiting_handover'];
+    const status = kind === 'pickup' ? rd.pickupTokenStatus : rd.handoverTokenStatus;
+    const validParty = kind === 'pickup'
+        ? (auth.uid === rd.driverId || auth.uid === await pickupSenderUid(DIRECT_READ, rd))
+        : (auth.uid === (rd.currentCustodian || rd.driverId) || auth.uid === rd.nextTransporterId);
+    if (!validParty || !activeStates.includes(rd.status) || status !== 'pending' || !expiry || !Number.isFinite(Date.parse(expiry)) || Date.parse(expiry) <= Date.now() || !custodyTokenOk(rd, kind, token)) return deny();
+    await custodyAttemptClear('verify', auth.uid);
+    const rc = await custodyContact(rideId);
+    return { ok: true, rideId, kind, cargoName: rd.cargoName || '', customerName: rd.customerName || rc.customerName || '', driverName: rd.driverName || '', vehicleType: rd.vehicleType || '', fromLocation: rd.fromLocation || '', toLocation: rd.toLocation || '', status: rd.status };
 });
 
 /* ============================================================
@@ -3930,22 +4126,35 @@ exports.commentsEvidence = onCall({ region: REGION }, async (req) => {
 exports.commentsPublish = onCall({ region: REGION }, async (req) => {
     const auth = requireAuth(req);
     const data = req.data || {};
-    const targetType = ['product', 'service', 'transport'].indexOf(String(data.targetType || 'product')) !== -1
-        ? String(data.targetType || 'product') : 'product';
-    const targetId = String(data.targetId || '');
-    const text = String(data.text || '').trim();
+    const targetType = data.targetType == null ? 'product' : String(data.targetType);
+    if (!['product', 'service', 'transport'].includes(targetType)) throw new HttpsError('invalid-argument', 'Aina ya tangazo si sahihi.');
+    const validId = v => typeof v === 'string' && v.length > 0 && Buffer.byteLength(v, 'utf8') <= 1500 && !v.includes('/') && v !== '.' && v !== '..';
+    const targetId = typeof data.targetId === 'string' ? data.targetId.trim() : '';
+    const text = typeof data.text === 'string' ? data.text.trim() : '';
     const parentId = data.parentId ? String(data.parentId) : null;
-    const media = Array.isArray(data.media) ? data.media.slice(0, 4).map(String).filter(Boolean) : [];
+    const requestedRoot = data.rootId ? String(data.rootId) : null;
+    const requestId = data.clientRequestId == null ? null : String(data.clientRequestId);
+    if (!validId(targetId) || (parentId && !validId(parentId)) || (requestedRoot && !validId(requestedRoot)) || (requestedRoot && !parentId) || (requestId && !/^[A-Za-z0-9_-]{16,100}$/.test(requestId))) throw new HttpsError('invalid-argument', 'Kitambulisho cha maoni si sahihi.');
+    if (data.media != null && (!Array.isArray(data.media) || data.media.length > 4 || data.media.some(x => typeof x !== 'string' || x.length > 2000))) throw new HttpsError('invalid-argument', 'Viambatisho si sahihi.');
+    const media = Array.isArray(data.media) ? data.media.filter(Boolean) : [];
     const productRef = (data.productRef && data.productRef.id) ? {
         id: String(data.productRef.id),
         collection: String(data.productRef.collection || 'products'),
         title: String(data.productRef.title || '').slice(0, 200),
-        price: data.productRef.price != null ? Number(data.productRef.price) : null,
+        price: data.productRef.price != null && Number.isFinite(Number(data.productRef.price)) ? Number(data.productRef.price) : null,
         image: String(data.productRef.image || '').slice(0, 500)
     } : null;
-    if (!targetId) throw new HttpsError('invalid-argument', 'targetId inahitajika.');
-    // Maoni yanaweza kuwa na maandishi au ushahidi wa picha/video (angalau kimoja).
-    if ((!text && !media.length) || text.length > 2000) throw new HttpsError('invalid-argument', 'Maoni lazima yawe na maandishi au picha/video (max herufi 2000).');
+    if ((!text && !media.length) || text.length > 2000 || (data.text != null && typeof data.text !== 'string')) throw new HttpsError('invalid-argument', 'Maoni lazima yawe na maandishi au picha/video (max herufi 2000).');
+    const targetRef = db.doc(({product:'products',service:'services',transport:'drivers'})[targetType] + '/' + targetId);
+    const parentRef = parentId ? db.doc('comments/' + parentId) : null;
+    const requestFingerprint = crypto.createHash('sha256').update(JSON.stringify({targetType,targetId,text,parentId,requestedRoot,media,productRef})).digest('hex');
+    const commentRef = requestId ? db.collection('comments').doc('op_' + crypto.createHash('sha256').update(auth.uid + '\0' + requestId).digest('hex')) : db.collection('comments').doc();
+    function retryResult(record) {
+        if (record.authorId !== auth.uid || record.requestFingerprint !== requestFingerprint) throw new HttpsError('already-exists', 'Kitambulisho hiki tayari kimetumika kwa ombi tofauti.');
+        return { ok: true, id: commentRef.id, already: true, verifiedPurchase: record.verifiedPurchase || null, verifiedDelivery: record.verifiedDelivery || null, authorVerified: !!record.authorVerified, authorRole: record.authorRole || 'user', parentAuthorId: record.parentAuthorId || null };
+    }
+    // A lost response can be retried without consuming another rate-limit slot.
+    if (requestId) { const old = await commentRef.get(); if (old.exists) return retryResult(old.data() || {}); }
 
     // Rate limit ya maoni (anti-spam) — max 5 kwa dakika.
     // [COMMENT FIX 2026-09] Soma-kuandika rahisi (sio transaction): transaction
@@ -3982,41 +4191,38 @@ exports.commentsPublish = onCall({ region: REGION }, async (req) => {
     const verifiedPurchase = evidence.order;
     const verifiedDelivery = evidence.delivery;
 
-    // Mwandishi wa maoni mzazi (kwa arifa ya reply).
-    let parentAuthorId = null;
-    if (parentId) {
-        try {
-            const ps = await db.doc('comments/' + parentId).get();
-            if (ps.exists) parentAuthorId = ps.data().authorId || null;
-        } catch (e) { /* ignore */ }
-    }
-
     const nowIso = new Date().toISOString();
-    const commentRef = await db.collection('comments').add({
-        targetType, targetId,
-        authorId: auth.uid,
-        authorName: String(data.authorName || 'Mteja').slice(0, 80),
-        authorPhoto: String(data.authorPhoto || '').slice(0, 500),
-        authorRole: authorRole,
-        authorVerified: authorVerified,
-        parentId: parentId,
-        rootId: data.rootId ? String(data.rootId) : parentId,
-        text: text,
-        media: media,
-        productRef: productRef,
-        likeCount: 0,
-        replyCount: 0,
-        verifiedPurchase: verifiedPurchase,
-        verifiedDelivery: verifiedDelivery,
-        moderationStatus: 'visible',
-        createdAt: nowIso,
-        updatedAt: nowIso,
-        deletedAt: null
+    let result;
+    await db.runTransaction(async t => {
+        // Read all documents before any writes. A concurrent retry sees the same comment.
+        const target = await t.get(targetRef);
+        const prior = requestId ? await t.get(commentRef) : null;
+        const parent = parentRef ? await t.get(parentRef) : null;
+        if (prior && prior.exists) { result = retryResult(prior.data() || {}); return; }
+        if (!target.exists) throw new HttpsError('not-found', 'Tangazo halipatikani.');
+        let parentAuthorId = null, rootId = null;
+        if (parentRef) {
+            if (!parent.exists) throw new HttpsError('not-found', 'Maoni unayojibu hayapatikani.');
+            const p = parent.data() || {};
+            if (p.targetId !== targetId || p.targetType !== targetType || p.deletedAt || p.moderationStatus === 'hidden' || p.moderationStatus === 'deleted') throw new HttpsError('failed-precondition', 'Maoni unayojibu hayahusiani na tangazo hili.');
+            rootId = p.rootId || parentId;
+            if (!validId(rootId) || (requestedRoot && requestedRoot !== rootId)) throw new HttpsError('failed-precondition', 'Mlolongo wa maoni si sahihi.');
+            parentAuthorId = p.authorId || null;
+        }
+        const record = {
+            targetType, targetId, authorId: auth.uid,
+            authorName: String(data.authorName || 'Mteja').slice(0, 80),
+            authorPhoto: String(data.authorPhoto || '').slice(0, 500),
+            authorRole, authorVerified, parentId, rootId, text, media, productRef,
+            likeCount: 0, replyCount: 0, verifiedPurchase, verifiedDelivery,
+            moderationStatus: 'visible', createdAt: nowIso, updatedAt: nowIso, deletedAt: null,
+            ...(requestId ? { requestFingerprint, parentAuthorId } : {})
+        };
+        t.create(commentRef, record);
+        if (parentRef) t.update(parentRef, { replyCount: FieldValue.increment(1) });
+        result = { ok: true, id: commentRef.id, verifiedPurchase, verifiedDelivery, authorVerified, authorRole, parentAuthorId };
     });
-    if (parentId) {
-        await db.doc('comments/' + parentId).update({ replyCount: FieldValue.increment(1) }).catch(() => {});
-    }
-    return { ok: true, id: commentRef.id, verifiedPurchase: verifiedPurchase, verifiedDelivery: verifiedDelivery, authorVerified: authorVerified, authorRole: authorRole, parentAuthorId: parentAuthorId };
+    return result;
 });
 
 /* ============================================================

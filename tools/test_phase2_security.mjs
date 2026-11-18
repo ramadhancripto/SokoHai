@@ -565,13 +565,17 @@ async function main() {
     eq(await restPatch(B.token, 'ride_requests/h6', { driverId: null, status: 'searching' }), 403, 'mteja baada ya pickup');
     eq(await restPatch(D.token, 'ride_requests/h6', { status: 'completed' }), 403, 'dereva status completed (S6d)');
     eq(await restPatch(D.token, 'ride_requests/h6', { driverLat: -2.5, driverLon: 32.9, driverLocAt: 'x', driverLocName: 'Mwanza' }), 200, 'eneo la dereva (25-tracking-hub)');
-    // breakdown halali (20-logistics): dereva anajiondoa, safari inarudi sokoni
-    eq(await restPatch(D.token, 'ride_requests/h6', { status: 'searching', oldDriverId: D.uid, driverId: null, driverName: null, driverPhone: null, isRecoveryActive: true }), 200, 'breakdown');
-    // mteja: kughairi / kubadilisha msafirishaji KABLA ya pickup
+    // Direct writes cannot release an active custodian or bypass token revocation.
+    eq(await restPatch(D.token, 'ride_requests/h6', { status: 'searching', oldDriverId: D.uid, driverId: null, driverName: null, driverPhone: null, isRecoveryActive: true }), 403, 'direct breakdown denied');
+    const fault = await call('deliveryReportTransportFault', D.uid, {rideId:'h6'});
+    assert(fault.ok && fault.data.custodyPreserved, 'fault keeps custody: ' + JSON.stringify(fault));
+    eq((await get('ride_requests/h6')).driverId, D.uid, 'custodian retained');
     await db.doc('ride_requests/h7').set({ customerId: B.uid, driverId: D.uid, status: 'accepted', acceptedAt: hoursAgo(1), custodyStage: 'pickup', agreedFare: 3000 });
     eq(await restPatch(X.token, 'ride_requests/h7', { status: 'cancelled' }), 403, 'mgeni cancel');
-    eq(await restPatch(B.token, 'ride_requests/h7', { driverId: null, status: 'searching' }), 200, 'mteja reassign kabla ya pickup');
-    eq(await restPatch(B.token, 'ride_requests/h7', { status: 'cancelled' }), 200, 'mteja cancel kabla ya pickup');
+    eq(await restPatch(B.token, 'ride_requests/h7', { driverId: null, status: 'searching' }), 403, 'direct reassignment denied');
+    eq(await restPatch(B.token, 'ride_requests/h7', { status: 'cancelled' }), 403, 'direct cancellation denied');
+    assert((await call('deliveryCancel', B.uid, {rideId:'h7'})).ok, 'server cancellation');
+    eq((await get('ride_requests/h7')).status, 'cancelled', 'server cancelled');
     // mteja hawezi kujikubalisha
     await newRide('h8');
     denied(await call('deliveryAccept', 'buyer', { rideId: 'h8' }), ['permission-denied'], 'mteja');

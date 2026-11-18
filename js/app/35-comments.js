@@ -162,7 +162,7 @@ import { skh } from './00-bootstrap.js';
         C.reactions = {}; C.mine = {}; C.reactionsLoaded = false; C.reactionsLoading = false;
         (C.pendingMedia || []).forEach(function (m) { if (m.previewUrl) URL.revokeObjectURL(m.previewUrl); });
         C.replyingTo = null; C.attachProduct = false; C.loaded = false;
-        C.threadShown = {}; C.draft = ''; C.sending = false; C.queryCapped = false; C.allCount = 0; C.cursor = null; C.allItems = []; C.serverCount = null;
+        C.threadShown = {}; C.draft = ''; C.sending = false; C.pendingAttempt = null; C.queryCapped = false; C.allCount = 0; C.cursor = null; C.allItems = []; C.serverCount = null;
         C.requestSeq++; C.sessionSeq++;
         // [MAONI 2026-09] Ushahidi wa oda/usafirishaji + midia inayosubiri.
         C.pendingMedia = [];
@@ -790,14 +790,23 @@ import { skh } from './00-bootstrap.js';
         var session = C.sessionSeq, targetId = C.targetId, targetType = C.targetType;
         var sellerId = C.sellerId, sellerName = C.sellerName, product = C.product;
         if (!inp) return;
+        // Reuse a request key for the same draft after an ambiguous response.
+        var attemptFingerprint = JSON.stringify([targetId, targetType, text, parent && parent.id, parent && parent.rootId, !!C.attachProduct,
+            mediaPending.map(function (m) { var f = m.file || {}; return [f.name || '', f.size || 0, f.lastModified || 0, !!m.isVideo]; })]);
+        if (!C.pendingAttempt || C.pendingAttempt.fingerprint !== attemptFingerprint) {
+            var random = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID().replace(/-/g, '') : null;
+            if (!random && window.crypto && window.crypto.getRandomValues) { var bytes = new Uint8Array(16); window.crypto.getRandomValues(bytes); random = Array.from(bytes, function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }
+            C.pendingAttempt = { fingerprint: attemptFingerprint, id: random, mediaUrls: null };
+        }
+        var attempt = C.pendingAttempt;
         C.sending = true; inp.disabled = true;
         var sendControl = document.getElementById('skhCmSendBtn');
         if (sendControl) sendControl.disabled = true;
         function unlock() { if (session !== C.sessionSeq) return; C.sending = false; var i = document.getElementById('skhCommentInput'), b = document.getElementById('skhCmSendBtn'); if (i) i.disabled = false; if (b) { b.disabled = false; b.textContent = T('cm_send', 'Tuma'); } }
         // Preserve the author's words: comments may be feedback, not only questions.
         // [USHAHIDI 2026-09] Pakia picha/video KABLA ya kutuma (Cloudinary).
-        var mediaUrls = [];
-        if (hasMedia) {
+        var mediaUrls = attempt.mediaUrls ? attempt.mediaUrls.slice() : [];
+        if (hasMedia && !attempt.mediaUrls) {
             var sendBtn = document.getElementById('skhCmSendBtn');
             if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '…'; }
             for (var mi = 0; mi < mediaPending.length; mi++) {
@@ -816,6 +825,7 @@ import { skh } from './00-bootstrap.js';
                 alert(T('cm_media_fail', 'Picha/video haikupakiwa. Tafadhali jaribu tena.'));
                 return;
             }
+            attempt.mediaUrls = mediaUrls.slice();
         }
         // [FIX 2026-11-17] Thibitisha kuwa maoni yatapanda kwenye bidhaa sahihi —
         // usiweze kuandika maoni ya bidhaa A kwenye bidhaa B kwa sababu C.targetId
@@ -835,7 +845,8 @@ import { skh } from './00-bootstrap.js';
             authorPhoto: (skh.currentUserData && skh.currentUserData.photoURL) || (skh.currentUser && skh.currentUser.photoURL) || '',
             parentId: parent ? parent.id : null,
             rootId: parent ? parent.rootId : null,
-            media: mediaUrls
+            media: mediaUrls,
+            ...(attempt.id ? { clientRequestId: attempt.id } : {})
         };
         if (C.attachProduct && C.product) {
             payload.productRef = {
@@ -903,7 +914,7 @@ import { skh } from './00-bootstrap.js';
                 notify(sellerId, mentioned ? T('cm_mention_title', 'Umetajwa kwenye maoni') : T('cm_new_title', 'Maoni Mapya'), body, mentioned ? 'comment_mention' : 'new_comment', { commentId: published.id, targetId: C.targetId });
             }
         } catch (e) { /* arifa si ya kusitisha */ }
-        var finalInput = document.getElementById('skhCommentInput'); if (finalInput) finalInput.value = ''; C.draft = ''; C.sending = false;
+        var finalInput = document.getElementById('skhCommentInput'); if (finalInput) finalInput.value = ''; C.draft = ''; C.sending = false; C.pendingAttempt = null;
         if (parent) C.threadShown[parent.rootId] = Math.max(C.threadShown[parent.rootId] || 2, (C.byParent[parent.rootId] || []).length + 1);
         C.replyingTo = null; C.attachProduct = false;
         // Safisha midia inayokuwa imetumwa.

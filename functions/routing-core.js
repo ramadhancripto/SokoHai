@@ -493,17 +493,39 @@ async function applyTransition(myDb, rideId, tr) {
  * Marketplace ya kazi) badala ya kufia kwenye failed_assignment. */
 async function exposeProductRideToMarketplace(myDb, rideId) {
     try {
-        const rs = await myDb.doc('ride_requests/' + rideId).get();
-        if (!rs.exists) return;
-        const rd = rs.data() || {};
-        if (!rd.productOrder) return;
-        await rs.ref.update({
-            status: 'searching',
-            routingStatus: 'marketplace',
-            preferredDriverId: null,
-            activeOfferId: null
+        const ref = myDb.doc('ride_requests/' + rideId);
+        await myDb.runTransaction(async (t) => {
+            const rs = await t.get(ref);
+            if (!rs.exists) return;
+            const rd = rs.data() || {};
+            if (!rd.productOrder || rd.status !== 'searching' || rd.driverId || rd.assignmentStatus !== 'failed_assignment') return;
+            t.update(ref, { routingStatus: 'marketplace', preferredDriverId: null, activeOfferId: null });
         });
-    } catch (e) { /* siyo kikwazo */ }
+    } catch (e) { /* best effort; never revive closed rides */ }
+}
+
+// Offer changes must contend with acceptance and cancellation on the same ride.
+async function transitionRideOffers(myDb, rideId, action) {
+    let result = { tr: null, offers: [] };
+    await myDb.runTransaction(async (t) => {
+        const ref = myDb.doc('ride_requests/' + rideId);
+        const rs = await t.get(ref);
+        if (!rs.exists) throw new Error('ride_not_found');
+        const rd = rs.data() || {};
+        if (!['searching','pending_acceptance'].includes(rd.status) || rd.assignmentStatus === 'assigned' || (rd.driverId && rd.acceptedAt)) {
+            if (action.type === 'decline') throw new Error('offer_not_active');
+            result = { tr: null, offers: [] }; return;
+        }
+        const snap = await t.get(myDb.collection('delivery_offers').where('rideId', '==', rideId));
+        const offers = [];
+        snap.forEach(d => offers.push(Object.assign({ id: d.id }, d.data())));
+        if (!offers.length) { result = { tr: null, offers }; return; }
+        const tr = L.transitionOffers(offers, action);
+        Object.keys(tr.updates || {}).forEach(oid => t.update(myDb.collection('delivery_offers').doc(oid), tr.updates[oid]));
+        if (tr.ridePatch) t.update(ref, tr.ridePatch);
+        result = { tr, offers };
+    });
+    return result;
 }
 
 /* ------------------ Decline → mfungue mwingine ------------------ */
@@ -514,9 +536,9 @@ async function declineOffer(myDb, offerId, agentId) {
     const offer = os.data();
     if (offer.agentId !== agentId) throw new Error('not_your_offer');
 
-    const offers = await rideOffers(myDb, offer.rideId);
-    const tr = L.transitionOffers(offers, { type: 'decline', offerId: offerId, agentId: agentId });
-    await applyTransition(myDb, offer.rideId, tr);
+    const transition = await transitionRideOffers(myDb, offer.rideId, { type: 'decline', offerId: offerId, agentId: agentId });
+    const tr = transition.tr;
+    if (!tr) throw new Error('offer_not_active');
     await routingEvent(myDb, offer.rideId, 'OFFER_DECLINED', agentId, {
         offerId: offerId, agentName: offer.agentName || ''
     });
@@ -538,12 +560,11 @@ async function declineOffer(myDb, offerId, agentId) {
 /* ------------------ Sweep: muda kuisha → mwingine ------------------ */
 
 async function sweepRide(myDb, rideId) {
-    const offers = await rideOffers(myDb, rideId);
-    if (!offers.length) return { ok: true, changed: false };
-    const tr = L.transitionOffers(offers, { type: 'sweep' });
+    const transition = await transitionRideOffers(myDb, rideId, { type: 'sweep' });
+    const offers = transition.offers, tr = transition.tr;
+    if (!tr) return { ok: true, changed: false };
     const changed = Object.keys(tr.updates).length > 0;
     if (changed) {
-        await applyTransition(myDb, rideId, tr);
         await routingEvent(myDb, rideId, 'OFFERS_SWEEP', 'system', { changed: Object.keys(tr.updates).length });
         tr.notify.forEach(function (uid) {
             const of = offers.find(o => o.agentId === uid) || {};

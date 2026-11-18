@@ -288,6 +288,13 @@ function FakeDb() {
     return {
         doc: p => docRef(p),
         collection: coll,
+        async runTransaction(fn) {
+            const writes = [];
+            const t = { get: ref => ref.get(), update: (ref, patch) => writes.push([ref, patch]) };
+            const result = await fn(t);
+            for (const [ref, patch] of writes) await ref.update(patch);
+            return result;
+        },
         batch() {
             return {
                 set(ref, d) { ops.push(['set', ref, d]); },

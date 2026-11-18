@@ -439,6 +439,9 @@ window.skhRouteMatcherChoose = function (driverId) {
 window.skhRouteMatcherBroadcast = function () {
     const modal = document.getElementById('routeMatchModal');
     if (modal) modal.style.display = 'none';
+    // Keep the request form available if broadcast validation or the request fails.
+    const request = document.getElementById('rideRequestModal');
+    if (request) request.style.display = 'flex';
     if (typeof window.broadcastRideRequest === 'function') {
         window.broadcastRideRequest();
     }

@@ -47,8 +47,8 @@ import { skh } from './00-bootstrap.js';
         try {
             var q = skh.query(skh.collection(skh.db, 'sellerFollowers'), skh.where('sellerId', '==', uid), skh.limit(500));
             var s = await skh.getDocs(q);
-            return s.size || 0;
-        } catch (e) { return 0; }
+            return s.size >= 500 ? '500+' : (s.size || 0);
+        } catch (e) { return null; }
     }
 
     async function getProducts(uid) {
@@ -57,32 +57,35 @@ import { skh } from './00-bootstrap.js';
             // [FIX 2026-09] Hakuna orderBy — inaepuka hitaji la composite index; panga hapa.
             var q = skh.query(skh.collection(skh.db, 'products'), skh.where('userId', '==', uid), skh.limit(120));
             var s = await skh.getDocs(q);
-            s.forEach(function (d) { list.push(Object.assign({ id: d.id }, d.data())); });
+            s.forEach(function (d) { list.push(Object.assign({}, d.data(), { id: d.id })); });
             list.sort(function (a, b) { return (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0); });
         } catch (e) {
-            console.warn('[seller-store] getProducts kosa:', e && e.message ? e.message : e);
+            console.warn('[seller-store] getProducts kosa:', e && (e.code || e.message) ? (e.code || e.message) : 'unknown');
+            return { items: [], failed: true, capped: false };
         }
-        return list;
+        return { items: list, failed: false, capped: list.length >= 120 };
     }
 
     async function getOrdersAgg(uid) {
-        var agg = { success: 0, total: 0, byProduct: {} };
+        var agg = { success: 0, total: 0, byProduct: {}, available: true };
         try {
             var q = skh.query(skh.collection(skh.db, 'orders'), skh.where('sellerId', '==', uid), skh.limit(300));
             var s = await skh.getDocs(q);
+            if (s.size >= 300) return { success: null, total: null, byProduct: {}, available: false };
             s.forEach(function (d) {
                 var o = d.data();
                 agg.total++;
                 var st = String(o.status || '').toLowerCase();
                 if (['completed', 'delivered', 'paid', 'delivered_confirmed', 'shipped'].indexOf(st) !== -1) agg.success++;
-                (o.items || []).forEach(function (it) {
+                (Array.isArray(o.items) ? o.items : []).forEach(function (it) {
+                    if (!it || typeof it !== 'object') return;
                     var pid = it.productId || it.id;
                     if (!pid) return;
                     var qty = Number(it.qty || it.quantity || 1) || 1;
                     agg.byProduct[pid] = (agg.byProduct[pid] || 0) + qty;
                 });
             });
-        } catch (e) {}
+        } catch (e) { agg = { success: null, total: null, byProduct: {}, available: false }; }
         return agg;
     }
 
@@ -90,7 +93,8 @@ import { skh } from './00-bootstrap.js';
     function ratingFromProducts(products) {
         var sum = 0, n = 0;
         products.forEach(function (p) {
-            (p.comments || []).forEach(function (c) {
+            (Array.isArray(p.comments) ? p.comments : []).forEach(function (c) {
+                if (!c || typeof c !== 'object') return;
                 var r = Number(c.rating || 0);
                 if (r > 0) { sum += r; n++; }
             });
@@ -111,12 +115,14 @@ import { skh } from './00-bootstrap.js';
 
         var seller = await getSellerDoc(sellerUid);
         var followers = await getFollowers(sellerUid);
-        var products = await getProducts(sellerUid);
+        var productResult = await getProducts(sellerUid);
+        var products = productResult.items;
         var ordersAgg = await getOrdersAgg(sellerUid);
         var rating = ratingFromProducts(products);
 
         var name = sellerName || (seller && (seller.storeName || seller.fullName || seller.displayName)) || T('eng_seller', 'Seller');
         var loc = (seller && (seller.location || seller.region || seller.city)) || 'Tanzania';
+        if (loc && typeof loc === 'object') loc = loc.label || loc.name || [loc.ward, loc.district, loc.region].filter(Boolean).join(', ') || 'Tanzania';
         var memberSince = seller && (seller.memberSince || seller.createdAt);
         var verified = !!(seller && (seller.verificationStatus === 'verified' || seller.verified === true));
         // [MY-PROFILE 2026-09-16] DP = picha ya MTU kwanza (photoURL/profileImage),
@@ -125,18 +131,18 @@ import { skh } from './00-bootstrap.js';
         var cover = (seller && seller.coverImage) || '';
         var about = (seller && (seller.about || seller.bio || seller.description)) || '';
 
-        products.forEach(function (p) { p.unitsSold = ordersAgg.byProduct[p.id] || 0; });
+        products.forEach(function (p) { p.unitsSold = ordersAgg.available ? (ordersAgg.byProduct[p.id] || 0) : null; });
         var deals = products.filter(function (p) { return p.saleMode === 'price_drop' || p.saleMode === 'group_buy' || p.isDeal; });
 
         var fulfillment = ordersAgg.total ? Math.round((ordersAgg.success / ordersAgg.total) * 100) : null;
-        var ratingTxt = rating.count ? (rating.avg.toFixed(1) + ' / 5') : T('sst_no_rating', 'No ratings yet');
+        var ratingTxt = productResult.failed ? T('sst_unavailable', 'Haipatikani') : (rating.count ? (rating.avg.toFixed(1) + ' / 5') : T('sst_no_rating', 'No ratings yet'));
 
         P = {
             uid: sellerUid, name: name, loc: loc, memberSince: memberSince, verified: verified,
             logo: logo, cover: cover, about: about, followers: followers,
             successOrders: ordersAgg.success, totalOrders: ordersAgg.total,
             fulfillment: fulfillment, rating: rating, ratingTxt: ratingTxt,
-            products: products, deals: deals
+            products: products, deals: deals, productsFailed: productResult.failed, productsCapped: productResult.capped
         };
 
         window.skhRenderSellerProfile();
@@ -154,7 +160,7 @@ import { skh } from './00-bootstrap.js';
         var verifiedBadge = P.verified ? '<span style="font-size:12.5px;background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:10px;font-weight:800;">✓ ' + T('verified', 'Verified') + '</span>' : '';
         return `
         ${coverHtml}
-        <div style="padding:0 16px 14px; background:white; border-radius:0 0 14px 14px; margin-bottom:10px; position:relative; text-align:center;"> <img src="${esc(P.logo)}" onerror="this.src='https://ui-avatars.com/api/?name=Store&background=03509d&color=ffffff'" style="width:82px;height:82px;border-radius:50%;border:4px solid white;background:#f1f5f9;object-fit:cover;box-shadow:0 4px 10px rgba(0,0,0,0.15);margin-top:-41px;display:inline-block;"> <div style="margin-top:6px;"> <b style="font-size:17px;color:#0f172a;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">${esc(P.name)} ${verifiedBadge}</b> <div style="font-size:12px;color:#475569;margin-top:2px;">${esc(P.loc)} ${since ? '· ' + since : ''}</div> <div style="display:flex;gap:14px;margin-top:9px;flex-wrap:wrap;font-size:12px;justify-content:center;"> <span style="color:#f59e0b;font-weight:800;">${starSvg('#f59e0b')} ${esc(P.ratingTxt)}</span> <span><b id="spFollowers">${P.followers}</b> ${T('sst_followers', 'Followers')}</span> <span><b>${P.successOrders}</b> ${T('pm_completed_orders', 'Completed Orders')}</span>
+        <div style="padding:0 16px 14px; background:white; border-radius:0 0 14px 14px; margin-bottom:10px; position:relative; text-align:center;"> <img src="${esc(P.logo)}" onerror="this.src='https://ui-avatars.com/api/?name=Store&background=03509d&color=ffffff'" style="width:82px;height:82px;border-radius:50%;border:4px solid white;background:#f1f5f9;object-fit:cover;box-shadow:0 4px 10px rgba(0,0,0,0.15);margin-top:-41px;display:inline-block;"> <div style="margin-top:6px;"> <b style="font-size:17px;color:#0f172a;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">${esc(P.name)} ${verifiedBadge}</b> <div style="font-size:12px;color:#475569;margin-top:2px;">${esc(P.loc)} ${since ? '· ' + since : ''}</div> <div style="display:flex;gap:14px;margin-top:9px;flex-wrap:wrap;font-size:12px;justify-content:center;"> <span style="color:#f59e0b;font-weight:800;">${starSvg('#f59e0b')} ${esc(P.ratingTxt)}</span> <span><b id="spFollowers">${P.followers == null ? T('sst_unavailable', 'Haipatikani') : P.followers}</b> ${T('sst_followers', 'Followers')}</span> <span><b>${P.successOrders == null ? T('sst_unavailable', 'Haipatikani') : P.successOrders}</b> ${T('pm_completed_orders', 'Completed Orders')}</span>
                     ${trustRow}
                 </div> <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;"> <button id="spFollowBtn" onclick="window.skhProfileFollow()" class="follow-btn btn-not-following" style="flex:1;max-width:170px;">${T('eng_follow', 'Follow')}</button> <button onclick="window.openChatWithUser && window.openChatWithUser('${js(P.uid)}', '${js(P.name)}')" style="flex:1;max-width:170px;padding:10px 14px;background:#1268A8;color:#fff;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;">Chat</button> </div> </div> </div>`;
     }
@@ -170,11 +176,11 @@ import { skh } from './00-bootstrap.js';
     }
 
     function cardGrid(list) {
-        if (!list.length) return '<p style="text-align:center;color:#64748b;padding:30px;">' + T('sst_no_products_here', 'No products in this section.') + '</p>';
+        if (!list.length) return '<p style="text-align:center;color:#64748b;padding:30px;">' + (P && P.productsFailed ? 'Bidhaa hazijapakiwa.' : T('sst_no_products_here', 'No products in this section.')) + '</p>';
         return `<div class="feed-grid" style="padding:4px 12px 20px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));">
             ${list.map(function (p) {
                 var img = esc(p.image || 'https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b');
-                return `<div class="feed-card-box" onclick="openProduct('${js(p.id)}','products')"> <div class="feed-img-box"><img src="${img}" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'"></div> <div class="feed-info-box"> <b>${esc(p.title || T('products', 'Products'))}</b> <span class="price" style="color:var(--terracotta);font-weight:900;">${tzs(p.price)}</span> <div class="stats-row"><small>${p.views || 0} ${T('sst_views', 'views')}</small><small>${p.unitsSold || 0} ${T('sst_sold', 'sold')}</small></div> </div> </div>`;
+                return `<div class="feed-card-box" onclick="openProduct('${js(p.id)}','products')"> <div class="feed-img-box"><img src="${img}" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name=Bidhaa&background=f1f5f9&color=64748b'"></div> <div class="feed-info-box"> <b>${esc(p.title || T('products', 'Products'))}</b> <span class="price" style="color:var(--terracotta);font-weight:900;">${tzs(p.price)}</span> <div class="stats-row"><small>${p.views || 0} ${T('sst_views', 'views')}</small><small>${p.unitsSold == null ? T('sst_unavailable', 'Haipatikani') : p.unitsSold} ${T('sst_sold', 'sold')}</small></div> </div> </div>`;
             }).join('')}
         </div>`;
     }
@@ -194,8 +200,7 @@ import { skh } from './00-bootstrap.js';
         window.skhToggleFollowSeller(P.uid, P.name, btn);
         setTimeout(function () {
             if (window.skhEngagementState && window.skhEngagementState.following && window.skhEngagementState.following[P.uid]) {
-                P.followers = (P.followers || 0);
-                if (f) f.innerText = P.followers;
+                if (f) f.innerText = P.followers == null ? T('sst_unavailable', 'Haipatikani') : P.followers;
             }
         }, 300);
     };
@@ -207,9 +212,11 @@ import { skh } from './00-bootstrap.js';
         html += `<div style="position:sticky;top:0;z-index:20;background:#f4f7fa;padding:8px 12px;display:flex;justify-content:flex-end;"> <button onclick="document.getElementById('sellerProfileModal').style.display='none'" style="background:#001122;border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;">&#10005;</button> </div>`;
         html += profHeader();
         html += profTabs();
+        if (P.productsFailed) html += '<p role="status" style="padding:10px 14px;color:#9a3412">Bidhaa hazijapakiwa. Tafadhali fungua duka tena kujaribu.</p>';
+        else if (P.productsCapped) html += '<p role="status" style="padding:10px 14px;color:#64748b">Inaonyesha hadi bidhaa 120; huenda zipo nyingine.</p>';
 
         if (P_TAB === 'store') {
-            html += `<div style="padding:0 12px 20px;"> <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:10px;"> <b style="font-size:12px;color:#0f172a;display:block;margin-bottom:8px;text-transform:uppercase;">${T('sst_trust', 'Seller Trust')}</b> <div style="font-size:12px;color:#334155;line-height:1.9;"> <div>${P.verified ? '<span style="color:#16a34a;font-weight:800;">' + T('sst_verified_seller', 'Verified Seller') + '</span>' : '<span style="color:#94a3b8;">' + T('sst_not_verified', 'Not verified yet') + '</span>'}</div> <div>${T('pm_completed_orders', 'Completed Orders')}: <b>${P.successOrders}</b></div>
+            html += `<div style="padding:0 12px 20px;"> <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:10px;"> <b style="font-size:12px;color:#0f172a;display:block;margin-bottom:8px;text-transform:uppercase;">${T('sst_trust', 'Seller Trust')}</b> <div style="font-size:12px;color:#334155;line-height:1.9;"> <div>${P.verified ? '<span style="color:#16a34a;font-weight:800;">' + T('sst_verified_seller', 'Verified Seller') + '</span>' : '<span style="color:#94a3b8;">' + T('sst_not_verified', 'Not verified yet') + '</span>'}</div> <div>${T('pm_completed_orders', 'Completed Orders')}: <b>${P.successOrders == null ? T('sst_unavailable', 'Haipatikani') : P.successOrders}</b></div>
                         ${P.fulfillment != null ? '<div>' + T('sst_completion_rate', 'Completion rate') + ': <b>' + P.fulfillment + '%</b></div>' : ''}
                         <div>${T('sst_buyer_rating', 'Buyer rating')}: <b>${esc(P.ratingTxt)}</b> (${T('sst_ratings_count', '{n} ratings', { n: P.rating.count })})</div>
                         ${P.memberSince ? '<div>' + T('sst_member_since', 'Member since') + ': <b>' + new Date(P.memberSince).getFullYear() + '</b></div>' : ''}
@@ -229,8 +236,8 @@ import { skh } from './00-bootstrap.js';
         } else if (P_TAB === 'reviews') {
             var reviews = [];
             P.products.forEach(function (p) {
-                (p.comments || []).forEach(function (c) {
-                    if (c.text || c.comment) reviews.push(c);
+                (Array.isArray(p.comments) ? p.comments : []).forEach(function (c) {
+                    if (c && (c.text || c.comment)) reviews.push(c);
                 });
             });
             html += `<div style="padding:0 12px 20px;">

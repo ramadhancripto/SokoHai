@@ -68,7 +68,7 @@
                 <button type="button" class="ch-plus-item" onclick="window.skhChatAttachOrder()"><span><span class="skh-ico" data-ico="cart"></span></span> Oda (Order)</button>
             </div>
             <div class="ch-comp-field">
-                <input type="text" id="chatInput" placeholder="Andika ujumbe..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}">
+                <input type="text" id="chatInput" aria-label="Andika ujumbe" placeholder="Andika ujumbe..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}">
             </div>
             <button type="button" id="voiceBtn" class="ch-cbtn" title="Rekodi ujumbe wa sauti" aria-label="Rekodi ujumbe wa sauti" onclick="toggleVoiceRecord()">
                 <svg class="ch-mic-ic" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -134,14 +134,14 @@
             </div>
             <div class="ch-inbox-head-actions">
                 <!-- [R22 §11] + → Contact / Chagua Contacts / Create Group (69-chat-groups.js) -->
-                <button type="button" id="sogaPlusBtn" onclick="window.skhSogaPlusMenu && window.skhSogaPlusMenu(event)" title="Anza: Contact / Contacts / Kikundi" class="ch-inbox-iconbtn ch-inbox-plus"><span style="font-size:20px;font-weight:900;line-height:1;">+</span></button>
-                <button onclick="window.skhChatOpenBlockedUsers()" title="Waliozuiwa" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="lock"></span></button>
+                <button type="button" id="sogaPlusBtn" aria-label="Anza mazungumzo au kikundi" onclick="window.skhSogaPlusMenu && window.skhSogaPlusMenu(event)" title="Anza: Contact / Contacts / Kikundi" class="ch-inbox-iconbtn ch-inbox-plus"><span style="font-size:20px;font-weight:900;line-height:1;">+</span></button>
+                <button type="button" aria-label="Waliozuiwa" onclick="window.skhChatOpenBlockedUsers()" title="Waliozuiwa" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="lock"></span></button>
                 <button aria-label="Funga" onclick="closeModals()" class="ch-inbox-iconbtn"><span class="skh-ico" data-ico="x"></span></button>
             </div>
         </div>
         <div class="ch-inbox-search">
             <span class="ch-inbox-search-ico" aria-hidden="true"><span class="skh-ico" data-ico="search"></span></span>
-            <input type="text" id="inboxSearchInput" placeholder="Tafuta mazungumzo, watu, maduka..." autocomplete="off" oninput="window.skhChatInboxSearch(this.value)">
+            <input type="text" id="inboxSearchInput" aria-label="Tafuta mazungumzo" placeholder="Tafuta mazungumzo, watu, maduka..." autocomplete="off" oninput="window.skhChatInboxSearch(this.value)">
             <button id="inboxSearchClear" class="ch-inbox-clear" style="display:none;" onclick="window.skhChatClearInboxSearch()" aria-label="Futa"><span class="skh-ico" data-ico="x"></span></button>
         </div>
         <div id="inboxChips" class="ch-inbox-chips"></div>

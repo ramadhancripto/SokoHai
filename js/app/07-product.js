@@ -156,7 +156,7 @@ window.openProduct = async function(id, manualCollection = null) {
                 return;
             }
 
-        const found = { id: snapshot.id, collectionName: colName, ...snapshot.data() };
+        const found = { ...snapshot.data(), id: snapshot.id, collectionName: colName };
         skh.currentOpenProduct = found;
 
         // [BUYER DASHBOARD] Recent view moja kwa user+entity (bounded, central).
@@ -812,33 +812,23 @@ window.submitComment = async function() {
             // [COMMENTS 2026-09] Maoni ya umma yanaenda kwenye collection ya
             // `comments` kupitia server (verifiedPurchase/author ni SERVER-ONLY).
             const fn = (typeof skh.wrapCallable === "function" ? skh.wrapCallable("commentsPublish") : skh.httpsCallable(skh.getFunctions(skh.fApp, "europe-west1"), "commentsPublish"));
-            try {
-                const res = await fn({
-                    targetType: 'product',
-                    targetId: skh.currentOpenProduct.id,
-                    text: text,
-                    authorName: skh.currentUser.displayName || (skh.currentUser.email ? skh.currentUser.email.split('@')[0] : 'Mteja'),
-                    authorPhoto: (skh.currentUserData && skh.currentUserData.photoURL) || skh.currentUser.photoURL || ''
-                });
-                if (res && res.data && res.data.ok) published = true;
-            } catch (e) {
-                const code = String((e && e.code) || '');
-                // Server haipatikani (haijatumwa) -> fallback ya client (bila badge).
-                if (code && code !== 'functions/not-found' && code !== 'unavailable' && code !== 'internal' && !/not-found/.test(code)) throw e;
+            const product = skh.currentOpenProduct;
+            const signature = JSON.stringify([product.id, product.collectionName || 'products', text]);
+            if (!input._skhCommentAttempt || input._skhCommentAttempt.signature !== signature) {
+                let key = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID().replace(/-/g, '') : null;
+                if (!key && window.crypto && window.crypto.getRandomValues) { const bytes = new Uint8Array(16); window.crypto.getRandomValues(bytes); key = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join(''); }
+                input._skhCommentAttempt = { signature, key };
             }
-            // Fallback: andika moja kwa moja (rules zinaruhusu maoni ya mwandishi).
-            if (!published) {
-                await skh.addDoc(skh.collection(skh.db, 'comments'), {
-                    targetType: 'product',
-                    targetId: skh.currentOpenProduct.id,
-                    authorId: skh.currentUser.uid,
-                    authorName: skh.currentUser.displayName || (skh.currentUser.email ? skh.currentUser.email.split('@')[0] : 'Mteja'),
-                    authorPhoto: (skh.currentUserData && skh.currentUserData.photoURL) || skh.currentUser.photoURL || '',
-                    parentId: null, rootId: null,
-                    text: text, media: [], productRef: null,
-                    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), deletedAt: null
-                });
-            }
+            const res = await fn({
+                targetType: product.collectionName === 'services' ? 'service' : (product.collectionName === 'drivers' ? 'transport' : 'product'),
+                targetId: product.id, text,
+                authorName: skh.currentUser.displayName || (skh.currentUser.email ? skh.currentUser.email.split('@')[0] : 'Mteja'),
+                authorPhoto: (skh.currentUserData && skh.currentUserData.photoURL) || skh.currentUser.photoURL || '',
+                ...(input._skhCommentAttempt.key ? {clientRequestId: input._skhCommentAttempt.key} : {})
+            });
+            if (!(res && res.data && res.data.ok)) throw new Error('Huduma haijathibitisha maoni.');
+            published = true;
+            input._skhCommentAttempt = null;
             input.value = ""; 
             // [COMMENT FIX 2026-09] Arifu muuzaji kwamba mteja ameuliza swali au
             // ameacha maoni — kwa kutumia mfumo ULIOPO wa notifications

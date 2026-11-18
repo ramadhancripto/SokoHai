@@ -33,7 +33,8 @@ import { skh } from './00-bootstrap.js';
             var fn = window[name];
             if (typeof fn !== 'function') return { ok: false, error: 'server_unavailable' };
             var res = await fn(payload || {});
-            return { ok: true, data: (res && res.data) || {} };
+            var data = (res && res.data) || {};
+            return data.ok === true ? { ok: true, data: data } : { ok: false, error: data.message || data.error || 'Server haijathibitisha ombi.' };
         } catch (e) {
             return { ok: false, error: (e && e.message) || 'error', code: (e && e.code) || null };
         }
@@ -274,23 +275,28 @@ import { skh } from './00-bootstrap.js';
         if (el) el.hidden = !el.hidden;
     };
 
+    var acceptingOffers = new Set();
     window.skhRequestInboxAccept = async function (offerId) {
+        if (acceptingOffers.has(offerId)) return;
+        acceptingOffers.add(offerId);
         var card = document.querySelector('[data-ri-id="' + (window.CSS && CSS.escape ? CSS.escape(offerId) : offerId) + '"]');
         var btn = card ? card.querySelector('.ri-btn-primary') : null;
         setBusy(btn, true);
         var r = await call('skhRoutingServerOfferAccept', { offerId: offerId });
-        if (r.ok) {
+        if (r.ok && r.data.token) {
             if (window.sokohaiToast) window.sokohaiToast('Umekubali ombi — Pickup Token imetengenezwa.', 'success', 3600);
+            else alert('Umekubali ombi — Pickup Token imetengenezwa.');
             window.skhCloseRequestInbox();
             if (window.skhOpenTokenBox) window.skhOpenTokenBox('active');
         } else {
             setBusy(btn, false, ico('check', 14) + ' Kubali');
-            var msg = (r.code === 'failed-precondition')
+            var msg = (String(r.code || '').replace(/^functions\//, '') === 'failed-precondition')
                 ? 'Ofa hii si hai tena — huenda mwingine aliichukua au muda uliisha.'
                 : ('Imeshindikana: ' + (r.error || 'jaribu tena'));
             if (window.sokohaiToast) window.sokohaiToast(msg, 'error', 3600);
             else alert(msg);
         }
+        acceptingOffers.delete(offerId);
     };
 
     window.skhRequestInboxDecline = async function (offerId) {

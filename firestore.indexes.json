@@ -1,6 +1,69 @@
 {
  "indexes": [
   {
+   "collectionGroup": "sales",
+   "queryScope": "COLLECTION",
+   "fields": [
+    { "fieldPath": "businessId", "order": "ASCENDING" },
+    { "fieldPath": "storeId", "order": "ASCENDING" },
+    { "fieldPath": "completedAt", "order": "ASCENDING" }
+   ]
+  },
+  {
+   "collectionGroup": "sale_adjustments",
+   "queryScope": "COLLECTION",
+   "fields": [
+    { "fieldPath": "businessId", "order": "ASCENDING" },
+    { "fieldPath": "storeId", "order": "ASCENDING" },
+    { "fieldPath": "updatedAt", "order": "ASCENDING" }
+   ]
+  },
+  {
+   "collectionGroup": "refunds",
+   "queryScope": "COLLECTION",
+   "fields": [
+    { "fieldPath": "businessId", "order": "ASCENDING" },
+    { "fieldPath": "storeId", "order": "ASCENDING" },
+    { "fieldPath": "updatedAt", "order": "ASCENDING" }
+   ]
+  },
+  {
+   "collectionGroup": "credit_adjustments",
+   "queryScope": "COLLECTION",
+   "fields": [
+    { "fieldPath": "businessId", "order": "ASCENDING" },
+    { "fieldPath": "storeId", "order": "ASCENDING" },
+    { "fieldPath": "updatedAt", "order": "ASCENDING" }
+   ]
+  },
+  {
+   "collectionGroup": "sale_voids",
+   "queryScope": "COLLECTION",
+   "fields": [
+    { "fieldPath": "businessId", "order": "ASCENDING" },
+    { "fieldPath": "storeId", "order": "ASCENDING" },
+    { "fieldPath": "updatedAt", "order": "ASCENDING" }
+   ]
+  },
+  {
+   "collectionGroup": "inventory_movements",
+   "queryScope": "COLLECTION",
+   "fields": [
+    { "fieldPath": "businessId", "order": "ASCENDING" },
+    { "fieldPath": "storeId", "order": "ASCENDING" },
+    { "fieldPath": "createdAt", "order": "ASCENDING" }
+   ]
+  },
+  {
+   "collectionGroup": "shop_ledger",
+   "queryScope": "COLLECTION",
+   "fields": [
+    { "fieldPath": "businessId", "order": "ASCENDING" },
+    { "fieldPath": "storeId", "order": "ASCENDING" },
+    { "fieldPath": "date", "order": "ASCENDING" }
+   ]
+  },
+  {
    "collectionGroup": "sokopay_links",
    "queryScope": "COLLECTION",
    "fields": [

@@ -1395,16 +1395,8 @@ service cloud.firestore {
             || (resource.data.get('customerId', '') == request.auth.uid
                 && resource.data.get('acceptedAt', null) == null
                 && resource.data.get('driverId', null) == null))
-        && (unchanged(['driverId','driverName'])
-            || request.resource.data.get('driverId', null) == resource.data.get('driverId', null)
-            || (request.resource.data.get('driverId', null) == null && rideReleaseDriverOk()))
-        && (unchanged(['status'])
-            || (request.resource.data.status == 'searching'
-                && request.resource.data.get('driverId', null) == null
-                && (resource.data.get('driverId', null) == null || rideReleaseDriverOk()))
-            || (request.resource.data.status == 'cancelled'
-                && resource.data.get('customerId', '') == request.auth.uid
-                && resource.data.get('status', 'searching') in ridePrePickupStates()))
+        // Assignment and cancellation must not race server token revocation.
+        && unchanged(['driverId','driverName','status'])
       ));
       allow delete: if signedIn()
         && resource.data.customerId == request.auth.uid
@@ -1439,11 +1431,40 @@ service cloud.firestore {
       allow read: if signedIn() && (isAdmin()
         || resource.data.get('fromUid', '') == request.auth.uid
         || resource.data.get('toUid', '') == request.auth.uid
+        || resource.data.get('fromTransporterId', '') == request.auth.uid
+        || resource.data.get('toTransporterId', '') == request.auth.uid
         || (resource.data.get('rideId', '') != '' && isRidePartyOf(resource.data.rideId)));
       allow write: if false;
     }
+    // Published administrative units are read-only; review and writes use server callables.
+    match /location_directory/{id} {
+      allow read: if resource.data.get('status', '') == 'verified';
+      allow write: if false;
+    }
+    match /location_suggestions/{id} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('submittedBy', '') == request.auth.uid);
+      allow write: if false;
+    }
     match /delivery_tokens/{id} {
-      allow read: if signedIn() && resource.data.participants.hasAny([request.auth.uid]);
+      // A stale participant must not retain pickup access after cancellation or reassignment.
+      // Handover is restricted to current sender and next transporter; delivery keeps its established rule.
+      allow read: if signedIn() && resource.data.participants.hasAny([request.auth.uid])
+        && (resource.data.get('kind', '') != 'pickup' || (
+          resource.data.get('rideId', '') != ''
+          && exists(/databases/$(database)/documents/ride_requests/$(resource.data.rideId))
+          && rideOf(resource.data.rideId).get('status', '') in ['accepted','awaiting_pickup','pickup_pending','seller_confirmed_handover','picked_up','in_transit','delivered','completed']
+          && rideOf(resource.data.rideId).get('driverId', '') != ''
+          && resource.data.participants.hasAny([rideOf(resource.data.rideId).get('driverId', '')])
+          && rideOf(resource.data.rideId).get('pickupTokenStatus', '') in ['pending','used']
+        ))
+        && (resource.data.get('kind', '') != 'handover' || (
+          resource.data.get('rideId', '') != ''
+          && exists(/databases/$(database)/documents/ride_requests/$(resource.data.rideId))
+          && rideOf(resource.data.rideId).get('status', '') == 'awaiting_handover'
+          && rideOf(resource.data.rideId).get('handoverTokenStatus', '') == 'pending'
+          && (request.auth.uid == rideOf(resource.data.rideId).get('currentCustodian', rideOf(resource.data.rideId).get('driverId', ''))
+              || request.auth.uid == rideOf(resource.data.rideId).get('nextTransporterId', ''))
+        ));
       allow write: if false;
     }
     match /custody_attempts/{id}  { allow read, write: if false; }

@@ -218,6 +218,19 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 const msgsIn = (convId) => [...store.entries()].filter(([p]) => p.startsWith(`conversations/${convId}/messages/`));
 
+console.log('\n[J0] Attachment picker routes (mock file chooser)');
+{
+  const file = document.createElement('input'); file.type = 'file'; file.id = 'chatFileInput';
+  document.body.appendChild(file); let picks = 0; file.click = () => { picks++; };
+  window.skhChatPickMedia('camera');
+  ok('camera uses native chooser with capture', picks === 1 && file.getAttribute('capture') === 'environment' && file.accept.includes('image/*'));
+  window.skhChatPickMedia('gallery');
+  ok('gallery clears capture and accepts video', picks === 2 && !file.hasAttribute('capture') && file.accept.includes('video/*'));
+  window.skhChatPickMedia('document');
+  ok('document uses native chooser and accepts PDF', picks === 3 && file.accept.includes('.pdf'));
+  file.remove();
+}
+
 console.log('\n[J1] INBOX tupu + reload');
 {
   await window.skhChatReloadInbox();

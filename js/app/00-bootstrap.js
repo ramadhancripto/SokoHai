@@ -768,6 +768,7 @@ try { window.skhCustodyServerTokenVerify = skh.wrapCallable("deliveryTokenVerify
 try { window.skhCustodyServerPassengerBoard = skh.wrapCallable("deliveryPassengerBoard"); } catch (e) { console.warn("[Custody] passengerBoard callable haikusajiliwa:", e && e.message); }
 // [C-C1 2026-11-10] Kubatilisha tokeni wakati wa kughairi safari.
 try { window.skhCustodyServerRevokeTokens = skh.wrapCallable("deliveryRevokeTokens"); } catch (e) { console.warn("[Custody] revoke callable haikusajiliwa:", e && e.message); }
+try { window.skhCustodyServerCancel = skh.wrapCallable("deliveryCancel"); } catch (e) { console.warn("[Custody] cancel callable haikusajiliwa:", e && e.message); }
 
 // [REQUEST ROUTING 2026-09] Routing Engine — ofa kwa mawakala waliostahili,
 // accept/decline, muda-kuisha/reassignment, na kurudia routing.
@@ -3066,7 +3067,9 @@ skh.renderMarketplaceSections = function renderMarketplaceSections(items) {
         const _what = _svc ? 'huduma' : (_tr ? 'huduma za usafiri' : 'bidhaa');
         const _who = _svc ? 'Huduma mpya zitaonekana mara tu watoa huduma watakapozichapisha.'
             : (_tr ? 'Matangazo ya usafiri yataonekana mara tu wasafirishaji watakapoyachapisha.' : 'Bidhaa mpya zitaonekana mara tu wauzaji watakapozichapisha.');
-        allEmptyNote.innerHTML = '<b style="display:block">Bado hakuna ' + _what + ' za kuonyesha hapa.</b> <span style="display:block">' + _who + '</span>';
+        allEmptyNote.innerHTML = (items && items.length)
+            ? '<b style="display:block">Hakuna matokeo kwenye safu hizi kwa sasa.</b><span style="display:block">Angalia matangazo kwenye soko hapa chini.</span>'
+            : '<b style="display:block">Bado hakuna ' + _what + ' za kuonyesha hapa.</b> <span style="display:block">' + _who + '</span>';
         allEmptyNote.hidden = false;
     } else if (allEmptyNote) {
         allEmptyNote.hidden = true;

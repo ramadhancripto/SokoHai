@@ -70,7 +70,7 @@ function buildPeriods(range) {
 /* ------------------------------ data ------------------------------ */
 async function callReport(period) {
     // [2026-11-06] legacy sellers: create the canonical Business/Store once (server).
-    if (typeof window.skhEnsureBusinessScope === 'function') { try { await window.skhEnsureBusinessScope(); } catch (e) { } }
+    if (typeof window.skhEnsureBusinessScope === 'function') await window.skhEnsureBusinessScope();
     const payload = {
         businessId: (skh.currentUserData && skh.currentUserData.businessId) || null,
         storeId: (skh.currentUserData && skh.currentUserData.storeId) || null,
@@ -157,7 +157,7 @@ function delta(current, previous) {
 }
 
 function trendRow(label, current, previous, formatter) {
-    const d = delta(current, previous);
+    const d = previous == null ? { text: '—', tone: 'flat' } : delta(current, previous);
     const arrow = d.tone === 'up' ? '↑' : d.tone === 'down' ? '↓' : '→';
     return '<div class="bos-trend-row">'
         + '<span class="bos-trend-label">' + esc(label) + '</span>'
@@ -339,7 +339,7 @@ function renderError(ws, p, message) {
         + '<div class="bos-error">' + ico('alert', 22)
         + '<b>' + esc(T('ov_error', 'Ripoti ya server haikuweza kupakiwa')) + '</b>'
         + '<p>' + esc(message || '') + '</p>'
-        + '<p class="bos-muted">' + esc(T('ov_error_hint', 'Hakuna namba iliyoonyeshwa kwa sababu chanzo rasmi hakijajibu. Jaribu tena baada ya mtandao kupona.')) + '</p>'
+        + '<p class="bos-muted">' + esc(T('ov_error_hint_safe', 'Hakuna namba iliyoonyeshwa kwa sababu ripoti haijathibitishwa.')) + '</p>'
         + '<button type="button" class="bos-btn" onclick="window.skhBusinessOverview.refresh()">' + esc(T('ov_retry', 'Jaribu tena')) + '</button>'
         + '</div></div>';
 }
@@ -347,7 +347,7 @@ function renderError(ws, p, message) {
 function renderOverview(ws, state) {
     const p = state.periods;
     const s = (state.report && state.report.summary) || {};
-    const prev = (state.previous && state.previous.summary) || {};
+    const prev = (state.previous && state.previous.summary) || null;
     const payments = (state.report && state.report.payments) || {};
     const products = (state.report && state.report.products) || {};
     const cashiers = (state.report && state.report.cashiers) || {};
@@ -373,10 +373,10 @@ function renderOverview(ws, state) {
 
     /* ---- Trends: kipindi hiki vs kilichopita ---- */
     const trends = '<div class="bos-trends">'
-        + trendRow(T('ov_trend_sales', 'Mauzo'), s.grossSales, prev.grossSales, money)
-        + trendRow(T('ov_trend_orders', 'Oda'), s.completedSales, prev.completedSales, num)
-        + trendRow(T('ov_trend_net', 'Mauzo halisi'), s.netSales, prev.netSales, money)
-        + trendRow(T('ov_trend_cash', 'Fedha taslimu'), s.cashCollected, prev.cashCollected, money)
+        + trendRow(T('ov_trend_sales', 'Mauzo'), s.grossSales, prev ? prev.grossSales : null, money)
+        + trendRow(T('ov_trend_orders', 'Oda'), s.completedSales, prev ? prev.completedSales : null, num)
+        + trendRow(T('ov_trend_net', 'Mauzo halisi'), s.netSales, prev ? prev.netSales : null, money)
+        + trendRow(T('ov_trend_cash', 'Fedha taslimu'), s.cashCollected, prev ? prev.cashCollected : null, money)
         + '</div>'
         + '<p class="bos-muted bos-trends-note">' + esc(T('ov_trend_note', 'Kipimo: {cur} dhidi ya {prev}. Chanzo: posReports (server).', { cur: p.label, prev: p.prevLabel })) + '</p>';
 
@@ -563,24 +563,39 @@ async function load(range, ws) {
     state.periods = p;
     ws = ws || document.getElementById('dashWorkspace');
     if (!ws) return;
+    const requestSeq = ++load.sequence;
+    let recentError = null;
     renderSkeleton(ws, p);
     try {
         const [report, previous, recent] = await Promise.all([
             callReport(p.current),
             callReport(p.previous).catch(() => null),
-            loadRecentSales(ownerUid()).catch(e => { state.recentSalesError = String(e && e.message || e); return null; })
+            loadRecentSales(ownerUid()).catch(() => { recentError = 'Mauzo hayakupatikana. Jaribu tena.'; return null; })
         ]);
+        if (requestSeq !== load.sequence) return;
+        if (!report || !report.summary || typeof report.summary !== 'object') { const e = new Error('Jibu la ripoti halijakamilika.'); e.code = 'invalid-report'; throw e; }
         state.report = report;
         state.previous = previous;
         state.recentSales = recent || [];
-        if (!state.recentSalesError) state.recentSalesError = null;
+        state.recentSalesError = recentError;
         renderOverview(ws, state);
     } catch (error) {
+        if (requestSeq !== load.sequence) return;
         state.report = null;
-        console.warn('[BOS overview] posReports imeshindikana:', error && error.message);
-        renderError(ws, p, String((error && (error.message || error.code)) || error));
+        const code = String(error && error.code || '').replace(/^functions\//, '').toLowerCase();
+        const message = String(error && error.message || '');
+        let help = 'Ripoti haijapatikana. Jaribu tena; ikiendelea, wasiliana na msaada.';
+        if (/REPORT_INDEX_UNAVAILABLE/.test(message)) help = 'Ripoti inahitaji index ya Firestore. Wasiliana na msaada wa SokoHai.';
+        else if (/BUSINESS_STORE_REQUIRED/.test(message)) help = 'Kamilisha usanidi wa biashara na duka kabla ya kupakia ripoti.';
+        else if (code === 'unauthenticated') help = 'Ingia kwenye akaunti yako tena ili kuona ripoti.';
+        else if (code === 'permission-denied') help = 'Akaunti hii haina ruhusa ya kuona ripoti ya duka hili.';
+        else if (code === 'unavailable' || code === 'deadline-exceeded') help = 'Ripoti haipatikani kwa sasa. Angalia mtandao kisha ujaribu tena.';
+        else if (code === 'internal') help = 'Server imeshindwa kuandaa ripoti. Jaribu tena; ikiendelea, wasiliana na msaada.';
+        console.warn('[BOS overview] report request failed:', code || 'unknown');
+        renderError(ws, p, help);
     }
 }
+load.sequence = 0;
 
 /* C6: filter ya mauzo — handler halisi (haibadilishi data, inachuja tu) */
 window.skhBOSFilterSales = function (value) {
@@ -601,6 +616,9 @@ window.skhBusinessOverview = {
         return load(range || 'today');
     },
     refresh() {
+        // Explicit user retry for this read-only report; other callables retain their cooldown.
+        if (skh._fnMissing) delete skh._fnMissing.posReports;
+        if (skh._fnDownSinceByName) delete skh._fnDownSinceByName.posReports;
         return load(state.range || 'today');
     },
     /* Kwa tests: hakuna DOM inayohitajika */

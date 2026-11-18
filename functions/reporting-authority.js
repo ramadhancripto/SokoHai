@@ -153,8 +153,19 @@ function aggregateReport(input = {}) {
 
 async function readCollection(collection, request, period, timestampField) {
   let query = db.collection(collection).where('businessId', '==', request.businessId).where('storeId', '==', request.storeId);
-  try { query = query.where(timestampField, '>=', period.start).where(timestampField, '<', period.end); } catch (error) {}
-  const snap = await query.get(); return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  query = query.where(timestampField, '>=', period.start).where(timestampField, '<', period.end);
+  try {
+    const snap = await query.get(); return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  } catch (error) {
+    // Firestore emulator does not enforce composite indexes; production does.
+    // Only identify a missing index when the server explicitly reports one.
+    const code = String(error && error.code || '').toLowerCase();
+    if ((code === '9' || code.includes('failed-precondition')) && /index/i.test(String(error && error.message || ''))) {
+      console.warn('[posReports] required index unavailable', { collection, code });
+      throw new HttpsError('failed-precondition', 'REPORT_INDEX_UNAVAILABLE: ripoti bado inahitaji index ya Firestore. Wasiliana na msaada.');
+    }
+    throw error;
+  }
 }
 
 exports.posReports = onCall({ region: REGION }, async req => {

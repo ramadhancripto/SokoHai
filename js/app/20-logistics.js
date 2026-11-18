@@ -48,7 +48,7 @@ window.boardPassengerByOtp = async function() {
 };
 
 window.triggerVehicleBreakdown = async function(rideId, cargoName) {
-    if(!await skhConfirm(` EMERGENCY BREAKDOWN RECOVERY ENGINE:\n\nJe, chombo chako kimepata hitilafu au dharura njiani?\n\nMfumo utahifadhi mkataba na Escrow yote, lakini utarudisha safari ya "${cargoName}" sokoni ili dereva wa karibu aje kuendeleza safari ya mzigo salama.`)) return;
+    if(!await skhConfirm(` EMERGENCY BREAKDOWN RECOVERY ENGINE:\n\nJe, chombo chako kimepata hitilafu au dharura njiani?\n\nMfumo utarekodi hitilafu ya safari ya "${cargoName}" bila kubadilisha malipo. Ikiwa mzigo tayari umepokelewa, msafirishaji wa sasa atabaki nao hadi makabidhiano salama yafanyike.`)) return;
 
     try {
         // Recovery is a custody-sensitive transition. Never rewrite ride_requests
@@ -59,6 +59,8 @@ window.triggerVehicleBreakdown = async function(rideId, cargoName) {
         const recoveryData = (recovery && recovery.data) || recovery || {};
         if (!recoveryData.ok) throw new Error('recovery_rejected');
 
+        // Notification is best effort; failure cannot undo committed recovery.
+        try {
         // Vuta taarifa za safari ili kujua mnunuzi
         const docSnap = await skh.getDoc(skh.doc(skh.db, "ride_requests", rideId));
         if(docSnap.exists()) {
@@ -71,7 +73,7 @@ window.triggerVehicleBreakdown = async function(rideId, cargoName) {
                 event: 'logistics.recoveryStarted',
                 params: { cargo: String(cargoName || '') },
                 title: " Uokoaji wa Safari Umeanzishwa (Recovery Active)",
-                body: `Chombo cha dereva kimepata hitilafu njiani. Safari ya "${cargoName}" imerudishwa sokoni automatically ili dereva wa karibu aje kuendeleza safari salama bila kuvunja Escrow.`,
+                body: recoveryData.custodyPreserved ? `Hitilafu imeripotiwa kwa "${cargoName}". Mzigo unabaki kwa mshika mzigo wa sasa; makabidhiano mapya yanahitajika.` : `Hitilafu imeripotiwa kwa "${cargoName}" kabla ya pickup; ombi lipo wazi tena.`,
                 createdAt: new Date().toISOString(),
                 read: false
             });
@@ -87,7 +89,7 @@ window.triggerVehicleBreakdown = async function(rideId, cargoName) {
                 event: 'logistics.transportFault',
                 params: { cargo: '' },
                         title: " Ujumbe: Hitilafu ya Usafiri!",
-                        body: `Mzigo wa mteja wako uliopo njiani umepata hitilafu ya chombo. Usijali, mfumo unatafuta gari lingine mtaani sasa hivi.`,
+                        body: `Hitilafu ya chombo imeripotiwa. Angalia hali ya safari na subiri makabidhiano mapya yathibitishwe.`,
                         createdAt: new Date().toISOString(),
                         read: false
                     });
@@ -95,7 +97,9 @@ window.triggerVehicleBreakdown = async function(rideId, cargoName) {
             }
         }
 
-        alert(T('lg_rescue_on', "Rescue system activated! Your contract is safe and the trip has been returned to the market for quick rescue."));
+        } catch (notificationError) { console.warn("[Recovery] notification failed", notificationError); }
+
+        alert(recoveryData.custodyPreserved ? "Hitilafu imerekodiwa. Mzigo unabaki kwa mshika mzigo wa sasa; makabidhiano mapya yanahitajika." : "Hitilafu imerekodiwa kabla ya pickup. Ombi lipo wazi tena.");
         window.renderDriverActiveTabContent();
     } catch(e) {
         alert(T('lg_rescue_error', "Error starting rescue: ") + e.message);
@@ -107,7 +111,7 @@ window.renderSellerLogisticsTab = async function() {
     if(!ws || !skh.currentUser) return;
 
     ws.innerHTML = `
-        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> MIZIGO, DISPATCH & VERIFY PICKUP</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Hapa ndipo unapomthibitisha dereva anapokuja kuchukua mzigo dukani kwako kwa kutumia Token A (PK) [1].</p> <!-- INPUT YA KULIPIA/KUHAKIKI TOKEN A (SELLER DISPATCH CONTROLS) --> <div style="background:#fffbeb; border:1.5px dashed var(--gold); padding:20px; border-radius:16px; margin-bottom:25px;"> <b style="color:var(--primary-dark); font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> HAKIKI TOKENS ZA MAREJESHO / DISPATCH</b> <p style="font-size:13px; color:#475569; margin-bottom:15px;">Weka Token A (Pickup Token - PK-XXXX) uliyopewa na dereva kuthibitisha kuwa chombo chake kinalingana na oda:</p> <div style="display:flex; gap:10px; margin-bottom:15px;"> <input type="text" id="sellerDispatchTokenInp" placeholder="${T('lg_token_a_ph', 'Enter Token A (e.g. PK-XXXX)...')}" style="flex:2; padding:15px; border-radius:12px; border:1px solid #cbd5e1; outline:none; text-align:center; font-weight:900; font-size:18px; text-transform:uppercase;"> <button onclick="window.verifySellerDispatchToken()" id="btnVerifySellerDispatch" style="flex:1; padding:15px; background:var(--primary-blue); color:white; border:none; border-radius:12px; font-weight:900; cursor:pointer;">${T('lg_verify', 'VERIFY')} </button> </div> <div id="sellerDispatchResult" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:14px; margin-bottom:15px; text-align:left;"></div> <div id="sellerParcelConditionBox" style="display:none; margin-bottom:15px; text-align:left;"> <label style="font-size:13px; color:#475569; display:block; margin-bottom:6px;">Hali ya mzigo unapoukabidhi (Parcel Condition):</label> <select id="sellerParcelCondition" style="width:100%; padding:12px; border-radius:12px; border:1px solid #cbd5e1; font-weight:600; outline:none;"> <option value="good"> Vizuri (Good)</option> <option value="packaging_damaged">Kifungashio kimeharibika (Packaging damaged)</option> <option value="parcel_damaged">Mzigo umeharibika (Parcel damaged)</option> <option value="seal_broken">Muhuri umevunjika (Seal broken)</option> <option value="other">Nyingine (Other)</option> </select> <label style="font-size:13px; color:#475569; display:block; margin:10px 0 6px;">Maelezo ya hali ya mzigo (kama kuna tatizo):</label> <textarea id="sellerParcelNote" rows="2" placeholder="Mfano: sanduku limechubuka pembeni..." style="width:100%; padding:10px; border-radius:12px; border:1px solid #cbd5e1; outline:none; font-size:12px;"></textarea> </div> <button onclick="window.confirmSellerDispatch()" id="btnConfirmSellerDispatch" style="display:none; width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI KWA TOKEN (OPTION A)</button> <button onclick="window.confirmSellerDispatchDirect()" id="btnConfirmSellerDispatchDirect" style="display:none; width:100%; padding:14px; margin-top:8px; background:#0f172a; color:white; border:none; border-radius:14px; font-weight:900; font-size:13px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI MOJA KWA MOJA (OPTION B — BILA TOKEN)</button> </div> <!-- LIST YA ODA ZINAZOSUBIRI KUCHUKULIWA --> <b style="font-size:13px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;"> ODA ZINAZOSUBIRI KUCHUKULIWA (PENDING DISPATCH)</b> <div id="sellerPendingDispatchList">Inapakia mizigo...</div> </div> `;
+        <div style="text-align:left; animation: fadeIn 0.3s ease;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> MIZIGO, DISPATCH & VERIFY PICKUP</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Hapa ndipo unapomthibitisha dereva anapokuja kuchukua mzigo dukani kwako kwa kutumia Token A (PK) [1].</p> <!-- INPUT YA KULIPIA/KUHAKIKI TOKEN A (SELLER DISPATCH CONTROLS) --> <div style="background:#fffbeb; border:1.5px dashed var(--gold); padding:20px; border-radius:16px; margin-bottom:25px;"> <b style="color:var(--primary-dark); font-size:13px; display:block; margin-bottom:10px; text-transform:uppercase;"> HAKIKI TOKENS ZA MAREJESHO / DISPATCH</b> <p style="font-size:13px; color:#475569; margin-bottom:15px;">Weka Token A (Pickup Token - PK-XXXX) uliyopewa na dereva kuthibitisha kuwa chombo chake kinalingana na oda:</p> <div style="display:flex; gap:10px; margin-bottom:15px;"> <input type="text" id="sellerDispatchTokenInp" placeholder="${T('lg_token_a_ph', 'Enter Token A (e.g. PK-XXXX)...')}" style="flex:2; padding:15px; border-radius:12px; border:1px solid #cbd5e1; outline:none; text-align:center; font-weight:900; font-size:18px; text-transform:uppercase;"> <button onclick="window.verifySellerDispatchToken()" id="btnVerifySellerDispatch" style="flex:1; padding:15px; background:var(--primary-blue); color:white; border:none; border-radius:12px; font-weight:900; cursor:pointer;">${T('lg_verify', 'VERIFY')} </button> </div> <div id="sellerDispatchResult" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:14px; margin-bottom:15px; text-align:left;"></div> <div id="sellerParcelConditionBox" style="display:none; margin-bottom:15px; text-align:left;"> <label style="font-size:13px; color:#475569; display:block; margin-bottom:6px;">Hali ya mzigo unapoukabidhi (Parcel Condition):</label> <select id="sellerParcelCondition" style="width:100%; padding:12px; border-radius:12px; border:1px solid #cbd5e1; font-weight:600; outline:none;"> <option value="good"> Vizuri (Good)</option> <option value="packaging_damaged">Kifungashio kimeharibika (Packaging damaged)</option> <option value="parcel_damaged">Mzigo umeharibika (Parcel damaged)</option> <option value="seal_broken">Muhuri umevunjika (Seal broken)</option> <option value="other">Nyingine (Other)</option> </select> <label style="font-size:13px; color:#475569; display:block; margin:10px 0 6px;">Maelezo ya hali ya mzigo (kama kuna tatizo):</label> <textarea id="sellerParcelNote" rows="2" placeholder="Mfano: sanduku limechubuka pembeni..." style="width:100%; padding:10px; border-radius:12px; border:1px solid #cbd5e1; outline:none; font-size:12px;"></textarea> </div> <button onclick="window.confirmSellerDispatch()" id="btnConfirmSellerDispatch" style="display:none; width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:14px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI KWA TOKEN (OPTION A)</button> <button onclick="window.confirmSellerDispatchDirect()" id="btnConfirmSellerDispatchDirect" style="display:none; width:100%; padding:14px; margin-top:8px; background:#0f172a; color:white; border:none; border-radius:14px; font-weight:900; font-size:13px; cursor:pointer; text-transform:uppercase;"> THIBITISHA KUKABIDHI MOJA KWA MOJA (OPTION B — BILA TOKEN)</button> </div> <button type="button" onclick="if(window.skhOpenTokenBox) window.skhOpenTokenBox('active')" style="width:100%;padding:12px;margin-bottom:20px;border:1px solid #a7d8ca;border-radius:12px;background:#f0fdf4;color:#145c45;font-weight:700;cursor:pointer;">Fungua Token Box kuona Pickup Token</button> <!-- LIST YA ODA ZINAZOSUBIRI KUCHUKULIWA --> <b style="font-size:13px; color:var(--primary-dark); display:block; margin-bottom:12px; text-transform:uppercase;"> ODA ZINAZOSUBIRI KUCHUKULIWA (PENDING DISPATCH)</b> <div id="sellerPendingDispatchList">Inapakia mizigo...</div> </div> `;
 
     // Load pending dispatch items from Firestore
     const shopOwnerId = skh.currentUserData?.shopOwnerUid || skh.currentUser.uid;
@@ -574,7 +578,7 @@ window.setupDriverActiveJobsQuery = function() {
             + '<button type="button" class="lm-offer" onclick="window.skhTransportOffer(\'' + esc(rid) + '\')">'
             +       lmIco('tag', 15) + ' Toa Ofa'
             + '</button>'
-            + '<button type="button" class="lm-accept" onclick="window.acceptTransportMission(\'' + esc(rid) + '\')">'
+            + '<button type="button" class="lm-accept" onclick="window.acceptTransportMission(\'' + esc(rid) + '\',this)">'
             +       lmIco('check', 16) + ' Kubali Kazi Hii'
             + '</button>'
             + '</div>'
@@ -1076,67 +1080,11 @@ window.skhRenderTripHistory = async function () {
 // ============================================================
 // [PHASE 8 FIX] UTEKELEZAJI WA KUKABILI KAZI NA KUTOA OFA YA USAFIRI
 // ============================================================
-window.acceptTransportMission = async function(rideId) {
-    if (!skh.requireAuth()) return;
-    if (typeof window.skhCustodyAcceptRide === 'function') {
-        return window.skhCustodyAcceptRide(rideId);
+window.acceptTransportMission = function(rideId, button) {
+    if (typeof window.directRequestTransporter !== 'function') {
+        alert('Huduma ya kukubali haijapakia. Tafadhali jaribu tena.'); return;
     }
-    try {
-        const me = skh.currentUser.uid;
-        const myName = (skh.currentUserData && skh.currentUserData.fullName) || skh.currentUser.displayName || 'Dereva';
-        const myPhone = (skh.currentUserData && skh.currentUserData.phone) || '';
-        const myVehicle = (skh.currentUserData && skh.currentUserData.vehicleType) || 'Usafiri';
-        const rideRef = skh.doc(skh.db, 'ride_requests', rideId);
-        const snap = await skh.getDoc(rideRef);
-        if (!snap || !snap.exists || !snap.exists()) return alert('Safari hii haipatikani tena.');
-        const rd = snap.data();
-        if (rd.status !== 'searching' && rd.status !== 'pending_acceptance') {
-            return alert('Safari hii imeshachukuliwa au kufungwa.');
-        }
-
-        const pkToken = 'PK-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-        await skh.updateDoc(rideRef, {
-            driverId: me,
-            driverName: myName,
-            driverPhone: myPhone,
-            vehicleType: myVehicle,
-            status: 'accepted',
-            acceptedAt: new Date().toISOString(),
-            pickupToken: pkToken,
-            pickupTokenStatus: 'pending'
-        });
-
-        // Tuma arifa kwa mteja
-        if (rd.customerId) {
-            await skh.addDoc(skh.collection(skh.db, 'notifications'), {
-                userId: rd.customerId,
-                title: 'Dereva Amekubali Safari!',
-                body: myName + ' amekubali kusafirisha ' + (rd.cargoName || 'mzigo wako') + '. Token A ya kuchukulia: ' + pkToken,
-                type: 'delivery',
-                rideId: rideId,
-                createdAt: new Date().toISOString(),
-                read: false
-            });
-        }
-        // Tuma arifa kwa muuzaji
-        if (rd.sellerId && rd.sellerId !== rd.customerId) {
-            await skh.addDoc(skh.collection(skh.db, 'notifications'), {
-                userId: rd.sellerId,
-                title: 'Dereva Ameelekea Kuchukua Mzigo',
-                body: myName + ' anakuja kuchukua mzigo #' + (rd.cargoName || '') + '. Hakiki Token A (' + pkToken + ') atakapofika.',
-                type: 'delivery',
-                rideId: rideId,
-                createdAt: new Date().toISOString(),
-                read: false
-            });
-        }
-
-        alert('Umefanikiwa kukubali safari hii! Unaweza kuiona kwenye tab ya "Safari Zangu".');
-        if (typeof window.switchDashTab === 'function') window.switchDashTab('active');
-        if (typeof window.renderDriverActiveTabContent === 'function') window.renderDriverActiveTabContent();
-    } catch(e) {
-        alert('Hitilafu ya kukubali safari: ' + e.message);
-    }
+    return window.directRequestTransporter(rideId, button);
 };
 
 window.skhTransportOffer = async function(rideId) {

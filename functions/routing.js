@@ -139,11 +139,14 @@ exports.deliveryReportTransportFault = onCall({ region: REGION }, async (req) =>
             t.update(rideRef, { status: 'reassignment_required', recoveryStatus: 'custody_preserved', transportFaultAt: new Date().toISOString(), transportFaultReason: reason });
             result = { status: 'reassignment_required', custodyPreserved: true };
         } else {
-            t.update(rideRef, { status: 'searching', routingStatus: 'recovery', assignmentStatus: 'seeking', driverId: null, driverName: null, driverPhone: null, driverVehicleReg: null, recoveryStatus: 'pre_pickup_released', transportFaultAt: new Date().toISOString(), transportFaultReason: reason });
+            const tokenRef = db.doc('delivery_tokens/' + rideId + '_pickup');
+            const tokenSnap = await t.get(tokenRef);
+            if (tokenSnap.exists) t.update(tokenRef, { status: 'revoked' });
+            t.update(rideRef, { status: 'searching', routingStatus: 'recovery', assignmentStatus: 'seeking', assignedAgentId: null, activeOfferId: null, acceptedAt: null, sellerConfirmedAt: null, sellerConfirmedBy: null, pickupTokenStatus: 'revoked', driverId: null, driverName: null, driverPhone: null, driverVehicleReg: null, recoveryStatus: 'pre_pickup_released', transportFaultAt: new Date().toISOString(), transportFaultReason: reason });
             result = { status: 'searching', custodyPreserved: false };
         }
     });
-    await routingEvent(db, rideId, 'TRANSPORT_FAULT_REPORTED', auth.uid, { reason: reason, custodyPreserved: !!(result && result.custodyPreserved) });
+    await core.routingEvent(db, rideId, 'TRANSPORT_FAULT_REPORTED', auth.uid, { reason: reason, custodyPreserved: !!(result && result.custodyPreserved) }).catch(() => {});
     return Object.assign({ ok: true, rideId: rideId }, result || {});
 });
 

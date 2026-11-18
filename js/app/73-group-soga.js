@@ -28,6 +28,50 @@ import { skh } from './00-bootstrap.js';
     function nowIso() { return new Date().toISOString(); }
 
     var CUR = { gid: null };
+    // Visibility has one authority; the selected section is kept per group for this page session.
+    var lastGroupTab = Object.create(null);
+    var stopGroupViewport = null;
+    function setSidebarOpen(open) {
+        CUR.__sidebarOpen = !!open;
+        var root = document.querySelector('#skhGroupSogaModal .gsg-fs');
+        var nav = document.getElementById('gsgTabs');
+        var toggle = document.getElementById('gsgSidebarToggle');
+        if (root) root.classList.toggle('gsg-nav-open', CUR.__sidebarOpen);
+        if (nav) { nav.inert = !CUR.__sidebarOpen; nav.setAttribute('aria-hidden', String(!CUR.__sidebarOpen)); }
+        if (toggle) toggle.setAttribute('aria-expanded', String(CUR.__sidebarOpen));
+    }
+    function setupGroupViewport(m) {
+        if (stopGroupViewport) stopGroupViewport();
+        var fs = m.querySelector('.gsg-fs'), head = m.querySelector('.gsg-head'), composer = m.querySelector('#gsgComposerRow');
+        var vv = window.visualViewport;
+        function update() {
+            if (!CUR.gid || !fs) return;
+            if (vv) {
+                m.style.setProperty('--gsg-vh', vv.height + 'px');
+                m.style.setProperty('--gsg-vtop', vv.offsetTop + 'px');
+            }
+            if (head) fs.style.setProperty('--gsg-head-height', head.getBoundingClientRect().height + 'px');
+            var h = composer && composer.getClientRects().length ? composer.getBoundingClientRect().height : 0;
+            fs.style.setProperty('--gsg-composer-height', h + 'px');
+        }
+        var ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+        if (ro) { if (head) ro.observe(head); if (composer) ro.observe(composer); }
+        window.addEventListener('resize', update);
+        if (vv) { vv.addEventListener('resize', update); vv.addEventListener('scroll', update); }
+        update();
+        stopGroupViewport = function () {
+            if (ro) ro.disconnect();
+            window.removeEventListener('resize', update);
+            if (vv) { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update); }
+            m.style.removeProperty('--gsg-vh'); m.style.removeProperty('--gsg-vtop');
+            stopGroupViewport = null;
+        };
+    }
+    function resizeGroupInput(inp) {
+        if (!inp) return;
+        inp.style.setProperty('--gsg-input-height', '34px');
+        inp.style.setProperty('--gsg-input-height', Math.max(34, Math.min(inp.scrollHeight, 112)) + 'px');
+    }
     var unsubMsgs = null;
     var unsubGO = null;
     function unsubscribeMsgs() {
@@ -94,6 +138,7 @@ import { skh } from './00-bootstrap.js';
        Hazibadilishi handlers: zote zinabaki data-act="gsg-*". */
     var I = {
         back:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>',
+        menu:  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
         info:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>',
         plus:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
         emoji: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><circle cx="9" cy="10" r=".85" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r=".85" fill="currentColor" stroke="none"/></svg>',
@@ -424,7 +469,10 @@ import { skh } from './00-bootstrap.js';
         } catch (eInstant) {}
 
         CUR.gid = gid;
-        CUR.__tab = 'chat';
+        var restoreTab = lastGroupTab[gid] || 'chat';
+        CUR.__tab = 'chat'; CUR.__tabTouched = false;
+        CUR.__myRole = null; CUR.__roles = {}; CUR.__g = {};
+        CUR.__sidebarOpen = false;
         CUR.__annOpen = false; CUR.__annHidden = null;
 
         var m = buildModal();
@@ -436,6 +484,7 @@ import { skh } from './00-bootstrap.js';
                 /* ---- 1 · HEADER ---- */
                 + '<header class="gsg-head">'
                 +   '<button type="button" class="skh-sheet-back" data-act="gsg-close" aria-label="' + tk('back', 'Rudi') + '">' + I.back + '</button>'
+                +   '<button type="button" id="gsgSidebarToggle" class="skh-sheet-back gsg-nav-toggle" data-act="gsg-sidebar-toggle" aria-label="Fungua au funga menyu ya kikundi" aria-controls="gsgTabs" aria-expanded="false">' + I.menu + '</button>'
                 +   '<div id="gsgAvatarTile" class="gsg-avatar" aria-hidden="true">#</div>'
                 +   '<div class="gsg-head-txt" data-act="gsg-panel" role="button" tabindex="0" title="Taarifa za kundi">'
                 +     '<b id="gsgTitleEl" class="skh-sheet-title">' + tk('group', 'Kikundi') + '</b>'
@@ -461,7 +510,7 @@ import { skh } from './00-bootstrap.js';
                 +     '<button type="button" class="gsg-cbtn" data-act="gsg-emoji" id="gsgEmojiBtn" title="Emoji" aria-label="Emoji" aria-haspopup="true" aria-expanded="false">' + I.emoji + '</button>'
                 +     '<button type="button" class="gsg-cbtn" data-act="gsg-sticker" id="gsgStickerBtn" title="Stickers" aria-label="Stickers" aria-haspopup="true">' + I.sticker + '</button>'
                 +     '<div class="gsg-field">'
-                +       '<input id="gsgInput" type="text" autocomplete="off" placeholder="' + tk('ch_msg_ph', 'Andika ujumbe...') + '">'
+                +       '<textarea id="gsgInput" rows="1" aria-label="Andika ujumbe" placeholder="' + tk('ch_msg_ph', 'Andika ujumbe...') + '"></textarea>'
                 +     '</div>'
                 +     '<button type="button" class="gsg-cbtn" data-act="gsg-voice" id="gsgVoiceBtn" title="' + tk('ch_voice', 'Rekodi ujumbe wa sauti') + '" aria-label="' + tk('ch_voice', 'Rekodi ujumbe wa sauti') + '">' + I.mic + '</button>'
                 +     '<button type="button" class="gsg-cbtn gsg-cbtn-trade" data-act="gsg-trade" id="gsgTradeBtn" title="' + tk('ch_trade', 'Biashara: bidhaa, oda, ofa') + '" aria-label="' + tk('ch_trade', 'Biashara') + '" aria-haspopup="true" aria-expanded="false">' + I.trade + '</button>'
@@ -485,7 +534,7 @@ import { skh } from './00-bootstrap.js';
             m.classList.add('open');
             m.style.display = 'block';
             document.body.style.overflow = 'hidden';
-            try { renderTabsBar(); } catch (eTB) {}
+            try { renderTabsBar(); setSidebarOpen(false); setupGroupViewport(m); } catch (eTB) {}
         }
 
         // 1) Anza kusoma na kusikiliza meseji za moja kwa moja bila kuzuia UI
@@ -632,6 +681,8 @@ import { skh } from './00-bootstrap.js';
                     try { renderSidePanel(); } catch (eSP) {}
                 } catch (eN0) {}
 
+                // Restore only after this group's role/context has loaded; never override a new selection.
+                if (CUR.gid === gid && !CUR.__tabTouched && restoreTab !== 'chat') setGsgTab(restoreTab);
                 try { startGoTick(); } catch (eTK) {}
             } catch (eMeta) {
                 console.warn('[loadGroupMeta]', eMeta);
@@ -673,9 +724,10 @@ import { skh } from './00-bootstrap.js';
         try { gsgBindGestures(); } catch (eBG) {}
         var inp = m.querySelector('#gsgInput');
         if (inp) {
-            inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendText(); });
+            inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendText(); } });
             var __typLast = 0;
             inp.addEventListener('input', function () {
+                resizeGroupInput(inp);
                 var now = Date.now();
                 if (now - __typLast < 1800) return;
                 __typLast = now;
@@ -688,6 +740,7 @@ import { skh } from './00-bootstrap.js';
     };
 
     window.skhCloseGroupSoga = function () {
+        if (stopGroupViewport) stopGroupViewport();
         try { document.body.classList.remove('gsg-open'); } catch (e0) {}
         var gid0 = CUR.gid;
         CUR.gid = null;
@@ -952,6 +1005,7 @@ import { skh } from './00-bootstrap.js';
     function setGsgTab(tab) {
         if (!CUR.gid || GSG_TABS.indexOf(tab) < 0) return;      // [§45] hakuna free-form
         CUR.__tab = tab;
+        lastGroupTab[CUR.gid] = tab;
         Object.keys(GSG_TAB_HOST).forEach(function (t) {
             var el = document.getElementById(GSG_TAB_HOST[t]);
             if (el) el.style.display = (t === tab) ? (t === 'chat' ? 'flex' : 'block') : 'none';
@@ -2553,7 +2607,7 @@ import { skh } from './00-bootstrap.js';
             }
             // [R24] baada ya kutuma — typing yangu ifutwe (si tena "… anaandika")
             try { var tp = {}; tp['typingMap.' + uid()] = null; await skh.updateDoc(cRef(CUR.gid), tp); } catch (eT3) {}
-            inp.value = '';
+            inp.value = ''; resizeGroupInput(inp);
             await renderMsgs(CUR.gid);
         } catch (e) { console.error('[gsg send]', e); alert(tk('gsg_err_send', 'Ujumbe haujatuma. Jaribu tena.')); }
     }
@@ -2585,16 +2639,29 @@ import { skh } from './00-bootstrap.js';
         } catch (e) {}
     }
 
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Escape' || !CUR.gid || !CUR.__sidebarOpen || !window.matchMedia('(max-width: 719px)').matches) return;
+        setSidebarOpen(false);
+        var toggle = document.getElementById('gsgSidebarToggle');
+        if (toggle) toggle.focus();
+        ev.preventDefault();
+    });
+
     document.addEventListener('click', function (ev) {
         try {
             var b = ev.target && ev.target.closest ? ev.target.closest('[data-act]') : null;
             if (!b) return;
             var act = b.getAttribute('data-act');
+            if (act === 'gsg-sidebar-toggle') { setSidebarOpen(!CUR.__sidebarOpen); return; }
             if (act === 'gsg-close') window.skhCloseGroupSoga();
             else if (act === 'gsg-send') { console.log('[gsg] send clicked, CUR.gid=', CUR && CUR.gid); sendText(); }
             else if (act === 'gsg-view-ctx') viewCtx();
             else if (act === 'gsg-tab') {
+                var fromNav = !!b.closest('#gsgTabs');
+                CUR.__tabTouched = true;
                 setGsgTab(b.getAttribute('data-tab'));
+                if (fromNav && window.matchMedia('(max-width: 719px)').matches) { setSidebarOpen(false); var toggle = document.getElementById('gsgSidebarToggle'); if (toggle) toggle.focus(); }
+                else if (fromNav) { var activeTab = document.querySelector('#gsgTabs .gsg-card.is-active'); if (activeTab) activeTab.focus(); }
                 return;
             }
             else if (act === 'gsg-offers-open') {
@@ -2747,7 +2814,7 @@ import { skh } from './00-bootstrap.js';
                 }
                 return;
             }
-            else if (act === 'gsg-panel') { if (window.innerWidth >= 1280 && document.getElementById('gsgSide') && document.getElementById('gsgSide').childElementCount) { renderSidePanel(); } else openPanelSheet(); return; }
+            else if (act === 'gsg-panel') { if (window.innerWidth >= 1280 && document.getElementById('gsgSide') && getComputedStyle(document.getElementById('gsgSide')).display !== 'none' && document.getElementById('gsgSide').childElementCount) { renderSidePanel(); } else openPanelSheet(); return; }
             else if (act === 'gsg-panel-close') { var pp0 = document.getElementById('gsgPanelPop'); if (pp0) pp0.remove(); return; }
             else if (act === 'gsg-sticker') { closeAttachPop(); openStickerPop(); return; }
             else if (act === 'gsg-sticker-send') {

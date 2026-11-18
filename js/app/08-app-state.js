@@ -1237,6 +1237,7 @@ window.broadcastRideRequest = async function() {
     // kitufe kiku sasa ni cha kuchambua magari kwa njia (skhRouteMatcherSearch).
     const btn = document.getElementById('btnBroadcastRideReq') || document.getElementById('btnSubmitRideReq');
     if(!btn) return;
+    const originalBroadcastText = btn.innerHTML;
     btn.innerHTML = " INATANGAZA OMBI... ";
     btn.disabled = true;
 
@@ -1382,12 +1383,21 @@ window.broadcastRideRequest = async function() {
         alert(" Kosa kuanzisha ombi: " + e.message);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = " Usipopata gari: tangaza ombi kwa madereva/wakala wote";
+        btn.innerHTML = originalBroadcastText;
     }
 };
 
+// A chained leg must display the same fixed origin used by the broadcast.
+window.skhSyncRideChainLocation = function() {
+    const input = document.getElementById('rideReqFrom');
+    const note = document.getElementById('rideChainNote');
+    const from = sessionStorage.getItem('chain_from') || '';
+    if (input) { if (!from && input.readOnly) input.value = ''; input.readOnly = !!from; if (from) input.value = from; }
+    if (note) note.hidden = !from;
+};
 window.openRideRequestModal = function() {
     if(!skh.requireAuth()) return;
+    if (window.skhSyncRideChainLocation) window.skhSyncRideChainLocation();
     closeModals();
     document.getElementById('rideRequestModal').style.display = 'flex';
 };

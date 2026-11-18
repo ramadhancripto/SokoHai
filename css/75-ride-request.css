@@ -1,0 +1,51 @@
+/* The existing request flow only; route matching and broadcast stay unchanged. */
+html body #rideRequestModal { font-family:Inter,system-ui,sans-serif; background:#fff; color:#20332e; }
+html body #rideRequestModal > .ride-sheet { display:flex !important; flex-direction:column !important; width:100% !important; height:100% !important; max-width:none !important; max-height:none !important; overflow:hidden !important; padding:0 !important; margin:0 !important; background:#fff !important; }
+#rideRequestModal *,#rideRequestModal *::before,#rideRequestModal *::after { box-sizing:border-box; }
+#rideRequestModal .ride-head { flex:none; min-height:64px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px max(18px,calc((100% - 680px)/2)); border-bottom:1px solid #e5eeeb; background:#fff; }
+#rideRequestModal .ride-brand { display:flex; gap:9px; align-items:center; min-width:0; }
+#rideRequestModal .ride-brand img { display:block; width:37px; height:37px; object-fit:contain; }
+#rideRequestModal .ride-brand > span { display:flex; flex-direction:column; gap:2px; }
+#rideRequestModal .ride-brand b { color:#127c68; font-size:18px; line-height:1; letter-spacing:-.4px; }
+#rideRequestModal .ride-brand b span { color:#1268a8; }
+#rideRequestModal .ride-brand b::after { content:""; display:inline-block; width:10px; height:2px; margin:0 0 2px 3px; border-radius:2px; background:#d8b83a; transform:skewX(-25deg); }
+#rideRequestModal .ride-brand small { color:#768982; font-size:9px; font-weight:800; letter-spacing:1px; }
+#rideRequestModal .ride-close { width:44px; height:44px; flex:0 0 44px; padding:0; border:0; border-radius:12px; color:#425b54; background:#f2f7f5; font-size:18px; cursor:pointer; }
+#rideRequestModal .ride-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+#rideRequestModal .ride-content { width:min(100%,680px); margin:0 auto; padding:22px 20px calc(30px + env(safe-area-inset-bottom,0px)); }
+#rideRequestModal .ride-intro { margin-bottom:22px; }
+#rideRequestModal .ride-kicker { color:#16856c; font-size:10px; font-weight:800; letter-spacing:1.15px; }
+#rideRequestModal .ride-intro h3 { margin:7px 0 7px; color:#1e3931; font-size:23px; line-height:1.2; letter-spacing:-.5px; }
+#rideRequestModal .ride-intro p { margin:0; color:#637a72; font-size:13px; line-height:1.5; }
+#rideRequestModal .ride-form { display:flex; flex-direction:column; gap:16px; }
+#rideRequestModal .ride-field { display:flex; flex-direction:column; gap:7px; min-width:0; }
+#rideRequestModal .ride-field > label { margin:0; color:#344e45; font-size:12px; font-weight:750; line-height:1.3; text-align:left; }
+#rideRequestModal .ride-field > label span { color:#be5b39; }
+html body #rideRequestModal .ride-field input:not([type=checkbox]),html body #rideRequestModal .ride-field select { display:block; width:100%; max-width:100%; min-width:0; height:48px; min-height:48px; margin:0; padding:0 13px; border:1px solid #d5e3dd; border-radius:10px; color:#243e34; background:#fff; box-shadow:none; font-family:inherit; font-size:16px; font-weight:500; line-height:normal; }
+html body #rideRequestModal .ride-field select { padding-right:32px; }
+#rideRequestModal input::placeholder { color:#94a69e; opacity:1; }
+#rideRequestModal .ride-details { padding:14px; border:1px solid #dbeae5; border-radius:12px; background:#f5faf8; }
+#rideRequestModal .ride-details--blue { border-color:#dbe8f1; background:#f5f9fc; }
+#rideRequestModal .ride-details--gold { border-color:#f1e5c9; background:#fffbf2; }
+#rideRequestModal .ride-details h4,#rideRequestModal .ride-route h4 { margin:0 0 12px; color:#24584a; font-size:13px; font-weight:800; }
+#rideRequestModal .ride-details > .ride-field + .ride-pair { margin-top:12px; }
+#rideRequestModal .ride-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#rideRequestModal .ride-checks { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px; }
+#rideRequestModal .ride-checks label { display:flex; align-items:center; gap:7px; min-height:36px; color:#526961; font-size:12px; font-weight:700; }
+html body #rideRequestModal .ride-checks input { width:18px; height:18px; margin:0; accent-color:#18a982; }
+#rideRequestModal .ride-route { padding:15px; border:1px solid #e1ece7; border-radius:12px; background:#f7fbf9; }
+#rideRequestModal .ride-route-fields { display:flex; flex-direction:column; gap:13px; padding-left:16px; border-left:2px solid #cce9de; }
+#rideRequestModal .ride-route-fields .ride-field { position:relative; }
+#rideRequestModal .ride-route-fields .ride-field::before { content:''; position:absolute; top:3px; left:-23px; width:12px; height:12px; border:3px solid #18a982; border-radius:50%; background:#fff; }
+#rideRequestModal .ride-route-fields .ride-destination::before { border-color:#e1a724; }
+#rideRequestModal .ride-chain-note { color:#557c6d; font-size:11px; line-height:1.4; }
+#rideRequestModal .ride-note { margin:-3px 0 0; color:#6d8079; font-size:11px; line-height:1.5; }
+#rideRequestModal .ride-actions { display:flex; flex-direction:column; gap:9px; }
+html body #rideRequestModal .ride-actions button { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; min-height:48px; margin:0; padding:11px 15px; border-radius:11px; font-family:inherit; font-size:13px; font-weight:800; line-height:1.35; text-align:center; text-transform:none; cursor:pointer; }
+html body #rideRequestModal .ride-actions .ride-primary { border:1px solid #18a982; background:#18a982; color:white; }
+#rideRequestModal .ride-primary svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; flex:none; }
+html body #rideRequestModal .ride-actions .ride-secondary { border:1px solid #b8d7e9; background:#f4f9fc; color:#17659a; }
+html body #rideRequestModal .ride-actions .ride-cancel { border:0; background:transparent; color:#657a72; font-weight:700; }
+#rideRequestModal button:disabled { opacity:.6; cursor:wait; }
+#rideRequestModal button:focus-visible,#rideRequestModal input:focus-visible,#rideRequestModal select:focus-visible { outline:3px solid #8acfc0; outline-offset:2px; }
+@media(max-width:360px) { #rideRequestModal .ride-content { padding-left:16px; padding-right:16px; } #rideRequestModal .ride-pair { grid-template-columns:1fr; } }

@@ -167,7 +167,7 @@ console.log('\n[2] REQUEST INBOX â€” kadi za NEW REQUEST na vitendo');
     };
     globalThis.skh = skh;
     win.skhRoutingServerSweep = async () => { swept = true; return { data: { ok: true } }; };
-    win.skhRoutingServerOfferAccept = async p => { acceptedWith = p; return { data: { ok: true } }; };
+    win.skhRoutingServerOfferAccept = async p => { acceptedWith = p; return { data: { ok: true, token: 'PK-TEST' } }; };
     win.skhRoutingServerOfferDecline = async p => { declinedWith = p; return { data: { ok: true } }; };
     win.skhOpenTokenBox = () => { tokensOpened = true; };
 
