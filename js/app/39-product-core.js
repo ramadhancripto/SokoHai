@@ -32,7 +32,7 @@ export function availabilityStatus(p){
   return 'available';
 }
 export function productEligible(p){
-  return !!p && publicationStatus(p)==='published' && !p.archivedAt && p.isOnline!==false && availabilityStatus(p)!=='hidden';
+  return !!p && !p.archivedAt && publicationStatus(p)!=='archived';
 }
 export function normalizeTaxonomyMetadata(input){
   const p=input||{};

@@ -615,6 +615,9 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
     // the preset) collapsed into the same "Weka angalau picha 1" alert, which
     // told the seller the wrong thing and hid the real cause.
     skh.setLoading('btnSeller', true, ' INAPANDISHA PICHA...');
+    if (typeof window.sokohaiToast === 'function') {
+        window.sokohaiToast('Inapanda picha… subiri kidogo.', 'info', 3000);
+    }
     var uploadOutcome = { urls: [], attempted: 0, failed: [] };
     try {
         if (typeof window.skhUploadPickedDetailed === 'function') {
@@ -824,6 +827,12 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
         
         closeModals();
         loadAndRenderDashboard();
+        /* [FIX 2026-11-17] Baada ya kuweka bidhaa, wasanii feed ya nyumbani
+           ili bidhaa iwezezwe kutokaakwa mara moja kwenye soko la mtandaoni
+           bila kuwa na mtu aendelee kurudi nyumbani kwa bandari. */
+        try { if (typeof window.loadMainFeed === 'function') window.loadMainFeed('all'); } catch (e) {
+            console.warn('[submitSeller] loadMainFeed baada ya kuweka imeshindikana:', e && e.message);
+        }
     }
     // [FIX 2026-11-17] Kama saveData kurudisha null (haujakubalika na mahiri,
     // mtandao umeanguka, n.k.), subiri hapa — usiifanye reset au close modals

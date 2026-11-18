@@ -179,8 +179,8 @@ window.openProduct = async function(id, manualCollection = null) {
 
         // [PUBLIC LINKS] Weka URL ya bidhaa kwenye address bar (bila ku-reload)
         // — hii inafanya kiungo kiweze kushirikiwa na kuonekana na Google.
-        window.skhSetProductUrl(found.id);
-        window.skhUpdateSeoMeta(found);
+        window.skhSetProductUrl(found.id, colName);
+        window.skhUpdateSeoMeta(found, colName);
 
         // --- CHORA UI (Renders everything inside the modal) ---
         
@@ -1073,37 +1073,58 @@ window.removeFromCart = async function(index) {
 // ============================================================
 
 // Weka (au futa) URL ya bidhaa kwenye address bar bila ku-reload ukurasa.
-window.skhSetProductUrl = function(id) {
+window.skhSetProductUrl = function(id, type) {
     try {
         if (id) {
-            history.replaceState(history.state, '', '#/product/' + encodeURIComponent(id)); // [NAV] hifadhi hali ya historia
-        } else if (/^#\/?product\//.test(window.location.hash || '')) {
+            const t = String(type || 'products').toLowerCase();
+            let prefix = 'product';
+            if (t === 'services' || t === 'service') prefix = 'service';
+            else if (t === 'drivers' || t === 'driver' || t === 'transport' || t === 'travel' || t === 'usafiri') prefix = 'driver';
+            else if (t === 'posts' || t === 'post') prefix = 'post';
+            history.replaceState(history.state, '', '#/' + prefix + '/' + encodeURIComponent(id)); // [NAV] hifadhi hali ya historia
+        } else if (/^#\/?(product|service|driver|post)\//.test(window.location.hash || '')) {
             history.replaceState(history.state, '', window.location.pathname + window.location.search);
         }
     } catch (e) { /* hash pekee — si muhimu */ }
 };
 
-// Kiungo cha umma cha bidhaa (clean URL /p/{id}) — kwa kushiriki + SEO.
-window.skhProductPublicUrl = function(id) {
+// Kiungo cha umma kwa aina yoyote ya entity — kwa kushiriki + SEO + deep linking.
+// /p/{id} = bidhaa, /s/{id} = huduma, /d/{id} = usafiri (drivers), /post/{id} = post
+window.skhEntityPublicUrl = function(id, type) {
     const base = (window.location.origin || '') + (window.location.pathname || '/');
-    return base.replace(/\/+$/, '') + '/p/' + encodeURIComponent(id || '');
+    const cleanBase = base.replace(/\/+$/, '');
+    const t = String(type || 'products').toLowerCase();
+    let prefix = 'p';
+    if (t === 'services' || t === 'service') prefix = 's';
+    else if (t === 'drivers' || t === 'driver' || t === 'transport' || t === 'travel' || t === 'usafiri') prefix = 'd';
+    else if (t === 'posts' || t === 'post') prefix = 'post';
+    return cleanBase + '/' + prefix + '/' + encodeURIComponent(id || '');
 };
 
-// [SEO] Sasisha <title> + meta tags za bidhaa kwa Google na viungo vya umma.
-window.skhUpdateSeoMeta = function(p) {
+// Backward-compatible wrappers
+window.skhProductPublicUrl = function(id) { return window.skhEntityPublicUrl(id, 'products'); };
+window.skhServicePublicUrl = function(id) { return window.skhEntityPublicUrl(id, 'services'); };
+window.skhTransportPublicUrl = function(id) { return window.skhEntityPublicUrl(id, 'drivers'); };
+window.skhPostPublicUrl = function(id) { return window.skhEntityPublicUrl(id, 'posts'); };
+
+// [SEO] Sasisha <title> + meta tags kwa Google na viungo vya umma.
+// type: 'products' | 'services' | 'drivers' | 'posts' (default 'products')
+window.skhUpdateSeoMeta = function(p, type) {
     try {
-        const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.name || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def','Bidhaa') : 'Bidhaa');
-        const t = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', 'SokoHai — Soko la Mtandaoni la Tanzania') : 'SokoHai — Soko la Mtandaoni la Tanzania');
-        document.title = t;
+        const t = String(type || 'products').toLowerCase();
+        const typeLabel = t === 'services' ? 'Huduma' : t === 'drivers' || t === 'transport' || t === 'travel' ? 'Usafiri' : t === 'posts' || t === 'post' ? 'Taarifa' : 'Bidhaa';
+        const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.name || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def', typeLabel) : typeLabel);
+        const t2 = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', 'SokoHai — Soko la Mtandaoni la Tanzania') : 'SokoHai — Soko la Mtandaoni la Tanzania');
+        document.title = t2;
         const desc = p
-            ? (_pT + (p.price ? (window.skhTF?window.skhTF('meta_for_tsh',' kwa TSh '):' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF?window.skhTF('meta_on_skh',' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'):' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'))
+            ? (_pT + (p.price ? (window.skhTF ? window.skhTF('meta_for_tsh', ' kwa TSh ') : ' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF ? window.skhTF('meta_on_skh', ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.') : ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'))
             : 'Nunua na uuze bidhaa, huduma na usafiri kwa usalama kupitia SokoHai.';
         const set = function(id, attr, val) { const el = document.getElementById(id); if (el) el.setAttribute(attr, val || ''); };
         set('skhMetaDescription', 'content', desc);
-        set('skhOgTitle', 'content', t);
+        set('skhOgTitle', 'content', t2);
         set('skhOgDescription', 'content', desc);
         set('skhOgImage', 'content', p ? (p.image || (p.images && p.images[0]) || p.photo || '') : '');
-        const url = p ? window.skhProductPublicUrl(p.id) : (window.location.origin + window.location.pathname);
+        const url = p ? window.skhEntityPublicUrl(p.id, type) : (window.location.origin + window.location.pathname);
         set('skhOgUrl', 'content', url);
         set('skhCanonical', 'href', url);
     } catch (e) { /* meta ni ya ziada tu */ }
@@ -1248,16 +1269,31 @@ window.skhFetchSellerAvatar = function(uid, photo, name) {
     }
 };
 
-// Tatua deep-link ya bidhaa (#/product/{id} au /p/{id}) kwenye kufungua ukurasa.
+// Tatua deep-link ya entity yoyote (#/product/{id}, /p/{id}, /s/{id}, /d/{id}, /post/{id})
+// kwenye kufungua ukurasa wa kifupi wa hiyo entity.
 window.skhResolveProductDeepLink = function() {
     try {
         let pid = null;
+        let ptype = 'products';
         const h = window.location.hash || '';
-        const hm = h.match(/^#\/?product\/([A-Za-z0-9_-]+)/);
-        if (hm) pid = hm[1];
+        const hm = h.match(/^#\/?(product|service|driver|post)\/([A-Za-z0-9_-]+)/);
+        if (hm) {
+            pid = hm[2];
+            const kind = hm[1].toLowerCase();
+            if (kind === 'service') ptype = 'services';
+            else if (kind === 'driver') ptype = 'drivers';
+            else if (kind === 'post') ptype = 'posts';
+        }
         if (!pid) {
-            const pm = (window.location.pathname || '').match(/^\/p\/([A-Za-z0-9_-]+)\/?$/);
-            if (pm) pid = pm[1];
+            const pm = (window.location.pathname || '').match(/^\/(p|s|d|post)\/([A-Za-z0-9_-]+)\/?$/);
+            if (pm) {
+                pid = pm[2];
+                const prefix = pm[1];
+                if (prefix === 's') ptype = 'services';
+                else if (prefix === 'd') ptype = 'drivers';
+                else if (prefix === 'post') ptype = 'posts';
+                else ptype = 'products';
+            }
         }
         if (!pid) return;
         // [FIX 2026-09-20] Timer ya 1400ms (chini) iliona URL /p/{id} iliyowekwa na kadi ambayo mtumiaji
@@ -1267,9 +1303,10 @@ window.skhResolveProductDeepLink = function() {
             const _pm = document.getElementById('productModal');
             if (_pm && _pm.style.display === 'flex' && skh.currentOpenProduct && String(skh.currentOpenProduct.id) === String(pid)) return;
         } catch (e) { /* endelea na ufunguzi wa kawaida */ }
-        if (typeof window.openProduct === 'function') window.openProduct(pid);
+        if (typeof window.openProduct === 'function') window.openProduct(pid, ptype);
     } catch (e) { /* si kiungo cha bidhaa */ }
 };
+
 
 window.startChat = function() {
     if(!skh.requireAuth() || !skh.currentOpenProduct) return;

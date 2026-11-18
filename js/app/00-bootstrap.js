@@ -1733,10 +1733,17 @@ skh.saveData = async function saveData(col, data, opts) {
         const ownerIsManaged = !!managedUid;
         // Products pass through one canonical compatibility layer. Other entities
         // retain their existing schemas and flows.
-        const canonicalData = col === 'products' ? skh.buildProductWrite(data) : data;
+        let canonicalData;
         if (col === 'products') {
+            try {
+                canonicalData = skh.buildProductWrite(data);
+            } catch (e) {
+                throw new Error('Kosa kwenye data ya bidhaa kabla ya kuandika: ' + (e && e.message ? e.message : e));
+            }
             const check = skh.validateProduct(canonicalData);
             if (!check.ok) throw new Error(check.errors.join(' '));
+        } else {
+            canonicalData = data;
         }
         const docData = { 
             ...canonicalData,
@@ -2665,6 +2672,11 @@ skh.whenProductReady = function whenProductReady(id, cb) {
 skh.cardAction = function cardAction(kind, id, col, uid, name) {
     const colName = col || 'products';
     try {
+        // Share: nakili kiungo cha umma — haijataki maelezo ya bidhaa.
+        if (kind === 'share') {
+            if (typeof window.skhShareCard === 'function') window.skhShareCard(id, colName);
+            return;
+        }
         // Chat haihitaji Product Details — handler ipo tayari popote.
         if (kind === 'chat') {
             if (uid && typeof window.openChatWithUser === 'function') { window.openChatWithUser(uid, name || ''); return; }
@@ -2684,12 +2696,15 @@ skh.cardAction = function cardAction(kind, id, col, uid, name) {
 };
 window.skhCardAction = skh.cardAction;
 
-/* [SOKOHURU CARD #1 2026-11] Share ya kadi: nakili kiungo cha umma cha bidhaa.
-   Kama skhShareProduct, lakini kwa id ya kadi (haihitaji currentOpenProduct). */
-skh.shareCard = function shareCard(id) {
+/* [SOKOHURU CARD #1 2026-11] Share ya kadi: nakili kiungo cha umma cha kila entity.
+   Kama skhShareProduct, lakini kwa id ya kadi (haihitaji currentOpenProduct).
+   type: 'products' | 'services' | 'drivers' | 'posts' (default 'products') */
+skh.shareCard = function shareCard(id, type) {
     if (!id) return;
-    const link = (typeof window.skhProductPublicUrl === 'function')
-        ? window.skhProductPublicUrl(id) : (window.location.origin + window.location.pathname + '#p=' + encodeURIComponent(id));
+    const t = String(type || 'products').toLowerCase();
+    const link = (typeof window.skhEntityPublicUrl === 'function')
+        ? window.skhEntityPublicUrl(id, t)
+        : (window.location.origin + window.location.pathname + '/' + (t === 'services' ? 's' : t === 'drivers' ? 'd' : t === 'posts' ? 'post' : 'p') + '/' + encodeURIComponent(id));
     const done = function () {
         if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Kiungo kimenakiliwa', 'success');
     };
@@ -2700,7 +2715,6 @@ skh.shareCard = function shareCard(id) {
 window.skhShareCard = skh.shareCard;
 
 skh.cardActions = function cardActions(data, colName) {
-    if (colName && colName !== 'products') return '';
     const id = skh.skhJsEsc(data.id);
     const uid = String(data.userId || data.sellerId || '');
     const name = String(data.ownerName || data.storeName || data.sellerName || '');
@@ -2729,6 +2743,7 @@ skh.cardActions = function cardActions(data, colName) {
         + mk('order', 'skh-act--order', 'cart', 'card_action_order', 'Weka Oda')
         + mk('nego', 'skh-act--nego', 'scales', 'card_action_nego', 'Patana Bei')
         + chat
+        + mk('share', 'skh-act--share', 'share', 'card_action_share', 'Shiriki')
         + '</div>';
 };
 
@@ -2778,6 +2793,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
         ${skh.cardImage(data, overlays, skh.cardImageClass(data, 'products'))}
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title || data.name) || skhTF('card_product_def', 'Bidhaa'))}</h3>
             ${skh.cardPriceHtml(data, 'products')}
+            ${skh.cardRating(data) ? '<span class="skh-rating">' + skh.cardRating(data) + '</span>' : ''}
             ${foot}
             <div class="skh-meta-row">${stockChip}${skh.cardPinLocation(data, 'products')}${skh.cardOpenChevron()}</div>
             ${skh.cardActions(data, 'products')}
@@ -2816,7 +2832,7 @@ skh.SokoHuruCard = function SokoHuruCard(data, colName) {
     return `<div class="skh-huru" ${skh.cardOpenAttrs(data.id, col, data.title)}>
         ${skh.cardImage(data, overlays, ' skh-huru-ph' + skh.cardImageClass(data, col))}
         <div class="skh-huru-body">
-            <div class="skh-huru-r1"><h3 class="skh-huru-name">${name}</h3><span class="skh-huru-price">${price}</span></div>
+            <div class="skh-huru-r1"><h3 class="skh-huru-name">${name}</h3><span class="skh-huru-price">${price}</span>${skh.cardRating(data) ? '<span class="skh-rating">' + skh.cardRating(data) + '</span>' : ''}</div>
             ${row2}
         </div></div>`;
 };

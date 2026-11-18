@@ -179,14 +179,23 @@
                 if (opts.folder) fd.append('folder', opts.folder);
             }
 
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/${resource}/upload`, { method: 'POST', body: fd });
-            const data = await res.json().catch(function () { return null; });
-            if (!data || !data.secure_url) {
-                console.error('skhUploadFromFile: hakuna secure_url', data);
-                const msg = (data && data.error && data.error.message) || 'Seva ya picha imeshindikana.';
-                return uploadFail('upload_failed', 'Picha haikupandishwa: ' + msg);
+            const ctrl = new AbortController();
+            const to = setTimeout(() => ctrl.abort(), 60000);
+            try {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/${resource}/upload`, { method: 'POST', body: fd, signal: ctrl.signal });
+                const data = await res.json().catch(function () { return null; });
+                clearTimeout(to);
+                if (!data || !data.secure_url) {
+                    console.error('skhUploadFromFile: hakuna secure_url', data);
+                    const msg = (data && data.error && data.error.message) || 'Seva ya picha imeshindikana.';
+                    return uploadFail('upload_failed', 'Picha haikupandishwa: ' + msg);
+                }
+                return { url: data.secure_url, data: data };
+            } catch (e) {
+                clearTimeout(to);
+                console.error('skhUploadFromFile:', e);
+                return uploadFail('network', 'Mtandao umeshindikana wakati wa kupandisha picha. Jaribu tena.');
             }
-            return { url: data.secure_url, data: data };
         } catch (e) {
             console.error('skhUploadFromFile:', e);
             return uploadFail('network', 'Mtandao umeshindikana wakati wa kupandisha picha. Jaribu tena.');

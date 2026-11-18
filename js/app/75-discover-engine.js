@@ -1900,6 +1900,22 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
         b.classList.add('active');
         return;
       }
+      if (act === 'de-share-entity') {
+        var id = b.getAttribute('data-id');
+        var type = b.getAttribute('data-type') || '';
+        var title = b.getAttribute('data-title') || '';
+        var col = (type === 'SERVICE' ? 'services' : type === 'TRANSPORTER' ? 'drivers' : type === 'POST' ? 'posts' : 'products');
+        var link = (typeof window.skhEntityPublicUrl === 'function')
+            ? window.skhEntityPublicUrl(id, col)
+            : (window.location.origin + window.location.pathname);
+        var done = function () {
+            if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Kiungo kimenakiliwa: ' + link, 'success');
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(done, function () { window.prompt('Nakili kiungo:', link); });
+        } else { window.prompt('Nakili kiungo:', link); }
+        return;
+      }
       if (act === 'de-request-nearby') {
         var q = b.getAttribute('data-query') || document.getElementById('skhDiscoverEngineInput').value || '';
         renderRequestNearbyModal(q);

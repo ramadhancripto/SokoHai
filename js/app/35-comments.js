@@ -729,7 +729,8 @@ import { skh } from './00-bootstrap.js';
         if (!e) return true;
         var c = String((e && e.code) || '');
         if (!c) return true; // hitilafu bila code (network) -> tuna fallback
-        return c === 'functions/not-found' || c === 'unavailable' || c === 'internal' || /not-found/.test(c);
+        return c === 'functions/not-found' || c === 'functions/unavailable'
+            || c === 'unavailable' || c === 'internal' || /not-found/.test(c);
     }
     function findCommentById(id) {
         if (!id) return null;

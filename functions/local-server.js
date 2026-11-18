@@ -249,8 +249,10 @@ function originAllowed(origin) {
 
   try {
     const u = new URL(origin);
-    return ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)
-      || u.hostname.endsWith('.localhost');
+    const host = u.hostname;
+    return ['localhost', '127.0.0.1', '[::1]'].includes(host)
+      || host.endsWith('.localhost')
+      || host.endsWith('.e2b.app'); // Arena preview proxy hosts
   } catch (_) {
     return false;
   }

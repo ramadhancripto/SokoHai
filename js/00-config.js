@@ -125,6 +125,16 @@ window.skhResolveFirebaseEnv = function (input) {
         if (!full(prodCfg) || !prod.projectId || prodCfg.projectId !== prod.projectId) return { env: null, config: null, reason: 'production-config-mismatch' };
         return { env: 'production', config: prodCfg, appCheckSiteKey: null, reason: 'production-host' };
     }
+    // Arena preview hosts (sbx-*.arena.site) — route to production Firebase config.
+    // Hii haitabadili config ya production ya Firebase; ni pekee kuwezesha host
+    // za preview kutumia config iliyo yao. Writes hufanya kazi dhidi ya project
+    // sokonet-3b847 (production) na hitajika autentikashoni sahihi.
+    if (host.endsWith('.arena.site')) {
+        if (!full(prodCfg) || !prod.projectId || prodCfg.projectId !== prod.projectId) {
+            return { env: null, config: null, reason: 'production-config-mismatch' };
+        }
+        return { env: 'production', config: prodCfg, appCheckSiteKey: null, reason: 'arena-preview-host' };
+    }
     var stgHosts = Array.isArray(stg.hosts) ? stg.hosts : [];
     var site = String(stg.netlifySite || '').toLowerCase();
     var suffix = '--' + site + '.netlify.app';
