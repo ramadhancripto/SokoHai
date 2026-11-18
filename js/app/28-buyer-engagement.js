@@ -153,10 +153,18 @@ import { skh } from './00-bootstrap.js';
         if (!btn) return;
         if (active) {
             btn.classList.add('skh-eng-active');
+            if (btn.matches && btn.matches('.skh-card-heart')) {
+                btn.classList.add('skh-eng-on');
+                btn.setAttribute('aria-pressed', 'true');
+            }
             btn.style.color = activeColor || '#ef4444';
             btn.style.borderColor = (activeColor || '#ef4444');
         } else {
             btn.classList.remove('skh-eng-active');
+            if (btn.matches && btn.matches('.skh-card-heart')) {
+                btn.classList.remove('skh-eng-on');
+                btn.setAttribute('aria-pressed', 'false');
+            }
             btn.style.color = '#64748b';
             btn.style.borderColor = '#cbd5e1';
         }

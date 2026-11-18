@@ -10,11 +10,6 @@
 <html lang="sw">
 <head>
     <meta charset="UTF-8">
-<!-- This site is hosted on Netlify. Anyone can build and deploy a site
-     like this one for free: https://netlify.new/?utm_campaign=ai-legible&utm_source=comment&utm_medium=referral&utm_id=7e5de4c3-e06f-4212-ac59-ecaa90b5f5d3
-     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
-<meta name="hosting-provider" content="Netlify">
-<meta name="netlify-deploy" content="https://netlify.new/?utm_campaign=ai-legible&amp;utm_source=meta&amp;utm_medium=referral&amp;utm_id=7e5de4c3-e06f-4212-ac59-ecaa90b5f5d3">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- [PERF 2026-11-08] Firebase SDK inapakiwa kutoka www.gstatic.com na data
          kutoka firestore.googleapis.com (ona js/app/00-bootstrap.js). Preconnect
@@ -229,7 +224,7 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/63-live-commerce.css?v=20261107r13b" media="print" onload="this.media='all'"><!-- [R13-B] live, hali, group soko -->
 <link rel="stylesheet" href="css/64-image-quality.css?v=20261108r13c"><!-- [R13-C] picha halisi, product cards 1:1 -->
 <link rel="stylesheet" href="css/65-live-design.css?v=20261113r14" media="print" onload="this.media='all'"><!-- [R13-D] live screens kama design refs 1,2,5,6,7,10 -->
-<link rel="stylesheet" href="css/66-home-layout.css?v=20261108r13e"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
+<link rel="stylesheet" href="css/66-home-layout.css?v=20261118navfix"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
 <link rel="stylesheet" href="css/67-chat-discover.css?v=20261108r13f" media="print" onload="this.media='all'"><!-- [R13-F] Chat Discover + Hali viewer kama refs 8, 9 -->
 <link rel="stylesheet" href="css/68-group-chat-design.css?v=20261108r13g" media="print" onload="this.media='all'"><!-- [R13-G] Group Chat kama design refs (Wakulima &amp; Biashara) -->
 <link rel="stylesheet" href="css/69-category-tiles.css?v=20261108r13g"><!-- [R13-G] picha halisi za kategoria kwenye kadi safi -->
@@ -237,6 +232,9 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/71-sale-type-flow.css?v=20261108m1" media="print" onload="this.media='all'"><!-- [M1 2026-11-08] kichaguzi cha aina ya mauzo (Bidhaa Sokoni) -->
 <link rel="stylesheet" href="css/70-product-card.css?v=20261108pc0"><!-- [PHASE 0 2026-11-08] product card visual system (safu ya mwisho; bidhaa pekee) -->
 <link rel="stylesheet" href="css/72-pro-polish.css?v=20261116ui2"><!-- [UI 2026-11-15] safu ya mwisho: marekebisho ya ukaguzi wa skrini zote -->
+<link rel="stylesheet" href="css/71-sokohuru-card-correction.css?v=20261118card1"><!-- SokoHuru overrides last: prevent 72 legacy rules from clipping details/badges -->
+<link rel="stylesheet" href="css/73-unified-home-card-system.css?v=20261118waterfall1"><!-- shared product/service/transport card style -->
+<link rel="stylesheet" href="css/74-comments-experience.css?v=20261118comments1"><!-- existing Maoni sheet only -->
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>
@@ -780,11 +778,12 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <div class="maoni-head">
                     <span class="maoni-grip" aria-hidden="true"></span>
                     <div class="maoni-head-row">
-                        <h3 id="maoniTitle">Maoni <span class="maoni-count" id="skhCmPanelCount">0</span></h3>
-                        <button type="button" class="maoni-x" aria-label="Funga Maoni" onclick="window.skhCloseMaoni()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" width="18" height="18"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        <button type="button" class="maoni-x" aria-label="Rudi kwenye bidhaa" onclick="window.skhCloseMaoni()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
                         </button>
+                        <div class="maoni-heading"><span>Soko<span>Hai</span></span><h3 id="maoniTitle">Mazungumzo ya bidhaa <span class="maoni-count" id="skhCmPanelCount">0</span></h3></div>
                     </div>
+                    <div id="maoniProductSummary" class="maoni-product" aria-label="Bidhaa inayojadiliwa"></div>
                 </div>
                 <div class="maoni-body" id="maoniSheetBody"><!-- skhCommentsRoot huambatishwa hapa na 35-comments.js --></div>
             </aside>
@@ -3100,12 +3099,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div class="top-nav-row">
         <div class="top-nav-left">
             <span class="menu-btn" onclick="openSidebarMenu()" data-skh-icon="menu" data-skh-size="19" data-i18n-aria="nav_menu_desc" data-i18n-title="nav_menu_desc" role="button" tabindex="0" aria-label="Menyu — akaunti na mipangilio" title="Menyu — akaunti na mipangilio"></span>
-            <!-- [BRAND TEXT 2026-09-17] Wordmark kubwa ya TEXT (kama Amazon/noon) — si logo finyu -->
-            <!-- [BRAND 2026-11-04] Logo halisi ya repo (fonts/assets/sokohai-s-mark.png) + jina
-                 lenye "Soko" blue ya mfumo (#1268A8) na "Hai" green (#18A982). -->
+            <!-- SokoHai brand: one user-provided cart mark + exact product name. -->
             <a class="skh-brand" href="#" onclick="updateApp('home');return false;" aria-label="SokoHai — Nyumbani">
-                <img class="skh-brand-logo" src="assets/img/sokohai-logo.png" alt="SokoHai" width="56" height="62" decoding="async">
-                <span class="skh-brand-div" aria-hidden="true"></span>
+                <img class="skh-brand-logo" src="assets/img/sokohai-cart-mark.png" alt="" width="48" height="48" decoding="async">
                 <span class="skh-brand-lockup">
                     <span class="skh-brand-word" aria-hidden="true"><b class="skh-brand-soko">Soko</b><b class="skh-brand-hai">Hai</b></span>
                     <span class="skh-brand-arc" aria-hidden="true"></span>
@@ -3419,124 +3415,11 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div id="dashboardViews" class="dashboard-view" style="display: none; padding: 0; margin: 0; min-height: 100vh;">
        <div id="richDashboardContainer" style="width: 100%; min-height: 100vh; text-align: left;">
 <!-- 5 KPI CARDS ROW -->
-    <div class="sp-kpi-grid">
-        <div class="sp-kpi-card" style="border-left: 4px solid #18A982;">
-            <span class="sp-kpi-title">Wallet Balance</span>
-            <span class="sp-kpi-value" id="lblWalletBalanceVal">TZS 0</span>
-            <span class="sp-kpi-sub" style="color: #18A982;">Available Balance</span>
-        </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #D8B83A;">
-            <span class="sp-kpi-title">Escrow / Locked</span>
-            <span class="sp-kpi-value" id="lblEscrowBalanceVal">TZS 0</span>
-            <span class="sp-kpi-sub" style="color: #D8B83A;">Locked in Contracts</span>
-        </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #4D91AA;">
-            <span class="sp-kpi-title">Active Contracts</span>
-            <span class="sp-kpi-value" id="lblActiveContractsVal">0</span>
-            <span class="sp-kpi-sub" style="color: #4D91AA;">Running Contracts</span>
-        </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #B88916;">
-            <span class="sp-kpi-title">Pending Confirmations</span>
-            <span class="sp-kpi-value" id="lblPendingConfirmationsVal">0</span>
-            <span class="sp-kpi-sub" style="color: #B88916;">Awaiting Action</span>
-        </div>
-        <div class="sp-kpi-card" style="border-left: 4px solid #18A982;">
-            <span class="sp-kpi-title">Total Earnings (This Month)</span>
-            <span class="sp-kpi-value" id="lblTotalEarningsVal">TZS 0</span>
-            <span class="sp-kpi-sub" style="color: #18A982;">&nbsp;</span>
-        </div>
-    </div>
-
-    <!-- MAIN TWO-COLUMN SPLIT GRID -->
-    <div class="sp-dashboard-grid">
-        
-        <!-- LEFT COLUMN: MAIN ACTIONS & TIMELINES -->
-        <div class="sp-main-col">
-            
-            <!-- 1. Active Contracts Overview -->
-            <div class="sp-widget-card">
-                <span class="sp-widget-title">Active Contracts Overview</span>
-                <div class="sp-overview-grid">
-                    <div class="sp-overview-box">
-                        <span></span>
-                        <b>Products</b>
-                        <small id="lblOvProducts">8 In Progress</small>
-                    </div>
-                    <div class="sp-overview-box">
-                        <span></span>
-                        <b>Services</b>
-                        <small id="lblOvServices">3 In Progress</small>
-                    </div>
-                    <div class="sp-overview-box">
-                        <span></span>
-                        <b>Logistics</b>
-                        <small id="lblOvLogistics">2 In Transit</small>
-                    </div>
-                    <div class="sp-overview-box">
-                        <span></span>
-                        <b>Companies</b>
-                        <small id="lblOvCompanies">1 Active</small>
-                    </div>
-                    <div class="sp-overview-box">
-                        <span></span>
-                        <b>Government</b>
-                        <small id="lblOvGov">0 Pending</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Live Tracking Overview (Ramani & CCTV Placeholder) -->
-            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 15px; margin-bottom: 20px;" class="sp-kpi-grid">
-                
-                <div class="sp-widget-card" style="margin-bottom: 0;">
-                    <span class="sp-widget-title">Live Tracking Overview</span>
-                    <small style="color: gray; display:block; margin-bottom: 8px;">Shipment: <b>Package #LOG-78391</b> (Electronics) - <b style="color: #18A982;">● Live</b></small>
-                    <div id="liveTrackingMiniMap" style="height: 180px; background: #e5e7eb; border-radius: 12px; margin-bottom: 10px;"></div>
-                </div>
-
-                <div class="sp-widget-card" style="margin-bottom: 0;">
-                    <span class="sp-widget-title">Construction Project Monitoring</span>
-                    <small style="color: gray; display:block; margin-bottom: 8px;">Project: <b>New Office Building</b></small>
-                    <div style="height: 140px; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;">
-                        <img src="img/hero-product.jpg" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
-                        <span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 3px 8px; border-radius: 12px; font-size: 12.5px;"> Live Camera 1</span>
-                        <button aria-label="Cheza video" style="position: absolute; width: 45px; height: 45px; border-radius: 50%; border: none; background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;"></button>
-                    </div>
-                    <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 13px;">
-                        <span>Progress: <b>65% Complete</b></span>
-                        <span>Expected: <b>Aug 30, 2024</b></span>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- [Mikataba ya Hivi Karibuni na Timeline yako vitaendelea chini hapa] -->
-
-        </div>
-
-        <!-- RIGHT COLUMN: FINANCIAL HEALTH & CHARTS -->
-        <div class="sp-side-col">
-            
-            <!-- 1. Wallet Summary Doughnut Chart -->
-            <div class="sp-widget-card" style="text-align: center;">
-                <span class="sp-widget-title">Wallet Summary</span>
-                <div style="height: 180px; position: relative; margin-top: 15px; display: flex; align-items: center; justify-content: center;">
-                    <canvas id="spDashboardWalletChart"></canvas>
-                    <div style="position: absolute; text-align: center; pointer-events: none;">
-                        <small style="color: gray; font-size: 12.5px; font-weight: bold; text-transform: uppercase; display:block;">Total Assets</small>
-                        <b style="font-size: 16px; color: #4D91AA;" id="lblSpTotalAssetsVal">TZS 0</b>
-                    </div>
-                </div>
-            </div>
-
-            <!-- [Quick Actions na Jopo la miamala ya hivi karibuni vitakuwepo hapa] -->
-
-        </div>
-
-    </div>
-
+<!-- Dashboard content is rendered in richDashboardContainer by the active role.
+     Do not put SokoPay placeholder markup here: it creates duplicate IDs and
+     fabricated financial/status values before the role dashboard loads. -->
+<p role="status" style="padding:24px; text-align:center;">Inapakia dashibodi...</p>
 </div>
-
 </div>
 
 <!--  BOTTOM AREA WRAPPER (bottom nav + "+" button) -->
@@ -3680,22 +3563,22 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/00-bootstrap.js"></script>
 <script type="module" src="js/app/01-market.js"></script>
 <script type="module" src="js/app/02-checkout.js"></script>
-<script type="module" src="js/app/03-dashboard.js"></script>
+<script type="module" src="js/app/03-dashboard.js?v=20261118navfix"></script>
 <script type="module" src="js/app/04-orders-escrow.js"></script>
 <script type="module" src="js/app/05-forms.js"></script>
 <script type="module" src="js/app/06-product-builder.js"></script>
 <script type="module" src="js/app/06-navigation.js"></script>
 <script type="module" src="js/app/07-product.js?v=20261113r16"></script>
-<script type="module" src="js/app/08-app-state.js"></script>
+<script type="module" src="js/app/08-app-state.js?v=20261118navfix"></script>
 <script type="module" src="js/app/09-feed-announcements.js"></script>
 <script type="module" src="js/app/10-dashboard-tabs.js"></script>
 <script type="module" src="js/app/11-analytics.js"></script>
 <script type="module" src="js/app/12-sys-modes.js"></script>
 <script type="module" src="js/app/06-product-edit-builder.js"></script>
-<script type="module" src="js/app/13-community.js"></script>
+<script type="module" src="js/app/13-community.js?v=20261118navfix"></script>
 <script type="module" src="js/app/14-map-onboarding.js"></script>
 <script type="module" src="js/app/15-pos-sales.js"></script>
-<script type="module" src="js/app/16-pos-admin-jobs.js"></script>
+<script type="module" src="js/app/16-pos-admin-jobs.js?v=20261118navfix"></script>
 <script type="module" src="js/app/17-hub.js?v=20261108r13e"></script>
 <script type="module" src="js/app/18-cockpit.js"></script>
 <script type="module" src="js/app/19-roles.js"></script>
@@ -3712,7 +3595,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/27-route-dispatch.js"></script>
 <script type="module" src="js/app/28-buyer-engagement.js"></script>
 <script type="module" src="js/app/29-seller-store.js"></script>
-<script type="module" src="js/app/30-seller-products.js"></script>
+<script type="module" src="js/app/30-seller-products.js?v=20261118fix1"></script>
 <script type="module" src="js/app/31-agent-assist.js"></script>
 <script type="module" src="js/app/32-i18n.js"></script>
 <script type="module" src="js/app/33-custody.js"></script>
@@ -3730,8 +3613,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/110-business-os-shell.js?v=20261106a"></script>
 <script type="module" src="js/app/111-business-os-overview.js?v=20261103b"></script>
 <script type="module" src="js/app/112-business-os-pos-page.js?v=20261103b"></script>
-<script type="module" src="js/app/35-comments.js"></script>
-<script type="module" src="js/app/36-seller-chat-comments.js"></script>
+<script type="module" src="js/app/35-comments.js?v=20261118comments1"></script>
+<script type="module" src="js/app/36-seller-chat-comments.js?v=20261118navfix"></script>
 <!-- [SHOWCASE MODULE 02] Product Detail UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
 <script type="module" src="js/app/39-product-showcase.js"></script>
 <!-- [INQUIRY BUILDER 2026-11] Uliza Zaidi kuhusu Bidhaa — maswali yenye muundo (productInquiries) -->
@@ -3743,7 +3626,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/43-delivery-choice.js"></script>
 <script type="module" src="js/app/54-error-core.js"></script>
 <script type="module" src="js/app/60-identity-layer.js"></script>
-<script type="module" src="js/app/61-full-system-repair.js"></script>
+<script type="module" src="js/app/61-full-system-repair.js?v=20261118navfix"></script>
     <script type="module" src="js/app/62-missing-features.js"></script>
 <script type="module" src="js/app/63-audit-fixes.js"></script>
 <script type="module" src="js/app/64-i18n-core.js"></script>
@@ -3780,7 +3663,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <!-- One server-authoritative delivery/rotation controller for all campaign slots. -->
 <script type="module" src="js/app/96-ad-delivery-controller.js"></script>
 <script type="module" src="js/app/97-escrow-center.js"></script><!-- [REPAIR 2026-10] Kituo cha Escrow (server-only actions) -->
-<script type="module" src="js/app/98-admin-control-center.js"></script>
+<script type="module" src="js/app/98-admin-control-center.js?v=20261118navfix"></script>
 <script type="module" src="js/app/106-chat-discovery-feed.js?v=20261108r13f"></script><!-- [R6i] GUNDUA BIASHARA (chat inbox: post za bidhaa + live) -->
 <script type="module" src="js/app/99-ads-marketplace.js?v=20261105r6w"></script>
 <script type="module" src="js/app/100-ads-studio-ui.js"></script><!-- [TASK 01] in-feed ads + true-size studio preview -->

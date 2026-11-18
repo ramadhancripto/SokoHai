@@ -276,9 +276,11 @@ export function psSummarizeReviews(comments) {
 export function psRatingDisplay(p) {
     const s = psSummarizeReviews(p && p.comments);
     if (s.count > 0) return { avg: s.avg, count: s.count, source: 'comments' };
-    const r = Number(p && p.rating);
-    if (Number.isFinite(r) && r > 0) {
-        const c = Number(p && (p.reviewCount || p.totalReviews || p.ratingCount)) || 0;
+    const fields = p ? [p.rating, p.averageRating, p.avgRating, p.ratings && p.ratings.avg, p.ratings && p.ratings.average] : [];
+    const r = fields.map(Number).find(function (v) { return Number.isFinite(v) && v >= 1 && v <= 5; });
+    if (r !== undefined) {
+        const rawCount = Number(p && (p.reviewCount || p.totalReviews || p.ratingCount || (p.ratings && p.ratings.count))) || 0;
+        const c = Number.isFinite(rawCount) && rawCount > 0 ? Math.floor(rawCount) : 0;
         return { avg: Math.round(r * 10) / 10, count: c, source: 'field' };
     }
     return null;

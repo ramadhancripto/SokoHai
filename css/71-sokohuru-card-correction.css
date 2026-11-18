@@ -1,0 +1,267 @@
+/* SokoHuru front-card correction — styles scoped to the legacy-compatible
+   .skh-huru card used by the home/discovery feeds. Do not leak into service,
+   transport or POS cards. */
+.skh-huru {
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+}
+.skh-huru .skh-img {
+  flex: 0 0 79% !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+.skh-huru .skh-img > img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+  padding: 7% !important;
+  box-sizing: border-box !important;
+}
+
+/* The old global .skh-out-pill is centered, rotated and oversized. The newer
+   product-card overrides only target .skh-card, but SokoHuru has its own
+   markup. Keep each pill compact and inside the image instead. */
+.skh-huru .skh-img > .skh-out-pill {
+  position: absolute !important;
+  inset: 8px 8px auto auto !important;
+  transform: none !important;
+  z-index: 14 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: calc(100% - 16px) !important;
+  height: 20px !important;
+  padding: 0 8px !important;
+  border: 1px solid #F0D6D2 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.96) !important;
+  color: #A92B22 !important;
+  font: 800 9px/1 Inter, system-ui, sans-serif !important;
+  letter-spacing: .02em !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 4px rgba(15,35,28,.12) !important;
+}
+.skh-huru .skh-img > .skh-badge,
+.skh-huru .skh-img > .boost-badge {
+  position: absolute !important;
+  inset: 8px auto auto 8px !important;
+  transform: none !important;
+  z-index: 12 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  box-sizing: border-box !important;
+  height: 19px !important;
+  max-width: min(112px, calc(100% - 16px)) !important;
+  overflow: hidden !important;
+  padding: 0 7px !important;
+  border: 1px solid #DCEBE5 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.96) !important;
+  color: #226451 !important;
+  font: 750 9px/1 Inter, system-ui, sans-serif !important;
+  letter-spacing: 0 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 4px rgba(15,35,28,.10) !important;
+}
+.skh-huru .skh-img > .skh-badge svg { flex: 0 0 auto !important; width: 9px !important; height: 9px !important; }
+.skh-huru .skh-img > .skh-disc-badge {
+  position: absolute !important;
+  inset: 8px 8px auto auto !important;
+  transform: none !important;
+  z-index: 13 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 19px !important;
+  padding: 0 7px !important;
+  border: 1px solid #EFE2B8 !important;
+  border-radius: 999px !important;
+  background: #FFFDF5 !important;
+  color: #80600C !important;
+  font: 800 9px/1 Inter, system-ui, sans-serif !important;
+  white-space: nowrap !important;
+}
+.skh-huru .skh-img:has(> .skh-badge--auction) > .skh-badge--category,
+.skh-huru .skh-img:has(> .skh-badge--drop) > .skh-badge--category,
+.skh-huru .skh-img:has(> .skh-badge--group) > .skh-badge--category,
+.skh-huru .skh-img:has(> .skh-badge--wholesale) > .skh-badge--category {
+  top: 31px !important;
+}
+.skh-huru .skh-img > .skh-verified-pill {
+  position: absolute !important;
+  inset: auto auto 8px 8px !important;
+  z-index: 13 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  max-width: calc(100% - 58px) !important;
+  height: 19px !important;
+  padding: 0 7px !important;
+  border: 1px solid #D6EBE2 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.97) !important;
+  color: #0F6E55 !important;
+  font: 750 9px/1 Inter, system-ui, sans-serif !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 4px rgba(16,40,34,.10) !important;
+}
+.skh-huru .skh-img > .skh-photo-count {
+  position: absolute !important;
+  inset: auto 8px 8px auto !important;
+  z-index: 13 !important;
+  height: 19px !important;
+  padding: 0 6px !important;
+  border: 1px solid #E2EAE7 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.96) !important;
+  color: #4A5A63 !important;
+  font: 750 9px/17px Inter, system-ui, sans-serif !important;
+}
+
+/* Compact 80/20 teaser: name+price, actual unit/condition/stock, then
+   location+rating. No seller, like, share or cart controls on the card face;
+   those actions remain on the product details page. */
+.skh-huru-body {
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  flex: 0 0 21% !important;
+  padding: 2px 8px 3px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) !important;
+  grid-template-rows: auto auto auto auto !important;
+  align-content: space-between !important;
+  justify-content: stretch !important;
+  gap: 1px !important;
+}
+.skh-huru-r1 {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.skh-huru-name {
+  min-width: 0 !important;
+  font-size: clamp(10.5px, 3.1cqw, 12.5px) !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.skh-huru-price-row {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  line-height: 1.1 !important;
+}
+.skh-huru-price {
+  display: block !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.1 !important;
+}
+.skh-huru-price .skh-price,
+.skh-huru-price .skh-amt {
+  display: inline !important;
+  font-size: clamp(10.5px, 3.3cqw, 13px) !important;
+  font-weight: 750 !important;
+  line-height: 1.1 !important;
+  color: #158666 !important;
+  white-space: nowrap !important;
+}
+.skh-huru-r2 {
+  display: block !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: clamp(8.5px, 2.7cqw, 10px) !important;
+  line-height: 1.15 !important;
+  color: #65766F !important;
+}
+.skh-huru-r2 i { margin: 0 3px !important; color: #A0ADA7 !important; }
+.skh-huru-r2 .skh-huru-stock { color: #0F6E57 !important; font-weight: 700 !important; }
+.skh-huru-r2 .skh-huru-stock.skh-huru-out { color: #AE342B !important; }
+.skh-huru-r3 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  line-height: 1 !important;
+}
+.skh-huru-r3 .skh-pinloc {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: #718079 !important;
+  font-size: clamp(8px, 2.6cqw, 9.5px) !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+}
+.skh-huru-r3 .skh-pinloc > span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.skh-huru-r3 .skh-pinloc svg { flex: 0 0 auto !important; width: 9px !important; height: 9px !important; }
+.skh-huru-r3 .skh-rating {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  color: #896412 !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+.skh-huru-r3 .skh-rating svg { width: 9px !important; height: 9px !important; }
+.skh-huru-r3 .skh-rating small,
+.skh-huru-r3 .skh-rating .skh-sold { display: none !important; }
+
+/* Fallback .skh-card product cards: rating stays in its own right-aligned row;
+   the full order/cart action is kept on Product Details, not the card front. */
+.feed-card-box.skh-card--product .skh-body > .skh-card-foot {
+  grid-column: 1 / -1 !important;
+  justify-self: end !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+.feed-card-box.skh-card--product .skh-card-foot .skh-rating {
+  display: inline-flex !important;
+  justify-content: flex-end !important;
+  margin-left: auto !important;
+}
+@media (max-width: 360px) {
+  .skh-huru-body { padding: 3px 6px 4px !important; }
+  .skh-huru-r1 { gap: 3px !important; }
+}

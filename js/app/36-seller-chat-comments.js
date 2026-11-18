@@ -345,8 +345,11 @@ import { skh } from './00-bootstrap.js';
     // Admin: weka kitufe kwenye dashboard ya admin (ikiwa ina container).
     const _oldLoadAdmin = window.loadAdminDashboard;
     window.loadAdminDashboard = async function () {
-        if (_oldLoadAdmin) await _oldLoadAdmin.apply(this, arguments);
+        const loading = _oldLoadAdmin ? _oldLoadAdmin.apply(this, arguments) : null;
+        const renderSeq = skh._dashboardRenderSeq;
+        if (loading) await loading;
         setTimeout(function () {
+            if (skh.currentMode !== 'admin' || skh._dashboardRenderSeq !== renderSeq) return;
             var ws = document.getElementById('richDashboardContainer') || document.getElementById('adminWorkspace') || document.querySelector('[id*="admin"]');
             if (!ws || document.getElementById('skhAdminModBtn')) return;
             var host = document.createElement('div');

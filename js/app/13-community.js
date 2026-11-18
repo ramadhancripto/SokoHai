@@ -73,6 +73,9 @@ window.loadAgentDashboard = async function() {
     // [FIX 2026-09] Kinga ya mbio (race guard): usichore dashboard ya wakala
     // ikiwa mtumiaji ameondoka kwenye agent mode wakati data bado inapakia.
     const expectedMode = skh.currentMode;
+    const expectedUid = skh.currentUser?.uid;
+    const renderSeq = skh._dashboardRenderSeq = (skh._dashboardRenderSeq || 0) + 1;
+    const isCurrentRender = () => skh._dashboardRenderSeq === renderSeq && skh.currentMode === expectedMode && skh.currentUser?.uid === expectedUid;
 
     container.innerHTML = `<div style="text-align:center; padding:50px;"><span style="font-size:24px; display:inline-block; animation:spin 1s linear infinite;"></span><p>${T('ag_loading_profile', 'Loading your profile and member list...')}</p></div>`;
 
@@ -85,7 +88,7 @@ if (!skh.currentUser) {
         const agentSnap = await skh.getDocs(agentQ);
 
         // Usiendelee kuchora kama mtumiaji amebadili mode wakati data inapakia.
-        if (skh.currentMode !== expectedMode) return;
+        if (!isCurrentRender()) return;
 
         if (agentSnap.empty) {
             // Kama sio wakala au hajalipia, onyesha form ya kujiunga
@@ -123,6 +126,7 @@ if (!skh.currentUser) {
             // Vuta wateja wote wa offline waliopo chini ya wakala huyu
             const offlineUsersQ = skh.query(skh.collection(skh.db, "users"), skh.where("managedByAgentUid", "==", skh.currentUser.uid));
             const offlineUsersSnap = await skh.getDocs(offlineUsersQ);
+            if (!isCurrentRender()) return;
 
             let normalClientsHtml = '';
             let businessClientsHtml = '';
@@ -166,6 +170,7 @@ if (!skh.currentUser) {
         container.innerHTML = `
             <div style="max-width: 400px; margin: 50px auto; text-align:center; padding:30px; background:white; border-radius:20px; border:1px solid #cbd5e1;"> <h3 style="color:var(--primary-dark); margin-top:10px;">${T('ag_unknown', 'Unknown Agency Status')}</h3> <p style="font-size:13px; color:#64748b; line-height:1.5;">${T('ag_unknown_hint', 'Your application status ({s}) is not recognized. Contact the admin for help.', { s: skh.skhEscape(status || 'N/A') })}</p> <button onclick="window.showForm('agentForm')" style="width:100%; padding:14px; background:var(--gold); color:var(--primary-dark); border:none; border-radius:12px; font-weight:900; font-size:13px; cursor:pointer; margin-top:14px;">${T('ag_resubmit', 'SUBMIT NEW APPLICATION')}</button> </div> `;
     } catch (e) {
+        if (!isCurrentRender()) return;
         console.error("Agent Dashboard Error:", e);
         container.innerHTML = `<p style="color:red; text-align:center; padding:30px;">${T('ag_net_error', 'Network error while loading the Dashboard.')} <button onclick="window.loadAgentDashboard()" style="padding:10px 15px; background:var(--primary-blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">${T('ag_retry', 'TRY AGAIN')}</button></p>`;
     }

@@ -60,12 +60,13 @@ console.log('\n[1] BIDHAA — CARD #1 (80/20)');
     ok('picha ndiyo kichwa cha kadi', c.children[0].classList.contains('skh-img'));
     ok('picha ni contain (darasa la huru)', c.children[0].classList.contains('skh-huru-ph'));
     ok('jina lipo (r1)', c.querySelector('.skh-huru-name').textContent.includes('Mchele Mbeya'));
-    ok('bei ni TSh 75,000 (r1)', c.querySelector('.skh-huru-price').textContent.replace(/\s/g, '').includes('75,000'));
+    ok('bei ni TSh 75,000 kwenye mstari wake unaosomeka', c.querySelector('.skh-huru-price').textContent.replace(/\s/g, '').includes('75,000') && !!c.querySelector('.skh-huru-price-row'));
     ok('Like HAIPO mbele ya kadi (#1 safi)', !c.querySelector('.card-eng-like'));
     ok('Save HAIPO mbele ya kadi (#1 safi)', !c.querySelector('.card-eng-save'));
     ok('Share HAIPO mbele ya kadi (#1 safi)', !c.querySelector('.skh-huru-share'));
-    ok('cart HAIPO mbele ya kadi (#1 safi kabisa)', !c.querySelector('.skh-huru-cart'));
-    ok('hakuna r3 — mwili ni r1+r2 pekee', !c.querySelector('.skh-huru-r3') && c.querySelector('.skh-huru-body').children.length === 2);
+    ok('Like haipo kwenye picha ya kadi', !c.querySelector('.skh-card-heart'));
+    ok('cart HAIPO mbele ya kadi (#1 safi kabisa)', !c.querySelector('.skh-huru-cart') && !c.querySelector('.skh-act--order'));
+    ok('r3 ya eneo/tathmini hutokea pale tu data inapopatikana', !!c.querySelector('.skh-huru-r3 .skh-pinloc') && !c.querySelector('.skh-huru-r3 .skh-rating'));
     ok('hakuna mstari wa muuzaji (#1)', !c.querySelector('.skh-seller-mini') && !c.textContent.includes('Mlimani Rice Store'));
     ok('verified pill kwenye picha', !!c.querySelector('.skh-img .skh-verified-pill'));
     ok('hakuna chips za ndani ya mwili', !c.querySelector('.skh-huru-body .skh-chip-row'));
@@ -75,6 +76,8 @@ console.log('\n[1] BIDHAA — CARD #1 (80/20)');
     ok('role/aria kwa ufikivu', c.getAttribute('role') === 'link' && c.getAttribute('tabindex') === '0');
     const u2 = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p8', baseUnit: 'Kg', condition: 'Mpya' }), 'products'));
     ok('r2 inaonyesha unit+hali halisi', u2.textContent.includes('Kg') && u2.textContent.includes('Mpya'));
+    const rated = render(skh.CommercePostCard(Object.assign({}, product, { rating: 4.8, reviewCount: 26 }), 'products'));
+    ok('tathmini huwekwa kulia kwenye mstari wa eneo, si kubana jina/bei', !!rated.querySelector('.skh-huru-r3 .skh-rating') && rated.querySelector('.skh-huru-r1 .skh-rating') === null);
 }
 
 console.log('\n[2] HUDUMA — bei "Kuanzia", mtoa + tathmini + eneo');
@@ -145,8 +148,8 @@ console.log('\n[5] USAWA WA FAMILIA (aina zote tatu)');
     {
         const c = render(skh.CommercePostCard(product, 'products')).querySelector('.skh-huru');
         const rows = [...c.querySelector('.skh-huru-body').children].map(x => x.className);
-        ok('products: r1 -> r2 pekee (#1)', rows.join(',') === 'skh-huru-r1,skh-huru-r2');
-        ok('products: r1 ina jina + bei', !!c.querySelector('.skh-huru-r1 .skh-huru-name') && !!c.querySelector('.skh-huru-r1 .skh-huru-price'));
+        ok('products: jina -> bei -> hali/units -> eneo/tathmini', rows.join(',') === 'skh-huru-r1,skh-huru-price-row,skh-huru-r2,skh-huru-r3');
+        ok('products: jina na bei ziko kwenye mistari tofauti ili visitieane', !!c.querySelector('.skh-huru-r1 .skh-huru-name') && !!c.querySelector('.skh-huru-price-row .skh-huru-price') && !c.querySelector('.skh-huru-r1 .skh-huru-price'));
     }
 }
 

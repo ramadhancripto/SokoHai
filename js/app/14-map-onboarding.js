@@ -988,6 +988,12 @@ window.saveShopSetup = async function() {
         // Hifadhi kwenye profile ya User Firebase
         await skh.updateDoc(skh.doc(skh.db, "users", skh.currentUser.uid), payload);
 
+        // updateDoc haisasisha currentUserData kwa uhakika kabla onSnapshot
+        // inayofuata. switchMode('seller') hapa chini hutegemea businessSetupComplete;
+        // bila kuoanisha cache, duka linaweza kuonekana halijasajiliwa na mtumiaji
+        // hurudishwa kwenye setup licha ya write kufanikiwa.
+        skh.currentUserData = Object.assign({}, skh.currentUserData || {}, payload);
+
         // Canonical Business + Store bridge. Legacy profile save above remains
         // compatible; this call is owner-authenticated and server-authoritative.
         let canonicalContext = null;

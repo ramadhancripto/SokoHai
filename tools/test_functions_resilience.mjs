@@ -141,6 +141,12 @@ console.log('\n[4] wrapCallable â€” mtiririko wa mafanikio na kushindwa');
     ok('bendela la kimataifa limewashwa', skh.functionsDown === true);
     delete behaviors.pesapalCheckout;
 
+    // Endpoint moja kukosa haizuii stock au huduma nyingine.
+    behaviors.inventoryAdjust = () => ({ data: { ok: true } });
+    const stockCall = await skh.wrapCallable('inventoryAdjust')({});
+    ok('kosa la endpoint moja halizuii inventoryAdjust', stockCall.data.ok === true);
+    delete behaviors.inventoryAdjust;
+
     // Kosa halali la kibisharau lisiweke bendela.
     skh.functionsDown = false;
     behaviors.deliveryAccept = () => { throw fnErr('functions/permission-denied', 'Hauruhusiwi.'); };
@@ -167,7 +173,7 @@ console.log('\n[5] CIRCUIT BREAKER â€” hakuna mtandao wakati wa cooldown, h
     ok('mwito wa pili unarudisha kosa la down mara moja', !!c2 && c2.fnDown === true && c2.code === 'functions/unavailable');
 
     // Cooldown ikipita, jaribu tena â€” ikifanikiwa kizingiti hufunguka.
-    skh.functionsDownSince = Date.now() - 31000;
+    skh._fnDownSinceByName.flakyFn = Date.now() - 31000;
     delete behaviors.flakyFn;
     let recoverCalls = 0;
     behaviors.flakyFn = () => { recoverCalls++; return { data: { ok: 1 } }; };

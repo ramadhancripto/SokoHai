@@ -14,7 +14,7 @@
      • Kabla ya kuongeza, sentinel inaonyesha spinner mdogo ("Inapakia…").
      • Hakuna vitufe vya "Onyesha zaidi" tena. Njia ya zamani (`skhFeedShowMore`)
        inabaki kama API kwa tests/compatibility — haionekani kwa mteja.
-     • Ikikosa zaidi (limit haiongezeki, au hakuna bidhaa), sentinel inaondolewa.
+     • Sentinel huondolewa baada ya kurasa za server na matokeo yaliyopakiwa kuisha.
      • Fallback: kivinjari kisicho na IntersectionObserver → scroll listener.
    ============================================================================ */
 import { skh } from './00-bootstrap.js';
@@ -51,12 +51,13 @@ import { skh } from './00-bootstrap.js';
     }
 
     function trigger() {
-        if (busy) return;
+        if (busy || (skh._tabFeed && skh._tabFeed.active && skh._tabFeed.loading)) return;
         var s = sentinel();
         if (!s) return;
         var before = Number(window.skh && skh.currentLimit) || 0;
+        var generation = skh._feedGen;
         var total = totalItems();
-        if (total && before >= total) { finish(); return; }   // hakuna zaidi
+        if (total && before >= total && !(skh._tabFeed && skh._tabFeed.active && skh._tabFeed.hasMore)) { finish(); return; }   // hakuna zaidi
 
         busy = true;
         markLoading(true);
@@ -70,6 +71,7 @@ import { skh } from './00-bootstrap.js';
         clearTimeout(safetyTimer);
         safetyTimer = setTimeout(function () {
             busy = false;
+            if (generation !== skh._feedGen) { arm(); return; }
             var after = Number(window.skh && skh.currentLimit) || 0;
             if (after <= before) { markLoading(false); finish(); return; }
             markLoading(false);

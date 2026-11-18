@@ -642,8 +642,11 @@ import { skh } from './00-bootstrap.js';
     // Kitufe ndani ya dashibodi ya admin iliyopo (bila kubadilisha muundo wake).
     var _prevLoadAdmin = window.loadAdminDashboard;
     window.loadAdminDashboard = async function () {
-        if (typeof _prevLoadAdmin === 'function') await _prevLoadAdmin.apply(this, arguments);
+        var loading = typeof _prevLoadAdmin === 'function' ? _prevLoadAdmin.apply(this, arguments) : null;
+        var renderSeq = skh._dashboardRenderSeq;
+        if (loading) await loading;
         setTimeout(function () {
+            if (skh.currentMode !== 'admin' || skh._dashboardRenderSeq !== renderSeq) return;
             var ws = document.getElementById('richDashboardContainer');
             if (!ws || document.getElementById('skhAdminCCBtn')) return;
             var host = document.createElement('div');

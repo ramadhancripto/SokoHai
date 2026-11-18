@@ -6,12 +6,13 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, startAfter, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
 import '../../shared/search-tokens.js'; // [SEARCH 2026-11-14] globalThis.SKHSearchTokens
 import { categoryFilterValues, categoryMatches, canonicalCategoryId, categoryInfo, buyerSubcategories, buyerProductCategories, legacySubcategoriesFor, categoryLabel } from '../../shared/category-filter-core.mjs';
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
+import { psRatingDisplay } from './39-showcase-logic.js';
 import { buildProductWrite, validateProduct, filterProducts, scoreProduct, productEligible, publicationStatus, availabilityStatus, normalizeVariants, normalizeConcreteVariantCombinations, normalizeTaxonomyMetadata, normalizeProductUploadData, resolveVariantImages, PRODUCT_SCHEMA_VERSION } from './39-product-core.js';
 
 const skh = {};
@@ -31,6 +32,7 @@ skh.validateProduct = validateProduct;
 skh.filterProducts = filterProducts;
 skh.scoreProduct = scoreProduct;
 skh.productEligible = productEligible;
+skh.psRatingDisplay = psRatingDisplay;
 skh.productPublicationStatus = publicationStatus;
 skh.productAvailabilityStatus = availabilityStatus;
 skh.normalizeProductVariants = normalizeVariants;
@@ -70,6 +72,7 @@ skh.arrayRemove = arrayRemove;
 skh.getDocs = getDocs;
 skh.getDoc = getDoc;
 skh.getCountFromServer = getCountFromServer;
+skh.startAfter = startAfter;
 skh.setDoc = setDoc;
 skh.deleteDoc = deleteDoc;
 skh.runTransaction = runTransaction;
@@ -294,6 +297,8 @@ skh.wrapCallable = function (name) {
     var FN_COOLDOWN_MS = 30000;
     var FN_MISSING_COOLDOWN_MS = 10 * 60 * 1000;
     skh._fnMissing = skh._fnMissing || {};
+    // A failure in one endpoint must not block unrelated operations (e.g. stock).
+    skh._fnDownSinceByName = skh._fnDownSinceByName || {};
     function syntheticDown() {
         var e = new Error('Cloud Functions hazipatikani kwa muda huu (server haijatumwa au mtandao umekatika).');
         e.code = 'functions/unavailable';
@@ -305,14 +310,15 @@ skh.wrapCallable = function (name) {
         if (missAt && (Date.now() - missAt) < FN_MISSING_COOLDOWN_MS) {
             return Promise.reject(syntheticDown());
         }
-        if (skh.functionsDown && skh.functionsDownSince
-            && (Date.now() - skh.functionsDownSince) < FN_COOLDOWN_MS) {
+        var downAt = skh._fnDownSinceByName[name];
+        if (downAt && (Date.now() - downAt) < FN_COOLDOWN_MS) {
             return Promise.reject(syntheticDown());
         }
         return Promise.resolve()
             .then(function () { return raw(data, opts); })
             .then(function (res) {
-                // Mwito umefanikiwa -> server imerudi; fungua kizingiti.
+                // Fungua kizingiti cha endpoint hii tu.
+                delete skh._fnDownSinceByName[name];
                 if (skh.functionsDown) {
                     skh.functionsDown = false;
                     skh.functionsDownSince = 0;
@@ -323,6 +329,7 @@ skh.wrapCallable = function (name) {
                 var normalized = normalizeFnCallError(name, e);
                 if (normalized.fnDown) {
                     skh.functionsDownSince = Date.now();
+                    skh._fnDownSinceByName[name] = skh.functionsDownSince;
                     // 404/not-found = haipo kabisa -> weka alama ya muda mrefu
                     var c = String((e && e.code) || '').toLowerCase();
                     var t = String((e && e.message) || '').toLowerCase();
@@ -1162,6 +1169,9 @@ skh.activeMarketMode = "all_modes";
 skh.MY_ADMIN_EMAIL = "rshabansaid@gmail.com";
 
 skh.applyModeUI = function applyModeUI() {
+    // Invalidate pending renders from the previous dashboard before switching.
+    skh._dashboardRenderSeq = (skh._dashboardRenderSeq || 0) + 1;
+    if (document.body) document.body.dataset.skhView = skh.currentMode === 'buyer' ? 'buyer' : 'dashboard';
     const buyerView = document.getElementById('buyerView'); 
     const dashView = document.getElementById('dashboardViews');
     
@@ -1992,7 +2002,7 @@ skh.loadMarketSearchSignals = function loadMarketSearchSignals() {
     }).catch(function () { return skh._marketSearchTerms; }).finally(function () { skh._marketSearchLoading = false; });
 };
 
-skh._catalogSearchAugment = async function (base, collectionToFetch, gen, feedGrid) {
+skh._catalogSearchAugment = async function (base, collectionToFetch, gen, feedGrid, paintVersion) {
     const ST = globalThis.SKHSearchTokens;
     const q = String(skh.searchQuery || '').trim();
     if (!ST || !q) return;
@@ -2014,7 +2024,7 @@ skh._catalogSearchAugment = async function (base, collectionToFetch, gen, feedGr
         } catch (e) { console.warn('[search] catalogue query', (e && e.code) || e); }
     }
     // ukurasa mwingine / swali jingine limeshaanza — usichore juu yake
-    if (!extra.length || gen !== skh._feedGen || String(skh.searchQuery || '').trim() !== q) return;
+    if (!extra.length || gen !== skh._feedGen || paintVersion !== skh._feedPaintVersion || String(skh.searchQuery || '').trim() !== q) return;
     skh._catalogSearchExtra = extra.length;
     skh.renderFeedUI((base || []).concat(extra), feedGrid);
 };
@@ -2049,13 +2059,25 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
        majibu ya ombi la zamani (Promise ya 'all' au listener ya collection nyingine)
        yalikuwa yanachora juu ya ukurasa mpya. Sasa ukurasa ulioonyeshwa ndio pekee
        unaochorwa; listener ya collection nyingine inazimwa. */
+    // A tab loads fixed-size cursor pages. Reuse the active session for scroll,
+    // but never let a pending response paint a different tab or filter.
+    const __tabKey = skh._feedCacheKey(collectionToFetch).replace(/\|lim\d+$/, '');
+    const __tab = skh._tabFeed;
+    if (collectionToFetch !== 'all' && __tab && __tab.key === __tabKey && __tab.active && skh.currentFeedCollection === collectionToFetch && skh.currentLimit > __tab.renderLimit) {
+        __tab.renderLimit = skh.currentLimit;
+        __tab.more();
+        return;
+    }
+    if (__tab) __tab.active = false;
+    skh._tabFeed = null;
     var __feedGen = skh._feedGen = (skh._feedGen || 0) + 1;
     /* [SEARCH 2026-11-14] Utafutaji wa katalogi NZIMA: kuchora kwanza kilichopo (haraka), kisha
        kuuliza Firestore kwa `searchTokens` (array-contains-any) na kuongeza matangazo ya zamani
        yanayolingana — si 20–100 za karibuni pekee. */
     const __paint = (arr) => {
+        const paintVersion = skh._feedPaintVersion = (skh._feedPaintVersion || 0) + 1;
         skh.renderFeedUI(arr, feedGrid);
-        try { skh._catalogSearchAugment(arr, collectionToFetch, __feedGen, feedGrid); } catch (eS) {}
+        try { skh._catalogSearchAugment(arr, collectionToFetch, __feedGen, feedGrid, paintVersion); } catch (eS) {}
     };
     try {
         var __shownKey = skh._feedCacheKey(collectionToFetch);
@@ -2068,7 +2090,7 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     try {
         var __earlyKey = skh._feedCacheKey(collectionToFetch);
         var __early = skh._feedCacheGet(__earlyKey);
-        if (__early && __early.length) {
+        if (collectionToFetch === 'all' && __early && __early.length) {
             skh.cachedItems = __early;
             __paint(__early);
             return;
@@ -2081,8 +2103,8 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     
     if(window.unsubscribeFeed) window.unsubscribeFeed();
 
-    // Msaidizi: panga items kwa createdAt (mpya kwanza). Kwenye sort ya browser,
-    // bidhaa zisizo na createdAt zinawekwa mwisho — hazifichwi kabisa.
+    // Msaidizi: panga matokeo yaliyopatikana kwa createdAt (mpya kwanza).
+    // Firestore orderBy hairejeshi rekodi zisizo na createdAt.
     const tsOf = (v) => {
         if (!v) return 0;
         if (typeof v.toMillis === 'function') return v.toMillis();
@@ -2142,11 +2164,6 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
     // [PERF 2026-09] Cache: rudi kwenye data iliyopo bila kupakua tena.
     const cacheKey = skh._feedCacheKey(collectionToFetch);
     const cached = skh._feedCacheGet(cacheKey);
-    if (cached) {
-        skh.cachedItems = cached;
-        __paint(cached);
-        return;
-    }
 
 let qNormal;
     const currentActiveMode = skh.activeMarketMode; 
@@ -2154,10 +2171,8 @@ let qNormal;
     // [FIX 2026-09: VICHUJIO VYA TAB VILIVOVUNJIKA]
     // 1) "saleMode" ni ya BIDHAA pekee — huduma/usafiri hawana sehemu hiyo, hivyo
     //    kichujio hicho kilikuwa kinafuta orodha nzima ya Huduma/Usafirishaji.
-    // 2) Hakuna orderBy wala limit kwenye matawi yenye `where` — tunachukua matokeo
-    //    yote ya kichujio na kupanga kwenye browser. Hii inaepuka hitaji la composite
-    //    indexes (ambazo hazipo kwenye services/drivers) NA inaondoa tatizo la
-    // "limit(20) bila mpangilio" lililokuwa linapoteza bidhaa mpya zilizopakiwa.
+    // 2) orderBy + vichujio hutumia index zilizopo; kila ukurasa una limit ya 20
+    //    na cursor ili rekodi za zamani zifikiwe bila kuvuta collection nzima.
     const isModeFilter = (currentActiveMode && currentActiveMode !== "all_modes" && collectionToFetch === 'products');
     const isCategoryFilter = (!isModeFilter && skh.activeCategory && skh.activeCategory !== "Zote" && skh.activeCategory !== "");
 
@@ -2168,8 +2183,7 @@ let qNormal;
         // watumiaji wengi). Index tayari ipo (products saleMode+createdAt DESC).
         qNormal = skh.query(skh.collection(skh.db, collectionToFetch), 
                   skh.where("saleMode", "==", currentActiveMode),
-                  skh.orderBy("createdAt", "desc"),
-                  skh.limit(skh.currentLimit));
+                  skh.orderBy("createdAt", "desc"));
     } 
     else if (collectionToFetch === 'drivers') {
         // USAFIRI: haina `category` wala `saleMode` — "kategoria" yake ni aina ya
@@ -2179,12 +2193,10 @@ let qNormal;
             // [LIVE-FIX 2026-09] orderBy+limit (index: drivers supportedServices+createdAt DESC).
             qNormal = skh.query(skh.collection(skh.db, collectionToFetch),
                       skh.where("supportedServices", "array-contains", skh.activeDeliverySection),
-                      skh.orderBy("createdAt", "desc"),
-                      skh.limit(skh.currentLimit));
+                      skh.orderBy("createdAt", "desc"));
         } else {
             qNormal = skh.query(skh.collection(skh.db, collectionToFetch), 
-                      skh.orderBy("createdAt", "desc"),
-                      skh.limit(skh.currentLimit));
+                      skh.orderBy("createdAt", "desc"));
         }
     }
     else if (isCategoryFilter) {
@@ -2195,29 +2207,60 @@ let qNormal;
         const _cv = (collectionToFetch === 'products') ? categoryFilterValues(skh.activeCategory).values : [skh.activeCategory];
         qNormal = skh.query(skh.collection(skh.db, collectionToFetch), 
                   _cv.length > 1 ? skh.where("category", "in", _cv) : skh.where("category", "==", skh.activeCategory),
-                  skh.orderBy("createdAt", "desc"),
-                  skh.limit(skh.currentLimit));
+                  skh.orderBy("createdAt", "desc"));
     } 
     else {
         // 3. Kama hajaweka filter yoyote, onyesha MPYA kwanza — orderBy createdAt
         //    ni index ya msingi ambayo Firestore inajitengenezea yenyewe.
         qNormal = skh.query(skh.collection(skh.db, collectionToFetch), 
-                  skh.orderBy("createdAt", "desc"),
-                  skh.limit(skh.currentLimit));
+                  skh.orderBy("createdAt", "desc"));
     }
 
+    // The first page remains live; later pages are fetched once via cursor.
+    // A first-page update resets the cursor chain, so deletes/moves cannot
+    // silently create gaps. Each read is at most 20 documents.
+    const state = skh._tabFeed = { key: __tabKey, active: true, renderLimit: skh.currentLimit,
+        docs: [], cursor: null, hasMore: false, loading: false, version: 0, error: false };
+    const active = () => state.active && skh._tabFeed === state && __feedGen === skh._feedGen && skh.currentFeedCollection === collectionToFetch;
+    const paint = () => {
+        if (!active()) return;
+        let rows = state.docs.map(doc => ({ id: doc.id, collectionName: collectionToFetch, ...doc.data() }));
+        if (collectionToFetch === 'products') rows = rows.filter(skh.productEligible);
+        __paint(sortByCreated(rows));
+    };
+    state.more = async () => {
+        if (!active() || state.loading) return;
+        if (!state.hasMore) { paint(); return; }
+        state.loading = true; state.error = false;
+        const version = state.version, cursor = state.cursor;
+        try {
+            const snapshot = await skh.getDocs(skh.query(qNormal, skh.startAfter(cursor), skh.limit(20)));
+            if (!active() || version !== state.version) return;
+            const docs = snapshot.docs;
+            state.docs = state.docs.concat(docs);
+            if (docs.length) state.cursor = docs[docs.length - 1];
+            state.hasMore = docs.length === 20;
+            paint();
+        } catch (err) {
+            if (!active() || version !== state.version) return;
+            state.error = true;
+            console.warn('[loadMainFeed] ukurasa zaidi umeshindikana:', err);
+            paint();
+        } finally {
+            if (version === state.version) state.loading = false;
+        }
+    };
     skh._feedKey = cacheKey;
-    window.unsubscribeFeed = skh.onSnapshot(qNormal, (snapshot) => {
-        let normalData = snapshot.docs.map(doc => ({ id: doc.id, collectionName: collectionToFetch, ...doc.data() }));
-        // Panga mpya kwanza, kisha kata kwa currentLimit (kwa matawi ya `where`
-        // ambapo hatukupunguza idadi kwenye server).
-        if (collectionToFetch === 'products') normalData = normalData.filter(skh.productEligible);
-        normalData = sortByCreated(normalData).slice(0, skh.currentLimit);
-        skh._feedCacheSet(cacheKey, normalData);
-        if (skh._feedShownKey !== cacheKey) return; // [NAV] ukurasa mwingine unaonyeshwa sasa
-        __paint(normalData);
+    window.unsubscribeFeed = skh.onSnapshot(skh.query(qNormal, skh.limit(20)), (snapshot) => {
+        if (!active()) return;
+        state.version++; state.loading = false; state.error = false;
+        state.docs = snapshot.docs.slice();
+        state.cursor = state.docs.length ? state.docs[state.docs.length - 1] : null;
+        state.hasMore = state.docs.length === 20;
+        paint();
     }, (err) => {
-        if (skh._feedShownKey !== cacheKey) return;
+        if (!active()) return;
+        state.hasMore = false;
         showFeedError((err && err.message) ? err.message : 'Angalia muunganisho wa mtandao.');
     });
 }
@@ -2322,16 +2365,17 @@ skh.sellerTrustChips = function sellerTrustChips(card) {
 // spec: ⭐rating (+ idadi ya comment) · Imeuzwa X. Taarifa zote ni za DB tu.
 skh.cardRating = function cardRating(data) {
     const bits = [];
-    const r = parseFloat(data.rating);
-    if (Number.isFinite(r) && r > 0) {
-        const count = data.reviewCount || data.totalReviews || data.ratingCount || 0;
+    const summary = skh.psRatingDisplay ? skh.psRatingDisplay(data) : { avg: Number(data.rating), count: Number(data.reviewCount || data.totalReviews || data.ratingCount) || 0 };
+    const r = summary && summary.avg;
+    if (Number.isFinite(r) && r >= 1 && r <= 5) {
+        const count = summary.count;
         bits.push(`${skh.cardIcon('star', 11)}<b>${r.toFixed(1)}</b>${count ? '<small>(' + Number(count).toLocaleString() + ')</small>' : ''}`);
     }
     const sold = Number(data.soldCount || data.sold || data.salesCount || 0);
     if (Number.isFinite(sold) && sold > 0) {
         bits.push('<small class="skh-sold">Imeuzwa ' + sold.toLocaleString() + '</small>');
     }
-    if (!bits.length) return '';
+    if (!summary || !Number.isFinite(r) || r < 1 || r > 5) bits.unshift('<span class="skh-unrated">Bado tathmini</span>');
     return `<span class="skh-rating">${bits.join('')}</span>`;
 };
 
@@ -2446,17 +2490,44 @@ skh.cardTypeBadge = function cardTypeBadge(colName) {
 };
 
 // [CategoryBadge] Badge ya kijani juu-kushoto mwa picha — anaisimia kategori (mf. Kilimo, IT & Tech, Taxi)
-skh.cardCategoryBadge = function cardCategoryBadge(data) {
+skh.cardCategoryBadge = function cardCategoryBadge(data, colName) {
     const cat = data && (data.category || data.subCategory || '');
     if (!cat) return '';
-    return '<span class="skh-badge skh-badge--category"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' + skh.skhEscape(cat) + '</span>';
+    const trustKind = skh.listingTrust(data, colName || 'products');
+    const trustMark = trustKind
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
+        : '';
+    const trustTitle = trustKind ? ' title="' + skh.skhEscape(skh.TRUST_LABELS[trustKind] || 'Imethibitishwa') + '"' : '';
+    return '<span class="skh-badge skh-badge--category"' + trustTitle + '>' + trustMark + skh.skhEscape(cat) + '</span>';
+};
+
+// Aina ya gari iliyochapishwa na msafirishaji, si lebo ya kubuni.
+skh.cardTransportBadge = function cardTransportBadge(data) {
+    const kind = data && (data.vehicleType || data.vehicle || data.category || data.subCategory || '');
+    if (!kind) return skh.cardTypeBadge('drivers');
+    const verified = skh.listingTrust(data, 'drivers');
+    const mark = verified
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
+        : '';
+    const title = verified ? ' title="' + skh.skhEscape(skh.TRUST_LABELS[verified] || 'Imethibitishwa') + '"' : '';
+    return '<span class="skh-badge skh-badge--transport"' + title + '>' + mark + skh.skhEscape(kind) + '</span>';
 };
 
 // [HeartIcon] Ikoni ya moya juu-kulia mwa picha — kuwega/ kuondoa like
-skh.cardHeartIcon = function cardHeartIcon(data) {
+skh.cardHeartIcon = function cardHeartIcon(data, colName) {
     if (!data || !data.id) return '';
     const id = skh.skhJsEsc(data.id);
-    return '<span class="skh-card-heart" onclick="event.stopPropagation(); window.skhCardToggle(\'like\',\'' + id + '\')" title="Penda" aria-label="Penda" role="button" tabindex="0">' + skh.cardIcon('heart', 14) + '</span>';
+    const collectionName = colName || data.collectionName || data._collection || 'products';
+    // Register exact collection before the heart is used, avoiding the legacy products fallback.
+    if (window.skhCardIndex) window.skhCardIndex[data.id] = {
+        id: data.id, collectionName, title: data.title || data.name || '',
+        image: data.image || data.photo || '', price: data.price || 0,
+        userId: data.userId || data.sellerId || '', ownerName: data.ownerName || data.driverName || data.fullName || data.storeName || ''
+    };
+    const key = collectionName + '__' + data.id;
+    const liked = !!((((window.skhEngagementState || {}).liked || {})[key]));
+    const on = liked ? ' skh-eng-on' : '';
+    return `<button type="button" id="cardLike_${id}" class="skh-card-heart${on}" onclick="event.stopPropagation(); window.skhCardToggle(&quot;like&quot;,&quot;${id}&quot;)" title="Penda" aria-label="Penda" aria-pressed="${liked ? 'true' : 'false'}">${skh.cardIcon('heart', 14)}</button>`;
 };
 
 // ============================================================
@@ -2767,7 +2838,8 @@ skh.cardActions = function cardActions(data, colName) {
     };
     const chat = uid ? mk('chat', 'skh-act--chat', 'chat', 'card_action_chat', 'Chat') : '';
     return '<div class="skh-card-actions" role="group" aria-label="' + skhTF('card_actions_label', 'Vitendo vya bidhaa') + '">'
-        + mk('order', 'skh-act--order', 'cart', 'card_action_order', 'Weka Oda')
+        // Kadi yenyewe ni kiungo cha maelezo; oda huanzishwa kutoka Product Details.
+        // Hii huzuia kikapu kuonekana kama kitufe kwenye uso wa kadi.
         + mk('nego', 'skh-act--nego', 'scales', 'card_action_nego', 'Patana Bei')
         + chat
         + mk('share', 'skh-act--share', 'share', 'card_action_share', 'Shiriki')
@@ -2807,7 +2879,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
         skh.cardCategoryBadge(data),
         skh.cardVerifiedPill(data, 'products'),
         skh.cardOutPill(data, 'products'),
-        skh.cardHeartIcon(data)
+        skh.cardHeartIcon(data, col)
     ].join('');
     // [PHASE 0] "Imeisha" inaonyeshwa MARA MOJA tu — pill juu ya picha
     // (cardOutPill). Chip ya meta haijirudii; nafasi yake inabaki kwa eneo.
@@ -2815,14 +2887,15 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
     const stockChip = isSoldOut ? '' : skh.cardStockChip(data);
     // [R16 D7 — uamuzi wa mmiliki] Jina la muuzaji / tathmini HAVIONEKANI mbele ya kadi ya bidhaa
     // (sawa na SokoHuruCard #1). Taarifa za muuzaji ziko kwenye ukurasa wa bidhaa (openProduct).
-    const foot = '';
-    // DOM: jina -> bei -> meta -> vitendo.
+    const cardRating = skh.cardRating(data);
+    const foot = cardRating ? '<div class="skh-card-foot">' + cardRating + '</div>' : '';
+    // DOM: jina -> bei -> rating (right-aligned) -> meta -> vitendo.
     // (Contract tools/test_commerce_cards.mjs inalinda mpangilio huu.)
     return `<div class="feed-card-box skh-card skh-card--product" ${skh.cardOpenAttrs(data.id, 'products', data.title)}>
         ${skh.cardImage(data, overlays, skh.cardImageClass(data, 'products'))}
         <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title || data.name) || skhTF('card_product_def', 'Bidhaa'))}</h3>
             ${skh.cardPriceHtml(data, 'products')}
-            ${skh.cardRating(data) ? '<span class="skh-rating">' + skh.cardRating(data) + '</span>' : ''}
+            ${cardRating}
             ${foot}
             <div class="skh-meta-row">${stockChip}${skh.cardPinLocation(data, 'products')}${skh.cardOpenChevron()}</div>
             ${skh.cardActions(data, 'products')}
@@ -2839,17 +2912,20 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
    Handler: openProduct (kadi nzima). */
 skh.SokoHuruCard = function SokoHuruCard(data, colName) {
     const col = colName || 'products';
+    const categoryBadge = skh.cardCategoryBadge(data, col);
     const overlays = [
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
         skh.cardDiscountBadge(data),
-        skh.cardCategoryBadge(data),
-        skh.cardVerifiedPill(data, col),
+        categoryBadge,
+        categoryBadge ? '' : skh.cardVerifiedPill(data, col),
         skh.cardOutPill(data, col),
-        skh.cardHeartIcon(data)
+        skh.cardHeartIcon(data, col)
     ].join('');
     const name = skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title || data.name) || skhTF('card_product_def', 'Bidhaa'));
     const price = skh.cardPriceHtml(data, col);
+    const location = skh.cardPinLocation(data, col);
+    const rating = skh.cardRating(data);
     const bits = [];
     const unitRaw = (data && data.baseUnit ? String(data.baseUnit).trim() : '');
     if (unitRaw) bits.push('<span>' + skh.skhEscape(unitRaw) + '</span>');
@@ -2859,49 +2935,71 @@ skh.SokoHuruCard = function SokoHuruCard(data, colName) {
     if (Number.isFinite(stock)) bits.push(stock > 0
         ? '<span class="skh-huru-stock">' + skhTF('card_in_stock', 'Inapatikana') + '</span>'
         : '<span class="skh-huru-stock skh-huru-out">' + skhTF('card_out', 'Zimeisha') + '</span>');
+    const priceRow = '<div class="skh-huru-price-row"><span class="skh-huru-price">' + price + '</span>' + rating + '</div>';
     const row2 = '<div class="skh-huru-r2">' + bits.join('<i>·</i>') + '</div>';
     return `<div class="skh-huru" ${skh.cardOpenAttrs(data.id, col, data.title)}>
         ${skh.cardImage(data, overlays, ' skh-huru-ph' + skh.cardImageClass(data, col))}
         <div class="skh-huru-body">
-            <div class="skh-huru-r1"><h3 class="skh-huru-name">${name}</h3><span class="skh-huru-price">${price}</span>${skh.cardRating(data) ? '<span class="skh-rating">' + skh.cardRating(data) + '</span>' : ''}</div>
+            <div class="skh-huru-r1"><h3 class="skh-huru-name">${name}</h3></div>
+            ${priceRow}
             ${row2}
+            ${location ? '<div class="skh-huru-r3">' + location + '</div>' : ''}
         </div></div>`;
 };
 
-// [ServicePostCard] TEASER: picha -> jina -> bei (Kuanzia) -> mtoa   -> eneo.
+// [ServicePostCard] Muundo wa feed wa pamoja: picha/tag/heart -> jina -> bei+tathmini -> eneo.
 skh.ServicePostCard = function ServicePostCard(data, colName) {
+    const category = skh.cardCategoryBadge(data, 'services');
+    const trusted = !!skh.listingTrust(data, 'services');
+    const tag = category || skh.cardTypeBadge('services');
     const overlays = [
         skh.activeBoostBadge(data),
-        skh.cardTypeBadge('services') ? '<div class="skh-overlay-chip skh-overlay-chip--service">' + skh.cardTypeBadge('services') + '</div>' : '',
         skh.cardModeBadge(data),
-        skh.cardVerifiedPill(data, 'services')
+        tag,
+        !category && trusted ? skh.cardVerifiedPill(data, 'services') : '',
+        skh.cardHeartIcon(data, 'services')
     ].join('');
-    return `<div class="feed-card-box skh-card skh-card--service" ${skh.cardOpenAttrs(data.id, 'services', data.title)}>
+    const title = ((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_service_def', 'Huduma');
+    const rating = skh.cardRating(data);
+    const location = skh.cardPinLocation(data, 'services');
+    return `<div class="feed-card-box skh-card skh-card--service" ${skh.cardOpenAttrs(data.id, 'services', title)}>
         ${skh.cardImage(data, overlays)}
-        <div class="feed-info-box skh-body"> <h3 class="skh-title">${skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_service_def', 'Huduma'))}</h3>
-            ${skh.cardPriceHtml(data, 'services')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'wrench', 'services')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'services')}</div> </div> </div>`;
+        <div class="feed-info-box skh-body skh-market-card-body">
+            <h3 class="skh-title">${skh.skhEscape(title)}</h3>
+            <div class="skh-market-price-rating"><span class="skh-market-card-price">${skh.cardPriceHtml(data, 'services')}</span>${rating}</div>
+            ${location ? '<div class="skh-market-card-meta">' + location + '</div>' : ''}
+        </div>
+    </div>`;
 };
 
-// [TransportPostCard] TEASER: picha (njia juu yake) -> jina/aina -> bei
-// (Kuanzia) -> msafirishaji   -> eneo la mwanzo.
+// [TransportPostCard] Tag ya chombo/uhakiki kwenye picha; njia, bei na rating kwenye details.
 skh.TransportPostCard = function TransportPostCard(data, colName) {
-    const hasRoute = !!(data.pickupRegion || data.destinationRegion);
+    const kindTag = skh.cardTransportBadge(data);
+    const trusted = !!skh.listingTrust(data, 'drivers');
+    const hasKind = !!(data.vehicleType || data.vehicle || data.category || data.subCategory);
     const overlays = [
         skh.activeBoostBadge(data),
-        hasRoute ? skh.cardRouteOverlay(data) : skh.cardVerifiedPill(data, 'drivers'),
-        skh.cardOutPill(data, colName)
+        skh.cardModeBadge(data),
+        kindTag,
+        !hasKind && trusted ? skh.cardVerifiedPill(data, 'drivers') : '',
+        skh.cardHeartIcon(data, 'drivers')
     ].join('');
-    const arrowIco = skh.cardIcon('arrow-right', 12);
-    const _locTitle = (window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title;
-    const title = skh.skhEscape(_locTitle || (hasRoute ? ((data.pickupRegion || '') + ' ' + (data.destinationRegion || '')) : skhTF('card_transport_def', 'Usafiri')));
-    const vehicle = data.vehicleType ? `<div class="skh-card-sub">${skh.cardIcon('truck', 11)} ${skh.skhEscape(data.vehicleType)}</div>` : '';
-    return `<div class="feed-card-box skh-card skh-card--transport" ${skh.cardOpenAttrs(data.id, 'drivers', _locTitle || skhTF('card_transport_def', 'Usafiri'))}>
+    const routeFrom = data.pickupRegion || data.location || data.region || '';
+    const routeTo = data.destinationRegion || '';
+    const routeText = [routeFrom, routeTo].filter(Boolean).join(' → ');
+    const route = routeText
+        ? '<span class="skh-pinloc">' + skh.cardIcon('map', 10) + '<span>' + skh.skhEscape(routeText) + '</span></span>'
+        : skh.cardPinLocation(data, 'drivers');
+    const title = ((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title || routeText) || skhTF('card_transport_def', 'Usafiri');
+    const rating = skh.cardRating(data);
+    return `<div class="feed-card-box skh-card skh-card--transport" ${skh.cardOpenAttrs(data.id, 'drivers', title)}>
         ${skh.cardImage(data, overlays)}
-        <div class="feed-info-box skh-body"> <h3 class="skh-title">${hasRoute && !data.title ? skh.skhEscape(data.pickupRegion || '') + '<span class="skh-title-arrow" aria-label="hadi">' + arrowIco + '</span>' + skh.skhEscape(data.destinationRegion || '') : title}</h3>
-            ${vehicle}
-            ${skh.cardPriceHtml(data, 'drivers')}
-            <div class="skh-seller-row">${skh.cardSellerMini(data, 'truck', 'drivers')}${skh.cardRating(data)}</div> <div class="skh-meta-row">${skh.cardPinLocation(data, 'drivers')}</div> </div> </div>`;
+        <div class="feed-info-box skh-body skh-market-card-body">
+            <h3 class="skh-title">${skh.skhEscape(title)}</h3>
+            <div class="skh-market-price-rating"><span class="skh-market-card-price">${skh.cardPriceHtml(data, 'drivers')}</span>${rating}</div>
+            ${route ? '<div class="skh-market-card-meta">' + route + '</div>' : ''}
+        </div>
+    </div>`;
 };
 
 // [CommercePostCard] Kichaguzi cha aina ya kadi
@@ -2974,6 +3072,100 @@ skh.renderMarketplaceSections = function renderMarketplaceSections(items) {
         allEmptyNote.hidden = true;
     }
     return sections;
+};
+
+// Continuous shortest-lane placement on the existing feed and its existing cards.
+// DOM order is never changed, so links, keyboard order, ads and lazy loading keep
+// their original handlers. Images without known dimensions reserve a temporary
+// square until their intrinsic dimensions arrive; the image itself is never cropped.
+skh.setupAdaptiveFeed = function setupAdaptiveFeed(feed) {
+    if (!feed || typeof ResizeObserver === 'undefined' || typeof MutationObserver === 'undefined') return;
+    if (feed.__skhAdaptiveRefresh) { feed.__skhAdaptiveRefresh(); return; }
+    const tracked = new Set();
+    let pending = false;
+    const resize = new ResizeObserver(schedule);
+    function setVar(el, key, value) {
+        if (el.style.getPropertyValue(key) !== value) el.style.setProperty(key, value);
+    }
+    function isFullWidth(child) {
+        return child.matches('.skh-empty, .skh-route-cta, .skh-lazy, [data-skh-lazy]') ||
+            /1\s*\/\s*-1/.test(child.style.gridColumn || '');
+    }
+    function imageState(img) {
+        if (!img || img.tagName !== 'IMG') return;
+        // No hard-coded dimensions once the browser knows the real ratio.
+        img.classList.toggle('skh-waterfall-image-pending', !!img.getAttribute('src') && !img.complete);
+    }
+    function layout() {
+        pending = false;
+        const width = feed.clientWidth;
+        if (!width) return; // hidden tab: retry when its observed size changes
+        const style = getComputedStyle(feed);
+        const gap = parseFloat(style.columnGap) || 0;
+        const vGap = parseFloat(style.rowGap) || 0;
+        const screen = window.innerWidth;
+        const columns = screen <= 600 ? (width < 240 ? 1 : 2) :
+            Math.max(1, Math.floor((width + gap) / ((screen < 1100 ? 196 : 244) + gap)));
+        const laneWidth = (width - gap * (columns - 1)) / columns;
+        const children = Array.from(feed.children);
+        // Width is set before measurement; cached/loaded images then establish
+        // the card's real natural height. Full-width banners separate sections.
+        children.forEach(function (child) {
+            setVar(child, '--wf-width', (isFullWidth(child) ? width : laneWidth) + 'px');
+        });
+        // Read all heights together before writing positions (avoid one forced
+        // layout per item); hidden ad cells do not consume a lane or a gap.
+        const measurements = children.map(function (child) {
+            return { child: child, height: getComputedStyle(child).display === 'none' ? 0 : child.offsetHeight };
+        });
+        const lanes = Array(columns).fill(0);
+        const rtl = style.direction === 'rtl';
+        measurements.forEach(function (item) {
+            const child = item.child, height = item.height;
+            if (!height) return;
+            let x = 0, y = 0;
+            if (isFullWidth(child)) {
+                y = Math.max.apply(null, lanes);
+                lanes.fill(y + height + vGap);
+            } else {
+                let lane = 0;
+                for (let i = 1; i < columns; i++) if (lanes[i] < lanes[lane]) lane = i;
+                y = lanes[lane];
+                x = (rtl ? columns - 1 - lane : lane) * (laneWidth + gap);
+                lanes[lane] = y + height + vGap;
+            }
+            setVar(child, '--wf-x', x + 'px');
+            setVar(child, '--wf-y', y + 'px');
+        });
+        setVar(feed, '--wf-height', Math.max(0, Math.max.apply(null, lanes) - vGap) + 'px');
+    }
+    function schedule() {
+        if (!pending) { pending = true; requestAnimationFrame(layout); }
+    }
+    function refresh() {
+        const children = new Set(Array.from(feed.children));
+        tracked.forEach(function (child) {
+            if (!children.has(child)) { resize.unobserve(child); tracked.delete(child); }
+        });
+        children.forEach(function (child) {
+            if (!tracked.has(child)) { tracked.add(child); resize.observe(child); }
+            child.querySelectorAll('img').forEach(imageState);
+        });
+        // Position synchronously before the lazy-feed observer can see its
+        // sentinel at the origin after the existing renderer replaces children.
+        layout();
+    }
+    feed.addEventListener('load', function (event) { imageState(event.target); schedule(); }, true);
+    feed.addEventListener('error', function (event) { imageState(event.target); schedule(); }, true);
+    feed.classList.add('skh-waterfall');
+    resize.observe(feed);
+    new MutationObserver(function (records) {
+        if (records.some(function (record) { return record.type === 'childList' && record.target === feed; })) refresh();
+        records.forEach(function (record) { if (record.type === 'attributes') imageState(record.target); });
+        schedule();
+    }).observe(feed, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+    feed.__skhAdaptiveRefresh = refresh;
+    refresh();
 };
 
 skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
@@ -3117,9 +3309,12 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
     const matcherBanner = (skh.currentFeedCollection === 'drivers')
         ? `<div class="skh-route-cta" style="grid-column: 1/-1;"> <span class="skh-route-cta-ic">${skh.cardIcon('filter', 22)}</span> <div class="skh-route-cta-txt"> <b>Unatafuta chombo cha kusafirisha?</b> <span>Weka njia yako (kutoka -> kwenda) na vigezo vya mzigo/abiria — utaona magari yanayopitia route hiyo.</span> </div> <button type="button" class="skh-route-cta-btn" onclick="if(window.openRideRequestModal){window.openRideRequestModal();}">${skh.cardIcon('search', 15)} <span>Tafuta gari kwa njia</span></button> </div>` : '';
 
-    if (filteredData.length === 0) {
+    const __hasServerMore = !!(skh._tabFeed && skh._tabFeed.active && skh._tabFeed.hasMore);
+    const __pageError = !!(skh._tabFeed && skh._tabFeed.active && skh._tabFeed.error);
+    if (filteredData.length === 0 && !__hasServerMore && !__pageError) {
         feedGrid.innerHTML = matcherBanner + `
             <div class="skh-empty" style="grid-column: 1/-1;"> <span class="skh-empty-icon">${skh.cardIcon('search', 30)}</span> <b>Hatujapata matokeo</b> <p>${skh.currentFeedCollection === 'drivers' ? 'Jaribu neno lingine au badilisha kategoria — au tafuta gari kwa njia yako.' : (skh.currentFeedCollection === 'services' ? 'Jaribu neno lingine au chagua sehemu nyingine ya huduma.' : 'Jaribu neno lingine au badilisha kategoria.')}</p> <button class="skh-empty-btn" onclick="resetAppState(); loadMainFeed('all');">Onyesha Vyote</button> </div>`;
+        skh.setupAdaptiveFeed(feedGrid);
         return;
     }
 
@@ -3140,7 +3335,9 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             console.warn('[renderFeedUI] kadi imerukwa (data mbovu):', cardErr && cardErr.message);
         }
     });
-    if (__total > __visible.length) {
+    if (__pageError) {
+        html += `<div class="skh-empty skh-empty--error" style="grid-column:1/-1;"><b>Imeshindikana kupakia zaidi</b> <button class="skh-empty-btn" type="button" onclick="window.skhRetryFeedPage()">Jaribu tena</button></div>`;
+    } else if (__total > __visible.length || __hasServerMore) {
         /* [LAZY 2026-11-04] Kitufe cha "Onyesha zaidi" KIMEONDOLEWA.
            Badala yake sentinel isiyoonekana: js/app/60-lazy-feed.js huipima kwa
            IntersectionObserver (900px kabla ya mwisho) na kuongeza bidhaa
@@ -3151,17 +3348,19 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             + `<small>Inapakia bidhaa zaidi…</small></div>`;
     }
     feedGrid.innerHTML = html;
+    skh.setupAdaptiveFeed(feedGrid);
 
     // [§12-§13 R8] HYDRATE hesabu HALISI za wafuasi (fire-and-forget —
     // haitazuia render: kadi zinaonekana mara moja, counts zinaingia baadaye).
     try { skh.hydrateFollowerCounts(feedGrid).catch(function () {}); } catch (e) {}
 }
 
-/* [PERF 2026-09-21] "Onyesha zaidi": ongeza kikomo kisha pakia — Home
-   huchora kutoka cache (bila network), tabs huvuta ukurasa mpana zaidi
-   (cache key inajumuisha limit). Scroll position inabaki. */
+/* Ongeza kikomo cha render; Home hutumia cache, tabs husoma ukurasa unaofuata
+   wa rekodi 20 kupitia cursor. Scroll position inabaki. */
+window.skhRetryFeedPage = function () { if (skh._tabFeed && skh._tabFeed.active) skh._tabFeed.more(); };
 window.skhFeedShowMore = function () {
     try {
+        if (skh._tabFeed && skh._tabFeed.active && skh._tabFeed.loading) return;
         skh.currentLimit = (skh.currentLimit || 20) + 20;
         skh.loadMainFeed(skh.currentFeedCollection || 'all');
     } catch (e) {}

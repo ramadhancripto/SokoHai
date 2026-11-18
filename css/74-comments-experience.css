@@ -1,0 +1,75 @@
+/* SokoHai discussion view: presentation scoped to the existing Maoni sheet. */
+html body #maoniLayer { --cm-green:#18A982; --cm-blue:#1769AA; --cm-gold:#F5B820; --cm-ink:#263442; --cm-muted:#677985; --cm-line:#E3EBEA; font-family:Inter,system-ui,sans-serif; }
+#maoniLayer .maoni-sheet { background:#fff; color:var(--cm-ink); }
+#maoniLayer .maoni-head { padding:8px 16px 10px; border-bottom:1px solid var(--cm-line); background:#fff; box-shadow:none; }
+#maoniLayer .maoni-grip { margin-bottom:5px; width:38px; background:#C9D9D4; }
+#maoniLayer .maoni-head-row { display:flex; justify-content:flex-start; align-items:center; gap:9px; padding:0 0 7px; }
+#maoniLayer .maoni-x { width:44px; height:44px; flex:0 0 44px; border:0; border-radius:13px; background:#F3F6F8; color:#263442; }
+#maoniLayer .maoni-heading { min-width:0; flex:1; }
+#maoniLayer .maoni-heading > span { font-size:12px; font-weight:800; color:var(--cm-blue); }
+#maoniLayer .maoni-heading > span span { color:var(--cm-green); }
+#maoniLayer .maoni-heading h3 { display:flex; gap:7px; margin:1px 0 0; font-size:16px; line-height:1.2; color:var(--cm-ink); letter-spacing:-.2px; }
+#maoniLayer .maoni-count { background:#E9F8F3; color:#08765B; min-width:26px; font-size:11px; }
+#maoniLayer .maoni-product { display:flex; align-items:center; min-height:52px; gap:10px; background:#F3F6F8; border:1px solid #EDF1F2; padding:6px 9px; border-radius:12px; }
+#maoniLayer .maoni-product img,#maoniLayer .maoni-product-icon { width:42px; height:42px; flex:0 0 42px; border-radius:8px; object-fit:contain; background:#fff; }
+#maoniLayer .maoni-product-icon { display:grid; place-items:center; color:#1769AA; }
+#maoniLayer .maoni-product div { display:flex; align-items:baseline; column-gap:9px; row-gap:1px; flex-wrap:wrap; min-width:0; line-height:1.2; }
+#maoniLayer .maoni-product small { flex-basis:100%; font-size:9px; color:#6A7C83; font-weight:800; letter-spacing:.6px; }
+#maoniLayer .maoni-product b { font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+#maoniLayer .maoni-product div span { color:#08765B; font-weight:800; font-size:12px; }
+html body #maoniLayer .maoni-body { display:flex !important; flex-direction:column !important; overflow:hidden !important; padding:0 !important; background:#fff; }
+#maoniLayer .maoni-reviews-details { flex:0 1 auto; overflow:auto; max-height:35%; border-bottom:1px solid var(--cm-line); }
+#maoniLayer .maoni-reviews-details summary { padding:10px 16px; min-height:42px; color:#1769AA; font-size:12px; font-weight:750; cursor:pointer; }
+#maoniLayer .maoni-reviews-details .maoni-reviews { margin:0 12px 8px; }
+html body #maoniLayer .maoni-body #skhCommentsRoot { display:flex !important; flex-direction:column !important; min-height:0 !important; height:auto !important; flex:1 1 auto !important; overflow:hidden !important; padding:0 !important; margin:0 !important; border:0; background:#fff; }
+html body #maoniLayer .maoni-body .skh-cm-headbar { flex:none !important; display:flex; align-items:center; justify-content:space-between; gap:4px 8px; padding:8px 14px 5px; margin:0; border:0; background:white; }
+#maoniLayer .skh-cm-headbar h5 { margin:0; font-size:12px; letter-spacing:0; text-transform:none; color:#263442; }
+#maoniLayer .skh-cm-sort { display:flex; gap:3px; margin-left:auto; width:auto; flex-wrap:nowrap; }
+#maoniLayer .skh-cm-sort button { flex:0 0 auto; min-height:36px; padding:6px 8px; border:0; background:transparent; color:#687A83; font-size:11px; white-space:nowrap; }
+#maoniLayer .skh-cm-sort button.active { background:#E7F7F1; color:#08765B; box-shadow:none; }
+html body #maoniLayer .maoni-body .skh-cm-list { display:flex !important; flex-direction:column !important; flex:1 1 auto !important; min-height:0 !important; overflow-y:auto !important; overscroll-behavior:contain; height:auto !important; max-height:none !important; gap:0 !important; padding:0 14px 8px !important; }
+#maoniLayer .skh-cm-conversation { padding:10px 0 7px; border-bottom:1px solid var(--cm-line); }
+#maoniLayer .skh-cm-conversation:last-child { border-bottom:0; }
+#maoniLayer .skh-cm-item, #maoniLayer .skh-cm-item.reply { background:transparent; border:0; border-radius:0; box-shadow:none; padding:0; margin:0; }
+#maoniLayer .skh-cm-head { align-items:center; gap:9px; }
+#maoniLayer .skh-cm-who { display:flex; flex-direction:row; align-items:baseline; flex-wrap:wrap; gap:2px 7px; line-height:1.2; }
+#maoniLayer .skh-cm-who b { display:inline; font-size:13px; color:#263442; }
+#maoniLayer .skh-cm-time { font-size:11px; font-weight:500; color:#788890; }
+#maoniLayer .skh-cm-replyto { display:inline; color:#1769AA; font-size:11px; }
+#maoniLayer .skh-cm-text,#maoniLayer .skh-cm-deleted { display:block; margin:4px 0 0 41px; white-space:pre-wrap; overflow-wrap:anywhere; font-size:13.5px; line-height:1.45; color:#263442; }
+#maoniLayer .skh-cm-badges,#maoniLayer .skh-cm-evidence,#maoniLayer .skh-cm-prodcard { margin-left:41px; }
+#maoniLayer .skh-cm-badges { margin-top:4px; }
+#maoniLayer .skh-cm-badge { font-size:10px; font-weight:750; line-height:1.35; }
+#maoniLayer .skh-cm-badge.seller { color:#785400; background:#FFF6D9; border-color:#F9E3A1; }
+#maoniLayer .skh-cm-badge.vp { color:#08765B; background:#E7F7F1; border-color:#BAE8DA; }
+#maoniLayer .skh-cm-actions { margin:1px 0 0 34px; display:flex; flex-wrap:wrap; align-items:center; gap:0; }
+#maoniLayer .skh-cm-actions > button { min-height:40px; padding:5px 7px; border:0; background:transparent; font-size:11.5px; color:#637681; }
+#maoniLayer .skh-cm-actions > button.on { color:#08765B; background:#E7F7F1; }
+#maoniLayer .skh-cm-thread { border-left:2px solid #D9EBE4; margin:1px 0 0 16px; padding:4px 0 0 16px; }
+#maoniLayer .skh-cm-thread .skh-cm-item { padding:7px 0 1px; }
+#maoniLayer .skh-cm-thread-controls { margin-left:34px; display:flex; gap:5px; flex-wrap:wrap; }
+#maoniLayer .skh-cm-more { min-height:40px; margin:0; padding:6px 9px; background:transparent; color:#1769AA; font-size:12px; font-weight:700; }
+#maoniLayer .skh-cm-empty { margin:14px 0; padding:20px 12px; background:#F3F6F8; color:#526772; }
+html body #maoniLayer .maoni-body .skh-cm-composer { position:static !important; flex:none !important; margin:0 !important; padding:9px 12px calc(9px + env(safe-area-inset-bottom,0px)) !important; border:0; border-top:1px solid var(--cm-line); background:#fff; box-shadow:none; }
+#maoniLayer .skh-cm-inputrow { padding:3px; gap:4px; border:1px solid #DCE8E4; background:#F8FAFA; box-shadow:none; }
+#maoniLayer .skh-cm-inputrow:focus-within { border-color:#18A982; }
+#maoniLayer .skh-cm-attach-btn { width:42px; height:42px; border:0; background:transparent; color:#1769AA; }
+#maoniLayer .skh-cm-attach-btn.disabled { color:#9AA9AD; }
+#maoniLayer #skhCommentInput { min-height:42px; font-size:16px; color:#263442; }
+#maoniLayer .skh-cm-send { min-height:42px; padding:8px 14px; background:#18A982; color:white; border-radius:999px; }
+#maoniLayer .skh-cm-send:disabled { opacity:.55; }
+#maoniLayer .skh-cm-replying { display:flex; align-items:center; min-height:32px; margin:0 0 6px; color:#1769AA; background:#EFF6FC; }
+#maoniLayer .skh-cm-replying button { min-width:36px; min-height:36px; background:transparent; color:#1769AA; }
+#maoniLayer .skh-cm-tools { margin-top:4px; line-height:1.25; }
+#maoniLayer .skh-cm-elig { font-size:11px; }
+#maoniLayer button:focus-visible,#maoniLayer input:focus-visible,#maoniLayer summary:focus-visible { outline:2px solid #1769AA; outline-offset:2px; }
+@media (max-width:640px) { #maoniLayer .maoni-sheet { height:94dvh; max-height:94dvh; border-radius:20px 20px 0 0; } #maoniLayer .skh-cm-headbar { align-items:flex-start; } #maoniLayer .skh-cm-sort { width:auto; } }
+@media (min-width:641px) { #maoniLayer .maoni-sheet { width:min(500px,100%); max-width:100%; } }
+/* Override the older important-valued card layer only inside this sheet. */
+html body #maoniLayer .maoni-body .skh-cm-item { padding:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:transparent !important; }
+html body #maoniLayer .maoni-body .skh-cm-thread .skh-cm-item { padding:6px 0 0 !important; }
+html body #maoniLayer .maoni-body .skh-cm-text { line-height:1.45 !important; color:#263442 !important; }
+html body #maoniLayer .maoni-body .skh-cm-actions { gap:0 !important; margin-top:0 !important; padding-top:0 !important; border-top:0 !important; }
+html body #maoniLayer .maoni-body .skh-cm-actions .cm-rx-open { width:40px; height:40px; border:0 !important; }
+#maoniLayer .skh-cm-sort button, #maoniLayer .skh-cm-actions > button, #maoniLayer .skh-cm-more { min-height:44px; }
+#maoniLayer .skh-cm-cap-note { margin:8px 3px 2px; color:#627681; font-size:12px; line-height:1.4; }

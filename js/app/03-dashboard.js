@@ -20,6 +20,9 @@ window.loadAndRenderDashboard = async function() {
     // [FIX 2026-09] Kinga ya mbio (race guard): usichore dashboard ya muuzaji
     // ikiwa mtumiaji ameondoka kwenye seller mode wakati data bado inapakia.
     const expectedMode = skh.currentMode;
+    const expectedUid = skh.currentUser.uid;
+    const renderSeq = skh._dashboardRenderSeq = (skh._dashboardRenderSeq || 0) + 1;
+    const isCurrentRender = () => skh._dashboardRenderSeq === renderSeq && skh.currentMode === expectedMode && skh.currentUser?.uid === expectedUid;
 
     container.innerHTML = `
         <div style="text-align:center; padding:50px;"> <span style="font-size:24px; display:inline-block; animation:spin 1s linear infinite;"></span> <p>Inapakia Mfumo Mkuu wa Control Tower v2.0.0...</p> </div>`;
@@ -32,6 +35,7 @@ window.loadAndRenderDashboard = async function() {
     const qPOs = skh.query(skh.collection(skh.db, "purchase_orders"), skh.where("shopOwnerId", "==", shopOwnerId));
 
     Promise.all([skh.getDocs(qProducts), skh.getDocs(qLedger), skh.getDocs(qStaff), skh.getDocs(qPOs)]).then(async ([prodSnap, ledgerSnap, staffSnap, poSnap]) => {
+        if (!isCurrentRender()) return;
         // [REAL DATA 2026-09] Anza na SIFURI — si namba za kubuni. Takwimu
         // hujazwa na ledger halisi hapa chini; ikiwa hakuna rekodi bado,
         // dashboard inaonyesha "0" (ukweli), si namba za kudhaniwa.
@@ -115,6 +119,7 @@ window.loadAndRenderDashboard = async function() {
         }
         window.switchDashTab('overview');
     }).catch(err => {
+        if (!isCurrentRender()) return;
         console.error(err);
         container.innerHTML = `<p style="color:red; text-align:center; padding:30px;">${T('db_net_error', 'Network error while loading: {e}', { e: skh.skhEscape(err.message) })}</p>`;
     });

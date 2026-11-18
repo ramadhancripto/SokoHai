@@ -404,27 +404,27 @@ console.log('[61-full-repair] loading — P0-P4 stabilization...');
 
   // Bottom nav fix — robust (MutationObserver + interval)
   (function fixBottomNav() {
-    const DASH_MODES = ['seller','provider','driver','agent','admin'];
+    const DASH_MODES = ['seller','business_os','provider','driver','agent','admin'];
     function isDashboardMode() {
+      // currentMode is the authority; the previously applied class is only a
+      // fallback, never a latch that overrides a return to buyer mode.
       const m = skh.currentMode || document.body.dataset.mode || '';
-      return DASH_MODES.includes(m) || document.body.classList.contains('skh-mode-dashboard');
+      return m ? DASH_MODES.includes(m) : document.body.classList.contains('skh-mode-dashboard');
     }
     function isBuyerMode() {
       if (isDashboardMode()) return false;
       const m = skh.currentMode || document.body.dataset.mode || '';
-      return m === 'buyer' || m === '' || !m || document.body.classList.contains('skh-mode-buyer');
+      return m === 'buyer' || !m;
     }
     function setBodyClass() {
       try {
-        if (isDashboardMode()) {
-          document.body.classList.add('skh-mode-dashboard');
-          document.body.classList.remove('skh-mode-buyer');
-          document.body.dataset.mode = skh.currentMode || 'dashboard';
-        } else {
-          document.body.classList.add('skh-mode-buyer');
-          document.body.classList.remove('skh-mode-dashboard');
-          document.body.dataset.mode = 'buyer';
-        }
+        const dashboard = isDashboardMode();
+        const body = document.body;
+        // Avoid writing unchanged attributes: the observer also watches them.
+        if (body.classList.contains('skh-mode-dashboard') !== dashboard) body.classList.toggle('skh-mode-dashboard', dashboard);
+        if (body.classList.contains('skh-mode-buyer') === dashboard) body.classList.toggle('skh-mode-buyer', !dashboard);
+        const mode = dashboard ? (skh.currentMode || 'dashboard') : 'buyer';
+        if (body.dataset.mode !== mode) body.dataset.mode = mode;
       } catch (e) {}
     }
     function ensureVisible(force) {

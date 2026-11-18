@@ -821,15 +821,19 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         } catch (e) { alert('Imeshindwa kubadili hali: ' + (e && e.message)); }
     };
 
+    var stockEditInFlight = Object.create(null);
     window.skhMPStock = async function (id, current) {
+        if (stockEditInFlight[id]) return;
         var v = await skhPrompt(T('smp_stock_prompt', 'Enter new stock amount (current: {n}):', { n: current }), String(current || 0));
         if (v === null) return;
         var n = Number(v);
-        if (isNaN(n) || n < 0) { alert(T('smp_stock_invalid', 'Please enter a valid number (0 or more).')); return; }
+        if (String(v).trim() === '' || !Number.isFinite(n) || n < 0) { alert(T('smp_stock_invalid', 'Please enter a valid number (0 or more).')); return; }
+        stockEditInFlight[id] = true;
         try {
             var delta = n - Number(current || 0);
+            var resultingStock = Number(current || 0);
             if (delta !== 0) {
-                await skh.wrapCallable('inventoryAdjust')({
+                var stockResult = await skh.wrapCallable('inventoryAdjust')({
                     productId: id,
                     delta: delta,
                     movementType: 'ADJUSTMENT',
@@ -839,10 +843,21 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
                     businessId: skh.currentUserData?.businessId || undefined,
                     storeId: skh.currentUserData?.storeId || undefined
                 });
+                if (stockResult && stockResult.data && typeof stockResult.data.resultingStock === 'number' && Number.isFinite(stockResult.data.resultingStock)) {
+                    resultingStock = Number(stockResult.data.resultingStock);
+                } else {
+                    // Older callable responses may not expose resultingStock.
+                    resultingStock = n;
+                }
             }
-            alert(T('smp_stock_updated', 'Stock updated to {n}.', { n: n }));
-            window.skhRenderMyProducts();
-        } catch (e) { alert(T('smp_stock_failed', 'Failed to update stock:') + ' ' + (e && e.message)); }
+            if (skh._feedCache) skh._feedCache.clear();
+            alert(T('smp_stock_updated', 'Stock updated to {n}.', { n: resultingStock }));
+            try { await window.skhRenderMyProducts(); } catch (refreshError) { console.warn('[seller-stock-refresh]', refreshError); }
+        } catch (e) {
+            console.error('[seller-stock-adjust]', e);
+            var detail = typeof window.skhFnErrText === 'function' ? window.skhFnErrText(e, 'inventoryAdjust') : (e && e.message || 'Jaribu tena.');
+            alert(T('smp_stock_failed', 'Failed to update stock:') + ' ' + detail + '\n\nAngalia stock ya sasa kabla ya kujaribu tena.');
+        } finally { delete stockEditInFlight[id]; }
     };
 
     /* API kwa tests (read-only) */

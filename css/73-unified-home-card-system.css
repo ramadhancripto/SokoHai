@@ -1,0 +1,445 @@
+/* Shared home/discovery card treatment for product, service and transport posts.
+   Keep feature-specific price, location, trust and routing data in the existing
+   builders; this layer only standardizes card composition and presentation. */
+
+/* Product home card: match the reference's right-aligned rating and heart. */
+.skh-huru .skh-img > .skh-card-heart {
+  position: absolute !important;
+  inset: 8px 8px auto auto !important;
+  z-index: 15 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  border: 1px solid rgba(220,229,235,.85) !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.96) !important;
+  box-shadow: 0 1px 4px rgba(15,23,42,.15) !important;
+  cursor: pointer !important;
+}
+.skh-huru .skh-img > .skh-card-heart svg { width: 17px !important; height: 17px !important; color: #173B56 !important; }
+.skh-huru .skh-img > .skh-card-heart.skh-eng-on svg { color: #18A982 !important; }
+.skh-huru .skh-img > .skh-badge {
+  background: #18A982 !important;
+  border-color: #18A982 !important;
+  color: #fff !important;
+  font-size: 9px !important;
+  max-width: min(112px, calc(100% - 54px)) !important;
+}
+.skh-huru .skh-img > .skh-badge svg { color: #fff !important; }
+.skh-huru .skh-huru-price-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+.skh-huru .skh-huru-price-row > .skh-huru-price { flex: 1 1 auto !important; max-width: 100% !important; }
+.skh-huru .skh-huru-price-row .skh-rating {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 2px !important;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  color: #18352D !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+.skh-huru .skh-huru-price-row .skh-rating svg { width: 12px !important; height: 12px !important; color: #E6A800 !important; }
+.skh-huru .skh-huru-price-row .skh-rating b { color: #18352D !important; }
+.skh-rating .skh-unrated { color: #65746E; font-size: 9px; font-weight: 600; }
+.skh-huru .skh-huru-price-row .skh-rating small,
+.skh-huru .skh-huru-price-row .skh-rating .skh-sold { display: none !important; }
+
+/* Service/transport cards use the same image-first card proportions as products. */
+.feed-card-box.skh-card--service,
+.feed-card-box.skh-card--transport {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1.62 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  border: 1px solid #E5ECEC !important;
+  box-shadow: 0 2px 7px rgba(20,50,40,.08) !important;
+}
+.feed-card-box.skh-card--service > .feed-img-box,
+.feed-card-box.skh-card--transport > .feed-img-box {
+  position: relative !important;
+  flex: 0 0 69% !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  background: #F6F8F7 !important;
+  border-bottom: 1px solid #EDF2F0 !important;
+}
+.feed-card-box.skh-card--service > .feed-img-box > img,
+.feed-card-box.skh-card--transport > .feed-img-box > img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  padding: 5px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+.feed-card-box.skh-card--service .skh-body.skh-market-card-body,
+.feed-card-box.skh-card--transport .skh-body.skh-market-card-body {
+  flex: 0 0 31% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) !important;
+  grid-template-rows: auto auto auto !important;
+  align-content: space-between !important;
+  justify-content: stretch !important;
+  align-items: center !important;
+  gap: 2px !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 5px 9px 6px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+.feed-card-box.skh-card--service .skh-market-card-body > .skh-title,
+.feed-card-box.skh-card--transport .skh-market-card-body > .skh-title {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  align-self: end !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: 1.3em !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: clamp(11px, 3.2cqw, 13px) !important;
+  line-height: 1.25 !important;
+  font-weight: 750 !important;
+  color: #172E46 !important;
+}
+.feed-card-box.skh-card--service .skh-market-price-rating,
+.feed-card-box.skh-card--transport .skh-market-price-rating {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 5px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  line-height: 1.1 !important;
+}
+.feed-card-box.skh-card--service .skh-market-card-price,
+.feed-card-box.skh-card--transport .skh-market-card-price {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #18A982 !important;
+  font-size: clamp(11px, 3.4cqw, 14px) !important;
+  font-weight: 800 !important;
+}
+.feed-card-box.skh-card--service .skh-market-card-price .skh-price,
+.feed-card-box.skh-card--transport .skh-market-card-price .skh-price,
+.feed-card-box.skh-card--service .skh-market-card-price .skh-amt,
+.feed-card-box.skh-card--transport .skh-market-card-price .skh-amt {
+  color: #18A982 !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  white-space: nowrap !important;
+}
+.feed-card-box.skh-card--service .skh-market-price-rating .skh-rating,
+.feed-card-box.skh-card--transport .skh-market-price-rating .skh-rating {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 2px !important;
+  flex: 0 0 auto !important;
+  margin: 0 0 0 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: #172E46 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+.feed-card-box.skh-card--service .skh-market-price-rating .skh-rating svg,
+.feed-card-box.skh-card--transport .skh-market-price-rating .skh-rating svg { width: 13px !important; height: 13px !important; color: #E6A800 !important; }
+.feed-card-box.skh-card--service .skh-market-price-rating .skh-rating b,
+.feed-card-box.skh-card--transport .skh-market-price-rating .skh-rating b { color: #172E46 !important; }
+.feed-card-box.skh-card--service .skh-market-price-rating .skh-rating small,
+.feed-card-box.skh-card--transport .skh-market-price-rating .skh-rating small,
+.feed-card-box.skh-card--service .skh-market-price-rating .skh-rating .skh-sold,
+.feed-card-box.skh-card--transport .skh-market-price-rating .skh-rating .skh-sold { display: none !important; }
+.feed-card-box.skh-card--service .skh-market-card-meta,
+.feed-card-box.skh-card--transport .skh-market-card-meta {
+  grid-column: 1 !important;
+  grid-row: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: #708078 !important;
+  font-size: 9px !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+}
+.feed-card-box.skh-card--service .skh-market-card-meta .skh-pinloc,
+.feed-card-box.skh-card--transport .skh-market-card-meta .skh-pinloc {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: #708078 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: nowrap !important;
+}
+.feed-card-box.skh-card--service .skh-market-card-meta .skh-pinloc > span,
+.feed-card-box.skh-card--transport .skh-market-card-meta .skh-pinloc > span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.feed-card-box.skh-card--service .skh-market-card-meta svg,
+.feed-card-box.skh-card--transport .skh-market-card-meta svg { flex: 0 0 auto !important; width: 10px !important; height: 10px !important; }
+
+/* One green, bounded image tag; real check only when trust is server-issued. */
+.feed-card-box.skh-card--service .feed-img-box > .skh-badge,
+.feed-card-box.skh-card--transport .feed-img-box > .skh-badge {
+  position: absolute !important;
+  inset: 8px auto auto 8px !important;
+  z-index: 12 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  box-sizing: border-box !important;
+  height: 21px !important;
+  max-width: calc(100% - 54px) !important;
+  overflow: hidden !important;
+  padding: 0 8px !important;
+  border: 1px solid #18A982 !important;
+  border-radius: 999px !important;
+  background: #18A982 !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.feed-card-box.skh-card--service .feed-img-box > .skh-badge svg,
+.feed-card-box.skh-card--transport .feed-img-box > .skh-badge svg { width: 10px !important; height: 10px !important; color: #fff !important; }
+.feed-card-box.skh-card--service .feed-img-box > .skh-verified-pill,
+.feed-card-box.skh-card--transport .feed-img-box > .skh-verified-pill { top: 34px !important; left: 8px !important; bottom: auto !important; }
+@media (max-width: 360px) {
+  .feed-card-box.skh-card--service .skh-body.skh-market-card-body,
+  .feed-card-box.skh-card--transport .skh-body.skh-market-card-body { padding: 4px 7px 5px !important; }
+}
+
+/* Keep the pre-existing SokoHai wordmark styling; only compact the supplied icon. */
+.top-nav-row .skh-brand { gap: 5px !important; margin-left: 0 !important; }
+.top-nav-row .skh-brand-logo { width: 30px !important; height: 30px !important; object-fit: contain !important; }
+.top-nav-row .skh-brand-div { display: none !important; }
+.top-nav-row .skh-brand-lockup { flex: 0 0 auto !important; }
+.top-nav-row .skh-brand::after { content: none !important; }
+
+/* Working, accessible Like button on all card types. */
+.feed-card-box.skh-card .skh-card-heart {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding: 0 !important;
+  border: 1px solid rgba(220,229,235,.85) !important;
+  color: #53656D !important;
+}
+.feed-card-box.skh-card .skh-card-heart svg { fill: none !important; }
+.feed-card-box.skh-card .skh-card-heart.skh-eng-on,
+.feed-card-box.skh-card .skh-card-heart.skh-eng-active { color: #E1495B !important; }
+.feed-card-box.skh-card .skh-card-heart.skh-eng-on svg,
+.feed-card-box.skh-card .skh-card-heart.skh-eng-active svg { fill: #E1495B !important; color: #E1495B !important; }
+.skh-huru .skh-img > .skh-card-heart { width: 30px !important; height: 30px !important; }
+
+/* Mobile card sizing: shrink the whole card as its grid column narrows while
+   keeping the reference's landscape proportions (never squash width/height). */
+.feed-card-box.skh-card--service,
+.feed-card-box.skh-card--transport,
+.skh-huru {
+  aspect-ratio: 1.17 / 1 !important;
+}
+.feed-card-box.skh-card--service > .feed-img-box,
+.feed-card-box.skh-card--transport > .feed-img-box,
+.skh-huru .skh-img {
+  flex-basis: 70% !important;
+}
+.feed-card-box.skh-card--service .skh-body.skh-market-card-body,
+.feed-card-box.skh-card--transport .skh-body.skh-market-card-body,
+.skh-huru .skh-huru-body {
+  flex-basis: 30% !important;
+}
+@media (max-width: 380px) {
+  .feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .feed-card-box.skh-card--service,
+  .feed-card-box.skh-card--transport,
+  .skh-huru { border-radius: 13px !important; }
+  .feed-card-box.skh-card--service .skh-body.skh-market-card-body,
+  .feed-card-box.skh-card--transport .skh-body.skh-market-card-body { padding: 4px 7px 5px !important; }
+  .skh-huru .skh-huru-body { padding: 4px 7px !important; }
+}
+@media (max-width: 344px) {
+  #mainFeed.feed-grid,
+  .feed-grid.feed-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+  .feed-card-box.skh-card--service,
+  .feed-card-box.skh-card--transport,
+  .skh-huru { aspect-ratio: 1.35 / 1 !important; }
+}
+
+/* Keep the complete bottom navigation visible above device safe-area insets,
+   and leave scroll room after the final feed card. */
+.bottom-area-wrapper { padding-bottom: 0 !important; }
+.bottom-nav-main {
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 6px) !important;
+}
+.bottom-nav-main .main-nav-icons { flex-shrink: 0 !important; }
+@media (max-width: 480px) {
+  .scroll-content { padding-bottom: max(150px, calc(78px + env(safe-area-inset-bottom, 0px))) !important; }
+}
+
+/* Header balance on compact phones: keep every existing action visible in one
+   row; scale hit-targets evenly only at very narrow widths. */
+@media (min-width: 361px) and (max-width: 430px) {
+  .top-nav-row .skh-brand-word { font-size: 18px !important; letter-spacing: -.5px !important; }
+  .top-nav-row .skh-brand-logo { width: 29px !important; height: 29px !important; }
+}
+@media (max-width: 360px) {
+  .top-nav-row { column-gap: 3px !important; padding: 6px 7px !important; }
+  .top-nav-row .top-nav-left { gap: 3px !important; flex: 0 1 auto !important; }
+  .top-nav-row .skh-brand { gap: 3px !important; min-width: 0 !important; }
+  .top-nav-row .skh-brand-logo { width: 24px !important; height: 24px !important; }
+  .top-nav-row .skh-brand-word { font-size: 16px !important; letter-spacing: -.35px !important; }
+  .top-nav-row .skh-brand-arc { height: 3px !important; margin-top: 1px !important; border-bottom-width: 2px !important; }
+  .top-nav-row .top-nav-left .menu-btn,
+  .top-nav-row .skh-icon-btn,
+  .top-nav-row .skh-post-btn { width: 29px !important; height: 29px !important; min-width: 29px !important; }
+  .top-nav-row .top-nav-icons { gap: 3px !important; padding-left: 0 !important; }
+  .top-nav-row .top-nav-left .menu-btn svg,
+  .top-nav-row .skh-icon-btn svg,
+  .top-nav-row .skh-post-btn svg { width: 15px !important; height: 15px !important; }
+}
+@media (max-width: 330px) {
+  .top-nav-row { column-gap: 2px !important; padding-left: 5px !important; padding-right: 5px !important; }
+  .top-nav-row .skh-brand-logo { width: 22px !important; height: 22px !important; }
+  .top-nav-row .skh-brand-word { font-size: 15px !important; letter-spacing: -.4px !important; }
+  .top-nav-row .top-nav-left .menu-btn,
+  .top-nav-row .skh-icon-btn,
+  .top-nav-row .skh-post-btn { width: 27px !important; height: 27px !important; min-width: 27px !important; }
+  .top-nav-row .top-nav-icons { gap: 2px !important; }
+}
+
+/* Service and transport are unchanged by the product-image sizing policy. */
+.feed-card-box.skh-card--service > .feed-img-box > img,
+.feed-card-box.skh-card--transport > .feed-img-box > img {
+  width: 100% !important; height: 100% !important;
+  max-width: none !important; max-height: none !important;
+  padding: 0 !important; object-fit: cover !important; object-position: center !important;
+}
+
+/* Product photos determine their own height, including on the existing rails.
+   No fixed box, cropping, distortion or inherited image padding. */
+.skh-huru,
+.feed-card-box.skh-card--product {
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  align-self: start !important;
+}
+.skh-huru .skh-img,
+.feed-card-box.skh-card--product .feed-img-box.skh-img {
+  display: block !important;
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  padding: 0 !important;
+}
+.skh-huru .skh-img > img,
+.feed-card-box.skh-card--product .feed-img-box.skh-img > img {
+  display: block !important;
+  position: static !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  transform: none !important;
+  border-radius: 0 !important;
+}
+.skh-huru .skh-huru-body {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+.skh-huru .skh-huru-r2 { display: block !important; }
+.skh-market-slide-card:has(> .skh-huru) { align-self: flex-start !important; }
+
+/* The existing Popular rail uses its own existing card markup. */
+#skhHomePopular .shp-row { align-items: flex-start !important; }
+#skhHomePopular .shp-img {
+  display: block !important; height: auto !important; aspect-ratio: auto !important;
+}
+#skhHomePopular .shp-img > img {
+  display: block !important; position: static !important; width: 100% !important;
+  height: auto !important; max-height: none !important; aspect-ratio: auto !important;
+  object-fit: contain !important; padding: 0 !important;
+}
+
+/* Shortest-lane waterfall positioning; DOM order stays unchanged for keyboard
+   and assistive tech. If observers are unavailable the original grid remains. */
+#mainFeed.skh-waterfall {
+  position: relative !important;
+  display: block !important;
+  height: var(--wf-height, auto) !important;
+}
+#mainFeed.skh-waterfall > * {
+  position: absolute !important;
+  box-sizing: border-box !important;
+  left: var(--wf-x, 0px) !important;
+  top: var(--wf-y, 0px) !important;
+  width: var(--wf-width, 100%) !important;
+  margin: 0 !important;
+}
+/* Temporary loading placeholder only; removed as soon as intrinsic size loads. */
+#mainFeed.skh-waterfall .skh-huru .skh-img > img.skh-waterfall-image-pending {
+  aspect-ratio: 1 / 1 !important;
+}

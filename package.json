@@ -8,6 +8,7 @@
     "playwright": "^1.47.2"
   },
   "scripts": {
+    "test:store-setup": "node tools/test_store_setup_state.mjs",
     "test:nego": "node tools/test_nego_form.mjs",
     "test:nego-engine": "node tools/test_negotiation_engine.mjs",
     "test:nego-dom": "node tools/test_negotiation_dom.mjs",

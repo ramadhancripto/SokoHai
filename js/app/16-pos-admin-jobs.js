@@ -226,6 +226,10 @@ function skhSysRow(kind, key, label, note) {
 window.loadAdminDashboard = async function() {
     const container = document.getElementById('richDashboardContainer');
     if(!container) return;
+    const expectedMode = skh.currentMode;
+    const expectedUid = skh.currentUser?.uid;
+    const renderSeq = skh._dashboardRenderSeq = (skh._dashboardRenderSeq || 0) + 1;
+    const isCurrentRender = () => skh._dashboardRenderSeq === renderSeq && skh.currentMode === expectedMode && skh.currentUser?.uid === expectedUid;
 
     container.innerHTML = `<div style="text-align:center; padding:50px;"><span style="font-size:24px; display:inline-block; animation:spin 1s linear infinite;"></span><p>Inapakia Daftari Kuu la Admin...</p></div>`;
 
@@ -256,6 +260,7 @@ window.loadAdminDashboard = async function() {
             });
         }
 
+        if (!isCurrentRender()) return;
         container.innerHTML = `
             <div style="text-align: left; font-family: inherit;"> <div style="background:#fff; color:#18352D; border:1px solid #D5E2DE; box-shadow:0 3px 14px rgba(24,53,45,.07); padding:25px; border-radius:20px; margin-bottom:25px;"> <h2 style="margin:0; color:#17604E;"> PLATFORM CONTROL PANEL</h2> <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 13px;">Usimamizi mkuu wa Sokohai, miamala, na ulinzi wa jamii.</p> </div> <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;"> <div style="background:#f0fdf4; border: 1px solid #bbf7d0; padding:15px; border-radius:14px;"> <small style="color: gray;">PLATFORM REVENUE (MAPATO YA MFUMO)</small> <h3 style="margin:5px 0 0; color:green; font-size: 18px; font-weight:900;">TSh ${totalPlatformRevenue.toLocaleString()}</h3>
                         ${statsMeta ? `<small style="color:#16a34a;"> Aggregates (${statsMeta.eventCount} matukio)${statsMeta.generatedAt ? " · " + new Date(statsMeta.generatedAt).toLocaleString() : ""} <span style="color:#2563eb; text-decoration:underline; cursor:pointer;" onclick="window.skhRefreshStats()">↻ Sasisha</span></small>` : ""}
@@ -306,6 +311,7 @@ window.loadAdminDashboard = async function() {
 
         window.renderAnnouncementManagerList();
     } catch (e) {
+        if (!isCurrentRender()) return;
         console.error(e);
         container.innerHTML = `<p style="color:red; text-align:center; padding:30px;">Hitilafu imetokea.</p>`;
     }

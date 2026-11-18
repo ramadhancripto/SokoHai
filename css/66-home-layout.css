@@ -4,7 +4,11 @@
  *   desktop (ref 14 + 12): carousel · njia 6 · Discover New Updates · matangazo 3 · Live na fursa ·
  *                     Gundua Soko · Bidhaa Maarufu · soko
  * Sections keep their own ids/handlers; only their ORDER and look change here (Nyumbani tab only). */
-body:has(#navTabHome.active) #buyerView { display: flex !important; flex-direction: column; }
+body:has(#navTabHome.active):not([data-skh-view="dashboard"]) #buyerView { display: flex !important; flex-direction: column; }
+/* Mode switching hides the market even when the Home tab remains active.
+   The bottom bar also has an important display rule in the core stylesheet. */
+body[data-skh-view="dashboard"] #buyerView,
+body[data-skh-view="dashboard"] .bottom-area-wrapper { display: none !important; }
 body:has(#navTabHome.active) #buyerView > * { order: 20; min-width: 0; }
 body:has(#navTabHome.active) #categoryStrip { order: 1; }
 body:has(#navTabHome.active) #skhHomeHero { order: 2; }

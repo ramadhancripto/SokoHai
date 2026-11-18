@@ -21,8 +21,11 @@ window.updateApp = function(mode, el = null) {
     // (physical/online... au Passenger/Cargo...) zisiendelee kuchuja tab nyingine.
     skh.activeServiceSection = 'all';
     skh.activeDeliverySection = 'all';
+    skh.activeMarketMode = 'all_modes'; // Tab mpya huanza na 'Zote', kama kitufe kinavyoonyesha.
     // 1. Hakikisha tupo kwenye Buyer View (Ukurasa mkuu)
-    skh.currentMode = 'buyer'; 
+    skh.currentMode = 'buyer';
+    skh._dashboardRenderSeq = (skh._dashboardRenderSeq || 0) + 1;
+    if (document.body) document.body.dataset.skhView = 'buyer';
     skh.localStorage.setItem('sokohai_mode', 'buyer'); 
 
     // [FIX: top nav kupotea] Rudisha upau wa juu, upau wa chini na upau wa eneo
@@ -481,9 +484,17 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
     // [POS 2026-11-01] kg / litre / metre products keep decimals (e.g. 12.5 kg); others stay whole units.
     const QC = globalThis.SKHQuantityCore;
     const quantityPrecision = QC ? QC.precisionForUnit(baseUnit) : 0;
-    const stockRaw = Number(document.getElementById('prodStock').value);
-    let rawQtyEntered = quantityPrecision && QC.isValidQuantity(stockRaw, quantityPrecision, { allowZero: true })
-        ? stockRaw : (parseInt(document.getElementById('prodStock').value) || 1);
+    const stockField = document.getElementById('prodStock');
+    const stockText = stockField.value.trim();
+    const stockRaw = Number(stockText);
+    const stockValid = stockText !== '' && Number.isFinite(stockRaw) && stockRaw >= 0 &&
+        (QC ? QC.isValidQuantity(stockRaw, quantityPrecision, { allowZero: true }) : Number.isInteger(stockRaw));
+    if (!stockValid) {
+        alert(quantityPrecision ? 'Weka kiasi halali cha stock (hadi desimali ' + quantityPrecision + ').' : 'Weka idadi kamili ya stock, sifuri au zaidi.');
+        stockField.focus();
+        return;
+    }
+    let rawQtyEntered = stockRaw;
     let finalCalculatedStock = rawQtyEntered;
     let bulkUnit = "";
     let conversionRatio = 1;
@@ -780,8 +791,9 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
                mtumiaji "jaribu tena" — hiyo ilizalisha bidhaa ya PILI kila mara.
                Sasa tunamalizia mchakato na kueleza ukweli kuhusu stock. */
             console.error('[product-opening-stock]', e);
-            openingStockNote = '\n\nKumbuka: stock ya kuanzia haijakamilika bado. ' +
-                'Usirudie kuichapisha (ingekuwa bidhaa ya pili) — ongeza stock kupitia "Bidhaa Zangu" → Stock.';
+            openingStockNote = '\n\nKumbuka: stock ya kuanzia haijathibitishwa na server. ' +
+                'Angalia stock ya bidhaa kabla ya kuongeza tena. Usirudie kuichapisha (ingekuwa bidhaa ya pili). ' +
+                'Bidhaa Zangu → Stock. ' + (typeof window.skhFnErrText === 'function' ? window.skhFnErrText(e, 'inventoryAdjust') : 'Jaribu tena baadaye.');
         }
         // [REPAIR 2026-10 B-07] The builder's own authority (collect/stockRequests)
         // was never called on CREATE, so the product SKU, canonical variant
