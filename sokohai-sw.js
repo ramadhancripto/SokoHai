@@ -8,7 +8,7 @@
 //    so a deploy is picked up on the next load (no stale app);
 //  - a new version waits until the page asks (SKIP_WAITING) and old caches are deleted on activate.
 // ============================================================
-const VERSION = 'sokohai-r15-20261113';
+const VERSION = 'sokohai-r16-20261118';
 const CACHE = VERSION + '-static';
 const SHELL = ['./', './index.html', './offline.html', './sokohai-manifest.json', './icon-192.png', './icon-512.png'];
 const STATIC_RE = /\.(?:js|mjs|css|woff2?|ttf|png|jpe?g|webp|svg|gif|ico|json)$/i;

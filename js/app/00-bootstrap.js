@@ -2237,6 +2237,19 @@ skh.cardIcon = function cardIcon(name, size) {
     return (window.skhNavIcon ? window.skhNavIcon(name, size) : '');
 };
 
+// [SOKOHAI BRAND LOGO] Cart logo (kama image ya mtumiaji) — itumika sehemu zote
+// za dashboard na UI ili muonekano wawe sawa kama kweny browser.
+skh.skohaiLogo = function skohaiLogo(size) {
+    var s = size || 32;
+    return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SokoHai">' +
+        '<path d="M2 19a1 1 0 011-1h2.586l1.293-1.293a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 012 19zM3.414 15.586l2.586-2.586a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 013.414 15.586zM5 5a1 1 0 011-1h2.586l1.293-1.293a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 015 5zM16.586 5H19a1 1 0 011 1v2.586l-1.293 1.293a1 1 0 01-1.414 0l-2.586-2.586a1 1 0 00-1.414 0L16 10.293l-1.293-1.293A1 1 0 0116.586 5zM5 19a1 1 0 011-1h2.586l1.293-1.293a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 015 19z" fill="#18A982"/>' +
+        '<path d="M7 3a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H8a1 1 0 01-1-1z" fill="#D8B83A"/>' +
+        '<path d="M20 19a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1zM6 18h8V8H6z" fill="#1268A8"/>' +
+        '<circle cx="6" cy="21" r="1.5" fill="#D8B83A"/>' +
+        '<circle cx="18" cy="21" r="1.5" fill="#D8B83A"/>' +
+        '</svg>';
+};
+
 // [PostActions] Like + Save — zinatumia skhCardToggle iliyopo (bila nakala)
 skh.cardEngage = function cardEngage(data, colName) {
     if (window.skhCardIndex) {
@@ -2430,6 +2443,20 @@ skh.cardTypeBadge = function cardTypeBadge(colName) {
     if (colName === 'services') return `<span class="skh-badge skh-badge--service">${skh.cardIcon('wrench', 10)} ${skhTF('nav_services', 'Huduma')}</span>`;
     if (colName === 'drivers') return `<span class="skh-badge skh-badge--transport">${skh.cardIcon('truck', 10)} ${skhTF('nav_transport', 'Usafiri')}</span>`;
     return '';
+};
+
+// [CategoryBadge] Badge ya kijani juu-kushoto mwa picha — anaisimia kategori (mf. Kilimo, IT & Tech, Taxi)
+skh.cardCategoryBadge = function cardCategoryBadge(data) {
+    const cat = data && (data.category || data.subCategory || '');
+    if (!cat) return '';
+    return '<span class="skh-badge skh-badge--category"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' + skh.skhEscape(cat) + '</span>';
+};
+
+// [HeartIcon] Ikoni ya moya juu-kulia mwa picha — kuwega/ kuondoa like
+skh.cardHeartIcon = function cardHeartIcon(data) {
+    if (!data || !data.id) return '';
+    const id = skh.skhJsEsc(data.id);
+    return '<span class="skh-card-heart" onclick="event.stopPropagation(); window.skhCardToggle(\'like\',\'' + id + '\')" title="Penda" aria-label="Penda" role="button" tabindex="0">' + skh.cardIcon('heart', 14) + '</span>';
 };
 
 // ============================================================
@@ -2777,8 +2804,10 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
         skh.cardDiscountBadge(data),
+        skh.cardCategoryBadge(data),
         skh.cardVerifiedPill(data, 'products'),
-        skh.cardOutPill(data, 'products')
+        skh.cardOutPill(data, 'products'),
+        skh.cardHeartIcon(data)
     ].join('');
     // [PHASE 0] "Imeisha" inaonyeshwa MARA MOJA tu — pill juu ya picha
     // (cardOutPill). Chip ya meta haijirudii; nafasi yake inabaki kwa eneo.
@@ -2814,8 +2843,10 @@ skh.SokoHuruCard = function SokoHuruCard(data, colName) {
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
         skh.cardDiscountBadge(data),
+        skh.cardCategoryBadge(data),
         skh.cardVerifiedPill(data, col),
-        skh.cardOutPill(data, col)
+        skh.cardOutPill(data, col),
+        skh.cardHeartIcon(data)
     ].join('');
     const name = skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title || data.name) || skhTF('card_product_def', 'Bidhaa'));
     const price = skh.cardPriceHtml(data, col);

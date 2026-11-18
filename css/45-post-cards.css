@@ -175,6 +175,34 @@
 .feed-card-box.skh-card .skh-badge--drop { color: #B91C1C !important; }
 .feed-card-box.skh-card .skh-badge--service { color: #1E5F86 !important; }
 .feed-card-box.skh-card .skh-badge--transport { color: #7C5314 !important; }
+.feed-card-box.skh-card .skh-badge--category {
+    background: #E7F7F1 !important;
+    color: #0F7E67 !important;
+}
+/* Heart icon — juu-kulia mwa picha */
+.feed-card-box.skh-card .skh-card-heart {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    z-index: 4 !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.16) !important;
+    cursor: pointer !important;
+}
+.feed-card-box.skh-card .skh-card-heart svg {
+    width: 16px !important;
+    height: 16px !important;
+    color: #94A3B8 !important;
+}
+.feed-card-box.skh-card .skh-card-heart.skh-eng-on svg {
+    color: #0F7E67 !important;
+}
 .feed-card-box.skh-card .skh-overlay-chip {
     position: absolute !important;
     top: 8px !important;
