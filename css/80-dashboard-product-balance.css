@@ -1,0 +1,57 @@
+/* Business dashboard and the existing My Products view only. */
+.bos-shell .bos-nav .bos-nav-item, .bos-shell .bos-nav button { box-sizing:border-box; }
+.bos-shell .bos-nav button:focus-visible, #dashWorkspace button:focus-visible, #dashWorkspace input:focus-visible { outline:3px solid #84c9ad; outline-offset:2px; }
+#dashWorkspace { min-width:0; }
+#dashWorkspace .mp-selection {
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px;
+  padding:13px 14px; margin:0 0 12px; background:#f2faf6; border:1px solid #cfe9dc; border-radius:14px; color:#194d3b;
+}
+#dashWorkspace .mp-selection > div:first-child { display:flex; flex-direction:column; gap:3px; min-width:0; }
+#dashWorkspace .mp-selection b { font:800 14px/1.3 system-ui,sans-serif; }
+#dashWorkspace .mp-selection small { font:500 12px/1.35 system-ui,sans-serif; color:#42695b; }
+#dashWorkspace .mp-selection-actions { display:flex; gap:7px; flex-wrap:wrap; align-items:stretch; }
+#dashWorkspace .mp-selection-actions button { min-height:40px; padding:9px 12px; border:1px solid #bbdacc; background:#fff; border-radius:10px; color:#155842; font:750 12px/1.25 system-ui,sans-serif; cursor:pointer; }
+#dashWorkspace .mp-selection-actions .mp-danger { background:#a92c2c; border-color:#a92c2c; color:#fff; }
+#dashWorkspace .mp-selection-actions button:disabled { opacity:.52; cursor:not-allowed; }
+#dashWorkspace #mpSelectionStatus { flex:0 0 100%; margin:0; color:#42695b; font:600 11px/1.4 system-ui,sans-serif; }
+#dashWorkspace .mp-product-card { box-shadow:0 3px 12px rgba(20,70,53,.04); border-color:#dbeae3 !important; min-width:0; }
+#dashWorkspace .mp-select-row { display:flex; align-items:center; min-height:32px; margin-bottom:9px; padding-bottom:8px; border-bottom:1px solid #edf4f0; }
+#dashWorkspace .mp-select-label { display:inline-flex; align-items:center; gap:8px; color:#25634c; font:700 12px/1.3 system-ui,sans-serif; cursor:pointer; }
+#dashWorkspace .mp-select-label input { width:18px; height:18px; margin:0; accent-color:#087856; }
+#dashWorkspace .mp-archived-label { color:#8f441c; background:#fff4e7; border:1px solid #f2ddbf; padding:5px 9px; border-radius:8px; font:750 11px/1.25 system-ui,sans-serif; }
+#dashWorkspace .mp-product-actions { display:grid !important; grid-template-columns:repeat(auto-fit,minmax(92px,1fr)); gap:7px !important; margin-top:12px !important; }
+#dashWorkspace .mp-product-actions button { min-width:0; min-height:39px; padding:8px 6px !important; line-height:1.2; white-space:normal; }
+#dashWorkspace .mp-product-actions button:disabled { opacity:.5; cursor:not-allowed; }
+@media(max-width:600px) {
+ #dashWorkspace .mp-selection-actions { width:100%; }
+ #dashWorkspace .mp-selection-actions button { flex:1 1 130px; }
+ #dashWorkspace .mp-product-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:340px) {
+ #dashWorkspace .mp-product-card > div:nth-child(2) { flex-wrap:wrap; }
+ #dashWorkspace .mp-product-card > div:nth-child(2) > div:last-child { flex-basis:100% !important; }
+}
+/* Product recycle bin is part of the normal dashboard flow, never floating. */
+.bos-recycle-btn { color:#12684c; }
+#dashWorkspace .rb-shell { max-width:1000px; margin:0 auto; color:#183a2e; }
+#dashWorkspace .rb-heading { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:18px; }
+#dashWorkspace .rb-heading > div { min-width:0; flex:1 1 240px; }
+#dashWorkspace .rb-heading h2 { margin:5px 0 4px; }
+#dashWorkspace .rb-heading p { max-width:580px; margin:0; font:500 13px/1.5 system-ui,sans-serif; color:#587063; }
+#dashWorkspace .rb-eyebrow { color:#138262; font:800 10px/1 system-ui,sans-serif; letter-spacing:.09em; }
+#dashWorkspace .rb-heading button,#dashWorkspace .rb-more { border:1px solid #cce4d7; background:white; color:#17664d; border-radius:10px; padding:10px 14px; min-height:42px; font-weight:750; cursor:pointer; }
+#dashWorkspace .rb-notice { display:flex; flex-direction:column; gap:4px; padding:14px 16px; background:#fff8e9; border:1px solid #f2dca9; border-radius:13px; color:#6d5017; font:500 12px/1.5 system-ui,sans-serif; }
+#dashWorkspace .rb-notice b { font-size:13px; }
+#dashWorkspace #rbStatus { color:#557265; font:600 12px/1.4 system-ui,sans-serif; margin:14px 0 8px; }
+#dashWorkspace .rb-card { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:13px; margin-bottom:10px; background:#fff; border:1px solid #dceae3; border-radius:14px; }
+#dashWorkspace .rb-picture { width:54px; height:54px; flex:0 0 54px; border-radius:10px; background:#eef6f1; color:#8ca89a; display:grid; place-items:center; overflow:hidden; }
+#dashWorkspace .rb-picture img { width:100%; height:100%; object-fit:cover; }
+#dashWorkspace .rb-info { display:flex; flex-direction:column; gap:4px; flex:1 1 150px; min-width:0; font:700 14px/1.3 system-ui,sans-serif; overflow-wrap:anywhere; }
+#dashWorkspace .rb-info small { font:500 12px/1.4 system-ui,sans-serif; color:#71867a; }
+#dashWorkspace .rb-info .rb-warning { color:#9a5714; }
+#dashWorkspace .rb-actions { display:flex; gap:7px; flex-wrap:wrap; }
+#dashWorkspace .rb-actions button { border:1px solid #b5daca; border-radius:9px; background:#eaf8f1; color:#146649; padding:9px 12px; min-height:40px; font:750 12px/1.3 system-ui,sans-serif; cursor:pointer; }
+#dashWorkspace .rb-actions button:disabled { color:#897878; border-color:#e5dede; background:#f5f2f2; cursor:not-allowed; }
+#dashWorkspace .rb-empty { border:1px dashed #cadfd3; border-radius:12px; padding:24px 16px; color:#627d6e; text-align:center; font:500 13px/1.5 system-ui,sans-serif; }
+#dashWorkspace .rb-more { margin-top:5px; }
+@media(max-width:600px) { #dashWorkspace .rb-actions { width:100%; } #dashWorkspace .rb-actions button { flex:1 1 120px; } }

@@ -1,0 +1,38 @@
+/* Scoped to the existing seller form and photo editor. No form flow changes. */
+#sellerForm { background:#fbfdfc !important; color:#17382f; border:1px solid #d3e8de; padding:18px !important; }
+#sellerForm > h3 { color:#075a43 !important; font:850 21px/1.2 system-ui,sans-serif !important; text-transform:none !important; text-align:left !important; margin:0 0 4px !important; letter-spacing:-.025em; }
+#sellerForm .sf-intro { color:#536c62; text-align:left; font:500 13px/1.4 system-ui,sans-serif; margin:0 0 13px; }
+#sellerFormProgress { gap:5px !important; padding:0 0 12px !important; border-bottom:1px solid #e3eee9; }
+#sellerFormProgress li { padding:5px 8px; border:1px solid #dcebe4; border-radius:999px; color:#34594b; background:#f0f8f4; font:700 10px/1.25 system-ui,sans-serif; }
+#sellerForm > [data-sf-group] { background:#fff !important; border:1px solid #dcebe4 !important; border-radius:15px !important; padding:14px !important; box-shadow:0 3px 12px rgba(18,72,53,.04); }
+#sellerForm > [data-sf-group="channel"] { background:linear-gradient(125deg,#edf9f2,#f7fcfa) !important; border-color:#bddfce !important; }
+#sellerForm > [data-sf-group] > b, #sellerForm > [data-sf-group] > label:first-child { color:#075c46 !important; letter-spacing:.035em; }
+#sellerForm input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]), #sellerForm select, #sellerForm textarea { border-color:#cbded5 !important; border-radius:10px !important; background:#fff; color:#18392f; }
+#sellerForm input:focus, #sellerForm select:focus, #sellerForm textarea:focus { outline:2px solid #80c9aa; outline-offset:1px; }
+#sellerForm #btnSeller { background:#087857 !important; border-radius:12px !important; box-shadow:0 4px 14px rgba(6,99,70,.2) !important; }
+#sellerForm #spbSaveDraft { border-radius:10px; }
+#sellerForm .skh-ps-field { border-color:#cce5d8 !important; background:#f9fdfb !important; }
+#sellerForm .skh-ps-drop { border-color:#83c8ab; background:#effaf4; }
+#sellerForm .skh-ps-tool[data-act="edit"] { background:#087857; color:#fff; border-color:#087857; }
+@media(max-width:600px) { #sellerForm { padding:14px !important; } #sellerForm input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]), #sellerForm select, #sellerForm textarea { font-size:16px !important; } }
+
+/* Keep preview useful on phones: don't allow flexbox to squash it to 1 line. */
+.skh-ps-editor .ps-ed-sheet { max-height:min(92dvh,900px); }
+.skh-ps-editor .ps-ed-head { flex-shrink:0; background:#f6fcf8; }
+.skh-ps-editor .ps-ed-head b { color:#075b44; font-size:16px; }
+.skh-ps-editor .ps-ed-stage { flex:0 0 auto; height:clamp(190px,33vh,300px); aspect-ratio:auto; background-color:#fff; }
+.skh-ps-editor .ps-ed-stage.is-white { background:#fff; }
+.skh-ps-editor .ps-ed-stage canvas { max-width:100%; max-height:100%; width:auto; height:auto; }
+.skh-ps-editor .ps-ed-stage canvas.is-erasing { cursor:crosshair; touch-action:none; }
+.skh-ps-editor .ps-ed-body { flex:0 0 auto; }
+.skh-ps-editor .ps-ed-status { margin:0; padding:8px 10px; background:#eaf8ef; border-radius:9px; color:#0a6549; font:650 12px/1.35 system-ui,sans-serif; }
+.skh-ps-editor .ps-ed-sec { background:#fff; border:1px solid #dcebe4; }
+.skh-ps-editor .ps-ed-sec > h5 { color:#426858; font-size:11px; }
+.skh-ps-editor .ps-ed-hint { color:#516c61; font-size:11px; }
+.skh-ps-editor .ps-ed-btn { min-height:38px; }
+.skh-ps-editor .ps-ed-foot { z-index:2; flex-shrink:0; }
+.skh-ps-editor .ps-ed-btn:focus-visible, .skh-ps-editor .ps-ed-x:focus-visible { outline:3px solid #84cbb0; outline-offset:2px; }
+@media (max-width:360px) { .skh-ps-editor { padding:8px; } .skh-ps-editor .ps-ed-stage { height:clamp(160px,30vh,240px); } }
+@media (max-width:600px) {
+ #sellerForm #onlineCategorySection > div { grid-template-columns:minmax(0,1fr) !important; }
+}

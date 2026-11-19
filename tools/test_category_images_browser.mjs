@@ -1,0 +1,18 @@
+// Category explorer uses real markup/CSS and the production decorator with local mock data.
+import {chromium} from 'playwright';import assert from 'node:assert/strict';
+import {CANONICAL_CATEGORIES} from '../shared/category-filter-core.mjs';import {legacyServiceDataMap} from './legacy_catalog_source.mjs';
+const services=Object.values(legacyServiceDataMap()).flatMap(x=>Object.keys(x)),transport=['Watu (Ride)','Kawaida (Parcels)','Mizigo Mikubwa','Dharura (Express)'];
+const browser=await chromium.launch();
+try {for(const width of [320,390,768,1280]){
+ const page=await browser.newPage({viewport:{width,height:900}});await page.goto('http://127.0.0.1:4174/',{waitUntil:'load'});await page.waitForFunction(()=>window.previewReady);
+ await page.evaluate(async()=>{const core=await import('/shared/category-filter-core.mjs');Object.assign(window.skh,{canonicalCategoryId:core.canonicalCategoryId,categoryLabel:core.categoryLabel,buyerProductCategories:()=>core.buyerProductCategories(Object.keys(window.skh.advancedCategories||{}))});document.querySelectorAll('.overlay-menu').forEach(el=>el.style.display='none')});
+ await page.addScriptTag({url:'/js/app/83-category-photos.js'});
+ await page.evaluate(({cats,services,transport})=>{const modal=document.getElementById('categoryModal');modal.style.display='flex';const grid=document.getElementById('catGridContainer');grid.innerHTML='';for(const item of cats.map(x=>({name:x.id,cat:x.id})).concat(services.concat(transport).map(name=>({name})))){let box=document.createElement('div');box.className='cat-box';if(item.cat)box.dataset.cat=item.cat;let icon=document.createElement('div');icon.className='cat-icon';let label=document.createElement('div');label.className='cat-name';label.textContent=item.name.toUpperCase();box.append(icon,label);grid.append(box)}} ,{cats:CANONICAL_CATEGORIES,services,transport});
+ await page.waitForFunction(expected=>document.querySelectorAll('#categoryModal .cat-box[data-cps-done="1"]').length===expected,CANONICAL_CATEGORIES.length+services.length+transport.length,{timeout:10000});
+ await page.evaluate(()=>document.querySelectorAll('#categoryModal .cat-icon img').forEach(i=>i.loading='eager'));
+ await page.waitForFunction(()=>[...document.querySelectorAll('#categoryModal .cat-icon img')].every(i=>i.complete),null,{timeout:20000});
+ const state=await page.evaluate(()=>({boxes:document.querySelectorAll('#categoryModal .cat-box').length,images:document.querySelectorAll('#categoryModal .cat-icon img').length,broken:[...document.querySelectorAll('#categoryModal .cat-icon img')].filter(i=>!i.naturalWidth).map(i=>i.getAttribute('src')),nonSquare:[...document.querySelectorAll('#categoryModal .cat-icon.skh-cat-photo')].map(el=>el.getBoundingClientRect()).filter(r=>Math.abs(r.width-r.height)>1).length,pending:document.querySelectorAll('#categoryModal .skh-photo-pending').length,scroll:document.documentElement.scrollWidth,logo:document.querySelector('.top-nav-row .skh-brand-logo').getAttribute('src')}));
+ assert.equal(state.boxes,CANONICAL_CATEGORIES.length+services.length+transport.length);assert.equal(state.images,state.boxes);assert.deepEqual(state.broken,[]);assert.equal(state.nonSquare,0,'category image frames are square');assert.equal(state.pending,0);assert.equal(state.scroll,width);assert.equal(state.logo,'assets/img/sokohai-cart-mark.png');
+ if(width===390) await page.screenshot({path:'/tmp/sokohai-category-modal-check.png'});
+ console.log(`PASS ${width}px: ${state.images} category/service/transport image elements loaded; no placeholder, broken image or page overflow (mock cloud).`);await page.close();
+}}finally{await browser.close()}
