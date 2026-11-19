@@ -212,6 +212,34 @@ service cloud.firestore {
             == resource.data.get('modeData', {}).get('livePaused', false))
         && (isAdmin() || unchanged(['saleMode']) || (resource.data.get('modeData', {}).get('totalBids', 0) == 0
                 && resource.data.get('modeData', {}).get('participants', []).size() == 0));
+      // A legacy product may no longer satisfy today's full schema (e.g. missing
+      // stock or an old zero price). Its owner or approved managing agent can
+      // still REMOVE it from the public market without rewriting any commerce
+      // fields. This is an archive-only exception; no client physical delete,
+      // no re-publish of invalid data, and no change to inventory/ownership.
+      allow update: if signedIn()
+        && (resource.data.get('userId', '') == request.auth.uid
+          || (resource.data.get('managedByAgentUid', '') == request.auth.uid && isApprovedAgent()))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['publicationStatus','status','archivedAt','updatedAt'])
+        && request.resource.data.get('publicationStatus', '') == 'archived'
+        && request.resource.data.get('status', '') == 'archived'
+        && request.resource.data.get('archivedAt', null) is string
+        && request.resource.data.get('updatedAt', null) is string;
+      // A previously archived legacy listing can return to DRAFT without changing
+      // stock or other commerce data. Publishing still requires full validation.
+      allow update: if signedIn()
+        && (resource.data.get('userId', '') == request.auth.uid
+          || (resource.data.get('managedByAgentUid', '') == request.auth.uid && isApprovedAgent()))
+        && (resource.data.get('archivedAt', null) != null
+          || resource.data.get('publicationStatus', '') == 'archived'
+          || resource.data.get('status', '') in ['archived','deleted'])
+        && resource.data.get('adminHidden', false) != true
+        && resource.data.get('moderationStatus', '') != 'removed'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['publicationStatus','status','archivedAt','updatedAt'])
+        && request.resource.data.get('publicationStatus', '') == 'draft'
+        && request.resource.data.get('status', '') == 'draft'
+        && request.resource.data.get('archivedAt', 'missing') == null
+        && request.resource.data.get('updatedAt', null) is string;
       // [REPAIR 2026-10 B-12] Found by the browser E2E: buyers opening or sharing a
       // product could never count a view/share (owner-only update), so product
       // analytics stayed at 0. A signed-in user may add exactly 1 to views or
@@ -1843,6 +1871,37 @@ service cloud.firestore {
     // ---------------------------------------------------------------
     // USER STATE / ENGAGEMENT
     // ---------------------------------------------------------------
+    // Private view preferences; no shared order/trip document is mutated.
+    // A marker can be created only for a finished record in which this user is
+    // a named party. Deleting a marker restores the view, never deletes data.
+    match /dashboard_hidden/{uid}/entries/{entryId} {
+      function reference() {
+        return get(/databases/$(database)/documents/$(request.resource.data.collection)/$(request.resource.data.recordId)).data;
+      }
+      function canHide() {
+        let c = request.resource.data.collection;
+        let d = reference();
+        let st = d.get('status', d.get('orderStatus', ''));
+        return (c == 'orders' && st in ['completed','cancelled','canceled','refunded','refunded_by_admin','rejected','expired','COMPLETED','CANCELLED','CANCELED','REFUNDED','REFUNDED_BY_ADMIN','REJECTED','EXPIRED']
+          && (d.get('buyerId','') == uid || d.get('sellerId','') == uid || d.get('providerId','') == uid || d.get('courierId','') == uid))
+          || (c == 'ride_requests' && st in ['completed','cancelled','canceled','rejected','expired','COMPLETED','CANCELLED','CANCELED','REJECTED','EXPIRED']
+          && (d.get('customerId','') == uid || d.get('driverId','') == uid || d.get('currentCustodian','') == uid || d.get('sellerId','') == uid || d.get('assignedAgentId','') == uid || d.get('nextTransporterId','') == uid))
+          || (c == 'requests' && st in ['completed','cancelled','canceled','rejected','expired','COMPLETED','CANCELLED','CANCELED','REJECTED','EXPIRED']
+          && (d.get('senderId','') == uid || d.get('receiverId','') == uid))
+          || (c == 'negotiations' && d.get('currentState', d.get('status','')) in ['CLOSED','CANCELLED','CANCELED','REJECTED','EXPIRED','closed','cancelled','canceled','rejected','expired']
+          && (d.get('buyerId','') == uid || d.get('sellerId','') == uid));
+      }
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['collection','recordId','hiddenAt'])
+        && request.resource.data.keys().hasAll(['collection','recordId','hiddenAt'])
+        && request.resource.data.collection in ['orders','ride_requests','requests','negotiations']
+        && request.resource.data.recordId is string && request.resource.data.recordId.size() > 0
+        && request.resource.data.recordId.size() < 1000
+        && request.resource.data.hiddenAt is string
+        && entryId == request.resource.data.collection + '__' + request.resource.data.recordId
+        && canHide();
+    }
     match /user_state/{stateUid} {
       allow read, write: if signedIn() && request.auth.uid == stateUid;
     }

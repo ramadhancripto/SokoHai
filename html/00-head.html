@@ -26,17 +26,17 @@
     <meta property="og:description" content="Nunua na uuze bidhaa, huduma na usafiri kwa usalama kupitia SokoHai." id="skhOgDescription">
     <meta property="og:type" content="website">
     <meta property="og:url" id="skhOgUrl" content="https://sokohaicom.netlify.app/">
-    <meta property="og:image" id="skhOgImage" content="https://sokohaicom.netlify.app/assets/sokohai-s-mark.png">
+    <meta property="og:image" id="skhOgImage" content="https://sokohaicom.netlify.app/assets/img/sokohai-cart-mark.png">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" id="skhCanonical" href="https://sokohaicom.netlify.app/">
-<link rel="icon" type="image/png" href="assets/sokohai-s-mark.png">
+<link rel="icon" type="image/png" href="assets/img/sokohai-app-192-v2.png">
     <!-- [SEO/PWA 2026-11-08] Manifest ilikuwa ipo (sokohai-manifest.json) lakini
          HAIKUWA imeunganishwa kwenye <head> — kwa hiyo browser haikuiona kamwe. -->
     <link rel="manifest" href="sokohai-manifest.json">
     <meta name="theme-color" content="#0F7A5C">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SokoHai">
-    <link rel="apple-touch-icon" href="assets/sokohai-s-mark.png">
+    <link rel="apple-touch-icon" href="assets/img/sokohai-app-192-v2.png">
     <!-- [SEO 2026-11-08] Structured data: Organization + WebSite (SearchAction).
          Hii inasaidia Google kuonyesha jina, logo na kisanduku cha utafutaji. -->
     <script type="application/ld+json">
@@ -48,7 +48,7 @@
           "@id": "https://sokohaicom.netlify.app/#organization",
           "name": "SokoHai",
           "url": "https://sokohaicom.netlify.app/",
-          "logo": "https://sokohaicom.netlify.app/assets/sokohai-s-mark.png",
+          "logo": "https://sokohaicom.netlify.app/assets/img/sokohai-cart-mark.png",
           "description": "Soko la mtandaoni la Tanzania: bidhaa, huduma na usafiri kwa ulinzi wa escrow.",
           "areaServed": { "@type": "Country", "name": "Tanzania" }
         },
@@ -143,7 +143,7 @@
     <link rel="stylesheet" href="css/48-chat-shell.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/49-call-ui.css">
     <!-- [PICHA STUDIO] Sehemu ya kupakia picha za bidhaa: dropzone, hero 1:1 contain, live preview -->
-    <link rel="stylesheet" href="css/50-sell-studio.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/50-sell-studio.css?v=20261118studio1" media="print" onload="this.media='all'">
     <!-- [VARIANT STUDIO] Product builder cards + buyer-facing variant preview -->
     <link rel="stylesheet" href="css/51-variant-studio.css" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="css/52-business-os-shell.css?v=20261106a" media="print" onload="this.media='all'"><!-- [BUSINESS OS 1A] sidebar + dashboard shell (light) -->
@@ -178,37 +178,21 @@
 </style>
 <script>document.documentElement.classList.add('skh-booting');</script>
 <script id="skhWordmarkGen">
-/* [BRAND WORDMARK R15 2026-09-17] SokoHai kama SVG-logo (sio text).
-   Chanzo kimoja — skhWordmark(w, {variant:'color'|'white', gid}).
-   S | o | k | o(+mkia unaoishia H: K-O-H connection) | H | a=Cart | i(gold dot).
-   Blue->Green gradient (#1268A8 -> #2B82BD -> #18A982), gold accent (#D8B83A). */
+/* Compatibility API: use the same cart mark and type lockup as the top nav. */
 window.skhWordmark = function(w, opts){
-    opts = opts || {};
-    var gid = opts.gid || 'skhWmGrad' + (opts.variant === 'white' ? 'W' : 'C');
-    var grad = opts.variant === 'white'
-      ? '<linearGradient id="'+gid+'" x1="0" y1="0" x2="352" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d9f0e6"/></linearGradient>'
-      : '<linearGradient id="'+gid+'" x1="0" y1="0" x2="352" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1268A8"/><stop offset=".52" stop-color="#2B82BD"/><stop offset="1" stop-color="#18A982"/></linearGradient>';
-    return '<svg width="'+w+'" height="'+Math.round(w*96/352)+'" viewBox="0 0 352 96" fill="none" stroke="url(#'+gid+')" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="SokoHai" xmlns="http://www.w3.org/2000/svg">'
-      + '<defs>'+grad+'</defs>'
-      + '<path stroke-width="14" d="M48 30 C44 24 33 22 25 25.5 C17 29 17.5 37.5 26 41 C32.5 43.7 41 46 45.6 50.8 C50.4 55.9 48.6 64.4 40.6 68 C32.8 71.5 20.6 70.8 14 64"/>'
-      + '<circle cx="86" cy="53" r="16.5" stroke-width="13"/>'
-      + '<path stroke-width="13" d="M117 22 V70 M142 40 L119.5 55.5 L145 70"/>'
-      + '<circle cx="171" cy="52" r="16.5" stroke-width="13"/>'
-      + '<path stroke-width="8" d="M180 65 C185.5 74.5 193.5 77 199 74"/>'
-      + '<path stroke-width="13" d="M206 22 V70 M234 22 V70 M206 46 H234"/>'
-      + '<path stroke-width="7.5" d="M249 37.5 l5 1.5 4.6 19 h24 l6.4 -14.5 h-25"/>'
-      + '<circle cx="262.5" cy="64" r="3.6" stroke-width="7"/>'
-      + '<circle cx="280" cy="64" r="3.6" stroke-width="7"/>'
-      + '<path stroke-width="13" d="M309 46 V70"/>'
-      + '<circle cx="309" cy="32" r="5" fill="#D8B83A" stroke="none"/>'
-      + '</svg>';
+    var width = Math.max(64, Math.min(500, Number(w) || 132));
+    var white = opts && opts.variant === 'white';
+    var fg = white ? ' style="color:#fff"' : '';
+    return '<span class="skh-dynamic-brand" role="img" aria-label="SokoHai" style="display:inline-flex;align-items:center;gap:'+Math.round(width*.04)+'px;width:'+width+'px;line-height:1">'
+      + '<img src="assets/img/sokohai-cart-mark.png" alt="" aria-hidden="true" style="width:24%;height:auto;object-fit:contain">'
+      + '<span class="skh-brand-lockup" aria-hidden="true" style="flex:1;min-width:0;font-size:'+Math.round(width*.18)+'px">'
+      + '<span class="skh-brand-word"><b class="skh-brand-soko"'+fg+'>Soko</b><b class="skh-brand-hai"'+fg+'>Hai</b></span><span class="skh-brand-arc"></span></span></span>';
 };
-/* Mounti: kila [data-skh-wm="<upana>"] hupata SVG moja — hakuna markup iliyodufu */
 window.skhMountWordmarks = function(root){
     (root || document).querySelectorAll('[data-skh-wm]').forEach(function(el){
         var w = parseInt(el.getAttribute('data-skh-wm'), 10) || 132;
         var v = el.getAttribute('data-skh-wm-variant') || 'color';
-        el.innerHTML = window.skhWordmark(w, { variant: v, gid: 'skhWmGrad_' + w + '_' + v });
+        el.innerHTML = window.skhWordmark(w, { variant: v });
     });
 };
 </script>
@@ -223,11 +207,11 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/62-system-polish.css?v=20261107r12">
 <link rel="stylesheet" href="css/63-live-commerce.css?v=20261107r13b" media="print" onload="this.media='all'"><!-- [R13-B] live, hali, group soko -->
 <link rel="stylesheet" href="css/64-image-quality.css?v=20261108r13c"><!-- [R13-C] picha halisi, product cards 1:1 -->
-<link rel="stylesheet" href="css/65-live-design.css?v=20261113r14" media="print" onload="this.media='all'"><!-- [R13-D] live screens kama design refs 1,2,5,6,7,10 -->
-<link rel="stylesheet" href="css/66-home-layout.css?v=20261118navfix"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
+<link rel="stylesheet" href="css/65-live-design.css?v=20261118compactlive1" media="print" onload="this.media='all'"><!-- [R13-D] live screens kama design refs 1,2,5,6,7,10 -->
+<link rel="stylesheet" href="css/66-home-layout.css?v=20261118poster4"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
 <link rel="stylesheet" href="css/67-chat-discover.css?v=20261108r13f" media="print" onload="this.media='all'"><!-- [R13-F] Chat Discover + Hali viewer kama refs 8, 9 -->
 <link rel="stylesheet" href="css/68-group-chat-design.css?v=20261108r13g" media="print" onload="this.media='all'"><!-- [R13-G] Group Chat kama design refs (Wakulima &amp; Biashara) -->
-<link rel="stylesheet" href="css/69-category-tiles.css?v=20261108r13g"><!-- [R13-G] picha halisi za kategoria kwenye kadi safi -->
+<link rel="stylesheet" href="css/69-category-tiles.css?v=20261118square1"><!-- [R13-G] picha halisi za kategoria kwenye kadi safi -->
 <link rel="stylesheet" href="css/70-group-business.css?v=20261113r15"><!-- [R13-H] Group Chat awamu ya 2: paneli, Soko, sehemu za biashara -->
 <link rel="stylesheet" href="css/71-sale-type-flow.css?v=20261108m1" media="print" onload="this.media='all'"><!-- [M1 2026-11-08] kichaguzi cha aina ya mauzo (Bidhaa Sokoni) -->
 <link rel="stylesheet" href="css/70-product-card.css?v=20261108pc0"><!-- [PHASE 0 2026-11-08] product card visual system (safu ya mwisho; bidhaa pekee) -->
@@ -238,7 +222,10 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/75-ride-request.css?v=20261118ride1"><!-- existing transport request view -->
 <link rel="stylesheet" href="css/76-market-rails.css?v=20261118uniform2"><!-- compact marketplace rails -->
 <link rel="stylesheet" href="css/77-chat-conversations.css?v=20261118group2"><!-- conversation-only chat polish -->
-<link rel="stylesheet" href="css/78-header-brand-balance.css?v=20261118brand1">
+<link rel="stylesheet" href="css/78-header-brand-balance.css?v=20261118welcome1">
+<link rel="stylesheet" href="css/79-seller-photo-polish.css?v=20261118studio1">
+<link rel="stylesheet" href="css/80-dashboard-product-balance.css?v=20261118recycle1">
+<link rel="stylesheet" href="css/81-personal-recycle.css?v=20261118a">
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>

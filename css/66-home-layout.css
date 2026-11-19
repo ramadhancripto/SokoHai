@@ -115,15 +115,22 @@ body:not(:has(#navTabHome.active)) .shx { display: none !important; }
 .shu-foot span { display: inline-flex; gap: 4px; align-items: center; color: #15A04D; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .shu-cta { border: 0; border-radius: 999px; color: #fff; font: 800 12.5px/1 Inter, system-ui, sans-serif; padding: 9px 14px; cursor: pointer; white-space: nowrap; }
 .shu-g { background: #15A04D; } .shu-b { background: #1F5FD1; } .shu-y { background: #E8862B; } .shu-p { background: #7B3FD0; }
-/* promo trio (ref 12) */
-.shm-row { display: grid; grid-template-columns: 1fr; gap: 10px; }
-@media (min-width: 900px) { .shm-row { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
-.shm { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 12px; padding: 16px; border-radius: 16px; border: 0; cursor: pointer; text-align: left; color: #fff; min-height: 76px; }
-.shm b { display: block; font: 900 17px/1.15 Inter, system-ui, sans-serif; } .shm small { font: 600 13px/1.3 Inter, system-ui, sans-serif; opacity: .95; }
-.shm em { font-style: normal; background: #fff; color: #12201C; font: 800 12.5px/1 Inter, system-ui, sans-serif; padding: 9px 12px; border-radius: 999px; display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; }
-.shm-ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .18); }
-.shm-g { background: linear-gradient(110deg, #138A4A, #1DAA5C); } .shm-b { background: linear-gradient(110deg, #1C4FB8, #2D7BEA); } .shm-y { background: linear-gradient(110deg, #E9B21E, #F5CF4A); color: #3A2A00; }
-.shm-y .shm-ic { background: rgba(0, 0, 0, .08); }
+/* Promo trio: existing full-card buttons and their handlers are unchanged. */
+.shm-row { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+.shm { box-sizing:border-box; min-width:0; width:100%; min-height:64px; display:grid; grid-template-columns:36px minmax(0,1fr) auto; align-items:center; gap:8px; padding:9px 10px; border:1px solid #dfece7; border-radius:13px; background:#fff; box-shadow:0 3px 10px rgba(16,42,67,.06); color:#173d36; text-align:left; cursor:pointer; font-family:Inter,system-ui,sans-serif; }
+.shm > span:nth-child(2) { min-width:0; }
+.shm b { display:block; color:#173d36; font:600 14px/1.2 Inter,system-ui,sans-serif; overflow-wrap:break-word; }
+.shm small { display:block; margin-top:2px; color:#5a706a; font:400 11px/1.25 Inter,system-ui,sans-serif; font-size:11px !important; }
+.shm em { display:inline-flex; align-items:center; gap:3px; max-width:100%; padding:4px 0; background:transparent; color:#087e5f; font:600 11px/1.15 Inter,system-ui,sans-serif; font-style:normal; white-space:nowrap; }
+.shm em svg { width:13px; height:13px; flex:none; }
+.shm-ic { width:36px; height:36px; display:grid; place-items:center; border-radius:11px; background:#e4f6ee; color:#0b8d69; }
+.shm-ic svg { width:20px; height:20px; }
+.shm-b { border-color:#dce9f5; } .shm-b .shm-ic { color:#1268a8; background:#e7f3fc; } .shm-b em { color:#1268a8; }
+.shm-y { border-color:#f0e8d0; } .shm-y .shm-ic { color:#936100; background:#fff5d8; } .shm-y em { color:#7b5700; }
+.shm:focus-visible { outline:3px solid #1268a8; outline-offset:2px; }
+@media (min-width:600px) { .shm-row { grid-template-columns:repeat(3,minmax(0,1fr)); } .shm { grid-template-columns:36px minmax(0,1fr); align-content:center; } .shm em { grid-column:2; } }
+@media (min-width:1100px) { .shm { grid-template-columns:36px minmax(0,1fr) auto; } .shm em { grid-column:auto; } }
+@media (max-width:360px) { .shm { gap:6px; } .shm b { font-size:13px; } .shm em { font-size:10px; } }
 
 /* ---------- Gundua Soko on simu: one row of small photo tiles (ref 11) ---------- */
 @media (max-width: 899px) {
@@ -169,3 +176,109 @@ body:not(:has(#navTabHome.active)) .shx { display: none !important; }
 .posg-tile.out { opacity: .5; cursor: not-allowed; }
 .posg-tile.hit { animation: posghit .4s ease; } @keyframes posghit { 40% { transform: scale(.95); border-color: #0F7A5C; } }
 .posg-empty { font-size: 12.5px; color: #5F716B; margin: 0 0 8px; }
+
+/* Compact SokoHai promotional carousel. Both existing slides share one track,
+   so their compact height is kept consistent without adding another banner. */
+#skhHomeHero #shcCarousel { border-radius:14px; box-shadow:0 4px 14px rgba(15,110,85,.13); }
+#skhHomeHero #shcTrack { align-items:stretch; }
+#skhHomeHero #shcCarousel .shc-slide { height:auto; min-height:140px; position:relative; overflow:hidden; }
+#skhHomeHero #shcCarousel .shh-banner, #skhHomeHero #shcCarousel .shc-escrow { display:block; min-height:140px; height:auto; }
+#skhHomeHero #shcCarousel .shh-copy, #skhHomeHero #shcCarousel .shc-copy { box-sizing:border-box; width:62%; padding:10px 8px 15px 14px; display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+#skhHomeHero #shcCarousel .shh-kicker { font-size:9px; padding:4px 8px; }
+#skhHomeHero #shcCarousel .shh-title { margin:0; font-size:16px !important; line-height:1.15 !important; }
+#skhHomeHero #shcCarousel .shh-sub, #skhHomeHero #shcCarousel .shc-sub { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin:0; font:500 11px/1.25 Inter,system-ui,sans-serif; }
+#skhHomeHero #shcCarousel .shh-ctas { margin-top:2px; }
+#skhHomeHero #shcCarousel .shh-cta { min-height:36px; padding:7px 13px; font-size:12px !important; }
+#skhHomeHero #shcCarousel .shc-brand { font-size:17px; }
+#skhHomeHero #shcCarousel .shc-title { font-size:17px; line-height:1.1; }
+#skhHomeHero #shcCarousel .shc-pill { padding:5px 8px; font-size:11px; }
+#skhHomeHero #shcCarousel .shc-escrow .shh-cta { margin-top:1px; }
+#skhHomeHero #shcCarousel .shh-photo, #skhHomeHero #shcCarousel .shc-photo { position:absolute !important; inset:0 0 0 auto; width:40%; height:100% !important; object-fit:cover; object-position:center 25%; }
+#skhHomeHero #shcCarousel .shh-banner::after { right:39%; }
+#skhHomeHero #shcCarousel .shc-dots { left:auto; right:14px; bottom:6px; width:auto; }
+@media (min-width:900px) {
+ #skhHomeHero #shcCarousel .shc-slide, #skhHomeHero #shcCarousel .shh-banner, #skhHomeHero #shcCarousel .shc-escrow { min-height:150px; }
+ #skhHomeHero #shcCarousel .shh-copy { width:64%; padding:12px 10px 16px 58px; }
+ #skhHomeHero #shcCarousel .shh-title { font-size:22px !important; }
+ #skhHomeHero #shcCarousel .shh-sub, #skhHomeHero #shcCarousel .shc-sub { font-size:12px; }
+ #skhHomeHero #shcCarousel .shc-copy { width:42%; padding:10px 8px 15px 58px; }
+ #skhHomeHero #shcCarousel .shc-brand { font-size:19px; }
+ #skhHomeHero #shcCarousel .shc-title { font-size:20px; }
+ #skhHomeHero #shcCarousel .shh-photo { width:40%; }
+ #skhHomeHero #shcCarousel .shc-photo { width:34%; right:23%; }
+ #skhHomeHero #shcCarousel .shc-escrow .shh-steps { position:absolute; top:8px; right:52px; bottom:8px; width:21%; display:grid; grid-template-columns:1fr 1fr; gap:5px; align-content:center; margin:0; padding:0; }
+ #skhHomeHero #shcCarousel .shc-escrow .shh-steps li { min-width:0; padding:6px; white-space:normal; font-size:10px; line-height:1.1; }
+ #skhHomeHero #shcCarousel .shc-escrow .shh-steps .skh-ico { flex:none; width:16px; height:16px; }
+}
+/* Keep the community message readable without turning it back into a tall poster. */
+#skhHomeHero #shcCarousel .shh-sub { -webkit-line-clamp:3; }
+
+/* New carousel posters: only artwork is cropped from the supplied posters;
+   the clean, selectable Swahili text is HTML, not text baked into an image. */
+#skhHomeHero #shcCarousel .shc-post-promo {
+  background:linear-gradient(110deg,#f2fbf5 0%,#e6f7ec 58%,#d7efe1 100%);
+  display:flex; align-items:center;
+}
+#skhHomeHero #shcCarousel .shc-post-products { background:linear-gradient(110deg,#f5fbf7 0%,#eaf7f0 59%,#e3f3e8 100%); }
+#skhHomeHero #shcCarousel .shc-post-copy {
+  position:relative; z-index:1; box-sizing:border-box; width:67%;
+  padding:12px 4px 24px 14px; display:flex; flex-direction:column; align-items:flex-start; gap:4px;
+}
+#skhHomeHero #shcCarousel .shc-post-brand { color:#1555a7; font:900 14px/1 system-ui,sans-serif; letter-spacing:-.02em; }
+#skhHomeHero #shcCarousel .shc-post-brand span { color:#07845a; }
+#skhHomeHero #shcCarousel .shc-post-copy h2 { margin:1px 0 0; color:#073629; font:800 17px/1.14 system-ui,sans-serif; }
+#skhHomeHero #shcCarousel .shc-post-copy p { margin:0; color:#183b30; font:600 12px/1.3 system-ui,sans-serif; }
+#skhHomeHero #shcCarousel .shc-post-copy .shc-post-highlight { color:#086441; font-weight:750; }
+#skhHomeHero #shcCarousel .shc-post-image { position:absolute; inset:0 0 0 auto; width:39%; height:100%; object-fit:cover; object-position:center; -webkit-mask-image:linear-gradient(90deg,transparent,#000 22%); mask-image:linear-gradient(90deg,transparent,#000 22%); }
+#skhHomeHero #shcCarousel .shc-post-merch { object-fit:contain; background:#f4faf6; }
+@media (min-width:900px) {
+ #skhHomeHero #shcCarousel .shc-post-copy { width:55%; padding:14px 8px 25px 58px; gap:5px; }
+ #skhHomeHero #shcCarousel .shc-post-brand { font-size:18px; }
+ #skhHomeHero #shcCarousel .shc-post-copy h2 { font-size:24px; }
+ #skhHomeHero #shcCarousel .shc-post-copy p { font-size:14px; }
+ #skhHomeHero #shcCarousel .shc-post-image { width:48%; }
+}
+@media (min-width:900px) {
+ #skhHomeHero #shcCarousel .shc-post-people { object-fit:contain; object-position:center; background:#e3f4e9; }
+}
+
+/* SokoHai campaign slides: concise live text on high-contrast colour. */
+#skhHomeHero #shcCarousel .shc-post-promo {
+  isolation:isolate;
+  background:linear-gradient(125deg,#053c31 0%,#086e55 69%,#36a276 100%);
+}
+#skhHomeHero #shcCarousel .shc-post-products {
+  background:linear-gradient(125deg,#07384e 0%,#096a68 69%,#31a77d 100%);
+}
+#skhHomeHero #shcCarousel .shc-post-promo::after {
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(90deg,rgba(4,55,45,.98) 0%,rgba(4,55,45,.96) 54%,rgba(4,55,45,.30) 72%,transparent 89%);
+}
+#skhHomeHero #shcCarousel .shc-post-products::after {
+  background:linear-gradient(90deg,rgba(5,49,65,.99) 0%,rgba(5,49,65,.96) 54%,rgba(5,49,65,.30) 72%,transparent 89%);
+}
+#skhHomeHero #shcCarousel .shc-post-copy { z-index:2; width:67%; gap:5px; }
+#skhHomeHero #shcCarousel .shc-post-brand {
+  color:#fff; font:800 12px/1 system-ui,sans-serif; letter-spacing:.01em;
+  background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.3);
+  padding:5px 8px; border-radius:99px;
+}
+#skhHomeHero #shcCarousel .shc-post-brand span { color:#ffdf62; }
+#skhHomeHero #shcCarousel .shc-post-copy h2 {
+  color:#fff; font:850 19px/1.1 system-ui,sans-serif; font-size:19px !important; letter-spacing:-.025em;
+}
+#skhHomeHero #shcCarousel .shc-post-copy h2 span { color:#ffdf62; }
+#skhHomeHero #shcCarousel .shc-post-copy p { color:#fff; font:500 12px/1.25 system-ui,sans-serif; }
+#skhHomeHero #shcCarousel .shc-post-copy .shc-post-highlight {
+  color:#c5f7d8; font-weight:750; font-size:11px; letter-spacing:.015em;
+}
+#skhHomeHero #shcCarousel .shc-post-image { width:43%; -webkit-mask-image:none; mask-image:none; }
+#skhHomeHero #shcCarousel .shc-post-merch { background:#f4faf6; }
+@media (min-width:900px) {
+ #skhHomeHero #shcCarousel .shc-post-copy { width:55%; gap:6px; }
+ #skhHomeHero #shcCarousel .shc-post-brand { font-size:13px; }
+ #skhHomeHero #shcCarousel .shc-post-copy h2 { font-size:27px !important; }
+ #skhHomeHero #shcCarousel .shc-post-copy p { font-size:14px; }
+ #skhHomeHero #shcCarousel .shc-post-copy .shc-post-highlight { font-size:12px; }
+ #skhHomeHero #shcCarousel .shc-post-image { width:48%; }
+}

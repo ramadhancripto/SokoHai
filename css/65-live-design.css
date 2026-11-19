@@ -286,18 +286,23 @@
   .lv7-side { flex-basis: 380px; }
 }
 
-/* ---------------- [AUCTION-LIVE] mini player, paused/conn overlays, bid states ---------------- */
-.lvx-mini { position: fixed; right: 12px; bottom: 76px; z-index: 100020; width: 240px; background: #0B1F19; border: 1px solid rgba(242, 201, 76, .45); border-radius: 16px; overflow: hidden; box-shadow: 0 18px 50px rgba(0, 0, 0, .5); }
-.lvx-mini-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 8px; background: rgba(7, 17, 13, .95); }
-.lvx-mini-head b { font-size: 11.5px; color: #F2C94C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lvx-mini-head span { display: flex; gap: 6px; flex: none; }
-.lvx-mini-head button { border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .1); color: #fff; border-radius: 8px; font-size: 11px; font-weight: 800; padding: 5px 9px; cursor: pointer; min-height: 30px; }
-.lvx-mini-slot { height: 300px; position: relative; }
-.lvx-mini-slot .lv7-stage { height: 300px; border-radius: 0; }
-.lvx-mini-slot .lv7-frame, .lvx-mini-slot .lv7-chat, .lvx-mini-slot .lvx-emoji, .lvx-mini-slot .lv7-sheet, .lvx-mini-slot .lv7-host { display: none !important; }
-.lvx-mini-slot .lv7-brand, .lvx-mini-slot .lv7-x { display: none !important; }
-.lvx-mini-slot .lv7-top { top: 8px; left: 8px; right: 8px; }
-@media (min-width: 1100px) { .lvx-mini { width: 300px; bottom: 24px; } .lvx-mini-slot, .lvx-mini-slot .lv7-stage { height: 340px; } }
+/* ---------------- Live mini preview (in-flow; never overlays marketplace) ---------------- */
+.lvx-mini { position:static; display:grid; grid-template-columns:68px minmax(0,1fr) 40px; align-items:center; gap:10px; box-sizing:border-box; width:calc(100% - 20px); max-width:960px; min-height:88px; margin:8px auto; padding:9px; border:1px solid #dcebe7; border-radius:14px; background:#fff; color:#173d36; box-shadow:0 3px 12px rgba(16,42,67,.08); font-family:Inter,system-ui,sans-serif; }
+.lvx-mini-slot { width:68px; height:68px; position:relative; overflow:hidden; border-radius:9px; background:#edf6f2; pointer-events:none; }
+.lvx-mini-slot .lv7-stage { width:68px; height:68px; min-height:0; border-radius:0; }
+.lvx-mini-slot .lv7-bg { overflow:hidden; }
+.lvx-mini-slot .lv7-hero { width:100%; height:100%; max-width:none; max-height:none; object-fit:cover; margin:0; border-radius:0; }
+.lvx-mini-slot .lv7-frame, .lvx-mini-slot .lv7-chat, .lvx-mini-slot .lvx-emoji, .lvx-mini-slot .lv7-sheet, .lvx-mini-slot .lv7-host, .lvx-mini-slot .lv7-top, .lvx-mini-slot .lv7-hostmedia, .lvx-mini-slot .lv7-frozen, .lvx-mini-slot .lv7-paused, .lvx-mini-slot .lv7-conn, .lvx-mini-slot .lv7-rtcstate, .lvx-mini-slot .lv7-shade { display:none !important; }
+.lvx-mini-slot .lv7-gone { padding:4px; font-size:9px; }
+.lvx-mini-info { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+.lvx-mini-title, .lvx-mini-desc { display:block; width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lvx-mini-title { font:600 14px/1.2 Inter,system-ui,sans-serif; color:#173d36; }
+.lvx-mini-desc { font:400 12px/1.2 Inter,system-ui,sans-serif; color:#657873; }
+.lvx-mini-back { border:0; background:transparent; color:#0b9270; padding:3px 0; min-height:24px; font:600 12px/1.2 Inter,system-ui,sans-serif; font-size:12px !important; cursor:pointer; }
+.lvx-mini-close { width:40px; height:40px; border:0; border-radius:50%; background:transparent; color:#637971; font:400 26px/1 Inter,system-ui,sans-serif; font-size:26px !important; cursor:pointer; }
+.lvx-mini-close:hover { background:#eff8f4; color:#08785b; }
+.lvx-mini button:focus-visible { outline:2px solid #1268a8; outline-offset:2px; }
+@media (max-width:360px) { .lvx-mini { gap:8px; } .lvx-mini-title { font-size:13px; } .lvx-mini-desc, .lvx-mini-back { font-size:11px !important; } }
 
 .lv7-paused, .lv7-conn { position: absolute; top: 56px; left: 0; right: 0; bottom: 0; z-index: 7; display: grid; place-items: center; background: rgba(4, 10, 8, .62); backdrop-filter: blur(2px); text-align: center; padding: 18px; }
 .lv7-paused[hidden], .lv7-conn[hidden] { display: none; }

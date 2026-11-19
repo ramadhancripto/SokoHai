@@ -1,7 +1,7 @@
 /* SOKOHAI PRODUCT FOUNDATION — one compatibility layer for the existing products collection.
    It reconciles legacy field names without creating a second product database or UI. */
 import { normalizeProductUploadData, resolveVariantImages } from '../../shared/product-upload-data-core.mjs';
-import { listingProjection, normalizeChannels, legacyFlagsFor } from '../../shared/product-listing-core.mjs';
+import { listingProjection, normalizeChannels, legacyFlagsFor, channelsOf } from '../../shared/product-listing-core.mjs';
 import { categoryInfo } from '../../shared/category-filter-core.mjs';
 export { normalizeProductUploadData, resolveVariantImages };
 const PUB = new Set(['draft','published','archived']);
@@ -32,7 +32,7 @@ export function availabilityStatus(p){
   return 'available';
 }
 export function productEligible(p){
-  return !!p && !p.archivedAt && publicationStatus(p)!=='archived';
+  return !!p && !p.archivedAt && publicationStatus(p)==='published' && channelsOf(p).includes('marketplace');
 }
 export function normalizeTaxonomyMetadata(input){
   const p=input||{};

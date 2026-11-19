@@ -2284,14 +2284,8 @@ skh.cardIcon = function cardIcon(name, size) {
 // [SOKOHAI BRAND LOGO] Cart logo (kama image ya mtumiaji) — itumika sehemu zote
 // za dashboard na UI ili muonekano wawe sawa kama kweny browser.
 skh.skohaiLogo = function skohaiLogo(size) {
-    var s = size || 32;
-    return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SokoHai">' +
-        '<path d="M2 19a1 1 0 011-1h2.586l1.293-1.293a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 012 19zM3.414 15.586l2.586-2.586a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 013.414 15.586zM5 5a1 1 0 011-1h2.586l1.293-1.293a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 015 5zM16.586 5H19a1 1 0 011 1v2.586l-1.293 1.293a1 1 0 01-1.414 0l-2.586-2.586a1 1 0 00-1.414 0L16 10.293l-1.293-1.293A1 1 0 0116.586 5zM5 19a1 1 0 011-1h2.586l1.293-1.293a1 1 0 011.414 0l2.586 2.586a1 1 0 01-.293 1.707l-2.586-2.586a1 1 0 00-1.414 0l-1.293 1.293A1 1 0 015 19z" fill="#18A982"/>' +
-        '<path d="M7 3a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H8a1 1 0 01-1-1z" fill="#D8B83A"/>' +
-        '<path d="M20 19a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1zM6 18h8V8H6z" fill="#1268A8"/>' +
-        '<circle cx="6" cy="21" r="1.5" fill="#D8B83A"/>' +
-        '<circle cx="18" cy="21" r="1.5" fill="#D8B83A"/>' +
-        '</svg>';
+    var s = Math.max(12, Math.min(256, Number(size) || 32));
+    return '<img src="assets/img/sokohai-cart-mark.png" width="' + s + '" height="' + s + '" alt="SokoHai" style="object-fit:contain">';
 };
 
 // [PostActions] Like + Save — zinatumia skhCardToggle iliyopo (bila nakala)

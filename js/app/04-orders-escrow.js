@@ -1,5 +1,6 @@
 /* ==== js/app/04-orders-escrow.js ==== */
 import { skh } from './00-bootstrap.js';
+import './128-personal-recycle.js';
 
 /* [LAUNCH-FIX 2026-11-09] Server escrow release wrapper. confirmEscrowOrder
    hutumia njia hii PEKEE — client fallback (status=completed + wallet adjusts
@@ -54,6 +55,8 @@ window.skhOrderChecks = {
     }
 };
 
+window.addEventListener('skh:personal-recycle-changed', function () { var m = document.getElementById('buyerOrdersModal'); if (m && m.style.display && m.style.display !== 'none' && typeof window.loadBuyerOrdersWithTracking === 'function') window.loadBuyerOrdersWithTracking(); });
+
 window.loadBuyerOrdersWithTracking = async function() {
     const list = document.getElementById('buyerOrdersModalList');
     if(!list) return;
@@ -72,14 +75,16 @@ const qRides = skh.query(
     skh.orderBy("createdAt", "desc") // <--- Hii inapanga mpya juu
 );
         const [snapOrders, snapRides] = await Promise.all([skh.getDocs(qOrders), skh.getDocs(qRides)]);
+        try { await window.skhPersonalRecycle.load(); } catch(e) { console.warn('[personal-recycle] visible fallback',e); }
 
-        let html = '<button onclick="window.skhOpenEscrowCenter && window.skhOpenEscrowCenter()" style="width:100%;padding:12px;margin-bottom:12px;background:#00509d;color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer;">Kituo cha Escrow — Namba ya Kupokea, Nimepokea, Mgogoro</button>';
+        let html = '<button type="button" class="drc-entry" onclick="window.skhOpenPersonalRecycle()">Recycle Bin ya shughuli</button><button onclick="window.skhOpenEscrowCenter && window.skhOpenEscrowCenter()" style="width:100%;padding:12px;margin-bottom:12px;background:#00509d;color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer;">Kituo cha Escrow — Namba ya Kupokea, Nimepokea, Mgogoro</button>';
 
         // 2. CHORA ODA ZA BIDHAA
         if(!snapOrders.empty) {
             snapOrders.forEach(docSnap => {
                 const od = docSnap.data();
-                const status = od.status;
+                if (window.skhPersonalRecycle.hidden('orders', Object.assign({},od,{id:docSnap.id}))) return;
+                const status = od.status || 'pending';
                 let progressWidth = "5%"; 
                 let step1Class = "done", step2Class = "", step3Class = "", step4Class = "";
 
@@ -90,7 +95,7 @@ const qRides = skh.query(
                 const odImg = od.itemImg || '';
                 html += `
                     <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:16px; margin-bottom:15px;"> <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;"> <img src="${odImg || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:52px; height:52px; border-radius:12px; object-fit:cover; border:1px solid #e2e8f0; background:#f1f5f9; flex-shrink:0;"> <div style="flex:1; min-width:0;"> <b style="color:var(--primary-dark); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"> Bidhaa: ${skh.skhEscape(od.itemTitle)}</b> <span style="font-size:13px; font-weight:bold; color:var(--terracotta);">TSh ${Number(od.amount || 0).toLocaleString()}</span>
-                                ${canArchive ? `<button onclick="window.deleteOrderLog('${docSnap.id}')" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;" title="Futa Rekodi"></button>` : ''}
+                                ${canArchive ? `<button onclick="window.deleteOrderLog('${docSnap.id}')" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;" title="Hamisha kwenye Recycle Bin">Hamisha</button>` : ''}
                             </div> </div> <div class="tracker-wrap"> <div class="tracker-line"></div> <div class="tracker-fill" style="width: ${progressWidth};"></div> <div class="tracker-steps"> <div class="t-step ${step1Class}"><div class="t-dot"></div><span class="t-label">Seller</span></div> <div class="t-step ${step2Class}"><div class="t-dot"></div><span class="t-label">Safarini</span></div> <div class="t-step"><div class="t-dot"></div><span class="t-label">Kituoni</span></div> <div class="t-step ${step4Class}"><div class="t-dot"></div><span class="t-label">Mteja</span></div> </div> </div> <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"> <button onclick="window.skhViewOrderProduct('${skh.skhJsEsc(String(od.itemId || ''))}')" style="flex:1; min-width:110px; padding:12px; background:#e0f2fe; color:#03509d; border:none; border-radius:10px; font-weight:bold; cursor:pointer;"> TAZAMA BIDHAA</button> <button onclick="window.openOrderTracking('${docSnap.id}')" style="flex:1; min-width:130px; padding:12px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128506; FUATILIA MZIGO</button> <button onclick="window.openChatWithUser('${skh.skhJsEsc(od.sellerId || '')}', '${skh.skhJsEsc(od.sellerName || 'Muuzaji')}')" style="flex:1; min-width:130px; padding:12px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">CHAT NA MUUZAJI</button> </div> <div style="margin-top:10px;">
                             ${status === 'shipped' ? `<button onclick="openEscrowModal('${docSnap.id}', '${od.sellerId}', ${od.amount})" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;"> NIMEPOKEA MZIGO</button>` : `<p style="font-size:12px; color:#64748b; text-align:center; background:#eee; padding:5px; border-radius:5px;">Hali: <b>${status.toUpperCase()}</b></p>`
                             }
@@ -102,6 +107,7 @@ const qRides = skh.query(
      if(!snapRides.empty) {
             snapRides.forEach(rDoc => {
                 const rd = rDoc.data();
+                if (window.skhPersonalRecycle.hidden('ride_requests', Object.assign({},rd,{id:rDoc.id}))) return;
                 let actionArea = "";
                 const isFinished = (rd.status === 'completed' || rd.status === 'cancelled');
 
@@ -117,7 +123,7 @@ const qRides = skh.query(
 
     html += `
                     <div style="background:#fffbeb; border:1px solid var(--gold); padding:15px; border-radius:16px; margin-bottom:15px;"> <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;"> <img src="${rideImg || 'https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff'}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff';" style="width:52px; height:52px; border-radius:12px; object-fit:cover; border:1px solid #fcd34d; background:#fff; flex-shrink:0;"> <div style="flex:1; min-width:0;"> <b style="color:var(--primary-dark); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"> Safari: ${skh.skhEscape(rd.cargoName || 'Mzigo')}</b> <p style="font-size:12px; color:#475569; margin:2px 0;"> ${skh.skhEscape(rd.fromLocation)}  ${skh.skhEscape(rd.toLocation)}</p>
-                                ${isFinished ? `<button onclick="deleteRideOrder('${rDoc.id}')" style="color:red; background:none; border:none; float:right; font-size:13px;"> Futa Kumbukumbu</button>` : ''}
+                                ${isFinished ? `<button onclick="deleteRideOrder('${rDoc.id}')" style="color:red; background:none; border:none; float:right; font-size:13px;"> Hamisha</button>` : ''}
                             </div> </div> <div style="display:flex; gap:8px; flex-wrap:wrap;"> <button onclick="window.openRideTracking('${rDoc.id}')" style="flex:1; min-width:130px; padding:12px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">&#128506; FUATILIA LIVE</button> <button onclick="window.openChatWithUser('${skh.skhJsEsc(rd.driverId || '')}', '${skh.skhJsEsc(rd.driverName || 'Msafirishaji')}')" style="flex:1; min-width:130px; padding:12px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">CHAT NA MSAFIRISHAJI</button> </div> <div style="background:white; padding:12px; border-radius:12px; margin-top:10px; border: 1px dashed #f97316;"> <p style="font-size:13px; color:#9a3412; margin:0;"><b> CODE YAKO YA UTHIBITISHO:</b></p> <h1 data-custody-token-ride="${rDoc.id}" data-custody-token-kind="transfer" style="text-align:center; color:orange; margin:5px 0;">• • •</h1> <small style="font-size:12px; display:block; text-align:center;">Mpe namba hii mtu anayepaswa kupokea mzigo huu (Dereva au Mteja wa mwisho).</small> </div>
                         ${actionArea}
                     </div>`;

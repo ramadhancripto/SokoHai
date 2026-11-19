@@ -1,5 +1,6 @@
 /* ==== js/app/16-pos-admin-jobs.js ==== */
 import { skh } from './00-bootstrap.js';
+import './128-personal-recycle.js';
 import {
     contrastRatio as skhPaletteContrast,
     normalizeCreative,
@@ -1580,16 +1581,9 @@ window.disableOfflineManagement = function() {
 };
 
 window.deleteRideOrder = async function(rideId) {
-    if(!await skhConfirm(" Una uhakika unataka kufuta kabisa historia ya safari hii kwenye kumbukumbu zako?")) return;
-
-    // [LIFECYCLE] Safari ni rekodi ya biashara (token, makabidhiano, escrow).
-    // Haifutwi ikishaanza — huwekwa kwenye Historia.
-    await window.skhRequestDelete('ride_requests', rideId, {
-        onDone: function () {
-            if (skh.currentMode === 'buyer') window.loadBuyerOrdersWithTracking();
-            else window.loadAndRenderDashboard();
-        }
-    });
+    if (!await skhConfirm('Hamisha safari hii kwenye Recycle Bin yako? Haitafutwa kwa wahusika wengine.')) return;
+    try { await window.skhPersonalRecycle.move('ride_requests', String(rideId)); if (typeof window.loadBuyerOrdersWithTracking === 'function') window.loadBuyerOrdersWithTracking(); }
+    catch (e) { alert('Imeshindikana: ' + (e.message || 'jaribu tena')); }
 };
 
 window.chainNextLeg = function(oldRideId, lastStop, cargoName) {
@@ -1898,12 +1892,9 @@ window.confirmDeliveryWithToken = async function(rideId, correctToken, driverId,
 };
 
 window.deleteOrderLog = async function(orderId) {
-    if (!await skhConfirm(" Una uhakika unataka kufuta kabisa rekodi hii ya mauzo kwenye historia yako? Hakuna kurudi nyuma.")) return;
-    // [LIFECYCLE] Oda: isiyolipiwa inafutika; iliyolipiwa/iliyokamilika
-    // huwekwa Kumbukumbu ili historia ya malipo/escrow isipotee.
-    await window.skhRequestDelete('orders', orderId, {
-        onDone: function () { window.loadBuyerOrdersWithTracking(); }
-    });
+    if (!await skhConfirm('Hamisha oda hii kwenye Recycle Bin yako? Oda na malipo hayatabadilika.')) return;
+    try { await window.skhPersonalRecycle.move('orders', String(orderId)); if (typeof window.loadBuyerOrdersWithTracking === 'function') window.loadBuyerOrdersWithTracking(); }
+    catch (e) { alert('Imeshindikana: ' + (e.message || 'jaribu tena')); }
 };
 
 // One server-authoritative acceptance path. No browser-created assignment/token.
@@ -2254,30 +2245,19 @@ window.completeServiceTaskPro = async function(orderId, buyerId, title) {
 
 window.loadHubDetailedCompletedTasks = async function() {
     const area = document.getElementById('providerWorkspace');
-    if(!area) return;
-
-    area.innerHTML = `
-        <div style="text-align:left; animation:fadeIn 0.2s ease-out;"> <h3 style="color:var(--primary-dark); margin-top:0; text-transform:uppercase;"> Kazi Zilizokamilika (History)</h3> <p style="color:gray; font-size:12px; margin-bottom:20px;">Orodha ya kazi zote ulizozifanya na kuzikamilisha salama mtaani kwako [1].</p> <div style="display:flex; flex-direction:column; gap:10px;" id="hubHistoryArea">Inapakia...</div> </div>`;
-
-    const listDiv = document.getElementById('hubHistoryArea');
+    const actor = skh.currentUser && skh.currentUser.uid;
+    if (!area || !actor) return;
+    area.innerHTML = '<section class="drc-provider-history"><div class="drc-title"><div><h3>Kazi zilizokamilika</h3><p>Hamisha kazi iliyokamilika kwenye pipa lako bila kubadilisha oda au malipo.</p></div><button type="button" onclick="window.skhOpenPersonalRecycle()">Recycle Bin</button></div><div id="hubHistoryArea" data-drc-bulk-scope>Inapakia…</div></section>';
+    const list = document.getElementById('hubHistoryArea');
     try {
-        const q = skh.query(skh.collection(skh.db, "orders"), skh.where("sellerId", "==", skh.currentUser.uid), skh.where("status", "==", "completed"));
-        const snap = await skh.getDocs(q);
-        let html = '';
-
-        if(!snap.empty) {
-            snap.forEach(docSnap => {
-                const od = docSnap.data();
-                html += `
-                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:14px; display:flex; justify-content:space-between; align-items:center;"> <div> <b> ${skh.skhEscape(od.itemTitle)}</b> <span style="display:block; font-size:13px; color:gray; margin-top:2px;">Mteja: ${skh.skhEscape(od.buyerName || '')} | Thamani: TZS ${(od.amount != null ? Number(od.amount) : 0).toLocaleString()}</span> </div> <span style="font-size:13px; background:#dcfce7; color:#16a34a; padding:4px 10px; border-radius:8px; font-weight:bold;">COMPLETED</span> </div>`;
-            });
-        } else {
-            // [REAL DATA 2026-09] Mock historia imeondolewa — hali ya kweli ya ukurasa mtupu.
-            html = `<div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:16px; padding:30px; text-align:center; color:#64748b;"> <p style="margin:0; font-size:14px;">${T('hub_history_empty', 'Hakuna kazi zilizokamilika bado — historia itajazwa hapa.')}</p> </div>`;
-        }
-        listDiv.innerHTML = html;
-    } catch(e) { listDiv.innerHTML = `<p style="color:red;">Kosa la mtandao.</p>`; }
+        const q = skh.query(skh.collection(skh.db, 'orders'), skh.where('sellerId','==',actor), skh.where('status','==','completed'), skh.limit(100));
+        const [snap] = await Promise.all([skh.getDocs(q), window.skhPersonalRecycle.load()]);
+        if (document.getElementById('hubHistoryArea') !== list || !skh.currentUser || skh.currentUser.uid !== actor) return;
+        const rows=[]; snap.forEach(function(d){ const o=Object.assign({},d.data(),{id:d.id}); if((!o.collectionName || o.collectionName === 'services') && !window.skhPersonalRecycle.hidden('orders',o)) rows.push(o); });
+        list.innerHTML = window.skhPersonalRecycle.toolbar() + (rows.length ? rows.map(function(o){return '<article class="drc-row"><div><b>'+skh.skhEscape(String(o.itemTitle||'Huduma'))+'</b><small>Mteja: '+skh.skhEscape(String(o.buyerName||'—'))+' · TZS '+Number(o.amount||0).toLocaleString()+'</small></div><span class="drc-tag">Imekamilika</span>'+window.skhPersonalRecycle.button('orders',o,'provider')+'</article>';}).join('') : '<p class="drc-empty">Hakuna kazi zilizokamilika kwenye ukurasa huu.</p>');
+    } catch(e) { if (document.getElementById('hubHistoryArea') === list) list.innerHTML='<p class="drc-error">Imeshindikana kupakia. Jaribu tena.</p>'; }
 };
+window.addEventListener('skh:personal-recycle-changed',function(){if(window.activeProviderTab==='completed' && document.getElementById('hubHistoryArea')) window.loadHubDetailedCompletedTasks();});
 
 /* ================================================================
    [REAL DATA 2026-09] Paneli za Provider Hub: mockups zimeondolewa.

@@ -27,34 +27,95 @@
 .top-nav-row #skhPostBtn { grid-column:2; grid-row:1; justify-self:center; margin:0 !important; }
 .top-nav-row .top-nav-icons { grid-column:3; grid-row:1; justify-self:end; margin:0 !important; padding-left:0 !important; display:flex; align-items:center; gap:10px !important; }
 .top-nav-row .top-nav-icons::before { display:none !important; }
-@media (max-width: 430px) and (min-width: 361px) {
-  .sticky-top-section .top-nav-row { padding:7px 8px !important; }
-  .top-nav-row .top-nav-left { gap:4px !important; }
-  .top-nav-row .top-nav-icons { gap:2px !important; }
-  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-icon-btn, .top-nav-row .skh-post-btn { width:38px !important; height:40px !important; min-width:38px !important; min-height:40px !important; }
-  .top-nav-row .skh-icon-btn svg, .top-nav-row .skh-post-btn svg { width:18px !important; height:18px !important; }
+/* Keep the original one-row order on phones: menu + brand, Post, actions.
+   At the smallest widths the targets must be narrower to fit; keep them tall. */
+@media (max-width: 480px) {
+  .sticky-top-section .top-nav-row { padding:6px 6px !important; row-gap:0 !important; }
+  .top-nav-row .top-nav-left { gap:3px !important; }
+  .top-nav-row .skh-brand { gap:3px !important; margin-left:0 !important; }
+  .top-nav-row .top-nav-icons { grid-column:3; grid-row:1; justify-self:stretch; width:100%; display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0 !important; }
+  .top-nav-row .top-nav-icons .skh-icon-btn { justify-self:center; }
+  /* Badges remain inside their own button horizontally, including at 99+. */
+  .top-nav-row .skh-count { top:-2px; right:0; min-width:16px; height:16px; line-height:16px; padding:0 3px; box-sizing:border-box; align-items:center; justify-content:center; }
+  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-icon-btn, .top-nav-row .skh-post-btn { width:36px !important; height:44px !important; min-width:36px !important; min-height:44px !important; padding:0 !important; }
+  .top-nav-row .top-nav-left .menu-btn svg, .top-nav-row .skh-icon-btn svg, .top-nav-row .skh-post-btn svg { width:18px !important; height:18px !important; }
 }
-/* Narrow phones get a spacious second action row rather than 27px targets. */
 @media (max-width:360px) {
-  .sticky-top-section .top-nav-row { padding:6px 9px 8px !important; row-gap:6px !important; }
-  .top-nav-row .top-nav-left { gap:5px !important; }
-  .top-nav-row .skh-brand-logo { width:29px !important; height:29px !important; }
-  .top-nav-row .skh-brand-word { font-size:18px !important; letter-spacing:-.5px !important; }
-  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-post-btn, .top-nav-row .skh-icon-btn { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; }
-  .top-nav-row .top-nav-left .menu-btn svg, .top-nav-row .skh-post-btn svg, .top-nav-row .skh-icon-btn svg { width:19px !important; height:19px !important; }
-  .top-nav-row .top-nav-icons { grid-column:1 / -1; grid-row:2; justify-self:stretch; justify-content:space-around; gap:0 !important; }
+  .sticky-top-section .top-nav-row { padding-left:4px !important; padding-right:4px !important; }
+  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-icon-btn, .top-nav-row .skh-post-btn { width:32px !important; min-width:32px !important; }
+  .top-nav-row .skh-brand-logo { width:22px !important; height:22px !important; }
+  .top-nav-row .skh-brand-word { font-size:14px !important; letter-spacing:-.35px !important; }
+}
+@media (max-width:319px) {
+  .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-icon-btn, .top-nav-row .skh-post-btn { width:30px !important; min-width:30px !important; }
+  .top-nav-row .top-nav-icons { gap:0 !important; }
 }
 @media (min-width:1100px) {
   .top-nav-row .top-nav-icons { width:min(100%, 490px); display:grid !important; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px !important; }
   .top-nav-row .top-nav-icons .skh-icon-btn { width:100% !important; justify-content:center; padding:0 8px !important; }
 }
-@media (min-width:431px) and (max-width:1099px) {
+@media (min-width:481px) and (max-width:1099px) {
   .top-nav-row .top-nav-left .menu-btn, .top-nav-row .skh-post-btn, .top-nav-row .skh-icon-btn { width:42px !important; height:42px !important; min-width:42px !important; min-height:42px !important; }
 }
-@media (max-width:360px) {
-  .top-nav-row .top-nav-left { gap:3px !important; }
-  .top-nav-row .top-nav-left .menu-btn { width:40px !important; min-width:40px !important; }
-  .top-nav-row .skh-brand { gap:3px !important; }
-  .top-nav-row .skh-brand-logo { width:22px !important; height:22px !important; }
-  .top-nav-row .skh-brand-word { font-size:14px !important; letter-spacing:-.35px !important; }
+
+/* Welcome alert only — existing trigger and handlers remain authoritative. */
+#welcomeModal { padding:12px; box-sizing:border-box; overflow:auto; }
+#welcomeModal .welcome-dialog { position:relative; flex:none; width:94%; max-width:520px; max-height:calc(100dvh - 24px); overflow-y:auto; overscroll-behavior:contain; background:#fff; border:1px solid #e2ece9; border-radius:22px; box-shadow:0 25px 70px rgba(16,42,67,.35); text-align:center; font-family:Inter,system-ui,sans-serif; }
+#welcomeModal .welcome-banner { height:140px; position:relative; background:#e7f5ed url('../assets/img/home/welcome-market-banner.webp') center / cover no-repeat; border-bottom:4px solid #d8b83a; }
+#welcomeModal .welcome-banner-brand { position:absolute; top:14px; left:50%; transform:translateX(-50%); display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 10px; background:rgba(255,255,255,.88); border-radius:14px; box-shadow:0 2px 12px rgba(16,42,67,.1); }
+#welcomeModal .welcome-banner-brand img { width:46px; height:46px; object-fit:contain; }
+#welcomeModal .welcome-banner-brand .skh-brand-lockup { font-size:30px; }
+#welcomeModal .welcome-close { position:absolute; top:10px; right:10px; width:40px; height:40px; border:0; border-radius:50%; background:#fff; color:#183b44; font:400 29px/1 Inter, sans-serif; cursor:pointer; box-shadow:0 2px 8px #102a4326; }
+#welcomeModal .welcome-content { padding:14px 20px 20px; }
+#welcomeModal #welcomeHeading { margin:0; color:#103d3b; font:700 28px/1.16 Inter,system-ui,sans-serif; }
+#welcomeModal .welcome-brand-text span:first-child { color:#1268a8; } #welcomeModal .welcome-brand-text span:last-child { color:#18a982; }
+#welcomeModal .welcome-greeting { margin:7px 0 0; font-size:17px; font-weight:500; line-height:1.25; color:#244b48; }
+#welcomeModal #welcomeName { color:#0e8d68; font-size:22px; font-weight:700; overflow-wrap:anywhere; }
+#welcomeModal .welcome-intro { margin:5px 0 12px; color:#53646d; font-size:13px; line-height:1.3; }
+#welcomeModal .welcome-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+#welcomeModal .welcome-card { min-width:0; overflow:hidden; border:1px solid #dce9e8; border-radius:12px; background:#f5fbfc; text-align:left; }
+#welcomeModal .welcome-card-photo { height:66px; background-position:center; background-size:cover; }
+#welcomeModal .welcome-photo-search { background-image:url('../assets/img/home/welcome-search.webp'); } #welcomeModal .welcome-photo-buy { background-image:url('../assets/img/home/welcome-buy.webp'); } #welcomeModal .welcome-photo-delivery { background-image:url('../assets/img/home/welcome-delivery.webp'); } #welcomeModal .welcome-photo-sell { background-image:url('../assets/img/home/welcome-sell.webp'); } #welcomeModal .welcome-photo-service { background-image:url('../assets/img/home/welcome-service.webp'); } #welcomeModal .welcome-photo-manage { background-image:url('../assets/img/home/welcome-manage.webp'); }
+#welcomeModal .welcome-card-caption { display:flex; align-items:center; gap:6px; padding:7px 6px; min-height:50px; box-sizing:border-box; }
+#welcomeModal .welcome-card-icon { flex:none; width:30px; height:30px; border-radius:50%; background:#0b9d73; color:white; display:grid; place-items:center; }
+#welcomeModal .welcome-card-icon svg { width:20px; height:20px; }
+#welcomeModal .welcome-card-label { min-width:0; display:block; } #welcomeModal .welcome-card-label strong { display:block; color:#123e3d; font-size:14px; font-weight:600; line-height:1.12; overflow-wrap:anywhere; } #welcomeModal .welcome-card-label small { display:block; margin-top:2px; color:#526168; font-size:11px; font-weight:400; line-height:1.15; overflow-wrap:anywhere; }
+#welcomeModal .welcome-safety { margin:12px 0; border-radius:9px; padding:8px 5px; background:#e2f7ed; color:#087a59; font-size:12px; font-weight:600; } #welcomeModal .welcome-safety span { display:inline-block; margin-right:4px; }
+#welcomeModal .welcome-cta { width:100%; height:54px; border:0; border-radius:14px; background:linear-gradient(90deg,#0b8d68,#18a982); color:white; font:700 17px Inter,system-ui,sans-serif; cursor:pointer; box-shadow:0 5px 15px #0e7a5f38; }
+#welcomeModal .welcome-cta:focus-visible, #welcomeModal .welcome-close:focus-visible { outline:3px solid #1268a8; outline-offset:2px; }
+@media (max-width:380px) { #welcomeModal { padding:8px; } #welcomeModal .welcome-dialog { max-height:calc(100dvh - 16px); width:96%; } #welcomeModal .welcome-content { padding:10px 10px 14px; } #welcomeModal .welcome-banner { height:130px; } #welcomeModal #welcomeHeading { font-size:24px; } #welcomeModal .welcome-cards { gap:6px; } #welcomeModal .welcome-card-caption { gap:4px; padding:5px 4px; } #welcomeModal .welcome-card-icon { width:26px; height:26px; } #welcomeModal .welcome-card-icon svg { width:17px; height:17px; } #welcomeModal .welcome-card-label strong { font-size:12px; } #welcomeModal .welcome-card-label small { font-size:10px; } #welcomeModal .welcome-card-photo { height:56px; } }
+@media (max-height:700px) { #welcomeModal .welcome-banner { height:100px; } #welcomeModal .welcome-content { padding-top:9px; padding-bottom:12px; } #welcomeModal .welcome-card-photo { height:46px; } #welcomeModal .welcome-intro { margin-bottom:7px; } #welcomeModal .welcome-safety { margin:7px 0; padding:6px; } #welcomeModal .welcome-cta { height:48px; } }
+/* Override broad legacy typography rules within this modal only. */
+#welcomeModal #welcomeHeading { font-size:28px !important; }
+#welcomeModal .welcome-card-label small { font-size:11px !important; }
+#welcomeModal .welcome-cta { font-size:17px !important; }
+#welcomeModal .welcome-close { font-size:29px !important; }
+#welcomeModal .welcome-cards { grid-auto-rows:1fr; }
+@media (max-width:380px) {
+ #welcomeModal #welcomeHeading { font-size:24px !important; }
+ #welcomeModal .welcome-card-caption { position:relative; display:block; min-height:58px; padding:15px 5px 5px; }
+ #welcomeModal .welcome-card { overflow:hidden; }
+ #welcomeModal .welcome-card-icon { position:absolute; top:-13px; right:5px; box-shadow:0 0 0 2px #f5fbfc; }
+ #welcomeModal .welcome-card-label strong { font-size:12px !important; line-height:1.12; }
+ #welcomeModal .welcome-card-label small { font-size:10px !important; line-height:1.12; }
+}
+@media (max-height:700px) and (max-width:380px) {
+ #welcomeModal .welcome-banner { height:80px; }
+ #welcomeModal .welcome-banner-brand { top:8px; }
+ #welcomeModal #welcomeHeading { font-size:21px !important; }
+ #welcomeModal .welcome-greeting { font-size:15px; margin-top:4px; }
+ #welcomeModal #welcomeName { font-size:18px; }
+ #welcomeModal .welcome-intro { font-size:11px; margin:3px 0 6px; }
+ #welcomeModal .welcome-card-photo { height:38px; }
+ #welcomeModal .welcome-card-caption { min-height:54px; }
+ #welcomeModal .welcome-safety { font-size:10px; }
+}
+@media (min-width:381px) and (max-width:480px) {
+ #welcomeModal .welcome-content { padding-left:14px; padding-right:14px; }
+ #welcomeModal .welcome-cards { gap:8px; }
+ #welcomeModal .welcome-card-caption { position:relative; display:block; min-height:58px; padding:15px 6px 6px; }
+ #welcomeModal .welcome-card-icon { position:absolute; top:-13px; right:6px; width:26px; height:26px; box-shadow:0 0 0 2px #f5fbfc; }
+ #welcomeModal .welcome-card-icon svg { width:17px; height:17px; }
+ #welcomeModal .welcome-card-label strong { font-size:13px !important; }
+ #welcomeModal .welcome-card-label small { font-size:11px !important; }
 }

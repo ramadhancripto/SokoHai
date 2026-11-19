@@ -120,7 +120,7 @@ async function deliver(notifId, n, sender) {
         tokens,
         notification: { title: cut(n.title || 'SokoHai', 80), body: cut(n.body || n.message || '', 160) },
         data: { notifId: String(notifId), category: cat, url: '/?notif=' + encodeURIComponent(String(notifId)) },
-        webpush: { fcmOptions: { link: '/?notif=' + encodeURIComponent(String(notifId)) }, notification: { icon: '/icon-192.png', badge: '/icon-192.png', tag: 'skh-' + cat } }
+        webpush: { fcmOptions: { link: '/?notif=' + encodeURIComponent(String(notifId)) }, notification: { icon: '/assets/img/sokohai-app-192-v2.png', badge: '/assets/img/sokohai-app-192-v2.png', tag: 'skh-' + cat } }
     };
     const res = await sender(msg);
     const dead = [];

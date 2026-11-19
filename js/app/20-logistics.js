@@ -1,5 +1,6 @@
 /* ==== js/app/20-logistics.js ==== */
 import { skh } from './00-bootstrap.js';
+import './128-personal-recycle.js';
 
 function T(key, en, vars) {
     var s = null;
@@ -1022,7 +1023,8 @@ window.skhRenderTripHistory = async function () {
     var lmic = function (n, s) { return (window.skhNavIcon ? window.skhNavIcon(n, s || 14) : ''); };
     var esc = skh.skhEscape || function (x) { return String(x == null ? '' : x); };
     var stats = await window.skhDriverTripStats();
-    if (!document.getElementById('driverTripHistoryArea')) return;
+    try { await window.skhPersonalRecycle.load(); } catch(e) { console.warn('[personal-recycle] visible fallback',e); }
+    if (document.getElementById('driverTripHistoryArea') !== area) return;
     if (!stats || !stats.rides.length) {
         area.innerHTML = '<div class="lm-empty"><div class="lm-empty-ico">' + lmic('clipboard', 28)
             + '</div><b>Hamna rekodi ya safari</b><p>Kumbukumbu ya usafirishaji itajaa kwa safari utakazokubali na kumaliza.</p></div>';
@@ -1060,12 +1062,13 @@ window.skhRenderTripHistory = async function () {
             + '<div class="lm-hist-side">'
             +     statusBadgeHtml
             + '<button type="button" class="lm-hist-track" onclick="window.openLiveMap(\'' + esc(r.id) + '\')">' + lmic('map', 12) + ' Tazama</button>'
+            + window.skhPersonalRecycle.button('ride_requests',r,'driver')
             + '</div>'
             + '</div>';
     }
-    var done = stats.rides.filter(function (r) { return r.status === 'completed'; }).slice(0, 15);
-    var problems = stats.rides.filter(function (r) { return r.status === 'disputed' || r.status === 'cancelled'; }).slice(0, 10);
-    var html = '';
+    var done = stats.rides.filter(function (r) { return r.status === 'completed' && !window.skhPersonalRecycle.hidden('ride_requests',r); }).slice(0, 15);
+    var problems = stats.rides.filter(function (r) { return (r.status === 'disputed' || r.status === 'cancelled') && !window.skhPersonalRecycle.hidden('ride_requests',r); }).slice(0, 10);
+    var html = window.skhPersonalRecycle.toolbar();
     if (problems.length) {
         html += '<div class="lm-hist-sep is-problem">' + lmic('alert', 13) + ' Matatizo / Migogoro (' + problems.length + ')</div>';
         html += problems.map(function (r) { return row(r, 'problem'); }).join('');
@@ -1078,6 +1081,9 @@ window.skhRenderTripHistory = async function () {
 };
 
 // ============================================================
+// Refresh only the history list; financial and performance totals remain unchanged.
+window.addEventListener('skh:personal-recycle-changed', function () { if (document.getElementById('driverTripHistoryArea')) window.skhRenderTripHistory(); });
+
 // [PHASE 8 FIX] UTEKELEZAJI WA KUKABILI KAZI NA KUTOA OFA YA USAFIRI
 // ============================================================
 window.acceptTransportMission = function(rideId, button) {

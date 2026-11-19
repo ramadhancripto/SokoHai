@@ -482,6 +482,7 @@ window.submitEditForm = async function(event) {
             updateMap.searchMetadata = merged.searchMetadata;
             updateMap.schemaVersion = skh.PRODUCT_SCHEMA_VERSION;
             if (pub === 'archived') updateMap.archivedAt = new Date().toISOString();
+            else if (fresh.data().archivedAt) updateMap.archivedAt = null;
         }
         if (totalBids > 0 && curMode === 'auction') {
             const oldPrice = parseFloat(fresh.data().price) || 0;

@@ -45,7 +45,7 @@ function ratio(a, b) {
     t('SEO: canonical ni absolute https',
         /<link rel="canonical"[^>]*href="https:\/\/[^"]+"/.test(head));
     t('SEO: favicon si data:, (brand mark)',
-        head.includes('rel="icon" type="image/png" href="assets/sokohai-s-mark.png"'));
+        head.includes('rel="icon" type="image/png" href="assets/img/sokohai-app-192-v2.png"') && fs.existsSync(path.join(ROOT, 'assets/img/sokohai-app-192-v2.png')));
     t('SEO: manifest imeunganishwa kwenye <head>',
         head.includes('<link rel="manifest" href="sokohai-manifest.json">'));
     t('SEO: theme-color ipo', head.includes('name="theme-color"'));

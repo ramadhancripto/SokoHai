@@ -15,6 +15,14 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
     var SOLD_STATUSES = ['completed', 'delivered', 'paid', 'delivered_confirmed', 'shipped'];
     var META = null; // { products:[], ordersAgg:{}, byProduct:{} }
     var MP_Q = '', MP_CAT = '', MP_STOCK = '', MP_STATUS = '', MP_SORT = 'newest';
+    var MP_SELECTED = new Set(), MP_OWNER = '', MP_REMOVING = false;
+    function mpInRecycle(p) { return !!(p && (p.archivedAt || String(p.publicationStatus || '').toLowerCase() === 'archived' || ['archived','deleted'].includes(String(p.status || '').toLowerCase()))); }
+    function mpArchived(p) { return mpInRecycle(p); }
+    function mpBusyCommerce(p) {
+        var m = p && p.modeData || {};
+        return ['auction','group_buy','price_drop'].includes(String(p && p.saleMode || '')) &&
+            (Number(m.totalBids || 0) > 0 || Number(m.queueEntries || 0) > 0 || (Array.isArray(m.participants) && m.participants.length > 0));
+    }
 
     function esc(s) { return skh.skhEscape(s == null ? '' : String(s)); }
     function js(s) { return skh.skhJsEsc(s == null ? '' : String(s)); }
@@ -41,7 +49,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             var pq = skh.query(skh.collection(skh.db, 'products'), skh.where('userId', '==', uid), skh.limit(300));
             var ps = await skh.getDocs(pq);
             ps.forEach(function (d) { products.push(Object.assign({ id: d.id }, d.data())); });
-        } catch (e) { }
+        } catch (e) { console.warn('[seller-products] bidhaa hazikupakiwa', e); META = null; return null; }
         try {
             var oq = skh.query(skh.collection(skh.db, 'orders'), skh.where('sellerId', '==', uid), skh.limit(300));
             var os = await skh.getDocs(oq);
@@ -148,7 +156,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
 
     function filteredRows() {
         if (!META) return [];
-        var list = META.rows.slice();
+        var list = META.rows.filter(function (r) { return !mpInRecycle(META.raw[r.id]); });
         if (MP_Q) {
             var q = MP_Q.toLowerCase();
             list = list.filter(function (r) {
@@ -460,7 +468,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
 
     /* ---------- hesabu za KPI ---------- */
     function computeKpis() {
-        var rows = (META && META.rows) ? META.rows : [];
+        var rows = (META && META.rows) ? META.rows.filter(function (r) { return !mpInRecycle(META.raw[r.id]); }) : [];
         var k = {
             total: rows.length, variants: 0,
             sellable: 0, low: 0, out: 0, untracked: 0, madeToOrder: 0,
@@ -697,12 +705,15 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
     }
 
     /* ---------- 1. MY PRODUCTS ---------- */
+    var mpRenderSeq = 0;
     window.skhRenderMyProducts = async function () {
         var ws = document.getElementById('dashWorkspace');
         if (!ws) return;
+        var renderSeq = ++mpRenderSeq, startTab = window.activeDashboardTab, actor = skh.currentUser && skh.currentUser.uid;
         ensureMpStyles();
         ws.innerHTML = '<p style="text-align:center;color:#64748b;padding:40px;">' + T('smp_loading_products', 'Loading your products...') + '</p>';
         await loadSellerMetrics();
+        if (renderSeq !== mpRenderSeq || window.activeDashboardTab !== startTab || document.getElementById('dashWorkspace') !== ws || !skh.currentUser || skh.currentUser.uid !== actor) return;
         if (!META) {
             ws.innerHTML = '<div style="background:#fff;border:1px solid #F2D7D5;border-radius:14px;padding:22px;text-align:center;color:#18352D;">'
                 + '<b style="display:block;font-size:14px;">' + esc(T('mpk_err_title', 'Bidhaa hazikuweza kupakiwa')) + '</b>'
@@ -710,7 +721,11 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
                 + '<button onclick="window.skhRenderMyProducts()" style="background:#18A982;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:900;cursor:pointer;">' + esc(T('mpk_retry', 'Jaribu tena')) + '</button></div>';
             return;
         }
-        var rows = META.rows;
+        var owner = String(skh.currentUser && skh.currentUser.uid || '') + ':' + shopOwnerId();
+        if (MP_OWNER !== owner) { MP_SELECTED.clear(); MP_OWNER = owner; }
+        var availableIds = new Set(META.rows.filter(function (r) { return !mpArchived(META.raw[r.id]); }).map(function (r) { return r.id; }));
+        MP_SELECTED.forEach(function (id) { if (!availableIds.has(id)) MP_SELECTED.delete(id); });
+        var rows = META.rows.filter(function (r) { return !mpInRecycle(META.raw[r.id]); });
         var cats = {};
         rows.forEach(function (r) { if (r.category && r.category !== 'N/A') cats[r.category] = true; });
         var catKeys = Object.keys(cats).sort();
@@ -730,6 +745,11 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
                         ${catKeys.map(function (c) { return '<option value="' + esc(c) + '"' + (MP_CAT === c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('')}
                     </select> <select id="mpStatus" onchange="window.skhMPFilter('status', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_status', 'Hali zote')}</option> <option value="active"${MP_STATUS === 'active' ? ' selected' : ''}>${T('mpk_st_active', 'Inatumika (Active)')}</option><option value="draft"${MP_STATUS === 'draft' ? ' selected' : ''}>${T('mpk_st_draft', 'Rasimu')}</option><option value="suspended"${MP_STATUS === 'suspended' ? ' selected' : ''}>${T('mpk_st_suspended', 'Imesimamishwa')}</option> </select> <select id="mpStock" onchange="window.skhMPFilter('stock', this.value)" style="flex:1;min-width:110px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="">${T('smp_all_stock', 'Stoo yote')}</option> <option value="in"${MP_STOCK === 'in' ? ' selected' : ''}>${T('eng_in_stock', 'In stock')}</option> <option value="low"${MP_STOCK === 'low' ? ' selected' : ''}>${T('mpk_stock_low', 'Stoo chini')}</option> <option value="out"${MP_STOCK === 'out' ? ' selected' : ''}>${T('eng_out_stock', 'Out of stock')}</option> <option value="untracked"${MP_STOCK === 'untracked' ? ' selected' : ''}>${T('mpk_stock_untracked', 'Bila stock tracking')}</option> </select> <select id="mpSort" onchange="window.skhMPFilter('sort', this.value)" style="flex:1;min-width:120px;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:12px;background:white;"> <option value="newest"${MP_SORT === 'newest' ? ' selected' : ''}>${T('smp_newest', 'Newest')}</option> <option value="oldest"${MP_SORT === 'oldest' ? ' selected' : ''}>${T('mpk_sort_oldest', 'Ya zamani zaidi')}</option> <option value="name"${MP_SORT === 'name' ? ' selected' : ''}>${T('mpk_sort_name', 'Jina (A–Z)')}</option> <option value="stock"${MP_SORT === 'stock' ? ' selected' : ''}>${T('mpk_sort_stock', 'Kiasi cha Stoo')}</option> <option value="best"${MP_SORT === 'best' ? ' selected' : ''}>${T('smp_best', 'Best selling')}</option> <option value="lowest"${MP_SORT === 'lowest' ? ' selected' : ''}>${T('smp_lowest', 'Slow selling')}</option> <option value="highest"${MP_SORT === 'highest' ? ' selected' : ''}>${T('smp_highest', 'Highest revenue')}</option> </select> <button type="button" class="mp-clear" onclick="window.skhMPClearAll()">${T('mpk_clear', 'Ondoa filters zote')}</button> </div> </div>
         <div id="mpResultInfo">${resultInfoHtml()}</div>
+        <section class="mp-selection" aria-label="Chagua bidhaa za kuondoa sokoni">
+            <div><b>Hamisha bidhaa kwenye Recycle Bin</b><small>Chagua moja au zaidi kutoka bidhaa zilizopakiwa (hadi 300); historia na rekodi hazifutwi.</small></div>
+            <div class="mp-selection-actions"><button type="button" id="mpSelectVisible" onclick="window.skhMPSelectVisible()">Chagua zilizoonyeshwa</button><button type="button" id="mpRemoveSelected" class="mp-danger" onclick="window.skhMPRemoveSelected()" disabled>Hamisha zilizochaguliwa (0)</button></div>
+            <p id="mpSelectionStatus" role="status" aria-live="polite"></p>
+        </section>
         <div id="mpTableWrap"></div> </div>`;
         window.skhMPRenderTable();
         loadSalesKpi();
@@ -758,13 +778,24 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
                   + '<p style="font-size:13px;margin:0 0 10px;">' + esc(T('smp_no_match', 'Hakuna bidhaa inayolingana na kigezo hiki.')) + '</p>'
                   + '<button type="button" class="mp-clear" onclick="window.skhMPClearAll()">' + esc(T('mpk_clear', 'Ondoa filters zote')) + '</button></div>'
                 : empty(T('smp_no_products', 'Hakuna bidhaa bado.'));
-            renderKpiSection();
+            mpUpdateSelection(); renderKpiSection();
             return;
         }
         var shown = rows.slice(0, MP_LIMIT);
         var rest = rows.length - shown.length;
         wrap.innerHTML = shown.map(productCardHtml).join('')
             + (rest > 0 ? '<button type="button" class="mp-more" onclick="window.skhMPMore()">' + esc(T('mpk_more', 'Onyesha bidhaa zaidi ({n} zimebaki)', { n: rest })) + '</button>' : '');
+        wrap.querySelectorAll('[data-mp-select]').forEach(function (box) {
+            box.addEventListener('change', function () {
+                var id = box.getAttribute('data-mp-select');
+                if (box.checked) MP_SELECTED.add(id); else MP_SELECTED.delete(id);
+                mpUpdateSelection();
+            });
+        });
+        wrap.querySelectorAll('[data-mp-remove]').forEach(function (btn) {
+            btn.addEventListener('click', function () { mpRemoveProducts([btn.getAttribute('data-mp-remove')]); });
+        });
+        mpUpdateSelection();
         renderKpiSection();
     };
 
@@ -788,8 +819,11 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             ? '<div style="font-size:11px;color:#8A6B16;margin-top:4px;">' + esc(T('mpk_draft_reason', 'Sababu:')) + ' ' + esc(r.readinessReasons.join(' · ')) + '</div>' : '';
         var skuLine = (r.sku || r.barcode)
             ? '<div style="font-size:11px;color:#94a3b8;margin:2px 0;">' + (r.sku ? 'SKU: ' + esc(r.sku) : '') + (r.sku && r.barcode ? ' · ' : '') + (r.barcode ? 'Barcode: ' + esc(r.barcode) : '') + '</div>' : '';
+        var archived = mpArchived(META.raw[r.id]);
+        var select = archived ? '<span class="mp-archived-label">Imeondolewa sokoni</span>'
+            : '<label class="mp-select-label"><input type="checkbox" data-mp-select="' + esc(r.id) + '"' + (MP_SELECTED.has(r.id) ? ' checked' : '') + '> Chagua bidhaa hii</label>';
         return `
-            <div style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;" data-mp-product="${esc(r.id)}"> <div style="display:flex;gap:10px;align-items:flex-start;"> <div style="width:56px;height:56px;flex:0 0 56px;aspect-ratio:1/1;border-radius:10px;background:#F1F5F3;display:flex;align-items:center;justify-content:center;overflow:hidden;">${img ? '<img src="' + img + '" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:contain;display:block;">' : '<span style="font-size:11px;font-weight:900;color:#8FA69D;">—</span>'}</div> <div style="flex:1;min-width:0;"> <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"> <b style="font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</b> <span style="font-size:13px;font-weight:900;color:var(--terracotta);white-space:nowrap;">${tzs(r.price)}</span> </div>
+            <div class="mp-product-card" style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;" data-mp-product="${esc(r.id)}"> <div class="mp-select-row">${select}</div><div style="display:flex;gap:10px;align-items:flex-start;"> <div style="width:56px;height:56px;flex:0 0 56px;aspect-ratio:1/1;border-radius:10px;background:#F1F5F3;display:flex;align-items:center;justify-content:center;overflow:hidden;">${img ? '<img src="' + img + '" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:contain;display:block;">' : '<span style="font-size:11px;font-weight:900;color:#8FA69D;">—</span>'}</div> <div style="flex:1;min-width:0;"> <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"> <b style="font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(r.title)}</b> <span style="font-size:13px;font-weight:900;color:var(--terracotta);white-space:nowrap;">${tzs(r.price)}</span> </div>
                         ${skuLine}
                         <div style="font-size:12px;color:#64748b;margin:3px 0;">${esc(r.category)} · ${esc(r.unitLabel || 'pcs')}</div>
                         <div style="font-size:12px;color:#64748b;margin:3px 0;">${T('mpk_available', 'Inapatikana')}: <b style="color:${st.color};">${esc(st.text)}</b>${st.sub ? ' <span style="color:#94a3b8;">(' + esc(st.sub) + ')</span>' : ''} · <span style="color:${statusColor};font-weight:800;">${esc(statusText)}</span></div>
@@ -805,18 +839,155 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
                         ${modeMetricsLine(r)}
                         <div style="font-size:12.5px;color:#94a3b8;margin-top:5px;">
                             ${T('smp_added_on', 'Added on')} ${esc(new Date(r.createdAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ'))}${r.updatedAt && r.updatedAt !== r.createdAt ? ' · ' + T('smp_updated_on', 'Updated on') + ' ' + esc(new Date(r.updatedAt).toLocaleDateString(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en' ? 'en-GB' : 'sw-TZ')) : ''}
-                        </div> <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"> <button onclick="openProduct('${js(r.id)}','products')" style="padding:8px 12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_view_btn', 'View')}</button> <button onclick="window.openEditModal('${js(r.id)}','products')" style="padding:8px 12px;background:#e0f2fe;color:#03509d;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_edit_btn', 'Edit')}</button> <button onclick="window.skhDuplicateProduct('${js(r.id)}')" title="Nakili mipangilio (bila SKU, stock, picha na variants)" style="padding:8px 12px;background:#EAF8F2;color:#0f6e55;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">Nakili</button> <button onclick="window.skhMPStock('${js(r.id)}', ${Number(r.stock) || 0})" style="padding:8px 12px;background:#fef3c7;color:#92400e;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_stock_btn', 'Stock')}</button> <button onclick="window.skhSetProductPublication('${js(r.id)}','${r.status === 'active' ? 'draft' : 'published'}')" style="padding:8px 12px;background:#ecfdf5;color:#047857;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${r.status === 'active' ? T('mpk_suspend', 'Simamisha') : T('mpk_publish', 'Chapisha')}</button> <button onclick="window.skhSetProductPublication('${js(r.id)}','archived')" style="padding:8px 12px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">Archive</button> <button onclick="window.skhRenderProductPerformance('${js(r.id)}')" style="padding:8px 12px;background:#f3e8ff;color:#6b21a8;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_perf_btn', 'Utendaji')}</button> </div> </div> </div> </div>`;
+                        </div> <div class="mp-product-actions" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"> <button onclick="openProduct('${js(r.id)}','products')" style="padding:8px 12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_view_btn', 'View')}</button> <button onclick="window.openEditModal('${js(r.id)}','products')" style="padding:8px 12px;background:#e0f2fe;color:#03509d;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_edit_btn', 'Edit')}</button> <button onclick="window.skhDuplicateProduct('${js(r.id)}')" title="Nakili mipangilio (bila SKU, stock, picha na variants)" style="padding:8px 12px;background:#EAF8F2;color:#0f6e55;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">Nakili</button> <button onclick="window.skhMPStock('${js(r.id)}', ${Number(r.stock) || 0})" style="padding:8px 12px;background:#fef3c7;color:#92400e;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_stock_btn', 'Stock')}</button> <button onclick="window.skhSetProductPublication('${js(r.id)}','${r.status === 'active' ? 'draft' : 'published'}')" style="padding:8px 12px;background:#ecfdf5;color:#047857;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${r.status === 'active' ? T('mpk_suspend', 'Simamisha') : T('mpk_publish', 'Chapisha')}</button> ${archived ? '' : `<button class="mp-remove-one" type="button" data-mp-remove="${esc(r.id)}" style="padding:8px 12px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">Hamisha</button>`} <button onclick="window.skhRenderProductPerformance('${js(r.id)}')" style="padding:8px 12px;background:#f3e8ff;color:#6b21a8;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;">${T('smp_perf_btn', 'Utendaji')}</button> </div> </div> </div> </div>`;
+    }
+
+    function mpUpdateSelection() {
+        var count = MP_SELECTED.size, button = document.getElementById('mpRemoveSelected'), status = document.getElementById('mpSelectionStatus'), select = document.getElementById('mpSelectVisible');
+        if (button) { button.disabled = MP_REMOVING || !count; button.textContent = MP_REMOVING ? 'Inaondoa…' : 'Hamisha zilizochaguliwa (' + count + ')'; }
+        if (status && !MP_REMOVING) status.textContent = count ? 'Umechagua bidhaa ' + count + '. Uchaguzi unabaki hata ukibadili kichujio.' : 'Hakuna bidhaa iliyochaguliwa.';
+        var boxes = Array.from(document.querySelectorAll('#mpTableWrap [data-mp-select]'));
+        if (select) { select.disabled = MP_REMOVING || !boxes.length; select.textContent = boxes.length && boxes.every(function (b) { return b.checked; }) ? 'Acha kuchagua zilizoonyeshwa' : 'Chagua zilizoonyeshwa'; }
+        boxes.forEach(function (b) { b.disabled = MP_REMOVING; });
+        document.querySelectorAll('#mpTableWrap .mp-product-actions button').forEach(function (b) { b.disabled = MP_REMOVING; });
+    }
+    window.skhMPSelectVisible = function () {
+        if (MP_REMOVING) return;
+        var boxes = Array.from(document.querySelectorAll('#mpTableWrap [data-mp-select]'));
+        var select = boxes.some(function (b) { return !b.checked; });
+        boxes.forEach(function (b) { b.checked = select; var id = b.getAttribute('data-mp-select'); if (select) MP_SELECTED.add(id); else MP_SELECTED.delete(id); });
+        mpUpdateSelection();
+    };
+    window.skhMPRemoveSelected = function () { return mpRemoveProducts(Array.from(MP_SELECTED)); };
+    async function mpRemoveProducts(ids) {
+        if (MP_REMOVING || !META || !skh.currentUser) return;
+        ids = Array.from(new Set(ids)).filter(function (id) { return META.raw[id] && !mpArchived(META.raw[id]); });
+        if (!ids.length) return;
+        var actor = skh.currentUser.uid;
+        var msg = 'Hamisha bidhaa ' + ids.length + ' kwenye Recycle Bin? Zitaondoka kwenye Bidhaa Zangu na orodha kuu ya soko. Rekodi, stoo na historia ya oda zitahifadhiwa; hii si kufuta kabisa.';
+        if (!await skhConfirm(msg)) return;
+        if (MP_REMOVING || !skh.currentUser || skh.currentUser.uid !== actor) return;
+        MP_REMOVING = true; mpUpdateSelection();
+        var done = [], failed = [];
+        try {
+            for (var i = 0; i < ids.length; i++) {
+                var id = ids[i], original = META.raw[id];
+                try {
+                    if (!skh.currentUser || skh.currentUser.uid !== actor) throw new Error('Akaunti imebadilika; jaribu tena.');
+                    if (typeof skh.runTransaction !== 'function') throw new Error('Huduma salama ya mabadiliko haipatikani.');
+                    var ref = skh.doc(skh.db, 'products', id);
+                    await skh.runTransaction(skh.db, async function (tx) {
+                        var snap = await tx.get(ref);
+                        if (!snap || !snap.exists()) throw new Error('Bidhaa haikupatikana.');
+                        var fresh = snap.data();
+                        if (mpArchived(fresh)) return;
+                        if (mpBusyCommerce(fresh)) throw new Error('Ina mnada au washiriki; shughulikia mchakato unaoendelea kwanza.');
+                        var now = new Date().toISOString();
+                        tx.update(ref, { publicationStatus:'archived', status:'archived', archivedAt:now, updatedAt:now });
+                    });
+                    done.push(id); MP_SELECTED.delete(id);
+                } catch (e) { failed.push((original && original.title || id) + ': ' + String(e && e.message || 'Imeshindikana')); }
+                var status = document.getElementById('mpSelectionStatus');
+                if (status) status.textContent = 'Imekaguliwa ' + (i + 1) + '/' + ids.length + ' · imeondolewa ' + done.length;
+            }
+            if (done.length) {
+                if (skh._feedCache) skh._feedCache.clear();
+                if (typeof window.skhRefreshHomeListings === 'function') { try { await window.skhRefreshHomeListings(); } catch (e) { console.warn('[seller-products] refresh home', e); } }
+            }
+        } finally { MP_REMOVING = false; }
+        var outcome = 'Imehamishwa kwenye Recycle Bin: ' + done.length + ' kati ya ' + ids.length + '.';
+        if (failed.length) outcome += '\nHaikuondolewa: ' + failed.length + '.\n' + failed.slice(0, 5).join('\n') + (failed.length > 5 ? '\nNa nyingine ' + (failed.length - 5) + '.' : '');
+        alert(outcome);
+        if (document.getElementById('mpTableWrap') && window.activeDashboardTab === 'my_products') await window.skhRenderMyProducts();
+    }
+
+    // Recycle Bin reads products in bounded pages so old archived records do not
+    // disappear simply because a seller has more than the first 300 listings.
+    var RB = { owner:'', actor:'', cursor:null, more:false, items:[], loading:false, busy:false, generation:0 };
+    function rbHere() { return window.activeDashboardTab === 'product_recycle_bin' && !!document.getElementById('rbProducts'); }
+    function rbOwner() { return skh.currentUser ? shopOwnerId() : ''; }
+    function rbPaint() {
+        var host = document.getElementById('rbProducts'); if (!host || !rbHere()) return;
+        var cards = RB.items.map(function (p) {
+            var blocked = p.adminHidden === true || String(p.moderationStatus || '').toLowerCase() === 'removed';
+            var img = p.image || (Array.isArray(p.imagesArray) && p.imagesArray[0]) || '';
+            var when = p.archivedAt ? new Date(p.archivedAt) : null;
+            var date = when && !isNaN(when.getTime()) ? when.toLocaleDateString('sw-TZ') : 'Tarehe haijaainishwa';
+            return '<article class="rb-card"><div class="rb-picture">' + (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '<span aria-hidden="true">▣</span>') + '</div>'
+                + '<div class="rb-info"><b>' + esc(p.title || p.name || 'Bidhaa') + '</b><small>Imeondolewa: ' + esc(date) + '</small>'
+                + (blocked ? '<small class="rb-warning">Bidhaa hii ina kizuizi cha usimamizi; wasiliana na msaada.</small>' : '') + '</div>'
+                + '<div class="rb-actions"><button type="button" data-rb-restore="' + esc(p.id) + '"' + (blocked || RB.busy ? ' disabled' : '') + '>Rejesha kama rasimu</button>'
+                + '<button type="button" disabled title="Ufutaji wa kudumu haujawezeshwa; rekodi za biashara zinahitaji ulinzi">Futa kabisa</button></div></article>';
+        }).join('');
+        host.innerHTML = cards || (RB.loading ? '<p class="rb-empty">Inapakia bidhaa…</p>' : '<p class="rb-empty">Hakuna bidhaa zilizofutwa kwenye ukurasa uliopakiwa.' + (RB.more ? ' Bonyeza “Pakia zaidi” kuangalia nyingine.' : '') + '</p>');
+        host.querySelectorAll('[data-rb-restore]').forEach(function (btn) { btn.addEventListener('click', function () { rbRestore(btn.getAttribute('data-rb-restore')); }); });
+        var more = document.getElementById('rbMore'); if (more) { more.hidden = !RB.more; more.disabled = RB.loading || RB.busy; more.textContent = RB.loading ? 'Inapakia…' : 'Pakia zaidi'; }
+    }
+    async function rbLoadMore(gen) {
+        if (RB.loading || !skh.currentUser || !rbHere()) return;
+        RB.loading = true; rbPaint();
+        var actor = skh.currentUser.uid, owner = rbOwner();
+        try {
+            var clauses = [skh.where('userId','==',owner)];
+            if (RB.cursor) clauses.push(skh.startAfter(RB.cursor));
+            clauses.push(skh.limit(100));
+            var snap = await skh.getDocs(skh.query.apply(null, [skh.collection(skh.db,'products')].concat(clauses)));
+            if (gen !== RB.generation || !rbHere() || !skh.currentUser || skh.currentUser.uid !== actor || rbOwner() !== owner) return;
+            var docs = snap.docs || [];
+            docs.forEach(function (d) { var p = Object.assign({}, d.data(), { id:d.id }); if (mpInRecycle(p) && !RB.items.some(function (x) { return x.id === p.id; })) RB.items.push(p); });
+            RB.cursor = docs.length ? docs[docs.length - 1] : RB.cursor; RB.more = docs.length === 100;
+            var status = document.getElementById('rbStatus'); if (status) status.textContent = 'Bidhaa zilizopatikana kwenye ukurasa uliopakiwa: ' + RB.items.length + '.';
+        } catch (e) {
+            if (gen === RB.generation && rbHere()) { var status = document.getElementById('rbStatus'); if (status) status.textContent = 'Imeshindikana kupakia. Jaribu tena: ' + String(e && e.message || 'kosa la mtandao'); RB.more = true; }
+        } finally { if (gen === RB.generation) { RB.loading = false; rbPaint(); } }
+    }
+    window.skhRBMore = function () { return rbLoadMore(RB.generation); };
+    window.skhOpenProductRecycleBin = function () {
+        if (typeof window.switchDashTab === 'function') window.switchDashTab('product_recycle_bin');
+        else { window.activeDashboardTab = 'product_recycle_bin'; window.skhRenderProductRecycleBin(); }
+    };
+    window.skhRenderProductRecycleBin = function () {
+        var ws = document.getElementById('dashWorkspace'); if (!ws || !skh.currentUser) return;
+        var gen = ++RB.generation;
+        RB.owner = rbOwner(); RB.actor = skh.currentUser.uid; RB.cursor = null; RB.items = []; RB.more = false; RB.loading = false; RB.busy = false;
+        ws.innerHTML = '<section class="rb-shell"><header class="rb-heading"><div><span class="rb-eyebrow">BIDHAA ZANGU</span><h2>Recycle Bin</h2><p>Bidhaa ulizoondoa huhifadhiwa hapa kwa muda. Unaweza kuzirejesha kama rasimu na kuzikagua kabla ya kuchapisha tena.</p></div><button type="button" onclick="window.switchDashTab(\'my_products\')">← Bidhaa Zangu</button></header>'
+            + '<aside class="rb-notice"><b>Futa kabisa bado haijawezeshwa</b><span>Mfumo unahitaji ukaguzi wa usalama wa oda, malipo na stoo kabla ya kufuta rekodi ya bidhaa. Bidhaa hubaki hapa hadi ukaguzi huo utakapowezekana.</span></aside>'
+            + '<p id="rbStatus" role="status" aria-live="polite">Inapakia…</p><div id="rbProducts"></div><button type="button" id="rbMore" class="rb-more" onclick="window.skhRBMore()" hidden>Pakia zaidi</button></section>';
+        rbLoadMore(gen);
+    };
+    async function rbRestore(id) {
+        if (RB.busy || !rbHere() || !skh.currentUser) return;
+        var row = RB.items.find(function (p) { return p.id === id; }); if (!row) return;
+        var actor = skh.currentUser.uid, owner = rbOwner(), gen = RB.generation;
+        if (!await skhConfirm('Rejesha "' + (row.title || row.name || 'bidhaa') + '" kama rasimu? Itabidi uikague kabla ya kuichapisha tena.')) return;
+        if (RB.busy || !rbHere() || gen !== RB.generation || !skh.currentUser || skh.currentUser.uid !== actor || rbOwner() !== owner) return;
+        RB.busy = true; rbPaint();
+        try {
+            var ref = skh.doc(skh.db, 'products', id);
+            await skh.runTransaction(skh.db, async function (tx) {
+                var snap = await tx.get(ref); if (!snap || !snap.exists()) throw new Error('Bidhaa haipatikani tena.');
+                var p = snap.data() || {};
+                if (!mpInRecycle(p)) throw new Error('Bidhaa haipo tena kwenye Recycle Bin.');
+                if (p.adminHidden === true || String(p.moderationStatus || '').toLowerCase() === 'removed') throw new Error('Ina kizuizi cha usimamizi.');
+                tx.update(ref, { publicationStatus:'draft', status:'draft', archivedAt:null, updatedAt:new Date().toISOString() });
+            });
+            if (skh._feedCache) skh._feedCache.clear();
+            if (gen === RB.generation && rbHere()) { RB.items = RB.items.filter(function (p) { return p.id !== id; }); var st = document.getElementById('rbStatus'); if (st) st.textContent = 'Imerejeshwa kama rasimu. Ikague kwenye Bidhaa Zangu.'; }
+        } catch (e) { if (gen === RB.generation && rbHere()) { var st = document.getElementById('rbStatus'); if (st) st.textContent = 'Haikurejeshwa: ' + String(e && e.message || 'jaribu tena'); } }
+        finally { if (gen === RB.generation) { RB.busy = false; rbPaint(); } }
     }
 
     window.skhSetProductPublication = async function (id, state) {
         if (!['draft','published','archived'].includes(state)) return;
-        var msg = state === 'archived' ? 'Archive bidhaa hii? Rekodi na historia zake hazitafutwa.' : (state === 'draft' ? 'Unpublish bidhaa hii?' : 'Publish bidhaa hii?');
+        if (state === 'archived') { await mpRemoveProducts([id]); return; }
+        var msg = state === 'draft' ? 'Simamisha bidhaa hii kwenye soko?' : 'Chapisha bidhaa hii tena sokoni?';
         if (!await skhConfirm(msg)) return;
         try {
             var patch = { publicationStatus: state, status: state === 'published' ? 'active' : state, updatedAt: new Date().toISOString() };
-            if (state === 'archived') patch.archivedAt = new Date().toISOString();
+            if (state !== 'archived') patch.archivedAt = null;
             await skh.updateDoc(skh.doc(skh.db, 'products', id), patch);
             if (skh._feedCache) skh._feedCache.clear();
+            if (typeof window.skhRefreshHomeListings === 'function') { try { await window.skhRefreshHomeListings(); } catch (e) { console.warn('[seller-products] refresh home', e); } }
             await window.skhRenderMyProducts();
         } catch (e) { alert('Imeshindwa kubadili hali: ' + (e && e.message)); }
     };
@@ -3418,6 +3589,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
     window.skhRenderSellerTab = function (tab) {
         var map = {
             my_products: window.skhRenderMyProducts,
+            product_recycle_bin: window.skhRenderProductRecycleBin,
             product_performance: window.skhRenderProductPerformance,
             sales_insights: window.skhRenderSalesInsights,
             demand_insights: window.skhRenderDemandInsights,

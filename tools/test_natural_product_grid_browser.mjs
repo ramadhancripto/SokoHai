@@ -1,4 +1,3 @@
-
 // Real served HTML/CSS + real card builder, isolated sample data only (no Firebase writes).
 // Requires the local static preview on port 4173, or set NATURAL_GRID_URL.
 import assert from 'node:assert/strict';
@@ -89,7 +88,7 @@ for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width: 768, height: 900 });
     await page.waitForFunction(old => Math.abs(document.querySelector('#mainFeed > .skh-huru').getBoundingClientRect().width - old) > 5, oldWidth);
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    const updated = await page.locator('#mainFeed').evaluate(e => e.style.getPropertyValue('--wf-height'));
+    const updated = await page.locator('#mainFeed').evaluate(e => e.style.getPropertyValue('--wf-height')); 
     await page.evaluate(src => { document.querySelector('#mainFeed > .skh-huru img').src = src; }, imgs[1]);
     await page.waitForFunction(old => document.querySelector('#mainFeed').style.getPropertyValue('--wf-height') !== old, updated);
     const res = await page.locator('#mainFeed > .skh-huru img').first().evaluate(i => ({ w:i.getBoundingClientRect().width,h:i.getBoundingClientRect().height,nw:i.naturalWidth,nh:i.naturalHeight }));

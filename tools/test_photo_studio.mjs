@@ -6,7 +6,7 @@ import { Buffer } from 'node:buffer';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
-const BASE = 'http://localhost:8080/';
+const BASE = process.env.SKH_BASE || 'http://localhost:8080/';
 let pass = 0, fail = 0;
 const ok = (n, c, d) => { c ? (pass++, console.log('  PASS ' + n)) : (fail++, console.log('  FAIL ' + n + '  ' + JSON.stringify(d))); };
 
@@ -242,7 +242,10 @@ for (const vp of [{ width: 1280, height: 900, tag: 'desktop' }, { width: 390, he
   });
   ok('background imeondolewa (kona ni uwazi)', bgRes.cornerA === 0, bgRes);
   ok('bidhaa imebaki (katikati haijafutwa)', bgRes.midA > 200, bgRes);
-  ok('pembeni zimepunguzwa (trim)', bgRes.w < 800 || bgRes.h < 800, bgRes);
+  ok('ondoa background haiikati picha bila kuombwa', bgRes.w === 800 && bgRes.h === 800, bgRes);
+  await p.evaluate(() => document.querySelector('.skh-ps-editor [data-ed="trim"]').click());
+  const trimmed = await p.evaluate(() => { const c=document.querySelector('#psEdCanvas'); return { w:c.width, h:c.height }; });
+  ok('punguza pembeni hukata nafasi tupu unapochagua', trimmed.w < 800 || trimmed.h < 800, trimmed);
 
   // zungusha
   const beforeRot = await p.evaluate(() => { const c = document.querySelector('#psEdCanvas'); return [c.width, c.height]; });

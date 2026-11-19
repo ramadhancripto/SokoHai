@@ -61,11 +61,15 @@
             c.width = cw; c.height = ch;
             var ctx = c.getContext('2d');
             if (!ctx) return file;
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cw, ch);
+            // PNG/WebP may contain transparency from the photo editor. Never flatten
+            // them to JPEG during upload: keep alpha and the matching MIME/extension.
+            var mime = file.type === 'image/jpeg' ? 'image/jpeg' : file.type;
+            if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cw, ch); }
             ctx.drawImage(img, 0, 0, cw, ch);
-            var blob = await new Promise(function (res) { c.toBlob(res, 'image/jpeg', cfg.quality); });
-            if (!blob || blob.size >= (file.size || Infinity)) return file;
-            var out = new File([blob], (file.name || 'picha').replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+            var blob = await new Promise(function (res) { c.toBlob(res, mime, cfg.quality); });
+            if (!blob || blob.type !== mime || blob.size >= (file.size || Infinity)) return file;
+            var ext = mime === 'image/png' ? '.png' : mime === 'image/webp' ? '.webp' : '.jpg';
+            var out = new File([blob], (file.name || 'picha').replace(/\.[^.]+$/, '') + ext, { type: mime });
             return out;
         } catch (e) {
             try { if (typeof URL !== 'undefined' && URL.revokeObjectURL && url) URL.revokeObjectURL(url); } catch (e2) {}
@@ -273,6 +277,11 @@
     function psMoney(n) {
         return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
+    function psEscapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
 
     function psActiveIndex(key) {
         var cfg = pickerCfg[key] || {};
@@ -309,10 +318,10 @@
             '<article class="skh-lp-card">' +
                 '<div class="skh-lp-imgbox">' + imgHtml + (out ? '<span class="ps-out">Imeisha</span>' : '') + '</div>' +
                 '<div class="skh-lp-body">' +
-                    '<h4 class="skh-lp-name' + (name ? '' : ' is-placeholder') + '">' + (name || 'Jina la bidhaa') + '</h4>' +
+                    '<h4 class="skh-lp-name' + (name ? '' : ' is-placeholder') + '">' + psEscapeHtml(name || 'Jina la bidhaa') + '</h4>' +
                     '<div class="skh-lp-price' + (price ? '' : ' is-placeholder') + '"><span class="cur">TSh</span>' + (price ? psMoney(price) : '0') + '</div>' +
                     '<div class="skh-lp-unit">' + (unit || '&nbsp;') + '</div>' +
-                    '<div class="skh-lp-meta">' + PS_SVG.pin + '<span>' + (loc || 'Eneo la bidhaa') + '</span></div>' +
+                    '<div class="skh-lp-meta">' + PS_SVG.pin + '<span>' + psEscapeHtml(loc || 'Eneo la bidhaa') + '</span></div>' +
                 '</div>' +
             '</article>' +
             '<p class="skh-lp-hint">Hivi ndivyo mnunuzi atakavyoona kadi yako kwenye soko — picha haikatwi, bei na kipimo vinaonekana wazi.</p>';
@@ -564,7 +573,10 @@
         var items = itemsFor(key);
         var cfg = pickerCfg[key] || {};
         var removed = items.splice(idx, 1)[0];
-        try { if (removed && removed.url) URL.revokeObjectURL(removed.url); } catch (e) {}
+        try {
+            if (removed && removed.url) URL.revokeObjectURL(removed.url);
+            if (removed && removed.orig && removed.orig.url && removed.orig.url !== removed.url) URL.revokeObjectURL(removed.orig.url);
+        } catch (e) {}
         if (Number(cfg.active) >= items.length) cfg.active = Math.max(0, items.length - 1);
         paintPicker(key);
     }
@@ -614,34 +626,34 @@
         try { img = ctx.getImageData(0, 0, W, H); } catch (e) { return false; }
         var d = img.data, N = W * H;
 
-        // rangi ya kumbukumbu = wastani wa pikseli za pembezoni
-        var rs = 0, gs = 0, bs = 0, n = 0, i, x, y;
-        var sample = function (idx) { rs += d[idx]; gs += d[idx + 1]; bs += d[idx + 2]; n++; };
+        // Median border colour is less sensitive to a product touching an edge.
+        var histR = new Uint32Array(256), histG = new Uint32Array(256), histB = new Uint32Array(256), n = 0, i, x, y;
+        function sample(idx) { if (d[idx + 3] > 8) { histR[d[idx]]++; histG[d[idx + 1]]++; histB[d[idx + 2]]++; n++; } }
         for (x = 0; x < W; x += Math.max(1, Math.round(W / 200))) { sample(x * 4); sample(((H - 1) * W + x) * 4); }
         for (y = 0; y < H; y += Math.max(1, Math.round(H / 200))) { sample((y * W) * 4); sample((y * W + W - 1) * 4); }
-        var R = rs / n, G = gs / n, B = bs / n;
-
-        var lim = tol * tol * 3;           // umbali wa rangi (RGB)
-        var visited = new Uint8Array(N);
-        var q = new Int32Array(N), qh = 0, qt = 0;
+        if (!n) return { removed: 0, total: N };
+        function median(hist) { var sum = 0; for (var k = 0; k < 256; k++) { sum += hist[k]; if (sum >= n / 2) return k; } return 255; }
+        var R = median(histR), G = median(histG), B = median(histB);
+        var lim = tol * tol * 3;
+        var visited = new Uint8Array(N), matched = new Uint8Array(N);
+        var q = new Int32Array(N), qh = 0, qt = 0, removed = 0;
         var push = function (idx) { if (!visited[idx]) { visited[idx] = 1; q[qt++] = idx; } };
         for (x = 0; x < W; x++) { push(x); push((H - 1) * W + x); }
         for (y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
-
         while (qh < qt) {
             i = q[qh++];
             var o = i * 4;
             var dr = d[o] - R, dg = d[o + 1] - G, db = d[o + 2] - B;
-            if (dr * dr + dg * dg + db * db > lim) continue;   // ni sehemu ya bidhaa
+            if (d[o + 3] === 0 || dr * dr + dg * dg + db * db > lim) continue;
+            matched[i] = 1; removed++;
             x = i % W; y = (i - x) / W;
             if (x > 0) push(i - 1);
             if (x < W - 1) push(i + 1);
             if (y > 0) push(i - W);
             if (y < H - 1) push(i + W);
         }
-
-        // weka alpha = 0 kwa background
-        for (i = 0; i < N; i++) if (visited[i]) d[i * 4 + 3] = 0;
+        // Only accepted background is erased; visited foreground stays intact.
+        for (i = 0; i < N; i++) if (matched[i]) d[i * 4 + 3] = 0;
 
         // lainisha kingo (feather) — pikseli iliyo karibu na background
         if (soft !== false) {
@@ -652,13 +664,13 @@
                     i = y * W + x;
                     if (!alphaCopy[i]) continue;
                     if (!alphaCopy[i - 1] || !alphaCopy[i + 1] || !alphaCopy[i - W] || !alphaCopy[i + W]) {
-                        d[i * 4 + 3] = 150;
+                        d[i * 4 + 3] = Math.min(d[i * 4 + 3], 150);
                     }
                 }
             }
         }
         ctx.putImageData(img, 0, 0);
-        return true;
+        return { removed: removed, total: N };
     }
 
     // Punguza pembeni tupu (trim) kulingana na alpha / rangi moja ya pembe
@@ -741,30 +753,36 @@
         wrap.className = 'skh-ps-editor';
         wrap.setAttribute('role', 'dialog');
         wrap.setAttribute('aria-label', 'Rekebisha picha');
+        wrap.setAttribute('aria-modal', 'true');
         wrap.innerHTML =
             '<div class="ps-ed-sheet">' +
                 '<div class="ps-ed-head">' +
-                    '<div><b>Rekebisha picha</b><small>Zungusha · ondoa background · punguza pembeni</small></div>' +
+                    '<div><b>Studio ya picha</b><small>Hariri picha yako kabla ya kuchapisha</small></div>' +
                     '<button type="button" class="ps-ed-x" aria-label="Funga">\u2715</button>' +
                 '</div>' +
-                '<div class="ps-ed-stage"><canvas id="psEdCanvas"></canvas><div class="ps-ed-busy" hidden><span class="skh-ps-spin"></span><span>Inachakata\u2026</span></div></div>' +
+                '<div class="ps-ed-stage"><canvas id="psEdCanvas" aria-label="Picha inayohaririwa"></canvas><div class="ps-ed-busy" hidden><span class="skh-ps-spin"></span><span>Inachakata\u2026</span></div></div>' +
                 '<div class="ps-ed-body">' +
-                    '<div class="ps-ed-sec"><h5>1 · Zungusha</h5><div class="ps-ed-row">' +
-                        '<button type="button" class="ps-ed-btn" data-ed="rotl">' + ED_SVG.rotL + ' Kushoto</button>' +
-                        '<button type="button" class="ps-ed-btn" data-ed="rotr">' + ED_SVG.rotR + ' Kulia</button>' +
-                        '<button type="button" class="ps-ed-btn" data-ed="reset">' + ED_SVG.undo + ' Anza upya</button>' +
-                    '</div></div>' +
-                    '<div class="ps-ed-sec"><h5>2 · Background <em>mpya</em></h5><div class="ps-ed-row">' +
+                    '<p class="ps-ed-status" role="status" aria-live="polite">Chagua zana ya kuhariri picha.</p>' +
+                    '<div class="ps-ed-sec"><h5>1 · Background <em>mpya</em></h5><div class="ps-ed-row">' +
                         '<button type="button" class="ps-ed-btn ps-ed-btn--main" data-ed="rmbg">' + ED_SVG.wand + ' Ondoa background</button>' +
+                        '<button type="button" class="ps-ed-btn" data-ed="erase" aria-pressed="false">Kifutio</button>' +
                         '<button type="button" class="ps-ed-btn" data-ed="bg-white" aria-pressed="false">Background nyeupe</button>' +
                         '<button type="button" class="ps-ed-btn" data-ed="bg-trans" aria-pressed="true">Uwazi (PNG)</button>' +
                     '</div>' +
                     '<div class="ps-ed-slider"><label for="psEdTol">Nguvu</label>' +
                         '<input type="range" id="psEdTol" min="8" max="60" step="2" value="26" aria-label="Nguvu ya kuondoa background">' +
                         '<output id="psEdTolOut">26</output></div>' +
-                    '<p class="ps-ed-hint">Inafanya kazi vizuri kwa picha zenye background moja (nyeupe au rangi moja). Bonyeza “Ondoa background” tena baada ya kubadilisha nguvu.</p>' +
+                    '<p class="ps-ed-hint">Hufanya kazi vizuri kwa mandhari ya rangi moja. Kwa mandhari yenye vitu vingi, tumia kifutio kurekebisha kwa mkono. Angalia matokeo kabla ya kuhifadhi.</p>' +
                     '</div>' +
-                    '<div class="ps-ed-sec"><h5>3 · Pembeni na ukubwa</h5><div class="ps-ed-row">' +
+                    '<div class="ps-ed-sec"><h5>2 · Zungusha</h5><div class="ps-ed-row">' +
+                        '<button type="button" class="ps-ed-btn" data-ed="rotl">' + ED_SVG.rotL + ' Kushoto</button>' +
+                        '<button type="button" class="ps-ed-btn" data-ed="rotr">' + ED_SVG.rotR + ' Kulia</button>' +
+                        '<button type="button" class="ps-ed-btn" data-ed="undo" disabled>' + ED_SVG.undo + ' Tendua</button>' +
+                        '<button type="button" class="ps-ed-btn" data-ed="reset">Anza upya</button>' +
+                    '</div></div>' +
+                    '<div class="ps-ed-sec"><h5>3 · Kifutio</h5><div class="ps-ed-slider"><label for="psEdBrush">Ukubwa</label><input type="range" id="psEdBrush" min="8" max="80" value="28" aria-label="Ukubwa wa kifutio"><output id="psEdBrushOut">28</output></div>' +
+                    '<p class="ps-ed-hint">Washa kifutio, kisha buruta kidole au kipanya juu ya sehemu ya kufuta. Tumia Tendua ukikosea.</p></div>' +
+                    '<div class="ps-ed-sec"><h5>4 · Pembeni na ukubwa</h5><div class="ps-ed-row">' +
                         '<button type="button" class="ps-ed-btn" data-ed="trim">' + ED_SVG.cut + ' Punguza pembeni</button>' +
                         '<button type="button" class="ps-ed-btn" data-ed="compress">' + ED_SVG.shrink + ' Punguza ukubwa</button>' +
                     '</div><p class="ps-ed-hint" id="psEdSize">—</p></div>' +
@@ -783,6 +801,13 @@
         var tolOut = wrap.querySelector('#psEdTolOut');
         var bgWhiteBtn = wrap.querySelector('[data-ed="bg-white"]');
         var bgTransBtn = wrap.querySelector('[data-ed="bg-trans"]');
+        var stage = wrap.querySelector('.ps-ed-stage');
+        var statusEl = wrap.querySelector('.ps-ed-status');
+        var undoBtn = wrap.querySelector('[data-ed="undo"]');
+        var eraseBtn = wrap.querySelector('[data-ed="erase"]');
+        var brushEl = wrap.querySelector('#psEdBrush');
+        var brushOut = wrap.querySelector('#psEdBrushOut');
+        state.history = []; state.erasing = false; state.drawing = false;
 
         function setBusy(on) {
             state.busy = !!on;
@@ -792,6 +817,7 @@
                 var a = b.getAttribute('data-ed');
                 b.disabled = !!on && a !== 'cancel';
             });
+            if (!on && undoBtn) undoBtn.disabled = state.history.length === 0;
         }
         function loadError(msg) {
             state.busy = false;
@@ -813,8 +839,8 @@
         }
         function paint() {
             if (!state.canvas) return;
-            cv.width = state.canvas.width;
-            cv.height = state.canvas.height;
+            if (cv.width !== state.canvas.width) cv.width = state.canvas.width;
+            if (cv.height !== state.canvas.height) cv.height = state.canvas.height;
             var ctx = cv.getContext('2d');
             ctx.clearRect(0, 0, cv.width, cv.height);
             ctx.drawImage(state.canvas, 0, 0);
@@ -825,10 +851,49 @@
             state.bg = mode;
             bgWhiteBtn.setAttribute('aria-pressed', mode === 'white' ? 'true' : 'false');
             bgTransBtn.setAttribute('aria-pressed', mode === 'transparent' ? 'true' : 'false');
+            stage.classList.toggle('is-white', mode === 'white');
+            statusEl.textContent = mode === 'white' ? 'Muonekano wa mandhari nyeupe.' : 'Muonekano wa mandhari yenye uwazi (PNG).';
             paint();
         }
-        function snapshot() { return state.canvas; }
-        function replace(canvas) { state.canvas = canvas; state.changed = true; paint(); }
+        function saveUndo() {
+            if (!state.canvas) return;
+            state.history.push(edFlatten(state.canvas, 'transparent'));
+            if (state.history.length > 3) state.history.shift();
+            undoBtn.disabled = false;
+        }
+        function replace(canvas, keepBgBase) {
+            saveUndo(); state.canvas = canvas; state.changed = true;
+            if (!keepBgBase) state.bgBase = null;
+            paint();
+        }
+        function erasePoint(e) {
+            var r = cv.getBoundingClientRect();
+            return { x: (e.clientX - r.left) * state.canvas.width / r.width,
+                     y: (e.clientY - r.top) * state.canvas.height / r.height,
+                     width: Number(brushEl.value) * state.canvas.width / r.width };
+        }
+        function eraseStroke(a, b) {
+            var ctx = state.canvas.getContext('2d');
+            ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = b.width;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore();
+            state.changed = true; paint();
+        }
+        brushEl.addEventListener('input', function () { brushOut.textContent = brushEl.value; });
+        cv.addEventListener('pointerdown', function (e) {
+            if (!state.erasing || state.busy || !state.canvas || (e.pointerType === 'mouse' && e.button !== 0)) return;
+            e.preventDefault(); saveUndo(); state.bgBase = null; state.drawing = true;
+            state.pointerId = e.pointerId; state.lastPoint = erasePoint(e);
+            try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+            eraseStroke(state.lastPoint, state.lastPoint);
+        });
+        cv.addEventListener('pointermove', function (e) {
+            if (!state.drawing || e.pointerId !== state.pointerId) return;
+            e.preventDefault(); var point = erasePoint(e); eraseStroke(state.lastPoint, point); state.lastPoint = point;
+        });
+        function finishStroke(e) { if (state.drawing && e.pointerId === state.pointerId) { state.drawing = false; statusEl.textContent = 'Sehemu imefutwa. Tumia Tendua ukikosea.'; } }
+        cv.addEventListener('pointerup', finishStroke); cv.addEventListener('pointercancel', finishStroke);
+        cv.addEventListener('lostpointercapture', finishStroke);
 
         // load
         setBusy(true);
@@ -837,6 +902,7 @@
         }, 12000);
         edLoadImage(it.url).then(function (img) {
             clearTimeout(loadTimer);
+            if (state.closed) return;
             if (!img.naturalWidth && !img.width) { loadError('Faili si picha halali'); return; }
             var base = edCanvasFromImage(img, 1800);
             state.original = base;
@@ -858,6 +924,7 @@
         });
 
         function close() {
+            state.closed = true;
             document.removeEventListener('keydown', onKey);
             if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
         }
@@ -867,16 +934,26 @@
 
         wrap.querySelectorAll('[data-ed]').forEach(function (btn) {
             btn.addEventListener('click', async function () {
-                if (state.busy) return;
                 var act = btn.getAttribute('data-ed');
                 if (act === 'cancel') { close(); return; }
-                if (act === 'reset') {
-                    state.canvas = edFlatten(state.original, 'transparent');
-                    state.changed = false;
-                    state.bgDone = false;
-                    state.bgBase = null;
-                    paint();
+                if (state.busy || state.closed) return;
+                if (act === 'undo') {
+                    if (state.history.length) { state.canvas = state.history.pop(); state.bgBase = null; state.changed = true; paint(); }
+                    undoBtn.disabled = !state.history.length; statusEl.textContent = 'Hatua ya mwisho imetenduliwa.'; return;
+                }
+                if (act === 'erase') {
+                    state.erasing = !state.erasing;
+                    eraseBtn.setAttribute('aria-pressed', String(state.erasing));
+                    eraseBtn.textContent = state.erasing ? 'Kifutio ✓' : 'Kifutio';
+                    cv.classList.toggle('is-erasing', state.erasing);
+                    if (state.erasing) cv.scrollIntoView({ block: 'nearest' });
+                    statusEl.textContent = state.erasing ? 'Buruta kwenye picha kufuta sehemu unayotaka.' : 'Kifutio kimezimwa.';
                     return;
+                }
+                if (act === 'reset') {
+                    replace(edFlatten(state.original, 'transparent'));
+                    state.bgDone = false; state.bgBase = null;
+                    statusEl.textContent = 'Picha imerudi mwanzo. Unaweza kutendua.'; return;
                 }
                 if (act === 'rotl' || act === 'rotr') {
                     replace(edRotate(state.canvas, act === 'rotr' ? 1 : -1));
@@ -885,6 +962,7 @@
                 if (act === 'rmbg') {
                     setBusy(true);
                     setTimeout(function () {
+                        if (state.closed) return;
                         // mara ya kwanza: hifadhi nakala safi ili "Nguvu" iweze kurudiwa
                         if (!state.bgBase) {
                             var b = document.createElement('canvas');
@@ -896,12 +974,16 @@
                         flat.width = state.bgBase.width; flat.height = state.bgBase.height;
                         flat.getContext('2d').drawImage(state.bgBase, 0, 0);
 
-                        var ok = edRemoveBackground(flat, state.tol, true);
-                        if (ok) {
-                            flat = edTrim(flat, 0.04);
-                            state.bgDone = true;
-                            replace(edFlatten(flat, state.bg === 'white' ? '#ffffff' : 'transparent'));
-                        }
+                        try {
+                            var result = edRemoveBackground(flat, state.tol, true);
+                            if (!result || result.removed < 1 || result.removed / result.total > 0.98) {
+                                statusEl.textContent = 'Haikuwezekana kutenganisha mandhari kwa uhakika. Badili nguvu au tumia kifutio.';
+                            } else {
+                                state.bgDone = true;
+                                replace(flat, true);
+                                statusEl.textContent = 'Mandhari imeondolewa. Kagua kingo; tumia kifutio au Tendua ikihitajika.';
+                            }
+                        } catch (err) { statusEl.textContent = 'Kuchakata picha kumeshindikana. Jaribu picha ndogo au tumia kifutio.'; }
                         setBusy(false);
                     }, 30);
                     return;
@@ -912,14 +994,14 @@
                 }
                 if (act === 'trim') {
                     var cut = edTrim(edFlatten(state.canvas, 'transparent'), 0.04);
-                    replace(edFlatten(cut, state.bg === 'white' ? '#ffffff' : 'transparent'));
+                    replace(cut); statusEl.textContent = 'Nafasi tupu pembeni imepunguzwa.';
                     return;
                 }
                 if (act === 'compress') {
                     setBusy(true);
-                    var asPng = state.bg === 'transparent';
-                    edCompress(edFlatten(state.canvas, asPng ? 'transparent' : '#ffffff'), 1600, 0.84, asPng)
+                    edCompress(edFlatten(state.canvas, 'transparent'), 1600, 0.84, true)
                         .then(function (r) {
+                            if (state.closed) return;
                             replace(r.canvas);
                             var kb = r.blob ? Math.round(r.blob.size / 1024) : 0;
                             sizeEl.textContent = 'Ukubwa: ' + r.canvas.width + ' \u00d7 ' + r.canvas.height + ' px \u00b7 ' + (kb >= 1024 ? (kb / 1024).toFixed(1) + 'MB' : kb + 'KB');
@@ -932,12 +1014,14 @@
                     var png = state.bg === 'transparent';
                     var flat = edFlatten(state.canvas, png ? 'transparent' : '#ffffff');
                     edCompress(flat, 1800, 0.9, png).then(function (r) {
-                        if (!r.blob) { setBusy(false); return; }
+                        if (state.closed) return;
+                        if (!r.blob) { statusEl.textContent = 'Picha haikuweza kuhifadhiwa. Jaribu tena.'; setBusy(false); return; }
                         var base = (it.name || 'picha').replace(/\.[^.]+$/, '');
                         var f = new File([r.blob], base + (png ? '-nobg.png' : '.jpg'),
                             { type: png ? 'image/png' : 'image/jpeg' });
                         // hifadhi picha halisi mara moja kwa "Rudisha picha halisi"
                         if (!it.orig) it.orig = { file: it.file, url: it.url, w: it.w, h: it.h, name: it.name };
+                        else if (it.url && it.url !== it.orig.url) { try { URL.revokeObjectURL(it.url); } catch (e) {} }
                         it.file = f;
                         it.name = f.name;
                         it.edited = true;
@@ -951,7 +1035,7 @@
                         pickerCfg[key].active = idx;
                         close();
                         paintPicker(key);
-                    }).catch(function () { setBusy(false); });
+                    }).catch(function () { statusEl.textContent = 'Picha haikuweza kuhifadhiwa. Jaribu tena.'; setBusy(false); });
                 }
             });
         });
@@ -1055,7 +1139,7 @@
 
         window.skhClearPickedPhotos = window.skhClearPickedPhotos || {};
         window.skhClearPickedPhotos[key] = function () {
-            itemsFor(key).forEach(function (it) { try { if (it.url) URL.revokeObjectURL(it.url); } catch (e) {} });
+            itemsFor(key).forEach(function (it) { try { if (it.url) URL.revokeObjectURL(it.url); if (it.orig && it.orig.url && it.orig.url !== it.url) URL.revokeObjectURL(it.orig.url); } catch (e) {} });
             pickerItems[key] = [];
             if (pickerCfg[key]) pickerCfg[key].active = 0;
             paintPicker(key);

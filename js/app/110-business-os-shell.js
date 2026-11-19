@@ -225,11 +225,8 @@ function renderShell() {
         + '      </div>'
         + '      <div class="ct-header-actions bos-header-actions">'
         + '        <button type="button" class="ct-pos-btn bos-pos-btn" onclick="window.skhBOSRunAction(\'openPos\')">' + ico('calculator', 15) + '<span>POS</span></button>'
-        + '        <button type="button" class="bos-icon-btn" onclick="if(window.openNotifications)window.openNotifications()" aria-label="' + esc(T('bos_notifications', 'Taarifa')) + '">'
-        + ico('bell', 19) /* idadi ya taarifa: hakuna chanzo halisi kwa Business OS, hivyo
-           badge haina namba ya kubuni; itaonekana tu ikiwekwa namba halisi. */
-        + '<span class="bos-notif-badge" id="ctHeaderNotifBadge"></span></button>'
-        + '        <button type="button" class="bos-icon-btn" onclick="if(window.openChatList)window.openChatList()" aria-label="' + esc(T('bos_chat', 'Gumzo')) + '">' + ico('chat', 19) + '</button>'
+        + '        <button type="button" id="bosRecycleBin" class="bos-icon-btn bos-recycle-btn" onclick="if(window.skh && window.skh.currentMode===\'driver\'){if(window.skhOpenPersonalRecycle)window.skhOpenPersonalRecycle()}else if(window.skhOpenProductRecycleBin)window.skhOpenProductRecycleBin()" aria-label="Recycle Bin" title="Recycle Bin">'
+        + '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg></button>'
         + '        <div class="bos-user">'
         + '          <div class="bos-user-meta">'
         + '            <b>' + esc(v.name) + '</b>'
@@ -255,6 +252,7 @@ function renderShell() {
 const TAB_META = {
     overview: { title: 'Dashibodi Kuu', sub: 'Muhtasari wa biashara kwa muda halisi' },
     my_products: { title: 'Bidhaa Zangu', sub: 'Orodha na udhibiti wa bidhaa zako' },
+    product_recycle_bin: { title: 'Recycle Bin', sub: 'Bidhaa zilizohamishwa kwa muda' },
     product_analytics: { title: 'Uchambuzi wa Bidhaa', sub: 'Namba za bidhaa zako' },
     product_performance: { title: 'Utendaji wa Bidhaa', sub: 'Bidhaa zinazouzwa zaidi' },
     sales_insights: { title: 'Maarifa ya Mauzo', sub: 'Mwenendo wa mauzo' },

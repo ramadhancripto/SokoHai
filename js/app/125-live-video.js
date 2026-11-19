@@ -453,36 +453,5 @@ window.skhLiveMicCam = function (opts) {
     }
     return Promise.resolve({ cam: !!V.provider.camOn, mic: !!V.provider.micOn });
 };
-/* mini player: MOVE the stage node (video element survives, stream continues) */
-window.skhLiveMinimize = function () {
-    if (document.getElementById('lvxMini')) return;
-    const stage = document.querySelector('#lvxRoom .lv7-stage');
-    if (!stage) return;
-    const mark = document.createComment('lvx-stage-home');
-    stage.parentNode.insertBefore(mark, stage);
-    const mini = document.createElement('div');
-    mini.id = 'lvxMini'; mini.className = 'lvx-mini';
-    mini.innerHTML = '<div class="lvx-mini-head"><b>Live inaendelea</b><span><button id="lvxMiniBack" aria-label="Rudi">Rudi</button><button id="lvxMiniX" aria-label="Funga">Funga</button></span></div><div class="lvx-mini-slot"></div>';
-    mini.querySelector('.lvx-mini-slot').appendChild(stage);
-    document.body.appendChild(mini);
-    mini.querySelector('#lvxMiniBack').onclick = () => window.skhLiveMiniRestore();
-    mini.querySelector('#lvxMiniX').onclick = () => { window.skhLiveMiniRestore(); if (typeof window.skhLiveClose === 'function') window.skhLiveClose('lvxRoom'); };
-    const room = document.getElementById('lvxRoom');
-    if (room) room.hidden = true;
-};
-window.skhLiveMiniRestore = function () {
-    const mini = document.getElementById('lvxMini');
-    if (!mini) return;
-    const stage = mini.querySelector('.lv7-stage');
-    const room = document.getElementById('lvxRoom');
-    if (room) room.hidden = false;
-    let home = null;
-    if (room) {
-        const it = document.createNodeIterator(room, NodeFilter.SHOW_COMMENT);
-        let n; while ((n = it.nextNode())) if (n.textContent === 'lvx-stage-home') { home = n; break; }
-    }
-    if (stage && home && home.parentNode) home.parentNode.insertBefore(stage, home);
-    else if (stage && room) { const fr = room.querySelector('.lv7'); if (fr) fr.insertBefore(stage, fr.firstChild); }
-    if (home && home.parentNode) home.parentNode.removeChild(home);
-    mini.remove();
-};
+/* Mini-player ownership is in 120-live-commerce-ui.js. The RTC provider
+ * remains mounted while the existing room stage is moved to/from the preview. */

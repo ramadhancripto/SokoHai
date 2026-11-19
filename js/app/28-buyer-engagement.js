@@ -17,6 +17,7 @@
 // hawezi kujinunulia followers (organic pekee).
 // ============================================================
 import { skh } from './00-bootstrap.js';
+import './128-personal-recycle.js';
 
 (function () { 'use strict';
 
@@ -654,14 +655,20 @@ import { skh } from './00-bootstrap.js';
     }
     function buyerRows(snap) {
         var out = [];
-        if (snap && typeof snap.forEach === 'function') snap.forEach(function (d) { out.push(Object.assign({ id: d.id }, d.data() || {})); });
+        if (snap && typeof snap.forEach === 'function') snap.forEach(function (d) { out.push(Object.assign({}, d.data() || {}, { id: d.id })); });
         return out.sort(function (a,b) { return buyerTime(b.updatedAt || b.createdAt || b.at || b.savedAt || b.likedAt || b.followedAt) - buyerTime(a.updatedAt || a.createdAt || a.at || a.savedAt || a.likedAt || a.followedAt); });
     }
     function buyerQuery(col, field, limitN) {
         var uid = buyerUid();
         if (!uid) return Promise.resolve([]);
         var q = skh.query(skh.collection(skh.db, col), skh.where(field, '==', uid), skh.limit(limitN || 60));
-        return skh.getDocs(q).then(buyerRows);
+        return skh.getDocs(q).then(async function(snap) {
+            var rows = buyerRows(snap), rc = window.skhPersonalRecycle;
+            if (rc && ['orders','requests','negotiations','ride_requests'].includes(col)) {
+                try { await rc.load(); rows = rows.filter(function(r){ return !rc.hidden(col,r); }); } catch(e) { console.warn('[personal-recycle] visible fallback',e); }
+            }
+            return rows;
+        });
     }
     function buyerCount(col, field) {
         var uid = buyerUid();
@@ -688,6 +695,7 @@ import { skh } from './00-bootstrap.js';
         window.skhMySokoHaiTab(tab, b);
     }
     window.skhBuyerOpenTab = buyerOpenTab;
+    window.addEventListener('skh:personal-recycle-changed', function () { buyerCache = Object.create(null); var m = document.getElementById('mySokoHaiModal'); if (m && m.style.display === 'flex') window.skhRenderEngagementTab(activeTab); });
 
     window.skhBuyerClose = function () {
         buyerUnsubs.splice(0).forEach(function (u) { try { u(); } catch (e) {} });
@@ -752,25 +760,25 @@ import { skh } from './00-bootstrap.js';
     function orderRow(o) {
         var title = o.itemTitle || o.productTitle || o.serviceTitle || o.orderId || ('Order ' + o.id.slice(0,8));
         var meta = (o.sellerName || o.providerName || 'SokoHai') + ' · ' + buyerDate(o.createdAt) + (o.amount != null ? ' · TSh ' + Number(o.amount || 0).toLocaleString() : '');
-        return '<article class="byd-row" onclick="window.skhBuyerOrderOpen(\'' + skh.skhJsEsc(o.id) + '\')"><img class="byd-thumb" src="' + buyerEsc(o.itemImg || o.productImage || '') + '" onerror="this.style.visibility=\'hidden\'"><div class="byd-row-main"><b>' + buyerEsc(title) + '</b><small>#' + buyerEsc(o.orderId || o.id.slice(0,10)) + ' · ' + buyerEsc(meta) + '</small></div>' + buyerStatus(o.status || o.orderStatus) + '</article>';
+        return '<article class="byd-row" onclick="window.skhBuyerOrderOpen(\'' + skh.skhJsEsc(o.id) + '\')"><img class="byd-thumb" src="' + buyerEsc(o.itemImg || o.productImage || '') + '" onerror="this.style.visibility=\'hidden\'"><div class="byd-row-main"><b>' + buyerEsc(title) + '</b><small>#' + buyerEsc(o.orderId || o.id.slice(0,10)) + ' · ' + buyerEsc(meta) + '</small></div>' + buyerStatus(o.status || o.orderStatus) + (window.skhPersonalRecycle ? window.skhPersonalRecycle.button('orders',o,'buyer') : '') + '</article>';
     }
     function requestRow(r) {
-        return '<article class="byd-row" onclick="window.skhBuyerRequestOpen(\'' + skh.skhJsEsc(r.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(r.itemTitle || r.cargoName || r.requestType || 'Request') + '</b><small>' + buyerEsc(r.detail1 || ((r.fromLocation || '') + ' → ' + (r.toLocation || ''))) + ' · ' + buyerDate(r.createdAt) + '</small></div>' + buyerStatus(r.status) + '</article>';
+        return '<article class="byd-row" onclick="window.skhBuyerRequestOpen(\'' + skh.skhJsEsc(r.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(r.itemTitle || r.cargoName || r.requestType || 'Request') + '</b><small>' + buyerEsc(r.detail1 || ((r.fromLocation || '') + ' → ' + (r.toLocation || ''))) + ' · ' + buyerDate(r.createdAt) + '</small></div>' + buyerStatus(r.status) + (window.skhPersonalRecycle ? window.skhPersonalRecycle.button('requests',r,'buyer') : '') + '</article>';
     }
     function negotiationRow(n) {
         var title = n.productTitle || n.serviceTitle || n.transportTitle || n.title || 'Negotiation';
         var price = n.currentUnitPrice || n.proposedPrice || n.currentPrice;
-        return '<article class="byd-row" onclick="window.skhBuyerNegotiationOpen(\'' + skh.skhJsEsc(n.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(title) + '</b><small>' + buyerEsc(n.sellerName || 'Muuzaji') + (price ? ' · TSh ' + Number(price).toLocaleString() : '') + ' · History ipo Chat</small></div>' + buyerStatus(n.currentState || n.status) + '</article>';
+        return '<article class="byd-row" onclick="window.skhBuyerNegotiationOpen(\'' + skh.skhJsEsc(n.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(title) + '</b><small>' + buyerEsc(n.sellerName || 'Muuzaji') + (price ? ' · TSh ' + Number(price).toLocaleString() : '') + ' · History ipo Chat</small></div>' + buyerStatus(n.currentState || n.status) + (window.skhPersonalRecycle ? window.skhPersonalRecycle.button('negotiations',n,'buyer') : '') + '</article>';
     }
     function deliveryRow(r) {
-        return '<article class="byd-row" onclick="window.skhBuyerDeliveryOpen(\'' + skh.skhJsEsc(r.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(r.cargoName || r.itemTitle || ('Delivery ' + r.id.slice(0,8))) + '</b><small>' + buyerEsc((r.fromLocation || 'Pickup') + ' → ' + (r.toLocation || 'Destination')) + ' · ' + buyerDate(r.createdAt) + '</small></div>' + buyerStatus(r.status) + '</article>';
+        return '<article class="byd-row" onclick="window.skhBuyerDeliveryOpen(\'' + skh.skhJsEsc(r.id) + '\')"><div class="byd-row-main"><b>' + buyerEsc(r.cargoName || r.itemTitle || ('Delivery ' + r.id.slice(0,8))) + '</b><small>' + buyerEsc((r.fromLocation || 'Pickup') + ' → ' + (r.toLocation || 'Destination')) + ' · ' + buyerDate(r.createdAt) + '</small></div>' + buyerStatus(r.status) + (window.skhPersonalRecycle ? window.skhPersonalRecycle.button('ride_requests',r,'buyer') : '') + '</article>';
     }
 
     function startBuyerLiveSummary() {
         var uid = buyerUid(); if (!uid || typeof skh.onSnapshot !== 'function') return;
         function listen(col, field, limitN, update) {
             var q = skh.query(skh.collection(skh.db,col), skh.where(field,'==',uid), skh.limit(limitN));
-            try { buyerUnsubs.push(skh.onSnapshot(q, function (snap) { update(buyerRows(snap)); }, function () {})); } catch (e) {}
+            try { buyerUnsubs.push(skh.onSnapshot(q, function (snap) { update(buyerRows(snap).filter(function (r) { return !window.skhPersonalRecycle || !window.skhPersonalRecycle.hidden(col,r); })); }, function () {})); } catch (e) {}
         }
         listen('orders','buyerId',80,function(items){
             buyerCache.orders=items; var n=items.filter(function(o){return BUYER_ACTIVE.indexOf(String(o.status||o.orderStatus||'').toLowerCase())!==-1;}).length;
@@ -830,14 +838,14 @@ import { skh } from './00-bootstrap.js';
 
     async function renderOrders(box) {
         try { var items=buyerCache.orders||await buyerQuery('orders','buyerId',100); buyerCache.orders=items;
-            box.innerHTML='<div class="byd-wrap">'+buyerTitle('Orders','Historia halisi kutoka existing Orders system.','<button class="byd-btn secondary" onclick="window.openBuyerOrdersModal&&window.openBuyerOrdersModal()">Mfumo wa Oda</button>')+'<div class="byd-filter-row">'+['all','active','processing','delivery','completed','cancelled'].map(function(f){return '<button class="byd-filter '+(f==='all'?'active':'')+'" onclick="window.skhBuyerFilterOrders(\''+f+'\',this)">'+f+'</button>';}).join('')+'</div><section id="bydOrderList" class="byd-card" data-all="1">'+(items.length?items.map(orderRow).join(''):buyerEmpty('Bado huna oda','Oda utakazofanya SokoHai zitaonekana hapa.'))+'</section></div>';
+            box.innerHTML='<div class="byd-wrap">'+buyerTitle('Orders','Historia halisi kutoka existing Orders system.','<button class="byd-btn secondary" onclick="window.openBuyerOrdersModal&&window.openBuyerOrdersModal()">Mfumo wa Oda</button>')+'<div class="byd-filter-row">'+['all','active','processing','delivery','completed','cancelled'].map(function(f){return '<button class="byd-filter '+(f==='all'?'active':'')+'" onclick="window.skhBuyerFilterOrders(\''+f+'\',this)">'+f+'</button>';}).join('')+'</div><section class="byd-card" data-drc-bulk-scope>'+window.skhPersonalRecycle.toolbar()+'<div id="bydOrderList" data-all="1">'+(items.length?items.map(orderRow).join(''):buyerEmpty('Bado huna oda','Oda utakazofanya SokoHai zitaonekana hapa.'))+'</div></section></div>';
         } catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
     }
-    window.skhBuyerFilterOrders=function(filter,el){document.querySelectorAll('.byd-filter').forEach(function(b){b.classList.remove('active');});if(el)el.classList.add('active');var items=buyerCache.orders||[];var filtered=items.filter(function(o){var s=String(o.status||o.orderStatus||'').toLowerCase();if(filter==='all')return true;if(filter==='active')return BUYER_ACTIVE.indexOf(s)!==-1;if(filter==='processing')return /process|confirm|paid|pending/.test(s);if(filter==='delivery')return /ship|transit|delivery|pickup/.test(s);if(filter==='completed')return /complete|delivered/.test(s);return /cancel|refund|reject/.test(s);});var host=document.getElementById('bydOrderList');if(host)host.innerHTML=filtered.length?filtered.map(orderRow).join(''):buyerEmpty('Hakuna oda hapa','Hakuna rekodi inayolingana na hali hii.');};
+    window.skhBuyerFilterOrders=function(filter,el){document.querySelectorAll('.byd-filter').forEach(function(b){b.classList.remove('active');});if(el)el.classList.add('active');var items=buyerCache.orders||[];var filtered=items.filter(function(o){var s=String(o.status||o.orderStatus||'').toLowerCase();if(filter==='all')return true;if(filter==='active')return BUYER_ACTIVE.indexOf(s)!==-1;if(filter==='processing')return /process|confirm|paid|pending/.test(s);if(filter==='delivery')return /ship|transit|delivery|pickup/.test(s);if(filter==='completed')return /complete|delivered/.test(s);return /cancel|refund|reject/.test(s);});var host=document.getElementById('bydOrderList');if(host){host.innerHTML=filtered.length?filtered.map(orderRow).join(''):buyerEmpty('Hakuna oda hapa','Hakuna rekodi inayolingana na hali hii.');var bulk=host.parentElement.querySelector('[data-drc-bulk]');if(bulk){bulk.disabled=true;bulk.textContent='Hamisha zilizochaguliwa (0)';}}};
 
     async function renderSimpleOwned(box,tab) {
         var cfg={requests:['requests','senderId','Requests','Maombi uliyoanzisha kwenye mifumo iliyopo.',requestRow],negotiations:['negotiations','buyerId','Negotiations','Summary tu; history na actions hubaki Chat.',negotiationRow],deliveries:['ride_requests','customerId','Deliveries','Safari na deliveries zako kutoka existing tracking.',deliveryRow]};
-        var c=cfg[tab]; try{var items=buyerCache[tab]||await buyerQuery(c[0],c[1],80);buyerCache[tab]=items;box.innerHTML='<div class="byd-wrap">'+buyerTitle(c[2],c[3])+'<section class="byd-card">'+(items.length?items.map(c[4]).join(''):buyerEmpty(tab==='requests'?'Bado huna request':tab==='negotiations'?'Bado huna negotiation':'Bado huna delivery','Shughuli zako zitaonekana hapa kutoka mfumo husika.'))+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
+        var c=cfg[tab]; try{var items=buyerCache[tab]||await buyerQuery(c[0],c[1],80);buyerCache[tab]=items;box.innerHTML='<div class="byd-wrap">'+buyerTitle(c[2],c[3])+'<section class="byd-card" data-drc-bulk-scope>'+window.skhPersonalRecycle.toolbar()+(items.length?items.map(c[4]).join(''):buyerEmpty(tab==='requests'?'Bado huna request':tab==='negotiations'?'Bado huna negotiation':'Bado huna delivery','Shughuli zako zitaonekana hapa kutoka mfumo husika.'))+'</section></div>';}catch(e){box.innerHTML='<div class="byd-wrap">'+buyerError(e)+'</div>';}
     }
 
     async function renderEngagement(box,tab) {

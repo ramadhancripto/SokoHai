@@ -37,7 +37,7 @@ const kshort = (n) => { n = Number(n) || 0; return n >= 1000 ? (Math.round(n / 1
 const photo = (p) => (p && (p.image || (Array.isArray(p.imagesArray) && p.imagesArray[0]))) || '';
 const modeOf = (p) => (p && (p.saleMode || (p.modeData || {}).mode)) || 'free_market';
 const initials = (n) => String(n || 'M').trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase()).join('') || 'M';
-const LOGO = 'assets/img/sokohai-logo.png';
+const LOGO = 'assets/img/sokohai-cart-mark.png';
 const ERR = { si_bidhaa_yako: 'Unaweza kuonyesha bidhaa zako tu.', si_mnada: 'Mnada Live inahitaji bidhaa za mnada.', si_bei_kushuka: 'Bei Kushuka Live inahitaji bidhaa za Bei Kushuka.',
     video_haikubaliki: 'Link ya video haikubaliki. Tumia link ya YouTube au Vimeo.', chagua_bidhaa: 'Chagua angalau bidhaa moja.', subiri_kidogo: 'Subiri sekunde mbili kabla ya kutuma tena.',
     umezuiwa_kwenye_live: 'Mwenyeji amekuzuia kutoa maoni kwenye live hii.', live_haiendelei: 'Live haiendelei sasa.', akaunti_imesimamishwa: 'Akaunti yako imesimamishwa.',
@@ -355,15 +355,40 @@ function onNetBack() { hideConn(); toast('Umerrejea online \u2014 live inaendele
  * so video/listeners/session continue untouched (no leave on minimize, no leaks).
  * Restore moves it back; only MiniClose leaves (once, via leaveRoom). */
 function closeMiniBox() { const m = document.getElementById('lvxMini'); if (m) m.remove(); }
+// moveBefore preserves iframe/media state where supported. Older browsers retain
+// the original DOM move as a fallback; embedded video may reload there.
+function moveLiveStage(parent, stage, before) {
+    if (typeof parent.moveBefore === 'function') {
+        try { parent.moveBefore(stage, before || null); return; } catch (e) {}
+    }
+    parent.insertBefore(stage, before || null);
+}
+function updateMiniDetails() {
+    const mini = document.getElementById('lvxMini');
+    if (!mini || !room) return;
+    const s = room.session || {};
+    const status = s.status === 'paused' ? 'Live imesitishwa' : s.status === 'scheduled' ? 'Live inakuja' : s.status === 'ended' ? 'Live imekwisha' : s.status === 'removed' ? 'Live haipatikani' : 'Live inaendelea';
+    const title = mini.querySelector('.lvx-mini-title');
+    const desc = mini.querySelector('.lvx-mini-desc');
+    if (title) title.textContent = s.title || 'SokoHai Live';
+    if (desc) desc.textContent = (s.hostName ? s.hostName + ' · ' : '') + status;
+}
 window.skhLiveMinimize = function () {
     if (!room || document.getElementById('lvxMini')) return;
     const stage = document.getElementById('lv7Stage'); if (!stage) return;
-    const s = room.session || {};
     const box = document.createElement('div'); box.id = 'lvxMini'; box.className = 'lvx-mini';
-    box.innerHTML = `<div class="lvx-mini-head"><b>${esc(s.title || 'Live')}</b><span><button onclick="skhLiveMiniRestore()">\u2197 Rudi</button><button onclick="skhLiveMiniClose()" aria-label="Funga">\u00d7</button></span></div><div class="lvx-mini-slot" id="lvxMiniSlot"></div>`;
-    document.body.appendChild(box);
-    box.querySelector('#lvxMiniSlot').appendChild(stage);
+    box.setAttribute('role', 'region'); box.setAttribute('aria-label', 'Muhtasari wa Live');
+    box.innerHTML = `<div class="lvx-mini-slot" id="lvxMiniSlot"></div><div class="lvx-mini-info"><b class="lvx-mini-title"></b><span class="lvx-mini-desc"></span><button type="button" class="lvx-mini-back" aria-label="Rudi">Tazama live <span aria-hidden="true">&#8599;</span></button></div><button type="button" class="lvx-mini-close" aria-label="Funga Live">&times;</button>`;
+    box.querySelector('.lvx-mini-back').onclick = () => window.skhLiveMiniRestore();
+    box.querySelector('.lvx-mini-close').onclick = () => window.skhLiveMiniClose();
+    // In normal flow, before the feed: never covers the navigation or marketplace controls.
+    const feed = document.querySelector('.app-content-main > .scroll-content');
+    if (feed && feed.parentNode) feed.parentNode.insertBefore(box, feed);
+    else document.body.appendChild(box);
+    moveLiveStage(box.querySelector('#lvxMiniSlot'), stage, null);
     const ov = document.getElementById('lvxRoom'); if (ov) ov.hidden = true;
+    if (!document.querySelector('.lvx-overlay:not([hidden])')) document.body.classList.remove('lvx-open');
+    updateMiniDetails();
 };
 window.skhLiveMiniRestore = function () {
     const box = document.getElementById('lvxMini'); if (!box || !room) { closeMiniBox(); return; }
@@ -371,9 +396,9 @@ window.skhLiveMiniRestore = function () {
     let ov = document.getElementById('lvxRoom');
     if (!ov) { renderRoomShell(); ov = document.getElementById('lvxRoom'); }
     const host = ov && ov.querySelector('.lv7');
-    if (stage && host) host.insertBefore(stage, host.firstChild);
+    if (stage && host) moveLiveStage(host, stage, host.firstChild);
     closeMiniBox();
-    if (ov) ov.hidden = false;
+    if (ov) { ov.hidden = false; document.body.classList.add('lvx-open'); }
     try { paintRoom(room.session); tick(); } catch (e) {}
 };
 window.skhLiveMiniClose = function () {
@@ -486,6 +511,7 @@ window.skhAuctionRoom = (pid) => productRoom(pid, 'auction');
 window.skhPriceDropRoom = (pid) => productRoom(pid, 'price_drop');
 
 function paintRoom(prev) {
+    updateMiniDetails();
     const s = room.session, mode = (pinned() && modeOf(pinned())) || s.kind;
     document.getElementById('lv7Sub').textContent = mode === 'auction' ? 'Live Auction Room' : mode === 'price_drop' ? 'Price Drop Live' : 'Live ya Muuzaji';
     const st = document.getElementById('lv7Status');

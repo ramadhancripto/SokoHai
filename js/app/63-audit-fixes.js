@@ -104,39 +104,29 @@ import { skh } from './00-bootstrap.js';
                 || clean(d.storeName) || clean(d.shopName) || clean(d.businessName)
                 || clean(d.sellerName) || clean(d.userName) || clean(d.username) || first;
         }
-        function pick() {
-            var u = skh.currentUserData || {};
-            var au = skh.currentUser || {};
-            var n = fromDoc(u) || clean(au.displayName);
-            if (n) return n;
-            var em = u.email || au.email || '';
-            if (em && String(em).indexOf('@') > 0) {
-                var pre = String(em).split('@')[0];
-                if (pre && !/^\d+$/.test(pre)) return pre;
-            }
-            return null;
+        function named() {
+            return fromDoc(skh.currentUserData || {}) || clean((skh.currentUser || {}).displayName);
         }
-        var n0 = pick();
+        function emailName(d) {
+            var em = (d && (d.email || d.userEmail)) || (skh.currentUserData || {}).email || (skh.currentUser || {}).email || '';
+            var pre = String(em).split('@')[0];
+            return String(em).indexOf('@') > 0 && pre && !/^\d+$/.test(pre) ? pre : null;
+        }
+        var n0 = named();
         if (n0) { cb(n0); return; }
         var uid = (skh.currentUser && skh.currentUser.uid) || null;
-        if (!uid || !skh.db || !skh.getDoc) { cb(pick() || 'Mgeni'); return; }
+        // Show a safe fallback immediately, but do not let an email alias prevent
+        // retrieving the account's full profile name.
+        cb(emailName() || 'Mgeni');
+        if (!uid || !skh.db || !skh.getDoc || !skh.doc) return;
         try {
             skh.getDoc(skh.doc(skh.db, 'users', uid)).then(function (s) {
-                var n1 = pick();
-                if (!n1 && s && s.exists && s.exists()) {
-                    var d = s.data() || {};
-                    n1 = fromDoc(d);
-                    if (!n1) {
-                        var em = d.email || d.userEmail || '';
-                        if (em && String(em).indexOf('@') > 0) {
-                            var pre = String(em).split('@')[0];
-                            if (pre && !/^\d+$/.test(pre)) n1 = pre;
-                        }
-                    }
-                }
-                cb(n1 || 'Mgeni');
-            }).catch(function () { cb(pick() || 'Mgeni'); });
-        } catch (e) { cb(pick() || 'Mgeni'); }
+                // A response from a previous account must never overwrite the new user.
+                if (!skh.currentUser || skh.currentUser.uid !== uid) return;
+                var d = s && s.exists && s.exists() ? (s.data() || {}) : {};
+                cb(named() || fromDoc(d) || emailName(d) || 'Mgeni');
+            }).catch(function () { /* the already displayed fallback remains */ });
+        } catch (e) { /* the already displayed fallback remains */ }
     }
 
     // Inafunguliwa nje (tests + mahali pengine): vuta jina la account halisi.

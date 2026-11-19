@@ -17,6 +17,7 @@ const short = (t, n) => { t = String(t || '').replace(/\s+/g, ' ').trim(); retur
 // Kwa wenye title, matokeo ni sawa na p.title (name haifikiki). Hairudi uongo: '' kama hakuna.
 const ptitle = (o) => { const v = o ? (o.title || o.name || o.itemTitle || o.cargoName) : ''; return (typeof v === 'string' || typeof v === 'number') ? String(v) : ''; };
 const live = (p) => p && p.publicationStatus !== 'draft' && !p.adminHidden && p.moderationStatus !== 'removed';
+const liveProduct = (p) => live(p) && !p.archivedAt && !['archived', 'deleted', 'inactive'].includes(String(p.status || '').toLowerCase()) && String(p.publicationStatus || '').toLowerCase() !== 'archived' && p.isOnline !== false && (!Array.isArray(p.salesChannels) || !p.salesChannels.length || p.salesChannels.includes('marketplace'));
 
 /* ---------------- carousel (ref 12/13/14 arrows + dots) ---------------- */
 let heroIdx = 0, heroTimer = 0;
@@ -26,7 +27,7 @@ window.skhHeroGo = function (d, abs) {
     heroIdx = abs != null ? abs : (heroIdx + d + n) % n;
     track.style.transform = 'translateX(' + (-100 * heroIdx) + '%)';
     document.querySelectorAll('#shcDots button').forEach((b, i) => b.classList.toggle('on', i === heroIdx));
-    clearInterval(heroTimer); heroTimer = setInterval(() => window.skhHeroGo(1), 9000);
+    clearInterval(heroTimer); heroTimer = setInterval(() => window.skhHeroGo(1), 5000);
 };
 function initCarousel() {
     const dots = document.querySelectorAll('#shcDots button'); if (!dots.length) return false;
@@ -67,9 +68,9 @@ async function q(col, ...c) { try { return (await skh.getDocs(skh.query(skh.coll
 /* ref 11 "Bidhaa Maarufu": most viewed real listings; discount only when the listing has a real old price */
 async function buildPopular() {
     const s = section('skhHomePopular', 'Bidhaa Maarufu', "updateApp('bidhaa')", 'star'); if (!s) return;
-    const list = (await q('products', skh.limit(60))).filter(p => live(p) && pic(p) && !(p.saleMode && p.saleMode !== 'free_market' && p.saleMode !== 'wholesale'));
+    const list = (await q('products', skh.limit(60))).filter(p => liveProduct(p) && pic(p) && !(p.saleMode && p.saleMode !== 'free_market' && p.saleMode !== 'wholesale'));
     list.sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-    const top = list.slice(0, 8); if (!top.length) return;
+    const top = list.slice(0, 8); if (!top.length) { s.hidden = true; s.querySelector('.shx-body').innerHTML = ''; return; }
     s.querySelector('.shx-body').innerHTML = `<div class="shp-row" role="region" tabindex="0" aria-label="Bidhaa maarufu, telezesha kushoto au kulia">${top.map(p => {
         const old = Number(p.originalPrice || p.oldPrice || p.compareAtPrice || 0), price = Number(p.price) || 0;
         const off = old > price && price > 0 ? Math.round((1 - price / old) * 100) : 0;
@@ -93,14 +94,15 @@ async function buildUpdates() {
         q('products', skh.orderBy('createdAt', 'desc'), skh.limit(20)), q('services', skh.limit(20)), q('drivers', skh.limit(20)),
         q('products', skh.where('saleMode', '==', 'price_drop'), skh.limit(10)), q('products', skh.where('saleMode', '==', 'auction'), skh.limit(10))]);
     const now = Date.now(), cards = [];
-    const catPic = (p) => pic(p) || (window.skhCategoryImage ? window.skhCategoryImage({ category: p.category || p.reqCategory || p.vehicleType }) : '') || '';
-    const prod = prods.find(p => live(p) && pic(p) && (!p.saleMode || p.saleMode === 'free_market' || p.saleMode === 'wholesale'));
+    // Category illustrations are not photographs of a seller's actual listing.
+    const catPic = (p) => pic(p) || '';
+    const prod = prods.find(p => liveProduct(p) && pic(p) && (!p.saleMode || p.saleMode === 'free_market' || p.saleMode === 'wholesale'));
     if (prod) cards.push({ tag: 'Bidhaa', cls: 'g', img: pic(prod), t: ptitle(prod), sub: prod.description || prod.category, who: prod.ownerName || prod.sellerName, cta: 'Angalia', go: `openProduct('${esc(prod.id)}','products')` });
     const svc = svcs.find(live); if (svc) cards.push({ tag: 'Huduma', cls: 'b', img: catPic(svc), t: svc.title, sub: svc.description || svc.subCategory || svc.category, who: svc.ownerName || svc.providerName, cta: 'Omba', go: `openProduct('${esc(svc.id)}','services')` });
     const d = drv.find(x => x.status !== 'suspended'); if (d) cards.push({ tag: 'Usafiri', cls: 'b', img: catPic(d), t: d.title || d.vehicleType || 'Usafiri', sub: d.description || d.route || d.location, who: d.driverName || d.ownerName, cta: 'Tafuta', go: `updateApp('delivery')` });
-    const o = pd.find(p => live(p) && !(Number((p.modeData || {}).endTime) <= now)); if (o) cards.push({ tag: 'Ofa', cls: 'y', img: catPic(o), t: o.title, sub: 'Bei inashuka hadi ' + tsh((o.modeData || {}).minPrice), who: o.ownerName || o.sellerName, cta: 'Tumia Ofa', go: `skhPriceDropRoom('${esc(o.id)}')` });
-    const a = au.find(p => live(p) && !(p.modeData || {}).ended && !(Number((p.modeData || {}).endTime) <= now)); if (a) cards.push({ tag: 'Mnada', cls: 'p', img: catPic(a), t: a.title, sub: 'Anza bei yako kuanzia ' + tsh(a.price), who: a.ownerName || a.sellerName, cta: 'Shiriki Mnada', go: `skhAuctionRoom('${esc(a.id)}')` });
-    if (!cards.length) return;
+    const o = pd.find(p => liveProduct(p) && !(Number((p.modeData || {}).endTime) <= now)); if (o) cards.push({ tag: 'Ofa', cls: 'y', img: catPic(o), t: o.title, sub: 'Bei inashuka hadi ' + tsh((o.modeData || {}).minPrice), who: o.ownerName || o.sellerName, cta: 'Tumia Ofa', go: `skhPriceDropRoom('${esc(o.id)}')` });
+    const a = au.find(p => liveProduct(p) && !(p.modeData || {}).ended && !(Number((p.modeData || {}).endTime) <= now)); if (a) cards.push({ tag: 'Mnada', cls: 'p', img: catPic(a), t: a.title, sub: 'Anza bei yako kuanzia ' + tsh(a.price), who: a.ownerName || a.sellerName, cta: 'Shiriki Mnada', go: `skhAuctionRoom('${esc(a.id)}')` });
+    if (!cards.length) { s.hidden = true; s.querySelector('.shx-body').innerHTML = ''; return; }
     s.querySelector('.shx-body').innerHTML = `<div class="shu-row">${cards.map(c => `<article class="shu-card"><div class="shu-img">${c.img ? `<img src="${esc(c.img)}" alt="" loading="lazy">` : ''}<span class="shu-tag shu-${c.cls}">${esc(c.tag)}</span></div>
         <b>${esc(short(c.t, 36))}</b><small>${esc(short(c.sub, 46))}</small><div class="shu-foot"><span>${ico('shop', 14)} ${esc(short(c.who || 'SokoHai', 20))}</span><button class="shu-cta shu-${c.cls}" onclick="${c.go}">${esc(c.cta)}</button></div></article>`).join('')}</div>`;
     s.hidden = false;
@@ -118,6 +120,7 @@ function buildPromos() {
 }
 
 let built = false;
+window.skhRefreshHomeListings = async function () { if (built) await Promise.all([buildUpdates(), buildPopular()]); };
 async function build() {
     if (built || !skh.db || !document.getElementById('buyerView') || !document.getElementById('skhHomeHero')) return false;
     built = true;
