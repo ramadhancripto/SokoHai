@@ -44,6 +44,9 @@ page.on('console', m => { if (m.type() === 'error' && !/404|Failed to load resou
 await page.addInitScript(() => { try { localStorage.setItem('sokohai_language', 'en'); } catch (e) { } });
 await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
 await page.waitForFunction(() => !!window.skhBOS && !!window.skhDataStates, null, { timeout: 30000 });
+// [2026-11-20] With the SDK available the app's real onAuthStateChanged runs; wait for it before injecting a test
+// user, otherwise it can reset skh.currentUser to null mid-test (flaky steps).
+await page.waitForFunction(() => window.skh && window.skh.__authResolved !== false, null, { timeout: 20000 }).catch(() => {});
 
 /* Fixtures: snapshots ndogo za jaribio (haziko kwenye app; ni za test pekee) */
 const FIXTURE = `

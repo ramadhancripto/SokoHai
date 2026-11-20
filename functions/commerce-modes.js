@@ -16,6 +16,7 @@
 'use strict';
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { productUnsellableReason } = require('./product-state'); // [R-18]
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
 
@@ -122,6 +123,8 @@ exports.auctionPlaceBid = onCall({ region: REGION }, async (req) => {
             if (dup.exists) { const b = dup.data() || {}; out = { ok: true, duplicate: true, bid: b.amount, totalBids: b.totalBids || null }; return; }
         }
         const p = s.data() || {};
+        const gone = productUnsellableReason(p); // [R-18] archived/removed auctions take no bids
+        if (gone) throw new HttpsError('failed-precondition', 'bidhaa_haipatikani:' + gone);
         const nowMs = Date.now();
         const v = validateBid(p, bid, uid, nowMs);
         if (!v.ok) throw new HttpsError('failed-precondition', v.code + (v.minRequired ? ':' + v.minRequired : ''));

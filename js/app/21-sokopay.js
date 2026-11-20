@@ -44,13 +44,13 @@ window.renderRoleBasedDashboard = function() {
 window.confirmSokoPayLinkDirect = async function(docId, sellerId, totalAmount, carrierShare = 0) {
     if(!await skhConfirm(`Je, unathibitisha kuwa mkataba huu umekamilika vizuri?\n\nPesa ya mkataba itatumwa kwa wahusika sasa hivi.`)) return;
 
-    // [SOKOPAY LIVE] Server-authoritative release — Cloud Function 'haipayReleaseLink'.
+    // [SOKOPAY LIVE] Server-authoritative release — Cloud Function 'sokopayReleaseLink' ([R-21 2026-11-20] client called the old name haipayReleaseLink, which is not exported: every release failed with not-found).
     // Browser haitoi pesa wala haibadilishi status ya 'completed' — server ndiyo mamlaka.
     // [LAUNCH-FIX 2026-11-09] Server path daima (geti WALLET_VIA_SERVER halikuwahi kuwashwa popote).
     const viaServer = (typeof skh.wrapCallable === 'function');
     if (viaServer) {
         try {
-            const call = (typeof skh.wrapCallable === "function" ? skh.wrapCallable("haipayReleaseLink") : skh.httpsCallable(skh.getFunctions(skh.fApp, "europe-west1"), "haipayReleaseLink"));
+            const call = (typeof skh.wrapCallable === "function" ? skh.wrapCallable("sokopayReleaseLink") : skh.httpsCallable(skh.getFunctions(skh.fApp, "europe-west1"), "sokopayReleaseLink"));
             const res = await call({ linkId: docId });
             const d = res && res.data;
             if (d && d.ok) {

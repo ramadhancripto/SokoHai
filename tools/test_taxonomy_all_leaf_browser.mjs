@@ -1,8 +1,11 @@
 // Real UI, deterministic local cloud boundary; never inject category options.
+// [2026-11-20] Leaves come from docs/taxonomy/mission/execution-queue.json when present (gitignored research
+// queue, LOCAL input), otherwise from the committed projection, which test_taxonomy_mission_contract.mjs proves is the same 743 leaves.
+import projection from '../shared/product-taxonomy-browser.mjs';
 import fs from 'node:fs';import assert from 'node:assert/strict';import {chromium} from 'playwright';
 import identity from '../shared/pos-product-identity-core.js';
 import {getProductSuggestions} from '../shared/product-taxonomy-bridge.mjs';
-const queue=JSON.parse(fs.readFileSync('docs/taxonomy/mission/execution-queue.json'));
+const queue=(fs.existsSync('docs/taxonomy/mission/execution-queue.json')?JSON.parse(fs.readFileSync('docs/taxonomy/mission/execution-queue.json')):Object.entries(projection.productLeaves).flatMap(([categoryId,leaves])=>leaves.map(leaf=>({categoryId,leaf}))));
 const root='docs/taxonomy/mission',dir=root+'/screenshots';fs.mkdirSync(dir,{recursive:true});
 const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(8000);const results=[],errors=[];page.on('pageerror',e=>errors.push(e.message));
 try{

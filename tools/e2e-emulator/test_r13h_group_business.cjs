@@ -11,7 +11,11 @@ const ev = (p, fn, a) => p.evaluate(fn, a);
 const prep = (p) => ev(p, () => { try { unlockSystem(); closeWelcome(); } catch (e) {} });
 // lib.cjs answers prompts with log.promptAnswer — feed it a queue
 const answers = (X, list) => { const q = list.slice(); Object.defineProperty(X.log, 'promptAnswer', { get: () => (q.length ? String(q.shift()) : ''), configurable: true }); return () => { delete X.log.promptAnswer; }; };
-const tab = async (p, t) => { await p.click('#gsgTabs [data-tab=' + t + ']'); await p.waitForTimeout(400); };
+/* [2026-11-20] Since 9ca6ad2 the group sections live in ONE collapsible rail (#gsgTabs, hidden until the
+   user taps #gsgSidebarToggle - css/77-chat-conversations.css). Open it the way a user does, then click. */
+const openRail = async (p) => { if ((await p.getAttribute('#gsgSidebarToggle', 'aria-expanded')) !== 'true') { await p.click('#gsgSidebarToggle'); } await p.waitForSelector('#gsgTabs .gsg-card', { state: 'visible', timeout: 10000 }); await p.waitForFunction(() => document.getElementById('gsgTabs').getBoundingClientRect().left >= -0.5, null, { timeout: 5000 }); /* phone: rail slides in (160 ms) */ };
+const tabClick = async (p, t) => { await openRail(p); await p.click('#gsgTabs [data-tab=' + t + ']'); };
+const tab = async (p, t) => { await tabClick(p, t); await p.waitForTimeout(400); };
 (async () => {
   await seed();
   const uidOf = async (e) => (await L.admin.auth().getUserByEmail(e)).uid;
@@ -38,11 +42,15 @@ const tab = async (p, t) => { await p.click('#gsgTabs [data-tab=' + t + ']'); aw
       deliveryStatus: 'in_transit', delivery: { area: 'Kariakoo, Dar es Salaam', method: 'transporter' }, createdAt: iso, sellerName: 'Juma Electronics', buyerName: 'Asha Mnunuzi' });
     gid2 = await ev(B.p, async () => (await skhGroupCreate({ name: 'Kundi la pili', groupType: 'PERMANENT_COMMUNITY' })).id); return gid; });
   await L.step('sidebar: agreed order of 10 sections, Soko has its own soft glow', async () => {
-    await ev(B.p, (g) => skhOpenGroupSoga(g), gid); await B.p.waitForSelector('#gsgTabs .gsg-card', { timeout: 20000 }); await B.p.waitForTimeout(2500);
+    await ev(B.p, (g) => skhOpenGroupSoga(g), gid); await B.p.waitForSelector('#gsgTabs .gsg-card', { state: 'attached', timeout: 20000 }); await B.p.waitForTimeout(2500); await openRail(B.p);
     const r = await ev(B.p, () => ({ tabs: [...document.querySelectorAll('#gsgTabs .gsg-card')].map(b => b.getAttribute('aria-label')),
       glow: getComputedStyle(document.querySelector('#gsgTabs [data-tab=soko]')).boxShadow }));
     L.assert(JSON.stringify(r.tabs) === JSON.stringify(['Mazungumzo', 'Media', 'Bidhaa', 'Huduma', 'Soko', 'Group Buy', 'Oda', 'Mapatano na Ofa', 'Usafirishaji', 'Wanachama']), r.tabs.join('|'));
-    L.assert(/rgba\(29, 185, 127/.test(r.glow), 'glow ' + r.glow); await shot(B.p, '01-chat'); return r.tabs.length + ' sections'; });
+    // [2026-11-20] The Soko glow (R13-H) was replaced on purpose by 9ca6ad2's single rail style
+    // (css/77-chat-conversations.css: [data-tab=soko] background transparent, box-shadow none). Check instead that the
+    // rail really opened from the toggle and Soko is a visible, reachable item.
+    const vis = await ev(B.p, () => { const t = document.querySelector('#gsgSidebarToggle'), s = document.querySelector('#gsgTabs [data-tab=soko]').getBoundingClientRect(); return { exp: t && t.getAttribute('aria-expanded'), w: s.width, h: s.height, x: s.left }; });
+    L.assert(vis.exp === 'true' && vis.w > 40 && vis.h > 20 && vis.x >= 0, 'rail/soko ' + JSON.stringify(vis)); await shot(B.p, '01-chat'); return r.tabs.length + ' sections'; });
   await L.step('Huduma: real service record with provider, price, [Tazama huduma] [Jadili]', async () => {
     await tab(B.p, 'services'); await B.p.waitForSelector('#gsgTabServices .gb-card', { timeout: 15000 });
     const t = await ev(B.p, () => document.querySelector('#gsgTabServices .gb-card').textContent);
@@ -60,7 +68,7 @@ const tab = async (p, t) => { await p.click('#gsgTabs [data-tab=' + t + ']'); aw
     const r2 = await ev(N.p, async ([g, l]) => { const s = window.skh; try { await s.updateDoc(s.doc(s.db, 'chatGroups/' + g + '/soko/' + l), { status: 'approved', decidedBy: s.currentUser.uid, decidedAt: 'x', expiresAtMs: 1e13 }); return 'ok'; } catch (e) { return 'denied'; } }, [gid, lid]);
     L.assert(r2 === 'denied', 'member approved someone else: ' + r2); return JSON.stringify(r); });
   await L.step('Soko UI: admin approves in "Usimamizi", listing goes live with expiry; suspend hides it', async () => {
-    await ev(S.p, (g) => skhOpenGroupSoga(g), gid); await S.p.waitForSelector('#gsgTabs [data-tab=soko]', { timeout: 20000 }); await S.p.waitForTimeout(2500);
+    await ev(S.p, (g) => skhOpenGroupSoga(g), gid); await S.p.waitForSelector('#gsgTabs [data-tab=soko]', { state: 'attached', timeout: 20000 }); await S.p.waitForTimeout(2500);
     await tab(S.p, 'soko'); await S.p.waitForSelector('#gsgTabSoko .gb-subtabs [data-k=admin]', { timeout: 15000 }); await S.p.click('#gsgTabSoko .gb-subtabs [data-k=admin]');
     await S.p.waitForSelector('[data-gb=soko-decide][data-st=approved]'); await shot(S.p, '03-soko-admin');
     await S.p.click('[data-gb=soko-decide][data-st=approved]'); await S.p.waitForTimeout(1500);
@@ -120,6 +128,8 @@ const tab = async (p, t) => { await p.click('#gsgTabs [data-tab=' + t + ']'); aw
     await L.db.doc('chatGroups/' + gid).update({ sendPolicy: 'everyone', sharePolicy: 'everyone' }); return 'product ' + p1 + ' / text ' + t2; });
   await L.step('stickers, image + PDF preview, forward to another group, report', async () => {
     await ev(B.p, (g) => skhOpenGroupSoga(g), gid); await B.p.waitForTimeout(2000);
+    await tab(B.p, 'chat'); // [2026-11-20] the group re-opens on the last section used; the composer lives in Mazungumzo
+    if ((await B.p.getAttribute('#gsgSidebarToggle', 'aria-expanded')) === 'true') await B.p.click('#gsgSidebarToggle');
     await B.p.click('#gsgComposerRow [data-act=gsg-attach]'); await B.p.click('.gsg-plus [data-act=gsg-sticker]'); await B.p.waitForSelector('#gsgStickerPop button');
     await B.p.click('#gsgStickerPop button'); await B.p.waitForSelector('#gsgMsgs .gsg-sticker', { timeout: 15000 });
     await ev(N.p, (g) => skhGroupSendTyped(g, { type: 'image', imageUrl: location.origin + '/assets/img/categories/clean/vyakula.webp' }), gid);

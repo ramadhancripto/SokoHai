@@ -277,6 +277,8 @@ async function ppInitiatorUid(tx) {
  * Anything else is held for admin review (status 'price_review'), never paid.
  * ========================================================== */
 const { modeUnitPrice, modeEligibility, modeQuantityLimit, variantPrice, boostPrice, SUBSCRIPTION_PRICES } = require('./pricing-core');
+const { productUnsellableReason } = require('./product-state'); // [R-18]
+const siteDomain = require('./site-domain'); // [R-19]
 // [PHASE 3 2026-10-31] Online reservation / stock commit (OFF unless system_config/inventory.mode says otherwise).
 const inventoryReservation = require('./inventory-reservation');
 const stockCore = require('./shared/inventory-reservation-core');
@@ -298,6 +300,8 @@ async function expectedItemAmount(item, buyerUid, nowMs) {
         const ps = await db.doc('products/' + pid).get();
         if (ps.exists) {
             const p = ps.data() || {};
+            const gone = productUnsellableReason(p); // [R-18]
+            if (gone) return { ok: false, reason: gone };
             qty = orderQuantity(item, p);
             if (qty === null) return { ok: false, reason: 'invalid_quantity' };
             if (item.sellerId && String(p.userId || '') !== String(item.sellerId)) return { ok: false, reason: 'seller_mismatch' };
@@ -318,8 +322,29 @@ async function expectedItemAmount(item, buyerUid, nowMs) {
     }
     return { ok: false, reason: 'unknown_item' };
 }
+/* [R-18 2026-11-20] Archive enforcement on the server: an order whose product is archived, deleted,
+ * suspended or removed by an admin has NO valid price, whatever price source it carries (cart, negotiation,
+ * admin approval, server price). Callers then refuse before any money moves (orderWalletPay) or send a
+ * captured payment to price_review instead of settling it to the seller (settlePesaPalPayment). */
+async function orderProductsGate(o) {
+    const ids = [];
+    const add = (v) => { const x = String(v || ''); if (x && x.indexOf('/') === -1 && ids.indexOf(x) === -1) ids.push(x); };
+    if (String(o.collectionName || '') === 'services' || String(o.commerceType || '') === 'service') return '';
+    add(o.productId);
+    if (!o.productId && o.itemId) add(o.itemId);
+    if (Array.isArray(o.items)) o.items.slice(0, 50).forEach(it => add(it && (it.productId || it.itemId || it.id)));
+    for (const pid of ids) {
+        const ps = await db.doc('products/' + pid).get();
+        if (!ps.exists) continue; // sokopay links / services / legacy ids are priced by their own source
+        const why = productUnsellableReason(ps.data() || {});
+        if (why) return why;
+    }
+    return '';
+}
 async function expectedOrderAmount(o, docId) {
     const nowMs = Date.now();
+    const gate = await orderProductsGate(o);
+    if (gate) return { ok: false, reason: gate };
     if (o.pricedByServer === true) return { ok: true, amount: moneyOf(o.amount), source: o.priceSource || 'server' };
     if (o.priceApprovedBy && Number(o.priceApprovedAmount) > 0) {
         // [REPAIR 2026-10 B-01] Trust an admin price approval only when the
@@ -1834,9 +1859,19 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
     const payPurpose = ['deposit', 'order', 'link'].indexOf(_pur) !== -1 ? _pur : 'other';
     const payKind = String(d.kind || payPurpose || 'generic').slice(0, 32);
     const payTargetId = String(d.targetId || '').replace(/[^A-Za-z0-9_\-]/g, '').slice(0, 128);
+    // [R-18 2026-11-20] Refuse BEFORE redirecting to PesaPal when a product in the checkout is archived /
+    // deleted / suspended / removed. (Settlement repeats the check through expectedOrderAmount, so a
+    // client that skips this list still cannot get an archived product settled to the seller.)
+    const preIds = Array.from(new Set((Array.isArray(d.productIds) ? d.productIds : []).map(x => String(x || '')).filter(x => x && x.indexOf('/') === -1))).slice(0, 50);
+    for (const pid of preIds) {
+        const ps = await db.doc('products/' + pid).get();
+        const why = ps.exists ? productUnsellableReason(ps.data() || {}) : '';
+        if (why) throw new HttpsError('failed-precondition', 'PRODUCT_UNAVAILABLE: Bidhaa hii haipatikani tena (' + why + '). Ondoa kwenye kikapu.');
+    }
     // [REPAIR 2026-10 M5] Only return to SokoHai's own origins (no open redirect).
     const allowedOrigins = String(process.env.PESAPAL_ALLOWED_RETURN_ORIGINS
-        || 'https://sokohaimarket.netlify.app,https://sokohaicom.netlify.app' + (process.env.FUNCTIONS_EMULATOR === 'true' ? ',http://localhost:5000,http://127.0.0.1:5000' : ''))
+        // [R-19] every production origin (sokohai.com / www were missing: a payment started there returned to the default callback)
+        || siteDomain.PRODUCTION_ORIGINS.join(',') + (process.env.FUNCTIONS_EMULATOR === 'true' ? ',http://localhost:5000,http://127.0.0.1:5000' : ''))
         .split(',').map(x => x.trim().replace(/\/+$/, '')).filter(Boolean);
     let redirectUrl = String(d.redirectUrl || c.defaultCallback);
     try {
@@ -4339,7 +4374,7 @@ exports.commentsModerate = onCall({ region: REGION }, async (req) => {
  * sitemapXml — (HTTP) orodha ya bidhaa/huduma/usafiri za umma
  * kwa ajili ya Google (SEO). Inajibu XML halisi ya sitemap.
  * Weka PUBLIC_BASE_URL kwenye functions/.env (mfano:
- *   PUBLIC_BASE_URL=https://sokohai.example.com
+ *   PUBLIC_BASE_URL=https://sokohai.com   (bila hii: functions/site-domain.js CANONICAL_ORIGIN)
  * ). Kisha unaweza kufanya hosting rewrite ya /sitemap.xml
  * kwenda kwenye function hii, au kuwasilisha URL ya function
  * moja kwa moja kwenye Google Search Console.
@@ -4347,8 +4382,10 @@ exports.commentsModerate = onCall({ region: REGION }, async (req) => {
 exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Content-Type', 'application/xml; charset=utf-8');
-    const base = (process.env.PUBLIC_BASE_URL || 'https://sokohai.example.com').replace(/\/+$/, '');
+    // [R-19] fallback is the real canonical origin (was the placeholder sokohai.example.com)
+    const base = (process.env.PUBLIC_BASE_URL || siteDomain.CANONICAL_ORIGIN).replace(/\/+$/, '');
     const urls = [base + '/'];
+    const PATH = { products: '/p/', services: '/s/', drivers: '/d/' }; // same routes as skhEntityPublicUrl
     try {
         const colls = ['products', 'services', 'drivers'];
         for (const c of colls) {
@@ -4356,8 +4393,10 @@ exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
             snap.forEach(d => {
                 // Ziandike zile zenye jina halisi tu (sio drafts tupu)
                 const dd = d.data() || {};
-                if (dd.title || dd.itemTitle || dd.name) {
-                    urls.push(base + '/p/' + encodeURIComponent(d.id));
+                // [R-18/R-19] archived / deleted / removed listings are not advertised to search engines;
+                // services and transport use their own public routes (were all written as /p/).
+                if ((dd.title || dd.itemTitle || dd.name) && !productUnsellableReason(dd) && !(c === 'products' && dd.isOnline === false)) {
+                    urls.push(base + PATH[c] + encodeURIComponent(d.id));
                 }
             });
         }

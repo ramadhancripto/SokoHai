@@ -570,6 +570,26 @@ service cloud.firestore {
               'reservationCheckedAt','reservationEndedAt','stockCommitted','stockCommittedAt','inventoryReviewState',
               'inventoryReviewReason','reviewDeadlineAt','refundPendingAt','refundId','reviewResolvedAt','reviewResolvedBy'];
     }
+    // [R-18 2026-11-20] A product that is archived / deleted / suspended / removed by an admin cannot get a
+    // NEW order, even when the browser writes the order document directly. Existing orders and the product
+    // itself are untouched (read-only check). Orders without productId (cart items, sokopay links) are
+    // checked by the server price check before money moves (functions/product-state.js).
+    function productGoneData(d) {
+      return !(d.get('archivedAt', null) in [null, ''])
+        || d.get('archived', false) == true
+        || d.get('deleted', false) == true
+        || d.get('publicationStatus', '') in ['archived', 'draft']
+        || d.get('status', '') in ['archived', 'deleted', 'suspended', 'inactive', 'removed']
+        || d.get('adminHidden', false) == true
+        || d.get('moderationStatus', '') == 'removed'
+        || d.get('suspended', false) == true;
+    }
+    function orderProductSellable() {
+      let pid = request.resource.data.get('productId', '');
+      return !(pid is string) || pid == '' || pid.matches('.*/.*')
+        || !exists(/databases/$(database)/documents/products/$(pid))
+        || !productGoneData(get(/databases/$(database)/documents/products/$(pid)).data);
+    }
     function orderServerOnlyCreateKeys() {
       return ['sellerEarned','carrierEarned','commission','autoReleased','autoReleasedAt',
               'disputeWinner','disputeResolvedAt','verifiedAmount','paymentProtectedAt','buyerRefund','completedAt',
@@ -600,7 +620,8 @@ service cloud.firestore {
         && request.resource.data.get('paymentStatus', 'pending') in ['pending','payment_pending','Payment Pending','unpaid','']
         && request.resource.data.get('paymentVerified', false) == false
         && !(request.resource.data.get('paymentRef', '') is string && request.resource.data.get('paymentRef', '').matches('^WLT_.*'))
-        && !('trust' in request.resource.data);   // [R9] Verified Transaction is server-only
+        && !('trust' in request.resource.data)   // [R9] Verified Transaction is server-only
+        && orderProductSellable();               // [R-18] no new order for an archived/removed product
       // [LAUNCH-FIX 2026-11-09] Oda ya huduma inayoundwa na FUNDI anapokubali
       // ombi la mteja (16-pos-admin-jobs.js acceptHubServiceRequest). Bila hii,
       // flow nzima ya kukubali-kazi ingekataliwa na rules. Salama kwa sababu:

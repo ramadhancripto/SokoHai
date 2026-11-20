@@ -43,6 +43,9 @@ page.on('console', m => { if (m.type() === 'error' && !/404|Failed to load resou
 
 await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
 await page.waitForFunction(() => !!window.skhBOS && !!window.skhRenderBusinessOSShell, null, { timeout: 30000 });
+// [2026-11-20] With the SDK available the app's real onAuthStateChanged runs; wait for it before injecting a test
+// user, otherwise it can reset skh.currentUser to null mid-test (flaky steps).
+await page.waitForFunction(() => window.skh && window.skh.__authResolved !== false, null, { timeout: 20000 }).catch(() => {});
 
 const MODEL = await page.evaluate(() => ({
   groups: window.skhBOS.navModel.map(g => ({ id: g.id, num: g.num, label: g.label, subgroups: (g.subgroups || []).map(s => ({ id: s.id, label: s.label })) })),

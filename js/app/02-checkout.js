@@ -167,6 +167,8 @@ window.processPayment = async function() {
                 phone: accountNumber,
                 provider: provider,
                 description: "SokoHai Escrow Purchase",
+                // [R-18 2026-11-20] server refuses archived/removed products before PesaPal
+                productIds: (pendingCheckout.cart && pendingCheckout.cart.length ? pendingCheckout.cart.map(function (x) { return x && (x.productId || x.id); }) : [pendingCheckout.product && pendingCheckout.product.id]).filter(Boolean).slice(0, 50),
                 customerName: (skh.currentUser && (skh.currentUser.displayName || skh.currentUser.email)) || "Mteja",
                 email: (skh.currentUser && skh.currentUser.email) || "",
                 redirectUrl: (window.location && (window.location.protocol === "http:" || window.location.protocol === "https:")) ? window.location.origin + "/?pesapal_return=1" : ""

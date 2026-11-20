@@ -23,9 +23,14 @@
    ========================================================================== */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+// [2026-11-20] repository-relative paths (were hard-coded to /home/user/..., so the test could not run on any other machine)
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const URL = process.env.BOS_URL || 'http://127.0.0.1:5055/';
-const SHOTS = process.env.STB_SHOTS || '/home/user/sokohai-business-os/shots/stage-b-terminology';
+const SHOTS = process.env.STB_SHOTS || path.join(os.tmpdir(), 'sokohai-shots', 'stage-b-terminology');
 mkdirSync(SHOTS, { recursive: true });
 
 let pass = 0;
@@ -68,7 +73,7 @@ const POS = { products: {}, daily: [], summary: { grossSales: 0 }, totals: {} };
    1. i18n keys (Kiswahili) — bila browser
    ========================================================================== */
 const fs = await import('node:fs');
-const i18nSrc = fs.readFileSync('/home/user/SokoHai/js/app/32-i18n.js', 'utf8');
+const i18nSrc = fs.readFileSync(path.join(ROOT, 'js', 'app', '32-i18n.js'), 'utf8');
 const KEYS_EXPECTED = {
     pa_title: 'Uchambuzi wa Bidhaa',
     an_active_products: 'BIDHAA ZILIZOCHAPISHWA',
@@ -119,6 +124,9 @@ page.on('pageerror', e => errors.push(String(e && e.message || e)));
 page.on('dialog', d => d.dismiss().catch(() => { }));
 await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
 await page.waitForFunction(() => !!window.skh && !!window.skhRenderMyProducts, null, { timeout: 30000 });
+// [2026-11-20] With the SDK available the app's real onAuthStateChanged runs; wait for it before injecting a test
+// user, otherwise it can reset skh.currentUser to null mid-test (flaky steps).
+await page.waitForFunction(() => window.skh && window.skh.__authResolved !== false, null, { timeout: 20000 }).catch(() => {});
 
 await page.evaluate(({ products, orders, pos }) => {
     window.__posCalls = 0;

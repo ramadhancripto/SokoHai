@@ -74,6 +74,9 @@ page.on('console', m => { if (m.type() === 'error' && !/404|Failed to load resou
 
 await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
 await page.waitForFunction(() => !!window.skh && !!window.skhRenderCompareProducts, null, { timeout: 30000 });
+// [2026-11-20] With the SDK available the app's real onAuthStateChanged runs; wait for it before injecting a test
+// user, otherwise it can reset skh.currentUser to null mid-test (flaky steps).
+await page.waitForFunction(() => window.skh && window.skh.__authResolved !== false, null, { timeout: 20000 }).catch(() => {});
 
 await page.evaluate(async ({ products, orders, posCur, posPrev }) => {
     window.__posCalls = 0;
@@ -248,11 +251,11 @@ await step('12. data isiyopo inaonyesha Haijawekwa / Haipatikani (si sifuri)', a
             na: cells.filter(c => c.classList.contains('is-na')).length,
             sample: cells.filter(c => c.classList.contains('is-na')).slice(0, 2).map(c => c.textContent),
             txPos: (() => {
-                const tr = [...document.querySelectorAll('.cmp-row')].find(x => /Transactions \(POS\)/.test(x.textContent));
+                const tr = [...document.querySelectorAll('.cmp-row')].find(x => /^(Transactions|Miamala) \(POS\)/.test(x.textContent) /* [2026-11-20] label is localised (cmp_tx_pos: "Miamala (POS)") */);
                 return tr ? [...tr.querySelectorAll('.cmp-cell')].map(c => c.textContent.trim()) : null;
             })(),
             txPosNa: (() => {
-                const tr = [...document.querySelectorAll('.cmp-row')].find(x => /Transactions \(POS\)/.test(x.textContent));
+                const tr = [...document.querySelectorAll('.cmp-row')].find(x => /^(Transactions|Miamala) \(POS\)/.test(x.textContent) /* [2026-11-20] label is localised (cmp_tx_pos: "Miamala (POS)") */);
                 return tr ? tr.querySelectorAll('.cmp-cell.is-na').length : -1;
             })()
         };

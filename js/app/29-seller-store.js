@@ -51,19 +51,46 @@ import { skh } from './00-bootstrap.js';
         } catch (e) { return null; }
     }
 
+    /* [R-22 2026-11-20] Canonical product owner field is `userId` (firestore.rules create/update, every server
+       price/stock check). Older or imported listings may carry only `sellerId`; the product page already
+       falls back to it (07-product.js, 39-product-showcase.js), so the store reads BOTH and merges by id.
+       Nothing is migrated or rewritten. The second query is best effort (a failure keeps the userId list).
+       Public store = public market rules: archived / deleted / draft / admin-removed / hidden / offline-only
+       listings are not shown to visitors (products are world-readable, so this filter is the UI's job;
+       buying them is refused by the server - R-18). */
+    function storeVisible(p) {
+        if (!p) return false;
+        if (typeof skh.productEligible === 'function') return !!skh.productEligible(p);
+        var st = String(p.status || '').toLowerCase(), pub = String(p.publicationStatus || '').toLowerCase();
+        return !p.archivedAt && p.archived !== true && p.deleted !== true && p.adminHidden !== true && p.moderationStatus !== 'removed'
+            && pub !== 'archived' && pub !== 'draft' && ['archived', 'deleted', 'suspended', 'inactive', 'removed'].indexOf(st) === -1
+            && p.isOnline !== false && p.hidden !== true;
+    }
     async function getProducts(uid) {
-        var list = [];
+        var byId = {}, rawCount = 0;
         try {
             // [FIX 2026-09] Hakuna orderBy — inaepuka hitaji la composite index; panga hapa.
             var q = skh.query(skh.collection(skh.db, 'products'), skh.where('userId', '==', uid), skh.limit(120));
             var s = await skh.getDocs(q);
-            s.forEach(function (d) { list.push(Object.assign({}, d.data(), { id: d.id })); });
-            list.sort(function (a, b) { return (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0); });
+            rawCount = s.size || 0;
+            s.forEach(function (d) { byId[d.id] = Object.assign({}, d.data(), { id: d.id }); });
         } catch (e) {
             console.warn('[seller-store] getProducts kosa:', e && (e.code || e.message) ? (e.code || e.message) : 'unknown');
             return { items: [], failed: true, capped: false };
         }
-        return { items: list, failed: false, capped: list.length >= 120 };
+        try {
+            var q2 = skh.query(skh.collection(skh.db, 'products'), skh.where('sellerId', '==', uid), skh.limit(120));
+            var s2 = await skh.getDocs(q2);
+            s2.forEach(function (d) {
+                var row = d.data() || {};
+                // a sellerId-only legacy row belongs to this seller only when it names no OTHER userId
+                if (row.userId && row.userId !== uid) return;
+                if (!byId[d.id]) byId[d.id] = Object.assign({}, row, { id: d.id });
+            });
+        } catch (e) { /* legacy lookup is optional */ }
+        var list = Object.keys(byId).map(function (k) { return byId[k]; }).filter(storeVisible);
+        list.sort(function (a, b) { return (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0); });
+        return { items: list, failed: false, capped: rawCount >= 120 };
     }
 
     async function getOrdersAgg(uid) {

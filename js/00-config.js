@@ -91,6 +91,10 @@ window.SOKOHAI_CONFIG = {
     //                MRADI WA STAGING (Firebase Console -> Project settings -> Your apps). Si siri.
     //                Ikiwa tupu, staging inaonyesha "haijasanidiwa" — HAIRUDI production kamwe.
     //  * localhost  : emulator pekee (functions/local-server.js). Hakuna production kutoka localhost.
+    // [R-19 2026-11-20] Public origin used for share links in messages / SEO. Same value as
+    // functions/site-domain.js and html/00-head.html; change ALL of them with
+    // `node tools/set_canonical_domain.mjs https://sokohai.com` once the owner has connected sokohai.com.
+    CANONICAL_ORIGIN: 'https://sokohaicom.netlify.app',
     FIREBASE_ENVIRONMENTS: {
         production: {
             projectId: 'sokonet-3b847',

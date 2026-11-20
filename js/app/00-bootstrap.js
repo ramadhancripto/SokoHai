@@ -681,7 +681,7 @@ skh.firebaseEnv = null;
             + '<p style="margin:0 0 12px;color:#334155;font-size:14px;line-height:1.5;">Mazingira haya hayajasanidiwa. Ukurasa huu hauunganishwi na database yoyote, kwa usalama.</p>'
             + '<p style="margin:0 0 4px;font-size:13px;color:#475569;">Host: <code>' + esc(window.location.hostname) + '</code></p>'
             + '<p style="margin:0;font-size:13px;color:#475569;">Sababu: <code>' + esc(reason) + '</code></p>'
-            + '<p style="margin:14px 0 0;font-size:12.5px;color:#64748b;">Tumia <b>sokohai.com</b>. Msimamizi: ongeza host hii kwenye <code>js/00-config.js → FIREBASE_ENVIRONMENTS</code>.</p></div>';
+            + '<p style="margin:14px 0 0;font-size:12.5px;color:#64748b;">Tumia <b>' + esc(String((window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.CANONICAL_ORIGIN) || 'https://sokohaicom.netlify.app').replace(/^https?:\/\//, '')) + '</b>. Msimamizi: ongeza host hii kwenye <code>js/00-config.js → FIREBASE_ENVIRONMENTS</code>.</p></div>';
         (document.body || document.documentElement).appendChild(box);
     } catch (e) {}
     console.error('[SokoHai] Environment not configured for host "' + window.location.hostname + '" (' + reason + '). Firebase NOT initialised.');

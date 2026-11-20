@@ -69,6 +69,9 @@ page.on('pageerror', e => errors.push(String(e && e.message || e)));
 page.on('console', m => { if (m.type() === 'error' && !/404|Failed to load resource/.test(m.text())) errors.push('console: ' + m.text().slice(0, 160)); });
 await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
 await page.waitForFunction(() => !!window.skhBOS && !!window.skhBusinessOverview, null, { timeout: 30000 });
+// [2026-11-20] With the SDK available the app's real onAuthStateChanged runs; wait for it before injecting a test
+// user, otherwise it can reset skh.currentUser to null mid-test (flaky steps).
+await page.waitForFunction(() => window.skh && window.skh.__authResolved !== false, null, { timeout: 20000 }).catch(() => {});
 
 /* ---------------- install stub + render ---------------- */
 async function mount(report) {

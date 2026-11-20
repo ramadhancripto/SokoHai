@@ -6,6 +6,10 @@ const OUT = require('path').join(__dirname, 'out', 'r13g-'); require('fs').mkdir
 const VP = process.env.VP || 'phone';
 const vp = VP === 'desktop' ? { width: 1440, height: 900 } : { width: 390, height: 844 };
 const shot = (p, n) => p.screenshot({ path: OUT + VP + '-' + n + '.png' });
+/* [2026-11-20] Since 9ca6ad2 the group sections live in ONE collapsible rail (#gsgTabs, hidden until the
+   user taps #gsgSidebarToggle - css/77-chat-conversations.css). Open it the way a user does, then click. */
+const openRail = async (p) => { if ((await p.getAttribute('#gsgSidebarToggle', 'aria-expanded')) !== 'true') { await p.click('#gsgSidebarToggle'); } await p.waitForSelector('#gsgTabs .gsg-card', { state: 'visible', timeout: 10000 }); await p.waitForFunction(() => document.getElementById('gsgTabs').getBoundingClientRect().left >= -0.5, null, { timeout: 5000 }); /* phone: rail slides in (160 ms) */ };
+const tabClick = async (p, t) => { await openRail(p); await p.click('#gsgTabs [data-tab=' + t + ']'); };
 const ev = (p, fn, a) => p.evaluate(fn, a);
 const prep = (p) => ev(p, () => { try { unlockSystem(); closeWelcome(); } catch (e) {} });
 (async () => {
@@ -56,18 +60,18 @@ const prep = (p) => ev(p, () => { try { unlockSystem(); closeWelcome(); } catch 
     await ev(B.p, () => { const m = document.getElementById('gsgMsgs'); m.scrollTop = m.scrollHeight; }); await B.p.waitForTimeout(500); await shot(B.p, '03-chat');
     return info.sub.trim(); });
   await L.step('Media section shows the shared photo with the sender', async () => {
-    await B.p.click('#gsgTabs [data-tab=media]'); await B.p.waitForSelector('.gsg-mtile', { timeout: 15000 });
+    await tabClick(B.p, 'media'); await B.p.waitForSelector('.gsg-mtile', { timeout: 15000 });
     const who = await ev(B.p, () => document.querySelector('.gsg-mwho').textContent); L.assert(/Neema/.test(who), who); await shot(B.p, '04-media'); });
   await L.step('Group Orders (emulator flag on): member Group Buy listed; no create button that rules would refuse', async () => {
     await L.db.doc('system/config').set({ features: { chatGroupOrders: true } }, { merge: true });
     await L.db.doc('products/gb1').set({ userId: juma, title: 'Mahindi group buy', price: 75000, unit: 'Gunia', image: img, publicationStatus: 'published', saleMode: 'group_buy',
       modeData: { mode: 'group_buy', groupPrice: 68000, targetUsers: 10, joinedUsers: 2, endTime: Date.now() + 864e5 }, createdAt: new Date().toISOString() });
     await ev(B.p, () => { window.skh.sysConfig = Object.assign({}, window.skh.sysConfig, { features: { chatGroupOrders: true } }); });
-    await B.p.click('#gsgTabs [data-tab=groupOrders]'); await B.p.waitForSelector('#gsgTabOrders .gb-card', { timeout: 15000 });   // [R13-H] Group Buy section (125)
+    await tabClick(B.p, 'groupOrders'); await B.p.waitForSelector('#gsgTabOrders .gb-card', { timeout: 15000 });   // [R13-H] Group Buy section (125)
     const t = await ev(B.p, () => ({ card: document.querySelector('#gsgTabOrders .gb-card').textContent, create: !!document.querySelector('#gsgTabOrders [data-act=gsg-at-gorder]') }));
     L.assert(/2\s*\/\s*10 wamejiunga/.test(t.card) && !t.create, JSON.stringify(t)); await shot(B.p, '05-group-orders'); });
   await L.step('[Jadili] opens a private chat with the REAL seller of the listing', async () => {
-    await B.p.click('#gsgTabs [data-tab=chat]'); await B.p.waitForTimeout(800);
+    await tabClick(B.p, 'chat'); await B.p.waitForTimeout(800);
     await B.p.click('#gsgMsgs .gsg-pcard [data-act=gsg-jadili]');
     await B.p.waitForSelector('.gb-pick-o[data-k=chat]'); await B.p.click('.gb-pick-o[data-k=chat]');   // [R13-H] Jadili: chat or Mapatano
     await B.p.waitForFunction(() => { const m = document.getElementById('chatModal'); return m && getComputedStyle(m).display !== 'none'; }, null, { timeout: 20000 });

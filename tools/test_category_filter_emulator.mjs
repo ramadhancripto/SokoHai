@@ -37,11 +37,15 @@ ok('CAT-11 selection: new (CAT-11) and old (legacy label) products, newest first
 ok('legacy "Electronics" selection returns the same set', JSON.stringify(await feed('Electronics & Teknoloji (Tech)')) === JSON.stringify(elec));
 ok('CAT-12 phones do not leak into CAT-11', !elec.includes('new_phone'));
 ok('food: CAT-01 + legacy food label together', JSON.stringify((await feed('CAT-01')).sort()) === '["new_rice","old_rice"]');
+// [2026-11-20] Since [F-F1 2026-11-10] (shared/taxonomy-legacy-mapping.js) the reviewed legacy label
+// "Afya na Pharmacy (Health)" maps to CAT-19 and "Mchanganyiko" to CAT-44, so selecting either side shows both.
+// (This test was written on 2026-11-06, when those labels were still unmapped proposals.)
 const med = await feed('Afya na Pharmacy (Health)');
-ok('unmapped legacy "Afya" shows only its own products (no guess to CAT-19)', JSON.stringify(med) === '["old_med"]', med);
-ok('CAT-19 does not pull the unmapped legacy health products', JSON.stringify(await feed('CAT-19')) === '["new_med"]');
+ok('mapped legacy "Afya" selection: legacy + CAT-19 products, newest first', JSON.stringify(med) === '["new_med","old_med"]', med);
+ok('CAT-19 selection returns the same set (and nothing else)', JSON.stringify(await feed('CAT-19')) === JSON.stringify(med));
+ok('health products do not leak into electronics / food', !elec.includes('old_med') && !(await feed('CAT-01')).includes('old_med'));
 ok('client filter agrees with the query for every seeded product', seed.every(([id, c]) => categoryMatches(c, 'CAT-11') === ['new_tv', 'old_tv'].includes(id)));
 const impact = JSON.parse(execFileSync('node', [path.join(path.dirname(new URL(import.meta.url).pathname), 'legacy_category_impact.mjs')], { stdio: ['ignore', 'pipe', 'ignore'] }).toString());
-ok('impact tool: 8 products, 2 legacy-unmapped labels counted', impact.products === 8 && Object.keys(impact.legacyUnmapped).length === 2 && impact.legacyUnmapped['Afya na Pharmacy (Health)'] === 1, impact);
+ok('impact tool: 8 products, 4 legacy labels mapped (Afya -> CAT-19, Mchanganyiko -> CAT-44), none unmapped', impact.products === 8 && Object.keys(impact.legacyUnmapped).length === 0 && impact.legacyMapped['Afya na Pharmacy (Health) -> CAT-19'] === 1 && impact.legacyMapped['Mchanganyiko (General Merchandise) -> CAT-44'] === 1 && Object.keys(impact.legacyMapped).length === 4, impact);
 console.log(`\nCATEGORY FILTER (emulator): ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

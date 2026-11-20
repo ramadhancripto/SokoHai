@@ -20,6 +20,7 @@
  */
 'use strict';
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { productUnsellableReason } = require('./product-state'); // [R-18]
 const admin = require('firebase-admin');
 const REGION = 'europe-west1';
 const db = () => admin.firestore();
@@ -68,7 +69,7 @@ async function checkProducts(uid, ids, kind) {
         if (!s.exists) throw new HttpsError('failed-precondition', 'bidhaa_haipo:' + pid);
         const p = s.data() || {};
         if (String(p.userId || '') !== uid) throw new HttpsError('permission-denied', 'si_bidhaa_yako:' + pid);
-        if (p.adminHidden || p.moderationStatus === 'removed' || p.publicationStatus === 'draft') throw new HttpsError('failed-precondition', 'bidhaa_haiko_hewani:' + pid);
+        if (p.adminHidden || p.moderationStatus === 'removed' || p.publicationStatus === 'draft' || productUnsellableReason(p)) throw new HttpsError('failed-precondition', 'bidhaa_haiko_hewani:' + pid); // [R-18] + archived/deleted/suspended
         if (kind === 'auction' && saleMode(p) !== 'auction') throw new HttpsError('failed-precondition', 'si_mnada:' + pid);
         if (kind === 'price_drop' && saleMode(p) !== 'price_drop') throw new HttpsError('failed-precondition', 'si_bei_kushuka:' + pid);
     }
@@ -278,6 +279,7 @@ exports.livePin = onCall({ region: REGION }, async (req) => {
     const now = new Date().toISOString();
     await ref.update({ pinnedProductId: pid, updatedAt: now });
     const p = ((await db().doc('products/' + pid).get()).data()) || {};
+    if (productUnsellableReason(p)) throw new HttpsError('failed-precondition', 'bidhaa_haiko_hewani:' + pid); // [R-18] archived after the session started
     await ref.collection('comments').add({ kind: 'product', text: 'Sasa tunaonyesha: ' + clean(p.title, 120), productId: pid, uid: d.hostUid, name: d.hostName, createdAt: now, status: 'visible' });
     return { ok: true };
 });

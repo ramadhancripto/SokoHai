@@ -51,7 +51,7 @@
         /* huduma (serviceDataMap) */
         'Home & Personal': 'svc-home-personal',
         // [R6] svc-construction.webp carries a third-party watermark/phone number → same-subject ujenzi image
-        'Construction & Handyman': 'icon:svc-construction-handyman.svg', /* [R13-C] no own clean photo yet (svc-construction is watermarked) */
+        'Construction & Handyman': 'scene:svc-construction-handyman', /* [R13-C] no own clean photo yet (svc-construction is watermarked) */
         'Cleaning & Maintenance': 'svc-cleaning', /* same subject as CAT-17 Huduma za Nyumbani */
         'Event & Entertainment': 'svc-event',
         'Tech & Repair': 'svc-tech',
@@ -60,16 +60,16 @@
         'Creative Freelancing': 'svc-creative',
         'Software & IT': 'svc-software',
         'Digital Marketing': 'svc-marketing',
-        'Writing & Translation': 'icon:svc-writing-translation.svg', /* [R6] svc-writing.webp: stock-photo watermark */
+        'Writing & Translation': 'scene:svc-writing-translation', /* [R6] svc-writing.webp: stock-photo watermark */
         'Media Production': 'svc-media',
         'AI Services': 'svc-ai',
         'Virtual Business': 'svc-virtual',
-        'Online Coaching': 'icon:svc-online-coaching.svg', /* [R6] svc-coaching.webp: stock-photo watermark */
-        'Website Services': 'icon:svc-website-services.svg', /* [R6] svc-website.webp: stock-photo watermark */
+        'Online Coaching': 'scene:svc-online-coaching', /* [R6] svc-coaching.webp: stock-photo watermark */
+        'Website Services': 'scene:svc-website-services', /* [R6] svc-website.webp: stock-photo watermark */
         'Remote Support': 'svc-support',
         'Food Services': 'svc-food',
         // [R6] svc-rental.webp does not show renting → clean fallback tile until the owner supplies an image
-        'Rental Services': 'icon:svc-rental-services.svg',
+        'Rental Services': 'scene:svc-rental-services',
         /* usafiri (deliveryTaxonomy) */
         'Passenger': 'tr-passenger',
         'Watu (Ride)': 'tr-passenger',
@@ -97,11 +97,11 @@
         'CAT-09': 'samani', 'CAT-10': 'ujenzi', 'CAT-11': 'elektroniki', 'CAT-12': 'new/cat12',
         'CAT-13': 'new/cat13', 'CAT-14': 'magari', 'CAT-15': 'new/cat15', 'CAT-16': 'new/cat16',
         'CAT-17': 'svc-cleaning', 'CAT-18': 'svc-tech', 'CAT-19': 'afya', 'CAT-20': 'new/cat20',
-        'CAT-21': 'svc-virtual', 'CAT-22': 'new/cat22', 'CAT-23': 'icon:cat-23-ajira-kazi.svg', 'CAT-24': 'icon:cat-24-hotel-malazi-utalii.svg',
+        'CAT-21': 'svc-virtual', 'CAT-22': 'new/cat22', 'CAT-23': 'scene:cat-23-ajira-kazi', 'CAT-24': 'scene:cat-24-hotel-malazi-utalii',
         'CAT-25': 'svc-food', 'CAT-26': 'photography/cat26', 'CAT-27': 'sanaa', 'CAT-28': 'asili', 'CAT-29': 'zawadi',
         'CAT-30': 'vichezeo', 'CAT-31': 'pet', 'CAT-32': 'photography/cat32', 'CAT-33': 'photography/cat33',
         'CAT-34': 'photography/cat34', 'CAT-35': 'photography/cat35', 'CAT-36': 'photography/cat36', 'CAT-37': 'svc-media',
-        'CAT-38': 'photography/cat38', 'CAT-39': 'icon:cat-39-used-second-hand-refurbished.svg', 'CAT-40': 'jumla', 'CAT-41': 'photography/cat41',
+        'CAT-38': 'photography/cat38', 'CAT-39': 'scene:cat-39-used-second-hand-refurbished', 'CAT-40': 'jumla', 'CAT-41': 'photography/cat41',
         'CAT-42': 'photography/cat42', 'CAT-43': 'photography/cat43', 'CAT-44': 'mchanganyiko'
     };
     /* [R6 review 2026-11] Files carrying a stock-photo watermark (Dreamstime) or a
@@ -123,6 +123,8 @@
     function assetUrl(slug) {
         if (!slug) return null;
         if (slug.indexOf('icon:') === 0) return 'assets/img/category-icons/' + slug.slice(5);
+        // [R-20 2026-11-20] original 4:3 scene artwork (tools/build_category_scenes.mjs) for the 8 groups without a clean photo
+        if (slug.indexOf('scene:') === 0) return 'assets/img/categories/illustrations/' + slug.slice(6) + '.svg';
         if (slug.indexOf('new/') === 0 || slug.indexOf('photography/') === 0) return 'assets/img/categories/' + slug + '.webp';
         return PHOTO_DIR + slug + '.webp';
     }

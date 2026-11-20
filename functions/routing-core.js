@@ -512,8 +512,21 @@ async function transitionRideOffers(myDb, rideId, action) {
         const rs = await t.get(ref);
         if (!rs.exists) throw new Error('ride_not_found');
         const rd = rs.data() || {};
-        if (!['searching','pending_acceptance'].includes(rd.status) || rd.assignmentStatus === 'assigned' || (rd.driverId && rd.acceptedAt)) {
+        // [PILOT-OPS C1 2026-11-20] Open states are the same as firestore.rules rideOpenStates()
+        // ('pending' / 'open' are legacy open rides that still carry routing offers).
+        const OPEN = ['searching', 'pending_acceptance', 'pending', 'open'];
+        if (!OPEN.includes(rd.status) || rd.assignmentStatus === 'assigned' || (rd.driverId && rd.acceptedAt)) {
             if (action.type === 'decline') throw new Error('offer_not_active');
+            // A closed / assigned ride is never revived, but its EXPIRED 'offered' offers must not stay
+            // live in an agent's inbox forever: mark only those as expired (ride document untouched).
+            if (action.type === 'sweep') {
+                const nowMs = Date.now(), nowIso = new Date(nowMs).toISOString(), updates = {};
+                const closed = await t.get(myDb.collection('delivery_offers').where('rideId', '==', rideId));
+                closed.forEach(d => { const o = d.data() || {}; const exp = Date.parse(o.expiresAt || '');
+                    if (o.status === L.OFFER.OFFERED && exp && exp <= nowMs) updates[d.id] = { status: L.OFFER.EXPIRED, expiredAt: nowIso }; });
+                Object.keys(updates).forEach(oid => t.update(myDb.collection('delivery_offers').doc(oid), updates[oid]));
+                result = { tr: Object.keys(updates).length ? { updates, notify: [], ridePatch: null } : null, offers: [] }; return;
+            }
             result = { tr: null, offers: [] }; return;
         }
         const snap = await t.get(myDb.collection('delivery_offers').where('rideId', '==', rideId));
