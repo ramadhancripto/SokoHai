@@ -4,7 +4,7 @@ const market=r('js/app/00-bootstrap.js'), cardCss=r('css/37-product-card-visual.
 let pass=0,fail=0;function t(n,v){if(v){pass++;console.log('PASS '+n)}else{fail++;console.error('FAIL '+n)}}
 const product=market.slice(market.indexOf('skh.ProductPostCard'),market.indexOf('skh.ServicePostCard'));
 t('product front card keeps image/title/price/location',product.includes('skh.cardImage')&&product.includes('skh-title')&&product.includes("cardPriceHtml(data, 'products')")&&product.includes("cardPinLocation(data, 'products')"));
-t('product front card omits seller details',!product.includes('cardSellerMini')&&!product.includes('cardRating'));
+t('product front card omits seller details',!product.includes('cardSellerMini')&&!/\bcardRating\(/.test(product)); // [2026-11-20] only the compact REAL rating (cardRatingCompact) is allowed — owner card style
 t('product front card omits mode/detail controls',!product.includes('cardModeSignalLine')&&!product.includes('description'));
 t('product image has stable wide aspect ratio',cardCss.includes('aspect-ratio:4/3')&&cardCss.includes('object-fit:cover!important'));
 t('product title uses readable two-line clamp',cardCss.includes('-webkit-line-clamp:2')&&cardCss.includes('font-size:15px!important'));

@@ -1,3 +1,4 @@
+// [OWNER CARD STYLE 2026-11-20] Cards use one 4:3 frame; the picture is shown WHOLE inside it (object-fit: contain, never cropped).
 // Real served HTML/CSS + real card builder, isolated sample data only (no Firebase writes).
 // Requires the local static preview on port 4173, or set NATURAL_GRID_URL.
 import assert from 'node:assert/strict';
@@ -63,14 +64,14 @@ for (const width of [320, 390, 768, 1280]) {
     lanes[shortest] = c.box.y + Math.round(c.box.h) + r.gap;
   }
   for (const c of r.cards) {
-    assert.ok(Math.abs(c.img.box.w / c.img.box.h - c.img.natural[0] / c.img.natural[1]) < 0.002, `distorted ${width}: ${JSON.stringify(c.img)}`);
+    assert.ok(Math.abs(c.img.box.w / c.img.box.h - 4/3) < 0.02 && c.img.fit === 'contain', `not a whole picture in the 4:3 frame ${width}: ${JSON.stringify(c.img)}`);
     assert.ok(Math.abs(c.img.box.w - c.img.parent.w) < 1 && Math.abs(c.img.box.h - c.img.parent.h) < 1, 'image frame clips image');
     assert.equal(c.img.fit, 'contain'); assert.equal(c.img.padding, '0px');
-    assert.match(c.text, /Bidhaa/); assert.match(c.text, /12,500/); assert.match(c.text, /Kg/); assert.match(c.text, /Inapatikana/); assert.match(c.text, /Dar/);
+    assert.match(c.text, /Bidhaa/); assert.match(c.text, /12,500/); assert.doesNotMatch(c.text, /Inapatikana|Dar/); // unit/stock/location live on the product page (owner style)
     assert.ok(c.rating && c.verified && !c.cart);
     assert.ok(c.box.bottom <= r.lazy.y + 1, 'lazy sentinel must follow all cards');
   }
-  for (const x of [r.rail, r.popular]) assert.ok(Math.abs(x.box.w/x.box.h-x.natural[0]/x.natural[1]) < 0.002 && x.fit === 'contain' && x.position === 'static', 'rail image distorted');
+  for (const x of [r.rail]) assert.ok(Math.abs(x.box.w/x.box.h-4/3) < 0.02 && x.fit === 'contain', 'rail image not whole in the 4:3 frame'); // Home rails now render the same card (test_popular_rail_browser)
   for (let i=0;i<r.cards.length;i++) for (let j=i+1;j<r.cards.length;j++) {
     const a=r.cards[i].box,b=r.cards[j].box;
     assert.ok(a.right <= b.x+.5 || b.right <= a.x+.5 || a.bottom <= b.y+.5 || b.bottom <= a.y+.5, `overlap ${width}: ${i},${j}`);
@@ -90,9 +91,12 @@ for (const width of [320, 390, 768, 1280]) {
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     const updated = await page.locator('#mainFeed').evaluate(e => e.style.getPropertyValue('--wf-height')); 
     await page.evaluate(src => { document.querySelector('#mainFeed > .skh-huru img').src = src; }, imgs[1]);
-    await page.waitForFunction(old => document.querySelector('#mainFeed').style.getPropertyValue('--wf-height') !== old, updated);
+    // [OWNER CARD STYLE 2026-11-20] the frame is a fixed 4:3, so a new picture must NOT move the layout.
+    await page.waitForFunction(() => { const i=document.querySelector('#mainFeed > .skh-huru img'); return i.complete && i.naturalWidth > 0; });
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await page.locator('#mainFeed').evaluate(e => e.style.getPropertyValue('--wf-height')), updated, 'layout stays stable when a picture changes');
     const res = await page.locator('#mainFeed > .skh-huru img').first().evaluate(i => ({ w:i.getBoundingClientRect().width,h:i.getBoundingClientRect().height,nw:i.naturalWidth,nh:i.naturalHeight }));
-    assert.ok(Math.abs(res.w/res.h-res.nw/res.nh)<0.002, 'dynamic image ratio');
+    assert.ok(Math.abs(res.w/res.h-4/3)<0.02, 'dynamic image keeps the 4:3 frame');
   }
   console.log(`PASS ${width}px: natural portrait/landscape/square, mixed feed, no overlap, rail, sentinel, dynamic item/ad`);
   await page.close();

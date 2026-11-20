@@ -32,7 +32,10 @@ export function availabilityStatus(p){
   return 'available';
 }
 export function productEligible(p){
-  return !!p && !p.archivedAt && publicationStatus(p)==='published' && channelsOf(p).includes('marketplace');
+  // [REMEDIATION 2026-11-20] hidden and offline listings never surface (regression from the channels change:
+  // a product with salesChannels ['marketplace'] but availabilityStatus 'hidden' / isOnline false was shown).
+  return !!p && !p.archivedAt && publicationStatus(p)==='published' && p.isOnline!==false
+    && availabilityStatus(p)!=='hidden' && channelsOf(p).includes('marketplace');
 }
 export function normalizeTaxonomyMetadata(input){
   const p=input||{};

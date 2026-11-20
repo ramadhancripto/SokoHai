@@ -55,36 +55,49 @@ window.skhEscrowInfo = function () {
 };
 
 /* ---------------- sections ---------------- */
-function section(id, title, more, icon) {
+function section(id, title, more, icon, moreLabel) {
     let s = document.getElementById(id); if (s) return s;
     const host = document.getElementById('buyerView'); if (!host) return null;
     s = document.createElement('section'); s.id = id; s.className = 'shx'; s.hidden = true;
-    s.innerHTML = `<header class="shx-h"><h2>${icon ? `<span class="shx-hi">${ico(icon, 18)}</span>` : ''}${esc(title)}</h2>${more ? `<button type="button" onclick="${more}">${more.indexOf('Hub') !== -1 ? 'Ona Zote' : 'Ona zaidi'} ${ico('arrow-right', 14)}</button>` : ''}</header><div class="shx-body"></div>`;
+    s.innerHTML = `<header class="shx-h"><h2>${icon ? `<span class="shx-hi">${ico(icon, 18)}</span>` : ''}${esc(title)}</h2>${more ? `<button type="button" onclick="${more}">${moreLabel || (more.indexOf('Hub') !== -1 ? 'Ona Zote' : 'Ona zaidi')} ${ico('arrow-right', 14)}</button>` : ''}</header><div class="shx-body"></div>`;
     host.appendChild(s);
     return s;
 }
 async function q(col, ...c) { try { return (await skh.getDocs(skh.query(skh.collection(skh.db, col), ...c))).docs.map(d => Object.assign({ id: d.id }, d.data())); } catch (e) { return []; } }
 
-/* ref 11 "Bidhaa Maarufu": most viewed real listings; discount only when the listing has a real old price */
-async function buildPopular() {
-    const s = section('skhHomePopular', 'Bidhaa Maarufu', "updateApp('bidhaa')", 'star'); if (!s) return;
-    const list = (await q('products', skh.limit(60))).filter(p => liveProduct(p) && pic(p) && !(p.saleMode && p.saleMode !== 'free_market' && p.saleMode !== 'wholesale'));
-    list.sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-    const top = list.slice(0, 8); if (!top.length) { s.hidden = true; s.querySelector('.shx-body').innerHTML = ''; return; }
-    s.querySelector('.shx-body').innerHTML = `<div class="shp-row" role="region" tabindex="0" aria-label="Bidhaa maarufu, telezesha kushoto au kulia">${top.map(p => {
-        const old = Number(p.originalPrice || p.oldPrice || p.compareAtPrice || 0), price = Number(p.price) || 0;
-        const off = old > price && price > 0 ? Math.round((1 - price / old) * 100) : 0;
-        const hasStock = p.stock !== undefined && p.stock !== null && String(p.stock).trim() !== '' && Number.isFinite(Number(p.stock));
-        const stock = hasStock ? Number(p.stock) : null;
-        const rating = typeof skh.cardRating === 'function' ? skh.cardRating(p) : '';
-        const location = typeof skh.cardPinLocation === 'function' ? skh.cardPinLocation(p, 'products') : '';
-        const unit = p.baseUnit ? `<span class="shp-unit">${esc(p.baseUnit)}</span>` : '';
-        const openAttrs = typeof skh.cardOpenAttrs === 'function' ? skh.cardOpenAttrs(p.id, 'products', ptitle(p)) : '';
-        return `<article class="shp-card" ${openAttrs}>${off ? `<span class="shp-off">-${off}%</span>` : `<button type="button" class="shp-heart" aria-label="Hifadhi" onclick="event.stopPropagation(); window.skhToggleSave && skhToggleSave({id:'${esc(p.id)}',collectionName:'products',title:'${esc(String(ptitle(p)).replace(/'/g, ''))}'}, this)">${ico('heart', 18)}</button>`}
-            <div class="shp-img"><img src="${esc(pic(p))}" alt="${esc(ptitle(p))}" loading="lazy" onerror="this.closest('.shp-card').remove()"></div>
-            <div class="shp-details"><b class="shp-t">${esc(ptitle(p))}</b><div class="shp-price-row"><strong>${price > 0 ? esc(tsh(price)) : 'Bei haijaainishwa'}</strong>${rating}</div>${off ? `<s>${esc(tsh(old))}</s>` : ''}
-            <div class="shp-meta">${unit}${hasStock ? `<span class="shp-stock ${stock > 0 ? '' : 'out'}" data-no-i18n>${ico(stock > 0 ? 'check' : 'x', 13)} ${stock > 0 ? 'Inapatikana' : 'Imeisha'}</span>` : ''}</div>${location ? `<div class="shp-location">${location}</div>` : ''}</div></article>`; }).join('')}</div>`;
+/* [OWNER CARD STYLE 2026-11-20] Nyumbani: safu TATU kama mfano wa mmiliki — Bidhaa · Huduma · Usafiri.
+   Kila safu inateleza pembeni, ina "Ona Zote" (inafungua tab husika) na inatumia KADI ILEILE ya soko
+   (skh.CommercePostCard): kategoria · ♡ · Imethibitishwa (kweli tu) -> jina -> bei | ⭐.
+   Rekodi halisi pekee; safu isiyo na data inafichwa (hakuna kisanduku tupu). */
+const RAIL_LIMIT = 10;
+function rail(s, items, col, label) {
+    const body = s.querySelector('.shx-body');
+    if (!items.length || typeof skh.CommercePostCard !== 'function') { s.hidden = true; body.innerHTML = ''; return; }
+    body.innerHTML = `<div class="shx-rail-row" role="region" tabindex="0" aria-label="${esc(label)}, telezesha kushoto au kulia">${items.map(it => skh.CommercePostCard(Object.assign({ collectionName: col }, it, { title: ptitle(it) || it.title }), col)).join('')}</div>`;
     s.hidden = false;
+}
+const withPicFirst = (list) => list.slice().sort((a, b) => (pic(b) ? 1 : 0) - (pic(a) ? 1 : 0));
+async function buildPopular() {
+    const s = section('skhHomePopular', 'Bidhaa', "updateApp('bidhaa')", 'package', 'Ona Zote'); if (!s) return;
+    s.classList.add('shx-rail');
+    const eligible = (p) => liveProduct(p) && (typeof skh.productEligible !== 'function' || skh.productEligible(p));
+    const list = (await q('products', skh.limit(60))).filter(p => eligible(p) && pic(p) && !(p.saleMode && p.saleMode !== 'free_market' && p.saleMode !== 'wholesale'));
+    list.sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    rail(s, list.slice(0, RAIL_LIMIT), 'products', 'Bidhaa');
+}
+async function buildServicesRail() {
+    const s = section('skhHomeServices', 'Huduma', "updateApp('services')", 'wrench', 'Ona Zote'); if (!s) return;
+    s.classList.add('shx-rail');
+    const ok = (x) => live(x) && !x.archivedAt && !['archived', 'deleted', 'inactive', 'suspended'].includes(String(x.status || '').toLowerCase()) && String(x.publicationStatus || '').toLowerCase() !== 'archived';
+    const list = withPicFirst((await q('services', skh.limit(40))).filter(ok));
+    rail(s, list.slice(0, RAIL_LIMIT), 'services', 'Huduma');
+}
+async function buildTransportRail() {
+    const s = section('skhHomeTransport', 'Usafiri', "updateApp('delivery')", 'truck', 'Ona Zote'); if (!s) return;
+    s.classList.add('shx-rail');
+    const ok = (x) => x && !x.archivedAt && !x.adminHidden && !['suspended', 'archived', 'deleted', 'inactive'].includes(String(x.status || '').toLowerCase()) && x.isOnline !== false;
+    const list = withPicFirst((await q('drivers', skh.limit(40))).filter(ok));
+    rail(s, list.slice(0, RAIL_LIMIT), 'drivers', 'Usafiri');
 }
 
 /* ref 12/14 "Discover New Updates": one real, recent record per type; label = what it is (no fake "Sponsored") */
@@ -120,13 +133,17 @@ function buildPromos() {
 }
 
 let built = false;
-window.skhRefreshHomeListings = async function () { if (built) await Promise.all([buildUpdates(), buildPopular()]); };
+window.skhRefreshHomeListings = async function () { if (built) await Promise.all([buildUpdates(), buildPopular(), buildServicesRail(), buildTransportRail()]); };
 async function build() {
     if (built || !skh.db || !document.getElementById('buyerView') || !document.getElementById('skhHomeHero')) return false;
     built = true;
     initCarousel();
     buildPromos();
-    await Promise.all([buildUpdates(), buildPopular()]);
+    // DOM order Bidhaa -> Huduma -> Usafiri is fixed before any data arrives
+    section('skhHomePopular', 'Bidhaa', "updateApp('bidhaa')", 'package', 'Ona Zote');
+    section('skhHomeServices', 'Huduma', "updateApp('services')", 'wrench', 'Ona Zote');
+    section('skhHomeTransport', 'Usafiri', "updateApp('delivery')", 'truck', 'Ona Zote');
+    await Promise.all([buildUpdates(), buildPopular(), buildServicesRail(), buildTransportRail()]);
     return true;
 }
 const t = setInterval(async () => { if (await build()) clearInterval(t); }, 800);

@@ -107,6 +107,13 @@ await step('1. keys za Kiswahili zimesajiliwa kwenye 32-i18n.js', async () => {
    ========================================================================== */
 const b = await chromium.launch({ args: ['--no-sandbox'] });
 const page = await b.newPage({ viewport: { width: 1440, height: 1200 } });
+/* [2026-11-20] Offline/CI machines: serve the Firebase SDK from a local firebase@10.8.1 package when
+   SKH_FIREBASE_SDK_DIR is set (same convention as tools/e2e-emulator/lib.cjs). No effect otherwise. */
+if (process.env.SKH_FIREBASE_SDK_DIR) {
+    const { readFileSync } = await import('node:fs');
+    const sdk = process.env.SKH_FIREBASE_SDK_DIR.replace(/\/?$/, '/');
+    await page.route(/gstatic\.com\/firebasejs\/10\.8\.1\/(.+\.js)/, r => r.fulfill({ status: 200, contentType: 'application/javascript', body: readFileSync(sdk + r.request().url().split('/').pop()) }));
+}
 const errors = [];
 page.on('pageerror', e => errors.push(String(e && e.message || e)));
 page.on('dialog', d => d.dismiss().catch(() => { }));

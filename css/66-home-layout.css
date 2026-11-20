@@ -13,6 +13,7 @@ body:has(#navTabHome.active) #buyerView > * { order: 20; min-width: 0; }
 body:has(#navTabHome.active) #categoryStrip { order: 1; }
 body:has(#navTabHome.active) #skhHomeHero { order: 2; }
 body:has(#navTabHome.active) #skhHomePopular { order: 3; }
+body:has(#navTabHome.active) #skhHomeServices, body:has(#navTabHome.active) #skhHomeTransport { order: 3; } /* [OWNER CARD STYLE 2026-11-20] Bidhaa -> Huduma -> Usafiri */
 body:has(#navTabHome.active) #lvHome { order: 4; }
 body:has(#navTabHome.active) #skhHomeUpdates { order: 5; display: none; }
 body:has(#navTabHome.active) #skhHomePromos { order: 6; }
@@ -25,6 +26,7 @@ body:not(:has(#navTabHome.active)) .shx { display: none !important; }
     body:has(#navTabHome.active) #lvHome { order: 4; }
     body:has(#navTabHome.active) #categoryStrip { order: 5; }
     body:has(#navTabHome.active) #skhHomePopular { order: 6; }
+    body:has(#navTabHome.active) #skhHomeServices, body:has(#navTabHome.active) #skhHomeTransport { order: 6; }
 }
 .shx[hidden] { display: none !important; }
 

@@ -203,6 +203,14 @@ function renderShell() {
         + '    </div>'
         + '    <div class="bos-nav-footer">'
         + actions
+        /* [REMEDIATION 2026-11-20] Taarifa na Gumzo: kitufe cha Recycle Bin kilichukua nafasi yao kwenye header
+           (uamuzi wa mmiliki 2026-11-18), lakini hawakuwa na njia nyingine ndani ya Business OS. Sasa wako hapa. */
+        + '      <button type="button" class="ct-sidebar-menu-btn bos-nav-item bos-nav-action" data-bos-search="taarifa notifications" onclick="if(window.openNotifications)window.openNotifications()">'
+        + '<span class="bos-nav-ico">' + ico('bell', 17) + '<span class="bos-notif-badge" id="ctHeaderNotifBadge"></span></span>'
+        + '<span class="bos-nav-text"><b>' + esc(T('bos_notifications', 'Taarifa')) + '</b></span></button>'
+        + '      <button type="button" class="ct-sidebar-menu-btn bos-nav-item bos-nav-action" data-bos-search="gumzo chat" onclick="if(window.openChatList)window.openChatList()">'
+        + '<span class="bos-nav-ico">' + ico('chat', 17) + '</span>'
+        + '<span class="bos-nav-text"><b>' + esc(T('bos_chat', 'Gumzo')) + '</b></span></button>'
         + '      <button type="button" class="ct-sidebar-menu-btn bos-nav-item bos-nav-exit" data-bos-action="' + BUSINESS_OS_EXIT.action + '" onclick="window.skhBOSRunAction(\'' + BUSINESS_OS_EXIT.action + '\')">'
         + '        <span class="bos-nav-ico">' + ico(BUSINESS_OS_EXIT.icon, 17) + '</span>'
         + '        <span class="bos-nav-text"><b>' + esc(T('bos_exit', BUSINESS_OS_EXIT.label)) + '</b></span>'
@@ -636,6 +644,9 @@ function pushTabHistory(from, to) {
     window.skhNavPush({
         type: 'bostab', id: 'bostab:' + (++__bosTabSeq), raise: true,
         restore: function () {
+            /* [REMEDIATION 2026-11-20] showForm() starts with closeModals(), and the overlay layers (79/81) close
+               the TOP history step — which can be this tab step. Opening a form must never switch the tab. */
+            if (window.__bosSuppressTabRestore) return;
             if (!document.getElementById('bosSidebar') || typeof window.switchDashTab !== 'function') return;
             __bosRestoringTab = true;
             try { window.switchDashTab(from); } finally { __bosRestoringTab = false; }

@@ -50,8 +50,10 @@ const PRODUCTS = [
     },
     // 8) draft isiyo na bei — draft + sababu
     { id: 'p_draft', userId: 'u1', title: 'Kikapu cha Mpunga', category: 'Nyumbani', price: 0, stock: 4, publicationStatus: 'draft', status: 'draft', baseUnit: 'Piece', views: 5, createdAt: dayAgo(3) },
-    // 9) archived → suspended
-    { id: 'p_arch', userId: 'u1', title: 'Redio ya Zamani', category: 'Elektroniki', price: 25000, stock: 2, publicationStatus: 'archived', status: 'archived', archivedAt: dayAgo(5), baseUnit: 'Piece', views: 30, createdAt: dayAgo(100) },
+    // 9) suspended (admin). [2026-11-20] An ARCHIVED product now lives in the Recycle Bin (owner change
+    //    2026-11-18) and is no longer part of Bidhaa Zangu — p_bin below proves it stays out of every KPI.
+    { id: 'p_bin', userId: 'u1', title: 'Iko kwenye Recycle Bin', category: 'Elektroniki', price: 1000, stock: 1, publicationStatus: 'archived', status: 'archived', archivedAt: dayAgo(2), baseUnit: 'Piece', views: 1, createdAt: dayAgo(9) },
+    { id: 'p_arch', userId: 'u1', title: 'Redio ya Zamani', category: 'Elektroniki', price: 25000, stock: 2, publicationStatus: 'published', status: 'active', suspended: true, baseUnit: 'Piece', views: 30, createdAt: dayAgo(100) },
     // 10) bila stock tracking (hakuna stock field)
     { id: 'p_untracked', userId: 'u1', title: 'Huduma ya Kupanga', category: 'Huduma', price: 5000, publicationStatus: 'published', status: 'active', baseUnit: 'Piece', views: 12, createdAt: dayAgo(15) },
     // 11) mali ya muuzaji mwingine — HAIpaswi kuonekana
@@ -81,6 +83,13 @@ const POS_PREVIOUS = {
 };
 
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } });
+/* [2026-11-20] Offline/CI machines: serve the Firebase SDK from a local firebase@10.8.1 package when
+   SKH_FIREBASE_SDK_DIR is set (same convention as tools/e2e-emulator/lib.cjs). No effect otherwise. */
+if (process.env.SKH_FIREBASE_SDK_DIR) {
+    const { readFileSync } = await import('node:fs');
+    const sdk = process.env.SKH_FIREBASE_SDK_DIR.replace(/\/?$/, '/');
+    await page.route(/gstatic\.com\/firebasejs\/10\.8\.1\/(.+\.js)/, r => r.fulfill({ status: 200, contentType: 'application/javascript', body: readFileSync(sdk + r.request().url().split('/').pop()) }));
+}
 const errors = [];
 page.on('pageerror', e => errors.push(String(e && e.message || e)));
 page.on('dialog', d => d.dismiss().catch(() => {}));
@@ -414,7 +423,7 @@ await step('14. load-more: 12 kwanza kisha zote (hakuna kupoteza bidhaa)', async
     eq(r.first, 12, 'ukurasa wa kwanza');
     eq(r.after, 15, 'baada ya Onyesha zaidi');
     ok(/zimebaki/i.test(r.label), 'lebo: ' + r.label);
-    eq(r.restored, 10, 'data imerejeshwa kwa screenshots');
+    eq(r.restored, 11, 'data imerejeshwa kwa screenshots (10 kwenye orodha + 1 kwenye Recycle Bin)');
 });
 
 /* ---------------- 15. [REVIEW F1] trend sahihi ---------------- */

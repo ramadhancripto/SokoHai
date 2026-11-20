@@ -49,9 +49,11 @@ function t(name, cond, extra) {
     const h123 = read('js/app/123-home-layout.js');
     t('123: ptitle helper ipo', h123.includes('const ptitle = (o) =>'));
     t('123: ptitle mpangilio sahihi', h123.includes('(o.title || o.name || o.itemTitle || o.cargoName)'));
-    t('123: save param inatumia ptitle', h123.includes("title:'${esc(String(ptitle(p)).replace(/'/g, ''))}'"));
-    t('123: img alt inatumia ptitle', h123.includes('alt="${esc(ptitle(p))}"'));
-    t('123: card title inatumia ptitle', h123.includes('<b class="shp-t">${esc(short(ptitle(p), 40))}</b>'));
+    // [2026-11-20] Home rails render the shared market card (skh.CommercePostCard); the record's
+    // title is resolved with ptitle first, so the full title -> name -> itemTitle -> cargoName chain holds
+    // for the card title, image alt and the heart/save index (all read data.title).
+    t('123: rails zinatumia kadi ya soko (CommercePostCard)', h123.includes('skh.CommercePostCard('));
+    t('123: card title inatumia ptitle', h123.includes('{ title: ptitle(it) || it.title }'));
     t('123: updates Bidhaa card inatumia ptitle', h123.includes("t: ptitle(prod),"));
     const logic = read('js/app/39-showcase-logic.js');
     t('39-logic: psTitle chain kamili',
@@ -80,8 +82,8 @@ function t(name, cond, extra) {
         bs.includes("skhTF('card_product_def', 'Bidhaa')"));
     t('feed: services card haijabadilika (nje ya scope)',
         bs.includes("|| data.title) || skhTF('card_service_def', 'Huduma')"));
-    t('feed: drivers card haijabadilika (nje ya scope)',
-        bs.includes("hasRoute && !data.title ?"));
+    t('feed: drivers card: title kwanza, njia ikikosekana title',
+        bs.includes("|| data.title || routeText) || skhTF('card_transport_def', 'Usafiri')"));
 }
 
 console.log(`\nPRODUCT NAME FALLBACK: ${pass} passed, ${fail} failed`);

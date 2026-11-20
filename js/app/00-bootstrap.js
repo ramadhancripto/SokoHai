@@ -1794,6 +1794,15 @@ skh.saveData = async function saveData(col, data, opts) {
             return window.skhPublishOutbox.enqueue(col, queuePayload, opts);
         }
         let docRef;
+        /* [REMEDIATION 2026-11-20] Queueable listings get their document id BEFORE the first write. If the
+           network fails after Firestore accepted the write (ambiguous), the outbox retries with the SAME id
+           (setDoc) instead of a new random one — no second copy of the listing. */
+        if (!opts.clientId && QUEUEABLE[col]) {
+            let rnd = '';
+            try { const a = new Uint8Array(8); crypto.getRandomValues(a); rnd = Array.from(a, b => (b % 36).toString(36)).join(''); }
+            catch (re) { rnd = Math.random().toString(36).slice(2, 10); }
+            opts = Object.assign({}, opts, { clientId: 'ob' + Date.now().toString(36) + rnd });
+        }
         if (opts.clientId) {
             /* Kusambaza foleni kwa usalama: kitambulisho kilekile => hakuna nakala mbili. */
             await skh.setDoc(skh.doc(skh.db, col, opts.clientId), queuePayload);
@@ -2374,6 +2383,15 @@ skh.cardRating = function cardRating(data) {
     return `<span class="skh-rating">${bits.join('')}</span>`;
 };
 
+// [OWNER CARD STYLE 2026-11-20] Tathmini ndogo ya kadi (kulia mwa bei): ⭐ wastani HALISI tu.
+// Hakuna "Bado tathmini" wala mauzo mbele ya kadi — taarifa hizo ziko ndani ya ukurasa wa tangazo.
+skh.cardRatingCompact = function cardRatingCompact(data) {
+    const summary = skh.psRatingDisplay ? skh.psRatingDisplay(data) : { avg: Number(data && data.rating) };
+    const r = summary && Number(summary.avg);
+    if (!Number.isFinite(r) || r < 1 || r > 5) return '';
+    return '<span class="skh-rating skh-rating--card" title="Tathmini ' + r.toFixed(1) + ' kati ya 5">' + skh.cardIcon('star', 12) + '<b>' + r.toFixed(1) + '</b></span>';
+};
+
 // [LocationDisplay] Eneo — bidhaa/huduma: location; usafiri: njia
 skh.cardLocation = function cardLocation(data, colName) {
     let loc = data.location || data.region || '';
@@ -2485,22 +2503,29 @@ skh.cardTypeBadge = function cardTypeBadge(colName) {
 };
 
 // [CategoryBadge] Badge ya kijani juu-kushoto mwa picha — anaisimia kategori (mf. Kilimo, IT & Tech, Taxi)
+/* [OWNER CARD STYLE 2026-11-20] Kibandiko cha kategoria juu-kushoto mwa picha: JINA la kategoria
+   (kamwe si code kama "CAT-09"). Uthibitisho unaonyeshwa kando na kibandiko "Imethibitishwa"
+   (cardVerifiedPill) chini-kulia — ni wa kweli tu (listingTrust, kutoka server). */
+skh.cardCategoryName = function cardCategoryName(data) {
+    const raw = data && (data.category || data.subCategory || data.serviceCategory || '');
+    if (!raw) return { short: '', full: '' };
+    let full = String(raw);
+    try { if (typeof skh.categoryLabel === 'function') full = skh.categoryLabel(raw) || full; } catch (e) {}
+    if (/^CAT-\d+$/i.test(full)) full = String(data.subCategory || '');
+    const short = full.split(/\s+(?:&|na|and)\s+|,|\//i)[0].trim() || full;
+    return { short, full };
+};
 skh.cardCategoryBadge = function cardCategoryBadge(data, colName) {
-    const cat = data && (data.category || data.subCategory || '');
-    if (!cat) return '';
-    const trustKind = skh.listingTrust(data, colName || 'products');
-    const trustMark = trustKind
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
-        : '';
-    const trustTitle = trustKind ? ' title="' + skh.skhEscape(skh.TRUST_LABELS[trustKind] || 'Imethibitishwa') + '"' : '';
-    return '<span class="skh-badge skh-badge--category"' + trustTitle + '>' + trustMark + skh.skhEscape(cat) + '</span>';
+    const n = skh.cardCategoryName(data);
+    if (!n.short) return '';
+    return '<span class="skh-badge skh-badge--category" title="' + skh.skhEscape(n.full) + '">' + skh.skhEscape(n.short) + '</span>';
 };
 
 // Aina ya gari iliyochapishwa na msafirishaji, si lebo ya kubuni.
 skh.cardTransportBadge = function cardTransportBadge(data) {
     const kind = data && (data.vehicleType || data.vehicle || data.category || data.subCategory || '');
     if (!kind) return skh.cardTypeBadge('drivers');
-    const verified = skh.listingTrust(data, 'drivers');
+    const verified = ''; // [OWNER CARD STYLE 2026-11-20] uthibitisho = cardVerifiedPill (chini-kulia)
     const mark = verified
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
         : '';
@@ -2536,7 +2561,7 @@ skh.cardHeartIcon = function cardHeartIcon(data, colName) {
 skh.cardVerifiedPill = function cardVerifiedPill(data, colName) {
     const k = skh.listingTrust(data, colName);
     if (!k) return '';
-    const short = { product_inspection: 'Imekaguliwa', provider: 'Imethibitishwa', carrier: 'Imethibitishwa', account: 'Imethibitishwa' }[k];
+    const short = 'Imethibitishwa'; // [OWNER CARD STYLE 2026-11-20] neno moja kwa kila aina; maelezo kamili kwenye title
     return '<span class="skh-verified-pill" title="' + skh.TRUST_LABELS[k] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' + short + '</span>';
 };
 
@@ -2874,7 +2899,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
         skh.cardCategoryBadge(data),
         skh.cardVerifiedPill(data, 'products'),
         skh.cardOutPill(data, 'products'),
-        skh.cardHeartIcon(data, col)
+        skh.cardHeartIcon(data, 'products') // [2026-11-20] was `col` (undefined here -> ReferenceError)
     ].join('');
     // [PHASE 0] "Imeisha" inaonyeshwa MARA MOJA tu — pill juu ya picha
     // (cardOutPill). Chip ya meta haijirudii; nafasi yake inabaki kwa eneo.
@@ -2882,8 +2907,8 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
     const stockChip = isSoldOut ? '' : skh.cardStockChip(data);
     // [R16 D7 — uamuzi wa mmiliki] Jina la muuzaji / tathmini HAVIONEKANI mbele ya kadi ya bidhaa
     // (sawa na SokoHuruCard #1). Taarifa za muuzaji ziko kwenye ukurasa wa bidhaa (openProduct).
-    const cardRating = skh.cardRating(data);
-    const foot = cardRating ? '<div class="skh-card-foot">' + cardRating + '</div>' : '';
+    const cardRating = skh.cardRatingCompact(data); // [OWNER CARD STYLE 2026-11-20] tathmini halisi tu, kulia mwa bei
+    const foot = '';
     // DOM: jina -> bei -> rating (right-aligned) -> meta -> vitendo.
     // (Contract tools/test_commerce_cards.mjs inalinda mpangilio huu.)
     return `<div class="feed-card-box skh-card skh-card--product" ${skh.cardOpenAttrs(data.id, 'products', data.title)}>
@@ -2906,93 +2931,73 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
    Data HALISI pekee; isiyopatikana haionyeshwi (haibuniwi).
    Handler: openProduct (kadi nzima). */
 skh.SokoHuruCard = function SokoHuruCard(data, colName) {
+    /* [OWNER CARD STYLE 2026-11-20 — mfano wa mmiliki, kwa post ZOTE (bidhaa/huduma/usafiri)]
+       PICHA: kategoria (juu-kushoto) · ♡ (juu-kulia) · Imethibitishwa (chini-kulia, kweli tu)
+              · Zimeisha (chini-kushoto, bidhaa zilizoisha tu).
+       MAELEZO: jina (mstari 1) -> bei kushoto | ⭐ tathmini kulia (halisi tu).
+       Kipimo/hali/stock/eneo/muuzaji HAVIONEKANI mbele ya kadi — viko ndani ya ukurasa wa tangazo. */
     const col = colName || 'products';
-    const categoryBadge = skh.cardCategoryBadge(data, col);
     const overlays = [
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
         skh.cardDiscountBadge(data),
-        categoryBadge,
-        categoryBadge ? '' : skh.cardVerifiedPill(data, col),
-        skh.cardOutPill(data, col),
-        skh.cardHeartIcon(data, col)
+        skh.cardCategoryBadge(data, col),
+        skh.cardHeartIcon(data, col),
+        skh.cardVerifiedPill(data, col),
+        skh.cardOutPill(data, col)
     ].join('');
     const name = skh.skhEscape(((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title || data.name) || skhTF('card_product_def', 'Bidhaa'));
-    const price = skh.cardPriceHtml(data, col);
-    const location = skh.cardPinLocation(data, col);
-    const rating = skh.cardRating(data);
-    const bits = [];
-    const unitRaw = (data && data.baseUnit ? String(data.baseUnit).trim() : '');
-    if (unitRaw) bits.push('<span>' + skh.skhEscape(unitRaw) + '</span>');
-    const condRaw = (data && data.condition ? String(data.condition).trim() : '');
-    if (condRaw) bits.push('<span>' + skh.skhEscape(condRaw) + '</span>');
-    const stock = Number(data && data.stock);
-    if (Number.isFinite(stock)) bits.push(stock > 0
-        ? '<span class="skh-huru-stock">' + skhTF('card_in_stock', 'Inapatikana') + '</span>'
-        : '<span class="skh-huru-stock skh-huru-out">' + skhTF('card_out', 'Zimeisha') + '</span>');
-    const priceRow = '<div class="skh-huru-price-row"><span class="skh-huru-price">' + price + '</span>' + rating + '</div>';
-    const row2 = '<div class="skh-huru-r2">' + bits.join('<i>·</i>') + '</div>';
-    return `<div class="skh-huru" ${skh.cardOpenAttrs(data.id, col, data.title)}>
-        ${skh.cardImage(data, overlays, ' skh-huru-ph' + skh.cardImageClass(data, col))}
-        <div class="skh-huru-body">
-            <div class="skh-huru-r1"><h3 class="skh-huru-name">${name}</h3></div>
-            ${priceRow}
-            ${row2}
-            ${location ? '<div class="skh-huru-r3">' + location + '</div>' : ''}
+    // kipimo (kwa Kg/Lita) hakionekani mbele ya kadi — kiko ndani ya ukurasa wa bidhaa
+    const price = skh.cardPriceHtml(data, col).replace(/<small class="skh-unit">[\s\S]*?<\/small>/, '');
+    const rating = skh.cardRatingCompact(data);
+    return `<div class="skh-huru skh-oc" ${skh.cardOpenAttrs(data.id, col, data.title)}>
+        ${skh.cardImage(data, overlays, ' skh-huru-ph skh-oc-img' + skh.cardImageClass(data, col))}
+        <div class="skh-huru-body skh-oc-body">
+            <div class="skh-huru-r1"><h3 class="skh-huru-name skh-oc-title">${name}</h3></div>
+            <div class="skh-huru-price-row skh-oc-row"><span class="skh-huru-price skh-oc-price">${price}</span>${rating}</div>
         </div></div>`;
 };
 
-// [ServicePostCard] Muundo wa feed wa pamoja: picha/tag/heart -> jina -> bei+tathmini -> eneo.
+// [ServicePostCard] Mtindo mmoja na bidhaa: picha (kategoria/♡/Imethibitishwa) -> jina -> bei | ⭐.
 skh.ServicePostCard = function ServicePostCard(data, colName) {
-    const category = skh.cardCategoryBadge(data, 'services');
-    const trusted = !!skh.listingTrust(data, 'services');
-    const tag = category || skh.cardTypeBadge('services');
+    const tag = skh.cardCategoryBadge(data, 'services') || skh.cardTypeBadge('services');
     const overlays = [
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
         tag,
-        !category && trusted ? skh.cardVerifiedPill(data, 'services') : '',
-        skh.cardHeartIcon(data, 'services')
+        skh.cardHeartIcon(data, 'services'),
+        skh.cardVerifiedPill(data, 'services')
     ].join('');
     const title = ((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title) || skhTF('card_service_def', 'Huduma');
-    const rating = skh.cardRating(data);
-    const location = skh.cardPinLocation(data, 'services');
-    return `<div class="feed-card-box skh-card skh-card--service" ${skh.cardOpenAttrs(data.id, 'services', title)}>
-        ${skh.cardImage(data, overlays)}
-        <div class="feed-info-box skh-body skh-market-card-body">
-            <h3 class="skh-title">${skh.skhEscape(title)}</h3>
-            <div class="skh-market-price-rating"><span class="skh-market-card-price">${skh.cardPriceHtml(data, 'services')}</span>${rating}</div>
-            ${location ? '<div class="skh-market-card-meta">' + location + '</div>' : ''}
+    const rating = skh.cardRatingCompact(data);
+    return `<div class="feed-card-box skh-card skh-card--service skh-oc" ${skh.cardOpenAttrs(data.id, 'services', title)}>
+        ${skh.cardImage(data, overlays, ' skh-oc-img')}
+        <div class="feed-info-box skh-body skh-market-card-body skh-oc-body">
+            <h3 class="skh-title skh-oc-title">${skh.skhEscape(title)}</h3>
+            <div class="skh-market-price-rating skh-oc-row"><span class="skh-market-card-price skh-oc-price">${skh.cardPriceHtml(data, 'services')}</span>${rating}</div>
         </div>
     </div>`;
 };
 
-// [TransportPostCard] Tag ya chombo/uhakiki kwenye picha; njia, bei na rating kwenye details.
+// [TransportPostCard] Mtindo mmoja: aina ya chombo (juu-kushoto) · ♡ · Imethibitishwa -> jina/njia -> bei | ⭐.
 skh.TransportPostCard = function TransportPostCard(data, colName) {
-    const kindTag = skh.cardTransportBadge(data);
-    const trusted = !!skh.listingTrust(data, 'drivers');
-    const hasKind = !!(data.vehicleType || data.vehicle || data.category || data.subCategory);
     const overlays = [
         skh.activeBoostBadge(data),
         skh.cardModeBadge(data),
-        kindTag,
-        !hasKind && trusted ? skh.cardVerifiedPill(data, 'drivers') : '',
-        skh.cardHeartIcon(data, 'drivers')
+        skh.cardTransportBadge(data),
+        skh.cardHeartIcon(data, 'drivers'),
+        skh.cardVerifiedPill(data, 'drivers')
     ].join('');
     const routeFrom = data.pickupRegion || data.location || data.region || '';
     const routeTo = data.destinationRegion || '';
     const routeText = [routeFrom, routeTo].filter(Boolean).join(' → ');
-    const route = routeText
-        ? '<span class="skh-pinloc">' + skh.cardIcon('map', 10) + '<span>' + skh.skhEscape(routeText) + '</span></span>'
-        : skh.cardPinLocation(data, 'drivers');
     const title = ((window.skhLocField ? window.skhLocField(data, 'title') : null) || data.title || routeText) || skhTF('card_transport_def', 'Usafiri');
-    const rating = skh.cardRating(data);
-    return `<div class="feed-card-box skh-card skh-card--transport" ${skh.cardOpenAttrs(data.id, 'drivers', title)}>
-        ${skh.cardImage(data, overlays)}
-        <div class="feed-info-box skh-body skh-market-card-body">
-            <h3 class="skh-title">${skh.skhEscape(title)}</h3>
-            <div class="skh-market-price-rating"><span class="skh-market-card-price">${skh.cardPriceHtml(data, 'drivers')}</span>${rating}</div>
-            ${route ? '<div class="skh-market-card-meta">' + route + '</div>' : ''}
+    const rating = skh.cardRatingCompact(data);
+    return `<div class="feed-card-box skh-card skh-card--transport skh-oc" ${skh.cardOpenAttrs(data.id, 'drivers', title)}>
+        ${skh.cardImage(data, overlays, ' skh-oc-img')}
+        <div class="feed-info-box skh-body skh-market-card-body skh-oc-body">
+            <h3 class="skh-title skh-oc-title">${skh.skhEscape(title)}</h3>
+            <div class="skh-market-price-rating skh-oc-row"><span class="skh-market-card-price skh-oc-price">${skh.cardPriceHtml(data, 'drivers')}</span>${rating}</div>
         </div>
     </div>`;
 };

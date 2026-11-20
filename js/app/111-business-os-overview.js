@@ -339,7 +339,7 @@ function renderError(ws, p, message) {
         + '<div class="bos-error">' + ico('alert', 22)
         + '<b>' + esc(T('ov_error', 'Ripoti ya server haikuweza kupakiwa')) + '</b>'
         + '<p>' + esc(message || '') + '</p>'
-        + '<p class="bos-muted">' + esc(T('ov_error_hint_safe', 'Hakuna namba iliyoonyeshwa kwa sababu ripoti haijathibitishwa.')) + '</p>'
+        + '<p class="bos-muted">' + esc(T('ov_error_hint_safe', 'Hakuna namba iliyoonyeshwa kwa sababu ripoti kutoka chanzo rasmi (server) haijathibitishwa.')) + '</p>'
         + '<button type="button" class="bos-btn" onclick="window.skhBusinessOverview.refresh()">' + esc(T('ov_retry', 'Jaribu tena')) + '</button>'
         + '</div></div>';
 }

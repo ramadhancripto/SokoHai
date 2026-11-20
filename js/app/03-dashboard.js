@@ -34,8 +34,21 @@ window.loadAndRenderDashboard = async function() {
     const qStaff = skh.query(skh.collection(skh.db, "shop_staff"), skh.where("shopOwnerId", "==", shopOwnerId));
     const qPOs = skh.query(skh.collection(skh.db, "purchase_orders"), skh.where("shopOwnerId", "==", shopOwnerId));
 
-    Promise.all([skh.getDocs(qProducts), skh.getDocs(qLedger), skh.getDocs(qStaff), skh.getDocs(qPOs)]).then(async ([prodSnap, ledgerSnap, staffSnap, poSnap]) => {
+    /* [REMEDIATION 2026-11-20] One failing secondary source (ledger / staff / purchase orders: rules, index,
+       network) used to take the WHOLE dashboard down with "Network error". Products stay required; the
+       others now degrade to an empty, clearly-flagged source and the seller is told which figures are missing. */
+    const unavailable = [];
+    const soft = (q, name) => skh.getDocs(q).catch(err => {
+        console.warn('[dashboard] ' + name + ' haikupatikana:', err && (err.code || err.message));
+        unavailable.push(name);
+        return { empty: true, size: 0, docs: [], forEach() {}, __unavailable: true };
+    });
+    Promise.all([skh.getDocs(qProducts), soft(qLedger, 'shop_ledger'), soft(qStaff, 'shop_staff'), soft(qPOs, 'purchase_orders')]).then(async ([prodSnap, ledgerSnap, staffSnap, poSnap]) => {
         if (!isCurrentRender()) return;
+        if (unavailable.length) {
+            const names = { shop_ledger: 'mauzo/matumizi (ledger)', shop_staff: 'wafanyakazi', purchase_orders: 'oda za manunuzi' };
+            try { (window.sokohaiToast || window.skhToast || function () {})('Baadhi ya takwimu hazikupatikana sasa: ' + unavailable.map(n => names[n] || n).join(', ') + '. Namba zake si za mwisho — jaribu tena baadaye.', 'warn', 7000); } catch (e) {}
+        }
         // [REAL DATA 2026-09] Anza na SIFURI — si namba za kubuni. Takwimu
         // hujazwa na ledger halisi hapa chini; ikiwa hakuna rekodi bado,
         // dashboard inaonyesha "0" (ukweli), si namba za kudhaniwa.
@@ -98,7 +111,8 @@ window.loadAndRenderDashboard = async function() {
             totalOrders,
             activeDebts: outstandingDebt,
             totalCustomersCount,
-            lowStockCount
+            lowStockCount,
+            unavailable: unavailable.slice() // sources that could not be read (their figures are not final)
         };
 
         // Chora muonekano mpya wa v2.0.0 layout

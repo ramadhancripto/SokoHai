@@ -138,7 +138,11 @@
             if (isEmbedded() && formId === FORM_ID) {
                 try { window.skhBOSPosPageRestore(); } catch (e) { }
             }
-            return prevShowForm.apply(this, arguments);
+            /* [REMEDIATION 2026-11-20] POS page -> Dashibodi -> header "POS" used to re-open the POS PAGE: the
+               closeModals() inside showForm popped the Business OS tab step and switched back to pos_page. */
+            window.__bosSuppressTabRestore = true;
+            try { return prevShowForm.apply(this, arguments); }
+            finally { window.__bosSuppressTabRestore = false; }
         };
         window.__bosPosShowFormWrapped = true;
     }

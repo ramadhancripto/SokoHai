@@ -29,10 +29,14 @@
         } catch (e) { return []; }
     }
 
+    /* [REMEDIATION 2026-11-20] write() reports whether the device really stored the list. It used to swallow
+       a full/blocked storage error, so enqueue() still told the seller "imehifadhiwa kwenye kifaa". */
     function write(list) {
+        var ok = true;
         try { window.localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX))); }
-        catch (e) { console.warn('[publish-outbox] kumbukumbu imejaa:', e && e.message); }
+        catch (e) { ok = false; console.warn('[publish-outbox] kumbukumbu imejaa:', e && e.message); }
         paint();
+        return ok;
     }
 
     function newClientId() {
@@ -62,11 +66,24 @@
             ready: opts.openingStock !== undefined ? true : null
         };
         var list = read();
+        /* The queue never drops an older unsent item to make room (it used to slice to MAX silently). */
+        if (list.filter(function (i) { return i.status !== 'synced'; }).length >= MAX) {
+            failNotice('Foleni ya kifaa imejaa (' + MAX + '). Unganisha mtandao ili zilizopo zichapishwe kwanza — ' + (LABEL[col] || 'tangazo') + ' hili bado liko kwenye fomu.');
+            return null;
+        }
         list.unshift(item);
-        write(list);
+        var stored = write(list) && read().some(function (i) { return i.clientId === clientId; });
+        if (!stored) {
+            failNotice('Kifaa hiki hakikuweza kuhifadhi ' + (LABEL[col] || 'tangazo') + ' (kumbukumbu imejaa au imezuiwa). Bado liko kwenye fomu — jaribu tena mtandao ukipatikana.');
+            return null;
+        }
         localIdMap[localIdFor(clientId)] = clientId;
         announce(item);
         return localIdFor(clientId);
+    }
+    function failNotice(msg) {
+        try { if (typeof window.sokohaiToast === 'function') { window.sokohaiToast(msg, 'error', 7000); return; } } catch (e) {}
+        try { window.alert(msg); } catch (e) {}
     }
 
     /* ---- vitambulisho vya ndani: 'local-<clientId>' ---- */

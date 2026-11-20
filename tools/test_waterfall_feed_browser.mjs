@@ -1,3 +1,4 @@
+// [OWNER CARD STYLE 2026-11-20] Cards use one 4:3 frame; the picture is shown WHOLE inside it (object-fit: contain, never cropped).
 // Real feed renderer, existing lazy-feed module and CSS; stub cloud, no production writes.
 // Start the local static server on 4173 before running this test.
 import assert from 'node:assert/strict';
@@ -29,10 +30,10 @@ await page.evaluate(({cards,render,lazy,shapes})=>{
 },{cards,render,lazy,shapes:[shape(200,600),shape(400,200),shape(200,200)]});
 await page.waitForFunction(()=>document.querySelector('#mainFeed img')?.classList.contains('skh-waterfall-image-pending'));
 const placeholder=await page.locator('#mainFeed img').first().evaluate(i=>({w:i.getBoundingClientRect().width,h:i.getBoundingClientRect().height}));
-assert.ok(placeholder.w>0 && Math.abs(placeholder.w-placeholder.h)<1,'unloaded image reserves a square');
+assert.ok(placeholder.w>0 && Math.abs(placeholder.w/placeholder.h-4/3)<0.02,'unloaded image reserves the 4:3 card frame');
 releaseSlow();
 await page.waitForFunction(()=>{const i=document.querySelector('#mainFeed img');return i.complete&&i.naturalWidth===200&&i.naturalHeight===700&&!i.classList.contains('skh-waterfall-image-pending')});
-await page.waitForFunction(()=>{const i=document.querySelector('#mainFeed img'),r=i.getBoundingClientRect();return Math.abs(r.width/r.height-2/7)<0.002});
+await page.waitForFunction(()=>{const i=document.querySelector('#mainFeed img'),r=i.getBoundingClientRect();return Math.abs(r.width/r.height-4/3)<0.02}); /* owner 4:3 frame; contain shows the 2:7 picture whole */
 // The first observer may prefetch one batch, but it must not drain the feed
 // while the sentinel is far below the viewport.
 await page.waitForTimeout(900);
@@ -68,6 +69,6 @@ await page.evaluate(()=>{
 });
 await page.waitForFunction(()=>document.querySelector('#mainFeed img').naturalWidth===400);
 const fallback=await page.evaluate(()=>{const f=document.getElementById('mainFeed'),i=f.querySelector('img'),r=i.getBoundingClientRect();return {display:getComputedStyle(f).display,ratio:r.width/r.height};});
-assert.equal(fallback.display,'grid');assert.ok(Math.abs(fallback.ratio-2)<0.002);
+assert.equal(fallback.display,'grid');assert.ok(Math.abs(fallback.ratio-4/3)<0.02); // image element fills the 4:3 frame; contain keeps the 2:1 picture whole
 console.log('PASS real feed + scroll pagination, loading placeholder, image resolution, 53 unique cards, keyboard/click, empty state (mock cloud)');
 await browser.close();

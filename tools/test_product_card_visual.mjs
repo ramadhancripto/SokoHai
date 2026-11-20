@@ -37,9 +37,11 @@ const huru = boot.slice(hs, boot.indexOf('\n};', hs) + 3); // the card function 
 const legacy = boot.slice(boot.indexOf('skh.ProductPostCard = function'), boot.indexOf('skh.SokoHuruCard = function'));
 t('D7 card #1 (SokoHuruCard) shows no seller line', huru.length > 100 && !/cardSellerLine|cardSellerMini|skh-seller-mini/.test(huru));
 t('D7 legacy ProductPostCard omits seller identity on the front', !/cardSellerLine\(|cardSellerMini/.test(legacy));
-t('D7 legacy ProductPostCard places rating in a dedicated footer', /const cardRating = skh\.cardRating\(data\)/.test(legacy) && /class="skh-card-foot"/.test(legacy));
+// [OWNER CARD STYLE 2026-11-20] superseded the 2026-11-18 footer/location layout: rating = real value only, right of the price
+t('legacy ProductPostCard uses the compact real rating', /const cardRating = skh\.cardRatingCompact\(data\)/.test(legacy));
 t('Product cards do not render a cart/order control in card actions', !/mk\('order', 'skh-act--order'/.test(boot.slice(boot.indexOf('skh.cardActions = function'), boot.indexOf('skh.cardDiscountBadge = function'))));
-t('SokoHuru front card includes location + right-side rating only when data exists', /const location = skh\.cardPinLocation\(data, col\)/.test(huru) && /skh-huru-r3/.test(huru));
+t('SokoHuru front card: name, then price with the real rating on the right; no location row', /skh-oc-row/.test(huru) && /cardRatingCompact\(data\)/.test(huru) && !/skh-huru-r3|cardPinLocation/.test(huru));
+t('owner card style layer loads last', head.indexOf('css/82-owner-card-style.css') > head.indexOf('css/81-personal-recycle.css') && head.indexOf('css/82-owner-card-style.css') > head.indexOf('css/73-unified-home-card-system.css'));
 t('SokoHuru front card excludes Like, cart and share controls', !/cardHeartIcon\(data\)|skh-card-actions|skh-huru-cart/.test(huru));
 t('SokoHuru badge sizing overrides legacy centered/rotated pill', /\.skh-huru \.skh-img > \.skh-out-pill[\s\S]*?transform: none !important/.test(huruCss));
 t('SokoHuru category/verified badges are scoped within image', /\.skh-huru \.skh-img > \.skh-badge/.test(huruCss) && /\.skh-huru \.skh-img > \.skh-verified-pill/.test(huruCss));

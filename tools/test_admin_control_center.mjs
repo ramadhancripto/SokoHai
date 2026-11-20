@@ -35,6 +35,7 @@ const DATA = {
 fs.writeFileSync(path.join(dir, '00-bootstrap.js'), `
 const W = globalThis.window;
 export const skh = {
+  currentMode: 'admin', _dashboardRenderSeq: 1, // [2026-11-20] the button is injected only for the current admin render (21b501a)
   db: {}, skhEscape: (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';'),
   collection: (db, c) => ({ c }), doc: (db, c, id) => ({ c, id }), limit: () => null,
   where: (f, op, v) => ({ f, v: Array.isArray(v) ? v.join(',') : String(v) }),

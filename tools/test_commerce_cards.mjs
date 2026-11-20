@@ -1,8 +1,9 @@
 /* ============================================================
  * SOKOHAI — Jaribio la KADI ZA DISCOVERY (Bidhaa/Huduma/Usafiri)
- * [SOKOHURU REDESIGN 2026-11] Kadi za BIDHAA ni CARD #1 (80/20,
- * imeidhinishwa na mmiliki): picha -> r1 jina+bei -> r2 spec·hali·stock
- * -> r3 like·save·share + cart. Huduma/usafiri zinabaki teaser za zamani.
+ * [OWNER CARD STYLE 2026-11-20 — mfano wa mmiliki] Post ZOTE (bidhaa/huduma/usafiri) zina
+ * mtindo mmoja: picha yenye kategoria (juu-kushoto, JINA si code), ♡ (juu-kulia),
+ * "Imethibitishwa" (chini-kulia, uthibitisho wa server tu) -> jina -> bei kushoto | ⭐ kulia
+ * (tathmini halisi tu). Kipimo/hali/eneo/muuzaji havionekani mbele ya kadi.
  * Hutumia WAJENZI HALISI kutoka 00-bootstrap.js.
  * Endesha:  node tools/test_commerce_cards.mjs
  * ============================================================ */
@@ -10,6 +11,7 @@ import { JSDOM } from 'jsdom';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { categoryLabel } from '../shared/category-filter-core.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -30,7 +32,8 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 window.skh = {
     skhEscape: esc, skhJsEsc: esc,
-    getOptimizedImageUrl: (u) => u || ''
+    getOptimizedImageUrl: (u) => u || '',
+    categoryLabel // same resolver as 00-bootstrap.js (skh.categoryLabel)
 };
 window.skhCardIndex = {}; window.skhCardToggle = () => {};
 window.skhEngagementState = { liked: {}, saved: {} };
@@ -52,60 +55,55 @@ const product = { id: 'p1', title: 'Mchele Mbeya 25kg', price: 75000, image: RIC
 const service = { id: 's1', title: 'Ushonaji Suti', price: 100000, pricingModel: 'starting', image: 'https://example.com/suit.jpg', ownerName: 'Asha Fashion', providerVerified: true, location: 'Tabora', rating: 4.8, reviewCount: 34 };
 const driver = { id: 'd1', title: 'Cargo Transport', price: 20000, image: 'https://example.com/truck.jpg', ownerName: 'Juma Transport', verified: true, pickupRegion: 'Tabora', destinationRegion: 'Pangale', vehicleType: 'Lori la Tani 10', rating: 4.7, reviewCount: 21 };
 
-console.log('\n[1] BIDHAA — CARD #1 (80/20)');
+console.log('\n[1] BIDHAA — mtindo wa mmiliki');
 {
-    const el = render(skh.CommercePostCard(product, 'products'));
-    const c = el.querySelector('.skh-huru');
-    ok('kadi ni SokoHuru card #1', !!c);
-    ok('picha ndiyo kichwa cha kadi', c.children[0].classList.contains('skh-img'));
-    ok('picha ni contain (darasa la huru)', c.children[0].classList.contains('skh-huru-ph'));
-    ok('jina lipo (r1)', c.querySelector('.skh-huru-name').textContent.includes('Mchele Mbeya'));
-    ok('bei ni TSh 75,000 kwenye mstari wake unaosomeka', c.querySelector('.skh-huru-price').textContent.replace(/\s/g, '').includes('75,000') && !!c.querySelector('.skh-huru-price-row'));
-    ok('Like HAIPO mbele ya kadi (#1 safi)', !c.querySelector('.card-eng-like'));
-    ok('Save HAIPO mbele ya kadi (#1 safi)', !c.querySelector('.card-eng-save'));
-    ok('Share HAIPO mbele ya kadi (#1 safi)', !c.querySelector('.skh-huru-share'));
-    ok('Like haipo kwenye picha ya kadi', !c.querySelector('.skh-card-heart'));
-    ok('cart HAIPO mbele ya kadi (#1 safi kabisa)', !c.querySelector('.skh-huru-cart') && !c.querySelector('.skh-act--order'));
-    ok('r3 ya eneo/tathmini hutokea pale tu data inapopatikana', !!c.querySelector('.skh-huru-r3 .skh-pinloc') && !c.querySelector('.skh-huru-r3 .skh-rating'));
-    ok('hakuna mstari wa muuzaji (#1)', !c.querySelector('.skh-seller-mini') && !c.textContent.includes('Mlimani Rice Store'));
-    ok('verified pill kwenye picha', !!c.querySelector('.skh-img .skh-verified-pill'));
-    ok('hakuna chips za ndani ya mwili', !c.querySelector('.skh-huru-body .skh-chip-row'));
+    const el = render(skh.CommercePostCard(Object.assign({}, product, { category: 'CAT-01', baseUnit: 'Kg', condition: 'Mpya' }), 'products'));
+    const c = el.querySelector('.skh-huru.skh-oc');
+    ok('kadi ya bidhaa ina mtindo mmoja (skh-oc)', !!c);
+    ok('picha ndiyo kichwa cha kadi', c.children[0].classList.contains('skh-img') && c.children[0].classList.contains('skh-oc-img'));
+    ok('jina lipo', c.querySelector('.skh-oc-title').textContent.includes('Mchele Mbeya'));
+    ok('bei TSh 75,000 kwenye mstari wa bei', c.querySelector('.skh-oc-row .skh-oc-price').textContent.replace(/\s/g, '').includes('75,000'));
+    ok('kategoria juu ya picha ni JINA, si code ya CAT', !!c.querySelector('.skh-img .skh-badge--category') && !/CAT-\d/.test(c.querySelector('.skh-badge--category').textContent));
+    ok('♡ juu ya picha (kuhifadhi/kupenda)', !!c.querySelector('.skh-img .skh-card-heart'));
+    ok('Imethibitishwa juu ya picha (uthibitisho wa server)', /Imethibitishwa/.test(c.querySelector('.skh-img .skh-verified-pill')?.textContent || ''));
+    ok('hakuna cart/Share mbele ya kadi', !c.querySelector('.skh-huru-cart') && !c.querySelector('.skh-act--order') && !c.querySelector('.skh-huru-share'));
+    ok('hakuna muuzaji mbele ya kadi', !c.querySelector('.skh-seller-mini') && !c.textContent.includes('Mlimani Rice Store'));
+    ok('kipimo/hali/eneo havionekani mbele ya kadi', !c.textContent.includes('Kg') && !c.textContent.includes('Mpya') && !c.querySelector('.skh-pinloc') && !c.textContent.includes('Tabora'));
     ok('hakuna idadi ya stock iliyobuniwa', !c.textContent.includes('Zipo (40)'));
-    ok('idadi ya picha inaonyeshwa', !!c.querySelector('.skh-photo-count'));
+    ok('bila tathmini halisi: hakuna nyota wala "Bado tathmini"', !c.querySelector('.skh-rating') && !c.textContent.includes('Bado tathmini'));
     ok('kufungua kadi kuna openProduct', /openProduct\(\s*'p1'\s*,\s*'products'\s*\)/.test(c.getAttribute('onclick')));
     ok('role/aria kwa ufikivu', c.getAttribute('role') === 'link' && c.getAttribute('tabindex') === '0');
-    const u2 = render(skh.CommercePostCard(Object.assign({}, product, { id: 'p8', baseUnit: 'Kg', condition: 'Mpya' }), 'products'));
-    ok('r2 inaonyesha unit+hali halisi', u2.textContent.includes('Kg') && u2.textContent.includes('Mpya'));
     const rated = render(skh.CommercePostCard(Object.assign({}, product, { rating: 4.8, reviewCount: 26 }), 'products'));
-    ok('tathmini huwekwa kulia kwenye mstari wa eneo, si kubana jina/bei', !!rated.querySelector('.skh-huru-r3 .skh-rating') && rated.querySelector('.skh-huru-r1 .skh-rating') === null);
+    ok('tathmini ⭐4.8 iko KULIA mwa bei (mstari mmoja), si ndani ya picha',
+        rated.querySelector('.skh-oc-row .skh-rating--card b')?.textContent === '4.8' && !rated.querySelector('.skh-img .skh-rating'));
 }
 
-console.log('\n[2] HUDUMA — bei "Kuanzia", mtoa + tathmini + eneo');
+console.log('\n[2] HUDUMA — mtindo ule ule');
 {
-    const el = render(skh.CommercePostCard(service, 'services'));
+    const el = render(skh.CommercePostCard(Object.assign({}, service, { category: 'Ushonaji' }), 'services'));
     const c = el.querySelector('.skh-card');
-    ok('kadi ya huduma', c.classList.contains('skh-card--service'));
+    ok('kadi ya huduma', c.classList.contains('skh-card--service') && c.classList.contains('skh-oc'));
     ok('bei inaanzia "Kuanzia"', c.querySelector('.skh-price-prefix')?.textContent.trim() === 'Kuanzia');
-    ok('tathmini inaonyeshwa', c.querySelector('.skh-rating b')?.textContent === '4.8');
-    ok('idadi ya maoni imo', c.textContent.includes('(34)'));
-    ok('mtoa huduma + tiki', !!c.querySelector('.skh-seller-mini .skh-verified'));
-    ok('eneo lipo', c.querySelector('.skh-pinloc').textContent.includes('Tabora'));
-    ok('kibandiko cha aina ya huduma juu ya picha', !!c.querySelector('.skh-img .skh-overlay-chip'));
+    ok('tathmini 4.8 kulia mwa bei', c.querySelector('.skh-oc-row .skh-rating--card b')?.textContent === '4.8');
+    ok('kategoria juu ya picha', c.querySelector('.skh-img .skh-badge--category')?.textContent === 'Ushonaji');
+    ok('♡ + Imethibitishwa (mtoa amethibitishwa na server)', !!c.querySelector('.skh-img .skh-card-heart') && !!c.querySelector('.skh-img .skh-verified-pill'));
+    ok('mtoa huduma / eneo havionekani mbele ya kadi', !c.querySelector('.skh-seller-mini') && !c.querySelector('.skh-pinloc'));
+    const noCat = render(skh.CommercePostCard(Object.assign({}, service, { id: 's9' }), 'services'));
+    ok('bila kategoria: kibandiko cha aina "Huduma"', !!noCat.querySelector('.skh-img .skh-badge--service'));
 }
 
-console.log('\n[3] USAFIRI — njia juu ya picha, chombo, bei, msafirishaji');
+console.log('\n[3] USAFIRI — mtindo ule ule');
 {
     const el = render(skh.CommercePostCard(driver, 'drivers'));
     const c = el.querySelector('.skh-card');
-    ok('kadi ya usafiri', c.classList.contains('skh-card--transport'));
-    const ro = c.querySelector('.skh-route-overlay');
-    ok('njia Tabora ➜ Pangale juu ya picha', ro && ro.textContent.includes('Tabora') && ro.textContent.includes('Pangale'));
-    ok('mshale wa njia ni icon ya SVG (sio emoji)', !!ro.querySelector('.skh-ro-arrow svg') && !ro.textContent.includes('➜'));
-    ok('jina la chombo (aina) lipo', c.querySelector('.skh-card-sub')?.textContent.includes('Lori'));
+    ok('kadi ya usafiri', c.classList.contains('skh-card--transport') && c.classList.contains('skh-oc'));
+    ok('aina ya chombo juu ya picha', (c.querySelector('.skh-img .skh-badge--transport')?.textContent || '').includes('Lori'));
     ok('bei "Kuanzia"', !!c.querySelector('.skh-price-prefix'));
-    ok('msafirishaji + tathmini', !!c.querySelector('.skh-seller-mini') && !!c.querySelector('.skh-rating'));
-    ok('eneo la mwanzo (pini)', c.querySelector('.skh-pinloc').textContent.includes('Tabora'));
+    ok('tathmini 4.7 kulia mwa bei', c.querySelector('.skh-oc-row .skh-rating--card b')?.textContent === '4.7');
+    ok('Imethibitishwa kwa msafirishaji aliyethibitishwa', !!c.querySelector('.skh-img .skh-verified-pill'));
     ok('kufungua ni openProduct(d1,drivers)', /openProduct\(\s*'d1'\s*,\s*'drivers'\s*\)/.test(c.getAttribute('onclick')));
+    const untitled = render(skh.CommercePostCard(Object.assign({}, driver, { id: 'd2', title: '' }), 'drivers'));
+    ok('bila jina: njia Tabora → Pangale inakuwa jina', untitled.querySelector('.skh-oc-title').textContent.includes('Tabora → Pangale'));
 }
 
 console.log('\n[4] HALI MAALUMU');
@@ -134,22 +132,12 @@ console.log('\n[4] HALI MAALUMU');
 
 console.log('\n[5] USAWA WA FAMILIA (aina zote tatu)');
 {
-    for (const [data, col] of [[service, 'services'], [driver, 'drivers']]) {
-        const c = render(skh.CommercePostCard(data, col)).querySelector('.skh-card');
-        const order = [...c.querySelector('.skh-body').children].map(x => x.className);
-        ok(col + ': jina ndiyo kwanza mwilini', order[0].includes('skh-title'));
-        // Kwa usafiri, aina ya chombo hutangulia bei; vinginevyo bei yafuata jina.
-        const priceIdx = order.findIndex(o => o.includes('skh-price'));
-        const expectedPriceIdx = col === 'drivers' && order[1].includes('skh-card-sub') ? 2 : 1;
-        ok(col + ': bei iko juu mara tu baada ya jina' + (col === 'drivers' ? '/chombo' : ''), priceIdx === expectedPriceIdx);
-        ok(col + ': front-card metadata policy ni sahihi',
-            (order.some(o => o.includes('skh-seller-row')) && order.some(o => o.includes('skh-meta-row'))));
-    }
-    {
-        const c = render(skh.CommercePostCard(product, 'products')).querySelector('.skh-huru');
-        const rows = [...c.querySelector('.skh-huru-body').children].map(x => x.className);
-        ok('products: jina -> bei -> hali/units -> eneo/tathmini', rows.join(',') === 'skh-huru-r1,skh-huru-price-row,skh-huru-r2,skh-huru-r3');
-        ok('products: jina na bei ziko kwenye mistari tofauti ili visitieane', !!c.querySelector('.skh-huru-r1 .skh-huru-name') && !!c.querySelector('.skh-huru-price-row .skh-huru-price') && !c.querySelector('.skh-huru-r1 .skh-huru-price'));
+    for (const [data, col] of [[product, 'products'], [service, 'services'], [driver, 'drivers']]) {
+        const c = render(skh.CommercePostCard(data, col)).querySelector('.skh-oc');
+        const body = c.querySelector('.skh-oc-body');
+        const rows = [...body.children].map(x => x.className);
+        ok(col + ': maelezo = jina -> bei|⭐ (mistari miwili tu)', rows.length === 2 && /skh-huru-r1|skh-oc-title/.test(rows[0]) && rows[1].includes('skh-oc-row'));
+        ok(col + ': jina na bei hazishiriki mstari', !!body.querySelector('.skh-oc-title') && !body.firstElementChild.querySelector('.skh-oc-price'));
     }
 }
 

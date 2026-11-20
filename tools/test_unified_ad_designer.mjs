@@ -30,7 +30,7 @@ w.eval(read('js/06-announcement.js'));
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'skh-designer-'));
 const copy = rel => { const dst = path.join(tmp, rel); fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(path.join(ROOT, rel), dst); };
-['js/app/16-pos-admin-jobs.js', 'shared/ads-design-rules.js'].forEach(copy);
+['js/app/16-pos-admin-jobs.js', 'js/app/128-personal-recycle.js', 'shared/ads-design-rules.js'].forEach(copy); // 16-pos-admin-jobs imports 128-personal-recycle (2026-11-19)
 fs.readdirSync(path.join(ROOT, 'js/app/creative')).filter(f => f.endsWith('.js')).forEach(f => copy('js/app/creative/' + f));
 fs.writeFileSync(path.join(tmp, 'js/app/00-bootstrap.js'), 'export const skh = globalThis.__skhStub;\n');
 const saved = [];

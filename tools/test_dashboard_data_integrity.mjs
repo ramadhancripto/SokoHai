@@ -27,6 +27,13 @@ const ok = (c, m) => { if (!c) throw new Error(m || 'expected true'); };
 const eq = (a, b2, m) => { if (a !== b2) throw new Error((m || 'not equal') + ': ' + JSON.stringify(a) + ' != ' + JSON.stringify(b2)); };
 
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } });
+/* [2026-11-20] Offline/CI machines: serve the Firebase SDK from a local firebase@10.8.1 package when
+   SKH_FIREBASE_SDK_DIR is set (same convention as tools/e2e-emulator/lib.cjs). No effect otherwise. */
+if (process.env.SKH_FIREBASE_SDK_DIR) {
+    const { readFileSync } = await import('node:fs');
+    const sdk = process.env.SKH_FIREBASE_SDK_DIR.replace(/\/?$/, '/');
+    await page.route(/gstatic\.com\/firebasejs\/10\.8\.1\/(.+\.js)/, r => r.fulfill({ status: 200, contentType: 'application/javascript', body: readFileSync(sdk + r.request().url().split('/').pop()) }));
+}
 const errors = [];
 page.on('pageerror', e => errors.push(String((e && e.message) || e)));
 page.on('console', m => { if (m.type() === 'error' && !/404|Failed to load resource|insufficient|CORS|adminWhoAmI/i.test(m.text())) errors.push('console: ' + m.text().slice(0, 140)); });

@@ -682,6 +682,12 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
     ['attributes','options','variantsStructured','features','additionalInfo'].forEach(function (key) {
         if (Array.isArray(structuredProduct[key]) && structuredProduct[key].length) structuredFields[key] = structuredProduct[key];
     });
+    /* [REMEDIATION 2026-11-20] The device outbox stores the product document and its opening stock only.
+       Canonical variant combinations (SKU/unit/variant stock) are saved by productVariantsSave AFTER the
+       product exists, so an offline-queued product would silently lose them. Such products are therefore
+       NOT queued: without a network the form stays filled and the seller retries. */
+    const pbExport = window.skhProductBuilderExport || {};
+    const hasVariantCombos = Array.isArray(pbExport.variantCombinations) && pbExport.variantCombinations.length > 0;
     const docId = await skh.saveData('products', {
         title: title,
         price: price,
@@ -743,7 +749,7 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
         imeiNumbers: imeiNumbers,
         
         createdAt: new Date().toISOString()
-    });
+    }, hasVariantCombos ? { skipQueue: true } : undefined);
         
     if(docId) {
         /* [PUBLISH OUTBOX 2026-11-01] Mtandao ulikatika: bidhaa imehifadhiwa kwenye
@@ -795,6 +801,7 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
                 'Angalia stock ya bidhaa kabla ya kuongeza tena. Usirudie kuichapisha (ingekuwa bidhaa ya pili). ' +
                 'Bidhaa Zangu → Stock. ' + (typeof window.skhFnErrText === 'function' ? window.skhFnErrText(e, 'inventoryAdjust') : 'Jaribu tena baadaye.');
         }
+        let builderIncomplete = '';
         // [REPAIR 2026-10 B-07] The builder's own authority (collect/stockRequests)
         // was never called on CREATE, so the product SKU, canonical variant
         // combinations (SKU, unit, inventory key) and their opening stock were
@@ -821,11 +828,16 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
             }
         } catch (e) {
             console.error('[product-builder-create]', e);
-            alert('Bidhaa imeundwa, lakini SKU/variants hazijakamilika: ' + (e && e.message ? e.message : e) + '. Fungua Edit ukamilishe.');
+            builderIncomplete = (e && e.message ? e.message : String(e));
         }
-        const doneMsg = (isStoreOnly
-            ? " Bidhaa imehifadhiwa kikamilifu kwenye Inventory ya duka!"
-            : " Bidhaa imechapishwa kikamilifu kwenye Soko la Mtandaoni!") + openingStockNote;
+        /* [REMEDIATION 2026-11-20] Do not say "kikamilifu" when the SKU/variant step failed (it used to show a
+           warning and then a full-success message). One honest message instead. */
+        const doneMsg = builderIncomplete
+            ? (isStoreOnly ? ' Bidhaa imehifadhiwa kwenye Inventory' : ' Bidhaa imechapishwa sokoni') +
+              ', LAKINI SKU/variants hazijakamilika: ' + builderIncomplete + '.\n\nFungua Bidhaa Zangu → Edit ukamilishe (usiichapishe upya — ingekuwa bidhaa ya pili).' + openingStockNote
+            : (isStoreOnly
+                ? " Bidhaa imehifadhiwa kikamilifu kwenye Inventory ya duka!"
+                : " Bidhaa imechapishwa kikamilifu kwenye Soko la Mtandaoni!") + openingStockNote;
         alert(doneMsg);
         // [UX 2026-10-31] Saved: forget the local draft, remember the location for the next product.
         if (typeof window.skhSellerAfterSave === 'function') window.skhSellerAfterSave({ location: loc });
@@ -849,9 +861,11 @@ isOffline: (visibility === 'offline_only' || visibility === 'hybrid'),
     // [FIX 2026-11-17] Kama saveData kurudisha null (haujakubalika na mahiri,
     // mtandao umeanguka, n.k.), subiri hapa — usiifanye reset au close modals
     // ili mtumiaji asiweze kuona fomu yalimwisha lakini bidhaa haijasukumwa.
-    if(!docId) return;
+    /* [REMEDIATION 2026-11-20] saveData returned null (refused / no network): the form stays filled, but the
+       button must be usable again — it used to stay disabled on "INACHAPISHA..." so the seller could not retry. */
     skh.setLoading('btnSeller', false, ' CHAPISHA BIDHAA SOKONI');
     window.skhUpdateSellerSubmitLabel();
+    if(!docId) return;
 };
 
 window.submitRating = async function() {
@@ -1540,7 +1554,6 @@ window.addEventListener('scroll', () => {
     window.addEventListener('resize', function () { if (maxScroll() <= 80) apply(false); }, { passive: true });
     // kubadilisha ukurasa/chat/modal: upau urudi ili usikosekane
     window.addEventListener('hashchange', function () { apply(false); });
-    window.addEventListener('resize', function () { var el = hdr(); if (el && hidden) measure(el); }, { passive: true });
     document.addEventListener('click', function (e) {
         var t = e.target && e.target.closest ? e.target.closest('.nav-tab, .sell-action-fab') : null;
         if (t) apply(false);

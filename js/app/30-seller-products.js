@@ -45,6 +45,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         var uid = shopOwnerId();
         var products = [];
         var orders = [];
+        var ordersUnavailable = false;
         try {
             var pq = skh.query(skh.collection(skh.db, 'products'), skh.where('userId', '==', uid), skh.limit(300));
             var ps = await skh.getDocs(pq);
@@ -54,7 +55,11 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             var oq = skh.query(skh.collection(skh.db, 'orders'), skh.where('sellerId', '==', uid), skh.limit(300));
             var os = await skh.getDocs(oq);
             os.forEach(function (d) { orders.push(Object.assign({ id: d.id }, d.data())); });
-        } catch (e) { }
+        } catch (e) {
+            /* [REMEDIATION 2026-11-20] was swallowed silently: sales/units/revenue then showed 0 as if true. */
+            ordersUnavailable = true;
+            console.warn('[seller-products] oda hazikupakiwa — takwimu za mauzo si za mwisho', e && (e.code || e.message));
+        }
 
         var byProduct = {}; // pid -> {orders, units, revenue}
         orders.forEach(function (o) {
@@ -107,7 +112,16 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         products.forEach(function (p) { rawMap[p.id] = p; });
         /* [COMPARE 2026-11-03] `raw` = nyongeza pekee (haibadilishi `rows`) — inatoa
            description/attributes/features/images/bidhaa mbichi kwa jedwali la kulinganisha. */
-        META = { rows: rows, byProduct: byProduct, orders: orders, raw: rawMap };
+        META = { rows: rows, byProduct: byProduct, orders: orders, raw: rawMap,
+            /* [REMEDIATION 2026-11-20] honest coverage flags (queries are capped at 300 records each) */
+            ordersUnavailable: ordersUnavailable, productsTruncated: products.length >= 300, ordersTruncated: orders.length >= 300 };
+        if (ordersUnavailable || META.productsTruncated || META.ordersTruncated) {
+            var why = [];
+            if (ordersUnavailable) why.push('oda hazikupatikana sasa (mauzo yanaonyeshwa 0 si ya mwisho)');
+            if (META.productsTruncated) why.push('bidhaa 300 za kwanza tu ndizo zimehesabiwa');
+            if (META.ordersTruncated) why.push('oda 300 za kwanza tu ndizo zimehesabiwa');
+            try { (window.sokohaiToast || window.skhToast || function () {})('Takwimu za Bidhaa Zangu: ' + why.join('; ') + '.', 'warn', 7000); } catch (e) {}
+        }
         return META;
     }
 

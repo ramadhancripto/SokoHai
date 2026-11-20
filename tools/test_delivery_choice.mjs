@@ -81,6 +81,15 @@ function FakeDb() {
     return {
         doc: p => docRef(p), collection: coll,
         batch() { return { set(r, d) { ops.push(['set', r, d]); }, update(r, p2) { ops.push(['update', r, p2]); }, delete(r) { ops.push(['delete', r]); }, async commit() { for (const [op, r, d] of ops) { if (op === 'set') await r.set(d); else if (op === 'update') await r.update(d); else await r.delete(); } ops.length = 0; } }; },
+        // [2026-11-20] routing-core now changes offers inside a transaction (ddacd20); this in-memory
+        // fake applies writes after the callback, like Firestore commits a transaction.
+        async runTransaction(fn) {
+            const writes = [];
+            const t = { get: (r) => r.get(), update(r, d) { writes.push(() => r.update(d)); return t; }, set(r, d) { writes.push(() => r.set(d)); return t; } };
+            const out = await fn(t);
+            for (const w of writes) await w();
+            return out;
+        },
         _docs: docs
     };
 }
