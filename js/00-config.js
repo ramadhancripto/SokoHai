@@ -94,6 +94,21 @@ window.SOKOHAI_CONFIG = {
     // [R-19 2026-11-20] Public origin used for share links in messages / SEO. Same value as
     // functions/site-domain.js and html/00-head.html; change ALL of them with
     // `node tools/set_canonical_domain.mjs https://sokohai.com` once the owner has connected sokohai.com.
+    // [SRV-12 2026-11-20] Client features whose Cloud Function does not exist yet. Keep false until the server
+    // function is written, reviewed and deployed (tools/test_callable_names.mjs enforces this).
+    FEATURES: { contentTranslation: false, offlineMemberTokenSignIn: false },
+    // [SOKOHURU 2026-11-21] Launch scope: free marketplace. These are the BROWSER defaults only; the real switch is
+    // the Firestore document system/launch (super admin), enforced by firestore.rules and functions/launch-gates.js.
+    // When system/launch is readable its booleans override these. Turning a value to true here alone enables nothing.
+    LAUNCH: {
+        scope: 'sokohuru',
+        auction: false, priceDrop: false, groupBuy: false,
+        wallet: false, escrow: false, checkout: false, delivery: false, paidEntitlements: false,
+        promotionsManual: false,          // paid boosts via manual verification: OFF until the owner reviews it
+        // Shown to sellers when promotionsManual is on. Filled by the owner; NO credentials, only the public
+        // payee name / till / pay-bill number that customers already see. Empty = payment collection stays off.
+        promotionPayment: { payeeName: '', channels: [] }
+    },
     CANONICAL_ORIGIN: 'https://sokohaicom.netlify.app',
     FIREBASE_ENVIRONMENTS: {
         production: {

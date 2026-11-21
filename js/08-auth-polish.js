@@ -31,6 +31,9 @@
             eye.setAttribute('title', shown ? 'Ficha nenosiri' : 'Onyesha nenosiri');
         }
         paintEye(false);
+        // [AUTH-UI 2026-11-21] the icon library may load after this script: repaint once it is there
+        window.addEventListener('load', function () { paintEye(input.type !== 'password'); });
+        setTimeout(function () { paintEye(input.type !== 'password'); }, 1500);
 
         eye.addEventListener('click', function () {
             var show = input.type === 'password';
@@ -93,6 +96,37 @@
             input.parentNode.parentNode.insertBefore(box, input.parentNode.nextSibling);
         }
     }
+
+    // ---------- 0) [AUTH-UI 2026-11-21] presentation helpers for the redesigned screen ----------
+    //  * language pill shows the current language (changing it calls the existing skhSetLang);
+    //  * "Ingia kwa Barua Pepe" reveals the e-mail / password fields (no auth logic here);
+    //    they open by themselves when an e-mail is already filled in (openAuthModal prefills the last one).
+    (function () {
+        var am = document.getElementById('authModal');
+        var sel = document.querySelector('#authModal .skh-auth-lang select');
+        var pill = document.querySelector('#authModal [data-skh-auth-email]');
+        var box = document.getElementById('skhAuthEmailBox');
+        function cur() { var l = ''; try { l = localStorage.getItem('sokohai_language') || ''; } catch (e) {} return (l || document.documentElement.lang || 'sw').slice(0, 2) === 'en' ? 'en' : 'sw'; }
+        function openEmail(focus) {
+            if (!box) return;
+            box.classList.add('is-open');
+            if (pill) pill.setAttribute('aria-expanded', 'true');
+            if (focus) { var em = document.getElementById('loginEmail'); if (em) em.focus({ preventScroll: false }); }
+        }
+        if (pill) pill.addEventListener('click', function () {
+            if (box && box.classList.contains('is-open')) { box.classList.remove('is-open'); pill.setAttribute('aria-expanded', 'false'); }
+            else openEmail(true);
+        });
+        function onShow() {
+            if (!am || am.style.display === 'none' || !am.style.display) return;
+            if (sel) sel.value = cur();
+            var em = document.getElementById('loginEmail');
+            if (em && String(em.value || '').trim()) openEmail(false);
+        }
+        if (sel) sel.value = cur();
+        if (am && window.MutationObserver) new MutationObserver(function () { setTimeout(onShow, 0); }).observe(am, { attributes: true, attributeFilter: ['style'] });
+        window.skhAuthOpenEmail = openEmail;
+    })();
 
     var loginPass = document.getElementById('loginPass');
     var signupPass = document.getElementById('signupPass');

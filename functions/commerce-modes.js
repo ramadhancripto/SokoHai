@@ -15,7 +15,9 @@
  */
 'use strict';
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const { productUnsellableReason } = require('./product-state'); // [R-18]
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
@@ -45,7 +47,7 @@ async function notify(userId, title, body, extra) {
             userId: String(userId), title: String(title).slice(0, 140), body: String(body).slice(0, 500),
             createdAt: new Date().toISOString(), read: false, source: 'server'
         }, extra || {}));
-    } catch (e) { /* a notification never blocks the money path */ }
+    } catch (e) { logBestEffort('commerce-modes:50', e); /* a notification never blocks the money path */ }
 }
 
 /* [R13-B 2026-11] Auction rules come from the listing (seller-set at creation):
@@ -245,7 +247,7 @@ async function claimOnce(markerRef, tag) {
 async function auctionEvent(ref, type, details) {
     try {
         await ref.collection('auction_events').add(Object.assign({ type, at: new Date().toISOString() }, details || {}));
-    } catch (e) { /* the audit trail never blocks the money path */ }
+    } catch (e) { logBestEffort('commerce-modes:250', e); /* the audit trail never blocks the money path */ }
 }
 /* [FULL-AUCTION 2026-11] Tightened payment proof (was: any paid order containing the
  * product). A qualifying order must ALL hold:
@@ -413,7 +415,7 @@ exports.auctionCancel = onCall({ region: REGION }, async (req) => {
     const p = s.data() || {}, m = p.modeData || {};
     const isOwner = String(p.userId || '') === uid;
     const tok = (req.auth.token) || {};
-    const isAdmin = tok.admin === true || tok.superAdmin === true;
+    const isAdmin = authz.isAdmin(req); // [SRV-09] shared policy
     if (!isOwner && !isAdmin) throw new HttpsError('permission-denied', 'si_mwenye_mnada');
     if (m.ended || m.cancelled) throw new HttpsError('failed-precondition', 'mnada_umeisha');
     const bids = parseInt(m.totalBids, 10) || 0;

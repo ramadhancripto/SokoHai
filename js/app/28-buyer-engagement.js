@@ -933,7 +933,12 @@ import './128-personal-recycle.js';
             await Promise.all(refVals.slice(0, 6).map(async function (r) {
                 try {
                     var ds = await skh.getDoc(skh.doc(skh.db, r.collectionName, r.id));
-                    if (snapExists(ds)) docs.push(Object.assign({ id: ds.id, collectionName: r.collectionName }, ds.data()));
+                    if (snapExists(ds)) {
+                        var item = Object.assign({ id: ds.id, collectionName: r.collectionName }, ds.data());
+                        // [RECYCLE 2026-11-21] bidhaa iliyoondolewa haipendekezwi
+                        if (r.collectionName === 'products' && skh.productEligible && !skh.productEligible(item)) return;
+                        docs.push(item);
+                    }
                 } catch (e) {}
             }));
             if (!docs.length) { host.style.display = 'none'; return; }

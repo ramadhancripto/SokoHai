@@ -109,6 +109,11 @@
         try { batch = queue.splice(0, 10); } catch (e0) { batch = []; }
         timer = null;
         if (!batch.length) return;
+        // [SRV-12 2026-11-20] 'translateContent' is not a deployed Cloud Function (no server implementation yet).
+        // Calling it produced a CORS-blocked 404 that the SDK reports as INTERNAL. It now runs only when the owner
+        // enables SOKOHAI_CONFIG.FEATURES.contentTranslation AND ships the function; otherwise the original text stays.
+        var feats = (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.FEATURES) || {};
+        if (feats.contentTranslation !== true) return;
         var fn;
         try { fn = skh.httpsCallable ? skh.httpsCallable(skh.functions, 'translateContent') : null; } catch (eF) { fn = null; }
         if (!fn) return; // hakuna backend inayopatikana — original inaonyeshwa (fallback)

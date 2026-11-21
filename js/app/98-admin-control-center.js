@@ -430,13 +430,26 @@ import { skh } from './00-bootstrap.js';
             '<select id="ccLCol" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;margin:4px 0 8px;"><option value="products">Bidhaa</option><option value="services">Huduma</option></select>'
             + input('ccLId', 'ID ya tangazo')
             + btn('Ficha tangazo', "window.skhAdminCCListing('hide')", 'danger') + btn('Rudisha tangazo', "window.skhAdminCCListing('restore')", 'plain')
-            + empty('Mmiliki hupokea arifa yenye sababu yako. Tangazo halifutwi — linafichwa tu.'));
+            + empty('Mmiliki hupokea arifa yenye sababu yako. Tangazo halifutwi — linafichwa tu.'))
+            // [SOKOHURU 2026-11-21] listing reports + paid promotion requests (manual payment verification)
+            + (window.skhLaunch && typeof window.skhLaunch.adminSectionHtml === 'function' ? await window.skhLaunch.adminSectionHtml() : '');
     };
     window.skhAdminCCListing = async function (action) {
         var id = val('ccLId'); if (!id) { toast('Weka ID ya tangazo.', 'error'); return; }
         var reason = await needReason(5); if (!reason) return;
-        try { await run('adminModerateListing', { collection: val('ccLCol') || 'products', id: id, action: action, reason: reason }); toast(action === 'hide' ? 'Tangazo limefichwa.' : 'Tangazo limerudishwa.', 'success'); }
-        catch (e) { toast(errText(e), 'error'); }
+        var col = val('ccLCol') || 'products';
+        try { await run('adminModerateListing', { collection: col, id: id, action: action, reason: reason }); toast(action === 'hide' ? 'Tangazo limefichwa.' : 'Tangazo limerudishwa.', 'success'); }
+        catch (e) {
+            // [SOKOHURU 2026-11-21] Cloud Functions not deployed yet: products are moderated from the browser with an
+            // append-only audit record in the same write (firestore.rules moderationAuditOk). Services still need the server.
+            var kind = skh.fnErrorKind ? skh.fnErrorKind(e) : 'server';
+            if (col === 'products' && (kind === 'missing' || kind === 'unreachable') && window.skhLaunch && window.skhLaunch.moderateProduct) {
+                try { await window.skhLaunch.moderateProduct(id, action, reason); toast(action === 'hide' ? 'Tangazo limefichwa (kumbukumbu imehifadhiwa).' : 'Tangazo limerudishwa (kumbukumbu imehifadhiwa).', 'success'); }
+                catch (e2) { toast(errText(e2), 'error'); }
+                return;
+            }
+            toast(errText(e), 'error');
+        }
     };
 
     VIEWS.policy = async function () {

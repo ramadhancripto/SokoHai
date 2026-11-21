@@ -110,8 +110,27 @@ async function main() {
     eq(w.ok, false, 'si yako denied'); eq(w.code, 'permission-denied', 'denied');
     const e = await call('deliveryOfferAccept', DRV, { offerId: 'of2' });
     eq(e.ok, false, 'expired denied');
-    const used = await call('deliveryOfferAccept', DRV, { offerId: 'of1' });
-    eq(used.ok, false, 'used offer denied');
+    // [2026-11-20] An ACCEPTED offer replayed by the SAME driver is an idempotent retry (ddacd20, after this test was
+    // written): same pickup token, nothing rewritten, no second assignment, no new events or notifications.
+    // It must still be refused for anyone else and once the assignment is no longer live.
+    const rideBefore = await getd('ride_requests/tm1'); const tokBefore = await getd('delivery_tokens/tm1_pickup');
+    const evBefore = (await db.collection('delivery_events').where('deliveryId', '==', 'tm1').get()).size;
+    const ntBefore = (await db.collection('notifications').get()).size;
+    const replay = await call('deliveryOfferAccept', DRV, { offerId: 'of1' });
+    eq(replay.ok, true, 'same-driver replay answered'); eq(replay.data.already, true, 'flagged as replay');
+    eq(replay.data.token, tokBefore.token, 'same pickup token (not rotated)');
+    eq(JSON.stringify(await getd('ride_requests/tm1')), JSON.stringify(rideBefore), 'ride untouched by replay');
+    eq(JSON.stringify(await getd('delivery_tokens/tm1_pickup')), JSON.stringify(tokBefore), 'token record untouched');
+    eq((await db.collection('delivery_events').where('deliveryId', '==', 'tm1').get()).size, evBefore, 'no new custody events');
+    eq((await db.collection('notifications').get()).size, ntBefore, 'no new notifications');
+    const other = await call('deliveryOfferAccept', DRV2, { offerId: 'of1' });
+    eq(other.ok, false, 'another driver refused'); eq(other.code, 'permission-denied', 'another driver: permission-denied');
+    await db.doc('ride_requests/tm1').update({ status: 'in_transit', pickupTokenStatus: 'used' });
+    const late = await call('deliveryOfferAccept', DRV, { offerId: 'of1' });
+    eq(late.ok, false, 'replay refused once pickup is done'); eq(late.code, 'failed-precondition', 'late replay: failed-precondition');
+    await db.doc('delivery_offers/of1').update({ status: 'declined' });
+    eq((await call('deliveryOfferAccept', DRV, { offerId: 'of1' })).code, 'failed-precondition', 'inactive offer refused');
+    await db.doc('ride_requests/tm1').set(rideBefore); await db.doc('delivery_offers/of1').update({ status: 'accepted' });
   });
 
   group = 'TM cancel'; console.log('\n[' + group + ']');

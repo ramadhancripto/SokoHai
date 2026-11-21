@@ -78,6 +78,57 @@ service cloud.firestore {
     // List queries must carry a small limit so collections cannot be dumped.
     // [REMEDIATION 2026-11 R7] trust badges on listings are admin/server-set only
     // (the card shows "Imethibitishwa" when any of these is set).
+    // [SOKOHURU 2026-11-21] Launch scope. system/launch (super admin only) switches payment-dependent
+    // features. A feature is OFF when that document says false. Production must have the document with
+    // every payment feature false (see docs/audit/2026-11-21-sokohuru); a missing document keeps the
+    // historic behaviour so existing emulator suites and staging keep working.
+    function launchOff(f) {
+      return exists(/databases/$(database)/documents/system/launch)
+        && get(/databases/$(database)/documents/system/launch).data.get(f, true) == false;
+    }
+    // Opt-in features (paid promotions) are ON only when system/launch says true explicitly.
+    function launchOn(f) {
+      return exists(/databases/$(database)/documents/system/launch)
+        && get(/databases/$(database)/documents/system/launch).data.get(f, false) == true;
+    }
+    function saleModeAllowed(d) {
+      return !(d.get('saleMode', '') == 'auction' && launchOff('auction'))
+        && !(d.get('saleMode', '') == 'price_drop' && launchOff('priceDrop'))
+        && !(d.get('saleMode', '') == 'group_buy' && launchOff('groupBuy'));
+    }
+    // Private contact data never goes into a PUBLIC listing document (use chat / userCards instead).
+    function productPrivateKeys() {
+      return ['userEmail','sellerEmail','ownerEmail','email','ownerPhone','sellerPhone','phone','phoneNumber','whatsapp'];
+    }
+    function noNewPrivateKeys() {
+      return !request.resource.data.keys().hasAny(productPrivateKeys())
+        || (resource != null && request.resource.data.diff(resource.data).affectedKeys().hasAny(productPrivateKeys()) == false);
+    }
+    // A boost on a listing must be backed by an ACTIVE promotion request for this listing, activated in the
+    // same write (manual payment verification by an admin; see promotion_requests below).
+    function promoBoostOk(pid) {
+      return request.resource.data.get('isBoosted', false) == false
+        || (request.resource.data.get('boostPaidRef', '') is string
+          && existsAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.get('boostPaidRef', '')))
+          && getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.get('boostPaidRef', ''))).data.status == 'active'
+          && getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.get('boostPaidRef', ''))).data.productId == pid
+          && getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.get('boostPaidRef', ''))).data.days == request.resource.data.get('boostDays', -1)
+          && getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.get('boostPaidRef', ''))).data.activatedAt == request.resource.data.get('boostedAt', ''));
+    }
+    // Owner/admin update of a listing under the launch scope. One diff (expression budget: products already
+    // carry many checks, and large searchTokens lists make each diff expensive).
+    function launchUpdateOk(pid) {
+      let ch = request.resource.data.diff(resource.data).affectedKeys();
+      return (!ch.hasAny(['saleMode','modeData']) || saleModeAllowed(request.resource.data))
+        && (!ch.hasAny(productPrivateKeys()) || !request.resource.data.keys().hasAny(productPrivateKeys()))
+        && (!ch.hasAny(['isBoosted','boostDays','boostedAt','boostPaidRef','boostExpiresAt','boostPlacement']) || promoBoostOk(pid))
+        && (!ch.hasAny(['adminHidden','moderationStatus']) || moderationAuditOk());
+    }
+    // An admin hiding/restoring a listing from the browser leaves an audit record in the same write.
+    function moderationAuditOk() {
+      return request.resource.data.get('moderationAuditId', '') is string
+        && existsAfter(/databases/$(database)/documents/admin_audit_log/$(request.resource.data.get('moderationAuditId', '')));
+    }
     function listingTrustKeys() {
       return ['verified','ownerVerified','verificationStatus','sellerVerified','isVerified','verifiedAt','verifiedBy','trust','inspected','inspectionStatus',
               'groupSokoId','groupSokoName','groupOwnership','consignmentSupplier'];   // [R13-B] Group Soko tags: server only
@@ -156,6 +207,8 @@ service cloud.firestore {
     match /products/{id} {
       allow read: if true;
       allow create: if signedIn() && validProduct(request.resource.data)
+        && saleModeAllowed(request.resource.data)                       // [SOKOHURU] auction / price drop / group buy off
+        && !request.resource.data.keys().hasAny(productPrivateKeys())   // [SOKOHURU] no e-mail / phone in a public listing
         && !('searchTokens' in request.resource.data)
         && request.resource.data.stock == 0
         && request.resource.data.get('openingStockPending', false) == true
@@ -179,6 +232,13 @@ service cloud.firestore {
           || isAdmin());
       allow update: if ownsProduct(resource.data) && validProduct(request.resource.data)
         && request.resource.data.userId == resource.data.userId
+        // [RECYCLE 2026-11-21] a permanently deleted listing is final for its owner (admin may still act)
+        && (isAdmin() || resource.data.get('permanentlyDeleted', false) != true)
+        // ...and the tombstone keys are set ONLY through the Recycle Bin purge rule below
+        && (isAdmin() || unchanged(['permanentlyDeleted','permanentlyDeletedAt']))
+        // [SOKOHURU 2026-11-21] disabled sale modes cannot be (re)configured; private contact keys cannot be added;
+        // a browser boost needs an active promotion request; browser moderation needs an audit record.
+        && launchUpdateOk(id)
         && searchTokensUntouched()
         // [PHASE 9 B-18] admin changing another seller's listing must sign it
         // (productsAdminAudit logs it); nobody may sign as someone else.
@@ -235,10 +295,27 @@ service cloud.firestore {
           || resource.data.get('status', '') in ['archived','deleted'])
         && resource.data.get('adminHidden', false) != true
         && resource.data.get('moderationStatus', '') != 'removed'
+        && resource.data.get('permanentlyDeleted', false) != true
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['publicationStatus','status','archivedAt','updatedAt'])
         && request.resource.data.get('publicationStatus', '') == 'draft'
         && request.resource.data.get('status', '') == 'draft'
         && request.resource.data.get('archivedAt', 'missing') == null
+        && request.resource.data.get('updatedAt', null) is string;
+      // [RECYCLE 2026-11-21] "Futa kabisa": the owner (or managing agent) marks an ARCHIVED listing as
+      // permanently deleted. Only the tombstone keys change; the record stays for orders/payments/stock
+      // history, the listing stays archived, and the two update paths above refuse it from now on.
+      allow update: if signedIn()
+        && (resource.data.get('userId', '') == request.auth.uid
+          || (resource.data.get('managedByAgentUid', '') == request.auth.uid && isApprovedAgent()))
+        && (resource.data.get('archivedAt', null) != null
+          || resource.data.get('publicationStatus', '') == 'archived'
+          || resource.data.get('status', '') in ['archived','deleted'])
+        && resource.data.get('permanentlyDeleted', false) != true
+        && resource.data.get('adminHidden', false) != true
+        && resource.data.get('moderationStatus', '') != 'removed'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['permanentlyDeleted','permanentlyDeletedAt','updatedAt'])
+        && request.resource.data.permanentlyDeleted == true
+        && request.resource.data.get('permanentlyDeletedAt', null) is string
         && request.resource.data.get('updatedAt', null) is string;
       // [REPAIR 2026-10 B-12] Found by the browser E2E: buyers opening or sharing a
       // product could never count a view/share (owner-only update), so product
@@ -499,8 +576,8 @@ service cloud.firestore {
       allow create, update: if (isSuperAdmin() && (doc != 'config' || (request.resource.data.get('lastChangedBy', '') == request.auth.uid
           && request.resource.data.get('lastChangedVia', '') == 'browser'
           && (resource == null || request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastChangedAt'])))))
-        || (isAdmin() && doc != 'config');
-      allow delete: if isSuperAdmin() && doc != 'config';
+        || (isAdmin() && !(doc in ['config','launch','promotion_packages']));
+      allow delete: if isSuperAdmin() && !(doc in ['config','launch','promotion_packages']);
     }
 
     match /businesses/{businessId} {
@@ -526,6 +603,7 @@ service cloud.firestore {
         || resource.data.get('buyerId', '') == request.auth.uid
         || smallQuery(1));
       allow create: if signedIn()
+        && !launchOff('escrow')                                           // [SOKOHURU] SokoPay links off
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.get('status', 'pending') == 'pending'
         && request.resource.data.get('price', 0) is number && request.resource.data.get('price', 0) > 0
@@ -613,6 +691,7 @@ service cloud.firestore {
       // [REPAIR C2] A browser-created order always starts unpaid. Only the server
       // (settlePesaPalPayment / sokopayLinkWalletPay / orderCreate) marks it paid.
       allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid
+        && !launchOff('checkout')                                         // [SOKOHURU] no checkout at launch
         && request.resource.data.get('sellerId', '') is string
         && request.resource.data.get('sellerId', '') != request.auth.uid
         && !request.resource.data.keys().hasAny(orderServerOnlyCreateKeys())
@@ -633,6 +712,7 @@ service cloud.firestore {
       // 'held' inadai pesa iko escrow — uongo kabla ya malipo. Server
       // (serviceOrderWalletPay / settlePesaPalPayment) ndiyo inayohamishia 'held'.
       allow create: if signedIn()
+        && !launchOff('checkout')                                         // [SOKOHURU]
         && request.resource.data.get('collectionName', '') == 'services'
         && request.resource.data.get('sellerId', '') == request.auth.uid
         && request.resource.data.get('buyerId', '') is string
@@ -736,7 +816,20 @@ service cloud.firestore {
       }
     }
     // Permanent admin audit trail and security events: server-only writes.
-    match /admin_audit_log/{id}   { allow read: if isAdmin(); allow write: if false; }
+    match /admin_audit_log/{id}   {
+      allow read: if isAdmin();
+      // [SOKOHURU 2026-11-21] Until Cloud Functions are deployed, two admin actions run from the browser and
+      // must leave an append-only record: listing moderation (mod_*) and promotion decisions (promo_*).
+      allow create: if isAdmin()
+        && (id.matches('^mod_[A-Za-z0-9_-]{6,200}$') || id.matches('^promo_[A-Za-z0-9_-]{6,200}$'))
+        && request.resource.data.get('actorUid', '') == request.auth.uid
+        && request.resource.data.get('actorRole', '') == 'admin'
+        && request.resource.data.get('via', '') == 'browser'
+        && request.resource.data.get('action', '') in ['LISTING_HIDE','LISTING_RESTORE','PROMOTION_ACTIVATED','PROMOTION_REJECTED']
+        && request.resource.data.get('reason', '') is string && request.resource.data.get('reason', '').size() >= 5
+        && request.resource.data.get('createdAt', null) is string;
+      allow update, delete: if false;
+    }
     // [R9] Trust badge records: evidence and verifier are visible to admins and to
     // the badge owner only; written by adminSetTrustBadge (server) only.
     match /trust_badges/{badgeId} {
@@ -1416,6 +1509,7 @@ service cloud.firestore {
         allow delete: if isAdmin() || (signedIn() && resource.data.get('customerId', '') == request.auth.uid);
       }
       allow create: if signedIn()
+        && !launchOff('delivery')                                         // [SOKOHURU] no delivery booking at launch
         && request.resource.data.customerId == request.auth.uid
         && !(request.resource.data.get('status', 'searching') in ['accepted', 'pickup_pending', 'seller_confirmed_handover',
              'picked_up', 'in_transit', 'awaiting_handover', 'delivered', 'completed'])
@@ -1579,6 +1673,7 @@ service cloud.firestore {
     match /sokopay_core_transactions/{id} {
       allow read: if signedIn() && (isAdmin() || txParty(resource.data));
       allow create: if signedIn() && request.resource.data.get('buyerId', '') == request.auth.uid
+        && !launchOff('escrow')                                           // [SOKOHURU]
         && !request.resource.data.keys().hasAny(coreServerKeys());
       allow update: if signedIn() && (isAdmin() || (txParty(resource.data)
         && unchanged(['buyerId','sellerId','amount','orderId']) && unchanged(coreServerKeys())));
@@ -1586,7 +1681,7 @@ service cloud.firestore {
     }
     match /sokopay_tokens/{id} {
       allow read: if signedIn() && (isAdmin() || txParty(resource.data));
-      allow create: if signedIn() && (request.resource.data.get('buyerId', '') == request.auth.uid
+      allow create: if signedIn() && !launchOff('escrow') && (request.resource.data.get('buyerId', '') == request.auth.uid
         || request.resource.data.get('sellerId', '') == request.auth.uid);
       allow update: if signedIn() && (isAdmin() || (txParty(resource.data)
         && unchanged(['buyerId','sellerId','token','tokenType'])));
@@ -1594,7 +1689,7 @@ service cloud.firestore {
     }
     match /smart_cart_checkouts/{id} {
       allow read: if signedIn() && (isAdmin() || resource.data.get('buyerId', '') == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.get('buyerId', '') == request.auth.uid;
+      allow create: if signedIn() && !launchOff('checkout') && request.resource.data.get('buyerId', '') == request.auth.uid;
       allow update, delete: if false;
     }
     match /cart_seller_messages/{id} {
@@ -1618,7 +1713,7 @@ service cloud.firestore {
       // Assignment board for logistics partners: open items are listable.
       allow read: if signedIn() && (isAdmin() || txParty(resource.data)
         || resource.data.get('assignmentStatus', '') == 'new_assignment');
-      allow create: if signedIn() && (request.resource.data.get('buyerId', '') == request.auth.uid
+      allow create: if signedIn() && !launchOff('delivery') && (request.resource.data.get('buyerId', '') == request.auth.uid
         || request.resource.data.get('sellerId', '') == request.auth.uid);
       allow update: if signedIn() && unchanged(['buyerId','sellerId','userId','amount'])
         && (isAdmin() || txParty(resource.data)
@@ -1629,6 +1724,7 @@ service cloud.firestore {
     match /shipments/{id} {
       allow read: if shipmentParty(resource.data);
       allow create: if shipmentParty(request.resource.data)
+        && !launchOff('delivery')                                         // [SOKOHURU]
         && shipmentCoreMatches(request.resource.data)
         && (request.resource.data.buyerId == request.auth.uid
             || request.resource.data.sellerId == request.auth.uid
@@ -2338,6 +2434,95 @@ service cloud.firestore {
     // [PILOT OPS 2026-11-14] written by Cloud Functions only; admins read
     match /client_errors/{id} { allow read: if isAdmin(); allow write: if false; }
     match /system_jobs/{id} { allow read: if isAdmin(); allow write: if false; }
+    // ===================== [SOKOHURU 2026-11-21] listing reports =====================
+    // One report per user per listing (document id = <productId>_<uid>). Admins triage.
+    match /listing_reports/{rid} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('reporterUid', '') == request.auth.uid);
+      allow create: if signedIn()
+        && rid == request.resource.data.get('productId', '') + '_' + request.auth.uid
+        && request.resource.data.get('reporterUid', '') == request.auth.uid
+        && request.resource.data.get('productId', '') is string
+        && exists(/databases/$(database)/documents/products/$(request.resource.data.get('productId', '')))
+        && request.resource.data.get('reason', '') in ['scam','prohibited','wrong_category','duplicate','offensive','wrong_price','other']
+        && request.resource.data.get('note', '') is string && request.resource.data.get('note', '').size() <= 500
+        && request.resource.data.get('status', '') == 'open'
+        && request.resource.data.get('createdAt', null) is string
+        && request.resource.data.keys().hasOnly(['productId','reporterUid','reason','note','status','createdAt']);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedBy','resolvedAt','resolution'])
+        && request.resource.data.status in ['open','actioned','dismissed']
+        && request.resource.data.get('resolvedBy', '') == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ===================== [SOKOHURU 2026-11-21] paid promotions (manual verification) =====================
+    // Seller asks; an admin checks the payment in the provider's own records; the admin activates in ONE
+    // write that also (a) reserves the payment reference (unique id, no replay), (b) writes the audit
+    // record and (c) sets the boost on the listing. Clients can never write paid / verified / active.
+    // OFF unless system/launch.promotionsManual == true; prices come from system/promotion_packages.
+    function promoPackage(pkg) {
+      return get(/databases/$(database)/documents/system/promotion_packages).data.packages[pkg];
+    }
+    match /promotion_requests/{reqId} {
+      allow read: if signedIn() && (isAdmin() || resource.data.get('sellerUid', '') == request.auth.uid);
+      allow create: if signedIn() && launchOn('promotionsManual')
+        && exists(/databases/$(database)/documents/system/promotion_packages)
+        && request.resource.data.keys().hasOnly(['reference','sellerUid','productId','packageId','kind','amount','currency','days','status','createdAt'])
+        && request.resource.data.reference == reqId
+        && reqId.matches('^PRM-[A-Z0-9]{6,32}$')
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is string
+        && request.resource.data.packageId in get(/databases/$(database)/documents/system/promotion_packages).data.packages
+        && promoPackage(request.resource.data.packageId).get('active', false) == true
+        && request.resource.data.amount == promoPackage(request.resource.data.packageId).amount
+        && request.resource.data.days == promoPackage(request.resource.data.packageId).days
+        && request.resource.data.kind == promoPackage(request.resource.data.packageId).kind
+        && request.resource.data.currency == 'TZS'
+        && exists(/databases/$(database)/documents/products/$(request.resource.data.productId))
+        && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.userId == request.auth.uid;
+      // seller withdraws a request that is still pending
+      allow update: if signedIn() && resource.data.sellerUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','cancelledAt'])
+        && request.resource.data.status == 'cancelled';
+      // admin activates: payment reference reserved + audit record + listing boost, all in this write
+      allow update: if isAdmin() && launchOn('promotionsManual')
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paymentRef','paymentProvider','verifiedBy','verifiedAt','activatedAt','expiresAt'])
+        && request.resource.data.status == 'active'
+        && request.resource.data.verifiedBy == request.auth.uid
+        && request.resource.data.paymentProvider in ['mpesa','tigopesa','airtelmoney','halopesa','bank','pesapal_manual']
+        && request.resource.data.paymentRef is string && request.resource.data.paymentRef.matches('^[A-Z0-9-]{6,40}$')
+        && request.resource.data.activatedAt is string && request.resource.data.expiresAt is string
+        && existsAfter(/databases/$(database)/documents/promotion_payment_refs/$(request.resource.data.paymentProvider + '_' + request.resource.data.paymentRef))
+        && getAfter(/databases/$(database)/documents/promotion_payment_refs/$(request.resource.data.paymentProvider + '_' + request.resource.data.paymentRef)).data.requestId == reqId
+        && existsAfter(/databases/$(database)/documents/admin_audit_log/$('promo_' + reqId + '_activate'));
+      // admin rejects (payment not found / wrong amount): audit record required
+      allow update: if isAdmin()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','verifiedBy','verifiedAt','rejectReason'])
+        && request.resource.data.status == 'rejected'
+        && request.resource.data.verifiedBy == request.auth.uid
+        && request.resource.data.rejectReason is string && request.resource.data.rejectReason.size() >= 5
+        && existsAfter(/databases/$(database)/documents/admin_audit_log/$('promo_' + reqId + '_reject'));
+      allow delete: if false;
+    }
+    // One document per provider transaction id: the same payment can never activate two promotions.
+    match /promotion_payment_refs/{ref} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && launchOn('promotionsManual')
+        && request.resource.data.keys().hasOnly(['requestId','amount','verifiedBy','verifiedAt'])
+        && request.resource.data.verifiedBy == request.auth.uid
+        && request.resource.data.verifiedAt is string
+        && existsAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.requestId))
+        && getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.requestId)).data.status == 'active'
+        && getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.requestId)).data.paymentProvider + '_'
+           + getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.requestId)).data.paymentRef == ref
+        && request.resource.data.amount == getAfter(/databases/$(database)/documents/promotion_requests/$(request.resource.data.requestId)).data.amount;
+      allow update, delete: if false;
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }

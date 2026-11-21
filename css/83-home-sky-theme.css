@@ -1,0 +1,223 @@
+/* ==== css/83-home-sky-theme.css ====                          [HOME SKY 2026-11-21]
+ * Owner reference "SokoHai_Tanzania_Marketplace_Home": DESIGN ONLY.
+ *   light sky page · green/gold wave · solid green round header buttons · white pill search and location ·
+ *   SokoHai banner art · navy section titles with gold marks · white rounded cards with green category chip ·
+ *   green information row on service / transport cards · floating white bottom bar on a skyline + green/gold wave,
+ *   and listings that rise out of that wave while the page scrolls.
+ * Structure, ids, handlers and data are unchanged. The "Dashibodi" grid button (#skhKaziBtn) is only hidden here
+ * (the same dashboard stays in the side menu). Loaded LAST.
+ */
+:root {
+  --sky-green: #18A982;
+  --sky-green-2: #12a15f;
+  --sky-leaf: #1fae6b;
+  --sky-navy: #16236b;
+  --sky-gold: #f4b400;
+  --sky-mint: #E7F8F1;
+}
+
+/* ---------- 1. page: light sky with soft clouds ---------- */
+html body {
+  background:
+    radial-gradient(260px 90px at 12% 38%, rgba(255, 255, 255, .85), transparent 70%),
+    radial-gradient(320px 110px at 88% 58%, rgba(255, 255, 255, .8), transparent 70%),
+    radial-gradient(280px 100px at 30% 82%, rgba(255, 255, 255, .75), transparent 70%),
+    linear-gradient(180deg, #d9effb 0%, #eaf6fd 38%, #e4f3fb 100%) fixed !important;
+}
+html body #buyerView,
+html body #buyerView > section,
+html body #buyerView .search-strategy,
+html body #buyerView .strategy-row.skh-section { background: transparent !important; }
+
+/* ---------- 2. header: green/gold wave top-left, sky behind ---------- */
+html body .sticky-top-section {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 140' preserveAspectRatio='none'%3E%3Cpath d='M0 0h210c-40 18-92 22-130 48C50 70 22 104 0 132Z' fill='%2312a15f'/%3E%3Cpath d='M0 132c22-28 50-62 80-84 38-26 90-30 130-48h18c-44 20-100 26-140 54C58 76 30 110 0 140Z' fill='%23f4c430'/%3E%3Cpath d='M300 0h90v34c-26-14-58-26-90-34Z' fill='%23f4c430' opacity='.85'/%3E%3C/svg%3E") left top / 100% 78px no-repeat,
+    linear-gradient(180deg, rgba(217, 239, 251, .96) 0%, rgba(226, 243, 252, .96) 100%) !important;
+  border-bottom: 0 !important;
+  box-shadow: 0 6px 18px rgba(22, 35, 107, .06) !important;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+/* solid green round buttons */
+html body .top-nav-row .menu-btn,
+html body .top-nav-row .skh-post-btn,
+html body .top-nav-row .skh-icon-btn {
+  width: 44px !important; height: 44px !important; min-width: 44px !important;
+  border-radius: 50% !important; border: 0 !important;
+  background: linear-gradient(180deg, #27bd78 0%, #129957 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(18, 153, 87, .32), inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+}
+/* narrow phones: keep every action on one row without overlap (touch height stays >= 40px);
+   the icon grid of css/78 had 4 columns — with the grid button hidden it has 3 */
+@media (max-width: 480px) { html body .top-nav-row .top-nav-icons { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
+@media (min-width: 1100px) { html body .top-nav-row .top-nav-icons { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; width: min(100%, 380px) !important; } }
+@media (max-width: 380px) {
+  html body .top-nav-row .menu-btn, html body .top-nav-row .skh-post-btn, html body .top-nav-row .skh-icon-btn { width: 40px !important; min-width: 40px !important; height: 40px !important; }
+}
+@media (max-width: 360px) {
+  html body .top-nav-row .menu-btn, html body .top-nav-row .skh-post-btn, html body .top-nav-row .skh-icon-btn { width: 32px !important; min-width: 32px !important; border-radius: 999px !important; }
+}
+@media (max-width: 319px) {
+  html body .top-nav-row .menu-btn, html body .top-nav-row .skh-post-btn, html body .top-nav-row .skh-icon-btn { width: 30px !important; min-width: 30px !important; }
+}
+html body .top-nav-row .menu-btn svg, html body .top-nav-row .skh-icon-btn svg, html body .top-nav-row .skh-post-btn svg { color: #fff !important; stroke: #fff !important; }
+html body .top-nav-row .skh-icon-btn .skh-count {
+  background: #e11d48 !important; color: #fff !important; border: 2px solid #fff !important;
+  min-width: 20px; height: 20px; border-radius: 999px; font-size: 11px; font-weight: 800;
+}
+/* "more" grid button removed from the header (owner request); the dashboard stays in the side menu */
+html body #skhKaziBtn { display: none !important; }
+
+/* search: white pill + green round search button */
+html body .search-nav-row { background: transparent !important; border: 0 !important; }
+html body .search-nav-row .search-wrap {
+  background: #fff !important; border: 0 !important; border-radius: 999px !important;
+  box-shadow: 0 6px 18px rgba(22, 35, 107, .10) !important; min-height: 52px;
+}
+html body .search-nav-row .skh-search-ico { color: var(--sky-green) !important; }
+html body .search-nav-row .skh-search-div { background: var(--sky-gold) !important; }
+html body .search-nav-row .skh-search-go {
+  width: 46px !important; height: 46px !important; border-radius: 50% !important; border: 0 !important;
+  background: linear-gradient(180deg, #27bd78 0%, #129957 100%) !important; color: #fff !important;
+  box-shadow: 0 5px 12px rgba(18, 153, 87, .3) !important;
+}
+/* location: two white pills */
+html body #locationFilterBar { background: transparent !important; border: 0 !important; padding: 4px 12px 10px !important; }
+html body #locationFilterBar #userLocationStatus,
+html body #locationFilterBar #regionFilterSelect {
+  background: #fff !important; border: 0 !important; border-radius: 999px !important;
+  box-shadow: 0 4px 12px rgba(22, 35, 107, .08) !important; color: var(--sky-navy) !important;
+  font-weight: 600 !important; min-height: 40px; padding: 8px 14px !important;
+}
+
+/* ---------- 3. banner: SokoHai art on the phone's first slide (text and button stay real) ---------- */
+@media (max-width: 899px) {
+  html body #skhHomeHero .shh-banner {
+    background: #dff0fb url("../assets/img/home/sokohai-hero-banner.webp") center / cover no-repeat !important;
+  }
+  html body #skhHomeHero .shh-banner::before, html body #skhHomeHero .shh-banner::after,
+  html body #skhHomeHero .shh-banner .shh-copy::before, html body #skhHomeHero .shh-banner .shh-copy::after { display: none !important; content: none !important; }
+  html body #skhHomeHero .shh-banner .shh-copy { position: absolute !important; inset: 0 !important; width: 100% !important; max-width: none !important; background: none !important; display: block !important; padding: 0 !important; }
+  html body #skhHomeHero .shh-banner .shh-kicker,
+  html body #skhHomeHero .shh-banner .shh-title,
+  html body #skhHomeHero .shh-banner .shh-sub {
+    position: absolute !important; left: 40% !important; top: 30% !important; width: 1px !important; height: 1px !important;
+    overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; margin: 0 !important; padding: 0 !important;
+  }
+  html body #skhHomeHero .shh-banner .shh-photo { position: absolute !important; right: 0 !important; bottom: 0 !important; width: 2px !important; height: 2px !important; opacity: 0 !important; }
+  html body #skhHomeHero .shh-banner .shh-ctas { position: absolute !important; left: 50% !important; top: 62% !important; transform: translateX(-50%) !important; margin: 0 !important; }
+  html body #skhHomeHero .shh-banner .shh-cta {
+    background: linear-gradient(180deg, #ffd84d 0%, #f4b400 100%) !important; color: var(--sky-navy) !important;
+    border: 0 !important; border-radius: 999px !important; font-weight: 800 !important; font-size: 14px !important;
+    padding: 8px 18px !important; box-shadow: 0 6px 14px rgba(244, 180, 0, .35) !important; white-space: nowrap;
+  }
+}
+html body #shcDots button { background: #dfe7ee !important; }
+html body #shcDots button.on { background: var(--sky-green) !important; }
+
+/* ---------- 4. sections: navy titles, gold marks, green "Ona Zote" ---------- */
+html body #buyerView .shx-h h2 { color: var(--sky-navy) !important; font-size: 24px !important; font-weight: 800 !important; }
+html body #buyerView .shx-h .shx-hi { color: var(--sky-gold) !important; }
+html body #buyerView .shx-h .shx-hi svg { width: 26px !important; height: 26px !important; stroke: var(--sky-gold) !important; stroke-width: 2.4 !important; }
+html body #buyerView #skhHomePopular .shx-h .shx-hi svg { display: none !important; }
+html body #buyerView #skhHomePopular .shx-h .shx-hi { display: inline-block !important; width: 8px !important; height: 30px !important; border-radius: 6px !important; background: var(--sky-gold) !important; margin-right: 12px !important; vertical-align: middle; }
+html body #buyerView .shx-h > button { color: var(--sky-green) !important; font-size: 17px !important; font-weight: 700 !important; background: none !important; }
+html body #buyerView .shx-h > button svg { stroke: var(--sky-green) !important; }
+html body #buyerView .shx { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+
+/* ---------- 5. cards ---------- */
+html body .skh-oc.skh-oc.skh-oc {
+  border: 0 !important; border-radius: 18px !important;
+  box-shadow: 0 8px 22px rgba(22, 35, 107, .12) !important;
+}
+html body .skh-oc.skh-oc.skh-oc .skh-oc-title.skh-oc-title { color: var(--sky-navy) !important; font-weight: 700 !important; }
+html body .skh-oc.skh-oc.skh-oc .skh-oc-price, html body .skh-oc.skh-oc.skh-oc .skh-oc-price .skh-amt, html body .skh-oc.skh-oc.skh-oc .skh-oc-price .skh-price { color: var(--sky-navy) !important; font-weight: 800 !important; }
+html body .skh-oc .skh-badge--category,
+html body .skh-oc .skh-badge--transport,
+html body .skh-oc .skh-badge--type {
+  display: inline-flex !important; align-items: center !important; gap: 5px !important;
+  background: rgba(31, 174, 107, .95) !important; color: #fff !important; border: 0 !important;
+  border-radius: 999px !important; padding: 4px 10px 4px 6px !important; font-weight: 700 !important;
+  box-shadow: 0 3px 8px rgba(18, 153, 87, .3) !important;
+}
+html body .skh-oc .skh-badge--category::before,
+html body .skh-oc .skh-badge--transport::before,
+html body .skh-oc .skh-badge--type::before {
+  content: ''; width: 15px; height: 15px; flex: 0 0 15px; border-radius: 50%;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231fae6b' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / 10px no-repeat;
+}
+html body .skh-oc .skh-card-heart {
+  background: #fff !important; color: var(--sky-navy) !important; border: 0 !important;
+  width: 34px !important; height: 34px !important; min-height: 34px !important; max-height: 34px !important; min-width: 34px !important; padding: 0 !important; border-radius: 50% !important; box-shadow: 0 3px 8px rgba(22, 35, 107, .18) !important;
+}
+/* home rails: two cards per phone screen, like the reference */
+@media (max-width: 899px) {
+  html body #buyerView .shx-rail .shx-rail-row { grid-auto-columns: calc((100% - 12px) / 2) !important; gap: 12px !important; }
+}
+
+/* green information row (service: area — mode · transport: from ━ 🚗 ━ to) */
+html body .skh-oc .skh-oc-info {
+  display: flex !important; flex-wrap: nowrap !important; align-items: center; gap: 3px !important;
+  box-sizing: border-box !important; align-self: stretch !important; min-width: 0;
+  margin: 6px -4px 4px !important; padding: 5px 6px !important; width: calc(100% + 8px) !important; max-width: calc(100% + 8px) !important;
+  background: var(--sky-mint); color: var(--sky-green);
+  border-radius: 10px; font-size: 11px; line-height: 1.2; white-space: nowrap; overflow: hidden;
+}
+html body .skh-oc .skh-oc-info > span { display: inline-flex !important; flex-wrap: nowrap !important; align-items: center; gap: 3px; min-width: 0; flex: 0 1 auto; white-space: nowrap !important; overflow: hidden; }
+html body .skh-oc .skh-oc-info .skh-oc-info-b { flex-shrink: 2 !important; }
+html body .skh-oc .skh-oc-info svg { width: 12px; height: 12px; }
+html body .skh-oc .skh-oc-info b { display: block; font-size: 11px !important; letter-spacing: -.01em; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap !important; word-break: normal !important; min-width: 0; color: var(--sky-green); }
+html body .skh-oc .skh-oc-info svg { flex: 0 0 auto; color: var(--sky-green); }
+html body .skh-oc .skh-oc-info .skh-oc-info-b svg, html body .skh-oc .skh-oc-info-car svg { stroke: var(--sky-green); }
+html body .skh-oc .skh-oc-info-line { flex: 1 1 4px; min-width: 4px; max-width: 16px; height: 2px; border-radius: 2px; background: var(--sky-green); opacity: .65; }
+html body .skh-oc .skh-oc-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--sky-green); box-shadow: 0 0 0 2px rgba(24, 169, 130, .2); }
+html body .skh-oc .skh-oc-info-car { flex: 0 0 auto; display: inline-flex; }
+
+/* ---------- 6. bottom: skyline + green/gold wave; white floating bar ---------- */
+html body .bottom-nav-main {
+  background: transparent !important; border: 0 !important; box-shadow: none !important;
+  padding: 0 12px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html body .bottom-nav-main::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 150px; z-index: -1; pointer-events: none;
+  background: url("../assets/img/auth/auth-footer.webp") center bottom / auto 150px repeat-x;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%); mask-image: linear-gradient(180deg, transparent 0%, #000 30%);
+}
+html body .bottom-nav-main .main-nav-icons {
+  position: relative; background: #fff !important; border: 0 !important; border-radius: 30px !important;
+  box-shadow: 0 10px 26px rgba(22, 35, 107, .18) !important; padding: 6px 8px !important; min-height: 64px;
+}
+html body .bottom-nav-main .nav-tab { color: var(--sky-navy) !important; border-radius: 22px !important; }
+html body .bottom-nav-main .nav-tab svg { stroke: var(--sky-navy) !important; }
+html body .bottom-nav-main .nav-tab span { color: var(--sky-navy) !important; font-weight: 700 !important; }
+html body .bottom-nav-main .nav-tab.active {
+  background: linear-gradient(180deg, #27bd78 0%, #129957 100%) !important;
+  box-shadow: 0 6px 14px rgba(18, 153, 87, .35) !important;
+}
+html body .bottom-nav-main .nav-tab.active svg { stroke: #fff !important; fill: none !important; }
+html body .bottom-nav-main .nav-tab svg { fill: none !important; }
+html body .bottom-nav-main .nav-tab.active svg { background: transparent !important; box-shadow: none !important; }
+html body .bottom-nav-main .nav-tab.active span { color: #fff !important; }
+html body .bottom-nav-main .nav-tab.active::before, html body .bottom-nav-main .nav-tab.active::after { display: none !important; }
+/* room so the last row can scroll above the wave */
+html body #buyerView { padding-bottom: 150px !important; }
+
+/* ---------- 7. listings rise out of the green wave while scrolling (no JavaScript) ---------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    html body #buyerView > .shx,
+    html body #mainFeed > .feed-card-box,
+    html body #mainFeed > .skh-oc,
+    html body #mainFeed > div > .skh-oc {
+      animation: skhSkyRise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+@keyframes skhSkyRise {
+  from { opacity: 0; transform: translateY(56px) scale(.94); }
+  to { opacity: 1; transform: none; }
+}

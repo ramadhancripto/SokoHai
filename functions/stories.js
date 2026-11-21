@@ -8,7 +8,9 @@
  * viewer. Reports go to admins; the author or an admin can remove a story.
  */
 'use strict';
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const admin = require('firebase-admin');
 const REGION = 'europe-west1';
 const db = () => admin.firestore();
@@ -16,7 +18,7 @@ const FV = () => admin.firestore.FieldValue;
 const TTL_MS = 24 * 60 * 60 * 1000, MAX_PER_DAY = 20;
 const clean = (v, n) => String(v == null ? '' : v).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
 const sid = (v) => { const s = String(v || ''); if (!s || s.length > 128 || s.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'id_si_sahihi'); return s; };
-const isAdminToken = (req) => { const t = (req.auth && req.auth.token) || {}; return t.admin === true || t.superAdmin === true; };
+const isAdminToken = (req) => !!(req && req.auth) && authz.isAdmin(req); // [SRV-09]
 
 function ownMedia(url, uid) {
     let u; try { u = new URL(String(url || '')); } catch (e) { return null; }

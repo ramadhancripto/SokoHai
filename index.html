@@ -29,14 +29,14 @@
     <meta property="og:image" id="skhOgImage" content="https://sokohaicom.netlify.app/assets/img/sokohai-cart-mark.png">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" id="skhCanonical" href="https://sokohaicom.netlify.app/">
-<link rel="icon" type="image/png" href="assets/img/sokohai-app-192-v2.png">
+<link rel="icon" type="image/png" href="assets/img/sokohai-app-192-v3.png">
     <!-- [SEO/PWA 2026-11-08] Manifest ilikuwa ipo (sokohai-manifest.json) lakini
          HAIKUWA imeunganishwa kwenye <head> — kwa hiyo browser haikuiona kamwe. -->
     <link rel="manifest" href="sokohai-manifest.json">
     <meta name="theme-color" content="#0F7A5C">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SokoHai">
-    <link rel="apple-touch-icon" href="assets/img/sokohai-app-192-v2.png">
+    <link rel="apple-touch-icon" href="assets/img/sokohai-app-192-v3.png">
     <!-- [SEO 2026-11-08] Structured data: Organization + WebSite (SearchAction).
          Hii inasaidia Google kuonyesha jina, logo na kisanduku cha utafutaji. -->
     <script type="application/ld+json">
@@ -86,7 +86,7 @@
 <link rel="stylesheet" href="css/02-menu.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/02b-menu-extra.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/05-announcement.css" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="css/06-auth-polish.css">
+<link rel="stylesheet" href="css/06-auth-polish.css?v=20261121authui">
 <link rel="stylesheet" href="css/07-market-polish.css">
 <link rel="stylesheet" href="css/08-dashboard-pos-polish.css" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/09-sokopay-polish.css">
@@ -227,6 +227,7 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/80-dashboard-product-balance.css?v=20261118recycle1">
 <link rel="stylesheet" href="css/81-personal-recycle.css?v=20261118a">
 <link rel="stylesheet" href="css/82-owner-card-style.css?v=20261120card2"><!-- [OWNER CARD STYLE 2026-11-20] kadi moja kwa post zote (mfano wa mmiliki); safu ya mwisho -->
+<link rel="stylesheet" href="css/83-home-sky-theme.css?v=20261121sky1"><!-- [HOME SKY 2026-11-21] muonekano wa nyumbani kwa mfano wa mmiliki (design tu); safu ya mwisho -->
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>
@@ -533,52 +534,103 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <button type="button" class="btn-close" onclick="closeModals()" style="margin-top:10px; background:none; color:gray; text-decoration:underline;">Ghairi</button>
     </div>
 </div>
-<!-- LOGIN / SIGNUP MODAL ILIYOREKEBISHWA UI -->
-<div id="authModal" class="overlay-menu" style="z-index:7000;">
-    <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:400px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
-        <div style="width: 60px; height: 60px; background: #e0f2fe; color: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 15px;"></div>
-        <h3 style="color:var(--primary-dark); margin:0 0 20px; font-size: 22px; text-transform:uppercase;">Ingia / Jisajili</h3>
-        
-        <!-- FOMU YA LOGIN -->
-        <form id="loginForm" class="auth-form-wrap" onsubmit="doLogin(event)">
-            <input type="email" id="loginEmail" placeholder="Barua Pepe" required style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; outline:none;">
-            <input type="password" id="loginPass" placeholder="Nenosiri" required style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; outline:none;">
-            
-<div style="text-align: right; margin-bottom: 5px;">
-    <button type="button" class="link-btn" id="btnResetPass" onclick="window.doResetPassword()"> Umesahau Nenosiri?</button>
-</div>
+<!-- LOGIN / SIGNUP — [AUTH-UI 2026-11-21] visual redesign only (owner reference: SokoHai_Mobile_Login_Screen1).
+     Every control keeps its original id and handler (08-app-state.js): doLogin(event), doSignup(event),
+     window.doGoogleLogin(), window.doResetPassword(), toggleAuth('login'|'signup'), closeModals().
+     js/08-auth-polish.js adds the eye toggle, strength meter, loading states and the "barua pepe" reveal. -->
+<div id="authModal" class="overlay-menu skh-auth" style="z-index:7000;">
+    <div class="skh-auth-card" role="dialog" aria-modal="true" aria-labelledby="skhAuthTitle">
+        <header class="skh-auth-hero">
+            <img class="skh-auth-hero-img" src="assets/img/auth/auth-hero.webp" width="1024" height="500" alt="" aria-hidden="true" decoding="async">
+            <h2 class="sr-only">SokoHai — Soko la Mtandaoni la Tanzania. Nunua, Uza, Jitafutie.</h2>
+            <label class="skh-auth-lang">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <select aria-label="Lugha / Language" onchange="window.skhSetLang &amp;&amp; window.skhSetLang(this.value)"><option value="sw">Swahili</option><option value="en">English</option></select>
+            </label>
+        </header>
 
-            <button type="submit" style="width:100%; padding:16px; background:var(--primary-blue); color:white; border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; text-transform:uppercase; box-shadow: 0 4px 10px rgba(0,80,157,0.3);">INGIA SASA</button>
-            
-            <div class="divider">au tumia</div>
-<button type="button" class="google-btn" onclick="window.doGoogleLogin()" style="font-family: 'Google Sans', Roboto, Arial, sans-serif; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20px" height="20px" style="display: block;">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-        <path fill="none" d="M0 0h48v48H0z"></path>
-    </svg>
-    Ingia kwa Google
-</button>
+        <div class="skh-auth-panel">
+            <!-- FOMU YA LOGIN -->
+            <form id="loginForm" class="auth-form-wrap" onsubmit="doLogin(event)">
+                <h3 id="skhAuthTitle" class="skh-auth-title">Karibu SokoHai</h3>
+                <p class="skh-auth-sub">Endelea na akaunti yako ya Google</p>
 
-            <p style="font-size:14px; color:#475569; margin-top:15px;">Huna akaunti? <b style="color:var(--primary-blue); cursor:pointer; text-decoration:underline;" onclick="toggleAuth('signup')">Jiunge Bure</b></p>
-        </form>
-        
-        <!-- FOMU YA SIGNUP -->
-        <form id="signupForm" class="auth-form-wrap" onsubmit="doSignup(event)">
-            <input type="text" id="signupName" placeholder="Jina Kamili" required style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; outline:none;">
-            <input type="email" id="signupEmail" placeholder="Barua Pepe" required style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; outline:none;">
-            <input type="tel" id="signupPhone" placeholder="Namba ya Simu" required style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; outline:none;">
-          <input type="text" id="signupAgentCode" placeholder="Namba ya Wakala (Kama unayo. Mf: AGT-12345)" style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; outline:none;">
-            <input type="password" id="signupPass" placeholder="Nenosiri" required minlength="6" style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; outline:none;">
-            
-            <button type="submit" style="width:100%; padding:16px; background:var(--green); color:white; border:none; border-radius:14px; font-weight:900; font-size:15px; cursor:pointer; text-transform:uppercase; box-shadow: 0 4px 10px rgba(16,185,129,0.3);">TENGENEZA AKAUNTI</button>
-            
-            <p style="font-size:14px; color:#475569; margin-top:15px;">Tayari una akaunti? <b style="color:var(--primary-blue); cursor:pointer; text-decoration:underline;" onclick="toggleAuth('login')">Ingia Hapa</b></p>
-        </form>
-        
-        <button onclick="closeModals()" style="width:100%; padding:15px; background:#f1f5f9; color:#475569; border:none; border-radius:14px; margin-top:20px; cursor:pointer; font-weight:bold; text-transform:uppercase;">Funga</button>
+                <button type="button" class="google-btn" onclick="window.doGoogleLogin()">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28" aria-hidden="true" focusable="false">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                    <span>Ingia kwa Google</span>
+                </button>
+
+                <div class="divider">au</div>
+
+                <!-- presentation only: shows the e-mail fields below (js/08-auth-polish.js) -->
+                <button type="button" class="skh-auth-alt" aria-controls="skhAuthEmailBox" aria-expanded="false" data-skh-auth-email>
+                    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg>
+                    <span>Ingia kwa Barua Pepe</span>
+                </button>
+
+                <div class="skh-auth-email" id="skhAuthEmailBox">
+                    <label class="skh-auth-field"><span>Barua pepe</span>
+                        <input type="email" id="loginEmail" placeholder="mfano@gmail.com" autocomplete="email" inputmode="email" required>
+                    </label>
+                    <label class="skh-auth-field"><span>Nenosiri</span>
+                        <input type="password" id="loginPass" placeholder="Nenosiri lako" autocomplete="current-password" required>
+                    </label>
+                    <div class="skh-auth-forgot">
+                        <button type="button" class="link-btn" id="btnResetPass" onclick="window.doResetPassword()">Umesahau nenosiri?</button>
+                    </div>
+                    <button type="submit" class="skh-auth-primary">Ingia</button>
+                </div>
+
+                <p class="skh-auth-switch">Huna akaunti? <b role="button" tabindex="0" onclick="toggleAuth('signup')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">Jisajili hapa</b></p>
+            </form>
+
+            <!-- FOMU YA SIGNUP -->
+            <form id="signupForm" class="auth-form-wrap" onsubmit="doSignup(event)">
+                <h3 class="skh-auth-title">Fungua Akaunti</h3>
+                <p class="skh-auth-sub">Ni bure. Weka bidhaa zako sokoni leo.</p>
+                <label class="skh-auth-field"><span>Jina kamili</span>
+                    <input type="text" id="signupName" placeholder="Jina lako kamili" autocomplete="name" required>
+                </label>
+                <label class="skh-auth-field"><span>Barua pepe</span>
+                    <input type="email" id="signupEmail" placeholder="mfano@gmail.com" autocomplete="email" inputmode="email" required>
+                </label>
+                <label class="skh-auth-field"><span>Namba ya simu</span>
+                    <input type="tel" id="signupPhone" placeholder="07XX XXX XXX" autocomplete="tel" inputmode="tel" required>
+                </label>
+                <label class="skh-auth-field"><span>Namba ya wakala <small>(kama unayo)</small></span>
+                    <input type="text" id="signupAgentCode" placeholder="Mf: AGT-12345">
+                </label>
+                <label class="skh-auth-field"><span>Nenosiri</span>
+                    <input type="password" id="signupPass" placeholder="Angalau herufi 6" autocomplete="new-password" required minlength="6">
+                </label>
+
+                <button type="submit" class="skh-auth-primary">Tengeneza Akaunti</button>
+
+                <p class="skh-auth-switch">Tayari una akaunti? <b role="button" tabindex="0" onclick="toggleAuth('login')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">Ingia hapa</b></p>
+            </form>
+        </div>
+
+        <ul class="skh-auth-trust" aria-label="Kwa nini SokoHai">
+            <li><svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><path d="M24 3 6 10v12c0 11.5 7.7 20.7 18 23 10.3-2.3 18-11.5 18-23V10z" fill="#16a34a"/><path d="m15.5 24.5 6 6 11-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Salama na<br>Uhakika</span></li>
+            <li><svg viewBox="0 0 64 48" width="52" height="40" aria-hidden="true" fill="#16a34a"><path d="M2 14 14 6l8 4-11 20-7-4zM62 14 50 6l-8 4 11 20 7-4z"/><path d="M22 11h10l-9 10c-2 2.2 0 5.2 2.7 4.5L36 19l13 13.5c1.6 1.7-.6 4.2-2.5 3L42 32l2.6 2.8c1.5 1.6-.6 4-2.4 2.9l-4.6-3 2 2.2c1.4 1.5-.6 3.8-2.3 2.8L33 38c1 1.4-.8 3.2-2.3 2.3L15 29l8-16z"/></svg><span>Biashara<br>ya Kweli</span></li>
+            <li><svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true"><path d="M24 2.5 29 7l6.6-.9 1.6 6.4 5.9 3.2-2.4 6.2 2.4 6.2-5.9 3.2-1.6 6.4L29 41l-5 4.5L19 41l-6.6.9-1.6-6.4-5.9-3.2 2.4-6.2-2.4-6.2 5.9-3.2 1.6-6.4L19 7z" fill="#16a34a"/><path d="m24 13.5 3.1 6.4 7 .9-5.1 4.9 1.3 7L24 29.3l-6.3 3.4 1.3-7-5.1-4.9 7-.9z" fill="#fff"/></svg><span>Kuweka<br>Bidhaa Bure</span></li>
+        </ul>
+
+        <button type="button" class="skh-auth-later" onclick="closeModals()">Endelea kuvinjari bila kuingia</button>
+
+        <footer class="skh-auth-foot">
+            <img src="assets/img/auth/auth-footer.webp" width="1024" height="168" alt="" aria-hidden="true" decoding="async" loading="lazy">
+            <div class="skh-auth-foot-band">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>
+                <span>Salama &amp; Inaaminika</span><i aria-hidden="true"></i><span>SokoHai.com</span>
+            </div>
+        </footer>
     </div>
 </div>
 <!-- PRODUCT DETAILS MODAL — SOKOHAI PRODUCT SHOWCASE (bidhaa ndiyo shujaa) -->
@@ -3647,6 +3699,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/123-home-layout.js?v=20261120rails1"></script><!-- [R13-E] Nyumbani: refs 11-15 -->
 <script type="module" src="js/app/124-pos-grid.js?v=20261108r13e"></script><!-- [R13-E] POS cashier grid: refs 17/18 -->
 <script type="module" src="js/app/125-group-business.js?v=20261108r13h"></script><!-- [R13-H] Group Chat: Huduma, Soko, Group Buy, Oda, Mapatano na Ofa, Usafirishaji, paneli -->
+<script type="module" src="js/app/129-launch-scope.js?v=20261121huru1"></script><!-- [SOKOHURU 2026-11-21] launch scope: disabled payment features, listing reports, manual paid promotions -->
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->

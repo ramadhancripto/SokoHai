@@ -1,5 +1,7 @@
 'use strict';
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -31,7 +33,7 @@ const localRules = path.join(__dirname, '..', 'shared', 'ads-design-rules.js');
 const ADS_RULES = require(fs.existsSync(packagedRules) ? packagedRules : localRules);
 
 function isAdmin(token) {
-  return token && (token.admin === true || token.role === 'admin' || String(token.email || '').toLowerCase() === 'rshabansaid@gmail.com');
+  return !!token && authz.isAdmin(token); // [SRV-09] hard-coded personal e-mail removed (use SUPER_ADMIN_EMAILS); verified e-mail only
 }
 function text(value, max = 240) { return String(value == null ? '' : value).trim().slice(0, max); }
 function validateDesign(input, options = {}) {

@@ -12,7 +12,7 @@ function low(v) { return String(v == null ? '' : v).trim().toLowerCase(); }
 /** Returns '' when the product may be sold, otherwise a stable reason code. */
 function productUnsellableReason(p) {
     if (!p || typeof p !== 'object') return 'product_missing';
-    if (p.deleted === true || p.isDeleted === true) return 'product_deleted';
+    if (p.deleted === true || p.isDeleted === true || p.permanentlyDeleted === true) return 'product_deleted';
     if (p.archivedAt || p.archived === true || low(p.publicationStatus) === 'archived') return 'product_archived';
     if (low(p.publicationStatus) === 'draft') return 'product_draft';
     if (BLOCKED_STATUS.indexOf(low(p.status)) !== -1) return 'product_' + low(p.status);

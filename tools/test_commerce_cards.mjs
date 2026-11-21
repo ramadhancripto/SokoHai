@@ -136,9 +136,23 @@ console.log('\n[5] USAWA WA FAMILIA (aina zote tatu)');
         const c = render(skh.CommercePostCard(data, col)).querySelector('.skh-oc');
         const body = c.querySelector('.skh-oc-body');
         const rows = [...body.children].map(x => x.className);
-        ok(col + ': maelezo = jina -> bei|⭐ (mistari miwili tu)', rows.length === 2 && /skh-huru-r1|skh-oc-title/.test(rows[0]) && rows[1].includes('skh-oc-row'));
+        // [HOME SKY 2026-11-21] owner request: services / transport show ONE green information row between the name
+        // and the price (area — mode / from ━ 🚗 ━ to), only when the record has that data. Products stay two lines.
+        const info = col === 'products' ? [] : rows.filter(r => r.includes('skh-oc-info'));
+        const core = rows.filter(r => !r.includes('skh-oc-info'));
+        ok(col + ': maelezo = jina -> ' + (col === 'products' ? '' : '[safu ya kijani] -> ') + 'bei|⭐', core.length === 2 && /skh-huru-r1|skh-oc-title/.test(core[0]) && core[1].includes('skh-oc-row')
+            && info.length <= 1 && rows.length === core.length + info.length && (!info.length || rows[1].includes('skh-oc-info')));
         ok(col + ': jina na bei hazishiriki mstari', !!body.querySelector('.skh-oc-title') && !body.firstElementChild.querySelector('.skh-oc-price'));
     }
+    // [HOME SKY 2026-11-21] the green rows use real fields only, and disappear without data
+    const sRow = render(skh.CommercePostCard(service, 'services')).querySelector('.skh-oc-info--svc');
+    ok('huduma: safu ya kijani ina eneo halisi (Tabora)', !!sRow && /Tabora/.test(sRow.textContent));
+    const dRow = render(skh.CommercePostCard(driver, 'drivers')).querySelector('.skh-oc-info--route');
+    ok('usafiri: njia kwenye mstari mmoja Tabora ━ 🚗 ━ Pangale', !!dRow && /Tabora/.test(dRow.textContent) && /Pangale/.test(dRow.textContent) && !!dRow.querySelector('.skh-oc-info-car'));
+    const bare = render(skh.CommercePostCard({ id: 's2', title: 'Huduma', price: 1000 }, 'services')).querySelector('.skh-oc-info');
+    ok('huduma bila eneo wala aina: hakuna safu (hakuna kubuni)', !bare);
+    const area = render(skh.CommercePostCard({ id: 'd2', title: 'Bajaji', price: 1000, location: 'Moshi' }, 'drivers')).querySelector('.skh-oc-info--route');
+    ok('usafiri bila njia maalum: eneo la huduma pekee', !!area && /Moshi/.test(area.textContent) && !area.querySelector('.skh-oc-info-car'));
 }
 
 console.log('\n==================================================');

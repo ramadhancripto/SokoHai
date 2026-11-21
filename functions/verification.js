@@ -13,7 +13,8 @@
  */
 'use strict';
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 const authority = require('./admin-authority');
@@ -117,7 +118,7 @@ exports.adminVerificationDecide = onCall({ region: REGION }, async (req) => {
         await db().collection('notifications').add({ userId: uid, type: 'verification', source: 'server', read: false, createdAt: now,
             title: decision === 'approve' ? 'Utambulisho wako umethibitishwa' : 'Ombi la uthibitisho limekataliwa',
             body: decision === 'approve' ? 'Akaunti yako sasa ina alama ya "Imethibitishwa".' : 'Sababu: ' + reason + '. Unaweza kutuma hati sahihi tena.' });
-    } catch (e) {}
+    } catch (e) { logBestEffort('adminVerificationDecide.notify', e); }
     return { ok: true, decision, docType };
 });
 

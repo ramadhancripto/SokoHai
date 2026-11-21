@@ -380,6 +380,10 @@
   // Frontend wrapper that calls backend offlineMemberCustomToken, then signInWithCustomToken as member
   window.skhSignInAsOfflineMember = async function(memberUid, memberPhone){
     try{
+      // [SRV-12 2026-11-20] 'offlineMemberCustomToken' does not exist on the server (signing in AS another person
+      // needs a written security design first). Off by default: the existing assisted mode is used directly.
+      const feats = (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.FEATURES) || {};
+      if (feats.offlineMemberTokenSignIn !== true) throw Object.assign(new Error('offline member token sign-in is disabled'), { code: 'feature-disabled' });
       if (!window.firebase || !firebase.functions) throw new Error('Firebase Functions not ready');
       const functions = firebase.app().functions('europe-west1');
       const callable = functions.httpsCallable('offlineMemberCustomToken');
@@ -395,7 +399,7 @@
       localStorage.setItem('skh_last_offline_signin', JSON.stringify({ memberUid, at: new Date().toISOString(), agentId: ((window.skh && window.skh.currentUser && window.skh.currentUser.uid) || null) }));
       return customToken;
     }catch(e){
-      console.error('[customToken] signInAsOfflineMember fail', e);
+      if (!(e && e.code === 'feature-disabled')) console.error('[customToken] signInAsOfflineMember fail', e);
       // Fallback to identity-layer assisted mode if backend not deployed
       if (window.skhIdentity && window.skhIdentity.enterAssistedMode) {
         console.warn('[customToken] fallback to assisted mode');

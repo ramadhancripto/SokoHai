@@ -274,8 +274,9 @@ async function loadDeals(grid) {
     const now = Date.now();
     const [pd, au] = await Promise.all(['price_drop', 'auction'].map(m => skh.getDocs(skh.query(skh.collection(skh.db, 'products'), skh.where('saleMode', '==', m), skh.limit(40))).catch(() => ({ docs: [] }))));
     const list = [];
-    pd.docs.forEach(d => { const p = Object.assign({ id: d.id }, d.data()); if (!dropEnded(p, now) && !(Number((p.modeData || {}).startTime) > now)) list.push(['price_drop', p]); });
-    au.docs.forEach(d => { const p = Object.assign({ id: d.id }, d.data()); if (!auctionState(p, now).ended) list.push(['auction', p]); });
+    const listed = p => typeof skh.productEligible !== 'function' || skh.productEligible(p); // [RECYCLE 2026-11-21]
+    pd.docs.forEach(d => { const p = Object.assign({ id: d.id }, d.data()); if (!listed(p)) return; if (!dropEnded(p, now) && !(Number((p.modeData || {}).startTime) > now)) list.push(['price_drop', p]); });
+    au.docs.forEach(d => { const p = Object.assign({ id: d.id }, d.data()); if (!listed(p)) return; if (!auctionState(p, now).ended) list.push(['auction', p]); });
     if (!list.length) { grid.innerHTML = `<div class="lvh-empty">${ico('tag', 30)}<b>Hakuna deals kwa sasa</b><span>Ofa za Bei Kushuka na minada inayoendelea zitaonekana hapa.</span></div>`; return; }
     grid.innerHTML = `<h4 class="lvh-sec">Deals</h4>` + list.map(([k, p]) => k === 'price_drop'
         ? cardHtml({ kind: k, title: p.title, img: photo(p), rows: dropRows(p), cta: 'ANGALIA KAMPENI', onclick: `skhPriceDropRoom('${esc(p.id)}')` })
@@ -1173,7 +1174,7 @@ async function mountHomeLive() {
         for (const d of snap.docs) { const s = Object.assign({ id: d.id }, d.data()); const pid = s.pinnedProductId || (s.productIds || [])[0]; const p = pid ? await getProduct(pid) : null; items.push({ s, p, open: `skhLiveOpen('${esc(s.id)}')` }); }
         if (items.length < 5) {
             const au = await skh.getDocs(skh.query(skh.collection(skh.db, 'products'), skh.where('saleMode', '==', 'auction'), skh.limit(10))).catch(() => ({ docs: [] }));
-            au.docs.forEach(d => { const p = Object.assign({ id: d.id }, d.data()); if (!auctionState(p, now).ended && !items.some(x => x.p && x.p.id === p.id)) items.push({ s: { kind: 'auction', viewerCount: null }, p, open: `skhAuctionRoom('${esc(p.id)}')` }); });
+            au.docs.forEach(d => { const p = Object.assign({ id: d.id }, d.data()); if (typeof skh.productEligible === 'function' && !skh.productEligible(p)) return; if (!auctionState(p, now).ended && !items.some(x => x.p && x.p.id === p.id)) items.push({ s: { kind: 'auction', viewerCount: null }, p, open: `skhAuctionRoom('${esc(p.id)}')` }); });
         }
         const feat = items.find(x => x.p && kindOf(x.s) === 'auction') || items.find(x => x.p);
         if (!feat) return;

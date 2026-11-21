@@ -22,7 +22,8 @@
  */
 'use strict';
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
 const authority = require('./admin-authority');
@@ -36,7 +37,7 @@ const { isAdmin, isSuperAdmin, writeAudit, requireReason } = authority._internal
 const DEFAULT_POLICY = { paymentMode: 'pay_after_target', realMoneyApproved: false, paymentWindowHours: 48, maxCampaignDays: 14, maxParticipants: 100, allowLeaveBeforeTarget: true };
 async function loadPolicy() {
     let raw = {};
-    try { const s = await db().doc('system/config').get(); raw = (s.exists && (s.data() || {}).groupBuy) || {}; } catch (e) {}
+    try { const s = await db().doc('system/config').get(); raw = (s.exists && (s.data() || {}).groupBuy) || {}; } catch (e) { logBestEffort('groupBuy.policy', e); /* defaults apply */ }
     const p = Object.assign({}, DEFAULT_POLICY, raw);
     p.paymentWindowHours = Math.min(168, Math.max(1, Number(p.paymentWindowHours) || 48));
     p.maxCampaignDays = Math.min(60, Math.max(1, Number(p.maxCampaignDays) || 14));
@@ -56,7 +57,7 @@ function statusOf(md, nowMs) {
 }
 async function notify(uid, title, body, extra) {
     if (!uid) return;
-    try { await db().collection('notifications').add(Object.assign({ userId: String(uid), title, body, createdAt: new Date().toISOString(), read: false, source: 'server', commerceMode: 'GROUP_BUY' }, extra || {})); } catch (e) {}
+    try { await db().collection('notifications').add(Object.assign({ userId: String(uid), title, body, createdAt: new Date().toISOString(), read: false, source: 'server', commerceMode: 'GROUP_BUY' }, extra || {})); } catch (e) { logBestEffort('groupBuy.notify', e); }
 }
 function cleanPid(v) { const s = String(v || '').trim(); if (!s || s.indexOf('/') !== -1 || s.length > 200) throw new HttpsError('invalid-argument', 'bidhaa_haipo'); return s; }
 const commitRef = (pid, uid) => db().doc('group_buy_commits/' + pid + '_' + uid);

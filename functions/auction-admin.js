@@ -15,7 +15,8 @@
  */
 'use strict';
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const admin = require('firebase-admin');
 const authority = require('./admin-authority');
 const cm = require('./commerce-modes');
@@ -141,7 +142,7 @@ exports.adminAuctionAction = onCall({ region: REGION }, async (req) => {
             await db().collection('notifications').add({ userId: before.winnerId, title: 'Muda wa kulipia mnada umeongezwa',
                 body: 'Una hadi ' + new Date(next).toISOString().replace('T', ' ').slice(0, 16) + ' (UTC) kulipia ' + before.title + '.',
                 createdAt: new Date().toISOString(), read: false, source: 'server', type: 'auction_payment_extended', productId, commerceMode: 'AUCTION' });
-        } catch (e) { /* a notification never blocks the action */ }
+        } catch (e) { logBestEffort('auction-admin:145', e); /* a notification never blocks the action */ }
         result = { paymentDeadline: next };
     }
     const after = summary(await ref.get(), Date.now());

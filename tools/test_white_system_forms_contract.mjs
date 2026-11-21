@@ -23,14 +23,17 @@ const c = (n, v) => {
   }
 };
 
+// [AUTH-UI 2026-11-21] owner-approved redesign: the thin top strip and the empty green logo circle were replaced by
+// a full light page (gold/green waves as decoration) and the approved app icon. Same intent, new design tokens.
 c(
-  'auth accent strip is green only',
-  auth.includes('linear-gradient(90deg, #18A982 0%, #35B892 100%)')
+  'auth primary action is green only',
+  auth.includes('background: linear-gradient(135deg, #1cb68d 0%, #12946f 100%)')
 );
 
 c(
-  'auth logo surface is soft green',
-  auth.includes('background: #EAF8F2 !important')
+  'auth screen is a light page (no dark backdrop) with the owner-approved hero artwork',
+  auth.includes('linear-gradient(180deg, #f4fbf8 0%, #ffffff 42%, #eef8f4 100%)') && !/rgba\(2, 13, 28/.test(auth)
+    && r('html/04-modal-auth.html').includes('src="assets/img/auth/auth-hero.webp"')
 );
 
 c(

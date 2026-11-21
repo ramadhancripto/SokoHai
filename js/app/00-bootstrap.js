@@ -222,30 +222,82 @@ function fnErrorText(e) {
     var dt = (d && (typeof d === 'string' ? d : (d.message || ''))) || '';
     return String(e.message || dt || '');
 }
-// Kweli wakati kosa ni LA MIUNDOMBINU (function haipo / haifikiki),
-// tofauti na katazo la biashara.
+/* [SRV-02/SRV-03 2026-11-20] One classification for every callable error (docs: SERVER-ERROR-CONTRACT.md).
+   kind:
+     'unreachable'  the browser got NO readable answer: the SDK reports code 'internal' with the bare message
+                    'internal' and no details (fetch failed: offline, CORS-blocked 404 of an undeployed function,
+                    DNS...). The cause cannot be known from the browser, so the text names both possibilities.
+     'missing'      a readable HTTP 404 without a server body (SDK message 'not-found'): endpoint not deployed.
+     'busy'         unavailable / deadline-exceeded without server details (SDK timeout, front-end 503).
+     'server'       ANY error that carries a server message or details.requestId (typed HttpsError or a wrapped
+                    unexpected failure). These are real answers: shown as-is, never treated as "server down".
+   Only unreachable / missing / busy trip the circuit breaker; an HTTP 500 / 'internal' from the server does not. */
+function fnErrorKind(e) {
+    if (!e) return 'server';
+    var code = fnErrorCode(e).replace(/^functions\//, '');
+    var msg = String(e.message || '').trim();
+    var d = e.details;
+    var hasServerDetail = !!(d && (typeof d === 'string' || d.requestId || d.message));
+    if (code === 'unavailable' && /hazipatikani kwa muda huu \(server haijatumwa/.test(msg)) return 'unreachable'; // synthetic (breaker)
+    if (hasServerDetail) return 'server';
+    if (/failed to fetch|network ?error|load failed|networkerror/i.test(msg)) return 'unreachable';
+    if (code === 'internal' && (msg === 'internal' || msg === 'Response is not valid JSON object.')) return 'unreachable';
+    if (code === 'not-found' && (msg === 'not-found' || msg === 'NOT_FOUND' || msg === '')) return 'missing';
+    // unavailable / deadline-exceeded WITHOUT server details: produced by the SDK (timeout) or by the Google front end
+    // (503 with no callable body). A server-thrown one always carries details.requestId (functions/errors.js) -> 'server'.
+    if (code === 'unavailable' || code === 'deadline-exceeded') return 'busy';
+    if (/^no_functions$/i.test(msg)) return 'missing';
+    return 'server';
+}
+skh.fnErrorKind = fnErrorKind;
+// Kweli PEKEE wakati kosa ni la miundombinu (haifikiki / haipo / imezidiwa), si jibu la server.
 skh.isFunctionsDownError = function (e) {
     if (!e) return false;
-    var code = fnErrorCode(e);
-    var text = (code + ' ' + fnErrorText(e)).toLowerCase();
-    if (code === 'functions/not-found' || code === 'functions/unavailable'
-        || code === 'unavailable' || code === 'functions/deadline-exceeded') return true;
-    if (code === 'functions/internal' || code === 'internal') return true;
-    // Ujumbe wa Firebase SDK wakati endpoint haipo / mkoa si sahihi / mtandao umekata.
-    return /not[- ]?found|unavailable|deadline[ -]?exceeded|failed to fetch|network error|no_functions|hazipatikani|haipatikani/.test(text)
-        || /^\s*internal\s*$/.test(String(e && e.message || '').trim());
+    var k = fnErrorKind(e);
+    return k === 'unreachable' || k === 'missing' || k === 'busy';
 };
 
-window.skhFnDownMessage = function (feature) {
+window.skhFnDownMessage = function (feature, kind) {
     var f = String(feature || '').toLowerCase();
+    var offline = (typeof navigator !== 'undefined' && navigator.onLine === false);
+    var reach = offline ? 'Hakuna mtandao kwenye kifaa hiki.'
+        : (kind === 'missing' ? 'Huduma hii ya server bado haijawashwa.'
+        : (kind === 'busy' ? 'Server imechelewa kujibu.'
+        : 'Hatukuweza kufikia server (mtandao umekatika, au huduma bado haijawashwa).'));
     if (/pesapal|pesa|pay|malipo|wallet|escrow|sokopay|haipay/.test(f)) {
-        return 'Huduma ya malipo (SokoPay) haipatikani kwa sasa. Malipo hayajakamilika — jaribu tena baadaye au wasiliana na msaada. Pesa yoyote haijatolewa.';
+        return reach + ' Malipo hayajakamilika na pesa yoyote haijatolewa. Jaribu tena baadaye au wasiliana na msaada.';
     }
-    if (/deliver|custody|token|rout|booking|safari|usafir|offer|negotiation/.test(f)) {
-        return 'Huduma ya server ya hatua hii haipatikani kwa sasa. Jaribu tena baadaye; endapo itaendelea, wasiliana na msaada.';
-    }
-    return 'Huduma ya server haipatikani kwa sasa. jaribu tena baadaye.';
+    return reach + ' Jaribu tena baadaye; ikiendelea, wasiliana na msaada.';
 };
+/* [SRV-03] Text for a REAL server answer, by code. The server's own message wins when it is meaningful. */
+var FN_CODE_TEXT = {
+    'unauthenticated': 'Tafadhali ingia (login) kwanza, kisha jaribu tena.',
+    'permission-denied': 'Huna ruhusa ya kufanya kitendo hiki.',
+    'invalid-argument': 'Taarifa ulizotuma si sahihi au hazijakamilika.',
+    'not-found': 'Ulichoomba hakipatikani.',
+    'failed-precondition': 'Kitendo hiki hakiwezi kuendelea kwa sasa.',
+    'already-exists': 'Taarifa hii tayari ipo.',
+    'resource-exhausted': 'Kikomo kimefikiwa. Jaribu tena baadaye.',
+    'aborted': 'Ombi limegongana na jingine. Jaribu tena.',
+    'unavailable': 'Huduma haipatikani kwa muda huu. Jaribu tena baadaye.',
+    'deadline-exceeded': 'Ombi limechukua muda mrefu. Jaribu tena.',
+    'internal': 'Hitilafu ya server. Jaribu tena; ikiendelea, wasiliana na msaada.'
+};
+function fnServerText(e) {
+    var code = fnErrorCode(e).replace(/^functions\//, '');
+    var d = e && e.details;
+    var real = (d && typeof d === 'string') ? d : String((e && (e.rawMessage || e.message)) || '');
+    real = real.replace(/^Error:\s*/, '').replace(/^\[.*?\]\s*/, '').trim();
+    var generic = !real || real.toLowerCase() === code || real.toUpperCase() === code.toUpperCase().replace(/-/g, '_') || /^internal$/i.test(real);
+    var text = generic ? (FN_CODE_TEXT[code] || 'Hitilafu. Jaribu tena.') : real;
+    var rid = d && typeof d === 'object' && d.requestId;
+    // The reference number is shown for unexpected failures (and when the text was substituted). A meaningful,
+    // typed business message (e.g. "mnada_umefungwa", "PRICE_CHANGED: ...") is returned unchanged, because
+    // existing UI code parses it (07-product.js placeBid); its id stays available as e.requestId.
+    var unexpected = (code === 'internal' || code === 'unknown' || code === 'data-loss' || code === 'unavailable' || code === 'deadline-exceeded');
+    if (rid && (generic || unexpected) && text.indexOf(rid) === -1) text += ' (namba ya kumbukumbu: ' + rid + ')';
+    return text;
+}
 
 function markFunctionsDown(name, e) {
     var first = !skh.functionsDown;
@@ -327,19 +379,22 @@ skh.wrapCallable = function (name) {
             })
             .catch(function (e) {
                 var normalized = normalizeFnCallError(name, e);
-                if (normalized.fnDown) {
+                if (normalized && normalized.fnDown) {
                     skh.functionsDownSince = Date.now();
                     skh._fnDownSinceByName[name] = skh.functionsDownSince;
-                    // 404/not-found = haipo kabisa -> weka alama ya muda mrefu
-                    var c = String((e && e.code) || '').toLowerCase();
-                    var t = String((e && e.message) || '').toLowerCase();
-                    if (/not-?found|404|cors|failed to fetch|err_failed/.test(c + ' ' + t)) {
+                    // [SRV-03] only a READABLE 404 proves the endpoint is missing -> long pause (10 min).
+                    // A status-0 failure (offline / CORS / undeployed - indistinguishable) keeps the 30 s pause.
+                    if (normalized.kind === 'missing') {
                         if (!skh._fnMissing[name]) {
-                            console.warn('[Cloud Functions] "' + name + '" haipo (haijadeploy). ' +
-                                         'Sitaijaribu tena kwa dakika 10. Endesha skhDiagnose() kwa maelezo.');
+                            console.warn('[Cloud Functions] "' + name + '" haipo (404). Sitaijaribu tena kwa dakika 10. Endesha skhDiagnose() kwa maelezo.');
                         }
                         skh._fnMissing[name] = Date.now();
                     }
+                } else {
+                    // [SRV-03] the server answered (any typed error, including 'internal' with a request id):
+                    // it is reachable, so the breaker must not block the next call.
+                    delete skh._fnDownSinceByName[name];
+                    delete skh._fnMissing[name];
                 }
                 throw normalized;
             });
@@ -349,12 +404,26 @@ skh.wrapCallable = function (name) {
     return wrapped;
 };
 function normalizeFnCallError(name, e) {
-    if (e && skh.isFunctionsDownError(e)) {
-        e.fnDown = true;
+    if (!e || e.__skhNormalized) return e;
+    var kind = fnErrorKind(e);
+    try {
+        e.kind = kind;
         e.fnName = name;
-        if (!e.friendlyMessage) e.friendlyMessage = window.skhFnDownMessage(name);
-        markFunctionsDown(name, e);
-    }
+        e.requestId = (e.details && typeof e.details === 'object' && e.details.requestId) || null;
+        if (e.rawMessage === undefined) e.rawMessage = e.message;
+        if (kind === 'server') {
+            e.fnDown = false;
+            e.friendlyMessage = fnServerText(e);
+        } else {
+            e.fnDown = true;
+            e.friendlyMessage = window.skhFnDownMessage(name, kind);
+            markFunctionsDown(name, e);
+        }
+        // [SRV-03] every `alert(e.message)` in the app now shows the readable text (raw text kept in e.rawMessage;
+        // typed server messages such as "PRICE_CHANGED: ..." are unchanged).
+        e.message = e.friendlyMessage;
+        e.__skhNormalized = true;
+    } catch (normErr) { /* frozen error object: leave as is */ }
     return e;
 }
 skh.normalizeFnError = normalizeFnCallError;
@@ -365,13 +434,10 @@ skh.callFunction = function (name, data, opts) {
 // Ujumbe wa kuonyesha kwa mtumiaji kutoka kosa la callable.
 window.skhFnErrText = function (e, feature) {
     if (!e) return (feature ? window.skhFnDownMessage(feature) : 'Hitilafu isiyojulikana.');
-    if (e.fnDown) return e.friendlyMessage || window.skhFnDownMessage(feature || e.fnName);
-    // Makosa HALISI ya server: toa ujumbe wa maana, si "INTERNAL" mbichi.
-    var d = e.details;
-    var real = (d && (typeof d === 'string' ? d : d.message)) || e.message || '';
-    real = String(real).replace(/^Error:\s*/, '').replace(/^\[.*?\]\s*/, '');
-    if (/^\s*internal\s*$/i.test(real)) return (feature ? window.skhFnDownMessage(feature) : 'Hitilafu ya ndani ya server. jaribu tena.');
-    return real || (feature ? window.skhFnDownMessage(feature) : 'Hitilafu. Jaribu tena.');
+    if (e.friendlyMessage) return e.friendlyMessage;
+    var kind = fnErrorKind(e);
+    if (kind !== 'server') return window.skhFnDownMessage(feature || e.fnName, kind);
+    return fnServerText(e);
 };
 
 skh.safeLocalStorage = undefined;
@@ -1759,7 +1825,7 @@ skh.saveData = async function saveData(col, data, opts) {
         const docData = { 
             ...canonicalData,
             userId: managedUid || skh.currentUser.uid, 
-            userEmail: ownerIsManaged ? null : skh.currentUser.email, 
+            // [SOKOHURU 2026-11-21] userEmail IMEONDOLEWA: tangazo ni PUBLIC; mnunuzi anamfikia muuzaji kwa chat (userId).
             // [LAUNCH-FIX 2026-11-09] ownerPhone IMEONDOLEWA: namba ya mwanachama
             // wa offline iliandikwa kwenye tangazo la PUBLIC bila msomaji yeyote.
             // Wakala amfikie mwanachama kupitia agentMembers/memberSecrets (private).
@@ -2160,6 +2226,9 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
                     combinedData.push({ id: doc.id, collectionName: colNames[index], ...doc.data() });
                 });
             });
+            // [RECYCLE 2026-11-21] chuja kwenye chanzo pia: skh.cachedItems inatumiwa na moduli nyingine (Gundua,
+            // utafutaji wa gumzo, wasifu, showcase) — bidhaa za Recycle Bin zisiingie humo kabisa.
+            combinedData = combinedData.filter(d => !d || d.collectionName !== 'products' || typeof skh.productEligible !== 'function' || skh.productEligible(d));
             combinedData = sortByCreated(combinedData);
             skh._feedCacheSet(cacheKey, combinedData);
             if (__feedGen !== skh._feedGen || skh._feedShownKey !== cacheKey) return; // [NAV] tab nyingine imeshafunguliwa
@@ -2958,6 +3027,34 @@ skh.SokoHuruCard = function SokoHuruCard(data, colName) {
         </div></div>`;
 };
 
+// [HOME SKY 2026-11-21] Safu ya kijani ya taarifa ndani ya kadi (muonekano tu; data iliyopo pekee).
+//   Huduma:  [📍 eneo] ━━━ [aina ya huduma: ana kwa ana / mtandaoni]   (sehemu isiyo na data inaachwa)
+//   Usafiri: [● kutoka] ━━ 🚗 ━━ [kwenda ●]; bila njia maalum -> eneo la huduma.
+const SKH_PIN_SVG = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2z"/></svg>';
+skh.cardServiceInfoRow = function cardServiceInfoRow(data) {
+    if (!data) return '';
+    const loc = String(data.location || data.region || data.serviceArea || '').trim();
+    const sec = String(data.section || '').toLowerCase();
+    const mode = sec === 'online' ? ['globe', 'Mtandaoni'] : (sec === 'physical' ? ['home', 'Ana kwa ana'] : null);
+    if (!loc && !mode) return '';
+    const a = loc ? '<span class="skh-oc-info-a" title="' + skh.skhEscape(loc) + '">' + SKH_PIN_SVG + '<b>' + skh.skhEscape(loc) + '</b></span>' : '';
+    const b = mode ? '<span class="skh-oc-info-b">' + skh.cardIcon(mode[0], 13) + '<b>' + mode[1] + '</b></span>' : '';
+    return '<div class="skh-oc-info skh-oc-info--svc">' + a + (a && b ? '<i class="skh-oc-info-line" aria-hidden="true"></i>' : '') + b + '</div>';
+};
+skh.cardRouteRow = function cardRouteRow(data) {
+    if (!data) return '';
+    const from = String(data.pickupRegion || data.location || data.region || '').trim();
+    const to = String(data.destinationRegion || '').trim();
+    if (from && to) {
+        return '<div class="skh-oc-info skh-oc-info--route" title="' + skh.skhEscape(from + ' → ' + to) + '">'
+            + '<span class="skh-oc-info-a"><i class="skh-oc-dot" aria-hidden="true"></i><b>' + skh.skhEscape(from) + '</b></span>'
+            + '<i class="skh-oc-info-line" aria-hidden="true"></i><span class="skh-oc-info-car" aria-label="hadi">' + skh.cardIcon('car', 14) + '</span><i class="skh-oc-info-line" aria-hidden="true"></i>'
+            + '<span class="skh-oc-info-b"><b>' + skh.skhEscape(to) + '</b><i class="skh-oc-dot" aria-hidden="true"></i></span></div>';
+    }
+    if (from) return '<div class="skh-oc-info skh-oc-info--route"><span class="skh-oc-info-a">' + SKH_PIN_SVG + '<b>' + skh.skhEscape(from) + '</b></span></div>';
+    return '';
+};
+
 // [ServicePostCard] Mtindo mmoja na bidhaa: picha (kategoria/♡/Imethibitishwa) -> jina -> bei | ⭐.
 skh.ServicePostCard = function ServicePostCard(data, colName) {
     const tag = skh.cardCategoryBadge(data, 'services') || skh.cardTypeBadge('services');
@@ -2974,6 +3071,7 @@ skh.ServicePostCard = function ServicePostCard(data, colName) {
         ${skh.cardImage(data, overlays, ' skh-oc-img')}
         <div class="feed-info-box skh-body skh-market-card-body skh-oc-body">
             <h3 class="skh-title skh-oc-title">${skh.skhEscape(title)}</h3>
+            ${skh.cardServiceInfoRow(data)}
             <div class="skh-market-price-rating skh-oc-row"><span class="skh-market-card-price skh-oc-price">${skh.cardPriceHtml(data, 'services')}</span>${rating}</div>
         </div>
     </div>`;
@@ -2997,6 +3095,7 @@ skh.TransportPostCard = function TransportPostCard(data, colName) {
         ${skh.cardImage(data, overlays, ' skh-oc-img')}
         <div class="feed-info-box skh-body skh-market-card-body skh-oc-body">
             <h3 class="skh-title skh-oc-title">${skh.skhEscape(title)}</h3>
+            ${skh.cardRouteRow(data)}
             <div class="skh-market-price-rating skh-oc-row"><span class="skh-market-card-price skh-oc-price">${skh.cardPriceHtml(data, 'drivers')}</span>${rating}</div>
         </div>
     </div>`;
@@ -3174,6 +3273,11 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
     if (!feedGrid) return;
     
     let filteredData = dataArray;
+
+    // [RECYCLE 2026-11-21] Bidhaa iliyo kwenye Recycle Bin (archived / deleted / draft / hidden) haionekani
+    // sokoni mpaka muuzaji airejeshe. Kabla: njia ya Home ('all') na cache hazikuchuja, hivyo bidhaa
+    // zilizoondolewa zilibaki kwenye #mainFeed. Kichujio kimoja hapa kinahusu njia zote za kuchora feed.
+    filteredData = (filteredData || []).filter(d => !d || d.collectionName !== 'products' || typeof skh.productEligible !== 'function' || skh.productEligible(d));
 
     // 1. Kuzuia muingiliano wa collection kwenye all-feed
     if (skh.currentFeedCollection !== 'all') {

@@ -16,7 +16,8 @@
  * and payment is approved by a treasurer who neither received nor inspected the goods.
  */
 'use strict';
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const admin = require('firebase-admin');
 const REGION = 'europe-west1';
 const db = () => admin.firestore();
@@ -53,7 +54,7 @@ async function notifyMembers(gref, G, title, body, extra, exceptUid) {
     const ms = await activeMembers(gref);
     for (const m of ms) {
         if (m.uid === exceptUid) continue;
-        try { await db().collection('notifications').add(Object.assign({ userId: m.uid, title: clean(G.name + ': ' + title, 140), body: clean(body, 500), createdAt: now(), read: false, source: 'server', type: 'group_soko', groupSokoId: gref.id }, extra || {})); } catch (e) { /* */ }
+        try { await db().collection('notifications').add(Object.assign({ userId: m.uid, title: clean(G.name + ': ' + title, 140), body: clean(body, 500), createdAt: now(), read: false, source: 'server', type: 'group_soko', groupSokoId: gref.id }, extra || {})); } catch (e) { logBestEffort('group-soko:57', e); /* */ }
     }
 }
 

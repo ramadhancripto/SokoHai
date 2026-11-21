@@ -16,7 +16,9 @@
  */
 'use strict';
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 
@@ -32,22 +34,9 @@ function verifiedEmail(req) {
     const t = tokenOf(req);
     return (t.email && t.email_verified === true) ? String(t.email).toLowerCase() : '';
 }
-function isSuperAdmin(req) {
-    if (!req || !req.auth) return false;
-    const t = tokenOf(req);
-    if (t.superAdmin === true) return true;
-    const em = verifiedEmail(req);
-    const supers = emailsFrom('SUPER_ADMIN_EMAILS');
-    const list = supers.length ? supers : emailsFrom('ADMIN_EMAILS');
-    return !!em && list.includes(em);
-}
-function isAdmin(req) {
-    if (!req || !req.auth) return false;
-    const t = tokenOf(req);
-    if (t.admin === true || t.role === 'admin' || t.superAdmin === true) return true;
-    const em = verifiedEmail(req);
-    return (!!em && emailsFrom('ADMIN_EMAILS').includes(em)) || isSuperAdmin(req);
-}
+// [SRV-09] the policy lives in authz.js (same rules as before); kept as local names for this module.
+function isSuperAdmin(req) { return !!(req && req.auth) && authz.isSuperAdmin(req); }
+function isAdmin(req) { return !!(req && req.auth) && authz.isAdmin(req); }
 function requireAdmin(req) {
     if (!req || !req.auth) throw new HttpsError('unauthenticated', 'Login inahitajika.');
     if (!isAdmin(req)) throw new HttpsError('permission-denied', 'Admin pekee.');
@@ -91,7 +80,7 @@ async function writeAudit(req, action, target, details, t) {
 async function securityEvent(kind, details) {
     try {
         await db().collection('security_events').add({ kind: String(kind), details: details || {}, createdAt: new Date().toISOString() });
-    } catch (e) { /* never block the main action */ }
+    } catch (e) { logBestEffort('admin-authority:83', e); /* never block the main action */ }
 }
 
 // users/{uid} or the legacy doc where uid == uid.
@@ -113,7 +102,7 @@ async function mergeClaims(uid, patch) {
 async function notify(userId, title, body, type) {
     try {
         await db().collection('notifications').add({ userId, title, body, type: type || 'admin', createdAt: new Date().toISOString(), read: false });
-    } catch (e) { /* optional */ }
+    } catch (e) { logBestEffort('admin-authority:105', e); /* optional */ }
 }
 
 /* ------------------------------------------------------------------
@@ -167,7 +156,7 @@ const adminApproveAgent = onCall({ region: REGION }, async (req) => {
         await writeAudit(req, 'AGENT_APPROVED', { kind: 'agent', agentDocId, uid: applicantUid },
             { agentCode: code, feeWaived: d.feeWaived === true, note: String(d.note || '').slice(0, 300) }, t);
     });
-    try { await mergeClaims(applicantUid, { agent: true }); } catch (e) { /* claim optional; Firestore flag is authoritative */ }
+    try { await mergeClaims(applicantUid, { agent: true }); } catch (e) { logBestEffort('admin-authority:159', e); /* claim optional; Firestore flag is authoritative */ }
     await notify(applicantUid, 'Hongera! Umeidhinishwa kuwa Wakala',
         'Sasa wewe ni Wakala Rasmi wa SokoHai. Namba yako ni ' + code + '.', 'agent');
     return { ok: true, agentCode: code };
@@ -212,7 +201,7 @@ const adminSetAgentStatus = onCall({ region: REGION }, async (req) => {
             status === 'approved' ? { approvedBy: req.auth.uid, approvedAt: now } : {})));
         await writeAudit(req, 'AGENT_STATUS_' + status.toUpperCase(), { kind: 'agent', uid }, { reason }, t);
     });
-    try { await mergeClaims(uid, { agent: status === 'approved' ? true : null }); } catch (e) {}
+    try { await mergeClaims(uid, { agent: status === 'approved' ? true : null }); } catch (e) { logBestEffort('adminSetAgentStatus.mergeClaims', e); }
     await notify(uid, 'Hali ya uwakala imebadilika', 'Hali mpya: ' + status + '. Sababu: ' + reason, 'agent');
     return { ok: true };
 });

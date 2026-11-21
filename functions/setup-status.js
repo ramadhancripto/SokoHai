@@ -5,7 +5,8 @@
  * (docs/SOKOHAI-USER-SETUP-CHECKLIST.md) from the Admin Control Center.
  */
 'use strict';
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const admin = require('firebase-admin');
 const authority = require('./admin-authority');
 const { isAdmin } = authority._internal;
@@ -13,7 +14,7 @@ const has = (k) => !!String(process.env[k] || '').trim();
 
 function status() {
     const base = String(process.env.PESAPAL_BASE_URL || 'https://pay.pesapal.com/v3');
-    let host = ''; try { host = new URL(base).hostname; } catch (e) {}
+    let host = ''; try { host = new URL(base).hostname; } catch (e) { /* invalid URL is reported as host '' (not configured) */ }
     const pesapalEnv = !has('PESAPAL_BASE_URL') ? 'unset' : (host === 'pay.pesapal.com' ? 'live' : (/cybqa|sandbox/.test(host) ? 'sandbox' : (host || 'unset')));
     const cloud = has('CLOUDINARY_CLOUD_NAME') && has('CLOUDINARY_API_KEY') && has('CLOUDINARY_API_SECRET') && has('CLOUDINARY_SIGNED_PRESET');
     const items = [
@@ -32,7 +33,7 @@ function status() {
 exports.adminSetupStatus = onCall({ region: 'europe-west1' }, async (req) => {
     if (!req.auth || !isAdmin(req)) throw new HttpsError('permission-denied', 'Admin pekee.');
     let cfg = {};
-    try { cfg = (await admin.firestore().doc('system/config').get()).data() || {}; } catch (e) {}
+    try { cfg = (await admin.firestore().doc('system/config').get()).data() || {}; } catch (e) { logBestEffort('adminSetupStatus.config', e); }
     const gb = cfg.groupBuy || {};
     const s = status();
     // [PILOT 2026-11-14] two-person withdrawals + search index (run adminSearchBackfill once after deploy)
@@ -42,7 +43,7 @@ exports.adminSetupStatus = onCall({ region: 'europe-west1' }, async (req) => {
     s.items.push({ key: 'pilot_limits', label: 'Pilot: kikomo cha malipo / kutoa pesa kwa muamala', ok: pay > 0 && wd > 0, optional: true,
         value: (pay > 0 ? 'malipo ≤ TSh ' + pay.toLocaleString() : 'malipo: hakuna kikomo') + ' · ' + (wd > 0 ? 'kutoa ≤ TSh ' + wd.toLocaleString() : 'kutoa: hakuna kikomo') });
     let backfilled = false;
-    try { backfilled = !(await admin.firestore().collection('admin_audit_log').where('action', '==', 'SEARCH_BACKFILL').limit(1).get()).empty; } catch (e) {}
+    try { backfilled = !(await admin.firestore().collection('admin_audit_log').where('action', '==', 'SEARCH_BACKFILL').limit(1).get()).empty; } catch (e) { logBestEffort('adminSetupStatus.backfill', e); }
     s.items.push({ key: 'search_backfill', label: 'Utafutaji: adminSearchBackfill imeendeshwa', ok: backfilled });
     s.items.push({ key: 'group_buy_money', label: 'Group Buy: pesa halisi (escrow_commit) imeidhinishwa', ok: gb.realMoneyApproved === true, optional: true });
     return Object.assign({ ok: true }, s);
