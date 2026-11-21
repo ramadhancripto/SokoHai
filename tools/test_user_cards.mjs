@@ -44,8 +44,15 @@ await test('buyer card has no private field', async () => {
   PRIVATE.forEach(k => assert(!(k in c), 'leaked ' + k));
   eq(c.fullName, 'Asha Buyer', 'name'); eq(c.uid, 'b1', 'uid'); assert(!('businessPhone' in c), 'buyer phone must not be public');
 });
-await test('seller card: business phone + follower count, no follower list', async () => {
+await test('seller card: personal phone NOT public without consent (privacy 2026-11-21)', async () => {
   const c = T.buildUserCard(seller, 's1');
+  assert(!('businessPhone' in c) && !JSON.stringify(c).includes('0755000000'), 'personal phone leaked without publishPhone');
+  eq(T.buildUserCard(Object.assign({}, seller, { publishPhone: true }), 's1').businessPhone, '0755000000', 'opt-in publishes the phone');
+  eq(T.buildUserCard(Object.assign({}, seller, { businessPhone: '0688000000' }), 's1').businessPhone, '0688000000', 'explicit business phone stays public');
+  eq(T.buildUserCard(Object.assign({}, buyer, { publishPhone: true }), 'b1').businessPhone, undefined, 'a buyer is never published, even with the switch');
+});
+await test('seller card: business phone + follower count, no follower list', async () => {
+  const c = T.buildUserCard(Object.assign({}, seller, { publishPhone: true }), 's1');
   eq(c.businessPhone, '0755000000', 'business phone'); eq(c.followersCount, 3, 'count');
   assert(!('followers' in c) && !('email' in c) && !('walletBalance' in c), 'private leaked');
   eq(c.shopName, 'Juma Electronics', 'shop'); eq(c.rating, 4.5, 'rating');

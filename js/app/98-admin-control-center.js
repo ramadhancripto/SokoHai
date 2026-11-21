@@ -68,7 +68,7 @@ import { skh } from './00-bootstrap.js';
 
     var TABS = [
         ['overview', 'Muhtasari'], ['accounts', 'Akaunti'], ['agents', 'Mawakala'], ['prices', 'Ukaguzi wa Bei'],
-        ['disputes', 'Migogoro'], ['withdrawals', 'Kutoa Pesa'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['auctions', 'Minada'], ['groupbuy', 'Group Buy'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
+        ['disputes', 'Migogoro'], ['withdrawals', 'Kutoa Pesa'], ['verify', 'Uthibitisho'], ['trust', 'Beji za uaminifu'], ['listings', 'Matangazo'], ['support', 'Msaada'], ['search', 'Utafutaji'], ['seo', 'SEO & Viungo'], ['auctions', 'Minada'], ['groupbuy', 'Group Buy'], ['policy', 'Sera ya Escrow'], ['audit', 'Kumbukumbu']
     ];
     function frame(inner) {
         var tabs = TABS.map(function (t) {
@@ -423,6 +423,19 @@ import { skh } from './00-bootstrap.js';
             var r = await run('adminSetTrustBadge', { badge: v('ccTBadge'), targetType: v('ccTType'), targetId: v('ccTId'), action: v('ccTAction'), evidenceRef: v('ccTEvidence'), reason: reason });
             toast('Beji: ' + ((r && r.status) || 'imesasishwa'), 'success');
         } catch (e) { toast(errText(e), 'error'); }
+    };
+
+    // [SUPPORT 2026-11-21] maombi ya msaada kutoka kwa watumiaji (support_requests)
+    VIEWS.support = async function () {
+        return box('Maombi ya msaada', (window.skhSupportAdmin ? await window.skhSupportAdmin.html() : empty('Moduli ya msaada haijapakia.')));
+    };
+
+    // [SEARCH-INTEL 2026-11-21] takwimu za utafutaji (search_logs) + rejista ya backlinks (seo_backlinks)
+    VIEWS.search = async function () {
+        return box('Takwimu za utafutaji', (window.skhSearchAdmin ? await window.skhSearchAdmin.html() : empty('Moduli ya takwimu haijapakia.')));
+    };
+    VIEWS.seo = async function () {
+        return box('SEO & viungo vinavyoelekeza SokoHai', (window.skhSeoAdmin ? await window.skhSeoAdmin.html() : empty('Moduli ya SEO haijapakia.')));
     };
 
     VIEWS.listings = async function () {

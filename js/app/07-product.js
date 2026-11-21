@@ -115,7 +115,7 @@ window.openProduct = async function(id, manualCollection = null) {
     if (!colToUse || colToUse === 'all') {
         colToUse = (skh.currentFeedCollection && skh.currentFeedCollection !== 'all') ? skh.currentFeedCollection : 'products';
     }
-    
+
     // 3. ANZA LIVE LISTENER (Hapa ndipo mawasiliano yanatokea)
     // [AUDIT-FIX 2026-09-16 :: alert ya uongo "Bidhaa haipo" baada ya login]
     // KISABABISHI: bidhaa iliyoko collection isiyo 'products' (mf. services/drivers)
@@ -195,14 +195,14 @@ window.openProduct = async function(id, manualCollection = null) {
         window.skhUpdateSeoMeta(found, colName);
 
         // --- CHORA UI (Renders everything inside the modal) ---
-        
+
         try {
         // A. Jaza Picha (Ulinzi uliodhibitiwa dhidi ya picha tupu)
         const slider = document.getElementById('pmImageSlider');
         let pics = window.skhNormalizeImages(found);
         pics = pics.filter(p => p && !/ui-avatars\.com/.test(String(p))); // [PHASE 5.7] chuja na avatar za zamani za DB
         if (pics.length === 0) {
-            pics = [window.SKH_PLACEHOLDER_IMG || "https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b"]; // [PHASE 5.7] tile ya SOKOHAI
+            pics = [window.SKH_PLACEHOLDER_IMG || (window.skhAvatarUrl || (() => ''))('Soko', 'f1f5f9')]; // [PHASE 5.7] tile ya SOKOHAI
         }
 
         // [SHOWCASE 39] Tenga video na picha; viewer ya zoom hupokea picha tu.
@@ -215,7 +215,7 @@ window.openProduct = async function(id, manualCollection = null) {
             }
             const zIdx = window.skhZoomImages.indexOf(pic);
             return `
-            <div onclick="window.openImageZoom(window.skhZoomImages, ${zIdx >= 0 ? zIdx : 0})" style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; cursor:zoom-in;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(pic))}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b'"> </div>`;
+            <div onclick="window.openImageZoom(window.skhZoomImages, ${zIdx >= 0 ? zIdx : 0})" style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; cursor:zoom-in;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(pic))}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||window.skhAvatarUrl('Soko', 'f1f5f9')"> </div>`;
         }).join('');
 
         // [ZOOM] Index ya sasa kwa viewer ya kugusa (26-image-zoom.js)
@@ -273,7 +273,7 @@ window.openProduct = async function(id, manualCollection = null) {
                 skh.updateDoc(docRef, { views: skh.increment(1) }).catch(function () { /* counter only; never block the page */ });
                 sessionStorage.setItem('v_'+id, '1');
             }
-            
+
             // Inaleta na kusasisha comments, views, na likes live!
             skh.updateInteractionUI();
 
@@ -800,23 +800,23 @@ window.handleLike = async function() {
         const colName = skh.currentOpenProduct.collectionName || skh.currentFeedCollection;
         const ref = skh.doc(skh.db, colName, skh.currentOpenProduct.id);
         const hasLiked = skh.currentOpenProduct.likes && skh.currentOpenProduct.likes.includes(skh.currentUser.uid);
-        try { 
-            if(hasLiked) { 
-                await skh.updateDoc(ref, { likes: skh.arrayRemove(skh.currentUser.uid) }); 
-            } else { 
-                await skh.updateDoc(ref, { likes: skh.arrayUnion(skh.currentUser.uid) }); 
-            } 
+        try {
+            if(hasLiked) {
+                await skh.updateDoc(ref, { likes: skh.arrayRemove(skh.currentUser.uid) });
+            } else {
+                await skh.updateDoc(ref, { likes: skh.arrayUnion(skh.currentUser.uid) });
+            }
         } catch(e) {}
     };
 
 window.submitComment = async function() {
         if(!skh.requireAuth() || !skh.currentOpenProduct) return;
-        const input = document.getElementById('pmCommentInput'); 
+        const input = document.getElementById('pmCommentInput');
         if(!input) return;
-        
-        const text = input.value.trim(); 
+
+        const text = input.value.trim();
         if(!text) return;
-        
+
         input.value = T('pr_sending', 'Sending...');
         input.disabled = true;
         let published = null;
@@ -841,7 +841,7 @@ window.submitComment = async function() {
             if (!(res && res.data && res.data.ok)) throw new Error('Huduma haijathibitisha maoni.');
             published = true;
             input._skhCommentAttempt = null;
-            input.value = ""; 
+            input.value = "";
             // [COMMENT FIX 2026-09] Arifu muuzaji kwamba mteja ameuliza swali au
             // ameacha maoni — kwa kutumia mfumo ULIOPO wa notifications
             // (skhEngageSendNotif / collection `notifications`). Hakuna mfumo mpya.
@@ -862,28 +862,28 @@ window.submitComment = async function() {
                 }
             } catch (e) { /* arifa si ya kusitisha utumaji wa maoni */ }
             if (typeof window.skhCommentsOpen === 'function') window.skhCommentsOpen(skh.currentOpenProduct);
-        } catch(e) { 
-            alert(T('pr_comment_fail', 'Failed to send comment.')); 
-            input.value = text; 
-        } finally { 
-            input.disabled = false; 
-            input.focus(); 
+        } catch(e) {
+            alert(T('pr_comment_fail', 'Failed to send comment.'));
+            input.value = text;
+        } finally {
+            input.disabled = false;
+            input.focus();
         }
     };
 
 window.handleShare = async function() {
         if(!skh.currentOpenProduct) return;
-        try { 
+        try {
             // Tengeneza link halisi ya bidhaa (Inasoma website yako automatically)
             const itemUrl = `${window.location.origin}${window.location.pathname}?item=${skh.currentOpenProduct.id}`;
             const shareText = T('pr_share_text', 'Check this out: {title} on SokoHai Pro! Tap here to view: {url}', { title: skh.currentOpenProduct.title || skh.currentOpenProduct.company, url: itemUrl });
-            
-            await navigator.clipboard.writeText(shareText); 
-            alert(T('pr_link_copied', 'Link copied! You can paste it on WhatsApp, Facebook or anywhere.')); 
-            
-            const colName = skh.currentOpenProduct.collectionName || skh.currentFeedCollection; 
-            await skh.updateDoc(skh.doc(skh.db, colName, skh.currentOpenProduct.id), { shares: skh.increment(1) }); 
-            
+
+            await navigator.clipboard.writeText(shareText);
+            alert(T('pr_link_copied', 'Link copied! You can paste it on WhatsApp, Facebook or anywhere.'));
+
+            const colName = skh.currentOpenProduct.collectionName || skh.currentFeedCollection;
+            await skh.updateDoc(skh.doc(skh.db, colName, skh.currentOpenProduct.id), { shares: skh.increment(1) });
+
             // Ongeza namba ya shares live kwenye kioo
             const psc = document.getElementById('pmSharesCount');
             if(psc) psc.innerText = parseInt(psc.innerText) + 1;
@@ -895,40 +895,40 @@ window.handleShare = async function() {
 window.toggleFollow = async function() {
         // [BUYER ENGAGEMENT] Tumia mfumo mpya wa follow (relationship docs)
         if (typeof window.skhModalFollow === 'function') { window.skhModalFollow(); return; }
-        if(!skh.requireAuth() || !skh.currentOpenProduct) return; 
-        const targetUid = skh.currentOpenProduct.userId; 
+        if(!skh.requireAuth() || !skh.currentOpenProduct) return;
+        const targetUid = skh.currentOpenProduct.userId;
         if(targetUid === skh.currentUser.uid) return;
-        
+
         try {
             // [REPAIR 2026-10 C4] doc id from the public card (users/{id} is private).
             const cardTarget = await skh.getUserCard(targetUid);
-            if(!cardTarget.exists()) return; 
-            
-            const targetDocRef = skh.doc(skh.db, "users", (cardTarget.data() || {}).docId || targetUid); 
+            if(!cardTarget.exists()) return;
+
+            const targetDocRef = skh.doc(skh.db, "users", (cardTarget.data() || {}).docId || targetUid);
             const myDocRef = skh.doc(skh.db, "users", skh.currentUserData.docId);
             const isFollowing = skh.currentUserData.following && skh.currentUserData.following.includes(targetUid);
-            
-            const btnF = document.getElementById('btnFollow'); 
-            if(btnF) btnF.innerText = "..."; 
-            
-            if(isFollowing) { 
-                await skh.updateDoc(myDocRef, { following: skh.arrayRemove(targetUid) }); 
-                await skh.updateDoc(targetDocRef, { followers: skh.arrayRemove(skh.currentUser.uid) }); 
-            } else { 
-                await skh.updateDoc(myDocRef, { following: skh.arrayUnion(targetUid) }); 
-                await skh.updateDoc(targetDocRef, { followers: skh.arrayUnion(skh.currentUser.uid) }); 
+
+            const btnF = document.getElementById('btnFollow');
+            if(btnF) btnF.innerText = "...";
+
+            if(isFollowing) {
+                await skh.updateDoc(myDocRef, { following: skh.arrayRemove(targetUid) });
+                await skh.updateDoc(targetDocRef, { followers: skh.arrayRemove(skh.currentUser.uid) });
+            } else {
+                await skh.updateDoc(myDocRef, { following: skh.arrayUnion(targetUid) });
+                await skh.updateDoc(targetDocRef, { followers: skh.arrayUnion(skh.currentUser.uid) });
             }
         } catch(e) {}
     };
 
 window.addToCart = async function(isBuyNow = false) {
     if(!skh.requireAuth()) return;
-    
+
     if(!skh.currentOpenProduct) {
         alert(T('pr_error', 'Error') + ': ' + T('pr_wait_product', 'Please wait for the product to load or reopen it.'));
         return;
     }
-    
+
     // Ulinzi wa Optional Chaining
     const chosenColor = skh.currentOpenProduct?.selectedVariants?.color || "N/A";
     const chosenSize = skh.currentOpenProduct?.selectedVariants?.size || "N/A";
@@ -998,27 +998,27 @@ window.addToCart = async function(isBuyNow = false) {
 window.proceedToDeliverySelection = function() {
     closeModals();
     const product = JSON.parse(sessionStorage.getItem('pending_order_product'));
-    
+
     // TUNAWEKA DATA MUHIMU: Mkoa unatoka wapi (Location ya Bidhaa)
     sessionStorage.setItem('chain_from', product.location || T('pr_shop', 'Shop'));
     sessionStorage.setItem('chain_cargo_name', product.title);
     sessionStorage.setItem('flow_step', 'awaiting_payment'); // Alama ya mnyororo
 
     alert(T('pr_held', 'Product held! Now choose a vehicle to deliver') + ' ' + product.title);
-    
+
     // Mpeleke kwenye Tab ya Usafiri
-    const deliveryTab = document.getElementById('navTabDelivery'); 
-    updateApp('delivery', deliveryTab); 
+    const deliveryTab = document.getElementById('navTabDelivery');
+    updateApp('delivery', deliveryTab);
 };
 
 window.openCart = function() {
         if(!skh.requireAuth()) return;
         const list = document.getElementById('cartItemsList');
         if(!list) return;
-        
+
         let html = '';
         let total = 0;
-        
+
         if(!skh.myCart || skh.myCart.length === 0) {
             html = '<p style="text-align:center; color:#64748b; margin-top:20px;">Kikapu chako kipo wazi.</p>';
         } else {
@@ -1046,22 +1046,22 @@ window.openCart = function() {
                     </div>`;
             });
         }
-        
+
         list.innerHTML = html;
         const ct = document.getElementById('cartTotal');
-        if(ct) ct.innerText = `TSh ${total.toLocaleString()}`; 
-        
+        if(ct) ct.innerText = `TSh ${total.toLocaleString()}`;
+
         closeModals();
         const cm = document.getElementById('cartModal');
         if(cm) cm.style.display = 'flex';
     };
 
-window.removeFromCart = async function(index) { 
-        skh.myCart.splice(index, 1); 
+window.removeFromCart = async function(index) {
+        skh.myCart.splice(index, 1);
         skh.localStorage.setItem('sokohai_cart', JSON.stringify(skh.myCart));
-        skh.updateCartUI(); 
-        openCart(); 
-        
+        skh.updateCartUI();
+        openCart();
+
         // Update database
         if(skh.currentUserData && skh.currentUserData.docId) {
             try {
@@ -1092,9 +1092,14 @@ window.skhSetProductUrl = function(id, type) {
 
 // Kiungo cha umma kwa aina yoyote ya entity — kwa kushiriki + SEO + deep linking.
 // /p/{id} = bidhaa, /s/{id} = huduma, /d/{id} = usafiri (drivers), /post/{id} = post
+// [SEO 2026-11-21] public links always use the canonical origin (the old base used the current pathname, so a link
+// made while viewing /p/<id> became /p/<id>/p/<other>).
+function skhOrigin() {
+    const local = !/(^|\.)sokohai\.com$|\.netlify\.app$/.test(window.location.hostname || '');   // local / preview builds keep their own origin
+    return String((!local && window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.CANONICAL_ORIGIN) || window.location.origin || '').replace(/\/+$/, '');
+}
 window.skhEntityPublicUrl = function(id, type) {
-    const base = (window.location.origin || '') + (window.location.pathname || '/');
-    const cleanBase = base.replace(/\/+$/, '');
+    const cleanBase = skhOrigin();
     const t = String(type || 'products').toLowerCase();
     let prefix = 'p';
     if (t === 'services' || t === 'service') prefix = 's';
@@ -1118,17 +1123,22 @@ window.skhUpdateSeoMeta = function(p, type) {
         const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.name || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def', typeLabel) : typeLabel);
         const t2 = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', 'SokoHai — Soko la Mtandaoni la Tanzania') : 'SokoHai — Soko la Mtandaoni la Tanzania');
         document.title = t2;
+        // [SEO 2026-11-21] no escrow promise: escrow / checkout are not switched on (system/launch)
         const desc = p
-            ? (_pT + (p.price ? (window.skhTF ? window.skhTF('meta_for_tsh', ' kwa TSh ') : ' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF ? window.skhTF('meta_on_skh', ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.') : ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'))
-            : 'Nunua na uuze bidhaa, huduma na usafiri kwa usalama kupitia SokoHai.';
+            ? (_pT + (p.price ? (window.skhTF ? window.skhTF('meta_for_tsh', ' kwa TSh ') : ' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF ? window.skhTF('meta_on_skh', ' kwenye SokoHai.') : ' kwenye SokoHai.'))
+            : 'Tafuta, linganisha na uuze bidhaa, huduma na usafiri Tanzania kupitia SokoHai.';
         const set = function(id, attr, val) { const el = document.getElementById(id); if (el) el.setAttribute(attr, val || ''); };
         set('skhMetaDescription', 'content', desc);
         set('skhOgTitle', 'content', t2);
         set('skhOgDescription', 'content', desc);
         set('skhOgImage', 'content', p ? (p.image || (p.images && p.images[0]) || p.photo || '') : '');
-        const url = p ? window.skhEntityPublicUrl(p.id, type) : (window.location.origin + window.location.pathname);
+        const url = p ? window.skhEntityPublicUrl(p.id, type) : (skhOrigin() + '/');
         set('skhOgUrl', 'content', url);
-        set('skhCanonical', 'href', url);
+        // [SEO 2026-11-21] the crawlable static page (/bidhaa/<slug>-<id>/, built by tools/build_seo.mjs) is the canonical
+        // address of a listing; the app view (/p/<id>) points to it. Other listing types keep their app URL.
+        const SP = globalThis.SKHSeoPaths;
+        const seoPath = p && SP ? (t === 'services' ? SP.service(p) : (t === 'products' ? SP.product(p) : null)) : null;
+        set('skhCanonical', 'href', seoPath ? skhOrigin() + seoPath : url);
     } catch (e) { /* meta ni ya ziada tu */ }
 };
 
@@ -1405,11 +1415,11 @@ window.resumeChat = function(uid, email, name) {
     window.skhSetChatHeaderAvatar(uid, null, skh.chatPartner);
     window.skhRenderAttachedProduct();
 
-    closeModals(); 
+    closeModals();
     const cm = document.getElementById('chatModal');
-    if(cm) cm.style.display = 'flex'; 
-    
-    skh.listenToChats(skh.currentChatEmail, skh.currentChatUid); 
+    if(cm) cm.style.display = 'flex';
+
+    skh.listenToChats(skh.currentChatEmail, skh.currentChatUid);
 };
 
 // [CHAT] Fungua chat na mtu yeyote kwa uid (muuzaji/dereva/mteja) — kwa kuangalia email yake
@@ -1430,13 +1440,13 @@ window.openChatWithUser = function(uid, displayName) {
     }
 };
 
-window.openChatList = async function() { 
-    if(!skh.requireAuth()) return; 
-    
+window.openChatList = async function() {
+    if(!skh.requireAuth()) return;
+
     closeModals();
     const clModal = document.getElementById('chatListModal');
     if(clModal) clModal.style.display = 'flex';
-    
+
     const inboxList = document.getElementById('inboxList');
     inboxList.innerHTML = '<p style="text-align:center; color:#64748b; padding:20px;">' + T('pr_loading_inbox', 'Loading inbox...') + '</p>';
 
@@ -1456,7 +1466,7 @@ window.openChatList = async function() {
         }
 
         const snaps = await Promise.all(queries.map(q => skh.getDocs(q)));
-        
+
         let allChats =[];
         snaps.forEach(snap => snap.forEach(doc => allChats.push(doc.data())));
 
@@ -1528,16 +1538,16 @@ window.openChatList = async function() {
     }
 };
 
-window.sendMessage = async function() { 
-    const input = document.getElementById('chatInput'); 
+window.sendMessage = async function() {
+    const input = document.getElementById('chatInput');
     if(!input) return;
-    const text = input.value.trim(); 
+    const text = input.value.trim();
     if(!text) return;
-    if(!skh.currentChatUid && !skh.currentChatEmail) { 
-        alert(T('pr_open_chat_hint', 'This person is unknown yet. Open chat from a listing or order.')); 
-        return; 
+    if(!skh.currentChatUid && !skh.currentChatEmail) {
+        alert(T('pr_open_chat_hint', 'This person is unknown yet. Open chat from a listing or order.'));
+        return;
     }
-    
+
     // Hakikisha mhusika ana identity inayojulikana
     const myEmail = (skh.currentUser.email || '').toLowerCase();
     const myUid = skh.currentUser.uid;
@@ -1545,11 +1555,11 @@ window.sendMessage = async function() {
     const theirUid = skh.currentChatUid || '';
     const myName = (skh.currentUser.displayName || (myEmail ? myEmail.split('@')[0] : 'Mimi'));
 
-    const msg = { 
-        text: text, 
-        sender: myEmail, 
+    const msg = {
+        text: text,
+        sender: myEmail,
         receiver: theirEmail,
-        senderUid: myUid, 
+        senderUid: myUid,
         receiverUid: theirUid,
         senderName: myName,
         senderPhoto: (skh.currentUserData && skh.currentUserData.photoURL) || skh.currentUser.photoURL || null,
@@ -1561,8 +1571,8 @@ window.sendMessage = async function() {
         productCollection: skh.activeChatProduct ? (skh.activeChatProduct.collectionName || skh.currentFeedCollection || null) : null,
         sellerUid: skh.activeChatProduct ? (skh.activeChatProduct.userId || null) : null
     };
-    
-    input.value = ""; 
+
+    input.value = "";
 
     // [OPTIMISTIC UI] Onyesha meseji papo hapo (hata kabla server haijajibu)
     const chatDiv = document.getElementById('chatMessages');
@@ -1574,14 +1584,14 @@ window.sendMessage = async function() {
         chatDiv.scrollTop = chatDiv.scrollHeight;
     }
 
-    try { 
+    try {
         // Tunatuma meseji + Taarifa za bidhaa (kama ipo)
-        await skh.addDoc(skh.collection(skh.db, "chats"), msg); 
+        await skh.addDoc(skh.collection(skh.db, "chats"), msg);
         skh.activeChatProduct = null; // Epuka kutuma bidhaa hii kwenye kila meseji anayoandika baadae
         window.skhRenderAttachedProduct(); // Ficha strip ya bidhaa iliyoambatishwa
-    } catch(err) { 
-        alert(T('pr_msg_fail', 'Failed to send message:') + " " + ((err && err.message) || T('pr_connection', 'connection'))); 
-    } 
+    } catch(err) {
+        alert(T('pr_msg_fail', 'Failed to send message:') + " " + ((err && err.message) || T('pr_connection', 'connection')));
+    }
 };
 
 // [FAKE FIX 2026-09] startAudioCall/startVideoCall ziliondolewa — zilikuwa
@@ -1591,95 +1601,95 @@ window.sendMessage = async function() {
 
 window.toggleVoiceRecord = async function() {
     const btn = document.getElementById('voiceBtn');
-    
-    if(!skh.isRecording) { 
+
+    if(!skh.isRecording) {
         try {
             // 1. Omba ruhusa ya Microphone kwa mtumiaji
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             skh.mediaRecorder = new MediaRecorder(stream);
             skh.audioChunks =[];
-            
+
             skh.mediaRecorder.ondataavailable = event => {
                 if (event.data.size > 0) skh.audioChunks.push(event.data);
             };
-            
+
             skh.mediaRecorder.onstop = async () => {
                 // 3. Rekodi ikisimama, ipandishe Cloudinary
                 btn.innerText = "";
                 const audioBlob = new Blob(skh.audioChunks, { type: 'audio/webm' });
-                
+
                 // [PHASE 4.2] Uploader mmoja (audio inapanda kama 'video' resource)
                 try {
                     const up = await window.skhUploadFromFile(audioBlob, { resourceType: 'video' });
-                    const data = up ? up.data : {}; 
-                    
-                    if(data.secure_url) { 
+                    const data = up ? up.data : {};
+
+                    if(data.secure_url) {
                         // Tuma url ya Sauti kwenye Firebase Chats
                         // [SOKOHURU 2026-11-21] listings no longer carry the seller e-mail: address the seller by uid (rules need senderUid/receiverUid)
                         let receiverEmail = (skh.currentOpenProduct && skh.currentOpenProduct.userEmail) || '';
                         const receiverUid = (skh.currentOpenProduct && skh.currentOpenProduct.userId) || skh.chatPartnerUid || '';
                         if (!receiverUid) { alert(T('pr_upload_fail', 'Failed to upload file.')); return; }
-                        await skh.addDoc(skh.collection(skh.db, "chats"), { 
-                            text: ` Attachment: ${data.secure_url}`, 
+                        await skh.addDoc(skh.collection(skh.db, "chats"), {
+                            text: ` Attachment: ${data.secure_url}`,
                             sender: skh.currentUser.email || '', senderUid: skh.currentUser.uid, receiverUid,
-                            receiver: receiverEmail, 
-                            createdAt: new Date().toISOString() 
-                        }); 
+                            receiver: receiverEmail,
+                            createdAt: new Date().toISOString()
+                        });
                     }
                 } catch(err) {
                     alert(T('pr_voice_fail', 'Failed to send voice note.'));
                 } finally {
-                    btn.style.color = "var(--terracotta)"; 
-                    btn.innerText = ""; 
+                    btn.style.color = "var(--terracotta)";
+                    btn.innerText = "";
                 }
             };
-            
+
             // 2. Anza kurekodi
             skh.mediaRecorder.start();
-            skh.isRecording = true; 
-            btn.style.color = "red"; 
-            btn.innerText = ""; 
+            skh.isRecording = true;
+            btn.style.color = "red";
+            btn.innerText = "";
             alert(T('pr_recording', 'Recording... Tap again to send.'));
-            
+
         } catch (err) {
             alert(T('pr_allow_mic', 'Allow your phone/browser to use the Microphone to send audio.'));
         }
-    } else { 
+    } else {
         // Simamisha Kurekodi
         skh.mediaRecorder.stop();
-        skh.isRecording = false; 
+        skh.isRecording = false;
     }
 };
 
-window.triggerChatAttachment = function() { 
+window.triggerChatAttachment = function() {
         const cfi = document.getElementById('chatFileInput');
-        if(cfi) cfi.click(); 
+        if(cfi) cfi.click();
     };
 
-window.handleChatFileUpload = async function(e) { 
-        const file = e.target.files[0]; 
-        if(!file || !skh.currentOpenProduct) return; 
-        
-        alert(T('pr_uploading', 'Uploading your file...')); 
-        
-        try { 
+window.handleChatFileUpload = async function(e) {
+        const file = e.target.files[0];
+        if(!file || !skh.currentOpenProduct) return;
+
+        alert(T('pr_uploading', 'Uploading your file...'));
+
+        try {
             const up = await window.skhUploadFromFile(file);
             if(!up) throw new Error(T('pr_upload_fail', 'Failed to upload file.'));
-            const data = up.data; 
-            if(data.secure_url) { 
-                await skh.addDoc(skh.collection(skh.db, "chats"), { 
-                    text: ` Attachment: ${data.secure_url}`, 
+            const data = up.data;
+            if(data.secure_url) {
+                await skh.addDoc(skh.collection(skh.db, "chats"), {
+                    text: ` Attachment: ${data.secure_url}`,
                     sender: skh.currentUser.email || '', senderUid: skh.currentUser.uid, receiverUid: skh.currentOpenProduct.userId || '', // [SOKOHURU] uid, not e-mail
                     receiver: skh.currentOpenProduct.userEmail || '',
-                    createdAt: new Date().toISOString() 
-                }); 
-            } 
-        } catch(err) { 
-            alert(T('pr_upload_fail', 'Failed to upload file.')); 
-        } finally { 
+                    createdAt: new Date().toISOString()
+                });
+            }
+        } catch(err) {
+            alert(T('pr_upload_fail', 'Failed to upload file.'));
+        } finally {
             const cfi = document.getElementById('chatFileInput');
-            if(cfi) cfi.value = ""; 
-        } 
+            if(cfi) cfi.value = "";
+        }
     };
 
 // ============================================================

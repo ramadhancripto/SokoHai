@@ -5,7 +5,9 @@
   # [AWAMU D2 2026-11-08] Minification imeunganishwa hapa: build + check + uthibitisho
   # wa usawa wa token. Kama uthibitisho unashindwa, deploy inakatishwa.
   # Kurudi nyuma ni mstari mmoja: node tools/build_dist.mjs --check
-  command = "node tools/build_dist.mjs --minify --check"
+  # [SEO 2026-11-21] then the crawlable public pages + sitemaps (tools/build_seo.mjs). A data error never fails the
+  # deploy: the static pages and sitemap are still written. Deploy previews / branch deploys build static pages only.
+  command = "node tools/build_dist.mjs --minify --check && node tools/build_seo.mjs --out dist"
   publish = "dist"
 
 [build.environment]
@@ -84,6 +86,44 @@
   to = "/index.html"
   status = 404
   force = true
+
+# [SEO 2026-11-21] Public page sections are static files. A page that does not exist (sold / removed listing, typo)
+# gets a real 404 instead of the app shell with 200 ("soft 404"). Not forced: existing pages are served first.
+[[redirects]]
+  from = "/bidhaa/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/huduma/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/duka/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/soko/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/chapa/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/mwongozo/*"
+  to = "/404.html"
+  status = 404
+
+[[headers]]
+  for = "/sitemap*.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=utf-8"
+    Cache-Control = "public, max-age=3600"
 
 [[redirects]]
   from = "/*"

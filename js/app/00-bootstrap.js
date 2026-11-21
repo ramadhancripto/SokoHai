@@ -9,7 +9,10 @@ import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPas
 import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, startAfter, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
+import '../../shared/search-dictionary.js'; // [SEARCH-INTEL 2026-11-21] globalThis.SKHSearchDictionary (language data)
 import '../../shared/search-tokens.js'; // [SEARCH 2026-11-14] globalThis.SKHSearchTokens
+import '../../shared/search-engine.js'; // [SEARCH-INTEL 2026-11-21] globalThis.SKHSearchEngine (understanding + ranking)
+import '../../shared/seo-paths.js'; // [SEO 2026-11-21] globalThis.SKHSeoPaths (crawlable listing URLs)
 import { categoryFilterValues, categoryMatches, canonicalCategoryId, categoryInfo, buyerSubcategories, buyerProductCategories, legacySubcategoriesFor, categoryLabel } from '../../shared/category-filter-core.mjs';
 import { buildMarketplaceSections, boostEligibility, MARKET_RANKING_VERSION } from './39-market-ranking.js';
 import { psRatingDisplay } from './39-showcase-logic.js';
@@ -747,7 +750,7 @@ skh.firebaseEnv = null;
             + '<p style="margin:0 0 12px;color:#334155;font-size:14px;line-height:1.5;">Mazingira haya hayajasanidiwa. Ukurasa huu hauunganishwi na database yoyote, kwa usalama.</p>'
             + '<p style="margin:0 0 4px;font-size:13px;color:#475569;">Host: <code>' + esc(window.location.hostname) + '</code></p>'
             + '<p style="margin:0;font-size:13px;color:#475569;">Sababu: <code>' + esc(reason) + '</code></p>'
-            + '<p style="margin:14px 0 0;font-size:12.5px;color:#64748b;">Tumia <b>' + esc(String((window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.CANONICAL_ORIGIN) || 'https://sokohaicom.netlify.app').replace(/^https?:\/\//, '')) + '</b>. Msimamizi: ongeza host hii kwenye <code>js/00-config.js → FIREBASE_ENVIRONMENTS</code>.</p></div>';
+            + '<p style="margin:14px 0 0;font-size:12.5px;color:#64748b;">Tumia <b>' + esc(String((window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.CANONICAL_ORIGIN) || 'https://sokohai.com').replace(/^https?:\/\//, '')) + '</b>. Msimamizi: ongeza host hii kwenye <code>js/00-config.js → FIREBASE_ENVIRONMENTS</code>.</p></div>';
         (document.body || document.documentElement).appendChild(box);
     } catch (e) {}
     console.error('[SokoHai] Environment not configured for host "' + window.location.hostname + '" (' + reason + '). Firebase NOT initialised.');
@@ -1398,7 +1401,7 @@ skh.loadRelatedProducts = async function loadRelatedProducts(category, excludeId
                 const img = skh.getOptimizedImageUrl(d.image || d.photo || 'https://via.placeholder.com/150');
                 const title = d.title || d.driverName || d.company || 'Tangazo';
                 html += `
-                    <div onclick="openProduct('${skh.skhEscape(d.id)}', '${skh.skhEscape(d.collectionName || colToUse || 'products')}')" style="min-width:130px; max-width:150px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; overflow:hidden; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.04);"> <img src="${skh.skhEscape(img)}" style="width:100%; height:90px; object-fit:cover; background:#f1f5f9;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b'"> <div style="padding:8px;"> <b style="font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${skh.skhEscape(title)}</b> <span style="color:var(--terracotta); font-size:12px; font-weight:900;">TSh ${(d.price||0).toLocaleString()}</span> </div> </div> `;
+                    <div onclick="openProduct('${skh.skhEscape(d.id)}', '${skh.skhEscape(d.collectionName || colToUse || 'products')}')" style="min-width:130px; max-width:150px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; overflow:hidden; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.04);"> <img src="${skh.skhEscape(img)}" style="width:100%; height:90px; object-fit:cover; background:#f1f5f9;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||window.skhAvatarUrl('Soko', 'f1f5f9')"> <div style="padding:8px;"> <b style="font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${skh.skhEscape(title)}</b> <span style="color:var(--terracotta); font-size:12px; font-weight:900;">TSh ${(d.price||0).toLocaleString()}</span> </div> </div> `;
             });
             return html || '<p style="font-size:12px; color:#64748b;">Hakuna matangazo mengine bado.</p>';
         };
@@ -3273,6 +3276,12 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
     if (!feedGrid) return;
     
     let filteredData = dataArray;
+    skh._feedSourceItems = Array.isArray(dataArray) ? dataArray : []; // [SEARCH-INTEL 2026-11-21] unfiltered source for the search panel
+
+    // [RECYCLE 2026-11-21] Bidhaa iliyo kwenye Recycle Bin (archived / deleted / draft / hidden) haionekani
+    // sokoni mpaka muuzaji airejeshe. Kabla: njia ya Home ('all') na cache hazikuchuja, hivyo bidhaa
+    // zilizoondolewa zilibaki kwenye #mainFeed. Kichujio kimoja hapa kinahusu njia zote za kuchora feed.
+    filteredData = (filteredData || []).filter(d => !d || d.collectionName !== 'products' || typeof skh.productEligible !== 'function' || skh.productEligible(d));
 
     // [RECYCLE 2026-11-21] Bidhaa iliyo kwenye Recycle Bin (archived / deleted / draft / hidden) haionekani
     // sokoni mpaka muuzaji airejeshe. Kabla: njia ya Home ('all') na cache hazikuchuja, hivyo bidhaa
@@ -3361,6 +3370,7 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             // Ikiwa swali lilibaki tupu baada ya mode-word, onyesha zote za mode
             // (si "hakuna matokeo") — mfano: user aandika tu "mnada".
         }
+        const __sxA = (query && globalThis.SKHSearchEngine) ? globalThis.SKHSearchEngine.analyze(query) : null;
         filteredData = filteredData.filter(data => {
             if (!query) return true; // msingi baada ya mode-only search
             const title = (data.title || data.name || data.driverName || data.company || '').toLowerCase();
@@ -3372,8 +3382,20 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
             const hay = title + ' ' + desc + ' ' + cat + ' ' + extra.toLowerCase();
             if (hay.includes(query) || query.split(' ').every(w => hay.includes(w))) return true;
             // [SEARCH 2026-11-14] maneno sawa (simu = phone) na mwanzo wa neno kupitia searchTokens
-            return !!(globalThis.SKHSearchTokens && globalThis.SKHSearchTokens.matches(data, query, hay));
+            if (globalThis.SKHSearchTokens && globalThis.SKHSearchTokens.matches(data, query, hay)) return true;
+            // [SEARCH-INTEL 2026-11-21] makosa ya tahajia, umoja/wingi, misemo ya kamusi ("nguo za watoto")
+            return !!(__sxA && globalThis.SKHSearchEngine.matchDoc(data, __sxA).relevance > 0);
         });
+        // [SEARCH-INTEL 2026-11-21] matokeo ya utafutaji yanapangwa kwa umuhimu (relevance + ubora), si kwa tarehe tu.
+        // "Karibu nami" (hatua 7) bado inapanga kwa umbali; boost haiongezi alama ya kikaboni.
+        if (__sxA && !skh.filterNearMe && filteredData.length > 1) {
+            try {
+                const __r = globalThis.SKHSearchEngine.rank(filteredData, __sxA, { userLat: skh.userLat, userLon: skh.userLon, region: skh.filterRegion || null });
+                const __order = new Map(__r.results.filter(x => !x.sponsored).map((x, i) => [x.item, i]));
+                filteredData = filteredData.slice().sort((a, b) => (__order.has(a) ? __order.get(a) : 1e6) - (__order.has(b) ? __order.get(b) : 1e6));
+                skh._lastSearchRank = { q: query, total: __r.total, duplicates: __r.duplicates };
+            } catch (eRank) { console.warn('[search] rank', eRank && eRank.message); }
+        }
     }
 
     // 6. Chujio la Mkoa (Location) — moja kati ya mikoa yote ya Tanzania

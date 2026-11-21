@@ -1457,7 +1457,7 @@ import { skh } from './00-bootstrap.js';
         attach_remove:        ['Remove product', 'Ondoa bidhaa'],
         meta_home_title:      ['SokoHai — Online Marketplace of Tanzania', 'SokoHai — Soko la Mtandaoni la Tanzania'],
         meta_for_tsh:         [' for TSh ', ' kwa TSh '],
-        meta_on_skh:          [' on SokoHai. Buy safely via escrow.', ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'],
+        meta_on_skh:          [' on SokoHai.', ' kwenye SokoHai.'],
 
         // --- [R17 PAYMENT ACCOUNTS + DISCOVER] ---
         pay_save_btn:         ['SAVE DETAILS', 'HIFADHI TAARIFA'],

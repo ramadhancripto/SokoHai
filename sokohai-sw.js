@@ -8,7 +8,7 @@
 //    so a deploy is picked up on the next load (no stale app);
 //  - a new version waits until the page asks (SKIP_WAITING) and old caches are deleted on activate.
 // ============================================================
-const VERSION = 'sokohai-r18-20261121-icon3';   // [ICON 2026-11-21] approved app icon (v3)
+const VERSION = 'sokohai-r19-20261121-seo1';   // [SEO 2026-11-21] static public pages are not stored as the app shell
 const CACHE = VERSION + '-static';
 const SHELL = ['./', './index.html', './offline.html', './sokohai-manifest.json', './assets/img/sokohai-app-192-v3.png', './assets/img/sokohai-app-512-v3.png'];
 const STATIC_RE = /\.(?:js|mjs|css|woff2?|ttf|png|jpe?g|webp|svg|gif|ico|json)$/i;
@@ -28,6 +28,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function isAppShell(p) { return p === '/' || p === '/index.html' || /^\/(p|s|d|post)\//.test(p); }
 function cacheable(res) { return res && res.ok && res.type === 'basic' && !/no-store|private/i.test(res.headers.get('Cache-Control') || ''); }
 
 self.addEventListener('fetch', (event) => {
@@ -38,7 +39,9 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req).then((res) => {
-        if (cacheable(res)) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {}); }
+        // [SEO 2026-11-21] only the APP SHELL is stored as ./index.html. Static public pages (/privacy.html, /bidhaa/...,
+        // /soko/...) are separate documents; storing them as index.html would replace the offline app with that page.
+        if (cacheable(res) && isAppShell(url.pathname)) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {}); }
         return res;
       }).catch(() => caches.match('./index.html').then((r) => r || caches.match('./offline.html')))
     );

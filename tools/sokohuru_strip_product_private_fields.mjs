@@ -2,8 +2,9 @@
 /* [SOKOHURU 2026-11-21] OWNER-RUN maintenance script. NOT run by any test or deploy step.
  *
  * Public product documents (products/*) are readable by anyone. Older listings still carry the seller's
- * e-mail / phone (userEmail, ownerPhone, sellerPhone, ...). The new rules stop NEW writes of these keys; this
- * script removes them from EXISTING listings. Nothing else in the document changes.
+ * e-mail / phone (userEmail, ownerPhone, sellerPhone, ...) and the seller's exact GPS position (coords). The rules
+ * stop NEW writes of the contact keys and the app now stores coords rounded to about 1 km; this script removes the
+ * contact keys from EXISTING listings and rounds existing coords to 2 decimals. Nothing else in the document changes.
  *
  * Default is a DRY RUN that only counts. Writing needs both --apply and --project=<id> typed by the owner.
  *   node tools/sokohuru_strip_product_private_fields.mjs --project=sokonet-3b847            # count only
@@ -29,9 +30,15 @@ for (;;) {
   for (const d of snap.docs) {
     scanned++; const x = d.data(), del = {};
     for (const k of KEYS) if (k in x) { del[k] = admin.firestore.FieldValue.delete(); perKey[k]++; }
+    // [PRIVACY 2026-11-21] exact GPS -> approximate area (2 decimals, about 1 km)
+    const c = x.coords;
+    if (c && typeof c === 'object' && Number.isFinite(Number(c.lat)) && Number.isFinite(Number(c.lon))) {
+      const r = v => Math.round(Number(v) * 100) / 100;
+      if (r(c.lat) !== Number(c.lat) || r(c.lon) !== Number(c.lon)) { del.coords = { lat: r(c.lat), lon: r(c.lon) }; perKey.coords = (perKey.coords || 0) + 1; }
+    }
     if (Object.keys(del).length) { affected++; if (apply) { batch.update(d.ref, del); inBatch++; } }
   }
   if (apply && inBatch) { await batch.commit(); written += inBatch; }
   last = snap.docs[snap.docs.length - 1];
 }
-console.log(JSON.stringify({ project, mode: apply ? 'APPLY' : 'DRY_RUN', scanned, listingsWithPrivateKeys: affected, perKey, written }, null, 2));
+console.log(JSON.stringify({ project, mode: apply ? 'APPLY' : 'DRY_RUN', scanned, listingsToClean: affected, perKey, written }, null, 2));

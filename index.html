@@ -19,16 +19,16 @@
     <title>SokoHai — Soko la Mtandaoni la Tanzania</title>
     <!-- [SEO / PUBLIC LINKS] Meta za Google + viungo vya umma vya bidhaa.
          IDs hizi zinasasishwa na JS (window.skhUpdateSeoMeta) kila bidhaa ikifunguliwa. -->
-    <meta name="description" content="SokoHai — soko la mtandaoni la Tanzania. Nunua na uuze bidhaa, huduma na usafiri kwa usalama (escrow)." id="skhMetaDescription">
+    <meta name="description" content="SokoHai — soko la mtandaoni la Tanzania. Tafuta, linganisha na uuze bidhaa, huduma na usafiri karibu nawe; matangazo ni bure." id="skhMetaDescription">
     <meta name="robots" content="index, follow">
     <meta property="og:site_name" content="SokoHai">
     <meta property="og:title" content="SokoHai — Soko la Mtandaoni la Tanzania" id="skhOgTitle">
-    <meta property="og:description" content="Nunua na uuze bidhaa, huduma na usafiri kwa usalama kupitia SokoHai." id="skhOgDescription">
+    <meta property="og:description" content="Tafuta, linganisha na uuze bidhaa, huduma na usafiri Tanzania kupitia SokoHai." id="skhOgDescription">
     <meta property="og:type" content="website">
-    <meta property="og:url" id="skhOgUrl" content="https://sokohaicom.netlify.app/">
-    <meta property="og:image" id="skhOgImage" content="https://sokohaicom.netlify.app/assets/img/sokohai-cart-mark.png">
+    <meta property="og:url" id="skhOgUrl" content="https://sokohai.com/">
+    <meta property="og:image" id="skhOgImage" content="https://sokohai.com/assets/img/sokohai-cart-mark.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="canonical" id="skhCanonical" href="https://sokohaicom.netlify.app/">
+    <link rel="canonical" id="skhCanonical" href="https://sokohai.com/">
 <link rel="icon" type="image/png" href="assets/img/sokohai-app-192-v3.png">
     <!-- [SEO/PWA 2026-11-08] Manifest ilikuwa ipo (sokohai-manifest.json) lakini
          HAIKUWA imeunganishwa kwenye <head> — kwa hiyo browser haikuiona kamwe. -->
@@ -45,23 +45,23 @@
       "@graph": [
         {
           "@type": "Organization",
-          "@id": "https://sokohaicom.netlify.app/#organization",
+          "@id": "https://sokohai.com/#organization",
           "name": "SokoHai",
-          "url": "https://sokohaicom.netlify.app/",
-          "logo": "https://sokohaicom.netlify.app/assets/img/sokohai-cart-mark.png",
-          "description": "Soko la mtandaoni la Tanzania: bidhaa, huduma na usafiri kwa ulinzi wa escrow.",
+          "url": "https://sokohai.com/",
+          "logo": "https://sokohai.com/assets/img/sokohai-cart-mark.png",
+          "description": "Soko la mtandaoni la Tanzania: bidhaa, huduma na usafiri.",
           "areaServed": { "@type": "Country", "name": "Tanzania" }
         },
         {
           "@type": "WebSite",
-          "@id": "https://sokohaicom.netlify.app/#website",
-          "url": "https://sokohaicom.netlify.app/",
+          "@id": "https://sokohai.com/#website",
+          "url": "https://sokohai.com/",
           "name": "SokoHai",
           "inLanguage": "sw",
-          "publisher": { "@id": "https://sokohaicom.netlify.app/#organization" },
+          "publisher": { "@id": "https://sokohai.com/#organization" },
           "potentialAction": {
             "@type": "SearchAction",
-            "target": { "@type": "EntryPoint", "urlTemplate": "https://sokohaicom.netlify.app/?q={search_term_string}" },
+            "target": { "@type": "EntryPoint", "urlTemplate": "https://sokohai.com/?q={search_term_string}" },
             "query-input": "required name=search_term_string"
           }
         }
@@ -614,6 +614,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
                 <p class="skh-auth-switch">Tayari una akaunti? <b role="button" tabindex="0" onclick="toggleAuth('login')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">Ingia hapa</b></p>
             </form>
+            <!-- [LEGAL 2026-11-21] links only; no auth logic -->
+            <p class="skh-auth-legal">Kwa kuendelea, unakubali <a href="/terms.html" target="_blank" rel="noopener">Masharti ya Matumizi</a> na <a href="/privacy.html" target="_blank" rel="noopener">Sera ya Faragha</a> ya SokoHai.</p>
         </div>
 
         <ul class="skh-auth-trust" aria-label="Kwa nini SokoHai">
@@ -630,6 +632,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>
                 <span>Salama &amp; Inaaminika</span><i aria-hidden="true"></i><span>SokoHai.com</span>
             </div>
+            <nav class="skh-auth-legal-nav" aria-label="Sera na msaada">
+                <a href="/about.html" target="_blank" rel="noopener">Kuhusu</a><a href="/support.html" target="_blank" rel="noopener">Msaada</a><a href="/privacy.html" target="_blank" rel="noopener">Faragha</a><a href="/terms.html" target="_blank" rel="noopener">Masharti</a>
+            </nav>
         </footer>
     </div>
 </div>
@@ -3700,6 +3705,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/124-pos-grid.js?v=20261108r13e"></script><!-- [R13-E] POS cashier grid: refs 17/18 -->
 <script type="module" src="js/app/125-group-business.js?v=20261108r13h"></script><!-- [R13-H] Group Chat: Huduma, Soko, Group Buy, Oda, Mapatano na Ofa, Usafirishaji, paneli -->
 <script type="module" src="js/app/129-launch-scope.js?v=20261121huru1"></script><!-- [SOKOHURU 2026-11-21] launch scope: disabled payment features, listing reports, manual paid promotions -->
+<script type="module" src="js/app/130-support-center.js?v=20261121sup1"></script><!-- [SUPPORT 2026-11-21] maombi halisi ya msaada (support_requests) + Kituo cha Udhibiti → Msaada -->
+<script type="module" src="js/app/131-search-insights.js?v=20261121sx1"></script><!-- [SEARCH-INTEL + SEO 2026-11-21] takwimu za utafutaji, rejista ya backlinks, /?q=, share kit ya duka -->
 
 
 <!-- DIRISHA LA MAOMBI YA KAZI NA HUDUMA (ACTION REQUEST MODAL) -->

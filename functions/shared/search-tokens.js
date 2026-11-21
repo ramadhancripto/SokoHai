@@ -57,8 +57,18 @@
     ['matunda', 'fruits', 'fruit'],
     ['mboga', 'vegetables']
   ];
+  // [SEARCH-INTEL 2026-11-21] the shared dictionary (shared/search-dictionary.js) is the source of truth;
+  // the list above stays as the fallback when the dictionary is not loaded. Only single words are stored.
+  var DICT = null;
+  try { DICT = (typeof module === 'object' && module.exports) ? require('./search-dictionary.js') : (typeof globalThis !== 'undefined' ? globalThis.SKHSearchDictionary : null); } catch (e) { DICT = null; }
+  if (DICT && Array.isArray(DICT.GROUPS)) {
+    DICT.GROUPS.forEach(function (g) {
+      var single = g.terms.map(function (t) { return String(t).toLowerCase().replace(/'/g, ''); }).filter(function (t) { return /^[a-z0-9]+$/.test(t); });
+      if (single.length > 1) SYNONYMS.push(single);
+    });
+  }
   var SYN = {};
-  SYNONYMS.forEach(function (g) { g.forEach(function (w) { SYN[w] = g; }); });
+  SYNONYMS.forEach(function (g) { g.forEach(function (w) { SYN[w] = SYN[w] ? SYN[w].concat(g.filter(function (x) { return SYN[w].indexOf(x) === -1; })) : g.slice(); }); });
 
   function fold(s) {
     s = String(s == null ? '' : s).toLowerCase();

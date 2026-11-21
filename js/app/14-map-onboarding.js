@@ -443,7 +443,7 @@ window.setupDriverRealtimeQuery = function() {
             // 1. Safari zangu active
             if (rd.driverId === skh.currentUser.uid && rd.status !== "completed" && rd.status !== "cancelled") {
                 activeCount++;
-                const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
+                const cargoImg = rd.cargoImage || (window.skhAvatarUrl || (() => ''))('Mzigo', 'cccccc');
                 // [REMEDIATION R5] plaintext token is never on the ride: show the masked ref, then the real
                 // token from delivery_tokens (party-only) fills #pktok_<rid> after render.
                 const pToken = `<span id="pktok_${rid}">${skh.skhEscape(rd.pickupTokenRef || (rd.pickupTokenStatus === 'pending' ? 'Inapakia…' : 'Bado haijatolewa'))}</span>`;
@@ -482,7 +482,7 @@ window.setupDriverRealtimeQuery = function() {
                 const isServiceSupported = driverServices.includes(rd.reqCategory);
                 if (isServiceSupported) {
                     availableCount++;
-                    const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Usafiri&background=cccccc&color=fff";
+                    const cargoImg = rd.cargoImage || (window.skhAvatarUrl || (() => ''))('Usafiri', 'cccccc');
                     availableJobsHtml += `
                         <div style="background:white; border:1px solid #cbd5e1; border-radius:14px; padding:15px; border-left:6px solid var(--gold); text-align:left; margin-bottom:10px; width:100%;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-weight:bold; text-transform:uppercase;">MPYA</span> <small style="color:gray;">Kategoria: ${rd.reqCategory}</small> </div> <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:var(--primary-dark);">${skh.skhEscape(rd.cargoName || "")}</b> <small style="display:block; color:gray;">Mteja</small> </div> </div> <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px;">
                                  Kutoka: <b>${skh.skhEscape(rd.fromLocation || '')}</b> -> Kwenda: <b>${skh.skhEscape(rd.toLocation || '')}</b> </div> <button onclick="window.acceptTransportMission('${rid}',this)" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;">KUBALI KAZI HII -></button> </div>`;
@@ -673,7 +673,7 @@ window.loadHeldCargoList = async function() {
 
             if (belongsToTab) {
                 count++;
-                const cargoImgUrl = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
+                const cargoImgUrl = rd.cargoImage || (window.skhAvatarUrl || (() => ''))('Mzigo', 'cccccc');
                 const badgeColor = status === 'completed' ? 'green' : (status === 'in_transit' ? 'orange' : 'gray');
 
                 html += `

@@ -287,8 +287,7 @@ import { skh } from './00-bootstrap.js';
         var d = skh.currentUserData || {};
         var name = d.fullName || u.displayName || 'Mtumiaji';
         var photo = d.photoURL || u.photoURL ||
-            ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) +
-             '&background=1268A8&color=ffffff');
+            (window.skhAvatarUrl || (() => ''))(name, '1268A8'); // [PRIVACY 2026-11-21] local initials
 
         // Majina popote
         ['sidebarUserName', 'profileName', 'userDisplayName', 'chatMyName'].forEach(function (id) {
