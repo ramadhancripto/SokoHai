@@ -1,3 +1,5 @@
+> **[2026-11-21] Imepitwa na wakati:** sitemap sasa inatengenezwa wakati wa build na `tools/build_seo.mjs` (si Cloud Function `sitemapXml`, ambayo haijawekwa production). Kurasa za umma: `/bidhaa/…`, `/soko/…`. Ona `docs/SEO-SEARCH-SYSTEM.md`.
+
 # 🔗 SEO — Viungo vya Umma vya Bidhaa (Google)
 
 Huu ni mwongozo wa jinsi bidhaa za SokoHai zinavyopata **viungo vya umma**

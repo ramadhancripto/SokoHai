@@ -37,6 +37,8 @@ for (const f of ALL) {
     if (u.startsWith('#')) { if (!anchorsOf(h).has(u.slice(1))) bad.push(u); continue; }
     if (u === '/') continue;
     const m = u.match(/^\/\?support=([a-z]+)$/); if (m) { if (!/^(account|buyer|seller|listing|payments|refunds|delivery|live|security|privacy|technical|feedback|other|mine)$/.test(m[1])) bad.push(u); continue; }
+    // [SEO 2026-11-21] hubs written at build time by tools/build_seo.mjs (into dist/, not the repository root)
+    if (['/soko/', '/mwongozo/', '/washirika.html'].includes(u)) { if (!/write\('(soko\/index\.html|mwongozo\/index\.html|washirika\.html)'/.test(read('tools/build_seo.mjs'))) bad.push(u); continue; }
     const [file, frag] = u.replace(/^\//, '').split('#'); const clean = file.split('?')[0];
     if (!fs.existsSync(path.join(ROOT, clean))) { bad.push(u); continue; }
     if (frag && clean.endsWith('.html') && !anchorsOf(read(clean)).has(frag)) bad.push(u);

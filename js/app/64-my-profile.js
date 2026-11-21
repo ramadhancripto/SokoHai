@@ -158,6 +158,8 @@
             + (u.phone ? '<label class="mp-kv mp-consent" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">'
                 + '<input type="checkbox" id="mpPublishPhone"' + (u.publishPhone === true ? ' checked' : '') + ' onchange="window.skhTogglePublishPhone && window.skhTogglePublishPhone(this)" style="margin-top:3px;width:18px;height:18px;accent-color:#18A982;">'
                 + '<span style="flex:1;font-size:13px;line-height:1.35;">Onyesha namba yangu ya simu kwa wanunuzi kwenye ukurasa wangu wa muuzaji. <small style="display:block;color:#64748b;">Ukizima, wanunuzi watakufikia kwa chat ya SokoHai tu.</small></span></label>' : '')
+            // [SEO 2026-11-21] seller share kit: public shop link + optional "Tupo SokoHai" badge
+            + '<button type="button" class="mp-kv" id="mpShareKit" onclick="window.skhOpenShareKit && window.skhOpenShareKit()" style="width:100%;text-align:left;border:0;background:none;cursor:pointer;font:inherit;display:flex;justify-content:space-between;align-items:center;"><span>Shiriki duka lako (kiungo na beji)</span><b class="mp-kv-v" style="color:#18A982;">Fungua</b></button>'
             + '</div>';
     }
 

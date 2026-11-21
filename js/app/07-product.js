@@ -1092,9 +1092,14 @@ window.skhSetProductUrl = function(id, type) {
 
 // Kiungo cha umma kwa aina yoyote ya entity — kwa kushiriki + SEO + deep linking.
 // /p/{id} = bidhaa, /s/{id} = huduma, /d/{id} = usafiri (drivers), /post/{id} = post
+// [SEO 2026-11-21] public links always use the canonical origin (the old base used the current pathname, so a link
+// made while viewing /p/<id> became /p/<id>/p/<other>).
+function skhOrigin() {
+    const local = !/(^|\.)sokohai\.com$|\.netlify\.app$/.test(window.location.hostname || '');   // local / preview builds keep their own origin
+    return String((!local && window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.CANONICAL_ORIGIN) || window.location.origin || '').replace(/\/+$/, '');
+}
 window.skhEntityPublicUrl = function(id, type) {
-    const base = (window.location.origin || '') + (window.location.pathname || '/');
-    const cleanBase = base.replace(/\/+$/, '');
+    const cleanBase = skhOrigin();
     const t = String(type || 'products').toLowerCase();
     let prefix = 'p';
     if (t === 'services' || t === 'service') prefix = 's';
@@ -1118,17 +1123,22 @@ window.skhUpdateSeoMeta = function(p, type) {
         const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.name || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def', typeLabel) : typeLabel);
         const t2 = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', 'SokoHai — Soko la Mtandaoni la Tanzania') : 'SokoHai — Soko la Mtandaoni la Tanzania');
         document.title = t2;
+        // [SEO 2026-11-21] no escrow promise: escrow / checkout are not switched on (system/launch)
         const desc = p
-            ? (_pT + (p.price ? (window.skhTF ? window.skhTF('meta_for_tsh', ' kwa TSh ') : ' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF ? window.skhTF('meta_on_skh', ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.') : ' kwenye SokoHai. Nunua kwa usalama kupitia escrow.'))
-            : 'Nunua na uuze bidhaa, huduma na usafiri kwa usalama kupitia SokoHai.';
+            ? (_pT + (p.price ? (window.skhTF ? window.skhTF('meta_for_tsh', ' kwa TSh ') : ' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF ? window.skhTF('meta_on_skh', ' kwenye SokoHai.') : ' kwenye SokoHai.'))
+            : 'Tafuta, linganisha na uuze bidhaa, huduma na usafiri Tanzania kupitia SokoHai.';
         const set = function(id, attr, val) { const el = document.getElementById(id); if (el) el.setAttribute(attr, val || ''); };
         set('skhMetaDescription', 'content', desc);
         set('skhOgTitle', 'content', t2);
         set('skhOgDescription', 'content', desc);
         set('skhOgImage', 'content', p ? (p.image || (p.images && p.images[0]) || p.photo || '') : '');
-        const url = p ? window.skhEntityPublicUrl(p.id, type) : (window.location.origin + window.location.pathname);
+        const url = p ? window.skhEntityPublicUrl(p.id, type) : (skhOrigin() + '/');
         set('skhOgUrl', 'content', url);
-        set('skhCanonical', 'href', url);
+        // [SEO 2026-11-21] the crawlable static page (/bidhaa/<slug>-<id>/, built by tools/build_seo.mjs) is the canonical
+        // address of a listing; the app view (/p/<id>) points to it. Other listing types keep their app URL.
+        const SP = globalThis.SKHSeoPaths;
+        const seoPath = p && SP ? (t === 'services' ? SP.service(p) : (t === 'products' ? SP.product(p) : null)) : null;
+        set('skhCanonical', 'href', seoPath ? skhOrigin() + seoPath : url);
     } catch (e) { /* meta ni ya ziada tu */ }
 };
 

@@ -4,4 +4,4 @@ Contact: https://github.com/ramadhancripto/SokoHai/security/advisories/new
 # Ikiwa una barua pepe ya usalama (mfano: security@sokohai.co.tz), ibadilishe hapa.
 Expires: 2027-12-31T23:59:59.000Z
 Preferred-Languages: sw, en
-Canonical: https://sokohaicom.netlify.app/.well-known/security.txt
+Canonical: https://sokohai.com/.well-known/security.txt

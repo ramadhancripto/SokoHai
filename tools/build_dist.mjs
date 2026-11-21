@@ -38,7 +38,7 @@ const WANT_MINIFY = ARGS.includes('--minify');
 // Whole directories copied recursively (with per-file filters below).
 // [R12] assets/img holds the category photos, the home banner and the logo used by index.html;
 // before this they were missing from dist (every category tile fell back on a deploy).
-const DIRS = ['css', 'js', 'img', 'vendor', 'shared', 'assets/img'];
+const DIRS = ['css', 'js', 'img', 'vendor', 'shared', 'assets/img', 'assets/badges']; // [SEO 2026-11-21] badges: the seller "Tupo SokoHai" badge
 // Single files.
 const FILES = [
   'index.html', 'offline.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js',

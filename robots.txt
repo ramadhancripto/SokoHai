@@ -1,7 +1,11 @@
-# SokoHai — robots.txt (SEO / Google)
+# SokoHai — robots.txt                                         [SEO 2026-11-21]
+# Public pages (listings, sellers, categories, guides, policies) are crawlable.
+# The sitemap index is generated at build time by tools/build_seo.mjs.
 User-agent: *
 Allow: /
+# App actions, not content: support / search deep links and server paths
+Disallow: /*?support=
+Disallow: /functions/
+Disallow: /__fn/
 
-# Sitemap inatolewa na Cloud Function "sitemapXml".
-# Ona docs/SEO-PRODUCT-LINKS.md kwa maelekezo kamili.
-Sitemap: https://sokohaicom.netlify.app/sitemap.xml
+Sitemap: https://sokohai.com/sitemap.xml

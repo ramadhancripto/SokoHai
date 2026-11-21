@@ -202,11 +202,48 @@
         return score;
     }
 
+    /* [SEARCH-INTEL 2026-11-21] Panel filters (sort, availability, verified sellers, price range). */
+    var filters = { sort: '', inStockOnly: false, verifiedOnly: false, minPrice: null, maxPrice: null };
+    window.skhSearchFilters = filters;
+    function searchPool() {
+        var skh = window.skh || {}, pool = Array.isArray(skh.cachedItems) ? skh.cachedItems.slice() : [];
+        // the full source list (cachedItems may already be narrowed by the feed's own search filter)
+        var src = Array.isArray(skh._feedSourceItems) ? skh._feedSourceItems : [];
+        if (src.length) { var have = {}; pool.forEach(function (x) { have[(x.collectionName || '') + '/' + x.id] = 1; });
+            src.forEach(function (x) { if (!have[(x.collectionName || '') + '/' + x.id]) pool.push(x); }); }
+        return pool;
+    }
+
     /** SearchService — hurudisha matokeo yaliyopangwa kwa makundi (§4) */
     window.skhSearchService = function (query, opts) {
         opts = opts || {};
         var intent = parseIntent(query);
         var skh = window.skh || {};
+        var E = window.SKHSearchEngine;
+        if (E) {
+            // [SEARCH-INTEL 2026-11-21] shared engine: typo / plural / synonym / phrase understanding and the
+            // documented weighted ranking (shared/search-engine.js). Products still pass the Product Foundation gate.
+            var pool0 = searchPool().filter(function (it) {
+                return (it.collectionName || 'products') !== 'products' || typeof skh.productEligible !== 'function' || skh.productEligible(it);
+            });
+            var f = opts.filters || filters;
+            var r = E.rank(pool0, query, { userLat: skh.userLat, userLon: skh.userLon, region: skh.filterRegion || null,
+                sort: f.sort || undefined, inStockOnly: f.inStockOnly || undefined, verifiedOnly: f.verifiedOnly || undefined,
+                minPrice: f.minPrice, maxPrice: f.maxPrice });
+            var groups0 = { products: [], services: [], drivers: [] }, all0 = [];
+            r.results.forEach(function (x) {
+                var it = x.sponsored ? Object.assign(Object.create(Object.getPrototypeOf(x.item)), x.item, { __sponsored: true }) : x.item;
+                if (!x.sponsored) { var c = it.collectionName || 'products'; if (groups0[c]) groups0[c].push(it); }
+                all0.push(it);
+            });
+            var an = r.analysis;
+            if (an.region && !intent.location) intent.location = an.region;
+            if (an.minPrice != null && intent.minPrice == null) intent.minPrice = an.minPrice;
+            if (an.maxPrice != null && intent.maxPrice == null) intent.maxPrice = an.maxPrice;
+            intent.sort = r.sort; intent.analysis = an;
+            return { intent: intent, total: r.total, all: all0.slice(0, opts.limit || 40), groups: groups0, ranked: r.results,
+                     duplicates: r.duplicates, filtered: r.filtered, engine: E.VERSION };
+        }
         var pool = Array.isArray(skh.cachedItems) ? skh.cachedItems : [];
 
         var scored = [];
@@ -235,6 +272,7 @@
     function suggestions(q) {
         q = String(q || '').toLowerCase().trim();
         if (q.length < 2) return [];
+        if (window.SKHSearchEngine) return window.SKHSearchEngine.autocomplete(q, searchPool(), 6);   // [SEARCH-INTEL] real titles + dictionary
         var skh = window.skh || {};
         var pool = Array.isArray(skh.cachedItems) ? skh.cachedItems : [];
         var seen = {}, out = [];
@@ -283,6 +321,18 @@
     /* ========================================================================
        5) TRENDING (§7) — kutoka data halisi, si static
        ======================================================================== */
+    /* [SEARCH-INTEL 2026-11-21] Popular searches = real search events of the last 14 days (skh._marketSearchTerms,
+       loaded by skh.loadMarketSearchSignals). Nothing is invented: with no events this list is empty. */
+    function popularSearches() {
+        var terms = ((window.skh || {})._marketSearchTerms) || [], c = {};
+        terms.forEach(function (e) { var q = String(e.query || '').trim().toLowerCase(); if (q.length >= 2 && !/\d{6,}/.test(q)) c[q] = (c[q] || 0) + 1; });
+        return Object.keys(c).filter(function (q) { return c[q] >= 2; }).sort(function (a, b) { return c[b] - c[a]; }).slice(0, 8);
+    }
+    function recentlyAdded(n) {
+        function t(x) { var v = x.createdAt || x.timestamp; if (v && typeof v.toMillis === 'function') return v.toMillis(); if (v && v.seconds) return v.seconds * 1000; return Date.parse(v) || 0; }
+        var E = window.SKHSearchEngine;
+        return searchPool().filter(function (x) { return !E || E.eligible(x); }).sort(function (a, b) { return t(b) - t(a); }).slice(0, n || 4);
+    }
     function trending() {
         var skh = window.skh || {};
         var pool = Array.isArray(skh.cachedItems) ? skh.cachedItems : [];
@@ -335,12 +385,12 @@
             : esc(catLbl(it.category) || it.location || '');
         var price = (col === 'products') ? money(it.price)
                   : (Number(it.price) > 0 ? 'Kuanzia ' + money(it.price) : 'Maelewano');
-        return '<button type="button" class="skh-ss-row" onclick="window.skhSearchOpen(\'' +
-               jsq(it.id) + '\',\'' + jsq(col) + '\')">' +
+        return '<button type="button" class="skh-ss-row' + (it.__sponsored ? ' is-sponsored' : '') + '" data-pos="' + (rowItem.pos = (rowItem.pos || 0) + 1) + '" onclick="window.skhSearchOpen(\'' +
+               jsq(it.id) + '\',\'' + jsq(col) + '\',' + rowItem.pos + (it.__sponsored ? ',1' : '') + ')">' +
                (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">'
                     : '<span class="skh-ss-ph">' + ico('package', 16) + '</span>') +
                '<span class="skh-ss-tx"><b>' + esc(it.title || it.name || 'Tangazo') + '</b>' +
-               '<small>' + sub + '</small></span>' +
+               '<small>' + (it.__sponsored ? '<em class="skh-ss-ad">Imefadhiliwa</em> ' : '') + sub + '</small></span>' +
                '<span class="skh-ss-price">' + esc(price) + '</span></button>';
     }
 
@@ -373,8 +423,15 @@
                                'onclick="window.skhSearchRemoveRecent(\'' + jsq(r) + '\', event)">' + ico('x', 12) + '</button></div>';
                      }).join('') + '</div>';
             }
+            var pop = popularSearches();
+            if (pop.length) {
+                h += '<div class="skh-ss-grp"><div class="skh-ss-gh">' + ico('search', 13) + ' Watu wanatafuta</div>' +
+                     '<div class="skh-ss-chips">' + pop.map(function (t) {
+                        return '<button type="button" class="skh-ss-chip" onclick="window.skhSearchUse(\'' + jsq(t) + '\')">' + esc(t) + '</button>';
+                     }).join('') + '</div></div>';
+            }
             if (tr.length) {
-                h += '<div class="skh-ss-grp"><div class="skh-ss-gh">' + ico('bolt', 13) + ' Vinavyotafutwa sana</div>' +
+                h += '<div class="skh-ss-grp"><div class="skh-ss-gh">' + ico('bolt', 13) + ' Kategoria zinazotazamwa</div>' +
                      '<div class="skh-ss-chips">' + tr.map(function (t) {
                         return '<button type="button" class="skh-ss-chip" onclick="window.skhSearchUse(\'' +
                                jsq(t) + '\')">' + esc(t) + '</button>';
@@ -389,7 +446,15 @@
         }
 
         /* ---- Matokeo ---- */
+        rowItem.pos = 0;
+        var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
         var res = window.skhSearchService(q);
+        var ms = Math.round(((window.performance && performance.now) ? performance.now() : Date.now()) - t0);
+        var E = window.SKHSearchEngine;
+        var fix = (E && res.total < 3) ? E.correct(q, searchPool()) : null;
+        if (fix && fix === String(q).toLowerCase().trim()) fix = null;
+        var rel = E ? E.related(res.intent.analysis || q, res.ranked || [], 6) : [];
+        logSearch(q, res, ms, fix);
         var sug = suggestions(q);
         var g = res.groups;
         // Watu/chat hupakia kwa async — tunatumia cache ili render iwe haraka
@@ -420,31 +485,43 @@
 
         var body = '';
         if (res.total === 0 && !chat.length) {
-            /* §19 — empty state yenye msaada, si Firebase error */
-            body = '<div class="skh-ss-none">' +
+            /* §19 — empty state yenye msaada, si Firebase error.
+               [SEARCH-INTEL 2026-11-21] + "Je, ulimaanisha…", related searches, filters reset and recently added listings. */
+            var anyFilter = filters.sort || filters.inStockOnly || filters.verifiedOnly || filters.minPrice != null || filters.maxPrice != null;
+            var fresh = recentlyAdded(4);
+            body = '<div class="skh-ss-none" data-skh-noresult="1">' +
                    '<div class="skh-ss-none-ic">' + ico('search', 22) + '</div>' +
                    '<b>Hakuna matokeo ya "' + esc(q) + '"</b>' +
+                   (fix ? '<p class="skh-ss-dym">Je, ulimaanisha <button type="button" data-skh-fix="1" onclick="window.skhSearchUse(\'' + jsq(fix) + '\')">' + esc(fix) + '</button>?</p>' : '') +
+                   (anyFilter ? '<p><button type="button" class="skh-ss-chip" onclick="window.skhSearchResetFilters()">Ondoa vichujio</button></p>' : '') +
                    '<ul><li>Jaribu neno tofauti au fupi</li><li>Angalia tahajia</li>' +
-                   '<li>Ondoa vichujio vya bei</li></ul>' +
+                   '<li>Tumia neno la Kiswahili au Kiingereza (mf. simu / phone)</li></ul>' +
+                   (rel.length ? '<div class="skh-ss-chips">' + rel.map(function (t) { return '<button type="button" class="skh-ss-chip" onclick="window.skhSearchUse(\'' + jsq(t) + '\')">' + esc(t) + '</button>'; }).join('') + '</div>' : '') +
                    '<div class="skh-ss-chips">' +
                    '<button type="button" class="skh-ss-chip" onclick="window.skhImageSearch()">' + ico('camera', 13) + ' Tafuta kwa picha</button>' +
-                   '</div></div>';
+                   '</div></div>' +
+                   (fresh.length ? '<div class="skh-ss-grp"><div class="skh-ss-gh">' + ico('clock', 13) + ' Zilizoongezwa karibuni</div>' + fresh.map(rowItem).join('') + '</div>' : '');
         } else if (activeTab === 'all') {
-            body = groupBlock('Bidhaa', g.products, 'package') +
+            var sp = (res.ranked || []).filter(function (x) { return x.sponsored; }).slice(0, 1).map(function (x) { return Object.assign({}, x.item, { __sponsored: true }); });
+            body = (sp.length ? '<div class="skh-ss-grp skh-ss-grp--ad">' + sp.map(rowItem).join('') + '</div>' : '') +
+                   groupBlock('Bidhaa', g.products, 'package') +
                    groupBlock('Huduma', g.services, 'wrench') +
                    groupBlock('Usafiri', g.drivers, 'truck');
             if (chat.length && typeof window.skhSearchChatHtml === 'function') body += window.skhSearchChatHtml(chat);
         } else if (activeTab === 'people') {
             body = (typeof window.skhSearchChatHtml === 'function') ? window.skhSearchChatHtml(chat) : '';
         } else {
-            body = (g[activeTab] || []).slice(0, 12).map(rowItem).join('');
+            var lst = g[activeTab] || [];
+            body = lst.slice(0, tabLimit).map(rowItem).join('') +
+                   (lst.length > tabLimit ? '<button type="button" class="skh-ss-more" onclick="window.skhSearchMore()">Onyesha zaidi (' + (lst.length - tabLimit) + ')</button>' : '');
         }
 
         // Intent iliyoeleweka (uwazi kwa mtumiaji)
         var chips = [];
         if (res.intent.maxPrice) chips.push('Hadi ' + money(res.intent.maxPrice));
         if (res.intent.minPrice) chips.push('Kuanzia ' + money(res.intent.minPrice));
-        if (res.intent.location) chips.push(res.intent.location);
+        if (res.intent.location) chips.push(esc(res.intent.location));
+        if (res.intent.sort && res.intent.sort !== 'relevance' && !filters.sort) chips.push({ price_asc: 'Bei ya chini kwanza', price_desc: 'Bei ya juu kwanza', newest: 'Mpya kwanza', nearest: 'Karibu nawe kwanza' }[res.intent.sort] || '');
         if (res.intent.from && res.intent.to) chips.push(res.intent.from + ' &rarr; ' + res.intent.to);
         var intentBar = chips.length
             ? '<div class="skh-ss-intent">' + ico('filter', 12) + chips.map(function (c) {
@@ -459,7 +536,47 @@
             ? '<button type="button" class="skh-ss-all" onclick="window.skhSearchAll()">' +
               'Ona matokeo yote (' + res.total + ')</button>' : '';
 
-        el.innerHTML = sugBar + intentBar + head + '<div class="skh-ss-body">' + body + '</div>' + footer;
+        var dym = (fix && res.total > 0) ? '<div class="skh-ss-dym">Je, ulimaanisha <button type="button" data-skh-fix="1" onclick="window.skhSearchUse(\'' + jsq(fix) + '\')">' + esc(fix) + '</button>?</div>' : '';
+        var relBar = (rel.length && res.total > 0) ? '<div class="skh-ss-rel"><span>Tafuta pia:</span>' + rel.slice(0, 5).map(function (t) {
+                  return '<button type="button" onclick="window.skhSearchUse(\'' + jsq(t) + '\')">' + esc(t) + '</button>'; }).join('') + '</div>' : '';
+        el.innerHTML = sugBar + dym + filterBar() + intentBar + head + '<div class="skh-ss-body">' + body + '</div>' + relBar + footer;
+    }
+
+    /* [SEARCH-INTEL 2026-11-21] Filter / sort bar inside the panel. */
+    var tabLimit = 12;
+    function filterBar() {
+        var sorts = [['', 'Inayohusika zaidi'], ['price_asc', 'Bei: chini → juu'], ['price_desc', 'Bei: juu → chini'], ['newest', 'Mpya kwanza'], ['nearest', 'Karibu nami']];
+        return '<div class="skh-ss-filters" role="group" aria-label="Vichujio vya utafutaji">' +
+            '<label class="skh-ss-sort"><span class="skh-vh">Panga</span><select id="skhSsSort" aria-label="Panga matokeo" onchange="window.skhSearchSetFilter(\'sort\', this.value)">' +
+            sorts.map(function (o) { return '<option value="' + o[0] + '"' + (filters.sort === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+            '<button type="button" class="skh-ss-tog' + (filters.inStockOnly ? ' on' : '') + '" aria-pressed="' + !!filters.inStockOnly + '" data-skh-filter="instock" onclick="window.skhSearchSetFilter(\'inStockOnly\', ' + !filters.inStockOnly + ')">Inapatikana</button>' +
+            '<button type="button" class="skh-ss-tog' + (filters.verifiedOnly ? ' on' : '') + '" aria-pressed="' + !!filters.verifiedOnly + '" data-skh-filter="verified" onclick="window.skhSearchSetFilter(\'verifiedOnly\', ' + !filters.verifiedOnly + ')">Waliothibitishwa</button>' +
+            '<span class="skh-ss-price-f"><input id="skhSsMin" inputmode="numeric" aria-label="Bei ya chini (TSh)" placeholder="Bei min" value="' + (filters.minPrice != null ? filters.minPrice : '') + '" onchange="window.skhSearchSetFilter(\'minPrice\', this.value)">' +
+            '<input id="skhSsMax" inputmode="numeric" aria-label="Bei ya juu (TSh)" placeholder="Bei max" value="' + (filters.maxPrice != null ? filters.maxPrice : '') + '" onchange="window.skhSearchSetFilter(\'maxPrice\', this.value)"></span>' +
+            '</div>';
+    }
+    window.skhSearchSetFilter = function (k, v) {
+        if (k === 'minPrice' || k === 'maxPrice') { var n = parseFloat(String(v).replace(/[^\d.]/g, '')); v = isFinite(n) && n > 0 ? n : null; }
+        if (k === 'inStockOnly' || k === 'verifiedOnly') v = v === true || v === 'true';
+        filters[k] = v; tabLimit = 12;
+        if (typeof window.skhSearchLog === 'function') window.skhSearchLog('filter', { q: (($('searchInput') || {}).value || '').trim(), filter: k, value: v == null ? '' : String(v) });
+        render(($('searchInput') || {}).value || '');
+    };
+    window.skhSearchResetFilters = function () { filters.sort = ''; filters.inStockOnly = false; filters.verifiedOnly = false; filters.minPrice = null; filters.maxPrice = null; render(($('searchInput') || {}).value || ''); };
+    window.skhSearchMore = function () { tabLimit += 12; render(($('searchInput') || {}).value || ''); };
+
+    /* [SEARCH-INTEL 2026-11-21] Analytics: one event per settled query (not per keystroke). */
+    var logTimer = null, lastLogged = '';
+    function logSearch(q, res, ms, fix) {
+        if (typeof window.skhSearchLog !== 'function') return;
+        clearTimeout(logTimer);
+        logTimer = setTimeout(function () {
+            var cur = (($('searchInput') || {}).value || '').trim();
+            var key = cur + '|' + JSON.stringify(filters);
+            if (cur !== String(q).trim() || key === lastLogged) return;
+            lastLogged = key;
+            window.skhSearchLog('search', { q: cur, results: res.total, ms: ms, corrected: fix || '', sort: filters.sort || (res.intent && res.intent.sort) || '' });
+        }, 1200);
     }
 
     window.skhSearchTab = function (t) { activeTab = t; render(($('searchInput') || {}).value || ''); };
@@ -471,7 +588,11 @@
         if (typeof window.handleSearch === 'function') window.handleSearch();  // feed ya zamani
     };
 
-    window.skhSearchOpen = function (id, col) {
+    window.skhSearchOpen = function (id, col, pos, sponsored) {
+        try {
+            var it = searchPool().filter(function (x) { return x.id === id; })[0] || {};
+            if (typeof window.skhSearchLog === 'function') window.skhSearchLog('click', { q: (($('searchInput') || {}).value || '').trim(), itemId: id, col: col || 'products', pos: pos || 0, cat: it.category || '', sponsored: !!sponsored });
+        } catch (eL) {}
         window.skhSearchClose();
         var i = $('searchInput'); if (i && i.value.trim()) addRecent(i.value.trim());
         if (typeof window.openProduct === 'function') window.openProduct(id, col);

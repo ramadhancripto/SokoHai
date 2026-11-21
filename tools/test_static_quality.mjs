@@ -67,7 +67,8 @@ function ratio(a, b) {
     const robots = read('robots.txt');
     t('SEO: robots.txt haina <DOMAIN>', !robots.includes('<DOMAIN>'));
     t('SEO: robots.txt ina Sitemap halisi',
-        robots.includes('Sitemap: https://sokohaicom.netlify.app/sitemap.xml'));
+        // [SEO 2026-11-21] the canonical origin (functions/site-domain.js) is https://sokohai.com; the sitemap is built by tools/build_seo.mjs
+        robots.includes('Sitemap: ' + /const CANONICAL_ORIGIN = '([^']+)'/.exec(read('functions/site-domain.js'))[1] + '/sitemap.xml'));
 
     const manifest = JSON.parse(read('sokohai-manifest.json'));
     t('SEO: manifest icons zipo kwenye repo',

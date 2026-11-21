@@ -899,6 +899,21 @@ body { background: var(--sh-bg); color: var(--sh-text); }
 }
 .skh-ss-chip:hover { background: var(--sh-blue-50); border-color: var(--sh-blue-100); color: var(--sh-blue); }
 .skh-ss-chip-row { display: flex; align-items: center; gap: 2px; }
+/* [SEARCH-INTEL 2026-11-21] filters, "did you mean", related searches, sponsored label */
+.skh-ss-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px var(--sh-2) 8px; border-bottom: 1px solid var(--sh-border-2); }
+.skh-ss-filters select, .skh-ss-price-f input { height: 32px; border: 1px solid var(--sh-border-2); border-radius: var(--sh-r-pill); background: var(--sh-surface); color: var(--sh-text); font: inherit; font-size: var(--sh-fs-xs); padding: 0 10px; min-width: 0; }
+.skh-ss-price-f { display: inline-flex; gap: 4px; }
+.skh-ss-price-f input { width: 82px; }
+.skh-ss-tog { height: 32px; padding: 0 12px; border-radius: var(--sh-r-pill); border: 1px solid var(--sh-border-2); background: var(--sh-surface); color: var(--sh-text-2); font-size: var(--sh-fs-xs); font-weight: var(--sh-fw-med); cursor: pointer; }
+.skh-ss-tog.on { background: var(--sh-green-50); border-color: var(--sh-green); color: var(--sh-green-deep); }
+.skh-ss-dym { padding: 6px var(--sh-2); font-size: var(--sh-fs-sm); color: var(--sh-text-2); }
+.skh-ss-dym button { border: 0; background: none; padding: 0; color: var(--sh-green-deep); font-weight: 800; text-decoration: underline; cursor: pointer; font-size: inherit; }
+.skh-ss-rel { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px var(--sh-2); font-size: var(--sh-fs-xs); color: var(--sh-text-2); border-top: 1px solid var(--sh-border-2); }
+.skh-ss-rel button { border: 1px solid var(--sh-blue-100); background: var(--sh-blue-50); color: var(--sh-blue-deep); border-radius: var(--sh-r-pill); padding: 5px 10px; font-size: var(--sh-fs-xs); cursor: pointer; }
+.skh-ss-more { display: block; width: calc(100% - 2 * var(--sh-2)); margin: 6px var(--sh-2); padding: 9px; border-radius: var(--sh-r-pill); border: 1px solid var(--sh-green); background: var(--sh-surface); color: var(--sh-green-deep); font-weight: 700; cursor: pointer; }
+.skh-ss-ad { font-style: normal; font-weight: 800; color: var(--sh-gold); background: var(--sh-gold-50); border-radius: 4px; padding: 0 5px; margin-right: 4px; font-size: 10.5px; }
+.skh-ss-row.is-sponsored { background: var(--sh-gold-50); }
+.skh-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .skh-ss-rec {
     flex: 1 1 auto; display: flex; align-items: center; gap: var(--sh-2);
     padding: 9px var(--sh-2); border: none; background: transparent; cursor: pointer;

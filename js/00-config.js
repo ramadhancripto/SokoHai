@@ -109,7 +109,7 @@ window.SOKOHAI_CONFIG = {
         // payee name / till / pay-bill number that customers already see. Empty = payment collection stays off.
         promotionPayment: { payeeName: '', channels: [] }
     },
-    CANONICAL_ORIGIN: 'https://sokohaicom.netlify.app',
+    CANONICAL_ORIGIN: 'https://sokohai.com',
     FIREBASE_ENVIRONMENTS: {
         production: {
             projectId: 'sokonet-3b847',
