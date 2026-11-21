@@ -904,6 +904,8 @@ body { background: var(--sh-bg); color: var(--sh-text); }
 .skh-ss-filters select, .skh-ss-price-f input { height: 32px; border: 1px solid var(--sh-border-2); border-radius: var(--sh-r-pill); background: var(--sh-surface); color: var(--sh-text); font: inherit; font-size: var(--sh-fs-xs); padding: 0 10px; min-width: 0; }
 .skh-ss-price-f { display: inline-flex; gap: 4px; }
 .skh-ss-price-f input { width: 82px; }
+/* the panel sits inside .search-wrap, whose input rule (padding for the bar's buttons) must not reach these fields */
+.search-wrap .skh-ss-price-f input { width: 96px !important; height: 32px !important; min-height: 32px; padding: 0 10px !important; font-size: 13px !important; box-shadow: none; }
 .skh-ss-tog { height: 32px; padding: 0 12px; border-radius: var(--sh-r-pill); border: 1px solid var(--sh-border-2); background: var(--sh-surface); color: var(--sh-text-2); font-size: var(--sh-fs-xs); font-weight: var(--sh-fw-med); cursor: pointer; }
 .skh-ss-tog.on { background: var(--sh-green-50); border-color: var(--sh-green); color: var(--sh-green-deep); }
 .skh-ss-dym { padding: 6px var(--sh-2); font-size: var(--sh-fs-sm); color: var(--sh-text-2); }

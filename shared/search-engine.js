@@ -437,7 +437,11 @@
     var a = typeof query === 'object' && query && query.terms ? query : analyze(query), out = [], seen = {};
     function add(t) { t = String(t || '').trim(); var k = fold(t); if (!t || seen[k] || k === a.text) return; seen[k] = 1; out.push(t); }
     a.terms.forEach(function (t) { if (t.group != null) DICT.GROUPS[t.group].terms.slice(0, 4).forEach(function (s) { if (fold(s) !== t.w) add(s); }); });
-    (ranked || []).slice(0, 12).forEach(function (r) { var d = r.item || r; if (d.subCategory) add(d.subCategory); if (d.brand) add(d.brand + ' ' + (a.terms[0] ? a.terms[0].w : '')); });
+    (ranked || []).slice(0, 12).forEach(function (r) { var d = r.item || r; if (d.subCategory) add(d.subCategory); if (d.brand) {
+      // the brand itself when the query was (a misspelling of) the brand, otherwise "brand + word" — never a typo in a suggestion
+      var w0 = a.terms[0] ? a.terms[0].w : '', fb = fold(d.brand);
+      if (!w0 || fb === w0 || fb.indexOf(w0) === 0 || editDistance(fb, w0) <= 2) add(d.brand); else add(d.brand + ' ' + w0);
+    } });
     return out.slice(0, limit || 8);
   }
   /** Prefix autocomplete from real listings + dictionary (no Firestore query). */
