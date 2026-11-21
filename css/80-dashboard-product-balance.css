@@ -52,6 +52,7 @@
 #dashWorkspace .rb-actions { display:flex; gap:7px; flex-wrap:wrap; }
 #dashWorkspace .rb-actions button { border:1px solid #b5daca; border-radius:9px; background:#eaf8f1; color:#146649; padding:9px 12px; min-height:40px; font:750 12px/1.3 system-ui,sans-serif; cursor:pointer; }
 #dashWorkspace .rb-actions button:disabled { color:#897878; border-color:#e5dede; background:#f5f2f2; cursor:not-allowed; }
+#dashWorkspace .rb-actions button.rb-purge:not(:disabled) { border-color:#f1b4b4; background:#fdf0f0; color:#b42318; } /* [RECYCLE 2026-11-21] Futa kabisa */
 #dashWorkspace .rb-empty { border:1px dashed #cadfd3; border-radius:12px; padding:24px 16px; color:#627d6e; text-align:center; font:500 13px/1.5 system-ui,sans-serif; }
 #dashWorkspace .rb-more { margin-top:5px; }
 @media(max-width:600px) { #dashWorkspace .rb-actions { width:100%; } #dashWorkspace .rb-actions button { flex:1 1 120px; } }

@@ -1,4 +1,5 @@
 'use strict';
+const { logBestEffort } = require('./errors'); // [SRV-10] best-effort steps leave a structured trace
 /* ============================================================
  * SOKOHAI — REQUEST ROUTING CORE (2026-09)
  * ============================================================
@@ -28,7 +29,7 @@ async function routingEvent(myDb, rideId, event, actorId, extra) {
             actorId: actorId || 'system',
             timestamp: nowIso()
         }, extra || {}));
-    } catch (e) { /* matukio hayapaswi kuvuruga routing */ }
+    } catch (e) { logBestEffort('routing-core:31', e); /* matukio hayapaswi kuvuruga routing */ }
 }
 
 async function notify(myDb, userId, title, body, rideId) {
@@ -43,7 +44,7 @@ async function notify(myDb, userId, title, body, rideId) {
             type: 'delivery_offer',
             rideId: rideId || null
         });
-    } catch (e) { /* si muhimu */ }
+    } catch (e) { logBestEffort('routing-core:46', e); /* si muhimu */ }
 }
 
 /* ------------------ kusanya wagombeaji ------------------ */
@@ -57,7 +58,7 @@ async function collectCandidates(myDb) {
             if (!x.userId) return;
             out.push(Object.assign({ id: d.id, uid: x.userId, kind: 'driver' }, x));
         });
-    } catch (e) { /* endelea na agents */ }
+    } catch (e) { logBestEffort('routing-core:60', e); /* endelea na agents */ }
     try {
         const as = await myDb.collection('agents').where('status', '==', 'approved').limit(200).get();
         as.forEach(function (d) {
@@ -71,7 +72,7 @@ async function collectCandidates(myDb) {
                 online: x.online !== false
             }, x, { kind: 'agent' }));
         });
-    } catch (e) { /* hakuna agents */ }
+    } catch (e) { logBestEffort('routing-core:74', e); /* hakuna agents */ }
     return out;
 }
 
@@ -275,7 +276,7 @@ async function preferredCandidateFor(myDb, uid, order) {
             const ud = u.data() || {};
             name = ud.fullName || ud.displayName || ud.businessName || ud.shopName || name;
         }
-    } catch (e) { /* endelea */ }
+    } catch (e) { logBestEffort('routing-core:278', e); /* endelea */ }
     const postId = (order.delivery && order.delivery.logisticPostId) || null;
     if (postId) {
         try {
@@ -501,7 +502,7 @@ async function exposeProductRideToMarketplace(myDb, rideId) {
             if (!rd.productOrder || rd.status !== 'searching' || rd.driverId || rd.assignmentStatus !== 'failed_assignment') return;
             t.update(ref, { routingStatus: 'marketplace', preferredDriverId: null, activeOfferId: null });
         });
-    } catch (e) { /* best effort; never revive closed rides */ }
+    } catch (e) { logBestEffort('routing-core:504', e); /* best effort; never revive closed rides */ }
 }
 
 // Offer changes must contend with acceptance and cancellation on the same ride.

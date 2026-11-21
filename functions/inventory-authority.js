@@ -1,6 +1,8 @@
 'use strict';
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 
@@ -91,7 +93,7 @@ function optionalMoney(value, name) {
 }
 
 function isAdmin(auth) {
-  return auth.token && (auth.token.admin === true || auth.token.role === 'admin');
+  return authz.isAdmin(auth || null); // [SRV-09] was claim-only: verified super admins were refused here
 }
 
 async function actorContext(uid) {
@@ -1053,10 +1055,7 @@ exports.inventoryAdjust = onCall({ region: REGION }, async req => {
 const MAX_VARIANT_COMBINATIONS = 200;
 const VARIANT_SERVER_KEYS = ['stock', 'reserved', 'openingStockInitialized'];
 function variantAdmin(auth) {
-  const t = auth.token || {};
-  const email = String(t.email || '').toLowerCase();
-  const list = String(process.env.ADMIN_EMAILS || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean);
-  return (email && t.email_verified === true && list.includes(email)) || t.admin === true || t.superAdmin === true || t.role === 'admin';
+  return authz.isAdmin(auth || null); // [SRV-09]
 }
 function cleanVariantRow(row) {
   if (!row || typeof row !== 'object' || Array.isArray(row)) throw new HttpsError('invalid-argument', 'VARIANT_ROW_INVALID');

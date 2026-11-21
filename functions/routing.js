@@ -16,7 +16,8 @@
  * ili itumie tena custody helpers zilizopo.
  * ============================================================ */
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const admin = require('firebase-admin');
 const core = require('./routing-core');
 const L = require('./routing-logic');
@@ -107,11 +108,13 @@ exports.deliveryRouteBooking = onCall({ region: REGION }, async (req) => {
         }
     }
 
-    return core.routeBookingFromOrder(db, orderId, {
-        actorId: auth.uid,
-        force: true,
-        preferredDriverId: preferredDriverId || null
-    });
+    try {
+        return await core.routeBookingFromOrder(db, orderId, {
+            actorId: auth.uid,
+            force: true,
+            preferredDriverId: preferredDriverId || null
+        });
+    } catch (e) { throw mapError(e); } // [G-1] typed core errors
 });
 
 // Recovery/breakdown is server-authoritative. Before pickup the assignment may
@@ -175,7 +178,7 @@ exports.deliveryRouteSweep = onCall({ region: REGION }, async (req) => {
     mine.forEach(d => ids.add(d.data().rideId));
     const results = [];
     for (const rideId of ids) {
-        try { results.push(await core.sweepRide(db, rideId)); } catch (e) { /* ruhusa/haipo */ }
+        try { results.push(await core.sweepRide(db, rideId)); } catch (e) { logBestEffort('routing:181', e); /* ruhusa/haipo */ }
     }
     return { ok: true, swept: ids.size, results: results };
 });
@@ -211,22 +214,33 @@ exports.deliveryRouteRetry = onCall({ region: REGION }, async (req) => {
     }
     const orderId = rd.orderId;
     if (!orderId) throw new HttpsError('failed-precondition', 'Order halijulikani; tangaza upya ombi.');
-    return core.routeBookingFromOrder(db, orderId, {
-        actorId: auth.uid, round: Number(rd.routingRound || 1) + 1, force: true
-    });
+    try {
+        return await core.routeBookingFromOrder(db, orderId, {
+            actorId: auth.uid, round: Number(rd.routingRound || 1) + 1, force: true
+        });
+    } catch (e) { throw mapError(e); } // [G-1] typed core errors
 });
 
 /* ---- makosa ya core (strings) → HttpsError zenye kanuni ---- */
 function mapError(e) {
+    if (e instanceof HttpsError) return e;
     const m = String((e && e.message) || e || '');
     const code = ({
         offer_not_found: 'not-found',
         not_your_offer: 'permission-denied',
         offer_not_active: 'failed-precondition',
         offer_expired: 'failed-precondition',
-        ride_already_assigned: 'failed-precondition'
-    })[m] || 'internal';
-    return new HttpsError(code, m);
+        ride_already_assigned: 'failed-precondition',
+        // [G-1 2026-11-20] found by tools/test_callables_g1_emulator.mjs: these core errors reached the browser as INTERNAL
+        not_a_booking: 'failed-precondition',
+        order_not_found: 'not-found',
+        ride_not_found: 'not-found',
+        orderId_required: 'invalid-argument',
+        unknown_action: 'invalid-argument'
+    })[m];
+    if (!code) return e; // unknown: the shared wrapper (functions/errors.js) returns internal + request id and logs it
+    const text = { not_a_booking: 'not_a_booking: oda hii haina usafiri ulioombwa (delivery.required) - chagua usafiri kwanza.' }[m] || m;
+    return new HttpsError(code, text);
 }
 
 /* ---- exports kwa ajili ya majaribio / kuunganisha tena ---- */

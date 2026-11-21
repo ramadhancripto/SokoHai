@@ -47,7 +47,9 @@ Module._load = function(request, parent, isMain) {
   if (request === 'firebase-functions/v2/https') return { onCall: (_opts, handler) => handler, HttpsError: class HttpsError extends Error { constructor(code, message) { super(message); this.code = code; } } };
   if (request === 'firebase-admin') return fakeAdmin;
   if (request === './business-store-authority') return { resolveBusinessStoreContext: async ({ auth, product, requestedBusinessId, requestedStoreId }) => {
-    if (!auth || auth.uid !== 'cashier-1') throw new Error('unauthorized');
+    // [SRV-10 2026-11-20] The real business-store-authority refuses with HttpsError('permission-denied', ...); the double
+    // now does the same (a plain Error is an UNEXPECTED failure under the shared error contract and becomes 'internal').
+    if (!auth || auth.uid !== 'cashier-1') { const H = require('firebase-functions/v2/https').HttpsError; throw new H('permission-denied', 'unauthorized'); }
     if (product.businessId !== requestedBusinessId || product.storeId !== requestedStoreId) throw new Error('scope mismatch');
     return { ownerUid: product.userId || 'seller-1', businessId: requestedBusinessId, storeId: requestedStoreId };
   } };

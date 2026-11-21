@@ -131,9 +131,12 @@ async function main() {
     const r = await call('pesapalCheckout', 'buyer', { amount: 10000, orderTrackingId: 'CK1' });
     assert(r.ok, JSON.stringify(r));
   });
-  await test('L1 missing redirect_url from PesaPal -> internal', async () => {
+  // [SRV-06 2026-11-20] typed contract: a PesaPal answer without a payment URL is an upstream failure
+  // (unavailable PAYMENT_PROVIDER_UNAVAILABLE, "Hakuna pesa iliyokatwa"), no longer a raw 'internal'.
+  await test('L1 missing redirect_url from PesaPal -> unavailable PAYMENT_PROVIDER_UNAVAILABLE', async () => {
     SUBMIT_HOOK = async () => ({ status: '200' });
-    denied(await call('pesapalCheckout', 'buyer', { amount: 1000, orderTrackingId: 'CK-NOREDIR' }), ['internal'], 'no redirect');
+    const r = await call('pesapalCheckout', 'buyer', { amount: 1000, orderTrackingId: 'CK-NOREDIR' });
+    denied(r, ['unavailable'], 'no redirect'); assert(/PAYMENT_PROVIDER_UNAVAILABLE/.test(r.message), 'typed reason: ' + r.message);
     SUBMIT_HOOK = null;
   });
   await test('L1 SubmitOrderRequest network fail -> internal', async () => {

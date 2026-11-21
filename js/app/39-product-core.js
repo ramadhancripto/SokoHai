@@ -34,7 +34,9 @@ export function availabilityStatus(p){
 export function productEligible(p){
   // [REMEDIATION 2026-11-20] hidden and offline listings never surface (regression from the channels change:
   // a product with salesChannels ['marketplace'] but availabilityStatus 'hidden' / isOnline false was shown).
-  return !!p && !p.archivedAt && publicationStatus(p)==='published' && p.isOnline!==false
+  // [SOKOHURU 2026-11-21] a listing hidden/removed by moderation never surfaces either
+  return !!p && !p.archivedAt && p.permanentlyDeleted!==true && p.deleted!==true && p.adminHidden!==true && String(p.moderationStatus||'').toLowerCase()!=='removed'
+    && publicationStatus(p)==='published' && p.isOnline!==false
     && availabilityStatus(p)!=='hidden' && channelsOf(p).includes('marketplace');
 }
 export function normalizeTaxonomyMetadata(input){

@@ -930,11 +930,12 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             return '<article class="rb-card"><div class="rb-picture">' + (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '<span aria-hidden="true">▣</span>') + '</div>'
                 + '<div class="rb-info"><b>' + esc(p.title || p.name || 'Bidhaa') + '</b><small>Imeondolewa: ' + esc(date) + '</small>'
                 + (blocked ? '<small class="rb-warning">Bidhaa hii ina kizuizi cha usimamizi; wasiliana na msaada.</small>' : '') + '</div>'
-                + '<div class="rb-actions"><button type="button" data-rb-restore="' + esc(p.id) + '"' + (blocked || RB.busy ? ' disabled' : '') + '>Rejesha kama rasimu</button>'
-                + '<button type="button" disabled title="Ufutaji wa kudumu haujawezeshwa; rekodi za biashara zinahitaji ulinzi">Futa kabisa</button></div></article>';
+                + '<div class="rb-actions"><button type="button" data-rb-restore="' + esc(p.id) + '"' + (blocked || RB.busy ? ' disabled' : '') + '>Rejesha sokoni</button>'
+                + '<button type="button" class="rb-purge" data-rb-purge="' + esc(p.id) + '"' + (blocked || RB.busy ? ' disabled' : '') + '>Futa kabisa</button></div></article>';
         }).join('');
         host.innerHTML = cards || (RB.loading ? '<p class="rb-empty">Inapakia bidhaa…</p>' : '<p class="rb-empty">Hakuna bidhaa zilizofutwa kwenye ukurasa uliopakiwa.' + (RB.more ? ' Bonyeza “Pakia zaidi” kuangalia nyingine.' : '') + '</p>');
         host.querySelectorAll('[data-rb-restore]').forEach(function (btn) { btn.addEventListener('click', function () { rbRestore(btn.getAttribute('data-rb-restore')); }); });
+        host.querySelectorAll('[data-rb-purge]').forEach(function (btn) { btn.addEventListener('click', function () { rbPurge(btn.getAttribute('data-rb-purge')); }); });
         var more = document.getElementById('rbMore'); if (more) { more.hidden = !RB.more; more.disabled = RB.loading || RB.busy; more.textContent = RB.loading ? 'Inapakia…' : 'Pakia zaidi'; }
     }
     async function rbLoadMore(gen) {
@@ -948,7 +949,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             var snap = await skh.getDocs(skh.query.apply(null, [skh.collection(skh.db,'products')].concat(clauses)));
             if (gen !== RB.generation || !rbHere() || !skh.currentUser || skh.currentUser.uid !== actor || rbOwner() !== owner) return;
             var docs = snap.docs || [];
-            docs.forEach(function (d) { var p = Object.assign({}, d.data(), { id:d.id }); if (mpInRecycle(p) && !RB.items.some(function (x) { return x.id === p.id; })) RB.items.push(p); });
+            docs.forEach(function (d) { var p = Object.assign({}, d.data(), { id:d.id }); if (mpInRecycle(p) && p.permanentlyDeleted !== true && !RB.items.some(function (x) { return x.id === p.id; })) RB.items.push(p); });
             RB.cursor = docs.length ? docs[docs.length - 1] : RB.cursor; RB.more = docs.length === 100;
             var status = document.getElementById('rbStatus'); if (status) status.textContent = 'Bidhaa zilizopatikana kwenye ukurasa uliopakiwa: ' + RB.items.length + '.';
         } catch (e) {
@@ -964,8 +965,8 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         var ws = document.getElementById('dashWorkspace'); if (!ws || !skh.currentUser) return;
         var gen = ++RB.generation;
         RB.owner = rbOwner(); RB.actor = skh.currentUser.uid; RB.cursor = null; RB.items = []; RB.more = false; RB.loading = false; RB.busy = false;
-        ws.innerHTML = '<section class="rb-shell"><header class="rb-heading"><div><span class="rb-eyebrow">BIDHAA ZANGU</span><h2>Recycle Bin</h2><p>Bidhaa ulizoondoa huhifadhiwa hapa kwa muda. Unaweza kuzirejesha kama rasimu na kuzikagua kabla ya kuchapisha tena.</p></div><button type="button" onclick="window.switchDashTab(\'my_products\')">← Bidhaa Zangu</button></header>'
-            + '<aside class="rb-notice"><b>Futa kabisa bado haijawezeshwa</b><span>Mfumo unahitaji ukaguzi wa usalama wa oda, malipo na stoo kabla ya kufuta rekodi ya bidhaa. Bidhaa hubaki hapa hadi ukaguzi huo utakapowezekana.</span></aside>'
+        ws.innerHTML = '<section class="rb-shell"><header class="rb-heading"><div><span class="rb-eyebrow">BIDHAA ZANGU</span><h2>Recycle Bin</h2><p>Bidhaa ulizoondoa hazionekani sokoni. Ukiirejesha, inarudi sokoni kama ilivyokuwa; ukiifuta kabisa, haitarudi tena.</p></div><button type="button" onclick="window.switchDashTab(\'my_products\')">← Bidhaa Zangu</button></header>'
+            + '<aside class="rb-notice"><b>Futa kabisa</b><span>Bidhaa iliyofutwa kabisa haionekani tena popote na haiwezi kurejeshwa. Rekodi yake huhifadhiwa kimya kwa ajili ya historia ya oda na malipo tu.</span></aside>'
             + '<p id="rbStatus" role="status" aria-live="polite">Inapakia…</p><div id="rbProducts"></div><button type="button" id="rbMore" class="rb-more" onclick="window.skhRBMore()" hidden>Pakia zaidi</button></section>';
         rbLoadMore(gen);
     };
@@ -973,7 +974,43 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         if (RB.busy || !rbHere() || !skh.currentUser) return;
         var row = RB.items.find(function (p) { return p.id === id; }); if (!row) return;
         var actor = skh.currentUser.uid, owner = rbOwner(), gen = RB.generation;
-        if (!await skhConfirm('Rejesha "' + (row.title || row.name || 'bidhaa') + '" kama rasimu? Itabidi uikague kabla ya kuichapisha tena.')) return;
+        if (!await skhConfirm('Rejesha "' + (row.title || row.name || 'bidhaa') + '" sokoni? Itaonekana tena kwa wanunuzi.')) return;
+        if (RB.busy || !rbHere() || gen !== RB.generation || !skh.currentUser || skh.currentUser.uid !== actor || rbOwner() !== owner) return;
+        RB.busy = true; rbPaint();
+        try {
+            var ref = skh.doc(skh.db, 'products', id);
+            // [RECYCLE 2026-11-21] Kurejesha = kurudi sokoni (published). Tangazo la zamani lisilokidhi muundo wa sasa
+            // (sheria zinakataa kulichapisha) linarudi kama rasimu ili muuzaji alikamilishe.
+            var restoreTo = async function (state) {
+                await skh.runTransaction(skh.db, async function (tx) {
+                    var snap = await tx.get(ref); if (!snap || !snap.exists()) throw new Error('Bidhaa haipatikani tena.');
+                    var p = snap.data() || {};
+                    if (!mpInRecycle(p) || p.permanentlyDeleted === true) throw new Error('Bidhaa haipo tena kwenye Recycle Bin.');
+                    if (p.adminHidden === true || String(p.moderationStatus || '').toLowerCase() === 'removed') throw new Error('Ina kizuizi cha usimamizi.');
+                    tx.update(ref, { publicationStatus: state, status: state === 'published' ? 'active' : 'draft', archivedAt: null, updatedAt: new Date().toISOString() });
+                });
+            };
+            var restoredAs = 'published';
+            try { await restoreTo('published'); }
+            catch (ePub) {
+                var denied = /permission|insufficient/i.test(String((ePub && (ePub.code || ePub.message)) || ''));
+                if (!denied) throw ePub;
+                await restoreTo('draft'); restoredAs = 'draft';
+            }
+            if (skh._feedCache) skh._feedCache.clear();
+            if (typeof window.skhRefreshHomeListings === 'function') { try { await window.skhRefreshHomeListings(); } catch (eR) {} }
+            if (gen === RB.generation && rbHere()) { RB.items = RB.items.filter(function (p) { return p.id !== id; }); var st = document.getElementById('rbStatus'); if (st) st.textContent = restoredAs === 'published' ? 'Imerejeshwa sokoni.' : 'Imerejeshwa kama rasimu: taarifa zake hazijakamilika. Ikamilishe kwenye Bidhaa Zangu kisha uichapishe.'; }
+        } catch (e) { if (gen === RB.generation && rbHere()) { var st = document.getElementById('rbStatus'); if (st) st.textContent = 'Haikurejeshwa: ' + String(e && e.message || 'jaribu tena'); } }
+        finally { if (gen === RB.generation) { RB.busy = false; rbPaint(); } }
+    }
+
+    /* [RECYCLE 2026-11-21] Futa kabisa: bidhaa inaondoka kwenye Recycle Bin na haiwezi kurejeshwa wala kuonekana popote.
+       Rekodi yenyewe haifutwi (sheria zinakataza kufuta) ili oda, malipo na stoo zilizoirejelea zibaki sahihi. */
+    async function rbPurge(id) {
+        if (RB.busy || !rbHere() || !skh.currentUser) return;
+        var row = RB.items.find(function (p) { return p.id === id; }); if (!row) return;
+        var actor = skh.currentUser.uid, owner = rbOwner(), gen = RB.generation;
+        if (!await skhConfirm('Futa kabisa "' + (row.title || row.name || 'bidhaa') + '"? Haitaweza kurejeshwa tena.')) return;
         if (RB.busy || !rbHere() || gen !== RB.generation || !skh.currentUser || skh.currentUser.uid !== actor || rbOwner() !== owner) return;
         RB.busy = true; rbPaint();
         try {
@@ -981,13 +1018,15 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             await skh.runTransaction(skh.db, async function (tx) {
                 var snap = await tx.get(ref); if (!snap || !snap.exists()) throw new Error('Bidhaa haipatikani tena.');
                 var p = snap.data() || {};
-                if (!mpInRecycle(p)) throw new Error('Bidhaa haipo tena kwenye Recycle Bin.');
+                if (!mpInRecycle(p)) throw new Error('Bidhaa haipo kwenye Recycle Bin.');
+                if (p.permanentlyDeleted === true) return;
                 if (p.adminHidden === true || String(p.moderationStatus || '').toLowerCase() === 'removed') throw new Error('Ina kizuizi cha usimamizi.');
-                tx.update(ref, { publicationStatus:'draft', status:'draft', archivedAt:null, updatedAt:new Date().toISOString() });
+                var now = new Date().toISOString();
+                tx.update(ref, { permanentlyDeleted: true, permanentlyDeletedAt: now, updatedAt: now });
             });
             if (skh._feedCache) skh._feedCache.clear();
-            if (gen === RB.generation && rbHere()) { RB.items = RB.items.filter(function (p) { return p.id !== id; }); var st = document.getElementById('rbStatus'); if (st) st.textContent = 'Imerejeshwa kama rasimu. Ikague kwenye Bidhaa Zangu.'; }
-        } catch (e) { if (gen === RB.generation && rbHere()) { var st = document.getElementById('rbStatus'); if (st) st.textContent = 'Haikurejeshwa: ' + String(e && e.message || 'jaribu tena'); } }
+            if (gen === RB.generation && rbHere()) { RB.items = RB.items.filter(function (p) { return p.id !== id; }); var st = document.getElementById('rbStatus'); if (st) st.textContent = 'Imefutwa kabisa.'; }
+        } catch (e) { if (gen === RB.generation && rbHere()) { var st = document.getElementById('rbStatus'); if (st) st.textContent = 'Haikufutwa: ' + String(e && e.message || 'jaribu tena'); } }
         finally { if (gen === RB.generation) { RB.busy = false; rbPaint(); } }
     }
 

@@ -20,7 +20,8 @@
  *   negotiation_events/{id} â€” audit trail (spec Â§41) + idempotency.
  *   offers/{id} â€” kumbukumbu ya kila ofa/counter (reused existing).
  * ============================================================ */
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const admin = require('firebase-admin');
 
 const REGION = 'europe-west1';
@@ -275,7 +276,7 @@ async function createOrderDoc(db, nego, negotiationId, agreements) {
         const [bp, sp] = await Promise.allSettled([db.doc('users/' + nego.buyerId).get(), db.doc('users/' + nego.sellerId).get()]);
         if (bp.status === 'fulfilled' && bp.value.exists) { const u = bp.value.data() || {}; buyerName = u.fullName || u.displayName || buyerName; }
         if (sp.status === 'fulfilled' && sp.value.exists) { const u = sp.value.data() || {}; sellerName = u.fullName || u.displayName || u.shopName || sellerName; }
-    } catch (e) { /* majina si lazima */ }
+    } catch (e) { logBestEffort('negotiation:279', e); /* majina si lazima */ }
     const orderDoc = {
         negotiationId: negotiationId,
         conversationId: nego.conversationId || null,
@@ -464,7 +465,7 @@ async function applyCommand(db, auth, params) {
             try {
                 const oSnap = await db.doc('orders/' + nego.orderId).get();
                 if (oSnap.exists && oSnap.data().paymentStatus === 'paid') parentPaid = true;
-            } catch (e) { /* assume not paid */ }
+            } catch (e) { logBestEffort('negotiation:468', e); /* assume not paid */ }
             if (parentPaid) {
                 const additionalQty = Math.max(1, qty - prevQty);
                 const amount = additionalQty * (nego.currentUnitPrice || 0);
@@ -548,7 +549,7 @@ async function applyCommand(db, auth, params) {
             try {
                 const routing = require('./routing');
                 await routing._core.routeBookingFromOrder(db, orderId, { actorId: uid, round: 1 });
-            } catch (e) { /* routing yaweza kurudiwa baadaye */ }
+            } catch (e) { logBestEffort('negotiation:552', e); /* routing yaweza kurudiwa baadaye */ }
         } else {
             notification = { to: nego.sellerId, title: 'ðŸ›’ Oda Imefungwa', body: 'Oda #' + orderId + ' Â· ' + (nego.serviceTitle || nego.productTitle || 'Bidhaa') + ' Â· TSh ' + ((nego.quantity || 1) * (nego.currentUnitPrice || 0)).toLocaleString() };
         }
@@ -736,10 +737,10 @@ exports.negotiationSendOffer = onCall({ region: REGION }, async (req) => {
             productImage = productImage || p.image || (p.images && p.images[0]) || '';
             originalUnitPrice = (p.price != null) ? Number(p.price) : null;
         }
-    } catch (e) { /* endelea bila meta ya bidhaa */ }
+    } catch (e) { logBestEffort('negotiation:740', e); /* endelea bila meta ya bidhaa */ }
 
     let buyerName = auth.token && auth.token.email ? auth.token.email.split('@')[0] : buyerId;
-    try { const b = await db.doc('users/' + buyerId).get(); if (b.exists) { const u = b.data() || {}; buyerName = u.fullName || u.displayName || buyerName; } } catch (e) {}
+    try { const b = await db.doc('users/' + buyerId).get(); if (b.exists) { const u = b.data() || {}; buyerName = u.fullName || u.displayName || buyerName; } } catch (e) { logBestEffort('negotiation.buyerName', e); }
 
     const negoId = db.collection('negotiations').doc().id;
     const now = nowIso();
@@ -970,7 +971,7 @@ async function applyCommandByOffer(db, auth, params) {
             try {
                 const routing = require('./routing');
                 await routing._core.routeBookingFromOrder(db, orderRef.id, { actorId: auth.uid, round: 1 });
-            } catch (e) { /* routing yaweza kurudiwa baadaye */ }
+            } catch (e) { logBestEffort('negotiation:974', e); /* routing yaweza kurudiwa baadaye */ }
         }
         res.orderId = orderRef.id;
         res.status = STATES.ORDER_CREATED;

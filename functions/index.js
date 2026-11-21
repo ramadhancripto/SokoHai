@@ -21,7 +21,9 @@
  */
 'use strict';
 
-const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
+const { onRequest, HttpsError } = require('firebase-functions/v2/https');
+const { onCall, fetchWithTimeout, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { setGlobalOptions } = require('firebase-functions/v2');
 const admin = require('firebase-admin');
@@ -67,10 +69,10 @@ function currentProjectId() {
 }
 function pesapalLiveGuard(baseUrl) {
     let host = '';
-    try { host = new URL(baseUrl).hostname; } catch (e) { throw new Error('PESAPAL_BASE_URL si URL halali.'); }
+    try { host = new URL(baseUrl).hostname; } catch (e) { throw new HttpsError('failed-precondition', 'PAYMENTS_NOT_CONFIGURED: PESAPAL_BASE_URL si URL halali.'); } // [SRV-06] typed config error
     const live = host === 'pay.pesapal.com';
     if (live && currentProjectId() !== PRODUCTION_PROJECT_ID && String(process.env.PESAPAL_ALLOW_LIVE || '').toLowerCase() !== 'true') {
-        throw new Error('PesaPal LIVE imezuiwa kwenye project "' + (currentProjectId() || '?') + '". Tumia sandbox (https://cybqa.pesapal.com/pesapalv3) kwenye staging.');
+        throw new HttpsError('failed-precondition', 'PAYMENTS_LIVE_BLOCKED: PesaPal LIVE imezuiwa kwenye project "' + (currentProjectId() || '?') + '". Tumia sandbox (https://cybqa.pesapal.com/pesapalv3) kwenye staging.');
     }
     return { host, live };
 }
@@ -81,17 +83,21 @@ let _ppToken = { value: '', expiresAt: 0 };
 async function pesapalToken() {
     const c = ppConfig();
     if (!c.consumerKey || !c.consumerSecret) {
-        throw new Error('PESAPAL_CONSUMER_KEY / PESAPAL_CONSUMER_SECRET hazijasanidiwa (angalia functions/.env).');
+        throw new HttpsError('failed-precondition', 'PAYMENTS_NOT_CONFIGURED: PESAPAL_CONSUMER_KEY / PESAPAL_CONSUMER_SECRET hazijasanidiwa (angalia functions/.env).'); // [SRV-06]
     }
     pesapalLiveGuard(c.baseUrl);
     const now = Date.now();
     if (_ppToken.value && _ppToken.expiresAt > now + 30000) return _ppToken.value;
 
-    const res = await fetch(c.baseUrl + '/api/Auth/RequestToken', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ consumer_key: c.consumerKey, consumer_secret: c.consumerSecret })
-    });
+    const started = Date.now();
+    let res;
+    try {
+        res = await fetchWithTimeout(c.baseUrl + '/api/Auth/RequestToken', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ consumer_key: c.consumerKey, consumer_secret: c.consumerSecret })
+        }, PP_TIMEOUT_MS);
+    } catch (e) { throw ppError('RequestToken', e, null, started); }
     const text = await res.text();
     let data = null;
     try { data = JSON.parse(text); } catch (e) { data = { _raw: text }; }
@@ -99,10 +105,12 @@ async function pesapalToken() {
     if (!token) {
         const detail = (data && data.error && (data.error.message || data.error)) || (data && data.message) || text.slice(0, 140);
         // Ujumbe wazi ili iwe rahisi kujua chanzo: funguo / mazingira / mtandao
-        const msg = (res.status === 401 || res.status === 403)
-            ? 'Funguo za PesaPal hazikubaliwa (HTTP ' + res.status + '). Angalia PESAPAL_CONSUMER_KEY/SECRET na base URL. ' + detail
-            : 'PesaPal RequestToken imeshindwa (HTTP ' + res.status + '): ' + detail;
-        throw new Error(String(msg));
+        // [SRV-06] typed: rejected keys = configuration, provider 5xx = unavailable
+        const httpStatus = res.status;
+        const msg = (httpStatus === 401 || httpStatus === 403 || (httpStatus < 500 && /invalid|credential|consumer|unauthori/i.test(String(detail))))
+            ? 'PAYMENT_PROVIDER_AUTH: Funguo za PesaPal hazikubaliwa (HTTP ' + httpStatus + '). Angalia PESAPAL_CONSUMER_KEY/SECRET na base URL.'
+            : 'PesaPal RequestToken imeshindwa (HTTP ' + httpStatus + '): ' + String(detail).slice(0, 140);
+        throw ppError('RequestToken', Object.assign(new Error(msg), { ppStatus: httpStatus, auth: /PAYMENT_PROVIDER_AUTH/.test(msg) }), httpStatus, started);
     }
     const expiryTs = Date.parse(data.expiryDate);
     const expiresIn = Number.isFinite(expiryTs) ? (expiryTs - now) : Number(data.expiresIn || 300000);
@@ -119,11 +127,34 @@ async function ppFetchJson(url, opts = {}) {
     const body = opts.body;
     const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = 'Bearer ' + token;
-    const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const started = Date.now();
+    let res;
+    try { res = await fetchWithTimeout(url, { method, headers, body: body ? JSON.stringify(body) : undefined }, PP_TIMEOUT_MS); } // [SRV-06] 15 s deadline
+    catch (e) { throw ppError(opts.stage || 'request', e, null, started); }
     const text = await res.text();
     let json = null;
     try { json = JSON.parse(text); } catch (e) { json = { _raw: text }; }
+    // [SRV-06] provider outage -> 'unavailable' (callers keep handling 2xx/4xx bodies as before)
+    if (res.status >= 500) throw ppError(opts.stage || 'request', Object.assign(new Error('PesaPal HTTP ' + res.status), { ppStatus: res.status }), res.status, started);
     return { status: res.status, json, text };
+}
+
+/* [SRV-06 2026-11-20] One mapping for PesaPal failures. Never includes keys, tokens or payment bodies.
+ *  - configuration problems (missing/invalid keys, blocked live host)  -> failed-precondition PAYMENTS_NOT_CONFIGURED / PAYMENT_PROVIDER_AUTH
+ *  - timeout (15 s), network failure, HTTP 5xx                          -> unavailable PAYMENT_PROVIDER_UNAVAILABLE
+ *  - an HttpsError passes through unchanged.
+ *  The error carries `upstream` {service, stage, status, durationMs} for the structured log (functions/errors.js). */
+const PP_TIMEOUT_MS = 15000;
+function ppError(stage, e, status, started) {
+    const upstream = { service: 'pesapal', stage, status: status || (e && e.ppStatus) || null, durationMs: started ? Date.now() - started : null, timeout: !!(e && e.timeout) };
+    let out;
+    if (e instanceof HttpsError) out = e;
+    else if (e && e.auth) out = new HttpsError('failed-precondition', String(e.message).slice(0, 220));
+    else if (e && (e.timeout || !e.ppStatus || e.ppStatus >= 500)) {
+        out = new HttpsError('unavailable', 'PAYMENT_PROVIDER_UNAVAILABLE: PesaPal (' + stage + ') ' + (e && e.timeout ? 'haikujibu ndani ya sekunde ' + (PP_TIMEOUT_MS / 1000) : (e && e.ppStatus ? 'imerudisha HTTP ' + e.ppStatus : 'haifikiki')) + '. Hakuna pesa iliyokatwa; jaribu tena baadaye.');
+    } else out = new HttpsError('failed-precondition', 'PAYMENT_PROVIDER_REJECTED: PesaPal (' + stage + ') imekataa ombi (HTTP ' + e.ppStatus + ').');
+    if (!out.upstream) out.upstream = upstream;
+    return out;
 }
 
 // Hali "COMPLETED" ya PesaPal → malipo yamethibitishwa
@@ -162,16 +193,9 @@ const ADMIN_EMAILS = () => String(process.env.ADMIN_EMAILS || '')
 
 function isAdmin(context) {
     if (!context || !context.auth) return false;
-    const em = (context.auth.token && context.auth.token.email || '').toLowerCase();
-    // [PHASE 1 SECURITY 2026-09] Email ya admin lazima iwe IMETHIBITISHWA
-    // (email_verified) — vinginevyo mtu angesajili akaunti kwa email hiyo.
-    if (em && context.auth.token.email_verified === true && ADMIN_EMAILS().includes(em)) return true;
-    const tk = context.auth.token || {};
-    if (tk.admin === true || tk.superAdmin === true || tk.role === 'admin') return true;
-    // [PILOT 2026-11-14] A super admin (SUPER_ADMIN_EMAILS, verified e-mail) is an admin everywhere.
-    // Before, admin-authority.js accepted the owner but these index.js callables (withdrawals,
-    // disputes, payment reviews...) refused them unless ADMIN_EMAILS or a custom claim was also set.
-    try { return require('./admin-authority')._internal.isSuperAdmin(context); } catch (e) { return false; }
+    // [SRV-09] one policy (functions/authz.js): admin/superAdmin/role claims, verified ADMIN_EMAILS,
+    // verified SUPER_ADMIN_EMAILS. Same result as the previous inline checks.
+    return authz.isAdmin(context);
 }
 
 /* ============================================================
@@ -225,7 +249,7 @@ async function ppVerifyTransaction(trackingId) {
     try {
         const c = ppConfig();
         const token = await pesapalToken();
-        const r = await ppFetchJson(c.baseUrl + '/api/Transactions/GetTransactionStatus?orderTrackingId=' + encodeURIComponent(id), { method: 'GET', token });
+        const r = await ppFetchJson(c.baseUrl + '/api/Transactions/GetTransactionStatus?orderTrackingId=' + encodeURIComponent(id), { method: 'GET', token, stage: 'GetTransactionStatus' });
         d = r.json || {};
     } catch (e) {
         return { paid: false, reason: 'pesapal_unavailable', message: (e && e.message) || '' };
@@ -441,7 +465,7 @@ async function settlePesaPalPayment(tx, source) {
                 initPurpose = String((inits.data() || {}).purpose || '');
                 initAmount = moneyOf((inits.data() || {}).amount);
             }
-        } catch (e) { /* best-effort */ }
+        } catch (e) { logBestEffort('index:468', e); /* best-effort */ }
     }
     // [REPAIR H2] Server price check for every candidate order (outside the
     // transaction: product/negotiation prices are only a lower bound).
@@ -613,7 +637,7 @@ async function settlePesaPalPayment(tx, source) {
     for (const de of depositEvents) {
         try { await db.collection('notifications').add({ userId: de.uid, title: 'Deposit Imepokelewa',
             body: 'TSh ' + Number(de.amount).toLocaleString() + ' imewekwa kwenye wallet yako (PesaPal).',
-            createdAt: now, read: false, type: 'deposit' }); } catch (e) { /* hiari */ }
+            createdAt: now, read: false, type: 'deposit' }); } catch (e) { logBestEffort('index:640', e); /* hiari */ }
     }
     out.ok = true;
     return out;
@@ -850,7 +874,7 @@ exports.walletAdjust = onCall({ region: REGION }, async (req) => {
         const ls = await t.get(ledgerRef);
         if (ls.exists) return; // idempotent — tayari imetekelezwa
         const us = await t.get(userRef);
-        if (!us.exists) throw new Error('USER_MISSING');
+        if (!us.exists) throw new HttpsError('failed-precondition', 'USER_MISSING: akaunti hii haina wasifu (users) bado. Kamilisha usajili kisha jaribu tena.'); // [SRV-05] was a plain Error -> INTERNAL
         let usage = null;
         if (usageRef) {
             const u = await t.get(usageRef);
@@ -1031,7 +1055,7 @@ exports.withdrawalRequest = onCall({ region: REGION }, async (req) => {
         const ls = await t.get(ledgerRef);
         if (ls.exists) return; // tayari — idempotent
         const us = await t.get(userRef);
-        if (!us.exists) throw new Error('USER_MISSING');
+        if (!us.exists) throw new HttpsError('failed-precondition', 'USER_MISSING: akaunti hii haina wasifu (users) bado. Kamilisha usajili kisha jaribu tena.'); // [SRV-05] was a plain Error -> INTERNAL
         const cur = Number(us.data().walletBalance || 0);
         balanceBefore = cur;
         if (cur + MONEY_EPS < amountTSh) {
@@ -1089,7 +1113,7 @@ exports.withdrawalResolve = onCall({ region: REGION }, async (req) => {
         const w = ((cfgSnap.exists ? cfgSnap.data() : {}) || {}).withdrawals || {};
         const n = Number(w.dualApprovalMin);
         if (Number.isFinite(n) && n > 0) dualMin = n;
-    } catch (e) { /* config isiposomeka: tabia ya zamani */ }
+    } catch (e) { logBestEffort('index:1116', e); /* config isiposomeka: tabia ya zamani */ }
     const externalRef = String(data.externalRef || '').trim().slice(0, 80);
     let outcome = null;
     await db.runTransaction(async (t) => {
@@ -1171,7 +1195,7 @@ exports.escrowRelease = onCall({ region: REGION }, async (req) => {
         return r;
     }
     const r = await releaseOrderEscrow(orderId, { callerUid: auth.uid, trigger: 'buyer' });
-    if (r && r.ok && !r.already) { try { await db.doc('orders/' + orderId).update({ buyerConfirmedAt: new Date().toISOString() }); } catch (e) {} }
+    if (r && r.ok && !r.already) { try { await db.doc('orders/' + orderId).update({ buyerConfirmedAt: new Date().toISOString() }); } catch (e) { logBestEffort('escrowRelease.buyerConfirmedAt', e); } }
     return r;
 });
 
@@ -1275,7 +1299,7 @@ async function releaseOrderEscrow(orderId, ctx) {
                 driverId = rd.driverId;
                 carrierShare = Math.min(Math.max(0, Number(rd.agreedFare || 0)), maxCarrier);
             }
-        } catch (e) { /* carrier ni hiari */ }
+        } catch (e) { logBestEffort('index:1302', e); /* carrier ni hiari */ }
     }
     if (driverId && driverId === buyerId) { driverId = null; carrierShare = 0; } // mnunuzi hajilipi mwenyewe
     if (driverId && driverId === sellerId) { driverId = null; carrierShare = 0; } // [PHASE 2 P1] muuzaji hapati "nauli" juu ya mauzo
@@ -1408,7 +1432,7 @@ async function releaseOrderEscrow(orderId, ctx) {
                 createdAt: now, read: false
             });
         }
-    } catch (e) { /* notifications si muhimu ku-crash */ }
+    } catch (e) { logBestEffort('index:1435', e); /* notifications si muhimu ku-crash */ }
 
     return {
         ok: true, orderId, ledgerId: releaseKey, applied,
@@ -1535,7 +1559,7 @@ async function releaseLinkEscrow(linkId, ctx) {
                 createdAt: now, read: false
             });
         }
-    } catch (e) { /* hiari */ }
+    } catch (e) { logBestEffort('index:1562', e); /* hiari */ }
 
     return {
         ok: true, linkId, ledgerId: releaseKey,
@@ -1711,7 +1735,7 @@ exports.serviceOrderWalletPay = onCall({ region: REGION }, async (req) => {
                 body: 'Mteja amelipa TSh ' + result.amount.toLocaleString() + ' kwa wallet. Pesa imethibitishwa na server na iko salama kwenye Escrow. Anza kazi sasa.',
                 orderId, createdAt: now, read: false
             }, { merge: true });
-        } catch (e) { /* taarifa si kikwazo cha malipo */ }
+        } catch (e) { logBestEffort('index:1738', e); /* taarifa si kikwazo cha malipo */ }
     }
     return result;
 });
@@ -1826,7 +1850,7 @@ async function notifyLinkEscrowFunded(db, linkId, sellerId, title, amount, metho
                 + '. Pesa imethibitishwa na server na iko salama kwenye Escrow ya SokoPay. Unaweza kuanza kazi/kusafirisha sasa.',
             linkId: String(linkId), createdAt: new Date().toISOString(), read: false
         }, { merge: true });
-    } catch (e) { /* taarifa si kikwazo cha malipo */ }
+    } catch (e) { logBestEffort('index:1853', e); /* taarifa si kikwazo cha malipo */ }
 }
 
 /* ============================================================
@@ -1892,9 +1916,7 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
         throw new HttpsError('failed-precondition', 'Kipindi cha majaribio: malipo moja yasizidi TSh ' + payCap.toLocaleString() + '.');
     }
 
-    const token = await pesapalToken().catch(e => {
-        throw new HttpsError('internal', 'PesaPal (RequestToken): ' + ((e && e.message) || 'Muunganisho umeshindikana.'));
-    });
+    const token = await pesapalToken().catch(e => { throw ppError('RequestToken', e); }); // [SRV-06] typed
 
     const body = {
         id: orderTrackingId,
@@ -1913,14 +1935,14 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
 
     let data = {};
     try {
-        const r = await ppFetchJson(c.baseUrl + '/api/Transactions/SubmitOrderRequest', { method: 'POST', token, body });
+        const r = await ppFetchJson(c.baseUrl + '/api/Transactions/SubmitOrderRequest', { method: 'POST', token, body, stage: 'SubmitOrderRequest' });
         data = r.json || {};
     } catch (e) {
-        throw new HttpsError('internal', 'PesaPal (SubmitOrderRequest): ' + ((e && e.message) || 'Muunganisho umeshindikana.'));
+        throw ppError('SubmitOrderRequest', e); // [SRV-06] typed (was internal)
     }
     if (data.error && !data.redirect_url) {
         const msg = (data.error && (data.error.message || data.error)) || 'PesaPal imekataa ombi la malipo.';
-        throw new HttpsError('internal', 'PesaPal (SubmitOrderRequest): ' + String(msg));
+        throw new HttpsError('failed-precondition', 'PAYMENT_PROVIDER_REJECTED: PesaPal (SubmitOrderRequest): ' + String(msg).slice(0, 200)); // [SRV-06] provider refused the request
     }
     // [PHASE 1 SECURITY 2026-09] Rekodi ya server: nani alianzisha malipo haya
     // (merchant reference). settlePesaPalPayment/walletAdjust hukataa kufunga
@@ -1940,7 +1962,7 @@ exports.pesapalCheckout = onCall({ region: REGION }, async (req) => {
     }
     const redirectUrlOut = data.redirect_url || data.redirectUrl || null;
     if (!redirectUrlOut) {
-        throw new HttpsError('internal', 'PesaPal haikurudisha URL ya malipo.');
+        throw new HttpsError('unavailable', 'PAYMENT_PROVIDER_UNAVAILABLE: PesaPal haikurudisha URL ya malipo. Hakuna pesa iliyokatwa; jaribu tena.'); // [SRV-06]
     }
     return { ok: true, redirectUrl: redirectUrlOut, orderTrackingId, merchantReference };
 });
@@ -1955,15 +1977,13 @@ exports.pesapalTransactionStatus = onCall({ region: REGION }, async (req) => {
     const orderTrackingId = String(d.orderTrackingId || d.externalId || '');
     if (!orderTrackingId) throw new HttpsError('invalid-argument', 'orderTrackingId inahitajika.');
 
-    const token = await pesapalToken().catch(e => {
-        throw new HttpsError('internal', 'PesaPal (RequestToken): ' + ((e && e.message) || 'Muunganisho umeshindikana.'));
-    });
+    const token = await pesapalToken().catch(e => { throw ppError('RequestToken', e); }); // [SRV-06] typed
     let data = {};
     try {
-        const r = await ppFetchJson(c.baseUrl + '/api/Transactions/GetTransactionStatus?orderTrackingId=' + encodeURIComponent(orderTrackingId), { method: 'GET', token });
+        const r = await ppFetchJson(c.baseUrl + '/api/Transactions/GetTransactionStatus?orderTrackingId=' + encodeURIComponent(orderTrackingId), { method: 'GET', token, stage: 'GetTransactionStatus' });
         data = r.json || {};
     } catch (e) {
-        throw new HttpsError('internal', 'PesaPal (GetTransactionStatus): ' + ((e && e.message) || 'Muunganisho umeshindikana.'));
+        throw ppError('GetTransactionStatus', e); // [SRV-06] typed (was internal)
     }
     // [PHASE 1 SECURITY 2026-09] Ikiwa PesaPal inathibitisha COMPLETED, SERVER
     // inafunga oda/link zenye rejea hii (paymentRef / transactionId) —
@@ -2042,7 +2062,7 @@ async function postOrderPaymentProtectedEvent(db, orderId, od, refKey, now) {
                 orderId: String(orderId), negotiationId: od.negotiationId || null
             }, { merge: true }).catch(() => {});
         }
-    } catch (e) { /* tukio la chat si kikwazo cha IPN */ }
+    } catch (e) { logBestEffort('index:2065', e); /* tukio la chat si kikwazo cha IPN */ }
 }
 
 /* ============================================================
@@ -2077,7 +2097,7 @@ exports.pesapalIpn = onRequest({ region: REGION }, async (req, res) => {
             const key = orderTrackingId || merchantReference;
             const tx = await ppVerifyTransaction(key);
             if (tx.paid) await settlePesaPalPayment(tx, 'ipn');
-        } catch (e) { /* log tu */ }
+        } catch (e) { logBestEffort('pesapalIpn.settle', e); /* [SRV-10] PesaPal still gets its 200 ack; pesapalReconcileSweep retries */ }
     }
 
     return res.status(200).type('application/json').send(JSON.stringify(ackBody));
@@ -2146,17 +2166,15 @@ exports.pesapalRegisterIpn = onCall({ region: REGION }, async (req) => {
     const url = String(d.url || c.ipnUrl || '');
     if (!url) throw new HttpsError('invalid-argument', 'URL ya IPN inahitajika.');
 
-    const token = await pesapalToken().catch(e => {
-        throw new HttpsError('internal', 'PesaPal (RequestToken): ' + ((e && e.message) || 'Muunganisho umeshindikana.'));
-    });
+    const token = await pesapalToken().catch(e => { throw ppError('RequestToken', e); }); // [SRV-06] typed
     let raw = null;
     try {
         const r = await ppFetchJson(c.baseUrl + '/api/URLSetup/RegisterIPN', {
-            method: 'POST', token, body: { url, ipn_notification_type: 'GET' }
+            method: 'POST', token, body: { url, ipn_notification_type: 'GET' }, stage: 'RegisterIPN'
         });
         raw = r.json;
     } catch (e) {
-        throw new HttpsError('internal', 'PesaPal (RegisterIPN): ' + ((e && e.message) || 'Muunganisho umeshindikana.'));
+        throw ppError('RegisterIPN', e); // [SRV-06] typed (was internal)
     }
     return { ok: true, raw };
 });
@@ -2332,7 +2350,7 @@ async function requireApprovedAgent(context) {
                 .where('uid', '==', auth.uid)
                 .limit(5).get();
             uq.forEach(d => { const u = d.data() || {}; if (u.isApprovedAgent === true && u.agentApprovedBy) approved = true; });
-        } catch (e) { /* hiari — agents ndiyo chanzo kikuu */ }
+        } catch (e) { logBestEffort('index:2353', e); /* hiari — agents ndiyo chanzo kikuu */ }
     }
     // [REPAIR 2026-10 C1] Both signals are now admin/server-only (rules). A
     // suspended/revoked agent or a suspended account is refused.
@@ -2342,7 +2360,7 @@ async function requireApprovedAgent(context) {
             const u = (ud && ud.data) || {};
             if (u.isSuspended === true || u.accountStatus === 'suspended'
                 || ['suspended', 'revoked'].indexOf(String(u.agentStatus || '')) !== -1) approved = false;
-        } catch (e) { /* keep decision */ }
+        } catch (e) { logBestEffort('index:2363', e); /* keep decision */ }
     }
     if (!approved) throw new HttpsError('permission-denied', 'Wakala wako hajaidhinishwa kutumia Msaada wa Mwanachama. Subiri Admin akubali ombi lako.');
     return auth;
@@ -2363,7 +2381,7 @@ async function assistLog(userId, agentId, action, referenceId, sessionId) {
             referenceId: referenceId || '',
             sessionId: sessionId || ''
         });
-    } catch (e) { /* audit haiwezi kuzuia operesheni kuu */ }
+    } catch (e) { logBestEffort('index:2384', e); /* audit haiwezi kuzuia operesheni kuu */ }
 }
 
 function nextMemberCode(n) { return 'SKH-' + String(n).padStart(8, '0'); }
@@ -2449,11 +2467,18 @@ exports.memberRegister = onCall({ region: REGION }, async (req) => {
         if (e && e.code && typeof e.code === 'string' && /^(invalid-argument|permission-denied|unauthenticated|not-found|already-exists|failed-precondition|out-of-range|aborted|internal|data-loss|resource-exhausted|cancelled|deadline-exceeded|unknown)$/.test(e.code) && e.message) {
             throw e; // tayari HttpsError yenye ujumbe wazi
         }
-        console.error('[memberRegister] hitilafu isiyotarajiwa:', e);
-        throw new HttpsError('internal', 'Usajili wa mwanachama umeshindikana: ' + (e && e.message ? e.message : e));
+        // [SRV-10] the shared wrapper logs it with a request id and returns a typed code (raw text is not sent to the browser)
+        throw e;
     }
 });
 
+/* [SRV-07] IAM signBlob / custom-token signing failures (code or message forms used by firebase-admin). */
+function isSigningPermissionError(e) {
+    const code = String((e && (e.code || (e.errorInfo && e.errorInfo.code))) || '');
+    const msg = String((e && e.message) || '');
+    return /insufficient-permission|invalid-credential/.test(code) || /signBlob|iam\.serviceAccounts|Service Account Token Creator|serviceAccountTokenCreator|Permission .*denied.*service account/i.test(msg);
+}
+Object.defineProperty(exports, '_isSigningPermissionErrorForTest', { enumerable: false, value: isSigningPermissionError });
 exports.memberAuthenticate = onCall({ region: REGION }, async (req) => {
     const auth = await requireApprovedAgent(req);
     const d = req.data || {};
@@ -2531,8 +2556,16 @@ exports.memberAuthenticate = onCall({ region: REGION }, async (req) => {
         const customToken = await admin.auth().createCustomToken(uid, { assisted: true });
         return { ok: true, customToken, sessionId, memberId: memberCode, uid, expiresAt };
     } catch (e) {
-        console.error('[memberAuthenticate] createCustomToken imeshindwa:', e);
-        throw new HttpsError('internal', 'Imeshindwa kuandaa kikao cha kuingia: ' + (e && e.message ? e.message : e));
+        // [SRV-07 2026-11-20] createCustomToken signs through IAM signBlob in Cloud Functions. Without the
+        // "Service Account Token Creator" role on the runtime service account it fails: say so (typed), and
+        // close the session that was just opened so no active session exists without a token.
+        await sessionRef.update({ active: false, endedAt: new Date().toISOString(), endReason: 'TOKEN_FAILED' }).catch(() => {});
+        if (isSigningPermissionError(e)) {
+            const err = new HttpsError('failed-precondition', 'SIGNING_NOT_CONFIGURED: server haina ruhusa ya kusaini kikao (IAM: Service Account Token Creator). Msimamizi arekebishe, kisha jaribu tena.');
+            err.upstream = { service: 'iam.signBlob', status: null };
+            throw err;
+        }
+        throw e;
     }
 });
 
@@ -2732,7 +2765,7 @@ async function custodyNotify(userId, title, body) {
             userId, title, body,
             createdAt: new Date().toISOString(), read: false, type: 'delivery'
         });
-    } catch (e) { /* notifications si muhimu ku-crash */ }
+    } catch (e) { logBestEffort('index:2768', e); /* notifications si muhimu ku-crash */ }
 }
 
 // Weka leg ya mwisho ya custodyLegs kuwa completed (kwa handover).
@@ -2752,7 +2785,7 @@ async function custodyCompleteLeg(rideId, parcelCondition, evidence) {
             });
             await db.doc('ride_requests/' + rideId).update({ custodyLegs: legs });
         }
-    } catch (e) { /* hiari */ }
+    } catch (e) { logBestEffort('index:2788', e); /* hiari */ }
 }
 
 /* ============================================================
@@ -2799,7 +2832,7 @@ async function custodySetToken(rideId, kind, token, participants, opts) {
     try {
         const rs = await db.doc('ride_requests/' + rideId).get();
         ride = rs.exists ? (rs.data() || {}) : {};
-    } catch (e) {}
+    } catch (e) { throw e; /* [SRV-10] was swallowed: a token must not be written from an unread ride (typed by the wrapper) */ }
     const tokenId = rideId + '_' + kind + (opts.legId ? '_' + String(opts.legId) : '');
     await db.collection('delivery_tokens').doc(tokenId).set({
         tokenId: tokenId,
@@ -2849,7 +2882,7 @@ async function custodyMarkTokenStatus(rideId, kind, status) {
         if (status === 'expired') patch.expiredAt = now;
         if (status === 'revoked') patch.revokedAt = now;
         await db.doc('delivery_tokens/' + rideId + '_' + kind).update(patch);
-    } catch (e) { /* hiari */ }
+    } catch (e) { logBestEffort('index:2885', e); /* hiari */ }
 }
 
 // Uthibitisho wa token: hash ya sasa (PHASE B) au plaintext ya zamani (legacy).
@@ -2885,10 +2918,10 @@ async function custodyAttemptFail(rideId, role) {
             windowStart: fresh ? now : Number((snap.data() || {}).windowStart || now),
             lastAt: new Date().toISOString()
         });
-    } catch (e) { /* hiari */ }
+    } catch (e) { logBestEffort('index:2921', e); /* hiari */ }
 }
 async function custodyAttemptClear(rideId, role) {
-    try { await db.collection('custody_attempts').doc(rideId + '_' + role).delete(); } catch (e) { /* hiari */ }
+    try { await db.collection('custody_attempts').doc(rideId + '_' + role).delete(); } catch (e) { logBestEffort('index:2924', e); /* hiari */ }
 }
 
 /* [CUSTODY 2026-09] Kukubali kazi (accept) ni ya SERVER — browser haiwezi
@@ -3912,7 +3945,7 @@ exports.deliveryComplete = onCall({ region: REGION }, async (req) => {
     } else if (data.skipPayout === true) {
         payoutStatus = 'skipped';
     }
-    try { await ref.update({ finalPayout: paidToDriver, payoutStatus: payoutStatus }); } catch (e) { /* hiari */ }
+    try { await ref.update({ finalPayout: paidToDriver, payoutStatus: payoutStatus }); } catch (e) { logBestEffort('index:3948', e); /* hiari */ }
 
     if (rd.driverId && paidToDriver > 0 && payoutStatus === 'paid_from_escrow') {
         await custodyNotify(rd.driverId, 'SokoPay: Malipo ya Safari Yamepokelewa!',
@@ -4132,7 +4165,7 @@ async function resolveCommentEvidence(uid, targetType, targetId) {
                     if (!out.order) out.order = { orderId: linked.d.orderId || linked.id, status: String(linked.d.status || ''), stage: '', at: linked.d.date || null };
                 }
             });
-        } catch (e) { /* index kukosa — achana */ }
+        } catch (e) { logBestEffort('index:4168', e); /* index kukosa — achana */ }
     }
     return out;
 }
@@ -4218,7 +4251,7 @@ exports.commentsPublish = onCall({ region: REGION }, async (req) => {
     try {
         const u = await db.doc('users/' + auth.uid).get();
         if (u.exists) { authorRole = u.data().role || 'user'; authorVerified = u.data().verificationStatus === 'verified' || u.data().verified === true; }
-    } catch (e) { /* fallback */ }
+    } catch (e) { logBestEffort('index:4254', e); /* fallback */ }
 
     // [USHAHIDI HALISI] Thibitisha oda/delivery kutoka mifumo ya SokoHai.
     // Hii ni SERVER-ONLY kamwe isibandikwe na browser.
@@ -4353,9 +4386,10 @@ exports.commentsModerate = onCall({ region: REGION }, async (req) => {
     const data = req.data || {};
     const commentId = String(data.commentId || '');
     const action = String(data.action || '');
-    const u = await db.doc('users/' + auth.uid).get();
-    const isAdmin = u.exists && u.data().role === 'admin';
-    if (!isAdmin) throw new HttpsError('permission-denied', 'Ni admin pekee anayeweza kusimamia maoni.');
+    // [SRV-09] shared admin policy; users.role === 'admin' (server/admin-set, protected by rules) still accepted
+    let isAdminUser = authz.isAdmin(req);
+    if (!isAdminUser) { const u = await db.doc('users/' + auth.uid).get(); isAdminUser = u.exists && u.data().role === 'admin'; }
+    if (!isAdminUser) throw new HttpsError('permission-denied', 'Ni admin pekee anayeweza kusimamia maoni.');
     if (!commentId || ['hide', 'unhide', 'delete'].indexOf(action) === -1) {
         throw new HttpsError('invalid-argument', 'commentId na action sahihi zinahitajika.');
     }
@@ -4400,7 +4434,7 @@ exports.sitemapXml = onRequest({ region: REGION }, async (req, res) => {
                 }
             });
         }
-    } catch (e) { /* ikishindikana, rudisha ukurasa wa kwanza tu */ }
+    } catch (e) { logBestEffort('sitemapXml.read', e); /* ikishindikana, rudisha ukurasa wa kwanza tu */ }
     const body = '<?xml version="1.0" encoding="UTF-8"?>\n'
         + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         + urls.map(u => '  <url><loc>' + u.replace(/&/g, '&amp;') + '</loc></url>').join('\n')
@@ -4679,7 +4713,7 @@ exports.orderConfirmDelivery = onCall({ region: REGION }, async (req) => {
         await db.collection('notifications').add({ userId: o.buyerId, title: 'Mzigo umekabidhiwa',
             body: 'Muuzaji amethibitisha makabidhiano kwa namba yako. Thibitisha kupokea au fungua mgogoro ikiwa kuna tatizo.',
             createdAt: new Date().toISOString(), read: false, type: 'order', orderId });
-    } catch (e) {}
+    } catch (e) { logBestEffort('orderConfirmDelivery.notify', e); }
     return result;
 });
 
@@ -4719,7 +4753,7 @@ exports.disputeOpen = onCall({ region: REGION }, async (req) => {
         t.update(ref, { status: 'disputed', disputeReason: reason, disputedAt: now, disputeId: disputeRef.id });
     });
     const other = auth.uid === buyerId ? sellerId : buyerId;
-    try { await db.collection('notifications').add({ userId: other, title: 'Mgogoro umefunguliwa', body: 'Fedha zimesimamishwa kwenye escrow mpaka Admin atoe uamuzi. Sababu: ' + reason, createdAt: now, read: false, type: 'dispute' }); } catch (e) {}
+    try { await db.collection('notifications').add({ userId: other, title: 'Mgogoro umefunguliwa', body: 'Fedha zimesimamishwa kwenye escrow mpaka Admin atoe uamuzi. Sababu: ' + reason, createdAt: now, read: false, type: 'dispute' }); } catch (e) { logBestEffort('notify', e); }
     return { ok: true, disputeId: disputeRef.id };
 });
 
@@ -4778,7 +4812,7 @@ exports.adminResolveDispute = onCall({ region: REGION }, async (req) => {
     });
     if (!applied) return { ok: true, already: true };
     for (const [uid, amt, who] of [[buyerUid, buyerAmt, 'mnunuzi'], [sellerUid, sellerAmt, 'muuzaji']]) {
-        try { await db.collection('notifications').add({ userId: uid, title: 'Uamuzi wa mgogoro', body: 'Admin ametoa uamuzi. Kiasi kwako (' + who + '): TSh ' + amt.toLocaleString() + '. Sababu: ' + reason.slice(0, 200), createdAt: now, read: false, type: 'dispute' }); } catch (e) {}
+        try { await db.collection('notifications').add({ userId: uid, title: 'Uamuzi wa mgogoro', body: 'Admin ametoa uamuzi. Kiasi kwako (' + who + '): TSh ' + amt.toLocaleString() + '. Sababu: ' + reason.slice(0, 200), createdAt: now, read: false, type: 'dispute' }); } catch (e) { logBestEffort('notify', e); }
     }
     return { ok: true, outcome, buyerAmount: buyerAmt, sellerAmount: sellerAmt };
 });
@@ -4864,7 +4898,7 @@ exports.adminPaymentReviewResolve = onCall({ region: REGION }, async (req) => {
         result = { ok: true, state: 'REFUNDED', amount };
     });
     if (result && result.ok && !result.already) {
-        try { await db.collection('notifications').doc('refund_late_' + safeKey(orderId)).set({ userId: buyerUid, type: 'refund', system: true, title: 'Refund ya oda', body: 'Oda yako haikuweza kutimizwa kwa sababu ya stock. TSh ' + Number(result.amount).toLocaleString() + ' zimerudishwa kwenye wallet yako.', createdAt: now, read: false }); } catch (e) {}
+        try { await db.collection('notifications').doc('refund_late_' + safeKey(orderId)).set({ userId: buyerUid, type: 'refund', system: true, title: 'Refund ya oda', body: 'Oda yako haikuweza kutimizwa kwa sababu ya stock. TSh ' + Number(result.amount).toLocaleString() + ' zimerudishwa kwenye wallet yako.', createdAt: now, read: false }); } catch (e) { logBestEffort('refund.notify', e); }
     }
     return result;
 });
@@ -5035,3 +5069,10 @@ exports.entitlementGrant = onCall({ region: REGION }, async (req) => {
     }
     throw new HttpsError('invalid-argument', 'kind: boost | subscription | agent_registration | deposit_item');
 });
+
+// [SRV-10] give every wrapped callable its export name for structured logs (no behaviour change).
+require('./errors').labelCallables(exports);
+
+// [SOKOHURU 2026-11-21] Launch scope: money-moving features answer FEATURE_DISABLED on the server while
+// system/launch (or SKH_LAUNCH_SCOPE=sokohuru) keeps them off. Original handlers run unchanged when on.
+require('./launch-gates').applyLaunchGates(exports);

@@ -19,7 +19,9 @@
  * rate-limited, length-limited, idempotent per clientId, and removable by host/admin.
  */
 'use strict';
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const { productUnsellableReason } = require('./product-state'); // [R-18]
 const admin = require('firebase-admin');
 const REGION = 'europe-west1';
@@ -30,7 +32,7 @@ const KINDS = ['live', 'live_commerce', 'auction', 'price_drop'];
 const MAX_PRODUCTS = 20, MAX_TEXT = 300, COMMENT_GAP_MS = 2000;
 const clean = (v, n) => String(v == null ? '' : v).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
 const id = (v) => { const s = String(v || ''); if (!s || s.length > 128 || s.indexOf('/') !== -1) throw new HttpsError('invalid-argument', 'id_si_sahihi'); return s; };
-function isAdminToken(req) { const t = (req.auth && req.auth.token) || {}; return t.admin === true || t.superAdmin === true; }
+function isAdminToken(req) { return !!(req && req.auth) && authz.isAdmin(req); } // [SRV-09]
 
 /* Only real players: YouTube / Vimeo embed links (watch/live links are converted). */
 function embedUrl(raw) {
@@ -49,10 +51,10 @@ function embedUrl(raw) {
 }
 async function notify(userId, title, body, extra) {
     if (!userId) return;
-    try { await db().collection('notifications').add(Object.assign({ userId: String(userId), title: clean(title, 140), body: clean(body, 500), createdAt: new Date().toISOString(), read: false, source: 'server' }, extra || {})); } catch (e) { /* never blocks */ }
+    try { await db().collection('notifications').add(Object.assign({ userId: String(userId), title: clean(title, 140), body: clean(body, 500), createdAt: new Date().toISOString(), read: false, source: 'server' }, extra || {})); } catch (e) { logBestEffort('live-commerce:54', e); /* never blocks */ }
 }
 async function audit(req, action, target, details) {
-    try { await db().collection('admin_audit_log').add({ action, actorUid: (req.auth && req.auth.uid) || 'system', actorRole: isAdminToken(req) ? 'admin' : 'user', target, details: details || {}, createdAt: new Date().toISOString() }); } catch (e) { /* */ }
+    try { await db().collection('admin_audit_log').add({ action, actorUid: (req.auth && req.auth.uid) || 'system', actorRole: isAdminToken(req) ? 'admin' : 'user', target, details: details || {}, createdAt: new Date().toISOString() }); } catch (e) { logBestEffort('live-commerce:57', e); /* */ }
 }
 async function userDoc(uid) { const s = await db().doc('users/' + uid).get(); return s.exists ? (s.data() || {}) : null; }
 function suspended(u) { return !!u && (u.accountStatus === 'suspended' || u.isSuspended === true || u.sellerLifecycle === 'suspended'); }
@@ -158,7 +160,7 @@ async function applyLiveFreeze(pids, wantPaused, stamp, shiftMs) {
                 if (saleMode(p) === 'auction' && Number(md.endTime) > 0 && !md.ended && pausedMs > 0) patch['modeData.endTime'] = Number(md.endTime) + pausedMs;
                 t.update(pref, patch);
             });
-        } catch (e) { /* the product may be gone; the session transition still stands */ }
+        } catch (e) { logBestEffort('live-commerce:163', e); /* the product may be gone; the session transition still stands */ }
     }
 }
 /* [STAGE2] convergence repair: the session document is the single source of truth, the product
@@ -262,7 +264,7 @@ exports.liveEnd = onCall({ region: REGION }, async (req) => {
     await ref.update({ status: 'ended', endedAt: now, updatedAt: now, endedBy: req.auth.uid, endReason: clean(data.reason, 200) || null, recordingUrl: rec, viewerCount: 0, pausedAt: null, pausedAtMs: null });
     // [AUCTION-LIVE] unfreeze the products (a paused session may be ended while frozen)
     for (const pid of (d.productIds || [])) {
-        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false, 'modeData.livePausedAtMs': null }); } catch (e) { /* gone */ }
+        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false, 'modeData.livePausedAtMs': null }); } catch (e) { logBestEffort('live-commerce:267', e); /* gone */ }
     }
     await ref.collection('comments').add({ kind: 'system', text: 'Live imekwisha', uid: req.auth.uid, name: 'SokoHai', createdAt: now, status: 'visible' });
     if (req.auth.uid !== d.hostUid) await audit(req, 'LIVE_ENDED_BY_ADMIN', { kind: 'live_session', id: ref.id }, { reason: clean(data.reason, 200) });
@@ -397,7 +399,7 @@ exports.adminLiveRemove = onCall({ region: REGION }, async (req) => {
     const now = new Date().toISOString();
     await ref.update({ status: 'removed', endedAt: d.endedAt || now, updatedAt: now, endedBy: req.auth.uid, endReason: reason, viewerCount: 0, pausedAt: null, pausedAtMs: null });
     for (const pid of (d.productIds || [])) {
-        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false, 'modeData.livePausedAtMs': null }); } catch (e) { /* gone */ }
+        try { await db().doc('products/' + id(pid)).update({ 'modeData.livePaused': false, 'modeData.livePausedAtMs': null }); } catch (e) { logBestEffort('live-commerce:402', e); /* gone */ }
     }
     await audit(req, 'LIVE_REMOVED', { kind: 'live_session', id: ref.id }, { reason });
     await notify(d.hostUid, 'Live yako imeondolewa', reason, { type: 'live_removed', liveSessionId: ref.id });

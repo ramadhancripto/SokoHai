@@ -1,147 +1,232 @@
 /* ==== css/06-auth-polish.css ==== */
 /* ============================================================
-   SOKOHAI AUTH POLISH (Phase 3.3) — Login & Signup
-   ⚠️ SCOPED: selectors zote zinaanza #authModal — hakuna modal
-   nyingine inayoathirika.
-   ⚠️ !IMPORTANT hapa inatumika KUBEAT inline styles zilizopo
-   kwenye HTML (padding/border/background) — njia pekee ya
-   kubadilisha bila kugusa HTML/auth logic. (Phase 4 itasafisha
-   inline styles zote.)
+   SOKOHAI AUTH SCREEN — [AUTH-UI 2026-11-21] visual redesign after the owner's
+   reference (SokoHai_Mobile_Login_Screen1): branded hero artwork, white card with
+   pill buttons, three trust marks, skyline footer with the green band.
+   Presentation only: every selector is scoped to #authModal (plus the
+   .skh-pass-wrap / .skh-strength helpers that js/08-auth-polish.js adds).
+   No authentication behaviour lives here.
    ============================================================ */
 
-/* ---------- Backdrop: brand gradient + blur ---------- */
 #authModal {
-    background: radial-gradient(1200px 600px at 20% -10%, rgba(3, 80, 157, 0.35), transparent 60%),
-                radial-gradient(900px 500px at 110% 110%, rgba(212, 175, 55, 0.18), transparent 55%),
-                rgba(2, 13, 28, 0.62) !important;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    --au-green: #18A982;
+    --au-green-d: #12946f;
+    --au-leaf: #16a34a;
+    --au-navy: #16236b;
+    --au-blue: #1268a8;
+    --au-ink: #0f2a3d;
+    --au-muted: #4b5b6b;
+    --au-line: #d8e3ea;
+    background: linear-gradient(180deg, #f4fbf8 0%, #ffffff 42%, #eef8f4 100%) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 !important;
+}
+#authModal .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* The global dialog rules (.overlay-menu > div: white box, radius, 92vh, 96vw) are for small dialogs.
+   This screen is a full page: its column opts out with a stronger selector. */
+html body #authModal > .skh-auth-card {
+    background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    max-height: none !important; overflow: visible !important;
+    width: 100% !important; max-width: 560px !important;
 }
 
-/* ---------- Card ya Auth ---------- */
-#authModal > div {
+/* ---------- page column ---------- */
+#authModal .skh-auth-card {
     position: relative;
-    overflow: hidden;
-    box-shadow: 0 24px 70px rgba(2, 13, 28, 0.45) !important;
-    animation: skhAuthPop 0.34s var(--skh-ease, cubic-bezier(.22, 1, .36, 1));
+    margin: 0 auto;
+    padding: 0;
+    min-height: 100%;
+    display: flex; flex-direction: column;
+    box-sizing: border-box;
+    text-align: center;
+    font-family: var(--skh-font, 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
+    animation: skhAuthIn .3s cubic-bezier(.22, 1, .36, 1);
 }
-/* Strip ya brand juu ya card */
-#authModal > div::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 6px;
-    background: linear-gradient(90deg, #18A982 0%, #35B892 100%);
-}
-@keyframes skhAuthPop {
-    from { opacity: 0; transform: scale(.94) translateY(14px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-}
+@keyframes skhAuthIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ---------- Duara la logo ---------- */
-#authModal > div > div:first-of-type {
-    background: #EAF8F2 !important;
-    box-shadow: 0 0 0 6px rgba(24, 169, 130, 0.08), var(--skh-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+/* ---------- hero artwork ---------- */
+#authModal .skh-auth-hero { position: relative; margin: 0; line-height: 0; }
+#authModal .skh-auth-hero-img { display: block; width: 100%; height: auto; aspect-ratio: 1024 / 500; object-fit: cover; }
+#authModal .skh-auth-lang {
+    position: absolute; top: 3.5%; right: 2.6%;
+    display: inline-flex; align-items: center; gap: 6px; line-height: 1;
+    background: #fff; border-radius: 999px;
+    padding: 5px 8px 5px 12px; color: var(--au-leaf);
+    box-shadow: 0 4px 14px rgba(15, 42, 61, .16);
 }
+#authModal .skh-auth-lang select {
+    border: 0; background: transparent; font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1;
+    color: var(--au-ink); padding: 6px 2px; outline: none; cursor: pointer; width: auto;
+}
+#authModal .skh-auth-lang:focus-within { box-shadow: 0 0 0 3px rgba(24, 169, 130, .35); }
 
-/* ---------- Inputs ---------- */
+/* ---------- white card ---------- */
+#authModal .skh-auth-panel {
+    position: relative; z-index: 1;
+    margin: -14px 14px 0;
+    background: #fff; border-radius: 26px; padding: 22px 18px 18px;
+    border: 1.5px solid #bfe6d3;
+    box-shadow: 0 16px 40px rgba(15, 42, 61, .12), 0 2px 6px rgba(15, 42, 61, .05);
+    text-align: left;
+}
+html body #authModal .skh-auth-title { margin: 0; text-align: center; font-size: 27px !important; font-weight: 800; color: var(--au-navy); text-transform: none; letter-spacing: -.01em; }
+#authModal .skh-auth-sub { margin: 6px 0 16px; text-align: center; font-size: 15.5px; color: var(--au-ink); }
+
+/* forms: toggleAuth() sets display:block/none on each form; spacing comes from margins */
+#authModal .auth-form-wrap > * + * { margin-top: 12px; }
+#authModal .auth-form-wrap > .skh-auth-sub { margin-top: 6px; }
+
+/* ---------- pill buttons (Google + e-mail) ---------- */
+#authModal .google-btn,
+#authModal .skh-auth-alt {
+    width: 100%; min-height: 58px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    background: #fff; border: 2px solid var(--au-leaf); border-radius: 999px;
+    font: 700 18px/1.2 'Google Sans', Roboto, var(--skh-font, Inter), Arial, sans-serif;
+    cursor: pointer; padding: 10px 20px;
+    box-shadow: 0 5px 14px rgba(22, 163, 74, .14);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+#authModal .google-btn { color: #111827; }
+#authModal .skh-auth-alt { color: var(--au-leaf); }
+#authModal .google-btn svg, #authModal .skh-auth-alt svg { flex: 0 0 auto; display: block; }
+#authModal .google-btn:hover:not(:disabled), #authModal .skh-auth-alt:hover { background: #f3fbf6; box-shadow: 0 8px 20px rgba(22, 163, 74, .22); transform: translateY(-1px); }
+#authModal .google-btn:active:not(:disabled), #authModal .skh-auth-alt:active { transform: scale(.985); }
+#authModal .google-btn:focus-visible, #authModal .skh-auth-alt:focus-visible { outline: 3px solid rgba(22, 163, 74, .45); outline-offset: 2px; }
+#authModal .google-btn:disabled { opacity: .7; cursor: progress; }
+#authModal .skh-auth-alt[aria-expanded="true"] { background: #f3fbf6; }
+
+/* ---------- "au" divider ---------- */
+#authModal .divider {
+    display: flex; align-items: center; gap: 14px; margin: 14px 4px 2px;
+    font-size: 16px; color: var(--au-ink); text-transform: none; letter-spacing: 0;
+}
+#authModal .divider::before, #authModal .divider::after { content: ''; flex: 1; height: 1px; background: #cfd9e3; }
+
+/* ---------- e-mail fields (revealed by the e-mail pill) ---------- */
+#authModal .skh-auth-email { display: none; }
+#authModal .skh-auth-email.is-open { display: block; animation: skhAuthIn .2s ease; }
+#authModal .skh-auth-email > * + * { margin-top: 12px; }
+#authModal .skh-auth-field { display: block; }
+#authModal .skh-auth-field > span { display: block; font-size: 13px; font-weight: 700; color: var(--au-ink); margin: 0 0 6px 4px; }
+#authModal .skh-auth-field > span small { font-weight: 500; color: var(--au-muted); }
 #authModal input[type="email"],
 #authModal input[type="password"],
 #authModal input[type="tel"],
 #authModal input[type="text"] {
-    border: 1.5px solid #d7e0ea !important;
-    background: #f8fafc !important;
-    font-size: 16px !important; /* inazuia iOS auto-zoom */
-    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    width: 100%; box-sizing: border-box; min-height: 52px;
+    padding: 13px 16px; margin: 0;
+    border: 1.5px solid var(--au-line) !important; border-radius: 16px;
+    background: #f8fbfa !important; color: var(--au-ink);
+    font-size: 16px !important; /* no iOS zoom */
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-#authModal input[type="email"]:hover,
-#authModal input[type="password"]:hover,
-#authModal input[type="tel"]:hover,
-#authModal input[type="text"]:hover {
-    border-color: #b3c3d4 !important;
-}
-#authModal input[type="email"]:focus,
-#authModal input[type="password"]:focus,
-#authModal input[type="tel"]:focus,
-#authModal input[type="text"]:focus {
-    border-color: var(--skh-primary, #03509d) !important;
-    background: #ffffff !important;
-    box-shadow: 0 0 0 4px rgba(3, 80, 157, 0.13) !important;
-}
-/* Placeholder laini */
-#authModal input::placeholder { color: #94a3b8; }
+#authModal input::placeholder { color: #9aa8b4; }
+#authModal input:hover { border-color: #b9ccd6 !important; }
+#authModal input:focus { border-color: var(--au-green) !important; background: #fff !important; box-shadow: 0 0 0 4px rgba(24, 169, 130, .14) !important; }
 
-/* ---------- Vitufe vya Submit ---------- */
-#authModal button[type="submit"] {
-    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
-    letter-spacing: 0.6px;
-}
-#authModal button[type="submit"]:hover:not(:disabled) {
-    transform: translateY(-2px);
-    filter: brightness(1.06);
-    box-shadow: 0 8px 22px rgba(0, 80, 157, 0.35) !important;
-}
-#authModal button[type="submit"]:active:not(:disabled) {
-    transform: translateY(0) scale(.985);
-}
-#authModal button[type="submit"]:disabled {
-    opacity: .75;
-    cursor: progress;
-}
+#authModal .skh-auth-forgot { text-align: right; margin-top: 4px !important; }
+#authModal .link-btn { background: none; border: 0; padding: 6px 2px; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--au-blue); }
+#authModal .link-btn:hover { color: var(--au-green-d); text-decoration: underline; }
 
-/* ---------- Google button ---------- */
-#authModal .google-btn {
-    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+/* ---------- primary submit ---------- */
+#authModal .skh-auth-primary {
+    width: 100%; min-height: 56px; border: 0; border-radius: 999px; cursor: pointer;
+    background: linear-gradient(135deg, #1cb68d 0%, #12946f 100%); color: #fff;
+    font-size: 17px; font-weight: 800; letter-spacing: .02em;
+    box-shadow: 0 10px 22px rgba(18, 148, 111, .32);
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
 }
-#authModal .google-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.12);
+#authModal .skh-auth-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); }
+#authModal .skh-auth-primary:active:not(:disabled) { transform: scale(.985); }
+#authModal .skh-auth-primary:focus-visible { outline: 3px solid rgba(18, 104, 168, .45); outline-offset: 2px; }
+#authModal .skh-auth-primary:disabled { opacity: .75; cursor: progress; }
+
+#authModal .skh-auth-switch { text-align: center; font-size: 16.5px; color: var(--au-navy); margin-top: 16px !important; }
+#authModal .skh-auth-switch b { color: var(--au-leaf); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+#authModal .skh-auth-switch b:hover, #authModal .skh-auth-switch b:focus-visible { color: var(--au-blue); outline: none; }
+
+/* ---------- trust marks ---------- */
+#authModal .skh-auth-trust { list-style: none; margin: 20px 10px 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+#authModal .skh-auth-trust li { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: left; font-size: 13.5px; line-height: 1.2; font-weight: 500; color: var(--au-ink); padding: 0 3px; }
+#authModal .skh-auth-trust li + li { border-left: 1px solid #cfd9e3; }
+#authModal .skh-auth-trust svg { flex: 0 0 auto; width: 34px; height: 34px; }
+#authModal .skh-auth-trust li:nth-child(2) svg { width: 42px; }
+
+#authModal .skh-auth-later {
+    display: block; margin: 14px auto 0; padding: 8px 14px;
+    background: transparent; border: 0; border-radius: 999px;
+    color: var(--au-muted); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
 }
-#authModal .google-btn:active { transform: scale(.985); }
+#authModal .skh-auth-later:hover { color: var(--au-ink); }
 
-/* ---------- Links ndogo ---------- */
-#authModal .link-btn { transition: color .15s ease, opacity .15s ease; }
-#authModal .link-btn:hover { color: var(--skh-primary, #03509d); }
-#authModal b[onclick] { transition: color .15s ease; }
-#authModal b[onclick]:hover { color: var(--skh-gold, #b8912a) !important; }
+/* ---------- skyline footer + green band ---------- */
+/* the footer takes the remaining height on tall phones: open sky above the skyline instead of an empty gap */
+#authModal .skh-auth-foot {
+    flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-end;
+    min-height: 120px; padding-top: 8px; line-height: 0;
+    background: linear-gradient(180deg, rgba(233, 245, 252, 0) 0%, #e9f5fc 100%);
+}
+#authModal .skh-auth-foot img { -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%); mask-image: linear-gradient(180deg, transparent 0%, #000 22%); }
+#authModal .skh-auth-foot img { display: block; width: 100%; height: auto; aspect-ratio: 1024 / 168; }
+#authModal .skh-auth-foot-band {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: linear-gradient(90deg, #048a44 0%, #07a552 55%, #19b45a 100%);
+    color: #fff; font-size: 15px; font-weight: 500; line-height: 1.2;
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    margin-top: -1px;
+}
+#authModal .skh-auth-foot-band i { width: 1px; height: 18px; background: rgba(255, 255, 255, .7); }
 
-/* ---------- Eye toggle ya nenosiri (js/08) ---------- */
-.skh-pass-wrap { position: relative; display: block; }
-.skh-pass-wrap input { padding-right: 48px !important; }
+/* ---------- Eye toggle (js/08) ---------- */
+.skh-pass-wrap { position: relative; display: block; margin: 0 !important; padding: 0 !important; }
+.skh-pass-wrap input { padding-right: 50px !important; }
 .skh-eye {
-    position: absolute;
-    right: 6px; top: 50%;
-    transform: translateY(-50%);
-    width: 38px; height: 38px;
-    border: none;
-    background: transparent;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 17px;
-    color: #64748b;
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 40px; height: 40px; border: none; background: transparent; border-radius: 10px;
+    cursor: pointer; font-size: 17px; color: #64748b;
     display: flex; align-items: center; justify-content: center;
     transition: background .15s ease, color .15s ease;
 }
-.skh-eye:hover { background: #eef2f7; color: var(--skh-primary, #03509d); }
+.skh-eye:hover { background: #eef5f2; color: #12946f; }
 
-/* ---------- Strength meter ya signup (js/08) ---------- */
-.skh-strength { display: flex; align-items: center; gap: 8px; margin-top: -4px; }
+/* ---------- Strength meter (js/08) ---------- */
+.skh-strength { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .skh-strength-bars { display: flex; gap: 4px; flex: 1; }
-.skh-strength-bars i {
-    height: 4px; flex: 1;
-    border-radius: 99px;
-    background: #e2e8f0;
-    transition: background .25s ease;
-}
+.skh-strength-bars i { height: 4px; flex: 1; border-radius: 99px; background: #e2e8f0; transition: background .25s ease; }
 .skh-strength-label { font-size: 12.5px; font-weight: 800; color: #94a3b8; min-width: 64px; text-align: right; }
 
-/* ---------- Mobile ---------- */
-@media (max-width: 420px) {
-    #authModal > div { padding: 24px 18px 18px !important; }
+/* ---------- small phones ---------- */
+@media (max-width: 360px) {
+    #authModal .skh-auth-panel { margin: -10px 10px 0; padding: 18px 14px 14px; border-radius: 22px; }
+    html body #authModal .skh-auth-title { font-size: 23px !important; }
+    #authModal .skh-auth-sub { font-size: 14px; }
+    #authModal .google-btn, #authModal .skh-auth-alt { min-height: 52px; font-size: 16px; gap: 10px; padding: 8px 14px; }
+    #authModal .skh-auth-trust { margin: 16px 4px 0; }
+    #authModal .skh-auth-trust li { font-size: 12px; gap: 5px; }
+    #authModal .skh-auth-trust svg { width: 32px; height: 32px; }
+    #authModal .skh-auth-trust li:nth-child(2) svg { width: 38px; }
+    #authModal .skh-auth-lang select { font-size: 13px; }
+}
+/* ---------- tablets / desktop: the phone design as a centred column on a soft page ---------- */
+@media (min-width: 600px) {
+    #authModal { background: radial-gradient(900px 500px at 10% 0%, rgba(24, 169, 130, .14), transparent 60%),
+                             radial-gradient(800px 500px at 100% 100%, rgba(233, 196, 106, .18), transparent 60%),
+                             #f3f8f6 !important; }
+    html body #authModal > .skh-auth-card { margin: 24px auto !important; min-height: calc(100% - 48px); background: #fff !important;
+        border-radius: 28px !important; box-shadow: 0 30px 80px rgba(15, 42, 61, .16) !important; overflow: hidden !important; }
+    #authModal .skh-auth-panel { margin: -18px 28px 0; padding: 26px 30px 22px; }
 }
 
-/* ---------- Upunguzaji wa motion (accessibility) ---------- */
 @media (prefers-reduced-motion: reduce) {
-    #authModal > div { animation: none; }
+    #authModal .skh-auth-card, #authModal .skh-auth-email.is-open { animation: none; }
     #authModal button, #authModal input { transition: none !important; }
 }

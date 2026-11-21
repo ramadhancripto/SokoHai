@@ -14,7 +14,9 @@
  * off, orders and payments behave exactly as before.
  */
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
@@ -37,11 +39,7 @@ async function loadConfig() {
 // Same rule as index.js isAdmin(): verified ADMIN_EMAILS address or an admin claim.
 function isAdminAuth(auth) {
   if (!auth) return false;
-  const t = auth.token || {};
-  const email = String(t.email || '').toLowerCase();
-  const list = String(process.env.ADMIN_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-  if (email && t.email_verified === true && list.includes(email)) return true;
-  return t.admin === true || t.superAdmin === true || t.role === 'admin';
+  return authz.isAdmin(auth); // [SRV-09] shared policy (adds verified SUPER_ADMIN_EMAILS)
 }
 
 async function readProducts(tx, productIds) {

@@ -9,7 +9,8 @@
  *     (run once after deploy; idempotent).
  */
 'use strict';
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const { onDocumentWritten } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const authority = require('./admin-authority');
@@ -121,7 +122,7 @@ exports.adminSearchBackfill = onCall({ region: REGION, timeoutSeconds: 300 }, as
             return Object.assign({ started: false }, cur);
         });
     } catch (e) {
-        if (e && e.__refused) { try { await audit('SEARCH_BACKFILL_REFUSED', req, e.__refused); } catch (x) {} }
+        if (e && e.__refused) { try { await audit('SEARCH_BACKFILL_REFUSED', req, e.__refused); } catch (x) { logBestEffort('adminSearchBackfill.auditRefused', x); } }
         throw e;
     }
     runId = lock.runId;
@@ -133,7 +134,7 @@ exports.adminSearchBackfill = onCall({ region: REGION, timeoutSeconds: 300 }, as
     try {
         r = await backfillPage(collection, lock.cursor, pageSize);
     } catch (e) {
-        try { await lockRef.update({ pageInFlight: false, lastError: String((e && e.message) || e).slice(0, 300) }); } catch (x) {}
+        try { await lockRef.update({ pageInFlight: false, lastError: String((e && e.message) || e).slice(0, 300) }); } catch (x) { logBestEffort('adminSearchBackfill.releasePage', x); }
         throw new HttpsError('internal', 'Ukurasa umeshindikana: ' + String((e && e.message) || e).slice(0, 200));
     }
 

@@ -245,7 +245,7 @@ window.saveOfflineInventoryItem = async function() {
             openingStockPending: true,
             openingStockInitialized: false,
             ownerName: skh.currentUser.displayName || "Duka letu",
-            userEmail: skh.currentUser.email,
+            // [SOKOHURU 2026-11-21] no userEmail in a public product document
             createdAt: new Date().toISOString()
         });
 

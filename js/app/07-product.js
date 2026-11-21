@@ -157,6 +157,18 @@ window.openProduct = async function(id, manualCollection = null) {
             }
 
         const found = { ...snapshot.data(), id: snapshot.id, collectionName: colName };
+        // [RECYCLE 2026-11-21] Bidhaa iliyoondolewa (Recycle Bin) haionyeshwi kwa wanunuzi hata kupitia kiungo cha zamani.
+        // Mmiliki (au wakala anayeisimamia) bado anaweza kuiona.
+        if (colName === 'products' && typeof skh.productEligible === 'function' && !skh.productEligible(found)) {
+            const meUid = skh.currentUser && skh.currentUser.uid;
+            const isOwnerView = !!meUid && (found.userId === meUid || found.managedByAgentUid === meUid);
+            if (!isOwnerView) {
+                if (window.activeProductUnsubscribe) { try { window.activeProductUnsubscribe(); } catch (eU) {} window.activeProductUnsubscribe = null; }
+                alert(T('pm_unavailable', 'Bidhaa hii haipatikani tena sokoni.'));
+                closeModals();
+                return;
+            }
+        }
         skh.currentOpenProduct = found;
 
         // [BUYER DASHBOARD] Recent view moja kwa user+entity (bounded, central).
@@ -1603,10 +1615,13 @@ window.toggleVoiceRecord = async function() {
                     
                     if(data.secure_url) { 
                         // Tuma url ya Sauti kwenye Firebase Chats
-                        let receiverEmail = skh.currentOpenProduct ? skh.currentOpenProduct.userEmail : skh.chatPartner + "@gmail.com"; // Fallback logic
+                        // [SOKOHURU 2026-11-21] listings no longer carry the seller e-mail: address the seller by uid (rules need senderUid/receiverUid)
+                        let receiverEmail = (skh.currentOpenProduct && skh.currentOpenProduct.userEmail) || '';
+                        const receiverUid = (skh.currentOpenProduct && skh.currentOpenProduct.userId) || skh.chatPartnerUid || '';
+                        if (!receiverUid) { alert(T('pr_upload_fail', 'Failed to upload file.')); return; }
                         await skh.addDoc(skh.collection(skh.db, "chats"), { 
                             text: ` Attachment: ${data.secure_url}`, 
-                            sender: skh.currentUser.email, 
+                            sender: skh.currentUser.email || '', senderUid: skh.currentUser.uid, receiverUid,
                             receiver: receiverEmail, 
                             createdAt: new Date().toISOString() 
                         }); 
@@ -1654,8 +1669,8 @@ window.handleChatFileUpload = async function(e) {
             if(data.secure_url) { 
                 await skh.addDoc(skh.collection(skh.db, "chats"), { 
                     text: ` Attachment: ${data.secure_url}`, 
-                    sender: skh.currentUser.email, 
-                    receiver: skh.currentOpenProduct.userEmail, 
+                    sender: skh.currentUser.email || '', senderUid: skh.currentUser.uid, receiverUid: skh.currentOpenProduct.userId || '', // [SOKOHURU] uid, not e-mail
+                    receiver: skh.currentOpenProduct.userEmail || '',
                     createdAt: new Date().toISOString() 
                 }); 
             } 

@@ -1,6 +1,7 @@
 'use strict';
 
 const admin = require('firebase-admin');
+const authz = require('./authz'); // [SRV-09] single admin policy
 const { HttpsError } = require('firebase-functions/v2/https');
 
 const db = admin.firestore();
@@ -10,7 +11,7 @@ function clean(value, max = 160) {
 }
 
 function adminClaim(auth) {
-  return !!(auth && auth.token && (auth.token.admin === true || auth.token.role === 'admin'));
+  return !!(auth && auth.token) && authz.isAdmin(auth); // [SRV-09]
 }
 
 /**

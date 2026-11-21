@@ -127,7 +127,12 @@ import { resolveDiscoveryContext, createDiscoverySession, productAttributeMap, c
             } catch (e) { q = skh.query(base, skh.limit(120)); }
             var snap = await skh.getDocs(q);
             var items = [];
-            snap.forEach(function (d) { items.push(Object.assign({ id: d.id, collectionName: col }, d.data())); });
+            snap.forEach(function (d) {
+                var it = Object.assign({ id: d.id, collectionName: col }, d.data());
+                // [RECYCLE 2026-11-21] bidhaa ya Recycle Bin / rasimu haiingii kwenye foleni ya Gundua
+                if (col === 'products' && skh.productEligible && !skh.productEligible(it)) return;
+                items.push(it);
+            });
             // Unganisha na cache bila kurudia
             var known = {};
             (skh.cachedItems || []).forEach(function (x) { known[x.collectionName + '/' + x.id] = 1; });

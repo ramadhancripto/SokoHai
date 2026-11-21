@@ -18,7 +18,8 @@
  *   price_drop_board/{pid}           public, masked: top 10, count, closed, offers
  */
 'use strict';
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
 const admin = require('firebase-admin');
 const { modeUnitPrice } = require('./pricing-core');
 const REGION = 'europe-west1';
@@ -42,7 +43,7 @@ function campaignState(p, nowMs) {
 }
 async function notify(userId, title, body, extra) {
     if (!userId) return;
-    try { await db().collection('notifications').add(Object.assign({ userId: String(userId), title: String(title).slice(0, 140), body: String(body).slice(0, 500), createdAt: new Date().toISOString(), read: false, source: 'server' }, extra || {})); } catch (e) {}
+    try { await db().collection('notifications').add(Object.assign({ userId: String(userId), title: String(title).slice(0, 140), body: String(body).slice(0, 500), createdAt: new Date().toISOString(), read: false, source: 'server' }, extra || {})); } catch (e) { logBestEffort('priceDrop.notify', e); }
 }
 async function ranked(pid) {
     const q = await db().collection('price_drop_entries').where('productId', '==', pid).limit(1000).get();

@@ -5,7 +5,9 @@
  * Campaigns stay in `announcements`; creative validation and presentation stay
  * in the shared Creative Model and canonical `js/06-announcement.js` renderer.
  */
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { HttpsError } = require('firebase-functions/v2/https');
+const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, wrapped in the shared error contract
+const authz = require('./authz'); // [SRV-09] single admin policy
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
@@ -40,8 +42,7 @@ function sha(value) { return crypto.createHash('sha256').update(String(value)).d
 function text(value, max = 180) { return core.text(value, max); }
 function timestampMillis(value) { return core.millis(value); }
 function isAdminToken(token) {
-  return !!token && (token.admin === true || token.isAdmin === true || token.role === 'admin'
-    || String(token.email || '').toLowerCase() === 'rshabansaid@gmail.com');
+  return !!token && authz.isAdmin(token); // [SRV-09] hard-coded personal e-mail and unverified email removed
 }
 function callableError(code, message) { return new HttpsError(code, message); }
 function randomId() { return crypto.randomBytes(18).toString('hex'); }
@@ -100,7 +101,7 @@ function publicCampaign(campaign, id) {
     else if (typeof value === 'boolean') output[field] = value;
     else if (Array.isArray(value) && field !== 'slideshow') output[field] = value.slice(0, 12);
     else if (value && typeof value === 'object' && field !== 'animation') {
-      try { output[field] = JSON.parse(JSON.stringify(value).slice(0, 12000)); } catch (_) {}
+      try { output[field] = JSON.parse(JSON.stringify(value).slice(0, 12000)); } catch (_) { /* truncated JSON is not valid: field intentionally omitted from the audit copy */ }
     }
   });
   output.id = String(id);
@@ -677,7 +678,7 @@ async function updateCampaignDelivery(request) {
     try {
       const metricsSnapshot = await metricRef(announcementId).get();
       if (metricsSnapshot.exists) totalViewable = core.currentDailyMetrics(metricsSnapshot.data(), core.dayKeyFor(now)).totalViewable;
-    } catch (_) {}
+    } catch (e) { logBestEffort('adsDelivery.metrics', e); /* 0 = not yet complete; next sweep retries */ }
   }
   const completed = status === 'completed' || (endAt > 0 && endAt <= now) || (totalGoal > 0 && totalViewable >= totalGoal);
   const mayChangeLifecycle = !completed && !draft

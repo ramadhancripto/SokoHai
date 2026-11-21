@@ -8,9 +8,9 @@
 //    so a deploy is picked up on the next load (no stale app);
 //  - a new version waits until the page asks (SKIP_WAITING) and old caches are deleted on activate.
 // ============================================================
-const VERSION = 'sokohai-r17-20261118-brand';
+const VERSION = 'sokohai-r18-20261121-icon3';   // [ICON 2026-11-21] approved app icon (v3)
 const CACHE = VERSION + '-static';
-const SHELL = ['./', './index.html', './offline.html', './sokohai-manifest.json', './assets/img/sokohai-app-192-v2.png', './assets/img/sokohai-app-512-v2.png'];
+const SHELL = ['./', './index.html', './offline.html', './sokohai-manifest.json', './assets/img/sokohai-app-192-v3.png', './assets/img/sokohai-app-512-v3.png'];
 const STATIC_RE = /\.(?:js|mjs|css|woff2?|ttf|png|jpe?g|webp|svg|gif|ico|json)$/i;
 const NEVER_RE = /\/__fn|\/api\/|pesapal|token|auth|checkout|wallet/i;
 
@@ -60,7 +60,7 @@ self.addEventListener('push', (event) => {
   const n = p.notification || {}, d = p.data || {};
   const link = (p.fcmOptions && p.fcmOptions.link) || d.url || './';
   event.waitUntil(self.registration.showNotification(String(n.title || 'SokoHai').slice(0, 80), {
-    body: String(n.body || '').slice(0, 160), icon: './assets/img/sokohai-app-192-v2.png', badge: './assets/img/sokohai-app-192-v2.png',
+    body: String(n.body || '').slice(0, 160), icon: './assets/img/sokohai-app-192-v3.png', badge: './assets/img/sokohai-app-192-v3.png',
     tag: 'skh-' + String(d.category || 'general'), data: { url: link }
   }));
 });
