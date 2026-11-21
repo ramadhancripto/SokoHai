@@ -186,6 +186,12 @@ html body #authModal .skh-auth-title { margin: 0; text-align: center; font-size:
 }
 #authModal .skh-auth-foot-band i { width: 1px; height: 18px; background: rgba(255, 255, 255, .7); }
 
+/* ---------- legal links (links only) ---------- */
+#authModal .skh-auth-legal { margin: 14px 0 0; text-align: center; font-size: 12.5px; line-height: 1.45; color: var(--au-muted); }
+#authModal .skh-auth-legal a, #authModal .skh-auth-legal-nav a { color: var(--au-blue); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+#authModal .skh-auth-legal-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 16px; padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px)); background: #07a552; line-height: 1.3; }
+#authModal .skh-auth-legal-nav a { color: #fff; font-size: 13px; }
+
 /* ---------- Eye toggle (js/08) ---------- */
 .skh-pass-wrap { position: relative; display: block; margin: 0 !important; padding: 0 !important; }
 .skh-pass-wrap input { padding-right: 50px !important; }

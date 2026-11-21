@@ -137,7 +137,7 @@ window.renderSellerLogisticsTab = async function() {
             // [PHASE 8 FIX] Chuja ili muuzaji aone mizigo ya duka lake pekee, si ya maduka mengine
             if (rd.sellerId && rd.sellerId !== shopOwnerId && rd.customerId !== shopOwnerId) return;
             count++;
-            const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
+            const cargoImg = rd.cargoImage || (window.skhAvatarUrl || (() => ''))('Mzigo', 'cccccc');
             html += `
                 <div style="background:white; border:1px solid #cbd5e1; padding:15px; border-radius:16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${cargoImg}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;"> ${skh.skhEscape(rd.cargoName || "")}</b> <span style="font-size:13px; color:gray; display:block;">Mteja: ${skh.skhEscape(rd.customerName)} | Njia: ${rd.fromLocation} -> ${rd.toLocation}</span> <span style="font-size:13px; color:orange; font-weight:bold; display:block; margin-top:2px;">Dereva: ${skh.skhEscape(rd.driverName || 'N/A')} (Chombo: ${rd.vehicleType})</span> </div> </div> <div style="text-align:right;"> <span style="font-size:12.5px; background:#fffbeb; color:#d97706; padding:4px 8px; border-radius:8px; font-weight:bold; display:block; margin-bottom:5px;">${rd.status.toUpperCase()}</span> <b style="font-size:12px; color:var(--primary-blue);">Token A: ${rd.pickupTokenRef || rd.pickupToken || 'Itaundwa baada ya dereva kukubali'}</b> </div> </div> `;
         });
@@ -435,7 +435,7 @@ window.setupDriverActiveJobsQuery = function() {
 
             if (rd.status !== "completed" && rd.status !== "cancelled") {
                 count++;
-                const cargoImg = rd.cargoImage || "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
+                const cargoImg = rd.cargoImage || (window.skhAvatarUrl || (() => ''))('Mzigo', 'cccccc');
                 const pToken = rd.pickupTokenRef || rd.pickupToken || "Bado";
                 const cPhone = skh.rideContactSpan(rid, "customerPhone", rd.customerPhone, "Haikujazwa"); // [R1] private/contact
 

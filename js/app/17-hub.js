@@ -725,7 +725,7 @@ window.openSokoPay = function() {
                 this.onerror = null;
                 this.src = (typeof window.skhInitialAvatar === 'function')
                     ? window.skhInitialAvatar(skh.currentUser.displayName || skh.currentUser.email)
-                    : 'https://ui-avatars.com/api/?name=SokoHai&background=00509d&color=fff';
+                    : (window.skhAvatarUrl || (() => ''))('SokoHai', '00509d');
             };
         }
     }
@@ -1907,7 +1907,7 @@ window.verifyAndPreviewSokoPay = async function() {
         // Chora muonekano wa preview maridadi ya mkataba
         if (preview) {
             preview.innerHTML = `
-                <div style="display:flex; gap:12px; align-items:center; text-align:left;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(d.image))}" style="width:60px; height:65px; border-radius:12px; object-fit:cover; border:1px solid #E2E8F0;" onerror="this.src='https://ui-avatars.com/api/?name=SokoPay&background=cbd5e1&color=0f172a'"> <div> <span style="font-size:12px; background: #FFFBEB; color: #B45309; padding: 2px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase;">Mkataba wa ${skh.skhEscape(d.contractType.toUpperCase())}</span> <b style="font-size:13px; display:block; color:#0F172A; margin-top:4px;">${skh.skhEscape(d.title)}</b> <span style="display:block; color:var(--terracotta); font-weight:900; margin-top:2px;">TSh ${d.price.toLocaleString()}</span> <small style="color:gray; font-size:12.5px; display:block; margin-top:2px;">Umetengenezwa na: <b>${skh.skhEscape(d.ownerName)}</b></small> </div> </div> `;
+                <div style="display:flex; gap:12px; align-items:center; text-align:left;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(d.image))}" style="width:60px; height:65px; border-radius:12px; object-fit:cover; border:1px solid #E2E8F0;" onerror="this.src=(window.skhAvatarUrl || (() => ''))('SokoPay', 'cbd5e1')"> <div> <span style="font-size:12px; background: #FFFBEB; color: #B45309; padding: 2px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase;">Mkataba wa ${skh.skhEscape(d.contractType.toUpperCase())}</span> <b style="font-size:13px; display:block; color:#0F172A; margin-top:4px;">${skh.skhEscape(d.title)}</b> <span style="display:block; color:var(--terracotta); font-weight:900; margin-top:2px;">TSh ${d.price.toLocaleString()}</span> <small style="color:gray; font-size:12.5px; display:block; margin-top:2px;">Umetengenezwa na: <b>${skh.skhEscape(d.ownerName)}</b></small> </div> </div> `;
         }
 
         // Badilisha vitufe vya muamala

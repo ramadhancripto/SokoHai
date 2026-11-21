@@ -120,6 +120,11 @@ window.openSokoHaiAccountSetting = function(key){
     if(key==='profile' && typeof window.openProfile==='function') { window.openProfile(); return; }
     if(key==='notifications' && typeof window.openNotifications==='function') { window.openNotifications(); return; }
     if(key==='payment_methods' && typeof window.openUserPaymentModal==='function') { window.openUserPaymentModal(); return; }
+    // [SUPPORT 2026-11-21] real destinations instead of placeholder cards
+    const PAGES = { help:'/support.html', terms:'/terms.html', privacy_policy:'/privacy.html', about:'/about.html', tutorials:'/support.html#getting-started' };
+    if (PAGES[key]) { window.open(PAGES[key], '_blank', 'noopener'); return; }
+    const SUPPORT = { contact_support:'other', report_problem:'technical', feedback:'feedback', rate:'feedback' };
+    if (SUPPORT[key] && typeof window.skhOpenSupport === 'function') { window.closeModals && window.closeModals(); window.skhOpenSupport(SUPPORT[key]); return; }
     const m=window.ensureSokoHaiAccountSettingModal();
     const all=window.sokohaiAccountMenuItems.flatMap(s=>s.items);
     const item=all.find(x=>x[0]===key) || [key,'','Settings','SokoHai settings'];
@@ -147,15 +152,9 @@ window.sokohaiAccountSettingContent = function(key,title){
         data_storage:[row('Cache used','<b>Calculating...</b>'),row('Downloads'),row('Data usage'),'<button class="skh-action-btn">Clear Cache</button>'],
         digital_identity:[row('SokoHai ID','<b>Auto-generated</b>'),row('QR Code'),row('Digital certificate'),row('Verification badge')],
         ai_settings:[row('AI language','<b>Swahili</b>'),row('AI voice'),row('Personalization',toggle(true)),row('AI permissions')],
-        feedback:['<div class="skh-setting-card"><b>Toa Maoni</b><p>Tueleze unachotaka kuboresha SokoHai.</p><textarea style="width:100%;height:90px;border:1px solid #cbd5e1;border-radius:12px;padding:10px;margin-top:10px;" placeholder="Andika maoni..."></textarea><button class="skh-action-btn">Submit Feedback</button></div>'],
-        help:['<div class="skh-setting-card"><b>Help Center</b><p>FAQs, user guide, documentation, na maelekezo ya modules zote za SokoHai.</p><button class="skh-action-btn">Open Help Center</button></div>'],
-        tutorials:['<div class="skh-setting-card"><b>Tutorials</b><p>Jifunze kutumia Marketplace, SokoPay, Services na Business OS.</p><button class="skh-action-btn">View Tutorials</button></div>'],
-        contact_support:['<div class="skh-setting-card"><b>Contact Support</b><p>Live chat, email, simu, ticket system.</p><button class="skh-action-btn">Create Support Ticket</button></div>'],
-        report_problem:['<div class="skh-setting-card"><b>Report a Problem</b><p>Tuma bug, screenshot au log.</p><input type="file" style="margin:10px 0;"><textarea style="width:100%;height:80px;border:1px solid #cbd5e1;border-radius:12px;padding:10px;" placeholder="Eleza tatizo..."></textarea><button class="skh-action-btn">Send Report</button></div>'],
-        rate:['<div class="skh-setting-card"><b>Rate SokoHai</b><p>Tupe rating yako.</p><div style="font-size:28px;color:#f59e0b;"></div><button class="skh-action-btn">Submit Rating</button></div>'],
-        terms:['<div class="skh-setting-card"><b>Terms of Service</b><p>Sheria za matumizi ya SokoHai zitaonekana hapa.</p></div>'],
-        privacy_policy:['<div class="skh-setting-card"><b>Privacy Policy</b><p>Sera ya faragha, data usage, media permissions na user control.</p></div>'],
-        about:[row('Version','<b>Ultimate Pro</b>'),row('Build','<b>2026</b>'),row('Licenses'),row('Updates')]
+        // [SUPPORT 2026-11-21] the old placeholder cards (dead buttons, invented version) are replaced: these keys now
+        // open the public pages or the real support form (openSokoHaiAccountSetting above). legal_center lists the policies.
+        legal_center:['<div class="skh-setting-card"><b>Sera za SokoHai</b><p>Nyaraka zote zinafunguka bila kuingia.</p>'+[['/privacy.html','Sera ya Faragha'],['/terms.html','Masharti ya Matumizi'],['/refund-policy.html','Marejesho, Kughairi na Migogoro'],['/seller-policy.html','Sera ya Wauzaji'],['/community-guidelines.html','Miongozo ya Jamii'],['/cookies.html','Cookies na Hifadhi ya Kifaa'],['/contact.html','Mawasiliano ya Kisheria na Faragha']].map(x=>'<a class="skh-setting-row" href="'+x[0]+'" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;"><span>'+x[1]+'</span><span style="color:#94a3b8;font-weight:800;">›</span></a>').join('')+'</div>']
     };
     const content=map[key] || [`<div class="skh-setting-card"><b>${title}</b><p>Sehemu hii ni ya account/system settings. Modules za biashara zipo kwenye navigation kuu.</p></div>`];
     return Array.isArray(content) ? content.join('') : content;

@@ -73,8 +73,10 @@ function buildUserCard(u, docId) {
     // Approved-agent badge only when the server stamped the approval (B-03).
     if (u.isApprovedAgent === true && (u.agentApprovedBy || u.approvedBy)) card.isApprovedAgent = true;
     // Business contact number: only for business accounts that chose to sell.
+    // [PRIVACY 2026-11-21] The personal sign-up phone is published ONLY when the user opted in (publishPhone: true,
+    // a switch on "Wasifu Wangu"). A business phone the user typed as such stays public as before.
     if (isBusinessAccount(u)) {
-        const bp = u.businessPhone || u.shopPhone || u.phone || u.phoneNumber;
+        const bp = u.businessPhone || u.shopPhone || (u.publishPhone === true ? (u.phone || u.phoneNumber) : '');
         if (typeof bp === 'string' && bp.trim()) card.businessPhone = bp.trim().slice(0, 40);
     }
     card.updatedAt = new Date().toISOString();

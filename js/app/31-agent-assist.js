@@ -218,7 +218,7 @@ import { skh } from './00-bootstrap.js';
             // Wakala = facilitator, SI mmiliki (§13)
             registeredThroughAgentId: agentUid,
             createdByAgentId: agentUid,
-            photoURL: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName) + '&background=f1f5f9&color=64748b',
+            photoURL: '', // [PRIVACY 2026-11-21] no third-party avatar URL with the member's name; the UI draws initials locally
             walletBalance: 0, createdAt: now
         });
         await skh.setDoc(skh.doc(skh.db, 'memberSecrets', uid), {

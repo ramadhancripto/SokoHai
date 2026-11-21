@@ -1026,18 +1026,18 @@ window.sokohaiAccountMenuItems = [
     { section:'Payments', items:[
                 ['payment_methods','','Payment Methods','Mobile money, bank, cards']
     ]},
+    // [SUPPORT 2026-11-21] one entry per real destination (the dead Tutorials / Rate entries merged into Help / Feedback)
     { section:'Support', items:[
-        ['feedback','','Feedback & Suggestions','Toa maoni au omba feature'],
-        ['help','','Help Center','FAQs, guide, documentation'],
-        ['tutorials','','Tutorials','Jifunze kutumia SokoHai'],
-        ['contact_support','','Contact Support','Live chat, email, ticket'],
-        ['report_problem','','Report a Problem','Bug, screenshot, logs'],
-        ['rate','','Rate SokoHai','Rating and review']
+        ['help','','Help Center','Maswali ya mara kwa mara na mwongozo'],
+        ['contact_support','','Contact Support','Tuma ombi na ufuatilie majibu'],
+        ['report_problem','','Report a Problem','Tatizo la kiufundi au la usalama'],
+        ['feedback','','Feedback & Suggestions','Toa maoni au omba feature']
     ]},
     { section:'Legal & About', items:[
+        ['about','','About SokoHai','SokoHai ni nini na inavyofanya kazi'],
         ['terms','','Terms of Service','Sheria za matumizi'],
         ['privacy_policy','','Privacy Policy','Sera ya faragha'],
-        ['about','','About SokoHai','Version, build, licenses']
+        ['legal_center','','Sera Nyingine','Refund, wauzaji, jamii na cookies']
     ]}
 ];
 

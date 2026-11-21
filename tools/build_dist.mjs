@@ -44,7 +44,11 @@ const FILES = [
   'index.html', 'offline.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js',
   'icon-192.png', 'icon-512.png', 'assets/sokohai-s-mark.png',
   'fonts/inter.css', 'fonts/sokohai-sw.js',
-  '.well-known/security.txt' // [85%-PUSH 2026-11-08] RFC 9116 — ukurasa wa kuripoti dosari.
+  '.well-known/security.txt', // [85%-PUSH 2026-11-08] RFC 9116 — ukurasa wa kuripoti dosari.
+  // [LEGAL 2026-11-21] public information pages (static, load signed-out). Netlify serves an existing file before the
+  // `/* -> /index.html` rewrite, so these URLs work without a redirect rule.
+  'about.html', 'privacy.html', 'terms.html', 'cookies.html', 'refund-policy.html', 'seller-policy.html',
+  'community-guidelines.html', 'support.html', 'contact.html'
 ];
 // fonts/*.ttf only (fonts/ also holds a retired copy of the whole app).
 const FONT_EXT = new Set(['.ttf', '.woff', '.woff2']);

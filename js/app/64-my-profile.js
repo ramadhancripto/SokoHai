@@ -154,8 +154,24 @@
                 var safe = raw.indexOf('<b') !== -1 ? raw : esc(raw);
                 return '<div class="mp-kv"><span>' + esc(r[0]) + '</span><b class="mp-kv-v">' + safe + '</b></div>';
             }).join('')
+            // [PRIVACY 2026-11-21] the personal phone is public on the seller card ONLY with this consent
+            + (u.phone ? '<label class="mp-kv mp-consent" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">'
+                + '<input type="checkbox" id="mpPublishPhone"' + (u.publishPhone === true ? ' checked' : '') + ' onchange="window.skhTogglePublishPhone && window.skhTogglePublishPhone(this)" style="margin-top:3px;width:18px;height:18px;accent-color:#18A982;">'
+                + '<span style="flex:1;font-size:13px;line-height:1.35;">Onyesha namba yangu ya simu kwa wanunuzi kwenye ukurasa wangu wa muuzaji. <small style="display:block;color:#64748b;">Ukizima, wanunuzi watakufikia kwa chat ya SokoHai tu.</small></span></label>' : '')
             + '</div>';
     }
+
+    // [PRIVACY 2026-11-21] owner's consent switch for publishing the personal phone (users/{uid}.publishPhone)
+    window.skhTogglePublishPhone = async function (cb) {
+        var uid = skh.currentUser && skh.currentUser.uid; if (!uid || !cb) return;
+        var want = !!cb.checked; cb.disabled = true;
+        try {
+            await skh.updateDoc(skh.doc(skh.db, 'users', uid), { publishPhone: want });
+            if (skh.currentUserData) skh.currentUserData.publishPhone = want;
+            if (window.skhToast) window.skhToast(want ? 'Namba yako itaonekana kwa wanunuzi.' : 'Namba yako haitaonekana hadharani.', 'success');
+        } catch (e) { cb.checked = !want; if (window.skhToast) window.skhToast('Imeshindikana kuhifadhi. Jaribu tena.', 'error'); else alert('Imeshindikana kuhifadhi.'); }
+        finally { cb.disabled = false; }
+    };
 
     function aboutHtml(u) {
         var about = u.about || u.bio || u.description || '';
@@ -214,7 +230,7 @@
         u.__name = name;
         u.__loc = u.location || u.region || u.city || (u.district ? (u.district + ', ' + (u.region || '')) : '') || 'Tanzania';
         u.__dp = u.photoURL || u.profileImage || u.dp || u.logo
-            || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=03509d&color=ffffff');
+            || (window.skhAvatarUrl || (() => ''))(name, '03509d'); // [PRIVACY 2026-11-21] local initials
         u.__cover = u.coverImage || u.cover || '';
 
         var stats = await gatherStats(uid);

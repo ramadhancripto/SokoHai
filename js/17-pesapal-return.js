@@ -171,7 +171,7 @@
             accountType: 'offline_member',
             ownerId: newUid,
             notificationChannel: 'sms',
-            photoURL: ctx.photoUrl || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(ctx.name || 'x') + '&background=f1f5f9&color=64748b'),
+            photoURL: ctx.photoUrl || '', // [PRIVACY 2026-11-21] no third-party avatar URL with the member's name; the UI draws initials locally
             region: ctx.region, district: ctx.district, businessType: ctx.bType,
             isOfflineUser: true, offlineAccountId: offlineAccountId, businessId: businessId, businessSetupComplete: businessSetupComplete,
             shopName: (ctx.bType && ctx.bType !== 'Sio Biashara') ? ('Duka la ' + ctx.name) : null,

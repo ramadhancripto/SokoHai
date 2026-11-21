@@ -701,7 +701,9 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         description: (visibility !== 'offline_only') ? document.getElementById('prodDesc').value : "In-store Product",
         location: loc,
         warehouseZone: whZone, // Hifadhi eneo la rafu ghala
-        coords: (skh.userLat && skh.userLon) ? { lat: skh.userLat, lon: skh.userLon } : null,
+        // [PRIVACY 2026-11-21] Listings are public: store an APPROXIMATE area (2 decimals ≈ 1 km), never the
+        // seller's exact GPS position. "Karibu nawe" distance sorting keeps working at this precision.
+        coords: (skh.userLat && skh.userLon) ? { lat: Math.round(Number(skh.userLat) * 100) / 100, lon: Math.round(Number(skh.userLon) * 100) / 100 } : null,
         image: mainImage,
         imagesArray: imageUrls,
         saleMode: saleMode,
@@ -1154,7 +1156,7 @@ window.submitDelivery = async function(event) {
             driverName: document.getElementById('delDriverName').value.trim(),
             contact: document.getElementById('delPhone').value.trim(),
             description: (document.getElementById('delDesc') ? document.getElementById('delDesc').value.trim() : ""),
-            image: imageUrl || "https://ui-avatars.com/api/?name=Usafiri&background=03509d&color=fff",
+            image: imageUrl || '', // [PRIVACY 2026-11-21] no third-party placeholder URL stored; cards draw a local placeholder
             online: true, // Anaonekana live kuanzia sasa
             status: "available",
             // [NEGO LOCK §21/§22] Transporter Settings — msafiri anajiamulia.
@@ -1268,7 +1270,7 @@ window.broadcastRideRequest = async function() {
 
     // Vuta picha na maelezo kutoka kwenye kadi iliyofunguliwa kama ipo kwenye memory
     const productDataRaw = sessionStorage.getItem('leg_construction');
-    let cargoImage = "https://ui-avatars.com/api/?name=Mzigo&background=cccccc&color=fff";
+    let cargoImage = ''; // [PRIVACY 2026-11-21] views draw a local placeholder
     let cargoPrice = 0;
     let cargoDetails = "N/A";
     

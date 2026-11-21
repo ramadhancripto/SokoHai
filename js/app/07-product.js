@@ -202,7 +202,7 @@ window.openProduct = async function(id, manualCollection = null) {
         let pics = window.skhNormalizeImages(found);
         pics = pics.filter(p => p && !/ui-avatars\.com/.test(String(p))); // [PHASE 5.7] chuja na avatar za zamani za DB
         if (pics.length === 0) {
-            pics = [window.SKH_PLACEHOLDER_IMG || "https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b"]; // [PHASE 5.7] tile ya SOKOHAI
+            pics = [window.SKH_PLACEHOLDER_IMG || (window.skhAvatarUrl || (() => ''))('Soko', 'f1f5f9')]; // [PHASE 5.7] tile ya SOKOHAI
         }
 
         // [SHOWCASE 39] Tenga video na picha; viewer ya zoom hupokea picha tu.
@@ -215,7 +215,7 @@ window.openProduct = async function(id, manualCollection = null) {
             }
             const zIdx = window.skhZoomImages.indexOf(pic);
             return `
-            <div onclick="window.openImageZoom(window.skhZoomImages, ${zIdx >= 0 ? zIdx : 0})" style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; cursor:zoom-in;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(pic))}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||'https://ui-avatars.com/api/?name=Soko&background=f1f5f9&color=64748b'"> </div>`;
+            <div onclick="window.openImageZoom(window.skhZoomImages, ${zIdx >= 0 ? zIdx : 0})" style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; cursor:zoom-in;"> <img src="${skh.skhEscape(skh.getOptimizedImageUrl(pic))}" style="width:100%; height:100%; object-fit:contain; pointer-events:none;" onerror="this.src=window.SKH_PLACEHOLDER_IMG||window.skhAvatarUrl('Soko', 'f1f5f9')"> </div>`;
         }).join('');
 
         // [ZOOM] Index ya sasa kwa viewer ya kugusa (26-image-zoom.js)

@@ -70,8 +70,11 @@ await test('userCardSync: users write -> public userCards card WITHOUT private f
   await written('users/' + U, { uid: U, fullName: 'Asha', email: 'asha@private.test', phone: '0712000000', walletBalance: 5000 }, fns.userCardSync.run);
   const c = await get('userCards/' + U); ok(c && /Asha/.test(JSON.stringify(c)), 'card ' + JSON.stringify(c));
   ok(!('email' in c) && !('walletBalance' in c) && !JSON.stringify(c).includes('asha@private') && !JSON.stringify(c).includes('0712000000'), 'no private fields');
-  // a BUSINESS account deliberately publishes its contact number as businessPhone (design: buyers must reach sellers); still no e-mail / wallet
+  // [PRIVACY 2026-11-21] a BUSINESS account without consent: the personal phone stays private
   await written('users/' + U, { uid: U, fullName: 'Asha', email: 'asha@private.test', phone: '0712000000', walletBalance: 5000, businessName: 'Duka la Asha' }, fns.userCardSync.run);
+  const nb = await get('userCards/' + U); ok(!('businessPhone' in nb) && !JSON.stringify(nb).includes('0712000000'), 'business card without consent: no phone');
+  // a BUSINESS account that opted in (publishPhone) publishes its contact number as businessPhone; still no e-mail / wallet
+  await written('users/' + U, { uid: U, fullName: 'Asha', email: 'asha@private.test', phone: '0712000000', walletBalance: 5000, businessName: 'Duka la Asha', publishPhone: true }, fns.userCardSync.run);
   const b = await get('userCards/' + U); eq(b.businessPhone, '0712000000', 'business contact published'); ok(!('email' in b) && !('walletBalance' in b) && !('phone' in b), 'business card: no private fields');
   await written('users/' + U, null, fns.userCardSync.run); ok(!(await db.doc('userCards/' + U).get()).exists, 'card removed');
 });
