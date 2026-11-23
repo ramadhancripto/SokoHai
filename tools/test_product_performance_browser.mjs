@@ -335,7 +335,7 @@ await step('13. jedwali lina kolamu zote zinazohitajika', async () => {
         heads: [...document.querySelectorAll('.pf-table thead th')].map(th => th.textContent.trim()),
         cells: document.querySelectorAll('.pf-row').length
     }));
-    const need = ['Bidhaa', 'Category', 'Lebo', 'Alama', 'Units', 'Oda (MP)', 'Mapato', 'Stock', 'Marejesho', 'Ukuaji', 'Mauzo ya mwisho', 'Hatua'];
+    const need = ['Bidhaa', 'Kategoria', 'Lebo', 'Alama', 'Units', 'Oda (MP)', 'Mapato', 'Stoo', 'Marejesho', 'Ukuaji', 'Mauzo ya mwisho', 'Hatua'];
     need.forEach(h => ok(r.heads.includes(h), 'kolamu ' + h));
     eq(r.cells, 8, 'mstari 8');
 });

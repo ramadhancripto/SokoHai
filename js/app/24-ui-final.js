@@ -603,6 +603,25 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       if(!key) return text;
       return (prefix || '') + this.t(key);
     },
+    // [L10N 2026-11-23] A text keeps the key it was translated with, so switching back gives exactly the text it had:
+    // two keys can share one translation ("Idadi" and "Kiasi / Idadi" are both "Quantity"), and a plain lookup of
+    // "Quantity" then picked the other one.
+    _mem: (typeof WeakMap === 'function') ? new WeakMap() : null,
+    translateMem(obj, text){
+      const s=String(text==null?'':text), tr=s.trim(); if(!tr) return s;
+      const m=this._mem && obj ? this._mem.get(obj) : null;
+      if(m){
+        const e=dict.en[m], w=dict.sw[m];
+        if(tr===e || tr===w) return this.t(m);
+        const sp=this.splitIcon(s); if(sp.core===e || sp.core===w) return (sp.prefix||'')+this.t(m);
+      }
+      const whole=this.keyFromPhrase(tr);
+      if(whole){ if(this._mem && obj) this._mem.set(obj, whole); return this.t(whole); }
+      const {prefix, core}=this.splitIcon(s); const key=this.keyFromPhrase(core);
+      if(!key) return s;
+      if(this._mem && obj) this._mem.set(obj, key);
+      return (prefix||'')+this.t(key);
+    },
     setLanguage(lang){
       if(!supported.includes(lang)) lang = DEFAULT_LANG;
       this.lang = lang;
@@ -640,7 +659,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
           // kubadilisha maandishi sahihi kuwa mengine (mf. nav "Chat" ikawa
           // "Chat Naye", ikakatika kwenye simu ndogo). Iachwe.
           // [I18N 2026-11-23] the split "Soko|Hai" brand word is never a phrase ("Soko" -> "Market" made "MarketHai")
-          if(p.hasAttribute('data-i18n') || p.closest('[data-i18n],[data-no-i18n],.nav-tab,.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return NodeFilter.FILTER_REJECT;
+          if(p.hasAttribute('data-i18n') || p.closest('[data-i18n],[data-no-i18n],[data-user-content],.nav-tab,.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return NodeFilter.FILTER_REJECT;
           const txt=node.nodeValue.replace(/\s+/g,' ').trim();
           if(!txt || txt.length>240) return NodeFilter.FILTER_REJECT;   // [I18N 2026-11-21] full sentences too (was 60: long phrases were never translated)
           if(!LMS.keyFromPhrase(LMS.splitIcon(txt).core) && !LMS.keyFromPhrase(txt)) return NodeFilter.FILTER_REJECT;
@@ -651,16 +670,17 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       // [UI 2026-11-15] A translation that still CONTAINS the text it replaces is not applied: it grew on
       // every pass ("-- Chagua Kategoria --" -> "-- -- Chagua Kategoria --" -> "-- -- -- -- Chagua…").
       const grows=(from,to)=>{ const a=String(from||'').trim(), b=String(to||'').trim(); return a && b!==a && b.indexOf(a)!==-1; };
-      nodes.forEach(n => { const tr=this.translatePhrase(n.nodeValue); if(tr!==n.nodeValue && !grows(n.nodeValue,tr)) n.nodeValue=n.nodeValue.replace(n.nodeValue.trim(), tr.trim()); });
-      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => { const tr=this.translatePhrase(el.getAttribute('placeholder')); if(tr!==el.getAttribute('placeholder') && !grows(el.getAttribute('placeholder'),tr)) el.setAttribute('placeholder', tr); });
+      nodes.forEach(n => { const tr=this.translateMem(n, n.nodeValue); if(tr!==n.nodeValue && !grows(n.nodeValue,tr)) n.nodeValue=n.nodeValue.replace(n.nodeValue.trim(), tr.trim()); });
+      root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => { if(el.hasAttribute('data-i18n-placeholder')) return; const tr=this.translateMem(el, el.getAttribute('placeholder')); if(tr!==el.getAttribute('placeholder') && !grows(el.getAttribute('placeholder'),tr)) el.setAttribute('placeholder', tr); });
       root.querySelectorAll('button, a, span, b, small, label, option, h1, h2, h3, h4').forEach(el => {
         if(el.children.length) return;
         // [FIX 2026-09-14] Usiguse vilivyo na data-i18n wala labels za nav.
-        if(el.hasAttribute('data-i18n') || el.closest('[data-i18n],[data-no-i18n],.nav-tab,.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return;
+        if(el.hasAttribute('data-i18n') || el.closest('[data-i18n],[data-no-i18n],[data-user-content],.nav-tab,.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return;
         const txt=el.textContent?.trim();
         if(!txt || txt.length>70) return;
-        const tr=this.translatePhrase(txt);
-        if(tr!==txt && !grows(txt,tr)) el.textContent=tr;
+        const tr=this.translateMem(el, txt);
+        // [L10N 2026-11-23] an <option> without a value attribute submits its text: keep the original as its value
+        if(tr!==txt && !grows(txt,tr)){ if(el.tagName==='OPTION' && !el.hasAttribute('value')) el.setAttribute('value', el.value); el.textContent=tr; }
       });
     },
     audit(root=document.body){
@@ -669,7 +689,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       keys.forEach(k => { supported.forEach(lang => { if(!dict[lang][k]) missing.push({key:k, lang}); }); });
       const seenValue={};
       Object.entries(dict[this.lang]).forEach(([k,v]) => { const vv=String(v).toLowerCase(); if(seenValue[vv]) duplicates.push({value:v, keys:[seenValue[vv],k]}); else seenValue[vv]=k; });
-      const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){ const p=node.parentElement; if(!p||['SCRIPT','STYLE','TEXTAREA','INPUT','CODE','PRE'].includes(p.tagName)) return NodeFilter.FILTER_REJECT; const t=node.nodeValue.trim(); if(t.length<3||t.length>55) return NodeFilter.FILTER_REJECT; if(LMS.keyFromPhrase(LMS.splitIcon(t).core)||LMS.keyFromPhrase(t)) return NodeFilter.FILTER_REJECT; if(/[A-Za-zÀ-ÿ]/.test(t)) return NodeFilter.FILTER_ACCEPT; return NodeFilter.FILTER_REJECT; }});
+      const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){ const p=node.parentElement; if(!p||['SCRIPT','STYLE','TEXTAREA','INPUT','CODE','PRE'].includes(p.tagName)) return NodeFilter.FILTER_REJECT; if(p.closest('[data-no-i18n],[data-user-content]')) return NodeFilter.FILTER_REJECT; const t=node.nodeValue.trim(); if(t.length<3||t.length>55) return NodeFilter.FILTER_REJECT; if(LMS.keyFromPhrase(LMS.splitIcon(t).core)||LMS.keyFromPhrase(t)) return NodeFilter.FILTER_REJECT; if(/[A-Za-zÀ-ÿ]/.test(t)) return NodeFilter.FILTER_ACCEPT; return NodeFilter.FILTER_REJECT; }});
       let count=0; while(walker.nextNode() && count<100){ hardcoded.push(walker.currentNode.nodeValue.trim()); count++; }
       return {lang:this.lang, missing, duplicates, hardcoded};
     },
@@ -721,10 +741,10 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     let m=document.getElementById('sokohaiLanguageCenterModal');
     if(!m){ m=document.createElement('div'); m.id='sokohaiLanguageCenterModal'; m.className='overlay-menu'; m.style.cssText='z-index:100020;display:none;background:rgba(15,23,42,.55);'; document.body.appendChild(m); }
     const audit=LMS.audit(document.body);
-    m.innerHTML=`<div class="skh-settings-modal-card"><div class="skh-settings-head"><div><b> ${LMS.t('language_center')}</b><br><small>${LMS.t('no_mixed_language')}</small></div><button class="skh-menu-close" onclick="document.getElementById('sokohaiLanguageCenterModal').style.display='none'" aria-label="Funga">${window.skhNavIcon ? window.skhNavIcon('x',16) : ''}</button></div><div class="skh-settings-body"><div class="skh-setting-card"><b>${LMS.t('switch_language')}</b><p>${LMS.lang==='sw'?'Mfumo wote utumie lugha moja kwa wakati mmoja.':'The whole system uses one language at a time.'}</p><div style="display:flex;gap:8px;margin-top:10px;"><button class="skh-action-btn" style="flex:1;${LMS.lang==='sw'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('sw'); window.openSokoHaiLanguageCenter();">Kiswahili</button><button class="skh-action-btn" style="flex:1;${LMS.lang==='en'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('en'); window.openSokoHaiLanguageCenter();">English</button></div></div><div class="skh-setting-card"><b>${LMS.t('language_audit')}</b><p>${LMS.t('missing_translation')}: ${audit.missing.length}<br>${LMS.t('duplicate_translation')}: ${audit.duplicates.length}<br>${LMS.t('hardcoded_text')}: ${audit.hardcoded.length}</p><button class="skh-action-btn" onclick="window.runSokoHaiLanguageAudit()">${LMS.t('audit_now')}</button></div><div class="skh-setting-card"><b>Add Translation Key</b><div class="skh-setting-row"><span>Key</span><input id="lmsKey" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>English</span><input id="lmsEn" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>Kiswahili</span><input id="lmsSw" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><button class="skh-action-btn" onclick="window.addSokoHaiTranslationKey()">${LMS.t('save')}</button></div><div class="skh-setting-card"><b>Hardcoded Text Sample</b><p style="max-height:130px;overflow:auto;font-size:13px;">${audit.hardcoded.slice(0,30).map(x=>'- '+x).join('<br>') || 'None'}</p></div></div></div>`;
+    m.innerHTML=`<div class="skh-settings-modal-card"><div class="skh-settings-head"><div><b> ${LMS.t('language_center')}</b><br><small>${LMS.t('no_mixed_language')}</small></div><button class="skh-menu-close" onclick="document.getElementById('sokohaiLanguageCenterModal').style.display='none'" aria-label="Funga">${window.skhNavIcon ? window.skhNavIcon('x',16) : ''}</button></div><div class="skh-settings-body"><div class="skh-setting-card"><b>${LMS.t('switch_language')}</b><p>${LMS.lang==='sw'?'Mfumo wote utumie lugha moja kwa wakati mmoja.':'The whole system uses one language at a time.'}</p><div style="display:flex;gap:8px;margin-top:10px;"><button class="skh-action-btn" style="flex:1;${LMS.lang==='sw'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('sw'); window.openSokoHaiLanguageCenter();">Kiswahili</button><button class="skh-action-btn" style="flex:1;${LMS.lang==='en'?'background:#10b981;':''}" onclick="window.setSokoHaiLanguage('en'); window.openSokoHaiLanguageCenter();">English</button></div></div><div class="skh-setting-card"><b>${LMS.t('language_audit')}</b><p>${LMS.t('missing_translation')}: ${audit.missing.length}<br>${LMS.t('duplicate_translation')}: ${audit.duplicates.length}<br>${LMS.t('hardcoded_text')}: ${audit.hardcoded.length}</p><button class="skh-action-btn" onclick="window.runSokoHaiLanguageAudit()">${LMS.t('audit_now')}</button></div><div class="skh-setting-card"><b>Add Translation Key</b><div class="skh-setting-row"><span>Key</span><input id="lmsKey" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>English</span><input id="lmsEn" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><div class="skh-setting-row"><span>Kiswahili</span><input id="lmsSw" style="width:60%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;"></div><button class="skh-action-btn" onclick="window.addSokoHaiTranslationKey()">${LMS.t('save')}</button></div><div class="skh-setting-card"><b>Hardcoded Text Sample</b><p data-no-i18n style="max-height:130px;overflow:auto;font-size:13px;">${audit.hardcoded.slice(0,30).map(x=>'- '+x).join('<br>') || 'None'}</p></div></div></div>`;
     m.style.display='flex';
   };
-  window.addSokoHaiTranslationKey = function(){ const k=document.getElementById('lmsKey')?.value?.trim(); const en=document.getElementById('lmsEn')?.value?.trim(); const sw=document.getElementById('lmsSw')?.value?.trim(); if(!k||!en||!sw) return alert('Required field'); LMS.register(k,en,sw,'draft'); LMS.apply(document.body); alert('Success'); window.openSokoHaiLanguageCenter(); };
+  window.addSokoHaiTranslationKey = function(){ const k=document.getElementById('lmsKey')?.value?.trim(); const en=document.getElementById('lmsEn')?.value?.trim(); const sw=document.getElementById('lmsSw')?.value?.trim(); if(!k||!en||!sw) return alert(LMS.lang==='sw'?'Jaza sehemu zote':'Fill in all fields'); LMS.register(k,en,sw,'draft'); LMS.apply(document.body); alert(LMS.t('success')); window.openSokoHaiLanguageCenter(); };
   window.runSokoHaiLanguageAudit = function(){ const a=LMS.audit(document.body); console.table(a.hardcoded); alert(`${LMS.t('language_audit')}\n${LMS.t('missing_translation')}: ${a.missing.length}\n${LMS.t('duplicate_translation')}: ${a.duplicates.length}\n${LMS.t('hardcoded_text')}: ${a.hardcoded.length}`); };
 
   // Hook account menu Language & Region to LMS Center.
@@ -736,9 +756,11 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
 
   // Debounced apply after DOM changes. Avoid translating while user is typing.
   let timer=null;
+  // [L10N 2026-11-23] while an input has focus the apply was DROPPED, not delayed: after a search (focus stays in the
+  // search box) nothing rendered later was translated until the user tapped elsewhere. Now it is only delayed.
   const obs=new MutationObserver(muts=>{
-    if(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
-    clearTimeout(timer); timer=setTimeout(()=>LMS.apply(document.body),250);
+    const typing=document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    clearTimeout(timer); timer=setTimeout(()=>LMS.apply(document.body), typing ? 700 : 250);
   });
   setTimeout(()=>{ try{ obs.observe(document.body,{childList:true,subtree:true}); LMS.setLanguage(LMS.lang); }catch(e){} },700);
 })();
@@ -797,7 +819,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       box.innerHTML = `<div class="tok-card"><b>Token Responsibilities</b><div class="tok-grid" style="margin-top:10px;"><div class="tok-box"><small>Tracking Token</small><b>Buyer/Seller tracking</b></div><div class="tok-box"><small>Delivery Permission</small><b>Current courier authorization</b></div><div class="tok-box"><small>Escrow Token</small><b>SokoPay protected funds</b></div><div class="tok-box"><small>Contract Token</small><b>Buyer/Seller agreement</b></div><div class="tok-box"><small>Verification Token</small><b>System step verification</b></div><div class="tok-box"><small>Shipment Token</small><b>Shipment engine link</b></div></div></div>`;
       return;
     }
-    box.innerHTML = `<div class="tok-card"><b>My Token Center</b><p style="font-size:12px;color:#64748b;">Inaonyesha tokens zako zinazoonekana kwa buyer/seller. Delivery Permission Tokens hazionekani hapa.</p><div id="myBuyerTokensList"><p style="text-align:center;color:#64748b;">Inapakia tokens...</p></div></div>`;
+    box.innerHTML = `<div class="tok-card"><b>My Token Center</b><p style="font-size:12px;color:#64748b;">Inaonyesha tokens zako zinazoonekana kwa mnunuzi/muuzaji. Tokens za ruhusa ya uwasilishaji hazionekani hapa.</p><div id="myBuyerTokensList"><p style="text-align:center;color:#64748b;">Inapakia tokens...</p></div></div>`;
     window.loadMyBuyerTokensPolished();
   };
 

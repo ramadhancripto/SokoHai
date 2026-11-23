@@ -262,7 +262,7 @@ window.loadSokoPayBuyerOrders = function(filter='All'){
     try{
         const qTx=skh.query(skh.collection(skh.db,'sokopay_core_transactions'), skh.where('buyerId','==',skh.currentUser.uid), skh.orderBy('createdAt','desc'), skh.limit(50));
         window.skhOnSnapshot('sokopay-tx', qTx, snap=>{
-            if(snap.empty){ box.innerHTML='<div class="spbuyer-card" style="text-align:center;color:#64748b;">Huna SokoPay orders bado.</div>'; return; }
+            if(snap.empty){ box.innerHTML='<div class="spbuyer-card" style="text-align:center;color:#64748b;">Huna oda za SokoPay bado.</div>'; return; }
             box.innerHTML='';
             snap.forEach(d=>{ const tx={ id:d.id, ...d.data() }; if(filter!=='All' && !String(tx.orderStatus||'').toLowerCase().includes(filter.toLowerCase()) && !String(tx.shipmentStatus||'').toLowerCase().includes(filter.toLowerCase())) return; box.innerHTML += window.renderSokoPayBuyerOrderRow(tx); });
         });

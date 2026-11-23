@@ -1052,7 +1052,7 @@ import {
         var id = jsEsc(d.id), cc = jsEsc(d.collectionName || col);
         return '<button type="button" class="pm-rel-card" onclick="openProduct(\'' + id + '\',\'' + cc + '\')" aria-label="' + esc(title) + '">'
             + '<span class="pm-rel-img"><img src="' + esc(img) + '" loading="lazy" alt="" onerror="this.onerror=null;this.src=window.SKH_PLACEHOLDER_IMG||\'\';this.parentNode.classList.add(\'pm-rel-img--ph\')"></span>'
-            + '<span class="pm-rel-body"><span class="pm-rel-title">' + esc(title) + '</span>'
+            + '<span class="pm-rel-body"><span class="pm-rel-title" data-user-content>' + esc(title) + '</span>'
             + '<span class="pm-rel-price">' + esc(price) + '</span>'
             + (loc ? '<span class="pm-rel-loc">' + (window.skhNavIcon ? window.skhNavIcon('map', 11) : '') + ' ' + esc(loc) + '</span>' : '')
             + '</span></button>';

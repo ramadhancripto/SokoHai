@@ -302,7 +302,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         
         <div class="menu-item" onclick="window.skhOpenMySokoHai && window.skhOpenMySokoHai('overview')" id="mode-buyer" style="border-left-color:var(--green); background:#f8fafc;">
             <b data-skh-icon="cart">Buyer Dashboard</b>
-            <span>Shughuli, oda, requests, negotiations na vitu vyako.</span>
+            <span>Shughuli, oda, maombi, majadiliano na vitu vyako.</span>
         </div>
         <div class="menu-item" onclick="switchMode('seller')" id="mode-seller" style="border-left-color:var(--gold); background:#f8fafc;">
             <b data-skh-icon="shop">Muuzaji wa Bidhaa</b>
@@ -322,7 +322,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         </div>
         <div class="menu-item" onclick="window.skhOpenAdvertiserDashboard && window.skhOpenAdvertiserDashboard()" id="mode-advertiser" style="border-left-color:#4D91AA; background:#f8fafc;">
             <b> Advertiser</b>
-            <span>Campaign workspace ya kampuni na matangazo.</span>
+            <span>Eneo la kampeni na matangazo ya kampuni.</span>
         </div>
         <!-- [J-J1 2026-11-10 RESTORED] Kiingilio cha Mfanyakazi wa Duka (kujiunga kwa kodi).
              KILIKUWEPO kwenye index.html (hand-edit) — kilifutika kwenye rebuild;
@@ -369,8 +369,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                     </button>
                 </div>
                 <ol class="adv-steps" aria-label="Jinsi matangazo yanavyofanya kazi">
-                    <li><span class="adv-step-n">1</span><div><b>Tengeneza creative</b><small>Picha, video, maandishi au Auto Design — kitu kimoja kinachotumika kwenye sehemu zote.</small></div></li>
-                    <li><span class="adv-step-n">2</span><div><b>Chagua placement</b><small>Home, Discover, Search, Product, Chat na nyingine — zote zipo tayari kwenye mfumo.</small></div></li>
+                    <li><span class="adv-step-n">1</span><div><b>Tengeneza tangazo</b><small>Picha, video, maandishi au Auto Design — kitu kimoja kinachotumika kwenye sehemu zote.</small></div></li>
+                    <li><span class="adv-step-n">2</span><div><b>Chagua mahali pa kuonekana</b><small>Nyumbani, Gundua, Utafutaji, Bidhaa, Chat na nyingine — zote zipo tayari kwenye mfumo.</small></div></li>
                     <li><span class="adv-step-n">3</span><div><b>Fuatilia na simamia</b><small>Campaign Manager inaonyesha impressions, clicks na CTR kwa kila tangazo.</small></div></li>
                 </ol>
                 <div class="adv-note">Billing is not enabled. No payment, wallet, checkout, pricing or campaign-spend operation can start from this entry.</div>
@@ -697,7 +697,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <!-- 2.1 UTAMBULISHO: bei + upatikanaji mbele -->
             <section class="pm-sec pm-id" id="pmIdentitySec">
                 <div class="pm-chips" id="pmChips"></div>
-                <h1 class="pm-title" id="pmTitle">Bidhaa</h1>
+                <h1 class="pm-title" id="pmTitle" data-user-content>Bidhaa</h1>
                 <div class="pm-rating-line" id="pmRatingLine"></div>
                 <div class="pm-price-row">
                     <div class="pm-price" id="pmPrice">TSh 0</div>
@@ -788,7 +788,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <!-- 2.4 MAELEZO + SIFA (zilizopo tu) -->
             <section class="pm-sec" id="pmDetailsSec">
                 <h2 class="pm-sec-title">Maelezo ya bidhaa</h2>
-                <p class="pm-desc" id="pmDesc"></p>
+                <p class="pm-desc" id="pmDesc" data-user-content></p>
                 <div class="pm-spec-grid" id="pmCustomDetails"></div>
             </section>
 
@@ -3629,23 +3629,23 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/16-pos-admin-jobs.js?v=20261118recycle"></script>
 <script type="module" src="js/app/17-hub.js?v=20261108r13e"></script>
 <script type="module" src="js/app/18-cockpit.js"></script>
-<script type="module" src="js/app/19-roles.js?v=20261118recycle"></script>
+<script type="module" src="js/app/19-roles.js?v=20261123l10n1"></script>
 <script src="shared/business-context-core.js"></script>
 <script src="shared/wholesale-price-core.js"></script> <!-- [2026-11-06] bei ya jumla/idadi — formula moja na server -->
 <script type="module" src="js/app/20-business-context.js"></script>
 <script type="module" src="js/app/20-logistics.js?v=20261118recycle"></script>
-<script type="module" src="js/app/21-sokopay.js"></script>
-<script type="module" src="js/app/22-printing.js"></script>
-<script type="module" src="js/app/23-smart-cart.js"></script>
-<script type="module" src="js/app/24-ui-final.js?v=20261123br1"></script>
+<script type="module" src="js/app/21-sokopay.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/22-printing.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/23-smart-cart.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/24-ui-final.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/25-tracking-hub.js"></script>
 <script type="module" src="js/app/26-image-zoom.js"></script>
 <script type="module" src="js/app/27-route-dispatch.js"></script>
-<script type="module" src="js/app/28-buyer-engagement.js?v=20261118recycle"></script>
+<script type="module" src="js/app/28-buyer-engagement.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/29-seller-store.js?v=20261120r22"></script>
-<script type="module" src="js/app/30-seller-products.js?v=20261123i18n5"></script>
+<script type="module" src="js/app/30-seller-products.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/31-agent-assist.js"></script>
-<script type="module" src="js/app/32-i18n.js?v=20261123i18n14"></script>
+<script type="module" src="js/app/32-i18n.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/33-custody.js?v=20261118cancel"></script>
 <script type="module" src="js/app/37-negotiation.js"></script>
 <!-- [NEGO MODULE 01] Fomu ya majadiliano inayojua muktadha (38 = UI, logic ni tupu) -->
@@ -3664,7 +3664,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/35-comments.js?v=20261118commentfix2"></script>
 <script type="module" src="js/app/36-seller-chat-comments.js?v=20261118navfix"></script>
 <!-- [SHOWCASE MODULE 02] Product Detail UI (bidhaa ni shujaa); 39-showcase-logic.js huagizwa na UI -->
-<script type="module" src="js/app/39-product-showcase.js?v=20261118sellerfix1"></script>
+<script type="module" src="js/app/39-product-showcase.js?v=20261123l10n1"></script>
 <!-- [INQUIRY BUILDER 2026-11] Uliza Zaidi kuhusu Bidhaa — maswali yenye muundo (productInquiries) -->
 <script type="module" src="js/app/53-product-inquiry.js"></script>
 <!-- [TOKEN BOX 2026-09] Sanduku la mikode ya makabidhiano (PK/TR/DL) linalojitegemea -->
@@ -3677,18 +3677,18 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/61-full-system-repair.js?v=20261118navfix"></script>
     <script type="module" src="js/app/62-missing-features.js"></script>
 <script type="module" src="js/app/63-audit-fixes.js?v=20261118welcome1"></script>
-<script type="module" src="js/app/64-i18n-core.js?v=20261123rt1"></script>
+<script type="module" src="js/app/64-i18n-core.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/65-content-l10n.js"></script>
 <script type="module" src="js/app/66-wordmark.js"></script>
 <script type="module" src="js/app/67-payment-accounts.js"></script>
 <script type="module" src="js/app/68-gundua-soko.js?v=20261108r13c"></script><!-- [2026-11-04] Gundua Soko -->
-<script type="module" src="js/app/82-home-header-actions.js?v=20261105r6w"></script>
+<script type="module" src="js/app/82-home-header-actions.js?v=20261123l10n1"></script>
 <!-- [R13-C] 86-category-icons-manifest.js (SVG family) is no longer loaded: categories use photos; files kept on disk -->
 <script type="module" src="js/app/83-category-photos.js?v=20261123art2"></script>
 <script type="module" src="js/app/84-location-fast.js?v=20261121loc1"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->
 <script type="module" src="js/app/69-chat-groups.js?v=20261108r13h"></script>
 <script type="module" src="js/app/70-role-identity.js"></script>
-<script type="module" src="js/app/71-visual-dictionary.js"></script>
+<script type="module" src="js/app/71-visual-dictionary.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/73-group-soga.js?v=20261118group2"></script>
 <script type="module" src="js/app/74-group-order-system.js?v=20261108r13g"></script>
 <script type="module" src="js/app/76-group-order-production-enhancement.js"></script>
@@ -3720,13 +3720,13 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/102-publish-outbox.js"></script>
 <script type="module" src="js/app/103-ad-badges.js"></script><!-- [ADS 2026-11-01] badges ndogo: dashboard, chat --><!-- [BIDHAA/HUDUMA/USAFIRI] hifadhi kwa kifaa, sambaza baadaye -->
 <script type="module" src="js/app/113-sale-type-flow.js?v=20261108m1"></script><!-- [M1 2026-11-08] aina 4 za mauzo: (+) → Bidhaa Sokoni -->
-<script type="module" src="js/app/120-live-commerce-ui.js?v=20261118compactlive1"></script><!-- [R13-B] Live, Mnada Live, Bei Kushuka Live -->
+<script type="module" src="js/app/120-live-commerce-ui.js?v=20261123l10n1"></script><!-- [R13-B] Live, Mnada Live, Bei Kushuka Live -->
 <script type="module" src="js/app/125-live-video.js?v=20261118compactlive1"></script><!-- [FULL-AUCTION 2026-11-11] WebRTC live camera broadcast -->
 <script type="module" src="js/app/126-push.js?v=20261113r15"></script><!-- [R15] web push (FCM) juu ya Taarifa Zako -->
 <script type="module" src="js/app/127-identity-verification.js?v=20261113r16"></script><!-- [R16] utambulisho: hati za siri + ukaguzi wa admin -->
 <script type="module" src="js/app/121-stories-ui.js?v=20261108r13f"></script><!-- [R13-B] Hali (stories) viewer -->
 <script type="module" src="js/app/122-group-soko-ui.js?v=20261108r13d"></script><!-- [R13-B] Group Soko -->
-<script type="module" src="js/app/123-home-layout.js?v=20261122seo1"></script><!-- [R13-E] Nyumbani: refs 11-15 -->
+<script type="module" src="js/app/123-home-layout.js?v=20261123l10n1"></script><!-- [R13-E] Nyumbani: refs 11-15 -->
 <script type="module" src="js/app/124-pos-grid.js?v=20261108r13e"></script><!-- [R13-E] POS cashier grid: refs 17/18 -->
 <script type="module" src="js/app/125-group-business.js?v=20261108r13h"></script><!-- [R13-H] Group Chat: Huduma, Soko, Group Buy, Oda, Mapatano na Ofa, Usafirishaji, paneli -->
 <script type="module" src="js/app/129-launch-scope.js?v=20261122seo1"></script><!-- [SOKOHURU 2026-11-21] launch scope: disabled payment features, listing reports, manual paid promotions -->
@@ -4538,8 +4538,8 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
 <script src="js/19-cart-checkout-canonical.js"></script>
 
-<script src="js/22-humanize.js"></script>
-<script src="js/23-smart-search.js"></script>
+<script src="js/22-humanize.js?v=20261123l10n1"></script>
+<script src="js/23-smart-search.js?v=20261123l10n1"></script>
 <script src="js/20-search-chat.js"></script>
 <script src="js/21-home-filters.js"></script>
 <!-- [CHAT FIXES 2026-09-20] Marekebisho ya chat system: background, loader isiyokwisha, group chat, inbox timeout, message-cache -->

@@ -52,6 +52,18 @@
     [EN2SW, SW2EN].forEach(function (m) { Object.keys(m).forEach(function (k) { if (String(m[k]).indexOf(k) !== -1 && m[k] !== k) delete m[k]; }); });
     var byLen = function (a, b) { return b.length - a.length; };
     var EN2SW_KEYS = Object.keys(EN2SW).sort(byLen), SW2EN_KEYS = Object.keys(SW2EN).sort(byLen);
+    /* [L10N 2026-11-23] The same whole-word rewrite as the sweep, for one string. The language system uses it to learn
+       the clean form of dictionary values that were captured after a sweep ("Delete yote" is shown as "Futa yote"). */
+    function rewordTo(lang, text) {
+        var t = String(text == null ? '' : text), map = lang === 'en' ? SW2EN : EN2SW, keys = lang === 'en' ? SW2EN_KEYS : EN2SW_KEYS;
+        keys.forEach(function (from) {
+            if (t.indexOf(from) === -1) return;
+            var body = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            t = t.replace(new RegExp((/^\w/.test(from) ? '\\b' : '') + body + (/\w$/.test(from) ? '\\b' : ''), 'g'), map[from]);
+        });
+        return t;
+    }
+    window.skhLangReword = rewordTo;
 
     /* --------------------------------------------------------
      * 3) MAELEKEZO MAFUPI (humanized form)
@@ -112,15 +124,29 @@
                 if (!p || SKIP_TAGS[p.nodeName]) return NodeFilter.FILTER_REJECT;
                 // [REMEDIATION R5] taxonomy names and seller-written listing text are DATA,
                 // never UI phrases ("Home Appliances" must not become "Nyumbani Appliances").
-                if (p.closest && p.closest('[data-no-i18n],.ch-react,.ch-reaction,input,textarea,' + DATA_TEXT)) {
+                if (p.closest && p.closest('[data-no-i18n],[data-user-content],.ch-react,.ch-reaction,input,textarea,' + DATA_TEXT)) {
                     return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
             }
         });
         var node, changed = 0;
+        // [L10N 2026-11-23] an <option> without a value attribute submits its text: keep the original before rewording it
+        var keepVal = function (n) { var o = n.parentNode; if (o && o.nodeName === 'OPTION' && !o.hasAttribute('value')) o.setAttribute('value', o.value); };
         while ((node = walker.nextNode())) {
             var t = node.nodeValue, orig = t;
+
+            // [I18N 2026-11-23] A text the language system knows as a WHOLE phrase is translated as a whole. The word map
+            // below used to rewrite single words inside it first ("Ghairi na rudi" -> "Cancel na rudi"), and the mixed
+            // result then matched no phrase in either language, so it stayed mixed after every switch. A phrase that is
+            // already in the current language falls through to the word map as before.
+            try {
+                var L = window.SokoHaiLMS, core = t.replace(/\s+/g, ' ').trim();
+                if (L && core && (L.keyFromPhrase(core) || L.keyFromPhrase(L.splitIcon(core).core))) {
+                    var whole = typeof L.translateMem === 'function' ? L.translateMem(node, core) : L.translatePhrase(core);
+                    if (whole && whole !== core && String(whole).indexOf(core) === -1) { keepVal(node); node.nodeValue = t.replace(t.trim(), whole); changed++; continue; }
+                }
+            } catch (e) {}
 
             // (a) fupisha maelekezo marefu
             t = humanizeText(t);
@@ -135,7 +161,7 @@
                 t = t.replace(re, map[from]);
             });
 
-            if (t !== orig) { node.nodeValue = t; changed++; }
+            if (t !== orig) { keepVal(node); node.nodeValue = t; changed++; }
         }
         return changed;
     }

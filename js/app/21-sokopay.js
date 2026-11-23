@@ -1031,13 +1031,13 @@ window.sokohaiAccountMenuItems = [
         ['help','','Help Center','Maswali ya mara kwa mara na mwongozo'],
         ['contact_support','','Contact Support','Tuma ombi na ufuatilie majibu'],
         ['report_problem','','Report a Problem','Tatizo la kiufundi au la usalama'],
-        ['feedback','','Feedback & Suggestions','Toa maoni au omba feature']
+        ['feedback','','Feedback & Suggestions','Toa maoni au omba kipengele kipya']
     ]},
     { section:'Legal & About', items:[
         ['about','','About SokoHai','SokoHai ni nini na inavyofanya kazi'],
         ['terms','','Terms of Service','Sheria za matumizi'],
         ['privacy_policy','','Privacy Policy','Sera ya faragha'],
-        ['legal_center','','Sera Nyingine','Refund, wauzaji, jamii na cookies']
+        ['legal_center','','Sera Nyingine','Marejesho, wauzaji, jamii na cookies']
     ]}
 ];
 

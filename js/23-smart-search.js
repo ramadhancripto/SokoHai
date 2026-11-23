@@ -38,6 +38,8 @@
             return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         });
     }
+    /* [L10N 2026-11-23] strings built with numbers or prices go through the language system at render time */
+    function T(k, fb) { try { return window.skhTF ? window.skhTF(k, fb) : fb; } catch (e) { return fb; } }
     function jsq(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
     function ico(n, s) { return window.skhNavIcon ? window.skhNavIcon(n, s || 16) : ''; }
     function money(v) {
@@ -382,15 +384,15 @@
         var img = it.image || it.photo || (it.imagesArray && it.imagesArray[0]) || '';
         var sub = col === 'drivers'
             ? (esc(it.pickupRegion || '') + ' &rarr; ' + esc(it.destinationRegion || ''))
-            : esc(catLbl(it.category) || it.location || '');
+            : '<span' + (it.category ? ' data-tax-scope' : ' data-user-content') + '>' + esc(catLbl(it.category) || it.location || '') + '</span>';
         var price = (col === 'products') ? money(it.price)
-                  : (Number(it.price) > 0 ? 'Kuanzia ' + money(it.price) : 'Maelewano');
+                  : (Number(it.price) > 0 ? T('l10n_ss_from', 'Kuanzia') + ' ' + money(it.price) : T('l10n_ss_negotiable', 'Maelewano'));
         return '<button type="button" class="skh-ss-row' + (it.__sponsored ? ' is-sponsored' : '') + '" data-pos="' + (rowItem.pos = (rowItem.pos || 0) + 1) + '" onclick="window.skhSearchOpen(\'' +
                jsq(it.id) + '\',\'' + jsq(col) + '\',' + rowItem.pos + (it.__sponsored ? ',1' : '') + ')">' +
                (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">'
                     : '<span class="skh-ss-ph">' + ico('package', 16) + '</span>') +
-               '<span class="skh-ss-tx"><b>' + esc(it.title || it.name || 'Tangazo') + '</b>' +
-               '<small>' + (it.__sponsored ? '<em class="skh-ss-ad">Imefadhiliwa</em> ' : '') + sub + '</small></span>' +
+               '<span class="skh-ss-tx"><b' + (it.title || it.name ? ' data-user-content' : '') + '>' + esc(it.title || it.name || T('l10n_ss_listing', 'Tangazo')) + '</b>' +
+               '<small>' + (it.__sponsored ? '<em class="skh-ss-ad">' + T('l10n_ss_sponsored', 'Imefadhiliwa') + '</em> ' : '') + sub + '</small></span>' +
                '<span class="skh-ss-price">' + esc(price) + '</span></button>';
     }
 
@@ -518,10 +520,10 @@
 
         // Intent iliyoeleweka (uwazi kwa mtumiaji)
         var chips = [];
-        if (res.intent.maxPrice) chips.push('Hadi ' + money(res.intent.maxPrice));
-        if (res.intent.minPrice) chips.push('Kuanzia ' + money(res.intent.minPrice));
+        if (res.intent.maxPrice) chips.push(T('l10n_ss_upto', 'Hadi') + ' ' + money(res.intent.maxPrice));
+        if (res.intent.minPrice) chips.push(T('l10n_ss_from', 'Kuanzia') + ' ' + money(res.intent.minPrice));
         if (res.intent.location) chips.push(esc(res.intent.location));
-        if (res.intent.sort && res.intent.sort !== 'relevance' && !filters.sort) chips.push({ price_asc: 'Bei ya chini kwanza', price_desc: 'Bei ya juu kwanza', newest: 'Mpya kwanza', nearest: 'Karibu nawe kwanza' }[res.intent.sort] || '');
+        if (res.intent.sort && res.intent.sort !== 'relevance' && !filters.sort) chips.push({ price_asc: T('l10n_ss_sort_asc', 'Bei ya chini kwanza'), price_desc: T('l10n_ss_sort_desc', 'Bei ya juu kwanza'), newest: T('l10n_ss_sort_new', 'Mpya kwanza'), nearest: T('l10n_ss_sort_near', 'Karibu nawe kwanza') }[res.intent.sort] || '');
         if (res.intent.from && res.intent.to) chips.push(res.intent.from + ' &rarr; ' + res.intent.to);
         var intentBar = chips.length
             ? '<div class="skh-ss-intent">' + ico('filter', 12) + chips.map(function (c) {
@@ -529,16 +531,16 @@
 
         var sugBar = (sug.length && res.total > 0)
             ? '<div class="skh-ss-sug">' + sug.slice(0, 5).map(function (s) {
-                  return '<button type="button" onclick="window.skhSearchUse(\'' + jsq(s) + '\')">' +
+                  return '<button type="button" data-user-content onclick="window.skhSearchUse(\'' + jsq(s) + '\')">' +
                          ico('search', 11) + ' ' + esc(s) + '</button>'; }).join('') + '</div>' : '';
 
         var footer = res.total > 0
             ? '<button type="button" class="skh-ss-all" onclick="window.skhSearchAll()">' +
-              'Ona matokeo yote (' + res.total + ')</button>' : '';
+              T('l10n_ss_all', 'Ona matokeo yote') + ' (' + res.total + ')</button>' : '';
 
-        var dym = (fix && res.total > 0) ? '<div class="skh-ss-dym">Je, ulimaanisha <button type="button" data-skh-fix="1" onclick="window.skhSearchUse(\'' + jsq(fix) + '\')">' + esc(fix) + '</button>?</div>' : '';
+        var dym = (fix && res.total > 0) ? '<div class="skh-ss-dym">' + T('l10n_ss_dym', 'Je, ulimaanisha') + ' <button type="button" data-user-content data-skh-fix="1" onclick="window.skhSearchUse(\'' + jsq(fix) + '\')">' + esc(fix) + '</button>?</div>' : '';
         var relBar = (rel.length && res.total > 0) ? '<div class="skh-ss-rel"><span>Tafuta pia:</span>' + rel.slice(0, 5).map(function (t) {
-                  return '<button type="button" onclick="window.skhSearchUse(\'' + jsq(t) + '\')">' + esc(t) + '</button>'; }).join('') + '</div>' : '';
+                  return '<button type="button" data-user-content onclick="window.skhSearchUse(\'' + jsq(t) + '\')">' + esc(t) + '</button>'; }).join('') + '</div>' : '';
         el.innerHTML = sugBar + dym + filterBar() + intentBar + head + '<div class="skh-ss-body">' + body + '</div>' + relBar + footer;
     }
 
@@ -551,8 +553,8 @@
             sorts.map(function (o) { return '<option value="' + o[0] + '"' + (filters.sort === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
             '<button type="button" class="skh-ss-tog' + (filters.inStockOnly ? ' on' : '') + '" aria-pressed="' + !!filters.inStockOnly + '" data-skh-filter="instock" onclick="window.skhSearchSetFilter(\'inStockOnly\', ' + !filters.inStockOnly + ')">Inapatikana</button>' +
             '<button type="button" class="skh-ss-tog' + (filters.verifiedOnly ? ' on' : '') + '" aria-pressed="' + !!filters.verifiedOnly + '" data-skh-filter="verified" onclick="window.skhSearchSetFilter(\'verifiedOnly\', ' + !filters.verifiedOnly + ')">Waliothibitishwa</button>' +
-            '<span class="skh-ss-price-f"><input id="skhSsMin" inputmode="numeric" aria-label="Bei ya chini (TSh)" placeholder="Bei min" value="' + (filters.minPrice != null ? filters.minPrice : '') + '" onchange="window.skhSearchSetFilter(\'minPrice\', this.value)">' +
-            '<input id="skhSsMax" inputmode="numeric" aria-label="Bei ya juu (TSh)" placeholder="Bei max" value="' + (filters.maxPrice != null ? filters.maxPrice : '') + '" onchange="window.skhSearchSetFilter(\'maxPrice\', this.value)"></span>' +
+            '<span class="skh-ss-price-f"><input id="skhSsMin" inputmode="numeric" aria-label="' + T('l10n_ss_min_aria', 'Bei ya chini (TSh)') + '" placeholder="' + T('l10n_ss_min', 'Bei ya chini') + '" value="' + (filters.minPrice != null ? filters.minPrice : '') + '" onchange="window.skhSearchSetFilter(\'minPrice\', this.value)">' +
+            '<input id="skhSsMax" inputmode="numeric" aria-label="' + T('l10n_ss_max_aria', 'Bei ya juu (TSh)') + '" placeholder="' + T('l10n_ss_max', 'Bei ya juu') + '" value="' + (filters.maxPrice != null ? filters.maxPrice : '') + '" onchange="window.skhSearchSetFilter(\'maxPrice\', this.value)"></span>' +
             '</div>';
     }
     window.skhSearchSetFilter = function (k, v) {
@@ -774,6 +776,10 @@
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
     else bind();
+    // [L10N 2026-11-23] an open results panel is rebuilt in the new language (counts, prices and chips are render-time text)
+    document.addEventListener('sokohai:languageChanged', function () {
+        try { var el = $('skhSmartSearch'); if (el && el.classList.contains('open')) { render(($('searchInput') || {}).value || ''); if (window.SokoHaiLMS) window.SokoHaiLMS.apply(el); } } catch (e) {}
+    });
     setTimeout(bind, 1200);
     setTimeout(bind, 3000);
 })();

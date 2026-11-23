@@ -69,7 +69,8 @@
     "build:taxonomy-i18n": "node tools/build_taxonomy_i18n.mjs",
     "perf:measure": "node tools/measure_performance.mjs",
     "test:browser:language-modules": "node tools/test_language_modules_browser.mjs",
-    "test:browser:language-sync": "node tools/test_language_account_sync_browser.mjs"
+    "test:browser:language-sync": "node tools/test_language_account_sync_browser.mjs",
+    "test:browser:l10n": "node tools/test_l10n_live_switch_browser.mjs && node tools/test_l10n_roundtrip_layout_browser.mjs"
   },
   "dependencies": {
     "acorn": "^8.19.0",

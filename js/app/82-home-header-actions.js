@@ -223,9 +223,15 @@
         if (!input) return;
         if (!searchFull) searchFull = input.getAttribute('placeholder') || '';
         var narrow = window.matchMedia('(max-width: 560px)').matches;
-        var want = narrow ? 'Tafuta bidhaa...' : searchFull;
+        // [L10N 2026-11-23] both forms follow the selected language (the short one was always Swahili, every 2 s)
+        var tf = function (k, fb) { try { return window.skhTF ? window.skhTF(k, fb) : fb; } catch (e) { return fb; } };
+        // the language system re-applies data-i18n-placeholder on every change, so the key itself follows the width
+        var key = narrow ? 'l10n_search_short' : 'search_placeholder';
+        if (input.getAttribute('data-i18n-placeholder') !== key) input.setAttribute('data-i18n-placeholder', key);
+        var want = narrow ? tf('l10n_search_short', 'Tafuta bidhaa...') : tf('search_placeholder', searchFull);
         if (input.getAttribute('placeholder') !== want) input.setAttribute('placeholder', want);
     }
+    document.addEventListener('sokohai:languageChanged', function () { try { tuneSearchPlaceholder(); } catch (e) {} });
 
     function watchSidebar() {
         var modal = document.getElementById('sidebarMenuModal');

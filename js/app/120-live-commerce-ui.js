@@ -302,7 +302,7 @@ window.skhLiveCreateForm = async function () {
         <label>Maelezo (hiari)<textarea id="lvxDesc" maxlength="500" rows="2"></textarea></label>
         <label>Itaanza lini (hiari)<input id="lvxWhen" type="datetime-local"><small>Ukiweka muda, live itaonekana "Yanayokuja" na wanunuzi wanaweza kuweka ukumbusho.</small></label>
         <div class="lvx-label">Bidhaa zitakazoonyeshwa <small>(zako tu, hadi 20)</small></div><div id="lvxProducts" class="lvx-pick">Inapakia bidhaa zako…</div>
-        <label>Link ya video (hiari)<input id="lvxVideo" placeholder="https://youtube.com/live/… au https://vimeo.com/…"><small>SokoHai haina seva ya kurusha video bado. Rusha kwenye YouTube au Vimeo kisha bandika link hapa; bila link, live inaonyesha bidhaa, bei na maoni kwa wakati halisi (Product live).</small></label>
+        <label>Link ya video (hiari)<input id="lvxVideo" placeholder="https://youtube.com/live/… au https://vimeo.com/…"><small>SokoHai haina seva ya kurusha video bado. Rusha kwenye YouTube au Vimeo kisha bandika kiungo hapa; bila kiungo, Live inaonyesha bidhaa, bei na maoni kwa wakati halisi (Live ya bidhaa).</small></label>
         <label class="lvx-check"><input type="checkbox" id="lvxRec"> Ruhusu rekodi ya live ihifadhiwe baada ya kuisha</label>
         <div class="lvx-actions"><button class="lvx-btn" onclick="skhLiveClose('lvxCreate')">Ghairi</button><button class="lvx-btn lvx-btn-primary" id="lvxCreateGo">Tengeneza live</button></div></div>`);
     try {

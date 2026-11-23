@@ -1566,13 +1566,13 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         var open = !!PF.open[x.id];
         var row = '<tr class="pf-row' + (open ? ' is-open' : '') + '" data-pf-row="' + esc(x.id) + '">'
             + '<td class="pf-c-name" data-l="Bidhaa"><span class="pf-thumb">' + img + '</span><span class="pf-nm"><b>' + esc(x.title) + '</b><small>' + esc(x.row.sku || x.row.barcode || 'Haijawekwa') + '</small></span></td>'
-            + '<td data-l="Category">' + esc(x.row.category || 'N/A') + '</td>'
+            + '<td data-l="Kategoria">' + esc(x.row.category || 'N/A') + '</td>'
             + '<td data-l="Lebo">' + pfChip(x) + '</td>'
             + '<td data-l="Alama"><b class="pf-score">' + x.score.total + '</b>' + pfConfDot(x.score.confidence) + '</td>'
             + '<td data-l="Units">' + fmtQty(x.units, x.precision) + ' <small>' + esc(x.unitLabel || '') + '</small></td>'
             + '<td data-l="Oda (MP)">' + (x.orders || 0) + '</td>'
             + '<td data-l="Mapato">' + tzs(x.revenue) + '</td>'
-            + '<td data-l="Stock" class="' + stockCls + '">' + esc(availTxt) + '</td>'
+            + '<td data-l="Stoo" class="' + stockCls + '">' + esc(availTxt) + '</td>'
             + '<td data-l="Marejesho">' + retTxt + '</td>'
             + '<td data-l="Ukuaji">' + pfGrowthTxt(x) + '</td>'
             + '<td data-l="Mauzo ya mwisho">' + (x.last ? x.last.toISOString().slice(0, 10) : (x.posOnly ? '<span class="pf-na">POS pekee</span>' : '<span class="pf-na">Hakuna</span>')) + '</td>'
@@ -1627,7 +1627,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         var list = pfFiltered();
         if (!list.length) return '<p class="pf-empty-box">Hakuna bidhaa inayolingana na vichujio hivi.</p>';
         return '<div class="pf-table-wrap"><table class="pf-table"><thead><tr>'
-            + '<th>Bidhaa</th><th>Category</th><th>Lebo</th><th>Alama</th><th>Units</th><th>Oda (MP)</th><th>Mapato</th><th>Stock</th><th>Marejesho</th><th>Ukuaji</th><th>Mauzo ya mwisho</th><th>Hatua</th>'
+            + '<th>Bidhaa</th><th>Kategoria</th><th>Lebo</th><th>Alama</th><th>Units</th><th>Oda (MP)</th><th>Mapato</th><th>Stoo</th><th>Marejesho</th><th>Ukuaji</th><th>Mauzo ya mwisho</th><th>Hatua</th>'
             + '</tr></thead><tbody>' + list.map(pfTableRow).join('') + '</tbody></table></div>';
     }
 

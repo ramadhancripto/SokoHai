@@ -583,7 +583,7 @@ import { skh } from './00-bootstrap.js';
         ['Jina la Usajili la Laini *', 'r16_line_name', 'Registered Line Name *'],
         ['Jina la Benki *', 'r16_bank_name', 'Bank Name *'],
         // ==== [R16 SIDEBAR PACK] 22-printing quick-menu + 21 account items ====
-        ['SOKO (MARKETPLACE)', 'sb_sec_market', 'MARKETPLACE'],
+        ['SOKO KUU', 'sb_sec_market', 'MARKETPLACE'],
         ['Soko Huru (Feed)', 'sb_feed_all', 'Open Market (Feed)'],
         ['Mchanganyiko wa bidhaa, huduma na usafirishaji', 'sb_feed_all_sub', 'A mix of products, services and transport'],
         ['Bidhaa Sokoni', 'sb_feed_products', 'Market Products'],
@@ -610,14 +610,14 @@ import { skh } from './00-bootstrap.js';
         ['MAWASILIANO', 'sb_sec_comms', 'COMMUNICATION'],
         ['Inbox (Chat)', 'sb_inbox', 'Inbox (Chat)'],
         ['Meseji zako na wauzaji/wateja', 'sb_inbox_sub', 'Your messages with sellers/customers'],
-        ['Notifications zako zote', 'sb_notif_sub', 'All your notifications'],
+        ['Taarifa zako zote', 'sb_notif_sub', 'All your notifications'],
         ['Vitu ulivyovipenda', 'sb_saved_sub', 'Things you loved'],
         // Sidebar drawer misc (22-printing drawer chrome)
         ['WALLET:', 'sb_wallet_lbl', 'WALLET:'],
         ['TOKENS:', 'sb_tokens_lbl', 'TOKENS:'],
         // Account item subtitles (21-sokopay)
         ['Taarifa binafsi, picha, mawasiliano', 'acc_profile_sub', 'Personal info, photo, contacts'],
-        ['Toa maoni au omba feature', 'acc_feedback_sub', 'Share feedback or request a feature'],
+        ['Toa maoni au omba kipengele kipya', 'acc_feedback_sub', 'Share feedback or request a feature'],
         ['Jifunze kutumia SokoHai', 'acc_tutorials_sub', 'Learn how to use SokoHai'],
         ['Sheria za matumizi', 'acc_terms_sub', 'Rules of use'],
         ['Sera ya faragha', 'acc_privacy_sub', 'Privacy policy'],

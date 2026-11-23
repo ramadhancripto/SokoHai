@@ -13,7 +13,7 @@ window.renderSokoHaiAccountMenu = function(){
     // ==== MENU MOJA IMARA (hakuna duplicates): Soko + Usimamizi + SokoPay + Account ====
     // sehemu kuu zinaonekana wazi; sehemu za akaunti zinakunjwa kwa asili (ili isiwe ndefu)
     const quick = [
-        ['SOKO (MARKETPLACE)', false, [
+        ['SOKO KUU', false, [
             ['feed_all','','Soko Huru (Feed)','Mchanganyiko wa bidhaa, huduma na usafirishaji'],
             ['feed_products','','Bidhaa Sokoni','Ona bidhaa zote zinazouzwa'],
             ['feed_services','','Watoa Huduma','Mafundi na huduma mbalimbali'],
@@ -36,7 +36,7 @@ window.renderSokoHaiAccountMenu = function(){
         ]],
         ['MAWASILIANO', false, [
             ['inbox','','Inbox (Chat)','Meseji zako na wauzaji/wateja'],
-            ['notifications','','Taarifa','Notifications zako zote'],
+            ['notifications','','Taarifa','Taarifa zako zote'],
             ['saved','','Saved Items','Vitu ulivyovipenda']
         ]]
     ];
@@ -140,7 +140,7 @@ window.sokohaiAccountSettingContent = function(key,title){
         verification:[row('Identity verification status','<b style="color:#f59e0b;">Pending</b>'),row('Company verification'),row('Government verification'),'<button class="skh-action-btn">Start / Continue Verification</button>'],
         security:[row('Change password'),row('PIN / Security code'),row('Biometric login',toggle(false)),row('Two-Factor Authentication',toggle(false)),row('Recovery options'),'<button class="skh-action-btn">Save Security Settings</button>'],
         privacy:[row('Profile visibility','<b>Friends/Verified</b>'),row('Location visibility'),row('Media permissions'),row('Data sharing',toggle(false)),row('Activity visibility'),'<button class="skh-action-btn">Save Privacy</button>'],
-        permissions:[row('Camera permission'),row('Microphone permission'),row('GPS / Location permission'),row('Notifications permission'),row('Storage permission'),row('Bluetooth permission'),'<button class="skh-action-btn" onclick="alert(\'Ruhusa za OS hubadilishwa kwenye Settings za simu/browser.\')">Check Permissions</button>'],
+        permissions:[row('Camera permission'),row('Microphone permission'),row('GPS / Location permission'),row('Notifications permission'),row('Storage permission'),row('Bluetooth permission'),'<button class="skh-action-btn" onclick="alert(window.skhTF ? window.skhTF(\'l10n_os_perm_alert\', \'Ruhusa za OS hubadilishwa kwenye Settings za simu/browser.\') : \'Ruhusa za OS hubadilishwa kwenye Settings za simu/browser.\')">Check Permissions</button>'],
         messages:[row('Read receipts',toggle(true)),row('Auto-download media',toggle(false)),row('Archived chats'),row('Blocked users'),'<button class="skh-action-btn">Save Message Settings</button>'],
         language:[row('Language','<b>Swahili</b>'),row('Country','<b>Tanzania</b>'),row('Currency','<b>TZS</b>'),row('Time zone','<b>Africa/Dar_es_Salaam</b>'),row('Date format','<b>DD/MM/YYYY</b>')],
         appearance:[row('Theme','<b>System</b>'),row('Dark mode',toggle(false)),row('Font size','<b>Medium</b>'),row('Icon size','<b>Normal</b>'),'<button class="skh-action-btn">Apply Appearance</button>'],
@@ -156,7 +156,7 @@ window.sokohaiAccountSettingContent = function(key,title){
         // open the public pages or the real support form (openSokoHaiAccountSetting above). legal_center lists the policies.
         legal_center:['<div class="skh-setting-card"><b>Sera za SokoHai</b><p>Nyaraka zote zinafunguka bila kuingia.</p>'+[['/privacy.html','Sera ya Faragha'],['/terms.html','Masharti ya Matumizi'],['/refund-policy.html','Marejesho, Kughairi na Migogoro'],['/seller-policy.html','Sera ya Wauzaji'],['/community-guidelines.html','Miongozo ya Jamii'],['/cookies.html','Cookies na Hifadhi ya Kifaa'],['/contact.html','Mawasiliano ya Kisheria na Faragha']].map(x=>'<a class="skh-setting-row" href="'+x[0]+'" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;"><span>'+x[1]+'</span><span style="color:#94a3b8;font-weight:800;">›</span></a>').join('')+'</div>']
     };
-    const content=map[key] || [`<div class="skh-setting-card"><b>${title}</b><p>Sehemu hii ni ya account/system settings. Modules za biashara zipo kwenye navigation kuu.</p></div>`];
+    const content=map[key] || [`<div class="skh-setting-card"><b>${title}</b><p>Sehemu hii ni ya mipangilio ya akaunti na mfumo. Moduli za biashara zipo kwenye menyu kuu.</p></div>`];
     return Array.isArray(content) ? content.join('') : content;
 };
 
