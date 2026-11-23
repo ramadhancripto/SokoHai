@@ -697,7 +697,7 @@ window.closeModals = function(forceAll) {
 
 skh.firebaseConfig = {
         apiKey: "AIzaSyB_OQ4TN2ctkAv5EpX8NxrNklGq6T7feR4",
-        authDomain: "sokonet-3b847.firebaseapp.com",
+        authDomain: "auth.sokohai.com",
         projectId: "sokonet-3b847",
         storageBucket: "sokonet-3b847.appspot.com",
         appId: "1:950677961118:web:4cd8177bae10dc9f743e8f"
