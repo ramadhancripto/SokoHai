@@ -2,7 +2,7 @@
   "id": "./",
   "name": "SokoHai",
   "short_name": "SokoHai",
-  "description": "SokoHai — soko la mtandaoni la Tanzania. Nunua, uza na tangaza bidhaa bure.",
+  "description": "SokoHai — soko la mtandaoni: nunua, uza na gundua bidhaa, huduma, usafiri na biashara.",
   "lang": "sw",
   "start_url": "./index.html?source=pwa",
   "scope": "./",

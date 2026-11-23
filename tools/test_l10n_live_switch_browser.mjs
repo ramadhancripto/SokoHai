@@ -4,7 +4,7 @@
  * interface text (text nodes and placeholders) is left in the previous language. User content (listing titles and
  * descriptions, search terms), brand / product names and technical identifiers are exempt. Also checked: the
  * preference survives a reload and navigation, <html lang> follows, an open cart / search panel / Language Center is
- * rebuilt in the new language, the SokoHai wordmark is never translated, a Kiswahili -> English -> Kiswahili round trip restores every text, <option> values do not change when their label is translated, and no screen scrolls
+ * rebuilt in the new language, aria-label / title follow the language, the SokoHai wordmark is never translated, a Kiswahili -> English -> Kiswahili round trip restores every text, <option> values do not change when their label is translated, and no screen scrolls
  * sideways at 360 px. */
 import { chromium } from 'playwright'; import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict';
 const SDK = (process.env.SKH_FIREBASE_SDK_DIR || '').replace(/\/?$/, '/');
@@ -76,6 +76,13 @@ ok(rt.length === 0, `Kiswahili -> English -> Kiswahili restores every visible te
 }
 if (PART === 'A') {
 ok(brand.length === 0, 'the SokoHai wordmark is never translated (no "MarketHai"): ' + JSON.stringify(brand));
+// accessibility labels follow the language (aria-label / title with a known translation)
+await p.evaluate("try{closeModals()}catch(e){}; window.skhSetLang('sw')"); await p.waitForTimeout(600); await p.evaluate("window.skhSetLang('en')"); await p.waitForTimeout(900);
+const ariaLeft = await p.evaluate(() => { const L = window.SokoHaiLMS, out = [];
+  document.querySelectorAll('[aria-label],[title]').forEach(el => { if (el.closest('[data-no-i18n],[data-user-content],.skh-brand-lockup')) return;
+    ['aria-label', 'title'].forEach(a => { const v = (el.getAttribute(a) || '').trim(); const k = v && L.keyFromPhrase(v); if (k && L.dict.sw[k] === v && L.dict.en[k] && L.dict.en[k] !== v) out.push(v); }); });
+  return [...new Set(out)]; });
+ok(ariaLeft.length === 0, 'English: no aria-label / title left in Kiswahili when a translation exists: ' + JSON.stringify(ariaLeft.slice(0, 8)));
 // an open view is rebuilt: cart summary (count/total), search panel footer, Language Center sentence
 await p.evaluate("try{closeModals()}catch(e){}; window.skhSetLang('sw')"); await p.evaluate('openCart()'); await p.waitForTimeout(1200);
 await p.evaluate("window.skhSetLang('en')"); await p.waitForTimeout(900);

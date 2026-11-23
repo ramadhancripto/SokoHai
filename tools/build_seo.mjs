@@ -207,7 +207,7 @@ ${ld.map(o => '<script type="application/ld+json">' + JSON.stringify(o).replace(
 </div></div>
 <main id="main" class="sp-main">${body}</main>
 <footer class="lp-foot"><div class="lp-foot-in">
-  <div><b>SokoHai</b><small>Soko la mtandaoni la Tanzania · <a href="${ORIGIN}/">${esc(ORIGIN.replace(/^https?:\/\//, ''))}</a><br>Ukurasa huu umetengenezwa kutoka matangazo ya umma tarehe ${TODAY}.</small></div>
+  <div><b>SokoHai</b><small>Soko la mtandaoni la kununua, kuuza na kugundua · <a href="${ORIGIN}/">${esc(ORIGIN.replace(/^https?:\/\//, ''))}</a><br>Ukurasa huu umetengenezwa kutoka matangazo ya umma tarehe ${TODAY}.</small></div>
   <div><b>Information</b><ul>${FOOT_INFO.map(([h, t]) => '<li><a href="' + h + '">' + esc(t) + '</a></li>').join('')}</ul></div>
   <div><b>Policies</b><ul>${FOOT_POL.map(([h, t]) => '<li><a href="' + h + '">' + esc(t) + '</a></li>').join('')}</ul></div>
 </div></footer>
@@ -246,6 +246,11 @@ function conditionLd(d) {
 const AVAIL_TEXT = { in_stock: 'Inapatikana', low_stock: 'Zimebaki chache', made_to_order: 'Inatengenezwa kwa oda', out_of_stock: 'Imeisha kwa sasa', stock_unconfirmed: 'Muulize muuzaji kama ipo', available: 'Inapatikana' };
 
 // ------------------------------------------------------------------ builders
+// [SEO 2026-11-23] Every page gets its own <title>. Two listings (or two shops) with the same name were identical in
+// search results; the first keeps the plain title, the next ones add what tells them apart (shop, then region).
+const USED_TITLES = new Set();
+function uniqTitle(cands) { const c = cands.filter(Boolean); for (const t of c) if (!USED_TITLES.has(t)) { USED_TITLES.add(t); return t; }
+  let i = 2; while (USED_TITLES.has(c[0] + ' (' + i + ')')) i++; const t = c[0] + ' (' + i + ')'; USED_TITLES.add(t); return t; }
 function listingPage(d, all, sellers) {
   const p = pathOf(d), t = titleOf(d), isSvc = d.collectionName === 'services';
   const cat = catLabel(d.category), reg = regionOf(d), place = placeOf(d), imgs = imagesOf(d), av = E.availability(d).label;
@@ -289,7 +294,21 @@ function listingPage(d, all, sellers) {
     if (cat) prod.category = cat;
     ld.push(prod);
   }
-  return shell({ path: p, title: clip(t, 52) + (price ? ' — ' + price : '') + ' | SokoHai', description: metaDesc, h1: t, kicker: isSvc ? 'Huduma' : (cat || 'Bidhaa'),
+  // [SEO 2026-11-23] a service listing is described as a Service: only fields the listing has (no rating, no area
+  // served that the provider did not state); the price is an Offer only when the provider set one
+  if (isSvc) {
+    const svc = { '@context': 'https://schema.org', '@type': 'Service', name: clip(t, 150), url: abs(p) };
+    if (cat) svc.serviceType = cat;
+    if (descTxt) svc.description = clip(descTxt, 4900);
+    if (imgs.length) svc.image = imgs.map(u => img(u, 1200));
+    if (seller) svc.provider = { '@type': 'Organization', name: seller.name, url: abs(seller.path) };
+    if (Number(d.price) > 0) svc.offers = { '@type': 'Offer', url: abs(p), priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'TZS', minPrice: String(Math.round(Number(d.price))) } };   // shown as "kuanzia" (from)
+    ld.push(svc);
+  }
+  const title = uniqTitle([clip(t, 52) + (price ? ' — ' + price : '') + ' | SokoHai',
+    seller && seller.name ? clip(t, 40) + ' — ' + clip(seller.name, 24) + ' | SokoHai' : '',
+    reg ? clip(t, 40) + ' — ' + reg + (seller && seller.name ? ' · ' + clip(seller.name, 20) : '') + ' | SokoHai' : '']);
+  return shell({ path: p, title, description: metaDesc, h1: t, kicker: isSvc ? 'Huduma' : (cat || 'Bidhaa'),
     lead: '', body, crumbs, jsonld: ld, ogImage: imgs[0] ? img(imgs[0], 1200) : null, ogType: isSvc ? 'website' : 'product' });
 }
 function listPage({ p, title, h1, kicker, lead, items, crumbs, extra, pageNo, pages, baseP }) {
@@ -372,7 +391,8 @@ listings.forEach(d => {
 // seller pages
 for (const s of sellers.values()) {
   const regs = Object.keys(s.regions).sort((a, b) => s.regions[b] - s.regions[a]);
-  paged(s.items, s.path, (p, items, n, pages) => listPage({ p, baseP: s.path, pageNo: n, pages, items, title: s.name + ' — duka kwenye SokoHai', h1: s.name, kicker: 'Duka',
+  const sTitle = uniqTitle([s.name + ' — duka kwenye SokoHai', regs.length ? s.name + ' — duka, ' + regs[0] + ' | SokoHai' : '']);
+  paged(s.items, s.path, (p, items, n, pages) => listPage({ p, baseP: s.path, pageNo: n, pages, items, title: sTitle, h1: s.name, kicker: 'Duka',
     lead: esc(s.name) + ' ana matangazo ' + s.items.length + ' hai kwenye SokoHai' + (regs.length ? ', ' + esc(regs.slice(0, 3).join(', ')) : '') + '. Wasiliana kupitia chat ya SokoHai.',
     crumbs: [['/soko/', 'Soko'], [s.path, s.name]], extra: s.verified ? '<p class="sp-badge-line"><span class="sp-badge">Muuzaji amethibitishwa na SokoHai</span></p>' : '' }), 'sellers');
 }
@@ -382,8 +402,8 @@ for (const [c, items] of catEntries) {
   const base = SP.category(c);
   const regs = [...byCatRegion.entries()].filter(([k, v]) => k.startsWith(c + '|') && v.length >= MIN_LIST).map(([k, v]) => [k.split('|')[1], v.length]).sort((a, b) => b[1] - a[1]);
   const extra = regs.length ? '<nav class="sp-chips" aria-label="Kwa mkoa">' + regs.map(([r, n]) => '<a href="' + SP.category(c, r) + '">' + esc(r) + ' <small>' + n + '</small></a>').join('') + '</nav>' : '';
-  paged(items, base, (p, its, n, pages) => listPage({ p, baseP: base, pageNo: n, pages, items: its, title: c + ' — nunua na uza Tanzania | SokoHai', h1: c, kicker: 'Kategoria',
-    lead: 'Matangazo ' + items.length + ' hai ya ' + esc(c) + ' kutoka kwa wauzaji wa SokoHai Tanzania. Linganisha bei na eneo, kisha ongea na muuzaji.', crumbs: [['/soko/', 'Soko'], [base, c]], extra }));
+  paged(items, base, (p, its, n, pages) => listPage({ p, baseP: base, pageNo: n, pages, items: its, title: c + ' — nunua na uza mtandaoni | SokoHai', h1: c, kicker: 'Kategoria',
+    lead: 'Matangazo ' + items.length + ' hai ya ' + esc(c) + ' kutoka kwa wauzaji wa SokoHai. Linganisha bei na eneo, kisha ongea na muuzaji.', crumbs: [['/soko/', 'Soko'], [base, c]], extra }));
 }
 for (const [k, items] of byCatRegion) {
   if (items.length < MIN_LIST) continue;
@@ -416,7 +436,7 @@ if (regionPathFree) for (const [r, items] of regionEntries) {
     crumbs: [['/soko/', 'Soko'], [base, r]], extra }));
 }
 if (services.length >= MIN_LIST) {
-  paged(services, '/soko/huduma/', (p, its, n, pages) => listPage({ p, baseP: '/soko/huduma/', pageNo: n, pages, items: its, title: 'Huduma Tanzania — mafundi na watoa huduma | SokoHai', h1: 'Huduma', kicker: 'Huduma',
+  paged(services, '/soko/huduma/', (p, its, n, pages) => listPage({ p, baseP: '/soko/huduma/', pageNo: n, pages, items: its, title: 'Huduma — mafundi na watoa huduma | SokoHai', h1: 'Huduma', kicker: 'Huduma',
     lead: 'Watoa huduma ' + services.length + ' kwenye SokoHai: mafundi, usafi, ubunifu na zaidi.', crumbs: [['/soko/', 'Soko'], ['/soko/huduma/', 'Huduma']] }));
 }
 // hub /soko/
@@ -428,7 +448,7 @@ if (services.length >= MIN_LIST) {
     + (brandEntries.length ? '<section class="sp-sec"><h2>Chapa</h2><nav class="sp-chips">' + brandEntries.slice(0, 40).map(b => '<a href="' + SP.brand(b.name) + '">' + esc(b.name) + ' <small>' + b.items.length + '</small></a>').join('') + '</nav></section>' : '')
     + (recent.length ? '<section class="sp-sec"><h2>Zilizoongezwa karibuni</h2>' + grid(recent) + '</section>' : '')
     + '<section class="sp-sec"><h2>Miongozo</h2><ul class="sp-cats">' + GUIDES.map(g => '<li><a href="/mwongozo/' + g.slug + '/">' + esc(g.title) + '</a></li>').join('') + '</ul></section>';
-  write('soko/index.html', shell({ path: '/soko/', title: 'Soko la SokoHai — bidhaa, huduma na wauzaji Tanzania', description: 'Vinjari matangazo ya umma ya SokoHai kwa kategoria, mkoa na chapa: bidhaa, huduma na wauzaji kote Tanzania.',
+  write('soko/index.html', shell({ path: '/soko/', title: 'Soko la SokoHai — bidhaa, huduma na wauzaji', description: 'Vinjari matangazo ya umma ya SokoHai kwa kategoria, eneo na chapa: bidhaa, huduma, usafiri na wauzaji.',
     h1: 'Soko kwa kategoria', kicker: 'SokoHai', lead: 'Matangazo ya umma ya SokoHai yaliyopangwa kwa kategoria, mkoa na chapa.', body, crumbs: [['/soko/', 'Soko']],
     jsonld: recent.length ? [itemListLd(recent, 'Zilizoongezwa karibuni')] : [] }));
   urls.push({ loc: abs('/soko/'), lastmod: TODAY, group: 'pages' });

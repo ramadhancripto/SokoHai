@@ -16,23 +16,24 @@
          hufungua DNS+TLS mapema — hint pekee, haibadilishi tabia yoyote. -->
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-    <title>SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania</title>
+    <title>SokoHai | Nunua, Uza Bidhaa, Gundua Huduma na Biashara</title>
     <!-- [SEO / PUBLIC LINKS] Meta za Google + viungo vya umma vya bidhaa.
          IDs hizi zinasasishwa na JS (window.skhUpdateSeoMeta) kila bidhaa ikifunguliwa. -->
-    <meta name="description" content="Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania." id="skhMetaDescription">
+    <meta name="description" content="Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma, chunguza fursa na upate unachohitaji kwenye SokoHai." id="skhMetaDescription">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta property="og:site_name" content="SokoHai">
-    <meta property="og:title" content="SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania" id="skhOgTitle">
-    <meta property="og:description" content="Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania." id="skhOgDescription">
+    <meta property="og:title" content="SokoHai | Nunua, Uza Bidhaa, Gundua Huduma na Biashara" id="skhOgTitle">
+    <meta property="og:description" content="Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma, chunguza fursa na upate unachohitaji kwenye SokoHai." id="skhOgDescription">
     <meta property="og:locale" content="sw_TZ">
     <meta property="og:locale:alternate" content="en_GB">
     <meta property="og:type" content="website">
     <meta property="og:url" id="skhOgUrl" content="https://sokohai.com/">
     <meta property="og:image" id="skhOgImage" content="https://sokohai.com/assets/img/sokohai-cart-mark.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania" id="skhTwTitle">
-    <meta name="twitter:description" content="Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania." id="skhTwDescription">
+    <meta name="twitter:title" content="SokoHai | Nunua, Uza Bidhaa, Gundua Huduma na Biashara" id="skhTwTitle">
+    <meta name="twitter:description" content="Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma, chunguza fursa na upate unachohitaji kwenye SokoHai." id="skhTwDescription">
     <meta property="og:image:alt" content="Nembo ya SokoHai">
+    <meta name="twitter:image:alt" content="Nembo ya SokoHai">
     <link rel="canonical" id="skhCanonical" href="https://sokohai.com/">
 <link rel="icon" type="image/png" href="assets/img/sokohai-app-192-v3.png">
     <!-- [SEO/PWA 2026-11-08] Manifest ilikuwa ipo (sokohai-manifest.json) lakini
@@ -55,8 +56,7 @@
           "url": "https://sokohai.com/",
           "logo": "https://sokohai.com/assets/img/sokohai-cart-mark.png",
           "alternateName": "Soko Hai",
-          "description": "Soko la mtandaoni la Tanzania: nunua na uza bidhaa, tafuta huduma na usafiri, na gundua biashara karibu nawe.",
-          "areaServed": { "@type": "Country", "name": "Tanzania" }
+          "description": "SokoHai ni soko la mtandaoni la kununua na kuuza bidhaa, kugundua huduma, usafiri na biashara, na kuwasiliana na wauzaji na watoa huduma."
         },
         {
           "@type": "WebSite",
@@ -124,7 +124,7 @@
 <link rel="stylesheet" href="css/39-creative-studio.css" media="print" onload="this.media='all'"><!-- Creative studio -->
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
-<link rel="stylesheet" href="css/25-typography.css">
+<link rel="stylesheet" href="css/25-typography.css?v=20261123seo1">
 <link rel="stylesheet" href="css/26-design-system.css">
     <!-- [VISUAL-AUDIT 2026-09-16] 27) Hero/touch/consolidation fixes — herufi la mwisho kwenye load order -->
     <link rel="stylesheet" href="css/27-visual-audit-fixes.css">
@@ -358,7 +358,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <button type="button" class="adv-nav-item locked" aria-disabled="true" onclick="window.skhOpenAdvertiserBillingSoon()"><span>Billing &amp; Payments</span><span class="adv-lock">Coming Soon</span></button>
             </nav>
             <main class="adv-main">
-                <h1 class="adv-title">Advertiser Dashboard</h1>
+                <h2 class="adv-title">Advertiser Dashboard</h2>
                 <p class="adv-lead">Create professional advertisements, posters and updates with one shared SokoHai Creative Studio.</p>
                 <div class="adv-grid">
                     <button type="button" class="adv-card" onclick="window.skhOpenCompanyAdsSoon()"><h3>Create Creative</h3><p>Design a professional advertisement, Product promotion, Service post, banner or Business update.</p><span class="adv-coming">Open Studio</span></button>
@@ -549,7 +549,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
     <div class="skh-auth-card" role="dialog" aria-modal="true" aria-labelledby="skhAuthTitle">
         <header class="skh-auth-hero">
             <img class="skh-auth-hero-img" src="assets/img/auth/auth-hero.webp" width="1024" height="500" alt="" aria-hidden="true" decoding="async">
-            <h2 class="sr-only">SokoHai — Soko la Mtandaoni la Tanzania. Nunua, Uza, Jitafutie.</h2>
+            <h2 class="sr-only">SokoHai — Soko la Mtandaoni. Nunua, Uza, Jitafutie.</h2>
             <label class="skh-auth-lang">
                 <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 <select aria-label="Lugha / Language" onchange="window.skhSetLang &amp;&amp; window.skhSetLang(this.value)"><option value="sw">Swahili</option><option value="en">English</option></select>
@@ -697,7 +697,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
             <!-- 2.1 UTAMBULISHO: bei + upatikanaji mbele -->
             <section class="pm-sec pm-id" id="pmIdentitySec">
                 <div class="pm-chips" id="pmChips"></div>
-                <h1 class="pm-title" id="pmTitle" data-user-content>Bidhaa</h1>
+                <h2 class="pm-title" id="pmTitle" data-user-content>Bidhaa</h2>
                 <div class="pm-rating-line" id="pmRatingLine"></div>
                 <div class="pm-price-row">
                     <div class="pm-price" id="pmPrice">TSh 0</div>
@@ -3192,7 +3192,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         </span>
         <div style="display:flex; align-items:center; gap:6px; flex:0 0 auto; justify-content:flex-end;">
             <select id="regionFilterSelect" aria-label="Chagua mkoa" onchange="window.filterByRegion(this.value)" style="padding:7px 8px; border-radius:999px; border:1.5px solid #cbd5e1; background:white; font-weight:800; font-size:12px; color:var(--primary-dark); outline:none; cursor:pointer;">
-                <option value="" data-i18n="region_all">Tanzania Nzima</option>
+                <option value="" data-i18n="region_all">Mikoa yote</option>
                 <option value="nearme" data-i18n="region_near">Karibu Nawe (GPS)</option>
                 <optgroup label=" Mikoa ya Tanzania Bara" data-i18n-label="region_mainland">
                     <option value="Arusha">Arusha</option>
@@ -3278,9 +3278,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
         <!-- [SEO 2026-11-22] Visible introduction (Home tab only). Google needs real text that says what SokoHai is;
              without it the snippet was taken from hidden checkout/payment dialogs (now data-nosnippet). -->
         <section class="skh-home-intro" id="skhHomeIntro" aria-labelledby="skhHomeIntroTitle">
-            <h1 id="skhHomeIntroTitle" data-i18n="home_intro_h1">SokoHai — soko la mtandaoni la Tanzania</h1>
-            <p data-i18n="home_intro_p">Nunua na uza bidhaa, tafuta huduma na usafiri, na gundua biashara karibu nawe — Dodoma, Dar es Salaam, Arusha, Mwanza na mikoa mingine ya Tanzania.</p>
-            <nav class="skh-home-intro-links" aria-label="SokoHai"><a href="/soko/" data-i18n="home_intro_browse">Vinjari kwa kategoria</a><a href="/mwongozo/" data-i18n="home_intro_guides">Miongozo ya kununua</a></nav>
+            <h1 id="skhHomeIntroTitle" data-i18n="home_intro_h1">SokoHai — Soko Lako la Kununua, Kuuza na Kugundua</h1>
+            <p data-i18n="home_intro_p">Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma, chunguza fursa na upate unachohitaji.</p>
+            <nav class="skh-home-intro-links" aria-label="SokoHai"><a href="/soko/" data-i18n="home_intro_browse">Vinjari Kategoria</a><a href="/" data-i18n="home_intro_products" onclick="if(window.updateApp){updateApp('bidhaa');return false;}">Gundua Bidhaa</a><a href="/soko/huduma/" data-i18n="home_intro_services">Gundua Huduma</a><a href="/" data-i18n="home_intro_transport" onclick="if(window.updateApp){updateApp('delivery');return false;}">Tafuta Usafiri</a><a href="/mwongozo/" data-i18n="home_intro_guides">Miongozo ya Kununua</a></nav>
         </section>
         <!-- Kitufe cha Kategoria & Subcategories (chini ya Ads Card) -->
         <!-- [FIX 2026-09-24] Inline display:none ILIFANICHA KATEGORIA MILELE —
@@ -3616,7 +3616,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/05-forms.js"></script>
 <script type="module" src="js/app/06-product-builder.js?v=20261122i18n1"></script>
 <script type="module" src="js/app/06-navigation.js"></script>
-<script type="module" src="js/app/07-product.js?v=20261122seo1"></script>
+<script type="module" src="js/app/07-product.js?v=20261123seo1"></script>
 <script type="module" src="js/app/08-app-state.js?v=20261120rem1"></script>
 <script type="module" src="js/app/09-feed-announcements.js"></script>
 <script type="module" src="js/app/10-dashboard-tabs.js?v=20261118recycle"></script>
@@ -3637,7 +3637,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/21-sokopay.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/22-printing.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/23-smart-cart.js?v=20261123l10n1"></script>
-<script type="module" src="js/app/24-ui-final.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/24-ui-final.js?v=20261123seo1"></script>
 <script type="module" src="js/app/25-tracking-hub.js"></script>
 <script type="module" src="js/app/26-image-zoom.js"></script>
 <script type="module" src="js/app/27-route-dispatch.js"></script>
@@ -3645,7 +3645,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/29-seller-store.js?v=20261120r22"></script>
 <script type="module" src="js/app/30-seller-products.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/31-agent-assist.js"></script>
-<script type="module" src="js/app/32-i18n.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/32-i18n.js?v=20261123seo1"></script>
 <script type="module" src="js/app/33-custody.js?v=20261118cancel"></script>
 <script type="module" src="js/app/37-negotiation.js"></script>
 <!-- [NEGO MODULE 01] Fomu ya majadiliano inayojua muktadha (38 = UI, logic ni tupu) -->

@@ -672,6 +672,19 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       const grows=(from,to)=>{ const a=String(from||'').trim(), b=String(to||'').trim(); return a && b!==a && b.indexOf(a)!==-1; };
       nodes.forEach(n => { const tr=this.translateMem(n, n.nodeValue); if(tr!==n.nodeValue && !grows(n.nodeValue,tr)) n.nodeValue=n.nodeValue.replace(n.nodeValue.trim(), tr.trim()); });
       root.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => { if(el.hasAttribute('data-i18n-placeholder')) return; const tr=this.translateMem(el, el.getAttribute('placeholder')); if(tr!==el.getAttribute('placeholder') && !grows(el.getAttribute('placeholder'),tr)) el.setAttribute('placeholder', tr); });
+      // [L10N 2026-11-23] accessibility text (aria-label, title) follows the language too: same whole-phrase rule, same
+      // key memory (per attribute), never inside user content or the brand lockup. Unknown labels are left as they are.
+      if(this._amem!==null){ if(!this._amem) this._amem=(typeof WeakMap==='function')?new WeakMap():null; }
+      if(this._amem) root.querySelectorAll('[aria-label],[title]').forEach(el => {
+        if(el.closest('[data-no-i18n],[data-user-content],.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return;
+        ['aria-label','title'].forEach(at => {
+          const v=el.getAttribute(at); if(!v || v.length>120) return;
+          let mem=this._amem.get(el); if(!mem){ mem={}; this._amem.set(el, mem); }
+          let k=mem[at];
+          if(!(k && (dict.en[k]===v.trim() || dict.sw[k]===v.trim()))) { k=this.keyFromPhrase(v.trim()); if(!k) return; mem[at]=k; }
+          const tr=this.t(k); if(tr && tr!==v && !grows(v,tr)) el.setAttribute(at, tr);
+        });
+      });
       root.querySelectorAll('button, a, span, b, small, label, option, h1, h2, h3, h4').forEach(el => {
         if(el.children.length) return;
         // [FIX 2026-09-14] Usiguse vilivyo na data-i18n wala labels za nav.

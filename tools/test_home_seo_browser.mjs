@@ -12,8 +12,10 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 const APP = process.env.SKH_APP_URL || 'http://127.0.0.1:5055/';
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n++; console.log('  PASS ' + m); };
-const TITLE = 'SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania';
-const DESC = 'Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania.';
+const TITLE = 'SokoHai | Nunua, Uza Bidhaa, Gundua Huduma na Biashara';
+const DESC = 'Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma, chunguza fursa na upate unachohitaji kwenye SokoHai.';
+// [SEO 2026-11-23] global positioning: the site-wide copy names no single country or list of cities
+const ONE_COUNTRY = /Tanzania|Dodoma|Dar es Salaam|Arusha|Mwanza/;
 const DIALOG = /Inahitaji Usafirishaji|Lipa kwa SokoPay Wallet|Ghairi Malipo|Thibitisha Malipo|Chagua njia ya malipo|Malipo yanawekwa kwenye Escrow/i;
 
 const b = await chromium.launch();
@@ -44,7 +46,7 @@ const raw = await (await fetch(APP)).text();
       dialogsCovered: ['checkoutModal', 'cartModal', 'userPaymentModal', 'authModal', 'productModal', 'plusMenu', 'mainMenu', 'chatModal'].every(id => { const e = d.getElementById(id); return e && !!e.closest('[data-nosnippet]'); }) };
   }, raw);
   ok(r.title === TITLE && r.title.length <= 60, 'title says what SokoHai is, <= 60 characters ("' + r.title + '")');
-  ok(r.desc === DESC && r.desc.length >= 120 && r.desc.length <= 160, 'meta description: buy, sell, services, businesses near you, Dodoma / Dar es Salaam / Tanzania (' + r.desc.length + ' chars)');
+  ok(r.desc === DESC && !ONE_COUNTRY.test(r.desc + r.title) && r.desc.length >= 120 && r.desc.length <= 160, 'meta description: products, services, transport, businesses; no single-country claim (' + r.desc.length + ' chars)');
   ok(r.canon === 'https://sokohai.com/', 'canonical is the https apex https://sokohai.com/ (www redirects there)');
   ok(/^index, follow/.test(r.robots) && !/noindex/.test(r.robots), 'robots: index, follow (' + r.robots + ')');
   ok(r.ogT === TITLE && r.ogD === DESC && /^https:\/\/sokohai\.com\//.test(r.ogI) && r.ogL === 'sw_TZ', 'Open Graph title, description, absolute image and sw_TZ locale');
@@ -53,10 +55,12 @@ const raw = await (await fetch(APP)).text();
   const org = graph.find(x => x['@type'] === 'Organization'), site = graph.find(x => x['@type'] === 'WebSite');
   ok(!r.ld.some(x => x.__bad) && org && org.name === 'SokoHai' && org.url === 'https://sokohai.com/' && /^https:\/\//.test(org.logo), 'JSON-LD parses: Organization (name, url, logo)');
   ok(site && site.potentialAction && site.potentialAction['@type'] === 'SearchAction' && /\?q=\{search_term_string\}$/.test(site.potentialAction.target.urlTemplate), 'JSON-LD WebSite + SearchAction pointing at /?q= (opened by the existing search, js/app/131)');
-  ok(r.h1.length === 1 && /SokoHai/.test(r.h1[0]) && /Tanzania/.test(r.h1[0]), 'exactly one quotable <h1> on the homepage and it names SokoHai and Tanzania ("' + r.h1.join(' | ') + '")');
+  ok(r.h1.length === 1 && /SokoHai/.test(r.h1[0]) && !ONE_COUNTRY.test(r.h1[0]), 'exactly one quotable <h1> on the homepage; it names SokoHai and no single country ("' + r.h1.join(' | ') + '")');
   ok(r.dialogsCovered && r.nosnippet >= 39, 'checkout, cart, payment, sign-in, product, menu and chat dialogs are data-nosnippet (' + r.nosnippet + ' containers)');
   ok(!DIALOG.test(r.snippetText), 'text Google may quote has none of the dialog / payment phrases');
-  ok(r.snippetText.includes('Nunua na uza bidhaa, tafuta huduma na usafiri, na gundua biashara karibu nawe'), 'text Google may quote contains the visible introduction');
+  ok(r.snippetText.includes('Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma') && !/mikoa mingine ya Tanzania/.test(r.snippetText), 'text Google may quote contains the visible introduction');
+  { const nav = (/<nav class="skh-home-intro-links"[\s\S]*?<\/nav>/.exec(raw) || [''])[0];
+    ok(['/soko/', '/soko/huduma/', '/mwongozo/'].every(h => nav.includes('href="' + h + '"')) && /home_intro_products/.test(nav) && /home_intro_transport/.test(nav), 'discovery links: categories, products, services, transport, buying guides (crawlable hrefs)'); }
   await ctx.close(); }
 
 // ---- 2. the running app: visible introduction, language, Escrow slide, meta after a product view
@@ -74,9 +78,9 @@ for (const w of [360, 1366]) {
   if (w === 1366) {
     await p.evaluate(() => window.skhSetLang && window.skhSetLang('en')); await p.waitForTimeout(500);
     const en = await p.evaluate(() => ({ h: document.getElementById('skhHomeIntroTitle').textContent, p: document.querySelector('#skhHomeIntro p').textContent, lang: document.documentElement.lang }));
-    ok(en.lang === 'en' && /online marketplace/i.test(en.h) && /Buy and sell products/.test(en.p), 'English: the introduction switches at once ("' + en.h + '")');
+    ok(en.lang === 'en' && /Your Marketplace to Buy, Sell & Discover/.test(en.h) && /^Discover products, services, transport and businesses/.test(en.p), 'English: the introduction switches at once ("' + en.h + '")');
     await p.evaluate(() => window.skhSetLang && window.skhSetLang('sw')); await p.waitForTimeout(500);
-    ok(/soko la mtandaoni la Tanzania/.test(await p.textContent('#skhHomeIntroTitle')), 'Kiswahili: the introduction switches back');
+    ok(/Soko Lako la Kununua, Kuuza na Kugundua/.test(await p.textContent('#skhHomeIntroTitle')), 'Kiswahili: the introduction switches back');
     // after a product view the home meta is restored (before: og:image was emptied and the description reverted to old copy)
     await p.evaluate(() => { window.skhUpdateSeoMeta({ id: 'x1', title: 'Simu ya Majaribio', price: 1000, image: 'https://res.cloudinary.com/demo/x.jpg' }, 'products'); window.skhUpdateSeoMeta(null); });
     const m = await p.evaluate(() => ({ t: document.title, d: document.getElementById('skhMetaDescription').content, i: document.getElementById('skhOgImage').content, tw: document.getElementById('skhTwTitle').content, c: document.getElementById('skhCanonical').href }));

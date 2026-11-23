@@ -97,6 +97,8 @@ small, .small, .caption, .meta, .muted,
 
 /* ---- Ukurasa wa tangazo ---- */
 .pm-title    { font-size: var(--fs-2xl) !important; line-height: 1.3; }
+/* [SEO 2026-11-23] the advertiser title became <h2> (one <h1> per page); it keeps the size it had as <h1> */
+.adv-title   { font-size: var(--fs-3xl) !important; }
 .pm-price    { font-size: var(--fs-3xl) !important; font-weight: 800; }
 .pm-sec-title{ font-size: var(--fs-lg)  !important; }
 .pm-spec-val { font-size: var(--fs-sm)  !important; }
