@@ -33,7 +33,12 @@ import '../../shared/location-core.js';
     function statusEl() { return document.getElementById('userLocationStatus'); }
     function paint(txt, loading, kind) {
         var el = statusEl(); if (!el) return;
+        // [LOCATION 2026-11-24] no blinking: an unchanged label is not rewritten, and the new text is translated in the
+        // same frame (it was written in Kiswahili and swapped to English a moment later, so it flashed in English mode)
+        if (el.__skhLocTxt === txt && el.getAttribute('data-loc-kind') === (kind || '')) return;
+        el.__skhLocTxt = txt;
         el.textContent = txt;
+        try { var LMS = window.SokoHaiLMS; if (LMS && LMS.lang === 'en' && typeof LMS.apply === 'function') LMS.apply(el); } catch (e) {}
         el.setAttribute('title', txt);
         el.setAttribute('data-loc-kind', kind || '');
         el.classList.toggle('skh-loc-loading', !!loading);
@@ -101,7 +106,9 @@ import '../../shared/location-core.js';
 
         if (!navigator.geolocation) { lastError = 'unsupported'; show(before); return; }
         busy = true;
-        if (userAction || before.kind === 'unavailable') paint('Inatafuta eneo lako…', true, 'loading');
+        // only a search the user asked for shows "Inatafuta…"; the silent start-up check keeps the current label until it
+        // has a result (it used to flash "Chagua eneo" -> "Inatafuta eneo lako…" -> "Chagua eneo" on every page load)
+        if (userAction) paint('Inatafuta eneo lako…', true, 'loading');
         if (deadline) clearTimeout(deadline);
         deadline = setTimeout(function () { busy = false; show(current()); }, HARD_MS);
 
@@ -112,7 +119,7 @@ import '../../shared/location-core.js';
             // hifadhi kuratibu mara moja (bila jina la eneo jingine)
             writeFix({ lat: fix.lat, lon: fix.lon, accuracy: fix.accuracy, ts: fix.ts, name: '', nameFor: '' });
             if (manual && !userAction) { busy = false; apply(current()); return; }   // chaguo la mtumiaji linabaki kwenye upau
-            paint('Inapata jina la eneo…', true, 'loading');
+            if (userAction) paint('Inapata jina la eneo…', true, 'loading');
             reverseGeocode(fix.lat, fix.lon, function (name) {
                 busy = false;
                 var saved = readFix();

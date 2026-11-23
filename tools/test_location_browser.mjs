@@ -18,6 +18,9 @@ async function open({ grant, geo, reverse, saved }) {
   await ctx.route(/nominatim\.openstreetmap\.org\/reverse/, r => { calls.reverse++; return reverse === 'fail' ? r.fulfill({ status: 503, body: 'busy' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(reverse || {}) }); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.addInitScript((s) => { try { localStorage.setItem('skh_welcomed_v1', '1'); if (s) localStorage.setItem('skh_last_loc', JSON.stringify(s)); } catch (e) {} }, saved || null);
+  // [LOCATION 2026-11-24] record every distinct label the bar shows (to catch blinking on page load)
+  await p.addInitScript(() => { window.__locSeen = []; const rec = () => { const e = document.getElementById('userLocationStatus'); if (!e) return; const t = e.textContent.trim(); if (window.__locSeen[window.__locSeen.length - 1] !== t) window.__locSeen.push(t); };
+    new MutationObserver(rec).observe(document, { subtree: true, childList: true, characterData: true }); });
   await p.goto(APP, { waitUntil: 'domcontentloaded' });
   await p.waitForFunction(() => window.skh && window.skhListingCoords && document.getElementById('userLocationStatus'), null, { timeout: 45000 });
   return { ctx, p, errs, calls };
@@ -40,6 +43,9 @@ const settle = (p, kind) => p.waitForFunction(k => { const e = document.getEleme
   await settle(p, 'unavailable');
   const s = await p.evaluate(() => ({ lat: window.skh.userLat, lon: window.skh.userLon, lc: window.skhListingCoords() }));
   ok((await bar(p)).text === 'Chagua eneo', 'permission denied: the bar says "Chagua eneo" (no guessed place)');
+  await p.waitForTimeout(2500);
+  const seen = await p.evaluate(() => window.__locSeen);
+  ok(seen.length === 1 && seen[0] === 'Chagua eneo', 'page load with no location does not blink ("Inatafuta…" / "Chagua eneo" back and forth): ' + JSON.stringify(seen));
   ok(s.lat == null && s.lon == null && s.lc === null, 'permission denied: no coordinates at all (the old code invented Dar es Salaam -6.7924, 39.2083)');
   await p.click('#userLocationStatus'); await p.waitForTimeout(300);
   ok(await p.evaluate(() => document.activeElement && document.activeElement.id === 'regionFilterSelect'), 'tapping the bar after a denial opens the manual region choice');

@@ -3195,9 +3195,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 
     <!-- Upau wa Location kwa juu — chujio la Mkoa (mikoa yote ya Tanzania) -->
     <div id="locationFilterBar" style="display:flex; justify-content:space-between; align-items:center; gap:10px; background:#f1f5f9; border-bottom:1.5px solid #cbd5e1; padding:8px 15px; font-size: 13px; font-weight:800; color:var(--primary-dark);">
-        <span id="userLocationStatus" onclick="window.requestUserLocation(true)" data-i18n="locating" style="cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--primary-blue); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1 1 auto;">
-             Inatafuta eneo...
-        </span>
+        <span id="userLocationStatus" onclick="window.requestUserLocation(true)" data-i18n="ui3_018" style="cursor:pointer; display:flex; align-items:center; gap:5px; color:var(--primary-blue); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1 1 auto;">Chagua eneo</span><!-- [LOCATION 2026-11-24] start with the neutral label: 84-location-fast replaces it only when it knows a place -->
         <div style="display:flex; align-items:center; gap:6px; flex:0 0 auto; justify-content:flex-end;">
             <select id="regionFilterSelect" aria-label="Chagua mkoa" onchange="window.filterByRegion(this.value)" style="padding:7px 8px; border-radius:999px; border:1.5px solid #cbd5e1; background:white; font-weight:800; font-size:12px; color:var(--primary-dark); outline:none; cursor:pointer;">
                 <option value="" data-i18n="region_all">Mikoa yote</option>
@@ -3690,7 +3688,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/82-home-header-actions.js?v=20261124nav2"></script>
 <!-- [R13-C] 86-category-icons-manifest.js (SVG family) is no longer loaded: categories use photos; files kept on disk -->
 <script type="module" src="js/app/83-category-photos.js?v=20261123art2"></script>
-<script type="module" src="js/app/84-location-fast.js?v=20261121loc1"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->
+<script type="module" src="js/app/84-location-fast.js?v=20261124loc2"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->
 <script type="module" src="js/app/69-chat-groups.js?v=20261108r13h"></script>
 <script type="module" src="js/app/70-role-identity.js"></script>
 <script type="module" src="js/app/71-visual-dictionary.js?v=20261123l10n1"></script>
