@@ -167,7 +167,7 @@ function shell({ path: p, title, description, h1, kicker, lead, body, crumbs, js
   const ld = [].concat(jsonld || []);
   if (crumbs && crumbs.length) ld.push({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => Object.assign({ '@type': 'ListItem', position: i + 1, name: c[1] }, c[0] ? { item: abs(c[0]) } : {})) });
   const crumbHtml = crumbs && crumbs.length ? '<nav class="sp-crumbs" aria-label="Breadcrumb"><ol>' + crumbs.map((c, i) => '<li>' + (c[0] && i < crumbs.length - 1 ? '<a href="' + esc(c[0]) + '">' + esc(c[1]) + '</a>' : '<span aria-current="page">' + esc(c[1]) + '</span>') + '</li>').join('') + '</ol></nav>' : '';
-  const og = ogImage || abs('/assets/img/sokohai-app-512-v3.png');
+  const og = ogImage || abs('/assets/img/brand/sokohai-icon-maskable-512.png');
   return `<!doctype html>
 <html lang="${lang || 'sw'}">
 <head>
@@ -185,7 +185,7 @@ function shell({ path: p, title, description, h1, kicker, lead, body, crumbs, js
 <meta property="og:image" content="${esc(og)}">
 <meta property="og:locale" content="sw_TZ">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" href="/assets/img/sokohai-app-192-v3.png">
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/sokohai-icon-192.png"><link rel="apple-touch-icon" sizes="180x180" href="/assets/img/brand/apple-touch-icon-180.png">
 <meta name="theme-color" content="#0F7A5C">
 <link rel="stylesheet" href="/fonts/inter.css">
 <link rel="stylesheet" href="/css/legal-pages.css?v=20261121legal1">
@@ -195,7 +195,7 @@ ${ld.map(o => '<script type="application/ld+json">' + JSON.stringify(o).replace(
 <body>
 <a class="lp-skip" href="#main">Ruka hadi maudhui</a>
 <header class="lp-top"><div class="lp-top-in">
-  <a class="lp-brand" href="/soko/" aria-label="SokoHai — soko kwa kategoria"><img src="/assets/img/sokohai-app-192-v3.png" alt="" width="40" height="40"><span class="lp-word"><b>Soko</b><b>Hai</b></span></a>
+  <a class="lp-brand" href="/soko/" aria-label="SokoHai — soko kwa kategoria"><img src="/assets/img/brand/sokohai-icon-192.png" alt="" width="40" height="40"><span class="lp-word"><b>Soko</b><b>Hai</b></span></a>
   <form class="sp-search" action="/" method="get" role="search"><label class="sp-vh" for="spq">Tafuta kwenye SokoHai</label><input id="spq" name="q" type="search" placeholder="Tafuta bidhaa, huduma…" maxlength="100"><button type="submit">Tafuta</button></form>
   <a class="lp-app" href="/">Fungua SokoHai</a>
 </div></header>
@@ -461,7 +461,7 @@ for (const g of GUIDES) {
     + (rel.length ? '<section class="sp-sec"><h2>Matangazo yanayohusiana</h2>' + grid(rel) + '</section>' : '') + '</article>';
   write(p.slice(1) + 'index.html', shell({ path: p, title: g.title + ' | SokoHai', description: g.description, h1: g.title, kicker: 'Mwongozo', lead: esc(g.description), body,
     crumbs: [['/mwongozo/', 'Miongozo'], [p, g.title]], ogType: 'article',
-    jsonld: [{ '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, inLanguage: 'sw', dateModified: TODAY, author: { '@type': 'Organization', name: 'SokoHai', url: ORIGIN + '/' }, publisher: { '@type': 'Organization', name: 'SokoHai', logo: { '@type': 'ImageObject', url: abs('/assets/img/sokohai-app-512-v3.png') } }, mainEntityOfPage: abs(p) }] }));
+    jsonld: [{ '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, inLanguage: 'sw', dateModified: TODAY, author: { '@type': 'Organization', name: 'SokoHai', url: ORIGIN + '/' }, publisher: { '@type': 'Organization', name: 'SokoHai', logo: { '@type': 'ImageObject', url: abs('/assets/img/brand/sokohai-icon-maskable-512.png') } }, mainEntityOfPage: abs(p) }] }));
   urls.push({ loc: abs(p), lastmod: TODAY, group: 'pages' });
 }
 write('mwongozo/index.html', shell({ path: '/mwongozo/', title: 'Miongozo ya kununua na kuuza | SokoHai', description: 'Miongozo ya vitendo ya kununua kwa usalama, kuchagua mafundi na kuandaa matangazo bora kwenye SokoHai.',

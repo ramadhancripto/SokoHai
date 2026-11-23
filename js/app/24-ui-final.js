@@ -584,6 +584,19 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       const clean = String(text||'').replace(/\s+/g,' ').trim();
       return phraseKey[clean] || null;
     },
+    // [L10N 2026-11-23] Phrases with numbers or dates ("Bidhaa 3", "Siku 23 za mwezi huu …", "(2026-09-25 → 2026-10-24)").
+    // A template is stored with # for each number; the numbers of the shown text are put back in the same order.
+    _tpl: {},
+    _NUM: /\d+(?:[.,:\/-]\d+)*/g,
+    registerTemplate(key, en, sw){ dict.en[key]=en; dict.sw[key]=sw; [en, sw].forEach(t => { const k=String(t).replace(/\s+/g,' ').trim(); if(k.indexOf('#')!==-1 && !this._tpl[k]) this._tpl[k]=key; }); },
+    templateKey(text){
+      const clean=String(text||'').replace(/\s+/g,' ').trim(); if(!/\d/.test(clean)) return null;
+      return this._tpl[clean.replace(this._NUM,'#')] || null;
+    },
+    fillTemplate(key, text){
+      const nums=String(text||'').match(this._NUM)||[]; let i=0;
+      return String(this.t(key)).replace(/#/g, () => (i < nums.length ? nums[i++] : '#'));
+    },
     splitIcon(text){
       const raw = String(text || '').trim();
       // Keep common leading icons/arrows/numbers without using fragile Unicode regex escapes.
@@ -618,7 +631,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       const whole=this.keyFromPhrase(tr);
       if(whole){ if(this._mem && obj) this._mem.set(obj, whole); return this.t(whole); }
       const {prefix, core}=this.splitIcon(s); const key=this.keyFromPhrase(core);
-      if(!key) return s;
+      if(!key){ const tk=this.templateKey(tr); return tk ? s.replace(tr, this.fillTemplate(tk, tr)) : s; }
       if(this._mem && obj) this._mem.set(obj, key);
       return (prefix||'')+this.t(key);
     },
@@ -662,7 +675,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
           if(p.hasAttribute('data-i18n') || p.closest('[data-i18n],[data-no-i18n],[data-user-content],.nav-tab,.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return NodeFilter.FILTER_REJECT;
           const txt=node.nodeValue.replace(/\s+/g,' ').trim();
           if(!txt || txt.length>240) return NodeFilter.FILTER_REJECT;   // [I18N 2026-11-21] full sentences too (was 60: long phrases were never translated)
-          if(!LMS.keyFromPhrase(LMS.splitIcon(txt).core) && !LMS.keyFromPhrase(txt)) return NodeFilter.FILTER_REJECT;
+          if(!LMS.keyFromPhrase(LMS.splitIcon(txt).core) && !LMS.keyFromPhrase(txt) && !LMS.templateKey(txt)) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
       });

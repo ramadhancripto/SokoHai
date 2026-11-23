@@ -41,7 +41,7 @@ const WANT_MINIFY = ARGS.includes('--minify');
 const DIRS = ['css', 'js', 'img', 'vendor', 'shared', 'assets/img', 'assets/badges']; // [SEO 2026-11-21] badges: the seller "Tupo SokoHai" badge
 // Single files.
 const FILES = [
-  'index.html', 'offline.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js',
+  'index.html', 'offline.html', 'robots.txt', 'sokohai-manifest.json', 'sokohai-sw.js', 'favicon.ico',
   'icon-192.png', 'icon-512.png', 'assets/sokohai-s-mark.png',
   'fonts/inter.css', 'fonts/sokohai-sw.js',
   '.well-known/security.txt', // [85%-PUSH 2026-11-08] RFC 9116 — ukurasa wa kuripoti dosari.

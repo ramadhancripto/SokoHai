@@ -1125,9 +1125,9 @@ window.skhUpdateSeoMeta = function(p, type) {
         const t = String(type || 'products').toLowerCase();
         const typeLabel = t === 'services' ? 'Huduma' : t === 'drivers' || t === 'transport' || t === 'travel' ? 'Usafiri' : t === 'posts' || t === 'post' ? 'Taarifa' : 'Bidhaa';
         const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.name || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def', typeLabel) : typeLabel);
-        const HOME_T = 'SokoHai | Nunua, Uza Bidhaa, Gundua Huduma na Biashara';
-        const HOME_D = 'Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma, chunguza fursa na upate unachohitaji kwenye SokoHai.';
-        const HOME_IMG = 'https://sokohai.com/assets/img/sokohai-cart-mark.png';   // [SEO 2026-11-22] home keeps the brand image (was cleared to '' after closing a product)
+        const HOME_T = 'SokoHai | The Most Trusted Escrow Marketplace';
+        const HOME_D = 'Buy and sell products, discover services, arrange transportation and manage your business with greater trust and transparency.';
+        const HOME_IMG = 'https://sokohai.com/assets/img/brand/sokohai-icon-maskable-512.png';   // [BRAND 2026-11-23] master icon (social)   // [SEO 2026-11-22] home keeps the brand image (was cleared to '' after closing a product)
         const t2 = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', HOME_T) : HOME_T);
         document.title = t2;
         // [SEO 2026-11-21] no escrow promise: escrow / checkout are not switched on (system/launch)

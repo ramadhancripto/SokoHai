@@ -8,9 +8,9 @@
 //    so a deploy is picked up on the next load (no stale app);
 //  - a new version waits until the page asks (SKIP_WAITING) and old caches are deleted on activate.
 // ============================================================
-const VERSION = 'sokohai-r20-20261122-seo2';   // [SEO 2026-11-21] static public pages are not stored as the app shell
+const VERSION = 'sokohai-r21-20261123-brand1';   // [BRAND 2026-11-23] new master icon set   // [SEO 2026-11-21] static public pages are not stored as the app shell
 const CACHE = VERSION + '-static';
-const SHELL = ['./', './index.html', './offline.html', './sokohai-manifest.json', './assets/img/sokohai-app-192-v3.png', './assets/img/sokohai-app-512-v3.png'];
+const SHELL = ['./', './index.html', './offline.html', './sokohai-manifest.json', './assets/img/brand/sokohai-icon-192.png', './assets/img/brand/sokohai-icon-512.png', './favicon.ico'];
 const STATIC_RE = /\.(?:js|mjs|css|woff2?|ttf|png|jpe?g|webp|svg|gif|ico|json)$/i;
 const NEVER_RE = /^\/admin(?:\/|$)|\/__fn|\/api\/|pesapal|token|auth|checkout|wallet/i;   // [ADMIN PORTAL 2026-11-22] /admin/ is never served from the marketplace cache
 
@@ -63,7 +63,7 @@ self.addEventListener('push', (event) => {
   const n = p.notification || {}, d = p.data || {};
   const link = (p.fcmOptions && p.fcmOptions.link) || d.url || './';
   event.waitUntil(self.registration.showNotification(String(n.title || 'SokoHai').slice(0, 80), {
-    body: String(n.body || '').slice(0, 160), icon: './assets/img/sokohai-app-192-v3.png', badge: './assets/img/sokohai-app-192-v3.png',
+    body: String(n.body || '').slice(0, 160), icon: './assets/img/brand/sokohai-icon-192.png', badge: './assets/img/brand/sokohai-icon-96.png',
     tag: 'skh-' + String(d.category || 'general'), data: { url: link }
   }));
 });

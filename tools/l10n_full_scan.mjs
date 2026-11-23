@@ -47,9 +47,9 @@ const SCREENS = [
  ['bos-perf', "switchDashTab('product_performance')"], ['bos-compare', "switchDashTab('product_compare')"], ['bos-settings', "switchDashTab('settings')"], ['bos-recycle', "switchDashTab('product_recycle_bin')"], ['pos', "switchDashTab('pos_page')"],
  ['bos-tracking', "switchDashTab('tracking')"], ['bos-bookings', "switchDashTab('bookings')"],
  ['mode-provider', "switchMode('provider')"], ['mode-driver', "switchMode('driver')"], ['mode-agent', "switchMode('agent')"], ['buyer-dashboard', "switchMode('buyer'); window.skhOpenMySokoHai && window.skhOpenMySokoHai('overview')"], ['buyer-saved', "window.skhOpenMySokoHai && window.skhOpenMySokoHai('saved')"], ['buyer-requests', "window.skhOpenMySokoHai && window.skhOpenMySokoHai('requests')"],
- ['form-product', "switchMode('buyer'); setTimeout(()=>{ try{ togglePlusMenu(); }catch(e){} const b=[...document.querySelectorAll('#plusMenu button,#plusMenu [onclick]')].find(x=>/bidhaa|product/i.test(x.textContent)); b&&b.click(); },400)"],
- ['form-service', "(()=>{ try{closeModals(); togglePlusMenu();}catch(e){} const b=[...document.querySelectorAll('#plusMenu button,#plusMenu [onclick]')].find(x=>/huduma|service/i.test(x.textContent)); b&&b.click(); })()"],
- ['form-transport', "(()=>{ try{closeModals(); togglePlusMenu();}catch(e){} const b=[...document.querySelectorAll('#plusMenu button,#plusMenu [onclick]')].find(x=>/usafiri|transport/i.test(x.textContent)); b&&b.click(); })()"],
+ ['form-product', "showForm('sellerForm')"],
+ ['form-service', "showForm('serviceForm')"],
+ ['form-transport', "showForm('deliveryForm')"],
 ];
 const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: W, height: W < 600 ? 844 : 900 } });
 if (SDK !== '/') await ctx.route(/gstatic\.com\/firebasejs\/10\.8\.1\/(.+\.js)/, rt => rt.fulfill({ status: 200, contentType: 'application/javascript', body: readFileSync(SDK + rt.request().url().split('/').pop()) }));
@@ -62,20 +62,32 @@ await p.evaluate(() => { Object.assign(window.skh.currentUserData = window.skh.c
 const scan = (re) => p.evaluate(({ src, ex }) => { const RE = new RegExp(src, 'i'), EXR = new RegExp(ex); const seen = new Set(), res = [], all = [];
   const vis = el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight * 3 && s.visibility !== 'hidden' && s.display !== 'none' && s.opacity !== '0'; };
   const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let n;
-  while ((n = w.nextNode())) { const t = n.nodeValue.replace(/\s+/g, ' ').trim(); const el = n.parentElement; if (!t || t.length < 3 || !el || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(el.tagName) || el.closest('[data-no-i18n],.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text,.skh-oc,.skh-huru,.feed-card-box,input,textarea,[data-user-content]') || !vis(el) || seen.has(t)) continue;
+  while ((n = w.nextNode())) { const t = n.nodeValue.replace(/\s+/g, ' ').trim(); const el = n.parentElement; if (!t || t.length < 3 || !el || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(el.tagName) || el.closest('[data-no-i18n],.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text,.skh-oc,.skh-huru,.feed-card-box,input,textarea,code,[data-user-content]') || !vis(el) || seen.has(t)) continue;
     seen.add(t); all.push(t); const core = t.replace(EXR, ''); if (RE.test(core)) res.push(t); }
   document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(i => { if (!vis(i)) return; const t = i.getAttribute('placeholder').trim(); if (t && !seen.has(t)) { seen.add(t); all.push(t); if (RE.test(t.replace(EXR, ''))) res.push('[placeholder] ' + t); } });
   return { total: all.length, left: res }; }, { src: re.source, ex: EXEMPT.source });
 const out = {};
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
+// [L10N 2026-11-23] A screen counts as audited only when it really opened (OPENED). The signed-in profile is
+// re-read after sign-in and loses the test business fields, so they are set again before every screen; without that
+// switchMode('seller') showed the shop set-up dialog and the 16 Business OS screens were never scanned.
+const OPENED = (name) => {
+  if (name === 'seller-home') return "!!document.getElementById('dashWorkspace') && document.getElementById('dashWorkspace').offsetParent !== null";
+  if (name.startsWith('bos-') || name === 'pos') return "!!document.getElementById('dashWorkspace') && document.getElementById('dashWorkspace').offsetParent !== null && !!window.activeDashboardTab";
+  const f = { 'form-product': 'sellerForm', 'form-service': 'serviceForm', 'form-transport': 'deliveryForm' }[name];
+  return f ? "(() => { const e = document.getElementById('" + f + "'); return !!e && e.offsetParent !== null; })()" : 'true';
+};
 for (const [name, js] of SCREENS) { if (ONLY && !ONLY.test(name)) continue;
-  try { await p.evaluate('try{closeModals()}catch(e){}'); await p.evaluate(`window.skhSetLang('${OTHER}')`); await p.waitForTimeout(300); await p.evaluate(js); } catch (e) {}
+  try { await p.evaluate('try{closeModals()}catch(e){}'); await p.evaluate(`window.skhSetLang('${OTHER}')`); await p.waitForTimeout(300);
+    await p.evaluate(() => { const u = window.skh.currentUser; if (u) Object.assign(window.skh.currentUserData = window.skh.currentUserData || {}, { shopOwnerUid: u.uid, businessId: 'b-' + u.uid, storeId: 's1', shopName: 'Duka la Test', stockMode: 'strict', businessSetupComplete: true }); });
+    await p.evaluate(js); } catch (e) {}
   await p.waitForTimeout(1300);
+  const opened = await p.evaluate(OPENED(name)).catch(() => false);
   await p.evaluate(`window.skhSetLang('${TARGET}')`); await p.waitForTimeout(1000);
-  const r = await scan(TARGET === 'en' ? SW : EN); out[name] = r;
+  const r = await scan(TARGET === 'en' ? SW : EN); r.opened = !!opened; out[name] = r;
 }
 out.__errors = errs.slice(0, 10);
 writeFileSync(OUT, JSON.stringify(out, null, 1));
-let tot = 0, left = 0; for (const [k, v] of Object.entries(out)) { if (k.startsWith('__')) continue; tot += v.total; left += v.left.length; console.log(k.padEnd(16), String(v.left.length).padStart(3), '/', v.total); }
-console.log('TOTAL', TARGET, left, '/', tot, 'errors', errs.length);
+let tot = 0, left = 0; for (const [k, v] of Object.entries(out)) { if (k.startsWith('__')) continue; tot += v.total; left += v.left.length; console.log(k.padEnd(16), String(v.left.length).padStart(3), '/', v.total, v.opened ? '' : 'NOT OPENED'); }
+console.log('TOTAL', TARGET, left, '/', tot, 'errors', errs.length, 'not opened', Object.entries(out).filter(([k, v]) => !k.startsWith('__') && !v.opened).map(([k]) => k).join(',') || 0);
 await b.close();

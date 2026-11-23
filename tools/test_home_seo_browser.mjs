@@ -12,8 +12,8 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 const APP = process.env.SKH_APP_URL || 'http://127.0.0.1:5055/';
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n++; console.log('  PASS ' + m); };
-const TITLE = 'SokoHai | Nunua, Uza Bidhaa, Gundua Huduma na Biashara';
-const DESC = 'Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma, chunguza fursa na upate unachohitaji kwenye SokoHai.';
+const TITLE = 'SokoHai | The Most Trusted Escrow Marketplace';   // [SEO 2026-11-23] owner-approved title
+const DESC = 'Buy and sell products, discover services, arrange transportation and manage your business with greater trust and transparency.';
 // [SEO 2026-11-23] global positioning: the site-wide copy names no single country or list of cities
 const ONE_COUNTRY = /Tanzania|Dodoma|Dar es Salaam|Arusha|Mwanza/;
 const DIALOG = /Inahitaji Usafirishaji|Lipa kwa SokoPay Wallet|Ghairi Malipo|Thibitisha Malipo|Chagua njia ya malipo|Malipo yanawekwa kwenye Escrow/i;
@@ -55,12 +55,14 @@ const raw = await (await fetch(APP)).text();
   const org = graph.find(x => x['@type'] === 'Organization'), site = graph.find(x => x['@type'] === 'WebSite');
   ok(!r.ld.some(x => x.__bad) && org && org.name === 'SokoHai' && org.url === 'https://sokohai.com/' && /^https:\/\//.test(org.logo), 'JSON-LD parses: Organization (name, url, logo)');
   ok(site && site.potentialAction && site.potentialAction['@type'] === 'SearchAction' && /\?q=\{search_term_string\}$/.test(site.potentialAction.target.urlTemplate), 'JSON-LD WebSite + SearchAction pointing at /?q= (opened by the existing search, js/app/131)');
-  ok(r.h1.length === 1 && /SokoHai/.test(r.h1[0]) && !ONE_COUNTRY.test(r.h1[0]), 'exactly one quotable <h1> on the homepage; it names SokoHai and no single country ("' + r.h1.join(' | ') + '")');
+  // [SEO 2026-11-23] the owner-approved heading is used word for word (it no longer starts with "SokoHai —"); the brand is
+  // still required in the title, Open Graph and JSON-LD checks above and below
+  ok(r.h1.length === 1 && r.h1[0] === 'Nunua, Uza na Gundua kwa Urahisi' && !ONE_COUNTRY.test(r.h1[0]) && /SokoHai/.test(r.title), 'exactly one quotable <h1> on the homepage: the approved heading, no single country; the title names SokoHai ("' + r.h1.join(' | ') + '")');
   ok(r.dialogsCovered && r.nosnippet >= 39, 'checkout, cart, payment, sign-in, product, menu and chat dialogs are data-nosnippet (' + r.nosnippet + ' containers)');
   ok(!DIALOG.test(r.snippetText), 'text Google may quote has none of the dialog / payment phrases');
-  ok(r.snippetText.includes('Gundua bidhaa, huduma, usafiri na biashara. Wasiliana na wauzaji na watoa huduma') && !/mikoa mingine ya Tanzania/.test(r.snippetText), 'text Google may quote contains the visible introduction');
+  ok(r.snippetText.includes('Pata bidhaa, huduma na usafiri. Ungana moja kwa moja na wauzaji na watoa huduma') && !/mikoa mingine ya Tanzania/.test(r.snippetText), 'text Google may quote contains the visible introduction');
   { const nav = (/<nav class="skh-home-intro-links"[\s\S]*?<\/nav>/.exec(raw) || [''])[0];
-    ok(['/soko/', '/soko/huduma/', '/mwongozo/'].every(h => nav.includes('href="' + h + '"')) && /home_intro_products/.test(nav) && /home_intro_transport/.test(nav), 'discovery links: categories, products, services, transport, buying guides (crawlable hrefs)'); }
+    ok(['/soko/', '/mwongozo/'].every(h => nav.includes('href="' + h + '"')) && /home_intro_products/.test(nav) && /home_intro_services[^>]*updateApp\('services'\)/.test(nav) && /home_intro_transport/.test(nav), 'discovery links: categories, products, services, transport, buying guides (crawlable hrefs)'); }
   await ctx.close(); }
 
 // ---- 2. the running app: visible introduction, language, Escrow slide, meta after a product view
@@ -78,13 +80,13 @@ for (const w of [360, 1366]) {
   if (w === 1366) {
     await p.evaluate(() => window.skhSetLang && window.skhSetLang('en')); await p.waitForTimeout(500);
     const en = await p.evaluate(() => ({ h: document.getElementById('skhHomeIntroTitle').textContent, p: document.querySelector('#skhHomeIntro p').textContent, lang: document.documentElement.lang }));
-    ok(en.lang === 'en' && /Your Marketplace to Buy, Sell & Discover/.test(en.h) && /^Discover products, services, transport and businesses/.test(en.p), 'English: the introduction switches at once ("' + en.h + '")');
+    ok(en.lang === 'en' && /Buy, Sell & Discover with Confidence/.test(en.h) && /^Discover products, services and transportation/.test(en.p), 'English: the introduction switches at once ("' + en.h + '")');
     await p.evaluate(() => window.skhSetLang && window.skhSetLang('sw')); await p.waitForTimeout(500);
-    ok(/Soko Lako la Kununua, Kuuza na Kugundua/.test(await p.textContent('#skhHomeIntroTitle')), 'Kiswahili: the introduction switches back');
+    ok(/Nunua, Uza na Gundua kwa Urahisi/.test(await p.textContent('#skhHomeIntroTitle')), 'Kiswahili: the introduction switches back');
     // after a product view the home meta is restored (before: og:image was emptied and the description reverted to old copy)
     await p.evaluate(() => { window.skhUpdateSeoMeta({ id: 'x1', title: 'Simu ya Majaribio', price: 1000, image: 'https://res.cloudinary.com/demo/x.jpg' }, 'products'); window.skhUpdateSeoMeta(null); });
     const m = await p.evaluate(() => ({ t: document.title, d: document.getElementById('skhMetaDescription').content, i: document.getElementById('skhOgImage').content, tw: document.getElementById('skhTwTitle').content, c: document.getElementById('skhCanonical').href }));
-    ok(m.t === TITLE && m.d === DESC && /sokohai-cart-mark\.png$/.test(m.i) && m.tw === TITLE && new URL(m.c).pathname === '/', 'closing a product restores the home title, description, image and Twitter title');
+    ok(m.t === TITLE && m.d === DESC && /brand\/sokohai-icon-maskable-512\.png$/.test(m.i) && m.tw === TITLE && new URL(m.c).pathname === '/', 'closing a product restores the home title, description, image and Twitter title');
   }
   await p.screenshot({ path: (process.env.SHOTS || '/tmp') + '/home-seo-' + w + '.png' });
   ok(!errs.length, w + 'px: no JavaScript errors ' + errs.slice(0, 2).join(' | '));

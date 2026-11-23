@@ -125,7 +125,7 @@ await step('1. dashboard inafungua; aina 4 za ishara zinatenganishwa', async () 
     eq(r.cards, 4, 'kadi 4 (search / matched / gap / bidhaa)');
     eq(r.charts, 3, 'charts 3 tofauti (search, views, ununuzi)');
     eq(r.panels, 2, 'panel 2 (maneno, pengo la stock)');
-    ok(r.heads.some(h => /Utafutaji/.test(h)) && r.heads.some(h => /Views/.test(h)) && r.heads.some(h => /Units/.test(h)), 'kolamu za ishara: ' + r.heads.join('|'));
+    ok(r.heads.some(h => /Utafutaji/.test(h)) && r.heads.some(h => /Views|Mitazamo/.test(h))   /* [L10N 2026-11-23] Kiswahili header is 'Mitazamo' */ && r.heads.some(h => /Units/.test(h)), 'kolamu za ishara: ' + r.heads.join('|'));
 });
 
 await step('2. search: kikomo 250 + cutoff ya siku 14', async () => {

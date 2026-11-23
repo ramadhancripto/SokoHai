@@ -751,7 +751,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         <div style="background:#fff;border:1px solid #E2EDE8;border-radius:16px;padding:12px;margin-bottom:14px;">
             <div class="mp-kpi-head"><span><b>${esc(T('mpk_section', 'Vipimo vya Bidhaa'))}</b> <small>${esc(T('mpk_section_sub', '· snapshot ya sasa; mauzo kwa kipindi kilichochaguliwa'))}</small></span><span id="mpKpiRange">${kpiRangeControlHtml()}</span></div>
             <div class="mpk-grid" id="mpKpiGrid">${kpiCardsHtml()}</div>
-            <p style="margin:9px 0 0;font-size:11px;color:#94a3b8;line-height:1.5;">${esc(T('mpk_footnote', 'Vyanzo: products (stock, variantCombinations, reservedStock, lowStockAlert) · orders (mauzo ya marketplace) · posReports (mauzo ya POS, server). Kiwango cha tahadhari: lowStockAlert ya bidhaa, la sivyo default {d}. Stock chini/imeisha zinahusu bidhaa zinazouzwa (active) pekee.', { d: MP_LOW_STOCK_DEFAULT }))}</p>
+            <p style="margin:9px 0 0;font-size:11px;color:#94a3b8;line-height:1.5;">${esc(T('mpk_footnote', 'Vyanzo: bidhaa (stoo, aina, stoo iliyoshikiliwa, kiwango cha tahadhari) · oda (mauzo ya soko la mtandaoni) · ripoti za POS (mauzo ya POS, seva). Kiwango cha tahadhari: kiwango kilichowekwa kwenye bidhaa, la sivyo chaguo-msingi {d}. Stoo ndogo/imeisha inahusu bidhaa zinazouzwa (hai) pekee.', { d: MP_LOW_STOCK_DEFAULT }))}</p>
         </div>
 
         <!-- filters -->
@@ -1639,7 +1639,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         return '<div class="pf-shell">'
             + '<div class="pf-top"><div><h2>Utendaji wa Bidhaa</h2>'
             + '<p>' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'Period' : 'Kipindi') + ': <b>' + esc(w.label) + '</b> · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'previous period' : 'kipindi cha awali') + ': ' + w.prevStart.toISOString().slice(0, 10) + ' → ' + w.prevEnd.toISOString().slice(0, 10)
-            + ' · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'sources' : 'vyanzo') + ': products · orders · ' + (PF.data.posState === 'ok' ? 'posReports' : '<span class="pf-na">' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'posReports unavailable' : 'posReports haipatikani') + '</span>') + '</p></div>'
+            + ' · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'sources' : 'vyanzo') + ': ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'products · orders' : 'bidhaa · oda') + ' · ' + (PF.data.posState === 'ok' ? 'posReports' : '<span class="pf-na">' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'posReports unavailable' : 'posReports haipatikani') + '</span>') + '</p></div>'
             + '<button type="button" class="pf-how-btn" onclick="window.skhPfHow()">Jinsi alama inavyohesabiwa</button></div>'
             + (PF.data.posState !== 'ok' ? '<div class="pf-warn">POS haipatikani (' + esc(PF.data.posReason) + ') — units na mapato ni ya marketplace pekee; marejesho = Haipatikani, si 0.</div>' : '')
             + pfKpiBar()
@@ -2215,7 +2215,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             + '<div class="si-chart"><b>Mwenendo (' + (SI.bucket === 'day' ? 'kila siku' : SI.bucket === 'week' ? 'kila wiki' : 'kila mwezi') + ')<small>mauzo ghafi</small></b>' + trend + '</div>'
             + '<div class="si-chart"><b>Kipindi hiki dhidi ya kilichopita<small>mauzo ghafi</small></b>' + cmp + '</div>'
             + '<div class="si-chart"><b>Siku za wiki<small>mauzo ghafi</small></b>' + dow + '</div>'
-            + '<div class="si-chart"><b>Mauzo kwa category<small>mauzo ghafi · share</small></b>' + cats + '</div>'
+            + '<div class="si-chart"><b>Mauzo kwa kategoria<small>mauzo ghafi · sehemu</small></b>' + cats + '</div>'
             + '</div>';
     }
 
@@ -2266,7 +2266,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         return '<div class="si-shell">'
             + '<div class="si-top"><div><h2>Maarifa ya Mauzo</h2>'
             + '<p>' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'Period' : 'Kipindi') + ': <b>' + esc(d.window.label) + '</b> · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'previous' : 'kilichopita') + ': ' + esc(d.prevWindow.label)
-            + ' · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'sources' : 'vyanzo') + ': orders (marketplace) · ' + (d.posState === 'ok' ? 'posReports (POS)' : '<span class="si-na">' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'posReports unavailable' : 'posReports haipatikani') + '</span>') + '</p></div>'
+            + ' · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'sources' : 'vyanzo') + ': ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'orders (marketplace)' : 'oda (soko la mtandaoni)') + ' · ' + (d.posState === 'ok' ? 'posReports (POS)' : '<span class="si-na">' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'posReports unavailable' : 'posReports haipatikani') + '</span>') + '</p></div>'
             + '<div class="si-tools">'
             + '<select aria-label="Kipindi" onchange="window.skhSiRange(this.value)">' + ranges.map(function (r) { return '<option value="' + r[0] + '"' + (SI.range === r[0] ? ' selected' : '') + '>' + esc(r[1]) + '</option>'; }).join('') + '</select>'
             + (SI.range === 'custom' ? '<input type="date" value="' + esc(SI.from) + '" onchange="window.skhSiCustom(this.value,null)"><input type="date" value="' + esc(SI.to) + '" onchange="window.skhSiCustom(null,this.value)">' : '')
@@ -2627,10 +2627,13 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         var byUnits = d.recs.slice().sort(function (a, b) { return b.units - a.units; }).slice(0, 8);
         var gaps = d.recs.filter(function (x) { return x.gap; });
         var ranges = [['today', 'Leo'], ['7d', 'Siku 7'], ['30d', 'Siku 30'], ['month', 'Mwezi huu'], ['3m', 'Miezi 3']];
+        var en = !!(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en');   // [L10N 2026-11-23] whole sentences per language (the open tab is rebuilt on a switch)
         return '<div class="di-shell">'
             + '<div class="di-top"><div><h2>Mahitaji ya Soko</h2>'
-            + '<p>Ishara zinazoonekana: <b>utaftutaji</b> (soko la mtandaoni, siku ' + DI_CUTOFF_DAYS + ') · <b>views/saves</b> (maisha yote) · <b>ununuzi</b> (' + esc(d.window.label) + ') · <b>pengo la stock</b>. Aina hizi <b>haziunganishwi</b> kuwa "mahitaji" moja.</p>'
-            + '<p><b>Kumbuka:</b> ishara hizi ni za <b>duka lako mwenyewe</b> (bidhaa zako, utaftutaji unaogusa bidhaa zako na mauzo yako) — <b>si</b> kipimo cha mahitaji ya soko kwa ujumla.</p></div>'
+            + (en ? '<p>Signals shown: <b>searches</b> (online market, ' + DI_CUTOFF_DAYS + ' days) · <b>views/saves</b> (lifetime) · <b>purchases</b> (' + esc(d.window.label) + ') · <b>stock gap</b>. These types are <b>not combined</b> into a single "demand" figure.</p>'
+                  + '<p><b>Note:</b> these signals are for <b>your own shop</b> (your products, searches that touch your products and your sales) — <b>not</b> a measure of overall market demand.</p></div>'
+                : '<p>Ishara zinazoonekana: <b>utafutaji</b> (soko la mtandaoni, siku ' + DI_CUTOFF_DAYS + ') · <b>mitazamo/vilivyohifadhiwa</b> (maisha yote) · <b>ununuzi</b> (' + esc(d.window.label) + ') · <b>pengo la stoo</b>. Aina hizi <b>haziunganishwi</b> kuwa "mahitaji" moja.</p>'
+                  + '<p><b>Kumbuka:</b> ishara hizi ni za <b>duka lako mwenyewe</b> (bidhaa zako, utafutaji unaogusa bidhaa zako na mauzo yako) — <b>si</b> kipimo cha mahitaji ya soko kwa ujumla.</p></div>')
             + '<div class="di-tools">'
             + '<input type="search" value="' + esc(DI.q) + '" placeholder="Tafuta bidhaa..." oninput="window.skhDiFilter(\'q\',this.value)">'
             + '<select aria-label="Kipindi" onchange="window.skhDiRange(this.value)">' + ranges.map(function (r) { return '<option value="' + r[0] + '"' + (DI.range === r[0] ? ' selected' : '') + '>' + esc(r[1]) + '</option>'; }).join('') + '</select>'
@@ -2666,10 +2669,12 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
                 return '<div class="di-gap"><b>' + esc(x.title) + '</b><small>Stock 0 · utaftutaji ' + x.searches + ' · views ' + x.views.toLocaleString() + ' · units ' + fmtQty(x.units) + '</small>'
                     + '<button type="button" class="di-btn" onclick="window.skhMPStock(\'' + js(x.id) + '\',' + (Number(x.avail) || 0) + ')">Stock (POS)</button></div>';
             }).join('') : '<p class="di-empty">Hakuna bidhaa yenye stock 0 na ishara.</p>')
-            + '<p class="di-note">Pengo la stock ni <b>ukweli wa upatikanaji</b>, si uthibitisho wa fursa wala kiasi cha kuagiza.</p></div>'
+            + (en ? '<p class="di-note">A stock gap is <b>a fact about availability</b>, not proof of an opportunity or of how much to order.</p></div>'
+                  : '<p class="di-note">Pengo la stoo ni <b>ukweli wa upatikanaji</b>, si uthibitisho wa fursa wala kiasi cha kuagiza.</p></div>')
             + '</div>'
             + diTable()
-            + '<p class="di-foot">Mbinu: utafutaji = events za <code>recommendationEvents(type=search)</code> zenye kikomo ' + DI_TERM_LIMIT + ', siku ' + DI_CUTOFF_DAYS + ', zinalinganishwa kwa maandishi (substring) na jina/SKU/category ya bidhaa yako. Views/saves ni za maisha yote ya bidhaa (hazichujwi kwa kipindi). Units = marketplace + POS net. ' + DI_NA_GEO + ' Hakuna data ya wateja/beacon/cart — hakuna ishara hizo.</p>'
+            + (en ? '<p class="di-foot">Method: searches = <code>recommendationEvents(type=search)</code> events, limited to ' + DI_TERM_LIMIT + ', ' + DI_CUTOFF_DAYS + ' days, matched by text (substring) against your product\'s name/SKU/category. Views/saves cover the product\'s whole lifetime (not filtered by period). Units = marketplace + POS net. There is no location data (region/town) in the system — no geographic analysis. There is no customer/beacon/cart data — no such signals.</p>'
+                  : '<p class="di-foot">Mbinu: utafutaji = matukio ya <code>recommendationEvents(type=search)</code> yenye kikomo ' + DI_TERM_LIMIT + ', siku ' + DI_CUTOFF_DAYS + ', yanayolinganishwa kwa maandishi (substring) na jina/SKU/kategoria ya bidhaa yako. Mitazamo/vilivyohifadhiwa ni vya maisha yote ya bidhaa (havichujwi kwa kipindi). Vipimo = soko la mtandaoni + POS halisi. ' + DI_NA_GEO + ' Hakuna data ya wateja/beacon/kikapu — hakuna ishara hizo.</p>')
             + '</div>';
     }
 

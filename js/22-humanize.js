@@ -142,7 +142,7 @@
             // already in the current language falls through to the word map as before.
             try {
                 var L = window.SokoHaiLMS, core = t.replace(/\s+/g, ' ').trim();
-                if (L && core && !(node.parentNode.closest && node.parentNode.closest('[data-i18n],.nav-tab')) && (L.keyFromPhrase(core) || L.keyFromPhrase(L.splitIcon(core).core))) {
+                if (L && core && !(node.parentNode.closest && node.parentNode.closest('[data-i18n],.nav-tab')) && (L.keyFromPhrase(core) || L.keyFromPhrase(L.splitIcon(core).core) || (L.templateKey && L.templateKey(core)))) {
                     var whole = typeof L.translateMem === 'function' ? L.translateMem(node, core) : L.translatePhrase(core);
                     if (whole && whole !== core && String(whole).indexOf(core) === -1) { keepVal(node); node.nodeValue = t.replace(t.trim(), whole); changed++; continue; }
                 }

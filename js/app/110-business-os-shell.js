@@ -237,7 +237,7 @@ function renderShell() {
         + '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg></button>'
         + '        <div class="bos-user">'
         + '          <div class="bos-user-meta">'
-        + '            <b>' + esc(v.name) + '</b>'
+        + '            <b data-user-content>' + esc(v.name) + '</b>'
         + '            <small>' + esc(v.roleLabel) + '</small>'
         + '          </div>'
         + (v.photoURL
