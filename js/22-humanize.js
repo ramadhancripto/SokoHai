@@ -124,7 +124,7 @@
                 if (!p || SKIP_TAGS[p.nodeName]) return NodeFilter.FILTER_REJECT;
                 // [REMEDIATION R5] taxonomy names and seller-written listing text are DATA,
                 // never UI phrases ("Home Appliances" must not become "Nyumbani Appliances").
-                if (p.closest && p.closest('[data-no-i18n],[data-user-content],.ch-react,.ch-reaction,input,textarea,' + DATA_TEXT)) {
+                if (p.closest && p.closest('[data-no-i18n],[data-user-content],.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text,.ch-react,.ch-reaction,input,textarea,' + DATA_TEXT)) {
                     return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
@@ -142,7 +142,7 @@
             // already in the current language falls through to the word map as before.
             try {
                 var L = window.SokoHaiLMS, core = t.replace(/\s+/g, ' ').trim();
-                if (L && core && (L.keyFromPhrase(core) || L.keyFromPhrase(L.splitIcon(core).core))) {
+                if (L && core && !(node.parentNode.closest && node.parentNode.closest('[data-i18n],.nav-tab')) && (L.keyFromPhrase(core) || L.keyFromPhrase(L.splitIcon(core).core))) {
                     var whole = typeof L.translateMem === 'function' ? L.translateMem(node, core) : L.translatePhrase(core);
                     if (whole && whole !== core && String(whole).indexOf(core) === -1) { keepVal(node); node.nodeValue = t.replace(t.trim(), whole); changed++; continue; }
                 }

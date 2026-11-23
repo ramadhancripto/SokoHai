@@ -4,7 +4,7 @@
  * interface text (text nodes and placeholders) is left in the previous language. User content (listing titles and
  * descriptions, search terms), brand / product names and technical identifiers are exempt. Also checked: the
  * preference survives a reload and navigation, <html lang> follows, an open cart / search panel / Language Center is
- * rebuilt in the new language, a Kiswahili -> English -> Kiswahili round trip restores every text, <option> values do not change when their label is translated, and no screen scrolls
+ * rebuilt in the new language, the SokoHai wordmark is never translated, a Kiswahili -> English -> Kiswahili round trip restores every text, <option> values do not change when their label is translated, and no screen scrolls
  * sideways at 360 px. */
 import { chromium } from 'playwright'; import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict';
 const SDK = (process.env.SKH_FIREBASE_SDK_DIR || '').replace(/\/?$/, '/');
@@ -48,6 +48,7 @@ const scan = (re) => p.evaluate(({ src, ex }) => { const RE = new RegExp(src, 'i
   document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(i => { if (!vis(i)) return; const t = i.getAttribute('placeholder').trim(); if (t && !seen.has(t)) { seen.add(t); all.push(t); if (RE.test(t.replace(EXR, ''))) res.push('[placeholder] ' + t); } });
   return { total: all.length, left: res }; }, { src: re.source, ex: EXEMPT.source });
 
+const brand = [];
 if (PART === 'A') {
 for (const [TARGET, OTHER, RE] of [['en', 'sw', SW], ['sw', 'en', EN]]) {
   const left = []; let total = 0;
@@ -56,6 +57,7 @@ for (const [TARGET, OTHER, RE] of [['en', 'sw', SW], ['sw', 'en', EN]]) {
     await p.waitForTimeout(1200);
     await p.evaluate(`window.skhSetLang('${TARGET}')`); await p.waitForTimeout(900);
     const r = await scan(RE); total += r.total; r.left.forEach(t => left.push(name + ': ' + t));
+    if (await p.evaluate(() => /Market ?Hai/.test(document.body.innerText))) brand.push(TARGET + ':' + name);
   }
   ok(left.length === 0, `${OTHER} -> ${TARGET}: no interface text left in ${OTHER === 'sw' ? 'Kiswahili' : 'English'} on ${SCREENS.length} screens (${total} texts checked): ` + JSON.stringify(left.slice(0, 12)));
 }
@@ -73,6 +75,7 @@ for (const [name, js] of SCREENS) {
 ok(rt.length === 0, `Kiswahili -> English -> Kiswahili restores every visible text on ${SCREENS.length} screens: ` + JSON.stringify(rt.slice(0, 10)));
 }
 if (PART === 'A') {
+ok(brand.length === 0, 'the SokoHai wordmark is never translated (no "MarketHai"): ' + JSON.stringify(brand));
 // an open view is rebuilt: cart summary (count/total), search panel footer, Language Center sentence
 await p.evaluate("try{closeModals()}catch(e){}; window.skhSetLang('sw')"); await p.evaluate('openCart()'); await p.waitForTimeout(1200);
 await p.evaluate("window.skhSetLang('en')"); await p.waitForTimeout(900);
