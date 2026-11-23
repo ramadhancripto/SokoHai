@@ -40,7 +40,14 @@ window.renderSokoHaiAccountMenu = function(){
             ['saved','','Saved Items','Vitu ulivyovipenda']
         ]]
     ];
-    const account = window.sokohaiAccountMenuItems.map(sec => [sec.section, true, sec.items]);
+    // [NAV 2026-11-23] one entry per destination. These account items open exactly the same screen as an entry that is
+    // already in the drawer: 'profile' = "Akaunti Yangu" at the top (82-home-header-actions), 'notifications' = Mawasiliano
+    // › Taarifa, 'payment_methods' = SokoPay & Finance › SokoPay Wallet (both openUserPaymentModal). They stay in
+    // sokohaiAccountMenuItems, so openSokoHaiAccountSetting(key) and deep links keep working; an emptied section is dropped.
+    const DRAWER_DUPES = { profile: 1, notifications: 1, payment_methods: 1 };
+    const account = window.sokohaiAccountMenuItems
+        .map(sec => [sec.section, true, sec.items.filter(it => !DRAWER_DUPES[it[0]])])
+        .filter(sec => sec[2].length);
 
     const secHtml = function(title, collapsed, items, accountItem) {
         const body = items.map(function(it) {
