@@ -1638,8 +1638,8 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         var w = PF.data.window;
         return '<div class="pf-shell">'
             + '<div class="pf-top"><div><h2>Utendaji wa Bidhaa</h2>'
-            + '<p>Kipindi: <b>' + esc(w.label) + '</b> · kipindi cha awali: ' + w.prevStart.toISOString().slice(0, 10) + ' → ' + w.prevEnd.toISOString().slice(0, 10)
-            + ' · vyanzo: products · orders · ' + (PF.data.posState === 'ok' ? 'posReports' : '<span class="pf-na">posReports haipatikani</span>') + '</p></div>'
+            + '<p>' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'Period' : 'Kipindi') + ': <b>' + esc(w.label) + '</b> · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'previous period' : 'kipindi cha awali') + ': ' + w.prevStart.toISOString().slice(0, 10) + ' → ' + w.prevEnd.toISOString().slice(0, 10)
+            + ' · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'sources' : 'vyanzo') + ': products · orders · ' + (PF.data.posState === 'ok' ? 'posReports' : '<span class="pf-na">' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'posReports unavailable' : 'posReports haipatikani') + '</span>') + '</p></div>'
             + '<button type="button" class="pf-how-btn" onclick="window.skhPfHow()">Jinsi alama inavyohesabiwa</button></div>'
             + (PF.data.posState !== 'ok' ? '<div class="pf-warn">POS haipatikani (' + esc(PF.data.posReason) + ') — units na mapato ni ya marketplace pekee; marejesho = Haipatikani, si 0.</div>' : '')
             + pfKpiBar()
@@ -2174,7 +2174,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
             + card('AOV (ghafi ÷ transactions)', aovGross === null ? 'Haipatikani' : tzs(aovGross), 'chanzo kilichochaguliwa', aovGross === null ? '' : siDelta(aovGross, aovGrossPrev), aovGross === null)
             + card('Units kwa transaction', unitsPerTx === null ? 'Haipatikani' : unitsPerTx.toFixed(2), 'units ÷ transactions', unitsPerTx === null ? '' : siDelta(unitsPerTx, unitsPerTxPrev), unitsPerTx === null)
             + card('Ukuaji (ghafi)', growth === null ? 'Haipatikani' : (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%',
-                'dhidi ya kipindi cha awali cha urefu sawa (' + esc(SI.data.prevWindow.label) + ')',
+                ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'vs the previous period of equal length (' : 'dhidi ya kipindi cha awali cha urefu sawa (') + esc(SI.data.prevWindow.label) + ')',
                 growth === null ? '<span class="si-na">Denominator halali haipo</span>' : '', growth === null)
             + '</div>';
     }
@@ -2231,7 +2231,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         }
         return '<div class="si-cmps">'
             + block('Wiki hii dhidi ya wiki iliyopita', d.wow, d.wow.posOk ? 'Siku 7 za mwisho dhidi ya siku 7 zilizopita' : 'POS haipatikani — marketplace pekee')
-            + block('Mwezi huu dhidi ya mwezi uliopita', d.mom, 'Siku ' + d.mom.days + ' za mwezi huu dhidi ya siku ' + d.mom.days + ' za mwezi uliopita' + (d.mom.posOk ? '' : ' · POS haipatikani'))
+            + block('Mwezi huu dhidi ya mwezi uliopita', d.mom, ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'First ' + d.mom.days + ' days of this month vs the first ' + d.mom.days + ' days of last month' + (d.mom.posOk ? '' : ' · POS unavailable') : 'Siku ' + d.mom.days + ' za mwezi huu dhidi ya siku ' + d.mom.days + ' za mwezi uliopita' + (d.mom.posOk ? '' : ' · POS haipatikani')))
             + '</div>';
     }
 
@@ -2265,8 +2265,8 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         var ranges = [['today', 'Leo'], ['7d', 'Siku 7'], ['30d', 'Siku 30'], ['month', 'Mwezi huu'], ['3m', 'Miezi 3'], ['custom', 'Kipindi maalum']];
         return '<div class="si-shell">'
             + '<div class="si-top"><div><h2>Maarifa ya Mauzo</h2>'
-            + '<p>Kipindi: <b>' + esc(d.window.label) + '</b> · kilichopita: ' + esc(d.prevWindow.label)
-            + ' · vyanzo: orders (marketplace) · ' + (d.posState === 'ok' ? 'posReports (POS)' : '<span class="si-na">posReports haipatikani</span>') + '</p></div>'
+            + '<p>' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'Period' : 'Kipindi') + ': <b>' + esc(d.window.label) + '</b> · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'previous' : 'kilichopita') + ': ' + esc(d.prevWindow.label)
+            + ' · ' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'sources' : 'vyanzo') + ': orders (marketplace) · ' + (d.posState === 'ok' ? 'posReports (POS)' : '<span class="si-na">' + ((window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en') ? 'posReports unavailable' : 'posReports haipatikani') + '</span>') + '</p></div>'
             + '<div class="si-tools">'
             + '<select aria-label="Kipindi" onchange="window.skhSiRange(this.value)">' + ranges.map(function (r) { return '<option value="' + r[0] + '"' + (SI.range === r[0] ? ' selected' : '') + '>' + esc(r[1]) + '</option>'; }).join('') + '</select>'
             + (SI.range === 'custom' ? '<input type="date" value="' + esc(SI.from) + '" onchange="window.skhSiCustom(this.value,null)"><input type="date" value="' + esc(SI.to) + '" onchange="window.skhSiCustom(null,this.value)">' : '')

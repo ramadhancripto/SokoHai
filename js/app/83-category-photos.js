@@ -110,6 +110,11 @@
     var REJECTED_IMAGES = ['svc-construction', 'svc-rental', 'huduma', 'vitabu', 'vito', 'kale', 'maagizo', 'svc-coaching', 'svc-writing', 'svc-website'];
     window.SKH_CATEGORY_REJECTED_IMAGES = REJECTED_IMAGES;
     var SUB_PHOTO = {};   /* '<CAT-xx>|<sub-category>' -> slug (owner-supplied; empty today) */
+    /* [CATEGORY ART 2026-11-23] owner's reference "Swahili Marketplace Category Grid": 3D illustrations on a sky background
+       (assets/img/categories/sky/, cut from the owner-supplied image, WebP). Same category IDs — only the picture changes.
+       The shoe illustration is NOT used: it carries a mark resembling a sportswear brand logo (owner decision). */
+    ['CAT-01:vyakula', 'CAT-07:nguo', 'CAT-08:urembo', 'CAT-09:furniture', 'CAT-11:vifaa-nyumbani', 'CAT-12:simu', 'CAT-14:magari',
+     'CAT-26:michezo', 'CAT-29:zaidi', 'CAT-32:vitabu-sky', 'CAT-42:nyumbani'].forEach(function (x) { var p = x.split(':'); PHOTO_BY_ID[p[0]] = 'sky/' + p[1]; });
     window.SKH_CATEGORY_PHOTO_BY_ID = PHOTO_BY_ID;
 
     function canonId(name) {
@@ -123,6 +128,7 @@
     function assetUrl(slug) {
         if (!slug) return null;
         if (slug.indexOf('icon:') === 0) return 'assets/img/category-icons/' + slug.slice(5);
+        if (slug.indexOf('sky/') === 0) return 'assets/img/categories/' + slug + '.webp';   // [CATEGORY ART 2026-11-23]
         // [R-20 2026-11-20] original 4:3 scene artwork (tools/build_category_scenes.mjs) for the 8 groups without a clean photo
         if (slug.indexOf('scene:') === 0) return 'assets/img/categories/illustrations/' + slug.slice(6) + '.svg';
         if (slug.indexOf('new/') === 0 || slug.indexOf('photography/') === 0) return 'assets/img/categories/' + slug + '.webp';
@@ -193,11 +199,20 @@
 
     /* strip ya Home: kategoria 6 (zile zile za design) */
     // [R13-E] order and short names of ref 11: Elektroniki, Mavazi, Kilimo, Usafiri (magari), Nyumba, Vyakula, More
-    var HOME_STRIP = ['CAT-11', 'CAT-07', 'CAT-02', 'CAT-14', 'CAT-09', 'CAT-01'];
-    var HOME_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Mavazi', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Nyumba', 'CAT-01': 'Vyakula' };
+    // [CATEGORY ART 2026-11-23] order of the owner's reference grid: Vyakula · Simu & Vifaa · Nguo · Nyumbani · Urembo · Magari (+ Zaidi)
+    var HOME_STRIP = ['CAT-01', 'CAT-12', 'CAT-07', 'CAT-09', 'CAT-08', 'CAT-14'];
+    var HOME_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Nguo', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Nyumba', 'CAT-01': 'Vyakula', 'CAT-12': 'Simu', 'CAT-08': 'Urembo' };
     /* [R13-G] majina mafupi ya grid ya desktop (kama picha ya "Kategoria za Bidhaa") — IDs hazibadiliki */
     var GRID_SHORT = { 'CAT-11': 'Elektroniki', 'CAT-07': 'Mavazi', 'CAT-02': 'Kilimo', 'CAT-14': 'Magari', 'CAT-09': 'Samani', 'CAT-01': 'Vyakula',
-        'CAT-04': 'Mifugo', 'CAT-10': 'Ujenzi', 'CAT-19': 'Afya', 'CAT-27': 'Sanaa', 'CAT-28': 'Bidhaa za Jadi', 'CAT-29': 'Zawadi', 'CAT-31': 'Wanyama', 'CAT-36': 'Ulinzi', 'CAT-40': 'Jumla' };
+        'CAT-04': 'Mifugo', 'CAT-10': 'Ujenzi', 'CAT-19': 'Afya', 'CAT-27': 'Sanaa', 'CAT-28': 'Bidhaa za Jadi', 'CAT-29': 'Zawadi', 'CAT-31': 'Wanyama', 'CAT-36': 'Ulinzi', 'CAT-40': 'Jumla',
+        'CAT-12': 'Simu & Vifaa', 'CAT-08': 'Urembo', 'CAT-26': 'Michezo', 'CAT-32': 'Vitabu', 'CAT-42': 'Nyumba & Ardhi' };
+    /* [I18N 2026-11-23] the same short names in English (one display table per language; IDs unchanged) */
+    var SHORT_EN = { 'CAT-11': 'Electronics', 'CAT-07': 'Clothing', 'CAT-02': 'Farming', 'CAT-14': 'Vehicles', 'CAT-09': 'Home', 'CAT-01': 'Food', 'CAT-12': 'Phones & Gadgets',
+        'CAT-08': 'Beauty', 'CAT-04': 'Livestock', 'CAT-10': 'Construction', 'CAT-19': 'Health', 'CAT-27': 'Arts', 'CAT-28': 'Traditional', 'CAT-29': 'Gifts', 'CAT-31': 'Pets',
+        'CAT-36': 'Security', 'CAT-40': 'Wholesale', 'CAT-26': 'Sports', 'CAT-32': 'Books', 'CAT-42': 'Property' };
+    var isEN = function () { try { return !!(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en'); } catch (e) { return false; } };
+    var SHORT_EN_PHONE = { 'CAT-12': 'Phones', 'CAT-11': 'Electronics', 'CAT-14': 'Vehicles' };
+    function shortName(id, phone) { if (isEN() && phone && SHORT_EN_PHONE[id]) return SHORT_EN_PHONE[id]; if (isEN() && SHORT_EN[id]) return SHORT_EN[id]; return (phone ? HOME_SHORT[id] : GRID_SHORT[id]) || HOME_SHORT[id] || GRID_SHORT[id]; }
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -293,15 +308,14 @@
             html += '<button type="button" class="cps-card" data-cat="' + esc(n) + '" title="' + esc(n) + '"'
                  + ' aria-pressed="false">'
                  + '<span class="cps-card-img">' + imgMarkup(n, 'cps-photo') + '</span>'
-                 + '<span class="cps-card-name">' + esc((window.matchMedia && (window.matchMedia('(max-width: 899px)').matches ? HOME_SHORT[canonId(n) || n] : GRID_SHORT[canonId(n) || n])) || labelOf(n)) + '</span></button>';
+                 + '<span class="cps-card-name">' + esc(shortName(canonId(n) || n, !!(window.matchMedia && window.matchMedia('(max-width: 899px)').matches)) || labelOf(n)) + '</span></button>';
         });
         /* kadi ya mwisho: Category Explorer */
+        var en = isEN();
         html += '<button type="button" class="cps-card cps-card--more" data-more="1"'
-             + ' title="Kategoria zote" aria-label="Zaidi — kategoria zote">'
-             + '<span class="cps-more-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">'
-             + '<rect x="3" y="3" width="8" height="8" rx="1.6"/><rect x="13" y="3" width="8" height="8" rx="1.6"/>'
-             + '<rect x="3" y="13" width="8" height="8" rx="1.6"/><rect x="13" y="13" width="8" height="8" rx="1.6"/></svg></span>'
-             + '<b>Zaidi</b></button>';
+             + ' title="' + (en ? 'All categories' : 'Kategoria zote') + '" aria-label="' + (en ? 'More — all categories' : 'Zaidi — kategoria zote') + '">'
+             + '<span class="cps-card-img"><img class="cps-photo" src="assets/img/categories/sky/zaidi.webp" alt="" width="360" height="264" loading="lazy" decoding="async"></span>'
+             + '<b class="cps-card-name">' + (en ? 'More' : 'Zaidi') + '</b></button>';
 
         host.innerHTML = html;
         host.dataset.built = '1';
@@ -502,6 +516,13 @@
     }
 
     /* ---------------- boot ---------------- */
+    /* [I18N 2026-11-23] short names follow the language: rebuild the strip (same IDs, same images) */
+    document.addEventListener('sokohai:languageChanged', function () {
+        try { var h = document.getElementById(MOUNT); if (h && h.dataset.built === '1') { h.dataset.built = '0'; buildStrip(); } } catch (e) {}
+        try { var en = isEN(), set = function (sel, t) { document.querySelectorAll(sel).forEach(function (x) { x.textContent = t; }); };
+            set('#categoryStrip #cpsTitle .cps-t-m', en ? 'Explore the market' : 'Gundua Soko'); set('#categoryStrip #cpsTitle .cps-t-d', en ? 'Product categories' : 'Kategoria za Bidhaa');
+            set('#categoryStrip .cps-more .cps-t-m', en ? 'All categories' : 'Kategoria zote'); set('#categoryStrip .cps-more .cps-t-d', en ? 'See all' : 'Tazama Zote'); } catch (e) {}
+    });
     function boot() {
         buildStrip();
         var tries = 0;

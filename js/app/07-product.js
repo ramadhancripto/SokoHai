@@ -164,6 +164,7 @@ window.openProduct = async function(id, manualCollection = null) {
             const isOwnerView = !!meUid && (found.userId === meUid || found.managedByAgentUid === meUid);
             if (!isOwnerView) {
                 if (window.activeProductUnsubscribe) { try { window.activeProductUnsubscribe(); } catch (eU) {} window.activeProductUnsubscribe = null; }
+                if (typeof skh.forgetListing === 'function') skh.forgetListing(id);   // [LIFECYCLE 2026-11-21] not shown again from cache
                 alert(T('pm_unavailable', 'Bidhaa hii haipatikani tena sokoni.'));
                 closeModals();
                 return;
@@ -948,8 +949,11 @@ window.addToCart = async function(isBuyNow = false) {
         // Rudisha bei/tangazo la hivi karibuni kabla ya kuingiza cart.
         try {
             const snap = await skh.getDoc(skh.doc(skh.db, 'products', skh.currentOpenProduct.id));
-            if (snap && snap.exists) liveProduct = { ...liveProduct, ...snap.data(), id: skh.currentOpenProduct.id };
+            if (snap && snap.exists()) liveProduct = { ...liveProduct, ...snap.data(), id: skh.currentOpenProduct.id };
+            else { alert(T('pm_deleted', 'Product no longer available!')); return; }   // [LIFECYCLE 2026-11-21]
         } catch (e) { /* tumia cached */ }
+        // [LIFECYCLE 2026-11-21] Buy Now never proceeds for a listing that was removed, archived or deleted
+        if (typeof skh.productEligible === 'function' && !skh.productEligible(liveProduct)) { alert(T('pm_deleted', 'Product no longer available!')); try { closeModals(); } catch (e) {} return; }
         const cartMeta = skh.orchProductMeta ? skh.orchProductMeta(liveProduct) : null;
         const buyItem = {
             ...liveProduct, qty, chosenColor, chosenSize,
@@ -1121,17 +1125,22 @@ window.skhUpdateSeoMeta = function(p, type) {
         const t = String(type || 'products').toLowerCase();
         const typeLabel = t === 'services' ? 'Huduma' : t === 'drivers' || t === 'transport' || t === 'travel' ? 'Usafiri' : t === 'posts' || t === 'post' ? 'Taarifa' : 'Bidhaa';
         const _pT = (window.skhLocField ? window.skhLocField(p, 'title') : null) || (p && (p.title || p.name || p.itemTitle)) || (window.skhTF ? window.skhTF('card_product_def', typeLabel) : typeLabel);
-        const t2 = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', 'SokoHai — Soko la Mtandaoni la Tanzania') : 'SokoHai — Soko la Mtandaoni la Tanzania');
+        const HOME_T = 'SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania';
+        const HOME_D = 'Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania.';
+        const HOME_IMG = 'https://sokohai.com/assets/img/sokohai-cart-mark.png';   // [SEO 2026-11-22] home keeps the brand image (was cleared to '' after closing a product)
+        const t2 = p ? (_pT + ' — SokoHai') : (window.skhTF ? window.skhTF('meta_home_title', HOME_T) : HOME_T);
         document.title = t2;
         // [SEO 2026-11-21] no escrow promise: escrow / checkout are not switched on (system/launch)
         const desc = p
             ? (_pT + (p.price ? (window.skhTF ? window.skhTF('meta_for_tsh', ' kwa TSh ') : ' kwa TSh ') + Number(p.price).toLocaleString() : '') + (window.skhTF ? window.skhTF('meta_on_skh', ' kwenye SokoHai.') : ' kwenye SokoHai.'))
-            : 'Tafuta, linganisha na uuze bidhaa, huduma na usafiri Tanzania kupitia SokoHai.';
+            : (window.skhTF ? window.skhTF('meta_home_desc', HOME_D) : HOME_D);
         const set = function(id, attr, val) { const el = document.getElementById(id); if (el) el.setAttribute(attr, val || ''); };
         set('skhMetaDescription', 'content', desc);
         set('skhOgTitle', 'content', t2);
         set('skhOgDescription', 'content', desc);
-        set('skhOgImage', 'content', p ? (p.image || (p.images && p.images[0]) || p.photo || '') : '');
+        set('skhTwTitle', 'content', t2);
+        set('skhTwDescription', 'content', desc);
+        set('skhOgImage', 'content', (p && (p.image || (p.images && p.images[0]) || p.photo)) || HOME_IMG);
         const url = p ? window.skhEntityPublicUrl(p.id, type) : (skhOrigin() + '/');
         set('skhOgUrl', 'content', url);
         // [SEO 2026-11-21] the crawlable static page (/bidhaa/<slug>-<id>/, built by tools/build_seo.mjs) is the canonical
@@ -1894,6 +1903,7 @@ skh.searchQuery = "";
 skh.filterRegion = ""; // [MIKOA] Rudisha kwenye "Tanzania Nzima"
 const regionSel = document.getElementById('regionFilterSelect');
 if(regionSel) regionSel.value = "";
+if (typeof window.skhLocationChoose === 'function') window.skhLocationChoose(''); // [LOCATION 2026-11-21] upau wa eneo ufuate chujio
 
 // Safisha vibox vya maandishi
 const sInput = document.getElementById('searchInput');

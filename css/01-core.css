@@ -557,7 +557,7 @@
 
     * {
         box-sizing: border-box;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: var(--font-ui, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif); /* [UI 2026-11-21] one typeface: Inter (was Segoe UI -> Tahoma/Verdana on Android) */
         -webkit-tap-highlight-color: transparent;
         scroll-behavior: smooth;
     }
@@ -1829,7 +1829,7 @@ mask-composite: exclude;
     min-height: 100vh;
     height: auto !important; /* Huruhusu urefu kuongezeka kwa kuteleza */
     background: #f1f5f9;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-ui, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif); /* [UI 2026-11-21] one typeface: Inter (was Segoe UI -> Tahoma/Verdana on Android) */
     text-align: left;
     overflow-y: visible !important; /* Huruhusu scrolling nyoofu kwenda chini */
 }
@@ -2099,7 +2099,7 @@ mask-composite: exclude;
     min-height: 100vh;
     height: auto !important; /* Inalazimisha kurasa ku-scroll vizuri chini bila kukatika */
     background: #f1f5f9;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-ui, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif); /* [UI 2026-11-21] one typeface: Inter (was Segoe UI -> Tahoma/Verdana on Android) */
     text-align: left;
     overflow-y: visible !important;
 }

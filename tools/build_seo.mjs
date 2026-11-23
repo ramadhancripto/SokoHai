@@ -16,7 +16,23 @@
  * Privacy: only an allow-list of public fields is requested (field mask) — no phone, e-mail, exact coordinates,
  * buyer data or private seller records. Honesty: price/availability/condition come from the listing; no ratings or
  * reviews are published in structured data (reviews are not yet tied to verified purchases); no invented stock.
- * A fetch failure never fails the deploy: the static pages and the sitemap of static pages are still written.
+ *
+ * [SEO-SAFETY 2026-11-21] Public location = REGION ONLY (country-aware: shared/admin-regions.js). The free-text
+ * `location` / `region` fields (legacy listings can hold a street, plot number, landmark or GPS pair) and the normalised
+ * `countryCode` / `country` / `adminRegion` / `state` / `county` fields are read only to recognise a first-level region:
+ * Tanzania (31 regions) and Kenya (47 counties) are supported; another valid ISO country shows its NAME only; a
+ * MISSING or unverifiable country shows NOTHING (no country is assumed); an unrecognised region shows the verified
+ * country name only. Not worldwide region support. Coordinate pairs, map links, phone numbers and e-mail
+ * addresses (Tanzanian and international formats, tel: / WhatsApp links) are also removed from titles, shop names,
+ * description text and attribute values (shared/public-text-privacy.js); valid barcodes, labelled identifiers and
+ * amounts after a currency are kept.
+ *
+ * [SEO-SAFETY 2026-11-21] Data failure:
+ *   - production (Netlify CONTEXT=production, or --strict): a failed / incomplete read of products or services FAILS
+ *     the build (exit 1, nothing written), so Netlify keeps the previous successful deployment and never publishes
+ *     a sitemap without the listings. An empty catalogue read successfully is NOT a failure (source "firestore",
+ *     rawListings 0, fetchError null). Optional floor: --min-listings N / SKH_SEO_MIN_LISTINGS=N.
+ *   - offline, deploy previews, branch deploys and plain local runs: documented static-only mode (fetchError reported).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,6 +61,9 @@ const EMU = process.env.FIRESTORE_EMULATOR_HOST || '';
 const PROJECT = EMU ? (process.env.GCLOUD_PROJECT || 'demo-sokohai') : PROD_PROJECT;
 const CONTEXT = process.env.CONTEXT || '';          // Netlify: production | deploy-preview | branch-deploy
 const OFFLINE = args.includes('--offline') || (CONTEXT && CONTEXT !== 'production' && !EMU);
+const STRICT = !OFFLINE && (CONTEXT === 'production' || args.includes('--strict'));   // [SEO-SAFETY] production must have its data
+const MIN_LISTINGS = Math.max(0, Number(arg('--min-listings', process.env.SKH_SEO_MIN_LISTINGS || 0)) || 0);
+const FETCH_TIMEOUT_MS = 30000, FETCH_TRIES = 3;
 const PER_PAGE = 48, MIN_LIST = 3;
 
 // ------------------------------------------------------------------ helpers
@@ -72,7 +91,8 @@ const PUBLIC_FIELDS = ['title', 'name', 'serviceTitle', 'serviceName', 'descript
   'serviceType', 'specialization', 'brand', 'model', 'condition', 'location', 'region', 'image', 'images', 'imageUrl', 'stock', 'availabilityStatus',
   'publicationStatus', 'status', 'archivedAt', 'deletedAt', 'permanentlyDeleted', 'deleted', 'adminHidden', 'moderationStatus', 'isOnline', 'active',
   'salesChannels', 'createdAt', 'updatedAt', 'timestamp', 'userId', 'sellerName', 'storeName', 'businessName', 'ownerName', 'providerName',
-  'verified', 'ownerVerified', 'sellerVerified', 'isVerified', 'providerVerified', 'verificationStatus', 'openingStockPending', 'baseUnit', 'unit', 'filters'];
+  'verified', 'ownerVerified', 'sellerVerified', 'isVerified', 'providerVerified', 'verificationStatus', 'openingStockPending', 'baseUnit', 'unit', 'filters',
+  'country', 'countryCode', 'adminRegion', 'state', 'county'];   // [SEO-PRIVACY] normalised location fields (only to recognise a region)
 function decode(v) {
   if (!v || typeof v !== 'object') return v;
   if ('stringValue' in v) return v.stringValue; if ('integerValue' in v) return Number(v.integerValue); if ('doubleValue' in v) return v.doubleValue;
@@ -84,16 +104,34 @@ function decode(v) {
 async function fetchCollection(col) {
   const base = EMU ? `http://${EMU}/v1/projects/${PROJECT}/databases/(default)/documents/${col}` : `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/${col}`;
   const mask = PUBLIC_FIELDS.map(f => 'mask.fieldPaths=' + encodeURIComponent(f)).join('&');
-  const out = []; let token = '';
+  const out = []; let token = '', complete = false;
   for (let page = 0; page < 100 && out.length < MAX; page++) {
     const url = `${base}?pageSize=300&${mask}${token ? '&pageToken=' + encodeURIComponent(token) : ''}${EMU ? '' : '&key=' + API_KEY}`;
-    const r = await fetch(url);   // no credentials: only what the public read rules allow
-    if (!r.ok) throw new Error(col + ' HTTP ' + r.status + ' ' + (await r.text()).slice(0, 160));
-    const j = await r.json();
+    const j = await getPage(url, col);   // no credentials: only what the public read rules allow
     (j.documents || []).forEach(d => { const o = Object.fromEntries(Object.entries(d.fields || {}).map(([k, v]) => [k, decode(v)])); o.id = d.name.split('/').pop(); o.collectionName = col; out.push(o); });
-    token = j.nextPageToken; if (!token) break;
+    token = j.nextPageToken; if (!token) { complete = true; break; }
   }
+  // stopped by the page cap with more pages waiting (and not by the configured --max): the read is incomplete
+  if (!complete && out.length < MAX) throw new Error(col + ' read incomplete: page limit reached with more data waiting');
   return out.slice(0, MAX);
+}
+/** One REST page: timeout, retry transient failures (network, 429, 5xx), and insist on a well-formed response. */
+async function getPage(url, col) {
+  let last = '';
+  for (let i = 1; i <= FETCH_TRIES; i++) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      if (r.ok) {
+        const j = await r.json();
+        if (!j || typeof j !== 'object' || Array.isArray(j) || ('documents' in j && !Array.isArray(j.documents))) throw new Error('malformed response');
+        return j;   // {} = no documents: a legitimately empty collection
+      }
+      last = 'HTTP ' + r.status + ' ' + (await r.text()).slice(0, 160);
+      if (r.status !== 429 && r.status < 500) break;   // 4xx (rules, key, project) will not heal by retrying
+    } catch (e) { last = String(e && e.message || e); }
+    if (i < FETCH_TRIES) await new Promise(res => setTimeout(res, 500 * i));
+  }
+  throw new Error(col + ' ' + last);
 }
 /** Public listing = engine eligibility + marketplace channel + a title + a safe id. */
 function publicListing(d) {
@@ -104,7 +142,20 @@ function publicListing(d) {
 }
 const titleOf = (d) => String(d.title || d.name || d.serviceTitle || d.serviceName || '').trim();
 const sellerNameOf = (d) => clip(String(d.storeName || d.businessName || d.sellerName || d.providerName || d.ownerName || '').trim(), 60);
-const regionOf = (d) => E.regionIn([d.location, d.region].join(' '));
+// [SEO-SAFETY 2026-11-21] the ONLY location a public page shows: a region name from the fixed list (or nothing)
+// [SEO-PRIVACY 2026-11-21 review] country-aware (shared/admin-regions.js): TZ regions and KE counties are recognised;
+// another valid country shows its NAME only; an unverifiable country or an unrecognised place shows nothing.
+const AR = require('../shared/admin-regions.js');
+const locOf = (d) => AR.publicLocation(d);
+const regionOf = (d) => { const l = locOf(d); return l && l.region ? l.label : null; };        // region pages / breadcrumbs
+const placeOf = (d) => { const l = locOf(d); return l ? l.label : null; };                      // what a page may show
+/** Remove what must never be published from free text: GPS pairs, map links, phone numbers, e-mail addresses. */
+// [SEO-PRIVACY 2026-11-21 review 2] one shared scrubber (shared/public-text-privacy.js): coordinates, map links, e-mails,
+// Tanzanian + international phone numbers, tel:/WhatsApp links — while valid product barcodes, labelled identifiers
+// (SKU, IMEI, model…) and amounts after a currency are kept (the previous rule removed every 9-14 digit run).
+const PTP = require('../shared/public-text-privacy.js');
+const scrubPrivate = (t) => PTP.scrub(t);
+const PRIVATE_ATTR = PTP.PRIVATE_ATTR;
 const pathOf = (d) => d.collectionName === 'services' ? SP.service(d) : SP.product(d);
 
 // ------------------------------------------------------------------ page shell
@@ -165,12 +216,12 @@ ${ld.map(o => '<script type="application/ld+json">' + JSON.stringify(o).replace(
 `;
 }
 function card(d) {
-  const p = pathOf(d); const im = imagesOf(d)[0]; const reg = regionOf(d);
+  const p = pathOf(d); const im = imagesOf(d)[0]; const reg = placeOf(d);
   return '<li class="sp-card"><a href="' + esc(p) + '">'
     + (im ? '<img src="' + esc(img(im, 400)) + '" alt="' + esc(titleOf(d)) + '" loading="lazy" decoding="async" width="400" height="300">' : '<span class="sp-noimg" aria-hidden="true">SokoHai</span>')
     + '<span class="sp-card-t">' + esc(clip(titleOf(d), 70)) + '</span>'
     + '<span class="sp-card-p">' + esc(money(d.price) || 'Bei kwa makubaliano') + '</span>'
-    + (reg || d.location ? '<span class="sp-card-l">' + esc(clip(d.location || reg, 40)) + '</span>' : '')
+    + (reg ? '<span class="sp-card-l">' + esc(reg) + '</span>' : '')
     + '</a></li>';
 }
 const grid = (items) => '<ul class="sp-grid">' + items.map(card).join('') + '</ul>';
@@ -197,26 +248,26 @@ const AVAIL_TEXT = { in_stock: 'Inapatikana', low_stock: 'Zimebaki chache', made
 // ------------------------------------------------------------------ builders
 function listingPage(d, all, sellers) {
   const p = pathOf(d), t = titleOf(d), isSvc = d.collectionName === 'services';
-  const cat = catLabel(d.category), reg = regionOf(d), imgs = imagesOf(d), av = E.availability(d).label;
+  const cat = catLabel(d.category), reg = regionOf(d), place = placeOf(d), imgs = imagesOf(d), av = E.availability(d).label;
   const seller = sellers.get(d.userId);
   const crumbs = [['/soko/', 'Soko']];
   if (cat) crumbs.push([SP.category(cat), cat]);
   if (cat && reg && sellersRegionPage.has(SP.category(cat, reg))) crumbs.push([SP.category(cat, reg), reg]);
   crumbs.push([p, clip(t, 60)]);
   const price = money(d.price);
-  const descTxt = String(d.description || '').trim();
-  const metaDesc = clip([t, price || '', reg || d.location || '', descTxt].filter(Boolean).join(' · '), 158);
+  const descTxt = scrubPrivate(d.description);
+  const metaDesc = clip([t, price || '', place || '', descTxt].filter(Boolean).join(' · '), 158);
   const cmp = E.compare(d, all, 8);
   const related = cmp.items.length >= 3 ? cmp.items : all.filter(x => x !== d && x.collectionName === d.collectionName && x.category === d.category && x.userId !== d.userId).slice(0, 8);
   const attrs = [['Chapa', d.brand], ['Modeli', d.model], ['Hali', d.condition], ['Kipimo', d.baseUnit || d.unit], ['Aina', d.subCategory || d.productTypeLabel || d.serviceType || d.specialization]]
-    .concat(d.filters && typeof d.filters === 'object' ? Object.entries(d.filters).filter(([k, v]) => typeof v === 'string' && v && k.length < 30).slice(0, 6) : [])
-    .filter(([, v]) => v && String(v).length < 80);
+    .concat(d.filters && typeof d.filters === 'object' ? Object.entries(d.filters).filter(([k, v]) => typeof v === 'string' && v && k.length < 30 && !PRIVATE_ATTR.test(k)).slice(0, 6) : [])
+    .filter(([, v]) => v && String(v).length < 80 && scrubPrivate(v) === String(v).trim());   // [SEO-SAFETY] a value carrying a GPS pair / phone / e-mail is dropped
   const body = '<div class="sp-listing">'
     + '<div class="sp-gallery">' + (imgs.length ? imgs.map((u, i) => '<img src="' + esc(img(u, 800)) + '" alt="' + esc(t + (i ? ' — picha ' + (i + 1) : '')) + '" width="800" height="600"' + (i ? ' loading="lazy"' : ' fetchpriority="high"') + ' decoding="async">').join('') : '<div class="sp-noimg sp-noimg--big" aria-hidden="true">SokoHai</div>') + '</div>'
     + '<div class="sp-info">'
     + '<p class="sp-price">' + esc(price || 'Bei kwa makubaliano') + (isSvc && price ? ' <small>(kuanzia)</small>' : '') + '</p>'
     + (isSvc ? '' : '<p class="sp-avail sp-avail--' + esc(av) + '">' + esc(AVAIL_TEXT[av] || 'Inapatikana') + '</p>')
-    + ((d.location || reg) ? '<p class="sp-loc">Eneo: ' + esc(clip(d.location || reg, 80)) + (reg && d.location && !String(d.location).toLowerCase().includes(reg.toLowerCase()) ? ', ' + esc(reg) : '') + '</p>' : '')
+    + (place ? '<p class="sp-loc">' + (reg ? 'Mkoa' : 'Nchi') + ': ' + esc(place) + '</p>' : '')
     + (seller ? '<p class="sp-seller">Muuzaji: <a href="' + esc(seller.path) + '">' + esc(seller.name) + '</a>' + (seller.verified ? ' <span class="sp-badge">Amethibitishwa</span>' : '') + '</p>' : '')
     + '<p class="sp-cta"><a class="sp-btn" href="/p/' + encodeURIComponent(d.id) + '">Fungua kwenye SokoHai</a><a class="sp-btn sp-btn--ghost" href="/p/' + encodeURIComponent(d.id) + '">Ongea na muuzaji</a></p>'
     + '<p class="sp-note">Malipo hufanyika moja kwa moja kati ya mnunuzi na muuzaji; SokoHai haishikilii pesa kwa sasa. Kagua bidhaa kabla ya kulipa. <a href="/support.html">Ushauri wa usalama</a></p>'
@@ -267,10 +318,25 @@ if (!OFFLINE) {
   try {
     const [p, s] = await Promise.all([fetchCollection('products'), fetchCollection('services')]);
     listings = p.concat(s); source = EMU ? 'emulator' : 'firestore';
-  } catch (e) { fetchError = String(e && e.message || e); console.warn('[seo] listing data unavailable — static pages only:', fetchError); }
+  } catch (e) {
+    fetchError = String(e && e.message || e);
+    if (STRICT) {   // [SEO-SAFETY] never publish a production sitemap without its listings: fail -> Netlify keeps the last good deploy
+      console.error('[seo] FATAL (production): listing data could not be read — build stopped, nothing written. ' + fetchError);
+      process.exit(1);
+    }
+    console.warn('[seo] listing data unavailable — static pages only (non-production run):', fetchError);
+  }
 }
 const raw = listings.length;
 listings = listings.filter(publicListing);
+// [SEO-PRIVACY 2026-11-21 review] names are public text too: a phone number / e-mail / coordinates typed into a title or a
+// shop name is removed before it can reach a page, a URL slug, a sitemap or JSON-LD
+for (const d of listings) for (const k of ['title', 'name', 'serviceTitle', 'serviceName', 'storeName', 'businessName', 'sellerName', 'providerName', 'ownerName'])
+  if (typeof d[k] === 'string') d[k] = scrubPrivate(d[k]);
+if (STRICT && listings.length < MIN_LISTINGS) {   // optional owner-set floor (default 0 = an empty catalogue is valid)
+  console.error('[seo] FATAL (production): ' + listings.length + ' public listings, fewer than the required ' + MIN_LISTINGS + ' — build stopped, nothing written.');
+  process.exit(1);
+}
 // one page per listing; duplicates (same seller + title + price) collapse to the best-ranked one
 const ranked = E.rank(listings, '', { now: NOW.getTime() }).results.filter(r => !r.sponsored).map(r => r.item);
 listings = ranked;
@@ -331,6 +397,24 @@ for (const b of brandEntries) {
   paged(b.items, base, (p, its, n, pages) => listPage({ p, baseP: base, pageNo: n, pages, items: its, title: b.name + ' — bidhaa kwenye SokoHai', h1: b.name, kicker: 'Chapa',
     lead: 'Matangazo ' + b.items.length + ' ya bidhaa za ' + esc(b.name) + ' kutoka kwa wauzaji tofauti wa SokoHai. SokoHai si msambazaji rasmi wa chapa hii.', crumbs: [['/soko/', 'Soko'], [base, b.name]] }));
 }
+// [LOCAL SEO 2026-11-22] region hubs /soko/mkoa/<region>/ — only for a VERIFIED region (countryCode + recognised region,
+// shared/admin-regions.js) with at least MIN_LIST public listings, so no empty or near-duplicate city pages are created.
+// Links to the category × region pages of that region. Skipped if a category would own the /soko/mkoa/ path.
+const byRegion = new Map();
+listings.forEach(d => { const r = regionOf(d); if (!r) return; (byRegion.get(r) || byRegion.set(r, []).get(r)).push(d); });
+const regionEntries = [...byRegion.entries()].filter(([, v]) => v.length >= MIN_LIST).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+const regionPathFree = ![...byCat.keys()].some(c => SP.slugify(c) === 'mkoa');
+if (regionPathFree) for (const [r, items] of regionEntries) {
+  const base = SP.region(r); if (!base) continue;
+  const nP = items.filter(d => d.collectionName === 'products').length, nS = items.filter(d => d.collectionName === 'services').length;
+  const cats = [...byCatRegion.entries()].filter(([k, v]) => k.endsWith('|' + r) && v.length >= MIN_LIST).map(([k, v]) => [k.split('|')[0], v.length]).sort((a, b) => b[1] - a[1]);
+  const sellersHere = new Set(items.map(d => d.userId).filter(Boolean)).size;
+  const extra = cats.length ? '<nav class="sp-chips" aria-label="Kategoria ' + esc(r) + '">' + cats.map(([c, n]) => '<a href="' + SP.category(c, r) + '">' + esc(c) + ' <small>' + n + '</small></a>').join('') + '</nav>' : '';
+  const parts = [nP ? 'bidhaa ' + nP : '', nS ? 'huduma ' + nS : ''].filter(Boolean).join(' na ');
+  paged(items, base, (p, its, n, pages) => listPage({ p, baseP: base, pageNo: n, pages, items: its, title: r + ' — nunua na uza bidhaa na huduma | SokoHai', h1: 'Soko la ' + r, kicker: 'Mkoa',
+    lead: 'Matangazo ya umma ' + items.length + ' (' + parts + ') kutoka kwa wauzaji ' + sellersHere + ' wa SokoHai walioko ' + esc(r) + '. Linganisha bei, kisha ongea na muuzaji kupitia SokoHai.',
+    crumbs: [['/soko/', 'Soko'], [base, r]], extra }));
+}
 if (services.length >= MIN_LIST) {
   paged(services, '/soko/huduma/', (p, its, n, pages) => listPage({ p, baseP: '/soko/huduma/', pageNo: n, pages, items: its, title: 'Huduma Tanzania — mafundi na watoa huduma | SokoHai', h1: 'Huduma', kicker: 'Huduma',
     lead: 'Watoa huduma ' + services.length + ' kwenye SokoHai: mafundi, usafi, ubunifu na zaidi.', crumbs: [['/soko/', 'Soko'], ['/soko/huduma/', 'Huduma']] }));
@@ -340,6 +424,7 @@ if (services.length >= MIN_LIST) {
   const recent = listings.slice().sort((a, b) => ts(b.createdAt || b.timestamp) - ts(a.createdAt || a.timestamp)).slice(0, 12);
   const body = (catEntries.length ? '<section class="sp-sec"><h2>Kategoria</h2><ul class="sp-cats">' + catEntries.map(([c, it]) => '<li><a href="' + SP.category(c) + '">' + esc(c) + ' <small>' + it.length + '</small></a></li>').join('')
       + (services.length >= MIN_LIST ? '<li><a href="/soko/huduma/">Huduma <small>' + services.length + '</small></a></li>' : '') + '</ul></section>' : '<p class="sp-empty">Matangazo ya umma yataonekana hapa yakishachapishwa. <a href="/">Fungua SokoHai</a></p>')
+    + (regionPathFree && regionEntries.length ? '<section class="sp-sec"><h2>Kwa mkoa</h2><nav class="sp-chips" aria-label="Kwa mkoa">' + regionEntries.map(([r, it]) => '<a href="' + SP.region(r) + '">' + esc(r) + ' <small>' + it.length + '</small></a>').join('') + '</nav></section>' : '')
     + (brandEntries.length ? '<section class="sp-sec"><h2>Chapa</h2><nav class="sp-chips">' + brandEntries.slice(0, 40).map(b => '<a href="' + SP.brand(b.name) + '">' + esc(b.name) + ' <small>' + b.items.length + '</small></a>').join('') + '</nav></section>' : '')
     + (recent.length ? '<section class="sp-sec"><h2>Zilizoongezwa karibuni</h2>' + grid(recent) + '</section>' : '')
     + '<section class="sp-sec"><h2>Miongozo</h2><ul class="sp-cats">' + GUIDES.map(g => '<li><a href="/mwongozo/' + g.slug + '/">' + esc(g.title) + '</a></li>').join('') + '</ul></section>';
@@ -399,7 +484,7 @@ write('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmln
 const robots = fs.readFileSync(path.join(ROOT, 'robots.txt'), 'utf8');
 write('robots.txt', robots);
 
-const report = { source, fetchError, rawListings: raw, publicListings: listings.length, sellers: sellers.size, categories: catEntries.length,
+const report = { source, strict: STRICT, fetchError, rawListings: raw, publicListings: listings.length, sellers: sellers.size, categories: catEntries.length,
   categoryRegions: sellersRegionPage.size, brands: brandEntries.length, guides: GUIDES.length, sitemapUrls: uniq.length, files: written.length, origin: ORIGIN, date: TODAY };
 console.log('[seo] ' + JSON.stringify(report));
 if (args.includes('--report')) fs.writeFileSync(arg('--report'), JSON.stringify(report, null, 2));

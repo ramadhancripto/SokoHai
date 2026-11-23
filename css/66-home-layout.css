@@ -284,3 +284,15 @@ body:not(:has(#navTabHome.active)) .shx { display: none !important; }
  #skhHomeHero #shcCarousel .shc-post-copy .shc-post-highlight { font-size:12px; }
  #skhHomeHero #shcCarousel .shc-post-image { width:48%; }
 }
+
+/* [SEO 2026-11-22] Home introduction — real, visible text that tells people (and Google) what SokoHai is.
+   Compact so it never pushes the hero or the feed far down; Home tab only (same rule as the hero). */
+.skh-home-intro { display: none; margin: 10px 12px 4px; padding: 0 2px; }
+body:has(#navTabHome.active) .skh-home-intro { display: block; }
+body:has(#navTabHome.active) #buyerView > #skhHomeIntro { order: 0; }   /* first on phone and desktop (the other Home sections use order 1+) */
+#skhHomeIntro h1 { margin: 0; font: 800 15px/1.3 Inter, system-ui, sans-serif; font-size: 15px !important; color: var(--primary-dark, #0F3D2E); letter-spacing: -.01em; } /* the global h1 rule uses !important (--fs-3xl) */
+#skhHomeIntro p { margin: 2px 0 0; font: 500 12.5px/1.45 Inter, system-ui, sans-serif; color: #475569; max-width: 72ch; }
+.skh-home-intro-links { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 4px; }
+.skh-home-intro-links a { font: 700 12.5px/1.4 Inter, system-ui, sans-serif; color: var(--primary-blue, #1f6faf); text-decoration: none; }
+.skh-home-intro-links a:hover, .skh-home-intro-links a:focus-visible { text-decoration: underline; }
+@media (min-width: 900px) { .skh-home-intro { margin: 14px 16px 6px; } #skhHomeIntro h1 { font-size: 18px !important; } #skhHomeIntro p { font-size: 13px; } }

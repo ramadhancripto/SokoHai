@@ -645,11 +645,14 @@ import { skh } from './00-bootstrap.js';
         await window.skhAdminCCTab('auctions'); window.skhAdminAucOpen(pid);
     };
 
+    var TAB_SEQ = 0;
     window.skhAdminCCTab = async function (t) {
         TAB = t || 'overview';
+        var seq = ++TAB_SEQ;   // [ADMIN PORTAL 2026-11-21] a slow earlier view (e.g. the overview) must not overwrite the view chosen later
         loading();
         var html = '';
         try { html = await (VIEWS[TAB] || VIEWS.overview)(); } catch (e) { html = empty('Hitilafu: ' + esc(errText(e))); }
+        if (seq !== TAB_SEQ) return;
         render(html);
     };
 
@@ -659,8 +662,10 @@ import { skh } from './00-bootstrap.js';
     window.skhOpenAdminControlCenter = async function (tab) {
         var m = modal(); m.style.display = 'flex';
         loading();
-        try { var w = await run('adminWhoAmI', {}); ME = { admin: !!w.admin, superAdmin: !!w.superAdmin }; }
+        try { var w = await run('adminWhoAmI', {}); ME = { admin: !!w.admin, superAdmin: !!w.superAdmin, support: !!w.support }; }
         catch (e) { ME = { admin: false, superAdmin: false }; }
+        // [ADMIN PORTAL 2026-11-21] limited support staff: the support view only (rules enforce the same)
+        if (!ME.admin && ME.support && tab === 'support') { TAB = 'support'; loading(); render(await VIEWS.support()); return; }
         if (!ME.admin) { render(box('Hakuna ruhusa', empty('Server haikutambui kama admin. Hakikisha umeingia kwa akaunti ya admin yenye barua pepe iliyothibitishwa, kisha ujaribu tena.'))); return; }
         window.skhAdminCCTab(tab && VIEWS[tab] ? tab : 'overview');
     };

@@ -158,6 +158,7 @@ function applyModeUI() {
     for (const [sel, f] of [['#skhHomePromos .shm-g', 'escrow'], ['#skhHomePromos .shm-b', 'delivery']]) {
         for (const el of document.querySelectorAll(sel)) el.style.display = enabled(f) ? '' : 'none';
     }
+    try { if (typeof window.skhHeroPrune === 'function') window.skhHeroPrune(); } catch (e) {}
     injectProductActions();
 }
 let modeTimer = 0;

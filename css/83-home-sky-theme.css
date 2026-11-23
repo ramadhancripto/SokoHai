@@ -221,3 +221,142 @@ html body #buyerView { padding-bottom: 150px !important; }
   from { opacity: 0; transform: translateY(56px) scale(.94); }
   to { opacity: 1; transform: none; }
 }
+
+/* =====================================================================================================================
+ * 8. [HOME REFINEMENT 2026-11-23] owner's approved direction — refinement of sections 1–7, nothing new in structure.
+ *    WHY the clouds were invisible: the sky was painted on <body>, but .app-content-main (#f1f5f9) and .scroll-content
+ *    (#fff) are opaque full-height layers on top of it, so only the header strip showed any blue. The wrappers are made
+ *    transparent in the marketplace (buyer) view and the clouds come from a real asset (assets/img/home/sky-clouds.svg,
+ *    3 KB, new: the project had no cloud image). Dashboards keep their white background.
+ * ===================================================================================================================== */
+html body.skh-mode-buyer {
+  background:
+    url("../assets/img/home/sky-clouds.svg") center top / max(100vw, 980px) auto repeat-y,
+    linear-gradient(180deg, #cfe9f9 0%, #dcf0fb 45%, #d6edfa 100%) !important;
+  background-attachment: scroll, scroll !important;   /* not fixed: a fixed background repaints on every scroll step (slow on low-end Android, delayed rail scrolling) */
+}
+html body.skh-mode-buyer .app-layout-wrapper,
+html body.skh-mode-buyer .app-content-main,
+html body.skh-mode-buyer .scroll-content,
+html body.skh-mode-buyer #buyerView .main-feed { background: transparent !important; }
+html body.skh-mode-buyer #dashboardViews { background: #fff; }
+/* header: lets the sky through, a little less tall; thinner gold line in the corner wave */
+html body .sticky-top-section {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 140' preserveAspectRatio='none'%3E%3Cpath d='M0 0h168c-34 14-76 18-108 38C34 54 16 78 0 100Z' fill='%2312a15f'/%3E%3Cpath d='M0 112c20-26 46-52 76-68 34-18 78-24 110-44' fill='none' stroke='%23f4c430' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M322 0h68v20c-20-9-44-16-68-20Z' fill='%23f4c430' opacity='.7'/%3E%3C/svg%3E") left top / 100% 72px no-repeat,
+    linear-gradient(180deg, rgba(207, 233, 249, .78) 0%, rgba(214, 237, 250, .72) 100%) !important;
+}
+@media (max-width: 899px) {
+  html body #locationFilterBar { padding: 2px 12px 8px !important; }
+  html body #locationFilterBar #userLocationStatus, html body #locationFilterBar #regionFilterSelect { min-height: 36px; padding: 6px 12px !important; }
+  html body .search-nav-row .search-wrap { min-height: 48px; }
+  html body .search-nav-row .skh-search-go { width: 42px !important; height: 42px !important; }
+}
+/* top icons: one size, even gaps, centred glyphs; SokoPay stays icon-only on every width (label kept for screen readers) */
+html body .top-nav-row .top-nav-icons { gap: 10px !important; align-items: center !important; }
+html body .top-nav-row .skh-icon-btn svg, html body .top-nav-row .menu-btn svg, html body .top-nav-row .skh-post-btn svg { width: 20px !important; height: 20px !important; display: block; margin: 0 auto; }
+html body .top-nav-row .skh-icon-btn, html body .top-nav-row .skh-post-btn { line-height: 1 !important; }
+html body #skhSokoPayBtn .skh-hlabel { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; }
+@media (min-width: 900px) {
+  /* icon-only SokoPay: same 44 px box as the other actions and centred in its grid cell, so the three actions keep
+     equal centre-to-centre spacing (test_header_brand_balance_browser) */
+  html body #skhSokoPayBtn { width: 44px !important; min-width: 44px !important; padding: 0 !important; border-radius: 50% !important; justify-self: center !important; }
+  html body .top-nav-row .skh-icon-btn .skh-hlabel { display: inline-flex; align-items: center; line-height: 1; }
+}
+
+/* hero: about 13 % lower so listings start higher; logo, art and message unchanged */
+/* min-height 140/150 -> 124/128 px; height stays auto so a poster whose copy needs more room is never cut
+   (a fixed 128 px clipped the poster text at 280-390 px: test_home_posters_browser) */
+html body #skhHomeHero #shcCarousel .shc-slide, html body #skhHomeHero #shcCarousel .shh-banner, html body #skhHomeHero #shcCarousel .shc-escrow { height: auto !important; min-height: 124px !important; }
+@media (max-width: 899px) {
+  html body #skhHomeHero .shh-quick4 { margin-top: 8px !important; }
+  html body #skhHomeHero .shh-quick4 button { padding: 8px 4px !important; gap: 4px !important; }
+  html body #skhHomeIntro { margin-top: 6px; }
+}
+@media (min-width: 900px) {
+  html body #skhHomeHero #shcCarousel .shc-slide, html body #skhHomeHero #shcCarousel .shh-banner, html body #skhHomeHero #shcCarousel .shc-escrow { min-height: 128px !important; }
+}
+
+/* cards: more room for the picture (square frame, centred; the whole product stays inside for upright photos) */
+html body .skh-oc.skh-oc .feed-img-box { aspect-ratio: 1 / 1 !important; height: auto !important; }
+html body .skh-oc.skh-oc .feed-img-box > img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; }
+/* information rows: readable route and service rows (icons were 12 px, the car was squeezed) */
+html body .skh-oc .skh-oc-info { padding: 6px 8px !important; gap: 4px !important; background: #e3f6ee !important; }
+html body .skh-oc .skh-oc-info b { font-size: 11.5px !important; font-weight: 700 !important; }
+html body .skh-oc .skh-oc-info svg { width: 13px !important; height: 13px !important; }
+html body .skh-oc .skh-oc-info-car svg { width: 16px !important; height: 16px !important; }
+html body .skh-oc .skh-oc-info-line { max-width: 22px !important; }
+
+/* bottom: compact floating pill (phones); skyline smaller and farther away; thin gold wave, green only as an accent */
+@media (max-width: 899px) {
+  html body .bottom-nav-main { padding: 0 16px calc(8px + env(safe-area-inset-bottom, 0px)) !important; }
+  html body .bottom-nav-main .main-nav-icons {
+    max-width: 340px !important; margin: 0 auto !important; min-height: 54px !important; padding: 4px 6px !important;
+    border-radius: 999px !important; box-shadow: 0 8px 22px rgba(22, 35, 107, .16) !important;
+  }
+  html body .bottom-nav-main .nav-tab { border-radius: 999px !important; padding: 5px 8px !important; min-height: 46px; }
+  html body .bottom-nav-main .nav-tab svg { width: 19px !important; height: 19px !important; }
+  html body .bottom-nav-main .nav-tab span { font-size: 10.5px !important; }
+  html body .bottom-nav-main::before {
+    height: 92px !important; opacity: .55;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 40' preserveAspectRatio='none'%3E%3Cpath d='M0 26C70 10 140 8 210 18s130 16 190 2' fill='none' stroke='%23f4c430' stroke-width='3'/%3E%3Cpath d='M0 34C80 22 150 22 220 28s120 8 180-2v14H0Z' fill='%2312a15f' opacity='.55'/%3E%3C/svg%3E") center bottom / 100% 34px no-repeat,
+      url("../assets/img/auth/auth-footer.webp") center top / auto 96px repeat-x !important;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 45%) !important; mask-image: linear-gradient(180deg, transparent 0%, #000 45%) !important;
+  }
+  /* enough room so the last cards scroll fully above the pill */
+  html body #buyerView { padding-bottom: 104px !important; }
+}
+/* rails sit directly on the sky (white cards, no white panel behind them) */
+html body.skh-mode-buyer #buyerView .shx, html body.skh-mode-buyer #buyerView .shx-rail, html body.skh-mode-buyer #buyerView .shx-body { background: transparent !important; box-shadow: none !important; border: 0 !important; }
+@media (max-width: 899px) {
+  html body .bottom-nav-main .nav-tab { padding: 5px 3px !important; min-width: 0 !important; flex: 1 1 0 !important; }
+  html body .bottom-nav-main .nav-tab span { font-size: 10px !important; letter-spacing: -.01em; overflow: visible !important; text-overflow: clip !important; white-space: nowrap; }
+  html body .bottom-nav-main::before { opacity: .7; }
+}
+/* narrow (two-per-row) cards: the car / dot already separate the places — drop the dashes so names fit */
+@media (max-width: 899px) {
+  html body .skh-oc .skh-oc-info-line { display: none !important; }
+  html body .skh-oc .skh-oc-info { gap: 5px !important; justify-content: space-between; }
+  html body .skh-oc .skh-oc-info > span { flex: 1 1 0 !important; }
+  html body .skh-oc .skh-oc-info .skh-oc-info-car { flex: 0 0 auto !important; }
+}
+@media (min-width: 900px) {
+  /* one evenly spaced row, right-aligned; label and icon on the same centre line */
+  html body .top-nav-row .skh-icon-btn { align-items: center !important; justify-content: center !important; gap: 6px !important; height: 44px !important; }
+  html body .top-nav-row .skh-icon-btn svg { margin: 0 !important; }
+  html body .top-nav-row .skh-icon-btn .skh-hlabel { margin: 0 !important; padding: 0 !important; line-height: 44px !important; }
+  /* side rail: skyline smaller and farther away there too */
+  html body .bottom-nav-main::before { height: 96px !important; opacity: .55; background-size: auto 96px !important; }
+}
+@media (min-width: 900px) {
+  /* side rail labels were cut ("Nyum…", "Hudu…"): smaller type, full word */
+  html body .bottom-nav-main .nav-tab span { font-size: 10px !important; letter-spacing: -.02em; white-space: nowrap !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important; }
+}
+
+/* =====================================================================================================================
+ * 9. [CATEGORY ART 2026-11-23] category images in the owner's reference style: picture on a light sky with clouds,
+ *    bold dark-green name underneath; 2 columns on phones, 4 on desktop. Categories that have 3D art
+ *    (assets/img/categories/sky/) fill the tile; the others keep their photo inside the same sky frame until art exists.
+ * ===================================================================================================================== */
+:root { --cat-sky: url("../assets/img/home/sky-clouds.svg") center / 260% auto no-repeat, linear-gradient(180deg, #bfe3f8 0%, #e3f3fc 100%); }
+html body #catGridContainer.cat-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-auto-rows: max-content !important; align-content: start !important; gap: 14px 12px !important; }
+@media (min-width: 900px) { html body #catGridContainer.cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 18px 16px !important; } }
+html body #catGridContainer.cat-grid > :not(.cat-box) { grid-column: 1 / -1 !important; }
+html body #catGridContainer .cat-box { max-width: none !important; width: auto !important; flex: none !important; height: auto !important; overflow: visible !important; background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; cursor: pointer; }
+html body #catGridContainer .cat-box .cat-icon.skh-cat-photo {
+  display: flex !important; align-items: center !important; justify-content: center !important; width: 100% !important; max-width: none !important; height: auto !important; aspect-ratio: 1 / 1 !important; margin: 0 !important;
+  padding: 8% !important; box-sizing: border-box !important; border-radius: 18px !important; overflow: hidden !important; line-height: 0 !important;
+  background: var(--cat-sky) !important; box-shadow: 0 6px 16px rgba(22, 35, 107, .10) !important;
+}
+html body #catGridContainer .cat-box .cat-icon.skh-cat-photo:has(img[src*="/categories/sky/"]) { padding: 0 !important; }
+html body #catGridContainer .cat-box .cat-icon.skh-cat-photo img { display: block !important; position: static !important; width: 100% !important; height: auto !important; aspect-ratio: 4 / 3 !important; object-fit: cover !important; border-radius: 12px !important; box-shadow: 0 6px 14px rgba(22, 35, 107, .16); }
+html body #catGridContainer .cat-box .cat-icon.skh-cat-photo img[src*="/categories/sky/"] { border-radius: 0 !important; box-shadow: none; aspect-ratio: auto !important; height: 100% !important; object-fit: contain !important; }
+html body #catGridContainer .cat-box .cat-name { color: #0b5d3b !important; font: 800 14px/1.25 Inter, system-ui, sans-serif !important; text-align: center !important; text-transform: none !important; }
+html body #catGridContainer .cat-box:hover .cat-icon, html body #catGridContainer .cat-box:focus-visible .cat-icon { box-shadow: 0 10px 22px rgba(18, 153, 87, .22) !important; }
+/* home strip: same sky tiles */
+html body #categoryStrip .cps-card-img { background: var(--cat-sky) !important; border-radius: 16px !important; overflow: hidden !important; display: flex !important; align-items: center; justify-content: center; }
+html body #categoryStrip .cps-card-img img { width: 80% !important; height: 80% !important; object-fit: cover !important; border-radius: 10px !important; }
+html body #categoryStrip .cps-card-img img[src*="/categories/sky/"] { width: 100% !important; height: 100% !important; border-radius: 0 !important; }
+html body #categoryStrip .cps-card-name { color: #0b5d3b !important; font-weight: 800 !important; }
+html body #categoryStrip .cps-card--more { background: transparent !important; }

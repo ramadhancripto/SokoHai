@@ -86,24 +86,30 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
   };
 
   // --- Location Handling ---
+  /* [LOCATION 2026-11-21 review] One precedence for every Discover search (shared/location-core.js discoveryContext):
+   *   place typed in Discover  >  region chosen in the top bar  >  device fix (classified gps / approximate)  >  none.
+   * Before: ANY skh.userLat/userLon was returned as source "gps" (stale, low-accuracy or last-known positions included),
+   * and a typed place name was ignored whenever the app held coordinates of another position.
+   * getDiscoveryArea()        -> the full context, including a manual place that has a NAME ONLY (no coordinates);
+   * getUserDiscoveryLocation() -> the same context only when it carries coordinates (for distances), else null —
+   *                               so a typed place is never measured from another position's coordinates. */
+  function readJson(k) { try { var r = skh.localStorage && skh.localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+  function getDiscoveryArea() {
+    var LC = globalThis.SKHLocationCore;
+    if (!LC) return null;
+    return LC.discoveryContext({ discoverManual: readJson('skh_discover_manual_loc'), barKind: skh.userLocationKind, barName: skh.userRegionName,
+      fix: readJson('skh_last_loc'), sessionLat: skh.userLat, sessionLon: skh.userLon, now: Date.now() });
+  }
   function getUserDiscoveryLocation() {
-    // Priority: skh.userLat/Lon (GPS) → saved localStorage → manual → Dar es Salaam fallback
-    var lat = skh.userLat, lon = skh.userLon;
-    if (typeof lat === 'number' && typeof lon === 'number') return validLocationContext({ lat, lon, source: 'gps', name: skh.userRegionName || '' });
-    try {
-      var raw = skh.localStorage && skh.localStorage.getItem('skh_last_loc');
-      if (raw) {
-        var d = JSON.parse(raw);
-        if (d && typeof d.lat === 'number' && typeof d.lon === 'number' && d.consent === true) return validLocationContext({ lat: d.lat, lon: d.lon, source: 'saved-consented', name: d.name || '' });
-      }
-      var manual = skh.localStorage && skh.localStorage.getItem('skh_discover_manual_loc');
-      if (manual) {
-        var m = JSON.parse(manual);
-        if (m && typeof m.lat === 'number' && typeof m.lon === 'number') return validLocationContext({ lat: m.lat, lon: m.lon, source: 'manual', name: m.name || '' });
-      }
-    } catch (e) {}
-    // Hakuna ruhusa/manual context: usibuni eneo wala umbali.
-    return null;
+    var c = getDiscoveryArea();
+    return c && c.hasCoords ? c : null;   // Hakuna kuratibu halali: usibuni eneo wala umbali.
+  }
+  window.skhDiscoveryArea = getDiscoveryArea; window.skhDiscoveryLocation = getUserDiscoveryLocation;   // read-only (tests, diagnostics)
+  function discoveryAreaLabel(c) {
+    if (!c) return T2('Eneo halijawekwa', 'No location set');
+    if (c.kind === 'manual') return c.name + ' • ' + T2('umechagua', 'chosen by you');
+    if (c.kind === 'gps') return (c.name || T2('Karibu nawe', 'Near you')) + ' • GPS';
+    return (c.name || T2('Karibu nawe', 'Near you')) + ' • ' + (c.stale ? T2('eneo la mwisho', 'last known') : T2('takriban', 'approximate'));
   }
 
   function calcDistance(lat1, lon1, lat2, lon2) {
@@ -1235,7 +1241,7 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
     var personalized = getPersonalizedSections();
     var html = '';
 
-    html += '<div style="margin-bottom:12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:13px;color:#0f172a;">📍 Discovery Location</b><button data-act="de-change-loc" style="border:1px solid #cbd5e1;background:#fff;color:#18A982;font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Change</button></div><small style="color:#64748b;font-size:11.5px;display:block;margin-top:4px;">' + esc(userLoc.name||'') + ' • ' + esc(userLoc.source) + ' • ' + esc(userLoc.lat.toFixed(4) + ', ' + userLoc.lon.toFixed(4)) + '</small>' + renderDistanceFilters(DISTANCE_FILTER.ANY) + '</div>';
+    html += '<div style="margin-bottom:12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:13px;color:#0f172a;">📍 Discovery Location</b><button data-act="de-change-loc" style="border:1px solid #cbd5e1;background:#fff;color:#18A982;font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;">Change</button></div><small style="color:#64748b;font-size:11.5px;display:block;margin-top:4px;">' + esc(discoveryAreaLabel(getDiscoveryArea())) + '</small>' + renderDistanceFilters(DISTANCE_FILTER.ANY) + '</div>';
 
     html += '<div data-skh-ad-slot="discover" data-skh-ad-surface="discover_home" aria-label="Sponsored content" style="margin:10px 0;"></div>';
     html += renderQuickCategories('all');
@@ -1577,7 +1583,7 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
       id: genId('REQ'),
       productQuery: query,
       quantity: quantity || 1,
-      area: area || getUserDiscoveryLocation().name || '',
+      area: area || (getDiscoveryArea() || {}).name || '',
       priceRange: priceRange || null,
       userId: uid(),
       userName: (skh.currentUser && skh.currentUser.displayName) || '',
@@ -1615,7 +1621,7 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
       + '<div style="display:flex;flex-direction:column;gap:10px;">'
       + '<label style="font-size:12px;font-weight:800;color:#334155;">Product Needed</label><input id="deReqProduct" type="text" value="' + esc(query||'') + '" placeholder="e.g. Cement 50kg" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;">'
       + '<label style="font-size:12px;font-weight:800;color:#334155;">Quantity</label><input id="deReqQty" type="number" min="1" value="1" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;">'
-      + '<label style="font-size:12px;font-weight:800;color:#334155;">Preferred Area</label><input id="deReqArea" type="text" value="' + esc(userLoc.name||'') + '" placeholder="e.g. Kariakoo, Dar" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;">'
+      + '<label style="font-size:12px;font-weight:800;color:#334155;">Preferred Area</label><input id="deReqArea" type="text" value="' + esc((getDiscoveryArea() || {}).name || '') + '" placeholder="e.g. Kariakoo, Dar" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;">'
       + '<label style="font-size:12px;font-weight:800;color:#334155;">Price Range (optional)</label><input id="deReqPrice" type="text" placeholder="e.g. 15000-20000" style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;">'
       + '<small style="color:#64748b;font-size:11px;">Request expires in 48h. Relevant sellers who opted into opportunities will receive it.</small>'
       + '<button data-act="de-submit-request" style="border:none;background:#18A982;color:#fff;font-weight:800;font-size:13px;padding:12px;border-radius:12px;cursor:pointer;margin-top:8px;">Send Request to Nearby Sellers</button>'
@@ -1954,16 +1960,22 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
         return;
       }
       if (act === 'de-change-loc') {
-        var loc = prompt(T2('Weka eneo lako (mf: Kariakoo, Dar) au lat,lng:', 'Enter your area or lat,lng:'), getUserDiscoveryLocation().name||'');
-        if (loc) {
+        var loc = prompt(T2('Weka eneo lako (mf: Kariakoo, Dar) au lat,lng:', 'Enter your area or lat,lng:'), (getDiscoveryArea() || {}).name || '');
+        if (loc !== null && !String(loc).trim()) {   // empty = clear the typed place (back to the bar / device location)
+          try { skh.localStorage.removeItem('skh_discover_manual_loc'); } catch (e) {}
+          renderHome();
+        } else if (loc) {
           // Try parse lat,lng
+          // [LOCATION 2026-11-21] a typed place name is stored as a NAME ONLY: it used to be saved with the coordinates of
+          // the previous position (so "Arusha" carried Dar es Salaam's coordinates, and crashed when there was none).
+          // Typed "lat,lng" must be valid coordinates; it is a manual choice and does not pretend to be GPS.
           var parts = loc.split(',');
-          if (parts.length===2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
-            var lat = parseFloat(parts[0]), lon = parseFloat(parts[1]);
-            try { skh.localStorage.setItem('skh_discover_manual_loc', JSON.stringify({ lat:lat, lon:lon, name: loc, ts: Date.now(), source:'manual' })); } catch (e) {}
-            skh.userLat = lat; skh.userLon = lon;
+          var LC = globalThis.SKHLocationCore;
+          var typed = (parts.length === 2 && LC) ? LC.validCoords(parts[0], parts[1]) : null;
+          if (typed) {
+            try { skh.localStorage.setItem('skh_discover_manual_loc', JSON.stringify({ lat: typed.lat, lon: typed.lon, name: loc, ts: Date.now(), source: 'manual' })); } catch (e) {}
           } else {
-            try { skh.localStorage.setItem('skh_discover_manual_loc', JSON.stringify({ lat: getUserDiscoveryLocation().lat, lon: getUserDiscoveryLocation().lon, name: loc, ts: Date.now(), source:'manual' })); } catch (e) {}
+            try { skh.localStorage.setItem('skh_discover_manual_loc', JSON.stringify({ name: loc, ts: Date.now(), source: 'manual' })); } catch (e) {}
           }
           renderHome();
         }
@@ -1972,8 +1984,10 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
       if (act === 'de-location') {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(function (pos) {
-            skh.userLat = pos.coords.latitude; skh.userLon = pos.coords.longitude;
-            try { skh.localStorage.setItem('skh_last_loc', JSON.stringify({ lat: pos.coords.latitude, lon: pos.coords.longitude, name: 'Current Location', ts: Date.now(), source:'gps' })); } catch (e) {}
+            // [LOCATION 2026-11-21] one set of rules (84-location-fast.js): validated fix, no invented place name
+            try { skh.localStorage.removeItem('skh_discover_manual_loc'); } catch (e) {}   // the user asked for their position: the typed place no longer applies
+            if (typeof window.skhLocationFromPosition === 'function') window.skhLocationFromPosition(pos);
+            else { skh.userLat = pos.coords.latitude; skh.userLon = pos.coords.longitude; }
             renderHome();
           }, function (err) { alert(T2('Imeshindikana kupata eneo', 'Failed to get location')); });
         }
@@ -2142,7 +2156,7 @@ import { parseDiscoverQuery, validLocationContext, publicProfileProjection, cata
     window.SKH_DISCOVER_ENGINE = {
       ENTITY_TYPE, SELLER_MODE, AVAILABILITY_STATUS, SEARCH_INTENT, DISTANCE_FILTER,
       buildDiscoverListing, parseProductStructure, getSellerMode, getAvailabilityStatus,
-      getInventoryFreshness, buildBusinessLocation, getUserDiscoveryLocation, calcDistance,
+      getInventoryFreshness, buildBusinessLocation, getUserDiscoveryLocation, getDiscoveryArea, calcDistance,
       detectIntent, rankListings, universalSearch, getSearchSuggestions,
       renderDiscoverHome, renderSearchResults, renderProductCard,
       renderBusinessCard, renderServiceCard, renderTransportCard,

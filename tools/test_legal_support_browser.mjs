@@ -112,7 +112,9 @@ const pid = await p.evaluate(async t => { window.skh.userLat = -6.792412; window
 const pd = (await db.doc('products/' + pid).get()).data() || {};
 ok(pd.coords && pd.coords.lat === -6.79 && pd.coords.lon === 39.21, 'listing written through the app keeps only approximate coordinates (-6.79, 39.21)');
 const appSrc = readFileSync(new URL('../js/app/08-app-state.js', import.meta.url), 'utf8');
-ok(/coords: \(skh\.userLat && skh\.userLon\) \? \{ lat: Math\.round\(Number\(skh\.userLat\) \* 100\) \/ 100/.test(appSrc), 'the sell form rounds GPS to 2 decimals before saving');
+// [LOCATION 2026-11-21] the sell form now takes coords from skhListingCoords() (fresh, accurate GPS only), which rounds to 2 decimals
+ok(/coords: \(typeof window\.skhListingCoords === 'function'\) \? window\.skhListingCoords\(\) : null/.test(appSrc), 'the sell form takes listing coords only from skhListingCoords()');
+ok(await p.evaluate(() => { const L = globalThis.SKHLocationCore; const c = L.listingCoords({ lat: -6.792412, lon: 39.208345, accuracy: 25, ts: Date.now(), source: 'gps' }, Date.now()); return c && c.lat === -6.79 && c.lon === 39.21; }), 'the sell form rounds GPS to 2 decimals before saving');
 // admin replies
 await p.evaluate(() => window.skh.signOut(window.skh.auth)); await p.waitForTimeout(500);
 await p.evaluate(async ({ e, pw }) => { const c = await window.skh.signInWithEmailAndPassword(window.skh.auth, e, pw); await c.user.getIdToken(true); }, { e: adminEmail, pw: PW });

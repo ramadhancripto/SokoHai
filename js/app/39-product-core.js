@@ -35,6 +35,10 @@ export function productEligible(p){
   // [REMEDIATION 2026-11-20] hidden and offline listings never surface (regression from the channels change:
   // a product with salesChannels ['marketplace'] but availabilityStatus 'hidden' / isOnline false was shown).
   // [SOKOHURU 2026-11-21] a listing hidden/removed by moderation never surfaces either
+  // [LIFECYCLE 2026-11-21] same conditions as shared/search-engine.js eligible(): a listing marked deleted / suspended /
+  // inactive in ANY of the legacy fields never surfaces (before, the feed and the search used different rules)
+  const st=low(p&&(p.status||p.listingStatus));
+  if(p&&(p.deletedAt||p.suspendedAt||p.archived===true||p.active===false||['deleted','archived','suspended','blocked','rejected','removed','inactive','draft'].includes(st))) return false;
   return !!p && !p.archivedAt && p.permanentlyDeleted!==true && p.deleted!==true && p.adminHidden!==true && String(p.moderationStatus||'').toLowerCase()!=='removed'
     && publicationStatus(p)==='published' && p.isOnline!==false
     && availabilityStatus(p)!=='hidden' && channelsOf(p).includes('marketplace');

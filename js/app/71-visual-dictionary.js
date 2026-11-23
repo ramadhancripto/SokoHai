@@ -361,7 +361,7 @@ import { skh } from './00-bootstrap.js';
     (function () {
         var dd = document.getElementById('langDropdown');
         if (!dd || typeof MutationObserver === 'undefined')
-            { var s2 = window.setInterval(function () { }, 0); return; }
+            return;   // [PERF 2026-11-22] was `setInterval(function () {}, 0)`: an empty callback firing ~200x/s forever (CPU + battery on phones)
         var mo = new MutationObserver(function () {
             if (dd.style.display !== 'none') {
                 var mv = document.getElementById('langMenuLughaView');

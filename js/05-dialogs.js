@@ -42,7 +42,7 @@
         // [LIFECYCLE 2026-09-14] `html:true` huruhusu maudhui tajiri (mf. orodha
         // ya historia/audit trail). Chaguo-msingi bado ni textContent — salama.
         if (opts.html) m.innerHTML = String(msg == null ? '' : msg);
-        else m.textContent = String(msg == null ? '' : msg);
+        else m.textContent = (window.SKHUiText ? window.SKHUiText.humanize : String)(msg == null ? '' : msg);   // [UI 2026-11-21] calm, consistent wording
         box.appendChild(ic); box.appendChild(ttl); box.appendChild(m);
         ov.appendChild(box);
         return { ov: ov, box: box, danger: k.danger };

@@ -664,7 +664,12 @@ import { skh } from './00-bootstrap.js';
         if (__L0) {
             STATIC_PHRASES.forEach(function (row) {
                 try {
+                    // [I18N 2026-11-23] an English word that already maps back to a plain Swahili phrase keeps that mapping:
+                    // "Product" -> "Bidhaa (Product)" contained the English, so the switch back to Swahili was refused and
+                    // Home kept "Product" (round-trip test). Only the reverse (English -> Swahili) lookup is protected.
+                    var __prevEn = __L0.phraseKey ? __L0.phraseKey[row[2]] : null;
                     __L0.register(row[1], row[2], row[0], 'reviewed');
+                    if (__prevEn && __L0.phraseKey) __L0.phraseKey[row[2]] = __prevEn;
                     // keyFromPhrase hufanya trim+collapse — phraseKey ziwe normalized vilevile
                     if (__L0.phraseKey) __L0.phraseKey[String(row[0]).replace(/\s+/g, ' ').trim()] = row[1];
                 } catch (eReg) {}

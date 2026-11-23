@@ -330,7 +330,7 @@
   }
   function eligible(d) {
     if (!d || !(d.id || d.entityId)) return false;
-    if (d.archivedAt || d.deletedAt || d.permanentlyDeleted === true || d.deleted === true || d.adminHidden === true || d.suspendedAt) return false;
+    if (d.archivedAt || d.deletedAt || d.archived === true || d.permanentlyDeleted === true || d.deleted === true || d.adminHidden === true || d.suspendedAt) return false;
     if (String(d.moderationStatus || '').toLowerCase() === 'removed') return false;
     var pub = String(d.publicationStatus || '').toLowerCase(); if (pub && pub !== 'published') return false;
     var st = String(d.status || d.listingStatus || '').toLowerCase();

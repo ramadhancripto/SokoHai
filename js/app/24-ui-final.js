@@ -593,8 +593,13 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
     },
     translatePhrase(text){
       if(!text || !String(text).trim()) return text;
+      // [I18N 2026-11-22] A WHOLE-phrase match is translated as a whole: its translation already carries its own leading
+      // characters. Before, the prefix split off by splitIcon (e.g. the opening quote of "“Fursa za biashara…”") was added
+      // again -> "““Business opportunities…" in English, which then matched nothing, so switching back to Swahili failed.
+      const whole = this.keyFromPhrase(String(text).trim());
+      if(whole) return this.t(whole);
       const {prefix, core} = this.splitIcon(text);
-      const key = this.keyFromPhrase(core) || this.keyFromPhrase(String(text).trim());
+      const key = this.keyFromPhrase(core);
       if(!key) return text;
       return (prefix || '') + this.t(key);
     },
@@ -634,9 +639,10 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
           // na applyLanguage(). Sweep ya phrase ilikuwa inaandika juu yake na
           // kubadilisha maandishi sahihi kuwa mengine (mf. nav "Chat" ikawa
           // "Chat Naye", ikakatika kwenye simu ndogo). Iachwe.
-          if(p.hasAttribute('data-i18n') || p.closest('[data-i18n],[data-no-i18n],.nav-tab')) return NodeFilter.FILTER_REJECT;
+          // [I18N 2026-11-23] the split "Soko|Hai" brand word is never a phrase ("Soko" -> "Market" made "MarketHai")
+          if(p.hasAttribute('data-i18n') || p.closest('[data-i18n],[data-no-i18n],.nav-tab,.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return NodeFilter.FILTER_REJECT;
           const txt=node.nodeValue.replace(/\s+/g,' ').trim();
-          if(!txt || txt.length>60) return NodeFilter.FILTER_REJECT;
+          if(!txt || txt.length>240) return NodeFilter.FILTER_REJECT;   // [I18N 2026-11-21] full sentences too (was 60: long phrases were never translated)
           if(!LMS.keyFromPhrase(LMS.splitIcon(txt).core) && !LMS.keyFromPhrase(txt)) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
@@ -650,7 +656,7 @@ setTimeout(()=>window.scanAndFixSokoHaiUI?.(),1200);
       root.querySelectorAll('button, a, span, b, small, label, option, h1, h2, h3, h4').forEach(el => {
         if(el.children.length) return;
         // [FIX 2026-09-14] Usiguse vilivyo na data-i18n wala labels za nav.
-        if(el.hasAttribute('data-i18n') || el.closest('[data-i18n],[data-no-i18n],.nav-tab')) return;
+        if(el.hasAttribute('data-i18n') || el.closest('[data-i18n],[data-no-i18n],.nav-tab,.skh-brand-word,.skh-brand-lockup,.shc-post-brand,.welcome-brand-text')) return;
         const txt=el.textContent?.trim();
         if(!txt || txt.length>70) return;
         const tr=this.translatePhrase(txt);

@@ -98,7 +98,7 @@
     function currentLang() {
         try {
             if (window.SokoHaiLMS && window.SokoHaiLMS.lang) return window.SokoHaiLMS.lang;
-            return localStorage.getItem('sokohai_lang') || 'sw';
+            return localStorage.getItem('sokohai_language') || 'sw';   // [I18N 2026-11-21] the ONE preference key (was 'sokohai_lang', never written)
         } catch (e) { return 'sw'; }
     }
 

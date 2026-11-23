@@ -5,8 +5,9 @@
   # [AWAMU D2 2026-11-08] Minification imeunganishwa hapa: build + check + uthibitisho
   # wa usawa wa token. Kama uthibitisho unashindwa, deploy inakatishwa.
   # Kurudi nyuma ni mstari mmoja: node tools/build_dist.mjs --check
-  # [SEO 2026-11-21] then the crawlable public pages + sitemaps (tools/build_seo.mjs). A data error never fails the
-  # deploy: the static pages and sitemap are still written. Deploy previews / branch deploys build static pages only.
+  # [SEO 2026-11-21] then the crawlable public pages + sitemaps (tools/build_seo.mjs). [SEO-SAFETY] In PRODUCTION a
+  # listing-data read failure FAILS the build, so Netlify keeps the last good deploy (an empty catalogue is not a failure).
+  # Deploy previews / branch deploys build static pages only.
   command = "node tools/build_dist.mjs --minify --check && node tools/build_seo.mjs --out dist"
   publish = "dist"
 
@@ -49,6 +50,21 @@
 
 # The repository previously contained a second stale application under /fonts/.
 # Old bookmarks and service-worker-controlled requests must return to one root app.
+# [ADMIN PORTAL 2026-11-21] admin.sokohai.com opens the separate admin application. Only the root is rewritten:
+# its scripts and styles (/js, /css, /shared, /fonts) are the same files as the marketplace. Owner action: add
+# admin.sokohai.com as a Netlify domain alias and to Firebase Auth "Authorized domains".
+[[redirects]]
+  from = "https://admin.sokohai.com/"
+  to = "/admin/"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+
 [[redirects]]
   from = "/fonts/js/*"
   to = "/js/:splat"

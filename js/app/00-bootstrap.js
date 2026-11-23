@@ -6,11 +6,12 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, connectAuthEmulator, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken, signOut, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, sendEmailVerification, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, startAfter, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, connectFirestoreEmulator, collection, addDoc, onSnapshot, query, orderBy, limit, where, updateDoc, doc, increment, arrayUnion, arrayRemove, getDocs, getDoc, getCountFromServer, startAfter, setDoc, deleteDoc, runTransaction, writeBatch, serverTimestamp, deleteField, documentId } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getFunctions, httpsCallable, httpsCallableFromURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
 import '../../shared/search-dictionary.js'; // [SEARCH-INTEL 2026-11-21] globalThis.SKHSearchDictionary (language data)
 import '../../shared/search-tokens.js'; // [SEARCH 2026-11-14] globalThis.SKHSearchTokens
+import '../../shared/location-core.js'; // [LOCATION 2026-11-21] globalThis.SKHLocationCore (one set of location rules)
 import '../../shared/search-engine.js'; // [SEARCH-INTEL 2026-11-21] globalThis.SKHSearchEngine (understanding + ranking)
 import '../../shared/seo-paths.js'; // [SEO 2026-11-21] globalThis.SKHSeoPaths (crawlable listing URLs)
 import { categoryFilterValues, categoryMatches, canonicalCategoryId, categoryInfo, buyerSubcategories, buyerProductCategories, legacySubcategoriesFor, categoryLabel } from '../../shared/category-filter-core.mjs';
@@ -67,6 +68,7 @@ skh.query = query;
 skh.orderBy = orderBy;
 skh.limit = limit;
 skh.where = where;
+skh.documentId = documentId;
 skh.updateDoc = updateDoc;
 skh.doc = doc;
 skh.increment = increment;
@@ -480,92 +482,11 @@ try {
 
 skh.localStorage = skh.safeLocalStorage;
 
-if (navigator.geolocation) {
-    const originalGetCurrentPosition = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
-    navigator.geolocation.getCurrentPosition = function(successCallback, errorCallback, options) {
-        try {
-            originalGetCurrentPosition(
-                successCallback,
-                function(error) {
-                    console.warn("Geolocation failed or blocked. Using fallback coordinates (Dar es Salaam).");
-                    const mockPosition = {
-                        coords: {
-                            latitude: -6.7924,
-                            longitude: 39.2083,
-                            accuracy: 10,
-                            altitude: null,
-                            altitudeAccuracy: null,
-                            heading: null,
-                            speed: null
-                        },
-                        timestamp: Date.now()
-                    };
-                    successCallback(mockPosition);
-                },
-                options
-            );
-        } catch (e) {
-            console.warn("getCurrentPosition threw error. Using Dar es Salaam fallback.");
-            const mockPosition = {
-                coords: {
-                    latitude: -6.7924,
-                    longitude: 39.2083,
-                    accuracy: 10,
-                    altitude: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    speed: null
-                },
-                timestamp: Date.now()
-            };
-            successCallback(mockPosition);
-        }
-    };
-    
-    const originalWatchPosition = navigator.geolocation.watchPosition.bind(navigator.geolocation);
-    navigator.geolocation.watchPosition = function(successCallback, errorCallback, options) {
-        try {
-            return originalWatchPosition(
-                successCallback,
-                function(error) {
-                    console.warn("watchPosition failed or blocked. Using fallback coordinates (Dar es Salaam).");
-                    const mockPosition = {
-                        coords: {
-                            latitude: -6.7924,
-                            longitude: 39.2083,
-                            accuracy: 10,
-                            altitude: null,
-                            altitudeAccuracy: null,
-                            heading: null,
-                            speed: null
-                        },
-                        timestamp: Date.now()
-                    };
-                    successCallback(mockPosition);
-                },
-                options
-            );
-        } catch (e) {
-            console.warn("watchPosition threw error. Using simulated timer fallback.");
-            const intervalId = setInterval(() => {
-                const mockPosition = {
-                    coords: {
-                        latitude: -6.7924,
-                        longitude: 39.2083,
-                        accuracy: 10,
-                        altitude: null,
-                        altitudeAccuracy: null,
-                        heading: null,
-                        speed: null
-                    },
-                    timestamp: Date.now()
-                };
-                successCallback(mockPosition);
-            }, 3000);
-            return intervalId;
-        }
-    };
-}
+/* [LOCATION 2026-11-21] ROOT CAUSE of wrong locations, removed: navigator.geolocation was wrapped here so that ANY
+ * failure (permission denied, no GPS, timeout) called the SUCCESS callback with Dar es Salaam (-6.7924, 39.2083)
+ * and an accuracy of 10 m. Every user outside Dar who denied or lost GPS was therefore placed in Dar es Salaam as a
+ * "precise" fix — in the location bar, in distance sorting, in new listings and in tracking. Failures now reach the
+ * caller's error callback unchanged; js/app/84-location-fast.js shows "Chagua eneo" and lets the user pick a region. */
 
 document.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -2032,6 +1953,62 @@ skh._feedCacheGet = function _feedCacheGet(key) {
     if (Date.now() > e.expiresAt) { skh._feedCache.delete(key); return null; }
     return e.data;
 };
+/* [LIFECYCLE 2026-11-21] Forget a listing everywhere in this browser the moment we learn it is no longer public
+ * (opened through an old link, refused by the cart, removed by its seller). Before, the 2-minute feed cache and
+ * skh.cachedItems (which the search panel and related rails read) could show it again until the cache expired. */
+skh.forgetListing = function forgetListing(id) {
+    if (!id) return;
+    const drop = (arr) => Array.isArray(arr) ? arr.filter(it => !it || String(it.id) !== String(id)) : arr;
+    try {
+        skh.cachedItems = drop(skh.cachedItems); skh._visibleFeedItems = drop(skh._visibleFeedItems); skh._feedSourceItems = drop(skh._feedSourceItems);
+        if (skh._feedCache) skh._feedCache.forEach((e) => { if (e && Array.isArray(e.data)) e.data = drop(e.data); });
+        // every card that opens this listing (feed, Home rails, related rails, storefront)
+        const sid = String(id).replace(/[^A-Za-z0-9_-]/g, '');
+        if (sid) document.querySelectorAll('[onclick*="openProduct(\'' + sid + '\'"]').forEach(el => el.remove());
+    } catch (e) {}
+};
+/* [LIFECYCLE 2026-11-22] Stale Home rows: a buyer who keeps SokoHai open never re-fetched the Home rails, so a listing
+ * the seller deleted stayed visible (and clickable) until the app reloaded. When the tab comes back after being hidden
+ * for >= 2 minutes, or Home is tapped, the product cards on screen are re-checked in one batched query
+ * (documentId() in [...], up to 30 per query) and every card whose listing is gone or no longer eligible is removed
+ * with forgetListing. Spark-friendly: at most 40 cards (= at most 40 document reads) and at most once every 3 minutes;
+ * no listener stays open and nothing runs while the tab is hidden. Opening a stale card was already refused
+ * (07-product.js, 23-smart-cart.js); this only removes it from view sooner. */
+(function () {
+    const MIN_GAP = 3 * 60 * 1000, HIDDEN_MIN = 2 * 60 * 1000, MAX_IDS = 40;
+    let last = Date.now(), busy = false, hiddenAt = 0;
+    const ID_RE = /openProduct\(\s*'([A-Za-z0-9_-]{1,128})'\s*,\s*'products'\s*\)/;
+    skh.revalidateVisibleListings = async function revalidateVisibleListings(opts) {
+        const force = !!(opts && opts.force);
+        if (busy || (!force && Date.now() - last < MIN_GAP)) return { skipped: true };
+        if (!skh.db || typeof skh.getDocs !== 'function' || typeof skh.documentId !== 'function') return { skipped: true };
+        busy = true; last = Date.now();
+        let checked = 0, removed = 0;
+        try {
+            const ids = [];
+            document.querySelectorAll('[onclick*="openProduct("]').forEach(el => {
+                const m = ID_RE.exec(el.getAttribute('onclick') || ''); if (m && !ids.includes(m[1]) && ids.length < MAX_IDS) ids.push(m[1]);
+            });
+            for (let i = 0; i < ids.length; i += 30) {
+                const chunk = ids.slice(i, i + 30);
+                const snap = await skh.getDocs(skh.query(skh.collection(skh.db, 'products'), skh.where(skh.documentId(), 'in', chunk)));
+                const live = new Map(); snap.forEach(d => live.set(d.id, Object.assign({ id: d.id, collectionName: 'products' }, d.data())));
+                chunk.forEach(id => {
+                    checked++;
+                    const d = live.get(id);
+                    if (!d || (typeof skh.productEligible === 'function' && !skh.productEligible(d))) { skh.forgetListing(id); removed++; }
+                });
+            }
+            return { checked, removed };
+        } catch (e) { return { checked, removed, error: String((e && (e.code || e.message)) || e) }; }
+        finally { busy = false; }
+    };
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+        if (hiddenAt && Date.now() - hiddenAt >= HIDDEN_MIN) skh.revalidateVisibleListings();
+    });
+    document.addEventListener('click', (e) => { if (e.target && e.target.closest && e.target.closest('#navTabHome')) setTimeout(() => skh.revalidateVisibleListings(), 400); }, true);
+})();
 skh._feedCacheSet = function _feedCacheSet(key, data) {
     if (!Array.isArray(data)) return;
     if (data.length === 0) return;        // usihifadhi "hakuna matokeo" (inaweza kuwa ya muda)
@@ -2366,7 +2343,7 @@ skh.cardIcon = function cardIcon(name, size) {
 // za dashboard na UI ili muonekano wawe sawa kama kweny browser.
 skh.skohaiLogo = function skohaiLogo(size) {
     var s = Math.max(12, Math.min(256, Number(size) || 32));
-    return '<img src="assets/img/sokohai-cart-mark.png" width="' + s + '" height="' + s + '" alt="SokoHai" style="object-fit:contain">';
+    return '<img src="assets/img/sokohai-cart-mark-192.webp" width="' + s + '" height="' + s + '" alt="SokoHai" style="object-fit:contain">';
 };
 
 // [PostActions] Like + Save — zinatumia skhCardToggle iliyopo (bila nakala)
@@ -3038,7 +3015,7 @@ skh.cardServiceInfoRow = function cardServiceInfoRow(data) {
     if (!data) return '';
     const loc = String(data.location || data.region || data.serviceArea || '').trim();
     const sec = String(data.section || '').toLowerCase();
-    const mode = sec === 'online' ? ['globe', 'Mtandaoni'] : (sec === 'physical' ? ['home', 'Ana kwa ana'] : null);
+    const mode = sec === 'online' ? ['globe', skhTF('card_mode_online', 'Mtandaoni')] : (sec === 'physical' ? ['home', skhTF('card_mode_physical', 'Ana kwa ana')] : null);   // [I18N 2026-11-23]
     if (!loc && !mode) return '';
     const a = loc ? '<span class="skh-oc-info-a" title="' + skh.skhEscape(loc) + '">' + SKH_PIN_SVG + '<b>' + skh.skhEscape(loc) + '</b></span>' : '';
     const b = mode ? '<span class="skh-oc-info-b">' + skh.cardIcon(mode[0], 13) + '<b>' + mode[1] + '</b></span>' : '';
@@ -3051,7 +3028,7 @@ skh.cardRouteRow = function cardRouteRow(data) {
     if (from && to) {
         return '<div class="skh-oc-info skh-oc-info--route" title="' + skh.skhEscape(from + ' → ' + to) + '">'
             + '<span class="skh-oc-info-a"><i class="skh-oc-dot" aria-hidden="true"></i><b>' + skh.skhEscape(from) + '</b></span>'
-            + '<i class="skh-oc-info-line" aria-hidden="true"></i><span class="skh-oc-info-car" aria-label="hadi">' + skh.cardIcon('car', 14) + '</span><i class="skh-oc-info-line" aria-hidden="true"></i>'
+            + '<i class="skh-oc-info-line" aria-hidden="true"></i><span class="skh-oc-info-car" aria-label="' + skhTF('card_route_to', 'hadi') + '">' + skh.cardIcon('car', 14) + '</span><i class="skh-oc-info-line" aria-hidden="true"></i>'
             + '<span class="skh-oc-info-b"><b>' + skh.skhEscape(to) + '</b><i class="skh-oc-dot" aria-hidden="true"></i></span></div>';
     }
     if (from) return '<div class="skh-oc-info skh-oc-info--route"><span class="skh-oc-info-a">' + SKH_PIN_SVG + '<b>' + skh.skhEscape(from) + '</b></span></div>';
@@ -3277,11 +3254,6 @@ skh.renderFeedUI = function renderFeedUI(dataArray, feedGrid) {
     
     let filteredData = dataArray;
     skh._feedSourceItems = Array.isArray(dataArray) ? dataArray : []; // [SEARCH-INTEL 2026-11-21] unfiltered source for the search panel
-
-    // [RECYCLE 2026-11-21] Bidhaa iliyo kwenye Recycle Bin (archived / deleted / draft / hidden) haionekani
-    // sokoni mpaka muuzaji airejeshe. Kabla: njia ya Home ('all') na cache hazikuchuja, hivyo bidhaa
-    // zilizoondolewa zilibaki kwenye #mainFeed. Kichujio kimoja hapa kinahusu njia zote za kuchora feed.
-    filteredData = (filteredData || []).filter(d => !d || d.collectionName !== 'products' || typeof skh.productEligible !== 'function' || skh.productEligible(d));
 
     // [RECYCLE 2026-11-21] Bidhaa iliyo kwenye Recycle Bin (archived / deleted / draft / hidden) haionekani
     // sokoni mpaka muuzaji airejeshe. Kabla: njia ya Home ('all') na cache hazikuchuja, hivyo bidhaa

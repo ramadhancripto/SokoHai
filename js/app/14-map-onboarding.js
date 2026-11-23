@@ -769,6 +769,7 @@ window.openSavedItems = async function() {
         let html = '';
         snap.forEach(docSnap => {
             const d = docSnap.data();
+            if (typeof skh.productEligible === 'function' && !skh.productEligible({ id: docSnap.id, ...d })) return;   // [LIFECYCLE 2026-11-21] removed listings are not offered
             html += `
                 <div class="list-item" style="cursor:pointer;" onclick="openProduct('${docSnap.id}', 'products')"> <img src="${skh.skhEscape(d.image)}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;"> <div class="list-info"> <b>${skh.skhEscape(d.title)}</b> <span>TSh ${(d.price || 0).toLocaleString()}</span> </div> </div> `;
         });

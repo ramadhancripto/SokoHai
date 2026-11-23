@@ -305,7 +305,8 @@ window.shareMyLocation = function(rideId) {
         }
     };
 
-    navigator.geolocation.getCurrentPosition(push, () => {});
+    // [LOCATION 2026-11-21] a failed fix is reported, never replaced by a guessed position
+    navigator.geolocation.getCurrentPosition(push, (err) => { if (typeof window.sokohaiToast === 'function') window.sokohaiToast(err && err.code === 1 ? 'Ruhusa ya eneo imezimwa — mahali pako hapashirikiwi.' : 'GPS haipatikani kwa sasa — mahali pako hapashirikiwi.', 'warn', 4500); });
     if (liveWatchId) { try { navigator.geolocation.clearWatch(liveWatchId); } catch(e){} }
     liveWatchId = navigator.geolocation.watchPosition(push, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 });
 };

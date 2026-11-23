@@ -4,7 +4,7 @@
             <span class="menu-btn" onclick="openSidebarMenu()" data-skh-icon="menu" data-skh-size="19" data-i18n-aria="nav_menu_desc" data-i18n-title="nav_menu_desc" role="button" tabindex="0" aria-label="Menyu — akaunti na mipangilio" title="Menyu — akaunti na mipangilio"></span>
             <!-- SokoHai brand: one user-provided cart mark + exact product name. -->
             <a class="skh-brand" href="#" onclick="updateApp('home');return false;" aria-label="SokoHai — Nyumbani">
-                <img class="skh-brand-logo" src="assets/img/sokohai-cart-mark.png" alt="" width="48" height="48" decoding="async">
+                <img class="skh-brand-logo" src="assets/img/sokohai-cart-mark-192.webp" alt="" width="48" height="48" decoding="async">
                 <span class="skh-brand-lockup">
                     <span class="skh-brand-word" aria-hidden="true"><b class="skh-brand-soko">Soko</b><b class="skh-brand-hai">Hai</b></span>
                     <span class="skh-brand-arc" aria-hidden="true"></span>
@@ -155,4 +155,11 @@
          A) BUYER VIEW (DEFAULT SOKO) 
          ========================================= -->
     <div id="buyerView">
+        <!-- [SEO 2026-11-22] Visible introduction (Home tab only). Google needs real text that says what SokoHai is;
+             without it the snippet was taken from hidden checkout/payment dialogs (now data-nosnippet). -->
+        <section class="skh-home-intro" id="skhHomeIntro" aria-labelledby="skhHomeIntroTitle">
+            <h1 id="skhHomeIntroTitle" data-i18n="home_intro_h1">SokoHai — soko la mtandaoni la Tanzania</h1>
+            <p data-i18n="home_intro_p">Nunua na uza bidhaa, tafuta huduma na usafiri, na gundua biashara karibu nawe — Dodoma, Dar es Salaam, Arusha, Mwanza na mikoa mingine ya Tanzania.</p>
+            <nav class="skh-home-intro-links" aria-label="SokoHai"><a href="/soko/" data-i18n="home_intro_browse">Vinjari kwa kategoria</a><a href="/mwongozo/" data-i18n="home_intro_guides">Miongozo ya kununua</a></nav>
+        </section>
         

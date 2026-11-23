@@ -1,5 +1,5 @@
 <!-- CHAT MODAL (Rangi za WhatsApp — nyepesi na wazi) -->
-<div id="chatModal" class="overlay-menu" style="z-index: 7800; padding:0;">
+<div id="chatModal" data-nosnippet class="overlay-menu" style="z-index: 7800; padding:0;">
     <div class="chat-card" style="background:#ffffff; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.45); animation: popIn 0.3s ease-out;">
         <div class="chat-head-bar">
             <button id="chatBackBtn" class="ch-back-btn" onclick="document.getElementById('nfShell') ? window.skhNegoFormClose() : window.skhChatBackToList()" title="Rudi kwenye orodha ya mazungumzo" aria-label="Rudi kwenye orodha">
@@ -117,10 +117,10 @@
 </div>
 
 <!-- GROUP SOGA MODAL (Vikundi) -->
-<div id="skhGroupSogaModal" class="skh-sheet-overlay" style="display:none; z-index: 100010;"></div>
+<div id="skhGroupSogaModal" data-nosnippet class="skh-sheet-overlay" style="display:none; z-index: 100010;"></div>
 
 <!-- CHAT LIST (INBOX) — Ukurasa KAMILI wa Chat (Chat UI v1.0, 2026-09) -->
-<div id="chatListModal" class="overlay-menu" style="z-index: 7750; padding:0;">
+<div id="chatListModal" data-nosnippet class="overlay-menu" style="z-index: 7750; padding:0;">
     <div class="ch-inbox-shell">
         <div class="ch-inbox-head">
             <div class="ch-inbox-brand">
@@ -161,10 +161,10 @@
 </div>
 
 <!-- CHAT UI v1.0 2026-09: Menyu ya ujumbe (long-press / right-click / ⋯) -->
-<div id="chMsgMenu" onclick="event.stopPropagation()" style="display:none; position:fixed; z-index:9000; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,.22); padding:6px; flex-direction:column; gap:2px; min-width:190px;"></div>
+<div id="chMsgMenu" data-nosnippet onclick="event.stopPropagation()" style="display:none; position:fixed; z-index:9000; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,.22); padding:6px; flex-direction:column; gap:2px; min-width:190px;"></div>
 
 <!-- CHAT UI v1.0 2026-09: Picker ya emoji reactions (spec §4) -->
-<div id="chEmojiMenu" onclick="event.stopPropagation()" style="display:none; position:fixed; z-index:9010; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,.22); padding:8px; flex-wrap:wrap; gap:4px; width:240px;">
+<div id="chEmojiMenu" data-nosnippet onclick="event.stopPropagation()" style="display:none; position:fixed; z-index:9010; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,.22); padding:8px; flex-wrap:wrap; gap:4px; width:240px;">
     <button type="button" class="ch-emoji-btn" onclick="window.skhChatReactEmoji(document.getElementById('chEmojiMenu').getAttribute('data-msgid'),'👍')">👍</button>
     <button type="button" class="ch-emoji-btn" onclick="window.skhChatReactEmoji(document.getElementById('chEmojiMenu').getAttribute('data-msgid'),'❤️')">❤️</button>
     <button type="button" class="ch-emoji-btn" onclick="window.skhChatReactEmoji(document.getElementById('chEmojiMenu').getAttribute('data-msgid'),'😂')">😂</button>
@@ -180,7 +180,7 @@
 </div>
 
 <!-- CHAT UI v1.0 2026-09: Sambaza ujumbe (forward) -->
-<div id="chatForwardModal" class="overlay-menu" style="z-index:7850;">
+<div id="chatForwardModal" data-nosnippet class="overlay-menu" style="z-index:7850;">
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;">Sambaza ujumbe kwa...</b>
@@ -191,7 +191,7 @@
 </div>
 
 <!-- CHAT UI v1.0 2026-09: Chagua bidhaa kushiriki -->
-<div id="chatAttachProductModal" class="overlay-menu" style="z-index:7850;">
+<div id="chatAttachProductModal" data-nosnippet class="overlay-menu" style="z-index:7850;">
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;"><span class="skh-ico" data-ico="cart"></span> Chagua bidhaa kushiriki</b>
@@ -202,7 +202,7 @@
 </div>
 
 <!-- CHAT UI v1.0 2026-09: Chagua oda kushiriki -->
-<div id="chatAttachOrderModal" class="overlay-menu" style="z-index:7850;">
+<div id="chatAttachOrderModal" data-nosnippet class="overlay-menu" style="z-index:7850;">
     <div style="background:#ffffff; border-radius:20px; width:94%; max-width:420px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,.5); animation:popIn .25s ease-out;">
         <div style="padding:14px 16px; border-bottom:1px solid #eef2f6; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
             <b style="color:#173B56; font-size:15px;"><span class="skh-ico" data-ico="cart"></span> Chagua oda kushiriki</b>
@@ -213,7 +213,7 @@
 </div>
 
 <!-- NOTIFICATIONS MODAL -->
-<div id="notifModal" class="overlay-menu" style="z-index: 7600;">
+<div id="notifModal" data-nosnippet class="overlay-menu" style="z-index: 7600;">
     <div style="background:white; border-radius:24px; padding:25px; width:95%; max-width:420px; display:flex; flex-direction:column; max-height:85vh; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
         <h3 style="color:var(--primary-dark); text-align:center; margin-top:0; margin-bottom:15px; font-size:20px; text-transform:uppercase; border-bottom:2px solid #f1f5f9; padding-bottom:15px;"> Taarifa Zako</h3>
         <div id="notifList" style="flex:1; overflow-y:auto; padding-right:5px; margin-bottom:15px;"></div>
@@ -223,7 +223,7 @@
 
 
 <!-- BUYER DASHBOARD — personal activity & commerce center; existing systems remain authoritative -->
-<div id="mySokoHaiModal" class="overlay-menu" style="z-index:7800;">
+<div id="mySokoHaiModal" data-nosnippet class="overlay-menu" style="z-index:7800;">
     <section class="byd-shell" role="dialog" aria-modal="true" aria-labelledby="buyerDashboardTitle">
         <header class="byd-head">
             <button type="button" class="byd-icon-btn" onclick="window.skhBuyerBack()" aria-label="Rudi hatua moja"><span class="skh-ico" data-ico="arrow-left"></span></button>
@@ -252,7 +252,7 @@
 </div>
 
 <!-- PUBLIC SELLER PROFILE (duka la muuzaji) -->
-<div id="sellerProfileModal" class="overlay-menu" style="z-index: 7900;">
+<div id="sellerProfileModal" data-nosnippet class="overlay-menu" style="z-index: 7900;">
     <div style="background:#f4f7fa; border-radius:24px; width:96%; max-width:540px; height:94vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.5); animation:popIn 0.25s ease-out;">
         <div id="sellerProfileBody" style="flex:1; overflow-y:auto;"></div>
     </div>

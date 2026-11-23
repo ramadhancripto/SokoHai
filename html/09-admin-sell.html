@@ -1,5 +1,5 @@
 <!-- ADMIN SETTINGS MODAL -->
-<div id="adminSettingsModal" class="overlay-menu" style="z-index: 8800;">
+<div id="adminSettingsModal" data-nosnippet class="overlay-menu" style="z-index: 8800;">
     <div style="background:white; border-radius:24px; padding:30px; width:95%; max-width:400px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); animation: popIn 0.3s ease-out;">
         <h3 style="color:var(--primary-dark); margin-top:0; font-size:20px;"><span class="skh-ico" data-ico="settings"></span> Admin Settings</h3>
         <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Weka akaunti ya kupokelea mapato ya Boost.</p>
@@ -15,7 +15,7 @@
 <!-- =========================================
      FOMU ZA KUPANDISHA BIDHAA NA MENU YAKE (PLUS BUTTON)
      ========================================= -->
-<div class="overlay-menu" id="plusMenu" onclick="if(event.target===this){togglePlusMenu();window.closeModals();}">
+<div class="overlay-menu" id="plusMenu" data-nosnippet onclick="if(event.target===this){togglePlusMenu();window.closeModals();}">
 
 <!--  UNIVERSAL PRODUCT FORM (BOS ENGINE v8.0) -->
 <form id="sellerForm" class="form-box" onsubmit="submitSeller(event)" style="padding: 25px; max-width: 500px; width: 95%;">
@@ -346,6 +346,11 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <input type="text" id="prodLocation" aria-label="Mahali (mtaa/soko)" placeholder="Mahali (Mtaa/Soko) *" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
             <input type="text" id="prodWarehouseZone" aria-label="Rafu au eneo la ghala" placeholder="Rafu / eneo la ghala (hiari)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0;">
+        </div>
+        <!-- [LOCATION 2026-11-21] country + region chosen by the seller (never assumed); public pages show the region only -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+            <select id="prodCountry" aria-label="Nchi" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0; background:#fff;"><option value="">Chagua nchi</option></select>
+            <select id="prodRegion" aria-label="Mkoa" disabled style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; margin:0; background:#fff;"><option value="">Chagua nchi kwanza</option></select>
         </div>
         <small id="prodLocationHint" style="display:block; color:#475569; margin-top:6px; font-size:12px;"></small>
     </div>

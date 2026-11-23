@@ -29,6 +29,19 @@ window.skhHeroGo = function (d, abs) {
     document.querySelectorAll('#shcDots button').forEach((b, i) => b.classList.toggle('on', i === heroIdx));
     clearInterval(heroTimer); heroTimer = setInterval(() => window.skhHeroGo(1), 5000);
 };
+/* [LAUNCH 2026-11-22] the Escrow slide promises protected payments; while escrow is switched off (129-launch-scope)
+ * the slide and its dot are removed so Home never advertises a service that is not available. Idempotent. */
+function pruneHero() {
+    const L = window.skhLaunch; if (!L || typeof L.enabled !== 'function' || L.enabled('escrow')) return false;
+    const slide = document.querySelector('#shcTrack .shc-escrow'); if (!slide) return false;
+    const idx = Array.prototype.indexOf.call(slide.parentNode.children, slide);
+    const dot = document.querySelectorAll('#shcDots button')[idx];
+    slide.remove(); if (dot) dot.remove();
+    document.querySelectorAll('#shcDots button').forEach((b, i) => { b.onclick = () => window.skhHeroGo(0, i); });
+    heroIdx = 0; window.skhHeroGo(0, 0);
+    return true;
+}
+window.skhHeroPrune = pruneHero;
 function initCarousel() {
     const dots = document.querySelectorAll('#shcDots button'); if (!dots.length) return false;
     dots.forEach((b, i) => b.onclick = () => window.skhHeroGo(0, i));
@@ -37,6 +50,7 @@ function initCarousel() {
     track.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) window.skhHeroGo(dx < 0 ? 1 : -1); x0 = null; }, { passive: true });
     // phone (ref 11) shows the community banner first; desktop (ref 14) the Escrow slide
     window.skhHeroGo(0, window.matchMedia('(max-width: 899px)').matches ? 1 : 0);
+    pruneHero();
     return true;
 }
 

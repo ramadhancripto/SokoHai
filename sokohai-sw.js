@@ -8,11 +8,11 @@
 //    so a deploy is picked up on the next load (no stale app);
 //  - a new version waits until the page asks (SKIP_WAITING) and old caches are deleted on activate.
 // ============================================================
-const VERSION = 'sokohai-r19-20261121-seo1';   // [SEO 2026-11-21] static public pages are not stored as the app shell
+const VERSION = 'sokohai-r20-20261122-seo2';   // [SEO 2026-11-21] static public pages are not stored as the app shell
 const CACHE = VERSION + '-static';
 const SHELL = ['./', './index.html', './offline.html', './sokohai-manifest.json', './assets/img/sokohai-app-192-v3.png', './assets/img/sokohai-app-512-v3.png'];
 const STATIC_RE = /\.(?:js|mjs|css|woff2?|ttf|png|jpe?g|webp|svg|gif|ico|json)$/i;
-const NEVER_RE = /\/__fn|\/api\/|pesapal|token|auth|checkout|wallet/i;
+const NEVER_RE = /^\/admin(?:\/|$)|\/__fn|\/api\/|pesapal|token|auth|checkout|wallet/i;   // [ADMIN PORTAL 2026-11-22] /admin/ is never served from the marketplace cache
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));

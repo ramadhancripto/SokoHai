@@ -396,7 +396,10 @@ import {
     function renderDelivery(p, col) {
         var list = $('pmDeliveryList');
         var rows = [];
-        rows.push(trustRow('shield-check', T('ps_escrow', 'Pesa yako inalindwa hadi upokee bidhaa.')));
+        // [UI/TRUTH 2026-11-21] promise escrow protection only when escrow is actually switched on (launch scope)
+        var escOn = !(window.skhLaunch && typeof window.skhLaunch.enabled === 'function') || window.skhLaunch.enabled('escrow');
+        rows.push(escOn ? trustRow('shield-check', T('ps_escrow', 'Pesa yako inalindwa hadi upokee bidhaa.'))
+                        : trustRow('shield-check', T('ps_direct_pay', 'Malipo ni kati yako na muuzaji. Kagua bidhaa kabla ya kulipa.')));
 
         var loc = p.location || p.region || '';
         var distance = '';
@@ -1062,6 +1065,8 @@ import {
             var rc = it.collectionName || col;
             if (rc !== col) return;
             if (String(it.id) === String(p.id)) return;
+            // [LIFECYCLE 2026-11-21] archived / deleted / hidden listings were offered in "Zinazofanana" and "Wauzaji wengine"
+            if (rc === 'products' && typeof skh.productEligible === 'function' && !skh.productEligible(it)) return;
             if (!merged.has(it.id)) merged.set(it.id, Object.assign({ collectionName: rc }, it));
         }
         (skh.cachedItems || []).forEach(absorb);

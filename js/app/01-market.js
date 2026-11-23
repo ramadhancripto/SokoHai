@@ -124,10 +124,8 @@ window.requestUserLocation = function(force) {
     }, { enableHighAccuracy: false, timeout: 12000, maximumAge: SKH_LOC_TTL });
 };
 
-// Boot: omba mara moja (isiyo-'force'). Kama cache ipo haitasusu GPS.
-setTimeout(() => {
-    window.requestUserLocation(false);
-}, 1500);
+// [LOCATION 2026-11-21] Boot ya eneo sasa inafanywa na js/app/84-location-fast.js pekee (moduli moja ya eneo);
+// toleo la hapa juu linabaki tu kama akiba ikiwa moduli hiyo haikupakia.
 
 window.toggleNearMeFilter = function() {
     const toggle = document.getElementById('nearMeToggle');
@@ -297,7 +295,7 @@ window.openCategoryModal = function() {
     closeModals(); 
     const container = document.getElementById('catGridContainer');
     // [PHASE 5.9] ikoni za SVG (hakuna emoji) — js/18-icons.js
-    let html = `<div class="cat-box" onclick="selectAdvancedCategory('Zote', 'all')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon('Zote') : ''}</div><div class="cat-name">ZOTE</div></div>`;
+    let html = `<div class="cat-box" onclick="selectAdvancedCategory('Zote', 'all')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon('Zote') : ''}</div><div class="cat-name">${(window.skhTF ? skhTF('cat_all_caps', 'ZOTE') : 'ZOTE')}</div></div>`;
     // MPYA: KAMA UPO KWENYE TAB YA USAFIRI (DRIVERS)
     if (skh.currentFeedCollection === 'drivers') {
         html += `<div style="grid-column: 1 / -1; color: var(--terracotta); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">CHAGUA HUDUMA YA USAFIRI</div>`; // [PHASE 5.9] emoji imetolewa
@@ -334,12 +332,12 @@ window.openCategoryModal = function() {
     }
     // 3. KAMA UPO KWENYE HOME (MCHANGANYIKO ULIOPANGWA VIZURI)
     else if (skh.currentFeedCollection === 'all') {
-         html += `<div style="grid-column: 1 / -1; color: var(--primary-dark); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA BIDHAA</div>`; // [PHASE 5.9]
+         html += `<div style="grid-column: 1 / -1; color: var(--primary-dark); font-weight: 900; font-size: 13px; margin-top: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">${(window.skhTF ? skhTF('cat_head_products', 'KATEGORIA ZA BIDHAA') : 'KATEGORIA ZA BIDHAA')}</div>`; // [PHASE 5.9]
          skhBuyerCats().forEach(function (c) {
              html += `<div class="cat-box" data-cat="${_ce(c.value)}" onclick="switchToTabAndCategory('bidhaa', this.dataset.cat, null)"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(c.value) : ''}</div><div class="cat-name">${_ce(String(c.label).toUpperCase())}</div></div>`;
          });
          
-         html += `<div style="grid-column: 1 / -1; color: var(--primary-blue); font-weight: 900; font-size: 13px; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">KATEGORIA ZA HUDUMA</div>`; // [PHASE 5.9]
+         html += `<div style="grid-column: 1 / -1; color: var(--primary-blue); font-weight: 900; font-size: 13px; margin-top: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">${(window.skhTF ? skhTF('cat_head_services', 'KATEGORIA ZA HUDUMA') : 'KATEGORIA ZA HUDUMA')}</div>`; // [PHASE 5.9]
          for (const section in skh.serviceDataMap) {
              for (const catName in skh.serviceDataMap[section]) {
                  html += `<div class="cat-box" onclick="switchToTabAndCategory('services', '${catName}', '${section}')"><div class="cat-icon">${window.skhCatIcon ? skhCatIcon(catName) : ''}</div><div class="cat-name">${catName.toUpperCase()}</div></div>`;

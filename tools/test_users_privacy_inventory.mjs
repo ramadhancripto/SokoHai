@@ -25,6 +25,7 @@ const CLASSIFIED = [
   ['js/app/60-identity-layer.js', /'users', wantUid/, 'own profile (guarded: wantUid === currentUser.uid)'],
   ['js/app/63-audit-fixes.js', /'users', uid\)\)\.then/, 'own profile (uid = currentUser.uid)'],
   ['js/app/64-my-profile.js', /'users', uid\)/, 'own profile edit'],
+  ['js/app/32-i18n.js', /window\.skh\.doc\(window\.skh\.db, 'users', u\)/, 'own language preference (u = currentUser.uid)'],
   ['js/app/67-payment-accounts.js', /'users', uid\(\)\)/, 'own payment accounts'],
   ['js/app/69-chat-groups.js', /'users', (me|uid\(\))\)/, 'own wallet/account type'],
   ['js/app/73-group-soga.js', /'users', uid\(\)\)/, 'own wallet'],

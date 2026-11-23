@@ -99,7 +99,7 @@ wrapConversion('skhOpenInquiryBuilder', 'contact');
     if (p === '/' || p === '/index.html' || /^\/(p|s|d|post)\/[^/]+\/?$/.test(p)) return;
     let m = document.querySelector('meta[name="robots"]');
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'robots'); document.head.appendChild(m); }
-    m.setAttribute('content', 'noindex, follow');
+    if (!/noindex/i.test(m.getAttribute('content') || '')) m.setAttribute('content', 'noindex, follow');   // never weaken a stricter page value (e.g. the admin portal's noindex, nofollow)
 })();
 
 /* /?q=<words> (SearchAction) — fill the search box and run the normal search */

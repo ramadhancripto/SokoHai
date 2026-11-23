@@ -700,10 +700,14 @@ if(!title || price <= 0 || (productType !== 'digital' && !loc) || (visibility !=
         ...structuredFields,
         description: (visibility !== 'offline_only') ? document.getElementById('prodDesc').value : "In-store Product",
         location: loc,
+        // [LOCATION 2026-11-21] verified ISO country (+ a region of that country) chosen by the seller; {} when not chosen
+        ...((typeof window.skhListingCountryFields === 'function') ? window.skhListingCountryFields('prod') : {}),
         warehouseZone: whZone, // Hifadhi eneo la rafu ghala
         // [PRIVACY 2026-11-21] Listings are public: store an APPROXIMATE area (2 decimals ≈ 1 km), never the
         // seller's exact GPS position. "Karibu nawe" distance sorting keeps working at this precision.
-        coords: (skh.userLat && skh.userLon) ? { lat: Math.round(Number(skh.userLat) * 100) / 100, lon: Math.round(Number(skh.userLon) * 100) / 100 } : null,
+        // [LOCATION 2026-11-21] ...and only from a FRESH, accurate GPS fix of this device (never a stale, manual or
+        // borrowed position — those put listings in the wrong place). No fix -> no coords; the typed location still shows.
+        coords: (typeof window.skhListingCoords === 'function') ? window.skhListingCoords() : null,
         image: mainImage,
         imagesArray: imageUrls,
         saleMode: saleMode,

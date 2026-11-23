@@ -345,24 +345,44 @@ function categorySuggestions() {
   (bridge.features || []).forEach(n=>add('feature',n,true));
   (bridge.filters || []).forEach(n=>{add('filter',n,'');const row=suggestionRows.find(r=>r.kind==='filter'&&r.name===n);if(row)row.attributeReference=(bridge.attributes||[]).includes(n);});
   // [UX 2026-10-31] The taxonomy says this leaf has buyer choices: show it on the collapsed group.
-  {const d=$('sellerVariantsDetails'),sm=d&&d.querySelector('summary');if(sm&&mode==='create'){const n=suggestionRows.filter(r=>r.kind==='option').length;sm.textContent='6 · Rangi, saizi, variants na sifa za bidhaa · hiari'+(n?' · mapendekezo '+n+' kwa kategoria hii':'');}}
+  SEED.opt=suggestionRows.filter(r=>r.kind==='option').length;
   (bridge.additionalInfo || []).forEach(n=>add('additional',typeof n==='string'?n:n.name,typeof n==='object'?n.value:''));
   (bridge.suggestedUnits || []).forEach(n=>add('unit',n,n));
   $('productBuilder').dataset.schema=bridge.profileId || bridge.source;
   let hint=$('spbSchemaHint');if(!hint){hint=document.createElement('p');hint.id='spbSchemaHint';$('spbSuggestions').before(hint);}
-  hint.textContent=cat+' → '+sub+' · '+(bridge.variantCapableFields.length?'Optional selector recommendations: '+bridge.variantCapableFields.join(', '):'No evidenced selector recommendation; simple products can be saved.')+' · Images are optional unless an explicit source rule applies. Accepted fields are kept; remove fields you no longer need.';
-  if(bridge.unitGuidance)hint.textContent+=' '+bridge.unitGuidance.note;
+  SEED.cat=cat;SEED.sub=sub;SEED.fields=bridge.variantCapableFields.slice();SEED.unitNote=bridge.unitGuidance?bridge.unitGuidance.note:'';
   // Source gaps remain in schema provenance/audit, not a false seller validation error.
   // Sections zenyewe ndizo zinabeba mapendekezo (muanzilishi). Panel hii inabaki
   // kwa muhtasari na kwa aina zisizo na section yake, mfano Suggested unit.
   const sectioned=new Set(['option','attribute','feature','filter','additional']);
   const loose=suggestionRows.map((r,i)=>[r,i]).filter(([r])=>!sectioned.has(r.kind)&&!r.state);
   const pending=suggestionRows.filter(r=>sectioned.has(r.kind)&&!r.state).length;
-  $('spbSuggestions').innerHTML=(pending?`<p class="spb-seed-summary">Mapendekezo ${pending} kutoka taxonomy yamewekwa kwenye sections hapa chini. Thibitisha kwa Use / Edit, au Skip.</p>`:'')
+  SEED.pending=pending;
+  $('spbSuggestions').innerHTML=(pending?`<p class="spb-seed-summary"></p>`:'')
     +loose.map(([r,i])=>`<div class="spb-row"><span><small>${esc(r.kind)}</small><b>${esc(r.name)}</b></span>${btn('suggest-use','Use',i)}${btn('suggest-edit','Edit',i)}${btn('suggest-skip','Skip',i)}</div>`).join('')
-    ||'<p class="spb-empty">Hakuna pendekezo la category kwa njia hii. Ongeza custom hapa chini; taxonomy ni mwongozo, si kizuizi.</p>';
+    ||'<p class="spb-empty"></p>';
+  seedTexts();
   render();
 }
+/* [I18N 2026-11-22] Texts of the suggestion panel follow the language (they carry counts, so the phrase dictionary cannot
+ * translate them). Re-rendered on a language change WITHOUT recomputing the suggestions, so the seller's Use/Edit/Skip
+ * choices stay. Taxonomy names go through skhTaxLabel (display only). */
+const SEED={opt:0,pending:0,cat:'',sub:'',fields:[],unitNote:''};
+const EN=()=>!!(window.SokoHaiLMS&&window.SokoHaiLMS.lang==='en');
+const TL=(v)=>typeof window.skhTaxLabel==='function'?window.skhTaxLabel(v):v;
+function seedTexts(){
+  const en=EN(),d=$('sellerVariantsDetails'),sm=d&&d.querySelector('summary');
+  if(sm&&mode==='create')sm.textContent=(en?'6 · Colour, size, variants and product details · optional':'6 · Rangi, saizi, variants na sifa za bidhaa · hiari')+(SEED.opt?(en?' · '+SEED.opt+' suggestions for this category':' · mapendekezo '+SEED.opt+' kwa kategoria hii'):'');
+  const sp=document.querySelector('#spbSuggestions .spb-seed-summary');
+  if(sp)sp.textContent=en?SEED.pending+' suggestions from the taxonomy were placed in the sections below. Confirm with Use / Edit, or Skip.':'Mapendekezo '+SEED.pending+' kutoka taxonomy yamewekwa kwenye sections hapa chini. Thibitisha kwa Use / Edit, au Skip.';
+  const em=document.querySelector('#spbSuggestions .spb-empty');
+  if(em)em.textContent=en?'No category suggestion for this route. Add your own below; the taxonomy is a guide, not a barrier.':'Hakuna pendekezo la category kwa njia hii. Ongeza custom hapa chini; taxonomy ni mwongozo, si kizuizi.';
+  const hint=$('spbSchemaHint');
+  if(hint&&SEED.sub){const f=SEED.fields.map(TL).join(', ');
+    hint.textContent=SEED.cat+' → '+TL(SEED.sub)+' · '+(en?(f?'Optional selector recommendations: '+f:'No evidenced selector recommendation; simple products can be saved.')+' · Images are optional unless an explicit source rule applies. Accepted fields are kept; remove fields you no longer need.'
+      :(f?'Mapendekezo ya hiari ya chaguo za mnunuzi: '+f:'Hakuna pendekezo la chaguo lenye ushahidi; bidhaa rahisi inaweza kuhifadhiwa.')+' · Picha si lazima isipokuwa sheria ya chanzo inataka. Sehemu ulizokubali zinabaki; ondoa usizozihitaji.')+(SEED.unitNote?' '+SEED.unitNote:'');}
+}
+document.addEventListener('sokohai:languageChanged',()=>{try{seedTexts();}catch(e){}});
 function previewOther() {
   const r=suggestCustom(value('spbOtherInput')); if(!r){notice('Andika custom input kwanza.',true);return;}
   $('spbOtherPreview').innerHTML=`<div class="spb-card"><b>Preview · ${r.kind==='option'?'Selector':esc(r.kind)} → ${esc(r.name)}</b><p>${esc(r.value)}</p>${btn('other-use','Use')}${btn('other-edit','Edit')}${btn('other-skip','Skip')}${btn('other-remove','Remove')}</div>`;

@@ -20,7 +20,7 @@
     var showing = false;
 
     // ---------- Styles (self-contained) ----------
-    var css = [ '#skhAlertOverlay{position:fixed;inset:0;background:rgba(2,13,28,.55);backdrop-filter:blur(3px);z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;animation:skhFadeIn .18s ease-out;font-family:var(--skh-font,"Segoe UI",system-ui,sans-serif)}', '#skhAlertBox{background:#fff;border-radius:16px;max-width:380px;width:100%;padding:22px 20px 18px;box-shadow:var(--skh-shadow-lg,0 12px 32px rgba(15,23,42,.16));animation:skhPopIn .22s var(--skh-ease,cubic-bezier(.22,1,.36,1));text-align:center}', '#skhAlertIcon{font-size:34px;line-height:1;margin-bottom:10px}', '#skhAlertMsg{font-size:14.5px;color:#0f172a;font-weight:600;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:46vh;overflow-y:auto;margin:0 0 16px}', '#skhAlertBtn{display:block;width:100%;padding:14px;border:none;border-radius:12px;background:var(--skh-primary,#03509d);color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.4px}', '#skhAlertBtn:active{transform:scale(.98)}', '#skhAlertBar{height:4px;border-radius:99px;width:56px;margin:0 auto 14px}', '@keyframes skhFadeIn{from{opacity:0}to{opacity:1}}', '@keyframes skhPopIn{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}', '.skh-toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:2147483100;display:flex;flex-direction:column;gap:8px;width:min(92vw,380px);pointer-events:none}', '.skh-toast{pointer-events:auto;background:#fff;color:#18352D;border:1px solid #CCEBDD;border-left:4px solid #18A982;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(24,53,45,.14);animation:skhToastIn .25s var(--skh-ease,ease-out);display:flex;gap:10px;align-items:flex-start;line-height:1.45}', '.skh-toast.skh-out{animation:skhToastOut .25s ease-in forwards}', '@keyframes skhToastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}', '@keyframes skhToastOut{to{opacity:0;transform:translateY(-12px)}}'
+    var css = [ '#skhAlertOverlay{position:fixed;inset:0;background:rgba(2,13,28,.55);backdrop-filter:blur(3px);z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;animation:skhFadeIn .18s ease-out;font-family:var(--skh-font,"Inter",system-ui,sans-serif)}', '#skhAlertBox{background:#fff;border-radius:16px;max-width:380px;width:100%;padding:22px 20px 18px;box-shadow:var(--skh-shadow-lg,0 12px 32px rgba(15,23,42,.16));animation:skhPopIn .22s var(--skh-ease,cubic-bezier(.22,1,.36,1));text-align:center}', '#skhAlertIcon{font-size:34px;line-height:1;margin-bottom:10px}', '#skhAlertIcon:empty{display:none}', '#skhAlertMsg{font-size:15px;color:#0f172a;font-weight:500;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:46vh;overflow-y:auto;margin:0 0 16px}', '#skhAlertBtn{display:block;width:100%;min-height:48px;padding:12px;border:none;border-radius:999px;background:#18A982;color:#fff;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0}', '#skhAlertBtn:active{transform:scale(.98)}', '#skhAlertBar{height:4px;border-radius:99px;width:56px;margin:0 auto 14px}', '@keyframes skhFadeIn{from{opacity:0}to{opacity:1}}', '@keyframes skhPopIn{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}', '.skh-toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:2147483100;display:flex;flex-direction:column;gap:8px;width:min(92vw,380px);pointer-events:none}', '.skh-toast{pointer-events:auto;background:#fff;color:#18352D;border:1px solid #CCEBDD;border-left:4px solid #18A982;border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(24,53,45,.14);animation:skhToastIn .25s var(--skh-ease,ease-out);display:flex;gap:10px;align-items:flex-start;line-height:1.45}', '.skh-toast.skh-out{animation:skhToastOut .25s ease-in forwards}', '@keyframes skhToastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}', '@keyframes skhToastOut{to{opacity:0;transform:translateY(-12px)}}'
     ].join('\n');
     var styleEl = document.createElement('style');
     styleEl.id = 'skhNiceAlertCss';
@@ -30,10 +30,11 @@
     // ---------- Aina ya ujumbe (kutoka emoji/maandishi) ----------
     function classify(msg) {
         var m = String(msg == null ? '' : msg);
-        if (/||||success|imefanikiwa|imekamilika|imepokelewa|imeingizwa|/i.test(m)) return { icon: '', color: '#10b981' };
-        if (/|||imeshindikana|kosa|error|wizi|hatari|kataliwa|feli|IMEFELI/i.test(m)) return { icon: '', color: '#ef4444' };
-        if (/ℹ️|ℹ|tafadhali|kumbuka|DEMO|hakuna|bado|subiri|jaribu/i.test(m)) return { icon: 'ℹ️', color: '#03509d' };
-        return { icon: '', color: '#03509d' };
+        if (/imeshindikana|imeshindwa|haikuweza|kosa|error|wizi|hatari|kataliwa|feli|si sahihi|haiwezekani|failed/i.test(m)) return { icon: '', color: '#dc2626' };
+        if (/success|imefanikiwa|imekamilika|imepokelewa|imeingizwa|imehifadhiwa|imetumwa|imewekwa|imethibitishwa/i.test(m)) return { icon: '', color: '#18A982' };
+        /* [UI 2026-11-21] the old first rule had empty alternatives (stripped emoji) and matched EVERY message, so errors showed as success */
+        if (/tafadhali|kumbuka|hakuna|bado|subiri|jaribu|weka|jaza|chagua/i.test(m)) return { icon: '', color: '#1268a8' };
+        return { icon: '', color: '#1268a8' };
     }
 
     // ---------- Dialog kwa queue (kama alert ya asali: moja baada ya nyingine) ----------
@@ -59,12 +60,12 @@
 
         var msg = document.createElement('div');
         msg.id = 'skhAlertMsg';
-        msg.textContent = String(next); // XSS-safe: textContent pekee
+        msg.textContent = (window.SKHUiText ? window.SKHUiText.humanize : String)(next); // XSS-safe: textContent pekee; [UI 2026-11-21] wording normalised
 
         var btn = document.createElement('button');
         btn.id = 'skhAlertBtn';
         btn.type = 'button';
-        btn.textContent = 'SAWA';
+        btn.textContent = 'Sawa';
         btn.style.background = kind.color;
 
         function close() {
@@ -113,7 +114,7 @@
         ic.className = 'skh-toast-ic';
         if (window.skhNavIcon) ic.innerHTML = window.skhNavIcon(iconName, 16);
         else ic.textContent = kind.icon || '';
-        var tx = document.createElement('span'); tx.textContent = String(message);
+        var tx = document.createElement('span'); tx.textContent = (window.SKHUiText ? window.SKHUiText.humanize : String)(message);
         t.appendChild(ic); t.appendChild(tx);
         t.style.borderLeft = '4px solid ' + kind.color;
         wrap.appendChild(t);

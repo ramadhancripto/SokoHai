@@ -102,7 +102,11 @@
     <input type="file" id="servHubImage" accept="image/*" style="background:white; padding:10px; width:100%; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:12px;">
 
     <label style="font-size:12px; font-weight:bold;">Eneo unakopatikana / Kazi Inapofanyika *</label>
-    <input type="text" id="servHubLocation" placeholder="Mfano: Kimara / Mikocheni, DSM" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px;">
+    <input type="text" id="servHubLocation" placeholder="Mfano: Kimara / Mikocheni, DSM" required style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:10px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;"><!-- [LOCATION 2026-11-21] country + region (never assumed) -->
+        <select id="servHubCountry" aria-label="Nchi" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:#fff;"><option value="">Chagua nchi</option></select>
+        <select id="servHubRegion" aria-label="Mkoa" disabled style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; background:#fff;"><option value="">Chagua nchi kwanza</option></select>
+    </div>
 
     <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; margin-bottom:12px; text-align:left;">
         <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#14532d; cursor:pointer;">

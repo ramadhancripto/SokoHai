@@ -3,6 +3,7 @@
  *   /bidhaa/<title-slug>-<id>/        product page          /huduma/<title-slug>-<id>/   service page
  *   /duka/<name-slug>-<uid>/          public seller page    /soko/<category-slug>/        category page
  *   /soko/<category-slug>/<region>/   category in a region  /chapa/<brand-slug>/          brand page
+ *   /soko/mkoa/<region>/              region hub (all public listings of one verified region)
  * Only ids made of letters, digits, "_" and "-" get a page (anything else stays app-only). */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -31,6 +32,8 @@
     seller: function (name, uid) { return withSlug('duka', name, uid, 'duka'); },
     category: function (label, region) { var c = slugify(label); if (!c) return null; return '/soko/' + c + '/' + (region ? slugify(region) + '/' : ''); },
     brand: function (brand) { var b = slugify(brand, 40); return b ? '/chapa/' + b + '/' : null; },
+    // [LOCAL SEO 2026-11-22] region hub: every public listing of one verified first-level region (tools/build_seo.mjs)
+    region: function (region) { var r = slugify(region); return r ? '/soko/mkoa/' + r + '/' : null; },
     absolute: function (path) { return path ? ORIGIN + path : null; }
   };
 });

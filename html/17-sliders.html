@@ -18,7 +18,7 @@
         <section class="shh" id="skhHomeHero" aria-label="Karibu SokoHai">
             <div class="shc" id="shcCarousel" aria-roledescription="carousel">
                 <div class="shc-track" id="shcTrack">
-                    <article class="shc-slide shc-escrow" aria-label="Malipo kwa Escrow">
+                    <article class="shc-slide shc-escrow" aria-label="Malipo kwa Escrow" data-nosnippet>
                         <div class="shc-copy">
                             <span class="shc-brand skh-brand-lockup" aria-label="SokoHai"><span class="skh-brand-word" aria-hidden="true"><b class="skh-brand-soko">Soko</b><b class="skh-brand-hai">Hai</b></span><span class="skh-brand-arc" aria-hidden="true"></span></span>
                             <h2 class="shc-title">Nunua kwa Ujasiri.</h2>
@@ -26,7 +26,7 @@
                             <p class="shc-sub">Malipo yanawekwa kwenye Escrow hadi upokee na kukagua mzigo wako.</p>
                             <button type="button" class="shh-cta" onclick="window.skhEscrowInfo &amp;&amp; skhEscrowInfo()">Jifunze Zaidi <span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></button>
                         </div>
-                        <img class="shc-photo" src="assets/img/home/escrow.webp" alt="" width="537" height="268" decoding="async">
+                        <img class="shc-photo" src="assets/img/home/escrow.webp" alt="" width="537" height="268" decoding="async" loading="lazy">
                         <ol class="shh-steps" aria-label="Jinsi malipo salama yanavyofanya kazi">
                             <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Weka Oda</li>
                             <li><span class="skh-ico" data-ico="check" aria-hidden="true"></span>Malipo Salama</li>
@@ -71,19 +71,19 @@
             </div>
             <!-- desktop (ref 14): njia sita -->
             <nav class="shh-quick" aria-label="Njia za haraka">
-                <button type="button" onclick="updateApp('bidhaa')"><span class="shh-qi"><span class="skh-ico" data-ico="cart" aria-hidden="true"></span></span><b>Nunua Bidhaa</b><small>Pata bidhaa bora</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
-                <button type="button" onclick="updateApp('services')"><span class="shh-qi"><span class="skh-ico" data-ico="wrench" aria-hidden="true"></span></span><b>Pata Huduma</b><small>Mtaalamu karibu yako</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
-                <button type="button" onclick="updateApp('delivery')"><span class="shh-qi"><span class="skh-ico" data-ico="car" aria-hidden="true"></span></span><b>Tafuta Usafiri</b><small>Safari kwa urahisi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
-                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub()" data-skh-live-entry="1"><span class="shh-qi"><span class="skh-ico" data-ico="video" aria-hidden="true"></span></span><b>Live sasa</b><small>Tazama na nunua</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
-                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub('deals')"><span class="shh-qi"><span class="skh-ico" data-ico="tag" aria-hidden="true"></span></span><b>Ofa &amp; Punguzo</b><small>Bei bora zaidi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
-                <button type="button" onclick="updateApp('bidhaa'); setMarketMode('auction', document.querySelector('[data-skh-mode=auction]'))"><span class="shh-qi"><span class="skh-ico" data-ico="trophy" aria-hidden="true"></span></span><b>Mnada</b><small>Shiriki mnada</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('bidhaa')"><span class="shh-qi"><span class="skh-ico" data-ico="cart" aria-hidden="true"></span></span><b data-i18n="hq6_buy">Nunua Bidhaa</b><small data-i18n="hq6_buy_s">Pata bidhaa bora</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('services')"><span class="shh-qi"><span class="skh-ico" data-ico="wrench" aria-hidden="true"></span></span><b data-i18n="hq6_svc">Pata Huduma</b><small data-i18n="hq6_svc_s">Mtaalamu karibu yako</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('delivery')"><span class="shh-qi"><span class="skh-ico" data-ico="car" aria-hidden="true"></span></span><b data-i18n="hq6_tr">Tafuta Usafiri</b><small data-i18n="hq6_tr_s">Safari kwa urahisi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub()" data-skh-live-entry="1"><span class="shh-qi"><span class="skh-ico" data-ico="video" aria-hidden="true"></span></span><b data-i18n="hq6_live">Live sasa</b><small data-i18n="hq6_live_s">Tazama na nunua</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="window.skhLiveHub &amp;&amp; skhLiveHub('deals')"><span class="shh-qi"><span class="skh-ico" data-ico="tag" aria-hidden="true"></span></span><b data-i18n="hq6_off">Ofa &amp; Punguzo</b><small data-i18n="hq6_off_s">Bei bora zaidi</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
+                <button type="button" onclick="updateApp('bidhaa'); setMarketMode('auction', document.querySelector('[data-skh-mode=auction]'))"><span class="shh-qi"><span class="skh-ico" data-ico="trophy" aria-hidden="true"></span></span><b data-i18n="hq6_auc">Mnada</b><small data-i18n="hq6_auc_s">Shiriki mnada</small><i class="shh-go"><span class="skh-ico" data-ico="arrow-right" aria-hidden="true"></span></i></button>
             </nav>
             <!-- simu (ref 11): njia nne -->
             <nav class="shh-quick4" aria-label="Njia za haraka" data-no-i18n>
-                <button type="button" onclick="openChatList()"><span class="skh-ico" data-ico="chat" aria-hidden="true"></span><b>Chat</b></button>
-                <button type="button" onclick="updateApp('bidhaa')"><span class="skh-ico" data-ico="clipboard" aria-hidden="true"></span><b>Weka Oda</b></button>
-                <button type="button" onclick="window.skhOpenRequestInbox ? skhOpenRequestInbox() : updateApp('bidhaa')"><span class="skh-ico" data-ico="scales" aria-hidden="true"></span><b>Patana Bei</b></button>
-                <button type="button" onclick="updateApp('delivery')"><span class="skh-ico" data-ico="truck" aria-hidden="true"></span><b>Usafirishaji</b></button>
+                <button type="button" onclick="openChatList()"><span class="skh-ico" data-ico="chat" aria-hidden="true"></span><b data-i18n="hq_chat">Chat</b></button>
+                <button type="button" onclick="updateApp('bidhaa')"><span class="skh-ico" data-ico="clipboard" aria-hidden="true"></span><b data-i18n="hq_order">Weka Oda</b></button>
+                <button type="button" onclick="window.skhOpenRequestInbox ? skhOpenRequestInbox() : updateApp('bidhaa')"><span class="skh-ico" data-ico="scales" aria-hidden="true"></span><b data-i18n="hq_nego">Patana Bei</b></button>
+                <button type="button" onclick="updateApp('delivery')"><span class="skh-ico" data-ico="truck" aria-hidden="true"></span><b data-i18n="hq_ship">Usafirishaji</b></button>
             </nav>
         </section>
 
@@ -106,8 +106,10 @@
             <div class="slide-row-wrap" id="filterRow"></div>
         </div>
 
+        <!-- [PERF/CLS 2026-11-22] rails start hidden; 00-bootstrap renderMarketplaceSections shows a rail only when it has items
+             (before: four ~110px empty rails collapsed after the data check -> CLS 0.07 on slow phones) -->
         <div class="search-strategy">
-            <section class="strategy-row skh-section">
+            <section class="strategy-row skh-section" hidden>
                 <div class="strategy-header skh-section-head">
                     <div class="skh-section-title">
                         <span class="skh-section-icon skh-section-icon--hot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
@@ -120,7 +122,7 @@
                 </div>
                 <div class="item-slider" id="slider1" role="region" tabindex="0" aria-label="Zinazovuma sasa, telezesha kushoto au kulia"></div>
             </section>
-            <section class="strategy-row skh-section">
+            <section class="strategy-row skh-section" hidden>
                 <div class="strategy-header skh-section-head">
                     <div class="skh-section-title">
                         <span class="skh-section-icon skh-section-icon--nearby"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
@@ -133,7 +135,7 @@
                 </div>
                 <div class="item-slider" id="slider2" role="region" tabindex="0" aria-label="Karibu nawe, telezesha kushoto au kulia"></div>
             </section>
-            <section class="strategy-row skh-section">
+            <section class="strategy-row skh-section" hidden>
                 <div class="strategy-header skh-section-head">
                     <div class="skh-section-title">
                         <span class="skh-section-icon skh-section-icon--search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg></span>
@@ -146,7 +148,7 @@
                 </div>
                 <div class="item-slider" id="slider3" role="region" tabindex="0" aria-label="Zinazotafutwa sana, telezesha kushoto au kulia"></div>
             </section>
-            <section class="strategy-row skh-section skh-section--boosted">
+            <section class="strategy-row skh-section skh-section--boosted" hidden>
                 <div class="strategy-header skh-section-head">
                     <div class="skh-section-title">
                         <span class="skh-section-icon skh-section-icon--boost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 2z"/></svg></span>

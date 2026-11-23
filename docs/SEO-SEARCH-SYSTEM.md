@@ -89,7 +89,9 @@ Rules the build follows:
 - **Unknown app paths:** marked `noindex` in the app.
 - **Listing canonical:** an open listing in the app points its canonical at its static page.
 - **Deploy previews:** they build static pages only (no production data).
-- **Data source down:** the static pages and sitemap are still written, so the deploy never fails.
+- **Data source down (production):** the build **fails** (exit 1, nothing written) when products or services cannot be read completely (unreachable, timeout after 3 tries, HTTP 4xx/5xx, malformed or truncated response). Netlify then keeps the previous successful deployment, so a sitemap without listings is never published. A catalogue that was read successfully but is empty is not a failure (`fetchError: null`, `rawListings: 0`). Optional floor: `--min-listings N` or `SKH_SEO_MIN_LISTINGS=N`. `--strict` gives the same behaviour outside Netlify.
+- **Data source down (deploy previews, branch deploys, offline, plain local runs):** static pages and the sitemap of static pages only; the failure is reported in the build log.
+- **Public location:** region name only, taken from the fixed list of Tanzanian regions. Free-text addresses, plot or house numbers, landmarks and GPS pairs are never shown; a listing with no recognisable region shows no location. GPS pairs, map links, phone numbers and e-mail addresses are removed from descriptions and attribute values.
 
 ### Freshness and cost
 

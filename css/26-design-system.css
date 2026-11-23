@@ -1499,3 +1499,27 @@ body.mb-on { padding-top: 46px; }
 
 /* [CART-ICON 2026-11] kitufe cha kikapu ni ICON TU — mraba, icon katikati */
 .pm-bar-btn.pm-bar-icon { flex: 0 0 auto !important; min-width: 0 !important; width: 52px !important; padding: 0 !important; justify-content: center !important; }
+
+/* ============================================================
+   [UI 2026-11-21] SYSTEM-WIDE CALM-UP (shared rules, every module)
+   1) Interaction tokens: one control height, one minimum touch target.
+   2) Buttons and labels are not shouted: inline `text-transform:uppercase` written into many templates
+      over time made buttons like "TENGENEZA LINK YA MALIPO". Small section kickers keep their style.
+   3) Horizontal rails / chip rows never drag the page sideways or trigger the browser's back-swipe;
+      vertical page scrolling still passes through (only the x axis is contained).
+   ============================================================ */
+:root {
+    --sh-control-h: 44px;      /* inputs, primary buttons */
+    --sh-touch-min: 40px;      /* smallest comfortable tap target */
+}
+button[style*="uppercase"], [role="button"][style*="uppercase"], a[style*="uppercase"],
+b[style*="uppercase"], strong[style*="uppercase"], label[style*="uppercase"],
+h1[style*="uppercase"], h2[style*="uppercase"], h3[style*="uppercase"], h4[style*="uppercase"] {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+body * { overscroll-behavior-x: contain; }
+/* banner dots: small to look at, comfortable to tap (hit area ~36px tall) */
+#shcDots.shc-dots { gap: 14px; }
+#shcDots.shc-dots button { position: relative; }
+#shcDots.shc-dots button::before { content: ''; position: absolute; inset: -14px -7px; }

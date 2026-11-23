@@ -16,18 +16,23 @@
          hufungua DNS+TLS mapema — hint pekee, haibadilishi tabia yoyote. -->
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-    <title>SokoHai — Soko la Mtandaoni la Tanzania</title>
+    <title>SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania</title>
     <!-- [SEO / PUBLIC LINKS] Meta za Google + viungo vya umma vya bidhaa.
          IDs hizi zinasasishwa na JS (window.skhUpdateSeoMeta) kila bidhaa ikifunguliwa. -->
-    <meta name="description" content="SokoHai — soko la mtandaoni la Tanzania. Tafuta, linganisha na uuze bidhaa, huduma na usafiri karibu nawe; matangazo ni bure." id="skhMetaDescription">
-    <meta name="robots" content="index, follow">
+    <meta name="description" content="Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania." id="skhMetaDescription">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta property="og:site_name" content="SokoHai">
-    <meta property="og:title" content="SokoHai — Soko la Mtandaoni la Tanzania" id="skhOgTitle">
-    <meta property="og:description" content="Tafuta, linganisha na uuze bidhaa, huduma na usafiri Tanzania kupitia SokoHai." id="skhOgDescription">
+    <meta property="og:title" content="SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania" id="skhOgTitle">
+    <meta property="og:description" content="Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania." id="skhOgDescription">
+    <meta property="og:locale" content="sw_TZ">
+    <meta property="og:locale:alternate" content="en_GB">
     <meta property="og:type" content="website">
     <meta property="og:url" id="skhOgUrl" content="https://sokohai.com/">
     <meta property="og:image" id="skhOgImage" content="https://sokohai.com/assets/img/sokohai-cart-mark.png">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SokoHai — Nunua na Uza Bidhaa na Huduma Tanzania" id="skhTwTitle">
+    <meta name="twitter:description" content="Nunua na uza bidhaa, tafuta huduma na gundua biashara karibu nawe. Pata wauzaji, bidhaa na huduma Dodoma, Dar es Salaam na mikoa mingine ya Tanzania." id="skhTwDescription">
+    <meta property="og:image:alt" content="Nembo ya SokoHai">
     <link rel="canonical" id="skhCanonical" href="https://sokohai.com/">
 <link rel="icon" type="image/png" href="assets/img/sokohai-app-192-v3.png">
     <!-- [SEO/PWA 2026-11-08] Manifest ilikuwa ipo (sokohai-manifest.json) lakini
@@ -49,7 +54,8 @@
           "name": "SokoHai",
           "url": "https://sokohai.com/",
           "logo": "https://sokohai.com/assets/img/sokohai-cart-mark.png",
-          "description": "Soko la mtandaoni la Tanzania: bidhaa, huduma na usafiri.",
+          "alternateName": "Soko Hai",
+          "description": "Soko la mtandaoni la Tanzania: nunua na uza bidhaa, tafuta huduma na usafiri, na gundua biashara karibu nawe.",
           "areaServed": { "@type": "Country", "name": "Tanzania" }
         },
         {
@@ -74,6 +80,7 @@
 
 
 <noscript></noscript>
+<script src="shared/ui-text.js?v=20261121ui1"></script><!-- [UI 2026-11-21] one message-text humanizer for alerts, dialogs and toasts -->
 <script src="js/05-dialogs.js"></script>
 <script src="js/05-local-avatars.js"></script>
 <script src="js/00-pwa.js?v=20261113r15" defer></script>
@@ -208,7 +215,7 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/63-live-commerce.css?v=20261107r13b" media="print" onload="this.media='all'"><!-- [R13-B] live, hali, group soko -->
 <link rel="stylesheet" href="css/64-image-quality.css?v=20261108r13c"><!-- [R13-C] picha halisi, product cards 1:1 -->
 <link rel="stylesheet" href="css/65-live-design.css?v=20261118compactlive1" media="print" onload="this.media='all'"><!-- [R13-D] live screens kama design refs 1,2,5,6,7,10 -->
-<link rel="stylesheet" href="css/66-home-layout.css?v=20261120rails1"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
+<link rel="stylesheet" href="css/66-home-layout.css?v=20261122seo1"><!-- [R13-E] Nyumbani kwa mpangilio wa refs 11-15 -->
 <link rel="stylesheet" href="css/67-chat-discover.css?v=20261108r13f" media="print" onload="this.media='all'"><!-- [R13-F] Chat Discover + Hali viewer kama refs 8, 9 -->
 <link rel="stylesheet" href="css/68-group-chat-design.css?v=20261108r13g" media="print" onload="this.media='all'"><!-- [R13-G] Group Chat kama design refs (Wakulima &amp; Biashara) -->
 <link rel="stylesheet" href="css/69-category-tiles.css?v=20261118square1"><!-- [R13-G] picha halisi za kategoria kwenye kadi safi -->
@@ -227,7 +234,7 @@ window.skhMountWordmarks = function(root){
 <link rel="stylesheet" href="css/80-dashboard-product-balance.css?v=20261118recycle1">
 <link rel="stylesheet" href="css/81-personal-recycle.css?v=20261118a">
 <link rel="stylesheet" href="css/82-owner-card-style.css?v=20261120card2"><!-- [OWNER CARD STYLE 2026-11-20] kadi moja kwa post zote (mfano wa mmiliki); safu ya mwisho -->
-<link rel="stylesheet" href="css/83-home-sky-theme.css?v=20261121sky1"><!-- [HOME SKY 2026-11-21] muonekano wa nyumbani kwa mfano wa mmiliki (design tu); safu ya mwisho -->
+<link rel="stylesheet" href="css/83-home-sky-theme.css?v=20261123sky6"><!-- [HOME SKY 2026-11-21] muonekano wa nyumbani kwa mfano wa mmiliki (design tu); safu ya mwisho -->
 <meta name="skh-build" content="HEADER-R6w-2026-11-05">
 <script>try{console.log("[SokoHai] build HEADER-R6w-2026-11-05");}catch(e){}</script>
 </head>

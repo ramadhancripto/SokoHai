@@ -48,7 +48,8 @@ const FILES = [
   // [LEGAL 2026-11-21] public information pages (static, load signed-out). Netlify serves an existing file before the
   // `/* -> /index.html` rewrite, so these URLs work without a redirect rule.
   'about.html', 'privacy.html', 'terms.html', 'cookies.html', 'refund-policy.html', 'seller-policy.html',
-  'community-guidelines.html', 'support.html', 'contact.html'
+  'community-guidelines.html', 'support.html', 'contact.html',
+  'admin/index.html'   // [ADMIN PORTAL 2026-11-21] separate admin application (admin.sokohai.com -> /admin/)
 ];
 // fonts/*.ttf only (fonts/ also holds a retired copy of the whole app).
 const FONT_EXT = new Set(['.ttf', '.woff', '.woff2']);

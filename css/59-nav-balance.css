@@ -760,6 +760,8 @@ body:has(#plusMenu[style*="display:flex"]) .bottom-area-wrapper .sell-action-fab
 #skhKamusiPage .skh-sheet-search,
 #skhKamusiPage .skh-k-results,
 #skhKamusiPage .skh-k-tabs { width: 100% !important; max-width: 100% !important; box-sizing: border-box; }
+/* [UI 2026-11-21] the search box has 12px side margins: 100% width pushed it 12px past the screen edge (320-430px) */
+#skhKamusiPage .skh-sheet-search { width: auto !important; max-width: calc(100% - 24px) !important; }
 #skhKamusiPage .skh-sheet-head { align-items: flex-start !important; }
 #skhKamusiPage .skh-sheet-head > div { min-width: 0 !important; flex: 1 1 auto !important; }
 #skhKamusiPage .skh-sheet-title { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2; }
