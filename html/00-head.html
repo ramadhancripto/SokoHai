@@ -10,6 +10,11 @@
 <html lang="sw">
 <head>
     <meta charset="UTF-8">
+    <!-- [ROUTING 2026-11-24] The app is also served at share URLs /p/<id>, /s/<id>, /d/<id> and /post/<id> (Netlify SPA
+         fallback). Every asset path in this page and in the scripts is relative ("css/..", "js/..", "assets/.."), so on
+         /p/<id> the browser asked for /p/css/.. and got the HTML fallback: the page loaded without CSS and JS.
+         Resolving relative URLs from the site root fixes every route family at once. Must stay before any URL. -->
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- [PERF 2026-11-08] Firebase SDK inapakiwa kutoka www.gstatic.com na data
          kutoka firestore.googleapis.com (ona js/app/00-bootstrap.js). Preconnect
@@ -86,7 +91,7 @@
 <script src="shared/ui-text.js?v=20261121ui1"></script><!-- [UI 2026-11-21] one message-text humanizer for alerts, dialogs and toasts -->
 <script src="js/05-dialogs.js"></script>
 <script src="js/05-local-avatars.js"></script>
-<script src="js/00-pwa.js?v=20261113r15" defer></script>
+<script src="js/00-pwa.js?v=20261124route1" defer></script>
 <script src="js/00-config.js" defer></script>
 <!-- [PERF 2026-09] Kipakiaji cha maktaba za nje: Leaflet/Chart hazipakwi
      kwenye startup tena — huingizwa kwa uvivu ramani/grafu zinapofunguliwa. -->

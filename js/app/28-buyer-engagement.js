@@ -833,7 +833,7 @@ import './128-personal-recycle.js';
     function renderActivityRows(items, emptyHome) {
         if (!items || !items.length) return buyerEmpty('Bado hakuna activity','Matendo yako muhimu yataonekana hapa.');
         var labels={PRODUCT_LIKED:'Ulipenda bidhaa',PRODUCT_UNLIKED:'Uliondoa like',PRODUCT_SAVED:'Ulihifadhi bidhaa',PRODUCT_UNSAVED:'Uliondoa saved',PRODUCT_WATCHED:'Ulianza kufuatilia bidhaa',PRODUCT_UNWATCHED:'Uliacha kufuatilia bidhaa',SELLER_FOLLOWED:'Ulifuata account',SELLER_UNFOLLOWED:'Uliacha kufuata account',ENTITY_VIEWED:'Uliangalia item',REVIEW_SUBMITTED:'Uliandika review',search:'Ulitafuta sokoni'};
-        return items.map(function(x){var label=labels[x.type]||String(x.type||'Activity').replace(/_/g,' ').toLowerCase();return '<div class="byd-row"><div class="byd-row-main"><b>'+buyerEsc(label)+'</b><small>'+buyerEsc(x.title||x.query||x.productTitle||x.productId||x.entityId||'SokoHai')+' · '+buyerDate(x.at||x.createdAt)+'</small></div></div>';}).join('');
+        return items.map(function(x){var label=labels[x.type]||String(x.type||'Activity').replace(/_/g,' ').toLowerCase();return '<div class="byd-row"><div class="byd-row-main"><b>'+buyerEsc(label)+'</b><small data-user-content>'+buyerEsc(x.title||x.query||x.productTitle||x.productId||x.entityId||'SokoHai')+' · '+buyerDate(x.at||x.createdAt)+'</small></div></div>';}).join('');
     }
 
     async function renderOrders(box) {

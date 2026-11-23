@@ -77,7 +77,7 @@
       if (reloading) return; reloading = true; location.reload();
     });
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sokohai-sw.js').then(function (reg) {
+      navigator.serviceWorker.register('/sokohai-sw.js')   /* [ROUTING 2026-11-24] root path: valid on share URLs too */.then(function (reg) {
         window.__skhSwReg = reg;
         offerUpdate(reg);
         reg.addEventListener('updatefound', function () {

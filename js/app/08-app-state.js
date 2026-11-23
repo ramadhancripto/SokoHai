@@ -256,7 +256,23 @@ window.doGoogleLogin = async function() {
         }, 300);
         console.log("Karibu " + user.displayName);
     } catch (error) {
-        alert("Kosa la Google Login: " + error.message);
+        // [AUTH 2026-11-24] bilingual, friendly messages instead of the raw Firebase text. A popup the user closed is a
+        // choice, not an error: no alert. Anything unknown gets a generic message; the detail goes to the console.
+        const c = String((error && error.code) || '');
+        const en = !!(window.SokoHaiLMS && window.SokoHaiLMS.lang === 'en');
+        const M = {
+            'auth/popup-closed-by-user': null, 'auth/cancelled-popup-request': null, 'auth/user-cancelled': null,
+            'auth/popup-blocked': en ? 'Your browser blocked the Google sign-in window. Allow pop-ups for this site, then try again.' : 'Browser imezuia dirisha la kuingia kwa Google. Ruhusu pop-ups kwa tovuti hii, kisha ujaribu tena.',
+            'auth/unauthorized-domain': en ? 'Google sign-in is not enabled for this web address yet. Use email and password for now.' : 'Kuingia kwa Google bado hakujawezeshwa kwa anwani hii ya tovuti. Kwa sasa tumia barua pepe na nenosiri.',
+            'auth/operation-not-allowed': en ? 'Google sign-in is not enabled yet. Use email and password for now.' : 'Kuingia kwa Google bado hakujawezeshwa. Kwa sasa tumia barua pepe na nenosiri.',
+            'auth/account-exists-with-different-credential': en ? 'An account with this email already exists. Sign in with email and password.' : 'Akaunti yenye barua pepe hii tayari ipo. Ingia kwa barua pepe na nenosiri.',
+            'auth/network-request-failed': en ? 'No connection. Check your internet and try again.' : 'Hakuna mtandao. Angalia intaneti kisha ujaribu tena.',
+            'auth/too-many-requests': en ? 'Too many attempts. Try again later.' : 'Majaribio mengi mno. Jaribu tena baadaye.',
+            'auth/user-disabled': en ? 'This account has been disabled. Contact SokoHai support.' : 'Akaunti hii imezimwa. Wasiliana na msaada wa SokoHai.'
+        };
+        try { console.warn('[google-login]', c, error && error.message); } catch (e) {}
+        if (Object.prototype.hasOwnProperty.call(M, c)) { if (M[c]) alert(M[c]); return; }
+        alert(en ? 'Google sign-in failed. Please try again.' : 'Kuingia kwa Google kumeshindikana. Jaribu tena.');
     }
 };
 

@@ -10,6 +10,11 @@
 <html lang="sw">
 <head>
     <meta charset="UTF-8">
+    <!-- [ROUTING 2026-11-24] The app is also served at share URLs /p/<id>, /s/<id>, /d/<id> and /post/<id> (Netlify SPA
+         fallback). Every asset path in this page and in the scripts is relative ("css/..", "js/..", "assets/.."), so on
+         /p/<id> the browser asked for /p/css/.. and got the HTML fallback: the page loaded without CSS and JS.
+         Resolving relative URLs from the site root fixes every route family at once. Must stay before any URL. -->
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- [PERF 2026-11-08] Firebase SDK inapakiwa kutoka www.gstatic.com na data
          kutoka firestore.googleapis.com (ona js/app/00-bootstrap.js). Preconnect
@@ -86,7 +91,7 @@
 <script src="shared/ui-text.js?v=20261121ui1"></script><!-- [UI 2026-11-21] one message-text humanizer for alerts, dialogs and toasts -->
 <script src="js/05-dialogs.js"></script>
 <script src="js/05-local-avatars.js"></script>
-<script src="js/00-pwa.js?v=20261113r15" defer></script>
+<script src="js/00-pwa.js?v=20261124route1" defer></script>
 <script src="js/00-config.js" defer></script>
 <!-- [PERF 2026-09] Kipakiaji cha maktaba za nje: Leaflet/Chart hazipakwi
      kwenye startup tena — huingizwa kwa uvivu ramani/grafu zinapofunguliwa. -->
@@ -3617,7 +3622,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/06-product-builder.js?v=20261122i18n1"></script>
 <script type="module" src="js/app/06-navigation.js"></script>
 <script type="module" src="js/app/07-product.js?v=20261123rel1"></script>
-<script type="module" src="js/app/08-app-state.js?v=20261120rem1"></script>
+<script type="module" src="js/app/08-app-state.js?v=20261124auth1"></script>
 <script type="module" src="js/app/09-feed-announcements.js"></script>
 <script type="module" src="js/app/10-dashboard-tabs.js?v=20261118recycle"></script>
 <script type="module" src="js/app/11-analytics.js"></script>
@@ -3641,7 +3646,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/25-tracking-hub.js"></script>
 <script type="module" src="js/app/26-image-zoom.js"></script>
 <script type="module" src="js/app/27-route-dispatch.js"></script>
-<script type="module" src="js/app/28-buyer-engagement.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/28-buyer-engagement.js?v=20261124route1"></script>
 <script type="module" src="js/app/29-seller-store.js?v=20261120r22"></script>
 <script type="module" src="js/app/30-seller-products.js?v=20261124nav2"></script>
 <script type="module" src="js/app/31-agent-assist.js"></script>

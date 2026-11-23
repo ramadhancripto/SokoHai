@@ -64,6 +64,7 @@
     "build:seo": "node tools/build_seo.mjs --out dist",
     "test:browser:location": "node tools/test_location_browser.mjs",
     "test:browser:home-seo": "node tools/test_home_seo_browser.mjs",
+    "test:browser:share-routes": "node tools/test_share_routes_browser.mjs",
     "test:browser:taxonomy-i18n": "node tools/test_taxonomy_i18n_browser.mjs",
     "test:browser:i18n": "node tools/test_i18n_integrity_browser.mjs",
     "build:taxonomy-i18n": "node tools/build_taxonomy_i18n.mjs",

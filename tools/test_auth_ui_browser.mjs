@@ -106,11 +106,16 @@ const g = await page.evaluate(() => window.__gcalls);
 ok(g.length === 1 && g[0].sameAuth && g[0].providerId === 'google.com' && g[0].real, 'Google button runs the original doGoogleLogin -> signInWithPopup(auth, GoogleAuthProvider)');
 ok(await hiddenWait(), 'auth screen closes after the Google sign-in result');
 ok(await page.evaluate(async () => (await window.skh.getDoc(window.skh.doc(window.skh.db, 'users', window.skh.currentUser.uid))).exists()), 'first Google sign-in creates the profile (original handler)');
-// a cancelled popup shows the original error message
+// [AUTH 2026-11-24] Google errors: a cancelled popup is the user's choice (no alert); a blocked popup gets a clear
+// message in the interface language; unknown errors get a generic message (never the raw Firebase text)
 await page.evaluate(() => window.skh.signOut(window.skh.auth)); await page.waitForTimeout(800);   // the welcome card opens 300 ms after sign-in
-await page.evaluate(() => { window.skh.signInWithPopup = async () => { const e = new Error('Firebase: Error (auth/popup-closed-by-user).'); e.code = 'auth/popup-closed-by-user'; throw e; }; window.openAuthModal(); });
-dialogs.length = 0; await page.click('#authModal .google-btn'); await page.waitForTimeout(800);
-ok(dialogs.some(m => /Kosa la Google Login/.test(m)), 'a cancelled Google popup shows the original error message');
+const gErr = code => page.evaluate(c => { window.skh.signInWithPopup = async () => { const e = new Error('Firebase: Error (' + c + ').'); e.code = c; throw e; }; window.openAuthModal(); }, code);
+await gErr('auth/popup-closed-by-user'); dialogs.length = 0; await page.click('#authModal .google-btn'); await page.waitForTimeout(800);
+ok(dialogs.length === 0, 'a cancelled Google popup shows no error dialog');
+await gErr('auth/popup-blocked'); dialogs.length = 0; await page.click('#authModal .google-btn'); await page.waitForTimeout(800);
+ok(dialogs.some(m => /Ruhusu pop-ups/.test(m)) && !dialogs.some(m => /Firebase|auth\//.test(m)), 'a blocked popup explains how to allow it, in Kiswahili, without the raw Firebase text');
+await gErr('auth/internal-error'); dialogs.length = 0; await page.click('#authModal .google-btn'); await page.waitForTimeout(800);
+ok(dialogs.some(m => /Kuingia kwa Google kumeshindikana/.test(m)) && !dialogs.some(m => /Firebase|auth\//.test(m)), 'an unknown Google error shows a generic message, not the raw Firebase text');
 
 // 7. close control
 await page.evaluate(() => window.openAuthModal()); await page.click('#authModal [onclick="closeModals()"]');
