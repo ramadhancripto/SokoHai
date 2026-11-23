@@ -1,0 +1,3 @@
+# auth.sokohai.com serves only the SokoHai sign-in handler. Nothing here is meant for search results.
+User-agent: *
+Disallow: /

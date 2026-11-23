@@ -15,7 +15,7 @@ const fns = new Set(calls.flatMap(c => [...c.matchAll(/(?:window\.)?([A-Za-z]+)\
 const known = ['updateApp', 'setMarketMode', 'openChatList', 'togglePlusMenu', 'querySelector', 'skhLiveHub', 'skhEscrowInfo', 'skhHeroGo', 'skhOpenRequestInbox']; // [R13-E] refs 11-15 carousel + quick actions
 ok('every hero action calls an existing function: ' + [...fns].join(', '), [...fns].every(f => known.includes(f)) && ['updateApp', 'setMarketMode', 'skhLiveHub', 'togglePlusMenu', 'skhEscrowInfo', 'skhHeroGo', 'openChatList', 'skhOpenRequestInbox'].every(f => f === 'querySelector' || new RegExp('window\\.' + f + '\\s*=').test(js)));
 ok('hero image is the owner-supplied design asset, present', fs.existsSync(path.join(ROOT, 'assets/img/home/community.webp')));
-ok('desktop-only rail items hidden on phones', /\.nav-tab\.nav-desk-only \{ display: none !important; \}/.test(css) && (idx.match(/nav-desk-only/g) || []).length === 3);
+ok('desktop-only rail items hidden on phones', /\.nav-tab\.nav-desk-only \{ display: none !important; \}/.test(css) && (idx.match(/nav-desk-only/g) || []).length === 2);   // [NAV 2026-11-24] Duka langu + Zaidi (Taarifa is the header bell)
 ok('SokoPay avatars reference real SVG files (the .png files contain SVG)', idx.includes('img/avatar-user.svg') && rd('img/avatar-user.svg').includes('<svg') && rd('img/avatar-sokohai.svg').includes('<svg'));
 ok('old avatar .png files kept (no asset deleted)', fs.existsSync(path.join(ROOT, 'img/avatar-user.png')) && fs.existsSync(path.join(ROOT, 'img/avatar-sokohai.png')));
 ok('chat inbox tabs in Swahili', js.includes("['groups', 'Makundi'], ['order_groups', 'Oda za Makundi']"));

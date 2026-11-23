@@ -735,9 +735,12 @@ body.dark-mode .top-nav-row .skh-brand-word { filter: brightness(1.35); }
 
 /* chip ya lugha kwenye sidebar */
 .skh-lang-chip {
-    min-width: 34px;
-    height: 24px;
-    padding: 0 8px;
+    /* [NAV 2026-11-24] the chip is now the SW/EN switch itself: a 40 px touch target */
+    min-width: 48px;
+    height: 36px;
+    padding: 0 10px;
+    cursor: pointer;
+    border: 1px solid rgba(23, 96, 78, .25);
     border-radius: 999px;
     background: var(--sokohai-green-soft);
     color: var(--sokohai-green-dark);

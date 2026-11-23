@@ -12,13 +12,10 @@ window.renderSokoHaiAccountMenu = function(){
 
     // ==== MENU MOJA IMARA (hakuna duplicates): Soko + Usimamizi + SokoPay + Account ====
     // sehemu kuu zinaonekana wazi; sehemu za akaunti zinakunjwa kwa asili (ili isiwe ndefu)
+    // [NAV 2026-11-24] Each destination appears ONCE across the whole interface. Removed from this drawer because the
+    // permanent navigation already has them: Soko Huru / Bidhaa / Huduma / Usafiri (bottom bar on phones, left rail on
+    // desktop), Inbox (the Chat tab) and Taarifa (the bell in the header). skhSidebarGo(key) still knows every key.
     const quick = [
-        ['SOKO KUU', false, [
-            ['feed_all','','Soko Huru (Feed)','Mchanganyiko wa bidhaa, huduma na usafirishaji'],
-            ['feed_products','','Bidhaa Sokoni','Ona bidhaa zote zinazouzwa'],
-            ['feed_services','','Watoa Huduma','Mafundi na huduma mbalimbali'],
-            ['feed_drivers','','Usafirishaji','Boda, bajaji, gari na mizigo']
-        ]],
         ['USIMAMIZI (DASHBOARDS)', false, [
             ['mode_buyer','','Buyer Dashboard','Shughuli, oda na biashara zako binafsi'],
             ['mode_seller','','Muuzaji wa Bidhaa','Duka, stoo, mauzo na madeni'],
@@ -31,12 +28,10 @@ window.renderSokoHaiAccountMenu = function(){
         ['SOKOPAY & FINANCE', false, [
             ['sokopay','','SokoPay (Escrow & Trust)','Malipo salama na mikataba ya escrow'],
             ['wallet','','SokoPay Wallet','Salio lako na njia za malipo'],
-            ['token','','Token Center','Tokens za mizigo na uhakiki'],
-            ['orders','','My Orders','Oda na safari zako (ufuatiliaji)']
+            ['token','','Token Center','Tokens za mizigo na uhakiki']
         ]],
-        ['MAWASILIANO', false, [
-            ['inbox','','Inbox (Chat)','Meseji zako na wauzaji/wateja'],
-            ['notifications','','Taarifa','Taarifa zako zote'],
+        ['Shughuli Zangu', false, [
+            ['orders','','My Orders','Oda na safari zako (ufuatiliaji)'],
             ['saved','','Saved Items','Vitu ulivyovipenda']
         ]]
     ];
@@ -44,9 +39,12 @@ window.renderSokoHaiAccountMenu = function(){
     // already in the drawer: 'profile' = "Akaunti Yangu" at the top (82-home-header-actions), 'notifications' = Mawasiliano
     // › Taarifa, 'payment_methods' = SokoPay & Finance › SokoPay Wallet (both openUserPaymentModal). They stay in
     // sokohaiAccountMenuItems, so openSokoHaiAccountSetting(key) and deep links keep working; an emptied section is dropped.
-    const DRAWER_DUPES = { profile: 1, notifications: 1, payment_methods: 1 };
+    // [NAV 2026-11-24] 'language' = the "Lugha" row at the top (its SW/EN chip switches, the row opens the Language Center).
+    // The Account section keeps only verification and identity, so it is named for that ("Akaunti Yangu" is the top row).
+    const DRAWER_DUPES = { profile: 1, notifications: 1, payment_methods: 1, language: 1 };
+    const SEC_LABEL = { Account: 'Uthibitisho na Utambulisho' };
     const account = window.sokohaiAccountMenuItems
-        .map(sec => [sec.section, true, sec.items.filter(it => !DRAWER_DUPES[it[0]])])
+        .map(sec => [SEC_LABEL[sec.section] || sec.section, true, sec.items.filter(it => !DRAWER_DUPES[it[0]])])
         .filter(sec => sec[2].length);
 
     const secHtml = function(title, collapsed, items, accountItem) {

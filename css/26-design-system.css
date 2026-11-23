@@ -1518,7 +1518,11 @@ h1[style*="uppercase"], h2[style*="uppercase"], h3[style*="uppercase"], h4[style
     text-transform: none !important;
     letter-spacing: normal !important;
 }
-body * { overscroll-behavior-x: contain; }
+/* [SLIDE 2026-11-24] Was `body * { overscroll-behavior-x: contain; }`. Every element with overflow:hidden (cards, image
+   boxes, buttons) is a scroll container, so a swipe that started ON a card stopped at the card and never reached the
+   rail: the category strip and the product rails did not slide by touch. Only the page itself blocks the browser's
+   back/forward swipe now; rails keep their own contain rules. */
+html, body { overscroll-behavior-x: none; }
 /* banner dots: small to look at, comfortable to tap (hit area ~36px tall) */
 #shcDots.shc-dots { gap: 14px; }
 #shcDots.shc-dots button { position: relative; }

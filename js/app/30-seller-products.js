@@ -23,6 +23,16 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         return ['auction','group_buy','price_drop'].includes(String(p && p.saleMode || '')) &&
             (Number(m.totalBids || 0) > 0 || Number(m.queueEntries || 0) > 0 || (Array.isArray(m.participants) && m.participants.length > 0));
     }
+    // [LAUNCH 2026-11-24] Auction, Price Drop and Group Buy are switched OFF in the launch scope (SokoHuru): nobody can bid,
+    // join or buy through them, so a listing that still carries old bids or participants must not be stuck. While its
+    // mode is off it may go to the Recycle Bin (archive only: modeData, bids and history are kept untouched, as the rules
+    // require). When the mode is switched on again the original guard applies.
+    var MP_MODE_FLAG = { auction: 'auction', group_buy: 'groupBuy', price_drop: 'priceDrop' };
+    function mpModeOff(p) {
+        var f = MP_MODE_FLAG[String(p && p.saleMode || '')], L = window.skhLaunch;
+        return !!(f && L && typeof L.enabled === 'function' && L.enabled(f) === false);
+    }
+    function mpBlockedRemoval(p) { return mpBusyCommerce(p) && !mpModeOff(p); }
 
     function esc(s) { return skh.skhEscape(s == null ? '' : String(s)); }
     function js(s) { return skh.skhJsEsc(s == null ? '' : String(s)); }
@@ -879,6 +889,8 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
         if (!ids.length) return;
         var actor = skh.currentUser.uid;
         var msg = 'Hamisha bidhaa ' + ids.length + ' kwenye Recycle Bin? Zitaondoka kwenye Bidhaa Zangu na orodha kuu ya soko. Rekodi, stoo na historia ya oda zitahifadhiwa; hii si kufuta kabisa.';
+        var stopped = ids.filter(function (id) { var r = META.raw[id]; return r && mpBusyCommerce(r) && mpModeOff(r); }).length;
+        if (stopped) msg += '\n\nBidhaa ' + stopped + ' zina Mnada, Group Buy au Bei Kushuka ambayo imesitishwa kwenye SokoHai kwa sasa. Zitaondolewa sokoni; zabuni na washiriki wake hawataweza kuendelea, na historia yao inahifadhiwa.';
         if (!await skhConfirm(msg)) return;
         if (MP_REMOVING || !skh.currentUser || skh.currentUser.uid !== actor) return;
         MP_REMOVING = true; mpUpdateSelection();
@@ -895,7 +907,7 @@ import { channelsOf, resolveUnit } from '../../shared/product-listing-core.mjs';
                         if (!snap || !snap.exists()) throw new Error('Bidhaa haikupatikana.');
                         var fresh = snap.data();
                         if (mpArchived(fresh)) return;
-                        if (mpBusyCommerce(fresh)) throw new Error('Ina mnada au washiriki; shughulikia mchakato unaoendelea kwanza.');
+                        if (mpBlockedRemoval(fresh)) throw new Error('Ina mnada au washiriki; shughulikia mchakato unaoendelea kwanza.');
                         var now = new Date().toISOString();
                         tx.update(ref, { publicationStatus:'archived', status:'archived', archivedAt:now, updatedAt:now });
                     });

@@ -128,7 +128,7 @@
 <!-- [DESIGN SYSTEM] Hizi mbili ni za MWISHO kwa makusudi: zinaweka
      typography na lugha moja ya muonekano juu ya CSS zote za awali. -->
 <link rel="stylesheet" href="css/25-typography.css?v=20261123seo1">
-<link rel="stylesheet" href="css/26-design-system.css">
+<link rel="stylesheet" href="css/26-design-system.css?v=20261124slide1">
     <!-- [VISUAL-AUDIT 2026-09-16] 27) Hero/touch/consolidation fixes — herufi la mwisho kwenye load order -->
     <link rel="stylesheet" href="css/27-visual-audit-fixes.css">
     <!-- [MY-PROFILE 2026-09-16] 28) My Profile (DP + Business Cover) — professional identity -->
@@ -164,7 +164,7 @@
 <link rel="stylesheet" href="css/54-maoni-polish.css" media="print" onload="this.media='all'"><!-- [2026-11-04] Maoni + Tathmini polish -->
 <link rel="stylesheet" href="css/55-engagement-system.css"><!-- [2026-11-04] Engagement + reactions system -->
 <link rel="stylesheet" href="css/56-lazy-feed.css" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="css/57-home-brand-header.css?v=20261105r6w">
+<link rel="stylesheet" href="css/57-home-brand-header.css?v=20261124nav2">
 <link rel="stylesheet" href="css/58-category-photo-strip.css?v=20261105r6w">
 <link rel="stylesheet" href="css/52-chat-discovery-feed.css?v=20261105r6w" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="css/59-nav-balance.css?v=20261105r6w">
@@ -3519,10 +3519,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
                 <span class="skh-ico" data-ico="shop" aria-hidden="true"></span>
                 <span data-i18n="rail_myshop">Duka langu</span>
             </div>
-            <div class="nav-tab nav-desk-only" role="button" tabindex="0" onclick="window.openNotifications && window.openNotifications()">
-                <span class="skh-ico" data-ico="bell" aria-hidden="true"></span>
-                <span data-i18n="rail_notif">Taarifa</span>
-            </div>
+            <!-- [NAV 2026-11-24] "Taarifa" removed from the rail: the header bell / "Taarifa" button is the one entry -->
             <div class="nav-tab nav-desk-only" role="button" tabindex="0" onclick="window.openSidebarMenu && window.openSidebarMenu()">
                 <span class="skh-ico" data-ico="menu" aria-hidden="true"></span>
                 <span data-i18n="rail_more">Zaidi</span>
@@ -3638,7 +3635,7 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/20-business-context.js"></script>
 <script type="module" src="js/app/20-logistics.js?v=20261118recycle"></script>
 <script type="module" src="js/app/21-sokopay.js?v=20261123l10n1"></script>
-<script type="module" src="js/app/22-printing.js?v=20261123nav1"></script>
+<script type="module" src="js/app/22-printing.js?v=20261124nav2"></script>
 <script type="module" src="js/app/23-smart-cart.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/24-ui-final.js?v=20261123rel1"></script>
 <script type="module" src="js/app/25-tracking-hub.js"></script>
@@ -3646,9 +3643,9 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/27-route-dispatch.js"></script>
 <script type="module" src="js/app/28-buyer-engagement.js?v=20261123l10n1"></script>
 <script type="module" src="js/app/29-seller-store.js?v=20261120r22"></script>
-<script type="module" src="js/app/30-seller-products.js?v=20261123rel1"></script>
+<script type="module" src="js/app/30-seller-products.js?v=20261124nav2"></script>
 <script type="module" src="js/app/31-agent-assist.js"></script>
-<script type="module" src="js/app/32-i18n.js?v=20261123rel1"></script>
+<script type="module" src="js/app/32-i18n.js?v=20261124nav2"></script>
 <script type="module" src="js/app/33-custody.js?v=20261118cancel"></script>
 <script type="module" src="js/app/37-negotiation.js"></script>
 <!-- [NEGO MODULE 01] Fomu ya majadiliano inayojua muktadha (38 = UI, logic ni tupu) -->
@@ -3680,12 +3677,12 @@ if(document.readyState==='complete')setTimeout(r,60);else window.addEventListene
 <script type="module" src="js/app/61-full-system-repair.js?v=20261118navfix"></script>
     <script type="module" src="js/app/62-missing-features.js"></script>
 <script type="module" src="js/app/63-audit-fixes.js?v=20261118welcome1"></script>
-<script type="module" src="js/app/64-i18n-core.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/64-i18n-core.js?v=20261124nav2"></script>
 <script type="module" src="js/app/65-content-l10n.js"></script>
 <script type="module" src="js/app/66-wordmark.js"></script>
 <script type="module" src="js/app/67-payment-accounts.js"></script>
 <script type="module" src="js/app/68-gundua-soko.js?v=20261108r13c"></script><!-- [2026-11-04] Gundua Soko -->
-<script type="module" src="js/app/82-home-header-actions.js?v=20261123l10n1"></script>
+<script type="module" src="js/app/82-home-header-actions.js?v=20261124nav2"></script>
 <!-- [R13-C] 86-category-icons-manifest.js (SVG family) is no longer loaded: categories use photos; files kept on disk -->
 <script type="module" src="js/app/83-category-photos.js?v=20261123art2"></script>
 <script type="module" src="js/app/84-location-fast.js?v=20261121loc1"></script><!-- [2026-11-04] Kazi sheet + account kwenye sidebar -->

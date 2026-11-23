@@ -26,13 +26,21 @@ for (const W of [390, 1366]) {
     return { rows: rows.length, dupActions: on.filter((x, i) => on.indexOf(x) !== i), account: m.querySelectorAll('.skh-menu-account-row').length,
       lang: m.querySelectorAll('.skh-menu-lang-row').length, profileSetting: count(/openSokoHaiAccountSetting\('profile'\)/),
       notif: count(/skhSidebarGo\('notifications'\)|openSokoHaiAccountSetting\('notifications'\)/), pay: count(/skhSidebarGo\('wallet'\)|openSokoHaiAccountSetting\('payment_methods'\)/),
-      emptySecs: [...m.querySelectorAll('.skh-menu-sec')].filter(s => !s.querySelector('.skh-menu-item')).length }; });
+      emptySecs: [...m.querySelectorAll('.skh-menu-sec')].filter(s => !s.querySelector('.skh-menu-item')).length,
+      // [NAV 2026-11-24] destinations that the permanent navigation already has must not be repeated in the drawer
+      navDupes: on.filter(x => /skhSidebarGo\('(feed_all|feed_products|feed_services|feed_drivers|inbox|notifications)'\)|openSokoHaiAccountSetting\('language'\)/.test(x)),
+      secTitles: [...m.querySelectorAll('.skh-menu-sec-h span:first-child')].map(e => e.textContent.trim()),
+      bell: !!document.querySelector('[onclick*="openNotifications"]:not(#sidebarMenuModal *)'),
+      chat: !!document.querySelector('.nav-tab[onclick*="openChatList"]'),
+      tabs: ['navTabHome', 'navTabBidhaa', 'navTabHuduma', 'navTabDelivery'].every(id => document.getElementById(id)) }; });
   ok(r.dupActions.length === 0, W + 'px: no action appears twice in the side menu after reopening and switching language: ' + JSON.stringify(r.dupActions));
   ok(r.account === 1 && r.profileSetting === 0, W + 'px: exactly one profile entry ("Akaunti Yangu"), not repeated under the Account section');
   ok(r.lang === 1, W + 'px: one language row');
-  ok(r.notif === 1, W + 'px: one notifications entry');
+  ok(r.notif === 0 && r.bell, W + 'px: notifications: one entry, the header bell (not repeated in the drawer)');
+  ok(r.navDupes.length === 0 && r.chat && r.tabs, W + 'px: Home / Products / Services / Transport / Chat live in the main navigation only, the Language Center in the "Lugha" row only: ' + JSON.stringify(r.navDupes));
+  ok(!r.secTitles.some(t => /^(AKAUNTI|ACCOUNT|SOKO KUU|MAIN MARKET)$/i.test(t)), W + 'px: no section repeats the "Akaunti Yangu" row or the main navigation: ' + JSON.stringify(r.secTitles));
   ok(r.pay === 1, W + 'px: one wallet / payment-methods entry');
-  ok(r.emptySecs === 0 && r.rows > 30, W + 'px: no empty section; the other entries are still there (' + r.rows + ' rows)');
+  ok(r.emptySecs === 0 && r.rows > 25, W + 'px: no empty section; the other entries are still there (' + r.rows + ' rows)');
   ok(await p.evaluate(() => typeof window.openSokoHaiAccountSetting === 'function' && window.sokohaiAccountMenuItems.flatMap(s => s.items).some(i => i[0] === 'payment_methods')), W + 'px: the removed rows stay reachable through openSokoHaiAccountSetting(key)');
   ok(errs.length === 0, W + 'px: no page errors ' + errs.slice(0, 2).join(' | '));
   await ctx.close();

@@ -154,9 +154,15 @@
             lang.type = 'button';
             lang.className = 'skh-menu-item skh-menu-lang-row';
             lang.innerHTML = '<span class="ico">' + ico('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9s-1.4 6.4-3.9 9c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/>') + '</span>'
-                + '<span class="txt"><b>Lugha</b><small>Kiswahili / English</small></span>'
-                + '<span class="skh-lang-chip">' + (cur === 'EN' ? 'EN' : 'SW') + '</span>';
-            lang.addEventListener('click', function () {
+                + '<span class="txt"><b>Lugha</b><small>Kiswahili / English · Kituo cha Lugha</small></span>'
+                + '<span class="skh-lang-chip" role="button" tabindex="0" aria-label="SW / EN" title="SW / EN">' + (cur === 'EN' ? 'EN' : 'SW') + '</span>';
+            lang.addEventListener('click', function (ev) {
+                // [NAV 2026-11-24] one language entry: the chip switches SW/EN at once, the rest of the row opens the
+                // Language Center (it was a second "Lugha na Eneo" row further down the menu)
+                if (!(ev && ev.target && ev.target.closest && ev.target.closest('.skh-lang-chip')) && typeof window.openSokoHaiLanguageCenter === 'function') {
+                    try { window.closeModals && window.closeModals(); } catch (e) {}
+                    window.openSokoHaiLanguageCenter(); return;
+                }
                 var now = (document.getElementById('langToggleLabel') || {}).textContent || 'SW';
                 var next = now === 'EN' ? 'sw' : 'en';
                 if (typeof window.skhSetLang === 'function') window.skhSetLang(next);

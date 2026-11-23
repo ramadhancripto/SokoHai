@@ -621,7 +621,7 @@ import { skh } from './00-bootstrap.js';
         ['Jifunze kutumia SokoHai', 'acc_tutorials_sub', 'Learn how to use SokoHai'],
         ['Sheria za matumizi', 'acc_terms_sub', 'Rules of use'],
         ['Sera ya faragha', 'acc_privacy_sub', 'Privacy policy'],
-        ['Logout, logout all devices, switch account', 'acc_logout_sub', 'Logout, logout all devices, switch account'],
+        ['Toka, toka kwenye vifaa vyote, badilisha akaunti', 'acc_logout_sub', 'Logout, logout all devices, switch account'],   // [L10N 2026-11-24] Kiswahili value was English
 
         // ==== [R16.2] Payment form round-2 + CHAT tabs + misc ====
         ['Namba ya Akaunti ya Benki (Account Number) *', 'r162_acc_num', 'Bank Account Number *'],

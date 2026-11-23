@@ -5,6 +5,7 @@
 | Date | 23 Nov 2026 |
 | Site | `https://sokohai.com` |
 | Status | Plan and tracking template. **No outreach has been done and no backlink has been verified.** |
+| Corrected | 24 Nov 2026: added the backlink tools that already exist (section 1a) and the Search Console status. Earlier versions of this file did not mention them |
 
 ## 1. What this document is
 
@@ -25,6 +26,17 @@ Neither was available when this document was written.
 | **Prospect** | A site that *could* link to SokoHai once contacted | Nobody yet | Categories are listed in section 3. No named site has agreed. |
 | **Internal link** | A link from one SokoHai page to another | SokoHai | Exists: home → `/soko/`, `/mwongozo/`, `/about.html`; static pages link to each other (see section 5) |
 | **Sitelinks** | Extra links Google *may* show under the main result | Google, automatically | **Cannot be requested or guaranteed.** A clear navigation and indexable section pages only make them more likely |
+
+## 1a. What already exists (verified in `main` 077e70f and on production, 24 Nov 2026)
+
+| Item | Where | Verified |
+|---|---|---|
+| Backlink register | Kituo cha Udhibiti → **SEO & Viungo** (`js/app/131-search-insights.js`, collection `seo_backlinks`, admin-only rule in `firestore.rules`). Records source, domain, target, anchor, rel type, quality, status; imports the Search Console "Top linking sites" CSV | Code: yes. **Its contents: NOT VERIFIED** (admin sign-in needed; it may be empty) |
+| Partners page | `https://sokohai.com/washirika.html` (built by `tools/build_seo.mjs`) explains how to link legitimately | Production: 200 |
+| Seller share kit | Wasifu → "Shiriki duka lako": shop link + optional "Tupo SokoHai" badge (`/assets/badges/tupo-sokohai.svg`) | Production badge: 200 |
+| Sitemap | `https://sokohai.com/sitemap.xml` → 4 child sitemaps, 94 URLs (pages 16, listings 55, sellers 6, categories 17) | Production: 200 `application/xml` |
+| Search Console | A `google-site-verification` TXT record exists on `sokohai.com` (public DNS, 22 Nov). **Which account owns the property, and whether the sitemap was submitted: NOT VERIFIED** | DNS only |
+| Web search for pages linking to `sokohai.com` | Only the owner's own GitHub repositories mention SokoHai, and they contain **no link** to `sokohai.com` (checked 24 Nov) | 0 external links found |
 
 ## 2. Rules
 
