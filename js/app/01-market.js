@@ -664,9 +664,11 @@ window.switchMode = async function(mode) {
     // moja kwa moja — mtumiaji asiye na kikao (au wakati wa kuhidrati) alisababisha
     // TypeError KABLA ya `skh.currentMode = mode`, hivyo kubadili mode kushindikana
     // kimya (mf. "Rudi Soko Kuu" kwenye Business OS haikufanya kitu).
-    const _curEmail = (skh.currentUser && skh.currentUser.email) || '';
-    const sokohaiIsAdmin = (window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin === true) ||
-                           (window.SOKOHAI_CONFIG && window.SOKOHAI_CONFIG.ADMIN_EMAIL_FALLBACK === true && _curEmail === skh.MY_ADMIN_EMAIL);
+    // [PART 2 SECURITY 2026-11-24] Admin = claims kwanza; fallback ya barua-pepe
+    // inahitaji email_verified (sawa na firestore.rules::isAdmin()).
+    const sokohaiIsAdmin = (typeof skh.isAdminUser === 'function')
+        ? skh.isAdminUser()
+        : !!(window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin === true);
     if(mode === 'admin' && !sokohaiIsAdmin) {
         alert(" Hauna ruhusa ya Admin."); return;
     }

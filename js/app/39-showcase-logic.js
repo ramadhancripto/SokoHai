@@ -45,6 +45,22 @@ export function psNum(v) {
     return Number.isFinite(n) ? n : null;
 }
 
+/* [PART 3 2026-11-24] Hali ya bidhaa (condition) ipo kwenye data tangu awali
+   (08-app-state.js inaihifadhi, 12-sys-modes.js inaihariri) lakini haikuwa ikionyeshwa
+   kwenye ukurasa wa bidhaa. Hapa tunatafsiri thamani ZILIZOPO pekee; hakuna kubuni. */
+const PS_CONDITION_LABELS = {
+    'new': 'Mpya',
+    'used': 'Imetumika',
+    'refurbished': 'Imekarabatiwa',
+    'not_applicable': ''
+};
+export function psConditionLabel(p) {
+    if (!p) return '';
+    const c = String(p.condition == null ? '' : p.condition).toLowerCase().trim();
+    if (!c) return '';
+    return PS_CONDITION_LABELS[c] || '';
+}
+
 export function psMoney(v) {
     const n = psNum(v);
     if (n === null || n <= 0) return 'Maelewano';
@@ -113,10 +129,21 @@ export function psSellerName(p) {
 /* ================================================================
  * 1) UPATIKANAJI (availability) — huonyeshwa ikiwa umejulikana tu
  * ================================================================ */
+/* [PART 4 2026-11-24] Mode ya huduma kutoka data HALISI: `section` (data ya zamani)
+   au `groupType` (fomu ya sasa ya kuchapisha huduma). Bila mojawapo -> '' (hakuna kubuni). */
+export function psServiceMode(p) {
+    if (!p) return '';
+    const raw = String(p.section || p.groupType || '').toLowerCase().trim();
+    if (raw === 'online') return 'online';
+    if (raw === 'physical') return 'physical';
+    if (p.online === true) return 'online';
+    return '';
+}
+
 export function psAvailability(p, col) {
     if (!p) return { kind: 'unknown', label: '' };
     if (col === PS_SERVICE) {
-        if (p.section === 'online' || p.online === true) return { kind: 'service', label: 'Inapatikana mtandaoni' };
+        if (psServiceMode(p) === 'online') return { kind: 'service', label: 'Inapatikana mtandaoni' };   // [PART 4] section || groupType
         var s = String(p.availabilityStatus || p.availability || '').toLowerCase();
         if (p.availableToday === true || s === 'available_today' || s === 'today') return { kind: 'service', label: 'Inapatikana leo' };
         if (s === 'available' || s === 'open') return { kind: 'service', label: 'Inapatikana' };
@@ -205,7 +232,11 @@ export function psSpecRows(p, col) {
         out.push(row('Kategoria', p.category));
         rowsFromFilters(p, out);
         out.push(row('Eneo', p.location || p.region));
-        if (p.section === 'online' || p.online === true) out.push(row('Mpangilio', 'Mtandaoni'));
+        /* [PART 4 2026-11-24] Mpangilio unatoka kwenye mode halisi; awali ulionekana
+           kwa `section` pekee, hivyo huduma zilizochapishwa kwa `groupType` hazikuwa na mstari huu. */
+        const smode = psServiceMode(p);
+        if (smode === 'online') out.push(row('Mpangilio', 'Mtandaoni'));
+        else if (smode === 'physical') out.push(row('Mpangilio', 'Ana kwa ana'));
         return out.filter(Boolean);
     }
 
@@ -477,9 +508,10 @@ export function psScoreItem(it, cur) {
     if (curLoc && locOf(it) && (locOf(it).indexOf(curLoc) !== -1 || curLoc.indexOf(locOf(it)) !== -1)) score += 6;
 
     // Upatikanaji — zilizopo mbele, zilizoisha nyuma
-    const stock = Number(it.stock);
-    if (Number.isFinite(stock)) {
-        if (stock <= 0) score -= 10;
+    // [PART 3 2026-11-24] stock '' / null = haijulikani -> hakuna adhabu (awali ilikuwa -10)
+    const rawStock = (it.stock === null || it.stock === undefined || it.stock === '') ? NaN : Number(it.stock);
+    if (Number.isFinite(rawStock)) {
+        if (rawStock <= 0) score -= 10;
         else score += 3;
     }
     // Mseto wa wauzaji (upendeleo mwepesi; hauzuiwi kabisa)

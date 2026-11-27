@@ -1,6 +1,15 @@
 /* ==== js/app/19-roles.js ==== */
 import { skh } from './00-bootstrap.js';
 import './128-personal-recycle.js';
+/* [PART 4 FOLLOW-UP 2026-11-24] mantiki safi ya KUHARIRI huduma iliyopo (hakuna fomu ya pili) */
+import {
+    serviceEditGuard,
+    serviceEditSnapshot,
+    validateServiceUpdate,
+    buildServiceUpdate,
+    serviceSubmitGate,
+    serviceUpdateErrorText
+} from './39-service-edit-core.js';
 
 window.loadDriverDashboard = function() {
     const container = document.getElementById('richDashboardContainer');
@@ -248,6 +257,133 @@ window.generateHubServiceFilters = function() {
     }
 };
 
+/* ============================================================================
+   [PART 4 FOLLOW-UP 2026-11-24] KUHARIRI HUDUMA ILIYOPO (K-7)
+   Fomu ILE ILE (#serviceForm) inatumika; hakuna fomu ya pili na hakuna ujenzi
+   mwingine. Update inaenda kwenye hati ILE ILE (hakuna tangazo la pili), na
+   haiwezi kubadilisha status/publicationStatus/userId/createdAt.
+   ============================================================================ */
+const SERVICE_EDIT = { id: null, doc: null, busy: false, lastOkAt: 0, original: null };
+window.__skhServiceEditState = SERVICE_EDIT;
+
+function svcEl(id) { return document.getElementById(id); }
+function svcSet(id, value) { var el = svcEl(id); if (el) el.value = value == null ? '' : String(value); }
+function svcCheck(id, on) { var el = svcEl(id); if (el) el.checked = !!on; }
+
+function svcFormShell() {
+    // Hifadhi maandishi ya awali (kwa ajili ya kurudisha hali ya "Sajili").
+    if (!SERVICE_EDIT.original) {
+        var h3 = document.querySelector('#serviceForm h3');
+        var btn = svcEl('btnSubmitHubService');
+        SERVICE_EDIT.original = { title: h3 ? h3.innerHTML : '', btn: btn ? btn.innerHTML : '' };
+    }
+}
+function svcSetFormMode(on, title) {
+    svcFormShell();
+    var h3 = document.querySelector('#serviceForm h3');
+    var btn = svcEl('btnSubmitHubService');
+    if (h3) h3.innerHTML = on ? ' Hariri Huduma' : SERVICE_EDIT.original.title;
+    if (btn) btn.innerHTML = on ? ' HIFADHI MABADILIKO' : SERVICE_EDIT.original.btn;
+    var note = svcEl('serviceEditNote');
+    if (on && !note) {
+        var form = svcEl('serviceForm');
+        var head = document.querySelector('#serviceForm h3');
+        if (form && head) {
+            note = document.createElement('div');
+            note.id = 'serviceEditNote';
+            note.setAttribute('style', 'background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;border-radius:10px;padding:10px;font-size:12.5px;font-weight:800;margin:0 0 12px;text-align:left;');
+            note.textContent = 'Unahariri huduma iliyopo' + (title ? ': ' + title : '') + '. Hali ya uchapishaji haitabadilika.';
+            head.insertAdjacentElement('afterend', note);
+        }
+    } else if (!on && note && note.parentNode) {
+        note.parentNode.removeChild(note);
+    }
+}
+
+window.skhServiceEditCancel = function () {
+    SERVICE_EDIT.id = null; SERVICE_EDIT.doc = null; SERVICE_EDIT.busy = false;
+    svcSetFormMode(false);
+    var f = svcEl('serviceForm'); if (f) f.reset();
+    try { window.updateHubCategories(); } catch (e) {}
+};
+
+/* "Ongeza Huduma" — hakikisha hali ya uhariri imetolewa kabla ya kuunda mpya. */
+window.skhServiceFormNew = function () {
+    window.skhServiceEditCancel();
+    if (typeof window.showForm === 'function') window.showForm('serviceForm');
+};
+
+window.skhServiceEditOpen = async function (id) {
+    if (!id) return;
+    if (skh.requireAuth && !skh.requireAuth()) return;
+    var me = skh.currentUser && skh.currentUser.uid;
+    var snap;
+    try {
+        snap = await skh.getDoc(skh.doc(skh.db, 'services', id));
+    } catch (e) {
+        alert(serviceUpdateErrorText(e));
+        return;
+    }
+    if (!snap || (snap.exists && !snap.exists())) { alert('Huduma hii haipo tena.'); return; }
+    var doc = Object.assign({ id: id }, (snap.data && snap.data()) || {});
+    var guard = serviceEditGuard(doc, me);
+    if (!guard.ok) {
+        alert(guard.error === 'forbidden' ? 'Huduma hii si yako — huwezi kuihariri.'
+            : guard.error === 'no_owner' ? 'Huduma hii haina mmiliki aliyesajiliwa — haiwezi kuhaririwa hapa.'
+            : guard.error === 'auth' ? 'Ingia kwanza ili kuhariri huduma.'
+            : 'Huduma hii haipo tena.');
+        return;
+    }
+
+    if (typeof window.showForm === 'function') window.showForm('serviceForm');
+    var vals = serviceEditSnapshot(doc);
+
+    /* 1) kundi -> kategoria -> aina ndogo -> vigezo (mpangilio ule ule wa fomu) */
+    svcSet('servGroupType', vals.groupType);
+    try { window.updateHubCategories(); } catch (e) {}
+    svcSet('servHubCategory', vals.category);
+    try { window.updateHubSubcategories(); } catch (e) {}
+    svcSet('servHubSubCategory', vals.subCategory);
+    try { window.generateHubServiceFilters(); } catch (e) {}
+
+    /* 2) vigezo vya taxonomy vilivyohifadhiwa (data halisi pekee) */
+    Object.keys(vals.filters).forEach(function (key) {
+        var inputs = document.querySelectorAll('#hubServiceFiltersArea .hub-service-filter-input');
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].getAttribute('data-filter') === key) { inputs[i].value = vals.filters[key]; break; }
+        }
+    });
+
+    /* 3) sehemu nyingine zote */
+    svcSet('servHubTitle', vals.title);
+    svcSet('servHubPrice', vals.price);
+    svcSet('servPricingModel', vals.pricingModel);
+    svcSet('servAvailability', vals.availabilityStatus);
+    svcSet('servHubDesc', vals.description);
+    svcSet('servHubLocation', vals.location);
+    svcCheck('servTravelAvailable', vals.travelAvailable);
+    svcCheck('servNegoAllowed', vals.negotiationAllowed);
+    var fileEl = svcEl('servHubImage');
+    if (fileEl && fileEl.value) { try { fileEl.value = ''; } catch (e) {} }   // picha ya zamani inabaki kwenye hati
+
+    /* 4) nchi + mkoa (orodha ya mikoa inategemea nchi) */
+    var countryEl = svcEl('servHubCountry');
+    if (countryEl && vals.countryCode) {
+        countryEl.value = vals.countryCode;
+        try { countryEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+        svcSet('servHubRegion', vals.region);
+    } else if (countryEl) {
+        try { countryEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+        svcSet('servHubRegion', '');
+    }
+
+    SERVICE_EDIT.id = id;
+    SERVICE_EDIT.doc = doc;
+    SERVICE_EDIT.busy = false;
+    SERVICE_EDIT.lastOkAt = 0;
+    svcSetFormMode(true, vals.title);
+};
+
 window.submitSokohaiService = async function(event) {
     if(event) event.preventDefault();
     if(!skh.requireAuth()) return;
@@ -271,10 +407,6 @@ window.submitSokohaiService = async function(event) {
         return;
     }
 
-    const origText = btn.innerHTML;
-    btn.innerHTML = " Inachapisha...";
-    btn.disabled = true;
-
     // Kusanya vigezo vya kipekee vya kila aina ya huduma
     let filtersObj = {};
     document.querySelectorAll('.hub-service-filter-input').forEach(inp => {
@@ -284,8 +416,63 @@ window.submitSokohaiService = async function(event) {
         }
     });
 
+    /* [PART 4 FOLLOW-UP 2026-11-24] Thamani MOJA zinazotumika kwa kuunda na kuhariri. */
+    const editValues = {
+        title: title, groupType: grp, category: cat, subCategory: sub,
+        description: desc, location: loc, price: price,
+        pricingModel: pricingModelSel,
+        availabilityStatus: ((document.getElementById('servAvailability') || {}).value || ''),
+        travelAvailable: !!((document.getElementById('servTravelAvailable') || {}).checked),
+        negotiationAllowed: (function () { var el = document.getElementById('servNegoAllowed'); return el ? !!el.checked : true; })(),
+        filters: filtersObj,
+        image: ''
+    };
+    const editCountry = (typeof window.skhListingCountryFields === 'function') ? window.skhListingCountryFields('servHub') : {};
+    editValues.countryCode = editCountry.countryCode || '';
+    editValues.region = editCountry.region || '';
+
+    /* Ukaguzi wa sehemu za lazima kwa UHARIRI (kanuni zile zile za kuunda). */
+    if (SERVICE_EDIT.id) {
+        const editErrors = validateServiceUpdate(editValues);
+        if (editErrors.length) {
+            const labels = { title: 'Kichwa', groupType: 'Kundi', category: 'Kategoria', subCategory: 'Aina ndogo', description: 'Maelezo', location: 'Eneo', price: 'Bei' };
+            alert(' Sehemu hizi zinahitajika kabla ya kuhifadhi: ' + editErrors.map(k => labels[k] || k).join(', ') + '.');
+            return;
+        }
+    }
+
+    /* Kizuizi cha kutuma mara mbili (bonyeza mara mbili / kurudia haraka). */
+    if (serviceSubmitGate(SERVICE_EDIT, Date.now()).blocked) return;
+
+    const origText = btn.innerHTML;
+    btn.innerHTML = SERVICE_EDIT.id ? " Inahifadhi..." : " Inachapisha...";
+    btn.disabled = true;
+    SERVICE_EDIT.busy = true;
+
     try {
         const imageUrl = await skh.uploadImage('servHubImage');
+
+        /* [PART 4 FOLLOW-UP 2026-11-24] UHARIRI: update kwenye hati ILE ILE.
+           Patch haina status/publicationStatus/userId/createdAt — hali ya uchapishaji
+           na umiliki haviwezi kubadilishwa kwa kuhariri. */
+        if (SERVICE_EDIT.id) {
+            const built = buildServiceUpdate(Object.assign({}, editValues, { image: imageUrl || '' }), SERVICE_EDIT.doc);
+            if (!built.ok) {
+                alert(' Sehemu zifuatazo hazijakamilika: ' + built.errors.join(', ') + '.');
+                return;
+            }
+            await skh.updateDoc(skh.doc(skh.db, 'services', SERVICE_EDIT.id), built.patch);
+            SERVICE_EDIT.lastOkAt = Date.now();
+            const editedTitle = built.patch.title;
+            window.skhServiceEditCancel();
+            if (skh._feedCache && skh._feedCache.clear) skh._feedCache.clear();
+            if (typeof window.skhRefreshHomeListings === 'function') { try { await window.skhRefreshHomeListings(); } catch (eR) {} }
+            alert(' MABADILIKO YAMEHIFADHIWA!\nHuduma "' + editedTitle + '" imesasishwa. Hali ya uchapishaji haijabadilishwa.');
+            closeModals();
+            if (typeof window.loadHubDetailedMyServices === 'function') { try { await window.loadHubDetailedMyServices(); } catch (eL) {} }
+            return;
+        }
+
         const docId = await skh.saveData('services', {
             title: title,
             price: price,
@@ -308,6 +495,7 @@ window.submitSokohaiService = async function(event) {
         });
 
         if (docId) {
+            SERVICE_EDIT.lastOkAt = Date.now();
             alert(` HUDUMA IMESAJILIWA!\nHuduma yako ya "${title}" imesajiliwa kikamilifu kwenye database ya Sokohai Huduma Hub.`);
             document.getElementById('serviceForm').reset();
             closeModals();
@@ -316,8 +504,9 @@ window.submitSokohaiService = async function(event) {
             }
         }
     } catch (e) {
-        alert(" Imeshindwa kusajili: " + e.message);
+        alert(SERVICE_EDIT.id ? serviceUpdateErrorText(e) : (" Imeshindwa kusajili: " + e.message));
     } finally {
+        SERVICE_EDIT.busy = false;
         btn.innerHTML = origText;
         btn.disabled = false;
     }

@@ -12,6 +12,8 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https
 import '../../shared/search-dictionary.js'; // [SEARCH-INTEL 2026-11-21] globalThis.SKHSearchDictionary (language data)
 import '../../shared/search-tokens.js'; // [SEARCH 2026-11-14] globalThis.SKHSearchTokens
 import '../../shared/location-core.js'; // [LOCATION 2026-11-21] globalThis.SKHLocationCore (one set of location rules)
+import '../../shared/delivery-destination-core.js'; // [PART 5B-3 2026-11-25] globalThis.SKHDestinationCore (one destination check for every ride writer)
+
 import '../../shared/search-engine.js'; // [SEARCH-INTEL 2026-11-21] globalThis.SKHSearchEngine (understanding + ranking)
 import '../../shared/seo-paths.js'; // [SEO 2026-11-21] globalThis.SKHSeoPaths (crawlable listing URLs)
 import { categoryFilterValues, categoryMatches, canonicalCategoryId, categoryInfo, buyerSubcategories, buyerProductCategories, legacySubcategoriesFor, categoryLabel } from '../../shared/category-filter-core.mjs';
@@ -104,6 +106,22 @@ skh.splitRidePrivate = function splitRidePrivate(data) {
     return { pub: pub, priv: priv };
 };
 skh.createRideRequest = async function createRideRequest(data, rideId) {
+    /* [PART 5B-3 2026-11-25] Kizuizi cha mwisho cha client kwenye KITUO KIMOJA cha
+       uandishi: ride yenye anwani ya kufikishiwa tupu haijaandikwa kabisa (hakuna
+       hati ya ride_requests wala private/contact). Mamlaka ya mwisho ni server
+       (functions/routing-core.js → requireDestination). */
+    const destCore = (typeof globalThis !== 'undefined' && globalThis.SKHDestinationCore) ||
+        (typeof window !== 'undefined' && window.SKHDestinationCore) || null;
+    if (destCore) {
+        const chk = destCore.resolve(data && data.toLocation);
+        if (!chk.ok) {
+            const err = new Error(destCore.messageFor(chk.reason));
+            err.code = 'invalid_destination';
+            err.reason = chk.reason;
+            throw err;
+        }
+        data = Object.assign({}, data, { toLocation: chk.value });
+    }
     const parts = skh.splitRidePrivate(data);
     const ref = rideId ? doc(skh.db, 'ride_requests', String(rideId)) : doc(collection(skh.db, 'ride_requests'));
     const batch = writeBatch(skh.db);
@@ -1159,6 +1177,32 @@ skh.activeMarketMode = "all_modes";
 
 skh.MY_ADMIN_EMAIL = "rshabansaid@gmail.com";
 
+/* [PART 2 SECURITY 2026-11-24] Admin yuko kwenye claims; barua-pepe ni fallback.
+ * Sababu: firestore.rules::isAdmin() inaheshimu barua-pepe ya mmiliki PALE TU
+ * `email_verified === true`. Client ilikuwa inalinganisha barua-pepe pekee, kwa
+ * hiyo UI ya admin ingeweza kuonekana kwa akaunti ambayo server itaikataa kila
+ * write. Hii inaunganisha client na server — haiwezi kumfunga mmiliki, kwa sababu
+ * kama barua-pepe haijathibitishwa, rules tayari zinamkataa.
+ * Hakuna uamuzi wa usalama unaotegemea client: ni kuonyesha UI tu. */
+skh.isAdminEmailFallback = function isAdminEmailFallback(user) {
+    var u = user || skh.currentUser || null;
+    var cfg = window.SOKOHAI_CONFIG || {};
+    // Opt-OUT si opt-in: kabla ya PART 2 gates 4 za UI zilikuwa zinakubali barua-pepe
+    // BILA kuangalia flag hii. Kufanya flag iwe lazima kungeweza kumfunga mmiliki kama
+    // config haijapakiwa; kinacholinda usalama ni email_verified, si flag.
+    if (cfg.ADMIN_EMAIL_FALLBACK === false) return false;
+    if (!u || !u.email) return false;
+    if (u.emailVerified !== true) return false;
+    var want = String(skh.MY_ADMIN_EMAIL || '').toLowerCase();
+    return !!want && String(u.email).toLowerCase() === want;
+};
+
+skh.isAdminUser = function isAdminUser(user) {
+    var claims = window.SOKOHAI_CLAIMS || {};
+    if (claims.isAdmin === true || claims.admin === true || claims.role === 'admin' || claims.superAdmin === true) return true;
+    return skh.isAdminEmailFallback(user);
+};
+
 skh.applyModeUI = function applyModeUI() {
     // Invalidate pending renders from the previous dashboard before switching.
     skh._dashboardRenderSeq = (skh._dashboardRenderSeq || 0) + 1;
@@ -2075,6 +2119,7 @@ skh._catalogSearchAugment = async function (base, collectionToFetch, gen, feedGr
                 const it = Object.assign({ id: d.id, collectionName: col }, d.data());
                 if (have[col + '/' + it.id]) return;
                 if (col === 'products' && typeof skh.productEligible === 'function' && !skh.productEligible(it)) return;
+                if (col === 'services' && typeof skh.serviceEligible === 'function' && !skh.serviceEligible(it)) return;   // [PART 4]
                 extra.push(it);
             });
         } catch (e) { console.warn('[search] catalogue query', (e && e.code) || e); }
@@ -2208,7 +2253,9 @@ skh.loadMainFeed = function loadMainFeed(collectionToFetch = 'products') {
             });
             // [RECYCLE 2026-11-21] chuja kwenye chanzo pia: skh.cachedItems inatumiwa na moduli nyingine (Gundua,
             // utafutaji wa gumzo, wasifu, showcase) — bidhaa za Recycle Bin zisiingie humo kabisa.
-            combinedData = combinedData.filter(d => !d || d.collectionName !== 'products' || typeof skh.productEligible !== 'function' || skh.productEligible(d));
+            combinedData = combinedData.filter(d => !d
+                || (d.collectionName === 'products' ? (typeof skh.productEligible !== 'function' || skh.productEligible(d))
+                    : (d.collectionName === 'services' ? skh.serviceEligible(d) : true)));   // [PART 4] huduma zilizosimamishwa hazionekani
             combinedData = sortByCreated(combinedData);
             skh._feedCacheSet(cacheKey, combinedData);
             if (__feedGen !== skh._feedGen || skh._feedShownKey !== cacheKey) return; // [NAV] tab nyingine imeshafunguliwa
@@ -2285,6 +2332,7 @@ let qNormal;
         if (!active()) return;
         let rows = state.docs.map(doc => ({ id: doc.id, collectionName: collectionToFetch, ...doc.data() }));
         if (collectionToFetch === 'products') rows = rows.filter(skh.productEligible);
+        if (collectionToFetch === 'services') rows = rows.filter(skh.serviceEligible);   // [PART 4] huduma zilizosimamishwa hazionekani
         __paint(sortByCreated(rows));
     };
     state.more = async () => {
@@ -2487,8 +2535,8 @@ skh.cardCtaLabel = function cardCtaLabel(colName) {
 // — INAONYESHWA IKIWA IMEJULIKANA TU (hatubandiki uwepo wa bidhaa).
 skh.cardAvail = function cardAvail(data, colName) {
     if (colName === 'products') {
-        const stock = Number(data.stock);
-        if (Number.isFinite(stock)) {
+        const stock = skh.stockNumber(data);   // [PART 3] '' / null = haijulikani, si 0
+        if (stock !== null) {
             if (stock <= 0) return '<span class="skh-badge skh-badge--out">Zimeisha</span>';
             if (stock <= 5) return `<span class="skh-badge skh-badge--low">Zimebaki ${stock}</span>`;
             return `<span class="skh-badge skh-badge--in">Zipo (${stock})</span>`;
@@ -2617,8 +2665,7 @@ skh.cardVerifiedPill = function cardVerifiedPill(data, colName) {
 // [OutPill] Bidhaa zikiwa zimeisha — kibandiko wazi juu ya picha
 skh.cardOutPill = function cardOutPill(data, colName) {
     if (colName !== 'products') return '';
-    const stock = Number(data.stock);
-    if (Number.isFinite(stock) && stock <= 0) return '<span class="skh-out-pill">' + skhTF('card_out', 'Zimeisha') + '</span>';
+    if (skh.isSoldOut(data)) return '<span class="skh-out-pill">' + skhTF('card_out', 'Zimeisha') + '</span>';   // [PART 3] stock ''/null si "imeisha"
     return '';
 };
 
@@ -2674,7 +2721,7 @@ skh.cardImageOverlays = function cardImageOverlays(data, colName, extra) {
 
 // [ImageClass] Darasa la ziada la picha (mfano grayscale zikiisha)
 skh.cardImageClass = function cardImageClass(data, colName) {
-    if (colName === 'products' && Number.isFinite(Number(data.stock)) && Number(data.stock) <= 0) {
+    if (colName === 'products' && skh.isSoldOut(data)) {   // [PART 3] greyscale = imeisha PEKEE
         return ' skh-img--out';
     }
     return '';
@@ -2764,14 +2811,38 @@ skh.activeBoostBadge = function activeBoostBadge(data) {
 // [ProductPostCard] TEASER: picha -> jina -> bei -> duka  -> eneo.
 // Taarifa kamili (stock, ulinzi, maoni) zipo kwenye ukurasa wa bidhaa.
 // [STOCK CHIP 2026-11-03] Hali halisi ya stock kwa kadi (data.stock pekee).
+/* [PART 3 2026-11-24] UKWELI WA STOCK — chanzo KIMOJA cha kusoma stock ya bidhaa.
+ * Kasoro iliyokuwa imeenea: `Number(data.stock)` inarudisha 0 kwa `''` na `null`, hivyo
+ * bidhaa ambayo muuzaji hakuweka stock (form ikiachwa tupu) ilionyeshwa "Zimeisha" na
+ * picha ikawa greyscale. Hapa tunatofautisha "haijulikani" (null) na "imeisha" (0).
+ * `cardStockChip` ilikuwa sahihi tayari; helpers hizi zinaunganisha sehemu zilizobaki. */
+skh.stockNumber = function stockNumber(data) {
+    const raw = (data && typeof data === 'object') ? data.stock : data;
+    if (raw === null || raw === undefined) return null;
+    if (typeof raw === 'boolean') return null;
+    let v = raw;
+    if (typeof v === 'string') { v = v.trim().replace(/,/g, ''); if (v === '') return null; }
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+};
+skh.stockOutStatus = function stockOutStatus(data) {
+    if (!data || typeof data !== 'object') return false;
+    const a = String(data.availabilityStatus || data.availability || data.stockStatus || '').toLowerCase();
+    return a === 'out_of_stock' || a === 'out-of-stock' || a === 'outofstock' || a === 'out';
+};
+/* Bidhaa imeisha? stock halisi kwanza; bila stock, tu ikiwa data inasema wazi imeisha. */
+skh.isSoldOut = function isSoldOut(data) {
+    const n = skh.stockNumber(data);
+    if (n !== null) return n <= 0;
+    return skh.stockOutStatus(data);
+};
+
 /* [PHASE 0 — 2026-11-08] Hali ya upatikanaji: lebo TATU pekee kama
    ilivyoainishwa (Inapatikana / Stock ndogo / Imeisha). Namba hazibuniwi:
    lebo hutolewa kutoka `stock` halisi; `stock` isipokuwepo hakuna lebo. */
 skh.cardStockChip = function cardStockChip(data) {
-    const raw = data && data.stock;
-    if (raw === null || raw === undefined || raw === '') return '';
-    const stock = Number(raw);
-    if (!Number.isFinite(stock)) return '';
+    const stock = skh.stockNumber(data);   // [PART 3] chanzo kimoja
+    if (stock === null) return '';
     if (stock <= 0) return '<span class="skh-stock-chip skh-stock-chip--out">' + skhTF('card_out', 'Zimeisha') + '</span>';
     if (stock <= 5) return '<span class="skh-stock-chip skh-stock-chip--low">' + skhTF('card_stock_low', 'Stock ndogo') + '</span>';
     return '<span class="skh-stock-chip skh-stock-chip--in">' + skhTF('card_in_stock', 'Inapatikana') + '</span>';
@@ -2885,8 +2956,7 @@ skh.cardActions = function cardActions(data, colName) {
     const id = skh.skhJsEsc(data.id);
     const uid = String(data.userId || data.sellerId || '');
     const name = String(data.ownerName || data.storeName || data.sellerName || '');
-    const stock = Number(data.stock);
-    const soldOut = Number.isFinite(stock) && stock <= 0;   // [DETAIL PARITY] kama Product Details
+    const soldOut = skh.isSoldOut(data);   // [PART 3] [DETAIL PARITY] kama Product Details
     const idArg = "'" + id + "'";
     const colArg = "'" + skh.skhJsEsc(colName || 'products') + "'";
     const uidArg = uid ? "'" + skh.skhJsEsc(uid) + "'" : 'null';
@@ -2952,7 +3022,7 @@ skh.ProductPostCard = function ProductPostCard(data, colName) {
     ].join('');
     // [PHASE 0] "Imeisha" inaonyeshwa MARA MOJA tu — pill juu ya picha
     // (cardOutPill). Chip ya meta haijirudii; nafasi yake inabaki kwa eneo.
-    const isSoldOut = Number.isFinite(Number(data.stock)) && Number(data.stock) <= 0;
+    const isSoldOut = skh.isSoldOut(data);   // [PART 3]
     const stockChip = isSoldOut ? '' : skh.cardStockChip(data);
     // [R16 D7 — uamuzi wa mmiliki] Jina la muuzaji / tathmini HAVIONEKANI mbele ya kadi ya bidhaa
     // (sawa na SokoHuruCard #1). Taarifa za muuzaji ziko kwenye ukurasa wa bidhaa (openProduct).
@@ -3011,11 +3081,39 @@ skh.SokoHuruCard = function SokoHuruCard(data, colName) {
 //   Huduma:  [📍 eneo] ━━━ [aina ya huduma: ana kwa ana / mtandaoni]   (sehemu isiyo na data inaachwa)
 //   Usafiri: [● kutoka] ━━ 🚗 ━━ [kwenda ●]; bila njia maalum -> eneo la huduma.
 const SKH_PIN_SVG = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2z"/></svg>';
+/* [PART 4 2026-11-24] MODE YA HUDUMA — chanzo KIMOJA.
+ * Kasoro: fomu halisi ya kuchapisha huduma (19-roles.js submitSokohaiService) huhifadhi
+ * `groupType` (physical/online/food/rental), lakini kadi na ukurasa wa huduma zilisoma
+ * `section` pekee — hivyo huduma mpya zilikuwa hazionyeshi "Mtandaoni"/"Ana kwa ana".
+ * Data ya zamani (`section`) inaendelea kutumika kwanza; hatubuni mode isiyojulikana. */
+skh.serviceMode = function serviceMode(data) {
+    if (!data) return '';
+    var raw = String(data.section || data.groupType || '').toLowerCase().trim();
+    if (raw === 'online') return 'online';
+    if (raw === 'physical') return 'physical';
+    if (data.online === true) return 'online';
+    return '';
+};
+
+/* [PART 4 2026-11-24] HUDUMA INAWEZA KUONEKANA SOKONI?
+ * Kanuni MOJA kwa huduma. `productEligible` haitumiki hapa kwa makusudi: inahitaji
+ * `saleMode`/`channels` za bidhaa na ingefuta huduma ZOTE. Kanuni hii inakataa tu hati
+ * zilizoondolewa/ zilizosimamishwa; hati za zamani zisizo na `status` zinaendelea kuonekana. */
+skh.serviceEligible = function serviceEligible(data) {
+    if (!data) return false;
+    if (data.deleted === true || data.archived === true || data.adminHidden === true) return false;
+    if (data.deletedAt || data.suspendedAt || data.archivedAt) return false;
+    const st = String(data.publicationStatus || data.status || data.listingStatus || '').toLowerCase();
+    if (['deleted', 'archived', 'suspended', 'blocked', 'rejected', 'removed', 'inactive', 'draft'].indexOf(st) !== -1) return false;
+    return true;
+};
+
 skh.cardServiceInfoRow = function cardServiceInfoRow(data) {
     if (!data) return '';
     const loc = String(data.location || data.region || data.serviceArea || '').trim();
     const sec = String(data.section || '').toLowerCase();
-    const mode = sec === 'online' ? ['globe', skhTF('card_mode_online', 'Mtandaoni')] : (sec === 'physical' ? ['home', skhTF('card_mode_physical', 'Ana kwa ana')] : null);   // [I18N 2026-11-23]
+    const m = typeof skh.serviceMode === 'function' ? skh.serviceMode(data) : sec;
+    const mode = m === 'online' ? ['globe', skhTF('card_mode_online', 'Mtandaoni')] : (m === 'physical' ? ['home', skhTF('card_mode_physical', 'Ana kwa ana')] : null);
     if (!loc && !mode) return '';
     const a = loc ? '<span class="skh-oc-info-a" title="' + skh.skhEscape(loc) + '">' + SKH_PIN_SVG + '<b>' + skh.skhEscape(loc) + '</b></span>' : '';
     const b = mode ? '<span class="skh-oc-info-b">' + skh.cardIcon(mode[0], 13) + '<b>' + mode[1] + '</b></span>' : '';
@@ -3818,6 +3916,20 @@ skh.smartCartItems = function smartCartItems(){ try { skh.myCart = JSON.parse(sk
 skh.smartCartPrice = function smartCartPrice(x){ return parseFloat(String(x.price||0).replace(/,/g,'')) || 0; }
 
 skh.smartCartQty = function smartCartQty(x){ return Math.max(1, parseInt(x.qty || x.quantity || 1)); }
+
+/* [PART 3 2026-11-24] Kikomo cha stock kwa mstari wa cart: namba, au null = hakijulikani.
+ * Chanzo kimoja na ukurasa wa bidhaa (`skh.stockNumber`). Variant iliyochaguliwa
+ * ikiwa na stock yake, hiyo inatumika kwanza. */
+skh.smartCartStockLimit = function smartCartStockLimit(x){
+    if (!x) return null;
+    var v = x.chosenVariant || x.selectedVariant || null;
+    var n = skh.stockNumber(v && (v.stock !== undefined ? v : null));
+    if (n !== null) return Math.max(0, Math.trunc(n));
+    n = skh.stockNumber(x);
+    if (n !== null) return Math.max(0, Math.trunc(n));
+    if (skh.stockOutStatus && skh.stockOutStatus(x)) return 0;
+    return null;
+};
 
 skh.smartCartSellerId = function smartCartSellerId(x){ return x.sellerId || x.userId || x.ownerId || 'unknown_seller'; }
 

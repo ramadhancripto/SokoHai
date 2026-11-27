@@ -53,15 +53,20 @@ const mOneEnd = L.scoreCandidate(driver({
 }), req);
 ok('ncha moja tu → si exact (pendekezo)', mOneEnd && mOneEnd.exact === false && mOneEnd.routeScore === 1);
 
+// [PART 5B-2] TABIA ILIYOBADILISHWA KWA MAKUSUDI: chombo kisicholingana si
+// "alama ndogo" tena — mgombeaji HATENGWI bali HATUMIKI. Kigezo kipya ni
+// kutengwa (null) + sababu, si exact=false.
 const mWrongVehicle = L.scoreCandidate(driver({
     uid: 'd3', vehicleType: 'Bajaji', maxWeight: '100 kg'
 }), req);
-ok('chombo tofauti → si exact', mWrongVehicle && mWrongVehicle.exact === false && mWrongVehicle.vehicleOk === false);
+ok('chombo tofauti → ametengwa kabisa', mWrongVehicle === null);
+ok('sababu: vehicle_mismatch', L.eligibility(driver({ uid: 'd3', vehicleType: 'Bajaji', maxWeight: '100 kg' }), req).reason === 'vehicle_mismatch');
 
 const mLowCap = L.scoreCandidate(driver({
     uid: 'd4', maxWeight: '500 kg'
 }), req);
-ok('uwezo duni (500<800 kg) → capacityOk false', mLowCap.capacityOk === false && mLowCap.exact === false);
+ok('uwezo duni (500<800 kg) → ametengwa kabisa', mLowCap === null);
+ok('sababu: capacity_insufficient', L.eligibility(driver({ uid: 'd4', maxWeight: '500 kg' }), req).reason === 'capacity_insufficient');
 
 ok('tani 2 zinahesabiwa kama 2000 kg', L.capacityKg({ maxWeight: '2 tani' }) === 2000);
 ok('kg hubaki kg', L.capacityKg({ capacity: '750kg' }) === 750);
@@ -80,13 +85,15 @@ const mPax = L.scoreCandidate({
     supportedServices: ['passenger'], rating: 4
 }, reqPax);
 ok('abiria + chombo cha abiria → exact', mPax && mPax.exact === true);
-ok('mizigo haifai kwa chombo cha abiria tu', (() => {
-    const m = L.scoreCandidate({
-        uid: 'p2', kind: 'driver', online: true, vehicleType: 'Bajaji',
+// [PART 5B-2] Huduma isiyolingana pia ni FILTER, si alama.
+ok('mizigo haifai kwa chombo cha abiria tu → ametengwa', (() => {
+    // chombo KINALINGANA (Lori) ili kigezo cha huduma kipimwe peke yake.
+    const cand = {
+        uid: 'p2', kind: 'driver', online: true, vehicleType: 'Lori', maxWeight: '3 tani',
         pickupRegion: 'Tabora', destinationRegion: 'Pangale',
         fullRoute: 'Tabora → Pangale', supportedServices: ['passenger']
-    }, req);
-    return m && m.serviceOk === false;
+    };
+    return L.scoreCandidate(cand, req) === null && L.eligibility(cand, req).reason === 'service_unsupported';
 })());
 
 console.log('\n[B] RANK — mpangilio na mawakala');
@@ -427,6 +434,114 @@ console.log('\n[H] DATA LAYER — expiry sweep na no-match');
     ok('no_match → failed_assignment (soko la jumla)', rideX.assignmentStatus === 'failed_assignment' && rideX.routingStatus === 'no_match');
 }
 
+console.log('\n[H2] [PART 5B-2] SIFA ZA LAZIMA — waliofeli HAWAPEWI ofa');
+
+{
+    // Route ya msingi ya majaribio: Dar es Salaam -> Mwanza, mzigo wa kilo 8,000, Lori.
+    const reqHeavy = { from: 'Dar es Salaam', to: 'Mwanza', category: 'Cargo', vehicleType: 'Lori', weight: 8000, excludeUid: 'buyer1' };
+    const base = {
+        kind: 'driver', online: true, vehicleType: 'Lori', maxWeight: '10 tani',
+        supportedServices: ['cargo'], pickupRegion: 'Dar es Salaam', destinationRegion: 'Mwanza',
+        fullRoute: 'Dar es Salaam → Morogoro → Mwanza', rating: 4
+    };
+    const mk = (over) => Object.assign({}, base, over || {});
+
+    /* 1. Dereva aliyesimamishwa */
+    const susp = mk({ uid: 'susp1', suspended: true });
+    ok('1) dereva aliyesimamishwa ametengwa', L.eligibility(susp, reqHeavy).reason === 'account_inactive' && L.scoreCandidate(susp, reqHeavy) === null);
+    ok('1b) hata kama ni "exact" kwa route/chombo/uwezo', L.eligibility(mk({ uid: 'susp2', accountStatus: 'suspended' }), reqHeavy).reason === 'account_inactive');
+
+    /* 2. Akaunti isiyo hai */
+    ok('2) accountStatus=inactive ametengwa', L.eligibility(mk({ uid: 'ina1', accountStatus: 'inactive' }), reqHeavy).reason === 'account_inactive');
+    ok('2b) agentStatus=suspended ametengwa', L.eligibility(mk({ uid: 'ina2', agentStatus: 'suspended' }), reqHeavy).reason === 'account_inactive');
+    ok('2c) accountStatus=active HAPITIWI (anabaki)', L.eligibility(mk({ uid: 'ok1', accountStatus: 'active' }), reqHeavy).ok === true);
+    ok('2d) bila accountStatus (data ya zamani) anabaki', L.eligibility(mk({ uid: 'ok2' }), reqHeavy).ok === true);
+
+    /* 3. Chombo kisicholingana */
+    ok('3) Bajaji kwa ombi la Lori ametengwa', L.eligibility(mk({ uid: 'veh1', vehicleType: 'Bajaji' }), reqHeavy).reason === 'vehicle_mismatch');
+    ok('3b) dereva asiye na vehicleType ametengwa ombi likitaja aina', L.eligibility(mk({ uid: 'veh2', vehicleType: '' }), reqHeavy).reason === 'vehicle_mismatch');
+    ok('3c) ombi lisilotaja chombo halikatai kwa vehicleType', L.eligibility(mk({ uid: 'veh3', vehicleType: 'Gari dogo' }), { from: 'Dar es Salaam', to: 'Mwanza', category: 'Cargo', weight: 0 }).ok === true);
+
+    /* 4. Uwezo mdogo */
+    ok('4) uwezo 500kg < mzigo 8000kg ametengwa', L.eligibility(mk({ uid: 'cap1', maxWeight: '500 kg' }), reqHeavy).reason === 'capacity_insufficient');
+    ok('4b) uwezo 5 tani < 8000kg ametengwa', L.eligibility(mk({ uid: 'cap2', maxWeight: '5 tani' }), reqHeavy).reason === 'capacity_insufficient');
+    ok('4c) uwezo 10 tani unatosha', L.eligibility(mk({ uid: 'cap3', maxWeight: '10 tani' }), reqHeavy).ok === true);
+    ok('4d) uzito usiojulikana (0) haukatai kwa uwezo', L.eligibility(mk({ uid: 'cap4', maxWeight: '100 kg' }), { from: 'Dar es Salaam', to: 'Mwanza', category: 'Cargo', vehicleType: 'Lori', weight: 0 }).ok === true);
+
+    /* 5. Huduma isiyolingana */
+    ok('5) services=[watu] kwa cargo ametengwa', L.eligibility(mk({ uid: 'svc1', supportedServices: ['Watu', 'Passenger'] }), reqHeavy).reason === 'service_unsupported');
+    ok('5b) services tupu (hajataja) anaruhusiwa', L.eligibility(mk({ uid: 'svc2', supportedServices: [] }), reqHeavy).ok === true);
+
+    /* 6. Route isiyolingana */
+    ok('6) route tofauti kabisa ametengwa', L.eligibility(mk({ uid: 'rt1', pickupRegion: 'Mbeya', destinationRegion: 'Songwe', fullRoute: 'Mbeya → Songwe' }), reqHeavy).reason === 'route_mismatch');
+    ok('6b) ncha MOJA (fallback halali) anaruhusiwa', L.eligibility(mk({ uid: 'rt2', destinationRegion: 'Dodoma', fullRoute: 'Dar es Salaam → Dodoma' }), reqHeavy).ok === true);
+
+    /* 7. Dereva anayefaa kikamilifu */
+    const good = mk({ uid: 'good1', rating: 4.6, price: 90000 });
+    const gm = L.scoreCandidate(good, reqHeavy);
+    ok('7) dereva anayefaa → exact', !!gm && gm.exact === true && gm.vehicleOk === true && gm.capacityOk === true && gm.serviceOk === true);
+    ok('7b) alama > 0', !!gm && gm.score > 0);
+
+    /* 8. Waliofaa wengi — mpangilio (rating juu/bei nafuu kwanza) */
+    const r1 = L.rankCandidates([
+        mk({ uid: 'a_ok', rating: 3.0, price: 200000 }),
+        mk({ uid: 'b_ok', rating: 5.0, price: 100000 }),
+        mk({ uid: 'c_ok', rating: 4.0, price: 150000 })
+    ], reqHeavy);
+    ok('8) waliofaa wote wamechaguliwa (3)', r1.chosen.length === 3);
+    ok('8b) mpangilio: rating/bei bora kwanza', r1.chosen[0].uid === 'b_ok' && r1.chosen[2].uid === 'a_ok');
+    ok('8c) hakuna aliyetengwa', r1.rejected.length === 0);
+
+    /* 9. Hakuna dereva anayefaa → seti tupu (+ agents ni safu ya pili) */
+    const none = L.rankCandidates([
+        mk({ uid: 'x1', suspended: true }),
+        mk({ uid: 'x2', maxWeight: '500 kg' }),
+        mk({ uid: 'x3', vehicleType: 'Bajaji' })
+    ], reqHeavy);
+    ok('9) hakuna dereva anayefaa → chosen tupu', none.chosen.length === 0);
+    ok('9b) sababu zimeandikwa kwa kila aliyetengwa', none.rejected.length === 3
+        && none.rejected.map(r => r.reason).sort().join(',') === 'account_inactive,capacity_insufficient,vehicle_mismatch');
+
+    /* 10. MFANO ULIRIPOTIWA: Bajaji ya kg 500 iliyosimamishwa + mzigo wa Lori kg 8,000 */
+    const reported = { uid: 'bajaji1', kind: 'driver', online: true, vehicleType: 'Bajaji', maxWeight: '500 kg', supportedServices: ['passenger'], pickupRegion: 'Dar es Salaam', destinationRegion: 'Mwanza', suspended: true };
+    const rep = L.rankCandidates([reported], reqHeavy);
+    ok('10) MFANO: Bajaji 500kg iliyosimamishwa HAIPEWI assignment ya Lori 8,000kg', rep.chosen.length === 0 && rep.drivers.length === 0);
+    ok('10b) sababu ni ya kwanza kwa usalama (account_inactive)', rep.rejected[0].reason === 'account_inactive');
+    const repActive = Object.assign({}, reported, { suspended: false });
+    ok('10c) hata akiwa hai: chombo + uwezo bado vinamkataa',
+        L.rankCandidates([repActive], reqHeavy).rejected[0].reason === 'vehicle_mismatch');
+
+    /* 11. Mteuzi wa mteja (preferred driver) haepushwi kwenye sifa za lazima */
+    {
+        const db = FakeDb();
+        // Oda ya BIDHAA yenye tangazo lililochaguliwa (product path) — hali halisi
+        // ya checkout: 43-delivery-choice huandika delivery.* kwenye oda.
+        await db.doc('orders/o_pref').set({
+            buyerId: 'mteja1', sellerId: 'muuzaji1', itemTitle: 'Saruji mifuko 40',
+            productOrder: true, amount: 400000, currency: 'TZS', status: 'held',
+            delivery: {
+                required: true, logisticPostId: 'veh_susp', logisticProviderId: 'dsusp',
+                pickupLocation: 'Tabora', destination: 'Pangale', vehicleType: 'Lori',
+                fare: 120000, packageWeightKg: 800, packageDescription: 'Saruji mifuko 40'
+            }
+        });
+        await db.doc('users/dsusp').set({ displayName: 'Dereva Aliyesimamishwa', suspended: true });
+        await db.collection('drivers').doc('veh_susp').set(goodDriver({ userId: 'dsusp', driverName: 'Dereva Aliyesimamishwa' }));
+        await db.collection('drivers').doc('veh_good').set(goodDriver({ userId: 'dgood', driverName: 'Dereva Mzuri', rating: 4 }));
+        const res = await core.routeBookingFromOrder(db, 'o_pref', { actorId: 'mteja1', preferredDriverId: 'dsusp', force: true });
+        const offers = await offersByRide(db, res.rideId);
+        const ride = (await db.doc('ride_requests/' + res.rideId).get()).data();
+        ok('11) mteuzi aliyesimamishwa HAPEWI ofa', !offers.some(o => o.agentId === 'dsusp'));
+        ok('11b) ombi linaendelea kwa wagombeaji waliofaa (fallback)', offers.some(o => o.agentId === 'dgood'));
+        ok('11c) sababu imeandikwa kwenye ride', ride.preferredRejectedReason === 'account_inactive');
+    }
+
+    /* 12. Mawakala: safu ya pili haipitiwi kwa sifa za chombo */
+    const ag = L.rankCandidates([{ uid: 'ag_ok', kind: 'agent', status: 'approved', location: 'Mwanza', rating: 4 }], reqHeavy);
+    ok('12) wakala wa eneo anabaki kuwa chaguo la mwisho', ag.chosen.length === 1 && ag.chosen[0].uid === 'ag_ok');
+    ok('12b) wakala aliyesimamishwa ametengwa', L.rankCandidates([{ uid: 'ag_susp', kind: 'agent', status: 'approved', location: 'Mwanza', suspended: true }], reqHeavy).chosen.length === 0);
+}
+
 console.log('\n[I] Idempotency');
 {
     const db = FakeDb();
@@ -447,6 +562,234 @@ console.log('\n[I] Idempotency');
     let bad = false;
     try { await core.routeBookingFromOrder(db2, 'o5', {}); } catch (e) { bad = String(e.message).includes('not_a_booking'); }
     ok('order isiyo booking inakataliwa', bad);
+}
+
+/* ============================================================
+ * [J] [PART 5B-3 2026-11-25] DESTINATION INTEGRITY — server
+ * Ombi la usafiri/oda yenye usafiri lisilo na anwani halali
+ * HALITENGENEZI ride_request wala delivery_offers, na halibadilishi
+ * delivery ya oda. Kigezo: shared/delivery-destination-core.js
+ * kinachotumika pia na kivinjari (hakuna nakala ya pili).
+ * ============================================================ */
+console.log('\n[J] [PART 5B-3] DESTINATION INTEGRITY — server');
+{
+    const DEST = require('../shared/delivery-destination-core.js');
+
+    /* -------- J1) kigezo cha pamoja (validator) -------- */
+    const accepts = [
+        ['Dodoma', 'Dodoma'],
+        ['  Dodoma, Mjini  ', 'Dodoma, Mjini'],
+        [{ label: 'Dodoma' }, 'Dodoma'],
+        [{ name: 'Dodoma', lat: -6.17, lon: 35.74 }, 'Dodoma'],
+        [{ address: 'Mtaa wa Kariakoo, Dar es Salaam' }, 'Mtaa wa Kariakoo, Dar es Salaam'],
+        [{ lat: -6.17, lon: 35.74 }, '-6.17, 35.74'],
+        [{ location: { label: 'Morogoro' } }, 'Morogoro']
+    ];
+    accepts.forEach(([input, want]) => {
+        const r = DEST.resolve(input);
+        ok('J1 anakubali ' + JSON.stringify(input).slice(0, 34) + ' → ' + r.value, r.ok && r.value === want);
+    });
+    const rejects = [
+        [undefined, 'missing_destination'],
+        [null, 'missing_destination'],
+        ['', 'empty_destination'],
+        ['   ', 'empty_destination'],
+        ['\n\t ', 'empty_destination'],
+        [{}, 'empty_destination'],
+        [{ label: '   ' }, 'empty_destination'],
+        [{ length: 0 }, 'empty_destination'],
+        [[], 'empty_destination'],
+        [{ lat: 'abc', lon: 'x' }, 'malformed_destination'],
+        [{ lat: 999, lon: 35 }, 'malformed_destination'],
+        [42, 'malformed_destination'],
+        [[1, 2], 'malformed_destination'],
+        [{ foo: 1 }, 'malformed_destination']
+    ];
+    rejects.forEach(([input, want]) => {
+        ok('J1 anakataa ' + JSON.stringify(input) + ' (' + want + ')', DEST.resolve(input).reason === want);
+    });
+    ok('J1 ujumbe wa Kiswahili kwa kila sababu',
+        /anwani/i.test(DEST.messageFor('missing_destination')) &&
+        /anwani/i.test(DEST.messageFor('empty_destination')) &&
+        /anwani/i.test(DEST.messageFor('malformed_destination')));
+    ok('J1 kipaumbele: tupu hurukwa, HALIJAJAZWA kwa origin',
+        DEST.firstValid(['', 'Dodoma']).value === 'Dodoma' && DEST.firstValid(['', '   ']).ok === false);
+
+    /* -------- J2) booking yenye anwani mbovu HAITENGENEZI kitu -------- */
+    async function bookingDb(toValue, extraDelivery) {
+        const db = FakeDb();
+        const order = {
+            kind: 'booking', buyerId: 'mteja1', sellerId: 'muuzaji1',
+            itemTitle: 'Mchele mifuko 10', route: { from: 'Tabora' },
+            vehicleType: 'Lori', fare: 150000, currency: 'TZS', status: 'payment_pending'
+        };
+        if (toValue !== '__absent__') order.route.to = toValue;
+        if (extraDelivery) order.delivery = extraDelivery;
+        await db.doc('orders/o_bad').set(order);
+        await db.collection('drivers').doc('veh_a').set(goodDriver({ userId: 'd0', rating: 5 }));
+        await db.collection('drivers').doc('veh_b').set(goodDriver({ userId: 'd1', rating: 4 }));
+        return db;
+    }
+
+    const badCases = [
+        ['hakuna sehemu kabisa', '__absent__', undefined, 'missing_destination'],
+        ['string tupu', '', undefined, 'empty_destination'],
+        ['nafasi tupu', '   ', undefined, 'empty_destination'],
+        ['null', null, undefined, 'missing_destination'],
+        ['object tupu', {}, undefined, 'empty_destination'],
+        ['object yenye label tupu', { label: '  ' }, undefined, 'empty_destination'],
+        ['object mbovu (lat si namba)', { lat: 'abc', lon: 'y' }, undefined, 'malformed_destination']
+    ];
+    for (const [label, toValue, extraDelivery, wantReason] of badCases) {
+        const db = await bookingDb(toValue, extraDelivery);
+        let err = null;
+        try { await core.routeBookingFromOrder(db, 'o_bad', { round: 1 }); } catch (e) { err = e; }
+        const rides = await db.collection('ride_requests').get();
+        const offers = await db.collection('delivery_offers').get();
+        const orderAfter = (await db.doc('orders/o_bad').get()).data();
+        ok('J2 booking — ' + label + ': imekataliwa kwa invalid_destination',
+            !!err && String(err.message).includes('invalid_destination') && err.destinationReason === wantReason);
+        ok('J2 booking — ' + label + ': HAKUNA ride wala ofa', rides.size === 0 && offers.size === 0);
+        ok('J2 booking — ' + label + ': oda haijabadilishwa',
+            !orderAfter.deliveryId && !orderAfter.rideRequestId && orderAfter.status === 'payment_pending' &&
+            JSON.stringify(orderAfter.route) === JSON.stringify(toValue === '__absent__' ? { from: 'Tabora' } : { from: 'Tabora', to: toValue }));
+    }
+
+    /* -------- J3) oda ya bidhaa yenye delivery.required -------- */
+    async function productDb(destValue) {
+        const db = FakeDb();
+        const delivery = { required: true, method: 'selected_listing', logisticPostId: 'veh_a', logisticProviderId: 'd0', pickupLocation: 'Morogoro' };
+        if (destValue !== '__absent__') delivery.destination = destValue;
+        await db.doc('orders/o_prod').set({
+            kind: 'product_order', buyerId: 'mteja1', items: [{ title: 'Pembejeo', qty: 1 }],
+            amount: 60000, delivery, status: 'pending'
+        });
+        await db.collection('drivers').doc('veh_a').set(goodDriver({ userId: 'd0', rating: 5 }));
+        await db.collection('drivers').doc('veh_b').set(goodDriver({ userId: 'd1', rating: 4 }));
+        return db;
+    }
+    const prodBad = [
+        ['hakuna anwani', '__absent__', 'missing_destination'],
+        ['string tupu', '', 'empty_destination'],
+        ['nafasi tupu', '   ', 'empty_destination'],
+        ['null', null, 'missing_destination'],
+        ['object tupu', {}, 'empty_destination'],
+        ['object mbovu', { lat: 'abc' }, 'malformed_destination'],
+        ['array', [1, 2], 'malformed_destination']
+    ];
+    for (const [label, destValue, wantReason] of prodBad) {
+        const db = await productDb(destValue);
+        let err = null;
+        try { await core.routeBookingFromOrder(db, 'o_prod', { actorId: 'mteja1' }); } catch (e) { err = e; }
+        const rides = await db.collection('ride_requests').get();
+        const offers = await db.collection('delivery_offers').get();
+        const after = (await db.doc('orders/o_prod').get()).data();
+        ok('J3 oda — ' + label + ': invalid_destination (' + wantReason + ')',
+            !!err && String(err.message).includes('invalid_destination') && err.destinationReason === wantReason);
+        ok('J3 oda — ' + label + ': HAKUNA ride/ofa', rides.size === 0 && offers.size === 0);
+        const destAfter = after.delivery && after.delivery.destination;
+        const sameDest = (destValue === '__absent__')
+            ? destAfter === undefined
+            : (destValue !== null && typeof destValue === 'object'
+                ? JSON.stringify(destAfter) === JSON.stringify(destValue)
+                : destAfter === destValue);
+        ok('J3 oda — ' + label + ': delivery ya oda iko kama ilivyokuwa (hakuna substitution)',
+            !!after.delivery && after.delivery.method === 'selected_listing' &&
+            after.delivery.pickupLocation === 'Morogoro' && sameDest);
+    }
+
+    /* -------- J4) mwito wa moja kwa moja (bila UI) -------- */
+    {
+        const db = await productDb('   ');
+        let err = null;
+        try {
+            await core.ensureRideForOrder(db, (await db.doc('orders/o_prod').get()).data(), 'o_prod', { preferredDriverId: 'd0' });
+        } catch (e) { err = e; }
+        ok('J4 ensureRideForOrder ya moja kwa moja inakataa (bila UI)',
+            !!err && String(err.message).includes('invalid_destination'));
+        ok('J4 hakuna ride iliyoundwa', (await db.collection('ride_requests').get()).size === 0);
+        ok('J4 hakuna ofa iliyoundwa', (await db.collection('delivery_offers').get()).size === 0);
+        let errB = null;
+        const dbB = await bookingDb('');
+        try { await core.ensureRideForOrder(dbB, (await dbB.doc('orders/o_bad').get()).data(), 'o_bad', {}); }
+        catch (e) { errB = e; }
+        ok('J4 booking tupu: ensureRideForOrder inakataa', !!errB && String(errB.message).includes('invalid_destination'));
+    }
+
+    /* -------- J5) anakubali data halali + 5B-2 routing inaendelea -------- */
+    {
+        const db = FakeDb();
+        await db.doc('orders/o_ok').set({
+            kind: 'booking', buyerId: 'mteja1', sellerId: 'muuzaji1',
+            itemTitle: 'Mchele', route: { from: 'Tabora', to: '  Pangale ' },
+            vehicleType: 'Lori', fare: 150000, currency: 'TZS', status: 'payment_pending'
+        });
+        await db.collection('drivers').doc('veh_a').set(goodDriver({ userId: 'd0', rating: 5 }));
+        await db.collection('drivers').doc('veh_b').set(goodDriver({ userId: 'd1', rating: 4 }));
+        const res = await core.routeBookingFromOrder(db, 'o_ok', { round: 1 });
+        const ride = (await db.doc('ride_requests/' + res.rideId).get()).data();
+        const offers = await offersByRide(db, res.rideId);
+        ok('J5 string halali: ride imeundwa', !!res.rideId && ride.status === 'searching');
+        ok('J5 string halali: toLocation imesafishwa (trim)', ride.toLocation === 'Pangale');
+        ok('J5 string halali: ofa zimetengenezwa (5B-2 routing bado inafanya kazi)', res.offers >= 1 && offers.length === res.offers);
+    }
+    {
+        const db = FakeDb();
+        await db.doc('orders/o_struct').set({
+            kind: 'booking', buyerId: 'mteja1', sellerId: 'muuzaji1', itemTitle: 'Mchele',
+            route: { from: 'Tabora', to: { label: 'Pangale', lat: -6.17, lon: 35.74 } },
+            vehicleType: 'Lori', fare: 150000, currency: 'TZS', status: 'payment_pending'
+        });
+        await db.collection('drivers').doc('veh_a').set(goodDriver({ userId: 'd0', rating: 5 }));
+        const res = await core.routeBookingFromOrder(db, 'o_struct', { round: 1 });
+        const ride = (await db.doc('ride_requests/' + res.rideId).get()).data();
+        ok('J5 structured halali: ride imeundwa', !!res.rideId);
+        ok('J5 structured: toLocation = label iliyosafishwa', ride.toLocation === 'Pangale');
+        ok('J5 structured: ofa zimetengenezwa', res.offers >= 1);
+    }
+    {
+        /* destination tupu LAKINI destinationLocation (jina la zamani) halali:
+           halikataliwi, na HALIJAZIBWI kwa origin. */
+        const db = FakeDb();
+        await db.doc('orders/o_alias').set({
+            kind: 'product_order', buyerId: 'mteja1', items: [{ title: 'Pembejeo' }], amount: 5000,
+            delivery: { required: true, method: 'selected_listing', logisticPostId: 'veh_a', logisticProviderId: 'd0', pickupLocation: 'Morogoro', destination: '   ', destinationLocation: 'Dodoma' },
+            status: 'pending'
+        });
+        await db.collection('drivers').doc('veh_a').set(goodDriver({ userId: 'd0', rating: 5 }));
+        const res = await core.routeBookingFromOrder(db, 'o_alias', {});
+        const ride = (await db.doc('ride_requests/' + res.rideId).get()).data();
+        ok('J5 destinationLocation (legacy) inakubaliwa', !!res.rideId);
+        ok('J5 legacy: toLocation ni anwani halali, SI origin/pickup', ride.toLocation === 'Dodoma' && ride.toLocation !== ride.fromLocation);
+    }
+    {
+        /* POS/direct-hire: oda yenye anwani halali ya string na preferred provider. */
+        const db = FakeDb();
+        await db.doc('orders/o_pos').set({
+            kind: 'product_order', buyerId: 'mteja1', items: [{ title: 'Mchele' }], amount: 9000,
+            delivery: { required: true, method: 'direct_hire', logisticProviderId: 'd0', pickupLocation: 'Tabora', destination: 'Pangale' },
+            status: 'pending'
+        });
+        await db.collection('drivers').doc('veh_a').set(goodDriver({ userId: 'd0', rating: 5 }));
+        await db.collection('drivers').doc('veh_b').set(goodDriver({ userId: 'd1', rating: 4 }));
+        const res = await core.routeBookingFromOrder(db, 'o_pos', { preferredDriverId: 'd0' });
+        const offers = await offersByRide(db, res.rideId);
+        ok('J5 direct-hire halali: ride + ofa', !!res.rideId && res.offers >= 1);
+        ok('J5 direct-hire: provider aliyechaguliwa (5B-2) anapata ofa',
+            offers.some(o => o.agentId === 'd0' && o.status === 'offered'));
+    }
+
+    /* -------- J6) tabia ya zamani ya eligibility haijabadilika -------- */
+    {
+        const db = await productDb('Dodoma');
+        let err = null;
+        const order = (await db.doc('orders/o_prod').get()).data();
+        order.delivery.required = false; order.kind = 'service_order';
+        try { await core.ensureRideForOrder(db, order, 'o_prod', {}); } catch (e) { err = e; }
+        ok('J6 oda isiyo na usafiri bado inakataliwa kwa not_a_booking',
+            !!err && String(err.message).includes('not_a_booking'));
+        ok('J6 wala hakuna ride', (await db.collection('ride_requests').get()).size === 0);
+    }
 }
 
 console.log('\n========================================');

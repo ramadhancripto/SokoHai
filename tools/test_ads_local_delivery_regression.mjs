@@ -17,7 +17,7 @@ const t=(name,ok)=>{if(ok){pass++;console.log('PASS '+name);}else{fail++;console
 const now=Date.now();
 const AD=(id,extra={})=>({id,headline:'Tangazo '+id,text:'Ofa',brandName:'Duka',creativeType:'solid_text',active:true,status:'published',priority:1,...extra});
 
-async function scenario({localEnv=false,admin=false,call,cache=[],mode=null}){
+async function scenario({localEnv=false,admin=false,verified=true,call,cache=[],mode=null}){
   const dom=new JSDOM('<body><div class="big-announcement" id="topAnnouncement" data-skh-ad-slot="home"><div class="marquee-text">Karibu</div></div></body>',
     {url:localEnv?'http://localhost:5500/':'https://sokohai.test/',runScripts:'outside-only',pretendToBeVisual:true});
   const w=dom.window;
@@ -26,7 +26,8 @@ async function scenario({localEnv=false,admin=false,call,cache=[],mode=null}){
   if(mode)w.localStorage.setItem('skh_ads_delivery_mode',mode);
   class IO{constructor(cb){this.cb=cb;}observe(el){setTimeout(()=>this.cb([{target:el,isIntersecting:true,intersectionRatio:1}]),0);}unobserve(){}disconnect(){}}
   w.IntersectionObserver=IO;
-  w.skh={isLocalEnv:localEnv,currentUser:admin?{email:'rshabansaid@gmail.com'}:{email:'u@x.test'},MY_ADMIN_EMAIL:'rshabansaid@gmail.com',
+  w.SOKOHAI_CONFIG={ADMIN_EMAIL_FALLBACK:true};   // [PART 2] as shipped in js/00-config.js
+  w.skh={isLocalEnv:localEnv,currentUser:admin?{email:'rshabansaid@gmail.com',emailVerified:verified}:{email:'u@x.test',emailVerified:true},MY_ADMIN_EMAIL:'rshabansaid@gmail.com',
     callFunction:(name,data)=>{calls.push(name);return call?call(name,data):Promise.reject(Object.assign(new Error('internal'),{code:'functions/internal',fnDown:true}));}};
   w.__sokohaiAnnouncementsCache=cache;
   w.eval(read('shared/ads-design-rules.js'));
@@ -77,6 +78,9 @@ async function scenario({localEnv=false,admin=false,call,cache=[],mode=null}){
   const s=await scenario({admin:true,cache:[AD('f1')]});
   t('F admin sees Home ad preview',!!s.host.querySelector('.skh-ann-card')&&s.host.dataset.skhAdSource==='admin-preview');
   t('F admin preview makes no delivery calls',s.calls.length===0);
+  // [PART 2 SECURITY] same e-mail but NOT verified -> no admin preview (server would deny too)
+  const sU=await scenario({admin:true,verified:false,cache:[AD('f2')]});
+  t('F unverified owner e-mail is NOT treated as admin',sU.host.dataset.skhAdSource!=='admin-preview');
 }
 // G. empty cache at boot, Firestore snapshot arrives later.
 {

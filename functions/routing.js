@@ -21,6 +21,7 @@ const { onCall, logBestEffort } = require('./errors'); // [SRV-10] same onCall, 
 const admin = require('firebase-admin');
 const core = require('./routing-core');
 const L = require('./routing-logic');
+const DEST = require('./shared/delivery-destination-core'); // [PART 5B-3] kigezo cha anwani ya kufikishiwa
 
 const REGION = 'europe-west1';
 const db = admin.firestore();
@@ -56,6 +57,14 @@ exports.deliveryRouteBooking = onCall({ region: REGION }, async (req) => {
     if (data.delivery && typeof data.delivery === 'object') {
         const d = data.delivery || {};
         const postId = d.logisticPostId ? String(d.logisticPostId) : '';
+        /* [PART 5B-3 2026-11-25] Anwani ya kufikishiwa inakaguliwa KABLA ya kuandika
+           oda: ombi lisilo na anwani halibadilishi delivery ya oda wala halitengenezi
+           ride/ofa. Server haitegemei uthibitisho wa client. */
+        const wantsDelivery = d.required === true || !!postId || (o.delivery && o.delivery.required === true);
+        if (wantsDelivery) {
+            const probe = core.destinationCheck({ delivery: Object.assign({}, (o.delivery || {}), d) });
+            if (!probe.ok) throw new HttpsError('invalid-argument', DEST.messageFor(probe.reason));
+        }
         if (postId) {
             const ps = await db.doc('drivers/' + postId).get();
             if (!ps.exists) throw new HttpsError('not-found', 'Tangazo la usafiri halipatikani.');
@@ -236,10 +245,15 @@ function mapError(e) {
         order_not_found: 'not-found',
         ride_not_found: 'not-found',
         orderId_required: 'invalid-argument',
+        // [PART 5B-3] ombi lisilo na anwani halali ya kufikishiwa
+        invalid_destination: 'invalid-argument',
         unknown_action: 'invalid-argument'
     })[m];
     if (!code) return e; // unknown: the shared wrapper (functions/errors.js) returns internal + request id and logs it
-    const text = { not_a_booking: 'not_a_booking: oda hii haina usafiri ulioombwa (delivery.required) - chagua usafiri kwanza.' }[m] || m;
+    const text = {
+        not_a_booking: 'not_a_booking: oda hii haina usafiri ulioombwa (delivery.required) - chagua usafiri kwanza.',
+        invalid_destination: 'Anwani ya kufikishiwa (destination) haijajazwa au si sahihi. Ombi la usafiri halijatumwa — jaza anwani halali kisha ujaribu tena.'
+    }[m] || m;
     return new HttpsError(code, text);
 }
 

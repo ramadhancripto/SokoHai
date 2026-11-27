@@ -90,7 +90,13 @@ window.renderSmartSellerGroup = function(sid, arr){
 
 window.renderSmartCartItem = function(item,index){
     const qty=skh.smartCartQty(item), price=skh.smartCartPrice(item), subtotal=price*qty;
-    return `<div class="scart-item"><img src="${skh.smartCartImg(item)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2282%22 height=%2282%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2224%22%3E%3C/text%3E%3C/svg%3E'"><div><div class="scart-item-title">${skh.skhEscape(item.title||item.name||'Product')}</div><div style="font-size:12px;color:#BC4A3C;font-weight:950;">TSh ${price.toLocaleString()} • Subtotal TSh ${subtotal.toLocaleString()}</div><div class="scart-meta"><span>Seller: ${skh.skhEscape(skh.smartCartSellerName(item))}</span><span>Stock: ${item.stock||item.quantityAvailable||'—'}</span><span>Color: ${item.chosenColor||item.color||'N/A'}</span><span>Size: ${item.chosenSize||item.size||'N/A'}</span><span>Warranty: ${item.warranty||'Seller terms'}</span></div><div class="scart-qty"><button onclick="window.updateSmartCartQty(${index},-1)">−</button><input value="${qty}" onchange="window.setSmartCartQty(${index},this.value)"><button onclick="window.updateSmartCartQty(${index},1)">+</button></div></div><div class="scart-item-actions"><button class="scart-btn scart-btn-light" onclick="window.saveCartItemForLater(${index})">Save Later</button><button class="scart-btn scart-btn-light" onclick="window.moveCartItemToWishlist(${index})">Wishlist</button><button class="scart-btn scart-btn-red" onclick="window.removeSmartCartItem(${index})">Remove</button></div></div>`;
+    /* [PART 3 2026-11-24] Kikomo cha stock: "+" inazimwa badala ya kumruhusu mnunuzi
+       kuagiza zaidi ya zilizopo. Stock isipojulikana (null) hakuna kikomo kinachobuniwa. */
+    const lim=skh.smartCartStockLimit(item);
+    const plusBtn=(lim!==null && qty>=lim)
+        ? '<button type="button" disabled title="Upeo wa stock umefikiwa" style="opacity:.45;cursor:not-allowed;">+</button>'
+        : '<button type="button" onclick="window.updateSmartCartQty(' + index + ',1)">+</button>';
+    return `<div class="scart-item"><img src="${skh.smartCartImg(item)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2282%22 height=%2282%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2224%22%3E%3C/text%3E%3C/svg%3E'"><div><div class="scart-item-title">${skh.skhEscape(item.title||item.name||'Product')}</div><div style="font-size:12px;color:#BC4A3C;font-weight:950;">TSh ${price.toLocaleString()} • Subtotal TSh ${subtotal.toLocaleString()}</div><div class="scart-meta"><span>Seller: ${skh.skhEscape(skh.smartCartSellerName(item))}</span><span>Stock: ${lim!==null?lim:(item.stock||item.quantityAvailable||'—')}</span><span>Color: ${item.chosenColor||item.color||'N/A'}</span><span>Size: ${item.chosenSize||item.size||'N/A'}</span><span>Warranty: ${item.warranty||'Seller terms'}</span></div><div class="scart-qty"><button type="button" onclick="window.updateSmartCartQty(${index},-1)">−</button><input value="${qty}" onchange="window.setSmartCartQty(${index},this.value)">${plusBtn}</div></div><div class="scart-item-actions"><button class="scart-btn scart-btn-light" onclick="window.saveCartItemForLater(${index})">Save Later</button><button class="scart-btn scart-btn-light" onclick="window.moveCartItemToWishlist(${index})">Wishlist</button><button class="scart-btn scart-btn-red" onclick="window.removeSmartCartItem(${index})">Remove</button></div></div>`;
 };
 
 window.renderSmartCartSummary = function(calc){
@@ -99,9 +105,50 @@ window.renderSmartCartSummary = function(calc){
 
 window.openCart = function(){ if(!skh.requireAuth()) return; closeModals(); const cm=document.getElementById('cartModal'); if(cm){ cm.style.display='flex'; window.renderSmartCart(); } };
 
-window.updateSmartCartQty=(i,d)=>{ skh.myCart[i].qty=skh.smartCartQty(skh.myCart[i])+d; if(skh.myCart[i].qty<1) skh.myCart[i].qty=1; skh.smartCartSave(); window.renderSmartCart(); };
+/* [PART 3 2026-11-24] Kikomo kimoja cha wingi: 1 <= qty <= stock (stock ikijulikana).
+   Awali mnunuzi angeweza kuongeza zaidi ya stock na oda ingeundwa bila stock ya kutosha. */
+window.skhClampCartQty=function(item, q){
+    q=Math.max(1, parseInt(q)||1);
+    const lim=skh.smartCartStockLimit(item);
+    if(lim!==null && lim>0 && q>lim) return lim;
+    return q;
+};
 
-window.setSmartCartQty=(i,v)=>{ skh.myCart[i].qty=Math.max(1,parseInt(v)||1); skh.smartCartSave(); window.renderSmartCart(); };
+window.updateSmartCartQty=(i,d)=>{
+    const item=skh.myCart[i]; if(!item) return;
+    const want=skh.smartCartQty(item)+d;
+    const q=window.skhClampCartQty(item, want);
+    const lim=skh.smartCartStockLimit(item);
+    if(q!==want && lim!==null) (window.skhToast?window.skhToast('Stock iliyopo ni '+lim+' pekee.'):alert('Stock iliyopo ni '+lim+' pekee.'));
+    item.qty=q; skh.smartCartSave(); window.renderSmartCart();
+};
+
+window.setSmartCartQty=(i,v)=>{ const item=skh.myCart[i]; if(!item) return; item.qty=window.skhClampCartQty(item, v); skh.smartCartSave(); window.renderSmartCart(); };
+
+/* [PART 3 2026-11-24] Ukaguzi mmoja wa stock kabla ya oda: hurudisha matatizo PEKEE
+   yanayojulikana (stock haiwezi kubuniwa). Hutumika kwenye mapitio na kwenye uthibitisho
+   wa oda (43-delivery-choice.js), ili oda isiundwe kwa stock isiyopo. */
+window.skhCartStockCheck=function(items){
+    const out=[];
+    (items || (skh.smartCartItems ? skh.smartCartItems() : (skh.myCart||[])) || []).forEach(function(x){
+        const lim=skh.smartCartStockLimit(x);
+        if(lim===null) return;                       // stock haijulikani -> hakuna zuio la kubuni
+        const qty=skh.smartCartQty(x);
+        if(lim<=0) out.push({ title:x.title||x.name||'Bidhaa', want:qty, have:0 });
+        else if(qty>lim) out.push({ title:x.title||x.name||'Bidhaa', want:qty, have:lim });
+    });
+    return out;
+};
+
+window.skhCartStockMessage=function(problems){
+    if(!problems || !problems.length) return '';
+    const lines=problems.slice(0,3).map(function(p){
+        return p.have<=0 ? ('• ' + p.title + ' — imeisha (stock 0)')
+                         : ('• ' + p.title + ' — unaomba ' + p.want + ', zilizopo ' + p.have);
+    });
+    if(problems.length>3) lines.push('• na bidhaa nyingine ' + (problems.length-3));
+    return lines.join('\n');
+};
 
 window.removeSmartCartItem=(i)=>{ skh.myCart.splice(i,1); skh.smartCartSave(); window.renderSmartCart(); };
 
@@ -152,13 +199,17 @@ window.addToCart = async function(isBuyNow=false){
     if(isBuyNow) return _oldAddToCartSmart ? _oldAddToCartSmart(true) : null;
     if(!skh.requireAuth()) return;
     if(!skh.currentOpenProduct) return alert('Bidhaa haijapakia vizuri.');
-    const qty=parseInt(document.getElementById('pmQty')?.value || '1') || 1;
+    /* [PART 3 2026-11-24] Bidhaa iliyoisha au yenye stock ndogo kuliko wingi iliyoombwa. */
+    const lim=skh.smartCartStockLimit(skh.currentOpenProduct);
+    if(lim===0) return alert('Bidhaa hii imeisha (stock 0). Haiwezi kuwekwa kwenye cart.');
+    let qty=parseInt(document.getElementById('pmQty')?.value || '1') || 1;
+    if(lim!==null && qty>lim) qty=lim;
     const chosenColor=skh.currentOpenProduct?.selectedVariants?.color || skh.currentOpenProduct?.chosenColor || 'N/A';
     const chosenSize=skh.currentOpenProduct?.selectedVariants?.size || skh.currentOpenProduct?.chosenSize || 'N/A';
     const item={...skh.currentOpenProduct, qty, chosenColor, chosenSize, sellerId:skh.currentOpenProduct.userId||skh.currentOpenProduct.sellerId, sellerName:skh.currentOpenProduct.sellerName||skh.currentOpenProduct.ownerName||'Seller', addedAt:new Date().toISOString(), escrowEligible:true};
     skh.myCart=skh.smartCartItems(); skh.myCart.push(item); skh.smartCartSave();
     const badge=document.getElementById('cartBadge'); if(badge){ badge.style.display='flex'; badge.innerText=skh.myCart.length; }
-    alert(' Bidhaa imewekwa kwenye Smart Cart.');
+    alert(lim!==null ? (' Bidhaa imewekwa kwenye Smart Cart (stock iliyopo: '+lim+').') : ' Bidhaa imewekwa kwenye Smart Cart.');
 };
 
 (function injectSokoPayBuyerTrackingCSS(){
@@ -408,7 +459,7 @@ window.addToCart = async function(isBuyNow=false){
     if(isBuyNow) return _orchAddToCartOld ? _orchAddToCartOld(true) : null;
     if(!skh.requireAuth()) return;
     if(!skh.currentOpenProduct) return alert('Bidhaa haijapakia vizuri.');
-    const qty=parseInt(document.getElementById('pmQty')?.value || '1') || 1;
+    let qty=parseInt(document.getElementById('pmQty')?.value || '1') || 1;
     const chosenColor=skh.currentOpenProduct?.selectedVariants?.color || skh.currentOpenProduct?.chosenColor || 'N/A';
     const chosenSize=skh.currentOpenProduct?.selectedVariants?.size || skh.currentOpenProduct?.chosenSize || 'N/A';
     let liveProduct={...skh.currentOpenProduct};
@@ -416,6 +467,11 @@ window.addToCart = async function(isBuyNow=false){
     try{ const snap=await skh.getDoc(skh.doc(skh.db,'products', skh.currentOpenProduct.id)); if(snap.exists()){ liveFound=true; liveProduct={...liveProduct,...snap.data(),id:skh.currentOpenProduct.id}; } }catch(e){}
     // [LIFECYCLE 2026-11-21] a listing that was removed, archived or deleted cannot be added (it used to be added from a stale modal)
     if(!liveFound || (typeof skh.productEligible==='function' && !skh.productEligible(liveProduct))){ if(skh.forgetListing) skh.forgetListing(skh.currentOpenProduct.id); alert('Bidhaa hii haipatikani tena sokoni.'); try{ closeModals(); }catch(e){} return; }
+    /* [PART 3 2026-11-24] Stock ya LIVE (si ya modal): hii ndiyo inayotumika mwisho. */
+    const limLive=skh.smartCartStockLimit(liveProduct);
+    if(limLive===0){ if(skh.forgetListing) skh.forgetListing(skh.currentOpenProduct.id); alert('Bidhaa hii imeisha (stock 0) sokoni kwa sasa.'); return; }
+    if(limLive!==null && qty>limLive){ qty=limLive; alert('Stock iliyopo ni '+limLive+' pekee — tumeweka '+limLive+' kwenye cart.'); }
+
     const cartMeta=skh.orchProductMeta(liveProduct);
     const item={...liveProduct, qty, chosenColor, chosenSize, sellerId:cartMeta.sellerId, sellerName:cartMeta.sellerName, storeName:cartMeta.storeName, cartMeta, escrowEligible:true, addedAt:new Date().toISOString(), orchestrationReady:true};
     skh.myCart=skh.smartCartItems(); skh.myCart.push(item); skh.smartCartSave();
@@ -775,7 +831,12 @@ window.openSellerLogisticsTools = async function(){
     const modal = document.getElementById('cartModal'); if(modal){ modal.style.display='flex'; window.finalRenderCart(); }
   };
 
-  window.finalCartQty = function(i,d){ const items=readCart(); if(!items[i]) return; items[i].qty=itemQty(items[i])+d; if(items[i].qty<1) items[i].qty=1; skh.myCart=items; writeCart(); window.finalRenderCart(); };
+  window.finalCartQty = function(i,d){ const items=readCart(); if(!items[i]) return;
+    /* [PART 3 2026-11-24] kikomo cha stock pia kwenye UI ya final cart */
+    const lim=(typeof skh.smartCartStockLimit==='function') ? skh.smartCartStockLimit(items[i]) : null;
+    let q=itemQty(items[i])+d; if(q<1) q=1;
+    if(lim!==null && lim>0 && q>lim){ q=lim; try{ (window.skhToast||window.alert)('Stock iliyopo ni '+lim+' pekee.'); }catch(e){} }
+    items[i].qty=q; skh.myCart=items; writeCart(); window.finalRenderCart(); };
   window.finalCartRemove = function(i){ const items=readCart(); items.splice(i,1); skh.myCart=items; writeCart(); window.finalRenderCart(); };
   window.finalClearCart = async function(){ if(await skhConfirm('Futa cart yote?')){ skh.myCart=[]; writeCart(); window.finalRenderCart(); } };
 

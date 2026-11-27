@@ -185,6 +185,7 @@ import { skh } from './00-bootstrap.js';
         notif_restock:           ['Back in Stock', 'Imerudi Sokoni'],
         notif_restock_body:      ['{title} you saved/watched is available again.', '{title} uliyo-save/watch sasa inapatikana tena.'],
         pm_deleted:              ['Product no longer available!', 'Bidhaa haipo tena!'],
+        ps_unavailable:          ['This service is no longer available.', 'Huduma hii haipatikani tena sokoni.'],   // [PART 4]
 
         // --- Usimamizi wa Bidhaa (muuzaji) ---
         smp_my_products:       ['My Products', 'Bidhaa Zangu'],

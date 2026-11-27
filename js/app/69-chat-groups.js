@@ -1031,28 +1031,90 @@ import { skh } from './00-bootstrap.js';
      * payment_pending → secured → confirmed → ready → in_transit → delivered → completed; reject→refunded.
      * ESCROW: walletBalance + wallet_ledger (idempotent). §36: hakuna chaji isiyotangazwa. */
     var GCO_FEE = 0.015;
+    /* [PART 2 FOLLOW-UP] Kila kosa la wallet huacha oda kwenye hali ile ile, na huripoti
+     * ukweli: wowote kati ya 'server_required' (hakuna kilichoandikwa),
+     * 'partial_write' (kimoja kimeandikwa — kinahitaji reconciliation ya server) au
+     * 'needs_reconciliation' (jaribio la awali la sehemu — hakuna kurudia kwenye browser). */
+    function gcoWalletFail(code, r) {
+        var res = r || {};
+        return {
+            ok: false,
+            reason: code,
+            walletReason: res.reason || 'unknown',
+            partial: !!res.partial,
+            needsReconciliation: !!res.needsReconciliation,
+            needsServer: !!res.needsServer,
+            balanceWritten: !!res.balanceWritten,
+            ledgerWritten: !!res.ledgerWritten
+        };
+    }
+
+    /* [PART 2 FOLLOW-UP 2026-11-24] WALLET MOVEMENT CONTRACT
+     * A wallet movement is TWO required writes: users.walletBalance AND a wallet_ledger row.
+     * It is COMPLETE only when BOTH land. Returning ok:true when only one landed was unsafe:
+     *   - balance ok + ledger fail -> money moved with no audit row (retry would double-credit)
+     *   - ledger ok + balance fail -> audit row claims money that never moved (retry says
+     *     "already" and the user is never credited)
+     * Firestore gives the browser no cross-document transaction it is allowed to use here
+     * (users.update must leave walletBalance unchanged under firestore.rules; wallet_ledger is
+     * `allow write: if false`). So the client CANNOT make this atomic, and it does not pretend
+     * to: partial outcomes are reported as failures with explicit flags, never retried blindly,
+     * and flagged for server reconciliation (deferred: B-03, needs Blaze). */
     async function gcoWalletAdd(uid2, delta, kind, orderDocId, note, meta) {
         if (!uid2) return { ok: false, reason: 'no_uid' };
+        var attemptKey = [uid2, kind, orderDocId].join('|');
+        var attempts = (window.skhWalletAttempts = window.skhWalletAttempts || {});
+        /* 1) A previous PARTIAL attempt must never be retried from the browser: the half that
+         *    already landed cannot be discovered from here, so a blind retry can pay twice
+         *    (or record a second ledger row). Stop and require server reconciliation. */
+        if (attempts[attemptKey]) {
+            return { ok: false, reason: 'needs_reconciliation', partial: true, needsServer: true,
+                     previous: attempts[attemptKey], before: null, after: null,
+                     balanceWritten: !!attempts[attemptKey].balanceWritten,
+                     ledgerWritten: !!attempts[attemptKey].ledgerWritten };
+        }
+        /* 2) Idempotency: an existing ledger row means this movement already ran. */
         try {
             var q = skh.query(skh.collection(skh.db, 'wallet_ledger'), skh.where('kind', '==', kind), skh.where('orderDocId', '==', orderDocId), skh.where('uid', '==', uid2), skh.limit(1));
             var qy = await skh.getDocs(q);
-            if (!qy.empty) return { ok: true, already: true };
+            if (!qy.empty) return { ok: true, already: true, complete: true };
         } catch (eQ0) {}
         var uref = skh.doc(skh.db, 'users', uid2);
         var us = null;
         try { us = await skh.getDoc(uref); } catch (eU) {}
         var before = (us && us.exists && us.exists()) ? (+us.data().walletBalance || 0) : 0;
         var after = before + (+delta);
-        try { await skh.updateDoc(uref, { walletBalance: after }); }
-        catch (eU2) { try { await skh.setDoc(uref, { walletBalance: after }, { merge: true }); } catch (eS2) {} }
-        try { if (uid2 === uid()) window.skh.currentUserData = Object.assign({}, window.skh.currentUserData || {}, { walletBalance: after }); } catch (eSC) {}
+        var balanceWritten = false, ledgerWritten = false, lastErr = null, partial = false;
+        /* [MODULE 1 2026-11-27] A2 / A3 / A5 — the browser NEVER moves money.
+         * users.walletBalance and wallet_ledger are server-write-only (firestore.rules:
+         * `unchanged(['walletBalance'])` on users, `allow write: if false` on wallet_ledger).
+         * A browser attempt could only fail, or — if a rule were ever loosened — land HALF a
+         * movement (balance without ledger row) that no later session can discover, so a retry
+         * after a reload would credit twice. Two writes from a browser can never be made
+         * atomic AND idempotent across sessions; the server transaction is the only path.
+         * Result: no write is attempted; the caller gets ok:false / server_required and keeps
+         * its own state unchanged (the same outcome the deployed rules already produce). */
+        lastErr = { code: 'server_required' };
+        partial = (balanceWritten || ledgerWritten);                 // exactly one landed
+        if (partial) {
+            attempts[attemptKey] = { at: nowIso(), balanceWritten: balanceWritten, ledgerWritten: ledgerWritten, delta: (+delta), kind: kind, orderDocId: orderDocId };
+        }
+        var fail = { at: nowIso(), kind: kind, orderDocId: orderDocId, delta: (+delta),
+                     partial: partial, balanceWritten: balanceWritten, ledgerWritten: ledgerWritten,
+                     needsReconciliation: partial, reason: partial ? 'partial_write' : 'server_required' };
+        try { (window.skhWalletFailures = window.skhWalletFailures || []).push(fail); } catch (eF) {}
         try {
-            await skh.addDoc(skh.collection(skh.db, 'wallet_ledger'), {
-                kind: kind, uid: uid2, orderDocId: orderDocId, delta: (+delta),
-                before: before, after: after, note: note || null, meta: meta || null, at: nowIso()
-            });
-        } catch (eL2) {}
-        return { ok: true, before: before, after: after };
+            console.error(partial
+                ? '[ESCROW] WALLET MOVEMENT YA SEHEMU: balance=' + balanceWritten + ' ledger=' + ledgerWritten + ' (kind=' + kind + ', order=' + orderDocId + ') — haiwezi kukamilishwa kwenye browser; inahitaji reconciliation ya server.'
+                : '[ESCROW] wallet movement imekataliwa na server (firestore.rules) — ni server pekee anayeruhusiwa. kind=' + kind);
+        } catch (eW) {}
+        /* Nothing is claimed as settled. The caller must NOT continue its own state change. */
+        return { ok: false, complete: false, partial: partial,
+                 reason: partial ? 'partial_write' : 'server_required',
+                 needsReconciliation: partial, needsServer: true,
+                 before: before, after: balanceWritten ? after : before,
+                 balanceWritten: balanceWritten, ledgerWritten: ledgerWritten,
+                 err: lastErr ? String(lastErr.code || lastErr.message || lastErr) : null };
     }
     window.skhGChildOrderGet = async function (orderDocId) {
         if (!orderDocId) return { ok: false, reason: 'need_id' };
@@ -1111,7 +1173,10 @@ import { skh } from './00-bootstrap.js';
                 if (d.paymentStatus === 'secured') return { ok: false, reason: 'already_secure' };
                 var bal = 0; try { var us2 = await skh.getDoc(skh.doc(skh.db, 'users', me)); if (us2 && us2.exists && us2.exists()) bal = +us2.data().walletBalance || 0; } catch (eB) {}
                 if (bal < amt) return { ok: false, reason: 'insufficient', balance: bal, need: amt };
-                await gcoWalletAdd(me, -amt, 'escrow_hold', orderDocId, 'ESCROW hold: ' + (d.humanId || orderDocId), { gid: d.groupId });
+                /* [PART 2 FOLLOW-UP] Hati ya escrow HAIWEZI kuwekwa 'held' kama wallet
+                 * movement haijakamilika (balance + ledger). Hakuna malipo ya kubuni. */
+                var holdRes = await gcoWalletAdd(me, -amt, 'escrow_hold', orderDocId, 'ESCROW hold: ' + (d.humanId || orderDocId), { gid: d.groupId });
+                if (!holdRes || !holdRes.ok) return gcoWalletFail('hold_failed', holdRes);
                 return fin({ status: 'secured', paymentStatus: 'secured', escrowStatus: 'held', amountPaid: amt, 'timeline.paymentSecuredAt': nowIso() }, 'paid', { secured: true });
             }
             case 'accept_order': {
@@ -1122,7 +1187,10 @@ import { skh } from './00-bootstrap.js';
             case 'reject_order': {
                 if (role !== 'seller') return { ok: false, reason: 'not_seller' };
                 if (d.status !== 'secured') return { ok: false, reason: 'bad_state' };
-                if (d.escrowStatus === 'held' && d.buyerId) await gcoWalletAdd(d.buyerId, amt, 'escrow_refund', orderDocId, 'ESCROW refund (mzabini amekataa): ' + (d.humanId || ''), { gid: d.groupId });
+                if (d.escrowStatus === 'held' && d.buyerId) {
+                    var refundRes = await gcoWalletAdd(d.buyerId, amt, 'escrow_refund', orderDocId, 'ESCROW refund (mzabini amekataa): ' + (d.humanId || ''), { gid: d.groupId });
+                    if (!refundRes || !refundRes.ok) return gcoWalletFail('refund_failed', refundRes);
+                }
                 return fin({ status: 'rejected', paymentStatus: 'refunded', escrowStatus: 'refunded', 'timeline.rejectedAt': nowIso() }, 'seller_rejected');
             }
             case 'assign_transporter': {
@@ -1158,8 +1226,13 @@ import { skh } from './00-bootstrap.js';
                 var selfCollect = !d.transporterId;
                 if (!(d.status === 'delivered' || (d.status === 'ready' && selfCollect))) return { ok: false, reason: 'bad_state' };
                 if (d.escrowStatus === 'held' && d.sellerId) {
-                    await gcoWalletAdd(d.sellerId, (amt - fee), 'escrow_release', orderDocId, 'ESCROW release: ' + (d.humanId || ''), { gid: d.groupId, fee: fee });
-                    await gcoWalletAdd('platform', fee, 'escrow_fee', orderDocId, 'Kamisheni 1.5%: ' + (d.humanId || ''), { gid: d.groupId });
+                    var releaseRes = await gcoWalletAdd(d.sellerId, (amt - fee), 'escrow_release', orderDocId, 'ESCROW release: ' + (d.humanId || ''), { gid: d.groupId, fee: fee });
+                    if (!releaseRes || !releaseRes.ok) return gcoWalletFail('release_failed', releaseRes);
+                    var feeRes = await gcoWalletAdd('platform', fee, 'escrow_fee', orderDocId, 'Kamisheni 1.5%: ' + (d.humanId || ''), { gid: d.groupId });
+                    /* Release imefanikiwa; kamisheni haijafanikiwa => MASAA YA SEHEMU. Oda
+                     * HAIWEKWI 'released' (hilo lingedai settlement kamili). Retry ni salama:
+                     * release inarudi already:true (ledger ipo), kamisheni inajaribiwa tena. */
+                    if (!feeRes || !feeRes.ok) return gcoWalletFail('fee_failed', feeRes);
                 }
                 return fin({ status: 'completed', paymentStatus: 'released', escrowStatus: 'released', 'timeline.completedAt': nowIso() }, 'completed', { fee: fee });
             }

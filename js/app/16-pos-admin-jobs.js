@@ -1,6 +1,7 @@
 /* ==== js/app/16-pos-admin-jobs.js ==== */
 import { skh } from './00-bootstrap.js';
 import './128-personal-recycle.js';
+import '../../shared/delivery-destination-core.js'; // [PART 5B-3] globalThis.SKHDestinationCore
 import {
     contrastRatio as skhPaletteContrast,
     normalizeCreative,
@@ -368,7 +369,7 @@ window.renderAnnouncementManagerList = function(){
 
 window.skhAdminAdPreviewExisting=function(id){const a=(window.__sokohaiAnnouncementsCache||[]).find(x=>x.id===id);if(!a)return;window.openAnnouncementFormModal(id);setTimeout(window.skhRenderAdminAdPreview,0);};
 window.skhOpenAdDeliverySettings=async function(id){
-  if(!((window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin)||(skh.currentUser&&skh.currentUser.email===skh.MY_ADMIN_EMAIL))){alert('Admin authorization required.');return;}
+  if(!(typeof skh.isAdminUser==='function'?skh.isAdminUser():!!(window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin))){alert('Admin authorization required.');return;}
   const announcementId=String(id||'');if(!announcementId)return;
   let campaign=(window.__sokohaiAnnouncementsCache||[]).find(item=>String(item.id)===announcementId);
   if(!campaign){try{const snap=await skh.getDoc(skh.doc(skh.db,'announcements',announcementId));if(snap.exists())campaign={...snap.data(),id:snap.id};}catch(e){}}
@@ -1008,7 +1009,7 @@ window.skhPersistBasicCreative=async function(input){
 };
 
 window.openAnnouncementFormModal=async function(editId){
-  if(!((window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin)||(skh.currentUser&&skh.currentUser.email===skh.MY_ADMIN_EMAIL))){alert('Admin authorization required.');return;}
+  if(!(typeof skh.isAdminUser==='function'?skh.isAdminUser():!!(window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin))){alert('Admin authorization required.');return;}
   window.__editingAnnouncementId=editId||null;window.__skhBasicCreative=null;window.__skhBasicTypeChanged=false;window.__skhBasicFormatChanged=false;window.__skhBasicSlideshowChanged=false;window.__skhBasicTextColorTouched=false;window.__skhBasicDescriptionColorTouched=false;window.__skhBasicPreviewMuted=true;window.__skhBasicPreviewPaused=false;
   const existing=editId?(window.__sokohaiAnnouncementsCache||[]).find(a=>a.id===editId):null;
   let modal=document.getElementById('announcementFormModal');
@@ -1525,7 +1526,7 @@ window.skhAdminAdUpload=async function(kind,input){
   finally{input.disabled=false;input.value='';}
 };
 
-window.skhOpenAdminMediaLibrary=async function(target){if(!((window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin)||(skh.currentUser&&skh.currentUser.email===skh.MY_ADMIN_EMAIL))){alert('Admin authorization required.');return;}window.__adminMediaTarget=target||'annImage';let m=document.getElementById('adminMediaLibraryModal');if(!m){m=document.createElement('div');m.id='adminMediaLibraryModal';m.className='overlay-menu';m.style.zIndex='10000';document.body.appendChild(m);}m.innerHTML='<section class="adm-ad-form" style="max-width:850px"><div class="adm-ad-form-head"><h3>Admin Media Library</h3><button class="adm-ad-btn" onclick="document.getElementById(\'adminMediaLibraryModal\').style.display=\'none\'">Close</button></div><div id="adminMediaLibraryGrid" class="adm-media-grid"><p>Loading media...</p></div></section>';m.style.display='flex';try{const q=skh.query(skh.collection(skh.db,'adminMedia'),skh.orderBy('uploadedAt','desc'),skh.limit(100)),snap=await skh.getDocs(q),items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));window.__adminMediaCache=items;window.skhRenderAdminMediaLibrary();}catch(e){document.getElementById('adminMediaLibraryGrid').innerHTML='<p style="color:#B43E3B">'+skh.skhEscape(e.message)+'</p>';}};
+window.skhOpenAdminMediaLibrary=async function(target){if(!(typeof skh.isAdminUser==='function'?skh.isAdminUser():!!(window.SOKOHAI_CLAIMS&&window.SOKOHAI_CLAIMS.isAdmin))){alert('Admin authorization required.');return;}window.__adminMediaTarget=target||'annImage';let m=document.getElementById('adminMediaLibraryModal');if(!m){m=document.createElement('div');m.id='adminMediaLibraryModal';m.className='overlay-menu';m.style.zIndex='10000';document.body.appendChild(m);}m.innerHTML='<section class="adm-ad-form" style="max-width:850px"><div class="adm-ad-form-head"><h3>Admin Media Library</h3><button class="adm-ad-btn" onclick="document.getElementById(\'adminMediaLibraryModal\').style.display=\'none\'">Close</button></div><div id="adminMediaLibraryGrid" class="adm-media-grid"><p>Loading media...</p></div></section>';m.style.display='flex';try{const q=skh.query(skh.collection(skh.db,'adminMedia'),skh.orderBy('uploadedAt','desc'),skh.limit(100)),snap=await skh.getDocs(q),items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));window.__adminMediaCache=items;window.skhRenderAdminMediaLibrary();}catch(e){document.getElementById('adminMediaLibraryGrid').innerHTML='<p style="color:#B43E3B">'+skh.skhEscape(e.message)+'</p>';}};
 window.skhRenderAdminMediaLibrary=function(){const box=document.getElementById('adminMediaLibraryGrid');if(!box)return;const items=(window.__adminMediaCache||[]).filter(x=>!x.archived);box.innerHTML=items.length?items.map(x=>'<article class="adm-media-card">'+(x.type==='video'?'<video muted preload="metadata" src="'+skh.skhEscape(x.url)+'"></video>':x.type==='audio'?'<audio controls preload="none" src="'+skh.skhEscape(x.url)+'"></audio>':'<img src="'+skh.skhEscape(x.url)+'">')+'<b>'+skh.skhEscape(x.name||x.type)+'</b><div class="adm-media-meta">'+skh.skhEscape(x.type)+' · '+(x.width&&x.height?x.width+'×'+x.height+' · ':'')+new Date(x.uploadedAt).toLocaleDateString()+'</div><div class="adm-media-actions"><button onclick="window.skhSelectAdminMedia(\''+x.id+'\')">Select</button><button onclick="window.skhArchiveAdminMedia(\''+x.id+'\')">Archive</button><button onclick="window.skhDeleteAdminMedia(\''+x.id+'\')">Delete</button></div></article>').join(''):'<p>Media Library bado ni tupu.</p>';};
 window.skhSelectAdminMedia=function(id){
   const item=(window.__adminMediaCache||[]).find(media=>media.id===id);if(!item)return;
@@ -1656,7 +1657,15 @@ window.openDirectHire = function(driverId, driverName, vehicleType) {
 window.submitDirectHire = async function() {
     const driverId = document.getElementById('dhTargetDriverId').value;
     const from = document.getElementById('dhFrom').value.trim();
-    const to = document.getElementById('dhTo').value.trim();
+    // [PART 5B-3] anwani ya kufikishiwa: kigezo kimoja (shared/), ujumbe wa Kiswahili
+    const dhDestCore = (typeof window !== 'undefined' && window.SKHDestinationCore) ||
+        (typeof globalThis !== 'undefined' && globalThis.SKHDestinationCore) || null;
+    const dhToCheck = dhDestCore ? dhDestCore.resolve(document.getElementById('dhTo').value) : null;
+    if (dhToCheck && !dhToCheck.ok) {
+        alert(dhDestCore.messageFor(dhToCheck.reason));
+        return;
+    }
+    const to = dhToCheck ? dhToCheck.value : document.getElementById('dhTo').value.trim();
     const cargo = document.getElementById('dhCargoName').value.trim();
 
     if(!from || !to || !cargo) { 
@@ -2320,7 +2329,7 @@ window.loadHubDetailedMyServices = async function () {
         + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">'
         + '<div><h3 style="color:var(--primary-dark); margin:0; text-transform:uppercase;"> ' + T('hub_services_title', 'Huduma Zangu (My Services List)') + '</h3>'
         + '<p style="color:gray; font-size:12px;">' + T('hub_services_sub', 'Maelezo ya ujuzi na matoleo yote uliyosajili sokoni hivi sasa.') + '</p></div>'
-        + '<button onclick="showForm(\'serviceForm\')" style="padding:10px 18px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;"> ' + T('hub_services_add', 'Ongeza Huduma') + '</button></div>'
+        + '<button onclick="(window.skhServiceFormNew || showForm)(\'serviceForm\')" style="padding:10px 18px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer;"> ' + T('hub_services_add', 'Ongeza Huduma') + '</button></div>'
         + '<div style="display:flex; flex-direction:column; gap:12px;" id="hubServicesListArea">' + T('common_loading', 'Inapakia...') + '</div></div>';
 
     const listDiv = document.getElementById('hubServicesListArea');
@@ -2333,8 +2342,13 @@ window.loadHubDetailedMyServices = async function () {
             snap.forEach(docSnap => {
                 const s = docSnap.data();
                 var priceHtml = (s.price != null && window.skhFmt) ? window.skhFmt.money(s.price) : 'TZS ' + (s.price != null ? Number(s.price) : 0).toLocaleString();
+                /* [PART 4 2026-11-24] Hali ya uchapishaji — thamani ZILE ZILE zinazotumika kwa bidhaa
+                   (draft = imesimamishwa; published/active = iko sokoni). Bila status = hati ya zamani = iko sokoni. */
+                var svcState = String(s.publicationStatus || s.status || '').toLowerCase();
+                var svcOff = ['draft', 'suspended', 'archived', 'inactive', 'deleted'].indexOf(svcState) !== -1;
+                var svcBadge = svcOff ? '<span style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:12px;font-weight:900;">Imezimwa</span>' : '';
                 html += `
-                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${s.image}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;"> ${s.title}</b> <span style="font-size:13px; color:gray; display:block;">Kundi: ${s.groupType || s.category} |  ${s.location}</span> </div> </div> <div style="text-align:right;"> <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">${priceHtml}</b> <button onclick="window.deleteAd('${docSnap.id}', 'services', '${s.title.replace(/'/g, "\\'")}')" style="padding:4px 10px; background:#fee2e2; color:#ef4444; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">Futa</button> </div> </div>`;
+                    <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:16px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; gap:12px; align-items:center;"> <img src="${s.image}" style="width:45px; height:45px; border-radius:8px; object-fit:cover; border:1px solid #eee;"> <div> <b style="font-size:14px; color:#0f172a; display:block;"> ${s.title}</b> <span style="font-size:13px; color:gray; display:block;">Kundi: ${s.groupType || s.category} |  ${s.location}</span>${svcBadge} </div> </div> <div style="text-align:right;"> <b style="display:block; color:var(--terracotta); font-size:14px; margin-bottom:5px;">${priceHtml}</b> <div style="display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap;"> <button onclick="openProduct(\'${docSnap.id}\', \'services\')" style="padding:4px 10px; background:#e2e8f0; color:#0f172a; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">Angalia</button> <button onclick="window.skhServiceEditOpen(\'${docSnap.id}\')" style="padding:4px 10px; background:#e0f2fe; color:#03509d; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">Hariri</button> <button onclick="window.skhSetServicePublication(\'${docSnap.id}\', \'${svcOff ? 'published' : 'draft'}\')" style="padding:4px 10px; background:#ecfdf5; color:#047857; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">${svcOff ? 'Chapisha' : 'Simamisha'}</button> <button onclick="window.deleteAd('${docSnap.id}', 'services', '${s.title.replace(/'/g, "\\'")}')"  style="padding:4px 10px; background:#fee2e2; color:#ef4444; border:none; border-radius:6px; font-weight:bold; font-size:12.5px; cursor:pointer;">Futa</button> </div> </div> </div>`;
             });
         } else {
             // [REAL DATA 2026-09] Mockup imeondolewa — hali ya kweli ya ukurasa mtupu.
@@ -2343,6 +2357,33 @@ window.loadHubDetailedMyServices = async function () {
         }
         listDiv.innerHTML = html;
     } catch (e) { listDiv.innerHTML = '<p style="color:red;">' + T('err_network', 'Kosa la mtandao wakati wa kupakia.') + '</p>'; }
+};
+
+/* [PART 4 2026-11-24] Mtoa huduma anaweza kusimamisha/kuchapisha huduma yake — kama bidhaa.
+   Sehemu na maana za status ni ZILE ZILE za bidhaa (publicationStatus + status); hakuna
+   mabadiliko ya maana na hati za zamani zisizo na status zinaendelea kuwa sokoni. */
+window.skhSetServicePublication = async function (id, state) {
+    if (['draft', 'published'].indexOf(state) === -1) return;
+    var msg = state === 'draft' ? 'Simamisha huduma hii kwenye soko?' : 'Chapisha huduma hii tena sokoni?';
+    var ok = (typeof window.skhConfirm === 'function') ? await window.skhConfirm(msg) : window.confirm(msg);
+    if (!ok) return;
+    try {
+        /* [PART 4 FOLLOW-UP 2026-11-24] UMILIKI: mmiliki PEKEE anabadilisha hali.
+           Hati isiyo na mmiliki haikubaliwi (hakuna kudai hati ya mtu mwingine),
+           na patch inagusa sehemu TATU pekee: publicationStatus, status, updatedAt. */
+        var me = skh.currentUser && skh.currentUser.uid;
+        if (!me) throw new Error('Ingia kwanza ili kubadilisha hali ya huduma.');
+        var ref = skh.doc(skh.db, 'services', id);
+        var snap = await skh.getDoc(ref);
+        if (!snap || (snap.exists && !snap.exists())) throw new Error('Huduma haipo tena.');
+        var data = (snap.data && snap.data()) || {};
+        var owner = String(data.userId || data.ownerId || '');
+        if (!owner) throw new Error('Huduma hii haina mmiliki aliyesajiliwa — haiwezi kubadilishwa hapa.');
+        if (owner !== me) throw new Error('Huduma hii si yako — huwezi kuibadilisha.');
+        await skh.updateDoc(ref, { publicationStatus: state, status: state === 'published' ? 'active' : state, updatedAt: new Date().toISOString() });
+        if (skh._feedCache && skh._feedCache.clear) skh._feedCache.clear();
+        await window.loadHubDetailedMyServices();
+    } catch (e) { alert('Imeshindwa kubadili hali: ' + (e && e.message)); }
 };
 
 window.loadHubDetailedClients = async function () {

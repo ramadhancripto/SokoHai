@@ -253,6 +253,8 @@
 .pm-avail--auction { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
 .pm-avail--service { color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; }
 .pm-avail--offline { color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; }
+/* [PART 3 2026-11-24] chip ya hali ya bidhaa — neutral, haigongani na rangi za brand */
+.pm-avail--cond { color: #17604E; background: #EAF8F2; border: 1px solid #CCEBDD; }
 
 .pm-title {
     font-size: 19px;

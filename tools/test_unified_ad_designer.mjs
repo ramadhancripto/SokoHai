@@ -30,12 +30,16 @@ w.eval(read('js/06-announcement.js'));
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'skh-designer-'));
 const copy = rel => { const dst = path.join(tmp, rel); fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(path.join(ROOT, rel), dst); };
-['js/app/16-pos-admin-jobs.js', 'js/app/128-personal-recycle.js', 'shared/ads-design-rules.js'].forEach(copy); // 16-pos-admin-jobs imports 128-personal-recycle (2026-11-19)
+['js/app/16-pos-admin-jobs.js', 'js/app/128-personal-recycle.js', 'shared/ads-design-rules.js', 'shared/delivery-destination-core.js'].forEach(copy); // 16-pos-admin-jobs imports 128-personal-recycle (2026-11-19) + shared/delivery-destination-core.js (PART 5B-3)
 fs.readdirSync(path.join(ROOT, 'js/app/creative')).filter(f => f.endsWith('.js')).forEach(f => copy('js/app/creative/' + f));
 fs.writeFileSync(path.join(tmp, 'js/app/00-bootstrap.js'), 'export const skh = globalThis.__skhStub;\n');
 const saved = [];
 globalThis.__skhStub = {
-  currentUser: { uid: 'admin1', email: 'admin@x' }, MY_ADMIN_EMAIL: 'admin@x',
+  currentUser: { uid: 'admin1', email: 'admin@x', emailVerified: true }, MY_ADMIN_EMAIL: 'admin@x',
+  // [PART 2] mirror the real bootstrap contract (js/app/00-bootstrap.js): claims first, then the
+  // owner e-mail ONLY when the token is verified. The real helper is unit-tested by
+  // tools/test_client_security_part2.mjs; here we only need the same contract for the stub.
+  isAdminUser: (u) => { const x = u || { uid: 'admin1', email: 'admin@x', emailVerified: true }; return x.emailVerified === true && String(x.email || '').toLowerCase() === 'admin@x'; },
   skhEscape: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
   db: {}, doc: (...a) => a.join('/'), getDoc: async () => ({ exists: () => false }),
   callFunction: async (name, data) => { saved.push({ name, data }); return { data: { ok: true, creativeId: 'c1', announcementId: 'a1' } }; }

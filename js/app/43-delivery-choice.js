@@ -22,6 +22,7 @@
 //    ride_requests (soko la kazi za madereva) + taarifa.
 // ============================================================ */
 import { skh } from './00-bootstrap.js';
+import '../../shared/delivery-destination-core.js'; // [PART 5B-3] globalThis.SKHDestinationCore (kigezo kimoja na server)
 
 (function () { 'use strict';
 
@@ -44,6 +45,58 @@ import { skh } from './00-bootstrap.js';
     }
     function nowIso() { return new Date().toISOString(); }
     function uid() { return skh.currentUser && skh.currentUser.uid; }
+
+    /* ================================================================
+     * [PART 5B-3 2026-11-25] ANWANI YA KUFIKISHIWA (destination)
+     * Kigezo kimoja: shared/delivery-destination-core.js (server hutumia
+     * hicho hicho). Hapa ni kizuizi cha UX + ujumbe; mamlaka ya mwisho ni
+     * server (functions/routing-core.js → requireDestination).
+     * ================================================================ */
+    function DEST() {
+        if (typeof window !== 'undefined' && window.SKHDestinationCore) return window.SKHDestinationCore;
+        if (typeof globalThis !== 'undefined' && globalThis.SKHDestinationCore) return globalThis.SKHDestinationCore;
+        return null;
+    }
+    /* null = halali; vinginevyo sababu (missing/empty/malformed). */
+    function destinationProblem(value) {
+        var D = DEST();
+        if (!D) { // mfumo haujapakia moduli: usizuie kwa uongo
+            return (typeof value === 'string' && value.trim()) ? null : 'missing_destination';
+        }
+        var r = D.resolve(value);
+        return r.ok ? null : r.reason;
+    }
+    function destinationValue(value) {
+        var D = DEST();
+        if (!D) return typeof value === 'string' ? value.trim() : '';
+        var r = D.resolve(value);
+        return r.ok ? r.value : '';
+    }
+    function destinationMessage(reason) {
+        var D = DEST();
+        return (D && D.messageFor) ? D.messageFor(reason) : 'Weka anwani ya kufikishiwa (destination) kabla ya kuomba usafirishaji.';
+    }
+    /* Zuia uthibitisho, onyesha ujumbe, rudi kwenye sehemu ya usafirishaji.
+       Taarifa nyingine za mtumiaji (nauli/tarehe/maelezo/mtoa usafiri) HAZIFUTWI:
+       zinabaki kwenye DC + localStorage na huchorwa upya. */
+    function blockForDestination(reason) {
+        var msg = destinationMessage(reason);
+        try {
+            if (typeof window.skhToast === 'function') window.skhToast(msg, 'error', 4500);
+            else alert(msg);
+        } catch (e) {}
+        try {
+            if (typeof window.renderSmartCart === 'function') window.renderSmartCart();
+            var el = document.getElementById('skhDcDest');
+            if (el) { try { el.focus(); } catch (e1) {} try { el.scrollIntoView({ block: 'center' }); } catch (e2) {} }
+        } catch (e3) {}
+        return { ok: false, error: 'invalid_destination', reason: reason };
+    }
+    /* Hutumika na sehemu yoyote ya UI inayoomba usafirishaji. */
+    window.skhDeliveryDestinationProblem = function (value) {
+        return destinationProblem(arguments.length ? value : DC.destination);
+    };
+    window.skhDeliveryDestinationMessage = destinationMessage;
 
     /* ------------------ hali ya chaguo (huvuka redirect ya PesaPal) ------------------ */
     function defaultState() {
@@ -438,7 +491,8 @@ import { skh } from './00-bootstrap.js';
             vehicleType: post ? post.vehicleType : (sellerItems[0] && sellerItems[0].vehicleType) || '',
             postSnapshot: post || null,
             pickupLocation: pickup,
-            destination: DC.destination || '',
+            // [PART 5B-3] thamani iliyosafishwa (trimmed / label ya eneo)
+            destination: destinationValue(DC.destination),
             notes: DC.notes || '',
             pickupDate: DC.pickupDate || '',
             pickupTime: DC.pickupTime || '',
@@ -474,17 +528,35 @@ import { skh } from './00-bootstrap.js';
         var items = cartItems();
         if (!items.length) return alert('Cart iko wazi.');
         if (!DC.chosen) return alert('Chagua: unahitaji usafirishaji au la (Usafirishaji / Delivery).');
-        if (DC.required && !DC.post && !await skhConfirm('Umeomba SokoHai ikutafutie mtoa usafiri (bila tangazo maalum). Endelea?')) return;
-        if (DC.required && DC.post && !DC.destination) {
-            // destination inashauriwa lakini haikatalishi (anaweza kukubali baadae).
+        if (DC.required) {
+            /* [PART 5B-3] Anwani ya kufikishiwa ni SHARTI — ombi la usafiri lisilo
+               na anwani haliendi mbele (hata kama mtoa usafiri amechaguliwa). */
+            var dp0 = destinationProblem(DC.destination);
+            if (dp0) return blockForDestination(dp0);
         }
+        if (DC.required && !DC.post && !await skhConfirm('Umeomba SokoHai ikutafutie mtoa usafiri (bila tangazo maalum). Endelea?')) return;
         window.openSmartOrderReview();
     };
 
     // Pitia ukaguzi wa zamani wa native-confirm na uende kwenye uumbaji safi.
     window.openSmartOrderReview = async function () {
+        /* [PART 5B-3] kizuizi kimoja pia kwenye njia ya kitufe cha cart. */
+        if (DC.chosen && DC.required) {
+            var dpR = destinationProblem(DC.destination);
+            if (dpR) return blockForDestination(dpR);
+        }
+        /* [PART 3 2026-11-24] Sasisha bidhaa (bei/stock halisi) KABLA ya mapitio, kisha
+           zuia ikiwa stock haitoshi. Hii ni UX guard; uthibitisho wa mwisho uko kwenye
+           confirmSmartCartOrder na mamlaka ya mwisho ni server/stock reservation. */
+        if (typeof window.hydrateSmartCartProducts === 'function') {
+            try { await window.hydrateSmartCartProducts(); } catch (e) {}
+        }
         var items = cartItems();
         if (!items.length) return alert('Cart iko wazi.');
+        if (typeof window.skhCartStockCheck === 'function') {
+            var probs = window.skhCartStockCheck(items);
+            if (probs.length) return alert('Stock haitoshi kwa bidhaa hizi:\n' + window.skhCartStockMessage(probs) + '\n\nPunguza wingi au ondosha bidhaa kabla ya kuendelea.');
+        }
         var t = totalsFor(items);
         var msg = 'MAPITIO YA ODA\nBidhaa: TSh ' + t.productsTotal.toLocaleString()
             + '\nHifadhi ya Escrow: TSh ' + t.escrowFee.toLocaleString()
@@ -505,10 +577,21 @@ import { skh } from './00-bootstrap.js';
         }
         var items = cartItems();
         if (!items.length) return alert('Cart iko wazi.');
+        // [PART 3 2026-11-24] Zuio la mwisho la client: hakuna oda yenye stock isiyotosha.
+        if (typeof window.skhCartStockCheck === 'function') {
+            var probs2 = window.skhCartStockCheck(items);
+            if (probs2.length) return alert('Oda haijatumwa: stock haitoshi.\n' + window.skhCartStockMessage(probs2) + '\n\nRekebisha kikapu kwanza.');
+        }
         // Mfululizo wa Lipa Sasa: chaguo huulizwa baada ya malipo.
         var isBuyNow = false;
         try { isBuyNow = sessionStorage.getItem(BUY_NOW_KEY) === '1'; } catch (e) {}
         if (!DC.chosen && !isBuyNow) return alert('Chagua: unahitaji usafirishaji au la.');
+        /* [PART 5B-3] Hakuna oda yenye usafiri na anwani tupu: kizuizi cha mwisho
+           cha client KABLA ya kuandika sokopay_core_transactions/orders. */
+        if (DC.chosen && DC.required) {
+            var dpC = destinationProblem(DC.destination);
+            if (dpC) return blockForDestination(dpC);
+        }
         var effectiveChoice = DC.chosen ? DC : Object.assign(defaultState(), { chosen: false });
         var t = totalsFor(items);
         var transactionToken = skh.smartCartToken();
@@ -708,7 +791,7 @@ import { skh } from './00-bootstrap.js';
             reqCategory: 'Cargo',
             vehicleType: delivery.vehicleType || '',
             fromLocation: delivery.pickupLocation || order.sellerLocation || '',
-            toLocation: delivery.destination || '',
+            toLocation: destinationValue(delivery.destination || delivery.destinationLocation || ''),
             cargoName: order.itemTitle || first.title || delivery.packageDescription || 'Mzigo wa oda',
             cargoDescription: delivery.packageDescription || order.itemTitle || '',
             cargoImage: order.itemImg || (first.image) || delivery.cargoImage || '',
@@ -755,6 +838,11 @@ import { skh } from './00-bootstrap.js';
                 return { routed: true, idempotent: true, rideId: exSnap.data().rideRequestId };
             }
         } catch (e) {}
+
+        /* [PART 5B-3 2026-11-25] Ombi lisilo na anwani halali halitumwi kwa server
+           wala haliandiki ride moja kwa moja. Oda haibadilishwi. */
+        var destProblem = destinationProblem(delivery.destination != null ? delivery.destination : delivery.destinationLocation);
+        if (destProblem) return { routed: false, error: 'invalid_destination', reason: destProblem };
 
         // 1) SERVER (ya kuaminika): deliveryRouteBooking hutengeneza
         //    ride + delivery_offers -> Request Inbox ya mtoa usafiri.

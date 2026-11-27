@@ -5,6 +5,7 @@ import { skh } from './00-bootstrap.js';
 import { getSellerSubcategories } from '../../shared/product-taxonomy-bridge.mjs';
 import { channelsFromVisibility } from '../../shared/product-listing-core.mjs';
 import '../../shared/quantity-core.js'; // [POS 2026-11-01] sets globalThis.SKHQuantityCore (kg/L/m decimals)
+import '../../shared/delivery-destination-core.js'; // [PART 5B-3] globalThis.SKHDestinationCore (anwani ya kufikishiwa)
 
 // Onyesha / ficha kitufe cha "+" (UZA) kwenye bottom nav.
 // Nav tabs hubaki — ni kitufe cha "+" tu kinachobadilika.
@@ -1223,7 +1224,12 @@ window.broadcastRideRequest = async function() {
 
     const category = document.getElementById('rideReqCategory').value;
     const vType = document.getElementById('rideReqType').value;
-    const toLoc = document.getElementById('rideReqTo').value.trim();
+    // [PART 5B-3] anwani ya kufikishiwa inakaguliwa kwa kigezo kimoja (shared/)
+    const destCore = (typeof window !== 'undefined' && window.SKHDestinationCore) ||
+        (typeof globalThis !== 'undefined' && globalThis.SKHDestinationCore) || null;
+    const toLocCheck = destCore ? destCore.resolve(document.getElementById('rideReqTo').value) : null;
+    if (toLocCheck && !toLocCheck.ok) { alert(destCore.messageFor(toLocCheck.reason)); return; }
+    const toLoc = toLocCheck ? toLocCheck.value : document.getElementById('rideReqTo').value.trim();
     const recPhone = document.getElementById('receiverPhone').value.trim();
     
     // Tunachukua jina la mzigo kutoka kwenye memory (chain) au kwenye fomu

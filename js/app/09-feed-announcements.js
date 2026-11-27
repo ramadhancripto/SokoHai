@@ -151,8 +151,10 @@ window.__sokohaiAnnouncementsUnsub = null;
 window.sokohaiStartAnnouncementsListener = function(){
     if(window.__sokohaiAnnouncementsUnsub) return; // tayari inasikiliza
     try {
-        const canManageAll = !!((window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin)
-            || (skh.currentUser && skh.currentUser.email === skh.MY_ADMIN_EMAIL));
+        // [PART 2 SECURITY] claims + fallback yenye email_verified pekee.
+        const canManageAll = (typeof skh.isAdminUser === 'function')
+            ? skh.isAdminUser()
+            : !!(window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin);
         
         const handleSnap = (snap) => {
             const all = [];
@@ -195,7 +197,10 @@ window.sokohaiStartAnnouncementsListener = function(){
 
 window.sokohaiSaveAnnouncement = async function(payload, editId){
     try {
-        const isAdmin = !!((window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin) || (skh.currentUser && skh.currentUser.email === skh.MY_ADMIN_EMAIL));
+        // [PART 2 SECURITY] claims + fallback yenye email_verified pekee.
+        const isAdmin = (typeof skh.isAdminUser === 'function')
+            ? skh.isAdminUser()
+            : !!(window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin);
         if(!isAdmin) throw new Error('Admin authorization required.');
         const data = {
             text: String(payload.text || payload.description || '').trim(),

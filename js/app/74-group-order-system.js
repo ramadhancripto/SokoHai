@@ -1001,9 +1001,16 @@ import { skh } from './00-bootstrap.js';
     await logAudit(gid, goid, 'package_confirmed', participantId || uid(), { packageId: packageId });
     // check if all packages confirmed -> group COMPLETED
     try { await checkGroupCompletion(gid, goid); } catch (e) {}
-    // settlement: release escrow to seller/transporter
-    try { await settlementRelease(gid, goid, packageId); } catch (eS) {}
-    return { ok: true };
+    /* [PART 2 FOLLOW-UP] Kupokea bidhaa ni kazi tofauti na kulipa. Hapa tunaripoti
+     * settlement kwa uwazi: hakuna 'released' inayodhaniwa. */
+    var settle = null;
+    try { settle = await settlementRelease(gid, goid, packageId); }
+    catch (eS) { settle = { ok: false, reason: 'settlement_error', partial: false }; try { console.warn('[confirmReceipt] settlement', eS); } catch (eW) {} }
+    if (settle && !settle.ok) {
+      try { console.warn('[confirmReceipt] settlement haijakamilika:', settle.reason, settle.partial ? '(SEHEMU — inahitaji reconciliation)' : ''); } catch (eW2) {}
+    }
+    return { ok: true, settlement: settle || { ok: false, reason: 'not_attempted' },
+             settlementComplete: !!(settle && settle.ok) };
   }
 
   async function reportProblem(gid, goid, packageId, reason, evidence) {
@@ -1050,6 +1057,16 @@ import { skh } from './00-bootstrap.js';
       if (pkg.releaseTransactionId) continue;
       var releaseTxId = 'rel_' + pkg.packageId + '_' + Date.now().toString(36);
       try {
+        /* [PART 2 FOLLOW-UP] SETTLE KWANZA. Hapo awali package iliwekwa CONFIRMED +
+         * releaseTransactionId + participant COMPLETED KABLA ya pesa kuhamishwa; kosa la
+         * settlement liliisha kwa console.warn tu, na `releaseTransactionId` ilizuia retry
+         * milele. Sasa: settlement ikikamilika (balance + ledger) ndipo tunaweka alama.
+         * Ikishindikana, package inabaki DELIVERED — inaweza kujaribiwa tena. */
+        var _sr = await settlementRelease(gid, goid, pkg.__id);
+        if (!(_sr && _sr.ok)) {
+          try { console.warn('[auto-release] settlement haijakamilika kwa', pkg.__id, _sr && _sr.reason, (_sr && _sr.partial) ? '(SEHEMU — reconciliation ya server)' : ''); } catch (eW2) {}
+          continue;   // HAKUNA releaseTransactionId, HAKUNA participant COMPLETED
+        }
         await skh.updateDoc(skh.doc(skh.db, 'chatGroups/' + gid + '/groupOrders/' + goid + '/packages', pkg.__id), {
           status: PACKAGE_STATUS.CONFIRMED,
           autoReleased: true,
@@ -1062,9 +1079,8 @@ import { skh } from './00-bootstrap.js';
           delivery: { status: DELIVERY_STATUS.AUTO_RELEASED, releasedAt: nowIso(), releaseTransactionId: releaseTxId },
           state: PARTICIPANT_STATE.COMPLETED
         });
-        await settlementRelease(gid, goid, pkg.__id);
-        released.push(pkg.__id);
         await logAudit(gid, goid, 'auto_released', 'system', { packageId: pkg.__id, releaseTxId: releaseTxId });
+        released.push(pkg.__id);
       } catch (eR) { console.warn('[auto-release]', eR); }
     }
     return { ok: true, released: released, count: released.length };
@@ -1076,6 +1092,15 @@ import { skh } from './00-bootstrap.js';
     if (!(pkgSnap && pkgSnap.exists && pkgSnap.exists())) return { ok: false, reason: 'package_not_found' };
     var pkg = pkgSnap.data() || {};
     if (pkg.settlementReleased) return { ok: true, already: true };
+    /* [VERIFY 2026-11-24] A partial settlement must not be retried from this browser: the
+     * half that already landed cannot be discovered here, so a blind retry can pay the seller
+     * (or the transporter) twice. Same contract as gcoWalletAdd/skhWalletAttempts. */
+    var settleKey = gid + '|' + goid + '|' + packageId;
+    var settleAttempts = (window.skhSettlementAttempts = window.skhSettlementAttempts || {});
+    if (settleAttempts[settleKey]) {
+      return { ok: false, reason: 'needs_reconciliation', partial: true, needsServer: true,
+               previous: settleAttempts[settleKey], sellerAmount: 0, fee: 0 };
+    }
     var goSnap = await skh.getDoc(goRef(gid, goid));
     var goData = goSnap.data() || {};
     var unitPrice = +goData.targetPrice || 0;
@@ -1088,25 +1113,35 @@ import { skh } from './00-bootstrap.js';
     // In prod, financial ledger secured/entitlement/fees/refunds/released/pending/disputed server-side
     var sellerId = goData.productSnapshot ? goData.productSnapshot.sellerId : goData.organizerId;
     // release to seller
-    if (sellerId) {
-      try {
-        var uRef = skh.doc(skh.db, 'users', sellerId);
-        var uSnap = await skh.getDoc(uRef);
-        var bal = uSnap && uSnap.exists && uSnap.exists() ? (+uSnap.data().walletBalance || 0) : 0;
-        await skh.updateDoc(uRef, { walletBalance: bal + sellerAmount, updatedAt: nowIso() });
-        await skh.addDoc(skh.collection(skh.db, 'wallet_ledger'), {
-          kind: 'escrow_release_seller',
-          uid: sellerId,
-          orderDocId: packageId,
-          groupOrderId: goid,
-          groupId: gid,
-          delta: sellerAmount,
-          before: bal,
-          after: bal + sellerAmount,
-          fee: fee,
-          at: nowIso()
-        });
-      } catch (eS) { console.warn('[settle seller]', eS); }
+    /* [PART 2 2026-11-24] HONEST SETTLEMENT: hapo awali kosa la kuandika wallet
+     * (mf. firestore.rules inakataa — wallet ni server-write-only) lilisahaulika kwa
+     * console.warn, kisha package ikawekwa `settlementReleased: true`. Hiyo ni
+     * malipo ya kubuni: escrow inaonekana "imelipwa" wakati salio halikuongezeka.
+     * Sasa kama seller hakupata kitu, settlement HAIKamilikiwi na tunarudisha ok:false
+     * ili mzunguko uweze kujaribiwa tena/kupewa server. */
+    var sellerCredited = false, sellerBalanceWritten = false, sellerLedgerWritten = false;
+    var transporterDue = false, transporterCredited = false, transporterErr = null;
+    /* [MODULE 1 2026-11-27] C / A3 — a package without a seller can never be "settled":
+     * previously the seller leg was skipped and the code went on to mark the package
+     * settlementReleased and return ok:true although nobody had been paid. */
+    if (!sellerId) return { ok: false, reason: 'no_seller', sellerAmount: 0, fee: 0 };
+    /* [MODULE 1 2026-11-27] The browser NEVER moves money (same contract as gcoWalletAdd):
+     * users.walletBalance and wallet_ledger are server-write-only in firestore.rules, and two
+     * browser writes cannot be atomic and idempotent across sessions. The seller leg therefore
+     * reports server_required and the guard below stops the settlement before anything is
+     * marked or any transporter is paid. */
+    /* [VERIFY 2026-11-24] SELLER GUARD BEFORE THE TRANSPORTER IS PAID. Previously the
+     * transporter block ran first, so a failed seller leg could still pay the transporter and
+     * then return failure with the package unmarked — a retry would have paid the transporter
+     * a second time. Now nothing else is attempted once the seller leg fails. */
+    if (sellerId && !sellerCredited) {
+      try { console.warn('[settle] seller movement haijakamilika (balance=' + sellerBalanceWritten + ', ledger=' + sellerLedgerWritten + ') — settlement haijakamilikiwa, package HAIWEKWI settlementReleased. packageId=' + packageId); } catch (eW) {}
+      if (sellerBalanceWritten || sellerLedgerWritten) {
+        settleAttempts[settleKey] = { at: nowIso(), sellerBalanceWritten: sellerBalanceWritten, sellerLedgerWritten: sellerLedgerWritten, packageId: packageId };
+      }
+      return { ok: false, reason: (sellerBalanceWritten || sellerLedgerWritten) ? 'partial_write' : 'server_required',
+               partial: (sellerBalanceWritten || sellerLedgerWritten), needsReconciliation: (sellerBalanceWritten || sellerLedgerWritten),
+               sellerAmount: sellerAmount, fee: fee, sellerBalanceWritten: sellerBalanceWritten, sellerLedgerWritten: sellerLedgerWritten };
     }
     // transporter release if shipment has transporter
     try {
@@ -1116,6 +1151,7 @@ import { skh } from './00-bootstrap.js';
         var ship = shipSnap && shipSnap.exists && shipSnap.exists() ? shipSnap.data() : {};
         var transporterId = ship.transporterId;
         if (transporterId && ship.transportFee) {
+          transporterDue = true;
           transporterFee = +ship.transportFee || 0;
           var tRef = skh.doc(skh.db, 'users', transporterId);
           var tSnap = await skh.getDoc(tRef);
@@ -1132,9 +1168,19 @@ import { skh } from './00-bootstrap.js';
             after: tBal + transporterFee,
             at: nowIso()
           });
+          transporterCredited = true;      // balance AND ledger, kama seller
         }
       }
-    } catch (eT) {}
+    } catch (eT) { transporterErr = eT; }
+    /* [PART 2 FOLLOW-UP] Escrow settlement = seller movement + (if due) transporter movement.
+     * Nothing is marked settled unless every required movement COMPLETED (balance + ledger). */
+    if (transporterDue && !transporterCredited) {
+      try { console.warn('[settle] transporter movement haijakamilika — settlement haijakamilikiwa (partial). packageId=' + packageId); } catch (eW2) {}
+      settleAttempts[settleKey] = { at: nowIso(), sellerCredited: true, transporterDue: true, transporterCredited: false, packageId: packageId };
+      return { ok: false, reason: 'partial_settlement', partial: true, needsReconciliation: true,
+               sellerAmount: sellerAmount, fee: fee, transporterFee: transporterFee,
+               sellerCredited: true, transporterCredited: false };
+    }
     // financial ledger update
     try {
       var finRef = skh.doc(skh.db, 'chatGroups/' + gid + '/groupOrders/' + goid + '/financialLedger', 'main');
@@ -1145,7 +1191,12 @@ import { skh } from './00-bootstrap.js';
       fin.pending = Math.max(0, (+fin.secured || 0) - (+fin.released || 0) - (+fin.refunds || 0));
       fin.updatedAt = nowIso();
       await skh.setDoc(finRef, fin, { merge: true });
-    } catch (eF) {}
+    } catch (eF) {
+      /* [MODULE 1 2026-11-27] C — a ledger failure is never reported as a settled payment. */
+      try { console.warn('[settle] financialLedger haikuandikwa — settlement HAIKAMILIKIWI. packageId=' + packageId, eF); } catch (eW3) {}
+      return { ok: false, reason: 'ledger_write_failed', sellerAmount: sellerAmount, fee: fee, needsReconciliation: true };
+    }
+    try { delete settleAttempts[settleKey]; } catch (eDS) {}
     await skh.updateDoc(skh.doc(skh.db, 'chatGroups/' + gid + '/groupOrders/' + goid + '/packages', packageId), {
       settlementReleased: true,
       settlementReleasedAt: nowIso(),

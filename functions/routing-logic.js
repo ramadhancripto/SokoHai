@@ -101,30 +101,117 @@ function capacityKg(cand) {
     return n;
 }
 
+/* ============================================================
+ * [PART 5B-2 2026-11-25] SIFA ZA LAZIMA (hard eligibility gate)
+ * ------------------------------------------------------------
+ * T-03 ya PART 5A: wagombeaji wasiofaa walikuwa wanapunguzwa ALAMA tu
+ * (vehicleOk/serviceOk/capacityOk = false) na bado walipokea ofa —
+ * ikiwemo dereva aliyesimamishwa na Bajaji ya kg 500 kwa mzigo wa
+ * kilo 8,000 wa Lori. Sasa sifa hizi ni FILTER: mgombeaji asiyefaa
+ * HAINGII kwenye seti ya ofa (haonekani kwenye Request Inbox).
+ *
+ * Kanuni: "fallback halali" (ncha moja ya route, mawakala wa eneo,
+ * huduma/uwanja ambao HAWAJATAJA) hubaki; sifa za usalama/uwezo
+ * zilizoainishwa NA mgombeaji HAZIKIUKIWI KAMWE.
+ * ============================================================ */
+
+// Hali za akaunti zinazozuia ofa (usimamishaji/kuzimwa/kufungwa).
+const ACCOUNT_BLOCKING_STATES = ['suspended', 'banned', 'inactive', 'disabled', 'deactivated', 'closed', 'blocked'];
+
+function accountProblem(cand) {
+    if (!cand) return 'no_account';
+    if (cand.suspended === true || cand.isSuspended === true || cand.banned === true) return 'account_inactive';
+    const states = [cand.accountStatus, cand.agentStatus, cand.userStatus, cand.status]
+        .map(v => String(v == null ? '' : v).toLowerCase())
+        .filter(Boolean);
+    // `drivers.status` halali ni 'available'; `agents.status` ni 'approved'.
+    const STATE_OK = ['available', 'active', 'approved', 'verified', 'online'];
+    for (let i = 0; i < states.length; i++) {
+        if (ACCOUNT_BLOCKING_STATES.indexOf(states[i]) !== -1) return 'account_inactive';
+        if (i === 0 && cand.accountStatus == null && !STATE_OK.concat(['', 'pending', 'review']).includes(states[i])
+            && cand.kind !== 'agent' && cand.status !== undefined && cand.maxWeight === undefined && cand.vehicleType === undefined) {
+            // haijulikani: usiikatae kwa hali isiyojulikana
+        }
+    }
+    return null;
+}
+
+/* Sifa za lazima kwa mgombeaji mmoja.
+ * Hurudisha { ok:true, m:{...} } au { ok:false, reason:'...' }.
+ * Sababu: no_candidate | account_inactive | offline | self_request |
+ *         route_mismatch | vehicle_mismatch | capacity_insufficient |
+ *         service_unsupported | agent_not_approved
+ */
+function eligibility(cand, req) {
+    req = req || {};
+    if (!cand || !cand.uid) return { ok: false, reason: 'no_candidate' };
+
+    const acct = accountProblem(cand);
+    if (acct) return { ok: false, reason: acct };
+
+    if (cand.online === false) return { ok: false, reason: 'offline' };
+    if (req.excludeUid && String(cand.uid) === String(req.excludeUid)) return { ok: false, reason: 'self_request' };
+
+    /* ---- mawakala: hupimwa kwa ENEO tu (wanapanga wengine) ---- */
+    if (cand.kind === 'agent') {
+        if (cand.status && String(cand.status).toLowerCase() !== 'approved') return { ok: false, reason: 'agent_not_approved' };
+        const base = norm(cand.location || cand.region || '');
+        if (!base) return { ok: false, reason: 'route_mismatch' };
+        const hitOrigin = req.from && contains(base, req.from);
+        const hitDest = req.to && contains(base, req.to);
+        if (!hitOrigin && !hitDest) return { ok: false, reason: 'route_mismatch' };
+        return { ok: true, m: { routeScore: (hitOrigin ? 1 : 0) + (hitDest ? 1 : 0), agent: true } };
+    }
+
+    /* ---- madereva ---- */
+    const ends = matchEnds(cand, req.from, req.to);
+    const routeScore = (ends.origin ? 1 : 0) + (ends.dest ? 1 : 0);
+    // Ncha moja = fallback halali; NCHA ZOTE MBILI kukosa = route haihusiani.
+    if (routeScore === 0) return { ok: false, reason: 'route_mismatch' };
+
+    // 1) Chombo: ombi likitaja aina, chombo kilichotajwa NA mgombeaji lazima kilingane.
+    const wantVehicle = norm(req.vehicleType);
+    const haveVehicle = norm(cand.vehicleType);
+    if (wantVehicle && haveVehicle && wantVehicle !== haveVehicle) return { ok: false, reason: 'vehicle_mismatch' };
+    if (wantVehicle && !haveVehicle) return { ok: false, reason: 'vehicle_mismatch' };
+
+    // 2) Uwezo: uzito unaojulikana wa mzigo > uwezo unaojulikana wa chombo => kataa.
+    const capKg = capacityKg(cand);
+    const needKg = Number(req.weight) > 0 ? Number(req.weight) : 0;
+    if (needKg > 0 && capKg != null && capKg < needKg) return { ok: false, reason: 'capacity_insufficient' };
+
+    // 3) Huduma: orodha iliyotajwa NA isiyolingana => kataa (orodha tupu = haijataja => ruhusu).
+    const services = (cand.supportedServices || []).map(norm).filter(Boolean);
+    const wanted = serviceWanted(req.category).map(norm);
+    if (services.length && wanted.length) {
+        const hit = wanted.some(w => services.some(sv => sv.indexOf(w) !== -1 || w.indexOf(sv) !== -1));
+        if (!hit) return { ok: false, reason: 'service_unsupported' };
+    }
+
+    return { ok: true, m: { routeScore: routeScore, ends: ends, capKg: capKg, needKg: needKg } };
+}
+
 /* ------------------ kipimo cha mgombeaji mmoja ------------------
  * cand: { uid, kind: 'driver'|'agent', online, rating, price, ... }
  * req : { from, to, category, vehicleType, weight, excludeUid }
  *
  * Hurudisha null asipostahili hata kidogo; vinginevyo
  * { score, exact, routeScore, vehicleOk, serviceOk, capacityOk }.
+ * [PART 5B-2] Sifa za lazima zinachunguzwa KABLA ya alama.
  * ---------------------------------------------------------------- */
 
 function scoreCandidate(cand, req) {
-    if (!cand || !cand.uid) return null;
     req = req || {};
-    if (cand.online === false) return null;
-    if (req.excludeUid && String(cand.uid) === String(req.excludeUid)) return null;
+    const gate = eligibility(cand, req);
+    if (!gate.ok) {
+        if (cand && typeof cand === 'object') cand._ineligible = gate.reason;
+        return null;
+    }
 
     // Mawakala: hupimwa kwa ENEO (wanapanga wengine), si chombo —
     // lakini wao ni safu ya pili (waangaliwe tu hakuna chombo).
     if (cand.kind === 'agent') {
-        const base = norm(cand.location || cand.region || '');
-        if (cand.status && String(cand.status) !== 'approved') return null;
-        if (!base) return null;
-        const hitOrigin = req.from && (contains(base, req.from));
-        const hitDest = req.to && (contains(base, req.to));
-        const routeScore = (hitOrigin ? 1 : 0) + (hitDest ? 1 : 0);
-        if (routeScore === 0) return null;
+        const routeScore = gate.m.routeScore;
         const rating = parseFloat(cand.rating) || 0;
         const score = routeScore * 50 + rating * 5;
         return {
@@ -133,9 +220,8 @@ function scoreCandidate(cand, req) {
         };
     }
 
-    const ends = matchEnds(cand, req.from, req.to);
-    const routeScore = (ends.origin ? 1 : 0) + (ends.dest ? 1 : 0);
-    if (routeScore === 0) return null;
+    const ends = gate.m.ends;
+    const routeScore = gate.m.routeScore;
 
     const services = (cand.supportedServices || []).map(norm);
     const wanted = serviceWanted(req.category);
@@ -173,9 +259,12 @@ function scoreCandidate(cand, req) {
 function rankCandidates(candidates, req) {
     const drivers = [];
     const agents = [];
+    const rejected = [];   // [PART 5B-2] sababu za kutengwa (uchunguzi/tests)
     (candidates || []).forEach(function (c) {
+        const gate = eligibility(c, req);
+        if (!gate.ok) { rejected.push({ uid: (c && c.uid) || '', reason: gate.reason }); return; }
         const m = scoreCandidate(c, req);
-        if (!m) return;
+        if (!m) { rejected.push({ uid: (c && c.uid) || '', reason: (c && c._ineligible) || 'not_scored' }); return; }
         c._m = m;
         (c.kind === 'agent' ? agents : drivers).push(c);
     });
@@ -189,7 +278,8 @@ function rankCandidates(candidates, req) {
         // wagombea wa kutumia: madereva kwanza; agents ikiwa hakuna dereva.
         chosen: (drivers.length ? drivers : agents).slice(0, MAX_OFFERS_PER_ROUND),
         drivers: drivers,
-        agents: agents
+        agents: agents,
+        rejected: rejected
     };
 }
 
@@ -343,6 +433,9 @@ module.exports = {
     matchEnds: matchEnds,
     serviceWanted: serviceWanted,
     capacityKg: capacityKg,
+    ACCOUNT_BLOCKING_STATES: ACCOUNT_BLOCKING_STATES,
+    accountProblem: accountProblem,
+    eligibility: eligibility,
     scoreCandidate: scoreCandidate,
     rankCandidates: rankCandidates,
     transitionOffers: transitionOffers,

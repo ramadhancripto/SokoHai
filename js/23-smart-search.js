@@ -156,6 +156,7 @@
     function scoreItem(it, intent) {
         var kind = it.collectionName || 'products';
         if (kind === 'products' && window.skh && typeof window.skh.productEligible === 'function' && !window.skh.productEligible(it)) return 0;
+        if (kind === 'services' && window.skh && typeof window.skh.serviceEligible === 'function' && !window.skh.serviceEligible(it)) return 0;   // [PART 4]
         // Product exact/name/brand/model/category/attribute weighting comes from
         // the shared Product Foundation; service/transport retain existing logic.
         var coreProductScore = kind === 'products' && window.skh && typeof window.skh.scoreProduct === 'function'

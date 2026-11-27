@@ -1,6 +1,7 @@
 /**
  * SOKOHAI 62 — Missing Features Completion (PHASE 9)
  * Implements: image search visual, voice search, service order backend, multi-leg UI, POS void history, platform_stats doc, customToken real flow
+ * [MODULE 2 DEF-006 2026-11-27] POS void and service orders go through the server only (see sections 3 and 5).
  * Depends on 60-identity-layer + 61-full-system-repair
  * Non-destructive: only adds, never removes
  */
@@ -233,71 +234,27 @@
 
   // ========= 3. SERVICE ORDER BACKEND =========
   // When negotiation agreed for service, create service_order doc + notify provider + client
-  window.skhCreateServiceOrder = async function(negotiationId, extra={}) {
+  /* [MODULE 2 DEF-006 2026-11-27] SERVICE ORDERS ARE SERVER-OWNED.
+   * Previously this helper wrote `service_orders/*` (no rule: always denied) and `orders/*` without a
+   * buyerId (denied by the orders create rule), plus a notification. It had no caller. The real paths:
+   *   - negotiation accepted -> the server creates the order (functions/negotiation.js, commerceType
+   *     'service', priced by the server);
+   *   - provider accepts a service request -> rule-backed order create (serviceOrderBackedByAcceptedRequest);
+   *   - payment -> serviceOrderWalletPay / PesaPal (server).
+   * The helper no longer writes anything; it returns the server order for the negotiation when one exists. */
+  window.skhCreateServiceOrder = async function(negotiationId) {
+    const x = window.skh || null;
+    if (!negotiationId) return { ok: false, reason: 'negotiation_required' };
     try {
-      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
-      if (!db) throw new Error('Firestore not ready');
-      // Get negotiation
-      const negoSnap = await db.collection('negotiations').doc(negotiationId).get();
-      if (!negoSnap.exists) throw new Error('Negotiation not found');
-      const nego = negoSnap.data();
-      if (nego.status !== 'agreed') throw new Error('Negotiation not agreed yet');
-      // Build service order
-      const orderId = `SVC-${Date.now()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
-      const activeUid = ((window.skh && window.skh.currentUser && window.skh.currentUser.uid) || null);
-      const order = {
-        orderId,
-        negotiationId,
-        serviceId: nego.serviceId || nego.targetId,
-        clientId: nego.initiatorId || nego.participantIds[0],
-        providerId: nego.providerId || nego.participantIds.find(id=>id!==nego.initiatorId),
-        scope: nego.finalAgreement?.scope || nego.currentOffer?.scope || nego.scope || extra.scope || 'Service as agreed',
-        deadline: nego.finalAgreement?.deadline || nego.currentOffer?.deadline || extra.deadline || null,
-        price: nego.finalAgreement?.price || nego.currentOffer?.price || nego.price || 0,
-        status: 'pending', // pending -> accepted -> in_progress -> delivered -> completed
-        paymentStatus: 'Payment Pending',
-        escrowStatus: 'Pending',
-        createdAt: (firebase.firestore.FieldValue.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()),
-        createdBy: activeUid,
-        history: [{ status: 'pending', at: new Date().toISOString(), by: activeUid }]
-      };
-      // Ensure identity correctness: ownerId = effective UID
-      order.ownerId = order.clientId;
-      order.userId = order.clientId;
-      await db.collection('service_orders').doc(orderId).set(order);
-      // Also create order in orders for unified tracking
-      await db.collection('orders').doc(orderId).set({ ...order, type: 'service' });
-      // Notify provider
-      if (window.skhNotify) skhNotify(order.providerId, { title: 'Oda mpya ya huduma', body: `Wateja wamekubali: ${order.scope}`, type: 'service_order_new', targetId: orderId });
-      // Direct notification doc
-      try{
-        await db.collection('notifications').add({ userId: order.providerId, title: 'Oda mpya ya huduma', body: order.scope.slice(0,120), type: 'service_order_new', targetId: orderId, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date() });
-      }catch(_){}
-      if (window.skhToast) skhToast('Oda ya huduma imetengenezwa!', 'success');
-      return order;
-    } catch(e){
-      console.error('[service-order] create failed', e);
-      if (window.skhToast) skhToast('Imeshindwa kutengeneza oda ya huduma: '+e.message, 'error');
-      throw e;
+      if (!x || !x.db) return { ok: false, reason: 'server_owned' };
+      const snap = await x.getDoc(x.doc(x.db, 'negotiations', String(negotiationId)));
+      const nego = snap && snap.exists && snap.exists() ? (snap.data() || {}) : null;
+      if (nego && nego.orderId) return { ok: true, orderId: nego.orderId, serverOwned: true };
+      return { ok: false, reason: 'server_owned', message: 'Oda ya huduma inaundwa na server baada ya makubaliano.' };
+    } catch (e) {
+      return { ok: false, reason: 'server_owned', message: (e && e.message) || '' };
     }
   };
-
-  // Auto-hook: when negotiation status changes to agreed and target is service, create service order
-  if (window.db) {
-    try{
-      // Listen to negotiations changes if user is participant — will be set up after auth
-      // We add a helper that can be called from negotiation logic
-      const origAccept = window.acceptNegotiation || window.skhAcceptNegotiation;
-      // Patch accept flow to trigger service order
-      window.skhOnNegotiationAgreed = async (negoId, negoData)=>{
-        try{
-          if (negoData && (negoData.type==='service' || negoData.targetType==='service' || negoData.serviceId)) {
-            await window.skhCreateServiceOrder(negoId);
-          }
-        }catch(e){ console.warn('[service-order] auto-create fail', e); }
-      };
-    }catch(_){}
-  }
 
   // ========= 4. MULTI-LEG TRANSPORT UI =========
   window.skhMultiLeg = {
@@ -335,27 +292,40 @@
   };
 
   // ========= 5. POS VOID HISTORY =========
+  /* [MODULE 2 DEF-006 2026-11-27] AUTHORITATIVE SERVER VOID ONLY.
+   * Previously this wrapper wrote `pos_voids` and `pos_transactions` from the browser. Neither
+   * collection has a rule (catch-all deny), and `pos_transactions` is not the POS ledger: sales live
+   * in `sales/*` and are voided by the `posVoid` callable (transaction + idempotency key + business/
+   * store authorization + stock restoration + `sale_voids/*`). The wrapper now calls `posVoid` with
+   * the same idempotency key format as the POS screen (17-hub.js submitPosVoid: 'void-ui-' + saleId),
+   * so a void started from either place is applied once. The device-local history is kept as a
+   * convenience and is written only after the server confirmed the void. */
   window.skhPOS = window.skhPOS || {};
-  window.skhPOS.voidHistory = JSON.parse(localStorage.getItem('skh_pos_void_history')||'[]');
-  const origVoid = window.skhPOS.voidTransaction;
+  window.skhPOS.voidHistory = (function(){ try { return JSON.parse(localStorage.getItem('skh_pos_void_history')||'[]'); } catch(_) { return []; } })();
   window.skhPOS.voidTransaction = async function(txId, reason){
-    try{
-      const entry = { txId, reason: reason||'No reason', at: new Date().toISOString(), by: (((window.skh && window.skh.currentUser && window.skh.currentUser.uid) || null) || 'unknown') };
+    const x = window.skh || null;
+    const saleId = String(txId || '').trim();
+    const why = String(reason || '').trim();
+    if (!saleId) return { ok: false, reason: 'sale_required' };
+    if (!why) return { ok: false, reason: 'reason_required' };
+    if (!x || typeof x.wrapCallable !== 'function') {
+      if (window.skhToast) skhToast('Void inahitaji mtandao na server. Jaribu tena baadaye.', 'error');
+      return { ok: false, reason: 'server_unavailable' };
+    }
+    try {
+      const ud = x.currentUserData || {};
+      const response = await x.wrapCallable('posVoid')({ idempotencyKey: 'void-ui-' + saleId, businessId: ud.businessId || null, storeId: ud.storeId || null, originalSaleId: saleId, reason: why });
+      const result = response && response.data ? response.data : response;
+      const entry = { txId: saleId, reason: why, at: new Date().toISOString(), by: (x.currentUser && x.currentUser.uid) || null, status: (result && result.status) || 'VOIDED' };
       window.skhPOS.voidHistory.unshift(entry);
-      localStorage.setItem('skh_pos_void_history', JSON.stringify(window.skhPOS.voidHistory.slice(0,100)));
-      // Also write to Firestore for audit
-      try{
-        const db = window.db || firebase.firestore();
-        await db.collection('pos_voids').add({ ...entry, createdAt: firebase.firestore.FieldValue.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date() });
-      }catch(_){}
-      if (origVoid) return origVoid.call(this, txId, reason);
-      // Fallback: mark transaction void
-      try{
-        const db = window.db || firebase.firestore();
-        await db.collection('pos_transactions').doc(txId).update({ status: 'voided', voidReason: reason, voidedAt: firebase.firestore.FieldValue.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date() });
-      }catch(_){}
-      if (window.skhToast) skhToast('Muamala umefutwa na kuorodheshwa kwenye historia','success');
-    }catch(e){ console.error('[pos-void] fail', e); if(window.skhToast) skhToast('Imeshindwa kufuta: '+e.message,'error'); }
+      try { localStorage.setItem('skh_pos_void_history', JSON.stringify(window.skhPOS.voidHistory.slice(0,100))); } catch(_) {}
+      if (window.skhToast) skhToast('Sale imefutwa (void) na server. Refund ni hatua tofauti.', 'success');
+      return { ok: true, result: result };
+    } catch (e) {
+      console.error('[pos-void] server refused', e);
+      if (window.skhToast) skhToast('Imeshindwa ku-void: ' + ((e && e.message) || 'server'), 'error');
+      return { ok: false, reason: (e && e.code) || 'server_error', message: (e && e.message) || '' };
+    }
   };
   window.skhPOS.getVoidHistory = ()=> window.skhPOS.voidHistory;
 

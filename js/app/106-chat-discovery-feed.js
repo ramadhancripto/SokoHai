@@ -297,7 +297,11 @@
             res.forEach(function (snap, i) {
                 if (!snap || typeof snap.forEach !== 'function') return;
                 snap.forEach(function (doc) {
-                    rows.push(Object.assign({ id: doc.id, collectionName: cols[i] }, doc.data() || {}));
+                    var row = Object.assign({ id: doc.id, collectionName: cols[i] }, doc.data() || {});
+                    /* [PART 4 2026-11-24] huduma zilizosimamishwa/kuondolewa hazionekani kwenye gundua
+                       (bidhaa zilikuwa zinapewa kichujio hiki tayari mahali pengine). */
+                    if (cols[i] === 'services' && window.skh && typeof window.skh.serviceEligible === 'function' && !window.skh.serviceEligible(row)) return;
+                    rows.push(row);
                 });
             });
             // Zote zimeshindikana = hitilafu ya DB, SIO "hakuna data".

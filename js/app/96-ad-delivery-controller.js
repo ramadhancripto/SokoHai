@@ -72,10 +72,21 @@ import { skh } from './00-bootstrap.js';
   function unwrap(result) { return result && result.data ? result.data : result; }
   function plain(value) { return value && typeof value === 'object' ? value : {}; }
   function isAdmin() {
+    /* [PART 2 SECURITY 2026-11-24] Sawia na firestore.rules::isAdmin():
+     *   claims kwanza; barua-pepe ya mmiliki PALE TU token inasema email_verified === true.
+     * Hapo awali hapa kulikuwa na ulinganisho mbichi wa barua-pepe (bila uthibitisho) na
+     * pia `user.admin === true` — uwanja wa user doc ambao mtumiaji anaweza kuuandika
+     * mwenyewe, hivyo haukuwa ushahidi wa ruhusa yoyote. Umeondolewa: ruhusa inatoka
+     * claims au barua-pepe iliyothibitishwa pekee. Controller hii inajitegemea kwa makusudi
+     * (bootstrap inaweza kuwa stubbed/aged), ndiyo maana parity iko hapa pia. */
+    if (typeof skh.isAdminUser === 'function') return skh.isAdminUser();
     const claims = window.SOKOHAI_CLAIMS || {};
+    if (claims.isAdmin === true || claims.admin === true || claims.role === 'admin' || claims.superAdmin === true) return true;
+    const cfg = window.SOKOHAI_CONFIG || {};
+    if (cfg.ADMIN_EMAIL_FALLBACK === false) return false;
     const user = skh.currentUser || {};
-    return claims.isAdmin === true || claims.admin === true || user.admin === true
-      || String(user.email || '').toLowerCase() === String(skh.MY_ADMIN_EMAIL || 'rshabansaid@gmail.com').toLowerCase();
+    if (user.emailVerified !== true) return false;
+    return !!user.email && String(user.email).toLowerCase() === String(skh.MY_ADMIN_EMAIL || '').toLowerCase();
   }
   function hiddenByLayout(element) {
     let node = element;

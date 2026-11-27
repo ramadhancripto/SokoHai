@@ -709,6 +709,17 @@ import {
             return { ok: false, error: 'self_offer' };
         }
 
+        /* [PART 4 2026-11-24] Huduma iliyosimamishwa / iliyoondolewa HAIOMBWI.
+           Ukaguzi unafanyika KABLA ya kuunda mazungumzo au ofa, kwa data halisi ya tangazo
+           (haibuni kitu; hati za zamani zisizo na status zinaendelea kupita). */
+        if (type === NF_TYPES.SERVICE && window.skh && typeof window.skh.serviceEligible === 'function') {
+            var svcProbe = Object.assign({}, (opts && opts.entity) || {}, baseEntity || {});
+            if (!window.skh.serviceEligible(svcProbe)) {
+                if (typeof window.sokohaiToast === 'function') window.sokohaiToast('Huduma hii haipatikani tena sokoni — haiwezi kuombwa.', 'error', 4200);
+                return { ok: false, error: 'service_unavailable' };
+            }
+        }
+
         // Conversation setup ni ya ndani; hakuna sharti la ujumbe wa kawaida.
         var c = await ensureContextConversation(type, baseEntity);
         if (!c) {

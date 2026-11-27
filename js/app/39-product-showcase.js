@@ -18,7 +18,7 @@ import {
     psAvailability, psCanBid, psSpecRows, psHasDetails,
     psSummarizeReviews, psRatingDisplay, psVariantGroups, psVariantDelta,
     psBuildRails, psMoney, psNum, psTitle, psSellerName, psResolveStructuredVariant, psOptionValueAvailable, psImagesForSelection,
-    psIsVideo, psServicePriceLabel, PS_PRODUCT, PS_SERVICE, PS_DRIVER, PS_FETCH_CAP, PS_LOW_STOCK
+    psIsVideo, psServicePriceLabel, psConditionLabel, PS_PRODUCT, PS_SERVICE, PS_DRIVER, PS_FETCH_CAP, PS_LOW_STOCK
 } from './39-showcase-logic.js';
 
 (function () { 'use strict';
@@ -58,6 +58,11 @@ import {
         // Mnada hai: mode badge ("Live Mnada") inatosha. Uliofungwa: onyesha.
         var dupAuction = (p.saleMode === 'auction' && av.kind === 'auction');
         if (av.label && !dupAuction) chips += '<span class="pm-avail pm-avail--' + av.kind + '">' + esc(av.label) + '</span>';
+        // [PART 3 2026-11-24] Hali ya bidhaa (Mpya / Imetumika / Imekarabatiwa) — data halisi pekee
+        if (col === PS_PRODUCT) {
+            var condLbl = (typeof psConditionLabel === 'function') ? psConditionLabel(p) : '';
+            if (condLbl) chips += '<span class="pm-avail pm-avail--cond">' + esc(condLbl) + '</span>';
+        }
         if (typeof skh.cardLocation === 'function') {
             var loc = skh.cardLocation(p, col);
             if (loc) chips += loc;

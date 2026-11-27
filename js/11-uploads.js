@@ -143,6 +143,26 @@
     }
     window.skhUploadLastError = null;
 
+    /* [PART 2 FOLLOW-UP 2026-11-24] Folda nyeti = folda YOYOTE yenye segment ya nyeti.
+     * Ulinganisho wa awali ulikuwa ^identity$ tu, hivyo 'identity/photos', 'sokohai/identity',
+     * 'Identity/', 'kc/..' n.k. zilipita kama folda za kawaida. Sasa tunagawanya njia kwa '/'
+     * (na '\\'), kucase-fold, kuondoa nukta za mwisho na ku-decode %XX, kisha kuangalia KILA
+     * segment. Fail-closed: folda inayoshindwa ku-parse inahesabiwa kuwa nyeti ikiwa ina
+     * neno lolote la nyeti ndani yake. */
+    var SENSITIVE_SEGMENTS = { identity: 1, identities: 1, id: 1, ids: 1, id_docs: 1, kyc: 1, aml: 1,
+                               verification: 1, verifications: 1, verify: 1, document: 1, documents: 1,
+                               passport: 1, licence: 1, license: 1, nida: 1, private: 1 };
+    window.skhUploadIsSensitiveFolder = function (folder) {
+        var raw = String(folder == null ? '' : folder);
+        try { raw = decodeURIComponent(raw); } catch (e) { /* si %-encoded */ }
+        var segments = raw.replace(/\\/g, '/').split('/');
+        for (var i = 0; i < segments.length; i++) {
+            var seg = String(segments[i] || '').trim().toLowerCase().replace(/^[.\s]+|[.\s]+$/g, '');
+            if (seg && SENSITIVE_SEGMENTS[seg]) return true;
+        }
+        return false;
+    };
+
     window.skhUploadFromFile = async function (file, opts) {
         opts = opts || {};
         if (!file) return uploadFail('no_file', 'Hakuna faili lililochaguliwa.');
@@ -163,9 +183,20 @@
                     console.error('skhUploadFromFile: upload imekataliwa na server', sig && sig.code, sig && sig.error);
                     return uploadFail(why.code, why.message);
                 }
-                fallback = true;
-                console.warn('skhUploadFromFile: huduma ya saini haipatikani (' + (sig && sig.code) + ') — preset ya umma inatumika');
+                fallback = true;   // warn only after the sensitive-folder gate below (else the log lies)
             }
+            /* [PART 2 SECURITY 2026-11-24] Nyaraka za faragha hazipandishwi KAMWE kwa preset
+             * ya umma. Njia ya "signing haipatikani" ilikuwa imezuiwa tayari kwa 'identity',
+             * LAKINI server inaweza kurudisha kwa makusudi {mode:'unsigned'} (transition —
+             * functions/upload-signing.js:87); hapo 'identity' ingeenda kwenye preset ya umma
+             * BILA saini. Tena ulinzi wa awali ulitambua neno 'identity' pekee, si 'kyc'/
+             * 'verification'/'documents'. Sasa: folda nyeti = saini INAHITAJIKA, vinginevyo fail.
+             * Folda za kawaida (products, ads, avatars…) hazibadiliki. */
+            if (window.skhUploadIsSensitiveFolder(opts.folder) && !(sig && sig.mode === 'signed')) {
+                console.warn('skhUploadFromFile: folda nyeti "' + opts.folder + '" inahitaji saini — imekataliwa (mode=' + ((sig && sig.mode) || (sig && sig.code) || 'none') + ')');
+                return uploadFail('signed_upload_required', 'Nyaraka za utambulisho zinahitaji upakiaji uliosainiwa; huduma salama haipatikani kwa sasa. Jaribu tena baadaye au wasiliana na msaada.');
+            }
+            if (fallback) console.warn('skhUploadFromFile: huduma ya saini haipatikani (' + (sig && sig.code) + ') — preset ya umma inatumika');
             window.skhUploadMode = fallback ? 'unsigned-fallback' : (sig && sig.mode);
             if (sig && sig.mode === 'signed') {
                 cloud = sig.cloudName || cloud;

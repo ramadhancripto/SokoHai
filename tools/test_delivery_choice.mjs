@@ -255,6 +255,22 @@ section('A) Chujio la matangazo halisi ya usafiri');
     const st = window.skhDeliveryState();
     eq('post imechaguliwa', st.post && st.post.id, 'p1');
     eq('provider amehifadhiwa', st.post.userId, 'd1');
+    /* [PART 5B-3] KABLA ya kuweka anwani: oda yenye usafiri LAZIMA izuiwe.
+       Hii ni tabia mpya inayolindwa (destination integrity). */
+    {
+        const before = (added.byCollection.orders || []).length;
+        let dmsg = ''; window.alert = globalThis.alert = m => { dmsg = m; };
+        const blocked = await window.confirmSmartCartOrder();
+        eq('5B-3: oda bila anwani imezuiwa', blocked && blocked.error, 'invalid_destination');
+        eq('5B-3: hakuna oda iliyoandikwa', (added.byCollection.orders || []).length, before);
+        ok('5B-3: ujumbe wa Kiswahili kuhusu anwani', /anwani/i.test(String(blocked && blocked.reason || dmsg) + dmsg));
+        eq('5B-3: provider aliyechaguliwa HAKUPOTEA', window.skhDeliveryState().post.userId, 'd1');
+        eq('5B-3: kigezo kimoja cha client', typeof window.skhDeliveryDestinationProblem, 'function');
+        eq('5B-3: nafasi tupu si anwani', window.skhDeliveryDestinationProblem('   '), 'empty_destination');
+        eq('5B-3: {} si anwani', window.skhDeliveryDestinationProblem({}), 'empty_destination');
+        eq('5B-3: anwani halali inapita', window.skhDeliveryDestinationProblem('Dodoma, Mjini'), null);
+    }
+    window.skhDeliveryUpdateField('destination', 'Dodoma, Mjini');
     await window.confirmSmartCartOrder();
     const ordersDel = added.byCollection.orders || [];
     const withDel = ordersDel.filter(o => o.delivery && o.delivery.required);
@@ -264,6 +280,7 @@ section('A) Chujio la matangazo halisi ya usafiri');
     eq('logisticProviderId', dd.logisticProviderId, 'd1');
     eq('njia selected_listing', dd.method, 'selected_listing');
     ok('pickup inatoka eneo la muuzaji', dd.pickupLocation === 'Morogoro');
+    eq('5B-3: anwani imehifadhiwa kwenye oda', dd.destination, 'Dodoma, Mjini');
     ok('sokopay core imeandikwa', (added.byCollection.sokopay_core_transactions || []).length >= 1);
 
     /* E2) skhHandleOrderDelivery hupitia server callable */
@@ -308,6 +325,7 @@ section('A) Chujio la matangazo halisi ya usafiri');
     const r3 = await window.skhHandleOrderDelivery('ORD-REAL-3', { required: false }, {});
     eq('self collection haiungi', r3.selfCollection, true);
     eq('hakuna ride iliyoundwa', (added.byCollection.ride_requests || []).length, 0);
+
 }
 
 /* ================================================================

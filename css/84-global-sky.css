@@ -1,0 +1,134 @@
+/* ==== css/84-global-sky.css ====                              [GLOBAL SKY 2026-11-27]
+ * Owner request "GLOBAL CLOUD BACKGROUND & TEXT COLOR BALANCING": the approved home sky
+ * (css/83-home-sky-theme.css, reference "SokoHai Tanzania Marketplace Home") becomes the shared
+ * background of the independent full-screen pages too, so the platform reads as one ecosystem.
+ *
+ * HOW
+ *   - One set of tokens (:root) — the same gradient and the same 3 KB cloud asset the home already
+ *     downloads (assets/img/home/sky-clouds.svg). No new image, no extra download.
+ *   - Two intensities: --skh-sky-page (marketplace / account pages) and --skh-sky-work (a lighter veil
+ *     for work pages: SokoPay, tokens, chat, business tools) so tables, forms and figures stay calm.
+ *   - Applied ONLY to the page shells listed in css/46-fullscreen-pages.css ("kurasa zinazojitegemea").
+ *     Small dialogs (category picker, profile card, support, settings, confirmations) keep their white
+ *     card on the dimmed backdrop: they are cards, not pages.
+ *   - NOT YET: role dashboards (#dashboardViews, Business OS) keep their white page — they could not be
+ *     opened and checked in the test environment, so they are left unchanged on purpose.
+ *   - NOT CHANGED: the open chat conversation keeps its own approved warm wallpaper (#EFE7DD, see
+ *     tools/test_chat_background.mjs); only the chat inbox page uses the sky.
+ *   - White content cards inside pages stay white; the sky shows around and between them.
+ *   - The sky is a background of the page shell (not background-attachment:fixed): no repaint on
+ *     scroll, no layer above content, no pointer-events impact.
+ * TEXT
+ *   - Text that sits directly on the sky uses navy (--skh-ink) or the readable blue-grey
+ *     (--skh-ink-muted). White text is kept for green buttons, navy/green badges and dark overlays only.
+ * WHY !important: every rule here overrides an existing `!important` rule or an inline style
+ *   (style="background:white") in the same shells; without it the sky would not show. Nothing else
+ *   in the platform is touched. Loaded after css/83.
+ */
+:root {
+  --skh-ink: #16236b;            /* primary text on light surfaces (navy: 11.2:1 on the sky #cfe9f9, 14.1:1 on white) */
+  --skh-ink-muted: #3f5274;      /* secondary text on the sky (6.2:1 on #cfe9f9, 7.9:1 on white) */
+  --skh-brand-ink: #0a6b4f;      /* brand green for SMALL TEXT on light surfaces (5.2:1 on the sky; #18A982 is only 2.4:1) */
+  --skh-on-dark: #ffffff;        /* text on green / navy / dark overlays */
+  --skh-brand: #18A982;
+  --skh-accent: #f4b400;
+  --skh-sky-gradient: linear-gradient(180deg, #cfe9f9 0%, #dcf0fb 45%, #d6edfa 100%);
+  --skh-sky-clouds: url("../assets/img/home/sky-clouds.svg") center top / max(100vw, 980px) auto repeat-y;
+  /* slim green + gold wave on the bottom edge of a page (decorative, behind content) */
+  --skh-sky-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40' preserveAspectRatio='none'%3E%3Cpath d='M0 26C220 6 420 4 640 20s420 18 560 0v20H0Z' fill='%2312a15f'/%3E%3Cpath d='M0 26C220 6 420 4 640 20s420 18 560 0v4C1060 42 860 40 640 24S220 10 0 30Z' fill='%23f4b400'/%3E%3C/svg%3E") center bottom / 100% 22px no-repeat;
+  --skh-sky-page: var(--skh-sky-wave), var(--skh-sky-clouds), var(--skh-sky-gradient);
+  --skh-sky-work: var(--skh-sky-wave), linear-gradient(rgba(255, 255, 255, .38), rgba(255, 255, 255, .38)), var(--skh-sky-clouds), var(--skh-sky-gradient);
+  --skh-glass: rgba(255, 255, 255, .88);
+  --skh-glass-line: rgba(22, 35, 107, .08);
+}
+
+/* (the body itself already carries the sky in every mode: css/83 section 1) */
+
+/* ---------- 1. marketplace / account pages ---------- */
+html body #cartModal > div, html body #cartModal .fcart-shell,
+html body #notifModal > div,
+html body #buyerOrdersModal > div,
+html body #savedItemsModal > div,
+html body #mySokoHaiModal > .byd-shell,
+html body #sellerProfileModal > div,
+html body #escrowModal > div,
+html body #deliveriesModal > div,
+html body #tripsModal > div,
+html body #lvxHub .lvh {
+  background: var(--skh-sky-page) !important;
+  color: var(--skh-ink);
+}
+/* login / registration page: the area around the card */
+html body #authModal.skh-auth { background: var(--skh-sky-page) !important; }
+
+/* ---------- 2. work pages: SokoPay, tokens, chat inbox, logistics, business tools ---------- */
+html body #chatListModal, html body #chatListModal > .ch-inbox-shell,
+html body #unifiedTokenCenterModal > .tok-shell,
+html body #tokenBoxModal > .tb-sheet,
+html body #requestInboxModal > .ri-sheet,
+html body #logisticsTokenModal > div,
+html body #advertiserDashboardModal > div, html body #advertiserDashboardModal .adv-shell,
+html body #offlineStockModal > div,
+html body #stockTransferModal > div,
+html body #shopLedgerModal > div,
+html body #procurementModal > div,
+html body #sokopayMainLayout {
+  background: var(--skh-sky-work) !important;
+  color: var(--skh-ink);
+}
+/* inner layers that only repeated the old page colour become see-through (cards inside keep theirs) */
+html body #chatListModal #inboxList.ch-inbox-scroll,
+html body #sokopayWorkspace { background: transparent !important; }
+/* SokoPay side panels: frosted white cards on the sky */
+html body #sokopayLeftSidebar.sp-sidebar,
+html body #sokopayRightSidebar { background: var(--skh-glass) !important; }
+
+/* ---------- 3. sticky page titles: frosted bar instead of a white slab ---------- */
+html body #notifModal > div > h3, html body #buyerOrdersModal > div > h3, html body #cartModal > div > h3,
+html body #escrowModal > div > h3, html body #savedItemsModal > div > h3, html body #deliveriesModal > div > h3,
+html body #tripsModal > div > h3, html body #logisticsTokenModal > div > h3, html body #procurementModal > div > h3,
+html body #advertiserDashboardModal > div > h3 {
+  background: rgba(220, 240, 251, .9) !important;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  color: var(--skh-ink) !important;
+  border-bottom-color: var(--skh-glass-line) !important;
+}
+html body #chatListModal .ch-inbox-head, html body #chatListModal .ch-inbox-top {
+  background: rgba(220, 240, 251, .9) !important;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+
+/* ---------- 4. text balance on the sky ---------- */
+/* light greys written inline (#94a3b8, #9ca3af, #aaa, #999, #888) are too faint on blue: use the readable blue-grey.
+   Only inside the sky pages listed here. Inside a white card of those pages the text becomes a little darker
+   (#3f5274 is 7.9:1 on white), which only improves it. */
+html body :is(#notifModal, #buyerOrdersModal, #savedItemsModal, #deliveriesModal, #tripsModal, #cartModal, #chatListModal, #unifiedTokenCenterModal, #mySokoHaiModal)
+  :is([style*="color:#94a3b8"], [style*="color: #94a3b8"], [style*="color:#9ca3af"], [style*="color: #9ca3af"], [style*="color:#aaa"], [style*="color: #aaa"], [style*="color:#999"], [style*="color: #999"], [style*="color:#888"], [style*="color: #888"], [style*="color:#64748b"], [style*="color: #64748b"], [style*="color:#6b7280"], [style*="color: #6b7280"], [style*="color:gray"], [style*="color: gray"]) {
+  color: var(--skh-ink-muted) !important;
+}
+/* page subtitles that now sit on the sky (were light grey on white): readable blue-grey; titles navy */
+html body #mySokoHaiModal .byd-section-title p,
+html body #sokopayWorkspace .sp-header-subtitle,
+html body #chatListModal .ch-inbox-title small,
+html body #unifiedTokenCenterModal .tok-head small { color: var(--skh-ink-muted) !important; }
+html body #mySokoHaiModal .byd-section-title h2, html body #mySokoHaiModal .byd-section-title h3,
+html body #sokopayWorkspace .sp-header-left h1, html body #sokopayWorkspace .sp-header-left h2 { color: var(--skh-ink) !important; }
+/* the token centre header was a mint slab across the page: let the sky through as a frosted bar */
+html body #unifiedTokenCenterModal .tok-head { background: rgba(220, 240, 251, .9) !important; color: var(--skh-ink) !important; }
+
+/* ---------- 5. product details on wide screens ----------
+   On phones the product sheet stays white (photos, price and actions fill the screen).
+   On wide screens the white sheet stretched edge to edge; the sky now shows around the centred content. */
+@media (min-width: 900px) {
+  html body #productModal.pm-overlay { background: var(--skh-sky-page) !important; }
+  html body #productModal > .pm-sheet, html body #productModal .pm-scroll { background: transparent !important; }
+}
+
+/* ---------- 6. brand-green text on the sky ----------
+   #18A982 stays the fill colour of buttons, chips and icons. As small text on the light sky it measured 2.4:1
+   (home intro links, "Kategoria zote" section links), below the 4.5:1 needed; those links use the deeper brand green. */
+html body .skh-home-intro-links a,
+html body #buyerView .shx-h > button { color: var(--skh-brand-ink) !important; }
+html body #buyerView .shx-h > button svg { stroke: var(--skh-brand-ink) !important; }
+/* Live & Auction hub: its own muted token (#5F716B, 4.1:1 on the sky) becomes the readable blue-grey inside the hub only */
+html body #lvxHub .lvh { --lv-mut: var(--skh-ink-muted); }

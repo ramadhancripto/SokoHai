@@ -170,6 +170,19 @@ window.openProduct = async function(id, manualCollection = null) {
                 return;
             }
         }
+        /* [PART 4 2026-11-24] Huduma iliyosimamishwa/kuondolewa haionyeshwi kwa wateja hata kwa kiungo
+           cha zamani; MTOA HUDUMA (mmiliki) bado anaiona kwa ajili ya hakiki/uchapishaji.
+           Kanuni ni ile ile ya bidhaa; `serviceEligible` haitumii masharti ya saleMode/channels. */
+        if (colName === 'services' && typeof skh.serviceEligible === 'function' && !skh.serviceEligible(found)) {
+            const meUidS = skh.currentUser && skh.currentUser.uid;
+            const isOwnerViewS = !!meUidS && (found.userId === meUidS || found.providerId === meUidS || found.ownerId === meUidS);
+            if (!isOwnerViewS) {
+                if (window.activeProductUnsubscribe) { try { window.activeProductUnsubscribe(); } catch (eUS) {} window.activeProductUnsubscribe = null; }
+                alert(T('ps_unavailable', 'Huduma hii haipatikani tena sokoni.'));
+                closeModals();
+                return;
+            }
+        }
         skh.currentOpenProduct = found;
 
         // [BUYER DASHBOARD] Recent view moja kwa user+entity (bounded, central).

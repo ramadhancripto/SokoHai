@@ -16,6 +16,7 @@ const { logBestEffort } = require('./errors'); // [SRV-10] best-effort steps lea
  * ============================================================ */
 
 const L = require('./routing-logic');
+const DEST = require('./shared/delivery-destination-core'); // [PART 5B-3] kigezo kimoja cha destination (shared/)
 
 function nowIso() { return new Date().toISOString(); }
 
@@ -56,6 +57,9 @@ async function collectCandidates(myDb) {
         ds.forEach(function (d) {
             const x = d.data() || {};
             if (!x.userId) return;
+            /* [PART 5B-2] chujio la haraka kwa tangazo lenyewe (bila read ya ziada);
+               hali kamili ya akaunti (users/{uid}) hukaguliwa kabla ya ofa. */
+            if (L.accountProblem(Object.assign({ kind: 'driver' }, x))) return;
             out.push(Object.assign({ id: d.id, uid: x.userId, kind: 'driver' }, x));
         });
     } catch (e) { logBestEffort('routing-core:60', e); /* endelea na agents */ }
@@ -114,7 +118,7 @@ function cargoManifestFromOrder(order, orderId, delivery) {
 // huungana na mfumo huohuo wa ride_request → delivery_offers → Request
 // Inbox. Hakuna mkusanyiko mpya wa bandia: oda inabeba snapshot ya
 // tangazo HALISI la usafiri (drivers/{postId}) lililochaguliwa na mteja.
-function rideFromProductOrder(order, orderId) {
+function rideFromProductOrder(order, orderId, destinationValue) {
     const d = order.delivery || {};
     const firstItem = (Array.isArray(order.items) && order.items[0]) || {};
     const cargoName = order.itemTitle || firstItem.title || d.packageDescription || 'Mzigo wa oda';
@@ -127,7 +131,7 @@ function rideFromProductOrder(order, orderId) {
         reqCategory: d.reqCategory || 'Cargo',
         vehicleType: d.vehicleType || '',
         fromLocation: d.pickupLocation || order.sellerLocation || order.fromLocation || '',
-        toLocation: d.destination || d.destinationLocation || '',
+        toLocation: destinationValue || d.destination || d.destinationLocation || '', // [PART 5B-3]
         cargoName: cargoName,
         cargoDescription: d.packageDescription || order.itemTitle || cargoName,
         cargoImage: order.itemImg || d.cargoImage || firstItem.image || '',
@@ -199,6 +203,44 @@ async function rideWithContact(myDb, rideId, rd) {
     } catch (_) { return Object.assign({}, rd || {}); }
 }
 
+/* ============================================================
+ * [PART 5B-3 2026-11-25] DESTINATION INTEGRITY (server-authoritative)
+ * ------------------------------------------------------------
+ * Ombi la usafiri LISILO na anwani ya kufikishiwa halitengenezi
+ * ride_request wala delivery_offers. Kigezo ni kimoja (shared/
+ * delivery-destination-core.js) kinachotumika pia na kivinjari.
+ *
+ * Kipaumbele cha sehemu ni kile kile kilichokuwepo (hakuna mabadiliko
+ * ya tabia kwa data halali):
+ *   delivery.destination → delivery.destinationLocation →
+ *   route.to → toLocation
+ * Tofauti moja pekee: sehemu TUPU ('' au pengine tupu) hurukwa; haijazibwa
+ * kwa ORIGIN wala kwa thamani ya kubuni.
+ * ============================================================ */
+function needsDestination(order) {
+    if (!order || typeof order !== 'object') return false;
+    if (order.kind === 'booking') return true;                 // booking ya usafiri
+    return !!(order.delivery && order.delivery.required === true); // oda ya bidhaa yenye usafiri
+}
+
+function destinationCheck(order) {
+    const o = order || {};
+    const d = o.delivery || {};
+    const route = o.route || {};
+    return DEST.firstValid([d.destination, d.destinationLocation, route.to, o.toLocation]);
+}
+
+/* Hurtupa Error('invalid_destination') — routing.js huipanga kuwa
+ * HttpsError('invalid-argument') kupitia mapError(). */
+function requireDestination(order) {
+    if (!needsDestination(order)) return null;
+    const res = destinationCheck(order);
+    if (res.ok) return res;
+    const err = new Error('invalid_destination');
+    err.destinationReason = res.reason;
+    throw err;
+}
+
 async function ensureRideForOrder(myDb, order, orderId, opts) {
     opts = opts || {};
     const existingId = order.rideRequestId || order.deliveryId || null;
@@ -206,6 +248,9 @@ async function ensureRideForOrder(myDb, order, orderId, opts) {
         const s = await myDb.doc('ride_requests/' + existingId).get();
         if (s.exists) return { ref: s.ref || myDb.doc('ride_requests/' + existingId), data: s.data(), created: false, id: existingId };
     }
+    /* [PART 5B-3] Kigezo cha mwisho KABLA ya kuunda hati yoyote: ombi lisilo na
+       anwani halali halitengenezi ride wala ofa (hakuna ride nusu-tayari). */
+    const destination = requireDestination(order);
     const ref = myDb.collection('ride_requests').doc();
 
     // [DELIVERY OPTION] Oda za bidhaa (sio booking ya majadiliano) zinahitaji
@@ -213,7 +258,7 @@ async function ensureRideForOrder(myDb, order, orderId, opts) {
     if (order.kind !== 'booking') {
         const d = order.delivery || {};
         if (!d.required) throw new Error('not_a_booking');
-        const ride = rideFromProductOrder(order, orderId);
+        const ride = rideFromProductOrder(order, orderId, destination && destination.value);
         if (opts.preferredDriverId) ride.preferredDriverId = String(opts.preferredDriverId);
         const pub1 = await writeRideSplit(myDb, ref, ride);
         return { ref: ref, data: pub1, created: true, id: ref.id };
@@ -230,7 +275,8 @@ async function ensureRideForOrder(myDb, order, orderId, opts) {
         reqCategory: order.reqCategory || 'Cargo',
         vehicleType: order.vehicleType || '',
         fromLocation: route.from || order.fromLocation || '',
-        toLocation: route.to || order.toLocation || '',
+        // [PART 5B-3] thamani iliyothibitishwa (trimmed / label ya eneo)
+        toLocation: (destination && destination.value) || '',
         cargoName: cargoName,
         cargoDescription: order.packageDescription || '',
         cargoImage: order.image || '',
@@ -270,10 +316,12 @@ async function preferredCandidateFor(myDb, uid, order) {
     if (!uid) return null;
     let name = 'Msafirishaji';
     let post = null;
+    let account = null;   // [PART 5B-2] hali ya akaunti ya msafirishaji aliyeteuliwa
     try {
         const u = await myDb.doc('users/' + uid).get();
         if (u.exists) {
             const ud = u.data() || {};
+            account = ud;
             name = ud.fullName || ud.displayName || ud.businessName || ud.shopName || name;
         }
     } catch (e) { logBestEffort('routing-core:278', e); /* endelea */ }
@@ -298,7 +346,17 @@ async function preferredCandidateFor(myDb, uid, order) {
         name: name,
         driverName: name,
         rating: post ? (post.rating || 0) : 0,
-        online: true
+        /* [PART 5B-2] chombo/uwezo/huduma za tangazo — zinahitajika ili
+           kigezo cha lazima (T-03) kiweze kupimwa kwa uteuzi wa mteja pia. */
+        vehicleType: post ? (post.vehicleType || '') : '',
+        maxWeight: post ? (post.maxWeight || post.capacity || '') : '',
+        supportedServices: post ? (post.supportedServices || []) : [],
+        online: post && post.online === false ? false : true,
+        // Hali halisi za akaunti (kama zipo) — kigezo cha lazima kinazipima.
+        accountStatus: account ? account.accountStatus : undefined,
+        suspended: account ? (account.suspended === true || account.isSuspended === true) : false,
+        banned: account ? account.banned === true : false,
+        agentStatus: account ? account.agentStatus : undefined
     };
 }
 
@@ -312,6 +370,8 @@ async function routeBookingFromOrder(myDb, orderId, opts) {
     const os = await myDb.doc('orders/' + orderId).get();
     if (!os.exists) throw new Error('order_not_found');
     const order = os.data();
+    /* [PART 5B-3] Anwani ya kufikishiwa ni sharti la SERVER (haitegemei client). */
+    requireDestination(order);
     const delivery = order.delivery || {};
     // ensureRideForOrder ndiyo inayokataa oda isiyokuwa booking/yenye delivery.
     const preferredUid = String(opts.preferredDriverId || delivery.logisticProviderId || delivery.preferredDriverId || '');
@@ -339,15 +399,32 @@ async function routeBookingFromOrder(myDb, orderId, opts) {
     };
 
     let chosen = [];
+    let preferredRejected = null;
     if (preferredCandidate) {
-        // Mteja amechagua tangazo HALISI la mtoa usafiri — ofa ya moja kwa
-        // moja huenda kwake (bado hupitia delivery_offers/Request Inbox).
-        chosen = [Object.assign({ rank: 0, _m: { score: 100, exact: true } }, preferredCandidate)];
-    } else {
+        /* [PART 5B-2 2026-11-25] Uteuzi wa mteja haupiti sifa za LAZIMA:
+           dereva aliyesimamishwa, chombo kisicholingana au uwezo mdogo
+           HAPEWI ofa; ombi linaendelea kwa orodha ya kawaida (fallback halali)
+           na sababu inaandikwa kwenye ride kwa uchunguzi. */
+        const gate = L.eligibility(preferredCandidate, req);
+        if (gate.ok) {
+            // Mteja amechagua tangazo HALISI la mtoa usafiri — ofa ya moja kwa
+            // moja huenda kwake (bado hupitia delivery_offers/Request Inbox).
+            chosen = [Object.assign({ rank: 0, _m: { score: 100, exact: true } }, preferredCandidate)];
+        } else {
+            preferredRejected = gate.reason;
+            preferredCandidate = null;
+        }
+    }
+    if (!chosen.length) {
         const candidates = await collectCandidates(myDb);
         const ranked = L.rankCandidates(candidates, req);
         chosen = ranked.chosen || [];
     }
+    /* [PART 5B-2] Kagua hali halisi ya akaunti kabla ya kuunda ofa. */
+    const beforeAccounts = chosen.length;
+    chosen = await dropInactiveAccounts(myDb, chosen);
+    const accountsRejected = beforeAccounts - chosen.length;
+
     const now = Date.now();
     const round = Number(opts.round || ride.routingRound || 1);
 
@@ -418,6 +495,8 @@ async function routeBookingFromOrder(myDb, orderId, opts) {
         status: ride.status || 'searching'
     };
     if (matched) ridePatch.dispatchedAt = ride.dispatchedAt || nowIso();
+    if (preferredRejected) ridePatch.preferredRejectedReason = preferredRejected; // [PART 5B-2] uchunguzi
+    if (accountsRejected > 0) ridePatch.accountsRejectedCount = accountsRejected; // [PART 5B-2] uchunguzi
     batch.update(rideRef, ridePatch);
     // Unganisha order ↔ safari (bila kugusa sehemu za malipo).
     const orderPatch = {
@@ -471,6 +550,32 @@ async function routeBookingFromOrder(myDb, orderId, opts) {
 }
 
 /* ------------------ ofa za safari ------------------ */
+
+/* [PART 5B-2 2026-11-25] Hali ya akaunti iko kwenye users/{uid}, si kwenye
+ * tangazo la chombo. Kwa hiyo kabla ya kuunda ofa, hali halisi ya akaunti ya
+ * kila mgombeaji aliyechaguliwa inasomwa (read ndogo: <= MAX_OFFERS_PER_ROUND)
+ * na aliyesimamishwa/kuzimwa HATENGWI. Bila hii, dereva aliyesimamishwa
+ * kupitia users/{uid}.suspended bado alipokea ofa (T-03). */
+async function dropInactiveAccounts(myDb, list) {
+    if (!list || !list.length) return [];
+    const checks = await Promise.all(list.map(async function (c) {
+        try {
+            const u = await myDb.doc('users/' + c.uid).get();
+            const ud = (u && u.exists) ? (u.data() || {}) : null;
+            if (!ud) return { c: c, blocked: null };
+            const merged = Object.assign({}, c, {
+                accountStatus: ud.accountStatus !== undefined ? ud.accountStatus : c.accountStatus,
+                suspended: ud.suspended !== undefined ? ud.suspended : c.suspended,
+                isSuspended: ud.isSuspended !== undefined ? ud.isSuspended : c.isSuspended,
+                banned: ud.banned !== undefined ? ud.banned : c.banned,
+                agentStatus: ud.agentStatus !== undefined ? ud.agentStatus : c.agentStatus,
+                status: c.status   // hali ya tangazo (available) haichukui nafasi ya akaunti
+            });
+            return { c: c, blocked: L.accountProblem(merged) };
+        } catch (e) { logBestEffort('routing-core:account', e); return { c: c, blocked: null }; }
+    }));
+    return checks.filter(x => !x.blocked).map(x => x.c);
+}
 
 async function rideOffers(myDb, rideId) {
     const snap = await myDb.collection('delivery_offers').where('rideId', '==', rideId).get();
@@ -604,11 +709,15 @@ module.exports = {
     notify: notify,
     collectCandidates: collectCandidates,
     ensureRideForOrder: ensureRideForOrder,
+    needsDestination: needsDestination,           // [PART 5B-3]
+    destinationCheck: destinationCheck,           // [PART 5B-3]
+    requireDestination: requireDestination,
     splitRidePrivate: splitRidePrivate,
     writeRideSplit: writeRideSplit,
     rideWithContact: rideWithContact,
     RIDE_PRIVATE_KEYS: RIDE_PRIVATE_KEYS,
     routeBookingFromOrder: routeBookingFromOrder,
+    dropInactiveAccounts: dropInactiveAccounts,
     rideOffers: rideOffers,
     applyTransition: applyTransition,
     declineOffer: declineOffer,

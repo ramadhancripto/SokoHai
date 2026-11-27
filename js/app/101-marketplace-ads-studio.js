@@ -141,9 +141,9 @@ import { listingEligible } from './39-market-ranking.js';
 
     function isAdmin() {
         try {
-            return !!((window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin) ||
-                (window.skh && window.skh.currentUser && window.skh.currentUser.email &&
-                    window.skh.currentUser.email === window.skh.MY_ADMIN_EMAIL));
+            // [PART 2 SECURITY] helper mmoja: claims + email_verified fallback.
+            if (window.skh && typeof window.skh.isAdminUser === 'function') return window.skh.isAdminUser();
+            return !!(window.SOKOHAI_CLAIMS && window.SOKOHAI_CLAIMS.isAdmin);
         } catch (e) { return false; }
     }
     function uid() { try { return (window.skh && window.skh.currentUser && window.skh.currentUser.uid) || ''; } catch (e) { return ''; } }

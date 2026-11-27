@@ -26,6 +26,7 @@
    ILIYOPO. Hakuna payment/cart/transport system mpya.
    ============================================================================ */
 import { skh } from './00-bootstrap.js';
+import '../../shared/delivery-destination-core.js'; // [PART 5B-3] globalThis.SKHDestinationCore
 
 (function () {
     'use strict';
@@ -319,6 +320,19 @@ import { skh } from './00-bootstrap.js';
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         }, payload || {}, (window.skhEnvStamp ? window.skhEnvStamp() : {}));
+
+        /* [PART 5B-3 2026-11-25] Ombi la usafirishaji lisilo na anwani ya kufikishiwa
+           halitumwi (hakuna ride_request yenye toLocation tupu). Server inakagua tena. */
+        var destCore = (typeof window !== 'undefined' && window.SKHDestinationCore) ||
+            (typeof globalThis !== 'undefined' && globalThis.SKHDestinationCore) || null;
+        var destCheck = destCore ? destCore.resolve(body.toLocation) : null;
+        if (destCore && !destCheck.ok) {
+            var dm = destCore.messageFor(destCheck.reason);
+            if (typeof skhToast === 'function') skhToast(dm, 'error', 4500);
+            else alert(dm);
+            return null;
+        }
+        if (destCore) body.toLocation = destCheck.value;
 
         try {
             var ref = await skh.createRideRequest(body); // [REMEDIATION R1] PII split
